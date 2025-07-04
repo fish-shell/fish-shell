@@ -6424,10 +6424,10 @@ msgid "Arguments to pass to `xcodebuild`"
 msgstr ""
 
 msgid "Arguments to pass to the build process"
-msgstr ""
+msgstr "传递给构建过程的参数"
 
 msgid "Arguments to pass to the executable product"
-msgstr ""
+msgstr "传递给可执行产品的参数"
 
 msgid "Arguments to pass to the test(s)"
 msgstr ""
@@ -9265,7 +9265,7 @@ msgid "Check the currently installed template packs for updates and installs the
 msgstr ""
 
 msgid "Check the dependencies"
-msgstr ""
+msgstr "检查依赖项"
 
 msgid "Check the given version strings"
 msgstr ""
@@ -9637,7 +9637,7 @@ msgid "Clean up the files that Cobertura Maven Plugin has created during instrum
 msgstr ""
 
 msgid "Clean up the target directory"
-msgstr ""
+msgstr "清理目标目录"
 
 msgid "Clean up the udev database"
 msgstr ""
@@ -10441,7 +10441,7 @@ msgid "Compile an input file"
 msgstr ""
 
 msgid "Compile and run an executable product"
-msgstr ""
+msgstr "编译并运行一个可执行产品"
 
 msgid "Compile as Javascript module (default=autodetect)"
 msgstr ""
@@ -10468,7 +10468,7 @@ msgid "Compile source packages"
 msgstr ""
 
 msgid "Compile the current module"
-msgstr ""
+msgstr "编译当前模块"
 
 msgid "Compile, but don't run benchmarks"
 msgstr ""
@@ -13234,7 +13234,7 @@ msgid "Define outfile for recovered hash"
 msgstr ""
 
 msgid "Define output type of current module"
-msgstr ""
+msgstr "定义当前模块的输出类型"
 
 msgid "Define specific session name"
 msgstr ""
@@ -15148,7 +15148,7 @@ msgid "Disable progress meter"
 msgstr ""
 
 msgid "Disable progress report"
-msgstr ""
+msgstr "禁用进度报告"
 
 msgid "Disable progress reports for long running commands"
 msgstr ""
@@ -15202,7 +15202,7 @@ msgid "Disable rewriting of the DISPLAY var"
 msgstr ""
 
 msgid "Disable script 'build.cj'"
-msgstr ""
+msgstr "禁用脚本 build.cj"
 
 msgid "Disable seccomp"
 msgstr ""
@@ -15298,7 +15298,7 @@ msgid "Disable temperature and fanspeed reads and triggers"
 msgstr ""
 
 msgid "Disable test output capturing"
-msgstr ""
+msgstr "禁用测试输出捕获"
 
 msgid "Disable the 'raw' directives"
 msgstr ""
@@ -15961,7 +15961,7 @@ msgid "Display brief instructions"
 msgstr ""
 
 msgid "Display brief progress report"
-msgstr ""
+msgstr "显示简要的进度报告"
 
 msgid "Display brief summary of the available commands and options"
 msgstr ""
@@ -17011,7 +17011,7 @@ msgid "Display the number of unique colors in the image"
 msgstr ""
 
 msgid "Display the package dependencies in the source code"
-msgstr ""
+msgstr "显示源代码中的包依赖关系"
 
 msgid "Display the package's README file from /usr/share/doc"
 msgstr ""
@@ -22204,7 +22204,7 @@ msgid "Enable characters with reverse attribute as color"
 msgstr ""
 
 msgid "Enable cjlint code check"
-msgstr ""
+msgstr "启用 cjlint 代码检查"
 
 msgid "Enable collecting crash dump on expected"
 msgstr ""
@@ -22228,7 +22228,7 @@ msgid "Enable colorized output"
 msgstr ""
 
 msgid "Enable colorless result output"
-msgstr ""
+msgstr "启用无颜色的结果输出"
 
 msgid "Enable colors for dependency graph debug messages"
 msgstr ""
@@ -22243,7 +22243,7 @@ msgid "Enable compile debug version target"
 msgstr ""
 
 msgid "Enable compile debug version tests"
-msgstr ""
+msgstr "启用调试版本测试的编译"
 
 msgid "Enable compiler REPL"
 msgstr ""
@@ -22288,7 +22288,7 @@ msgid "Enable content assertions with draft >= 7"
 msgstr ""
 
 msgid "Enable coverage"
-msgstr ""
+msgstr "启用覆盖率统计"
 
 msgid "Enable coverage extension"
 msgstr ""
@@ -22375,7 +22375,7 @@ msgid "Enable debug symbols and other info"
 msgstr ""
 
 msgid "Enable debug version"
-msgstr ""
+msgstr "启用调试版本"
 
 msgid "Enable debugger"
 msgstr ""
@@ -22477,7 +22477,7 @@ msgid "Enable files system monitor feature"
 msgstr ""
 
 msgid "Enable filter test"
-msgstr ""
+msgstr "启用测试过滤器"
 
 msgid "Enable firewall given by this file"
 msgstr ""
@@ -22522,7 +22522,7 @@ msgid "Enable imgmath extension"
 msgstr ""
 
 msgid "Enable incremental compilation"
-msgstr ""
+msgstr "启用增量编译"
 
 msgid "Enable index mode"
 msgstr ""
@@ -22534,7 +22534,7 @@ msgid "Enable inlining of PLT entries for functions that are not known to bind l
 msgstr ""
 
 msgid "Enable install debug version target"
-msgstr ""
+msgstr "启用安装调试版本目标"
 
 msgid "Enable intersphinx extension"
 msgstr ""
@@ -22738,7 +22738,7 @@ msgid "Enable quiet operation"
 msgstr ""
 
 msgid "Enable random seed"
-msgstr ""
+msgstr "启用随机种子"
 
 msgid "Enable raw ring 0"
 msgstr ""
@@ -22873,7 +22873,7 @@ msgid "Enable subvolume quota support for a filesystem."
 msgstr ""
 
 msgid "Enable support of mocking classes in tests"
-msgstr ""
+msgstr "启用测试中的类模拟支持"
 
 msgid "Enable suspension support"
 msgstr ""
@@ -22894,7 +22894,7 @@ msgid "Enable the current slide indicator"
 msgstr ""
 
 msgid "Enable the customized option 'cfg'"
-msgstr ""
+msgstr "启用自定义选项 'cfg'"
 
 msgid "Enable the display of bold characters"
 msgstr ""
@@ -23005,7 +23005,7 @@ msgid "Enable use of the concurrent shell"
 msgstr ""
 
 msgid "Enable verbose"
-msgstr ""
+msgstr "启用详细输出"
 
 msgid "Enable verbose and progress meter"
 msgstr ""
@@ -27346,7 +27346,7 @@ msgid "Generate code for the SH4al-dsp, or for a SH4a without using FPU"
 msgstr ""
 
 msgid "Generate code for the given target platform"
-msgstr ""
+msgstr "为指定目标平台生成代码"
 
 msgid "Generate code for the specified ABI"
 msgstr ""
@@ -28801,7 +28801,7 @@ msgid "Help for benchmark"
 msgstr ""
 
 msgid "Help for build"
-msgstr ""
+msgstr "显示 build 的帮助信息"
 
 msgid "Help for check"
 msgstr ""
@@ -28810,7 +28810,7 @@ msgid "Help for chromastyles"
 msgstr ""
 
 msgid "Help for cjpm"
-msgstr ""
+msgstr "显示 cjpm 的帮助信息"
 
 msgid "Help for config"
 msgstr ""
@@ -28846,10 +28846,10 @@ msgid "Help for import"
 msgstr ""
 
 msgid "Help for init"
-msgstr ""
+msgstr "显示 init 的帮助信息"
 
 msgid "Help for install"
-msgstr ""
+msgstr "显示 install 的帮助信息"
 
 msgid "Help for jekyll"
 msgstr ""
@@ -28864,7 +28864,7 @@ msgid "Help for new"
 msgstr ""
 
 msgid "Help for run"
-msgstr ""
+msgstr "显示 run 的帮助信息"
 
 msgid "Help for server"
 msgstr ""
@@ -28873,7 +28873,7 @@ msgid "Help for site"
 msgstr ""
 
 msgid "Help for test"
-msgstr ""
+msgstr "显示 test 的帮助信息"
 
 msgid "Help for theme"
 msgstr ""
@@ -30778,7 +30778,7 @@ msgid "Inhibit warning messages about the use of #import"
 msgstr ""
 
 msgid "Init a new cangjie module"
-msgstr ""
+msgstr "初始化一个新的 Cangjie 模块"
 
 msgid "Init or update cache only"
 msgstr ""
@@ -30856,7 +30856,7 @@ msgid "Initialize a signed repository with your specified RSA key"
 msgstr ""
 
 msgid "Initialize a workspace's default configuration file"
-msgstr ""
+msgstr "初始化工作区的默认配置文件"
 
 msgid "Initialize all devices to a default state"
 msgstr ""
@@ -31093,7 +31093,7 @@ msgid "Install a Rust binary. Default location is $HOME/.cargo/bin"
 msgstr ""
 
 msgid "Install a cangjie binary"
-msgstr ""
+msgstr "安装一个 Cangjie 可执行文件"
 
 msgid "Install a gem into the local repository"
 msgstr ""
@@ -31147,7 +31147,7 @@ msgid "Install as a dependency"
 msgstr ""
 
 msgid "Install binary in target directory without building"
-msgstr ""
+msgstr "无需构建，直接安装目标目录中的可执行文件"
 
 msgid "Install cached packages without reboot"
 msgstr ""
@@ -32464,7 +32464,7 @@ msgid "Limit number of entries displayed (with --full)"
 msgstr ""
 
 msgid "Limit number of entries shown in progress report"
-msgstr ""
+msgstr "限制进度报告中显示的条目数量"
 
 msgid "Limit number of tags"
 msgstr ""
@@ -32977,7 +32977,7 @@ msgid "List all installed files and directories with their details"
 msgstr ""
 
 msgid "List all installed modules and their versions"
-msgstr ""
+msgstr "列出所有已安装模块及其版本"
 
 msgid "List all installed, non-relocatable schemas"
 msgstr ""
@@ -37540,7 +37540,7 @@ msgid "Name of the example target to run"
 msgstr ""
 
 msgid "Name of the executable product to run (default: main)"
-msgstr ""
+msgstr "要运行的可执行产品名称（默认：main）"
 
 msgid "Name of the launch profile to use"
 msgstr ""
@@ -38086,7 +38086,7 @@ msgid "Number of jobs"
 msgstr ""
 
 msgid "Number of jobs to spawn in parallel"
-msgstr ""
+msgstr "并行生成的任务数"
 
 msgid "Number of journal entries to show"
 msgstr ""
@@ -38254,7 +38254,7 @@ msgid "Number of worker threads"
 msgstr ""
 
 msgid "Number of workers running tests"
-msgstr ""
+msgstr "运行测试的工作线程数"
 
 msgid "Number sets BitsPerPixel value"
 msgstr ""
@@ -44515,7 +44515,7 @@ msgid "Print tally"
 msgstr ""
 
 msgid "Print tests without execution"
-msgstr ""
+msgstr "仅打印测试内容，不执行"
 
 msgid "Print text describing all the command line options instead of preprocessing anything"
 msgstr ""
@@ -51088,7 +51088,7 @@ msgid "Run benchmark of selected hash-modes"
 msgstr ""
 
 msgid "Run benchmarks in a local package or module"
-msgstr ""
+msgstr "在本地包或模块中运行基准测试"
 
 msgid "Run benchmarks instead of tests"
 msgstr ""
@@ -51547,13 +51547,13 @@ msgid "Run tests with detailed reporting; automatically sets `--max-cases` to 1"
 msgstr ""
 
 msgid "Run tests with specified tags"
-msgstr ""
+msgstr "运行带有指定标签的测试"
 
 msgid "Run tests without displaying the Microsoft TestPlatform banner"
 msgstr ""
 
 msgid "Run tests without specified tags"
-msgstr ""
+msgstr "运行不包含指定标签的测试"
 
 msgid "Run the Build.pm in a given module's path"
 msgstr ""
@@ -58306,7 +58306,7 @@ msgid "Show output as JSON"
 msgstr ""
 
 msgid "Show output for all test cases"
-msgstr ""
+msgstr "显示所有测试用例的输出"
 
 msgid "Show output in JSON"
 msgstr ""
@@ -60010,7 +60010,7 @@ msgid "Skip compile, only run tests"
 msgstr ""
 
 msgid "Skip compile, only run the executable product"
-msgstr ""
+msgstr "跳过编译，仅运行可执行产品"
 
 msgid "Skip compressing files with suffix in LIST"
 msgstr ""
@@ -61084,7 +61084,7 @@ msgid "Specify URI(s) referring to the ldap server(s)"
 msgstr ""
 
 msgid "Specify URL of installed git module"
-msgstr ""
+msgstr "指定安装的 Git 模块的 URL"
 
 msgid "Specify Windows program as the format of the output file"
 msgstr ""
@@ -61246,7 +61246,7 @@ msgid "Specify a maximum bitrate in kbps"
 msgstr ""
 
 msgid "Specify a member module of the workspace"
-msgstr ""
+msgstr "指定工作区中的成员模块"
 
 msgid "Specify a message"
 msgstr ""
@@ -61468,7 +61468,7 @@ msgid "Specify blocksize in samples"
 msgstr ""
 
 msgid "Specify branch of installed git module"
-msgstr ""
+msgstr "指定安装的 Git 模块的分支"
 
 msgid "Specify build-dir"
 msgstr ""
@@ -61516,7 +61516,7 @@ msgid "Specify commands via stdin"
 msgstr ""
 
 msgid "Specify commit ID of installed git module"
-msgstr ""
+msgstr "指定安装的 Git 模块的提交 ID"
 
 msgid "Specify common arguments to pass to sftp/scp/ssh"
 msgstr ""
@@ -61603,7 +61603,7 @@ msgid "Specify default text encoding"
 msgstr ""
 
 msgid "Specify default timeout for test cases"
-msgstr ""
+msgstr "指定测试用例的默认超时时间"
 
 msgid "Specify defect limit"
 msgstr ""
@@ -61723,7 +61723,7 @@ msgid "Specify file to save"
 msgstr ""
 
 msgid "Specify format of report"
-msgstr ""
+msgstr "指定测试报告的格式"
 
 msgid "Specify format string"
 msgstr ""
@@ -61942,7 +61942,7 @@ msgid "Specify module for new helper"
 msgstr ""
 
 msgid "Specify modules to test (default: current module)"
-msgstr ""
+msgstr "指定要测试的模块（默认：当前模块）"
 
 msgid "Specify mount point"
 msgstr ""
@@ -62014,16 +62014,16 @@ msgid "Specify parent window id"
 msgstr ""
 
 msgid "Specify path of installed binary"
-msgstr ""
+msgstr "指定安装的可执行文件路径"
 
 msgid "Specify path of source module (default: current path)"
-msgstr ""
+msgstr "指定源模块路径（默认：当前路径）"
 
 msgid "Specify path to create the module (default: current directory)"
-msgstr ""
+msgstr "指定用于创建模块的路径（默认：当前目录）"
 
 msgid "Specify path to directory of report"
-msgstr ""
+msgstr "指定测试报告目录路径"
 
 msgid "Specify path to global settings/plugins"
 msgstr ""
@@ -62089,10 +62089,10 @@ msgid "Specify printf-like format"
 msgstr ""
 
 msgid "Specify product name to install (default: all)"
-msgstr ""
+msgstr "指定要安装的产品名称（默认：全部）"
 
 msgid "Specify product name when compiling an executable file"
-msgstr ""
+msgstr "编译可执行文件时指定产品名称"
 
 msgid "Specify profession"
 msgstr ""
@@ -62155,7 +62155,7 @@ msgid "Specify root directory for rpm operations"
 msgstr ""
 
 msgid "Specify root package name (default: current directory)"
-msgstr ""
+msgstr "指定根包名（默认：当前目录）"
 
 msgid "Specify rounding factor"
 msgstr ""
@@ -62236,7 +62236,7 @@ msgid "Specify table style"
 msgstr ""
 
 msgid "Specify tag of installed git module"
-msgstr ""
+msgstr "指定安装的 Git 模块的标签"
 
 msgid "Specify target CPU and feature set"
 msgstr ""
@@ -62245,7 +62245,7 @@ msgid "Specify target architecture"
 msgstr ""
 
 msgid "Specify target directory"
-msgstr ""
+msgstr "指定目标目录"
 
 msgid "Specify target framework profile: mscorlib, netcore or netstandard"
 msgstr ""
@@ -67216,7 +67216,7 @@ msgid "Uninstall a Ruby version"
 msgstr ""
 
 msgid "Uninstall a cangjie binary"
-msgstr ""
+msgstr "卸载一个 Cangjie 可执行文件"
 
 msgid "Uninstall a gem from the local repository"
 msgstr ""
@@ -67264,10 +67264,10 @@ msgid "Unique Remote Branch"
 msgstr ""
 
 msgid "Unittest a local package or module"
-msgstr ""
+msgstr "对本地包或模块进行单元测试"
 
 msgid "Unittest for the given target platform"
-msgstr ""
+msgstr "为指定目标平台执行单元测试"
 
 msgid "Unity block size"
 msgstr ""
@@ -67573,7 +67573,7 @@ msgid "Update cache and check dependencies"
 msgstr ""
 
 msgid "Update cjpm.lock"
-msgstr ""
+msgstr "更新 cjpm.lock"
 
 msgid "Update config"
 msgstr ""
@@ -70804,7 +70804,7 @@ msgid "Verify using openSSL with authorized keys from file KEYS"
 msgstr ""
 
 msgid "Version for cjpm"
-msgstr ""
+msgstr "显示 cjpm 的版本信息"
 
 msgid "Version information"
 msgstr ""

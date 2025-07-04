@@ -1,8 +1,3 @@
-# complete -c zellij -n "__fish_use_subcommand" -l max-panes -d 'Maximum panes on screen, caution: opening more panes will close old ones' -r
-# complete -c zellij -n "__fish_use_subcommand" -l data-dir -d 'Change where zellij looks for plugins' -r -F
-
-# complete -c zellij -n "__fish_seen_subcommand_from options" -l simplified-ui -d 'Allow plugins to use a more simplified layout that is compatible with more fonts (true or false)' -r -f -a "{true	,false	}"
-# complete -c zellij -n "__fish_seen_subcommand_from options" -l theme -d 'Set the default theme' -r
 
 # cjpm.fish - Fish completion script for Cangjie Package Manager
 

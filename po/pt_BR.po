@@ -6393,6 +6393,12 @@ msgstr ""
 msgid "Arguments to pass to `xcodebuild`"
 msgstr ""
 
+msgid "Arguments to pass to the build process"
+msgstr ""
+
+msgid "Arguments to pass to the executable product"
+msgstr ""
+
 msgid "Arguments to pass to the test(s)"
 msgstr ""
 
@@ -9213,6 +9219,9 @@ msgstr ""
 msgid "Check the currently installed template packs for updates and installs them"
 msgstr ""
 
+msgid "Check the dependencies"
+msgstr ""
+
 msgid "Check the given version strings"
 msgstr ""
 
@@ -9580,6 +9589,9 @@ msgid "Clean up releases, stemcells, disks, etc."
 msgstr ""
 
 msgid "Clean up the files that Cobertura Maven Plugin has created during instrumentation"
+msgstr ""
+
+msgid "Clean up the target directory"
 msgstr ""
 
 msgid "Clean up the udev database"
@@ -10377,6 +10389,9 @@ msgstr ""
 msgid "Compile an input file"
 msgstr ""
 
+msgid "Compile and run an executable product"
+msgstr ""
+
 msgid "Compile as Javascript module (default=autodetect)"
 msgstr ""
 
@@ -10399,6 +10414,9 @@ msgid "Compile scripts automatically"
 msgstr ""
 
 msgid "Compile source packages"
+msgstr ""
+
+msgid "Compile the current module"
 msgstr ""
 
 msgid "Compile, but don't run benchmarks"
@@ -13158,6 +13176,9 @@ msgstr ""
 msgid "Define outfile for recovered hash"
 msgstr ""
 
+msgid "Define output type of current module"
+msgstr ""
+
 msgid "Define specific session name"
 msgstr ""
 
@@ -15060,6 +15081,9 @@ msgstr ""
 msgid "Disable progress meter"
 msgstr ""
 
+msgid "Disable progress report"
+msgstr ""
+
 msgid "Disable progress reports for long running commands"
 msgstr ""
 
@@ -15109,6 +15133,9 @@ msgid "Disable reverse-wraparound"
 msgstr ""
 
 msgid "Disable rewriting of the DISPLAY var"
+msgstr ""
+
+msgid "Disable script 'build.cj'"
 msgstr ""
 
 msgid "Disable seccomp"
@@ -15202,6 +15229,9 @@ msgid "Disable syntax highlighting"
 msgstr ""
 
 msgid "Disable temperature and fanspeed reads and triggers"
+msgstr ""
+
+msgid "Disable test output capturing"
 msgstr ""
 
 msgid "Disable the 'raw' directives"
@@ -15862,6 +15892,9 @@ msgid "Display author email"
 msgstr ""
 
 msgid "Display brief instructions"
+msgstr ""
+
+msgid "Display brief progress report"
 msgstr ""
 
 msgid "Display brief summary of the available commands and options"
@@ -16909,6 +16942,9 @@ msgid "Display the notifications on a said device"
 msgstr ""
 
 msgid "Display the number of unique colors in the image"
+msgstr ""
+
+msgid "Display the package dependencies in the source code"
 msgstr ""
 
 msgid "Display the package's README file from /usr/share/doc"
@@ -22070,6 +22106,9 @@ msgstr ""
 msgid "Enable characters with reverse attribute as color"
 msgstr ""
 
+msgid "Enable cjlint code check"
+msgstr ""
+
 msgid "Enable collecting crash dump on expected"
 msgstr ""
 
@@ -22091,6 +22130,9 @@ msgstr ""
 msgid "Enable colorized output"
 msgstr ""
 
+msgid "Enable colorless result output"
+msgstr ""
+
 msgid "Enable colors for dependency graph debug messages"
 msgstr ""
 
@@ -22098,6 +22140,12 @@ msgid "Enable compact field lists"
 msgstr ""
 
 msgid "Enable compact lists"
+msgstr ""
+
+msgid "Enable compile debug version target"
+msgstr ""
+
+msgid "Enable compile debug version tests"
 msgstr ""
 
 msgid "Enable compiler REPL"
@@ -22140,6 +22188,9 @@ msgid "Enable constraints that allow a TypeScript project to be used with projec
 msgstr ""
 
 msgid "Enable content assertions with draft >= 7"
+msgstr ""
+
+msgid "Enable coverage"
 msgstr ""
 
 msgid "Enable coverage extension"
@@ -22224,6 +22275,9 @@ msgid "Enable debug output"
 msgstr ""
 
 msgid "Enable debug symbols and other info"
+msgstr ""
+
+msgid "Enable debug version"
 msgstr ""
 
 msgid "Enable debugger"
@@ -22325,6 +22379,9 @@ msgstr ""
 msgid "Enable files system monitor feature"
 msgstr ""
 
+msgid "Enable filter test"
+msgstr ""
+
 msgid "Enable firewall given by this file"
 msgstr ""
 
@@ -22367,6 +22424,9 @@ msgstr ""
 msgid "Enable imgmath extension"
 msgstr ""
 
+msgid "Enable incremental compilation"
+msgstr ""
+
 msgid "Enable index mode"
 msgstr ""
 
@@ -22374,6 +22434,9 @@ msgid "Enable initial response in SASL authentication"
 msgstr ""
 
 msgid "Enable inlining of PLT entries for functions that are not known to bind locally"
+msgstr ""
+
+msgid "Enable install debug version target"
 msgstr ""
 
 msgid "Enable intersphinx extension"
@@ -22577,6 +22640,9 @@ msgstr ""
 msgid "Enable quiet operation"
 msgstr ""
 
+msgid "Enable random seed"
+msgstr ""
+
 msgid "Enable raw ring 0"
 msgstr ""
 
@@ -22709,6 +22775,9 @@ msgstr ""
 msgid "Enable subvolume quota support for a filesystem."
 msgstr ""
 
+msgid "Enable support of mocking classes in tests"
+msgstr ""
+
 msgid "Enable suspension support"
 msgstr "Enable suspension support"
 
@@ -22725,6 +22794,9 @@ msgid "Enable the bitrate management engine"
 msgstr ""
 
 msgid "Enable the current slide indicator"
+msgstr ""
+
+msgid "Enable the customized option 'cfg'"
 msgstr ""
 
 msgid "Enable the display of bold characters"
@@ -27160,6 +27232,9 @@ msgstr ""
 msgid "Generate code for the SH4al-dsp, or for a SH4a without using FPU"
 msgstr ""
 
+msgid "Generate code for the given target platform"
+msgstr ""
+
 msgid "Generate code for the specified ABI"
 msgstr ""
 
@@ -28609,10 +28684,16 @@ msgstr ""
 msgid "Help for benchmark"
 msgstr ""
 
+msgid "Help for build"
+msgstr ""
+
 msgid "Help for check"
 msgstr ""
 
 msgid "Help for chromastyles"
+msgstr ""
+
+msgid "Help for cjpm"
 msgstr ""
 
 msgid "Help for config"
@@ -28648,6 +28729,12 @@ msgstr ""
 msgid "Help for import"
 msgstr ""
 
+msgid "Help for init"
+msgstr ""
+
+msgid "Help for install"
+msgstr ""
+
 msgid "Help for jekyll"
 msgstr ""
 
@@ -28660,10 +28747,16 @@ msgstr ""
 msgid "Help for new"
 msgstr ""
 
+msgid "Help for run"
+msgstr ""
+
 msgid "Help for server"
 msgstr ""
 
 msgid "Help for site"
+msgstr ""
+
+msgid "Help for test"
 msgstr ""
 
 msgid "Help for theme"
@@ -30562,6 +30655,9 @@ msgstr ""
 msgid "Inhibit warning messages about the use of #import"
 msgstr ""
 
+msgid "Init a new cangjie module"
+msgstr ""
+
 msgid "Init or update cache only"
 msgstr ""
 
@@ -30635,6 +30731,9 @@ msgid "Initialize a repo for serving files"
 msgstr ""
 
 msgid "Initialize a signed repository with your specified RSA key"
+msgstr ""
+
+msgid "Initialize a workspace's default configuration file"
 msgstr ""
 
 msgid "Initialize all devices to a default state"
@@ -30871,6 +30970,9 @@ msgstr ""
 msgid "Install a Rust binary. Default location is $HOME/.cargo/bin"
 msgstr ""
 
+msgid "Install a cangjie binary"
+msgstr ""
+
 msgid "Install a gem into the local repository"
 msgstr ""
 
@@ -30920,6 +31022,9 @@ msgid "Install artifacts with the specified profile"
 msgstr ""
 
 msgid "Install as a dependency"
+msgstr ""
+
+msgid "Install binary in target directory without building"
 msgstr ""
 
 msgid "Install cached packages without reboot"
@@ -32224,6 +32329,9 @@ msgstr ""
 msgid "Limit number of entries displayed (with --full)"
 msgstr ""
 
+msgid "Limit number of entries shown in progress report"
+msgstr ""
+
 msgid "Limit number of tags"
 msgstr ""
 
@@ -32729,6 +32837,9 @@ msgid "List all installed files and directories"
 msgstr ""
 
 msgid "List all installed files and directories with their details"
+msgstr ""
+
+msgid "List all installed modules and their versions"
 msgstr ""
 
 msgid "List all installed, non-relocatable schemas"
@@ -37279,6 +37390,9 @@ msgstr ""
 msgid "Name of the example target to run"
 msgstr ""
 
+msgid "Name of the executable product to run (default: main)"
+msgstr ""
+
 msgid "Name of the launch profile to use"
 msgstr ""
 
@@ -37819,6 +37933,9 @@ msgstr ""
 msgid "Number of jobs"
 msgstr ""
 
+msgid "Number of jobs to spawn in parallel"
+msgstr ""
+
 msgid "Number of journal entries to show"
 msgstr ""
 
@@ -37982,6 +38099,9 @@ msgid "Number of uploads to fill out to with optimistic unchokes"
 msgstr "Number of uploads to fill out to with optimistic unchokes"
 
 msgid "Number of worker threads"
+msgstr ""
+
+msgid "Number of workers running tests"
 msgstr ""
 
 msgid "Number sets BitsPerPixel value"
@@ -44220,6 +44340,9 @@ msgstr ""
 
 msgid "Print tally"
 msgstr "Print tally"
+
+msgid "Print tests without execution"
+msgstr ""
 
 msgid "Print text describing all the command line options instead of preprocessing anything"
 msgstr ""
@@ -50779,6 +50902,9 @@ msgstr ""
 msgid "Run benchmark of selected hash-modes"
 msgstr ""
 
+msgid "Run benchmarks in a local package or module"
+msgstr ""
+
 msgid "Run benchmarks instead of tests"
 msgstr ""
 
@@ -51235,7 +51361,13 @@ msgstr ""
 msgid "Run tests with detailed reporting; automatically sets `--max-cases` to 1"
 msgstr ""
 
+msgid "Run tests with specified tags"
+msgstr ""
+
 msgid "Run tests without displaying the Microsoft TestPlatform banner"
+msgstr ""
+
+msgid "Run tests without specified tags"
 msgstr ""
 
 msgid "Run the Build.pm in a given module's path"
@@ -57973,6 +58105,9 @@ msgstr ""
 msgid "Show output as JSON"
 msgstr ""
 
+msgid "Show output for all test cases"
+msgstr ""
+
 msgid "Show output in JSON"
 msgstr ""
 
@@ -59662,6 +59797,12 @@ msgstr ""
 msgid "Skip compilation"
 msgstr ""
 
+msgid "Skip compile, only run tests"
+msgstr ""
+
+msgid "Skip compile, only run the executable product"
+msgstr ""
+
 msgid "Skip compressing files with suffix in LIST"
 msgstr ""
 
@@ -60733,6 +60874,9 @@ msgstr ""
 msgid "Specify URI(s) referring to the ldap server(s)"
 msgstr ""
 
+msgid "Specify URL of installed git module"
+msgstr ""
+
 msgid "Specify Windows program as the format of the output file"
 msgstr ""
 
@@ -60890,6 +61034,9 @@ msgid "Specify a match to use"
 msgstr ""
 
 msgid "Specify a maximum bitrate in kbps"
+msgstr ""
+
+msgid "Specify a member module of the workspace"
 msgstr ""
 
 msgid "Specify a message"
@@ -61111,6 +61258,9 @@ msgstr ""
 msgid "Specify blocksize in samples"
 msgstr ""
 
+msgid "Specify branch of installed git module"
+msgstr ""
+
 msgid "Specify build-dir"
 msgstr ""
 
@@ -61154,6 +61304,9 @@ msgid "Specify commands to run"
 msgstr ""
 
 msgid "Specify commands via stdin"
+msgstr ""
+
+msgid "Specify commit ID of installed git module"
 msgstr ""
 
 msgid "Specify common arguments to pass to sftp/scp/ssh"
@@ -61238,6 +61391,9 @@ msgid "Specify debugging type"
 msgstr ""
 
 msgid "Specify default text encoding"
+msgstr ""
+
+msgid "Specify default timeout for test cases"
 msgstr ""
 
 msgid "Specify defect limit"
@@ -61355,6 +61511,9 @@ msgid "Specify file format to compress/decompress"
 msgstr ""
 
 msgid "Specify file to save"
+msgstr ""
+
+msgid "Specify format of report"
 msgstr ""
 
 msgid "Specify format string"
@@ -61576,6 +61735,9 @@ msgstr ""
 msgid "Specify module for new helper"
 msgstr ""
 
+msgid "Specify modules to test (default: current module)"
+msgstr ""
+
 msgid "Specify mount point"
 msgstr ""
 
@@ -61642,6 +61804,18 @@ msgstr ""
 msgid "Specify parent window id"
 msgstr ""
 
+msgid "Specify path of installed binary"
+msgstr ""
+
+msgid "Specify path of source module (default: current path)"
+msgstr ""
+
+msgid "Specify path to create the module (default: current directory)"
+msgstr ""
+
+msgid "Specify path to directory of report"
+msgstr ""
+
 msgid "Specify path to global settings/plugins"
 msgstr ""
 
@@ -61705,6 +61879,12 @@ msgstr ""
 msgid "Specify printf-like format"
 msgstr ""
 
+msgid "Specify product name to install (default: all)"
+msgstr ""
+
+msgid "Specify product name when compiling an executable file"
+msgstr ""
+
 msgid "Specify profession"
 msgstr ""
 
@@ -61763,6 +61943,9 @@ msgid "Specify result cache path and filename"
 msgstr ""
 
 msgid "Specify root directory for rpm operations"
+msgstr ""
+
+msgid "Specify root package name (default: current directory)"
 msgstr ""
 
 msgid "Specify rounding factor"
@@ -61843,10 +62026,16 @@ msgstr ""
 msgid "Specify table style"
 msgstr ""
 
+msgid "Specify tag of installed git module"
+msgstr ""
+
 msgid "Specify target CPU and feature set"
 msgstr ""
 
 msgid "Specify target architecture"
+msgstr ""
+
+msgid "Specify target directory"
 msgstr ""
 
 msgid "Specify target framework profile: mscorlib, netcore or netstandard"
@@ -66808,6 +66997,9 @@ msgstr ""
 msgid "Uninstall a Ruby version"
 msgstr ""
 
+msgid "Uninstall a cangjie binary"
+msgstr ""
+
 msgid "Uninstall a gem from the local repository"
 msgstr ""
 
@@ -66851,6 +67043,12 @@ msgid "Uninstalls archives"
 msgstr ""
 
 msgid "Unique Remote Branch"
+msgstr ""
+
+msgid "Unittest a local package or module"
+msgstr ""
+
+msgid "Unittest for the given target platform"
 msgstr ""
 
 msgid "Unity block size"
@@ -67151,6 +67349,9 @@ msgid "Update before running"
 msgstr ""
 
 msgid "Update cache and check dependencies"
+msgstr ""
+
+msgid "Update cjpm.lock"
 msgstr ""
 
 msgid "Update config"
@@ -70376,6 +70577,9 @@ msgid "Verify the partition map layout of a whole disk"
 msgstr ""
 
 msgid "Verify using openSSL with authorized keys from file KEYS"
+msgstr ""
+
+msgid "Version for cjpm"
 msgstr ""
 
 msgid "Version information"

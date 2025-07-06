@@ -507,7 +507,7 @@ Command mode is also known as normal mode.
 
 - :kbd:`backspace` moves the cursor left.
 
-- :kbd:`g` / :kbd:`G` moves the cursor to the beginning/end of the commandline, respectively.
+- :kbd:`g,g` / :kbd:`G` moves the cursor to the beginning/end of the commandline, respectively.
 
 - :kbd:`:,q` exits fish.
 

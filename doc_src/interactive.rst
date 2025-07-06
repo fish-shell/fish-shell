@@ -509,6 +509,12 @@ Command mode is also known as normal mode.
 
 - :kbd:`g,g` / :kbd:`G` moves the cursor to the beginning/end of the commandline, respectively.
 
+- :kbd:`~` toggles the case (upper/lower) of the character and moves to the next character.
+
+- :kbd:`g,u` lowercases to the end of the word.
+
+- :kbd:`g,U` uppercases to the end of the word.
+
 - :kbd:`:,q` exits fish.
 
 .. _vi-mode-insert:

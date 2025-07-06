@@ -557,6 +557,10 @@ Visual mode
 
 - :kbd:`~` toggles the case (upper/lower) on the selection, and enters :ref:`command mode <vi-mode-command>`.
 
+- :kbd:`g,u` lowercases the selection, and enters :ref:`command mode <vi-mode-command>`.
+
+- :kbd:`g,U` uppercases the selection, and enters :ref:`command mode <vi-mode-command>`.
+
 - :kbd:`",*,y` copies the selection to the clipboard, and enters :ref:`command mode <vi-mode-command>`.
 
 .. _custom-binds:

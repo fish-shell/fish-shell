@@ -7177,6 +7177,9 @@ msgstr ""
 msgid "Background color [color]"
 msgstr ""
 
+msgid "Background color when decors are used"
+msgstr ""
+
 msgid "Background colour (6-digit hex)"
 msgstr ""
 
@@ -10036,6 +10039,9 @@ msgstr ""
 msgid "Comma-separated list of metadata to copy, if present"
 msgstr ""
 
+msgid "Comma-separated list of mirrors to use for this run"
+msgstr ""
+
 msgid "Comma-separated list of package installation states to follow recursively"
 msgstr "Komma-separarad lista av paketinstallationstillstånd att följa rekursivt"
 
@@ -10106,6 +10112,9 @@ msgid "Command to run"
 msgstr "Kommando att utföra"
 
 msgid "Command to run and exit"
+msgstr ""
+
+msgid "Command to run instead of shell"
 msgstr ""
 
 msgid "Command to run on launch"
@@ -12514,6 +12523,9 @@ msgstr ""
 msgid "Creates Java classes and deployment descriptor templates from a WSDL file"
 msgstr ""
 
+msgid "Creates a CPAN.pm autobundle with CPAN::Shell->autobundle"
+msgstr ""
+
 msgid "Creates a PMD report"
 msgstr ""
 
@@ -12972,6 +12984,9 @@ msgstr ""
 
 msgid "Decompress to stdout"
 msgstr "Dekomprimera till standard ut"
+
+msgid "Decorate animation"
+msgstr ""
 
 msgid "Decorate the montage image with a title [string]"
 msgstr ""
@@ -18916,6 +18931,9 @@ msgstr ""
 msgid "Do not synthesize or include glibc NSS data"
 msgstr ""
 
+msgid "Do not test modules. Simply install them"
+msgstr ""
+
 msgid "Do not throw error on deleting non-existing object note"
 msgstr ""
 
@@ -21076,6 +21094,9 @@ msgstr ""
 msgid "Download infos from each binary pkg. Implies -k"
 msgstr ""
 
+msgid "Download latest distribution of module to current directory"
+msgstr ""
+
 msgid "Download latest ostree & RPM data, skip deploy"
 msgstr ""
 
@@ -21187,6 +21208,9 @@ msgstr ""
 msgid "Drop capabilities from the container"
 msgstr ""
 
+msgid "Drop in the CPAN.pm shell"
+msgstr ""
+
 msgid "Drop the module cache before liberating"
 msgstr ""
 
@@ -21260,6 +21284,9 @@ msgid "Dump all IR"
 msgstr ""
 
 msgid "Dump all measurements to save files"
+msgstr ""
+
+msgid "Dump all the namespaces to standard output"
 msgstr ""
 
 msgid "Dump an entire subpath to stdout"
@@ -21401,6 +21428,9 @@ msgid "Dump the code generated for the capture filter in a human-readable form, 
 msgstr ""
 
 msgid "Dump the compiled packet-matching code in a human readable form"
+msgstr ""
+
+msgid "Dump the configuration in the same format that CPAN.pm uses"
 msgstr ""
 
 msgid "Dump the contents of specified section as bytes"
@@ -22907,6 +22937,9 @@ msgid "Enable verbose"
 msgstr ""
 
 msgid "Enable verbose and progress meter"
+msgstr ""
+
+msgid "Enable verbose insights for the curious"
 msgstr ""
 
 msgid "Enable verbose log messages"
@@ -25210,7 +25243,13 @@ msgstr ""
 msgid "Find and add results to current queue"
 msgstr ""
 
+msgid "Find and the best mirrors available"
+msgstr ""
+
 msgid "Find as good common ancestors as possible for a merge"
+msgstr ""
+
+msgid "Find close matches to named module. Requires Text::Levenshtein or others"
 msgstr ""
 
 msgid "Find commits yet to be applied to upstream"
@@ -26260,6 +26299,9 @@ msgstr ""
 msgid "Force the solver to find a solution (even an aggressive one)"
 msgstr ""
 
+msgid "Force the specified action"
+msgstr ""
+
 msgid "Force the stream to be received as a clone of the given snapshot"
 msgstr ""
 
@@ -27112,6 +27154,9 @@ msgstr ""
 msgid "Generate big-endian code"
 msgstr ""
 
+msgid "Generate both gif and mp4 video"
+msgstr ""
+
 msgid "Generate code coverage report in Clover XML format"
 msgstr ""
 
@@ -27407,6 +27452,9 @@ msgid "Generate object file even after errors"
 msgstr ""
 
 msgid "Generate only declarations, not parser code"
+msgstr ""
+
+msgid "Generate only mp4 video, not gif"
 msgstr ""
 
 msgid "Generate output compatible with the NeXT runtime"
@@ -29204,6 +29252,9 @@ msgid "Icon name for user"
 msgstr ""
 
 msgid "Id of the virtual UDB on <host>"
+msgstr ""
+
+msgid "Id of window to capture"
 msgstr ""
 
 msgid "Identical to '--multifile --encrypt'"
@@ -31232,6 +31283,9 @@ msgid "Install source packages and their build dependencies"
 msgstr ""
 
 msgid "Install specific distributions by name or path"
+msgstr ""
+
+msgid "Install specified module"
 msgstr ""
 
 msgid "Install strategy"
@@ -34501,6 +34555,9 @@ msgstr ""
 msgid "List the local USB gadgets bound to usbip-vudc"
 msgstr ""
 
+msgid "List the modules by the specified authors"
+msgstr ""
+
 msgid "List the name of each instance only, one per line"
 msgstr ""
 
@@ -34643,6 +34700,9 @@ msgid "List virtual packages provided"
 msgstr ""
 
 msgid "List vols"
+msgstr ""
+
+msgid "List windows available for recording by their id"
 msgstr ""
 
 msgid "List workspaces"
@@ -34891,6 +34951,9 @@ msgstr ""
 msgid "Live monitor for what's going on"
 msgstr ""
 
+msgid "Load 'local::lib' (think like '-I' for loading lib paths)"
+msgstr ""
+
 msgid "Load .rc file"
 msgstr ""
 
@@ -34952,6 +35015,9 @@ msgid "Load driver state"
 msgstr ""
 
 msgid "Load encryption key for dataset"
+msgstr ""
+
+msgid "Load file with CPAN configuration data"
 msgstr ""
 
 msgid "Load helper default settings"
@@ -35822,6 +35888,9 @@ msgid "Make the packet output packet-buffered"
 msgstr ""
 
 msgid "Make the result of a division yielding a remainder have the same sign as the divisor"
+msgstr ""
+
+msgid "Make the specified modules"
 msgstr ""
 
 msgid "Make the tag a \"branch\" tag, allowing concurrent development."
@@ -37427,6 +37496,9 @@ msgid "Names additional files that don't directly affect code generation but may
 msgstr ""
 
 msgid "Names of the attributes to show"
+msgstr ""
+
+msgid "Natural typing, disables idle detection and sampling optimization"
 msgstr ""
 
 msgid "Navigate to changed content file on live browser reload"
@@ -39619,6 +39691,9 @@ msgstr "Utdatafil"
 msgid "Output file (default: stdout)"
 msgstr ""
 
+msgid "Output file (without extension); defaults to t-rec"
+msgstr ""
+
 msgid "Output file for debugging rules"
 msgstr ""
 
@@ -41185,6 +41260,12 @@ msgstr ""
 msgid "Pause scrubbing"
 msgstr ""
 
+msgid "Pause time at end of animation"
+msgstr ""
+
+msgid "Pause time at start of animation"
+msgstr ""
+
 msgid "Pauses after execution"
 msgstr ""
 
@@ -41618,6 +41699,9 @@ msgid "Ping as soon as reply is received"
 msgstr ""
 
 msgid "Ping npm registry"
+msgstr ""
+
+msgid "Ping the configured mirrors and print a report"
 msgstr ""
 
 msgid "Ping with source IP address 0.0.0.0"
@@ -43127,6 +43211,9 @@ msgid "Print detailed help information"
 msgstr ""
 
 msgid "Print detailed information about each command"
+msgstr ""
+
+msgid "Print detailed information about the cpan client"
 msgstr ""
 
 msgid "Print detailed information about the image"
@@ -44654,6 +44741,9 @@ msgid "Print the result as a table"
 msgstr ""
 
 msgid "Print the scons version information"
+msgstr ""
+
+msgid "Print the script version and CPAN.pm version then exit"
 msgstr ""
 
 msgid "Print the set command used"
@@ -46402,6 +46492,9 @@ msgstr ""
 msgid "Quiet mode, implies -N"
 msgstr ""
 
+msgid "Quiet mode, suppresses the banner"
+msgstr ""
+
 msgid "Quiet mode. Refresh interval 2 seconds"
 msgstr ""
 
@@ -47141,6 +47234,9 @@ msgid "Recognize Qt format strings (only language C++)"
 msgstr ""
 
 msgid "Recompile every Sass file, even if the CSS file is newer"
+msgstr ""
+
+msgid "Recompiles dynamically loaded modules with CPAN::Shell->recompile"
 msgstr ""
 
 msgid "Recompress archive to smaller"
@@ -50743,6 +50839,9 @@ msgstr ""
 msgid "Run a Read-Eval Loop without printing results."
 msgstr ""
 
+msgid "Run a `make test` on the specified modules"
+msgstr ""
+
 msgid "Run a benchmark"
 msgstr ""
 
@@ -51581,6 +51680,9 @@ msgid "Runs a Canoo WebTest defined in an ANT script"
 msgstr ""
 
 msgid "Runs a Canoo WebTest in a loop until an error or failure occurs"
+msgstr ""
+
+msgid "Runs a `make clean` in the specified modules directories"
 msgstr ""
 
 msgid "Runs a multiplayer game"
@@ -57853,6 +57955,9 @@ msgstr "Visa ändringstid"
 msgid "Show modified files in the output"
 msgstr ""
 
+msgid "Show module details"
+msgstr ""
+
 msgid "Show more information about the subvolume"
 msgstr ""
 
@@ -58190,6 +58295,9 @@ msgid "Show preview of the proposed null safety changes in the console"
 msgstr ""
 
 msgid "Show previous settime entries"
+msgstr ""
+
+msgid "Show primary maintainer for specified module"
 msgstr ""
 
 msgid "Show print dialog"
@@ -58585,6 +58693,9 @@ msgstr ""
 msgid "Show test commands only"
 msgstr ""
 
+msgid "Show the Changes files for specified module"
+msgstr ""
+
 msgid "Show the DPP state"
 msgstr ""
 
@@ -58775,6 +58886,9 @@ msgid "Show the notes that annotate the commit"
 msgstr ""
 
 msgid "Show the operating system label"
+msgstr ""
+
+msgid "Show the out-of-date modules"
 msgstr ""
 
 msgid "Show the package files for PKG"
@@ -66484,6 +66598,9 @@ msgstr ""
 msgid "Turn off -w, even if it was turned on implicitly"
 msgstr ""
 
+msgid "Turn off CPAN.pm's attempts to lock anything"
+msgstr ""
+
 msgid "Turn off FTP globbing"
 msgstr "Använd inte filmatchning i FTP"
 
@@ -67667,6 +67784,9 @@ msgid "Upgrade all eligible pools, enabling all supported features"
 msgstr ""
 
 msgid "Upgrade all installed AUR packages"
+msgstr ""
+
+msgid "Upgrade all installed modules"
 msgstr ""
 
 msgid "Upgrade all of the installed packages or just those listed"
@@ -75299,6 +75419,9 @@ msgid "list all available queues"
 msgstr ""
 
 msgid "list all guards in series file"
+msgstr ""
+
+msgid "list all installed modules with their versions"
 msgstr ""
 
 msgid "list all installed packages and their versions"

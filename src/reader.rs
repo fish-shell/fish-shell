@@ -3574,6 +3574,33 @@ impl<'a> Reader<'a> {
                     self.update_buff_pos(elt, Some(buff_pos));
                 }
             }
+            rl::UpcaseSelection | rl::DowncaseSelection => {
+                let (elt, el) = self.active_edit_line();
+
+                // Check that we have an active selection and get the bounds.
+                if let Some(selection) = self.get_selection() {
+                    let text = &el.text().as_char_slice()[selection.clone()];
+                    let replacement = if c == rl::UpcaseSelection {
+                        WString::from_iter(text.iter().flat_map(|c| c.to_uppercase()))
+                    } else {
+                        WString::from_iter(text.iter().flat_map(|c| c.to_lowercase()))
+                    };
+
+                    let buff_pos = el.position();
+                    self.replace_substring(elt, selection, replacement);
+
+                    // Restore the buffer position since replace_substring moves
+                    // the buffer position ahead of the replaced text.
+                    // Note: This does not take string length changes into account.
+                    // E.g.: When the cursor was at the right of the selection,
+                    // the selection contains 'ẞ', which is uppercased into 'SS',
+                    // the cursor will stay at the same offset, but it will not be on the same
+                    // character as before.
+                    // The position calculations work on codepoints rather than graphemes, which can
+                    // result in additional issues.
+                    self.update_buff_pos(elt, Some(buff_pos));
+                }
+            }
             rl::UpcaseWord | rl::DowncaseWord | rl::CapitalizeWord => {
                 let (elt, el) = self.active_edit_line();
                 // For capitalize_word, whether we've capitalized a character so far.

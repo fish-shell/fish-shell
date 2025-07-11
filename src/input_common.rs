@@ -108,6 +108,8 @@ pub enum ReadlineCmd {
     DowncaseWord,
     CapitalizeWord,
     TogglecaseChar,
+    UpcaseSelection,
+    DowncaseSelection,
     TogglecaseSelection,
     Execute,
     BeginningOfBuffer,

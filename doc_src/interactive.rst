@@ -507,7 +507,13 @@ Command mode is also known as normal mode.
 
 - :kbd:`backspace` moves the cursor left.
 
-- :kbd:`g` / :kbd:`G` moves the cursor to the beginning/end of the commandline, respectively.
+- :kbd:`g,g` / :kbd:`G` moves the cursor to the beginning/end of the commandline, respectively.
+
+- :kbd:`~` toggles the case (upper/lower) of the character and moves to the next character.
+
+- :kbd:`g,u` lowercases to the end of the word.
+
+- :kbd:`g,U` uppercases to the end of the word.
 
 - :kbd:`:,q` exits fish.
 
@@ -550,6 +556,10 @@ Visual mode
 - :kbd:`y` copies the selection to the :ref:`killring`, and enters :ref:`command mode <vi-mode-command>`.
 
 - :kbd:`~` toggles the case (upper/lower) on the selection, and enters :ref:`command mode <vi-mode-command>`.
+
+- :kbd:`g,u` lowercases the selection, and enters :ref:`command mode <vi-mode-command>`.
+
+- :kbd:`g,U` uppercases the selection, and enters :ref:`command mode <vi-mode-command>`.
 
 - :kbd:`",*,y` copies the selection to the clipboard, and enters :ref:`command mode <vi-mode-command>`.
 

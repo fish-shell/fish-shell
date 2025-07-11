@@ -38,8 +38,6 @@ bitflags! {
     pub struct ExpandFlags : u16 {
         /// Fail expansion if there is a command substitution.
         const FAIL_ON_CMDSUBST = 1 << 0;
-        /// Skip command substitutions.
-        const SKIP_CMDSUBST = 1 << 14;
         /// Skip variable expansion.
         const SKIP_VARIABLES = 1 << 1;
         /// Skip wildcard expansion.
@@ -75,6 +73,8 @@ bitflags! {
         const SPECIAL_FOR_COMMAND = 1 << 13;
         /// The token has an unclosed brace, so don't add a space.
         const NO_SPACE_FOR_UNCLOSED_BRACE = 1 << 14;
+        /// Skip command substitutions.
+        const SKIP_CMDSUBST = 1 << 15;
     }
 }
 

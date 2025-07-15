@@ -1,5 +1,6 @@
 complete -c fish_indent -s h -l help -d 'Display help and exit'
 complete -c fish_indent -s v -l version -d 'Display version and exit'
+complete -c fish_indent -s c -l check -d 'Do not indent, only return 0 if the code is already indented as fish_indent would'
 complete -c fish_indent -s i -l no-indent -d 'Do not indent output, only reformat into one job per line'
 complete -c fish_indent -l only-indent -d 'Do not reformat, only indent lines'
 complete -c fish_indent -l only-unindent -d 'Do not reformat, only unindent lines'

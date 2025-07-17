@@ -315,7 +315,7 @@ def unparse_color(col):
     if col["bold"]:
         ret += " --bold"
     if col["underline"] is not None:
-        ret += " --underline=" + col["underline"]
+        ret += " --underline=" + str(col["underline"])
     if col["italics"]:
         ret += " --italics"
     if col["dim"]:

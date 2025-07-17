@@ -614,7 +614,7 @@ impl Parser {
         let mut execution_context =
             ExecutionContext::new(ps.clone(), block_io.clone(), Rc::clone(&line_counter));
 
-        terminal_protocols_disable_ifn();
+        terminal_protocols_disable_ifn(false);
 
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().exec_count;

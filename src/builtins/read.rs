@@ -248,7 +248,7 @@ fn read_interactive(
 
         reader_readline(parser, nchars)
     };
-    terminal_protocols_disable_ifn();
+    terminal_protocols_disable_ifn(false);
     if let Some(line) = mline {
         *buff = line;
         if nchars > 0 && nchars < buff.len() {

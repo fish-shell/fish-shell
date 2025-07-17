@@ -3,7 +3,7 @@ use libc::VERASE;
 use crate::{
     common::{escape_string, EscapeFlags, EscapeStringStyle},
     fallback::fish_wcwidth,
-    reader::TERMINAL_MODE_ON_STARTUP,
+    reader::safe_get_terminal_mode_on_startup,
     wchar::{decode_byte_from_char, prelude::*},
     wutil::{fish_is_pua, fish_wcstoul},
 };
@@ -169,8 +169,10 @@ pub(crate) fn canonicalize_keyed_control_char(c: char) -> char {
     if c == ' ' {
         return Space;
     }
-    if c == char::from(TERMINAL_MODE_ON_STARTUP.lock().unwrap().c_cc[VERASE]) {
-        return Backspace;
+    if let Some(tm) = safe_get_terminal_mode_on_startup() {
+        if c == char::from(tm.c_cc[VERASE]) {
+            return Backspace;
+        }
     }
     if c == char::from(127) {
         // when it's not backspace

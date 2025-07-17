@@ -749,7 +749,7 @@ pub fn terminal_protocols_enable_ifn() {
     reader_current_data().map(|data| data.save_screen_state());
 }
 
-pub(crate) fn terminal_protocols_disable_ifn() {
+pub(crate) fn terminal_protocols_disable_ifn(in_signal_handler: bool) {
     if !TERMINAL_PROTOCOLS.load(Ordering::Acquire) {
         return;
     }
@@ -784,7 +784,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     if IS_TMUX.load() {
         let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004l".as_bytes());
     }
-    if is_main_thread() {
+    if !in_signal_handler && is_main_thread() {
         reader_current_data().map(|data| data.save_screen_state());
     }
     TERMINAL_PROTOCOLS.store(false, Ordering::Release);

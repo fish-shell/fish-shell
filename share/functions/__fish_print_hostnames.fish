@@ -76,6 +76,11 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
             set -l new_paths
             for path in $paths
+                # while ssh_config is using brackets to resolve env, they should be removed
+                # example
+                # in ssh_config: ${SOME_PATH}
+                # in fish:       $SOME_PATH
+                set path (string replace -r '\${([^}]+)}' '$1' $path)
                 set -l expanded_path
                 # Scope "relative" paths in accordance to ssh path resolution
                 if string match -qrv '^[~/]' $path

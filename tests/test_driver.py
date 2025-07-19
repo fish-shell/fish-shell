@@ -213,7 +213,9 @@ async def main():
                     result = await task
                 except Exception as e:
                     arg = task.get_name()
-                    result = TestFail(arg, None, f"Test '{arg}' raised an exception: {e}")
+                    result = TestFail(
+                        arg, None, f"Test '{arg}' raised an exception: {e}"
+                    )
                 # TODO(python>3.8): use match statement
                 if isinstance(result, TestSkip):
                     arg = result.arg

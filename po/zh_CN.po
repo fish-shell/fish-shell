@@ -18151,6 +18151,9 @@ msgstr "不包括默认库文件(lib.d.ts)"
 msgid "Do not indent output, only reformat into one job per line"
 msgstr "不缩进输出, 只重排为每行一个任务"
 
+msgid "Do not indent, only return 0 if the code is already indented as fish_indent would"
+msgstr ""
+
 msgid "Do not init if restore fails"
 msgstr "如果还原失败, 不输入"
 

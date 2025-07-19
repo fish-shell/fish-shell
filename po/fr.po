@@ -18253,6 +18253,9 @@ msgstr ""
 msgid "Do not indent output, only reformat into one job per line"
 msgstr "Ne pas indenter la sortie, se contenter de la reformater à une tâche par ligne"
 
+msgid "Do not indent, only return 0 if the code is already indented as fish_indent would"
+msgstr ""
+
 msgid "Do not init if restore fails"
 msgstr "Ne pas initialiser si la restauration échoue"
 

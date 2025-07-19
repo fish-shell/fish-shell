@@ -31795,6 +31795,9 @@ msgstr "关闭文件后继续激活应用程序"
 msgid "Keep the backing chain relatively referenced"
 msgstr "保持支持链相对引用"
 
+msgid "Keep the base commit as-is"
+msgstr ""
+
 msgid "Keep the commits that don't change anything"
 msgstr "保持承诺不会改变任何事情"
 

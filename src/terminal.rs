@@ -441,7 +441,7 @@ pub struct Outputter {
 impl Outputter {
     /// Construct an outputter which outputs to a given fd.
     /// If the fd is negative, the outputter will buffer its output.
-    pub const fn new_from_fd(fd: RawFd) -> Self {
+    const fn new_from_fd(fd: RawFd) -> Self {
         Self {
             contents: Vec::new(),
             buffer_count: 0,

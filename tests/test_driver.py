@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime
 import os
 from pathlib import Path
+import resource
 import shutil
 import subprocess
 import sys
@@ -365,6 +366,11 @@ else:
     asyncio_run = asyncio.run
 
 if __name__ == "__main__":
+    # Increase the maximum number of open files to at least 4096,
+    # as we run tests concurrently.
+    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    if soft < 4096:
+        resource.setrlimit(resource.RLIMIT_NOFILE, (min(4096, hard), hard))
     try:
         ret = asyncio_run(main())
         sys.exit(ret)

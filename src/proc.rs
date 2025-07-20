@@ -521,19 +521,15 @@ impl Process {
     /// As a process does not know its job id, we pass it in.
     /// Note this will return null if the process is not waitable (has no pid).
     pub fn make_wait_handle(&self, jid: InternalJobId) -> Option<WaitHandleRef> {
-        if !matches!(self.typ, ProcessType::External) || self.pid().is_none() {
-            // Not waitable.
-            None
-        } else {
-            if self.wait_handle.borrow().is_none() {
-                self.wait_handle.replace(Some(WaitHandle::new(
-                    self.pid().unwrap(),
-                    jid,
-                    wbasename(&self.actual_cmd.clone()).to_owned(),
-                )));
-            }
-            self.get_wait_handle()
+        let pid = self.pid()?;
+        if self.wait_handle.borrow().is_none() {
+            self.wait_handle.replace(Some(WaitHandle::new(
+                pid,
+                jid,
+                wbasename(&self.actual_cmd.clone()).to_owned(),
+            )));
         }
+        self.get_wait_handle()
     }
 }
 

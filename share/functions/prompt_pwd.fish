@@ -1,5 +1,5 @@
 function prompt_pwd --description 'short CWD for the prompt'
-    set -l options h/help d/dir-length= D/full-length-dirs=
+    set -l options h/help d/dir-length= D/full-length-dirs= p/dir-depth=
     argparse -n prompt_pwd $options -- $argv
     or return
 
@@ -24,10 +24,23 @@ function prompt_pwd --description 'short CWD for the prompt'
     set -q fish_prompt_pwd_full_dirs
     or set -l fish_prompt_pwd_full_dirs 1
 
+    set -ql _flag_p
+    and set -l fish_prompt_pwd_dir_depth $_flag_p
+
+    set -q fish_prompt_pwd_dir_depth
+    or set -l fish_prompt_pwd_dir_depth 0
+
     for path in $argv
         # Replace $HOME with "~"
         set -l realhome (string escape --style=regex -- ~)
         set -l tmp (string replace -r '^'"$realhome"'($|/)' '~$1' $path)
+
+        # Shorten to at most $fish_prompt_pwd_dir_depth components, unless set to 0.
+        if test "$fish_prompt_pwd_dir_depth" -gt 0
+            set -l split (string split / $tmp)
+            set -l length (math (count $split) - (math $fish_prompt_pwd_dir_depth - 1))
+            set tmp $split[$length..]
+        end
 
         if test "$fish_prompt_pwd_dir_length" -eq 0
             echo $tmp

@@ -47,7 +47,7 @@ function funced --description 'Edit function definition'
             functions --no-details -- $funcname | __fish_indent --only-unindent | __fish_indent --no-indent | read -z init
         end
 
-        set -l prompt 'printf "%s%s%s> " (set_color green) '$funcname' (set_color normal)'
+        set -l prompt 'printf "%s%s%s> " (set_color green) $funcname (set_color normal)'
         if read -p $prompt -c "$init" --shell cmd
             echo -n $cmd | __fish_indent --only-unindent | read -lz cmd
             eval "$cmd"

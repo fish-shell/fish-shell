@@ -21,7 +21,6 @@ use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;
 use std::mem::MaybeUninit;
 use std::os::fd::RawFd;
-use std::ptr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
@@ -514,7 +513,25 @@ enum ReadbResult {
 }
 
 fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
+    let do_readb = || {
+        let mut arr: [u8; 1] = [0];
+        if read_blocked(in_fd, &mut arr) != Ok(1) {
+            // The terminal has been closed.
+            return ReadbResult::Eof;
+        }
+        let c = arr[0];
+        FLOG!(reader, "Read byte", char_to_symbol(char::from(c), true));
+        // The common path is to return a u8.
+        return ReadbResult::Byte(c);
+    };
     assert!(in_fd >= 0, "Invalid in fd");
+    if !blocking {
+        return if check_fd_readable(in_fd, Duration::from_millis(1)) {
+            do_readb()
+        } else {
+            ReadbResult::NothingToRead
+        };
+    }
     let mut fdset = FdReadableSet::new();
     loop {
         fdset.clear();
@@ -532,11 +549,7 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
         }
 
         // Here's where we call select().
-        let select_res = fdset.check_readable(if blocking {
-            Timeout::Forever
-        } else {
-            Timeout::Duration(Duration::from_millis(1))
-        });
+        let select_res = fdset.check_readable(Timeout::Forever);
         if select_res < 0 {
             let err = errno::errno().0;
             if err == libc::EINTR || err == libc::EAGAIN {
@@ -548,32 +561,18 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
             }
         }
 
-        if blocking {
-            // select() did not return an error, so we may have a readable fd.
-            // The priority order is: uvars, stdin, ioport.
-            // Check to see if we want a universal variable barrier.
-            if let Some(notifier_fd) = notifier_fd {
-                if fdset.test(notifier_fd) && notifier.notification_fd_became_readable(notifier_fd)
-                {
-                    return ReadbResult::UvarNotified;
-                }
+        // select() did not return an error, so we may have a readable fd.
+        // The priority order is: uvars, stdin, ioport.
+        // Check to see if we want a universal variable barrier.
+        if let Some(notifier_fd) = notifier_fd {
+            if fdset.test(notifier_fd) && notifier.notification_fd_became_readable(notifier_fd) {
+                return ReadbResult::UvarNotified;
             }
         }
 
         // Check stdin.
         if fdset.test(in_fd) {
-            let mut arr: [u8; 1] = [0];
-            if read_blocked(in_fd, &mut arr) != Ok(1) {
-                // The terminal has been closed.
-                return ReadbResult::Eof;
-            }
-            let c = arr[0];
-            FLOG!(reader, "Read byte", char_to_symbol(char::from(c), true));
-            // The common path is to return a u8.
-            return ReadbResult::Byte(c);
-        }
-        if !blocking {
-            return ReadbResult::NothingToRead;
+            return do_readb();
         }
 
         // Check for iothread completions only if there is no data to be read from the stdin.
@@ -582,6 +581,55 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
             return ReadbResult::IOPortNotified;
         }
     }
+}
+
+pub fn check_fd_readable(in_fd: RawFd, timeout: Duration) -> bool {
+    use std::ptr;
+    // We are not prepared to handle a signal immediately; we only want to know if we get input on
+    // our fd before the timeout. Use pselect to block all signals; we will handle signals
+    // before the next call to readch().
+    let mut sigs = MaybeUninit::uninit();
+    let mut sigs = unsafe {
+        libc::sigfillset(sigs.as_mut_ptr());
+        sigs.assume_init()
+    };
+
+    // pselect expects timeouts in nanoseconds.
+    const NSEC_PER_MSEC: u64 = 1000 * 1000;
+    const NSEC_PER_SEC: u64 = NSEC_PER_MSEC * 1000;
+    let wait_nsec: u64 = (timeout.as_millis() as u64) * NSEC_PER_MSEC;
+    let timeout = libc::timespec {
+        tv_sec: (wait_nsec / NSEC_PER_SEC).try_into().unwrap(),
+        tv_nsec: (wait_nsec % NSEC_PER_SEC).try_into().unwrap(),
+    };
+
+    // We have one fd of interest.
+    let mut fdset = MaybeUninit::uninit();
+    let mut fdset = unsafe {
+        libc::FD_ZERO(fdset.as_mut_ptr());
+        fdset.assume_init()
+    };
+    unsafe {
+        libc::FD_SET(in_fd, &mut fdset);
+    }
+
+    let res = unsafe {
+        libc::pselect(
+            in_fd + 1,
+            &mut fdset,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            &timeout,
+            &sigs,
+        )
+    };
+
+    // Prevent signal starvation on WSL causing the `torn_escapes.py` test to fail
+    if is_windows_subsystem_for_linux(WSL::V1) {
+        // Merely querying the current thread's sigmask is sufficient to deliver a pending signal
+        let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), &mut sigs) };
+    }
+    res > 0
 }
 
 // Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
@@ -1403,54 +1451,11 @@ pub trait InputEventQueuer {
             return Some(evt);
         }
 
-        // We are not prepared to handle a signal immediately; we only want to know if we get input on
-        // our fd before the timeout. Use pselect to block all signals; we will handle signals
-        // before the next call to readch().
-        let mut sigs = MaybeUninit::uninit();
-        let mut sigs = unsafe {
-            libc::sigfillset(sigs.as_mut_ptr());
-            sigs.assume_init()
-        };
-
-        // pselect expects timeouts in nanoseconds.
-        const NSEC_PER_MSEC: u64 = 1000 * 1000;
-        const NSEC_PER_SEC: u64 = NSEC_PER_MSEC * 1000;
-        let wait_nsec: u64 = (wait_time_ms as u64) * NSEC_PER_MSEC;
-        let timeout = libc::timespec {
-            tv_sec: (wait_nsec / NSEC_PER_SEC).try_into().unwrap(),
-            tv_nsec: (wait_nsec % NSEC_PER_SEC).try_into().unwrap(),
-        };
-
-        // We have one fd of interest.
-        let mut fdset = MaybeUninit::uninit();
-        let mut fdset = unsafe {
-            libc::FD_ZERO(fdset.as_mut_ptr());
-            fdset.assume_init()
-        };
-        let in_fd = self.get_in_fd();
-        unsafe {
-            libc::FD_SET(in_fd, &mut fdset);
-        };
-        let res = unsafe {
-            libc::pselect(
-                in_fd + 1,
-                &mut fdset,
-                ptr::null_mut(),
-                ptr::null_mut(),
-                &timeout,
-                &sigs,
-            )
-        };
-
-        // Prevent signal starvation on WSL causing the `torn_escapes.py` test to fail
-        if is_windows_subsystem_for_linux(WSL::V1) {
-            // Merely querying the current thread's sigmask is sufficient to deliver a pending signal
-            let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), &mut sigs) };
-        }
-        if res > 0 {
-            return Some(self.readch());
-        }
-        None
+        check_fd_readable(
+            self.get_in_fd(),
+            Duration::from_millis(u64::try_from(wait_time_ms).unwrap()),
+        )
+        .then(|| self.readch())
     }
 
     /// Return the fd from which to read.

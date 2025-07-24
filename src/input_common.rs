@@ -12,7 +12,7 @@ use crate::key::{
 use crate::reader::{reader_save_screen_state, reader_test_and_clear_interrupted};
 use crate::terminal::{Capability, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
 use crate::threads::iothread_port;
-use crate::tty_handoff::set_kitty_keyboard_capability;
+use crate::tty_handoff::{get_kitty_keyboard_capability, set_kitty_keyboard_capability};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
@@ -905,7 +905,22 @@ pub trait InputEventQueuer {
 
     fn try_readb(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
         let fd = self.get_in_fd();
-        if !check_fd_readable(fd, Duration::from_millis(1)) {
+        if !check_fd_readable(
+            fd,
+            Duration::from_millis(
+                if self.paste_is_buffering()
+                    || get_kitty_keyboard_capability() == Capability::Supported
+                {
+                    300
+                } else {
+                    1
+                },
+            ),
+        ) {
+            FLOG!(
+                reader,
+                format!("Incomplete escape sequence: {}", DisplayBytes(buffer))
+            );
             return None;
         }
         let next = readb(fd)?;

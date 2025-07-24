@@ -19,7 +19,7 @@ use crate::wutil::perror;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use std::mem::MaybeUninit;
 use std::os::fd::BorrowedFd;
-use std::sync::atomic::{AtomicPtr, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU8, Ordering};
 
 // Facts about our environment, which inform how we handle the tty.
 #[derive(Debug, Copy, Clone)]
@@ -244,7 +244,7 @@ pub fn initialize_tty_metadata() {
 }
 
 // A marker of the current state of the tty protocols.
-static TTY_PROTOCOLS_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static TTY_PROTOCOLS_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 // A marker that the tty has been closed (SIGHUP, etc) and so we should not try to write to it.
 static TTY_INVALID: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -261,10 +261,12 @@ fn set_tty_protocols_active(enable: bool) -> bool {
     // Already set?
     // Note we don't need atomic swaps as this is only called on the main thread.
     // Also note we (logically) set and clear this even if we got SIGHUP.
-    if TTY_PROTOCOLS_ACTIVE.load() == enable {
+    if TTY_PROTOCOLS_ACTIVE.load(Ordering::Relaxed) == enable {
         return false;
     }
-    TTY_PROTOCOLS_ACTIVE.store(enable);
+    if enable {
+        TTY_PROTOCOLS_ACTIVE.store(true, Ordering::Release);
+    }
 
     // Did we get SIGHUP?
     if TTY_INVALID.load() {
@@ -274,6 +276,9 @@ fn set_tty_protocols_active(enable: bool) -> bool {
     // Write the commands to the tty, ignoring errors.
     let commands = protocols.safe_get_commands(enable);
     let _ = common::write_loop(&libc::STDOUT_FILENO, commands);
+    if !enable {
+        TTY_PROTOCOLS_ACTIVE.store(false, Ordering::Relaxed);
+    }
 
     // Flog any terminal protocol changes of interest.
     let mode = if enable { "Enabling" } else { "Disabling" };
@@ -287,7 +292,7 @@ fn set_tty_protocols_active(enable: bool) -> bool {
 
 // Helper to check if TTY protocols are active.
 pub fn get_tty_protocols_active() -> bool {
-    TTY_PROTOCOLS_ACTIVE.load()
+    TTY_PROTOCOLS_ACTIVE.load(Ordering::Relaxed)
 }
 
 // Called from a signal handler to deactivate TTY protocols before exiting.
@@ -299,7 +304,7 @@ pub fn safe_deactivate_tty_protocols() {
         // No protocols set, nothing to do.
         return;
     };
-    if !TTY_PROTOCOLS_ACTIVE.load() {
+    if !TTY_PROTOCOLS_ACTIVE.load(Ordering::Acquire) {
         return;
     }
 
@@ -308,11 +313,11 @@ pub fn safe_deactivate_tty_protocols() {
         return;
     }
 
-    TTY_PROTOCOLS_ACTIVE.store(false);
     let commands = protocols.safe_get_commands(false);
     // Safety: just writing data to stdout.
     let stdout_fd = unsafe { BorrowedFd::borrow_raw(libc::STDOUT_FILENO) };
     let _ = nix::unistd::write(stdout_fd, commands);
+    TTY_PROTOCOLS_ACTIVE.store(false, Ordering::Release);
 }
 
 // Called from a signal handler to mark the tty as invalid (e.g. SIGHUP).

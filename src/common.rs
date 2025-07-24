@@ -1355,7 +1355,7 @@ pub fn valid_func_name(name: &wstr) -> bool {
 
 /// A rusty port of the C++ `write_loop()` function from `common.cpp`. This should be deprecated in
 /// favor of native rust read/write methods at some point.
-pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
+pub fn safe_write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
     let fd = fd.as_raw_fd();
     let mut total = 0;
     while total < buf.len() {
@@ -1373,6 +1373,8 @@ pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
     }
     Ok(())
 }
+
+pub use safe_write_loop as write_loop;
 
 // Output writes always succeed; this adapter allows us to use it in a write-like macro.
 struct OutputWriteAdapter<'a, T: Output>(&'a mut T);

@@ -1,7 +1,7 @@
 //! Utility for transferring the tty to a child process in a scoped way,
 //! and reclaiming it after.
 
-use crate::common;
+use crate::common::{self, safe_write_loop};
 use crate::flog::{FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
@@ -18,7 +18,6 @@ use crate::wchar_ext::ToWString;
 use crate::wutil::perror;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use std::mem::MaybeUninit;
-use std::os::fd::BorrowedFd;
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU8, Ordering};
 
 // Facts about our environment, which inform how we handle the tty.
@@ -316,8 +315,7 @@ pub fn safe_deactivate_tty_protocols() {
 
     let commands = protocols.safe_get_commands(false);
     // Safety: just writing data to stdout.
-    let stdout_fd = unsafe { BorrowedFd::borrow_raw(libc::STDOUT_FILENO) };
-    let _ = nix::unistd::write(stdout_fd, commands);
+    let _ = safe_write_loop(&libc::STDOUT_FILENO, commands);
     TTY_PROTOCOLS_ACTIVE.store(false, Ordering::Release);
 }
 

@@ -47,10 +47,7 @@ impl TtyMetadata {
         let in_tmux = var_os("TMUX").is_some();
 
         // Detect iTerm2 before 3.5.12.
-        let pre_kitty_iterm2 = match get_iterm2_version() {
-            None => true,
-            Some(v) => v < (3, 5, 12),
-        };
+        let pre_kitty_iterm2 = get_iterm2_version().is_some_and(|v| v < (3, 5, 12));
         Self {
             in_midnight_commander,
             in_dvtm,

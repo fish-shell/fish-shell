@@ -9,7 +9,7 @@ use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol, ctrl,
     function_key, shift, Key, Modifiers, ViewportPosition,
 };
-use crate::reader::reader_test_and_clear_interrupted;
+use crate::reader::{reader_save_screen_state, reader_test_and_clear_interrupted};
 use crate::terminal::{Capability, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
 use crate::threads::iothread_port;
 use crate::tty_handoff::set_kitty_keyboard_capability;
@@ -1168,7 +1168,7 @@ pub trait InputEventQueuer {
                         reader,
                         "Received kitty progressive enhancement flags, marking as supported"
                     );
-                    set_kitty_keyboard_capability(Capability::Supported);
+                    set_kitty_keyboard_capability(reader_save_screen_state, Capability::Supported);
                     return None;
                 }
 

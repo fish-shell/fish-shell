@@ -91,7 +91,7 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
     let mut recent_chars = vec![];
     streams.err.appendln("Press a key:\n");
 
-    let mut handoff = TtyHandoff::new();
+    let mut handoff = TtyHandoff::new(|| {});
     handoff.enable_tty_protocols();
 
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
@@ -100,7 +100,7 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
             CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
             CharEvent::QueryResponse(QueryResponseEvent::PrimaryDeviceAttribute) => {
                 if get_kitty_keyboard_capability() == Capability::Unknown {
-                    set_kitty_keyboard_capability(Capability::NotSupported);
+                    set_kitty_keyboard_capability(|| {}, Capability::NotSupported);
                 }
                 continue;
             }

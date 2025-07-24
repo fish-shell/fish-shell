@@ -2,7 +2,7 @@
 
 use crate::fds::make_fd_blocking;
 use crate::proc::Pid;
-use crate::reader::reader_write_title;
+use crate::reader::{reader_save_screen_state, reader_write_title};
 use crate::tokenizer::tok_command;
 use crate::wutil::perror;
 use crate::{env::EnvMode, tty_handoff::TtyHandoff};
@@ -139,7 +139,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
 
     // Note if tty transfer fails, we still try running the job.
     parser.job_promote_at(job_pos);
-    let mut handoff = TtyHandoff::new();
+    let mut handoff = TtyHandoff::new(reader_save_screen_state);
     let _ = make_fd_blocking(STDIN_FILENO);
     {
         let job_group = job.group();

@@ -110,7 +110,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     let deferred_process = get_deferred_process(job);
 
     // We may want to transfer tty ownership to the pgroup leader.
-    let mut handoff = TtyHandoff::new();
+    let mut handoff = TtyHandoff::new(|| {});
 
     // This loop loops over every process_t in the job, starting it as appropriate. This turns out
     // to be rather complex, since a process_t can be one of many rather different things.

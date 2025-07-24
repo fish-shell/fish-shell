@@ -716,7 +716,7 @@ fn read_i(parser: &Parser) {
     // Set up tty protocols. These should be enabled while we're reading interactively,
     // and disabled before we run fish script, wildcards, or completions. This is scoped.
     // Note this may be disabled within the loop, e.g. when running fish script bound to keys.
-    let mut tty = TtyHandoff::new();
+    let mut tty = TtyHandoff::new(reader_save_screen_state);
 
     while !check_exit_loop_maybe_warning(Some(&mut data)) {
         RUN_COUNT.fetch_add(1, Ordering::Relaxed);
@@ -1484,6 +1484,10 @@ impl ReaderData {
     }
 }
 
+pub fn reader_save_screen_state() {
+    current_data().map(|data| data.save_screen_state());
+}
+
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 /// Exposed for testing purposes only.
 pub fn combine_command_and_autosuggestion(
@@ -2182,7 +2186,7 @@ impl<'a> Reader<'a> {
     /// Read a command to execute, respecting input bindings.
     /// Return the command, or none if we were asked to cancel (e.g. SIGHUP).
     fn readline(&mut self, nchars: Option<NonZeroUsize>) -> Option<WString> {
-        let mut tty = TtyHandoff::new();
+        let mut tty = TtyHandoff::new(reader_save_screen_state);
 
         self.rls = Some(ReadlineLoopState::new());
 
@@ -2323,7 +2327,7 @@ impl<'a> Reader<'a> {
         let last_statuses = self.parser.vars().get_last_statuses();
         let prev_exec_external_count = self.parser.libdata().exec_external_count;
         // Disable TTY protocols while we run a bind command, because it may call out.
-        let mut scoped_tty = TtyHandoff::new();
+        let mut scoped_tty = TtyHandoff::new(reader_save_screen_state);
         let mut modified_tty = scoped_tty.disable_tty_protocols();
 
         self.parser.eval(cmd, &IoChain::new());
@@ -2567,10 +2571,10 @@ impl<'a> Reader<'a> {
                             return ControlFlow::Continue(());
                         }
                         if get_kitty_keyboard_capability() == Capability::Unknown {
-                            set_kitty_keyboard_capability(Capability::NotSupported);
-                            // We may have written to the tty, so save the screen state
-                            // so we don't repaint.
-                            self.screen.save_status();
+                            set_kitty_keyboard_capability(
+                                reader_save_screen_state,
+                                Capability::NotSupported,
+                            );
                         }
                     }
                     QueryResponseEvent::CursorPositionReport(cursor_pos) => {
@@ -2819,10 +2823,12 @@ impl<'a> Reader<'a> {
                     // Either the user hit tab only once, or we had no visible completion list.
                     // Disable tty protocols while we compute completions, so that control-C
                     // triggers SIGINT (suppressed by CSI-U).
-                    let mut tty = TtyHandoff::new();
+                    let mut tty = TtyHandoff::new(reader_save_screen_state);
                     tty.disable_tty_protocols();
                     self.compute_and_apply_completions(c);
-                    tty.reclaim();
+                    if tty.reclaim() {
+                        self.save_screen_state();
+                    }
                 }
             }
             rl::PagerToggleSearch => {
@@ -4614,7 +4620,7 @@ impl<'a> Reader<'a> {
         let _noninteractive = self.parser.push_scope(|s| s.is_interactive = false);
 
         // Suppress TTY protocols in a scoped way so that e.g. control-C can cancel the prompt.
-        let mut scoped_tty = TtyHandoff::new();
+        let mut scoped_tty = TtyHandoff::new(reader_save_screen_state);
         scoped_tty.disable_tty_protocols();
 
         // Update the termsize now.

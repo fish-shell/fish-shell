@@ -16,6 +16,7 @@ use crate::input_common::DecodeState;
 use crate::input_common::InvalidPolicy;
 use crate::nix::isatty;
 use crate::reader::commandline_set_buffer;
+use crate::reader::reader_save_screen_state;
 use crate::reader::ReaderConfig;
 use crate::reader::{reader_pop, reader_push, reader_readline};
 use crate::tokenizer::Tokenizer;
@@ -244,7 +245,7 @@ fn read_interactive(
 
     let mline = {
         let _interactive = parser.push_scope(|s| s.is_interactive = true);
-        let mut scoped_handoff = TtyHandoff::new();
+        let mut scoped_handoff = TtyHandoff::new(reader_save_screen_state);
         scoped_handoff.enable_tty_protocols();
         reader_readline(parser, NonZeroUsize::try_from(nchars).ok())
     };

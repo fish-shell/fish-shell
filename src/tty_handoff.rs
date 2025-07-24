@@ -72,10 +72,10 @@ pub fn get_kitty_keyboard_capability() -> Capability {
 
 // Set CSI-U ("Kitty") support capability.
 // This correctly handles the case where we think protocols are already enabled.
-pub fn set_kitty_keyboard_capability(cap: Capability) {
+pub fn set_kitty_keyboard_capability(on_write: fn(), cap: Capability) {
     assert_is_main_thread();
     // Disable and renable protocols around capabilities.
-    let mut tty = TtyHandoff::new();
+    let mut tty = TtyHandoff::new(on_write);
     tty.disable_tty_protocols();
     KITTY_KEYBOARD_SUPPORTED.store(cap as _, Ordering::Relaxed);
     FLOG!(
@@ -252,7 +252,7 @@ static TTY_INVALID: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 // Enable or disable TTY protocols by writing the appropriate commands to the tty.
 // Return true if we emitted any bytes to the tty.
 // Note this does NOT intialize the TTY protocls if not already initialized.
-fn set_tty_protocols_active(enable: bool) -> bool {
+fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
     assert_is_main_thread();
     // Have protocols at all? We require someone else to have initialized them.
     let Some(protocols) = tty_protocols() else {
@@ -287,6 +287,7 @@ fn set_tty_protocols_active(enable: bool) -> bool {
         ProtocolKind::Other => FLOG!(term_protocols, mode, "other extended keys"),
         ProtocolKind::None => (),
     };
+    (on_write)();
     true
 }
 
@@ -347,16 +348,19 @@ pub struct TtyHandoff {
     tty_protocols_applied: bool,
     // Whether reclaim was called, restoring the tty to its pre-scoped value.
     reclaimed: bool,
+    // Called after writing to the TTY.
+    on_write: fn(),
 }
 
 impl TtyHandoff {
-    pub fn new() -> Self {
+    pub fn new(on_write: fn()) -> Self {
         let protocols_active = get_tty_protocols_active();
         TtyHandoff {
             owner: None,
             tty_protocols_initial: protocols_active,
             tty_protocols_applied: protocols_active,
             reclaimed: false,
+            on_write,
         }
     }
 
@@ -367,7 +371,7 @@ impl TtyHandoff {
             return false; // Already enabled.
         }
         self.tty_protocols_applied = true;
-        set_tty_protocols_active(true)
+        set_tty_protocols_active(self.on_write, true)
     }
 
     /// Mark terminal modes as disabled.
@@ -377,7 +381,7 @@ impl TtyHandoff {
             return false; // Already disabled.
         };
         self.tty_protocols_applied = false;
-        set_tty_protocols_active(false)
+        set_tty_protocols_active(self.on_write, false)
     }
 
     /// Transfer to the given job group, if it wants to own the terminal.

@@ -12,7 +12,7 @@ use crate::key::{
 use crate::reader::{reader_save_screen_state, reader_test_and_clear_interrupted};
 use crate::terminal::{Capability, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
 use crate::threads::iothread_port;
-use crate::tty_handoff::set_kitty_keyboard_capability;
+use crate::tty_handoff::{get_kitty_keyboard_capability, set_kitty_keyboard_capability};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
@@ -512,7 +512,7 @@ enum ReadbResult {
     NothingToRead,
 }
 
-fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
+fn readb(in_fd: RawFd, blocking: bool, pasting: bool) -> ReadbResult {
     let do_readb = || {
         let mut arr: [u8; 1] = [0];
         if read_blocked(in_fd, &mut arr) != Ok(1) {
@@ -526,7 +526,16 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
     };
     assert!(in_fd >= 0, "Invalid in fd");
     if !blocking {
-        return if check_fd_readable(in_fd, Duration::from_millis(1)) {
+        return if check_fd_readable(
+            in_fd,
+            Duration::from_millis(
+                if pasting || get_kitty_keyboard_capability() == Capability::Supported {
+                    300
+                } else {
+                    1
+                },
+            ),
+        ) {
             do_readb()
         } else {
             ReadbResult::NothingToRead
@@ -805,7 +814,7 @@ pub trait InputEventQueuer {
                 return Some(mevt);
             }
 
-            let rr = readb(self.get_in_fd(), blocking);
+            let rr = readb(self.get_in_fd(), blocking, /*pasting=*/ false);
             match rr {
                 ReadbResult::Eof => {
                     return Some(CharEvent::Implicit(ImplicitEvent::Eof));
@@ -848,10 +857,16 @@ pub trait InputEventQueuer {
                     let mut i = 0;
                     let ok = loop {
                         if i == buffer.len() {
-                            buffer.push(match readb(self.get_in_fd(), /*blocking=*/ true) {
-                                ReadbResult::Byte(b) => b,
-                                _ => 0,
-                            });
+                            buffer.push(
+                                match readb(
+                                    self.get_in_fd(),
+                                    /*blocking=*/ true,
+                                    /*pasting=*/ false,
+                                ) {
+                                    ReadbResult::Byte(b) => b,
+                                    _ => 0,
+                                },
+                            );
                         }
                         match decode_input_byte(
                             &mut seq,
@@ -930,7 +945,11 @@ pub trait InputEventQueuer {
     }
 
     fn try_readb(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
-        let ReadbResult::Byte(next) = readb(self.get_in_fd(), /*blocking=*/ false) else {
+        let ReadbResult::Byte(next) = readb(
+            self.get_in_fd(),
+            /*blocking=*/ false,
+            self.paste_is_buffering(),
+        ) else {
             return None;
         };
         buffer.push(next);

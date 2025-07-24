@@ -963,7 +963,14 @@ pub trait InputEventQueuer {
 
     fn try_readb(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
         let fd = self.get_in_fd();
-        if !check_fd_readable(fd, Duration::from_millis(1)) {
+        if !check_fd_readable(
+            fd,
+            Duration::from_millis(if self.paste_is_buffering() { 300 } else { 1 }),
+        ) {
+            FLOG!(
+                reader,
+                format!("Incomplete escape sequence: {}", DisplayBytes(buffer))
+            );
             return None;
         }
         let next = readb(fd)?;

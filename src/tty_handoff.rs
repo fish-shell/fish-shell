@@ -135,7 +135,7 @@ impl TtyProtocolsSet {
 }
 
 // Serialize a sequence of terminal commands into a byte array.
-fn serialize_commands<const N: usize>(cmds: [TerminalCommand<'_>; N]) -> Box<[u8]> {
+fn serialize_commands<'a>(cmds: impl Iterator<Item = TerminalCommand<'a>>) -> Box<[u8]> {
     let mut out = Outputter::new_buffering();
     for cmd in cmds {
         out.write_command(cmd);
@@ -161,33 +161,38 @@ impl TtyMetadata {
 
     // Return the protocols set to enable or disable TTY protocols.
     fn get_protocols(self) -> TtyProtocolsSet {
+        // Enable focus reporting under tmux
+        let focus_reporting_on = || self.in_tmux.then_some(DecsetFocusReporting).into_iter();
+        let focus_reporting_off = || self.in_tmux.then_some(DecrstFocusReporting).into_iter();
+        let maybe_enable_focus_reporting = |protocols: &'static [TerminalCommand<'static>]| {
+            protocols.iter().cloned().chain(focus_reporting_on())
+        };
+        let maybe_disable_focus_reporting = |protocols: &'static [TerminalCommand<'static>]| {
+            protocols.iter().cloned().chain(focus_reporting_off())
+        };
         let enablers = ProtocolBytes {
-            csi_u: serialize_commands([
+            csi_u: serialize_commands(maybe_enable_focus_reporting(&[
                 DecsetBracketedPaste,                       // Enable bracketed paste
-                DecsetFocusReporting,                       // Enable focus reporting under tmux
                 KittyKeyboardProgressiveEnhancementsEnable, // Kitty keyboard progressive enhancements
-            ]),
-            other: serialize_commands([
+            ])),
+            other: serialize_commands(maybe_enable_focus_reporting(&[
                 DecsetBracketedPaste,
-                DecsetFocusReporting,
                 ModifyOtherKeysEnable,       // XTerm's modifyOtherKeys
                 ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
-            ]),
-            none: serialize_commands([DecsetBracketedPaste, DecsetFocusReporting]),
+            ])),
+            none: serialize_commands(maybe_enable_focus_reporting(&[DecsetBracketedPaste])),
         };
         let disablers = ProtocolBytes {
-            csi_u: serialize_commands([
+            csi_u: serialize_commands(maybe_disable_focus_reporting(&[
                 DecrstBracketedPaste,                        // Disable bracketed paste
-                DecrstFocusReporting,                        // Disable focus reporting under tmux
                 KittyKeyboardProgressiveEnhancementsDisable, // Kitty keyboard progressive enhancements
-            ]),
-            other: serialize_commands([
+            ])),
+            other: serialize_commands(maybe_disable_focus_reporting(&[
                 DecrstBracketedPaste,
-                DecrstFocusReporting,
                 ModifyOtherKeysDisable,
                 ApplicationKeypadModeDisable,
-            ]),
-            none: serialize_commands([DecrstBracketedPaste, DecrstFocusReporting]),
+            ])),
+            none: serialize_commands(maybe_disable_focus_reporting(&[DecrstBracketedPaste])),
         };
         TtyProtocolsSet {
             md: self,

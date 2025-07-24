@@ -62,17 +62,16 @@ if set -q fish_files[1]
     if not type -q fish_indent
         echo
         echo $yellow'Could not find `fish_indent` in `$PATH`.'$normal
-        echo
-    else
-        echo === Running "$green"fish_indent"$normal"
-        if set -l -q _flag_check
-            if not fish_indent --check -- $fish_files
-                echo $red"Fish files are not formatted correctly."$normal
-                exit 1
-            end
-        else
-            fish_indent -w -- $fish_files
+        exit 127
+    end
+    echo === Running "$green"fish_indent"$normal"
+    if set -l -q _flag_check
+        if not fish_indent --check -- $fish_files
+            echo $red"Fish files are not formatted correctly."$normal
+            exit 1
         end
+    else
+        fish_indent -w -- $fish_files
     end
 end
 
@@ -80,17 +79,16 @@ if set -q python_files[1]
     if not type -q black
         echo
         echo $yellow'Please install `black` to style python'$normal
-        echo
-    else
-        echo === Running "$green"black"$normal"
-        if set -l -q _flag_check
-            if not black --check $python_files
-                echo $red"Python files are not formatted correctly."$normal
-                exit 1
-            end
-        else
-            black $python_files
+        exit 127
+    end
+    echo === Running "$green"black"$normal"
+    if set -l -q _flag_check
+        if not black --check $python_files
+            echo $red"Python files are not formatted correctly."$normal
+            exit 1
         end
+    else
+        black $python_files
     end
 end
 
@@ -98,30 +96,29 @@ if not cargo fmt --version >/dev/null
     echo
     echo $yellow'Please install "rustfmt" to style Rust, e.g. via:'
     echo "rustup component add rustfmt"$normal
-    echo
-else
-    echo === Running "$green"rustfmt"$normal"
-    if set -l -q _flag_check
-        if set -l -q _flag_all
-            if not cargo fmt --check
-                echo $red"Rust files are not formatted correctly."$normal
-                exit 1
-            end
-        else
-            if set -q rust_files[1]
-                if not rustfmt --check --files-with-diff $rust_files
-                    echo $red"Rust files are not formatted correctly."
-                    exit 1
-                end
-            end
+    exit 127
+end
+echo === Running "$green"rustfmt"$normal"
+if set -l -q _flag_check
+    if set -l -q _flag_all
+        if not cargo fmt --check
+            echo $red"Rust files are not formatted correctly."$normal
+            exit 1
         end
     else
-        if set -l -q _flag_all
-            cargo fmt
-        else
-            if set -q rust_files[1]
-                rustfmt $rust_files
+        if set -q rust_files[1]
+            if not rustfmt --check --files-with-diff $rust_files
+                echo $red"Rust files are not formatted correctly."
+                exit 1
             end
+        end
+    end
+else
+    if set -l -q _flag_all
+        cargo fmt
+    else
+        if set -q rust_files[1]
+            rustfmt $rust_files
         end
     end
 end

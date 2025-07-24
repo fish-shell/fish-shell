@@ -1407,7 +1407,10 @@ pub trait InputEventQueuer {
         // our fd before the timeout. Use pselect to block all signals; we will handle signals
         // before the next call to readch().
         let mut sigs = MaybeUninit::uninit();
-        unsafe { libc::sigfillset(sigs.as_mut_ptr()) };
+        let mut sigs = unsafe {
+            libc::sigfillset(sigs.as_mut_ptr());
+            sigs.assume_init()
+        };
 
         // pselect expects timeouts in nanoseconds.
         const NSEC_PER_MSEC: u64 = 1000 * 1000;
@@ -1420,26 +1423,29 @@ pub trait InputEventQueuer {
 
         // We have one fd of interest.
         let mut fdset = MaybeUninit::uninit();
+        let mut fdset = unsafe {
+            libc::FD_ZERO(fdset.as_mut_ptr());
+            fdset.assume_init()
+        };
         let in_fd = self.get_in_fd();
         unsafe {
-            libc::FD_ZERO(fdset.as_mut_ptr());
-            libc::FD_SET(in_fd, fdset.as_mut_ptr());
+            libc::FD_SET(in_fd, &mut fdset);
         };
         let res = unsafe {
             libc::pselect(
                 in_fd + 1,
-                fdset.as_mut_ptr(),
+                &mut fdset,
                 ptr::null_mut(),
                 ptr::null_mut(),
                 &timeout,
-                sigs.as_ptr(),
+                &sigs,
             )
         };
 
         // Prevent signal starvation on WSL causing the `torn_escapes.py` test to fail
         if is_windows_subsystem_for_linux(WSL::V1) {
             // Merely querying the current thread's sigmask is sufficient to deliver a pending signal
-            let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), sigs.as_mut_ptr()) };
+            let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), &mut sigs) };
         }
         if res > 0 {
             return Some(self.readch());

@@ -19,6 +19,8 @@ To change the number of characters per path component, pass ``--dir-length=`` or
 
 To keep some components unshortened, pass ``--full-length-dirs=`` or set :envvar:`fish_prompt_pwd_full_dirs` to the number of components. This defaults to 1, keeping the last component.
 
+To print only up to a certain depth of parent directories, pass ``--dir-depth`` or set :envvar:`fish_prompt_pwd_dir_depth` to the desired depth. Setting it to 0 will print an unbounded number of parent directories, i.e. the full path. This defaults to 0.
+
 If any positional arguments are given, ``prompt_pwd`` shortens them instead of :envvar:`PWD`.
 
 Options
@@ -29,6 +31,9 @@ Options
 
 **-D** or **--full-length-dirs** *NUM*
     Keeps *NUM* components (counted from the right) as full length without shortening. This overrides :envvar:`fish_prompt_pwd_full_dirs`.
+
+**p-** or **--dir-depth=** *NUM*
+    Keeps only *NUM* components (counted from the right). This overrides :envvar:`fish_prompt_dir_depth`.
 
 **-h** or **--help**
     Displays help about using this command.

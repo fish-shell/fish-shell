@@ -667,7 +667,7 @@ fn create_dir_all_with_mode<P: AsRef<std::path::Path>>(path: P, mode: u32) -> st
 /// Return whether the given path is on a remote filesystem.
 pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     let narrow = wcs2zstring(path);
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", cygwin))]
     {
         let mut buf = MaybeUninit::uninit();
         if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
@@ -701,7 +701,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
             }
         }
     }
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", cygwin)))]
     {
         fn remoteness_via_statfs<StatFS, Flags>(
             statfn: unsafe extern "C" fn(*const i8, *mut StatFS) -> libc::c_int,

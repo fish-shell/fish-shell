@@ -1,20 +1,14 @@
-function __fish_protontricks__complete_appid
-    protontricks -l |
-        string match --regex '.*\(\d+\)' |
-        string replace --regex '(.*) \((\d+)\)' '$2\t$1'
-end
-
-function __fish_protontricks__complete_winetricks_command
+function __fish_protontricks_complete_winetricks_command
     complete -C 'winetricks '
 end
 
-function __fish_protontricks__is_search
+function __fish_protontricks_is_search
     __fish_contains_opt -s s search
 end
 
 complete -c protontricks -f
-complete -c protontricks -n 'not __fish_protontricks__is_search' -n '__fish_is_nth_token 1' -ka '(__fish_protontricks__complete_appid)'
-complete -c protontricks -n 'not __fish_protontricks__is_search' -n 'not __fish_is_nth_token 1' -a '(__fish_protontricks__complete_winetricks_command)'
+complete -c protontricks -n 'not __fish_protontricks_is_search' -n '__fish_is_nth_token 1' -ka '(__fish_protontricks_complete_appid)'
+complete -c protontricks -n 'not __fish_protontricks_is_search' -n 'not __fish_is_nth_token 1' -a '(__fish_protontricks_complete_winetricks_command)'
 complete -c protontricks -s h -l help -d 'Show help message and exit'
 complete -c protontricks -s v -l verbose -d 'Increase log verbosity, can be supplied twice'
 complete -c protontricks -l no-term -d 'Specify that no terminal is available to Protontricks'

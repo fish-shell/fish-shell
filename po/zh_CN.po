@@ -8602,6 +8602,9 @@ msgstr ""
 msgid "Change to directory of source file when processing it"
 msgstr "处理时更改源文件目录"
 
+msgid "Change to the Steam app directory when launching command"
+msgstr ""
+
 msgid "Change to this directory before searching for the sconstruct file"
 msgstr "在搜索构造文件前更改到此目录"
 
@@ -14554,6 +14557,9 @@ msgstr "禁用连接的 SSL"
 msgid "Disable Spotlight activity for volume"
 msgstr "音量禁用焦点活动"
 
+msgid "Disable Steam Runtime"
+msgstr ""
+
 msgid "Disable TestDox progress animation"
 msgstr "禁用测试 Dox 进度动画"
 
@@ -14754,6 +14760,9 @@ msgstr "禁用内置文件删除"
 
 msgid "Disable built-ins that are not mandated by ANSI/ISO C"
 msgstr "禁用ANSI/ISO C未授权的内置"
+
+msgid "Disable bwrap containerization when using Steam Runtime"
+msgstr ""
 
 msgid "Disable cache"
 msgstr ""
@@ -18222,6 +18231,9 @@ msgstr ""
 
 msgid "Do not invoke man to verify the existence of man pages"
 msgstr "不要用人来证明人页的存在"
+
+msgid "Do not launch wineserver process"
+msgstr ""
 
 msgid "Do not lift the usual restrictions on the size of the global offset table"
 msgstr ""
@@ -30550,6 +30562,9 @@ msgstr "增加浮点代码的 IEEE 符合度"
 msgid "Increase log output level"
 msgstr "增加日志输出水平"
 
+msgid "Increase log verbosity, can be supplied twice"
+msgstr ""
+
 msgid "Increase page number in filename by #"
 msgstr "增加文件名的页码 #"
 
@@ -32020,6 +32035,9 @@ msgstr "启动错误报告会话"
 msgid "Launch a container from a particular image."
 msgstr "从特定图像发射容器 ."
 
+msgid "Launch a wineserver process to improve Wine startup time"
+msgstr ""
+
 msgid "Launch an application"
 msgstr "启动申请"
 
@@ -32036,6 +32054,9 @@ msgid "Launch on <disp> X display"
 msgstr "在 < disp > X 显示时启动"
 
 msgid "Launch python shell"
+msgstr ""
+
+msgid "Launch the Protontricks GUI"
 msgstr ""
 
 msgid "Launch the terminal user interface"
@@ -32715,6 +32736,9 @@ msgstr "列出所有活动的钩子"
 
 msgid "List all analyzed versions"
 msgstr "列出所有分析过的版本"
+
+msgid "List all apps"
+msgstr ""
 
 msgid "List all apps in the target space"
 msgstr "列出目标空间中的所有应用程序"
@@ -50857,6 +50881,9 @@ msgstr "从本地或远程 npm 软件包运行命令"
 msgid "Run a command from the build directory"
 msgstr "从构建目录运行命令"
 
+msgid "Run a command with Wine-related environment variables set"
+msgstr ""
+
 msgid "Run a defined package script"
 msgstr "运行定义的软件包脚本"
 
@@ -52470,6 +52497,9 @@ msgstr "在指定的目录中搜索设备或文件"
 
 msgid "Search for fonts in directory"
 msgstr "在目录中搜索字体"
+
+msgid "Search for game(s) with the given name"
+msgstr ""
 
 msgid "Search for gems under specific paths"
 msgstr "在特定路径下搜索gems"
@@ -61852,6 +61882,9 @@ msgstr "指定净弧文件"
 msgid "Specify network interface"
 msgstr "指定网络接口"
 
+msgid "Specify no terminal is available for errors, use dialogs instead"
+msgstr ""
+
 msgid "Specify number of FATs"
 msgstr "指定 FAT 的数目"
 
@@ -62151,6 +62184,9 @@ msgstr "指定应进行所有可能的核查"
 
 msgid "Specify that each and every sector on the disk is set to zero"
 msgstr "指定磁盘上每个扇区设置为零"
+
+msgid "Specify that no terminal is available to Protontricks"
+msgstr ""
 
 msgid "Specify that the choices are case-sensitive"
 msgstr "指定选择对大小写有敏感认识"

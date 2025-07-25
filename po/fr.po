@@ -8704,6 +8704,9 @@ msgstr ""
 msgid "Change to directory of source file when processing it"
 msgstr "Aller dans le dossier du fichier source lors de son traitement"
 
+msgid "Change to the Steam app directory when launching command"
+msgstr ""
+
 msgid "Change to this directory before searching for the sconstruct file"
 msgstr ""
 
@@ -14656,6 +14659,9 @@ msgstr ""
 msgid "Disable Spotlight activity for volume"
 msgstr ""
 
+msgid "Disable Steam Runtime"
+msgstr ""
+
 msgid "Disable TestDox progress animation"
 msgstr ""
 
@@ -14855,6 +14861,9 @@ msgid "Disable built-in file deletion"
 msgstr ""
 
 msgid "Disable built-ins that are not mandated by ANSI/ISO C"
+msgstr ""
+
+msgid "Disable bwrap containerization when using Steam Runtime"
 msgstr ""
 
 msgid "Disable cache"
@@ -18323,6 +18332,9 @@ msgid "Do not interpret the first row as headers"
 msgstr ""
 
 msgid "Do not invoke man to verify the existence of man pages"
+msgstr ""
+
+msgid "Do not launch wineserver process"
 msgstr ""
 
 msgid "Do not lift the usual restrictions on the size of the global offset table"
@@ -30652,6 +30664,9 @@ msgstr "Améliorer la conformité IEEE du code en virgule flottante"
 msgid "Increase log output level"
 msgstr ""
 
+msgid "Increase log verbosity, can be supplied twice"
+msgstr ""
+
 msgid "Increase page number in filename by #"
 msgstr ""
 
@@ -32122,6 +32137,9 @@ msgstr ""
 msgid "Launch a container from a particular image."
 msgstr ""
 
+msgid "Launch a wineserver process to improve Wine startup time"
+msgstr ""
+
 msgid "Launch an application"
 msgstr ""
 
@@ -32138,6 +32156,9 @@ msgid "Launch on <disp> X display"
 msgstr ""
 
 msgid "Launch python shell"
+msgstr ""
+
+msgid "Launch the Protontricks GUI"
 msgstr ""
 
 msgid "Launch the terminal user interface"
@@ -32817,6 +32838,9 @@ msgstr ""
 
 msgid "List all analyzed versions"
 msgstr "Lister toutes les versions analysées"
+
+msgid "List all apps"
+msgstr ""
 
 msgid "List all apps in the target space"
 msgstr ""
@@ -50959,6 +50983,9 @@ msgstr ""
 msgid "Run a command from the build directory"
 msgstr ""
 
+msgid "Run a command with Wine-related environment variables set"
+msgstr ""
+
 msgid "Run a defined package script"
 msgstr ""
 
@@ -52571,6 +52598,9 @@ msgid "Search for devices or files in specified directory"
 msgstr "Chercher les périphériques et fichiers dans le dossier spécifié"
 
 msgid "Search for fonts in directory"
+msgstr ""
+
+msgid "Search for game(s) with the given name"
 msgstr ""
 
 msgid "Search for gems under specific paths"
@@ -61954,6 +61984,9 @@ msgstr ""
 msgid "Specify network interface"
 msgstr ""
 
+msgid "Specify no terminal is available for errors, use dialogs instead"
+msgstr ""
+
 msgid "Specify number of FATs"
 msgstr "Spécifier le nombre de tables d’allocation des fichiers (FAT)"
 
@@ -62252,6 +62285,9 @@ msgid "Specify that all verifications possible should be performed"
 msgstr ""
 
 msgid "Specify that each and every sector on the disk is set to zero"
+msgstr ""
+
+msgid "Specify that no terminal is available to Protontricks"
 msgstr ""
 
 msgid "Specify that the choices are case-sensitive"

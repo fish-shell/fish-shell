@@ -6,7 +6,7 @@ use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::flog::{FloggableDebug, FloggableDisplay, FLOG};
 use crate::key::{
-    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol, ctrl,
+    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol,
     function_key, shift, Key, Modifiers, ViewportPosition,
 };
 use crate::reader::{reader_save_screen_state, reader_test_and_clear_interrupted};

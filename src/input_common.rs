@@ -723,44 +723,28 @@ pub trait InputEventQueuer {
         self.get_input_data_mut().queue.pop_front()
     }
 
-    /// An "infallible" version of [`try_readch`](Self::try_readch) to be used when the input pipe
-    /// fd is expected to outlive the input reader. Will panic upon EOF.
-    #[inline(always)]
-    fn readch(&mut self) -> CharEvent {
-        match self.try_readch(/*blocking*/ true) {
-            Some(c) => c,
-            None => unreachable!(),
-        }
-    }
-
     /// Function used by [`readch`](Self::readch) to read bytes from stdin until enough bytes have been read to
-    /// convert them to a wchar_t. Conversion is done using `mbrtowc`. If a character has previously
-    /// been read and then 'unread', that character is returned.
-    ///
-    /// This is guaranteed to keep returning `Some(CharEvent)` so long as the input stream remains
-    /// open; `None` is only returned upon EOF as the main loop within blocks until input becomes
-    /// available.
-    ///
-    /// This method is used directly by the fuzzing harness to avoid a panic on bounded inputs.
-    fn try_readch(&mut self, blocking: bool) -> Option<CharEvent> {
+    /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously
+    /// been read and then 'unread' using \c input_common_unreadch, that character is returned.
+    fn readch(&mut self) -> CharEvent {
         loop {
             // Do we have something enqueued already?
             // Note this may be initially true, or it may become true through calls to
             // iothread_service_main() or env_universal_barrier() below.
             if let Some(mevt) = self.try_pop() {
-                return Some(mevt);
+                return mevt;
             }
 
             // We are going to block; but first allow any override to inject events.
             self.prepare_to_select();
             if let Some(mevt) = self.try_pop() {
-                return Some(mevt);
+                return mevt;
             }
 
-            let rr = readb(self.get_in_fd(), blocking);
+            let rr = readb(self.get_in_fd(), /*blocking=*/ true);
             match rr {
                 ReadbResult::Eof => {
-                    return Some(CharEvent::Implicit(ImplicitEvent::Eof));
+                    return CharEvent::Implicit(ImplicitEvent::Eof);
                 }
 
                 ReadbResult::Interrupted => {
@@ -874,9 +858,9 @@ pub trait InputEventQueuer {
                         continue;
                     }
                     extra.map(|extra| self.insert_front(extra));
-                    return Some(key_evt);
+                    return key_evt;
                 }
-                ReadbResult::NothingToRead => return None,
+                ReadbResult::NothingToRead => unreachable!(),
             }
         }
     }

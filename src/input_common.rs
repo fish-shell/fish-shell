@@ -11,7 +11,7 @@ use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
-    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol, ctrl,
+    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol,
     function_key, shift, Key, Modifiers,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};

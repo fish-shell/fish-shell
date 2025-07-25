@@ -991,7 +991,7 @@ pub trait InputEventQueuer {
         // The maximum number of CSI parameters is defined by NPAR, nominally 16.
         let mut params = [[0_u32; 4]; 16];
         let Some(mut c) = self.try_readb(buffer) else {
-            return Some(KeyEvent::from(ctrl('[')));
+            return Some(KeyEvent::from(alt('[')));
         };
         let mut next_char = |zelf: &mut Self| zelf.try_readb(buffer).unwrap_or(0xff);
         let private_mode;

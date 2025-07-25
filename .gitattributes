@@ -1,7 +1,5 @@
 # normalize newlines
-* text=auto
-*.fish text
-*.bat eol=crlf
+* text=auto eol=lf
 
 # let git show off diff hunk headers, help git diff -L:
 # https://git-scm.com/docs/gitattributes

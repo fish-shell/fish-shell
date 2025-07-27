@@ -63,8 +63,8 @@ else
             echo "So valid filenames are of the shape 'll.po' or 'll_CC.po'."
             exit 1
         end
-        if not basename $arg | grep -qE '^[a-z]{2,3}(_[A-Z]{2})?\.po$'
-            echo "Filename does not match the expected format ('ll.po' or 'll_CC.po')."
+        if not basename $arg | grep -qE '^[a-z]{2,3}_[A-Z]{2}\.po$'
+            echo "Filename does not match the expected format 'll_CC.po'."
             exit 1
         end
     end

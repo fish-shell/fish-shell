@@ -138,7 +138,7 @@ for po_file in $po_files
                 echo $build_tools/../target
             end
         )/fish-locale
-        set -l out_dir $locale_dir/(basename $po_file .po)/LC_MESSAGES
+        set -l out_dir $locale_dir/(basename $po_file .po).utf8/LC_MESSAGES
         mkdir -p $out_dir
         msgfmt --check-format --output-file=$out_dir/fish.mo $po_file
     end

@@ -35,6 +35,7 @@ mod internal {
     use libc::c_char;
     use std::ffi::CStr;
     pub fn fish_gettext(msgid: &CStr) -> *const c_char {
+        panic!("Gettext is unavailable");
         msgid.as_ptr()
     }
     pub fn fish_bindtextdomain(_domainname: &CStr, _dirname: &CStr) -> *mut c_char {

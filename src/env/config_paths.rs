@@ -16,7 +16,9 @@ const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 // Because we only set `LOCALEDIR` in cmake builds,
 // cargo-only builds currently cannot use localization after installation.
 // (It does work from the build directory.)
-const LOCALE_DIR: Option<&str> = option_env!("LOCALEDIR");
+// `LOCALEDIR` is always set, as `build.rs` sets it to a default value if it is not defined
+// externally.
+const LOCALE_DIR: &str = env!("LOCALEDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
@@ -33,7 +35,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
     let mut paths = ConfigPaths::default();
     let mut done = false;
     let exec_path = get_executable_path(&argv0);
-    let env_locale_path: Option<PathBuf> = LOCALE_DIR.map(PathBuf::from);
+    let env_locale_path: PathBuf = PathBuf::from(LOCALE_DIR);
     if let Ok(exec_path) = exec_path.canonicalize() {
         FLOG!(
             config,
@@ -58,7 +60,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
                 bin: Some(exec_path.parent().unwrap().to_owned()),
-                locale: Some(locale_dir),
+                locale: locale_dir,
             }
         }
 
@@ -149,11 +151,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
             .clone()
             .map(|x| x.display().to_string())
             .unwrap_or("|not found|".to_string()),
-        paths
-            .locale
-            .clone()
-            .map(|x| x.display().to_string())
-            .unwrap_or("|not found|".to_string()),
+        paths.locale.display().to_string()
     );
 
     paths

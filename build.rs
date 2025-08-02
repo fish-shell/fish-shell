@@ -14,6 +14,10 @@ fn canonicalize_str<P: AsRef<Path>>(path: P) -> String {
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 
+#[cfg(feature = "embed-data")]
+#[cfg(not(clippy))]
+const SPHINX_DOC_SOURCES: [&str; 3] = ["CHANGELOG.rst", "CONTRIBUTING.rst", "doc_src"];
+
 fn main() {
     setup_paths();
 
@@ -59,13 +63,24 @@ fn main() {
         let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
     }
 
-    rsconf::rebuild_if_paths_changed(&["src", "printf", "Cargo.toml", "Cargo.lock", "build.rs"]);
+    rsconf::rebuild_if_paths_changed(&[
+        "build.rs",
+        "Cargo.lock",
+        "Cargo.toml",
+        "gettext-extraction",
+        "printf",
+        "src",
+    ]);
 
     // These are necessary if built with embedded functions,
     // but only in release builds (because rust-embed in debug builds reads from the filesystem).
     #[cfg(feature = "embed-data")]
     #[cfg(not(debug_assertions))]
-    rsconf::rebuild_if_paths_changed(&["doc_src", "share"]);
+    rsconf::rebuild_if_paths_changed(&["share"]);
+
+    #[cfg(feature = "embed-data")]
+    #[cfg(not(clippy))]
+    rsconf::rebuild_if_paths_changed(&SPHINX_DOC_SOURCES);
 
     rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
 
@@ -392,6 +407,106 @@ fn get_version(src_dir: &Path) -> String {
 }
 
 #[cfg(feature = "embed-data")]
+#[cfg(not(clippy))]
+/// Given a path, returns an iterator containing this path, and possibly others depending on what
+/// the input path refers to.
+/// If the path points to a file, only this file will be included.
+/// If it is a symlink, the path of the link will be included, as well as the target,
+/// provided the target is a file. Panics on non-file targets, including non-existing targets.
+/// If it is a directory, the function recurses on each entry and combines the results into the
+/// returned iterator.
+fn read_dir_all<P: AsRef<Path>>(path: P) -> impl Iterator<Item = PathBuf> {
+    fn walk(path: PathBuf) -> Box<dyn Iterator<Item = PathBuf>> {
+        if path.is_file() {
+            return Box::new([path].into_iter());
+        }
+        if path.is_symlink() {
+            let target = path.read_link().unwrap();
+            if target.is_file() {
+                return Box::new([path, target].into_iter());
+            }
+            panic!("Symlink {path:?} does not point to a file. Such symlinks are unsupported.");
+        }
+        if path.is_dir() {
+            return Box::new(
+                [path.clone()].into_iter().chain(
+                    std::fs::read_dir(path)
+                        .unwrap()
+                        .flat_map(|p| walk(p.unwrap().path())),
+                ),
+            );
+        }
+        panic!("Unexpected type for path {path:?}");
+    }
+
+    walk(path.as_ref().to_owned())
+}
+
+#[cfg(feature = "embed-data")]
+#[cfg(not(clippy))]
+/// Helper function for avoiding unnecessary rebuilds.
+/// Specify all files/directories which should trigger a rebuild if modified via `source_paths`.
+/// `cache_file` is used to store the time of the latest build.
+/// If this file does not exist, it will be created, if possible.
+/// The modification time of all files in `source_paths` are checked.
+/// For symlinks, both the link and the target are considered, but only links to files are
+/// supported.
+/// If the most recent mtime found this way is not more recent than the one stored in `cache_file`,
+/// then the build directory is considered up-to-date and `true` is returned.
+/// Otherwise, the timestamp in `cache_file` is updated and false is returned.
+/// The mtime is stored as milliseconds since the Unix epoch.
+/// There are some edge cases around the time, which could theoretically result in unnecessary
+/// builds or builds not being updated when they should.
+/// <https://doc.rust-lang.org/std/time/struct.SystemTime.html>
+/// Deleting the `cache_file` before invoking this function prevents the latter case (but makes
+/// this function useless).
+fn is_build_dir_up_to_date<'a, P: AsRef<Path> + 'a, I: IntoIterator<Item = &'a P>>(
+    source_paths: I,
+    cache_file: &Path,
+) -> bool {
+    use std::{
+        io::{Read, Seek, SeekFrom, Write},
+        str::FromStr,
+        time::UNIX_EPOCH,
+    };
+    let source_timestamp = source_paths
+        .into_iter()
+        .flat_map(read_dir_all)
+        .map(|p| p.metadata().unwrap().modified().unwrap())
+        .max()
+        .unwrap()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+    let cache_file_dir = cache_file.parent().unwrap();
+    std::fs::create_dir_all(cache_file_dir).unwrap();
+    let mut timestamp_file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(cache_file)
+        .unwrap();
+    let mut timestamp_file_content = vec![];
+    timestamp_file
+        .read_to_end(&mut timestamp_file_content)
+        .unwrap();
+    if !timestamp_file_content.is_empty() {
+        let timestamp_file_str = std::str::from_utf8(&timestamp_file_content).unwrap().trim();
+        let build_timestamp = u128::from_str(timestamp_file_str).unwrap();
+        if source_timestamp <= build_timestamp {
+            return true;
+        }
+        timestamp_file.seek(SeekFrom::Start(0)).unwrap();
+        timestamp_file.set_len(0).unwrap();
+    }
+    timestamp_file
+        .write_all(format!("{source_timestamp}\n").as_bytes())
+        .unwrap();
+    false
+}
+
+#[cfg(feature = "embed-data")]
 // disable clippy because otherwise it would panic without sphinx
 #[cfg(not(clippy))]
 fn build_man(build_dir: &Path) {
@@ -400,6 +515,16 @@ fn build_man(build_dir: &Path) {
     let sec1dir = mandir.join("man1");
     let docsrc_path = canonicalize(MANIFEST_DIR).join("doc_src");
     let docsrc = docsrc_path.to_str().unwrap();
+
+    // `sphinx-build` runs for several seconds even if none of the sources changed.
+    // This can result in the completely useless `sphinx-build` invocation almost doubling the
+    // duration of a `cargo b` (for a non-clean build).
+    // https://github.com/sphinx-doc/sphinx/issues/13727
+    let timestamp_file_path = mandir.join("build_timestamp");
+    if is_build_dir_up_to_date(&SPHINX_DOC_SOURCES, &timestamp_file_path) {
+        return;
+    }
+
     let args = &[
         "-j",
         "auto",

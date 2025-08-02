@@ -55,3 +55,9 @@ Examples
 
     >_ prompt_pwd --full-length-dirs=2 --dir-length=1
     /t/b/s/with/mustard
+
+    >_ echo (prompt_pwd | string split /)[-1]
+    mustard
+
+    >_ echo (string join / (prompt_pwd | string split /)[-3..-1])
+    s/with/mustard

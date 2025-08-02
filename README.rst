@@ -66,7 +66,8 @@ Windows
    for Linux with the instructions for the appropriate distribution
    listed above under “Packages for Linux”, or from source with the
    instructions below.
--  fish (4.0 on and onwards) cannot be installed in Cygwin, due to a lack of Rust support.
+-  Fish can also be installed on all versions of Windows using
+   `Cygwin <https://cygwin.com/>`__ or `MSYS2 <https://github.com/Berrysoft/fish-msys2>`__.
 
 Building from source
 ~~~~~~~~~~~~~~~~~~~~

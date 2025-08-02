@@ -18,6 +18,10 @@ trim_trailing_whitespace = false
 [*.sh]
 indent_size = 4
 
+[{build_tools/release.sh,build_tools/release/*.sh}]
+indent_size = 4
+max_line_length = 72
+
 [Dockerfile]
 indent_size = 2
 

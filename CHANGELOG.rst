@@ -3,6 +3,7 @@ fish 4.0.3 (released ???)
 
 This release of fish fixes a number of issues identified in fish 4.0.2:
 
+- :kbd:`alt-delete` now deletes the word right of the cursor.
 - fish now properly inherits $PATH under Windows WSL2 (:issue:`11354`).
 - the :doc:`read <cmds/printf>` builtin no longer miscalculates width of multi-byte characters (:issue:`11412`).
 - A crash displaying multi-line quoted command substitutions has been fixed (:issue:`11444`).

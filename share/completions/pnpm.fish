@@ -1,0 +1,1 @@
+pnpm completion fish | source

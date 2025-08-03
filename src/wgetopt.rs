@@ -107,6 +107,8 @@ enum NextArgv {
     FoundOption,
 }
 
+use std::borrow::Cow;
+
 pub struct WGetopter<'opts, 'args, 'argarray> {
     /// List of arguments. Will not be resized, but can be modified.
     pub argv: &'argarray mut [&'args wstr],
@@ -141,7 +143,7 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     initialized: bool,
     /// This will be populated with the elements of the original args that were interpreted
     /// as options and arguments to options
-    pub argv_opts: Vec<&'args wstr>,
+    pub argv_opts: Vec<Cow<'args, wstr>>,
 }
 
 impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
@@ -307,7 +309,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         let opt = self.argv[self.wopt_index];
-        self.argv_opts.push(opt);
+        self.argv_opts.push(Cow::Borrowed(opt));
 
         // We've found an option, so we need to skip the initial punctuation.
         let skip = if !self.longopts.is_empty() && opt.char_at(1) == '-' {
@@ -373,7 +375,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             } else {
                 // Consume the next element.
                 let val = self.argv[self.wopt_index];
-                self.argv_opts.push(val);
+                self.argv_opts.push(Cow::Borrowed(val));
                 self.woptarg = Some(val);
                 self.wopt_index += 1;
             }
@@ -403,7 +405,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         } else if opt_found.arg_type == ArgType::RequiredArgument {
             if self.wopt_index < self.argv.len() {
                 let val = self.argv[self.wopt_index];
-                self.argv_opts.push(val);
+                self.argv_opts.push(Cow::Borrowed(val));
                 self.woptarg = Some(val);
                 self.wopt_index += 1;
             } else {

@@ -13609,6 +13609,9 @@ msgstr ""
 msgid "Delete only those tarballs which aren't present in a snapshot"
 msgstr ""
 
+msgid "Delete option from argv_opts"
+msgstr ""
+
 msgid "Delete previous settime entry"
 msgstr ""
 

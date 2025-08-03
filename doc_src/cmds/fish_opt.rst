@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    fish_opt -s ALPHANUM [-l LONG-NAME] [-or] [--multiple-vals] [--long-only]
+    fish_opt -s ALPHANUM [-l LONG-NAME] [-ord] [--multiple-vals] [--long-only]
     fish_opt --help
 
 Description
@@ -35,6 +35,10 @@ The following ``argparse`` options are available:
 
 **--multiple-vals**
     The option being defined requires a value each time it is seen. Each instance is stored. This means the resulting flag variable created by ``argparse`` will have one element for each instance of this option in the arguments.
+
+**-d** or **--delete**
+    The option and any values will be deleted from the ``$argv_opts`` variables set by ``argparse``
+    (as with other options, it will also be deleted from ``$argv``).
 
 **-h** or **--help**
     Displays help about using this command.

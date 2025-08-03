@@ -43,6 +43,7 @@ Scripting improvements
 ----------------------
 - The ``psub`` command now allows combining ``--suffix`` with ``--fifo`` (:issue:`11729`).
 - ``argparse`` now saves recognised options and values in ``$argv_opts``, allowing them to be forwarded to other commands (:issue:`6466`).
+- ``argparse`` options can now be marked to be deleted from ``$argv_opts`` (by adding a ``&`` at the end of the option spec, before a ``!`` if present). There is now also a corresponding ``-d`` / ``--delete`` option to ``fish_opt``.
 
 Interactive improvements
 ------------------------

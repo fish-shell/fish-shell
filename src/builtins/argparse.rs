@@ -34,6 +34,7 @@ struct OptionSpec<'args> {
     validation_command: &'args wstr,
     vals: Vec<WString>,
     short_flag_valid: bool,
+    delete: bool,
     num_allowed: ArgCardinality,
     num_seen: isize,
 }
@@ -59,7 +60,7 @@ struct ArgParseCmdOpts<'args> {
     name: WString,
     raw_exclusive_flags: Vec<&'args wstr>,
     args: Vec<&'args wstr>,
-    args_opts: Vec<&'args wstr>,
+    args_opts: Vec<Cow<'args, wstr>>,
     options: HashMap<char, OptionSpec<'args>>,
     long_to_short_flag: HashMap<WString, char>,
     exclusive_flag_sets: Vec<Vec<char>>,
@@ -205,7 +206,11 @@ fn parse_flag_modifiers<'args>(
 ) -> bool {
     let mut s = *opt_spec_str;
 
-    if opt_spec.short_flag == opts.implicit_int_flag && !s.is_empty() && s.char_at(0) != '!' {
+    if opt_spec.short_flag == opts.implicit_int_flag
+        && !s.is_empty()
+        && s.char_at(0) != '!'
+        && s.char_at(0) != '&'
+    {
         streams.err.append(wgettext_fmt!(
             "%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n",
             opts.name,
@@ -225,6 +230,11 @@ fn parse_flag_modifiers<'args>(
         if opt_spec.num_allowed != ArgCardinality::Once {
             s = s.slice_from(1);
         }
+    }
+
+    if s.char_at(0) == '&' {
+        opt_spec.delete = true;
+        s = s.slice_from(1);
     }
 
     if s.char_at(0) == '!' {
@@ -333,7 +343,7 @@ fn parse_option_spec_sep<'args>(
             opt_spec.num_allowed = ArgCardinality::Once;
             i += 1; // the struct is initialized assuming short_flag_valid should be true
         }
-        '!' | '?' | '=' => {
+        '!' | '?' | '=' | '&' => {
             // Try to parse any other flag modifiers
             // parse_flag_modifiers assumes opt_spec_str starts where it should, not one earlier
             s = s.slice_from(i);
@@ -680,6 +690,10 @@ fn validate_and_store_implicit_int<'args>(
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     let opt_spec = opts.options.get_mut(&opts.implicit_int_flag).unwrap();
+    if opt_spec.delete {
+        // No need to call delete_flag, as w.argv_opts.last will be of form -<number>
+        w.argv_opts.pop();
+    }
     validate_arg(parser, &opts.name, opt_spec, is_long_flag, val, streams)?;
 
     // It's a valid integer so store it and return success.
@@ -691,21 +705,85 @@ fn validate_and_store_implicit_int<'args>(
     Ok(SUCCESS)
 }
 
+/// Delete the most recently matched flag, is_long_flag should be true if the flag was given with a
+/// long flag name (even if it was given with a single - and not two).
+fn delete_flag<'args>(w: &mut WGetopter<'_, 'args, '_>, is_long_flag: bool) {
+    // Does the option have a value that was a seperate argument to the option name itself? (e.g.
+    // w.argv_opts ends in --<long_flag> <value> or -<other-short-options>...<short_flag> <value>)
+    let separate_value = w
+        .woptarg
+        .zip(w.argv_opts.last())
+        .is_some_and(|(value, last)| value == *last);
+    if separate_value {
+        // Remove the value
+        w.argv_opts.pop();
+        // There can't be any short options between the flag and its value
+        assert!(w.remaining_text.is_empty());
+    }
+
+    // Remove the last option (we may have to put part of it back if it had other short options in
+    // it)
+    let opt_arg = w.argv_opts.pop().unwrap();
+    assert!(opt_arg.starts_with("-"));
+
+    if is_long_flag {
+        // opt_arg will be of form --<long-flag>, except there may only be one -, and <long-flag>
+        // may be abbreviated
+        assert!(w.remaining_text.is_empty());
+        // There will be no short options, so we're done
+        return;
+    }
+
+    // Otherwise, it's a short option so opt_arg will be of form:
+    //    -<previous-short-ops>...<short-flag><more-short-ops>...
+    //    -<previous-short-ops>...<short-flag><value>, or
+    //    -<previous-short-ops>...<short-flag>
+    let more_opts = w.remaining_text;
+    let value = if separate_value {
+        L!("")
+    } else {
+        w.woptarg.unwrap_or_default()
+    };
+    assert!(more_opts.is_empty() || value.is_empty()); // Both can't be present
+    assert!(opt_arg.ends_with(more_opts));
+    assert!(opt_arg.ends_with(value));
+
+    // The length of <previous-short-ops>... (the -2 is for the '-' and <short-flag>)
+    let previous_opts = opt_arg.len() - (more_opts.len() + value.len()) - 2;
+
+    if previous_opts == 0 && more_opts.is_empty() {
+        // opt_arg will be of form -<short-flag> or -<short-flag><value>
+        // (i.e. there are no other options that we need to add back to w.argv_opts)
+        return;
+    }
+
+    // Set opt_arg_without to to be opt_arg minus <short-flag><value> (i.e.
+    // -<previous-short-opts>...<more-short-opts>). (the +1 is to skip over the leading '-')
+    let opt_arg_without = opt_arg[..previous_opts + 1].to_owned() + more_opts;
+    assert!(opt_arg.len() > 1); // There should be at least one short opt
+
+    // Put the version without <short-flag> back
+    w.argv_opts.push(opt_arg_without.into());
+}
+
 fn handle_flag<'args>(
     parser: &Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     opt: char,
     is_long_flag: bool,
-    woptarg: Option<&'args wstr>,
+    w: &mut WGetopter<'_, 'args, '_>,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     let opt_spec = opts.options.get_mut(&opt).unwrap();
+    if opt_spec.delete {
+        delete_flag(w, is_long_flag);
+    }
 
     opt_spec.num_seen += 1;
     if opt_spec.num_allowed == ArgCardinality::None {
         // It's a boolean flag. Save the flag we saw since it might be useful to know if the
         // short or long flag was given.
-        assert!(woptarg.is_none());
+        assert!(w.woptarg.is_none());
         let s = if is_long_flag {
             WString::from("--") + opt_spec.long_flag
         } else {
@@ -715,7 +793,7 @@ fn handle_flag<'args>(
         return Ok(SUCCESS);
     }
 
-    if let Some(woptarg) = woptarg {
+    if let Some(woptarg) = w.woptarg {
         validate_arg(parser, &opts.name, opt_spec, is_long_flag, woptarg, streams)?;
     }
 
@@ -725,12 +803,12 @@ fn handle_flag<'args>(
             // `opt_spec->num_allowed == 1` and thus return ':' so that we don't take this branch if
             // the mandatory arg is missing.
             opt_spec.vals.clear();
-            if let Some(arg) = woptarg {
+            if let Some(arg) = w.woptarg {
                 opt_spec.vals.push(arg.into());
             }
         }
         _ => {
-            opt_spec.vals.push(woptarg.unwrap().into());
+            opt_spec.vals.push(w.woptarg.unwrap().into());
         }
     }
 
@@ -814,7 +892,7 @@ fn argparse_parse_flags<'args>(
                 continue;
             }
             // It's a recognized flag.
-            _ => handle_flag(parser, opts, opt, is_long_flag, w.woptarg, streams),
+            _ => handle_flag(parser, opts, opt, is_long_flag, &mut w, streams),
         };
         retval?;
     }
@@ -878,7 +956,7 @@ fn check_min_max_args_constraints(
 }
 
 /// Put the result of parsing the supplied args into the caller environment as local vars.
-fn set_argparse_result_vars(vars: &EnvStack, opts: &ArgParseCmdOpts) {
+fn set_argparse_result_vars(vars: &EnvStack, opts: ArgParseCmdOpts) {
     for opt_spec in opts.options.values() {
         if opt_spec.num_seen == 0 {
             continue;
@@ -904,7 +982,7 @@ fn set_argparse_result_vars(vars: &EnvStack, opts: &ArgParseCmdOpts) {
 
     let args = opts.args.iter().map(|&s| s.to_owned()).collect();
     vars.set(L!("argv"), EnvMode::LOCAL, args);
-    let args_opts = opts.args_opts.iter().map(|&s| s.to_owned()).collect();
+    let args_opts = opts.args_opts.into_iter().map(|s| s.into_owned()).collect();
     vars.set(L!("argv_opts"), EnvMode::LOCAL, args_opts);
 }
 
@@ -953,7 +1031,7 @@ pub fn argparse(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
 
     check_min_max_args_constraints(&opts, streams)?;
 
-    set_argparse_result_vars(parser.vars(), &opts);
+    set_argparse_result_vars(parser.vars(), opts);
 
     Ok(SUCCESS)
 }

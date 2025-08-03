@@ -57,6 +57,15 @@ The following ``argparse`` options are available. They must appear before all *O
 
         Note that the above assumes that unknown long flags use the ``--`` "GNU-style" (e.g. if *KIND* is ``none``, and there is no ``bar`` long option, ``-bar`` is interpreted as three short flags, ``b``, ``a``, and ``r``; but if ``bar`` is known, ``-bar`` is treated the same as ``--bar``).
 
+**-L** or **--strict-longopts**
+    This makes the parsing of long options more strict:
+
+    - Long options must be preceded by ``--`` (so the "old-style" ``-foo`` will never match a long option ``foo``, even if there is no short option ``f``)
+
+    - Long options names cannot be abbreviated (so ``--fo`` will not match a long option ``foo``, even if no other long option starts with ``fo``)
+
+    This flag has no effect on the parsing of unknown options.
+
 **-s** or **--stop-nonopt**
     Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
 

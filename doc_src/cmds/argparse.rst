@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-This command makes it easy for fish scripts and functions to handle arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, and sets ``$argv`` to the remaining arguments. See the :ref:`usage <cmd-argparse-usage>` section below.
+This command makes it easy for fish scripts and functions to handle arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, sets ``$argv_opts`` to the options and their values, and sets ``$argv`` to the remaining arguments. See the :ref:`usage <cmd-argparse-usage>` section below.
 
 Each option specification (``OPTION_SPEC``) is written in the :ref:`domain specific language <cmd-argparse-option-specification>` described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
@@ -217,7 +217,7 @@ Some *OPTION_SPEC* examples:
 
 - ``#longonly`` causes the last integer option to be stored in ``_flag_longonly``.
 
-After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero.
+After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero. Similarly, the ``argv_opts`` variable is set with local scope to the arguments that *were* consumed during flag processing. This allows forwarindg ``$argv_opts`` to another command, together with additional arguments.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.
 

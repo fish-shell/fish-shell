@@ -47,6 +47,10 @@ The following ``argparse`` options are available. They must appear before all *O
     treated as an argument to the unknown one (e.g. ``--ignore-unknown h -- -oh`` will treat ``h`` as the argument to ``-o``, and so ``_flag_h`` will *not* be set).
     In contrast, if the known option comes first (and does not take any arguments), the known option will be recognised and moved from ``$argv`` to ``$argv_opts`` (e.g. ``argparse --ignore-unknown h -- -ho`` will set ``$argv`` to ``-o`` and ``$argv_opts`` to ``-h``)
 
+**-m** or **--move-unknown**
+    This is like **--ignore-unknown**, except that unknown options and their arguments are moved from ``$argv`` to ``$argv_opts``, just like
+    known options.
+
 **-s** or **--stop-nonopt**
     Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
 
@@ -274,7 +278,7 @@ An example of using ``$argv_opts`` to forward known options to another command, 
         set opt_spec n/lines= q/quiet silent v/verbose z/zero-terminated help version
         # --qwords is a new option, but --bytes is an existing one which we will modify below
         set opt_spec -a "qwords=&" "c/bytes=&"
-        argparse $opt_spec -- $argv
+        argparse --move-unknown $opt_spec -- $argv
 
         if set -q _flag_qwords
             # --qwords allows specifying the size in multiples of 8 bytes
@@ -302,4 +306,8 @@ An example of using ``$argv_opts`` to forward known options to another command, 
 
 The argparse call above saves all the options we do *not* want to process in ``$argv_opts``. (The ``--qwords`` and ``--bytes`` options are *not* saved there as their option spec's end in a ``~``). The code then processes the ``--qwords`` and ``--bytess`` options using the the ``$_flag_OPTION`` variables, and puts the transformed options in ``$argv_opts`` (which already contains all the original options, *other* than ``--qwords`` and ``--bytes``).
 
-Note that the ``argparse`` call does need to know all the options to the original ``head`` so that we can accurately work out the *non*-option arguments (i.e. ``$argv``, the filenames that ``head`` is to operate on). We'd similarly need to tell ``argparse`` the options if we wanted to modify the given filenames.
+Note that because the ``argparse`` call above uses ``--move-unknown``, if the original ``head`` adds any new options, the wrapper script can still be used; however, such new options must have their arguments given in "stuck" form (e.g. ``-o<arg>`` or ``--opt=<arg>``). This is needed for the wrapper script to work out the *non*-option arguments (i.e. ``$argv``, the filenames that ``head`` is to operate on).
+
+Also note that if ``--ignore-unknown`` was used instead of ``--move-unknown`` the ``command head $argv_opts -- $argv`` line would incorrectly
+parse unknown options to ``head`` as if they were file names, but removing the ``--`` would prevent users of the wrapper function from passing
+in filenames starting with ``--`` (as ``head`` would interpret them as options).

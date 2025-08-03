@@ -46,6 +46,7 @@ Scripting improvements
 - ``argparse --ignore-unknown`` now removes preceding known short options from groups containing unknown options (e.g. when parsing ``-abc``, if ``a`` is known but ``b`` is not, then ``$argv`` will contain ``-bc``).
 - ``argparse`` now has an ``-m`` / ``--move-unknown`` option that works like ``--ignore-unknown``, but unknown options (and their arguments) are moved from ``$argv`` to ``$argv_opts``. whereas ``--ignore-unknown`` keeps them in ``$argv``.
 - ``argparse`` now has an ``-a`` / ``--unknown-arguments`` *KIND* option whichm, wehre *KIND* is either ``optional``, ``required``, or ``none``, indicating whether unknown options are parsed as taking optional, required, or no arguments.
+- ``argparse`` now has an ``-L`` / ``--strict-longopts`` option that forbids abbreviating long options or passing them with a single dash (e.g. if there is a long option called ``foo``, ``--fo`` and ``--foo`` won't match it).
 
 Interactive improvements
 ------------------------

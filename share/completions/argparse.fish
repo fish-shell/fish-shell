@@ -75,5 +75,7 @@ complete --command argparse --short-option m --long-option move-unknown \
 complete --command argparse --short-option a --long-option unknown-arguments --no-files --require-parameter \
     --arguments "optional required none"\
     --description 'Arguments for unknown options'
+complete --command argparse --short-option L --long-option strict-longopts \
+    --description 'Pass long options strictly'
 complete --command argparse --short-option s --long-option stop-nonopt \
     --description 'Exit on subcommand'

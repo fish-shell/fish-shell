@@ -64,6 +64,19 @@ The following ``argparse`` options are available. They must appear before all *O
 
         When using ``--unknown-arguments=required``, you will get an error if the provided arguments end in an unknown option, since it has no argument. Similarly, with ``--unknown-arguments=none``, you will get an error if you use the ``--flag=value`` syntax and ``flag`` is an unknown option.
 
+**-L** or **--strict-longopts**
+    This makes the parsing of long options more strict. In particular, *without* this flag, if ``long`` is a known long option flag, ``--long`` and ``--long=<value>`` can be abbreviated as:
+
+    - ``-long`` and ``-long=<value>``, but *only* if there is no short flag ``l``.
+
+    - ``--lo`` and ``--lo=<value>``, but *only* if there is no other long flag that starts with ``lo``. Similarly with any other non-empty prefix of ``long``.
+
+    - ``-lo`` and ``-lo=<value>`` (i.e. combining the above two).
+
+    With the ``--strict-longopts`` flag, the above three are parse errors: one must use the syntax ``--long`` or ``--long=<value>`` to use a long option called ``long``.
+
+    This flag has no effect on the parsing of unknown options (which are parsed as if this flag is on).
+
 **-s** or **--stop-nonopt**
     Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
 

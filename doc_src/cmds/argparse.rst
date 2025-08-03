@@ -112,6 +112,8 @@ Each option specification consists of:
 
     - **=+** if it requires a value and each instance of the flag is saved.
 
+- Optionally a ``&``, indicating that the option and any attached values are not to be saved in ``$argv`` or ``$argv_opts``. This does not affect the the ``_flag_`` variables.
+
 - Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on :ref:`Flag Value Validation <flag-value-validation>` for more information.
 
 See the :doc:`fish_opt <fish_opt>` command for a friendlier but more verbose way to create option specifications.
@@ -197,7 +199,7 @@ Some *OPTION_SPEC* examples:
 
 - ``h/help`` means that both ``-h`` and ``--help`` are valid. The flag is a boolean and can be used more than once. If either flag is used then ``_flag_h`` and ``_flag_help`` will be set to however either flag was seen, as many times as it was seen. So it could be set to ``-h``, ``-h`` and ``--help``, and ``count $_flag_h`` would yield "3".
 
-- ``help`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If it is used then ``_flag_help`` will be set as above. Also ``h-help`` (with an arbitrary short letter) for backwards compatibility.
+- ``help&`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If it is used then ``_flag_help`` will be set as above. Also ``h-help`` (with an arbitrary short letter) for backwards compatibility. Moreover, ``--help`` will be removed from ``$argv`` and *not* placed in ``$argv_opts``.
 
 - ``longonly=`` is a flag ``--longonly`` that requires an option, there is no short flag or even short flag variable.
 

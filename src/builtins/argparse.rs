@@ -49,9 +49,17 @@ impl OptionSpec<'_> {
     }
 }
 
+#[derive(Default, PartialEq)]
+enum UnknownHandling {
+    #[default]
+    Error,
+    Ignore,
+    Move,
+}
+
 #[derive(Default)]
 struct ArgParseCmdOpts<'args> {
-    ignore_unknown: bool,
+    unknown_handling: UnknownHandling,
     print_help: bool,
     stop_nonopt: bool,
     min_args: usize,
@@ -75,10 +83,11 @@ impl ArgParseCmdOpts<'_> {
     }
 }
 
-const SHORT_OPTIONS: &wstr = L!("+:hn:six:N:X:");
+const SHORT_OPTIONS: &wstr = L!("+:hn:siux:N:X:");
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("stop-nonopt"), ArgType::NoArgument, 's'),
     wopt(L!("ignore-unknown"), ArgType::NoArgument, 'i'),
+    wopt(L!("move-unknown"), ArgType::NoArgument, 'u'),
     wopt(L!("name"), ArgType::RequiredArgument, 'n'),
     wopt(L!("exclusive"), ArgType::RequiredArgument, 'x'),
     wopt(L!("help"), ArgType::NoArgument, 'h'),
@@ -507,7 +516,22 @@ fn parse_cmd_opts<'args>(
         match c {
             'n' => opts.name = w.woptarg.unwrap().to_owned(),
             's' => opts.stop_nonopt = true,
-            'i' => opts.ignore_unknown = true,
+            'i' | 'u' => {
+                if opts.unknown_handling != UnknownHandling::Error {
+                    streams.err.append(wgettext_fmt!(
+                        BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                        cmd,
+                        "--ignore-unknown",
+                        "--move-unknown"
+                    ));
+                    return Err(STATUS_INVALID_ARGS);
+                };
+                opts.unknown_handling = if c == 'i' {
+                    UnknownHandling::Ignore
+                } else {
+                    UnknownHandling::Move
+                }
+            }
             // Just save the raw string here. Later, when we have all the short and long flag
             // definitions we'll parse these strings into a more useful data structure.
             'x' => opts.raw_exclusive_flags.push(w.woptarg.unwrap()),
@@ -865,7 +889,7 @@ fn argparse_parse_flags<'args>(
                         is_long_flag,
                         streams,
                     )
-                } else if !opts.ignore_unknown {
+                } else if opts.unknown_handling == UnknownHandling::Error {
                     streams.err.append(wgettext_fmt!(
                         BUILTIN_ERR_UNKNOWN,
                         opts.name,
@@ -891,12 +915,22 @@ fn argparse_parse_flags<'args>(
                         w.remaining_text = L!("");
                     }
 
-                    // Now by calling delete_flag we ensure that if the unknown flag is precceded by
-                    // known flags, the known flags are kept in $argv_opts, and not added to $argv.
-                    // (any argument to the option is also returned in unknown_flag, and removed
-                    // from opts.argv_opts)
-                    let unknown_flag = delete_flag(&mut w, is_long_flag);
-                    opts.args.push(unknown_flag);
+                    if opts.unknown_handling == UnknownHandling::Ignore {
+                        // Now by calling delete_flag we ensure that if the unknown flag is
+                        // precceded by known flags, the known flags are kept in $argv_opts, and not
+                        // added to $argv. (any argument to the option is also returned in
+                        // unknown_flag, and removed from opts.argv_opts) Now by calling delete_flag
+                        // we ensure that if the unknown flag is precceded by known flags, the known
+                        // flags are kept in $argv_opts, and not added to $argv. (any argument to
+                        // the option is also returned in unknown_flag, and removed from
+                        // opts.argv_opts)
+                        let unknown_flag = delete_flag(&mut w, is_long_flag);
+                        opts.args.push(unknown_flag);
+                    } else {
+                        assert!(opts.unknown_handling == UnknownHandling::Move);
+                        // Nothing more to do, w.argv_opts will already contain the option, and its
+                        // value (if any)
+                    }
 
                     // Work around weirdness with wgetopt, which crashes if we `continue` here.
                     if w.wopt_index == argc {

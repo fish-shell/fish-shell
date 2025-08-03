@@ -10,9 +10,6 @@ function __fish_opt_validate_args --no-scope-shadowing
     else if set -q _flag_long_only && not set -q _flag_long
         printf (_ "%s: The --long-only flag requires the --long flag\n") fish_opt >&2
         return 1
-    else if not set -q _flag_short && test 1 -eq (string length -- $_flag_long)
-        printf (_ "%s: The --long flag must be more than one character when no --short flag is provided\n") fish_opt >&2
-        return 1
     end
 
     return 0
@@ -33,7 +30,7 @@ function fish_opt -d 'Produce an option specification suitable for use with `arg
     or return
 
     if not set -q _flag_short
-        set opt_spec $_flag_long
+        set opt_spec "/$_flag_long"
     else if not set -q _flag_long
         set opt_spec $_flag_short
     else if set -q _flag_long_only

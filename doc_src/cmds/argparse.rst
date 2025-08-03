@@ -138,7 +138,9 @@ Each option specification consists of:
 
 - An optional alphanumeric short flag character.
 
-- An optional long flag name, seperated from the short flag (if present) by a ``/``. If neither a short flag nor long flag are present, an error is reported.
+- An optional long flag name preceded by a ``/``. If neither a short flag nor long flag are present, an error is reported.
+
+    - If there is no short flag, and the long flag name is more than one character, the ``/`` can be omitted.
 
     - For backwards compatibility, if there is a short and a long flag, a ``-`` can be used in place of the ``/``, if the short flag is not to be usable by users (in which case it will also not be exposed as a flag variable).
 
@@ -254,6 +256,8 @@ Some *OPTION_SPEC* examples:
 - ``name=+`` means that only ``--name`` is valid. It requires a value and can be used more than once. If the flag is seen then ``_flag_name`` will be set with the values associated with each occurrence.
 
 - ``x`` means that only ``-x`` is valid. It is a boolean that can be used more than once. If it is seen then ``_flag_x`` will be set as above.
+
+- ``/x`` is similar, but only ``--x`` is valid (instead of ``-x``).
 
 - ``x=``, ``x=?``, and ``x=+`` are similar to the n/name examples above but there is no long flag alternative to the short flag ``-x``.
 

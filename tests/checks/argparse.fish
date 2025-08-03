@@ -36,6 +36,7 @@ end
 
 # Invalid option specs
 argparse h-
+argparse /
 argparse +help
 argparse h/help:
 argparse h-help::
@@ -43,6 +44,11 @@ argparse h-help=x
 #CHECKERR: argparse: Invalid option spec 'h-' at char '-'
 #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h-
+#CHECKERR: ^
+#CHECKERR: (Type 'help argparse' for related documentation)
+#CHECKERR: argparse: Short flag '/' invalid, must be alphanum or '#'
+#CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
+#CHECKERR: argparse /
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 #CHECKERR: argparse: Short flag '+' invalid, must be alphanum or '#'
@@ -504,7 +510,7 @@ end
 
 # long-only flags with one letter
 begin
-    argparse i-i= a-f -- --i=no --f
+    argparse i-i= /f -- --i=no --f
     set -l
     # CHECK: _flag_f --f
     # CHECK: _flag_i no
@@ -553,12 +559,6 @@ fish_opt -s h --long-only
 and echo unexpected status $status
 #CHECKERR: fish_opt: The --long-only flag requires the --long flag
 
-# One character long flag with no short isn't supported
-fish_opt -l h
-and echo unexpected status $status
-#CHECKERR: fish_opt: The --long flag must be more than one character when no --short flag is provided
-
-
 fish_opt -s help
 and echo unexpected status $status
 #CHECKERR: fish_opt: The --short flag must be a single character
@@ -584,7 +584,12 @@ or echo unexpected status $status
 # Long flag only
 fish_opt -l help
 or echo unexpected status $status
-#CHECK: help
+#CHECK: /help
+
+# One character long flag
+fish_opt -l h
+or echo unexpected status $status
+#CHECK: /h
 
 # Bool, short and long
 fish_opt --short h --long help
@@ -598,7 +603,7 @@ fish_opt --short h --long help --long-only
 # Required val and long
 fish_opt --long help -r
 or echo unexpected status $status
-#CHECK: help=
+#CHECK: /help=
 
 # Optional val, short and long valid, and delete
 fish_opt --short h -l help --optional-val --delete
@@ -623,7 +628,7 @@ or echo unexpected status $status
 # Repeated val and short
 fish_opt -ml help --long-only
 or echo unexpected status $status
-#CHECK: help=+
+#CHECK: /help=+
 
 # Repeated and optional val, short and long but short not valid
 fish_opt --short h -l help --long-only -mo

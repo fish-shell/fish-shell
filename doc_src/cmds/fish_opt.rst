@@ -22,10 +22,10 @@ The following ``argparse`` options are available:
     Takes a single letter or number that is used as the short flag in the option being defined. Either this option or the **--long** option must be provided.
 
 **-l** or **--long** *LONG-NAME*
-    Takes a string that is used as the long flag in the option being defined. This option is optional and has no default. If no long flag is defined then only the short flag will be allowed when parsing arguments using the option specification.  If there is no **--short** flag, the long flag name must be more than one character (use **--short** together with **--long-only** to bypass this restriction).
+    Takes a string that is used as the long flag in the option being defined. This option is optional and has no default. If no long flag is defined then only the short flag will be allowed when parsing arguments using the option specification.
 
 **--long-only**
-    The option being defined will only allow the long flag name to be used, even if the short flag is defined (i.e., **--short** is specified).
+    Deprecated. The option being defined will only allow the long flag name to be used, even if the short flag is defined (i.e., **--short** is specified).
 
 **-o** or **--optional-val**
     The option being defined can take a value, but it is optional rather than required. If the option is seen more than once when parsing arguments, only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will zero elements if no value was given with the option else it will have exactly one element.

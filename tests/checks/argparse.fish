@@ -284,28 +284,32 @@ and echo unexpected argparse return status >&2
 # CHECKERR: argparse: Value '765x' for flag 'max' is not an integer
 # CHECKERR: argparse: Value 'a1' for flag 'm' is not an integer
 
+begin
 # Check the exit status from argparse validation
-argparse 'm#max!set -l | grep "^_flag_"; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
-set -l saved_status $status
-test $saved_status -eq 57
-and echo expected argparse return status $saved_status
-# CHECK: _flag_name max
-# CHECK: _flag_value 83
-# CHECK: expected argparse return status 57
+    argparse 'm#max!set -l | grep "^_flag_"; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
+    set -l saved_status $status
+    test $saved_status -eq 57
+    and echo expected argparse return status $saved_status
+    # CHECK: _flag_name max
+    # CHECK: _flag_value 83
+    # CHECK: expected argparse return status 57
+end
 
-# Explicit int flag validation
-# These should fail
-argparse 'm#max!_validate_int --min 1 --max 1' -- argle -m2 bargle
-and echo unexpected argparse return status $status >&2
-argparse 'm#max!_validate_int --min 0 --max 1' -- argle --max=-1 bargle
-and echo unexpected argparse return status $status >&2
-# CHECKERR: argparse: Value '2' for flag 'm' greater than max allowed of '1'
-# CHECKERR: argparse: Value '-1' for flag 'max' less than min allowed of '0'
-# These should succeed
-argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=0 bargle
-or echo unexpected argparse return status $status >&2
-argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=1 bargle
-or echo unexpected argparse return status $status >&2
+begin
+    # Explicit int flag validation
+    # These should fail
+    argparse 'm#max!_validate_int --min 1 --max 1' -- argle -m2 bargle
+    and echo unexpected argparse return status $status >&2
+    argparse 'm#max!_validate_int --min 0 --max 1' -- argle --max=-1 bargle
+    and echo unexpected argparse return status $status >&2
+    # CHECKERR: argparse: Value '2' for flag 'm' greater than max allowed of '1'
+    # CHECKERR: argparse: Value '-1' for flag 'max' less than min allowed of '0'
+    # These should succeed
+    argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=0 bargle
+    or echo unexpected argparse return status $status >&2
+    argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=1 bargle
+    or echo unexpected argparse return status $status >&2
+end
 
 # Errors use function name by default
 function notargparse
@@ -316,17 +320,25 @@ notargparse
 
 true
 
-# Ignoring unknown options
-argparse -i a=+ b=+ -- -a alpha -b bravo -t tango -a aaaa --wurst
-or echo unexpected argparse return status $status >&2
-# The unknown options are removed _entirely_.
-echo $argv
-echo $_flag_a
-# CHECK: -t tango --wurst
-# CHECK: alpha aaaa
+begin
+    # Ignoring unknown options
+    argparse -i a=+ b=+ -- -a alpha -b bravo -t tango -a aaaa --wurst
+    or echo unexpected argparse return status $status >&2
+    # The unknown options are removed _entirely_.
+    echo $argv
+    echo $_flag_a
+    # CHECK: -t tango --wurst
+    # CHECK: alpha aaaa
+end
 
-# Check for crash when last option is unknown
-argparse -i b/break -- "-b kubectl get pods -l name=foo"
+begin
+    # Check for crash when last option is unknown
+    argparse -i b/break -- "-b kubectl get pods -l name=foo"
+    set -l
+    # CHECK: _flag_b -b
+    # CHECK: _flag_break -b
+    # CHECK: argv '-b kubectl get pods -l name=foo'
+end
 
 begin
     # Checking arguments after "--"
@@ -337,67 +349,43 @@ begin
     # CHECK: -a
 end
 
-# #5864 - short flag only with same validation function.
-# Checking validation for short flags only
-argparse 'i=!_validate_int' 'o=!_validate_int' -- -i 2 -o banana
-argparse 'i=!_validate_int' 'o=!_validate_int' -- -i -o banana
-# CHECKERR: argparse: Value 'banana' for flag 'o' is not an integer
-# CHECKERR: argparse: Value '-o' for flag 'i' is not an integer
 begin
+    # #5864 - short flag only with same validation function.
+    # Checking validation for short flags only
+    argparse 'i=!_validate_int' 'o=!_validate_int' -- -i 2 -o banana
+    argparse 'i=!_validate_int' 'o=!_validate_int' -- -i -o banana
+    # CHECKERR: argparse: Value 'banana' for flag 'o' is not an integer
+    # CHECKERR: argparse: Value '-o' for flag 'i' is not an integer
     argparse 'i=!_validate_int' 'o=!_validate_int' -- -i 2 -o 3
     set -l
-    # CHECK: _flag_a 'alpha'  'aaaa'
-    # CHECK: _flag_b -b
-    # CHECK: _flag_break -b
     # CHECK: _flag_i 2
-    # CHECK: _flag_m 1
-    # CHECK: _flag_max 1
     # CHECK: _flag_o 3
     # CHECK: argv
-    # CHECK: saved_status 57
 end
 
 # long-only flags
 begin
     argparse installed= foo -- --installed=no --foo
     set -l
-    # CHECK: _flag_a 'alpha'  'aaaa'
-    # CHECK: _flag_b -b
-    # CHECK: _flag_break -b
     # CHECK: _flag_foo --foo
     # CHECK: _flag_installed no
-    # CHECK: _flag_m 1
-    # CHECK: _flag_max 1
     # CHECK: argv
-    # CHECK: saved_status 57
 end
 
 begin
     argparse installed='!_validate_int --max 12' foo -- --installed=5 --foo
     set -l
-    # CHECK: _flag_a 'alpha'  'aaaa'
-    # CHECK: _flag_b -b
-    # CHECK: _flag_break -b
     # CHECK: _flag_foo --foo
     # CHECK: _flag_installed 5
-    # CHECK: _flag_m 1
-    # CHECK: _flag_max 1
     # CHECK: argv
-    # CHECK: saved_status 57
 end
 
 begin
     argparse '#num' installed= -- --installed=5 -5
     set -l
-    # CHECK: _flag_a 'alpha'  'aaaa'
-    # CHECK: _flag_b -b
-    # CHECK: _flag_break -b
     # CHECK: _flag_installed 5
-    # CHECK: _flag_m 1
-    # CHECK: _flag_max 1
     # CHECK: _flag_num 5
     # CHECK: argv
-    # CHECK: saved_status 57
 end
 
 begin
@@ -516,3 +504,6 @@ begin
     or echo No flag I
     #CHECK: No flag I
 end
+
+# Check that the argparse's are properly wrapped in begin blocks
+set -l

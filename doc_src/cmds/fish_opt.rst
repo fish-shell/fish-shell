@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    fish_opt -s ALPHANUM [-l LONG-NAME] [-ormd] [--long-only]
+    fish_opt [-s ALPHANUM] [-l LONG-NAME] [-ormd] [--long-only]
     fish_opt --help
 
 Description
@@ -19,13 +19,13 @@ This command provides a way to produce option specifications suitable for use wi
 The following ``argparse`` options are available:
 
 **-s** or **--short** *ALPHANUM*
-    Takes a single letter that is used as the short flag in the option being defined. This option is mandatory.
+    Takes a single letter or number that is used as the short flag in the option being defined. Either this option or the **--long** option must be provided.
 
 **-l** or **--long** *LONG-NAME*
-    Takes a string that is used as the long flag in the option being defined. This option is optional and has no default. If no long flag is defined then only the short flag will be allowed when parsing arguments using the option specification.
+    Takes a string that is used as the long flag in the option being defined. This option is optional and has no default. If no long flag is defined then only the short flag will be allowed when parsing arguments using the option specification.  If there is no **--short** flag, the long flag name must be more than one character (use **--short** together with **--long-only** to bypass this restriction).
 
 **--long-only**
-    The option being defined will only allow the long flag name to be used. The short flag name must still be defined (i.e., **--short** must be specified) but it cannot be used when parsing arguments using this option specification.
+    The option being defined will only allow the long flag name to be used, even if the short flag is defined (i.e., **--short** is specified).
 
 **-o** or **--optional-val**
     The option being defined can take a value, but it is optional rather than required. If the option is seen more than once when parsing arguments, only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will zero elements if no value was given with the option else it will have exactly one element.
@@ -67,7 +67,7 @@ Same as above but with a second flag that requires a value:
     argparse $options -- $argv
 
 
-Same as above but with a third flag that can be given multiple times saving the value of each instance seen and only the long flag name (``--token``) can be used:
+Same as above but with a third flag that can be given multiple times saving the value of each instance seen and only a long flag name (``--token``) is defined:
 
 
 
@@ -75,6 +75,6 @@ Same as above but with a third flag that can be given multiple times saving the 
 
     set -l options (fish_opt --short=h --long=help)
     set options $options (fish_opt --short=m --long=max --required-val)
-    set options $options (fish_opt --short=t --long=token --multiple-vals --long-only)
+    set options $options (fish_opt --long=token --multiple-vals)
     argparse $options -- $argv
 

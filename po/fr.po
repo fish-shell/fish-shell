@@ -2027,6 +2027,9 @@ msgstr "%s : Impossible de trouver un navigateur Web.\\n"
 msgid "%s: Directory stack is empty…\\n"
 msgstr "%s : Pile de dossiers vide…\\n"
 
+msgid "%s: Either the --short or --long flag must be provided\\n"
+msgstr ""
+
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 msgstr "%s : 1, 2 ou 3 arguments attendus, %d reçu(s)\\n"
 
@@ -2039,8 +2042,14 @@ msgstr "%s : Masque '%s' invalide\\n"
 msgid "%s: Not inside of command substitution"
 msgstr "%s : hors de la substitution de commande"
 
-msgid "%s: The --short flag is required and must be a single character\\n"
-msgstr "%s : L’option --short est requise et doit être un caractère unique\\n"
+msgid "%s: The --long flag must be more than one character when no --short flag is provided\\n"
+msgstr ""
+
+msgid "%s: The --long-only flag requires the --long flag\\n"
+msgstr ""
+
+msgid "%s: The --short flag must be a single character\\n"
+msgstr ""
 
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
 msgstr "%s : Le nombre de positions à passer doit être un entier naturel\\n"

@@ -136,9 +136,11 @@ Option Specifications
 
 Each option specification consists of:
 
-- An optional alphanumeric short flag character, followed by a ``/`` if the short flag can be used by someone invoking your command or, for backwards compatibility, a ``-`` if it should not be exposed as a valid short flag (in which case it will also not be exposed as a flag variable).
+- An optional alphanumeric short flag character.
 
-- An optional long flag name, which if not present the short flag can be used, and if that is also not present, an error is reported
+- An optional long flag name, seperated from the short flag (if present) by a ``/``. If neither a short flag nor long flag are present, an error is reported.
+
+    - For backwards compatibility, if there is a short and a long flag, a ``-`` can be used in place of the ``/``, if the short flag is not to be usable by users (in which case it will also not be exposed as a flag variable).
 
 - Nothing if the flag is a boolean that takes no argument or is an integer flag, or
 

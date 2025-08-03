@@ -490,6 +490,10 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 .as_char_slice()
                 .contains(&self.remaining_text.char_at(0))
         {
+            // Unknown option, assume remaining text is its argument
+            // (it needs to be saved somewhere for argparse, but we cant save it in
+            // self.remaining_text as that will break further parsing)
+            self.woptarg = Some(&self.remaining_text[1..]);
             self.remaining_text = empty_wstr();
             self.wopt_index += 1;
 

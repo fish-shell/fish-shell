@@ -1936,6 +1936,9 @@ msgstr ""
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 msgstr ""
 
+msgid "%s: Extra non-option arguments were provided\\n"
+msgstr ""
+
 msgid "%s: Invalid mask '%s'\\n"
 msgstr ""
 
@@ -1946,6 +1949,12 @@ msgid "%s: The --long-only flag requires the --long flag\\n"
 msgstr ""
 
 msgid "%s: The --short flag must be a single character\\n"
+msgstr ""
+
+msgid "%s: The --validate flag requires subsequent arguments\\n"
+msgstr ""
+
+msgid "%s: The --validate flag requires the --required-val, --optional-value, or --multiple-vals flag\\n"
 msgstr ""
 
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
@@ -25449,6 +25458,9 @@ msgid "First page to convert"
 msgstr ""
 
 msgid "First remove existing destination files"
+msgstr ""
+
+msgid "Fish script to validate option values"
 msgstr ""
 
 msgid "Fish's release notes"

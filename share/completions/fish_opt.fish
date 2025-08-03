@@ -11,3 +11,4 @@ complete --command fish_opt --short-option o --long-option optional-val -n $COND
 complete --command fish_opt --short-option r --long-option required-val -n $CONDITION --description 'Require value'
 complete --command fish_opt --short-option m --long-option multiple-vals --description 'Store all values'
 complete --command fish_opt --short-option d --long-option delete --description 'Delete option from argv_opts'
+complete --command fish_opt --short-option v --long-option validate --require-parameter --description 'Fish script to validate option values'

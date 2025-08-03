@@ -51,6 +51,7 @@ Scripting improvements
 - ``argparse`` now allows specifying options that take multiple optional values by using ``=*`` in the option spec, the parsing of the option is the same as ones with optional values (i.e. ``=?``), but each successive use accumulates more values (or an empty string if no value), instead of replacing the previous value (i.e. it behaves similarly to ``=+``) (:issue:`8432`). In addition, ``fish_opt`` has been modified to support such options by using the ``--multiple-vals`` together with ``-o`` / ``--optional-val``; ``-m`` is also now acceptable as an abbreviation for ``--multiple-vals``.
 - ``fish_opt`` no longer requires you give a short flag name when defining options, provided you give it a long flag name with more than one character.
 - ``argparse`` option specifiers for long only options can now start with ``/``, allowing the definition of long options with a single letter (withouht the ``/``, an option with a single letter is always interpreted as a short flag). Due to this change, the ``--long-only`` option to ``fish_opt`` is now no longer necessary and is deprecated.
+- ``fish_opt`` now has a ``-v`` / ``--validate`` option you can use to give a fish script to validate values of the option.
 
 Interactive improvements
 ------------------------

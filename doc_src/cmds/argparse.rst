@@ -41,7 +41,11 @@ The following ``argparse`` options are available. They must appear before all *O
     The maximum number of acceptable non-option arguments. The default is infinity.
 
 **-i** or **--ignore-unknown**
-    Ignores unknown options, keeping them and their arguments in $argv instead.
+    Ignore unknown options, keeping them and their arguments in ``$argv`` instead and not moving them to ``$argv_opts``. Unknown options are treated as if they take optional arguments (i.e. have option spec ``=?``).
+
+    The above means that if a group of short options contains an unknown short option *followed* by a known short option, the known short option is
+    treated as an argument to the unknown one (e.g. ``--ignore-unknown h -- -oh`` will treat ``h`` as the argument to ``-o``, and so ``_flag_h`` will *not* be set).
+    In contrast, if the known option comes first (and does not take any arguments), the known option will be recognised and moved from ``$argv`` to ``$argv_opts`` (e.g. ``argparse --ignore-unknown h -- -ho`` will set ``$argv`` to ``-o`` and ``$argv_opts`` to ``-h``)
 
 **-s** or **--stop-nonopt**
     Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
@@ -299,18 +303,3 @@ An example of using ``$argv_opts`` to forward known options to another command, 
 The argparse call above saves all the options we do *not* want to process in ``$argv_opts``. (The ``--qwords`` and ``--bytes`` options are *not* saved there as their option spec's end in a ``~``). The code then processes the ``--qwords`` and ``--bytess`` options using the the ``$_flag_OPTION`` variables, and puts the transformed options in ``$argv_opts`` (which already contains all the original options, *other* than ``--qwords`` and ``--bytes``).
 
 Note that the ``argparse`` call does need to know all the options to the original ``head`` so that we can accurately work out the *non*-option arguments (i.e. ``$argv``, the filenames that ``head`` is to operate on). We'd similarly need to tell ``argparse`` the options if we wanted to modify the given filenames.
-
-Limitations
------------
-
-One limitation with **--ignore-unknown** is that, if an unknown option is given in a group with known options, the entire group will be kept in $argv. ``argparse`` will not do any permutations here.
-
-For instance::
-
-  argparse --ignore-unknown h -- -ho
-  echo $_flag_h # is -h, because -h was given
-  echo $argv # is still -ho
-
-This limitation may be lifted in future.
-
-Additionally, it can only parse known options up to the first unknown option in the group - the unknown option could take options, so it isn't clear what any character after an unknown option means.

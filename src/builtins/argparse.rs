@@ -59,7 +59,7 @@ struct ArgParseCmdOpts<'args> {
     implicit_int_flag: char,
     name: WString,
     raw_exclusive_flags: Vec<&'args wstr>,
-    args: Vec<&'args wstr>,
+    args: Vec<Cow<'args, wstr>>,
     args_opts: Vec<Cow<'args, wstr>>,
     options: HashMap<char, OptionSpec<'args>>,
     long_to_short_flag: HashMap<WString, char>,
@@ -707,7 +707,8 @@ fn validate_and_store_implicit_int<'args>(
 
 /// Delete the most recently matched flag, is_long_flag should be true if the flag was given with a long flag name
 /// (even if it was given with a single - and not two).
-fn delete_flag<'args>(w: &mut WGetopter<'_, 'args, '_>, is_long_flag: bool) {
+/// The returned value is the deleted flag and its value (unless the value was given as a seperate argument)
+fn delete_flag<'args>(w: &mut WGetopter<'_, 'args, '_>, is_long_flag: bool) -> Cow<'args, wstr> {
     // Does the option have a value that was a seperate argument to the option name itself?
     // (e.g. w.argv_opts ends in --<long_flag> <value>, or -<other-short-opts>...<short_flag> <value>?)
     let separate_value = w
@@ -728,7 +729,7 @@ fn delete_flag<'args>(w: &mut WGetopter<'_, 'args, '_>, is_long_flag: bool) {
         // opt_arg will be of form --<long-flag>, except there may only be one -, and <long-flag> may be abbreviated
         debug_assert!(w.remaining_text.is_empty());
         // There will be no short options, so we're done
-        return;
+        return opt_arg;
     }
 
     // Otherwise, it's a short option so opt_arg will be of form:
@@ -751,16 +752,21 @@ fn delete_flag<'args>(w: &mut WGetopter<'_, 'args, '_>, is_long_flag: bool) {
     if previous_opts == 0 && more_opts.is_empty() {
         // opt_arg will be of form -<short-flag> or -<short-flag><value>
         // (i.e. there are no other options that we need to add back to w.argv_opts)
-        return;
+        return opt_arg;
     }
+
+    // Set opt_arg_with to be opt_arg minus the <previous-short-ops>... (i.e. -<short-flag><value>)
+    // (the +1 is to skip over the leading '-', and the +2 ensures a one character slice is returned)
+    let opt_arg_with = L!("-").to_owned() + &opt_arg[previous_opts + 1..previous_opts + 2] + value;
 
     // Set opt_arg_without to to be opt_arg minus <short-flag><value> (i.e. -<previous-short-opts>...<more-short-opts>)
     // (the +1 is to skip over the leading '-')
     let opt_arg_without = opt_arg[..previous_opts + 1].to_owned() + more_opts;
     debug_assert!(opt_arg.len() > 1); // There should be at least one short opt
 
-    // Put the version without <short-flag> back
+    // Put the version without <short-flag> back, and return the version with it
     w.argv_opts.push(opt_arg_without.into());
+    Cow::Owned(opt_arg_with)
 }
 
 fn handle_flag<'args>(
@@ -864,18 +870,31 @@ fn argparse_parse_flags<'args>(
                     ));
                     Err(STATUS_INVALID_ARGS)
                 } else {
+                    debug_assert!(!is_long_flag); // The option is unknown, so there's no long opt index it could have used
+                    let is_long_flag = arg_contents.starts_with("-"); // arg_contents already skipped over the first '-'
+
                     // Any unrecognized option is put back if ignore_unknown is used.
                     // This allows reusing the same argv in multiple argparse calls,
                     // or just ignoring the error (e.g. in completions).
-                    opts.args.push(args_read[w.wopt_index - 1]);
-                    w.argv_opts.pop();
+
+                    // First we consume any remaining text as if it was the option's argument
+                    if !w.remaining_text.is_empty() {
+                        debug_assert!(w.woptarg.is_none()); // Both don't make sense
+                        w.woptarg = Some(w.remaining_text);
+                        // Explain to wgetopt that we want to skip to the next arg,
+                        // because we can't handle this opt group.
+                        w.remaining_text = L!("");
+                    }
+
+                    // Now by calling delete_flag we ensure that if the unknown flag is precceded by known flags, the known flags are kept in $argv_opts, and not added to $argv.
+                    // (any argument to the option is also returned in unknown_flag, and removed from opts.argv_opts)
+                    let unknown_flag = delete_flag(&mut w, is_long_flag);
+                    opts.args.push(unknown_flag);
+
                     // Work around weirdness with wgetopt, which crashes if we `continue` here.
                     if w.wopt_index == argc {
                         break;
                     }
-                    // Explain to wgetopt that we want to skip to the next arg,
-                    // because we can't handle this opt group.
-                    w.remaining_text = L!("");
                     Ok(SUCCESS)
                 }
             }
@@ -885,7 +904,7 @@ fn argparse_parse_flags<'args>(
                 // otherwise we'd get ignored options first and normal arguments later.
                 // E.g. `argparse -i -- -t tango -w` needs to keep `-t tango -w` in $argv, not `-t -w
                 // tango`.
-                opts.args.push(args_read[w.wopt_index - 1]);
+                opts.args.push(Cow::Borrowed(args_read[w.wopt_index - 1]));
                 continue;
             }
             // It's a recognized flag.
@@ -918,7 +937,8 @@ fn argparse_parse_args<'args>(
 
     check_for_mutually_exclusive_flags(opts, streams)?;
 
-    opts.args.extend_from_slice(&args[optind..]);
+    opts.args
+        .extend(args[optind..].iter().map(|&s| Cow::Borrowed(s)));
 
     Ok(SUCCESS)
 }
@@ -977,7 +997,7 @@ fn set_argparse_result_vars(vars: &EnvStack, opts: ArgParseCmdOpts) {
         }
     }
 
-    let args = opts.args.iter().map(|&s| s.to_owned()).collect();
+    let args = opts.args.into_iter().map(|s| s.into_owned()).collect();
     vars.set(L!("argv"), EnvMode::LOCAL, args);
     let args_opts = opts.args_opts.into_iter().map(|s| s.into_owned()).collect();
     vars.set(L!("argv_opts"), EnvMode::LOCAL, args_opts);

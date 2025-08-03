@@ -347,13 +347,25 @@ begin
 end
 
 begin
+    # Ignoring unknown long options that share a character with a known short options
+    argparse -i o -- --long=value --long
+    or echo unexpected argparse return status $status >&2
+    set -l
+    # CHECK: argv '--long=value'  '--long'
+    # CHECK: argv_opts
+end
+
+begin
     # Check for crash when last option is unknown
+    # Note that because of the quotation marks, there is a single argument
+    # starting with the known short option '-b', and continuing with an unknown short option
+    # that starts with a space
     argparse -i b/break -- "-b kubectl get pods -l name=foo"
     set -l
     # CHECK: _flag_b -b
     # CHECK: _flag_break -b
-    # CHECK: argv '-b kubectl get pods -l name=foo'
-    # CHECK: argv_opts
+    # CHECK: argv '- kubectl get pods -l name=foo'
+    # CHECK: argv_opts -b
 end
 
 begin
@@ -519,8 +531,9 @@ end
 begin
     argparse --ignore-unknown h i -- -hoa -oia
     echo -- $argv
-    #CHECK: -hoa -oia
+    #CHECK: -oa -oia
     echo -- $argv_opts
+    #CHECK: -h
     echo $_flag_h
     #CHECK: -h
     set -q _flag_i

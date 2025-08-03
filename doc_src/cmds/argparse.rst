@@ -41,7 +41,7 @@ The following ``argparse`` options are available. They must appear before all *O
     The maximum number of acceptable non-option arguments. The default is infinity.
 
 **-i** or **--ignore-unknown**
-    Ignores unknown options, keeping them and their arguments in $argv instead.
+    Ignores unknown options, keeping them and their arguments in ``$argv`` instead (while moving any preceding known short options to ``$argv_opts``). Unknown options are treated as if they take optional arguments (i.e. have option spec ``=?``).
 
 **-s** or **--stop-nonopt**
     Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
@@ -259,19 +259,3 @@ After this it figures out which variable it should operate on according to the `
     # it is not valid in a variable name
     not set -ql _flag_dry_run
     and set $var $result
-
-
-Limitations
------------
-
-One limitation with **--ignore-unknown** is that, if an unknown option is given in a group with known options, the entire group will be kept in $argv. ``argparse`` will not do any permutations here.
-
-For instance::
-
-  argparse --ignore-unknown h -- -ho
-  echo $_flag_h # is -h, because -h was given
-  echo $argv # is still -ho
-
-This limitation may be lifted in future.
-
-Additionally, it can only parse known options up to the first unknown option in the group - the unknown option could take options, so it isn't clear what any character after an unknown option means.

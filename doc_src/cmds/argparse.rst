@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-This command makes it easy for fish scripts and functions to handle arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, and sets ``$argv`` to the remaining arguments. See the :ref:`usage <cmd-argparse-usage>` section below.
+This command makes it easy for fish scripts and functions to handle arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, sets ``$argv_opts`` to the options and their values, and sets ``$argv`` to the remaining arguments. See the :ref:`usage <cmd-argparse-usage>` section below.
 
 Each option specification (``OPTION_SPEC``) is written in the :ref:`domain specific language <cmd-argparse-option-specification>` described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
@@ -217,7 +217,7 @@ Some *OPTION_SPEC* examples:
 
 - ``#longonly`` causes the last integer option to be stored in ``_flag_longonly``.
 
-After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero.
+After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero. Similarly, the ``argv_opts`` variable is set with local scope to the arguments that *were* consumed during flag processing. This allows forwarding ``$argv_opts`` to another command, together with additional arguments.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.
 
@@ -258,6 +258,48 @@ After this it figures out which variable it should operate on according to the `
     not set -ql _flag_dry_run
     and set $var $result
 
+
+An example of using ``$argv_opts`` to forward known options to another command, whilst adding new options::
+
+    function my-head
+        # The following options are existing ones to head that we will forward verbatim
+        set -l opt_spec n/lines= q/quiet silent v/verbose z/zero-terminated help version
+        argparse --ignore-unknown $opt_spec -- $argv || return
+        set -l opts $argv_opts # Save it so it isn't overridden by the next argparse call
+
+        # --qwords is a new option, but --bytes is an existing one which we will modify below
+        argparse qwords= c/bytes= -- $argv || return
+
+        if set -q _flag_qwords
+            # --qwords allows specifying the size in multiples of 8 bytes
+            set -a opts --bytes=(math -- $_flag_qwords \* 8 || return)
+        else if set -q _flag_bytes
+            # Allows using a 'q' suffix, e.g. --bytes=4q to mean 4*8 bytes.
+            if string match -qr 'q$' -- $_flag_bytes
+                set -a opts --bytes=(math -- (string replace -r 'q$' '*8' -- $_flag_bytes) || return)
+            else
+                # Keep the users setting
+                set -a opts --bytes=$_flag_bytes
+            end
+
+        end
+
+        if test (count $argv) -eq 0
+            # Default to heading /dev/kmsg (whereas head defaults to stdin)
+            set -l argv /dev/kmsg
+        end
+
+        # Call the real head with our modified options and arguments.
+        head $opts -- $argv
+    end
+
+
+The first argparse call above saves all the options we do *not* want to process in ``$argv_opts``, which we then copy in to ``$opts``.
+The second `argparse` call then parses the options we *do* want to process. The new
+value of ``$argv_opts`` is ignored, and instead the ``$_flag_OPTION`` variables are used to transform each of these additional options and
+add them back to ``$opts``.
+
+Note that the first ``argparse`` call is *needed* for the code that inspects ``$argv`` to work, as it checks for the absence of any *non*-option arguments (i.e. no file was specified). We'd similarly need the first call if we wanted to modify the given filenames.
 
 Limitations
 -----------

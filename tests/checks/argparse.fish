@@ -31,6 +31,7 @@ begin
     # CHECK: 0
     set -l
     # CHECK: argv hello
+    # CHECK: argv_opts
 end
 
 # Invalid option specs
@@ -154,6 +155,7 @@ begin
     argparse h/help -- help
     set -l
     # CHECK: argv help
+    # CHECK: argv_opts
 end
 
 # Five args with two matching a flag
@@ -163,12 +165,13 @@ begin
     # CHECK: _flag_h '--help'  '-h'
     # CHECK: _flag_help '--help'  '-h'
     # CHECK: argv 'help'  'me'  'a lot more'
+    # CHECK: argv_opts '--help'  '-h'
 end
 
 # Required, optional, and multiple flags
 begin
     argparse h/help 'a/abc=' 'd/def=?' 'g/ghk=+' -- help --help me --ghk=g1 --abc=ABC --ghk g2 -d -g g3
-    set -l
+    set -lL
     # CHECK: _flag_a ABC
     # CHECK: _flag_abc ABC
     # CHECK: _flag_d
@@ -178,6 +181,7 @@ begin
     # CHECK: _flag_h --help
     # CHECK: _flag_help --help
     # CHECK: argv 'help'  'me'
+    # CHECK: argv_opts '--help'  '--ghk=g1'  '--abc=ABC'  '--ghk'  'g2'  '-d'  '-g'  'g3'
 end
 
 # --stop-nonopt works
@@ -189,6 +193,7 @@ begin
     # CHECK: _flag_h -h
     # CHECK: _flag_help -h
     # CHECK: argv 'non-opt'  'second non-opt'  '--help'
+    # CHECK: argv_opts '-a'  'A1'  '-h'  '--abc'  'A2'
 end
 
 # Implicit int flags work
@@ -197,6 +202,7 @@ begin
     set -l
     # CHECK: _flag_val 123
     # CHECK: argv 'abc'  'def'
+    # CHECK: argv_opts -123
 end
 begin
     argparse v/verbose '#-val' 't/token=' -- -123 a1 --token woohoo --234 -v a2 --verbose
@@ -207,6 +213,7 @@ begin
     # CHECK: _flag_val -234
     # CHECK: _flag_verbose '-v'  '--verbose'
     # CHECK: argv 'a1'  'a2'
+    # CHECK: argv_opts '-123'  '--token'  'woohoo'  '--234'  '-v'  '--verbose'
 end
 
 # Should be set to 987
@@ -216,6 +223,7 @@ begin
     # CHECK: _flag_m 987
     # CHECK: _flag_max 987
     # CHECK: argv 'argle'  'bargle'
+    # CHECK: argv_opts -987
 end
 
 # Should be set to 765
@@ -225,6 +233,7 @@ begin
     # CHECK: _flag_m 765
     # CHECK: _flag_max 765
     # CHECK: argv 'argle'  'bargle'
+    # CHECK: argv_opts '-987'  '--max'  '765'
 end
 
 # Bool short flag only
@@ -234,6 +243,7 @@ begin
     # CHECK: _flag_C -C
     # CHECK: _flag_v '-v'  '-v'
     # CHECK: argv 'arg1'  'arg2'
+    # CHECK: argv_opts '-C'  '-v'  '-v'
 end
 
 # Value taking short flag only
@@ -244,6 +254,7 @@ begin
     # CHECK: _flag_verbose '--verbose'  '-v'
     # CHECK: _flag_x arg2
     # CHECK: argv arg1
+    # CHECK: argv_opts '--verbose'  '-v'  '-x'  'arg2'
 end
 
 # Implicit int short flag only
@@ -254,6 +265,7 @@ begin
     # CHECK: _flag_verbose '-v'  '-v'  '-v'
     # CHECK: _flag_x 321
     # CHECK: argv 'argle'  'bargle'
+    # CHECK: argv_opts '-v'  '-v'  '-v'  '-x'  '321'
 end
 
 # Implicit int short flag only with custom validation passes
@@ -264,6 +276,7 @@ begin
     # CHECK: _flag_verbose '-v'  '-v'  '-v'
     # CHECK: _flag_x 499
     # CHECK: argv
+    # CHECK: argv_opts '-v'  '-v'  '-x'  '499'  '-v'
 end
 
 # Implicit int short flag only with custom validation fails
@@ -326,8 +339,10 @@ begin
     or echo unexpected argparse return status $status >&2
     # The unknown options are removed _entirely_.
     echo $argv
+    echo $argv_opts
     echo $_flag_a
     # CHECK: -t tango --wurst
+    # CHECK: -a alpha -b bravo -a aaaa
     # CHECK: alpha aaaa
 end
 
@@ -338,6 +353,7 @@ begin
     # CHECK: _flag_b -b
     # CHECK: _flag_break -b
     # CHECK: argv '-b kubectl get pods -l name=foo'
+    # CHECK: argv_opts
 end
 
 begin
@@ -346,7 +362,9 @@ begin
     printf '%s\n' $argv
     # CHECK: a
     # CHECK: b
+    printf '%s\n' $argv_opts
     # CHECK: -a
+    # CHECK: --alpha
 end
 
 begin
@@ -361,6 +379,7 @@ begin
     # CHECK: _flag_i 2
     # CHECK: _flag_o 3
     # CHECK: argv
+    # CHECK: argv_opts '-i'  '2'  '-o'  '3'
 end
 
 # long-only flags
@@ -370,6 +389,7 @@ begin
     # CHECK: _flag_foo --foo
     # CHECK: _flag_installed no
     # CHECK: argv
+    # CHECK: argv_opts '--installed=no'  '--foo'
 end
 
 begin
@@ -378,6 +398,7 @@ begin
     # CHECK: _flag_foo --foo
     # CHECK: _flag_installed 5
     # CHECK: argv
+    # CHECK: argv_opts '--installed=5'  '--foo'
 end
 
 begin
@@ -386,6 +407,7 @@ begin
     # CHECK: _flag_installed 5
     # CHECK: _flag_num 5
     # CHECK: argv
+    # CHECK: argv_opts '--installed=5'  '-5'
 end
 
 begin
@@ -498,6 +520,7 @@ begin
     argparse --ignore-unknown h i -- -hoa -oia
     echo -- $argv
     #CHECK: -hoa -oia
+    echo -- $argv_opts
     echo $_flag_h
     #CHECK: -h
     set -q _flag_i

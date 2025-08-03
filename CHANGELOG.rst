@@ -45,6 +45,7 @@ Scripting improvements
 - ``argparse`` now saves recognised options and values in ``$argv_opts``, allowing them to be forwarded to other commands (:issue:`6466`).
 - ``argparse`` options can now be marked to be deleted from ``$argv_opts`` (by adding a ``&`` at the end of the option spec, before a ``!`` if present). There is now also a corresponding ``-d`` / ``--delete`` option to ``fish_opt``.
 - ``argparse --ignore-unknown`` now removes preceding known short options from groups containing unknown options (e.g. when parsing ``-abc``, if ``a`` is known but ``b`` is not, then ``$argv`` will contain ``-bc``).
+- ``argparse`` now has an ``-u`` / ``--move-unknown`` option that works like ``--ignore-unknown``, but unknown options (and their arguments) are moved from ``$argv`` to ``$argv_opts``. whereas ``--ignore-unknown`` keeps them in ``$argv``.
 
 Interactive improvements
 ------------------------

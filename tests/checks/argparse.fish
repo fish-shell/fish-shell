@@ -369,6 +369,62 @@ begin
 end
 
 begin
+    # Ignore unknown and move unknown are mutually exclusive
+    argparse -i --move-unknown --
+    #CHECKERR: argparse: --ignore-unknown --move-unknown: options cannot be used together
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: argparse -i --move-unknown --
+    #CHECKERR: ^
+    #CHECKERR: (Type 'help argparse' for related documentation)
+end
+
+begin
+    # Moving unknown options
+    argparse --move-unknown h i -- -hoa -oia
+    echo -- $argv
+    #CHECK:
+    echo -- $argv_opts
+    #CHECK: -hoa -oia
+    echo $_flag_h
+    #CHECK: -h
+    set -q _flag_i
+    or echo No flag I
+    #CHECK: No flag I
+end
+
+begin
+    # Moving unknown options
+    argparse -u a=+ b=+ -- -a alpha -b bravo -t tango -a aaaa --wurst
+    or echo unexpected argparse return status $status >&2
+    # The unknown options are removed _entirely_.
+    echo $argv
+    echo $argv_opts
+    echo $_flag_a
+    # CHECK: tango
+    # CHECK: -a alpha -b bravo -t -a aaaa --wurst
+    # CHECK: alpha aaaa
+end
+
+begin
+    # Move unknown long options that share a character with a known short options
+    argparse -u o -- --long=value --long
+    or echo unexpected argparse return status $status >&2
+    set -l
+    # CHECK: argv
+    # CHECK: argv_opts '--long=value'  '--long'
+end
+
+
+begin
+    argparse -u b/break -- "-b kubectl get pods -l name=foo"
+    set -l
+    # CHECK: _flag_b -b
+    # CHECK: _flag_break -b
+    # CHECK: argv
+    # CHECK: argv_opts '-b kubectl get pods -l name=foo'
+end
+
+begin
     # Checking arguments after "--"
     argparse a/alpha -- a --alpha -- b -a
     printf '%s\n' $argv

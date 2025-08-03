@@ -67,6 +67,10 @@ complete --command argparse --short-option N --long-option min-args --no-files -
 complete --command argparse --short-option X --long-option max-args --no-files --require-parameter \
     --description 'Specify maximum non-option argument count'
 complete --command argparse --short-option i --long-option ignore-unknown \
+    -n '! __fish_seen_argument --short u --long move-unknown' \
     --description 'Ignore unknown options'
+complete --command argparse --short-option u --long-option move-unknown \
+    -n '! __fish_seen_argument --short i --long ignore-unknown' \
+    --description 'Move unknown options into \$argv_opts'
 complete --command argparse --short-option s --long-option stop-nonopt \
     --description 'Exit on subcommand'

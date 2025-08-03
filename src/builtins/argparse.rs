@@ -364,10 +364,12 @@ fn parse_option_spec_sep<'args>(
             }
         }
         _ => {
-            // No short flag separator and no other modifiers, so this is a long only option.
+            // No short flag or separator, and no other modifiers, so this is a long only option.
             // Since getopt needs a wchar, we have a counter that we count up.
             opt_spec.short_flag_valid = false;
-            i -= 1;
+            if s.char_at(i - 1) != '/' {
+                i -= 1
+            }
             opt_spec.short_flag = char::from_u32(*counter).unwrap();
             *counter += 1;
         }
@@ -392,7 +394,8 @@ fn parse_option_spec<'args>(
     }
 
     let mut s = option_spec;
-    if !fish_iswalnum(s.char_at(0)) && s.char_at(0) != '#' {
+    if !fish_iswalnum(s.char_at(0)) && s.char_at(0) != '#' && !(s.char_at(0) == '/' && s.len() > 1)
+    {
         streams.err.append(wgettext_fmt!(
             "%ls: Short flag '%lc' invalid, must be alphanum or '#'\n",
             opts.name,

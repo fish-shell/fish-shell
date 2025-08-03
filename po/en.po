@@ -1941,9 +1941,6 @@ msgstr "%s: Invalid mask “%s”\\n"
 msgid "%s: Not inside of command substitution"
 msgstr "%s: Not inside of command substitution"
 
-msgid "%s: The --long flag must be more than one character when no --short flag is provided\\n"
-msgstr ""
-
 msgid "%s: The --long-only flag requires the --long flag\\n"
 msgstr ""
 

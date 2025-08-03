@@ -41,10 +41,21 @@ The following ``argparse`` options are available. They must appear before all *O
     The maximum number of acceptable non-option arguments. The default is infinity.
 
 **-i** or **--ignore-unknown**
-    Ignores unknown options, keeping them and their arguments in ``$argv`` instead (while moving any preceding known short options to ``$argv_opts``). Unknown options are treated as if they take optional arguments (i.e. have option spec ``=?``).
+    Ignores unknown options, keeping them and their arguments in ``$argv`` instead (while moving any preceding known short options to ``$argv_opts``). By default, unknown options are treated as if they take optional arguments (i.e. have option spec ``=?``).
 
 **-m** or **--move-unknown**
     This is like **--ignore-unknown**, except that unknown options and their arguments are moved from ``$argv`` to ``$argv_opts``.
+
+**-a** or **--unknown-arguments** *KIND*
+    Modifies the parsing behaviour of unknown options handled by **--ignore-unknown** and **--move-unknown** above, depending on the value of *KIND*:
+
+        - **optional** (the default), allows each unknown option to take an optional argument (i.e. as if it had ``=?`` in its option specification)
+
+        - **required**, requires each unknown option to take an argument (i.e. as if it had ``=`` or ``=+`` in its option specification).
+
+        - **none**, forbids each unknown option from taking an argument (i.e. as if it had no ``=`` in its option specification).
+
+        Note that the above assumes that unknown long flags use the ``--`` "GNU-style" (e.g. if *KIND* is ``none``, and there is no ``bar`` long option, ``-bar`` is interpreted as three short flags, ``b``, ``a``, and ``r``; but if ``bar`` is known, ``-bar`` is treated the same as ``--bar``).
 
 **-s** or **--stop-nonopt**
     Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.

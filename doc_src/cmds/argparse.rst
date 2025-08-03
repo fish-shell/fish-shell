@@ -112,6 +112,8 @@ Each option specification consists of:
 
     - **=+** if it requires a value and each instance of the flag is saved.
 
+- Optionally a ``&``, indicating that the option and any attached values are not to be saved in ``$argv`` or ``$argv_opts``. This does not affect the the ``_flag_`` variables.
+
 - Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on :ref:`Flag Value Validation <flag-value-validation>` for more information.
 
 See the :doc:`fish_opt <fish_opt>` command for a friendlier but more verbose way to create option specifications.
@@ -199,6 +201,8 @@ Some *OPTION_SPEC* examples:
 
 - ``help`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If it is used then ``_flag_help`` will be set as above. Also ``h-help`` (with an arbitrary short letter) for backwards compatibility.
 
+- ``help&`` is similar (it will *remove* ``--help`` from ``$argv``), the difference is that ``--help``` will *not* placed in ``$argv_opts``.
+
 - ``longonly=`` is a flag ``--longonly`` that requires an option, there is no short flag or even short flag variable.
 
 - ``n/name=`` means that both ``-n`` and ``--name`` are valid. It requires a value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the single mandatory value associated with the flag.
@@ -264,22 +268,20 @@ An example of using ``$argv_opts`` to forward known options to another command, 
     function my-head
         # The following options are existing ones to head that we will forward verbatim
         set -l opt_spec n/lines= q/quiet silent v/verbose z/zero-terminated help version
-        argparse --ignore-unknown $opt_spec -- $argv || return
-        set -l opts $argv_opts # Save it so it isn't overridden by the next argparse call
-
         # --qwords is a new option, but --bytes is an existing one which we will modify below
-        argparse qwords= c/bytes= -- $argv || return
+        set -a opt_spec "qwords=&" "c/bytes=&"
+        argparse $opt_spec -- $argv || return
 
         if set -q _flag_qwords
             # --qwords allows specifying the size in multiples of 8 bytes
-            set -a opts --bytes=(math -- $_flag_qwords \* 8 || return)
+            set -a argv_opts --bytes=(math -- $_flag_qwords \* 8 || return)
         else if set -q _flag_bytes
             # Allows using a 'q' suffix, e.g. --bytes=4q to mean 4*8 bytes.
             if string match -qr 'q$' -- $_flag_bytes
-                set -a opts --bytes=(math -- (string replace -r 'q$' '*8' -- $_flag_bytes) || return)
+                set -a argv_opts --bytes=(math -- (string replace -r 'q$' '*8' -- $_flag_bytes) || return)
             else
                 # Keep the users setting
-                set -a opts --bytes=$_flag_bytes
+                set -a argv_opts --bytes=$_flag_bytes
             end
 
         end
@@ -290,16 +292,13 @@ An example of using ``$argv_opts`` to forward known options to another command, 
         end
 
         # Call the real head with our modified options and arguments.
-        head $opts -- $argv
+        head $argv_opts -- $argv
     end
 
 
-The first argparse call above saves all the options we do *not* want to process in ``$argv_opts``, which we then copy in to ``$opts``.
-The second `argparse` call then parses the options we *do* want to process. The new
-value of ``$argv_opts`` is ignored, and instead the ``$_flag_OPTION`` variables are used to transform each of these additional options and
-add them back to ``$opts``.
+The argparse call above saves all the options we do *not* want to process in ``$argv_opts``. (The ``--qwords`` and ``--bytes`` options are *not* saved there as their option spec's end in a ``~``). The code then processes the ``--qwords`` and ``--bytess`` options using the the ``$_flag_OPTION`` variables, and puts the transformed options in ``$argv_opts`` (which already contains all the original options, *other* than ``--qwords`` and ``--bytes``).
 
-Note that the first ``argparse`` call is *needed* for the code that inspects ``$argv`` to work, as it checks for the absence of any *non*-option arguments (i.e. no file was specified). We'd similarly need the first call if we wanted to modify the given filenames.
+Note that the ``argparse`` call does need to know all the options to the original ``head`` so that we can accurately work out the *non*-option arguments (i.e. ``$argv``, the filenames that ``head`` is to operate on). We'd similarly need to tell ``argparse`` the options if we wanted to modify the given filenames.
 
 Limitations
 -----------

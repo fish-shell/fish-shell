@@ -473,10 +473,10 @@ fish_opt --short h --long help -r --long-only
 or echo unexpected status $status
 #CHECK: h-help=
 
-# Optional val, short and long valid
-fish_opt --short h -l help --optional-val
+# Optional val, short and long valid, and delete
+fish_opt --short h -l help --optional-val --delete
 or echo unexpected status $status
-#CHECK: h/help=?
+#CHECK: h/help=?&
 
 # Optional val, short and long but the short var cannot be used
 fish_opt --short h -l help --optional-val --long-only
@@ -493,13 +493,13 @@ fish_opt --short h -l help --multiple-vals --long-only
 or echo unexpected status $status
 #CHECK: h-help=+
 
-# Repeated val, short only
+# Repeated val, short only, and deleted
 fish_opt -s h --multiple-vals
 or echo unexpected status $status
-fish_opt -s h --multiple-vals --long-only
+#CHECK: h=+
+fish_opt -s h --multiple-vals --long-only -d
 or echo unexpected status $status
-#CHECK: h=+
-#CHECK: h=+
+#CHECK: h=+&
 
 function wrongargparse
     argparse -foo -- banana
@@ -526,6 +526,48 @@ begin
     set -q _flag_i
     or echo No flag I
     #CHECK: No flag I
+end
+
+# Tests for --delete
+begin
+    argparse 'a/long&' -- before -a inbetween --long after
+    set -l
+    # CHECK: _flag_a '-a'  '--long'
+    # CHECK: _flag_long '-a'  '--long'
+    # CHECK: argv 'before'  'inbetween'  'after'
+    # CHECK: argv_opts
+end
+
+begin
+    argparse 'a/long=+&' '#int&' -- -123 before -a -a inbetween -astuck ater -long=long
+    set -l
+    # CHECK: _flag_a '-a'  'stuck'  'long'
+    # CHECK: _flag_int 123
+    # CHECK: _flag_long '-a'  'stuck'  'long'
+    # CHECK: argv 'before'  'inbetween'  'ater'
+    # CHECK: argv_opts
+end
+
+
+begin
+    argparse 'd=?&' a b  -- -d -d3 -ad -bd345
+    set -l
+    # CHECK: _flag_a -a
+    # CHECK: _flag_b -b
+    # CHECK: _flag_d 345
+    # CHECK: argv
+    # CHECK: argv_opts '-a'  '-b'
+end
+
+begin
+    argparse 'd&' a b 'v='  -- 0 -adbv124 1 -abdv125 2 -dabv124 3 -vd3
+    set -l
+    # CHECK: _flag_a '-a'  '-a'  '-a'
+    # CHECK: _flag_b '-b'  '-b'  '-b'
+    # CHECK: _flag_d '-d'  '-d'  '-d'
+    # CHECK: _flag_v d3
+    # CHECK: argv '0'  '1'  '2'  '3'
+    # CHECK: argv_opts '-abv124'  '-abv125'  '-abv124'  '-vd3'
 end
 
 # Check that the argparse's are properly wrapped in begin blocks

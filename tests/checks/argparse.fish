@@ -572,7 +572,17 @@ and echo unexpected status $status
 # An unexpected arg not associated with a flag is an error
 fish_opt -s h -l help hello
 and echo unexpected status $status
-#CHECKERR: fish_opt: expected <= 0 arguments; got 1
+#CHECKERR: fish_opt: Extra non-option arguments were provided
+
+# A -v / --validate without any arguments is an error
+fish_opt -s h -l help -rv
+and echo unexpected status $status
+#CHECKERR: fish_opt: The --validate flag requires subsequent arguments
+
+# A -v / --validate for boolean options is an error
+fish_opt -s h -l help -v echo hello
+and echo unexpected status $status
+#CHECKERR: fish_opt: The --validate flag requires the --required-val, --optional-value, or --multiple-vals flag
 
 # Now verify that valid combinations of options produces the correct output.
 
@@ -615,20 +625,20 @@ fish_opt --short h -l help --optional-val --long-only
 or echo unexpected status $status
 #CHECK: h-help=?
 
-# Repeated val, short and long valid
-fish_opt --short h -l help --multiple-vals
+# Repeated val, short and long valid, with validate
+fish_opt --short h -l help --multiple-vals --validate _validate_int --max 500
 or echo unexpected status $status
-#CHECK: h/help=+
+#CHECK: h/help=+!_validate_int --max 500
 
 # Repeated and optional val, short and long valid
 fish_opt --short h -l help --optional-val -m
 or echo unexpected status $status
 #CHECK: h/help=*
 
-# Repeated val and short
-fish_opt -ml help --long-only
+# Repeated val and short, with validate
+fish_opt -ml help --long-only -v test \$_flag_value != "' '"
 or echo unexpected status $status
-#CHECK: /help=+
+#CHECK: /help=+!test $_flag_value != ' '
 
 # Repeated and optional val, short and long but short not valid
 fish_opt --short h -l help --long-only -mo

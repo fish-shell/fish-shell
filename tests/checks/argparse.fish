@@ -679,6 +679,11 @@ begin
 end
 
 begin
+    argparse f!echo hello -- -f
+    #CHECKERR: argparse: Invalid option spec 'f!echo' at char '!'
+end
+
+begin
     argparse --ignore-unknown h i -- -hoa -oia
     echo -- $argv
     #CHECK: -oa -oia

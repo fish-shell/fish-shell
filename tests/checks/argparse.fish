@@ -502,6 +502,16 @@ begin
     # CHECK: argv_opts '--installed=no'  '--foo'
 end
 
+# long-only flags with one letter
+begin
+    argparse i-i= a-f -- --i=no --f
+    set -l
+    # CHECK: _flag_f --f
+    # CHECK: _flag_i no
+    # CHECK: argv
+    # CHECK: argv_opts '--i=no'  '--f'
+end
+
 begin
     argparse installed='!_validate_int --max 12' foo -- --installed=5 --foo
     set -l
@@ -536,15 +546,22 @@ argparse r/required= -- foo --required
 # No args is an error
 fish_opt
 and echo unexpected status $status
-#CHECKERR: fish_opt: The --short flag is required and must be a single character
+#CHECKERR: fish_opt: Either the --short or --long flag must be provided
 
-# No short flag or an invalid short flag is an error
-fish_opt -l help
+# Long-only with no long makes no sense
+fish_opt -s h --long-only
 and echo unexpected status $status
-#CHECKERR: fish_opt: The --short flag is required and must be a single character
+#CHECKERR: fish_opt: The --long-only flag requires the --long flag
+
+# One character long flag with no short isn't supported
+fish_opt -l h
+and echo unexpected status $status
+#CHECKERR: fish_opt: The --long flag must be more than one character when no --short flag is provided
+
+
 fish_opt -s help
 and echo unexpected status $status
-#CHECKERR: fish_opt: The --short flag is required and must be a single character
+#CHECKERR: fish_opt: The --short flag must be a single character
 
 # A required and optional arg makes no sense
 fish_opt -s h -l help -r --optional-val
@@ -564,6 +581,11 @@ fish_opt -s h
 or echo unexpected status $status
 #CHECK: h
 
+# Long flag only
+fish_opt -l help
+or echo unexpected status $status
+#CHECK: help
+
 # Bool, short and long
 fish_opt --short h --long help
 or echo unexpected status $status
@@ -573,10 +595,10 @@ or echo unexpected status $status
 fish_opt --short h --long help --long-only
 #CHECK: h-help
 
-# Required val, short and long but the short var cannot be used
-fish_opt --short h --long help -r --long-only
+# Required val and long
+fish_opt --long help -r
 or echo unexpected status $status
-#CHECK: h-help=
+#CHECK: help=
 
 # Optional val, short and long valid, and delete
 fish_opt --short h -l help --optional-val --delete
@@ -598,10 +620,10 @@ fish_opt --short h -l help --optional-val -m
 or echo unexpected status $status
 #CHECK: h/help=*
 
-# Repeated val, short and long but short not valid
-fish_opt --short h -ml help --long-only
+# Repeated val and short
+fish_opt -ml help --long-only
 or echo unexpected status $status
-#CHECK: h-help=+
+#CHECK: help=+
 
 # Repeated and optional val, short and long but short not valid
 fish_opt --short h -l help --long-only -mo
@@ -609,19 +631,13 @@ or echo unexpected status $status
 #CHECK: h-help=*
 
 # Repeated val, short only, and deleted
-fish_opt -s h --multiple-vals
-or echo unexpected status $status
-#CHECK: h=+
-fish_opt -s h -md --long-only
+fish_opt -ms h -md
 or echo unexpected status $status
 #CHECK: h=+&
 
 # Repeated and optional val, short only
 fish_opt -s h -om
 or echo unexpected status $status
-fish_opt -s h --optional-val --multiple-vals --long-only
-or echo unexpected status $status
-#CHECK: h=*
 #CHECK: h=*
 
 function wrongargparse

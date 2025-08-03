@@ -1925,6 +1925,9 @@ msgstr "%s: 找不到网页浏览器.\\n"
 msgid "%s: Directory stack is empty…\\n"
 msgstr "%s: 目录堆栈为空...\\n"
 
+msgid "%s: Either the --short or --long flag must be provided\\n"
+msgstr ""
+
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 msgstr "%s: 预期参数 1, 2 或 3, 获得 %d\\n"
 
@@ -1937,8 +1940,14 @@ msgstr "%s:无效的掩码'%s'\\n"
 msgid "%s: Not inside of command substitution"
 msgstr "%s: 命令替换不在内"
 
-msgid "%s: The --short flag is required and must be a single character\\n"
-msgstr "%s:需要 --short旗并必须是单一字符\\n"
+msgid "%s: The --long flag must be more than one character when no --short flag is provided\\n"
+msgstr ""
+
+msgid "%s: The --long-only flag requires the --long flag\\n"
+msgstr ""
+
+msgid "%s: The --short flag must be a single character\\n"
+msgstr ""
 
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
 msgstr "%s:要跳过的位置数必须是非负整数\\n"

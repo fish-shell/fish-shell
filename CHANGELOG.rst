@@ -41,6 +41,7 @@ Deprecations and removed features
 
 Scripting improvements
 ----------------------
+- ``argparse`` now saves recognised options and values in ``$argv_opts``, allowing them to be forwarded to other commands (:issue:`6466`).
 
 Interactive improvements
 ------------------------

@@ -248,6 +248,14 @@ fn parse_flag_modifiers<'args>(
     }
 
     if s.char_at(0) == '!' {
+        if opt_spec.arg_type == ArgType::NoArgument {
+            streams.err.append(wgettext_fmt!(
+                BUILTIN_ERR_INVALID_OPT_SPEC,
+                opts.name,
+                option_spec,
+                s.char_at(0)
+            ));
+        }
         s = s.slice_from(1);
         opt_spec.validation_command = s;
         // Move cursor to the end so we don't expect a long flag.

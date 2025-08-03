@@ -139,6 +139,9 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     return_colon: bool,
     /// Prevents redundant initialization.
     initialized: bool,
+    /// This will be populated with the elements of the original args that were interpreted
+    /// as options and arguments to options
+    pub argv_opts: Vec<&'args wstr>,
 }
 
 impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
@@ -160,6 +163,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             last_nonopt: 0,
             return_colon: false,
             initialized: false,
+            argv_opts: Vec::new(),
         }
     }
 
@@ -302,14 +306,17 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             return NextArgv::UnpermutedNonOption;
         }
 
+        let opt = self.argv[self.wopt_index];
+        self.argv_opts.push(opt);
+
         // We've found an option, so we need to skip the initial punctuation.
-        let skip = if !self.longopts.is_empty() && self.argv[self.wopt_index].char_at(1) == '-' {
+        let skip = if !self.longopts.is_empty() && opt.char_at(1) == '-' {
             2
         } else {
             1
         };
 
-        self.remaining_text = self.argv[self.wopt_index][skip..].into();
+        self.remaining_text = opt[skip..].into();
         NextArgv::FoundOption
     }
 
@@ -365,7 +372,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 c = if self.return_colon { ':' } else { '?' };
             } else {
                 // Consume the next element.
-                self.woptarg = Some(self.argv[self.wopt_index]);
+                let val = self.argv[self.wopt_index];
+                self.argv_opts.push(val);
+                self.woptarg = Some(val);
                 self.wopt_index += 1;
             }
         }
@@ -393,7 +402,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             }
         } else if opt_found.arg_type == ArgType::RequiredArgument {
             if self.wopt_index < self.argv.len() {
-                self.woptarg = Some(self.argv[self.wopt_index]);
+                let val = self.argv[self.wopt_index];
+                self.argv_opts.push(val);
+                self.woptarg = Some(val);
                 self.wopt_index += 1;
             } else {
                 self.remaining_text = empty_wstr();

@@ -59,6 +59,7 @@ struct ArgParseCmdOpts<'args> {
     name: WString,
     raw_exclusive_flags: Vec<&'args wstr>,
     args: Vec<&'args wstr>,
+    args_opts: Vec<&'args wstr>,
     options: HashMap<char, OptionSpec<'args>>,
     long_to_short_flag: HashMap<WString, char>,
     exclusive_flag_sets: Vec<Vec<char>>,
@@ -792,6 +793,7 @@ fn argparse_parse_flags<'args>(
                     // This allows reusing the same argv in multiple argparse calls,
                     // or just ignoring the error (e.g. in completions).
                     opts.args.push(args_read[w.wopt_index - 1]);
+                    w.argv_opts.pop();
                     // Work around weirdness with wgetopt, which crashes if we `continue` here.
                     if w.wopt_index == argc {
                         break;
@@ -816,6 +818,7 @@ fn argparse_parse_flags<'args>(
         };
         retval?;
     }
+    opts.args_opts = w.argv_opts;
 
     *optind = w.wopt_index;
     return Ok(SUCCESS);
@@ -901,6 +904,8 @@ fn set_argparse_result_vars(vars: &EnvStack, opts: &ArgParseCmdOpts) {
 
     let args = opts.args.iter().map(|&s| s.to_owned()).collect();
     vars.set(L!("argv"), EnvMode::LOCAL, args);
+    let args_opts = opts.args_opts.iter().map(|&s| s.to_owned()).collect();
+    vars.set(L!("argv_opts"), EnvMode::LOCAL, args_opts);
 }
 
 /// The argparse builtin. This is explicitly not compatible with the BSD or GNU version of this

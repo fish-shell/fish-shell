@@ -645,5 +645,35 @@ argparse a/alpha -- --banna=value
 argparse a/alpha -- --alpha=value --banna=value
 # CHECKERR: argparse: --alpha=value: option does not take an argument
 
+# Check behaviour without -S/--strict-longopts option
+begin
+    argparse long valu=+ -- --lon -long -lon -valu=3 -valu 4 -val=3 -val 4
+    set -lL
+    # CHECK: _flag_long '--long'  '--long'  '--long'
+    # CHECK: _flag_valu '3'  '4'  '3'  '4'
+    # CHECK: argv
+    # CHECK: argv_opts '--lon'  '-long'  '-lon'  '-valu=3'  '-valu'  '4'  '-val=3'  '-val'  '4'
+    argparse amb ambig -- -am
+    # CHECKERR: argparse: -am: unknown option
+    argparse a ambig -- -ambig
+    # CHECKERR: argparse: -ambig: unknown option
+    argparse long -- -long3
+    # CHECKERR: argparse: -long3: unknown option
+end
+
+# Check behaviour with -S/--strict-longopts option
+begin
+    argparse -S long -- --lon
+    # CHECKERR: argparse: --lon: unknown option
+    argparse -S long -- -long
+    # CHECKERR: argparse: -long: unknown option
+    argparse --strict-longopts long -- -lon
+    # CHECKERR: argparse: -lon: unknown option
+    argparse -S value=+ -- -valu=3
+    # CHECKERR: argparse: -valu=3: unknown option
+    argparse --strict-longopts value=+ -- -valu 4
+    # CHECKERR: argparse: -valu: unknown option
+end
+
 # Check that the argparse's are properly wrapped in begin blocks
 set -l

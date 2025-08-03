@@ -60,6 +60,7 @@ enum UnknownHandling {
 #[derive(Default)]
 struct ArgParseCmdOpts<'args> {
     unknown_handling: UnknownHandling,
+    strict_long_opts: bool,
     print_help: bool,
     stop_nonopt: bool,
     min_args: usize,
@@ -83,13 +84,14 @@ impl ArgParseCmdOpts<'_> {
     }
 }
 
-const SHORT_OPTIONS: &wstr = L!("+hn:siux:N:X:");
+const SHORT_OPTIONS: &wstr = L!("+hn:siux:SN:X:");
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("stop-nonopt"), ArgType::NoArgument, 's'),
     wopt(L!("ignore-unknown"), ArgType::NoArgument, 'i'),
     wopt(L!("move-unknown"), ArgType::NoArgument, 'u'),
     wopt(L!("name"), ArgType::RequiredArgument, 'n'),
     wopt(L!("exclusive"), ArgType::RequiredArgument, 'x'),
+    wopt(L!("strict-longopts"), ArgType::NoArgument, 'S'),
     wopt(L!("help"), ArgType::NoArgument, 'h'),
     wopt(L!("min-args"), ArgType::RequiredArgument, 'N'),
     wopt(L!("max-args"), ArgType::RequiredArgument, 'X'),
@@ -532,6 +534,7 @@ fn parse_cmd_opts<'args>(
                     UnknownHandling::Move
                 }
             }
+            'S' => opts.strict_long_opts = true,
             // Just save the raw string here. Later, when we have all the short and long flag
             // definitions we'll parse these strings into a more useful data structure.
             'x' => opts.raw_exclusive_flags.push(w.woptarg.unwrap()),
@@ -873,6 +876,7 @@ fn argparse_parse_flags<'args>(
     populate_option_strings(opts, &mut short_options, &mut long_options);
 
     let mut w = WGetopter::new(&short_options, &long_options, args);
+    w.strict_long_opts = opts.strict_long_opts;
     while let Some((opt, longopt_idx)) = w.next_opt_indexed() {
         let is_long_flag = longopt_idx.is_some();
         let retval: BuiltinResult = match opt {

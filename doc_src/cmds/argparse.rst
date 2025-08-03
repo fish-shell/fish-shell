@@ -41,7 +41,7 @@ The following ``argparse`` options are available. They must appear before all *O
     The maximum number of acceptable non-option arguments. The default is infinity.
 
 **-i** or **--ignore-unknown**
-    Ignore unknown options, keeping them and their arguments in ``$argv`` instead and not moving them to ``$argv_opts``. By default, unknown options are treated as if they take optional arguments (i.e. have option spec ``=?``).
+    Ignore unknown options, keeping them and their arguments in ``$argv`` instead and not moving them to ``$argv_opts``. By default, unknown options are treated as if they take optional arguments (i.e. have option spec ``=?`` or ``=*``).
     
     The above means that if a group of short options contains an unknown short option *followed* by a known short option, the known short option is
     treated as an argument to the unknown one (e.g. ``--ignore-unknown h -- -oh`` will treat ``h`` as the argument to ``-o``, and so ``_flag_h`` will *not* be set).
@@ -54,7 +54,7 @@ The following ``argparse`` options are available. They must appear before all *O
 **-a** or **--unknown-arguments** *KIND*
     Modifies the parsing behaviour of unknown options handled by **--ignore-unknown** and **--move-unknown** above, depending on the value of *KIND*:
 
-        - **optional** (the default), allows each unknown option to take an optional argument (i.e. as if it had ``=?`` in its option specification). For example, ``argparse --ignore-unknown --unknown-arguments=optional ab -- -u -a -ub`` will set ``_flag_a`` but *not* ``_flag_b``, as the ``b`` is treated as an argument to the second use of ``-u``.
+        - **optional** (the default), allows each unknown option to take an optional argument (i.e. as if it had ``=?`` or ``=*`` in its option specification). For example, ``argparse --ignore-unknown --unknown-arguments=optional ab -- -u -a -ub`` will set ``_flag_a`` but *not* ``_flag_b``, as the ``b`` is treated as an argument to the second use of ``-u``.
 
         - **required** requires each unknown option to take an argument (i.e. as if it had ``=`` or ``=+`` in its option specification). If the above example was changed to use ``--unknown-arguments=required``, *neither* ``_flag_a`` nor ``_flag_b`` would be set: the ``-a`` will be treated as an argument to the first use of ``-u``, and the ``b`` as an argument to the second.
 
@@ -144,7 +144,9 @@ Each option specification consists of:
 
     - **=?** if it takes an optional value and only the last instance of the flag is saved, or
 
-    - **=+** if it requires a value and each instance of the flag is saved.
+    - **=+** if it requires a value and each instance of the flag is saved, or
+
+    - **=\*** if it takes an optional value *and* each instance of the flag is saved, storing the empty string when the flag was not given a value.
 
 - Optionally a ``&``, indicating that the option and any attached values are not to be saved in ``$argv`` or ``$argv_opts``. This does not affect the the ``_flag_`` variables.
 
@@ -168,7 +170,7 @@ This does not read numbers given as ``+NNN``, only those that look like flags - 
 Note: Optional arguments
 ------------------------
 
-An option defined with ``=?`` can take optional arguments. Optional arguments have to be *directly attached* to the option they belong to.
+An option defined with ``=?`` or ``=*`` can take optional arguments. Optional arguments have to be *directly attached* to the option they belong to.
 
 That means the argument will only be used for the option if you use it like::
 
@@ -242,6 +244,8 @@ Some *OPTION_SPEC* examples:
 - ``n/name=`` means that both ``-n`` and ``--name`` are valid. It requires a value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the single mandatory value associated with the flag.
 
 - ``n/name=?`` means that both ``-n`` and ``--name`` are valid. It accepts an optional value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the value associated with the flag if one was provided else it will be set with no values.
+
+- ``n/name=*`` means that both ``-n`` and ``--name`` are valid. It accepts an optional value and can be used more than once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the values associated with each occurence. Each value will be the value given to the option, or the empty string if no value was given.
 
 - ``name=+`` means that only ``--name`` is valid. It requires a value and can be used more than once. If the flag is seen then ``_flag_name`` will be set with the values associated with each occurrence.
 

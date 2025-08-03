@@ -19,6 +19,7 @@ enum ArgCardinality {
     None = 0,
     Once = 1,
     AtLeastOnce = 2,
+    Any = 3,
 }
 
 impl Default for ArgCardinality {
@@ -239,6 +240,7 @@ fn parse_flag_modifiers<'args>(
         opt_spec.num_allowed = match s.char_at(0) {
             '?' => ArgCardinality::Optional,
             '+' => ArgCardinality::AtLeastOnce,
+            '*' => ArgCardinality::Any,
             _ => ArgCardinality::Once,
         };
         if opt_spec.num_allowed != ArgCardinality::Once {
@@ -548,6 +550,7 @@ fn parse_cmd_opts<'args>(
                 } else {
                     // No need for a way to set ArgCardinality::AtLeastOnce, as that only differs from ArgCardinality::Once
                     // in the way _flag_ variables are set, which are not set for unknown options.
+                    // Similarly, ArgCardinality::Any would be equivalent to ArgCardinality::Optional.
                     streams.err.append(wgettext_fmt!(
                         "%ls: Invalid --unknown-arguments value '%ls'\n",
                         cmd,
@@ -646,7 +649,7 @@ fn populate_option_strings<'args>(
         }
 
         let arg_type = match opt_spec.num_allowed {
-            ArgCardinality::Optional => {
+            ArgCardinality::Optional | ArgCardinality::Any => {
                 if opt_spec.short_flag_valid {
                     short_options.push_str("::");
                 }
@@ -859,8 +862,16 @@ fn handle_flag<'args>(
                 opt_spec.vals.push(arg.into());
             }
         }
-        _ => {
-            opt_spec.vals.push(w.woptarg.unwrap().into());
+        ArgCardinality::Any => {
+            if let Some(arg) = w.woptarg {
+                opt_spec.vals.push(arg.into());
+            } else {
+                opt_spec.vals.push(WString::new());
+            }
+        }
+        ArgCardinality::AtLeastOnce => opt_spec.vals.push(w.woptarg.unwrap().into()),
+        ArgCardinality::None => {
+            unreachable!()
         }
     }
 

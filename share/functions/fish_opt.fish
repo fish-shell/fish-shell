@@ -11,9 +11,9 @@ end
 
 # The `fish_opt` command.
 function fish_opt -d 'Produce an option specification suitable for use with `argparse`.'
-    set -l options h/help 's/short=' 'l/long=' d/delete o/optional-val r/required-val
-    set options $options L-long-only M-multiple-vals
-    argparse -n fish_opt --max-args=0 --exclusive=r,o --exclusive=M,o $options -- $argv
+    set -l options h/help 's/short=' 'l/long=' d/delete o/optional-val r/required-val m/multiple-vals
+    set options $options L-long-only
+    argparse -n fish_opt --max-args=0 --exclusive=r,o $options -- $argv
     or return
 
     if set -q _flag_help
@@ -35,7 +35,9 @@ function fish_opt -d 'Produce an option specification suitable for use with `arg
         set opt_spec "$opt_spec$_flag_long"
     end
 
-    if set -q _flag_multiple_vals
+    if set -q _flag_multiple_vals && set -q _flag_optional_val
+        set opt_spec "$opt_spec=*"
+    else if set -q _flag_multiple_vals
         set opt_spec "$opt_spec=+"
     else if set -q _flag_required_val
         set opt_spec "$opt_spec="

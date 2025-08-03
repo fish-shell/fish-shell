@@ -43,6 +43,9 @@ The following ``argparse`` options are available. They must appear before all *O
 **-i** or **--ignore-unknown**
     Ignores unknown options, keeping them and their arguments in ``$argv`` instead (while moving any preceding known short options to ``$argv_opts``). Unknown options are treated as if they take optional arguments (i.e. have option spec ``=?``).
 
+**-m** or **--move-unknown**
+    This is like **--ignore-unknown**, except that unknown options and their arguments are moved from ``$argv`` to ``$argv_opts``.
+
 **-s** or **--stop-nonopt**
     Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
 

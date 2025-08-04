@@ -84,7 +84,8 @@ fn main() {
 
     rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
 
-    cc::Build::new().file("src/libc.c").compile("flibc.a");
+    
+    // cc::Build::new().file("src/libc.c").compile("flibc.a");
 
     let mut build = cc::Build::new();
     // Add to the default library search path

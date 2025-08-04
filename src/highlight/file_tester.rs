@@ -25,9 +25,9 @@ use crate::wutil::{
 use libc::PATH_MAX;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
-use std::os::fd::RawFd;
 #[cfg(any(unix, target_os = "wasi"))]
 use std::ffi::CString;
+use std::os::fd::RawFd;
 
 // This is used only internally to this file, and is exposed only for testing.
 #[derive(Clone, Copy, Default)]
@@ -414,7 +414,6 @@ fn fs_is_case_insensitive(
         match case_sensitivity_cache.entry(path.to_owned()) {
             // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
             // sensitive, and a 0 value means case insensitive.
-
             Entry::Occupied(e) => *e.get(),
             Entry::Vacant(e) => {
                 let v = pure_rust_case_insensitive_at_fd(fd);
@@ -429,7 +428,7 @@ fn fs_is_case_insensitive(
 /// Returns true if the FS is case-insensitive.
 #[cfg(any(unix, target_os = "wasi"))]
 fn pure_rust_case_insensitive_at_fd(fd: RawFd) -> bool {
-    use libc::{openat, faccessat, unlinkat, close, F_OK, O_CREAT, O_EXCL, O_WRONLY};
+    use libc::{close, faccessat, openat, unlinkat, F_OK, O_CREAT, O_EXCL, O_WRONLY};
 
     // Unique name base, ASCII to avoid encoding headaches.
     let base = format!(
@@ -474,4 +473,3 @@ fn pure_rust_case_insensitive_at_fd(_fd: RawFd) -> bool {
     // On Windows, we usually don't end up here (different logic there). By default, assume sensitive=false.
     false
 }
-

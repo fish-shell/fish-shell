@@ -25,12 +25,12 @@ pub fn C_PATH_BSHELL() -> *const c_char {
 // --- _PC_CASE_SENSITIVE ------------------------------------------------------
 // IMPORTANT: we make it optional, so we don’t clutter pathconf with junk on platforms without this constant.
 
-pub static _PC_CASE_SENSITIVE: Lazy<Option<c_int>> = Lazy::new(|| C_PC_CASE_SENSITIVE());
+pub static _PC_CASE_SENSITIVE: Lazy<Option<c_int>> = Lazy::new(C_PC_CASE_SENSITIVE);
 
 #[inline]
 pub fn C_PC_CASE_SENSITIVE() -> Option<c_int> {
     // Exists on Apple platforms
-    #[cfg(any(target_vendor = "apple"))]
+    #[cfg(target_vendor = "apple")]
     {
         Some(libc::_PC_CASE_SENSITIVE as c_int)
     }
@@ -42,10 +42,12 @@ pub fn C_PC_CASE_SENSITIVE() -> Option<c_int> {
     }
 }
 
-// --- stdout_stream / setlinebuf ---------------------------------------------
-
-// Returns the pointer to the current stdout FILE object.
-// Platform-specific symbol names.
+/// Returns the pointer to the current stdout FILE object.
+///
+/// # Safety
+///
+/// The returned pointer must only be used according to C ABI rules for FILE pointers.
+/// Misuse can cause undefined behavior.
 pub unsafe fn stdout_stream() -> *mut libc::FILE {
     #[cfg(any(
         target_os = "linux",
@@ -74,7 +76,11 @@ pub unsafe fn stdout_stream() -> *mut libc::FILE {
     }
 }
 
-// Sets the given FILE stream to line-buffered mode.
+/// Sets the given FILE stream to line-buffered mode.
+///
+/// # Safety
+///
+/// The caller must ensure the FILE pointer is valid and not aliased elsewhere.
 pub unsafe fn setlinebuf(stream: *mut libc::FILE) {
     #[cfg(any(unix, target_os = "wasi"))]
     {

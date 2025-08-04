@@ -102,11 +102,11 @@ pub fn MB_CUR_MAX() -> usize {
 
 // --- ST_LOCAL / MNT_LOCAL ----------------------------------------------------
 
-// Filesystem mount flags. ST_LOCAL is only available on BSD-like systems.
+// Filesystem mount flags.
+// NOTE: On Darwin (macOS/iOS) there is no ST_LOCAL in libc; use MNT_LOCAL() instead.
 pub fn ST_LOCAL() -> u64 {
+    // BSDs that actually expose ST_LOCAL in libc
     #[cfg(any(
-        target_os = "macos",
-        target_os = "ios",
         target_os = "freebsd",
         target_os = "dragonfly",
         target_os = "openbsd",
@@ -115,13 +115,19 @@ pub fn ST_LOCAL() -> u64 {
     {
         libc::ST_LOCAL as u64
     }
+    // Darwin does not have ST_LOCAL in libc; return 0 and rely on MNT_LOCAL().
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    {
+        0
+    }
+    // Everything else: no concept of ST_LOCAL.
     #[cfg(not(any(
-        target_os = "macos",
-        target_os = "ios",
         target_os = "freebsd",
         target_os = "dragonfly",
         target_os = "openbsd",
-        target_os = "netbsd"
+        target_os = "netbsd",
+        target_os = "macos",
+        target_os = "ios"
     )))]
     {
         0

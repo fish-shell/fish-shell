@@ -1,12 +1,12 @@
-// src/libc.rs — чисто-Rust замена libc.c
+// src/libc.rs — pure-Rust replacement for libc.c
 
 use once_cell::sync::Lazy;
-use std::sync::atomic::AtomicPtr; // Ordering здесь не нужен — убираем предупреждение
+use std::sync::atomic::AtomicPtr; // No need for Ordering here — removes warning
 use libc::{c_char, c_int};
-use std::{fs, io, path::{Path, PathBuf}}; // для pure-Rust фоллбэка ниже
 
 // --- _PATH_BSHELL ------------------------------------------------------------
 
+// Global: holds pointer to shell path, can be updated at runtime.
 pub static _PATH_BSHELL: AtomicPtr<c_char> = AtomicPtr::new(std::ptr::null_mut());
 
 pub fn C_PATH_BSHELL() -> *const c_char {
@@ -23,23 +23,25 @@ pub fn C_PATH_BSHELL() -> *const c_char {
 }
 
 // --- _PC_CASE_SENSITIVE ------------------------------------------------------
-// ВАЖНО: делаем опциональным, чтобы не пихать мусор в pathconf на платформах без этой константы.
+// IMPORTANT: we make it optional, so we don’t clutter pathconf with junk on platforms without this constant.
 
 pub static _PC_CASE_SENSITIVE: Lazy<Option<c_int>> = Lazy::new(|| C_PC_CASE_SENSITIVE());
 
 #[inline]
 pub fn C_PC_CASE_SENSITIVE() -> Option<c_int> {
-    // На Apple имя есть
+    // Exists on Apple platforms
     #[cfg(any(target_vendor = "apple"))]
     { Some(libc::_PC_CASE_SENSITIVE as c_int) }
 
-    // На всех остальных такого имени у pathconf нет
+    // No such name in pathconf on all other platforms
     #[cfg(not(any(target_vendor = "apple")))]
     { None }
 }
 
 // --- stdout_stream / setlinebuf ---------------------------------------------
 
+// Returns the pointer to the current stdout FILE object.
+// Platform-specific symbol names.
 pub unsafe fn stdout_stream() -> *mut libc::FILE {
     #[cfg(any(
         target_os = "linux", target_os = "android",
@@ -58,6 +60,7 @@ pub unsafe fn stdout_stream() -> *mut libc::FILE {
     { std::ptr::null_mut() }
 }
 
+// Sets the given FILE stream to line-buffered mode.
 pub unsafe fn setlinebuf(stream: *mut libc::FILE) {
     #[cfg(any(unix, target_os = "wasi"))]
     { libc::setvbuf(stream, std::ptr::null_mut(), libc::_IOLBF, 0); }
@@ -67,12 +70,15 @@ pub unsafe fn setlinebuf(stream: *mut libc::FILE) {
 
 // --- MB_CUR_MAX --------------------------------------------------------------
 
+// Maximum number of bytes per character (UTF-8 practical maximum).
+// Good enough for Windows as well.
 pub fn MB_CUR_MAX() -> usize {
-    4 // UTF-8 практический максимум. Подойдёт и для Win.
+    4
 }
 
 // --- ST_LOCAL / MNT_LOCAL ----------------------------------------------------
 
+// Filesystem mount flags. ST_LOCAL is only available on BSD-like systems.
 pub fn ST_LOCAL() -> u64 {
     #[cfg(any(
         target_os = "macos", target_os = "ios",
@@ -86,6 +92,7 @@ pub fn ST_LOCAL() -> u64 {
     { 0 }
 }
 
+// MNT_LOCAL — same as above, for mount table
 pub fn MNT_LOCAL() -> u64 {
     #[cfg(any(
         target_os = "macos", target_os = "ios",
@@ -101,6 +108,7 @@ pub fn MNT_LOCAL() -> u64 {
 
 // --- _CS_PATH / confstr ------------------------------------------------------
 
+// _CS_PATH — system path for utilities, if available
 pub fn _CS_PATH() -> c_int {
     #[cfg(any(
         target_os = "linux", target_os = "android",
@@ -124,11 +132,13 @@ pub unsafe fn confstr(_name: c_int, _buf: *mut c_char, _len: usize) -> usize { 0
 
 // --- RLIMIT_* ----------------------------------------------------------------
 
+// On Windows: all RLIMIT_* constants are missing, stub as -1.
 #[cfg(windows)]
 macro_rules! rlimit_all_neg1 {
     ($($name:ident),* $(,)?) => { $(pub fn $name() -> i32 { -1 })* }
 }
 
+// On Unix: most RLIMIT_* are available, map directly to libc.
 #[cfg(any(unix, target_os = "wasi"))]
 macro_rules! rlimit_simple {
     ($($name:ident),* $(,)?) => { $(pub fn $name() -> i32 { libc::$name as i32 })* }
@@ -138,6 +148,7 @@ macro_rules! rlimit_simple {
 rlimit_simple!(RLIMIT_CORE, RLIMIT_DATA, RLIMIT_FSIZE, RLIMIT_NOFILE, RLIMIT_STACK, RLIMIT_CPU);
 
 #[cfg(any(unix, target_os = "wasi"))]
+// Some RLIMIT_* may not exist everywhere, so handle per-OS
 pub fn RLIMIT_AS() -> i32 {
     #[cfg(any(
         target_os = "linux", target_os = "android",
@@ -234,6 +245,7 @@ pub fn RLIMIT_SWAP() -> i32 {
     #[cfg(not(target_os = "freebsd"))] { -1 }
 }
 
+// Windows: all RLIMIT_* functions stubbed to -1.
 #[cfg(windows)]
 rlimit_all_neg1!(
     RLIMIT_SBSIZE, RLIMIT_CORE, RLIMIT_DATA, RLIMIT_NICE, RLIMIT_FSIZE, RLIMIT_SIGPENDING,

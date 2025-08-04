@@ -26,8 +26,6 @@ use libc::PATH_MAX;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::os::fd::RawFd;
-use std::{fs, io, path::PathBuf}; // понадобится для фоллбэка
-// ДОБАВЬ (для Unix-фоллбэка по fd):
 #[cfg(any(unix, target_os = "wasi"))]
 use std::ffi::CString;
 
@@ -401,21 +399,22 @@ fn fs_is_case_insensitive(
     fd: RawFd,
     case_sensitivity_cache: &mut CaseSensitivityCache,
 ) -> bool {
-    // Сначала пробуем системный способ (только на Apple есть имя для pathconf).
     if let Some(name) = *_PC_CASE_SENSITIVE {
         match case_sensitivity_cache.entry(path.to_owned()) {
             Entry::Occupied(e) => *e.get(),
             Entry::Vacant(e) => {
                 // fpathconf: 0 -> insensitive, 1 -> sensitive, -1 -> ошибка/неизвестно
                 let ret = unsafe { libc::fpathconf(fd, name) };
-                let v = (ret == 0);
+                let v = ret == 0;
                 e.insert(v);
                 v
             }
         }
     } else {
-        // Фоллбэк без pathconf: проверка по дескриптору каталога (unix/wasi).
         match case_sensitivity_cache.entry(path.to_owned()) {
+            // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
+            // sensitive, and a 0 value means case insensitive.
+
             Entry::Occupied(e) => *e.get(),
             Entry::Vacant(e) => {
                 let v = pure_rust_case_insensitive_at_fd(fd);
@@ -426,13 +425,13 @@ fn fs_is_case_insensitive(
     }
 }
 
-/// Фоллбэк: создаём файл "lower", проверяем, виден ли он как "UPPER".
-/// Возвращает true, если ФС case-insensitive.
+/// Fallback: create a file called "lower", check if it's visible as "UPPER".
+/// Returns true if the FS is case-insensitive.
 #[cfg(any(unix, target_os = "wasi"))]
 fn pure_rust_case_insensitive_at_fd(fd: RawFd) -> bool {
     use libc::{openat, faccessat, unlinkat, close, F_OK, O_CREAT, O_EXCL, O_WRONLY};
 
-    // Уникальная база имени, ASCII — чтобы без заморочек с кодировками.
+    // Unique name base, ASCII to avoid encoding headaches.
     let base = format!(
         ".rust_case_check_{}_{}",
         unsafe { libc::getpid() },
@@ -444,7 +443,7 @@ fn pure_rust_case_insensitive_at_fd(fd: RawFd) -> bool {
     let lower = base.to_lowercase(); // "abc..."
     let upper = base.to_uppercase(); // "ABC..."
 
-    // CString без нулей внутри (у нас ASCII, так что ок).
+    // CString without interior nulls (ASCII, so we're safe).
     let lower_c = match CString::new(lower) {
         Ok(s) => s,
         Err(_) => return false,
@@ -454,24 +453,25 @@ fn pure_rust_case_insensitive_at_fd(fd: RawFd) -> bool {
         Err(_) => return false,
     };
 
-    // Создаём пустой файл через openat(O_CREAT|O_EXCL).
+    // Create an empty file using openat(O_CREAT|O_EXCL).
     let created = unsafe { openat(fd, lower_c.as_ptr(), O_WRONLY | O_CREAT | O_EXCL, 0o600) };
     if created < 0 {
-        return false; // не удалось создать — считаем sensitive, чтобы не подсвечивать лишнего
+        return false; // failed to create — assume sensitive to avoid unnecessary highlighting
     }
     unsafe { close(created) };
 
-    // Проверяем, виден ли он по ИМЕНИ В ВЕРХНЕМ РЕГИСТРЕ.
+    // Check if it's visible using the UPPERCASE NAME.
     let exists_upper = unsafe { faccessat(fd, upper_c.as_ptr(), F_OK, 0) } == 0;
 
-    // Чистим хвосты.
+    // Clean up.
     let _ = unsafe { unlinkat(fd, lower_c.as_ptr(), 0) };
 
-    exists_upper // true => FS insensitive
+    exists_upper // true => FS is insensitive
 }
 
 #[cfg(not(any(unix, target_os = "wasi")))]
 fn pure_rust_case_insensitive_at_fd(_fd: RawFd) -> bool {
-    // На Windows сюда обычно не зайдём (там другая логика). По умолчанию считаем sensitive=false.
+    // On Windows, we usually don't end up here (different logic there). By default, assume sensitive=false.
     false
 }
+

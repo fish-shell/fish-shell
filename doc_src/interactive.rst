@@ -56,6 +56,15 @@ It also provides a large number of program specific scripted completions. Most o
 
 You can also write your own completions or install some you got from someone else. For that, see :ref:`Writing your own completions <completion-own>`.
 
+.. envvar:: fish_censor_vars
+    A list of glob patterns for variable names whose values should be censored in completion descriptions.
+    If a variable name matches one of these patterns, its value will be replaced with ``[censored]`` in the completion description.
+    This is useful for preventing accidental exposure of sensitive information like API keys or tokens during tab completion.
+
+    Example: to censor variables ending with ``_TOKEN`` or containing ``SECRET``::
+
+        set -g fish_censor_vars '*_TOKEN' '*_SECRET*'
+
 Completion scripts are loaded on demand, like :ref:`functions are <syntax-function-autoloading>`. The difference is the ``$fish_complete_path`` :ref:`list <variables-lists>` is used instead of ``$fish_function_path``. Typically you can drop new completions in ~/.config/fish/completions/name-of-command.fish and fish will find them automatically.
 
 .. _color:

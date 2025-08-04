@@ -1714,6 +1714,10 @@ msgstr "Sygnał zdefiniowany przez użytkownika 2"
 msgid "Variable: %ls"
 msgstr "Zmienna: %ls"
 
+#
+msgid "Variable: [censored]"
+msgstr ""
+
 #, c-format
 msgid "Variables cannot be bracketed. In fish, please use \"$%ls\"."
 msgstr "Zmienne nie mogą znajdować się w nawiasach. W fish używane jest \"$%ls\"."

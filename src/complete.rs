@@ -1682,8 +1682,23 @@ impl<'ctx> Completer<'ctx> {
                         continue;
                     };
 
-                    let value = expand_escape_variable(&var);
-                    desc = sprintf!(*COMPLETE_VAR_DESC_VAL, value);
+                    let redacted = if let Some(redact_patterns) =
+                        self.ctx.vars().get(L!("fish_redact_vars"))
+                    {
+                        redact_patterns.as_list().iter().any(|pattern| {
+                            let wc = crate::parse_util::parse_util_unescape_wildcards(pattern);
+                            wildcard_match(&env_name, wc, false)
+                        })
+                    } else {
+                        false
+                    };
+
+                    if redacted {
+                        desc = wgettext!("Variable: [redacted]").to_owned();
+                    } else {
+                        let value = expand_escape_variable(&var);
+                        desc = sprintf!(*COMPLETE_VAR_DESC_VAL, value);
+                    }
                 }
             }
 

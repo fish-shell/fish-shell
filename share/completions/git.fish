@@ -1170,10 +1170,10 @@ complete -c git -n '__fish_git_using_command add' -l ignore-errors -d 'Ignore er
 complete -c git -n '__fish_git_using_command add' -l ignore-missing -d 'Check if any of the given files would be ignored'
 # Renames also show up as untracked + deleted, and to get git to show it as a rename _both_ need to be added.
 # However, we can't do that as it is two tokens, so we don't need renamed here.
-complete -f -c git -n '__fish_git_using_command add; and test "$(__fish_git config --get bash.showUntrackedFiles)" != 0' -a '(__fish_git_files modified untracked deleted unmerged modified-staged-deleted)'
+complete -f -c git -n '__fish_git_using_command add; and test "$(__fish_git config --type bool --get status.showUntrackedFiles)" != false' -a '(__fish_git_files modified untracked deleted unmerged modified-staged-deleted)'
 # If we have so many files that you disable untrackedfiles, let's add file completions,
 # to avoid slurping megabytes of git output.
-complete -F -c git -n '__fish_git_using_command add; and test "$(__fish_git config --get bash.showUntrackedFiles)" = 0' -a '(__fish_git_files modified deleted unmerged modified-staged-deleted)'
+complete -F -c git -n '__fish_git_using_command add; and test "$(__fish_git config --type bool --get status.showUntrackedFiles)" = false' -a '(__fish_git_files modified deleted unmerged modified-staged-deleted)'
 
 ### am
 complete -c git -n __fish_git_needs_command -a am -d 'Apply patches from a mailbox'

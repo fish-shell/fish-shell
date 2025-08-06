@@ -33,11 +33,11 @@ Boolean options (those which enable or disable something) understand "1", "yes" 
 - ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to 1, true or yes to enable the "informative" display, which will show a large amount of information - the number of dirty files, unpushed/unpulled commits, and more.
   In large repositories, this can take a lot of time, so you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.
 
-  Because counting untracked files requires a lot of time, the number of untracked files is only shown if enabled via ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``bash.showUntrackedFiles``.
+  Because counting untracked files requires a lot of time, the number of untracked files is only shown if enabled via ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``status.showUntrackedFiles``.
 
 - ``$__fish_git_prompt_showdirtystate`` or the git option ``bash.showDirtyState`` can be set to 1, true or yes to show if the repository is "dirty", i.e. has uncommitted changes.
 
-- ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``bash.showUntrackedFiles`` can be set to 1, true or yes to show if the repository has untracked files (that aren't ignored).
+- ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``status.showUntrackedFiles`` can be set to 1, true or yes to show if the repository has untracked files (that aren't ignored).
 
 - ``$__fish_git_prompt_showupstream`` can be set to a list of values to determine how changes between HEAD and upstream are shown:
 

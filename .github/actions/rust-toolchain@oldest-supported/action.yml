@@ -20,3 +20,5 @@ runs:
       with:
         targets: ${{ inputs.targets }}
         components: ${{ inputs.components}}
+    - run: rm rust-toolchain.toml
+      shell: sh

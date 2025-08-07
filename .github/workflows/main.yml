@@ -39,6 +39,7 @@ jobs:
         # Ensure that fish is available as an executable.
         PATH="$PWD/build:$PATH" build_tools/update_translations.fish --no-mo
         # Show diff output. Fail if there is any.
+        git restore --worktree rust-toolchain.toml
         git --no-pager diff --exit-code || { echo 'There are uncommitted changes after regenerating the gettext PO files. Make sure to update them via `build_tools/update_translations.fish --no-mo` after changing source files.'; exit 1; }
 
   ubuntu-32bit-static-pcre2:
@@ -87,6 +88,7 @@ jobs:
         # ASAN uses `cargo build -Zbuild-std` which requires the rust-src component
         # this is comma-separated
         components: rust-src
+    - run: rm rust-toolchain.toml
     - name: Install deps
       run: |
         sudo apt install gettext libpcre2-dev python3-pexpect tmux

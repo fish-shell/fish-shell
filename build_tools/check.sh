@@ -37,11 +37,6 @@ if $lint && command -v rustup >/dev/null && rustup show active-toolchain | grep 
     if rustup check | grep ^stable- | grep 'Update available'; then
         exit 1
     fi
-    # Same in CI.
-    rust_version=$(rustc --version | cut -d' ' -f2)
-    rust_version=${rust_version%.*}
-    grep -q "\bdtolnay/rust-toolchain@$rust_version\b" \
-        "$repo_root/.github/actions/rust-toolchain@stable/action.yml"
 fi
 
 if $lint; then

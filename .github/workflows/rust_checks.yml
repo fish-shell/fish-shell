@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt
     - name: cargo fmt
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy
     - name: Install deps
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@stable
     - name: cargo doc
       run: |
         RUSTDOCFLAGS='-D warnings' cargo doc --workspace

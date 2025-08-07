@@ -14,7 +14,7 @@ jobs:
         with:
           targets: x86_64-apple-darwin
       - name: Install Rust Stable
-        uses: ./.github/actions/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
       - name: build-and-codesign

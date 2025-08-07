@@ -101,6 +101,7 @@ asan = []
 tsan = []
 
 [workspace.lints]
+rust.mismatched_lifetime_syntaxes = "allow"
 rust.non_camel_case_types = "allow"
 rust.non_upper_case_globals = "allow"
 rust.unknown_lints = "allow"

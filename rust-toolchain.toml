@@ -1,3 +1,3 @@
 [toolchain]
 # also update in .github/actions/rust-toolchain@stable/action.yml
-channel = "1.88"
+channel = "1.88.0"

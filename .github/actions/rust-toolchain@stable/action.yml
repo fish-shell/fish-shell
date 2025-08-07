@@ -16,6 +16,7 @@ permissions:
 runs:
   using: "composite"
   steps:
+    # also update in rust-toolchain.toml
     - uses: dtolnay/rust-toolchain@1.88
       with:
         targets: ${{ inputs.targets }}

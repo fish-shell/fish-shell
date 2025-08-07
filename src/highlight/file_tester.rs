@@ -25,6 +25,8 @@ use crate::wutil::{
 use libc::PATH_MAX;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
+#[cfg(any(unix, target_os = "wasi"))]
+use std::ffi::CString;
 use std::os::fd::RawFd;
 
 // This is used only internally to this file, and is exposed only for testing.
@@ -391,27 +393,83 @@ pub fn is_potential_cd_path(
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
 pub type CaseSensitivityCache = HashMap<WString, bool>;
+
 fn fs_is_case_insensitive(
     path: &wstr,
     fd: RawFd,
     case_sensitivity_cache: &mut CaseSensitivityCache,
 ) -> bool {
-    let mut result = false;
-    if *_PC_CASE_SENSITIVE != 0 {
-        // Try the cache first.
+    if let Some(name) = *_PC_CASE_SENSITIVE {
         match case_sensitivity_cache.entry(path.to_owned()) {
-            Entry::Occupied(e) => {
-                /* Use the cached value */
-                result = *e.get();
-            }
+            Entry::Occupied(e) => *e.get(),
             Entry::Vacant(e) => {
-                // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
-                // sensitive, and a 0 value means case insensitive.
-                let ret = unsafe { libc::fpathconf(fd, *_PC_CASE_SENSITIVE) };
-                result = ret == 0;
-                e.insert(result);
+                // fpathconf: 0 -> insensitive, 1 -> sensitive, -1 -> ошибка/неизвестно
+                let ret = unsafe { libc::fpathconf(fd, name) };
+                let v = ret == 0;
+                e.insert(v);
+                v
+            }
+        }
+    } else {
+        match case_sensitivity_cache.entry(path.to_owned()) {
+            // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
+            // sensitive, and a 0 value means case insensitive.
+            Entry::Occupied(e) => *e.get(),
+            Entry::Vacant(e) => {
+                let v = pure_rust_case_insensitive_at_fd(fd);
+                e.insert(v);
+                v
             }
         }
     }
-    result
+}
+
+/// Fallback: create a file called "lower", check if it's visible as "UPPER".
+/// Returns true if the FS is case-insensitive.
+#[cfg(any(unix, target_os = "wasi"))]
+fn pure_rust_case_insensitive_at_fd(fd: RawFd) -> bool {
+    use libc::{close, faccessat, openat, unlinkat, F_OK, O_CREAT, O_EXCL, O_WRONLY};
+
+    // Unique name base, ASCII to avoid encoding headaches.
+    let base = format!(
+        ".rust_case_check_{}_{}",
+        unsafe { libc::getpid() },
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    );
+    let lower = base.to_lowercase(); // "abc..."
+    let upper = base.to_uppercase(); // "ABC..."
+
+    // CString without interior nulls (ASCII, so we're safe).
+    let lower_c = match CString::new(lower) {
+        Ok(s) => s,
+        Err(_) => return false,
+    };
+    let upper_c = match CString::new(upper) {
+        Ok(s) => s,
+        Err(_) => return false,
+    };
+
+    // Create an empty file using openat(O_CREAT|O_EXCL).
+    let created = unsafe { openat(fd, lower_c.as_ptr(), O_WRONLY | O_CREAT | O_EXCL, 0o600) };
+    if created < 0 {
+        return false; // failed to create — assume sensitive to avoid unnecessary highlighting
+    }
+    unsafe { close(created) };
+
+    // Check if it's visible using the UPPERCASE NAME.
+    let exists_upper = unsafe { faccessat(fd, upper_c.as_ptr(), F_OK, 0) } == 0;
+
+    // Clean up.
+    let _ = unsafe { unlinkat(fd, lower_c.as_ptr(), 0) };
+
+    exists_upper // true => FS is insensitive
+}
+
+#[cfg(not(any(unix, target_os = "wasi")))]
+fn pure_rust_case_insensitive_at_fd(_fd: RawFd) -> bool {
+    // On Windows, we usually don't end up here (different logic there). By default, assume sensitive=false.
+    false
 }

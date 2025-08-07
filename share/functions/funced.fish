@@ -71,6 +71,11 @@ function funced --description 'Edit function definition'
 
     if not functions -q -- $funcname
         echo $init >$tmpname
+    else if not string match --quiet --regex '^(?:n/a|not-autoloaded|autoloaded)$' -- (functions --details --verbose -- $funcname)[2]
+        # Pretend this copied function does not have a definition file. Editing the file which
+        # originally defined it would not update this copy, and the file which copied it
+        # would not have a function body to edit. (issue #11614)
+        functions -- $funcname >$tmpname
     else if functions --details -- $funcname | string match --invert --quiet --regex '^(?:-|stdin|embedded:.*)$'
         set writepath (functions --details -- $funcname)
         # Use cat here rather than cp to avoid copying permissions

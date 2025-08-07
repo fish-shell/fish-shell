@@ -123,10 +123,10 @@ impl<T: AcceptorMut> AcceptorMut for Option<T> {
 /// Node is the base trait of all AST nodes.
 pub trait Node: Acceptor + AsNode + std::fmt::Debug {
     /// Return the kind of this node.
-    fn kind(&self) -> Kind;
+    fn kind(&self) -> Kind<'_>;
 
     /// Return the kind of this node, as a mutable reference.
-    fn kind_mut(&mut self) -> KindMut;
+    fn kind_mut(&mut self) -> KindMut<'_>;
 
     /// Helper to try to cast to a keyword.
     fn as_keyword(&self) -> Option<&dyn Keyword> {
@@ -407,10 +407,10 @@ trait CheckParse: Default {
 macro_rules! implement_node {
     ( $name:ident ) => {
         impl Node for $name {
-            fn kind(&self) -> Kind {
+            fn kind(&self) -> Kind<'_> {
                 Kind::$name(self)
             }
-            fn kind_mut(&mut self) -> KindMut {
+            fn kind_mut(&mut self) -> KindMut<'_> {
                 KindMut::$name(self)
             }
         }
@@ -462,10 +462,10 @@ macro_rules! define_keyword_node {
         }
         implement_leaf!($name);
         impl Node for $name {
-            fn kind(&self) -> Kind {
+            fn kind(&self) -> Kind<'_> {
                 Kind::Keyword(self)
             }
-            fn kind_mut(&mut self) -> KindMut {
+            fn kind_mut(&mut self) -> KindMut<'_> {
                 KindMut::Keyword(self)
             }
         }
@@ -495,10 +495,10 @@ macro_rules! define_token_node {
             parse_token_type: ParseTokenType,
         }
         impl Node for $name {
-            fn kind(&self) -> Kind {
+            fn kind(&self) -> Kind<'_> {
                 Kind::Token(self)
             }
-            fn kind_mut(&mut self) -> KindMut {
+            fn kind_mut(&mut self) -> KindMut<'_> {
                 KindMut::Token(self)
             }
         }

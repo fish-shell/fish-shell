@@ -119,7 +119,7 @@ impl<'a> OperationContext<'a> {
         }
     }
 
-    pub fn background_interruptible(env: &dyn Environment) -> OperationContext {
+    pub fn background_interruptible(env: &dyn Environment) -> OperationContext<'_> {
         OperationContext::background_with_cancel_checker(
             env,
             Box::new(|| signal_check_cancel() != 0),
@@ -153,7 +153,7 @@ impl<'a> OperationContext<'a> {
 /// Return an operation context for a background operation..
 /// Crucially the operation context itself does not contain a parser.
 /// It is the caller's responsibility to ensure the environment lives as long as the result.
-pub fn get_bg_context(env: &EnvDyn, generation_count: u32) -> OperationContext {
+pub fn get_bg_context(env: &EnvDyn, generation_count: u32) -> OperationContext<'_> {
     let cancel_checker = move || {
         // Cancel if the generation count changed.
         generation_count != read_generation_count()

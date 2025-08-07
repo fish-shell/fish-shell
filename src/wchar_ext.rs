@@ -237,7 +237,7 @@ pub trait WExt {
 
     /// Return an iterator over substrings, split by a given char.
     /// The split char is not included in the substrings.
-    fn split(&self, c: char) -> WStrCharSplitIter {
+    fn split(&self, c: char) -> WStrCharSplitIter<'_> {
         WStrCharSplitIter {
             split: c,
             chars: Some(self.as_char_slice()),

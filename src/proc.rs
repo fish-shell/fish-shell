@@ -680,12 +680,12 @@ impl Job {
     }
 
     /// Access the job flags.
-    pub fn flags(&self) -> Ref<JobFlags> {
+    pub fn flags(&self) -> Ref<'_, JobFlags> {
         self.job_flags.borrow()
     }
 
     /// Access mutable job flags.
-    pub fn mut_flags(&self) -> RefMut<JobFlags> {
+    pub fn mut_flags(&self) -> RefMut<'_, JobFlags> {
         self.job_flags.borrow_mut()
     }
 

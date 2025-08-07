@@ -1093,7 +1093,7 @@ impl HistoryImpl {
 
     /// Return the specified history at the specified index. 0 is the index of the current
     /// commandline. (So the most recent item is at index 1.)
-    fn item_at_index(&mut self, mut idx: usize) -> Option<Cow<HistoryItem>> {
+    fn item_at_index(&mut self, mut idx: usize) -> Option<Cow<'_, HistoryItem>> {
         // 0 is considered an invalid index.
         if idx == 0 {
             return None;
@@ -1255,7 +1255,7 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
 pub struct History(Mutex<HistoryImpl>);
 
 impl History {
-    fn imp(&self) -> MutexGuard<HistoryImpl> {
+    fn imp(&self) -> MutexGuard<'_, HistoryImpl> {
         self.0.lock().unwrap()
     }
 

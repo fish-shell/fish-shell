@@ -262,7 +262,7 @@ fn escape_yaml_fish_2_0(s: &mut Vec<u8>) {
 
 #[inline(always)]
 /// Unescapes the fish-specific yaml variant, if it requires it.
-fn maybe_unescape_yaml_fish_2_0(s: &[u8]) -> Cow<[u8]> {
+fn maybe_unescape_yaml_fish_2_0(s: &[u8]) -> Cow<'_, [u8]> {
     // This is faster than s.contains(b'\\') and can be auto-vectorized to SIMD. See benchmark note
     // on unescape_yaml_fish_2_0().
     if !s.iter().copied().fold(false, |acc, b| acc | (b == b'\\')) {
@@ -348,7 +348,7 @@ fn trim_leading_spaces(s: &[u8]) -> (usize, &[u8]) {
 // unescape_yaml_fish_2_0() for the discarded key.
 #[inline(always)]
 #[allow(clippy::type_complexity)]
-fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Cow<[u8]>, Cow<[u8]>)> {
+fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Cow<'_, [u8]>, Cow<'_, [u8]>)> {
     let mut split = line.splitn(2, |c| *c == b':');
     let key = split.next().unwrap();
     let value = split.next()?;

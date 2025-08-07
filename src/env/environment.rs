@@ -164,7 +164,7 @@ impl EnvScoped {
         EnvScoped { inner }
     }
 
-    fn lock(&self) -> EnvMutexGuard<EnvScopedImpl> {
+    fn lock(&self) -> EnvMutexGuard<'_, EnvScopedImpl> {
         self.inner.lock()
     }
 }
@@ -199,7 +199,7 @@ impl EnvStack {
         }
     }
 
-    fn lock(&self) -> EnvMutexGuard<EnvStackImpl> {
+    fn lock(&self) -> EnvMutexGuard<'_, EnvStackImpl> {
         self.inner.lock()
     }
 

@@ -1139,7 +1139,7 @@ impl<T> EnvMutex<T> {
         }
     }
 
-    pub fn lock(&self) -> EnvMutexGuard<T> {
+    pub fn lock(&self) -> EnvMutexGuard<'_, T> {
         let guard = ENV_LOCK.lock().unwrap();
         // Safety: we have the global lock.
         let value = unsafe { &mut *self.inner.get() };

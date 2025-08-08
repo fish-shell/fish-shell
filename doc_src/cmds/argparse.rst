@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-This command makes it easy for fish scripts and functions to handle arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, and sets ``$argv`` to the remaining arguments. See the :ref:`usage <cmd-argparse-usage>` section below.
+This command makes it easy for fish scripts and functions to handle arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, sets ``$argv_opts`` to the options and their values, and sets ``$argv`` to the remaining arguments. See the :ref:`usage <cmd-argparse-usage>` section below.
 
 Each option specification (``OPTION_SPEC``) is written in the :ref:`domain specific language <cmd-argparse-option-specification>` described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
@@ -41,7 +41,30 @@ The following ``argparse`` options are available. They must appear before all *O
     The maximum number of acceptable non-option arguments. The default is infinity.
 
 **-i** or **--ignore-unknown**
-    Ignores unknown options, keeping them and their arguments in $argv instead.
+    Ignores unknown options, keeping them and their arguments in ``$argv`` instead (while moving any preceding known short options to ``$argv_opts``). By default, unknown options are treated as if they take optional arguments (i.e. have option spec ``=?`` or ``=*``).
+
+**-m** or **--move-unknown**
+    This is like **--ignore-unknown**, except that unknown options and their arguments are moved from ``$argv`` to ``$argv_opts``.
+
+**-a** or **--unknown-arguments** *KIND*
+    Modifies the parsing behaviour of unknown options handled by **--ignore-unknown** and **--move-unknown** above, depending on the value of *KIND*:
+
+        - **optional** (the default), allows each unknown option to take an optional argument (i.e. as if it had ``=?`` or ``=*`` in its option specification)
+
+        - **required**, requires each unknown option to take an argument (i.e. as if it had ``=`` or ``=+`` in its option specification).
+
+        - **none**, forbids each unknown option from taking an argument (i.e. as if it had no ``=`` in its option specification).
+
+        Note that the above assumes that unknown long flags use the ``--`` "GNU-style" (e.g. if *KIND* is ``none``, and there is no ``bar`` long option, ``-bar`` is interpreted as three short flags, ``b``, ``a``, and ``r``; but if ``bar`` is known, ``-bar`` is treated the same as ``--bar``).
+
+**-L** or **--strict-longopts**
+    This makes the parsing of long options more strict:
+
+    - Long options must be preceded by ``--`` (so the "old-style" ``-foo`` will never match a long option ``foo``, even if there is no short option ``f``)
+
+    - Long options names cannot be abbreviated (so ``--fo`` will not match a long option ``foo``, even if no other long option starts with ``fo``)
+
+    This flag has no effect on the parsing of unknown options.
 
 **-s** or **--stop-nonopt**
     Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
@@ -100,9 +123,13 @@ Option Specifications
 
 Each option specification consists of:
 
-- An optional alphanumeric short flag character, followed by a ``/`` if the short flag can be used by someone invoking your command or, for backwards compatibility, a ``-`` if it should not be exposed as a valid short flag (in which case it will also not be exposed as a flag variable).
+- An optional alphanumeric short flag character.
 
-- An optional long flag name, which if not present the short flag can be used, and if that is also not present, an error is reported
+- An optional long flag name preceded by a ``/``. If neither a short flag nor long flag are present, an error is reported.
+
+    - If there is no short flag, and the long flag name is more than one character, the ``/`` can be omitted.
+
+    - For backwards compatibility, if there is a short and a long flag, a ``-`` can be used in place of the ``/``, if the short flag is not to be usable by users (in which case it will also not be exposed as a flag variable).
 
 - Nothing if the flag is a boolean that takes no argument or is an integer flag, or
 
@@ -110,9 +137,15 @@ Each option specification consists of:
 
     - **=?** if it takes an optional value and only the last instance of the flag is saved, or
 
-    - **=+** if it requires a value and each instance of the flag is saved.
+    - **=+** if it requires a value and each instance of the flag is saved, or
 
-- Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on :ref:`Flag Value Validation <flag-value-validation>` for more information.
+    - **=\*** if it takes an optional value *and* each instance of the flag is saved, storing the empty string when the flag was not given a value.
+
+- Optionally a ``&``, indicating that the option and any attached values are not to be saved in ``$argv`` or ``$argv_opts``. This does not affect the the ``_flag_`` variables.
+
+- Nothing if the flag is a boolean that takes no argument, or
+
+    - ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on :ref:`Flag Value Validation <flag-value-validation>` for more information.
 
 See the :doc:`fish_opt <fish_opt>` command for a friendlier but more verbose way to create option specifications.
 
@@ -132,7 +165,7 @@ This does not read numbers given as ``+NNN``, only those that look like flags - 
 Note: Optional arguments
 ------------------------
 
-An option defined with ``=?`` can take optional arguments. Optional arguments have to be *directly attached* to the option they belong to.
+An option defined with ``=?`` or ``=*`` can take optional arguments. Optional arguments have to be *directly attached* to the option they belong to.
 
 That means the argument will only be used for the option if you use it like::
 
@@ -197,7 +230,7 @@ Some *OPTION_SPEC* examples:
 
 - ``h/help`` means that both ``-h`` and ``--help`` are valid. The flag is a boolean and can be used more than once. If either flag is used then ``_flag_h`` and ``_flag_help`` will be set to however either flag was seen, as many times as it was seen. So it could be set to ``-h``, ``-h`` and ``--help``, and ``count $_flag_h`` would yield "3".
 
-- ``help`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If it is used then ``_flag_help`` will be set as above. Also ``h-help`` (with an arbitrary short letter) for backwards compatibility.
+- ``help&`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If it is used then ``_flag_help`` will be set as above. Also ``h-help`` (with an arbitrary short letter) for backwards compatibility. Moreover, ``--help`` will be removed from ``$argv`` and *not* placed in ``$argv_opts``.
 
 - ``longonly=`` is a flag ``--longonly`` that requires an option, there is no short flag or even short flag variable.
 
@@ -205,9 +238,13 @@ Some *OPTION_SPEC* examples:
 
 - ``n/name=?`` means that both ``-n`` and ``--name`` are valid. It accepts an optional value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the value associated with the flag if one was provided else it will be set with no values.
 
+- ``n/name=*`` means that both ``-n`` and ``--name`` are valid. It accepts an optional value and can be used more than once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the values associated with each occurence. Each value will be the value given to the option, or the empty string if no value was given.
+
 - ``name=+`` means that only ``--name`` is valid. It requires a value and can be used more than once. If the flag is seen then ``_flag_name`` will be set with the values associated with each occurrence.
 
 - ``x`` means that only ``-x`` is valid. It is a boolean that can be used more than once. If it is seen then ``_flag_x`` will be set as above.
+
+- ``/x`` is similar, but only ``--x`` is valid (instead of ``-x``).
 
 - ``x=``, ``x=?``, and ``x=+`` are similar to the n/name examples above but there is no long flag alternative to the short flag ``-x``.
 
@@ -217,7 +254,7 @@ Some *OPTION_SPEC* examples:
 
 - ``#longonly`` causes the last integer option to be stored in ``_flag_longonly``.
 
-After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero.
+After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero. Similarly, the ``argv_opts`` variable is set with local scope to the arguments that *were* consumed during flag processing. This allows forwarindg ``$argv_opts`` to another command, together with additional arguments.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.
 
@@ -257,19 +294,3 @@ After this it figures out which variable it should operate on according to the `
     # it is not valid in a variable name
     not set -ql _flag_dry_run
     and set $var $result
-
-
-Limitations
------------
-
-One limitation with **--ignore-unknown** is that, if an unknown option is given in a group with known options, the entire group will be kept in $argv. ``argparse`` will not do any permutations here.
-
-For instance::
-
-  argparse --ignore-unknown h -- -ho
-  echo $_flag_h # is -h, because -h was given
-  echo $argv # is still -ho
-
-This limitation may be lifted in future.
-
-Additionally, it can only parse known options up to the first unknown option in the group - the unknown option could take options, so it isn't clear what any character after an unknown option means.

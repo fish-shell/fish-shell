@@ -711,7 +711,7 @@ impl HistoryImpl {
         // write.
         // We don't update `self.file_contents` since we only appended to the file, and everything we
         // appended remains in our new_items
-        self.history_file_id = file_id;
+        self.history_file_id = file_id_for_file(locked_history_file.get());
 
         drop(locked_history_file);
 

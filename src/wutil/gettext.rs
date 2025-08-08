@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::ffi::CString;
 use std::os::unix::ffi::OsStrExt;
 use std::sync::Mutex;
@@ -35,6 +35,7 @@ mod internal {
     use libc::c_char;
     use std::ffi::CStr;
     pub fn fish_gettext(msgid: &CStr) -> *const c_char {
+        panic!("Gettext is unavailable");
         msgid.as_ptr()
     }
     pub fn fish_bindtextdomain(_domainname: &CStr, _dirname: &CStr) -> *mut c_char {
@@ -49,11 +50,8 @@ use internal::*;
 
 // Really init wgettext.
 fn wgettext_really_init() {
-    let Some(ref localepath) = CONFIG_PATHS.locale else {
-        return;
-    };
     let package_name = CString::new(PACKAGE_NAME).unwrap();
-    let localedir = CString::new(localepath.as_os_str().as_bytes()).unwrap();
+    let localedir = CString::new(CONFIG_PATHS.locale.as_os_str().as_bytes()).unwrap();
     fish_bindtextdomain(&package_name, &localedir);
     fish_textdomain(&package_name);
 }
@@ -63,57 +61,43 @@ fn wgettext_init_if_necessary() {
     INIT.get_or_init(wgettext_really_init);
 }
 
-/// A type that can be either a static or local string.
-enum MaybeStatic<'a> {
-    Static(&'static wstr),
-    Local(&'a wstr),
-}
-
 /// Implementation detail for wgettext!.
 /// Wide character wrapper around the gettext function. For historic reasons, unlike the real
 /// gettext function, wgettext takes care of setting the correct domain, etc. using the textdomain
 /// and bindtextdomain functions. This should probably be moved out of wgettext, so that wgettext
 /// will be nothing more than a wrapper around gettext, like all other functions in this file.
-fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
+fn wgettext_impl(key: &wstr) -> &'static wstr {
     // Preserve errno across this since this is often used in printing error messages.
     let err = errno();
 
     wgettext_init_if_necessary();
 
-    let key = match text {
-        MaybeStatic::Static(s) => s,
-        MaybeStatic::Local(s) => s,
-    };
-
     debug_assert!(!key.contains('\0'), "key should not contain NUL");
 
-    // Note that because entries are immortal, we simply leak non-static keys, and all values.
-    static WGETTEXT_MAP: Lazy<Mutex<HashMap<&'static wstr, &'static wstr>>> =
-        Lazy::new(|| Mutex::new(HashMap::new()));
-    let mut wmap = WGETTEXT_MAP.lock().unwrap();
-    let res = match wmap.get(key) {
-        Some(v) => *v,
-        None => {
-            let mbs_in = wcs2zstring(key);
-            let out = fish_gettext(&mbs_in);
-            let out = charptr2wcstring(out);
+    // If a translation exists, gettext will return a static reference to it.
+    // Otherwise, a pointer to the input will be returned.
+    // Because the input is not necessarily static, we need an allocation here.
+    let localized_message = charptr2wcstring(fish_gettext(&wcs2zstring(key)));
+
+    // Stores the results of the gettext calls to prevent leaking the same string repeatedly.
+    static MESSAGE_CACHE: Lazy<Mutex<HashSet<&'static wstr>>> =
+        Lazy::new(|| Mutex::new(HashSet::new()));
+    let mut message_cache = MESSAGE_CACHE.lock().unwrap();
+
+    let static_localized_message =
+        if let Some(cached_message) = message_cache.get(localized_message.as_utfstr()) {
+            cached_message
+        } else {
             // Leak the value into the heap.
-            let value: &'static wstr = Box::leak(out.into_boxed_utfstr());
-
-            // Get a static key, perhaps leaking it into the heap as well.
-            let key: &'static wstr = match text {
-                MaybeStatic::Static(s) => s,
-                MaybeStatic::Local(s) => wstr::from_char_slice(Box::leak(s.as_char_slice().into())),
-            };
-
-            wmap.insert(key, value);
-            value
-        }
-    };
+            let static_localized_message: &'static wstr =
+                wstr::from_char_slice(Box::leak(localized_message.as_char_slice().into()));
+            message_cache.insert(static_localized_message);
+            static_localized_message
+        };
 
     set_errno(err);
 
-    res
+    static_localized_message
 }
 
 /// A string which can be localized.
@@ -149,14 +133,14 @@ impl LocalizableString {
                 if s.is_empty() {
                     L!("")
                 } else {
-                    wgettext_impl(MaybeStatic::Static(s))
+                    wgettext_impl(s)
                 }
             }
             Self::Owned(s) => {
                 if s.is_empty() {
                     L!("")
                 } else {
-                    wgettext_impl(MaybeStatic::Local(s))
+                    wgettext_impl(s)
                 }
             }
         }

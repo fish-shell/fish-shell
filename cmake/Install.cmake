@@ -160,7 +160,7 @@ install(FILES CHANGELOG.rst DESTINATION ${docdir})
 if(GETTEXT_FOUND)
   foreach(lang ${languages})
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${lang}.gmo DESTINATION
-            ${CMAKE_INSTALL_LOCALEDIR}/${lang}/LC_MESSAGES/ RENAME fish.mo)
+        ${CMAKE_INSTALL_LOCALEDIR}/${lang}.utf8/LC_MESSAGES/ RENAME fish.mo)
   endforeach()
 endif()
 

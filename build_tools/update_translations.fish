@@ -6,7 +6,7 @@
 # updates the PO files for each language from that
 # (changed line numbers, added messages, removed messages),
 # and finally generates a machine-readable MO file for each language,
-# which is stored in share/locale/$LANG/LC_MESSAGES/fish.mo (relative to the repo root).
+# which is stored in target/fish-locale/$LANG/LC_MESSAGES/fish.mo (relative to the repo root).
 #
 # Use cases:
 # For developers:
@@ -63,7 +63,7 @@ else
             echo "So valid filenames are of the shape 'll.po' or 'll_CC.po'."
             exit 1
         end
-        if not basename $arg | grep -qE '^[a-z]{2}(_[A-Z]{2})?\.po$'
+        if not basename $arg | grep -qE '^[a-z]{2,3}_[A-Z]{2}\.po$'
             echo "Filename does not match the expected format ('ll.po' or 'll_CC.po')."
             exit 1
         end
@@ -130,8 +130,15 @@ for po_file in $po_files
         end
     end
     if set -l --query mo
-        set -l locale_dir $build_tools/../share/locale
-        set -l out_dir $locale_dir/(basename $po_file .po)/LC_MESSAGES
+        set -l locale_dir (
+            # FISH_BUILD_DIR is set by CMake, and also in build.rs if it is not already defined.
+            if set -q FISH_BUILD_DIR
+                echo $FISH_BUILD_DIR
+            else
+                echo $build_tools/../target
+            end
+        )/fish-locale
+        set -l out_dir $locale_dir/(basename $po_file .po).utf8/LC_MESSAGES
         mkdir -p $out_dir
         msgfmt --check-format --output-file=$out_dir/fish.mo $po_file
     end

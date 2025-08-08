@@ -1,5 +1,5 @@
 use crate::{
-    common::{str2wcstring, wcs2zstring, ScopeGuard},
+    common::{str2wcstring, wcs2zstring},
     fds::wopen_cloexec,
     path::{path_remoteness, DirRemoteness},
     wchar::prelude::*,
@@ -335,98 +335,112 @@ where
         Ok(())
     }
 
+    // This contains the main body of the surrounding function.
+    // It is wrapped as its own function to allow unlinking the tmpfile reliably.
+    // This can be achieved more concisely using a `ScopeGuard` which unlinks the file when it is
+    // closed, but this does not work if the file should be closed before renaming, which is
+    // necessary for the whole process to work reliably on some filesystems.
+    fn try_rewriting<F, UserData>(
+        path: &wstr,
+        rewrite: F,
+        tmp_name: &wstr,
+        mut tmp_file: File,
+    ) -> std::io::Result<(FileId, PotentialUpdate<UserData>)>
+    where
+        F: Fn(&File, &mut File) -> std::io::Result<PotentialUpdate<UserData>>,
+    {
+        // We want to rewrite the file.
+        // To avoid issues with crashes during writing,
+        // we write to a temporary file and once we are done, this file is renamed such that it
+        // replaces the original file.
+        // To avoid races, we need to have exclusive access to the file for the entire
+        // duration, which we get via an exclusive lock on the parent directory.
+        // Taking a shared lock first and later upgrading to an exclusive one could result in a
+        // deadlock, so we take an exclusive one immediately.
+        match LockedFile::new(LockingMode::Exclusive(WriteMethod::RenameIntoPlace), path) {
+            Ok(locked_file) => {
+                let potential_update = rewrite(locked_file.get(), &mut tmp_file)?;
+                if potential_update.do_save {
+                    update_metadata(locked_file.get(), &tmp_file);
+                    rename(tmp_name, path)?;
+                }
+                return Ok((file_id_for_path(path), potential_update));
+            }
+            Err(e) => {
+                FLOGF!(
+                    synced_file_access,
+                    "Error acquiring exclusive lock on the directory of '%s': %s",
+                    path,
+                    e,
+                );
+            }
+        }
+
+        // If this is reached, we assume that locking is not available so we use a fallback
+        // implementation which tries to avoid race conditions, but in the case of contention it is
+        // possible that some writes are lost.
+
+        FLOG!(
+            synced_file_access,
+            "flock-based locking is disabled. Using fallback implementation."
+        );
+
+        // Give up after this many unsuccessful attempts.
+        // TODO: which value, should this be a constant shared with other retrying logic?
+        let max_attempts = 1000;
+        for _ in 0..max_attempts {
+            // Truncate tmp_file for the next attempt to get rid of data potentially written in the
+            // previous iteration.
+            tmp_file.set_len(0)?;
+            tmp_file.seek(std::io::SeekFrom::Start(0)).unwrap();
+
+            // If the file does not exist yet, this will be `INVALID_FILE_ID`.
+            let initial_file_id = file_id_for_path(path);
+            // If we cannot open the file, there is nothing we can do,
+            // so just return immediately.
+            let old_file = wopen_cloexec(path, OFlag::O_RDONLY | OFlag::O_CREAT, LOCKED_FILE_MODE)?;
+            let opened_file_id = file_id_for_file(&old_file);
+            if initial_file_id != INVALID_FILE_ID && initial_file_id != opened_file_id {
+                // File ID changed (and not just because the file was created by us).
+                continue;
+            }
+            let Ok(potential_update) = rewrite(&old_file, &mut tmp_file) else {
+                // Retry if rewrite function failed. Because we do not hold a lock, this might be
+                // caused by concurrent modifications.
+                continue;
+            };
+
+            if potential_update.do_save {
+                update_metadata(&old_file, &tmp_file);
+            }
+
+            let mut final_file_id = file_id_for_path(path);
+            if opened_file_id != final_file_id {
+                continue;
+            }
+
+            // If we reach this point, the file ID did not change while we read the old file and wrote
+            // to `tmp_file`. Now we replace the old file with the `tmp_file`.
+            // Note that we cannot prevent races here.
+            // If the file is modified by someone else between the syscall for determining the [`FileId`]
+            // and the rename syscall, these modifications will be lost.
+
+            if potential_update.do_save {
+                // Do not retry on rename failures, as it is unlikely that these will disappear if we retry.
+                rename(tmp_name, path)?;
+                final_file_id = file_id_for_path(path);
+            }
+            // Note that this might not match the version of the file we just wrote.
+            // (If we did write.)
+            return Ok((final_file_id, potential_update));
+        }
+        Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to update the file. Locking is disabled, and the fallback code did not succeed within the permissible number of attempts."))
+    }
+
     const TMP_FILE_SUFFIX: &wstr = L!(".XXXXXX");
     let tmp_file_template = path.to_owned() + TMP_FILE_SUFFIX;
     let (tmp_file, tmp_name) = create_temporary_file(&tmp_file_template)?;
-    // Ensure that the temporary file is unlinked when this function returns.
-    let mut tmp_file = ScopeGuard::new(tmp_file, |_| {
-        wunlink(&tmp_name);
-    });
-
-    // We want to rewrite the file.
-    // To avoid issues with crashes during writing,
-    // we write to a temporary file and once we are done, this file is renamed such that it
-    // replaces the original file.
-    // To avoid races, we need to have exclusive access to the file for the entire
-    // duration, which we get via an exclusive lock on the parent directory.
-    // Taking a shared lock first and later upgrading to an exclusive one could result in a
-    // deadlock, so we take an exclusive one immediately.
-    match LockedFile::new(LockingMode::Exclusive(WriteMethod::RenameIntoPlace), path) {
-        Ok(locked_file) => {
-            let potential_update = rewrite(locked_file.get(), &mut tmp_file)?;
-            if potential_update.do_save {
-                update_metadata(locked_file.get(), &tmp_file);
-                rename(&tmp_name, path)?;
-            }
-            return Ok((file_id_for_path(path), potential_update));
-        }
-        Err(e) => {
-            FLOGF!(
-                synced_file_access,
-                "Error acquiring exclusive lock on the directory of '%s': %s",
-                path,
-                e,
-            );
-        }
-    }
-
-    // If this is reached, we assume that locking is not available so we use a fallback
-    // implementation which tries to avoid race conditions, but in the case of contention it is
-    // possible that some writes are lost.
-
-    FLOG!(
-        synced_file_access,
-        "flock-based locking is disabled. Using fallback implementation."
-    );
-
-    // Give up after this many unsuccessful attempts.
-    // TODO: which value, should this be a constant shared with other retrying logic?
-    let max_attempts = 1000;
-    for _ in 0..max_attempts {
-        // Truncate tmp_file for the next attempt to get rid of data potentially written in the
-        // previous iteration.
-        tmp_file.set_len(0)?;
-        tmp_file.seek(std::io::SeekFrom::Start(0)).unwrap();
-
-        // If the file does not exist yet, this will be `INVALID_FILE_ID`.
-        let initial_file_id = file_id_for_path(path);
-        // If we cannot open the file, there is nothing we can do,
-        // so just return immediately.
-        let old_file = wopen_cloexec(path, OFlag::O_RDONLY | OFlag::O_CREAT, LOCKED_FILE_MODE)?;
-        let opened_file_id = file_id_for_file(&old_file);
-        if initial_file_id != INVALID_FILE_ID && initial_file_id != opened_file_id {
-            // File ID changed (and not just because the file was created by us).
-            continue;
-        }
-        let Ok(potential_update) = rewrite(&old_file, &mut tmp_file) else {
-            // Retry if rewrite function failed. Because we do not hold a lock, this might be
-            // caused by concurrent modifications.
-            continue;
-        };
-
-        if potential_update.do_save {
-            update_metadata(&old_file, &tmp_file);
-        }
-
-        let mut final_file_id = file_id_for_path(path);
-        if opened_file_id != final_file_id {
-            continue;
-        }
-
-        // If we reach this point, the file ID did not change while we read the old file and wrote
-        // to `tmp_file`. Now we replace the old file with the `tmp_file`.
-        // Note that we cannot prevent races here.
-        // If the file is modified by someone else between the syscall for determining the [`FileId`]
-        // and the rename syscall, these modifications will be lost.
-
-        if potential_update.do_save {
-            // Do not retry on rename failures, as it is unlikely that these will disappear if we retry.
-            rename(&tmp_name, path)?;
-            final_file_id = file_id_for_path(path);
-        }
-        // Note that this might not match the version of the file we just wrote.
-        // (If we did write.)
-        return Ok((final_file_id, potential_update));
-    }
-    Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to update the file. Locking is disabled, and the fallback code did not succeed within the permissible number of attempts."))
+    let result = try_rewriting(path, rewrite, &tmp_name, tmp_file);
+    wunlink(&tmp_name);
+    result
 }

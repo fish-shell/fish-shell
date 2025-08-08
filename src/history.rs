@@ -696,6 +696,7 @@ impl HistoryImpl {
         }
 
         flush_to_file(&mut buffer, locked_history_file.get_mut(), 0)?;
+        locked_history_file.get().sync_all()?;
         self.first_unwritten_new_item_index = new_first_index;
 
         // Since we just modified the file, update our history_file_id to match its current state

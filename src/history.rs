@@ -661,8 +661,10 @@ impl HistoryImpl {
             LockedFile::new(LockingMode::Exclusive(WriteMethod::Append), history_path)?;
 
         // Check if the file was modified since it was last read.
-        let file_id = file_id_for_file(locked_history_file.get());
-        let file_changed = file_id != self.history_file_id;
+        // If someone has replaced the file, forget our file state.
+        if file_id_for_file(locked_history_file.get()) != self.history_file_id {
+            self.clear_file_state();
+        }
 
         // We took the exclusive lock. Append to the file.
         // Note that this is sketchy for a few reasons:
@@ -712,13 +714,6 @@ impl HistoryImpl {
         // We don't update `self.file_contents` since we only appended to the file, and everything we
         // appended remains in our new_items
         self.history_file_id = file_id_for_file(locked_history_file.get());
-
-        drop(locked_history_file);
-
-        // If someone has replaced the file, forget our file state.
-        if file_changed {
-            self.clear_file_state();
-        }
 
         res
     }

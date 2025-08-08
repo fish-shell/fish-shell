@@ -683,30 +683,20 @@ impl HistoryImpl {
         // So far so good. Write all items at or after first_unwritten_new_item_index. Note that we
         // write even a pending item - pending items are ignored by history within the command
         // itself, but should still be written to the file.
-        // TODO: consider filling the buffer ahead of time, so we can just lock, splat, and unlock?
-        let mut res = Ok(());
         // Use a small buffer size for appending, we usually only have 1 item
         let mut buffer = Vec::new();
-        while self.first_unwritten_new_item_index < self.new_items.len() {
-            let item = &self.new_items[self.first_unwritten_new_item_index];
+        let mut new_first_index = self.first_unwritten_new_item_index;
+        while new_first_index < self.new_items.len() {
+            let item = &self.new_items[new_first_index];
             if item.should_write_to_disk() {
                 append_history_item_to_buffer(item, &mut buffer);
-                res = flush_to_file(
-                    &mut buffer,
-                    locked_history_file.get_mut(),
-                    HISTORY_OUTPUT_BUFFER_SIZE,
-                );
-                if res.is_err() {
-                    break;
-                }
             }
             // We wrote or skipped this item, hooray.
-            self.first_unwritten_new_item_index += 1;
+            new_first_index += 1;
         }
 
-        if res.is_ok() {
-            res = flush_to_file(&mut buffer, locked_history_file.get_mut(), 0);
-        }
+        flush_to_file(&mut buffer, locked_history_file.get_mut(), 0)?;
+        self.first_unwritten_new_item_index = new_first_index;
 
         // Since we just modified the file, update our history_file_id to match its current state
         // Otherwise we'll think the file has been changed by someone else the next time we go to
@@ -715,7 +705,7 @@ impl HistoryImpl {
         // appended remains in our new_items
         self.history_file_id = file_id_for_file(locked_history_file.get());
 
-        res
+        Ok(())
     }
 
     /// Saves history.

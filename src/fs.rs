@@ -480,6 +480,18 @@ where
     let tmp_file_template = path.to_owned() + TMP_FILE_SUFFIX;
     let (tmp_file, tmp_name) = create_temporary_file(&tmp_file_template)?;
     let result = try_rewriting(path, rewrite, &tmp_name, tmp_file);
-    wunlink(&tmp_name);
+    // Do not leave the tmpfile around.
+    // Note that we do not unlink when renaming succeeded.
+    // In that case, it would be unnecessary, because the file will no longer exist at the path,
+    // but it also enables a race condition, where after renaming succeeded, a different fish
+    // instance creates a tmpfile with the same name (unlikely but possible), which we would then
+    // delete here.
+    if result.is_err()
+        || result
+            .as_ref()
+            .is_ok_and(|(_file_id, potential_update)| !potential_update.do_save)
+    {
+        wunlink(&tmp_name);
+    }
     result
 }

@@ -715,8 +715,6 @@ impl HistoryImpl {
         // appended remains in our new_items
         self.history_file_id = file_id_for_file(locked_history_file.get());
 
-        drop(locked_history_file);
-
         res
     }
 

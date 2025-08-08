@@ -1,5 +1,5 @@
 use crate::{
-    common::{str2wcstring, wcs2zstring},
+    common::{str2wcstring, wcs2osstring, wcs2zstring},
     fds::wopen_cloexec,
     path::{path_remoteness, DirRemoteness},
     wchar::prelude::*,
@@ -13,8 +13,7 @@ use libc::{c_int, fchown, flock, LOCK_EX, LOCK_SH};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{
     ffi::CString,
-    fs::File,
-    io::Seek,
+    fs::{File, OpenOptions},
     os::{
         fd::{AsRawFd, FromRawFd},
         unix::fs::MetadataExt,
@@ -172,6 +171,36 @@ impl LockedFile {
 
     pub fn get_mut(&mut self) -> &mut File {
         &mut self.data_file
+    }
+
+    /// Calling `fsync` and then closing the file is required for correctness on some file systems
+    /// before renaming the file.
+    /// <https://www.comp.nus.edu.sg/~lijl/papers/ferrite-asplos16.pdf>
+    /// <https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/FAQ.html#What_are_the_crash_guarantees_of_overwrite-by-rename.3F>
+    /// Returns the lock file so that the lock can be kept.
+    pub fn fsync_close_and_keep_lock(self) -> std::io::Result<File> {
+        fsync(&self.data_file)?;
+        Ok(self._locked_fd)
+    }
+}
+
+/// Reimplementation of `std::sys::fs::unix::File::fsync` using publicly accessible functionality.
+/// This function is used instead of `sync_all` due to concerns of that being too slow on macOS,
+/// since there `libc::fcntl(fd, libc::F_FULLFSYNC)` is used internally.
+/// This weakens our guarantees on macOS.
+pub fn fsync(file: &File) -> std::io::Result<()> {
+    let fd = file.as_raw_fd();
+    loop {
+        match unsafe { libc::fsync(fd) } {
+            0 => return Ok(()),
+            -1 => {
+                let os_error = std::io::Error::last_os_error();
+                if os_error.kind() != std::io::ErrorKind::Interrupted {
+                    return Err(os_error);
+                }
+            }
+            _ => panic!("fsync should only ever return 0 or -1"),
+        }
     }
 }
 
@@ -360,8 +389,12 @@ where
         match LockedFile::new(LockingMode::Exclusive(WriteMethod::RenameIntoPlace), path) {
             Ok(locked_file) => {
                 let potential_update = rewrite(locked_file.get(), &mut tmp_file)?;
+                // In case the `LockedFile` is destroyed, this variable keeps the lock file in
+                // scope, to prevent releasing the lock too early.
+                let mut _lock_file = None;
                 if potential_update.do_save {
                     update_metadata(locked_file.get(), &tmp_file);
+                    _lock_file = Some(locked_file.fsync_close_and_keep_lock()?);
                     rename(tmp_name, path)?;
                 }
                 return Ok((file_id_for_path(path), potential_update));
@@ -389,10 +422,12 @@ where
         // TODO: which value, should this be a constant shared with other retrying logic?
         let max_attempts = 1000;
         for _ in 0..max_attempts {
-            // Truncate tmp_file for the next attempt to get rid of data potentially written in the
-            // previous iteration.
-            tmp_file.set_len(0)?;
-            tmp_file.seek(std::io::SeekFrom::Start(0)).unwrap();
+            // Reopen the tmpfile. This is important because it might have been closed by
+            // explicitly dropping it.
+            tmp_file = OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .open(wcs2osstring(tmp_name))?;
 
             // If the file does not exist yet, this will be `INVALID_FILE_ID`.
             let initial_file_id = file_id_for_path(path);
@@ -412,6 +447,10 @@ where
 
             if potential_update.do_save {
                 update_metadata(&old_file, &tmp_file);
+                // fsync + close as described in
+                // https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/FAQ.html#What_are_the_crash_guarantees_of_overwrite-by-rename.3F
+                fsync(&tmp_file)?;
+                std::mem::drop(tmp_file);
             }
 
             let mut final_file_id = file_id_for_path(path);

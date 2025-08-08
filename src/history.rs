@@ -48,6 +48,7 @@ use crate::{
     expand::{expand_one, ExpandFlags},
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
+    fs::fsync,
     history::file::{append_history_item_to_buffer, HistoryFileContents},
     io::IoStreams,
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND},
@@ -696,6 +697,7 @@ impl HistoryImpl {
         }
 
         flush_to_file(&mut buffer, locked_history_file.get_mut(), 0)?;
+        fsync(locked_history_file.get())?;
         self.first_unwritten_new_item_index = new_first_index;
 
         // Since we just modified the file, update our history_file_id to match its current state

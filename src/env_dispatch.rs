@@ -575,8 +575,7 @@ fn init_locale(vars: &EnvStack) {
     // should never fail, the C locale should always be defined
     assert_ne!(loc_ptr, ptr::null_mut());
 
-    // See that we regenerate our special locale for numbers
-    crate::locale::invalidate_numeric_locale();
+    // Update cached locale information.
     crate::common::fish_setlocale();
     FLOG!(
         env_locale,

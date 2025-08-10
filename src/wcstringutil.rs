@@ -1,10 +1,9 @@
 //! Helper functions for working with wcstring.
 
-use crate::common::{get_ellipsis_char, get_ellipsis_str};
+use crate::common::{get_ellipsis_char, get_ellipsis_str, get_is_multibyte_locale};
 use crate::expand::INTERNAL_SEPARATOR;
 use crate::fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
 use crate::flog::FLOGF;
-use crate::libc::MB_CUR_MAX;
 use crate::wchar::{decode_byte_from_char, prelude::*};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 
@@ -312,7 +311,7 @@ pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) ->
     let mut state = zero_mbstate();
     let mut converted = [0_u8; AT_LEAST_MB_LEN_MAX];
 
-    let is_singlebyte_locale = MB_CUR_MAX() == 1;
+    let is_singlebyte_locale = !get_is_multibyte_locale();
 
     for c in input.chars() {
         // TODO: this doesn't seem sound.

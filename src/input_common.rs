@@ -1,6 +1,6 @@
 use crate::common::{
-    fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes,
-    str2wcstring, WSL,
+    fish_reserved_codepoint, get_is_multibyte_locale, is_windows_subsystem_for_linux, read_blocked,
+    shell_modes, str2wcstring, WSL,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
@@ -1699,10 +1699,8 @@ pub(crate) fn decode_input_byte(
     use DecodeState::*;
     let mut res: char = '\0';
     let read_byte = *buffer.last().unwrap();
-    if crate::libc::MB_CUR_MAX() == 1 {
+    if !get_is_multibyte_locale() {
         // single-byte locale, all values are legal
-        // FIXME: this looks wrong, this falsely assumes that
-        // the single-byte locale is compatible with Unicode upper-ASCII.
         res = read_byte.into();
         out_seq.push(res);
         return Complete;

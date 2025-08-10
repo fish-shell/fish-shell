@@ -3,13 +3,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>     // MB_CUR_MAX
+#include <stdlib.h>
 #include <sys/mount.h>  // MNT_LOCAL
 #include <sys/resource.h>
 #include <sys/statvfs.h>  // ST_LOCAL
 #include <unistd.h>       // _CS_PATH, _PC_CASE_SENSITIVE
-
-size_t C_MB_CUR_MAX() { return MB_CUR_MAX; }
 
 uint64_t C_ST_LOCAL() {
 #if defined(ST_LOCAL)

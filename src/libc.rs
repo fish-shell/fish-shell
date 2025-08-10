@@ -29,7 +29,6 @@ macro_rules! CVAR {
     };
 }
 
-CVAR!(C_MB_CUR_MAX, MB_CUR_MAX, usize);
 CVAR!(C_ST_LOCAL, ST_LOCAL, u64);
 CVAR!(C_MNT_LOCAL, MNT_LOCAL, u64);
 CVAR!(C_CS_PATH, _CS_PATH, i32);

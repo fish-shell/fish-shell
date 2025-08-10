@@ -54,9 +54,10 @@ use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
-    escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
-    restore_term_foreground_process_group_for_exit, shell_modes, str2wcstring, write_loop,
-    EscapeFlags, EscapeStringStyle, ScopeGuard, PROGRAM_NAME, UTF8_BOM_WCHAR,
+    escape, escape_string, exit_without_destructors, get_ellipsis_char, get_is_multibyte_locale,
+    get_obfuscation_read_char, restore_term_foreground_process_group_for_exit, shell_modes,
+    str2wcstring, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, PROGRAM_NAME,
+    UTF8_BOM_WCHAR,
 };
 use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
@@ -97,7 +98,6 @@ use crate::input_common::{
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
-use crate::libc::MB_CUR_MAX;
 use crate::nix::{getpgrp, getpid, isatty};
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::pager::{PageRendering, Pager, SelectionMotion};
@@ -3226,7 +3226,7 @@ impl<'a> Reader<'a> {
                 // Update the pager data.
                 self.pager.set_search_field_shown(true);
                 self.pager.set_prefix(
-                    if MB_CUR_MAX() > 1 {
+                    if get_is_multibyte_locale() {
                         L!("► ")
                     } else {
                         L!("> ")

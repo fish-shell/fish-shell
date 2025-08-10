@@ -4,14 +4,14 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 use crate::common::{
-    escape_string, get_ellipsis_char, get_ellipsis_str, EscapeFlags, EscapeStringStyle,
+    escape_string, get_ellipsis_char, get_ellipsis_str, get_is_multibyte_locale, EscapeFlags,
+    EscapeStringStyle,
 };
 use crate::complete::Completion;
 use crate::editable_line::EditableLine;
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::highlight::{highlight_shell, HighlightRole, HighlightSpec};
-use crate::libc::MB_CUR_MAX;
 use crate::operation_context::OperationContext;
 use crate::screen::{wcswidth_rendered, wcwidth_rendered, CharOffset, Line, ScreenData};
 use crate::termsize::Termsize;
@@ -1243,7 +1243,7 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
             // We should probably fix this by first highlighting the original completion, and
             // then writing a variant of escape_string() that adjusts highlighting according
             // so it matches the escaped string.
-            && MB_CUR_MAX() > 1
+            && get_is_multibyte_locale()
         {
             highlight_shell(
                 &comp.completion,

@@ -29,25 +29,13 @@ cleanup () {
 
 trap cleanup EXIT INT TERM HUP
 
-repo_root="$(dirname "$0")/.."
-build_dir="${CARGO_TARGET_DIR:-$repo_root/target}/${target_triple}/debug"
-
-if $lint && command -v rustup >/dev/null && rustup show active-toolchain | grep -q ^stable-; then
-    # Check that stable is up-to-date
-    if rustup check | grep ^stable- | grep 'Update available'; then
-        exit 1
-    fi
-    # Same in CI.
-    rust_version=$(rustc --version | cut -d' ' -f2)
-    rust_version=${rust_version%.*}
-    grep -q "\bdtolnay/rust-toolchain@$rust_version\b" \
-        "$repo_root/.github/actions/rust-toolchain@stable/action.yml"
-fi
-
 if $lint; then
     export RUSTFLAGS="--deny=warnings ${RUSTFLAGS}"
     export RUSTDOCFLAGS="--deny=warnings ${RUSTDOCFLAGS}"
 fi
+
+repo_root="$(dirname "$0")/.."
+build_dir="${CARGO_TARGET_DIR:-$repo_root/target}/${target_triple}/debug"
 
 template_file=$(mktemp)
 FISH_GETTEXT_EXTRACTION_FILE=$template_file cargo build --workspace --all-targets

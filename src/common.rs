@@ -9,7 +9,6 @@ use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
-use crate::libc::MB_CUR_MAX;
 use crate::locale::invalidate_numeric_locale;
 use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::terminal::Output;
@@ -17,7 +16,9 @@ use crate::termsize::Termsize;
 use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
 use crate::wcstringutil::wcs2string_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use crate::wutil::encoding::{mbrtowc, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
+use crate::wutil::encoding::{
+    mbrtowc, probe_is_multibyte_locale, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX,
+};
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
 use libc::{SIGTTOU, SIG_IGN, STDIN_FILENO};
@@ -187,7 +188,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     let no_quoted = flags.contains(EscapeFlags::NO_QUOTED);
     let no_tilde = flags.contains(EscapeFlags::NO_TILDE);
     let no_qmark = feature_test(FeatureFlag::qmark_noglob);
-    let symbolic = flags.contains(EscapeFlags::SYMBOLIC) && MB_CUR_MAX() > 1;
+    let symbolic = flags.contains(EscapeFlags::SYMBOLIC) && get_is_multibyte_locale();
 
     assert!(
         !symbolic || !escape_printables,
@@ -1061,6 +1062,13 @@ pub fn get_obfuscation_read_char() -> char {
     char::from_u32(OBFUSCATION_READ_CHAR.load(Ordering::Relaxed)).unwrap()
 }
 
+static IS_MB_LOCALE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+/// Whether we believe we are in a multibyte locale.
+pub fn get_is_multibyte_locale() -> bool {
+    IS_MB_LOCALE.load()
+}
+
 /// Profiling flag. True if commands should be profiled.
 pub static PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
@@ -1290,6 +1298,9 @@ pub fn fish_setlocale() {
             &S
         }};
     }
+
+    // Mark if we are a multibyte locale.
+    IS_MB_LOCALE.store(probe_is_multibyte_locale());
 
     // Use various Unicode symbols if they can be encoded using the current locale, else a simple
     // ASCII char alternative. All of the can_be_encoded() invocations should return the same

@@ -14,6 +14,7 @@ use crate::terminal::use_terminfo;
 use crate::terminal::ColorSupport;
 use crate::tty_handoff::xtversion;
 use crate::wchar::prelude::*;
+use crate::wutil::encoding::probe_is_multibyte_locale;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};
 use std::borrow::Cow;
@@ -551,21 +552,20 @@ fn init_locale(vars: &EnvStack) {
         .map(|allow_c| !crate::wcstringutil::bool_from_string(&allow_c))
         .unwrap_or(true);
 
-    if fix_locale && crate::libc::MB_CUR_MAX() == 1 {
-        FLOG!(env_locale, "Have singlebyte locale, trying to fix.");
+    if fix_locale && !probe_is_multibyte_locale() {
+        FLOG!(env_locale, "Have single byte locale, trying to fix.");
+        let mut fixed = false;
         for locale in UTF8_LOCALES {
-            {
-                let locale = CString::new(locale.to_owned()).unwrap();
-                // this can fail, that is fine
-                unsafe { libc::setlocale(libc::LC_CTYPE, locale.as_ptr()) };
-            }
-            if crate::libc::MB_CUR_MAX() > 1 {
+            let locale_cstr = CString::new(*locale).unwrap();
+            // this can fail, that is fine
+            unsafe { libc::setlocale(libc::LC_CTYPE, locale_cstr.as_ptr()) };
+            if probe_is_multibyte_locale() {
                 FLOG!(env_locale, "Fixed locale:", locale);
+                fixed = true;
                 break;
             }
         }
-
-        if crate::libc::MB_CUR_MAX() == 1 {
+        if !fixed {
             FLOG!(env_locale, "Failed to fix locale.");
         }
     }

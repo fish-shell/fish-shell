@@ -1,13 +1,15 @@
 use std::sync::MutexGuard;
 
 use crate::common::{
-    escape_string, str2wcstring, unescape_string, wcs2string, EscapeFlags, EscapeStringStyle,
-    UnescapeStringStyle, ENCODE_DIRECT_BASE, ENCODE_DIRECT_END,
+    escape_string, fish_setlocale, str2wcstring, unescape_string, wcs2string, EscapeFlags,
+    EscapeStringStyle, UnescapeStringStyle, ENCODE_DIRECT_BASE, ENCODE_DIRECT_END,
 };
 use crate::locale::LOCALE_LOCK;
 use crate::util::{get_rng_seed, get_seeded_rng};
 use crate::wchar::{wstr, WString, L};
-use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
+use crate::wutil::encoding::{
+    probe_is_multibyte_locale, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX,
+};
 use rand::{Rng, RngCore};
 
 /// wcs2string is locale-dependent, so ensure we have a multibyte locale
@@ -19,13 +21,14 @@ fn setlocale() -> MutexGuard<'static, ()> {
     const UTF8_LOCALES: &[&str] = &[
         "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",
     ];
-    if crate::libc::MB_CUR_MAX() > 1 {
+    if probe_is_multibyte_locale() {
         return guard;
     }
     for locale in UTF8_LOCALES {
         let locale = std::ffi::CString::new(locale.to_owned()).unwrap();
         unsafe { libc::setlocale(libc::LC_CTYPE, locale.as_ptr()) };
-        if crate::libc::MB_CUR_MAX() > 1 {
+        if probe_is_multibyte_locale() {
+            fish_setlocale(); // Update cached locale information.
             return guard;
         }
     }

@@ -82,7 +82,7 @@ As a more comprehensive example, here's a commented excerpt of the completions f
   #
   # The `-n`/`--condition` option takes script as a string, which it executes.
   # If it returns true, the completion is offered.
-  # Here the condition is the `__fish_seen_subcommands_from` helper function.
+  # Here the condition is the `__fish_seen_subcommand_from` helper function.
   # It returns true if any of the given commands is used on the commandline,
   # as determined by a simple heuristic.
   # For more complex uses, you can write your own function.

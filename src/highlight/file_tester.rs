@@ -8,7 +8,6 @@ use crate::expand::{
     VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
 use crate::expand::{expand_tilde, ExpandFlags, HOME_DIRECTORY};
-use crate::libc::_PC_CASE_SENSITIVE;
 use crate::operation_context::OperationContext;
 use crate::path::path_apply_working_directory;
 use crate::redirection::RedirectionMode;
@@ -23,7 +22,6 @@ use crate::wutil::{
     dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat,
 };
 use libc::PATH_MAX;
-use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::os::fd::RawFd;
 
@@ -391,27 +389,30 @@ pub fn is_potential_cd_path(
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
 pub type CaseSensitivityCache = HashMap<WString, bool>;
+
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 fn fs_is_case_insensitive(
     path: &wstr,
     fd: RawFd,
     case_sensitivity_cache: &mut CaseSensitivityCache,
 ) -> bool {
-    let mut result = false;
-    if *_PC_CASE_SENSITIVE != 0 {
-        // Try the cache first.
-        match case_sensitivity_cache.entry(path.to_owned()) {
-            Entry::Occupied(e) => {
-                /* Use the cached value */
-                result = *e.get();
-            }
-            Entry::Vacant(e) => {
-                // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
-                // sensitive, and a 0 value means case insensitive.
-                let ret = unsafe { libc::fpathconf(fd, *_PC_CASE_SENSITIVE) };
-                result = ret == 0;
-                e.insert(result);
-            }
-        }
-    }
-    result
+    if let Some(cached) = case_sensitivity_cache.get(path) {
+        return *cached;
+    };
+    // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
+    // sensitive, and a 0 value means case insensitive.
+    let ret = unsafe { libc::fpathconf(fd, libc::_PC_CASE_SENSITIVE) };
+    let icase = ret == 0;
+    case_sensitivity_cache.insert(path.to_owned(), icase);
+    icase
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "ios")))]
+pub fn fs_is_case_insensitive(
+    _path: &wstr,
+    _fd: RawFd,
+    _case_sensitivity_cache: &mut CaseSensitivityCache,
+) -> bool {
+    // Other platforms don’t have _PC_CASE_SENSITIVE.
+    false
 }

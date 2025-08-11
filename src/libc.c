@@ -7,7 +7,7 @@
 #include <sys/mount.h>  // MNT_LOCAL
 #include <sys/resource.h>
 #include <sys/statvfs.h>  // ST_LOCAL
-#include <unistd.h>       // _PC_CASE_SENSITIVE
+#include <unistd.h>
 
 uint64_t C_ST_LOCAL() {
 #if defined(ST_LOCAL)
@@ -26,14 +26,6 @@ uint64_t C_MNT_LOCAL() {
 }
 
 const char* C_PATH_BSHELL() { return _PATH_BSHELL; }
-
-int C_PC_CASE_SENSITIVE() {
-#ifdef _PC_CASE_SENSITIVE
-    return _PC_CASE_SENSITIVE;
-#else
-    return 0;
-#endif
-}
 
 FILE* stdout_stream() { return stdout; }
 

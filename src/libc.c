@@ -7,21 +7,13 @@
 #include <sys/mount.h>  // MNT_LOCAL
 #include <sys/resource.h>
 #include <sys/statvfs.h>  // ST_LOCAL
-#include <unistd.h>       // _CS_PATH, _PC_CASE_SENSITIVE
+#include <unistd.h>       // _PC_CASE_SENSITIVE
 
 uint64_t C_ST_LOCAL() {
 #if defined(ST_LOCAL)
     return ST_LOCAL;
 #else
     return 0;
-#endif
-}
-
-int C_CS_PATH() {
-#if defined(_CS_PATH)
-    return _CS_PATH;
-#else
-    return -1;
 #endif
 }
 

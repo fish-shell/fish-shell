@@ -569,13 +569,12 @@ fn setup_user(vars: &EnvStack) {
 }
 
 pub(crate) static FALLBACK_PATH: Lazy<&[WString]> = Lazy::new(|| {
-    use crate::libc::_CS_PATH;
     // _CS_PATH: colon-separated paths to find POSIX utilities
-    let buf_size = unsafe { confstr(_CS_PATH(), std::ptr::null_mut(), 0) };
+    let buf_size = unsafe { confstr(libc::_CS_PATH, std::ptr::null_mut(), 0) };
     Box::leak(
         (if buf_size > 0 {
             let mut buf = vec![b'\0' as libc::c_char; buf_size];
-            unsafe { confstr(_CS_PATH(), buf.as_mut_ptr(), buf_size) };
+            unsafe { confstr(libc::_CS_PATH, buf.as_mut_ptr(), buf_size) };
             let buf = buf;
             // safety: buf should contain a null-byte, and is not mutable unless we move ownership
             let cstr = unsafe { CStr::from_ptr(buf.as_ptr()) };

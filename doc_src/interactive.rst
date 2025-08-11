@@ -61,7 +61,7 @@ You can also write your own completions or install some you got from someone els
     If a variable name matches one of these patterns, its value will be replaced with ``[redacted]`` in the completion description.
     This is useful for preventing accidental exposure of sensitive information like API keys or tokens during tab completion.
 
-    Example: to redact variables ending with ``_TOKEN`` or containing ``SECRET``::
+    Example: to redact variables ending with ``_TOKEN`` or containing ``_SECRET``::
 
         set -g fish_redact_vars '*_TOKEN' '*_SECRET*'
 

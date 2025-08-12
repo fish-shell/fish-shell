@@ -1,4 +1,8 @@
-set(languages de en fr pl pt_BR sv zh_CN)
+file(GLOB language_files LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/po CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/po/*.po)
+foreach(lang_file ${language_files})
+  string(REGEX REPLACE ".po$" "" lang ${lang_file})
+  list(APPEND languages ${lang})
+endforeach()
 
 include(FeatureSummary)
 

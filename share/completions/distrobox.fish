@@ -15,8 +15,8 @@ complete -c distrobox -n "__fish_seen_subcommand_from $commands" \
 complete -c distrobox -n "__fish_seen_subcommand_from enter ephemeral list ls create rm generate-entry upgrade && not __fish_seen_subcommand_from assemble" \
     -s r -l root -d "Launch podman/docker/lilipod with root privileges"
 
-complete -c distrobox --no-files -n "not __fish_seen_subcommand_from $commands" \
-    -a "assemble create enter list ls stop upgrade ephemeral generate-entry version help"
+complete -c distrobox -n "not __fish_seen_subcommand_from $commands" \
+    -a "$commands"
 
 complete -c distrobox -n "__fish_seen_subcommand_from assemble" \
     -a "create rm"
@@ -76,12 +76,12 @@ complete -c distrobox -n "__fish_seen_subcommand_from create ephemeral && not __
 complete -c distrobox -n "__fish_seen_subcommand_from create ephemeral && not __fish_seen_subcommand_from assemble" \
     -l no-entry -d "Do not generate a container entry in the application list"
 complete -c distrobox -n "__fish_seen_subcommand_from create ephemeral && not __fish_seen_subcommand_from assemble" \
-    -l absolutely-disable-root-password-i-am-really-positively-sure -d "when setting up a rootful distrobox, this will skip user password setup, leaving it blanK"
+    -l absolutely-disable-root-password-i-am-really-positively-sure -d "When setting up a rootful distrobox, this will skip user password setup, leaving it blank"
 
 complete -c distrobox -n "__fish_seen_subcommand_from enter rm stop upgrade" \
-    --no-files -ra "(__fish_distrobox_list_containers)"
+    -ra "(__fish_distrobox_list_containers)"
 complete -c distrobox -n "__fish_seen_subcommand_from enter" \
-    -s n -l name --no-files -ra "(__fish_distrobox_list_containers)" -d "Name for the distrobox"
+    -s n -l name -ra "(__fish_distrobox_list_containers)" -d "Name for the distrobox"
 complete -c distrobox -n "__fish_seen_subcommand_from enter ephemeral" \
     -s "e -" -d "End arguments, execute the rest as command to execute at login"
 complete -c distrobox -n "__fish_seen_subcommand_from enter" \
@@ -112,4 +112,4 @@ complete -c distrobox -n "__fish_seen_subcommand_from upgrade" \
 complete -c distrobox -n "__fish_seen_subcommand_from generate-entry" \
     -s d -l delete -d "Delete the entry"
 complete -c distrobox -n "__fish_seen_subcommand_from generate-entry" \
-    -s i -l icon -F -ra "(__fish_complete_path)" -d "Specify a custom icon"
+    -s i -l icon -F -r -d "Specify a custom icon"

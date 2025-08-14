@@ -7,7 +7,6 @@ const DOC_DIR: &str = env!("DOCDIR");
 const DATA_DIR: &str = env!("DATADIR");
 const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
-const LOCALE_DIR: &str = env!("LOCALEDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
@@ -45,7 +44,6 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
                 bin: Some(exec_path.parent().unwrap().to_owned()),
-                locale: Some(manifest_dir.join("share/locale")),
             }
         }
 
@@ -66,7 +64,6 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
                     sysconf: base_path.join("etc/fish"),
                     doc: base_path.join("share/doc/fish"),
                     bin: Some(base_path.join("bin")),
-                    locale: Some(data_dir.join("locale")),
                 }
             } else if exec_path.ends_with("fish") {
                 FLOG!(
@@ -83,7 +80,6 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
                     sysconf: base_path.join("etc"),
                     doc: base_path.join("user_doc/html"),
                     bin: Some(base_path.to_path_buf()),
-                    locale: Some(data_dir.join("locale")),
                 }
             }
 
@@ -109,11 +105,6 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
         } else {
             Some(PathBuf::from(BIN_DIR))
         };
-        let locale = if cfg!(feature = "embed-data") {
-            None
-        } else {
-            Some(PathBuf::from(LOCALE_DIR))
-        };
 
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
@@ -121,14 +112,13 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin,
-            locale,
         }
     }
 
     FLOGF!(
         config,
         "determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: \
-        %ls\npaths.doc: %ls\npaths.bin: %ls\npaths.locale: %ls",
+        %ls\npaths.doc: %ls\npaths.bin: %ls",
         paths
             .data
             .clone()
@@ -138,11 +128,6 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
         paths.doc.display().to_string(),
         paths
             .bin
-            .clone()
-            .map(|x| x.display().to_string())
-            .unwrap_or("|not found|".to_string()),
-        paths
-            .locale
             .clone()
             .map(|x| x.display().to_string())
             .unwrap_or("|not found|".to_string()),

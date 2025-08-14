@@ -15,8 +15,6 @@ endif()
 # Set up standard directories.
 include(GNUInstallDirs)
 
-include(cmake/gettext.cmake)
-
 # Set up PCRE2
 # This sets an environment variable that needs to be available before the Rust stanzas
 include(cmake/PCRE2.cmake)

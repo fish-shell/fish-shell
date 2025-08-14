@@ -58,7 +58,11 @@ rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
 widestring = "1.2.0"
 # We need 0.9.0 specifically for some crash fixes.
 terminfo = "0.9.0"
-rust-embed = { version = "8.2.0", optional = true }
+# The `interpolate-folder-path` feature pulls in several additional transitive dependencies.
+# At the moment, it is only used to access the parent of the fish-locale directory,
+# whose location differs between CMake and cargo-only builds.
+# If we change this to a fixed location, we can get rid of the feature.
+rust-embed = { version = "8.2.0", features = ["interpolate-folder-path"] }
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
 portable-atomic = { version = "1", default-features = false, features = [
@@ -94,7 +98,7 @@ path = "src/bin/fish_key_reader.rs"
 [features]
 default = ["embed-data"]
 benchmark = []
-embed-data = ["dep:rust-embed"]
+embed-data = []
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
 asan = []

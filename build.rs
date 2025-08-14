@@ -1,6 +1,6 @@
 #![allow(clippy::uninlined_format_args)]
 
-use rsconf::{LinkType, Target};
+use rsconf::Target;
 use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
@@ -29,10 +29,9 @@ fn main() {
         .unwrap_or(canonicalize(MANIFEST_DIR).join("target"));
 
     // FISH_BUILD_DIR is set by CMake, if we are using it.
-    rsconf::set_env_value(
-        "FISH_BUILD_DIR",
-        option_env!("FISH_BUILD_DIR").unwrap_or(cargo_target_dir.to_str().unwrap()),
-    );
+    let fish_build_dir =
+        option_env!("FISH_BUILD_DIR").unwrap_or(cargo_target_dir.to_str().unwrap());
+    rsconf::set_env_value("FISH_BUILD_DIR", fish_build_dir);
 
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
     // compare it directly as a string at runtime.
@@ -62,6 +61,13 @@ fn main() {
         let sec1dir = targetman.join("man1");
         let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
     }
+
+    let mo_file_dir = PathBuf::from(fish_build_dir).join("fish-locale");
+    // Ensure that the directory is created, because clippy cannot compile the code if the
+    // directory does not exist.
+    std::fs::create_dir_all(&mo_file_dir).unwrap();
+    #[cfg(not(clippy))]
+    build_mo(&mo_file_dir).unwrap();
 
     rsconf::rebuild_if_paths_changed(&[
         "build.rs",
@@ -123,7 +129,6 @@ fn detect_cfgs(target: &mut Target) {
         ("apple", &detect_apple),
         ("bsd", &detect_bsd),
         ("cygwin", &detect_cygwin),
-        ("gettext", &have_gettext),
         ("small_main_stack", &has_small_stack),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| {
@@ -188,51 +193,6 @@ fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
     ))]
     assert!(is_bsd, "Target incorrectly detected as not BSD!");
     Ok(is_bsd)
-}
-
-/// Detect libintl/gettext and its needed symbols to enable internationalization/localization
-/// support.
-fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
-    // The following script correctly detects and links against gettext, but so long as we are using
-    // C++ and generate a static library linked into the C++ binary via CMake, we need to account
-    // for the CMake option WITH_GETTEXT being explicitly disabled.
-    rsconf::rebuild_if_env_changed("CMAKE_WITH_GETTEXT");
-    if let Some(with_gettext) = std::env::var_os("CMAKE_WITH_GETTEXT") {
-        if with_gettext.eq_ignore_ascii_case("0") {
-            return Ok(false);
-        }
-    }
-
-    // In order for fish to correctly operate, we need some way of notifying libintl to invalidate
-    // its localizations when the locale environment variables are modified. Without the libintl
-    // symbol _nl_msg_cat_cntr, we cannot use gettext even if we find it.
-    let mut libraries = Vec::new();
-    let mut found = 0;
-    let symbols = ["gettext", "_nl_msg_cat_cntr"];
-    for symbol in &symbols {
-        // Historically, libintl was required in order to use gettext() and co, but that
-        // functionality was subsumed by some versions of libc.
-        if target.has_symbol(symbol) {
-            // No need to link anything special for this symbol
-            found += 1;
-            continue;
-        }
-        for library in ["intl", "gettextlib"] {
-            if target.has_symbol_in(symbol, &[library]) {
-                libraries.push(library);
-                found += 1;
-                continue;
-            }
-        }
-    }
-    match found {
-        0 => Ok(false),
-        1 => Err(format!("gettext found but cannot be used without {}", symbols[1]).into()),
-        _ => {
-            rsconf::link_libraries(&libraries, LinkType::Default);
-            Ok(true)
-        }
-    }
 }
 
 /// Rust sets the stack size of newly created threads to a sane value, but is at at the mercy of the
@@ -579,4 +539,39 @@ fn build_man(build_dir: &Path) {
             }
         },
     }
+}
+
+#[cfg(not(clippy))]
+fn build_mo(mo_file_dir: &Path) -> std::io::Result<()> {
+    let po_dir = PathBuf::from(MANIFEST_DIR).join("po");
+    for dir_entry_result in po_dir.read_dir()? {
+        let dir_entry = dir_entry_result?;
+        let po_file_path = dir_entry.path();
+        let lang = po_file_path
+            .file_stem()
+            .expect("All entries in the po directory must be regular files.");
+        let mo_file_path = mo_file_dir.join(lang);
+
+        let update_mo_file = || {
+            // Try to create a new MO file.
+            let _ = std::process::Command::new("msgfmt")
+                .arg("--check-format")
+                .arg(format!("--output-file={}", mo_file_path.to_str().unwrap()))
+                .arg(po_file_path)
+                .output();
+        };
+
+        if let Ok(metadata) = std::fs::metadata(&mo_file_path) {
+            // MO file exists, but might be outdated.
+            let mo_mtime = metadata.modified().unwrap();
+            let po_mtime = dir_entry.metadata().unwrap().modified().unwrap();
+            if mo_mtime < po_mtime {
+                update_mo_file();
+            }
+        } else {
+            // MO file does not exist.
+            update_mo_file();
+        }
+    }
+    Ok(())
 }

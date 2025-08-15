@@ -49,6 +49,17 @@ else
 end
 #CHECK: psub filename ends with .cc
 
+# Fifo is allowed to have a suffix as well
+# hack: the background write that psub performs may block
+# until someone opens the fifo for reading. So make sure we
+# actually read it.
+if cat (echo foo | psub -F -s .cc | string match -e -r '\.fifo\.cc$') >/dev/null
+    echo 'psub pipe name ends with .cc'
+else
+    echo 'psub pipe name does not end with .cc'
+end
+#CHECK: psub pipe name ends with .cc
+
 set -l filename (echo foo | psub -s .fish)
 if test -e (dirname $filename)
     echo 'psub directory was not deleted'

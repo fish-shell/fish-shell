@@ -1,5 +1,5 @@
 function psub --description "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits."
-    set -l options -x 'f,F' -x 'F,s' h/help f/file F/fifo 's/suffix=' T-testing
+    set -l options -x 'f,F' h/help f/file F/fifo 's/suffix=' T-testing
     argparse -n psub --max-args=0 $options -- $argv
     or return
 

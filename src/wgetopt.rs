@@ -107,6 +107,8 @@ enum NextArgv {
     FoundOption,
 }
 
+use std::borrow::Cow;
+
 pub struct WGetopter<'opts, 'args, 'argarray> {
     /// List of arguments. Will not be resized, but can be modified.
     pub argv: &'argarray mut [&'args wstr],
@@ -139,6 +141,11 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     return_colon: bool,
     /// Prevents redundant initialization.
     initialized: bool,
+    // Makes parsing long options more strict (long options must have their full name specified,
+    // and cannot be given with a single hyphen).
+    pub strict_long_opts: bool,
+    /// This will be populated with the elements of the original args that were interpreted as options
+    pub argv_opts: Vec<Cow<'args, wstr>>,
 }
 
 impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
@@ -160,6 +167,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             last_nonopt: 0,
             return_colon: false,
             initialized: false,
+            strict_long_opts: false,
+            argv_opts: Vec::new(),
         }
     }
 
@@ -302,14 +311,17 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             return NextArgv::UnpermutedNonOption;
         }
 
+        let opt = self.argv[self.wopt_index];
+        self.argv_opts.push(Cow::Borrowed(opt));
+
         // We've found an option, so we need to skip the initial punctuation.
-        let skip = if !self.longopts.is_empty() && self.argv[self.wopt_index].char_at(1) == '-' {
+        let skip = if !self.longopts.is_empty() && opt.char_at(1) == '-' {
             2
         } else {
             1
         };
 
-        self.remaining_text = self.argv[self.wopt_index][skip..].into();
+        self.remaining_text = opt[skip..].into();
         NextArgv::FoundOption
     }
 
@@ -365,7 +377,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 c = if self.return_colon { ':' } else { '?' };
             } else {
                 // Consume the next element.
-                self.woptarg = Some(self.argv[self.wopt_index]);
+                let val = self.argv[self.wopt_index];
+                self.argv_opts.push(Cow::Borrowed(val));
+                self.woptarg = Some(val);
                 self.wopt_index += 1;
             }
         }
@@ -393,7 +407,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             }
         } else if opt_found.arg_type == ArgType::RequiredArgument {
             if self.wopt_index < self.argv.len() {
-                self.woptarg = Some(self.argv[self.wopt_index]);
+                let val = self.argv[self.wopt_index];
+                self.argv_opts.push(Cow::Borrowed(val));
+                self.woptarg = Some(val);
                 self.wopt_index += 1;
             } else {
                 self.remaining_text = empty_wstr();
@@ -426,6 +442,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                     index = i;
                     exact = true;
                     break;
+                } else if self.strict_long_opts {
+                    // It didn't match exactly, continue
+                    continue;
                 } else if opt.is_none() {
                     // The option begins with the matching text, but is not
                     // exactly equal.
@@ -477,6 +496,10 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 .as_char_slice()
                 .contains(&self.remaining_text.char_at(0))
         {
+            // Unknown option, assume remaining text is its argument
+            // (it needs to be saved somewhere for argparse, but we cant save it in
+            // self.remaining_text as that will break further parsing)
+            self.woptarg = Some(&self.remaining_text[1..]);
             self.remaining_text = empty_wstr();
             self.wopt_index += 1;
 
@@ -515,8 +538,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         // We set things up so that `-f` is parsed as a short-named option if there
-        // is a valid option to match it to, otherwise we parse it as a long-named
-        // option. We also make sure that `-fu` is *not* parsed as `-f` with
+        // is a valid option to match it to, otherwise, if self.strict_long_opts is false,
+        // we parse it as a long-named option. We also make sure that `-fu` is *not* parsed as `-f` with
         // an arg `u`.
         if !self.longopts.is_empty() && self.wopt_index < self.argv.len() {
             let arg = self.argv[self.wopt_index];
@@ -525,7 +548,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 // matches options like `--foo`
                 arg.char_at(0) == '-' && arg.char_at(1) == '-'
                 // matches options like `-f` if `f` is not a valid shortopt.
-                || !self.shortopts.as_char_slice().contains(&arg.char_at(1));
+                || !self.strict_long_opts && !self.shortopts.as_char_slice().contains(&arg.char_at(1));
 
             if try_long {
                 let retval = self.handle_long_opt(longopt_index);

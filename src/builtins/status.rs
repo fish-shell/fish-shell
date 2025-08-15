@@ -568,8 +568,6 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     streams.out.appendln(profile);
                     streams.out.append(L!("Features: "));
                     let features: &[&str] = &[
-                        #[cfg(gettext)]
-                        "gettext",
                         #[cfg(feature = "embed-data")]
                         "embed-data",
                         #[cfg(target_feature = "crt-static")]

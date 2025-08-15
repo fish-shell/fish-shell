@@ -1,0 +1,11 @@
+[package]
+name = "fish-mo-file-parser"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

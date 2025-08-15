@@ -1,6 +1,6 @@
 #![allow(clippy::uninlined_format_args)]
 
-use rsconf::{LinkType, Target};
+use rsconf::Target;
 use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
@@ -29,10 +29,9 @@ fn main() {
         .unwrap_or(canonicalize(MANIFEST_DIR).join("target"));
 
     // FISH_BUILD_DIR is set by CMake, if we are using it.
-    rsconf::set_env_value(
-        "FISH_BUILD_DIR",
-        option_env!("FISH_BUILD_DIR").unwrap_or(cargo_target_dir.to_str().unwrap()),
-    );
+    let fish_build_dir =
+        option_env!("FISH_BUILD_DIR").unwrap_or(cargo_target_dir.to_str().unwrap());
+    rsconf::set_env_value("FISH_BUILD_DIR", fish_build_dir);
 
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
     // compare it directly as a string at runtime.
@@ -63,11 +62,19 @@ fn main() {
         let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
     }
 
+    #[cfg(feature = "localize")]
+    {
+        let mo_file_dir = PathBuf::from(fish_build_dir).join("fish-locale");
+        embed_localizations(&mo_file_dir);
+    }
+
     rsconf::rebuild_if_paths_changed(&[
         "build.rs",
         "Cargo.lock",
         "Cargo.toml",
         "gettext-extraction",
+        "mo-file-parser",
+        "po",
         "printf",
         "src",
     ]);
@@ -123,7 +130,6 @@ fn detect_cfgs(target: &mut Target) {
         ("apple", &detect_apple),
         ("bsd", &detect_bsd),
         ("cygwin", &detect_cygwin),
-        ("gettext", &have_gettext),
         ("small_main_stack", &has_small_stack),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| {
@@ -188,51 +194,6 @@ fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
     ))]
     assert!(is_bsd, "Target incorrectly detected as not BSD!");
     Ok(is_bsd)
-}
-
-/// Detect libintl/gettext and its needed symbols to enable internationalization/localization
-/// support.
-fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
-    // The following script correctly detects and links against gettext, but so long as we are using
-    // C++ and generate a static library linked into the C++ binary via CMake, we need to account
-    // for the CMake option WITH_GETTEXT being explicitly disabled.
-    rsconf::rebuild_if_env_changed("CMAKE_WITH_GETTEXT");
-    if let Some(with_gettext) = std::env::var_os("CMAKE_WITH_GETTEXT") {
-        if with_gettext.eq_ignore_ascii_case("0") {
-            return Ok(false);
-        }
-    }
-
-    // In order for fish to correctly operate, we need some way of notifying libintl to invalidate
-    // its localizations when the locale environment variables are modified. Without the libintl
-    // symbol _nl_msg_cat_cntr, we cannot use gettext even if we find it.
-    let mut libraries = Vec::new();
-    let mut found = 0;
-    let symbols = ["gettext", "_nl_msg_cat_cntr"];
-    for symbol in &symbols {
-        // Historically, libintl was required in order to use gettext() and co, but that
-        // functionality was subsumed by some versions of libc.
-        if target.has_symbol(symbol) {
-            // No need to link anything special for this symbol
-            found += 1;
-            continue;
-        }
-        for library in ["intl", "gettextlib"] {
-            if target.has_symbol_in(symbol, &[library]) {
-                libraries.push(library);
-                found += 1;
-                continue;
-            }
-        }
-    }
-    match found {
-        0 => Ok(false),
-        1 => Err(format!("gettext found but cannot be used without {}", symbols[1]).into()),
-        _ => {
-            rsconf::link_libraries(&libraries, LinkType::Default);
-            Ok(true)
-        }
-    }
 }
 
 /// Rust sets the stack size of newly created threads to a sane value, but is at at the mercy of the
@@ -579,4 +540,120 @@ fn build_man(build_dir: &Path) {
             }
         },
     }
+}
+
+#[cfg(feature = "localize")]
+fn embed_localizations(mo_file_dir: &Path) {
+    use fish_mo_file_parser::parse_mo_file;
+    use std::{
+        fs::File,
+        io::{BufWriter, Read, Write},
+    };
+
+    let po_dir = PathBuf::from(MANIFEST_DIR).join("po");
+
+    // Ensure that the directory is created, because clippy cannot compile the code if the
+    // directory does not exist.
+    std::fs::create_dir_all(mo_file_dir).unwrap();
+
+    let localization_map_path =
+        Path::new(&env::var("OUT_DIR").unwrap()).join("localization_maps.rs");
+    let mut localization_map_file = BufWriter::new(File::create(&localization_map_path).unwrap());
+
+    // This will become a map which maps from language identifiers to maps containing localizations
+    // for the respective language.
+    let mut catalogs = phf_codegen::Map::new();
+
+    let all_langs_enabled = std::env::var("CARGO_FEATURE_LOCALIZE_ALL_LANGUAGES").is_ok();
+
+    for dir_entry_result in po_dir.read_dir().unwrap() {
+        let dir_entry = dir_entry_result.unwrap();
+        let po_file_path = dir_entry.path();
+        let lang = po_file_path
+            .file_stem()
+            .expect("All entries in the po directory must be regular files.");
+        let language = lang.to_str().unwrap().to_owned();
+
+        if !all_langs_enabled
+            && std::env::var(format!(
+                "CARGO_FEATURE_LOCALIZE_{}",
+                language.to_uppercase()
+            ))
+            .is_err()
+        {
+            // Localizations for this language are not enabled.
+            // The `CARGO_FEATURE_*` variables are set by cargo based on which features are enabled.
+            // The feature names are converted to uppercase and `-` is replaced by `_`.
+            continue;
+        }
+        let mo_file_path = mo_file_dir.join(lang);
+
+        let update_mo_file = || {
+            // Try to create a new MO file.
+            std::process::Command::new("msgfmt")
+                .arg("--check-format")
+                .arg(format!("--output-file={}", mo_file_path.to_str().unwrap()))
+                .arg(&po_file_path)
+                .output()
+        };
+
+        if let Ok(metadata) = std::fs::metadata(&mo_file_path) {
+            // MO file exists, but might be outdated.
+            let mo_mtime = metadata.modified().unwrap();
+            let po_mtime = dir_entry.metadata().unwrap().modified().unwrap();
+            if mo_mtime < po_mtime {
+                update_mo_file().unwrap();
+            };
+        } else {
+            // MO file does not exist.
+            update_mo_file().unwrap();
+        }
+
+        // At this point we have an up-to-date MO file.
+        // We proceed to parse the file into a map, which is put into a Rust source file,
+        // such that it can be used from other source code.
+
+        let mut mo_file = File::open(&mo_file_path).unwrap();
+        let mut file_content = vec![];
+        mo_file.read_to_end(&mut file_content).unwrap();
+        let language_localizations = parse_mo_file(&file_content).unwrap();
+
+        let mut single_language_localization_map = phf_codegen::Map::new();
+
+        // The values will be written into the source code as is, meaning escape sequences and
+        // double quotes in the data will be interpreted by the Rust compiler, which is undesirable.
+        // Converting them to raw strings prevents this. (As long as no input data contains `"###`.)
+        fn to_raw_str(s: &str) -> String {
+            format!("r###\"{s}\"###")
+        }
+        for (k, v) in language_localizations {
+            single_language_localization_map.entry(
+                String::from_utf8(k.into()).unwrap(),
+                to_raw_str(&String::from_utf8(v.into()).unwrap()),
+            );
+        }
+        // Each language gets its own static map for the mapping from message in the source code to
+        // the localized version.
+        let map_name = format!("LANG_MAP_{language}");
+        write!(
+            &mut localization_map_file,
+            "static {}: phf::Map<&'static str, &'static str> = {}",
+            &map_name,
+            single_language_localization_map.build()
+        )
+        .unwrap();
+        writeln!(&mut localization_map_file, ";").unwrap();
+
+        // Map from the language identifier to the map containing the localizations for this
+        // language.
+        catalogs.entry(language, format!("&{map_name}"));
+    }
+
+    write!(
+        &mut localization_map_file,
+        "pub(super) static CATALOGS: phf::Map<&str, &phf::Map<&str, &str>> = {}",
+        catalogs.build()
+    )
+    .unwrap();
+    writeln!(&mut localization_map_file, ";").unwrap();
 }

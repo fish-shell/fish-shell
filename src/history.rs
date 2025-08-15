@@ -48,6 +48,7 @@ use crate::{
     expand::{expand_one, ExpandFlags},
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
+    fs::fsync,
     history::file::{append_history_item_to_buffer, HistoryFileContents},
     io::IoStreams,
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND},
@@ -661,8 +662,10 @@ impl HistoryImpl {
             LockedFile::new(LockingMode::Exclusive(WriteMethod::Append), history_path)?;
 
         // Check if the file was modified since it was last read.
-        let file_id = file_id_for_file(locked_history_file.get());
-        let file_changed = file_id != self.history_file_id;
+        // If someone has replaced the file, forget our file state.
+        if file_id_for_file(locked_history_file.get()) != self.history_file_id {
+            self.clear_file_state();
+        }
 
         // We took the exclusive lock. Append to the file.
         // Note that this is sketchy for a few reasons:
@@ -681,46 +684,30 @@ impl HistoryImpl {
         // So far so good. Write all items at or after first_unwritten_new_item_index. Note that we
         // write even a pending item - pending items are ignored by history within the command
         // itself, but should still be written to the file.
-        // TODO: consider filling the buffer ahead of time, so we can just lock, splat, and unlock?
-        let mut res = Ok(());
         // Use a small buffer size for appending, we usually only have 1 item
         let mut buffer = Vec::new();
-        while self.first_unwritten_new_item_index < self.new_items.len() {
-            let item = &self.new_items[self.first_unwritten_new_item_index];
+        let mut new_first_index = self.first_unwritten_new_item_index;
+        while new_first_index < self.new_items.len() {
+            let item = &self.new_items[new_first_index];
             if item.should_write_to_disk() {
                 append_history_item_to_buffer(item, &mut buffer);
-                res = flush_to_file(
-                    &mut buffer,
-                    locked_history_file.get_mut(),
-                    HISTORY_OUTPUT_BUFFER_SIZE,
-                );
-                if res.is_err() {
-                    break;
-                }
             }
             // We wrote or skipped this item, hooray.
-            self.first_unwritten_new_item_index += 1;
+            new_first_index += 1;
         }
 
-        if res.is_ok() {
-            res = flush_to_file(&mut buffer, locked_history_file.get_mut(), 0);
-        }
+        flush_to_file(&mut buffer, locked_history_file.get_mut(), 0)?;
+        fsync(locked_history_file.get())?;
+        self.first_unwritten_new_item_index = new_first_index;
 
         // Since we just modified the file, update our history_file_id to match its current state
         // Otherwise we'll think the file has been changed by someone else the next time we go to
         // write.
         // We don't update `self.file_contents` since we only appended to the file, and everything we
         // appended remains in our new_items
-        self.history_file_id = file_id;
+        self.history_file_id = file_id_for_file(locked_history_file.get());
 
-        drop(locked_history_file);
-
-        // If someone has replaced the file, forget our file state.
-        if file_changed {
-            self.clear_file_state();
-        }
-
-        res
+        Ok(())
     }
 
     /// Saves history.

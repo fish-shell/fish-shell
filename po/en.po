@@ -38447,9 +38447,6 @@ msgstr ""
 msgid "Only apply settings that match pattern"
 msgstr ""
 
-msgid "Only build <packages> from a split package"
-msgstr ""
-
 msgid "Only build a binary pkg"
 msgstr ""
 

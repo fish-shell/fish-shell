@@ -38446,9 +38446,6 @@ msgstr "仅适用于为大端处理器生成代码时"
 msgid "Only apply settings that match pattern"
 msgstr "只应用匹配模式的设置"
 
-msgid "Only build <packages> from a split package"
-msgstr "只从分块包构建 < packages>"
-
 msgid "Only build a binary pkg"
 msgstr "只构建 二进制 pkg"
 

@@ -22,3 +22,10 @@ pub fn blocked_signals_for_job(job: &Job, sigmask: &mut libc::sigset_t) -> bool 
     }
     false
 }
+
+// Bravely define _PATH_BSHELL. On practice it's /bin/sh everywhere, except on Android.
+#[cfg(not(target_os = "android"))]
+pub static PATH_BSHELL: &[u8] = b"/bin/sh\0";
+
+#[cfg(target_os = "android")]
+pub static PATH_BSHELL: &[u8] = b"/system/bin/sh\0";

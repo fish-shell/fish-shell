@@ -13,7 +13,6 @@ use crate::event::Event;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input::{init_input, FISH_BIND_MODE_VAR};
-use crate::libc::{C_PATH_BSHELL, _PATH_BSHELL};
 use crate::nix::{geteuid, getpid};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
@@ -26,7 +25,6 @@ use crate::universal_notifier::default_notifier;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
-use std::sync::atomic::Ordering;
 
 use libc::{c_int, confstr, uid_t};
 use once_cell::sync::{Lazy, OnceCell};
@@ -856,6 +854,4 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
 /// Various things we need to initialize at run-time that don't really fit any of the other init
 /// routines.
-pub fn misc_init() {
-    _PATH_BSHELL.store(unsafe { C_PATH_BSHELL().cast_mut() }, Ordering::SeqCst);
-}
+pub fn misc_init() {}

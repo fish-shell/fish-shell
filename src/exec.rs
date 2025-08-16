@@ -24,12 +24,12 @@ use crate::fork_exec::postfork::{
 };
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::fork_exec::spawn::PosixSpawner;
+use crate::fork_exec::PATH_BSHELL;
 use crate::function::{self, FunctionProperties};
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
 };
-use crate::libc::_PATH_BSHELL;
 use crate::nix::{getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
@@ -49,7 +49,7 @@ use crate::wchar_ext::ToWString;
 use crate::wutil::{fish_wcstol, perror};
 use errno::{errno, set_errno};
 use libc::{
-    EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
+    c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO,
 };
 use nix::fcntl::OFlag;
@@ -407,13 +407,14 @@ fn safe_launch_process(
         if nargs <= maxargs {
             // +1 for /bin/sh, +1 for terminating nullptr
             let mut argv2 = [std::ptr::null(); 1 + maxargs + 1];
-            argv2[0] = _PATH_BSHELL.load(Ordering::Relaxed);
+            let bshell = PATH_BSHELL.as_ptr() as *const c_char;
+            argv2[0] = bshell as *mut c_char;
             argv2[1..argv.len() + 1].copy_from_slice(argv);
             // The command to call should use the full path,
             // not what we would pass as argv0.
             argv2[1] = actual_cmd.as_ptr();
             unsafe {
-                libc::execve(_PATH_BSHELL.load(Ordering::Relaxed), &argv2[0], envv.get());
+                libc::execve(bshell, &argv2[0], envv.get());
             }
         }
     }

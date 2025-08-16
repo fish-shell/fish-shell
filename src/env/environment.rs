@@ -13,8 +13,8 @@ use crate::event::Event;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input::{init_input, FISH_BIND_MODE_VAR};
-use crate::libc::{stdout_stream, C_PATH_BSHELL, _PATH_BSHELL};
-use crate::nix::{geteuid, getpid, isatty};
+use crate::libc::{C_PATH_BSHELL, _PATH_BSHELL};
+use crate::nix::{geteuid, getpid};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
     path_emit_config_directory_messages, path_get_cache, path_get_config, path_get_data,
@@ -28,11 +28,10 @@ use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
 use std::sync::atomic::Ordering;
 
-use libc::{c_int, confstr, uid_t, STDOUT_FILENO, _IONBF};
+use libc::{c_int, confstr, uid_t};
 use once_cell::sync::{Lazy, OnceCell};
 use std::collections::HashMap;
 use std::ffi::CStr;
-use std::io::Write;
 use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::sync::Arc;
@@ -858,12 +857,5 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 /// Various things we need to initialize at run-time that don't really fit any of the other init
 /// routines.
 pub fn misc_init() {
-    // If stdout is open on a tty ensure stdio is unbuffered. That's because those functions might
-    // be intermixed with `write()` calls and we need to ensure the writes are not reordered. See
-    // issue #3748.
-    if isatty(STDOUT_FILENO) {
-        let _ = std::io::stdout().flush();
-        unsafe { libc::setvbuf(stdout_stream(), std::ptr::null_mut(), _IONBF, 0) };
-    }
     _PATH_BSHELL.store(unsafe { C_PATH_BSHELL().cast_mut() }, Ordering::SeqCst);
 }

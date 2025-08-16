@@ -5,10 +5,87 @@ use nix::errno::Errno;
 use once_cell::sync::Lazy;
 
 use crate::fallback::{fish_wcswidth, wcscasecmp};
-use crate::libc::*;
 use crate::wutil::perror;
 
 use super::prelude::*;
+
+pub mod limits {
+    /// Constants that exist everywhere (Linux, macOS, BSD).
+    /// Note these are uints on Linux but ints everywhere else - we use -1 as a sentinel
+    /// so cast to int.
+    pub mod common {
+        use libc;
+        pub const CORE: libc::c_int = libc::RLIMIT_CORE as _;
+        pub const DATA: libc::c_int = libc::RLIMIT_DATA as _;
+        pub const FSIZE: libc::c_int = libc::RLIMIT_FSIZE as _;
+        pub const MEMLOCK: libc::c_int = libc::RLIMIT_MEMLOCK as _;
+        pub const NOFILE: libc::c_int = libc::RLIMIT_NOFILE as _;
+        pub const STACK: libc::c_int = libc::RLIMIT_STACK as _;
+        pub const CPU: libc::c_int = libc::RLIMIT_CPU as _;
+        pub const NPROC: libc::c_int = libc::RLIMIT_NPROC as _;
+        pub const AS: libc::c_int = libc::RLIMIT_AS as _;
+    }
+    pub use self::common::*;
+
+    #[cfg(target_os = "linux")]
+    pub mod linux {
+        use libc;
+        pub const SIGPENDING: libc::c_int = libc::RLIMIT_SIGPENDING as _;
+        pub const MSGQUEUE: libc::c_int = libc::RLIMIT_MSGQUEUE as _;
+        pub const RTPRIO: libc::c_int = libc::RLIMIT_RTPRIO as _;
+        pub const RTTIME: libc::c_int = libc::RLIMIT_RTTIME as _;
+        pub const RSS: libc::c_int = libc::RLIMIT_RSS as _;
+
+        pub const SBSIZE: libc::c_int = -1;
+        pub const NICE: libc::c_int = -1;
+        pub const SWAP: libc::c_int = -1;
+        pub const KQUEUES: libc::c_int = -1;
+        pub const NPTS: libc::c_int = -1;
+        pub const NTHR: libc::c_int = -1;
+    }
+    #[cfg(target_os = "linux")]
+    pub use self::linux::*;
+
+    #[cfg(any(target_os = "ios", target_os = "macos"))]
+    pub mod macos {
+        use libc;
+
+        pub const SIGPENDING: libc::c_int = -1;
+        pub const MSGQUEUE: libc::c_int = -1;
+        pub const RTPRIO: libc::c_int = -1;
+        pub const RTTIME: libc::c_int = -1;
+
+        pub const SBSIZE: libc::c_int = -1;
+        pub const NICE: libc::c_int = -1;
+        pub const RSS: libc::c_int = -1;
+        pub const SWAP: libc::c_int = -1;
+        pub const KQUEUES: libc::c_int = -1;
+        pub const NPTS: libc::c_int = -1;
+        pub const NTHR: libc::c_int = -1;
+    }
+    #[cfg(any(target_os = "ios", target_os = "macos"))]
+    pub use self::macos::*;
+
+    #[cfg(bsd)]
+    pub mod bsd {
+        use libc;
+
+        pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
+        pub const NICE: libc::c_int = libc::RLIMIT_NICE;
+        pub const RSS: libc::c_int = libc::RLIMIT_RSS;
+        pub const NTHR: libc::c_int = libc::RLIMIT_NTHR;
+        pub const SWAP: libc::c_int = libc::RLIMIT_SWAP;
+        pub const KQUEUES: libc::c_int = libc::RLIMIT_KQUEUES;
+        pub const NPTS: libc::c_int = libc::RLIMIT_NPTS;
+
+        pub const SIGPENDING: libc::c_int = -1;
+        pub const MSGQUEUE: libc::c_int = -1;
+        pub const RTPRIO: libc::c_int = -1;
+        pub const RTTIME: libc::c_int = -1;
+    }
+    #[cfg(bsd)]
+    pub use self::bsd::*;
+}
 
 /// Calls getrlimit.
 fn getrlimit(resource: c_uint) -> Option<(rlim_t, rlim_t)> {
@@ -57,7 +134,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
         };
         let l = if hard { rlim_max } else { rlim_cur };
 
-        let unit = if resource.resource == RLIMIT_CPU() as c_uint {
+        let unit = if resource.resource == limits::CPU as c_uint {
             "(seconds, "
         } else if get_multiplier(resource.resource) == 1 {
             "("
@@ -160,7 +237,7 @@ struct Options {
 impl Default for Options {
     fn default() -> Self {
         Options {
-            what: RLIMIT_FSIZE(),
+            what: limits::FSIZE,
             report_all: false,
             hard: false,
             soft: false,
@@ -209,26 +286,26 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             'a' => opts.report_all = true,
             'H' => opts.hard = true,
             'S' => opts.soft = true,
-            'b' => opts.what = RLIMIT_SBSIZE(),
-            'c' => opts.what = RLIMIT_CORE(),
-            'd' => opts.what = RLIMIT_DATA(),
-            'e' => opts.what = RLIMIT_NICE(),
-            'f' => opts.what = RLIMIT_FSIZE(),
-            'i' => opts.what = RLIMIT_SIGPENDING(),
-            'l' => opts.what = RLIMIT_MEMLOCK(),
-            'm' => opts.what = RLIMIT_RSS(),
-            'n' => opts.what = RLIMIT_NOFILE(),
-            'q' => opts.what = RLIMIT_MSGQUEUE(),
-            'r' => opts.what = RLIMIT_RTPRIO(),
-            's' => opts.what = RLIMIT_STACK(),
-            't' => opts.what = RLIMIT_CPU(),
-            'u' => opts.what = RLIMIT_NPROC(),
-            'v' => opts.what = RLIMIT_AS(),
-            'w' => opts.what = RLIMIT_SWAP(),
-            'y' => opts.what = RLIMIT_RTTIME(),
-            'K' => opts.what = RLIMIT_KQUEUES(),
-            'P' => opts.what = RLIMIT_NPTS(),
-            'T' => opts.what = RLIMIT_NTHR(),
+            'b' => opts.what = limits::SBSIZE,
+            'c' => opts.what = limits::CORE,
+            'd' => opts.what = limits::DATA,
+            'e' => opts.what = limits::NICE,
+            'f' => opts.what = limits::FSIZE,
+            'i' => opts.what = limits::SIGPENDING,
+            'l' => opts.what = limits::MEMLOCK,
+            'm' => opts.what = limits::RSS,
+            'n' => opts.what = limits::NOFILE,
+            'q' => opts.what = limits::MSGQUEUE,
+            'r' => opts.what = limits::RTPRIO,
+            's' => opts.what = limits::STACK,
+            't' => opts.what = limits::CPU,
+            'u' => opts.what = limits::NPROC,
+            'v' => opts.what = limits::AS,
+            'w' => opts.what = limits::SWAP,
+            'y' => opts.what = limits::RTTIME,
+            'K' => opts.what = limits::KQUEUES,
+            'P' => opts.what = limits::NPTS,
+            'T' => opts.what = limits::NTHR,
             'h' => {
                 builtin_print_help(parser, streams, cmd);
                 return Ok(SUCCESS);
@@ -360,101 +437,96 @@ impl Resource {
 static RESOURCE_ARR: Lazy<Box<[Resource]>> = Lazy::new(|| {
     let resources_info = [
         (
-            RLIMIT_SBSIZE(),
+            limits::SBSIZE,
             L!("Maximum size of socket buffers"),
             'b',
             1024,
         ),
         (
-            RLIMIT_CORE(),
+            limits::CORE,
             L!("Maximum size of core files created"),
             'c',
             1024,
         ),
         (
-            RLIMIT_DATA(),
+            limits::DATA,
             L!("Maximum size of a process’s data segment"),
             'd',
             1024,
         ),
+        (limits::NICE, L!("Control of maximum nice priority"), 'e', 1),
         (
-            RLIMIT_NICE(),
-            L!("Control of maximum nice priority"),
-            'e',
-            1,
-        ),
-        (
-            RLIMIT_FSIZE(),
+            limits::FSIZE,
             L!("Maximum size of files created by the shell"),
             'f',
             1024,
         ),
         (
-            RLIMIT_SIGPENDING(),
+            limits::SIGPENDING,
             L!("Maximum number of pending signals"),
             'i',
             1,
         ),
         (
-            RLIMIT_MEMLOCK(),
+            limits::MEMLOCK,
             L!("Maximum size that may be locked into memory"),
             'l',
             1024,
         ),
-        (RLIMIT_RSS(), L!("Maximum resident set size"), 'm', 1024),
+        (limits::RSS, L!("Maximum resident set size"), 'm', 1024),
         (
-            RLIMIT_NOFILE(),
+            limits::NOFILE,
             L!("Maximum number of open file descriptors"),
             'n',
             1,
         ),
         (
-            RLIMIT_MSGQUEUE(),
+            limits::MSGQUEUE,
             L!("Maximum bytes in POSIX message queues"),
             'q',
             1024,
         ),
         (
-            RLIMIT_RTPRIO(),
+            limits::RTPRIO,
             L!("Maximum realtime scheduling priority"),
             'r',
             1,
         ),
-        (RLIMIT_STACK(), L!("Maximum stack size"), 's', 1024),
+        (limits::STACK, L!("Maximum stack size"), 's', 1024),
         (
-            RLIMIT_CPU(),
+            limits::CPU,
             L!("Maximum amount of CPU time in seconds"),
             't',
             1,
         ),
         (
-            RLIMIT_NPROC(),
+            limits::NPROC,
             L!("Maximum number of processes available to current user"),
             'u',
             1,
         ),
         (
-            RLIMIT_AS(),
+            limits::AS,
             L!("Maximum amount of virtual memory available to each process"),
             'v',
             1024,
         ),
-        (RLIMIT_SWAP(), L!("Maximum swap space"), 'w', 1024),
+        (limits::SWAP, L!("Maximum swap space"), 'w', 1024),
         (
-            RLIMIT_RTTIME(),
+            limits::RTTIME,
             L!("Maximum contiguous realtime CPU time"),
             'y',
             1,
         ),
-        (RLIMIT_KQUEUES(), L!("Maximum number of kqueues"), 'K', 1),
+        (limits::KQUEUES, L!("Maximum number of kqueues"), 'K', 1),
         (
-            RLIMIT_NPTS(),
+            limits::NPTS,
             L!("Maximum number of pseudo-terminals"),
             'P',
             1,
         ),
         (
-            RLIMIT_NTHR(),
+            limits::NTHR,
             L!("Maximum number of simultaneous threads"),
             'T',
             1,

@@ -29,7 +29,7 @@
 # `FILE` must be the path to a gettext template file generated from our compilation process.
 # It can be obtained by running:
 #   set -l FILE (mktemp)
-#   FISH_GETTEXT_EXTRACTION_FILE=$FILE cargo check
+#   FISH_GETTEXT_EXTRACTION_FILE=$FILE cargo check --features=gettext-extract
 
 # The sort utility is locale-sensitive.
 # Ensure that sorting output is consistent by setting LC_ALL here.

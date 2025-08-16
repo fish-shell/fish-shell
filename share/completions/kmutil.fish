@@ -7,5 +7,6 @@
 #        kmutil -h
 
 if test "$(command -s kmutil)" = /usr/bin/kmutil
-    command kmutil --generate-completion-script=fish | source
+    __fish_cache_sourced_completions kmutil --generate-completion-script=fish
+    or command kmutil --generate-completion-script=fish | source
 end

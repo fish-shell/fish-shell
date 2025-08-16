@@ -64,8 +64,6 @@ pub mod io;
 pub mod job_group;
 pub mod key;
 pub mod kill;
-#[allow(non_snake_case)]
-pub mod libc;
 pub mod locale;
 pub mod nix;
 pub mod null_terminated_array;

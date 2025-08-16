@@ -50,9 +50,6 @@ fn main() {
     #[cfg(feature = "gettext-extract")]
     rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
 
-    rsconf::rebuild_if_path_changed("src/libc.c");
-    cc::Build::new().file("src/libc.c").compile("flibc.a");
-
     let build = cc::Build::new();
     let mut target = Target::new_from(build).unwrap();
     // Keep verbose mode on until we've ironed out rust build script stuff

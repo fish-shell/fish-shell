@@ -318,8 +318,8 @@ pub(crate) fn safe_report_exec_error(
                 } else {
                     fstat(fd).map_err(|_| ())
                 };
-                #[allow(clippy::useless_conversion)] // for mode
-                if md.is_err() || unsafe { libc::access(interpreter.as_ptr(), libc::X_OK) } != 0 {
+
+                fn err_or_no_exec_handling(interpreter: &CStr, actual_cmd: &CStr) {
                     // Detect Windows line endings and complain specifically about them.
                     let interpreter = interpreter.to_bytes();
                     if interpreter.last() == Some(&b'\r') {
@@ -339,15 +339,25 @@ pub(crate) fn safe_report_exec_error(
                             "', which is not an executable command."
                         );
                     }
-                } else if md.unwrap().mode() & u32::from(libc::S_IFMT) == u32::from(libc::S_IFDIR) {
-                    FLOG_SAFE!(
-                        exec,
-                        "Failed to execute process '",
-                        actual_cmd,
-                        "': The file specified the interpreter '",
-                        interpreter,
-                        "', which is a directory."
-                    );
+                }
+
+                if let Ok(metadata) = md {
+                    #[allow(clippy::useless_conversion)] // for mode
+                    if unsafe { libc::access(interpreter.as_ptr(), libc::X_OK) } != 0 {
+                        err_or_no_exec_handling(interpreter, actual_cmd);
+                    } else if metadata.mode() & u32::from(libc::S_IFMT) == u32::from(libc::S_IFDIR)
+                    {
+                        FLOG_SAFE!(
+                            exec,
+                            "Failed to execute process '",
+                            actual_cmd,
+                            "': The file specified the interpreter '",
+                            interpreter,
+                            "', which is a directory."
+                        );
+                    }
+                } else {
+                    err_or_no_exec_handling(interpreter, actual_cmd);
                 }
             } else if unsafe { libc::access(actual_cmd.as_ptr(), libc::X_OK) } == 0 {
                 FLOG_SAFE!(

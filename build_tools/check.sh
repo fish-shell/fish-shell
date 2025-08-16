@@ -35,7 +35,13 @@ if $lint; then
 fi
 
 workspace_root="$(dirname "$0")/.."
-build_dir="${CARGO_TARGET_DIR:-$workspace_root/target}/${target_triple}/debug"
+target_dir=${CARGO_TARGET_DIR:-$workspace_root/target}
+if [ -n "$target_triple" ]; then
+    target_dir="$target_dir/$target_triple"
+fi
+# The directory containing the binaries produced by cargo/rustc.
+# Currently, all builds are debug builds.
+build_dir="$target_dir/debug"
 
 template_file=$(mktemp)
 FISH_GETTEXT_EXTRACTION_FILE=$template_file cargo build --workspace --all-targets --features=gettext-extract

@@ -1041,10 +1041,7 @@ pub trait InputEventQueuer {
             //
             // Alternatively, we could relax our exact matching semantics, and make "bind ä"
             // match the "shift-ä" event, as suggested in the kitty issue.
-            if caps_lock
-                && modifiers == Modifiers::SHIFT
-                && !key.to_uppercase().eq(Some(key).into_iter())
-            {
+            if caps_lock && modifiers == Modifiers::SHIFT && !key.to_uppercase().eq(Some(key)) {
                 modifiers.shift = false;
             }
             KeyEvent::new_with(modifiers, key, shifted_key, base_layout_key)

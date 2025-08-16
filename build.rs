@@ -82,6 +82,7 @@ fn main() {
     #[cfg(not(clippy))]
     rsconf::rebuild_if_paths_changed(&SPHINX_DOC_SOURCES);
 
+    #[cfg(feature = "gettext-extract")]
     rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
 
     cc::Build::new().file("src/libc.c").compile("flibc.a");

@@ -173,11 +173,19 @@ impl std::fmt::Display for LocalizableString {
 /// The essential part is the invocation of the proc macro,
 /// which ensures that the string gets extracted for localization.
 #[macro_export]
+#[cfg(feature = "gettext-extract")]
 macro_rules! localizable_string {
     ($string:literal) => {
         $crate::wutil::gettext::LocalizableString::Static(widestring::utf32str!(
             fish_gettext_extraction::gettext_extract!($string)
         ))
+    };
+}
+#[macro_export]
+#[cfg(not(feature = "gettext-extract"))]
+macro_rules! localizable_string {
+    ($string:literal) => {
+        $crate::wutil::gettext::LocalizableString::Static(widestring::utf32str!($string))
     };
 }
 pub use localizable_string;

@@ -4,22 +4,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/mount.h>  // MNT_LOCAL
+#include <sys/mount.h>
 #include <sys/resource.h>
-#include <sys/statvfs.h>  // ST_LOCAL
+#include <sys/statvfs.h>
 #include <unistd.h>
 
 uint64_t C_ST_LOCAL() {
 #if defined(ST_LOCAL)
     return ST_LOCAL;
-#else
-    return 0;
-#endif
-}
-
-uint64_t C_MNT_LOCAL() {
-#if defined(MNT_LOCAL)
-    return MNT_LOCAL;
 #else
     return 0;
 #endif

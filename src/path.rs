@@ -694,49 +694,20 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     }
     #[cfg(not(any(target_os = "linux", cygwin)))]
     {
-        fn remoteness_via_statfs<StatFS, Flags>(
-            statfn: unsafe extern "C" fn(*const libc::c_char, *mut StatFS) -> libc::c_int,
-            flagsfn: fn(&StatFS) -> Flags,
-            is_local_flag: u64,
-            path: &std::ffi::CStr,
-        ) -> DirRemoteness
-        where
-            u64: From<Flags>,
-        {
-            if is_local_flag == 0 {
-                return DirRemoteness::unknown;
-            }
-            let mut buf = MaybeUninit::uninit();
-            if unsafe { (statfn)(path.as_ptr(), buf.as_mut_ptr()) } < 0 {
-                return DirRemoteness::unknown;
-            }
-            let buf = unsafe { buf.assume_init() };
-            // statfs::f_flag is hard-coded as 64-bits on 32/64-bit FreeBSD but it's a (4-byte)
-            // long on 32-bit NetBSD.. and always 4-bytes on macOS (even on 64-bit builds).
-            #[allow(clippy::useless_conversion)]
-            if u64::from((flagsfn)(&buf)) & is_local_flag != 0 {
-                DirRemoteness::local
-            } else {
-                DirRemoteness::remote
-            }
+        let mut buf = MaybeUninit::uninit();
+        if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
+            return DirRemoteness::unknown;
         }
-        // ST_LOCAL is a flag to statvfs, which is itself standardized.
-        // In practice the only system to define it is NetBSD.
-        #[cfg(target_os = "netbsd")]
-        let remoteness = remoteness_via_statfs(
-            libc::statvfs,
-            |stat: &libc::statvfs| stat.f_flag,
-            crate::libc::ST_LOCAL(),
-            &narrow,
-        );
-        #[cfg(not(target_os = "netbsd"))]
-        let remoteness = remoteness_via_statfs(
-            libc::statfs,
-            |stat: &libc::statfs| stat.f_flags,
-            crate::libc::MNT_LOCAL(),
-            &narrow,
-        );
-        remoteness
+        let buf = unsafe { buf.assume_init() };
+        // statfs::f_flag is hard-coded as 64-bits on 32/64-bit FreeBSD but it's a (4-byte)
+        // long on 32-bit NetBSD.. and always 4-bytes on macOS (even on 64-bit builds).
+        #[allow(clippy::useless_conversion)]
+        let flags = u64::from(buf.f_flags);
+        if flags & (libc::MNT_LOCAL as u64) != 0 {
+            DirRemoteness::local
+        } else {
+            DirRemoteness::remote
+        }
     }
 }
 

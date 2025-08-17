@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    fish_opt [(-slor | --multiple-vals=) OPTNAME]
+    fish_opt -s ALPHANUM [-l LONG-NAME] [-or] [--multiple-vals] [--long-only]
     fish_opt --help
 
 Description
@@ -18,10 +18,10 @@ This command provides a way to produce option specifications suitable for use wi
 
 The following ``argparse`` options are available:
 
-**-s** or **--short**
+**-s** or **--short** *ALPHANUM*
     Takes a single letter that is used as the short flag in the option being defined. This option is mandatory.
 
-**-l** or **--long**
+**-l** or **--long** *LONG-NAME*
     Takes a string that is used as the long flag in the option being defined. This option is optional and has no default. If no long flag is defined then only the short flag will be allowed when parsing arguments using the option specification.
 
 **--long-only**

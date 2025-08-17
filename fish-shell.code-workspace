@@ -1,0 +1,87 @@
+{
+    // This line is needed: it tells vscode to apply these settings to the containing folder
+    "folders": [{"path": "."}],
+
+    "extensions": {
+        // These are extensions that you will be suggested to install (if you haven't already)
+        "recommendations": [
+            "bmalehorn.vscode-fish", // Fish
+            "rust-lang.rust-analyzer", "dustypomerleau.rust-syntax", // Rust
+            "ms-python.python", "ms-python.black-formatter", // Python
+            "EditorConfig.EditorConfig", // limited .editorconfig support
+            "stkb.rewrap", // for hard line wrapping
+        ],
+
+        // These extesnions won't be suggested by VS Code's usual logic
+        // (unfortunately, it won't give you a warning if you already have them)
+        "unwantedRecommendations": [
+            "ms-vscode.cmake-tools", // CMake, this is slow and unecessary with Rust
+            "skyapps.fish-vscode" // breaks syntax highlighting for Fish string literals
+        ]
+    },
+
+    // Please keep these settings in sync with .editorconfig
+    "settings": {
+        // At the time of writing, the EditorConfig.EditorConfig extension supports the following
+        // properties (with their vscode equivalents):
+        //      indent_style (equivalent to editor.insertSpaces)
+        //      end_of_line (equivalent to files.eol)
+        //      indent_size and tab_width (equivalent to editor.tabSize)
+        //      trim_trailing_whitespace (equivalent to files.trimTrailingWhitespace)
+        //      insert_final_newline (equivalent to files.insertFinalNewline)
+        //
+        // It does not support any other properties, so they need to be specified in this file
+        // manually
+        "files.encoding": "utf8", // equivalent to .editorconfig's encoding
+
+        //Rough equivalents to the .editorconfig's max_line_length = 100 setting
+        "editor.rulers": [100], // This displays a visible ruler on the right
+        "rewrap.autoWrap.enabled": true, // This enables hard wrapping at the value of editor.rulers
+
+        // don't use "editor.wordWrapColumn", it's only for soft wrapping
+
+        // Vscode applies settings per "language" not per "file glob"
+        // So in order to convert an .editorconfig "glob" to a vscode setting
+        // you need to give the file a language, e.g. via
+        //       "files.associations": { "*.fish": "fish" },
+        // making new languages however requires making an entire new extension, so I'm just using
+        // the languages that come with VS Code, or are incldued with an extension that is
+        // recomended above.
+        "[fish]": {
+            // As explained above, no easy way to make this ONLY apply to fish files in
+            // share/{completions,functions}
+            "editor.rulers": [], // like max_line_length = unset
+            // Setting empty rulers causes rewrap to wrap at 80, so we need to disable it
+            "rewrap.autoWrap.enabled": false,
+        },
+
+        // Put this in your config.fish file to have vscode used as your git editor,
+        // but only when running git commands from VS Code's integrated terminal:
+        //  test "$TERM_PROGRAM" = "vscode" && set -gx EDITOR code -w
+        "[git-commit]": { // COMMIT_EDITMSG
+            "editor.rulers": [72], // like max_line_length = 72
+            // I do not know what a "git-revise-todo" or "*.jjdescription" file is, so I haven't
+            // included settings for those
+        },
+
+        // These are for commit messages you write in VS Code's gui
+        // (instead of editing a COMMIT_EDITMSG file)
+        "git.inputValidationSubjectLength": 72,
+        "git.inputValidationLength": 72,
+
+        // Use this to stop highlighting overlong subject lines in COMMIT_EDITMSG files in red
+        // (I don't know how to change how wide the message is allowed to be, or how to get
+        // your default foreground colour, so you have to manually change #000000
+        // to whatever your text colour is)
+        /* "editor.tokenColorCustomizations": {
+            "textMateRules": [{
+                "scope": [
+                    "invalid.deprecated.line-too-long.git-commit", // for columns 51-72
+                    //"invalid.illegal.line-too-long.git-commit", // for column 73+
+                ],
+                "settings": {"foreground": "#000000"}
+            }],
+        },
+        */
+    }
+}

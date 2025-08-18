@@ -49,6 +49,7 @@ enum UnknownHandling {
 #[derive(Default)]
 struct ArgParseCmdOpts<'args> {
     unknown_handling: UnknownHandling,
+    unknown_arguments: ArgType,
     strict_long_opts: bool,
     print_help: bool,
     stop_nonopt: bool,
@@ -68,16 +69,18 @@ impl ArgParseCmdOpts<'_> {
     fn new() -> Self {
         Self {
             max_args: usize::MAX,
+            unknown_arguments: ArgType::OptionalArgument,
             ..Default::default()
         }
     }
 }
 
-const SHORT_OPTIONS: &wstr = L!("+hn:siux:SN:X:");
+const SHORT_OPTIONS: &wstr = L!("+hn:siuU:x:SN:X:");
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("stop-nonopt"), ArgType::NoArgument, 's'),
     wopt(L!("ignore-unknown"), ArgType::NoArgument, 'i'),
     wopt(L!("move-unknown"), ArgType::NoArgument, 'u'),
+    wopt(L!("unknown-arguments"), ArgType::RequiredArgument, 'U'),
     wopt(L!("name"), ArgType::RequiredArgument, 'n'),
     wopt(L!("exclusive"), ArgType::RequiredArgument, 'x'),
     wopt(L!("strict-longopts"), ArgType::NoArgument, 'S'),
@@ -506,6 +509,7 @@ fn parse_cmd_opts<'args>(
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
 
+    let mut seen_unknown_arguments = false;
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
     while let Some(c) = w.next_opt() {
         match c {
@@ -525,6 +529,24 @@ fn parse_cmd_opts<'args>(
                     UnknownHandling::Ignore
                 } else {
                     UnknownHandling::Move
+                }
+            }
+            'U' => {
+                seen_unknown_arguments = true;
+                let kind = w.woptarg.unwrap();
+                opts.unknown_arguments = if kind == L!("optional") {
+                    ArgType::OptionalArgument
+                } else if kind == L!("required") {
+                    ArgType::RequiredArgument
+                } else if kind == L!("none") {
+                    ArgType::NoArgument
+                } else {
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: Invalid --unknown-arguments value '%ls'\n",
+                        cmd,
+                        kind
+                    ));
+                    return Err(STATUS_INVALID_ARGS);
                 }
             }
             'S' => opts.strict_long_opts = true,
@@ -586,6 +608,11 @@ fn parse_cmd_opts<'args>(
             }
             _ => panic!("unexpected retval from next_opt"),
         }
+    }
+
+    // Imply --unknown-arguments implies --move-unknown, unless --ignore-unknown was given
+    if seen_unknown_arguments && opts.unknown_handling == UnknownHandling::Error {
+        opts.unknown_handling = UnknownHandling::Move;
     }
 
     if opts.print_help {
@@ -866,7 +893,7 @@ fn argparse_parse_flags<'args>(
     w.strict_long_opts = opts.strict_long_opts;
     while let Some((opt, longopt_idx)) = w.next_opt_indexed() {
         let is_long_flag = longopt_idx.is_some();
-        let retval: BuiltinResult = match opt {
+        match opt {
             ':' => {
                 builtin_missing_argument(
                     parser,
@@ -875,7 +902,7 @@ fn argparse_parse_flags<'args>(
                     args_read[w.wopt_index - 1],
                     false,
                 );
-                Err(STATUS_INVALID_ARGS)
+                return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
                 builtin_unexpected_argument(
@@ -885,7 +912,7 @@ fn argparse_parse_flags<'args>(
                     args_read[w.wopt_index - 1],
                     false,
                 );
-                Err(STATUS_INVALID_ARGS)
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 // It's not a recognized flag. See if it's an implicit int flag.
@@ -899,31 +926,85 @@ fn argparse_parse_flags<'args>(
                         &mut w,
                         is_long_flag,
                         streams,
-                    )
+                    )?;
                 } else if opts.unknown_handling == UnknownHandling::Error {
                     streams.err.append(wgettext_fmt!(
                         BUILTIN_ERR_UNKNOWN,
                         opts.name,
                         args_read[w.wopt_index - 1]
                     ));
-                    Err(STATUS_INVALID_ARGS)
+                    return Err(STATUS_INVALID_ARGS);
                 } else {
                     // The option is unknown, so there's no long opt index it could have used
                     assert!(!is_long_flag);
                     // arg_contents already skipped over the first '-'
                     let is_long_flag = arg_contents.starts_with("-");
 
+                    if is_long_flag {
+                        // For some reason, wgetopt parses unknown long options as if they where a
+                        // short '-' flag, followed by the long flag name, interpreted either as the
+                        // value for '-' or as remaining short options, so this fixes that
+                        let rest = if let Some(value) = w.woptarg {
+                            assert!(w.remaining_text.is_empty());
+                            value
+                        } else {
+                            w.remaining_text
+                        };
+                        // The arguments was of form --<long-flag>=<value>, so extract out <value>
+                        if let Some(i) = rest.find_char('=') {
+                            w.woptarg = Some(&rest[i + 1..]);
+                        }
+                        // Ensure w.remaining_text is not misinterpreted as the value of the flag,
+                        // or as remaining short options
+                        w.remaining_text = L!("");
+                    }
+
                     // Any unrecognized option is put back if ignore_unknown is used.
                     // This allows reusing the same argv in multiple argparse calls,
                     // or just ignoring the error (e.g. in completions).
 
                     // First we consume any remaining text as if it was the option's argument
-                    if !w.remaining_text.is_empty() {
+                    if opts.unknown_arguments != ArgType::NoArgument && !w.remaining_text.is_empty()
+                    {
                         assert!(w.woptarg.is_none()); // Both don't make sense
                         w.woptarg = Some(w.remaining_text);
                         // Explain to wgetopt that we want to skip to the next arg,
                         // because we can't handle this opt group.
                         w.remaining_text = L!("");
+                    }
+
+                    // If unknown options require arguments, but there weren't any worked out above,
+                    // take the next element of w.argv as the argument
+                    let separate_value = if opts.unknown_arguments == ArgType::RequiredArgument
+                        && w.woptarg.is_none()
+                    {
+                        if w.wopt_index < w.argv.len() {
+                            w.wopt_index += 1; // Tell wgetop to skip over the options value
+                            Some(w.argv[w.wopt_index - 1])
+                        } else {
+                            // the option is at the end of argv, so it has no argument
+                            streams.err.append(wgettext_fmt!(
+                                BUILTIN_ERR_MISSING,
+                                opts.name,
+                                args_read[w.wopt_index - 1]
+                            ));
+                            return Err(STATUS_INVALID_ARGS);
+                        }
+                    } else {
+                        None
+                    };
+
+                    // If the option uses the long flag syntax with a value (i.e. --<flag>=<value>)
+                    if opts.unknown_arguments == ArgType::NoArgument
+                        && is_long_flag
+                        && arg_contents.contains('=')
+                    {
+                        streams.err.append(wgettext_fmt!(
+                            BUILTIN_ERR_UNEXP_ARG,
+                            opts.name,
+                            args_read[w.wopt_index - 1]
+                        ));
+                        return Err(STATUS_INVALID_ARGS);
                     }
 
                     if opts.unknown_handling == UnknownHandling::Ignore {
@@ -937,17 +1018,29 @@ fn argparse_parse_flags<'args>(
                         // opts.argv_opts)
                         let unknown_flag = delete_flag(&mut w, is_long_flag);
                         opts.args.push(unknown_flag);
+                        // If the value of the argument was the next element of the input arguments,
+                        // record it to be stored in the new $argv value
+                        if let Some(value) = separate_value {
+                            opts.args.push(Cow::Borrowed(value));
+                        }
                     } else {
                         assert!(opts.unknown_handling == UnknownHandling::Move);
-                        // Nothing more to do, w.argv_opts will already contain the option, and its
-                        // value (if any)
+                        // w.argv_opts will already contain the option and its value, unless the
+                        // value was given as a seperate argument
+                        if let Some(value) = separate_value {
+                            w.argv_opts.push(Cow::Borrowed(value));
+                        }
+                    }
+
+                    // Make wgetopt keep reading this argument for more options
+                    if !w.remaining_text.is_empty() {
+                        w.wopt_index -= 1;
                     }
 
                     // Work around weirdness with wgetopt, which crashes if we `continue` here.
                     if w.wopt_index == argc {
                         break;
                     }
-                    Ok(SUCCESS)
                 }
             }
             NON_OPTION_CHAR => {
@@ -960,9 +1053,10 @@ fn argparse_parse_flags<'args>(
                 continue;
             }
             // It's a recognized flag.
-            _ => handle_flag(parser, opts, opt, is_long_flag, &mut w, streams),
-        };
-        retval?;
+            _ => {
+                handle_flag(parser, opts, opt, is_long_flag, &mut w, streams)?;
+            }
+        }
     }
     opts.args_opts = w.argv_opts;
 

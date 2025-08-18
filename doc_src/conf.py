@@ -10,6 +10,7 @@ import glob
 import os.path
 import subprocess
 import sys
+from sphinx.highlighting import lexers
 from sphinx.errors import SphinxWarning
 from docutils import nodes
 
@@ -35,11 +36,14 @@ def issue_role(name, rawtext, text, lineno, inliner, options=None, content=None)
     return [link], []
 
 
+def do_not_use_fish_indent_for_man(app):
+    if app.builder.name == "man":
+        del lexers["fish-docs-samples"]
+
+
 # -- Load our extensions -------------------------------------------------
 def setup(app):
     # Our own pygments lexers
-    from sphinx.highlighting import lexers
-
     this_dir = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, this_dir)
     from fish_indent_lexer import FishIndentLexer
@@ -51,6 +55,8 @@ def setup(app):
 
     app.add_config_value("issue_url", default=None, rebuild="html")
     app.add_role("issue", issue_role)
+
+    app.connect("builder-inited", do_not_use_fish_indent_for_man)
 
 
 # The default language to assume

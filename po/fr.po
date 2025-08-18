@@ -17581,6 +17581,9 @@ msgstr ""
 msgid "Do no interactive prompting"
 msgstr ""
 
+msgid "Do no prompt for password"
+msgstr ""
+
 msgid "Do not (do) assume that unaligned memory references will be handled by the system"
 msgstr "(Ne pas) présumer que les références de mémoire non alignées seront gérées par le système"
 
@@ -18705,6 +18708,9 @@ msgstr "Ne pas réinstaller les paquets à jour"
 
 msgid "Do not reload daemon configuration"
 msgstr "Ne pas recharger la configuration du démon"
+
+msgid "Do not reload systemd-networkd or systemd-udevd"
+msgstr ""
 
 msgid "Do not remount filesystems during rename"
 msgstr "Ne pas remonter les systèmes de fichiers pendant le renommage"
@@ -21772,6 +21778,9 @@ msgstr ""
 msgid "Edit mode for the interface. [default: insert]"
 msgstr ""
 
+msgid "Edit network configuration files"
+msgstr ""
+
 msgid "Edit notes for a given object"
 msgstr ""
 
@@ -21780,6 +21789,12 @@ msgstr ""
 
 msgid "Edit revision information"
 msgstr "Éditer l’information de révision"
+
+msgid "Edit runtime config file"
+msgstr ""
+
+msgid "Edit specified drop-in instead of main file"
+msgstr ""
 
 msgid "Edit tag"
 msgstr "Éditer l’étiquette spécifiée"
@@ -26984,6 +26999,9 @@ msgid "Generate Forward Secure Sealing key pair"
 msgstr ""
 
 msgid "Generate HP Function Key escape codes for function keys"
+msgstr ""
+
+msgid "Generate JSON output"
 msgstr ""
 
 msgid "Generate LLVM bitcode"
@@ -36476,6 +36494,9 @@ msgid "Marks the repository metadata expired"
 msgstr ""
 
 msgid "Mask input with ●"
+msgstr ""
+
+msgid "Mask network configuration files"
 msgstr ""
 
 msgid "Master document name"
@@ -47031,6 +47052,9 @@ msgstr ""
 
 msgid "Read names from stdin"
 msgstr "Lire les noms de fichiers depuis l’entrée standard"
+
+msgid "Read new contents of edited file from stdin"
+msgstr ""
 
 msgid "Read note message from file"
 msgstr ""
@@ -58102,6 +58126,9 @@ msgstr ""
 msgid "Show multipart uploads"
 msgstr ""
 
+msgid "Show network configuration files"
+msgstr ""
+
 msgid "Show network details"
 msgstr "Afficher les détails du réseau"
 
@@ -67352,6 +67379,9 @@ msgid "Unlocks the given dependencies"
 msgstr "Déverrouiller les dépendances spécifiées"
 
 msgid "Unmarks installed package"
+msgstr ""
+
+msgid "Unmask network configuration files"
 msgstr ""
 
 msgid "Unmount a filesystem"

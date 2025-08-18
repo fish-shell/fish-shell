@@ -17479,6 +17479,9 @@ msgstr "执行输入 JPEG 文件的丢失的转码"
 msgid "Do no interactive prompting"
 msgstr "不交互提示"
 
+msgid "Do no prompt for password"
+msgstr ""
+
 msgid "Do not (do) assume that unaligned memory references will be handled by the system"
 msgstr "不要( do) 假设系统会处理不匹配的内存引用"
 
@@ -18603,6 +18606,9 @@ msgstr "不重新公布最新目标"
 
 msgid "Do not reload daemon configuration"
 msgstr "不重新装入守护进程配置"
+
+msgid "Do not reload systemd-networkd or systemd-udevd"
+msgstr ""
 
 msgid "Do not remount filesystems during rename"
 msgstr "重命名时不要重挂载文件系统"
@@ -21670,6 +21676,9 @@ msgstr "在fish中编辑,而不是外部编辑器"
 msgid "Edit mode for the interface. [default: insert]"
 msgstr ""
 
+msgid "Edit network configuration files"
+msgstr ""
+
 msgid "Edit notes for a given object"
 msgstr "编辑给定对象的注释"
 
@@ -21678,6 +21687,12 @@ msgstr "发送前编辑补丁"
 
 msgid "Edit revision information"
 msgstr "编辑修订信息"
+
+msgid "Edit runtime config file"
+msgstr ""
+
+msgid "Edit specified drop-in instead of main file"
+msgstr ""
 
 msgid "Edit tag"
 msgstr "编辑标签"
@@ -26883,6 +26898,9 @@ msgstr "生成前置安全封存密钥对"
 
 msgid "Generate HP Function Key escape codes for function keys"
 msgstr "生成 HP 函数 函数密钥的密钥逃生代码"
+
+msgid "Generate JSON output"
+msgstr ""
 
 msgid "Generate LLVM bitcode"
 msgstr "生成 LLVM 位码"
@@ -36375,6 +36393,9 @@ msgstr "标记存储器元数据已过期"
 
 msgid "Mask input with ●"
 msgstr "带有 * 的遮盖输入"
+
+msgid "Mask network configuration files"
+msgstr ""
 
 msgid "Master document name"
 msgstr "主文档名称"
@@ -46929,6 +46950,9 @@ msgstr "将最大值读取为缩放整数( 默认字节)"
 
 msgid "Read names from stdin"
 msgstr "从 stdin 读取姓名"
+
+msgid "Read new contents of edited file from stdin"
+msgstr ""
 
 msgid "Read note message from file"
 msgstr "从文件读取便条消息"
@@ -58000,6 +58024,9 @@ msgstr "显示更多动词输出"
 msgid "Show multipart uploads"
 msgstr "显示多段上传"
 
+msgid "Show network configuration files"
+msgstr ""
+
 msgid "Show network details"
 msgstr "显示网络细节"
 
@@ -67251,6 +67278,9 @@ msgstr "解锁给定的依赖关系"
 
 msgid "Unmarks installed package"
 msgstr "已安装的未标记软件包"
+
+msgid "Unmask network configuration files"
+msgstr ""
 
 msgid "Unmount a filesystem"
 msgstr "卸载文件系统"

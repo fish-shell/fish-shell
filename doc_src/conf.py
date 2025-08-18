@@ -72,7 +72,7 @@ elif "FISH_BUILD_VERSION" in os.environ:
     ret = os.environ["FISH_BUILD_VERSION"]
 else:
     ret = subprocess.check_output(
-        ("fish_indent", "--version"), stderr=subprocess.STDOUT
+        ("../build_tools/git_version_gen.sh", "--stdout"), stderr=subprocess.STDOUT
     ).decode("utf-8")
 
 # The full version, including alpha/beta/rc tags

@@ -13,20 +13,6 @@ localizable_consts!(
     "%ls: Invalid option spec '%ls' at char '%lc'\n"
 );
 
-#[derive(PartialEq)]
-enum ArgCardinality {
-    Optional = -1isize,
-    None = 0,
-    Once = 1,
-    AtLeastOnce = 2,
-}
-
-impl Default for ArgCardinality {
-    fn default() -> Self {
-        Self::None
-    }
-}
-
 #[derive(Default)]
 struct OptionSpec<'args> {
     short_flag: char,
@@ -35,7 +21,8 @@ struct OptionSpec<'args> {
     vals: Vec<WString>,
     short_flag_valid: bool,
     delete: bool,
-    num_allowed: ArgCardinality,
+    arg_type: ArgType,
+    accumulate_args: bool,
     num_seen: isize,
 }
 
@@ -44,6 +31,8 @@ impl OptionSpec<'_> {
         Self {
             short_flag: s,
             short_flag_valid: true,
+            arg_type: ArgType::NoArgument,
+            accumulate_args: true,
             ..Default::default()
         }
     }
@@ -233,14 +222,17 @@ fn parse_flag_modifiers<'args>(
 
     if s.char_at(0) == '=' {
         s = s.slice_from(1);
-        opt_spec.num_allowed = match s.char_at(0) {
-            '?' => ArgCardinality::Optional,
-            '+' => ArgCardinality::AtLeastOnce,
-            _ => ArgCardinality::Once,
+        (opt_spec.arg_type, opt_spec.accumulate_args) = match s.char_at(0) {
+            '?' => {
+                s = s.slice_from(1);
+                (ArgType::OptionalArgument, false)
+            }
+            '+' => {
+                s = s.slice_from(1);
+                (ArgType::RequiredArgument, true)
+            }
+            _ => (ArgType::RequiredArgument, false),
         };
-        if opt_spec.num_allowed != ArgCardinality::Once {
-            s = s.slice_from(1);
-        }
     }
 
     if s.char_at(0) == '&' {
@@ -351,7 +343,8 @@ fn parse_option_spec_sep<'args>(
                 return false;
             }
             opts.implicit_int_flag = opt_spec.short_flag;
-            opt_spec.num_allowed = ArgCardinality::Once;
+            opt_spec.arg_type = ArgType::RequiredArgument;
+            opt_spec.accumulate_args = false;
             i += 1; // the struct is initialized assuming short_flag_valid should be true
         }
         '!' | '?' | '=' | '&' => {
@@ -633,24 +626,20 @@ fn populate_option_strings<'args>(
             short_options.push(opt_spec.short_flag);
         }
 
-        let arg_type = match opt_spec.num_allowed {
-            ArgCardinality::Optional => {
-                if opt_spec.short_flag_valid {
-                    short_options.push_str("::");
-                }
-                ArgType::OptionalArgument
-            }
-            ArgCardinality::Once | ArgCardinality::AtLeastOnce => {
-                if opt_spec.short_flag_valid {
-                    short_options.push_str(":");
-                }
-                ArgType::RequiredArgument
-            }
-            ArgCardinality::None => ArgType::NoArgument,
-        };
+        if opt_spec.short_flag_valid {
+            match opt_spec.arg_type {
+                ArgType::OptionalArgument => short_options.push_str("::"),
+                ArgType::RequiredArgument => short_options.push_str(":"),
+                ArgType::NoArgument => {}
+            };
+        }
 
         if !opt_spec.long_flag.is_empty() {
-            long_options.push(wopt(opt_spec.long_flag, arg_type, opt_spec.short_flag));
+            long_options.push(wopt(
+                opt_spec.long_flag,
+                opt_spec.arg_type,
+                opt_spec.short_flag,
+            ));
         }
     }
 }
@@ -823,9 +812,10 @@ fn handle_flag<'args>(
     }
 
     opt_spec.num_seen += 1;
-    if opt_spec.num_allowed == ArgCardinality::None {
+    if opt_spec.arg_type == ArgType::NoArgument {
         // It's a boolean flag. Save the flag we saw since it might be useful to know if the
         // short or long flag was given.
+        assert!(opt_spec.accumulate_args);
         assert!(w.woptarg.is_none());
         let s = if is_long_flag {
             WString::from("--") + opt_spec.long_flag
@@ -840,18 +830,15 @@ fn handle_flag<'args>(
         validate_arg(parser, &opts.name, opt_spec, is_long_flag, woptarg, streams)?;
     }
 
-    match opt_spec.num_allowed {
-        ArgCardinality::Optional | ArgCardinality::Once => {
-            // We're depending on `next_opt()` to report that a mandatory value is missing if
-            // `opt_spec->num_allowed == 1` and thus return ':' so that we don't take this branch if
-            // the mandatory arg is missing.
-            opt_spec.vals.clear();
-            if let Some(arg) = w.woptarg {
-                opt_spec.vals.push(arg.into());
-            }
-        }
-        _ => {
-            opt_spec.vals.push(w.woptarg.unwrap().into());
+    if opt_spec.accumulate_args {
+        opt_spec.vals.push(w.woptarg.unwrap().into());
+    } else {
+        // We're depending on `next_opt()` to report that a mandatory value is missing if
+        // `opt_spec->arg_type == ArgType::RequiredArgument` and thus return ':' so that we don't
+        // take this branch if the mandatory arg is missing.
+        opt_spec.vals.clear();
+        if let Some(arg) = w.woptarg {
+            opt_spec.vals.push(arg.into());
         }
     }
 

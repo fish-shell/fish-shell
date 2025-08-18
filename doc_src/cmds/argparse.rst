@@ -41,7 +41,7 @@ The following ``argparse`` options are available. They must appear before all *O
     The maximum number of acceptable non-option arguments. The default is infinity.
 
 **-u** or **--move-unknown**
-    Allow unknown options, and move them from ``$argv`` to ``$argv_opts``. Unknown options are treated as if they take optional arguments (i.e. have option spec ``=?``).
+    Allow unknown options, and move them from ``$argv`` to ``$argv_opts``. By default, Unknown options are treated as if they take optional arguments (i.e. have option spec ``=?``).
 
     The above means that if a group of short options contains an unknown short option *followed* by a known short option, the known short option is
     treated as an argument to the unknown one (e.g. ``--move-unknown h -- -oh`` will treat ``h`` as the argument to ``-o``, and so ``_flag_h`` will *not* be set).
@@ -64,6 +64,20 @@ The following ``argparse`` options are available. They must appear before all *O
     This flag has no effect on the parsing of unknown options (which are parsed as if this flag is on).
 
     This option may be on all the time in the future, so do not rely on the behaviour without it.
+
+**--unknown-arguments** *KIND*
+    This option implies **--move-unknown**, unless **--ignore-unknown** is also given.
+    This will modify the parsing behaviour of unknown options depending on the value of *KIND*:
+
+        - **optional** (the default), allows each unknown option to take an optional argument (i.e. as if it had ``=?`` in its option specification). For example, ``argparse --ignore-unknown --unknown-arguments=optional ab -- -u -a -ub`` will set ``_flag_a`` but *not* ``_flag_b``, as the ``b`` is treated as an argument to the second use of ``-u``.
+
+        - **required** requires each unknown option to take an argument (i.e. as if it had ``=`` or ``=+`` in its option specification). If the above example was changed to use ``--unknown-arguments=required``, *neither* ``_flag_a`` nor ``_flag_b`` would be set: the ``-a`` will be treated as an argument to the first use of ``-u``, and the ``b`` as an argument to the second.
+
+        - **none** forbids each unknown option from taking an argument (i.e. as if it had no ``=`` in its option specification). If the above example was changed to use ``--unknown-arguments=none``, *both* ``_flag_a`` and ``_flag_b`` would be set, as neither use of ``-u`` will be passed as taking an argument.
+
+        Note that the above assumes that unknown long flags use the ``--`` "GNU-style" (e.g. if *KIND* is ``none``, and there is no ``bar`` long option, ``-bar`` is interpreted as three short flags, ``b``, ``a``, and ``r``; but if ``bar`` is known, ``-bar`` is treated the same as ``--bar``).
+
+        When using ``--unknown-arguments=required``, you will get an error if the provided arguments end in an unknown option, since it has no argument. Similarly, with ``--unknown-arguments=none``, you will get an error if you use the ``--flag=value`` syntax and ``flag`` is an unknown option.
 
 **-s** or **--stop-nonopt**
     Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
@@ -288,11 +302,12 @@ After this it figures out which variable it should operate on according to the `
 An example of using ``$argv_opts`` to forward known options to another command, whilst adding new options::
 
     function my-head
-        # The following options are existing ones to head that we will forward verbatim
-        set -l opt_spec n/lines= q/quiet silent v/verbose z/zero-terminated help version
+        # The following option is the only existing one to head that takes arguments
+        # (we will forward it verbatim).
+        set -l opt_spec n/lines=
         # --qwords is a new option, but --bytes is an existing one which we will modify below
         set -a opt_spec "qwords=&" "c/bytes=&"
-        argparse --move-unknown $opt_spec -- $argv || return
+        argparse --strict-longopts --move-unknown --unknown-arguments=none $opt_spec -- $argv || return
         if set -q _flag_qwords
             # --qwords allows specifying the size in multiples of 8 bytes
             set -a argv_opts --bytes=(math -- $_flag_qwords \* 8 || return)
@@ -319,4 +334,6 @@ An example of using ``$argv_opts`` to forward known options to another command, 
 
 The argparse call above saves all the options we do *not* want to process in ``$argv_opts``. (The ``--qwords`` and ``--bytes`` options are *not* saved there as their option spec's end in a ``~``). The code then processes the ``--qwords`` and ``--bytess`` options using the the ``$_flag_OPTION`` variables, and puts the transformed options in ``$argv_opts`` (which already contains all the original options, *other* than ``--qwords`` and ``--bytes``).
 
-Note that because the ``argparse`` call above uses ``--move-unknown``, if the original ``head`` adds any new options, the wrapper script can still be used; however, such new options must have their arguments given in "stuck" form (e.g. ``-o<arg>`` or ``--opt=<arg>``). This is needed for the wrapper script to work out the *non*-option arguments (i.e. ``$argv``, the filenames that ``head`` is to operate on).
+Note that because the ``argparse`` call above uses ``--move-unknown`` and ``--unknown-arguments=none``, we only need to tell it the arguments to ``head`` that take a value. This allows the wrapper script to accurately work out the *non*-option arguments (i.e. ``$argv``, the filenames that ``head`` is to operate on). Using ``--unknown-arguments=optional`` and explicitly listing all the known options to ``head`` however would have the advantage that if ``head`` were to add new options, they could still be used with the wrapper script using the "stuck" form for arguments (e.g. ``-o<arg>``, or ``--opt=<arg>``).
+
+Note that the ``--strict-longopts`` is required to be able to correctly pass short options, e.g. without it ``my-head -q --bytes 10q``, will actually parse the ``-q`` as shorthand for ``--qwords``.

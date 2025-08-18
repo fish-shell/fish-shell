@@ -74,5 +74,8 @@ complete --command argparse --short-option u --long-option move-unknown \
     --description 'Move unknown options into \$argv_opts'
 complete --command argparse --short-option S --long-option strict-longopts \
     --description 'Pass long options strictly'
+complete --command argparse --short-option U --long-option unknown-arguments --no-files --require-parameter \
+    --arguments "optional required none" \
+    --description 'Whether unknown options can have arguments'
 complete --command argparse --short-option s --long-option stop-nonopt \
     --description 'Exit on subcommand'

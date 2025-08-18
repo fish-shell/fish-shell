@@ -408,6 +408,11 @@ msgstr ""
 msgid "%ls: Invalid --min-args value '%ls'\n"
 msgstr ""
 
+#
+#, c-format
+msgid "%ls: Invalid --unknown-arguments value '%ls'\n"
+msgstr ""
+
 #, c-format
 msgid "%ls: Invalid count value '%ls'\n"
 msgstr ""

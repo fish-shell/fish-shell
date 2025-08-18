@@ -380,7 +380,7 @@ end
 
 begin
     # Moving unknown options
-    argparse --move-unknown h i -- -hoa -oia
+    argparse --move-unknown --unknown-arguments=optional h i -- -hoa -oia
     echo -- $argv
     #CHECK:
     echo -- $argv_opts
@@ -422,6 +422,48 @@ begin
     # CHECK: _flag_break -b
     # CHECK: argv
     # CHECK: argv_opts '-b kubectl get pods -l name=foo'
+end
+
+begin
+    # Checking unknown-arguments, with errors
+    argparse -i -U none -- --long=value
+    # CHECKERR: argparse: --long=value: option does not take an argument
+    argparse -i -U required -- -u
+    # CHECKERR: argparse: -u: option requires an argument
+    argparse -i -U required -- --long
+    # CHECKERR: argparse: --long: option requires an argument
+end
+
+begin
+    argparse -U none -i b= -- -abv=val in --long between -u
+    set -l
+    # CHECK: _flag_b v=val
+    # CHECK: argv '-a'  'in'  '--long'  'between'  '-u'
+    # CHECK: argv_opts -bv=val
+end
+
+begin
+    argparse -U none b= -- -abv in --long between -u
+    set -l
+    # CHECK: _flag_b v
+    # CHECK: argv 'in'  'between'
+    # CHECK: argv_opts '-abv'  '--long'  '-u'
+end
+
+begin
+    argparse -iU required b= -- -abv -b -b --long -b -u -b
+    set -l
+    # CHECK: _flag_b -b
+    # CHECK: argv '-abv'  '--long'  '-b'  '-u'  '-b'
+    # CHECK: argv_opts '-b'  '-b'
+end
+
+begin
+    argparse -uU required b= -- -abv -b -b --long -b -u -b
+    set -l
+    # CHECK: _flag_b -b
+    # CHECK: argv
+    # CHECK: argv_opts '-abv'  '-b'  '-b'  '--long'  '-b'  '-u'  '-b'
 end
 
 begin
@@ -580,6 +622,24 @@ begin
     #CHECKERR: argparse: An option spec must have at least a short or a long flag
     #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
     #CHECKERR: argparse ''
+    #CHECKERR: ^
+    #CHECKERR: (Type 'help argparse' for related documentation)
+end
+
+begin
+    argparse -U
+    #CHECKERR: argparse: -U: option requires an argument
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: argparse -U
+    #CHECKERR: ^
+    #CHECKERR: (Type 'help argparse' for related documentation)
+end
+
+begin
+    argparse --unknown-arguments what --
+    #CHECKERR: argparse: Invalid --unknown-arguments value 'what'
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: argparse --unknown-arguments what --
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
 end

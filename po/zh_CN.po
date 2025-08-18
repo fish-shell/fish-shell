@@ -405,6 +405,11 @@ msgstr "%ls: 无效的 --max-args 值 '%ls'\n"
 msgid "%ls: Invalid --min-args value '%ls'\n"
 msgstr "%ls: 无效的 --min-args 值 '%ls'\n"
 
+#
+#, c-format
+msgid "%ls: Invalid --unknown-arguments value '%ls'\n"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "%ls: Invalid count value '%ls'\n"
 msgstr "%s: 无效的计数值 '%s'\n"

@@ -24,5 +24,5 @@ indent_size = 2
 [share/{completions,functions}/**.fish]
 max_line_length = unset
 
-[{COMMIT_EDITMSG,git-revise-todo}]
-max_line_length = 80
+[{COMMIT_EDITMSG,git-revise-todo,*.jjdescription}]
+max_line_length = 72

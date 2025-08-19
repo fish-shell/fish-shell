@@ -48,6 +48,7 @@ Scripting improvements
 - ``argparse`` now has an ``-u`` / ``--move-unknown`` option that works like ``--ignore-unknown``, but unknown options (and their arguments) are moved from ``$argv`` to ``$argv_opts``. whereas ``--ignore-unknown`` keeps them in ``$argv``.
 - ``argparse`` now has an ``-S`` / ``--strict-longopts`` option that forbids abbreviating long options or passing them with a single dash (e.g. if there is a long option called ``foo``, ``--fo`` and ``--foo`` won't match it).
 - ``argparse`` now has a ``-U`` / ``--unknown-arguments`` *KIND* option, where *KIND* is either ``optional``, ``required``, or ``none``, indicating whether unknown options are parsed as taking optional, required, or no arguments. This implies ``--move-unknown``.
+- ``argparse`` now allows specifying options that take multiple optional values by using ``=*`` in the option spec, the parsing of the option is the same as ones with optional values (i.e. ``=?``), but each successive use accumulates more values (or an empty string if no value), instead of replacing the previous value (i.e. it behaves similarly to ``=+``) (:issue:`8432`). In addition, ``fish_opt`` has been modified to support such options by using the ``--multiple-vals`` together with ``-o`` / ``--optional-val``; ``-m`` is also now acceptable as an abbreviation for ``--multiple-vals``.
 
 Interactive improvements
 ------------------------

@@ -552,11 +552,6 @@ and echo unexpected status $status
 #CHECKERR: fish_opt: o/optional-val r/required-val: options cannot be used together
 # XXX FIXME the error should output -r and --optional-val: what the user used
 
-# A repeated and optional arg makes no sense
-fish_opt -s h -l help --multiple-vals --optional-val
-and echo unexpected status $status
-#CHECKERR: fish_opt: multiple-vals o/optional-val: options cannot be used together
-
 # An unexpected arg not associated with a flag is an error
 fish_opt -s h -l help hello
 and echo unexpected status $status
@@ -598,18 +593,36 @@ fish_opt --short h -l help --multiple-vals
 or echo unexpected status $status
 #CHECK: h/help=+
 
+# Repeated and optional val, short and long valid
+fish_opt --short h -l help --optional-val -m
+or echo unexpected status $status
+#CHECK: h/help=*
+
 # Repeated val, short and long but short not valid
-fish_opt --short h -l help --multiple-vals --long-only
+fish_opt --short h -ml help --long-only
 or echo unexpected status $status
 #CHECK: h-help=+
+
+# Repeated and optional val, short and long but short not valid
+fish_opt --short h -l help --long-only -mo
+or echo unexpected status $status
+#CHECK: h-help=*
 
 # Repeated val, short only, and deleted
 fish_opt -s h --multiple-vals
 or echo unexpected status $status
 #CHECK: h=+
-fish_opt -s h --multiple-vals --long-only -d
+fish_opt -s h -md --long-only
 or echo unexpected status $status
 #CHECK: h=+&
+
+# Repeated and optional val, short only
+fish_opt -s h -om
+or echo unexpected status $status
+fish_opt -s h --optional-val --multiple-vals --long-only
+or echo unexpected status $status
+#CHECK: h=*
+#CHECK: h=*
 
 function wrongargparse
     argparse -foo -- banana
@@ -733,6 +746,17 @@ begin
     # CHECKERR: argparse: -valu=3: unknown option
     argparse --strict-longopts value=+ -- -valu 4
     # CHECKERR: argparse: -valu: unknown option
+end
+
+# Check =* options
+begin
+    set -l _flag_o previous value
+    argparse 'o/opt=*' -- -o non-value -oval --opt arg --opt=456
+    set -l
+    # CHECK: _flag_o ''  'val'  ''  '456'
+    # CHECK: _flag_opt ''  'val'  ''  '456'
+    # CHECK: argv 'non-value'  'arg'
+    # CHECK: argv_opts '-o'  '-oval'  '--opt'  '--opt=456'
 end
 
 # Check that the argparse's are properly wrapped in begin blocks

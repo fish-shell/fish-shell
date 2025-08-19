@@ -234,6 +234,10 @@ fn parse_flag_modifiers<'args>(
                 s = s.slice_from(1);
                 (ArgType::RequiredArgument, true)
             }
+            '*' => {
+                s = s.slice_from(1);
+                (ArgType::OptionalArgument, true)
+            }
             _ => (ArgType::RequiredArgument, false),
         };
     }
@@ -858,7 +862,11 @@ fn handle_flag<'args>(
     }
 
     if opt_spec.accumulate_args {
-        opt_spec.vals.push(w.woptarg.unwrap().into());
+        if let Some(arg) = w.woptarg {
+            opt_spec.vals.push(arg.into());
+        } else {
+            opt_spec.vals.push(WString::new());
+        }
     } else {
         // We're depending on `next_opt()` to report that a mandatory value is missing if
         // `opt_spec->arg_type == ArgType::RequiredArgument` and thus return ':' so that we don't

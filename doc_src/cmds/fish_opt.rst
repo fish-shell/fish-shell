@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    fish_opt -s ALPHANUM [-l LONG-NAME] [-ord] [--multiple-vals] [--long-only]
+    fish_opt -s ALPHANUM [-l LONG-NAME] [-ormd] [--long-only]
     fish_opt --help
 
 Description
@@ -33,8 +33,8 @@ The following ``argparse`` options are available:
 **-r** or **--required-val**
     The option being defined requires a value. If the option is seen more than once when parsing arguments, only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will have exactly one element.
 
-**--multiple-vals**
-    The option being defined requires a value each time it is seen. Each instance is stored. This means the resulting flag variable created by ``argparse`` will have one element for each instance of this option in the arguments.
+**-m** or **--multiple-vals**
+    The value of each instance of the option is accumulated. If **--optional-val** is provided, the value is optional, and an empty string is stored if no value is provided. Otherwise, the **--requiured-val** option is implied and each instance of the option requires a value. This means the resulting flag variable created by ``argparse`` will have one element for each instance of this option in the arguments, even for instances that did not provide a value.
 
 **-d** or **--delete**
     The option and any values will be deleted from the ``$argv_opts`` variables set by ``argparse``

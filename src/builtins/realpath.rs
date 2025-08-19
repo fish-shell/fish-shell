@@ -15,7 +15,7 @@ struct Options {
     no_symlinks: bool,
 }
 
-const short_options: &wstr = L!("+:hs");
+const short_options: &wstr = L!("+hs");
 const long_options: &[WOption] = &[
     wopt(L!("no-symlinks"), NoArgument, 's'),
     wopt(L!("help"), NoArgument, 'h'),
@@ -38,6 +38,10 @@ fn parse_options(
             'h' => opts.print_help = true,
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

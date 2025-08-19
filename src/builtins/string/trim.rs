@@ -26,7 +26,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
         wopt(L!("right"), NoArgument, 'r'),
         wopt(L!("quiet"), NoArgument, 'q'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":c:lrq");
+    const SHORT_OPTIONS: &'static wstr = L!("c:lrq");
 
     fn parse_opt(
         &mut self,

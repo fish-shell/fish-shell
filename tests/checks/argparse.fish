@@ -639,5 +639,11 @@ begin
     # CHECK: argv_opts '-abv124'  '-abv125'  '-abv124'  '-vd3'
 end
 
+argparse a/alpha -- --banna=value
+# CHECKERR: argparse: --banna=value: unknown option
+# But this gives a better message
+argparse a/alpha -- --alpha=value --banna=value
+# CHECKERR: argparse: --alpha=value: option does not take an argument
+
 # Check that the argparse's are properly wrapped in begin blocks
 set -l

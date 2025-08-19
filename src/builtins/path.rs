@@ -178,7 +178,7 @@ fn path_out(streams: &mut IoStreams, opts: &Options<'_>, s: impl AsRef<wstr>) {
 
 fn construct_short_opts(opts: &Options) -> WString {
     // All commands accept -z, -Z and -q
-    let mut short_opts = WString::from(":zZq");
+    let mut short_opts = WString::from("zZq");
     if opts.perms_valid {
         short_opts += L!("p:");
         short_opts += L!("rwx");
@@ -245,6 +245,17 @@ fn parse_opts<'args>(
             ':' => {
                 streams.err.append(L!("path ")); // clone of string_error
                 builtin_missing_argument(parser, streams, cmd, args_read[w.wopt_index - 1], false);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                streams.err.append(L!("path ")); // clone of string_error
+                builtin_unexpected_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    args_read[w.wopt_index - 1],
+                    false,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

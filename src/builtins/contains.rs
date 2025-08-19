@@ -14,7 +14,7 @@ fn parse_options(
 ) -> Result<(Options, usize), ErrorCode> {
     let cmd = args[0];
 
-    const SHORT_OPTS: &wstr = L!("+:hi");
+    const SHORT_OPTS: &wstr = L!("+hi");
     const LONG_OPTS: &[WOption] = &[
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("index"), ArgType::NoArgument, 'i'),
@@ -29,6 +29,10 @@ fn parse_options(
             'i' => opts.print_index = true,
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

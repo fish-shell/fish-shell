@@ -86,6 +86,16 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 // In future we change both to actually print an error.
                 return Err(STATUS_INVALID_ARGS);
             }
+            Err(UnexpectedOptArg(option_index)) => {
+                builtin_unexpected_argument(
+                    parser,
+                    streams,
+                    L!("set_color"),
+                    argv[option_index],
+                    true, /* print_hints */
+                );
+                return Err(STATUS_INVALID_ARGS);
+            }
             Err(UnknownColor(arg)) => {
                 streams
                     .err

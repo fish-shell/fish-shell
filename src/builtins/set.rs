@@ -108,7 +108,7 @@ impl Options {
         // Variables used for parsing the argument list. This command is atypical in using the "+"
         // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
         // we stop scanning for flags when the first non-flag argument is seen.
-        const SHORT_OPTS: &wstr = L!("+:LSUaefghlnpqux");
+        const SHORT_OPTS: &wstr = L!("+LSUaefghlnpqux");
         const LONG_OPTS: &[WOption] = &[
             wopt(L!("export"), NoArgument, 'x'),
             wopt(L!("global"), NoArgument, 'g'),
@@ -165,6 +165,16 @@ impl Options {
                 }
                 ':' => {
                     builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                ';' => {
+                    builtin_unexpected_argument(
+                        parser,
+                        streams,
+                        cmd,
+                        args[w.wopt_index - 1],
+                        false,
+                    );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {

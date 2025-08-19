@@ -26,7 +26,7 @@ impl StringSubCommand<'_> for Pad {
         wopt(L!("right"), NoArgument, 'r'),
         wopt(L!("width"), RequiredArgument, 'w'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":c:rw:");
+    const SHORT_OPTIONS: &'static wstr = L!("c:rw:");
 
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {

@@ -170,6 +170,7 @@ pub(crate) enum ParsedArgs<'argarray, 'args> {
 
 pub(crate) enum ParseError<'args> {
     MissingOptArg,
+    UnexpectedOptArg(usize),
     UnknownColor(&'args wstr),
     UnknownUnderlineStyle(&'args wstr),
     UnknownOption(usize),
@@ -180,7 +181,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     is_builtin: bool,
 ) -> Result<ParsedArgs<'argarray, 'args>, ParseError<'args>> {
     let builtin_extra_args = if is_builtin { 0 } else { "hc".len() };
-    let short_options = L!(":b:oidru::ch");
+    let short_options = L!("b:oidru::ch");
     let short_options = &short_options[..short_options.len() - builtin_extra_args];
     let long_options: &[WOption] = &[
         wopt(L!("background"), ArgType::RequiredArgument, 'b'),
@@ -260,6 +261,11 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
             ':' => {
                 if is_builtin {
                     return Err(MissingOptArg);
+                }
+            }
+            ';' => {
+                if is_builtin {
+                    return Err(UnexpectedOptArg(w.wopt_index - 1));
                 }
             }
             '?' => {

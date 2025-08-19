@@ -23,7 +23,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
     let print_hints = false;
     let mut opts: type_cmd_opts_t = Default::default();
 
-    const shortopts: &wstr = L!(":hasftpPq");
+    const shortopts: &wstr = L!("hasftpPq");
     const longopts: &[WOption] = &[
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("all"), ArgType::NoArgument, 'a'),
@@ -52,6 +52,16 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

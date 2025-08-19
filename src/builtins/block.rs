@@ -30,7 +30,7 @@ fn parse_options(
 ) -> Result<(Options, usize), ErrorCode> {
     let cmd = args[0];
 
-    const SHORT_OPTS: &wstr = L!(":eghl");
+    const SHORT_OPTS: &wstr = L!("eghl");
     const LONG_OPTS: &[WOption] = &[
         wopt(L!("erase"), ArgType::NoArgument, 'e'),
         wopt(L!("local"), ArgType::NoArgument, 'l'),
@@ -57,6 +57,10 @@ fn parse_options(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

@@ -11,7 +11,7 @@ impl StringSubCommand<'_> for Collect {
         wopt(L!("allow-empty"), NoArgument, 'a'),
         wopt(L!("no-trim-newlines"), NoArgument, 'N'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":Na");
+    const SHORT_OPTIONS: &'static wstr = L!("Na");
 
     fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
         match c {

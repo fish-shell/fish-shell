@@ -171,7 +171,7 @@ impl Default for Options {
 pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let cmd = args[0];
 
-    const SHORT_OPTS: &wstr = L!(":HSabcdefilmnqrstuvwyKPTh");
+    const SHORT_OPTS: &wstr = L!("HSabcdefilmnqrstuvwyKPTh");
 
     const LONG_OPTS: &[WOption] = &[
         wopt(L!("all"), ArgType::NoArgument, 'a'),
@@ -235,6 +235,10 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

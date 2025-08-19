@@ -13,6 +13,15 @@ string escape (set_color red reset yellow)
 string escape (set_color --background=reset)
 # CHECKERR: set_color: Unknown color 'reset'
 
+string escape (set_color --bold=red)
+# CHECKERR: set_color: --bold=red: option does not take an argument
+#CHECKERR: {{.*}}checks/set_color.fish (line {{\d+}}):
+#CHECKERR: set_color --bold=red
+#CHECKERR: ^
+#CHECKERR: in command substitution
+#CHECKERR: called on line {{\d+}} of file {{.*}}checks/set_color.fish
+#CHECKERR: (Type 'help set_color' for related documentation)
+
 string escape (set_color --bold red --background=normal)
 # CHECK: \e\[31m\e\[49m\e\[1m
 string escape (set_color --bold red --background=blue)

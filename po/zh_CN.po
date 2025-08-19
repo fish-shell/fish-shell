@@ -188,6 +188,11 @@ msgstr "%ls: %ls:无效的子命令\n"
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
 msgstr "%ls: %ls:无效的可变名称. 参见`help identifiers`\n"
 
+#
+#, c-format
+msgid "%ls: %ls: option does not take an argument\n"
+msgstr ""
+
 #, c-format
 msgid "%ls: %ls: option requires an argument\n"
 msgstr "%ls:%ls: 选项需要参数\n"

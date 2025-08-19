@@ -194,6 +194,11 @@ msgstr ""
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
 msgstr ""
 
+#
+#, c-format
+msgid "%ls: %ls: option does not take an argument\n"
+msgstr ""
+
 #, c-format
 msgid "%ls: %ls: option requires an argument\n"
 msgstr ""

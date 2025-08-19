@@ -137,8 +137,6 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     /// Used when reordering elements. After scanning is finished, indicates the index
     /// after the final non-option skipped during parsing.
     pub last_nonopt: usize,
-    /// Return `:` if an arg is missing.
-    return_colon: bool,
     /// Prevents redundant initialization.
     initialized: bool,
     /// This will be populated with the elements of the original args that were interpreted
@@ -163,13 +161,19 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             ordering: Ordering::Permute,
             first_nonopt: 0,
             last_nonopt: 0,
-            return_colon: false,
             initialized: false,
             argv_opts: Vec::new(),
         }
     }
 
-    /// Try to get the next option.
+    /// Try to get the next option, returning:
+    /// * None if there are no more options
+    /// * `Some(`[`NON_OPTION_CHAR`]`)` for a non-option when using [`Ordering::ReturnInOrder`]
+    /// * `Some('?') for unrecognised options
+    /// * `Some(':')` for options missing an argument,
+    /// * `Some(';') for options with an unexpected argument (this is only possible when using the
+    ///     --long=value or -long=value syntax where long was declared as taking no arguments).
+    /// * Otherwise, `Some(c)`, where `c` is the option's short character
     pub fn next_opt(&mut self) -> Option<char> {
         assert!(
             self.wopt_index <= self.argv.len(),
@@ -231,11 +235,6 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             optstring = &optstring[1..];
         } else {
             self.ordering = Ordering::Permute;
-        }
-
-        if optstring.char_at(0) == ':' {
-            self.return_colon = true;
-            optstring = &optstring[1..];
         }
 
         self.shortopts = optstring;
@@ -371,7 +370,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 // no following element to consume, then the option
                 // has no argument.
                 self.unrecognized_opt = c;
-                c = if self.return_colon { ':' } else { '?' };
+                c = ':';
             } else {
                 // Consume the next element.
                 let val = self.argv[self.wopt_index];
@@ -398,7 +397,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         if self.remaining_text.char_at(name_end) == '=' {
             if opt_found.arg_type == ArgType::NoArgument {
                 self.remaining_text = empty_wstr();
-                return '?';
+                return ';';
             } else {
                 self.woptarg = Some(self.remaining_text[(name_end + 1)..].into());
             }
@@ -410,7 +409,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 self.wopt_index += 1;
             } else {
                 self.remaining_text = empty_wstr();
-                return if self.return_colon { ':' } else { '?' };
+                return ':';
             }
         }
 

@@ -32,7 +32,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
         wopt(L!("left"), NoArgument, 'l'),
         wopt(L!("quiet"), NoArgument, 'q'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":c:m:Nlq");
+    const SHORT_OPTIONS: &'static wstr = L!("c:m:Nlq");
 
     fn parse_opt(
         &mut self,

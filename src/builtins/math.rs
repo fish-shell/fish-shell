@@ -38,7 +38,7 @@ fn parse_cmd_opts(
 
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
     // This is needed because of the minus, `-`, operator in math expressions.
-    const SHORT_OPTS: &wstr = L!("+:hs:b:m:");
+    const SHORT_OPTS: &wstr = L!("+hs:b:m:");
     const LONG_OPTS: &[WOption] = &[
         wopt(L!("scale"), ArgType::RequiredArgument, 's'),
         wopt(L!("base"), ArgType::RequiredArgument, 'b'),
@@ -118,6 +118,16 @@ fn parse_cmd_opts(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], print_hints);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    args[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

@@ -83,7 +83,7 @@ impl ArgParseCmdOpts<'_> {
     }
 }
 
-const SHORT_OPTIONS: &wstr = L!("+:hn:siux:N:X:");
+const SHORT_OPTIONS: &wstr = L!("+hn:siux:N:X:");
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("stop-nonopt"), ArgType::NoArgument, 's'),
     wopt(L!("ignore-unknown"), ArgType::NoArgument, 'i'),
@@ -574,6 +574,16 @@ fn parse_cmd_opts<'args>(
                 );
                 return Err(STATUS_INVALID_ARGS);
             }
+            ';' => {
+                builtin_unexpected_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    args[w.wopt_index - 1],
+                    /* print_hints */ false,
+                );
+                return Err(STATUS_INVALID_ARGS);
+            }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
@@ -858,7 +868,7 @@ fn argparse_parse_flags<'args>(
 
     // "+" means stop at nonopt, "-" means give nonoptions the option character code `1`, and don't
     // reorder.
-    let mut short_options = WString::from(if opts.stop_nonopt { L!("+:") } else { L!("-:") });
+    let mut short_options = WString::from(if opts.stop_nonopt { L!("+") } else { L!("-") });
     let mut long_options = vec![];
     populate_option_strings(opts, &mut short_options, &mut long_options);
 
@@ -868,6 +878,16 @@ fn argparse_parse_flags<'args>(
         let retval: BuiltinResult = match opt {
             ':' => {
                 builtin_missing_argument(
+                    parser,
+                    streams,
+                    &opts.name,
+                    args_read[w.wopt_index - 1],
+                    false,
+                );
+                Err(STATUS_INVALID_ARGS)
+            }
+            ';' => {
+                builtin_unexpected_argument(
                     parser,
                     streams,
                     &opts.name,

@@ -1,0 +1,1 @@
+stackit completion fish | source

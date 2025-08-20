@@ -1,7 +1,7 @@
 fish 4.1.0 (released ???)
 =========================
 
-.. ignore for 4.1: 10929 10940 10948 10955 10965 10975 10989 10990 10998 11028 11052 11055 11069 11071 11079 11092 11098 11104 11106 11110 11140 11146 11148 11150 11214 11218 11259 11288 11299 11328 11350 11373 11395 11417 11419  
+.. ignore for 4.1: 10929 10940 10948 10955 10965 10975 10989 10990 10998 11028 11052 11055 11069 11071 11079 11092 11098 11104 11106 11110 11140 11146 11148 11150 11214 11218 11259 11288 11299 11328 11350 11373 11395 11417 11419
 
 Notable improvements and fixes
 ------------------------------
@@ -72,6 +72,9 @@ Completions
 ^^^^^^^^^^^
 - ``git`` completions now show the remote url as a description when completing remotes.
 - ``systemctl`` completions no longer print escape codes if ``SYSTEMD_COLORS`` is set (:issue:`11465`).
+- Added completions for:
+
+  - ``stackit`` (:issue:`11742`)
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -103,7 +106,7 @@ This release of fish fixes a number of issues identified in fish 4.0.1:
 - The warning when the terminfo database can't be found has been downgraded to a log message. fish will act as if the terminal behaves like xterm-256color, which is correct for the vast majority of cases (:issue:`11277`, :issue:`11290`).
 - Key combinations using the super (Windows/command) key can now (actually) be bound using the :kbd:`super-` prefix (:issue:`11217`). This was listed in the release notes for 4.0.1 but did not work correctly.
 - :doc:`function <cmds/function>` is stricter about argument parsing, rather than allowing additional parameters to be silently ignored (:issue:`11295`).
-- Using parentheses in the :doc:`test <cmds/test>` builtin works correctly, following a regression in 4.0.0 where they were not recognized (:issue:`11387`). 
+- Using parentheses in the :doc:`test <cmds/test>` builtin works correctly, following a regression in 4.0.0 where they were not recognized (:issue:`11387`).
 - :kbd:`delete` in Vi mode when Num Lock is active will work correctly (:issue:`11303`).
 - Abbreviations cannot alter the command-line contents, preventing a crash (:issue:`11324`).
 - Improvements to various completions, including new completions for ``wl-randr`` (:issue:`11301`), performance improvements for ``cargo`` completions by avoiding network requests (:issue:`11347`), and other improvements for  ``btrfs`` (:issue:`11320`), ``cryptsetup`` (:issue:`11315`), ``git`` (:issue:`11319`, :issue:`11322`, :issue:`11323`), ``jj`` (:issue:`11046`), and ``systemd-analyze`` (:issue:`11314`).
@@ -306,7 +309,7 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - When the cursor is on a command that resolves to an executable script, :kbd:`alt-o` will now open that script in your editor (:issue:`10266`).
-- During up-arrow history search, :kbd:`shift-delete` will delete the current search item and move to the next older item. Previously this was only supported in the history pager. 
+- During up-arrow history search, :kbd:`shift-delete` will delete the current search item and move to the next older item. Previously this was only supported in the history pager.
 - :kbd:`shift-delete` will also remove the currently-displayed autosuggestion from history, and remove it as a suggestion.
 - :kbd:`ctrl-Z` (also known as :kbd:`ctrl-shift-z`) is now bound to redo.
 - Some improvements to the :kbd:`alt-e` binding which edits the command line in an external editor:

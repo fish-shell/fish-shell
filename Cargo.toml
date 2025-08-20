@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["printf", "gettext-extraction"]
+members = ["crates/*"]
 
 [workspace.package]
 # To build revisions that use Corrosion (those before 2024-01), use CMake 3.19, Rustc 1.78 and Rustup 1.27.
@@ -48,8 +48,8 @@ nix = { version = "0.30.1", default-features = false, features = [
 ] }
 num-traits = "0.2.19"
 once_cell = "1.19.0"
-fish-printf = { path = "./printf", features = ["widestring"] }
-fish-gettext-extraction = { path = "./gettext-extraction", optional = true }
+fish-printf = { path = "crates/printf", features = ["widestring"] }
+fish-gettext-extraction = { path = "crates/gettext-extraction", optional = true }
 
 # Don't use the "getrandom" feature as it requires "getentropy" which was not
 # available on macOS < 10.12. We can enable "getrandom" when we raise the

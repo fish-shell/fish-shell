@@ -67,8 +67,8 @@ fn main() {
         "build.rs",
         "Cargo.lock",
         "Cargo.toml",
-        "gettext-extraction",
-        "printf",
+        "crates/gettext-extraction",
+        "crates/printf",
         "src",
     ]);
 

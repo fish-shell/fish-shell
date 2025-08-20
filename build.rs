@@ -5,28 +5,13 @@ use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 
-fn canonicalize<P: AsRef<Path>>(path: P) -> PathBuf {
-    std::fs::canonicalize(path).unwrap()
-}
-fn canonicalize_str<P: AsRef<Path>>(path: P) -> String {
-    canonicalize(path).to_str().unwrap().to_owned()
-}
-
-const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
-
-#[cfg(feature = "embed-data")]
-#[cfg(not(clippy))]
-const SPHINX_DOC_SOURCES: [&str; 3] = ["CHANGELOG.rst", "CONTRIBUTING.rst", "doc_src"];
-
 fn main() {
     setup_paths();
 
     // Add our default to enable tools that don't go through CMake, like "cargo test" and the
     // language server.
 
-    let cargo_target_dir: PathBuf = option_env!("CARGO_TARGET_DIR")
-        .map(canonicalize)
-        .unwrap_or(canonicalize(MANIFEST_DIR).join("target"));
+    let cargo_target_dir = fish_build_helper::get_target_dir();
 
     // FISH_BUILD_DIR is set by CMake, if we are using it.
     rsconf::set_env_value(
@@ -36,7 +21,10 @@ fn main() {
 
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
     // compare it directly as a string at runtime.
-    rsconf::set_env_value("CARGO_MANIFEST_DIR", &canonicalize_str(MANIFEST_DIR));
+    rsconf::set_env_value(
+        "CARGO_MANIFEST_DIR",
+        fish_build_helper::get_repo_root().to_str().unwrap(),
+    );
 
     // Some build info
     rsconf::set_env_value("BUILD_TARGET_TRIPLE", &env::var("TARGET").unwrap());
@@ -50,28 +38,11 @@ fn main() {
 
     std::env::set_var("FISH_BUILD_VERSION", version);
 
-    let targetman = cargo_target_dir.join("fish-man");
-
-    #[cfg(feature = "embed-data")]
-    #[cfg(not(clippy))]
-    {
-        build_man(&targetman);
-    }
-    #[cfg(any(not(feature = "embed-data"), clippy))]
-    {
-        let sec1dir = targetman.join("man1");
-        let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
-    }
-
     // These are necessary if built with embedded functions,
     // but only in release builds (because rust-embed in debug builds reads from the filesystem).
     #[cfg(feature = "embed-data")]
     #[cfg(not(debug_assertions))]
     rsconf::rebuild_if_path_changed("share");
-
-    #[cfg(feature = "embed-data")]
-    #[cfg(not(clippy))]
-    rsconf::rebuild_if_paths_changed(&SPHINX_DOC_SOURCES);
 
     #[cfg(feature = "gettext-extract")]
     rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
@@ -360,8 +331,9 @@ fn get_version(src_dir: &Path) -> String {
     // or because it refused (safe.directory applies to `git describe`!)
     // So we read the SHA ourselves.
     fn get_git_hash() -> Result<String, Box<dyn std::error::Error>> {
-        let gitdir = Path::new(MANIFEST_DIR).join(".git");
-        let jjdir = Path::new(MANIFEST_DIR).join(".jj");
+        let repo_root_dir = fish_build_helper::get_repo_root();
+        let gitdir = repo_root_dir.join(".git");
+        let jjdir = repo_root_dir.join(".jj");
         let commit_id = if gitdir.exists() {
             // .git/HEAD contains ref: refs/heads/branch
             let headpath = gitdir.join("HEAD");
@@ -397,179 +369,4 @@ fn get_version(src_dir: &Path) -> String {
     }
 
     get_git_hash().expect("Could not get a version. Either set $FISH_BUILD_VERSION or install git.")
-}
-
-#[cfg(feature = "embed-data")]
-#[cfg(not(clippy))]
-/// Given a path, returns an iterator containing this path, and possibly others depending on what
-/// the input path refers to.
-/// If the path points to a file, only this file will be included.
-/// If it is a symlink, the path of the link will be included, as well as the target,
-/// provided the target is a file. Panics on non-file targets, including non-existing targets.
-/// If it is a directory, the function recurses on each entry and combines the results into the
-/// returned iterator.
-fn read_dir_all<P: AsRef<Path>>(path: P) -> impl Iterator<Item = PathBuf> {
-    fn walk(path: PathBuf) -> Box<dyn Iterator<Item = PathBuf>> {
-        if path.is_file() {
-            return Box::new([path].into_iter());
-        }
-        if path.is_symlink() {
-            let target = path.read_link().unwrap();
-            if target.is_file() {
-                return Box::new([path, target].into_iter());
-            }
-            panic!("Symlink {path:?} does not point to a file. Such symlinks are unsupported.");
-        }
-        if path.is_dir() {
-            return Box::new(
-                [path.clone()].into_iter().chain(
-                    std::fs::read_dir(path)
-                        .unwrap()
-                        .flat_map(|p| walk(p.unwrap().path())),
-                ),
-            );
-        }
-        panic!("Unexpected type for path {path:?}");
-    }
-
-    walk(path.as_ref().to_owned())
-}
-
-#[cfg(feature = "embed-data")]
-#[cfg(not(clippy))]
-/// Helper function for avoiding unnecessary rebuilds.
-/// Specify all files/directories which should trigger a rebuild if modified via `source_paths`.
-/// `cache_file` is used to store the time of the latest build.
-/// If this file does not exist, it will be created, if possible.
-/// The modification time of all files in `source_paths` are checked.
-/// For symlinks, both the link and the target are considered, but only links to files are
-/// supported.
-/// If the most recent mtime found this way is not more recent than the one stored in `cache_file`,
-/// then the build directory is considered up-to-date and `true` is returned.
-/// Otherwise, the timestamp in `cache_file` is updated and false is returned.
-/// The mtime is stored as milliseconds since the Unix epoch.
-/// There are some edge cases around the time, which could theoretically result in unnecessary
-/// builds or builds not being updated when they should.
-/// <https://doc.rust-lang.org/std/time/struct.SystemTime.html>
-/// Deleting the `cache_file` before invoking this function prevents the latter case (but makes
-/// this function useless).
-fn is_build_dir_up_to_date<'a, P: AsRef<Path> + 'a, I: IntoIterator<Item = &'a P>>(
-    source_paths: I,
-    cache_file: &Path,
-) -> bool {
-    use std::{
-        io::{Read, Seek, SeekFrom, Write},
-        str::FromStr,
-        time::UNIX_EPOCH,
-    };
-    let source_timestamp = source_paths
-        .into_iter()
-        .flat_map(read_dir_all)
-        .map(|p| p.metadata().unwrap().modified().unwrap())
-        .max()
-        .unwrap()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis();
-    let cache_file_dir = cache_file.parent().unwrap();
-    std::fs::create_dir_all(cache_file_dir).unwrap();
-    let mut timestamp_file = std::fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .truncate(false)
-        .open(cache_file)
-        .unwrap();
-    let mut timestamp_file_content = vec![];
-    timestamp_file
-        .read_to_end(&mut timestamp_file_content)
-        .unwrap();
-    if !timestamp_file_content.is_empty() {
-        let timestamp_file_str = std::str::from_utf8(&timestamp_file_content).unwrap().trim();
-        let build_timestamp = u128::from_str(timestamp_file_str).unwrap();
-        if source_timestamp <= build_timestamp {
-            return true;
-        }
-        timestamp_file.seek(SeekFrom::Start(0)).unwrap();
-        timestamp_file.set_len(0).unwrap();
-    }
-    timestamp_file
-        .write_all(format!("{source_timestamp}\n").as_bytes())
-        .unwrap();
-    false
-}
-
-#[cfg(feature = "embed-data")]
-// disable clippy because otherwise it would panic without sphinx
-#[cfg(not(clippy))]
-fn build_man(build_dir: &Path) {
-    use std::process::Command;
-    let mandir = build_dir;
-    let sec1dir = mandir.join("man1");
-    let docsrc_path = canonicalize(MANIFEST_DIR).join("doc_src");
-    let docsrc = docsrc_path.to_str().unwrap();
-
-    // `sphinx-build` runs for several seconds even if none of the sources changed.
-    // This can result in the completely useless `sphinx-build` invocation almost doubling the
-    // duration of a `cargo b` (for a non-clean build).
-    // https://github.com/sphinx-doc/sphinx/issues/13727
-    let timestamp_file_path = mandir.join("build_timestamp");
-    if is_build_dir_up_to_date(&SPHINX_DOC_SOURCES, &timestamp_file_path) {
-        return;
-    }
-
-    let args = &[
-        "-j",
-        "auto",
-        "-q",
-        "-b",
-        "man",
-        "-c",
-        docsrc,
-        // doctree path - put this *above* the man1 dir to exclude it.
-        // this is ~6M
-        "-d",
-        mandir.to_str().unwrap(),
-        docsrc,
-        sec1dir.to_str().unwrap(),
-    ];
-    let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
-
-    rsconf::rebuild_if_env_changed("FISH_BUILD_DOCS");
-    if env::var("FISH_BUILD_DOCS") == Ok("0".to_string()) {
-        println!("cargo:warning=Skipping man pages because $FISH_BUILD_DOCS is set to 0");
-        return;
-    }
-
-    // We run sphinx to build the man pages.
-    // Every error here is fatal so cargo doesn't cache the result
-    // - if we skipped the docs with sphinx not installed, installing it would not then build the docs.
-    // That means you need to explicitly set $FISH_BUILD_DOCS=0 (`FISH_BUILD_DOCS=0 cargo install --path .`),
-    // which is unfortunate - but the docs are pretty important because they're also used for --help.
-    match Command::new("sphinx-build").args(args).spawn() {
-        Err(x) if x.kind() == std::io::ErrorKind::NotFound => {
-            if env::var("FISH_BUILD_DOCS") == Ok("1".to_string()) {
-                panic!("Could not find sphinx-build to build man pages.\nInstall sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0.");
-            }
-            println!("cargo:warning=Cannot find sphinx-build to build man pages.");
-            println!("cargo:warning=If you install it now you need to run `cargo clean` and rebuild, or set $FISH_BUILD_DOCS=1 explicitly.");
-        }
-        Err(x) => {
-            // Another error - permissions wrong etc
-            panic!("Error starting sphinx-build to build man pages: {:?}", x);
-        }
-        Ok(mut x) => match x.wait() {
-            Err(err) => {
-                panic!(
-                    "Error waiting for sphinx-build to build man pages: {:?}",
-                    err
-                );
-            }
-            Ok(out) => {
-                if !out.success() {
-                    panic!("sphinx-build failed to build the man pages.");
-                }
-            }
-        },
-    }
 }

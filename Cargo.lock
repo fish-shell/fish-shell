@@ -104,6 +104,8 @@ dependencies = [
  "bitflags",
  "cc",
  "errno",
+ "fish-build-helper",
+ "fish-build-man-pages",
  "fish-gettext-extraction",
  "fish-printf",
  "libc",
@@ -123,8 +125,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "fish-build-helper"
+version = "0.0.0"
+dependencies = [
+ "rsconf",
+]
+
+[[package]]
+name = "fish-build-man-pages"
+version = "0.0.0"
+dependencies = [
+ "fish-build-helper",
+ "rsconf",
+]
+
+[[package]]
 name = "fish-gettext-extraction"
-version = "0.0.1"
+version = "0.0.0"
 dependencies = [
  "proc-macro2",
 ]

@@ -1,0 +1,12 @@
+[package]
+name = "fish-build-helper"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+
+[dependencies]
+rsconf.workspace = true
+
+[lints]
+workspace = true

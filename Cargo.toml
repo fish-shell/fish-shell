@@ -12,6 +12,8 @@ repository = "https://github.com/fish-shell/fish-shell"
 bitflags = "2.5.0"
 cc = "1.0.94"
 errno = "0.3.0"
+fish-build-helper = { path = "crates/build-helper" }
+fish-build-man-pages = { path = "crates/build-man-pages" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-printf = { path = "crates/printf", features = ["widestring"] }
 libc = "0.2.155"
@@ -71,6 +73,7 @@ readme = "README.rst"
 [dependencies]
 bitflags.workspace = true
 errno.workspace = true
+fish-build-man-pages = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-printf.workspace = true
 libc.workspace = true
@@ -92,6 +95,7 @@ serial_test.workspace = true
 
 [build-dependencies]
 cc.workspace = true
+fish-build-helper.workspace = true
 rsconf.workspace = true
 
 [target.'cfg(windows)'.build-dependencies]
@@ -116,7 +120,7 @@ path = "src/bin/fish_key_reader.rs"
 [features]
 default = ["embed-data"]
 benchmark = []
-embed-data = ["dep:rust-embed"]
+embed-data = ["dep:rust-embed", "dep:fish-build-man-pages"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
 # desired. This happens when running tests via `build_tools/check.sh` and when calling

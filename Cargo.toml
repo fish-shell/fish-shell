@@ -14,6 +14,7 @@ license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
 bitflags = "2.5.0"
 cc = "1.0.94"
 cfg-if = "1.0.3"
+clap = { version = "4.5.54", features = ["derive"] }
 errno = "0.3.0"
 fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }
@@ -177,7 +178,7 @@ embed-manpages = ["dep:fish-build-man-pages"]
 localize-messages = ["dep:fish-gettext"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
-# desired. This happens when running tests via `build_tools/check.sh` and when calling
+# desired. This happens when running tests via `cargo xtask check` and when calling
 # `build_tools/update_translations.fish`, so there should not be a need to enable it manually.
 gettext-extract = ["dep:fish-gettext-extraction"]
 

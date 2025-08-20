@@ -35,7 +35,7 @@ pub fn fish_build_dir() -> Cow<'static, Path> {
 }
 
 pub fn fish_doc_dir() -> Cow<'static, Path> {
-    fish_build_dir().join("fish-docs").into()
+    cargo_target_dir().join("fish-docs").into()
 }
 
 // TODO Move this to rsconf

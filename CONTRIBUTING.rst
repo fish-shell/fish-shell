@@ -50,7 +50,7 @@ Guidelines
 In short:
 
 - Be conservative in what you need (keep to the agreed minimum supported Rust version, limit new dependencies)
-- Use automated tools to help you (``build_tools/check.sh``)
+- Use automated tools to help you (``cargo xtask check``)
 
 Commit History
 ==============
@@ -245,7 +245,7 @@ In this example we're in the root of the workspace and have run ``cargo build`` 
 
 To run all tests and linters, use::
 
-    build_tools/check.sh
+    cargo xtask check
 
 Contributing Translations
 =========================

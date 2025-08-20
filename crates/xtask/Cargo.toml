@@ -1,0 +1,10 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+rust-version.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[dependencies]
+clap.workspace = true
+fish-build-helper.workspace = true

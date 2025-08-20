@@ -380,7 +380,7 @@ impl TopicMonitor {
         }
         // Note that if the STATUS_NEEDS_WAKEUP bit is set, no other bits must be set.
         assert!(
-            ((oldstatus == STATUS_NEEDS_WAKEUP) == ((oldstatus & STATUS_NEEDS_WAKEUP) != 0)),
+            (oldstatus == STATUS_NEEDS_WAKEUP) == ((oldstatus & STATUS_NEEDS_WAKEUP) != 0),
             "If STATUS_NEEDS_WAKEUP is set no other bits should be set"
         );
 

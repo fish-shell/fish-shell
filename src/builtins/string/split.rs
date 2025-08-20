@@ -108,7 +108,6 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         wopt(L!("max"), RequiredArgument, 'm'),
         wopt(L!("no-empty"), NoArgument, 'n'),
         wopt(L!("fields"), RequiredArgument, 'f'),
-        // FIXME: allow-empty is not documented
         wopt(L!("allow-empty"), NoArgument, 'a'),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":qrm:nf:a");

@@ -8,9 +8,9 @@ Synopsis
 
 .. synopsis::
 
-    string split [(-f | --fields) FIELDS] [(-m | --max) MAX] [-n | --no-empty] 
+    string split [(-f | --fields) FIELDS [-a | --allow-empty]] [(-m | --max) MAX] [-n | --no-empty]
                  [-q | --quiet] [-r | --right] SEP [STRING ...]
-    string split0 [(-f | --fields) FIELDS] [(-m | --max) MAX] [-n | --no-empty]
+    string split0 [(-f | --fields) FIELDS [-a | --allow-empty]] [(-m | --max) MAX] [-n | --no-empty]
                   [-q | --quiet] [-r | --right] [STRING ...]
 
 .. END SYNOPSIS
@@ -20,7 +20,7 @@ Description
 
 .. BEGIN DESCRIPTION
 
-``string split`` splits each *STRING* on the separator *SEP*, which can be an empty string. If **-m** or **--max** is specified, at most MAX splits are done on each *STRING*. If **-r** or **--right** is given, splitting is performed right-to-left. This is useful in combination with **-m** or **--max**. With **-n** or **--no-empty**, empty results are excluded from consideration (e.g. ``hello\n\nworld`` would expand to two strings and not three). Exit status: 0 if at least one split was performed, or 1 otherwise.
+``string split`` splits each *STRING* on the separator *SEP*, which can be an empty string. If **-m** or **--max** is specified, at most MAX splits are done on each *STRING*. If **-r** or **--right** is given, splitting is performed right-to-left. This is only useful in combination with **-m** or **--max**. With **-n** or **--no-empty**, empty results are excluded from consideration (e.g. ``hello\n\nworld`` would expand to two strings and not three). Exit status: 0 if at least one split was performed, or 1 otherwise.
 
 Use **-f** or **--fields** to print out specific fields. FIELDS is a comma-separated string of field numbers and/or spans. Each field is one-indexed, and will be printed on separate lines. If a given field does not exist, then the command exits with status 1 and does not print anything, unless **--allow-empty** is used.
 

@@ -856,5 +856,5 @@ pub fn misc_init() {
         let _ = std::io::stdout().flush();
         unsafe { libc::setvbuf(stdout_stream(), std::ptr::null_mut(), _IONBF, 0) };
     }
-    _PATH_BSHELL.store(unsafe { C_PATH_BSHELL().cast_mut() }, Ordering::SeqCst);
+    _PATH_BSHELL.store(C_PATH_BSHELL().cast_mut(), Ordering::SeqCst);
 }

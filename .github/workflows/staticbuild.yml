@@ -28,7 +28,11 @@ jobs:
            sudo apt install musl-tools crossbuild-essential-arm64 python3-pexpect tmux -y
     - name: Build
       run: |
-           CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2" CMAKE_WITH_GETTEXT=0 CC=aarch64-linux-gnu-gcc RUSTFLAGS="-C linker=aarch64-linux-gnu-gcc -C link-arg=-lgcc -C link-arg=-D_FORTIFY_SOURCE=0" cargo build --release --target aarch64-unknown-linux-musl --bin fish
+           CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2" \
+             CMAKE_WITH_GETTEXT=0 \
+             CC=aarch64-linux-gnu-gcc \
+             RUSTFLAGS="-C linker=aarch64-linux-gnu-gcc -C link-arg=-lgcc -C link-arg=-D_FORTIFY_SOURCE=0" \
+             cargo build --release --target aarch64-unknown-linux-musl --bin fish
            cargo build --release --target x86_64-unknown-linux-musl
     - name: Test
       run: |

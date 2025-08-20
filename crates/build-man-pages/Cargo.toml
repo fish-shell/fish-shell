@@ -1,0 +1,13 @@
+[package]
+name = "fish-build-man-pages"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[build-dependencies]
+fish-build-helper.workspace = true
+rsconf.workspace = true
+
+[lints]
+workspace = true

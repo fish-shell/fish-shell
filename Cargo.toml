@@ -8,6 +8,10 @@ rust-version = "1.70"
 edition = "2021"
 repository = "https://github.com/fish-shell/fish-shell"
 
+[workspace.dependencies]
+fish-build-helper = { path = "crates/build-helper" }
+rsconf = "0.2.2"
+
 [profile.release]
 overflow-checks = true
 lto = true
@@ -50,6 +54,7 @@ num-traits = "0.2.19"
 once_cell = "1.19.0"
 fish-printf = { path = "crates/printf", features = ["widestring"] }
 fish-gettext-extraction = { path = "crates/gettext-extraction", optional = true }
+fish-build-man-pages = { path = "crates/build-man-pages", optional = true }
 
 # Don't use the "getrandom" feature as it requires "getentropy" which was not
 # available on macOS < 10.12. We can enable "getrandom" when we raise the
@@ -70,7 +75,8 @@ serial_test = { version = "3", default-features = false }
 
 [build-dependencies]
 cc = "1.0.94"
-rsconf = "0.2.2"
+rsconf.workspace = true
+fish-build-helper.workspace = true
 
 [target.'cfg(windows)'.build-dependencies]
 unix_path = "1.0.1"
@@ -94,7 +100,7 @@ path = "src/bin/fish_key_reader.rs"
 [features]
 default = ["embed-data"]
 benchmark = []
-embed-data = ["dep:rust-embed"]
+embed-data = ["dep:rust-embed", "dep:fish-build-man-pages"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
 # desired. This happens when running tests via `build_tools/check.sh` and when calling

@@ -104,6 +104,8 @@ dependencies = [
  "bitflags",
  "cc",
  "errno",
+ "fish-build-helper",
+ "fish-build-man-pages",
  "fish-gettext-extraction",
  "fish-printf",
  "libc",
@@ -120,6 +122,21 @@ dependencies = [
  "terminfo",
  "unix_path",
  "widestring",
+]
+
+[[package]]
+name = "fish-build-helper"
+version = "0.1.0"
+dependencies = [
+ "rsconf",
+]
+
+[[package]]
+name = "fish-build-man-pages"
+version = "0.1.0"
+dependencies = [
+ "fish-build-helper",
+ "rsconf",
 ]
 
 [[package]]

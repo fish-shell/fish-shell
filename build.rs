@@ -63,20 +63,11 @@ fn main() {
         let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
     }
 
-    rsconf::rebuild_if_paths_changed(&[
-        "build.rs",
-        "Cargo.lock",
-        "Cargo.toml",
-        "crates/gettext-extraction",
-        "crates/printf",
-        "src",
-    ]);
-
     // These are necessary if built with embedded functions,
     // but only in release builds (because rust-embed in debug builds reads from the filesystem).
     #[cfg(feature = "embed-data")]
     #[cfg(not(debug_assertions))]
-    rsconf::rebuild_if_paths_changed(&["share"]);
+    rsconf::rebuild_if_path_changed("share");
 
     #[cfg(feature = "embed-data")]
     #[cfg(not(clippy))]
@@ -85,6 +76,7 @@ fn main() {
     #[cfg(feature = "gettext-extract")]
     rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
 
+    rsconf::rebuild_if_path_changed("src/libc.c");
     cc::Build::new().file("src/libc.c").compile("flibc.a");
 
     let mut build = cc::Build::new();

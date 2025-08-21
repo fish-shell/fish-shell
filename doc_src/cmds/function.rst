@@ -21,7 +21,7 @@ A function is a list of commands that will be executed when the name of the func
 The following options are available:
 
 **-a** *NAMES* or **--argument-names** *NAMES*
-    Has to be the last option. Assigns the value of successive command-line arguments to the names given in *NAMES* (separated by space). These are the same arguments given in :envvar:`argv`, and are still available there. See also :ref:`Argument Handling <variables-argv>`.
+    Assigns the value of successive command-line arguments to the names given in *NAMES* (separated by space). These are the same arguments given in :envvar:`argv`, and are still available there. See also :ref:`Argument Handling <variables-argv>`.
 
 **-d** *DESCRIPTION* or **--description** *DESCRIPTION*
     A description of what the function does, suitable as a completion description.

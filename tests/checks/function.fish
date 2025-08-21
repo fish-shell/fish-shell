@@ -108,16 +108,16 @@ test "$name3[3..-1]" = "$name3a[3..-1]"; and echo "3 = 3a"
 # Test the first two lines.
 string join \n -- $name1[1..2]
 #CHECK: # Defined in {{(?:(?!, copied).)*}}
-#CHECK: function name1 --argument-names arg1 --argument-names arg2
+#CHECK: function name1 --argument-names arg1 arg2
 string join \n -- $name1a[1..2]
 #CHECK: # Defined in {{.*}}, copied in {{.*}}
-#CHECK: function name1a --argument-names arg1 --argument-names arg2
+#CHECK: function name1a --argument-names arg1 arg2
 string join \n -- $name3[1..2]
 #CHECK: # Defined in {{(?:(?!, copied).)*}}
-#CHECK: function name3 --argument-names arg1 --argument-names arg2
+#CHECK: function name3 --argument-names arg1 arg2
 string join \n -- $name3a[1..2]
 #CHECK: # Defined in {{.*}}, copied in {{.*}}
-#CHECK: function name3a --argument-names arg1 --argument-names arg2
+#CHECK: function name3a --argument-names arg1 arg2
 
 function test
     echo banana

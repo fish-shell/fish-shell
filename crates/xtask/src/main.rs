@@ -31,6 +31,7 @@ fn main() {
     match command.as_str() {
         "cargo" | "c" => run_or_panic(Command::new(env!("CARGO")).args(command_args)),
         "check" => run_checks(command_args),
+        "html-docs" => build_html_docs(command_args),
         other => {
             panic!("Unknown xtask: {other}");
         }
@@ -44,4 +45,43 @@ fn run_checks(args: &[String]) {
     let repo_root_dir = fish_build_helper::get_repo_root();
     let check_script = repo_root_dir.join("build_tools").join("check.sh");
     run_or_panic(&mut Command::new(check_script));
+}
+
+fn build_html_docs(args: &[String]) {
+    if !args.is_empty() {
+        panic!("Args passed to `html-docs` when none were expected: {args:?}");
+    }
+
+    run_or_panic(Command::new(env!("CARGO")).args([
+        "build",
+        "--bin",
+        "fish_indent",
+        "--profile",
+        "dev",
+        "--no-default-features",
+    ]));
+
+    let repo_root_dir = fish_build_helper::get_repo_root();
+    let target_dir = fish_build_helper::get_target_dir();
+    // Our binaries should be in `debug`.
+    let binary_dir = target_dir.join("debug");
+    // Set path so `sphinx-build` can find `fish_indent`.
+    std::env::set_var(
+        "PATH",
+        format!("{}:{}", binary_dir.to_str().unwrap(), env!("PATH")),
+    );
+    let doc_src_dir = repo_root_dir.join("doc_src");
+    let html_dir = target_dir.join("fish-html");
+    std::fs::create_dir_all(&html_dir).unwrap();
+    run_or_panic(Command::new("sphinx-build").args([
+        "-j",
+        "auto",
+        "-q",
+        "-b",
+        "html",
+        "-c",
+        doc_src_dir.to_str().unwrap(),
+        doc_src_dir.to_str().unwrap(),
+        html_dir.to_str().unwrap(),
+    ]))
 }

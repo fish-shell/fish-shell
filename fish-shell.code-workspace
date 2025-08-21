@@ -64,6 +64,9 @@
             // included settings for those
         },
 
+        "[markdown][restructuredtext]": { // *.md and *.rst
+            "editor.rulers": [], "rewrap.autoWrap.enabled": false, // like max_line_length = unset
+        },
         // These are for commit messages you write in VS Code's gui
         // (instead of editing a COMMIT_EDITMSG file)
         "git.inputValidationSubjectLength": 72,

@@ -16,7 +16,7 @@ docsrc=$repo_root/doc_src
 tmp_dir=$(mktemp -d)
 doctree=$tmp_dir/doctree
 output_dir=$tmp_dir/$builder
-sphinx-build \
+FISH_BUILD_VERSION=test-dummy-version sphinx-build \
     -j auto \
     -q \
     -W \

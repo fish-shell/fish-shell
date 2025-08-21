@@ -13,6 +13,7 @@ max_line_length = 100
 indent_style = tab
 
 [*.{md,rst}]
+max_line_length = unset
 trim_trailing_whitespace = false
 
 [*.sh]

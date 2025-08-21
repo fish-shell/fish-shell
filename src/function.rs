@@ -475,8 +475,9 @@ impl FunctionProperties {
 
         let named = &self.named_arguments;
         if !named.is_empty() {
+            sprintf!(=> &mut out, " --argument-names");
             for name in named {
-                sprintf!(=> &mut out, " --argument-names %ls", name);
+                sprintf!(=> &mut out, " %ls", name);
             }
         }
 

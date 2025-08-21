@@ -6,4 +6,5 @@ edition.workspace = true
 repository.workspace = true
 
 [dependencies]
+fish-build-helper.workspace = true
 fish-version.workspace = true

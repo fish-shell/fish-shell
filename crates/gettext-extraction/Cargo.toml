@@ -10,7 +10,7 @@ description = "proc-macro for extracting strings for gettext translation"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1.0"
+proc-macro2.workspace = true
 
 [lints]
 workspace = true

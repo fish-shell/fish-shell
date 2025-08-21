@@ -8,6 +8,46 @@ rust-version = "1.70"
 edition = "2021"
 repository = "https://github.com/fish-shell/fish-shell"
 
+[workspace.dependencies]
+bitflags = "2.5.0"
+cc = "1.0.94"
+errno = "0.3.0"
+fish-gettext-extraction = { path = "crates/gettext-extraction" }
+fish-printf = { path = "crates/printf", features = ["widestring"] }
+libc = "0.2.155"
+# lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
+# disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
+# files as of 22 April 2024.
+lru = "0.13.0"
+nix = { version = "0.30.1", default-features = false, features = [
+    "event",
+    "inotify",
+    "resource",
+    "fs",
+] }
+num-traits = "0.2.19"
+once_cell = "1.19.0"
+pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", tag = "0.2.9-utf32", default-features = false, features = [
+    "utf32",
+] }
+portable-atomic = { version = "1", default-features = false, features = [
+    "fallback",
+] }
+proc-macro2 = "1.0"
+# Don't use the "getrandom" feature as it requires "getentropy" which was not
+# available on macOS < 10.12. We can enable "getrandom" when we raise the
+# minimum supported version to 10.12.
+rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
+rsconf = "0.2.2"
+rust-embed = { version = "8.2.0" }
+serial_test = { version = "3", default-features = false }
+# We need 0.9.0 specifically for some crash fixes.
+terminfo = "0.9.0"
+widestring = "1.2.0"
+unicode-segmentation = "1.12.0"
+unicode-width = "0.2.0"
+unix_path = "1.0.1"
+
 [profile.release]
 overflow-checks = true
 lto = true
@@ -29,51 +69,33 @@ homepage = "https://fishshell.com"
 readme = "README.rst"
 
 [dependencies]
-pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", tag = "0.2.9-utf32", default-features = false, features = [
-    "utf32",
-] }
-
-bitflags = "2.5.0"
-errno = "0.3.0"
-libc = "0.2.155"
-# lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
-# disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
-# files as of 22 April 2024.
-lru = "0.13.0"
-nix = { version = "0.30.1", default-features = false, features = [
-    "event",
-    "inotify",
-    "resource",
-    "fs",
-] }
-num-traits = "0.2.19"
-once_cell = "1.19.0"
-fish-printf = { path = "crates/printf", features = ["widestring"] }
-fish-gettext-extraction = { path = "crates/gettext-extraction", optional = true }
-
-# Don't use the "getrandom" feature as it requires "getentropy" which was not
-# available on macOS < 10.12. We can enable "getrandom" when we raise the
-# minimum supported version to 10.12.
-rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
-widestring = "1.2.0"
-# We need 0.9.0 specifically for some crash fixes.
-terminfo = "0.9.0"
-rust-embed = { version = "8.2.0", optional = true }
+bitflags.workspace = true
+errno.workspace = true
+fish-gettext-extraction = { workspace = true, optional = true }
+fish-printf.workspace = true
+libc.workspace = true
+lru.workspace = true
+nix.workspace = true
+num-traits.workspace = true
+once_cell.workspace = true
+pcre2.workspace = true
+rand.workspace = true
+rust-embed = { workspace = true, optional = true }
+terminfo.workspace = true
+widestring.workspace = true
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
-portable-atomic = { version = "1", default-features = false, features = [
-    "fallback",
-] }
-
-[dev-dependencies]
-serial_test = { version = "3", default-features = false }
-
-[build-dependencies]
-cc = "1.0.94"
-rsconf = "0.2.2"
+portable-atomic.workspace = true
 
 [target.'cfg(windows)'.build-dependencies]
-unix_path = "1.0.1"
+unix_path.workspace = true
+
+[dev-dependencies]
+serial_test.workspace = true
+
+[build-dependencies]
+cc.workspace = true
+rsconf.workspace = true
 
 [lib]
 crate-type = ["rlib"]

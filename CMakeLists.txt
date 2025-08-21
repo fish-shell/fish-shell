@@ -49,6 +49,7 @@ function(CREATE_TARGET target)
       "${CMAKE_COMMAND}" -E
         env ${VARS_FOR_CARGO}
           ${Rust_CARGO}
+            xtask cargo
             build --bin ${target}
             $<$<CONFIG:Release>:--release>
             $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>

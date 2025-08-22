@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use fish_build_helper::fish_doc_dir;
+use fish_build_helper::{as_os_strs, fish_doc_dir};
 
 fn main() {
     let sec1_dir = fish_doc_dir().join("man").join("man1");
@@ -14,10 +14,7 @@ fn main() {
 
 fn build_man(sec1_dir: &Path) {
     use fish_build_helper::{env_var, workspace_root};
-    use std::{
-        ffi::OsStr,
-        process::{Command, Stdio},
-    };
+    use std::process::{Command, Stdio};
 
     let workspace_root = workspace_root();
     let doc_src_dir = workspace_root.join("doc_src");
@@ -29,33 +26,21 @@ fn build_man(sec1_dir: &Path) {
         &doc_src_dir,
     ]);
 
-    let args: &[&OsStr] = {
-        fn as_os_str<S: AsRef<OsStr> + ?Sized>(s: &S) -> &OsStr {
-            s.as_ref()
-        }
-        macro_rules! as_os_strs {
-            ( [ $( $x:expr, )* ] ) => {
-                &[
-                    $( as_os_str($x), )*
-                ]
-            }
-        }
-        as_os_strs!([
-            "-j",
-            "auto",
-            "-q",
-            "-b",
-            "man",
-            "-c",
-            &doc_src_dir,
-            // doctree path - put this *above* the man1 dir to exclude it.
-            // this is ~6M
-            "-d",
-            &doctrees_dir,
-            &doc_src_dir,
-            &sec1_dir,
-        ])
-    };
+    let args = as_os_strs![
+        "-j",
+        "auto",
+        "-q",
+        "-b",
+        "man",
+        "-c",
+        &doc_src_dir,
+        // doctree path - put this *above* the man1 dir to exclude it.
+        // this is ~6M
+        "-d",
+        &doctrees_dir,
+        &doc_src_dir,
+        &sec1_dir,
+    ];
 
     rsconf::rebuild_if_env_changed("FISH_BUILD_DOCS");
     if env_var("FISH_BUILD_DOCS") == Some("0".to_string()) {

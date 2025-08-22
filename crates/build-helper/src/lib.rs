@@ -87,3 +87,18 @@ pub fn target_os_is_bsd() -> bool {
 pub fn target_os_is_cygwin() -> bool {
     target_os() == "cygwin"
 }
+
+#[macro_export]
+macro_rules! as_os_strs {
+    [ $( $x:expr, )* ] => {
+        {
+            use std::ffi::OsStr;
+            fn as_os_str<S: AsRef<OsStr> + ?Sized>(s: &S) -> &OsStr {
+                s.as_ref()
+            }
+            &[
+                $( as_os_str($x), )*
+            ]
+        }
+    }
+}

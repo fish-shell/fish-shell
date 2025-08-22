@@ -24,8 +24,12 @@ include(cmake/Rust.cmake)
 # Work around issue where archive-built libs go in the wrong place.
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-# Set up the docs.
-include(cmake/Docs.cmake)
+find_program(SPHINX_EXECUTABLE NAMES sphinx-build
+    HINTS
+    $ENV{SPHINX_DIR}
+    PATH_SUFFIXES bin
+    DOC "Sphinx documentation generator")
+
 
 # Tell Cargo where our build directory is so it can find Cargo.toml.
 set(VARS_FOR_CARGO
@@ -86,6 +90,9 @@ create_link(fish_indent)
 
 # Define fish_key_reader.
 create_link(fish_key_reader)
+
+# Set up the docs.
+include(cmake/Docs.cmake)
 
 # Set up tests.
 include(cmake/Tests.cmake)

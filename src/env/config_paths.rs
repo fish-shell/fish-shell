@@ -135,18 +135,18 @@ impl ConfigPaths {
                     workspace_root.display()
                 ),
             );
-            let user_doc_join = |dir| {
+            let doc_join = |dir| {
                 cfg!(using_cmake)
                     .then_some(Path::new(BUILD_DIR))
-                    .map(|path| path.join("user_doc").join(dir))
+                    .map(|path| path.join("cargo").join("fish-docs").join(dir))
             };
             // If we're in Cargo's target directory or in CMake's build directory, use the source files.
             Self {
                 sysconf: workspace_root.join("etc"),
                 bin: Some(exec_path_parent.to_owned()),
                 data: Some(workspace_root.join("share")),
-                man: user_doc_join("man"),
-                doc: user_doc_join("html"),
+                man: doc_join("man"),
+                doc: doc_join("html"),
             }
         } else {
             flog!(

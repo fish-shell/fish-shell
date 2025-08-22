@@ -1228,6 +1228,7 @@ version = "0.0.0"
 dependencies = [
  "clap",
  "fish-build-helper",
+ "fish-tempfile",
 ]
 
 [[package]]

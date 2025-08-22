@@ -8,3 +8,4 @@ repository.workspace = true
 [dependencies]
 clap.workspace = true
 fish-build-helper.workspace = true
+fish-tempfile.workspace = true

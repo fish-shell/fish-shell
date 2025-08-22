@@ -32,6 +32,9 @@ fn main() {
         "cargo" | "c" => run_or_panic(Command::new(env!("CARGO")).args(command_args)),
         "check" => run_checks(command_args),
         "html-docs" => build_html_docs(command_args),
+        "version" => {
+            run_or_panic(Command::new(env!("CARGO")).args(["run", "--package", "fish-version"]))
+        }
         other => {
             panic!("Unknown xtask: {other}");
         }

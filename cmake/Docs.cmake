@@ -1,8 +1,6 @@
 include(FeatureSummary)
 
-set(SPHINX_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/doc_src")
 set(SPHINX_OUTPUT_DIR "${FISH_RUST_BUILD_DIR}/fish-docs")
-set(SPHINX_MANPAGE_DIR "${SPHINX_OUTPUT_DIR}/man")
 
 set(FISH_INDENT_FOR_BUILDING_DOCS "" CACHE FILEPATH "Path to fish_indent executable for building HTML docs")
 
@@ -25,13 +23,8 @@ add_custom_target(sphinx-docs
     COMMENT "Building HTML documentation with Sphinx")
 
 add_custom_target(sphinx-manpages
-    ${SPHINX_EXECUTABLE}
-        -j auto
-        -q -b man
-        -c "${SPHINX_SRC_DIR}"
-        -d "${SPHINX_OUTPUT_DIR}/.doctrees-man"
-        "${SPHINX_SRC_DIR}"
-        "${SPHINX_MANPAGE_DIR}/man1"
+    COMMAND env ${VARS_FOR_CARGO_SPHINX_WRAPPER}
+        cargo xtask man-pages
     COMMENT "Building man pages with Sphinx")
 
 if(NOT DEFINED WITH_DOCS) # Don't check for legacy options if the new one is defined, to help bisecting.

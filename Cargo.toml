@@ -16,6 +16,7 @@ fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-printf = { path = "crates/printf", features = ["widestring"] }
+fish-version = { path = "crates/version" }
 libc = "0.2.155"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
@@ -96,6 +97,7 @@ serial_test.workspace = true
 [build-dependencies]
 cc.workspace = true
 fish-build-helper.workspace = true
+fish-version.workspace = true
 rsconf.workspace = true
 
 [target.'cfg(windows)'.build-dependencies]

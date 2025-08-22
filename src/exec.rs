@@ -947,7 +947,11 @@ fn function_prepare_environment(
     // 2. inherited variables
     // 3. argv
 
+    let mut overwrite_argv = false;
     for (idx, named_arg) in props.named_arguments.iter().enumerate() {
+        if named_arg == L!("argv") {
+            overwrite_argv = true
+        };
         if idx < argv.len() {
             vars.set_one(named_arg, EnvMode::LOCAL | EnvMode::USER, argv[idx].clone());
         } else {
@@ -956,10 +960,15 @@ fn function_prepare_environment(
     }
 
     for (key, value) in &*props.inherit_vars {
+        if key == L!("argv") {
+            overwrite_argv = true
+        };
         vars.set(key, EnvMode::LOCAL | EnvMode::USER, value.clone());
     }
 
-    vars.set_argv(argv);
+    if !overwrite_argv {
+        vars.set_argv(argv);
+    }
     fb
 }
 

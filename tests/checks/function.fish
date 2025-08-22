@@ -186,4 +186,25 @@ function foo; echo before; end
 foo (functions --erase foo)
 # CHECKERR: error: Unknown function 'foo'
 
-exit 0
+
+# Tests the --argument-names and --inherit-variable can overwrite argv
+function t --argument-names a argv c
+    echo $argv
+end
+t 1 2 3
+#CHECK: 2
+
+function t -a argv
+    echo $argv
+end
+t 1 2 3
+#CHECK: 1
+
+function outer
+    function inner -v argv -V argv
+        echo $argv
+    end
+    set -gx argv 4 5 6
+end
+outer 1 2 3
+#CHECK: 1 2 3

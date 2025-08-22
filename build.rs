@@ -31,9 +31,26 @@ fn main() {
     rsconf::set_env_value("BUILD_HOST_TRIPLE", &env::var("HOST").unwrap());
     rsconf::set_env_value("BUILD_PROFILE", &env::var("PROFILE").unwrap());
 
-    let version = &fish_version::get_version();
+    // This results in automatic rebuilds if `FISH_BUILD_VERSION` changes.
+    //
+    // Since rust-analyzer does not run this via xtask, it will always rebuild by default.
+    // This can be avoided by modifying the rust-analyzer config
+    // to explicitly set `FISH_BUILD_VERSION`, e.g.:
+    // "rust-analyzer.cargo.extraEnv": {
+    //   "FISH_BUILD_VERSION": "rust-analyzer-dummy-version"
+    // }
+    // There does not seem to be a way to set this for the project, and we don't have a way to
+    // detect if the code is compiled by rust-analyzer, so we can't put special handling for that
+    // into our code.
+    // https://github.com/rust-lang/rust-analyzer/issues/17766
+    let version = option_env!("FISH_BUILD_VERSION",).unwrap_or_else(|| {
+        println!("cargo:warning=FISH_BUILD_VERSION environment variable not set.");
+        println!("cargo:warning=This will result in recompilation on each cargo invocation.");
+        println!("cargo:warning=Run cargo as `cargo xtask cargo` to prevent this.");
+        rsconf::rebuild_if_path_changed("nonexistent-path-to-force-recompilation");
+        Box::leak(fish_version::get_version().into())
+    });
     rsconf::set_env_value("FISH_BUILD_VERSION", version);
-
     std::env::set_var("FISH_BUILD_VERSION", version);
 
     // These are necessary if built with embedded functions,

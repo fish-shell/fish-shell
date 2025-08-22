@@ -1,0 +1,32 @@
+[package]
+name = "fish-gettext-maps"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+
+[dependencies]
+phf.workspace = true
+
+[build-dependencies]
+fish-build-helper.workspace = true
+fish-mo-file-parser.workspace = true
+phf_codegen.workspace = true
+rsconf.workspace = true
+
+[features]
+# These features control for which languages gettext localizations are built.
+# They should be enabled based on corresponding features in the workspace-root `Cargo.toml`.
+# Not enabling localizations (or only enabling them for certain languages) reduces binary sizes, and
+# reduces the work required on compilation.
+all-languages = []
+de_DE = []
+en_US = []
+fr_FR = []
+pl_PL = []
+pt_BR = []
+sv_SE = []
+zh_CN = []
+
+[lints]
+workspace = true

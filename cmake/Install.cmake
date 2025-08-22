@@ -156,16 +156,6 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/html/ # Trailing slash is
         DESTINATION ${docdir} OPTIONAL)
 install(FILES CHANGELOG.rst DESTINATION ${docdir})
 
-# These files are built by cmake/gettext.cmake, but using GETTEXT_PROCESS_PO_FILES's
-# INSTALL_DESTINATION leads to them being installed as ${lang}.gmo, not fish.mo
-# The ${languages} array comes from cmake/gettext.cmake
-if(GETTEXT_FOUND)
-  foreach(lang ${languages})
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${lang}.gmo DESTINATION
-            ${CMAKE_INSTALL_LOCALEDIR}/${lang}/LC_MESSAGES/ RENAME fish.mo)
-  endforeach()
-endif()
-
 # Group install targets into a InstallTargets folder
 set_property(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
              PROPERTY FOLDER cmake/InstallTargets)

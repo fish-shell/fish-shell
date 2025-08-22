@@ -21,19 +21,14 @@ add_custom_target(sphinx-docs
     COMMAND cp -r ${CMAKE_CURRENT_BINARY_DIR}/cargo/build/fish-html ${SPHINX_HTML_DIR}
 )
 
-# sphinx-manpages needs the fish_indent binary for the version number
 add_custom_target(sphinx-manpages
-    env FISH_BUILD_VERSION_FILE=${CMAKE_CURRENT_BINARY_DIR}/${FBVF}
-        ${SPHINX_EXECUTABLE}
-        -j auto
-        -q -b man
-        -c "${SPHINX_SRC_DIR}"
-        -d "${SPHINX_ROOT_DIR}/.doctrees-man"
-        "${SPHINX_SRC_DIR}"
-        # TODO: This only works if we only have section 1 manpages.
-        "${SPHINX_MANPAGE_DIR}/man1"
-    DEPENDS CHECK-FISH-BUILD-VERSION-FILE
-    COMMENT "Building man pages with Sphinx")
+    COMMAND env CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/cargo/build/ cargo xtask man-pages
+    COMMAND mkdir -p ${SPHINX_MANPAGE_DIR}
+    # Copy the man files to where the rest of CMake expects them.
+    # This is necessary because the xtask does not have special handling for the location expected
+    # by CMake.
+    COMMAND cp -r ${CMAKE_CURRENT_BINARY_DIR}/cargo/build/fish-man ${SPHINX_MANPAGE_DIR}
+)
 
 if(SPHINX_EXECUTABLE)
     option(BUILD_DOCS "build documentation (requires Sphinx)" ON)

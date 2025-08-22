@@ -177,7 +177,7 @@ actual_tag_oid=$(git ls-remote "$remote" |
 )
 CopyDocs() {
     rm -rf "$fish_site/site/docs/$1"
-    cp -r "$tmpdir/local-tarball/fish-$version/user_doc/html" "$fish_site/site/docs/$1"
+    cp -r "$tmpdir/local-tarball/fish-$version/cargo/fish-docs/html" "$fish_site/site/docs/$1"
     git -C $fish_site add "site/docs/$1"
 }
 minor_version=${version%.*}

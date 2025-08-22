@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::{ffi::OsStr, process::Command};
 
 fn run_or_panic(command: &mut Command) {
     match command.status() {
@@ -16,6 +16,14 @@ fn run_or_panic(command: &mut Command) {
     }
 }
 
+fn cargo<I, S>(cargo_args: I)
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    run_or_panic(Command::new(env!("CARGO")).args(cargo_args));
+}
+
 fn main() {
     // Args passed to xtasks, not including the binary name which gets set automatically.
     let args = std::env::args().skip(1).collect::<Vec<_>>();
@@ -29,12 +37,10 @@ fn main() {
     let command = &args[0];
     let command_args = &args[1..];
     match command.as_str() {
-        "cargo" | "c" => run_or_panic(Command::new(env!("CARGO")).args(command_args)),
+        "cargo" | "c" => cargo(command_args),
         "check" => run_checks(command_args),
         "html-docs" => build_html_docs(command_args),
-        "version" => {
-            run_or_panic(Command::new(env!("CARGO")).args(["run", "--package", "fish-version"]))
-        }
+        "version" => cargo(["run", "--package", "fish-version"]),
         other => {
             panic!("Unknown xtask: {other}");
         }
@@ -55,14 +61,14 @@ fn build_html_docs(args: &[String]) {
         panic!("Args passed to `html-docs` when none were expected: {args:?}");
     }
 
-    run_or_panic(Command::new(env!("CARGO")).args([
+    cargo([
         "build",
         "--bin",
         "fish_indent",
         "--profile",
         "dev",
         "--no-default-features",
-    ]));
+    ]);
 
     let repo_root_dir = fish_build_helper::get_repo_root();
     let target_dir = fish_build_helper::get_target_dir();

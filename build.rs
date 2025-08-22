@@ -1,6 +1,6 @@
 #![allow(clippy::uninlined_format_args)]
 
-use rsconf::{LinkType, Target};
+use rsconf::Target;
 use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
@@ -14,10 +14,9 @@ fn main() {
     let cargo_target_dir = fish_build_helper::get_target_dir();
 
     // FISH_BUILD_DIR is set by CMake, if we are using it.
-    rsconf::set_env_value(
-        "FISH_BUILD_DIR",
-        option_env!("FISH_BUILD_DIR").unwrap_or(cargo_target_dir.to_str().unwrap()),
-    );
+    let fish_build_dir =
+        option_env!("FISH_BUILD_DIR").unwrap_or(cargo_target_dir.to_str().unwrap());
+    rsconf::set_env_value("FISH_BUILD_DIR", fish_build_dir);
 
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
     // compare it directly as a string at runtime.
@@ -50,10 +49,7 @@ fn main() {
     rsconf::rebuild_if_path_changed("src/libc.c");
     cc::Build::new().file("src/libc.c").compile("flibc.a");
 
-    let mut build = cc::Build::new();
-    // Add to the default library search path
-    build.flag_if_supported("-L/usr/local/lib/");
-    rsconf::add_library_search_path("/usr/local/lib");
+    let build = cc::Build::new();
     let mut target = Target::new_from(build).unwrap();
     // Keep verbose mode on until we've ironed out rust build script stuff
     target.set_verbose(true);
@@ -87,7 +83,6 @@ fn detect_cfgs(target: &mut Target) {
         ("apple", &detect_apple),
         ("bsd", &detect_bsd),
         ("cygwin", &detect_cygwin),
-        ("gettext", &have_gettext),
         ("small_main_stack", &has_small_stack),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| {
@@ -152,51 +147,6 @@ fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
     ))]
     assert!(is_bsd, "Target incorrectly detected as not BSD!");
     Ok(is_bsd)
-}
-
-/// Detect libintl/gettext and its needed symbols to enable internationalization/localization
-/// support.
-fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
-    // The following script correctly detects and links against gettext, but so long as we are using
-    // C++ and generate a static library linked into the C++ binary via CMake, we need to account
-    // for the CMake option WITH_GETTEXT being explicitly disabled.
-    rsconf::rebuild_if_env_changed("CMAKE_WITH_GETTEXT");
-    if let Some(with_gettext) = std::env::var_os("CMAKE_WITH_GETTEXT") {
-        if with_gettext.eq_ignore_ascii_case("0") {
-            return Ok(false);
-        }
-    }
-
-    // In order for fish to correctly operate, we need some way of notifying libintl to invalidate
-    // its localizations when the locale environment variables are modified. Without the libintl
-    // symbol _nl_msg_cat_cntr, we cannot use gettext even if we find it.
-    let mut libraries = Vec::new();
-    let mut found = 0;
-    let symbols = ["gettext", "_nl_msg_cat_cntr"];
-    for symbol in &symbols {
-        // Historically, libintl was required in order to use gettext() and co, but that
-        // functionality was subsumed by some versions of libc.
-        if target.has_symbol(symbol) {
-            // No need to link anything special for this symbol
-            found += 1;
-            continue;
-        }
-        for library in ["intl", "gettextlib"] {
-            if target.has_symbol_in(symbol, &[library]) {
-                libraries.push(library);
-                found += 1;
-                continue;
-            }
-        }
-    }
-    match found {
-        0 => Ok(false),
-        1 => Err(format!("gettext found but cannot be used without {}", symbols[1]).into()),
-        _ => {
-            rsconf::link_libraries(&libraries, LinkType::Default);
-            Ok(true)
-        }
-    }
 }
 
 /// Rust sets the stack size of newly created threads to a sane value, but is at at the mercy of the
@@ -284,10 +234,6 @@ fn setup_paths() {
     );
     rsconf::set_env_value("SYSCONFDIR", sysconfdir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("SYSCONFDIR");
-
-    let localedir = get_path("LOCALEDIR", "locale/", &datadir);
-    rsconf::set_env_value("LOCALEDIR", localedir.to_str().unwrap());
-    rsconf::rebuild_if_env_changed("LOCALEDIR");
 
     let docdir = get_path("DOCDIR", "doc/fish", &datadir);
     rsconf::set_env_value("DOCDIR", docdir.to_str().unwrap());

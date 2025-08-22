@@ -24,6 +24,8 @@ enum Task {
         #[arg(long)]
         fish_indent: Option<PathBuf>,
     },
+    /// Build man pages
+    ManPages,
 }
 
 fn main() {
@@ -31,6 +33,7 @@ fn main() {
     match cli.task {
         Task::Check => run_checks(),
         Task::HtmlDocs { fish_indent } => build_html_docs(fish_indent),
+        Task::ManPages => cargo(["build", "--package", "fish-build-man-pages"]),
     }
 }
 

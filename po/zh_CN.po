@@ -678,6 +678,11 @@ msgstr "%ls: 无法同时path 和 unpath\n"
 msgid "%ls: column %ls exceeds line length\n"
 msgstr ""
 
+#
+#, c-format
+msgid "%ls: duplicate variable '%ls' in --argument-names\n"
+msgstr ""
+
 #, c-format
 msgid "%ls: exclusive flag '%ls' is not valid\n"
 msgstr "%ls: 排他性标志 '%ls' 无效\n"
@@ -786,6 +791,16 @@ msgstr "%ls: 对-i的用法 --silent 已贬值. 请使用 - s 或 --silent 代�
 #, c-format
 msgid "%ls: value not completely converted (can't convert '%ls')"
 msgstr "%ls: 数值未完全转换( 无法转换 '%ls' )"
+
+#
+#, c-format
+msgid "%ls: variable '%ls' is inherited multiple times\n"
+msgstr ""
+
+#
+#, c-format
+msgid "%ls: variable '%ls' is passed to both --argument-names and --inherit-variable\n"
+msgstr ""
 
 #, c-format
 msgid "%ls: variable '%ls' is read-only\n"

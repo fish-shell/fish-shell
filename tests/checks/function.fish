@@ -208,3 +208,59 @@ function outer
 end
 outer 1 2 3
 #CHECK: 1 2 3
+
+# Check for errors with duplicate names
+set var 1
+function bad -a var var -V var
+    echo $var
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: variable 'var' is passed to both --argument-names and --inherit-variable
+#CHECKERR: function bad -a var var -V var
+#CHECKERR: ^
+bad 2
+#CHECKERR: fish: Unknown command: bad
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}):
+#CHECKERR: bad 2
+#CHECKERR: ^~^
+
+
+echo START>&2
+#CHECKERR: START
+
+function bad -V var -a var
+    echo $var
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: variable 'var' is passed to both --argument-names and --inherit-variable
+#CHECKERR: function bad -V var -a var
+#CHECKERR: ^
+bad 3
+#CHECKERR: fish: Unknown command: bad
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}):
+#CHECKERR: bad 3
+#CHECKERR: ^~^
+
+function bad -a var var -V not_var
+    echo $var
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: duplicate variable 'var' in --argument-names
+#CHECKERR: function bad -a var var -V not_var
+#CHECKERR: ^
+bad 4
+#CHECKERR: fish: Unknown command: bad
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}):
+#CHECKERR: bad 4
+#CHECKERR: ^~^
+
+function bad -V var -V var
+    echo $var
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: variable 'var' is inherited multiple times
+#CHECKERR: function bad -V var -V var
+#CHECKERR: ^
+bad 5
+#CHECKERR: fish: Unknown command: bad
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}):
+#CHECKERR: bad 5
+#CHECKERR: ^~^
+
+exit 0

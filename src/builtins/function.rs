@@ -12,6 +12,7 @@ use crate::parse_tree::NodeRef;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::proc::Pid;
 use crate::signal::Signal;
+use std::collections::HashSet;
 use std::sync::Arc;
 
 struct FunctionCmdOpts {
@@ -333,17 +334,20 @@ pub fn function(
     let definition_file = parser.libdata().current_filename.clone();
 
     // Ensure inherit_vars is unique and then populate it.
-    opts.inherit_vars.sort_unstable();
-    opts.inherit_vars.dedup();
+    //let inherit_vars: HashSet<WString> = opts.inherit_vars.drain(..).collect();
+    let mut inherit_vars = HashSet::new();
+    for named in opts.inherit_vars.drain(..) {
+        if !inherit_vars.insert(named.clone()) {
+            streams.err.append(wgettext_fmt!(
+                "%ls: variable '%ls' is inherited multiple times\n",
+                cmd,
+                named
+            ));
+            return Err(STATUS_INVALID_ARGS);
+        }
+    }
 
-    let inherit_vars: Vec<(WString, Vec<WString>)> = opts
-        .inherit_vars
-        .into_iter()
-        .filter_map(|name| {
-            let vals = parser.vars().get(&name)?.as_list().to_vec();
-            Some((name, vals))
-        })
-        .collect();
+    let mut seen_arguments = HashSet::new();
 
     for named in &opts.named_arguments {
         if !valid_var_name(named) {
@@ -351,8 +355,30 @@ pub fn function(
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, named));
             return Err(STATUS_INVALID_ARGS);
+        } else if inherit_vars.contains(named) {
+            streams.err.append(wgettext_fmt!(
+                "%ls: variable '%ls' is passed to both --argument-names and --inherit-variable\n",
+                cmd,
+                named
+            ));
+            return Err(STATUS_INVALID_ARGS);
+        } else if !seen_arguments.insert(named) {
+            streams.err.append(wgettext_fmt!(
+                "%ls: duplicate variable '%ls' in --argument-names\n",
+                cmd,
+                named
+            ));
+            return Err(STATUS_INVALID_ARGS);
         }
     }
+
+    let inherit_vars: Vec<(WString, Vec<WString>)> = inherit_vars
+        .into_iter()
+        .filter_map(|name| {
+            let vals = parser.vars().get(&name)?.as_list().to_vec();
+            Some((name, vals))
+        })
+        .collect();
 
     // We have what we need to actually define the function.
     let props = function::FunctionProperties {

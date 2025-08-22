@@ -684,6 +684,11 @@ msgstr ""
 msgid "%ls: column %ls exceeds line length\n"
 msgstr ""
 
+#
+#, c-format
+msgid "%ls: duplicate variable '%ls' in --argument-names\n"
+msgstr ""
+
 #, c-format
 msgid "%ls: exclusive flag '%ls' is not valid\n"
 msgstr ""
@@ -791,6 +796,16 @@ msgstr ""
 
 #, c-format
 msgid "%ls: value not completely converted (can't convert '%ls')"
+msgstr ""
+
+#
+#, c-format
+msgid "%ls: variable '%ls' is inherited multiple times\n"
+msgstr ""
+
+#
+#, c-format
+msgid "%ls: variable '%ls' is passed to both --argument-names and --inherit-variable\n"
 msgstr ""
 
 #, c-format

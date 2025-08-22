@@ -1,27 +1,10 @@
 function __fish_complete_macos_java_version
-    set -l xslt (mktemp)
-
-    printf '%s\n' \
-        '<?xml version="1.0" encoding="UTF-8"?>' \
-        '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">' \
-        '  <xsl:output method="text" encoding="UTF-8"/>' \
-        '  <xsl:template match="/">' \
-        '    <xsl:for-each select="//dict">' \
-        '      <xsl:variable name="v"   select="string(key[.=\'JVMVersion\']/following-sibling::*[1])"/>' \
-        '      <xsl:variable name="a"   select="string(key[.=\'JVMArch\']/following-sibling::*[1])"/>' \
-        '      <xsl:variable name="n"   select="string(key[.=\'JVMName\']/following-sibling::*[1])"/>' \
-        '      <xsl:variable name="ven" select="string(key[.=\'JVMVendor\']/following-sibling::*[1])"/>' \
-        '      <xsl:value-of select="concat($v,\'&#9;\',$a,\' \',$n,\' by \',$ven)"/>' \
-        '      <xsl:text>&#10;</xsl:text>' \
-        '    </xsl:for-each>' \
-        '  </xsl:template>' \
-        '</xsl:stylesheet>' >$xslt
-
-    /usr/libexec/java_home -X | xsltproc $xslt -
+    set -l json (/usr/libexec/java_home -X|plutil -convert json -o - -)
+    osascript -l JavaScript -s o -e "JSON.parse('$json').map(e => `\${e.JVMVersion}\t\${e.JVMArch} \${e.JVMName} by \${e.JVMVendor}`).join('\n')"
 end
 
 function __fish_complete_macos_java_home_exec
-    # seperate the buffer into two parts
+    # separate the buffer into two parts
     # where the first used to get the JAVA_HOME
     # and the second is the subcommand to complete
     set -l cmds (string replace -a -r ' *java_home *' ''  (commandline) )

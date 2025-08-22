@@ -1,0 +1,9 @@
+[package]
+name = "fish-gettext-mo-file-parser"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+
+[lints]
+workspace = true

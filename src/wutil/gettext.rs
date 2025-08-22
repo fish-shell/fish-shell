@@ -1,129 +1,251 @@
-use std::collections::HashMap;
 use std::sync::Mutex;
 
-use crate::common::{charptr2wcstring, wcs2zstring};
+#[cfg(feature = "localize-messages")]
+use crate::env::EnvStack;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
-use errno::{errno, set_errno};
-use once_cell::sync::{Lazy, OnceCell};
+use once_cell::sync::Lazy;
 
-#[cfg(gettext)]
-mod internal {
-    use libc::c_char;
-    use std::ffi::CStr;
-    extern "C" {
-        fn gettext(msgid: *const c_char) -> *mut c_char;
-        #[cfg(not(feature = "embed-data"))]
-        fn bindtextdomain(domainname: *const c_char, dirname: *const c_char) -> *mut c_char;
-        #[cfg(not(feature = "embed-data"))]
-        fn textdomain(domainname: *const c_char) -> *mut c_char;
+#[cfg(feature = "localize-messages")]
+mod gettext_impl {
+    use std::sync::Mutex;
+
+    use once_cell::sync::Lazy;
+
+    pub(super) use fish_gettext_maps::CATALOGS;
+    type Catalog = &'static phf::Map<&'static str, &'static str>;
+
+    use crate::env::{EnvStack, Environment};
+
+    /// Tries to find a catalog for `language`.
+    /// `language` must be an ISO 639 language code, optionally followed by an underscore and an ISO
+    /// 3166 country/territory code.
+    /// Always prefers the catalog with the exact same name as `language` if it exists.
+    /// If a country code is present (`ll_CC`), only the catalog named `ll` will be considered as a fallback.
+    /// If no country code is present (`ll`), an arbitrary catalog whose name starts with `ll_`
+    /// will be used as a fallback, if one exists.
+    /// If there is a catalog for the language, then `Some(catalog)` will be returned.
+    /// `None` will be returned if no variant of the language has localizations.
+    fn find_existing_catalog(language: &str) -> Option<Catalog> {
+        // Try the exact name first.
+        // If there already is a corresponding catalog return the language.
+        if let Some(catalog) = CATALOGS.get(language) {
+            return Some(catalog);
+        }
+        let language_without_country_code =
+            language.split_once('_').map_or(language, |(ll, _cc)| ll);
+        if language == language_without_country_code {
+            // We have `ll` format. In this case, try to find any catalog whose name starts with `ll_`.
+            // Note that it is important to include the underscore in the pattern, otherwise `ll` might
+            // fall back to `llx_CC`, where `llx` is a 3-letter language identifier.
+            let ll_prefix = format!("{language}_");
+            for (&lang_name, &catalog) in CATALOGS.entries() {
+                if lang_name.starts_with(&ll_prefix) {
+                    return Some(catalog);
+                }
+            }
+            // No localizations for the language (and any regional variations) exist.
+            None
+        } else {
+            // If `language` contained a country code, we only try to fall back to a catalog
+            // without a country code.
+            CATALOGS.get(language_without_country_code).copied()
+        }
     }
-    pub fn fish_gettext(msgid: &CStr) -> *const c_char {
-        unsafe { gettext(msgid.as_ptr()) }
+
+    /// The precedence list of user-preferred languages, obtained from the relevant environment
+    /// variables.
+    /// This should be updated when the relevant variables change.
+    pub(super) static LANGUAGE_PRECEDENCE: Lazy<Mutex<Vec<Catalog>>> =
+        Lazy::new(|| Mutex::new(Vec::new()));
+
+    /// Four environment variables can be used to select languages.
+    /// A detailed description is available at
+    /// <https://www.gnu.org/software/gettext/manual/html_node/Setting-the-POSIX-Locale.html>
+    /// Our does not replicate the behavior exactly.
+    /// See the following description.
+    ///
+    /// There are three variables which can be used for setting the locale for messages:
+    /// 1. `LC_ALL`
+    /// 2. `LC_MESSAGES`
+    /// 3. `LANG`
+    /// The value of the first one set to a non-zero value will be considered.
+    /// If it is set to the `C` locale (we consider any value starting with `C` as the `C` locale),
+    /// localization will be disabled.
+    /// Otherwise, the variable `LANGUAGE` is checked. If it is non-empty, it is considered a
+    /// colon-separated list of languages. Languages are listed with descending priority, meaning
+    /// we will localize each message into the first language with a localization available.
+    /// Each language is specified by a 2 or 3 letter ISO 639 language code, optionally followed by
+    /// an underscore and an ISO 3166 country/territory code. If the second part is omitted, some
+    /// variant of the language will be used if localizations exist for one. We make no guarantees
+    /// about which variant that will be.
+    /// In addition to the colon-separated format, using a list with one language per element is
+    /// also supported.
+    ///
+    /// Returns the (possibly empty) preference list of languages.
+    fn get_language_preferences_from_env(vars: &EnvStack) -> Vec<String> {
+        use crate::wchar::L;
+
+        fn normalize_locale_name(locale: &str) -> String {
+            // Strips off the encoding and modifier parts.
+            let mut normalized_name = String::new();
+            // Strip off encoding and modifier. (We always expect UTF-8 and don't support modifiers.)
+            for c in locale.chars() {
+                if c.is_alphabetic() || c == '_' {
+                    normalized_name.push(c);
+                } else {
+                    break;
+                }
+            }
+            // At this point, the normalized_name should have the shape `ll` or `ll_CC`.
+            normalized_name
+        }
+
+        fn check_language_var(vars: &EnvStack) -> Option<Vec<String>> {
+            let langs = vars.get(L!("LANGUAGE"))?;
+            let langs = langs.as_list();
+            let filtered_langs: Vec<String> = langs
+                .iter()
+                .filter(|lang| !lang.is_empty())
+                .map(|lang| normalize_locale_name(&lang.to_string()))
+                .collect();
+            if filtered_langs.is_empty() {
+                return None;
+            }
+            Some(filtered_langs)
+        }
+
+        // Locale value is determined by the first of these three variables set to a non-zero
+        // value.
+        if let Some(locale) = vars
+            .get(L!("LC_ALL"))
+            .or_else(|| vars.get(L!("LC_MESSAGES")).or_else(|| vars.get(L!("LANG"))))
+        {
+            let locale = locale.as_string().to_string();
+            if locale.starts_with('C') {
+                // Do not localize in C locale.
+                return vec![];
+            }
+            // `LANGUAGE` has higher precedence than the locale value.
+            if let Some(precedence_list) = check_language_var(vars) {
+                return precedence_list;
+            }
+            // Use the locale value if `LANGUAGE` is not set.
+            vec![normalize_locale_name(&locale)]
+        } else if let Some(precedence_list) = check_language_var(vars) {
+            // Use the `LANGUAGE` value if locale is not set.
+            return precedence_list;
+        } else {
+            // None of the relevant variables are set, so we will not localize.
+            vec![]
+        }
     }
-    #[cfg(not(feature = "embed-data"))]
-    pub fn fish_bindtextdomain(domainname: &CStr, dirname: &CStr) -> *mut c_char {
-        unsafe { bindtextdomain(domainname.as_ptr(), dirname.as_ptr()) }
-    }
-    #[cfg(not(feature = "embed-data"))]
-    pub fn fish_textdomain(domainname: &CStr) -> *mut c_char {
-        unsafe { textdomain(domainname.as_ptr()) }
+
+    /// Implementation of the function with the same name in super.
+    pub(super) fn update_locale_from_env(vars: &EnvStack) {
+        let mut language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();
+        *language_precedence = get_language_preferences_from_env(vars)
+            .iter()
+            .filter_map(|lang| find_existing_catalog(lang))
+            .collect();
     }
 }
-#[cfg(not(gettext))]
-mod internal {
-    use libc::c_char;
-    use std::ffi::CStr;
-    pub fn fish_gettext(msgid: &CStr) -> *const c_char {
-        msgid.as_ptr()
-    }
-    #[cfg(not(feature = "embed-data"))]
-    pub fn fish_bindtextdomain(_domainname: &CStr, _dirname: &CStr) -> *mut c_char {
-        std::ptr::null_mut()
-    }
-    #[cfg(not(feature = "embed-data"))]
-    pub fn fish_textdomain(_domainname: &CStr) -> *mut c_char {
-        std::ptr::null_mut()
-    }
+
+/// Call this when one of `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG` changes.
+/// Updates internal state such that the correct localizations will be used in subsequent
+/// localization requests.
+#[cfg(feature = "localize-messages")]
+pub fn update_locale_from_env(vars: &EnvStack) {
+    gettext_impl::update_locale_from_env(vars);
 }
 
-use internal::*;
+/// This function only exists to provide a way for initializing gettext before an [`EnvStack`] is
+/// available. Without this, early error messages cannot be localized.
+#[cfg(feature = "localize-messages")]
+pub fn initialize_gettext() {
+    use crate::common::str2wcstring;
+    use crate::env::EnvMode;
+    use std::os::unix::ffi::OsStrExt;
 
-// Really init wgettext.
-fn wgettext_really_init() {
-    #[cfg(not(feature = "embed-data"))]
+    let locale_vars = EnvStack::new();
+    macro_rules! from_env {
+        ($var_name:literal) => {
+            if let Some(var) = std::env::var_os($var_name) {
+                locale_vars.set_one(L!($var_name), EnvMode::GLOBAL, str2wcstring(var.as_bytes()));
+            }
+        };
+    }
+    from_env!("LANGUAGE");
+    from_env!("LC_ALL");
+    from_env!("LC_MESSAGES");
+    from_env!("LANG");
+
+    gettext_impl::update_locale_from_env(&locale_vars);
+}
+
+/// Use this function to localize a message.
+/// The [`MaybeStatic`] wrapper type allows avoiding allocating and leaking a new [`wstr`] when no
+/// localization is found and the input is returned, but as a static reference.
+fn gettext(message: MaybeStatic) -> &'static wstr {
+    use std::collections::HashMap;
+
+    #[cfg(not(feature = "localize-messages"))]
+    type NarrowMessage = ();
+    #[cfg(feature = "localize-messages")]
+    type NarrowMessage = &'static str;
+
+    let message_wstr = match message {
+        MaybeStatic::Static(s) => s,
+        MaybeStatic::Local(s) => s,
+    };
+    static MESSAGE_TO_NARROW: Lazy<Mutex<HashMap<&'static wstr, NarrowMessage>>> =
+        Lazy::new(|| Mutex::new(HashMap::default()));
+    let mut message_to_narrow = MESSAGE_TO_NARROW.lock().unwrap();
+    if !message_to_narrow.contains_key(message_wstr) {
+        let message_wstr: &'static wstr = match message {
+            MaybeStatic::Static(s) => s,
+            MaybeStatic::Local(l) => wstr::from_char_slice(Box::leak(l.as_char_slice().into())),
+        };
+        #[cfg(not(feature = "localize-messages"))]
+        let message_str = ();
+        #[cfg(feature = "localize-messages")]
+        let message_str = Box::leak(message_wstr.to_string().into_boxed_str());
+        message_to_narrow.insert(message_wstr, message_str);
+    }
+    let (message_static_wstr, message_str) = message_to_narrow.get_key_value(message_wstr).unwrap();
+
+    #[cfg(not(feature = "localize-messages"))]
+    let () = message_str;
+    #[cfg(feature = "localize-messages")]
     {
-        use crate::common::PACKAGE_NAME;
-        use crate::env::config_paths::LOCALE_DIR;
-        use std::ffi::CString;
+        let language_precedence = gettext_impl::LANGUAGE_PRECEDENCE.lock().unwrap();
 
-        let package_name = CString::new(PACKAGE_NAME).unwrap();
-        let localedir = LOCALE_DIR.load();
-        #[cfg(not(test))]
-        assert!(!localedir.is_empty());
-        let localedir = CString::new(localedir).unwrap();
-        fish_bindtextdomain(&package_name, &localedir);
-        fish_textdomain(&package_name);
+        // Use the localization from the highest-precedence language that has one available.
+
+        for catalog in language_precedence.iter() {
+            if let Some(localization_str) = catalog.get(message_str) {
+                static LOCALIZATION_TO_WIDE: Lazy<Mutex<HashMap<&'static str, &'static wstr>>> =
+                    Lazy::new(|| Mutex::new(HashMap::default()));
+                let mut locatizations_to_wide = LOCALIZATION_TO_WIDE.lock().unwrap();
+                if !locatizations_to_wide.contains_key(localization_str) {
+                    let localization_wstr =
+                        Box::leak(WString::from_str(localization_str).into_boxed_utfstr());
+                    locatizations_to_wide.insert(localization_str, localization_wstr);
+                }
+                return locatizations_to_wide.get(localization_str).unwrap();
+            }
+        }
     }
-}
 
-fn wgettext_init_if_necessary() {
-    static INIT: OnceCell<()> = OnceCell::new();
-    INIT.get_or_init(wgettext_really_init);
+    // No localization found.
+    message_static_wstr
 }
 
 /// A type that can be either a static or local string.
 enum MaybeStatic<'a> {
     Static(&'static wstr),
     Local(&'a wstr),
-}
-
-/// Implementation detail for wgettext!.
-/// Wide character wrapper around the gettext function. For historic reasons, unlike the real
-/// gettext function, wgettext takes care of setting the correct domain, etc. using the textdomain
-/// and bindtextdomain functions. This should probably be moved out of wgettext, so that wgettext
-/// will be nothing more than a wrapper around gettext, like all other functions in this file.
-fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
-    // Preserve errno across this since this is often used in printing error messages.
-    let err = errno();
-
-    wgettext_init_if_necessary();
-
-    let key = match text {
-        MaybeStatic::Static(s) => s,
-        MaybeStatic::Local(s) => s,
-    };
-
-    debug_assert!(!key.contains('\0'), "key should not contain NUL");
-
-    // Note that because entries are immortal, we simply leak non-static keys, and all values.
-    static WGETTEXT_MAP: Lazy<Mutex<HashMap<&'static wstr, &'static wstr>>> =
-        Lazy::new(|| Mutex::new(HashMap::new()));
-    let mut wmap = WGETTEXT_MAP.lock().unwrap();
-    let res = match wmap.get(key) {
-        Some(v) => *v,
-        None => {
-            let mbs_in = wcs2zstring(key);
-            let out = fish_gettext(&mbs_in);
-            let out = charptr2wcstring(out);
-            // Leak the value into the heap.
-            let value: &'static wstr = Box::leak(out.into_boxed_utfstr());
-
-            // Get a static key, perhaps leaking it into the heap as well.
-            let key: &'static wstr = match text {
-                MaybeStatic::Static(s) => s,
-                MaybeStatic::Local(s) => wstr::from_char_slice(Box::leak(s.as_char_slice().into())),
-            };
-
-            wmap.insert(key, value);
-            value
-        }
-    };
-
-    set_errno(err);
-
-    res
 }
 
 /// A string which can be localized.
@@ -159,14 +281,14 @@ impl LocalizableString {
                 if s.is_empty() {
                     L!("")
                 } else {
-                    wgettext_impl(MaybeStatic::Static(s))
+                    gettext(MaybeStatic::Static(s))
                 }
             }
             Self::Owned(s) => {
                 if s.is_empty() {
                     L!("")
                 } else {
-                    wgettext_impl(MaybeStatic::Local(s))
+                    gettext(MaybeStatic::Local(s))
                 }
             }
         }

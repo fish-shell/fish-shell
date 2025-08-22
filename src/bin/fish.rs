@@ -418,6 +418,10 @@ fn throwing_main() -> i32 {
         .collect();
     let config_path_detection = init_locale_dir(&args[0]);
 
+    // Initialize gettext translation.
+    #[cfg(feature = "localize-messages")]
+    fish::wutil::gettext::initialize_gettext();
+
     // Enable debug categories set in FISH_DEBUG.
     // This is in *addition* to the ones given via --debug.
     if let Some(debug_categories) = env::var_os("FISH_DEBUG") {

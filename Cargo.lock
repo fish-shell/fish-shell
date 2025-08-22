@@ -98,6 +98,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fastrand"
+version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
+
+[[package]]
 name = "fish"
 version = "4.1.0-alpha0"
 dependencies = [
@@ -107,6 +113,8 @@ dependencies = [
  "fish-build-helper",
  "fish-build-man-pages",
  "fish-gettext-extraction",
+ "fish-gettext-maps",
+ "fish-gettext-mo-file-parser",
  "fish-printf",
  "libc",
  "lru",
@@ -114,6 +122,8 @@ dependencies = [
  "num-traits",
  "once_cell",
  "pcre2",
+ "phf 0.12.1",
+ "phf_codegen 0.12.1",
  "portable-atomic",
  "rand",
  "rsconf",
@@ -145,6 +155,21 @@ version = "0.0.0"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "fish-gettext-maps"
+version = "0.0.0"
+dependencies = [
+ "fish-build-helper",
+ "fish-gettext-mo-file-parser",
+ "phf 0.12.1",
+ "phf_codegen 0.12.1",
+ "rsconf",
+]
+
+[[package]]
+name = "fish-gettext-mo-file-parser"
+version = "0.0.0"
 
 [[package]]
 name = "fish-printf"
@@ -327,7 +352,16 @@ version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fd6780a80ae0c52cc120a26a1a42c1ae51b247a253e4e06113d23d2c2edd078"
 dependencies = [
- "phf_shared",
+ "phf_shared 0.11.3",
+]
+
+[[package]]
+name = "phf"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "913273894cec178f401a31ec4b656318d95473527be05c0752cc41cdc32be8b7"
+dependencies = [
+ "phf_shared 0.12.1",
 ]
 
 [[package]]
@@ -336,8 +370,18 @@ version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aef8048c789fa5e851558d709946d6d79a8ff88c0440c587967f8e94bfb1216a"
 dependencies = [
- "phf_generator",
- "phf_shared",
+ "phf_generator 0.11.3",
+ "phf_shared 0.11.3",
+]
+
+[[package]]
+name = "phf_codegen"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efbdcb6f01d193b17f0b9c3360fa7e0e620991b193ff08702f78b3ce365d7e61"
+dependencies = [
+ "phf_generator 0.12.1",
+ "phf_shared 0.12.1",
 ]
 
 [[package]]
@@ -346,8 +390,18 @@ version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c80231409c20246a13fddb31776fb942c38553c51e871f8cbd687a4cfb5843d"
 dependencies = [
- "phf_shared",
+ "phf_shared 0.11.3",
  "rand",
+]
+
+[[package]]
+name = "phf_generator"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2cbb1126afed61dd6368748dae63b1ee7dc480191c6262a3b4ff1e29d86a6c5b"
+dependencies = [
+ "fastrand",
+ "phf_shared 0.12.1",
 ]
 
 [[package]]
@@ -355,6 +409,15 @@ name = "phf_shared"
 version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67eabc2ef2a60eb7faa00097bd1ffdb5bd28e62bf39990626a582201b7a754e5"
+dependencies = [
+ "siphasher",
+]
+
+[[package]]
+name = "phf_shared"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06005508882fb681fd97892ecff4b7fd0fee13ef1aa569f8695dae7ab9099981"
 dependencies = [
  "siphasher",
 ]
@@ -557,8 +620,8 @@ checksum = "d4ea810f0692f9f51b382fff5893887bb4580f5fa246fde546e0b13e7fcee662"
 dependencies = [
  "fnv",
  "nom",
- "phf",
- "phf_codegen",
+ "phf 0.11.3",
+ "phf_codegen 0.11.3",
 ]
 
 [[package]]

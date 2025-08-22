@@ -23,7 +23,7 @@ Architecture: any
 # for col and lock - bsdmainutils is required in Ubuntu focal
 Depends: bsdextrautils | bsdmainutils,
  file,
-# for the gettext command
+# for the msgfmt command
  gettext-base,
 # for nroff and preconv
  groff-base,

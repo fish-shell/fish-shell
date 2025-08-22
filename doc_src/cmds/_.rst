@@ -15,12 +15,15 @@ Description
 
 ``_`` translates its arguments into the current language, if possible.
 
-It is equivalent to ``gettext fish STRING``, meaning it can only be used to look up fish's own translations.
+This only works with messages which are translated as part of fish's own sources, so using it as part of your own fish scripts which are not upstreamed into the fish repo will not work unless the exact same message also exists upstream.
 
-It requires fish to be built with gettext support. If that support is disabled, or there is no translation it will echo the argument back.
+It requires fish to be built with gettext support. If that support is disabled or there is no translation it will echo the argument back.
 
-The language depends on the current locale, set with :envvar:`LANG` and :envvar:`LC_MESSAGES`.
+The language depends on the current locale, set with :envvar:`LANG`, :envvar:`LC_MESSAGES`, :envvar:`LC_ALL`, and :envvar:`LANGUAGE`.
+These variables do not have to be exported for fish to use them, and fish's variable scopes are supported.
+If other programs launched via fish should respect these locale variables they have to be exported to make them available outside of fish.
 
+For :envvar:`LANGUAGE` you can use a list, or use colons to separate multiple languages.
 
 Options
 -------
@@ -30,7 +33,20 @@ Options
 Examples
 --------
 
-::
+Use German translations::
 
-    > _ File
+    > set LANG de_DE.UTF-8
+    > _ file
     Datei
+
+Specify a precedence of languages (only works with :envvar:`LANGUAGE`)::
+
+    > set LANGUAGE pt de
+    > _ file  # This message has a Portuguese translation.
+    arquivo
+    > _ "Invalid arguments"  # This message does not have a Portuguese translation, but a German one.
+    Ungültige Argumente
+    > _ untranslatable  # No translation in Portuguese, nor in German.
+    untranslatable
+
+Note that the specific examples may change if translations are added/modified.

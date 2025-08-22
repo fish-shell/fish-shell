@@ -1519,7 +1519,7 @@ For more information on argparse, like how to handle option arguments, see :doc:
 PATH variables
 ^^^^^^^^^^^^^^
 
-Path variables are a special kind of variable used to support colon-delimited path lists including :envvar:`PATH`, :envvar:`CDPATH`, :envvar:`MANPATH`, :envvar:`PYTHONPATH`, etc. All variables that end in "PATH" (case-sensitive) become PATH variables by default.
+Path variables are a special kind of variable used to support colon-delimited path lists including :envvar:`PATH`, :envvar:`CDPATH`, :envvar:`MANPATH`, :envvar:`PYTHONPATH`, :envvar:`LANGUAGE` (for :doc:`localization <cmds/_>`) etc. All variables that end in "PATH" (case-sensitive) become PATH variables by default.
 
 PATH variables act as normal lists, except they are implicitly joined and split on colons.
 

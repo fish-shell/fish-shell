@@ -1,0 +1,18 @@
+[package]
+name = "fish-gettext-maps"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+
+[dependencies]
+phf.workspace = true
+
+[build-dependencies]
+fish-build-helper.workspace = true
+fish-gettext-mo-file-parser.workspace = true
+phf_codegen.workspace = true
+rsconf.workspace = true
+
+[lints]
+workspace = true

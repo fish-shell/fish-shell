@@ -50,6 +50,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/rust-toolchain@stable
+    - name: Install deps
+      run: |
+        sudo apt install gettext
     - name: cargo doc
       run: |
         RUSTDOCFLAGS='-D warnings' cargo doc --workspace

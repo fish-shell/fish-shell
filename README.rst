@@ -93,8 +93,6 @@ Running fish requires:
    ``file``, ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sh``, ``sort``, ``tee``, ``tr``,
    ``uname`` and ``sed`` at least, but the full coreutils plus ``find`` and
    ``awk`` is preferred)
--  The gettext library, if compiled with
-   translation support
 
 The following optional features also have specific requirements:
 
@@ -125,7 +123,7 @@ Compiling fish requires:
 -  CMake (version 3.15 or later)
 -  a C compiler (for system feature detection and the test helper binary)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
--  gettext (headers and libraries) - optional, for translation support
+-  gettext (only the msgfmt tool) - optional, for translation support
 -  an Internet connection, as other dependencies will be downloaded automatically
 
 Sphinx is also optionally required to build the documentation from a
@@ -165,7 +163,7 @@ In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), f
 - INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).
 - FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
 - MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
-- WITH_GETTEXT=ON|OFF - whether to build with gettext support for translations.
+- WITH_GETTEXT=ON|OFF - whether to include translations.
 - extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
 
 Building fish with embedded data (experimental)
@@ -185,13 +183,14 @@ To install fish with embedded files, just use ``cargo``, like::
 
 This will place the binaries in ``~/.cargo/bin/``, but you can place them wherever you want.
 
-This build won't have the HTML docs (``help`` will open the online version) or translations.
-
+This build won't have the HTML docs (``help`` will open the online version).
 It will try to build the man pages with sphinx-build. If that is not available and you would like to include man pages, you need to install it and retrigger the build script, e.g. by setting FISH_BUILD_DOCS=1::
 
   FISH_BUILD_DOCS=1 cargo install --path .
 
 Setting it to "0" disables the inclusion of man pages.
+
+To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features --features=embed-data`` to cargo.
 
 You can also link this build statically (but not against glibc) and move it to other computers.
 

@@ -18,6 +18,21 @@ Notable improvements and fixes
   use `status get-file` or find alternatives (like loading completions for "foo" via `complete -C"foo "`).
 
   We're considering making data embedding mandatory in future releases because it has a few advantages even for installation from a package (like making file conflicts with other packages impossible). (:issue:`11143`)
+- Reworked gettext localization.
+  We replaced several parts of the gettext functionality with custom implementations.
+  Most notably, message extraction, which should now work reliably, and the runtime implementation, where we no longer dynamically link to gettext, but instead use our own implementation, whose behavior is similar to GNU gettext, with some minor deviations.
+  Our implementation now fully respects fish variables, so locale variables do not have to be exported for fish localizations to work.
+  They still have to be exported to inform other programs about language preferences.
+  The :envvar:`LANGUAGE` environment variable is now treated as a path variable, meaning it is an implicitly colon-separated list.
+  While we no longer have any runtime dependency on gettext, we still need gettext tools for building, most notably ``msgfmt``.
+  When building without ``msgfmt`` available, localization will not work with the resulting executable.
+  Localization data is no longer sourced at runtime from MO files on the file system, but instead built into the executable.
+  This is always done, independently of the other data embedding, so all fish executables will have access to all message catalogs, regardless of the state of the file system.
+  We have a new cargo feature called `localize-messages`, which is enabled by default.
+  Disabling it will cause fish to be built without localization support.
+  CMake builds can continue to use the `WITH_GETTEXT` option, with the same semantics as the `localize-messages` feature.
+  The current implementation does not provide any configuration options for controlling which language catalogs are built into the executable (other than disabling them all).
+  As a workaround, you can delete files in the ``po`` directory before building to exclude unwanted languages.
 
 Deprecations and removed features
 ---------------------------------
@@ -105,6 +120,10 @@ For distributors
 - The CMake system was simplified and no longer second-guesses rustup. It will run rustc and cargo via $PATH or in ~/.cargo/bin/.
   If that doesn't match your setup, set the Rust_COMPILER and Rust_CARGO cmake variables (:issue:`11328`).
 - Cygwin support has been reintroduced, since rust gained a Cygwin target (https://github.com/rust-lang/rust/pull/134999, :issue:`11238`).
+- Fish no longer uses gettext MO files.
+  See the description about changes to the gettext behavior for details.
+  More detailed discussion and reasoning can be found in https://github.com/fish-shell/fish-shell/pull/11726.
+  If you have use cases which are incompatible with our new approach, please let us know.
 
 --------------
 

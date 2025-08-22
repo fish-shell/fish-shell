@@ -603,18 +603,8 @@ fn init_locale(vars: &EnvStack) {
         new_msg_locale.to_string_lossy()
     );
 
-    #[cfg(gettext)]
-    {
-        if old_msg_locale.as_c_str() != new_msg_locale {
-            // Make change known to GNU gettext.
-            extern "C" {
-                static mut _nl_msg_cat_cntr: libc::c_int;
-            }
-            unsafe {
-                _nl_msg_cat_cntr += 1;
-            }
-        }
-    }
+    #[cfg(feature = "localize-messages")]
+    crate::wutil::gettext::update_locale_from_env(vars);
 }
 
 pub fn use_posix_spawn() -> bool {

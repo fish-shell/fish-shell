@@ -93,8 +93,6 @@ Running fish requires:
    ``file``, ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sh``, ``sort``, ``tee``, ``tr``,
    ``uname`` and ``sed`` at least, but the full coreutils plus ``find`` and
    ``awk`` is preferred)
--  The gettext library, if compiled with
-   translation support
 
 The following optional features also have specific requirements:
 
@@ -125,7 +123,7 @@ Compiling fish requires:
 -  CMake (version 3.15 or later)
 -  a C compiler (for system feature detection and the test helper binary)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
--  gettext (headers and libraries) - optional, for translation support
+-  gettext (only the msgfmt tool) - optional, for translation support
 -  an Internet connection, as other dependencies will be downloaded automatically
 
 Sphinx is also optionally required to build the documentation from a

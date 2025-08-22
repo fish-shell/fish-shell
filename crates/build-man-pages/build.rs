@@ -1,11 +1,8 @@
 #[cfg(not(clippy))]
 use std::path::Path;
 
-use fish_build_helper::cargo_target_dir;
-
 fn main() {
-    let cargo_target_dir = cargo_target_dir();
-    let mandir = cargo_target_dir.join("fish-man");
+    let mandir = fish_build_helper::fish_build_dir().join("fish-man");
     let sec1dir = mandir.join("man1");
     // Running `cargo clippy` on a clean build directory panics, because when rust-embed tries to
     // embed a directory which does not exist it will panic.

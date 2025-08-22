@@ -39,6 +39,7 @@ fn main() {
     match command.as_str() {
         "cargo" | "c" => cargo(command_args),
         "check" => run_checks(command_args),
+        "man-pages" => cargo(["build", "--package", "fish-build-man-pages"]),
         "html-docs" => build_html_docs(command_args),
         "version" => cargo(["run", "--package", "fish-version"]),
         other => {

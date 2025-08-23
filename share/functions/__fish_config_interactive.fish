@@ -139,6 +139,9 @@ end" >$__fish_config_dir/config.fish
     # Load key bindings
     __fish_reload_key_bindings
 
+    # Set default redaction patterns for variables that likely contain secrets.
+    __init_uvar fish_redact_vars '*_API_KEY' '*_TOKEN' '*_SECRET'
+
     # Detect whether the terminal reflows on its own
     # If it does we shouldn't do it.
     # Allow $fish_handle_reflow to override it.

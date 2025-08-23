@@ -263,4 +263,111 @@ bad 5
 #CHECKERR: bad 5
 #CHECKERR: ^~^
 
-exit 0
+# Tests for ... in argument names
+function dotty -a x y... -a z...
+    set -l
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: variadic argument name 'y' must be the final one
+#CHECKERR: function dotty -a x y... -a z...
+#CHECKERR: ^
+dotty 1 2 3 4
+#CHECKERR: fish: Unknown command: dotty
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}):
+#CHECKERR: dotty 1 2 3 4
+#CHECKERR: ^~~~^
+
+function dotty -a x...
+    set -l
+end
+dotty
+#CHECK: argv
+#CHECK: x
+dotty 1
+#CHECK: argv 1
+#CHECK: x 1
+dotty 1 2
+#CHECK: argv '1'  '2'
+#CHECK: x '1'  '2'
+dotty 1 2 3
+#CHECK: argv '1'  '2'  '3'
+#CHECK: x '1'  '2'  '3'
+dotty 1 2 3 4 5
+#CHECK: argv '1'  '2'  '3'  '4'  '5'
+#CHECK: x '1'  '2'  '3'  '4'  '5'
+functions dotty
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x...
+# CHECK:     set -l
+# CHECK: end
+type dotty
+# CHECK: dotty is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x...
+# CHECK:     set -l
+# CHECK: end
+
+functions -e dotty
+
+function dotty -a x... y z
+    set -l
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: variadic argument name 'x' must be the final one
+#CHECKERR: function dotty -a x... y z
+#CHECKERR: ^
+dotty 1 2 3 4
+#CHECKERR: fish: Unknown command: dotty
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}):
+#CHECKERR: dotty 1 2 3 4
+#CHECKERR: ^~~~^
+
+function dotty -a x y... z
+    set -l
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: variadic argument name 'y' must be the final one
+#CHECKERR: function dotty -a x y... z
+#CHECKERR: ^
+dotty 1 2 3 4
+#CHECKERR: fish: Unknown command: dotty
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}):
+#CHECKERR: dotty 1 2 3 4
+#CHECKERR: ^~~~^
+
+function dotty -a x y z...
+    set -l
+end
+dotty
+#CHECK: argv
+#CHECK: x
+#CHECK: y
+#CHECK: z
+dotty 1
+# CHECK: argv 1
+# CHECK: x 1
+# CHECK: y
+# CHECK: z
+dotty 1 2
+# CHECK: argv '1'  '2'
+# CHECK: x 1
+# CHECK: y 2
+# CHECK: z
+dotty 1 2 3
+# CHECK: argv '1'  '2'  '3'
+# CHECK: x 1
+# CHECK: y 2
+# CHECK: z 3
+dotty 1 2 3 4 5
+# CHECK: argv '1'  '2'  '3'  '4'  '5'
+# CHECK: x 1
+# CHECK: y 2
+# CHECK: z '3'  '4'  '5'
+functions dotty
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x y z...
+# CHECK:     set -l
+# CHECK: end
+type dotty
+# CHECK: dotty is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x y z...
+# CHECK:     set -l
+# CHECK: end

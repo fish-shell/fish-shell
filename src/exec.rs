@@ -948,14 +948,30 @@ fn function_prepare_environment(
     // 3. argv
 
     let mut overwrite_argv = false;
+    let last_arg = if props.variadic {
+        props.named_arguments.len() - 1
+    } else {
+        usize::MAX
+    };
+    let mode = EnvMode::LOCAL | EnvMode::USER;
     for (idx, named_arg) in props.named_arguments.iter().enumerate() {
         if named_arg == L!("argv") {
             overwrite_argv = true
         };
-        if idx < argv.len() {
-            vars.set_one(named_arg, EnvMode::LOCAL | EnvMode::USER, argv[idx].clone());
+        if idx == last_arg {
+            // we set the variable below
+        } else if idx < argv.len() {
+            vars.set_one(named_arg, mode, argv[idx].clone());
         } else {
-            vars.set_empty(named_arg, EnvMode::LOCAL | EnvMode::USER);
+            vars.set_empty(named_arg, mode);
+        }
+    }
+    if props.variadic {
+        let name = props.named_arguments.last().unwrap();
+        if last_arg < argv.len() {
+            vars.set(name, mode, argv[last_arg..].to_owned());
+        } else {
+            vars.set_empty(name, mode);
         }
     }
 

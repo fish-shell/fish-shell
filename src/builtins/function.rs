@@ -21,6 +21,7 @@ struct FunctionCmdOpts {
     description: WString,
     events: Vec<EventDescription>,
     named_arguments: Vec<WString>,
+    variadic: bool,
     inherit_vars: Vec<WString>,
     wrap_targets: Vec<WString>,
 }
@@ -33,6 +34,7 @@ impl Default for FunctionCmdOpts {
             description: WString::new(),
             events: Vec::new(),
             named_arguments: Vec::new(),
+            variadic: false,
             inherit_vars: Vec::new(),
             wrap_targets: Vec::new(),
         }
@@ -70,6 +72,44 @@ fn job_id_for_pid(pid: Pid, parser: &Parser) -> Option<u64> {
     }
 }
 
+fn proccess_argument_name(
+    opts: &mut FunctionCmdOpts,
+    mut name: WString,
+    streams: &mut IoStreams,
+) -> BuiltinResult {
+    let cmd = L!("function");
+    if opts.variadic {
+        streams.err.append(wgettext_fmt!(
+            "%ls: variadic argument name '%ls' must be the final one\n",
+            cmd,
+            opts.named_arguments.last().unwrap(),
+        ));
+        return Err(STATUS_INVALID_ARGS);
+    }
+    let variadic = name.ends_with(L!("..."));
+    if variadic {
+        name.truncate(name.len() - 3);
+        opts.variadic = true;
+    }
+    if is_read_only(&name) {
+        streams.err.append(wgettext_fmt!(
+            "%ls: variable '%ls' is read-only\n",
+            cmd,
+            name
+        ));
+        return Err(STATUS_INVALID_ARGS);
+    }
+    if !valid_var_name(&name) {
+        streams
+            .err
+            .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, name));
+        return Err(STATUS_INVALID_ARGS);
+    }
+
+    opts.named_arguments.push(name);
+    Ok(SUCCESS)
+}
+
 /// Parses options to builtin function, populating opts.
 /// Returns an exit status.
 fn parse_cmd_opts(
@@ -93,15 +133,7 @@ fn parse_cmd_opts(
                 // A positional argument we got because we use RETURN_IN_ORDER.
                 let woptarg = w.woptarg.unwrap().to_owned();
                 if handling_named_arguments {
-                    if is_read_only(&woptarg) {
-                        streams.err.append(wgettext_fmt!(
-                            "%ls: variable '%ls' is read-only\n",
-                            cmd,
-                            woptarg
-                        ));
-                        return Err(STATUS_INVALID_ARGS);
-                    }
-                    opts.named_arguments.push(woptarg);
+                    proccess_argument_name(opts, woptarg, streams)?;
                 } else {
                     streams.err.append(wgettext_fmt!(
                         "%ls: %ls: unexpected positional argument",
@@ -185,17 +217,8 @@ fn parse_cmd_opts(
                 opts.events.push(e);
             }
             'a' => {
-                let name = w.woptarg.unwrap().to_owned();
-                if is_read_only(&name) {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: variable '%ls' is read-only\n",
-                        cmd,
-                        name
-                    ));
-                    return Err(STATUS_INVALID_ARGS);
-                }
                 handling_named_arguments = true;
-                opts.named_arguments.push(name);
+                proccess_argument_name(opts, w.woptarg.unwrap().to_owned(), streams)?;
             }
             'S' => {
                 opts.shadow_scope = false;
@@ -312,13 +335,7 @@ pub fn function(
         if !opts.named_arguments.is_empty() {
             // Remaining arguments are named arguments.
             for &arg in argv[optind..].iter() {
-                if !valid_var_name(arg) {
-                    streams
-                        .err
-                        .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, arg));
-                    return Err(STATUS_INVALID_ARGS);
-                }
-                opts.named_arguments.push(arg.to_owned());
+                proccess_argument_name(&mut opts, arg.to_owned(), streams)?;
             }
         } else {
             streams.err.append(wgettext_fmt!(
@@ -384,6 +401,7 @@ pub fn function(
     let props = function::FunctionProperties {
         func_node,
         named_arguments: opts.named_arguments,
+        variadic: opts.variadic,
         // Function descriptions are extracted from scripts in `share` via
         // `build_tools/fish_xgettext.fish`.
         description: LocalizableString::from_external_source(opts.description),

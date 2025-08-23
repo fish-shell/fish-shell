@@ -22,6 +22,8 @@ The following options are available:
 
 **-a** *NAMES* or **--argument-names** *NAMES*
     Assigns the value of successive command-line arguments to the names given in *NAMES* (separated by spaces). These are the same arguments given in :envvar:`argv`, and are still available there (unless ``--inherit-variable argv`` was used or one of the given *NAMES* is ``argv``). See also :ref:`Argument Handling <variables-argv>`.
+    
+    The last name given can end in ``...``, in which case all remaining arguments are saved in a variable with that name (excluding the ``...`` part).
 
     See the :ref:`Argument Names Caveats <argument_names_caveats>` section below for what happens when the number of arguments passed differs from the number of argument *NAMES*.
 
@@ -151,7 +153,7 @@ The ``-a`` / ``--argument-names`` flag does *not* validate the number of argumen
     #    x 1
     #    y
 
-Similarly any extra arguments are ignored, but they are still accessible in ``$argv``. Continuing the previous example:
+Similarly, if the last argument name doesn't end in ``...``, any extra arguments are ignored, but they are still accessible in ``$argv``. Continuing the previous example:
 
 ::
 
@@ -160,6 +162,20 @@ Similarly any extra arguments are ignored, but they are still accessible in ``$a
     #    argv '1'  '2'  '3'
     #    x 1
     #    y 2
+
+If on the other hand the last argument name does end in ``...``, any extra arguments are stored in that variable. For example:
+
+::
+
+    function one_or_more -a x y...
+        set -l
+    end
+    one_or_more 1 2 3
+    # prints:
+    #    argv '1'  '2'  '3'
+    #    x 1
+    #    y '2'  '3'
+
 
 Notes
 -----

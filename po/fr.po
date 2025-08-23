@@ -913,6 +913,11 @@ msgstr ""
 msgid "%ls: variable '%ls' is read-only\n"
 msgstr ""
 
+#
+#, c-format
+msgid "%ls: variadic argument name '%ls' must be the final one\n"
+msgstr ""
+
 #, c-format
 msgid "%lsand %lu more rows"
 msgstr "%lset %lu lignes de plus"

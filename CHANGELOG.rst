@@ -54,6 +54,7 @@ Scripting improvements
 - ``fish_opt`` now has a ``-v`` / ``--validate`` option you can use to give a fish script to validate values of the option.
 - The ``string pad`` command now has a ``-C/--center`` option.
 - A single parameter in a function's ``-a``/``--argument-names`` list can now end in ``...``, indicating that it will collect as many arguments as possible.
+- Add a ``-A``/``--strict-argument-names`` to the ``function`` builtin, this is like the existing ``-a``/``--argument-names`` options, but it reports an error if the given number of arguments doesn't agree with the argument names.
 
 Interactive improvements
 ------------------------

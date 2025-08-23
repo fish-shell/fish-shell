@@ -4,8 +4,8 @@
 // performed have been massive.
 
 use crate::builtins::shared::{
-    builtin_run, ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE,
-    STATUS_READ_TOO_MUCH,
+    builtin_run, ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_INVALID_ARGS,
+    STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
 };
 use crate::common::{
     exit_without_destructors, str2wcstring, truncate_at_nul, wcs2string, wcs2zstring, write_loop,
@@ -927,12 +927,45 @@ fn function_prepare_environment(
     parser: &Parser,
     mut argv: Vec<WString>,
     props: &FunctionProperties,
-) -> BlockId {
+) -> Option<BlockId> {
     // Extract the function name and remaining arguments.
     let mut func_name = WString::new();
     if !argv.is_empty() {
         // Extract and remove the function name from argv.
         func_name = argv.remove(0);
+    }
+
+    if props.strict_arity {
+        let expected = if props.variadic.is_some() {
+            // The variadic argument is allowed to be empty
+            props.named_arguments.len().wrapping_sub(1)
+        } else {
+            props.named_arguments.len()
+        };
+
+        if props.variadic.is_some() && argv.len() < expected {
+            FLOG!(
+                error,
+                wgettext_fmt!(
+                    "%ls: function requires at least %d arguments, but %d where supplied",
+                    func_name,
+                    expected,
+                    argv.len()
+                )
+            );
+            return None;
+        } else if props.variadic.is_none() && argv.len() != expected {
+            FLOG!(
+                error,
+                wgettext_fmt!(
+                    "%ls: function requires exactly %d arguments, but %d where supplied",
+                    func_name,
+                    expected,
+                    argv.len()
+                )
+            );
+            return None;
+        }
     }
 
     let fb = parser.push_block(Block::function_block(
@@ -990,7 +1023,7 @@ fn function_prepare_environment(
     if !overwrite_argv {
         vars.set_argv(argv);
     }
-    fb
+    Some(fb)
 }
 
 // Given that we are done executing a function, restore the environment.
@@ -1042,27 +1075,29 @@ fn get_performer_for_function(
     // We want to capture the job group.
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
+    let name = p.argv0().unwrap();
     // This may occur if the function was erased as part of its arguments or in other strange edge cases.
-    let Some(props) = function::get_props(p.argv0().unwrap()) else {
-        FLOG!(
-            error,
-            wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap())
-        );
+    let Some(props) = function::get_props(name) else {
+        FLOG!(error, wgettext_fmt!("Unknown function '%ls'", name));
         return Err(());
     };
     let argv = p.argv().clone();
     Ok(Box::new(move |parser: &Parser, _out, _err| {
         // Pull out the job list from the function.
-        let fb = function_prepare_environment(parser, argv, &props);
-        let body_node = props.func_node.child_ref(|n| &n.jobs);
-        let mut res = parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
-        function_restore_environment(parser, fb);
+        if let Some(fb) = function_prepare_environment(parser, argv, &props) {
+            let body_node = props.func_node.child_ref(|n| &n.jobs);
+            let mut res =
+                parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
+            function_restore_environment(parser, fb);
 
-        // If the function did not execute anything, treat it as success.
-        if res.was_empty {
-            res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
+            // If the function did not execute anything, treat it as success.
+            if res.was_empty {
+                res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
+            }
+            res.status
+        } else {
+            ProcStatus::from_exit_code(STATUS_INVALID_ARGS)
         }
-        res.status
     }))
 }
 

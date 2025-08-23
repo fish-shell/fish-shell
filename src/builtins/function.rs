@@ -21,6 +21,7 @@ struct FunctionCmdOpts {
     description: WString,
     events: Vec<EventDescription>,
     named_arguments: Vec<WString>,
+    strict_arity: bool,
     variadic: Option<usize>,
     inherit_vars: Vec<WString>,
     wrap_targets: Vec<WString>,
@@ -34,6 +35,7 @@ impl Default for FunctionCmdOpts {
             description: WString::new(),
             events: Vec::new(),
             named_arguments: Vec::new(),
+            strict_arity: false,
             variadic: None,
             inherit_vars: Vec::new(),
             wrap_targets: Vec::new(),
@@ -43,7 +45,7 @@ impl Default for FunctionCmdOpts {
 
 // This command is atypical in using the "-" (RETURN_IN_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.
-const SHORT_OPTIONS: &wstr = L!("-a:d:e:hj:p:s:v:w:SV:");
+const SHORT_OPTIONS: &wstr = L!("-a:A::d:e:hj:p:s:v:w:SV:");
 #[rustfmt::skip]
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("description"), ArgType::RequiredArgument, 'd'),
@@ -55,6 +57,7 @@ const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("wraps"), ArgType::RequiredArgument, 'w'),
     wopt(L!("help"), ArgType::NoArgument, 'h'),
     wopt(L!("argument-names"), ArgType::RequiredArgument, 'a'),
+    wopt(L!("strict-argument-names"), ArgType::OptionalArgument, 'A'),
     wopt(L!("no-scope-shadowing"), ArgType::NoArgument, 'S'),
     wopt(L!("inherit-variable"), ArgType::RequiredArgument, 'V'),
 ];
@@ -124,9 +127,10 @@ fn parse_cmd_opts(
     let print_hints = false;
     let mut handling_named_arguments = false;
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
+
     while let Some(opt) = w.next_opt() {
         // NON_OPTION_CHAR is returned when we reach a non-permuted non-option.
-        if opt != 'a' && opt != NON_OPTION_CHAR {
+        if opt != 'a' && opt != 'A' && opt != NON_OPTION_CHAR {
             handling_named_arguments = false;
         }
         match opt {
@@ -217,9 +221,31 @@ fn parse_cmd_opts(
                 }
                 opts.events.push(e);
             }
-            'a' => {
+            'a' | 'A' => {
+                let expected = if opts.strict_arity {
+                    Some('A')
+                } else if !opts.named_arguments.is_empty() {
+                    Some('a')
+                } else {
+                    None
+                };
+                if expected.is_some() && expected.unwrap() != opt {
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: --argument-names and --strict-argument-names cannot be mixed",
+                        cmd
+                    ));
+                    return Err(STATUS_INVALID_ARGS);
+                }
+
                 handling_named_arguments = true;
-                proccess_argument_name(opts, w.woptarg.unwrap().to_owned(), streams)?;
+                if opt == 'A' {
+                    opts.strict_arity = true;
+                }
+                if opt == 'a' || w.woptarg.is_some() {
+                    // Note that because -A/--strict-argument-names takes an optional argument
+                    // constructs like "function foo -A -A name -A -A bar" are perfectly valid
+                    proccess_argument_name(opts, w.woptarg.unwrap().to_owned(), streams)?;
+                }
             }
             'S' => {
                 opts.shadow_scope = false;
@@ -402,6 +428,7 @@ pub fn function(
     let props = function::FunctionProperties {
         func_node,
         named_arguments: opts.named_arguments,
+        strict_arity: opts.strict_arity,
         variadic: opts.variadic,
         // Function descriptions are extracted from scripts in `share` via
         // `build_tools/fish_xgettext.fish`.

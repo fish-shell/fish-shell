@@ -27,6 +27,13 @@ The following options are available:
 
     See the :ref:`Argument Names Caveats <argument_names_caveats>` section below for what happens when the number of arguments passed differs from the number of argument *NAMES*.
 
+**-A** *NAMES* or **--strict-argument-names** *NAMES*
+    This behaves like like ``-a`` / ``--argument-names``, except that calling the function with an incorrect number of arguments will print an error, return 2, and not execute the body of the function.
+    If none of the given *NAMES* use a ``...``, this error will trigger when the number of actual arguments does not equal the number of *NAMES*.
+    Otherwise, (if ``...`` was used) the error will trigger if the number of actual arguments is *less* than the number *NAMES* minus 1.
+
+    Unlike the ``-a``/``--argument-names`` option, the given *NAMES* list can be empty, in which case an error will be generated if the function is called with a non-empty list of arguments.
+
 **-d** *DESCRIPTION* or **--description** *DESCRIPTION*
     A description of what the function does, suitable as a completion description.
 
@@ -153,7 +160,9 @@ The ``-a`` / ``--argument-names`` flag does *not* validate the number of argumen
     #    x 1
     #    y
 
-Similarly, if none of the argument names end in ``...``, any extra arguments are ignored, but they are still accessible in ``$argv``. Continuing the previous example:
+In contrast, if the ``-A`` / ``--strict-argument-names`` option where used instead, the above call to ``two`` would produce an error.
+
+Similarly, if ``-a`` / ``--argument-names`` is used and none of the argument names end in ``...``, any extra arguments are ignored, but they are still accessible in ``$argv``. Continuing the previous example:
 
 ::
 
@@ -162,6 +171,8 @@ Similarly, if none of the argument names end in ``...``, any extra arguments are
     #    argv '1'  '2'  '3'
     #    x 1
     #    y 2
+
+Using ``-A`` / ``--strict-argument-names`` will make the above call to ``two`` an error.
 
 If on the other hand the last argument name does end in ``...``, any extra arguments are stored in that variable. For example:
 
@@ -175,6 +186,8 @@ If on the other hand the last argument name does end in ``...``, any extra argum
     #    argv '1'  '2'  '3'
     #    x 1
     #    y '2'  '3'
+
+The same behaviour occurs with the ``-A`` / ``--strict-argument-names`` option.
 
 If the argument named with a ``...`` is not the last, then if possible, it will leave enough arguments for the subsequent argument names. For example:
 
@@ -202,6 +215,8 @@ The argument with a ``...`` is however set to the empty list if there are not en
     #    x
     #    y 1
     #    z
+
+However, with the ``-A`` / ``--strict-argument-names`` option, the above call to ``more_or_two`` would produce an error.
 
 Notes
 -----

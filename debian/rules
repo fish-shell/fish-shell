@@ -17,7 +17,7 @@ override_dh_auto_configure:
 	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
 override_dh_clean:
-	dh_clean
+	dh_clean --exclude=Cargo.toml.orig
 	-unlink .cargo
 	-unlink vendor
 

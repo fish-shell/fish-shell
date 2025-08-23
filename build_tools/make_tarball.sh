@@ -9,12 +9,12 @@
 # Exit on error
 set -e
 
-# We wil generate a tarball with a prefix "fish-VERSION"
+# We will generate a tarball with a prefix "fish-VERSION"
 # git can do that automatically for us via git-archive
 # but to get the documentation in, we need to make a symlink called "fish-VERSION"
 # and tar from that, so that the documentation gets the right prefix
 
-# Use Ninja if available, as it automatically paralellises
+# Use Ninja if available, as it automatically parallelises
 BUILD_TOOL="make"
 BUILD_GENERATOR="Unix Makefiles"
 if command -v ninja >/dev/null; then

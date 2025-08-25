@@ -1,0 +1,29 @@
+name: ShellCheck
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  file-list-up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install deps
+      run: |
+        sudo apt install ripgrep
+    - name: check for updates
+      run: |
+        build_tools/shellcheck/check_for_file_updates.sh
+
+  check-files:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install deps
+      run: |
+        sudo apt install shellcheck
+    - name: shellcheck
+      run: |
+        build_tools/shellcheck/check.sh

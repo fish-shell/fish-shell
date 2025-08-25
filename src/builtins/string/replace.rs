@@ -26,7 +26,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
         wopt(L!("regex"), NoArgument, 'r'),
         wopt(L!("max-matches"), RequiredArgument, 'm'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":afiqrm:");
+    const SHORT_OPTIONS: &'static wstr = L!("afiqrm:");
 
     fn parse_opt(&mut self, _n: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {

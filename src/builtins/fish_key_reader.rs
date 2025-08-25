@@ -212,6 +212,14 @@ fn parse_flags(
             'V' => {
                 *verbose = true;
             }
+            ';' => {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_UNEXP_ARG,
+                    "fish_key_reader",
+                    w.argv[w.wopt_index - 1]
+                ));
+                return ControlFlow::Break(Err(STATUS_CMD_ERROR));
+            }
             '?' => {
                 streams.err.append(wgettext_fmt!(
                     BUILTIN_ERR_UNKNOWN,

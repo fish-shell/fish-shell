@@ -26,8 +26,8 @@ use fish::{
     builtins::{
         fish_indent, fish_key_reader,
         shared::{
-            BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR, STATUS_CMD_OK,
-            STATUS_CMD_UNKNOWN,
+            BUILTIN_ERR_MISSING, BUILTIN_ERR_UNEXP_ARG, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR,
+            STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
         },
     },
     common::{
@@ -253,7 +253,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;
     const PROFILE_STARTUP_ARG: char = 3 as char;
 
-    const SHORT_OPTS: &wstr = L!("+:hPilNnvc:C:p:d:f:D:o:");
+    const SHORT_OPTS: &wstr = L!("+hPilNnvc:C:p:d:f:D:o:");
     const LONG_OPTS: &[WOption<'static>] = &[
         wopt(L!("command"), RequiredArgument, 'c'),
         wopt(L!("init-command"), RequiredArgument, 'C'),
@@ -356,6 +356,13 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 eprintf!(
                     "%ls\n",
                     wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
+                );
+                return ControlFlow::Break(1);
+            }
+            ';' => {
+                eprintf!(
+                    "%ls\n",
+                    wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }

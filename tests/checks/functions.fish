@@ -229,3 +229,8 @@ functions --banana
 # CHECKERR: functions: --banana: unknown option
 echo $status
 # CHECK: 2
+
+functions --all=arg
+# CHECKERR: functions: --all=arg: option does not take an argument
+echo $status
+# CHECK: 2

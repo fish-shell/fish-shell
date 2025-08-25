@@ -29,7 +29,7 @@ fn parse_options(
         return Err(STATUS_INVALID_ARGS);
     };
 
-    const SHORT_OPTS: &wstr = L!("+:Eens");
+    const SHORT_OPTS: &wstr = L!("+Eens");
     const LONG_OPTS: &[WOption] = &[];
 
     let mut opts = Options::default();
@@ -47,6 +47,9 @@ fn parse_options(
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                panic!("unexpected option arguments are only possible with long options")
             }
             '?' => {
                 return Ok((oldopts, w.wopt_index - 1));

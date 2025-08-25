@@ -188,6 +188,11 @@ msgstr "%ls: %ls:无效的子命令\n"
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
 msgstr "%ls: %ls:无效的可变名称. 参见`help identifiers`\n"
 
+#
+#, c-format
+msgid "%ls: %ls: option does not take an argument\n"
+msgstr ""
+
 #, c-format
 msgid "%ls: %ls: option requires an argument\n"
 msgstr "%ls:%ls: 选项需要参数\n"
@@ -399,6 +404,11 @@ msgstr "%ls: 无效的 --max-args 值 '%ls'\n"
 #, c-format
 msgid "%ls: Invalid --min-args value '%ls'\n"
 msgstr "%ls: 无效的 --min-args 值 '%ls'\n"
+
+#
+#, c-format
+msgid "%ls: Invalid --unknown-arguments value '%ls'\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "%ls: Invalid count value '%ls'\n"
@@ -1915,11 +1925,17 @@ msgstr "%s: 找不到网页浏览器.\\n"
 msgid "%s: Directory stack is empty…\\n"
 msgstr "%s: 目录堆栈为空...\\n"
 
+msgid "%s: Either the --short or --long flag must be provided\\n"
+msgstr ""
+
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 msgstr "%s: 预期参数 1, 2 或 3, 获得 %d\\n"
 
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 msgstr "%s: 需要精确的一条参数, 获得 %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
+
+msgid "%s: Extra non-option arguments were provided\\n"
+msgstr ""
 
 msgid "%s: Invalid mask '%s'\\n"
 msgstr "%s:无效的掩码'%s'\\n"
@@ -1927,8 +1943,17 @@ msgstr "%s:无效的掩码'%s'\\n"
 msgid "%s: Not inside of command substitution"
 msgstr "%s: 命令替换不在内"
 
-msgid "%s: The --short flag is required and must be a single character\\n"
-msgstr "%s:需要 --short旗并必须是单一字符\\n"
+msgid "%s: The --long-only flag requires the --long flag\\n"
+msgstr ""
+
+msgid "%s: The --short flag must be a single character\\n"
+msgstr ""
+
+msgid "%s: The --validate flag requires subsequent arguments\\n"
+msgstr ""
+
+msgid "%s: The --validate flag requires the --required-val, --optional-value, or --multiple-vals flag\\n"
+msgstr ""
 
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
 msgstr "%s:要跳过的位置数必须是非负整数\\n"
@@ -13610,6 +13635,9 @@ msgid "Delete only libvirt metadata, leaving snapshot contents behind"
 msgstr "只删除 libvirt 元数据, 留下快照内容"
 
 msgid "Delete only those tarballs which aren't present in a snapshot"
+msgstr ""
+
+msgid "Delete option from argv_opts"
 msgstr ""
 
 msgid "Delete previous settime entry"
@@ -25419,6 +25447,9 @@ msgstr "要转换的第一个页面"
 
 msgid "First remove existing destination files"
 msgstr "首先删除已有目的文件"
+
+msgid "Fish script to validate option values"
+msgstr ""
 
 msgid "Fish's release notes"
 msgstr "fish的放行记录"

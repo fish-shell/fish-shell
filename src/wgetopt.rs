@@ -59,9 +59,10 @@ enum Ordering {
 
 /// Indicates whether an option takes an argument, and whether that argument
 /// is optional.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ArgType {
     /// The option takes no arguments.
+    #[default]
     NoArgument,
     /// The option takes a required argument.
     RequiredArgument,
@@ -107,6 +108,8 @@ enum NextArgv {
     FoundOption,
 }
 
+use std::borrow::Cow;
+
 pub struct WGetopter<'opts, 'args, 'argarray> {
     /// List of arguments. Will not be resized, but can be modified.
     pub argv: &'argarray mut [&'args wstr],
@@ -135,10 +138,14 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     /// Used when reordering elements. After scanning is finished, indicates the index
     /// after the final non-option skipped during parsing.
     pub last_nonopt: usize,
-    /// Return `:` if an arg is missing.
-    return_colon: bool,
     /// Prevents redundant initialization.
     initialized: bool,
+    // Makes parsing long options more strict (long options must have their full name specified,
+    // and cannot be given with a single hyphen).
+    pub strict_long_opts: bool,
+    /// This will be populated with the elements of the original args that were interpreted
+    /// as options and arguments to options
+    pub argv_opts: Vec<Cow<'args, wstr>>,
 }
 
 impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
@@ -158,12 +165,20 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             ordering: Ordering::Permute,
             first_nonopt: 0,
             last_nonopt: 0,
-            return_colon: false,
             initialized: false,
+            strict_long_opts: false,
+            argv_opts: Vec::new(),
         }
     }
 
-    /// Try to get the next option.
+    /// Try to get the next option, returning:
+    /// * None if there are no more options
+    /// * `Some(`[`NON_OPTION_CHAR`]`)` for a non-option when using [`Ordering::ReturnInOrder`]
+    /// * `Some('?') for unrecognised options
+    /// * `Some(':')` for options missing an argument,
+    /// * `Some(';') for options with an unexpected argument (this is only possible when using the
+    ///     --long=value or -long=value syntax where long was declared as taking no arguments).
+    /// * Otherwise, `Some(c)`, where `c` is the option's short character
     pub fn next_opt(&mut self) -> Option<char> {
         assert!(
             self.wopt_index <= self.argv.len(),
@@ -225,11 +240,6 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             optstring = &optstring[1..];
         } else {
             self.ordering = Ordering::Permute;
-        }
-
-        if optstring.char_at(0) == ':' {
-            self.return_colon = true;
-            optstring = &optstring[1..];
         }
 
         self.shortopts = optstring;
@@ -302,14 +312,17 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             return NextArgv::UnpermutedNonOption;
         }
 
+        let opt = self.argv[self.wopt_index];
+        self.argv_opts.push(Cow::Borrowed(opt));
+
         // We've found an option, so we need to skip the initial punctuation.
-        let skip = if !self.longopts.is_empty() && self.argv[self.wopt_index].char_at(1) == '-' {
+        let skip = if !self.longopts.is_empty() && opt.char_at(1) == '-' {
             2
         } else {
             1
         };
 
-        self.remaining_text = self.argv[self.wopt_index][skip..].into();
+        self.remaining_text = opt[skip..].into();
         NextArgv::FoundOption
     }
 
@@ -362,10 +375,12 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 // no following element to consume, then the option
                 // has no argument.
                 self.unrecognized_opt = c;
-                c = if self.return_colon { ':' } else { '?' };
+                c = ':';
             } else {
                 // Consume the next element.
-                self.woptarg = Some(self.argv[self.wopt_index]);
+                let val = self.argv[self.wopt_index];
+                self.argv_opts.push(Cow::Borrowed(val));
+                self.woptarg = Some(val);
                 self.wopt_index += 1;
             }
         }
@@ -387,17 +402,19 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         if self.remaining_text.char_at(name_end) == '=' {
             if opt_found.arg_type == ArgType::NoArgument {
                 self.remaining_text = empty_wstr();
-                return '?';
+                return ';';
             } else {
                 self.woptarg = Some(self.remaining_text[(name_end + 1)..].into());
             }
         } else if opt_found.arg_type == ArgType::RequiredArgument {
             if self.wopt_index < self.argv.len() {
-                self.woptarg = Some(self.argv[self.wopt_index]);
+                let val = self.argv[self.wopt_index];
+                self.argv_opts.push(Cow::Borrowed(val));
+                self.woptarg = Some(val);
                 self.wopt_index += 1;
             } else {
                 self.remaining_text = empty_wstr();
-                return if self.return_colon { ':' } else { '?' };
+                return ':';
             }
         }
 
@@ -426,6 +443,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                     index = i;
                     exact = true;
                     break;
+                } else if self.strict_long_opts {
+                    // It didn't match exactly, continue
+                    continue;
                 } else if opt.is_none() {
                     // The option begins with the matching text, but is not
                     // exactly equal.
@@ -477,6 +497,10 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 .as_char_slice()
                 .contains(&self.remaining_text.char_at(0))
         {
+            // Unknown option, assume remaining text is its argument
+            // (it needs to be saved somewhere for argparse, but we cant save it in
+            // self.remaining_text as that will break further parsing)
+            self.woptarg = Some(&self.remaining_text[1..]);
             self.remaining_text = empty_wstr();
             self.wopt_index += 1;
 
@@ -515,9 +539,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         // We set things up so that `-f` is parsed as a short-named option if there
-        // is a valid option to match it to, otherwise we parse it as a long-named
-        // option. We also make sure that `-fu` is *not* parsed as `-f` with
-        // an arg `u`.
+        // is a valid option to match it to, otherwise, if self.strict_long_opts is false,
+        // we parse it as a long-named option. We also make sure that `-fu` is *not* parsed as
+        // `-f` with an arg `u`.
         if !self.longopts.is_empty() && self.wopt_index < self.argv.len() {
             let arg = self.argv[self.wopt_index];
 
@@ -525,7 +549,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 // matches options like `--foo`
                 arg.char_at(0) == '-' && arg.char_at(1) == '-'
                 // matches options like `-f` if `f` is not a valid shortopt.
-                || !self.shortopts.as_char_slice().contains(&arg.char_at(1));
+                || (!self.strict_long_opts
+                    && !self.shortopts.as_char_slice().contains(&arg.char_at(1)));
 
             if try_long {
                 let retval = self.handle_long_opt(longopt_index);

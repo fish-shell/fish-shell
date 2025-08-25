@@ -40,7 +40,7 @@ impl Default for FunctionCmdOpts {
 
 // This command is atypical in using the "-" (RETURN_IN_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.
-const SHORT_OPTIONS: &wstr = L!("-:a:d:e:hj:p:s:v:w:SV:");
+const SHORT_OPTIONS: &wstr = L!("-a:d:e:hj:p:s:v:w:SV:");
 #[rustfmt::skip]
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("description"), ArgType::RequiredArgument, 'd'),
@@ -217,6 +217,16 @@ fn parse_cmd_opts(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                return STATUS_INVALID_ARGS;
+            }
+            ';' => {
+                builtin_unexpected_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {

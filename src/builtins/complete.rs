@@ -239,7 +239,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let mut preserve_order = false;
     let mut unescape_output = true;
 
-    const short_options: &wstr = L!(":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
+    const short_options: &wstr = L!("a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
     const long_options: &[WOption] = &[
         wopt(L!("exclusive"), ArgType::NoArgument, 'x'),
         wopt(L!("no-files"), ArgType::NoArgument, 'f'),
@@ -380,6 +380,10 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

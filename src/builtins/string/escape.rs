@@ -12,7 +12,7 @@ impl StringSubCommand<'_> for Escape {
         wopt(L!("no-quoted"), NoArgument, 'n'),
         wopt(L!("style"), RequiredArgument, NON_OPTION_CHAR),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":n");
+    const SHORT_OPTIONS: &'static wstr = L!("n");
 
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {

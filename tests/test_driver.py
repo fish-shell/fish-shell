@@ -268,7 +268,7 @@ class TestPass:
     arg: str
     duration_ms: int
 
-    def __init__(self, arg: str, duration_ms: Optional[int]):
+    def __init__(self, arg: str, duration_ms: int):
         self.arg = arg
         self.duration_ms = duration_ms
 

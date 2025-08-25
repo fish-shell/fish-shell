@@ -37,9 +37,9 @@ jobs:
         # Generate PO files. This should not result it a change in the repo if all translations are
         # up to date.
         # Ensure that fish is available as an executable.
-        PATH="$PWD/build:$PATH" build_tools/update_translations.fish --no-mo
+        PATH="$PWD/build:$PATH" build_tools/update_translations.fish
         # Show diff output. Fail if there is any.
-        git --no-pager diff --exit-code || { echo 'There are uncommitted changes after regenerating the gettext PO files. Make sure to update them via `build_tools/update_translations.fish --no-mo` after changing source files.'; exit 1; }
+        git --no-pager diff --exit-code || { echo 'There are uncommitted changes after regenerating the gettext PO files. Make sure to update them via `build_tools/update_translations.fish` after changing source files.'; exit 1; }
 
   ubuntu-32bit-static-pcre2:
 
@@ -166,7 +166,7 @@ jobs:
     - name: cmake
       run: |
         mkdir build && cd build
-        cmake -DWITH_GETTEXT=NO -DCMAKE_BUILD_TYPE=Debug ..
+        cmake -DCMAKE_BUILD_TYPE=Debug ..
     - name: make
       run: |
         make -C build VERBOSE=1

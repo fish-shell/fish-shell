@@ -64,7 +64,8 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 let data = base_path.join("share/fish/install");
                 #[cfg(not(feature = "installable"))]
                 let data = base_path.join("share/fish");
-                let locale = Some(data.join("locale"));
+                let locale =
+                    (!cfg!(feature = "installable")).then(|| base_path.join("share/locale"));
                 paths = ConfigPaths {
                     // One obvious path is ~/.local (with fish in ~/.local/bin/).
                     // If we picked ~/.local/share/fish as our data path,

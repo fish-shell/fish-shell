@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use std::sync::Mutex;
 
+#[cfg(feature = "localize")]
+use crate::env::EnvStack;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -14,6 +16,8 @@ mod gettext_impl {
 
     pub(super) use fish_gettext_maps::CATALOGS;
     type Catalog = &'static phf::Map<&'static str, &'static str>;
+
+    use crate::env::{EnvStack, Environment};
 
     /// `language` must be an ISO 639 language code, optionally followed by an underscore and an ISO
     /// 3166 country/territory code.
@@ -69,9 +73,13 @@ mod gettext_impl {
     /// an underscore and an ISO 3166 country/territory code. If the second part is omitted, some
     /// variant of the language will be used if localizations exist for one. We make no guarantees
     /// about which variant that will be.
+    /// In addition to the colon-separated format, using a list with one language per element is
+    /// also supported.
     ///
     /// Returns the (possibly empty) preference list of languages.
-    fn get_language_preferences_from_env() -> Vec<String> {
+    fn get_language_preferences_from_env(vars: &EnvStack) -> Vec<String> {
+        use crate::wchar::L;
+
         fn normalize_locale_name(locale: &str) -> String {
             // Strips off the encoding and modifier parts.
             let mut normalized_name = String::new();
@@ -86,35 +94,49 @@ mod gettext_impl {
             // At this point, the normalized_name should have the shape `ll` or `ll_CC`.
             normalized_name
         }
-        fn get_nonempty_env_var(var: &str) -> Option<String> {
-            if let Ok(value) = std::env::var(var) {
-                if value.is_empty() {
-                    None
-                } else {
-                    Some(value)
-                }
-            } else {
-                None
+
+        fn check_language_var(vars: &EnvStack) -> Option<Vec<String>> {
+            let langs = vars.get(L!("LANGUAGE"))?;
+            let langs = langs.as_list();
+            if langs.len() == 1 {
+                // For compatibility with gettext, assume colon-separated languages.
+                return Some(
+                    langs[0]
+                        .to_string()
+                        .split(':')
+                        .map(normalize_locale_name)
+                        .collect(),
+                );
             }
+            // Otherwise, assume one language per element.
+            Some(
+                langs
+                    .iter()
+                    .map(|l| normalize_locale_name(&l.to_string()))
+                    .collect(),
+            )
         }
+
         // Locale value is determined by the first of these three variables set to a non-zero
         // value.
-        if let Some(locale) = get_nonempty_env_var("LC_ALL").or_else(|| {
-            get_nonempty_env_var("LC_MESSAGES").or_else(|| get_nonempty_env_var("LANG"))
-        }) {
+        if let Some(locale) = vars
+            .get(L!("LC_ALL"))
+            .or_else(|| vars.get(L!("LC_MESSAGES")).or_else(|| vars.get(L!("LANG"))))
+        {
+            let locale = locale.as_string().to_string();
             if locale.starts_with('C') {
                 // Do not localize in C locale.
                 return vec![];
             }
             // `LANGUAGE` has higher precedence than the locale value.
-            if let Some(langs) = get_nonempty_env_var("LANGUAGE") {
-                return langs.split(':').map(normalize_locale_name).collect();
+            if let Some(precedence_list) = check_language_var(vars) {
+                return precedence_list;
             }
             // Use the locale value if `LANGUAGE` is not set.
             vec![normalize_locale_name(&locale)]
-        } else if let Some(langs) = get_nonempty_env_var("LANGUAGE") {
+        } else if let Some(precedence_list) = check_language_var(vars) {
             // Use the `LANGUAGE` value if locale is not set.
-            return langs.split(':').map(normalize_locale_name).collect();
+            return precedence_list;
         } else {
             // None of the relevant variables are set, so we will not localize.
             vec![]
@@ -122,9 +144,9 @@ mod gettext_impl {
     }
 
     /// Implementation of the function with the same name in super.
-    pub(super) fn update_locale_from_env() {
+    pub(super) fn update_locale_from_env(vars: &EnvStack) {
         let mut language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();
-        *language_precedence = get_language_preferences_from_env()
+        *language_precedence = get_language_preferences_from_env(vars)
             .iter()
             .filter_map(|lang| find_existing_catalog(lang))
             .collect();
@@ -135,8 +157,38 @@ mod gettext_impl {
 /// Updates internal state such that the correct localizations will be used in subsequent
 /// localization requests.
 #[cfg(feature = "localize")]
-pub fn update_locale_from_env() {
-    gettext_impl::update_locale_from_env();
+pub fn update_locale_from_env(vars: &EnvStack) {
+    gettext_impl::update_locale_from_env(vars);
+}
+
+/// This function only exists to provide a way for initializing gettext before an [`EnvStack`] is
+/// available. Without this, early error messages cannot be localized.
+#[cfg(feature = "localize")]
+pub fn initialize_gettext() {
+    use crate::env::EnvMode;
+
+    let locale_vars = EnvStack::new();
+    if let Ok(language) = std::env::var("LANGUAGE") {
+        locale_vars.set_one(
+            L!("LANGUAGE"),
+            EnvMode::GLOBAL,
+            WString::from_str(&language),
+        );
+    }
+    if let Ok(lc_all) = std::env::var("LC_ALL") {
+        locale_vars.set_one(L!("LC_ALL"), EnvMode::GLOBAL, WString::from_str(&lc_all));
+    }
+    if let Ok(lc_messages) = std::env::var("LC_MESSAGES") {
+        locale_vars.set_one(
+            L!("LC_MESSAGES"),
+            EnvMode::GLOBAL,
+            WString::from_str(&lc_messages),
+        );
+    }
+    if let Ok(lang) = std::env::var("LANG") {
+        locale_vars.set_one(L!("LANG"), EnvMode::GLOBAL, WString::from_str(&lang));
+    }
+    gettext_impl::update_locale_from_env(&locale_vars);
 }
 
 /// Use this function to localize a message.

@@ -428,7 +428,7 @@ fn throwing_main() -> i32 {
 
     // Initialize gettext translation.
     #[cfg(feature = "localize")]
-    fish::wutil::gettext::update_locale_from_env();
+    fish::wutil::gettext::initialize_gettext();
 
     // Enable debug categories set in FISH_DEBUG.
     // This is in *addition* to the ones given via --debug.

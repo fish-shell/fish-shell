@@ -604,7 +604,7 @@ fn init_locale(vars: &EnvStack) {
     );
 
     #[cfg(feature = "localize")]
-    crate::wutil::gettext::update_locale_from_env();
+    crate::wutil::gettext::update_locale_from_env(vars);
 }
 
 pub fn use_posix_spawn() -> bool {

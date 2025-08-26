@@ -29,7 +29,7 @@ complete -c loginctl -f -n "not $seen $commands" -l value -d "When showing prope
 complete -c loginctl -f -n "not $seen $commands" -l version -d "Show package version"
 
 function __fish_loginctl_list_sessions
-    loginctl list-sessions --no-legend --no-pager --output=short | string replace -r '^\s*(\d+)\s+\d+\s+(\S+)\s+(\S+\s+)?(\S+\d+).*' '$1\t$2 at $4'
+    loginctl list-sessions --no-legend --no-pager --output=short | string replace -r '^\s*(\S+)\s+\d+\s+(\S+)\s+(\S+).*' '$1\t$2 at $3'
 end
 
 function __fish_loginctl_list_users

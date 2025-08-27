@@ -1,6 +1,6 @@
 function __fish_complete_macos_java_version
     set -l json (/usr/libexec/java_home -X|plutil -convert json -o - -)
-    osascript -l JavaScript -s o -e "JSON.parse('$json').forEach(e => console.log(`\${e.JVMVersion}\t\${e.JVMArch} \${e.JVMName} by--exec \${e.JVMVendor}`))"
+    osascript -l JavaScript -s o -e "JSON.parse('$json').map(e => `\${e.JVMVersion}\t\${e.JVMArch} \${e.JVMName} by \${e.JVMVendor}`).join('\n')"
 end
 
 function __fish_complete_macos_java_home_exec

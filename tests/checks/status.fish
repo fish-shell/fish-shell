@@ -63,6 +63,7 @@ status features
 #CHECK: remove-percent-self     off 4.0 %self is no longer expanded (use $fish_pid)
 #CHECK: test-require-arg        off 4.0 builtin test requires an argument
 #CHECK: keyboard-protocols      on  4.0 Use keyboard protocols (kitty, xterm's modifyotherkeys
+#CHECK: mark-prompt             on  4.0 Write OSC 133 prompt markers to the terminal
 status test-feature stderr-nocaret
 echo $status
 #CHECK: 0

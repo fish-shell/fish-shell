@@ -32,6 +32,8 @@ This release of fish fixes a number of issues identified in fish 4.0.2:
 - The routines to save history and universal variables have seen some robustness improvements.
 - Vi mode: The cursor position after pasting via :kbd:`p` has been corrected.
 - Vi mode: Trying to replace the last character via :kbd:`r` no longer replaces the last-but-one character (:issue:`11484`),
+- To work around terminals that fail to parse OSC sequences, a temporary feature flag has been added.
+  It allows you to disable prompt marking (OSC 133) by running (once) ``set -Ua fish_features no-mark-prompt" and restarting fish (:issue:`11749`).
 
 fish 4.0.2 (released April 20, 2025)
 ====================================

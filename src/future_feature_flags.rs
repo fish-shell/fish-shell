@@ -30,6 +30,9 @@ pub enum FeatureFlag {
 
     /// Whether keyboard protocols (kitty's CSI x u, xterm's modifyOtherKeys) are used
     keyboard_protocols,
+
+    /// Whether to write OSC 133 prompt markers
+    mark_prompt,
 }
 
 struct Features {
@@ -118,6 +121,14 @@ pub const METADATA: &[FeatureMetadata] = &[
         default_value: true,
         read_only: false,
     },
+    FeatureMetadata {
+        flag: FeatureFlag::mark_prompt,
+        name: L!("mark-prompt"),
+        groups: L!("4.0"),
+        description: L!("Write OSC 133 prompt markers to the terminal"),
+        default_value: true,
+        read_only: false,
+    },
 ];
 
 thread_local!(
@@ -180,6 +191,7 @@ impl Features {
                 AtomicBool::new(METADATA[4].default_value),
                 AtomicBool::new(METADATA[5].default_value),
                 AtomicBool::new(METADATA[6].default_value),
+                AtomicBool::new(METADATA[7].default_value),
             ],
         }
     }

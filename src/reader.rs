@@ -66,6 +66,7 @@ use crate::fds::{make_fd_blocking, wopen_cloexec, AutoCloseFd};
 use crate::flog::{FLOG, FLOGF};
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
+use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{
     autosuggest_validate_from_history, highlight_shell, HighlightRole, HighlightSpec,
@@ -664,13 +665,15 @@ fn read_i(parser: &Parser) -> i32 {
         data.command_line.clear();
         data.update_buff_pos(EditableLineTag::Commandline, None);
         data.command_line_changed(EditableLineTag::Commandline);
-        // OSC 133 "Command start"
-        write!(
-            BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
-            "\x1b]133;C;cmdline_url={}\x07",
-            escape_string(&command, EscapeStringStyle::Url),
-        )
-        .unwrap();
+        if feature_test(FeatureFlag::mark_prompt) {
+            // OSC 133 "Command start"
+            write!(
+                BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
+                "\x1b]133;C;cmdline_url={}\x07",
+                escape_string(&command, EscapeStringStyle::Url),
+            )
+            .unwrap();
+        }
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
         let eval_res = reader_run_command(parser, &command);
         signal_clear_cancel();
@@ -683,12 +686,14 @@ fn read_i(parser: &Parser) -> i32 {
         parser.libdata_mut().exit_current_script = false;
 
         // OSC 133 "Command finished"
-        write!(
-            BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
-            "\x1b]133;D;{}\x07",
-            parser.get_last_status()
-        )
-        .unwrap();
+        if feature_test(FeatureFlag::mark_prompt) {
+            write!(
+                BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
+                "\x1b]133;D;{}\x07",
+                parser.get_last_status()
+            )
+            .unwrap();
+        }
         event::fire_generic(parser, L!("fish_postexec").to_owned(), vec![command]);
         // Allow any pending history items to be returned in the history array.
         data.history.resolve_pending();

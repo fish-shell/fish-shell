@@ -7,6 +7,7 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
+use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::pager::{PageRendering, Pager, PAGER_MIN_HEIGHT};
 use std::cell::RefCell;
 use std::collections::LinkedList;
@@ -931,8 +932,11 @@ impl Screen {
         } else if left_prompt != zelf.actual_left_prompt || (zelf.scrolled && is_final_rendering) {
             zelf.r#move(0, 0);
             let mut start = 0;
-            let osc_133_prompt_start =
-                |zelf: &mut Screen| zelf.write_bytes(b"\x1b]133;A;special_key=1\x07");
+            let osc_133_prompt_start = |zelf: &mut Screen| {
+                if feature_test(FeatureFlag::mark_prompt) {
+                    zelf.write_bytes(b"\x1b]133;A;special_key=1\x07");
+                }
+            };
             if left_prompt_layout.line_breaks.is_empty() {
                 osc_133_prompt_start(&mut zelf);
             }

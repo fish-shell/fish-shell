@@ -18,7 +18,7 @@ Synopsis
                  [-g | --groups-only] [-r | --regex] [-n | --index]
                  [-q | --quiet] [-v | --invert]
                  PATTERN [STRING ...]
-    string pad [-r | --right] [(-c | --char) CHAR] [(-w | --width) INTEGER]
+    string pad [-r | --right] [-C | --center] [(-c | --char) CHAR] [(-w | --width) INTEGER]
                [STRING ...]
     string repeat [(-n | --count) COUNT] [(-m | --max) MAX] [-N | --no-newline]
                   [-q | --quiet] [STRING ...]

@@ -42,6 +42,7 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - The ``psub`` command now allows combining ``--suffix`` with ``--fifo`` (:issue:`11729`).
+- The ``string pad`` command now has a ``-C/--center`` option.
 
 Interactive improvements
 ------------------------

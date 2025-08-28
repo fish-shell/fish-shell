@@ -43,10 +43,14 @@ string length -q ""; and echo not zero length; or echo zero length
 # CHECK: zero length
 
 string pad foo
+#CHECK: foo
+string pad -C foo
 # CHECK: foo
 
 string pad -r -w 7 --chars - foo
 # CHECK: foo----
+string pad -r -w 7 --chars - --center foo
+# CHECK: --foo--
 
 # might overflow when converting sign
 string sub --start -9223372036854775808 abc
@@ -54,24 +58,48 @@ string sub --start -9223372036854775808 abc
 
 string pad --width 7 -c '=' foo
 # CHECK: ====foo
+string pad --width 7 -c '=' -C foo
+# CHECK: ==foo==
+string pad --width 8 -c '=' -C foo
+# CHECK: ===foo==
+string pad --width 8 -c '=' -Cr foo
+# CHECK: ==foo===
 
 echo \|(string pad --width 10 --right foo)\|
 # CHECK: |foo       |
+echo \|(string pad --width 10 --right --center foo)\|
+# CHECK: |   foo    |
+echo \|(string pad --width 10 --center foo)\|
+# CHECK: |    foo   |
 
 begin
     set -l fish_emoji_width 2
     # Pad string with multi-width emoji.
     string pad -w 4 -c . 🐟
     # CHECK: ..🐟
+    string pad -w 4 -c . -C 🐟
+    # CHECK: .🐟.
 
     # Pad with multi-width character.
     string pad -w 3 -c 🐟 .
     # CHECK: 🐟.
+    # string pad would rather the result actually be centerd, than it actually contain
+    # the padding character (so since it can't print half a 🐟, it instead prints a space which is half as wide)
+    string collect \|(string pad -w 3 -c 🐟 -C .)\|
+    # CHECK: | . |
+    string collect \|(string pad -w 7 -c 🐟 -C .)\|
+    # CHECK: |🐟 . 🐟|
 
     # Multi-width pad with remainder, complemented with a space.
     string pad -w 4 -c 🐟 . ..
     # CHECK: 🐟 .
     # CHECK: 🐟..
+    string collect \|(string pad -w 7 -c 🐟 -C . ..)\|
+    # CHECK: |🐟 . 🐟|
+    # CHECK: |🐟 ..🐟|
+    string collect \|(string pad -w 7 -c 🐟 -Cr . ..)\|
+    # CHECK: |🐟 . 🐟|
+    # CHECK: |🐟.. 🐟|
 end
 
 # Pad to the maximum length.
@@ -79,12 +107,26 @@ string pad -c . long longer longest
 # CHECK: ...long
 # CHECK: .longer
 # CHECK: longest
+string pad -c . -C long longer longest
+# CHECK: ..long.
+# CHECK: .longer
+# CHECK: longest
+string pad -c . -Cr long longer longest
+# CHECK: .long..
+# CHECK: longer.
+# CHECK: longest
 
 # This tests current behavior where the max width of an argument overrules
 # the width parameter. This could be changed if needed.
 string pad -c_ --width 5 longer-than-width-param x
 # CHECK: longer-than-width-param
 # CHECK: ______________________x
+string pad -c_ --width 5 --center longer-than-width-param x
+# CHECK: longer-than-width-param
+# CHECK: ___________x___________
+string pad -c_ --width 5 --center --right longer-than-width-param x
+# CHECK: longer-than-width-param
+# CHECK: ___________x___________
 
 # Current behavior is that only a single padding character is supported.
 # We can support longer strings in future without breaking compatibility.

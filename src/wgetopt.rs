@@ -91,13 +91,9 @@ pub const fn wopt(name: &wstr, arg_type: ArgType, val: char) -> WOption<'_> {
 
 /// Used internally by [WGetopter::find_matching_long_opt]. See there for further
 /// details.
-#[derive(Default)]
-enum LongOptMatch<'a> {
-    Exact(WOption<'a>, usize),
-    NonExact(WOption<'a>, usize),
-    Ambiguous,
-    #[default]
-    NoMatch,
+struct LongOptMatch<'a> {
+    option: WOption<'a>,
+    index: usize,
 }
 
 /// Used internally by [WGetopter::next_argv]. See there for further details.
@@ -407,13 +403,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     }
 
     /// Find a matching long-named option.
-    fn find_matching_long_opt(&self, name_end: usize) -> LongOptMatch<'opts> {
-        let mut opt = None;
-        let mut index = 0;
-        let mut exact = false;
-        let mut ambiguous = false;
-
-        // Test all long options for either exact match or abbreviated matches.
+    fn find_matching_long_opt(&self, name_end: usize) -> Option<LongOptMatch<'opts>> {
+        // Test all long options for exact matches.
         for (i, potential_match) in self.longopts.iter().enumerate() {
             // Check if current option is prefix of long opt
             if potential_match
@@ -422,31 +413,14 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             {
                 if name_end == potential_match.name.len() {
                     // The option matches the text exactly, so we're finished.
-                    opt = Some(*potential_match);
-                    index = i;
-                    exact = true;
-                    break;
-                } else if opt.is_none() {
-                    // The option begins with the matching text, but is not
-                    // exactly equal.
-                    opt = Some(*potential_match);
-                    index = i;
-                } else {
-                    // There are multiple options that match the text non-exactly.
-                    ambiguous = true;
+                    return Some(LongOptMatch {
+                        option: *potential_match,
+                        index: i,
+                    });
                 }
             }
         }
-
-        opt.map_or(LongOptMatch::NoMatch, |opt| {
-            if exact {
-                LongOptMatch::Exact(opt, index)
-            } else if ambiguous {
-                LongOptMatch::Ambiguous
-            } else {
-                LongOptMatch::NonExact(opt, index)
-            }
-        })
+        None
     }
 
     /// Check for a matching long-named option.
@@ -457,16 +431,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             self.remaining_text.len()
         };
 
-        match self.find_matching_long_opt(name_end) {
-            LongOptMatch::Exact(opt, index) | LongOptMatch::NonExact(opt, index) => {
-                return Some(self.update_long_opt(&opt, name_end, longopt_index, index));
-            }
-            LongOptMatch::Ambiguous => {
-                self.remaining_text = empty_wstr();
-                self.wopt_index += 1;
-                return Some('?');
-            }
-            LongOptMatch::NoMatch => {}
+        if let Some(opt) = self.find_matching_long_opt(name_end) {
+            return Some(self.update_long_opt(&opt.option, name_end, longopt_index, opt.index));
         }
 
         // If we can't find a long option, try to interpret it as a short option.

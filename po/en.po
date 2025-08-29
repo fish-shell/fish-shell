@@ -40719,6 +40719,9 @@ msgstr ""
 msgid "Pacman log actions"
 msgstr ""
 
+msgid "Pad both left and right"
+msgstr ""
+
 msgid "Pad right instead of left"
 msgstr ""
 

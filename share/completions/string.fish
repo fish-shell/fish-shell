@@ -54,6 +54,7 @@ complete -x -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains --
 complete -f -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains -- (commandline -xpc)[2] repeat" -s N -l no-newline -d "Remove newline"
 complete -f -c string -n "test (count (commandline -xpc)) -lt 2" -a pad
 complete -x -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains -- (commandline -xpc)[2] pad" -s r -l right -d "Pad right instead of left"
+complete -x -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains -- (commandline -xpc)[2] pad" -s r -l center -d "Pad both left and right"
 complete -x -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains -- (commandline -xpc)[2] pad" -s c -l char -x -d "Character to use for padding"
 complete -x -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains -- (commandline -xpc)[2] pad" -s w -l width -x -d "Integer width of the result, default is maximum width of inputs"
 complete -f -c string -n "test (count (commandline -xpc)) -lt 2" -a shorten

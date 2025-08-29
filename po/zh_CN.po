@@ -40718,6 +40718,9 @@ msgstr "将本地仓库中已有的文物装入捆绑, 用于上传请求"
 msgid "Pacman log actions"
 msgstr "Pacman 日志动作"
 
+msgid "Pad both left and right"
+msgstr ""
+
 msgid "Pad right instead of left"
 msgstr "右侧而不是左侧"
 

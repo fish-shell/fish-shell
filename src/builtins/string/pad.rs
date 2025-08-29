@@ -5,6 +5,7 @@ pub struct Pad {
     char_to_pad: char,
     pad_char_width: usize,
     pad_from: Direction,
+    center: bool,
     width: usize,
 }
 
@@ -14,6 +15,7 @@ impl Default for Pad {
             char_to_pad: ' ',
             pad_char_width: 1,
             pad_from: Direction::Left,
+            center: false,
             width: 0,
         }
     }
@@ -24,9 +26,10 @@ impl StringSubCommand<'_> for Pad {
         // FIXME docs say `--char`, there was no long_opt with `--char` in C++
         wopt(L!("chars"), RequiredArgument, 'c'),
         wopt(L!("right"), NoArgument, 'r'),
+        wopt(L!("center"), NoArgument, 'C'),
         wopt(L!("width"), RequiredArgument, 'w'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!("c:rw:");
+    const SHORT_OPTIONS: &'static wstr = L!("c:rCw:");
 
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {
@@ -55,6 +58,7 @@ impl StringSubCommand<'_> for Pad {
                     .try_into()
                     .map_err(|_| invalid_args!("%ls: Invalid width value '%ls'\n", name, arg))?
             }
+            'C' => self.center = true,
             _ => return Err(StringError::UnknownOption),
         }
         return Ok(());
@@ -83,21 +87,22 @@ impl StringSubCommand<'_> for Pad {
         for (input, width) in inputs {
             use std::iter::repeat;
 
-            let pad = (pad_width - width) / self.pad_char_width;
-            let remaining_width = (pad_width - width) % self.pad_char_width;
-            let mut padded: WString = match self.pad_from {
-                Direction::Left => repeat(self.char_to_pad)
-                    .take(pad)
-                    .chain(repeat(' ').take(remaining_width))
-                    .chain(input.chars())
-                    .collect(),
-                Direction::Right => input
-                    .chars()
-                    .chain(repeat(' ').take(remaining_width))
-                    .chain(repeat(self.char_to_pad).take(pad))
-                    .collect(),
+            let total_pad = pad_width - width;
+            let (left_pad, right_pad) = match (self.pad_from, self.center) {
+                (Direction::Left, false) => (total_pad, 0),
+                (Direction::Right, false) => (0, total_pad),
+                (Direction::Left, true) => (total_pad - total_pad / 2, total_pad / 2),
+                (Direction::Right, true) => (total_pad / 2, total_pad - total_pad / 2),
             };
 
+            let chars = |w| repeat(self.char_to_pad).take(w / self.pad_char_width);
+            let spaces = |w| repeat(' ').take(w % self.pad_char_width);
+            let mut padded: WString = chars(left_pad)
+                .chain(spaces(left_pad))
+                .chain(input.chars())
+                .chain(spaces(right_pad))
+                .chain(chars(right_pad))
+                .collect();
             if print_trailing_newline {
                 padded.push('\n');
             }

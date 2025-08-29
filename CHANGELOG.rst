@@ -52,6 +52,7 @@ Scripting improvements
 - ``fish_opt`` no longer requires you give a short flag name when defining options, provided you give it a long flag name with more than one character.
 - ``argparse`` option specifiers for long only options can now start with ``/``, allowing the definition of long options with a single letter (withouht the ``/``, an option with a single letter is always interpreted as a short flag). Due to this change, the ``--long-only`` option to ``fish_opt`` is now no longer necessary and is deprecated.
 - ``fish_opt`` now has a ``-v`` / ``--validate`` option you can use to give a fish script to validate values of the option.
+- The ``string pad`` command now has a ``-C/--center`` option.
 
 Interactive improvements
 ------------------------

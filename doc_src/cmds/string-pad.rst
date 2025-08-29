@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    string pad [-r | --right] [(-c | --char) CHAR] [(-w | --width) INTEGER]
+    string pad [-r | --right] [-C | --center] [(-c | --char) CHAR] [(-w | --width) INTEGER]
                [STRING ...]
 
 .. END SYNOPSIS
@@ -21,6 +21,8 @@ Description
 ``string pad`` extends each *STRING* to the given visible width by adding *CHAR* to the left. That means the width of all visible characters added together, excluding escape sequences and accounting for :envvar:`fish_emoji_width` and :envvar:`fish_ambiguous_width`. It is the amount of columns in a terminal the *STRING* occupies.
 
 The escape sequences reflect what fish knows about, and how it computes its output. Your terminal might support more escapes, or not support escape sequences that fish knows about.
+
+If **-C** or **--center** is given, add the padding to before and after the string. If it is impossible to perfectly center the result (because the required amount of padding is an odd number), extra padding will be added to the left, unless **--right** is also given.
 
 If **-r** or **--right** is given, add the padding after a string.
 

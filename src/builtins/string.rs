@@ -71,6 +71,17 @@ trait StringSubCommand<'args> {
                     );
                     return Err(STATUS_INVALID_ARGS);
                 }
+                ';' => {
+                    streams.err.append(L!("string ")); // clone of string_error
+                    builtin_unexpected_argument(
+                        parser,
+                        streams,
+                        cmd,
+                        args_read[w.wopt_index - 1],
+                        false,
+                    );
+                    return Err(STATUS_INVALID_ARGS);
+                }
                 '?' => {
                     string_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
                     return Err(STATUS_INVALID_ARGS);

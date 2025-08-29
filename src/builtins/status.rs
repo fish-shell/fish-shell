@@ -150,7 +150,7 @@ const IS_INTERACTIVE_JOB_CTRL_SHORT: char = '\x03';
 const IS_NO_JOB_CTRL_SHORT: char = '\x04';
 const IS_INTERACTIVE_READ_SHORT: char = '\x05';
 
-const SHORT_OPTIONS: &wstr = L!(":L:cbilfnhj:t");
+const SHORT_OPTIONS: &wstr = L!("L:cbilfnhj:t");
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("help"), NoArgument, 'h'),
     wopt(L!("current-filename"), NoArgument, 'f'),
@@ -302,6 +302,10 @@ fn parse_cmd_opts(
             'h' => opts.print_help = true,
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

@@ -66,7 +66,7 @@ struct HistoryCmdOpts {
 /// the non-flag subcommand form. While many of these flags are deprecated they must be
 /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
 /// config.fish and other scripts.
-const short_options: &wstr = L!(":CRcehmn:pt::z");
+const short_options: &wstr = L!("CRcehmn:pt::z");
 const longopts: &[WOption] = &[
     wopt(L!("prefix"), ArgType::NoArgument, 'p'),
     wopt(L!("contains"), ArgType::NoArgument, 'c'),
@@ -209,6 +209,10 @@ fn parse_cmd_opts(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

@@ -49,7 +49,7 @@ impl Default for FunctionsCmdOpts<'_> {
 
 const NO_METADATA_SHORT: char = 2 as char;
 
-const SHORT_OPTIONS: &wstr = L!(":Ht:Dacd:ehnqv");
+const SHORT_OPTIONS: &wstr = L!("Ht:Dacd:ehnqv");
 #[rustfmt::skip]
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("erase"), ArgType::NoArgument, 'e'),
@@ -99,6 +99,16 @@ fn parse_cmd_opts<'args>(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

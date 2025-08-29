@@ -140,7 +140,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     let mut print_help = false;
     let print_hints = false;
 
-    const shortopts: &wstr = L!(":nh");
+    const shortopts: &wstr = L!("nh");
     const longopts: &[WOption] = &[
         wopt(L!("any"), ArgType::NoArgument, 'n'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
@@ -157,6 +157,16 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

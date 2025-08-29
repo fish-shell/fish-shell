@@ -25,6 +25,10 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Buil
                 builtin_print_help(parser, streams, cmd);
                 return Ok(SUCCESS);
             }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, argv[w.wopt_index - 1], false);
+                return Err(STATUS_INVALID_ARGS);
+            }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);

@@ -16,7 +16,7 @@ fn parse_options(
 ) -> ControlFlow<ErrorCode, (Options, usize)> {
     let cmd = args[0];
 
-    const SHORT_OPTS: &wstr = L!(":h");
+    const SHORT_OPTS: &wstr = L!("h");
     const LONG_OPTS: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
     let mut opts = Options::default();
@@ -28,6 +28,10 @@ fn parse_options(
             'h' => opts.print_help = true,
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
+                return ControlFlow::Break(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
                 return ControlFlow::Break(STATUS_INVALID_ARGS);
             }
             '?' => {

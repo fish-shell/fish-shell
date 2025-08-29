@@ -15,7 +15,7 @@ impl StringSubCommand<'_> for Repeat {
         wopt(L!("quiet"), NoArgument, 'q'),
         wopt(L!("no-newline"), NoArgument, 'N'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":n:m:qN");
+    const SHORT_OPTIONS: &'static wstr = L!("n:m:qN");
 
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {

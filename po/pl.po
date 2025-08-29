@@ -190,6 +190,11 @@ msgstr ""
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
 msgstr ""
 
+#
+#, c-format
+msgid "%ls: %ls: option does not take an argument\n"
+msgstr ""
+
 #, c-format
 msgid "%ls: %ls: option requires an argument\n"
 msgstr ""
@@ -400,6 +405,11 @@ msgstr ""
 
 #, c-format
 msgid "%ls: Invalid --min-args value '%ls'\n"
+msgstr ""
+
+#
+#, c-format
+msgid "%ls: Invalid --unknown-arguments value '%ls'\n"
 msgstr ""
 
 #, c-format
@@ -1912,10 +1922,16 @@ msgstr ""
 msgid "%s: Directory stack is empty…\\n"
 msgstr ""
 
+msgid "%s: Either the --short or --long flag must be provided\\n"
+msgstr ""
+
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 msgstr ""
 
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
+msgstr ""
+
+msgid "%s: Extra non-option arguments were provided\\n"
 msgstr ""
 
 msgid "%s: Invalid mask '%s'\\n"
@@ -1924,7 +1940,16 @@ msgstr ""
 msgid "%s: Not inside of command substitution"
 msgstr ""
 
-msgid "%s: The --short flag is required and must be a single character\\n"
+msgid "%s: The --long-only flag requires the --long flag\\n"
+msgstr ""
+
+msgid "%s: The --short flag must be a single character\\n"
+msgstr ""
+
+msgid "%s: The --validate flag requires subsequent arguments\\n"
+msgstr ""
+
+msgid "%s: The --validate flag requires the --required-val, --optional-value, or --multiple-vals flag\\n"
 msgstr ""
 
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
@@ -13607,6 +13632,9 @@ msgid "Delete only libvirt metadata, leaving snapshot contents behind"
 msgstr ""
 
 msgid "Delete only those tarballs which aren't present in a snapshot"
+msgstr ""
+
+msgid "Delete option from argv_opts"
 msgstr ""
 
 msgid "Delete previous settime entry"
@@ -25415,6 +25443,9 @@ msgid "First page to convert"
 msgstr ""
 
 msgid "First remove existing destination files"
+msgstr ""
+
+msgid "Fish script to validate option values"
 msgstr ""
 
 msgid "Fish's release notes"

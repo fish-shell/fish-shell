@@ -14,7 +14,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
     let argc = argv.len();
     let print_hints = false;
 
-    const shortopts: &wstr = L!("+:h");
+    const shortopts: &wstr = L!("+h");
     const longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);
@@ -27,6 +27,16 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

@@ -407,7 +407,7 @@ fn parse_cmd_opts(
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     let cmd = argv[0];
-    let short_options = L!(":aehkKfM:Lm:s");
+    let short_options = L!("aehkKfM:Lm:s");
     const long_options: &[WOption] = &[
         wopt(L!("all"), NoArgument, 'a'),
         wopt(L!("erase"), NoArgument, 'e'),
@@ -475,6 +475,10 @@ fn parse_cmd_opts(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

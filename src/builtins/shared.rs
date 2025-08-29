@@ -27,6 +27,10 @@ localizable_consts!(
     pub BUILTIN_ERR_MISSING
     "%ls: %ls: option requires an argument\n"
 
+    /// Error message on unexpected argument.
+    pub BUILTIN_ERR_UNEXP_ARG
+    "%ls: %ls: option does not take an argument\n"
+
     /// Error message on missing man page.
     pub BUILTIN_ERR_MISSING_HELP
     "fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will show an online version\n"
@@ -694,6 +698,22 @@ pub fn builtin_missing_argument(
     }
 }
 
+/// Perform error reporting for encounter with an extra argument.
+pub fn builtin_unexpected_argument(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    opt: &wstr,
+    print_hints: bool, /*=true*/
+) {
+    streams
+        .err
+        .append(wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, cmd, opt));
+    if print_hints {
+        builtin_print_error_trailer(parser, streams.err, cmd);
+    }
+}
+
 /// Print the backtrace and call for help that we use at the end of error messages.
 pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &wstr) {
     b.push('\n');
@@ -736,7 +756,7 @@ impl HelpOnlyCmdOpts {
         let cmd = args[0];
         let print_hints = true;
 
-        const shortopts: &wstr = L!("+:h");
+        const shortopts: &wstr = L!("+h");
         const longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
         let mut print_help = false;
@@ -748,6 +768,16 @@ impl HelpOnlyCmdOpts {
                 }
                 ':' => {
                     builtin_missing_argument(
+                        parser,
+                        streams,
+                        cmd,
+                        args[w.wopt_index - 1],
+                        print_hints,
+                    );
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                ';' => {
+                    builtin_unexpected_argument(
                         parser,
                         streams,
                         cmd,

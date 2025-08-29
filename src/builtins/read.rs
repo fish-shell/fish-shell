@@ -63,7 +63,7 @@ impl Options {
     }
 }
 
-const SHORT_OPTIONS: &wstr = L!(":ac:d:fghiLln:p:sStuxzP:UR:L");
+const SHORT_OPTIONS: &wstr = L!("ac:d:fghiLln:p:sStuxzP:UR:L");
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("array"), ArgType::NoArgument, 'a'),
     wopt(L!("command"), ArgType::RequiredArgument, 'c'),
@@ -183,6 +183,10 @@ fn parse_cmd_opts(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

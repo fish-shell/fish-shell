@@ -20,7 +20,7 @@ end
 function __fish_meson_builddir
     # Consider the value of -C option to detect the build directory
     set -l cmd (commandline -xpc)
-    argparse -i 'C=' -- $cmd
+    argparse -u 'C=' -- $cmd
     if set -q _flag_C
         echo $_flag_C
     else

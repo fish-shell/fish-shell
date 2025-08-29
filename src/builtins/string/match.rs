@@ -34,7 +34,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         wopt(L!("index"), NoArgument, 'n'),
         wopt(L!("max-matches"), RequiredArgument, 'm'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":aegivqrnm:");
+    const SHORT_OPTIONS: &'static wstr = L!("aegivqrnm:");
 
     fn parse_opt(&mut self, _n: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {

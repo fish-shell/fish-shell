@@ -117,7 +117,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
     };
 }
 
-const SHORT_OPTIONS: &wstr = L!(":cghlpq");
+const SHORT_OPTIONS: &wstr = L!("cghlpq");
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("command"), ArgType::NoArgument, 'c'),
     wopt(L!("group"), ArgType::NoArgument, 'g'),
@@ -164,6 +164,10 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

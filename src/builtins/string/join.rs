@@ -23,7 +23,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         wopt(L!("quiet"), NoArgument, 'q'),
         wopt(L!("no-empty"), NoArgument, 'n'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":qn");
+    const SHORT_OPTIONS: &'static wstr = L!("qn");
 
     fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
         match c {

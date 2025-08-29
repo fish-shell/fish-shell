@@ -42,6 +42,16 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - The ``psub`` command now allows combining ``--suffix`` with ``--fifo`` (:issue:`11729`).
+- ``argparse`` now saves recognised options and values in ``$argv_opts``, allowing them to be forwarded to other commands (:issue:`6466`).
+- ``argparse`` options can now be marked to be deleted from ``$argv_opts`` (by adding a ``&`` at the end of the option spec, before a ``!`` if present). There is now also a corresponding ``-d`` / ``--delete`` option to ``fish_opt``.
+- ``argparse --ignore-unknown`` now removes preceding known short options from groups containing unknown options (e.g. when parsing ``-abc``, if ``a`` is known but ``b`` is not, then ``$argv`` will contain ``-bc``).
+- ``argparse`` now has an ``-u`` / ``--move-unknown`` option that works like ``--ignore-unknown``, but unknown options (and their arguments) are moved from ``$argv`` to ``$argv_opts``. whereas ``--ignore-unknown`` keeps them in ``$argv``.
+- ``argparse`` now has an ``-S`` / ``--strict-longopts`` option that forbids abbreviating long options or passing them with a single dash (e.g. if there is a long option called ``foo``, ``--fo`` and ``--foo`` won't match it).
+- ``argparse`` now has a ``-U`` / ``--unknown-arguments`` *KIND* option, where *KIND* is either ``optional``, ``required``, or ``none``, indicating whether unknown options are parsed as taking optional, required, or no arguments. This implies ``--move-unknown``.
+- ``argparse`` now allows specifying options that take multiple optional values by using ``=*`` in the option spec, the parsing of the option is the same as ones with optional values (i.e. ``=?``), but each successive use accumulates more values (or an empty string if no value), instead of replacing the previous value (i.e. it behaves similarly to ``=+``) (:issue:`8432`). In addition, ``fish_opt`` has been modified to support such options by using the ``--multiple-vals`` together with ``-o`` / ``--optional-val``; ``-m`` is also now acceptable as an abbreviation for ``--multiple-vals``.
+- ``fish_opt`` no longer requires you give a short flag name when defining options, provided you give it a long flag name with more than one character.
+- ``argparse`` option specifiers for long only options can now start with ``/``, allowing the definition of long options with a single letter (withouht the ``/``, an option with a single letter is always interpreted as a short flag). Due to this change, the ``--long-only`` option to ``fish_opt`` is now no longer necessary and is deprecated.
+- ``fish_opt`` now has a ``-v`` / ``--validate`` option you can use to give a fish script to validate values of the option.
 
 Interactive improvements
 ------------------------

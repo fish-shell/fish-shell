@@ -269,7 +269,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     let mut override_buffer = None;
 
-    const short_options: &wstr = L!(":abijpctfxorhI:CBELSsP");
+    const short_options: &wstr = L!("abijpctfxorhI:CBELSsP");
     let long_options: &[WOption] = &[
         wopt(L!("append"), ArgType::NoArgument, 'a'),
         wopt(L!("insert"), ArgType::NoArgument, 'i'),
@@ -353,6 +353,10 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

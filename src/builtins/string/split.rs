@@ -110,7 +110,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         wopt(L!("fields"), RequiredArgument, 'f'),
         wopt(L!("allow-empty"), NoArgument, 'a'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":qrm:nf:a");
+    const SHORT_OPTIONS: &'static wstr = L!("qrm:nf:a");
 
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {

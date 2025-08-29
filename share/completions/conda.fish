@@ -29,9 +29,9 @@ function __fish_conda_subcommand
     # get the commandline args without the "conda"
     set -l toks (commandline -xpc)[2..-1]
 
-    # Remove any important options - if we had options with arguments,
+    # if we had options with arguments,
     # they'd need to be listed here to be removed.
-    argparse -i h/help v/version -- $toks 2>/dev/null
+    argparse -u -- $toks 2>/dev/null
     # Return false if it fails - this shouldn't really happen,
     # so all bets are off
     or return 2
@@ -44,19 +44,12 @@ function __fish_conda_subcommand
         if test "$subcmds[1]" = "$argv[1]"
             set -e argv[1]
             set -e subcmds[1]
-        else if string match -q -- '-*' $argv[1]
-            set -e argv[1]
         else
             return 1
         end
     end
 
-    # Skip any remaining options.
-    while string match -q -- '-*' $argv[1]
-        set -e argv[1]
-    end
-
-    # If we have no subcommand left,
+    # If we have no subcommand
     # we either matched all given subcommands or we need one.
     if not set -q argv[1]
         return $have_sub

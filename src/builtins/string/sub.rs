@@ -17,7 +17,7 @@ impl StringSubCommand<'_> for Sub {
         wopt(L!("end"), RequiredArgument, 'e'),
         wopt(L!("quiet"), NoArgument, 'q'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":l:qs:e:");
+    const SHORT_OPTIONS: &'static wstr = L!("l:qs:e:");
 
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {

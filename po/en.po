@@ -43533,6 +43533,9 @@ msgstr ""
 msgid "Print help for the given subcommand(s)"
 msgstr ""
 
+msgid "Print help for the specified fish function or builtin"
+msgstr ""
+
 msgid "Print help info and exit"
 msgstr ""
 

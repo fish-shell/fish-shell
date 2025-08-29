@@ -25,8 +25,8 @@ Depends: bsdextrautils | bsdmainutils,
  file,
 # for the msgfmt command
  gettext-base,
-# for nroff and preconv
- groff-base,
+# for man
+ man-db,
 # for terminal definitions
  ncurses-base,
 # for kill

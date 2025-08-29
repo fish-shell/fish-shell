@@ -1,4 +1,4 @@
-function __fish_print_help --description "Print help message for the specified fish function or builtin"
+function __fish_print_help --description "Print help for the specified fish function or builtin"
     set -l item $argv[1]
     switch $item
         case !
@@ -11,8 +11,41 @@ function __fish_print_help --description "Print help message for the specified f
             set item test
     end
 
+    if not command -v man >/dev/null
+        __fish_print_help_pre_4.1 \
+            $item \
+            "fish: warning: Unknown command 'man', falling back to 'mandoc' or 'nroff'"
+        return
+    end
+
+    # NOTE: this is duplicated with share/functions/man.fish, but that
+    # function is not always defined.
+    set -l tmpdir
+    set -l file (path filter -- \
+                    $__fish_data_dir/man/man1/$item.1 \
+                    $__fish_data_dir/man/man1/$item.1.gz)
+    or begin
+        set -l contents "$(status get-file man/man1/$item.1)"
+        or return 2
+        set tmpdir (__fish_mktemp_relative -d fish-print-help)
+        or return
+        set file $tmpdir/$item.1
+        printf %s\n $contents >$file
+    end
+    command man $file[1]
+    set -l saved_status $status
+    if set -q tmpdir[1]
+        command rm -r $tmpdir
+    end
+    return $saved_status
+end
+
+function __fish_print_help_pre_4.1 --description "Print help message for the specified fish function or builtin"
+    set -l item $argv[1]
+    set -l error_message $argv[2]
     # Do nothing if the file does not exist
-    if not path is -- $__fish_data_dir/man/man1/$item.1 $__fish_data_dir/man/man1/$item.1.gz; and not status get-file man/man1/$item.1 >/dev/null
+    if not path is -- $__fish_data_dir/man/man1/$item.1 $__fish_data_dir/man/man1/$item.1.gz
+        and not status get-file man/man1/$item.1 >/dev/null
         return 2
     end
 
@@ -76,6 +109,7 @@ function __fish_print_help --description "Print help message for the specified f
     set -l state blank
     set -l have_name
     begin
+        string join \n $error_message
         for line in $help
             # categorize the line
             set -l line_type

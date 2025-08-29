@@ -58,6 +58,7 @@ Interactive improvements
 - Pasted commands are now stripped of any :code:`$\ ` command prefixes, which are sometimes used in copy-pasted code snippets.
 - The :kbd:`alt-s` binding will now also use ``run0`` if available.
 - ``funced`` will now edit copied functions directly, instead of the file where ``function --copy`` was invoked. (:issue:`11614`)
+- built-in help options as ``abbr --help`` now use ``man`` directly, meaning that variables like :envvar:`MANWIDTH` are respected (:issue:`11786`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -95,6 +96,8 @@ For distributors
   it will act like the given tool (i.e. it's a multi-call binary).
   This allows truly distributing fish as a single file.
   This means they can be replaced with symlinks if you want to save disk space (:issue:`10876`).
+- builtin commands that support the ``--help`` option now require the ``man`` program.
+  The direct dependency on either of ``mandoc`` or ``nroff`` has been removed.
 - The CMake build configuration has been simplified and no longer second-guesses rustup.
   It will run rustc and cargo via :envvar:`PATH` or in ~/.cargo/bin/.
   If that doesn't match your setup, set the Rust_COMPILER and Rust_CARGO cmake variables (:issue:`11328`).

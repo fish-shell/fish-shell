@@ -97,8 +97,7 @@ Running fish requires:
 The following optional features also have specific requirements:
 
 -  builtin commands that have the ``--help`` option or print usage
-   messages require ``nroff`` or ``mandoc`` for
-   display
+   messages require ``man`` for display
 -  automated completion generation from manual pages requires Python 3.5+
 -  the ``fish_config`` web configuration tool requires Python 3.5+ and a web browser
 -  system clipboard integration (with the default Ctrl-V and Ctrl-X

@@ -61,11 +61,13 @@ function __fish_complete_yadm_like_git
     set -l yadm_work_tree (yadm gitconfig --get core.worktree)
     set -l yadm_repo (yadm introspect repo)
 
-    argparse -i 'R-yadm-repo=' -- $cmdline 2>/dev/null
+    argparse -u 'R-yadm-repo=&' -- $cmdline 2>/dev/null
     if set -q _flag_yadm_repo
         set yadm_repo $_flag_yadm_repo
-        # argparse *always* sets $argv to remaining arguments after consuming specified options
-        set cmdline $argv
+        # argparse -u *always* sets $argv to remaining arguments after consuming all options,
+        # and it *always* sets $argv_opts to any specified non-& options and any unknown options
+        # (the -- is needed in case $argv originally contained a -- followed by arguments starting with a -)
+        set cmdline $argv_opts -- $argv
     end
 
     set -l git_wrapper_cmd "git --work-tree $yadm_work_tree --git-dir $yadm_repo $cmdline"

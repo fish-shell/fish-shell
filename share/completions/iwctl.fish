@@ -8,10 +8,10 @@ function __iwctl_filter -w iwctl
     # awk does not work on multiline entries, therefore we use string match,
     # which has the added benefit of filtering out the `No devices in ...` lines
 
-    argparse -i all-columns -- $argv
+    argparse -u all-columns -- $argv
 
     # remove color escape sequences
-    set -l results (iwctl $argv | string replace -ra '\e\[[\d;]+m' '')
+    set -l results (iwctl $argv_opts -- $argv | string replace -ra '\e\[[\d;]+m' '')
     # calculate column widths
     set -l headers $results[3]
     # We exploit the fact that all column labels will have >2 space to the left, and inside column labels there is always only one space.
@@ -38,7 +38,7 @@ function __iwctl_match_subcoms
 
     set argv (commandline -pxc)
     # iwctl allows to specify arguments for username, password, passphrase and dont-ask regardless of any following commands
-    argparse -i 'u/username=' 'p/password=' 'P/passphrase=' v/dont-ask -- $argv
+    argparse -u 'u/username=' 'p/password=' 'P/passphrase=' v/dont-ask -- $argv
     set argv $argv[2..]
 
     if test (count $argv) != (count $match)
@@ -55,7 +55,7 @@ end
 function __iwctl_connect
     set argv (commandline -pxc)
     # remove all options
-    argparse -i 'u/username=' 'p/password=' 'P/passphrase=' v/dont-ask -- $argv
+    argparse -u 'u/username=' 'p/password=' 'P/passphrase=' v/dont-ask -- $argv
     # station name should now be the third argument (`iwctl station <wlan>`)
     for network in (__iwctl_filter station $argv[3] get-networks rssi-dbms --all-columns)
         set network (string split \t -- $network)

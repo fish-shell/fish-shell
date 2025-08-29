@@ -267,17 +267,6 @@ it may be advisable to circumvent this check with
 To install the hook, place the code in a new file
 ``.git/hooks/pre-push`` and make it executable.
 
-Coverity Scan
--------------
-
-We use Coverity’s static analysis tool which offers free access to open
-source projects. While access to the tool itself is restricted,
-fish-shell organization members should know that they can login
-`here <https://scan.coverity.com/projects/fish-shell-fish-shell?tab=overview>`__
-with their GitHub account. Currently, tests are triggered upon merging
-the ``master`` branch into ``coverity_scan_master``. Even if you are not
-a fish developer, you can keep an eye on our statistics there.
-
 Contributing Translations
 =========================
 

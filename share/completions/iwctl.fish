@@ -1,36 +1,27 @@
 # Execute an `iwctl ... list` command and parse output
-function __iwctl_filter -w iwctl
-    # set results "iwctl $cmd list | tail -n +5"
-    # if test -n "$empty"
-    #     set -a results "| string match --invert '*$empty*'"
-    # end
-    # eval "$results" | awk '{print $2}'
-    # awk does not work on multiline entries, therefore we use string match,
-    # which has the added benefit of filtering out the `No devices in ...` lines
+function __iwctl_list
+    set -l python (__fish_anypython); and command -q busctl; or return
+    $python -c "
+import subprocess, json, sys, getopt
+SERVICE = 'net.connman.iwd'
+DEVICE = f'{SERVICE}.Device'
+def call(*a): return json.loads(subprocess.run(['busctl','call','--json=short',f'{SERVICE}',*a],stdout=subprocess.PIPE).stdout)['data'][0]
+objects=call('/','org.freedesktop.DBus.ObjectManager','GetManagedObjects')
+dev = lambda x: x[DEVICE]['Name']['data']
 
-    argparse -i all-columns -- $argv
+def names(i): [print(v[i]['Name']['data']) for o,v in objects.items() if i in v]
+def devices(i): [print(dev(v)) for o,v in objects.items() if i in v and DEVICE in v]
+def networks(name: str):
+    station = next(obj for obj,i in objects.items() if f'{SERVICE}.Station' in i and dev(i)==name)
+    for obj, signal in call(station, 'net.connman.iwd.Station', 'GetOrderedNetworks'):
+        network = objects[obj][f'{SERVICE}.Network']
+        print(network['Name']['data'], network['Type']['data'], signal, sep='\t')
 
-    # remove color escape sequences
-    set -l results (iwctl $argv | string replace -ra '\e\[[\d;]+m' '')
-    # calculate column widths
-    set -l headers $results[3]
-    # We exploit the fact that all column labels will have >2 space to the left, and inside column labels there is always only one space.
-    set -l leading_ws (string match -r "^ *" -- $headers | string length)
-    set -l column_widths (string match -a -r '(?<=  )\S.*?(?:  (?=\S)|$)' -- $headers | string length)
-
-    if set -ql _flag_all_columns
-        for line in (string match "  *" -- $results[5..] | string sub -s (math $leading_ws + 1))
-            for column_width in $column_widths
-                printf %s\t (string sub -l $column_width -- $line | string trim -r)
-                set line (string sub -s (math $column_width + 1) -- $line)
-            end
-            printf "\n"
-        end
-    else if set -q column_widths[1]
-        # only take lines starting with `  `, i.e., no `No devices ...`
-        # then take the first column as substring
-        string match "  *" $results[5..] | string sub -s (math $leading_ws + 1) -l $column_widths[1] | string trim -r
-    end
+opts, args = getopt.getopt(sys.argv[1:], 'dn')
+for opt, _ in opts:
+    if opt == '-d': devices(f'{SERVICE}.{args[0]}'); break
+    if opt == '-n': networks(args[0]); break
+else: names(f'{SERVICE}.{args[0]}') " $argv 2>/dev/null
 end
 
 function __iwctl_match_subcoms
@@ -57,7 +48,7 @@ function __iwctl_connect
     # remove all options
     argparse -i 'u/username=' 'p/password=' 'P/passphrase=' v/dont-ask -- $argv
     # station name should now be the third argument (`iwctl station <wlan>`)
-    for network in (__iwctl_filter station $argv[3] get-networks rssi-dbms --all-columns)
+    for network in (__iwctl_list -n $argv[3])
         set network (string split \t -- $network)
         set -l strength "$network[3]"
         # This follows iwctls display of * to ****
@@ -76,16 +67,6 @@ function __iwctl_connect
     end
 end
 
-# The `empty` messages in case we want to go back to using those
-# set ad_hoc '(__iwctl_filter ad-hoc "No devices in Ad-Hoc mode available.")'
-# set adapter '(__iwctl_filter adapter)'
-# set ap '(__iwctl_filter ap "No devices in access point mode available.")'
-# set device '(__iwctl_filter device)'
-# set dpp '(__iwctl_filter dpp "No DPP-capable devices available")'
-# set known_networks '(__iwctl_filter known-networks)'
-# set station '(__iwctl_filter station "No devices in Station mode available.")'
-# set wsc '(__iwctl_filter wsc "No WSC-capable devices available")'
-
 complete -f iwctl
 
 # Options
@@ -101,21 +82,21 @@ complete -c iwctl -n __iwctl_match_subcoms \
 
 # ad-hoc
 complete -c iwctl -n '__iwctl_match_subcoms ad-hoc' -a list -d "List devices in Ad-Hoc mode"
-complete -c iwctl -n '__iwctl_match_subcoms ad-hoc' -a "(__iwctl_filter ad-hoc list)"
+complete -c iwctl -n '__iwctl_match_subcoms ad-hoc' -a "(__iwctl_list -d AdHoc)"
 complete -c iwctl -n '__iwctl_match_subcoms "ad-hoc *"' -n 'not __iwctl_match_subcoms ad-hoc list' -a start -d "Start or join an Ad-Hoc network"
 complete -c iwctl -n '__iwctl_match_subcoms "ad-hoc *"' -n 'not __iwctl_match_subcoms ad-hoc list' -a start_open -d "Start of join an open Ad-Hoc network"
 complete -c iwctl -n '__iwctl_match_subcoms "ad-hoc *"' -n 'not __iwctl_match_subcoms ad-hoc list' -a stop -d "Leave an Ad-Hoc network"
 
 # adapter
 complete -c iwctl -n '__iwctl_match_subcoms adapter' -a list -d "List adapters"
-complete -c iwctl -n '__iwctl_match_subcoms adapter' -a "(__iwctl_filter adapter list)"
+complete -c iwctl -n '__iwctl_match_subcoms adapter' -a "(__iwctl_list Adapter)"
 complete -c iwctl -n '__iwctl_match_subcoms "adapter *"' -n 'not __iwctl_match_subcoms adapter list' -a show -d "Show adapter info"
 complete -c iwctl -n '__iwctl_match_subcoms "adapter *"' -n 'not __iwctl_match_subcoms adapter list' -a set-property -d "Set property"
 # TODO implement completions for `properties`, i.e. all rows with `*` in first column
 
 # ap
 complete -c iwctl -n '__iwctl_match_subcoms ap' -a list -d "List devices in AP mode"
-complete -c iwctl -n '__iwctl_match_subcoms ap' -a "(__iwctl_filter ap list)"
+complete -c iwctl -n '__iwctl_match_subcoms ap' -a "(__iwctl_list -d AccessPoint)"
 complete -c iwctl -n '__iwctl_match_subcoms "ap *"' -n 'not __iwctl_match_subcoms ap list' -a start -d "Start an access point"
 complete -c iwctl -n '__iwctl_match_subcoms "ap *"' -n 'not __iwctl_match_subcoms ap list' -a start-profile -d "Start an access point based on a disk profile"
 complete -c iwctl -n '__iwctl_match_subcoms "ap *"' -n 'not __iwctl_match_subcoms ap list' -a stop -d "Stop a started access point"
@@ -131,14 +112,14 @@ complete -c iwctl -n '__iwctl_match_subcoms "debug * autoconnect"' -a "on off" -
 
 # device
 complete -c iwctl -n '__iwctl_match_subcoms device' -a list -d "List devices"
-complete -c iwctl -n '__iwctl_match_subcoms device' -a "(__iwctl_filter device list)"
+complete -c iwctl -n '__iwctl_match_subcoms device' -a "(__iwctl_list Device)"
 complete -c iwctl -n '__iwctl_match_subcoms "device *"' -n 'not __iwctl_match_subcoms device list' -a show -d "Show device info"
 complete -c iwctl -n '__iwctl_match_subcoms "device *"' -n 'not __iwctl_match_subcoms device list' -a set-property -d "Set property"
 # TODO implement completions for `properties`, i.e. all rows with `*` in first column
 
 # dpp
 complete -c iwctl -n '__iwctl_match_subcoms dpp' -a list -d "List DPP-capable devices"
-complete -c iwctl -n '__iwctl_match_subcoms dpp' -a "(__iwctl_filter dpp list)"
+complete -c iwctl -n '__iwctl_match_subcoms dpp' -a "(__iwctl_list -d DeviceProvisioning)"
 complete -c iwctl -n '__iwctl_match_subcoms "dpp *"' -n 'not __iwctl_match_subcoms dpp list' -a start-enrollee -d "Starts a DPP Enrollee"
 complete -c iwctl -n '__iwctl_match_subcoms "dpp *"' -n 'not __iwctl_match_subcoms dpp list' -a start-configurator -d "Starts a DPP Configurator"
 complete -c iwctl -n '__iwctl_match_subcoms "dpp *"' -n 'not __iwctl_match_subcoms dpp list' -a stop -d "Aborts a DPP operations"
@@ -147,14 +128,14 @@ complete -c iwctl -n '__iwctl_match_subcoms "dpp *"' -n 'not __iwctl_match_subco
 # known-networks
 # TODO Does not support SSIDs ending/starting on whitespace. Not sure how to fix.
 complete -c iwctl -n '__iwctl_match_subcoms known-networks' -a list -d "List known networks"
-complete -c iwctl -n '__iwctl_match_subcoms known-networks' -a "(__iwctl_filter known-networks list)"
+complete -c iwctl -n '__iwctl_match_subcoms known-networks' -a "(__iwctl_list KnownNetwork)"
 complete -c iwctl -n '__iwctl_match_subcoms "known-networks *"' -n 'not __iwctl_match_subcoms known-networks list' -a forget -d "Forget a known network"
 complete -c iwctl -n '__iwctl_match_subcoms "known-networks *"' -n 'not __iwctl_match_subcoms known-networks list' -a show -d "Show known network"
 complete -c iwctl -n '__iwctl_match_subcoms "known-networks *"' -n 'not __iwctl_match_subcoms known-networks list' -a set-property -d "Set property"
 
 # station
 complete -c iwctl -n '__iwctl_match_subcoms station' -a list -d "List devices in Station mode"
-complete -c iwctl -n '__iwctl_match_subcoms station' -a "(__iwctl_filter station list)"
+complete -c iwctl -n '__iwctl_match_subcoms station' -a "(__iwctl_list -d Station)"
 complete -c iwctl -n '__iwctl_match_subcoms "station *"' -n 'not __iwctl_match_subcoms station list' -a connect -d "Connect to network"
 complete -c iwctl -n '__iwctl_match_subcoms "station * connect"' -a "(__iwctl_connect)" -d "Connect to network" --keep-order
 complete -c iwctl -n '__iwctl_match_subcoms "station *"' -n 'not __iwctl_match_subcoms station list' -a connect-hidden -d "Connect to hidden network"
@@ -168,7 +149,7 @@ complete -c iwctl -n '__iwctl_match_subcoms "station *"' -n 'not __iwctl_match_s
 
 # wsc
 complete -c iwctl -n '__iwctl_match_subcoms wsc' -a list -d "List WSC-capable devices"
-complete -c iwctl -n '__iwctl_match_subcoms wsc' -a "(__iwctl_filter wsc list)"
+complete -c iwctl -n '__iwctl_match_subcoms wsc' -a "(__iwctl_list -d SimpleConfiguration)"
 complete -c iwctl -n '__iwctl_match_subcoms "wsc *"' -n 'not __iwctl_match_subcoms wsc list' -a push-button -d "PushButton Mode"
 complete -c iwctl -n '__iwctl_match_subcoms "wsc *"' -n 'not __iwctl_match_subcoms wsc list' -a start-user-pin -d "PIN mode"
 complete -c iwctl -n '__iwctl_match_subcoms "wsc *"' -n 'not __iwctl_match_subcoms wsc list' -a start-pin -d "PIN mode with generated PIN"

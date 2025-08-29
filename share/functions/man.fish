@@ -44,6 +44,8 @@ function man --description "Format and display the on-line manual pages"
         # isn't guaranteed to be allowed.
         # So we override them with the good name.
         switch $argv
+            case !
+                set argv not
             case :
                 set argv true
             case '['

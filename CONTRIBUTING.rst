@@ -11,10 +11,17 @@ Contributions are welcome, and there are many ways to contribute!
 Whether you want to change some of the core Rust source, enhance or add a completion script or function,
 improve the documentation or translate something, this document will tell you how.
 
-Getting Set Up
-==============
 
-Fish is developed on Github, at https://github.com/fish-shell/fish-shell.
+Mailing List
+============
+
+Send patches to the public mailing list: mailto:~krobelus/fish-shell@lists.sr.ht.
+Archives are available at https://lists.sr.ht/~krobelus/fish-shell/.
+
+GitHub
+======
+
+Fish is available on Github, at https://github.com/fish-shell/fish-shell.
 
 First, you'll need an account there, and you'll need a git clone of fish.
 Fork it on Github and then run::

@@ -43,7 +43,7 @@ Guidelines
 In short:
 
 - Be conservative in what you need (keep to the agreed minimum supported Rust version, limit new dependencies)
-- Use automated tools to help you (including ``make fish_run_tests`` and ``build_tools/style.fish``)
+- Use automated tools to help you (``build_tools/check.sh``)
 
 Contributing completions
 ========================
@@ -243,24 +243,19 @@ One possibility is a pre-push hook script like this one:
 
    # Git gives us lines like "refs/heads/frombranch SOMESHA1 refs/heads/tobranch SOMESHA1"
    # We're only interested in the branches
+   isprotected=false
    while read from _ to _; do
-       if [ "x$to" = "xrefs/heads/$protected_branch" ]; then
-           isprotected=1
+       if [ "$to" = "refs/heads/$protected_branch" ]; then
+           isprotected=true
        fi
    done
-   if [ "x$isprotected" = x1 ]; then
-       echo "Running tests before push to master"
-       make fish_run_tests
-       RESULT=$?
-       if [ $RESULT -ne 0 ]; then
-           echo "Tests failed for a push to master, we can't let you do that" >&2
-           exit 1
-       fi
+   if "$isprotected"; then
+       echo "Running checks before push to master"
+       build_tools/check.sh
    fi
-   exit 0
 
 This will check if the push is to the master branch and, if it is, only
-allow the push if running ``make fish_run_tests`` succeeds. In some circumstances
+allow the push if running ``build_tools/check.sh`` succeeds. In some circumstances
 it may be advisable to circumvent this check with
 ``git push --no-verify``, but usually that isn’t necessary.
 

@@ -58,12 +58,9 @@ function funced --description 'Edit function definition'
         return 0
     end
 
-    # OS X (macOS) `mktemp` is rather restricted - no suffix, no way to automatically use TMPDIR.
-    # Create a directory so we can use a ".fish" suffix for the file - makes editors pick up that
-    # it's a fish file.
-    set -q TMPDIR
-    or set -l TMPDIR /tmp
-    set -l tmpdir (mktemp -d $TMPDIR/fish.XXXXXX)
+    # Create a directory so we can use a ".fish" suffix for the file -
+    # makes editors pick up that it's a fish file.
+    set -l tmpdir (__fish_mktemp_relative -d fish-funced)
     or return 1
     set -l tmpname $tmpdir/$funcname.fish
 

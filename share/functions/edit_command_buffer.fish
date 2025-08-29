@@ -1,9 +1,9 @@
 function edit_command_buffer --description 'Edit the command buffer in an external editor'
-    set -l f (mktemp)
+    set -l tmpdir (__fish_mktemp_relative -d fish)
     or return 1
-    if set -q f[1]
-        command mv $f $f.fish
-        set f $f.fish
+    set -l f
+    if set -q tmpdir[1]
+        set f $tmpdir/command-line.fish
     else
         # We should never execute this block but better to be paranoid.
         if set -q TMPDIR
@@ -11,9 +11,9 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         else
             set f /tmp/fish.$fish_pid.fish
         end
-        command touch $f
-        or return 1
     end
+    command touch $f
+    or return 1
 
     set -l editor (__fish_anyeditor)
     or return 1
@@ -52,13 +52,13 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
                     set found true
                     break
                 end
-                set cursor_from_editor (mktemp)
+                set cursor_from_editor (__fish_mktemp_relative fish-edit_command_buffer)
                 set -a editor +$line "+norm! $col|" $f \
                     '+au VimLeave * ++once call writefile([printf("%s %s %s", shellescape(bufname()), line("."), col("."))], "'$cursor_from_editor'")'
             case emacs emacsclient gedit
                 set -a editor +$line:$col $f
             case kak
-                set cursor_from_editor (mktemp)
+                set cursor_from_editor (__fish_mktemp_relative fish-edit_command_buffer)
                 set -a editor +$line:$col $f -e "
                         hook -always -once global ClientClose %val{client} %{
                             echo -to-file $cursor_from_editor -quoting shell \
@@ -117,7 +117,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         end
         command rm $cursor_from_editor
     end
-    command rm $f
+    command rm -r (path dirname $f)
     # We've probably opened something that messed with the screen.
     # A repaint seems in order.
     commandline -f repaint

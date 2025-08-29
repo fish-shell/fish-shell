@@ -226,9 +226,7 @@ function help --description 'Show help for the fish shell'
         # trampoline (they're only needed if there's a fragment in the path)
         if set -l clean_url (string match -re '#' $page_url)
             # Write a temporary file that will redirect where we want.
-            set -q TMPDIR
-            or set -l TMPDIR /tmp
-            set -l tmpdir (mktemp -d $TMPDIR/help.XXXXXX)
+            set -l tmpdir (__fish_mktemp_relative -d fish-help)
             or return 1
             set -l tmpname $tmpdir/help.html
             echo '<meta http-equiv="refresh" content="0;URL=\''$clean_url'\'" />' >$tmpname

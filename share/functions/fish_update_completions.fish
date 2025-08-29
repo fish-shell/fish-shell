@@ -11,7 +11,7 @@ function fish_update_completions --description "Update man-page based completion
             echo "Cannot find man page completion generator. Please check your fish installation."
             return 1
         end
-        set -l temp (mktemp -d)
+        set -l temp (__fish_mktemp_relative -d fish_update_completions)
         for file in create_manpage_completions.py deroff.py
             status get-file tools/$file >$temp/$file
             or return

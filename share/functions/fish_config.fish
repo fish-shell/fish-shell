@@ -26,7 +26,7 @@ function fish_config --description "Launch fish's web based configuration"
                     echo "Cannot find web configuration tool. Please check your fish installation."
                     return 1
                 end
-                set -l temp (mktemp -d)
+                set -l temp (__fish_mktemp_relative -d fish_config)
                 for dir in (status list-files tools/web_config | path dirname | path sort -u)
                     mkdir -p $temp/$dir
                     or return

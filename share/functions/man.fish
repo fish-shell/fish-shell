@@ -58,6 +58,7 @@ function man --description "Format and display the on-line manual pages"
     set -l tmpdir
     if not set -q argv[2] && status list-files "man/man1/$argv[1].1" &>/dev/null
         set tmpdir (__fish_mktemp_relative -d fish-man)
+        or return
         status get-file "man/man1/$argv[1].1" >$tmpdir/$argv.1
         set argv $tmpdir/$argv.1
     end
@@ -66,7 +67,7 @@ function man --description "Format and display the on-line manual pages"
     set -l saved_status $status
 
     if set -q tmpdir[1]
-        rm -r $tmpdir
+        command rm -r $tmpdir
     end
 
     return $saved_status

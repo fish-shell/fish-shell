@@ -1,17 +1,7 @@
 function edit_command_buffer --description 'Edit the command buffer in an external editor'
     set -l tmpdir (__fish_mktemp_relative -d fish)
     or return 1
-    set -l f
-    if set -q tmpdir[1]
-        set f $tmpdir/command-line.fish
-    else
-        # We should never execute this block but better to be paranoid.
-        if set -q TMPDIR
-            set f $TMPDIR/fish.$fish_pid.fish
-        else
-            set f /tmp/fish.$fish_pid.fish
-        end
-    end
+    set -l f $tmpdir/command-line.fish
     command touch $f
     or return 1
 

@@ -32,6 +32,9 @@
         //
         // It does not support any other properties, so they need to be specified in this file
         // manually
+        // Moreover, .editorconfig doesn't support specifying autoformatters to run on save,
+        // so those that are enabled below are not present in the .editorconfig file
+
         "files.encoding": "utf8", // equivalent to .editorconfig's encoding
 
         //Rough equivalents to the .editorconfig's max_line_length = 100 setting
@@ -53,7 +56,14 @@
             "editor.rulers": [], // like max_line_length = unset
             // Setting empty rulers causes rewrap to wrap at 80, so we need to disable it
             "rewrap.autoWrap.enabled": false,
+
+            // Auto format with fish_indent on save
+            "editor.defaultFormatter": "bmalehorn.vscode-fish",
+            "editor.formatOnSave": true
         },
+        // Uncomment this out if you want to use a locally built fish_indent
+        // (instead of the one in your PATH)
+        //"fish.path.fish_indent": "target/debug/fish_indent",
 
         // Put this in your config.fish file to have vscode used as your git editor,
         // but only when running git commands from VS Code's integrated terminal:
@@ -67,6 +77,15 @@
         "[markdown][restructuredtext]": { // *.md and *.rst
             "editor.rulers": [], "rewrap.autoWrap.enabled": false, // like max_line_length = unset
         },
+        "[rust]": { // use rustfmt to format rust code on save
+            "editor.defaultFormatter": "rust-lang.rust-analyzer",
+            "editor.formatOnSave": true
+        },
+        "[python]": { // use black to format python code on save
+            "editor.defaultFormatter": "ms-python.black-formatter",
+            "editor.formatOnSave": true
+        },
+
         // These are for commit messages you write in VS Code's gui
         // (instead of editing a COMMIT_EDITMSG file)
         "git.inputValidationSubjectLength": 72,

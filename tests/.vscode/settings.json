@@ -1,0 +1,6 @@
+{
+    "[fish]": {
+        // Disable autoformat for fish files, at it will break some tests
+        "editor.formatOnSave": false
+    },
+}

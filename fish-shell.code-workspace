@@ -1,7 +1,12 @@
 {
-    // This line is needed: it tells vscode to apply these settings to the containing folder
-    "folders": [{"path": "."}],
-
+    "folders": [
+        // This line is needed: it tells vscode to apply these settings to the containing folder
+        {"path": "."},
+        // These lines makes vscode load $path/.vscode/settings.json, which contain
+        // settings that apply only to $path
+        {"path": "share/completions"},
+        {"path": "share/functions"},
+    ],
     "extensions": {
         // These are extensions that you will be suggested to install (if you haven't already)
         "recommendations": [
@@ -50,12 +55,16 @@
         // making new languages however requires making an entire new extension, so I'm just using
         // the languages that come with VS Code, or are incldued with an extension that is
         // recomended above.
+        //
+        // If however the "glob" is simply to limit the affect to a specific folder,
+        // you can accomplish this by putting the folder specific settings in
+        // <folder>/.vscode/settings.json, and listing the folder above in the "folders" setting.
+
+
         "[fish]": {
-            // As explained above, no easy way to make this ONLY apply to fish files in
-            // share/{completions,functions}
-            "editor.rulers": [], // like max_line_length = unset
-            // Setting empty rulers causes rewrap to wrap at 80, so we need to disable it
-            "rewrap.autoWrap.enabled": false,
+            // Folder specific fish settings are in:
+            //    {share/{completions,functions},tests}/.vscode/settings.json
+
 
             // Auto format with fish_indent on save
             "editor.defaultFormatter": "bmalehorn.vscode-fish",
@@ -75,6 +84,7 @@
         },
 
         "[markdown][restructuredtext]": { // *.md and *.rst
+            // Setting empty rulers causes rewrap to wrap at 80, so we also need to disable rewrap
             "editor.rulers": [], "rewrap.autoWrap.enabled": false, // like max_line_length = unset
         },
         "[rust]": { // use rustfmt to format rust code on save

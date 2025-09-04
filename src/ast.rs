@@ -437,8 +437,8 @@ macro_rules! Node {
 }
 
 /// Implement the leaf trait.
-macro_rules! implement_leaf {
-    ( $name:ident ) => {
+macro_rules! Leaf {
+    ($name:ident) => {
         impl Leaf for $name {
             fn range(&self) -> Option<SourceRange> {
                 self.range
@@ -459,17 +459,20 @@ macro_rules! implement_leaf {
             }
         }
     };
+
+    ( $(#[$_m:meta])* $_v:vis struct $name:ident $_:tt $(;)? ) => {
+        Leaf!($name);
+    };
 }
 
 /// Define a node that implements the keyword trait.
 macro_rules! define_keyword_node {
     ( $name:ident, $($allowed:ident),* $(,)? ) => {
-        #[derive(Default, Debug)]
+        #[derive(Default, Debug, Leaf!)]
         pub struct $name {
             range: Option<SourceRange>,
             keyword: ParseKeyword,
         }
-        implement_leaf!($name);
         impl Node for $name {
             fn kind(&self) -> Kind<'_> {
                 Kind::Keyword(self)
@@ -498,7 +501,7 @@ macro_rules! define_keyword_node {
 /// Define a node that implements the token trait.
 macro_rules! define_token_node {
     ( $name:ident, $($allowed:ident),* $(,)? ) => {
-        #[derive(Default, Debug)]
+        #[derive(Default, Debug, Leaf!)]
         pub struct $name {
             range: Option<SourceRange>,
             parse_token_type: ParseTokenType,
@@ -511,7 +514,6 @@ macro_rules! define_token_node {
                 KindMut::Token(self)
             }
         }
-        implement_leaf!($name);
         impl Token for $name {
             fn token_type(&self) -> ParseTokenType {
                 self.parse_token_type
@@ -1080,11 +1082,10 @@ define_list_node!(JobList, JobConjunction);
 define_list_node!(CaseItemList, CaseItem);
 
 /// A variable_assignment contains a source range like FOO=bar.
-#[derive(Default, Debug, Node!)]
+#[derive(Default, Debug, Node!, Leaf!)]
 pub struct VariableAssignment {
     range: Option<SourceRange>,
 }
-implement_leaf!(VariableAssignment);
 impl CheckParse for VariableAssignment {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         // Do we have a variable assignment at all?
@@ -1106,19 +1107,17 @@ impl CheckParse for VariableAssignment {
 }
 
 /// Zero or more newlines.
-#[derive(Default, Debug, Node!)]
+#[derive(Default, Debug, Node!, Leaf!)]
 pub struct MaybeNewlines {
     range: Option<SourceRange>,
 }
-implement_leaf!(MaybeNewlines);
 
 /// An argument is just a node whose source range determines its contents.
 /// This is a separate type because it is sometimes useful to find all arguments.
-#[derive(Default, Debug, Node!)]
+#[derive(Default, Debug, Node!, Leaf!)]
 pub struct Argument {
     range: Option<SourceRange>,
 }
-implement_leaf!(Argument);
 impl CheckParse for Argument {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::string

@@ -1357,8 +1357,7 @@ pub fn parse(src: &wstr, flags: ParseTreeFlags, out_errors: Option<&mut ParseErr
         src, flags, false, /* not freestanding_arguments */
         out_errors,
     );
-    let mut list = JobList::default();
-    pops.populate_list(&mut list, true);
+    let list: JobList = pops.allocate_populate_list(true);
     finalize_parse(pops, list)
 }
 
@@ -1372,8 +1371,7 @@ pub fn parse_argument_list(
         src, flags, true, /* freestanding_arguments */
         out_errors,
     );
-    let mut list = ArgumentList::default();
-    pops.populate_list(&mut list, true);
+    let list: ArgumentList = pops.allocate_populate_list(true);
     finalize_parse(pops, list)
 }
 
@@ -1772,15 +1770,15 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             KM::AndorJob(node) => node.accept_mut(self),
 
             // Lists
-            KM::VariableAssignmentList(node) => self.populate_list(node, false),
-            KM::ArgumentOrRedirectionList(node) => self.populate_list(node, false),
-            KM::ElseifClauseList(node) => self.populate_list(node, false),
-            KM::JobContinuationList(node) => self.populate_list(node, false),
-            KM::AndorJobList(node) => self.populate_list(node, false),
-            KM::JobConjunctionContinuationList(node) => self.populate_list(node, false),
-            KM::CaseItemList(node) => self.populate_list(node, false),
-            KM::ArgumentList(node) => self.populate_list(node, false),
-            KM::JobList(node) => self.populate_list(node, false),
+            KM::VariableAssignmentList(node) => *node = self.allocate_populate_list(false),
+            KM::ArgumentOrRedirectionList(node) => *node = self.allocate_populate_list(false),
+            KM::ElseifClauseList(node) => *node = self.allocate_populate_list(false),
+            KM::JobContinuationList(node) => *node = self.allocate_populate_list(false),
+            KM::AndorJobList(node) => *node = self.allocate_populate_list(false),
+            KM::JobConjunctionContinuationList(node) => *node = self.allocate_populate_list(false),
+            KM::CaseItemList(node) => *node = self.allocate_populate_list(false),
+            KM::ArgumentList(node) => *node = self.allocate_populate_list(false),
+            KM::JobList(node) => *node = self.allocate_populate_list(false),
         }
         VisitResult::Continue(())
     }
@@ -2266,11 +2264,12 @@ impl<'s> Populator<'s> {
 
     /// Given that we are a list of nodes of type N, populate as many elements as we can.
     /// If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
-    fn populate_list<N>(&mut self, list: &mut Box<[N]>, exhaust_stream: bool)
+    fn allocate_populate_list<N>(&mut self, exhaust_stream: bool) -> Box<[N]>
     where
         N: NodeMut + CheckParse + Default + ListElement,
     {
-        assert!(list.is_empty(), "List is not initially empty");
+        let empty = Box::<[N]>::default();
+        let kind = empty.kind();
 
         // Do not attempt to parse a list if we are unwinding.
         if self.unwinding {
@@ -2284,10 +2283,9 @@ impl<'s> Populator<'s> {
                 "%*sunwinding %ls",
                 self.spaces(),
                 "",
-                ast_kind_to_string(list.kind())
+                ast_kind_to_string(kind)
             );
-            assert!(list.is_empty(), "Should be an empty list");
-            return;
+            return empty;
         }
 
         // We're going to populate a vector with our nodes.
@@ -2297,7 +2295,7 @@ impl<'s> Populator<'s> {
             // If we are unwinding, then either we recover or we break the loop, dependent on the
             // loop type.
             if self.unwinding {
-                if !self.list_kind_stops_unwind(list.kind()) {
+                if !self.list_kind_stops_unwind(kind) {
                     break;
                 }
                 // We are going to stop unwinding.
@@ -2326,7 +2324,7 @@ impl<'s> Populator<'s> {
             }
 
             // Chomp semis and newlines.
-            self.chomp_extras(list.kind());
+            self.chomp_extras(kind);
 
             // Now try parsing a node.
             if let Some(node) = self.try_parse::<N>() {
@@ -2347,24 +2345,22 @@ impl<'s> Populator<'s> {
             }
         }
 
-        // Populate our list from our contents.
-        if !contents.is_empty() {
-            assert!(
-                contents.len() <= u32::MAX.try_into().unwrap(),
-                "Contents size out of bounds"
-            );
-            assert!(list.is_empty(), "List should still be empty");
-            *list = contents.into_boxed_slice();
-        }
+        assert!(
+            contents.len() <= u32::MAX.try_into().unwrap(),
+            "Contents size out of bounds"
+        );
+        let list = contents.into_boxed_slice();
 
         FLOGF!(
             ast_construction,
             "%*s%ls size: %lu",
             self.spaces(),
             "",
-            ast_kind_to_string(list.kind()),
+            ast_kind_to_string(kind),
             list.len()
         );
+
+        list
     }
 
     /// Allocate and populate a statement.

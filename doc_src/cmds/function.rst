@@ -23,6 +23,8 @@ The following options are available:
 **-a** *NAMES* or **--argument-names** *NAMES*
     Assigns the value of successive command-line arguments to the names given in *NAMES* (separated by spaces). These are the same arguments given in :envvar:`argv`, and are still available there (unless ``--inherit-variable argv`` was used or one of the given *NAMES* is ``argv``). See also :ref:`Argument Handling <variables-argv>`.
 
+    See the :ref:`Argument Names Caveats <argument_names_caveats>` section below for what happens when the number of arguments passed differs from the number of argument *NAMES*.
+
 **-d** *DESCRIPTION* or **--description** *DESCRIPTION*
     A description of what the function does, suitable as a completion description.
 
@@ -74,8 +76,6 @@ Example
 
 will run the ``ls`` command, using the ``-l`` option, while passing on any additional files and switches to ``ls``.
 
-
-
 ::
 
     function debug -a name val
@@ -99,8 +99,6 @@ will run the ``ls`` command, using the ``-l`` option, while passing on any addit
 
 will create a ``debug`` command to print chosen variables to `stderr`.
 
-
-
 ::
 
     function mkdir -d "Create a directory and set CWD"
@@ -120,7 +118,6 @@ will create a ``debug`` command to print chosen variables to `stderr`.
 This will run the ``mkdir`` command, and if it is successful, change the current working directory to the one just created.
 
 
-
 ::
 
     function notify
@@ -136,6 +133,33 @@ This will run the ``mkdir`` command, and if it is successful, change the current
 
 This will beep when the most recent job completes.
 
+.. _argument_names_caveats:
+
+Argument Names Caveats
+----------------------
+
+The ``-a`` / ``--argument-names`` flag does *not* validate the number of arguments passed: if an argument is missing the corresponding variable will be assigned to an empty list. For example:
+
+::
+
+    function two -a x y
+        set -l
+    end
+    two 1
+    # prints:
+    #    argv 1
+    #    x 1
+    #    y
+
+Similarly any extra arguments are ignored, but they are still accessible in ``$argv``. Continuing the previous example:
+
+::
+
+    two 1 2 3
+    # prints:
+    #    argv '1'  '2'  '3'
+    #    x 1
+    #    y 2
 
 Notes
 -----

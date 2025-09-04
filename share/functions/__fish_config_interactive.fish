@@ -168,15 +168,17 @@ end" >$__fish_config_dir/config.fish
     end
 
     # Notify terminals when $PWD changes via OSC 7 (issue #906).
-    function __fish_update_cwd_osc --on-variable PWD --description 'Notify terminals when $PWD changes'
-        set -l host $hostname
-        if set -q KONSOLE_VERSION
-            set host ''
+    if not functions --query __fish_update_cwd_osc
+        function __fish_update_cwd_osc --on-variable PWD --description 'Notify terminals when $PWD changes'
+            set -l host $hostname
+            if set -q KONSOLE_VERSION
+                set host ''
+            end
+            if [ "$TERM" = dumb ]
+                return
+            end
+            printf \e\]7\;file://%s%s\a $host (string escape --style=url -- $PWD)
         end
-        if [ "$TERM" = dumb ]
-            return
-        end
-        printf \e\]7\;file://%s%s\a $host (string escape --style=url -- $PWD)
     end
     __fish_update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
 

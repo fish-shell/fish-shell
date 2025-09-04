@@ -272,9 +272,9 @@ pub enum Kind<'a> {
     Token(&'a dyn Token),
     Keyword(&'a dyn Keyword),
     VariableAssignment(&'a VariableAssignment),
-    VariableAssignmentList(&'a VariableAssignmentList),
+    VariableAssignmentList(&'a [VariableAssignment]),
     ArgumentOrRedirection(&'a ArgumentOrRedirection),
-    ArgumentOrRedirectionList(&'a ArgumentOrRedirectionList),
+    ArgumentOrRedirectionList(&'a [ArgumentOrRedirection]),
     Statement(&'a Statement),
     JobPipeline(&'a JobPipeline),
     JobConjunction(&'a JobConjunction),
@@ -287,7 +287,7 @@ pub enum Kind<'a> {
     BraceStatement(&'a BraceStatement),
     IfClause(&'a IfClause),
     ElseifClause(&'a ElseifClause),
-    ElseifClauseList(&'a ElseifClauseList),
+    ElseifClauseList(&'a [ElseifClause]),
     ElseClause(&'a ElseClause),
     IfStatement(&'a IfStatement),
     CaseItem(&'a CaseItem),
@@ -295,16 +295,16 @@ pub enum Kind<'a> {
     DecoratedStatement(&'a DecoratedStatement),
     NotStatement(&'a NotStatement),
     JobContinuation(&'a JobContinuation),
-    JobContinuationList(&'a JobContinuationList),
+    JobContinuationList(&'a [JobContinuation]),
     JobConjunctionContinuation(&'a JobConjunctionContinuation),
     AndorJob(&'a AndorJob),
-    AndorJobList(&'a AndorJobList),
+    AndorJobList(&'a [AndorJob]),
     FreestandingArgumentList(&'a FreestandingArgumentList),
-    JobConjunctionContinuationList(&'a JobConjunctionContinuationList),
+    JobConjunctionContinuationList(&'a [JobConjunctionContinuation]),
     MaybeNewlines(&'a MaybeNewlines),
-    CaseItemList(&'a CaseItemList),
+    CaseItemList(&'a [CaseItem]),
     Argument(&'a Argument),
-    ArgumentList(&'a ArgumentList),
+    ArgumentList(&'a [Argument]),
     JobList(&'a JobList),
 }
 
@@ -401,6 +401,35 @@ pub trait Keyword: Leaf {
 trait CheckParse: Default {
     /// A true return means we should descend into the production, false means stop.
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool;
+}
+
+trait ListElement: NodeMut + Sized {
+    fn list_kind(list: &Box<[Self]>) -> Kind<'_>;
+    fn list_kind_mut(list: &mut Box<[Self]>) -> KindMut<'_>;
+}
+
+impl<N: ListElement> Node for Box<[N]> {
+    fn kind(&self) -> Kind<'_> {
+        N::list_kind(self)
+    }
+
+    fn kind_mut(&mut self) -> KindMut<'_> {
+        N::list_kind_mut(self)
+    }
+}
+
+impl<N: ListElement> Acceptor for Box<[N]> {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        self.iter().for_each(|item| visitor.visit(item));
+    }
+}
+
+impl<N: ListElement> AcceptorMut for Box<[N]> {
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
+        visitor.will_visit_fields_of(self);
+        let flow = self.iter_mut().try_for_each(|item| visitor.visit_mut(item));
+        visitor.did_visit_fields_of(self, flow);
+    }
 }
 
 /// Implement the node trait.
@@ -547,26 +576,13 @@ macro_rules! define_list_node {
     ) => {
         pub type $name = Box<[$contents]>;
 
-        impl Node for $name {
-            fn kind(&self) -> Kind<'_> {
-                Kind::$name(self)
+        impl ListElement for $contents {
+            fn list_kind(list: &Box<[Self]>) -> Kind<'_> {
+                Kind::$name(list)
             }
-            fn kind_mut(&mut self) -> KindMut<'_> {
-                KindMut::$name(self)
-            }
-        }
 
-        impl Acceptor for $name {
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-                self.iter().for_each(|item| visitor.visit(item));
-            }
-        }
-
-        impl AcceptorMut for $name {
-            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-                visitor.will_visit_fields_of(self);
-                let flow = self.iter_mut().try_for_each(|item| visitor.visit_mut(item));
-                visitor.did_visit_fields_of(self, flow);
+            fn list_kind_mut(list: &mut Box<[Self]>) -> KindMut<'_> {
+                KindMut::$name(list)
             }
         }
     };
@@ -2264,12 +2280,11 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// Given that we are a list of nodes of type Contents, populate as many elements as we can.
+    /// Given that we are a list of nodes of type N, populate as many elements as we can.
     /// If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
     fn populate_list<N>(&mut self, list: &mut Box<[N]>, exhaust_stream: bool)
     where
-        N: NodeMut + CheckParse + Default,
-        Box<[N]>: Node,
+        N: NodeMut + CheckParse + Default + ListElement,
     {
         assert!(list.is_empty(), "List is not initially empty");
 

@@ -21,7 +21,7 @@ struct FunctionCmdOpts {
     description: WString,
     events: Vec<EventDescription>,
     named_arguments: Vec<WString>,
-    variadic: bool,
+    variadic: Option<usize>,
     inherit_vars: Vec<WString>,
     wrap_targets: Vec<WString>,
 }
@@ -34,7 +34,7 @@ impl Default for FunctionCmdOpts {
             description: WString::new(),
             events: Vec::new(),
             named_arguments: Vec::new(),
-            variadic: false,
+            variadic: None,
             inherit_vars: Vec::new(),
             wrap_targets: Vec::new(),
         }
@@ -78,18 +78,19 @@ fn proccess_argument_name(
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     let cmd = L!("function");
-    if opts.variadic {
-        streams.err.append(wgettext_fmt!(
-            "%ls: variadic argument name '%ls' must be the final one\n",
-            cmd,
-            opts.named_arguments.last().unwrap(),
-        ));
-        return Err(STATUS_INVALID_ARGS);
-    }
     let variadic = name.ends_with(L!("..."));
     if variadic {
         name.truncate(name.len() - 3);
-        opts.variadic = true;
+        if opts.variadic.is_some() {
+            streams.err.append(wgettext_fmt!(
+                "%ls: argument names '%ls...' and '%ls...' both end in '...'\n",
+                cmd,
+                name,
+                opts.named_arguments[opts.variadic.unwrap()],
+            ));
+            return Err(STATUS_INVALID_ARGS);
+        }
+        opts.variadic = Some(opts.named_arguments.len());
     }
     if is_read_only(&name) {
         streams.err.append(wgettext_fmt!(

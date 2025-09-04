@@ -948,32 +948,37 @@ fn function_prepare_environment(
     // 3. argv
 
     let mut overwrite_argv = false;
-    let last_arg = if props.variadic {
-        props.named_arguments.len() - 1
-    } else {
-        usize::MAX
-    };
     let mode = EnvMode::LOCAL | EnvMode::USER;
-    for (idx, named_arg) in props.named_arguments.iter().enumerate() {
+    let mut idx = 0; // Index of the next element in argv to proccess
+                     //  println!("argv = {:?}", argv);
+                     //    println!("-a = {:?}", props.named_arguments);
+                     //    println!("... = {:?}", props.variadic);
+    for (named_idx, named_arg) in props.named_arguments.iter().enumerate() {
+        //    println!("-> {idx}");
         if named_arg == L!("argv") {
             overwrite_argv = true
         };
-        if idx == last_arg {
-            // we set the variable below
+        if props.variadic == Some(named_idx) {
+            if argv.len() < props.named_arguments.len() {
+                //          println!("argv is too small, set variadic {named_arg} to empty");
+                vars.set_empty(named_arg, mode);
+            } else {
+                // End of argv, minus the number of named arguments we still need to proccess
+                let end = argv.len() - (props.named_arguments.len() - idx - 1);
+                //        println!("setting variadic {named_arg} = argv[{idx}..{end}] = {:?}", &argv[idx..end]);
+                vars.set(named_arg, mode, argv[idx..end].to_owned());
+                idx = end;
+            }
         } else if idx < argv.len() {
+            //  println!("setting single {named_arg} = argv[{idx}] = {}", &argv[idx]);
             vars.set_one(named_arg, mode, argv[idx].clone());
+            idx += 1;
         } else {
+            //println!("setting empty {named_arg}");
             vars.set_empty(named_arg, mode);
         }
     }
-    if props.variadic {
-        let name = props.named_arguments.last().unwrap();
-        if last_arg < argv.len() {
-            vars.set(name, mode, argv[last_arg..].to_owned());
-        } else {
-            vars.set_empty(name, mode);
-        }
-    }
+    //    println!("All done!");
 
     for (key, value) in &*props.inherit_vars {
         if key == L!("argv") {

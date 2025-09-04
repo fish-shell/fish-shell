@@ -654,6 +654,11 @@ msgstr "%ls: Warnung: Option '%ls' wurde entfernt und wird nun ignoriert"
 msgid "%ls: `set --show` does not allow slices with the var names\n"
 msgstr ""
 
+#
+#, c-format
+msgid "%ls: argument names '%ls...' and '%ls...' both end in '...'\n"
+msgstr ""
+
 #, c-format
 msgid "%ls: array index out of bounds\n"
 msgstr ""
@@ -812,11 +817,6 @@ msgstr ""
 
 #, c-format
 msgid "%ls: variable '%ls' is read-only\n"
-msgstr ""
-
-#
-#, c-format
-msgid "%ls: variadic argument name '%ls' must be the final one\n"
 msgstr ""
 
 #, c-format

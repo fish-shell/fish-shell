@@ -22,8 +22,8 @@ The following options are available:
 
 **-a** *NAMES* or **--argument-names** *NAMES*
     Assigns the value of successive command-line arguments to the names given in *NAMES* (separated by spaces). These are the same arguments given in :envvar:`argv`, and are still available there (unless ``--inherit-variable argv`` was used or one of the given *NAMES* is ``argv``). See also :ref:`Argument Handling <variables-argv>`.
-    
-    The last name given can end in ``...``, in which case all remaining arguments are saved in a variable with that name (excluding the ``...`` part).
+
+    A single argument name given can end in ``...``, in which case a variable number of arguments are saved in a variable with that name (excluding the ``...`` part), as many as possible whilst still leaving arguments for each of the other named arguments. If this cannot be done (because the number of arguments is smaller than the number of argument names), the argument with a ``...`` is set to the empty list, and the other arguments are asigned values as if the ``...`` one was not there.
 
     See the :ref:`Argument Names Caveats <argument_names_caveats>` section below for what happens when the number of arguments passed differs from the number of argument *NAMES*.
 
@@ -153,7 +153,7 @@ The ``-a`` / ``--argument-names`` flag does *not* validate the number of argumen
     #    x 1
     #    y
 
-Similarly, if the last argument name doesn't end in ``...``, any extra arguments are ignored, but they are still accessible in ``$argv``. Continuing the previous example:
+Similarly, if none of the argument names end in ``...``, any extra arguments are ignored, but they are still accessible in ``$argv``. Continuing the previous example:
 
 ::
 
@@ -176,6 +176,32 @@ If on the other hand the last argument name does end in ``...``, any extra argum
     #    x 1
     #    y '2'  '3'
 
+If the argument named with a ``...`` is not the last, then if possible, it will leave enough arguments for the subsequent argument names. For example:
+
+::
+
+    function more_or_one -a x... y
+        set -l
+    end
+    more_or_one 1 2 3
+    # prints:
+    #    argv '1'  '2'  '3'
+    #    x '1'  '2'
+    #    y 3
+
+The argument with a ``...`` is however set to the empty list if there are not enough arguments to satisfy all the argument names. For example:
+
+::
+
+    function more_or_two -a x... y z
+        set -l
+    end
+    more_or_two 1
+    # prints:
+    #    argv 1
+    #    x
+    #    y 1
+    #    z
 
 Notes
 -----

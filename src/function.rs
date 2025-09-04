@@ -27,8 +27,8 @@ pub struct FunctionProperties {
     /// List of all named arguments for this function.
     pub named_arguments: Vec<WString>,
 
-    /// Does the last element of named_arguments end in ...?
-    pub variadic: bool,
+    /// The index of the named_arguments that ends in ...
+    pub variadic: Option<usize>,
 
     /// Description of the function.
     pub description: LocalizableString,
@@ -479,11 +479,11 @@ impl FunctionProperties {
         let named = &self.named_arguments;
         if !named.is_empty() {
             sprintf!(=> &mut out, " --argument-names");
-            for name in named {
+            for (idx, name) in named.iter().enumerate() {
                 sprintf!(=> &mut out, " %ls", name);
-            }
-            if self.variadic {
-                sprintf!(=> &mut out, "...");
+                if self.variadic == Some(idx) {
+                    sprintf!(=> &mut out, "...");
+                }
             }
         }
 

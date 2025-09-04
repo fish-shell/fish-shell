@@ -26,8 +26,7 @@ use crate::tokenizer::{
 use crate::wchar::prelude::*;
 use macro_rules_attribute::derive;
 use std::borrow::Cow;
-use std::convert::AsMut;
-use std::ops::{ControlFlow, Deref};
+use std::ops::ControlFlow;
 
 /**
  * A NodeVisitor is something which can visit an AST node.
@@ -546,28 +545,14 @@ macro_rules! define_list_node {
         $name:ident,
         $contents:ident
     ) => {
-        #[derive(Default, Debug, Node!)]
-        pub struct $name(Box<[$contents]>);
+        pub type $name = Box<[$contents]>;
 
-        impl Deref for $name {
-            type Target = Box<[$contents]>;
-            fn deref(&self) -> &Self::Target {
-                &self.0
+        impl Node for $name {
+            fn kind(&self) -> Kind<'_> {
+                Kind::$name(self)
             }
-        }
-
-        impl<'a> IntoIterator for &'a $name {
-            type Item = &'a $contents;
-            type IntoIter = std::slice::Iter<'a, $contents>;
-
-            fn into_iter(self) -> Self::IntoIter {
-                self.0.iter()
-            }
-        }
-
-        impl AsMut<Box<[$contents]>> for $name {
-            fn as_mut(&mut self) -> &mut Box<[$contents]> {
-                &mut self.0
+            fn kind_mut(&mut self) -> KindMut<'_> {
+                KindMut::$name(self)
             }
         }
 
@@ -580,10 +565,7 @@ macro_rules! define_list_node {
         impl AcceptorMut for $name {
             fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
                 visitor.will_visit_fields_of(self);
-                let flow = self
-                    .0
-                    .iter_mut()
-                    .try_for_each(|item| visitor.visit_mut(item));
+                let flow = self.iter_mut().try_for_each(|item| visitor.visit_mut(item));
                 visitor.did_visit_fields_of(self, flow);
             }
         }
@@ -2282,13 +2264,12 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// Given that we are a list of type ListNodeType, whose contents type is ContentsNode,
-    /// populate as many elements as we can.
+    /// Given that we are a list of nodes of type Contents, populate as many elements as we can.
     /// If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
-    fn populate_list<Contents, List>(&mut self, list: &mut List, exhaust_stream: bool)
+    fn populate_list<N>(&mut self, list: &mut Box<[N]>, exhaust_stream: bool)
     where
-        Contents: NodeMut + CheckParse + Default,
-        List: Node + Deref<Target = Box<[Contents]>> + AsMut<Box<[Contents]>>,
+        N: NodeMut + CheckParse + Default,
+        Box<[N]>: Node,
     {
         assert!(list.is_empty(), "List is not initially empty");
 
@@ -2349,7 +2330,7 @@ impl<'s> Populator<'s> {
             self.chomp_extras(list.kind());
 
             // Now try parsing a node.
-            if let Some(node) = self.try_parse::<Contents>() {
+            if let Some(node) = self.try_parse::<N>() {
                 // #7201: Minimize reallocations of contents vector
                 // Empirically, 99.97% of cases are 16 elements or fewer,
                 // with 75% being empty, so this works out best.
@@ -2374,7 +2355,7 @@ impl<'s> Populator<'s> {
                 "Contents size out of bounds"
             );
             assert!(list.is_empty(), "List should still be empty");
-            *list.as_mut() = contents.into_boxed_slice();
+            *list = contents.into_boxed_slice();
         }
 
         FLOGF!(

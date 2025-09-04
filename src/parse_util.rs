@@ -1334,8 +1334,7 @@ pub fn parse_util_detect_errors_in_argument_list(
 
     // Get the root argument list and extract arguments from it.
     // Test each of these.
-    let arg_list: &ast::FreestandingArgumentList = ast.top();
-    let args = &arg_list.arguments;
+    let args = ast.top();
     for arg in args.iter() {
         let arg_src = arg.source(arg_list_src);
         if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {

@@ -299,7 +299,6 @@ pub enum Kind<'a> {
     JobConjunctionContinuation(&'a JobConjunctionContinuation),
     AndorJob(&'a AndorJob),
     AndorJobList(&'a [AndorJob]),
-    FreestandingArgumentList(&'a FreestandingArgumentList),
     JobConjunctionContinuationList(&'a [JobConjunctionContinuation]),
     MaybeNewlines(&'a MaybeNewlines),
     CaseItemList(&'a [CaseItem]),
@@ -340,7 +339,6 @@ pub enum KindMut<'a> {
     JobConjunctionContinuation(&'a mut JobConjunctionContinuation),
     AndorJob(&'a mut AndorJob),
     AndorJobList(&'a mut AndorJobList),
-    FreestandingArgumentList(&'a mut FreestandingArgumentList),
     JobConjunctionContinuationList(&'a mut JobConjunctionContinuationList),
     MaybeNewlines(&'a mut MaybeNewlines),
     CaseItemList(&'a mut CaseItemList),
@@ -1024,14 +1022,6 @@ impl CheckParse for AndorJob {
 
 define_list_node!(AndorJobList, AndorJob);
 
-/// A freestanding_argument_list is equivalent to a normal argument list, except it may contain
-/// TOK_END (newlines, and even semicolons, for historical reasons).
-/// In practice the tok_ends are ignored by fish code so we do not bother to store them.
-#[derive(Default, Debug, Node!, Acceptor!)]
-pub struct FreestandingArgumentList {
-    pub arguments: ArgumentList,
-}
-
 define_list_node!(JobConjunctionContinuationList, JobConjunctionContinuation);
 
 define_list_node!(ArgumentList, Argument);
@@ -1237,7 +1227,6 @@ pub fn ast_kind_to_string(k: Kind<'_>) -> &'static wstr {
         Kind::JobConjunctionContinuation(_) => L!("job_conjunction_continuation"),
         Kind::AndorJob(_) => L!("andor_job"),
         Kind::AndorJobList(_) => L!("andor_job_list"),
-        Kind::FreestandingArgumentList(_) => L!("freestanding_argument_list"),
         Kind::JobConjunctionContinuationList(_) => L!("job_conjunction_continuation_list"),
         Kind::MaybeNewlines(_) => L!("maybe_newlines"),
         Kind::CaseItemList(_) => L!("case_item_list"),
@@ -1378,13 +1367,13 @@ pub fn parse_argument_list(
     src: &wstr,
     flags: ParseTreeFlags,
     out_errors: Option<&mut ParseErrorList>,
-) -> Ast<FreestandingArgumentList> {
+) -> Ast<ArgumentList> {
     let mut pops = Populator::new(
         src, flags, true, /* freestanding_arguments */
         out_errors,
     );
-    let mut list = FreestandingArgumentList::default();
-    pops.populate_list(&mut list.arguments, true);
+    let mut list = ArgumentList::default();
+    pops.populate_list(&mut list, true);
     finalize_parse(pops, list)
 }
 
@@ -1792,9 +1781,6 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             KM::CaseItemList(node) => self.populate_list(node, false),
             KM::ArgumentList(node) => self.populate_list(node, false),
             KM::JobList(node) => self.populate_list(node, false),
-
-            // Weird top-level case, not actually a list.
-            KM::FreestandingArgumentList(node) => node.accept_mut(self),
         }
         VisitResult::Continue(())
     }
@@ -1988,9 +1974,7 @@ impl<'s> Populator<'s> {
     /// Return whether a list kind allows arbitrary newlines in it.
     fn list_kind_chomps_newlines(&self, kind: Kind) -> bool {
         match kind {
-            Kind::ArgumentList(_) | Kind::FreestandingArgumentList(_) => {
-                self.freestanding_arguments
-            }
+            Kind::ArgumentList(_) => self.freestanding_arguments,
 
             Kind::ArgumentOrRedirectionList(_) => {
                 // No newlines inside arguments.
@@ -2040,7 +2024,7 @@ impl<'s> Populator<'s> {
     /// Return whether a list kind allows arbitrary semicolons in it.
     fn list_kind_chomps_semis(&self, kind: Kind) -> bool {
         match kind {
-            Kind::ArgumentList(_) | Kind::FreestandingArgumentList(_) => {
+            Kind::ArgumentList(_) => {
                 // Hackish. If we are producing a freestanding argument list, then it allows
                 // semicolons, for hysterical raisins.
                 // That is, this is OK: complete -c foo -a 'x ; y ; z'

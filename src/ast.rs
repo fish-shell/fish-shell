@@ -125,9 +125,6 @@ pub trait Node: Acceptor + AsNode + std::fmt::Debug {
     /// Return the kind of this node.
     fn kind(&self) -> Kind<'_>;
 
-    /// Return the kind of this node, as a mutable reference.
-    fn kind_mut(&mut self) -> KindMut<'_>;
-
     /// Helper to try to cast to a keyword.
     fn as_keyword(&self) -> Option<&dyn Keyword> {
         match self.kind() {
@@ -262,8 +259,10 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
 }
 
 /// NodeMut is a mutable node.
-trait NodeMut: Node + AcceptorMut {}
-impl<T> NodeMut for T where T: Node + AcceptorMut {}
+trait NodeMut: Node + AcceptorMut {
+    /// Return the kind of this node, as a mutable reference.
+    fn kind_mut(&mut self) -> KindMut<'_>;
+}
 
 /// The different kinds of nodes. Note that Token and Keyword have different subtypes.
 #[derive(Copy, Clone)]
@@ -304,7 +303,7 @@ pub enum Kind<'a> {
     CaseItemList(&'a [CaseItem]),
     Argument(&'a Argument),
     ArgumentList(&'a [Argument]),
-    JobList(&'a JobList),
+    JobList(&'a [JobConjunction]),
 }
 
 pub enum KindMut<'a> {
@@ -402,17 +401,32 @@ trait CheckParse: Default {
 }
 
 trait ListElement: NodeMut + Sized {
-    fn list_kind(list: &Box<[Self]>) -> Kind<'_>;
+    const LIST_KIND: Kind<'static>;
+    fn list_kind(list: &[Self]) -> Kind<'_>;
     fn list_kind_mut(list: &mut Box<[Self]>) -> KindMut<'_>;
+}
+
+impl<'a, N: ListElement> Node for &'a [N] {
+    fn kind(&self) -> Kind<'_> {
+        N::list_kind(self)
+    }
 }
 
 impl<N: ListElement> Node for Box<[N]> {
     fn kind(&self) -> Kind<'_> {
         N::list_kind(self)
     }
+}
 
+impl<N: ListElement> NodeMut for Box<[N]> {
     fn kind_mut(&mut self) -> KindMut<'_> {
         N::list_kind_mut(self)
+    }
+}
+
+impl<'a, N: ListElement> Acceptor for &'a [N] {
+    fn accept<'b>(&'b self, visitor: &mut dyn NodeVisitor<'b>) {
+        self.iter().for_each(|item| visitor.visit(item));
     }
 }
 
@@ -437,6 +451,8 @@ macro_rules! Node {
             fn kind(&self) -> Kind<'_> {
                 Kind::$name(self)
             }
+        }
+        impl NodeMut for $name {
             fn kind_mut(&mut self) -> KindMut<'_> {
                 KindMut::$name(self)
             }
@@ -503,6 +519,8 @@ macro_rules! define_keyword_node {
             fn kind(&self) -> Kind<'_> {
                 Kind::Keyword(self)
             }
+        }
+        impl NodeMut for $name {
             fn kind_mut(&mut self) -> KindMut<'_> {
                 KindMut::Keyword(self)
             }
@@ -536,6 +554,8 @@ macro_rules! define_token_node {
             fn kind(&self) -> Kind<'_> {
                 Kind::Token(self)
             }
+        }
+        impl NodeMut for $name {
             fn kind_mut(&mut self) -> KindMut<'_> {
                 KindMut::Token(self)
             }
@@ -575,7 +595,9 @@ macro_rules! define_list_node {
         pub type $name = Box<[$contents]>;
 
         impl ListElement for $contents {
-            fn list_kind(list: &Box<[Self]>) -> Kind<'_> {
+            const LIST_KIND: Kind<'static> = Kind::$name(&[]);
+
+            fn list_kind(list: &[Self]) -> Kind<'_> {
                 Kind::$name(list)
             }
 
@@ -2264,12 +2286,11 @@ impl<'s> Populator<'s> {
 
     /// Given that we are a list of nodes of type N, populate as many elements as we can.
     /// If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
-    fn allocate_populate_list<N>(&mut self, exhaust_stream: bool) -> Box<[N]>
-    where
-        N: NodeMut + CheckParse + Default + ListElement,
-    {
-        let empty = Box::<[N]>::default();
-        let kind = empty.kind();
+    fn allocate_populate_list<N: CheckParse + ListElement>(
+        &mut self,
+        exhaust_stream: bool,
+    ) -> Box<[N]> {
+        let kind = N::LIST_KIND;
 
         // Do not attempt to parse a list if we are unwinding.
         if self.unwinding {
@@ -2285,7 +2306,7 @@ impl<'s> Populator<'s> {
                 "",
                 ast_kind_to_string(kind)
             );
-            return empty;
+            return Box::new([]);
         }
 
         // We're going to populate a vector with our nodes.

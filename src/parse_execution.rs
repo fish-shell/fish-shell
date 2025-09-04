@@ -168,7 +168,7 @@ impl<'a> ExecutionContext<'a> {
     fn eval_job_list(
         &mut self,
         ctx: &OperationContext<'_>,
-        job_list: &'a ast::JobList,
+        job_list: &'a [ast::JobConjunction],
         associated_block: BlockId,
     ) -> EndExecutionReason {
         // Check for infinite recursion: a function which immediately calls itself..
@@ -370,7 +370,7 @@ impl<'a> ExecutionContext<'a> {
     fn infinite_recursive_statement_in_job_list<'b>(
         &self,
         ctx: &OperationContext<'_>,
-        jobs: &'b ast::JobList,
+        jobs: &'b [ast::JobConjunction],
         out_func_name: &mut WString,
     ) -> Option<&'b ast::DecoratedStatement> {
         // This is a bit fragile. It is a test to see if we are inside of function call, but
@@ -1741,7 +1741,7 @@ impl<'a> ExecutionContext<'a> {
     fn run_job_list(
         &mut self,
         ctx: &OperationContext<'_>,
-        job_list_node: &'a ast::JobList,
+        job_list_node: &'a [ast::JobConjunction],
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
         let mut result = EndExecutionReason::ok;

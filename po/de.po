@@ -7630,6 +7630,12 @@ msgstr ""
 msgid "Boolean as the value for the given key"
 msgstr ""
 
+msgid "Boot into a specific boot loader entry on next boot"
+msgstr ""
+
+msgid "Boot into boot loader menu on next boot"
+msgstr ""
+
 msgid "Boot manager display label (Default: Linux)"
 msgstr ""
 

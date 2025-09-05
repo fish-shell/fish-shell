@@ -94,3 +94,9 @@ if test $systemd_version -gt 219 2>/dev/null
     complete -f -c systemctl -l now -n "__fish_seen_subcommand_from enable" -d "Also start unit"
     complete -f -c systemctl -l now -n "__fish_seen_subcommand_from disable mask" -d "Also stop unit"
 end
+
+# New options since systemd 242
+if test $systemd_version -ge 242 2>/dev/null
+    complete -x -c systemctl -l boot-loader-entry -n "__fish_seen_subcommand_from halt poweroff reboot" -d "Boot into a specific boot loader entry on next boot" -a "(systemctl --boot-loader-entry=help --no-legend --no-pager 2>/dev/null)"
+    complete -x -c systemctl -l boot-loader-menu -n "__fish_seen_subcommand_from halt poweroff reboot" -d "Boot into boot loader menu on next boot"
+end

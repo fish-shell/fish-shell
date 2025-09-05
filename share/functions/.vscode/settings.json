@@ -1,0 +1,6 @@
+{
+    "[fish]": {
+        "editor.rulers": [], // like max_line_length = unset
+        "rewrap.autoWrap.enabled": false,
+    }
+}

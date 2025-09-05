@@ -233,6 +233,11 @@ msgstr "%ls: '%ls' 不是有效任务说明符\n"
 msgid "%ls: '%ls' is not a valid process id\n"
 msgstr "%ls: '%ls' 不是一个有效的进程 id\n"
 
+#
+#, c-format
+msgid "%ls: --argument-names and --strict-argument-names cannot be mixed"
+msgstr ""
+
 #, c-format
 msgid "%ls: --command cannot be combined with --position command"
 msgstr ""
@@ -646,6 +651,11 @@ msgstr "%ls: 警告: 选项 '%ls' 已被删除, 现在被忽略"
 msgid "%ls: `set --show` does not allow slices with the var names\n"
 msgstr "%ls: `set --show` 不支持使用带有变量名称的切片\n"
 
+#
+#, c-format
+msgid "%ls: argument names '%ls...' and '%ls...' both end in '...'\n"
+msgstr ""
+
 #, c-format
 msgid "%ls: array index out of bounds\n"
 msgstr ""
@@ -676,6 +686,11 @@ msgstr "%ls: 无法同时path 和 unpath\n"
 
 #, c-format
 msgid "%ls: column %ls exceeds line length\n"
+msgstr ""
+
+#
+#, c-format
+msgid "%ls: duplicate variable '%ls' in --argument-names\n"
 msgstr ""
 
 #, c-format
@@ -710,6 +725,16 @@ msgstr ""
 #, c-format
 msgid "%ls: function name required"
 msgstr "%ls: 函数名称是必须的"
+
+#
+#, c-format
+msgid "%ls: function requires at least %d arguments, but %d where supplied"
+msgstr ""
+
+#
+#, c-format
+msgid "%ls: function requires exactly %d arguments, but %d where supplied"
+msgstr ""
 
 #, c-format
 msgid "%ls: given %d indexes but %d values\n"
@@ -786,6 +811,16 @@ msgstr "%ls: 对-i的用法 --silent 已贬值. 请使用 - s 或 --silent 代�
 #, c-format
 msgid "%ls: value not completely converted (can't convert '%ls')"
 msgstr "%ls: 数值未完全转换( 无法转换 '%ls' )"
+
+#
+#, c-format
+msgid "%ls: variable '%ls' is inherited multiple times\n"
+msgstr ""
+
+#
+#, c-format
+msgid "%ls: variable '%ls' is passed to both --argument-names and --inherit-variable\n"
+msgstr ""
 
 #, c-format
 msgid "%ls: variable '%ls' is read-only\n"

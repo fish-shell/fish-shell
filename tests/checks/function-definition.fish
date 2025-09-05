@@ -8,7 +8,7 @@ end
 
 functions stuff
 #CHECK: # Defined in {{.*}}
-#CHECK: function stuff --argument-names a --argument-names b --argument-names c
+#CHECK: function stuff --argument-names a b c
 #CHECK:    # This is a comment
 #CHECK:    echo stuff
 #CHECK:    # This is another comment
@@ -26,10 +26,10 @@ end
 functions commenting
 #CHECK: # Defined in {{.*}}
 #CHECK: function commenting
-#CHECK:     
+#CHECK:
 #CHECK:     # line 2
-#CHECK:     
+#CHECK:
 #CHECK:     # line 4
-#CHECK:     
+#CHECK:
 #CHECK:     echo Bye bye says line 6
 #CHECK: end

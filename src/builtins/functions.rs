@@ -419,11 +419,8 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         let mut def = WString::new();
 
         if !comment.is_empty() {
-            def.push_utfstr(&sprintf!(
-                "# %ls\n%ls",
-                comment,
-                props.annotated_definition(arg)
-            ));
+            let defy = props.annotated_definition(arg);
+            def.push_utfstr(&sprintf!("# %ls\n%ls", comment, defy,));
         } else {
             def = props.annotated_definition(arg);
         }

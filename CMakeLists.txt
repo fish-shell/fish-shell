@@ -15,8 +15,6 @@ endif()
 # Set up standard directories.
 include(GNUInstallDirs)
 
-include(cmake/gettext.cmake)
-
 # Set up PCRE2
 # This sets an environment variable that needs to be available before the Rust stanzas
 include(cmake/PCRE2.cmake)
@@ -54,6 +52,7 @@ function(CREATE_TARGET target)
             $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>
             --target ${Rust_CARGO_TARGET}
             --no-default-features
+            --features=localize-all-languages
             ${CARGO_FLAGS}
             ${FEATURES_ARG}
       &&

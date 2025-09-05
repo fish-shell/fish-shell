@@ -19,6 +19,11 @@ pub fn get_target_dir() -> PathBuf {
 }
 
 // TODO Move this to rsconf
+pub fn rebuild_if_path_changed<P: AsRef<Path>>(path: P) {
+    rsconf::rebuild_if_path_changed(path.as_ref().to_str().unwrap());
+}
+
+// TODO Move this to rsconf
 pub fn rebuild_if_paths_changed<P: AsRef<Path>, I: IntoIterator<Item = P>>(paths: I) {
     for path in paths {
         rsconf::rebuild_if_path_changed(path.as_ref().to_str().unwrap());

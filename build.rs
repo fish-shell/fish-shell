@@ -257,12 +257,6 @@ fn setup_paths() {
     rsconf::set_env_value("PREFIX", prefix.to_str().unwrap());
 
     let datadir = get_path("DATADIR", "share/", &prefix);
-    rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
-    rsconf::rebuild_if_env_changed("DATADIR");
-
-    let bindir = get_path("BINDIR", "bin/", &prefix);
-    rsconf::set_env_value("BINDIR", bindir.to_str().unwrap());
-    rsconf::rebuild_if_env_changed("BINDIR");
 
     let sysconfdir = get_path(
         "SYSCONFDIR",
@@ -277,15 +271,25 @@ fn setup_paths() {
     rsconf::set_env_value("SYSCONFDIR", sysconfdir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("SYSCONFDIR");
 
-    let localedir = get_path("LOCALEDIR", "locale/", &datadir);
-    let localedir = localedir.to_str().unwrap();
-    assert!(!localedir.is_empty(), "empty LOCALEDIR is not supported");
-    rsconf::set_env_value("LOCALEDIR", localedir);
-    rsconf::rebuild_if_env_changed("LOCALEDIR");
+    #[cfg(not(feature = "embed-data"))]
+    {
+        rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
+        rsconf::rebuild_if_env_changed("DATADIR");
 
-    let docdir = get_path("DOCDIR", "doc/fish", &datadir);
-    rsconf::set_env_value("DOCDIR", docdir.to_str().unwrap());
-    rsconf::rebuild_if_env_changed("DOCDIR");
+        let bindir = get_path("BINDIR", "bin/", &prefix);
+        rsconf::set_env_value("BINDIR", bindir.to_str().unwrap());
+        rsconf::rebuild_if_env_changed("BINDIR");
+
+        let localedir = get_path("LOCALEDIR", "locale/", &datadir);
+        let localedir = localedir.to_str().unwrap();
+        assert!(!localedir.is_empty(), "empty LOCALEDIR is not supported");
+        rsconf::set_env_value("LOCALEDIR", localedir);
+        rsconf::rebuild_if_env_changed("LOCALEDIR");
+
+        let docdir = get_path("DOCDIR", "doc/fish", &datadir);
+        rsconf::set_env_value("DOCDIR", docdir.to_str().unwrap());
+        rsconf::rebuild_if_env_changed("DOCDIR");
+    }
 }
 
 fn get_version(src_dir: &Path) -> String {

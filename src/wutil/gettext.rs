@@ -1,10 +1,7 @@
 use std::collections::HashMap;
-use std::ffi::CString;
-use std::os::unix::ffi::OsStrExt;
 use std::sync::Mutex;
 
-use crate::common::{charptr2wcstring, wcs2zstring, PACKAGE_NAME};
-use crate::env::CONFIG_PATHS;
+use crate::common::{charptr2wcstring, wcs2zstring};
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -17,15 +14,19 @@ mod internal {
     use std::ffi::CStr;
     extern "C" {
         fn gettext(msgid: *const c_char) -> *mut c_char;
+        #[cfg(not(feature = "embed-data"))]
         fn bindtextdomain(domainname: *const c_char, dirname: *const c_char) -> *mut c_char;
+        #[cfg(not(feature = "embed-data"))]
         fn textdomain(domainname: *const c_char) -> *mut c_char;
     }
     pub fn fish_gettext(msgid: &CStr) -> *const c_char {
         unsafe { gettext(msgid.as_ptr()) }
     }
+    #[cfg(not(feature = "embed-data"))]
     pub fn fish_bindtextdomain(domainname: &CStr, dirname: &CStr) -> *mut c_char {
         unsafe { bindtextdomain(domainname.as_ptr(), dirname.as_ptr()) }
     }
+    #[cfg(not(feature = "embed-data"))]
     pub fn fish_textdomain(domainname: &CStr) -> *mut c_char {
         unsafe { textdomain(domainname.as_ptr()) }
     }
@@ -37,9 +38,11 @@ mod internal {
     pub fn fish_gettext(msgid: &CStr) -> *const c_char {
         msgid.as_ptr()
     }
+    #[cfg(not(feature = "embed-data"))]
     pub fn fish_bindtextdomain(_domainname: &CStr, _dirname: &CStr) -> *mut c_char {
         std::ptr::null_mut()
     }
+    #[cfg(not(feature = "embed-data"))]
     pub fn fish_textdomain(_domainname: &CStr) -> *mut c_char {
         std::ptr::null_mut()
     }
@@ -49,13 +52,18 @@ use internal::*;
 
 // Really init wgettext.
 fn wgettext_really_init() {
-    let Some(ref localepath) = CONFIG_PATHS.locale else {
-        return;
-    };
-    let package_name = CString::new(PACKAGE_NAME).unwrap();
-    let localedir = CString::new(localepath.as_os_str().as_bytes()).unwrap();
-    fish_bindtextdomain(&package_name, &localedir);
-    fish_textdomain(&package_name);
+    #[cfg(not(feature = "embed-data"))]
+    {
+        use crate::common::PACKAGE_NAME;
+        use crate::env::CONFIG_PATHS;
+        use std::ffi::CString;
+        use std::os::unix::ffi::OsStrExt;
+
+        let package_name = CString::new(PACKAGE_NAME).unwrap();
+        let localedir = CString::new(CONFIG_PATHS.locale.as_os_str().as_bytes()).unwrap();
+        fish_bindtextdomain(&package_name, &localedir);
+        fish_textdomain(&package_name);
+    }
 }
 
 fn wgettext_init_if_necessary() {

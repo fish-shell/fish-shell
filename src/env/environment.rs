@@ -646,8 +646,11 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     setup_user(vars);
 
     if let Some(paths) = paths {
-        if let Some(ddir) = &paths.data {
-            let datadir = str2wcstring(ddir.as_os_str().as_bytes());
+        #[cfg(feature = "embed-data")]
+        vars.set_empty(FISH_DATADIR_VAR, EnvMode::GLOBAL);
+        #[cfg(not(feature = "embed-data"))]
+        {
+            let datadir = str2wcstring(paths.data.as_os_str().as_bytes());
             vars.set_one(FISH_DATADIR_VAR, EnvMode::GLOBAL, datadir.clone());
 
             if default_paths {
@@ -657,8 +660,6 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
                 scstr.push_str("/functions");
                 vars.set_one(L!("fish_function_path"), EnvMode::GLOBAL, scstr);
             }
-        } else {
-            vars.set_empty(FISH_DATADIR_VAR, EnvMode::GLOBAL);
         }
 
         vars.set_one(

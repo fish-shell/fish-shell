@@ -1,4 +1,4 @@
-mod config_paths;
+pub mod config_paths;
 pub mod environment;
 mod environment_impl;
 pub mod var;

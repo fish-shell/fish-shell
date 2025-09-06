@@ -2,10 +2,11 @@ use super::environment_impl::{
     colon_split, uvars, EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult,
     UVAR_SCOPE_IS_GLOBAL,
 };
-use super::{ConfigPaths, ElectricVar};
+use super::ElectricVar;
 use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
 use crate::builtins::shared::{BuiltinResult, SUCCESS};
 use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
+use crate::env::config_paths::ConfigPaths;
 use crate::env::{EnvMode, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
 use crate::event::Event;

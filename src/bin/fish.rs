@@ -35,8 +35,9 @@ use fish::{
         PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
+        config_paths::ConfigPaths,
         environment::{env_init, EnvStack, Environment},
-        ConfigPaths, EnvMode, Statuses, CONFIG_PATHS,
+        EnvMode, Statuses, CONFIG_PATHS,
     },
     eprintf,
     event::{self, Event},

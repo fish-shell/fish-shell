@@ -4,7 +4,6 @@ use crate::wcstringutil::join_strings;
 use bitflags::bitflags;
 use libc::c_int;
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 /// The character used to delimit path and non-path variables in exporting and in string expansion.
@@ -44,17 +43,6 @@ impl From<EnvMode> for u16 {
     fn from(val: EnvMode) -> Self {
         val.bits()
     }
-}
-
-/// A struct of configuration directories, determined in main() that fish will optionally pass to
-/// env_init.
-#[derive(Default)]
-pub struct ConfigPaths {
-    pub data: Option<PathBuf>,   // e.g., /usr/local/share
-    pub sysconf: PathBuf,        // e.g., /usr/local/etc
-    pub doc: PathBuf,            // e.g., /usr/local/share/doc/fish
-    pub bin: Option<PathBuf>,    // e.g., /usr/local/bin
-    pub locale: Option<PathBuf>, // e.g., /usr/local/share/locale
 }
 
 /// A collection of status and pipestatus.

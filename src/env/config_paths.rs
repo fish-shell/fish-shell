@@ -95,7 +95,6 @@ impl ConfigPaths {
             config,
             format!("exec_path: {:?}, argv[0]: {:?}", exec_path, &argv0)
         );
-        // TODO: we should determine program_name from argv0 somewhere in this file
 
         // If we're in Cargo's target directory or CMake's build directory, use the source files.
         if exec_path.starts_with(env!("FISH_BUILD_DIR")) {

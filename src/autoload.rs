@@ -341,15 +341,14 @@ impl AutoloadFileCache {
         cmd: &wstr,
         allow_stale: bool,
     ) -> Option<AutoloadableFileInfo> {
-        let asset_dir = cfg!(feature = "embed-data").then_some(()).and_then(|()| {
-            if env_var_name == "fish_function_path" {
-                Some(AssetDir::Functions)
-            } else if cfg!(feature = "embed-data") && env_var_name == "fish_complete_path" {
-                Some(AssetDir::Completions)
-            } else {
-                None
-            }
-        });
+        let asset_dir =
+            cfg!(feature = "embed-data")
+                .then_some(())
+                .and_then(|()| match env_var_name {
+                    s if s == "fish_function_path" => Some(AssetDir::Functions),
+                    s if s == "fish_complete_path" => Some(AssetDir::Completions),
+                    _ => None,
+                });
 
         // Check hits.
         if let Some(value) = self.known_files.get(cmd) {

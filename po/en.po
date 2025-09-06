@@ -52257,6 +52257,9 @@ msgstr ""
 msgid "Save to optionalDependencies"
 msgstr ""
 
+msgid "Save to peerDependencies"
+msgstr ""
+
 msgid "Save which profiles are active"
 msgstr ""
 

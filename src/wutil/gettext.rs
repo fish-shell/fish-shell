@@ -55,12 +55,14 @@ fn wgettext_really_init() {
     #[cfg(not(feature = "embed-data"))]
     {
         use crate::common::PACKAGE_NAME;
-        use crate::env::CONFIG_PATHS;
+        use crate::env::config_paths::LOCALE_DIR;
         use std::ffi::CString;
-        use std::os::unix::ffi::OsStrExt;
 
         let package_name = CString::new(PACKAGE_NAME).unwrap();
-        let localedir = CString::new(CONFIG_PATHS.locale.as_os_str().as_bytes()).unwrap();
+        let localedir = LOCALE_DIR.load();
+        #[cfg(not(test))]
+        assert!(!localedir.is_empty());
+        let localedir = CString::new(localedir).unwrap();
         fish_bindtextdomain(&package_name, &localedir);
         fish_textdomain(&package_name);
     }

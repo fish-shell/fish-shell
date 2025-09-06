@@ -286,7 +286,9 @@ fn setup_paths() {
     rsconf::rebuild_if_env_changed("SYSCONFDIR");
 
     let localedir = get_path("LOCALEDIR", "locale/", &datadir);
-    rsconf::set_env_value("LOCALEDIR", localedir.to_str().unwrap());
+    let localedir = localedir.to_str().unwrap();
+    assert!(!localedir.is_empty(), "empty LOCALEDIR is not supported");
+    rsconf::set_env_value("LOCALEDIR", localedir);
     rsconf::rebuild_if_env_changed("LOCALEDIR");
 
     let docdir = get_path("DOCDIR", "doc/fish", &datadir);

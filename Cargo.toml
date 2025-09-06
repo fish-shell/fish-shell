@@ -73,7 +73,7 @@ readme = "README.rst"
 [dependencies]
 bitflags.workspace = true
 errno.workspace = true
-fish-build-helper = { path = "crates/build-helper" }
+fish-build-helper.workspace = true
 fish-build-man-pages = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-printf.workspace = true

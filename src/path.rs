@@ -3,7 +3,7 @@
 //! path-related issues.
 
 use crate::common::{wcs2osstring, wcs2zstring};
-use crate::env::{EnvMode, EnvStack, Environment};
+use crate::env::{EnvMode, EnvStack, Environment, FALLBACK_PATH};
 use crate::expand::{expand_tilde, HOME_DIRECTORY};
 use crate::flog::{FLOG, FLOGF};
 use crate::wchar::prelude::*;
@@ -196,15 +196,6 @@ pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
     }
 }
 
-// PREFIX is defined at build time.
-pub static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
-    [
-        WString::from_str(env!("PREFIX")) + L!("/bin"),
-        L!("/usr/bin").to_owned(),
-        L!("/bin").to_owned(),
-    ]
-});
-
 /// Finds the path of an executable named `cmd`, by looking in $PATH taken from `vars`.
 /// On success, err will be 0 and the path is returned.
 /// On failure, we return the "best path" with err set appropriately.
@@ -225,7 +216,7 @@ pub fn path_try_get_path(cmd: &wstr, vars: &dyn Environment) -> GetPathResult {
     if let Some(path) = vars.get(L!("PATH")) {
         path_get_path_core(cmd, path.as_list())
     } else {
-        path_get_path_core(cmd, &*DEFAULT_PATH)
+        path_get_path_core(cmd, &FALLBACK_PATH)
     }
 }
 

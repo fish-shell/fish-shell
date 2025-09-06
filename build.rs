@@ -271,13 +271,6 @@ fn setup_paths() {
     rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("DATADIR");
 
-    let datadir_subdir = if prefix_from_home {
-        "fish/install"
-    } else {
-        "fish"
-    };
-    rsconf::set_env_value("DATADIR_SUBDIR", datadir_subdir);
-
     let bindir = get_path("BINDIR", "bin/", &prefix);
     rsconf::set_env_value("BINDIR", bindir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("BINDIR");

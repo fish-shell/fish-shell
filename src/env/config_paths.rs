@@ -122,7 +122,7 @@ impl ConfigPaths {
         // Fall back to what got compiled in.
         FLOG!(config, "Using compiled in paths:");
         ConfigPaths {
-            data: Some(PathBuf::from(env!("DATADIR")).join(env!("DATADIR_SUBDIR"))),
+            data: Some(PathBuf::from(env!("DATADIR")).join("fish")),
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin: Some(PathBuf::from(env!("BINDIR"))),

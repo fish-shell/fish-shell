@@ -28,7 +28,7 @@ use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
 use std::sync::atomic::Ordering;
 
 use libc::{c_int, confstr, uid_t, STDOUT_FILENO, _IONBF};
-use once_cell::sync::OnceCell;
+use once_cell::sync::{Lazy, OnceCell};
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::io::Write;
@@ -567,29 +567,39 @@ fn setup_user(vars: &EnvStack) {
     }
 }
 
-/// Make sure the PATH variable contains something.
-fn setup_path() {
+pub(crate) static FALLBACK_PATH: Lazy<&[WString]> = Lazy::new(|| {
     use crate::libc::_CS_PATH;
-
-    let vars = EnvStack::globals();
-    let path = vars.get_unless_empty(L!("PATH"));
-    if path.is_none() {
-        // _CS_PATH: colon-separated paths to find POSIX utilities
-
-        let buf_size = unsafe { confstr(_CS_PATH(), std::ptr::null_mut(), 0) };
-        let path = if buf_size > 0 {
+    // _CS_PATH: colon-separated paths to find POSIX utilities
+    let buf_size = unsafe { confstr(_CS_PATH(), std::ptr::null_mut(), 0) };
+    Box::leak(
+        (if buf_size > 0 {
             let mut buf = vec![b'\0' as libc::c_char; buf_size];
             unsafe { confstr(_CS_PATH(), buf.as_mut_ptr(), buf_size) };
             let buf = buf;
             // safety: buf should contain a null-byte, and is not mutable unless we move ownership
             let cstr = unsafe { CStr::from_ptr(buf.as_ptr()) };
-            str2wcstring(cstr.to_bytes())
+            colon_split(&[str2wcstring(cstr.to_bytes())])
         } else {
-            // the above should really not fail
-            join_strings(crate::path::DEFAULT_PATH.as_ref(), ':')
-        };
+            vec![
+                WString::from_str(env!("PREFIX")) + L!("/bin"),
+                L!("/usr/bin").to_owned(),
+                L!("/bin").to_owned(),
+            ]
+        })
+        .into_boxed_slice(),
+    )
+});
 
-        vars.set_one(L!("PATH"), EnvMode::GLOBAL | EnvMode::EXPORT, path);
+/// Make sure the PATH variable contains something.
+fn setup_path() {
+    let vars = EnvStack::globals();
+    let path = vars.get_unless_empty(L!("PATH"));
+    if path.is_none() {
+        vars.set(
+            L!("PATH"),
+            EnvMode::GLOBAL | EnvMode::EXPORT,
+            FALLBACK_PATH.to_vec(),
+        );
     }
 }
 

@@ -1,6 +1,5 @@
 use crate::{common::get_executable_path, FLOG, FLOGF};
 use once_cell::sync::Lazy;
-use std::path::Path;
 use std::path::PathBuf;
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
@@ -29,7 +28,10 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
     let argv0 = argv0.canonicalize().unwrap_or(argv0);
     let exec_path = get_executable_path(&argv0);
 
-    let paths = ConfigPaths::new(&argv0, exec_path);
+    FLOG!(config, format!("executable path: {}", exec_path.display()));
+    FLOG!(config, format!("argv[0]: {}", argv0.display()));
+
+    let paths = ConfigPaths::new(exec_path);
 
     FLOGF!(
         config,
@@ -78,7 +80,7 @@ impl ConfigPaths {
     }
 
     #[cfg(feature = "embed-data")]
-    fn new(_argv0: &Path, exec_path: PathBuf) -> Self {
+    fn new(exec_path: PathBuf) -> Self {
         FLOG!(config, "embed-data feature is active, ignoring data paths");
         ConfigPaths {
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
@@ -87,22 +89,20 @@ impl ConfigPaths {
     }
 
     #[cfg(not(feature = "embed-data"))]
-    fn new(argv0: &Path, exec_path: PathBuf) -> Self {
-        let Ok(exec_path) = exec_path.canonicalize() else {
+    fn new(unresolved_exec_path: PathBuf) -> Self {
+        let Ok(exec_path) = unresolved_exec_path.canonicalize() else {
             return Self::static_paths();
         };
-        FLOG!(
-            config,
-            format!("exec_path: {:?}, argv[0]: {:?}", exec_path, &argv0)
-        );
 
         // If we're in Cargo's target directory or CMake's build directory, use the source files.
         if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
             let workspace_root = fish_build_helper::workspace_root();
             FLOG!(
                 config,
-                "Running out of target directory, using paths relative to workspace root:\n",
-                workspace_root.display()
+                format!(
+                    "Running out of target directory, using paths relative to workspace root ({})",
+                    workspace_root.display(),
+                )
             );
             return ConfigPaths {
                 sysconf: workspace_root.join("etc"),

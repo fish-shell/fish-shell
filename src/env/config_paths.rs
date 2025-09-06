@@ -7,11 +7,12 @@ use std::path::PathBuf;
 /// env_init.
 #[derive(Default)]
 pub struct ConfigPaths {
+    pub sysconf: PathBuf,     // e.g., /usr/local/etc
+    pub bin: Option<PathBuf>, // e.g., /usr/local/bin
     #[cfg(not(feature = "embed-data"))]
     pub data: PathBuf, // e.g., /usr/local/share
-    pub sysconf: PathBuf,     // e.g., /usr/local/etc
-    pub doc: PathBuf,         // e.g., /usr/local/share/doc/fish
-    pub bin: Option<PathBuf>, // e.g., /usr/local/bin
+    #[cfg(not(feature = "embed-data"))]
+    pub doc: PathBuf, // e.g., /usr/local/share/doc/fish
     #[cfg(not(feature = "embed-data"))]
     pub locale: PathBuf, // e.g., /usr/local/share/locale
 }
@@ -31,14 +32,11 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
 
     let paths = ConfigPaths::new(&argv0, exec_path);
 
-    #[cfg(not(feature = "embed-data"))]
-    FLOGF!(config, "paths.data: %ls", paths.data.display().to_string());
     FLOGF!(
         config,
         "paths.sysconf: %ls",
         paths.sysconf.display().to_string()
     );
-    FLOGF!(config, "paths.doc: %ls", paths.doc.display().to_string());
     FLOGF!(
         config,
         "paths.bin: %ls",
@@ -48,6 +46,10 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
             .map(|x| x.display().to_string())
             .unwrap_or("|not found|".to_string()),
     );
+    #[cfg(not(feature = "embed-data"))]
+    FLOGF!(config, "paths.data: %ls", paths.data.display().to_string());
+    #[cfg(not(feature = "embed-data"))]
+    FLOGF!(config, "paths.doc: %ls", paths.doc.display().to_string());
     #[cfg(not(feature = "embed-data"))]
     FLOGF!(
         config,
@@ -59,6 +61,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
 });
 
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
+#[cfg(not(feature = "embed-data"))]
 const DOC_DIR: &str = env!("DOCDIR");
 
 impl ConfigPaths {
@@ -67,7 +70,6 @@ impl ConfigPaths {
         FLOG!(config, "embed-data feature is active, ignoring data paths");
         ConfigPaths {
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
-            doc: DOC_DIR.into(),
             bin: exec_path.parent().map(|x| x.to_path_buf()),
         }
     }
@@ -77,10 +79,10 @@ impl ConfigPaths {
         // Fall back to what got compiled in.
         FLOG!(config, "Using compiled in paths:");
         ConfigPaths {
-            data: PathBuf::from(env!("DATADIR")).join("fish"),
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
-            doc: DOC_DIR.into(),
             bin: Some(PathBuf::from(env!("BINDIR"))),
+            data: PathBuf::from(env!("DATADIR")).join("fish"),
+            doc: DOC_DIR.into(),
             locale: PathBuf::from(env!("LOCALEDIR")),
         }
     }
@@ -105,10 +107,10 @@ impl ConfigPaths {
                 manifest_dir.display()
             );
             return ConfigPaths {
-                data: manifest_dir.join("share"),
                 sysconf: manifest_dir.join("etc"),
-                doc: manifest_dir.join("user_doc/html"),
                 bin: Some(exec_path.parent().unwrap().to_owned()),
+                data: manifest_dir.join("share"),
+                doc: manifest_dir.join("user_doc/html"),
                 locale: manifest_dir.join("share/locale"),
             };
         }
@@ -118,10 +120,10 @@ impl ConfigPaths {
         if exec_path.ends_with("bin/fish") {
             let base_path = exec_path.parent().unwrap().parent().unwrap();
             paths = ConfigPaths {
-                data: base_path.join("share/fish"),
                 sysconf: base_path.join("etc/fish"),
-                doc: base_path.join("share/doc/fish"),
                 bin: Some(base_path.join("bin")),
+                data: base_path.join("share/fish"),
+                doc: base_path.join("share/doc/fish"),
                 locale: base_path.join("share/locale"),
             }
         } else if exec_path.ends_with("fish") {
@@ -132,10 +134,10 @@ impl ConfigPaths {
             let base_path = exec_path.parent().unwrap();
             let data_dir = base_path.join("share");
             paths = ConfigPaths {
-                data: data_dir.clone(),
                 sysconf: base_path.join("etc"),
-                doc: base_path.join("user_doc/html"),
                 bin: Some(base_path.to_path_buf()),
+                data: data_dir.clone(),
+                doc: base_path.join("user_doc/html"),
                 locale: data_dir.join("locale"),
             }
         }

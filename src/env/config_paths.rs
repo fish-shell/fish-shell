@@ -114,26 +114,23 @@ impl ConfigPaths {
             };
         }
 
-        let or_static_doc = |doc: PathBuf| {
-            // The docs dir may not exist; in that case fall back to the compiled in path.
-            if doc.exists() {
-                doc
-            } else {
-                PathBuf::from(DOC_DIR)
-            }
-        };
-
         // The next check is that we are in a relocatable directory tree
         if exec_path.ends_with("bin/fish") {
             let base_path = exec_path.parent().unwrap().parent().unwrap();
             let data = base_path.join("share/fish");
             let sysconf = base_path.join("etc/fish");
             if data.exists() && sysconf.exists() {
+                let doc = base_path.join("share/doc/fish");
                 return ConfigPaths {
                     sysconf,
                     bin: Some(base_path.join("bin")),
                     data,
-                    doc: or_static_doc(base_path.join("share/doc/fish")),
+                    // The docs dir may not exist; in that case fall back to the compiled in path.
+                    doc: if doc.exists() {
+                        doc
+                    } else {
+                        PathBuf::from(DOC_DIR)
+                    },
                     locale: base_path.join("share/locale"),
                 };
             }
@@ -146,12 +143,13 @@ impl ConfigPaths {
             let data = base_path.join("share");
             let sysconf = base_path.join("etc");
             if data.exists() && sysconf.exists() {
+                let locale = data.join("locale");
                 return ConfigPaths {
                     sysconf,
                     bin: Some(base_path.to_path_buf()),
-                    data: data.clone(),
-                    doc: or_static_doc(base_path.join("user_doc/html")),
-                    locale: data.join("locale"),
+                    data,
+                    doc: base_path.join("user_doc/html"),
+                    locale,
                 };
             }
         }

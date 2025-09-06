@@ -414,6 +414,7 @@ for c in install add i in ins inst insta instal isnt isnta isntal isntall instal
     complete -f -c npm -n "__fish_npm_using_command $c" -s P -l save-prod -d 'Save to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s D -l save-dev -d 'Save to devDependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s O -l save-optional -d 'Save to optionalDependencies'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l save-peer -d 'Save to peerDependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s B -l save-bundle -d 'Also save to bundleDependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s E -l save-exact -d 'Save dependency with exact version'
     complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Install package globally'

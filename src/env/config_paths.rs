@@ -101,6 +101,9 @@ impl ConfigPathDetection {
         let Ok(exec_path) = unresolved_exec_path.canonicalize() else {
             return invalid_exec_path(unresolved_exec_path);
         };
+        let Some(exec_path_parent) = exec_path.parent() else {
+            return invalid_exec_path(exec_path);
+        };
 
         // If we're in Cargo's target directory or CMake's build directory, use the source files.
         if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
@@ -109,7 +112,7 @@ impl ConfigPathDetection {
                 kind: WorkspaceRoot,
                 paths: ConfigPaths {
                     sysconf: workspace_root.join("etc"),
-                    bin: Some(exec_path.parent().unwrap().to_owned()),
+                    bin: Some(exec_path_parent.to_owned()),
                     data: workspace_root.join("share"),
                     doc: workspace_root.join("user_doc/html"),
                     locale: workspace_root.join("share/locale"),
@@ -118,9 +121,6 @@ impl ConfigPathDetection {
             };
         }
 
-        let Some(exec_path_parent) = exec_path.parent() else {
-            return invalid_exec_path(exec_path);
-        };
         // The next check is that we are in a relocatable directory tree
         if exec_path_parent.ends_with("bin") {
             let base_path = exec_path_parent.parent().unwrap();
@@ -132,7 +132,7 @@ impl ConfigPathDetection {
                     kind: RelocatableTree,
                     paths: ConfigPaths {
                         sysconf,
-                        bin: Some(base_path.join("bin")),
+                        bin: Some(exec_path_parent.to_owned()),
                         data,
                         // The docs dir may not exist; in that case fall back to the compiled in path.
                         doc: if doc.exists() {

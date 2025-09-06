@@ -4,6 +4,8 @@ use crate::wchar::prelude::*;
 use crate::{common::get_executable_path, FLOG, FLOGF};
 use std::ffi::OsString;
 use std::os::unix::ffi::OsStringExt;
+#[cfg(not(feature = "embed-data"))]
+use std::path::Path;
 use std::path::PathBuf;
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
@@ -39,8 +41,8 @@ pub struct ConfigPathDetection {
     exec_path: PathBuf,
 }
 
+#[cfg(not(feature = "embed-data"))]
 impl ConfigPaths {
-    #[cfg(not(feature = "embed-data"))]
     fn static_paths() -> Self {
         Self {
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
@@ -48,6 +50,18 @@ impl ConfigPaths {
             data: PathBuf::from(env!("DATADIR")).join("fish"),
             doc: DOC_DIR.into(),
             locale: PathBuf::from(env!("LOCALEDIR")),
+        }
+    }
+
+    fn from_source_tree(repo_root: &Path, bin: PathBuf) -> Self {
+        Self {
+            sysconf: repo_root.join("etc"),
+            bin: Some(bin),
+            data: repo_root.join("share"),
+            // This requires manual sphinx invocation.
+            doc: repo_root.join("user_doc/html"),
+            // This requires manual build_tools/update_translations.fish invocation.
+            locale: repo_root.join("share/locale"),
         }
     }
 }
@@ -107,15 +121,10 @@ impl ConfigPathDetection {
         // If we're in Cargo's target directory or CMake's build directory, use the source files.
         if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
             let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let paths = ConfigPaths::from_source_tree(&manifest_dir, bin.to_owned());
             return Self {
-                kind: BuildDirectory(manifest_dir.clone()),
-                paths: ConfigPaths {
-                    sysconf: manifest_dir.join("etc"),
-                    bin: Some(bin.to_owned()),
-                    data: manifest_dir.join("share"),
-                    doc: manifest_dir.join("user_doc/html"),
-                    locale: manifest_dir.join("share/locale"),
-                },
+                kind: BuildDirectory(manifest_dir),
+                paths,
                 exec_path,
             };
         }
@@ -144,24 +153,12 @@ impl ConfigPathDetection {
                     exec_path,
                 };
             }
-        } else {
-            let base_path = bin;
-            let data = base_path.join("share");
-            let sysconf = base_path.join("etc");
-            if data.exists() && sysconf.exists() {
-                let locale = data.join("locale");
-                return Self {
-                    kind: InTreeBuild,
-                    paths: ConfigPaths {
-                        sysconf,
-                        bin: Some(base_path.to_path_buf()),
-                        data,
-                        doc: base_path.join("user_doc/html"),
-                        locale,
-                    },
-                    exec_path,
-                };
-            }
+        } else if bin.join("data").exists() && bin.join("etc").exists() {
+            return Self {
+                kind: InTreeBuild,
+                paths: ConfigPaths::from_source_tree(bin, bin.to_owned()),
+                exec_path,
+            };
         }
 
         Self {

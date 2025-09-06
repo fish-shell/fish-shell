@@ -22,8 +22,10 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
     };
     let argv0 = argv0.canonicalize().unwrap_or(argv0);
     let mut paths = ConfigPaths::default();
+    #[allow(unused_mut)]
     let mut done = false;
     let exec_path = get_executable_path(&argv0);
+    #[cfg(not(feature = "embed-data"))]
     if let Ok(exec_path) = exec_path.canonicalize() {
         FLOG!(
             config,
@@ -53,22 +55,12 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
             // The next check is that we are in a relocatable directory tree
             if exec_path.ends_with("bin/fish") {
                 let base_path = exec_path.parent().unwrap().parent().unwrap();
-                #[cfg(feature = "embed-data")]
-                let data_dir = base_path.join("share/fish/install");
-                #[cfg(not(feature = "embed-data"))]
-                let data_dir = base_path.join("share/fish");
-                let locale =
-                    (!cfg!(feature = "embed-data")).then(|| base_path.join("share/locale"));
                 paths = ConfigPaths {
-                    // One obvious path is ~/.local (with fish in ~/.local/bin/).
-                    // If we picked ~/.local/share/fish as our data path,
-                    // we would install there and erase history.
-                    // So let's isolate us a bit more.
-                    data: Some(data_dir),
+                    data: Some(base_path.join("share/fish")),
                     sysconf: base_path.join("etc/fish"),
                     doc: base_path.join("share/doc/fish"),
                     bin: Some(base_path.join("bin")),
-                    locale,
+                    locale: Some(base_path.join("share/locale")),
                 }
             } else if exec_path.ends_with("fish") {
                 FLOG!(
@@ -76,9 +68,6 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
                     "'fish' not in a 'bin/', trying paths relative to source tree"
                 );
                 let base_path = exec_path.parent().unwrap();
-                #[cfg(feature = "embed-data")]
-                let data_dir = base_path.join("share/install");
-                #[cfg(not(feature = "embed-data"))]
                 let data_dir = base_path.join("share");
                 paths = ConfigPaths {
                     data: Some(data_dir.clone()),

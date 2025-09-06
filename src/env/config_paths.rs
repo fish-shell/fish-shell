@@ -16,20 +16,9 @@ pub struct ConfigPaths {
 }
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
-    // Read the current executable and follow all symlinks to it.
-    // OpenBSD has issues with `std::env::current_exe`, see gh-9086 and
-    // https://github.com/rust-lang/rust/issues/60560
     let argv0 = PathBuf::from(std::env::args().next().unwrap());
-    let argv0 = if argv0.exists() {
-        argv0
-    } else {
-        std::env::current_exe().unwrap_or(argv0)
-    };
-    let argv0 = argv0.canonicalize().unwrap_or(argv0);
     let exec_path = get_executable_path(&argv0);
-
     FLOG!(config, format!("executable path: {}", exec_path.display()));
-    FLOG!(config, format!("argv[0]: {}", argv0.display()));
 
     let paths = ConfigPaths::new(exec_path);
 

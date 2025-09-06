@@ -16,7 +16,7 @@ pub struct ConfigPaths {
 }
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
-    let argv0 = PathBuf::from(std::env::args().next().unwrap());
+    let argv0 = PathBuf::from(std::env::args_os().next().unwrap());
     let exec_path = get_executable_path(&argv0);
     FLOG!(config, format!("executable path: {}", exec_path.display()));
 

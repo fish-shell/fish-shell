@@ -422,9 +422,6 @@ fn throwing_main() -> i32 {
     let mut args: Vec<WString> = env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
-    if args.is_empty() {
-        args.push("fish".into());
-    }
 
     // Enable debug categories set in FISH_DEBUG.
     // This is in *addition* to the ones given via --debug.

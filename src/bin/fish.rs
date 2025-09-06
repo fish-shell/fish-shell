@@ -188,7 +188,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
         let datapath = str2wcstring(
             paths
                 .data
-                .clone()
+                .as_ref()
                 .expect("Non-embed build not having a data path. That's a bug")
                 .as_os_str()
                 .as_bytes(),

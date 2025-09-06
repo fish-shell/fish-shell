@@ -41,7 +41,9 @@ template_file=$(mktemp)
 FISH_GETTEXT_EXTRACTION_FILE=$template_file cargo build --workspace --all-targets --features=gettext-extract
 if $lint; then
     PATH="$build_dir:$PATH" "$repo_root/build_tools/style.fish" --all --check
-    cargo clippy --workspace --all-targets
+    for features in "" --no-default-features; do
+        cargo clippy --workspace --all-targets $features
+    done
 fi
 cargo test --no-default-features --workspace --all-targets
 cargo test --doc --workspace

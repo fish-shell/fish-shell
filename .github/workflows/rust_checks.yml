@@ -18,6 +18,9 @@ jobs:
 
   clippy-stable:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features: ["", "--no-default-features"]
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/rust-toolchain@stable
@@ -27,7 +30,7 @@ jobs:
       run: |
         sudo apt install gettext
     - name: cargo clippy
-      run: cargo clippy --workspace --all-targets -- --deny=warnings
+      run: cargo clippy --workspace --all-targets ${{ matrix.features }} -- --deny=warnings
 
   clippy-msrv:
     runs-on: ubuntu-latest

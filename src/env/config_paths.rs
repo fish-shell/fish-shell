@@ -7,11 +7,13 @@ use std::path::PathBuf;
 /// env_init.
 #[derive(Default)]
 pub struct ConfigPaths {
-    pub data: Option<PathBuf>,   // e.g., /usr/local/share
-    pub sysconf: PathBuf,        // e.g., /usr/local/etc
-    pub doc: PathBuf,            // e.g., /usr/local/share/doc/fish
-    pub bin: Option<PathBuf>,    // e.g., /usr/local/bin
-    pub locale: Option<PathBuf>, // e.g., /usr/local/share/locale
+    #[cfg(not(feature = "embed-data"))]
+    pub data: PathBuf, // e.g., /usr/local/share
+    pub sysconf: PathBuf,     // e.g., /usr/local/etc
+    pub doc: PathBuf,         // e.g., /usr/local/share/doc/fish
+    pub bin: Option<PathBuf>, // e.g., /usr/local/bin
+    #[cfg(not(feature = "embed-data"))]
+    pub locale: PathBuf, // e.g., /usr/local/share/locale
 }
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
@@ -29,27 +31,28 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
 
     let paths = ConfigPaths::new(&argv0, exec_path);
 
+    #[cfg(not(feature = "embed-data"))]
+    FLOGF!(config, "paths.data: %ls", paths.data.display().to_string());
     FLOGF!(
         config,
-        "determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: \
-        %ls\npaths.doc: %ls\npaths.bin: %ls\npaths.locale: %ls",
-        paths
-            .data
-            .clone()
-            .map(|x| x.display().to_string())
-            .unwrap_or("|not found|".to_string()),
-        paths.sysconf.display().to_string(),
-        paths.doc.display().to_string(),
+        "paths.sysconf: %ls",
+        paths.sysconf.display().to_string()
+    );
+    FLOGF!(config, "paths.doc: %ls", paths.doc.display().to_string());
+    FLOGF!(
+        config,
+        "paths.bin: %ls",
         paths
             .bin
             .clone()
             .map(|x| x.display().to_string())
             .unwrap_or("|not found|".to_string()),
-        paths
-            .locale
-            .clone()
-            .map(|x| x.display().to_string())
-            .unwrap_or("|not found|".to_string()),
+    );
+    #[cfg(not(feature = "embed-data"))]
+    FLOGF!(
+        config,
+        "paths.locale: %ls",
+        paths.locale.display().to_string()
     );
 
     paths
@@ -63,11 +66,9 @@ impl ConfigPaths {
     fn new(_argv0: &Path, exec_path: PathBuf) -> Self {
         FLOG!(config, "embed-data feature is active, ignoring data paths");
         ConfigPaths {
-            data: None,
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin: exec_path.parent().map(|x| x.to_path_buf()),
-            locale: None,
         }
     }
 
@@ -76,11 +77,11 @@ impl ConfigPaths {
         // Fall back to what got compiled in.
         FLOG!(config, "Using compiled in paths:");
         ConfigPaths {
-            data: Some(PathBuf::from(env!("DATADIR")).join("fish")),
+            data: PathBuf::from(env!("DATADIR")).join("fish"),
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin: Some(PathBuf::from(env!("BINDIR"))),
-            locale: Some(PathBuf::from(env!("LOCALEDIR"))),
+            locale: PathBuf::from(env!("LOCALEDIR")),
         }
     }
 
@@ -104,11 +105,11 @@ impl ConfigPaths {
                 manifest_dir.display()
             );
             return ConfigPaths {
-                data: Some(manifest_dir.join("share")),
+                data: manifest_dir.join("share"),
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
                 bin: Some(exec_path.parent().unwrap().to_owned()),
-                locale: Some(manifest_dir.join("share/locale")),
+                locale: manifest_dir.join("share/locale"),
             };
         }
 
@@ -117,11 +118,11 @@ impl ConfigPaths {
         if exec_path.ends_with("bin/fish") {
             let base_path = exec_path.parent().unwrap().parent().unwrap();
             paths = ConfigPaths {
-                data: Some(base_path.join("share/fish")),
+                data: base_path.join("share/fish"),
                 sysconf: base_path.join("etc/fish"),
                 doc: base_path.join("share/doc/fish"),
                 bin: Some(base_path.join("bin")),
-                locale: Some(base_path.join("share/locale")),
+                locale: base_path.join("share/locale"),
             }
         } else if exec_path.ends_with("fish") {
             FLOG!(
@@ -131,15 +132,15 @@ impl ConfigPaths {
             let base_path = exec_path.parent().unwrap();
             let data_dir = base_path.join("share");
             paths = ConfigPaths {
-                data: Some(data_dir.clone()),
+                data: data_dir.clone(),
                 sysconf: base_path.join("etc"),
                 doc: base_path.join("user_doc/html"),
                 bin: Some(base_path.to_path_buf()),
-                locale: Some(data_dir.join("locale")),
+                locale: data_dir.join("locale"),
             }
         }
 
-        if paths.data.clone().is_some_and(|x| x.exists()) && paths.sysconf.exists() {
+        if paths.data.exists() && paths.sysconf.exists() {
             // The docs dir may not exist; in that case fall back to the compiled in path.
             if !paths.doc.exists() {
                 paths.doc = PathBuf::from(DOC_DIR);

@@ -186,14 +186,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
     }
     #[cfg(not(feature = "embed-data"))]
     {
-        let datapath = str2wcstring(
-            paths
-                .data
-                .as_ref()
-                .expect("Non-embed build not having a data path. That's a bug")
-                .as_os_str()
-                .as_bytes(),
-        );
+        let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
         if !source_config_in_directory(parser, &datapath) {
             // If we cannot read share/config.fish, our internal configuration,
             // something is wrong.

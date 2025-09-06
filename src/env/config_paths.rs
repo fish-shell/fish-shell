@@ -72,66 +72,7 @@ impl ConfigPaths {
     }
 
     #[cfg(not(feature = "embed-data"))]
-    fn new(argv0: &Path, exec_path: PathBuf) -> Self {
-        if let Ok(exec_path) = exec_path.canonicalize() {
-            FLOG!(
-                config,
-                format!("exec_path: {:?}, argv[0]: {:?}", exec_path, &argv0)
-            );
-            // TODO: we should determine program_name from argv0 somewhere in this file
-
-            // If we're in Cargo's target directory or CMake's build directory, use the source files.
-            if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
-                let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-                FLOG!(
-                config,
-                "Running out of target directory, using paths relative to CARGO_MANIFEST_DIR:\n",
-                manifest_dir.display()
-            );
-                return ConfigPaths {
-                    data: Some(manifest_dir.join("share")),
-                    sysconf: manifest_dir.join("etc"),
-                    doc: manifest_dir.join("user_doc/html"),
-                    bin: Some(exec_path.parent().unwrap().to_owned()),
-                    locale: Some(manifest_dir.join("share/locale")),
-                };
-            }
-
-            // The next check is that we are in a relocatable directory tree
-            if exec_path.ends_with("bin/fish") {
-                let base_path = exec_path.parent().unwrap().parent().unwrap();
-                paths = ConfigPaths {
-                    data: Some(base_path.join("share/fish")),
-                    sysconf: base_path.join("etc/fish"),
-                    doc: base_path.join("share/doc/fish"),
-                    bin: Some(base_path.join("bin")),
-                    locale: Some(base_path.join("share/locale")),
-                }
-            } else if exec_path.ends_with("fish") {
-                FLOG!(
-                    config,
-                    "'fish' not in a 'bin/', trying paths relative to source tree"
-                );
-                let base_path = exec_path.parent().unwrap();
-                let data_dir = base_path.join("share");
-                paths = ConfigPaths {
-                    data: Some(data_dir.clone()),
-                    sysconf: base_path.join("etc"),
-                    doc: base_path.join("user_doc/html"),
-                    bin: Some(base_path.to_path_buf()),
-                    locale: Some(data_dir.join("locale")),
-                }
-            }
-
-            if paths.data.clone().is_some_and(|x| x.exists()) && paths.sysconf.exists() {
-                // The docs dir may not exist; in that case fall back to the compiled in path.
-                if !paths.doc.exists() {
-                    paths.doc = PathBuf::from(DOC_DIR);
-                }
-                return paths;
-            }
-        }
-
+    fn static_paths() -> Self {
         // Fall back to what got compiled in.
         FLOG!(config, "Using compiled in paths:");
         ConfigPaths {
@@ -141,5 +82,70 @@ impl ConfigPaths {
             bin: Some(PathBuf::from(env!("BINDIR"))),
             locale: Some(PathBuf::from(env!("LOCALEDIR"))),
         }
+    }
+
+    #[cfg(not(feature = "embed-data"))]
+    fn new(argv0: &Path, exec_path: PathBuf) -> Self {
+        let Ok(exec_path) = exec_path.canonicalize() else {
+            return Self::static_paths();
+        };
+        FLOG!(
+            config,
+            format!("exec_path: {:?}, argv[0]: {:?}", exec_path, &argv0)
+        );
+        // TODO: we should determine program_name from argv0 somewhere in this file
+
+        // If we're in Cargo's target directory or CMake's build directory, use the source files.
+        if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
+            let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            FLOG!(
+                config,
+                "Running out of target directory, using paths relative to CARGO_MANIFEST_DIR:\n",
+                manifest_dir.display()
+            );
+            return ConfigPaths {
+                data: Some(manifest_dir.join("share")),
+                sysconf: manifest_dir.join("etc"),
+                doc: manifest_dir.join("user_doc/html"),
+                bin: Some(exec_path.parent().unwrap().to_owned()),
+                locale: Some(manifest_dir.join("share/locale")),
+            };
+        }
+
+        // The next check is that we are in a relocatable directory tree
+        let mut paths = ConfigPaths::default();
+        if exec_path.ends_with("bin/fish") {
+            let base_path = exec_path.parent().unwrap().parent().unwrap();
+            paths = ConfigPaths {
+                data: Some(base_path.join("share/fish")),
+                sysconf: base_path.join("etc/fish"),
+                doc: base_path.join("share/doc/fish"),
+                bin: Some(base_path.join("bin")),
+                locale: Some(base_path.join("share/locale")),
+            }
+        } else if exec_path.ends_with("fish") {
+            FLOG!(
+                config,
+                "'fish' not in a 'bin/', trying paths relative to source tree"
+            );
+            let base_path = exec_path.parent().unwrap();
+            let data_dir = base_path.join("share");
+            paths = ConfigPaths {
+                data: Some(data_dir.clone()),
+                sysconf: base_path.join("etc"),
+                doc: base_path.join("user_doc/html"),
+                bin: Some(base_path.to_path_buf()),
+                locale: Some(data_dir.join("locale")),
+            }
+        }
+
+        if paths.data.clone().is_some_and(|x| x.exists()) && paths.sysconf.exists() {
+            // The docs dir may not exist; in that case fall back to the compiled in path.
+            if !paths.doc.exists() {
+                paths.doc = PathBuf::from(DOC_DIR);
+            }
+            return paths;
+        }
+        Self::static_paths()
     }
 }

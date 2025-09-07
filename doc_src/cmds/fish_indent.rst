@@ -43,12 +43,6 @@ The following options are available:
 **--html**
     Outputs HTML, which supports syntax highlighting if the appropriate CSS is defined. The CSS class names are the same as the variable names, such as ``fish_color_command``.
 
-**-d** or **--debug=DEBUG_CATEGORIES**
-    Enable debug output and specify a pattern for matching debug categories. See :ref:`Debugging <debugging-fish>` in :doc:`fish <fish>` (1) for details.
-
-**-o** or **--debug-output=DEBUG_FILE**
-    Specify a file path to receive the debug output, including categories and ``fish_trace``. The default is standard error.
-
 **--dump-parse-tree**
     Dumps information about the parsed statements to standard error. This is likely to be of interest only to people working on the fish source code.
 

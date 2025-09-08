@@ -29,7 +29,8 @@ function fish_config --description "Launch fish's web based configuration"
                 end
                 set temp (__fish_mktemp_relative -d fish_config)
                 or return
-                for dir in (status list-files tools/web_config | path dirname | path sort -u)
+                for dir in (status list-files tools/web_config |
+                            path dirname | path sort -u)
                     mkdir -p $temp/$dir
                     or return
                 end
@@ -91,7 +92,10 @@ function fish_config --description "Launch fish's web based configuration"
                 case show
                     set -l fish (status fish-path)
                     set -l prompts $prompt_dir/$argv.fish
-                    set -q prompts[1]; or set prompts $prompt_dir/*.fish (status list-files tools/web_config/sample_prompts/ 2>/dev/null)
+                    if not set -q prompts[1]
+                        set prompts $prompt_dir/*.fish \
+                            (status list-files tools/web_config/sample_prompts/ 2>/dev/null)
+                    end
                     for p in $prompts
                         if not test -e "$p"
                             continue
@@ -113,7 +117,8 @@ function fish_config --description "Launch fish's web based configuration"
                         echo
                     end
                 case list ''
-                    files=$prompt_dir/*.theme string replace -r '.*/([^/]*).fish$' '$1' $files (status list-files tools/web_config/sample_prompts/)
+                    files=$prompt_dir/*.theme string replace -r '.*/([^/]*).fish$' '$1' \
+                        $files (status list-files tools/web_config/sample_prompts/ 2>/dev/null)
                     return
                 case choose
                     if set -q argv[2]
@@ -212,7 +217,8 @@ function fish_config --description "Launch fish's web based configuration"
 
             switch $cmd
                 case list ''
-                    files=$dirs/*.theme string replace -r '.*/([^/]*).theme$' '$1' $files (status list-files tools/web_config/themes/)
+                    files=$dirs/*.theme string replace -r '.*/([^/]*).theme$' '$1' \
+                        $files (status list-files tools/web_config/themes/ 2>/dev/null)
                     return
                 case demo
                     echo -ns (set_color $fish_color_command || set_color $fish_color_normal) /bright/vixens
@@ -240,8 +246,11 @@ function fish_config --description "Launch fish's web based configuration"
                     echo
                 case show
                     set -l fish (status fish-path)
-                    set -l themes $dirs/$argv.theme (status list-files tools/web_config/themes/ | string match -- "*/"$argv.theme)
-                    set -q themes[1]; or set themes $dirs/*.theme (status list-files tools/web_config/themes/)
+                    set -l themes $dirs/$argv.theme \
+                        (status list-files tools/web_config/themes/ 2>/dev/null | string match -- "*/"$argv.theme)
+                    if not set -q themes[1]
+                        set themes $dirs/*.theme (status list-files tools/web_config/themes/ 2>/dev/null)
+                    end
                     set -l used_themes
 
                     echo -s (set_color normal; set_color --underline) Current (set_color normal)

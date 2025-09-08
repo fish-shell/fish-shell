@@ -52262,6 +52262,9 @@ msgstr "保存到不依赖"
 msgid "Save to optionalDependencies"
 msgstr "保存到可选 依赖关系"
 
+msgid "Save to peerDependencies"
+msgstr ""
+
 msgid "Save which profiles are active"
 msgstr "保存哪些配置文件活动"
 

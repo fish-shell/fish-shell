@@ -7496,6 +7496,9 @@ msgstr ""
 msgid "Become an editor server for NetBeans"
 msgstr "Servir de serveur d’édition pour NetBeans"
 
+msgid "Become password file"
+msgstr ""
+
 msgid "Beep if command has a non-zero exit"
 msgstr "Sonner en cas de code de retour non nul"
 

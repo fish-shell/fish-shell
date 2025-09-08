@@ -7625,6 +7625,12 @@ msgstr "粗体字体"
 msgid "Boolean as the value for the given key"
 msgstr "布尔为给定密钥的值"
 
+msgid "Boot into a specific boot loader entry on next boot"
+msgstr ""
+
+msgid "Boot into boot loader menu on next boot"
+msgstr ""
+
 msgid "Boot manager display label (Default: Linux)"
 msgstr "Boot 管理器显示标签( 默认: Linux)"
 

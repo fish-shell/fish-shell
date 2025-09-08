@@ -529,7 +529,7 @@ class TypeScdocManParser(ManParser):
             return False
         options_section = options_section_matched.group(1)
 
-        options_parts_regex = re.compile("(.*?).RE", re.DOTALL)
+        options_parts_regex = re.compile(r"(.*?)\.RE", re.DOTALL)
         options_matched = re.match(options_parts_regex, options_section)
         add_diagnostic("Command is %r" % CMDNAME)
 

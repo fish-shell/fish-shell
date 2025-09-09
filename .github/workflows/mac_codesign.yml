@@ -19,6 +19,10 @@ jobs:
           targets: aarch64-apple-darwin
       - name: build-and-codesign
         run: |
+          export FISH_ARTEFACT_PATH=/tmp/fish-built
+          # macOS runners keep having issues loading Cargo.toml dependencies from git (GitHub) instead
+          # of crates.io, so give this a try. It's also sometimes significantly faster on all platforms.
+          export CARGO_NET_GIT_FETCH_WITH_CLI=true
           cargo install apple-codesign
           mkdir -p "$FISH_ARTEFACT_PATH"
           echo "$MAC_CODESIGN_APP_P12_BASE64" | base64 --decode > /tmp/app.p12
@@ -31,10 +35,6 @@ jobs:
           MAC_CODESIGN_INSTALLER_P12_BASE64: ${{ secrets.MAC_CODESIGN_INSTALLER_P12_BASE64 }}
           MAC_CODESIGN_PASSWORD: ${{ secrets.MAC_CODESIGN_PASSWORD }}
           MACOS_NOTARIZE_JSON: ${{ secrets.MACOS_NOTARIZE_JSON }}
-          # macOS runners keep having issues loading Cargo.toml dependencies from git (GitHub) instead
-          # of crates.io, so give this a try. It's also sometimes significantly faster on all platforms.
-          CARGO_NET_GIT_FETCH_WITH_CLI: true
-          FISH_ARTEFACT_PATH: /tmp/fish-built
       - uses: actions/upload-artifact@v4
         with:
           name: macOS Artefacts

@@ -8,16 +8,12 @@ jobs:
   label-and-milestone:
     runs-on: ubuntu-latest
     steps:
-    # - name: Checkout repository
-    #   uses: actions/checkout@v2
-
     - name: Set label and milestone
       id: set-label-milestone
       uses: actions/github-script@v7
       with:
         script: |
           const completionsLabel = 'completions';
-          const completionsMilestone = 'fish next-3.x';
 
           // Get changed files in the pull request
           const prNumber = context.payload.pull_request.number;
@@ -41,26 +37,4 @@ jobs:
               labels: [completionsLabel],
             });
             console.log(`PR ${prNumber} assigned label "${completionsLabel}"`);
-
-            // Get the list of milestones
-            const { data: milestones } = await github.rest.issues.listMilestones({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-
-            // Find the milestone id
-            const milestone = milestones.find(milestone => milestone.title === completionsMilestone);
-
-            if (milestone) {
-              // Set the milestone for the PR
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                milestone: milestone.number
-              });
-              console.log(`PR ${prNumber} assigned milestone "${completionsMilestone}"`);
-            } else {
-              console.error(`Milestone "${completionsMilestone}" not found`);
-            }
           }

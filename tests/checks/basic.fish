@@ -657,3 +657,19 @@ chmod +x $tmpdir/argv0.sh
 cd $tmpdir
 ./argv0.sh
 # CHECK: ./argv0.sh
+
+# A simple check of badly formatted code
+#!fish_indent: off
+  begin; echo -n "1"
+# A comment
+   ; echo -n          2 |
+cat (
+		
+	echo -n 3|psub
+)
+
+        set a 4 &&
+echo -n $a[      1 ]
+    echo -n 5         >         /dev/stdout; end
+#!fish_indent: on
+#CHECK: 1345

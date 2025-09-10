@@ -14,7 +14,8 @@ echo (command sleep 1000000 & ; set -g sleep_pid $last_pid ; echo local)
 # CHECK: local
 echo $sleep_pid
 # CHECK: {{[1-9]\d*}}
-kill $sleep_pid ; echo $status
+kill $sleep_pid
+echo $status
 # CHECK: 0
 
 status job-control interactive
@@ -44,7 +45,6 @@ set --show b
 #CHECKERR: set b (string repeat -n 512 x)
 #CHECKERR:       ^~~~~~~~~~~~~~~~~~~~~~~^
 
-
 # Command sub over the limit should fail
 set c (subme 513)
 set --show c
@@ -72,7 +72,6 @@ or echo expected status 122, saw $saved_status >&2
 #CHECKERR: {{.*}}: Too much data emitted by command substitution so it was discarded
 #CHECKERR: echo this will fail (string repeat --max 513 b) to output anything
 #CHECKERR:                     ^~~~~~~~~~~~~~~~~~~~~~~~~~^
-
 
 # Check that it's reset to the default when unset
 begin

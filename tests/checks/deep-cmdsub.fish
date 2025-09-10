@@ -8,4 +8,3 @@ for i in (seq 63)
 end
 eval $s
 #CHECK: hooray
-

@@ -36,7 +36,7 @@ git config --local alias.re 'restore --staged'
 # Test custom command completions by adding a command:
 
 set -p PATH $PWD
-echo "echo foo" > git-frobnicate
+echo "echo foo" >git-frobnicate
 chmod +x git-frobnicate
 
 complete -c git-frobnicate -xa 'foo bar baz'
@@ -145,7 +145,7 @@ fish_git_prompt
 echo
 #CHECK: (newbranch)
 
-echo "test" > foo
+echo test >foo
 fish_git_prompt
 echo
 #CHECK: (newbranch *)
@@ -166,7 +166,7 @@ set -g ___fish_git_prompt_char_cleanstate ''
 
 set -l identity -c user.email=banana@example.com -c user.name=banana
 git $identity commit -m Init >/dev/null
-echo 'changed' > foo
+echo changed >foo
 # (some git versions don't allow stash without giving an email)
 git $identity stash >/dev/null
 fish_git_prompt
@@ -184,7 +184,6 @@ set -e __fish_git_prompt_status_order
 set -e ___fish_git_prompt_char_stashstate
 set -e ___fish_git_prompt_char_cleanstate
 
-
 # Turn on everything and verify we correctly ignore sus config files.
 set -g __fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
 set -g __fish_git_prompt_showdirtystate 1
@@ -192,12 +191,12 @@ set -g __fish_git_prompt_show_informative_status 1
 set -g __fish_git_prompt_showuntrackedfiles 1
 rm -Rf .git *
 git init >/dev/null 2>&1
-echo -n > ran.txt
+echo -n >ran.txt
 git config core.fsmonitor 'echo fsmonitor >> ran.txt; false'
 git config core.sshCommand 'echo sshCommand >> ran.txt; false'
 git config diff.external 'echo diff >> ran.txt; false'
 touch untracked_file
-fish_git_prompt > /dev/null
+fish_git_prompt >/dev/null
 cat ran.txt # should output nothing
 
 test "$(complete -C'git re ')" = "$(complete -C'git restore --staged ')"

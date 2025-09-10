@@ -97,7 +97,8 @@ for i in 1 2 3
     echo $i
 end
 
-if false; or --help
+if false
+    or --help
 end
 
 # Make sure while loops don't run forever with no-exec (#1543)

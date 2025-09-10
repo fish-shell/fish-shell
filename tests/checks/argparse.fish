@@ -304,7 +304,7 @@ and echo unexpected argparse return status >&2
 # CHECKERR: argparse: Value 'a1' for flag 'm' is not an integer
 
 begin
-# Check the exit status from argparse validation
+    # Check the exit status from argparse validation
     argparse 'm#max!set -l | grep "^_flag_"; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
     set -l saved_status $status
     test $saved_status -eq 57
@@ -419,7 +419,6 @@ begin
     # CHECK: argv
     # CHECK: argv_opts '--long=value'  '--long'
 end
-
 
 begin
     argparse -u b/break -- "-b kubectl get pods -l name=foo"
@@ -726,9 +725,8 @@ begin
     # CHECK: argv_opts
 end
 
-
 begin
-    argparse 'd=?&' a b  -- -d -d3 -ad -bd345
+    argparse 'd=?&' a b -- -d -d3 -ad -bd345
     set -l
     # CHECK: _flag_a -a
     # CHECK: _flag_b -b
@@ -738,7 +736,7 @@ begin
 end
 
 begin
-    argparse 'd&' a b 'v='  -- 0 -adbv124 1 -abdv125 2 -dabv124 3 -vd3
+    argparse 'd&' a b 'v=' -- 0 -adbv124 1 -abdv125 2 -dabv124 3 -vd3
     set -l
     # CHECK: _flag_a '-a'  '-a'  '-a'
     # CHECK: _flag_b '-b'  '-b'  '-b'

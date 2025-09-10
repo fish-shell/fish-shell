@@ -225,7 +225,7 @@ string split "" abc
 # CHECK: b
 # CHECK: c
 
-string split --max 1 --right 12 "AB12CD"
+string split --max 1 --right 12 AB12CD
 # CHECK: AB
 # CHECK: CD
 
@@ -895,16 +895,15 @@ echo $status
 # CHECK: 0
 
 # should not be able to enable UTF mode
-string match -r "(*UTF).*" "aaa"
+string match -r "(*UTF).*" aaa
 # CHECKERR: string match: Regular expression compile error: using UTF is disabled by the application
 # CHECKERR: string match: (*UTF).*
 # CHECKERR: string match:      ^
 
-string replace -r "(*UTF).*" "aaa"
+string replace -r "(*UTF).*" aaa
 # CHECKERR: string replace: Regular expression compile error: using UTF is disabled by the application
 # CHECKERR: string replace: (*UTF).*
 # CHECKERR: string replace:      ^
-
 
 string match -eq asd asd
 echo $status
@@ -1201,9 +1200,9 @@ printf "dog\ncat\nbat\ngnat\n" | string match -m2 "*at"
 printf "dog\ncat\nbat\nhog\n" | string match -rvm1 'at$'
 # CHECK: dog
 
-printf "dog\ncat\nbat\n" | string replace -rf --max-matches 1 'at$' 'aught'
+printf "dog\ncat\nbat\n" | string replace -rf --max-matches 1 'at$' aught
 # CHECK: caught
 
-printf "dog\ncat\nbat\n" | string replace -r --max-matches 1 '^c' 'h'
+printf "dog\ncat\nbat\n" | string replace -r --max-matches 1 '^c' h
 # CHECK: dog
 # CHECK: hat

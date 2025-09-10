@@ -138,7 +138,6 @@ math n + 4
 # CHECKERR: 'n + 4'
 # CHECKERR:  ^
 
-
 not math 'sin()'
 # CHECKERR: math: Error: Too few arguments
 # CHECKERR: 'sin()'

@@ -615,3 +615,30 @@ cat $tmpdir/indent_test.fish
 # See that the builtin can be redirected
 printf %s\n a b c | builtin fish_indent | grep b
 # CHECK: b
+
+# Check for various uses of #!fish_indent
+echo '
+"echo" \
+"reformat"   "this"
+#!fish_indent: off
+do   not   "reformat"   "this" \
+#!fish_indent: off
+do   not   "reformat"   "this" \
+#!fish_indent: on
+"reformat"   "this" \
+#!fish_indent:on
+"reformat"   "this" \
+#!fish_indent:off
+do   not   "reformat"   "this"' | $fish_indent
+#CHECK: echo \
+#CHECK:     reformat this
+#CHECK: #!fish_indent: off
+#CHECK: do   not   "reformat"   "this" \
+#CHECK: #!fish_indent: off
+#CHECK: do   not   "reformat"   "this" \
+#CHECK:     #!fish_indent: on
+#CHECK:     reformat this \
+#CHECK:     #!fish_indent:on
+#CHECK:     reformat this \
+#CHECK:     #!fish_indent:off
+#CHECK: do   not   "reformat"   "this"

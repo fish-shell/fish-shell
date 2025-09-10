@@ -54,3 +54,17 @@ The following options are available:
 
 **-h** or **--help**
     Displays help about using this command.
+
+Except when using ``--only-indent`` or ``--only-unindent``, :program:`fish_indent` will recognise the following special comments:
+
+**#!fish_indent: off**
+    All text starting from the ``#!`` up until the next ``#!fish_indent: on`` (or end of file), will be output verbatim (i.e. it will not be reformated in any way).
+
+    Note: if another ``#!fish_indent: off`` occurs before a subsequent ``#!fish_indent: on`` (or end of file), it will be treated like an ordinary comment.
+
+**#!fish_indent: on**
+    This disables the effect of any previous ``#!fish_indent: off``. All text starting from the ``#!`` up until the next ``#!fish_indent: off`` (or end of file), is formatted as normal.
+
+    Note: if another ``#!fish_indent: on`` occurs before a subsequent ``#!fish_indent: off`` (or end of file), it will be treated like an ordinary comment.
+
+Other comments starting with ``#!fish_indent:`` are not treated specially, but this may change in the future.

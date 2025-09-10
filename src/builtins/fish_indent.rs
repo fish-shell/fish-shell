@@ -83,6 +83,11 @@ struct PrettyPrinterState<'source, 'ast> {
     // This is computed ahead of time for convenience.
     preferred_semi_locations: Vec<usize>,
 
+    // The indices of the start of the "#!fish_indent: off" directive that is in effect
+    // (The first index is into to self.source, the second is into self.output.)
+    // This will be none if we have not read such a directive yet, or it has since been canceled by
+    // a "#!fish_indent: on" directive.
+    fish_indent_off: Option<(usize, usize)>,
     errors: Option<&'ast SourceRangeList>,
 }
 
@@ -179,6 +184,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
                 gaps: vec![],
                 multi_line_brace_statement_locations: vec![],
                 preferred_semi_locations: vec![],
+                fish_indent_off: None,
                 errors: None,
             },
         };
@@ -206,6 +212,10 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
             self.state.output.pop();
         }
         self.state.emit_newline();
+
+        // Pretend the file ended with "#!fish_indent: on", ensuring that any text under a
+        // preeceding "#!fish_indent: off" directive is un-formatted.
+        self.state.set_formatting(true, self.state.source.len());
 
         std::mem::replace(&mut self.state.output, WString::new())
     }
@@ -471,6 +481,23 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         }
     }
 
+    // Set the formatting mode to on/off; directive_offset is the start index of
+    // the #!fish_indent directive.
+    fn set_formatting(&mut self, on: bool, directive_offset: usize) {
+        match self.fish_indent_off {
+            None if !on => {
+                self.fish_indent_off = Some((directive_offset, self.output.len()));
+            }
+            Some((source_index, output_index)) if on => {
+                // Replace any formatted text we've generated with the original non-formatted text
+                self.output
+                    .replace_range(output_index.., &self.source[source_index..directive_offset]);
+                self.fish_indent_off = None
+            }
+            _ => {} // No need to do anything, formatting was already on/off
+        }
+    }
+
     // Emit "gap text:" newlines and comments from the original source.
     // Gap text may be a few things:
     //
@@ -544,6 +571,18 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             }
 
             if tok.type_ == TokenType::comment {
+                let prefix = "#!fish_indent:";
+                if tok_text.starts_with(prefix) {
+                    let word = tok_text[prefix.len()..].trim();
+                    let offset = range.start() + tok.offset();
+                    if word == L!("on") {
+                        self.set_formatting(true, offset);
+                    } else if word == L!("off") {
+                        self.set_formatting(false, offset);
+                    } else {
+                        // Don't print an error message, for consistency with other parse errors
+                    }
+                }
                 self.emit_space_or_indent(GapFlags::default());
                 self.output.push_utfstr(tok_text);
                 needs_nl = true;

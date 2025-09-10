@@ -105,28 +105,16 @@ impl ConfigPathDetection {
             return invalid_exec_path(exec_path);
         };
 
-        // If we're in Cargo's target directory or CMake's build directory, use the source files.
-        if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
-            let workspace_root = workspace_root();
-            return Self {
-                kind: WorkspaceRoot,
-                paths: ConfigPaths {
-                    sysconf: workspace_root.join("etc"),
-                    bin: Some(exec_path_parent.to_owned()),
-                    data: workspace_root.join("share"),
-                    doc: workspace_root.join("user_doc/html"),
-                    locale: workspace_root.join("share/locale"),
-                },
-                exec_path,
-            };
-        }
+        let workspace_root = workspace_root();
 
         // The next check is that we are in a relocatable directory tree
         if exec_path_parent.ends_with("bin") {
             let base_path = exec_path_parent.parent().unwrap();
             let data = base_path.join("share/fish");
             let sysconf = base_path.join("etc/fish");
-            if data.exists() && sysconf.exists() {
+            if base_path != workspace_root // Install to repo root is not supported.
+                && data.exists() && sysconf.exists()
+            {
                 let doc = base_path.join("share/doc/fish");
                 return Self {
                     kind: RelocatableTree,
@@ -145,6 +133,21 @@ impl ConfigPathDetection {
                     exec_path,
                 };
             }
+        }
+
+        // If we're in Cargo's target directory or in CMake's build directory, use the source files.
+        if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
+            return Self {
+                kind: WorkspaceRoot,
+                paths: ConfigPaths {
+                    sysconf: workspace_root.join("etc"),
+                    bin: Some(exec_path_parent.to_owned()),
+                    data: workspace_root.join("share"),
+                    doc: workspace_root.join("user_doc/html"),
+                    locale: workspace_root.join("share/locale"),
+                },
+                exec_path,
+            };
         }
 
         Self {

@@ -738,6 +738,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     fn visit_left_brace(&mut self, node: &dyn ast::Token) {
         let range = node.source_range();
         let flags = self.gap_text_flags_before_node(node.as_node());
+        self.emit_gap_text_before(range, flags);
         if self.is_multi_line_brace(node) && !self.at_line_start() {
             self.emit_newline();
         }

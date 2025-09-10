@@ -43,8 +43,8 @@ if test $all = yes
             end
         end
     end
-    set fish_files $repo_root/{benchmarks,build_tools,etc,share}/**.fish
-    set python_files {doc_src,share,tests}/**.py
+    set fish_files $repo_root/**.fish
+    set python_files $repo_root/**.py
 else
     # Format the files specified as arguments.
     set -l files $argv

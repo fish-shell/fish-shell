@@ -21,6 +21,7 @@ end
 #CHECK: 2b
 
 # Escaped newlines
+#!fish_indent: off
 echo foo\ bar
 echo foo\
 bar
@@ -28,6 +29,7 @@ echo "foo\
 bar"
 echo 'foo\
 bar'
+#!fish_indent: on
 #CHECK: foo bar
 #CHECK: foobar
 #CHECK: foobar
@@ -480,9 +482,11 @@ try_unbalanced_block 'if false'
 #CHECKERR: - (line 1): Missing end to balance this if statement
 
 # Ensure that quoted keywords work
+#!fish_indent: off
 'while' false; end
 "while" false; end
 "wh"'ile' false; "e"nd
+#!fish_indent: on
 
 # BOM checking (see #1518). But only in UTF8 locales.
 # (locale guarded because of musl)

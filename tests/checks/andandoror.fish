@@ -94,6 +94,7 @@ end
 # CHECK: 4
 
 # Newlines
+#!fish_indent: off
 true &&
 echo newline after conjunction
 # CHECK: newline after conjunction
@@ -110,6 +111,7 @@ true &&
 # can have comments here!
 echo comment after conjunction
 # CHECK: comment after conjunction
+#!fish_indent: on
 
 # --help works
 builtin and --help >/dev/null

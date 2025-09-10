@@ -61,6 +61,7 @@ e{cho,cho,cho}
 # CHECK: compound
 # CHECK: command
 
+#!fish_indent: off
 {;echo -n start with\ ; echo semi; }
 # CHECK: start with semi
 
@@ -104,6 +105,7 @@ $fish -c '{ :; } true'
 
 ; { echo semi; }
 # CHECK: semi
+#!fish_indent: on
 
 a=b { echo $a; }
 # CHECK: b
@@ -136,7 +138,8 @@ false || { echo disjunction; }
 false; or { echo or; }
 # CHECK: or
 
-begin { echo begin }
+begin
+    { echo begin }
 end
 # CHECK: begin
 
@@ -164,13 +167,13 @@ end
 }
 # CHECK: while
 
-{{echo inner}
-    echo outer}
+{ { echo inner }
+    echo outer
+}
 # CHECK: inner
 # CHECK: outer
 
 {
-
     echo leading blank lines
 }
 # CHECK: leading blank lines

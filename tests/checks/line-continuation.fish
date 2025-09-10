@@ -1,4 +1,6 @@
 #RUN: %fish %s
+#!fish_indent: off
+
 ech\
 o echo
 #CHECK: echo

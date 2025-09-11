@@ -55,7 +55,7 @@ pub fn colon_split<T: AsRef<wstr>>(val: &[T]) -> Vec<WString> {
 
 /// Return true if a variable should become a path variable by default. See #436.
 fn variable_should_auto_pathvar(name: &wstr) -> bool {
-    name.ends_with("PATH")
+    name.ends_with("PATH") || name == "LANGUAGE"
 }
 
 /// We cache our null-terminated export list. However an exported variable may change for lots of

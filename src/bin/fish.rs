@@ -426,6 +426,10 @@ fn throwing_main() -> i32 {
         args.push("fish".into());
     }
 
+    // Initialize gettext translation.
+    #[cfg(feature = "gettext")]
+    fish::wutil::gettext::initialize_gettext();
+
     // Enable debug categories set in FISH_DEBUG.
     // This is in *addition* to the ones given via --debug.
     if let Some(debug_categories) = env::var_os("FISH_DEBUG") {

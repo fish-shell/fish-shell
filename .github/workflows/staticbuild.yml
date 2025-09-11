@@ -16,7 +16,7 @@ jobs:
       contents: read
 
     steps:
-    - uses: ./.github/actions/rust-toolchain@oldest-supported
+    - uses: ./.github/actions/rust-toolchain@stable
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0

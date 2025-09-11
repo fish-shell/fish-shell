@@ -732,7 +732,7 @@ impl Parser {
 
         // Get the root argument list and extract arguments from it.
         let mut result = vec![];
-        for arg in ast.top() {
+        for arg in ast.top().iter() {
             let arg_src = arg.source(arg_list_src);
             if matches!(
                 expand_string(arg_src.to_owned(), &mut result, flags, ctx, None).result,

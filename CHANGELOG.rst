@@ -21,7 +21,7 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
-- Tokens like ``{echo,echo}`` or ``{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
+- Commands like ``{echo,echo}`` or ``{ echo, echo }`` are no longer interpreted as brace expansion token but as compound command, i.e. :doc:`test <cmds/begin>`.
 - Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation since 4.0,
   and currently they would map back to information from terminfo, which does not match what terminals would send with the kitty keyboard protocol (:issue:`11342`).
 - fish no longer reads the terminfo database, so its behavior is no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).

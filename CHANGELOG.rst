@@ -1,5 +1,5 @@
-fish 4.0.3 (released ???)
-====================================
+fish 4.0.6 (released September 12, 2025)
+========================================
 
 This release of fish fixes a number of issues identified in fish 4.0.2:
 

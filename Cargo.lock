@@ -112,7 +112,7 @@ dependencies = [
 
 [[package]]
 name = "fish"
-version = "4.0.2"
+version = "4.0.6"
 dependencies = [
  "bitflags",
  "cc",

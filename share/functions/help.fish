@@ -178,7 +178,7 @@ function help --description 'Show help for the fish shell'
         case ''
             set fish_help_page "index.html"
         case $intropages
-            set fish_help_page "index.html$fish_help_item"
+            set fish_help_page "index.html#$fish_help_item"
         case "*"
             printf (_ "%s: no fish help topic '%s', try 'man %s'\n") help $fish_help_item $fish_help_item
             return 1

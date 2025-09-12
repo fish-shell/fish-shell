@@ -13,16 +13,20 @@ max_line_length = 100
 indent_style = tab
 
 [*.{md,rst}]
+max_line_length = unset
 trim_trailing_whitespace = false
 
-[*.{sh,ac}]
-indent_size = 2
+[*.sh]
+indent_size = 4
+
+[build_tools/release.sh]
+max_line_length = 72
 
 [Dockerfile]
 indent_size = 2
 
 [share/{completions,functions}/**.fish]
-max_line_length = off
+max_line_length = unset
 
-[{COMMIT_EDITMSG,git-revise-todo}]
-max_line_length = 80
+[{COMMIT_EDITMSG,git-revise-todo,*.jjdescription}]
+max_line_length = 72

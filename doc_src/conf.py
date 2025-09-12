@@ -10,8 +10,18 @@ import glob
 import os.path
 import subprocess
 import sys
+from sphinx.highlighting import lexers
 from sphinx.errors import SphinxWarning
 from docutils import nodes
+
+try:
+    import sphinx_markdown_builder
+
+    extensions = [
+        "sphinx_markdown_builder",
+    ]
+except ImportError:
+    pass
 
 # -- Helper functions --------------------------------------------------------
 
@@ -35,11 +45,14 @@ def issue_role(name, rawtext, text, lineno, inliner, options=None, content=None)
     return [link], []
 
 
+def remove_fish_indent_lexer(app):
+    if app.builder.name in ("man", "markdown"):
+        del lexers["fish-docs-samples"]
+
+
 # -- Load our extensions -------------------------------------------------
 def setup(app):
     # Our own pygments lexers
-    from sphinx.highlighting import lexers
-
     this_dir = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, this_dir)
     from fish_indent_lexer import FishIndentLexer
@@ -52,6 +65,8 @@ def setup(app):
     app.add_config_value("issue_url", default=None, rebuild="html")
     app.add_role("issue", issue_role)
 
+    app.connect("builder-inited", remove_fish_indent_lexer)
+
 
 # The default language to assume
 highlight_language = "fish-docs-samples"
@@ -59,7 +74,7 @@ highlight_language = "fish-docs-samples"
 # -- Project information -----------------------------------------------------
 
 project = "fish-shell"
-copyright = "2024, fish-shell developers"
+copyright = "fish-shell developers"
 author = "fish-shell developers"
 issue_url = "https://github.com/fish-shell/fish-shell/issues"
 
@@ -72,7 +87,7 @@ elif "FISH_BUILD_VERSION" in os.environ:
     ret = os.environ["FISH_BUILD_VERSION"]
 else:
     ret = subprocess.check_output(
-        ("fish_indent", "--version"), stderr=subprocess.STDOUT
+        ("../build_tools/git_version_gen.sh", "--stdout"), stderr=subprocess.STDOUT
     ).decode("utf-8")
 
 # The full version, including alpha/beta/rc tags

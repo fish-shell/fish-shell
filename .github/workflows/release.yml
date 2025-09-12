@@ -1,0 +1,211 @@
+name: Create a new release
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  is-release-tag:
+    name: Pre-release checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Workaround for https://github.com/actions/checkout/issues/882
+          ref: ${{ github.ref }}
+      - name: Check if the pushed tag looks like a release
+        run: |
+          set -x
+          commit_subject=$(git log -1 --format=%s)
+          tag=$(git describe)
+          [ "$commit_subject" = "Release $tag" ]
+
+
+  source-tarball:
+    needs: [is-release-tag]
+    name: Create the source tarball
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tarball-name: ${{ steps.version.outputs.tarball-name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Workaround for https://github.com/actions/checkout/issues/882
+          ref: ${{ github.ref }}
+      - name: Install dependencies
+        run: sudo apt install cmake gettext ninja-build python3-pip python3-sphinx
+      - name: Create tarball
+        run: |
+          set -x
+          mkdir /tmp/fish-built
+          FISH_ARTEFACT_PATH=/tmp/fish-built ./build_tools/make_tarball.sh
+          {
+            pip install sphinx-markdown-builder==0.6.8
+            relnotes_tmp=$(mktemp -d)
+            mkdir "$relnotes_tmp/src" "$relnotes_tmp/out"
+            version=$(git describe)
+            minor_version=${version%.*}
+            # Delete notes for prior releases.
+            # Also fix up any relative references to other documentation files.
+            awk <CHANGELOG.rst '
+              /^fish/ && $2 != "'"$version"'" { exit }
+              { print }
+            ' |
+              sed >"$relnotes_tmp/src"/index.rst \
+                -e 's,:doc:`\(.*\) <\([^>]*\)>`,`\1 <https://fishshell.com/docs/'"$minor_version"'/\2.html>`_,g' \
+                -e 's,:envvar:`\([^`]*\)`,``$\1``,g'
+            # In future, we could reuse doctree from when we made HTML docs.
+            sphinx-build -j 1 $(: "sphinx-markdown-builder is not marked concurrency-safe") \
+              -W -E -b markdown -c doc_src \
+              -d "$relnotes_tmp/doctree" "$relnotes_tmp/src" $relnotes_tmp/out
+            # Delete title
+            sed -n 1p "$relnotes_tmp/out/index.md" | grep -q "^# fish .*"
+            sed -n 2p "$relnotes_tmp/out/index.md" | grep -q '^$'
+            sed -i 1,2d "$relnotes_tmp/out/index.md"
+            {
+              cat "$relnotes_tmp/out/index.md" - <<EOF
+          ----
+
+          *Download links: To download the source code for fish, we suggest the file named "fish-$version.tar.xz". The file downloaded from "Source code (tar.gz)" will not build correctly.*
+
+          *There is no GPG signature because we haven't yet decided how to integrate signing into the new release automation.*
+
+          *The files called fish-$version-linux-\*.tar.xz are experimental packages containing a single standalone ``fish`` binary for any Linux with the given architecture.*
+          EOF
+            } >/tmp/fish-built/release-notes.md
+            rm -r "$relnotes_tmp"
+          }
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-tarball
+          path: |
+            /tmp/fish-built/fish-${{ github.ref_name }}.tar.xz
+            /tmp/fish-built/release-notes.md
+          if-no-files-found: error
+
+  packages-for-linux:
+    needs: [is-release-tag]
+    name: Build single-file fish for Linux (experimental)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Workaround for https://github.com/actions/checkout/issues/882
+          ref: ${{ github.ref }}
+      - name: Install Rust Stable
+        uses: ./.github/actions/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl
+      - name: Install dependencies
+        run: sudo apt install crossbuild-essential-arm64 musl-tools python3-sphinx
+      - name: Build statically-linked executables
+        run: |
+          set -x
+          CFLAGS="-D_FORTIFY_SOURCE=2" \
+            CMAKE_WITH_GETTEXT=0 \
+            CC=aarch64-linux-gnu-gcc \
+            RUSTFLAGS="-C linker=aarch64-linux-gnu-gcc -C link-arg=-lgcc -C link-arg=-D_FORTIFY_SOURCE=0" \
+            cargo build --release --target aarch64-unknown-linux-musl --bin fish
+          cargo build --release --target x86_64-unknown-linux-musl --bin fish
+      - name: Compress
+        run: |
+          set -x
+          for arch in x86_64 aarch64; do
+            tar -cazf fish-$(git describe)-linux-$arch.tar.xz \
+              -C target/$arch-unknown-linux-musl/release fish
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Static builds for Linux
+          path: fish-${{ github.ref_name }}-linux-*.tar.xz
+          if-no-files-found: error
+
+  create-draft-release:
+    needs:
+      - is-release-tag
+      - source-tarball
+      - packages-for-linux
+    name: Create release draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Workaround for https://github.com/actions/checkout/issues/882
+          ref: ${{ github.ref }}
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: /tmp/artifacts
+      - name: List artifacts
+        run: find /tmp/artifacts -type f
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: fish ${{ github.ref_name }}
+          body_path: /tmp/artifacts/release-notes.md
+          draft: true
+          files: |
+            /tmp/artifacts/fish-${{ github.ref_name }}.tar.xz
+            /tmp/artifacts/fish-${{ github.ref_name }}-linux-*.tar.xz
+
+  packages-for-macos:
+    needs: [is-release-tag, create-draft-release]
+    name: Build packages for macOS
+    runs-on: macos-latest
+    environment: macos-codesign
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Workaround for https://github.com/actions/checkout/issues/882
+          ref: ${{ github.ref }}
+      - name: Install Rust
+        uses: ./.github/actions/rust-toolchain@oldest-supported
+        with:
+          targets: x86_64-apple-darwin
+      - name: Install Rust Stable
+        uses: ./.github/actions/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+      - name: Build and codesign
+        run: |
+          die() { echo >&2 "$*"; exit 1; }
+          [ -n "$MAC_CODESIGN_APP_P12_BASE64" ] || die "Missing MAC_CODESIGN_APP_P12_BASE64"
+          [ -n "$MAC_CODESIGN_INSTALLER_P12_BASE64" ] || die "Missing MAC_CODESIGN_INSTALLER_P12_BASE64"
+          [ -n "$MAC_CODESIGN_PASSWORD" ] || die "Missing MAC_CODESIGN_PASSWORD"
+          [ -n "$MACOS_NOTARIZE_JSON" ] || die "Missing MACOS_NOTARIZE_JSON"
+          set -x
+          export FISH_ARTEFACT_PATH=/tmp/fish-built
+          # macOS runners keep having issues loading Cargo.toml dependencies from git (GitHub) instead
+          # of crates.io, so give this a try. It's also sometimes significantly faster on all platforms.
+          export CARGO_NET_GIT_FETCH_WITH_CLI=true
+          cargo install apple-codesign
+          mkdir -p "$FISH_ARTEFACT_PATH"
+          echo "$MAC_CODESIGN_APP_P12_BASE64" | base64 --decode >/tmp/app.p12
+          echo "$MAC_CODESIGN_INSTALLER_P12_BASE64" | base64 --decode >/tmp/installer.p12
+          echo "$MACOS_NOTARIZE_JSON" >/tmp/notarize.json
+          ./build_tools/make_macos_pkg.sh -s -f /tmp/app.p12 \
+            -i /tmp/installer.p12 -p "$MAC_CODESIGN_PASSWORD" \
+            -n -j /tmp/notarize.json
+          [ -f "${FISH_ARTEFACT_PATH}/fish-${{ github.ref_name }}.app.zip" ]
+          [ -f "${FISH_ARTEFACT_PATH}/fish-${{ github.ref_name }}.pkg" ]
+          rm /tmp/installer.p12 /tmp/app.p12 /tmp/notarize.json
+        env:
+          MAC_CODESIGN_APP_P12_BASE64: ${{ secrets.MAC_CODESIGN_APP_P12_BASE64 }}
+          MAC_CODESIGN_INSTALLER_P12_BASE64: ${{ secrets.MAC_CODESIGN_INSTALLER_P12_BASE64 }}
+          MAC_CODESIGN_PASSWORD: ${{ secrets.MAC_CODESIGN_PASSWORD }}
+          MACOS_NOTARIZE_JSON: ${{ secrets.MACOS_NOTARIZE_JSON }}
+      - name: Add macOS packages to the release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload $(git describe) \
+            /tmp/fish-built/fish-${{ github.ref_name }}.app.zip \
+            /tmp/fish-built/fish-${{ github.ref_name }}.pkg

@@ -24,7 +24,7 @@ add_executable(fish_macapp EXCLUDE_FROM_ALL
 
 # Compute the version. Note this is done at generation time, not build time,
 # so cmake must be re-run after version changes for the app to be updated. But
-# generally this will be run by make_pkg.sh which always re-runs cmake.
+# generally this will be run by make_macos_pkg.sh which always re-runs cmake.
 execute_process(
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh --stdout
     COMMAND cut -d- -f1
@@ -32,7 +32,7 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 
-# Note CMake appends .app, so the real output name will be fish.app. 
+# Note CMake appends .app, so the real output name will be fish.app.
 # This target does not include the 'base' resource.
 set_target_properties(fish_macapp PROPERTIES OUTPUT_NAME "fish")
 

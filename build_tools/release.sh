@@ -34,7 +34,8 @@ fish_site=$repo_root/../fish-site
 
 for path in . "$fish_site"
 do
-    if ! git -C "$path" diff HEAD --quiet; then
+    if ! git -C "$path" diff HEAD --quiet ||
+        git ls-files --others --exclude-standard | grep .; then
         echo >&2 "$0: index and worktree must be clean"
         exit 1
     fi
@@ -86,6 +87,10 @@ done
 # Update fishshell.com
 tag_oid=$(git rev-parse "$version")
 tmpdir=$(mktemp -d)
+# TODO This works on draft releases only if "gh" is configured to
+# have write access to the fish-shell repository. Unless we are fine
+# publishing the release at this point, we should at least fail if
+# "gh" doesn't have write access.
 while ! \
     gh release download "$version" --dir="$tmpdir" \
         --pattern="fish-$version.tar.xz"
@@ -95,13 +100,13 @@ done
 actual_tag_oid=$(git ls-remote "$remote" |
     awk '$2 == "refs/tags/'"$version"'" { print $1 }')
 [ "$tag_oid" = "$actual_tag_oid" ]
-tar -C "$tmpdir" xf fish-$version.tar.xz
-minor_version=${version%.*}
+( cd "$tmpdir" && tar xf fish-$version.tar.xz )
 CopyDocs() {
-    rm -rf "fish-site/site/docs/$1"
-    cp -r "$tmpdir/fish-$version/user_doc/html" "fish-site/site/docs/$1"
-    git -C fish-site add "site/docs/$1"
+    rm -rf "$fish_site/site/docs/$1"
+    cp -r "$tmpdir/fish-$version/user_doc/html" "$fish_site/site/docs/$1"
+    git -C $fish_site add "site/docs/$1"
 }
+minor_version=${version%.*}
 CopyDocs "$minor_version"
 latest_release=$(
     releases=$(git tag | grep '^[0-9]*\.[0-9]*\.[0-9]*.*' |
@@ -115,17 +120,19 @@ fi
 rm -rf "$tmpdir"
 (
     cd "$fish_site"
-    make new-release
+    make
     git add -u
+    ! git ls-files --others --exclude-standard | grep .
     git commit --message="$(printf %s "\
-        | Release $version
+        | Release $version (docs)
         |
         | Created by ../fish-shell/build_tools/release.sh
-    " | sed 's,^\s*| ,,')"
+    " | sed 's,^\s*| \?,,')"
 )
 
-# N.B. --exit-status doesn't fail reliably.
-gh run view "$run_id" --verbose --log-failed --exit-status
+# # Uncomment this to wait the full workflow run (i.e. macOS packages).
+# # Also note that --exit-status doesn't fail reliably.
+# gh run view "$run_id" --verbose --log-failed --exit-status
 
 while {
     ! draft=$(gh release view "$version" --json=isDraft --jq=.isDraft) \
@@ -137,18 +144,38 @@ done
 
 (
     cd "$fish_site"
-    git push git@github.com:$repository_owner/fish-site
+    make new-release
+    git add -u
+    ! git ls-files --others --exclude-standard | grep .
+    git commit --message="$(printf %s "\
+        | Release $version (release list update)
+        |
+        | Created by ../fish-shell/build_tools/release.sh
+    " | sed 's,^\s*| \?,,')"
+    # This takes care to support remote names that are different from
+    # fish-shell remote name. Also, support detached HEAD state.
+    git push git@github.com:$repository_owner/fish-site HEAD:master
 )
 
 if git merge-base --is-ancestor $remote/master $version
 then
-    git push $remote $version:master
+    changelog=$(cat - CHANGELOG.rst <<EOF
+fish ?.?.? (released ???)
+=========================
+
+EOF
+    )
+    printf %s\\n "$changelog" >CHANGELOG.rst
+    CommitVersion ${version}-snapshot "start new cycle"
+    git push $remote HEAD:master
 else
     # Probably on an integration branch.
     # TODO Maybe push when that's safe (or move this to CI).
     :
 fi
 
+# TODO This can currently require a TTY for editing and password
+# prompts.
 if [ "$repository_owner" = fish-shell ]; then {
     mail=$(mktemp)
     cat >$mail <<EOF
@@ -161,15 +188,6 @@ EOF
     git send-email --suppress-cc=all $mail
     rm $mail
 } fi
-
-changelog=$(cat - CHANGELOG.rst <<EOF
-fish ?.?.? (released ???)
-=========================
-
-EOF
-)
-printf %s\\n "$changelog" >CHANGELOG.rst
-CommitVersion ${version}-snapshot "start new cycle"
 
 exit
 

@@ -153,8 +153,8 @@ jobs:
           body_path: /tmp/artifacts/release-notes.md
           draft: true
           files: |
-            /tmp/artifacts/fish-${{ github.ref_name }}.tar.xz # source tarball
-            /tmp/artifacts/fish-${{ github.ref_name }}-linux-*.tar.xz # Linux packages
+            /tmp/artifacts/fish-${{ github.ref_name }}.tar.xz
+            /tmp/artifacts/fish-${{ github.ref_name }}-linux-*.tar.xz
 
   packages-for-macos:
     needs: [is-release-tag, create-draft-release]

@@ -31,8 +31,8 @@ For information on using fish interactively, see :ref:`Interactive use <interact
 
 If you need to install fish first, read on, the rest of this document will tell you how to get, install and configure fish.
 
-Installation
-============
+Setup
+=====
 
 This section describes how to install, uninstall, start, and exit :command:`fish`. It also explains how to make fish the default shell.
 

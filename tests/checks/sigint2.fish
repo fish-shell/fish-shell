@@ -17,7 +17,6 @@ status job-control interactive
 echo "Finished testing pgroups"
 #CHECK: Finished testing pgroups
 
-
 # Ensure that if child processes SIGINT, we exit our loops
 # Test for #3780
 

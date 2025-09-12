@@ -16,5 +16,5 @@ isolated-tmux send-keys \
 tmux-sleep
 # Extract the line where command output starts.
 string match <output -r '.*\e\]133;C.*' |
-string escape
+    string escape
 # CHECK: {{.*}}interactive{{$}}

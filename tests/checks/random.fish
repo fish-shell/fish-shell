@@ -95,7 +95,6 @@ for i in (seq 10)
     test_choice bass trout salmon zander perch carp
 end
 
-
 #check seeding
 set -l seed (random)
 random $seed

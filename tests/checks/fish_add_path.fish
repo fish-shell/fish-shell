@@ -21,7 +21,9 @@ and echo Have bin
 # CHECK: Have bin
 
 # Not adding duplicates and not triggering variable handlers
-function checkpath --on-variable PATH --on-variable fish_user_paths; echo CHECKPATH: $argv; end
+function checkpath --on-variable PATH --on-variable fish_user_paths
+    echo CHECKPATH: $argv
+end
 set PATH $PATH
 # CHECK: CHECKPATH: VARIABLE SET PATH
 fish_add_path -v $tmpdir/bin

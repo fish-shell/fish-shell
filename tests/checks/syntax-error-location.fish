@@ -16,7 +16,6 @@ echo 'true | time false' | $fish 2>| string replace -r '(.*)' '<$1>'
 # CHECK: <true | time false>
 # CHECK: <       ^~~~~~~~~^>
 
-
 echo '
 
 FOO=BAR (true one)
@@ -105,7 +104,6 @@ $fish -c 'echo (echo <&foo)'
 # CHECKERR: fish: Invalid arguments
 # CHECKERR: echo (echo <&foo)
 # CHECKERR: ^~~~~~~~~~~^
-
 
 $fish -c 'echo (time echo foo &)'
 # CHECKERR: fish: 'time' is not supported for background jobs. Consider using 'command time'.

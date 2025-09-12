@@ -1,6 +1,8 @@
 #RUN: fish=%fish %fish %s
 
-function fooc; true; end;
+function fooc
+    true
+end
 
 # A non-`complete -k` completion
 complete -c fooc -fa "alpha delta bravo"

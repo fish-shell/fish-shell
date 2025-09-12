@@ -23,7 +23,7 @@ echo "begin; echo oops" | $fish -n
 echo $status
 #CHECK: 127
 
-echo "begin" > broken
+echo begin >broken
 $fish -n $PWD/broken
 #CHECKERR: /{{.*}}broken (line 1): Missing end to balance this begin
 #CHECKERR: begin

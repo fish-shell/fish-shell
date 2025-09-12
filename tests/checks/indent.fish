@@ -33,7 +33,6 @@ brot' | $fish_indent
 #CHECK: echo foo \
 #CHECK: brot
 
-
 echo 'echo rabarber \\
      banana' | $fish_indent
 #CHECK: echo rabarber \
@@ -222,7 +221,6 @@ echo < stdin >>appended yes 2>&1 no > stdout maybe 2>&    4 | cat 2>| cat
 ' | $fish_indent
 #CHECK: echo <stdin >>appended yes 2>&1 no >stdout maybe 2>&4 | cat 2>| cat
 
-
 # issue 7252
 echo -n '
 begin
@@ -261,7 +259,6 @@ end
 #CHECK: {{^    }}cmd \
 #CHECK: {{^    }}{{    }}continuation
 #CHECK: {{^}}end
-
 
 echo -n '
 i\
@@ -560,7 +557,6 @@ end' | $fish_indent --only-unindent
 # CHECK: {{^}}  not indented properly
 # CHECK: {{^}}end
 
-
 echo 'echo (
 if true
 echo
@@ -607,7 +603,7 @@ end
 # CHECK: {{^}})
 
 set -l tmpdir (mktemp -d)
-echo 'echo "foo" "bar"' > $tmpdir/indent_test.fish
+echo 'echo "foo" "bar"' >$tmpdir/indent_test.fish
 $fish_indent --write $tmpdir/indent_test.fish
 cat $tmpdir/indent_test.fish
 # CHECK: echo foo bar
@@ -615,3 +611,30 @@ cat $tmpdir/indent_test.fish
 # See that the builtin can be redirected
 printf %s\n a b c | builtin fish_indent | grep b
 # CHECK: b
+
+# Check for various uses of #!fish_indent
+echo '
+"echo" \
+"reformat"   "this"
+#!fish_indent: off
+do   not   "reformat"   "this" \
+#!fish_indent: off
+do   not   "reformat"   "this" \
+#!fish_indent: on
+"reformat"   "this" \
+#!fish_indent:on
+"reformat"   "this" \
+#!fish_indent:off
+do   not   "reformat"   "this"' | $fish_indent
+#CHECK: echo \
+#CHECK:     reformat this
+#CHECK: #!fish_indent: off
+#CHECK: do   not   "reformat"   "this" \
+#CHECK: #!fish_indent: off
+#CHECK: do   not   "reformat"   "this" \
+#CHECK:     #!fish_indent: on
+#CHECK:     reformat this \
+#CHECK:     #!fish_indent:on
+#CHECK:     reformat this \
+#CHECK:     #!fish_indent:off
+#CHECK: do   not   "reformat"   "this"

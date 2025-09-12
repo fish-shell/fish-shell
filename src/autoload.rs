@@ -564,7 +564,7 @@ fn test_autoload() {
         autoload.resolve_command_impl(L!("file2"), paths),
         AutoloadResult::Loaded
     ));
-    assert!((autoload.get_autoloaded_commands() == vec![L!("file1"), L!("file2")]));
+    assert!(autoload.get_autoloaded_commands() == vec![L!("file1"), L!("file2")]);
 
     autoload.clear();
     assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());

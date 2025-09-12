@@ -103,8 +103,8 @@ fn test_killring() {
 
     kr.add(WString::from_str("d"));
 
-    assert!((kr.entries() == [L!("d"), L!("a"), L!("c"), L!("b")]));
+    assert!(kr.entries() == [L!("d"), L!("a"), L!("c"), L!("b")]);
 
     assert!(kr.yank_rotate() == "a");
-    assert!((kr.entries() == [L!("a"), L!("c"), L!("b"), L!("d")]));
+    assert!(kr.entries() == [L!("a"), L!("c"), L!("b"), L!("d")]);
 }

@@ -1,5 +1,6 @@
 #RUN: fish_indent=%fish_indent %fish --features=ampersand-nobg-in-token %s
 
+#!fish_indent: off
 echo no&background
 # CHECK: no&background
 
@@ -8,6 +9,7 @@ echo background&
 
 echo background &
 # CHECK: background
+#!fish_indent: on
 
 wait
 

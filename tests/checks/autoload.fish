@@ -3,7 +3,8 @@
 set -g fish_complete_path c1 c2
 mkdir c1 c2
 
-function foo; end
+function foo
+end
 for i in c1 c2
     echo >$i/foo.fish "echo auto-loading $i/foo.fish"
 end

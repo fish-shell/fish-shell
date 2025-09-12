@@ -65,24 +65,24 @@ cat $tmp/normal.prof
 # CHECK: Time (μs){{\s+}}Sum (μs){{\s+}}Command
 # CHECK: {{\d+\s+\d+\s+>}} exit
 
-string match -rq "builtin source " < $tmp/startup.prof
+string match -rq "builtin source " <$tmp/startup.prof
 and echo matched
 # CHECK: matched
 
 # See that sending both profiles to the same file works.
 $fish --profile $tmp/full.prof --profile-startup $tmp/full.prof -c 'echo thisshouldneverbeintheconfig'
 # CHECK: thisshouldneverbeintheconfig
-string match -rq "builtin source " < $tmp/full.prof
+string match -rq "builtin source " <$tmp/full.prof
 and echo matched
 # CHECK: matched
-string match -rq "echo thisshouldneverbeintheconfig" < $tmp/full.prof
+string match -rq "echo thisshouldneverbeintheconfig" <$tmp/full.prof
 and echo matched
 # CHECK: matched
 
 # See that profiling without startup actually gives us just the command
 $fish --no-config --profile $tmp/nostartup.prof -c 'echo foo'
 # CHECK: foo
-count < $tmp/nostartup.prof
+count <$tmp/nostartup.prof
 # CHECK: 2
 
 $fish --no-config -c 'echo notprinted; echo foo | exec true; echo banana'
@@ -115,4 +115,4 @@ $fish --no-config --features
 # CHECKERR: fish: --features: option requires an argument
 
 # Regression test for a hang.
-echo "set -L" | $fish > /dev/null
+echo "set -L" | $fish >/dev/null

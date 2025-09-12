@@ -137,7 +137,6 @@ bind \ef forward-word
 bind \ef
 # CHECK: bind alt-f forward-word
 
-
 # Erasing bindings
 bind --erase tab
 bind tab

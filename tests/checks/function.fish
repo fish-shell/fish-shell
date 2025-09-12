@@ -146,6 +146,7 @@ rm -r $tmpdir
 
 functions -e foo
 
+#!fish_indent: off
 function foo -p bar; end
 # CHECKERR: {{.*}}function.fish (line {{\d+}}): function: bar: invalid process id
 # CHECKERR: function foo -p bar; end
@@ -169,6 +170,7 @@ function foo --argument-names foo status; end
 # CHECKERR: {{.*}}function.fish (line {{\d+}}): function: variable 'status' is read-only
 # CHECKERR: function foo --argument-names foo status; end
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+#!fish_indent: on
 
 functions -q foo
 echo exists $status
@@ -176,13 +178,17 @@ echo exists $status
 
 # If a function is changed as part of its own arguments, then we see the change.
 # This codifies historic behavior.
-function foo; echo before; end
+function foo
+    echo before
+end
 foo (function foo; echo after; end)
 # CHECK: after
 
 # If a function is deleted as part of its own arguments, then we see the change.
 # This codifies historic behavior.
-function foo; echo before; end
+function foo
+    echo before
+end
 foo (functions --erase foo)
 # CHECKERR: error: Unknown function 'foo'
 

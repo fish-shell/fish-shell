@@ -13,4 +13,3 @@ ulimit 4352353252352352334
 #CHECKERR: ulimit 4352353252352352334
 #CHECKERR: ^
 #CHECKERR: (Type 'help ulimit' for related documentation)
-

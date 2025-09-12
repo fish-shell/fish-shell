@@ -7,7 +7,7 @@ trap -p
 # CHECK:
 
 # Validate both SIG, no-SIG, uppercase, and lowercase.
-trap "true" SIGTERM kill ExIT INT
+trap true SIGTERM kill ExIT INT
 
 trap -p
 # CHECK: # Defined via `source`

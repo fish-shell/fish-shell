@@ -67,7 +67,7 @@ $fish -c 'echo Is it time yet | time cat'
 #CHECKERR:                       ^~~~~~~^
 
 begin
-    printf '%s\n' "#!/bin/sh" 'echo No this is Patrick' > time
+    printf '%s\n' "#!/bin/sh" 'echo No this is Patrick' >time
     chmod +x time
     set -l PATH .
     echo Hello is this time | command time

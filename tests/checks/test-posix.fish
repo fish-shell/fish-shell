@@ -14,7 +14,7 @@ test -d
 echo $status
 #CHECK: 0
 
-test "foo"
+test foo
 echo $status
 #CHECK: 0
 
@@ -45,4 +45,3 @@ echo 'test foo; test; test -z; test -n; test -d; echo oops' | $fish -d 'deprecat
 #CHECKERR: Standard input (line 1):
 #CHECKERR: test foo; test; test -z; test -n; test -d; echo oops
 #CHECKERR: ^
-

@@ -6,7 +6,7 @@
 # updates the PO files for each language from that
 # (changed line numbers, added messages, removed messages),
 # and finally generates a machine-readable MO file for each language,
-# which is stored in share/locale/$LANG/LC_MESSAGES/fish.mo (relative to the repo root).
+# which is stored in share/locale/$LANG/LC_MESSAGES/fish.mo (relative to the workspace root).
 #
 # Use cases:
 # For developers:

@@ -7,7 +7,7 @@ pub fn canonicalize<P: AsRef<Path>>(path: P) -> PathBuf {
     std::fs::canonicalize(path).unwrap()
 }
 
-pub fn get_repo_root() -> PathBuf {
+pub fn workspace_root() -> PathBuf {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     canonicalize(manifest_dir.ancestors().nth(2).unwrap())
 }
@@ -15,7 +15,7 @@ pub fn get_repo_root() -> PathBuf {
 pub fn get_target_dir() -> PathBuf {
     option_env!("CARGO_TARGET_DIR")
         .map(canonicalize)
-        .unwrap_or(get_repo_root().join("target"))
+        .unwrap_or(workspace_root().join("target"))
 }
 
 // TODO Move this to rsconf

@@ -17,19 +17,19 @@ fn main() {
 fn build_man(man_dir: &Path) {
     use std::{env, process::Command};
 
-    let repo_root_dir = fish_build_helper::get_repo_root();
+    let workspace_root = fish_build_helper::workspace_root();
 
     let man_str = man_dir.to_str().unwrap();
 
     let sec1_dir = man_dir.join("man1");
     let sec1_str = sec1_dir.to_str().unwrap();
 
-    let docsrc_dir = repo_root_dir.join("doc_src");
+    let docsrc_dir = workspace_root.join("doc_src");
     let docsrc_str = docsrc_dir.to_str().unwrap();
 
     let sphinx_doc_sources = [
-        repo_root_dir.join("CHANGELOG.rst"),
-        repo_root_dir.join("CONTRIBUTING.rst"),
+        workspace_root.join("CHANGELOG.rst"),
+        workspace_root.join("CONTRIBUTING.rst"),
         docsrc_dir.clone(),
     ];
     fish_build_helper::rebuild_if_paths_changed(sphinx_doc_sources);

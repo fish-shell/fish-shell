@@ -27,7 +27,7 @@ fn main() {
     // compare it directly as a string at runtime.
     rsconf::set_env_value(
         "CARGO_MANIFEST_DIR",
-        fish_build_helper::get_repo_root().to_str().unwrap(),
+        fish_build_helper::workspace_root().to_str().unwrap(),
     );
 
     // Some build info
@@ -335,9 +335,9 @@ fn get_version(src_dir: &Path) -> String {
     // or because it refused (safe.directory applies to `git describe`!)
     // So we read the SHA ourselves.
     fn get_git_hash() -> Result<String, Box<dyn std::error::Error>> {
-        let repo_root_dir = fish_build_helper::get_repo_root();
-        let gitdir = repo_root_dir.join(".git");
-        let jjdir = repo_root_dir.join(".jj");
+        let workspace_root = fish_build_helper::workspace_root();
+        let gitdir = workspace_root.join(".git");
+        let jjdir = workspace_root.join(".jj");
         let commit_id = if gitdir.exists() {
             // .git/HEAD contains ref: refs/heads/branch
             let headpath = gitdir.join("HEAD");

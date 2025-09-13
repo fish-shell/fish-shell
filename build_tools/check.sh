@@ -34,13 +34,13 @@ if $lint; then
     export RUSTDOCFLAGS="--deny=warnings ${RUSTDOCFLAGS}"
 fi
 
-repo_root="$(dirname "$0")/.."
-build_dir="${CARGO_TARGET_DIR:-$repo_root/target}/${target_triple}/debug"
+workspace_root="$(dirname "$0")/.."
+build_dir="${CARGO_TARGET_DIR:-$workspace_root/target}/${target_triple}/debug"
 
 template_file=$(mktemp)
 FISH_GETTEXT_EXTRACTION_FILE=$template_file cargo build --workspace --all-targets --features=gettext-extract
 if $lint; then
-    PATH="$build_dir:$PATH" "$repo_root/build_tools/style.fish" --all --check
+    PATH="$build_dir:$PATH" "$workspace_root/build_tools/style.fish" --all --check
     for features in "" --no-default-features; do
         cargo clippy --workspace --all-targets $features
     done
@@ -50,7 +50,7 @@ cargo test --doc --workspace
 if $lint; then
     cargo doc --workspace
 fi
-FISH_GETTEXT_EXTRACTION_FILE=$template_file "$repo_root/tests/test_driver.py" "$build_dir"
+FISH_GETTEXT_EXTRACTION_FILE=$template_file "$workspace_root/tests/test_driver.py" "$build_dir"
 
 exit
 }

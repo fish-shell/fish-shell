@@ -24,7 +24,7 @@ if set -l -q _flag_all
     end
 end
 
-set -l repo_root (status dirname)/..
+set -l workspace_root (status dirname)/..
 
 if test $all = yes
     if not set -l -q _flag_force; and not set -l -q _flag_check
@@ -43,7 +43,7 @@ if test $all = yes
             end
         end
     end
-    set fish_files $repo_root/{benchmarks,build_tools,etc,share}/**.fish
+    set fish_files $workspace_root/{benchmarks,build_tools,etc,share}/**.fish
     set python_files {doc_src,share,tests}/**.py
 else
     # Format the files specified as arguments.

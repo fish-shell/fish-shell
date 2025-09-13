@@ -10,9 +10,9 @@ cleanup () {
 
 trap cleanup EXIT INT TERM HUP
 
-repo_root=$(dirname "$0")/../..
+workspace_root=$(dirname "$0")/../..
 builder=$1
-docsrc=$repo_root/doc_src
+docsrc=$workspace_root/doc_src
 tmp_dir=$(mktemp -d)
 doctree=$tmp_dir/doctree
 output_dir=$tmp_dir/$builder

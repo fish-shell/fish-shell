@@ -19,7 +19,7 @@ begin
         echo ""
     end
 
-    set -g repo_root (status dirname)/..
+    set -g workspace_root (status dirname)/..
 
     set -l rust_extraction_file
     if set -l --query _flag_use_existing_template
@@ -66,7 +66,7 @@ begin
             sed -E -e 's_\\\\_\\\\\\\\_g' -e 's_"_\\\\"_g' -e 's_^(.*)$_msgid "\1"\nmsgstr ""\n_'
     end
 
-    set -g share_dir $repo_root/share
+    set -g share_dir $workspace_root/share
 
     # This regex handles explicit requests to translate a message. These are more important to translate
     # than messages which should be implicitly translated.

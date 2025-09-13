@@ -1,7 +1,8 @@
 # fish completion for spago, PureScript package manager and build tool
 # version v0.16.0
 
-spago --fish-completion-script (command -v spago) | source
+__fish_cache_sourced_completions spago --fish-completion-script (command -v spago)
+or spago --fish-completion-script (command -v spago) | source
 
 function __fish_spago_is_arg_n --argument-names n
     test $n -eq (count (string match -v -- '-*' (commandline -pxc)))

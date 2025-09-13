@@ -83,7 +83,7 @@ use crate::highlight::{
 };
 use crate::history::{
     history_session_id, in_private_mode, History, HistorySearch, PersistenceMode, SearchDirection,
-    SearchType,
+    SearchFlags, SearchType,
 };
 use crate::input::init_input;
 use crate::input_common::{
@@ -151,6 +151,7 @@ use crate::tty_handoff::{
 };
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
+use crate::wcstringutil::CaseSensitivity;
 use crate::wcstringutil::{
     count_preceding_backslashes, join_strings, string_prefixes_string,
     string_prefixes_string_case_insensitive, StringFuzzyMatch,
@@ -4696,7 +4697,6 @@ struct Autosuggestion {
     search_string_range: Range<usize>,
 
     // Whether the autosuggestion should be case insensitive.
-    // This is true for file-generated autosuggestions, but not for history.
     icase: bool,
 
     // Whether the autosuggestion is a whole match from history.
@@ -4796,35 +4796,66 @@ fn get_autosuggestion_performer(
                 tokens.first().map(|tok| tok.offset()).unwrap_or(cursor_pos),
             ) == search_string_range
         };
+
+        // Only to be used if no case-sensitive suggestions are found.
+        let mut icase_history_result = None;
+
         if cursor_line_has_process_start {
-            let mut searcher = HistorySearch::new_with_type(
+            let mut searcher = HistorySearch::new_with(
                 history,
                 search_string.to_owned(),
                 SearchType::LinePrefix,
+                SearchFlags::IGNORE_CASE,
+                0,
             );
+
             while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
                 let item = searcher.current_item();
 
-                // Suggest only a single line each time.
-                let matched_line = item
+                // The history item's may have multiple lines of text.
+                // Only suggest the line that actually contains the search string.
+
+                let lines = item
                     .str()
                     .as_char_slice()
                     .split(|&c| c == '\n')
                     .rev()
-                    .find(|line| line.starts_with(search_string.as_char_slice()))
-                    .unwrap();
+                    .map(wstr::from_char_slice);
+
+                let mut icase = false;
+                let mut matched_line = lines.clone().find(|line| line.starts_with(search_string));
+
+                // Only check for a case-insensitive match if we haven't already found one
+                if matched_line.is_none() && icase_history_result.is_none() {
+                    icase = true;
+                    matched_line = lines
+                        .into_iter()
+                        .find(|line| string_prefixes_string_case_insensitive(search_string, line));
+                }
+
+                let Some(matched_line) = matched_line else {
+                    assert!(
+                        icase_history_result.is_some(),
+                        "couldn't find line matching search {search_string:?} in history item {item:?} (did history search yield a bogus result?)"
+                    );
+                    continue;
+                };
 
                 if autosuggest_validate_from_history(item, &working_directory, &ctx) {
                     // The command autosuggestion was handled specially, so we're done.
-                    // History items are case-sensitive, see #3978.
                     let is_whole = matched_line.len() == item.str().len();
-                    return AutosuggestionResult::new(
-                        command_line,
-                        search_string_range,
+                    let result = AutosuggestionResult::new(
+                        command_line.clone(),
+                        search_string_range.clone(),
                         matched_line.into(),
-                        /*icase=*/ false,
+                        icase,
                         is_whole,
                     );
+                    if icase {
+                        icase_history_result = Some(result);
+                    } else {
+                        return result;
+                    }
                 }
             }
         }
@@ -4855,10 +4886,22 @@ fn get_autosuggestion_performer(
             complete(&command_line[..would_be_cursor], complete_flags, &ctx);
 
         let suggestion = if completions.is_empty() {
+            // If there are no completions to suggest, fall back to icase history.
+            if let Some(result) = icase_history_result {
+                return result;
+            }
             WString::new()
         } else {
             sort_and_prioritize(&mut completions, complete_flags);
             let comp = &completions[0];
+
+            // Prefer icase history over smartcase/icase completions.
+            if let (Some(result), CaseSensitivity::Smart | CaseSensitivity::Insensitive) =
+                (icase_history_result, comp.r#match.case_fold)
+            {
+                return result;
+            }
+
             let full_line = completion_apply_to_command_line(
                 &OperationContext::background_interruptible(&vars),
                 &comp.completion,

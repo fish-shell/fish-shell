@@ -139,7 +139,10 @@ end
 
 if set -g --query tmpdir[1]
     diff -ur $po_dir $tmpdir
-    or cleanup_exit
+    or begin
+        echo ERROR: translations in ./po/ are stale. Try running build_tools/update_translations.fish
+        cleanup_exit
+    end
 end
 
 cleanup_exit

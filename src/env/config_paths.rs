@@ -71,23 +71,6 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
                     bin: Some(base_path.join("bin")),
                     locale,
                 }
-            } else if exec_path.ends_with("fish") {
-                FLOG!(
-                    config,
-                    "'fish' not in a 'bin/', trying paths relative to source tree"
-                );
-                let base_path = exec_path.parent().unwrap();
-                #[cfg(feature = "embed-data")]
-                let data_dir = base_path.join("share/install");
-                #[cfg(not(feature = "embed-data"))]
-                let data_dir = base_path.join("share");
-                paths = ConfigPaths {
-                    data: Some(data_dir.clone()),
-                    sysconf: base_path.join("etc"),
-                    doc: base_path.join("user_doc/html"),
-                    bin: Some(base_path.to_path_buf()),
-                    locale: Some(data_dir.join("locale")),
-                }
             }
 
             if paths.data.clone().is_some_and(|x| x.exists()) && paths.sysconf.exists() {

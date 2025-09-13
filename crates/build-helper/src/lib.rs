@@ -1,21 +1,14 @@
-use std::{
-    env,
-    path::{Path, PathBuf},
-};
+use std::{borrow::Cow, env, path::Path};
 
-pub fn canonicalize<P: AsRef<Path>>(path: P) -> PathBuf {
-    std::fs::canonicalize(path).unwrap()
+pub fn workspace_root() -> &'static Path {
+    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    manifest_dir.ancestors().nth(2).unwrap()
 }
 
-pub fn workspace_root() -> PathBuf {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    canonicalize(manifest_dir.ancestors().nth(2).unwrap())
-}
-
-pub fn get_target_dir() -> PathBuf {
+pub fn target_dir() -> Cow<'static, Path> {
     option_env!("CARGO_TARGET_DIR")
-        .map(canonicalize)
-        .unwrap_or(workspace_root().join("target"))
+        .map(|d| Cow::Borrowed(Path::new(d)))
+        .unwrap_or(std::borrow::Cow::Owned(workspace_root().join("target")))
 }
 
 // TODO Move this to rsconf

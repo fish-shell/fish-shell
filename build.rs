@@ -5,20 +5,22 @@ use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 
+fn canonicalize<P: AsRef<Path>>(path: P) -> PathBuf {
+    std::fs::canonicalize(path).unwrap()
+}
+
 fn main() {
     setup_paths();
 
     // Add our default to enable tools that don't go through CMake, like "cargo test" and the
     // language server.
 
-    let cargo_target_dir = fish_build_helper::get_target_dir();
-
     rsconf::set_env_value(
         "FISH_BUILD_DIR",
         // This is set by CMake and might include symlinks. Since we want to compare this to
         // the dir fish is executed in we need to canonicalize it.
         option_env!("FISH_BUILD_DIR")
-            .map_or(cargo_target_dir, fish_build_helper::canonicalize)
+            .map_or(canonicalize(fish_build_helper::target_dir()), canonicalize)
             .to_str()
             .unwrap(),
     );
@@ -27,7 +29,9 @@ fn main() {
     // compare it directly as a string at runtime.
     rsconf::set_env_value(
         "CARGO_MANIFEST_DIR",
-        fish_build_helper::workspace_root().to_str().unwrap(),
+        canonicalize(fish_build_helper::workspace_root())
+            .to_str()
+            .unwrap(),
     );
 
     // Some build info

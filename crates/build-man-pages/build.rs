@@ -2,7 +2,7 @@
 use std::path::Path;
 
 fn main() {
-    let cargo_target_dir = fish_build_helper::get_target_dir();
+    let cargo_target_dir = fish_build_helper::target_dir();
     let mandir = cargo_target_dir.join("fish-man");
     let sec1dir = mandir.join("man1");
     // Running `cargo clippy` on a clean build directory panics, because when rust-embed tries to

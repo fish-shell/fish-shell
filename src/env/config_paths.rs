@@ -5,7 +5,6 @@ use std::path::PathBuf;
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
-#[derive(Default)]
 pub struct ConfigPaths {
     pub sysconf: PathBuf,     // e.g., /usr/local/etc
     pub bin: Option<PathBuf>, // e.g., /usr/local/bin
@@ -115,25 +114,26 @@ impl ConfigPaths {
             };
         }
 
-        let mut paths = ConfigPaths::default();
         // The next check is that we are in a relocatable directory tree
         if exec_path.ends_with("bin/fish") {
             let base_path = exec_path.parent().unwrap().parent().unwrap();
-            paths = ConfigPaths {
-                sysconf: base_path.join("etc/fish"),
-                bin: Some(base_path.join("bin")),
-                data: base_path.join("share/fish"),
-                doc: base_path.join("share/doc/fish"),
-                locale: base_path.join("share/locale"),
+            let data = base_path.join("share/fish");
+            let sysconf = base_path.join("etc/fish");
+            if data.exists() && sysconf.exists() {
+                let doc = base_path.join("share/doc/fish");
+                return ConfigPaths {
+                    sysconf,
+                    bin: Some(base_path.join("bin")),
+                    data,
+                    // The docs dir may not exist; in that case fall back to the compiled in path.
+                    doc: if doc.exists() {
+                        doc
+                    } else {
+                        PathBuf::from(DOC_DIR)
+                    },
+                    locale: base_path.join("share/locale"),
+                };
             }
-        }
-
-        if paths.data.exists() && paths.sysconf.exists() {
-            // The docs dir may not exist; in that case fall back to the compiled in path.
-            if !paths.doc.exists() {
-                paths.doc = PathBuf::from(DOC_DIR);
-            }
-            return paths;
         }
 
         Self::static_paths()

@@ -13,10 +13,14 @@ fn main() {
 
     let cargo_target_dir = fish_build_helper::get_target_dir();
 
-    // FISH_BUILD_DIR is set by CMake, if we are using it.
     rsconf::set_env_value(
         "FISH_BUILD_DIR",
-        option_env!("FISH_BUILD_DIR").unwrap_or(cargo_target_dir.to_str().unwrap()),
+        // This is set by CMake and might include symlinks. Since we want to compare this to
+        // the dir fish is executed in we need to canonicalize it.
+        option_env!("FISH_BUILD_DIR")
+            .map_or(cargo_target_dir, fish_build_helper::canonicalize)
+            .to_str()
+            .unwrap(),
     );
 
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to

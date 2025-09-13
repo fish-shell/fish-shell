@@ -5,7 +5,7 @@ pub fn workspace_root() -> &'static Path {
     manifest_dir.ancestors().nth(2).unwrap()
 }
 
-pub fn target_dir() -> Cow<'static, Path> {
+pub fn cargo_target_dir() -> Cow<'static, Path> {
     option_env!("CARGO_TARGET_DIR")
         .map(|d| Cow::Borrowed(Path::new(d)))
         .unwrap_or(std::borrow::Cow::Owned(workspace_root().join("target")))

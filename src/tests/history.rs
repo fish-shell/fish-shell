@@ -9,6 +9,7 @@ use crate::tests::string_escape::ESCAPE_TEST_CHAR;
 use crate::util::get_rng;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
+use fish_build_helper::workspace_root;
 use rand::rngs::SmallRng;
 use rand::Rng;
 use std::collections::VecDeque;
@@ -593,9 +594,9 @@ fn test_history_path_detection() {
 fn install_sample_history(name: &wstr) {
     let path = path_get_data().expect("Failed to get data directory");
     std::fs::copy(
-        env!("CARGO_MANIFEST_DIR").to_owned()
-            + "/tests/"
-            + std::str::from_utf8(&wcs2string(name)).unwrap(),
+        workspace_root()
+            .join("tests")
+            .join(std::str::from_utf8(&wcs2string(name)).unwrap()),
         wcs2osstring(&(path + L!("/") + name + L!("_history"))),
     )
     .unwrap();
@@ -633,9 +634,7 @@ fn test_history_formats() {
         "echo foo".into(),
     ];
     let test_history_imported_from_bash = History::with_name(L!("bash_import"));
-    let file =
-        std::fs::File::open(env!("CARGO_MANIFEST_DIR").to_owned() + "/tests/history_sample_bash")
-            .unwrap();
+    let file = std::fs::File::open(workspace_root().join("tests/history_sample_bash")).unwrap();
     test_history_imported_from_bash.populate_from_bash(BufReader::new(file));
     assert_eq!(test_history_imported_from_bash.get_history(), expected);
     test_history_imported_from_bash.clear();

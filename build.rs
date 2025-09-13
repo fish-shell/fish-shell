@@ -1,5 +1,6 @@
 #![allow(clippy::uninlined_format_args)]
 
+use fish_build_helper::{cargo_target_dir, workspace_root};
 use rsconf::{LinkType, Target};
 use std::env;
 use std::error::Error;
@@ -20,7 +21,7 @@ fn main() {
         // This is set by CMake and might include symlinks. Since we want to compare this to
         // the dir fish is executed in we need to canonicalize it.
         option_env!("FISH_BUILD_DIR")
-            .map_or(canonicalize(fish_build_helper::target_dir()), canonicalize)
+            .map_or(canonicalize(cargo_target_dir()), canonicalize)
             .to_str()
             .unwrap(),
     );
@@ -29,9 +30,7 @@ fn main() {
     // compare it directly as a string at runtime.
     rsconf::set_env_value(
         "CARGO_MANIFEST_DIR",
-        canonicalize(fish_build_helper::workspace_root())
-            .to_str()
-            .unwrap(),
+        canonicalize(workspace_root()).to_str().unwrap(),
     );
 
     // Some build info
@@ -339,7 +338,7 @@ fn get_version(src_dir: &Path) -> String {
     // or because it refused (safe.directory applies to `git describe`!)
     // So we read the SHA ourselves.
     fn get_git_hash() -> Result<String, Box<dyn std::error::Error>> {
-        let workspace_root = fish_build_helper::workspace_root();
+        let workspace_root = workspace_root();
         let gitdir = workspace_root.join(".git");
         let jjdir = workspace_root.join(".jj");
         let commit_id = if gitdir.exists() {

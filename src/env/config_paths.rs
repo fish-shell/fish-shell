@@ -1,5 +1,6 @@
 use super::ConfigPaths;
 use crate::{common::get_executable_path, FLOG, FLOGF};
+use fish_build_helper::workspace_root;
 use once_cell::sync::Lazy;
 use std::path::PathBuf;
 
@@ -33,19 +34,19 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
 
         // Detect if we're running right out of the CMAKE build directory
         if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
-            let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let workspace_root = workspace_root();
             FLOG!(
                 config,
-                "Running out of target directory, using paths relative to CARGO_MANIFEST_DIR:\n",
-                manifest_dir.display()
+                "Running out of target directory, using paths relative to workspace root:\n",
+                workspace_root.display()
             );
             done = true;
             paths = ConfigPaths {
-                data: Some(manifest_dir.join("share")),
-                sysconf: manifest_dir.join("etc"),
-                doc: manifest_dir.join("user_doc/html"),
+                data: Some(workspace_root.join("share")),
+                sysconf: workspace_root.join("etc"),
+                doc: workspace_root.join("user_doc/html"),
                 bin: Some(exec_path.parent().unwrap().to_owned()),
-                locale: Some(manifest_dir.join("share/locale")),
+                locale: Some(workspace_root.join("share/locale")),
             }
         }
 

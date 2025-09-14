@@ -26,7 +26,6 @@ use crate::tokenizer::{
 use crate::wchar::prelude::*;
 use macro_rules_attribute::derive;
 use std::borrow::Cow;
-use std::ops::ControlFlow;
 
 /**
  * A NodeVisitor is something which can visit an AST node.
@@ -60,64 +59,26 @@ impl<T: Acceptor> Acceptor for Option<T> {
 /// A helper trait to invoke the visit() or visit_mut() method on a field.
 trait VisitableField {
     fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
-    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult;
 }
 
-impl<N: Node + NodeMut> VisitableField for N {
+impl<N: Node> VisitableField for N {
     fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         visitor.visit(self);
     }
-
-    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult {
-        visitor.visit_mut(self)
-    }
 }
 
-impl<N: Node + NodeMut + CheckParse> VisitableField for Option<N> {
+impl<N: Node> VisitableField for Option<N> {
     fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         if let Some(node) = self {
             node.do_visit(visitor);
         }
     }
-
-    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult {
-        visitor.visit_optional_mut(self)
-    }
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct MissingEndError {
     allowed_keywords: &'static [ParseKeyword],
     token: ParseToken,
-}
-
-pub type VisitResult = ControlFlow<MissingEndError>;
-
-/// Similar to NodeVisitor, but for mutable nodes.
-trait NodeVisitorMut {
-    /// will_visit (did_visit) is called before (after) a node's fields are visited.
-    fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N);
-    fn visit_mut<N: NodeMut>(&mut self, node: &mut N) -> VisitResult;
-    fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult);
-
-    // Visit an optional field, perhaps populating it.
-    fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult;
-}
-
-/**
- * A trait implemented on Nodes which can be visited by a NodeVisitorMut.
- *
- * It generally invokes the right visit() method on each of its children.
- */
-trait AcceptorMut {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V);
-}
-
-impl<T: AcceptorMut> AcceptorMut for Option<T> {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-        if let Some(node) = self {
-            node.accept_mut(visitor)
-        }
-    }
 }
 
 /// Node is the base trait of all AST nodes.
@@ -258,12 +219,6 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
     std::mem::discriminant(&lhs.kind()) == std::mem::discriminant(&rhs.kind())
 }
 
-/// NodeMut is a mutable node.
-trait NodeMut: Node + AcceptorMut {
-    /// Return the kind of this node, as a mutable reference.
-    fn kind_mut(&mut self) -> KindMut<'_>;
-}
-
 /// The different kinds of nodes. Note that Token and Keyword have different subtypes.
 #[derive(Copy, Clone)]
 pub enum Kind<'a> {
@@ -400,9 +355,8 @@ trait CheckParse: Default {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool;
 }
 
-trait ListElement: NodeMut + Sized {
+trait ListElement: Sized + std::fmt::Debug + Node {
     fn list_kind(list: &[Self]) -> Kind<'_>;
-    fn list_kind_mut(list: &mut Box<[Self]>) -> KindMut<'_>;
 
     /// Return whether a list kind allows arbitrary newlines in it.
     fn chomps_newlines(pop: &Populator<'_>) -> bool;
@@ -427,12 +381,6 @@ impl<N: ListElement> Node for Box<[N]> {
     }
 }
 
-impl<N: ListElement> NodeMut for Box<[N]> {
-    fn kind_mut(&mut self) -> KindMut<'_> {
-        N::list_kind_mut(self)
-    }
-}
-
 impl<'a, N: ListElement> Acceptor for &'a [N] {
     fn accept<'b>(&'b self, visitor: &mut dyn NodeVisitor<'b>) {
         self.iter().for_each(|item| visitor.visit(item));
@@ -445,25 +393,12 @@ impl<N: ListElement> Acceptor for Box<[N]> {
     }
 }
 
-impl<N: ListElement> AcceptorMut for Box<[N]> {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-        visitor.will_visit_fields_of(self);
-        let flow = self.iter_mut().try_for_each(|item| visitor.visit_mut(item));
-        visitor.did_visit_fields_of(self, flow);
-    }
-}
-
 /// Implement the node trait.
 macro_rules! Node {
     ($name:ident) => {
         impl Node for $name {
             fn kind(&self) -> Kind<'_> {
                 Kind::$name(self)
-            }
-        }
-        impl NodeMut for $name {
-            fn kind_mut(&mut self) -> KindMut<'_> {
-                KindMut::$name(self)
             }
         }
 
@@ -502,13 +437,6 @@ macro_rules! Leaf {
             #[allow(unused_variables)]
             fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {}
         }
-        impl AcceptorMut for $name {
-            #[allow(unused_variables)]
-            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-                visitor.will_visit_fields_of(self);
-                visitor.did_visit_fields_of(self, VisitResult::Continue(()));
-            }
-        }
     };
 
     ( $(#[$_m:meta])* $_v:vis struct $name:ident $_:tt $(;)? ) => {
@@ -529,11 +457,6 @@ macro_rules! define_keyword_node {
                 Kind::Keyword(self)
             }
         }
-        impl NodeMut for $name {
-            fn kind_mut(&mut self) -> KindMut<'_> {
-                KindMut::Keyword(self)
-            }
-        }
         impl Keyword for $name {
             fn keyword(&self) -> ParseKeyword {
                 self.keyword
@@ -546,6 +469,11 @@ macro_rules! define_keyword_node {
             }
             fn as_leaf(&self) -> &dyn Leaf {
                 self
+            }
+        }
+        impl Parse for $name {
+            fn parse(pop: &mut Populator) -> ParseResult<Self> {
+                pop.parse_keyword()
             }
         }
     }
@@ -562,11 +490,6 @@ macro_rules! define_token_node {
         impl Node for $name {
             fn kind(&self) -> Kind<'_> {
                 Kind::Token(self)
-            }
-        }
-        impl NodeMut for $name {
-            fn kind_mut(&mut self) -> KindMut<'_> {
-                KindMut::Token(self)
             }
         }
         impl Token for $name {
@@ -587,6 +510,11 @@ macro_rules! define_token_node {
             fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
                 let typ = pop.peek_type(0);
                 Self::ALLOWED_TOKENS.contains(&typ)
+            }
+        }
+        impl Parse for $name {
+            fn parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
+                Ok(pop.parse_token())
             }
         }
         impl $name {
@@ -614,23 +542,81 @@ macro_rules! Acceptor {
                 )*
             }
         }
-        impl AcceptorMut for $name {
-            #[allow(unused_variables)]
-            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-                visitor.will_visit_fields_of(self);
-                let flow = loop {
-                    $(
-                        let result = self.$field_name.do_visit_mut(visitor);
-                        if result.is_break() {
-                            break result;
+        impl Parse for $name {
+            fn parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
+                let mut node = Self::default();
+                pop.will_visit_fields_of(&mut node);
+
+                $(
+                    node.$field_name = match Parse::parse(pop) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            pop.did_visit_fields_of(&mut node, Some(e));
+                            return Ok(node);
                         }
-                    )*
-                    break VisitResult::Continue(());
-                };
-                visitor.did_visit_fields_of(self, flow);
+                    };
+                )*
+
+                pop.did_visit_fields_of(&mut node, None);
+                Ok(node)
             }
         }
     };
+}
+
+/// Report an error based on `fmt` for the tokens' range
+macro_rules! parse_error {
+    (
+        $self:ident,
+        $token:expr,
+        $code:expr,
+        $fmt:expr
+        $(, $args:expr)*
+        $(,)?
+    ) => {
+        let range = $token.range();
+        parse_error_range!($self, range, $code, $fmt $(, $args)*);
+    }
+}
+
+/// Report an error based on `fmt` for the source range `range`.
+macro_rules! parse_error_range {
+    (
+        $self:ident,
+        $range:expr,
+        $code:expr,
+        $fmt:expr
+        $(, $args:expr)*
+        $(,)?
+    ) => {
+        let text = if $self.out_errors.is_some() && !$self.unwinding {
+            Some(wgettext_fmt!($fmt $(, $args)*))
+        } else {
+            None
+        };
+        $self.any_error = true;
+
+        // Ignore additional parse errors while unwinding.
+        // These may come about e.g. from `true | and`.
+        if !$self.unwinding {
+            $self.unwinding = true;
+
+            FLOGF!(ast_construction, "%*sparse error - begin unwinding", $self.spaces(), "");
+            // TODO: can store this conditionally dependent on flags.
+            if $range.start() != SOURCE_OFFSET_INVALID {
+                $self.errors.push($range);
+            }
+
+            if let Some(errors) = &mut $self.out_errors {
+                let mut err = ParseError::default();
+                err.text = text.unwrap();
+                err.code = $code;
+                err.source_start = $range.start();
+                err.source_length = $range.length();
+                errors.push(err);
+            }
+        }
+    }
 }
 
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.
@@ -665,13 +651,6 @@ impl Acceptor for ArgumentOrRedirection {
             Self::Argument(child) => visitor.visit(child),
             Self::Redirection(child) => visitor.visit(&**child),
         };
-    }
-}
-impl AcceptorMut for ArgumentOrRedirection {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-        visitor.will_visit_fields_of(self);
-        let flow = visitor.visit_mut(self);
-        visitor.did_visit_fields_of(self, flow);
     }
 }
 
@@ -755,14 +734,6 @@ impl Acceptor for Statement {
     }
 }
 
-impl AcceptorMut for Statement {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-        visitor.will_visit_fields_of(self);
-        let flow = visitor.visit_mut(self);
-        visitor.did_visit_fields_of(self, flow);
-    }
-}
-
 /// A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
 /// like if statements, where we require a command).
 #[derive(Default, Debug, Node!, Acceptor!)]
@@ -780,7 +751,7 @@ pub struct JobPipeline {
 }
 
 /// A job_conjunction is a job followed by a && or || continuations.
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!)]
 pub struct JobConjunction {
     /// The job conjunction decorator.
     pub decorator: Option<JobConjunctionDecorator>,
@@ -804,6 +775,44 @@ impl CheckParse for JobConjunction {
                     token.keyword,
                     ParseKeyword::Case | ParseKeyword::End | ParseKeyword::Else
                 ))
+    }
+}
+
+impl Acceptor for JobConjunction {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        self.decorator.do_visit(visitor);
+        self.job.do_visit(visitor);
+        self.continuations.do_visit(visitor);
+        self.semi_nl.do_visit(visitor);
+    }
+}
+
+impl Parse for JobConjunction {
+    fn parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
+        let kw = pop.peek_token(1).keyword;
+        if matches!(kw, ParseKeyword::And | ParseKeyword::Or) {
+            parse_error!(
+                pop,
+                pop.peek_token(1),
+                ParseErrorCode::andor_in_pipeline,
+                INVALID_PIPELINE_CMD_ERR_MSG,
+                kw
+            );
+        }
+
+        let mut node = Self::default();
+        pop.will_visit_fields_of(&mut node);
+
+        let result: Result<(), MissingEndError> = (|| {
+            node.decorator = pop.parse()?;
+            node.job = pop.parse()?;
+            node.continuations = pop.parse()?;
+            node.semi_nl = pop.parse()?;
+            Ok(())
+        })();
+
+        pop.did_visit_fields_of(&mut node, result.err());
+        Ok(node)
     }
 }
 
@@ -1175,13 +1184,6 @@ impl Acceptor for BlockStatementHeader {
         visitor.visit(self.embedded_node());
     }
 }
-impl AcceptorMut for BlockStatementHeader {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-        visitor.will_visit_fields_of(self);
-        let flow = visitor.visit_mut(self);
-        visitor.did_visit_fields_of(self, flow);
-    }
-}
 
 /// Return a string literal name for an ast type.
 pub fn ast_kind_to_string(k: Kind<'_>) -> &'static wstr {
@@ -1347,7 +1349,7 @@ pub fn parse(src: &wstr, flags: ParseTreeFlags, out_errors: Option<&mut ParseErr
         src, flags, false, /* not freestanding_arguments */
         out_errors,
     );
-    let list: JobList = pops.allocate_populate_list(true);
+    let list: JobList = pops.parse_list(true).unwrap_or_default();
     finalize_parse(pops, list)
 }
 
@@ -1361,7 +1363,7 @@ pub fn parse_argument_list(
         src, flags, true, /* freestanding_arguments */
         out_errors,
     );
-    let list: ArgumentList = pops.allocate_populate_list(true);
+    let list: ArgumentList = pops.parse_list(true).unwrap_or_default();
     finalize_parse(pops, list)
 }
 
@@ -1623,7 +1625,7 @@ macro_rules! internal_error {
         $fmt:expr
         $(, $args:expr)*
         $(,)?
-    ) => {
+    ) => {{
         FLOG!(
             debug,
             concat!(
@@ -1634,62 +1636,7 @@ macro_rules! internal_error {
         );
         FLOGF!(debug, "Encountered while parsing:<<<<\n%s\n>>>", $self.tokens.src);
         panic!();
-    };
-}
-
-/// Report an error based on `fmt` for the tokens' range
-macro_rules! parse_error {
-    (
-        $self:ident,
-        $token:expr,
-        $code:expr,
-        $fmt:expr
-        $(, $args:expr)*
-        $(,)?
-    ) => {
-        let range = $token.range();
-        parse_error_range!($self, range, $code, $fmt $(, $args)*);
-    }
-}
-
-/// Report an error based on `fmt` for the source range `range`.
-macro_rules! parse_error_range {
-    (
-        $self:ident,
-        $range:expr,
-        $code:expr,
-        $fmt:expr
-        $(, $args:expr)*
-        $(,)?
-    ) => {
-        let text = if $self.out_errors.is_some() && !$self.unwinding {
-            Some(wgettext_fmt!($fmt $(, $args)*))
-        } else {
-            None
-        };
-        $self.any_error = true;
-
-        // Ignore additional parse errors while unwinding.
-        // These may come about e.g. from `true | and`.
-        if !$self.unwinding {
-            $self.unwinding = true;
-
-            FLOGF!(ast_construction, "%*sparse error - begin unwinding", $self.spaces(), "");
-            // TODO: can store this conditionally dependent on flags.
-            if $range.start() != SOURCE_OFFSET_INVALID {
-                $self.errors.push($range);
-            }
-
-            if let Some(errors) = &mut $self.out_errors {
-                let mut err = ParseError::default();
-                err.text = text.unwrap();
-                err.code = $code;
-                err.source_start = $range.start();
-                err.source_length = $range.length();
-                errors.push(err);
-            }
-        }
-    }
+    }};
 }
 
 struct Populator<'a> {
@@ -1723,58 +1670,8 @@ struct Populator<'a> {
     out_errors: Option<&'a mut ParseErrorList>,
 }
 
-impl<'s> NodeVisitorMut for Populator<'s> {
-    fn visit_mut<N: NodeMut>(&mut self, node: &mut N) -> VisitResult {
-        use KindMut as KM;
-        match node.kind_mut() {
-            // Leaves
-            KM::Argument(node) => self.visit_argument(node),
-            KM::VariableAssignment(node) => self.visit_variable_assignment(node),
-            KM::JobContinuation(node) => self.visit_job_continuation(node),
-            KM::Token(node) => self.visit_token(node),
-            KM::Keyword(node) => return self.visit_keyword(node),
-
-            KM::MaybeNewlines(node) => self.visit_maybe_newlines(node),
-
-            // Branches
-            KM::ArgumentOrRedirection(node) => self.visit_argument_or_redirection(node),
-            KM::BlockStatementHeader(node) => self.visit_block_statement_header(node),
-            KM::Statement(node) => self.visit_statement(node),
-            KM::Redirection(node) => node.accept_mut(self),
-            KM::JobPipeline(node) => node.accept_mut(self),
-            KM::JobConjunction(node) => node.accept_mut(self),
-            KM::ForHeader(node) => node.accept_mut(self),
-            KM::WhileHeader(node) => node.accept_mut(self),
-            KM::FunctionHeader(node) => node.accept_mut(self),
-            KM::BeginHeader(node) => node.accept_mut(self),
-            KM::BlockStatement(node) => node.accept_mut(self),
-            KM::BraceStatement(node) => node.accept_mut(self),
-            KM::IfClause(node) => node.accept_mut(self),
-            KM::ElseifClause(node) => node.accept_mut(self),
-            KM::ElseClause(node) => node.accept_mut(self),
-            KM::IfStatement(node) => node.accept_mut(self),
-            KM::CaseItem(node) => node.accept_mut(self),
-            KM::SwitchStatement(node) => node.accept_mut(self),
-            KM::DecoratedStatement(node) => node.accept_mut(self),
-            KM::NotStatement(node) => node.accept_mut(self),
-            KM::JobConjunctionContinuation(node) => node.accept_mut(self),
-            KM::AndorJob(node) => node.accept_mut(self),
-
-            // Lists
-            KM::VariableAssignmentList(node) => *node = self.allocate_populate_list(false),
-            KM::ArgumentOrRedirectionList(node) => *node = self.allocate_populate_list(false),
-            KM::ElseifClauseList(node) => *node = self.allocate_populate_list(false),
-            KM::JobContinuationList(node) => *node = self.allocate_populate_list(false),
-            KM::AndorJobList(node) => *node = self.allocate_populate_list(false),
-            KM::JobConjunctionContinuationList(node) => *node = self.allocate_populate_list(false),
-            KM::CaseItemList(node) => *node = self.allocate_populate_list(false),
-            KM::ArgumentList(node) => *node = self.allocate_populate_list(false),
-            KM::JobList(node) => *node = self.allocate_populate_list(false),
-        }
-        VisitResult::Continue(())
-    }
-
-    fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N) {
+impl<'s> Populator<'s> {
+    fn will_visit_fields_of<N: Node>(&mut self, node: &N) {
         FLOGF!(
             ast_construction,
             "%*swill_visit %ls",
@@ -1785,13 +1682,13 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         self.depth += 1
     }
 
-    fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult) {
+    fn did_visit_fields_of<'a, N: Node>(&'a mut self, node: &'a N, error: Option<MissingEndError>) {
         self.depth -= 1;
 
         if self.unwinding {
             return;
         }
-        let VisitResult::Break(error) = flow else {
+        let Some(error) = error else {
             return;
         };
 
@@ -1868,11 +1765,6 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             );
         }
     }
-
-    fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult {
-        *node = self.try_parse::<N>();
-        VisitResult::Continue(())
-    }
 }
 
 /// Helper to describe a list of keywords.
@@ -1924,10 +1816,6 @@ macro_rules! define_list_nodes {
         impl ListElement for $contents {
             fn list_kind(list: &[Self]) -> Kind<'_> {
                 Kind::$name(list)
-            }
-
-            fn list_kind_mut(list: &mut Box<[Self]>) -> KindMut<'_> {
-                KindMut::$name(list)
             }
 
             fn chomps_newlines(pop: &Populator<'_>) -> bool {
@@ -2247,10 +2135,10 @@ impl<'s> Populator<'s> {
 
     /// Given that we are a list of nodes of type N, populate as many elements as we can.
     /// If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
-    fn allocate_populate_list<N: CheckParse + ListElement>(
+    fn parse_list<N: CheckParse + Parse + ListElement>(
         &mut self,
         exhaust_stream: bool,
-    ) -> Box<[N]> {
+    ) -> ParseResult<Box<[N]>> {
         // Do not attempt to parse a list if we are unwinding.
         if self.unwinding {
             assert!(
@@ -2266,7 +2154,7 @@ impl<'s> Populator<'s> {
                 "",
                 ast_kind_to_string(list.kind())
             );
-            return list;
+            return Ok(list);
         }
 
         // We're going to populate a vector with our nodes.
@@ -2308,7 +2196,7 @@ impl<'s> Populator<'s> {
             self.chomp_extras::<N>();
 
             // Now try parsing a node.
-            if let Some(node) = self.try_parse::<N>() {
+            if let Ok(Some(node)) = self.parse_option::<N>() {
                 // #7201: Minimize reallocations of contents vector
                 // Empirically, 99.97% of cases are 16 elements or fewer,
                 // with 75% being empty, so this works out best.
@@ -2341,20 +2229,19 @@ impl<'s> Populator<'s> {
             list.len()
         );
 
-        list
+        Ok(list)
     }
 
-    /// Allocate and populate a statement.
-    fn allocate_populate_statement(&mut self) -> Statement {
+    fn parse_statement(&mut self) -> ParseResult<Statement> {
         // In case we get a parse error, we still need to return something non-null. Use a
         // decorated statement; all of its leaf nodes will end up unsourced.
-        fn got_error(slf: &mut Populator<'_>) -> Statement {
+        fn got_error(slf: &mut Populator<'_>) -> ParseResult<Statement> {
             assert!(slf.unwinding, "Should have produced an error");
             new_decorated_statement(slf)
         }
 
-        fn new_decorated_statement(slf: &mut Populator<'_>) -> Statement {
-            let embedded = slf.allocate_visit::<DecoratedStatement>();
+        fn new_decorated_statement(slf: &mut Populator<'_>) -> ParseResult<Statement> {
+            let embedded = slf.parse::<DecoratedStatement>()?;
             if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::left_brace {
                 parse_error!(
                     slf,
@@ -2368,16 +2255,15 @@ impl<'s> Populator<'s> {
                     slf.peek_token(0).user_presentable_description()
                 );
             }
-            Statement::Decorated(embedded)
+            Ok(Statement::Decorated(embedded))
         }
 
         if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
             // This may happen if we just have a 'time' prefix.
             // Construct a decorated statement, which will be unsourced.
-            self.allocate_visit::<DecoratedStatement>();
+            _ = self.parse::<DecoratedStatement>();
         } else if self.peek_token(0).typ == ParseTokenType::left_brace {
-            let embedded = self.allocate_boxed_visit::<BraceStatement>();
-            return Statement::Brace(embedded);
+            return self.parse_boxed().map(Statement::Brace);
         } else if self.peek_token(0).typ != ParseTokenType::string {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
@@ -2446,25 +2332,15 @@ impl<'s> Populator<'s> {
         }
 
         match self.peek_token(0).keyword {
-            ParseKeyword::Not | ParseKeyword::Exclam => {
-                let embedded = self.allocate_boxed_visit::<NotStatement>();
-                Statement::Not(embedded)
-            }
+            ParseKeyword::Not | ParseKeyword::Exclam => self.parse_boxed().map(Statement::Not),
+
             ParseKeyword::For
             | ParseKeyword::While
             | ParseKeyword::Function
-            | ParseKeyword::Begin => {
-                let embedded = self.allocate_boxed_visit::<BlockStatement>();
-                Statement::Block(embedded)
-            }
-            ParseKeyword::If => {
-                let embedded = self.allocate_boxed_visit::<IfStatement>();
-                Statement::If(embedded)
-            }
-            ParseKeyword::Switch => {
-                let embedded = self.allocate_boxed_visit::<SwitchStatement>();
-                Statement::Switch(embedded)
-            }
+            | ParseKeyword::Begin => self.parse_boxed().map(Statement::Block),
+
+            ParseKeyword::If => self.parse_boxed().map(Statement::If),
+            ParseKeyword::Switch => self.parse_boxed().map(Statement::Switch),
             ParseKeyword::End => {
                 // 'end' is forbidden as a command.
                 // For example, `if end` or `while end` will produce this error.
@@ -2477,128 +2353,29 @@ impl<'s> Populator<'s> {
                     "Expected a command, but found %ls",
                     self.peek_token(0).user_presentable_description()
                 );
-                return got_error(self);
+                got_error(self)
             }
             _ => new_decorated_statement(self),
         }
     }
 
-    /// Allocate and populate a block statement header.
-    /// This must never return null.
-    fn allocate_populate_block_header(&mut self) -> BlockStatementHeader {
-        match self.peek_token(0).keyword {
-            ParseKeyword::For => {
-                let embedded = self.allocate_visit::<ForHeader>();
-                BlockStatementHeader::For(embedded)
-            }
-            ParseKeyword::While => {
-                let embedded = self.allocate_visit::<WhileHeader>();
-                BlockStatementHeader::While(embedded)
-            }
-            ParseKeyword::Function => {
-                let embedded = self.allocate_visit::<FunctionHeader>();
-                BlockStatementHeader::Function(embedded)
-            }
-            ParseKeyword::Begin => {
-                let embedded = self.allocate_visit::<BeginHeader>();
-                BlockStatementHeader::Begin(embedded)
-            }
-            _ => {
-                internal_error!(
-                    self,
-                    allocate_populate_block_header,
-                    "should not have descended into block_header"
-                );
-            }
-        }
+    fn parse<T: Parse>(&mut self) -> ParseResult<T> {
+        Parse::parse(self)
     }
 
-    fn try_parse<T: NodeMut + Default + CheckParse>(&mut self) -> Option<T> {
-        if !T::can_be_parsed(self) {
-            return None;
-        }
-        Some(self.allocate_visit())
+    fn parse_option<T: CheckParse + Parse>(&mut self) -> ParseResult<Option<T>> {
+        Parse::parse(self)
     }
 
-    // Given a node type, allocate it, invoking its default constructor,
-    // and then visit it as a field.
-    // Return the resulting Node.
-    fn allocate_visit<T: NodeMut + Default>(&mut self) -> T {
-        let mut result = T::default();
-        let _ = self.visit_mut(&mut result);
-        result
+    fn parse_boxed<T: Parse>(&mut self) -> ParseResult<Box<T>> {
+        Parse::parse(self).map(Box::new)
     }
 
-    // Like allocate_visit, but returns the value as a Box.
-    fn allocate_boxed_visit<T: NodeMut + Default>(&mut self) -> Box<T> {
-        let mut result = Box::<T>::default();
-        let _ = self.visit_mut(&mut *result);
-        result
-    }
-
-    fn visit_argument_or_redirection(&mut self, node: &mut ArgumentOrRedirection) {
-        if let Some(arg) = self.try_parse::<Argument>() {
-            *node = ArgumentOrRedirection::Argument(arg);
-        } else if let Some(redir) = self.try_parse::<Redirection>() {
-            *node = ArgumentOrRedirection::Redirection(Box::new(redir));
-        } else {
-            internal_error!(
-                self,
-                visit_argument_or_redirection,
-                "Unable to parse argument or redirection"
-            );
-        }
-    }
-    fn visit_block_statement_header(&mut self, node: &mut BlockStatementHeader) {
-        *node = self.allocate_populate_block_header();
-    }
-    fn visit_statement(&mut self, node: &mut Statement) {
-        *node = self.allocate_populate_statement();
-    }
-
-    fn visit_argument(&mut self, arg: &mut Argument) {
-        if self.unsource_leaves() {
-            arg.range = None;
-            return;
-        }
-        arg.range = Some(self.consume_token_type(ParseTokenType::string));
-    }
-
-    fn visit_variable_assignment(&mut self, varas: &mut VariableAssignment) {
-        if self.unsource_leaves() {
-            varas.range = None;
-            return;
-        }
-        if !self.peek_token(0).may_be_variable_assignment {
-            internal_error!(
-                self,
-                visit_variable_assignment,
-                "Should not have created variable_assignment_t from this token"
-            );
-        }
-        varas.range = Some(self.consume_token_type(ParseTokenType::string));
-    }
-
-    fn visit_job_continuation(&mut self, node: &mut JobContinuation) {
-        // Special error handling to catch 'and' and 'or' in pipelines, like `true | and false`.
-        let kw = self.peek_token(1).keyword;
-        if matches!(kw, ParseKeyword::And | ParseKeyword::Or) {
-            parse_error!(
-                self,
-                self.peek_token(1),
-                ParseErrorCode::andor_in_pipeline,
-                INVALID_PIPELINE_CMD_ERR_MSG,
-                kw
-            );
-        }
-        node.accept_mut(self);
-    }
-
-    // Overload for token fields.
-    fn visit_token(&mut self, token: &mut dyn Token) {
+    fn parse_token<T: Token + Default>(&mut self) -> T {
+        let mut token = T::default();
         if self.unsource_leaves() {
             *token.range_mut() = None;
-            return;
+            return token;
         }
 
         if !token.allows_token(self.peek_token(0).typ) {
@@ -2609,7 +2386,7 @@ impl<'s> Populator<'s> {
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
-                return;
+                return token;
             }
 
             parse_error!(
@@ -2621,18 +2398,19 @@ impl<'s> Populator<'s> {
                 self.peek_token(0).user_presentable_description()
             );
             *token.range_mut() = None;
-            return;
+            return token;
         }
         let tok = self.consume_any_token();
         *token.token_type_mut() = tok.typ;
         *token.range_mut() = Some(tok.range());
+        token
     }
 
-    // Overload for keyword fields.
-    fn visit_keyword(&mut self, keyword: &mut dyn Keyword) -> VisitResult {
+    fn parse_keyword<T: Keyword + Default>(&mut self) -> ParseResult<T> {
+        let mut keyword = T::default();
         if self.unsource_leaves() {
             *keyword.range_mut() = None;
-            return VisitResult::Continue(());
+            return Ok(keyword);
         }
 
         if !keyword.allows_keyword(self.peek_token(0).keyword) {
@@ -2645,13 +2423,13 @@ impl<'s> Populator<'s> {
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
-                return VisitResult::Continue(());
+                return Ok(keyword);
             }
 
             // Special error reporting for keyword_t<kw_end>.
             let allowed_keywords = keyword.allowed_keywords();
             if keyword.allowed_keywords() == [ParseKeyword::End] {
-                return VisitResult::Break(MissingEndError {
+                return Err(MissingEndError {
                     allowed_keywords,
                     token: *self.peek_token(0),
                 });
@@ -2664,32 +2442,13 @@ impl<'s> Populator<'s> {
                     keywords_user_presentable_description(allowed_keywords),
                     self.peek_token(0).user_presentable_description(),
                 );
-                return VisitResult::Continue(());
+                return Ok(keyword);
             }
         }
         let tok = self.consume_any_token();
         *keyword.keyword_mut() = tok.keyword;
         *keyword.range_mut() = Some(tok.range());
-        VisitResult::Continue(())
-    }
-
-    fn visit_maybe_newlines(&mut self, nls: &mut MaybeNewlines) {
-        if self.unsource_leaves() {
-            nls.range = None;
-            return;
-        }
-        let mut range = SourceRange::new(0, 0);
-        // TODO: it would be nice to have the start offset be the current position in the token
-        // stream, even if there are no newlines.
-        while self.peek_token(0).is_newline {
-            let r = self.consume_token_type(ParseTokenType::end);
-            if range.length == 0 {
-                range = r;
-            } else {
-                range.length = r.start + r.length - range.start
-            }
-        }
-        nls.range = Some(range);
+        Ok(keyword)
     }
 }
 
@@ -2798,3 +2557,6 @@ fn test_ast_parse() {
     let ast = parse(src, ParseTreeFlags::empty(), None);
     assert!(!ast.any_error);
 }
+
+mod parse;
+use parse::{Parse, ParseResult};

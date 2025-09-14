@@ -48,7 +48,7 @@ fn build_man(man_dir: &Path) {
 
     rsconf::rebuild_if_env_changed("FISH_BUILD_DOCS");
     if env::var("FISH_BUILD_DOCS") == Ok("0".to_string()) {
-        println!("cargo:warning=Skipping man pages because $FISH_BUILD_DOCS is set to 0");
+        rsconf::warn!("Skipping man pages because $FISH_BUILD_DOCS is set to 0");
         return;
     }
 
@@ -62,8 +62,8 @@ fn build_man(man_dir: &Path) {
             if env::var("FISH_BUILD_DOCS") == Ok("1".to_string()) {
                 panic!("Could not find sphinx-build to build man pages.\nInstall sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0.");
             }
-            println!("cargo:warning=Cannot find sphinx-build to build man pages.");
-            println!("cargo:warning=If you install it now you need to run `cargo clean` and rebuild, or set $FISH_BUILD_DOCS=1 explicitly.");
+            rsconf::warn!("Cannot find sphinx-build to build man pages.");
+            rsconf::warn!("If you install it now you need to run `cargo clean` and rebuild, or set $FISH_BUILD_DOCS=1 explicitly.");
         }
         Err(x) => {
             // Another error - permissions wrong etc

@@ -1329,7 +1329,7 @@ pub type SourceRangeList = Vec<SourceRange>;
 
 /// Extra source ranges.
 /// These are only generated if the corresponding flags are set.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Extras {
     /// Set of comments, sorted by offset.
     pub comments: SourceRangeList,
@@ -1385,6 +1385,7 @@ fn finalize_parse<N: ListElement>(mut pops: Populator<'_>, top: Box<[N]>) -> Ast
 }
 
 /// The ast type itself.
+#[derive(Debug)]
 pub struct Ast<N: Node = JobList> {
     // The top node.
     top: N,

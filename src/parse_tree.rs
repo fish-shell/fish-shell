@@ -15,7 +15,7 @@ use crate::wchar::prelude::*;
 use crate::wcstringutil::count_newlines;
 
 /// A struct representing the token type that we use internally.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct ParseToken {
     /// The type of the token as represented by the parser
     pub typ: ParseTokenType,

@@ -431,8 +431,8 @@ macro_rules! define_keyword_node {
                 self
             }
         }
-        impl Parse for $name {
-            fn parse(pop: &mut Populator) -> ParseResult<Self> {
+        impl TryParse for $name {
+            fn try_parse(pop: &mut Populator) -> ParseResult<Self> {
                 pop.parse_keyword()
             }
         }
@@ -473,8 +473,8 @@ macro_rules! define_token_node {
             }
         }
         impl Parse for $name {
-            fn parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
-                Ok(pop.parse_token())
+            fn parse(pop: &mut Populator<'_>) -> Self {
+                pop.parse_token()
             }
         }
         impl $name {
@@ -503,22 +503,22 @@ macro_rules! Acceptor {
             }
         }
         impl Parse for $name {
-            fn parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
+            fn parse(pop: &mut Populator<'_>) -> Self {
                 let mut node = Self::default();
-                pop.will_visit_fields_of(&mut node);
+                pop.will_visit_fields_of(&node);
 
                 $(
-                    node.$field_name = match Parse::parse(pop) {
+                    node.$field_name = match pop.try_parse() {
                         Ok(v) => v,
                         Err(e) => {
-                            pop.did_visit_fields_of(&mut node, Some(e));
-                            return Ok(node);
+                            pop.did_visit_fields_of(&node, Some(e));
+                            return node;
                         }
                     };
                 )*
 
-                pop.did_visit_fields_of(&mut node, None);
-                Ok(node)
+                pop.did_visit_fields_of(&node, None);
+                node
             }
         }
     };
@@ -924,7 +924,7 @@ impl Acceptor for JobContinuation {
 }
 
 impl Parse for JobContinuation {
-    fn parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
+    fn parse(pop: &mut Populator<'_>) -> Self {
         // Special error handling to catch 'and' and 'or' in pipelines, like `true | and false`.
         let kw = pop.peek_token(1).keyword;
         if matches!(kw, ParseKeyword::And | ParseKeyword::Or) {
@@ -938,18 +938,17 @@ impl Parse for JobContinuation {
         }
 
         let mut node = Self::default();
-        pop.will_visit_fields_of(&mut node);
+        pop.will_visit_fields_of(&node);
 
-        let result: Result<(), MissingEndError> = (|| {
-            node.pipe = pop.parse()?;
-            node.newlines = pop.parse()?;
-            node.variables = pop.parse()?;
-            node.statement = pop.parse()?;
-            Ok(())
-        })();
+        node = Self {
+            pipe: pop.parse(),
+            newlines: pop.parse(),
+            variables: pop.parse(),
+            statement: pop.parse(),
+        };
 
-        pop.did_visit_fields_of(&mut node, result.err());
-        Ok(node)
+        pop.did_visit_fields_of(&node, None);
+        node
     }
 }
 
@@ -1310,7 +1309,7 @@ pub fn parse(src: &wstr, flags: ParseTreeFlags, out_errors: Option<&mut ParseErr
         src, flags, false, /* not freestanding_arguments */
         out_errors,
     );
-    let list: JobList = pops.parse_list(true).unwrap_or_default();
+    let list: JobList = pops.parse_list(true);
     finalize_parse(pops, list)
 }
 
@@ -1324,7 +1323,7 @@ pub fn parse_argument_list(
         src, flags, true, /* freestanding_arguments */
         out_errors,
     );
-    let list: ArgumentList = pops.parse_list(true).unwrap_or_default();
+    let list: ArgumentList = pops.parse_list(true);
     finalize_parse(pops, list)
 }
 
@@ -2099,7 +2098,7 @@ impl<'s> Populator<'s> {
     fn parse_list<N: CheckParse + Parse + ListElement>(
         &mut self,
         exhaust_stream: bool,
-    ) -> ParseResult<Box<[N]>> {
+    ) -> Box<[N]> {
         // Do not attempt to parse a list if we are unwinding.
         if self.unwinding {
             assert!(
@@ -2115,7 +2114,7 @@ impl<'s> Populator<'s> {
                 "",
                 ast_kind_to_string(list.kind())
             );
-            return Ok(list);
+            return list;
         }
 
         // We're going to populate a vector with our nodes.
@@ -2157,7 +2156,7 @@ impl<'s> Populator<'s> {
             self.chomp_extras::<N>();
 
             // Now try parsing a node.
-            if let Ok(Some(node)) = self.parse_option::<N>() {
+            if let Some(node) = self.parse_option::<N>() {
                 // #7201: Minimize reallocations of contents vector
                 // Empirically, 99.97% of cases are 16 elements or fewer,
                 // with 75% being empty, so this works out best.
@@ -2190,19 +2189,19 @@ impl<'s> Populator<'s> {
             list.len()
         );
 
-        Ok(list)
+        list
     }
 
-    fn parse_statement(&mut self) -> ParseResult<Statement> {
+    fn parse_statement(&mut self) -> Statement {
         // In case we get a parse error, we still need to return something non-null. Use a
         // decorated statement; all of its leaf nodes will end up unsourced.
-        fn got_error(slf: &mut Populator<'_>) -> ParseResult<Statement> {
+        fn got_error(slf: &mut Populator<'_>) -> Statement {
             assert!(slf.unwinding, "Should have produced an error");
             new_decorated_statement(slf)
         }
 
-        fn new_decorated_statement(slf: &mut Populator<'_>) -> ParseResult<Statement> {
-            let embedded = slf.parse::<DecoratedStatement>()?;
+        fn new_decorated_statement(slf: &mut Populator<'_>) -> Statement {
+            let embedded = slf.parse::<DecoratedStatement>();
             if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::left_brace {
                 parse_error!(
                     slf,
@@ -2216,7 +2215,7 @@ impl<'s> Populator<'s> {
                     slf.peek_token(0).user_presentable_description()
                 );
             }
-            Ok(Statement::Decorated(embedded))
+            Statement::Decorated(embedded)
         }
 
         if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
@@ -2224,7 +2223,7 @@ impl<'s> Populator<'s> {
             // Construct a decorated statement, which will be unsourced.
             _ = self.parse::<DecoratedStatement>();
         } else if self.peek_token(0).typ == ParseTokenType::left_brace {
-            return self.parse_boxed().map(Statement::Brace);
+            return Statement::Brace(self.parse_boxed());
         } else if self.peek_token(0).typ != ParseTokenType::string {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
@@ -2293,15 +2292,15 @@ impl<'s> Populator<'s> {
         }
 
         match self.peek_token(0).keyword {
-            ParseKeyword::Not | ParseKeyword::Exclam => self.parse_boxed().map(Statement::Not),
+            ParseKeyword::Not | ParseKeyword::Exclam => Statement::Not(self.parse_boxed()),
 
             ParseKeyword::For
             | ParseKeyword::While
             | ParseKeyword::Function
-            | ParseKeyword::Begin => self.parse_boxed().map(Statement::Block),
+            | ParseKeyword::Begin => Statement::Block(self.parse_boxed()),
 
-            ParseKeyword::If => self.parse_boxed().map(Statement::If),
-            ParseKeyword::Switch => self.parse_boxed().map(Statement::Switch),
+            ParseKeyword::If => Statement::If(self.parse_boxed()),
+            ParseKeyword::Switch => Statement::Switch(self.parse_boxed()),
             ParseKeyword::End => {
                 // 'end' is forbidden as a command.
                 // For example, `if end` or `while end` will produce this error.
@@ -2320,16 +2319,28 @@ impl<'s> Populator<'s> {
         }
     }
 
-    fn parse<T: Parse>(&mut self) -> ParseResult<T> {
+    fn parse<T: Parse>(&mut self) -> T {
         Parse::parse(self)
     }
 
-    fn parse_option<T: CheckParse + Parse>(&mut self) -> ParseResult<Option<T>> {
-        Parse::parse(self)
+    fn try_parse<T: TryParse>(&mut self) -> ParseResult<T> {
+        TryParse::try_parse(self)
     }
 
-    fn parse_boxed<T: Parse>(&mut self) -> ParseResult<Box<T>> {
-        Parse::parse(self).map(Box::new)
+    // This can't be made into `impl<T: Parse> Parse for Option<T>`,
+    // because it conflicts with the TryParse version of that trait impl.
+    // That version is more important because it's needed for the
+    // automatic Parse impl for branch nodes.
+    fn parse_option<T: Parse + CheckParse>(&mut self) -> Option<T> {
+        if T::can_be_parsed(self) {
+            Some(self.parse::<T>())
+        } else {
+            None
+        }
+    }
+
+    fn parse_boxed<T: Parse>(&mut self) -> Box<T> {
+        Box::new(self.parse())
     }
 
     fn parse_token<T: Token + Default>(&mut self) -> T {
@@ -2520,4 +2531,4 @@ fn test_ast_parse() {
 }
 
 mod parse;
-use parse::{Parse, ParseResult};
+use parse::{Parse, ParseResult, TryParse};

@@ -55,7 +55,6 @@ impl Parse for VariableAssignment {
 
 impl Parse for Argument {
     fn parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
-        println!("parsing an arg");
         check_unsource!(pop);
         from_range!(pop.consume_token_type(ParseTokenType::string))
     }

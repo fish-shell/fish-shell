@@ -261,46 +261,6 @@ pub enum Kind<'a> {
     JobList(&'a [JobConjunction]),
 }
 
-pub enum KindMut<'a> {
-    Redirection(&'a mut Redirection),
-    Token(&'a mut dyn Token),
-    Keyword(&'a mut dyn Keyword),
-    VariableAssignment(&'a mut VariableAssignment),
-    VariableAssignmentList(&'a mut VariableAssignmentList),
-    ArgumentOrRedirection(&'a mut ArgumentOrRedirection),
-    ArgumentOrRedirectionList(&'a mut ArgumentOrRedirectionList),
-    Statement(&'a mut Statement),
-    JobPipeline(&'a mut JobPipeline),
-    JobConjunction(&'a mut JobConjunction),
-    BlockStatementHeader(&'a mut BlockStatementHeader),
-    ForHeader(&'a mut ForHeader),
-    WhileHeader(&'a mut WhileHeader),
-    FunctionHeader(&'a mut FunctionHeader),
-    BeginHeader(&'a mut BeginHeader),
-    BlockStatement(&'a mut BlockStatement),
-    BraceStatement(&'a mut BraceStatement),
-    IfClause(&'a mut IfClause),
-    ElseifClause(&'a mut ElseifClause),
-    ElseifClauseList(&'a mut ElseifClauseList),
-    ElseClause(&'a mut ElseClause),
-    IfStatement(&'a mut IfStatement),
-    CaseItem(&'a mut CaseItem),
-    SwitchStatement(&'a mut SwitchStatement),
-    DecoratedStatement(&'a mut DecoratedStatement),
-    NotStatement(&'a mut NotStatement),
-    JobContinuation(&'a mut JobContinuation),
-    JobContinuationList(&'a mut JobContinuationList),
-    JobConjunctionContinuation(&'a mut JobConjunctionContinuation),
-    AndorJob(&'a mut AndorJob),
-    AndorJobList(&'a mut AndorJobList),
-    JobConjunctionContinuationList(&'a mut JobConjunctionContinuationList),
-    MaybeNewlines(&'a mut MaybeNewlines),
-    CaseItemList(&'a mut CaseItemList),
-    Argument(&'a mut Argument),
-    ArgumentList(&'a mut ArgumentList),
-    JobList(&'a mut JobList),
-}
-
 // Support casting to this type.
 pub trait Castable {
     fn cast(node: &dyn Node) -> Option<&Self>;
@@ -751,7 +711,7 @@ pub struct JobPipeline {
 }
 
 /// A job_conjunction is a job followed by a && or || continuations.
-#[derive(Default, Debug, Node!)]
+#[derive(Default, Debug, Node!, Acceptor!)]
 pub struct JobConjunction {
     /// The job conjunction decorator.
     pub decorator: Option<JobConjunctionDecorator>,
@@ -775,44 +735,6 @@ impl CheckParse for JobConjunction {
                     token.keyword,
                     ParseKeyword::Case | ParseKeyword::End | ParseKeyword::Else
                 ))
-    }
-}
-
-impl Acceptor for JobConjunction {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        self.decorator.do_visit(visitor);
-        self.job.do_visit(visitor);
-        self.continuations.do_visit(visitor);
-        self.semi_nl.do_visit(visitor);
-    }
-}
-
-impl Parse for JobConjunction {
-    fn parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
-        let kw = pop.peek_token(1).keyword;
-        if matches!(kw, ParseKeyword::And | ParseKeyword::Or) {
-            parse_error!(
-                pop,
-                pop.peek_token(1),
-                ParseErrorCode::andor_in_pipeline,
-                INVALID_PIPELINE_CMD_ERR_MSG,
-                kw
-            );
-        }
-
-        let mut node = Self::default();
-        pop.will_visit_fields_of(&mut node);
-
-        let result: Result<(), MissingEndError> = (|| {
-            node.decorator = pop.parse()?;
-            node.job = pop.parse()?;
-            node.continuations = pop.parse()?;
-            node.semi_nl = pop.parse()?;
-            Ok(())
-        })();
-
-        pop.did_visit_fields_of(&mut node, result.err());
-        Ok(node)
     }
 }
 
@@ -979,7 +901,7 @@ pub struct NotStatement {
     pub contents: Statement,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!)]
 pub struct JobContinuation {
     pub pipe: TokenPipe,
     pub newlines: MaybeNewlines,
@@ -989,6 +911,45 @@ pub struct JobContinuation {
 impl CheckParse for JobContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::pipe
+    }
+}
+
+impl Acceptor for JobContinuation {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        self.pipe.do_visit(visitor);
+        self.newlines.do_visit(visitor);
+        self.variables.do_visit(visitor);
+        self.statement.do_visit(visitor);
+    }
+}
+
+impl Parse for JobContinuation {
+    fn parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
+        // Special error handling to catch 'and' and 'or' in pipelines, like `true | and false`.
+        let kw = pop.peek_token(1).keyword;
+        if matches!(kw, ParseKeyword::And | ParseKeyword::Or) {
+            parse_error!(
+                pop,
+                pop.peek_token(1),
+                ParseErrorCode::andor_in_pipeline,
+                INVALID_PIPELINE_CMD_ERR_MSG,
+                kw
+            );
+        }
+
+        let mut node = Self::default();
+        pop.will_visit_fields_of(&mut node);
+
+        let result: Result<(), MissingEndError> = (|| {
+            node.pipe = pop.parse()?;
+            node.newlines = pop.parse()?;
+            node.variables = pop.parse()?;
+            node.statement = pop.parse()?;
+            Ok(())
+        })();
+
+        pop.did_visit_fields_of(&mut node, result.err());
+        Ok(node)
     }
 }
 

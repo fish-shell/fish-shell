@@ -597,7 +597,7 @@ fn test_new_parser_errors() {
         ($src:expr, $expected_code:expr) => {
             let mut errors = vec![];
             let ast = ast::parse(L!($src), ParseTreeFlags::default(), Some(&mut errors));
-            assert!(ast.errored());
+            assert!(ast.errored(), "{:?} should have errored", $src);
             assert_eq!(
                 errors.into_iter().map(|e| e.code).collect::<Vec<_>>(),
                 vec![$expected_code],

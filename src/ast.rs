@@ -401,9 +401,18 @@ trait CheckParse: Default {
 }
 
 trait ListElement: NodeMut + Sized {
-    const LIST_KIND: Kind<'static>;
     fn list_kind(list: &[Self]) -> Kind<'_>;
     fn list_kind_mut(list: &mut Box<[Self]>) -> KindMut<'_>;
+
+    /// Return whether a list kind allows arbitrary newlines in it.
+    fn chomps_newlines(pop: &Populator<'_>) -> bool;
+    /// Return whether a list kind allows arbitrary semicolons in it.
+    fn chomps_semis(pop: &Populator<'_>) -> bool;
+    /// Return whether a list kind should recover from errors.
+    /// That is, whether we should stop unwinding when we encounter this type.
+    fn stops_unwind(_pop: &Populator<'_>) -> bool {
+        false
+    }
 }
 
 impl<'a, N: ListElement> Node for &'a [N] {
@@ -586,28 +595,6 @@ macro_rules! define_token_node {
     }
 }
 
-/// Define a list node.
-macro_rules! define_list_node {
-    (
-        $name:ident,
-        $contents:ident
-    ) => {
-        pub type $name = Box<[$contents]>;
-
-        impl ListElement for $contents {
-            const LIST_KIND: Kind<'static> = Kind::$name(&[]);
-
-            fn list_kind(list: &[Self]) -> Kind<'_> {
-                Kind::$name(list)
-            }
-
-            fn list_kind_mut(list: &mut Box<[Self]>) -> KindMut<'_> {
-                KindMut::$name(list)
-            }
-        }
-    };
-}
-
 /// Implement the acceptor trait for the given branch node.
 macro_rules! Acceptor {
     (
@@ -659,8 +646,6 @@ impl CheckParse for Redirection {
         pop.peek_type(0) == ParseTokenType::redirection
     }
 }
-
-define_list_node!(VariableAssignmentList, VariableAssignment);
 
 #[derive(Debug, Node!)]
 pub enum ArgumentOrRedirection {
@@ -724,8 +709,6 @@ impl CheckParse for ArgumentOrRedirection {
         matches!(typ, ParseTokenType::string | ParseTokenType::redirection)
     }
 }
-
-define_list_node!(ArgumentOrRedirectionList, ArgumentOrRedirection);
 
 /// A statement is a normal command, or an if / while / etc
 #[derive(Debug, Node!)]
@@ -913,8 +896,6 @@ impl CheckParse for ElseifClause {
     }
 }
 
-define_list_node!(ElseifClauseList, ElseifClause);
-
 #[derive(Default, Debug, Node!, Acceptor!)]
 pub struct ElseClause {
     /// else ; body
@@ -1002,8 +983,6 @@ impl CheckParse for JobContinuation {
     }
 }
 
-define_list_node!(JobContinuationList, JobContinuation);
-
 #[derive(Default, Debug, Node!, Acceptor!)]
 pub struct JobConjunctionContinuation {
     /// The && or || token.
@@ -1041,17 +1020,6 @@ impl CheckParse for AndorJob {
         ) && !next_token.is_help_argument
     }
 }
-
-define_list_node!(AndorJobList, AndorJob);
-
-define_list_node!(JobConjunctionContinuationList, JobConjunctionContinuation);
-
-define_list_node!(ArgumentList, Argument);
-
-// For historical reasons, a job list is a list of job *conjunctions*. This should be fixed.
-define_list_node!(JobList, JobConjunction);
-
-define_list_node!(CaseItemList, CaseItem);
 
 /// A variable_assignment contains a source range like FOO=bar.
 #[derive(Default, Debug, Node!, Leaf!)]
@@ -1398,9 +1366,9 @@ pub fn parse_argument_list(
 }
 
 // Given that we have populated some top node, add all the extras that we want and produce an Ast.
-fn finalize_parse<N: Node>(mut pops: Populator<'_>, top: N) -> Ast<N> {
+fn finalize_parse<N: ListElement>(mut pops: Populator<'_>, top: Box<[N]>) -> Ast<Box<[N]>> {
     // Chomp trailing extras, etc.
-    pops.chomp_extras(top.kind());
+    pops.chomp_extras::<N>();
 
     let any_error = pops.any_error;
     let extras = Extras {
@@ -1937,6 +1905,105 @@ fn token_types_user_presentable_description(types: &'static [ParseTokenType]) ->
     res
 }
 
+macro_rules! define_list_nodes {
+    ($(
+        $contents:ty => $name:ident {
+            $(let $pop:ident;)?
+            chomp_newlines: $newlines:expr,
+            chomp_semis: $semis:expr,
+            $(
+                let $pop_:ident;
+                stop_unwind: $unwind:expr
+            )?
+        }
+    )*) => {$(
+        pub type $name = Box<[$contents]>;
+
+        #[allow(unused_variables)]
+        impl ListElement for $contents {
+            fn list_kind(list: &[Self]) -> Kind<'_> {
+                Kind::$name(list)
+            }
+
+            fn list_kind_mut(list: &mut Box<[Self]>) -> KindMut<'_> {
+                KindMut::$name(list)
+            }
+
+            fn chomps_newlines(pop: &Populator<'_>) -> bool {
+                $(let $pop = pop;)?
+                $newlines
+            }
+
+            fn chomps_semis(pop: &Populator<'_>) -> bool {
+                $(let $pop = pop;)?
+                $semis
+            }
+
+            $(fn stops_unwind(pop: &Populator<'_>) -> bool {
+                let $pop_ = pop;
+                $unwind
+            })?
+        }
+    )*}
+}
+
+define_list_nodes! {
+    Argument => ArgumentList {
+        let pop;
+        chomp_newlines: pop.freestanding_arguments,
+        // Hackish. If we are producing a freestanding argument list,
+        // then it allows semicolons, for hysterical raisins.
+        // That is, this is OK: complete -c foo -a 'x ; y ; z'
+        // But this is not: foo x ; y ; z
+        chomp_semis: pop.freestanding_arguments,
+    }
+    ArgumentOrRedirection => ArgumentOrRedirectionList {
+        chomp_newlines: false, // No newlines inside arguments.
+        chomp_semis: false,
+    }
+    VariableAssignment => VariableAssignmentList {
+        chomp_newlines: false, // No newlines inside variable assignment lists.
+        chomp_semis: false,
+    }
+    // For historical reasons, a job list is a list of job *conjunctions*.
+    // This should be fixed.
+    JobConjunction => JobList {
+        chomp_newlines: true, // Like echo a \n \n echo b
+        chomp_semis: true, // Like echo a ; ;  echo b
+        let pop;
+        stop_unwind: pop.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
+    }
+    CaseItem => CaseItemList {
+        chomp_newlines: true, // Like switch foo \n \n \n case a \n end
+        // Like switch foo ; ; ;  case a \n end
+        // This is historically allowed.
+        chomp_semis: true,
+    }
+    AndorJob => AndorJobList {
+        chomp_newlines: true, // Like while true ; \n \n and true ; end
+        chomp_semis: true, // Like while true ; ; ;  and true ; end
+    }
+    ElseifClause => ElseifClauseList {
+        chomp_newlines: true, // Like if true ; \n \n else if false; end
+        chomp_semis: false, // Like if true ; ; ;  else if false; end
+    }
+    JobConjunctionContinuation => JobConjunctionContinuationList {
+        // This would be like echo a && echo b \n && echo c
+        // We could conceivably support this but do not now.
+        chomp_newlines: false,
+        chomp_semis: false, // Like echo a ; ; && echo b. Not supported.
+    }
+    JobContinuation => JobContinuationList {
+        // This would be like echo a \n | echo b
+        // We could conceivably support this but do not now.
+        chomp_newlines: false,
+        // This would be like echo a ; | echo b
+        // Not supported.
+        // We could conceivably support this but do not now.
+        chomp_semis: false,
+    }
+}
+
 impl<'s> Populator<'s> {
     /// Construct a new Populator, parsing source with the given flags.
     /// If freestanding_arguments is true, then we are parsing a freestanding argument list
@@ -1991,110 +2058,10 @@ impl<'s> Populator<'s> {
         self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
     }
 
-    /// Return whether a list kind allows arbitrary newlines in it.
-    fn list_kind_chomps_newlines(&self, kind: Kind) -> bool {
-        match kind {
-            Kind::ArgumentList(_) => self.freestanding_arguments,
-
-            Kind::ArgumentOrRedirectionList(_) => {
-                // No newlines inside arguments.
-                false
-            }
-            Kind::VariableAssignmentList(_) => {
-                // No newlines inside variable assignment lists.
-                false
-            }
-            Kind::JobList(_) => {
-                // Like echo a \n \n echo b
-                true
-            }
-            Kind::CaseItemList(_) => {
-                // Like switch foo \n \n \n case a \n end
-                true
-            }
-            Kind::AndorJobList(_) => {
-                // Like while true ; \n \n and true ; end
-                true
-            }
-            Kind::ElseifClauseList(_) => {
-                // Like if true ; \n \n else if false; end
-                true
-            }
-            Kind::JobConjunctionContinuationList(_) => {
-                // This would be like echo a && echo b \n && echo c
-                // We could conceivably support this but do not now.
-                false
-            }
-            Kind::JobContinuationList(_) => {
-                // This would be like echo a \n | echo b
-                // We could conceivably support this but do not now.
-                false
-            }
-            _ => {
-                internal_error!(
-                    self,
-                    list_kind_chomps_newlines,
-                    "Type %ls not handled",
-                    ast_kind_to_string(kind)
-                );
-            }
-        }
-    }
-
-    /// Return whether a list kind allows arbitrary semicolons in it.
-    fn list_kind_chomps_semis(&self, kind: Kind) -> bool {
-        match kind {
-            Kind::ArgumentList(_) => {
-                // Hackish. If we are producing a freestanding argument list, then it allows
-                // semicolons, for hysterical raisins.
-                // That is, this is OK: complete -c foo -a 'x ; y ; z'
-                // But this is not: foo x ; y ; z
-                self.freestanding_arguments
-            }
-
-            Kind::ArgumentOrRedirectionList(_) | Kind::VariableAssignmentList(_) => false,
-            Kind::JobList(_) => {
-                // Like echo a ; ;  echo b
-                true
-            }
-            Kind::CaseItemList(_) => {
-                // Like switch foo ; ; ;  case a \n end
-                // This is historically allowed.
-                true
-            }
-            Kind::AndorJobList(_) => {
-                // Like while true ; ; ;  and true ; end
-                true
-            }
-            Kind::ElseifClauseList(_) => {
-                // Like if true ; ; ;  else if false; end
-                false
-            }
-            Kind::JobConjunctionContinuationList(_) => {
-                // Like echo a ; ; && echo b. Not supported.
-                false
-            }
-            Kind::JobContinuationList(_) => {
-                // This would be like echo a ; | echo b
-                // Not supported.
-                // We could conceivably support this but do not now.
-                false
-            }
-            _ => {
-                internal_error!(
-                    self,
-                    list_kind_chomps_semis,
-                    "Type %ls not handled",
-                    ast_kind_to_string(kind)
-                );
-            }
-        }
-    }
-
     /// Chomp extra comments, semicolons, etc. for a given list kind.
-    fn chomp_extras(&mut self, kind: Kind) {
-        let chomp_semis = self.list_kind_chomps_semis(kind);
-        let chomp_newlines = self.list_kind_chomps_newlines(kind);
+    fn chomp_extras<N: ListElement>(&mut self) {
+        let chomp_semis = N::chomps_semis(self);
+        let chomp_newlines = N::chomps_newlines(self);
         loop {
             let peek = self.tokens.peek(0);
             if chomp_newlines && peek.typ == ParseTokenType::end && peek.is_newline {
@@ -2110,13 +2077,6 @@ impl<'s> Populator<'s> {
                 break;
             }
         }
-    }
-
-    /// Return whether a list kind should recover from errors.
-    /// That is, whether we should stop unwinding when we encounter this type.
-    fn list_kind_stops_unwind(&self, kind: Kind) -> bool {
-        matches!(kind, Kind::JobList(_))
-            && self.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
     }
 
     /// Return a reference to a non-comment token at index `idx`.
@@ -2290,23 +2250,22 @@ impl<'s> Populator<'s> {
         &mut self,
         exhaust_stream: bool,
     ) -> Box<[N]> {
-        let kind = N::LIST_KIND;
-
         // Do not attempt to parse a list if we are unwinding.
         if self.unwinding {
             assert!(
                 !exhaust_stream,
                 "exhaust_stream should only be set at top level, and so we should not be unwinding"
             );
+            let list: Box<[N]> = Box::new([]);
             // Mark in the list that it was unwound.
             FLOGF!(
                 ast_construction,
                 "%*sunwinding %ls",
                 self.spaces(),
                 "",
-                ast_kind_to_string(kind)
+                ast_kind_to_string(list.kind())
             );
-            return Box::new([]);
+            return list;
         }
 
         // We're going to populate a vector with our nodes.
@@ -2316,7 +2275,7 @@ impl<'s> Populator<'s> {
             // If we are unwinding, then either we recover or we break the loop, dependent on the
             // loop type.
             if self.unwinding {
-                if !self.list_kind_stops_unwind(kind) {
+                if !N::stops_unwind(self) {
                     break;
                 }
                 // We are going to stop unwinding.
@@ -2345,7 +2304,7 @@ impl<'s> Populator<'s> {
             }
 
             // Chomp semis and newlines.
-            self.chomp_extras(kind);
+            self.chomp_extras::<N>();
 
             // Now try parsing a node.
             if let Some(node) = self.try_parse::<N>() {
@@ -2377,7 +2336,7 @@ impl<'s> Populator<'s> {
             "%*s%ls size: %lu",
             self.spaces(),
             "",
-            ast_kind_to_string(kind),
+            ast_kind_to_string(list.kind()),
             list.len()
         );
 

@@ -695,7 +695,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     #[cfg(not(any(target_os = "linux", cygwin)))]
     {
         fn remoteness_via_statfs<StatFS, Flags>(
-            statfn: unsafe extern "C" fn(*const i8, *mut StatFS) -> libc::c_int,
+            statfn: unsafe extern "C" fn(*const libc::c_char, *mut StatFS) -> libc::c_int,
             flagsfn: fn(&StatFS) -> Flags,
             is_local_flag: u64,
             path: &std::ffi::CStr,

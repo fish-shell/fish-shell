@@ -1,4 +1,4 @@
-use crate::ast::{self, is_same_node, Ast, Castable, JobList, JobPipeline, Kind, Node, Traversal};
+use crate::ast::{self, is_same_node, Ast, JobList, JobPipeline, Kind, Node, Traversal};
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
@@ -784,7 +784,11 @@ fn test_line_counter() {
         assert_eq!(line_offset, expected);
     }
 
-    let pipelines: Vec<_> = ps.ast.walk().filter_map(ast::JobPipeline::cast).collect();
+    let pipelines: Vec<&JobPipeline> = ps
+        .ast
+        .walk()
+        .filter_map(|node| node.kind().try_into().ok())
+        .collect();
     assert_eq!(pipelines.len(), 3);
     let src_offsets = [0, 0, 2];
     assert_eq!(line_counter.source_offset_of_node(), None);

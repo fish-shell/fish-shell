@@ -6,6 +6,16 @@ macro_rules! Node {
                 Kind::$name(self)
             }
         }
+
+        impl<'a> TryFrom<Kind<'a>> for &'a $name {
+            type Error = Kind<'a>;
+            fn try_from(kind: Kind<'a>) -> Result<Self, Self::Error> {
+                match kind {
+                    Kind::$name(this) => Ok(this),
+                    _ => Err(kind),
+                }
+            }
+        }
     };
 
     ( $(#[$_m:meta])* $_v:vis struct $name:ident $_:tt $(;)? ) => {

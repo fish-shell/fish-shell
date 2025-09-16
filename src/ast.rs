@@ -152,7 +152,7 @@ impl CheckParse for Redirection {
     }
 }
 
-#[derive(Debug, Node!)]
+#[derive(Debug, Node!, Acceptor!)]
 pub enum ArgumentOrRedirection {
     Argument(Argument),
     Redirection(Box<Redirection>), // Boxed because it's bigger
@@ -161,15 +161,6 @@ pub enum ArgumentOrRedirection {
 impl Default for ArgumentOrRedirection {
     fn default() -> Self {
         Self::Argument(Argument::default())
-    }
-}
-
-impl Acceptor for ArgumentOrRedirection {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        match self {
-            Self::Argument(child) => visitor.visit(child),
-            Self::Redirection(child) => visitor.visit(&**child),
-        };
     }
 }
 
@@ -209,7 +200,7 @@ impl CheckParse for ArgumentOrRedirection {
 }
 
 /// A statement is a normal command, or an if / while / etc
-#[derive(Debug, Node!)]
+#[derive(Debug, Node!, Acceptor!)]
 pub enum Statement {
     Decorated(DecoratedStatement),
     Not(Box<NotStatement>),
@@ -232,24 +223,6 @@ impl Statement {
             Self::Decorated(child) => Some(child),
             _ => None,
         }
-    }
-
-    // Return the node embedded in this statement.
-    fn embedded_node(&self) -> &dyn Node {
-        match self {
-            Self::Not(child) => &**child,
-            Self::Block(child) => &**child,
-            Self::Brace(child) => &**child,
-            Self::If(child) => &**child,
-            Self::Switch(child) => &**child,
-            Self::Decorated(child) => child,
-        }
-    }
-}
-
-impl Acceptor for Statement {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        visitor.visit(self.embedded_node());
     }
 }
 
@@ -664,7 +637,7 @@ impl DecoratedStatement {
     }
 }
 
-#[derive(Debug, Node!)]
+#[derive(Debug, Node!, Acceptor!)]
 pub enum BlockStatementHeader {
     Begin(BeginHeader),
     For(ForHeader),
@@ -679,19 +652,13 @@ impl Default for BlockStatementHeader {
 }
 
 impl BlockStatementHeader {
-    pub fn embedded_node(&self) -> &dyn Node {
+    fn embedded_node(&self) -> &dyn Node {
         match self {
             Self::Begin(child) => child,
             Self::For(child) => child,
             Self::While(child) => child,
             Self::Function(child) => child,
         }
-    }
-}
-
-impl Acceptor for BlockStatementHeader {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        visitor.visit(self.embedded_node());
     }
 }
 

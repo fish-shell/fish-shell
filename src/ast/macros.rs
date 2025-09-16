@@ -59,6 +59,25 @@ macro_rules! Acceptor {
             }
         }
     };
+    (
+        $(#[$_m:meta])*
+        $_v:vis enum $name:ident {
+            $(
+                $(#[$_vm:meta])*
+                $variant:ident($_vt:ty)
+            ),* $(,)?
+        }
+    ) => {
+        impl Acceptor for $name {
+            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>){
+                match self {
+                    $(
+                        Self::$variant(inner) => inner.do_visit(visitor),
+                    )*
+                }
+            }
+        }
+    };
 }
 
 /// Implement the acceptor trait for the given branch node.

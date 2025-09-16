@@ -30,8 +30,6 @@ use std::borrow::Cow;
 #[macro_use]
 mod macros;
 
-mod parse;
-
 mod traits;
 use traits::*;
 pub use traits::{Keyword, Leaf, Node, Token};
@@ -164,6 +162,22 @@ impl Default for ArgumentOrRedirection {
     }
 }
 
+impl Parse for ArgumentOrRedirection {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        if let Some(arg) = pop.parse_option::<Argument>() {
+            ArgumentOrRedirection::Argument(arg)
+        } else if let Some(redir) = pop.parse_option::<Redirection>() {
+            ArgumentOrRedirection::Redirection(Box::new(redir))
+        } else {
+            internal_error!(
+                pop,
+                ArgumentOrRedirection_parse,
+                "Unable to parse argument or redirection"
+            );
+        }
+    }
+}
+
 impl ArgumentOrRedirection {
     /// Return whether this represents an argument.
     pub fn is_argument(&self) -> bool {
@@ -213,6 +227,12 @@ pub enum Statement {
 impl Default for Statement {
     fn default() -> Self {
         Self::Decorated(DecoratedStatement::default())
+    }
+}
+
+impl Parse for Statement {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        pop.parse_statement()
     }
 }
 
@@ -537,11 +557,48 @@ impl CheckParse for VariableAssignment {
         }
     }
 }
+impl Parse for VariableAssignment {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        if pop.unsource_leaves() {
+            return Self::default();
+        }
+        if !pop.peek_token(0).may_be_variable_assignment {
+            internal_error!(
+                pop,
+                VariableAssignment_parse,
+                "Should not have created VariableAssignment from this token"
+            );
+        }
+        Self {
+            range: Some(pop.consume_token_type(ParseTokenType::string)),
+        }
+    }
+}
 
 /// Zero or more newlines.
 #[derive(Default, Debug, Node!, Leaf!)]
 pub struct MaybeNewlines {
     range: Option<SourceRange>,
+}
+
+impl Parse for MaybeNewlines {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        if pop.unsource_leaves() {
+            return Self::default();
+        }
+        let mut range = SourceRange::new(0, 0);
+        // TODO: it would be nice to have the start offset be the current position in the token
+        // stream, even if there are no newlines.
+        while pop.peek_token(0).is_newline {
+            let r = pop.consume_token_type(ParseTokenType::end);
+            if range.length == 0 {
+                range = r;
+            } else {
+                range.length = r.start + r.length - range.start
+            }
+        }
+        Self { range: Some(range) }
+    }
 }
 
 /// An argument is just a node whose source range determines its contents.
@@ -553,6 +610,16 @@ pub struct Argument {
 impl CheckParse for Argument {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::string
+    }
+}
+impl Parse for Argument {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        if pop.unsource_leaves() {
+            return Self::default();
+        }
+        Self {
+            range: Some(pop.consume_token_type(ParseTokenType::string)),
+        }
     }
 }
 
@@ -658,6 +725,22 @@ impl BlockStatementHeader {
             Self::For(child) => child,
             Self::While(child) => child,
             Self::Function(child) => child,
+        }
+    }
+}
+
+impl Parse for BlockStatementHeader {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        match pop.peek_token(0).keyword {
+            ParseKeyword::For => BlockStatementHeader::For(pop.parse()),
+            ParseKeyword::While => BlockStatementHeader::While(pop.parse()),
+            ParseKeyword::Function => BlockStatementHeader::Function(pop.parse()),
+            ParseKeyword::Begin => BlockStatementHeader::Begin(pop.parse()),
+            _ => internal_error!(
+                pop,
+                BlockStatementHeader_parse,
+                "should not have descended into block_header"
+            ),
         }
     }
 }

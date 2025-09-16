@@ -58,6 +58,20 @@ macro_rules! Acceptor {
                 )*
             }
         }
+    };
+}
+
+/// Implement the acceptor trait for the given branch node.
+macro_rules! Parse {
+    (
+        $(#[$_m:meta])*
+        $_v:vis struct $name:ident {
+            $(
+                $(#[$_fm:meta])*
+                $_fv:vis $field_name:ident : $_ft:ty
+            ),* $(,)?
+        }
+    ) => {
         impl Parse for $name {
             fn parse(pop: &mut Populator<'_>) -> Self {
                 let mut node = Self::default();

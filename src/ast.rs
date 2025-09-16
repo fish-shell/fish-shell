@@ -140,7 +140,7 @@ pub enum Kind<'a> {
 
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.
 /// Note that pipes are not redirections.
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct Redirection {
     pub oper: TokenRedirection,
     pub target: String_,
@@ -255,7 +255,7 @@ impl Acceptor for Statement {
 
 /// A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
 /// like if statements, where we require a command).
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct JobPipeline {
     /// Maybe the time keyword.
     pub time: Option<KeywordTime>,
@@ -270,7 +270,7 @@ pub struct JobPipeline {
 }
 
 /// A job_conjunction is a job followed by a && or || continuations.
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct JobConjunction {
     /// The job conjunction decorator.
     pub decorator: Option<JobConjunctionDecorator>,
@@ -297,7 +297,7 @@ impl CheckParse for JobConjunction {
     }
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct ForHeader {
     /// 'for'
     pub kw_for: KeywordFor,
@@ -311,7 +311,7 @@ pub struct ForHeader {
     pub semi_nl: SemiNl,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct WhileHeader {
     /// 'while'
     pub kw_while: KeywordWhile,
@@ -319,7 +319,7 @@ pub struct WhileHeader {
     pub andor_tail: AndorJobList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct FunctionHeader {
     pub kw_function: KeywordFunction,
     /// functions require at least one argument.
@@ -328,7 +328,7 @@ pub struct FunctionHeader {
     pub semi_nl: SemiNl,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct BeginHeader {
     pub kw_begin: KeywordBegin,
     /// Note that 'begin' does NOT require a semi or nl afterwards.
@@ -336,7 +336,7 @@ pub struct BeginHeader {
     pub semi_nl: Option<SemiNl>,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct BlockStatement {
     /// A header like for, while, etc.
     pub header: BlockStatementHeader,
@@ -348,7 +348,7 @@ pub struct BlockStatement {
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct BraceStatement {
     /// The opening brace, in command position.
     pub left_brace: TokenLeftBrace,
@@ -360,7 +360,7 @@ pub struct BraceStatement {
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct IfClause {
     /// The 'if' keyword.
     pub kw_if: KeywordIf,
@@ -372,7 +372,7 @@ pub struct IfClause {
     pub body: JobList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct ElseifClause {
     /// The 'else' keyword.
     pub kw_else: KeywordElse,
@@ -386,7 +386,7 @@ impl CheckParse for ElseifClause {
     }
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct ElseClause {
     /// else ; body
     pub kw_else: KeywordElse,
@@ -399,7 +399,7 @@ impl CheckParse for ElseClause {
     }
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct IfStatement {
     /// if part
     pub if_clause: IfClause,
@@ -413,7 +413,7 @@ pub struct IfStatement {
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct CaseItem {
     /// case \<arguments\> ; body
     pub kw_case: KeywordCase,
@@ -427,7 +427,7 @@ impl CheckParse for CaseItem {
     }
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct SwitchStatement {
     /// switch \<argument\> ; body ; end args_redirs
     pub kw_switch: KeywordSwitch,
@@ -440,7 +440,7 @@ pub struct SwitchStatement {
 
 /// A decorated_statement is a command with a list of arguments_or_redirections, possibly with
 /// "builtin" or "command" or "exec"
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct DecoratedStatement {
     /// An optional decoration (command, builtin, exec, etc).
     pub opt_decoration: Option<DecoratedStatementDecorator>,
@@ -451,7 +451,7 @@ pub struct DecoratedStatement {
 }
 
 /// A not statement like `not true` or `! true`
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct NotStatement {
     /// Keyword, either not or exclam.
     pub kw: KeywordNot,
@@ -460,7 +460,7 @@ pub struct NotStatement {
     pub contents: Statement,
 }
 
-#[derive(Default, Debug, Node!)]
+#[derive(Default, Debug, Node!, Acceptor!)]
 pub struct JobContinuation {
     pub pipe: TokenPipe,
     pub newlines: MaybeNewlines,
@@ -470,15 +470,6 @@ pub struct JobContinuation {
 impl CheckParse for JobContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::pipe
-    }
-}
-
-impl Acceptor for JobContinuation {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        self.pipe.do_visit(visitor);
-        self.newlines.do_visit(visitor);
-        self.variables.do_visit(visitor);
-        self.statement.do_visit(visitor);
     }
 }
 
@@ -511,7 +502,7 @@ impl Parse for JobContinuation {
     }
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct JobConjunctionContinuation {
     /// The && or || token.
     pub conjunction: TokenConjunction,
@@ -529,7 +520,7 @@ impl CheckParse for JobConjunctionContinuation {
 /// An andor_job just wraps a job, but requires that the job have an 'and' or 'or' job_decorator.
 /// Note this is only used for andor_job_list; jobs that are not part of an andor_job_list are not
 /// instances of this.
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct AndorJob {
     pub job: JobConjunction,
 }

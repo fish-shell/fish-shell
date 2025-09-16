@@ -1,7 +1,7 @@
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
 set -l __fish_status_all_commands \
     basename \
-    buildinfo \
+    build-info \
     current-command \
     current-commandline \
     current-filename \
@@ -44,7 +44,7 @@ complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_com
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-full-job-control -d "Test if all new jobs are put under job control"
 
 # The subcommands that are not "is-something" which don't change the fish state.
-complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a buildinfo -d "Print information on how this version fish was built"
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a build-info -d "Print information on how this version fish was built"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a current-command -d "Print the name of the currently running command or function"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a current-commandline -d "Print the currently running command with its arguments"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a current-filename -d "Print the filename of the currently running script"

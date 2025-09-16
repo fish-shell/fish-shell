@@ -6,10 +6,13 @@
 # Profile: release
 # Features: gettext
 
-status buildinfo | grep -v 'Host:'
+status build-info | grep -v 'Host:'
 # CHECK: Build system: {{CMake|Cargo}}
 # CHECK: Version: {{.+}}
 # (this could be "Target (and Host)" or "Target:" and a separate line "Host:")
 # CHECK: Target{{.*}}: {{.+}}
 # CHECK: Profile: {{release|debug}}
 # CHECK: Features:{{.*}}
+
+test "$(status build-info)" = "$(status buildinfo)"
+or echo 'missing backwards-compatible version?'

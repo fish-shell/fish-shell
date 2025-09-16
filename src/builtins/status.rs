@@ -59,6 +59,7 @@ enum StatusCmd {
     STATUS_STACK_TRACE,
     STATUS_TEST_FEATURE,
     STATUS_CURRENT_COMMANDLINE,
+    STATUS_BUILD_INFO,
     STATUS_BUILDINFO,
     STATUS_GET_FILE,
     STATUS_LIST_FILES,
@@ -68,6 +69,7 @@ str_enum!(
     StatusCmd,
     (STATUS_BASENAME, "basename"),
     (STATUS_BASENAME, "current-basename"),
+    (STATUS_BUILD_INFO, "build-info"),
     (STATUS_BUILDINFO, "buildinfo"),
     (STATUS_CURRENT_CMD, "current-command"),
     (STATUS_CURRENT_COMMANDLINE, "current-commandline"),
@@ -546,7 +548,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Err(STATUS_INVALID_ARGS);
             }
             match s {
-                STATUS_BUILDINFO => {
+                STATUS_BUILD_INFO | STATUS_BUILDINFO => {
                     let version = str2wcstring(crate::BUILD_VERSION.as_bytes());
                     let target = str2wcstring(env!("BUILD_TARGET_TRIPLE").as_bytes());
                     let host = str2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());

@@ -475,7 +475,7 @@ Improved terminal support
 
 Other improvements
 ------------------
-- ``status`` gained a ``buildinfo`` subcommand, to print information on how fish was built, to help with debugging (:issue:`10896`).
+- ``status`` gained a ``build-info`` subcommand, to print information on how fish was built, to help with debugging (:issue:`10896`).
 - ``fish_indent`` will now collapse multiple empty lines into one (:issue:`10325`).
 - ``fish_indent`` now preserves the modification time of files if there were no changes (:issue:`10624`).
 - Performance in launching external processes has been improved for many cases (:issue:`10869`).

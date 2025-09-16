@@ -160,6 +160,9 @@ pub fn update_locale_from_env(vars: &EnvStack) {
     gettext_impl::update_locale_from_env(vars);
 }
 
+#[cfg(not(feature = "localize-messages"))]
+pub fn initialize_gettext() {}
+
 /// This function only exists to provide a way for initializing gettext before an [`EnvStack`] is
 /// available. Without this, early error messages cannot be localized.
 #[cfg(feature = "localize-messages")]

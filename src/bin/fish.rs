@@ -35,7 +35,7 @@ use fish::{
         PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
-        config_paths::{init_locale_dir, ConfigPaths},
+        config_paths::ConfigPaths,
         environment::{env_init, EnvStack, Environment},
         EnvMode, Statuses,
     },
@@ -413,13 +413,6 @@ fn throwing_main() -> i32 {
         }
     }
 
-    let mut args: Vec<WString> = env::args_os()
-        .map(|osstr| str2wcstring(osstr.as_bytes()))
-        .collect();
-    let config_path_detection = init_locale_dir(&args[0]);
-
-    // Initialize gettext translation.
-    #[cfg(feature = "localize-messages")]
     fish::wutil::gettext::initialize_gettext();
 
     // Enable debug categories set in FISH_DEBUG.
@@ -429,6 +422,9 @@ fn throwing_main() -> i32 {
         activate_flog_categories_by_pattern(&s);
     }
 
+    let mut args: Vec<WString> = env::args_os()
+        .map(|osstr| str2wcstring(osstr.as_bytes()))
+        .collect();
     let mut opts = FishCmdOpts::default();
     let mut my_optind = match fish_parse_opt(&mut args, &mut opts) {
         ControlFlow::Continue(optind) => optind,
@@ -464,8 +460,6 @@ fn throwing_main() -> i32 {
         };
     }
 
-    config_path_detection.log_config_paths();
-
     // No-exec is prohibited when in interactive mode.
     if opts.is_interactive_session && opts.no_exec {
         FLOG!(
@@ -497,13 +491,13 @@ fn throwing_main() -> i32 {
 
     // If we're not executing, there's no need to find the config.
     let config_paths = if !opts.no_exec {
-        let paths = config_path_detection.paths;
+        let config_paths = ConfigPaths::new(&args[0]);
         env_init(
-            Some(&paths),
+            Some(&config_paths),
             /* do uvars */ !opts.no_config,
             /* default paths */ opts.no_config,
         );
-        Some(paths)
+        Some(config_paths)
     } else {
         None
     };

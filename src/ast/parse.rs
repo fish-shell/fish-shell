@@ -1,50 +1,5 @@
 use super::*;
 
-pub(super) type ParseResult<T> = Result<T, MissingEndError>;
-
-/// Only explicitly *implemented* for Keyword nodes.
-/// Only explicitly *called* by the Parse impl of a branch node.
-///
-/// In the event of an error, a branch node's Parse impl will catch the error,
-/// stop parsing the rest of the node (leaving subsequent fields default-initialized),
-/// and begin an unwind (see [ParserStatus::unwinding]).
-/// In effect, this short-circuits the parse, but a JobList is sometimes able
-/// to "stop" the unwind and resume parsing another job.
-///
-/// Either way, the top-level parse operation is infallible in terms of Rust idioms,
-/// with error information stored elsewhere in the [Ast] struct and some nodes being
-/// unsourced after an error.
-pub(super) trait TryParse: Sized {
-    fn try_parse(pop: &mut Populator<'_>) -> ParseResult<Self>;
-}
-
-pub(super) trait Parse: TryParse {
-    fn parse(pop: &mut Populator<'_>) -> Self;
-}
-
-impl<T: Parse> TryParse for T {
-    fn try_parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
-        Ok(Self::parse(pop))
-    }
-}
-
-impl<T: CheckParse + TryParse> TryParse for Option<T> {
-    fn try_parse(pop: &mut Populator<'_>) -> ParseResult<Self> {
-        if T::can_be_parsed(pop) {
-            Some(pop.try_parse::<T>())
-        } else {
-            None
-        }
-        .transpose()
-    }
-}
-
-impl<T: CheckParse + Parse + ListElement> Parse for Box<[T]> {
-    fn parse(pop: &mut Populator<'_>) -> Self {
-        pop.parse_list(false)
-    }
-}
-
 macro_rules! check_unsource {
     ($pop:expr) => {
         if $pop.unsource_leaves() {

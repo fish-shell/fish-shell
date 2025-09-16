@@ -31,7 +31,10 @@ use std::borrow::Cow;
 mod macros;
 
 mod parse;
-use parse::{Parse, ParseResult, TryParse};
+
+mod traits;
+use traits::*;
+pub use traits::{Keyword, Leaf, Node, Token};
 
 /**
  * A NodeVisitor is something which can visit an AST node.
@@ -44,142 +47,10 @@ pub trait NodeVisitor<'a> {
     fn visit(&mut self, node: &'a dyn Node);
 }
 
-/**
- * Acceptor is implemented on Nodes which can be visited by a NodeVisitor.
- *
- * It generally invokes the visitor's visit() method on each of its children.
- *
- */
-pub trait Acceptor {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
-}
-
-impl<T: Acceptor> Acceptor for Option<T> {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        if let Some(node) = self {
-            node.accept(visitor)
-        }
-    }
-}
-
-/// A helper trait to invoke the visit() or visit_mut() method on a field.
-trait VisitableField {
-    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
-}
-
-impl<N: Node> VisitableField for N {
-    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        visitor.visit(self);
-    }
-}
-
-impl<N: Node> VisitableField for Option<N> {
-    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        if let Some(node) = self {
-            node.do_visit(visitor);
-        }
-    }
-}
-
 #[derive(Copy, Clone, Debug)]
 pub struct MissingEndError {
     allowed_keywords: &'static [ParseKeyword],
     token: ParseToken,
-}
-
-/// Node is the base trait of all AST nodes.
-pub trait Node: Acceptor + AsNode + std::fmt::Debug {
-    /// Return the kind of this node.
-    fn kind(&self) -> Kind<'_>;
-
-    /// Helper to try to cast to a keyword.
-    fn as_keyword(&self) -> Option<&dyn Keyword> {
-        match self.kind() {
-            Kind::Keyword(n) => Some(n),
-            _ => None,
-        }
-    }
-
-    /// Helper to try to cast to a token.
-    fn as_token(&self) -> Option<&dyn Token> {
-        match self.kind() {
-            Kind::Token(n) => Some(n),
-            _ => None,
-        }
-    }
-
-    /// Helper to try to cast to a leaf.
-    /// Note this must be kept in sync with Leaf implementors.
-    fn as_leaf(&self) -> Option<&dyn Leaf> {
-        match self.kind() {
-            Kind::Token(n) => Some(Token::as_leaf(n)),
-            Kind::Keyword(n) => Some(Keyword::as_leaf(n)),
-            Kind::VariableAssignment(n) => Some(n),
-            Kind::MaybeNewlines(n) => Some(n),
-            Kind::Argument(n) => Some(n),
-            _ => None,
-        }
-    }
-
-    /// Return a helpful string description of this node.
-    fn describe(&self) -> WString {
-        let mut res = ast_kind_to_string(self.kind()).to_owned();
-        if let Some(n) = self.as_token() {
-            let token_type = n.token_type().to_wstr();
-            sprintf!(=> &mut res, " '%ls'", token_type);
-        } else if let Some(n) = self.as_keyword() {
-            let keyword = n.keyword().to_wstr();
-            sprintf!(=> &mut res, " '%ls'", keyword);
-        }
-        res
-    }
-
-    /// Return the source range for this node, or none if unsourced.
-    /// This may return none if the parse was incomplete or had an error.
-    fn try_source_range(&self) -> Option<SourceRange> {
-        let mut visitor = SourceRangeVisitor {
-            total: SourceRange::new(0, 0),
-            any_unsourced: false,
-        };
-        visitor.visit(self.as_node());
-        if visitor.any_unsourced {
-            None
-        } else {
-            Some(visitor.total)
-        }
-    }
-
-    /// Return the source range for this node, or an empty range {0, 0} if unsourced.
-    fn source_range(&self) -> SourceRange {
-        self.try_source_range().unwrap_or_default()
-    }
-
-    /// Return the source code for this node, or none if unsourced.
-    fn try_source<'s>(&self, orig: &'s wstr) -> Option<&'s wstr> {
-        self.try_source_range().map(|r| &orig[r.start()..r.end()])
-    }
-
-    /// Return the source code for this node, or an empty string if unsourced.
-    fn source<'s>(&self, orig: &'s wstr) -> &'s wstr {
-        self.try_source(orig).unwrap_or_default()
-    }
-
-    /// The raw byte size of this node, excluding children.
-    /// This also excludes the allocations stored in lists.
-    fn self_memory_size(&self) -> usize {
-        std::mem::size_of_val(self)
-    }
-}
-
-// Convert to the dynamic Node type.
-pub trait AsNode {
-    fn as_node(&self) -> &dyn Node;
-}
-
-impl<T: Node + Sized> AsNode for T {
-    fn as_node(&self) -> &dyn Node {
-        self
-    }
 }
 
 /// Return true if two nodes are the same object.
@@ -265,126 +136,6 @@ pub enum Kind<'a> {
     Argument(&'a Argument),
     ArgumentList(&'a [Argument]),
     JobList(&'a [JobConjunction]),
-}
-
-// Support casting to this type.
-pub trait Castable {
-    fn cast(node: &dyn Node) -> Option<&Self>;
-}
-
-impl<'a> dyn Node + 'a {
-    /// Cast to a concrete node type.
-    pub fn cast<T: Castable>(&self) -> Option<&T> {
-        T::cast(self)
-    }
-}
-
-/// Trait for all "leaf" nodes: nodes with no ast children.
-pub trait Leaf: Node {
-    /// Basically Default::default(), but works around an issue with the Sized bound.
-    /// Also slightly clearer about intent.
-    fn unsourced() -> Self
-    where
-        Self: Sized;
-
-    /// Returns none if this node is "unsourced." This happens if for whatever reason we are
-    /// unable to parse the node, either because we had a parse error and recovered, or because
-    /// we accepted incomplete and the token stream was exhausted.
-    fn range(&self) -> Option<SourceRange>;
-
-    fn has_source(&self) -> bool {
-        self.range().is_some()
-    }
-}
-
-// A token node is a node which contains a token, which must be one of a fixed set.
-pub trait Token: Leaf {
-    fn new(range: SourceRange, token_type: ParseTokenType) -> Self
-    where
-        Self: Sized;
-
-    // The use of `&dyn Token` prevents making this an associated const.
-    fn allowed_tokens() -> &'static [ParseTokenType]
-    where
-        Self: Sized;
-
-    /// Return whether a token type is allowed in this token_t, i.e. is a member of our Toks list.
-    fn allows_token(token_type: ParseTokenType) -> bool
-    where
-        Self: Sized,
-    {
-        Self::allowed_tokens().contains(&token_type)
-    }
-
-    /// The token type which was parsed.
-    fn token_type(&self) -> ParseTokenType;
-    fn as_leaf(&self) -> &dyn Leaf;
-}
-
-/// A keyword node is a node which contains a keyword, which must be one of a fixed set.
-pub trait Keyword: Leaf {
-    fn new(range: SourceRange, keyword: ParseKeyword) -> Self
-    where
-        Self: Sized;
-
-    // The use of `&dyn Keyword` prevents making this an associated const.
-    fn allowed_keywords() -> &'static [ParseKeyword]
-    where
-        Self: Sized;
-
-    fn allows_keyword(kw: ParseKeyword) -> bool
-    where
-        Self: Sized,
-    {
-        Self::allowed_keywords().contains(&kw)
-    }
-
-    fn keyword(&self) -> ParseKeyword;
-    fn as_leaf(&self) -> &dyn Leaf;
-}
-
-/// This is for optional values and for lists.
-trait CheckParse: Default {
-    /// A true return means we should descend into the production, false means stop.
-    fn can_be_parsed(pop: &mut Populator<'_>) -> bool;
-}
-
-trait ListElement: Sized + std::fmt::Debug + Node {
-    fn list_kind(list: &[Self]) -> Kind<'_>;
-
-    /// Return whether a list kind allows arbitrary newlines in it.
-    fn chomps_newlines(pop: &Populator<'_>) -> bool;
-    /// Return whether a list kind allows arbitrary semicolons in it.
-    fn chomps_semis(pop: &Populator<'_>) -> bool;
-    /// Return whether a list kind should recover from errors.
-    /// That is, whether we should stop unwinding when we encounter this type.
-    fn stops_unwind(_pop: &Populator<'_>) -> bool {
-        false
-    }
-}
-
-impl<'a, N: ListElement> Node for &'a [N] {
-    fn kind(&self) -> Kind<'_> {
-        N::list_kind(self)
-    }
-}
-
-impl<N: ListElement> Node for Box<[N]> {
-    fn kind(&self) -> Kind<'_> {
-        N::list_kind(self)
-    }
-}
-
-impl<'a, N: ListElement> Acceptor for &'a [N] {
-    fn accept<'b>(&'b self, visitor: &mut dyn NodeVisitor<'b>) {
-        self.iter().for_each(|item| visitor.visit(item));
-    }
-}
-
-impl<N: ListElement> Acceptor for Box<[N]> {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        self.iter().for_each(|item| visitor.visit(item));
-    }
 }
 
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.

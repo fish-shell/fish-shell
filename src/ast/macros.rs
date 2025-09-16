@@ -6,16 +6,6 @@ macro_rules! Node {
                 Kind::$name(self)
             }
         }
-
-        impl Castable for $name {
-            // Try casting a Node to this type.
-            fn cast(node: &dyn Node) -> Option<&Self> {
-                match node.kind() {
-                    Kind::$name(res) => Some(res),
-                    _ => None,
-                }
-            }
-        }
     };
 
     ( $(#[$_m:meta])* $_v:vis struct $name:ident $_:tt $(;)? ) => {

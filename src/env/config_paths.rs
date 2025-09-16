@@ -1,5 +1,4 @@
 use crate::common::wcs2string;
-use crate::global_safety::AtomicRef;
 use crate::wchar::prelude::*;
 use crate::{common::get_executable_path, FLOG, FLOGF};
 #[cfg(not(feature = "embed-data"))]
@@ -17,8 +16,6 @@ pub struct ConfigPaths {
     pub data: PathBuf, // e.g., /usr/local/share
     #[cfg(not(feature = "embed-data"))]
     pub doc: PathBuf, // e.g., /usr/local/share/doc/fish
-    #[cfg(not(feature = "embed-data"))]
-    pub locale: PathBuf, // e.g., /usr/local/share/locale
 }
 
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
@@ -48,32 +45,13 @@ impl ConfigPaths {
             bin: Some(PathBuf::from(env!("BINDIR"))),
             data: PathBuf::from(env!("DATADIR")).join("fish"),
             doc: DOC_DIR.into(),
-            locale: PathBuf::from(env!("LOCALEDIR")),
         }
     }
 }
 
-const EMPTY_LOCALE_DIR: &[u8] = &[];
-pub static LOCALE_DIR: AtomicRef<[u8]> = AtomicRef::new(&EMPTY_LOCALE_DIR);
-
-/// NOTE: This is called during early startup, do not log anything.
-pub fn init_locale_dir(argv0: &wstr) -> ConfigPathDetection {
-    #[allow(clippy::let_and_return)] // for old clippy
-    let detection = ConfigPathDetection::new(argv0);
-    #[cfg(not(feature = "embed-data"))]
-    {
-        use std::os::unix::ffi::OsStrExt;
-        let bytes = detection.paths.locale.as_os_str().as_bytes();
-        assert!(!bytes.is_empty());
-        let bytes: Box<[u8]> = Box::from(bytes);
-        let bytes: Box<&'static [u8]> = Box::new(Box::leak(bytes));
-        LOCALE_DIR.store(Box::leak(bytes));
-    }
-    detection
-}
-
 impl ConfigPathDetection {
-    fn new(argv0: &wstr) -> Self {
+    /// NOTE: This is called during early startup, do not log anything.
+    pub fn new(argv0: &wstr) -> Self {
         let argv0 = PathBuf::from(OsString::from_vec(wcs2string(argv0)));
         let exec_path = get_executable_path(argv0);
         Self::from_exec_path(exec_path)
@@ -128,7 +106,6 @@ impl ConfigPathDetection {
                         } else {
                             PathBuf::from(DOC_DIR)
                         },
-                        locale: base_path.join("share/locale"),
                     },
                     exec_path,
                 };
@@ -144,7 +121,6 @@ impl ConfigPathDetection {
                     bin: Some(exec_path_parent.to_owned()),
                     data: workspace_root.join("share"),
                     doc: workspace_root.join("user_doc/html"),
-                    locale: workspace_root.join("share/locale"),
                 },
                 exec_path,
             };
@@ -210,11 +186,5 @@ impl ConfigPathDetection {
         FLOGF!(config, "paths.data: %ls", paths.data.display().to_string());
         #[cfg(not(feature = "embed-data"))]
         FLOGF!(config, "paths.doc: %ls", paths.doc.display().to_string());
-        #[cfg(not(feature = "embed-data"))]
-        FLOGF!(
-            config,
-            "paths.locale: %ls",
-            paths.locale.display().to_string()
-        );
     }
 }

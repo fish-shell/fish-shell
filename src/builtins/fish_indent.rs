@@ -11,7 +11,7 @@ use std::fs;
 use std::io::{Read, Write};
 use std::os::unix::ffi::OsStrExt;
 
-use crate::env::config_paths::init_locale_dir;
+use crate::env::config_paths::ConfigPathDetection;
 use crate::panic::panic_handler;
 use libc::LC_ALL;
 
@@ -907,7 +907,7 @@ fn throwing_main() -> i32 {
     let args: Vec<WString> = std::env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
-    init_locale_dir(&args[0]);
+    ConfigPathDetection::new(&args[0]);
     env_init(None, true, false);
 
     // Only set these here so you can't set them via the builtin.

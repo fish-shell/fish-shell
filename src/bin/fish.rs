@@ -35,7 +35,7 @@ use fish::{
         PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
-        config_paths::{init_locale_dir, ConfigPaths},
+        config_paths::{ConfigPathDetection, ConfigPaths},
         environment::{env_init, EnvStack, Environment},
         EnvMode, Statuses,
     },
@@ -416,7 +416,7 @@ fn throwing_main() -> i32 {
     let mut args: Vec<WString> = env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
-    let config_path_detection = init_locale_dir(&args[0]);
+    let config_path_detection = ConfigPathDetection::new(&args[0]);
 
     // Initialize gettext translation.
     #[cfg(feature = "localize-messages")]

@@ -17,7 +17,7 @@ use crate::future::IsSomeAnd;
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{shell_modes, str2wcstring, PROGRAM_NAME},
-    env::{config_paths::init_locale_dir, env_init, EnvStack, Environment},
+    env::{config_paths::ConfigPathDetection, env_init, EnvStack, Environment},
     future_feature_flags,
     input_common::{
         match_key_event_to_key, CharEvent, InputEventQueue, InputEventQueuer, KeyEvent,
@@ -281,7 +281,7 @@ fn throwing_main() -> i32 {
     let args: Vec<WString> = std::env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
-    init_locale_dir(&args[0]);
+    ConfigPathDetection::new(&args[0]);
     env_init(None, true, false);
     reader_init(false);
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {

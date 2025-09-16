@@ -48,7 +48,7 @@ impl<T: CheckParse + Parse + ListElement> Parse for Box<[T]> {
 macro_rules! check_unsource {
     ($pop:expr) => {
         if $pop.unsource_leaves() {
-            return Self { range: None };
+            return Self::default();
         }
     };
 }

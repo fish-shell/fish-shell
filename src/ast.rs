@@ -281,11 +281,17 @@ impl<'a> dyn Node + 'a {
 
 /// Trait for all "leaf" nodes: nodes with no ast children.
 pub trait Leaf: Node {
+    /// Basically Default::default(), but works around an issue with the Sized bound.
+    /// Also slightly clearer about intent.
+    fn unsourced() -> Self
+    where
+        Self: Sized;
+
     /// Returns none if this node is "unsourced." This happens if for whatever reason we are
     /// unable to parse the node, either because we had a parse error and recovered, or because
     /// we accepted incomplete and the token stream was exhausted.
     fn range(&self) -> Option<SourceRange>;
-    fn range_mut(&mut self) -> &mut Option<SourceRange>;
+
     fn has_source(&self) -> bool {
         self.range().is_some()
     }
@@ -293,25 +299,47 @@ pub trait Leaf: Node {
 
 // A token node is a node which contains a token, which must be one of a fixed set.
 pub trait Token: Leaf {
+    fn new(range: SourceRange, token_type: ParseTokenType) -> Self
+    where
+        Self: Sized;
+
+    // The use of `&dyn Token` prevents making this an associated const.
+    fn allowed_tokens() -> &'static [ParseTokenType]
+    where
+        Self: Sized;
+
+    /// Return whether a token type is allowed in this token_t, i.e. is a member of our Toks list.
+    fn allows_token(token_type: ParseTokenType) -> bool
+    where
+        Self: Sized,
+    {
+        Self::allowed_tokens().contains(&token_type)
+    }
+
     /// The token type which was parsed.
     fn token_type(&self) -> ParseTokenType;
-    fn token_type_mut(&mut self) -> &mut ParseTokenType;
-    fn allowed_tokens(&self) -> &'static [ParseTokenType];
-    /// Return whether a token type is allowed in this token_t, i.e. is a member of our Toks list.
-    fn allows_token(&self, token_type: ParseTokenType) -> bool {
-        self.allowed_tokens().contains(&token_type)
-    }
     fn as_leaf(&self) -> &dyn Leaf;
 }
 
 /// A keyword node is a node which contains a keyword, which must be one of a fixed set.
 pub trait Keyword: Leaf {
-    fn keyword(&self) -> ParseKeyword;
-    fn keyword_mut(&mut self) -> &mut ParseKeyword;
-    fn allowed_keywords(&self) -> &'static [ParseKeyword];
-    fn allows_keyword(&self, kw: ParseKeyword) -> bool {
-        self.allowed_keywords().contains(&kw)
+    fn new(range: SourceRange, keyword: ParseKeyword) -> Self
+    where
+        Self: Sized;
+
+    // The use of `&dyn Keyword` prevents making this an associated const.
+    fn allowed_keywords() -> &'static [ParseKeyword]
+    where
+        Self: Sized;
+
+    fn allows_keyword(kw: ParseKeyword) -> bool
+    where
+        Self: Sized,
+    {
+        Self::allowed_keywords().contains(&kw)
     }
+
+    fn keyword(&self) -> ParseKeyword;
     fn as_leaf(&self) -> &dyn Leaf;
 }
 
@@ -2063,14 +2091,12 @@ impl<'s> Populator<'s> {
         Box::new(self.parse())
     }
 
-    fn parse_token<T: Token + Default>(&mut self) -> T {
-        let mut token = T::default();
+    fn parse_token<T: Token>(&mut self) -> T {
         if self.unsource_leaves() {
-            *token.range_mut() = None;
-            return token;
+            return T::unsourced();
         }
 
-        if !token.allows_token(self.peek_token(0).typ) {
+        if !T::allows_token(self.peek_token(0).typ) {
             if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
                     TokenizerError::unterminated_quote,
@@ -2078,7 +2104,7 @@ impl<'s> Populator<'s> {
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
-                return token;
+                return T::unsourced();
             }
 
             parse_error!(
@@ -2086,28 +2112,21 @@ impl<'s> Populator<'s> {
                 self.peek_token(0),
                 ParseErrorCode::generic,
                 "Expected %ls, but found %ls",
-                token_types_user_presentable_description(token.allowed_tokens()),
+                token_types_user_presentable_description(T::allowed_tokens()),
                 self.peek_token(0).user_presentable_description()
             );
-            *token.range_mut() = None;
-            return token;
+            return T::unsourced();
         }
         let tok = self.consume_any_token();
-        *token.token_type_mut() = tok.typ;
-        *token.range_mut() = Some(tok.range());
-        token
+        Token::new(tok.range(), tok.typ)
     }
 
-    fn parse_keyword<T: Keyword + Default>(&mut self) -> ParseResult<T> {
-        let mut keyword = T::default();
+    fn parse_keyword<T: Keyword>(&mut self) -> ParseResult<T> {
         if self.unsource_leaves() {
-            *keyword.range_mut() = None;
-            return Ok(keyword);
+            return Ok(T::unsourced());
         }
 
-        if !keyword.allows_keyword(self.peek_token(0).keyword) {
-            *keyword.range_mut() = None;
-
+        if !T::allows_keyword(self.peek_token(0).keyword) {
             if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
                     TokenizerError::unterminated_quote,
@@ -2115,12 +2134,12 @@ impl<'s> Populator<'s> {
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
-                return Ok(keyword);
+                return Ok(T::unsourced());
             }
 
             // Special error reporting for keyword_t<kw_end>.
-            let allowed_keywords = keyword.allowed_keywords();
-            if keyword.allowed_keywords() == [ParseKeyword::End] {
+            let allowed_keywords = T::allowed_keywords();
+            if allowed_keywords == [ParseKeyword::End] {
                 return Err(MissingEndError {
                     allowed_keywords,
                     token: *self.peek_token(0),
@@ -2134,13 +2153,11 @@ impl<'s> Populator<'s> {
                     keywords_user_presentable_description(allowed_keywords),
                     self.peek_token(0).user_presentable_description(),
                 );
-                return Ok(keyword);
+                return Ok(T::unsourced());
             }
         }
         let tok = self.consume_any_token();
-        *keyword.keyword_mut() = tok.keyword;
-        *keyword.range_mut() = Some(tok.range());
-        Ok(keyword)
+        Ok(T::new(tok.range(), tok.keyword))
     }
 }
 

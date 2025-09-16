@@ -31,11 +31,11 @@ macro_rules! Node {
 macro_rules! Leaf {
     ($name:ident) => {
         impl Leaf for $name {
+            fn unsourced() -> Self {
+                Self::default()
+            }
             fn range(&self) -> Option<SourceRange> {
                 self.range
-            }
-            fn range_mut(&mut self) -> &mut Option<SourceRange> {
-                &mut self.range
             }
         }
         impl Acceptor for $name {
@@ -104,13 +104,16 @@ macro_rules! define_keyword_node {
             }
         }
         impl Keyword for $name {
+            fn new(range: SourceRange, keyword: ParseKeyword) -> Self {
+                Self {
+                    range: Some(range),
+                    keyword,
+                }
+            }
             fn keyword(&self) -> ParseKeyword {
                 self.keyword
             }
-            fn keyword_mut(&mut self) -> &mut ParseKeyword {
-                &mut self.keyword
-            }
-            fn allowed_keywords(&self) -> &'static [ParseKeyword] {
+            fn allowed_keywords() -> &'static [ParseKeyword] {
                 &[$(ParseKeyword::$allowed),*]
             }
             fn as_leaf(&self) -> &dyn Leaf {
@@ -139,13 +142,16 @@ macro_rules! define_token_node {
             }
         }
         impl Token for $name {
+            fn new(range: SourceRange, token_type: ParseTokenType) -> Self {
+                Self {
+                    range: Some(range),
+                    parse_token_type: token_type,
+                }
+            }
             fn token_type(&self) -> ParseTokenType {
                 self.parse_token_type
             }
-            fn token_type_mut(&mut self) -> &mut ParseTokenType {
-                &mut self.parse_token_type
-            }
-            fn allowed_tokens(&self) -> &'static [ParseTokenType] {
+            fn allowed_tokens() -> &'static [ParseTokenType] {
                 Self::ALLOWED_TOKENS
             }
             fn as_leaf(&self) -> &dyn Leaf {

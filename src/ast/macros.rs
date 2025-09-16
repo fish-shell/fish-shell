@@ -176,17 +176,20 @@ macro_rules! define_token_node {
 }
 
 macro_rules! define_list_nodes {
-    ($(
-        $contents:ty => $name:ident {
-            $(let $pop:ident;)?
-            chomp_newlines: $newlines:expr,
-            chomp_semis: $semis:expr,
-            $(
-                let $pop_:ident;
-                stop_unwind: $unwind:expr
-            )?
-        }
-    )*) => {$(
+    (
+        // due to macro hygiene, the caller needs to provide their own
+        // variable name for the populator if they intend to access it
+        // just specify it up here, and all the trait impls are free to use it if they need
+        let $pop:ident;
+
+        $(
+            $contents:ty => $name:ident {
+                chomp_newlines: $newlines:expr,
+                chomp_semis: $semis:expr,
+                $(stop_unwind: $unwind:expr,)?
+            }
+        ),*$(,)?
+    ) => {$(
         pub type $name = Box<[$contents]>;
 
         #[allow(unused_variables)]
@@ -196,17 +199,17 @@ macro_rules! define_list_nodes {
             }
 
             fn chomps_newlines(pop: &Populator<'_>) -> bool {
-                $(let $pop = pop;)?
+                let $pop = pop;
                 $newlines
             }
 
             fn chomps_semis(pop: &Populator<'_>) -> bool {
-                $(let $pop = pop;)?
+                let $pop = pop;
                 $semis
             }
 
             $(fn stops_unwind(pop: &Populator<'_>) -> bool {
-                let $pop_ = pop;
+                let $pop = pop;
                 $unwind
             })?
         }

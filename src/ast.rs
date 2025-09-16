@@ -1545,51 +1545,51 @@ fn token_types_user_presentable_description(types: &'static [ParseTokenType]) ->
 }
 
 define_list_nodes! {
+    let pop;
+
     Argument => ArgumentList {
-        let pop;
         chomp_newlines: pop.freestanding_arguments,
         // Hackish. If we are producing a freestanding argument list,
         // then it allows semicolons, for hysterical raisins.
         // That is, this is OK: complete -c foo -a 'x ; y ; z'
         // But this is not: foo x ; y ; z
         chomp_semis: pop.freestanding_arguments,
-    }
+    },
     ArgumentOrRedirection => ArgumentOrRedirectionList {
         chomp_newlines: false, // No newlines inside arguments.
         chomp_semis: false,
-    }
+    },
     VariableAssignment => VariableAssignmentList {
         chomp_newlines: false, // No newlines inside variable assignment lists.
         chomp_semis: false,
-    }
+    },
     // For historical reasons, a job list is a list of job *conjunctions*.
     // This should be fixed.
     JobConjunction => JobList {
         chomp_newlines: true, // Like echo a \n \n echo b
         chomp_semis: true, // Like echo a ; ;  echo b
-        let pop;
-        stop_unwind: pop.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
-    }
+        stop_unwind: pop.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR),
+    },
     CaseItem => CaseItemList {
         chomp_newlines: true, // Like switch foo \n \n \n case a \n end
         // Like switch foo ; ; ;  case a \n end
         // This is historically allowed.
         chomp_semis: true,
-    }
+    },
     AndorJob => AndorJobList {
         chomp_newlines: true, // Like while true ; \n \n and true ; end
         chomp_semis: true, // Like while true ; ; ;  and true ; end
-    }
+    },
     ElseifClause => ElseifClauseList {
         chomp_newlines: true, // Like if true ; \n \n else if false; end
         chomp_semis: false, // Like if true ; ; ;  else if false; end
-    }
+    },
     JobConjunctionContinuation => JobConjunctionContinuationList {
         // This would be like echo a && echo b \n && echo c
         // We could conceivably support this but do not now.
         chomp_newlines: false,
         chomp_semis: false, // Like echo a ; ; && echo b. Not supported.
-    }
+    },
     JobContinuation => JobContinuationList {
         // This would be like echo a \n | echo b
         // We could conceivably support this but do not now.

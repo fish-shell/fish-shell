@@ -45,7 +45,7 @@ fn main() {
     // These are necessary if built with embedded functions,
     // but only in release builds (because rust-embed in debug builds reads from the filesystem).
     #[cfg(feature = "embed-data")]
-    #[cfg(not(debug_assertions))]
+    #[cfg(any(windows, not(debug_assertions)))]
     rsconf::rebuild_if_path_changed("share");
 
     #[cfg(feature = "gettext-extract")]

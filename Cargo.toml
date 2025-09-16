@@ -90,12 +90,16 @@ once_cell.workspace = true
 pcre2.workspace = true
 phf = { workspace = true, optional = true }
 rand.workspace = true
-rust-embed = { workspace = true, optional = true }
 terminfo.workspace = true
 widestring.workspace = true
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
 portable-atomic.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+rust-embed = { workspace = true, optional = true, features = ["deterministic-timestamps", "debug-embed"] }
+[target.'cfg(not(windows))'.dependencies]
+rust-embed = { workspace = true, optional = true, features = ["deterministic-timestamps"] }
 
 [dev-dependencies]
 serial_test.workspace = true

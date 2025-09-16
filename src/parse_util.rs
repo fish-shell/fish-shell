@@ -1,7 +1,5 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{
-    self, is_same_node, Ast, Keyword, Kind, Leaf, Node, NodeVisitor, Token, Traversal,
-};
+use crate::ast::{self, Ast, Keyword, Kind, Leaf, Node, NodeVisitor, Token, Traversal};
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
@@ -1584,7 +1582,7 @@ fn detect_errors_in_backgrounded_job(
         // Find the index of ourselves in the job list.
         let index = jlist
             .iter()
-            .position(|job| is_same_node(job, job_conj))
+            .position(|job| std::ptr::eq::<ast::JobConjunction>(job, job_conj))
             .expect("Should have found the job in the list");
 
         // Try getting the next job and check its decorator.
@@ -1649,7 +1647,7 @@ fn detect_errors_in_decorated_statement(
     // Check our pipeline position.
     let pipe_pos = if job.continuation.is_empty() {
         PipelinePosition::none
-    } else if is_same_node(&job.statement, st) {
+    } else if std::ptr::eq::<ast::Statement>(&job.statement, st) {
         PipelinePosition::first
     } else {
         PipelinePosition::subsequent

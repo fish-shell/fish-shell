@@ -45,13 +45,13 @@ function man --description "Format and display the on-line manual pages"
         # So we override them with the good name.
         switch $argv
             case !
-                set argv not
-            case :
-                set argv true
-            case '['
-                set argv test
+                set $argv not
             case .
-                set argv source
+                set $argv source
+            case :
+                set $argv true
+            case '['
+                set $argv test
         end
     end
 

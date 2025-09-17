@@ -89,7 +89,7 @@ pub trait Node: Acceptor + AsNode + std::fmt::Debug {
     }
 }
 
-// Convert to the dynamic Node type.
+/// Convert to the dynamic Node type.
 pub trait AsNode {
     fn as_node(&self) -> &dyn Node;
 }
@@ -145,21 +145,24 @@ impl<T: CheckParse + TryParse> TryParse for Option<T> {
     }
 }
 
+/// A list of nodes is parsed by calling CheckParse::can_be_parsed(pop) and T::parse(pop)
+/// repeatedly, until the former returns false.
 impl<T: CheckParse + Parse + ListElement> Parse for Box<[T]> {
     fn parse(pop: &mut Populator<'_>) -> Self {
         pop.parse_list(false)
     }
 }
 
+/// A node that can be parsed as an element of a homogenous list.
 pub(super) trait ListElement: Sized + Node {
     fn list_kind(list: &[Self]) -> Kind<'_>;
 
-    /// Return whether a list kind allows arbitrary newlines in it.
+    /// Return whether a list of these nodes allows arbitrary newlines in it.
     fn chomps_newlines(pop: &Populator<'_>) -> bool;
-    /// Return whether a list kind allows arbitrary semicolons in it.
+    /// Return whether a list of these nodes allows arbitrary semicolons in it.
     fn chomps_semis(pop: &Populator<'_>) -> bool;
-    /// Return whether a list kind should recover from errors.
-    /// That is, whether we should stop unwinding when we encounter this type.
+    /// Return whether a list of these nodes should recover from errors.
+    /// That is, whether we should stop unwinding when we encounter this node's parent list.
     fn stops_unwind(_pop: &Populator<'_>) -> bool {
         false
     }
@@ -253,12 +256,8 @@ pub trait Keyword: Leaf {
     fn as_leaf(&self) -> &dyn Leaf;
 }
 
-/**
- * Acceptor is implemented on Nodes which can be visited by a NodeVisitor.
- *
- * It generally invokes the visitor's visit() method on each of its children.
- *
- */
+/// Acceptor is implemented on Nodes which can be visited by a NodeVisitor.
+/// It generally invokes the visitor's visit() method on each of its children.
 pub trait Acceptor {
     fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
 }
@@ -271,7 +270,7 @@ impl<T: Acceptor> Acceptor for Option<T> {
     }
 }
 
-/// A helper trait to invoke the visit() or visit_mut() method on a field.
+/// A helper trait to invoke the visit() method on a field.
 pub(super) trait VisitableField {
     fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
 }

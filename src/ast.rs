@@ -510,8 +510,8 @@ impl CheckParse for JobConjunctionContinuation {
     }
 }
 
-/// An andor_job just wraps a job, but requires that the job have an 'and' or 'or' job_decorator.
-/// Note this is only used for andor_job_list; jobs that are not part of an andor_job_list are not
+/// An AndorJob just wraps a job, but requires that the job have an 'and' or 'or' decorator.
+/// Note this is only used for AndorJobList; jobs that are not part of an AndorJobList are not
 /// instances of this.
 #[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct AndorJob {
@@ -533,7 +533,7 @@ impl CheckParse for AndorJob {
     }
 }
 
-/// A variable_assignment contains a source range like FOO=bar.
+/// A VariableAssignment contains a source range like FOO=bar.
 #[derive(Default, Debug, Node!, Leaf!)]
 pub struct VariableAssignment {
     range: Option<SourceRange>,
@@ -560,7 +560,7 @@ impl CheckParse for VariableAssignment {
 impl Parse for VariableAssignment {
     fn parse(pop: &mut Populator<'_>) -> Self {
         if pop.unsource_leaves() {
-            return Self::default();
+            return Self::unsourced();
         }
         if !pop.peek_token(0).may_be_variable_assignment {
             internal_error!(
@@ -584,7 +584,7 @@ pub struct MaybeNewlines {
 impl Parse for MaybeNewlines {
     fn parse(pop: &mut Populator<'_>) -> Self {
         if pop.unsource_leaves() {
-            return Self::default();
+            return Self::unsourced();
         }
         let mut range = SourceRange::new(0, 0);
         // TODO: it would be nice to have the start offset be the current position in the token
@@ -615,7 +615,7 @@ impl CheckParse for Argument {
 impl Parse for Argument {
     fn parse(pop: &mut Populator<'_>) -> Self {
         if pop.unsource_leaves() {
-            return Self::default();
+            return Self::unsourced();
         }
         Self {
             range: Some(pop.consume_token_type(ParseTokenType::string)),
@@ -694,7 +694,6 @@ impl DecoratedStatement {
         let Some(decorator) = &self.opt_decoration else {
             return StatementDecoration::none;
         };
-        let decorator: &dyn Keyword = decorator;
         match decorator.keyword() {
             ParseKeyword::Command => StatementDecoration::command,
             ParseKeyword::Builtin => StatementDecoration::builtin,
@@ -913,7 +912,7 @@ pub fn parse(src: &wstr, flags: ParseTreeFlags, out_errors: Option<&mut ParseErr
     finalize_parse(pops, list)
 }
 
-/// Parse a FreestandingArgumentList.
+/// Parse an argument list.
 pub fn parse_argument_list(
     src: &wstr,
     flags: ParseTreeFlags,
@@ -1733,8 +1732,8 @@ impl<'s> Populator<'s> {
     }
 
     fn parse_statement(&mut self) -> Statement {
-        // In case we get a parse error, we still need to return something non-null. Use a
-        // decorated statement; all of its leaf nodes will end up unsourced.
+        // In case we get a parse error, we still need to return something.
+        // Use a decorated statement; all of its leaf nodes will end up unsourced.
         fn got_error(slf: &mut Populator<'_>) -> Statement {
             assert!(slf.unwinding, "Should have produced an error");
             new_decorated_statement(slf)
@@ -1845,7 +1844,7 @@ impl<'s> Populator<'s> {
                 // 'end' is forbidden as a command.
                 // For example, `if end` or `while end` will produce this error.
                 // We still have to descend into the decorated statement because
-                // we can't leave our pointer as null.
+                // we have to return a Statement value.
                 parse_error!(
                     self,
                     self.peek_token(0),
@@ -1986,7 +1985,7 @@ impl From<ParseTreeFlags> for TokFlags {
     }
 }
 
-/// Convert from Tokenizer's token type to a parse_token_t type.
+/// Convert from Tokenizer's token type to a ParseTokenType.
 impl From<TokenType> for ParseTokenType {
     fn from(token_type: TokenType) -> Self {
         match token_type {

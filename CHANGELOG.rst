@@ -108,6 +108,13 @@ For distributors
 
 --------------
 
+fish 4.0.7 (released September 18, 2025)
+========================================
+
+This release fixes a regression in 4.0.6 that caused user bindings to be shadowed by either fish's or a plugin's bindings (:issue:`11803`).
+
+--------------
+
 fish 4.0.6 (released September 12, 2025)
 ========================================
 

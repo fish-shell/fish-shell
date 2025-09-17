@@ -211,7 +211,6 @@ fn apply_shift(mut key: Key, do_ascii: bool, shifted_codepoint: char) -> Option<
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum KeyMatchQuality {
-    Legacy,
     BaseLayoutModuloShift,
     BaseLayout,
     ModuloShift,

@@ -442,6 +442,15 @@ eval continue
 #CHECKERR: Error-message: continue: Not inside of loop
 #CHECKERR: Documentation for continue
 
+break -h
+#CHECKERR: Documentation for break
+break --help
+#CHECKERR: Documentation for break
+$dyn_break -h
+#CHECKERR: Documentation for break
+continue -h
+#CHECKERR: Documentation for continue
+
 # Test implicit cd. This should do nothing.
 ./
 

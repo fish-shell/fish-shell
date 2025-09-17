@@ -15,6 +15,8 @@ Description
 
 ``continue`` skips the remainder of the current iteration of the current inner loop, such as a :doc:`for <for>` loop or a :doc:`while <while>` loop. It is usually added inside of a conditional block such as an :doc:`if <if>` statement or a :doc:`switch <switch>` statement.
 
+The **-h** or **--help** option displays help about using this command.
+
 Example
 -------
 

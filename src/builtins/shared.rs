@@ -978,6 +978,13 @@ fn builtin_break_continue(
     let is_break = argv[0] == "break";
     let argc = argv.len();
 
+    let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
+
+    if opts.print_help {
+        builtin_print_help(parser, streams, argv[0]);
+        return Ok(SUCCESS);
+    }
+
     if argc != 1 {
         let error_message = wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]);
         builtin_print_help_error(parser, streams, argv[0], &error_message);

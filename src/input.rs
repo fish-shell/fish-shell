@@ -589,11 +589,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                         actual_seq.len()
                     )
                 );
-                return Some(if matches!(style, KeyNameStyle::Terminfo(_)) {
-                    KeyMatchQuality::Exact
-                } else {
-                    KeyMatchQuality::Legacy
-                });
+                return Some(KeyMatchQuality::Exact);
             }
             if key.modifiers == Modifiers::ALT && seq_char == '\x1b' {
                 if self.subidx + 1 == actual_seq.len() {
@@ -613,11 +609,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                         self.subidx = 0;
                     }
                     FLOG!(reader, format!("matched {key} against raw escape sequence"));
-                    return Some(if matches!(style, KeyNameStyle::Terminfo(_)) {
-                        KeyMatchQuality::Exact
-                    } else {
-                        KeyMatchQuality::Legacy
-                    });
+                    return Some(KeyMatchQuality::Exact);
                 }
             }
         }

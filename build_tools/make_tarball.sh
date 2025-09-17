@@ -39,8 +39,8 @@ fi
 # Get the current directory, which we'll use for symlinks
 wd="$PWD"
 
-# Get the version from git-describe
-VERSION=$(git describe --dirty 2>/dev/null)
+# Get the version
+VERSION=$(build_tools/git_version_gen.sh --stdout 2>/dev/null)
 
 # The name of the prefix, which is the directory that you get when you untar
 prefix="fish-$VERSION"

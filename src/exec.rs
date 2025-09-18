@@ -4,8 +4,8 @@
 // performed have been massive.
 
 use crate::builtins::shared::{
-    builtin_run, ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE,
-    STATUS_READ_TOO_MUCH,
+    builtin_run, ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_INVALID_ARGS,
+    STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
 };
 use crate::common::{
     exit_without_destructors, str2wcstring, truncate_at_nul, wcs2string, wcs2zstring, write_loop,
@@ -927,12 +927,45 @@ fn function_prepare_environment(
     parser: &Parser,
     mut argv: Vec<WString>,
     props: &FunctionProperties,
-) -> BlockId {
+) -> Option<BlockId> {
     // Extract the function name and remaining arguments.
     let mut func_name = WString::new();
     if !argv.is_empty() {
         // Extract and remove the function name from argv.
         func_name = argv.remove(0);
+    }
+
+    if props.strict_arity {
+        let expected = if props.variadic.is_some() {
+            // The variadic argument is allowed to be empty
+            props.named_arguments.len().wrapping_sub(1)
+        } else {
+            props.named_arguments.len()
+        };
+
+        if props.variadic.is_some() && argv.len() < expected {
+            FLOG!(
+                error,
+                wgettext_fmt!(
+                    "%ls: function requires at least %d arguments, but %d where supplied",
+                    func_name,
+                    expected,
+                    argv.len()
+                )
+            );
+            return None;
+        } else if props.variadic.is_none() && argv.len() != expected {
+            FLOG!(
+                error,
+                wgettext_fmt!(
+                    "%ls: function requires exactly %d arguments, but %d where supplied",
+                    func_name,
+                    expected,
+                    argv.len()
+                )
+            );
+            return None;
+        }
     }
 
     let fb = parser.push_block(Block::function_block(
@@ -947,20 +980,50 @@ fn function_prepare_environment(
     // 2. inherited variables
     // 3. argv
 
-    for (idx, named_arg) in props.named_arguments.iter().enumerate() {
-        if idx < argv.len() {
-            vars.set_one(named_arg, EnvMode::LOCAL | EnvMode::USER, argv[idx].clone());
+    let mut overwrite_argv = false;
+    let mode = EnvMode::LOCAL | EnvMode::USER;
+    let mut idx = 0; // Index of the next element in argv to proccess
+                     //  println!("argv = {:?}", argv);
+                     //    println!("-a = {:?}", props.named_arguments);
+                     //    println!("... = {:?}", props.variadic);
+    for (named_idx, named_arg) in props.named_arguments.iter().enumerate() {
+        //    println!("-> {idx}");
+        if named_arg == L!("argv") {
+            overwrite_argv = true
+        };
+        if props.variadic == Some(named_idx) {
+            if argv.len() < props.named_arguments.len() {
+                //          println!("argv is too small, set variadic {named_arg} to empty");
+                vars.set_empty(named_arg, mode);
+            } else {
+                // End of argv, minus the number of named arguments we still need to proccess
+                let end = argv.len() - (props.named_arguments.len() - idx - 1);
+                //        println!("setting variadic {named_arg} = argv[{idx}..{end}] = {:?}", &argv[idx..end]);
+                vars.set(named_arg, mode, argv[idx..end].to_owned());
+                idx = end;
+            }
+        } else if idx < argv.len() {
+            //  println!("setting single {named_arg} = argv[{idx}] = {}", &argv[idx]);
+            vars.set_one(named_arg, mode, argv[idx].clone());
+            idx += 1;
         } else {
-            vars.set_empty(named_arg, EnvMode::LOCAL | EnvMode::USER);
+            //println!("setting empty {named_arg}");
+            vars.set_empty(named_arg, mode);
         }
     }
+    //    println!("All done!");
 
     for (key, value) in &*props.inherit_vars {
+        if key == L!("argv") {
+            overwrite_argv = true
+        };
         vars.set(key, EnvMode::LOCAL | EnvMode::USER, value.clone());
     }
 
-    vars.set_argv(argv);
-    fb
+    if !overwrite_argv {
+        vars.set_argv(argv);
+    }
+    Some(fb)
 }
 
 // Given that we are done executing a function, restore the environment.
@@ -1012,27 +1075,29 @@ fn get_performer_for_function(
     // We want to capture the job group.
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
+    let name = p.argv0().unwrap();
     // This may occur if the function was erased as part of its arguments or in other strange edge cases.
-    let Some(props) = function::get_props(p.argv0().unwrap()) else {
-        FLOG!(
-            error,
-            wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap())
-        );
+    let Some(props) = function::get_props(name) else {
+        FLOG!(error, wgettext_fmt!("Unknown function '%ls'", name));
         return Err(());
     };
     let argv = p.argv().clone();
     Ok(Box::new(move |parser: &Parser, _out, _err| {
         // Pull out the job list from the function.
-        let fb = function_prepare_environment(parser, argv, &props);
-        let body_node = props.func_node.child_ref(|n| &n.jobs);
-        let mut res = parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
-        function_restore_environment(parser, fb);
+        if let Some(fb) = function_prepare_environment(parser, argv, &props) {
+            let body_node = props.func_node.child_ref(|n| &n.jobs);
+            let mut res =
+                parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
+            function_restore_environment(parser, fb);
 
-        // If the function did not execute anything, treat it as success.
-        if res.was_empty {
-            res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
+            // If the function did not execute anything, treat it as success.
+            if res.was_empty {
+                res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
+            }
+            res.status
+        } else {
+            ProcStatus::from_exit_code(STATUS_INVALID_ARGS)
         }
-        res.status
     }))
 }
 

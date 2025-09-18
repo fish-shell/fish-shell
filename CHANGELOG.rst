@@ -53,6 +53,8 @@ Scripting improvements
 - ``argparse`` option specifiers for long only options can now start with ``/``, allowing the definition of long options with a single letter (withouht the ``/``, an option with a single letter is always interpreted as a short flag). Due to this change, the ``--long-only`` option to ``fish_opt`` is now no longer necessary and is deprecated.
 - ``fish_opt`` now has a ``-v`` / ``--validate`` option you can use to give a fish script to validate values of the option.
 - The ``string pad`` command now has a ``-C/--center`` option.
+- A single parameter in a function's ``-a``/``--argument-names`` list can now end in ``...``, indicating that it will collect as many arguments as possible.
+- Add a ``-A``/``--strict-argument-names`` to the ``function`` builtin, this is like the existing ``-a``/``--argument-names`` options, but it reports an error if the given number of arguments doesn't agree with the argument names.
 
 Interactive improvements
 ------------------------

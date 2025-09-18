@@ -21,7 +21,18 @@ A function is a list of commands that will be executed when the name of the func
 The following options are available:
 
 **-a** *NAMES* or **--argument-names** *NAMES*
-    Has to be the last option. Assigns the value of successive command-line arguments to the names given in *NAMES* (separated by space). These are the same arguments given in :envvar:`argv`, and are still available there. See also :ref:`Argument Handling <variables-argv>`.
+    Assigns the value of successive command-line arguments to the names given in *NAMES* (separated by spaces). These are the same arguments given in :envvar:`argv`, and are still available there (unless ``--inherit-variable argv`` was used or one of the given *NAMES* is ``argv``). See also :ref:`Argument Handling <variables-argv>`.
+
+    A single argument name given can end in ``...``, in which case a variable number of arguments are saved in a variable with that name (excluding the ``...`` part), as many as possible whilst still leaving arguments for each of the other named arguments. If this cannot be done (because the number of arguments is smaller than the number of argument names), the argument with a ``...`` is set to the empty list, and the other arguments are asigned values as if the ``...`` one was not there.
+
+    See the :ref:`Argument Names Caveats <argument_names_caveats>` section below for what happens when the number of arguments passed differs from the number of argument *NAMES*.
+
+**-A** *NAMES* or **--strict-argument-names** *NAMES*
+    This behaves like like ``-a`` / ``--argument-names``, except that calling the function with an incorrect number of arguments will print an error, return 2, and not execute the body of the function.
+    If none of the given *NAMES* use a ``...``, this error will trigger when the number of actual arguments does not equal the number of *NAMES*.
+    Otherwise, (if ``...`` was used) the error will trigger if the number of actual arguments is *less* than the number *NAMES* minus 1.
+
+    Unlike the ``-a``/``--argument-names`` option, the given *NAMES* list can be empty, in which case an error will be generated if the function is called with a non-empty list of arguments.
 
 **-d** *DESCRIPTION* or **--description** *DESCRIPTION*
     A description of what the function does, suitable as a completion description.
@@ -74,8 +85,6 @@ Example
 
 will run the ``ls`` command, using the ``-l`` option, while passing on any additional files and switches to ``ls``.
 
-
-
 ::
 
     function debug -a name val
@@ -99,8 +108,6 @@ will run the ``ls`` command, using the ``-l`` option, while passing on any addit
 
 will create a ``debug`` command to print chosen variables to `stderr`.
 
-
-
 ::
 
     function mkdir -d "Create a directory and set CWD"
@@ -120,7 +127,6 @@ will create a ``debug`` command to print chosen variables to `stderr`.
 This will run the ``mkdir`` command, and if it is successful, change the current working directory to the one just created.
 
 
-
 ::
 
     function notify
@@ -136,6 +142,81 @@ This will run the ``mkdir`` command, and if it is successful, change the current
 
 This will beep when the most recent job completes.
 
+.. _argument_names_caveats:
+
+Argument Names Caveats
+----------------------
+
+The ``-a`` / ``--argument-names`` flag does *not* validate the number of arguments passed: if an argument is missing the corresponding variable will be assigned to an empty list. For example:
+
+::
+
+    function two -a x y
+        set -l
+    end
+    two 1
+    # prints:
+    #    argv 1
+    #    x 1
+    #    y
+
+In contrast, if the ``-A`` / ``--strict-argument-names`` option where used instead, the above call to ``two`` would produce an error.
+
+Similarly, if ``-a`` / ``--argument-names`` is used and none of the argument names end in ``...``, any extra arguments are ignored, but they are still accessible in ``$argv``. Continuing the previous example:
+
+::
+
+    two 1 2 3
+    # prints:
+    #    argv '1'  '2'  '3'
+    #    x 1
+    #    y 2
+
+Using ``-A`` / ``--strict-argument-names`` will make the above call to ``two`` an error.
+
+If on the other hand the last argument name does end in ``...``, any extra arguments are stored in that variable. For example:
+
+::
+
+    function one_or_more -a x y...
+        set -l
+    end
+    one_or_more 1 2 3
+    # prints:
+    #    argv '1'  '2'  '3'
+    #    x 1
+    #    y '2'  '3'
+
+The same behaviour occurs with the ``-A`` / ``--strict-argument-names`` option.
+
+If the argument named with a ``...`` is not the last, then if possible, it will leave enough arguments for the subsequent argument names. For example:
+
+::
+
+    function more_or_one -a x... y
+        set -l
+    end
+    more_or_one 1 2 3
+    # prints:
+    #    argv '1'  '2'  '3'
+    #    x '1'  '2'
+    #    y 3
+
+The argument with a ``...`` is however set to the empty list if there are not enough arguments to satisfy all the argument names. For example:
+
+::
+
+    function more_or_two -a x... y z
+        set -l
+    end
+    more_or_two 1
+    # prints:
+    #    argv 1
+    #    x
+    #    y 1
+    #    z
+
+However, with the ``-A`` / ``--strict-argument-names`` option, the above call to ``more_or_two`` would produce an error.
 
 Notes
 -----

@@ -108,16 +108,16 @@ test "$name3[3..-1]" = "$name3a[3..-1]"; and echo "3 = 3a"
 # Test the first two lines.
 string join \n -- $name1[1..2]
 #CHECK: # Defined in {{(?:(?!, copied).)*}}
-#CHECK: function name1 --argument-names arg1 --argument-names arg2
+#CHECK: function name1 --argument-names arg1 arg2
 string join \n -- $name1a[1..2]
 #CHECK: # Defined in {{.*}}, copied in {{.*}}
-#CHECK: function name1a --argument-names arg1 --argument-names arg2
+#CHECK: function name1a --argument-names arg1 arg2
 string join \n -- $name3[1..2]
 #CHECK: # Defined in {{(?:(?!, copied).)*}}
-#CHECK: function name3 --argument-names arg1 --argument-names arg2
+#CHECK: function name3 --argument-names arg1 arg2
 string join \n -- $name3a[1..2]
 #CHECK: # Defined in {{.*}}, copied in {{.*}}
-#CHECK: function name3a --argument-names arg1 --argument-names arg2
+#CHECK: function name3a --argument-names arg1 arg2
 
 function test
     echo banana
@@ -186,4 +186,432 @@ function foo; echo before; end
 foo (functions --erase foo)
 # CHECKERR: error: Unknown function 'foo'
 
-exit 0
+
+# Tests the --argument-names and --inherit-variable can overwrite argv
+function t --argument-names a argv c
+    echo $argv
+end
+t 1 2 3
+#CHECK: 2
+
+function t -a argv
+    echo $argv
+end
+t 1 2 3
+#CHECK: 1
+
+function outer
+    function inner -v argv -V argv
+        echo $argv
+    end
+    set -gx argv 4 5 6
+end
+outer 1 2 3
+#CHECK: 1 2 3
+
+# Check for errors with duplicate names
+set var 1
+function bad -a var var -V var
+    echo $var
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: variable 'var' is passed to both --argument-names and --inherit-variable
+#CHECKERR: function bad -a var var -V var
+#CHECKERR: ^
+not functions -q bad || echo "function should not exist"
+
+function bad -V var -a var
+    echo $var
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: variable 'var' is passed to both --argument-names and --inherit-variable
+#CHECKERR: function bad -V var -a var
+#CHECKERR: ^
+not functions -q bad || echo "function should not exist"
+
+function bad -a var var -V not_var
+    echo $var
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: duplicate variable 'var' in --argument-names
+#CHECKERR: function bad -a var var -V not_var
+#CHECKERR: ^
+not functions -q bad || echo "function should not exist"
+
+function bad -V var -V var
+    echo $var
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: variable 'var' is inherited multiple times
+#CHECKERR: function bad -V var -V var
+#CHECKERR: ^
+not functions -q bad || echo "function should not exist"
+
+# Tests for ... in argument names
+function dotty -a x y... -a z...
+    set -l
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: argument names 'z...' and 'y...' both end in '...'
+#CHECKERR: function dotty -a x y... -a z...
+#CHECKERR: ^
+not functions -q bad || echo "function should not exist"
+
+function dotty -a x...
+    set -l
+end
+dotty
+#CHECK: argv
+#CHECK: x
+dotty 1
+#CHECK: argv 1
+#CHECK: x 1
+dotty 1 2
+#CHECK: argv '1'  '2'
+#CHECK: x '1'  '2'
+dotty 1 2 3
+#CHECK: argv '1'  '2'  '3'
+#CHECK: x '1'  '2'  '3'
+dotty 1 2 3 4 5
+#CHECK: argv '1'  '2'  '3'  '4'  '5'
+#CHECK: x '1'  '2'  '3'  '4'  '5'
+functions dotty
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x...
+# CHECK:     set -l
+# CHECK: end
+type dotty
+# CHECK: dotty is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x...
+# CHECK:     set -l
+# CHECK: end
+
+function dotty -a x... y z
+    set -l
+end
+dotty
+#CHECK: argv
+#CHECK: x
+#CHECK: y
+#CHECK: z
+dotty 1
+#CHECK: argv 1
+#CHECK: x
+#CHECK: y 1
+#CHECK: z
+dotty 1 2
+#CHECK: argv '1'  '2'
+#CHECK: x
+#CHECK: y 1
+#CHECK: z 2
+dotty 1 2 3
+#CHECK: argv '1'  '2'  '3'
+#CHECK: x 1
+#CHECK: y 2
+#CHECK: z 3
+dotty 1 2 3 4 5
+#CHECK: argv '1'  '2'  '3'  '4'  '5'
+#CHECK: x '1'  '2'  '3'
+#CHECK: y 4
+#CHECK: z 5
+functions dotty
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x... y z
+# CHECK:     set -l
+# CHECK: end
+type dotty
+# CHECK: dotty is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x... y z
+# CHECK:     set -l
+# CHECK: end
+
+function dotty -a x y... z
+    set -l
+end
+dotty
+#CHECK: argv
+#CHECK: x
+#CHECK: y
+#CHECK: z
+dotty 1
+#CHECK: argv 1
+#CHECK: x 1
+#CHECK: y
+#CHECK: z
+dotty 1 2
+#CHECK: argv '1'  '2'
+#CHECK: x 1
+#CHECK: y
+#CHECK: z 2
+dotty 1 2 3
+#CHECK: argv '1'  '2'  '3'
+#CHECK: x 1
+#CHECK: y 2
+#CHECK: z 3
+dotty 1 2 3 4 5
+#CHECK: argv '1'  '2'  '3'  '4'  '5'
+#CHECK: x 1
+#CHECK: y '2'  '3'  '4'
+#CHECK: z 5
+functions dotty
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x y... z
+# CHECK:     set -l
+# CHECK: end
+type dotty
+# CHECK: dotty is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x y... z
+# CHECK:     set -l
+# CHECK: end
+
+function dotty -a x y z...
+    set -l
+end
+dotty
+#CHECK: argv
+#CHECK: x
+#CHECK: y
+#CHECK: z
+dotty 1
+# CHECK: argv 1
+# CHECK: x 1
+# CHECK: y
+# CHECK: z
+dotty 1 2
+# CHECK: argv '1'  '2'
+# CHECK: x 1
+# CHECK: y 2
+# CHECK: z
+dotty 1 2 3
+# CHECK: argv '1'  '2'  '3'
+# CHECK: x 1
+# CHECK: y 2
+# CHECK: z 3
+dotty 1 2 3 4 5
+# CHECK: argv '1'  '2'  '3'  '4'  '5'
+# CHECK: x 1
+# CHECK: y 2
+# CHECK: z '3'  '4'  '5'
+functions dotty
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x y z...
+# CHECK:     set -l
+# CHECK: end
+type dotty
+# CHECK: dotty is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function dotty --argument-names x y z...
+# CHECK:     set -l
+# CHECK: end
+
+# Tests for --strict-argument-names
+function strict -A
+    set -l
+end
+strict 1; test $status -eq 2 || echo WRONG
+
+# CHECKERR: error: strict: function requires exactly 0 arguments, but 1 where supplied
+strict; test $status -eq 0 || echo WRONG
+# CHECK: argv
+functions strict
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names
+# CHECK:     set -l
+# CHECK: end
+type strict
+# CHECK: strict is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names
+# CHECK:     set -l
+# CHECK: end
+
+function bad -a
+    set -l
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: -a: option requires an argument
+#CHECKERR: function bad -a
+#CHECKERR: ^
+not functions -q bad || echo "function should not exist"
+
+function strict -A -A # This is the same as -A, this could be made into an error though
+    set -l
+end
+strict 1; test $status -eq 2 || echo WRONG
+# CHECKERR: error: strict: function requires exactly 0 arguments, but 1 where supplied
+strict; test $status -eq 0 || echo WRONG
+# CHECK: argv
+functions strict
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names
+# CHECK:     set -l
+# CHECK: end
+type strict
+# CHECK: strict is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names
+# CHECK:     set -l
+# CHECK: end
+
+function bad -a -a
+    set -l
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: -a: invalid variable name. See `help identifiers`
+#CHECKERR: function bad -a -a
+#CHECKERR: ^
+not functions -q bad || echo "function should not exist"
+
+function strict -AA # This is the same as -A A, not -A -A
+    set -l
+end
+strict; test $status -eq 2 || echo WRONG
+# CHECKERR: error: strict: function requires exactly 1 arguments, but 0 where supplied
+strict 1; test $status -eq 0 || echo WRONG
+# CHECK: A 1
+# CHECK: argv 1
+strict 1 2 3; test $status -eq 2 || echo WRONG
+# CHECKERR: error: strict: function requires exactly 1 arguments, but 3 where supplied
+functions strict
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names A
+# CHECK:     set -l
+# CHECK: end
+type strict
+# CHECK: strict is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names A
+# CHECK:     set -l
+# CHECK: end
+
+function non_strict -aa # This is the same as -a a, not -a -a
+    set -l
+end
+non_strict; test $status -eq 0 || echo WRONG
+# CHECK: a
+# CHECK: argv
+non_strict 1; test $status -eq 0 || echo WRONG
+# CHECK: a 1
+# CHECK: argv 1
+non_strict 1 2 3; test $status -eq 0 || echo WRONG
+# CHECK: a 1
+# CHECK: argv '1'  '2'  '3'
+functions non_strict
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function non_strict --argument-names a
+# CHECK:     set -l
+# CHECK: end
+type non_strict
+# CHECK: non_strict is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function non_strict --argument-names a
+# CHECK:     set -l
+# CHECK: end
+
+function strict --strict-argument-names x y -A z # This is the same as -A x y z
+    set -l
+end
+strict; test $status -eq 2 || echo WRONG
+# CHECKERR: error: strict: function requires exactly 3 arguments, but 0 where supplied
+strict 1 2 3; test $status -eq 0 || echo WRONG
+# CHECK: argv '1'  '2'  '3'
+# CHECK: x 1
+# CHECK: y 2
+# CHECK: z 3
+functions strict
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names x y z
+# CHECK:     set -l
+# CHECK: end
+type strict
+# CHECK: strict is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names x y z
+# CHECK:     set -l
+# CHECK: end
+
+function bad --strict-argument-names x y -a z
+    set -l
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: --argument-names and --strict-argument-names cannot be mixed
+#CHECKERR: function bad --strict-argument-names x y -a z
+#CHECKERR: ^
+not functions -q bad || echo "function should not exist"
+
+function bad --argument-names x y -A z
+    set -l
+end
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: --argument-names and --strict-argument-names cannot be mixed
+#CHECKERR: function bad --argument-names x y -A z
+#CHECKERR: ^
+not functions -q bad || echo "function should not exist"
+
+# Tests for --strict-argument-names with ...
+function strict -A x...
+    set -l
+end
+strict; test $status -eq 0 || echo WRONG
+# CHECK: argv
+# CHECK: x
+strict 1; test $status -eq 0 || echo WRONG
+# CHECK: argv 1
+# CHECK: x 1
+strict 1 2 3; test $status -eq 0 || echo WRONG
+# CHECK: argv '1'  '2'  '3'
+# CHECK: x '1'  '2'  '3'
+functions strict
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names x...
+# CHECK:     set -l
+# CHECK: end
+type strict
+# CHECK: strict is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names x...
+# CHECK:     set -l
+# CHECK: end
+
+function strict -A x y...
+    set -l
+end
+strict; test $status -eq 2 || echo WRONG
+# CHECKERR: error: strict: function requires at least 1 arguments, but 0 where supplied
+strict 1; test $status -eq 0 || echo WRONG
+# CHECK: argv 1
+# CHECK: x 1
+# CHECK: y
+strict 1 2 3; test $status -eq 0 || echo WRONG
+# CHECK: argv '1'  '2'  '3'
+# CHECK: x 1
+# CHECK: y '2'  '3'
+functions strict
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names x y...
+# CHECK:     set -l
+# CHECK: end
+type strict
+# CHECK: strict is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names x y...
+# CHECK:     set -l
+# CHECK: end
+
+function strict -A x y... z
+    set -l
+end
+strict; test $status -eq 2 || echo WRONG
+# CHECKERR: error: strict: function requires at least 2 arguments, but 0 where supplied
+strict 1; test $status -eq 2 || echo WRONG
+# CHECKERR: error: strict: function requires at least 2 arguments, but 1 where supplied
+strict 1 2 3; test $status -eq 0 || echo WRONG
+# CHECK: argv '1'  '2'  '3'
+# CHECK: x 1
+# CHECK: y 2
+# CHECK: z 3
+functions strict
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names x y... z
+# CHECK:     set -l
+# CHECK: end
+type strict
+# CHECK: strict is a function with definition
+# CHECK: # Defined in {{.*}}checks/function.fish @ line {{\d+}}
+# CHECK: function strict --strict-argument-names x y... z
+# CHECK:     set -l
+# CHECK: end

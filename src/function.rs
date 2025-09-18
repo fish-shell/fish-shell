@@ -27,6 +27,12 @@ pub struct FunctionProperties {
     /// List of all named arguments for this function.
     pub named_arguments: Vec<WString>,
 
+    /// Whether to give an error if the function is called with an incorrect number of arguments
+    pub strict_arity: bool,
+
+    /// The index of the named_arguments that ends in ...
+    pub variadic: Option<usize>,
+
     /// Description of the function.
     pub description: LocalizableString,
 
@@ -474,9 +480,17 @@ impl FunctionProperties {
         }
 
         let named = &self.named_arguments;
-        if !named.is_empty() {
-            for name in named {
-                sprintf!(=> &mut out, " --argument-names %ls", name);
+        if !named.is_empty() || self.strict_arity {
+            sprintf!(=> &mut out, if self.strict_arity {
+                " --strict-argument-names"
+            } else {
+                " --argument-names"
+            });
+            for (idx, name) in named.iter().enumerate() {
+                sprintf!(=> &mut out, " %ls", name);
+                if self.variadic == Some(idx) {
+                    sprintf!(=> &mut out, "...");
+                }
             }
         }
 

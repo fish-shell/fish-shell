@@ -1279,7 +1279,9 @@ impl<'a> ExecutionContext<'a> {
             &mut streams,
             &mut shim_arguments,
             NodeRef::new(Arc::clone(self.pstree()), statement),
-        );
+        )
+        .err()
+        .unwrap_or(STATUS_CMD_OK);
 
         ctx.parser().libdata_mut().status_count += 1;
         ctx.parser().set_last_statuses(Statuses::just(err_code));

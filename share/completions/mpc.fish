@@ -85,6 +85,7 @@ complete -c mpc -n "not __fish_seen_subcommand_from $subcommands" -a current -d 
 
 # Using '(mpc search filename (commandline -ct))' _might_ be faster for larger libraries
 complete -c mpc -n "__fish_seen_subcommand_from add insert" -a "(mpc listall)"
+complete -c mpc -n "__fish_seen_subcommand_from add insert" -n 'string match -qr -- ^/ "$(commandline -xt)"' -F
 
 complete -c mpc -n "__fish_seen_subcommand_from playlist load" -a "(mpc lsplaylists)"
 complete -c mpc -n "__fish_seen_subcommand_from consume random repeat single" -a "on off"

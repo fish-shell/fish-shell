@@ -50,15 +50,18 @@ jobs:
             mkdir "$relnotes_tmp/src" "$relnotes_tmp/out"
             version=$(git describe)
             minor_version=${version%.*}
-            # Delete notes for prior releases.
-            # Also fix up any relative references to other documentation files.
-            awk <CHANGELOG.rst '
+            changelog_for_this_version=$(awk <CHANGELOG.rst '
               /^fish/ && $2 != "'"$version"'" { exit }
               { print }
-            ' |
+            ')
+            # Also fix up any relative references to other documentation files.
+            # Also remove spurious transitions at the end of the document.
+            printf %s "$changelog_for_this_version" |
               sed >"$relnotes_tmp/src"/index.rst \
                 -e 's,:doc:`\(.*\) <\([^>]*\)>`,`\1 <https://fishshell.com/docs/'"$minor_version"'/\2.html>`_,g' \
-                -e 's,:envvar:`\([^`]*\)`,``$\1``,g'
+                -e 's,:envvar:`\([^`]*\)`,``$\1``,g' \
+                -e '$s/^----*$//'
+
             # In future, we could reuse doctree from when we made HTML docs.
             sphinx-build -j 1 $(: "sphinx-markdown-builder is not marked concurrency-safe") \
               -W -E -b markdown -c doc_src \

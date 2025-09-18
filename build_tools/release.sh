@@ -53,7 +53,7 @@ integration_branch=$(
 [ -n "$integration_branch" ] ||
     git merge-base --is-ancestor $remote/master HEAD
 
-sed -n 1p CHANGELOG.rst | grep -q '^fish .*(released ???)$'
+sed -n 1p CHANGELOG.rst | grep -q '^fish .*(released .*)$'
 sed -n 2p CHANGELOG.rst | grep -q '^===*$'
 
 changelog_title="fish $version (released $(date +'%B %d, %Y'))"

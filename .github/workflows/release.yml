@@ -72,6 +72,7 @@ jobs:
             sed -i 1,2d "$relnotes_tmp/out/index.md"
             {
               cat "$relnotes_tmp/out/index.md" - <<EOF
+
           ----
 
           *Download links: To download the source code for fish, we suggest the file named "fish-$version.tar.xz". The file downloaded from "Source code (tar.gz)" will not build correctly.*

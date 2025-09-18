@@ -73,8 +73,6 @@ jobs:
 
           *Download links: To download the source code for fish, we suggest the file named "fish-$version.tar.xz". The file downloaded from "Source code (tar.gz)" will not build correctly.*
 
-          *There is no GPG signature because we haven't yet decided how to integrate signing into the new release automation.*
-
           *The files called fish-$version-linux-\*.tar.xz are experimental packages containing a single standalone ``fish`` binary for any Linux with the given architecture.*
           EOF
             } >/tmp/fish-built/release-notes.md

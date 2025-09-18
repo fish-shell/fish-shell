@@ -46,6 +46,13 @@ if git tag | grep -qxF "$version"; then
     exit 1
 fi
 
+integration_branch=$(
+    git for-each-ref --points-at=HEAD 'refs/heads/Integration_*' \
+        --format='%(refname:strip=2)'
+)
+[ -n "$integration_branch" ] ||
+    git merge-base --is-ancestor $remote/master HEAD
+
 sed -n 1p CHANGELOG.rst | grep -q '^fish .*(released ???)$'
 sed -n 2p CHANGELOG.rst | grep -q '^===*$'
 
@@ -157,8 +164,9 @@ done
     git push git@github.com:$repository_owner/fish-site HEAD:master
 )
 
-if git merge-base --is-ancestor $remote/master $version
-then
+if [ -n "$integration_branch" ]; then
+    git push $remote "$version^{commit}":refs/heads/$integration_branch
+else
     changelog=$(cat - CHANGELOG.rst <<EOF
 fish ?.?.? (released ???)
 =========================
@@ -168,10 +176,6 @@ EOF
     printf %s\\n "$changelog" >CHANGELOG.rst
     CommitVersion ${version}-snapshot "start new cycle"
     git push $remote HEAD:master
-else
-    # Probably on an integration branch.
-    # TODO Maybe push when that's safe (or move this to CI).
-    :
 fi
 
 # TODO This can currently require a TTY for editing and password
@@ -180,12 +184,12 @@ if [ "$repository_owner" = fish-shell ]; then {
     mail=$(mktemp)
     cat >$mail <<EOF
 From: $(git var GIT_AUTHOR_IDENT | sed 's/ [0-9]* +[0-9]*$//')
-To: fish-users Mailing List <fish-users@lists.sourceforge.net>
 Subject: fish $version released
 
 See https://github.com/fish-shell/fish-shell/releases/tag/$version
 EOF
-    git send-email --suppress-cc=all $mail
+    git send-email --suppress-cc=all --confirm=always $mail \
+        --to="fish-users Mailing List <fish-users@lists.sourceforge.net>"
     rm $mail
 } fi
 

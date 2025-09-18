@@ -20,6 +20,7 @@ fi
 for tool in \
     bundle \
     gh \
+    jq \
     ruby \
     timeout \
 ; do
@@ -136,6 +137,30 @@ rm -rf "$tmpdir"
         | Created by ../fish-shell/build_tools/release.sh
     " | sed 's,^\s*| \?,,')"
 )
+
+
+
+# Approve macos-codesign
+# TODO what if current user can't approve?
+sleep 5
+environment_id=$(
+    gh api \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        /repos/$repository_owner/fish-shell/actions/runs/$run_id/pending_deployments |
+        jq .[].environment.id
+)
+gh api \
+    -X POST \
+    -H "Accept: application/vnd.github+json" \
+    "/repos/$repository_owner/fish-shell/actions/runs/$run_id/pending_deployments" \
+    -d '
+        {
+            "environment_ids": ['"$environment_id"'],
+            "state": "approved",
+            "comment": "Approved via ./build_tools/release.sh"
+        }
+    '
 
 # # Uncomment this to wait the full workflow run (i.e. macOS packages).
 # # Also note that --exit-status doesn't fail reliably.

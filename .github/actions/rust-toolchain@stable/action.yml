@@ -14,7 +14,7 @@ permissions:
 runs:
   using: "composite"
   steps:
-    - uses: dtolnay/rust-toolchain@1.89
+    - uses: dtolnay/rust-toolchain@1.90
       with:
         targets: ${{ inputs.targets }}
         components: ${{ inputs.components }}

@@ -18,21 +18,8 @@ Notable improvements and fixes
   use ``status get-file`` or find alternatives (like loading completions for "foo" via ``complete -C"foo "``).
 
   We're considering making data embedding mandatory in future releases because it has a few advantages even for installation from a package (like making file conflicts with other packages impossible) (:issue:`11143`).
-- Reworked gettext localization (:issue:`11726`).
-  We replaced several parts of the gettext functionality with custom implementations.
-  Most notably, message extraction, which should now work reliably, and the runtime implementation, where we no longer dynamically link to gettext, but instead use our own implementation, whose behavior is similar to GNU gettext, with some minor deviations.
-  Our implementation now fully respects fish variables, so locale variables do not have to be exported for fish localizations to work.
-  They still have to be exported to inform other programs about language preferences.
-  The :envvar:`LANGUAGE` environment variable is now treated as a path variable, meaning it is an implicitly colon-separated list.
-  While we no longer have any runtime dependency on gettext, we still need gettext tools for building, most notably ``msgfmt``.
-  When building without ``msgfmt`` available, localization will not work with the resulting executable.
-  Localization data is no longer sourced at runtime from MO files on the file system, but instead built into the executable.
-  This is always done, independently of the other data embedding, so all fish executables will have access to all message catalogs, regardless of the state of the file system.
-  We have a new cargo feature called ``localize-messages``, which is enabled by default.
-  Disabling it will cause fish to be built without localization support.
-  CMake builds can continue to use the ``WITH_GETTEXT`` option, with the same semantics as the ``localize-messages`` feature.
-  The current implementation does not provide any configuration options for controlling which language catalogs are built into the executable (other than disabling them all).
-  As a workaround, you can delete files in the ``po`` directory before building to exclude unwanted languages.
+- Reworked gettext localization, making translations work inside builds with embedded data (mentioned above).
+  See :ref:`below <changelog-4.1-gettext>` for a detailed description of the changes.
 
 Deprecations and removed features
 ---------------------------------
@@ -57,16 +44,7 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - The ``psub`` command now allows combining ``--suffix`` with ``--fifo`` (:issue:`11729`).
-- ``argparse`` now saves recognised options and values in :envvar:`argv_opts`, allowing them to be forwarded to other commands (:issue:`6466`).
-- ``argparse`` options can now be marked to be deleted from :envvar:`argv_opts` (by adding a ``&`` at the end of the option spec, before a ``!`` if present). There is now also a corresponding ``-d`` / ``--delete`` option to ``fish_opt``.
-- ``argparse --ignore-unknown`` now removes preceding known short options from groups containing unknown options (e.g. when parsing ``-abc``, if ``a`` is known but ``b`` is not, then :envvar:`argv` will contain ``-bc``).
-- ``argparse`` now has an ``-u`` / ``--move-unknown`` option that works like ``--ignore-unknown``, but unknown options (and their arguments) are moved from :envvar:`argv` to :envvar:`argv_opts`. whereas ``--ignore-unknown`` keeps them in :envvar:`argv`.
-- ``argparse`` now has an ``-S`` / ``--strict-longopts`` option that forbids abbreviating long options or passing them with a single dash (e.g. if there is a long option called ``foo``, ``--fo`` and ``--foo`` won't match it).
-- ``argparse`` now has a ``-U`` / ``--unknown-arguments`` *KIND* option, where *KIND* is either ``optional``, ``required``, or ``none``, indicating whether unknown options are parsed as taking optional, required, or no arguments. This implies ``--move-unknown``.
-- ``argparse`` now allows specifying options that take multiple optional values by using ``=*`` in the option spec, the parsing of the option is the same as ones with optional values (i.e. ``=?``), but each successive use accumulates more values (or an empty string if no value), instead of replacing the previous value (i.e. it behaves similarly to ``=+``) (:issue:`8432`). In addition, ``fish_opt`` has been modified to support such options by using the ``--multiple-vals`` together with ``-o`` / ``--optional-val``; ``-m`` is also now acceptable as an abbreviation for ``--multiple-vals``.
-- ``fish_opt`` no longer requires you give a short flag name when defining options, provided you give it a long flag name with more than one character.
-- ``argparse`` option specifiers for long only options can now start with ``/``, allowing the definition of long options with a single letter (withouht the ``/``, an option with a single letter is always interpreted as a short flag). Due to this change, the ``--long-only`` option to ``fish_opt`` is now no longer necessary and is deprecated.
-- ``fish_opt`` now has a ``-v`` / ``--validate`` option you can use to give a fish script to validate values of the option.
+- Builtin :doc:`argparse <cmds/argparse>` has seen many improvements, see :ref:`below <changelog-4.1-argparse>`.
 - The ``string pad`` command now has a ``-C/--center`` option.
 
 Interactive improvements
@@ -120,9 +98,45 @@ For distributors
 - The CMake system was simplified and no longer second-guesses rustup. It will run rustc and cargo via :envvar:`PATH` or in ~/.cargo/bin/.
   If that doesn't match your setup, set the Rust_COMPILER and Rust_CARGO cmake variables (:issue:`11328`).
 - Cygwin support has been reintroduced, since rust gained a Cygwin target (https://github.com/rust-lang/rust/pull/134999, :issue:`11238`).
-- Fish no longer uses gettext MO files (:issue:`11726`).
+- Fish no longer uses gettext MO files, see :ref:`below <changelog-4.1-gettext>` (:issue:`11726`).
   See the description about changes to the gettext behavior for details.
   If you have use cases which are incompatible with our new approach, please let us know.
+
+.. _changelog-4.1-gettext:
+
+Changes to gettext localization
+-------------------------------
+
+We replaced several parts of the gettext functionality with custom implementations (:issue:`11726`).
+Most notably, message extraction, which should now work reliably, and the runtime implementation, where we no longer dynamically link to gettext, but instead use our own implementation, whose behavior is similar to GNU gettext, with some minor deviations.
+Our implementation now fully respects fish variables, so locale variables do not have to be exported for fish localizations to work.
+They still have to be exported to inform other programs about language preferences.
+The :envvar:`LANGUAGE` environment variable is now treated as a path variable, meaning it is an implicitly colon-separated list.
+While we no longer have any runtime dependency on gettext, we still need gettext tools for building, most notably ``msgfmt``.
+When building without ``msgfmt`` available, localization will not work with the resulting executable.
+Localization data is no longer sourced at runtime from MO files on the file system, but instead built into the executable.
+This is always done, independently of the other data embedding, so all fish executables will have access to all message catalogs, regardless of the state of the file system.
+We have a new cargo feature called ``localize-messages``, which is enabled by default.
+Disabling it will cause fish to be built without localization support.
+CMake builds can continue to use the ``WITH_GETTEXT`` option, with the same semantics as the ``localize-messages`` feature.
+The current implementation does not provide any configuration options for controlling which language catalogs are built into the executable (other than disabling them all).
+As a workaround, you can delete files in the ``po`` directory before building to exclude unwanted languages.
+
+.. _changelog-4.1-argparse:
+
+Changes to the argparse builtin
+-------------------------------
+
+- ``argparse`` now saves recognised options and values in :envvar:`argv_opts`, allowing them to be forwarded to other commands (:issue:`6466`).
+- ``argparse`` options can now be marked to be deleted from :envvar:`argv_opts` (by adding a ``&`` at the end of the option spec, before a ``!`` if present). There is now also a corresponding ``-d`` / ``--delete`` option to ``fish_opt``.
+- ``argparse --ignore-unknown`` now removes preceding known short options from groups containing unknown options (e.g. when parsing ``-abc``, if ``a`` is known but ``b`` is not, then :envvar:`argv` will contain ``-bc``).
+- ``argparse`` now has an ``-u`` / ``--move-unknown`` option that works like ``--ignore-unknown``, but unknown options (and their arguments) are moved from :envvar:`argv` to :envvar:`argv_opts`. whereas ``--ignore-unknown`` keeps them in :envvar:`argv`.
+- ``argparse`` now has an ``-S`` / ``--strict-longopts`` option that forbids abbreviating long options or passing them with a single dash (e.g. if there is a long option called ``foo``, ``--fo`` and ``--foo`` won't match it).
+- ``argparse`` now has a ``-U`` / ``--unknown-arguments`` *KIND* option, where *KIND* is either ``optional``, ``required``, or ``none``, indicating whether unknown options are parsed as taking optional, required, or no arguments. This implies ``--move-unknown``.
+- ``argparse`` now allows specifying options that take multiple optional values by using ``=*`` in the option spec, the parsing of the option is the same as ones with optional values (i.e. ``=?``), but each successive use accumulates more values (or an empty string if no value), instead of replacing the previous value (i.e. it behaves similarly to ``=+``) (:issue:`8432`). In addition, ``fish_opt`` has been modified to support such options by using the ``--multiple-vals`` together with ``-o`` / ``--optional-val``; ``-m`` is also now acceptable as an abbreviation for ``--multiple-vals``.
+- ``fish_opt`` no longer requires you give a short flag name when defining options, provided you give it a long flag name with more than one character.
+- ``argparse`` option specifiers for long only options can now start with ``/``, allowing the definition of long options with a single letter (withouht the ``/``, an option with a single letter is always interpreted as a short flag). Due to this change, the ``--long-only`` option to ``fish_opt`` is now no longer necessary and is deprecated.
+- ``fish_opt`` now has a ``-v`` / ``--validate`` option you can use to give a fish script to validate values of the option.
 
 --------------
 
@@ -230,7 +244,7 @@ Notable backwards-incompatible changes
 
 - As part of a larger binding rework, ``bind`` gained a new key notation.
   In most cases the old notation should keep working, but in rare cases you may have to change a ``bind`` invocation to use the new notation.
-  See :ref:`below <changelog-new-bindings>` for details.
+  See :ref:`below <changelog-4.0-new-bindings>` for details.
 - :kbd:`ctrl-c` now calls a new bind function called ``clear-commandline``. The old behavior, which leaves a "^C" marker, is available as ``cancel-commandline`` (:issue:`10935`)
 - ``random`` will produce different values from previous versions of fish when used with the same seed, and will work more sensibly with small seed numbers.
   The seed was never guaranteed to give the same result across systems,
@@ -252,7 +266,7 @@ Notable backwards-incompatible changes
 
 Notable improvements and fixes
 ------------------------------
-.. _changelog-new-bindings:
+.. _changelog-4.0-new-bindings:
 
 -  fish now requests XTerm's ``modifyOtherKeys`` keyboard encoding and `kitty keyboard protocol's <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_ progressive enhancements (:issue:`10359`).
    Depending on terminal support, this allows to binding more key combinations, including arbitrary combinations of modifiers :kbd:`ctrl`, :kbd:`alt` and :kbd:`shift`, and distinguishing (for example) :kbd:`ctrl-i` from :kbd:`tab`.
@@ -395,7 +409,7 @@ New or improved bindings
 - Bindings like :kbd:`alt-l` that print output in between prompts now work correctly with multiline commandlines.
 - :kbd:`alt-d` on an empty command line lists the directory history again. This restores the behavior of version 2.1.
 - ``history-prefix-search-backward`` and ``-forward`` now maintain the cursor position, instead of moving the cursor to the end of the command line (:issue:`10430`).
-- The following keys have refined behavior if the terminal supports :ref:`the new keyboard encodings <changelog-new-bindings>`:
+- The following keys have refined behavior if the terminal supports :ref:`the new keyboard encodings <changelog-4.0-new-bindings>`:
 
   - :kbd:`shift-enter` now inserts a newline instead of executing the command line.
   - :kbd:`ctrl-backspace` now deletes the last word instead of only one character (:issue:`10741`).

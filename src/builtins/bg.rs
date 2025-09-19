@@ -17,12 +17,13 @@ fn send_to_bg(
             let err = {
                 let job = &jobs[job_pos];
                 wgettext_fmt!(
-                "%ls: Can't put job %s, '%ls' to background because it is not under job control\n",
-                cmd,
-                job.job_id().to_wstring(),
-                job.command()
-            )
+                    "%ls: Can't put job %s, '%ls' to background because it is not under job control\n",
+                    cmd,
+                    job.job_id().to_wstring(),
+                    job.command()
+                )
             };
+            drop(jobs);
             builtin_print_help_error(parser, streams, cmd, &err);
             return STATUS_CMD_ERROR;
         }

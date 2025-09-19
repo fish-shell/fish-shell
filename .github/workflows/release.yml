@@ -109,11 +109,11 @@ jobs:
       - name: Build statically-linked executables
         run: |
           set -x
+          cargo build --release --target x86_64-unknown-linux-musl --bin fish
           CFLAGS="-D_FORTIFY_SOURCE=2" \
             CC=aarch64-linux-gnu-gcc \
             RUSTFLAGS="-C linker=aarch64-linux-gnu-gcc -C link-arg=-lgcc -C link-arg=-D_FORTIFY_SOURCE=0" \
             cargo build --release --target aarch64-unknown-linux-musl --bin fish
-          cargo build --release --target x86_64-unknown-linux-musl --bin fish
       - name: Compress
         run: |
           set -x

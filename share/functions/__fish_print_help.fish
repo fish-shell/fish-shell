@@ -1,4 +1,5 @@
-function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument-names item error_message
+function __fish_print_help --description "Print help message for the specified fish function or builtin"
+    set -l item $argv[1]
     switch $item
         case !
             set item not
@@ -75,7 +76,6 @@ function __fish_print_help --description "Print help message for the specified f
     set -l state blank
     set -l have_name
     begin
-        string join \n $error_message
         for line in $help
             # categorize the line
             set -l line_type

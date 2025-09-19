@@ -431,16 +431,12 @@ end
 # Check that these error correctly.
 $dyn_break
 eval break
-#CHECKERR: Error-message: break: Not inside of loop
-#CHECKERR: Documentation for break
-#CHECKERR: Error-message: break: Not inside of loop
-#CHECKERR: Documentation for break
+#CHECKERR: break: Not inside of loop
+#CHECKERR: break: Not inside of loop
 $dyn_continue
 eval continue
-#CHECKERR: Error-message: continue: Not inside of loop
-#CHECKERR: Documentation for continue
-#CHECKERR: Error-message: continue: Not inside of loop
-#CHECKERR: Documentation for continue
+#CHECKERR: continue: Not inside of loop
+#CHECKERR: continue: Not inside of loop
 
 break -h
 #CHECKERR: Documentation for break

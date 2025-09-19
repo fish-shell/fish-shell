@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::builtins::*;
 use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
-use crate::io::{IoFd, OutputStream};
+use crate::io::OutputStream;
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
 use crate::parser::{Block, BlockType, LoopStatus};
@@ -9,12 +9,11 @@ use crate::proc::{no_exec, ProcStatus};
 use crate::reader::reader_read;
 use crate::wchar::L;
 use errno::errno;
-use libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+use libc::STDIN_FILENO;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::os::fd::FromRawFd;
-use std::sync::Arc;
 
 pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;
 
@@ -627,28 +626,13 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
 ///
 /// Process and print help for the specified builtin or function.
 pub fn builtin_print_help(parser: &Parser, streams: &mut IoStreams, cmd: &wstr) {
-    builtin_print_help_error(parser, streams, cmd, L!(""))
-}
-
-pub fn builtin_print_help_error(
-    parser: &Parser,
-    streams: &mut IoStreams,
-    cmd: &wstr,
-    error_message: &wstr,
-) {
     // This won't ever work if no_exec is set.
     if no_exec() {
         return;
     }
     let name_esc = escape(cmd);
-    let mut cmd = sprintf!("__fish_print_help %ls ", &name_esc);
-    let mut ios = streams.io_chain.clone();
-    if !error_message.is_empty() {
-        cmd.push_utfstr(&escape(error_message));
-        // If it's an error, redirect the output of __fish_print_help to stderr
-        ios.push(Arc::new(IoFd::new(STDOUT_FILENO, STDERR_FILENO)));
-    }
-    let res = parser.eval(&cmd, &ios);
+    let cmd = sprintf!("__fish_print_help %ls ", &name_esc);
+    let res = parser.eval(&cmd, streams.io_chain);
     if res.status.normal_exited() && res.status.exit_code() == 2 {
         streams
             .err
@@ -986,8 +970,9 @@ fn builtin_break_continue(
     }
 
     if argc != 1 {
-        let error_message = wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]);
-        builtin_print_help_error(parser, streams, argv[0], &error_message);
+        streams
+            .err
+            .append(wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]));
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -1004,8 +989,9 @@ fn builtin_break_continue(
         }
     }
     if !has_loop {
-        let error_message = wgettext_fmt!("%ls: Not inside of loop\n", argv[0]);
-        builtin_print_help_error(parser, streams, argv[0], &error_message);
+        streams
+            .err
+            .append(wgettext_fmt!("%ls: Not inside of loop\n", argv[0]));
         return Err(STATUS_CMD_ERROR);
     }
 

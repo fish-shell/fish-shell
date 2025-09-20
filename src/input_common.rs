@@ -171,10 +171,15 @@ impl KeyEvent {
     }
 
     pub(crate) fn codepoint_text(&self) -> Option<char> {
-        if self.modifiers.is_some() {
+        let mut modifiers = self.modifiers;
+        let mut c = self.codepoint;
+        if self.shifted_codepoint != '\0' && modifiers.shift {
+            modifiers.shift = false;
+            c = self.shifted_codepoint;
+        }
+        if modifiers.is_some() {
             return None;
         }
-        let c = self.codepoint;
         if c == key::Space {
             return Some(' ');
         }

@@ -1,3 +1,10 @@
+fish 4.0.9 (released ???)
+=========================
+
+This release fixes a regression in 4.0.6 that caused shifted keys to not be inserted on some terminals.
+
+--------------
+
 fish 4.0.8 (released September 18, 2025)
 ========================================
 

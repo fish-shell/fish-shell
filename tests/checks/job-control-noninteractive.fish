@@ -19,5 +19,15 @@ $fish -c 'status job-control full ; $fth report_foreground' &
 wait
 #CHECKERR: background
 
-$fish -c 'sleep .2 & bg %1'
-#CHECKERR: bg: Can't put job 1, 'sleep .2 &' to background because it is not under job control
+$fish -c '
+    function __fish_print_help
+        if set -q argv[2]
+            echo Error-message: $argv[2] >&2
+        end
+        echo Documentation for $argv[1] >&2
+        return 1
+    end
+    sleep .2 & bg %1
+'
+#CHECKERR: Error-message: bg: Can't put job 1, 'sleep .2 &' to background because it is not under job control
+#CHECKERR: Documentation for bg

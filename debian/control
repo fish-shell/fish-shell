@@ -20,7 +20,6 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-Depends: bsdextrautils,
 Depends: bsdextrautils | bsdmainutils,
  file,
  gettext-base,

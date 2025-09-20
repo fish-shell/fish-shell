@@ -7,7 +7,7 @@ use crate::{
     future_feature_flags::{test as feature_test, FeatureFlag},
     reader::safe_get_terminal_mode_on_startup,
     wchar::{decode_byte_from_char, prelude::*},
-    wutil::{fish_is_pua, fish_wcstoul},
+    wutil::fish_wcstoul,
 };
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
@@ -351,28 +351,6 @@ pub(crate) fn canonicalize_raw_escapes(keys: Vec<Key>) -> Vec<Key> {
         canonical.push(Key::from_raw(Escape));
     }
     canonical
-}
-
-impl Key {
-    pub(crate) fn codepoint_text(&self) -> Option<char> {
-        if self.modifiers.is_some() {
-            return None;
-        }
-        let c = self.codepoint;
-        if c == Space {
-            return Some(' ');
-        }
-        if c == Enter {
-            return Some('\n');
-        }
-        if c == Tab {
-            return Some('\t');
-        }
-        if fish_is_pua(c) || u32::from(c) <= 27 {
-            return None;
-        }
-        Some(c)
-    }
 }
 
 impl std::fmt::Display for Key {

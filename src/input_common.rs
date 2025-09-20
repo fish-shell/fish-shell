@@ -16,7 +16,7 @@ use crate::tty_handoff::{get_kitty_keyboard_capability, set_kitty_keyboard_capab
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
-use crate::wutil::fish_wcstol;
+use crate::wutil::{fish_is_pua, fish_wcstol};
 use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;
 use std::mem::MaybeUninit;
@@ -168,6 +168,26 @@ impl KeyEvent {
     }
     pub fn from_single_byte(c: u8) -> Self {
         Self::from(Key::from_single_byte(c))
+    }
+
+    pub(crate) fn codepoint_text(&self) -> Option<char> {
+        if self.modifiers.is_some() {
+            return None;
+        }
+        let c = self.codepoint;
+        if c == key::Space {
+            return Some(' ');
+        }
+        if c == key::Enter {
+            return Some('\n');
+        }
+        if c == key::Tab {
+            return Some('\t');
+        }
+        if fish_is_pua(c) || u32::from(c) <= 27 {
+            return None;
+        }
+        Some(c)
     }
 }
 

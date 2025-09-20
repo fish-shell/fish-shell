@@ -27,7 +27,7 @@ Deprecations and removed features
 - Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation since 4.0,
   and currently they would map back to information from terminfo, which does not match what terminals would send with the kitty keyboard protocol (:issue:`11342`).
 - fish no longer reads the terminfo database, so its behavior is no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).
-  For the time being, this can be turned off via the "ignore-terminfo" feature flag::
+  For the time being, this can be turned off via the "ignore-terminfo" feature flag. To do so, run the following once and restart fish::
 
     set -Ua fish_features no-ignore-terminfo
 
@@ -39,7 +39,9 @@ Deprecations and removed features
   - Inside macOS Terminal.app, fish makes an attempt to still use the palette colors.
     If that doesn't work, use ``set fish_term24bit 0``.
 - ``set_color --background=COLOR`` no longer implicitly activates bold mode.
-  To mitigate this change on existing installations that use a default theme, update your theme with ``fish_config theme choose`` or ``fish_config theme save``.
+  If your theme is stored in universal variables (which is the historical default),
+  you may want to update it to the new defaults that explicitly activate bold mode.
+  In this case, use something like ``fish_config theme save "fish default"``.
 
 Scripting improvements
 ----------------------
@@ -51,10 +53,9 @@ Interactive improvements
 ------------------------
 - Autosuggestions are now also provided in multi-line command lines. Like :kbd:`ctrl-r`, autosuggestions operate only on the current line.
 - Autosuggestions used to not suggest multi-line commandlines from history; now autosuggestions include individual lines from multi-line command lines.
-- The history search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
-- Left mouse click (as requested by `click_events <terminal-compatibility.html#click-events>`__) can now select pager items (:issue:`10932`).
+- The history pager search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
 - Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), the autosuggestion when deleting it, and the full command line in all other cases.
-- Pasted commands are now stripped of any ``$`` prefix.
+- Pasted commands are now stripped of any :code:`$\ ` command prefixes, which are sometimes used in copy-pasted code snippets.
 - The :kbd:`alt-s` binding will now also use ``run0`` if available.
 - ``funced`` will now edit copied functions directly, instead of the file where ``function --copy`` was invoked. (:issue:`11614`)
 
@@ -62,44 +63,43 @@ New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - On non-macOS systems, :kbd:`alt-left`, :kbd:`alt-right`, :kbd:`alt-backspace`, :kbd:`alt-delete` no longer operate on punctuation-delimited words but on whole arguments, possibly including special characters like ``/`` and quoted spaces.
   On macOS, the corresponding :kbd:`ctrl-` prefixed keys operate on whole arguments.
-  Word operations are still available via the other respective modifier, same as in the browser.
+  Word operations are still available via the other respective modifier, just like in most web browsers.
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
-- The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking.
+- The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking in the command line,
+  and selecting pager items (:issue:`10932`).
 - :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback, before clearing and redrawing the screen (via a new special input function ``scrollback-push``).
   For compatibility with terminals that do not provide the scroll-forward command,
-  this is only enabled by default if the terminal advertises support for the ``indn`` capability via XTGETTCAP.
-- Bindings using shift with non-ASCII letters (such as :kbd:`ctrl-shift-ä`) are now supported.
-  If there is any modifier other than shift, this is the recommended notation (as opposed to :kbd:`ctrl-Ä`).
+  this is only enabled by default if the terminal advertises support for the ``indn`` capability via the XTGETTCAP protocol.
 - Vi mode has learned :kbd:`ctrl-a` (increment) and :kbd:`ctrl-x` (decrement) (:issue:`11570`).
 
 Completions
 ^^^^^^^^^^^
-- ``git`` completions now show the remote url as a description when completing remotes.
+- ``git`` completions now show the remote URL as a description when completing remotes.
 - ``systemctl`` completions no longer print escape codes if ``SYSTEMD_COLORS`` is set (:issue:`11465`).
-- Added completions for:
-
-  - ``stackit`` (:issue:`11742`)
+- Added many completions scripts.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- Support for double, curly, dotted and dashed underlines in ``fish_color_*`` variables and :doc:`set_color <cmds/set_color>` (:issue:`10957`).
+- Support for double, curly, dotted and dashed underlines, for use in ``fish_color_*`` variables and the :doc:`set_color builtin <cmds/set_color>` (:issue:`10957`).
 - Underlines can now be colored independent of text (:issue:`7619`).
-- New documentation page `Terminal Compatibility <terminal-compatibility.html>`_ (also accessible via ``man fish-terminal-compatibility``) lists required and optional terminal control sequences used by fish.
+- New documentation page `Terminal Compatibility <terminal-compatibility.html>`_ (also accessible via ``man fish-terminal-compatibility``) lists terminal control sequences used by fish.
 
 Other improvements
 ------------------
-- ``fish_indent`` and ``fish_key_reader`` are now available as builtins, and if fish is called with that name it will act like the given tool (as a multi-call binary).
-  This allows truly distributing fish as a single file. (:issue:`10876`)
 - ``fish_indent --dump-parse-tree`` now emits simple metrics about the tree including its memory consumption.
 
 For distributors
 ----------------
-- ``fish_indent`` and ``fish_key_reader`` are still built as separate binaries for now, but can also be replaced with a symlink if you want to save disk space (:issue:`10876`).
-- The CMake system was simplified and no longer second-guesses rustup. It will run rustc and cargo via :envvar:`PATH` or in ~/.cargo/bin/.
+- The ``fish_indent`` and ``fish_key_reader`` programs are now also available as builtins.
+  If fish is invoked via e.g. a symlink with one of these names,
+  it will act like the given tool (i.e. it's a multi-call binary).
+  This allows truly distributing fish as a single file.
+  This means they can be replaced with symlinks if you want to save disk space (:issue:`10876`).
+- The CMake build configuration has been simplified and no longer second-guesses rustup.
+  It will run rustc and cargo via :envvar:`PATH` or in ~/.cargo/bin/.
   If that doesn't match your setup, set the Rust_COMPILER and Rust_CARGO cmake variables (:issue:`11328`).
-- Cygwin support has been reintroduced, since rust gained a Cygwin target (https://github.com/rust-lang/rust/pull/134999, :issue:`11238`).
-- Fish no longer uses gettext MO files, see :ref:`below <changelog-4.1-gettext>` (:issue:`11726`).
-  See the description about changes to the gettext behavior for details.
+- Cygwin support has been reintroduced, since Rust gained a Cygwin target (https://github.com/rust-lang/rust/pull/134999, :issue:`11238`).
+- Fish no longer uses gettext MO files, see :ref:`below <changelog-4.1-gettext>`.
   If you have use cases which are incompatible with our new approach, please let us know.
 
 .. _changelog-4.1-gettext:

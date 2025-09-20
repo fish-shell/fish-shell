@@ -18,8 +18,6 @@ Help on a specific builtin can also be obtained with the ``-h`` parameter. For i
 
 The main page can be viewed via ``help index`` (or just ``help``) or ``man fish-doc``. The tutorial can be viewed with ``help tutorial`` or ``man fish-tutorial``.
 
-.. _autosuggestions:
-
 Autosuggestions
 ---------------
 
@@ -32,8 +30,6 @@ Autosuggestions are a powerful way to quickly summon frequently entered commands
 If you don't like autosuggestions, you can disable them by setting ``$fish_autosuggestion_enabled`` to 0::
 
   set -g fish_autosuggestion_enabled 0
-
-.. _tab-completion:
 
 Tab Completion
 --------------
@@ -185,8 +181,6 @@ Variable                                                   Meaning
 ===================================================        ===========================================================
 
 When the secondary or selected variables aren't set or are empty, the normal variables are used, except for ``$fish_pager_color_selected_background``, where the background of ``$fish_color_search_match`` is tried first.
-
-.. _abbreviations:
 
 Abbreviations
 -------------
@@ -681,8 +675,6 @@ If the commandline reads ``cd m``, place the cursor over the ``m`` character and
 .. [#] Or another binding that triggers the ``history-pager`` input function. See :doc:`bind <cmds/bind>` for a list.
 .. [#] Or another binding that triggers the ``pager-toggle-search`` input function.
 
-.. _private-mode:
-
 Private mode
 -------------
 
@@ -694,8 +686,6 @@ You can query the variable ``fish_private_mode`` (``if test -n "$fish_private_mo
 
 Navigating directories
 ----------------------
-
-.. _directory-history:
 
 Navigating directories is usually done with the :doc:`cd <cmds/cd>` command, but fish offers some advanced features as well.
 
@@ -712,8 +702,6 @@ Several commands are provided to interact with this directory history:
 - :doc:`cdh <cmds/cdh>` displays a prompt to quickly navigate the history
 - :doc:`prevd <cmds/prevd>` moves backward through the history. It is bound to :kbd:`alt-left` (``←``)
 - :doc:`nextd <cmds/nextd>` moves forward through the history. It is bound to :kbd:`alt-right` (``→``)
-
-.. _directory-stack:
 
 Directory stack
 ^^^^^^^^^^^^^^^

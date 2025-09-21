@@ -404,6 +404,8 @@ pub enum CancelBehavior {
 }
 
 pub struct Parser {
+    pub interactive_initialized: RelaxedAtomicBool,
+
     /// A shared line counter. This is handed out to each execution context
     /// so they can communicate the line number back to this Parser.
     line_counter: ScopedRefCell<LineCounter<ast::JobPipeline>>,
@@ -449,6 +451,7 @@ impl Parser {
     /// Create a parser.
     pub fn new(variables: EnvStack, cancel_behavior: CancelBehavior) -> Parser {
         let result = Self {
+            interactive_initialized: RelaxedAtomicBool::new(false),
             line_counter: ScopedRefCell::new(LineCounter::empty()),
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),

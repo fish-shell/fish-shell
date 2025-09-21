@@ -110,7 +110,7 @@ Variables used with ``showupstream`` (also implied by informative status):
 
 - ``$__fish_git_prompt_char_upstream_ahead`` (>, ↑) - the character for the commits this repository is ahead of upstream
 - ``$__fish_git_prompt_char_upstream_behind`` (<, ↓) - the character for the commits this repository is behind upstream
-- ``$__fish_git_prompt_char_upstream_diverged`` (<>) - the symbol if this repository is both ahead and behind upstream
+- ``$__fish_git_prompt_char_upstream_diverged`` (<>, ↓↑) - the symbol if this repository is both ahead and behind upstream
 - ``$__fish_git_prompt_char_upstream_equal`` (=) - the symbol if this repo is equal to upstream
 - ``$__fish_git_prompt_char_upstream_prefix`` ('')
 - ``$__fish_git_prompt_color_upstream``

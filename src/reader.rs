@@ -266,8 +266,7 @@ pub(crate) fn initial_query(
 ) {
     blocking_query.get_or_init(|| {
         let md = tty_metadata();
-        let query = if is_dumb() || md.in_midnight_commander || md.in_dvtm || !isatty(STDOUT_FILENO)
-        {
+        let query = if is_dumb() || md.in_midnight_commander || !isatty(STDOUT_FILENO) {
             None
         } else {
             // Query for kitty keyboard protocol support.

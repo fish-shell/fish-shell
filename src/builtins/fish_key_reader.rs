@@ -21,7 +21,7 @@ use crate::{
     future_feature_flags,
     input_common::{
         match_key_event_to_key, CharEvent, InputEventQueue, InputEventQueuer, KeyEvent,
-        QueryResponseEvent, TerminalQuery,
+        QueryResponse, QueryResultEvent, TerminalQuery,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
@@ -95,16 +95,17 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
     handoff.enable_tty_protocols();
 
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
+        use QueryResultEvent::*;
         let kevt = match queue.readch() {
             CharEvent::Key(kevt) => kevt,
             CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
-            CharEvent::QueryResponse(QueryResponseEvent::PrimaryDeviceAttributeResponse) => {
+            CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute) | Timeout) => {
                 if get_kitty_keyboard_capability() == Capability::Unknown {
                     set_kitty_keyboard_capability(|| {}, Capability::NotSupported);
                 }
                 continue;
             }
-            CharEvent::QueryResponse(_) => continue,
+            CharEvent::QueryResult(_) => continue,
         };
         if verbose {
             streams.out.append(L!("# decoded from: "));

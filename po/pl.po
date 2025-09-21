@@ -810,6 +810,11 @@ msgstr ""
 msgid "%s and %s are mutually exclusive"
 msgstr ""
 
+#
+#, c-format
+msgid "%s could not read response to primary device attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
+msgstr ""
+
 #, c-format
 msgid "%s, version %s"
 msgstr ""

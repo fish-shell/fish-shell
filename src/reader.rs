@@ -86,9 +86,10 @@ use crate::history::{
     SearchFlags, SearchType,
 };
 use crate::input::init_input;
+use crate::input_common::QueryResponse;
 use crate::input_common::{
     stop_query, CharEvent, CharInputStyle, CursorPositionQuery, CursorPositionQueryKind,
-    ImplicitEvent, InputData, QueryResponseEvent, ReadlineCmd, TerminalQuery,
+    ImplicitEvent, InputData, QueryResultEvent, ReadlineCmd, TerminalQuery,
 };
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
@@ -2569,12 +2570,13 @@ impl<'a> Reader<'a> {
                     );
                 }
             },
-            CharEvent::QueryResponse(query_result) => {
+            CharEvent::QueryResult(query_result) => {
                 let mut maybe_query = self.blocking_query();
                 let query = &mut maybe_query;
-                use QueryResponseEvent::*;
+                use QueryResponse::*;
+                use QueryResultEvent::*;
                 let query = match (&mut **query, query_result) {
-                    (Some(TerminalQuery::Initial), PrimaryDeviceAttributeResponse) => {
+                    (Some(TerminalQuery::Initial), Response(PrimaryDeviceAttribute) | Timeout) => {
                         if get_kitty_keyboard_capability() == Capability::Unknown {
                             set_kitty_keyboard_capability(
                                 reader_save_screen_state,
@@ -2585,14 +2587,14 @@ impl<'a> Reader<'a> {
                     }
                     (
                         Some(TerminalQuery::CursorPosition(cursor_pos_query)),
-                        CursorPositionResponse(cursor_pos),
+                        Response(CursorPosition(cursor_pos)),
                     ) => {
                         cursor_pos_query.result = Some(cursor_pos);
                         maybe_query
                     }
                     (
                         Some(TerminalQuery::CursorPosition(cursor_pos_query)),
-                        PrimaryDeviceAttributeResponse,
+                        Response(PrimaryDeviceAttribute) | Timeout,
                     ) => {
                         let cursor_pos_query = cursor_pos_query.clone();
                         drop(maybe_query);

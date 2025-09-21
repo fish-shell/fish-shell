@@ -560,7 +560,7 @@ fn next_input_event(in_fd: RawFd) -> InputEventTrigger {
         // Get the uvar notifier fd (possibly none).
         let notifier = default_notifier();
         let notifier_fd = notifier.notification_fd();
-        if let Some(notifier_fd) = notifier.notification_fd() {
+        if let Some(notifier_fd) = notifier_fd {
             fdset.add(notifier_fd);
         }
 

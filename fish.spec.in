@@ -73,7 +73,6 @@ make %{?_smp_mflags}
 %else
 %make_install
 %endif
-%find_lang %{name}
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir

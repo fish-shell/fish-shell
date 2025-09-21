@@ -2,13 +2,53 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use std::{ffi::OsString, fs::OpenOptions, io::Write};
 
+fn unescape_multiline_rust_string(s: String) -> String {
+    if !s.contains('\n') {
+        return s;
+    }
+    let mut unescaped = String::new();
+    enum State {
+        Ground,
+        Escaped,
+        ContinuationLineLeadingWhitespace,
+    }
+    use State::*;
+    let mut state = Ground;
+    for c in s.chars() {
+        match state {
+            Ground => match c {
+                '\\' => state = Escaped,
+                _ => {
+                    unescaped.push(c);
+                }
+            },
+            Escaped => match c {
+                '\\' => {
+                    unescaped.push('\\');
+                    state = Ground
+                }
+                '\n' => state = ContinuationLineLeadingWhitespace,
+                _ => panic!("Unsupported escape sequence '\\{c}' in message string '{s}'"),
+            },
+            ContinuationLineLeadingWhitespace => match c {
+                ' ' | '\t' => (),
+                _ => {
+                    unescaped.push(c);
+                    state = Ground
+                }
+            },
+        }
+    }
+    unescaped
+}
+
 fn append_po_entry_to_file(message: &TokenStream, file_name: &OsString) {
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(file_name)
         .unwrap_or_else(|e| panic!("Could not open file {file_name:?}: {e}"));
-    let message_string = message.to_string();
+    let message_string = unescape_multiline_rust_string(message.to_string());
     if message_string.contains('\n') {
         panic!("Gettext strings may not contain unescaped newlines. Unescaped newline found in '{message_string}'")
     }

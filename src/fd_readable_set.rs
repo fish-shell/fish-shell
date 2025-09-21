@@ -2,6 +2,7 @@ use libc::c_int;
 use std::os::unix::prelude::*;
 use std::time::Duration;
 
+#[derive(Clone, Copy)]
 pub enum Timeout {
     Duration(Duration),
     Forever,

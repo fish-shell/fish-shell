@@ -26,9 +26,6 @@ pub struct TtyMetadata {
     // Whether we are running under Midnight Commander.
     pub in_midnight_commander: bool,
 
-    // Whether we are running under dvtm.
-    pub in_dvtm: bool,
-
     // Whether we are running under tmux.
     pub in_tmux: bool,
 
@@ -39,17 +36,15 @@ pub struct TtyMetadata {
 impl TtyMetadata {
     // Create a new TtyMetadata instance with the current environment.
     fn detect() -> Self {
-        use std::env::{var, var_os};
+        use std::env::var_os;
 
         let in_midnight_commander = var_os("MC_TMPDIR").is_some();
-        let in_dvtm = var("TERM").as_deref() == Ok("dvtm-256color");
         let in_tmux = var_os("TMUX").is_some();
 
         // Detect iTerm2 before 3.5.12.
         let pre_kitty_iterm2 = get_iterm2_version().is_some_and(|v| v < (3, 5, 12));
         Self {
             in_midnight_commander,
-            in_dvtm,
             in_tmux,
             pre_kitty_iterm2,
         }

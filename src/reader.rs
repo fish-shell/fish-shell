@@ -315,12 +315,11 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
     assert_is_main_thread();
     let hist = History::with_name(history_name);
     hist.resolve_pending();
-    let is_top_level = reader_data_stack().is_empty();
-    let data = ReaderData::new(hist, conf, is_top_level);
+    let data = ReaderData::new(hist, conf, reader_data_stack().is_empty());
     reader_data_stack().push(data);
     let data = current_data().unwrap();
     data.command_line_changed(EditableLineTag::Commandline, AutosuggestionUpdate::Remove);
-    if is_top_level {
+    if !parser.interactive_initialized.swap(true) {
         reader_interactive_init(parser);
     }
     Reader { data, parser }
@@ -335,7 +334,7 @@ pub fn reader_pop() {
             .screen
             .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
     } else {
-        reader_interactive_destroy();
+        Outputter::stdoutput().borrow_mut().reset_text_face();
         *commandline_state_snapshot() = CommandlineState::new();
     }
 }
@@ -4546,11 +4545,6 @@ fn reader_interactive_init(parser: &Parser) {
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
 
     initialize_tty_metadata();
-}
-
-/// Destroy data for interactive use.
-fn reader_interactive_destroy() {
-    Outputter::stdoutput().borrow_mut().reset_text_face();
 }
 
 /// Return whether fish is currently unwinding the stack in preparation to exit.

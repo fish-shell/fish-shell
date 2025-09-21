@@ -148,7 +148,7 @@ use crate::tokenizer::{
 };
 use crate::tty_handoff::{
     get_kitty_keyboard_capability, get_tty_protocols_active, initialize_tty_metadata,
-    safe_deactivate_tty_protocols, set_kitty_keyboard_capability, tty_metadata, TtyHandoff,
+    safe_deactivate_tty_protocols, set_kitty_keyboard_capability, TtyHandoff,
 };
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
@@ -265,19 +265,20 @@ pub(crate) fn initial_query(
     vars: Option<&dyn Environment>,
 ) {
     blocking_query.get_or_init(|| {
-        let md = tty_metadata();
-        let query = if is_dumb() || md.in_midnight_commander || !isatty(STDOUT_FILENO) {
-            None
-        } else {
-            // Query for kitty keyboard protocol support.
-            out.write_command(QueryKittyKeyboardProgressiveEnhancements);
-            out.write_command(QueryXtversion);
-            if let Some(vars) = vars {
-                query_capabilities_via_dcs(out.by_ref(), vars);
-            }
-            out.write_command(QueryPrimaryDeviceAttribute);
-            Some(TerminalQuery::Initial)
-        };
+        initialize_tty_metadata();
+        let query =
+            if is_dumb() || std::env::var_os("MC_TMPDIR").is_some() || !isatty(STDOUT_FILENO) {
+                None
+            } else {
+                // Query for kitty keyboard protocol support.
+                out.write_command(QueryKittyKeyboardProgressiveEnhancements);
+                out.write_command(QueryXtversion);
+                if let Some(vars) = vars {
+                    query_capabilities_via_dcs(out.by_ref(), vars);
+                }
+                out.write_command(QueryPrimaryDeviceAttribute);
+                Some(TerminalQuery::Initial)
+            };
         RefCell::new(query)
     });
 }

@@ -146,6 +146,7 @@ use crate::tokenizer::{
     tok_command, MoveWordStateMachine, MoveWordStyle, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
 };
+use crate::tty_handoff::XTVERSION;
 use crate::tty_handoff::{
     get_tty_protocols_active, initialize_tty_metadata, maybe_set_kitty_keyboard_capability,
     safe_deactivate_tty_protocols, TtyHandoff,
@@ -272,7 +273,7 @@ pub fn terminal_init() -> InputEventQueue {
     let mut input_queue = InputEventQueue::new(STDIN_FILENO);
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
-        initialize_tty_metadata();
+        initialize_tty_metadata(XTVERSION.get_or_init(WString::new));
     });
 
     if !querying_allowed(STDIN_FILENO) {

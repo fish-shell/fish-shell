@@ -12,6 +12,7 @@ use crate::screen::{
 };
 use crate::terminal::use_terminfo;
 use crate::terminal::ColorSupport;
+use crate::tty_handoff::xtversion;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};
@@ -153,7 +154,7 @@ fn handle_timezone(var_name: &wstr, vars: &EnvStack) {
 }
 
 /// Update the value of [`FISH_EMOJI_WIDTH`](crate::fallback::FISH_EMOJI_WIDTH).
-fn guess_emoji_width(vars: &EnvStack) {
+pub fn guess_emoji_width(vars: &EnvStack) {
     use crate::fallback::FISH_EMOJI_WIDTH;
 
     if let Some(width_str) = vars.get(L!("fish_emoji_width")) {
@@ -168,7 +169,7 @@ fn guess_emoji_width(vars: &EnvStack) {
         return;
     }
 
-    let term = vars
+    let term_program = vars
         .get(L!("TERM_PROGRAM"))
         .map(|v| v.as_string())
         .unwrap_or_else(WString::new);
@@ -189,14 +190,14 @@ fn guess_emoji_width(vars: &EnvStack) {
         })
         .unwrap_or(0.0);
 
-    if term == "Apple_Terminal" && version as i32 >= 400 {
-        // Apple Terminal on High Sierra
-        FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
-        FLOG!(term_support, "default emoji width: 2 for", term);
-    } else if term == "iTerm.app" {
+    if xtversion().unwrap().starts_with(L!("iTerm2 ")) {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
         FLOG!(term_support, "default emoji width 2 for iTerm2");
+    } else if term_program == "Apple_Terminal" && version as i32 >= 400 {
+        // Apple Terminal on High Sierra
+        FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
+        FLOG!(term_support, "default emoji width: 2 for", term_program);
     } else {
         // Default to whatever the system's wcwidth gives for U+1F603, but only if it's at least
         // 1 and at most 2.
@@ -372,7 +373,6 @@ pub fn env_dispatch_init(vars: &EnvStack) {
 fn run_inits(vars: &EnvStack) {
     init_locale(vars);
     init_terminal(vars);
-    guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
     update_wait_on_sequence_key_ms(vars);
     handle_read_limit_change(vars);

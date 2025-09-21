@@ -145,16 +145,14 @@ end" >$__fish_config_dir/config.fish
     if not set -q fish_handle_reflow
         # VTE reflows the text itself, so us doing it inevitably races against it.
         # Guidance from the VTE developers is to let them repaint.
-        if set -q VTE_VERSION
-            # Same for these terminals
+        # Konsole reflows since version 21.04. Konsole added XTVERSION
+        # in v22.03.80~7.
+        if string match -rq -- "$fish_terminal" '^(?:VTE\b|Konsole |WezTerm )'
+            or begin
+                set -q KONSOLE_VERSION
+                and test "$KONSOLE_VERSION" -ge 210400 2>/dev/null
+            end
             or string match -q -- 'alacritty*' $TERM
-            or test "$TERM_PROGRAM" = WezTerm
-            set -g fish_handle_reflow 0
-        else if set -q KONSOLE_VERSION
-            and test "$KONSOLE_VERSION" -ge 210400 2>/dev/null
-            # Konsole since version 21.04(.00)
-            # Note that this is optional, but since we have no way of detecting it
-            # we go with the default, which is true.
             set -g fish_handle_reflow 0
         else
             set -g fish_handle_reflow 1
@@ -171,6 +169,10 @@ end" >$__fish_config_dir/config.fish
     if not functions --query __fish_update_cwd_osc
         function __fish_update_cwd_osc --on-variable PWD --description 'Notify terminals when $PWD changes'
             set -l host $hostname
+            # if set -l konsole_version (string match -r -- '^Konsole (\d+)\..*' "$fish_terminal")[2]
+            #     # To-do: use a Konsole version where KF6_DEP_VERSION is >= 6.12
+            #     and $konsole_version -lt ???
+            # end
             if set -q KONSOLE_VERSION
                 set host ''
             end

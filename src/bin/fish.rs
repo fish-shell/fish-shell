@@ -39,6 +39,7 @@ use fish::{
         environment::{env_init, EnvStack, Environment},
         EnvMode, Statuses,
     },
+    env_dispatch::guess_emoji_width,
     eprintf,
     event::{self, Event},
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
@@ -62,6 +63,7 @@ use fish::{
     signal::{signal_clear_cancel, signal_unblock_all},
     threads::{self},
     topic_monitor,
+    tty_handoff::xtversion,
     wchar::prelude::*,
     wutil::waccess,
 };
@@ -553,6 +555,12 @@ fn throwing_main() -> i32 {
             .pending_input
             .borrow_mut()
             .extend(std::mem::take(&mut input_data.queue));
+        parser.vars().set_one(
+            L!("fish_terminal"),
+            EnvMode::GLOBAL,
+            xtversion().unwrap().to_owned(),
+        );
+        guess_emoji_width(parser.vars());
     }
 
     if !opts.no_exec && !opts.no_config {

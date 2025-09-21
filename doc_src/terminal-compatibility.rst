@@ -224,9 +224,12 @@ Optional Commands
      - Ss
      - Set cursor style (DECSCUSR); Ps is 2, 4 or 6 for block, underscore or line shape.
      - VT520
-   * - ``\e[ Ps q``
+   * - .. _term-compat-xtversion:
+
+       ``\e[ Ps q``
      - n/a
      - Request terminal name and version (XTVERSION).
+       This is only used for temporary workarounds for incompatible terminals.
      - XTerm
    * - ``\e[?25h``
      - cvvis

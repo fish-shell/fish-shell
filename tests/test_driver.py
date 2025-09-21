@@ -62,15 +62,12 @@ def makeenv(script_path: Path, home: Path) -> Dict[str, str]:
         "LANGUAGE",
         "MC_SID",
         "MC_TMPDIR",
-        "LC_TERMINAL",
-        "LC_TERMINAL_VERSION",
         "COLORTERM",
         "KONSOLE_VERSION",
         "STY",
         "TERM",  # Erase this since we still respect TERM=dumb etc.
         "TERM_PROGRAM",
         "TERM_PROGRAM_VERSION",
-        "VTE_VERSION",
     ]:
         if var in env:
             del env[var]

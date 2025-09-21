@@ -13,7 +13,9 @@ use crate::key::{
 use crate::reader::reader_test_and_clear_interrupted;
 use crate::terminal::{SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
 use crate::threads::iothread_port;
-use crate::tty_handoff::{get_kitty_keyboard_capability, maybe_set_kitty_keyboard_capability};
+use crate::tty_handoff::{
+    get_kitty_keyboard_capability, maybe_set_kitty_keyboard_capability, XTVERSION,
+};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
@@ -1435,13 +1437,14 @@ pub trait InputEventQueuer {
         if buffer.get(3)? != &b'|' {
             return None;
         }
-        FLOG!(
-            reader,
-            format!(
-                "Received XTVERSION response: {}",
-                str2wcstring(&buffer[4..buffer.len()])
-            )
-        );
+        XTVERSION.get_or_init(|| {
+            let xtversion = str2wcstring(&buffer[4..buffer.len()]);
+            FLOG!(
+                reader,
+                format!("Received XTVERSION response: {}", xtversion)
+            );
+            xtversion
+        });
         None
     }
 

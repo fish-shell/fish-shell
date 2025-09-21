@@ -14,12 +14,19 @@ use crate::terminal::TerminalCommand::{
 };
 use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
+use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
-use crate::wutil::perror;
+use crate::wutil::{perror, wcstoi};
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use once_cell::sync::OnceCell;
 use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
+
+pub static XTVERSION: OnceCell<WString> = OnceCell::new();
+
+pub fn xtversion() -> Option<&'static wstr> {
+    XTVERSION.get().as_ref().map(|s| s.as_utfstr())
+}
 
 // Facts about our environment, which inform how we handle the tty.
 #[derive(Debug, Copy, Clone)]
@@ -33,13 +40,11 @@ pub struct TtyMetadata {
 
 impl TtyMetadata {
     // Create a new TtyMetadata instance with the current environment.
-    fn detect() -> Self {
-        use std::env::var_os;
-
-        let in_tmux = var_os("TMUX").is_some();
-
+    fn detect(xtversion: &wstr) -> Self {
+        let in_tmux = xtversion.starts_with(L!("tmux "));
         // Detect iTerm2 before 3.5.12.
-        let pre_kitty_iterm2 = get_iterm2_version().is_some_and(|v| v < (3, 5, 12));
+        let pre_kitty_iterm2 = get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12));
+
         Self {
             in_tmux,
             pre_kitty_iterm2,
@@ -185,30 +190,22 @@ fn tty_protocols() -> Option<&'static TtyProtocolsSet> {
     unsafe { TTY_PROTOCOLS.load(Ordering::Acquire).as_ref() }
 }
 
-// Get the TTY protocols, initializing it if necessary.
+// Initialize TTY metadata.
 // This also initializes the terminal enable and disable serialized commands.
-// Note in practice this is only used from the main thread - races are very unlikely.
-fn get_or_init_tty_protocols() -> &'static TtyProtocolsSet {
+pub fn initialize_tty_metadata(xtversion: &wstr) {
+    assert_is_main_thread();
     use std::sync::atomic::Ordering::{Acquire, Release};
     // Standard lazy-init pattern from rust-atomics-and-locks.
     let mut p = TTY_PROTOCOLS.load(Acquire);
     if p.is_null() {
         // Try to swap in a new TTY protocols set.
-        p = Box::into_raw(Box::new(TtyMetadata::detect().get_protocols()));
-        if let Err(e) = TTY_PROTOCOLS.compare_exchange(std::ptr::null_mut(), p, Release, Acquire) {
+        p = Box::into_raw(Box::new(TtyMetadata::detect(xtversion).get_protocols()));
+        if let Err(_e) = TTY_PROTOCOLS.compare_exchange(std::ptr::null_mut(), p, Release, Acquire) {
             // Safety: p comes from Box::into_raw right above,
             // and wasn't shared with any other thread.
             drop(unsafe { Box::from_raw(p) });
-            p = e;
         }
     }
-    // Safety: p is not null and points to a properly initialized value.
-    unsafe { &*p }
-}
-
-// Initialize TTY metadata.
-pub fn initialize_tty_metadata() {
-    get_or_init_tty_protocols();
 }
 
 // A marker of the current state of the tty protocols.
@@ -563,17 +560,18 @@ impl Drop for TtyHandoff {
 }
 
 // If we are running under iTerm2, get the version as a tuple of (major, minor, patch).
-fn get_iterm2_version() -> Option<(u32, u32, u32)> {
-    use std::env::var;
-    let term = var("LC_TERMINAL").ok()?;
-    if term != "iTerm2" {
+fn get_iterm2_version(xtversion: &wstr) -> Option<(u32, u32, u32)> {
+    // TODO split_once
+    let mut xtversion = xtversion.split(' ');
+    let name = xtversion.next().unwrap();
+    let version = xtversion.next()?;
+    if name != "iTerm2" {
         return None;
     }
-    let version = var("LC_TERMINAL_VERSION").ok()?;
     let mut parts = version.split('.');
     Some((
-        parts.next()?.parse().ok()?,
-        parts.next()?.parse().ok()?,
-        parts.next()?.parse().ok()?,
+        wcstoi(parts.next()?).ok()?,
+        wcstoi(parts.next()?).ok()?,
+        wcstoi(parts.next()?).ok()?,
     ))
 }

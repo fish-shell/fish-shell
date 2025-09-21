@@ -23,9 +23,6 @@ use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU8, Ordering};
 // Facts about our environment, which inform how we handle the tty.
 #[derive(Debug, Copy, Clone)]
 pub struct TtyMetadata {
-    // Whether we are running under Midnight Commander.
-    pub in_midnight_commander: bool,
-
     // Whether we are running under tmux.
     pub in_tmux: bool,
 
@@ -38,13 +35,11 @@ impl TtyMetadata {
     fn detect() -> Self {
         use std::env::var_os;
 
-        let in_midnight_commander = var_os("MC_TMPDIR").is_some();
         let in_tmux = var_os("TMUX").is_some();
 
         // Detect iTerm2 before 3.5.12.
         let pre_kitty_iterm2 = get_iterm2_version().is_some_and(|v| v < (3, 5, 12));
         Self {
-            in_midnight_commander,
             in_tmux,
             pre_kitty_iterm2,
         }
@@ -113,7 +108,7 @@ impl TtyProtocolsSet {
     // Get commands to enable or disable TTY protocols, based on the metadata
     // and the KITTY_KEYBOARD_SUPPORTED global variable.
     // THIS IS USED FROM A SIGNAL HANDLER.
-    pub fn safe_get_commands(&self, enable: bool) -> &[u8] {
+    fn safe_get_commands(&self, enable: bool) -> &[u8] {
         let protocol = self.md.safe_get_supported_protocol();
         let cmds = if enable {
             &self.enablers
@@ -227,14 +222,9 @@ fn get_or_init_tty_protocols() -> &'static TtyProtocolsSet {
     unsafe { &*p }
 }
 
-// Get the TTY metadata, initializing it if necessary.
-pub fn tty_metadata() -> TtyMetadata {
-    get_or_init_tty_protocols().md
-}
-
-// Cover to merely initialize the TTY metadata, for clarity at call sites.
+// Initialize TTY metadata.
 pub fn initialize_tty_metadata() {
-    tty_metadata();
+    get_or_init_tty_protocols();
 }
 
 // A marker of the current state of the tty protocols.

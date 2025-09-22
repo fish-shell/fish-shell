@@ -50,7 +50,7 @@ struct Options {
     silent: bool,
     split_null: bool,
     to_stdout: bool,
-    nchars: usize,
+    nchars: Option<NonZeroUsize>,
     one_line: bool,
 }
 
@@ -130,7 +130,7 @@ fn parse_cmd_opts(
             }
             'n' => {
                 opts.nchars = match fish_wcstoi(w.woptarg.unwrap()) {
-                    Ok(n) if n >= 0 => n.try_into().unwrap(),
+                    Ok(n) if n >= 0 => NonZeroUsize::new(n.try_into().unwrap()),
                     Err(wutil::Error::Overflow) => {
                         streams.err.append(wgettext_fmt!(
                             "%ls: Argument '%ls' is out of range\n",
@@ -207,7 +207,7 @@ fn parse_cmd_opts(
 fn read_interactive(
     parser: &Parser,
     buff: &mut WString,
-    nchars: usize,
+    nchars: Option<NonZeroUsize>,
     shell: bool,
     silent: bool,
     prompt: &wstr,
@@ -251,16 +251,18 @@ fn read_interactive(
         let _interactive = parser.push_scope(|s| s.is_interactive = true);
         let mut scoped_handoff = TtyHandoff::new(reader_save_screen_state);
         scoped_handoff.enable_tty_protocols();
-        reader_readline(parser, NonZeroUsize::try_from(nchars).ok())
+        reader_readline(parser, nchars)
     };
     if let Some(line) = mline {
         *buff = line;
-        if nchars > 0 && nchars < buff.len() {
+        if let Some(nchars) = nchars.map(usize::from) {
             // Line may be longer than nchars if a keybinding used `commandline -i`
             // note: we're deliberately throwing away the tail of the commandline.
             // It shouldn't be unread because it was produced with `commandline -i`,
             // not typed.
-            buff.truncate(nchars);
+            if nchars < buff.len() {
+                buff.truncate(nchars);
+            }
         }
     } else {
         exit_res = Err(STATUS_CMD_ERROR);
@@ -341,7 +343,7 @@ fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool
 fn read_one_char_at_a_time(
     fd: RawFd,
     buff: &mut WString,
-    nchars: usize,
+    nchars: Option<NonZeroUsize>,
     split_null: bool,
 ) -> BuiltinResult {
     let mut exit_res = Ok(SUCCESS);
@@ -398,8 +400,10 @@ fn read_one_char_at_a_time(
             buff.pop();
             break;
         }
-        if nchars > 0 && nchars <= buff.len() {
-            break;
+        if let Some(nchars) = nchars.map(usize::from) {
+            if nchars <= buff.len() {
+                break;
+            }
         }
     }
 
@@ -603,7 +607,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 &opts.commandline,
                 streams.stdin_fd,
             );
-        } else if opts.nchars == 0 && !stream_stdin_is_a_tty &&
+        } else if opts.nchars.is_none() && !stream_stdin_is_a_tty &&
                    // "one_line" is implemented as reading n-times to a new line,
                    // if we're chunking we could get multiple lines so we would have to advance
                    // more than 1 per run through the loop. Let's skip that for now.

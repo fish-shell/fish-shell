@@ -1,11 +1,12 @@
 name: Create a new release
 
-on: workflow_dispatch
-  inputs:
-    version:
-      description: 'Version to release (tag name)'
-      required: true
-      type: string
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (tag name)'
+        required: true
+        type: string
 
 permissions:
   contents: write

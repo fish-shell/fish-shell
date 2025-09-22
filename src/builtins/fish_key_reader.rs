@@ -33,10 +33,7 @@ use crate::{
     terminal::Capability,
     threads,
     topic_monitor::topic_monitor_init,
-    tty_handoff::{
-        get_kitty_keyboard_capability, initialize_tty_metadata, set_kitty_keyboard_capability,
-        TtyHandoff,
-    },
+    tty_handoff::{get_kitty_keyboard_capability, set_kitty_keyboard_capability, TtyHandoff},
     wchar::prelude::*,
     wgetopt::{wopt, ArgType, WGetopter, WOption},
 };
@@ -152,13 +149,9 @@ fn setup_and_process_keys(
     continuous_mode: bool,
     verbose: bool,
 ) -> BuiltinResult {
-    signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
-    set_shell_modes(STDIN_FILENO, "startup");
-    initialize_tty_metadata();
-    let blocking_query: OnceCell<RefCell<Option<TerminalQuery>>> = OnceCell::new();
-    initial_query(streams.stdin_fd, &blocking_query, streams.out, None);
+    set_shell_modes(STDIN_FILENO, "fish_key_reader");
 
     if continuous_mode {
         streams.err.append(L!("\n"));
@@ -311,6 +304,10 @@ fn throwing_main() -> i32 {
             .appendln(wgettext!("Stdin must be attached to a tty."));
         return 1;
     }
+
+    signal_set_handlers(true);
+    let blocking_query: OnceCell<RefCell<Option<TerminalQuery>>> = OnceCell::new();
+    initial_query(streams.stdin_fd, &blocking_query, streams.out, None);
 
     setup_and_process_keys(&mut streams, continuous_mode, verbose).builtin_status_code()
 }

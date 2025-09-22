@@ -196,8 +196,9 @@ jobs:
           ./build_tools/make_macos_pkg.sh -s -f /tmp/app.p12 \
             -i /tmp/installer.p12 -p "$MAC_CODESIGN_PASSWORD" \
             -n -j /tmp/notarize.json
-          [ -f "${FISH_ARTEFACT_PATH}/fish-${{ github.ref_name }}.app.zip" ]
-          [ -f "${FISH_ARTEFACT_PATH}/fish-${{ github.ref_name }}.pkg" ]
+          version=$(git describe)
+          [ -f "${FISH_ARTEFACT_PATH}/fish-$version.app.zip" ]
+          [ -f "${FISH_ARTEFACT_PATH}/fish-$version.pkg" ]
           rm /tmp/installer.p12 /tmp/app.p12 /tmp/notarize.json
         env:
           MAC_CODESIGN_APP_P12_BASE64: ${{ secrets.MAC_CODESIGN_APP_P12_BASE64 }}
@@ -208,6 +209,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload $(git describe) \
-            /tmp/fish-built/fish-${{ github.ref_name }}.app.zip \
-            /tmp/fish-built/fish-${{ github.ref_name }}.pkg
+          version=$(git describe)
+          gh release upload $version \
+            /tmp/fish-built/fish-$version.app.zip \
+            /tmp/fish-built/fish-$version.pkg

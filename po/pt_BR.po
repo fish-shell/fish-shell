@@ -995,9 +995,6 @@ msgstr ""
 msgid "Could not set terminal mode for new job"
 msgstr "Não foi possível definir modo do terminal para a nova tarefa"
 
-msgid "Could not set terminal mode for shell"
-msgstr "Não foi possível preparar modo do terminal para shell"
-
 msgid "Could not show help message"
 msgstr ""
 
@@ -1123,7 +1120,9 @@ msgstr ""
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
-msgid "Failed to set startup terminal mode!"
+#
+#, c-format
+msgid "Failed to set terminal mode (%s)"
 msgstr ""
 
 msgid "Failed to take control of the terminal"

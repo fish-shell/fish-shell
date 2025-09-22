@@ -1095,9 +1095,6 @@ msgstr "Impossible de déterminer le dossier de travail. Vos paramètres région
 msgid "Could not set terminal mode for new job"
 msgstr "Impossible de paramétrer le mode du terminal pour la nouvelle tâche"
 
-msgid "Could not set terminal mode for shell"
-msgstr "Impossible de paramétrer le mode du terminal pour le shell"
-
 msgid "Could not show help message"
 msgstr ""
 
@@ -1223,7 +1220,9 @@ msgstr ""
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
-msgid "Failed to set startup terminal mode!"
+#
+#, c-format
+msgid "Failed to set terminal mode (%s)"
 msgstr ""
 
 msgid "Failed to take control of the terminal"

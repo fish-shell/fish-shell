@@ -2231,15 +2231,7 @@ impl<'a> Reader<'a> {
             unsafe { libc::tcgetattr(self.conf.inputfd, old_modes.as_mut_ptr()) } == 0;
 
         // Set the new modes.
-        if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &*shell_modes()) } == -1 {
-            let err = errno().0;
-            // This check is required to work around certain issues with fish's approach to
-            // terminal control when launching interactive processes while in non-interactive
-            // mode. See #4178 for one such example.
-            if err != ENOTTY || is_interactive_session() {
-                perror("tcsetattr");
-            }
-        }
+        set_shell_modes(self.conf.inputfd, "readline");
 
         initial_query(
             self.conf.inputfd,
@@ -2367,16 +2359,7 @@ impl<'a> Reader<'a> {
         // from a key binding. However we do NOT want to invoke term_donate(), because that will enable
         // ECHO mode, causing a race between new input and restoring the mode (#7770). So we leave the
         // tty alone, run the commands in shell mode, and then restore shell modes.
-        let mut res;
-        loop {
-            res = unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) };
-            if res >= 0 || errno().0 != EINTR {
-                break;
-            }
-        }
-        if res < 0 {
-            perror("tcsetattr");
-        }
+        set_shell_modes(STDIN_FILENO, "bind scripts");
         termsize_invalidate_tty();
     }
 
@@ -4396,19 +4379,29 @@ pub fn term_copy_modes() {
     }
 }
 
+pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
+    let ok = loop {
+        let ok = unsafe { libc::tcsetattr(fd, TCSANOW, &*shell_modes()) } != -1;
+        if ok || errno().0 != EINTR {
+            break ok;
+        }
+    };
+    if !ok {
+        perror("tcsetattr");
+        FLOG!(
+            warning,
+            wgettext_fmt!("Failed to set terminal mode (%s)", whence)
+        );
+    }
+    ok
+}
+
 /// Grab control of terminal.
 fn term_steal(copy_modes: bool) {
     if copy_modes {
         term_copy_modes();
     }
-    while unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
-        if errno().0 != EINTR {
-            FLOG!(warning, wgettext!("Could not set terminal mode for shell"));
-            perror("tcsetattr");
-            break;
-        }
-    }
-
+    set_shell_modes(STDIN_FILENO, "shell");
     termsize_invalidate_tty();
 }
 
@@ -4541,10 +4534,7 @@ fn reader_interactive_init(parser: &Parser) {
         }
 
         // Configure terminal attributes
-        if unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
-            FLOG!(warning, wgettext!("Failed to set startup terminal mode!"));
-            perror("tcsetattr");
-        }
+        set_shell_modes(STDIN_FILENO, "startup");
     }
 
     termsize_invalidate_tty();

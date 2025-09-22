@@ -991,9 +991,6 @@ msgstr ""
 msgid "Could not set terminal mode for new job"
 msgstr "Kunde inte återställa terminalen för nytt jobb"
 
-msgid "Could not set terminal mode for shell"
-msgstr "Kunde inte återställa terminalen till skalet"
-
 msgid "Could not show help message"
 msgstr ""
 
@@ -1119,7 +1116,9 @@ msgstr ""
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
-msgid "Failed to set startup terminal mode!"
+#
+#, c-format
+msgid "Failed to set terminal mode (%s)"
 msgstr ""
 
 msgid "Failed to take control of the terminal"

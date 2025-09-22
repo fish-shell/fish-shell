@@ -996,9 +996,6 @@ msgstr "Das aktuelle Arbeitsverzeichnis konnte nicht bestimmt werden. Ist die lo
 msgid "Could not set terminal mode for new job"
 msgstr "Konnte Terminalmodus für neuen Job nicht festlegen"
 
-msgid "Could not set terminal mode for shell"
-msgstr "Konnte Terminalmodus für neue Shell nicht festlegen"
-
 msgid "Could not show help message"
 msgstr "Hilfemeldung konnte nicht angezeigt werden"
 
@@ -1124,8 +1121,10 @@ msgstr ""
 msgid "Failed to assign shell to its own process group"
 msgstr "Konnte Shell nicht einer eigenen Prozessgruppe zuweisen"
 
-msgid "Failed to set startup terminal mode!"
-msgstr "Konnte Terminalmodus nicht setzen"
+#
+#, c-format
+msgid "Failed to set terminal mode (%s)"
+msgstr ""
 
 msgid "Failed to take control of the terminal"
 msgstr "Konnte Kontrolle über das Terminal nicht übernehmen"

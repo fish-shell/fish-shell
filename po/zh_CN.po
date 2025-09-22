@@ -988,9 +988,6 @@ msgstr "无法确定当前工作目录 . 你的本地设置正确吗?"
 msgid "Could not set terminal mode for new job"
 msgstr "无法为新任务设置终端模式"
 
-msgid "Could not set terminal mode for shell"
-msgstr "无法为 shell 设置终端模式"
-
 msgid "Could not show help message"
 msgstr "无法显示帮助消息"
 
@@ -1116,8 +1113,10 @@ msgstr ""
 msgid "Failed to assign shell to its own process group"
 msgstr "无法将shell分配到它自己的进程组"
 
-msgid "Failed to set startup terminal mode!"
-msgstr "设置启动终端模式失败 !"
+#
+#, c-format
+msgid "Failed to set terminal mode (%s)"
+msgstr ""
 
 msgid "Failed to take control of the terminal"
 msgstr "控制终端失败"

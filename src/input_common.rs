@@ -10,10 +10,10 @@ use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol,
     function_key, shift, Key, Modifiers, ViewportPosition,
 };
-use crate::reader::{reader_save_screen_state, reader_test_and_clear_interrupted};
-use crate::terminal::{Capability, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
+use crate::reader::reader_test_and_clear_interrupted;
+use crate::terminal::{SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
 use crate::threads::iothread_port;
-use crate::tty_handoff::{get_kitty_keyboard_capability, set_kitty_keyboard_capability};
+use crate::tty_handoff::{get_kitty_keyboard_capability, maybe_set_kitty_keyboard_capability};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
@@ -1003,9 +1003,7 @@ pub trait InputEventQueuer {
         if !check_fd_readable(
             fd,
             Duration::from_millis(
-                if self.paste_is_buffering()
-                    || get_kitty_keyboard_capability() == Capability::Supported
-                {
+                if self.paste_is_buffering() || get_kitty_keyboard_capability() == Some(&true) {
                     300
                 } else {
                     1
@@ -1296,11 +1294,7 @@ pub trait InputEventQueuer {
             }
             b'u' => {
                 if private_mode == Some(b'?') {
-                    FLOG!(
-                        reader,
-                        "Received kitty progressive enhancement flags, marking as supported"
-                    );
-                    set_kitty_keyboard_capability(reader_save_screen_state, Capability::Supported);
+                    maybe_set_kitty_keyboard_capability(true);
                     return None;
                 }
 

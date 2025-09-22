@@ -132,7 +132,7 @@ use crate::terminal::TerminalCommand::{
     QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
     QueryXtgettcap, QueryXtversion,
 };
-use crate::terminal::{Capability, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
+use crate::terminal::{SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::parse_text_face;
 use crate::text_face::TextFace;
@@ -147,8 +147,8 @@ use crate::tokenizer::{
     TOK_SHOW_COMMENTS,
 };
 use crate::tty_handoff::{
-    get_kitty_keyboard_capability, get_tty_protocols_active, initialize_tty_metadata,
-    safe_deactivate_tty_protocols, set_kitty_keyboard_capability, TtyHandoff,
+    get_tty_protocols_active, initialize_tty_metadata, maybe_set_kitty_keyboard_capability,
+    safe_deactivate_tty_protocols, TtyHandoff,
 };
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
@@ -299,12 +299,7 @@ pub fn terminal_init() -> InputEventQueue {
             Implicit(CheckExit) => {}
             Implicit(QueryInterrupted) => break,
             CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute) | Timeout) => {
-                if get_kitty_keyboard_capability() == Capability::Unknown {
-                    set_kitty_keyboard_capability(
-                        reader_save_screen_state,
-                        Capability::NotSupported,
-                    );
-                }
+                maybe_set_kitty_keyboard_capability(false);
                 break;
             }
             CharEvent::QueryResult(Response(_)) => (),

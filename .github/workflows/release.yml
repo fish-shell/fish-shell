@@ -1,9 +1,11 @@
 name: Create a new release
 
-on:
-  push:
-    tags:
-      - '*.*.*'
+on: workflow_dispatch
+inputs:
+  version:
+    description: 'Version to release (tag name)'
+    required: true
+    type: string
 
 permissions:
   contents: write
@@ -16,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.version }}
       - name: Check if the pushed tag looks like a release
         run: |
           set -x
@@ -36,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.version }}
       - name: Install dependencies
         run: sudo apt install cmake gettext ninja-build python3-pip python3-sphinx
       - name: Create tarball
@@ -87,7 +89,7 @@ jobs:
         with:
           name: source-tarball
           path: |
-            /tmp/fish-built/fish-${{ github.ref_name }}.tar.xz
+            /tmp/fish-built/fish-${{ inputs.version }}.tar.xz
             /tmp/fish-built/release-notes.md
           if-no-files-found: error
 
@@ -99,7 +101,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.version }}
       - name: Install Rust Stable
         uses: ./.github/actions/rust-toolchain@stable
         with:
@@ -125,7 +127,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Static builds for Linux
-          path: fish-${{ github.ref_name }}-linux-*.tar.xz
+          path: fish-${{ inputs.version }}-linux-*.tar.xz
           if-no-files-found: error
 
   create-draft-release:
@@ -139,7 +141,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.version }}
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -150,13 +152,13 @@ jobs:
       - name: Create draft release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: fish ${{ github.ref_name }}
+          tag_name: ${{ inputs.version }}
+          name: fish ${{ inputs.version }}
           body_path: /tmp/artifacts/release-notes.md
           draft: true
           files: |
-            /tmp/artifacts/fish-${{ github.ref_name }}.tar.xz
-            /tmp/artifacts/fish-${{ github.ref_name }}-linux-*.tar.xz
+            /tmp/artifacts/fish-${{ inputs.version }}.tar.xz
+            /tmp/artifacts/fish-${{ inputs.version }}-linux-*.tar.xz
 
   packages-for-macos:
     needs: [is-release-tag, create-draft-release]
@@ -167,7 +169,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.version }}
       - name: Install Rust
         uses: ./.github/actions/rust-toolchain@oldest-supported
         with:

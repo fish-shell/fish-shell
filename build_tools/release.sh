@@ -54,6 +54,9 @@ integration_branch=$(
 [ -n "$integration_branch" ] ||
     git merge-base --is-ancestor $remote/master HEAD
 
+release_flow=.github/workflows/release.yml
+git diff --exit-code -- :/$release_flow $remote/master:$release_flow
+
 sed -n 1p CHANGELOG.rst | grep -q '^fish .*(released .*)$'
 sed -n 2p CHANGELOG.rst | grep -q '^===*$'
 
@@ -82,6 +85,8 @@ git push $remote $version
 gh() {
     command gh --repo "$repository_owner/fish-shell" "$@"
 }
+
+gh workflow run release.yml --raw-field "version=$version"
 
 run_id=
 while [ -z "$run_id" ] && sleep 5

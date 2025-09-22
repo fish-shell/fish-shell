@@ -9,7 +9,7 @@
 
 use std::{cell::RefCell, ops::ControlFlow, os::unix::prelude::OsStrExt};
 
-use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
+use libc::{STDIN_FILENO, VEOF, VINTR};
 use once_cell::unsync::OnceCell;
 
 #[allow(unused_imports)]
@@ -28,7 +28,7 @@ use crate::{
     panic::panic_handler,
     print_help::print_help,
     proc::set_interactive_session,
-    reader::{check_exit_loop_maybe_warning, initial_query, reader_init},
+    reader::{check_exit_loop_maybe_warning, initial_query, reader_init, set_shell_modes},
     signal::signal_set_handlers,
     terminal::Capability,
     threads,
@@ -155,7 +155,7 @@ fn setup_and_process_keys(
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
-    unsafe { libc::tcsetattr(0, TCSANOW, &*shell_modes()) };
+    set_shell_modes(STDIN_FILENO, "startup");
     initialize_tty_metadata();
     let blocking_query: OnceCell<RefCell<Option<TerminalQuery>>> = OnceCell::new();
     initial_query(streams.stdin_fd, &blocking_query, streams.out, None);

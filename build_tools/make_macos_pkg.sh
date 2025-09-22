@@ -53,13 +53,7 @@ if [ -n "$NOTARIZE" ] && [ -z "$API_KEY_FILE" ]; then
     usage
 fi
 
-VERSION=$(git describe --always --dirty 2>/dev/null)
-if test -z "$VERSION" ; then
-    echo "Could not get version from git"
-    if test -f version; then
-        VERSION=$(cat version)
-    fi
-fi
+VERSION=$(build_tools/git_version_gen.sh --stdout 2>/dev/null)
 
 echo "Version is $VERSION"
 

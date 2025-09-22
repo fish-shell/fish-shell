@@ -257,7 +257,7 @@ pub fn fish_key_reader(
         return s;
     }
 
-    if streams.stdin_fd < 0 || unsafe { libc::isatty(streams.stdin_fd) } == 0 {
+    if streams.stdin_fd < 0 || !isatty(streams.stdin_fd) {
         streams.err.appendln("Stdin must be attached to a tty.");
         return Err(STATUS_CMD_ERROR);
     }

@@ -216,14 +216,6 @@ fn maybe_terminfo(
     true
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-#[repr(u8)]
-pub enum Capability {
-    Unknown,
-    Supported,
-    NotSupported,
-}
-
 pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static SCROLL_FORWARD_TERMINFO_CODE: &str = "indn";
 

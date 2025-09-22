@@ -12,13 +12,14 @@ use crate::terminal::TerminalCommand::{
     KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
     ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
-use crate::terminal::{Capability, Output, Outputter};
+use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
 use crate::wchar_ext::ToWString;
 use crate::wutil::perror;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
+use once_cell::sync::OnceCell;
 use std::mem::MaybeUninit;
-use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 
 // Facts about our environment, which inform how we handle the tty.
 #[derive(Debug, Copy, Clone)]
@@ -47,32 +48,16 @@ impl TtyMetadata {
 }
 
 // Whether CSI-U ("Kitty") support is present in the TTY.
-static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
+static KITTY_KEYBOARD_SUPPORTED: OnceCell<bool> = OnceCell::new();
 
 // Get the support capability for CSI-U ("Kitty") protocols.
-pub fn get_kitty_keyboard_capability() -> Capability {
-    let cap = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed);
-    match cap {
-        x if x == Capability::Supported as _ => Capability::Supported,
-        x if x == Capability::NotSupported as _ => Capability::NotSupported,
-        _ => Capability::Unknown,
-    }
+pub fn get_kitty_keyboard_capability() -> Option<&'static bool> {
+    KITTY_KEYBOARD_SUPPORTED.get()
 }
 
 // Set CSI-U ("Kitty") support capability.
-// This correctly handles the case where we think protocols are already enabled.
-pub fn set_kitty_keyboard_capability(on_write: fn(), cap: Capability) {
-    assert_is_main_thread();
-    // Disable and renable protocols around capabilities.
-    let mut tty = TtyHandoff::new(on_write);
-    tty.disable_tty_protocols();
-    KITTY_KEYBOARD_SUPPORTED.store(cap as _, Ordering::Relaxed);
-    FLOG!(
-        term_protocols,
-        "Set Kitty keyboard capability to",
-        format!("{:?}", cap)
-    );
-    tty.reclaim();
+pub fn maybe_set_kitty_keyboard_capability(supported: bool) {
+    KITTY_KEYBOARD_SUPPORTED.get_or_init(|| supported);
 }
 
 // Helper to determine which keyboard protocols to enable.
@@ -140,11 +125,10 @@ impl TtyMetadata {
         if self.pre_kitty_iterm2 {
             return ProtocolKind::Other;
         }
-        let cap = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed);
-        match cap {
-            x if x == Capability::Supported as _ => ProtocolKind::CSI_U,
-            x if x == Capability::NotSupported as _ => ProtocolKind::Other,
-            _ => ProtocolKind::None,
+        match KITTY_KEYBOARD_SUPPORTED.get() {
+            Some(&true) => ProtocolKind::CSI_U,
+            Some(&false) => ProtocolKind::Other,
+            None => ProtocolKind::None,
         }
     }
 

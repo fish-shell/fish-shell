@@ -101,6 +101,7 @@ if [ "$1" = 0 ]; then
     mv %{_sysconfdir}/fish.tmp %{_sysconfdir}/shells
 fi
 
+%files
 %defattr(-,root,root,-)
 
 # The documentation directory

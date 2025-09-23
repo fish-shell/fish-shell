@@ -44,6 +44,7 @@ Deprecations and removed features
   If your theme is stored in universal variables (which is the historical default),
   you may want to update it to the new defaults that explicitly activate bold mode.
   In this case, use something like ``fish_config theme save "fish default"``.
+- Users of GNU screen may experience :ref:`minor glitches <term-compat-dcs-gnu-screen>` in edge cases.
 
 Scripting improvements
 ----------------------

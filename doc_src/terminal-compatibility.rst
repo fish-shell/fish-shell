@@ -5,7 +5,7 @@ fish writes various control sequences to the terminal.
 Some must be implemented to enable basic functionality,
 while others enable optional features and may be ignored by the terminal.
 
-The terminal must be able to parse Control Sequence Introducer (CSI) commands, Operating System Commands (OSC) and optionally Device Control Strings (DCS).
+The terminal must be able to parse Control Sequence Introducer (CSI) commands, Operating System Commands (OSC) and :ref:`optionally <term-compat-dcs-gnu-screen>` Device Control Strings (DCS).
 These are defined by ECMA-48.
 If a valid CSI, OSC or DCS sequence does not represent a command implemented by the terminal, the terminal must ignore it.
 
@@ -312,3 +312,25 @@ Optional Commands
        Currently, fish only queries the :ref:`indn <term-compat-indn>` string capability.
      - XTerm (but without string capabilities), kitty;
        also adopted by foot, wezterm, contour, ghostty
+
+
+.. _term-compat-dcs-gnu-screen:
+
+DCS commands and GNU screen
+---------------------------
+
+Fully-correct DCS parsing is optional because fish switches to the alternate screen before printing any DCS commands.
+However, since GNU screen neither allows turning on the alternate screen buffer by default,
+nor treats DCS commands in a compatible way,
+fish's initial prompt may be garbled by a DCS payload like ``+q696e646e``.
+For the time being, fish works around this by checking for presence of the :envvar:`STY` environment variable.
+If that doesn't work for some reason, you can add this to your ``~/.screenrc``::
+
+    altscreen on
+
+Or add this to your ``config.fish``::
+
+    function GNU-screen-workaround --on-event fish_prompt
+        commandline -f repaint
+        functions --erase GNU-screen-workaround
+    end

@@ -38,6 +38,7 @@ function ls
     isatty stdout
     and set -a indicators_opt $__fish_ls_indicators_opt
 
+    # TODO(term-workaround)
     # Terminal.app doesn't set $COLORTERM or $CLICOLOR,
     # but the new FreeBSD ls requires either to be set,
     # before it will enable color.

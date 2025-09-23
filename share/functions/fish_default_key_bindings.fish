@@ -69,7 +69,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
 
     bind --preset $argv ctrl-r history-pager
 
-    # term-specific special bindings
+    # TODO(term-workaround)
     switch "$TERM"
         case xterm-256color
             # Microsoft's conemu uses xterm-256color plus

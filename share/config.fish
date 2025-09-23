@@ -185,6 +185,7 @@ if status --is-login
     #
     # Put linux consoles in unicode mode.
     #
+    # TODO(terminal-workaround)
     if test "$TERM" = linux
         and string match -qir '\.UTF' -- $LANG
         and command -sq unicode_start

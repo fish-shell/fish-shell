@@ -175,6 +175,7 @@ pub fn guess_emoji_width(vars: &EnvStack) {
         .map(|v| v.as_string())
         .unwrap_or_else(WString::new);
 
+    // TODO(term-workaround)
     if xtversion().unwrap_or(L!("")).starts_with(L!("iTerm2 ")) {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
@@ -397,6 +398,7 @@ fn update_fish_color_support(vars: &EnvStack) {
     };
 
     let supports_24bit;
+    #[allow(unused_parens)]
     if let Some(fish_term24bit) = vars.get(L!("fish_term24bit")).map(|v| v.as_string()) {
         // $fish_term24bit
         supports_24bit = crate::wcstringutil::bool_from_string(&fish_term24bit);
@@ -409,7 +411,10 @@ fn update_fish_color_support(vars: &EnvStack) {
                 "disabled"
             }
         );
-    } else if vars.get(L!("STY")).is_some() {
+    } else if (
+        // TODO(term-workaround)
+        vars.get(L!("STY")).is_some()
+    ) {
         // Screen requires "truecolor on" to enable true-color sequences, so we ignore them
         // unless force-enabled.
         supports_24bit = false;
@@ -429,10 +434,11 @@ fn update_fish_color_support(vars: &EnvStack) {
             ct
         );
     } else {
-        supports_24bit = !is_xterm_16color
-            && vars
-                .get_unless_empty(L!("TERM_PROGRAM"))
-                .is_none_or(|term| term.as_list()[0] != "Apple_Terminal");
+        supports_24bit = !is_xterm_16color && {
+            // TODO(term-workaround)
+            vars.get_unless_empty(L!("TERM_PROGRAM"))
+                .is_none_or(|term| term.as_list()[0] != "Apple_Terminal")
+        };
         FLOG!(
             term_support,
             "True-color support",
@@ -464,6 +470,7 @@ fn init_terminal(vars: &EnvStack) {
     IS_DUMB.store(term == "dumb");
     ONLY_GRAYSCALE.store(term == "ansi-m" || term == "linux-m" || term == "xterm-mono");
 
+    // TODO(term-workaround)
     if vars.get(MIDNIGHT_COMMANDER_SID).is_some() {
         screen_set_midnight_commander_hack();
     }

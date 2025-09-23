@@ -238,10 +238,16 @@ fn redirect_tty_after_sighup() {
 }
 
 fn querying_allowed(vars: &dyn Environment) -> bool {
-    future_feature_flags::test(FeatureFlag::query_term) &&
-    !is_dumb() && vars.get(MIDNIGHT_COMMANDER_SID).is_none()
-        // Could use /dev/tty in future.
-        && isatty(STDOUT_FILENO)
+    future_feature_flags::test(FeatureFlag::query_term)
+        && !is_dumb()
+        && {
+            // TODO(term-workaround)
+            vars.get(MIDNIGHT_COMMANDER_SID).is_none()
+        }
+        && {
+            // Could use /dev/tty in future.
+            isatty(STDOUT_FILENO)
+        }
 }
 
 pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue {
@@ -2712,6 +2718,7 @@ fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
 }
 
 fn query_capabilities_via_dcs(out: &mut impl Output, vars: &dyn Environment) {
+    // TODO(term-workaround)
     if vars.get_unless_empty(L!("STY")).is_some()
         || vars.get_unless_empty(L!("TERM")).is_some_and(|term| {
             let term = &term.as_list()[0];

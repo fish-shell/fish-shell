@@ -365,7 +365,11 @@ impl<'a> std::fmt::Display for DisplayAsHex<'a> {
 }
 
 fn query_kitty_progressive_enhancements(out: &mut impl Output) -> bool {
-    if std::env::var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color") {
+    #[allow(unused_parens)]
+    if (
+        // TODO(term-workaround)
+        std::env::var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color")
+    ) {
         return false;
     }
     out.write_bytes(b"\x1b[?u");

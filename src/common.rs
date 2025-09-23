@@ -1795,6 +1795,7 @@ pub const fn assert_sync<T: Sync>() {}
 /// bullet-proof and that's OK.
 pub fn is_console_session() -> bool {
     static IS_CONSOLE_SESSION: OnceCell<bool> = OnceCell::new();
+    // TODO(terminal-workaround)
     *IS_CONSOLE_SESSION.get_or_init(|| {
         const PATH_MAX: usize = libc::PATH_MAX as usize;
         let mut tty_name = [0u8; PATH_MAX];

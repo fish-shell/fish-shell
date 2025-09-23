@@ -136,6 +136,7 @@ end" >$__fish_config_dir/config.fish
         # Guidance from the VTE developers is to let them repaint.
         # Konsole reflows since version 21.04. Konsole added XTVERSION
         # in v22.03.80~7.
+        # TODO(term-workaround)
         if string match -rq -- '^(?:VTE\b|Konsole |WezTerm )' (status terminal)
             or begin
                 set -q KONSOLE_VERSION
@@ -162,6 +163,7 @@ end" >$__fish_config_dir/config.fish
             #     # To-do: use a Konsole version where KF6_DEP_VERSION is >= 6.12
             #     and $konsole_version -lt ???
             # end
+            # TODO(term-workaround)
             if set -q KONSOLE_VERSION
                 set host ''
             end

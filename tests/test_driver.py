@@ -60,12 +60,14 @@ def makeenv(script_path: Path, home: Path) -> Dict[str, str]:
     for var in [
         "XDG_DATA_DIRS",
         "LANGUAGE",
+        "MC_SID",
+        "MC_TMPDIR",
         "COLORTERM",
         "KONSOLE_VERSION",
+        "STY",
         "TERM",  # Erase this since we still respect TERM=dumb etc.
         "TERM_PROGRAM",
         "TERM_PROGRAM_VERSION",
-        "VTE_VERSION",
     ]:
         if var in env:
             del env[var]

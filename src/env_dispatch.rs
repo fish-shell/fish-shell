@@ -2,6 +2,7 @@ use crate::complete::complete_invalidate_path;
 use crate::env::{setenv_lock, unsetenv_lock, EnvMode, EnvStack, Environment};
 use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
 use crate::flog::FLOG;
+use crate::future_feature_flags::allow_terminal_workarounds;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
@@ -12,6 +13,7 @@ use crate::screen::{
 };
 use crate::terminal::use_terminfo;
 use crate::terminal::ColorSupport;
+use crate::tty_handoff::xtversion;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};
@@ -153,7 +155,7 @@ fn handle_timezone(var_name: &wstr, vars: &EnvStack) {
 }
 
 /// Update the value of [`FISH_EMOJI_WIDTH`](crate::fallback::FISH_EMOJI_WIDTH).
-fn guess_emoji_width(vars: &EnvStack) {
+pub fn guess_emoji_width(vars: &EnvStack) {
     use crate::fallback::FISH_EMOJI_WIDTH;
 
     if let Some(width_str) = vars.get(L!("fish_emoji_width")) {
@@ -168,35 +170,32 @@ fn guess_emoji_width(vars: &EnvStack) {
         return;
     }
 
-    let term = vars
+    let term_program = vars
         .get(L!("TERM_PROGRAM"))
         .map(|v| v.as_string())
         .unwrap_or_else(WString::new);
-    // The format and contents of $TERM_PROGRAM_VERSION depend on $TERM_PROGRAM. Under
-    // Apple_Terminal, this is an integral value in the hundreds corresponding to the
-    // CFBundleVersion of Terminal.app; under iTerm, this is the version number which can contain
-    // multiple periods (e.g 3.4.19). Currently we only care about Apple_Terminal but the C++ code
-    // used wcstod() to parse at least the major.minor value of cases like the latter.
-    //
-    // TODO: Move this inside the Apple_Terminal branch and use i32::FromStr (i.e. str::parse())
-    // instead.
-    let version = vars
-        .get(L!("TERM_PROGRAM_VERSION"))
-        .map(|v| v.as_string())
-        .and_then(|v| {
-            let mut consumed = 0;
-            crate::wutil::wcstod::wcstod(&v, '.', &mut consumed).ok()
-        })
-        .unwrap_or(0.0);
 
-    if term == "Apple_Terminal" && version as i32 >= 400 {
-        // Apple Terminal on High Sierra
-        FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
-        FLOG!(term_support, "default emoji width: 2 for", term);
-    } else if term == "iTerm.app" {
+    let allow_workaround = allow_terminal_workarounds();
+
+    if allow_workaround && xtversion().is_some_and(|xtversion| xtversion.starts_with(L!("iTerm2 ")))
+    {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
         FLOG!(term_support, "default emoji width 2 for iTerm2");
+    } else if allow_workaround && term_program == "Apple_Terminal" && {
+        let version = vars
+            .get(L!("TERM_PROGRAM_VERSION"))
+            .map(|v| v.as_string())
+            .and_then(|v| {
+                let mut consumed = 0;
+                crate::wutil::wcstod::wcstod(&v, '.', &mut consumed).ok()
+            })
+            .unwrap_or(0.0);
+        version as i32 >= 400
+    } {
+        // Apple Terminal on High Sierra
+        FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
+        FLOG!(term_support, "default emoji width: 2 for", term_program);
     } else {
         // Default to whatever the system's wcwidth gives for U+1F603, but only if it's at least
         // 1 and at most 2.
@@ -387,7 +386,8 @@ fn update_fish_color_support(vars: &EnvStack) {
 
     let term = vars.get_unless_empty(L!("TERM"));
     let term = term.as_ref().map_or(L!(""), |term| &term.as_list()[0]);
-    let is_xterm_16color = term == "xterm-16color";
+    let allow_workaround = allow_terminal_workarounds();
+    let is_xterm_16color = allow_workaround && term == "xterm-16color";
 
     let supports_256color = if let Some(fish_term256) = vars.get(L!("fish_term256")) {
         let ok = crate::wcstringutil::bool_from_string(&fish_term256.as_string());
@@ -414,7 +414,7 @@ fn update_fish_color_support(vars: &EnvStack) {
                 "disabled"
             }
         );
-    } else if vars.get(L!("STY")).is_some() {
+    } else if allow_workaround && vars.get(L!("STY")).is_some() {
         // Screen requires "truecolor on" to enable true-color sequences, so we ignore them
         // unless force-enabled.
         supports_24bit = false;
@@ -435,9 +435,10 @@ fn update_fish_color_support(vars: &EnvStack) {
         );
     } else {
         supports_24bit = !is_xterm_16color
-            && !vars
-                .get_unless_empty(L!("TERM_PROGRAM"))
-                .is_some_and(|term| term.as_list()[0] == "Apple_Terminal");
+            && (!allow_workaround
+                || !vars
+                    .get_unless_empty(L!("TERM_PROGRAM"))
+                    .is_some_and(|term| term.as_list()[0] == "Apple_Terminal"));
         FLOG!(
             term_support,
             "True-color support",
@@ -465,9 +466,11 @@ fn init_terminal(vars: &EnvStack) {
         .unwrap_or(L!(""));
 
     IS_DUMB.store(term == "dumb");
-    ONLY_GRAYSCALE.store(term == "ansi-m" || term == "linux-m" || term == "xterm-mono");
+    if allow_terminal_workarounds() {
+        ONLY_GRAYSCALE.store(term == "ansi-m" || term == "linux-m" || term == "xterm-mono");
+    }
 
-    if vars.get(L!("MC_SID")).is_some() {
+    if allow_terminal_workarounds() && vars.get(L!("MC_SID")).is_some() {
         screen_set_midnight_commander_hack();
     }
 

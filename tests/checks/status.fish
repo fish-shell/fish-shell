@@ -62,7 +62,10 @@ status features
 #CHECK: ampersand-nobg-in-token on  3.4 & only backgrounds if followed by a separator
 #CHECK: remove-percent-self     off 4.0 %self is no longer expanded (use $fish_pid)
 #CHECK: test-require-arg        off 4.0 builtin test requires an argument
+#CHECK: mark-prompt             on  4.0 write OSC 133 prompt markers to the terminal
 #CHECK: ignore-terminfo         on  4.1 do not look up $TERM in terminfo database
+#CHECK: query-term              on  4.1 query the TTY to enable extra functionality
+#CHECK: omit-term-workarounds   off 4.1 skip workarounds for individual terminals
 status test-feature stderr-nocaret
 echo $status
 #CHECK: 0

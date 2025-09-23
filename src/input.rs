@@ -781,7 +781,7 @@ impl<'a> Reader<'a> {
                             match evt {
                                 Key(_) => true,
                                 Implicit(Eof) => true,
-                                Readline(_) | Command(_) | Implicit(_) | QueryResponse(_) => false,
+                                Readline(_) | Command(_) | Implicit(_) | QueryResult(_) => false,
                             }
                         });
 
@@ -823,7 +823,7 @@ impl<'a> Reader<'a> {
                     self.push_front(evt);
                     self.mapping_execute_matching_or_generic();
                 }
-                CharEvent::Implicit(_) | CharEvent::QueryResponse(_) => {
+                CharEvent::Implicit(_) | CharEvent::QueryResult(_) => {
                     return evt;
                 }
             }

@@ -41,7 +41,7 @@ pub fn getpid() -> i32 {
 pub fn isatty(fd: i32) -> bool {
     // This returns false if the fd is valid but not a tty, or is invalid.
     // No place we currently call it really cares about the difference.
-    return unsafe { libc::isatty(fd) } == 1;
+    (unsafe { libc::isatty(fd) }) == 1
 }
 
 /// An enumeration of supported libc rusage types used by [`getrusage()`].

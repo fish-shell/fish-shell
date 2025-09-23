@@ -37,14 +37,16 @@ function ls --description "List contents of directory"
     isatty stdout
     and set -a indicators_opt $__fish_ls_indicators_opt
 
-    # Terminal.app doesn't set $COLORTERM or $CLICOLOR,
-    # but the new FreeBSD ls requires either to be set,
-    # before it will enable color.
-    # See #8309.
-    # We don't set $COLORTERM because that should be set to
-    # "truecolor" or similar and we don't want to specify that here.
-    test "$TERM_PROGRAM" = Apple_Terminal
-    and set -lx CLICOLOR 1
+    if not status test-feature omit-term-workarounds
+        # Terminal.app doesn't set $COLORTERM or $CLICOLOR,
+        # but the new FreeBSD ls requires either to be set,
+        # before it will enable color.
+        # See #8309.
+        # We don't set $COLORTERM because that should be set to
+        # "truecolor" or similar and we don't want to specify that here.
+        test "$TERM_PROGRAM" = Apple_Terminal
+        and set -lx CLICOLOR 1
+    end
 
     # If CLICOLOR_FORCE is set, don't colorize `ls` (if piped) because the results
     # might not be what we want; i.e. `ls --color=auto | cat` might still emit color

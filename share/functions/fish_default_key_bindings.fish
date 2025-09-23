@@ -70,10 +70,12 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv ctrl-r history-pager
 
     # term-specific special bindings
-    switch "$TERM"
-        case xterm-256color
-            # Microsoft's conemu uses xterm-256color plus
-            # the following to tell a console to paste:
-            bind --preset $argv \e\x20ep fish_clipboard_paste
+    if not status test-feature omit-term-workarounds
+        switch "$TERM"
+            case xterm-256color
+                # Microsoft's conemu uses xterm-256color plus
+                # the following to tell a console to paste:
+                bind --preset $argv \e\x20ep fish_clipboard_paste
+        end
     end
 end

@@ -14,7 +14,7 @@ use crate::expand::{
 };
 use crate::fds::{open_dir, BEST_O_SEARCH};
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::TerminalQuery;
+use crate::input_common::{CharEvent, TerminalQuery};
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -34,10 +34,10 @@ use crate::wchar_ext::WExt;
 use crate::wutil::perror;
 use crate::{function, FLOG};
 use libc::c_int;
-use once_cell::unsync::OnceCell;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
+use std::collections::VecDeque;
 use std::ffi::{CStr, OsStr};
 use std::fs::File;
 use std::io::Write;
@@ -404,6 +404,8 @@ pub enum CancelBehavior {
 }
 
 pub struct Parser {
+    pub interactive_initialized: RelaxedAtomicBool,
+
     /// A shared line counter. This is handed out to each execution context
     /// so they can communicate the line number back to this Parser.
     line_counter: ScopedRefCell<LineCounter<ast::JobPipeline>>,
@@ -442,13 +444,16 @@ pub struct Parser {
     /// Global event blocks.
     pub global_event_blocks: AtomicU64,
 
-    pub blocking_query: OnceCell<RefCell<Option<TerminalQuery>>>,
+    pub blocking_query: RefCell<Option<TerminalQuery>>,
+
+    pub pending_input: RefCell<VecDeque<CharEvent>>,
 }
 
 impl Parser {
     /// Create a parser.
     pub fn new(variables: EnvStack, cancel_behavior: CancelBehavior) -> Parser {
         let result = Self {
+            interactive_initialized: RelaxedAtomicBool::new(false),
             line_counter: ScopedRefCell::new(LineCounter::empty()),
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),
@@ -460,7 +465,8 @@ impl Parser {
             cancel_behavior,
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
-            blocking_query: OnceCell::new(),
+            blocking_query: RefCell::new(None),
+            pending_input: RefCell::new(VecDeque::new()),
         };
 
         match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {

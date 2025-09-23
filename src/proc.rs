@@ -198,12 +198,12 @@ impl ProcStatus {
     /// Return the exit code, given that we normal exited.
     pub fn exit_code(&self) -> u8 {
         assert!(self.normal_exited(), "Process is not normal exited");
-        u8::try_from(WEXITSTATUS(self.status()) & 0xff).unwrap() // Workaround for libc bug
+        u8::try_from(WEXITSTATUS(self.status())).unwrap()
     }
 
     /// Return if this status represents success.
     pub fn is_success(&self) -> bool {
-        self.normal_exited() && self.exit_code() == u8::try_from(EXIT_SUCCESS).unwrap()
+        self.normal_exited() && i32::from(self.exit_code()) == EXIT_SUCCESS
     }
 
     /// Return the value appropriate to populate $status.

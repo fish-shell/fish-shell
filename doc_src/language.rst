@@ -1693,6 +1693,10 @@ Fish also provides additional information through the values of certain environm
 
    the process ID (PID) of the shell.
 
+.. envvar:: fish_terminal
+
+   the name and version of the terminal fish is running inside (i.e. `XTVERSION <terminal-compatibility.html#term-compat-xtversion>`_).
+
 .. envvar:: history
 
    a list containing the last commands that were entered.
@@ -2026,7 +2030,10 @@ You can see the current list of features via ``status features``::
     ampersand-nobg-in-token on  3.4 & only backgrounds if followed by a separating character
     remove-percent-self     off 4.0 %self is no longer expanded (use $fish_pid)
     test-require-arg        off 4.0 builtin test requires an argument
+    mark-prompt             on  4.0 write OSC 133 prompt markers to the terminal
     ignore-terminfo         on  4.1 do not look up $TERM in terminfo database
+    query-term              on  4.1 query the TTY to enable extra functionality
+    omit-term-workarounds   off 4.1 skip workarounds for individual terminals
 
 Here is what they mean:
 
@@ -2036,7 +2043,13 @@ Here is what they mean:
 - ``ampersand-nobg-in-token`` was introduced in fish 3.4 (and made the default in 3.5). It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
 - ``remove-percent-self`` turns off the special ``%self`` expansion. It was introduced in 4.0. To get fish's pid, you can use the :envvar:`fish_pid` variable.
 - ``test-require-arg`` removes :doc:`builtin test <cmds/test>`'s one-argument form (``test "string"``. It was introduced in 4.0. To test if a string is non-empty, use ``test -n "string"``. If disabled, any call to ``test`` that would change sends a :ref:`debug message <debugging-fish>` of category "deprecated-test", so starting fish with ``fish --debug=deprecated-test`` can be used to find offending calls.
+- ``mark-prompt`` makes fish report to the terminal the beginning and and of both shell prompts and command output.
 - ``ignore-terminfo`` disables lookup of $TERM in the terminfo database. Use ``no-ignore-terminfo`` to turn it back on.
+- ``query-term`` allows fish to query the terminal by writing escape sequences and reading the terminal's response.
+  This enables features such as `scrolling <terminal-compatibility.html#term-compat-cursor-position-report>`_.
+  If you use an incompatible terminal, you can -- for the time being -- work around it by running (once) ``set -Ua fish_features no-query-term``.
+- ``omit-term-workarounds`` prevents fish from trying to work around specific terminal's quirks.
+  This implies the ``ignore-terminfo`` feature flag.
 
 
 These changes are introduced off by default. They can be enabled on a per session basis::

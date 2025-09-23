@@ -28,8 +28,17 @@ pub enum FeatureFlag {
     /// Remove `test`'s one and zero arg mode (make `test -n` return false etc)
     test_require_arg,
 
+    /// Whether to write OSC 133 prompt markers
+    mark_prompt,
+
     /// Do not look up $TERM in terminfo database.
     ignore_terminfo,
+
+    /// Whether we are allowed to query the TTY for extra information.
+    query_term,
+
+    /// Do not try to workaround terminal quirks.
+    omit_term_workarounds,
 }
 
 struct Features {
@@ -111,11 +120,35 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: false,
     },
     FeatureMetadata {
+        flag: FeatureFlag::mark_prompt,
+        name: L!("mark-prompt"),
+        groups: L!("4.0"),
+        description: L!("write OSC 133 prompt markers to the terminal"),
+        default_value: true,
+        read_only: false,
+    },
+    FeatureMetadata {
         flag: FeatureFlag::ignore_terminfo,
         name: L!("ignore-terminfo"),
         groups: L!("4.1"),
         description: L!("do not look up $TERM in terminfo database"),
         default_value: true,
+        read_only: false,
+    },
+    FeatureMetadata {
+        flag: FeatureFlag::query_term,
+        name: L!("query-term"),
+        groups: L!("4.1"),
+        description: L!("query the TTY to enable extra functionality"),
+        default_value: true,
+        read_only: false,
+    },
+    FeatureMetadata {
+        flag: FeatureFlag::omit_term_workarounds,
+        name: L!("omit-term-workarounds"),
+        groups: L!("4.1"),
+        description: L!("skip workarounds for individual terminals"),
+        default_value: false,
         read_only: false,
     },
 ];
@@ -180,6 +213,9 @@ impl Features {
                 AtomicBool::new(METADATA[4].default_value),
                 AtomicBool::new(METADATA[5].default_value),
                 AtomicBool::new(METADATA[6].default_value),
+                AtomicBool::new(METADATA[7].default_value),
+                AtomicBool::new(METADATA[8].default_value),
+                AtomicBool::new(METADATA[9].default_value),
             ],
         }
     }
@@ -231,6 +267,10 @@ impl Features {
             }
         }
     }
+}
+
+pub fn allow_terminal_workarounds() -> bool {
+    !test(FeatureFlag::omit_term_workarounds)
 }
 
 #[cfg(test)]

@@ -7,10 +7,9 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::{cell::RefCell, ops::ControlFlow, os::unix::prelude::OsStrExt};
+use std::{ops::ControlFlow, os::unix::prelude::OsStrExt};
 
-use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
-use once_cell::unsync::OnceCell;
+use libc::{STDIN_FILENO, VEOF, VINTR};
 
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
@@ -21,22 +20,17 @@ use crate::{
     future_feature_flags,
     input_common::{
         match_key_event_to_key, CharEvent, InputEventQueue, InputEventQueuer, KeyEvent,
-        QueryResponseEvent, TerminalQuery,
+        QueryResultEvent,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
     panic::panic_handler,
     print_help::print_help,
     proc::set_interactive_session,
-    reader::{check_exit_loop_maybe_warning, initial_query, reader_init},
-    signal::signal_set_handlers,
-    terminal::Capability,
+    reader::{check_exit_loop_maybe_warning, initial_query, reader_init, set_shell_modes},
     threads,
     topic_monitor::topic_monitor_init,
-    tty_handoff::{
-        get_kitty_keyboard_capability, initialize_tty_metadata, set_kitty_keyboard_capability,
-        TtyHandoff,
-    },
+    tty_handoff::TtyHandoff,
     wchar::prelude::*,
     wgetopt::{wopt, ArgType, WGetopter, WOption},
 };
@@ -85,9 +79,13 @@ fn should_exit(
 }
 
 /// Process the characters we receive as the user presses keys.
-fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) -> BuiltinResult {
+fn process_input(
+    streams: &mut IoStreams,
+    continuous_mode: bool,
+    verbose: bool,
+    mut input_queue: InputEventQueue,
+) -> BuiltinResult {
     let mut first_char_seen = false;
-    let mut queue = InputEventQueue::new(STDIN_FILENO);
     let mut recent_chars = vec![];
     streams.err.appendln("Press a key:\n");
 
@@ -95,16 +93,12 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
     handoff.enable_tty_protocols();
 
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
-        let kevt = match queue.readch() {
+        use QueryResultEvent::*;
+        let kevt = match input_queue.readch() {
             CharEvent::Key(kevt) => kevt,
             CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
-            CharEvent::QueryResponse(QueryResponseEvent::PrimaryDeviceAttribute) => {
-                if get_kitty_keyboard_capability() == Capability::Unknown {
-                    set_kitty_keyboard_capability(|| {}, Capability::NotSupported);
-                }
-                continue;
-            }
-            CharEvent::QueryResponse(_) => continue,
+            CharEvent::QueryResult(Timeout) => panic!("should not be querying"),
+            CharEvent::QueryResult(Response(_)) => continue,
         };
         if verbose {
             streams.out.append(L!("# decoded from: "));
@@ -150,14 +144,11 @@ fn setup_and_process_keys(
     streams: &mut IoStreams,
     continuous_mode: bool,
     verbose: bool,
+    input_queue: InputEventQueue,
 ) -> BuiltinResult {
-    signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
-    unsafe { libc::tcsetattr(0, TCSANOW, &*shell_modes()) };
-    initialize_tty_metadata();
-    let blocking_query: OnceCell<RefCell<Option<TerminalQuery>>> = OnceCell::new();
-    initial_query(&blocking_query, streams.out, None);
+    set_shell_modes(STDIN_FILENO, "fish_key_reader");
 
     if continuous_mode {
         streams.err.append(L!("\n"));
@@ -173,7 +164,7 @@ fn setup_and_process_keys(
         streams.err.appendln(L!("\n"));
     }
 
-    process_input(streams, continuous_mode, verbose)
+    process_input(streams, continuous_mode, verbose, input_queue)
 }
 
 fn parse_flags(
@@ -256,12 +247,17 @@ pub fn fish_key_reader(
         return s;
     }
 
-    if streams.stdin_fd < 0 || unsafe { libc::isatty(streams.stdin_fd) } == 0 {
+    if streams.stdin_fd < 0 || !isatty(streams.stdin_fd) {
         streams.err.appendln("Stdin must be attached to a tty.");
         return Err(STATUS_CMD_ERROR);
     }
 
-    setup_and_process_keys(streams, continuous_mode, verbose)
+    setup_and_process_keys(
+        streams,
+        continuous_mode,
+        verbose,
+        InputEventQueue::new(streams.stdin_fd),
+    )
 }
 
 pub fn main() {
@@ -311,5 +307,8 @@ fn throwing_main() -> i32 {
         return 1;
     }
 
-    setup_and_process_keys(&mut streams, continuous_mode, verbose).builtin_status_code()
+    let input_queue = initial_query();
+
+    setup_and_process_keys(&mut streams, continuous_mode, verbose, input_queue)
+        .builtin_status_code()
 }

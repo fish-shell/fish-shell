@@ -194,6 +194,7 @@ if status --is-login
     #
     # Put linux consoles in unicode mode.
     #
+    # TODO Is this still necessary?
     if test "$TERM" = linux
         and string match -qir '\.UTF' -- $LANG
         and command -sq unicode_start

@@ -5,7 +5,7 @@ use crate::expand::{
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
 use crate::fallback::fish_wcwidth;
-use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::future_feature_flags::{allow_terminal_workarounds, feature_test, FeatureFlag};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
@@ -1920,10 +1920,10 @@ pub fn is_console_session() -> bool {
         tty_name.starts_with(b"/dev/dcons\0") ||
         tty_name.starts_with(b"/dev/console\0"))
         // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something` or `sun-color`.
-        && match env::var_os("TERM") {
+        && (!allow_terminal_workarounds()|| match env::var_os("TERM") {
             Some(term) => !term.as_bytes().contains(&b'-'),
             None => true,
-        }
+        })
     })
 }
 

@@ -12,23 +12,25 @@ use crate::terminal::TerminalCommand::{
     KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
     ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
-use crate::terminal::{Capability, Output, Outputter};
+use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
+use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
-use crate::wutil::perror;
+use crate::wutil::{perror, wcstoi};
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
+use once_cell::sync::OnceCell;
 use std::mem::MaybeUninit;
-use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
+
+pub static XTVERSION: OnceCell<WString> = OnceCell::new();
+
+pub fn xtversion() -> Option<&'static wstr> {
+    XTVERSION.get().as_ref().map(|s| s.as_utfstr())
+}
 
 // Facts about our environment, which inform how we handle the tty.
 #[derive(Debug, Copy, Clone)]
 pub struct TtyMetadata {
-    // Whether we are running under Midnight Commander.
-    pub in_midnight_commander: bool,
-
-    // Whether we are running under dvtm.
-    pub in_dvtm: bool,
-
     // Whether we are running under tmux.
     pub in_tmux: bool,
 
@@ -38,18 +40,12 @@ pub struct TtyMetadata {
 
 impl TtyMetadata {
     // Create a new TtyMetadata instance with the current environment.
-    fn detect() -> Self {
-        use std::env::{var, var_os};
-
-        let in_midnight_commander = var_os("MC_TMPDIR").is_some();
-        let in_dvtm = var("TERM").as_deref() == Ok("dvtm-256color");
-        let in_tmux = var_os("TMUX").is_some();
-
+    fn detect(xtversion: &wstr) -> Self {
+        let in_tmux = xtversion.starts_with(L!("tmux "));
         // Detect iTerm2 before 3.5.12.
-        let pre_kitty_iterm2 = get_iterm2_version().is_some_and(|v| v < (3, 5, 12));
+        let pre_kitty_iterm2 = get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12));
+
         Self {
-            in_midnight_commander,
-            in_dvtm,
             in_tmux,
             pre_kitty_iterm2,
         }
@@ -57,32 +53,16 @@ impl TtyMetadata {
 }
 
 // Whether CSI-U ("Kitty") support is present in the TTY.
-static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
+static KITTY_KEYBOARD_SUPPORTED: OnceCell<bool> = OnceCell::new();
 
 // Get the support capability for CSI-U ("Kitty") protocols.
-pub fn get_kitty_keyboard_capability() -> Capability {
-    let cap = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed);
-    match cap {
-        x if x == Capability::Supported as _ => Capability::Supported,
-        x if x == Capability::NotSupported as _ => Capability::NotSupported,
-        _ => Capability::Unknown,
-    }
+pub fn get_kitty_keyboard_capability() -> Option<&'static bool> {
+    KITTY_KEYBOARD_SUPPORTED.get()
 }
 
 // Set CSI-U ("Kitty") support capability.
-// This correctly handles the case where we think protocols are already enabled.
-pub fn set_kitty_keyboard_capability(on_write: fn(), cap: Capability) {
-    assert_is_main_thread();
-    // Disable and renable protocols around capabilities.
-    let mut tty = TtyHandoff::new(on_write);
-    tty.disable_tty_protocols();
-    KITTY_KEYBOARD_SUPPORTED.store(cap as _, Ordering::Relaxed);
-    FLOG!(
-        term_protocols,
-        "Set Kitty keyboard capability to",
-        format!("{:?}", cap)
-    );
-    tty.reclaim();
+pub fn maybe_set_kitty_keyboard_capability(supported: bool) {
+    KITTY_KEYBOARD_SUPPORTED.get_or_init(|| supported);
 }
 
 // Helper to determine which keyboard protocols to enable.
@@ -118,7 +98,7 @@ impl TtyProtocolsSet {
     // Get commands to enable or disable TTY protocols, based on the metadata
     // and the KITTY_KEYBOARD_SUPPORTED global variable.
     // THIS IS USED FROM A SIGNAL HANDLER.
-    pub fn safe_get_commands(&self, enable: bool) -> &[u8] {
+    fn safe_get_commands(&self, enable: bool) -> &[u8] {
         let protocol = self.md.safe_get_supported_protocol();
         let cmds = if enable {
             &self.enablers
@@ -150,11 +130,10 @@ impl TtyMetadata {
         if self.pre_kitty_iterm2 {
             return ProtocolKind::Other;
         }
-        let cap = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed);
-        match cap {
-            x if x == Capability::Supported as _ => ProtocolKind::CSI_U,
-            x if x == Capability::NotSupported as _ => ProtocolKind::Other,
-            _ => ProtocolKind::None,
+        match KITTY_KEYBOARD_SUPPORTED.get() {
+            Some(&true) => ProtocolKind::CSI_U,
+            Some(&false) => ProtocolKind::Other,
+            None => ProtocolKind::None,
         }
     }
 
@@ -211,35 +190,22 @@ fn tty_protocols() -> Option<&'static TtyProtocolsSet> {
     unsafe { TTY_PROTOCOLS.load(Ordering::Acquire).as_ref() }
 }
 
-// Get the TTY protocols, initializing it if necessary.
+// Initialize TTY metadata.
 // This also initializes the terminal enable and disable serialized commands.
-// Note in practice this is only used from the main thread - races are very unlikely.
-fn get_or_init_tty_protocols() -> &'static TtyProtocolsSet {
+pub fn initialize_tty_metadata(xtversion: &wstr) {
+    assert_is_main_thread();
     use std::sync::atomic::Ordering::{Acquire, Release};
     // Standard lazy-init pattern from rust-atomics-and-locks.
     let mut p = TTY_PROTOCOLS.load(Acquire);
     if p.is_null() {
         // Try to swap in a new TTY protocols set.
-        p = Box::into_raw(Box::new(TtyMetadata::detect().get_protocols()));
-        if let Err(e) = TTY_PROTOCOLS.compare_exchange(std::ptr::null_mut(), p, Release, Acquire) {
+        p = Box::into_raw(Box::new(TtyMetadata::detect(xtversion).get_protocols()));
+        if let Err(_e) = TTY_PROTOCOLS.compare_exchange(std::ptr::null_mut(), p, Release, Acquire) {
             // Safety: p comes from Box::into_raw right above,
             // and wasn't shared with any other thread.
             drop(unsafe { Box::from_raw(p) });
-            p = e;
         }
     }
-    // Safety: p is not null and points to a properly initialized value.
-    unsafe { &*p }
-}
-
-// Get the TTY metadata, initializing it if necessary.
-pub fn tty_metadata() -> TtyMetadata {
-    get_or_init_tty_protocols().md
-}
-
-// Cover to merely initialize the TTY metadata, for clarity at call sites.
-pub fn initialize_tty_metadata() {
-    tty_metadata();
 }
 
 // A marker of the current state of the tty protocols.
@@ -410,7 +376,11 @@ impl TtyHandoff {
         if self.owner.is_some() {
             FLOG!(proc_pgroup, "fish reclaiming terminal");
             if unsafe { libc::tcsetpgrp(STDIN_FILENO, libc::getpgrp()) } == -1 {
-                FLOG!(warning, "Could not return shell to foreground");
+                FLOG!(
+                    warning,
+                    "Could not return shell to foreground:",
+                    errno::errno()
+                );
                 perror("tcsetpgrp");
             }
             self.owner = None;
@@ -590,17 +560,18 @@ impl Drop for TtyHandoff {
 }
 
 // If we are running under iTerm2, get the version as a tuple of (major, minor, patch).
-fn get_iterm2_version() -> Option<(u32, u32, u32)> {
-    use std::env::var;
-    let term = var("LC_TERMINAL").ok()?;
-    if term != "iTerm2" {
+fn get_iterm2_version(xtversion: &wstr) -> Option<(u32, u32, u32)> {
+    // TODO split_once
+    let mut xtversion = xtversion.split(' ');
+    let name = xtversion.next().unwrap();
+    let version = xtversion.next()?;
+    if name != "iTerm2" {
         return None;
     }
-    let version = var("LC_TERMINAL_VERSION").ok()?;
     let mut parts = version.split('.');
     Some((
-        parts.next()?.parse().ok()?,
-        parts.next()?.parse().ok()?,
-        parts.next()?.parse().ok()?,
+        wcstoi(parts.next()?).ok()?,
+        wcstoi(parts.next()?).ok()?,
+        wcstoi(parts.next()?).ok()?,
     ))
 }

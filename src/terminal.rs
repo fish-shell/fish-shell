@@ -2,7 +2,7 @@
 use crate::color::{Color, Color24};
 use crate::common::ToCString;
 use crate::common::{self, escape_string, wcs2string, wcs2string_appending, EscapeStringStyle};
-use crate::future_feature_flags::{self, FeatureFlag};
+use crate::future_feature_flags::{self, allow_terminal_workarounds, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
@@ -220,7 +220,9 @@ pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBoo
 pub(crate) static SCROLL_FORWARD_TERMINFO_CODE: &str = "indn";
 
 pub(crate) fn use_terminfo() -> bool {
-    !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()
+    !future_feature_flags::test(FeatureFlag::ignore_terminfo)
+        && allow_terminal_workarounds()
+        && TERM.lock().unwrap().is_some()
 }
 
 fn underline_mode(out: &mut impl Output, style: UnderlineStyle) -> bool {
@@ -368,7 +370,10 @@ impl<'a> std::fmt::Display for DisplayAsHex<'a> {
 }
 
 fn query_kitty_progressive_enhancements(out: &mut impl Output) -> bool {
-    if std::env::var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color") {
+    if allow_terminal_workarounds()
+        && std::env::var_os("TERM")
+            .is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color")
+    {
         return false;
     }
     out.write_bytes(b"\x1b[?u");

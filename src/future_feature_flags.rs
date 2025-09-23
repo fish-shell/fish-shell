@@ -36,6 +36,9 @@ pub enum FeatureFlag {
 
     /// Whether we are allowed to query the TTY for extra information.
     query_term,
+
+    /// Do not try to workaround terminal quirks.
+    omit_term_workarounds,
 }
 
 struct Features {
@@ -140,6 +143,14 @@ pub const METADATA: &[FeatureMetadata] = &[
         default_value: true,
         read_only: false,
     },
+    FeatureMetadata {
+        flag: FeatureFlag::omit_term_workarounds,
+        name: L!("omit-term-workarounds"),
+        groups: L!("4.1"),
+        description: L!("skip workarounds for individual terminals"),
+        default_value: false,
+        read_only: false,
+    },
 ];
 
 thread_local!(
@@ -204,6 +215,7 @@ impl Features {
                 AtomicBool::new(METADATA[6].default_value),
                 AtomicBool::new(METADATA[7].default_value),
                 AtomicBool::new(METADATA[8].default_value),
+                AtomicBool::new(METADATA[9].default_value),
             ],
         }
     }
@@ -255,6 +267,10 @@ impl Features {
             }
         }
     }
+}
+
+pub fn allow_terminal_workarounds() -> bool {
+    !test(FeatureFlag::omit_term_workarounds)
 }
 
 #[cfg(test)]

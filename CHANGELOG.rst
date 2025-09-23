@@ -91,6 +91,7 @@ Improved terminal support
 - fish now requires the terminal to respond to queries for the primary device attribute.
   For now, this can be reversed via a `feature flag <language.html#featureflags>`_,
   by running (once) ``set -Ua fish_features no-query-term``.
+- New `feature flag <language.html#featureflags>`_ ``omit-term-workarounds`` can be turned on to prevent fish from trying to work around specific terminals' quirks.
 
 Other improvements
 ------------------

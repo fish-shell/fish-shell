@@ -158,7 +158,7 @@ fn setup_and_process_keys(
     unsafe { libc::tcsetattr(0, TCSANOW, &*shell_modes()) };
     initialize_tty_metadata();
     let blocking_query: OnceCell<RefCell<Option<TerminalQuery>>> = OnceCell::new();
-    initial_query(&blocking_query, streams.out, None);
+    initial_query(streams.stdin_fd, &blocking_query, streams.out, None);
 
     if continuous_mode {
         streams.err.append(L!("\n"));

@@ -210,7 +210,7 @@ Optional Commands
        and the second parameter is the column number.
        Both start at 1.
 
-       This is required for terminals that either
+       This is used inside terminals that either
 
        - implement the OSC 133 `click_events <#osc-133>`_ feature.
        - advertise the `indn`_ capability via `XTGETTCAP`_

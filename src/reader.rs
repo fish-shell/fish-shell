@@ -87,8 +87,8 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input_common::{
-    stop_query, CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData,
-    QueryResponseEvent, ReadlineCmd, TerminalQuery,
+    stop_query, CharEvent, CharInputStyle, CursorPositionQuery, CursorPositionQueryKind,
+    ImplicitEvent, InputData, QueryResponseEvent, ReadlineCmd, TerminalQuery,
 };
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
@@ -276,7 +276,7 @@ pub(crate) fn initial_query(
                 query_capabilities_via_dcs(out.by_ref(), vars);
             }
             out.write_command(QueryPrimaryDeviceAttribute);
-            Some(TerminalQuery::PrimaryDeviceAttribute)
+            Some(TerminalQuery::Initial)
         };
         RefCell::new(query)
     });
@@ -1548,7 +1548,12 @@ impl<'a> Reader<'a> {
         let mut query = self.blocking_query();
         assert!(query.is_none());
         *query = Some(TerminalQuery::CursorPosition(q));
-        out.write_command(QueryCursorPosition);
+        {
+            out.begin_buffering();
+            out.write_command(QueryCursorPosition);
+            out.write_command(QueryPrimaryDeviceAttribute);
+            out.end_buffering();
+        }
         drop(query);
         self.save_screen_state();
     }
@@ -2560,19 +2565,16 @@ impl<'a> Reader<'a> {
                     FLOG!(reader, "Mouse left click", position);
                     self.request_cursor_position(
                         &mut Outputter::stdoutput().borrow_mut(),
-                        CursorPositionQuery::MouseLeft(position),
+                        CursorPositionQuery::new(CursorPositionQueryKind::MouseLeft(position)),
                     );
                 }
             },
             CharEvent::QueryResponse(query_result) => {
-                let maybe_query = self.blocking_query();
-                let query = &maybe_query;
+                let mut maybe_query = self.blocking_query();
+                let query = &mut maybe_query;
                 use QueryResponseEvent::*;
-                let query = match (&**query, query_result) {
-                    (
-                        Some(TerminalQuery::PrimaryDeviceAttribute),
-                        PrimaryDeviceAttributeResponse,
-                    ) => {
+                let query = match (&mut **query, query_result) {
+                    (Some(TerminalQuery::Initial), PrimaryDeviceAttributeResponse) => {
                         if get_kitty_keyboard_capability() == Capability::Unknown {
                             set_kitty_keyboard_capability(
                                 reader_save_screen_state,
@@ -2585,14 +2587,27 @@ impl<'a> Reader<'a> {
                         Some(TerminalQuery::CursorPosition(cursor_pos_query)),
                         CursorPositionResponse(cursor_pos),
                     ) => {
+                        cursor_pos_query.result = Some(cursor_pos);
+                        maybe_query
+                    }
+                    (
+                        Some(TerminalQuery::CursorPosition(cursor_pos_query)),
+                        PrimaryDeviceAttributeResponse,
+                    ) => {
                         let cursor_pos_query = cursor_pos_query.clone();
                         drop(maybe_query);
-                        match cursor_pos_query {
-                            CursorPositionQuery::MouseLeft(click_position) => {
-                                self.mouse_left_click(cursor_pos, click_position);
+                        use CursorPositionQueryKind::*;
+                        let cursor_pos = cursor_pos_query.result;
+                        match cursor_pos_query.kind {
+                            MouseLeft(click_position) => {
+                                if let Some(cursor_pos) = cursor_pos {
+                                    self.mouse_left_click(cursor_pos, click_position);
+                                }
                             }
-                            CursorPositionQuery::ScrollbackPush => {
-                                self.screen.push_to_scrollback(cursor_pos.y);
+                            ScrollbackPush => {
+                                if let Some(cursor_pos) = cursor_pos {
+                                    self.screen.push_to_scrollback(cursor_pos.y);
+                                }
                             }
                         };
                         self.blocking_query()
@@ -3908,12 +3923,12 @@ impl<'a> Reader<'a> {
                     drop(query);
                     self.request_cursor_position(
                         &mut Outputter::stdoutput().borrow_mut(),
-                        CursorPositionQuery::ScrollbackPush,
+                        CursorPositionQuery::new(CursorPositionQueryKind::ScrollbackPush),
                     );
                     return;
                 };
                 match query {
-                    TerminalQuery::PrimaryDeviceAttribute => panic!(),
+                    TerminalQuery::Initial => panic!(),
                     TerminalQuery::CursorPosition(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(

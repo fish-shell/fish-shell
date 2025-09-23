@@ -756,14 +756,26 @@ impl InputData {
 }
 
 #[derive(Clone, Eq, PartialEq)]
-pub enum CursorPositionQuery {
+pub enum CursorPositionQueryKind {
     MouseLeft(ViewportPosition),
     ScrollbackPush,
 }
 
+#[derive(Clone, Eq, PartialEq)]
+pub struct CursorPositionQuery {
+    pub kind: CursorPositionQueryKind,
+    pub result: Option<ViewportPosition>,
+}
+
+impl CursorPositionQuery {
+    pub fn new(kind: CursorPositionQueryKind) -> Self {
+        Self { kind, result: None }
+    }
+}
+
 #[derive(Eq, PartialEq)]
 pub enum TerminalQuery {
-    PrimaryDeviceAttribute,
+    Initial,
     CursorPosition(CursorPositionQuery),
 }
 

@@ -86,6 +86,7 @@ use crate::history::{
     SearchFlags, SearchType,
 };
 use crate::input::init_input;
+use crate::input_common::InputEventQueuer;
 use crate::input_common::QueryResponse;
 use crate::input_common::{
     stop_query, CharEvent, CharInputStyle, CursorPositionQuery, CursorPositionQueryKind,
@@ -259,18 +260,22 @@ fn redirect_tty_after_sighup() {
     }
 }
 
-fn querying_allowed() -> bool {
-    !is_dumb() && std::env::var_os("MC_TMPDIR").is_none() && isatty(STDOUT_FILENO)
+fn querying_allowed(in_fd: RawFd) -> bool {
+    !is_dumb() && std::env::var_os("MC_TMPDIR").is_none()
+        // Could use /dev/tty in future.
+        && isatty(in_fd)
+        && isatty(STDOUT_FILENO)
 }
 
 pub(crate) fn initial_query(
+    in_fd: RawFd,
     blocking_query: &OnceCell<RefCell<Option<TerminalQuery>>>,
     out: &mut impl Output,
     vars: Option<&dyn Environment>,
 ) {
     blocking_query.get_or_init(|| {
         initialize_tty_metadata();
-        let query = if !querying_allowed() {
+        let query = if !querying_allowed(in_fd) {
             None
         } else {
             // Query for kitty keyboard protocol support.
@@ -1545,7 +1550,7 @@ impl<'a> Reader<'a> {
     }
 
     pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
-        if !querying_allowed() {
+        if !querying_allowed(self.get_in_fd()) {
             return;
         }
         let mut query = self.blocking_query();
@@ -2235,6 +2240,7 @@ impl<'a> Reader<'a> {
         }
 
         initial_query(
+            self.conf.inputfd,
             &self.parser.blocking_query,
             &mut BufferedOutputter::new(Outputter::stdoutput()),
             Some(self.parser.vars()),

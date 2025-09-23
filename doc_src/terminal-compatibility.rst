@@ -72,6 +72,9 @@ Required Commands
      -
      - Request primary device attribute.
        The terminal must respond with a CSI command that starts with the ``?`` parameter byte (so a sequence starting with ``\e[?``) and has ``c`` as final byte.
+
+       Failure to implement this will cause a brief pause at startup followed by a warning.
+       For the time being, both can be turned off by turning off the ``query-terminal`` `feature flag <language.html#featureflags>`_.
      - VT100
    * - n/a
      - am

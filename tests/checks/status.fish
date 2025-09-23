@@ -64,6 +64,7 @@ status features
 #CHECK: test-require-arg        off 4.0 builtin test requires an argument
 #CHECK: mark-prompt             on  4.0 write OSC 133 prompt markers to the terminal
 #CHECK: ignore-terminfo         on  4.1 do not look up $TERM in terminfo database
+#CHECK: query-term              on  4.1 query the TTY to enable extra functionality
 status test-feature stderr-nocaret
 echo $status
 #CHECK: 0

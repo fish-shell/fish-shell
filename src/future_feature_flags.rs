@@ -33,6 +33,9 @@ pub enum FeatureFlag {
 
     /// Do not look up $TERM in terminfo database.
     ignore_terminfo,
+
+    /// Whether we are allowed to query the TTY for extra information.
+    query_term,
 }
 
 struct Features {
@@ -129,6 +132,14 @@ pub const METADATA: &[FeatureMetadata] = &[
         default_value: true,
         read_only: false,
     },
+    FeatureMetadata {
+        flag: FeatureFlag::query_term,
+        name: L!("query-term"),
+        groups: L!("4.1"),
+        description: L!("query the TTY to enable extra functionality"),
+        default_value: true,
+        read_only: false,
+    },
 ];
 
 thread_local!(
@@ -192,6 +203,7 @@ impl Features {
                 AtomicBool::new(METADATA[5].default_value),
                 AtomicBool::new(METADATA[6].default_value),
                 AtomicBool::new(METADATA[7].default_value),
+                AtomicBool::new(METADATA[8].default_value),
             ],
         }
     }

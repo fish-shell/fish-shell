@@ -75,6 +75,8 @@ use crate::fds::{make_fd_blocking, wopen_cloexec, AutoCloseFd};
 use crate::flog::{FLOG, FLOGF};
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
+use crate::future_feature_flags;
+use crate::future_feature_flags::FeatureFlag;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{
     autosuggest_validate_from_history, highlight_shell, parse_text_face_for_highlight,
@@ -261,6 +263,7 @@ fn redirect_tty_after_sighup() {
 }
 
 fn querying_allowed(in_fd: RawFd) -> bool {
+    future_feature_flags::test(FeatureFlag::query_term) &&
     !is_dumb() && std::env::var_os("MC_TMPDIR").is_none()
         // Could use /dev/tty in future.
         && isatty(in_fd)

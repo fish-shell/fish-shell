@@ -1,4 +1,4 @@
-fish ?.?.? (released ???)
+fish 4.3.0 (released ???)
 =========================
 
 Notable improvements and fixes
@@ -10,6 +10,10 @@ Deprecations and removed features
 Interactive improvements
 ------------------------
 - When typing immediately after starting fish, the first prompt is now rendered correctly.
+
+Improved terminal support
+-------------------------
+- New :ref:`feature flag <featureflags>` ``omit-term-workarounds`` can be turned on to prevent fish from trying to work around incompatible terminals.
 
 For distributors and developers
 -------------------------------

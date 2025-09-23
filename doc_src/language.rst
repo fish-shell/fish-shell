@@ -2027,6 +2027,7 @@ You can see the current list of features via ``status features``::
     mark-prompt             on  4.0 write OSC 133 prompt markers to the terminal
     ignore-terminfo         on  4.1 do not look up $TERM in terminfo database
     query-term              on  4.1 query the TTY to enable extra functionality
+    omit-term-workarounds   off 4.3 skip workarounds for incompatible terminals
 
 Here is what they mean:
 
@@ -2041,6 +2042,7 @@ Here is what they mean:
 - ``query-term`` allows fish to query the terminal by writing escape sequences and reading the terminal's response.
   This enables features such as :ref:`scrolling <term-compat-cursor-position-report>`.
   If you use an incompatible terminal, you can -- for the time being -- work around it by running (once) ``set -Ua fish_features no-query-term``.
+- ``omit-term-workarounds`` prevents fish from trying to work around incompatible terminals.
 
 
 These changes are introduced off by default. They can be enabled on a per session basis::

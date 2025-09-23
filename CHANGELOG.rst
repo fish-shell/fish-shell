@@ -5,14 +5,14 @@ fish 4.1.0 (released ???)
 
 Notable improvements and fixes
 ------------------------------
-- Compound commands (``begin; echo 1; echo 2; end``) can now be expressed with braces (``{ echo1; echo 2 }``), like in other shells.
+- Compound commands (``begin; echo 1; echo 2; end``) can now be written using braces (``{ echo1; echo 2 }``), like in other shells.
 - Fish now supports transient prompts: if :envvar:`fish_transient_prompt` is set to 1, fish will reexecute prompt functions with the ``--final-rendering`` argument before running a commandline (:issue:`11153`).
 - Tab completion results are truncated up to the common directory path, instead of somwehere inside that path. E.g. if you complete "share/functions", and it includes the files "foo.fish" and "bar.fish",
   the completion pager will now show "…/foo.fish" and "…/bar.fish". This will make the candidates shorter and allow for more to be shown at once (:issue:`11250`).
 - The self-installing configuration introduced in fish 4.0 has been changed.
   Now fish built with embedded data will just read the data straight from its own binary or write it out when necessary, instead of requiring an installation step on start.
   That means it is now possible to build fish as a single file and copy it to a compatible system, including as a different user, without extracting any files.
-  As before this is the default when building via ``cargo``, and disabled when building via ``cmake``, and for packagers we continue to recommend cmake.
+  As before this is the default when building via ``cargo``, and disabled when building via CMake, and for packagers we continue to recommend CMake
 
   Note: When fish is built like this, the :envvar:`__fish_data_dir` variable will be empty because that directory no longer has meaning. If you need to load files from there,
   use ``status get-file`` or find alternatives (like loading completions for "foo" via ``complete -C"foo "``).
@@ -24,10 +24,11 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 - Commands like ``{echo,echo}`` or ``{ echo, echo }`` are no longer interpreted as brace expansion token but as compound command, i.e. :doc:`begin <cmds/begin>`.
-- Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation since 4.0,
+- Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by fish's own key names since 4.0,
   and currently they would map back to information from terminfo, which does not match what terminals would send with the kitty keyboard protocol (:issue:`11342`).
 - fish no longer reads the terminfo database, so its behavior is no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).
-  For the time being, this can be turned off via the "ignore-terminfo" feature flag. To do so, run the following once and restart fish::
+  For the time being, this change can be reversed via the ``ignore-terminfo`` :ref:`feature flag <featureflags>`.
+  To do so, run the following once and restart fish::
 
     set -Ua fish_features no-ignore-terminfo
 
@@ -36,8 +37,9 @@ Deprecations and removed features
 
   - To go back to using the nearest match from the 256-color palette, use ``set fish_term24bit 0`` or set :envvar:`COLORTERM` to a value that is not "24bit" or "truecolor".
     To make the nearest-match logic use the 16 color palette instead, use ``set fish_term256 0``.
-  - Inside macOS Terminal.app, fish makes an attempt to still use the palette colors.
-    If that doesn't work, use ``set fish_term24bit 0``.
+  - Since macOS' Terminal.app doesn't support true-color yet,
+    fish tries to keep using palette colors.
+    If Terminal.app is not correctly detected, use ``set fish_term24bit 0``.
 - ``set_color --background=COLOR`` no longer implicitly activates bold mode.
   If your theme is stored in universal variables (which is the historical default),
   you may want to update it to the new defaults that explicitly activate bold mode.
@@ -53,7 +55,7 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - Autosuggestions are now also provided in multi-line command lines. Like :kbd:`ctrl-r`, autosuggestions operate only on the current line.
-- Autosuggestions used to not suggest multi-line commandlines from history; now autosuggestions include individual lines from multi-line command lines.
+- Autosuggestions used to not suggest multi-line command-lines from history; now autosuggestions include individual lines from multi-line command-lines.
 - The history pager search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
 - Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), the autosuggestion when deleting it, and the full command line in all other cases.
 - Pasted commands are now stripped of any :code:`$\ ` command prefixes, which are sometimes used in copy-pasted code snippets.
@@ -78,7 +80,7 @@ Completions
 ^^^^^^^^^^^
 - ``git`` completions now show the remote URL as a description when completing remotes.
 - ``systemctl`` completions no longer print escape codes if ``SYSTEMD_COLORS`` is set (:issue:`11465`).
-- Added many completions scripts.
+- Added and improved many completion scripts.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,7 +104,7 @@ For distributors
 - The CMake build configuration has been simplified and no longer second-guesses rustup.
   It will run rustc and cargo via :envvar:`PATH` or in ~/.cargo/bin/.
   If that doesn't match your setup, set the Rust_COMPILER and Rust_CARGO cmake variables (:issue:`11328`).
-- Cygwin support has been reintroduced, since Rust gained a Cygwin target (https://github.com/rust-lang/rust/pull/134999, :issue:`11238`).
+- Cygwin support has been reintroduced, since `Rust gained a Cygwin target <https://github.com/rust-lang/rust/pull/134999>`__ (:issue:`11238`).
 - Fish no longer uses gettext MO files, see :ref:`below <changelog-4.1-gettext>`.
   If you have use cases which are incompatible with our new approach, please let us know.
 

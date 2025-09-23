@@ -210,7 +210,7 @@ Optional Commands
        and the second parameter is the column number.
        Both start at 1.
 
-       This is required for terminals that either
+       This is used inside terminals that either
 
        - implement the OSC 133 :ref:`click_events <term-compat-osc-133>` feature.
        - advertise the :ref:`indn <term-compat-indn>` capability via :ref:`XTGETTCAP <term-compat-xtgettcap>`
@@ -284,8 +284,8 @@ Optional Commands
        ``\e]133;A; click_events=1\x07``
      -
      - Mark prompt start (OSC 133), with kitty's ``click_events`` extension.
-       If ``click_events`` is implemented,
-       the :ref:`cursor position reporting <term-compat-cursor-position-report>` feature is required.
+       The ``click_events`` extension enables mouse clicks to move the cursor or select pager items,
+       assuming that :ref:`cursor position reporting <term-compat-cursor-position-report>` is available.
      - FinalTerm, kitty
    * - ``\e]133;C; cmdline_url= Pt \x07``
      -

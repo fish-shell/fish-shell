@@ -173,28 +173,22 @@ pub fn guess_emoji_width(vars: &EnvStack) {
         .get(L!("TERM_PROGRAM"))
         .map(|v| v.as_string())
         .unwrap_or_else(WString::new);
-    // The format and contents of $TERM_PROGRAM_VERSION depend on $TERM_PROGRAM. Under
-    // Apple_Terminal, this is an integral value in the hundreds corresponding to the
-    // CFBundleVersion of Terminal.app; under iTerm, this is the version number which can contain
-    // multiple periods (e.g 3.4.19). Currently we only care about Apple_Terminal but the C++ code
-    // used wcstod() to parse at least the major.minor value of cases like the latter.
-    //
-    // TODO: Move this inside the Apple_Terminal branch and use i32::FromStr (i.e. str::parse())
-    // instead.
-    let version = vars
-        .get(L!("TERM_PROGRAM_VERSION"))
-        .map(|v| v.as_string())
-        .and_then(|v| {
-            let mut consumed = 0;
-            crate::wutil::wcstod::wcstod(&v, '.', &mut consumed).ok()
-        })
-        .unwrap_or(0.0);
 
     if xtversion().is_some_and(|xtversion| xtversion.starts_with(L!("iTerm2 "))) {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
         FLOG!(term_support, "default emoji width 2 for iTerm2");
-    } else if term_program == "Apple_Terminal" && version as i32 >= 400 {
+    } else if term_program == "Apple_Terminal" && {
+        let version = vars
+            .get(L!("TERM_PROGRAM_VERSION"))
+            .map(|v| v.as_string())
+            .and_then(|v| {
+                let mut consumed = 0;
+                crate::wutil::wcstod::wcstod(&v, '.', &mut consumed).ok()
+            })
+            .unwrap_or(0.0);
+        version as i32 >= 400
+    } {
         // Apple Terminal on High Sierra
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
         FLOG!(term_support, "default emoji width: 2 for", term_program);

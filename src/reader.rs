@@ -259,6 +259,10 @@ fn redirect_tty_after_sighup() {
     }
 }
 
+fn querying_allowed() -> bool {
+    !is_dumb() && std::env::var_os("MC_TMPDIR").is_none() && isatty(STDOUT_FILENO)
+}
+
 pub(crate) fn initial_query(
     blocking_query: &OnceCell<RefCell<Option<TerminalQuery>>>,
     out: &mut impl Output,
@@ -266,19 +270,18 @@ pub(crate) fn initial_query(
 ) {
     blocking_query.get_or_init(|| {
         initialize_tty_metadata();
-        let query =
-            if is_dumb() || std::env::var_os("MC_TMPDIR").is_some() || !isatty(STDOUT_FILENO) {
-                None
-            } else {
-                // Query for kitty keyboard protocol support.
-                out.write_command(QueryKittyKeyboardProgressiveEnhancements);
-                out.write_command(QueryXtversion);
-                if let Some(vars) = vars {
-                    query_capabilities_via_dcs(out.by_ref(), vars);
-                }
-                out.write_command(QueryPrimaryDeviceAttribute);
-                Some(TerminalQuery::Initial)
-            };
+        let query = if !querying_allowed() {
+            None
+        } else {
+            // Query for kitty keyboard protocol support.
+            out.write_command(QueryKittyKeyboardProgressiveEnhancements);
+            out.write_command(QueryXtversion);
+            if let Some(vars) = vars {
+                query_capabilities_via_dcs(out.by_ref(), vars);
+            }
+            out.write_command(QueryPrimaryDeviceAttribute);
+            Some(TerminalQuery::Initial)
+        };
         RefCell::new(query)
     });
 }
@@ -1542,7 +1545,7 @@ impl<'a> Reader<'a> {
     }
 
     pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
-        if !isatty(STDOUT_FILENO) {
+        if !querying_allowed() {
             return;
         }
         let mut query = self.blocking_query();

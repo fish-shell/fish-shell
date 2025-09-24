@@ -21,6 +21,7 @@ Scripting improvements
 
 Other improvements
 ------------------
+- Improved French translations (:issue:`11842`).
 
 For distributors
 ----------------

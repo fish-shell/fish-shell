@@ -64,6 +64,7 @@ use fish::{
     wchar::prelude::*,
     wutil::waccess,
 };
+use libc::STDIN_FILENO;
 #[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
 use std::ffi::{CString, OsStr, OsString};
@@ -371,7 +372,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
     // We are an interactive session if we have not been given an explicit
     // command or file to execute and stdin is a tty. Note that the -i or
     // --interactive options also force interactive mode.
-    if opts.batch_cmds.is_empty() && optind == args.len() && isatty(libc::STDIN_FILENO) {
+    if opts.batch_cmds.is_empty() && optind == args.len() && isatty(STDIN_FILENO) {
         set_interactive_session(true);
     }
 

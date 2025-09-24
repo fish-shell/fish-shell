@@ -298,7 +298,7 @@ fn throwing_main() -> i32 {
         return s.builtin_status_code();
     }
 
-    if !isatty(libc::STDIN_FILENO) {
+    if !isatty(STDIN_FILENO) {
         streams
             .err
             .appendln(wgettext!("Stdin must be attached to a tty."));

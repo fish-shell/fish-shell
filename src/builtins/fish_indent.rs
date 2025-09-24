@@ -886,7 +886,7 @@ fn throwing_main() -> i32 {
     use crate::io::FdOutputStream;
     use crate::io::IoChain;
     use crate::io::OutputStream::Fd;
-    use libc::{STDERR_FILENO, STDOUT_FILENO};
+    use libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 
     topic_monitor_init();
     threads::init();
@@ -895,7 +895,7 @@ fn throwing_main() -> i32 {
     let mut err = Fd(FdOutputStream::new(STDERR_FILENO));
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
-    streams.stdin_fd = libc::STDIN_FILENO;
+    streams.stdin_fd = STDIN_FILENO;
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
     // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
     //

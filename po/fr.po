@@ -33,78 +33,82 @@
 # pouvez la changer, mais vous devrez alors propager ce changement aux traductions existantes pour maintenir leur cohérence.
 #
 # Traductions recommandées
-# to list                                                 lister
-# to run                                                  exécuter
-# to build (code source)                                  compiler
-# to build (rassembler en un ensemble cohérent : paquet…) construire
-# to report                                               communiquer
-# short                                                   concis
-# tree                                                    arborescence
-# directory                                               dossier
-# repertory                                               dossier
-# safe mode                                               mode sécurisé
-# change                                                  modification
-# status                                                  état
-# exit status                                             code de retour
-# to remove                                               supprimer
-# to delete                                               supprimer
-# to set                                                  paramétrer
+## Substantifs
 # a set                                                   un jeu
-# to suppress                                             masquer
+# about                                                   au sujet de
+# additionally                                            de surcroît
+# addon                                                   greffon
+# array (RAID)                                            ensemble
+# banner                                                  bannière
+# block device                                            périphérique en mode bloc
+# built in                                                intégré
+# change                                                  modification
+# character device                                        périphérique en mode caractères
+# checkin                                                 soumission
+# checkpoint                                              point de vérification
 # current                                                 actuel
 # device                                                  périphérique
-# block device                                            périphérique de bloc
-# character device                                        périphérique de caractères
-# to unset                                                déparamétrer
-# out of date                                             obsolète
-# to give                                                 spécifier
-# to bypass                                               outrepasser
-# built in                                                intégré
-# time(stamp)                                             horodatage
-# i(-)node                                                i-nœud
-# to assume                                               présumer
+# directory                                               dossier
+# endpoint                                                point d’entrée
+# exit status                                             code de retour
+# geometry                                                dimensions
+# header                                                  en-tête
+# home (directory)                                        principal
 # hook                                                    crochet
+# i(-)node                                                i-nœud
+# if any                                                  le cas échéant
+# in order to                                             afin de
+# jail (BSD)                                              environnement jail
+# locale                                                  paramètres régionaux
+# old-style                                               daté
+# one-liner                                               en une ligne
+# out of date                                             obsolète
+# plugin                                                  greffon
+# popup                                                   fenêtre surgissante
+# queue                                                   file (d’attente)
+# relocation                                              relogement
+# repertory                                               dossier
+# repository                                              dépôt
+# safe mode                                               mode sécurisé
+# short                                                   concis
+# sparse file                                             fichier creux
+# status                                                  état
+# the cache                                               le cache
+# time(stamp)                                             horodatage
+# token                                                   lexème (analyse syntaxique)
+# tree                                                    arborescence
+# vendor                                                  fournisseur
+# working directory                                       dossier de travail
+#
+## Verbes
+# to assume                                               présumer
+# to build (code source)                                  compiler
+# to build (rassembler en un ensemble cohérent : paquet…) construire
+# to bundle                                               regrouper
+# to bypass                                               outrepasser
+# to clean                                                nettoyer
+# to delete                                               supprimer
+# to forward                                              faire suivre
+# to give                                                 spécifier
+# to inline                                               étendre inline
+# to instruct                                             charger
+# to list                                                 lister
+# to own (paquet)                                         fournir
+# to query (hors BDD)                                     obtenir
+# to remove                                               supprimer
+# to report                                               communiquer
+# to retrieve                                             récupérer
+# to roll back                                            revenir
+# to run                                                  exécuter
+# to search                                               rechercher
+# to set                                                  paramétrer
+# to suppress                                             masquer
+# to test                                                 vérifier
+# to unset                                                déparamétrer
 # to update                                               mettre à jour
 # to upgrade (paquet)                                     mettre à jour
 # to upgrade (système)                                    mettre à niveau
-# to clean                                                nettoyer
-# the cache                                               le cache
-# to test                                                 vérifier
-# to own (paquet)                                         fournir
-# repository                                              dépôt
-# addon                                                   greffon
-# plugin                                                  greffon
-# to retrieve                                             récupérer
-# to query (hors BDD)                                     obtenir
-# sparse file                                             fichier creux
-# to search                                               rechercher
-# array (RAID)                                            ensemble
-# endpoint                                                point d’entrée
-# token                                                   lexème (analyse syntaxique)
-# home (directory)                                        principal
-# to forward                                              faire suivre
-# checkpoint                                              point de vérification
-# header                                                  en-tête
-# vendor                                                  fournisseur
-# jail (BSD)                                              environnement jail
-# one-liner                                               en une ligne
-# checkin                                                 soumission
-# about                                                   au sujet de
-# if any                                                  le cas échéant
-# to instruct                                             charger
-# old-style                                               daté
-# to inline                                               étendre inline
-# additionally                                            de surcroît
-# in order to                                             afin de
-# working directory                                       dossier de travail
-# relocation                                              relogement
-# locale                                                  paramètres régionaux
-# popup                                                   fenêtre surgissante
-# geometry                                                dimensions
-# to roll back                                            revenir
-# to bundle                                               regrouper
-# queue                                                   file (d’attente)
-# banner                                                  page de garde
+
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.2.8POT-Creation-Date: 2006-07-10 13:44-0400\n"

@@ -176,7 +176,7 @@ pub fn guess_emoji_width(vars: &EnvStack) {
 
     #[allow(renamed_and_removed_lints)] // for old clippy
     #[allow(clippy::blocks_in_if_conditions)] // for old clippy
-    if xtversion().unwrap().starts_with(L!("iTerm2 ")) {
+    if xtversion().unwrap_or(L!("")).starts_with(L!("iTerm2 ")) {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
         FLOG!(term_support, "default emoji width 2 for iTerm2");

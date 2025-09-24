@@ -20,15 +20,17 @@ use crate::{
     env::{env_init, EnvStack, Environment},
     future_feature_flags,
     input_common::{
-        match_key_event_to_key, CharEvent, InputEventQueue, InputEventQueuer, KeyEvent,
-        QueryResponse, QueryResultEvent, TerminalQuery,
+        match_key_event_to_key, CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer,
+        KeyEvent, QueryResponse, QueryResultEvent, TerminalQuery,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
     panic::panic_handler,
     print_help::print_help,
     proc::set_interactive_session,
-    reader::{check_exit_loop_maybe_warning, initial_query, reader_init, set_shell_modes},
+    reader::{
+        check_exit_loop_maybe_warning, initial_query, reader_init, reader_sighup, set_shell_modes,
+    },
     signal::signal_set_handlers,
     terminal::Capability,
     threads,
@@ -94,6 +96,10 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
         use QueryResultEvent::*;
         let kevt = match queue.readch() {
+            CharEvent::Implicit(ImplicitEvent::Eof) => {
+                reader_sighup();
+                continue;
+            }
             CharEvent::Key(kevt) => kevt,
             CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
             CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute) | Timeout) => {

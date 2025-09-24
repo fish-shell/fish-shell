@@ -2539,9 +2539,7 @@ impl<'a> Reader<'a> {
                 self.rls_mut().last_cmd = None;
             }
             CharEvent::Implicit(implicit_event) => match implicit_event {
-                ImplicitEvent::Eof => {
-                    reader_sighup();
-                }
+                ImplicitEvent::Eof => reader_sighup(),
                 ImplicitEvent::CheckExit => (),
                 ImplicitEvent::FocusIn => {
                     event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);

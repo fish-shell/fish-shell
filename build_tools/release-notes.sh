@@ -11,6 +11,15 @@ mkdir -p "$relnotes_tmp/fake-workspace" "$relnotes_tmp/out"
     cp -r doc_src CONTRIBUTING.rst README.rst "$relnotes_tmp/fake-workspace"
 )
 version=$(sed 's,^fish \(\S*\) .*,\1,; 1q' "$workspace_root/CHANGELOG.rst")
+previous_version=$(awk <"$workspace_root/CHANGELOG.rst" '
+    ( /^fish \S*\.\S*\.\S* \(released .*\)$/ &&
+        NR > 1 &&
+        # Skip tags that have not been created yet..
+        system("git rev-parse --verify >/dev/null --quiet refs/tags/"$2) == 0 \
+    ) {
+        print $2; exit
+    }
+')
 minor_version=${version%.*}
 changelog_for_this_version=$(awk <"$workspace_root/CHANGELOG.rst" '
     /^===/ { if (v++) { exit } }
@@ -35,9 +44,14 @@ sed -n 2p "$relnotes_tmp/out/relnotes.md" | grep -Fxq ''
 sed -i 1,2d "$relnotes_tmp/out/relnotes.md"
 
 {
-    cat "$relnotes_tmp/out/relnotes.md" - <<EOF
+    cat "$relnotes_tmp/out/relnotes.md"
+    echo ""
+    echo "---"
+    echo ""
+    "$workspace_root"/build_tools/list_committers_since.fish "$previous_version"
+    cat <<EOF
 
---
+---
 
 *Download links: To download the source code for fish, we suggest the file named "fish-$version.tar.xz". The file downloaded from "Source code (tar.gz)" will not build correctly.*
 

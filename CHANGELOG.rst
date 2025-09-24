@@ -9,15 +9,7 @@ Notable improvements and fixes
 - Fish now supports transient prompts: if :envvar:`fish_transient_prompt` is set to 1, fish will reexecute prompt functions with the ``--final-rendering`` argument before running a commandline (:issue:`11153`).
 - Tab completion results are truncated up to the common directory path, instead of somwehere inside that path. E.g. if you complete "share/functions", and it includes the files "foo.fish" and "bar.fish",
   the completion pager will now show "…/foo.fish" and "…/bar.fish". This will make the candidates shorter and allow for more to be shown at once (:issue:`11250`).
-- The self-installing configuration introduced in fish 4.0 has been changed.
-  Now fish built with embedded data will just read the data straight from its own binary or write it out when necessary, instead of requiring an installation step on start.
-  That means it is now possible to build fish as a single file and copy it to a compatible system, including as a different user, without extracting any files.
-  As before this is the default when building via ``cargo``, and disabled when building via CMake, and for packagers we continue to recommend CMake
-
-  Note: When fish is built like this, the :envvar:`__fish_data_dir` variable will be empty because that directory no longer has meaning. If you need to load files from there,
-  use ``status get-file`` or find alternatives (like loading completions for "foo" via ``complete -C"foo "``).
-
-  We're considering making data embedding mandatory in future releases because it has a few advantages even for installation from a package (like making file conflicts with other packages impossible) (:issue:`11143`).
+- Self-installing builds as created by ``cargo build`` or ``cargo install`` have changed, see :ref:`below <changelog-4.1-embedded>`.
 - Reworked gettext localization, making translations work inside builds with embedded data (mentioned above).
   See :ref:`below <changelog-4.1-gettext>` for a detailed description of the changes.
 
@@ -32,7 +24,7 @@ Deprecations and removed features
 
     set -Ua fish_features no-ignore-terminfo
 
-- The ``--install`` option when fish is built as self-installable was removed. If you need to write out fish's data you can use the new ``status list-files`` and ``status get-file`` subcommands, but it should no longer be necessary (:issue:`11143`).
+- The ``--install`` option when fish is built as self-installing was removed, see :ref:`below <changelog-4.1-embedded>`.
 - RGB colors (``set_color ff0000``) now default to using 24-bit RGB true-color commands, even if :envvar:`COLORTERM` is unset, because that is often lost e.g. over ssh (:issue:`11372`)
 
   - To go back to using the nearest match from the 256-color palette, use ``set fish_term24bit 0`` or set :envvar:`COLORTERM` to a value that is not "24bit" or "truecolor".
@@ -60,7 +52,6 @@ Interactive improvements
 - The history pager search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
 - Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), the autosuggestion when deleting it, and the full command line in all other cases.
 - Pasted commands are now stripped of any :code:`$\ ` command prefixes, which are sometimes used in copy-pasted code snippets.
-- The :kbd:`alt-s` binding will now also use ``run0`` if available.
 - ``funced`` will now edit copied functions directly, instead of the file where ``function --copy`` was invoked. (:issue:`11614`)
 - built-in help options as ``abbr --help`` now use ``man`` directly, meaning that variables like :envvar:`MANWIDTH` are respected (:issue:`11786`).
 
@@ -70,6 +61,7 @@ New or improved bindings
   On macOS, the corresponding :kbd:`ctrl-` prefixed keys operate on whole arguments.
   Word operations are still available via the other respective modifier, just like in most web browsers.
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
+- The :kbd:`alt-s` binding will now also use ``run0`` if available.
 - The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking in the command line,
   and selecting pager items (:issue:`10932`).
 - :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback,
@@ -103,8 +95,7 @@ For distributors
 - The :doc:`fish_indent <cmds/fish_indent>` and :doc:`fish_key_reader <cmds/fish_key_reader>` programs are now also available as builtins.
   If fish is invoked via e.g. a symlink with one of these names,
   it will act like the given tool (i.e. it's a multi-call binary).
-  This allows truly distributing fish as a single file.
-  This means they can be replaced with symlinks if you want to save disk space (:issue:`10876`).
+  This allows truly distributing fish as a single file (:issue:`10876`).
 - builtin commands that support the ``--help`` option now require the ``man`` program.
   The direct dependency on either of ``mandoc`` or ``nroff`` has been removed.
 - The CMake build configuration has been simplified and no longer second-guesses rustup.
@@ -113,6 +104,20 @@ For distributors
 - Cygwin support has been reintroduced, since `Rust gained a Cygwin target <https://github.com/rust-lang/rust/pull/134999>`__ (:issue:`11238`).
 - Fish no longer uses gettext MO files, see :ref:`below <changelog-4.1-gettext>`.
   If you have use cases which are incompatible with our new approach, please let us know.
+
+.. _changelog-4.1-embedded:
+
+Changes to self-installing builds
+---------------------------------
+
+The self-installing configuration introduced in fish 4.0 has been changed (:issue:`11143`).
+Now fish built with embedded data will just read the data straight from its own binary or write it out when necessary, instead of requiring an installation step on start.
+That means it is now possible to build fish as a single file and copy it to a compatible system, including as a different user, without extracting any files.
+As before this is the default when building via ``cargo``, and disabled when building via CMake, and for packagers we continue to recommend CMake
+
+Note: When fish is built like this, the :envvar:`__fish_data_dir` variable will be empty because that directory no longer has meaning.
+If you need to load files from there,
+use ``status get-file`` or find alternatives (like loading completions for "foo" via ``complete -C"foo "``).
 
 .. _changelog-4.1-gettext:
 

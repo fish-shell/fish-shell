@@ -317,7 +317,7 @@ or within the running fish shell::
 
 For more options regarding how to choose languages, see
 `the corresponding gettext documentation
-<https://www.gnu.org/software/gettext/manual/html_node/Locale-Environment-Variables.html>`.
+<https://www.gnu.org/software/gettext/manual/html_node/Locale-Environment-Variables.html>`__.
 One neat thing you can do is set a list of languages to check for translations in the order defined
 using the ``LANGUAGE`` variable, e.g.::
 

@@ -47,44 +47,13 @@ jobs:
           set -x
           mkdir /tmp/fish-built
           FISH_ARTEFACT_PATH=/tmp/fish-built ./build_tools/make_tarball.sh
-          {
-            pip install sphinx-markdown-builder==0.6.8
-            relnotes_tmp=$(mktemp -d)
-            mkdir "$relnotes_tmp/src" "$relnotes_tmp/out"
-            version=$(git describe)
-            minor_version=${version%.*}
-            changelog_for_this_version=$(awk <CHANGELOG.rst '
-              /^fish/ && $2 != "'"$version"'" { exit }
-              { print }
-            ')
-            # Also fix up any relative references to other documentation files.
-            # Also remove spurious transitions at the end of the document.
-            printf %s "$changelog_for_this_version" |
-              sed >"$relnotes_tmp/src"/index.rst \
-                -e 's,:doc:`\(.*\) <\([^>]*\)>`,`\1 <https://fishshell.com/docs/'"$minor_version"'/\2.html>`_,g' \
-                -e 's,:envvar:`\([^`]*\)`,``$\1``,g' \
-                -e '$s/^----*$//'
-
-            # In future, we could reuse doctree from when we made HTML docs.
-            sphinx-build -j 1 $(: "sphinx-markdown-builder is not marked concurrency-safe") \
-              -W -E -b markdown -c doc_src \
-              -d "$relnotes_tmp/doctree" "$relnotes_tmp/src" $relnotes_tmp/out
-            # Delete title
-            sed -n 1p "$relnotes_tmp/out/index.md" | grep -q "^# fish .*"
-            sed -n 2p "$relnotes_tmp/out/index.md" | grep -q '^$'
-            sed -i 1,2d "$relnotes_tmp/out/index.md"
-            {
-              cat "$relnotes_tmp/out/index.md" - <<EOF
-
-          ----
-
-          *Download links: To download the source code for fish, we suggest the file named "fish-$version.tar.xz". The file downloaded from "Source code (tar.gz)" will not build correctly.*
-
-          *The files called fish-$version-linux-\*.tar.xz are experimental packages containing a single standalone ``fish`` binary for any Linux with the given architecture.*
-          EOF
-            } >/tmp/fish-built/release-notes.md
-            rm -r "$relnotes_tmp"
-          }
+          pip install sphinx-markdown-builder==0.6.8
+          relnotes=/tmp/fish-built/release-notes.md
+          sh -x ./build_tools/release-notes.sh >"$relnotes"
+          # Delete title
+          sed -n 1p "$relnotes" | grep -q "^# fish .*"
+          sed -n 2p "$relnotes" | grep -q '^$'
+          sed -i 1,2d "$relnotes"
       - name: Upload tarball artifact
         uses: actions/upload-artifact@v4
         with:

@@ -1,4 +1,4 @@
-#RUN: fish_indent=%fish_indent fish=%fish %fish %s
+#RUN: fish_indent=%fish_indent %fish %s
 #REQUIRES: command -v sphinx-build
 
 set -l build_script (status dirname)/../test_functions/sphinx-shared.sh

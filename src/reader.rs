@@ -895,9 +895,11 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     tty_modes_for_external_cmds.c_iflag &= !IXOFF;
 
     // Set the mode used for the terminal, initialized to the current mode.
-    *shell_modes() = *tty_modes_for_external_cmds;
-
-    term_fix_modes(&mut shell_modes());
+    {
+        let mut shell_modes = shell_modes();
+        *shell_modes = *tty_modes_for_external_cmds;
+        term_fix_modes(&mut shell_modes);
+    }
 
     drop(tty_modes_for_external_cmds);
 

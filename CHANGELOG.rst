@@ -83,7 +83,7 @@ Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - Support for double, curly, dotted and dashed underlines, for use in ``fish_color_*`` variables and the :doc:`set_color builtin <cmds/set_color>` (:issue:`10957`).
 - Underlines can now be colored independent of text (:issue:`7619`).
-- New documentation page `Terminal Compatibility <terminal-compatibility.html>`_ (also accessible via ``man fish-terminal-compatibility``) lists terminal control sequences used by fish.
+- New documentation page :doc:`Terminal Compatibility <terminal-compatibility>` (also accessible via ``man fish-terminal-compatibility``) lists terminal control sequences used by fish.
 
 Other improvements
 ------------------

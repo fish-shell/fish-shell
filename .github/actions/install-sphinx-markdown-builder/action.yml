@@ -1,0 +1,10 @@
+name: Install sphinx-markdown-builder
+
+permissions:
+  contents: read
+
+runs:
+  using: "composite"
+  steps:
+    - run: pip install sphinx-markdown-builder==0.6.8
+      shell: bash

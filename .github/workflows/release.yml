@@ -42,12 +42,12 @@ jobs:
           ref: ${{ inputs.version }}
       - name: Install dependencies
         run: sudo apt install cmake gettext ninja-build python3-pip python3-sphinx
+      - uses: ./.github/actions/install-sphinx-markdown-builder
       - name: Create tarball
         run: |
           set -x
           mkdir /tmp/fish-built
           FISH_ARTEFACT_PATH=/tmp/fish-built ./build_tools/make_tarball.sh
-          pip install sphinx-markdown-builder==0.6.8
           relnotes=/tmp/fish-built/release-notes.md
           sh -x ./build_tools/release-notes.sh >"$relnotes"
           # Delete title

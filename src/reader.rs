@@ -276,6 +276,7 @@ pub fn terminal_init() -> InputEventQueue {
     let mut input_queue = InputEventQueue::new(STDIN_FILENO);
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
+        maybe_set_kitty_keyboard_capability(false);
         initialize_tty_metadata(XTVERSION.get_or_init(WString::new));
     });
 
@@ -303,7 +304,6 @@ pub fn terminal_init() -> InputEventQueue {
             Implicit(CheckExit) => {}
             Implicit(QueryInterrupted) => break,
             CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute) | Timeout) => {
-                maybe_set_kitty_keyboard_capability(false);
                 break;
             }
             CharEvent::QueryResult(Response(_)) => (),

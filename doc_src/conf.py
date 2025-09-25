@@ -16,10 +16,6 @@ from docutils import nodes
 
 try:
     import sphinx_markdown_builder
-
-    extensions = [
-        "sphinx_markdown_builder",
-    ]
 except ImportError:
     pass
 

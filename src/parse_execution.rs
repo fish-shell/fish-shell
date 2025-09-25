@@ -168,7 +168,7 @@ impl<'a> ExecutionContext<'a> {
     fn eval_job_list(
         &mut self,
         ctx: &OperationContext<'_>,
-        job_list: &'a ast::JobList,
+        job_list: &'a [ast::JobConjunction],
         associated_block: BlockId,
     ) -> EndExecutionReason {
         // Check for infinite recursion: a function which immediately calls itself..
@@ -370,7 +370,7 @@ impl<'a> ExecutionContext<'a> {
     fn infinite_recursive_statement_in_job_list<'b>(
         &self,
         ctx: &OperationContext<'_>,
-        jobs: &'b ast::JobList,
+        jobs: &'b [ast::JobConjunction],
         out_func_name: &mut WString,
     ) -> Option<&'b ast::DecoratedStatement> {
         // This is a bit fragile. It is a test to see if we are inside of function call, but
@@ -432,7 +432,7 @@ impl<'a> ExecutionContext<'a> {
         let infinite_recursive_statement = statement_recurses(&jc.job.statement)
             // Check piped remainder.
             .or_else(|| {
-                for c in &job.continuation {
+                for c in &job.continuation[..] {
                     let s = statement_recurses(&c.statement);
                     if s.is_some() {
                         return s;
@@ -541,7 +541,7 @@ impl<'a> ExecutionContext<'a> {
 
         // Helper to check if an argument_or_redirection_list_t has no redirections.
         let no_redirs =
-            |list: &ast::ArgumentOrRedirectionList| !list.iter().any(|val| val.is_redirection());
+            |list: &[ast::ArgumentOrRedirection]| !list.iter().any(|val| val.is_redirection());
 
         // Check if we're a block statement with redirections.
         match &job.statement {
@@ -584,7 +584,7 @@ impl<'a> ExecutionContext<'a> {
         &mut self,
         ctx: &OperationContext<'_>,
         mut proc: Option<&mut Process>,
-        variable_assignment_list: &ast::VariableAssignmentList,
+        variable_assignment_list: &[ast::VariableAssignment],
         block: &mut Option<BlockId>,
     ) -> EndExecutionReason {
         if variable_assignment_list.is_empty() {
@@ -643,7 +643,7 @@ impl<'a> ExecutionContext<'a> {
         job: &mut Job,
         proc: &mut Process,
         statement: &ast::Statement,
-        variable_assignments: &ast::VariableAssignmentList,
+        variable_assignments: &[ast::VariableAssignment],
     ) -> EndExecutionReason {
         let mut block = None;
         let result =
@@ -860,7 +860,7 @@ impl<'a> ExecutionContext<'a> {
         &mut self,
         ctx: &OperationContext<'_>,
         header: &'a ast::ForHeader,
-        block_contents: &'a ast::JobList,
+        block_contents: &'a [ast::JobConjunction],
     ) -> EndExecutionReason {
         // Get the variable name: `for var_name in ...`. We expand the variable name. It better result
         // in just one.
@@ -1119,7 +1119,7 @@ impl<'a> ExecutionContext<'a> {
 
         // Expand case statements.
         let mut matching_case_item = None;
-        for case_item in &statement.cases {
+        for case_item in &statement.cases[..] {
             if let Some(ret) = self.check_end_execution(ctx) {
                 result = ret;
                 break;
@@ -1294,7 +1294,7 @@ impl<'a> ExecutionContext<'a> {
     fn run_begin_statement(
         &mut self,
         ctx: &OperationContext<'_>,
-        contents: &'a ast::JobList,
+        contents: &'a [ast::JobConjunction],
     ) -> EndExecutionReason {
         // Basic begin/end block. Push a scope block, run jobs, pop it
         trace_if_enabled(ctx.parser(), L!("begin"));
@@ -1307,7 +1307,7 @@ impl<'a> ExecutionContext<'a> {
         ret
     }
 
-    fn get_argument_nodes(args: &ast::ArgumentList) -> AstArgsList<'_> {
+    fn get_argument_nodes(args: &[ast::Argument]) -> AstArgsList<'_> {
         let mut result = AstArgsList::new();
         for arg in args {
             result.push(arg);
@@ -1315,7 +1315,7 @@ impl<'a> ExecutionContext<'a> {
         result
     }
 
-    fn get_argument_nodes_no_redirs(args: &ast::ArgumentOrRedirectionList) -> AstArgsList<'_> {
+    fn get_argument_nodes_no_redirs(args: &[ast::ArgumentOrRedirection]) -> AstArgsList<'_> {
         let mut result = AstArgsList::new();
         for arg in args {
             if arg.is_argument() {
@@ -1400,7 +1400,7 @@ impl<'a> ExecutionContext<'a> {
     fn determine_redirections(
         &self,
         ctx: &OperationContext<'_>,
-        list: &ast::ArgumentOrRedirectionList,
+        list: &[ast::ArgumentOrRedirection],
         out_redirections: &mut RedirectionSpecList,
     ) -> EndExecutionReason {
         // Get all redirection nodes underneath the statement.
@@ -1711,7 +1711,7 @@ impl<'a> ExecutionContext<'a> {
             return reason;
         }
         let mut result = self.run_1_job(ctx, &job_expr.job, associated_block);
-        for jc in &job_expr.continuations {
+        for jc in &job_expr.continuations[..] {
             if result != EndExecutionReason::ok {
                 return result;
             }
@@ -1741,7 +1741,7 @@ impl<'a> ExecutionContext<'a> {
     fn run_job_list(
         &mut self,
         ctx: &OperationContext<'_>,
-        job_list_node: &'a ast::JobList,
+        job_list_node: &'a [ast::JobConjunction],
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
         let mut result = EndExecutionReason::ok;
@@ -1755,7 +1755,7 @@ impl<'a> ExecutionContext<'a> {
     fn run_andor_job_list(
         &mut self,
         ctx: &OperationContext<'_>,
-        job_list_node: &'a ast::AndorJobList,
+        job_list_node: &'a [ast::AndorJob],
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
         let mut result = EndExecutionReason::ok;
@@ -1787,7 +1787,7 @@ impl<'a> ExecutionContext<'a> {
         );
 
         // Construct Processes for job continuations (pipelines).
-        for jc in &job_node.continuation {
+        for jc in &job_node.continuation[..] {
             if result != EndExecutionReason::ok {
                 break;
             }
@@ -1966,7 +1966,7 @@ fn job_node_wants_timing(job_node: &ast::JobPipeline) -> bool {
     if is_timed_not_statement(&job_node.statement) {
         return true;
     }
-    for jc in &job_node.continuation {
+    for jc in &job_node.continuation[..] {
         if is_timed_not_statement(&jc.statement) {
             return true;
         }

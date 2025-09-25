@@ -181,7 +181,7 @@ The destination of a stream can be changed using something called *redirection*.
 - An ampersand (``&``) followed by the number of another file descriptor like ``&2`` for standard error. The output will be written to the destination descriptor.
 - An ampersand followed by a minus sign (``&-``). The file descriptor will be closed. Note: This may cause the program to fail because its writes will be unsuccessful.
 
-As a convenience, the redirection ``&>`` can be used to direct both stdout and stderr to the same destination. For example, ``echo hello &> all_output.txt`` redirects both stdout and stderr to the file ``all_output.txt``. This is equivalent to ``echo hello > all_output.txt 2>&1``.
+As a convenience, the redirection ``&>`` can be used to direct both stdout and stderr to the same destination. For example, ``echo hello &> all_output.txt`` redirects both stdout and stderr to the file ``all_output.txt``. This is equivalent to ``echo hello > all_output.txt 2>&1``.  You can also use ``&>>`` to append both stdout and stderr to the same destination.
 
 Any arbitrary file descriptor can be used in a redirection by prefixing the redirection with the FD number.
 

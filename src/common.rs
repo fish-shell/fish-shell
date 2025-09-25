@@ -2079,3 +2079,17 @@ impl ToCString for &[u8] {
         CString::new(self).unwrap()
     }
 }
+
+#[macro_export]
+macro_rules! env_stack_set_from_env {
+    ($vars:ident, $var_name:literal) => {{
+        use std::os::unix::ffi::OsStrExt;
+        if let Some(var) = std::env::var_os($var_name) {
+            $vars.set_one(
+                L!($var_name),
+                $crate::env::EnvMode::GLOBAL,
+                $crate::common::str2wcstring(var.as_bytes()),
+            );
+        }
+    }};
+}

@@ -369,6 +369,7 @@ pub fn env_dispatch_init(vars: &EnvStack) {
 fn run_inits(vars: &EnvStack) {
     init_locale(vars);
     init_terminal(vars);
+    guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
     update_wait_on_sequence_key_ms(vars);
     handle_read_limit_change(vars);

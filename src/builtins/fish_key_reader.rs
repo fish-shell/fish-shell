@@ -313,7 +313,12 @@ fn throwing_main() -> i32 {
         return 1;
     }
 
-    let input_queue = terminal_init();
+    let input_queue = {
+        let vars = EnvStack::new();
+        env_stack_set_from_env!(vars, "STY");
+        env_stack_set_from_env!(vars, "TERM");
+        terminal_init(&vars, STDIN_FILENO)
+    };
 
     setup_and_process_keys(&mut streams, continuous_mode, verbose, input_queue)
         .builtin_status_code()

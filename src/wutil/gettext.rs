@@ -167,22 +167,11 @@ pub fn initialize_gettext() {}
 /// available. Without this, early error messages cannot be localized.
 #[cfg(feature = "localize-messages")]
 pub fn initialize_gettext() {
-    use crate::common::str2wcstring;
-    use crate::env::EnvMode;
-    use std::os::unix::ffi::OsStrExt;
-
     let locale_vars = EnvStack::new();
-    macro_rules! from_env {
-        ($var_name:literal) => {
-            if let Some(var) = std::env::var_os($var_name) {
-                locale_vars.set_one(L!($var_name), EnvMode::GLOBAL, str2wcstring(var.as_bytes()));
-            }
-        };
-    }
-    from_env!("LANGUAGE");
-    from_env!("LC_ALL");
-    from_env!("LC_MESSAGES");
-    from_env!("LANG");
+    env_stack_set_from_env!(locale_vars, "LANGUAGE");
+    env_stack_set_from_env!(locale_vars, "LC_ALL");
+    env_stack_set_from_env!(locale_vars, "LC_MESSAGES");
+    env_stack_set_from_env!(locale_vars, "LANG");
 
     gettext_impl::update_locale_from_env(&locale_vars);
 }

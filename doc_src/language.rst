@@ -1696,6 +1696,8 @@ Fish also provides additional information through the values of certain environm
 .. envvar:: fish_terminal
 
    the name and version of the terminal fish is running inside (for example as reported via :ref:`XTVERSION <term-compat-xtversion>`).
+   This is initialized just before the first interactive prompt is shown (possibly via builtin :doc:`read <cmds/read>`),
+   that is, on the first ``fish_prompt`` or ``fish_read`` :ref:`event <event>`.
 
 .. envvar:: history
 

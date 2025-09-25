@@ -38,7 +38,6 @@ use std::ops::ControlFlow;
 use std::ops::Range;
 use std::os::fd::BorrowedFd;
 use std::os::fd::{AsRawFd, RawFd};
-use std::os::unix::ffi::OsStrExt;
 use std::pin::Pin;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
@@ -66,6 +65,7 @@ use crate::complete::{
 use crate::editable_line::{line_at_cursor, range_of_line_at_cursor, Edit, EditableLine};
 use crate::env::EnvStack;
 use crate::env::{EnvMode, Environment, Statuses};
+use crate::env_dispatch::guess_emoji_width;
 use crate::exec::exec_subshell;
 use crate::expand::expand_one;
 use crate::expand::{expand_string, expand_tilde, ExpandFlags, ExpandResultCode};
@@ -148,6 +148,7 @@ use crate::tokenizer::{
     TOK_SHOW_COMMENTS,
 };
 use crate::tty_handoff::get_scroll_content_up_capability;
+use crate::tty_handoff::xtversion;
 use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
 use crate::tty_handoff::{
     get_tty_protocols_active, initialize_tty_metadata, safe_deactivate_tty_protocols, TtyHandoff,
@@ -269,26 +270,26 @@ fn querying_allowed(in_fd: RawFd) -> bool {
         && isatty(STDOUT_FILENO)
 }
 
-pub fn terminal_init() -> InputEventQueue {
+pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue {
     reader_interactive_init();
 
-    let mut input_queue = InputEventQueue::new(STDIN_FILENO);
+    let mut input_queue = InputEventQueue::new(inputfd);
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
         initialize_tty_metadata();
     });
 
-    if !querying_allowed(STDIN_FILENO) {
+    if !querying_allowed(inputfd) {
         return input_queue;
     }
 
-    set_shell_modes(STDIN_FILENO, "initial query");
+    set_shell_modes(inputfd, "initial query");
     {
         let mut out = BufferedOutputter::new(Outputter::stdoutput());
         // Query for kitty keyboard protocol support.
         out.write_command(QueryKittyKeyboardProgressiveEnhancements);
         out.write_command(QueryXtversion);
-        query_capabilities_via_dcs(out.by_ref());
+        query_capabilities_via_dcs(out.by_ref(), vars);
         out.write_command(QueryPrimaryDeviceAttribute);
     }
     input_queue.blocking_query().replace(TerminalQuery::Initial);
@@ -363,13 +364,20 @@ pub use current_data as reader_current_data;
 /// If `history_name` is empty, then save history in-memory only; do not write it to disk.
 pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConfig) -> Reader<'a> {
     assert_is_main_thread();
-    let hist = History::with_name(history_name);
-    hist.resolve_pending();
-    let data = ReaderData::new(hist, conf, reader_data_stack().is_empty());
-    reader_data_stack().push(data);
-    let data = current_data().unwrap();
-    data.command_line_changed(EditableLineTag::Commandline, AutosuggestionUpdate::Remove);
     if !parser.interactive_initialized.swap(true) {
+        let mut input_queue = terminal_init(parser.vars(), conf.inputfd);
+        let input_data = input_queue.get_input_data_mut();
+        parser
+            .pending_input
+            .borrow_mut()
+            .extend(std::mem::take(&mut input_data.queue));
+        parser.vars().set_one(
+            L!("fish_terminal"),
+            EnvMode::GLOBAL,
+            xtversion().unwrap().to_owned(),
+        );
+        guess_emoji_width(parser.vars());
+
         // Provide value for `status current-command`
         parser.libdata_mut().status_vars.command = L!("fish").to_owned();
         // Also provide a value for the deprecated fish 2.0 $_ variable
@@ -377,7 +385,15 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
             .vars()
             .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
     }
-    Reader { data, parser }
+    let hist = History::with_name(history_name);
+    hist.resolve_pending();
+    let data = ReaderData::new(hist, conf, reader_data_stack().is_empty());
+    reader_data_stack().push(data);
+    let data = current_data().unwrap();
+    data.command_line_changed(EditableLineTag::Commandline, AutosuggestionUpdate::Remove);
+    let mut reader = Reader { data, parser };
+    reader.insert_front(parser.pending_input.take());
+    reader
 }
 
 /// Return to previous reader environment.
@@ -2303,7 +2319,6 @@ impl<'a> Reader<'a> {
         // Start out as initially dirty.
         self.force_exec_prompt_and_repaint = true;
 
-        self.insert_front(self.parser.pending_input.take());
         while !self.rls().finished && !check_exit_loop_maybe_warning(Some(self)) {
             // Enable tty protocols while we read input.
             tty.enable_tty_protocols();
@@ -2664,13 +2679,12 @@ fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
 
 #[allow(renamed_and_removed_lints)]
 #[allow(clippy::blocks_in_if_conditions)] // for old clippy
-fn query_capabilities_via_dcs(out: &mut impl Output) {
+fn query_capabilities_via_dcs(out: &mut impl Output, vars: &dyn Environment) {
     if {
-        use std::env::var_os;
-        var_os("STY").is_some()
-            || var_os("TERM").is_some_and(|term| {
-                let screens: [&[u8]; 2] = [b"screen", b"screen-256color"];
-                screens.contains(&term.as_bytes())
+        vars.get_unless_empty(L!("STY")).is_some()
+            || vars.get_unless_empty(L!("TERM")).is_some_and(|term| {
+                let term = &term.as_list()[0];
+                term == "screen" || term == "screen-256color"
             })
     } {
         return;

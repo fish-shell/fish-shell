@@ -39,13 +39,11 @@ use fish::{
         environment::{env_init, EnvStack, Environment},
         EnvMode, Statuses,
     },
-    env_dispatch::guess_emoji_width,
     eprintf,
     event::{self, Event},
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
-    input_common::InputEventQueuer,
     io::IoChain,
     nix::{getpid, getrusage, isatty, RUsage},
     panic::panic_handler,
@@ -59,11 +57,10 @@ use fish::{
         get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
         set_interactive_session, Pid,
     },
-    reader::{reader_init, reader_read, term_copy_modes, terminal_init},
+    reader::{reader_init, reader_read, term_copy_modes},
     signal::{signal_clear_cancel, signal_unblock_all},
     threads::{self},
     topic_monitor,
-    tty_handoff::xtversion,
     wchar::prelude::*,
     wutil::waccess,
 };
@@ -525,44 +522,6 @@ fn throwing_main() -> i32 {
     let parser = &Parser::new(env, CancelBehavior::Clear);
     parser.set_syncs_uvars(!opts.no_config);
 
-    #[derive(Eq, PartialEq)]
-    enum CommandSource {
-        Arguments,
-        Stdin,
-        File,
-    }
-    let command_source = if !opts.batch_cmds.is_empty() {
-        CommandSource::Arguments
-    } else if my_optind == args.len() {
-        CommandSource::Stdin
-    } else {
-        CommandSource::File
-    };
-
-    if command_source == CommandSource::Stdin && isatty(STDIN_FILENO) {
-        // Implicitly interactive mode.
-        if opts.no_exec {
-            FLOG!(
-                error,
-                "no-execute mode enabled and no script given. Exiting"
-            );
-            // above line should always exit
-            return libc::EXIT_FAILURE;
-        }
-        let mut input_queue = terminal_init();
-        let input_data = input_queue.get_input_data_mut();
-        parser
-            .pending_input
-            .borrow_mut()
-            .extend(std::mem::take(&mut input_data.queue));
-        parser.vars().set_one(
-            L!("fish_terminal"),
-            EnvMode::GLOBAL,
-            xtversion().unwrap().to_owned(),
-        );
-        guess_emoji_width(parser.vars());
-    }
-
     if !opts.no_exec && !opts.no_config {
         read_init(parser, config_paths.as_ref().unwrap());
     }
@@ -604,7 +563,7 @@ fn throwing_main() -> i32 {
     // Clear signals in case we were interrupted (#9024).
     signal_clear_cancel();
 
-    if command_source == CommandSource::Arguments {
+    if !opts.batch_cmds.is_empty() {
         // Run the commands specified as arguments, if any.
         if get_login() {
             // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
@@ -621,8 +580,17 @@ fn throwing_main() -> i32 {
         );
         res = run_command_list(parser, &opts.batch_cmds);
         parser.libdata_mut().exit_current_script = false;
-    } else if command_source == CommandSource::Stdin {
-        res = reader_read(parser, STDIN_FILENO, &IoChain::new());
+    } else if my_optind == args.len() {
+        // Implicitly interactive mode.
+        if opts.no_exec && isatty(libc::STDIN_FILENO) {
+            FLOG!(
+                error,
+                "no-execute mode enabled and no script given. Exiting"
+            );
+            // above line should always exit
+            return libc::EXIT_FAILURE;
+        }
+        res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
     } else {
         let n = wcs2string(&args[my_optind]);
         let path = OsStr::from_bytes(&n);

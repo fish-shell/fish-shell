@@ -8,7 +8,7 @@ use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
     match_key_event_to_key, CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer,
-    KeyMatchQuality, ReadlineCmd, TerminalQuery, R_END_INPUT_FUNCTIONS,
+    KeyMatchQuality, ReadlineCmd, R_END_INPUT_FUNCTIONS,
 };
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::proc::job_reap;
@@ -19,7 +19,6 @@ use crate::signal::signal_clear_cancel;
 use crate::threads::{assert_is_main_thread, iothread_service_main};
 use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
-use std::cell::RefMut;
 use std::mem;
 use std::sync::{
     atomic::{AtomicU32, Ordering},
@@ -450,10 +449,6 @@ impl<'a> InputEventQueuer for Reader<'a> {
             "__fish_paste %s",
             escape(&str2wcstring(&buffer))
         )));
-    }
-
-    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
-        Reader::blocking_query(self)
     }
 }
 

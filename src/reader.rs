@@ -28,7 +28,6 @@ use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::borrow::Cow;
-use std::cell::RefMut;
 use std::cell::UnsafeCell;
 use std::cmp;
 use std::io::BufReader;
@@ -1633,10 +1632,6 @@ pub fn combine_command_and_autosuggestion(
 }
 
 impl<'a> Reader<'a> {
-    pub(crate) fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
-        self.parser.blocking_query.borrow_mut()
-    }
-
     pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
         if !querying_allowed(self.get_in_fd()) {
             return;

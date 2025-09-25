@@ -749,6 +749,9 @@ pub struct InputData {
 
     // How long to wait for responses for TTY queries.
     pub blocking_query_timeout: Option<Duration>,
+
+    // If set, events will be buffered until the query finishes.
+    pub blocking_query: RefCell<Option<TerminalQuery>>,
 }
 
 impl InputData {
@@ -762,6 +765,7 @@ impl InputData {
             function_status: false,
             event_storage: Vec::new(),
             blocking_query_timeout,
+            blocking_query: RefCell::new(None),
         }
     }
 
@@ -1620,7 +1624,9 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>>;
+    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
+        self.get_input_data().blocking_query.borrow_mut()
+    }
     fn is_blocked_querying(&self) -> bool {
         self.blocking_query().is_some()
     }
@@ -1772,14 +1778,12 @@ impl<'a> FloggableDisplay for DisplayBytes<'a> {}
 /// A simple, concrete implementation of InputEventQueuer.
 pub struct InputEventQueue {
     data: InputData,
-    blocking_query: RefCell<Option<TerminalQuery>>,
 }
 
 impl InputEventQueue {
     pub fn new(in_fd: RawFd, blocking_query_timeout: Option<Duration>) -> Self {
         Self {
             data: InputData::new(in_fd, blocking_query_timeout),
-            blocking_query: RefCell::new(None),
         }
     }
 }
@@ -1797,9 +1801,6 @@ impl InputEventQueuer for InputEventQueue {
         if reader_test_and_clear_interrupted() != 0 {
             self.enqueue_interrupt_key();
         }
-    }
-    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
-        self.blocking_query.borrow_mut()
     }
 }
 

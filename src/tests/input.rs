@@ -1,13 +1,11 @@
 use crate::env::EnvStack;
 use crate::input::{EventQueuePeeker, InputMappingSet, KeyNameStyle, DEFAULT_BIND_MODE};
-use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent, TerminalQuery};
+use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent};
 use crate::key::Key;
 use crate::wchar::prelude::*;
-use std::cell::{RefCell, RefMut};
 
 struct TestInputEventQueuer {
     input_data: InputData,
-    blocking_query: RefCell<Option<TerminalQuery>>,
 }
 
 impl InputEventQueuer for TestInputEventQueuer {
@@ -17,17 +15,13 @@ impl InputEventQueuer for TestInputEventQueuer {
     fn get_input_data_mut(&mut self) -> &mut InputData {
         &mut self.input_data
     }
-    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
-        self.blocking_query.borrow_mut()
-    }
 }
 
 #[test]
 fn test_input() {
     let vars = EnvStack::new();
     let mut input = TestInputEventQueuer {
-        input_data: InputData::new(i32::MAX), // value doesn't matter since we don't read from it
-        blocking_query: RefCell::new(None),
+        input_data: InputData::new(i32::MAX, None), // value doesn't matter since we don't read from it
     };
     // Ensure sequences are order independent. Here we add two bindings where the first is a prefix
     // of the second, and then emit the second key list. The second binding should be invoked, not

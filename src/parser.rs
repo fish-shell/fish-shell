@@ -14,7 +14,7 @@ use crate::expand::{
 };
 use crate::fds::{open_dir, BEST_O_SEARCH};
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::{CharEvent, TerminalQuery};
+use crate::input_common::TerminalQuery;
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -37,7 +37,6 @@ use libc::c_int;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
-use std::collections::VecDeque;
 use std::ffi::{CStr, OsStr};
 use std::fs::File;
 use std::io::Write;
@@ -47,6 +46,7 @@ use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
+use std::time::Duration;
 
 pub enum BlockData {
     Function {
@@ -446,7 +446,8 @@ pub struct Parser {
 
     pub blocking_query: RefCell<Option<TerminalQuery>>,
 
-    pub pending_input: RefCell<VecDeque<CharEvent>>,
+    // Timeout for blocking terminal queries.
+    pub blocking_query_timeout: RefCell<Option<Duration>>,
 }
 
 impl Parser {
@@ -466,7 +467,7 @@ impl Parser {
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
             blocking_query: RefCell::new(None),
-            pending_input: RefCell::new(VecDeque::new()),
+            blocking_query_timeout: RefCell::new(None),
         };
 
         match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {

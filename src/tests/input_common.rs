@@ -2,7 +2,7 @@ use crate::input_common::{CharEvent, InputEventQueue, InputEventQueuer, Readline
 
 #[test]
 fn test_push_front_back() {
-    let mut queue = InputEventQueue::new(0);
+    let mut queue = InputEventQueue::new(0, None);
     queue.push_front(CharEvent::from_char('a'));
     queue.push_front(CharEvent::from_char('b'));
     queue.push_back(CharEvent::from_char('c'));
@@ -16,7 +16,7 @@ fn test_push_front_back() {
 
 #[test]
 fn test_promote_interruptions_to_front() {
-    let mut queue = InputEventQueue::new(0);
+    let mut queue = InputEventQueue::new(0, None);
     queue.push_back(CharEvent::from_char('a'));
     queue.push_back(CharEvent::from_char('b'));
     queue.push_back(CharEvent::from_readline(ReadlineCmd::Undo));
@@ -41,7 +41,7 @@ fn test_promote_interruptions_to_front() {
 
 #[test]
 fn test_insert_front() {
-    let mut queue = InputEventQueue::new(0);
+    let mut queue = InputEventQueue::new(0, None);
     queue.push_back(CharEvent::from_char('a'));
     queue.push_back(CharEvent::from_char('b'));
 

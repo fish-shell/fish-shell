@@ -262,7 +262,8 @@ pub fn fish_key_reader(
         streams,
         continuous_mode,
         verbose,
-        InputEventQueue::new(streams.stdin_fd),
+        // Won't be querying, so no timeout value needed.
+        InputEventQueue::new(streams.stdin_fd, None),
     )
 }
 

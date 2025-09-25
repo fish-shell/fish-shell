@@ -273,7 +273,11 @@ fn querying_allowed(in_fd: RawFd) -> bool {
 pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue {
     reader_interactive_init();
 
-    let mut input_queue = InputEventQueue::new(inputfd);
+    const INITIAL_QUERY_TIMEOUT_SECONDS: u64 = 2;
+    let mut input_queue = InputEventQueue::new(
+        inputfd,
+        Some(Duration::from_secs(INITIAL_QUERY_TIMEOUT_SECONDS)),
+    );
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
         initialize_tty_metadata();
@@ -302,7 +306,28 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
             Implicit(Eof) => reader_sighup(),
             Implicit(CheckExit) => {}
             Implicit(QueryInterrupted) => break,
-            CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute) | Timeout) => {
+            CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute)) => {
+                break;
+            }
+            CharEvent::QueryResult(Timeout) => {
+                let program = PROGRAM_NAME.get().unwrap();
+                FLOG!(
+                    warning,
+                    wgettext_fmt!(
+                        "%s could not read response to primary device attribute query after waiting for %d seconds. \
+                         This is often due to a missing feature in your terminal. \
+                         See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. \
+                         This %s process will no longer wait for outstanding queries, \
+                         which disables some optional features.",
+                         program,
+                         INITIAL_QUERY_TIMEOUT_SECONDS,
+                         program
+                    ),
+                );
+                input_queue
+                    .get_input_data_mut()
+                    .blocking_query_timeout
+                    .replace(Duration::from_millis(30));
                 break;
             }
             CharEvent::QueryResult(Response(_)) => (),
@@ -315,14 +340,6 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
     let input_data = input_queue.get_input_data();
     // We blocked execution of code and mappings so input function args must be empty.
     assert!(input_data.input_function_args.is_empty());
-    if input_data.paste_buffer.is_some() {
-        // The terminal should never interleave query responses with a bracketed paste
-        // command. hence this should only happen on timeout.
-        FLOG!(
-            reader,
-            "Bracketed paste was interrupted; dropping uncommitted paste buffer"
-        )
-    }
     assert!(input_data.event_storage.is_empty());
     FLOGF!(
         reader,
@@ -364,13 +381,10 @@ pub use current_data as reader_current_data;
 /// If `history_name` is empty, then save history in-memory only; do not write it to disk.
 pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConfig) -> Reader<'a> {
     assert_is_main_thread();
-    if !parser.interactive_initialized.swap(true) {
-        let mut input_queue = terminal_init(parser.vars(), conf.inputfd);
+    let inputfd = conf.inputfd;
+    let input_data = if !parser.interactive_initialized.swap(true) {
+        let mut input_queue = terminal_init(parser.vars(), inputfd);
         let input_data = input_queue.get_input_data_mut();
-        parser
-            .pending_input
-            .borrow_mut()
-            .extend(std::mem::take(&mut input_data.queue));
         parser.vars().set_one(
             L!("fish_terminal"),
             EnvMode::GLOBAL,
@@ -384,16 +398,21 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
         parser
             .vars()
             .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
-    }
+        let old = parser
+            .blocking_query_timeout
+            .replace(input_data.blocking_query_timeout);
+        assert!(old.is_none());
+        std::mem::take(input_data)
+    } else {
+        InputData::new(inputfd, *parser.blocking_query_timeout.borrow())
+    };
     let hist = History::with_name(history_name);
     hist.resolve_pending();
-    let data = ReaderData::new(hist, conf, reader_data_stack().is_empty());
+    let data = ReaderData::new(input_data, hist, conf, reader_data_stack().is_empty());
     reader_data_stack().push(data);
     let data = current_data().unwrap();
     data.command_line_changed(EditableLineTag::Commandline, AutosuggestionUpdate::Remove);
-    let mut reader = Reader { data, parser };
-    reader.insert_front(parser.pending_input.take());
-    reader
+    Reader { data, parser }
 }
 
 /// Return to previous reader environment.
@@ -1279,8 +1298,12 @@ fn reader_received_sighup() -> bool {
 }
 
 impl ReaderData {
-    fn new(history: Arc<History>, conf: ReaderConfig, is_top_level: bool) -> Pin<Box<Self>> {
-        let input_data = InputData::new(conf.inputfd);
+    fn new(
+        input_data: InputData,
+        history: Arc<History>,
+        conf: ReaderConfig,
+        is_top_level: bool,
+    ) -> Pin<Box<Self>> {
         let mut command_line = EditableLine::default();
         if is_top_level {
             let state = commandline_state_snapshot();

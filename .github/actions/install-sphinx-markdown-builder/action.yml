@@ -6,5 +6,6 @@ permissions:
 runs:
   using: "composite"
   steps:
-    - run: pip install sphinx-markdown-builder==0.6.8
+    - run: |
+        pip install git+https://github.com/krobelus/sphinx-markdown-builder@ae8cf577bfb263dcda509ad449a331b9b74664fa
       shell: bash

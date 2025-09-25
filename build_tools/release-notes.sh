@@ -33,10 +33,9 @@ changelog_for_this_version=$(awk <"$workspace_root/CHANGELOG.rst" '
 printf %s "$changelog_for_this_version" |
     sed -e '$s/^----*$//' >"$relnotes_tmp/fake-workspace"/CHANGELOG.rst
 
-# Use "-j 1" because sphinx-markdown-builder is not marked concurrency-safe.
-sphinx-build >&2 -j 1 \
+sphinx-build >&2 -j auto \
     -W -E -b markdown -c "$workspace_root/doc_src" \
-    -d "$relnotes_tmp/doctree" "$relnotes_tmp/fake-workspace/doc_src" $relnotes_tmp/out \
+    -d "$relnotes_tmp/doctree" "$relnotes_tmp/fake-workspace/doc_src" "$relnotes_tmp/out" \
     -D markdown_http_base="https://fishshell.com/docs/$minor_version" \
     -D markdown_uri_doc_suffix=".html" \
     "$@"

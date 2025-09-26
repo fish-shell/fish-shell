@@ -6,76 +6,77 @@ fish 4.1.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 - Compound commands (``begin; echo 1; echo 2; end``) can now be written using braces (``{ echo1; echo 2 }``), like in other shells.
-- Fish now supports transient prompts: if :envvar:`fish_transient_prompt` is set to 1, fish will reexecute prompt functions with the ``--final-rendering`` argument before running a commandline (:issue:`11153`).
-- Tab completion results are truncated up to the common directory path, instead of somwehere inside that path. E.g. if you complete "share/functions", and it includes the files "foo.fish" and "bar.fish",
-  the completion pager will now show "…/foo.fish" and "…/bar.fish". This will make the candidates shorter and allow for more to be shown at once (:issue:`11250`).
-- Self-installing builds as created by ``cargo build`` or ``cargo install`` have changed, see :ref:`below <changelog-4.1-embedded>`.
-- Reworked gettext localization, making translations work inside builds with embedded data (mentioned above).
-  See :ref:`below <changelog-4.1-gettext>` for a detailed description of the changes.
+- fish now supports transient prompts: if :envvar:`fish_transient_prompt` is set to 1, fish will reexecute prompt functions with the ``--final-rendering`` argument before running a commandline (:issue:`11153`).
+- Tab completion results are truncated up to the common directory path, instead of somewhere inside that path. E.g. if you complete "share/functions", and it includes the files "foo.fish" and "bar.fish",
+  the completion pager will now show "…/foo.fish" and "…/bar.fish" (:issue:`11250`).
+- Self-installing builds as created by e.g. ``cargo install`` no longer install other files, see :ref:`below <changelog-4.1-embedded>`.
+- Our gettext-based message-localization has been reworked,
+  adding translations to self-installing builds; see :ref:`below <changelog-4.1-gettext>`.
 
 Deprecations and removed features
 ---------------------------------
-- Commands like ``{echo,echo}`` or ``{ echo, echo }`` are no longer interpreted as brace expansion token but as compound command, i.e. :doc:`begin <cmds/begin>`.
-- Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by fish's own key names since 4.0,
-  and currently they would map back to information from terminfo, which does not match what terminals would send with the kitty keyboard protocol (:issue:`11342`).
-- fish no longer reads the terminfo database, so its behavior is no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).
+- ``set_color --background=COLOR`` no longer implicitly activates bold mode.
+  If your theme is stored in universal variables (the historical default), some bold formatting might be lost.
+  To fix this, we suggest updating to the latest version of our theme, to explicitly activate bold mode,
+  for example use ``fish_config theme save "fish default"``.
+- ``{echo,echo}`` or ``{ echo, echo }`` are no longer interpreted as brace expansion tokens but as :doc:`compound commands <cmds/begin>`.
+- Terminfo-style key names (``bind -k nul``) are no longer supported. They had been superseded by fish's :doc:`own key names <cmds/bind>` since 4.0 (:issue:`11342`).
+- fish no longer reads the terminfo database, so its behavior is generally no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).
   For the time being, this change can be reversed via the ``ignore-terminfo`` :ref:`feature flag <featureflags>`.
   To do so, run the following once and restart fish::
 
     set -Ua fish_features no-ignore-terminfo
 
-- The ``--install`` option when fish is built as self-installing was removed, see :ref:`below <changelog-4.1-embedded>`.
-- RGB colors (``set_color ff0000``) now default to using 24-bit RGB true-color commands, even if :envvar:`COLORTERM` is unset, because that is often lost e.g. over ssh (:issue:`11372`)
-
-  - To go back to using the nearest match from the 256-color palette, use ``set fish_term24bit 0`` or set :envvar:`COLORTERM` to a value that is not "24bit" or "truecolor".
-    To make the nearest-match logic use the 16 color palette instead, use ``set fish_term256 0``.
-  - Since macOS' Terminal.app doesn't support true-color yet,
-    fish tries to keep using palette colors.
-    If Terminal.app is not correctly detected, use ``set fish_term24bit 0``.
-- ``set_color --background=COLOR`` no longer implicitly activates bold mode.
-  If your theme is stored in universal variables (which is the historical default),
-  you may want to update it to the new defaults that explicitly activate bold mode.
-  In this case, use something like ``fish_config theme save "fish default"``.
-- Users of GNU screen may experience :ref:`minor glitches <term-compat-dcs-gnu-screen>` in edge cases.
+- The ``--install`` option when fish is built as self-installing is removed, see :ref:`below <changelog-4.1-embedded>`.
+- ``set_color ff0000`` now outputs 24-bit RGB true-color even if :envvar:`COLORTERM` is unset.
+  One can override this by setting :envvar:`fish_term24bit` to 0 (:issue:`11372`).
+- fish now requires the terminal to respond to queries for the :ref:`primary device attribute <term-compat-primary-da>`.
+  For now, this can be reversed via a :ref:`feature flag <featureflags>`,
+  by running (once) ``set -Ua fish_features no-query-term`` and restarting fish.
+- Users of GNU screen may experience :ref:`minor glitches <term-compat-dcs-gnu-screen>` when starting fish.
 
 Scripting improvements
 ----------------------
-- The :doc:`psub <cmds/psub>` command now allows combining ``--suffix`` with ``--fifo`` (:issue:`11729`).
-- Builtin :doc:`argparse <cmds/argparse>` has seen many improvements, see :ref:`below <changelog-4.1-argparse>`.
+- The :doc:`argparse <cmds/argparse>` builtin has seen many improvements, see :ref:`below <changelog-4.1-argparse>`.
 - The :doc:`string pad <cmds/string-pad>` command now has a ``-C/--center`` option.
+- The :doc:`psub <cmds/psub>` command now allows combining ``--suffix`` with ``--fifo`` (:issue:`11729`).
 - The :doc:`read <cmds/read>` builtin has learned the ``--tokenize-raw`` option to tokenize without quote removal (:issue:`11084`).
 
 Interactive improvements
 ------------------------
-- Autosuggestions are now also provided in multi-line command lines. Like :kbd:`ctrl-r`, autosuggestions operate only on the current line.
+- Autosuggestions are now also provided in multi-line command lines. Like :kbd:`ctrl-r`, these operate only on the current line.
 - Autosuggestions used to not suggest multi-line command-lines from history; now autosuggestions include individual lines from multi-line command-lines.
 - The history pager search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
-- Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), the autosuggestion when deleting it, and the full command line in all other cases.
-- Pasted commands are now stripped of any :code:`$\ ` command prefixes, which are sometimes used in copy-pasted code snippets.
+- Instead of highlighting events by flashing *all text to the left of the cursor*,
+  failing history token search (:kbd:`alt-.`) flashes the associated token,
+  failing tab-completion flashes the to-be-completed token (:issue:`11050`),
+  deleting an autosuggestion (:kbd:`shift-delete`) flashes the suggestion,
+  and all other scenarios flash the full command line.
+- Pasted commands are now stripped of any :code:`$\ ` command prefixes, to help pasting code snippets.
+- Builtin help options (e.g. ``abbr --help``) now use ``man`` directly, meaning that variables like :envvar:`MANWIDTH` are respected (:issue:`11786`).
 - ``funced`` will now edit copied functions directly, instead of the file where ``function --copy`` was invoked. (:issue:`11614`)
-- built-in help options as ``abbr --help`` now use ``man`` directly, meaning that variables like :envvar:`MANWIDTH` are respected (:issue:`11786`).
+- Added a simple ``fish_jj_prompt`` which reduces visual noise in the prompt inside `Jujutsu <https://jj-vcs.github.io/jj/latest/>`__ repositories that are colocated with Git.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
-- On non-macOS systems, :kbd:`alt-left`, :kbd:`alt-right`, :kbd:`alt-backspace`, :kbd:`alt-delete` no longer operate on punctuation-delimited words but on whole arguments, possibly including special characters like ``/`` and quoted spaces.
+- On non-macOS systems, :kbd:`alt-left`, :kbd:`alt-right`, :kbd:`alt-backspace` and :kbd:`alt-delete` no longer operate on punctuation-delimited words but on whole arguments, possibly including special characters like ``/`` and quoted spaces.
   On macOS, the corresponding :kbd:`ctrl-` prefixed keys operate on whole arguments.
   Word operations are still available via the other respective modifier, just like in most web browsers.
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
 - The :kbd:`alt-s` binding will now also use ``run0`` if available.
-- The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking in the command line,
+- Some mouse support has been added: the OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking in the command line,
   and selecting pager items (:issue:`10932`).
-- :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback,
-  via a new special input function :ref:`scrollback-push <special-input-functions-scrollback-push>`,
-  before redrawing the screen as usual.
-  For compatibility with terminals that do not provide ECMA-48's ``SCROLL UP`` command,
+- Before clearing the screen and redrawing, :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback,
+  via a new special input function :ref:`scrollback-push <special-input-functions-scrollback-push>`.
+  For compatibility with terminals that do not implement ECMA-48's :ref:`SCROLL UP <term-compat-indn>` command,
   this function is only enabled if the terminal advertises support for that via :ref:`XTGETTCAP <term-compat-xtgettcap>`.
 - Vi mode has learned :kbd:`ctrl-a` (increment) and :kbd:`ctrl-x` (decrement) (:issue:`11570`).
 
 Completions
 ^^^^^^^^^^^
-- ``git`` completions now show the remote URL as a description when completing remotes.
-- ``systemctl`` completions no longer print escape codes if ``SYSTEMD_COLORS`` is set (:issue:`11465`).
-- Added and improved many completion scripts.
+- ``git`` completions now show the remote URL as description when completing remotes.
+- ``systemctl`` completions no longer print escape codes if ``SYSTEMD_COLORS`` happens to be set (:issue:`11465`).
+- Added and improved many completion scripts, notably ``tmux``.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -88,36 +89,50 @@ Improved terminal support
 
 Other improvements
 ------------------
+- Updated Chinese and German translations.
 - ``fish_indent --dump-parse-tree`` now emits simple metrics about the tree including its memory consumption.
+- We added some tools to improve development workflows, for example ``build_tools/{check,update_translations,release}.sh`` and ``tests/test_driver.py``.
+  In conjunction with ``cargo``, these enable almost all day-to-day development tasks without using CMake.
 
 For distributors
 ----------------
+- Builtin commands that support the ``--help`` option now require the ``man`` program.
+  The direct dependency on ``mandoc`` and ``nroff`` has been removed.
+- fish no longer uses gettext MO files, see :ref:`below <changelog-4.1-gettext>`.
+  If you have use cases which are incompatible with our new approach, please let us know.
 - The :doc:`fish_indent <cmds/fish_indent>` and :doc:`fish_key_reader <cmds/fish_key_reader>` programs are now also available as builtins.
   If fish is invoked via e.g. a symlink with one of these names,
   it will act like the given tool (i.e. it's a multi-call binary).
   This allows truly distributing fish as a single file (:issue:`10876`).
-- builtin commands that support the ``--help`` option now require the ``man`` program.
-  The direct dependency on either of ``mandoc`` or ``nroff`` has been removed.
 - The CMake build configuration has been simplified and no longer second-guesses rustup.
   It will run rustc and cargo via :envvar:`PATH` or in ~/.cargo/bin/.
   If that doesn't match your setup, set the Rust_COMPILER and Rust_CARGO cmake variables (:issue:`11328`).
 - Cygwin support has been reintroduced, since `Rust gained a Cygwin target <https://github.com/rust-lang/rust/pull/134999>`__ (:issue:`11238`).
-- Fish no longer uses gettext MO files, see :ref:`below <changelog-4.1-gettext>`.
-  If you have use cases which are incompatible with our new approach, please let us know.
+- CMake 3.15 is now required.
 
 .. _changelog-4.1-embedded:
 
 Changes to self-installing builds
 ---------------------------------
 
-The self-installing configuration introduced in fish 4.0 has been changed (:issue:`11143`).
-Now fish built with embedded data will just read the data straight from its own binary or write it out when necessary, instead of requiring an installation step on start.
-That means it is now possible to build fish as a single file and copy it to a compatible system, including as a different user, without extracting any files.
-As before this is the default when building via ``cargo``, and disabled when building via CMake, and for packagers we continue to recommend CMake
+The self-installing build type introduced in fish 4.0 has been changed (:issue:`11143`).
+Now fish built with embedded data will just read the data straight from its own binary or write it out to temporary files when necessary, instead of requiring an installation step on start.
+That means it is now possible to build fish as a single file and copy it to any system with a compatible CPU architecture, including as a different user, without extracting any files.
+As before, this is the default when building via ``cargo``, and disabled when building via CMake.
+For packagers we continue to recommend CMake.
 
 Note: When fish is built like this, the :envvar:`__fish_data_dir` variable will be empty because that directory no longer has meaning.
 If you need to load files from there,
 use ``status get-file`` or find alternatives (like loading completions for "foo" via ``complete -C"foo "``).
+
+Remaining benefits of a full installation (as currently done by CMake) are:
+
+- man pages like ``fish(1)`` in standard locations, easily accessible from outside fish.
+- a local copy of the HTML documentation, typically accessed via the :doc:`help <cmds/help>` function.
+  In builds with embedded data, ``help`` will redirect to e.g. `<https://fishshell.com/docs/current/>`__
+- ``fish_indent`` and ``fish_key_reader`` as separate files, making them easily accessible outside fish
+- an (empty) ``/etc/fish/config.fish`` as well as empty directories ``/etc/fish/{functions,completions,conf.d}``
+- ``$PREFIX/share/pkgconfig/fish.pc``, which defines directories for configuration-snippets, like ``vendor_completions.d``
 
 .. _changelog-4.1-gettext:
 
@@ -125,7 +140,7 @@ Changes to gettext localization
 -------------------------------
 
 We replaced several parts of the gettext functionality with custom implementations (:issue:`11726`).
-Most notably, message extraction, which should now work reliably, and the runtime implementation, where we no longer dynamically link to gettext, but instead use our own implementation, whose behavior is similar to GNU gettext, with some minor deviations.
+Most notably, message extraction, which should now work reliably, and the runtime implementation, where we no longer dynamically link to gettext, but instead use our own implementation, whose behavior is similar to GNU gettext, with some :doc:`minor deviations <cmds/_>`.
 Our implementation now fully respects fish variables, so locale variables do not have to be exported for fish localizations to work.
 They still have to be exported to inform other programs about language preferences.
 The :envvar:`LANGUAGE` environment variable is now treated as a path variable, meaning it is an implicitly colon-separated list.
@@ -133,26 +148,26 @@ While we no longer have any runtime dependency on gettext, we still need gettext
 When building without ``msgfmt`` available, localization will not work with the resulting executable.
 Localization data is no longer sourced at runtime from MO files on the file system, but instead built into the executable.
 This is always done, independently of the other data embedding, so all fish executables will have access to all message catalogs, regardless of the state of the file system.
-We have a new cargo feature called ``localize-messages``, which is enabled by default.
-Disabling it will cause fish to be built without localization support.
+Disabling our new ``localize-messages`` cargo feature will cause fish to be built without localization support.
 CMake builds can continue to use the ``WITH_GETTEXT`` option, with the same semantics as the ``localize-messages`` feature.
 The current implementation does not provide any configuration options for controlling which language catalogs are built into the executable (other than disabling them all).
 As a workaround, you can delete files in the ``po`` directory before building to exclude unwanted languages.
 
 .. _changelog-4.1-argparse:
 
-Changes to the argparse builtin
--------------------------------
+Changes to the :doc:`argparse <cmds/argparse>` builtin
+------------------------------------------------------
 
-- ``argparse`` now saves recognised options and values in :envvar:`argv_opts`, allowing them to be forwarded to other commands (:issue:`6466`).
+- ``argparse`` now saves recognised options, including option-arguments in :envvar:`argv_opts`, allowing them to be forwarded to other commands (:issue:`6466`).
 - ``argparse`` options can now be marked to be deleted from :envvar:`argv_opts` (by adding a ``&`` at the end of the option spec, before a ``!`` if present). There is now also a corresponding ``-d`` / ``--delete`` option to ``fish_opt``.
 - ``argparse --ignore-unknown`` now removes preceding known short options from groups containing unknown options (e.g. when parsing ``-abc``, if ``a`` is known but ``b`` is not, then :envvar:`argv` will contain ``-bc``).
-- ``argparse`` now has an ``-u`` / ``--move-unknown`` option that works like ``--ignore-unknown``, but unknown options (and their arguments) are moved from :envvar:`argv` to :envvar:`argv_opts`. whereas ``--ignore-unknown`` keeps them in :envvar:`argv`.
+- ``argparse`` now has an ``-u`` / ``--move-unknown`` option that works like ``--ignore-unknown`` but preserves unknown options in :envvar:`argv`.
 - ``argparse`` now has an ``-S`` / ``--strict-longopts`` option that forbids abbreviating long options or passing them with a single dash (e.g. if there is a long option called ``foo``, ``--fo`` and ``--foo`` won't match it).
-- ``argparse`` now has a ``-U`` / ``--unknown-arguments`` *KIND* option, where *KIND* is either ``optional``, ``required``, or ``none``, indicating whether unknown options are parsed as taking optional, required, or no arguments. This implies ``--move-unknown``.
-- ``argparse`` now allows specifying options that take multiple optional values by using ``=*`` in the option spec, the parsing of the option is the same as ones with optional values (i.e. ``=?``), but each successive use accumulates more values (or an empty string if no value), instead of replacing the previous value (i.e. it behaves similarly to ``=+``) (:issue:`8432`). In addition, ``fish_opt`` has been modified to support such options by using the ``--multiple-vals`` together with ``-o`` / ``--optional-val``; ``-m`` is also now acceptable as an abbreviation for ``--multiple-vals``.
+- ``argparse`` now has a ``-U`` / ``--unknown-arguments`` option to specify how to parse unknown option's arguments.
+- ``argparse`` now allows specifying options that take multiple optional values by using ``=*`` in the option spec (:issue:`8432`).
+  In addition, ``fish_opt`` has been modified to support such options by using the ``--multiple-vals`` together with ``-o`` / ``--optional-val``; ``-m`` is also now acceptable as an abbreviation for ``--multiple-vals``.
 - ``fish_opt`` no longer requires you give a short flag name when defining options, provided you give it a long flag name with more than one character.
-- ``argparse`` option specifiers for long only options can now start with ``/``, allowing the definition of long options with a single letter (withouht the ``/``, an option with a single letter is always interpreted as a short flag). Due to this change, the ``--long-only`` option to ``fish_opt`` is now no longer necessary and is deprecated.
+- ``argparse`` option specifiers for long-only options can now start with ``/``, allowing the definition of long options with a single letter. Due to this change, the ``--long-only`` option to ``fish_opt`` is now no longer necessary and is deprecated.
 - ``fish_opt`` now has a ``-v`` / ``--validate`` option you can use to give a fish script to validate values of the option.
 
 --------------

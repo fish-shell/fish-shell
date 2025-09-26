@@ -39,8 +39,8 @@ pub(crate) static SCROLL_CONTENT_UP_SUPPORTED: OnceCell<bool> = OnceCell::new();
 pub(crate) const SCROLL_CONTENT_UP_TERMINFO_CODE: &str = "indn";
 
 // Get the support capability for kitty keyboard protocol.
-pub fn get_scroll_content_up_capability() -> Option<&'static bool> {
-    SCROLL_CONTENT_UP_SUPPORTED.get()
+pub fn get_scroll_content_up_capability() -> Option<bool> {
+    SCROLL_CONTENT_UP_SUPPORTED.get().copied()
 }
 
 pub fn maybe_set_scroll_content_up_capability() {

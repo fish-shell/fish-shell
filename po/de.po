@@ -61852,9 +61852,6 @@ msgstr ""
 msgid "Specify key bindings source file"
 msgstr ""
 
-msgid "Specify key name, not sequence"
-msgstr ""
-
 msgid "Specify key of item to retrieve value for."
 msgstr ""
 

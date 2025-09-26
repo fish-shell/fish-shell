@@ -61847,9 +61847,6 @@ msgstr ""
 msgid "Specify key bindings source file"
 msgstr ""
 
-msgid "Specify key name, not sequence"
-msgstr "指定密钥名称, 不是序列"
-
 msgid "Specify key of item to retrieve value for."
 msgstr "指定要检索值的项目密钥 ."
 

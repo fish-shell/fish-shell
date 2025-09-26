@@ -1572,11 +1572,13 @@ You can change the settings of fish by changing the values of certain variables.
 .. envvar:: fish_term24bit
 
    If this is set to 0, fish will not output 24-bit RGB true-color sequences but the nearest color on the 256 color palette (or the 16 color palette, if :envvar:`fish_term256` is 0).
+   See also :doc:`set_color <cmds/set_color>`.
+   The default is 1 but for historical reasons, fish defaults to behaving as if it was 0 on some terminals that are known to not support true-color sequences.
 
 .. envvar:: fish_term256
 
    If this is set to 0 and :envvar:`fish_term24bit` is 0, translate RGB colors down to the 16 color palette.
-   Also, if this is set to 0, :doc:`set_color <cmds/set_color>`/` commands such as ``set_color ff0000 red`` will prefer the named color.
+   Also, if this is set to 0, :doc:`set_color <cmds/set_color>` commands such as ``set_color ff0000 red`` will prefer the named color.
 
 .. envvar:: fish_ambiguous_width
 
@@ -1668,6 +1670,10 @@ Fish also provides additional information through the values of certain environm
 .. envvar:: argv
 
    a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed.
+
+.. envvar:: argv_opts
+
+   :doc:`argparse <cmds/argparse>` sets this to the list of successfully parsed options, including option-arguments. This variable can be changed.
 
 .. envvar:: CMD_DURATION
 

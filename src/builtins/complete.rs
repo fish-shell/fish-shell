@@ -30,8 +30,8 @@ fn builtin_complete_add2(
     cmd: &wstr,
     cmd_is_path: bool,
     short_opt: &wstr,
-    gnu_opts: &[WString],
-    old_opts: &[WString],
+    gnu_opts: &[&wstr],
+    old_opts: &[&wstr],
     result_mode: CompletionMode,
     condition: &[WString],
     comp: &wstr,
@@ -52,7 +52,7 @@ fn builtin_complete_add2(
         );
     }
 
-    for gnu_opt in gnu_opts {
+    for &gnu_opt in gnu_opts {
         complete_add(
             cmd.to_owned(),
             cmd_is_path,
@@ -66,7 +66,7 @@ fn builtin_complete_add2(
         );
     }
 
-    for old_opt in old_opts {
+    for &old_opt in old_opts {
         complete_add(
             cmd.to_owned(),
             cmd_is_path,
@@ -100,8 +100,8 @@ fn builtin_complete_add(
     cmds: &[WString],
     paths: &[WString],
     short_opt: &wstr,
-    gnu_opt: &[WString],
-    old_opt: &[WString],
+    gnu_opt: &[&wstr],
+    old_opt: &[&wstr],
     result_mode: CompletionMode,
     condition: &[WString],
     comp: &wstr,
@@ -142,8 +142,8 @@ fn builtin_complete_remove_cmd(
     cmd: &WString,
     cmd_is_path: bool,
     short_opt: &wstr,
-    gnu_opt: &[WString],
-    old_opt: &[WString],
+    gnu_opt: &[&wstr],
+    old_opt: &[&wstr],
 ) {
     let mut removed = false;
     for s in short_opt.chars() {
@@ -186,8 +186,8 @@ fn builtin_complete_remove(
     cmds: &[WString],
     paths: &[WString],
     short_opt: &wstr,
-    gnu_opt: &[WString],
-    old_opt: &[WString],
+    gnu_opt: &[&wstr],
+    old_opt: &[&wstr],
 ) {
     for cmd in cmds {
         builtin_complete_remove_cmd(cmd, false /* not path */, short_opt, gnu_opt, old_opt);
@@ -224,10 +224,8 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let mut result_mode = CompletionMode::default();
     let mut remove = false;
     let mut short_opt = WString::new();
-    // todo!("these would be Vec<&wstr>");
     let mut gnu_opt = vec![];
     let mut old_opt = vec![];
-    let mut subcommand = vec![];
     let mut comp = WString::new();
     let mut desc = WString::new();
     let mut condition = vec![];
@@ -250,7 +248,6 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         wopt(L!("short-option"), ArgType::RequiredArgument, 's'),
         wopt(L!("long-option"), ArgType::RequiredArgument, 'l'),
         wopt(L!("old-option"), ArgType::RequiredArgument, 'o'),
-        wopt(L!("subcommand"), ArgType::RequiredArgument, 'S'),
         wopt(L!("description"), ArgType::RequiredArgument, 'd'),
         wopt(L!("arguments"), ArgType::RequiredArgument, 'a'),
         wopt(L!("erase"), ArgType::NoArgument, 'e'),
@@ -327,7 +324,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             }
             'l' => {
                 let arg = w.woptarg.unwrap();
-                gnu_opt.push(arg.to_owned());
+                gnu_opt.push(arg);
                 if arg.is_empty() {
                     streams
                         .err
@@ -337,7 +334,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             }
             'o' => {
                 let arg = w.woptarg.unwrap();
-                old_opt.push(arg.to_owned());
+                old_opt.push(arg);
                 if arg.is_empty() {
                     streams
                         .err
@@ -345,16 +342,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
-            'S' => {
-                let arg = w.woptarg.unwrap();
-                subcommand.push(arg.to_owned());
-                if arg.is_empty() {
-                    streams
-                        .err
-                        .append(wgettext_fmt!("%ls: -S requires a non-empty string\n", cmd,));
-                    return Err(STATUS_INVALID_ARGS);
-                }
-            }
+            'S' => {}
             'a' => {
                 comp = w.woptarg.unwrap().to_owned();
             }

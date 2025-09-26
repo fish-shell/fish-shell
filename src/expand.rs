@@ -1589,6 +1589,5 @@ pub struct ExpandResult {
 
     /// If expansion resulted in an error, this is an appropriate value with which to populate
     /// $status.
-    // todo!("should be c_int?");
-    pub status: i32,
+    pub status: libc::c_int,
 }

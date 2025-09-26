@@ -2617,7 +2617,7 @@ impl<'a> Reader<'a> {
                         Response(CursorPosition(cursor_pos)),
                     ) => {
                         cursor_pos_query.result = Some(cursor_pos);
-                        maybe_query
+                        return ControlFlow::Continue(());
                     }
                     (
                         Some(TerminalQuery::CursorPosition(cursor_pos_query)),

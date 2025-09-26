@@ -1540,9 +1540,6 @@ msgstr "Terminalen bröt uppkopplingen"
 msgid "Terminal ownership events"
 msgstr ""
 
-msgid "Terminal protocol negotiation"
-msgstr ""
-
 msgid "Test a condition"
 msgstr ""
 

@@ -134,7 +134,6 @@ use crate::terminal::TerminalCommand::{
     QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
     QueryXtgettcap, QueryXtversion,
 };
-use crate::terminal::{SCROLL_CONTENT_UP_SUPPORTED, SCROLL_CONTENT_UP_TERMINFO_CODE};
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::parse_text_face;
 use crate::text_face::TextFace;
@@ -148,10 +147,10 @@ use crate::tokenizer::{
     tok_command, MoveWordStateMachine, MoveWordStyle, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
 };
-use crate::tty_handoff::XTVERSION;
+use crate::tty_handoff::get_scroll_content_up_capability;
+use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
 use crate::tty_handoff::{
-    get_tty_protocols_active, initialize_tty_metadata, maybe_set_kitty_keyboard_capability,
-    safe_deactivate_tty_protocols, TtyHandoff,
+    get_tty_protocols_active, initialize_tty_metadata, safe_deactivate_tty_protocols, TtyHandoff,
 };
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
@@ -276,8 +275,7 @@ pub fn terminal_init() -> InputEventQueue {
     let mut input_queue = InputEventQueue::new(STDIN_FILENO);
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
-        maybe_set_kitty_keyboard_capability(false);
-        initialize_tty_metadata(XTVERSION.get_or_init(WString::new));
+        initialize_tty_metadata();
     });
 
     if !querying_allowed(STDIN_FILENO) {
@@ -3946,7 +3944,7 @@ impl<'a> Reader<'a> {
                 self.clear_screen_and_repaint();
             }
             rl::ScrollbackPush => {
-                if !SCROLL_CONTENT_UP_SUPPORTED.load() {
+                if !get_scroll_content_up_capability().unwrap() {
                     return;
                 }
                 let query = self.blocking_query();

@@ -131,7 +131,6 @@ pub mod categories {
         (fd_monitor, "fd-monitor", "FD monitor events");
 
         (term_support, "term-support", "Terminal feature detection");
-        (term_protocols, "term-protocols", "Terminal protocol negotiation");
 
         (reader, "reader", "The interactive reader/input system");
         (reader_render, "reader-render", "Rendering the command line");

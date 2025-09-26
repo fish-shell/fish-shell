@@ -3,10 +3,10 @@ use crate::color::{Color, Color24};
 use crate::common::ToCString;
 use crate::common::{self, escape_string, wcs2string, wcs2string_appending, EscapeStringStyle};
 use crate::future_feature_flags::{self, FeatureFlag};
-use crate::global_safety::RelaxedAtomicBool;
 use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
+use crate::tty_handoff::get_scroll_content_up_capability;
 use crate::wchar::prelude::*;
 use crate::FLOGF;
 use bitflags::bitflags;
@@ -216,9 +216,6 @@ fn maybe_terminfo(
     true
 }
 
-pub(crate) static SCROLL_CONTENT_UP_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub(crate) static SCROLL_CONTENT_UP_TERMINFO_CODE: &str = "indn";
-
 pub(crate) fn use_terminfo() -> bool {
     !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()
 }
@@ -413,7 +410,7 @@ fn osc_133_command_finished(out: &mut impl Output, exit_status: libc::c_int) -> 
 }
 
 fn scroll_content_up(out: &mut impl Output, lines: usize) -> bool {
-    assert!(SCROLL_CONTENT_UP_SUPPORTED.load());
+    assert!(get_scroll_content_up_capability().unwrap());
     write_to_output!(out, "\x1b[{}S", lines);
     true
 }

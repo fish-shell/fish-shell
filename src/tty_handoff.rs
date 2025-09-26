@@ -22,6 +22,34 @@ use once_cell::sync::OnceCell;
 use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 
+/// Whether kitty keyboard protocol support is present in the TTY.
+static KITTY_KEYBOARD_SUPPORTED: OnceCell<bool> = OnceCell::new();
+
+/// Get whether the TTY supports the kitty keyboard protocol.
+pub fn get_kitty_keyboard_capability() -> Option<&'static bool> {
+    KITTY_KEYBOARD_SUPPORTED.get()
+}
+
+/// Set that the TTY supports the kitty keyboard protocol.
+pub fn maybe_set_kitty_keyboard_capability() {
+    KITTY_KEYBOARD_SUPPORTED.get_or_init(|| true);
+}
+
+pub(crate) static SCROLL_CONTENT_UP_SUPPORTED: OnceCell<bool> = OnceCell::new();
+pub(crate) const SCROLL_CONTENT_UP_TERMINFO_CODE: &str = "indn";
+
+// Get the support capability for kitty keyboard protocol.
+pub fn get_scroll_content_up_capability() -> Option<&'static bool> {
+    SCROLL_CONTENT_UP_SUPPORTED.get()
+}
+
+pub fn maybe_set_scroll_content_up_capability() {
+    SCROLL_CONTENT_UP_SUPPORTED.get_or_init(|| {
+        FLOG!(reader, "SCROLL UP is supported");
+        true
+    });
+}
+
 pub static XTVERSION: OnceCell<WString> = OnceCell::new();
 
 pub fn xtversion() -> Option<&'static wstr> {
@@ -34,7 +62,7 @@ pub struct TtyMetadata {
     // Whether we are running under tmux.
     pub in_tmux: bool,
 
-    // If set, we are running before iTerm2 3.5.12, which does not support CSI-U.
+    // If set, we are running before iTerm2 3.5.12, which does not support CSI-u.
     pub pre_kitty_iterm2: bool,
 }
 
@@ -52,25 +80,12 @@ impl TtyMetadata {
     }
 }
 
-// Whether CSI-U ("Kitty") support is present in the TTY.
-static KITTY_KEYBOARD_SUPPORTED: OnceCell<bool> = OnceCell::new();
-
-// Get the support capability for CSI-U ("Kitty") protocols.
-pub fn get_kitty_keyboard_capability() -> Option<&'static bool> {
-    KITTY_KEYBOARD_SUPPORTED.get()
-}
-
-// Set CSI-U ("Kitty") support capability.
-pub fn maybe_set_kitty_keyboard_capability(supported: bool) {
-    KITTY_KEYBOARD_SUPPORTED.get_or_init(|| supported);
-}
-
 // Helper to determine which keyboard protocols to enable.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum ProtocolKind {
-    CSI_U, // Kitty keyboard support with CSI-U
-    Other, // Other protocols (e.g., modifyOtherKeys)
-    None,  // No protocols
+    KittyKeyboard, // Kitty keyboard support, producing CSI-u style encoding.
+    Other,         // Other protocols (e.g., modifyOtherKeys)
+    None,          // No protocols
 }
 
 // Commands to emit to enable or disable TTY protocols. Each of these contains
@@ -78,7 +93,7 @@ enum ProtocolKind {
 // way so that we can use it from a signal handler - no need to allocate or deallocate
 // as Kitty support is discovered through tty queries.
 struct ProtocolBytes {
-    csi_u: Box<[u8]>,
+    kitty_keyboard: Box<[u8]>,
     other: Box<[u8]>,
     none: Box<[u8]>,
 }
@@ -106,7 +121,7 @@ impl TtyProtocolsSet {
             &self.disablers
         };
         match protocol {
-            ProtocolKind::CSI_U => &cmds.csi_u,
+            ProtocolKind::KittyKeyboard => &cmds.kitty_keyboard,
             ProtocolKind::Other => &cmds.other,
             ProtocolKind::None => &cmds.none,
         }
@@ -131,7 +146,7 @@ impl TtyMetadata {
             return ProtocolKind::Other;
         }
         match KITTY_KEYBOARD_SUPPORTED.get() {
-            Some(&true) => ProtocolKind::CSI_U,
+            Some(&true) => ProtocolKind::KittyKeyboard,
             Some(&false) => ProtocolKind::Other,
             None => ProtocolKind::None,
         }
@@ -149,7 +164,7 @@ impl TtyMetadata {
             protocols.iter().cloned().chain(focus_reporting_off())
         };
         let enablers = ProtocolBytes {
-            csi_u: serialize_commands(maybe_enable_focus_reporting(&[
+            kitty_keyboard: serialize_commands(maybe_enable_focus_reporting(&[
                 DecsetBracketedPaste,                       // Enable bracketed paste
                 KittyKeyboardProgressiveEnhancementsEnable, // Kitty keyboard progressive enhancements
             ])),
@@ -161,7 +176,7 @@ impl TtyMetadata {
             none: serialize_commands(maybe_enable_focus_reporting(&[DecsetBracketedPaste])),
         };
         let disablers = ProtocolBytes {
-            csi_u: serialize_commands(maybe_disable_focus_reporting(&[
+            kitty_keyboard: serialize_commands(maybe_disable_focus_reporting(&[
                 DecrstBracketedPaste,                        // Disable bracketed paste
                 KittyKeyboardProgressiveEnhancementsDisable, // Kitty keyboard progressive enhancements
             ])),
@@ -192,7 +207,12 @@ fn tty_protocols() -> Option<&'static TtyProtocolsSet> {
 
 // Initialize TTY metadata.
 // This also initializes the terminal enable and disable serialized commands.
-pub fn initialize_tty_metadata(xtversion: &wstr) {
+pub fn initialize_tty_metadata() {
+    // Default missing query responses.
+    KITTY_KEYBOARD_SUPPORTED.get_or_init(|| false);
+    SCROLL_CONTENT_UP_SUPPORTED.get_or_init(|| false);
+    let xtversion = XTVERSION.get_or_init(WString::new);
+
     use std::sync::atomic::Ordering::{Acquire, Release};
     // Standard lazy-init pattern from rust-atomics-and-locks.
     let mut p = TTY_PROTOCOLS.load(Acquire);
@@ -247,8 +267,8 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
     // Flog any terminal protocol changes of interest.
     let mode = if enable { "Enabling" } else { "Disabling" };
     match protocols.md.safe_get_supported_protocol() {
-        ProtocolKind::CSI_U => FLOG!(term_protocols, mode, "CSI-U extended keys"),
-        ProtocolKind::Other => FLOG!(term_protocols, mode, "other extended keys"),
+        ProtocolKind::KittyKeyboard => FLOG!(reader, mode, "kitty keyboard protocol"),
+        ProtocolKind::Other => FLOG!(reader, mode, "other extended keys"),
         ProtocolKind::None => (),
     };
     (on_write)();

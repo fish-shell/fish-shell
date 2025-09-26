@@ -265,10 +265,6 @@ msgid "%ls: --set-cursor option requires --add\n"
 msgstr ""
 
 #, c-format
-msgid "%ls: -S requires a non-empty string\n"
-msgstr ""
-
-#, c-format
 msgid "%ls: -l requires a non-empty string\n"
 msgstr ""
 
@@ -808,6 +804,11 @@ msgstr ""
 
 #, c-format
 msgid "%s"
+msgstr ""
+
+#
+#, c-format
+msgid "%s %s: unrecognized feature '%ls'"
 msgstr ""
 
 #
@@ -65169,6 +65170,9 @@ msgid "Test if snap command should have files as potential completion"
 msgstr ""
 
 msgid "Test if snap has yet to be given the subcommand"
+msgstr ""
+
+msgid "Test if the terminal suports the given feature"
 msgstr ""
 
 msgid "Test if there is a subcommand given"

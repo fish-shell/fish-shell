@@ -134,3 +134,15 @@ printf "%s\n" (test-stack-trace-copy | string replace \t '<TAB>')[1..4]
 # CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.fish
 # CHECK: in function 'test-stack-trace-copy'
 # CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.fish
+
+status test-terminal-feature
+and should have failed on missing arg
+# CHECKERR: status: test-terminal-feature: expected 1 arguments; got 0
+status test-terminal-feature 1 2
+and should have failed on too many args
+# CHECKERR: status: test-terminal-feature: expected 1 arguments; got 2
+status test-terminal-feature unrecognized-feature
+and should have failed on unrecognized feature
+# CHECKERR: status test-terminal-feature: unrecognized feature 'unrecognized-feature'
+status test-terminal-feature scroll-content-up
+and should have failed when running without a TTY

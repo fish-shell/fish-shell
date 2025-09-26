@@ -258,10 +258,6 @@ msgid "%ls: --set-cursor option requires --add\n"
 msgstr "%ls: --set-cursor 选项需要 --add\n"
 
 #, c-format
-msgid "%ls: -S requires a non-empty string\n"
-msgstr "%ls: -S 需要非空字符串\n"
-
-#, c-format
 msgid "%ls: -l requires a non-empty string\n"
 msgstr "%ls: -l 需要一个非空字符串\n"
 
@@ -801,6 +797,11 @@ msgstr "%lu\n"
 
 #, c-format
 msgid "%s"
+msgstr ""
+
+#
+#, c-format
+msgid "%s %s: unrecognized feature '%ls'"
 msgstr ""
 
 #
@@ -65146,6 +65147,9 @@ msgstr "测试Snap命令是否应该有文件作为可能的补全"
 
 msgid "Test if snap has yet to be given the subcommand"
 msgstr "测试是否尚未给定 snap 命令"
+
+msgid "Test if the terminal suports the given feature"
+msgstr ""
 
 msgid "Test if there is a subcommand given"
 msgstr "测试是否有一个子命令"

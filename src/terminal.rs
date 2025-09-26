@@ -6,7 +6,6 @@ use crate::future_feature_flags::{self, FeatureFlag};
 use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
-use crate::tty_handoff::get_scroll_content_up_capability;
 use crate::wchar::prelude::*;
 use crate::FLOGF;
 use bitflags::bitflags;
@@ -410,7 +409,6 @@ fn osc_133_command_finished(out: &mut impl Output, exit_status: libc::c_int) -> 
 }
 
 fn scroll_content_up(out: &mut impl Output, lines: usize) -> bool {
-    assert!(get_scroll_content_up_capability().unwrap());
     write_to_output!(out, "\x1b[{}S", lines);
     true
 }

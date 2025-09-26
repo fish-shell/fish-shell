@@ -154,7 +154,7 @@ class SpawnedProc(object):
         name="fish",
         timeout=TIMEOUT_SECS,
         env=os.environ.copy(),
-        scroll_up_content_supported: bool = False,
+        scroll_content_up_supported: bool = False,
         **kwargs,
     ):
         """Construct from a name, timeout, and environment.
@@ -184,7 +184,7 @@ class SpawnedProc(object):
         )
         self.spawn.delaybeforesend = None
         self.prompt_counter = 0
-        if scroll_up_content_supported:
+        if scroll_content_up_supported:
             # XTGETTCAP
             key = bytes.hex(b"indn")
             value = bytes.hex(b"dont-care")

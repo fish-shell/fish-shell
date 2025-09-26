@@ -28,7 +28,8 @@ set -l __fish_status_all_commands \
     print-stack-trace \
     stack-trace \
     terminal \
-    test-feature
+    test-feature \
+    test-terminal-feature
 
 # These are the recognized flags.
 complete -c status -s h -l help -d "Display help and exit"
@@ -66,6 +67,8 @@ complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_com
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a list-files -d "List embedded files contained in the fish binary"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a fish-path -d "Print the path to the current instance of fish"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a terminal -d "Print name and version of the terminal fish is running in"
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a test-terminal-feature -d "Test if the terminal suports the given feature"
+complete -f -c status -n "__fish_seen_subcommand_from test-terminal-feature" -a 'scroll-content-up\t"Command for scrolling up terminal contents"'
 
 # The job-control command changes fish state.
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a job-control -d "Set which jobs are under job control"

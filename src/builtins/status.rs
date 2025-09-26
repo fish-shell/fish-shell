@@ -7,7 +7,7 @@ use crate::proc::{
     get_job_control_mode, get_login, is_interactive_session, set_job_control_mode, JobControl,
 };
 use crate::reader::reader_in_interactive_read;
-use crate::tty_handoff::xtversion;
+use crate::tty_handoff::{get_scroll_content_up_capability, xtversion};
 use crate::wutil::{waccess, wbasename, wdirname, wrealpath, Error};
 use libc::F_OK;
 use nix::errno::Errno;
@@ -65,6 +65,7 @@ enum StatusCmd {
     STATUS_GET_FILE,
     STATUS_LIST_FILES,
     STATUS_TERMINAL,
+    STATUS_TEST_TERMINAL_FEATURE,
 }
 
 str_enum!(
@@ -101,6 +102,7 @@ str_enum!(
     (STATUS_STACK_TRACE, "stack-trace"),
     (STATUS_TERMINAL, "terminal"),
     (STATUS_TEST_FEATURE, "test-feature"),
+    (STATUS_TEST_TERMINAL_FEATURE, "test-terminal-feature"),
 );
 
 /// Values that may be returned from the test-feature option to status.
@@ -539,6 +541,33 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Err(STATUS_CMD_ERROR);
             }
         }
+        c @ STATUS_TEST_TERMINAL_FEATURE => {
+            if args.len() != 1 {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_ARG_COUNT2,
+                    cmd,
+                    c.to_wstr(),
+                    1,
+                    args.len()
+                ));
+                return Err(STATUS_INVALID_ARGS);
+            }
+            if args[0] != "scroll-content-up" {
+                streams.err.appendln(wgettext_fmt!(
+                    "%s %s: unrecognized feature '%ls'",
+                    cmd,
+                    c.to_wstr(),
+                    args[0]
+                ));
+                return Err(STATUS_INVALID_ARGS);
+            };
+            return if get_scroll_content_up_capability() == Some(true) {
+                Ok(SUCCESS)
+            } else {
+                Err(STATUS_CMD_ERROR)
+            };
+        }
+
         ref s => {
             if !args.is_empty() {
                 streams.err.append(wgettext_fmt!(
@@ -733,7 +762,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 | STATUS_FEATURES
                 | STATUS_TEST_FEATURE
                 | STATUS_GET_FILE
-                | STATUS_LIST_FILES => {
+                | STATUS_LIST_FILES
+                | STATUS_TEST_TERMINAL_FEATURE => {
                     unreachable!("")
                 }
             }

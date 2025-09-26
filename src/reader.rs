@@ -147,7 +147,6 @@ use crate::tokenizer::{
     tok_command, MoveWordStateMachine, MoveWordStyle, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
 };
-use crate::tty_handoff::get_scroll_content_up_capability;
 use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
 use crate::tty_handoff::{
     get_tty_protocols_active, initialize_tty_metadata, safe_deactivate_tty_protocols, TtyHandoff,
@@ -3988,9 +3987,6 @@ impl<'a> Reader<'a> {
                 self.clear_screen_and_repaint();
             }
             rl::ScrollbackPush => {
-                if !get_scroll_content_up_capability().unwrap() {
-                    return;
-                }
                 let query = self.blocking_query();
                 let Some(query) = &*query else {
                     drop(query);

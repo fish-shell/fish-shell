@@ -198,8 +198,9 @@ Optional Commands
 
        ``\e[ Ps S``
      - indn
-     - Scroll up the content (not the viewport) Ps lines (called ``SCROLL UP`` / ``SU`` by ECMA-48 and "scroll forward" by terminfo)
-       This enables the :ref:`scrollback-push <special-input-functions-scrollback-push>` special input function which is used by :kbd:`ctrl-l`.
+     - Scroll up the content (not the viewport) Ps lines (called ``SCROLL UP`` / ``SU`` by ECMA-48 and "scroll forward" by terminfo).
+       When fish detects support for this feature, :ref:`status test-terminal-features scroll-content-up <status-test-terminal-features>` will return 0,
+       which enables the :kbd:`ctrl-l` binding to use the :ref:`scrollback-push <special-input-functions-scrollback-push>` special input function.
      - ECMA-48
    * - ``\e[= Ps u``, ``\e[? Ps u``
      - n/a
@@ -215,10 +216,8 @@ Optional Commands
        and the second parameter is the column number.
        Both start at 1.
 
-       This is used inside terminals that either
-
-       - implement the OSC 133 :ref:`click_events <term-compat-osc-133>` feature.
-       - advertise the :ref:`indn <term-compat-indn>` capability via :ref:`XTGETTCAP <term-compat-xtgettcap>`
+       This is used by the :ref:`scrollback-push <special-input-functions-scrollback-push>` special input function,
+       and inside terminals that implement the OSC 133 :ref:`click_events <term-compat-osc-133>` feature.
      - VT100
    * - ``\e[ \x20 q``
      - Se

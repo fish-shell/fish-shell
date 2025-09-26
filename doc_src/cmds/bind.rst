@@ -187,9 +187,7 @@ The following special input functions are available:
 
 ``scrollback-push``
     pushes earlier output to the terminal scrollback, positioning the prompt at the top.
-
-    For compatibility with terminals that do not provide the ECMA-48 ``SCROLL UP`` command,
-    this command does nothing unless the terminal advertises support for that command via :ref:`XTGETTCAP <term-compat-xtgettcap>`.
+    This requires the terminal to implement the ECMA-48 :ref:`SCROLL UP <term-compat-indn>` command and :ref:`cursor position reporting <term-compat-cursor-position-report>`.
 
 ``complete``
     guess the remainder of the current token

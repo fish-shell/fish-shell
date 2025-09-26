@@ -69,7 +69,7 @@ New or improved bindings
 - Before clearing the screen and redrawing, :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback,
   via a new special input function :ref:`scrollback-push <special-input-functions-scrollback-push>`.
   For compatibility with terminals that do not implement ECMA-48's :ref:`SCROLL UP <term-compat-indn>` command,
-  this function is only enabled if the terminal advertises support for that via :ref:`XTGETTCAP <term-compat-xtgettcap>`.
+  this function is only used if the terminal advertises support for that via :ref:`XTGETTCAP <term-compat-xtgettcap>`.
 - Vi mode has learned :kbd:`ctrl-a` (increment) and :kbd:`ctrl-x` (decrement) (:issue:`11570`).
 
 Completions

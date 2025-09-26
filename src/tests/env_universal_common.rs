@@ -1,10 +1,9 @@
 use crate::common::char_offset;
 use crate::common::wcs2osstring;
-use crate::common::ScopeGuard;
 use crate::common::ENCODE_DIRECT_BASE;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::env_universal_common::{EnvUniversal, UvarFormat};
-use crate::reader::{reader_pop, reader_push, ReaderConfig};
+use crate::reader::fake_scoped_reader;
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;
@@ -43,8 +42,7 @@ fn test_universal() {
     std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
     let parser = TestParser::new();
 
-    let mut reader = reader_push(&parser, L!(""), ReaderConfig::default());
-    let _pop = ScopeGuard::new((), |()| reader_pop());
+    let mut reader = fake_scoped_reader(&parser);
 
     let threads = 1;
     for i in 0..threads {

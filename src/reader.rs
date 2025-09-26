@@ -52,6 +52,7 @@ use crate::ast::{self, is_same_node, Kind};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
+use crate::common::ScopeGuarding;
 use crate::common::{
     escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
     restore_term_foreground_process_group_for_exit, shell_modes, str2wcstring, write_loop,
@@ -261,15 +262,15 @@ fn redirect_tty_after_sighup() {
     }
 }
 
-fn querying_allowed(in_fd: RawFd) -> bool {
+fn querying_allowed() -> bool {
     future_feature_flags::test(FeatureFlag::query_term) &&
     !is_dumb() && std::env::var_os("MC_TMPDIR").is_none()
         // Could use /dev/tty in future.
-        && isatty(in_fd)
         && isatty(STDOUT_FILENO)
 }
 
 pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue {
+    assert!(isatty(inputfd));
     reader_interactive_init();
 
     const INITIAL_QUERY_TIMEOUT_SECONDS: u64 = 2;
@@ -282,7 +283,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
         initialize_tty_metadata();
     });
 
-    if !querying_allowed(inputfd) {
+    if !querying_allowed() {
         return input_queue;
     }
 
@@ -426,6 +427,23 @@ pub fn reader_pop() {
         Outputter::stdoutput().borrow_mut().reset_text_face();
         *commandline_state_snapshot() = CommandlineState::new();
     }
+}
+
+pub fn fake_scoped_reader<'a>(parser: &'a Parser) -> impl ScopeGuarding<Target = Reader<'a>> + 'a {
+    let inputfd = -1;
+    let conf = ReaderConfig {
+        inputfd,
+        ..Default::default()
+    };
+    let hist = History::with_name(L!(""));
+    let input_data = InputData::new(inputfd, None);
+    let data = ReaderData::new(input_data, hist, conf, reader_data_stack().is_empty());
+    reader_data_stack().push(data);
+    let data = current_data().unwrap();
+    let reader = Reader { data, parser };
+    ScopeGuard::new(reader, |_reader| {
+        reader_data_stack().pop().unwrap();
+    })
 }
 
 /// Configuration that we provide to a reader.
@@ -1633,7 +1651,7 @@ pub fn combine_command_and_autosuggestion(
 
 impl<'a> Reader<'a> {
     pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
-        if !querying_allowed(self.get_in_fd()) {
+        if !querying_allowed() {
             return;
         }
         let mut query = self.blocking_query();

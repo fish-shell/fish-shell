@@ -1,5 +1,4 @@
 use crate::ast::{self, is_same_node, Ast, Castable, JobList, JobPipeline, Kind, Node, Traversal};
-use crate::common::ScopeGuard;
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
@@ -9,7 +8,7 @@ use crate::parse_constants::{
 use crate::parse_tree::{parse_source, LineCounter};
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
 use crate::parser::{CancelBehavior, Parser};
-use crate::reader::{reader_pop, reader_push, reader_reset_interrupted, ReaderConfig};
+use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
 use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
 use crate::tests::prelude::*;
 use crate::threads::iothread_perform;
@@ -730,8 +729,7 @@ fn test_1_cancellation(parser: &Parser, src: &wstr) {
 fn test_cancellation() {
     let _cleanup = test_init();
     let parser = Parser::new(EnvStack::new(), CancelBehavior::Clear);
-    reader_push(&parser, L!(""), ReaderConfig::default());
-    let _pop = ScopeGuard::new((), |()| reader_pop());
+    let _pop = fake_scoped_reader(&parser);
 
     printf!("Testing Ctrl-C cancellation. If this hangs, that's a bug!\n");
 

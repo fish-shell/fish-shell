@@ -4,12 +4,10 @@ use std::sync::{
 };
 use std::time::Duration;
 
-use crate::common::ScopeGuard;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::reader::{reader_pop, reader_push, Reader, ReaderConfig};
+use crate::reader::{fake_scoped_reader, Reader};
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_service_main, Debounce};
-use crate::wchar::prelude::*;
 
 #[test]
 #[serial]
@@ -61,8 +59,7 @@ fn test_debounce() {
     ctx.cv.notify_all();
 
     // Wait until the last completion is done.
-    let mut reader = reader_push(&parser, L!(""), ReaderConfig::default());
-    let _pop = ScopeGuard::new((), |()| reader_pop());
+    let mut reader = fake_scoped_reader(&parser);
     while !ctx.completion_ran.last().unwrap().load() {
         iothread_service_main(&mut reader);
     }

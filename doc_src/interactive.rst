@@ -332,7 +332,8 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`ctrl-u` removes contents from the beginning of line to the cursor (moving it to the :ref:`killring <killring>`).
 
-- :kbd:`ctrl-l` clears and repaints the screen.
+- :kbd:`ctrl-l` pushes any text above the prompt to the terminal's scrollback,
+  then clears and repaints the screen.
 
 - :kbd:`ctrl-w` removes the previous path component (everything up to the previous "/", ":" or "@") (moving it to the :ref:`killring`).
 

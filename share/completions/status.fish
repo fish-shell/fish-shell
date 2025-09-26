@@ -27,6 +27,7 @@ set -l __fish_status_all_commands \
     list-files \
     print-stack-trace \
     stack-trace \
+    terminal \
     test-feature
 
 # These are the recognized flags.
@@ -64,6 +65,7 @@ complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_com
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a get-file -d "Print an embedded file from the fish binary"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a list-files -d "List embedded files contained in the fish binary"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a fish-path -d "Print the path to the current instance of fish"
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a terminal -d "Print name and version of the terminal fish is running in"
 
 # The job-control command changes fish state.
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a job-control -d "Set which jobs are under job control"

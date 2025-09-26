@@ -44015,6 +44015,9 @@ msgstr "Afficher la taille maximale de paquet (MTU)"
 msgid "Print multiple document pages on each output page"
 msgstr ""
 
+msgid "Print name and version of the terminal fish is running in"
+msgstr ""
+
 msgid "Print name of each linked file"
 msgstr "Afficher le nom de chaque fichier lié"
 

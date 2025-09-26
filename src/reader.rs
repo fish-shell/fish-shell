@@ -148,7 +148,6 @@ use crate::tokenizer::{
     TOK_SHOW_COMMENTS,
 };
 use crate::tty_handoff::get_scroll_content_up_capability;
-use crate::tty_handoff::xtversion;
 use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
 use crate::tty_handoff::{
     get_tty_protocols_active, initialize_tty_metadata, safe_deactivate_tty_protocols, TtyHandoff,
@@ -385,11 +384,6 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
     let input_data = if !parser.interactive_initialized.swap(true) {
         let mut input_queue = terminal_init(parser.vars(), inputfd);
         let input_data = input_queue.get_input_data_mut();
-        parser.vars().set_one(
-            L!("fish_terminal"),
-            EnvMode::GLOBAL,
-            xtversion().unwrap().to_owned(),
-        );
         guess_emoji_width(parser.vars());
 
         // Provide value for `status current-command`

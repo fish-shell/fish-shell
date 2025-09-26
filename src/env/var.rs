@@ -249,7 +249,6 @@ pub const ELECTRIC_VARIABLES: &[ElectricVar] = &[
     ElectricVar{name: L!("fish_kill_signal"), flags:electric::READONLY | electric::COMPUTED},
     ElectricVar{name: L!("fish_killring"), flags:electric::READONLY | electric::COMPUTED},
     ElectricVar{name: L!("fish_pid"), flags:electric::READONLY},
-    ElectricVar{name: L!("fish_terminal"), flags:electric::READONLY},
     ElectricVar{name: L!("history"), flags:electric::READONLY | electric::COMPUTED},
     ElectricVar{name: L!("hostname"), flags:electric::READONLY},
     ElectricVar{name: L!("pipestatus"), flags:electric::READONLY | electric::COMPUTED},

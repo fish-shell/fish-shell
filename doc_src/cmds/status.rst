@@ -33,6 +33,7 @@ Synopsis
     status build-info
     status get-file FILE
     status list-files [PATH]
+    status terminal
 
 Description
 -----------
@@ -116,6 +117,11 @@ The following operations (subcommands) are available:
 **list-files** *FILE*
     This lists the files embedded in the fish binary at compile time. Only files where the path starts with the optional *FILE* argument are shown.
     Returns 0 if something was printed, 1 otherwise.
+
+**terminal**
+    Prints the name and version of the terminal fish is running inside (for example as reported via :ref:`XTVERSION <term-compat-xtversion>`).
+    This is not available during early startup but only just before the first interactive prompt is shown (possibly via builtin :doc:`read <read>`),
+    that is, on the first ``fish_prompt`` or ``fish_read`` :ref:`event <event>`.
 
 Notes
 -----

@@ -43913,6 +43913,9 @@ msgstr "打印 mtu"
 msgid "Print multiple document pages on each output page"
 msgstr "在每个输出页面上打印多页文档"
 
+msgid "Print name and version of the terminal fish is running in"
+msgstr ""
+
 msgid "Print name of each linked file"
 msgstr "打印每个链接文件的名称"
 

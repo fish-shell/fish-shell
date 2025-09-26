@@ -7,6 +7,7 @@ use crate::proc::{
     get_job_control_mode, get_login, is_interactive_session, set_job_control_mode, JobControl,
 };
 use crate::reader::reader_in_interactive_read;
+use crate::tty_handoff::xtversion;
 use crate::wutil::{waccess, wbasename, wdirname, wrealpath, Error};
 use libc::F_OK;
 use nix::errno::Errno;
@@ -63,6 +64,7 @@ enum StatusCmd {
     STATUS_BUILDINFO,
     STATUS_GET_FILE,
     STATUS_LIST_FILES,
+    STATUS_TERMINAL,
 }
 
 str_enum!(
@@ -97,6 +99,7 @@ str_enum!(
     (STATUS_LINE_NUMBER, "line-number"),
     (STATUS_STACK_TRACE, "print-stack-trace"),
     (STATUS_STACK_TRACE, "stack-trace"),
+    (STATUS_TERMINAL, "terminal"),
     (STATUS_TEST_FEATURE, "test-feature"),
 );
 
@@ -717,6 +720,14 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         let path = str2wcstring(path.as_os_str().as_bytes());
                         streams.out.appendln(path);
                     }
+                }
+                STATUS_TERMINAL => {
+                    let xtversion = xtversion().unwrap_or_default();
+                    let first_line = &xtversion[..xtversion
+                        .chars()
+                        .position(|c| c == '\n')
+                        .unwrap_or(xtversion.len())];
+                    streams.out.appendln(first_line);
                 }
                 STATUS_SET_JOB_CONTROL
                 | STATUS_FEATURES

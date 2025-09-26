@@ -1068,30 +1068,31 @@ pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
     if parser.scope().readonly_commandline {
         return;
     }
-    if let Some(data) = current_data() {
-        let mut data = Reader { parser, data };
-        let CharEvent::Readline(readline_cmd_evt) = &ch else {
-            panic!()
-        };
-        if matches!(
-            readline_cmd_evt.cmd,
-            ReadlineCmd::ClearScreenAndRepaint
-                | ReadlineCmd::RepaintMode
-                | ReadlineCmd::Repaint
-                | ReadlineCmd::ForceRepaint
-        ) {
-            data.queued_repaint = true;
-        }
-        if data.queued_repaint {
-            data.input_data.queue_char(ch);
-            return;
-        }
-        if data.rls.is_none() {
-            data.rls = Some(ReadlineLoopState::new());
-        }
-        data.save_screen_state();
-        let _ = data.handle_char_event(Some(ch));
+    let Some(data) = current_data() else {
+        return;
+    };
+    let mut data = Reader { parser, data };
+    let CharEvent::Readline(readline_cmd_evt) = &ch else {
+        panic!()
+    };
+    if matches!(
+        readline_cmd_evt.cmd,
+        ReadlineCmd::ClearScreenAndRepaint
+            | ReadlineCmd::RepaintMode
+            | ReadlineCmd::Repaint
+            | ReadlineCmd::ForceRepaint
+    ) {
+        data.queued_repaint = true;
     }
+    if data.queued_repaint {
+        data.input_data.queue_char(ch);
+        return;
+    }
+    if data.rls.is_none() {
+        data.rls = Some(ReadlineLoopState::new());
+    }
+    data.save_screen_state();
+    let _ = data.handle_char_event(Some(ch));
 }
 
 pub fn reader_showing_suggestion(parser: &Parser) -> bool {

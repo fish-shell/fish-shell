@@ -109,7 +109,7 @@ pub(crate) enum TerminalCommand<'a> {
 
     // Other terminal features
     QueryCursorPosition,
-    ScrollForward(usize),
+    ScrollContentUp(usize),
 
     DecsetShowCursor,
     DecrstMouseTracking,
@@ -182,7 +182,7 @@ pub(crate) trait Output {
             Osc133CommandStart(command) => osc_133_command_start(self, command),
             Osc133CommandFinished(s) => osc_133_command_finished(self, s),
             QueryCursorPosition => write(self, b"\x1b[6n"),
-            ScrollForward(lines) => scroll_forward(self, lines),
+            ScrollContentUp(lines) => scroll_content_up(self, lines),
             DecsetShowCursor => write(self, b"\x1b[?25h"),
             DecrstMouseTracking => write(self, b"\x1b[?1000l"),
             DecsetFocusReporting => write(self, b"\x1b[?1004h"),
@@ -216,8 +216,8 @@ fn maybe_terminfo(
     true
 }
 
-pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub(crate) static SCROLL_FORWARD_TERMINFO_CODE: &str = "indn";
+pub(crate) static SCROLL_CONTENT_UP_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static SCROLL_CONTENT_UP_TERMINFO_CODE: &str = "indn";
 
 pub(crate) fn use_terminfo() -> bool {
     !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()
@@ -412,8 +412,8 @@ fn osc_133_command_finished(out: &mut impl Output, exit_status: libc::c_int) -> 
     true
 }
 
-fn scroll_forward(out: &mut impl Output, lines: usize) -> bool {
-    assert!(SCROLL_FORWARD_SUPPORTED.load());
+fn scroll_content_up(out: &mut impl Output, lines: usize) -> bool {
+    assert!(SCROLL_CONTENT_UP_SUPPORTED.load());
     write_to_output!(out, "\x1b[{}S", lines);
     true
 }

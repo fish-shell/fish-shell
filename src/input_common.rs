@@ -11,7 +11,7 @@ use crate::key::{
     function_key, shift, Key, Modifiers, ViewportPosition,
 };
 use crate::reader::reader_test_and_clear_interrupted;
-use crate::terminal::{SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
+use crate::terminal::{SCROLL_CONTENT_UP_SUPPORTED, SCROLL_CONTENT_UP_TERMINFO_CODE};
 use crate::threads::iothread_port;
 use crate::tty_handoff::{
     get_kitty_keyboard_capability, maybe_set_kitty_keyboard_capability, XTVERSION,
@@ -1505,9 +1505,9 @@ pub trait InputEventQueuer {
                 format!("Received XTGETTCAP response: {}", str2wcstring(&key))
             );
         }
-        if key == SCROLL_FORWARD_TERMINFO_CODE.as_bytes() {
-            SCROLL_FORWARD_SUPPORTED.store(true);
-            FLOG!(reader, "Scroll forward is supported");
+        if key == SCROLL_CONTENT_UP_TERMINFO_CODE.as_bytes() {
+            SCROLL_CONTENT_UP_SUPPORTED.store(true);
+            FLOG!(reader, "SCROLL UP is supported");
         }
         return None;
     }

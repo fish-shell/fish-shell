@@ -134,7 +134,7 @@ use crate::terminal::TerminalCommand::{
     QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
     QueryXtgettcap, QueryXtversion,
 };
-use crate::terminal::{SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
+use crate::terminal::{SCROLL_CONTENT_UP_SUPPORTED, SCROLL_CONTENT_UP_TERMINFO_CODE};
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::parse_text_face;
 use crate::text_face::TextFace;
@@ -2678,7 +2678,7 @@ fn query_capabilities_via_dcs(out: &mut impl Output) {
         return;
     }
     out.write_command(DecsetAlternateScreenBuffer); // enable alternative screen buffer
-    send_xtgettcap_query(out, SCROLL_FORWARD_TERMINFO_CODE);
+    send_xtgettcap_query(out, SCROLL_CONTENT_UP_TERMINFO_CODE);
     out.write_command(DecrstAlternateScreenBuffer); // disable alternative screen buffer
 }
 
@@ -3946,7 +3946,7 @@ impl<'a> Reader<'a> {
                 self.clear_screen_and_repaint();
             }
             rl::ScrollbackPush => {
-                if !SCROLL_FORWARD_SUPPORTED.load() {
+                if !SCROLL_CONTENT_UP_SUPPORTED.load() {
                     return;
                 }
                 let query = self.blocking_query();

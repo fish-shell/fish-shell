@@ -198,7 +198,7 @@ Optional Commands
 
        ``\e[ Ps S``
      - indn
-     - Scroll up Ps lines (aka ``SU`` but terminfo calls it "scroll forward")
+     - Scroll up the content (not the viewport) Ps lines (aka ``SU`` but terminfo calls it "scroll forward")
        This enables the :ref:`scrollback-push <special-input-functions-scrollback-push>` special input function which is used by :kbd:`ctrl-l`.
      - ECMA-48
    * - ``\e[= Ps u``, ``\e[? Ps u``

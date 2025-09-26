@@ -34,7 +34,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightSpec};
 use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
-    CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptStart, ScrollForward,
+    CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptStart, ScrollContentUp,
 };
 use crate::terminal::{use_terminfo, BufferedOutputter, CardinalDirection, Output, Outputter};
 use crate::termsize::{termsize_last, Termsize};
@@ -588,8 +588,8 @@ impl Screen {
             return;
         }
         let mut out = BufferedOutputter::new(self.outp);
-        // Scroll down.
-        out.write_command(ScrollForward(lines_to_scroll));
+        // Move everything to scrollback.
+        out.write_command(ScrollContentUp(lines_to_scroll));
         // Reposition cursor.
         out.write_command(CursorMove(CardinalDirection::Up, lines_to_scroll));
     }

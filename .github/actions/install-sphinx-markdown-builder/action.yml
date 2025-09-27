@@ -7,5 +7,6 @@ runs:
   using: "composite"
   steps:
     - run: |
-        pip install git+https://github.com/krobelus/sphinx-markdown-builder@ae8cf577bfb263dcda509ad449a331b9b74664fa
+        commit=a6dd85e7b13107172c0502937bec6b718002510d
+        pip install git+https://github.com/krobelus/sphinx-markdown-builder@"$commit"
       shell: bash

@@ -19,12 +19,13 @@ previous_version=$(
             # Skip tags that have not been created yet..
             system("git rev-parse --verify >/dev/null --quiet refs/tags/"$2) == 0 \
         ) {
-            print $2; exit
+            print $2; ok = 1; exit
         }
+        END { exit !ok }
     '
 )
 minor_version=${version%.*}
-previous_minor_version=${minor_version%.*}
+previous_minor_version=${previous_version%.*}
 {
     sed -n 1,2p <"$workspace_root/CHANGELOG.rst"
 
@@ -59,24 +60,26 @@ previous_minor_version=${minor_version%.*}
     ' | sed '$d')" |
         sed -e '$s/^----*$//' # Remove spurious transitions at the end of the document.
 
-    JoinEscaped() {
-        sed 's/\S/\\&/g' |
-            awk '
-                NR != 1 { printf ", " }
-                { printf "%s", $0 }
-                END { printf "\n" }
-            '
-    }
-    echo ""
-    echo "---"
-    echo ""
-    echo "Thanks to everyone who contributed through issue discussions, code reviews, or code changes."
-    echo
-    printf "Welcome our new committers: "
-    JoinEscaped <"$relnotes_tmp/committers-new"
-    echo
-    printf "Welcome back our returning committers: "
-    JoinEscaped <"$relnotes_tmp/committers-returning"
+    if [ "$minor_version" != "$previous_minor_version" ]; then
+        JoinEscaped() {
+            sed 's/\S/\\&/g' |
+                awk '
+                    NR != 1 { printf ",\n" }
+                    { printf "%s", $0 }
+                    END { printf "\n" }
+                '
+        }
+        echo ""
+        echo "---"
+        echo ""
+        echo "Thanks to everyone who contributed through issue discussions, code reviews, or code changes."
+        echo
+        printf "Welcome our new committers: "
+        JoinEscaped <"$relnotes_tmp/committers-new"
+        echo
+        printf "Welcome back our returning committers: "
+        JoinEscaped <"$relnotes_tmp/committers-returning"
+    fi
     echo
     echo "---"
     echo

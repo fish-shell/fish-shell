@@ -173,10 +173,14 @@ Changes to the :doc:`argparse <cmds/argparse>` builtin
 
 --------------
 
-fish 4.0.9 (released ???)
-=========================
+fish 4.0.9 (released September 27, 2025)
+========================================
 
-This release fixes a regression in 4.0.6 that caused shifted keys to not be inserted on some terminals.
+This release fixes:
+
+- a regression in 4.0.6 causing shifted keys to not be inserted on some terminals (:issue:`11813`).
+- a regression in 4.0.6 causing the build to fail on systems where ``char`` is unsigned (:issue:`11804`).
+- a regression in 4.0.0 causing a crash on an invalid :doc:`bg <cmds/bg>` invocation.
 
 --------------
 

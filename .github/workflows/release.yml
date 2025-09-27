@@ -49,9 +49,12 @@ jobs:
           mkdir /tmp/fish-built
           FISH_ARTEFACT_PATH=/tmp/fish-built ./build_tools/make_tarball.sh
           relnotes=/tmp/fish-built/release-notes.md
+          # Need history since the last release (i.e. tag) for stats.
+          git fetch --tags
+          git fetch --unshallow
           sh -x ./build_tools/release-notes.sh >"$relnotes"
           # Delete title
-          sed -n 1p "$relnotes" | grep -q "^# fish .*"
+          sed -n 1p "$relnotes" | grep -q "^## fish .*"
           sed -n 2p "$relnotes" | grep -q '^$'
           sed -i 1,2d "$relnotes"
       - name: Upload tarball artifact

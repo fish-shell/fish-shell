@@ -54,9 +54,6 @@ integration_branch=$(
 [ -n "$integration_branch" ] ||
     git merge-base --is-ancestor $remote/master HEAD
 
-release_flow=.github/workflows/release.yml
-git diff --exit-code -- :/$release_flow $remote/master:$release_flow
-
 sed -n 1p CHANGELOG.rst | grep -q '^fish .*(released .*)$'
 sed -n 2p CHANGELOG.rst | grep -q '^===*$'
 
@@ -82,11 +79,14 @@ git tag --annotate --message="Release $version" $version
 
 git push $remote $version
 
+TIMEOUT=
 gh() {
-    command gh --repo "$repository_owner/fish-shell" "$@"
+    command ${TIMEOUT:+timeout $TIMEOUT} \
+        gh --repo "$repository_owner/fish-shell" "$@"
 }
 
-gh workflow run release.yml --raw-field "version=$version"
+gh workflow run release.yml --ref="$version" \
+    --raw-field="version=$version"
 
 run_id=
 while [ -z "$run_id" ] && sleep 5
@@ -108,7 +108,8 @@ while ! \
     gh release download "$version" --dir="$tmpdir" \
         --pattern="fish-$version.tar.xz"
 do
-    timeout 30 gh run watch "$run_id" ||:
+    TIMEOUT=30 gh run watch "$run_id" ||:
+    sleep 5
 done
 actual_tag_oid=$(git ls-remote "$remote" |
     awk '$2 == "refs/tags/'"$version"'" { print $1 }')
@@ -143,37 +144,33 @@ rm -rf "$tmpdir"
     " | sed 's,^\s*| \?,,')"
 )
 
-
-
 # Approve macos-codesign
 # TODO what if current user can't approve?
-sleep 5
-pending_deployments_endpoint=/repos/$repository_owner/fish-shell/actions/runs/$run_id/pending_deployments
-environment_id=$(
-    gh api \
+gh_pending_deployments() {
+    command gh api \
         -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
-        "$pending_deployments_endpoint" |
-        jq .[].environment.id
-)
-if [ -n "$environment_id" ]; then
-    gh api \
-        -H "Accept: application/vnd.github+json" \
-        -H "X-GitHub-Api-Version: 2022-11-28" \
-        "$pending_deployments_endpoint" \
-        -X POST \
-        -d '
-            {
-                "environment_ids": ['"$environment_id"'],
-                "state": "approved",
-                "comment": "Approved via ./build_tools/release.sh"
-            }
-        '
-fi
+        "/repos/$repository_owner/fish-shell/actions/runs/$run_id/pending_deployments" \
+        "$@"
+}
+while {
+    environment_id=$(gh_pending_deployments | jq .[].environment.id)
+    [ -z "$environment_id" ]
+}
+do
+    sleep 5
+done
+echo '
+        {
+            "environment_ids": ['"$environment_id"'],
+            "state": "approved",
+            "comment": "Approved via ./build_tools/release.sh"
+        }
+    ' |
+gh_pending_deployments -XPOST --input=-
 
-# # Uncomment this to wait the full workflow run (i.e. macOS packages).
-# # Also note that --exit-status doesn't fail reliably.
-# gh run view "$run_id" --verbose --log-failed --exit-status
+# Await completion.
+gh run watch "$run_id"
 
 while {
     ! draft=$(gh release view "$version" --json=isDraft --jq=.isDraft) \

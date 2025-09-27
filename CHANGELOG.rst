@@ -1,5 +1,5 @@
-fish 4.0.9 (released ???)
-=========================
+fish 4.0.9 (released September 27, 2025)
+========================================
 
 This release fixes:
 

@@ -24,14 +24,66 @@ previous_version=$(
     '
 )
 minor_version=${version%.*}
-changelog_for_this_version=$(awk <"$workspace_root/CHANGELOG.rst" '
-    /^===/ { if (v++) { exit } }
-    { print }
-' | sed '$d'
-)
-# Remove spurious transitions at the end of the document.
-printf %s "$changelog_for_this_version" |
-    sed -e '$s/^----*$//' >"$relnotes_tmp/fake-workspace"/CHANGELOG.rst
+previous_minor_version=${minor_version%.*}
+{
+    sed -n 1,2p <"$workspace_root/CHANGELOG.rst"
+
+    ListCommitters() {
+        comm "$@" "$relnotes_tmp/committers-then" "$relnotes_tmp/committers-now"
+    }
+    (
+        cd "$workspace_root"
+        git log "$previous_version" --format="%aN" | sort -u >"$relnotes_tmp/committers-then"
+        git log "$previous_version".. --format="%aN" | sort -u >"$relnotes_tmp/committers-now"
+        ListCommitters -13 >"$relnotes_tmp/committers-new"
+        ListCommitters -12 >"$relnotes_tmp/committers-returning"
+    )
+    if [ "$minor_version" != "$previous_minor_version" ]; then
+        (
+            cd "$workspace_root"
+            num_commits=$(git log --no-merges --format=%H "$previous_version".. | wc -l)
+            num_authors=$(wc -l <"$relnotes_tmp/committers-now")
+            num_new_authors=$(wc -l <"$relnotes_tmp/committers-new")
+            printf %s \
+                "This release comprises $num_commits commits since $previous_version," \
+                " contributed by $num_authors authors, $num_new_authors of which are new committers."
+            echo
+            echo
+        )
+    fi
+
+    printf %s "$(awk <"$workspace_root/CHANGELOG.rst" '
+        NR <= 2 || /^\.\. ignore / { next }
+        /^===/ { exit }
+        { print }
+    ' | sed '$d')" |
+        sed -e '$s/^----*$//' # Remove spurious transitions at the end of the document.
+
+    JoinEscaped() {
+        sed 's/\S/\\&/g' |
+            awk '
+                NR != 1 { printf ", " }
+                { printf "%s", $0 }
+                END { printf "\n" }
+            '
+    }
+    echo ""
+    echo "---"
+    echo ""
+    echo "Thanks to everyone who contributed through issue discussions, code reviews, or code changes."
+    echo
+    printf "Welcome our new committers: "
+    JoinEscaped <"$relnotes_tmp/committers-new"
+    echo
+    printf "Welcome back our returning committers: "
+    JoinEscaped <"$relnotes_tmp/committers-returning"
+    echo
+    echo "---"
+    echo
+    echo "*Download links: To download the source code for fish, we suggest the file named \"fish-$version.tar.xz\". The file downloaded from \"Source code (tar.gz)\" will not build correctly.*"
+    echo
+    echo "*The files called fish-$version-linux-\*.tar.xz are experimental packages containing a single standalone ``fish`` binary for any Linux with the given CPU architecture.*"
+} >"$relnotes_tmp/fake-workspace"/CHANGELOG.rst
 
 sphinx-build >&2 -j auto \
     -W -E -b markdown -c "$workspace_root/doc_src" \
@@ -41,27 +93,9 @@ sphinx-build >&2 -j auto \
     -D markdown_github_flavored=1 \
     "$@"
 
-# Delete changelog header
+# Skip changelog header
 sed -n 1p "$relnotes_tmp/out/relnotes.md" | grep -Fxq "# Release notes"
 sed -n 2p "$relnotes_tmp/out/relnotes.md" | grep -Fxq ''
-sed -i 1,2d "$relnotes_tmp/out/relnotes.md"
+sed 1,2d "$relnotes_tmp/out/relnotes.md"
 
-{
-    cat "$relnotes_tmp/out/relnotes.md"
-    echo ""
-    echo "---"
-    echo ""
-    (
-        cd "$workspace_root"
-        build_tools/list_committers_since.fish "$previous_version"
-    )
-    cat <<EOF
-
----
-
-*Download links: To download the source code for fish, we suggest the file named "fish-$version.tar.xz". The file downloaded from "Source code (tar.gz)" will not build correctly.*
-
-*The files called fish-$version-linux-\*.tar.xz are experimental packages containing a single standalone ``fish`` binary for any Linux with the given architecture.*
-EOF
-}
 rm -r "$relnotes_tmp"

@@ -122,8 +122,9 @@ As before, this is the default when building via ``cargo``, and disabled when bu
 For packagers we continue to recommend CMake.
 
 Note: When fish is built like this, the :envvar:`__fish_data_dir` variable will be empty because that directory no longer has meaning.
-If you need to load files from there,
-use ``status get-file`` or find alternatives (like loading completions for "foo" via ``complete -C"foo "``).
+You should generally not need these files.
+For example, if you want to make sure that completions for "foo" are loaded, use ``complete -C"foo " >/dev/null``  instead).
+The raw files are still exposed via :ref:`status subcommands <status-get-file>`, mainly for fish's internal use, but you can also use them as a last resort.
 
 Remaining benefits of a full installation (as currently done by CMake) are:
 

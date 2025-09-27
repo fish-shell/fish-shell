@@ -136,7 +136,10 @@ rm -rf "$tmpdir"
     cd "$fish_site"
     make
     git add -u
-    ! git ls-files --others --exclude-standard | grep .
+    git add docs
+    if git ls-files --others --exclude-standard | grep .; then
+        exit 1
+    fi
     git commit --message="$(printf %s "\
         | Release $version (docs)
         |
@@ -184,7 +187,10 @@ done
     cd "$fish_site"
     make new-release
     git add -u
-    ! git ls-files --others --exclude-standard | grep .
+    git add docs
+    if git ls-files --others --exclude-standard | grep .; then
+        exit 1
+    fi
     git commit --message="$(printf %s "\
         | Release $version (release list update)
         |

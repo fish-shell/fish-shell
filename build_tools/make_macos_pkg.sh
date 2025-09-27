@@ -73,7 +73,6 @@ mkdir -p "$PKGDIR/build_x86_64" "$PKGDIR/build_arm64" "$PKGDIR/root" "$PKGDIR/in
     && cmake \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
-        -DWITH_GETTEXT=OFF \
         -DRust_CARGO_TARGET=aarch64-apple-darwin \
         -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
         -DFISH_USE_SYSTEM_PCRE2=OFF \
@@ -88,9 +87,10 @@ mkdir -p "$PKGDIR/build_x86_64" "$PKGDIR/build_arm64" "$PKGDIR/root" "$PKGDIR/in
     && cmake \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
-        -DWITH_GETTEXT=OFF \
         -DRust_TOOLCHAIN="$RUST_VERSION_X86_64" \
         -DRust_CARGO_TARGET=x86_64-apple-darwin \
+        -DRust_COMPILER="$(rustup +$RUST_VERSION_X86_64 which rustc)" \
+        -DRust_CARGO="$(rustup +$RUST_VERSION_X86_64 which cargo)" \
         -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
         -DFISH_USE_SYSTEM_PCRE2=OFF "$SRC_DIR" \
     && env $X86_64_DEPLOY_TARGET make VERBOSE=1 -j 12; }

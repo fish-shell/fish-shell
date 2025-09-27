@@ -106,7 +106,7 @@ For distributors
   This allows truly distributing fish as a single file (:issue:`10876`).
 - The CMake build configuration has been simplified and no longer second-guesses rustup.
   It will run rustc and cargo via :envvar:`PATH` or in ~/.cargo/bin/.
-  If that doesn't match your setup, set the Rust_COMPILER and Rust_CARGO cmake variables (:issue:`11328`).
+  If that doesn't match your setup, set the Rust_COMPILER and Rust_CARGO CMake variables (:issue:`11328`).
 - Cygwin support has been reintroduced, since `Rust gained a Cygwin target <https://github.com/rust-lang/rust/pull/134999>`__ (:issue:`11238`).
 - CMake 3.15 is now required.
 

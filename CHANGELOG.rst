@@ -1,7 +1,8 @@
 fish 4.0.9 (released ???)
 =========================
 
-This release fixes
+This release fixes:
+
 - a regression in 4.0.6 causing shifted keys to not be inserted on some terminals (:issue:`11813`).
 - a regression in 4.0.6 causing the build to fail on systems where ``char`` is unsigned (:issue:`11804`).
 - a regression in 4.0.0 causing a crash on an invalid :doc:`bg <cmds/bg>` invocation.

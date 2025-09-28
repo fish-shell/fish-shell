@@ -150,6 +150,8 @@ jobs:
         uses: ./.github/actions/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
+      - name: Install dependencies
+        run: brew install gettext
       - name: Build and codesign
         run: |
           die() { echo >&2 "$*"; exit 1; }

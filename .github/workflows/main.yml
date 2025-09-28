@@ -163,7 +163,7 @@ jobs:
         # --break-system-packages because homebrew has now declared itself "externally managed".
         # this is CI so we don't actually care.
         sudo pip3 install --break-system-packages pexpect
-        brew install tmux
+        brew install gettext tmux
     - name: cmake
       run: |
         mkdir build && cd build

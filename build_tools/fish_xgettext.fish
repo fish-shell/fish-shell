@@ -19,7 +19,7 @@ begin
         echo ""
     end
 
-    set -g workspace_root (status dirname)/..
+    set -g workspace_root (path resolve (status dirname)/..)
 
     set -l rust_extraction_file
     if set -l --query _flag_use_existing_template
@@ -31,6 +31,7 @@ begin
         or exit 1
     end
 
+    echo '# fish-section-tier1-from-rust'
     # Get rid of duplicates and sort.
     msguniq --no-wrap --strict --sort-output $rust_extraction_file
     or exit 1
@@ -39,8 +40,9 @@ begin
         rm $rust_extraction_file
     end
 
-    function extract_fish_script_messages --argument-names regex
-
+    function extract_fish_script_messages_impl
+        set -l regex $argv[1]
+        set -e argv[1]
         # Using xgettext causes more trouble than it helps.
         # This is due to handling of escaping in fish differing from formats xgettext understands
         # (e.g. POSIX shell strings).
@@ -59,24 +61,74 @@ begin
         # 5. Double quotes are escaped, such that they are not interpreted as the start or end of
         #    a msgid.
         # 6. We transform the string into the format expected in a PO file.
-        cat $share_dir/config.fish $share_dir/completions/*.fish $share_dir/functions/*.fish |
+        cat $argv |
             string replace --filter --regex $regex '$1' |
             string unescape |
             sort -u |
             sed -E -e 's_\\\\_\\\\\\\\_g' -e 's_"_\\\\"_g' -e 's_^(.*)$_msgid "\1"\nmsgstr ""\n_'
     end
 
+    function extract_fish_script_messages
+        set -l tier $argv[1]
+        set -e argv[1]
+        if not set -q argv[1]
+            return
+        end
+        # This regex handles explicit requests to translate a message. These are more important to translate
+        # than messages which should be implicitly translated.
+        set -l explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
+        echo "# fish-section-$tier-from-script-explicitly-added"
+        extract_fish_script_messages_impl $explicit_regex $argv
+
+        # This regex handles descriptions for `complete` and `function` statements. These messages are not
+        # particularly important to translate. Hence the "implicit" label.
+        set -l implicit_regex '^(?:\s|and |or )*(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
+        echo "# fish-section-$tier-from-script-implicitly-added"
+        extract_fish_script_messages_impl $implicit_regex $argv
+    end
+
     set -g share_dir $workspace_root/share
 
-    # This regex handles explicit requests to translate a message. These are more important to translate
-    # than messages which should be implicitly translated.
-    set -l explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
-    extract_fish_script_messages $explicit_regex
+    set -l tier1 $share_dir/config.fish
+    set -l tier2
+    set -l tier3
 
-    # This regex handles descriptions for `complete` and `function` statements. These messages are not
-    # particularly important to translate. Hence the "implicit" label.
-    set -l implicit_regex '^(?:\s|and |or )*(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
-    extract_fish_script_messages $implicit_regex
+    for file in $share_dir/completions/*.fish $share_dir/functions/*.fish
+        # set -l tier (string match -r '^# localization: .*' <$file)
+        set -l tier (string replace -rf -m1 \
+            '^# localization: (.*)$' '$1' <$file)
+        if set -q tier[1]
+            switch "$tier"
+                case tier1 tier2 tier3
+                    set -a $tier $file
+                case 'skip*'
+                case '*'
+                    echo >&2 "$file:1 unexpected localization tier: $tier"
+                    exit 1
+            end
+            continue
+        end
+        set -l dirname (path basename (path dirname $file))
+        set -l command_name (path basename --no-extension $file)
+        if test $dirname = functions &&
+                string match -q -- 'fish_*' $command_name
+            set -a tier1 $file
+            continue
+        end
+        if test $dirname != completions
+            echo >&2 "$file:1 missing localization tier for function file"
+            exit 1
+        end
+        if test -e $workspace_root/doc_src/cmds/$command_name.rst
+            set -a tier1 $file
+        else
+            set -a tier3 $file
+        end
+    end
+
+    extract_fish_script_messages tier1 $tier1
+    extract_fish_script_messages tier2 $tier2
+    extract_fish_script_messages tier3 $tier3
 end |
     # At this point, all extracted strings have been written to stdout,
     # starting with the ones taken from the Rust sources,

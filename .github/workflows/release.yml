@@ -80,7 +80,7 @@ jobs:
         with:
           targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl
       - name: Install dependencies
-        run: sudo apt install crossbuild-essential-arm64 musl-tools python3-sphinx
+        run: sudo apt install crossbuild-essential-arm64 gettext musl-tools python3-sphinx
       - name: Build statically-linked executables
         run: |
           set -x

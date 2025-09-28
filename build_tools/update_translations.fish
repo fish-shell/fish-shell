@@ -99,15 +99,55 @@ if set -l --query _flag_dry_run
     cp -r $po_dir/* $tmpdir
 end
 
+function merge_po_files --argument-names template_file po_file
+    msgmerge --no-wrap --update --no-fuzzy-matching --backup=none --quiet \
+        $po_file $template_file
+    or cleanup_exit
+    set -l new_po_file (mktemp) # TODO Remove on failure.
+    and msgattrib --no-wrap --no-obsolete -o $new_po_file $po_file
+    or cleanup_exit
+
+    begin
+        echo "# fish-note-sections: Translations are divided into sections, each starting with a fish-section-* comment."
+        echo "# fish-note-sections: The first few sections are more important."
+        echo "# fish-note-sections: Ignore the tier3 sections unless you have a lot of time."
+        sed -i '
+            /^# fish-note-sections:/d;
+            /^# fish-section-/d;
+        ' $new_po_file
+
+        set -l next_line 1
+        set -l section
+        awk <$template_file '
+            /^# fish-section-\S*$/ {
+                section = $0
+            }
+            section != "" && /^msgid ".+"$/ {
+                print section
+                print $0
+                section = ""
+            }
+        ' |
+            while read -l section
+                read -l msgid_line
+                set -l line_number (grep -m1 -Fxn $msgid_line $new_po_file | string split :)[1]
+                sed -n "$next_line,$(math $line_number - 1)"p $new_po_file
+                echo $section
+                set next_line $line_number
+                # set section
+            end
+        sed -n "$next_line,\$"p $new_po_file
+    end >$po_file
+    rm $new_po_file
+end
+
 for po_file in $po_files
     if set --query tmpdir[1]
         set po_file $tmpdir/(basename $po_file)
     end
     if set -l --query po
         if test -e $po_file
-            msgmerge --no-wrap --update --no-fuzzy-matching --backup=none --quiet $po_file $template_file
-            and msgattrib --no-wrap --no-obsolete -o $po_file $po_file
-            or cleanup_exit
+            merge_po_files $template_file $po_file
         else
             cp $template_file $po_file
         end

@@ -91,28 +91,8 @@ function fish_config --description "Launch fish's web based configuration"
             switch $cmd
                 case show
                     set -l fish (status fish-path)
-                    set -l prompts
-                    if set -q __fish_data_dir[1]
-                        set prompts $prompt_dir/$argv.fish
-                        if not set -q prompts[1]
-                            set prompts $prompt_dir/*.fish
-                        end
-                    else
-                        set prompts tools/web_config/sample_prompts/$argv.fish
-                        if not set -q prompts[1]
-                            set prompts (status list-files tools/web_config/sample_prompts/ 2>/dev/null)
-                        end
-                    end
+                    set -l prompts (__fish_config_matching tools/web_config/sample_prompts .fish $argv)
                     for p in $prompts
-                        if set -q __fish_data_dir[1]
-                            if not test -e "$p"
-                                continue
-                            end
-                        else
-                            if not status get-file $p &>/dev/null
-                                continue
-                            end
-                        end
                         set -l promptname (string replace -r '.*/([^/]*).fish$' '$1' $p)
                         echo -s (set_color --underline) $promptname (set_color normal)
                         $fish -c 'functions -e fish_right_prompt;
@@ -259,22 +239,15 @@ function fish_config --description "Launch fish's web based configuration"
                     echo
                 case show
                     set -l fish (status fish-path)
-                    set -l themes $dirs/$argv.theme \
-                        (set -q argv[1] &&
-                            status list-files tools/web_config/themes/ 2>/dev/null |
-                            grep -Fx -e"tools/web_config/themes/"$argv.theme)
-                    if not set -q themes[1]
-                        set themes $dirs/*.theme (status list-files tools/web_config/themes/ 2>/dev/null)
-                    end
+                    set -l themes \
+                        (path filter $dirs/$argv.theme) \
+                        (__fish_config_matching tools/web_config/themes .theme $argv)
                     set -l used_themes
 
                     echo -s (set_color normal; set_color --underline) Current (set_color normal)
                     fish_config theme demo
 
                     for t in $themes
-                        not test -e "$t"
-                        and continue
-
                         set -l themename (string replace -r '.*/([^/]*).theme$' '$1' $t)
                         contains -- $themename $used_themes
                         and continue
@@ -404,4 +377,25 @@ function fish_config --description "Launch fish's web based configuration"
                     return 1
             end
     end
+end
+
+function __fish_config_matching
+    set -l prefix $argv[1]
+    set -l suffix $argv[2]
+    set -e argv[1..2]
+    set -l paths
+    if set -q __fish_data_dir[1]
+        if not set -q argv[1]
+            set paths $__fish_data_dir/$prefix/*$suffix
+        else
+            set paths (path filter $__fish_data_dir/$prefix/$argv$suffix)
+        end
+    else
+        if not set -q argv[1]
+            set paths (status list-files $prefix)
+        else
+            set paths (status list-files $prefix | grep -Fx -e"$prefix/"$argv$suffix)
+        end
+    end
+    string join \n $paths
 end

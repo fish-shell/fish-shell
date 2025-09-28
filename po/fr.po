@@ -1,3 +1,6 @@
+# fish-note-sections: Translations are divided into sections, each starting with a fish-section-* comment.
+# fish-note-sections: The first few sections are more important.
+# fish-note-sections: Ignore the tier3 sections unless you have a lot of time.
 # translation of fr.po to Français
 # FRENCH TRANSLATION FOR FISH
 # Copyright (C) 2006 Xavier Douville
@@ -125,6 +128,7 @@ msgstr ""
 "   PID Commande\n"
 
 #, c-format
+# fish-section-tier1-from-rust
 msgid " (%ls)\n"
 msgstr ""
 
@@ -2010,6 +2014,7 @@ msgstr ""
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr ""
 
+# fish-section-tier1-from-script-explicitly-added
 msgid "%ls: %ls: expected %d arguments; got %d\\n"
 msgstr ""
 
@@ -2031,32 +2036,14 @@ msgstr "%s : Impossible de trouver un navigateur Web.\\n"
 msgid "%s: Directory stack is empty…\\n"
 msgstr "%s : Pile de dossiers vide…\\n"
 
-msgid "%s: Either the --short or --long flag must be provided\\n"
-msgstr ""
-
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 msgstr "%s : Un argument attendu, %s reçu(s).\\n\\nRésumé :\\n\\t%svared%s VARIABLE\\n"
-
-msgid "%s: Extra non-option arguments were provided\\n"
-msgstr ""
 
 msgid "%s: Invalid mask '%s'\\n"
 msgstr "%s : Masque '%s' invalide\\n"
 
 msgid "%s: Not inside of command substitution"
 msgstr "%s : hors de la substitution de commande"
-
-msgid "%s: The --long-only flag requires the --long flag\\n"
-msgstr ""
-
-msgid "%s: The --short flag must be a single character\\n"
-msgstr ""
-
-msgid "%s: The --validate flag requires subsequent arguments\\n"
-msgstr ""
-
-msgid "%s: The --validate flag requires the --required-val, --optional-value, or --multiple-vals flag\\n"
-msgstr ""
 
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
 msgstr "%s : Le nombre de positions à passer doit être un entier naturel\\n"
@@ -2250,10 +2237,1710 @@ msgstr "ou le fichier était vide"
 msgid "python executable not found"
 msgstr "Exécutable python introuvable"
 
-msgid " "
+# fish-section-tier1-from-script-implicitly-added
+msgid "# comments"
 msgstr ""
 
-msgid " DEPRECATED: use fish_commandline_prepend instead. Prepend 'sudo ' to the beginning of the current commandline"
+msgid "$PATH"
+msgstr ""
+
+msgid "$status, the return code"
+msgstr ""
+
+msgid "$variable"
+msgstr ""
+
+msgid "(Used together with -o) Do not overwrite but append"
+msgstr "(Utilisé avec -o) Ne pas écraser le fichier, y concaténer les résultats"
+
+msgid "(command) command substitution"
+msgstr ""
+
+msgid "< and > redirections"
+msgstr ""
+
+msgid "A right prompt to be used when `breakpoint` is executed"
+msgstr ""
+
+msgid "Add abbreviation"
+msgstr "Ajouter une abbréviation"
+
+msgid "Add path to the end"
+msgstr ""
+
+msgid "Add path to the front (default)"
+msgstr ""
+
+msgid "Add paths to the PATH"
+msgstr ""
+
+msgid "Add text at cursor"
+msgstr "Ajouter du texte au niveau du curseur"
+
+msgid "Add text at cursor but DWIM, stripping leading $"
+msgstr ""
+
+msgid "Add text to the end of the selected area"
+msgstr "Ajouter du texte à la fin de la sélection"
+
+msgid "Also print directory history"
+msgstr ""
+
+msgid "Always print empty argument"
+msgstr ""
+
+msgid "Always use file completion"
+msgstr ""
+
+msgid "An overview of fish's builtins"
+msgstr ""
+
+msgid "Append suffix to the filename"
+msgstr ""
+
+msgid "Append the given string to the command-line, or remove the suffix if already there"
+msgstr ""
+
+msgid "Append value to a list"
+msgstr ""
+
+msgid "Autoloading Functions"
+msgstr "Fonctions à chargement automatique"
+
+msgid "Autoloading functions"
+msgstr "Fonctions à chargement automatique"
+
+msgid "Automatically funcsave the alias"
+msgstr ""
+
+msgid "Autosave after successful edit"
+msgstr ""
+
+msgid "Background jobs"
+msgstr "Tâches en arrière-plan"
+
+msgid "Brace expansion {a,b,c}"
+msgstr "Expansion d’accolades {a,b,c}"
+
+msgid "Builtin commands"
+msgstr "Commandes intégrées"
+
+msgid "Cartesian Products"
+msgstr "Produits cartésiens"
+
+msgid "Case insensitive"
+msgstr ""
+
+msgid "Change background color"
+msgstr ""
+
+msgid "Change current mode after bind is executed"
+msgstr ""
+
+msgid "Change directory"
+msgstr ""
+
+msgid "Change extension for given paths"
+msgstr ""
+
+msgid "Change underline color"
+msgstr ""
+
+msgid "Character to use for padding"
+msgstr ""
+
+msgid "Characters to use as ellipsis"
+msgstr ""
+
+msgid "Check if a job exists without output"
+msgstr ""
+
+msgid "Check if an abbreviation exists"
+msgstr ""
+
+msgid "Check if something exists without output"
+msgstr ""
+
+msgid "Check if the user is root"
+msgstr ""
+
+msgid "Choose how to count vendor files"
+msgstr ""
+
+msgid "Colorize the output using ANSI escape sequences"
+msgstr "Coloriser la sortie en utilisant les séquences d’échappement ANSI"
+
+msgid "Combiners (And, Or, Not)"
+msgstr "Combinaisons (and, or, not)"
+
+msgid "Combining different expansions"
+msgstr "Combinaison de différentes expansions"
+
+msgid "Command Substitutions"
+msgstr "Substitutions de commande"
+
+msgid "Command line editor"
+msgstr "Éditeur de ligne de commande"
+
+msgid "Command mode"
+msgstr "Mode commande"
+
+msgid "Command substitution"
+msgstr "Substitution de commande"
+
+msgid "Command substitution (SUBCOMMAND)"
+msgstr "Substitution de commandes (SUBCOMMAND)"
+
+msgid "Command to add completion to"
+msgstr "Commande à laquelle ajouter une complétion"
+
+msgid "Comment/uncomment the current command"
+msgstr ""
+
+msgid "Communicate using a named pipe"
+msgstr ""
+
+msgid "Communicate using a regular file, not a named pipe"
+msgstr ""
+
+msgid "Completion only used if command has zero exit status"
+msgstr ""
+
+msgid "Conditional execution of code and flow control"
+msgstr "Exécution conditionnelle de code et contrôle de flux"
+
+msgid "Conditionals (If, Else, Switch)"
+msgstr "Conditionnelles (if, else, switch)"
+
+msgid "Configurable greeting"
+msgstr "Message de bienvenue configurable"
+
+msgid "Control of maximum nice priority"
+msgstr ""
+
+msgid "Convert exit code to signal name"
+msgstr ""
+
+msgid "Copy and paste (Kill Ring)"
+msgstr "Copier et coller (avec la pile)"
+
+msgid "Copy the specified function to the specified new name"
+msgstr "Dupliquer la fonction sous un autre nom"
+
+msgid "Create a global (manually erased) event block"
+msgstr ""
+
+msgid "Create a local (automatically erased) event block"
+msgstr ""
+
+msgid "Creates a function wrapping a command"
+msgstr ""
+
+msgid "Debugging fish scripts"
+msgstr "Déboguer des scripts fish"
+
+msgid "Defining aliases"
+msgstr "Définition d’alias"
+
+msgid "Description of completion"
+msgstr ""
+
+msgid "Differences from bash"
+msgstr ""
+
+msgid "Dim text"
+msgstr ""
+
+msgid "Disable backslash escapes"
+msgstr "Désactiver les séquences d’échappement"
+
+msgid "Display a list of defined bind modes"
+msgstr ""
+
+msgid "Display all currently defined trap handlers"
+msgstr ""
+
+msgid "Display help and exit"
+msgstr "Afficher l’aide et quitter"
+
+msgid "Display information about the function"
+msgstr "Afficher les informations sur la fonction"
+
+msgid "Display names of all signals"
+msgstr "Afficher le nom de tous les signaux"
+
+msgid "Display version and exit"
+msgstr "Afficher la version et quitter"
+
+msgid "Display vi prompt mode"
+msgstr ""
+
+msgid "Displays the current mode"
+msgstr "Afficher le mode actuel"
+
+msgid "Do not export variable to subprocess"
+msgstr ""
+
+msgid "Do not indent output, only reformat into one job per line"
+msgstr "Ne pas indenter la sortie, se contenter de la reformater à une tâche par ligne"
+
+msgid "Do not indent, only return 0 if the code is already indented as fish_indent would"
+msgstr ""
+
+msgid "Do not output a newline"
+msgstr "Ne pas retourner à la ligne"
+
+msgid "Do not persist history"
+msgstr ""
+
+msgid "Do not print anything, only set exit status"
+msgstr ""
+
+msgid "Do not print output"
+msgstr "Ne rien afficher"
+
+msgid "Do not read configuration files"
+msgstr ""
+
+msgid "Do not reformat, only indent lines"
+msgstr ""
+
+msgid "Do not reformat, only unindent lines"
+msgstr ""
+
+msgid "Do not send the results to stderr, but overwrite the specified file"
+msgstr "Ne pas envoyer les résultats sur la sortie d’erreur, écraser plutôt le fichier spécifié avec"
+
+msgid "Do not separate arguments with spaces"
+msgstr "Ne pas séparer les arguments avec des espaces"
+
+msgid "Do not shadow variable scope of calling function"
+msgstr "Laisser la fonction accéder au contexte du code l’appelant"
+
+msgid "Do not truncate long lines"
+msgstr "Ne pas tronquer les lignes longues"
+
+msgid "Don't display the full diff"
+msgstr ""
+
+msgid "Don't emit an event"
+msgstr ""
+
+msgid "Don't print function definition"
+msgstr ""
+
+msgid "Don't trim trailing newlines"
+msgstr ""
+
+msgid "Don't use file completion"
+msgstr ""
+
+msgid "Dump information about parsed statements to stderr"
+msgstr ""
+
+msgid "Edit function definition"
+msgstr "Éditer la définition de fonction"
+
+msgid "Edit in fish, not external editor"
+msgstr ""
+
+msgid "Edit the command buffer in an external editor"
+msgstr ""
+
+msgid "Edit variable value"
+msgstr ""
+
+msgid "Emacs mode commands"
+msgstr "Commande en mode Emacs"
+
+msgid "Empty results excluded"
+msgstr ""
+
+msgid "Empty strings excluded"
+msgstr ""
+
+msgid "Enable backslash escapes"
+msgstr "Activer les séquences d’échappement"
+
+msgid "Enable debug at specified verbosity level"
+msgstr "Activer la sortie de débogage au niveau de verbosité spécifié"
+
+msgid "Erase abbreviation"
+msgstr "Supprimer une abbréviation"
+
+msgid "Erase function"
+msgstr "Effacer la fonction"
+
+msgid "Erase mode"
+msgstr "Mode effacement"
+
+msgid "Erase variable"
+msgstr "Effacer la variable"
+
+msgid "Escape with \\ instead of quotes"
+msgstr ""
+
+msgid "Escaping characters"
+msgstr "Échappement de caractères"
+
+msgid "Event handler, resets prompt when any char changes"
+msgstr ""
+
+msgid "Event handler, resets prompt when any color changes"
+msgstr ""
+
+msgid "Event handler, resets prompt when functionality changes"
+msgstr ""
+
+msgid "Event handlers"
+msgstr "Gestion d’événements"
+
+msgid "Exit Status"
+msgstr "Code de retour"
+
+msgid "Expand only as a command, or anywhere"
+msgstr ""
+
+msgid "Export variable to subprocess"
+msgstr "Exporter la variable dans le sous-processus"
+
+msgid "Exporting variables"
+msgstr "Exportation de variables"
+
+msgid "Exports (Shell Variables)"
+msgstr "Exportations (variables shell)"
+
+msgid "FD is a terminal"
+msgstr "Le descripteur de fichier aboutit sur un terminal"
+
+msgid "File has the set-group-ID bit"
+msgstr ""
+
+msgid "File has the set-user-ID bit"
+msgstr ""
+
+msgid "File is a socket"
+msgstr "Le fichier est une socket"
+
+msgid "File is executable"
+msgstr "Le fichier est exécutable ou le dossier est accessible"
+
+msgid "File is readable"
+msgstr "Le fichier est accessible en lecture"
+
+msgid "File is writable"
+msgstr "Le fichier est accessible en écriture"
+
+msgid "File owned by our effective group ID"
+msgstr "Le fichier existe et appartient au GID effectif de l’appelant"
+
+msgid "File owned by our effective user ID"
+msgstr "Le fichier existe et appartient à l’UUID effectif de l'appelant"
+
+msgid "File size is non-zero"
+msgstr "Le fichier a une taille non nulle"
+
+msgid "Filter by permission"
+msgstr ""
+
+msgid "Filter by type"
+msgstr ""
+
+msgid "Filter directories"
+msgstr ""
+
+msgid "Filter executable paths"
+msgstr ""
+
+msgid "Filter files"
+msgstr ""
+
+msgid "Filter readable paths"
+msgstr ""
+
+msgid "Filter symlinks"
+msgstr ""
+
+msgid "Filter writable paths"
+msgstr ""
+
+msgid "Fish's release notes"
+msgstr ""
+
+msgid "Frequently Asked Questions"
+msgstr ""
+
+msgid "Function name"
+msgstr "Nom de la fonction"
+
+msgid "Further help and development"
+msgstr "Encore plus d’aide et développement"
+
+msgid "GNU-style long option to complete"
+msgstr ""
+
+msgid "Get all current limits"
+msgstr ""
+
+msgid "Get current selection ending position"
+msgstr ""
+
+msgid "Get current selection starting position"
+msgstr ""
+
+msgid "Gets the umask in a format that can be used as a command"
+msgstr ""
+
+msgid "Gets the umask in symbolic format instead of octal"
+msgstr ""
+
+msgid "Getting Help"
+msgstr "Obtenir de l’aide"
+
+msgid "Give basename for given paths"
+msgstr ""
+
+msgid "Give dirname for given paths"
+msgstr ""
+
+msgid "Give extension for given paths"
+msgstr ""
+
+msgid "Handle NULL-delimited input"
+msgstr ""
+
+msgid "Help for this command"
+msgstr ""
+
+msgid "Help on how to reuse previously entered commands"
+msgstr "Aide sur la réutilisation des commandes précédentes"
+
+msgid "Helper function for fish_git_prompt"
+msgstr ""
+
+msgid "Helper function to list unused options"
+msgstr ""
+
+msgid "Home directory expansion ~USER"
+msgstr "Expansion du dossier principal ~USER"
+
+msgid "How \"\" and '' work"
+msgstr ""
+
+msgid "How \\\\ escaping works"
+msgstr ""
+
+msgid "How different expansions work together"
+msgstr ""
+
+msgid "How functions are loaded"
+msgstr ""
+
+msgid "How lists combine"
+msgstr ""
+
+msgid "How tab-completion works"
+msgstr "Utilisation de l’autocomplétion par tabulation"
+
+msgid "How to color the pager"
+msgstr ""
+
+msgid "How to define an alias"
+msgstr ""
+
+msgid "How to define functions"
+msgstr ""
+
+msgid "How to handle arguments"
+msgstr ""
+
+msgid "How to make your own prompt"
+msgstr ""
+
+msgid "How to write completions"
+msgstr ""
+
+msgid "How to write your own prompt"
+msgstr ""
+
+msgid "If commandline is empty, run nextd; else move one argument to the right"
+msgstr ""
+
+msgid "If commandline is empty, run prevd; else move one argument to the left"
+msgstr ""
+
+msgid "If cursor is at the command token, edit the command source file"
+msgstr ""
+
+msgid "Ignore completions"
+msgstr ""
+
+msgid "Ignore config files"
+msgstr ""
+
+msgid "Ignore function files"
+msgstr ""
+
+msgid "Include new files"
+msgstr ""
+
+msgid "Index range expansion"
+msgstr "Expansion de plage d’indice"
+
+msgid "Inherit completions from specified command"
+msgstr ""
+
+msgid "Inherit completions from the given command"
+msgstr "Hériter des complétions de la commande spécifiée"
+
+msgid "Initial contents of read buffer when reading interactively"
+msgstr ""
+
+msgid "Initialization files"
+msgstr "Fichiers d’initialisation"
+
+msgid "Inject readline functions to reader"
+msgstr "Injecter les fonctions readline au lecteur"
+
+msgid "Input/Output (IO) redirection"
+msgstr "Redirection d’entrée/sortie (E/S)"
+
+msgid "Insert mode"
+msgstr "Mode insertion"
+
+msgid "Integer width of the result, default is maximum width of inputs"
+msgstr ""
+
+msgid "Integer width of the result, default is minimum non-zero width of inputs"
+msgstr ""
+
+msgid "Introduction to the fish syntax"
+msgstr "Introduction à la syntaxe de fish"
+
+msgid "Invert meaning of filters"
+msgstr ""
+
+msgid "Job control"
+msgstr "Contrôle des tâches"
+
+msgid "Keep order of arguments instead of sorting alphabetically"
+msgstr ""
+
+msgid "Launch fish's web based configuration"
+msgstr ""
+
+msgid "Learning fish"
+msgstr "Apprendre fish"
+
+msgid "Left file equal to right file"
+msgstr ""
+
+msgid "Left file newer than right file"
+msgstr ""
+
+msgid "Left file older than right file"
+msgstr ""
+
+msgid "Left number != right number"
+msgstr ""
+
+msgid "Left number < right number"
+msgstr ""
+
+msgid "Left number <= right number"
+msgstr ""
+
+msgid "Left number > right number"
+msgstr ""
+
+msgid "Left number >= right number"
+msgstr ""
+
+msgid "List all feature flags"
+msgstr ""
+
+msgid "List contents of directory using long format"
+msgstr ""
+
+msgid "List contents of directory, including hidden files in directory using long format"
+msgstr ""
+
+msgid "List contents of token under the cursor if it is a directory, otherwise list the contents of the current directory"
+msgstr ""
+
+msgid "List embedded files contained in the fish binary"
+msgstr ""
+
+msgid "List the names of the functions, but not their definition"
+msgstr "Lister les noms des fonctions sans leur définition"
+
+msgid "List the names of the variables, but not their value"
+msgstr ""
+
+msgid "Local, global and universal scope"
+msgstr ""
+
+msgid "Locale variables"
+msgstr "Variables régionales"
+
+msgid "Logical AND"
+msgstr "Faire un ET logique"
+
+msgid "Logical OR"
+msgstr "Faire un OU logique"
+
+msgid "Make -C escape special characters"
+msgstr ""
+
+msgid "Make font bold"
+msgstr ""
+
+msgid "Make the function a generic event handler"
+msgstr "Utiliser la fonction comme un gestionnaire d’événements génériques"
+
+msgid "Make the function a job exit event handler"
+msgstr "Utiliser la fonction comme un gestionnaire d’événement de fin de tâche"
+
+msgid "Make the function a process exit event handler"
+msgstr "Utiliser la fonction comme un gestionnaire d’événement de fin de processus"
+
+msgid "Make the function a signal event handler"
+msgstr "Utiliser la fonction comme un gestionnaire de signaux"
+
+msgid "Make the function a variable update event handler"
+msgstr "Utiliser la fonction comme un gestionnaire d’événement de mise à jour de variable"
+
+msgid "Make variable as a path variable"
+msgstr ""
+
+msgid "Make variable function-scoped"
+msgstr ""
+
+msgid "Make variable not as a path variable"
+msgstr ""
+
+msgid "Make variable scope global"
+msgstr ""
+
+msgid "Make variable scope local"
+msgstr ""
+
+msgid "Mask input with ●"
+msgstr ""
+
+msgid "Match a regular expression"
+msgstr ""
+
+msgid "Maximum amount of cpu time in seconds"
+msgstr "Utilisation maximale de temps processeur en secondes"
+
+msgid "Maximum amount of virtual memory available to the shell"
+msgstr "Taille maximale de mémoire virtuelle allouée au shell"
+
+msgid "Maximum bytes in POSIX message queues"
+msgstr ""
+
+msgid "Maximum contiguous realtime CPU time"
+msgstr ""
+
+msgid "Maximum number of kqueues"
+msgstr ""
+
+msgid "Maximum number of open file descriptors"
+msgstr "Nombre maximal de descripteurs de fichiers ouverts"
+
+msgid "Maximum number of pending signals"
+msgstr ""
+
+msgid "Maximum number of printed chars"
+msgstr ""
+
+msgid "Maximum number of processes available to a single user"
+msgstr "Nombre maximal de processus pour un seul utilisaleur"
+
+msgid "Maximum number of pseudo-terminals"
+msgstr ""
+
+msgid "Maximum number of simultaneous threads"
+msgstr ""
+
+msgid "Maximum realtime scheduling priority"
+msgstr ""
+
+msgid "Maximum resident set size"
+msgstr "Taille maximale de RAM utilisée (RSS)"
+
+msgid "Maximum size of a process's data segment"
+msgstr "Taille maximale d’un segment de donnée de programme"
+
+msgid "Maximum size of core files created"
+msgstr "Taille maximale des fichiers de dump mémoire créés"
+
+msgid "Maximum size of files created by the shell"
+msgstr "Taille maximale des fichiers créés par le shell"
+
+msgid "Maximum size of socket buffers"
+msgstr ""
+
+msgid "Maximum size that may be locked into memory"
+msgstr "Taille maximale en mémoire sur laquelle un verrou peut être apposé"
+
+msgid "Maximum stack size"
+msgstr "Taille maximale de la pile"
+
+msgid "Maximum swap space"
+msgstr ""
+
+msgid "Menu based cd command"
+msgstr ""
+
+msgid "More on universal variables"
+msgstr "Plus au sujet des variables universelles"
+
+msgid "Move back in the directory history"
+msgstr ""
+
+msgid "Move forward in the directory history"
+msgstr ""
+
+msgid "Move path to the front or back"
+msgstr ""
+
+msgid "Multiline editing"
+msgstr "Édition multiligne"
+
+msgid "Negate expression"
+msgstr "Nier logique l’expression"
+
+msgid "New resource limit"
+msgstr "Nouvelle limite sur les ressources"
+
+msgid "Normalize given paths (remove ./, resolve ../ against other components..)"
+msgstr ""
+
+msgid "Normalize given paths and resolve symlinks"
+msgstr ""
+
+msgid "Numbers are equal"
+msgstr ""
+
+msgid "Old style long option to complete"
+msgstr "Option longue de style ancien à compléter"
+
+msgid "Only keep one line of each input"
+msgstr ""
+
+msgid "Only leave the first of each run with the same key"
+msgstr ""
+
+msgid "Only parse input, do not execute"
+msgstr "Ne faire que la vérification syntaxique de la commande, pas son exécution"
+
+msgid "Only report capturing groups"
+msgstr ""
+
+msgid "Only return status, no output"
+msgstr ""
+
+msgid "Only return that part of the command line before the cursor"
+msgstr "Retourner seulement la partie de la ligne de commande avant le curseur"
+
+msgid "Only show status for last job to be started"
+msgstr "N’afficher que l’état de la dernière tâche à avoir été lancée"
+
+msgid "Open file in default application"
+msgstr ""
+
+msgid "Open function in external editor"
+msgstr ""
+
+msgid "Open the web-based UI"
+msgstr ""
+
+msgid "Operate on preset bindings"
+msgstr ""
+
+msgid "Operate on the pager search field"
+msgstr ""
+
+msgid "Operate on user bindings"
+msgstr ""
+
+msgid "Operate silently"
+msgstr ""
+
+msgid "Other features"
+msgstr "Autres fonctionnalités"
+
+msgid "Output in HTML format"
+msgstr "Afficher la sortie au format HTML"
+
+msgid "Output profiling information (excluding startup) to a file"
+msgstr ""
+
+msgid "Output startup profiling information to a file"
+msgstr ""
+
+msgid "Output timing and explain sequence"
+msgstr ""
+
+msgid "POSIX-style short option to complete"
+msgstr ""
+
+msgid "Pad both left and right"
+msgstr ""
+
+msgid "Pad right instead of left"
+msgstr ""
+
+msgid "Parameter expansion (Globbing)"
+msgstr "Expansion de paramètres (globs)"
+
+msgid "Path exists"
+msgstr ""
+
+msgid "Path is a block device"
+msgstr ""
+
+msgid "Path is a character device"
+msgstr ""
+
+msgid "Path is a directory"
+msgstr ""
+
+msgid "Path is a named pipe"
+msgstr ""
+
+msgid "Path is a regular file"
+msgstr ""
+
+msgid "Path is a symlink"
+msgstr ""
+
+msgid "Path to add completion to"
+msgstr "Chemin auquel ajouter une complétion"
+
+msgid "Perform an action when the shell receives a signal"
+msgstr ""
+
+msgid "Pipes and Redirections"
+msgstr "Tubes et redirections"
+
+msgid "Pop directory from the stack and cd to it"
+msgstr ""
+
+msgid "Position the cursor at % post-expansion"
+msgstr ""
+
+msgid "Prepend the given string to the command-line, or remove the prefix if already there"
+msgstr ""
+
+msgid "Prepend value to a list"
+msgstr ""
+
+msgid "Print NULL-delimited output"
+msgstr ""
+
+msgid "Print a list of all accepted color names"
+msgstr ""
+
+msgid "Print a list of all function calls leading up to running the current command"
+msgstr ""
+
+msgid "Print a list of expanded tokens"
+msgstr ""
+
+msgid "Print all abbreviation names"
+msgstr "Afficher tous les noms d’abbréviations"
+
+msgid "Print all abbreviations"
+msgstr "Afficher toutes les abbréviations"
+
+msgid "Print all external commands by the given name"
+msgstr ""
+
+msgid "Print all possible definitions of the specified name"
+msgstr "Afficher toutes les définitions possibles pour le nom spécifié"
+
+msgid "Print all vcs prompts"
+msgstr ""
+
+msgid "Print an embedded file from the fish binary"
+msgstr ""
+
+msgid "Print command type"
+msgstr "Afficher le type de commande"
+
+msgid "Print completions for a commandline specified as a parameter"
+msgstr ""
+
+msgid "Print directory stack"
+msgstr ""
+
+msgid "Print index of first match"
+msgstr ""
+
+msgid "Print information on how this version fish was built"
+msgstr ""
+
+msgid "Print more output"
+msgstr "Être verbeux"
+
+msgid "Print name and version of the terminal fish is running in"
+msgstr ""
+
+msgid "Print names of all existing builtins"
+msgstr "Afficher le nom de toutes les commandes internes"
+
+msgid "Print names of available functions"
+msgstr "Afficher les noms des fonctions disponibles"
+
+msgid "Print names of available keys"
+msgstr "Afficher les noms des combinaisons disponibles"
+
+msgid "Print path to command"
+msgstr "Afficher le chemin vers la commande"
+
+msgid "Print path to command, or nothing if name is not a command"
+msgstr ""
+
+msgid "Print paths that match a filter"
+msgstr ""
+
+msgid "Print stats from getrusage at exit"
+msgstr ""
+
+msgid "Print the current directory history (the prev and next lists)"
+msgstr ""
+
+msgid "Print the currently running command with its arguments"
+msgstr ""
+
+msgid "Print the debug categories fish knows"
+msgstr ""
+
+msgid "Print the file name (without the path) of the currently running script"
+msgstr ""
+
+msgid "Print the file that would be executed"
+msgstr "Afficher le fichier qui serait exécuté"
+
+msgid "Print the filename of the currently running script"
+msgstr "Afficher le nom du fichier du script en cours d’exécution"
+
+msgid "Print the line number of the currently running script"
+msgstr "Afficher le numéro de ligne du scripte en cours d’exécution"
+
+msgid "Print the name of the current function"
+msgstr ""
+
+msgid "Print the name of the currently running command or function"
+msgstr ""
+
+msgid "Print the path (without the file name) of the currently running script"
+msgstr ""
+
+msgid "Print the path to the current instance of fish"
+msgstr ""
+
+msgid "Print the set command used"
+msgstr ""
+
+msgid "Print the set command without executing it"
+msgstr ""
+
+msgid "Print working directory with symlinks resolved"
+msgstr ""
+
+msgid "Print working directory without resolving symlinks"
+msgstr ""
+
+msgid "Print/set the column the cursor is on"
+msgstr ""
+
+msgid "Print/set the line the cursor is on"
+msgstr ""
+
+msgid "Programmable prompt"
+msgstr "Invite programmable"
+
+msgid "Programmable title"
+msgstr "Titre programmable"
+
+msgid "Prompt function for Git"
+msgstr ""
+
+msgid "Prompt function for svn"
+msgstr "Fonction d’invite pour svn"
+
+msgid "Push directory to stack"
+msgstr ""
+
+msgid "Quit with abnormal exit status"
+msgstr "Quitter avec un code de retour anormal"
+
+msgid "Quit with normal exit status"
+msgstr "Quitter avec un code de retour normal"
+
+msgid "Read each line into its own variable"
+msgstr ""
+
+msgid "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits."
+msgstr ""
+
+msgid "Read like the shell would"
+msgstr ""
+
+msgid "Read the specified number of characters"
+msgstr ""
+
+msgid "Ready for more?"
+msgstr "Paré pour continuer ?"
+
+msgid "Remove completion"
+msgstr "Supprimer la complétion"
+
+msgid "Remove from the left on"
+msgstr ""
+
+msgid "Remove newline"
+msgstr "Supprimer le saut de ligne"
+
+msgid "Remove the extension"
+msgstr ""
+
+msgid "Remove the topmost global event block"
+msgstr ""
+
+msgid "Rename an abbreviation"
+msgstr ""
+
+msgid "Repetition count"
+msgstr ""
+
+msgid "Replace selected part"
+msgstr "Remplacer la partie sélectionnée"
+
+msgid "Report every match"
+msgstr ""
+
+msgid "Report index, length of match"
+msgstr ""
+
+msgid "Report only actual replacements"
+msgstr ""
+
+msgid "Report only non-matches"
+msgstr ""
+
+msgid "Require parameter"
+msgstr "Requérir un paramètre"
+
+msgid "Require parameter and don't use file completion"
+msgstr ""
+
+msgid "Return as soon as the first job completes"
+msgstr ""
+
+msgid "Return from function with abnormal exit status"
+msgstr ""
+
+msgid "Return from function with normal exit status"
+msgstr ""
+
+msgid "Return true if any path matched a filter"
+msgstr ""
+
+msgid "Return true if pager is showing all content"
+msgstr ""
+
+msgid "Return true if performing a history search"
+msgstr "Renvoyer vrai si une recherche dans l’historique est en cours"
+
+msgid "Return true if showing pager content"
+msgstr "Renvoyer vrai si le contenu afficher provient d’un visionneur"
+
+msgid "Return true if the command line has an autosuggestion"
+msgstr ""
+
+msgid "Return true if the command line is syntactically valid and complete"
+msgstr ""
+
+msgid "Reverse color text"
+msgstr ""
+
+msgid "Reverse the order"
+msgstr ""
+
+msgid "Run as a login shell"
+msgstr ""
+
+msgid "Run in interactive mode"
+msgstr "Exécuter en mode interactif"
+
+msgid "Run specified command before session"
+msgstr ""
+
+msgid "Run specified command instead of interactive session"
+msgstr ""
+
+msgid "Run with comma-separated feature flags enabled"
+msgstr ""
+
+msgid "Running Commands"
+msgstr "Exécuter des commandes"
+
+msgid "Running multiple programs"
+msgstr "Exécuter plusieurs programmes"
+
+msgid "Save function"
+msgstr "Enregistrer la fonction"
+
+msgid "Save the current definition of all specified functions to file"
+msgstr ""
+
+msgid "Search back or move cursor up 1 line"
+msgstr ""
+
+msgid "Searchable history"
+msgstr "Historique ouvert à la recherche"
+
+msgid "Select current selection"
+msgstr ""
+
+msgid "Select entire command line (default)"
+msgstr "Sélectionner la ligne de commande entière (défaut)"
+
+msgid "Select job under cursor"
+msgstr "Sélectionner la tâche sous le curseur"
+
+msgid "Select process under cursor"
+msgstr "Sélectionner le processus sous le curseur"
+
+msgid "Select token under cursor"
+msgstr "Sélectionner le lexème sous le curseur"
+
+msgid "Separating Commands (Semicolon)"
+msgstr "Séparer les commandes (point-virgule)"
+
+msgid "Set all jobs under job control"
+msgstr ""
+
+msgid "Set cursor shape for different vi modes"
+msgstr ""
+
+msgid "Set default file permission mask"
+msgstr ""
+
+msgid "Set env variable. Alias for `set -gx` for bash compatibility."
+msgstr ""
+
+msgid "Set function description"
+msgstr "Paramétrer la description de la fonction"
+
+msgid "Set no jobs under job control"
+msgstr ""
+
+msgid "Set only interactive jobs under job control"
+msgstr ""
+
+msgid "Set or get hard limit"
+msgstr "Définir ou obtenir une limite forte"
+
+msgid "Set or get soft limit"
+msgstr "Définir ou obtenir une limite faible"
+
+msgid "Set prompt command"
+msgstr ""
+
+msgid "Set prompt using provided string"
+msgstr ""
+
+msgid "Set right-hand prompt command"
+msgstr ""
+
+msgid "Set string to use as delimiter"
+msgstr ""
+
+msgid "Set which jobs are under job control"
+msgstr ""
+
+msgid "Set/get cursor position, not buffer contents"
+msgstr "Paramétrer ou obtenir l’emplacement du curseur, sans tampon"
+
+msgid "Setting syntax highlighting colors"
+msgstr "Paramétrage des couleurs de la coloration syntaxique"
+
+msgid "Share variable persistently across sessions"
+msgstr ""
+
+msgid "Share variable with all the users fish processes on the computer"
+msgstr ""
+
+msgid "Shared bindings"
+msgstr ""
+
+msgid "Shell variable and function names"
+msgstr "Variable shell et noms de fonction"
+
+msgid "Shell variables"
+msgstr "Variables shell"
+
+msgid "Show commandname of each job"
+msgstr "Afficher le nom de commande de toutes les tâches"
+
+msgid "Show entire matching lines"
+msgstr ""
+
+msgid "Show event handlers"
+msgstr ""
+
+msgid "Show event handlers matching the given type"
+msgstr ""
+
+msgid "Show group id of job"
+msgstr "Afficher l’ID de groupe de la tâche"
+
+msgid "Show help"
+msgstr "Afficher l’aide"
+
+msgid "Show help and exit"
+msgstr "Afficher l’aide et quitter"
+
+msgid "Show help for the fish shell"
+msgstr ""
+
+msgid "Show hidden functions"
+msgstr "Afficher les fonctions masquées"
+
+msgid "Show man page entries or function description related to the token under the cursor"
+msgstr ""
+
+msgid "Show modification time"
+msgstr "Afficher l’horodatage de modification"
+
+msgid "Show seconds since the modification time"
+msgstr ""
+
+msgid "Show the process id of each process in the job"
+msgstr "Afficher le PID de tous les processus de la tâche"
+
+msgid "Show unavailable key bindings/erase all bindings"
+msgstr "Afficher ou effacer toutes les combinaisons existantes"
+
+msgid "Show variable"
+msgstr ""
+
+msgid "Snapshot and define local variable"
+msgstr ""
+
+msgid "Some common words"
+msgstr "Quelques mots courants"
+
+msgid "Sort paths"
+msgstr ""
+
+msgid "Space-separated list of possible arguments"
+msgstr ""
+
+msgid "Special variables"
+msgstr "Variable spéciales"
+
+msgid "Specify command to operate on"
+msgstr "Spécifier la commande sur laquelle opérer"
+
+msgid "Specify debug categories"
+msgstr ""
+
+msgid "Specify end index"
+msgstr ""
+
+msgid "Specify escaping style"
+msgstr ""
+
+msgid "Specify fields"
+msgstr ""
+
+msgid "Specify how many stack frames to display in debug messages"
+msgstr "Spécifier le nombre d’éléments de la pile à afficher dans les messages de débogage"
+
+msgid "Specify maximum number of splits"
+msgstr ""
+
+msgid "Specify named arguments"
+msgstr "Spécifier le nom des arguments"
+
+msgid "Specify output format"
+msgstr "Spécifier le format de la sortie"
+
+msgid "Specify start index"
+msgstr ""
+
+msgid "Specify substring length"
+msgstr ""
+
+msgid "Specify the bind mode that the bind is used in"
+msgstr ""
+
+msgid "Specify the chars to trim (default: whitespace)"
+msgstr ""
+
+msgid "Split right-to-left"
+msgstr ""
+
+msgid "Start a continuous session"
+msgstr ""
+
+msgid "Startup (Where's .bashrc?)"
+msgstr "Démarrage (où est « .bashrc » ?)"
+
+msgid "Store the results as an array"
+msgstr ""
+
+msgid "String length is non-zero"
+msgstr "La chaîne n’est pas vide"
+
+msgid "String length is zero"
+msgstr "La chaîne est vide"
+
+msgid "Strings are identical"
+msgstr ""
+
+msgid "Strings are not identical"
+msgstr ""
+
+msgid "Suppress function and builtin lookup"
+msgstr ""
+
+msgid "Suspend the current shell."
+msgstr "Suspendre le shell actuel"
+
+msgid "Syntax Highlighting"
+msgstr "Coloration syntaxique"
+
+msgid "TRAP handler: debug prompt"
+msgstr ""
+
+msgid "Tab Completions"
+msgstr "Complétions par tabulation"
+
+msgid "Terminal features used by fish"
+msgstr ""
+
+msgid "Test if We are specifying a color value for the prompt"
+msgstr ""
+
+msgid "Test if We are specifying a locale value for the prompt"
+msgstr ""
+
+msgid "Test if a breakpoint is currently in effect"
+msgstr ""
+
+msgid "Test if a code block is currently evaluated"
+msgstr ""
+
+msgid "Test if a command substitution is currently evaluated"
+msgstr ""
+
+msgid "Test if a feature flag is enabled"
+msgstr ""
+
+msgid "Test if all new jobs are put under job control"
+msgstr ""
+
+msgid "Test if function is defined"
+msgstr "Vérifier l’existence de la fonction"
+
+msgid "Test if inside an interactive read builtin"
+msgstr ""
+
+msgid "Test if new jobs are never put under job control"
+msgstr ""
+
+msgid "Test if only interactive new jobs are put under job control"
+msgstr ""
+
+msgid "Test if the terminal suports the given feature"
+msgstr ""
+
+msgid "Test if this is a login shell"
+msgstr "Vérifier si ceci est un shell de connexion"
+
+msgid "Test if this is an interactive shell"
+msgstr "Vérifier si ceci est un shell interactif"
+
+msgid "Test if variable is defined"
+msgstr ""
+
+msgid "Tests if a file descriptor is a tty"
+msgstr "Vérifier si un descripteur de fichier est un terminal"
+
+msgid "Tests if builtin exists"
+msgstr ""
+
+msgid "The status variable"
+msgstr "La variable status"
+
+msgid "Treat expansion argument as a fish function"
+msgstr ""
+
+msgid "Trim only leading chars"
+msgstr ""
+
+msgid "Trim only trailing chars"
+msgstr ""
+
+msgid "Underline style"
+msgstr ""
+
+msgid "Universal Variables"
+msgstr "Variables universelles"
+
+msgid "Update $PATH directly"
+msgstr ""
+
+msgid "Update PATH when fish_user_paths changes"
+msgstr "Mettre à jour PATH lorsque fish_user_paths est modifié"
+
+msgid "Update man-page based completions"
+msgstr "Mettre à jour les complétions basées sur les pages de manuel"
+
+msgid "Use NUL character as line terminator"
+msgstr ""
+
+msgid "Use a global $fish_user_paths"
+msgstr ""
+
+msgid "Use a universal $fish_user_paths (default)"
+msgstr ""
+
+msgid "Use regex instead of globs"
+msgstr ""
+
+msgid "Use shell tokenization rules when splitting"
+msgstr ""
+
+msgid "Use the portable output format"
+msgstr "Utiliser le format de sortie portable (POSIX 1003.2)"
+
+msgid "Use the visible width, excluding escape sequences"
+msgstr ""
+
+msgid "Useful functions for writing completions"
+msgstr "Fonctions utiles pour écrire des complétions"
+
+msgid "Variable expansion $VARNAME"
+msgstr ""
+
+msgid "Variable scope"
+msgstr "Portée des variable"
+
+msgid "Variable scope for functions"
+msgstr "Portée des variables des fonctions"
+
+msgid "Variables for changing highlighting colors"
+msgstr "Variables de coloration syntaxique"
+
+msgid "Variables with multiple elements"
+msgstr ""
+
+msgid "Verbose mode"
+msgstr "Mode verbeux"
+
+msgid "Vi mode commands"
+msgstr "Commandes en mode vi"
+
+msgid "Vi-style bindings that inherit emacs-style bindings in all modes"
+msgstr ""
+
+msgid "View and pick from the sample prompts"
+msgstr ""
+
+msgid "View and pick from the sample themes"
+msgstr ""
+
+msgid "Visual mode"
+msgstr "Mode visuel"
+
+msgid "What characters are allowed in names"
+msgstr ""
+
+msgid "What set -x does"
+msgstr ""
+
+msgid "Where to direct debug output to"
+msgstr ""
+
+msgid "Where to put completions"
+msgstr "Où placer les complétions"
+
+msgid "Why $PATH is special"
+msgstr ""
+
+msgid "Why fish?"
+msgstr "Pourquoi fish ?"
+
+msgid "Wildcard expansion *.*"
+msgstr "Expansion des métacaractères *.*"
+
+msgid "Write out the fossil prompt"
+msgstr ""
+
+msgid "Write out the hg prompt"
+msgstr ""
+
+msgid "Write out the prompt"
+msgstr ""
+
+msgid "Write to file"
+msgstr "Écrire dans le fichier spécifié"
+
+msgid "Writing your own completions"
+msgstr "Créer vos propres complétions"
+
+msgid "all components of the path must exist"
+msgstr ""
+
+msgid "condition evaluation utility"
+msgstr ""
+
+msgid "dir to save function(s) into"
+msgstr ""
+
+msgid "display or manipulate interactive command history"
+msgstr ""
+
+msgid "display this help and exit"
+msgstr "Afficher cette aide et quitter"
+
+msgid "display user name for the prompt"
+msgstr ""
+
+msgid "don't expand symlinks"
+msgstr "Ne pas développer les liens symboliques"
+
+msgid "emacs-like key binds"
+msgstr ""
+
+msgid "fish_git_prompt helper, checks char variables"
+msgstr ""
+
+msgid "fish_git_prompt helper, checks color variables"
+msgstr ""
+
+msgid "fish_git_prompt helper, returns the current Git operation and branch"
+msgstr ""
+
+msgid "foo=bar variable overrides"
+msgstr ""
+
+msgid "helper function that does pretty formatting on svn status"
+msgstr ""
+
+msgid "ifs and elses"
+msgstr ""
+
+msgid "increment or decrement the number below the cursor"
+msgstr ""
+
+msgid "no components of the path need exist"
+msgstr ""
+
+msgid "open app in background"
+msgstr ""
+
+msgid "open app with fresh state"
+msgstr ""
+
+msgid "open in TextEdit"
+msgstr ""
+
+msgid "open in default editor"
+msgstr ""
+
+msgid "open library header file"
+msgstr ""
+
+msgid "open new instance of app"
+msgstr ""
+
+msgid "open stdin with editor"
+msgstr ""
+
+msgid "output version information and exit"
+msgstr "Afficher les informations de version et quitter"
+
+msgid "pass remaining args to app"
+msgstr ""
+
+msgid "print absolute paths unless paths below FILE"
+msgstr ""
+
+msgid "print the resolved path relative to FILE"
+msgstr ""
+
+msgid "resolve '..' components before symlinks"
+msgstr ""
+
+msgid "resolve symlinks as encountered (default)"
+msgstr ""
+
+msgid "reveal in Finder"
+msgstr ""
+
+msgid "save function(s) to disk"
+msgstr ""
+
+msgid "search forward or move down 1 line"
+msgstr ""
+
+msgid "separate output with NUL rather than newline"
+msgstr ""
+
+msgid "set an environment variable like path_helper does (macOS only)"
+msgstr ""
+
+msgid "short CWD for the prompt"
+msgstr ""
+
+msgid "short hostname for the prompt"
+msgstr ""
+
+msgid "specify app bundle id"
+msgstr ""
+
+msgid "specify app name"
+msgstr ""
+
+msgid "suppress most error messages"
+msgstr "Masquer la plupart des messages d’erreur"
+
+msgid "suppress output"
+msgstr "Masquer la sortie"
+
+msgid "text color"
+msgstr ""
+
+msgid "var[x..y] slices"
+msgstr ""
+
+msgid "vi-like key bindings for fish"
+msgstr ""
+
+msgid "wait for app to exit"
+msgstr ""
+
+msgid "while, for and begin"
+msgstr ""
+
+msgid "{a,b} brace expansion"
+msgstr ""
+
+msgid "~ expansion"
+msgstr ""
+
+# fish-section-tier3-from-script-implicitly-added
+msgid " "
 msgstr ""
 
 msgid " Displays the contents of the .gdb_index and/or .debug_names sections"
@@ -2301,25 +3988,13 @@ msgstr "Afficher la base de données du module"
 msgid "\"slow\" test threshold in milliseconds [75]"
 msgstr ""
 
-msgid "# comments"
-msgstr ""
-
 msgid "#load the given file on startup"
-msgstr ""
-
-msgid "$PATH"
 msgstr ""
 
 msgid "$description"
 msgstr ""
 
 msgid "$split_item[2]"
-msgstr ""
-
-msgid "$status, the return code"
-msgstr ""
-
-msgid "$variable"
 msgstr ""
 
 msgid "% of ICs that must have type info to allow optimization"
@@ -2778,13 +4453,7 @@ msgstr ""
 msgid "(Un)Register a Peer Service"
 msgstr ""
 
-msgid "(Used together with -o) Do not overwrite but append"
-msgstr "(Utilisé avec -o) Ne pas écraser le fichier, y concaténer les résultats"
-
 msgid "(all) Specify which DNS-over-HTTPS (DOH) server to use to resolve hostnames"
-msgstr ""
-
-msgid "(command) command substitution"
 msgstr ""
 
 msgid "(default) use llvm's disassembler"
@@ -3112,9 +4781,6 @@ msgid "64bits hash"
 msgstr ""
 
 msgid "802.1p priority to set"
-msgstr ""
-
-msgid "< and > redirections"
 msgstr ""
 
 msgid "<CMD> Command to execute"
@@ -3496,9 +5162,6 @@ msgid "A really simple server for Git repositories"
 msgstr ""
 
 msgid "A regular expression for restricting remote host execution"
-msgstr ""
-
-msgid "A right prompt to be used when `breakpoint` is executed"
 msgstr ""
 
 msgid "A semicolon-separated list of dates"
@@ -4155,9 +5818,6 @@ msgstr ""
 msgid "Add a wait time for reading"
 msgstr ""
 
-msgid "Add abbreviation"
-msgstr "Ajouter une abbréviation"
-
 msgid "Add addresses in Signed-off-by trailers to Cc"
 msgstr ""
 
@@ -4482,15 +6142,6 @@ msgstr ""
 msgid "Add path to head of image search path"
 msgstr ""
 
-msgid "Add path to the end"
-msgstr ""
-
-msgid "Add path to the front (default)"
-msgstr ""
-
-msgid "Add paths to the PATH"
-msgstr ""
-
 msgid "Add prefix"
 msgstr ""
 
@@ -4553,15 +6204,6 @@ msgstr "Ajouter une étiquette aux soumissions"
 
 msgid "Add test source directories to the POM"
 msgstr ""
-
-msgid "Add text at cursor"
-msgstr "Ajouter du texte au niveau du curseur"
-
-msgid "Add text at cursor but DWIM, stripping leading $"
-msgstr ""
-
-msgid "Add text to the end of the selected area"
-msgstr "Ajouter du texte à la fin de la sélection"
 
 msgid "Add the IPv4 forward port"
 msgstr ""
@@ -5042,9 +6684,6 @@ msgstr ""
 
 msgid "All processes accessing files on that file system are listed"
 msgstr "Lister tous les processus accédant à des fichiers situés sur le même système de fichiers que celui du fichier précisé"
-
-msgid "All services known to the system"
-msgstr "Tous les services connus sur le système"
 
 msgid "All the -Wunused options combined"
 msgstr ""
@@ -5538,9 +7177,6 @@ msgstr ""
 msgid "Also patch binaries"
 msgstr ""
 
-msgid "Also print directory history"
-msgstr ""
-
 msgid "Also print reason for the state"
 msgstr ""
 
@@ -5772,9 +7408,6 @@ msgstr ""
 msgid "Always pop the arguments to each function call as soon as that function returns"
 msgstr "Toujours dépiler les paramètres de chaque appel de fonction dès que la fonction se termine"
 
-msgid "Always print empty argument"
-msgstr ""
-
 msgid "Always print file names"
 msgstr ""
 
@@ -5804,9 +7437,6 @@ msgstr "Toujours vrai"
 
 msgid "Always update a specific revision"
 msgstr "Toujours mettre à jour une version spécifique"
-
-msgid "Always use file completion"
-msgstr ""
 
 msgid "Always use formatting"
 msgstr ""
@@ -5860,9 +7490,6 @@ msgid "An external editor command"
 msgstr ""
 
 msgid "An initialization vector for --encrypt"
-msgstr ""
-
-msgid "An overview of fish's builtins"
 msgstr ""
 
 msgid "Analysis pass number"
@@ -6084,12 +7711,6 @@ msgstr "Ajouter les règles à la fin d’une chaîne"
 msgid "Append string to config file"
 msgstr "Suffixer le fichier de configuration avec la chaîne spécifiée"
 
-msgid "Append suffix to the filename"
-msgstr ""
-
-msgid "Append the given string to the command-line, or remove the suffix if already there"
-msgstr ""
-
 msgid "Append the specified repository to the top of the list"
 msgstr ""
 
@@ -6118,9 +7739,6 @@ msgid "Append to the playlist"
 msgstr ""
 
 msgid "Append to variable specified by --name"
-msgstr ""
-
-msgid "Append value to a list"
 msgstr ""
 
 msgid "Append with full file checksum, including old data"
@@ -7089,12 +8707,6 @@ msgstr ""
 msgid "Autoload classes from the classmap only. Implicitly enables `--optimize`"
 msgstr ""
 
-msgid "Autoloading Functions"
-msgstr "Fonctions à chargement automatique"
-
-msgid "Autoloading functions"
-msgstr "Fonctions à chargement automatique"
-
 msgid "Automagically orient (rotate) image"
 msgstr "Orienter automagiquement l’image"
 
@@ -7138,9 +8750,6 @@ msgid "Automatically destroy the guest when virsh disconnects"
 msgstr ""
 
 msgid "Automatically fix lint warnings reported by rustc"
-msgstr ""
-
-msgid "Automatically funcsave the alias"
 msgstr ""
 
 msgid "Automatically guess renames"
@@ -7198,9 +8807,6 @@ msgid "Automatically update the packet display as packets are coming in"
 msgstr ""
 
 msgid "Automock all files by default"
-msgstr ""
-
-msgid "Autosave after successful edit"
 msgstr ""
 
 msgid "Autostart a domain"
@@ -7301,9 +8907,6 @@ msgstr ""
 
 msgid "Background immediately"
 msgstr "Se mettre à l’arrière-plan"
-
-msgid "Background jobs"
-msgstr "Tâches en arrière-plan"
 
 msgid "Background the process and don\\'t wait for it to complete"
 msgstr ""
@@ -7647,9 +9250,6 @@ msgstr ""
 msgid "Bind-mount file on top of another"
 msgstr ""
 
-msgid "Bindings shared between emacs and vi mode"
-msgstr ""
-
 msgid "Binstub destination directory (default bin)"
 msgstr ""
 
@@ -7745,9 +9345,6 @@ msgstr ""
 
 msgid "Borg cow"
 msgstr "Vache borg"
-
-msgid "Brace expansion {a,b,c}"
-msgstr "Expansion d’accolades {a,b,c}"
 
 msgid "Brain server authentication password"
 msgstr ""
@@ -8103,9 +9700,6 @@ msgstr ""
 msgid "Builds this project and all of its dependencies specified by Project References"
 msgstr ""
 
-msgid "Builtin commands"
-msgstr "Commandes intégrées"
-
 msgid "Bump a package version"
 msgstr ""
 
@@ -8259,9 +9853,6 @@ msgstr "Mettre en cache les résultats des tests dans le fichier config.cache"
 msgid "Cache test results in specified file"
 msgstr "Mettre en cache les résultats des tests dans le fichier spécifié"
 
-msgid "Cache the command output for a given amount of time"
-msgstr ""
-
 msgid "Caddyfile to load"
 msgstr ""
 
@@ -8290,9 +9881,6 @@ msgid "Call hooks with TEST reason to print DHCP variables"
 msgstr ""
 
 msgid "Call mvn siteskinner:skin on a maven project"
-msgstr ""
-
-msgid "Call systemctl with some options from the current commandline"
 msgstr ""
 
 msgid "Call the -main function from namespace w/args"
@@ -8421,12 +10009,6 @@ msgstr ""
 msgid "Cargo features to enable"
 msgstr ""
 
-msgid "Cartesian Products"
-msgstr "Produits cartésiens"
-
-msgid "Case insensitive"
-msgstr ""
-
 msgid "Case insensitive comparison"
 msgstr ""
 
@@ -8538,17 +10120,11 @@ msgstr ""
 msgid "Change audio volume"
 msgstr ""
 
-msgid "Change background color"
-msgstr ""
-
 msgid "Change clock slowly with adjtime"
 msgstr ""
 
 msgid "Change configuration directory"
 msgstr "Modifier le dossier de configuration"
-
-msgid "Change current mode after bind is executed"
-msgstr ""
 
 msgid "Change daemon's gid"
 msgstr ""
@@ -8562,9 +10138,6 @@ msgstr ""
 msgid "Change destination permissions"
 msgstr "Modifier les permissions sur la destination"
 
-msgid "Change directory"
-msgstr ""
-
 msgid "Change directory to DIR first"
 msgstr ""
 
@@ -8572,9 +10145,6 @@ msgid "Change directory to that containing portname"
 msgstr ""
 
 msgid "Change downloaded packages to provided directory"
-msgstr ""
-
-msgid "Change extension for given paths"
 msgstr ""
 
 msgid "Change font directory"
@@ -8745,9 +10315,6 @@ msgstr ""
 msgid "Change type of health check performed on an app"
 msgstr ""
 
-msgid "Change underline color"
-msgstr ""
-
 msgid "Change user ID before opening any savefiles for output"
 msgstr ""
 
@@ -8832,9 +10399,6 @@ msgstr ""
 msgid "Character set to use in output: utf8, ascii"
 msgstr ""
 
-msgid "Character to use for padding"
-msgstr ""
-
 msgid "Characters per line"
 msgstr ""
 
@@ -8843,9 +10407,6 @@ msgstr ""
 
 msgid "Characters to scroll on left/right arrows"
 msgstr "Nombre de caractères à faire défiler lors de l’utilisation des touches directionnelles gauche et droite"
-
-msgid "Characters to use as ellipsis"
-msgstr ""
 
 msgid "Charset for strings on the command line"
 msgstr "Jeu de caractères pour les chaînes de la ligne de commande"
@@ -9036,9 +10597,6 @@ msgstr ""
 msgid "Check if FILE can be booted as i386 PAE Xen unprivileged guest kernel"
 msgstr "Vérifier si le fichier spécifié peut être démarré comme un noyau i386 PAE d’invité sans privilège Xen"
 
-msgid "Check if a job exists without output"
-msgstr ""
-
 msgid "Check if a jump branches to a location where another comparison subsumed by the first is found"
 msgstr ""
 
@@ -9047,9 +10605,6 @@ msgstr "Vérifier si un port est installé"
 
 msgid "Check if all files owned by PACKAGE are present"
 msgstr "Vérifier si tous les fichiers fournis par PAQUET sont présents"
-
-msgid "Check if an abbreviation exists"
-msgstr ""
 
 msgid "Check if any of the given files would be ignored"
 msgstr "Vérifier si l’un des fichiers spécifiés serait ignoré"
@@ -9159,14 +10714,8 @@ msgstr ""
 msgid "Check if server is alive"
 msgstr ""
 
-msgid "Check if something exists without output"
-msgstr ""
-
 msgid "Check if the LXD instance is up."
 msgstr ""
-
-msgid "Check if the current directory is a git repository"
-msgstr "Vérifier si le dossier actuel est un dépôt git"
 
 msgid "Check if the first commit is an ancestor of the second commit"
 msgstr ""
@@ -9187,9 +10736,6 @@ msgid "Check if the requirements are installed and available to bundler"
 msgstr ""
 
 msgid "Check if the service is in it's requested state"
-msgstr ""
-
-msgid "Check if the user is root"
 msgstr ""
 
 msgid "Check installed gems"
@@ -9390,9 +10936,6 @@ msgstr "Vérifier si une règle correspondante existe dans la chaîne"
 msgid "Check whether address is allowed"
 msgstr ""
 
-msgid "Check whether argument is used"
-msgstr ""
-
 msgid "Check whether sparsity rules match one or more paths"
 msgstr ""
 
@@ -9471,9 +11014,6 @@ msgstr ""
 msgid "Checks if a parameter has been given already"
 msgstr ""
 
-msgid "Checks if a specific option has been given in the current commandline"
-msgstr "Vérifier si une option spécifique a été donnée sur la ligne de commande actuelle"
-
 msgid "Checks if prompt is in a specific command"
 msgstr ""
 
@@ -9484,9 +11024,6 @@ msgid "Checks provides"
 msgstr ""
 
 msgid "Checks status of the latest build"
-msgstr ""
-
-msgid "Checks that a specific option is not in the current command line"
 msgstr ""
 
 msgid "Checks that prompt is not inside of magento command"
@@ -9544,9 +11081,6 @@ msgid "Choose filter when resizing an image [type]"
 msgstr ""
 
 msgid "Choose format (ociarchive oci registry)"
-msgstr ""
-
-msgid "Choose how to count vendor files"
 msgstr ""
 
 msgid "Choose imports as if source code is from dir"
@@ -10050,9 +11584,6 @@ msgstr "Colorer l’image avec la couleur de remplissage [valeur]"
 msgid "Colorize the output"
 msgstr ""
 
-msgid "Colorize the output using ANSI escape sequences"
-msgstr "Coloriser la sortie en utilisant les séquences d’échappement ANSI"
-
 msgid "Colorized output"
 msgstr ""
 
@@ -10094,12 +11625,6 @@ msgstr "Combiner deux image pour créer un anaglyphe [géométrie]"
 
 msgid "Combined username/groupname mapping"
 msgstr ""
-
-msgid "Combiners (And, Or, Not)"
-msgstr "Combinaisons (and, or, not)"
-
-msgid "Combining different expansions"
-msgstr "Combinaison de différentes expansions"
 
 msgid "Comma separated country list"
 msgstr "Liste de pays séparés par des virgules"
@@ -10191,32 +11716,14 @@ msgstr "Spécifier une liste, séparée par des virgules, de suffixes ou motifs 
 msgid "Comma-separated lists of file name suffixes or patterns to reject"
 msgstr "Spécifier une liste, séparée par des virgules, de suffixes ou motifs de noms de fichiers à refuser"
 
-msgid "Command Substitutions"
-msgstr "Substitutions de commande"
-
 msgid "Command execute a command in an remote display process"
 msgstr ""
 
 msgid "Command is in human monitor protocol"
 msgstr ""
 
-msgid "Command line editor"
-msgstr "Éditeur de ligne de commande"
-
-msgid "Command mode"
-msgstr "Mode commande"
-
 msgid "Command on device"
 msgstr ""
-
-msgid "Command substitution"
-msgstr "Substitution de commande"
-
-msgid "Command substitution (SUBCOMMAND)"
-msgstr "Substitution de commandes (SUBCOMMAND)"
-
-msgid "Command to add completion to"
-msgstr "Commande à laquelle ajouter une complétion"
 
 msgid "Command to be run to determine th revision range to show"
 msgstr ""
@@ -10266,9 +11773,6 @@ msgstr "Commande à utilise pour un diff en interface graphique"
 msgid "Command to use for graphical merge"
 msgstr "Commande à utilise pour une fusion en interface graphique"
 
-msgid "Command used to find descriptions for commands"
-msgstr ""
-
 msgid "Command-line tool to control NetworkManager"
 msgstr ""
 
@@ -10285,9 +11789,6 @@ msgid "Commands to run"
 msgstr ""
 
 msgid "Comment out LiveView socket setup in assets/js/app.js"
-msgstr ""
-
-msgid "Comment/uncomment the current command"
 msgstr ""
 
 msgid "Commit a revision which has been accepted by a reviewer"
@@ -10327,12 +11828,6 @@ msgid "Commons-attributes compiler"
 msgstr ""
 
 msgid "Commons-attributes compiler for tests"
-msgstr ""
-
-msgid "Communicate using a named pipe"
-msgstr ""
-
-msgid "Communicate using a regular file, not a named pipe"
 msgstr ""
 
 msgid "Compact channels (globally)"
@@ -10599,32 +12094,17 @@ msgstr ""
 msgid "Complete CD/DVD-Recorder recording process with the laser turned off"
 msgstr "Compléter l'enregistrement du CD/DVD avec le laser éteint"
 
-msgid "Complete Convert options"
-msgstr ""
-
 msgid "Complete abook formats"
 msgstr ""
 
 msgid "Complete dd operands"
 msgstr "Compléter les opérandes de dd"
 
-msgid "Complete directory prefixes"
-msgstr "Compléter les préfixes de dossier"
-
-msgid "Complete group IDs with group name as description"
-msgstr ""
-
 msgid "Complete hashing methods for mkpasswd"
-msgstr ""
-
-msgid "Complete isp name for pon/poff"
 msgstr ""
 
 msgid "Complete lpr common options"
 msgstr "Compléter les options lph communes"
-
-msgid "Complete lpr option"
-msgstr ""
 
 msgid "Complete network interfaces available on the system and on which tcpdump can capture packets"
 msgstr ""
@@ -10635,33 +12115,6 @@ msgstr ""
 msgid "Complete setxkb options"
 msgstr ""
 
-msgid "Complete subcommand"
-msgstr "Compléter la sous-commande"
-
-msgid "Complete user IDs with user name as description"
-msgstr ""
-
-msgid "Complete using all algorithms of the type specified in argv[2] supported by gpg. argv[2] is a regexp"
-msgstr ""
-
-msgid "Complete using all available commands"
-msgstr ""
-
-msgid "Complete using available character encodings"
-msgstr ""
-
-msgid "Complete using files"
-msgstr "Compléter en utilisant les fichiers"
-
-msgid "Complete using gpg key ids"
-msgstr "Compléter en utilisant les identifiants des clés GPG"
-
-msgid "Complete using gpg user ids"
-msgstr "Compléter en utilisant les identifiants des utilisateurs GPG"
-
-msgid "Complete using path"
-msgstr "Compléter en utilisant le chemin"
-
 msgid "Complete wvdial peers"
 msgstr ""
 
@@ -10669,12 +12122,6 @@ msgid "Completely remove the on-disk data of free space cache of given version"
 msgstr ""
 
 msgid "Completely silent mode"
-msgstr ""
-
-msgid "Completes with available ZFS pools"
-msgstr "Complète avec les pools ZFS disponibles"
-
-msgid "Completion only used if command has zero exit status"
 msgstr ""
 
 msgid "Completions for Docutils HTML options"
@@ -10685,9 +12132,6 @@ msgstr ""
 
 msgid "Completions for Docutils standalone reader options"
 msgstr ""
-
-msgid "Completions for the cd command"
-msgstr "Complétions pour la commande cd"
 
 msgid "Comply with the calling conventions defined by Renesas"
 msgstr "Se conformer aux conventions d’appels définies par Renesas"
@@ -10854,12 +12298,6 @@ msgstr ""
 msgid "Condense printed messages"
 msgstr ""
 
-msgid "Conditional execution of code and flow control"
-msgstr "Exécution conditionnelle de code et contrôle de flux"
-
-msgid "Conditionals (If, Else, Switch)"
-msgstr "Conditionnelles (if, else, switch)"
-
 msgid "Conf file"
 msgstr "Ficher de configuration"
 
@@ -10886,9 +12324,6 @@ msgstr "Option de configuration"
 
 msgid "Config with special placeholders"
 msgstr ""
-
-msgid "Configurable greeting"
-msgstr "Message de bienvenue configurable"
 
 msgid "Configuration dir"
 msgstr ""
@@ -11367,9 +12802,6 @@ msgstr "Spécifier le formatage des lignes de journal"
 msgid "Control network time sync"
 msgstr ""
 
-msgid "Control of maximum nice priority"
-msgstr ""
-
 msgid "Control or query domain emulator affinity"
 msgstr ""
 
@@ -11529,9 +12961,6 @@ msgstr ""
 msgid "Convert domain XML to native config"
 msgstr ""
 
-msgid "Convert exit code to signal name"
-msgstr ""
-
 msgid "Convert file to mp4 during playback"
 msgstr "Convertir le fichier en MP4 lors de la lecture"
 
@@ -11664,9 +13093,6 @@ msgstr "Copier et appliquer les patchs de ce dépôt sur un autre"
 msgid "Copy and edit note from object"
 msgstr ""
 
-msgid "Copy and paste (Kill Ring)"
-msgstr "Copier et coller (avec la pile)"
-
 msgid "Copy branch"
 msgstr ""
 
@@ -11768,9 +13194,6 @@ msgstr ""
 
 msgid "Copy the source to another existing app (and restart that)"
 msgstr ""
-
-msgid "Copy the specified function to the specified new name"
-msgstr "Dupliquer la fonction sous un autre nom"
 
 msgid "Correct RTC relative to system clock"
 msgstr ""
@@ -11973,16 +13396,10 @@ msgstr ""
 msgid "Create a dynamic-link library"
 msgstr ""
 
-msgid "Create a global (manually erased) event block"
-msgstr ""
-
 msgid "Create a group"
 msgstr ""
 
 msgid "Create a home area"
-msgstr ""
-
-msgid "Create a local (automatically erased) event block"
 msgstr ""
 
 msgid "Create a model from a Modelfile"
@@ -12342,9 +13759,6 @@ msgstr ""
 msgid "Create and check lockfile"
 msgstr ""
 
-msgid "Create and return XDG_CACHE_HOME"
-msgstr ""
-
 msgid "Create any missing parent directories"
 msgstr ""
 
@@ -12646,9 +14060,6 @@ msgid "Creates a configuration profile"
 msgstr "Créer un profil de configuration"
 
 msgid "Creates a file that contains information that makes it easy to report a bug"
-msgstr ""
-
-msgid "Creates a function wrapping a command"
 msgstr ""
 
 msgid "Creates a historic report of performance test results"
@@ -13038,9 +14449,6 @@ msgstr ""
 msgid "Debugging command"
 msgstr "Commande de débogage"
 
-msgid "Debugging fish scripts"
-msgstr "Déboguer des scripts fish"
-
 msgid "Debugging messages to stderr."
 msgstr ""
 
@@ -13328,9 +14736,6 @@ msgstr ""
 
 msgid "Defines the debug mode"
 msgstr ""
-
-msgid "Defining aliases"
-msgstr "Définition d’alias"
 
 msgid "Defragment a file or a directory"
 msgstr ""
@@ -13719,9 +15124,6 @@ msgstr ""
 msgid "Delete only those tarballs which aren't present in a snapshot"
 msgstr ""
 
-msgid "Delete option from argv_opts"
-msgstr ""
-
 msgid "Delete previous settime entry"
 msgstr ""
 
@@ -14079,9 +15481,6 @@ msgstr ""
 msgid "Description for unit"
 msgstr ""
 
-msgid "Description of completion"
-msgstr ""
-
 msgid "Description of package"
 msgstr ""
 
@@ -14364,13 +15763,7 @@ msgstr ""
 msgid "Differences between two archives"
 msgstr ""
 
-msgid "Differences from bash"
-msgstr ""
-
 msgid "Digests and compresses static files"
-msgstr ""
-
-msgid "Dim text"
 msgstr ""
 
 msgid "Dir names to be searched recursively up from the requiring module"
@@ -14834,9 +16227,6 @@ msgstr ""
 
 msgid "Disable backlinks to the TOC"
 msgstr ""
-
-msgid "Disable backslash escapes"
-msgstr "Désactiver les séquences d’échappement"
 
 msgid "Disable backup of any installed apk expansion (default)"
 msgstr "Désactiver la sauvegarde des extensions apk installées (par défaut)"
@@ -15894,9 +17284,6 @@ msgstr "Afficher l’aide"
 msgid "Display a help page"
 msgstr "Afficher une page d’aide"
 
-msgid "Display a list of defined bind modes"
-msgstr ""
-
 msgid "Display a list of speedtest.net servers sorted by distance"
 msgstr ""
 
@@ -15956,9 +17343,6 @@ msgstr ""
 
 msgid "Display all changelogs"
 msgstr "Afficher tous les journaux des modifications"
-
-msgid "Display all currently defined trap handlers"
-msgstr ""
 
 msgid "Display all details."
 msgstr "Afficher tous les détails"
@@ -16280,9 +17664,6 @@ msgstr "Afficher une aide pour darcs et ses commandes"
 
 msgid "Display help and debug options"
 msgstr "Afficher l’aide et les options de débogage"
-
-msgid "Display help and exit"
-msgstr "Afficher l’aide et quitter"
 
 msgid "Display help and exit\t"
 msgstr "Afficher l’aide et quitter\t"
@@ -16671,9 +18052,6 @@ msgstr ""
 msgid "Display information about specific packages"
 msgstr ""
 
-msgid "Display information about the function"
-msgstr "Afficher les informations sur la fonction"
-
 msgid "Display information about the link group"
 msgstr ""
 
@@ -16769,9 +18147,6 @@ msgstr ""
 
 msgid "Display more information"
 msgstr "Afficher plus d’informations"
-
-msgid "Display names of all signals"
-msgstr "Afficher le nom de tous les signaux"
 
 msgid "Display native libc paths file or validate one"
 msgstr ""
@@ -17241,9 +18616,6 @@ msgstr "Afficher la version"
 msgid "Display version and copyright information"
 msgstr "Afficher la version et les informations de licence"
 
-msgid "Display version and exit"
-msgstr "Afficher la version et quitter"
-
 msgid "Display version and feature info"
 msgstr ""
 
@@ -17269,9 +18641,6 @@ msgid "Display version number and exit"
 msgstr "Afficher le numéro de version et quitter"
 
 msgid "Display version number."
-msgstr ""
-
-msgid "Display vi prompt mode"
 msgstr ""
 
 msgid "Display virtual device GUID instead of device name"
@@ -17447,9 +18816,6 @@ msgstr ""
 
 msgid "Displays the contents of the .trace_info section"
 msgstr ""
-
-msgid "Displays the current mode"
-msgstr "Afficher le mode actuel"
 
 msgid "Displays the current version of serve"
 msgstr ""
@@ -18120,9 +19486,6 @@ msgstr "Ne pas développer le motif"
 msgid "Do not expand wildcards"
 msgstr "Ne pas développer les jokers"
 
-msgid "Do not export variable to subprocess"
-msgstr ""
-
 msgid "Do not extract source files"
 msgstr "Ne pas extraire les fichiers sources"
 
@@ -18285,12 +19648,6 @@ msgstr ""
 msgid "Do not include the default library file (lib.d.ts)"
 msgstr ""
 
-msgid "Do not indent output, only reformat into one job per line"
-msgstr "Ne pas indenter la sortie, se contenter de la reformater à une tâche par ligne"
-
-msgid "Do not indent, only return 0 if the code is already indented as fish_indent would"
-msgstr ""
-
 msgid "Do not init if restore fails"
 msgstr "Ne pas initialiser si la restauration échoue"
 
@@ -18441,9 +19798,6 @@ msgstr ""
 msgid "Do not optimize"
 msgstr "Ne pas optimiser"
 
-msgid "Do not output a newline"
-msgstr "Ne pas retourner à la ligne"
-
 msgid "Do not output any message"
 msgstr ""
 
@@ -18519,9 +19873,6 @@ msgstr ""
 msgid "Do not perform write operations"
 msgstr ""
 
-msgid "Do not persist history"
-msgstr ""
-
 msgid "Do not pipe output into a pager"
 msgstr "Ne pas envoyer la sortie dans un visionneur"
 
@@ -18552,9 +19903,6 @@ msgstr ""
 msgid "Do not print anything including errors"
 msgstr "Ne rien afficher, pas même les erreurs"
 
-msgid "Do not print anything, only set exit status"
-msgstr ""
-
 msgid "Do not print cargo log messages"
 msgstr ""
 
@@ -18584,9 +19932,6 @@ msgstr "Ne pas afficher le nom ou l’en-tête si aucune révision n’est séle
 
 msgid "Do not print out a status report for failed SCSI commands"
 msgstr "Ne pas afficher un rapport d’état pour les commandes SCSI qui ont échoué"
-
-msgid "Do not print output"
-msgstr "Ne rien afficher"
 
 msgid "Do not print progress information to stdout"
 msgstr "Ne pas afficher les informations sur la progression sur la sortie standard"
@@ -18645,9 +19990,6 @@ msgstr ""
 msgid "Do not re-encode author name and email"
 msgstr ""
 
-msgid "Do not read configuration files"
-msgstr ""
-
 msgid "Do not read default options from any option file"
 msgstr ""
 
@@ -18694,12 +20036,6 @@ msgid "Do not redirect stdout and stderr"
 msgstr ""
 
 msgid "Do not reference the default CLI assemblies by default"
-msgstr ""
-
-msgid "Do not reformat, only indent lines"
-msgstr ""
-
-msgid "Do not reformat, only unindent lines"
 msgstr ""
 
 msgid "Do not refresh the repositories"
@@ -18873,23 +20209,14 @@ msgstr "Ne pas envoyer la sortie dans un visionneur"
 msgid "Do not send passwords to the server in old format"
 msgstr ""
 
-msgid "Do not send the results to stderr, but overwrite the specified file"
-msgstr "Ne pas envoyer les résultats sur la sortie d’erreur, écraser plutôt le fichier spécifié avec"
-
 msgid "Do not send wall message before halt"
 msgstr "Ne pas diffuser de message avant l’arrêt"
-
-msgid "Do not separate arguments with spaces"
-msgstr "Ne pas séparer les arguments avec des espaces"
 
 msgid "Do not set ERRNO after calling math functions that are executed with a single instruction, e"
 msgstr "Ne pas paramétrer ERRNO après l’appel de fonctions mathématiques tenant en une seule instruction"
 
 msgid "Do not set password, but allow non-password logins (e.g. SSH RSA)"
 msgstr ""
-
-msgid "Do not shadow variable scope of calling function"
-msgstr "Laisser la fonction accéder au contexte du code l’appelant"
 
 msgid "Do not shorten long names"
 msgstr ""
@@ -19100,9 +20427,6 @@ msgstr ""
 
 msgid "Do not truncate error messages"
 msgstr ""
-
-msgid "Do not truncate long lines"
-msgstr "Ne pas tronquer les lignes longues"
 
 msgid "Do not trust the line counts in the hunk headers"
 msgstr ""
@@ -19872,9 +21196,6 @@ msgstr "Ne pas afficher l’ascenceur"
 msgid "Don't display the continuous count of packets captured"
 msgstr ""
 
-msgid "Don't display the full diff"
-msgstr ""
-
 msgid "Don't display the splash screen during startup"
 msgstr ""
 
@@ -19909,9 +21230,6 @@ msgid "Don't embed any application manifest into the executable"
 msgstr ""
 
 msgid "Don't embed the uid of the signing key in the data signature"
-msgstr ""
-
-msgid "Don't emit an event"
 msgstr ""
 
 msgid "Don't encrypt files"
@@ -20331,9 +21649,6 @@ msgstr "Ne pas afficher les validations possédant plus d’un parent"
 msgid "Don't print domain name qualification of host names"
 msgstr ""
 
-msgid "Don't print function definition"
-msgstr ""
-
 msgid "Don't print group information"
 msgstr "Omettre le nom des groupes dans le format d’affichage long"
 
@@ -20494,9 +21809,6 @@ msgid "Don't require executable stack for this object"
 msgstr "Ne pas requérir la pile d’exécution pour cet objet"
 
 msgid "Don't require user interaction"
-msgstr ""
-
-msgid "Don't require value"
 msgstr ""
 
 msgid "Don't rescue exceptions"
@@ -20751,9 +22063,6 @@ msgstr "Ne pas traiter les fichiers d’entrée comme du texte, ni les stocker e
 msgid "Don't treat warning level issues as fatal. (default on)"
 msgstr ""
 
-msgid "Don't trim trailing newlines"
-msgstr ""
-
 msgid "Don't trust the file modification times"
 msgstr "Ne pas se fier aux horodatages de modification des fichiers"
 
@@ -20839,9 +22148,6 @@ msgid "Don't use copy and delete fallback"
 msgstr ""
 
 msgid "Don't use debug mode"
-msgstr ""
-
-msgid "Don't use file completion"
 msgstr ""
 
 msgid "Don't use global registers 2 through 4, SPARC SVR4 ABI-reserved for applications"
@@ -21486,9 +22792,6 @@ msgstr "Afficher intégralement l’arbre de configuration"
 msgid "Dump hardware database"
 msgstr ""
 
-msgid "Dump information about parsed statements to stderr"
-msgstr ""
-
 msgid "Dump information on which options are loaded"
 msgstr "Afficher les informations sur les options chargées"
 
@@ -21774,13 +23077,7 @@ msgstr "Éditer les fichiers sur un serveur Vim"
 msgid "Edit files on nvim server specified with --server"
 msgstr ""
 
-msgid "Edit function definition"
-msgstr "Éditer la définition de fonction"
-
 msgid "Edit global config"
-msgstr ""
-
-msgid "Edit in fish, not external editor"
 msgstr ""
 
 msgid "Edit mode for the interface. [default: insert]"
@@ -21807,9 +23104,6 @@ msgstr ""
 msgid "Edit tag"
 msgstr "Éditer l’étiquette spécifiée"
 
-msgid "Edit the command buffer in an external editor"
-msgstr ""
-
 msgid "Edit the commit message prior to committing"
 msgstr "Éditer le message de validation avant de valider"
 
@@ -21835,9 +23129,6 @@ msgid "Edit the patch bundle description [DEFAULT]"
 msgstr ""
 
 msgid "Edit the todo list"
-msgstr ""
-
-msgid "Edit variable value"
 msgstr ""
 
 msgid "Edit workspace"
@@ -21872,9 +23163,6 @@ msgstr ""
 
 msgid "Eliminate implicit rules"
 msgstr ""
-
-msgid "Emacs mode commands"
-msgstr "Commande en mode Emacs"
 
 msgid "Email address for user"
 msgstr ""
@@ -21997,12 +23285,6 @@ msgid "Empty goal, provided only to set loose the lifecycle"
 msgstr ""
 
 msgid "Empty queue"
-msgstr ""
-
-msgid "Empty results excluded"
-msgstr ""
-
-msgid "Empty strings excluded"
 msgstr ""
 
 msgid "Empty the trash"
@@ -22239,9 +23521,6 @@ msgstr ""
 msgid "Enable autorefresh of the repository"
 msgstr "Activer le rafraîchissement automatique du dépôt"
 
-msgid "Enable backslash escapes"
-msgstr "Activer les séquences d’échappement"
-
 msgid "Enable backup of any installed apk expansion"
 msgstr "Activer la sauvegarde des extensions apk installées"
 
@@ -22373,9 +23652,6 @@ msgstr ""
 
 msgid "Enable debug"
 msgstr ""
-
-msgid "Enable debug at specified verbosity level"
-msgstr "Activer la sortie de débogage au niveau de verbosité spécifié"
 
 msgid "Enable debug build of Node.js"
 msgstr ""
@@ -23619,9 +24895,6 @@ msgstr ""
 msgid "Erase a whole disk, writing random data to the media"
 msgstr "Effacer un disque entier en y écrivant des données aléatoires"
 
-msgid "Erase abbreviation"
-msgstr "Supprimer une abbréviation"
-
 msgid "Erase an existing disk"
 msgstr "Effacer un disque"
 
@@ -23637,12 +24910,6 @@ msgstr "Effacer les paquets construits"
 msgid "Erase contents of, but keep, an APFS Volume"
 msgstr ""
 
-msgid "Erase function"
-msgstr "Effacer la fonction"
-
-msgid "Erase mode"
-msgstr "Mode effacement"
-
 msgid "Erase obsolete files"
 msgstr "Effacer les fichiers obsolètes"
 
@@ -23654,9 +24921,6 @@ msgstr ""
 
 msgid "Erase possible superblock"
 msgstr ""
-
-msgid "Erase variable"
-msgstr "Effacer la variable"
 
 msgid "Erase, using a secure method"
 msgstr "Effacer de manière sécurisée"
@@ -23699,12 +24963,6 @@ msgstr ""
 
 msgid "Escape unprintables except \\t"
 msgstr ""
-
-msgid "Escape with \\ instead of quotes"
-msgstr ""
-
-msgid "Escaping characters"
-msgstr "Échappement de caractères"
 
 msgid "Estimate the entropy of a password"
 msgstr ""
@@ -23762,18 +25020,6 @@ msgstr ""
 
 msgid "Event action value [change]"
 msgstr ""
-
-msgid "Event handler, resets prompt when any char changes"
-msgstr ""
-
-msgid "Event handler, resets prompt when any color changes"
-msgstr ""
-
-msgid "Event handler, resets prompt when functionality changes"
-msgstr ""
-
-msgid "Event handlers"
-msgstr "Gestion d’événements"
 
 msgid "Everything (same as -x, but all record types)"
 msgstr "Tout (idem à -x, mais avec tous les types d’enregistrement)"
@@ -24255,9 +25501,6 @@ msgstr ""
 msgid "Exit 77 if no overlays changed"
 msgstr ""
 
-msgid "Exit Status"
-msgstr "Code de retour"
-
 msgid "Exit after configuring an interface"
 msgstr ""
 
@@ -24393,9 +25636,6 @@ msgstr ""
 msgid "Expand numbers"
 msgstr "Ne pas arrondir les nombres"
 
-msgid "Expand only as a command, or anywhere"
-msgstr ""
-
 msgid "Expand the device to use all available space"
 msgstr "Étendre le périphérique pour en utiliser tout l’espace disponible"
 
@@ -24530,15 +25770,6 @@ msgstr "Exporter le jeu de modifications local dans un fichier"
 
 msgid "Export variable to file"
 msgstr ""
-
-msgid "Export variable to subprocess"
-msgstr "Exporter la variable dans le sous-processus"
-
-msgid "Exporting variables"
-msgstr "Exportation de variables"
-
-msgid "Exports (Shell Variables)"
-msgstr "Exportations (variables shell)"
 
 msgid "Exports the chapter information in a simple format"
 msgstr ""
@@ -24680,9 +25911,6 @@ msgstr ""
 
 msgid "Extracts sources"
 msgstr ""
-
-msgid "FD is a terminal"
-msgstr "Le descripteur de fichier aboutit sur un terminal"
 
 msgid "FILENAME of the known_hosts file"
 msgstr ""
@@ -24888,20 +26116,8 @@ msgstr "Le fichier a l’i-nœud dont le numéro est spécifié"
 msgid "File has specified number of links"
 msgstr "Le fichier est la cible de n liens"
 
-msgid "File has the set-group-ID bit"
-msgstr ""
-
-msgid "File has the set-user-ID bit"
-msgstr ""
-
-msgid "File is a socket"
-msgstr "Le fichier est une socket"
-
 msgid "File is empty and is either a regular file or a directory"
 msgstr "Le fichier est vide et un fichier standard ou un dossier"
-
-msgid "File is executable"
-msgstr "Le fichier est exécutable ou le dossier est accessible"
 
 msgid "File is of specified type"
 msgstr "Le fichier est du type spécifié"
@@ -24909,17 +26125,11 @@ msgstr "Le fichier est du type spécifié"
 msgid "File is on filesystem of specified type"
 msgstr "Le fichier est sur un système de fichier du type spécifié"
 
-msgid "File is readable"
-msgstr "Le fichier est accessible en lecture"
-
 msgid "File is symlink matching specified case insensitive pattern"
 msgstr "Le fichier est un lien symbolique vers un fichier dont le nom correspond au motif spécifié sans tenir compte de la casse"
 
 msgid "File is symlink matching specified pattern"
 msgstr "Le fichier est un lien symbolique vers un fichier dont le nom correspond au motif spécifié"
-
-msgid "File is writable"
-msgstr "Le fichier est accessible en écriture"
 
 msgid "File last accessed more recently than file was modified"
 msgstr "Le dernier accès au fichier est plus récent que la dernière modification du fichier spécifié"
@@ -24966,12 +26176,6 @@ msgstr "Spécifier la socket Unix d’obtention de données aléatoires par EGD"
 msgid "File on device"
 msgstr ""
 
-msgid "File owned by our effective group ID"
-msgstr "Le fichier existe et appartient au GID effectif de l’appelant"
-
-msgid "File owned by our effective user ID"
-msgstr "Le fichier existe et appartient à l’UUID effectif de l'appelant"
-
 msgid "File path matches case insensitive pattern"
 msgstr "Le chemin absolu du fichier correspond à l’expression régulière sans tenir compte de la casse"
 
@@ -24980,9 +26184,6 @@ msgstr "Le chemin complet du fichier correspond au motif"
 
 msgid "File refers to the same inode as specified file"
 msgstr "Le fichier se réfère au même i-nœud que le fichier spécifié"
-
-msgid "File size is non-zero"
-msgstr "Le fichier a une taille non nulle"
 
 msgid "File status last changed more recently than file was modified"
 msgstr "L’état du fichier a été modifié plus récemment que le fichier spécifié"
@@ -25200,9 +26401,6 @@ msgstr ""
 msgid "Filter by node device name"
 msgstr ""
 
-msgid "Filter by permission"
-msgstr ""
-
 msgid "Filter by priority"
 msgstr "Filtrer par priorité"
 
@@ -25218,16 +26416,10 @@ msgstr ""
 msgid "Filter by storage pool name or UUID"
 msgstr ""
 
-msgid "Filter by type"
-msgstr ""
-
 msgid "Filter by using .gitignore files"
 msgstr ""
 
 msgid "Filter dependencies matching the given target-triple (or `all` for all targets)"
-msgstr ""
-
-msgid "Filter directories"
 msgstr ""
 
 msgid "Filter even with refs in refs/original or existing temp directory"
@@ -25237,12 +26429,6 @@ msgid "Filter events by subsystem"
 msgstr ""
 
 msgid "Filter events by tag"
-msgstr ""
-
-msgid "Filter executable paths"
-msgstr ""
-
-msgid "Filter files"
 msgstr ""
 
 msgid "Filter for performing the commit"
@@ -25281,9 +26467,6 @@ msgstr ""
 msgid "Filter processes by terms matching the commands"
 msgstr ""
 
-msgid "Filter readable paths"
-msgstr ""
-
 msgid "Filter sharpness"
 msgstr ""
 
@@ -25291,9 +26474,6 @@ msgid "Filter strategies"
 msgstr ""
 
 msgid "Filter strength (integer 0…100; default: 60)"
-msgstr ""
-
-msgid "Filter symlinks"
 msgstr ""
 
 msgid "Filter templates based on available types"
@@ -25354,9 +26534,6 @@ msgid "Filter which tests to run"
 msgstr ""
 
 msgid "Filter which testsuite to run"
-msgstr ""
-
-msgid "Filter writable paths"
 msgstr ""
 
 msgid "Filters installed extensions by provided category"
@@ -25525,12 +26702,6 @@ msgid "First page to convert"
 msgstr ""
 
 msgid "First remove existing destination files"
-msgstr ""
-
-msgid "Fish script to validate option values"
-msgstr ""
-
-msgid "Fish's release notes"
 msgstr ""
 
 msgid "Fit the size of the window to the size of the page"
@@ -26841,9 +28012,6 @@ msgstr ""
 msgid "Freeze units with the cgroup freezer"
 msgstr ""
 
-msgid "Frequently Asked Questions"
-msgstr ""
-
 msgid "Freshen: only changed files"
 msgstr "Mettre à jour l’archive si le fichier à mettre à jour y est plus ancien"
 
@@ -26886,9 +28054,6 @@ msgstr ""
 msgid "Fullscreen playback"
 msgstr ""
 
-msgid "Function name"
-msgstr "Nom de la fonction"
-
 msgid "Function to generate args"
 msgstr ""
 
@@ -26904,9 +28069,6 @@ msgstr ""
 msgid "Further edit the message taken from -m, -C, or -F"
 msgstr ""
 
-msgid "Further help and development"
-msgstr "Encore plus d’aide et développement"
-
 msgid "Further limit selected hosts to an additional pattern"
 msgstr ""
 
@@ -26914,9 +28076,6 @@ msgid "Fuzzy match"
 msgstr ""
 
 msgid "Fuzzy matching algorithm"
-msgstr ""
-
-msgid "GNU-style long option to complete"
 msgstr ""
 
 msgid "GOPATH environment variable"
@@ -27460,9 +28619,6 @@ msgid "Generate compiler predefines and select a startfile for the specified UNI
 msgstr "Générer les pré-définitions du compilateur et sélectionner un fichier de démarrage pour le standard UNIX spécifié"
 
 msgid "Generate completion file for a shell"
-msgstr ""
-
-msgid "Generate completions that are specified as comma-separated values from stdin source"
 msgstr ""
 
 msgid "Generate compressed stream"
@@ -28038,9 +29194,6 @@ msgstr ""
 msgid "Get all chains added to table"
 msgstr ""
 
-msgid "Get all current limits"
-msgstr ""
-
 msgid "Get all files from folder"
 msgstr "Obtenir tous les fichiers du dossier"
 
@@ -28093,12 +29246,6 @@ msgid "Get configuration value"
 msgstr "Obtenir une valeur de configuration"
 
 msgid "Get current brightness of device"
-msgstr ""
-
-msgid "Get current selection ending position"
-msgstr ""
-
-msgid "Get current selection starting position"
 msgstr ""
 
 msgid "Get dataset space consumed by each user"
@@ -28461,17 +29608,8 @@ msgstr "Afficher toutes les dépendances obsolètes"
 msgid "Gets the currently used cpufreq policy"
 msgstr ""
 
-msgid "Gets the umask in a format that can be used as a command"
-msgstr ""
-
-msgid "Gets the umask in symbolic format instead of octal"
-msgstr ""
-
 msgid "Gets the value of an environment variable from within launchd"
 msgstr "Obtenir la valeur d’une variable d’environnement depuis launchd"
-
-msgid "Getting Help"
-msgstr "Obtenir de l’aide"
 
 msgid "Git Root"
 msgstr ""
@@ -28497,9 +29635,6 @@ msgstr ""
 msgid "Give an object a human-readable name"
 msgstr ""
 
-msgid "Give basename for given paths"
-msgstr ""
-
 msgid "Give cluster name"
 msgstr ""
 
@@ -28509,14 +29644,8 @@ msgstr ""
 msgid "Give devices as replacement"
 msgstr ""
 
-msgid "Give dirname for given paths"
-msgstr ""
-
 msgid "Give even more status messages"
 msgstr "Afficher encore plus de messages d’état"
-
-msgid "Give extension for given paths"
-msgstr ""
 
 msgid "Give human-readable output"
 msgstr "Générer une sortie conviviale"
@@ -28788,9 +29917,6 @@ msgstr ""
 msgid "Halt the machine"
 msgstr "Arrêter l’ordinateur"
 
-msgid "Handle NULL-delimited input"
-msgstr ""
-
 msgid "Handle container images"
 msgstr ""
 
@@ -28938,9 +30064,6 @@ msgstr ""
 msgid "Help for theme"
 msgstr "Aide pour « theme »"
 
-msgid "Help for this command"
-msgstr ""
-
 msgid "Help for toJSON"
 msgstr "Aide sur « toJSON »"
 
@@ -28959,16 +30082,7 @@ msgstr "Aide pour « undraft »"
 msgid "Help for version"
 msgstr "Aide pour « version »"
 
-msgid "Help on how to reuse previously entered commands"
-msgstr "Aide sur la réutilisation des commandes précédentes"
-
 msgid "Help screen"
-msgstr ""
-
-msgid "Helper function for fish_git_prompt"
-msgstr ""
-
-msgid "Helper function to list unused options"
 msgstr ""
 
 msgid "Helper function to print tasks"
@@ -29106,9 +30220,6 @@ msgstr ""
 msgid "Home directory"
 msgstr ""
 
-msgid "Home directory expansion ~USER"
-msgstr "Expansion du dossier principal ~USER"
-
 msgid "Home directory for GPG"
 msgstr "Dossier principal pour GPG"
 
@@ -29184,21 +30295,6 @@ msgstr ""
 msgid "Hot-add listed devices as spare"
 msgstr ""
 
-msgid "How \"\" and '' work"
-msgstr ""
-
-msgid "How \\\\ escaping works"
-msgstr ""
-
-msgid "How different expansions work together"
-msgstr ""
-
-msgid "How functions are loaded"
-msgstr ""
-
-msgid "How lists combine"
-msgstr ""
-
 msgid "How long in sec to download"
 msgstr "Durée du téléchargement (sec)"
 
@@ -29244,13 +30340,7 @@ msgstr ""
 msgid "How often the input of the passphrase can be retried"
 msgstr ""
 
-msgid "How tab-completion works"
-msgstr "Utilisation de l’autocomplétion par tabulation"
-
 msgid "How the Configure call should run the config tests"
-msgstr ""
-
-msgid "How to color the pager"
 msgstr ""
 
 msgid "How to connect to agent."
@@ -29259,19 +30349,10 @@ msgstr ""
 msgid "How to deal with queued jobs"
 msgstr "Spécifier comment gérer les tâches mises en file"
 
-msgid "How to define an alias"
-msgstr ""
-
-msgid "How to define functions"
-msgstr ""
-
 msgid "How to display names of large objects"
 msgstr ""
 
 msgid "How to duplicate files"
-msgstr ""
-
-msgid "How to handle arguments"
 msgstr ""
 
 msgid "How to handle loads of words that are partially addressable"
@@ -29280,17 +30361,8 @@ msgstr ""
 msgid "How to link generated output to the source files"
 msgstr ""
 
-msgid "How to make your own prompt"
-msgstr ""
-
 msgid "How to specify revisions in bzr"
 msgstr "Comment spécifier les révisions dans bzr"
-
-msgid "How to write completions"
-msgstr ""
-
-msgid "How to write your own prompt"
-msgstr ""
 
 msgid "Human readable output"
 msgstr ""
@@ -29461,15 +30533,6 @@ msgid "If a whole directory is classified as \"other\", show just its name"
 msgstr ""
 
 msgid "If any <file> does not appear in the index, treat this as an error"
-msgstr ""
-
-msgid "If commandline is empty, run nextd; else move one argument to the right"
-msgstr ""
-
-msgid "If commandline is empty, run prevd; else move one argument to the left"
-msgstr ""
-
-msgid "If cursor is at the command token, edit the command source file"
 msgstr ""
 
 msgid "If destination is already merged, pull rather than merging"
@@ -29694,12 +30757,6 @@ msgstr ""
 msgid "Ignore code coverage configuration"
 msgstr ""
 
-msgid "Ignore completions"
-msgstr ""
-
-msgid "Ignore config files"
-msgstr ""
-
 msgid "Ignore default config file"
 msgstr "Ignorer le fichier de configuration par défaut"
 
@@ -29752,9 +30809,6 @@ msgid "Ignore filters when saving package"
 msgstr ""
 
 msgid "Ignore footprint"
-msgstr ""
-
-msgid "Ignore function files"
 msgstr ""
 
 msgid "Ignore host and package OS mismatch"
@@ -30510,9 +31564,6 @@ msgstr ""
 msgid "Include new advisories"
 msgstr ""
 
-msgid "Include new files"
-msgstr ""
-
 msgid "Include newpackage relevant packages"
 msgstr ""
 
@@ -30756,9 +31807,6 @@ msgstr ""
 msgid "Index from 1 instead of 0"
 msgstr ""
 
-msgid "Index range expansion"
-msgstr "Expansion de plage d’indice"
-
 msgid "Index throttle value"
 msgstr ""
 
@@ -30813,12 +31861,6 @@ msgstr ""
 msgid "Information of the currently played file"
 msgstr ""
 
-msgid "Inherit completions from specified command"
-msgstr ""
-
-msgid "Inherit completions from the given command"
-msgstr "Hériter des complétions de la commande spécifiée"
-
 msgid "Inherit key from its parent"
 msgstr ""
 
@@ -30849,9 +31891,6 @@ msgstr ""
 msgid "Initial allocation size, as scaled integer (default bytes)"
 msgstr ""
 
-msgid "Initial contents of read buffer when reading interactively"
-msgstr ""
-
 msgid "Initial depth to which JSON nodes are expanded in the visualization. [default: 3]"
 msgstr ""
 
@@ -30871,12 +31910,6 @@ msgid "Initialise or reset the JIG archive files"
 msgstr ""
 
 msgid "Initialise the required directory structure with default templates"
-msgstr ""
-
-msgid "Initialization files"
-msgstr "Fichiers d’initialisation"
-
-msgid "Initializations that should be performed when entering interactive mode"
 msgstr ""
 
 msgid "Initialize Git config vars for maintenance"
@@ -30990,9 +32023,6 @@ msgstr ""
 msgid "Inject into other processes"
 msgstr ""
 
-msgid "Inject readline functions to reader"
-msgstr "Injecter les fonctions readline au lecteur"
-
 msgid "Inject the payload as a new thread (for template)"
 msgstr ""
 
@@ -31056,9 +32086,6 @@ msgstr ""
 msgid "Input target from file"
 msgstr ""
 
-msgid "Input/Output (IO) redirection"
-msgstr "Redirection d’entrée/sortie (E/S)"
-
 msgid "Input_file Read a list of already existing known bad blocks"
 msgstr "Fichier_entrée Lire un fichier listant les blocs défectueux connus"
 
@@ -31073,9 +32100,6 @@ msgstr "Insérer l’en-tête"
 
 msgid "Insert last image into the image sequence [index]"
 msgstr ""
-
-msgid "Insert mode"
-msgstr "Mode insertion"
 
 msgid "Insert modules matching the given wildcard"
 msgstr "Insérer tout les modules correspondant au motif spécifié"
@@ -31563,12 +32587,6 @@ msgstr ""
 msgid "Integer as the value for the given key"
 msgstr ""
 
-msgid "Integer width of the result, default is maximum width of inputs"
-msgstr ""
-
-msgid "Integer width of the result, default is minimum non-zero width of inputs"
-msgstr ""
-
 msgid "Integrate all simple functions into their callers"
 msgstr "Intégrer toutes les fonctions simples à leur appelant"
 
@@ -31659,12 +32677,6 @@ msgstr ""
 msgid "Intermix source code with disassembly"
 msgstr ""
 
-msgid "Internal completion function for appending string to the commandline"
-msgstr ""
-
-msgid "Internal fish function"
-msgstr "Fonction interne à fish"
-
 msgid "Internal flag only to be used by e2fsck(8) and mke2fs(8)"
 msgstr "Drapeau interne à utiliser uniquement par e2fsck(8) et mke2fs(8)"
 
@@ -31722,9 +32734,6 @@ msgstr ""
 msgid "Intrinsic library functions are being compiled, passing all values in registers"
 msgstr ""
 
-msgid "Introduction to the fish syntax"
-msgstr "Introduction à la syntaxe de fish"
-
 msgid "Introspect a remote object"
 msgstr ""
 
@@ -31742,9 +32751,6 @@ msgstr ""
 
 msgid "Invert match"
 msgstr "Inverser la recherche"
-
-msgid "Invert meaning of filters"
-msgstr ""
 
 msgid "Invert selection"
 msgstr "Inverser la sélection"
@@ -31838,9 +32844,6 @@ msgstr ""
 
 msgid "Java1.5+: use the OS proxy settings"
 msgstr ""
-
-msgid "Job control"
-msgstr "Contrôle des tâches"
 
 msgid "Jobs format"
 msgstr "Format des tâches"
@@ -31960,9 +32963,6 @@ msgid "Keep nvram file, if inactive"
 msgstr ""
 
 msgid "Keep only the BlockAdditions up to the specified level"
-msgstr ""
-
-msgid "Keep order of arguments instead of sorting alphabetically"
 msgstr ""
 
 msgid "Keep partially transferred files"
@@ -32166,9 +33166,6 @@ msgstr ""
 msgid "Launch even if there's no sbt project"
 msgstr ""
 
-msgid "Launch fish's web based configuration"
-msgstr ""
-
 msgid "Launch in a sandboxed environment"
 msgstr ""
 
@@ -32202,9 +33199,6 @@ msgstr ""
 msgid "Leak-check on exit"
 msgstr ""
 
-msgid "Learning fish"
-msgstr "Apprendre fish"
-
 msgid "Leave an Ad-Hoc network"
 msgstr ""
 
@@ -32235,31 +33229,7 @@ msgstr ""
 msgid "Leave the program"
 msgstr ""
 
-msgid "Left file equal to right file"
-msgstr ""
-
-msgid "Left file newer than right file"
-msgstr ""
-
-msgid "Left file older than right file"
-msgstr ""
-
 msgid "Left for backwards compatibility"
-msgstr ""
-
-msgid "Left number != right number"
-msgstr ""
-
-msgid "Left number < right number"
-msgstr ""
-
-msgid "Left number <= right number"
-msgstr ""
-
-msgid "Left number > right number"
-msgstr ""
-
-msgid "Left number >= right number"
 msgstr ""
 
 msgid "Left-column  Output only the left column of common lines."
@@ -32994,9 +33964,6 @@ msgstr ""
 msgid "List all expired posts"
 msgstr "Lister tous les billets expirés"
 
-msgid "List all feature flags"
-msgstr ""
-
 msgid "List all files"
 msgstr ""
 
@@ -33249,9 +34216,6 @@ msgstr "Lister le contenu de l’archive (version concise)"
 msgid "List archive (technical)"
 msgstr "Lister le contenu de l’archive (version technique)"
 
-msgid "List archive contents"
-msgstr ""
-
 msgid "List assertion filters"
 msgstr ""
 
@@ -33429,9 +34393,6 @@ msgstr "Lister les clients utilisateurs du dépôt"
 msgid "List cluster(s)"
 msgstr ""
 
-msgid "List codes and names of available signals"
-msgstr ""
-
 msgid "List collections"
 msgstr ""
 
@@ -33489,19 +34450,10 @@ msgstr ""
 msgid "List contents of a package matching pattern"
 msgstr "Lister le contenu d'un paquet correspondant au motif"
 
-msgid "List contents of directory using long format"
-msgstr ""
-
-msgid "List contents of directory, including hidden files in directory using long format"
-msgstr ""
-
 msgid "List contents of packages"
 msgstr "Lister le contenu des paquets"
 
 msgid "List contents of service unit's file descriptor store"
-msgstr ""
-
-msgid "List contents of token under the cursor if it is a directory, otherwise list the contents of the current directory"
 msgstr ""
 
 msgid "List controllers"
@@ -33637,9 +34589,6 @@ msgid "List domains without managed save"
 msgstr ""
 
 msgid "List egress zones added"
-msgstr ""
-
-msgid "List embedded files contained in the fish binary"
 msgstr ""
 
 msgid "List encodings"
@@ -33862,9 +34811,6 @@ msgid "List installed commands"
 msgstr "Lister les commandes installées"
 
 msgid "List installed groups"
-msgstr ""
-
-msgid "List installed icon names according to `https://specifications.freedesktop.org/icon-theme-spec/0.13/`"
 msgstr ""
 
 msgid "List installed obsoleted packages"
@@ -34201,9 +35147,6 @@ msgid "List orphaned packages only"
 msgstr ""
 
 msgid "List outdated ports"
-msgstr ""
-
-msgid "List own network addresses with interface as description"
 msgstr ""
 
 msgid "List owners of a crate"
@@ -34707,12 +35650,6 @@ msgstr "Lister les seuls noms de chaque instance, un par ligne"
 msgid "List the name, rather than the full xml"
 msgstr ""
 
-msgid "List the names of the functions, but not their definition"
-msgstr "Lister les noms des fonctions sans leur définition"
-
-msgid "List the names of the variables, but not their value"
-msgstr ""
-
 msgid "List the objects that can have alternatives configured"
 msgstr ""
 
@@ -34907,9 +35844,6 @@ msgstr ""
 
 msgid "Lists ZFS filesystems"
 msgstr ""
-
-msgid "Lists ZFS snapshots"
-msgstr "Liste les instantanés ZFS"
 
 msgid "Lists ZFS volumes"
 msgstr ""
@@ -35328,9 +36262,6 @@ msgstr ""
 msgid "Local section"
 msgstr ""
 
-msgid "Local, global and universal scope"
-msgstr ""
-
 msgid "Locale data directory"
 msgstr ""
 
@@ -35339,9 +36270,6 @@ msgstr ""
 
 msgid "Locale settings for the database"
 msgstr ""
-
-msgid "Locale variables"
-msgstr "Variables régionales"
 
 msgid "Locally sign the given <key>"
 msgstr ""
@@ -35583,12 +36511,6 @@ msgstr ""
 msgid "Logging target"
 msgstr ""
 
-msgid "Logical AND"
-msgstr "Faire un ET logique"
-
-msgid "Logical OR"
-msgstr "Faire un OU logique"
-
 msgid "Logical walk, follow symbolic links to directories"
 msgstr ""
 
@@ -35769,9 +36691,6 @@ msgstr ""
 msgid "Make --list-devices or --list-available print the devices id, to ease scripting"
 msgstr "Avec « --list-devices » et « --list-available », afficher les identifiants de périphérique, pour faciliter l’utilisation des sorties par un script"
 
-msgid "Make -C escape special characters"
-msgstr ""
-
 msgid "Make GCC align \"int\", \"long\", \"long long\", \"float\", \"double\", and \"long double\" variables on a 32-bit boundary"
 msgstr ""
 
@@ -35913,14 +36832,8 @@ msgstr "Rendre les fichiers accessibles à tous les autres utilisateurs"
 msgid "Make filesystem exportable via NFS"
 msgstr ""
 
-msgid "Make font bold"
-msgstr ""
-
 msgid "Make hard links directly to symbolic links"
 msgstr "Créer des liens matériels directement vers les liens symboliques"
-
-msgid "Make list of kill signals for completion"
-msgstr ""
 
 msgid "Make live change persistent"
 msgstr ""
@@ -36006,21 +36919,6 @@ msgstr ""
 msgid "Make the entry appear as a new file in \"git diff\" and non-existent in \"git diff -l cached\""
 msgstr ""
 
-msgid "Make the function a generic event handler"
-msgstr "Utiliser la fonction comme un gestionnaire d’événements génériques"
-
-msgid "Make the function a job exit event handler"
-msgstr "Utiliser la fonction comme un gestionnaire d’événement de fin de tâche"
-
-msgid "Make the function a process exit event handler"
-msgstr "Utiliser la fonction comme un gestionnaire d’événement de fin de processus"
-
-msgid "Make the function a signal event handler"
-msgstr "Utiliser la fonction comme un gestionnaire de signaux"
-
-msgid "Make the function a variable update event handler"
-msgstr "Utiliser la fonction comme un gestionnaire d’événement de mise à jour de variable"
-
 msgid "Make the new .service unit part of the slice the run0 itself has been invoked in"
 msgstr ""
 
@@ -36047,21 +36945,6 @@ msgstr ""
 
 msgid "Make username an administrator"
 msgstr "Accorder les droits administrateur à un utilisateur"
-
-msgid "Make variable as a path variable"
-msgstr ""
-
-msgid "Make variable function-scoped"
-msgstr ""
-
-msgid "Make variable not as a path variable"
-msgstr ""
-
-msgid "Make variable scope global"
-msgstr ""
-
-msgid "Make variable scope local"
-msgstr ""
 
 msgid "Make window fullscreen"
 msgstr "Mettre la fenêtre en plein écran"
@@ -36492,16 +37375,10 @@ msgstr ""
 msgid "Marks the repository metadata expired"
 msgstr ""
 
-msgid "Mask input with ●"
-msgstr ""
-
 msgid "Mask network configuration files"
 msgstr ""
 
 msgid "Master document name"
-msgstr ""
-
-msgid "Match a regular expression"
 msgstr ""
 
 msgid "Match against the base name of the file"
@@ -36615,25 +37492,13 @@ msgstr ""
 msgid "Maximum age (in seconds) for assets"
 msgstr ""
 
-msgid "Maximum amount of cpu time in seconds"
-msgstr "Utilisation maximale de temps processeur en secondes"
-
 msgid "Maximum amount of in-flight data during the copy"
 msgstr ""
-
-msgid "Maximum amount of virtual memory available to the shell"
-msgstr "Taille maximale de mémoire virtuelle allouée au shell"
 
 msgid "Maximum backward scroll"
 msgstr "Nombre maximal de lignes lors d’un défilement arrière"
 
-msgid "Maximum bytes in POSIX message queues"
-msgstr ""
-
 msgid "Maximum command wait time"
-msgstr ""
-
-msgid "Maximum contiguous realtime CPU time"
 msgstr ""
 
 msgid "Maximum depth of a certification chain (default is 5)"
@@ -36678,27 +37543,6 @@ msgstr ""
 msgid "Maximum number of hops"
 msgstr ""
 
-msgid "Maximum number of kqueues"
-msgstr ""
-
-msgid "Maximum number of open file descriptors"
-msgstr "Nombre maximal de descripteurs de fichiers ouverts"
-
-msgid "Maximum number of pending signals"
-msgstr ""
-
-msgid "Maximum number of printed chars"
-msgstr ""
-
-msgid "Maximum number of processes available to a single user"
-msgstr "Nombre maximal de processus pour un seul utilisaleur"
-
-msgid "Maximum number of pseudo-terminals"
-msgstr ""
-
-msgid "Maximum number of simultaneous threads"
-msgstr ""
-
 msgid "Maximum number of thread-local symbols."
 msgstr ""
 
@@ -36723,26 +37567,8 @@ msgstr ""
 msgid "Maximum port to listen to"
 msgstr ""
 
-msgid "Maximum realtime scheduling priority"
-msgstr ""
-
 msgid "Maximum recursion depth"
 msgstr "Profondeur maximale de récursion"
-
-msgid "Maximum resident set size"
-msgstr "Taille maximale de RAM utilisée (RSS)"
-
-msgid "Maximum size of a process's data segment"
-msgstr "Taille maximale d’un segment de donnée de programme"
-
-msgid "Maximum size of core files created"
-msgstr "Taille maximale des fichiers de dump mémoire créés"
-
-msgid "Maximum size of files created by the shell"
-msgstr "Taille maximale des fichiers créés par le shell"
-
-msgid "Maximum size of socket buffers"
-msgstr ""
 
 msgid "Maximum size of the encoded payload"
 msgstr ""
@@ -36754,15 +37580,6 @@ msgid "Maximum size of the resulting payload"
 msgstr ""
 
 msgid "Maximum size per savefile (in MB)"
-msgstr ""
-
-msgid "Maximum size that may be locked into memory"
-msgstr "Taille maximale en mémoire sur laquelle un verrou peut être apposé"
-
-msgid "Maximum stack size"
-msgstr "Taille maximale de la pile"
-
-msgid "Maximum swap space"
 msgstr ""
 
 msgid "Maximum time (in seconds) that the client should wait for the DAD to complete on an interface"
@@ -36827,9 +37644,6 @@ msgstr "Journal de l’utilisation mémoire"
 
 msgid "Mention unused functions in flat profile"
 msgstr "Mentionner les fonctions inutilisées dans le profil à plat"
-
-msgid "Menu based cd command"
-msgstr ""
 
 msgid "Merge Maven repository from one VFS to another VFS"
 msgstr ""
@@ -37230,9 +38044,6 @@ msgstr "Davantage de fichiers à ignorer (! pour réinitialiser)"
 msgid "More information about a command"
 msgstr "Plus d’information sur une commande"
 
-msgid "More on universal variables"
-msgstr "Plus au sujet des variables universelles"
-
 msgid "Morph an image sequence [value]"
 msgstr ""
 
@@ -37335,9 +38146,6 @@ msgstr ""
 msgid "Move and/or rename something in working copy or repository"
 msgstr ""
 
-msgid "Move back in the directory history"
-msgstr ""
-
 msgid "Move branches with loop invariant conditions out of the loop"
 msgstr ""
 
@@ -37360,9 +38168,6 @@ msgid "Move files from a virtual file system to another"
 msgstr ""
 
 msgid "Move files to the trash"
-msgstr ""
-
-msgid "Move forward in the directory history"
 msgstr ""
 
 msgid "Move into zipfile (delete files)"
@@ -37395,9 +38200,6 @@ msgstr "Déplacer les paquets du cache de téléchargement vers un miroir Debian
 msgid "Move packages to local tree"
 msgstr ""
 
-msgid "Move path to the front or back"
-msgstr ""
-
 msgid "Move submodule's git directory to current .git/module directory"
 msgstr ""
 
@@ -37408,9 +38210,6 @@ msgid "Move the content of the user's home directory to the new location"
 msgstr "Déplacer le contenu du dossier personnel de l’utilisateur vers le nouveau dossier personnel"
 
 msgid "Move the current torrents' data to another directory"
-msgstr ""
-
-msgid "Move the last element of a directory history from src to dest"
 msgstr ""
 
 msgid "Move the screen to the bottom on input"
@@ -37433,9 +38232,6 @@ msgstr ""
 
 msgid "Multi-select marker"
 msgstr ""
-
-msgid "Multiline editing"
-msgstr "Édition multiligne"
 
 msgid "Multipart upload chunk size"
 msgstr ""
@@ -37656,9 +38452,6 @@ msgstr ""
 msgid "Negate all pixels above the threshold level [threshold]"
 msgstr ""
 
-msgid "Negate expression"
-msgstr "Nier logique l’expression"
-
 msgid "Negate result of action"
 msgstr "Inverser le résultat de l’action"
 
@@ -37766,9 +38559,6 @@ msgstr ""
 
 msgid "New name for identifier"
 msgstr "Nouveau nom pour l’identifiant"
-
-msgid "New resource limit"
-msgstr "Nouvelle limite sur les ressources"
 
 msgid "New section"
 msgstr ""
@@ -37992,12 +38782,6 @@ msgstr ""
 msgid "Normal and bold fonts have VT100 line-drawing characters"
 msgstr ""
 
-msgid "Normalize given paths (remove ./, resolve ../ against other components..)"
-msgstr ""
-
-msgid "Normalize given paths and resolve symlinks"
-msgstr ""
-
 msgid "Normalize repetitive calendar events and calculate when they elapse next"
 msgstr ""
 
@@ -38018,9 +38802,6 @@ msgstr ""
 
 msgid "Notify daemon to do an operation"
 msgstr "Demander au démon d’effectuer une opération"
-
-msgid "Notify terminals when $PWD changes"
-msgstr ""
 
 msgid "Notify the kernel about the current regulatory domain"
 msgstr ""
@@ -38316,9 +39097,6 @@ msgstr ""
 msgid "Number the changes"
 msgstr "Chiffrer les modifications"
 
-msgid "Numbers are equal"
-msgstr ""
-
 msgid "Numbers of submodules fetched in parallel"
 msgstr ""
 
@@ -38399,9 +39177,6 @@ msgstr "Dissimuler un filigrane en décalage dans une image"
 
 msgid "Old section"
 msgstr ""
-
-msgid "Old style long option to complete"
-msgstr "Option longue de style ancien à compléter"
 
 msgid "Older patch format (for compatibility)"
 msgstr ""
@@ -38691,12 +39466,6 @@ msgstr ""
 msgid "Only install packages/themes compatible with specified Atom version"
 msgstr ""
 
-msgid "Only keep one line of each input"
-msgstr ""
-
-msgid "Only leave the first of each run with the same key"
-msgstr ""
-
 msgid "Only list files that would be recovered"
 msgstr ""
 
@@ -38792,9 +39561,6 @@ msgstr "N’afficher que les avertissements et les erreurs"
 
 msgid "Only overwrite files that are older than the copied file"
 msgstr ""
-
-msgid "Only parse input, do not execute"
-msgstr "Ne faire que la vérification syntaxique de la commande, pas son exécution"
 
 msgid "Only perform integrity checks"
 msgstr ""
@@ -38922,9 +39688,6 @@ msgstr "Supprimer uniquement les fichiers temporaires de Fossil"
 msgid "Only remove targets not required by PACKAGE"
 msgstr "Supprimer uniquement les cibles non requises par PAQUET"
 
-msgid "Only report capturing groups"
-msgstr ""
-
 msgid "Only report critical statistics"
 msgstr ""
 
@@ -38945,12 +39708,6 @@ msgstr ""
 
 msgid "Only return processes w/ same root directory"
 msgstr ""
-
-msgid "Only return status, no output"
-msgstr ""
-
-msgid "Only return that part of the command line before the cursor"
-msgstr "Retourner seulement la partie de la ligne de commande avant le curseur"
 
 msgid "Only run lint and unit tests"
 msgstr ""
@@ -39023,9 +39780,6 @@ msgstr "N’afficher que les pairs pas encore activés, bien qu’ils puissent l
 
 msgid "Only show properties with values"
 msgstr ""
-
-msgid "Only show status for last job to be started"
-msgstr "N’afficher que l’état de la dernière tâche à avoir été lancée"
 
 msgid "Only show tasks assigned to the given username,"
 msgstr ""
@@ -39201,9 +39955,6 @@ msgstr ""
 msgid "Open file"
 msgstr "Ouvrir le fichier"
 
-msgid "Open file in default application"
-msgstr ""
-
 msgid "Open files"
 msgstr ""
 
@@ -39211,9 +39962,6 @@ msgid "Open folder"
 msgstr ""
 
 msgid "Open folder read-only"
-msgstr ""
-
-msgid "Open function in external editor"
 msgstr ""
 
 msgid "Open horizontally split windows for each file"
@@ -39270,9 +40018,6 @@ msgstr ""
 msgid "Open the command prompt in a client"
 msgstr "Ouvrir l’invite de commandes d’un client"
 
-msgid "Open the file at the cursor in a pager"
-msgstr ""
-
 msgid "Open the file provided in the -o option in append mode"
 msgstr ""
 
@@ -39296,9 +40041,6 @@ msgstr ""
 
 msgid "Open the specified profile in an editor"
 msgstr "Ouvrir le profil spécifié dans un éditeur"
-
-msgid "Open the web-based UI"
-msgstr ""
 
 msgid "Open torrent in the default torrent application"
 msgstr ""
@@ -39387,19 +40129,10 @@ msgstr ""
 msgid "Operate on orphan packages"
 msgstr "Opérer sur les paquets orphelins"
 
-msgid "Operate on preset bindings"
-msgstr ""
-
 msgid "Operate on remote HOST"
 msgstr ""
 
 msgid "Operate on remote host"
-msgstr ""
-
-msgid "Operate on the pager search field"
-msgstr ""
-
-msgid "Operate on user bindings"
 msgstr ""
 
 msgid "Operate only on journal files matching glob"
@@ -39416,9 +40149,6 @@ msgstr "Opérer récursivement"
 
 msgid "Operate recursively on datasets"
 msgstr "Opérer récursivement sur les jeux de données"
-
-msgid "Operate silently"
-msgstr ""
 
 msgid "Operate silently, i.e. don't ring any bells "
 msgstr "Mode silencieux : ne pas déclencher d’avertissement sonore"
@@ -39572,9 +40302,6 @@ msgstr ""
 
 msgid "Orphan disk"
 msgstr ""
-
-msgid "Other features"
-msgstr "Autres fonctionnalités"
 
 msgid "Other users to CC on the new task"
 msgstr ""
@@ -39903,9 +40630,6 @@ msgstr ""
 msgid "Output in C include file style"
 msgstr ""
 
-msgid "Output in HTML format"
-msgstr "Afficher la sortie au format HTML"
-
 msgid "Output in JSON format"
 msgstr ""
 
@@ -40062,9 +40786,6 @@ msgstr ""
 msgid "Output plan graph assuming refresh only"
 msgstr ""
 
-msgid "Output profiling information (excluding startup) to a file"
-msgstr ""
-
 msgid "Output quality"
 msgstr ""
 
@@ -40109,9 +40830,6 @@ msgstr ""
 
 msgid "Output specifications for all versions of the gem"
 msgstr "Générer les spécifications pour toutes les versions de la gemme"
-
-msgid "Output startup profiling information to a file"
-msgstr ""
 
 msgid "Output statistics"
 msgstr ""
@@ -40166,9 +40884,6 @@ msgstr ""
 
 msgid "Output the version number"
 msgstr "Afficher le numéro de version"
-
-msgid "Output timing and explain sequence"
-msgstr ""
 
 msgid "Output to /dev/null"
 msgstr "Sortie vers /dev/null"
@@ -40656,9 +41371,6 @@ msgstr ""
 msgid "PKZIP recursion"
 msgstr "Récursion PKZIP"
 
-msgid "POSIX-style short option to complete"
-msgstr ""
-
 msgid "POST the log file to URL"
 msgstr "Envoyer le journal par requête POST sur l’URL spécifiée"
 
@@ -40788,12 +41500,6 @@ msgstr ""
 msgid "Pacman log actions"
 msgstr ""
 
-msgid "Pad both left and right"
-msgstr ""
-
-msgid "Pad right instead of left"
-msgstr ""
-
 msgid "Page cache size for xbzrle compression"
 msgstr ""
 
@@ -40818,17 +41524,11 @@ msgstr ""
 msgid "Page width for EPUB layout"
 msgstr ""
 
-msgid "Paginate the current command using the users default pager"
-msgstr ""
-
 msgid "Pair with device"
 msgstr ""
 
 msgid "Pane option"
 msgstr ""
-
-msgid "Parameter expansion (Globbing)"
-msgstr "Expansion de paramètres (globs)"
 
 msgid "Paranoid cow"
 msgstr "Vache paranoïaque"
@@ -41082,28 +41782,7 @@ msgstr ""
 msgid "Path exclusion"
 msgstr ""
 
-msgid "Path exists"
-msgstr ""
-
 msgid "Path for the cached environment and doctree files"
-msgstr ""
-
-msgid "Path is a block device"
-msgstr ""
-
-msgid "Path is a character device"
-msgstr ""
-
-msgid "Path is a directory"
-msgstr ""
-
-msgid "Path is a named pipe"
-msgstr ""
-
-msgid "Path is a regular file"
-msgstr ""
-
-msgid "Path is a symlink"
 msgstr ""
 
 msgid "Path of HSTS database"
@@ -41174,9 +41853,6 @@ msgstr ""
 
 msgid "Path to a target manifest file"
 msgstr ""
-
-msgid "Path to add completion to"
-msgstr "Chemin auquel ajouter une complétion"
 
 msgid "Path to additional deps.json"
 msgstr ""
@@ -41589,9 +42265,6 @@ msgstr ""
 msgid "Perform all the checks implied by --check-format, --check-header, --check-domain"
 msgstr ""
 
-msgid "Perform an action when the shell receives a signal"
-msgstr ""
-
 msgid "Perform an install without asking questions (non-interactive)"
 msgstr ""
 
@@ -41880,9 +42553,6 @@ msgstr ""
 msgid "Pipes all ack output through command"
 msgstr "Envoyer toutes les sorties d’ack dans la commande"
 
-msgid "Pipes and Redirections"
-msgstr "Tubes et redirections"
-
 msgid "Pixel cache resource limit [type value]"
 msgstr ""
 
@@ -42057,9 +42727,6 @@ msgstr "Pool duquel afficher l’état"
 msgid "Pop current pkg"
 msgstr ""
 
-msgid "Pop directory from the stack and cd to it"
-msgstr ""
-
 msgid "Pop last stash"
 msgstr "Appliquer le dernier remisage"
 
@@ -42101,9 +42768,6 @@ msgstr ""
 
 msgid "Ports Directory"
 msgstr "Dossier des ports"
-
-msgid "Position the cursor at % post-expansion"
-msgstr ""
 
 msgid "Post a status text"
 msgstr ""
@@ -42324,14 +42988,8 @@ msgstr "Préfixer le fichier de configuration avec la chaîne spécifiée"
 msgid "Prepend string to relative links"
 msgstr "Utiliser la chaîne spécifiée comme base pour les liens relatifs"
 
-msgid "Prepend the given string to the command-line, or remove the prefix if already there"
-msgstr ""
-
 msgid "Prepend the name of the cpu to all public symbol names"
 msgstr "Préfixer le nom du processeur à tous les noms de symboles publics"
-
-msgid "Prepend value to a list"
-msgstr ""
 
 msgid "Prepends a time stamp to each trace or verbose line that curl displays"
 msgstr ""
@@ -42708,9 +43366,6 @@ msgstr ""
 msgid "Print NUL after each output"
 msgstr ""
 
-msgid "Print NULL-delimited output"
-msgstr ""
-
 msgid "Print NUM lines of context"
 msgstr "Afficher N lignes autour de l’occurrence"
 
@@ -42744,9 +43399,6 @@ msgstr "Afficher l’URL au lieu de l’ouvrir"
 msgid "Print Unix form (/cygdrive/c/winnt)"
 msgstr ""
 
-msgid "Print Windows drives"
-msgstr ""
-
 msgid "Print Windows form (C:\\WINNT)"
 msgstr ""
 
@@ -42754,15 +43406,6 @@ msgid "Print Windows form with regular slashes (C:/WINNT)"
 msgstr ""
 
 msgid "Print Windows long form"
-msgstr ""
-
-msgid "Print Windows user names"
-msgstr ""
-
-msgid "Print X windows"
-msgstr "Afficher les fenêtres X"
-
-msgid "Print XDG mime types"
 msgstr ""
 
 msgid "Print XML"
@@ -42834,15 +43477,6 @@ msgstr "Afficher un message d’aide et quitter"
 msgid "Print a help message for this build"
 msgstr ""
 
-msgid "Print a list of all accepted color names"
-msgstr ""
-
-msgid "Print a list of all function calls leading up to running the current command"
-msgstr ""
-
-msgid "Print a list of all known filesystem types"
-msgstr ""
-
 msgid "Print a list of applied patches"
 msgstr ""
 
@@ -42858,16 +43492,7 @@ msgstr ""
 msgid "Print a list of diff tools that may be used with `--tool`"
 msgstr ""
 
-msgid "Print a list of documented fish commands"
-msgstr ""
-
-msgid "Print a list of expanded tokens"
-msgstr ""
-
 msgid "Print a list of interfaces on which $shark can capture and exit"
-msgstr ""
-
-msgid "Print a list of job PIDs and their commands"
 msgstr ""
 
 msgid "Print a list of k3d clusters"
@@ -42876,28 +43501,7 @@ msgstr ""
 msgid "Print a list of k3d nodes"
 msgstr ""
 
-msgid "Print a list of known hostnames"
-msgstr "Lister les noms d’hôtes connus"
-
-msgid "Print a list of known network interfaces"
-msgstr ""
-
-msgid "Print a list of local groups"
-msgstr ""
-
-msgid "Print a list of local groups, with group members as the description"
-msgstr ""
-
-msgid "Print a list of local users"
-msgstr ""
-
-msgid "Print a list of local users, with the real user name as a description"
-msgstr ""
-
 msgid "Print a list of merge tools that may be used with `--tool`"
-msgstr ""
-
-msgid "Print a list of process identifiers along with brief descriptions"
 msgstr ""
 
 msgid "Print a list of running screen sessions"
@@ -42916,9 +43520,6 @@ msgid "Print a minimal subset of the supplied commits with the same ancestors"
 msgstr ""
 
 msgid "Print a more human readable output"
-msgstr ""
-
-msgid "Print a pager to use"
 msgstr ""
 
 msgid "Print a prompt even if not on a tty"
@@ -42990,12 +43591,6 @@ msgstr ""
 msgid "Print additional statistics about the file traversal to stderr"
 msgstr ""
 
-msgid "Print all abbreviation names"
-msgstr "Afficher tous les noms d’abbréviations"
-
-msgid "Print all abbreviations"
-msgstr "Afficher toutes les abbréviations"
-
 msgid "Print all active monitors"
 msgstr ""
 
@@ -43006,9 +43601,6 @@ msgid "Print all available information"
 msgstr ""
 
 msgid "Print all available information associated with file descriptors"
-msgstr ""
-
-msgid "Print all available packages"
 msgstr ""
 
 msgid "Print all available providers"
@@ -43023,9 +43615,6 @@ msgstr "Afficher toutes les validations sur l’entrée standard au format mbox"
 msgid "Print all defined monitors"
 msgstr ""
 
-msgid "Print all external commands by the given name"
-msgstr ""
-
 msgid "Print all field names used in all entries of the journal"
 msgstr ""
 
@@ -43037,9 +43626,6 @@ msgstr "Afficher tous les GID"
 
 msgid "Print all information"
 msgstr "Afficher toutes les informations"
-
-msgid "Print all installed packages (non-deduplicated)"
-msgstr ""
 
 msgid "Print all key matches"
 msgstr ""
@@ -43068,9 +43654,6 @@ msgstr ""
 msgid "Print all possible data values of FIELD"
 msgstr ""
 
-msgid "Print all possible definitions of the specified name"
-msgstr "Afficher toutes les définitions possibles pour le nom spécifié"
-
 msgid "Print all rules in a chain."
 msgstr "Afficher toutes les règles d’une chaîne"
 
@@ -43089,9 +43672,6 @@ msgstr ""
 msgid "Print all the subvolumes and absolute and relative path"
 msgstr ""
 
-msgid "Print all vcs prompts"
-msgstr ""
-
 msgid "Print all versions"
 msgstr "Afficher toutes les versions"
 
@@ -43102,9 +43682,6 @@ msgid "Print alsactl version number"
 msgstr "Afficher le numéro de version d’alsactl"
 
 msgid "Print an annotated listing of the given file"
-msgstr ""
-
-msgid "Print an embedded file from the fish binary"
 msgstr ""
 
 msgid "Print an empty line between matches from different files"
@@ -43212,9 +43789,6 @@ msgstr "Afficher le script d’autocomplétion"
 msgid "Print command names for PIDs"
 msgstr ""
 
-msgid "Print command type"
-msgstr "Afficher le type de commande"
-
 msgid "Print command-line option descriptions"
 msgstr "Afficher la description des options de la ligne de commande"
 
@@ -43238,9 +43812,6 @@ msgstr "Afficher l’historique fichier intégral"
 
 msgid "Print complete help message on program usage"
 msgstr "Afficher un message d’aide détaillé sur l’utilisation du programme"
-
-msgid "Print completions for a commandline specified as a parameter"
-msgstr ""
 
 msgid "Print compression ratios"
 msgstr "Afficher les ratios de compression"
@@ -43392,14 +43963,8 @@ msgstr ""
 msgid "Print differences between installed packages and ports in the port tree"
 msgstr ""
 
-msgid "Print directories where desktop files are stored"
-msgstr ""
-
 msgid "Print directory names"
 msgstr "Afficher des messages de progression"
-
-msgid "Print directory stack"
-msgstr ""
 
 msgid "Print display names"
 msgstr ""
@@ -43590,9 +44155,6 @@ msgstr ""
 msgid "Print help for the given subcommand(s)"
 msgstr ""
 
-msgid "Print help for the specified fish function or builtin"
-msgstr ""
-
 msgid "Print help info and exit"
 msgstr ""
 
@@ -43607,9 +44169,6 @@ msgstr ""
 
 msgid "Print help message and exit"
 msgstr "Afficher un message d’aide et quitter"
-
-msgid "Print help message for the specified fish function or builtin"
-msgstr "Afficher une aide pour la fonction (intégrée) de fish spécifiée"
 
 msgid "Print help message or the help of the given subcommand(s)"
 msgstr ""
@@ -43668,9 +44227,6 @@ msgstr ""
 msgid "Print in human readable format"
 msgstr ""
 
-msgid "Print index of first match"
-msgstr ""
-
 msgid "Print indexing status"
 msgstr "Afficher l’état de l’indexation"
 
@@ -43723,9 +44279,6 @@ msgid "Print information for packages partially matching name"
 msgstr ""
 
 msgid "Print information given infocode"
-msgstr ""
-
-msgid "Print information on how this version fish was built"
 msgstr ""
 
 msgid "Print informative messages"
@@ -43830,9 +44383,6 @@ msgstr "Afficher les lignes correspondant à un motif"
 msgid "Print link flags"
 msgstr ""
 
-msgid "Print list host-names with user@"
-msgstr ""
-
 msgid "Print list of ICMP types supported by firewalld"
 msgstr ""
 
@@ -43883,12 +44433,6 @@ msgstr "Afficher le processus de connexion"
 
 msgid "Print logs of failing tests"
 msgstr ""
-
-msgid "Print lpr options"
-msgstr "Afficher les options lpr"
-
-msgid "Print lpr printers"
-msgstr "Afficher les imprimantes lpr"
 
 msgid "Print machine name"
 msgstr "Afficher le nom de la machine"
@@ -43953,19 +44497,10 @@ msgstr ""
 msgid "Print more information"
 msgstr ""
 
-msgid "Print more output"
-msgstr "Être verbeux"
-
-msgid "Print mounted devices"
-msgstr "Afficher les périphériques"
-
 msgid "Print mtu"
 msgstr "Afficher la taille maximale de paquet (MTU)"
 
 msgid "Print multiple document pages on each output page"
-msgstr ""
-
-msgid "Print name and version of the terminal fish is running in"
 msgstr ""
 
 msgid "Print name of each linked file"
@@ -43985,15 +44520,6 @@ msgstr "Afficher le nom, la ligne et l’heure"
 
 msgid "Print name, not number"
 msgstr "Afficher le nom, pas l’ID"
-
-msgid "Print names of all existing builtins"
-msgstr "Afficher le nom de toutes les commandes internes"
-
-msgid "Print names of available functions"
-msgstr "Afficher les noms des fonctions disponibles"
-
-msgid "Print names of available keys"
-msgstr "Afficher les noms des combinaisons disponibles"
 
 msgid "Print names of files part of the compilation"
 msgstr ""
@@ -44283,12 +44809,6 @@ msgstr ""
 msgid "Print path of the zone configuration file"
 msgstr ""
 
-msgid "Print path to command"
-msgstr "Afficher le chemin vers la commande"
-
-msgid "Print path to command, or nothing if name is not a command"
-msgstr ""
-
 msgid "Print path to embeddings database"
 msgstr ""
 
@@ -44310,13 +44830,7 @@ msgstr ""
 msgid "Print paths for all snapshots"
 msgstr ""
 
-msgid "Print paths that match a filter"
-msgstr ""
-
 msgid "Print periodic timing stats"
-msgstr ""
-
-msgid "Print pipestatus for prompt"
 msgstr ""
 
 msgid "Print placeholder instead of names"
@@ -44451,9 +44965,6 @@ msgstr ""
 msgid "Print security context"
 msgstr ""
 
-msgid "Print service status"
-msgstr "Afficher l'état du service"
-
 msgid "Print short description of zone|policy|ipset|service|helper|icmptype"
 msgstr ""
 
@@ -44514,9 +45025,6 @@ msgstr ""
 msgid "Print statistics of CPU usage on exit"
 msgstr ""
 
-msgid "Print stats from getrusage at exit"
-msgstr ""
-
 msgid "Print stats in a tabular form"
 msgstr ""
 
@@ -44549,9 +45057,6 @@ msgstr ""
 
 msgid "Print suppressions for detected errors"
 msgstr ""
-
-msgid "Print svn revisions"
-msgstr "Afficher les révisions svn"
 
 msgid "Print synopsis and options"
 msgstr ""
@@ -44631,13 +45136,7 @@ msgstr "Afficher la configuration de prt-get"
 msgid "Print the contents of the package cache"
 msgstr ""
 
-msgid "Print the current directory history (the prev and next lists)"
-msgstr ""
-
 msgid "Print the current layout settings and exit"
-msgstr ""
-
-msgid "Print the currently running command with its arguments"
 msgstr ""
 
 msgid "Print the data of each packet in hex (including link level header)"
@@ -44653,9 +45152,6 @@ msgid "Print the data of each packet in hex and ASCII (minus link level header)"
 msgstr ""
 
 msgid "Print the date of last modification or (-c) status change"
-msgstr ""
-
-msgid "Print the debug categories fish knows"
 msgstr ""
 
 msgid "Print the default config"
@@ -44688,17 +45184,8 @@ msgstr ""
 msgid "Print the exit reason of kvm vcpu"
 msgstr ""
 
-msgid "Print the file name (without the path) of the currently running script"
-msgstr ""
-
-msgid "Print the file that would be executed"
-msgstr "Afficher le fichier qui serait exécuté"
-
 msgid "Print the filename for each match"
 msgstr "Afficher le nom de fichier pour chaque occurrence"
-
-msgid "Print the filename of the currently running script"
-msgstr "Afficher le nom du fichier du script en cours d’exécution"
 
 msgid "Print the final configuration instead of building"
 msgstr ""
@@ -44763,9 +45250,6 @@ msgstr "Enregistrer le nom du dernier dossier de travail dans le fichier spécif
 msgid "Print the license"
 msgstr ""
 
-msgid "Print the line number of the currently running script"
-msgstr "Afficher le numéro de ligne du scripte en cours d’exécution"
-
 msgid "Print the link-level header on each dump line"
 msgstr ""
 
@@ -44802,12 +45286,6 @@ msgstr ""
 msgid "Print the name of each header file used, in addition to other normal activities"
 msgstr "Afficher le nom de chaque fichier d’en-tête utilisé, en plus de toute autre action"
 
-msgid "Print the name of the current function"
-msgstr ""
-
-msgid "Print the name of the currently running command or function"
-msgstr ""
-
 msgid "Print the name of the zone the interface is bound to"
 msgstr ""
 
@@ -44838,22 +45316,13 @@ msgstr ""
 msgid "Print the parsed form of the magic file"
 msgstr "Afficher la version prémâchée du fichier des nombres magiques"
 
-msgid "Print the path (without the file name) of the currently running script"
-msgstr ""
-
 msgid "Print the path of a port"
-msgstr ""
-
-msgid "Print the path to the current instance of fish"
 msgstr ""
 
 msgid "Print the path to the current machine directory"
 msgstr ""
 
 msgid "Print the path to the latest snapshot"
-msgstr ""
-
-msgid "Print the paths of all configured repositories"
 msgstr ""
 
 msgid "Print the pidfile dhcpcd will use to stdout"
@@ -44874,9 +45343,6 @@ msgstr ""
 msgid "Print the report in CSV format"
 msgstr ""
 
-msgid "Print the repositories configured for arch's pacman package manager"
-msgstr ""
-
 msgid "Print the result as a table"
 msgstr ""
 
@@ -44884,12 +45350,6 @@ msgid "Print the scons version information"
 msgstr ""
 
 msgid "Print the script version and CPAN.pm version then exit"
-msgstr ""
-
-msgid "Print the set command used"
-msgstr ""
-
-msgid "Print the set command without executing it"
 msgstr ""
 
 msgid "Print the site configuration"
@@ -44902,9 +45362,6 @@ msgid "Print the size in bytes of each file"
 msgstr ""
 
 msgid "Print the standard help message about command-line options and exit"
-msgstr ""
-
-msgid "Print the state of the tokenizer at the end of the given string"
 msgstr ""
 
 msgid "Print the status of the service"
@@ -45216,12 +45673,6 @@ msgstr "Afficher dans le sens de lecture par défaut"
 msgid "Print working directory"
 msgstr "Afficher le dossier de travail"
 
-msgid "Print working directory with symlinks resolved"
-msgstr ""
-
-msgid "Print working directory without resolving symlinks"
-msgstr ""
-
 msgid "Print xrandr modes"
 msgstr ""
 
@@ -45238,12 +45689,6 @@ msgid "Print/change the header of the topmost/given patch"
 msgstr ""
 
 msgid "Print/set UTC time"
-msgstr ""
-
-msgid "Print/set the column the cursor is on"
-msgstr ""
-
-msgid "Print/set the line the cursor is on"
 msgstr ""
 
 msgid "Prints Phoenix tasks and their information."
@@ -45421,9 +45866,6 @@ msgid "Prints state of the device"
 msgstr "Afficher l’état du périphérique"
 
 msgid "Prints the APK manifest in XML format"
-msgstr ""
-
-msgid "Prints the Nth token (ignoring command and switches/flags)"
 msgstr ""
 
 msgid "Prints the PID of the launchd controlling the session"
@@ -45795,9 +46237,6 @@ msgstr "Produire un objet partagé pouvant être lié avec d’autres pour forme
 msgid "Produce an import library file (default)"
 msgstr ""
 
-msgid "Produce an option specification suitable for use with `argparse`."
-msgstr ""
-
 msgid "Produce assembler debugging messages"
 msgstr "Produire des messages de débogage de l’assembleur"
 
@@ -45927,12 +46366,6 @@ msgstr ""
 msgid "Program to view content"
 msgstr ""
 
-msgid "Programmable prompt"
-msgstr "Invite programmable"
-
-msgid "Programmable title"
-msgstr "Titre programmable"
-
 msgid "Progress line update (in seconds)"
 msgstr ""
 
@@ -46037,12 +46470,6 @@ msgstr ""
 
 msgid "Prompt for whether to edit the long comment"
 msgstr "Donner la possibilité d’éditer le commentaire détaillé"
-
-msgid "Prompt function for Git"
-msgstr ""
-
-msgid "Prompt function for svn"
-msgstr "Fonction d’invite pour svn"
 
 msgid "Prompt string"
 msgstr "Chaîne à utiliser comme invite"
@@ -46356,9 +46783,6 @@ msgstr ""
 msgid "Push changes to a remote subtree"
 msgstr ""
 
-msgid "Push directory to stack"
-msgstr ""
-
 msgid "Push given value to environment for hooks"
 msgstr ""
 
@@ -46662,12 +47086,6 @@ msgstr ""
 msgid "Quit if file shorter than one screen"
 msgstr "Quitter si le fichier peut être intégralement affiché en une fois"
 
-msgid "Quit with abnormal exit status"
-msgstr "Quitter avec un code de retour anormal"
-
-msgid "Quit with normal exit status"
-msgstr "Quitter avec un code de retour normal"
-
 msgid "Quit with status 2 if interrupt keys pressed"
 msgstr ""
 
@@ -46935,9 +47353,6 @@ msgstr ""
 msgid "Read diff from stdin"
 msgstr "Lire le diff depuis l’entrée standard"
 
-msgid "Read each line into its own variable"
-msgstr ""
-
 msgid "Read email message from stdin and add the sender"
 msgstr "Lire un email depuis l’entrée standard et ajouter son expéditeur"
 
@@ -46969,9 +47384,6 @@ msgid "Read from stdin and save"
 msgstr ""
 
 msgid "Read from stdin for pipeline use, exit when stdin closes"
-msgstr ""
-
-msgid "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits."
 msgstr ""
 
 msgid "Read git commit IDs from stdin"
@@ -47027,9 +47439,6 @@ msgstr ""
 
 msgid "Read job from file"
 msgstr "Lire la tâche depuis le fichier"
-
-msgid "Read like the shell would"
-msgstr ""
 
 msgid "Read lines from file, performing one search for each"
 msgstr ""
@@ -47172,9 +47581,6 @@ msgstr ""
 msgid "Read the password from the given file descriptor"
 msgstr ""
 
-msgid "Read the specified number of characters"
-msgstr ""
-
 msgid "Read the stream from FILE instead of stdin"
 msgstr ""
 
@@ -47219,9 +47625,6 @@ msgstr "Lire ou modifier les limites de consommation de ressources de launchd"
 
 msgid "Reads paths from files (.=stdin)"
 msgstr ""
-
-msgid "Ready for more?"
-msgstr "Paré pour continuer ?"
 
 msgid "Real name for user"
 msgstr ""
@@ -47988,17 +48391,11 @@ msgstr ""
 msgid "Reload firewall rules and keep state information"
 msgstr ""
 
-msgid "Reload key bindings when binding variable change"
-msgstr ""
-
 msgid "Reload rules and database"
 msgstr ""
 
 msgid "Reload server configuration"
 msgstr ""
-
-msgid "Reload service configuration"
-msgstr "Recharger la configuration du service"
 
 msgid "Reload the default keys"
 msgstr ""
@@ -48447,9 +48844,6 @@ msgstr ""
 msgid "Remove comment elements"
 msgstr ""
 
-msgid "Remove completion"
-msgstr "Supprimer la complétion"
-
 msgid "Remove config/state/logs for the given units"
 msgstr ""
 
@@ -48534,9 +48928,6 @@ msgstr "Supprimer la description de type de fichier"
 msgid "Remove first pkg in resume list. Use with --resume"
 msgstr ""
 
-msgid "Remove from the left on"
-msgstr ""
-
 msgid "Remove fsigned-bitfields"
 msgstr ""
 
@@ -48611,9 +49002,6 @@ msgstr ""
 
 msgid "Remove network traffic policy of an app"
 msgstr ""
-
-msgid "Remove newline"
-msgstr "Supprimer le saut de ligne"
 
 msgid "Remove non-duplicate lines"
 msgstr ""
@@ -48855,9 +49243,6 @@ msgstr "Supprimer les torrents actuels"
 msgid "Remove the current torrents and delete data"
 msgstr ""
 
-msgid "Remove the extension"
-msgstr ""
-
 msgid "Remove the given switch from disk"
 msgstr ""
 
@@ -48899,9 +49284,6 @@ msgstr ""
 
 msgid "Remove the test directory"
 msgstr "Supprimer le dossier de test"
-
-msgid "Remove the topmost global event block"
-msgstr ""
 
 msgid "Remove the topmost/given patch from the series file"
 msgstr ""
@@ -49077,9 +49459,6 @@ msgstr ""
 msgid "Rename account"
 msgstr ""
 
-msgid "Rename an abbreviation"
-msgstr ""
-
 msgid "Rename an app"
 msgstr ""
 
@@ -49221,9 +49600,6 @@ msgstr ""
 msgid "Repaint from top"
 msgstr "Afficher en partant du haut"
 
-msgid "Repaint screen when window changes size"
-msgstr ""
-
 msgid "Repair a corrupted repository"
 msgstr ""
 
@@ -49249,9 +49625,6 @@ msgid "Repeat headers on each page of output"
 msgstr ""
 
 msgid "Repeat until no new blocks are found in provided number of scans"
-msgstr ""
-
-msgid "Repetition count"
 msgstr ""
 
 msgid "Replace -SNAPSHOT versions with a release version, downgrading if necessary"
@@ -49334,9 +49707,6 @@ msgstr ""
 
 msgid "Replace revision's log message."
 msgstr "Remplacer le message de la révision"
-
-msgid "Replace selected part"
-msgstr "Remplacer la partie sélectionnée"
 
 msgid "Replace the default HTML title and H1 header with string"
 msgstr ""
@@ -49482,17 +49852,11 @@ msgstr ""
 msgid "Report errors on unused parameters"
 msgstr ""
 
-msgid "Report every match"
-msgstr ""
-
 msgid "Report files that were unchanged or ignored"
 msgstr ""
 
 msgid "Report identity of disc"
 msgstr "Communiquer l’identité du disque"
-
-msgid "Report index, length of match"
-msgstr ""
 
 msgid "Report internal yadm data"
 msgstr ""
@@ -49516,12 +49880,6 @@ msgid "Report on clients that have accessed the server"
 msgstr ""
 
 msgid "Report on mode of file"
-msgstr ""
-
-msgid "Report only actual replacements"
-msgstr ""
-
-msgid "Report only non-matches"
 msgstr ""
 
 msgid "Report outstanding replies"
@@ -49749,12 +50107,6 @@ msgstr ""
 msgid "Require module"
 msgstr "Requérir un module"
 
-msgid "Require parameter"
-msgstr "Requérir un paramètre"
-
-msgid "Require parameter and don't use file completion"
-msgstr ""
-
 msgid "Require table/schema include patterns to match entities"
 msgstr ""
 
@@ -49777,9 +50129,6 @@ msgid "Require to verify presence when unlocking the volume"
 msgstr ""
 
 msgid "Require user verification when unlocking the volume"
-msgstr ""
-
-msgid "Require value"
 msgstr ""
 
 msgid "Required shared libraries, separated by whitespace"
@@ -50499,9 +50848,6 @@ msgstr "Renvoyer les valeurs « short », « struct » et « union » dans
 msgid "Return \"struct\" and \"union\" values in registers when possible"
 msgstr "Renvoyer les valeurs « short » et « struct » dans la mémoire si possible"
 
-msgid "Return 0 if the current token has an open single-quote"
-msgstr ""
-
 msgid "Return PATH, MANPATH, OCAML_TOPLEVEL_PATH and CAML_LD_LIBRARY_PATH for compiler"
 msgstr ""
 
@@ -50522,9 +50868,6 @@ msgstr "Afficher une liste de propriétés"
 
 msgid "Return all structures in memory (as specified by the AIX ABI)"
 msgstr "Afficher toutes les structures en mémoire, comme préconisé par l’ABI AIX"
-
-msgid "Return as soon as the first job completes"
-msgstr ""
 
 msgid "Return at most n mirrors"
 msgstr ""
@@ -50549,12 +50892,6 @@ msgstr "Renvoyer des résultats en virgule flottante dans ac0 (fr0 dans la synta
 
 msgid "Return floating-point results in memory"
 msgstr "Renvoyer des résultats en virgule flottante en mémoire"
-
-msgid "Return from function with abnormal exit status"
-msgstr ""
-
-msgid "Return from function with normal exit status"
-msgstr ""
 
 msgid "Return highest version ebuild available"
 msgstr ""
@@ -50614,27 +50951,6 @@ msgid "Return the value associated with the given variable"
 msgstr ""
 
 msgid "Return to the previous movie or chapter in the playlist"
-msgstr ""
-
-msgid "Return true if any path matched a filter"
-msgstr ""
-
-msgid "Return true if array contains a sequence"
-msgstr ""
-
-msgid "Return true if pager is showing all content"
-msgstr ""
-
-msgid "Return true if performing a history search"
-msgstr "Renvoyer vrai si une recherche dans l’historique est en cours"
-
-msgid "Return true if showing pager content"
-msgstr "Renvoyer vrai si le contenu afficher provient d’un visionneur"
-
-msgid "Return true if the command line has an autosuggestion"
-msgstr ""
-
-msgid "Return true if the command line is syntactically valid and complete"
 msgstr ""
 
 msgid "Return whether ICMP block inversion is enabled"
@@ -50727,9 +51043,6 @@ msgstr ""
 msgid "Reuse log message and authorship of an existing commit"
 msgstr ""
 
-msgid "Reverse color text"
-msgstr ""
-
 msgid "Reverse image sequence"
 msgstr ""
 
@@ -50747,9 +51060,6 @@ msgstr "Inverser le résultat"
 
 msgid "Reverse sort order"
 msgstr "Inverser l’ordre du tri"
-
-msgid "Reverse the order"
-msgstr ""
 
 msgid "Reverse the order of the input"
 msgstr ""
@@ -51096,9 +51406,6 @@ msgstr ""
 msgid "Run array despite warnings"
 msgstr ""
 
-msgid "Run as a login shell"
-msgstr ""
-
 msgid "Run as an rsync daemon"
 msgstr ""
 
@@ -51296,9 +51603,6 @@ msgstr "Exécuter en mode fictif"
 
 msgid "Run in foreground, show what's happening"
 msgstr ""
-
-msgid "Run in interactive mode"
-msgstr "Exécuter en mode interactif"
 
 msgid "Run in isolated mode"
 msgstr ""
@@ -51505,12 +51809,6 @@ msgid "Run snapshot and backup operations"
 msgstr ""
 
 msgid "Run snapshot operations only"
-msgstr ""
-
-msgid "Run specified command before session"
-msgstr ""
-
-msgid "Run specified command instead of interactive session"
 msgstr ""
 
 msgid "Run src_compile()"
@@ -51765,9 +52063,6 @@ msgstr ""
 msgid "Run wicd without the tray icon."
 msgstr ""
 
-msgid "Run with comma-separated feature flags enabled"
-msgstr ""
-
 msgid "Run with memory usage monitoring"
 msgstr ""
 
@@ -51798,14 +52093,8 @@ msgstr ""
 msgid "Run zed in the foreground (useful for debugging)"
 msgstr ""
 
-msgid "Running Commands"
-msgstr "Exécuter des commandes"
-
 msgid "Running commentary"
 msgstr ""
-
-msgid "Running multiple programs"
-msgstr "Exécuter plusieurs programmes"
 
 msgid "Runs Cassandra in the foreground"
 msgstr ""
@@ -52233,9 +52522,6 @@ msgstr ""
 msgid "Save files to directory"
 msgstr ""
 
-msgid "Save function"
-msgstr "Enregistrer la fonction"
-
 msgid "Save marks in the history file"
 msgstr ""
 
@@ -52279,9 +52565,6 @@ msgid "Save some or all changes"
 msgstr "Sauvegarder tout ou partie des modifications"
 
 msgid "Save state in a temporary file"
-msgstr ""
-
-msgid "Save the current definition of all specified functions to file"
 msgstr ""
 
 msgid "Save the current switch state to a file"
@@ -52532,9 +52815,6 @@ msgstr "Rechercher une mise à jour pour les paquets de développement"
 
 msgid "Search and build packages recursively"
 msgstr "Rechercher et construire les paquets récursivement"
-
-msgid "Search back or move cursor up 1 line"
-msgstr ""
 
 msgid "Search blobs registered in the index file"
 msgstr ""
@@ -52872,9 +53152,6 @@ msgstr "Rechercher avec des résultats intermédiaires"
 msgid "Search within directory"
 msgstr ""
 
-msgid "Searchable history"
-msgstr "Historique ouvert à la recherche"
-
 msgid "Searches for an exact package name"
 msgstr "Rechercher un nom de paquet exact"
 
@@ -53157,17 +53434,11 @@ msgstr ""
 msgid "Select compression level"
 msgstr "Sélectionner le niveau de compression"
 
-msgid "Select current selection"
-msgstr ""
-
 msgid "Select default controller"
 msgstr ""
 
 msgid "Select display"
 msgstr "Sélectionner le type d’affichage"
-
-msgid "Select entire command line (default)"
-msgstr "Sélectionner la ligne de commande entière (défaut)"
 
 msgid "Select field delimiter"
 msgstr "Délimiteur de champs"
@@ -53201,9 +53472,6 @@ msgstr "Sélectionner l'interface"
 
 msgid "Select issues matching the specified string"
 msgstr ""
-
-msgid "Select job under cursor"
-msgstr "Sélectionner la tâche sous le curseur"
 
 msgid "Select latest version of package"
 msgstr ""
@@ -53271,9 +53539,6 @@ msgstr ""
 msgid "Select print mode"
 msgstr "Sélectionner le mode d’affichage"
 
-msgid "Select process under cursor"
-msgstr "Sélectionner le processus sous le curseur"
-
 msgid "Select processes for all users"
 msgstr ""
 
@@ -53339,9 +53604,6 @@ msgstr "Spécifier le chemin du fichier de verrou d’état"
 
 msgid "Select time style"
 msgstr "Afficher les horodatages selon le format spécifié"
-
-msgid "Select token under cursor"
-msgstr "Sélectionner le lexème sous le curseur"
 
 msgid "Select which mnemonics to use in the generated assembler code"
 msgstr "Sélectionner la mnémotechnique à utiliser dans le code assembleur généré"
@@ -53717,9 +53979,6 @@ msgstr ""
 
 msgid "Separate source and build directories"
 msgstr ""
-
-msgid "Separating Commands (Semicolon)"
-msgstr "Séparer les commandes (point-virgule)"
 
 msgid "Separator char for hashlists and outfile"
 msgstr ""
@@ -54102,9 +54361,6 @@ msgstr ""
 msgid "Set all following frame durations"
 msgstr ""
 
-msgid "Set all jobs under job control"
-msgstr ""
-
 msgid "Set all sources to online/offline status according to network config"
 msgstr ""
 
@@ -54366,15 +54622,6 @@ msgstr "Paramétrer le détenteur des droits d’auteurs pour la sortie"
 msgid "Set cpu idle state specific kernel options"
 msgstr ""
 
-msgid "Set cursor (konsole)"
-msgstr ""
-
-msgid "Set cursor (xterm)"
-msgstr ""
-
-msgid "Set cursor shape for different vi modes"
-msgstr ""
-
 msgid "Set daemon connection timeout in seconds"
 msgstr ""
 
@@ -54415,9 +54662,6 @@ msgid "Set default boot loader timeout"
 msgstr ""
 
 msgid "Set default boot loader timeout (Once)"
-msgstr ""
-
-msgid "Set default file permission mask"
 msgstr ""
 
 msgid "Set default filter to silent"
@@ -54510,9 +54754,6 @@ msgstr "Paramétrer les options spécifiques au pilote"
 msgid "Set dvd viewing angle"
 msgstr ""
 
-msgid "Set env variable. Alias for `set -gx` for bash compatibility."
-msgstr ""
-
 msgid "Set environment variable"
 msgstr "Paramétrer une variable d’environnement"
 
@@ -54587,9 +54828,6 @@ msgstr ""
 
 msgid "Set frequency band"
 msgstr ""
-
-msgid "Set function description"
-msgstr "Paramétrer la description de la fonction"
 
 msgid "Set gamma correction [red:green:blue]"
 msgstr ""
@@ -54846,9 +55084,6 @@ msgstr "Paramétrer un paramètre réseau à"
 msgid "Set new description for zone|policy|ipset|service|helper|icmptype"
 msgstr ""
 
-msgid "Set no jobs under job control"
-msgstr ""
-
 msgid "Set npm log level to quiet"
 msgstr "Rendre npm bavard"
 
@@ -54906,9 +55141,6 @@ msgstr ""
 msgid "Set one option"
 msgstr ""
 
-msgid "Set only interactive jobs under job control"
-msgstr ""
-
 msgid "Set options and reconfigure the project"
 msgstr ""
 
@@ -54929,12 +55161,6 @@ msgstr ""
 
 msgid "Set or get engine"
 msgstr ""
-
-msgid "Set or get hard limit"
-msgstr "Définir ou obtenir une limite forte"
-
-msgid "Set or get soft limit"
-msgstr "Définir ou obtenir une limite faible"
 
 msgid "Set or query a block device I/O tuning parameters"
 msgstr ""
@@ -55071,12 +55297,6 @@ msgstr "Paramétrer la version du produit"
 msgid "Set project properties for changeSet/changeSetDate from the current hg repository"
 msgstr ""
 
-msgid "Set prompt command"
-msgstr ""
-
-msgid "Set prompt using provided string"
-msgstr ""
-
 msgid "Set property"
 msgstr "Paramétrer la propriété"
 
@@ -55153,9 +55373,6 @@ msgid "Set reverse video mode"
 msgstr ""
 
 msgid "Set revision state (latest revision on branch,"
-msgstr ""
-
-msgid "Set right-hand prompt command"
 msgstr ""
 
 msgid "Set role for identifying the window in X11"
@@ -55307,9 +55524,6 @@ msgstr ""
 
 msgid "Set strict locking."
 msgstr "Paramétrer le verrouillage strict"
-
-msgid "Set string to use as delimiter"
-msgstr ""
 
 msgid "Set subsystem label for the LUKS2 device"
 msgstr ""
@@ -56214,9 +56428,6 @@ msgstr ""
 msgid "Set whether to use searchlist"
 msgstr "Paramétrer l’usage ou non de la liste de recherche"
 
-msgid "Set which jobs are under job control"
-msgstr ""
-
 msgid "Set which version  of  the  sparse  format  to  use"
 msgstr ""
 
@@ -56261,9 +56472,6 @@ msgstr ""
 
 msgid "Set/block on F_SETLKW stdout lock"
 msgstr ""
-
-msgid "Set/get cursor position, not buffer contents"
-msgstr "Paramétrer ou obtenir l’emplacement du curseur, sans tampon"
 
 msgid "Sets EEE behaviour"
 msgstr ""
@@ -56317,9 +56525,6 @@ msgid "Sets a property to the latest version in a given range of associated arti
 msgstr ""
 
 msgid "Sets a standard SysV interface script or PPD file "
-msgstr ""
-
-msgid "Sets a universal variable if it's not already set"
 msgstr ""
 
 msgid "Sets a value"
@@ -56565,9 +56770,6 @@ msgstr ""
 msgid "Sets verbosity (1..10).  Higher values yield more messages"
 msgstr ""
 
-msgid "Setting syntax highlighting colors"
-msgstr "Paramétrage des couleurs de la coloration syntaxique"
-
 msgid "Setting this value to fake value of timers"
 msgstr ""
 
@@ -56622,15 +56824,6 @@ msgstr ""
 msgid "Share the system with the host [See Man Page]"
 msgstr ""
 
-msgid "Share variable persistently across sessions"
-msgstr ""
-
-msgid "Share variable with all the users fish processes on the computer"
-msgstr ""
-
-msgid "Shared bindings"
-msgstr ""
-
 msgid "Shared or Private [type]"
 msgstr ""
 
@@ -56642,12 +56835,6 @@ msgstr "Rogner l’image [géométrie]"
 
 msgid "Shell for account"
 msgstr ""
-
-msgid "Shell variable and function names"
-msgstr "Variable shell et noms de fonction"
-
-msgid "Shell variables"
-msgstr "Variables shell"
 
 msgid "Shift image pixels defined by a displacement map [geometry]"
 msgstr ""
@@ -57249,9 +57436,6 @@ msgstr ""
 msgid "Show command-line and environment info for swapped-out processes (root-only)"
 msgstr ""
 
-msgid "Show commandname of each job"
-msgstr "Afficher le nom de commande de toutes les tâches"
-
 msgid "Show commands"
 msgstr ""
 
@@ -57320,9 +57504,6 @@ msgstr ""
 
 msgid "Show current config"
 msgstr ""
-
-msgid "Show current path"
-msgstr "Afficher le chemin actuel"
 
 msgid "Show current runtime config"
 msgstr ""
@@ -57516,9 +57697,6 @@ msgstr ""
 msgid "Show enabled repos only"
 msgstr ""
 
-msgid "Show entire matching lines"
-msgstr ""
-
 msgid "Show entries after the passed cursor"
 msgstr ""
 
@@ -57553,12 +57731,6 @@ msgid "Show estimated time of arrival"
 msgstr ""
 
 msgid "Show event details"
-msgstr ""
-
-msgid "Show event handlers"
-msgstr ""
-
-msgid "Show event handlers matching the given type"
 msgstr ""
 
 msgid "Show every device, overrides above options"
@@ -57672,9 +57844,6 @@ msgstr "Afficher les versions complètes pour les paquets"
 msgid "Show given attribute"
 msgstr ""
 
-msgid "Show group id of job"
-msgstr "Afficher l’ID de groupe de la tâche"
-
 msgid "Show group instead of owner in long format"
 msgstr ""
 
@@ -57693,9 +57862,6 @@ msgstr ""
 msgid "Show held packages"
 msgstr "Afficher les paquets maintenus"
 
-msgid "Show help"
-msgstr "Afficher l’aide"
-
 msgid "Show help (this message) and exit"
 msgstr ""
 
@@ -57705,9 +57871,6 @@ msgstr ""
 msgid "Show help about options"
 msgstr ""
 
-msgid "Show help and exit"
-msgstr "Afficher l’aide et quitter"
-
 msgid "Show help for a command"
 msgstr "Afficher l’aide pour une commande"
 
@@ -57715,9 +57878,6 @@ msgid "Show help for a specific command"
 msgstr ""
 
 msgid "Show help for a subcommand"
-msgstr ""
-
-msgid "Show help for the fish shell"
 msgstr ""
 
 msgid "Show help for this command"
@@ -57761,9 +57921,6 @@ msgstr "Inclure les fichiers cachés, sauf . et .."
 
 msgid "Show hidden files"
 msgstr ""
-
-msgid "Show hidden functions"
-msgstr "Afficher les fonctions masquées"
 
 msgid "Show hierarchy"
 msgstr "Montrer l’arborescence des processus"
@@ -58053,9 +58210,6 @@ msgstr "Afficher intégralement la révision"
 msgid "Show main and auxiliary commands"
 msgstr "Afficher les commandes principales et auxiliaires"
 
-msgid "Show man page entries or function description related to the token under the cursor"
-msgstr ""
-
 msgid "Show manpage for subcommands"
 msgstr ""
 
@@ -58097,9 +58251,6 @@ msgstr ""
 
 msgid "Show method names as they are invoked"
 msgstr ""
-
-msgid "Show modification time"
-msgstr "Afficher l’horodatage de modification"
 
 msgid "Show modified files in the output"
 msgstr ""
@@ -58626,9 +58777,6 @@ msgstr ""
 msgid "Show scan progress"
 msgstr ""
 
-msgid "Show seconds since the modification time"
-msgstr ""
-
 msgid "Show server hostname and port"
 msgstr ""
 
@@ -59055,9 +59203,6 @@ msgstr ""
 msgid "Show the porcelain format"
 msgstr "Afficher le format porcelaine"
 
-msgid "Show the process id of each process in the job"
-msgstr "Afficher le PID de tous les processus de la tâche"
-
 msgid "Show the protected attributes in clear text"
 msgstr ""
 
@@ -59247,9 +59392,6 @@ msgstr ""
 msgid "Show tunnel-related capabilities and state"
 msgstr ""
 
-msgid "Show unavailable key bindings/erase all bindings"
-msgstr "Afficher ou effacer toutes les combinaisons existantes"
-
 msgid "Show uniquely abbreviated commit object as fallback"
 msgstr ""
 
@@ -59299,9 +59441,6 @@ msgid "Show users that are members of specified group(s)"
 msgstr ""
 
 msgid "Show uuid of the subvolume"
-msgstr ""
-
-msgid "Show variable"
 msgstr ""
 
 msgid "Show variable names only"
@@ -60300,9 +60439,6 @@ msgstr "Petite taille de blocs"
 msgid "Smush an image sequence together [geometry]"
 msgstr ""
 
-msgid "Snapshot and define local variable"
-msgstr ""
-
 msgid "Snapshot from which hold is to be removed"
 msgstr "Instantané duquel retirer le verrou"
 
@@ -60344,9 +60480,6 @@ msgstr ""
 
 msgid "Some 387 emulators do not support the \"sin\", \"cos\" and \"sqrt\" instructions for the 387"
 msgstr "Certains émulateurs 387 ne supportent pas ses instructions « sin », « cos » et « sqrt »"
-
-msgid "Some common words"
-msgstr "Quelques mots courants"
 
 msgid "Somewhat quiet output"
 msgstr ""
@@ -60449,9 +60582,6 @@ msgstr "Trier les paquets par nom (par défaut)"
 
 msgid "Sort packages by repository"
 msgstr "Trier les paquets par dépôt"
-
-msgid "Sort paths"
-msgstr ""
 
 msgid "Sort results by"
 msgstr ""
@@ -60573,9 +60703,6 @@ msgstr ""
 msgid "Space or comma separated list of features to activate"
 msgstr ""
 
-msgid "Space-separated list of possible arguments"
-msgstr ""
-
 msgid "Space-separated options to exclude from search"
 msgstr ""
 
@@ -60584,9 +60711,6 @@ msgstr ""
 
 msgid "Spatial noise shaping (integer 0…100; default: 50)"
 msgstr ""
-
-msgid "Special variables"
-msgstr "Variable spéciales"
 
 msgid "Specific commit to use when installing from git"
 msgstr ""
@@ -61536,9 +61660,6 @@ msgstr ""
 msgid "Specify columns to output for --list"
 msgstr ""
 
-msgid "Specify command to operate on"
-msgstr "Spécifier la commande sur laquelle opérer"
-
 msgid "Specify command to run after this darcs command"
 msgstr "Spécifier la commande à exécuter après cette commande darcs"
 
@@ -61623,9 +61744,6 @@ msgstr ""
 msgid "Specify data layout"
 msgstr ""
 
-msgid "Specify debug categories"
-msgstr ""
-
 msgid "Specify debug level (0-4)"
 msgstr ""
 
@@ -61701,9 +61819,6 @@ msgstr ""
 msgid "Specify end frame"
 msgstr ""
 
-msgid "Specify end index"
-msgstr ""
-
 msgid "Specify env for literal-blocks"
 msgstr ""
 
@@ -61711,9 +61826,6 @@ msgid "Specify environment config"
 msgstr ""
 
 msgid "Specify environment variable"
-msgstr ""
-
-msgid "Specify escaping style"
 msgstr ""
 
 msgid "Specify experimental feature flags"
@@ -61735,9 +61847,6 @@ msgid "Specify eye string"
 msgstr "Spécifier la chaîne pour l’œil"
 
 msgid "Specify field separator other than whitespace, using Rust `regex` syntax"
-msgstr ""
-
-msgid "Specify fields"
 msgstr ""
 
 msgid "Specify file containing non bootable message"
@@ -61796,9 +61905,6 @@ msgstr ""
 
 msgid "Specify how differences in submodules are shown"
 msgstr ""
-
-msgid "Specify how many stack frames to display in debug messages"
-msgstr "Spécifier le nombre d’éléments de la pile à afficher dans les messages de débogage"
 
 msgid "Specify how many times the passphrase mangling for symmetric encryption is repeated"
 msgstr ""
@@ -61941,9 +62047,6 @@ msgstr ""
 msgid "Specify logging verbosity level"
 msgstr ""
 
-msgid "Specify long option"
-msgstr ""
-
 msgid "Specify mail charset"
 msgstr ""
 
@@ -61961,9 +62064,6 @@ msgstr ""
 
 msgid "Specify maximum number of loops for 'ip addr flush'"
 msgstr "Spécifier le nombre maximum d’itérations pour « ip addr flush »"
-
-msgid "Specify maximum number of splits"
-msgstr ""
 
 msgid "Specify media type"
 msgstr "Spécifier le type de support"
@@ -61991,9 +62091,6 @@ msgstr "Spécifier le nom du périphérique Chromecast à utiliser"
 
 msgid "Specify name of output file"
 msgstr ""
-
-msgid "Specify named arguments"
-msgstr "Spécifier le nom des arguments"
 
 msgid "Specify netrc file"
 msgstr ""
@@ -62039,9 +62136,6 @@ msgstr ""
 
 msgid "Specify output filename"
 msgstr "Spécifier le nom du fichier de sortie"
-
-msgid "Specify output format"
-msgstr "Spécifier le format de la sortie"
 
 msgid "Specify owner password for the PDF"
 msgstr ""
@@ -62220,9 +62314,6 @@ msgstr "Spécifier le mot de passe pour les paramètres"
 msgid "Specify shell type"
 msgstr ""
 
-msgid "Specify short option"
-msgstr ""
-
 msgid "Specify sort order"
 msgstr ""
 
@@ -62244,9 +62335,6 @@ msgstr "Spécifier un fichier sources.list"
 msgid "Specify start frame"
 msgstr ""
 
-msgid "Specify start index"
-msgstr ""
-
 msgid "Specify start of array data"
 msgstr ""
 
@@ -62254,9 +62342,6 @@ msgid "Specify starting point for the search"
 msgstr ""
 
 msgid "Specify string comparison mode: text or binary"
-msgstr ""
-
-msgid "Specify substring length"
 msgstr ""
 
 msgid "Specify subsystem version of this assembly"
@@ -62382,13 +62467,7 @@ msgstr ""
 msgid "Specify the base href tag used in the wrapped up html"
 msgstr ""
 
-msgid "Specify the bind mode that the bind is used in"
-msgstr ""
-
 msgid "Specify the branch to use"
-msgstr ""
-
-msgid "Specify the chars to trim (default: whitespace)"
 msgstr ""
 
 msgid "Specify the chunk size"
@@ -62889,9 +62968,6 @@ msgstr ""
 msgid "Split output"
 msgstr ""
 
-msgid "Split right-to-left"
-msgstr ""
-
 msgid "Split stdout and stderr in test logs"
 msgstr ""
 
@@ -62983,9 +63059,6 @@ msgid "Start a block commit operation"
 msgstr ""
 
 msgid "Start a block copy operation"
-msgstr ""
-
-msgid "Start a continuous session"
 msgstr ""
 
 msgid "Start a daemon, e.g., gdm, apache (see list-daemons)"
@@ -63264,9 +63337,6 @@ msgstr ""
 msgid "Start server in foreground"
 msgstr ""
 
-msgid "Start service"
-msgstr "Démarrer le service"
-
 msgid "Start service, but don't restart it"
 msgstr ""
 
@@ -63432,9 +63502,6 @@ msgstr "Démarrer le démon logkeys"
 msgid "Starts the specified service"
 msgstr "Démarrer le service spécifié"
 
-msgid "Startup (Where's .bashrc?)"
-msgstr "Démarrage (où est « .bashrc » ?)"
-
 msgid "Startup banner"
 msgstr ""
 
@@ -63552,9 +63619,6 @@ msgstr ""
 msgid "Stop and start the first matching agent"
 msgstr ""
 
-msgid "Stop and then start service"
-msgstr "Redémarrer le service"
-
 msgid "Stop at first failure in reactorized builds"
 msgstr ""
 
@@ -63666,9 +63730,6 @@ msgstr "Arrêter la recherche à la première occurrence"
 msgid "Stop searching in each file after NUM matches"
 msgstr "Arrêter la recherche dans chaque fichier après N occurrences"
 
-msgid "Stop service"
-msgstr "Arrêter le service"
-
 msgid "Stop sharing a given filesystem, or all of them"
 msgstr "Arrêter le partage d’un système de fichiers donné, ou de tous les systèmes de fichiers"
 
@@ -63753,9 +63814,6 @@ msgstr ""
 msgid "Store NTFS alternate streams"
 msgstr ""
 
-msgid "Store all values"
-msgstr ""
-
 msgid "Store assemblies"
 msgstr ""
 
@@ -63796,9 +63854,6 @@ msgid "Store the address of the caller’s frame as backchain pointer into calle
 msgstr ""
 
 msgid "Store the maven core version in a property maven.version"
-msgstr ""
-
-msgid "Store the results as an array"
 msgstr ""
 
 msgid "Store the stack frame pointer"
@@ -63849,22 +63904,10 @@ msgstr ""
 msgid "String key-value pair for `sys.inputs`"
 msgstr ""
 
-msgid "String length is non-zero"
-msgstr "La chaîne n’est pas vide"
-
-msgid "String length is zero"
-msgstr "La chaîne est vide"
-
 msgid "String literal mode"
 msgstr ""
 
 msgid "String to print as header"
-msgstr ""
-
-msgid "Strings are identical"
-msgstr ""
-
-msgid "Strings are not identical"
 msgstr ""
 
 msgid "Strip JSON inspection data"
@@ -64188,9 +64231,6 @@ msgstr ""
 msgid "Suppress fsi writing to stdout"
 msgstr ""
 
-msgid "Suppress function and builtin lookup"
-msgstr ""
-
 msgid "Suppress generation of CALLT instruction for the v850e/v850e1 flavors of v850 architecture"
 msgstr ""
 
@@ -64343,9 +64383,6 @@ msgstr ""
 
 msgid "Suspend a machine"
 msgstr ""
-
-msgid "Suspend the current shell."
-msgstr "Suspendre le shell actuel"
 
 msgid "Suspend the guest after timeout"
 msgstr ""
@@ -64566,9 +64603,6 @@ msgstr "Pareil que -l 8 -b 4608 -m -r 3,3"
 msgid "Synonymous with -l 8 -b 4608 -m -r 4"
 msgstr "Pareil que -l 8 -b 4608 -m -r 4"
 
-msgid "Syntax Highlighting"
-msgstr "Coloration syntaxique"
-
 msgid "Syntax and method deprecation warnings"
 msgstr ""
 
@@ -64626,9 +64660,6 @@ msgstr ""
 msgid "TOC indicates that data has permission to be copied without limit"
 msgstr ""
 
-msgid "TRAP handler: debug prompt"
-msgstr ""
-
 msgid "TTY console"
 msgstr ""
 
@@ -64640,9 +64671,6 @@ msgstr "Groupe de transaction auquel revenir (implique -FX)"
 
 msgid "Tab Completion for npm"
 msgstr ""
-
-msgid "Tab Completions"
-msgstr "Complétions par tabulation"
 
 msgid "Tab stop spacing"
 msgstr ""
@@ -64965,9 +64993,6 @@ msgstr "Temporairement hors-ligne"
 msgid "Temporary mount point property"
 msgstr "Paramètre de point de montage temporaire"
 
-msgid "Terminal features used by fish"
-msgstr ""
-
 msgid "Terminal identification"
 msgstr ""
 
@@ -65064,27 +65089,6 @@ msgstr ""
 msgid "Test goal implementation of the import mojo"
 msgstr ""
 
-msgid "Test if We are specifying a color value for the prompt"
-msgstr ""
-
-msgid "Test if We are specifying a locale value for the prompt"
-msgstr ""
-
-msgid "Test if a breakpoint is currently in effect"
-msgstr ""
-
-msgid "Test if a code block is currently evaluated"
-msgstr ""
-
-msgid "Test if a command substitution is currently evaluated"
-msgstr ""
-
-msgid "Test if a feature flag is enabled"
-msgstr ""
-
-msgid "Test if a non-switch argument has been given in the current commandline"
-msgstr "Vérifier si un argument non binaire a été spécifié sur la ligne de commande actuelle"
-
 msgid "Test if a package exists"
 msgstr "Vérifier si un paquet existe"
 
@@ -65098,9 +65102,6 @@ msgid "Test if a package has exactly this version"
 msgstr ""
 
 msgid "Test if adb has yet to be given the subcommand"
-msgstr ""
-
-msgid "Test if all new jobs are put under job control"
 msgstr ""
 
 msgid "Test if an ebuild-argument has been given in the current commandline"
@@ -65130,20 +65131,8 @@ msgstr "Vérifier si bundle s’est fait donner une sous-commande spécifique"
 msgid "Test if bundle has been given no subcommand"
 msgstr "Vérifier si bundle ne s’est encore fait donner aucune sous-commande"
 
-msgid "Test if current token is on Nth place"
-msgstr ""
-
-msgid "Test if current token is the Nth (ignoring command and switches/flags)"
-msgstr ""
-
-msgid "Test if function is defined"
-msgstr "Vérifier l’existence de la fonction"
-
 msgid "Test if given subcommand is used"
 msgstr "Vérifier si la sous-commande spécifiée est utilisée"
-
-msgid "Test if inside an interactive read builtin"
-msgstr ""
 
 msgid "Test if k3d has yet to be given subcommands"
 msgstr ""
@@ -65153,15 +65142,6 @@ msgstr "Tester si kitchen doit encore se faire donner la sous-commande"
 
 msgid "Test if lxc has yet to be given the command"
 msgstr "Vérifier si lxc doit encore se faire donner la sous-commande"
-
-msgid "Test if new jobs are never put under job control"
-msgstr ""
-
-msgid "Test if no non-switch argument has been specified yet"
-msgstr ""
-
-msgid "Test if only interactive new jobs are put under job control"
-msgstr ""
 
 msgid "Test if opkg command should have installed packages as potential completion"
 msgstr ""
@@ -65187,22 +65167,10 @@ msgstr ""
 msgid "Test if snap has yet to be given the subcommand"
 msgstr ""
 
-msgid "Test if the terminal suports the given feature"
-msgstr ""
-
 msgid "Test if there is a subcommand given"
 msgstr ""
 
-msgid "Test if this is a login shell"
-msgstr "Vérifier si ceci est un shell de connexion"
-
-msgid "Test if this is an interactive shell"
-msgstr "Vérifier si ceci est un shell interactif"
-
 msgid "Test if usbip has yet to be given the subcommand"
-msgstr ""
-
-msgid "Test if variable is defined"
 msgstr ""
 
 msgid "Test if vim-addons has yet to be given the subcommand"
@@ -65294,12 +65262,6 @@ msgstr ""
 
 msgid "Test_pattern Specify a test pattern to be read (and written) to disk blocks"
 msgstr "Motif-test Spécifier le motif de test à lire depuis, et écrire dans, les blocs"
-
-msgid "Tests if a file descriptor is a tty"
-msgstr "Vérifier si un descripteur de fichier est un terminal"
-
-msgid "Tests if builtin exists"
-msgstr ""
 
 msgid "Tests if the service exists or not"
 msgstr ""
@@ -65765,9 +65727,6 @@ msgstr ""
 
 msgid "The start offset in the backend device"
 msgstr ""
-
-msgid "The status variable"
-msgstr "La variable status"
 
 msgid "The store period in seconds for the daemon command"
 msgstr ""
@@ -66468,9 +66427,6 @@ msgstr ""
 msgid "Treat event case-insensitively"
 msgstr ""
 
-msgid "Treat expansion argument as a fish function"
-msgstr ""
-
 msgid "Treat exported or foreign devices as inactive"
 msgstr "Considérer les périphériques exportés ou étrangers comme inactifs"
 
@@ -66610,12 +66566,6 @@ msgid "Triggers a new sync with GitHub"
 msgstr ""
 
 msgid "Trim image edges"
-msgstr ""
-
-msgid "Trim only leading chars"
-msgstr ""
-
-msgid "Trim only trailing chars"
 msgstr ""
 
 msgid "Truncate the history to a specified number of revisions"
@@ -67191,9 +67141,6 @@ msgstr ""
 msgid "Undeploys the apk(s) of the current project(s) to all attached devices and emulators"
 msgstr ""
 
-msgid "Underline style"
-msgstr ""
-
 msgid "Understand ANSI C trigraphs for input (only languages C, C++, ObjectiveC)"
 msgstr ""
 
@@ -67313,9 +67260,6 @@ msgstr ""
 
 msgid "Unity build"
 msgstr ""
-
-msgid "Universal Variables"
-msgstr "Variables universelles"
 
 msgid "Unix socket file to communicate with the MySQL server"
 msgstr ""
@@ -67536,12 +67480,6 @@ msgstr ""
 msgid "Untrust device"
 msgstr ""
 
-msgid "Update $PATH directly"
-msgstr ""
-
-msgid "Update PATH when fish_user_paths changes"
-msgstr "Mettre à jour PATH lorsque fish_user_paths est modifié"
-
 msgid "Update a NuGet source"
 msgstr ""
 
@@ -67700,9 +67638,6 @@ msgstr ""
 
 msgid "Update locally, not in Kerberos"
 msgstr ""
-
-msgid "Update man-page based completions"
-msgstr "Mettre à jour les complétions basées sur les pages de manuel"
 
 msgid "Update md5sum"
 msgstr "Mettre à jour la somme de contrôle MD5"
@@ -68466,9 +68401,6 @@ msgstr ""
 msgid "Use NAME"
 msgstr ""
 
-msgid "Use NUL character as line terminator"
-msgstr ""
-
 msgid "Use NULs as output field/commit terminators"
 msgstr ""
 
@@ -68739,9 +68671,6 @@ msgstr ""
 msgid "Use a first argument as output path"
 msgstr ""
 
-msgid "Use a global $fish_user_paths"
-msgstr ""
-
 msgid "Use a library template"
 msgstr ""
 
@@ -68798,9 +68727,6 @@ msgstr ""
 
 msgid "Use a specified .gemspec to create the Gemfile"
 msgstr "Utiliser un fichier .gemspec spécifié pour créer le fichier Gemfile"
-
-msgid "Use a universal $fish_user_paths (default)"
-msgstr ""
 
 msgid "Use active mode for data transfers"
 msgstr ""
@@ -69543,9 +69469,6 @@ msgstr ""
 msgid "Use only a given repository"
 msgstr "Utiliser seulement un dépôt spécifié"
 
-msgid "Use only long option"
-msgstr ""
-
 msgid "Use only paramiko, no openssh"
 msgstr ""
 
@@ -69654,9 +69577,6 @@ msgstr ""
 msgid "Use raw packet of specified protocol for tracerouting"
 msgstr ""
 
-msgid "Use regex instead of globs"
-msgstr ""
-
 msgid "Use registers (stack) for passing arguments to functions"
 msgstr ""
 
@@ -69724,9 +69644,6 @@ msgid "Use sharper (and slower) RGB->YUV conversion"
 msgstr ""
 
 msgid "Use shell as the user's login shell, rather than the default"
-msgstr ""
-
-msgid "Use shell tokenization rules when splitting"
 msgstr ""
 
 msgid "Use short status indicators"
@@ -70140,9 +70057,6 @@ msgstr ""
 msgid "Use the portable calling conventions proposed by HP for ELF systems"
 msgstr "Utiliser les conventions d’appel portables proposées par HP pour les systèmes ELF"
 
-msgid "Use the portable output format"
-msgstr "Utiliser le format de sortie portable (POSIX 1003.2)"
-
 msgid "Use the progressive mode for AC"
 msgstr ""
 
@@ -70234,9 +70148,6 @@ msgid "Use the standard DDNS scheme"
 msgstr ""
 
 msgid "Use the system Readline library"
-msgstr ""
-
-msgid "Use the visible width, excluding escape sequences"
 msgstr ""
 
 msgid "Use this SUPERBLOCK copy"
@@ -70413,9 +70324,6 @@ msgstr ""
 msgid "Used w/ --prof,starts profiling automatically)"
 msgstr ""
 
-msgid "Useful functions for writing completions"
-msgstr "Fonctions utiles pour écrire des complétions"
-
 msgid "User defined format"
 msgstr "Format défini par l’utilisateur"
 
@@ -70584,22 +70492,7 @@ msgstr ""
 msgid "Values of the Origin header to allow for incoming requests"
 msgstr ""
 
-msgid "Variable expansion $VARNAME"
-msgstr ""
-
-msgid "Variable scope"
-msgstr "Portée des variable"
-
-msgid "Variable scope for functions"
-msgstr "Portée des variables des fonctions"
-
 msgid "Variable to manipulate"
-msgstr ""
-
-msgid "Variables for changing highlighting colors"
-msgstr "Variables de coloration syntaxique"
-
-msgid "Variables with multiple elements"
 msgstr ""
 
 msgid "Vary the brightness, saturation, and hue [value]"
@@ -70643,9 +70536,6 @@ msgstr "Journalisation verbeuse"
 
 msgid "Verbose messages when run foreground"
 msgstr "Messages détaillés lors de l’exécution au premier plan"
-
-msgid "Verbose mode"
-msgstr "Mode verbeux"
 
 msgid "Verbose mode (-vv/-vvv/-vvvv for more)"
 msgstr ""
@@ -70881,12 +70771,6 @@ msgstr ""
 msgid "Vhci_hcd port the device is on"
 msgstr ""
 
-msgid "Vi mode commands"
-msgstr "Commandes en mode vi"
-
-msgid "Vi-style bindings that inherit emacs-style bindings in all modes"
-msgstr ""
-
 msgid "Video bitrate"
 msgstr ""
 
@@ -70903,12 +70787,6 @@ msgid "View all assigned tasks"
 msgstr ""
 
 msgid "View and manage past transactions"
-msgstr ""
-
-msgid "View and pick from the sample prompts"
-msgstr ""
-
-msgid "View and pick from the sample themes"
 msgstr ""
 
 msgid "View contents of something encrypted"
@@ -70997,9 +70875,6 @@ msgstr ""
 
 msgid "Visible overlay"
 msgstr ""
-
-msgid "Visual mode"
-msgstr "Mode visuel"
 
 msgid "Visually show diff of changes in the index"
 msgstr "Afficher les différences des changements dans l’index"
@@ -71478,12 +71353,6 @@ msgstr "Adresse du serveur Web pour les recherches en ligne de commande"
 msgid "Weight for XEN_CREDIT"
 msgstr ""
 
-msgid "What characters are allowed in names"
-msgstr ""
-
-msgid "What set -x does"
-msgstr ""
-
 msgid "What to backup"
 msgstr ""
 
@@ -71634,9 +71503,6 @@ msgstr ""
 msgid "When used with -s, --silent, it makes curl show an error message if it fails"
 msgstr ""
 
-msgid "Where to direct debug output to"
-msgstr ""
-
 msgid "Where to install C header files"
 msgstr ""
 
@@ -71651,9 +71517,6 @@ msgstr ""
 
 msgid "Where to look for the current torrents' data"
 msgstr ""
-
-msgid "Where to put completions"
-msgstr "Où placer les complétions"
 
 msgid "Where to put documentation files"
 msgstr ""
@@ -71799,12 +71662,6 @@ msgstr ""
 msgid "Who to send signal to"
 msgstr ""
 
-msgid "Why $PATH is special"
-msgstr ""
-
-msgid "Why fish?"
-msgstr "Pourquoi fish ?"
-
 msgid "Why, What & How We Log"
 msgstr ""
 
@@ -71822,9 +71679,6 @@ msgstr ""
 
 msgid "Width of scan area [160..640pel]"
 msgstr ""
-
-msgid "Wildcard expansion *.*"
-msgstr "Expansion des métacaractères *.*"
 
 msgid "Will run all tests affected by file changes in the last commit made"
 msgstr ""
@@ -71989,9 +71843,6 @@ msgid "Wrap up the output with html tags"
 msgstr ""
 
 msgid "Wrap width"
-msgstr ""
-
-msgid "Wrapper for the complete built-in. Skips the long completions on non-GNU systems"
 msgstr ""
 
 msgid "Wrapper to run tests with (e.g. valgrind)"
@@ -72168,15 +72019,6 @@ msgstr ""
 msgid "Write out the current configuration"
 msgstr "Afficher la configuration actuelle"
 
-msgid "Write out the fossil prompt"
-msgstr ""
-
-msgid "Write out the hg prompt"
-msgstr ""
-
-msgid "Write out the prompt"
-msgstr ""
-
 msgid "Write output back to the same file instead of stdout"
 msgstr ""
 
@@ -72303,9 +72145,6 @@ msgstr ""
 msgid "Write to devices as files (implies --inplace)"
 msgstr ""
 
-msgid "Write to file"
-msgstr "Écrire dans le fichier spécifié"
-
 msgid "Write to specified log file"
 msgstr ""
 
@@ -72335,9 +72174,6 @@ msgstr ""
 
 msgid "Writes domain or or a key in the domain"
 msgstr ""
-
-msgid "Writing your own completions"
-msgstr "Créer vos propres complétions"
 
 msgid "Wwn of disk device"
 msgstr ""
@@ -72691,9 +72527,6 @@ msgid "alias for -F short --list"
 msgstr "Alias pour -F short --list"
 
 msgid "alias for the created org"
-msgstr ""
-
-msgid "all components of the path must exist"
 msgstr ""
 
 msgid "all control characters"
@@ -73302,9 +73135,6 @@ msgstr "Compiler le binaire de test dans « pkq.cetc », sans l’exécuter"
 msgid "complement the set of selected bytes, characters or fields"
 msgstr ""
 
-msgid "condition evaluation utility"
-msgstr ""
-
 msgid "condition: evaluate Condition and Assert assignments in unit file"
 msgstr ""
 
@@ -73662,9 +73492,6 @@ msgstr ""
 msgid "digest the stylesheet asset references without the query string `?vsn=d`"
 msgstr ""
 
-msgid "dir to save function(s) into"
-msgstr ""
-
 msgid "directory path to store test run artifacts: for example, log files and test results"
 msgstr ""
 
@@ -73827,9 +73654,6 @@ msgstr "Afficher les journaux d’une application"
 msgid "display navigation URL, but don’t launch browser"
 msgstr ""
 
-msgid "display or manipulate interactive command history"
-msgstr ""
-
 msgid "display or set date and time"
 msgstr ""
 
@@ -73860,14 +73684,8 @@ msgstr ""
 msgid "display the version number El ENVIRONMENT The d… [See Man Page]"
 msgstr ""
 
-msgid "display this help and exit"
-msgstr "Afficher cette aide et quitter"
-
 msgid "display to use"
 msgstr "Affichage à utiliser"
-
-msgid "display user name for the prompt"
-msgstr ""
 
 msgid "display usual progress messages from called programs"
 msgstr "Afficher les messages de progression habituels des programmes appelés"
@@ -74097,9 +73915,6 @@ msgstr ""
 msgid "don't emit a status line whenever a password is cracked"
 msgstr ""
 
-msgid "don't expand symlinks"
-msgstr "Ne pas développer les liens symboliques"
-
 msgid "don't follow copies and renames"
 msgstr "Ne pas suivre les copies et renommages"
 
@@ -74263,9 +74078,6 @@ msgid "editor to compose toot"
 msgstr ""
 
 msgid "eliminate dead phis"
-msgstr ""
-
-msgid "emacs-like key binds"
 msgstr ""
 
 msgid "email address"
@@ -74706,15 +74518,6 @@ msgstr "Première révision à éditer"
 msgid "first truncate SET1 to length of SET2"
 msgstr "Tronquer d’abord le premier ensemble à la longueur du second"
 
-msgid "fish_git_prompt helper, checks char variables"
-msgstr ""
-
-msgid "fish_git_prompt helper, checks color variables"
-msgstr ""
-
-msgid "fish_git_prompt helper, returns the current Git operation and branch"
-msgstr ""
-
 msgid "flag permits fetching & resolving domains using insecure schemes"
 msgstr ""
 
@@ -74737,9 +74540,6 @@ msgid "follow changeset history, or file history across copies and renames"
 msgstr "Suivre l’historique des modifications, ou l’historique du fichier à travers copies et renommages"
 
 msgid "follow links"
-msgstr ""
-
-msgid "foo=bar variable overrides"
 msgstr ""
 
 msgid "for --disable-eprt"
@@ -75093,9 +74893,6 @@ msgstr "Considérer que les tabulations comportent N caractères et non 8"
 msgid "help for ollama"
 msgstr ""
 
-msgid "helper function that does pretty formatting on svn status"
-msgstr ""
-
 msgid "herd(s) for the pkg"
 msgstr ""
 
@@ -75166,9 +74963,6 @@ msgid "ideographic characters"
 msgstr ""
 
 msgid "if -A is specified, detach other clients attached to the session"
-msgstr ""
-
-msgid "ifs and elses"
 msgstr ""
 
 msgid "ignore ICMP unreachable in UDP"
@@ -75281,9 +75075,6 @@ msgstr ""
 
 msgid "increase verbosity level by one"
 msgstr "Incrémenter le niveau de verbosité"
-
-msgid "increment or decrement the number below the cursor"
-msgstr ""
 
 msgid "incremental mode"
 msgstr ""
@@ -76347,9 +76138,6 @@ msgstr ""
 msgid "no colors in output"
 msgstr ""
 
-msgid "no components of the path need exist"
-msgstr ""
-
 msgid "no prompt to confirm deletion"
 msgstr ""
 
@@ -76515,31 +76303,10 @@ msgstr "Ouvrir la documentation d’un greffon dans votre navigateur"
 msgid "open an org in your browser"
 msgstr ""
 
-msgid "open app in background"
-msgstr ""
-
-msgid "open app with fresh state"
-msgstr ""
-
 msgid "open backing file with O_DIRECT"
 msgstr ""
 
-msgid "open in TextEdit"
-msgstr ""
-
-msgid "open in default editor"
-msgstr ""
-
-msgid "open library header file"
-msgstr ""
-
 msgid "open new instance"
-msgstr ""
-
-msgid "open new instance of app"
-msgstr ""
-
-msgid "open stdin with editor"
 msgstr ""
 
 msgid "open template"
@@ -76683,9 +76450,6 @@ msgstr "Afficher les informations d’utilisation"
 msgid "output verbose messages on internal operations"
 msgstr ""
 
-msgid "output version information and exit"
-msgstr "Afficher les informations de version et quitter"
-
 msgid "overall filesystem tasks and information"
 msgstr ""
 
@@ -76741,9 +76505,6 @@ msgid "partition containing loader (Default: 1)"
 msgstr ""
 
 msgid "pass in template for formatting"
-msgstr ""
-
-msgid "pass remaining args to app"
 msgstr ""
 
 msgid "password file to activate the connection"
@@ -76975,9 +76736,6 @@ msgid "print SIZE in bytes rather than in human readable format"
 msgstr ""
 
 msgid "print a stack trace if an assertion failure occurs"
-msgstr ""
-
-msgid "print absolute paths unless paths below FILE"
 msgstr ""
 
 msgid "print additional information"
@@ -77236,9 +76994,6 @@ msgid "print the operating system version."
 msgstr "Afficher la version du système d’exploitation"
 
 msgid "print the relocation entries"
-msgstr ""
-
-msgid "print the resolved path relative to FILE"
 msgstr ""
 
 msgid "print the version"
@@ -77700,13 +77455,7 @@ msgstr ""
 msgid "resize support: > 1.0 blurry, < 1.0 sharp"
 msgstr ""
 
-msgid "resolve '..' components before symlinks"
-msgstr ""
-
 msgid "resolve non-local accounts"
-msgstr ""
-
-msgid "resolve symlinks as encountered (default)"
 msgstr ""
 
 msgid "respect case when matching symbols"
@@ -77766,9 +77515,6 @@ msgstr ""
 msgid "retrieve the status of a package version creation request"
 msgstr ""
 
-msgid "return an absolute path without symlinks"
-msgstr ""
-
 msgid "return version and exit"
 msgstr ""
 
@@ -77782,9 +77528,6 @@ msgid "returns bytecode linking options"
 msgstr ""
 
 msgid "returns include options"
-msgstr ""
-
-msgid "reveal in Finder"
 msgstr ""
 
 msgid "reverse order of output"
@@ -77922,9 +77665,6 @@ msgstr ""
 msgid "run tests from a single class synchronously"
 msgstr ""
 
-msgid "run the given command after the current commandline and redraw the prompt"
-msgstr ""
-
 msgid "run the package hammer test in the Salesforce preview version"
 msgstr ""
 
@@ -77949,9 +77689,6 @@ msgstr ""
 msgid "save buffer to path"
 msgstr ""
 
-msgid "save function(s) to disk"
-msgstr ""
-
 msgid "save msgs in status bar in per-client msg log"
 msgstr "Sauvegarder les messages de la barre d’état dans le journal des messages de chaque client"
 
@@ -77974,9 +77711,6 @@ msgid "search for buildfile towards the root and use it"
 msgstr ""
 
 msgid "search for given arch"
-msgstr ""
-
-msgid "search forward or move down 1 line"
 msgstr ""
 
 msgid "search only in the specified repository"
@@ -78087,9 +77821,6 @@ msgstr ""
 msgid "send the prefix key"
 msgstr "Utiliser la combinaison de touche de préfixe"
 
-msgid "separate output with NUL rather than newline"
-msgstr ""
-
 msgid "serial number embedded in the certificate"
 msgstr ""
 
@@ -78118,9 +77849,6 @@ msgid "set an alias for the authenticated org"
 msgstr ""
 
 msgid "set an alias for the created username to reference within the CLI"
-msgstr ""
-
-msgid "set an environment variable like path_helper does (macOS only)"
 msgstr ""
 
 msgid "set ap_scan parameter"
@@ -78283,12 +78011,6 @@ msgid "sets bootnum inactive"
 msgstr ""
 
 msgid "shelve with the specified commit date"
-msgstr ""
-
-msgid "short CWD for the prompt"
-msgstr ""
-
-msgid "short hostname for the prompt"
 msgstr ""
 
 msgid "short wordlist with static seed words/morphemes"
@@ -78762,12 +78484,6 @@ msgstr "Spécifier un nouveaux shell, '/bin/bash -l -c' par défaut"
 msgid "specify a validity interval when signing a certificate"
 msgstr ""
 
-msgid "specify app bundle id"
-msgstr ""
-
-msgid "specify app name"
-msgstr ""
-
 msgid "specify build file [default=build.ninja]"
 msgstr ""
 
@@ -78927,12 +78643,6 @@ msgstr ""
 msgid "suppress diagnostics about file/dir-creation failure"
 msgstr ""
 
-msgid "suppress most error messages"
-msgstr "Masquer la plupart des messages d’erreur"
-
-msgid "suppress output"
-msgstr "Masquer la sortie"
-
 msgid "suppress sourcing of configuration files"
 msgstr ""
 
@@ -79009,9 +78719,6 @@ msgid "testlevel enum value"
 msgstr ""
 
 msgid "tests to run if --testlevel RunSpecifiedTests"
-msgstr ""
-
-msgid "text color"
 msgstr ""
 
 msgid "the ID of the batch whose status you want to view"
@@ -79614,9 +79321,6 @@ msgstr ""
 msgid "validate given config file and test it against given command"
 msgstr ""
 
-msgid "var[x..y] slices"
-msgstr ""
-
 msgid "verbose [use twice to be more verbose]"
 msgstr ""
 
@@ -79645,9 +79349,6 @@ msgid "vertical align of modes and owners"
 msgstr ""
 
 msgid "vet packages"
-msgstr ""
-
-msgid "vi-like key bindings for fish"
 msgstr ""
 
 msgid "view a record"
@@ -79682,9 +79383,6 @@ msgstr "Visionneur PS"
 
 msgid "visit FILE using find-file"
 msgstr "Visiter le fichier spécifié avec find-file"
-
-msgid "wait for app to exit"
-msgstr ""
 
 msgid "wait for async suite definition"
 msgstr ""
@@ -79744,9 +79442,6 @@ msgid "whether generate stack-trace in case of fatal signals"
 msgstr ""
 
 msgid "whether keys have been revoked in a KRL"
-msgstr ""
-
-msgid "while, for and begin"
 msgstr ""
 
 msgid "whitespace characters"
@@ -79828,10 +79523,4 @@ msgid "zIconBeep percentage"
 msgstr ""
 
 msgid "zero-I/O mode [used for scanning]"
-msgstr ""
-
-msgid "{a,b} brace expansion"
-msgstr ""
-
-msgid "~ expansion"
 msgstr ""

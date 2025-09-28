@@ -3,7 +3,6 @@
 use fish_build_helper::{fish_build_dir, workspace_root};
 use rsconf::Target;
 use std::env;
-use std::error::Error;
 use std::path::{Path, PathBuf};
 
 fn canonicalize<P: AsRef<Path>>(path: P) -> PathBuf {
@@ -81,53 +80,44 @@ fn detect_cfgs(target: &mut Target) {
     for (name, handler) in [
         // Ignore the first entry, it just sets up the type inference. Model new entries after the
         // second line.
-        (
-            "",
-            &(|_: &Target| Ok(false)) as &dyn Fn(&Target) -> Result<bool, Box<dyn Error>>,
-        ),
+        ("", &(|_: &Target| false) as &dyn Fn(&Target) -> bool),
         ("apple", &detect_apple),
         ("bsd", &detect_bsd),
         ("cygwin", &detect_cygwin),
         ("small_main_stack", &has_small_stack),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| {
-            Ok(target.has_symbol("localeconv_l"))
+            target.has_symbol("localeconv_l")
         }),
         ("FISH_USE_POSIX_SPAWN", &|target| {
-            Ok(target.has_header("spawn.h"))
+            target.has_header("spawn.h")
         }),
         ("HAVE_PIPE2", &|target| {
-            Ok(target.has_symbol("pipe2"))
+            target.has_symbol("pipe2")
         }),
         ("HAVE_EVENTFD", &|target| {
             // FIXME: NetBSD 10 has eventfd, but the libc crate does not expose it.
             if cfg!(target_os = "netbsd") {
-                 Ok(false)
+                 false
              } else {
-                 Ok(target.has_header("sys/eventfd.h"))
+                 target.has_header("sys/eventfd.h")
             }
         }),
         ("HAVE_WAITSTATUS_SIGNAL_RET", &|target| {
-            Ok(target.r#if("WEXITSTATUS(0x007f) == 0x7f", &["sys/wait.h"]))
+            target.r#if("WEXITSTATUS(0x007f) == 0x7f", &["sys/wait.h"])
         }),
     ] {
-        match handler(target) {
-            Err(e) => {
-                rsconf::warn!("{}: {}", name, e);
-                rsconf::declare_cfg(name, false);
-            },
-            Ok(enabled) => rsconf::declare_cfg(name, enabled),
-        }
+        rsconf::declare_cfg(name, handler(target))
     }
 }
 
-fn detect_apple(_: &Target) -> Result<bool, Box<dyn Error>> {
-    Ok(cfg!(any(target_os = "ios", target_os = "macos")))
+fn detect_apple(_: &Target) -> bool {
+    cfg!(any(target_os = "ios", target_os = "macos"))
 }
 
-fn detect_cygwin(_: &Target) -> Result<bool, Box<dyn Error>> {
+fn detect_cygwin(_: &Target) -> bool {
     // Cygwin target is usually cross-compiled.
-    Ok(std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "cygwin")
+    std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "cygwin"
 }
 
 /// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
@@ -136,7 +126,7 @@ fn detect_cygwin(_: &Target) -> Result<bool, Box<dyn Error>> {
 /// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
 /// doesn't necessarily include less-popular forks nor does it group them into families more
 /// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
-fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
+fn detect_bsd(_: &Target) -> bool {
     // Instead of using `uname`, we can inspect the TARGET env variable set by Cargo. This lets us
     // support cross-compilation scenarios.
     let mut target = std::env::var("TARGET").unwrap();
@@ -151,7 +141,7 @@ fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
         target_os = "openbsd",
     ))]
     assert!(is_bsd, "Target incorrectly detected as not BSD!");
-    Ok(is_bsd)
+    is_bsd
 }
 
 /// Rust sets the stack size of newly created threads to a sane value, but is at at the mercy of the
@@ -160,13 +150,13 @@ fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
 ///
 /// 0.5 MiB is small enough that we'd have to drastically reduce MAX_STACK_DEPTH to less than 10, so
 /// we instead use a workaround to increase the main thread size.
-fn has_small_stack(_: &Target) -> Result<bool, Box<dyn Error>> {
+fn has_small_stack(_: &Target) -> bool {
     #[cfg(not(any(target_os = "ios", target_os = "macos", target_os = "netbsd")))]
-    return Ok(false);
+    return false;
 
     // NetBSD 10 also needs this but can't find pthread_get_stacksize_np.
     #[cfg(target_os = "netbsd")]
-    return Ok(true);
+    return true;
 
     #[cfg(any(target_os = "ios", target_os = "macos"))]
     {
@@ -182,8 +172,8 @@ fn has_small_stack(_: &Target) -> Result<bool, Box<dyn Error>> {
         let stack_size = unsafe { pthread_get_stacksize_np(pthread_self()) };
         const TWO_MIB: usize = 2 * 1024 * 1024 - 1;
         match stack_size {
-            0..=TWO_MIB => Ok(true),
-            _ => Ok(false),
+            0..=TWO_MIB => true,
+            _ => false,
         }
     }
 }

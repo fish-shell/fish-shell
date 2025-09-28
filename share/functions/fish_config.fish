@@ -87,7 +87,7 @@ function fish_config --description "Launch fish's web based configuration"
                 return 1
             end
 
-            set -l prompt_dir $__fish_data_dir/sample_prompts $__fish_data_dir/tools/web_config/sample_prompts
+            set -l prompt_dir $__fish_data_dir/tools/web_config/sample_prompts
             switch $cmd
                 case show
                     set -l fish (status fish-path)

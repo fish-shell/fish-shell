@@ -180,7 +180,7 @@ To install fish with embedded files, just use ``cargo``, like::
    cargo install --git https://github.com/fish-shell/fish-shell --tag "$(curl -s https://api.github.com/repos/fish-shell/fish-shell/releases/latest | jq -r .tag_name)" # to build the latest release
    cargo install --git https://github.com/fish-shell/fish-shell # to build the latest development snapshot
 
-This will place the binaries in ``~/.cargo/bin/``, but you can place them wherever you want.
+This will place the standalone binaries in ``~/.cargo/bin/``, but you can place them wherever you want.
 
 This build won't have the HTML docs (``help`` will open the online version).
 It will try to build the man pages with sphinx-build. If that is not available and you would like to include man pages, you need to install it and retrigger the build script, e.g. by setting FISH_BUILD_DOCS=1::

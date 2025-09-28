@@ -1,6 +1,13 @@
 fish ?.?.? (released ???)
 =========================
 
+fish 4.1.1 (released ???)
+=========================
+
+This release fixes the following regressions identified in 4.1.0:
+
+- Some :doc:`fish_config <cmds/fish_config>` subcommands for prompts and themes were broken in standalone Linux builds (those using the ``embed-data`` cargo feature), which has been fixed (:issue:`11832`).
+
 fish 4.1.0 (released September 27, 2025)
 ========================================
 

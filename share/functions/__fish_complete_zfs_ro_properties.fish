@@ -1,4 +1,5 @@
-function __fish_complete_zfs_ro_properties -d "Completes with ZFS read-only properties"
+# localization: tier3
+function __fish_complete_zfs_ro_properties
     echo -e "available\tAvailable space"
     echo -e "avail\tAvailable space"
     echo -e "compressratio\tAchieved compression ratio"

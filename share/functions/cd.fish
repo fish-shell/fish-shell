@@ -1,3 +1,4 @@
+# localization: tier1
 #
 # Wrap the builtin cd command to maintain directory history.
 #

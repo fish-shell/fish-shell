@@ -1,3 +1,4 @@
+# localization: skip(deprecated)
 function __fish_pwd --description "Show current path"
     if status test-feature regex-easyesc
         string replace -r '^/cygdrive/(.)?' '\U$1:' -- $PWD

@@ -1,3 +1,4 @@
+# localization: tier1
 function dirh --description "Print the current directory history (the prev and next lists)"
     set -l options h/help
     argparse -n dirh --max-args=0 $options -- $argv

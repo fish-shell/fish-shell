@@ -1,4 +1,5 @@
-function setenv --description 'Set an env var for csh compatibility.'
+# localization: tier1
+function setenv
     # No arguments should cause the current env vars to be displayed.
     if not set -q argv[1]
         env
@@ -27,7 +28,7 @@ function setenv --description 'Set an env var for csh compatibility.'
         # This message is verbatim from csh. We don't really need to do this but if we don't fish
         # will display a different error message which might confuse someone expecting the csh
         # message.
-        printf (_ '%s: Variable name must contain alphanumeric characters\n') setenv >&2
+        echo "setenv: Variable name must contain alphanumeric characters" >&2
         return 1
     end
 

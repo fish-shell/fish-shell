@@ -1,4 +1,5 @@
-function __fish_anyeditor --description "Print a editor to use, or an error message"
+# localization: tier1
+function __fish_anyeditor
     set -l editor
     if set -q VISUAL
         echo $VISUAL | read -at editor

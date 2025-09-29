@@ -1,3 +1,4 @@
+# localization: tier1
 # This function is typically bound to Alt-L, it is used to list the contents
 # of the directory under the cursor.
 

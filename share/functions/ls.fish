@@ -1,4 +1,5 @@
-function ls --description "List contents of directory"
+# localization: skip(uses-apropos)
+function ls
     # Make ls use colors and show indicators if we are on a system that supports that feature and writing to stdout.
     #
 

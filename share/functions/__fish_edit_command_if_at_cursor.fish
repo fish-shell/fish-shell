@@ -1,3 +1,4 @@
+# localization: tier1
 function __fish_edit_command_if_at_cursor --description 'If cursor is at the command token, edit the command source file'
     set -l tokens (commandline -xpc)
     set -l command

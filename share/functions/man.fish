@@ -1,9 +1,11 @@
+# localization: skip(uses-apropos)
+
 if not command -qs man
     # see #5329 and discussion at https://github.com/fish-shell/fish-shell/commit/13e025bdb01cc4dd08463ec497a0a3495873702f
     exit
 end
 
-function man --description "Format and display the on-line manual pages"
+function man
     # Work around the "builtin" manpage that everything symlinks to,
     # by prepending our fish datadir to man. This also ensures that man gives fish's
     # man pages priority, without having to put fish's bin directories first in $PATH.

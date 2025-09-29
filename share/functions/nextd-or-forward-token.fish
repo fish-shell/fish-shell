@@ -1,3 +1,4 @@
+# localization: tier1
 function nextd-or-forward-token --description "If commandline is empty, run nextd; else move one argument to the right"
     if test "$(commandline; printf .)" = \n.
         nextd

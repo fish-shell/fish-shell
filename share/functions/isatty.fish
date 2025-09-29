@@ -1,3 +1,4 @@
+# localization: tier1
 function isatty -d "Tests if a file descriptor is a tty"
     set -l options h/help
     argparse -n isatty $options -- $argv

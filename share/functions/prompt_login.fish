@@ -1,3 +1,4 @@
+# localization: tier1
 function prompt_login --description "display user name for the prompt"
     if not set -q __fish_machine
         set -g __fish_machine

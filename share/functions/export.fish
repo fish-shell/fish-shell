@@ -1,3 +1,4 @@
+# localization: tier1
 function export --description 'Set env variable. Alias for `set -gx` for bash compatibility.'
     if not set -q argv[1]
         set -x

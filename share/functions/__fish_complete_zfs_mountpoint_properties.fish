@@ -1,4 +1,5 @@
-function __fish_complete_zfs_mountpoint_properties -d "Completes with ZFS mountpoint properties"
+# localization: tier3
+function __fish_complete_zfs_mountpoint_properties
     set -l OS ""
     switch (uname)
         case Linux

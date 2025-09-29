@@ -1,3 +1,5 @@
+# localization: skip(barely-used)
+
 set --local CONDITION '! __fish_seen_argument --short r --long required-val --short o --long optional-val'
 
 complete --command fish_opt --no-files

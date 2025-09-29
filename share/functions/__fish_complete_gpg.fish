@@ -1,3 +1,4 @@
+# localization: tier3
 #
 # Completions for the gpg program.
 #
@@ -15,7 +16,7 @@
 # removed. The remaining list of completions is still quite
 # impressive.
 
-function __fish_complete_gpg -d "Internal function for gpg completion code deduplication" -a __fish_complete_gpg_command
+function __fish_complete_gpg -a __fish_complete_gpg_command
     if string match -q 'gpg (GnuPG) 1.*' ($__fish_complete_gpg_command --version 2>/dev/null)
         complete -c $__fish_complete_gpg_command -l simple-sk-checksum -d 'Integrity protect secret keys by using a SHA-1 checksum'
         complete -c $__fish_complete_gpg_command -l no-sig-create-check -d "Do not verify each signature right after creation"

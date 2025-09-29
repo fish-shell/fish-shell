@@ -41,7 +41,7 @@ set x (functions -v -D vared)
 if test (count $x) -ne 5
     or not string match -rq '.*functions/vared\.fish' $x[1]
     or test $x[2] != autoloaded
-    or test $x[3] != 6
+    or test $x[3] != 7
     or test $x[4] != scope-shadowing
     or test $x[5] != 'Edit variable value'
     echo "Unexpected output for 'functions -v -D vared': $x" >&2

@@ -1,3 +1,4 @@
+# localization: skip(uses-apropos)
 #
 # Match colors for grep, if supported
 #

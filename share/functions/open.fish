@@ -1,3 +1,4 @@
+# localization: tier1
 #
 # This allows us to use 'open FILENAME' to open a given file in the default
 # application for the file.

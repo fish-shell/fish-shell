@@ -1,3 +1,4 @@
+# localization: tier3
 function __fish_complete_magick
     complete -c $argv -o adjoin -d 'Join images into a single multi-image file'
     complete -c $argv -o affine -d 'Affine transform matrix [matrix]'

@@ -1,3 +1,5 @@
+# localization: skip(uses-apropos)
+
 # If seq is not installed, then define a function that invokes __fish_fallback_seq
 # We can't call type here because that also calls seq
 
@@ -7,18 +9,18 @@ end
 
 if command -sq gseq
     # No seq provided by the OS, but GNU coreutils was apparently installed, fantastic
-    function seq --description "Print sequences of numbers (gseq)"
+    function seq
         gseq $argv
     end
     exit
 end
 
 # No seq command
-function seq --description "Print sequences of numbers"
+function seq
     __fish_fallback_seq $argv
 end
 
-function __fish_fallback_seq --description "Fallback implementation of the seq command"
+function __fish_fallback_seq
     set -l from 1
     set -l step 1
     set -l to 1
@@ -39,13 +41,13 @@ function __fish_fallback_seq --description "Fallback implementation of the seq c
             set step $argv[2]
             set to $argv[3]
         case '*'
-            printf (_ "%s: Expected 1, 2 or 3 arguments, got %d\n") seq (count $argv) >&2
+            printf "seq: Expected 1, 2 or 3 arguments, got %d\n" (count $argv) >&2
             return 1
     end
 
     for i in $from $step $to
         if not string match -rq -- '^-?[0-9]*([0-9]*|\.[0-9]+)$' $i
-            printf (_ "%s: '%s' is not a number\n") seq $i >&2
+            printf "seq: '%s' is not a number\n" $i >&2
             return 1
         end
     end

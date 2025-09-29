@@ -1,3 +1,5 @@
+# localization: tier1
+
 # This defines a compatibility shim for the `trap` command found in other shells like bash and zsh.
 function trap -d 'Perform an action when the shell receives a signal'
     set -l options h/help l/list-signals p/print

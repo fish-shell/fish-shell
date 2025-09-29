@@ -379,9 +379,10 @@ msgstr "%ls: Expected exactly two names (current function name, and new function
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
 msgstr ""
 
+#
 #, c-format
-msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
-msgstr "%ls: Function “%ls” already exists. Cannot create copy “%ls”\n"
+msgid "%ls: Function '%ls' already exists. Cannot create copy of '%ls'\n"
+msgstr ""
 
 #, c-format
 msgid "%ls: Function '%ls' does not exist\n"

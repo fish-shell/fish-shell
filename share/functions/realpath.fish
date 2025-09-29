@@ -7,7 +7,7 @@
 # However, we only want our builtin if there is no external realpath command.
 
 if command -sq realpath
-    function realpath -w realpath -d "print the resolved path [command realpath]"
+    function realpath -d "print the resolved path [command realpath]"
         command realpath $argv
     end
     exit 0
@@ -15,7 +15,7 @@ end
 
 # If there is a HomeBrew installed version of GNU realpath named grealpath use that.
 if command -sq grealpath
-    function realpath -w grealpath -d "print the resolved path [command grealpath]"
+    function realpath -d "print the resolved path [command grealpath]"
         command grealpath $argv
     end
     exit 0

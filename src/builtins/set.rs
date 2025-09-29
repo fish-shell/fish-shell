@@ -468,7 +468,7 @@ fn split_var_and_indexes_internal<'a>(
             l_ind = 1; // first index
         } else {
             l_ind = wcstoi_partial(c, crate::wutil::Options::default(), &mut consumed)
-                .map_err(|_| EnvArrayParseError::InvalidIndex(res.varname.to_owned()))?;
+                .map_err(|_| EnvArrayParseError::InvalidIndex(c.slice_from(consumed).to_owned()))?;
             c = c.slice_from(consumed);
             // Skip trailing whitespace.
             while !c.is_empty() && c.char_at(0).is_whitespace() {
@@ -494,11 +494,14 @@ fn split_var_and_indexes_internal<'a>(
             let l_ind2: isize;
             // If we are at the last index range expression, a missing end-index means the range
             // spans until the last item.
+            let tmp = consumed;
             if res.indexes.is_empty() && c.char_at(0) == ']' {
                 l_ind2 = -1;
             } else {
                 l_ind2 = wcstoi_partial(c, crate::wutil::Options::default(), &mut consumed)
-                    .map_err(|_| EnvArrayParseError::InvalidIndex(res.varname.to_owned()))?;
+                    .map_err(|_| {
+                        EnvArrayParseError::InvalidIndex(c.slice_from(consumed - tmp).to_owned())
+                    })?;
                 c = c.slice_from(consumed);
                 // Skip trailing whitespace.
                 while !c.is_empty() && c.char_at(0).is_whitespace() {

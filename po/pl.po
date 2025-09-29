@@ -344,10 +344,6 @@ msgid "%ls: Could not find job '%d'\n"
 msgstr ""
 
 #, c-format
-msgid "%ls: Could not get executable path: '%s'\n"
-msgstr ""
-
-#, c-format
 msgid "%ls: Did you mean `set %ls %ls`?"
 msgstr ""
 
@@ -418,10 +414,6 @@ msgstr ""
 
 #, c-format
 msgid "%ls: Invalid end value '%ls'\n"
-msgstr ""
-
-#, c-format
-msgid "%ls: Invalid escape sequence in pattern \"%ls\"\n"
 msgstr ""
 
 #, c-format
@@ -1187,10 +1179,6 @@ msgstr ""
 #, c-format
 msgid "Home for %ls"
 msgstr "Katalog domowy dla %ls"
-
-#, c-format
-msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
-msgstr ""
 
 msgid "I/O on asynchronous file descriptor is possible"
 msgstr ""

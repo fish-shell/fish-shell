@@ -195,9 +195,12 @@ impl RegexError {
             InvalidEscape(pattern) => {
                 string_error!(
                     streams,
-                    "%ls: Invalid escape sequence in pattern \"%ls\"\n",
-                    cmd,
-                    pattern
+                    "%ls",
+                    sprintf!(
+                        "%ls: Invalid escape sequence in pattern \"%ls\"\n",
+                        cmd,
+                        pattern
+                    )
                 );
             }
         }

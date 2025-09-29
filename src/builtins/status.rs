@@ -726,7 +726,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 STATUS_FISH_PATH => {
                     let path = get_executable_path("fish");
                     if path.is_empty() {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(sprintf!(
                             "%ls: Could not get executable path: '%s'\n",
                             cmd,
                             Errno::last().to_string()

@@ -342,10 +342,6 @@ msgid "%ls: Could not find job '%d'\n"
 msgstr "%ls: 找不到作业 '%d'\n"
 
 #, c-format
-msgid "%ls: Could not get executable path: '%s'\n"
-msgstr "%ls: 无法获取可执行路径: '%s'\n"
-
-#, c-format
 msgid "%ls: Did you mean `set %ls %ls`?"
 msgstr "%ls: 您是否指`set %ls %ls`?"
 
@@ -417,10 +413,6 @@ msgstr "%s: 无效的计数值 '%s'\n"
 #, c-format
 msgid "%ls: Invalid end value '%ls'\n"
 msgstr "%ls: 无效的end值 '%ls'\n"
-
-#, c-format
-msgid "%ls: Invalid escape sequence in pattern \"%ls\"\n"
-msgstr "%ls: 模式字符串中包含不合法的转义字符 \"%ls\"\n"
 
 #, c-format
 msgid "%ls: Invalid escape style '%ls'\n"
@@ -1185,10 +1177,6 @@ msgstr "历史会话 ID '%ls' 不是有效的可变名称 . 切换回`%ls`."
 #, c-format
 msgid "Home for %ls"
 msgstr "%ls 的 Home"
-
-#, c-format
-msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
-msgstr "检测到自身为孤立进程，优雅退出。进程 pid 为 %d."
 
 msgid "I/O on asynchronous file descriptor is possible"
 msgstr ""

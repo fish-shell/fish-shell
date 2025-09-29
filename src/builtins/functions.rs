@@ -351,7 +351,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
         if function::exists(new_func, parser) {
             streams.err.append(wgettext_fmt!(
-                "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n",
+                "%ls: Function '%ls' already exists. Cannot create copy of '%ls'\n",
                 cmd,
                 new_func,
                 current_func

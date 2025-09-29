@@ -373,9 +373,10 @@ msgstr "%ls: 预期有两个确切的名称(当前函数名称, 和新函数名�
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
 msgstr "%ls: 对于 --handlers-type 选项，预期 generic | variable | signal | exit | job-id \n"
 
+#
 #, c-format
-msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
-msgstr "%ls: 函数 '%ls' 已经存在 . 无法创建复制 '%ls'\n"
+msgid "%ls: Function '%ls' already exists. Cannot create copy of '%ls'\n"
+msgstr ""
 
 #, c-format
 msgid "%ls: Function '%ls' does not exist\n"

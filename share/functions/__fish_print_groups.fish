@@ -1,3 +1,4 @@
+# localization: skip(private)
 # This should be used where you want group names without a description. If you also want
 # a description, such as when getting a list of groups for a completion, you probably want
 # __fish_complete_groups.

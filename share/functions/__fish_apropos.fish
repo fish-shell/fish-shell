@@ -1,3 +1,4 @@
+# localization: skip(private)
 if not type -q apropos
     function __fish_apropos
     end

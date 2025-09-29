@@ -1,3 +1,5 @@
+# localization: skip(private)
+#
 # This function is compatible with clang, clang++, and variations thereof, and is shared
 # by clang.fish and clang++.fish.
 # We dynamically query the head at `(commandline -x)[1]` to get the correct completions.

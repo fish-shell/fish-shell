@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_argcomplete_complete
     set -lx _ARGCOMPLETE 1
     set -lx _ARGCOMPLETE_IFS \n

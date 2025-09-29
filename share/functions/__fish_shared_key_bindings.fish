@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mode"
     # These are some bindings that are supposed to be shared between vi mode and default mode.
     # They are supposed to be unrelated to text-editing (or movement).

@@ -1,3 +1,5 @@
+# localization: skip(private)
+#
 # Find files ending in any of the non-switch arguments and output them as completions.
 # * --description provides the description that should be part of each generated completion,
 # * --prefix=DIR makes __fish_complete_suffix behave as if it were called in DIR rather than $PWD

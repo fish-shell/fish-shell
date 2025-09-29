@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_path --description "Complete using path"
     set -l target
     set -l description

@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_contains_opt -d "Checks if a specific option has been given in the current commandline"
     set -l next_short
     set -l short_opt

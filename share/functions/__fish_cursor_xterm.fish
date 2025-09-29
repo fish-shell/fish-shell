@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_cursor_xterm -d 'Set cursor (xterm)'
     set -l shape $argv[1]
 

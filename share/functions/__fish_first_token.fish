@@ -1,3 +1,4 @@
+# localization: skip(private)
 # Retrieves the first non-switch argument from the command line buffer
 function __fish_first_token
     set -l tokens (commandline -cx)

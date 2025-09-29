@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_eopkg_packages
     type -q -f eopkg || return 1
 

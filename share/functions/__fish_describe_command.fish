@@ -1,3 +1,4 @@
+# localization: skip(private)
 #
 # This function is used internally by the fish command completion code
 #

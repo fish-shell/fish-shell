@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_job_pids --description "Print a list of job PIDs and their commands"
     if set -l jobpids (jobs -p)
         # when run at the commandline, the first line of output is a header, but

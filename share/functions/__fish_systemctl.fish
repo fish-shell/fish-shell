@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_systemctl --description 'Call systemctl with some options from the current commandline'
     # We don't want to complete with ANSI color codes
     set -lu SYSTEMD_COLORS

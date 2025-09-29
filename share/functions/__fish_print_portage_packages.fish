@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_portage_packages
     # This completes the package name from the portage tree.
     # True for installing new packages. Function for printing

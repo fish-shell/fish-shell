@@ -1,3 +1,5 @@
+# localization: skip(private)
+#
 # Helper function for contextual autocompletion of GPG crypto algorithm options
 
 function __fish_print_gpg_algo -d "Complete using all algorithms of the type specified in argv[2] supported by gpg. argv[2] is a regexp" -a __fish_complete_gpg_command

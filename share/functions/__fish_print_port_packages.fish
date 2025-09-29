@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_port_packages
     type -q -f port || return 1
 

@@ -1,3 +1,5 @@
+# localization: skip(private)
+#
 # Helper function for completions that need to enumerate block devices.
 function __fish_complete_blockdevice
     set -l cmd (commandline -ct)

@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_not_contain_opt -d "Checks that a specific option is not in the current command line"
     set -l next_short
     set -l short_opt

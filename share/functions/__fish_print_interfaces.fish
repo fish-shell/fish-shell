@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_interfaces --description "Print a list of known network interfaces"
     if test -d /sys/class/net
         path basename /sys/class/net/*

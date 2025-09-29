@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_cache_put
     set -l cache_file $argv[1]
     touch $cache_file

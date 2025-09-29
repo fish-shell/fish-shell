@@ -1,3 +1,4 @@
+# localization: skip(private)
 set -l erase_line "$(
     if status test-feature ignore-terminfo
         echo \e\[K

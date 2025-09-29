@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_list --argument-names div cmd prefix iprefix
     if not set -q cmd[1]
         echo "Usage:

@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_atool_archive_contents --description 'List archive contents'
     set -l cmd (commandline -cxp)
     set -e cmd[1]

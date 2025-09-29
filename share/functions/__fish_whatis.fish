@@ -1,3 +1,5 @@
+# localization: skip(private)
+
 # uses `whatis` if available to describe a command
 
 function __fish_whatis

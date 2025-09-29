@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_portage_available_pkgs --description 'Print all available packages'
     set -l paths (__fish_print_portage_repository_paths)
     set -q paths[1]

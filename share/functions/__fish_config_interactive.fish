@@ -1,3 +1,4 @@
+# localization: skip(private)
 #
 # Initializations that should only be performed when entering interactive mode.
 #

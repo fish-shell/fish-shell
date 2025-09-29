@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_ps
     switch (command -s ps | path resolve | path basename)
         case busybox

@@ -1,3 +1,5 @@
+# localization: skip(private)
+
 #
 # Test to see if we've seen a subcommand from a list.
 # This logic may seem backwards, but the commandline will often be much shorter

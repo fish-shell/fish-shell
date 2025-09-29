@@ -1,3 +1,4 @@
+# localization: skip(private)
 set -l dir "$(path dirname -- (status fish-path 2>/dev/null))"
 
 if command -v $dir/fish_indent >/dev/null

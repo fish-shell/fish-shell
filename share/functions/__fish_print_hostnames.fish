@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_hostnames -d "Print a list of known hostnames"
     # This function used to primarily query `getent hosts` and only read from `/etc/hosts` if
     # `getent` did not exist or `getent hosts` failed, based off the (documented) assumption that

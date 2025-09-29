@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_cached --description "Cache the command output for a given amount of time"
 
     argparse --min-args 1 --max-args 1 --stop-nonopt 't/max-age=!_validate_int --min 0' 'k/cache-key=' -- $argv

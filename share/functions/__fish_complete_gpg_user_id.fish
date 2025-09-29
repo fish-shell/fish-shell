@@ -1,5 +1,6 @@
-# Helper function for contextual autocompletion of gpg user ids
+# localization: skip(private)
 
+# Helper function for contextual autocompletion of gpg user ids
 function __fish_complete_gpg_user_id -d "Complete using gpg user ids" -a __fish_complete_gpg_command list_arg
     # gpg doesn't seem to like it when you use the whole key name as a
     # completion, so we skip the <EMAIL> part and use it as a description.

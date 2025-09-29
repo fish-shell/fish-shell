@@ -11,7 +11,7 @@ complete -c commandline -s t -l current-token -d "Select token under cursor"
 complete -c commandline -s b -l current-buffer -d "Select entire command line (default)"
 
 complete -c commandline -s c -l cut-at-cursor -d "Only return that part of the command line before the cursor"
-complete -c commandline -s f -l function -d "Inject readline functions to reader"
+complete -c commandline -s f -l function -d "execute readline function"
 complete -c commandline -s x -l tokens-expanded -d "Print a list of expanded tokens"
 
 complete -c commandline -s I -l input -d "Specify command to operate on"

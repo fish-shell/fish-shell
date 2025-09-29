@@ -2786,9 +2786,6 @@ msgstr ""
 msgid "Initialization files"
 msgstr "Fichiers d’initialisation"
 
-msgid "Inject readline functions to reader"
-msgstr "Injecter les fonctions readline au lecteur"
-
 msgid "Input/Output (IO) redirection"
 msgstr "Redirection d’entrée/sortie (E/S)"
 
@@ -3807,6 +3804,9 @@ msgid "don't expand symlinks"
 msgstr "Ne pas développer les liens symboliques"
 
 msgid "emacs-like key binds"
+msgstr ""
+
+msgid "execute readline function"
 msgstr ""
 
 msgid "fish_git_prompt helper, checks char variables"

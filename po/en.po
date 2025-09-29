@@ -1921,9 +1921,6 @@ msgstr ""
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 msgstr "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 
-msgid "%s: '%s' is not a number\\n"
-msgstr "%s: “%s” is not a number\\n"
-
 msgid "%s: Could not create configuration directory '%s'\\n"
 msgstr ""
 
@@ -1935,9 +1932,6 @@ msgstr ""
 
 msgid "%s: Either the --short or --long flag must be provided\\n"
 msgstr ""
-
-msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
-msgstr "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 msgstr "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
@@ -1966,14 +1960,8 @@ msgstr ""
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
 msgstr "%s: The number of positions to skip must be a non-negative integer\\n"
 
-msgid "%s: These flags are not allowed by fish realpath: '%s'"
-msgstr ""
-
 msgid "%s: Too many arguments"
 msgstr ""
-
-msgid "%s: Too many arguments %s\\n"
-msgstr "%s: Too many arguments %s\\n"
 
 msgid "%s: Too many arguments\\n"
 msgstr "%s: Too many arguments\\n"
@@ -1991,9 +1979,6 @@ msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
 msgstr "%s: Value '%s' for flag '%s' is not an integer\\n"
 
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
-msgstr ""
-
-msgid "%s: Variable name must contain alphanumeric characters\\n"
 msgstr ""
 
 msgid "%s: body cannot be empty\\n"
@@ -2025,9 +2010,6 @@ msgstr ""
 
 msgid "Cancelled function editing"
 msgstr "Cancelled function editing"
-
-msgid "Cannot format help; no parser found"
-msgstr ""
 
 msgid "Command history cleared!\\n"
 msgstr ""
@@ -10528,9 +10510,6 @@ msgstr "Complete dd operands"
 msgid "Complete directory prefixes"
 msgstr ""
 
-msgid "Complete ftp, pftp"
-msgstr ""
-
 msgid "Complete group IDs with group name as description"
 msgstr ""
 
@@ -10591,18 +10570,6 @@ msgstr ""
 msgid "Completely silent mode"
 msgstr ""
 
-msgid "Completes with ZFS mountpoint properties"
-msgstr "Completes with ZFS mountpoint properties"
-
-msgid "Completes with ZFS properties which can only be written at filesystem creation, and only be read thereafter"
-msgstr "Completes with ZFS properties which can only be written at filesystem creation, and only be read thereafter"
-
-msgid "Completes with ZFS read-only properties"
-msgstr "Completes with ZFS read-only properties"
-
-msgid "Completes with ZFS read-write properties"
-msgstr "Completes with ZFS read-write properties"
-
 msgid "Completes with available ZFS pools"
 msgstr "Completes with available ZFS pools"
 
@@ -10613,9 +10580,6 @@ msgid "Completions for Docutils HTML options"
 msgstr ""
 
 msgid "Completions for Docutils LaTeX options"
-msgstr ""
-
-msgid "Completions for Docutils common options"
 msgstr ""
 
 msgid "Completions for Docutils standalone reader options"
@@ -24685,9 +24649,6 @@ msgstr "Fake mounting"
 msgid "Fall back to three way merge on patch failure"
 msgstr ""
 
-msgid "Fallback implementation of the seq command"
-msgstr "Fallback implementation of the seq command"
-
 msgid "Fallback instance name for template units"
 msgstr ""
 
@@ -26619,9 +26580,6 @@ msgstr ""
 
 msgid "Format all input files like typing stubs regardless of file extension"
 msgstr ""
-
-msgid "Format and display the on-line manual pages"
-msgstr "Format and display the on-line manual pages"
 
 msgid "Format and output info on each ref"
 msgstr ""
@@ -31609,9 +31567,6 @@ msgstr ""
 msgid "Internal flag only to be used by e2fsck(8) and mke2fs(8)"
 msgstr ""
 
-msgid "Internal function for gpg completion code deduplication"
-msgstr ""
-
 msgid "Interpolates variables into a manifest"
 msgstr ""
 
@@ -33432,9 +33387,6 @@ msgstr ""
 
 msgid "List contents of a package matching pattern"
 msgstr "List contents of a package matching pattern"
-
-msgid "List contents of directory"
-msgstr "List contents of directory"
 
 msgid "List contents of directory using long format"
 msgstr "List contents of directory using long format"
@@ -42757,9 +42709,6 @@ msgstr ""
 msgid "Print a description of target specific options for each tool"
 msgstr ""
 
-msgid "Print a editor to use, or an error message"
-msgstr ""
-
 msgid "Print a file"
 msgstr ""
 
@@ -44401,12 +44350,6 @@ msgstr ""
 msgid "Print security context"
 msgstr ""
 
-msgid "Print sequences of numbers"
-msgstr "Print sequences of numbers"
-
-msgid "Print sequences of numbers (gseq)"
-msgstr ""
-
 msgid "Print service status"
 msgstr "Print service status"
 
@@ -44819,9 +44762,6 @@ msgid "Print the plist in a human-readable fashion"
 msgstr ""
 
 msgid "Print the program argument list"
-msgstr ""
-
-msgid "Print the prompts for all available vcsen"
 msgstr ""
 
 msgid "Print the protections for each file"
@@ -54086,9 +54026,6 @@ msgid "Set an alternate configuration file"
 msgstr ""
 
 msgid "Set an alternate database location"
-msgstr ""
-
-msgid "Set an env var for csh compatibility."
 msgstr ""
 
 msgid "Set an env variable for an app"
@@ -72133,9 +72070,6 @@ msgstr "Write out the current configuration"
 msgid "Write out the fossil prompt"
 msgstr ""
 
-msgid "Write out the git prompt"
-msgstr "Write out the git prompt"
-
 msgid "Write out the hg prompt"
 msgstr ""
 
@@ -77201,12 +77135,6 @@ msgid "print the operating system version."
 msgstr ""
 
 msgid "print the relocation entries"
-msgstr ""
-
-msgid "print the resolved path [command grealpath]"
-msgstr ""
-
-msgid "print the resolved path [command realpath]"
 msgstr ""
 
 msgid "print the resolved path relative to FILE"

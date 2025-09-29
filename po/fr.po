@@ -2022,9 +2022,6 @@ msgstr ""
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 msgstr "%s : %s est un tableau. Utilisez %svared%s %s[n]%s pour éditer le n-ième élément de %s\\n"
 
-msgid "%s: '%s' is not a number\\n"
-msgstr "%s : '%s' n’est pas un nombre\\n"
-
 msgid "%s: Could not create configuration directory '%s'\\n"
 msgstr ""
 
@@ -2036,9 +2033,6 @@ msgstr "%s : Pile de dossiers vide…\\n"
 
 msgid "%s: Either the --short or --long flag must be provided\\n"
 msgstr ""
-
-msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
-msgstr "%s : 1, 2 ou 3 arguments attendus, %d reçu(s)\\n"
 
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 msgstr "%s : Un argument attendu, %s reçu(s).\\n\\nRésumé :\\n\\t%svared%s VARIABLE\\n"
@@ -2067,14 +2061,8 @@ msgstr ""
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
 msgstr "%s : Le nombre de positions à passer doit être un entier naturel\\n"
 
-msgid "%s: These flags are not allowed by fish realpath: '%s'"
-msgstr "%s : Ces options ne sont pas autorisées par la version fish de realpath : '%s'"
-
 msgid "%s: Too many arguments"
 msgstr "%s : Trop d’arguments"
-
-msgid "%s: Too many arguments %s\\n"
-msgstr "%s: Trop d'arguments %s\\n"
 
 msgid "%s: Too many arguments\\n"
 msgstr "%s : Trop d’arguments\\n"
@@ -2093,9 +2081,6 @@ msgstr "%s : La valeur '%s' pour l’option '%s' n’est pas un entier\\n"
 
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
 msgstr "%s : La valeur '%s' pour l’option '%s' est inférieure au minimum autorisé pour '%s'\\n"
-
-msgid "%s: Variable name must contain alphanumeric characters\\n"
-msgstr "%s : Le nom de variable doit contenir des caractères alphanumériques\\n"
 
 msgid "%s: body cannot be empty\\n"
 msgstr ""
@@ -2126,9 +2111,6 @@ msgstr ""
 
 msgid "Cancelled function editing"
 msgstr "Édition de fonction annulée"
-
-msgid "Cannot format help; no parser found"
-msgstr ""
 
 msgid "Command history cleared!\\n"
 msgstr "Historique de commande effacé !\\n"
@@ -10629,9 +10611,6 @@ msgstr "Compléter les opérandes de dd"
 msgid "Complete directory prefixes"
 msgstr "Compléter les préfixes de dossier"
 
-msgid "Complete ftp, pftp"
-msgstr "Compléter ftp, pftp"
-
 msgid "Complete group IDs with group name as description"
 msgstr ""
 
@@ -10692,18 +10671,6 @@ msgstr ""
 msgid "Completely silent mode"
 msgstr ""
 
-msgid "Completes with ZFS mountpoint properties"
-msgstr "Complète avec les paramètres ZFS de point de montage"
-
-msgid "Completes with ZFS properties which can only be written at filesystem creation, and only be read thereafter"
-msgstr "Complète avec les paramètres ZFS pouvant être réglés seulement à la création du système de fichiers, et qui ne peuvent alors plus qu’être lus"
-
-msgid "Completes with ZFS read-only properties"
-msgstr "Complète avec les paramètres ZFS en lecture seule"
-
-msgid "Completes with ZFS read-write properties"
-msgstr "Complète avec les paramètres ZFS en lecture-écriture"
-
 msgid "Completes with available ZFS pools"
 msgstr "Complète avec les pools ZFS disponibles"
 
@@ -10714,9 +10681,6 @@ msgid "Completions for Docutils HTML options"
 msgstr ""
 
 msgid "Completions for Docutils LaTeX options"
-msgstr ""
-
-msgid "Completions for Docutils common options"
 msgstr ""
 
 msgid "Completions for Docutils standalone reader options"
@@ -24786,9 +24750,6 @@ msgstr "Ne pas monter réellement le système de fichiers"
 msgid "Fall back to three way merge on patch failure"
 msgstr ""
 
-msgid "Fallback implementation of the seq command"
-msgstr "Implémentation de repli pour la commande seq"
-
 msgid "Fallback instance name for template units"
 msgstr ""
 
@@ -26719,9 +26680,6 @@ msgid "Format according to the string format, inspired by printf."
 msgstr ""
 
 msgid "Format all input files like typing stubs regardless of file extension"
-msgstr ""
-
-msgid "Format and display the on-line manual pages"
 msgstr ""
 
 msgid "Format and output info on each ref"
@@ -31710,9 +31668,6 @@ msgstr "Fonction interne à fish"
 msgid "Internal flag only to be used by e2fsck(8) and mke2fs(8)"
 msgstr "Drapeau interne à utiliser uniquement par e2fsck(8) et mke2fs(8)"
 
-msgid "Internal function for gpg completion code deduplication"
-msgstr ""
-
 msgid "Interpolates variables into a manifest"
 msgstr ""
 
@@ -33533,9 +33488,6 @@ msgstr ""
 
 msgid "List contents of a package matching pattern"
 msgstr "Lister le contenu d'un paquet correspondant au motif"
-
-msgid "List contents of directory"
-msgstr ""
 
 msgid "List contents of directory using long format"
 msgstr ""
@@ -42858,9 +42810,6 @@ msgstr ""
 msgid "Print a description of target specific options for each tool"
 msgstr ""
 
-msgid "Print a editor to use, or an error message"
-msgstr ""
-
 msgid "Print a file"
 msgstr "Afficher un fichier"
 
@@ -44502,12 +44451,6 @@ msgstr ""
 msgid "Print security context"
 msgstr ""
 
-msgid "Print sequences of numbers"
-msgstr ""
-
-msgid "Print sequences of numbers (gseq)"
-msgstr ""
-
 msgid "Print service status"
 msgstr "Afficher l'état du service"
 
@@ -44920,9 +44863,6 @@ msgid "Print the plist in a human-readable fashion"
 msgstr ""
 
 msgid "Print the program argument list"
-msgstr ""
-
-msgid "Print the prompts for all available vcsen"
 msgstr ""
 
 msgid "Print the protections for each file"
@@ -54188,9 +54128,6 @@ msgstr "Paramétrer l’emplacement du fichier de configuration alternatif"
 
 msgid "Set an alternate database location"
 msgstr "Paramétrer l’emplacement de la base de données alternative"
-
-msgid "Set an env var for csh compatibility."
-msgstr ""
 
 msgid "Set an env variable for an app"
 msgstr ""
@@ -72234,9 +72171,6 @@ msgstr "Afficher la configuration actuelle"
 msgid "Write out the fossil prompt"
 msgstr ""
 
-msgid "Write out the git prompt"
-msgstr ""
-
 msgid "Write out the hg prompt"
 msgstr ""
 
@@ -77302,12 +77236,6 @@ msgid "print the operating system version."
 msgstr "Afficher la version du système d’exploitation"
 
 msgid "print the relocation entries"
-msgstr ""
-
-msgid "print the resolved path [command grealpath]"
-msgstr ""
-
-msgid "print the resolved path [command realpath]"
 msgstr ""
 
 msgid "print the resolved path relative to FILE"

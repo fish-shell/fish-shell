@@ -701,10 +701,6 @@ msgid "%ls: fish was not built with embedded files"
 msgstr ""
 
 #, c-format
-msgid "%ls: function name required"
-msgstr "%ls: 函数名称是必须的"
-
-#, c-format
 msgid "%ls: given %d indexes but %d values\n"
 msgstr "%ls: 给定的 %d 索引但 %d 值\n"
 

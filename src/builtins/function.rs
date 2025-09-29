@@ -243,20 +243,7 @@ fn parse_cmd_opts(
     STATUS_CMD_OK
 }
 
-fn validate_function_name(
-    argv: &mut [&wstr],
-    function_name: &mut WString,
-    cmd: &wstr,
-    streams: &mut IoStreams,
-) -> c_int {
-    if argv.len() < 2 {
-        // This is currently impossible but let's be paranoid.
-        streams
-            .err
-            .append(wgettext_fmt!("%ls: function name required", cmd));
-        return STATUS_INVALID_ARGS;
-    }
-    *function_name = argv[1].to_owned();
+fn validate_function_name(function_name: &wstr, cmd: &wstr, streams: &mut IoStreams) -> c_int {
     if !valid_func_name(function_name) {
         streams.err.append(wgettext_fmt!(
             "%ls: %ls: invalid function name",
@@ -294,8 +281,8 @@ pub fn function(
     let cmd = argv[0];
 
     // A valid function name has to be the first argument.
-    let mut function_name = WString::new();
-    let mut retval = validate_function_name(argv, &mut function_name, cmd, streams);
+    let function_name = argv[1].to_owned();
+    let mut retval = validate_function_name(&function_name, cmd, streams);
     if retval != STATUS_CMD_OK {
         return retval;
     }

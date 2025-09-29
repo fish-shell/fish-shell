@@ -1,3 +1,5 @@
+# localization: skip(uses-apropos)
+
 # Provide a minimalist realpath implementation to help deal with platforms that may not provide it
 # as a command. If an external realpath or grealpath command is available simply pass all arguments
 # thru to it. If not fallback to our builtin.
@@ -7,7 +9,7 @@
 # However, we only want our builtin if there is no external realpath command.
 
 if command -sq realpath
-    function realpath -d "print the resolved path [command realpath]"
+    function realpath
         command realpath $argv
     end
     exit 0
@@ -15,7 +17,7 @@ end
 
 # If there is a HomeBrew installed version of GNU realpath named grealpath use that.
 if command -sq grealpath
-    function realpath -d "print the resolved path [command grealpath]"
+    function realpath
         command grealpath $argv
     end
     exit 0
@@ -42,14 +44,14 @@ function realpath -d "return an absolute path without symlinks"
     # We don't implement any of the other flags so if any are set it's an error.
     if string match -q '_flag_*' -- (set -l)
         set -l flags (set -l | string replace --filter --regex '_flag_\w+\s*' '' | sort -u)
-        printf (_ "%s: These flags are not allowed by fish realpath: '%s'") realpath "$flags" >&2
+        printf "realpath: These flags are not allowed by fish realpath: '%s'" "$flags" >&2
         echo >&2
         __fish_print_help realpath
         return 1
     end
 
     if not set -q argv[1]
-        printf (_ "%ls: Expected at least %d args, got only %d\n") realpath 1 0 >&2
+        printf "realpath: Expected at least %d args, got only %d\n" 1 0 >&2
         return 1
     end
 

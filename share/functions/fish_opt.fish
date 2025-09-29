@@ -1,3 +1,5 @@
+# localization: skip(barely-used)
+
 # This is a helper function for `fish_opt`. It does some basic validation of the arguments.
 function __fish_opt_validate_args --no-scope-shadowing
     if not set -q _flag_validate && test (count $argv) -ne 0

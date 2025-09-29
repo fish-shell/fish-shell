@@ -1,3 +1,4 @@
+# localization: tier1
 function funced --description 'Edit function definition'
     set -l options h/help 'e/editor=' i/interactive s/save
     argparse -n funced --max-args=1 $options -- $argv

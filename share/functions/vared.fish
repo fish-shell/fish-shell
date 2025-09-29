@@ -1,4 +1,5 @@
-#
+# localization: tier1
+
 # This is a neat function, stolen from zsh. It allows you to edit the
 # value of a variable interactively.
 #

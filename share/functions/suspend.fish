@@ -1,3 +1,5 @@
+# localization: tier1
+
 function suspend --description 'Suspend the current shell.'
     set -l options h/help f/force
     argparse -n suspend --max-args=1 $options -- $argv

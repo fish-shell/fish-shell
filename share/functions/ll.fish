@@ -1,3 +1,4 @@
+# localization: tier1
 #
 # These are very common and useful
 #

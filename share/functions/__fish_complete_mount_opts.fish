@@ -1,3 +1,4 @@
+# localization: tier3
 function __fish_print_user_ids
     if command -sq getent
         for line in (getent passwd)

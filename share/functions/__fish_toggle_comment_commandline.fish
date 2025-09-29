@@ -1,3 +1,5 @@
+# localization: tier1
+#
 # This is meant to be bound to key sequences such as \e#. It provides a simple way to quickly
 # comment/uncomment the current command. This is something introduced by the Korn shell (ksh) in
 # 1993. It allows you to capture a command in the shell history without executing it. Then

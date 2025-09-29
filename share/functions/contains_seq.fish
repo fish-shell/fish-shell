@@ -1,3 +1,4 @@
+# localization: skip(barely-used)
 function contains_seq --description 'Return true if array contains a sequence'
     set -l printnext
     switch $argv[1]

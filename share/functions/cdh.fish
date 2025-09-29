@@ -1,3 +1,4 @@
+# localization: tier1
 # Provide a menu of the directories recently navigated to and ask the user to
 # choose one to make the new current working directory (cwd).
 

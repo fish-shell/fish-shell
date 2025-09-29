@@ -1,3 +1,5 @@
+# localization: tier1
+#
 # This function is intended to be used as a validation command for individual option specifications
 # given to the `argparse` command. It checks that the argument is a valid integer and optionally
 # whether it is in a reasonable range.

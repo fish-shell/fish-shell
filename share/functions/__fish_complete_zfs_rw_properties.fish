@@ -1,4 +1,5 @@
-function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write properties"
+# localization: tier3
+function __fish_complete_zfs_rw_properties
     set -l OS ""
     switch (uname)
         case Linux

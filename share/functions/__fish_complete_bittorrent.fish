@@ -1,5 +1,6 @@
+# localization: tier3
+#
 # Bittorrent commands
-
 function __fish_complete_bittorrent
     complete -c $argv -l max_uploads -x --description "Maximum uploads at once"
     complete -c $argv -l keepalive_interval -x --description "Number of seconds between keepalives"

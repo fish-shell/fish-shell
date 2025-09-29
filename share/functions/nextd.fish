@@ -1,3 +1,4 @@
+# localization: tier1
 function nextd --description "Move forward in the directory history"
     set -l options h/help l/list
     argparse -n nextd --max-args=1 $options -- $argv

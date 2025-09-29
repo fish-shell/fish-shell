@@ -1,3 +1,5 @@
+# localization: tier3
+#
 # Helper functions for wireshark/tshark/dumpcap completion
 
 function __fish_wireshark_choices

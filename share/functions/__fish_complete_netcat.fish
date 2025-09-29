@@ -1,3 +1,4 @@
+# localization: tier3
 function __fish_complete_netcat
     set -l nc $argv[1]
     set -l flavor $argv[-1]

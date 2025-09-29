@@ -1,3 +1,4 @@
+# localization: tier1
 function edit_command_buffer --description 'Edit the command buffer in an external editor'
     set -l tmpdir (__fish_mktemp_relative -d fish)
     or return 1

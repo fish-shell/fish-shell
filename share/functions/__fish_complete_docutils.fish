@@ -1,4 +1,5 @@
-function __fish_complete_docutils -d "Completions for Docutils common options" -a cmd
+# localization: tier3
+function __fish_complete_docutils -a cmd
     complete -x -c $cmd -k -a "(__fish_complete_suffix .rst .txt)"
 
     # General Docutils Options

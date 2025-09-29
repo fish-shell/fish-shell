@@ -1,4 +1,5 @@
-function __fish_complete_ftp -d 'Complete ftp, pftp' --argument-names ftp
+# localization: tier3
+function __fish_complete_ftp --argument-names ftp
     # Common across all ftp implementations
     complete -c $ftp -xa "(__fish_print_hostnames)" -d Hostname
     complete -c $ftp -s 4 -d 'Use IPv4 only'

@@ -1,4 +1,5 @@
-function __fish_cmd__complete_args -d 'Function to generate args'
+# localization: tier3
+function __fish_cmd__complete_args
     set -l current_token (commandline -tc)
 
     switch $current_token

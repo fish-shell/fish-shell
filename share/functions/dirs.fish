@@ -1,3 +1,4 @@
+# localization: tier1
 function dirs --description 'Print directory stack'
     set -l options h/help c
     argparse -n dirs --max-args=0 $options -- $argv

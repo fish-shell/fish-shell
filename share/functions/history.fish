@@ -1,3 +1,4 @@
+# localization: tier1
 #
 # Wrap the builtin history command to provide additional functionality.
 #

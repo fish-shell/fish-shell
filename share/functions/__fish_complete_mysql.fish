@@ -1,3 +1,4 @@
+# localization: tier3
 function __fish_mysql_query -a query
     argparse -u 'u/user=' 'P/port=' 'h/host=' 'p/password=?' 'S/socket=' -- (commandline -px)
     set -l mysql_cmd mysql

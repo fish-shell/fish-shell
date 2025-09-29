@@ -951,9 +951,16 @@ while set -e undefined
 end
 
 set -e undefined[x..]
-# CHECKERR: set: Invalid index starting at 'undefined'
+# CHECKERR: set: Invalid index starting at 'x..]'
 # CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
 # CHECKERR: set -e undefined[x..]
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -e undefined[..y]
+# CHECKERR: set: Invalid index starting at 'y]'
+# CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
+# CHECKERR: set -e undefined[..y]
 # CHECKERR: ^
 # CHECKERR: (Type 'help set' for related documentation)
 

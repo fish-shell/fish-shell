@@ -12,7 +12,7 @@ $fish --not-a-real-flag
 # CHECKERR: fish: --not-a-real-flag: unbekannte Option
 
 set --show custom_gettext_var
-# CHECK: $custom_gettext_var: Gesetzt in local Gültigkeit als nicht exportiert, mit 1 Elementen
+# CHECK: $custom_gettext_var: Gesetzt in Geltungsbereich 'local', nicht exportiert, mit 1 Elementen
 # CHECK: $custom_gettext_var[1]: |asdf|
 
 set -lx LANG en_US.utf8

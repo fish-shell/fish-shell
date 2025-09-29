@@ -34,7 +34,7 @@ msgid " (%ls)\n"
 msgstr " (%ls)\n"
 
 msgid " (read-only)\n"
-msgstr " (nur lesbar)\n"
+msgstr " (screibgeschützt)\n"
 
 msgid " a path variable"
 msgstr " eine Pfadvariable"
@@ -62,7 +62,7 @@ msgstr "$%ls: Ursprünglich geerbt als |%ls|\n"
 
 #, c-format
 msgid "$%ls: set in %ls scope, %ls,%ls with %d elements"
-msgstr "$%ls: Gesetzt in %ls Gültigkeit als %ls,%ls mit %d Elementen"
+msgstr "$%ls: Gesetzt in Geltungsbereich '%ls', %ls,%ls mit %d Elementen"
 
 msgid "$* is not supported. In fish, please use $argv."
 msgstr ""
@@ -130,7 +130,7 @@ msgstr ""
 
 #, c-format
 msgid "%ls is a function"
-msgstr ""
+msgstr "%ls ist eine Funktion"
 
 #, c-format
 msgid "%ls, version %s"
@@ -279,7 +279,7 @@ msgstr ""
 
 #, c-format
 msgid "%ls: -s requires a non-empty string\n"
-msgstr "%ls: -s erfordert eine nicht leere Zeichenkette\n"
+msgstr "%ls: -s erfordert eine nicht-leere Zeichenkette\n"
 
 #, c-format
 msgid "%ls: Ambiguous job\n"
@@ -291,11 +291,11 @@ msgstr ""
 
 #, c-format
 msgid "%ls: Argument '%ls' is out of range\n"
-msgstr "%ls: Argument '%ls' ist ausserhalb des Definitionsbereichs\n"
+msgstr "%ls: Argument '%ls' ist außerhalb des Definitionsbereichs\n"
 
 #, c-format
 msgid "%ls: Can not specify scope when removing block\n"
-msgstr "%ls: Bei Blocklöschung kann keine Gültigkeit angegeben werden\n"
+msgstr "%ls: Bei Blocklöschung kann kein Geltungsbereich angegeben werden\n"
 
 #, c-format
 msgid "%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n"
@@ -315,11 +315,11 @@ msgstr "%ls: Mehrere Positionen können nicht gleichzeitig angegeben werden\n"
 
 #, c-format
 msgid "%ls: Cannot specify multiple regex patterns\n"
-msgstr "%ls: Mehrere Regex können nicht gleichzeitig angegeben werden\n"
+msgstr "%ls: Maximal ein regulärer Ausdruck erlaubt\n"
 
 #, c-format
 msgid "%ls: Cannot specify multiple set-cursor options\n"
-msgstr "%ls: Mehrere set-cursor können nicht gleichzeitig angegeben werden\n"
+msgstr "%ls: Maximal eine set-cursor-Option erlaubt\n"
 
 #, c-format
 msgid "%ls: Cannot use --append or --prepend when assigning to a slice"
@@ -327,7 +327,7 @@ msgstr ""
 
 #, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "%ls: Befehl nicht interaktiv am Prompt gültig\n"
+msgstr "%ls: Kann nicht am Prompt verwendet werden\n"
 
 #, c-format
 msgid "%ls: Could not find '%ls'\n"
@@ -335,11 +335,11 @@ msgstr "%ls: Konnte '%ls' nicht finden\n"
 
 #, c-format
 msgid "%ls: Could not find a job with process id '%d'\n"
-msgstr "%ls: Konnte keinen Job mit Prozessid '%d' finden\n"
+msgstr "%ls: Konnte keinen Job mit Prozess-ID '%d' finden\n"
 
 #, c-format
 msgid "%ls: Could not find child processes with the name '%ls'\n"
-msgstr "%ls: Konnte Kindprozess mit Namen '%ls' nicht finden\n"
+msgstr "%ls: Kein Kindprozess namens '%ls' gefunden\n"
 
 #, c-format
 msgid "%ls: Could not find home directory\n"
@@ -347,7 +347,7 @@ msgstr "%ls: Konnte Heimordner nicht finden\n"
 
 #, c-format
 msgid "%ls: Could not find job '%d'\n"
-msgstr "%ls: Konnte Job '%d' nicht finden\n"
+msgstr "%ls: Job '%d' nicht gefunden\n"
 
 #, c-format
 msgid "%ls: Did you mean `set %ls %ls`?"
@@ -355,7 +355,7 @@ msgstr "%ls: Meintest du `set %ls %ls`?"
 
 #, c-format
 msgid "%ls: Empty directory '%ls' does not exist\n"
-msgstr "%ls: Leerer Ordner '%ls' existiert nicht\n"
+msgstr "%ls: Leerer Ordnerpfad '%ls' existiert nicht\n"
 
 #, c-format
 msgid "%ls: Error encountered while sourcing file '%ls':\n"
@@ -375,16 +375,15 @@ msgstr "%ls: Erwartete genau einen Funktionsnamen\n"
 
 #, c-format
 msgid "%ls: Expected exactly two names (current function name, and new function name)\n"
-msgstr "%ls: Erwartete exakt zwei Namen (momentanen Funktionsnamen und den Neuen)\n"
+msgstr "%ls: Erwartete exakt zwei Namen (aktuellen und neuen Funktionsnamen)\n"
 
 #, c-format
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
 msgstr "%ls: Erwartete generic | variable | signal | exit | job-id für --handlers-type\n"
 
-#
 #, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy of '%ls'\n"
-msgstr ""
+msgstr "%ls: Funktion '%ls' existiert schon. Konnte '%ls' nicht kopieren\n"
 
 #, c-format
 msgid "%ls: Function '%ls' does not exist\n"
@@ -400,7 +399,7 @@ msgstr "%ls: Implizite Zahloption '%lc' ist schon definiert\n"
 
 #, c-format
 msgid "%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n"
-msgstr "%ls: Implizite Zahloption '%lc' darf keine Modifizierer wie '%lc' haben\n"
+msgstr "%ls: Implizite Zahloption '%lc' darf keine Modifikatoren wie '%lc' haben\n"
 
 #, c-format
 msgid "%ls: Invalid --max-args value '%ls'\n"
@@ -425,7 +424,7 @@ msgstr "%ls: Ungültiger 'end'-Wert '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid escape style '%ls'\n"
-msgstr "%ls: Ungültiger Escapestil '%ls'\n"
+msgstr "%ls: Ungültiger Escape-Stil '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid fields value '%ls'\n"
@@ -437,7 +436,7 @@ msgstr "%ls: Ungültiger Funktionsname: %ls\n"
 
 #, c-format
 msgid "%ls: Invalid index starting at '%ls'\n"
-msgstr "%ls: Ungültiger Indexstart bei '%ls'\n"
+msgstr "%ls: Ungültiger Index ab '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid job control mode '%ls'\n"
@@ -453,7 +452,7 @@ msgstr ""
 
 #, c-format
 msgid "%ls: Invalid limit '%ls'\n"
-msgstr "%ls: Ungültiger Grenzwert '%ls'\n"
+msgstr "%ls: Ungültiges Limit '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid max matches value '%ls'\n"
@@ -465,7 +464,7 @@ msgstr "%ls: Ungültiger Maximalwert '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid option spec '%ls' at char '%lc'\n"
-msgstr "%ls: Ungültige Optionsbeschreibung '%ls' bei Zeichen '%lc'\n"
+msgstr "%ls: Ungültige Options-Spezifikation '%ls' bei Zeichen '%lc'\n"
 
 #, c-format
 msgid "%ls: Invalid padding character of width zero '%ls'\n"
@@ -521,11 +520,11 @@ msgstr ""
 
 #, c-format
 msgid "%ls: Missing -- separator\n"
-msgstr "%ls: Fehlendes Trennzeichen --\n"
+msgstr "%ls: Fehlendes '--'-Trennzeichen\n"
 
 #, c-format
 msgid "%ls: New limit cannot be an empty string\n"
-msgstr "%ls: Neuer Grenzwert darf keine leere Zeichenkette sein\n"
+msgstr "%ls: Neues Limit darf keine leere Zeichenkette sein\n"
 
 #, c-format
 msgid "%ls: No binding found for key '%ls'\n"
@@ -565,11 +564,11 @@ msgstr "%ls: Berechtigung verweigert: '%ls'\n"
 
 #, c-format
 msgid "%ls: Regular expression compile error: %ls\n"
-msgstr "%ls: Fehler beim Kompilieren von Regulärem Ausdruck: %ls\n"
+msgstr "%ls: Fehler beim Kompilieren von regulärem Ausdruck: %ls\n"
 
 #, c-format
 msgid "%ls: Regular expression substitute error: %ls\n"
-msgstr "%ls: Fehler beim Ersetzen von Regulärem Ausdruck: %ls\n"
+msgstr "%ls: Fehler beim Ersetzen von regulärem Ausdruck: %ls\n"
 
 #, c-format
 msgid "%ls: Resource limit not available on this operating system\n"
@@ -577,7 +576,7 @@ msgstr "%ls: Ressourcenlimit ist auf diesem Betriebssystem nicht verfügbar\n"
 
 #, c-format
 msgid "%ls: STEP must be a positive integer\n"
-msgstr "%ls: STEP muss eine positive ganze Zahl sein\n"
+msgstr "%ls: STEP muss eine positive Ganzzahl sein\n"
 
 #, c-format
 msgid "%ls: Short flag '%lc' already defined\n"
@@ -665,7 +664,7 @@ msgstr "%ls: Aufrufender Job für Eventhandler nicht gefunden"
 
 #, c-format
 msgid "%ls: can't merge history in private mode\n"
-msgstr "%ls: Kann Verlauf nicht im privaten Modus zusammenfügen\n"
+msgstr "%ls: Kann Verlauf im privaten Modus nicht zusammenfügen\n"
 
 #, c-format
 msgid "%ls: cannot both export and unexport\n"
@@ -681,11 +680,11 @@ msgstr ""
 
 #, c-format
 msgid "%ls: exclusive flag '%ls' is not valid\n"
-msgstr "%ls: Exklusive option '%ls' ist ungültig\n"
+msgstr "%ls: Exklusive Option '%ls' ist ungültig\n"
 
 #, c-format
 msgid "%ls: exclusive flag string '%ls' is not valid\n"
-msgstr "%ls: Exklusive option '%ls' ist ungültig\n"
+msgstr "%ls: Exklusive Option '%ls' ist ungültig\n"
 
 #, c-format
 msgid "%ls: expected %d arguments; got %d\n"
@@ -790,7 +789,7 @@ msgstr ""
 
 #, c-format
 msgid "%lsand %lu more rows"
-msgstr "%lsund %lu mehr Zeilen"
+msgstr "%lsund %lu weitere Zeilen"
 
 #, c-format
 msgid "%lu\n"
@@ -839,7 +838,7 @@ msgid "'end' does not take arguments. Did you forget a ';'?"
 msgstr "'end' braucht keine Parameter. Fehlendes ';'?"
 
 msgid "'end' outside of a block"
-msgstr "'end' ausserhalb eines Blocks"
+msgstr "'end' außerhalb eines Blocks"
 
 msgid "'time' is not supported for background jobs. Consider using 'command time'."
 msgstr ""
@@ -849,7 +848,7 @@ msgstr ""
 
 #, c-format
 msgid "(Type 'help %ls' for related documentation)\n"
-msgstr "(Nutze 'help %ls' für Dokumentation)\n"
+msgstr "(Nutze 'help %ls' für entsprechende Dokumentation)\n"
 
 msgid "(no matches)"
 msgstr "(keine Treffer)"
@@ -982,7 +981,7 @@ msgid "Commandname was invalid"
 msgstr "Befehlsname war ungültig"
 
 msgid "Conditionally run blocks of code"
-msgstr "Anweisungsblock bedingungsabhängig ausführen"
+msgstr "Anweisungsblock bedingt ausführen"
 
 msgid "Continue previously stopped process"
 msgstr "Vorher gestoppten Prozess fortsetzen"
@@ -1001,7 +1000,7 @@ msgid "Could not write profiling information to file '%s': %s"
 msgstr "Konnte Profilinformationen nicht in Datei '%s' schreiben: %s"
 
 msgid "Count the number of arguments"
-msgstr "Die Anzahl Argumente zählen"
+msgstr "Die Anzahl der Argumente zählen"
 
 msgid "Create a block of code"
 msgstr "Codeblock erstellen"
@@ -1026,7 +1025,7 @@ msgid "Division by zero"
 msgstr "Teilung durch Null"
 
 msgid "Edit command specific completions"
-msgstr "Befehlsspezifische Erweiterungen bearbeiten"
+msgstr "Befehlsspezifische Vervollständigungen bearbeiten"
 
 msgid "Emit an event"
 msgstr "Ein Ereignis auslösen"
@@ -1050,22 +1049,22 @@ msgid "Errors reported by exec (on by default)"
 msgstr ""
 
 msgid "Evaluate a string as a statement"
-msgstr "Eine Zeichenfolge als Befehl ausführen"
+msgstr "Text als Befehl ausführen"
 
 msgid "Evaluate block if condition is false"
 msgstr "Werte Block aus, wenn die Bedingung falsch ist"
 
 msgid "Evaluate block if condition is true"
-msgstr "Block auswerten, wenn Bedingung wahr ist"
+msgstr "Block ausführen wenn Bedingung wahr ist"
 
 msgid "Evaluate contents of file"
-msgstr "Inhalt einer Datei auswerten"
+msgstr "Inhalt einer Datei ausführen"
 
 msgid "Evaluate math expressions"
-msgstr "Mathematische Formel berechnen"
+msgstr "Mathematische Formel ausrechnen"
 
 msgid "Execute command if previous command failed"
-msgstr "Befehl ausführen, wenn vorheriger Befehl fehlerhaft war"
+msgstr "Befehl ausführen wenn vorheriger Befehl fehlschlug"
 
 msgid "Exit the shell"
 msgstr "Shell verlassen"
@@ -1154,7 +1153,7 @@ msgid "Group\n"
 msgstr "Gruppe\n"
 
 msgid "Halt execution and start debug prompt"
-msgstr "Ausführung anhalten und einen Debugprompt starten"
+msgstr "Ausführung anhalten und einen Debug-Prompt starten"
 
 msgid "Handle environment variables"
 msgstr "Behandlung von Umgebungsvariablen"
@@ -1163,13 +1162,13 @@ msgid "Handle fish key bindings"
 msgstr "Fish-Tastenbelegungen bearbeiten"
 
 msgid "Handle paths"
-msgstr "Pfade behandeln"
+msgstr "Pfade verarbeiten"
 
 msgid "Hint: a leading '0' without an 'x' indicates an octal number"
 msgstr "Tipp: Eine führende '0' ohne 'x' gibt eine Oktalzahl an"
 
 msgid "History of commands executed by user"
-msgstr "Befehlsgeschichte"
+msgstr "Befehlsverlauf"
 
 msgid "History performance measurements"
 msgstr ""
@@ -1220,7 +1219,7 @@ msgid "Invalid index value"
 msgstr "Ungültiger Indexwert"
 
 msgid "Invalid input/output redirection"
-msgstr "Ungültige input/output-Umlenkung"
+msgstr "Ungültige Eingabe-/Ausgabe-Umlenkung"
 
 #, c-format
 msgid "Invalid number: %ls"
@@ -1236,7 +1235,7 @@ msgstr "Ungültige Umleitung: %ls"
 
 #, c-format
 msgid "Invalid token '%ls'"
-msgstr "Ungültiges Token '%ls'"
+msgstr "Ungültiger Token '%ls'"
 
 #, c-format
 msgid "Items %lu to %lu of %lu"
@@ -1265,7 +1264,7 @@ msgid "Logical operations are not supported, use `test` instead"
 msgstr "Logikoperationen werden nicht unterstützt, nimm stattdessen `test`"
 
 msgid "Manage abbreviations"
-msgstr "Handbuch-Sektionen"
+msgstr "Abkürzungen verwalten"
 
 msgid "Manipulate strings"
 msgstr "Strings manipulieren"
@@ -1274,13 +1273,13 @@ msgid "Measure how long a command or block takes"
 msgstr "Dauer der Ausführung eines Befehls oder Blocks messen"
 
 msgid "Misaligned address error"
-msgstr "Fehler: nicht ausgerichtete Adresse"
+msgstr "Fehler: versetzte Adresse"
 
 msgid "Mismatched braces"
-msgstr "Unpassende Klammern"
+msgstr "Unausgeglichene Klammern"
 
 msgid "Mismatched parenthesis"
-msgstr "Nicht übereinstimmende Klammer"
+msgstr "Unausgeglichene Klammer"
 
 msgid "Missing closing parenthesis"
 msgstr "Fehlende schließende Klammer"
@@ -1290,7 +1289,7 @@ msgid "Missing end to balance this %ls"
 msgstr ""
 
 msgid "Missing hexadecimal number in Unicode escape"
-msgstr "fehlende Hexzahl in Unicode-Escapesequenz"
+msgstr "fehlende Hexadezimal-Zahl in Unicode-Escapesequenz"
 
 msgid "Missing operator"
 msgstr ""
@@ -1300,7 +1299,7 @@ msgid "Modification of read-only variable \"%ls\" is not allowed\n"
 msgstr ""
 
 msgid "Negate exit status of job"
-msgstr "Exit-Status des Jobs verneinen"
+msgstr "Exit-Status des Jobs negieren"
 
 msgid "Never"
 msgstr "Nie"
@@ -1389,7 +1388,7 @@ msgid "Process groups"
 msgstr ""
 
 msgid "Profiling timer expired"
-msgstr "Profilierungszeitgeber abgelaufen"
+msgstr "Profilierungszeit abgelaufen"
 
 msgid "Quit request from job control (^C)"
 msgstr "Quit-Anforderung über Jobsteuerung (^C)"
@@ -1468,10 +1467,10 @@ msgid "Send job %s '%ls' to background\n"
 msgstr ""
 
 msgid "Send job to background"
-msgstr "Job in Hintergrund schicken"
+msgstr "Job in den Hintergrund schicken"
 
 msgid "Send job to foreground"
-msgstr "Job in Vordergrund schicken"
+msgstr "Job in den Vordergrund schicken"
 
 msgid "Serious unexpected errors (on by default)"
 msgstr ""
@@ -1518,7 +1517,7 @@ msgid "Stop request from job control (^Z)"
 msgstr "Stoppanforderung über Jobsteuerung (^Z)"
 
 msgid "Stop the currently evaluated function"
-msgstr "Derzeit ausgewertete Funktion stoppen"
+msgstr "Derzeit ausführende Funktion stoppen"
 
 msgid "Stop the innermost loop"
 msgstr "Innerste Schleife beenden"
@@ -1586,7 +1585,7 @@ msgid "This is not a login shell\n"
 msgstr ""
 
 msgid "Timer expired"
-msgstr "Zeitgeber abgelaufen"
+msgstr "Zeit abgelaufen"
 
 msgid "Too few arguments"
 msgstr ""
@@ -1601,7 +1600,7 @@ msgid "Too much data emitted by command substitution so it was discarded"
 msgstr ""
 
 msgid "Trace or breakpoint trap"
-msgstr "Verfolgungs- oder Haltepunkt erreicht"
+msgstr "Aufzeichnungs- oder Haltepunkt erreicht"
 
 msgid "Translate a string"
 msgstr "Übersetze eine Zeichenkette"
@@ -1667,7 +1666,7 @@ msgstr "Unerwartetes Token"
 
 #, c-format
 msgid "Unicode character out of range: \\%c%0*x"
-msgstr "Unicodezeichen ausserhalb der Gültigkeit: \\%c%0*x"
+msgstr "Unicodezeichen außerhalb des gültigen Bereichs: \\%c%0*x"
 
 msgid "Unknown"
 msgstr "Unbekannt"
@@ -1716,7 +1715,7 @@ msgid "Unused signal"
 msgstr ""
 
 msgid "Urgent socket condition"
-msgstr "Vorrangige Socket-Bedingung"
+msgstr "Dringender Socket-Zustand"
 
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr ""
@@ -1762,7 +1761,7 @@ msgid "[: the last argument must be ']'"
 msgstr ""
 
 msgid "array indices start at 1, not 0."
-msgstr "Array Indexe beginnen mit 1, nicht 0"
+msgstr "Array-Indizes beginnen mit 1, nicht 0"
 
 msgid "autoloading"
 msgstr ""
@@ -1856,7 +1855,7 @@ msgid "invalid precision: %ls"
 msgstr "Ungültige Genauigkeitsangabe: %ls"
 
 msgid "missing hexadecimal number in escape"
-msgstr "fehlende Hexzahl in Escapesequenz"
+msgstr "fehlende Hexadezimal-Zahl in Escapesequenz"
 
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"
@@ -2082,7 +2081,7 @@ msgid "Warning: the file containing this function has not been saved. Changes ma
 msgstr ""
 
 msgid "Welcome to fish, the friendly interactive shell"
-msgstr "Willkommen zu fish, der freundlichen interaktiven Shell"
+msgstr "Willkommen in fish, der freundlichen interaktiven Shell"
 
 msgid "You did not say 'yes' so I will not clear your command history\\n"
 msgstr ""
@@ -2785,10 +2784,10 @@ msgid "Make the function a generic event handler"
 msgstr ""
 
 msgid "Make the function a job exit event handler"
-msgstr "Funktion zur Ereignisbehandlung bei Jobende verwenden"
+msgstr "Funktion zur Ereignisbehandlung bei Job-Ende verwenden"
 
 msgid "Make the function a process exit event handler"
-msgstr "Funktion zur Ereignisbehandlung bei Prozessende verwenden"
+msgstr "Funktion zur Ereignisbehandlung bei Prozess-Ende verwenden"
 
 msgid "Make the function a signal event handler"
 msgstr "Funktion zur Signalereignisbehandlung verwenden"
@@ -2929,7 +2928,7 @@ msgid "Only return status, no output"
 msgstr ""
 
 msgid "Only return that part of the command line before the cursor"
-msgstr "Nur Teil der Befehlszeile vor dem Curser zurückgeben"
+msgstr "Nur Teil der Befehlszeile vor dem Cursor zurückgeben"
 
 msgid "Only show status for last job to be started"
 msgstr "Nur Status für zuletzt gestarteten Job anzeigen"
@@ -3004,7 +3003,7 @@ msgid "Path is a symlink"
 msgstr ""
 
 msgid "Path to add completion to"
-msgstr "Pfad, bei dem Vervollständigung berücksichtigt werden soll"
+msgstr "Pfad, bei dem diese Vervollständigung berücksichtigt werden soll"
 
 msgid "Perform an action when the shell receives a signal"
 msgstr ""
@@ -3295,16 +3294,16 @@ msgid "Select current selection"
 msgstr ""
 
 msgid "Select entire command line (default)"
-msgstr "Vollständige Befehlszeile selektieren (Standard)"
+msgstr "Ganze Befehlszeile auswählen (Standard)"
 
 msgid "Select job under cursor"
-msgstr "Job unter Curser selektieren"
+msgstr "Job unter Cursor auswählen"
 
 msgid "Select process under cursor"
-msgstr "Prozess unter Cursor selektieren"
+msgstr "Prozess unter Cursor auswählen"
 
 msgid "Select token under cursor"
-msgstr "Token unter dem Cursor selektieren"
+msgstr "Token unter dem Cursor auswählen"
 
 msgid "Separating Commands (Semicolon)"
 msgstr ""
@@ -3556,7 +3555,7 @@ msgid "Test if this is an interactive shell"
 msgstr ""
 
 msgid "Test if variable is defined"
-msgstr "Test, ob Variable definiert ist"
+msgstr "Teste, ob Variable definiert ist"
 
 msgid "Tests if a file descriptor is a tty"
 msgstr ""
@@ -3709,7 +3708,7 @@ msgid "emacs-like key binds"
 msgstr ""
 
 msgid "execute readline function"
-msgstr ""
+msgstr "readline-Funktion ausführen"
 
 msgid "fish_git_prompt helper, checks char variables"
 msgstr ""

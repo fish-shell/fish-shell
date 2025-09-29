@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_opkg_packages
     type -q -f opkg || return 1
 

@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_freedesktop_icons -d 'List installed icon names according to `https://specifications.freedesktop.org/icon-theme-spec/0.13/`'
     # The latest `icon-theme-spec` as of 2024-08-10 is 0.13
     # https://specifications.freedesktop.org/icon-theme-spec/latest/

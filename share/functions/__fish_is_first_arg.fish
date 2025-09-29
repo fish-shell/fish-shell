@@ -1,3 +1,4 @@
+# localization: skip(private)
 # determine if this is the very first argument (regardless if switch or not)
 function __fish_is_first_arg
     set -l tokens (commandline -pxc)

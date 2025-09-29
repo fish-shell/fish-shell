@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_man
     # Try to guess what section to search in. If we don't know, we
     # use [^)]*, which should match any section.

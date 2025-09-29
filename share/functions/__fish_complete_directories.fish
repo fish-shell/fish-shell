@@ -1,3 +1,4 @@
+# localization: skip(private)
 #
 # Find directories that complete $argv[1], output them as completions
 # with description $argv[2] if defined, otherwise use 'Directory'.

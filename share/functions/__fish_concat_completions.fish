@@ -1,3 +1,5 @@
+# localization: skip(private)
+#
 # This function is intended to be used to generate completions in `-a "(...)"` calls for arguments that take 1..n values
 # separated by commas and we dynamically or statically generated a list of n values that must be combined and permuted
 # in order to appease both the `complete` machinery and the target application.

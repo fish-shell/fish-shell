@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_pacman_packages
     # Caches for 5 minutes
     type -q -f pacman || return 1

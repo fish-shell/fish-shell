@@ -1,5 +1,6 @@
-# Helper function for contextual autocompletion of GPG key ids
+# localization: skip(private)
 
+# Helper function for contextual autocompletion of GPG key ids
 function __fish_complete_gpg_key_id -d 'Complete using gpg key ids' -a __fish_complete_gpg_command list_arg
     # Use user id as description
     set -l keyid

@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_anypager --description "Print a pager to use"
     set -l pager
     # We prefer $PAGER if we have it

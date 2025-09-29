@@ -1,3 +1,5 @@
+# localization: skip(private)
+#
 # This should be used where you want user names with a description. Such as in an argument
 # completion. If you just want a list of user names use __fish_print_users.
 # The string replace command takes into account GECOS-formatted description fields, by retaining

@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_pids -d "Print a list of process identifiers along with brief descriptions"
     # This may be a bit slower, but it's nice - having the tty displayed is really handy
     # 'tail -n +2' deletes the first line, which contains the headers

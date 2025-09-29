@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_reg__complete_keys
     set -l current_token (commandline -tc | string unescape)
 

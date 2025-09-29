@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_convert_options --description 'Complete Convert options' --argument-names what
     switch $what
         case format Format

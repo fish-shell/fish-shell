@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_help --description "Print help for the specified fish function or builtin"
     set -l item $argv[1]
     switch $item
@@ -73,7 +74,7 @@ function __fish_print_help_pre_4.1 --description "Print help message for the spe
             set -a format -rLL={$cols}n
         end
     else
-        echo fish: (_ "Cannot format help; no parser found") >&2
+        echo "fish: Cannot format help; no parser found" >&2
         return 1
     end
 

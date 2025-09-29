@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_groups --description "Print a list of local groups, with group members as the description"
     if command -sq getent
         getent group | while read -l line

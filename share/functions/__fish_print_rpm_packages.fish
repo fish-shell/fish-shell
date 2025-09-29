@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_rpm_packages
     type -q -f rpm /usr/share/yum-cli/completion-helper.py || return 1
 

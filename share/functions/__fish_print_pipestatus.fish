@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_pipestatus --description "Print pipestatus for prompt"
     set -l last_status
     if set -q __fish_last_status

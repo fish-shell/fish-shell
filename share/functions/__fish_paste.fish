@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_paste
     # Also split on \r, otherwise it looks confusing
     set -l data (string split \r -- $argv[1] | string split \n)

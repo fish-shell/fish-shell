@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_cache_sourced_completions
     # Allow a `--name=foo` option which ends up in the filename.
     argparse -s name= -- $argv

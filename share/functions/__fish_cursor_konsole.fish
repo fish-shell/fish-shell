@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_cursor_konsole -d 'Set cursor (konsole)'
     set -l shape $argv[1]
     switch "$shape"

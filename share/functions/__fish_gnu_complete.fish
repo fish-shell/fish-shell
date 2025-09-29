@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_gnu_complete -d "Wrapper for the complete built-in. Skips the long completions on non-GNU systems"
     set -l is_gnu 0
 

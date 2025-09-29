@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_seen_argument --description 'Check whether argument is used'
     argparse --move-unknown 's/short=+&' 'o/old=+&' 'l/long=+&' 'w/windows=+&' -- $argv
 

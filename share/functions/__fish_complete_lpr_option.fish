@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_lpr_option --description 'Complete lpr option'
     set -l optstr "$(commandline -t)"
     switch $optstr

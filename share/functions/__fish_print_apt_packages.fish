@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_apt_packages
     argparse --name=__fish_print_packages i/installed -- $argv
     or return

@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_commands --description "Print a list of documented fish commands"
     if set -q __fish_data_dir[1] && test -d $__fish_data_dir/man/man1/
         for file in $__fish_data_dir/man/man1/**.1*

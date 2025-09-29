@@ -1,4 +1,5 @@
-function __terlar_git_prompt --description 'Write out the git prompt'
+# localization: skip(private)
+function __terlar_git_prompt
     set -q __fish_git_prompt_showdirtystate
     or set -g __fish_git_prompt_showdirtystate 1
     set -q __fish_git_prompt_showuntrackedfiles

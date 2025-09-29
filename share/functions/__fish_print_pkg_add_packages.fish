@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_pkg_add_packages
     # pkg_info on OpenBSD provides versioning info which we want for
     # installed packages but, calling it directly can cause delays in

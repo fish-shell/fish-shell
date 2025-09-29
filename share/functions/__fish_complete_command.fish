@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_command --description 'Complete using all available commands'
     set -l ctoken "$(commandline -ct)"
     switch $ctoken

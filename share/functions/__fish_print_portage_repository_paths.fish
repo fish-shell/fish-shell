@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_portage_repository_paths --description 'Print the paths of all configured repositories'
     set -l a /etc/portage/repos.conf
     set -l b

@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_print_service_names -d 'All services known to the system'
     if test -d /run/systemd/system # Systemd systems
         # For the `service` command, this needs to be without the type suffix

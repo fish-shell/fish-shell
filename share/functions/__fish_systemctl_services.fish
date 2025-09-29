@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_systemctl_services
     # We don't want to complete with ANSI color codes
     set -lu SYSTEMD_COLORS

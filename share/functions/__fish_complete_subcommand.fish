@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowing
     # How many non-option tokens we skip in the input commandline before completing the subcommand
     # Usually 1; use "--fcs-skip=2" to make it 2 (see e.g. tmux and ssh completions)

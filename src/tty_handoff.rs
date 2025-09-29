@@ -64,6 +64,8 @@ pub enum TtyQuirks {
     PreKittyIterm2,
     // Whether we are running under tmux.
     Tmux,
+    // Whether we are running under WezTerm.
+    Wezterm,
 }
 
 impl TtyQuirks {
@@ -74,6 +76,8 @@ impl TtyQuirks {
             PreKittyIterm2
         } else if xtversion.starts_with(L!("tmux ")) {
             Tmux
+        } else if xtversion.starts_with(L!("WezTerm ")) {
+            Wezterm
         } else {
             None
         }
@@ -85,7 +89,8 @@ impl TtyQuirks {
 enum ProtocolKind {
     KittyKeyboard, // Kitty keyboard support, producing CSI-u style encoding.
     Other,         // Other protocols (e.g., modifyOtherKeys)
-    None,          // No protocols
+    WorkAroundWezTerm,
+    None, // No protocols
 }
 
 // Commands to emit to enable or disable TTY protocols. Each of these contains
@@ -95,6 +100,7 @@ enum ProtocolKind {
 struct ProtocolBytes {
     kitty_keyboard: Box<[u8]>,
     other: Box<[u8]>,
+    wezterm_workaround: Box<[u8]>,
     none: Box<[u8]>,
 }
 
@@ -123,6 +129,7 @@ impl TtyProtocolsSet {
         match protocol {
             ProtocolKind::KittyKeyboard => &cmds.kitty_keyboard,
             ProtocolKind::Other => &cmds.other,
+            ProtocolKind::WorkAroundWezTerm => &cmds.wezterm_workaround,
             ProtocolKind::None => &cmds.none,
         }
     }
@@ -141,13 +148,19 @@ impl TtyQuirks {
     // Determine which keyboard protocol.
     // This is used from a signal handler.
     fn safe_get_supported_protocol(&self) -> ProtocolKind {
-        use TtyQuirks::PreKittyIterm2;
+        use TtyQuirks::{PreKittyIterm2, Wezterm};
         if *self == PreKittyIterm2 {
             return ProtocolKind::Other;
         }
         match KITTY_KEYBOARD_SUPPORTED.get() {
             Some(&true) => ProtocolKind::KittyKeyboard,
-            Some(&false) => ProtocolKind::Other,
+            Some(&false) => {
+                if *self == Wezterm {
+                    ProtocolKind::WorkAroundWezTerm
+                } else {
+                    ProtocolKind::Other
+                }
+            }
             None => ProtocolKind::None,
         }
     }
@@ -178,6 +191,10 @@ impl TtyQuirks {
                 ModifyOtherKeysEnable,       // XTerm's modifyOtherKeys
                 ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
             ])),
+            wezterm_workaround: serialize_commands(maybe_enable_focus_reporting(&[
+                DecsetBracketedPaste,
+                ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
+            ])),
             none: serialize_commands(maybe_enable_focus_reporting(&[DecsetBracketedPaste])),
         };
         let disablers = ProtocolBytes {
@@ -188,6 +205,10 @@ impl TtyQuirks {
             other: serialize_commands(maybe_disable_focus_reporting(&[
                 DecrstBracketedPaste,
                 ModifyOtherKeysDisable,
+                ApplicationKeypadModeDisable,
+            ])),
+            wezterm_workaround: serialize_commands(maybe_disable_focus_reporting(&[
+                DecrstBracketedPaste,
                 ApplicationKeypadModeDisable,
             ])),
             none: serialize_commands(maybe_disable_focus_reporting(&[DecrstBracketedPaste])),
@@ -273,6 +294,7 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
     match protocols.quirks.safe_get_supported_protocol() {
         ProtocolKind::KittyKeyboard => FLOG!(reader, mode, "kitty keyboard protocol"),
         ProtocolKind::Other => FLOG!(reader, mode, "other extended keys"),
+        ProtocolKind::WorkAroundWezTerm => FLOG!(reader, mode, "wezterm; no modifyOtherKeys"),
         ProtocolKind::None => (),
     };
     (on_write)();

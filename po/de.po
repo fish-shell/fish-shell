@@ -350,10 +350,6 @@ msgid "%ls: Could not find job '%d'\n"
 msgstr "%ls: Konnte Job '%d' nicht finden\n"
 
 #, c-format
-msgid "%ls: Could not get executable path: '%s'\n"
-msgstr "%ls: Konnte Ausführungsdatei-Pfad nicht finden: '%s'\n"
-
-#, c-format
 msgid "%ls: Did you mean `set %ls %ls`?"
 msgstr "%ls: Meintest du `set %ls %ls`?"
 
@@ -425,10 +421,6 @@ msgstr "%ls: Ungültiger 'count'-Wert '%ls'\n"
 #, c-format
 msgid "%ls: Invalid end value '%ls'\n"
 msgstr "%ls: Ungültiger 'end'-Wert '%ls'\n"
-
-#, c-format
-msgid "%ls: Invalid escape sequence in pattern \"%ls\"\n"
-msgstr "%ls: Ungültige Escapesequenz in Muster \"%ls\"\n"
 
 #, c-format
 msgid "%ls: Invalid escape style '%ls'\n"
@@ -1192,10 +1184,6 @@ msgstr "Verlaufs-ID '%ls' ist kein gültiger Variablenname. Nutze `%ls`."
 #, c-format
 msgid "Home for %ls"
 msgstr "Heimordner für %ls"
-
-#, c-format
-msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
-msgstr "Ich scheine ein verwaister Prozess zu sein, also beende ich mich höflich. Meine PID ist %d."
 
 msgid "I/O on asynchronous file descriptor is possible"
 msgstr "E/A auf asynchronem Dateideskriptor ist möglich"

@@ -449,10 +449,6 @@ msgid "%ls: Could not find job '%d'\n"
 msgstr "%ls : Impossible de trouver la tâche '%d'\n"
 
 #, c-format
-msgid "%ls: Could not get executable path: '%s'\n"
-msgstr ""
-
-#, c-format
 msgid "%ls: Did you mean `set %ls %ls`?"
 msgstr ""
 
@@ -523,10 +519,6 @@ msgstr "%ls : compte '%ls' invalide\n"
 
 #, c-format
 msgid "%ls: Invalid end value '%ls'\n"
-msgstr ""
-
-#, c-format
-msgid "%ls: Invalid escape sequence in pattern \"%ls\"\n"
 msgstr ""
 
 #, c-format
@@ -1292,10 +1284,6 @@ msgstr "L’ID de session d’historique '%ls' n’est pas un nom de variable va
 #, c-format
 msgid "Home for %ls"
 msgstr ""
-
-#, c-format
-msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
-msgstr "Il semblerait que je sois un processus orphelin, je m'arrête donc. Mon pid est %d."
 
 msgid "I/O on asynchronous file descriptor is possible"
 msgstr "E/S sur un descripteur de fichier asynchrone possible"

@@ -4551,7 +4551,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             if check_for_orphaned_process(loop_count, shell_pgid) {
                 // We're orphaned, so we just die. Another sad statistic.
                 let pid = getpid();
-                FLOG!(warning, wgettext_fmt!("I appear to be an orphaned process, so I am quitting politely. My pid is %d.", pid));
+                FLOG!(warning, sprintf!("I appear to be an orphaned process, so I am quitting politely. My pid is %d.", pid));
                 exit_without_destructors(1);
             }
 

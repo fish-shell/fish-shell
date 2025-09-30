@@ -56,26 +56,26 @@ pub fn xtversion() -> Option<&'static wstr> {
     XTVERSION.get().as_ref().map(|s| s.as_utfstr())
 }
 
-// Facts about our environment, which inform how we handle the tty.
-#[derive(Debug, Copy, Clone)]
-pub struct TtyMetadata {
+// Facts that affect how we communicate with the TTY.
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum TtyQuirks {
+    None,
+    // Running in iTerm2 before 3.5.12, which causes issues when using the kitty keyboard protocol.
+    PreKittyIterm2,
     // Whether we are running under tmux.
-    pub in_tmux: bool,
-
-    // If set, we are running before iTerm2 3.5.12, which does not support CSI-u.
-    pub pre_kitty_iterm2: bool,
+    Tmux,
 }
 
-impl TtyMetadata {
-    // Create a new TtyMetadata instance with the current environment.
+impl TtyQuirks {
+    // Create a new TtyQuirks instance with the current environment.
     fn detect(xtversion: &wstr) -> Self {
-        let in_tmux = xtversion.starts_with(L!("tmux "));
-        // Detect iTerm2 before 3.5.12.
-        let pre_kitty_iterm2 = get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12));
-
-        Self {
-            in_tmux,
-            pre_kitty_iterm2,
+        use TtyQuirks::*;
+        if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12)) {
+            PreKittyIterm2
+        } else if xtversion.starts_with(L!("tmux ")) {
+            Tmux
+        } else {
+            None
         }
     }
 }
@@ -102,19 +102,19 @@ struct ProtocolBytes {
 // This is created once at startup and then leaked, so it may be used
 // from the SIGTERM handler.
 struct TtyProtocolsSet {
-    // TTY metadata.
-    md: TtyMetadata,
+    // TTY quirks.
+    quirks: TtyQuirks,
     // Variants to enable or disable tty protocols.
     enablers: ProtocolBytes,
     disablers: ProtocolBytes,
 }
 
 impl TtyProtocolsSet {
-    // Get commands to enable or disable TTY protocols, based on the metadata
+    // Get commands to enable or disable TTY protocols
     // and the KITTY_KEYBOARD_SUPPORTED global variable.
     // THIS IS USED FROM A SIGNAL HANDLER.
     fn safe_get_commands(&self, enable: bool) -> &[u8] {
-        let protocol = self.md.safe_get_supported_protocol();
+        let protocol = self.quirks.safe_get_supported_protocol();
         let cmds = if enable {
             &self.enablers
         } else {
@@ -137,12 +137,12 @@ fn serialize_commands<'a>(cmds: impl Iterator<Item = TerminalCommand<'a>>) -> Bo
     out.contents().into()
 }
 
-impl TtyMetadata {
-    // Determine which keyboard protocol to use based on the metadata
-    // and the KITTY_KEYBOARD_SUPPORTED global variable.
+impl TtyQuirks {
+    // Determine which keyboard protocol.
     // This is used from a signal handler.
     fn safe_get_supported_protocol(&self) -> ProtocolKind {
-        if self.pre_kitty_iterm2 {
+        use TtyQuirks::PreKittyIterm2;
+        if *self == PreKittyIterm2 {
             return ProtocolKind::Other;
         }
         match KITTY_KEYBOARD_SUPPORTED.get() {
@@ -155,8 +155,13 @@ impl TtyMetadata {
     // Return the protocols set to enable or disable TTY protocols.
     fn get_protocols(self) -> TtyProtocolsSet {
         // Enable focus reporting under tmux
-        let focus_reporting_on = || self.in_tmux.then_some(DecsetFocusReporting).into_iter();
-        let focus_reporting_off = || self.in_tmux.then_some(DecrstFocusReporting).into_iter();
+        let (focus_reporting_on, focus_reporting_off) = {
+            let is_tmux = self == TtyQuirks::Tmux;
+            (
+                move || is_tmux.then_some(DecsetFocusReporting).into_iter(),
+                move || is_tmux.then_some(DecrstFocusReporting).into_iter(),
+            )
+        };
         let maybe_enable_focus_reporting = |protocols: &'static [TerminalCommand<'static>]| {
             protocols.iter().cloned().chain(focus_reporting_on())
         };
@@ -188,7 +193,7 @@ impl TtyMetadata {
             none: serialize_commands(maybe_disable_focus_reporting(&[DecrstBracketedPaste])),
         };
         TtyProtocolsSet {
-            md: self,
+            quirks: self,
             enablers,
             disablers,
         }
@@ -205,9 +210,8 @@ fn tty_protocols() -> Option<&'static TtyProtocolsSet> {
     unsafe { TTY_PROTOCOLS.load(Ordering::Acquire).as_ref() }
 }
 
-// Initialize TTY metadata.
-// This also initializes the terminal enable and disable serialized commands.
-pub fn initialize_tty_metadata() {
+// Initialize serialized commands for enabling/disabling TTY protocols in signal handlers.
+pub fn initialize_tty_protocols() {
     // Default missing query responses.
     KITTY_KEYBOARD_SUPPORTED.get_or_init(|| false);
     SCROLL_CONTENT_UP_SUPPORTED.get_or_init(|| false);
@@ -218,7 +222,7 @@ pub fn initialize_tty_metadata() {
     let mut p = TTY_PROTOCOLS.load(Acquire);
     if p.is_null() {
         // Try to swap in a new TTY protocols set.
-        p = Box::into_raw(Box::new(TtyMetadata::detect(xtversion).get_protocols()));
+        p = Box::into_raw(Box::new(TtyQuirks::detect(xtversion).get_protocols()));
         if let Err(_e) = TTY_PROTOCOLS.compare_exchange(std::ptr::null_mut(), p, Release, Acquire) {
             // Safety: p comes from Box::into_raw right above,
             // and wasn't shared with any other thread.
@@ -266,7 +270,7 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
 
     // Flog any terminal protocol changes of interest.
     let mode = if enable { "Enabling" } else { "Disabling" };
-    match protocols.md.safe_get_supported_protocol() {
+    match protocols.quirks.safe_get_supported_protocol() {
         ProtocolKind::KittyKeyboard => FLOG!(reader, mode, "kitty keyboard protocol"),
         ProtocolKind::Other => FLOG!(reader, mode, "other extended keys"),
         ProtocolKind::None => (),

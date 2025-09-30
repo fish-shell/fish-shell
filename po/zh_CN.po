@@ -1,20 +1,7 @@
 # fish-note-sections: Translations are divided into sections, each starting with a fish-section-* comment.
 # fish-note-sections: The first few sections are more important.
 # fish-note-sections: Ignore the tier3 sections unless you have a lot of time.
-msgid ""
-msgstr ""
-"Project-Id-Version: fish 1.21.8\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-10 16:38+0100\n"
-"PO-Revision-Date: 2025-09-30 19:14+0800\n"
-"Last-Translator: Yuyi Wang <Strawberry_Str@hotmail.com>\n"
-"Language-Team: \n"
-"Language: zh_CN\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.7\n"
-
+#
 # General Notices 凡例
 # abort: 中止
 # argument: 参数
@@ -41,6 +28,20 @@ msgstr ""
 # token: 记号
 # universal (variable): 通用
 # valid & invalid: 有效 & 无效
+msgid ""
+msgstr ""
+"Project-Id-Version: fish 1.21.8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-03-10 16:38+0100\n"
+"PO-Revision-Date: 2025-09-30 19:14+0800\n"
+"Last-Translator: Yuyi Wang <Strawberry_Str@hotmail.com>\n"
+"Language-Team: \n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.7\n"
+
 msgid ""
 "\n"
 "   PID  Command\n"

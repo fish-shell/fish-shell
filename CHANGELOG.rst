@@ -42,7 +42,7 @@ Deprecations and removed features
 - The ``--install`` option when fish is built as self-installing is removed, see :ref:`below <changelog-4.1-embedded>`.
 - ``set_color ff0000`` now outputs 24-bit RGB true-color even if :envvar:`COLORTERM` is unset.
   One can override this by setting :envvar:`fish_term24bit` to 0 (:issue:`11372`).
-- fish now requires the terminal to respond to queries for the :ref:`primary device attribute <term-compat-primary-da>`.
+- fish now requires the terminal to respond to queries for the :ref:`Primary Device Attribute <term-compat-primary-da>`.
   For now, this can be reversed via a :ref:`feature flag <featureflags>`,
   by running (once) ``set -Ua fish_features no-query-term`` and restarting fish.
 - Users of GNU screen may experience :ref:`minor glitches <term-compat-dcs-gnu-screen>` when starting fish.
@@ -95,9 +95,6 @@ Improved terminal support
 - Support for double, curly, dotted and dashed underlines, for use in ``fish_color_*`` variables and the :doc:`set_color builtin <cmds/set_color>` (:issue:`10957`).
 - Underlines can now be colored independent of text (:issue:`7619`).
 - New documentation page :doc:`Terminal Compatibility <terminal-compatibility>` (also accessible via ``man fish-terminal-compatibility``) lists the terminal control sequences used by fish.
-- fish now requires the terminal to respond to queries for the :ref:`primary device attribute <term-compat-primary-da>`.
-  For now, this can be reversed via a :ref:`feature flag <featureflags>`,
-  by running (once) ``set -Ua fish_features no-query-term``.
 
 Other improvements
 ------------------

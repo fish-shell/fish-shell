@@ -312,7 +312,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
                 FLOG!(
                     warning,
                     wgettext_fmt!(
-                        "%s could not read response to primary device attribute query after waiting for %d seconds. \
+                        "%s could not read response to Primary Device Attribute query after waiting for %d seconds. \
                          This is often due to a missing feature in your terminal. \
                          See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. \
                          This %s process will no longer wait for outstanding queries, \

@@ -31,7 +31,15 @@ begin
         or exit 1
     end
 
-    echo '# fish-section-tier1-from-rust'
+    function mark_section
+        set -l section_name $argv[1]
+        echo 'msgid "fish-section-'$section_name'"'
+        echo 'msgstr ""'
+        echo ''
+    end
+
+    mark_section tier1-from-rust
+
     # Get rid of duplicates and sort.
     msguniq --no-wrap --strict --sort-output $rust_extraction_file
     or exit 1
@@ -77,13 +85,13 @@ begin
         # This regex handles explicit requests to translate a message. These are more important to translate
         # than messages which should be implicitly translated.
         set -l explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
-        echo "# fish-section-$tier-from-script-explicitly-added"
+        mark_section "$tier-from-script-explicitly-added"
         extract_fish_script_messages_impl $explicit_regex $argv
 
         # This regex handles descriptions for `complete` and `function` statements. These messages are not
         # particularly important to translate. Hence the "implicit" label.
         set -l implicit_regex '^(?:\s|and |or )*(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
-        echo "# fish-section-$tier-from-script-implicitly-added"
+        mark_section "$tier-from-script-implicitly-added"
         extract_fish_script_messages_impl $implicit_regex $argv
     end
 

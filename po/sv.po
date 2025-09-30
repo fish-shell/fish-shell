@@ -1,4 +1,4 @@
-# fish-note-sections: Translations are divided into sections, each starting with a fish-section-* comment.
+# fish-note-sections: Translations are divided into sections, each starting with a fish-section-* pseudo-message.
 # fish-note-sections: The first few sections are more important.
 # fish-note-sections: Ignore the tier3 sections unless you have a lot of time.
 # Copyright © 2006
@@ -18,13 +18,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "fish-section-tier1-from-rust"
+msgstr ""
+
 msgid ""
 "\n"
 "   PID  Command\n"
 msgstr ""
 
 #, c-format
-# fish-section-tier1-from-rust
 msgid " (%ls)\n"
 msgstr ""
 
@@ -1886,7 +1888,9 @@ msgstr ""
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr ""
 
-# fish-section-tier1-from-script-explicitly-added
+msgid "fish-section-tier1-from-script-explicitly-added"
+msgstr ""
+
 msgid "%ls: %ls: expected %d arguments; got %d\\n"
 msgstr ""
 
@@ -2109,7 +2113,9 @@ msgstr ""
 msgid "python executable not found"
 msgstr ""
 
-# fish-section-tier1-from-script-implicitly-added
+msgid "fish-section-tier1-from-script-implicitly-added"
+msgstr ""
+
 msgid "# comments"
 msgstr ""
 
@@ -3811,7 +3817,12 @@ msgstr ""
 msgid "~ expansion"
 msgstr ""
 
-# fish-section-tier3-from-script-implicitly-added
+msgid "fish-section-tier3-from-script-explicitly-added"
+msgstr ""
+
+msgid "fish-section-tier3-from-script-implicitly-added"
+msgstr ""
+
 msgid " "
 msgstr ""
 

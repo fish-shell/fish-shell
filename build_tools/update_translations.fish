@@ -104,39 +104,24 @@ function merge_po_files --argument-names template_file po_file
         $po_file $template_file
     or cleanup_exit
     set -l new_po_file (mktemp) # TODO Remove on failure.
+    # Remove obsolete messages instead of keeping them as #~ entries.
     and msgattrib --no-wrap --no-obsolete -o $new_po_file $po_file
     or cleanup_exit
 
+    # This is used to identify lines which should be set here via $header_lines.
+    # Make sure that this prefix does not appear elsewhere in the file and only contains characters
+    # without special meaning in a sed pattern.
+    set -l header_prefix "# fish-note-sections: "
+    set -l header_lines \
+        "Translations are divided into sections, each starting with a fish-section-* pseudo-message." \
+        "The first few sections are more important." \
+        "Ignore the tier3 sections unless you have a lot of time."
     begin
-        echo "# fish-note-sections: Translations are divided into sections, each starting with a fish-section-* comment."
-        echo "# fish-note-sections: The first few sections are more important."
-        echo "# fish-note-sections: Ignore the tier3 sections unless you have a lot of time."
-        sed -i '
-            /^# fish-note-sections:/d;
-            /^# fish-section-/d;
-        ' $new_po_file
-
-        set -l next_line 1
-        set -l section
-        awk <$template_file '
-            /^# fish-section-\S*$/ {
-                section = $0
-            }
-            section != "" && /^msgid ".+"$/ {
-                print section
-                print $0
-                section = ""
-            }
-        ' |
-            while read -l section
-                read -l msgid_line
-                set -l line_number (grep -m1 -Fxn $msgid_line $new_po_file | string split :)[1]
-                sed -n "$next_line,$(math $line_number - 1)"p $new_po_file
-                echo $section
-                set next_line $line_number
-                # set section
-            end
-        sed -n "$next_line,\$"p $new_po_file
+        for line in $header_lines
+            printf '%s%s\n' $header_prefix $line
+        end
+        # Paste PO file without old header lines.
+        sed '/^'$header_prefix'/d;' $new_po_file
     end >$po_file
     rm $new_po_file
 end

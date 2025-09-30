@@ -53,14 +53,14 @@ previous_minor_version=${previous_version%.*}
         )
     fi
 
-    printf %s "$(awk <"$workspace_root/CHANGELOG.rst" '
+    printf '%s\n' "$(awk <"$workspace_root/CHANGELOG.rst" '
         NR <= 2 || /^\.\. ignore / { next }
         /^===/ { exit }
         { print }
     ' | sed '$d')" |
         sed -e '$s/^----*$//' # Remove spurious transitions at the end of the document.
 
-    if [ "$minor_version" != "$previous_minor_version" ]; then
+    if [ "$minor_version" != "$previous_minor_version" ]; then {
         JoinEscaped() {
             sed 's/\S/\\&/g' |
                 awk '
@@ -79,7 +79,7 @@ previous_minor_version=${previous_version%.*}
         echo
         printf "Welcome back our returning committers: "
         JoinEscaped <"$relnotes_tmp/committers-returning"
-    fi
+    } fi
     echo
     echo "---"
     echo

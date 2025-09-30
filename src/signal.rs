@@ -404,7 +404,7 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     signal_entry!(SIGURG, "Urgent socket condition"),
     signal_entry!(SIGXCPU, "CPU time limit exceeded"),
     signal_entry!(SIGXFSZ, "File size limit exceeded"),
-    signal_entry!(SIGVTALRM, "Virtual timefr expired"),
+    signal_entry!(SIGVTALRM, "Virtual timer expired"),
     signal_entry!(SIGPROF, "Profiling timer expired"),
     signal_entry!(SIGWINCH, "Window size change"),
     signal_entry!(SIGIO, "I/O on asynchronous file descriptor is possible"),

@@ -612,7 +612,7 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
         _ if name == "true" => wgettext!("Return a successful result"),
         _ if name == "type" => wgettext!("Check if a thing is a thing"),
         _ if name == "ulimit" => wgettext!("Get/set resource usage limits"),
-        _ if name == "wait" => wgettext!("Wait for background processes completed"),
+        _ if name == "wait" => wgettext!("Await background process completion"),
         _ if name == "while" => wgettext!("Perform a command multiple times"),
         _ => return None,
     };

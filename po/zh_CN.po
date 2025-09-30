@@ -917,6 +917,10 @@ msgstr "设置管道时出错"
 msgid "Argument is not a number: '%ls'"
 msgstr "参数不是数字:  '%ls'"
 
+#
+msgid "Await background process completion"
+msgstr ""
+
 msgid "Background IO thread events"
 msgstr ""
 
@@ -1743,11 +1747,9 @@ msgstr ""
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
 msgstr ""
 
-msgid "Virtual timefr expired"
+#
+msgid "Virtual timer expired"
 msgstr ""
-
-msgid "Wait for background processes completed"
-msgstr "等待背景进程完成"
 
 msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
 msgstr ""

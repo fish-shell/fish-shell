@@ -149,7 +149,7 @@ use crate::tokenizer::{
 };
 use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
 use crate::tty_handoff::{
-    get_tty_protocols_active, initialize_tty_metadata, safe_deactivate_tty_protocols, TtyHandoff,
+    get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols, TtyHandoff,
 };
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
@@ -278,7 +278,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
     );
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
-        initialize_tty_metadata();
+        initialize_tty_protocols();
     });
 
     if !querying_allowed() {

@@ -2,7 +2,7 @@ use std::{
     env,
     ffi::OsStr,
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Stdio},
 };
 
 fn main() {
@@ -34,7 +34,11 @@ fn embed_localizations(cache_dir: &Path) {
     // for the respective language.
     let mut catalogs = phf_codegen::Map::new();
 
-    match Command::new("msgfmt").arg("-h").status() {
+    match Command::new("msgfmt")
+        .arg("-h")
+        .stdout(Stdio::null())
+        .status()
+    {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             rsconf::warn!(
                 "Cannot find msgfmt to build gettext message catalogs. Localization will not work."

@@ -72,7 +72,7 @@ Required Commands
 
        ``\e[0c``
      -
-     - Request primary device attribute.
+     - Request Primary Device Attribute.
        The terminal must respond with a CSI command that starts with the ``?`` parameter byte (so a sequence starting with ``\e[?``) and has ``c`` as final byte.
 
        Failure to implement this will cause a brief pause at startup followed by a warning.

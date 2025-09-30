@@ -1267,7 +1267,7 @@ pub trait InputEventQueuer {
                 _ => return None,
             },
             b'c' if private_mode == Some(b'?') => {
-                FLOG!(reader, "Received primary device attribute response");
+                FLOG!(reader, "Received Primary Device Attribute response");
                 self.push_front(CharEvent::QueryResult(QueryResultEvent::Response(
                     QueryResponse::PrimaryDeviceAttribute,
                 )));

@@ -97,6 +97,12 @@ fn embed_localizations(cache_dir: &Path) {
                     .arg(&po_file_path)
                     .output()
                     .unwrap();
+                if !output.status.success() {
+                    panic!(
+                        "msgfmt failed:\n{}",
+                        String::from_utf8(output.stderr).unwrap()
+                    );
+                }
                 let mo_data = output.stdout;
 
                 // Extract map from MO data.

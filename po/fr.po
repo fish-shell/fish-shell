@@ -299,7 +299,6 @@ msgstr ""
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: %ls: option does not take an argument\n"
 msgstr ""
@@ -480,7 +479,6 @@ msgstr "%ls : Exactement deux noms attendus (noms de fonctions actuel et projet
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy of '%ls'\n"
 msgstr ""
@@ -509,7 +507,6 @@ msgstr "%ls : Valeur --max-args '%ls' invalide\n"
 msgid "%ls: Invalid --min-args value '%ls'\n"
 msgstr "%ls : Valeur --min-args '%ls' invalide\n"
 
-#
 #, c-format
 msgid "%ls: Invalid --unknown-arguments value '%ls'\n"
 msgstr ""
@@ -802,7 +799,6 @@ msgstr ""
 msgid "%ls: expected a numeric value"
 msgstr "%ls : valeur numérique attendue"
 
-#
 #, c-format
 msgid "%ls: fish was not built with embedded files"
 msgstr ""
@@ -899,17 +895,14 @@ msgstr ""
 msgid "%s"
 msgstr ""
 
-#
 #, c-format
 msgid "%s %s: unrecognized feature '%ls'"
 msgstr ""
 
-#
 #, c-format
 msgid "%s and %s are mutually exclusive"
 msgstr ""
 
-#
 #, c-format
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
 msgstr ""
@@ -1013,7 +1006,6 @@ msgstr "Une erreur est survenue lors du paramétrage du tube"
 msgid "Argument is not a number: '%ls'"
 msgstr ""
 
-#
 msgid "Await background process completion"
 msgstr ""
 
@@ -1218,7 +1210,6 @@ msgstr ""
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
-#
 #, c-format
 msgid "Failed to set terminal mode (%s)"
 msgstr ""
@@ -1622,7 +1613,6 @@ msgstr "Arrêter la fonction actuellement en évaluation"
 msgid "Stop the innermost loop"
 msgstr "Arrêter la boucle interne"
 
-#
 msgid "Synchronized file access"
 msgstr ""
 
@@ -1837,7 +1827,6 @@ msgstr "Les variables ne peuvent être placées entre crochets. Dans fish, veuil
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
 msgstr "Les variables ne peuvent être placées entre crochets. Dans fish, veuillez utiliser {$%ls}."
 
-#
 msgid "Virtual timer expired"
 msgstr ""
 

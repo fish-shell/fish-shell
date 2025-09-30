@@ -199,7 +199,6 @@ msgstr ""
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: %ls: option does not take an argument\n"
 msgstr ""
@@ -380,7 +379,6 @@ msgstr "%ls: Esperava exatamente dois nomes (nome atual da função, e novo nome
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy of '%ls'\n"
 msgstr ""
@@ -409,7 +407,6 @@ msgstr ""
 msgid "%ls: Invalid --min-args value '%ls'\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: Invalid --unknown-arguments value '%ls'\n"
 msgstr ""
@@ -702,7 +699,6 @@ msgstr ""
 msgid "%ls: expected a numeric value"
 msgstr "%ls: esperava valor numérico"
 
-#
 #, c-format
 msgid "%ls: fish was not built with embedded files"
 msgstr ""
@@ -799,17 +795,14 @@ msgstr ""
 msgid "%s"
 msgstr ""
 
-#
 #, c-format
 msgid "%s %s: unrecognized feature '%ls'"
 msgstr ""
 
-#
 #, c-format
 msgid "%s and %s are mutually exclusive"
 msgstr ""
 
-#
 #, c-format
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
 msgstr ""
@@ -913,7 +906,6 @@ msgstr "Ocorreu um erro ao preparar pipe"
 msgid "Argument is not a number: '%ls'"
 msgstr ""
 
-#
 msgid "Await background process completion"
 msgstr ""
 
@@ -1118,7 +1110,6 @@ msgstr ""
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
-#
 #, c-format
 msgid "Failed to set terminal mode (%s)"
 msgstr ""
@@ -1522,7 +1513,6 @@ msgstr "Pára a função em execução"
 msgid "Stop the innermost loop"
 msgstr "Pára o laço mais interno"
 
-#
 msgid "Synchronized file access"
 msgstr ""
 
@@ -1737,7 +1727,6 @@ msgstr ""
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
 msgstr ""
 
-#
 msgid "Virtual timer expired"
 msgstr ""
 
@@ -19604,11 +19593,6 @@ msgstr ""
 msgid "Do not list files that match the given pattern"
 msgstr ""
 
-# Notas:
-# Adicionar nota
-#
-# Caminhos:
-# share/functions/__fish_complete_ls.fish:49
 msgid "Do not list implied entries matching specified shell pattern"
 msgstr "Não lista entradas com o padrão especificado"
 
@@ -26017,11 +26001,6 @@ msgstr ""
 msgid "File is on filesystem of specified type"
 msgstr ""
 
-# Notas:
-# Adicionar nota
-#
-# Caminhos:
-# share/functions/__fish_complete_ls.fish:49
 msgid "File is symlink matching specified case insensitive pattern"
 msgstr ""
 
@@ -36558,12 +36537,6 @@ msgstr ""
 msgid "Machine-readable description of custom origin"
 msgstr ""
 
-# Notas:
-# Adicionar nota
-#
-# Caminhos:
-# proc.cpp:1279
-# proc.cpp:1305
 msgid "Mail address to send alerts to"
 msgstr ""
 
@@ -46062,12 +46035,6 @@ msgstr ""
 msgid "Process last file first"
 msgstr ""
 
-# Notas:
-# Adicionar nota
-#
-# Caminhos:
-# proc.cpp:1279
-# proc.cpp:1305
 msgid "Process log file"
 msgstr ""
 

@@ -200,7 +200,6 @@ msgstr "%ls: %ls: ungültiger Unterbefehl\n"
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: %ls: option does not take an argument\n"
 msgstr ""
@@ -409,7 +408,6 @@ msgstr ""
 msgid "%ls: Invalid --min-args value '%ls'\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: Invalid --unknown-arguments value '%ls'\n"
 msgstr ""
@@ -702,7 +700,6 @@ msgstr ""
 msgid "%ls: expected a numeric value"
 msgstr "%ls: Erwartete numerischen Wert"
 
-#
 #, c-format
 msgid "%ls: fish was not built with embedded files"
 msgstr ""
@@ -799,17 +796,14 @@ msgstr ""
 msgid "%s"
 msgstr ""
 
-#
 #, c-format
 msgid "%s %s: unrecognized feature '%ls'"
 msgstr ""
 
-#
 #, c-format
 msgid "%s and %s are mutually exclusive"
 msgstr ""
 
-#
 #, c-format
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
 msgstr ""
@@ -1117,7 +1111,6 @@ msgstr ""
 msgid "Failed to assign shell to its own process group"
 msgstr "Konnte Shell nicht einer eigenen Prozessgruppe zuweisen"
 
-#
 #, c-format
 msgid "Failed to set terminal mode (%s)"
 msgstr ""
@@ -1195,7 +1188,6 @@ msgstr "Illegale Instruktion"
 msgid "Incomplete escape sequence '%ls'"
 msgstr "Unvollständige Escapesequenz '%ls'"
 
-#
 msgid "Information request"
 msgstr ""
 
@@ -1522,7 +1514,6 @@ msgstr "Derzeit ausführende Funktion stoppen"
 msgid "Stop the innermost loop"
 msgstr "Innerste Schleife beenden"
 
-#
 msgid "Synchronized file access"
 msgstr ""
 
@@ -1710,7 +1701,6 @@ msgstr "Nicht passender Platzhalter"
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr ""
 
-#
 msgid "Unused signal"
 msgstr ""
 
@@ -1738,7 +1728,6 @@ msgstr ""
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
 msgstr ""
 
-#
 msgid "Virtual timer expired"
 msgstr ""
 

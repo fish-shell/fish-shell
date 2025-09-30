@@ -984,7 +984,10 @@ pub trait InputEventQueuer {
         if !check_fd_readable(
             fd,
             Duration::from_millis(
-                if self.paste_is_buffering() || get_kitty_keyboard_capability() == Some(&true) {
+                if self.paste_is_buffering()
+                    || self.is_blocked_querying()
+                    || get_kitty_keyboard_capability() == Some(&true)
+                {
                     300
                 } else {
                     1

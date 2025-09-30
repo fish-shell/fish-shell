@@ -6,111 +6,139 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-03-10 16:38+0100\n"
-"PO-Revision-Date: 2025-04-17 09:40+0800\n"
-"Last-Translator: DaiLuCao <caodailu@foxmail.com>\n"
+"PO-Revision-Date: 2025-09-30 19:14+0800\n"
+"Last-Translator: Yuyi Wang <Strawberry_Str@hotmail.com>\n"
+"Language-Team: \n"
 "Language: zh_CN\n"
-"MIME-Version: 1.1\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.7\n"
 
+# General Notices 凡例
+# abort: 中止
+# argument: 参数
+# block (for variables): 作用域
+# (code) block: （代码）块
+# builtin: 内建命令
+# evaluate: 求值
+# execute: 执行
+# exit/quit: 退出
+# exit status/code: 退出代码
+# expand: 展开
+# flag: 标识
+# global (variable): 全局
+# home (directory): 主（目录）
+# job: 作业
+# legal & illegal: 合法 & 非法
+# local (variable): 局域
+# option: 选项
+# run: 运行
+# slice: 切片
+# state: 状态
+# status: 状况
+# terminate: 终止
+# token: 记号
+# universal (variable): 通用
+# valid & invalid: 有效 & 无效
 msgid ""
 "\n"
 "   PID  Command\n"
 msgstr ""
 "\n"
-" 密码 命令\n"
+"   PID  命令\n"
 
 #, c-format
 # fish-section-tier1-from-rust
 msgid " (%ls)\n"
-msgstr "(%ls)\n"
+msgstr " (%ls)\n"
 
 msgid " (read-only)\n"
-msgstr "(只读)\n"
+msgstr " (只读)\n"
 
 msgid " a path variable"
 msgstr "路径变量"
 
 #, c-format
 msgid " with arguments '%ls'"
-msgstr "参数 '%ls'"
+msgstr "，参数为 '%ls'"
 
 msgid " with definition"
-msgstr "有定义"
+msgstr "，定义为"
 
 msgid "$# is not supported. In fish, please use 'count $argv'."
-msgstr "$# 不支持 . 在fish中,请使用'count $argv'."
+msgstr "不支持 $#。在 fish 中，请使用 'count $argv'。"
 
 msgid "$$ is not the pid. In fish, please use $fish_pid."
-msgstr "美元不是皮条客. 在fish中,请使用$fish_pid."
+msgstr "$$ 不是 PID。在 fish 中，请使用 $fish_pid。"
 
 #, c-format
 msgid "$%lc is not a valid variable in fish."
-msgstr ""
+msgstr "$%lc 在 fish 中不是有效变量。"
 
 #, c-format
 msgid "$%ls: originally inherited as |%ls|\n"
-msgstr "$%ls: 原为 |%ls| 继承 \n"
+msgstr "$%ls: 原继承值为 |%ls|\n"
 
 #, c-format
 msgid "$%ls: set in %ls scope, %ls,%ls with %d elements"
-msgstr "%ls: 设置在 %ls 范围, %ls,%ls 包含 %d 元素"
+msgstr "%ls: 设定在 %ls 作用域，%ls，%ls，包含 %d 个元素"
 
 msgid "$* is not supported. In fish, please use $argv."
-msgstr "$* 不支持. 在fish上,请使用$argv."
+msgstr "不支持 $*。在 fish 中，请使用 $argv。"
 
 msgid "$? is not the exit status. In fish, please use $status."
-msgstr "是吗? 不是退出状态. 在fish中,请使用$status."
+msgstr "$? 不是退出代码。在 fish 中，请使用 $status。"
 
 msgid "$@ is not supported. In fish, please use $argv."
-msgstr "$@ 不支持 . 在fish上,请使用$argv."
+msgstr "不支持 $@。在 fish 中，请使用 $argv。"
 
 msgid "$status is not valid as a command. See `help conditions`"
-msgstr "$status 作为命令无效 . 见`help conditions`"
+msgstr "$status 不是有效的命令。参见 `help conditions`"
 
 #, c-format
 msgid "%.*ls: invalid conversion specification"
-msgstr "%.*ls: 无效的转换形式"
+msgstr "%.*ls: 无效的转换规范"
 
 #, c-format
 msgid "%ls"
-msgstr ""
+msgstr "%ls"
 
 #, c-format
 msgid "%ls %ls: Abbreviation %ls already exists, cannot rename %ls\n"
-msgstr "%ls %ls:  缩写 %ls 已经存在, 无法重命名 %ls\n"
+msgstr "%ls %ls: 缩写 %ls 已经存在，无法重命名 %ls\n"
 
 #, c-format
 msgid "%ls %ls: Abbreviation '%ls' cannot have spaces in the word\n"
-msgstr "%ls %ls:  缩写 '%ls' 无法在单词中设置空格\n"
+msgstr "%ls %ls: 缩写词 '%ls' 不能包含空格\n"
 
 #, c-format
 msgid "%ls %ls: Name cannot be empty\n"
-msgstr "%ls %ls:  名称不能为空\n"
+msgstr "%ls %ls: 名称不能为空\n"
 
 #, c-format
 msgid "%ls %ls: No abbreviation named %ls\n"
-msgstr "%ls %ls:  没有命名为 %ls 的缩写\n"
+msgstr "%ls %ls: 没有命名为 %ls 的缩写\n"
 
 #, c-format
 msgid "%ls %ls: Requires at least two arguments\n"
-msgstr "%ls %ls:  需要至少两个参数\n"
+msgstr "%ls %ls: 需要至少两个参数\n"
 
 #, c-format
 msgid "%ls %ls: Requires exactly two arguments\n"
-msgstr "%ls %ls:  需要两个参数\n"
+msgstr "%ls %ls: 需要两个参数\n"
 
 #, c-format
 msgid "%ls %ls: Unexpected argument -- '%ls'\n"
-msgstr ""
+msgstr "%ls %ls: 意外参数 -- '%ls'\n"
 
 #, c-format
 msgid "%ls (line %d): "
-msgstr "%ls (line %d): "
+msgstr "%ls (行 %d): "
 
 #, c-format
 msgid "%ls (line %lu): "
-msgstr "%ls (line %lu): "
+msgstr "%ls (行 %lu): "
 
 #, c-format
 msgid "%ls is %ls\n"
@@ -118,15 +146,15 @@ msgstr "%ls 是 %ls\n"
 
 #, c-format
 msgid "%ls is a builtin\n"
-msgstr "%ls 是一个内建的\n"
+msgstr "%ls 是一个内建命令\n"
 
 #, c-format
 msgid "%ls is a function"
-msgstr "%ls 是函数"
+msgstr "%ls 是一个函数"
 
 #, c-format
 msgid "%ls, version %s"
-msgstr ""
+msgstr "%ls，版本 %s"
 
 #, c-format
 msgid "%ls: %*ls\n"
@@ -142,7 +170,7 @@ msgstr "%ls: %ls %ls: 选项无法一起使用\n"
 
 #, c-format
 msgid "%ls: %ls: cannot overwrite read-only variable"
-msgstr "%ls: %ls: 无法覆盖只读变量"
+msgstr "%ls: %ls: 无法覆写只读变量"
 
 #, c-format
 msgid "%ls: %ls: cannot use reserved keyword as function name"
@@ -150,60 +178,59 @@ msgstr "%ls: %ls: 无法将保留关键字作为函数名"
 
 #, c-format
 msgid "%ls: %ls: contains a syntax error\n"
-msgstr "%ls:%ls: 包含语法错误\n"
+msgstr "%ls: %ls: 包含语法错误\n"
 
 #, c-format
 msgid "%ls: %ls: expected %d arguments; got %d\n"
-msgstr ""
+msgstr "%ls: %ls: 预期收到 %d 个参数；实际收到 %d 个\n"
 
 #, c-format
 msgid "%ls: %ls: invalid base value\n"
-msgstr "%ls:%ls: 无效的base值\n"
+msgstr "%ls: %ls: 无效的进制值\n"
 
 #, c-format
 msgid "%ls: %ls: invalid function name"
-msgstr "%ls:%ls: 无效的函数名"
+msgstr "%ls: %ls: 无效的函数名"
 
 #, c-format
 msgid "%ls: %ls: invalid integer\n"
-msgstr "%ls:%ls: 无效整数\n"
+msgstr "%ls: %ls: 无效整数\n"
 
 #, c-format
 msgid "%ls: %ls: invalid mode\n"
-msgstr ""
+msgstr "%ls: %ls: 无效舍入模式\n"
 
 #, c-format
 msgid "%ls: %ls: invalid mode name. See `help identifiers`\n"
-msgstr "%ls: %ls:无效模式名. 参见`help identifiers`\n"
+msgstr "%ls: %ls: 无效模式名。参见 `help identifiers`\n"
 
 #, c-format
 msgid "%ls: %ls: invalid process id"
-msgstr "%ls:%ls: 无效进程 id"
+msgstr "%ls: %ls: 无效进程 ID"
 
 #, c-format
 msgid "%ls: %ls: invalid scale\n"
-msgstr ""
+msgstr "%ls: %ls: 无效位数\n"
 
 #, c-format
 msgid "%ls: %ls: invalid subcommand\n"
-msgstr "%ls: %ls:无效的子命令\n"
+msgstr "%ls: %ls: 无效的子命令\n"
 
 #, c-format
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
-msgstr "%ls: %ls:无效的可变名称. 参见`help identifiers`\n"
+msgstr "%ls: %ls: 无效的变量名。参见 `help identifiers`\n"
 
-#
 #, c-format
 msgid "%ls: %ls: option does not take an argument\n"
-msgstr ""
+msgstr "%ls: %ls: 选项不接受参数\n"
 
 #, c-format
 msgid "%ls: %ls: option requires an argument\n"
-msgstr "%ls:%ls: 选项需要参数\n"
+msgstr "%ls: %ls: 选项需要参数\n"
 
 #, c-format
 msgid "%ls: %ls: subcommand takes no options\n"
-msgstr "%ls: %ls: 子命令没有选项\n"
+msgstr "%ls: %ls: 子命令不接受选项\n"
 
 #, c-format
 msgid "%ls: %ls: unexpected positional argument"
@@ -211,35 +238,35 @@ msgstr "%ls: %ls: 意外的位置参数"
 
 #, c-format
 msgid "%ls: %ls: unknown option\n"
-msgstr "%ls:%ls:未知选项\n"
+msgstr "%ls: %ls: 未知选项\n"
 
 #, c-format
 msgid "%ls: '%ls' is a broken symbolic link to '%ls'\n"
-msgstr "%ls: '%ls' 是 '%ls' 损坏的符号链接\n"
+msgstr "%ls: '%ls' 是损坏的到 '%ls' 的符号链接\n"
 
 #, c-format
 msgid "%ls: '%ls' is not a directory\n"
-msgstr "%ls:'%ls' 不是一个目录\n"
+msgstr "%ls: '%ls' 不是一个目录\n"
 
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
-msgstr "%ls:'%ls' 不是一个任务\n"
+msgstr "%ls: '%ls' 不是一个作业\n"
 
 #, c-format
 msgid "%ls: '%ls' is not a valid job id\n"
-msgstr "%ls: '%ls'不是一个有效的工作 id\n"
+msgstr "%ls: '%ls' 不是一个有效的作业 ID\n"
 
 #, c-format
 msgid "%ls: '%ls' is not a valid job specifier\n"
-msgstr "%ls: '%ls' 不是有效任务说明符\n"
+msgstr "%ls: '%ls' 不是有效的作业说明符\n"
 
 #, c-format
 msgid "%ls: '%ls' is not a valid process id\n"
-msgstr "%ls: '%ls' 不是一个有效的进程 id\n"
+msgstr "%ls: '%ls' 不是一个有效的进程 ID\n"
 
 #, c-format
 msgid "%ls: --command cannot be combined with --position command"
-msgstr ""
+msgstr "%ls: --command 选项不能与 --position 命令组合使用"
 
 #, c-format
 msgid "%ls: --function option requires --add\n"
@@ -275,27 +302,27 @@ msgstr "%ls: -s 需要一个非空字符串\n"
 
 #, c-format
 msgid "%ls: Ambiguous job\n"
-msgstr "%ls:不明确的任务\n"
+msgstr "%ls: 有歧义的作业\n"
 
 #, c-format
 msgid "%ls: An option spec must have at least a short or a long flag\n"
-msgstr "%ls: 选项 spec 必须至少有一个短或长的标识\n"
+msgstr "%ls: 选项规范必须至少包含一个短标识或长标识\n"
 
 #, c-format
 msgid "%ls: Argument '%ls' is out of range\n"
-msgstr "%ls: 参数 '%ls' 超出范围\n"
+msgstr "%ls: 参数 '%ls' 超出取值范围\n"
 
 #, c-format
 msgid "%ls: Can not specify scope when removing block\n"
-msgstr "%ls: 当移除区块时不能指定作用域 \n"
+msgstr "%ls: 移除范围时不能指定作用域\n"
 
 #, c-format
 msgid "%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n"
-msgstr "%ls:不能将任务 %d, '%ls' 带到前台，因为它不受任务控制\n"
+msgstr "%ls: 不能将作业 %d，'%ls' 带到前台，因为它不受作业控制管理\n"
 
 #, c-format
 msgid "%ls: Can't put job %s, '%ls' to background because it is not under job control\n"
-msgstr "%ls: 无法将任务 %s, '%ls' 放到后台,因为它不受任务控制\n"
+msgstr "%ls: 无法将作业 %s，'%ls' 放到后台，因为它不受作业控制管理\n"
 
 #, c-format
 msgid "%ls: Cannot combine options %ls\n"
@@ -303,15 +330,15 @@ msgstr "%ls: 无法合并选项 %ls\n"
 
 #, fuzzy, c-format
 msgid "%ls: Cannot specify multiple positions\n"
-msgstr "%s: 无法指定多个位置\n"
+msgstr "%ls: 无法指定多个位置\n"
 
 #, fuzzy, c-format
 msgid "%ls: Cannot specify multiple regex patterns\n"
-msgstr "%s: 无法指定多种正则匹配规则\n"
+msgstr "%ls: 无法指定多种正则匹配规则\n"
 
 #, c-format
 msgid "%ls: Cannot specify multiple set-cursor options\n"
-msgstr "%ls: 无法指定多个set-cursor选项\n"
+msgstr "%ls: 无法指定多个 set-cursor 选项\n"
 
 #, c-format
 msgid "%ls: Cannot use --append or --prepend when assigning to a slice"
@@ -319,7 +346,7 @@ msgstr "%ls: 分配切片时无法使用 --append 或 --prepend"
 
 #, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "%ls: 命令在交互式prompt时无效\n"
+msgstr "%ls: 命令在交互提示符下无效\n"
 
 #, c-format
 msgid "%ls: Could not find '%ls'\n"
@@ -327,15 +354,15 @@ msgstr "%ls: 找不到 '%ls'\n"
 
 #, fuzzy, c-format
 msgid "%ls: Could not find a job with process id '%d'\n"
-msgstr "%s: 无法找到进程 id 为'%d' 的作业 \n"
+msgstr "%ls: 无法找到进程 ID 为 '%d' 的作业\n"
 
 #, fuzzy, c-format
 msgid "%ls: Could not find child processes with the name '%ls'\n"
-msgstr "%s: 无法找到名为 '%ls' 的子进程\n"
+msgstr "%ls: 无法找到名为 '%ls' 的子进程\n"
 
 #, c-format
 msgid "%ls: Could not find home directory\n"
-msgstr "%ls:找不到home目录\n"
+msgstr "%ls: 找不到主目录\n"
 
 #, c-format
 msgid "%ls: Could not find job '%d'\n"
@@ -343,7 +370,7 @@ msgstr "%ls: 找不到作业 '%d'\n"
 
 #, c-format
 msgid "%ls: Did you mean `set %ls %ls`?"
-msgstr "%ls: 您是否指`set %ls %ls`?"
+msgstr "%ls: 您是否想输入 `set %ls %ls`？"
 
 #, c-format
 msgid "%ls: Empty directory '%ls' does not exist\n"
@@ -351,48 +378,47 @@ msgstr "%ls: 空目录 '%ls' 不存在\n"
 
 #, c-format
 msgid "%ls: Error encountered while sourcing file '%ls':\n"
-msgstr "%ls:加载文件'%ls'时遇到错误:\n"
+msgstr "%ls: 加载源文件 '%ls' 时遇到错误：\n"
 
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
-msgstr "%ls:读取文件 '%ls' 时发生错误\n"
+msgstr "%ls: 读取文件 '%ls' 时发生错误\n"
 
 #, c-format
 msgid "%ls: Expected at least one argument"
-msgstr ""
+msgstr "%ls: 至少需要一个参数"
 
 #, c-format
 msgid "%ls: Expected exactly one function name\n"
-msgstr "%ls:预期一个确切的函数名\n"
+msgstr "%ls: 需要一个函数名\n"
 
 #, c-format
 msgid "%ls: Expected exactly two names (current function name, and new function name)\n"
-msgstr "%ls: 预期有两个确切的名称(当前函数名称, 和新函数名称)\n"
+msgstr "%ls: 预期有两个名称 (当前函数名，和新函数名)\n"
 
 #, c-format
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
-msgstr "%ls: 对于 --handlers-type 选项，预期 generic | variable | signal | exit | job-id \n"
+msgstr "%ls: 对于 --handlers-type 选项，预期 generic | variable | signal | exit | job-id\n"
 
-#
 #, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy of '%ls'\n"
-msgstr ""
+msgstr "%ls: 函数 '%ls' 已经存在。无法创建副本 '%ls'\n"
 
 #, c-format
 msgid "%ls: Function '%ls' does not exist\n"
-msgstr "%ls:函数 '%ls' 不存在\n"
+msgstr "%ls: 函数 '%ls' 不存在\n"
 
 #, c-format
 msgid "%ls: Illegal function name '%ls'\n"
-msgstr "%ls:非法函数名 '%ls'\n"
+msgstr "%ls: 非法函数名 '%ls'\n"
 
 #, c-format
 msgid "%ls: Implicit int flag '%lc' already defined\n"
-msgstr "%ls: 隐式int标志 '%lc' 已经被定义\n"
+msgstr "%ls: 隐式整形标识 '%lc' 已被定义\n"
 
 #, fuzzy, c-format
 msgid "%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n"
-msgstr "%s: 隐式int短标志 '%lc' 不能带有像 '%lc' 的修饰符\n"
+msgstr "%ls: 隐式整形短标识 '%lc' 不能带有形如 '%lc' 的修饰符\n"
 
 #, c-format
 msgid "%ls: Invalid --max-args value '%ls'\n"
@@ -402,18 +428,17 @@ msgstr "%ls: 无效的 --max-args 值 '%ls'\n"
 msgid "%ls: Invalid --min-args value '%ls'\n"
 msgstr "%ls: 无效的 --min-args 值 '%ls'\n"
 
-#
 #, c-format
 msgid "%ls: Invalid --unknown-arguments value '%ls'\n"
-msgstr ""
+msgstr "%ls: 无效的 --unknown-arguments 值 '%ls'\n"
 
 #, fuzzy, c-format
 msgid "%ls: Invalid count value '%ls'\n"
-msgstr "%s: 无效的计数值 '%s'\n"
+msgstr "%ls: 无效的计数值 '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid end value '%ls'\n"
-msgstr "%ls: 无效的end值 '%ls'\n"
+msgstr "%ls: 无效的终止值 '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid escape style '%ls'\n"
@@ -421,27 +446,27 @@ msgstr "%ls: 无效的转义格式 '%ls'\n"
 
 #, fuzzy, c-format
 msgid "%ls: Invalid fields value '%ls'\n"
-msgstr "%s: 无效的字段值 '%ls'\n"
+msgstr "%ls: 无效的字段值 '%ls'\n"
 
 #, fuzzy, c-format
 msgid "%ls: Invalid function name: %ls\n"
-msgstr "%ls: 无效的函数名:%s\n"
+msgstr "%ls: 无效的函数名：%ls\n"
 
 #, c-format
 msgid "%ls: Invalid index starting at '%ls'\n"
-msgstr "%ls:开始于 '%ls' 的索引非法\n"
+msgstr "%ls: 无效的起始索引值 '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid job control mode '%ls'\n"
-msgstr "%ls: 无效的工作控制模式 '%ls'\n"
+msgstr "%ls: 无效的作业控制模式 '%ls'\n"
 
 #, fuzzy, c-format
 msgid "%ls: Invalid length value '%ls'\n"
-msgstr "%s: 无效的长度值 '%s'\n"
+msgstr "%ls: 无效的长度值 '%ls'\n"
 
 #, fuzzy, c-format
 msgid "%ls: Invalid level value '%ls'\n"
-msgstr "%s: 无效的级别值 '%ls'\n"
+msgstr "%ls: 无效的级别值 '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid limit '%ls'\n"
@@ -449,19 +474,19 @@ msgstr "%ls: 无效的限制 '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid max matches value '%ls'\n"
-msgstr ""
+msgstr "%ls: 无效的最大匹配值 '%ls'\n"
 
 #, fuzzy, c-format
 msgid "%ls: Invalid max value '%ls'\n"
-msgstr "%s: 无效的最大值 '%s'\n"
+msgstr "%ls: 无效的最大值 '%ls'\n"
 
 #, fuzzy, c-format
 msgid "%ls: Invalid option spec '%ls' at char '%lc'\n"
-msgstr "%ls: 在字符 '%lc' 无效的选项 spec %ls\n"
+msgstr "%ls: 无效的选项规范 '%ls' 于字符 '%lc'\n"
 
 #, c-format
 msgid "%ls: Invalid padding character of width zero '%ls'\n"
-msgstr "%ls: 宽度为零 '%ls' 的无效的填充字符\n"
+msgstr "%ls: 宽度为零的无效的填充字符 '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid permission '%ls'\n"
@@ -477,15 +502,15 @@ msgstr "%ls: 字段 '%ls' 的范围值无效\n"
 
 #, c-format
 msgid "%ls: Invalid sort key '%ls'\n"
-msgstr "%ls: 无效的密钥排序 '%ls'\n"
+msgstr "%ls: 无效的排序键 '%ls'\n"
 
 #, fuzzy, c-format
 msgid "%ls: Invalid start value '%ls'\n"
-msgstr "%s: 无效的起始值 '%ls'\n"
+msgstr "%ls: 无效的起始值 '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid state\n"
-msgstr "%ls:非法状态\n"
+msgstr "%ls: 无效状态\n"
 
 #, c-format
 msgid "%ls: Invalid style value '%ls'\n"
@@ -493,7 +518,7 @@ msgstr "%ls: 无效的样式值 '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid token '%ls'\n"
-msgstr "%ls: 无效的符号 '%ls'\n"
+msgstr "%ls: 无效记号 '%ls'\n"
 
 #, c-format
 msgid "%ls: Invalid type '%ls'\n"
@@ -505,15 +530,15 @@ msgstr "%ls: 无效的宽度值 '%ls'\n"
 
 #, c-format
 msgid "%ls: Key not specified\n"
-msgstr "%ls:没有指定key\n"
+msgstr "%ls: 没有指定键\n"
 
 #, c-format
 msgid "%ls: Long flag '%ls' already defined\n"
-msgstr "%ls: 长标识 '%ls' 已经定义了\n"
+msgstr "%ls: 长标识 '%ls' 已定义\n"
 
 #, c-format
 msgid "%ls: Missing -- separator\n"
-msgstr ""
+msgstr "%ls: 缺少 -- 分隔符\n"
 
 #, c-format
 msgid "%ls: New limit cannot be an empty string\n"
@@ -521,27 +546,27 @@ msgstr "%ls: 新限制不能为空字符串\n"
 
 #, c-format
 msgid "%ls: No binding found for key '%ls'\n"
-msgstr "%ls: 找不到key '%ls' 的绑定\n"
+msgstr "%ls: 未找到键 '%ls' 的绑定\n"
 
 #, c-format
 msgid "%ls: No binding found for key sequence '%ls'\n"
-msgstr ""
+msgstr "%ls: 未找到键序列 '%ls' 的绑定\n"
 
 #, c-format
 msgid "%ls: No blocks defined\n"
-msgstr "%ls:没有定义区块\n"
+msgstr "%ls: 没有定义作用域\n"
 
 #, c-format
 msgid "%ls: No suitable job: %d\n"
-msgstr "%ls:没有合适的任务: %d\n"
+msgstr "%ls: 没有合适的作业：%d\n"
 
 #, c-format
 msgid "%ls: No suitable job: %ls\n"
-msgstr "%ls: 没有合适的任务:%ls\n"
+msgstr "%ls: 没有合适的作业：%ls\n"
 
 #, c-format
 msgid "%ls: Not inside of loop\n"
-msgstr "%ls:不在循环体内部\n"
+msgstr "%ls: 不在循环体内部\n"
 
 #, c-format
 msgid "%ls: Options %ls and %ls cannot be used together\n"
@@ -557,15 +582,15 @@ msgstr "%ls: 拒绝访问: '%ls'\n"
 
 #, c-format
 msgid "%ls: Regular expression compile error: %ls\n"
-msgstr "%ls: 正则表达式编译出错:%ls\n"
+msgstr "%ls: 正则表达式编译错误：%ls\n"
 
 #, c-format
 msgid "%ls: Regular expression substitute error: %ls\n"
-msgstr "%ls: 正则表达式替换错误:%ls\n"
+msgstr "%ls: 正则表达式替换错误：%ls\n"
 
 #, c-format
 msgid "%ls: Resource limit not available on this operating system\n"
-msgstr "%ls: 在该操作系统上无法使用资源限制\n"
+msgstr "%ls: 该操作系统不支持资源限制\n"
 
 #, c-format
 msgid "%ls: STEP must be a positive integer\n"
@@ -573,15 +598,15 @@ msgstr "%ls: STEP 必须是正整数\n"
 
 #, fuzzy, c-format
 msgid "%ls: Short flag '%lc' already defined\n"
-msgstr "%s: 已经定义了短标识 '%lc'\n"
+msgstr "%ls: 已经定义了短标识 '%lc'\n"
 
 #, c-format
 msgid "%ls: Short flag '%lc' invalid, must be alphanum or '#'\n"
-msgstr "%ls: 短标识 '%lc' 无效, 必须是 字母数字 或'#'\n"
+msgstr "%ls: 短标识 '%lc' 无效，必须是字母、数字或 '#'\n"
 
 #, c-format
 msgid "%ls: The directory '%ls' does not exist\n"
-msgstr "%ls:目录 '%ls' 不存在\n"
+msgstr "%ls: 目录 '%ls' 不存在\n"
 
 #, c-format
 msgid "%ls: The variable '%ls' does not exist\n"
@@ -589,23 +614,23 @@ msgstr "%ls: 变量 '%ls' 不存在\n"
 
 #, c-format
 msgid "%ls: There are no jobs\n"
-msgstr "%ls:没有任务\n"
+msgstr "%ls: 没有作业\n"
 
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
-msgstr "%ls:没有匹配的任务\n"
+msgstr "%ls: 没有匹配的作业\n"
 
 #, c-format
 msgid "%ls: Too many levels of symbolic links: '%ls'\n"
-msgstr "%ls: 符号链接的级别过多:  '%ls'\n"
+msgstr "%ls: 符号链接的级别过多：'%ls'\n"
 
 #, c-format
 msgid "%ls: Too many long-only options\n"
-msgstr "%ls: 过多的仅限long选项被使用\n"
+msgstr "%ls: 过多的仅长选项\n"
 
 #, c-format
 msgid "%ls: Tried to change the read-only variable '%ls'\n"
-msgstr "%ls:试图改变只读变量 '%ls' 的值\n"
+msgstr "%ls: 试图改变只读变量 '%ls' 的值\n"
 
 #, c-format
 msgid "%ls: Tried to modify the special variable '%ls' to an invalid value\n"
@@ -621,7 +646,7 @@ msgstr "%ls: 未知颜色 '%ls'\n"
 
 #, c-format
 msgid "%ls: Unknown error trying to locate directory '%ls'\n"
-msgstr "%ls:定位目录'%ls'时发生未知错误\n"
+msgstr "%ls: 定位目录 '%ls' 时发生未知错误\n"
 
 #, c-format
 msgid "%ls: Unknown input function '%ls'"
@@ -633,7 +658,7 @@ msgstr "%ls: 未知信号 '%ls'"
 
 #, c-format
 msgid "%ls: Warning: Option '%ls' was removed and is now ignored"
-msgstr "%ls: 警告: 选项 '%ls' 已被删除, 现在被忽略"
+msgstr "%ls: 警告：忽略已被删除的选项 '%ls'"
 
 #, c-format
 msgid "%ls: `set --show` does not allow slices with the var names\n"
@@ -641,96 +666,95 @@ msgstr "%ls: `set --show` 不支持使用带有变量名称的切片\n"
 
 #, c-format
 msgid "%ls: array index out of bounds\n"
-msgstr ""
+msgstr "%ls: 数组索引越界\n"
 
 #, c-format
 msgid "%ls: called with no arguments. This will be an error in future."
-msgstr ""
+msgstr "%ls: 未带参数调用。此操作在未来版本中将视为错误。"
 
 #, c-format
 msgid "%ls: called with one argument. This will return false in future."
-msgstr ""
+msgstr "%ls：带一个参数调用。此操作在未来版本中将返回 false。"
 
 #, c-format
 msgid "%ls: calling job for event handler not found"
-msgstr "%ls: 未找到事件处理器的调用任务"
+msgstr "%ls: 未找到事件处理程序的调用作业"
 
 #, c-format
 msgid "%ls: can't merge history in private mode\n"
-msgstr "%ls: 无法在private模式中合并历史 \n"
+msgstr "%ls: 无法在私密模式中合并历史\n"
 
 #, c-format
 msgid "%ls: cannot both export and unexport\n"
-msgstr "%ls: 无法同时导出和解出\n"
+msgstr "%ls: 无法同时导出和取消导出\n"
 
 #, c-format
 msgid "%ls: cannot both path and unpath\n"
-msgstr "%ls: 无法同时path 和 unpath\n"
+msgstr "%ls: 无法同时是路径变量和非路径变量\n"
 
 #, c-format
 msgid "%ls: column %ls exceeds line length\n"
-msgstr ""
+msgstr "%ls: 列 %ls 超出行长度\n"
 
 #, c-format
 msgid "%ls: exclusive flag '%ls' is not valid\n"
-msgstr "%ls: 排他性标志 '%ls' 无效\n"
+msgstr "%ls: 排他标识 '%ls' 无效\n"
 
 #, c-format
 msgid "%ls: exclusive flag string '%ls' is not valid\n"
-msgstr "%ls: 排他性标志字符串 '%ls' 无效\n"
+msgstr "%ls: 排他标识字符串 '%ls' 无效\n"
 
 #, c-format
 msgid "%ls: expected %d arguments; got %d\n"
-msgstr ""
+msgstr "%ls: 预期收到 %d 个参数；实际收到 %d 个\n"
 
 #, c-format
 msgid "%ls: expected <= %d arguments; got %d\n"
-msgstr ""
+msgstr "%ls: 预期收到 <= %d 个参数；实际收到 %d 个\n"
 
 #, c-format
 msgid "%ls: expected >= %d arguments; got %d\n"
-msgstr ""
+msgstr "%ls: 预期收到 >= %d 个参数；实际收到 %d 个\n"
 
 #, c-format
 msgid "%ls: expected a numeric value"
-msgstr "%ls: 预期数字类型值"
+msgstr "%ls: 预期收到数值"
 
-#
 #, c-format
 msgid "%ls: fish was not built with embedded files"
-msgstr ""
+msgstr "%ls: fish 构建时未包含嵌入文件"
 
 #, c-format
 msgid "%ls: given %d indexes but %d values\n"
-msgstr "%ls: 给定的 %d 索引但 %d 值\n"
+msgstr "%ls: 给定索引 %d 但只有 %d 个值\n"
 
 #, c-format
 msgid "%ls: invalid option combination\n"
-msgstr "%ls: 选项组合无效\n"
+msgstr "%ls: 无效的选项组合\n"
 
 #, c-format
 msgid "%ls: invalid option combination, %ls\n"
-msgstr ""
+msgstr "%ls: 无效的选项组合，%ls\n"
 
 #, c-format
 msgid "%ls: invalid underline style: %ls\n"
-msgstr ""
+msgstr "%ls: 无效的下划线样式：%ls\n"
 
 #, c-format
 msgid "%ls: job %d ('%ls') was stopped and has been signalled to continue.\n"
-msgstr "%ls: 任务 %d ('%ls') 已停止并指示要继续 .\n"
+msgstr "%ls: 作业 %d ('%ls') 已停止并收到继续信号。\n"
 
 #, c-format
 msgid "%ls: line/column index starts at 1"
-msgstr ""
+msgstr "%ls: 行/列索引从1开始"
 
 #, c-format
 msgid "%ls: missing argument\n"
-msgstr ""
+msgstr "%ls: 缺少参数\n"
 
 #, c-format
 msgid "%ls: missing filename argument or input redirection\n"
-msgstr ""
+msgstr "%ls: 缺少文件名参数或输入重定向\n"
 
 #, c-format
 msgid "%ls: missing subcommand\n"
@@ -738,15 +762,15 @@ msgstr "%ls: 缺少子命令\n"
 
 #, c-format
 msgid "%ls: nothing to choose from\n"
-msgstr "%ls: 无选择于 \n"
+msgstr "%ls: 没有可选项\n"
 
 #, c-format
 msgid "%ls: realpath failed: %s\n"
-msgstr "%ls: realath 失败:  %s\n"
+msgstr "%ls: realpath 失败：%s\n"
 
 #, c-format
 msgid "%ls: scope can be only one of: universal function global local\n"
-msgstr "%ls: 范围只能是: 通用函数全局本地\n"
+msgstr "%ls: 范围只能是：universal（通用）function（函数）global（全局）local（局域）\n"
 
 #, c-format
 msgid "%ls: stdin is closed\n"
@@ -754,15 +778,15 @@ msgstr "%ls: stdin 已关闭\n"
 
 #, c-format
 msgid "%ls: successfully set universal '%ls'; but a global by that name shadows it\n"
-msgstr "%ls: 成功设置通用 '%ls' ; 但是这个名称的全局设置覆盖它\n"
+msgstr "%ls: 成功设置通用变量 '%ls' ；但是同名全局变量遮蔽它\n"
 
 #, c-format
 msgid "%ls: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`\n"
-msgstr ""
+msgstr "%ls：-k/--key 语法不再受支持。参见 `bind --help` 和 `bind --key-names`\n"
 
 #, c-format
 msgid "%ls: there is no line %ls\n"
-msgstr ""
+msgstr "%ls: 不存在行 %ls\n"
 
 #, c-format
 msgid "%ls: too many arguments\n"
@@ -770,19 +794,19 @@ msgstr "%ls: 参数太多\n"
 
 #, c-format
 msgid "%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"
-msgstr "%ls: 对-i的用法 --silent 已贬值. 请使用 - s 或 --silent 代替.\n"
+msgstr "%ls: 参数 -i 用于表示 --silent 已弃用。请改用 -s 或 --silent 代替。\n"
 
 #, c-format
 msgid "%ls: value not completely converted (can't convert '%ls')"
-msgstr "%ls: 数值未完全转换( 无法转换 '%ls' )"
+msgstr "%ls: 数值未完全转换 (无法转换 '%ls')"
 
 #, c-format
 msgid "%ls: variable '%ls' is read-only\n"
-msgstr ""
+msgstr "%ls: 变量 '%ls' 只读\n"
 
 #, c-format
 msgid "%lsand %lu more rows"
-msgstr "%lsand %lu 更多行数"
+msgstr "%ls还有 %lu 行"
 
 #, c-format
 msgid "%lu\n"
@@ -790,111 +814,108 @@ msgstr "%lu\n"
 
 #, c-format
 msgid "%s"
-msgstr ""
+msgstr "%s"
 
-#
 #, c-format
 msgid "%s %s: unrecognized feature '%ls'"
-msgstr ""
+msgstr "%s %s: 未识别的特性 '%ls'"
 
-#
 #, c-format
 msgid "%s and %s are mutually exclusive"
-msgstr ""
+msgstr "%s 与 %s 互斥"
 
-#
 #, c-format
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
-msgstr ""
+msgstr "%s 等待 %d 秒后仍无法读取 Primary Device Attribute 查询的响应。这通常是由于终端缺少相应功能所致。参见 'help terminal-compatibility' 或 'man fish-terminal-compatibility'。此 %s 进程将不再等待未处理的查询，这将禁用某些可选功能。"
 
 #, c-format
 msgid "%s, version %s"
-msgstr ""
+msgstr "%s，版本 %s"
 
 #, c-format
 msgid "%s, version %s\n"
-msgstr "%s, 版本 %s\n"
+msgstr "%s，版本 %s\n"
 
 msgid "'break' while not inside of loop"
-msgstr "不在循环内时'break'"
+msgstr "'break' 不在循环内"
 
 msgid "'case' builtin not inside of switch block"
-msgstr "'case' 不在switch代码块内"
+msgstr "'case' 不在 switch 块内"
 
 msgid "'continue' while not inside of loop"
-msgstr "不在循环内时'continue'"
+msgstr "'continue' 不在循环内"
 
 msgid "'else' builtin not inside of if block"
-msgstr "'else' 不在 if 代码块内"
+msgstr "'else' 不在 if 块内"
 
 msgid "'end' does not take arguments. Did you forget a ';'?"
-msgstr "'end' 没有获取到参数. 你忘了一个';'吗?"
+msgstr "'end' 不接受参数。是否漏掉了分号';'？"
 
 msgid "'end' outside of a block"
 msgstr "'end' 在代码块外"
 
 msgid "'time' is not supported for background jobs. Consider using 'command time'."
-msgstr "' 时间' 不支持背景任务 . 考虑使用命令时间 ."
+msgstr "'time' 不支持后台作业。考虑使用 'command time'。"
 
 msgid "'}' does not take arguments. Did you forget a ';'?"
-msgstr ""
+msgstr "'}' 不接受参数。是否漏掉了分号';'？"
 
 #, c-format
 msgid "(Type 'help %ls' for related documentation)\n"
-msgstr "(帮助%ls 的相关文档)\n"
+msgstr "(输入 'help %ls' 查看相关文档)\n"
 
 msgid "(no matches)"
 msgstr "(无匹配)"
 
 #, c-format
 msgid ", copied in %ls @ line %d"
-msgstr ",复制到 %ls @ line %d"
+msgstr "，复制到 %ls @ line %d"
 
 msgid ", copied interactively"
-msgstr ",交互复制"
+msgstr "，交互时复制"
 
 msgid ", copied via `source`"
-msgstr ",通过`source`复制"
+msgstr "，通过 `source` 复制"
 
 msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty 只对 --fields 有效"
 
 msgid "--end and --length are mutually exclusive"
-msgstr "--end 和 --length 是相互排斥的"
+msgstr "--end 和 --length 互斥"
 
 msgid "--entire and --groups-only are mutually exclusive"
-msgstr "--entire 和 --groups-only 是相互排斥的"
+msgstr "--entire 和 --groups-only 互斥"
 
 msgid "--entire and --index are mutually exclusive"
-msgstr "--entire 和 --index 是相互排斥的"
+msgstr "--entire 和 --index 互斥"
 
 msgid "--invert and --groups-only are mutually exclusive"
-msgstr "--invert 和 --groups-only是相互排斥的"
+msgstr "--invert 和 --groups-only 互斥"
 
 msgid "--query and --names are mutually exclusive"
-msgstr "--query和 --names 相互排斥"
+msgstr "--query 和 --names 互斥"
 
 msgid "--tokens options are mutually exclusive"
-msgstr "--tokens 选项是相互排斥的"
+msgstr "--tokens 各选项互斥"
 
 msgid "A second attempt to exit will terminate them.\n"
-msgstr "第二次尝试退出将终止它们.\n"
+msgstr "第二次尝试退出将终止它们。\n"
 
 msgid "Abbreviation expansion"
-msgstr ""
+msgstr "缩写展开"
 
 #, c-format
 msgid "Abbreviation: %ls"
-msgstr "缩写:%ls"
+msgstr "缩写：%ls"
 
 msgid "Abort"
-msgstr ""
+msgstr "中止"
 
 msgid "Abort (Alias for SIGABRT)"
-msgstr ""
+msgstr "中止 (SIGABRT 的别名)"
 
 msgid "Address boundary error"
-msgstr ""
+msgstr "地址边界错误"
 
 msgid "Always"
 msgstr "总是"
@@ -904,42 +925,41 @@ msgstr "设置管道时出错"
 
 #, c-format
 msgid "Argument is not a number: '%ls'"
-msgstr "参数不是数字:  '%ls'"
+msgstr "参数不是数字：'%ls'"
 
-#
 msgid "Await background process completion"
-msgstr ""
+msgstr "等待后台进程完成"
 
 msgid "Background IO thread events"
-msgstr ""
+msgstr "后台 IO 线程事件"
 
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr "后台命令不能用作条件"
 
 msgid "Bad system call"
-msgstr ""
+msgstr "错误的系统调用"
 
 msgid "Block of code to run conditionally"
 msgstr "有条件运行的代码块"
 
 msgid "Broken pipe"
-msgstr ""
+msgstr "断开的管道"
 
 msgid "CPU\t"
 msgstr "CPU\t"
 
 msgid "CPU time limit exceeded"
-msgstr ""
+msgstr "CPU 超时"
 
 msgid "Calls to fork()"
-msgstr ""
+msgstr "调用 fork()"
 
 msgid "Can not use the no-execute mode when running an interactive session"
-msgstr "运行交互式会话时不能使用 no-execute模式"
+msgstr "交互式会话时不能使用 no-execute 模式"
 
 #, c-format
 msgid "Cannot add control modifier to control character '%s'"
-msgstr ""
+msgstr "无法向控制字符 '%s' 添加控制修饰符"
 
 msgid "Cannot use stdin (fd 0) as pipe output"
 msgstr "无法使用 stdin (fd 0) 作为管道输出"
@@ -948,59 +968,59 @@ msgid "Change working directory"
 msgstr "改变工作目录"
 
 msgid "Changes to exported variables"
-msgstr ""
+msgstr "更改导出变量"
 
 msgid "Changes to locale variables"
-msgstr ""
+msgstr "更改区域变量"
 
 msgid "Character encoding issues"
-msgstr ""
+msgstr "字符编码问题"
 
 msgid "Check if a thing is a thing"
-msgstr "检查某事是否是其自身"
+msgstr "检查某物是否是其自身"
 
 msgid "Child process status changed"
-msgstr ""
+msgstr "子进程状况已改变"
 
 msgid "Command\n"
 msgstr "命令\n"
 
 msgid "Command history events"
-msgstr ""
+msgstr "命令历史事件"
 
 msgid "Command not executable"
-msgstr "命令不是可执行的"
+msgstr "命令不可执行"
 
 msgid "Commandname was invalid"
 msgstr "命令名称无效"
 
 msgid "Conditionally run blocks of code"
-msgstr "有条件运行代码块"
+msgstr "条件执行代码块"
 
 msgid "Continue previously stopped process"
-msgstr ""
+msgstr "继续先前停止的进程"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
-msgstr "无法确定当前工作目录 . 你的本地设置正确吗?"
+msgstr "无法确定当前工作目录。你的区域设置正确吗？"
 
 msgid "Could not set terminal mode for new job"
-msgstr "无法为新任务设置终端模式"
+msgstr "无法为新作业设置终端模式"
 
 msgid "Could not show help message"
 msgstr "无法显示帮助消息"
 
 #, c-format
 msgid "Could not write profiling information to file '%s': %s"
-msgstr "无法将配置信息写入文件'%s':%s"
+msgstr "无法将分析信息写入文件 '%s': %s"
 
 msgid "Count the number of arguments"
 msgstr "计算参数个数"
 
 msgid "Create a block of code"
-msgstr "创建代码区块"
+msgstr "创建代码块"
 
 msgid "Debugging aid (on by default)"
-msgstr ""
+msgstr "调试辅助 (默认开启)"
 
 msgid "Define a new function"
 msgstr "定义一个新函数"
@@ -1010,10 +1030,10 @@ msgid "Defined in %ls @ line %d"
 msgstr "定义于 %ls @ line %d"
 
 msgid "Defined interactively"
-msgstr "定义交互"
+msgstr "交互时定义"
 
 msgid "Defined via `source`"
-msgstr "通过`source`定义"
+msgstr "通过 `source` 定义"
 
 msgid "Division by zero"
 msgstr "除以零"
@@ -1029,67 +1049,67 @@ msgstr "结束一个命令块"
 
 #, c-format
 msgid "Error reading script file '%s':"
-msgstr "读取脚本文件 '%s'出错: "
+msgstr "读取脚本文件 '%s' 时出错："
 
 #, c-format
 msgid "Error when renaming file: %s"
-msgstr ""
+msgstr "重命名文件时出错：%s"
 
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "读取文件 %ls 时出错\n"
 
 msgid "Errors reported by exec (on by default)"
-msgstr ""
+msgstr "exec 报告的错误 (默认开启)"
 
 msgid "Evaluate a string as a statement"
-msgstr "将此字符串视为一条程序语句进行执行"
+msgstr "将字符串视为一条程序语句求值"
 
 msgid "Evaluate block if condition is false"
-msgstr "条件为假时执行代码块"
+msgstr "条件为假时求值代码块"
 
 msgid "Evaluate block if condition is true"
-msgstr "条件为真时执行代码块"
+msgstr "条件为真时求值代码块"
 
 msgid "Evaluate contents of file"
-msgstr "执行目录里的文件"
+msgstr "求值文件内容"
 
 msgid "Evaluate math expressions"
-msgstr "执行数学表达式"
+msgstr "求值数学表达式"
 
 msgid "Execute command if previous command failed"
 msgstr "如果前一条命令失败则执行命令"
 
 msgid "Exit the shell"
-msgstr "退出这个 shell"
+msgstr "退出 shell"
 
 msgid "Expansion error"
-msgstr "扩展错误"
+msgstr "展开错误"
 
 msgid "Expansion produced too many results"
-msgstr "扩展产生了太多的结果"
+msgstr "展开产生了太多的结果"
 
 #, c-format
 msgid "Expected %ls, but found %ls"
-msgstr "预期 %ls,但找到 %ls"
+msgstr "预期 %ls，但找到 %ls"
 
 #, c-format
 msgid "Expected %s, but found %ls"
-msgstr ""
+msgstr "预期 %s，但找到 %ls"
 
 #, c-format
 msgid "Expected a command, but found %ls"
-msgstr "预期是一个命令,但发现了 %ls"
+msgstr "预期是一个命令，但找到 %ls"
 
 #, c-format
 msgid "Expected a string, but found %ls"
-msgstr "预期是字符串,但发现了 %ls"
+msgstr "预期是字符串，但找到 %ls"
 
 msgid "Expected a string, but found a redirection"
-msgstr "预期是字符串, 但找到redirection"
+msgstr "预期是字符串，但找到重定向"
 
 msgid "Expected a variable name after this $."
-msgstr "期望在此 $ 之后有一个可变名称 ."
+msgstr "在此 $ 之后应有变量名称。"
 
 #, c-format
 msgid ""
@@ -1097,165 +1117,166 @@ msgid ""
 "\n"
 " $ %ls -w foo.fish"
 msgstr ""
+"预期 -w 后有用于读或写的文件路径：\n"
+"\n"
+" $ %ls -w foo.fish"
 
 #, c-format
 msgid "Expected no arguments, got %d"
-msgstr ""
+msgstr "预期没有参数，但收到 %d 个"
 
 msgid "Expression is bogus"
-msgstr "表达式存在问题"
+msgstr "表达式无效"
 
 msgid "FD monitor events"
-msgstr ""
+msgstr "FD 监控事件"
 
 msgid "Failed to assign shell to its own process group"
-msgstr "无法将shell分配到它自己的进程组"
+msgstr "无法将 shell 分配到它自己的进程组"
 
-#
 #, c-format
 msgid "Failed to set terminal mode (%s)"
-msgstr ""
+msgstr "设置终端模式 (%s) 失败"
 
 msgid "Failed to take control of the terminal"
-msgstr "控制终端失败"
+msgstr "接管终端失败"
 
 msgid "File size limit exceeded"
-msgstr ""
+msgstr "文件大小超出限制"
 
 msgid "Finding and reading configuration"
-msgstr ""
+msgstr "查找并读取配置"
 
 msgid "Firing events"
-msgstr ""
+msgstr "触发事件"
 
 msgid "Floating point exception"
-msgstr ""
+msgstr "浮点异常"
 
 msgid "Forced quit"
-msgstr ""
+msgstr "强制退出"
 
 msgid "Forced stop"
-msgstr ""
+msgstr "强制停止"
 
 msgid "Generate random number"
 msgstr "生成随机数"
 
 msgid "Get/set resource usage limits"
-msgstr "获取/设定 资源使用限制"
+msgstr "获取/设定资源使用限制"
 
 msgid "Group\n"
 msgstr "组\n"
 
 msgid "Halt execution and start debug prompt"
-msgstr "停止执行并启动调试程序"
+msgstr "停止执行并启动调试提示符"
 
 msgid "Handle environment variables"
 msgstr "处理环境变量"
 
 msgid "Handle fish key bindings"
-msgstr "处理 fish key 绑定"
+msgstr "处理 fish 按键绑定"
 
 msgid "Handle paths"
 msgstr "处理路径"
 
 msgid "Hint: a leading '0' without an 'x' indicates an octal number"
-msgstr "提示: 起始'0'没有跟'x' 表示八进制数字"
+msgstr "提示: 起始 '0' 没有跟一个 'x' 表示八进制数字"
 
 msgid "History of commands executed by user"
-msgstr "用户执行的历史命令"
+msgstr "用户执行的命令历史"
 
 msgid "History performance measurements"
-msgstr ""
+msgstr "历史性能测量"
 
 #, c-format
 msgid "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
-msgstr "历史会话 ID '%ls' 不是有效的可变名称 . 切换回`%ls`."
+msgstr "历史会话 ID '%ls' 不是有效的变量名称。回退到 `%ls`。"
 
 #, c-format
 msgid "Home for %ls"
-msgstr "%ls 的 Home"
+msgstr "%ls 的主目录"
 
 msgid "I/O on asynchronous file descriptor is possible"
-msgstr ""
+msgstr "在异步文件描述符上的 I/O 是可行的"
 
 #, c-format
 msgid "Illegal file descriptor in redirection '%ls'"
-msgstr "重定向 '%ls' 中的非法文件描述符  '"
+msgstr "重定向 '%ls' 中有非法文件描述符"
 
 msgid "Illegal instruction"
-msgstr ""
+msgstr "非法指令"
 
 #, c-format
 msgid "Incomplete escape sequence '%ls'"
 msgstr "不完整的转义序列 '%ls'"
 
-#
 msgid "Information request"
-msgstr ""
+msgstr "信息请求"
 
 #, c-format
 msgid "Integer %lld in '%ls' followed by non-digit"
-msgstr "整数 %lld 在 '%ls' 中,后面跟随着非数字"
+msgstr "整数 %lld 于 '%ls' 中，后面跟随着非数字"
 
 msgid "Internal (non-forked) process events"
-msgstr ""
+msgstr "内部 (非 fork) 进程事件"
 
 msgid "Internal details of the topic monitor"
-msgstr ""
+msgstr "主题监视器的内部细节"
 
 msgid "Invalid arguments"
-msgstr "无效的参数"
+msgstr "无效参数"
 
 msgid "Invalid code points not yet supported by printf"
-msgstr "无效代码点尚未由printf函数支持"
+msgstr "尚未由 printf 支持的无效码点"
 
 msgid "Invalid index value"
-msgstr "无效的索引值"
+msgstr "无效索引值"
 
 msgid "Invalid input/output redirection"
 msgstr "无效的输入/输出重定向"
 
 #, c-format
 msgid "Invalid number: %ls"
-msgstr "无效的数字: %ls"
+msgstr "无效的数字：%ls"
 
 #, c-format
 msgid "Invalid redirection target: %ls"
-msgstr "无效的重定向目标: %ls"
+msgstr "无效的重定向目标：%ls"
 
 #, c-format
 msgid "Invalid redirection: %ls"
-msgstr "无效的重定向: %ls"
+msgstr "无效的重定向：%ls"
 
 #, c-format
 msgid "Invalid token '%ls'"
-msgstr "无效的token '%ls'"
+msgstr "无效记号 '%ls'"
 
 #, c-format
 msgid "Items %lu to %lu of %lu"
-msgstr ""
+msgstr "第 %lu 个至第 %lu 个项目，共 %lu 个"
 
 msgid "Job\tGroup\t"
-msgstr "任务\t组\t"
+msgstr "作业\t组\t"
 
 #, c-format
 msgid "Job control: %ls\n"
-msgstr "任务控制:%ls\n"
+msgstr "作业控制:%ls\n"
 
 msgid "Jobs being executed"
-msgstr ""
+msgstr "正在执行的作业"
 
 msgid "Jobs changing status"
-msgstr ""
+msgstr "正在改变状况的作业"
 
 msgid "Jobs getting started or continued"
-msgstr ""
+msgstr "正在启动或继续的作业"
 
 msgid "List or remove functions"
 msgstr "列出或移除函数"
 
 msgid "Logical operations are not supported, use `test` instead"
-msgstr "不支持逻辑操作,使用`test`替代"
+msgstr "不支持逻辑运算，使用 `test` 替代"
 
 msgid "Manage abbreviations"
 msgstr "管理缩写"
@@ -1267,33 +1288,33 @@ msgid "Measure how long a command or block takes"
 msgstr "测量命令或块需要多长时间"
 
 msgid "Misaligned address error"
-msgstr ""
+msgstr "地址对齐错误"
 
 msgid "Mismatched braces"
-msgstr "牙套不匹配"
+msgstr "大括号不匹配"
 
 msgid "Mismatched parenthesis"
-msgstr "括号错配"
+msgstr "括号不匹配"
 
 msgid "Missing closing parenthesis"
 msgstr "缺少收尾括号"
 
 #, c-format
 msgid "Missing end to balance this %ls"
-msgstr "缺少端以平衡%ls"
+msgstr "缺少结尾以平衡 %ls"
 
 msgid "Missing hexadecimal number in Unicode escape"
-msgstr "Unicode 逃逸中缺少十六进制数"
+msgstr "Unicode 转义序列中缺少十六进制数字"
 
 msgid "Missing operator"
 msgstr "缺少运算符"
 
 #, c-format
 msgid "Modification of read-only variable \"%ls\" is not allowed\n"
-msgstr "只读变量\"%ls\"的修改不被允许\n"
+msgstr "不允许修改只读变量 \"%ls\"\n"
 
 msgid "Negate exit status of job"
-msgstr "负的任务退出代码(exit status)"
+msgstr "对作业退出代码取反"
 
 msgid "Never"
 msgstr "从不"
@@ -1303,41 +1324,41 @@ msgstr "交互 shell 没有 TTY (tcgetpgrp 失败)"
 
 #, c-format
 msgid "No matches for wildcard '%ls'. See `help wildcards-globbing`."
-msgstr "不匹配通配符 '%ls' . 见`帮助通配符-取出'."
+msgstr "未找到通配符 '%ls' 的匹配项。参见 `help wildcards-globbing`。"
 
 msgid "Not a function"
 msgstr "不是一个函数"
 
 msgid "Not a number"
-msgstr "没有号码"
+msgstr "非数字"
 
 msgid "Notifications about universal variable changes"
-msgstr ""
+msgstr "通用变量变更通知"
 
 msgid "Number is infinite"
-msgstr "数字是无限的"
+msgstr "数字是无穷"
 
 msgid "Number is too large"
-msgstr "数字太大了"
+msgstr "数字过大"
 
 msgid "Number out of range"
-msgstr "数量超出范围"
+msgstr "数字超出范围"
 
 msgid "Number was empty"
 msgstr "数字为空"
 
 msgid "Only on interactive jobs"
-msgstr "只在不活跃的进程上"
+msgstr "只在不活跃的作业上"
 
 #, c-format
 msgid "Opening \"%s\" failed: %s"
-msgstr ""
+msgstr "打开 \"%s\" 失败：%s"
 
 msgid "Parse options in fish script"
-msgstr "分析fish文脚本中的选项"
+msgstr "解析 fish 文脚本中的选项"
 
 msgid "Parsing fish AST"
-msgstr ""
+msgstr "解析 fish AST"
 
 msgid "Perform a command multiple times"
 msgstr "多次执行一条命令"
@@ -1347,27 +1368,27 @@ msgstr "多次执行一组指令"
 
 #, fuzzy, c-format
 msgid "Please set $%ls to a directory where you have write access."
-msgstr "请将 $ls 设置为您有写入权限的目录 ."
+msgstr "请将 $%ls 设置为您有写入权限的目录。"
 
 #, c-format
 msgid "Please set the %ls or HOME environment variable before starting fish."
-msgstr "请在开始钓fish前设置 %ls 或 home 环境变量 ."
+msgstr "请在启动 fish 前设置 %ls 或 HOME 环境变量。"
 
 msgid "Polite quit request"
-msgstr ""
+msgstr "请求温和退出"
 
 msgid "Power failure"
-msgstr ""
+msgstr "断电"
 
 #, c-format
 msgid "Press ctrl-%c again to exit\n"
-msgstr ""
+msgstr "再次按下 ctrl-%c 退出\n"
 
 msgid "Print arguments"
 msgstr "打印参数"
 
 msgid "Print currently running jobs"
-msgstr "列出当前运行的任务"
+msgstr "打印当前运行的作业"
 
 msgid "Print the working directory"
 msgstr "打印工作目录"
@@ -1379,207 +1400,206 @@ msgid "Process\n"
 msgstr "进程\n"
 
 msgid "Process groups"
-msgstr ""
+msgstr "进程组"
 
 msgid "Profiling timer expired"
-msgstr ""
+msgstr "分析计时器到期"
 
 msgid "Quit request from job control (^C)"
-msgstr ""
+msgstr "作业控制请求退出 (^C)"
 
 msgid "Quit request from job control with core dump (^\\)"
-msgstr ""
+msgstr "作业控制请求退出并生成核心转储 (^\\)"
 
 msgid "Reacting to variables"
-msgstr ""
+msgstr "响应变量"
 
 msgid "Read a line of input into variables"
 msgstr "将输入的一行读入到变量中"
 
 msgid "Reading/Writing the history file"
-msgstr ""
+msgstr "读/写历史文件"
 
 msgid "Reaping external (forked) processes"
-msgstr ""
+msgstr "回收外部 (fork) 进程"
 
 msgid "Reaping internal (non-forked) processes"
-msgstr ""
+msgstr "回收内部 (非 fork) 进程"
 
 msgid "Refcell dynamic borrowing"
-msgstr ""
+msgstr "RefCell 动态借用"
 
 msgid "Remove job from job list"
-msgstr "从工作列表中删除任务"
+msgstr "从作业列表中删除作业"
 
 msgid "Rendering the command line"
-msgstr ""
+msgstr "渲染命令行"
 
 #, c-format
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
-msgstr "请求重定向到 '%ls' , 这不是一个有效的文件描述符"
+msgstr "请求重定向到 '%ls'，这不是一个有效的文件描述符"
 
 #, c-format
 msgid "Result too large: %ls"
-msgstr "结果太大: %ls"
+msgstr "结果太大：%ls"
 
 msgid "Return a successful result"
 msgstr "返回一个成功的结果"
 
 msgid "Return an unsuccessful result"
-msgstr "返回未成功的结果"
+msgstr "返回一个不成功的结果"
 
 msgid "Return status information about fish"
-msgstr "返回 fish 的状态信息"
+msgstr "返回 fish 的状况信息"
 
 msgid "Run a builtin specifically"
-msgstr "具体运行内建"
+msgstr "运行一个具体内建命令"
 
 msgid "Run a command specifically"
-msgstr "具体运行命令"
+msgstr "运行一个具体命令"
 
 msgid "Run command if last command succeeded"
-msgstr "如果上次命令成功运行命令"
+msgstr "如果上次命令成功则运行命令"
 
 msgid "Run command in current process"
-msgstr "在当前进程下执行命令"
+msgstr "在当前进程下运行命令"
 
 msgid "Screen repaints"
-msgstr ""
+msgstr "屏幕重绘"
 
 msgid "Search for a specified string in a list"
 msgstr "在指定列表中搜索一个特定的字符串"
 
 msgid "Searching/using paths"
-msgstr ""
+msgstr "搜索/使用路径"
 
 #, c-format
 msgid "Send job %d (%ls) to foreground\n"
-msgstr "将任务 %d (%ls) 发送给前台\n"
+msgstr "将作业 %d (%ls) 发送到前台\n"
 
 #, fuzzy, c-format
 msgid "Send job %s '%ls' to background\n"
-msgstr "将任务'%ls'发送到背景\n"
+msgstr "将作业 %s '%ls' 发送到后台\n"
 
 msgid "Send job to background"
-msgstr "将任务置于后台"
+msgstr "将作业发送到后台"
 
 msgid "Send job to foreground"
-msgstr "将任务带回到前台"
+msgstr "将作业发送到前台"
 
 msgid "Serious unexpected errors (on by default)"
-msgstr ""
+msgstr "严重意外错误 (默认开启)"
 
 msgid "Set or get the commandline"
-msgstr "设置或取得命令行"
+msgstr "设置或获取命令行"
 
 msgid "Set the terminal color"
 msgstr "设置终端颜色"
 
 msgid "Show absolute path sans symlinks"
-msgstr "显示绝对路径 sans 符号链接"
+msgstr "显示绝对路径，不含符号链接"
 
 msgid "Skip over remaining innermost loop"
-msgstr "跳过剩下的最内环"
+msgstr "跳过剩下的最内层循环"
 
 msgid "Stack fault"
-msgstr ""
+msgstr "栈故障"
 
 msgid "Standard input"
 msgstr "标准输入"
 
 #, c-format
 msgid "Standard input (line %d): "
-msgstr "标准输入( 第%d行):"
+msgstr "标准输入 (行 %d)："
 
 #, c-format
 msgid "Startup (line %d): "
-msgstr "启动( 第%d行):"
+msgstr "启动 (行 %d)："
 
 msgid "State\tCommand\n"
 msgstr "状态\t命令\n"
 
 msgid "Stdin must be attached to a tty."
-msgstr ""
+msgstr "Stdin 必须连接到 TTY。"
 
 msgid "Stop from terminal input"
-msgstr ""
+msgstr "终端输入引发停止"
 
 msgid "Stop from terminal output"
-msgstr ""
+msgstr "终端输出引发停止"
 
 msgid "Stop request from job control (^Z)"
-msgstr ""
+msgstr "作业控制请求停止 (^Z)"
 
 msgid "Stop the currently evaluated function"
 msgstr "停止当前求值的函数"
 
 msgid "Stop the innermost loop"
-msgstr "停止最内层的循环"
+msgstr "停止最内层循环"
 
-#
 msgid "Synchronized file access"
-msgstr ""
+msgstr "同步文件访问"
 
 msgid "Temporarily block delivery of events"
-msgstr "Temporarily block delivery of events"
+msgstr "暂时阻塞事件传递"
 
 msgid "Terminal feature detection"
-msgstr ""
+msgstr "终端功能探测"
 
 msgid "Terminal hung up"
-msgstr ""
+msgstr "终端挂起"
 
 msgid "Terminal ownership events"
-msgstr ""
+msgstr "终端所有权事件"
 
 msgid "Test a condition"
 msgstr "测试一个条件"
 
 #, c-format
 msgid "The '%ls' command can not be used immediately after a backgrounded job"
-msgstr "在后台工作之后无法立即使用 '%ls' 命令"
+msgstr "在后台作业之后无法立即使用 '%ls' 命令"
 
 #, c-format
 msgid "The '%ls' command can not be used in a pipeline"
 msgstr "无法在管道中使用 '%ls' 命令"
 
 msgid "The 'time' command may only be at the beginning of a pipeline"
-msgstr "'time'命令可能只在管道开始的时候"
+msgstr "'time' 命令只可以在管道开始的时候"
 
 msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
-msgstr "呼叫堆栈限制已经超过 . 你有一个意外的无限循环?"
+msgstr "调用栈超过限制。是否存在意外的无限循环？"
 
 msgid "The completion system"
-msgstr ""
+msgstr "补全系统"
 
 #, c-format
 msgid "The error was '%s'."
-msgstr "错误为 '%s' ."
+msgstr "错误为 '%s'。"
 
 msgid "The expanded command is a keyword."
-msgstr "扩展后的命令是关键词 ."
+msgstr "展开后的命令是关键词。"
 
 msgid "The expanded command was empty."
-msgstr "扩展的命令为空 ."
+msgstr "展开后的命令为空。"
 
 #, c-format
 msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
-msgstr "函数 '%ls' 立即调用它, 会导致无限循环 ."
+msgstr "函数 '%ls' 立即调用自身，会导致无限循环。"
 
 msgid "The interactive reader/input system"
-msgstr ""
+msgstr "交互式阅读器/输入系统"
 
 msgid "There are still jobs active:\n"
-msgstr "仍然有活动的工作: \n"
+msgstr "仍然活动的作业：\n"
 
 msgid "This is a login shell\n"
-msgstr "这是登录shell\n"
+msgstr "这是登录 shell\n"
 
 msgid "This is not a login shell\n"
-msgstr "这不是登录shell\n"
+msgstr "这不是登录 shell\n"
 
 msgid "Timer expired"
-msgstr ""
+msgstr "计时器到期"
 
 msgid "Too few arguments"
 msgstr "参数太少"
@@ -1588,107 +1608,107 @@ msgid "Too many active file descriptors"
 msgstr "活动文件描述符太多"
 
 msgid "Too many arguments"
-msgstr "太多参数"
+msgstr "参数太多"
 
 msgid "Too much data emitted by command substitution so it was discarded"
-msgstr "命令替换释放的数据过多, 因此被丢弃"
+msgstr "命令替换生成的数据过多，因此被丢弃"
 
 msgid "Trace or breakpoint trap"
-msgstr ""
+msgstr "跟踪或断点陷阱"
 
 msgid "Translate a string"
 msgstr "翻译字符串"
 
 msgid "Trying to print invalid output"
-msgstr ""
+msgstr "尝试打印无效输出"
 
 #, c-format
 msgid "Unable to create temporary file '%ls': %s"
-msgstr "无法创建临时文件 '%ls':%s"
+msgstr "无法创建临时文件 '%ls': %s"
 
 msgid "Unable to evaluate string substitution"
-msgstr "无法评价字符串替换"
+msgstr "无法求值字符串替换"
 
 #, c-format
 msgid "Unable to expand variable name '%ls'"
-msgstr "无法扩展可变名称 '%ls'"
+msgstr "无法展开变量名称 '%ls'"
 
 #, fuzzy, c-format
 msgid "Unable to locate %ls directory derived from $%ls: '%ls'."
-msgstr "无法定位来自 $ls 的 %ls 目录: %ls ."
+msgstr "无法定位目录 %ls 导出自 $%ls：'%ls'。"
 
 #, c-format
 msgid "Unable to locate the %ls directory."
-msgstr "无法找到 %ls 目录 ."
+msgstr "无法找到目录 %ls。"
 
 #, c-format
 msgid "Unable to read input file: %s"
-msgstr "无法读取输入文件:%s"
+msgstr "无法读取输入文件：%s"
 
 msgid "Unexpected ')' for unopened parenthesis"
-msgstr "未打开的括号' ' "
+msgstr "未闭合的括号前出现意外的 ')'"
 
 msgid "Unexpected ')' found, expecting '}'"
-msgstr "发现出乎意料的''', 期待'}  '"
+msgstr "意外找到 ')'，期待 '}'"
 
 msgid "Unexpected '[' at this location"
-msgstr "未预料到的 '[' 在此位置"
+msgstr "此位置意外找到 '['"
 
 msgid "Unexpected '}' for unopened brace"
-msgstr ""
+msgstr "未闭合的大括号前出现意外的 '}'"
 
 msgid "Unexpected '}' found, expecting ')'"
-msgstr "发现出乎意料的' } '  '"
+msgstr "意外找到 '}'，期待 ')'"
 
 msgid "Unexpected end of string, expecting ')'"
-msgstr "字符串的意外结束, 期待 )  '"
+msgstr "字符串意外结束，期待 ')'"
 
 msgid "Unexpected end of string, incomplete escape sequence"
-msgstr "意外的字符串结束, 不完整的逃生序列"
+msgstr "字符串意外结束，不完整的转义序列"
 
 msgid "Unexpected end of string, incomplete parameter expansion"
-msgstr "字符串的意外结束, 参数扩展不完整"
+msgstr "字符串意外结束，参数展开不完整"
 
 msgid "Unexpected end of string, quotes are not balanced"
-msgstr "字符串的意外结束, 引用不平衡"
+msgstr "字符串意外结束，引号不全"
 
 msgid "Unexpected end of string, square brackets do not match"
-msgstr "意外字符串结束, 方括号不匹配"
+msgstr "字符串意外结束，方括号不匹配"
 
 msgid "Unexpected token"
-msgstr "意外的标志"
+msgstr "意外的记号"
 
 #, c-format
 msgid "Unicode character out of range: \\%c%0*x"
-msgstr "Unicode 字符超出范围: %c%0*x"
+msgstr "Unicode 字符超出范围：\\%c%0*x"
 
 msgid "Unknown"
 msgstr "未知"
 
 #, c-format
 msgid "Unknown builtin '%ls'"
-msgstr "未知的内置命令 '%ls'"
+msgstr "未知的内建命令 '%ls'"
 
 msgid "Unknown command"
 msgstr "未知的命令"
 
 #, c-format
 msgid "Unknown command. '%ls' exists but is not an executable file."
-msgstr "未知的命令 . '%ls' 已经存在, 但不是一个可执行的文件 ."
+msgstr "未知的命令。'%ls' 存在，但不是一个可执行文件。"
 
 #, c-format
 msgid "Unknown command. A component of '%ls' is not a directory."
-msgstr "未知的命令 . %ls 的组件不是一个目录 ."
+msgstr "未知的命令。%ls 的一个组件不是目录。"
 
 #, c-format
 msgid "Unknown command. A component of '%ls' is not a directory. Check your $PATH."
-msgstr "未知的命令 . %ls 的组件不是一个目录 . 检查你的$PATH."
+msgstr "未知的命令。%ls 的一个组件不是目录。检查你的 $PATH."
 
 msgid "Unknown command:"
-msgstr "未知的命令: "
+msgstr "未知的命令："
 
 msgid "Unknown error while evaluating command substitution"
-msgstr "评估命令替换时出现未知错误"
+msgstr "求值命令替换时出现未知错误"
 
 msgid "Unknown function"
 msgstr "未知函数"
@@ -1702,81 +1722,79 @@ msgstr "未匹配的通配符"
 
 #, c-format
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
-msgstr "不支持使用'='. 在fish类中,请使用'set %ls %ls'."
+msgstr "不支持使用 '='。在 fish 中，请使用 'set %ls %ls'。"
 
-#
 msgid "Unused signal"
-msgstr ""
+msgstr "未使用的信号"
 
 msgid "Urgent socket condition"
-msgstr ""
+msgstr "紧急套接字情况"
 
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
-msgstr "使用' 取消 PID ' 从列表中删除任务而不终止它们 .\n"
+msgstr "使用 'disown PID' 从列表中删除作业而不终止它们。\n"
 
 msgid "User defined signal 1"
-msgstr ""
+msgstr "用户定义的信号1"
 
 msgid "User defined signal 2"
-msgstr ""
+msgstr "用户定义的信号2"
 
 #, c-format
 msgid "Variable: %ls"
-msgstr "变量:%ls"
+msgstr "变量：%ls"
 
 #, c-format
 msgid "Variables cannot be bracketed. In fish, please use \"$%ls\"."
-msgstr ""
+msgstr "变量不能用方括号包围。在 fish 中，请使用 \"$%ls\"。"
 
 #, c-format
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
-msgstr ""
+msgstr "变量不能用方括号包围。在 fish 中，请使用 {$%ls}。"
 
-#
 msgid "Virtual timer expired"
-msgstr ""
+msgstr "虚拟计时器到期"
 
 msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
-msgstr ""
+msgstr "警告使用 test 命令的零参数或单参数模式（`test -d $foo`），未来会被更改。"
 
 msgid "Warnings (on by default)"
-msgstr ""
+msgstr "警告 (默认开启)"
 
 msgid "Warnings about unusable paths for config/history (on by default)"
-msgstr ""
+msgstr "关于配置/历史记录路径不可用的警告 (默认开启)"
 
 msgid "Window size change"
-msgstr ""
+msgstr "窗口大小变更"
 
 msgid "Writing/reading the universal variable store"
-msgstr ""
+msgstr "写/读通用变量存储"
 
 msgid "[: the last argument must be ']'"
-msgstr "[:最后的论点必须是  '"
+msgstr "[：最后的参数必须是 ']'"
 
 msgid "array indices start at 1, not 0."
-msgstr "数组指数起始时间为 1,而不是 0."
+msgstr "数组索引起始为 1，而不是 0。"
 
 msgid "autoloading"
-msgstr ""
+msgstr "自动加载"
 
 #, c-format
 msgid "builtin %ls: %ls: %s\n"
-msgstr "内建的 %ls:  %ls: %s\n"
+msgstr "内建 %ls: %ls: %s\n"
 
 #, c-format
 msgid "builtin %ls: Invalid arg: %ls\n"
-msgstr "内建的 %ls:  无效的参数:%ls\n"
+msgstr "内建 %ls: 无效的参数：%ls\n"
 
 #, c-format
 msgid "builtin %ls: realpath failed: %s\n"
-msgstr "内建 %ls: realpath 失败:  %s\n"
+msgstr "内建 %ls: realpath 失败：%s\n"
 
 msgid "builtin history delete --exact requires --case-sensitive\n"
 msgstr "内建历史删除 --exact 需要 --case-sensitive\n"
 
 msgid "builtin history delete only supports --exact\n"
-msgstr "内建历史只删除支持 --exact\n"
+msgstr "内建历史删除只支持 --exact\n"
 
 msgid "can not save history"
 msgstr "无法保存历史"
@@ -1786,7 +1804,7 @@ msgstr "无法保存通用变量或函数"
 
 #, c-format
 msgid "cannot parse key '%s'"
-msgstr ""
+msgstr "无法解析键 '%s'"
 
 msgid "command"
 msgstr "命令"
@@ -1795,13 +1813,13 @@ msgid "command link"
 msgstr "命令链接"
 
 msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-msgstr "在命令位置进行命令替换不被允许. 试着使用 var=(your-cmd) $var ..."
+msgstr "在命令位置不允许替换命令。试使用 var=(你的命令) $var ..."
 
 msgid "completion reached maximum recursion depth, possible cycle?"
-msgstr "达到了最大的递归深度，可能存在循环?"
+msgstr "补全达到了最大的递归深度，可能存在循环？"
 
 msgid "dir symlink"
-msgstr "dir 符号链接"
+msgstr "目录符号链接"
 
 msgid "directory"
 msgstr "目录"
@@ -1810,7 +1828,7 @@ msgid "error\n"
 msgstr "错误\n"
 
 msgid "explore what characters keyboard keys send"
-msgstr ""
+msgstr "探索键盘按键发送的字符"
 
 msgid "exported"
 msgstr "导出"
@@ -1824,9 +1842,9 @@ msgid ""
 "Documentation may not be installed.\n"
 "`help %ls` will show an online version\n"
 msgstr ""
-"fish:%ls: 缺少 man page\n"
-" 文件可能无法安装. \n"
-" 帮助 %ls 将显示在线版本\n"
+"fish: %ls: 缺少 man page\n"
+"文档可能未安装。\n"
+"`help %ls` 将显示在线版本\n"
 
 #, c-format
 msgid "from sourcing file %ls\n"
@@ -1837,34 +1855,34 @@ msgstr "在命令替换中\n"
 
 #, c-format
 msgid "in event handler: %ls\n"
-msgstr "在事件处理器: %ls\n"
+msgstr "在事件处理程序：%ls\n"
 
 #, c-format
 msgid "in function '%ls'"
-msgstr "函数 '%ls' 中"
+msgstr "在函数 '%ls' 中"
 
 #, c-format
 msgid "invalid field width: %ls"
-msgstr "无效的字段宽度: %ls"
+msgstr "无效的字段宽度：%ls"
 
 #, c-format
 msgid "invalid precision: %ls"
-msgstr "无效的精度: %ls"
+msgstr "无效的精度：%ls"
 
 msgid "missing hexadecimal number in escape"
-msgstr "在逃逸中缺少十六进制数"
+msgstr "在转义中缺少十六进制数字"
 
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"
-msgstr ""
+msgstr "仅支持 f1 至 f%d，不支持 'f%s'"
 
 #, c-format
 msgid "or press ctrl-%c or ctrl-%c twice in a row."
-msgstr ""
+msgstr "或按下 ctrl-%c 键，或连续按两次 ctrl-%c 键。"
 
 #, fuzzy, c-format
 msgid "rows %lu to %lu of %lu"
-msgstr "%lu到%lu的行数"
+msgstr "第 %lu 行至第 %lu 行，共 %lu 行"
 
 msgid "running"
 msgstr "运行中"
@@ -1877,244 +1895,244 @@ msgstr "已终止"
 
 #, c-format
 msgid "switch: Expected at most one argument, got %lu\n"
-msgstr "切换: 最多需要一个参数, 得到 %lu\n"
+msgstr "switch: 最多需要一个参数，但收到 %lu 个\n"
 
 msgid "symlink"
 msgstr "符号链接"
 
 #, c-format
 msgid "ulimit: Permission denied when changing resource of type '%ls'\n"
-msgstr "ulimit: 更改类型 '%ls' 的资源时被拒绝的权限\n"
+msgstr "ulimit: 更改类型 '%ls' 的资源时权限被拒绝\n"
 
 msgid "unexported"
 msgstr "未导出"
 
 #, c-format
 msgid "unknown modifier '%s' in '%s'"
-msgstr ""
+msgstr "未知修饰符 '%s' 于 '%s'"
 
 msgid "unlimited\n"
 msgstr "无限制\n"
 
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
-msgstr "|& 无效 . 在fish中,用 &| 来管道连接 stdout 和 stderr."
+msgstr "|& 无效。在 fish 中，用 &| 来同时管道链接 stdout 和 stderr。"
 
 # fish-section-tier1-from-script-explicitly-added
 msgid "%ls: %ls: expected %d arguments; got %d\\n"
-msgstr "%ls:%ls: 期望 %d 参数; 获得 %d\\n"
+msgstr "%ls: %ls: 期望 %d 个参数；收到 %d 个\\n"
 
 msgid "%ls: %ls: subcommand takes no options\\n"
-msgstr "%s:%s: 子命令不需要选项\\n"
+msgstr "%ls: %ls: 子命令不需要选项\\n"
 
 msgid "%ls: Expected at least %d args, got only %d\\n"
-msgstr "%ls: 需要至少 %d 参数, 只得到 %d\\n"
+msgstr "%ls: 需要至少 %d 个参数，只收到 %d 个\\n"
 
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
-msgstr "%s: %s是一个数组变量. 使用 %svared%s %s[n]%s 编辑 %s\\n 中的 n:th 元素"
+msgstr "%s: %s 是一个数组变量。使用 %svared%s %s[n]%s 编辑第 n 个元素于 %s\\n"
 
 msgid "%s: Could not create configuration directory '%s'\\n"
 msgstr "%s: 无法创建配置目录 '%s'\\n"
 
 msgid "%s: Could not find a web browser.\\n"
-msgstr "%s: 找不到网页浏览器.\\n"
+msgstr "%s: 找不到网络浏览器。\\n"
 
 msgid "%s: Directory stack is empty…\\n"
-msgstr "%s: 目录堆栈为空...\\n"
+msgstr "%s: 目录栈为空...\\n"
 
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
-msgstr "%s: 需要精确的一条参数, 获得 %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
+msgstr "%s: 需要一个参数，收到 %s 个。\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 
 msgid "%s: Invalid mask '%s'\\n"
-msgstr "%s:无效的掩码'%s'\\n"
+msgstr "%s: 无效的掩码'%s'\\n"
 
 msgid "%s: Not inside of command substitution"
 msgstr "%s: 命令替换不在内"
 
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
-msgstr "%s:要跳过的位置数必须是非负整数\\n"
+msgstr "%s: 要跳过的位置数必须是非负整数\\n"
 
 msgid "%s: Too many arguments"
 msgstr "%s: 参数过多"
 
 msgid "%s: Too many arguments\\n"
-msgstr "%s:参数太多\\n"
+msgstr "%s: 参数过多\\n"
 
 msgid "%s: Unknown function '%s'\\n"
-msgstr "%s:未知函数'%s'\\n"
+msgstr "%s: 未知函数 '%s'\\n"
 
 msgid "%s: Unknown option %s\\n"
-msgstr "%s:未知选项 %s\\n"
+msgstr "%s: 未知选项 %s\\n"
 
 msgid "%s: Value '%s' for flag '%s' greater than max allowed of '%s'\\n"
-msgstr "%s: 标记'%s'的值大于允许的'%s'\\n的最大值"
+msgstr "%s: 值 '%s' 为标识 '%s' 大于允许的最大值 '%s'\\n"
 
 msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
-msgstr "%s: 标记'%s'的值不是整数\\n"
+msgstr "%s: 值 '%s' 为标识 '%s' 不是整数\\n"
 
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
-msgstr "%s: 标记'%s'的值'%s'小于允许的分钟'%s'\\n"
+msgstr "%s: 值 '%s' 为标识 '%s' 小于允许的最小值 '%s'\\n"
 
 msgid "%s: body cannot be empty\\n"
-msgstr "%s: 身体不能为空\\n"
+msgstr "%s: 内容不能为空\\n"
 
 msgid "%s: name cannot be empty\\n"
 msgstr "%s: 名称不能为空\\n"
 
 msgid "%s: no fish help topic '%s', try 'man %s'\\n"
-msgstr "%s:没有fish帮助话题'%s',尝试'man %s'\\n"
+msgstr "%s：没有关于 '%s' 的 fish 帮助主题，请尝试 'man %s'\\n"
 
 msgid "%s: removed %s\\n"
-msgstr "%s: 删除 %s\\n"
+msgstr "%s: 已移除 %s\\n"
 
 msgid "%s: wrote %s\\n"
-msgstr "%s: 写入 %s\\n"
+msgstr "%s: 已写入 %s\\n"
 
 msgid "%sChanged%s: %s\\n"
-msgstr "%s 变化的 %s:%s\\n"
+msgstr "%s已更改%s: %s\\n"
 
 msgid "%sNew%s: %s\\n"
-msgstr "%s 新建 %s:%s\\n"
+msgstr "%s新增%s: %s\\n"
 
 msgid "%sPossibly changed%s: %s\\n"
-msgstr "数据 %s 可能更改的 %s: %s\\n 数据"
+msgstr "%s可能更改%s: %s\\n"
 
 msgid "%sUnmodified%s: %s\\n"
-msgstr "数据 %s 未修改 %s:%s\\n"
+msgstr "%s未更改%s: %s\\n"
 
 msgid "Cancelled function editing"
 msgstr "已取消的函数编辑"
 
 msgid "Command history cleared!\\n"
-msgstr "命令历史清除 !\\n"
+msgstr "命令历史已清除！\\n"
 
 msgid "Command history for session cleared!\\n"
-msgstr "命令历史已清除 !\\n"
+msgstr "会话的命令历史已清除！\\n"
 
 msgid "Edit the file again? [Y/n]"
-msgstr "再次编辑文件吗 ? [年/n]"
+msgstr "再次编辑文件吗 ? [Y/n]"
 
 msgid "Editing failed or was cancelled"
 msgstr "编辑失败或取消"
 
 msgid "Editor exited but the function was not modified"
-msgstr "编辑器退出了, 但功能没有被修改"
+msgstr "编辑器退出了，但函数没有修改"
 
 msgid "Error: expected a number between 1 and %d or letter in that range, got \"%s\""
-msgstr "错误: 需要数字在 1 到 %d 之间, 或该范围内的字母, 但是获得 \"%s\""
+msgstr "错误：预期输入 1 到 %d 之间的数字或该范围内的字母，实际输入为 \"%s\""
 
 msgid "External editor requested but $VISUAL or $EDITOR not set."
-msgstr ""
+msgstr "请求外部编辑器，但未设置 $VISUAL 或 $EDITOR。"
 
 msgid "Function saved to %s"
-msgstr "函数保存到 %s"
+msgstr "函数已保存到 %s"
 
 msgid "If the editor is still running, check if it waits for completion, maybe a '--wait' option?"
-msgstr "如果编辑器还在运行, 请检查它是否等待完成, 也许是一个' - 等待' 选项 ?"
+msgstr "如果编辑器还在运行，请检查它是否在等待完成，也许是一个 '--wait' 选项？"
 
 msgid "If you enter 'yes' your entire interactive command history will be erased\\n"
-msgstr "如果您输入' 是' , 您的整个交互命令历史将被去除\\n"
+msgstr "若输入 'yes'，您的所有交互式命令历史记录将被擦除\\n"
 
 msgid "Ignoring invalid history entry ID \"%s\"\\n"
-msgstr "忽略无效历史条目 ID \"%s\"\\n"
+msgstr "忽略无效历史记录条目 ID \"%s\"\\n"
 
 msgid "Ignoring the output of your editor since its exit status was non-zero"
-msgstr "忽略编辑器的输出, 因为其退出状态为 非零"
+msgstr "忽略编辑器的输出，因为其退出代码为非零"
 
 msgid "No open utility found. Try installing \"xdg-open\" or \"xdg-utils\"."
-msgstr "未找到打开的工具.尝试安装\"xdg-open\" or \"xdg-utils\"."
+msgstr "未找到可用的打开工具。请尝试安装 \"xdg-open\" 或 \"xdg-utils\"。"
 
 msgid "No paths to add, not setting anything.\\n"
-msgstr ""
+msgstr "没有路径可添加，未设置任何内容。\\n"
 
 msgid "No previous directories to select. You have to cd at least once."
-msgstr "无前一个目录可选择 . 你至少得接受一次检查."
+msgstr "没有可选的先前目录。您必须至少执行一次 cd 命令。"
 
 msgid "Or open %s in your browser of choice.\\n"
-msgstr ""
+msgstr "或在您首选的浏览器中打开 %s。\\n"
 
 msgid "Please set VISUAL or EDITOR to your preferred editor."
-msgstr "请将 ViSUAL 或 EDITOR 设置为您的首选编辑器 ."
+msgstr "请将 VISUAL 或 EDITOR 设置为您首选的编辑器。"
 
 msgid "Please try `BROWSER=some_browser help`, `man fish-doc`, or `man fish-tutorial`.\\n\\n"
-msgstr ""
+msgstr "请尝试 `BROWSER=some_browser help`、`man fish-doc` 或 `man fish-tutorial`。\\n\\n"
 
 msgid "Run funcsave %s to save this function to the configuration directory."
 msgstr "运行 funcsave %s 以保存此函数到配置目录."
 
 msgid "Save function to %s? [Y/n]"
-msgstr "将函数保存到 %s 吗 ? [年/n]"
+msgstr "将函数保存到 %s 吗？[Y/n]"
 
 msgid "Saving to original location failed; saving to user configuration instead."
-msgstr "保存到原始位置失败; 保存到用户配置 ."
+msgstr "保存到原始位置失败；保存到用户配置。"
 
 msgid "Saving to user configuration failed. Changes may be lost when fish is closed."
-msgstr "保存到用户配置失败 . fish类关闭后可能会失去变化."
+msgstr "保存到用户配置失败；fish 关闭后可能会失去更改。"
 
 msgid "Select directory by letter or number: "
-msgstr "通过字母或编号选择目录: "
+msgstr "通过字母或编号选择目录："
 
 msgid "Skipping already included path: %s\\n"
-msgstr ""
+msgstr "跳过已包含的路径：%s\\n"
 
 msgid "Skipping non-existent path: %s\\n"
-msgstr "跳过不存在的路径:%s\\n"
+msgstr "跳过不存在的路径：%s\\n"
 
 msgid "Skipping path because it is a file instead of a directory: %s\\n"
-msgstr ""
+msgstr "跳过路径，因为它是文件而不是目录：%s\\n"
 
 msgid "There are %s unique dirs in your history but I can only handle %s"
-msgstr "您历史上有 %s 独有的 dirs 但我只能处理 %s"
+msgstr "您的历史记录中包含 %s 个唯一目录，但当前仅能处理 %s 个。"
 
 msgid "This should not happen. Have you changed the cd function?"
-msgstr "这不应该发生. 你改变CD功能了吗?"
+msgstr "这种情况不应该发生。您是否更改了 cd 函数？"
 
 msgid "Too many args for cd command"
-msgstr "用于 CD 命令的参数太多"
+msgstr "cd 命令的参数太多"
 
 msgid "Type %shelp%s for instructions on how to use fish"
-msgstr "如何使用fish的指令类型 %s 帮助%s"
+msgstr "输入 %shelp%s 获取 fish 的使用说明"
 
 msgid "Warning: the file containing this function has not been saved. Changes may be lost when fish is closed."
-msgstr "警告: 包含此函数的文件没有保存 . fish类关闭后可能会失去变化."
+msgstr "警告: 包含此函数的文件没有保存。fish 关闭后可能会失去更改。"
 
 msgid "Welcome to fish, the friendly interactive shell"
-msgstr "欢迎来到fish,友好互动的外壳"
+msgstr "欢迎来到 fish，友好交互的 shell"
 
 msgid "You did not say 'yes' so I will not clear your command history\\n"
-msgstr "你没有说'yes' 所以我不会清理你的命令历史\\n"
+msgstr "您没有输入 'yes'，因此我不会清除您的命令历史记录。\\n"
 
 msgid "cdh: Expected zero or one arguments"
 msgstr "cdh: 预期为零或一个参数"
 
 msgid "fish is running in private mode, history will not be persisted."
-msgstr "fish在私人模式中运行,历史不会持续下去."
+msgstr "fish 在私密模式中运行，历史不会持久化。"
 
 msgid "fish: Job %s, '%s' has ended\\n"
-msgstr "fish: 任务 %s, '%s' 结束了\\n"
+msgstr "fish: 作业 %s, '%s' 已结束\\n"
 
 msgid "fish: Job %s, '%s' has stopped\\n"
-msgstr "fish: 任务 %s, '%s' 已停止\\n"
+msgstr "fish: 作业 %s, '%s' 已停止\\n"
 
 msgid "fish: Job %s, '%s' terminated by signal %s (%s)\\n"
-msgstr "fish: 任务 %s, '%s' 终止于信号 %s (%s)\\n"
+msgstr "fish: 作业 %s, '%s' 终止于信号 %s (%s)\\n"
 
 msgid "fish: Process %s, '%s' from job %s, '%s' terminated by signal %s (%s)\\n"
-msgstr "fish: 进程 %s, '%s' from job %s, '%s' 终止于信号 %s (%s)\\n"
+msgstr "fish: 进程 %s, '%s' 自 %s, '%s' 终止于信号 %s (%s)\\n"
 
 msgid "fish: Unknown command: %s\\n"
-msgstr "fish: 未知的命令:%s\\n"
+msgstr "fish: 未知的命令：%s\\n"
 
 msgid "funced: The value for $EDITOR '$editor' could not be used because the command '$editor[1]' could not be found"
-msgstr ""
+msgstr "funced: 无法使用 $EDITOR '$editor' 的值，因为找不到命令 '$editor[1]'"
 
 msgid "help: %s is not a valid command: %s\\n"
-msgstr ""
+msgstr "help: %s 不是有效的命令：%s\\n"
 
 msgid "help: Help is being displayed in %s.\\n"
-msgstr "帮助:  帮助以 %s.\\n 显示"
+msgstr "help: 帮助信息正在 %s 中显示。\\n"
 
 msgid "help: If no help could be displayed, go to %s to view the documentation online.\\n"
-msgstr ""
+msgstr "help: 若无法显示帮助信息，请访问 %s 在线查看文档。\\n"
 
 msgid "or the file was empty"
 msgstr "或文件为空"
@@ -2124,1705 +2142,1705 @@ msgstr "找不到 python 可执行文件"
 
 # fish-section-tier1-from-script-implicitly-added
 msgid "# comments"
-msgstr ""
+msgstr "# 注释"
 
 msgid "$PATH"
 msgstr ""
 
 msgid "$status, the return code"
-msgstr ""
+msgstr "$status 退出代码"
 
 msgid "$variable"
-msgstr ""
+msgstr "$variable 变量"
 
 msgid "(Used together with -o) Do not overwrite but append"
-msgstr ""
+msgstr "(与 -o 一起使用) 不覆写但追加"
 
 msgid "(command) command substitution"
-msgstr ""
+msgstr "(命令) 命令替换"
 
 msgid "< and > redirections"
-msgstr ""
+msgstr "< 和 > 重定向"
 
 msgid "A right prompt to be used when `breakpoint` is executed"
-msgstr ""
+msgstr "执行 `breakpoint` 时使用的正确提示符"
 
 msgid "Add abbreviation"
-msgstr ""
+msgstr "添加缩写"
 
 msgid "Add path to the end"
-msgstr ""
+msgstr "在结尾添加路径"
 
 msgid "Add path to the front (default)"
-msgstr ""
+msgstr "在开头添加路径 (默认)"
 
 msgid "Add paths to the PATH"
-msgstr ""
+msgstr "向 PATH 添加路径"
 
 msgid "Add text at cursor"
-msgstr ""
+msgstr "在光标处添加文本"
 
 msgid "Add text at cursor but DWIM, stripping leading $"
-msgstr ""
+msgstr "在光标处添加文本，但自动补全，去除开头的 $"
 
 msgid "Add text to the end of the selected area"
-msgstr ""
+msgstr "将文本添加到选定区域的末尾"
 
 msgid "Also print directory history"
-msgstr ""
+msgstr "同时打印目录历史"
 
 msgid "Always print empty argument"
-msgstr ""
+msgstr "总是打印空参数"
 
 msgid "Always use file completion"
-msgstr ""
+msgstr "总是使用文件补全"
 
 msgid "An overview of fish's builtins"
-msgstr ""
+msgstr "fish 内建命令概览"
 
 msgid "Append suffix to the filename"
-msgstr ""
+msgstr "在文件名后添加后缀"
 
 msgid "Append the given string to the command-line, or remove the suffix if already there"
-msgstr ""
+msgstr "将给定的字符串添加到命令行末尾, 若该字符串已存在则移除该后缀"
 
 msgid "Append value to a list"
-msgstr ""
+msgstr "添加值到列表末尾"
 
 msgid "Autoloading Functions"
-msgstr ""
+msgstr "自动加载函数"
 
 msgid "Autoloading functions"
-msgstr ""
+msgstr "自动加载函数"
 
 msgid "Automatically funcsave the alias"
-msgstr ""
+msgstr "自动保存 (funcsave) 别名"
 
 msgid "Autosave after successful edit"
-msgstr ""
+msgstr "成功编辑后自动保存"
 
 msgid "Background jobs"
-msgstr ""
+msgstr "后台作业"
 
 msgid "Brace expansion {a,b,c}"
-msgstr ""
+msgstr "大括号展开 {a,b,c}"
 
 msgid "Builtin commands"
-msgstr ""
+msgstr "内建命令"
 
 msgid "Cartesian Products"
-msgstr ""
+msgstr "笛卡尔积"
 
 msgid "Case insensitive"
-msgstr ""
+msgstr "不区分大小写"
 
 msgid "Change background color"
-msgstr ""
+msgstr "更改背景颜色"
 
 msgid "Change current mode after bind is executed"
-msgstr ""
+msgstr "绑定执行后更改当前模式"
 
 msgid "Change directory"
-msgstr ""
+msgstr "更改目录"
 
 msgid "Change extension for given paths"
-msgstr ""
+msgstr "更改给定路径的扩展名"
 
 msgid "Change underline color"
-msgstr ""
+msgstr "更改下划线颜色"
 
 msgid "Character to use for padding"
-msgstr ""
+msgstr "用于填空的字符"
 
 msgid "Characters to use as ellipsis"
-msgstr ""
+msgstr "要用作省略号的字符"
 
 msgid "Check if a job exists without output"
-msgstr ""
+msgstr "检查作业是否存在（不输出结果）"
 
 msgid "Check if an abbreviation exists"
-msgstr ""
+msgstr "检查缩写是否存在"
 
 msgid "Check if something exists without output"
-msgstr ""
+msgstr "检查是否存在（不输出结果）"
 
 msgid "Check if the user is root"
-msgstr ""
+msgstr "检查用户是否为 root"
 
 msgid "Choose how to count vendor files"
-msgstr ""
+msgstr "选择如何计数供应商文件"
 
 msgid "Colorize the output using ANSI escape sequences"
-msgstr ""
+msgstr "使用 ANSI 转义序列输出颜色"
 
 msgid "Combiners (And, Or, Not)"
-msgstr ""
+msgstr "组合器 (与、或、非)"
 
 msgid "Combining different expansions"
-msgstr ""
+msgstr "合并不同的展开"
 
 msgid "Command Substitutions"
-msgstr ""
+msgstr "命令替换"
 
 msgid "Command line editor"
-msgstr ""
+msgstr "命令行编辑器"
 
 msgid "Command mode"
-msgstr ""
+msgstr "命令模式"
 
 msgid "Command substitution"
-msgstr ""
+msgstr "命令替换"
 
 msgid "Command substitution (SUBCOMMAND)"
-msgstr ""
+msgstr "命令替换 (子命令)"
 
 msgid "Command to add completion to"
-msgstr ""
+msgstr "添加补全的命令"
 
 msgid "Comment/uncomment the current command"
-msgstr ""
+msgstr "注释/取消注释当前命令"
 
 msgid "Communicate using a named pipe"
-msgstr ""
+msgstr "使用命名管道通信"
 
 msgid "Communicate using a regular file, not a named pipe"
-msgstr ""
+msgstr "使用普通文件而不是命名管道通信"
 
 msgid "Completion only used if command has zero exit status"
-msgstr ""
+msgstr "只有在命令退出代码为零时才使用的补全"
 
 msgid "Conditional execution of code and flow control"
-msgstr ""
+msgstr "有条件地执行代码和流程控制"
 
 msgid "Conditionals (If, Else, Switch)"
-msgstr ""
+msgstr "条件 (If, Else, Switch)"
 
 msgid "Configurable greeting"
-msgstr ""
+msgstr "可配置的问候语"
 
 msgid "Control of maximum nice priority"
-msgstr ""
+msgstr "控制最高 nice 优先级"
 
 msgid "Convert exit code to signal name"
-msgstr ""
+msgstr "将退出代码转换为信号名称"
 
 msgid "Copy and paste (Kill Ring)"
-msgstr ""
+msgstr "复制并粘贴 (Kill Ring)"
 
 msgid "Copy the specified function to the specified new name"
-msgstr ""
+msgstr "将指定的函数复制到指定的新名称"
 
 msgid "Create a global (manually erased) event block"
-msgstr ""
+msgstr "创建一个全局 (手动清除) 事件块"
 
 msgid "Create a local (automatically erased) event block"
-msgstr ""
+msgstr "创建局域 (自动清除) 事件块"
 
 msgid "Creates a function wrapping a command"
-msgstr ""
+msgstr "创建包装命令的函数"
 
 msgid "Debugging fish scripts"
-msgstr ""
+msgstr "调试 fish 脚本"
 
 msgid "Defining aliases"
-msgstr ""
+msgstr "定义别名"
 
 msgid "Description of completion"
-msgstr ""
+msgstr "补全描述"
 
 msgid "Differences from bash"
-msgstr ""
+msgstr "与 bash 的区别"
 
 msgid "Dim text"
-msgstr ""
+msgstr "暗色文本"
 
 msgid "Disable backslash escapes"
-msgstr ""
+msgstr "禁用反斜杠转义"
 
 msgid "Display a list of defined bind modes"
-msgstr ""
+msgstr "显示已定义的绑定模式列表"
 
 msgid "Display all currently defined trap handlers"
-msgstr ""
+msgstr "显示所有当前定义的陷阱处理程序"
 
 msgid "Display help and exit"
-msgstr ""
+msgstr "显示帮助并退出"
 
 msgid "Display information about the function"
-msgstr ""
+msgstr "显示函数信息"
 
 msgid "Display names of all signals"
-msgstr ""
+msgstr "显示所有信号的名称"
 
 msgid "Display version and exit"
-msgstr ""
+msgstr "显示版本并退出"
 
 msgid "Display vi prompt mode"
-msgstr ""
+msgstr "显示 vi 提示符模式"
 
 msgid "Displays the current mode"
-msgstr ""
+msgstr "显示当前模式"
 
 msgid "Do not export variable to subprocess"
-msgstr ""
+msgstr "不向子进程导出变量"
 
 msgid "Do not indent output, only reformat into one job per line"
-msgstr ""
+msgstr "不缩进输出, 只重排为每行一个作业"
 
 msgid "Do not indent, only return 0 if the code is already indented as fish_indent would"
-msgstr ""
+msgstr "不要缩进，仅当代码已按 fish_indent 方式缩进时才返回 0"
 
 msgid "Do not output a newline"
-msgstr ""
+msgstr "不输出新行"
 
 msgid "Do not persist history"
-msgstr ""
+msgstr "不要持久化历史"
 
 msgid "Do not print anything, only set exit status"
-msgstr ""
+msgstr "不要打印任何东西, 只设置退出代码"
 
 msgid "Do not print output"
-msgstr ""
+msgstr "不打印输出"
 
 msgid "Do not read configuration files"
-msgstr ""
+msgstr "不读取配置文件"
 
 msgid "Do not reformat, only indent lines"
-msgstr ""
+msgstr "不重新格式化，只缩进行"
 
 msgid "Do not reformat, only unindent lines"
-msgstr ""
+msgstr "不重新格式化，只取消缩进行"
 
 msgid "Do not send the results to stderr, but overwrite the specified file"
-msgstr ""
+msgstr "不将结果发送到 stderr, 而是覆盖指定的文件"
 
 msgid "Do not separate arguments with spaces"
-msgstr ""
+msgstr "不以空格分隔参数"
 
 msgid "Do not shadow variable scope of calling function"
-msgstr ""
+msgstr "不覆盖调用函数的变量作用域"
 
 msgid "Do not truncate long lines"
-msgstr ""
+msgstr "不要截断长行"
 
 msgid "Don't display the full diff"
-msgstr ""
+msgstr "不要显示完整差分"
 
 msgid "Don't emit an event"
-msgstr ""
+msgstr "不要触发事件"
 
 msgid "Don't print function definition"
-msgstr ""
+msgstr "不要打印函数定义"
 
 msgid "Don't trim trailing newlines"
-msgstr ""
+msgstr "不要修剪尾随换行符"
 
 msgid "Don't use file completion"
-msgstr ""
+msgstr "不要使用文件补全"
 
 msgid "Dump information about parsed statements to stderr"
-msgstr ""
+msgstr "将解析的语句信息转储到 stderr"
 
 msgid "Edit function definition"
-msgstr ""
+msgstr "编辑函数定义"
 
 msgid "Edit in fish, not external editor"
-msgstr ""
+msgstr "在 fish 中，而不是外部编辑器中编辑"
 
 msgid "Edit the command buffer in an external editor"
-msgstr ""
+msgstr "在外部编辑器中编辑命令缓冲区"
 
 msgid "Edit variable value"
-msgstr ""
+msgstr "编辑变量值"
 
 msgid "Emacs mode commands"
-msgstr ""
+msgstr "Emacs 模式命令"
 
 msgid "Empty results excluded"
-msgstr ""
+msgstr "排除空结果"
 
 msgid "Empty strings excluded"
-msgstr ""
+msgstr "排除空字符串"
 
 msgid "Enable backslash escapes"
-msgstr ""
+msgstr "启用反斜杠转义"
 
 msgid "Enable debug at specified verbosity level"
-msgstr ""
+msgstr "在指定的详细程度启用调试"
 
 msgid "Erase abbreviation"
-msgstr ""
+msgstr "擦除缩写"
 
 msgid "Erase function"
-msgstr ""
+msgstr "擦除函数"
 
 msgid "Erase mode"
-msgstr ""
+msgstr "擦除模式"
 
 msgid "Erase variable"
-msgstr ""
+msgstr "擦除变量"
 
 msgid "Escape with \\ instead of quotes"
-msgstr ""
+msgstr "使用 \\ 代替引号转义"
 
 msgid "Escaping characters"
-msgstr ""
+msgstr "转义字符"
 
 msgid "Event handler, resets prompt when any char changes"
-msgstr ""
+msgstr "事件处理程序，当任何字符变化时重置提示符"
 
 msgid "Event handler, resets prompt when any color changes"
-msgstr ""
+msgstr "事件处理程序，当任何颜色变化时重置提示符"
 
 msgid "Event handler, resets prompt when functionality changes"
-msgstr ""
+msgstr "事件处理程序，当功能变化时重置提示符"
 
 msgid "Event handlers"
-msgstr ""
+msgstr "事件处理程序"
 
 msgid "Exit Status"
-msgstr ""
+msgstr "退出代码"
 
 msgid "Expand only as a command, or anywhere"
-msgstr ""
+msgstr "仅作为命令，或在任何位置展开"
 
 msgid "Export variable to subprocess"
-msgstr ""
+msgstr "导出变量到子进程"
 
 msgid "Exporting variables"
-msgstr ""
+msgstr "导出变量"
 
 msgid "Exports (Shell Variables)"
-msgstr ""
+msgstr "导出 (shell 变量)"
 
 msgid "FD is a terminal"
-msgstr ""
+msgstr "FD 是终端"
 
 msgid "File has the set-group-ID bit"
-msgstr ""
+msgstr "文件具有 set-group-ID 标识位"
 
 msgid "File has the set-user-ID bit"
-msgstr ""
+msgstr "文件具有 set-user-ID 标识位"
 
 msgid "File is a socket"
-msgstr ""
+msgstr "文件是套接字"
 
 msgid "File is executable"
-msgstr ""
+msgstr "文件是可执行文件"
 
 msgid "File is readable"
-msgstr ""
+msgstr "文件可读"
 
 msgid "File is writable"
-msgstr ""
+msgstr "文件可写"
 
 msgid "File owned by our effective group ID"
-msgstr ""
+msgstr "属于我们有效组 ID 的文件"
 
 msgid "File owned by our effective user ID"
-msgstr ""
+msgstr "属于我们有效用户 ID 的文件"
 
 msgid "File size is non-zero"
-msgstr ""
+msgstr "文件大小非零"
 
 msgid "Filter by permission"
-msgstr ""
+msgstr "按权限过滤"
 
 msgid "Filter by type"
-msgstr ""
+msgstr "按类型过滤"
 
 msgid "Filter directories"
-msgstr ""
+msgstr "过滤目录"
 
 msgid "Filter executable paths"
-msgstr ""
+msgstr "过滤可执行路径"
 
 msgid "Filter files"
-msgstr ""
+msgstr "过滤文件"
 
 msgid "Filter readable paths"
-msgstr ""
+msgstr "过滤可读路径"
 
 msgid "Filter symlinks"
-msgstr ""
+msgstr "过滤符号链接"
 
 msgid "Filter writable paths"
-msgstr ""
+msgstr "过滤可写路径"
 
 msgid "Fish's release notes"
-msgstr ""
+msgstr "Fish 的发布说明"
 
 msgid "Frequently Asked Questions"
-msgstr ""
+msgstr "经常被问到的问题"
 
 msgid "Function name"
-msgstr ""
+msgstr "函数名"
 
 msgid "Further help and development"
-msgstr ""
+msgstr "进一步的帮助和开发"
 
 msgid "GNU-style long option to complete"
-msgstr ""
+msgstr "要补全的 GNU 风格长选项"
 
 msgid "Get all current limits"
-msgstr ""
+msgstr "获取当前所有限制"
 
 msgid "Get current selection ending position"
-msgstr ""
+msgstr "获取当前选中的结束位置"
 
 msgid "Get current selection starting position"
-msgstr ""
+msgstr "获取当前选中的起始位置"
 
 msgid "Gets the umask in a format that can be used as a command"
-msgstr ""
+msgstr "以可以用作命令的格式获取 umask"
 
 msgid "Gets the umask in symbolic format instead of octal"
-msgstr ""
+msgstr "以符号格式而不是八进制格式获取 umask"
 
 msgid "Getting Help"
-msgstr ""
+msgstr "获取帮助"
 
 msgid "Give basename for given paths"
-msgstr ""
+msgstr "为给定的路径提供基础名"
 
 msgid "Give dirname for given paths"
-msgstr ""
+msgstr "为给定路径提供目录"
 
 msgid "Give extension for given paths"
-msgstr ""
+msgstr "为给定路径提供扩展名"
 
 msgid "Handle NULL-delimited input"
-msgstr ""
+msgstr "处理以 NULL 分隔的输入"
 
 msgid "Help for this command"
-msgstr ""
+msgstr "此命令的帮助"
 
 msgid "Help on how to reuse previously entered commands"
-msgstr ""
+msgstr "关于如何重复使用先前输入的命令的帮助"
 
 msgid "Helper function for fish_git_prompt"
-msgstr ""
+msgstr "fish_git_prompt 的辅助函数"
 
 msgid "Helper function to list unused options"
-msgstr ""
+msgstr "列出未使用的选项的辅助函数"
 
 msgid "Home directory expansion ~USER"
-msgstr ""
+msgstr "主目录展开 ~USER"
 
 msgid "How \"\" and '' work"
-msgstr ""
+msgstr "\"\" 和 '' 如何工作"
 
 msgid "How \\\\ escaping works"
-msgstr ""
+msgstr "\\\\ 转义如何工作"
 
 msgid "How different expansions work together"
-msgstr ""
+msgstr "不同的展开如何一起工作"
 
 msgid "How functions are loaded"
-msgstr ""
+msgstr "函数如何加载"
 
 msgid "How lists combine"
-msgstr ""
+msgstr "列表如何组合"
 
 msgid "How tab-completion works"
-msgstr ""
+msgstr "Tab 补全如何工作"
 
 msgid "How to color the pager"
-msgstr ""
+msgstr "如何为分页器设置颜色"
 
 msgid "How to define an alias"
-msgstr ""
+msgstr "如何定义别名"
 
 msgid "How to define functions"
-msgstr ""
+msgstr "如何定义函数"
 
 msgid "How to handle arguments"
-msgstr ""
+msgstr "如何处理参数"
 
 msgid "How to make your own prompt"
-msgstr ""
+msgstr "如何构建自己的提示符"
 
 msgid "How to write completions"
-msgstr ""
+msgstr "如何写补全"
 
 msgid "How to write your own prompt"
-msgstr ""
+msgstr "如何编写自己的提示符"
 
 msgid "If commandline is empty, run nextd; else move one argument to the right"
-msgstr ""
+msgstr "如果命令行参数为空，则运行 nextd；否则将将一个参数向右移动"
 
 msgid "If commandline is empty, run prevd; else move one argument to the left"
-msgstr ""
+msgstr "如果命令行参数为空，则运行 prevd；否则将将一个参数向左移动"
 
 msgid "If cursor is at the command token, edit the command source file"
-msgstr ""
+msgstr "如果光标位于命令记号上，编辑命令源文件"
 
 msgid "Ignore completions"
-msgstr ""
+msgstr "忽略补全"
 
 msgid "Ignore config files"
-msgstr ""
+msgstr "忽略配置文件"
 
 msgid "Ignore function files"
-msgstr ""
+msgstr "忽略函数文件"
 
 msgid "Include new files"
-msgstr ""
+msgstr "包含新文件"
 
 msgid "Index range expansion"
-msgstr ""
+msgstr "索引范围展开"
 
 msgid "Inherit completions from specified command"
-msgstr ""
+msgstr "从指定的命令继承补全"
 
 msgid "Inherit completions from the given command"
-msgstr ""
+msgstr "从给定命令继承补全"
 
 msgid "Initial contents of read buffer when reading interactively"
-msgstr ""
+msgstr "交互式读取时读缓冲区的初始内容"
 
 msgid "Initialization files"
-msgstr ""
+msgstr "初始化文件"
 
 msgid "Input/Output (IO) redirection"
-msgstr ""
+msgstr "输入/输出 (IO) 重定向"
 
 msgid "Insert mode"
-msgstr ""
+msgstr "插入模式"
 
 msgid "Integer width of the result, default is maximum width of inputs"
-msgstr ""
+msgstr "结果的整数宽度，默认为输入的最大宽度"
 
 msgid "Integer width of the result, default is minimum non-zero width of inputs"
-msgstr ""
+msgstr "结果的整数宽度，默认值为输入最小的非零宽度"
 
 msgid "Introduction to the fish syntax"
-msgstr ""
+msgstr "Fish 语法介绍"
 
 msgid "Invert meaning of filters"
-msgstr ""
+msgstr "反转过滤器的含义"
 
 msgid "Job control"
-msgstr ""
+msgstr "作业控制"
 
 msgid "Keep order of arguments instead of sorting alphabetically"
-msgstr ""
+msgstr "保持参数的顺序而不是按字母排序"
 
 msgid "Launch fish's web based configuration"
-msgstr ""
+msgstr "启动 fish 的基于网页的配置"
 
 msgid "Learning fish"
-msgstr ""
+msgstr "学习 fish"
 
 msgid "Left file equal to right file"
-msgstr ""
+msgstr "左侧文件等于右侧文件"
 
 msgid "Left file newer than right file"
-msgstr ""
+msgstr "左侧文件比右侧文件新"
 
 msgid "Left file older than right file"
-msgstr ""
+msgstr "左侧文件比右侧文件旧"
 
 msgid "Left number != right number"
-msgstr ""
+msgstr "左侧数 != 右侧数"
 
 msgid "Left number < right number"
-msgstr ""
+msgstr "左侧数 < 右侧数"
 
 msgid "Left number <= right number"
-msgstr ""
+msgstr "左侧数 <= 右侧数"
 
 msgid "Left number > right number"
-msgstr ""
+msgstr "左侧数 > 右侧数"
 
 msgid "Left number >= right number"
-msgstr ""
+msgstr "左侧数 >= 右侧数"
 
 msgid "List all feature flags"
-msgstr ""
+msgstr "列出所有功能标识"
 
 msgid "List contents of directory using long format"
-msgstr ""
+msgstr "使用长格式列出目录内容"
 
 msgid "List contents of directory, including hidden files in directory using long format"
-msgstr ""
+msgstr "使用长格式列出目录内容, 包括在目录中隐藏的文件"
 
 msgid "List contents of token under the cursor if it is a directory, otherwise list the contents of the current directory"
-msgstr ""
+msgstr "如果光标下的记号是目录，则列出其内容；否则列出当前目录的内容。"
 
 msgid "List embedded files contained in the fish binary"
-msgstr ""
+msgstr "列出 fish 二进制文件包含的嵌入文件"
 
 msgid "List the names of the functions, but not their definition"
-msgstr ""
+msgstr "列出函数的名称，但不列出其定义"
 
 msgid "List the names of the variables, but not their value"
-msgstr ""
+msgstr "列出变量的名称，但不列出其值"
 
 msgid "Local, global and universal scope"
-msgstr ""
+msgstr "局域、全局和通用作用域"
 
 msgid "Locale variables"
-msgstr ""
+msgstr "区域变量"
 
 msgid "Logical AND"
-msgstr ""
+msgstr "逻辑与"
 
 msgid "Logical OR"
-msgstr ""
+msgstr "逻辑或"
 
 msgid "Make -C escape special characters"
-msgstr ""
+msgstr "使 -C 转义特殊字符"
 
 msgid "Make font bold"
-msgstr ""
+msgstr "使字体变为粗体"
 
 msgid "Make the function a generic event handler"
-msgstr ""
+msgstr "使函数成为通用事件处理程序"
 
 msgid "Make the function a job exit event handler"
-msgstr ""
+msgstr "使函数成为作业退出事件处理程"
 
 msgid "Make the function a process exit event handler"
-msgstr ""
+msgstr "使函数成为进程事件处理程序"
 
 msgid "Make the function a signal event handler"
-msgstr ""
+msgstr "使函数成为信号事件处理程序"
 
 msgid "Make the function a variable update event handler"
-msgstr ""
+msgstr "使函数成为变量更新事件处理程序"
 
 msgid "Make variable as a path variable"
-msgstr ""
+msgstr "设置变量为路径变量"
 
 msgid "Make variable function-scoped"
-msgstr ""
+msgstr "设置变量为函数作用域"
 
 msgid "Make variable not as a path variable"
-msgstr ""
+msgstr "设置变量不为路径变量"
 
 msgid "Make variable scope global"
-msgstr ""
+msgstr "设置变量为全局作用域"
 
 msgid "Make variable scope local"
-msgstr ""
+msgstr "设置变量为局域作用域"
 
 msgid "Mask input with ●"
-msgstr ""
+msgstr "用 ● 遮盖输入"
 
 msgid "Match a regular expression"
-msgstr ""
+msgstr "匹配正则表达式"
 
 msgid "Maximum amount of cpu time in seconds"
-msgstr ""
+msgstr "CPU 时间的最大值 (秒)"
 
 msgid "Maximum amount of virtual memory available to the shell"
-msgstr ""
+msgstr "Shell 可用的最大虚拟内存量"
 
 msgid "Maximum bytes in POSIX message queues"
-msgstr ""
+msgstr "POSIX 消息队列中的最大字节"
 
 msgid "Maximum contiguous realtime CPU time"
-msgstr ""
+msgstr "最大连续实时 CPU 时间"
 
 msgid "Maximum number of kqueues"
-msgstr ""
+msgstr "最大 kqueue 数"
 
 msgid "Maximum number of open file descriptors"
-msgstr ""
+msgstr "打开文件描述符的最大数量"
 
 msgid "Maximum number of pending signals"
-msgstr ""
+msgstr "最多待发信号数"
 
 msgid "Maximum number of printed chars"
-msgstr ""
+msgstr "最大打印字符数"
 
 msgid "Maximum number of processes available to a single user"
-msgstr ""
+msgstr "单个用户可使用的最大进程数"
 
 msgid "Maximum number of pseudo-terminals"
-msgstr ""
+msgstr "最大伪终端数"
 
 msgid "Maximum number of simultaneous threads"
-msgstr ""
+msgstr "最大并发线程数"
 
 msgid "Maximum realtime scheduling priority"
-msgstr ""
+msgstr "最大实时调度优先级"
 
 msgid "Maximum resident set size"
-msgstr ""
+msgstr "最大驻留集大小"
 
 msgid "Maximum size of a process's data segment"
-msgstr ""
+msgstr "进程数据段的最大大小"
 
 msgid "Maximum size of core files created"
-msgstr ""
+msgstr "创建的核心文件最大大小"
 
 msgid "Maximum size of files created by the shell"
-msgstr ""
+msgstr "由 shell 创建的最大文件大小"
 
 msgid "Maximum size of socket buffers"
-msgstr ""
+msgstr "套接字缓冲区的最大大小"
 
 msgid "Maximum size that may be locked into memory"
-msgstr ""
+msgstr "可锁定在内存的最大大小"
 
 msgid "Maximum stack size"
-msgstr ""
+msgstr "最大栈大小"
 
 msgid "Maximum swap space"
-msgstr ""
+msgstr "最大交换空间"
 
 msgid "Menu based cd command"
-msgstr ""
+msgstr "基于菜单的 cd 命令"
 
 msgid "More on universal variables"
-msgstr ""
+msgstr "关于通用变量的更多内容"
 
 msgid "Move back in the directory history"
-msgstr ""
+msgstr "在目录历史中后退"
 
 msgid "Move forward in the directory history"
-msgstr ""
+msgstr "在目录历史中前进"
 
 msgid "Move path to the front or back"
-msgstr ""
+msgstr "将路径移到前端或后端"
 
 msgid "Multiline editing"
-msgstr ""
+msgstr "多行编辑"
 
 msgid "Negate expression"
-msgstr ""
+msgstr "取反表达式"
 
 msgid "New resource limit"
-msgstr ""
+msgstr "新的资源限制"
 
 msgid "Normalize given paths (remove ./, resolve ../ against other components..)"
-msgstr ""
+msgstr "规范化给定的路径 (移除 ./，解析 ../ 相对于其他组件..)"
 
 msgid "Normalize given paths and resolve symlinks"
-msgstr ""
+msgstr "规范化给定的路径并解析符号链接"
 
 msgid "Numbers are equal"
-msgstr ""
+msgstr "数字相等"
 
 msgid "Old style long option to complete"
-msgstr ""
+msgstr "要补全的旧样式长选项"
 
 msgid "Only keep one line of each input"
-msgstr ""
+msgstr "每个输入只保留一行"
 
 msgid "Only leave the first of each run with the same key"
-msgstr ""
+msgstr "只留下每次运行中有相同键的第一个"
 
 msgid "Only parse input, do not execute"
-msgstr ""
+msgstr "只解析输入, 不执行"
 
 msgid "Only report capturing groups"
-msgstr ""
+msgstr "只报告捕获组"
 
 msgid "Only return status, no output"
-msgstr ""
+msgstr "只返回代码，没有输出"
 
 msgid "Only return that part of the command line before the cursor"
-msgstr ""
+msgstr "只返回光标前的命令行部分"
 
 msgid "Only show status for last job to be started"
-msgstr ""
+msgstr "只显示要开始的最后一个作业的状况"
 
 msgid "Open file in default application"
-msgstr ""
+msgstr "在默认应用程序中打开文件"
 
 msgid "Open function in external editor"
-msgstr ""
+msgstr "在外部编辑器中打开函数"
 
 msgid "Open the web-based UI"
-msgstr ""
+msgstr "打开基于网络的用户界面"
 
 msgid "Operate on preset bindings"
-msgstr ""
+msgstr "在预设绑定上操作"
 
 msgid "Operate on the pager search field"
-msgstr ""
+msgstr "在分页器搜索字段上操作"
 
 msgid "Operate on user bindings"
-msgstr ""
+msgstr "在用户绑定上操作"
 
 msgid "Operate silently"
-msgstr ""
+msgstr "静默操作"
 
 msgid "Other features"
-msgstr ""
+msgstr "其他功能"
 
 msgid "Output in HTML format"
-msgstr ""
+msgstr "以 HTML 格式输出"
 
 msgid "Output profiling information (excluding startup) to a file"
-msgstr ""
+msgstr "输出分析信息 (不包括启动过程) 到文件"
 
 msgid "Output startup profiling information to a file"
-msgstr ""
+msgstr "将启动分析信息输出到文件"
 
 msgid "Output timing and explain sequence"
-msgstr ""
+msgstr "输出时序和解释序列"
 
 msgid "POSIX-style short option to complete"
-msgstr ""
+msgstr "要补全的 POSIX 风格短选项"
 
 msgid "Pad both left and right"
-msgstr ""
+msgstr "左右两侧填充"
 
 msgid "Pad right instead of left"
-msgstr ""
+msgstr "填充右侧而非左侧"
 
 msgid "Parameter expansion (Globbing)"
-msgstr ""
+msgstr "参数展开 (通配符)"
 
 msgid "Path exists"
-msgstr ""
+msgstr "路径存在"
 
 msgid "Path is a block device"
-msgstr ""
+msgstr "路径是块设备"
 
 msgid "Path is a character device"
-msgstr ""
+msgstr "路径是字符设备"
 
 msgid "Path is a directory"
-msgstr ""
+msgstr "路径是目录"
 
 msgid "Path is a named pipe"
-msgstr ""
+msgstr "路径是命名管道"
 
 msgid "Path is a regular file"
-msgstr ""
+msgstr "路径是普通文件"
 
 msgid "Path is a symlink"
-msgstr ""
+msgstr "路径是符号链接"
 
 msgid "Path to add completion to"
-msgstr ""
+msgstr "添加补全到路径"
 
 msgid "Perform an action when the shell receives a signal"
-msgstr ""
+msgstr "当 shell 收到信号时执行动作"
 
 msgid "Pipes and Redirections"
-msgstr ""
+msgstr "管道和重定向"
 
 msgid "Pop directory from the stack and cd to it"
-msgstr ""
+msgstr "从栈弹出目录并切换到该目录"
 
 msgid "Position the cursor at % post-expansion"
-msgstr ""
+msgstr "扩展后将光标定位在 %"
 
 msgid "Prepend the given string to the command-line, or remove the prefix if already there"
-msgstr ""
+msgstr "将给定的字符串添加到命令行开头, 若该字符串已存在则移除该前缀"
 
 msgid "Prepend value to a list"
-msgstr ""
+msgstr "添加值到列表开头"
 
 msgid "Print NULL-delimited output"
-msgstr ""
+msgstr "打印以 NULL 分隔的输出"
 
 msgid "Print a list of all accepted color names"
-msgstr ""
+msgstr "打印所有已接受的颜色名列表"
 
 msgid "Print a list of all function calls leading up to running the current command"
-msgstr ""
+msgstr "打印当前命令运行前的所有函数调用列表"
 
 msgid "Print a list of expanded tokens"
-msgstr ""
+msgstr "打印已展开的记号列表"
 
 msgid "Print all abbreviation names"
-msgstr ""
+msgstr "打印所有缩写名"
 
 msgid "Print all abbreviations"
-msgstr ""
+msgstr "打印所有缩写"
 
 msgid "Print all external commands by the given name"
-msgstr ""
+msgstr "按给定名称打印所有外部命令"
 
 msgid "Print all possible definitions of the specified name"
-msgstr ""
+msgstr "打印指定名称的所有可能定义"
 
 msgid "Print all vcs prompts"
-msgstr ""
+msgstr "打印所有版本控制系统提示"
 
 msgid "Print an embedded file from the fish binary"
-msgstr ""
+msgstr "打印 fish 二进制文件包含的一个嵌入文件"
 
 msgid "Print command type"
-msgstr ""
+msgstr "打印命令类型"
 
 msgid "Print completions for a commandline specified as a parameter"
-msgstr ""
+msgstr "为指定为参数的命令行打印补全"
 
 msgid "Print directory stack"
-msgstr ""
+msgstr "打印目录栈"
 
 msgid "Print index of first match"
-msgstr ""
+msgstr "打印第一个匹配的索引"
 
 msgid "Print information on how this version fish was built"
-msgstr ""
+msgstr "打印有关此版本 fish 构建方式的信息"
 
 msgid "Print more output"
-msgstr ""
+msgstr "打印更多输出"
 
 msgid "Print name and version of the terminal fish is running in"
-msgstr ""
+msgstr "打印运行 fish 的终端名称和版本"
 
 msgid "Print names of all existing builtins"
-msgstr ""
+msgstr "打印所有已存在的内建命令的名称"
 
 msgid "Print names of available functions"
-msgstr ""
+msgstr "打印可用函数的名称"
 
 msgid "Print names of available keys"
-msgstr ""
+msgstr "打印可用键的名称"
 
 msgid "Print path to command"
-msgstr ""
+msgstr "将路径打印为命令"
 
 msgid "Print path to command, or nothing if name is not a command"
-msgstr ""
+msgstr "将路径打印为命令，如果名称不是命令，则不输出"
 
 msgid "Print paths that match a filter"
-msgstr ""
+msgstr "打印匹配过滤器的路径"
 
 msgid "Print stats from getrusage at exit"
-msgstr ""
+msgstr "退出时打印 getrusage 的统计信息"
 
 msgid "Print the current directory history (the prev and next lists)"
-msgstr ""
+msgstr "打印当前目录历史 (上一个和下一个列表)"
 
 msgid "Print the currently running command with its arguments"
-msgstr ""
+msgstr "打印当前正在运行的命令及其参数"
 
 msgid "Print the debug categories fish knows"
-msgstr ""
+msgstr "打印 fish 已知的调试类别"
 
 msgid "Print the file name (without the path) of the currently running script"
-msgstr ""
+msgstr "打印当前运行的脚本的文件名 (不含路径)"
 
 msgid "Print the file that would be executed"
-msgstr ""
+msgstr "打印要执行的文件"
 
 msgid "Print the filename of the currently running script"
-msgstr ""
+msgstr "打印当前运行的脚本的文件名"
 
 msgid "Print the line number of the currently running script"
-msgstr ""
+msgstr "打印当前运行的脚本的行号"
 
 msgid "Print the name of the current function"
-msgstr ""
+msgstr "打印当前函数的名称"
 
 msgid "Print the name of the currently running command or function"
-msgstr ""
+msgstr "打印当前运行的命令或函数的名称"
 
 msgid "Print the path (without the file name) of the currently running script"
-msgstr ""
+msgstr "打印当前运行的脚本的路径 (不含文件名)"
 
 msgid "Print the path to the current instance of fish"
-msgstr ""
+msgstr "打印当前 fish 的路径"
 
 msgid "Print the set command used"
-msgstr ""
+msgstr "打印所用的 set 命令"
 
 msgid "Print the set command without executing it"
-msgstr ""
+msgstr "打印所用的 set 命令而不执行"
 
 msgid "Print working directory with symlinks resolved"
-msgstr ""
+msgstr "打印工作目录并解析符号链接"
 
 msgid "Print working directory without resolving symlinks"
-msgstr ""
+msgstr "打印工作目录而不解析符号链接"
 
 msgid "Print/set the column the cursor is on"
-msgstr ""
+msgstr "打印/设置光标所在的列"
 
 msgid "Print/set the line the cursor is on"
-msgstr ""
+msgstr "打印/设置光标所在的行"
 
 msgid "Programmable prompt"
-msgstr ""
+msgstr "可编程提示符"
 
 msgid "Programmable title"
-msgstr ""
+msgstr "可编程标题"
 
 msgid "Prompt function for Git"
-msgstr ""
+msgstr "Git 的提示函数"
 
 msgid "Prompt function for svn"
-msgstr ""
+msgstr "Svn 的提示函数"
 
 msgid "Push directory to stack"
-msgstr ""
+msgstr "将目录推到栈"
 
 msgid "Quit with abnormal exit status"
-msgstr ""
+msgstr "以异常退出代码退出"
 
 msgid "Quit with normal exit status"
-msgstr ""
+msgstr "以正常退出代码退出"
 
 msgid "Read each line into its own variable"
-msgstr ""
+msgstr "将每行读入各自的变量"
 
 msgid "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits."
-msgstr ""
+msgstr "从 stdin 读取内容写入文件并输出文件名。调用 psub 退出的命令时删除文件。"
 
 msgid "Read like the shell would"
-msgstr ""
+msgstr "如同 shell 一样读取"
 
 msgid "Read the specified number of characters"
-msgstr ""
+msgstr "读取指定的字符数"
 
 msgid "Ready for more?"
-msgstr ""
+msgstr "准备好更多了吗？"
 
 msgid "Remove completion"
-msgstr ""
+msgstr "移除补全"
 
 msgid "Remove from the left on"
-msgstr ""
+msgstr "从左边移除"
 
 msgid "Remove newline"
-msgstr ""
+msgstr "移除新行"
 
 msgid "Remove the extension"
-msgstr ""
+msgstr "移除扩展名"
 
 msgid "Remove the topmost global event block"
-msgstr ""
+msgstr "移除最顶级全局事件块"
 
 msgid "Rename an abbreviation"
-msgstr ""
+msgstr "重命名缩写"
 
 msgid "Repetition count"
-msgstr ""
+msgstr "重复计数"
 
 msgid "Replace selected part"
-msgstr ""
+msgstr "替换选中的部分"
 
 msgid "Report every match"
-msgstr ""
+msgstr "报告每个匹配"
 
 msgid "Report index, length of match"
-msgstr ""
+msgstr "报告匹配的索引、长度"
 
 msgid "Report only actual replacements"
-msgstr ""
+msgstr "仅报告实际替换"
 
 msgid "Report only non-matches"
-msgstr ""
+msgstr "仅报告非匹配"
 
 msgid "Require parameter"
-msgstr ""
+msgstr "需要参数"
 
 msgid "Require parameter and don't use file completion"
-msgstr ""
+msgstr "需要参数而不使用文件补全"
 
 msgid "Return as soon as the first job completes"
-msgstr ""
+msgstr "第一个作业结束马上返回"
 
 msgid "Return from function with abnormal exit status"
-msgstr ""
+msgstr "函数以异常退出代码返回"
 
 msgid "Return from function with normal exit status"
-msgstr ""
+msgstr "函数以正常退出代码返回"
 
 msgid "Return true if any path matched a filter"
-msgstr ""
+msgstr "如果有路径匹配过滤器，则返回 true"
 
 msgid "Return true if pager is showing all content"
-msgstr ""
+msgstr "如果分页器显示所有内容，返回 true"
 
 msgid "Return true if performing a history search"
-msgstr ""
+msgstr "执行历史搜索时返回 true"
 
 msgid "Return true if showing pager content"
-msgstr ""
+msgstr "显示分页器内容时返回 true"
 
 msgid "Return true if the command line has an autosuggestion"
-msgstr ""
+msgstr "如果命令行有自动建议，返回 true"
 
 msgid "Return true if the command line is syntactically valid and complete"
-msgstr ""
+msgstr "如果命令行语法有效且完整，返回 true"
 
 msgid "Reverse color text"
-msgstr ""
+msgstr "反色文本"
 
 msgid "Reverse the order"
-msgstr ""
+msgstr "倒转顺序"
 
 msgid "Run as a login shell"
-msgstr ""
+msgstr "作为登录 shell 运行"
 
 msgid "Run in interactive mode"
-msgstr ""
+msgstr "在交互模式下运行"
 
 msgid "Run specified command before session"
-msgstr ""
+msgstr "在会话前运行指定的命令"
 
 msgid "Run specified command instead of interactive session"
-msgstr ""
+msgstr "运行指定的命令而不是交互式会话"
 
 msgid "Run with comma-separated feature flags enabled"
-msgstr ""
+msgstr "启用以逗号分隔的功能标识运行"
 
 msgid "Running Commands"
-msgstr ""
+msgstr "运行命令"
 
 msgid "Running multiple programs"
-msgstr ""
+msgstr "运行多个程序"
 
 msgid "Save function"
-msgstr ""
+msgstr "保存函数"
 
 msgid "Save the current definition of all specified functions to file"
-msgstr ""
+msgstr "将所有指定函数的当前定义保存到文件"
 
 msgid "Search back or move cursor up 1 line"
-msgstr ""
+msgstr "向后搜索或向上移动光标 1 行"
 
 msgid "Searchable history"
-msgstr ""
+msgstr "可搜索历史"
 
 msgid "Select current selection"
-msgstr ""
+msgstr "选择当前选项"
 
 msgid "Select entire command line (default)"
-msgstr ""
+msgstr "选择整个命令行 (默认)"
 
 msgid "Select job under cursor"
-msgstr ""
+msgstr "选择在光标下的作业"
 
 msgid "Select process under cursor"
-msgstr ""
+msgstr "选择在光标下的进程"
 
 msgid "Select token under cursor"
-msgstr ""
+msgstr "选择在光标下的记号"
 
 msgid "Separating Commands (Semicolon)"
-msgstr ""
+msgstr "命令分隔符 (分号)"
 
 msgid "Set all jobs under job control"
-msgstr ""
+msgstr "将所有作业置于作业控制之下"
 
 msgid "Set cursor shape for different vi modes"
-msgstr ""
+msgstr "为不同的 vi 模式设定光标形状"
 
 msgid "Set default file permission mask"
-msgstr ""
+msgstr "设置默认文件权限掩码"
 
 msgid "Set env variable. Alias for `set -gx` for bash compatibility."
-msgstr ""
+msgstr "设置环境变量。为兼容 bash 而设置的 `set -gx` 别名。"
 
 msgid "Set function description"
-msgstr ""
+msgstr "设置函数描述"
 
 msgid "Set no jobs under job control"
-msgstr ""
+msgstr "在作业控制下不设置任何作业"
 
 msgid "Set only interactive jobs under job control"
-msgstr ""
+msgstr "仅设置交互式作业在作业控制下"
 
 msgid "Set or get hard limit"
-msgstr ""
+msgstr "设置或获取硬件限制"
 
 msgid "Set or get soft limit"
-msgstr ""
+msgstr "设置或获取软件限制"
 
 msgid "Set prompt command"
-msgstr ""
+msgstr "设置提示命令"
 
 msgid "Set prompt using provided string"
-msgstr ""
+msgstr "使用提供的字符串设定提示"
 
 msgid "Set right-hand prompt command"
-msgstr ""
+msgstr "设置右侧提示命令"
 
 msgid "Set string to use as delimiter"
-msgstr ""
+msgstr "设定要用作分隔符的字符串"
 
 msgid "Set which jobs are under job control"
-msgstr ""
+msgstr "设定哪些作业处于作业控制之下"
 
 msgid "Set/get cursor position, not buffer contents"
-msgstr ""
+msgstr "设置/获取光标位置, 而非缓冲区内容"
 
 msgid "Setting syntax highlighting colors"
-msgstr ""
+msgstr "设置语法高亮着色"
 
 msgid "Share variable persistently across sessions"
-msgstr ""
+msgstr "在不同会话中持久共享变量"
 
 msgid "Share variable with all the users fish processes on the computer"
-msgstr ""
+msgstr "与计算机上所有用户 fish 进程共享变量"
 
 msgid "Shared bindings"
-msgstr ""
+msgstr "共享绑定"
 
 msgid "Shell variable and function names"
-msgstr ""
+msgstr "Shell 变量和函数名"
 
 msgid "Shell variables"
-msgstr ""
+msgstr "Shell 变量"
 
 msgid "Show commandname of each job"
-msgstr ""
+msgstr "显示每个作业的命令名"
 
 msgid "Show entire matching lines"
-msgstr ""
+msgstr "显示整个匹配行"
 
 msgid "Show event handlers"
-msgstr ""
+msgstr "显示事件处理程序"
 
 msgid "Show event handlers matching the given type"
-msgstr ""
+msgstr "显示匹配指定类型的事件处理程序"
 
 msgid "Show group id of job"
-msgstr ""
+msgstr "显示作业的组 ID"
 
 msgid "Show help"
-msgstr ""
+msgstr "显示帮助"
 
 msgid "Show help and exit"
-msgstr ""
+msgstr "显示帮助并退出"
 
 msgid "Show help for the fish shell"
-msgstr ""
+msgstr "显示 fish shell 的帮助"
 
 msgid "Show hidden functions"
-msgstr ""
+msgstr "显示隐藏函数"
 
 msgid "Show man page entries or function description related to the token under the cursor"
-msgstr ""
+msgstr "显示与光标下记号相关的 man 页面条目或函数描述"
 
 msgid "Show modification time"
-msgstr ""
+msgstr "显示修改时间"
 
 msgid "Show seconds since the modification time"
-msgstr ""
+msgstr "显示自修改时间以来的秒数"
 
 msgid "Show the process id of each process in the job"
-msgstr ""
+msgstr "显示作业中每个进程的进程 ID"
 
 msgid "Show unavailable key bindings/erase all bindings"
-msgstr ""
+msgstr "显示不可用的键位绑定/清除所有绑定"
 
 msgid "Show variable"
-msgstr ""
+msgstr "显示变量"
 
 msgid "Snapshot and define local variable"
-msgstr ""
+msgstr "快照并定义局域变量"
 
 msgid "Some common words"
-msgstr ""
+msgstr "一些常用词"
 
 msgid "Sort paths"
-msgstr ""
+msgstr "排序路径"
 
 msgid "Space-separated list of possible arguments"
-msgstr ""
+msgstr "空格分隔的可能参数列表"
 
 msgid "Special variables"
-msgstr ""
+msgstr "特殊变量"
 
 msgid "Specify command to operate on"
-msgstr ""
+msgstr "指定要操作的命令"
 
 msgid "Specify debug categories"
-msgstr ""
+msgstr "指定调试类别"
 
 msgid "Specify end index"
-msgstr ""
+msgstr "指定结束索引"
 
 msgid "Specify escaping style"
-msgstr ""
+msgstr "指定转义样式"
 
 msgid "Specify fields"
-msgstr ""
+msgstr "指定字段"
 
 msgid "Specify how many stack frames to display in debug messages"
-msgstr ""
+msgstr "指定调试信息中要显示的栈帧数"
 
 msgid "Specify maximum number of splits"
-msgstr ""
+msgstr "指定最大拆分数"
 
 msgid "Specify named arguments"
-msgstr ""
+msgstr "指定命名参数"
 
 msgid "Specify output format"
-msgstr ""
+msgstr "指定输出格式"
 
 msgid "Specify start index"
-msgstr ""
+msgstr "指定起始索引"
 
 msgid "Specify substring length"
-msgstr ""
+msgstr "指定子串长度"
 
 msgid "Specify the bind mode that the bind is used in"
-msgstr ""
+msgstr "指定绑定使用的绑定模式"
 
 msgid "Specify the chars to trim (default: whitespace)"
-msgstr ""
+msgstr "指定要修剪的字符 (默认: 空格)"
 
 msgid "Split right-to-left"
-msgstr ""
+msgstr "右向左分割"
 
 msgid "Start a continuous session"
-msgstr ""
+msgstr "开始连续会话"
 
 msgid "Startup (Where's .bashrc?)"
-msgstr ""
+msgstr "启动 (.bashrc 在哪里？)"
 
 msgid "Store the results as an array"
-msgstr ""
+msgstr "将结果存储为数组"
 
 msgid "String length is non-zero"
-msgstr ""
+msgstr "字符串长度非零"
 
 msgid "String length is zero"
-msgstr ""
+msgstr "字符串长度为零"
 
 msgid "Strings are identical"
-msgstr ""
+msgstr "字符串相同"
 
 msgid "Strings are not identical"
-msgstr ""
+msgstr "字符串不相同"
 
 msgid "Suppress function and builtin lookup"
-msgstr ""
+msgstr "禁止函数和内建命令查询"
 
 msgid "Suspend the current shell."
-msgstr ""
+msgstr "挂起当前 shell。"
 
 msgid "Syntax Highlighting"
-msgstr ""
+msgstr "语法高亮"
 
 msgid "TRAP handler: debug prompt"
-msgstr ""
+msgstr "TRAP 处理函数：调试提示符"
 
 msgid "Tab Completions"
-msgstr ""
+msgstr "Tab 补全"
 
 msgid "Terminal features used by fish"
-msgstr ""
+msgstr "Fish 使用的终端功能"
 
 msgid "Test if We are specifying a color value for the prompt"
-msgstr ""
+msgstr "测试是否我们正在指定提示符的颜色值"
 
 msgid "Test if We are specifying a locale value for the prompt"
-msgstr ""
+msgstr "测试是否我们正在指定提示符的区域值"
 
 msgid "Test if a breakpoint is currently in effect"
-msgstr ""
+msgstr "测试一个断点是否生效"
 
 msgid "Test if a code block is currently evaluated"
-msgstr ""
+msgstr "测试当前是否求值一个代码块"
 
 msgid "Test if a command substitution is currently evaluated"
-msgstr ""
+msgstr "测试当前是否求值命令替换"
 
 msgid "Test if a feature flag is enabled"
-msgstr ""
+msgstr "测试是否启用了功能标识"
 
 msgid "Test if all new jobs are put under job control"
-msgstr ""
+msgstr "测试所有新作业是否处于作业控制之下"
 
 msgid "Test if function is defined"
-msgstr ""
+msgstr "测试函数是否定义"
 
 msgid "Test if inside an interactive read builtin"
-msgstr ""
+msgstr "测试是否处于交互式读取内建命令中"
 
 msgid "Test if new jobs are never put under job control"
-msgstr ""
+msgstr "测试新作业是否从不受到作业控制"
 
 msgid "Test if only interactive new jobs are put under job control"
-msgstr ""
+msgstr "测试是否只有新的交互式作业处于作业控制之下"
 
 msgid "Test if the terminal suports the given feature"
-msgstr ""
+msgstr "测试终端是否支持给定功能"
 
 msgid "Test if this is a login shell"
-msgstr ""
+msgstr "测试是否为登录 shell"
 
 msgid "Test if this is an interactive shell"
-msgstr ""
+msgstr "测试是否为交互式 shell"
 
 msgid "Test if variable is defined"
-msgstr ""
+msgstr "测试是否定义了变量"
 
 msgid "Tests if a file descriptor is a tty"
-msgstr ""
+msgstr "测试文件描述符是否为 TTY"
 
 msgid "Tests if builtin exists"
-msgstr ""
+msgstr "测试内建命令是否存在"
 
 msgid "The status variable"
-msgstr ""
+msgstr "状况变量"
 
 msgid "Treat expansion argument as a fish function"
-msgstr ""
+msgstr "将展开参数视为 fish 函数"
 
 msgid "Trim only leading chars"
-msgstr ""
+msgstr "只修剪开头字符"
 
 msgid "Trim only trailing chars"
-msgstr ""
+msgstr "只修建结尾字符"
 
 msgid "Underline style"
-msgstr ""
+msgstr "下划线样式"
 
 msgid "Universal Variables"
-msgstr ""
+msgstr "通用变量"
 
 msgid "Update $PATH directly"
-msgstr ""
+msgstr "直接更新 $PATH"
 
 msgid "Update PATH when fish_user_paths changes"
-msgstr ""
+msgstr "fish_user_paths 更改时更新 PATH"
 
 msgid "Update man-page based completions"
-msgstr ""
+msgstr "更新基于 man-page 的补全"
 
 msgid "Use NUL character as line terminator"
-msgstr ""
+msgstr "使用 NUL 字符作为行终止符"
 
 msgid "Use a global $fish_user_paths"
-msgstr ""
+msgstr "使用全局的 $fish_user_paths"
 
 msgid "Use a universal $fish_user_paths (default)"
-msgstr ""
+msgstr "使用通用的 $fish_user_paths (默认)"
 
 msgid "Use regex instead of globs"
-msgstr ""
+msgstr "使用正则表达式而不是通配符"
 
 msgid "Use shell tokenization rules when splitting"
-msgstr ""
+msgstr "拆分时使用 shell 标记规则"
 
 msgid "Use the portable output format"
-msgstr ""
+msgstr "使用可移植输出格式"
 
 msgid "Use the visible width, excluding escape sequences"
-msgstr ""
+msgstr "使用可见宽度，不包括转义序列"
 
 msgid "Useful functions for writing completions"
-msgstr ""
+msgstr "写补全的有用函数"
 
 msgid "Variable expansion $VARNAME"
-msgstr ""
+msgstr "变量展开 $VARNAME"
 
 msgid "Variable scope"
-msgstr ""
+msgstr "变量作用域"
 
 msgid "Variable scope for functions"
-msgstr ""
+msgstr "函数的变量作用域"
 
 msgid "Variables for changing highlighting colors"
-msgstr ""
+msgstr "用于改变高亮颜色的变量"
 
 msgid "Variables with multiple elements"
-msgstr ""
+msgstr "有多种元素的变量"
 
 msgid "Verbose mode"
-msgstr ""
+msgstr "详细模式"
 
 msgid "Vi mode commands"
-msgstr ""
+msgstr "Vi 模式命令"
 
 msgid "Vi-style bindings that inherit emacs-style bindings in all modes"
-msgstr ""
+msgstr "所有模式中的继承 emacs 样式绑定的 Vi 样式绑定"
 
 msgid "View and pick from the sample prompts"
-msgstr ""
+msgstr "查看并从示例提示中选择"
 
 msgid "View and pick from the sample themes"
-msgstr ""
+msgstr "查看并从示例主题中选择"
 
 msgid "Visual mode"
-msgstr ""
+msgstr "可视模式"
 
 msgid "What characters are allowed in names"
-msgstr ""
+msgstr "名称中允许什么字符"
 
 msgid "What set -x does"
-msgstr ""
+msgstr "设置 -x 做什么"
 
 msgid "Where to direct debug output to"
-msgstr ""
+msgstr "将调试输出导向何处"
 
 msgid "Where to put completions"
-msgstr ""
+msgstr "将补全放在哪里"
 
 msgid "Why $PATH is special"
-msgstr ""
+msgstr "为什么 $PATH 特殊"
 
 msgid "Why fish?"
-msgstr ""
+msgstr "为什么用 fish？"
 
 msgid "Wildcard expansion *.*"
-msgstr ""
+msgstr "通配符展开 *.*"
 
 msgid "Write out the fossil prompt"
-msgstr ""
+msgstr "写出 fossil 提示"
 
 msgid "Write out the hg prompt"
-msgstr ""
+msgstr "写出 hg 提示"
 
 msgid "Write out the prompt"
-msgstr ""
+msgstr "写出提示"
 
 msgid "Write to file"
-msgstr ""
+msgstr "写入文件"
 
 msgid "Writing your own completions"
-msgstr ""
+msgstr "自己写补全"
 
 msgid "all components of the path must exist"
-msgstr ""
+msgstr "路径的所有组件必须存在"
 
 msgid "condition evaluation utility"
-msgstr ""
+msgstr "条件求值工具"
 
 msgid "dir to save function(s) into"
-msgstr ""
+msgstr "将函数保存到目录"
 
 msgid "display or manipulate interactive command history"
-msgstr ""
+msgstr "显示或操纵交互式命令历史"
 
 msgid "display this help and exit"
-msgstr ""
+msgstr "显示此帮助并退出"
 
 msgid "display user name for the prompt"
-msgstr ""
+msgstr "显示提示符的用户名"
 
 msgid "don't expand symlinks"
-msgstr ""
+msgstr "不要展开符号链接"
 
 msgid "emacs-like key binds"
-msgstr ""
+msgstr "类似 emacs 的键绑定"
 
 msgid "execute readline function"
-msgstr ""
+msgstr "执行 readline 函数"
 
 msgid "fish_git_prompt helper, checks char variables"
-msgstr ""
+msgstr "fish_git_prompt 辅助工具，检查字符变量"
 
 msgid "fish_git_prompt helper, checks color variables"
-msgstr ""
+msgstr "fish_git_prompt 辅助工具，检查颜色变量"
 
 msgid "fish_git_prompt helper, returns the current Git operation and branch"
-msgstr ""
+msgstr "fish_git_prompt 辅助工具，返回当前 Git 操作和分支"
 
 msgid "foo=bar variable overrides"
-msgstr ""
+msgstr "foo=bar 变量覆盖"
 
 msgid "helper function that does pretty formatting on svn status"
-msgstr ""
+msgstr "在 svn 状况下漂亮格式化的辅助函数"
 
 msgid "ifs and elses"
-msgstr ""
+msgstr "if 和 else"
 
 msgid "increment or decrement the number below the cursor"
-msgstr ""
+msgstr "递增或递减光标下方的数字"
 
 msgid "no components of the path need exist"
-msgstr ""
+msgstr "路径的组件不需要存在"
 
 msgid "open app in background"
-msgstr ""
+msgstr "后台打开应用程序"
 
 msgid "open app with fresh state"
-msgstr ""
+msgstr "以新状态打开应用程序"
 
 msgid "open in TextEdit"
-msgstr ""
+msgstr "在文本编辑中打开"
 
 msgid "open in default editor"
-msgstr ""
+msgstr "在默认编辑器中打开"
 
 msgid "open library header file"
-msgstr ""
+msgstr "打开库头文件"
 
 msgid "open new instance of app"
-msgstr ""
+msgstr "打开应用新实例"
 
 msgid "open stdin with editor"
-msgstr ""
+msgstr "用编辑器打开 stdin"
 
 msgid "output version information and exit"
-msgstr ""
+msgstr "输出版本信息并退出"
 
 msgid "pass remaining args to app"
-msgstr ""
+msgstr "将剩余参数传给应用"
 
 msgid "print absolute paths unless paths below FILE"
-msgstr ""
+msgstr "打印绝对路径，除非路径位于 FILE 下"
 
 msgid "print the resolved path relative to FILE"
-msgstr ""
+msgstr "打印相对 FILE 的已解析的路径"
 
 msgid "resolve '..' components before symlinks"
-msgstr ""
+msgstr "解析符号链接前解析 '..' 组件"
 
 msgid "resolve symlinks as encountered (default)"
-msgstr ""
+msgstr "解析遇到的符号链接 (默认)"
 
 msgid "reveal in Finder"
-msgstr ""
+msgstr "在访达中显示"
 
 msgid "save function(s) to disk"
-msgstr ""
+msgstr "将函数保存到磁盘"
 
 msgid "search forward or move down 1 line"
-msgstr ""
+msgstr "向前搜索或向下移动 1 行"
 
 msgid "separate output with NUL rather than newline"
-msgstr ""
+msgstr "使用 NUL 而不是新行分隔输出"
 
 msgid "set an environment variable like path_helper does (macOS only)"
-msgstr ""
+msgstr "设置环境变量，类似于 path_helper (仅 macOS)"
 
 msgid "short CWD for the prompt"
-msgstr ""
+msgstr "提示符的短 CWD"
 
 msgid "short hostname for the prompt"
-msgstr ""
+msgstr "提示符的短主机名"
 
 msgid "specify app bundle id"
-msgstr ""
+msgstr "指定应用捆绑包 ID"
 
 msgid "specify app name"
-msgstr ""
+msgstr "指定应用名称"
 
 msgid "suppress most error messages"
-msgstr ""
+msgstr "禁用大多数错误消息"
 
 msgid "suppress output"
-msgstr ""
+msgstr "禁用输出"
 
 msgid "text color"
-msgstr ""
+msgstr "文本颜色"
 
 msgid "var[x..y] slices"
-msgstr ""
+msgstr "var[x..y] 切片"
 
 msgid "vi-like key bindings for fish"
-msgstr ""
+msgstr "fish 中类似 vi 的键位绑定"
 
 msgid "wait for app to exit"
-msgstr ""
+msgstr "等待应用程序退出"
 
 msgid "while, for and begin"
-msgstr ""
+msgstr "while、for 和 begin"
 
 msgid "{a,b} brace expansion"
-msgstr ""
+msgstr "{a,b} 大括号展开"
 
 msgid "~ expansion"
-msgstr ""
+msgstr "~ 展开"
 
 # fish-section-tier3-from-script-implicitly-added
 msgid " "
@@ -4339,10 +4357,10 @@ msgid "(Un)Register a Peer Service"
 msgstr ""
 
 msgid "(all) Specify which DNS-over-HTTPS (DOH) server to use to resolve hostnames"
-msgstr ""
+msgstr "(所有) 指定用于解析主机名的 DNS-over-HTTPS (DOH) 服务器"
 
 msgid "(default) use llvm's disassembler"
-msgstr ""
+msgstr "(默认) 使用 LLVM 反汇编器"
 
 msgid "(expert only) Override USB IDs"
 msgstr ""
@@ -9895,19 +9913,19 @@ msgid "Cargo features to enable"
 msgstr ""
 
 msgid "Case insensitive comparison"
-msgstr ""
+msgstr "不区分大小写比较"
 
 msgid "Case insensitive file matching"
-msgstr ""
+msgstr "不区分大小写文件匹配"
 
 msgid "Case insensitive match"
-msgstr ""
+msgstr "不区分大小写匹配"
 
 msgid "Case insensitive move (implies seems mode)"
-msgstr ""
+msgstr "不区分大小写移动 (暗含 seems 模式)"
 
 msgid "Case insensitive packages"
-msgstr ""
+msgstr "不区分大小写包"
 
 msgid "Case sensitive packages"
 msgstr ""
@@ -14335,7 +14353,7 @@ msgid "Debugging command"
 msgstr ""
 
 msgid "Debugging messages to stderr."
-msgstr ""
+msgstr "调试消息输出到 stderr。"
 
 msgid "Debugging mode"
 msgstr ""
@@ -15367,13 +15385,13 @@ msgid "Description for unit"
 msgstr ""
 
 msgid "Description of package"
-msgstr ""
+msgstr "包描述"
 
 msgid "Description of snapshot"
-msgstr ""
+msgstr "快照描述"
 
 msgid "Description of the new revision"
-msgstr ""
+msgstr "新修订描述"
 
 msgid "Deselect all processes that do not fulfill conditions"
 msgstr ""
@@ -17230,7 +17248,7 @@ msgid "Display all changelogs"
 msgstr ""
 
 msgid "Display all details."
-msgstr ""
+msgstr "显示所有细节。"
 
 msgid "Display all environment variables and their values to standard output"
 msgstr ""
@@ -19288,7 +19306,7 @@ msgid "Do not edit build files"
 msgstr ""
 
 msgid "Do not ellipsize anything"
-msgstr ""
+msgstr "不要略去任何缩写"
 
 msgid "Do not ellipsize output"
 msgstr ""
@@ -20023,7 +20041,7 @@ msgid "Do not restore tablespace assignments"
 msgstr ""
 
 msgid "Do not reveal the resulting package in the Finder"
-msgstr ""
+msgstr "不要在访达中显示结果包"
 
 msgid "Do not run 'haveged' automatically when needed"
 msgstr ""
@@ -24808,13 +24826,13 @@ msgid "Erase possible superblock"
 msgstr ""
 
 msgid "Erase, using a secure method"
-msgstr ""
+msgstr "使用安全方法擦除"
 
 msgid "Error format"
 msgstr ""
 
 msgid "Error handler"
-msgstr ""
+msgstr "错误处理程序"
 
 msgid "Error log"
 msgstr ""
@@ -24850,7 +24868,7 @@ msgid "Escape unprintables except \\t"
 msgstr ""
 
 msgid "Estimate the entropy of a password"
-msgstr ""
+msgstr "估计密码的熵"
 
 msgid "Eval exprs in string; print non-nil values"
 msgstr ""
@@ -32731,7 +32749,7 @@ msgid "Java1.5+: use the OS proxy settings"
 msgstr ""
 
 msgid "Jobs format"
-msgstr ""
+msgstr "作业格式"
 
 msgid "Join CSV files"
 msgstr ""
@@ -36400,7 +36418,7 @@ msgid "Logical walk, follow symbolic links to directories"
 msgstr ""
 
 msgid "Login off"
-msgstr ""
+msgstr "登出"
 
 msgid "Login on"
 msgstr ""
@@ -36832,7 +36850,7 @@ msgid "Make username an administrator"
 msgstr ""
 
 msgid "Make window fullscreen"
-msgstr ""
+msgstr "使窗口全屏"
 
 msgid "Make word-wise movements respect path separators"
 msgstr ""
@@ -37429,7 +37447,7 @@ msgid "Maximum number of hops"
 msgstr ""
 
 msgid "Maximum number of thread-local symbols."
-msgstr ""
+msgstr "最大线程局域符号数。"
 
 msgid "Maximum number of unknown host"
 msgstr ""
@@ -38806,7 +38824,7 @@ msgid "Number of jobs"
 msgstr ""
 
 msgid "Number of jobs to spawn in parallel"
-msgstr "并行生成的任务数"
+msgstr "并行启动的作业数"
 
 msgid "Number of journal entries to show"
 msgstr ""
@@ -39592,7 +39610,7 @@ msgid "Only return mirrors with a reported sync delay of n hours or less, where 
 msgstr ""
 
 msgid "Only return processes w/ same root directory"
-msgstr ""
+msgstr "只有返回进程与同根目录"
 
 msgid "Only run lint and unit tests"
 msgstr ""
@@ -40021,22 +40039,22 @@ msgid "Operate on remote host"
 msgstr ""
 
 msgid "Operate only on journal files matching glob"
-msgstr ""
+msgstr "只操作于匹配 glob 的日记文件"
 
 msgid "Operate quietly"
-msgstr ""
+msgstr "安静操作"
 
 msgid "Operate quietly and do not report progress"
-msgstr ""
+msgstr "安静操作，不报告进度"
 
 msgid "Operate recursively"
-msgstr ""
+msgstr "递归操"
 
 msgid "Operate recursively on datasets"
-msgstr ""
+msgstr "在数据集上递归操作"
 
 msgid "Operate silently, i.e. don't ring any bells "
-msgstr ""
+msgstr "静默操作，即不要发出警报 "
 
 msgid "Operates in \"global\" mode"
 msgstr ""
@@ -40771,7 +40789,7 @@ msgid "Output the version number"
 msgstr ""
 
 msgid "Output to /dev/null"
-msgstr ""
+msgstr "输出到 /dev/null"
 
 msgid "Output to automatically named file in DIRECTORY, default: current directory"
 msgstr ""
@@ -40831,10 +40849,10 @@ msgid "Output version information"
 msgstr ""
 
 msgid "Output version information and exit"
-msgstr ""
+msgstr "输出版本信息并退出"
 
 msgid "Output version information and exit."
-msgstr ""
+msgstr "输出版本信息并退出。"
 
 msgid "Output version information then quit"
 msgstr ""
@@ -51979,7 +51997,7 @@ msgid "Run zed in the foreground (useful for debugging)"
 msgstr ""
 
 msgid "Running commentary"
-msgstr ""
+msgstr "运行评论"
 
 msgid "Runs Cassandra in the foreground"
 msgstr ""
@@ -64144,16 +64162,16 @@ msgid "Suppress messages"
 msgstr ""
 
 msgid "Suppress most error messages"
-msgstr ""
+msgstr "禁用大多数错误消息"
 
 msgid "Suppress most errors"
-msgstr ""
+msgstr "禁用大多数错误"
 
 msgid "Suppress non-error messages"
 msgstr ""
 
 msgid "Suppress normal output, print only error messages"
-msgstr ""
+msgstr "禁用正常输出, 只打印出错消息"
 
 msgid "Suppress output"
 msgstr ""

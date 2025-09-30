@@ -122,7 +122,7 @@ complete -c help -x -a exporting-variables -d "What set -x does"
 complete -c help -x -a functions -d "How to define functions"
 complete -c help -x -a home-directory-expansion -d "~ expansion"
 complete -c help -x -a index-range-expansion -d "var[x..y] slices"
-complete -c help -x -a input-output-redirection -d "< and > redirectoins"
+complete -c help -x -a input-output-redirection -d "< and > redirections"
 complete -c help -x -a lists -d "Variables with multiple elements"
 complete -c help -x -a loops-and-blocks -d "while, for and begin"
 complete -c help -x -a more-on-universal-variables

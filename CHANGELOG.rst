@@ -8,6 +8,7 @@ This release fixes the following regressions identified in 4.1.0:
 
 - Some :doc:`fish_config <cmds/fish_config>` subcommands for prompts and themes were broken in standalone Linux builds (those using the ``embed-data`` cargo feature), which has been fixed (:issue:`11832`).
 - Our new workaround for WezTerm's `issues with modifyOtherKeys <https://github.com/wezterm/wezterm/issues/6087>`__ breaking shifted keys was broken on some versions of WezTerm, which has been fixed (:issue:`11204`).
+- Fixed a crash when using new underline styles in :doc:`the web-based configuration tool <cmds/fish_config>` (:issue:`11840`).
 
 fish 4.1.0 (released September 27, 2025)
 ========================================

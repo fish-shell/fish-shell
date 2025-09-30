@@ -919,6 +919,10 @@ msgstr ""
 msgid "Argument is not a number: '%ls'"
 msgstr ""
 
+#
+msgid "Await background process completion"
+msgstr ""
+
 msgid "Background IO thread events"
 msgstr ""
 
@@ -1743,10 +1747,8 @@ msgstr "Zmienne nie mogą znajdować się w nawiasach. W fish używane jest \"$%
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
 msgstr "Zmienne nie mogą znajdować się w nawiasach. W fish używane jest {$%ls}."
 
-msgid "Virtual timefr expired"
-msgstr ""
-
-msgid "Wait for background processes completed"
+#
+msgid "Virtual timer expired"
 msgstr ""
 
 msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."

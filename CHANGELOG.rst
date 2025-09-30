@@ -6,16 +6,16 @@ fish 4.1.1 (released ???)
 
 This release fixes the following regressions identified in 4.1.0:
 
-- The new Chinese translations were more confusing than helpful; they have been fixed or removed (:issue:`11833`).
+- Many of our new Chinese translations were more confusing than helpful; they have been fixed or removed (:issue:`11833`).
 
   Note that you can work around this type of issue by configuring fish's :doc:`message localization <cmds/_>`:
   if your environment contains something like ``LANG=zh_CN.UTF-8``,
   you can use ``set -g LC_MESSAGES en`` to use English messages inside fish.
-  Since ``LC_MESSAGES`` is not exported, it will not affect fish's child processes.
+  This will not affect fish's child processes unless ``LC_MESSAGES`` was already exported.
 
-- Some :doc:`fish_config <cmds/fish_config>` subcommands for prompts and themes were broken in standalone Linux builds (those using the ``embed-data`` cargo feature), which has been fixed (:issue:`11832`).
-- On Windows Terminal, we observed an issue where fish would fail to read a response to startup queries, causing brief hangs and a misleading error message. A workaround has been added (:issue:`11841`). 
-- Our new workaround for WezTerm's `issues with modifyOtherKeys <https://github.com/wezterm/wezterm/issues/6087>`__ breaking shifted keys was broken on some versions of WezTerm, which has been fixed (:issue:`11204`).
+- Some :doc:`fish_config <cmds/fish_config>` subcommands for showing prompts and themes had been broken in standalone Linux builds (those using the ``embed-data`` cargo feature), which has been fixed (:issue:`11832`).
+- On Windows Terminal, we observed an issue where fish would fail to read the terminal's response to our new startup queries, causing noticeable lags and a misleading error message. A workaround has been added (:issue:`11841`). 
+- A WezTerm `issue breaking shifted key input <https://github.com/wezterm/wezterm/issues/6087>`__ has resurfaced on some versions of WezTerm; our workaround has been extended to cover all versions for now (:issue:`11204`).
 - Fixed a crash in :doc:`the web-based configuration tool <cmds/fish_config>` when using the new underline styles (:issue:`11840`).
 
 fish 4.1.0 (released September 27, 2025)

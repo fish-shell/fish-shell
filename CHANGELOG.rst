@@ -1,5 +1,5 @@
-fish 4.1.1 (released ???)
-=========================
+fish 4.1.1 (released September 30, 2025)
+========================================
 
 This release fixes the following regressions identified in 4.1.0:
 

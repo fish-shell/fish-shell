@@ -3030,8 +3030,8 @@ msgstr "64 位散列"
 msgid "802.1p priority to set"
 msgstr ""
 
-msgid "< and > redirectoins"
-msgstr "<和 > 重定向线"
+msgid "< and > redirections"
+msgstr ""
 
 msgid "<CMD> Command to execute"
 msgstr ""

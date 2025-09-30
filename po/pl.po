@@ -3027,7 +3027,7 @@ msgstr ""
 msgid "802.1p priority to set"
 msgstr ""
 
-msgid "< and > redirectoins"
+msgid "< and > redirections"
 msgstr ""
 
 msgid "<CMD> Command to execute"

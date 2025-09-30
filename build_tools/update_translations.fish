@@ -31,7 +31,6 @@
 set -gx LC_ALL C.UTF-8
 
 set -l build_tools (status dirname)
-set -g tmpdir
 set -l po_dir $build_tools/../po
 
 set -l extract

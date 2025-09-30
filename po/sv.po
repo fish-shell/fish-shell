@@ -195,7 +195,6 @@ msgstr ""
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: %ls: option does not take an argument\n"
 msgstr ""
@@ -376,7 +375,6 @@ msgstr ""
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy of '%ls'\n"
 msgstr ""
@@ -405,7 +403,6 @@ msgstr ""
 msgid "%ls: Invalid --min-args value '%ls'\n"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: Invalid --unknown-arguments value '%ls'\n"
 msgstr ""
@@ -698,7 +695,6 @@ msgstr ""
 msgid "%ls: expected a numeric value"
 msgstr ""
 
-#
 #, c-format
 msgid "%ls: fish was not built with embedded files"
 msgstr ""
@@ -795,17 +791,14 @@ msgstr ""
 msgid "%s"
 msgstr ""
 
-#
 #, c-format
 msgid "%s %s: unrecognized feature '%ls'"
 msgstr ""
 
-#
 #, c-format
 msgid "%s and %s are mutually exclusive"
 msgstr ""
 
-#
 #, c-format
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
 msgstr ""
@@ -909,7 +902,6 @@ msgstr "Ett fel inträffade under skapandet av ett rör"
 msgid "Argument is not a number: '%ls'"
 msgstr ""
 
-#
 msgid "Await background process completion"
 msgstr ""
 
@@ -1114,7 +1106,6 @@ msgstr ""
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
-#
 #, c-format
 msgid "Failed to set terminal mode (%s)"
 msgstr ""
@@ -1518,7 +1509,6 @@ msgstr "Avbryt den nuvarande funktionen"
 msgid "Stop the innermost loop"
 msgstr "Avbryt den innersta loopen"
 
-#
 msgid "Synchronized file access"
 msgstr ""
 
@@ -1733,7 +1723,6 @@ msgstr ""
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
 msgstr ""
 
-#
 msgid "Virtual timer expired"
 msgstr ""
 
@@ -2069,14 +2058,12 @@ msgstr ""
 msgid "Too many args for cd command"
 msgstr ""
 
-#
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr "Skriv %shelp%s för instruktioner om hur man använder fish"
 
 msgid "Warning: the file containing this function has not been saved. Changes may be lost when fish is closed."
 msgstr ""
 
-#
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr "Välkommen till fish, det vänliga interaktiva skalet"
 

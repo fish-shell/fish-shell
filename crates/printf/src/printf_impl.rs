@@ -18,8 +18,16 @@ pub enum Error {
     BadFormatString,
     /// Too few arguments.
     MissingArg,
-    /// Too many arguments.
-    ExtraArg,
+    /// Explicit argument index could not be parsed, is 0, or larger than the number of provided
+    /// arguments.
+    InvalidArgIndex(String),
+    /// The format string contains a format specifier using explicit argument indices and one using
+    /// implicit indices.
+    /// Only all-explicit and all-implicit are allowed.
+    InconsistentUseOfArgumentIndices,
+    /// Not all arguments are used.
+    /// Vector contains indices of unused arguments (1-based)
+    UnusedArgs(Vec<usize>),
     /// Argument type doesn't match format specifier.
     BadArgType,
     /// Precision is too large to represent.
@@ -33,6 +41,15 @@ impl From<fmt::Error> for Error {
     fn from(err: fmt::Error) -> Error {
         Error::Fmt(err)
     }
+}
+
+#[derive(Debug, Copy, Clone)]
+enum ArgPositions {
+    Uninitialized,
+    // Stores index of the next value to print
+    Explicit(usize),
+    // Stores next index to process
+    Implicit(usize),
 }
 
 #[derive(Debug, Copy, Clone, Default)]
@@ -171,6 +188,18 @@ pub trait FormatString {
     // The characters may optionally be stored in the given buffer.
     // This handles a tail of %%.
     fn take_literal<'a: 'b, 'b>(&'a mut self, buffer: &'b mut String) -> &'b str;
+
+    /// Tries to parse an argument position at the start of the string.
+    /// Such arguments consist of a positive integer not exceeding the number of arguments,
+    /// specified via ASCII digits in decimal, followed by a dollar ($).
+    /// Takes the number of available arguments to perform bounds checking.
+    /// If the string does not start with a digit or the starting digits are not followed by a $,
+    /// [`Ok(None)`] is returned.
+    /// If parsing and bounds checks succeed, the string is advanced past the position specifier,
+    /// and the argument index is returned as [`Ok(Some(index - 1))`].
+    /// The index is decremented so it is in range [`0..num_args`].
+    /// In all other cases, an error is returned.
+    fn take_arg_position(&mut self, num_args: usize) -> Result<Option<usize>, Error>;
 }
 
 impl FormatString for &str {
@@ -209,6 +238,23 @@ impl FormatString for &str {
         // Trim half of the trailing percent characters from the prefix.
         &prefix[..prefix.len() - percent_pairs]
     }
+
+    fn take_arg_position(&mut self, num_args: usize) -> Result<Option<usize>, Error> {
+        // ASCII digits are always single-byte.
+        let num_digits = self.chars().take_while(|&c| c.is_ascii_digit()).count();
+        if self.at(num_digits) != Some('$') || num_digits == 0 {
+            return Ok(None);
+        }
+        let digits = &self[..num_digits];
+        let Ok(arg_index) = digits.parse::<usize>() else {
+            return Err(Error::InvalidArgIndex(String::from(digits)));
+        };
+        if arg_index < 1 || arg_index > num_args {
+            return Err(Error::InvalidArgIndex(String::from(digits)));
+        }
+        *self = &self[(num_digits + 1)..];
+        Ok(Some(arg_index - 1))
+    }
 }
 
 #[cfg(feature = "widestring")]
@@ -234,6 +280,22 @@ impl FormatString for &wstr {
         buffer.clear();
         buffer.extend(s[..non_percents + percent_pairs].iter());
         buffer.as_str()
+    }
+
+    fn take_arg_position(&mut self, num_args: usize) -> Result<Option<usize>, Error> {
+        let num_digits = self.chars().take_while(|&c| c.is_ascii_digit()).count();
+        if self.at(num_digits) != Some('$') || num_digits == 0 {
+            return Ok(None);
+        }
+        let digits = self[..num_digits].to_string();
+        let Ok(arg_index) = digits.parse::<usize>() else {
+            return Err(Error::InvalidArgIndex(digits));
+        };
+        if arg_index < 1 || arg_index > num_args {
+            return Err(Error::InvalidArgIndex(digits));
+        }
+        *self = &self[(num_digits + 1)..];
+        Ok(Some(arg_index - 1))
     }
 }
 
@@ -352,8 +414,15 @@ pub fn sprintf_locale(
 ) -> Result<usize, Error> {
     use ConversionSpec as CS;
     let mut s = fmt;
-    let mut args = args.iter_mut();
+    let num_args = args.len();
     let mut out_len: usize = 0;
+    // Whether args are implicitly used in the order they appear, or explicitly indexed using %1$
+    // syntax.
+    // When initialized, keeps track of indices to be used.
+    let mut arg_positions = ArgPositions::Uninitialized;
+
+    // Tracks which positions are used when using explicit positions.
+    let mut used_positions = vec![false; num_args];
 
     // Shared storage for the output of the conversion specifier.
     let buf = &mut String::new();
@@ -374,6 +443,30 @@ pub fn sprintf_locale(
         debug_assert!(s.at(0) == Some('%'));
         s.advance_by(1);
 
+        match arg_positions {
+            ArgPositions::Uninitialized => match s.take_arg_position(num_args)? {
+                Some(position) => {
+                    used_positions[position] = true;
+                    arg_positions = ArgPositions::Explicit(position);
+                }
+                None => {
+                    arg_positions = ArgPositions::Implicit(0);
+                }
+            },
+            ArgPositions::Explicit(_) => match s.take_arg_position(num_args)? {
+                Some(position) => {
+                    used_positions[position] = true;
+                    arg_positions = ArgPositions::Explicit(position);
+                }
+                None => return Err(Error::InconsistentUseOfArgumentIndices),
+            },
+            ArgPositions::Implicit(_) => {
+                if (s.take_arg_position(num_args)?).is_some() {
+                    return Err(Error::InconsistentUseOfArgumentIndices);
+                }
+            }
+        }
+
         // Read modifier flags. '-' and '0' flags are mutually exclusive.
         let mut flags = ModifierFlags::default();
         while flags.try_set(s.at(0).unwrap_or('\0')) {
@@ -383,10 +476,28 @@ pub fn sprintf_locale(
             flags.zero_pad = false;
         }
 
-        // Read field width. We do not support $.
+        // Read field width.
         let desired_width = if s.at(0) == Some('*') {
-            let arg_width = args.next().ok_or(Error::MissingArg)?.as_sint()?;
             s.advance_by(1);
+            let arg_index = match arg_positions {
+                ArgPositions::Uninitialized => {
+                    panic!("arg_positions must be initialized before parsing width.")
+                }
+                ArgPositions::Explicit(_) => match s.take_arg_position(num_args)? {
+                    // next_value_index is not updated here, since it will be used for the value to
+                    // print.
+                    Some(position) => {
+                        used_positions[position] = true;
+                        position
+                    }
+                    None => return Err(Error::InconsistentUseOfArgumentIndices),
+                },
+                ArgPositions::Implicit(next_index) => {
+                    arg_positions = ArgPositions::Implicit(next_index + 1);
+                    next_index
+                }
+            };
+            let arg_width = args.get(arg_index).ok_or(Error::MissingArg)?.as_sint()?;
             if arg_width < 0 {
                 flags.left_adj = true;
             }
@@ -398,12 +509,30 @@ pub fn sprintf_locale(
             get_int(&mut s)?
         };
 
-        // Optionally read precision. We do not support $.
+        // Optionally read precision.
         let mut desired_precision: Option<usize> = if s.at(0) == Some('.') && s.at(1) == Some('*') {
             // "A negative precision is treated as though it were missing."
             // Here we assume the precision is always signed.
             s.advance_by(2);
-            let p = args.next().ok_or(Error::MissingArg)?.as_sint()?;
+            let arg_index = match arg_positions {
+                ArgPositions::Uninitialized => {
+                    panic!("arg_positions must be initialized before parsing precision.")
+                }
+                ArgPositions::Explicit(_) => match s.take_arg_position(num_args)? {
+                    // next_value_index is not updated here, since it will be used for the value to
+                    // print.
+                    Some(position) => {
+                        used_positions[position] = true;
+                        position
+                    }
+                    None => return Err(Error::InconsistentUseOfArgumentIndices),
+                },
+                ArgPositions::Implicit(next_index) => {
+                    arg_positions = ArgPositions::Implicit(next_index + 1);
+                    next_index
+                }
+            };
+            let p = args.get(arg_index).ok_or(Error::MissingArg)?.as_sint()?;
             p.try_into().ok()
         } else if s.at(0) == Some('.') {
             s.advance_by(1);
@@ -418,7 +547,17 @@ pub fn sprintf_locale(
 
         // Read out the format specifier and arg.
         let conv_spec = get_specifier(&mut s)?;
-        let arg = args.next().ok_or(Error::MissingArg)?;
+        let arg_index = match arg_positions {
+            ArgPositions::Uninitialized => {
+                panic!("arg_positions must be initialized before trying to access them.");
+            }
+            ArgPositions::Explicit(next_value_index) => next_value_index,
+            ArgPositions::Implicit(next_index) => {
+                arg_positions = ArgPositions::Implicit(next_index + 1);
+                next_index
+            }
+        };
+        let arg = args.get_mut(arg_index).ok_or(Error::MissingArg)?;
         let mut prefix = "";
 
         // Thousands grouping only works for d,u,i,f,F.
@@ -621,8 +760,17 @@ pub fn sprintf_locale(
     }
 
     // Too many args?
-    if args.next().is_some() {
-        return Err(Error::ExtraArg);
+    let unused_args: Vec<usize> = match arg_positions {
+        ArgPositions::Uninitialized => (0..num_args).map(|i| i + 1).collect(),
+        ArgPositions::Explicit(_) => used_positions
+            .iter()
+            .enumerate()
+            .filter_map(|(index, &used)| if used { None } else { Some(index + 1) })
+            .collect(),
+        ArgPositions::Implicit(next_index) => (next_index..num_args).map(|i| i + 1).collect(),
+    };
+    if !unused_args.is_empty() {
+        return Err(Error::UnusedArgs(unused_args));
     }
     Ok(out_len)
 }

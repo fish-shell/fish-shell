@@ -749,20 +749,49 @@ fn test_non_ascii() {
 }
 
 #[test]
+fn test_explicit_argument_positions() {
+    assert_fmt!("%1$d", 42 => "42");
+    assert_fmt!("%2$d %1$d", 42, 33 => "33 42");
+    assert_fmt!("%1$d %1$d", 42 => "42 42");
+    assert_fmt!("%1$d %1$d", 42 => "42 42");
+    assert_fmt!("%1$*2$d", 1, 5 => "    1");
+    assert_fmt!("%1$0*2$d", 1, 5 => "00001");
+    assert_fmt!("%1$*2$.*3$d", 1, 10, 5 => "     00001");
+    assert_fmt!("%1$.*2$d", 1, 5 => "00001");
+    assert_fmt!("%10$d %9$d %8$d %7$d %6$d %5$d %4$d %3$d %2$d %1$d", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 => "10 9 8 7 6 5 4 3 2 1");
+    assert_fmt!("%%%1$d%%", 42 => "%42%");
+    assert_fmt!("%2$s %1$s %2$s", "a", "b" => "b a b");
+    assert_fmt!("%1$*1$d", 5 => "    5");
+    assert_fmt!("%1$*1$d", -5 => "-5   ");
+}
+
+#[test]
 fn test_errors() {
     use Error::*;
     sprintf_err!("%", => BadFormatString);
     sprintf_err!("%1", => BadFormatString);
     sprintf_err!("%%%k", => BadFormatString);
     sprintf_err!("%B", =>  BadFormatString);
-    sprintf_err!("%lC", 'q' =>  BadFormatString);
-    sprintf_err!("%lS", 'q' =>  BadFormatString);
+    sprintf_err!("%lC", 'q' => BadFormatString);
+    sprintf_err!("%lS", 'q' => BadFormatString);
     sprintf_err!("%d", => MissingArg);
     sprintf_err!("%d %u", 1 => MissingArg);
     sprintf_err!("%*d", 5 => MissingArg);
     sprintf_err!("%.*d", 5 => MissingArg);
-    sprintf_err!("%%", 1 => ExtraArg);
-    sprintf_err!("%d %d", 1, 2, 3 => ExtraArg);
+    sprintf_err!("%%", 1 => UnusedArgs(vec![1]));
+    sprintf_err!("%d %d", 1, 2, 3 => UnusedArgs(vec![3]));
+    sprintf_err!("%2$d %4$d", 1, 2, 3, 4, 5 => UnusedArgs(vec![1,3,5]));
+    sprintf_err!("%1$s", => InvalidArgIndex("1".into()));
+    sprintf_err!("%0$s", => InvalidArgIndex("0".into()));
+    sprintf_err!("%999999999999999999999999999999999999999999999999999$s", => InvalidArgIndex("999999999999999999999999999999999999999999999999999".into()));
+    sprintf_err!("%1$*2$d", 1 => InvalidArgIndex("2".into()));
+    sprintf_err!("%1$.*2$d", 1 => InvalidArgIndex("2".into()));
+    sprintf_err!("%1$*3$.*2$d", 1 => InvalidArgIndex("3".into()));
+    sprintf_err!("%1234$s", 1 => InvalidArgIndex("1234".into()));
+    sprintf_err!("%1$d %d", 1, 2 => InconsistentUseOfArgumentIndices);
+    sprintf_err!("%1$*d", 1, 2 => InconsistentUseOfArgumentIndices);
+    sprintf_err!("%1$2$*.*d", 1, 2, 3 => BadFormatString);
+    sprintf_err!("%d %$2d", 1, 2 => BadFormatString);
     sprintf_err!("%d", "abc" => BadArgType);
     sprintf_err!("%s", 5 => BadArgType);
     sprintf_err!("%*d", "s", 5 => BadArgType);

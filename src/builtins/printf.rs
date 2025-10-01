@@ -252,7 +252,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     /// `field_width` and `precision` are the field width and precision for '*' values, if any.
     /// `argument` is the argument to be formatted.
     #[allow(clippy::collapsible_else_if, clippy::too_many_arguments)]
-    fn print_direc(
+    fn print_directive(
         &mut self,
         spec: &wstr,
         conversion: char,
@@ -407,8 +407,8 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         let mut argc = argv.len();
         let save_argc = argc; /* Preserve original value.  */
         let mut f: &wstr; /* Pointer into `format'.  */
-        let mut direc_start: &wstr; /* Start of % directive.  */
-        let mut direc_length: usize; /* Length of % directive.  */
+        let mut directive_start: &wstr; /* Start of % directive.  */
+        let mut directive_length: usize; /* Length of % directive.  */
         let mut field_width: Option<i64>; /* Arg to first '*'.  */
         let mut precision: Option<i64>; /* Arg to second '*'.  */
         let mut ok = [false; 256]; /* ok['x'] is true if %x is allowed.  */
@@ -429,9 +429,9 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
             match f.char_at(0) {
                 '%' => {
-                    direc_start = f;
+                    directive_start = f;
                     f = &f[1..];
-                    direc_length = 1;
+                    directive_length = 1;
                     field_width = None;
                     precision = None;
                     if f.char_at(0) == '%' {
@@ -475,13 +475,13 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                         }
                         if continue_looking_for_flags {
                             f = &f[1..];
-                            direc_length += 1;
+                            directive_length += 1;
                         }
                     }
 
                     if f.char_at(0) == '*' {
                         f = &f[1..];
-                        direc_length += 1;
+                        directive_length += 1;
                         if argc > 0 {
                             let width: i64 = string_to_scalar_type(argv[0], self);
                             if (c_int::MIN as i64) <= width && width <= (c_int::MAX as i64) {
@@ -500,17 +500,17 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                     } else {
                         while iswdigit(f.char_at(0)) {
                             f = &f[1..];
-                            direc_length += 1;
+                            directive_length += 1;
                         }
                     }
 
                     if f.char_at(0) == '.' {
                         f = &f[1..];
-                        direc_length += 1;
+                        directive_length += 1;
                         modify_allowed_format_specifiers(&mut ok, "c", false);
                         if f.char_at(0) == '*' {
                             f = &f[1..];
-                            direc_length += 1;
+                            directive_length += 1;
                             if argc > 0 {
                                 let prec: i64 = string_to_scalar_type(argv[0], self);
                                 if prec < 0 {
@@ -533,7 +533,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                         } else {
                             while iswdigit(f.char_at(0)) {
                                 f = &f[1..];
-                                direc_length += 1;
+                                directive_length += 1;
                             }
                         }
                     }
@@ -546,8 +546,8 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                     if (conversion as usize) > 0xFF || !ok[conversion as usize] {
                         self.fatal_error(wgettext_fmt!(
                             "%.*ls: invalid conversion specification",
-                            wstr_offset_in(f, direc_start) + 1,
-                            direc_start
+                            wstr_offset_in(f, directive_start) + 1,
+                            directive_start
                         ));
                         return 0;
                     }
@@ -558,8 +558,8 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                         argv = &argv[1..];
                         argc -= 1;
                     }
-                    self.print_direc(
-                        &direc_start[..direc_length],
+                    self.print_directive(
+                        &directive_start[..directive_length],
                         f.char_at(0),
                         field_width,
                         precision,

@@ -98,6 +98,21 @@ if set -l --query _flag_dry_run
     cp -r $po_dir/* $tmpdir
 end
 
+# This is used to identify lines which should be set here via $header_lines.
+# Make sure that this prefix does not appear elsewhere in the file and only contains characters
+# without special meaning in a sed pattern.
+set -g header_prefix "# fish-note-sections: "
+
+function print_header
+    set -l header_lines \
+        "Translations are divided into sections, each starting with a fish-section-* pseudo-message." \
+        "The first few sections are more important." \
+        "Ignore the tier3 sections unless you have a lot of time."
+    for line in $header_lines
+        printf '%s%s\n' $header_prefix $line
+    end
+end
+
 function merge_po_files --argument-names template_file po_file
     msgmerge --no-wrap --update --no-fuzzy-matching --backup=none --quiet \
         $po_file $template_file
@@ -107,20 +122,10 @@ function merge_po_files --argument-names template_file po_file
     and msgattrib --no-wrap --no-obsolete -o $new_po_file $po_file
     or cleanup_exit
 
-    # This is used to identify lines which should be set here via $header_lines.
-    # Make sure that this prefix does not appear elsewhere in the file and only contains characters
-    # without special meaning in a sed pattern.
-    set -l header_prefix "# fish-note-sections: "
-    set -l header_lines \
-        "Translations are divided into sections, each starting with a fish-section-* pseudo-message." \
-        "The first few sections are more important." \
-        "Ignore the tier3 sections unless you have a lot of time."
     begin
-        for line in $header_lines
-            printf '%s%s\n' $header_prefix $line
-        end
+        print_header
         # Paste PO file without old header lines.
-        sed '/^'$header_prefix'/d;' $new_po_file
+        sed '/^'$header_prefix'/d' $new_po_file
     end >$po_file
     rm $new_po_file
 end
@@ -133,7 +138,10 @@ for po_file in $po_files
         if test -e $po_file
             merge_po_files $template_file $po_file
         else
-            cp $template_file $po_file
+            begin
+                print_header
+                cat $template_file
+            end >$po_file
         end
     end
 end

@@ -40060,7 +40060,7 @@ msgid "Operate quietly and do not report progress"
 msgstr "安静操作，不报告进度"
 
 msgid "Operate recursively"
-msgstr "递归操"
+msgstr "递归操作"
 
 msgid "Operate recursively on datasets"
 msgstr "在数据集上递归操作"

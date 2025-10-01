@@ -3667,7 +3667,7 @@ msgid "What characters are allowed in names"
 msgstr "名称中允许什么字符"
 
 msgid "What set -x does"
-msgstr "设置 -x 做什么"
+msgstr "`set -x` 做什么"
 
 msgid "Where to direct debug output to"
 msgstr "将调试输出导向何处"

@@ -246,11 +246,12 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         }
     }
 
-    /// Evaluate a printf conversion specification.  SPEC is the start of the directive, and CONVERSION
-    /// specifies the type of conversion.  SPEC does not include any length modifier or the
-    /// conversion specifier itself.  FIELD_WIDTH and PRECISION are the field width and
-    /// precision for '*' values, if HAVE_FIELD_WIDTH and HAVE_PRECISION are true, respectively.
-    /// ARGUMENT is the argument to be formatted.
+    /// Evaluate a printf conversion specification.
+    /// `spec` is the start of the directive, and `conversion` specifies the type of conversion.
+    /// `spec` does not include any length modifier or the conversion specifier itself.
+    /// `field_width` and `precision` are the field width and precision for '*' values,
+    /// if `have_field_width` and `have_precision` are true, respectively.
+    /// `argument` is the argument to be formatted.
     #[allow(clippy::collapsible_else_if, clippy::too_many_arguments)]
     fn print_direc(
         &mut self,
@@ -384,8 +385,8 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         }
     }
 
-    /// Print the text in FORMAT, using ARGV for arguments to any `%' directives.
-    /// Return the number of elements of ARGV used.
+    /// Print the text in `format`, using `argv` for arguments to any `%' directives.
+    /// Return the number of elements of `argv` used.
     fn print_formatted(&mut self, format: &wstr, mut argv: &[&wstr]) -> usize {
         let mut argc = argv.len();
         let save_argc = argc; /* Preserve original value.  */

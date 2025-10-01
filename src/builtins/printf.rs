@@ -249,18 +249,15 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     /// Evaluate a printf conversion specification.
     /// `spec` is the start of the directive, and `conversion` specifies the type of conversion.
     /// `spec` does not include any length modifier or the conversion specifier itself.
-    /// `field_width` and `precision` are the field width and precision for '*' values,
-    /// if `have_field_width` and `have_precision` are true, respectively.
+    /// `field_width` and `precision` are the field width and precision for '*' values, if any.
     /// `argument` is the argument to be formatted.
     #[allow(clippy::collapsible_else_if, clippy::too_many_arguments)]
     fn print_direc(
         &mut self,
         spec: &wstr,
         conversion: char,
-        have_field_width: bool,
-        field_width: i32,
-        have_precision: bool,
-        precision: i32,
+        field_width: Option<i64>,
+        precision: Option<i64>,
         argument: &wstr,
     ) {
         /// Printf macro helper which provides our locale.
@@ -307,77 +304,96 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         match conversion {
             'd' | 'i' => {
                 let arg: i64 = string_to_scalar_type(argument, self);
-                if !have_field_width {
-                    if !have_precision {
-                        append_output_fmt!(fmt, arg);
-                    } else {
-                        append_output_fmt!(fmt, precision, arg);
-                    }
-                } else {
-                    if !have_precision {
-                        append_output_fmt!(fmt, field_width, arg);
-                    } else {
-                        append_output_fmt!(fmt, field_width, precision, arg);
-                    }
+                match field_width {
+                    Some(field_width) => match precision {
+                        Some(precision) => {
+                            append_output_fmt!(fmt, field_width, precision, arg);
+                        }
+                        None => {
+                            append_output_fmt!(fmt, field_width, arg);
+                        }
+                    },
+                    None => match precision {
+                        Some(precision) => {
+                            append_output_fmt!(fmt, precision, arg);
+                        }
+                        None => {
+                            append_output_fmt!(fmt, arg);
+                        }
+                    },
                 }
             }
             'o' | 'u' | 'x' | 'X' => {
                 let arg: u64 = string_to_scalar_type(argument, self);
-                if !have_field_width {
-                    if !have_precision {
-                        append_output_fmt!(fmt, arg);
-                    } else {
-                        append_output_fmt!(fmt, precision, arg);
-                    }
-                } else {
-                    if !have_precision {
-                        append_output_fmt!(fmt, field_width, arg);
-                    } else {
-                        append_output_fmt!(fmt, field_width, precision, arg);
-                    }
+                match field_width {
+                    Some(field_width) => match precision {
+                        Some(precision) => {
+                            append_output_fmt!(fmt, field_width, precision, arg);
+                        }
+                        None => {
+                            append_output_fmt!(fmt, field_width, arg);
+                        }
+                    },
+                    None => match precision {
+                        Some(precision) => {
+                            append_output_fmt!(fmt, precision, arg);
+                        }
+                        None => {
+                            append_output_fmt!(fmt, arg);
+                        }
+                    },
                 }
             }
 
             'a' | 'A' | 'e' | 'E' | 'f' | 'F' | 'g' | 'G' => {
                 let arg: f64 = string_to_scalar_type(argument, self);
-                if !have_field_width {
-                    if !have_precision {
-                        append_output_fmt!(fmt, arg);
-                    } else {
-                        append_output_fmt!(fmt, precision, arg);
-                    }
-                } else {
-                    if !have_precision {
-                        append_output_fmt!(fmt, field_width, arg);
-                    } else {
-                        append_output_fmt!(fmt, field_width, precision, arg);
-                    }
+                match field_width {
+                    Some(field_width) => match precision {
+                        Some(precision) => {
+                            append_output_fmt!(fmt, field_width, precision, arg);
+                        }
+                        None => {
+                            append_output_fmt!(fmt, field_width, arg);
+                        }
+                    },
+                    None => match precision {
+                        Some(precision) => {
+                            append_output_fmt!(fmt, precision, arg);
+                        }
+                        None => {
+                            append_output_fmt!(fmt, arg);
+                        }
+                    },
                 }
             }
 
-            'c' => {
-                if !have_field_width {
-                    append_output_fmt!(fmt, argument.char_at(0));
-                } else {
+            'c' => match field_width {
+                Some(field_width) => {
                     append_output_fmt!(fmt, field_width, argument.char_at(0));
                 }
-            }
+                None => {
+                    append_output_fmt!(fmt, argument.char_at(0));
+                }
+            },
 
-            's' => {
-                if !have_field_width {
-                    if !have_precision {
-                        append_output_fmt!(fmt, argument);
-                    } else {
-                        append_output_fmt!(fmt, precision, argument);
-                    }
-                } else {
-                    if !have_precision {
-                        append_output_fmt!(fmt, field_width, argument);
-                    } else {
+            's' => match field_width {
+                Some(field_width) => match precision {
+                    Some(precision) => {
                         append_output_fmt!(fmt, field_width, precision, argument);
                     }
-                }
-            }
+                    None => {
+                        append_output_fmt!(fmt, field_width, argument);
+                    }
+                },
+                None => match precision {
+                    Some(precision) => {
+                        append_output_fmt!(fmt, precision, argument);
+                    }
+                    None => {
+                        append_output_fmt!(fmt, argument);
+                    }
+                },
+            },
 
             _ => {
                 panic!("unexpected opt: {}", conversion);
@@ -393,10 +409,8 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         let mut f: &wstr; /* Pointer into `format'.  */
         let mut direc_start: &wstr; /* Start of % directive.  */
         let mut direc_length: usize; /* Length of % directive.  */
-        let mut have_field_width: bool; /* True if FIELD_WIDTH is valid.  */
-        let mut field_width: c_int = 0; /* Arg to first '*'.  */
-        let mut have_precision: bool; /* True if PRECISION is valid.  */
-        let mut precision = 0; /* Arg to second '*'.  */
+        let mut field_width: Option<i64>; /* Arg to first '*'.  */
+        let mut precision: Option<i64>; /* Arg to second '*'.  */
         let mut ok = [false; 256]; /* ok['x'] is true if %x is allowed.  */
 
         // N.B. this was originally written as a loop like so:
@@ -418,8 +432,8 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                     direc_start = f;
                     f = &f[1..];
                     direc_length = 1;
-                    have_field_width = false;
-                    have_precision = false;
+                    field_width = None;
+                    precision = None;
                     if f.char_at(0) == '%' {
                         self.append_output('%');
                         continue;
@@ -471,7 +485,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                         if argc > 0 {
                             let width: i64 = string_to_scalar_type(argv[0], self);
                             if (c_int::MIN as i64) <= width && width <= (c_int::MAX as i64) {
-                                field_width = width as c_int;
+                                field_width = Some(width);
                             } else {
                                 self.fatal_error(wgettext_fmt!(
                                     "invalid field width: %ls",
@@ -481,9 +495,8 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                             argv = &argv[1..];
                             argc -= 1;
                         } else {
-                            field_width = 0;
+                            field_width = Some(0);
                         }
-                        have_field_width = true;
                     } else {
                         while iswdigit(f.char_at(0)) {
                             f = &f[1..];
@@ -503,21 +516,20 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                                 if prec < 0 {
                                     // A negative precision is taken as if the precision were omitted,
                                     // so -1 is safe here even if prec < INT_MIN.
-                                    precision = -1;
+                                    precision = Some(-1);
                                 } else if (c_int::MAX as i64) < prec {
                                     self.fatal_error(wgettext_fmt!(
                                         "invalid precision: %ls",
                                         argv[0]
                                     ));
                                 } else {
-                                    precision = prec as c_int;
+                                    precision = Some(prec);
                                 }
                                 argv = &argv[1..];
                                 argc -= 1;
                             } else {
-                                precision = 0;
+                                precision = Some(0);
                             }
-                            have_precision = true;
                         } else {
                             while iswdigit(f.char_at(0)) {
                                 f = &f[1..];
@@ -549,9 +561,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                     self.print_direc(
                         &direc_start[..direc_length],
                         f.char_at(0),
-                        have_field_width,
                         field_width,
-                        have_precision,
                         precision,
                         argument,
                     );

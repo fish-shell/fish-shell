@@ -45,8 +45,8 @@ if test -z $argv[1]
 else
     set -l po_dir_id (stat --format='%d:%i' -- $po_dir)
     for arg in $argv
-        set -l arg_dir_id (stat --format='%d:%i' -- (dirname $arg))
-        if test $po_dir_id != $arg_dir_id
+        set -l arg_dir_id (stat --format='%d:%i' -- (dirname $arg) 2>/dev/null)
+        if test $po_dir_id != "$arg_dir_id"
             echo "Argument $arg is not a file in the directory $(realpath $po_dir)."
             echo "Non-option arguments must specify paths to files in this directory."
             echo ""

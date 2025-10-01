@@ -147,14 +147,20 @@ rm -rf "$tmpdir"
     " | sed 's,^\s*| \?,,')"
 )
 
-# Approve macos-codesign
-# TODO what if current user can't approve?
-gh_pending_deployments() {
+gh_api_repo() {
+    path=$1
+    shift
     command gh api \
         -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
-        "/repos/$repository_owner/fish-shell/actions/runs/$run_id/pending_deployments" \
+        "/repos/$repository_owner/fish-shell/$1" \
         "$@"
+}
+
+# Approve macos-codesign
+# TODO what if current user can't approve?
+gh_pending_deployments() {
+    gh_api_repo "actions/runs/$run_id/pending_deployments" "$@"
 }
 while {
     environment_id=$(gh_pending_deployments | jq .[].environment.id)
@@ -170,7 +176,7 @@ echo '
             "comment": "Approved via ./build_tools/release.sh"
         }
     ' |
-gh_pending_deployments -XPOST --input=-
+gh_pending_deployments --method POST --input=-
 
 # Await completion.
 gh run watch "$run_id"
@@ -203,7 +209,7 @@ done
 
 if [ -n "$integration_branch" ]; then {
     git push $remote "$version^{commit}":refs/heads/$integration_branch
-else
+} else {
     changelog=$(cat - CHANGELOG.rst <<EOF
 fish ?.?.? (released ???)
 =========================
@@ -214,6 +220,13 @@ EOF
     CommitVersion ${version}-snapshot "start new cycle"
     git push $remote HEAD:master
 } fi
+
+milestone_number=$(
+    gh_api_repo milestones?state=open |
+        jq '.[] | select(.title == "fish '"$version"'") | .number'
+)
+gh_api_repo --method PATCH milestones/$milestone_number \
+    --raw-field state=closed
 
 exit
 

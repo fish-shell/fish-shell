@@ -101,10 +101,14 @@ end
 # This is used to identify lines which should be set here via $header_lines.
 # Make sure that this prefix does not appear elsewhere in the file and only contains characters
 # without special meaning in a sed pattern.
-set -g header_prefix "# fish-note-sections: "
+set -g header_prefix "# fish-note: "
 
-function print_header
+function print_header -a po_file
+    set -l ll_CC (basename $po_file .po)
     set -l header_lines \
+        "To subscribe to proposed updates, point your feed reader at:" \
+        https://raw.githubusercontent.com/fish-shell/fish-shell/fish-shell-events/po/$ll_CC-additions.atom \
+        https://raw.githubusercontent.com/fish-shell/fish-shell/fish-shell-events/po/$ll_CC-removals.atom \
         "Translations are divided into sections, each starting with a fish-section-* pseudo-message." \
         "The first few sections are more important." \
         "Ignore the tier3 sections unless you have a lot of time."
@@ -123,7 +127,7 @@ function merge_po_files --argument-names template_file po_file
     or cleanup_exit
 
     begin
-        print_header
+        print_header $po_file
         # Paste PO file without old header lines.
         sed '/^'$header_prefix'/d' $new_po_file
     end >$po_file
@@ -139,7 +143,7 @@ for po_file in $po_files
             merge_po_files $template_file $po_file
         else
             begin
-                print_header
+                print_header $po_file
                 cat $template_file
             end >$po_file
         end

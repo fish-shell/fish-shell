@@ -201,7 +201,7 @@ done
     git push git@github.com:$repository_owner/fish-site HEAD:master
 )
 
-if [ -n "$integration_branch" ]; then
+if [ -n "$integration_branch" ]; then {
     git push $remote "$version^{commit}":refs/heads/$integration_branch
 else
     changelog=$(cat - CHANGELOG.rst <<EOF
@@ -213,21 +213,6 @@ EOF
     printf %s\\n "$changelog" >CHANGELOG.rst
     CommitVersion ${version}-snapshot "start new cycle"
     git push $remote HEAD:master
-fi
-
-# TODO This can currently require a TTY for editing and password
-# prompts.
-if [ "$repository_owner" = fish-shell ]; then {
-    mail=$(mktemp)
-    cat >$mail <<EOF
-From: $(git var GIT_AUTHOR_IDENT | sed 's/ [0-9]* +[0-9]*$//')
-Subject: fish $version released
-
-See https://github.com/fish-shell/fish-shell/releases/tag/$version
-EOF
-    git send-email --suppress-cc=all --confirm=always $mail \
-        --to="fish-users Mailing List <fish-users@lists.sourceforge.net>"
-    rm $mail
 } fi
 
 exit

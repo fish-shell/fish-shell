@@ -263,6 +263,10 @@ def parse_color(color_str):
             ) -> str:
                 if comp.startswith(long_opt):
                     c = comp[len(long_opt) :]
+                    if c[0] == "=":
+                        # There was a = between the long option and the value.
+                        # i.e. support also --background=red, not just --background red
+                        c = c[1:]
                     parsed_c = parse_one_color(c)
                     # We prefer the unparsed version - if it says "brgreen", we use brgreen,
                     # instead of 00ff00

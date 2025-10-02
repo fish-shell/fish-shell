@@ -229,7 +229,7 @@ def parse_color(color_str):
     background_color = ""
     underline_color = ""
     bold = False
-    underline = False
+    underline = None
     italics = False
     dim = False
     reverse = False

@@ -1410,7 +1410,7 @@ pub fn parse_util_detect_errors_in_argument(
                             out_errors,
                             source_start + begin,
                             end - begin,
-                            "Incomplete escape sequence '%ls'",
+                            "Incomplete escape sequence '%s'",
                             arg_src
                         );
                         return ParserTestErrorBits::ERROR;
@@ -1419,7 +1419,7 @@ pub fn parse_util_detect_errors_in_argument(
                         out_errors,
                         source_start + begin,
                         end - begin,
-                        "Invalid token '%ls'",
+                        "Invalid token '%s'",
                         arg_src
                     );
                 }
@@ -1948,7 +1948,7 @@ pub fn parse_util_expand_variable_error(
 localizable_consts!(
     /// Error message for use of backgrounded commands before and/or.
     pub(crate) BOOL_AFTER_BACKGROUND_ERROR_MSG
-    "The '%ls' command can not be used immediately after a backgrounded job"
+    "The '%s' command can not be used immediately after a backgrounded job"
 
     /// Error message for backgrounded commands as conditionals.
     BACKGROUND_IN_CONDITIONAL_ERROR_MSG

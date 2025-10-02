@@ -416,7 +416,7 @@ pub fn token_type_user_presentable_description(
     keyword: ParseKeyword,
 ) -> WString {
     if keyword != ParseKeyword::None {
-        return sprintf!("keyword: '%ls'", keyword.to_wstr());
+        return sprintf!("keyword: '%s'", keyword.to_wstr());
     }
     match type_ {
         ParseTokenType::string => L!("a string").to_owned(),
@@ -432,7 +432,7 @@ pub fn token_type_user_presentable_description(
         ParseTokenType::error => L!("a parse error").to_owned(),
         ParseTokenType::tokenizer_error => L!("an incomplete token").to_owned(),
         ParseTokenType::comment => L!("a comment").to_owned(),
-        _ => sprintf!("a %ls", type_.to_wstr()),
+        _ => sprintf!("a %s", type_.to_wstr()),
     }
 }
 
@@ -464,7 +464,7 @@ pub const FISH_MAX_EVAL_DEPTH: isize = 500;
 localizable_consts!(
     /// Error message on a function that calls itself immediately.
     pub INFINITE_FUNC_RECURSION_ERR_MSG
-    "The function '%ls' calls itself immediately, which would result in an infinite loop."
+    "The function '%s' calls itself immediately, which would result in an infinite loop."
 
     /// Error message on reaching maximum call stack depth.
     pub CALL_STACK_LIMIT_EXCEEDED_ERR_MSG
@@ -472,19 +472,19 @@ localizable_consts!(
 
     /// Error message when encountering an unknown builtin name.
     pub UNKNOWN_BUILTIN_ERR_MSG
-    "Unknown builtin '%ls'"
+    "Unknown builtin '%s'"
 
     /// Error message when encountering a failed expansion, e.g. for the variable name in for loops.
     pub FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG
-    "Unable to expand variable name '%ls'"
+    "Unable to expand variable name '%s'"
 
     /// Error message when encountering an illegal file descriptor.
     pub ILLEGAL_FD_ERR_MSG
-    "Illegal file descriptor in redirection '%ls'"
+    "Illegal file descriptor in redirection '%s'"
 
     /// Error message for wildcards with no matches.
     pub WILDCARD_ERR_MSG
-    "No matches for wildcard '%ls'. See `help wildcards-globbing`."
+    "No matches for wildcard '%s'. See `help wildcards-globbing`."
 
     /// Error when using break outside of loop.
     pub INVALID_BREAK_ERR_MSG
@@ -496,21 +496,21 @@ localizable_consts!(
 
     /// Error message when a command may not be in a pipeline.
     pub INVALID_PIPELINE_CMD_ERR_MSG
-    "The '%ls' command can not be used in a pipeline"
+    "The '%s' command can not be used in a pipeline"
 
     // Error messages. The number is a reminder of how many format specifiers are contained.
 
     /// Error for $^.
     pub ERROR_BAD_VAR_CHAR1
-    "$%lc is not a valid variable in fish."
+    "$%c is not a valid variable in fish."
 
     /// Error for ${a}.
     pub ERROR_BRACKETED_VARIABLE1
-    "Variables cannot be bracketed. In fish, please use {$%ls}."
+    "Variables cannot be bracketed. In fish, please use {$%s}."
 
     /// Error for "${a}".
     pub ERROR_BRACKETED_VARIABLE_QUOTED1
-    "Variables cannot be bracketed. In fish, please use \"$%ls\"."
+    "Variables cannot be bracketed. In fish, please use \"$%s\"."
 
     /// Error issued on $?.
     pub ERROR_NOT_STATUS
@@ -538,7 +538,7 @@ localizable_consts!(
 
     /// Error message for Posix-style assignment: foo=bar.
     pub ERROR_BAD_COMMAND_ASSIGN_ERR_MSG
-    "Unsupported use of '='. In fish, please use 'set %ls %ls'."
+    "Unsupported use of '='. In fish, please use 'set %s %s'."
 
     /// Error message for a command like `time foo &`.
     pub ERROR_TIME_BACKGROUND

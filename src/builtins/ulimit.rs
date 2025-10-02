@@ -117,7 +117,7 @@ fn print(resource: c_uint, hard: bool, streams: &mut IoStreams) {
     } else {
         streams
             .out
-            .append(wgettext_fmt!("%lu\n", l / get_multiplier(resource)));
+            .append(wgettext_fmt!("%u\n", l / get_multiplier(resource)));
     }
 }
 
@@ -142,7 +142,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
             "(kB, "
         };
         streams.out.append(sprintf!(
-            "%-*ls %10ls-%lc) ",
+            "%-*s %10s-%c) ",
             w,
             resource.desc,
             unit,
@@ -152,10 +152,9 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
         if l == RLIM_INFINITY {
             streams.out.append(wgettext!("unlimited\n"));
         } else {
-            streams.out.append(wgettext_fmt!(
-                "%lu\n",
-                l / get_multiplier(resource.resource)
-            ));
+            streams
+                .out
+                .append(wgettext_fmt!("%u\n", l / get_multiplier(resource.resource)));
         }
     }
 }
@@ -197,7 +196,7 @@ fn set_limit(
     if let Err(errno) = setrlimit(resource, rlim_cur, rlim_max) {
         if errno == Errno::EPERM {
             streams.err.append(wgettext_fmt!(
-                "ulimit: Permission denied when changing resource of type '%ls'\n",
+                "ulimit: Permission denied when changing resource of type '%s'\n",
                 get_desc(resource)
             ));
         } else {
@@ -334,7 +333,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
 
     if opts.what == -1 {
         streams.err.append(wgettext_fmt!(
-            "%ls: Resource limit not available on this operating system\n",
+            "%s: Resource limit not available on this operating system\n",
             cmd
         ));
 
@@ -368,7 +367,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
 
     let new_limit: rlim_t = if w.wopt_index == argc {
         streams.err.append(wgettext_fmt!(
-            "%ls: New limit cannot be an empty string\n",
+            "%s: New limit cannot be an empty string\n",
             cmd
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -388,7 +387,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     } else if let Ok(limit) = fish_wcstol(w.argv[w.wopt_index]) {
         let Some(x) = get_multiplier(what).checked_mul(limit as rlim_t) else {
             streams.err.append(wgettext_fmt!(
-                "%ls: Invalid limit '%ls'\n",
+                "%s: Invalid limit '%s'\n",
                 cmd,
                 w.argv[w.wopt_index]
             ));
@@ -398,7 +397,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         x
     } else {
         streams.err.append(wgettext_fmt!(
-            "%ls: Invalid limit '%ls'\n",
+            "%s: Invalid limit '%s'\n",
             cmd,
             w.argv[w.wopt_index]
         ));

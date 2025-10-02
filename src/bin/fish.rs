@@ -156,7 +156,7 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     if waccess(&config_pathname, libc::R_OK) != 0 {
         FLOGF!(
             config,
-            "not sourcing %ls (not readable or does not exist)",
+            "not sourcing %s (not readable or does not exist)",
             escaped_pathname
         );
         return false;
@@ -182,7 +182,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
         let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
         parser.libdata_mut().within_fish_init = false;
         if let Err(msg) = ret {
-            eprintf!("%ls", msg);
+            eprintf!("%s", msg);
         }
     }
     #[cfg(not(feature = "embed-data"))]
@@ -196,7 +196,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
             let escaped_pathname = escape(&datapath);
             FLOGF!(
                 error,
-                "Fish cannot find its asset files in '%ls'.\n\
+                "Fish cannot find its asset files in '%s'.\n\
                  Refusing to read configuration because of this.",
                 escaped_pathname,
             );
@@ -287,7 +287,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 activate_flog_categories_by_pattern(w.woptarg.unwrap());
                 for cat in flog::categories::all_categories() {
                     if cat.enabled.load(Ordering::Relaxed) {
-                        printf!("Debug enabled for category: %ls\n", cat.name);
+                        printf!("Debug enabled for category: %s\n", cat.name);
                     }
                 }
             }
@@ -315,7 +315,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 for cat in cats.iter() {
                     let desc = cat.description.localize();
                     // this is left-justified
-                    printf!("%-*ls %ls\n", name_width, cat.name, desc);
+                    printf!("%-*s %s\n", name_width, cat.name, desc);
                 }
                 return ControlFlow::Break(0);
             }
@@ -342,21 +342,21 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             }
             '?' => {
                 eprintf!(
-                    "%ls\n",
+                    "%s\n",
                     wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             ':' => {
                 eprintf!(
-                    "%ls\n",
+                    "%s\n",
                     wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             ';' => {
                 eprintf!(
-                    "%ls\n",
+                    "%s\n",
                     wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
@@ -623,7 +623,7 @@ fn throwing_main() -> i32 {
                 if res.is_err() {
                     FLOGF!(
                         warning,
-                        wgettext!("Error while reading file %ls\n"),
+                        wgettext!("Error while reading file %s\n"),
                         path.to_string_lossy()
                     );
                 }

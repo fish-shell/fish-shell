@@ -110,7 +110,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             }
 
             for p in j.processes() {
-                out += &sprintf!("%ls\n", p.argv0().unwrap())[..];
+                out += &sprintf!("%s\n", p.argv0().unwrap())[..];
             }
             streams.out.append(out);
         }
@@ -196,7 +196,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 match fish_wcstoi(&arg[1..]).ok().filter(|&job_id| job_id >= 0) {
                     None => {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: '%ls' is not a valid job id\n",
+                            "%s: '%s' is not a valid job id\n",
                             cmd,
                             arg
                         ));
@@ -217,7 +217,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 match fish_wcstoi(arg).ok().and_then(Pid::new) {
                     None => {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: '%ls' is not a valid process id\n",
+                            "%s: '%s' is not a valid process id\n",
                             cmd,
                             arg
                         ));
@@ -236,7 +236,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 if mode != JobsPrintMode::PrintNothing {
                     streams
                         .err
-                        .append(wgettext_fmt!("%ls: No suitable job: %ls\n", cmd, arg));
+                        .append(wgettext_fmt!("%s: No suitable job: %s\n", cmd, arg));
                 }
                 return Err(STATUS_CMD_ERROR);
             }
@@ -256,7 +256,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         if !streams.out_is_redirected && mode != JobsPrintMode::PrintNothing {
             streams
                 .out
-                .append(wgettext_fmt!("%ls: There are no jobs\n", argv[0]));
+                .append(wgettext_fmt!("%s: There are no jobs\n", argv[0]));
         }
         return Err(STATUS_CMD_ERROR);
     }

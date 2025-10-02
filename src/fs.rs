@@ -56,11 +56,7 @@ pub fn create_temporary_file(name_template: &wstr) -> std::io::Result<(File, WSt
                 _ => {
                     FLOG!(
                         error,
-                        wgettext_fmt!(
-                            "Unable to create temporary file '%ls': %s",
-                            name_template,
-                            e
-                        )
+                        wgettext_fmt!("Unable to create temporary file '%s': %s", name_template, e)
                     );
 
                     return Err(e);

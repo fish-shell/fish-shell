@@ -30,12 +30,12 @@ impl ConfigPaths {
         let paths = Self::from_exec_path(exec_path);
         FLOGF!(
             config,
-            "paths.sysconf: %ls",
+            "paths.sysconf: %s",
             paths.sysconf.display().to_string()
         );
         FLOGF!(
             config,
-            "paths.bin: %ls",
+            "paths.bin: %s",
             paths
                 .bin
                 .clone()
@@ -43,9 +43,9 @@ impl ConfigPaths {
                 .unwrap_or("|not found|".to_string()),
         );
         #[cfg(not(feature = "embed-data"))]
-        FLOGF!(config, "paths.data: %ls", paths.data.display().to_string());
+        FLOGF!(config, "paths.data: %s", paths.data.display().to_string());
         #[cfg(not(feature = "embed-data"))]
-        FLOGF!(config, "paths.doc: %ls", paths.doc.display().to_string());
+        FLOGF!(config, "paths.doc: %s", paths.doc.display().to_string());
         paths
     }
 

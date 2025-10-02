@@ -283,7 +283,7 @@ fn parse_opts<'args>(
                 let types_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for t in types_args {
                     let Ok(r#type) = t.try_into() else {
-                        path_error!(streams, "%ls: Invalid type '%ls'\n", "path", t);
+                        path_error!(streams, "%s: Invalid type '%s'\n", "path", t);
                         return Err(STATUS_INVALID_ARGS);
                     };
                     *types |= r#type;
@@ -295,7 +295,7 @@ fn parse_opts<'args>(
                 let perms_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for p in perms_args {
                     let Ok(perm) = p.try_into() else {
-                        path_error!(streams, "%ls: Invalid permission '%ls'\n", "path", p);
+                        path_error!(streams, "%s: Invalid permission '%s'\n", "path", p);
                         return Err(STATUS_INVALID_ARGS);
                     };
                     *perms |= perm;
@@ -709,7 +709,7 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
         }
         None => wbasename,
         Some(k) => {
-            path_error!(streams, "%ls: Invalid sort key '%ls'\n", args[0], k);
+            path_error!(streams, "%s: Invalid sort key '%s'\n", args[0], k);
             return Err(STATUS_INVALID_ARGS);
         }
     };

@@ -10,7 +10,7 @@ function funced --description 'Edit function definition'
     end
 
     if not set -q argv[1]
-        printf (_ "%ls: Expected at least %d args, got only %d\n") funced 1 0
+        printf (_ "%s: Expected at least %d args, got only %d\n") funced 1 0
         return 1
     end
 

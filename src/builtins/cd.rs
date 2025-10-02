@@ -39,7 +39,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
             None => {
                 streams
                     .err
-                    .append(wgettext_fmt!("%ls: Could not find home directory\n", cmd));
+                    .append(wgettext_fmt!("%s: Could not find home directory\n", cmd));
                 return Err(STATUS_CMD_ERROR);
             }
         }
@@ -48,7 +48,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
     // Stop `cd ""` from crashing
     if dir_in.is_empty() {
         streams.err.append(wgettext_fmt!(
-            "%ls: Empty directory '%ls' does not exist\n",
+            "%s: Empty directory '%s' does not exist\n",
             cmd,
             dir_in
         ));
@@ -63,7 +63,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
     let dirs = path_apply_cdpath(dir_in, &pwd, vars);
     if dirs.is_empty() {
         streams.err.append(wgettext_fmt!(
-            "%ls: The directory '%ls' does not exist\n",
+            "%s: The directory '%s' does not exist\n",
             cmd,
             dir_in
         ));
@@ -132,41 +132,37 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
     }
 
     if best_errno == ENOTDIR {
-        streams.err.append(wgettext_fmt!(
-            "%ls: '%ls' is not a directory\n",
-            cmd,
-            dir_in
-        ));
+        streams
+            .err
+            .append(wgettext_fmt!("%s: '%s' is not a directory\n", cmd, dir_in));
     } else if !broken_symlink.is_empty() {
         streams.err.append(wgettext_fmt!(
-            "%ls: '%ls' is a broken symbolic link to '%ls'\n",
+            "%s: '%s' is a broken symbolic link to '%s'\n",
             cmd,
             broken_symlink,
             broken_symlink_target
         ));
     } else if best_errno == ELOOP {
         streams.err.append(wgettext_fmt!(
-            "%ls: Too many levels of symbolic links: '%ls'\n",
+            "%s: Too many levels of symbolic links: '%s'\n",
             cmd,
             dir_in
         ));
     } else if best_errno == ENOENT {
         streams.err.append(wgettext_fmt!(
-            "%ls: The directory '%ls' does not exist\n",
+            "%s: The directory '%s' does not exist\n",
             cmd,
             dir_in
         ));
     } else if best_errno == EACCES || best_errno == EPERM {
-        streams.err.append(wgettext_fmt!(
-            "%ls: Permission denied: '%ls'\n",
-            cmd,
-            dir_in
-        ));
+        streams
+            .err
+            .append(wgettext_fmt!("%s: Permission denied: '%s'\n", cmd, dir_in));
     } else {
         errno::set_errno(Errno(best_errno));
         wperror(L!("cd"));
         streams.err.append(wgettext_fmt!(
-            "%ls: Unknown error trying to locate directory '%ls'\n",
+            "%s: Unknown error trying to locate directory '%s'\n",
             cmd,
             dir_in
         ));

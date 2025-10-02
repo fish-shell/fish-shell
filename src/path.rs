@@ -150,12 +150,12 @@ fn maybe_issue_path_warning(
     if path.is_empty() {
         FLOG!(
             warning_path,
-            wgettext_fmt!("Unable to locate the %ls directory.", which_dir)
+            wgettext_fmt!("Unable to locate the %s directory.", which_dir)
         );
         FLOG!(
             warning_path,
             wgettext_fmt!(
-                "Please set the %ls or HOME environment variable before starting fish.",
+                "Please set the %s or HOME environment variable before starting fish.",
                 xdg_var
             )
         );
@@ -164,7 +164,7 @@ fn maybe_issue_path_warning(
         FLOG!(
             warning_path,
             wgettext_fmt!(
-                "Unable to locate %ls directory derived from $%ls: '%ls'.",
+                "Unable to locate %s directory derived from $%s: '%s'.",
                 which_dir,
                 env_var,
                 path
@@ -177,7 +177,7 @@ fn maybe_issue_path_warning(
         FLOG!(
             warning_path,
             wgettext_fmt!(
-                "Please set $%ls to a directory where you have write access.",
+                "Please set $%s to a directory where you have write access.",
                 env_var
             )
         );
@@ -236,7 +236,7 @@ fn path_check_executable(path: &wstr) -> Result<(), std::io::Error> {
 
 /// Return all the paths that match the given command.
 pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
-    FLOGF!(path, "path_get_paths('%ls')", cmd);
+    FLOGF!(path, "path_get_paths('%s')", cmd);
     let mut paths = vec![];
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother

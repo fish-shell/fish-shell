@@ -21,7 +21,7 @@ fn test_error_messages() {
     // Given a format string, returns a list of non-empty strings separated by format specifiers. The
     // format specifiers themselves are omitted.
     fn separate_by_format_specifiers(format: &wstr) -> Vec<&wstr> {
-        let format_specifier_regex = Regex::new(L!(r"%l?[cds]").as_char_slice()).unwrap();
+        let format_specifier_regex = Regex::new(L!(r"%[cds]").as_char_slice()).unwrap();
         let mut result = vec![];
         let mut offset = 0;
         for mtch in format_specifier_regex.find_iter(format.as_char_slice()) {

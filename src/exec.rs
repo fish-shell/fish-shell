@@ -212,7 +212,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
 
     FLOGF!(
         exec_job_exec,
-        "Executed job %d from command '%ls'",
+        "Executed job %d from command '%s'",
         job.job_id(),
         job.command()
     );
@@ -574,7 +574,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
 
     FLOGF!(
         proc_internal_proc,
-        "Created internal proc %llu to write output for proc '%ls'",
+        "Created internal proc %u to write output for proc '%s'",
         internal_proc.get_id(),
         p.argv0().unwrap()
     );
@@ -646,7 +646,7 @@ fn run_internal_process_or_short_circuit(
         if p.is_last_in_job {
             FLOGF!(
                 exec_job_status,
-                "Set status of job %d (%ls) to %d using short circuit",
+                "Set status of job %d (%s) to %d using short circuit",
                 j.job_id(),
                 j.preview(),
                 p.status().status_value()
@@ -759,7 +759,7 @@ fn fork_child_for_process(
     let count = FORK_COUNT.fetch_add(1, Ordering::Relaxed) + 1;
     FLOGF!(
         exec_fork,
-        "Fork #%d, pid %d fork external command for '%ls'",
+        "Fork #%d, pid %d fork external command for '%s'",
         count,
         pid,
         p.argv0().unwrap()
@@ -895,7 +895,7 @@ fn exec_external_command(
         };
         FLOGF!(
             exec_fork,
-            "Fork #%d, pid %d: spawn external command '%s' from '%ls'",
+            "Fork #%d, pid %d: spawn external command '%s' from '%s'",
             count,
             pid,
             p.actual_cmd,
@@ -1017,7 +1017,7 @@ fn get_performer_for_function(
     let Some(props) = function::get_props(p.argv0().unwrap()) else {
         FLOG!(
             error,
-            wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap())
+            wgettext_fmt!("Unknown function '%s'", p.argv0().unwrap())
         );
         return Err(());
     };

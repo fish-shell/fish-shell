@@ -43,7 +43,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
                         .and_then(|v| NonZeroUsize::new(v as usize))
                         .ok_or_else(|| {
                             StringError::InvalidArgs(wgettext_fmt!(
-                                "%ls: Invalid max matches value '%ls'\n",
+                                "%s: Invalid max matches value '%s'\n",
                                 _n,
                                 arg
                             ))
@@ -104,7 +104,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
                 Err(e) => {
                     string_error!(
                         streams,
-                        "%ls: Regular expression substitute error: %ls\n",
+                        "%s: Regular expression substitute error: %s\n",
                         cmd,
                         e.error_message()
                     );

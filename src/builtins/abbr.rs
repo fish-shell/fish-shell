@@ -48,7 +48,7 @@ impl Options {
 
         if cmds.len() > 1 {
             streams.err.append(wgettext_fmt!(
-                "%ls: Cannot combine options %ls\n",
+                "%s: Cannot combine options %s\n",
                 CMD,
                 join(&cmds, L!(", "))
             ));
@@ -63,28 +63,26 @@ impl Options {
         }
 
         if !self.add && self.position.is_some() {
-            streams.err.append(wgettext_fmt!(
-                "%ls: --position option requires --add\n",
-                CMD
-            ));
+            streams
+                .err
+                .append(wgettext_fmt!("%s: --position option requires --add\n", CMD));
             return false;
         }
         if !self.add && self.regex_pattern.is_some() {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: --regex option requires --add\n", CMD));
+                .append(wgettext_fmt!("%s: --regex option requires --add\n", CMD));
             return false;
         }
         if !self.add && self.function.is_some() {
-            streams.err.append(wgettext_fmt!(
-                "%ls: --function option requires --add\n",
-                CMD
-            ));
+            streams
+                .err
+                .append(wgettext_fmt!("%s: --function option requires --add\n", CMD));
             return false;
         }
         if !self.add && self.set_cursor_marker.is_some() {
             streams.err.append(wgettext_fmt!(
-                "%ls: --set-cursor option requires --add\n",
+                "%s: --set-cursor option requires --add\n",
                 CMD
             ));
             return false;
@@ -96,7 +94,7 @@ impl Options {
             .unwrap_or(false)
         {
             streams.err.append(wgettext_fmt!(
-                "%ls: --set-cursor argument cannot be empty\n",
+                "%s: --set-cursor argument cannot be empty\n",
                 CMD
             ));
             return false;
@@ -182,7 +180,7 @@ fn abbr_list(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     const subcmd: &wstr = L!("--list");
     if !opts.args.is_empty() {
         streams.err.append(wgettext_fmt!(
-            "%ls %ls: Unexpected argument -- '%ls'\n",
+            "%s %s: Unexpected argument -- '%s'\n",
             CMD,
             subcmd,
             &opts.args[0]
@@ -206,7 +204,7 @@ fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
 
     if opts.args.len() != 2 {
         streams.err.append(wgettext_fmt!(
-            "%ls %ls: Requires exactly two arguments\n",
+            "%s %s: Requires exactly two arguments\n",
             CMD,
             subcmd
         ));
@@ -215,17 +213,15 @@ fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     let old_name = &opts.args[0];
     let new_name = &opts.args[1];
     if old_name.is_empty() || new_name.is_empty() {
-        streams.err.append(wgettext_fmt!(
-            "%ls %ls: Name cannot be empty\n",
-            CMD,
-            subcmd
-        ));
+        streams
+            .err
+            .append(wgettext_fmt!("%s %s: Name cannot be empty\n", CMD, subcmd));
         return Err(STATUS_INVALID_ARGS);
     }
 
     if contains_whitespace(new_name) {
         streams.err.append(wgettext_fmt!(
-            "%ls %ls: Abbreviation '%ls' cannot have spaces in the word\n",
+            "%s %s: Abbreviation '%s' cannot have spaces in the word\n",
             CMD,
             subcmd,
             new_name.as_utfstr()
@@ -235,7 +231,7 @@ fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     abbrs::with_abbrs_mut(|abbrs| -> BuiltinResult {
         if !abbrs.has_name(old_name) {
             streams.err.append(wgettext_fmt!(
-                "%ls %ls: No abbreviation named %ls\n",
+                "%s %s: No abbreviation named %s\n",
                 CMD,
                 subcmd,
                 old_name.as_utfstr()
@@ -244,7 +240,7 @@ fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
         }
         if abbrs.has_name(new_name) {
             streams.err.append(wgettext_fmt!(
-                "%ls %ls: Abbreviation %ls already exists, cannot rename %ls\n",
+                "%s %s: Abbreviation %s already exists, cannot rename %s\n",
                 CMD,
                 subcmd,
                 new_name.as_utfstr(),
@@ -280,7 +276,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
 
     if opts.args.len() < 2 && opts.function.is_none() {
         streams.err.append(wgettext_fmt!(
-            "%ls %ls: Requires at least two arguments\n",
+            "%s %s: Requires at least two arguments\n",
             CMD,
             subcmd
         ));
@@ -288,17 +284,15 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     }
 
     if opts.args.is_empty() || opts.args[0].is_empty() {
-        streams.err.append(wgettext_fmt!(
-            "%ls %ls: Name cannot be empty\n",
-            CMD,
-            subcmd
-        ));
+        streams
+            .err
+            .append(wgettext_fmt!("%s %s: Name cannot be empty\n", CMD, subcmd));
         return Err(STATUS_INVALID_ARGS);
     }
     let name = &opts.args[0];
     if name.chars().any(|c| c.is_whitespace()) {
         streams.err.append(wgettext_fmt!(
-            "%ls %ls: Abbreviation '%ls' cannot have spaces in the word\n",
+            "%s %s: Abbreviation '%s' cannot have spaces in the word\n",
             CMD,
             subcmd,
             name.as_utfstr()
@@ -319,17 +313,15 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
 
         if let Err(error) = result {
             streams.err.append(wgettext_fmt!(
-                "%ls: Regular expression compile error: %ls\n",
+                "%s: Regular expression compile error: %s\n",
                 CMD,
                 error.error_message(),
             ));
             if let Some(offset) = error.offset() {
                 streams
                     .err
-                    .append(wgettext_fmt!("%ls: %ls\n", CMD, regex_pattern.as_utfstr()));
-                streams
-                    .err
-                    .append(sprintf!("%ls: %*ls\n", CMD, offset, "^"));
+                    .append(wgettext_fmt!("%s: %s\n", CMD, regex_pattern.as_utfstr()));
+                streams.err.append(sprintf!("%s: %*s\n", CMD, offset, "^"));
             }
             return Err(STATUS_INVALID_ARGS);
         }
@@ -359,7 +351,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
         // This is to prevent accidental usage of e.g. `--function 'string replace'`
         if !valid_func_name(function) || contains_whitespace(function) {
             streams.err.append(wgettext_fmt!(
-                "%ls: Invalid function name: %ls\n",
+                "%s: Invalid function name: %s\n",
                 CMD,
                 function.as_utfstr()
             ));
@@ -387,7 +379,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     });
     if !opts.commands.is_empty() && position == Position::Command {
         streams.err.appendln(wgettext_fmt!(
-            "%ls: --command cannot be combined with --position command",
+            "%s: --command cannot be combined with --position command",
             CMD,
         ));
         return Err(STATUS_INVALID_ARGS);
@@ -501,7 +493,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             'p' => {
                 if opts.position.is_some() {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: Cannot specify multiple positions\n",
+                        "%s: Cannot specify multiple positions\n",
                         CMD
                     ));
                     return Err(STATUS_INVALID_ARGS);
@@ -512,7 +504,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                     opts.position = Some(Position::Anywhere);
                 } else {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: Invalid position '%ls'\n",
+                        "%s: Invalid position '%s'\n",
                         CMD,
                         w.woptarg.unwrap_or_default()
                     ));
@@ -525,7 +517,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             'r' => {
                 if opts.regex_pattern.is_some() {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: Cannot specify multiple regex patterns\n",
+                        "%s: Cannot specify multiple regex patterns\n",
                         CMD
                     ));
                     return Err(STATUS_INVALID_ARGS);
@@ -535,7 +527,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             SET_CURSOR_SHORT => {
                 if opts.set_cursor_marker.is_some() {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: Cannot specify multiple set-cursor options\n",
+                        "%s: Cannot specify multiple set-cursor options\n",
                         CMD
                     ));
                     return Err(STATUS_INVALID_ARGS);
@@ -558,7 +550,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             'U' => {
                 // Kept and made ineffective, so we warn.
                 streams.err.append(wgettext_fmt!(
-                    "%ls: Warning: Option '%ls' was removed and is now ignored",
+                    "%s: Warning: Option '%s' was removed and is now ignored",
                     cmd,
                     argv_read[w.wopt_index - 1]
                 ));

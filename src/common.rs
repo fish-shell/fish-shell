@@ -1458,7 +1458,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
                 if line_width != 0 {
                     buff.push('\n');
                 }
-                buff += &sprintf!("%ls-\n", token)[..];
+                buff += &sprintf!("%s-\n", token)[..];
                 line_width = 0;
             } else {
                 // Print the token.

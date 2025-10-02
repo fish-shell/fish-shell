@@ -296,7 +296,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     }
                 } else {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: Invalid token '%ls'\n",
+                        "%s: Invalid token '%s'\n",
                         cmd,
                         w.woptarg.unwrap()
                     ));
@@ -318,7 +318,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 if arg.is_empty() {
                     streams
                         .err
-                        .append(wgettext_fmt!("%ls: -s requires a non-empty string\n", cmd,));
+                        .append(wgettext_fmt!("%s: -s requires a non-empty string\n", cmd,));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -328,7 +328,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 if arg.is_empty() {
                     streams
                         .err
-                        .append(wgettext_fmt!("%ls: -l requires a non-empty string\n", cmd,));
+                        .append(wgettext_fmt!("%s: -l requires a non-empty string\n", cmd,));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -338,7 +338,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 if arg.is_empty() {
                     streams
                         .err
-                        .append(wgettext_fmt!("%ls: -o requires a non-empty string\n", cmd,));
+                        .append(wgettext_fmt!("%s: -o requires a non-empty string\n", cmd,));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -442,7 +442,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
 
         if let Err(err_text) = parse_util_detect_errors_in_argument_list(&comp, &prefix) {
             streams.err.append(wgettext_fmt!(
-                "%ls: %ls: contains a syntax error\n",
+                "%s: %s: contains a syntax error\n",
                 cmd,
                 comp
             ));

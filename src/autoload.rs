@@ -116,12 +116,12 @@ impl Autoload {
                 match &path {
                     #[cfg(feature = "embed-data")]
                     AutoloadPath::Embedded(_) => {
-                        FLOGF!(autoload, "Embedded: %ls", cmd);
+                        FLOGF!(autoload, "Embedded: %s", cmd);
                     }
                     AutoloadPath::Path(path) => {
                         FLOGF!(
                             autoload,
-                            "Loading %ls from var %ls from path %ls",
+                            "Loading %s from var %s from path %s",
                             cmd,
                             self.env_var_name,
                             path
@@ -152,14 +152,14 @@ impl Autoload {
             AutoloadPath::Embedded(name) => {
                 use crate::common::str2wcstring;
                 use std::sync::Arc;
-                FLOGF!(autoload, "Loading embedded: %ls", name);
+                FLOGF!(autoload, "Loading embedded: %s", name);
                 let emfile = Asset::get(name).expect("Embedded file not found");
                 let src = str2wcstring(&emfile.data);
                 let mut widename = L!("embedded:").to_owned();
                 widename.push_str(name);
                 let ret = parser.eval_file_wstr(src, Arc::new(widename), &IoChain::new(), None);
                 if let Err(msg) = ret {
-                    eprintf!("%ls", msg);
+                    eprintf!("%s", msg);
                 }
             }
         }
@@ -527,8 +527,8 @@ fn test_autoload() {
         .is_none());
     assert!(autoload.get_autoloaded_commands().is_empty());
 
-    run!("touch %ls/file1.fish", p1);
-    run!("touch %ls/file2.fish", p2);
+    run!("touch %s/file1.fish", p1);
+    run!("touch %s/file2.fish", p2);
     autoload.invalidate_cache();
 
     assert!(!autoload.autoload_in_progress(L!("file1")));
@@ -586,11 +586,11 @@ fn test_autoload() {
         autoload.resolve_command_impl(L!("file1"), paths),
         AutoloadResult::Loaded
     ));
-    touch_file(&sprintf!("%ls/file1.fish", p1));
+    touch_file(&sprintf!("%s/file1.fish", p1));
     autoload.invalidate_cache();
     assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());
     autoload.mark_autoload_finished(L!("file1"));
 
-    run!(L!("rm -Rf %ls"), p1);
-    run!(L!("rm -Rf %ls"), p2);
+    run!(L!("rm -Rf %s"), p1);
+    run!(L!("rm -Rf %s"), p2);
 }

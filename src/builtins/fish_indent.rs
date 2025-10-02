@@ -997,7 +997,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
         if args.is_empty() && i == 0 {
             if output_type == OutputType::File {
                 streams.err.appendln(wgettext_fmt!(
-                    "Expected file path to read/write for -w:\n\n $ %ls -w foo.fish",
+                    "Expected file path to read/write for -w:\n\n $ %s -w foo.fish",
                     PROGRAM_NAME.get().unwrap()
                 ));
                 return Err(STATUS_CMD_ERROR);
@@ -1299,7 +1299,7 @@ fn html_colorize(text: &wstr, colors: &[HighlightSpec]) -> Vec<u8> {
             html.push_str("</span>");
         }
         if i == 0 || color != last_color {
-            sprintf!(=> &mut html, "<span class=\"%ls\">", html_class_name_for_color(color));
+            sprintf!(=> &mut html, "<span class=\"%s\">", html_class_name_for_color(color));
         }
         last_color = color;
 

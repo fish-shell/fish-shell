@@ -77,7 +77,7 @@ impl fmt::Write for NullOutput {
 #[test]
 fn smoke() {
     assert_fmt!("Hello, %s!", "world"  => "Hello, world!");
-    assert_fmt!("Hello, %ls!", "world" => "Hello, world!");
+    assert_fmt!("Hello, %ls!", "world" => "Hello, world!"); // length modifier
     assert_fmt!("Hello, world! %d %%%%", 3 => "Hello, world! 3 %%");
     assert_fmt!("" => "");
 }
@@ -234,6 +234,7 @@ fn test_int() {
     assert_fmt!("%2o", 4 => " 4");
     assert_fmt!("% 12d", -4 => "          -4");
     assert_fmt!("% 12d", 48 => "          48");
+    // with length modifier
     assert_fmt!("%ld", -4_i64 => "-4");
     assert_fmt!("%lld", -4_i64 => "-4");
     assert_fmt!("%lX", -4_i64 => "FFFFFFFFFFFFFFFC");
@@ -248,6 +249,7 @@ fn test_int() {
     assert_fmt!("%9X", 492 => "      1EC");
     assert_fmt!("% 12u", 4 => "           4");
     assert_fmt!("% 12u", 48 => "          48");
+    // with length modifier
     assert_fmt!("%lu", 4_u64 => "4");
     assert_fmt!("%llu", 4_u64 => "4");
     assert_fmt!("%lX", 4_u64 => "4");
@@ -414,6 +416,7 @@ fn test_float() {
     assert_fmt1!("%f", 0.0, "0.000000");
     assert_fmt1!("%g", 0.0, "0");
     assert_fmt1!("%#g", 0.0, "0.00000");
+    // with length modifier
     assert_fmt1!("%la", 0.0, "0x0p+0");
     assert_fmt1!("%le", 0.0, "0.000000e+00");
     assert_fmt1!("%lf", 0.0, "0.000000");
@@ -430,7 +433,7 @@ fn test_float() {
     assert_fmt1!("%.4f", 1.03125, "1.0312"); /* 0x1.08p0 */
     assert_fmt1!("%.2f", 1.375, "1.38");
     assert_fmt1!("%.1f", 1.375, "1.4");
-    assert_fmt1!("%.1lf", 1.375, "1.4");
+    assert_fmt1!("%.1lf", 1.375, "1.4"); // length modifier
     assert_fmt1!("%.15f", 1.1, "1.100000000000000");
     assert_fmt1!("%.16f", 1.1, "1.1000000000000001");
     assert_fmt1!("%.17f", 1.1, "1.10000000000000009");
@@ -755,8 +758,8 @@ fn test_errors() {
     sprintf_err!("%1", => BadFormatString);
     sprintf_err!("%%%k", => BadFormatString);
     sprintf_err!("%B", =>  BadFormatString);
-    sprintf_err!("%lC", 'q' =>  BadFormatString);
-    sprintf_err!("%lS", 'q' =>  BadFormatString);
+    sprintf_err!("%lC", 'q' =>  BadFormatString); // length modifier
+    sprintf_err!("%lS", 'q' =>  BadFormatString); // length modifier
     sprintf_err!("%d", => MissingArg);
     sprintf_err!("%d %u", 1 => MissingArg);
     sprintf_err!("%*d", 5 => MissingArg);

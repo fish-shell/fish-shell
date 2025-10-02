@@ -179,25 +179,25 @@ impl RegexError {
             Compile(pattern, e) => {
                 string_error!(
                     streams,
-                    "%ls: Regular expression compile error: %ls\n",
+                    "%s: Regular expression compile error: %s\n",
                     cmd,
                     &WString::from(e.error_message())
                 );
-                string_error!(streams, "%ls: %ls\n", cmd, pattern);
-                string_error!(streams, "%ls: %*ls\n", cmd, e.offset().unwrap_or(0), "^");
+                string_error!(streams, "%s: %s\n", cmd, pattern);
+                string_error!(streams, "%s: %*s\n", cmd, e.offset().unwrap_or(0), "^");
             }
             InvalidCaptureGroupName(name) => {
                 streams.err.append(wgettext_fmt!(
-                    "Modification of read-only variable \"%ls\" is not allowed\n",
+                    "Modification of read-only variable \"%s\" is not allowed\n",
                     name
                 ));
             }
             InvalidEscape(pattern) => {
                 string_error!(
                     streams,
-                    "%ls",
+                    "%s",
                     sprintf!(
-                        "%ls: Invalid escape sequence in pattern \"%ls\"\n",
+                        "%s: Invalid escape sequence in pattern \"%s\"\n",
                         cmd,
                         pattern
                     )

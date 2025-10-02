@@ -57,7 +57,7 @@ use crate::wutil::{
     wcstoi::{wcstoi_partial, Options as WcstoiOpts},
     wstr_offset_in,
 };
-use fish_printf::{sprintf_locale, ToArg};
+use fish_printf::{sprintf_locale, Arg, FormatString, ToArg};
 
 /// Return true if `c` is an octal digit.
 fn is_octal_digit(c: char) -> bool {
@@ -246,6 +246,65 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         }
     }
 
+    /// Determines whether explicit argument positions are used in the format string.
+    /// Detects some format string errors which are marked via `self.fatal_error`,
+    /// so check `self.early_exit` before trusting the return value and exit if `self.early_exit`
+    /// is true.
+    fn uses_explicit_positions(&mut self, format: &wstr) -> bool {
+        let mut format_chars = format;
+        // suffix of the format string starting at the character following the % of the first directive.
+        format_chars.skip_literal_prefix();
+        // If explicit arguments are used, the directive_str must start with [0-9]+\$
+        let num_digits = format_chars
+            .chars()
+            .take_while(|&c| c.is_ascii_digit())
+            .count();
+        if num_digits == 0 {
+            return false;
+        }
+        match format_chars.try_char_at(num_digits) {
+            Some('$') => {
+                return true;
+            }
+            Some(_) => {
+                return false;
+            }
+            None => {
+                self.fatal_error(wgettext!(
+                    "Unclosed directive: Directives cannot end on a number."
+                ));
+                return false;
+            }
+        }
+    }
+
+    /// Tries to parse the argument according to the conversion char.
+    /// On failure, `self.fatal_error` is called and `None` is returned.
+    fn parse_arg<'c>(&mut self, conversion: char, argument: &'c wstr) -> Option<Arg<'c>> {
+        match conversion {
+            'd' | 'i' => Some(string_to_scalar_type::<i64>(argument, self).to_arg()),
+            'o' | 'u' | 'x' | 'X' => Some(string_to_scalar_type::<u64>(argument, self).to_arg()),
+            'a' | 'A' | 'e' | 'E' | 'f' | 'F' | 'g' | 'G' => {
+                Some(string_to_scalar_type::<f64>(argument, self).to_arg())
+            }
+            'c' => {
+                if argument.len() != 1 {
+                    self.fatal_error(wgettext_fmt!("Specified conversion 'c', but supplied argument '%s' is not a character (single codepoint).", argument));
+                    return None;
+                }
+                Some(argument.to_arg())
+            }
+            's' => Some(argument.to_arg()),
+            c => {
+                self.fatal_error(wgettext_fmt!(
+                    "Invalid conversion character in format string: '%c'",
+                    c
+                ));
+                return None;
+            }
+        }
+    }
+
     /// Evaluate a printf conversion specification.
     /// `spec` is the start of the directive, and `conversion` specifies the type of conversion.
     /// `spec` does not include any length modifier or the conversion specifier itself.
@@ -388,7 +447,12 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
     /// Print the text in `format`, using `argv` for arguments to any `%' directives.
     /// Return the number of elements of `argv` used.
-    fn print_formatted(&mut self, format: &wstr, mut argv: &[&wstr]) -> usize {
+    /// This version does not support explicit argument positions.
+    /// Use it for format strings which only contain implicit argument positions,
+    /// which can be checked with the `uses_explicit_positions` function.
+    /// The advantage of this function is that it allows repeated application of the format string,
+    /// which is a custom feature of fish's printf.
+    fn print_formatted_implicit_positions(&mut self, format: &wstr, mut argv: &[&wstr]) -> usize {
         let mut argc = argv.len();
         let save_argc = argc; /* Preserve original value.  */
         let mut f: &wstr; /* Pointer into `format'.  */
@@ -562,6 +626,156 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
             }
         }
         save_argc - argc
+    }
+
+    /// Print the text in `format`, using `args` for arguments to any `%' directives.
+    /// This version only supports explicit argument positions, but does not support repeated
+    /// application of the format string, a custom feature of fish's printf that only works when no
+    /// explicit argument positions are used.
+    fn print_formatted_explicit_positions(&mut self, format: &wstr, args: &[&wstr]) {
+        let num_args = args.len();
+        let mut parsed_args: Vec<Option<Arg>> = Vec::with_capacity(num_args);
+        for _ in 0..num_args {
+            parsed_args.push(None);
+        }
+
+        let mut remaining_format = format;
+        remaining_format.skip_literal_prefix();
+        while !remaining_format.is_empty() {
+            // Syntax of directive (after %):
+            // argument$[flags][width][.precision][length modifier]conversion
+            //
+            // argument: consists of one ore more ASCII digits and indicates the 1-based index of
+            // the argument which should be used for the value to format.
+            // If argument is given, the arg at that index must have the type indicated by
+            // conversion.
+            //
+            // flags: [I'-+ #0]+
+            // can be skipped over
+            //
+            // width: [1-9][0-9]* or `*m$`, where `m` is a decimal number indicating an
+            // argument index.
+            // In the latter case, the argument at index `m` must have type i64.
+            //
+            // precision: same as width, but can also be empty
+            //
+            // length modifier: [lLhjtz]*
+            // Length modifiers are useless for our implementation, so we don't bother verifying
+            // whether they match the conversion or are valid at all (technically, only single
+            // letter length modifiers, plus hh and ll are allowed).
+            //
+            // conversion: [aAcdeEfFgGiosuxX]
+            // This tells us the type which should be parsed from the argument string.
+
+            // First, look for the argument index
+            let next_value_index = match remaining_format.take_value_index(num_args) {
+                Ok(position) => position,
+                Err(e) => {
+                    self.fatal_error(&e);
+                    return;
+                }
+            };
+
+            remaining_format.skip_flags();
+
+            match remaining_format.take_width_index(num_args) {
+                Ok(Some(width_index)) => match &parsed_args[width_index] {
+                    Some(existing_arg) => {
+                        if !matches!(existing_arg, Arg::SInt(_, _)) {
+                            self.fatal_error(wgettext_fmt!(
+                                "Argument at index %d has conflicting type constraints.",
+                                width_index + 1
+                            ));
+                            return;
+                        }
+                    }
+                    None => {
+                        let arg = string_to_scalar_type::<i64>(args[width_index], self).to_arg();
+                        parsed_args[width_index] = Some(arg);
+                    }
+                },
+                Ok(None) => {}
+                Err(e) => {
+                    self.fatal_error(&e);
+                    return;
+                }
+            }
+
+            match remaining_format.take_precision_index(num_args) {
+                Ok(Some(precision_index)) => match &parsed_args[precision_index] {
+                    Some(existing_arg) => {
+                        if !matches!(existing_arg, Arg::SInt(_, _)) {
+                            self.fatal_error(wgettext_fmt!(
+                                "Argument at index %d has conflicting type constraints.",
+                                precision_index + 1
+                            ));
+                            return;
+                        }
+                    }
+                    None => {
+                        let arg =
+                            string_to_scalar_type::<i64>(args[precision_index], self).to_arg();
+                        parsed_args[precision_index] = Some(arg);
+                    }
+                },
+                Ok(None) => {}
+                Err(e) => {
+                    self.fatal_error(&e);
+                    return;
+                }
+            }
+
+            remaining_format.skip_length_modifiers();
+
+            match remaining_format.try_char_at(0) {
+                Some(conversion) => match self.parse_arg(conversion, args[next_value_index]) {
+                    Some(arg) => match &parsed_args[next_value_index] {
+                        Some(existing_arg) => {
+                            if std::mem::discriminant(&arg) != std::mem::discriminant(existing_arg)
+                            {
+                                self.fatal_error(wgettext_fmt!(
+                                    "Argument at index %d has conflicting type constraints.",
+                                    next_value_index + 1
+                                ));
+                            }
+                        }
+                        None => {
+                            parsed_args[next_value_index] = Some(arg);
+                        }
+                    },
+                    None => {
+                        return;
+                    }
+                },
+                None => {
+                    self.fatal_error(wgettext!(
+                        "Format string ends on directive without conversion specifier."
+                    ));
+                    return;
+                }
+            }
+            remaining_format.advance_by(1);
+
+            remaining_format.skip_literal_prefix();
+        }
+        let unused_args = parsed_args
+            .iter()
+            .enumerate()
+            .filter_map(|(index, arg)| if arg.is_none() { Some(index + 1) } else { None })
+            .collect::<Vec<usize>>();
+        if !unused_args.is_empty() {
+            self.fatal_error(wgettext_fmt!(
+                "Unused argument indices: %s",
+                format!("{unused_args:?}")
+            ));
+            return;
+        }
+
+        let mut parsed_args = parsed_args.into_iter().flatten().collect::<Vec<Arg>>();
+
+        sprintf_locale(&mut self.buff, format, &self.locale, &mut parsed_args)
+            .err()
+            .map(|err| self.handle_sprintf_error(err));
     }
 
     fn nonfatal_error<Str: AsRef<wstr>>(&mut self, errstr: Str) {
@@ -762,6 +976,164 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     }
 }
 
+trait FormatStringHelper {
+    /// Strips the prefix of literal characters and returns the remaining suffix.
+    /// If a formatting directive (starting with a %) is contained, the % of that directive is also
+    /// stripped.
+    /// Note that a format string with a trailing % is accepted by this function.
+    fn skip_literal_prefix(&mut self);
+
+    /// Expects the remaining format string to start with a positive number of ASCII digits,
+    /// followed by a $.
+    /// If this format is found, the number is parsed to a `usize`.
+    /// A bounds check is performed, ensuring that the number is in 1..=num_args.
+    /// If all checks succeed, the number is decremented to match Rust's 0-based indexing and
+    /// returned in the `Ok` variant.
+    /// On errors, a suitable message is returned.
+    fn take_value_index(&mut self, num_args: usize) -> Result<usize, WString>;
+
+    /// Advances past the formatting flags, if any.
+    fn skip_flags(&mut self);
+
+    /// Checks if the width is specified via an index.
+    /// If so, that index is bounds-checked, decremented and returned.
+    /// If no width is specified, or it is specified inline, `Ok(None)` is returned.
+    fn take_width_index(&mut self, num_args: usize) -> Result<Option<usize>, WString>;
+
+    /// Checks if the precision is specified via an index.
+    /// If so, that index is bounds-checked, decremented and returned.
+    /// If no precision is specified, or it is specified inline, `Ok(None)` is returned.
+    fn take_precision_index(&mut self, num_args: usize) -> Result<Option<usize>, WString>;
+
+    /// Advances past the formatting flags, if any.
+    fn skip_length_modifiers(&mut self);
+}
+
+impl FormatStringHelper for &wstr {
+    fn skip_literal_prefix(&mut self) {
+        let mut directive_start_index = None;
+        let mut i = 0;
+        while i < self.len() {
+            if self.char_at(i) == '%' {
+                match self.try_char_at(i + 1) {
+                    Some('%') => {
+                        i += 2;
+                    }
+                    Some(_) => {
+                        directive_start_index = Some(i + 1);
+                        break;
+                    }
+                    None => {
+                        // Invalid string. Trailing %.
+                        *self = L!("");
+                        return;
+                    }
+                }
+            } else {
+                i += 1;
+            }
+        }
+        match directive_start_index {
+            Some(directive_start_index) => {
+                *self = &self[directive_start_index..];
+            }
+            None => {
+                *self = L!("");
+            }
+        }
+    }
+
+    fn take_value_index(&mut self, num_args: usize) -> Result<usize, WString> {
+        let num_digits = self.chars().take_while(|&c| c.is_ascii_digit()).count();
+        if num_digits == 0 {
+            return Err(wgettext_fmt!(
+                "Missing argument position in format string.\nExpected decimal number but found:\n%s",
+                self
+            ));
+        }
+        if self.try_char_at(num_digits) != Some('$') {
+            return Err(wgettext_fmt!(
+                "Argument position in format string not terminated by a $:\n%s",
+                self
+            ));
+        }
+        let digits = self[..num_digits].to_string();
+        let Ok(arg_index) = digits.parse::<usize>() else {
+            return Err(wgettext_fmt!(
+                "Failed to parse argument position in format string. Location in format string:\n%s\nExtracted digits: %s", self, digits
+            ));
+        };
+        if arg_index == 0 {
+            return Err(wgettext_fmt!(
+                "Argument position 0 in format string is invalid. The first valid position is 1. Location in format string:\n%s", self
+            ));
+        }
+        if arg_index > num_args {
+            return Err(wgettext_fmt!(
+                "Argument position %d in format string exceeds number of arguments (%d).",
+                arg_index,
+                num_args
+            ));
+        }
+        *self = &self[(num_digits + 1)..];
+        Ok(arg_index - 1)
+    }
+
+    fn skip_flags(&mut self) {
+        let num_flag_chars = self
+            .chars()
+            .take_while(|&c| matches!(c, 'I' | '\'' | '-' | '+' | ' ' | '#' | '0'))
+            .count();
+        *self = &self[num_flag_chars..]
+    }
+
+    fn take_width_index(&mut self, num_args: usize) -> Result<Option<usize>, WString> {
+        match self.try_char_at(0) {
+            Some('*') => {
+                // width is taken from arguments.
+                self.advance_by(1);
+                self.take_value_index(num_args).map(Some)
+            }
+            Some(c) if c.is_ascii_digit() => {
+                // width is specified inline
+                let num_digits = self.chars().take_while(|&c| c.is_ascii_digit()).count();
+                *self = &self[num_digits..];
+                Ok(None)
+            }
+            Some(_) | None => Ok(None),
+        }
+    }
+
+    fn take_precision_index(&mut self, num_args: usize) -> Result<Option<usize>, WString> {
+        if self.try_char_at(0) != Some('.') {
+            return Ok(None);
+        }
+        self.advance_by(1);
+        match self.try_char_at(0) {
+            Some('*') => {
+                // precision is taken from arguments.
+                self.advance_by(1);
+                self.take_value_index(num_args).map(Some)
+            }
+            Some(c) if c.is_ascii_digit() => {
+                // precision is specified inline
+                let num_digits = self.chars().take_while(|&c| c.is_ascii_digit()).count();
+                *self = &self[num_digits..];
+                Ok(None)
+            }
+            Some(_) | None => Ok(None),
+        }
+    }
+
+    fn skip_length_modifiers(&mut self) {
+        let num_length_modifier_chars = self
+            .chars()
+            .take_while(|&c| matches!(c, 'l' | 'L' | 'h' | 'j' | 't' | 'z'))
+            .count();
+        *self = &self[num_length_modifier_chars..];
+    }
+}
+
 /// The printf builtin.
 pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let mut argc = argv.len();
@@ -783,16 +1155,28 @@ pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> 
     let format = argv[0];
     argc -= 1;
     argv = &argv[1..];
-    loop {
-        let args_used = state.print_formatted(format, argv);
-        argc -= args_used;
-        argv = &argv[args_used..];
+    let explicit_positions = state.uses_explicit_positions(format);
+    if state.early_exit {
+        return state.exit_code;
+    }
+    if explicit_positions {
+        state.print_formatted_explicit_positions(format, argv);
         if !state.buff.is_empty() {
             state.streams.out.append(&state.buff);
-            state.buff.clear();
         }
-        if !(args_used > 0 && argc > 0 && !state.early_exit) {
-            break;
+    } else {
+        // This supports repeated application of the format string.
+        loop {
+            let args_used = state.print_formatted_implicit_positions(format, argv);
+            argc -= args_used;
+            argv = &argv[args_used..];
+            if !state.buff.is_empty() {
+                state.streams.out.append(&state.buff);
+                state.buff.clear();
+            }
+            if !(args_used > 0 && argc > 0 && !state.early_exit) {
+                break;
+            }
         }
     }
     return state.exit_code;

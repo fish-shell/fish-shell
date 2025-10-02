@@ -22,10 +22,10 @@ use crate::{
 
 localizable_consts!(
     MISMATCHED_ARGS
-    "%ls: given %d indexes but %d values\n"
+    "%s: given %d indexes but %d values\n"
 
     UVAR_ERR
-    "%ls: successfully set universal '%ls'; but a global by that name shadows it\n"
+    "%s: successfully set universal '%s'; but a global by that name shadows it\n"
 );
 
 #[derive(Debug, Clone)]
@@ -327,28 +327,28 @@ fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams:
         EnvStackSetResult::Ok => (),
         EnvStackSetResult::Perm => {
             streams.err.append(wgettext_fmt!(
-                "%ls: Tried to change the read-only variable '%ls'\n",
+                "%s: Tried to change the read-only variable '%s'\n",
                 cmd,
                 key
             ));
         }
         EnvStackSetResult::Scope => {
             streams.err.append(wgettext_fmt!(
-                "%ls: Tried to modify the special variable '%ls' with the wrong scope\n",
+                "%s: Tried to modify the special variable '%s' with the wrong scope\n",
                 cmd,
                 key
             ));
         }
         EnvStackSetResult::Invalid => {
             streams.err.append(wgettext_fmt!(
-                "%ls: Tried to modify the special variable '%ls' to an invalid value\n",
+                "%s: Tried to modify the special variable '%s' to an invalid value\n",
                 cmd,
                 key
             ));
         }
         EnvStackSetResult::NotFound => {
             streams.err.append(wgettext_fmt!(
-                "%ls: The variable '%ls' does not exist\n",
+                "%s: The variable '%s' does not exist\n",
                 cmd,
                 key
             ));
@@ -389,7 +389,7 @@ impl std::fmt::Display for EnvArrayParseError {
             "{}",
             match self {
                 EnvArrayParseError::InvalidIndex(varname) =>
-                    wgettext_fmt!("%ls: Invalid index starting at '%ls'\n", "set", varname)
+                    wgettext_fmt!("%s: Invalid index starting at '%s'\n", "set", varname)
                         .to_string(),
             }
         )
@@ -428,7 +428,7 @@ fn split_var_and_indexes<'a>(
         Ok(split) => Some(split),
         Err(EnvArrayParseError::InvalidIndex(varname)) => {
             streams.err.append(wgettext_fmt!(
-                "%ls: Invalid index starting at '%ls'\n",
+                "%s: Invalid index starting at '%s'\n",
                 "set",
                 &varname,
             ));
@@ -657,7 +657,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
     };
     let vals = var.as_list();
     streams.out.append(wgettext_fmt!(
-        "$%ls: set in %ls scope, %ls,%ls with %d elements",
+        "$%s: set in %s scope, %s,%s with %d elements",
         var_name,
         scope_name,
         exportv,
@@ -694,7 +694,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
         );
         streams
             .out
-            .append(sprintf!("$%ls[%d]: |%ls|\n", var_name, i + 1, &escaped_val));
+            .append(sprintf!("$%s[%d]: |%s|\n", var_name, i + 1, &escaped_val));
     }
 }
 
@@ -720,7 +720,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
                 );
                 streams.out.append(wgettext_fmt!(
-                    "$%ls: originally inherited as |%ls|\n",
+                    "$%s: originally inherited as |%s|\n",
                     name,
                     escaped_val
                 ));
@@ -738,7 +738,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
 
             if arg.contains('[') {
                 streams.err.append(wgettext_fmt!(
-                    "%ls: `set --show` does not allow slices with the var names\n",
+                    "%s: `set --show` does not allow slices with the var names\n",
                     cmd
                 ));
                 builtin_print_error_trailer(parser, streams.err, cmd);
@@ -754,7 +754,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
                 );
                 streams.out.append(wgettext_fmt!(
-                    "$%ls: originally inherited as |%ls|\n",
+                    "$%s: originally inherited as |%s|\n",
                     arg,
                     escaped_val
                 ));
@@ -931,7 +931,7 @@ fn set_internal(
             .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, split.varname));
         if let Some(pos) = split.varname.chars().position(|c| c == '=') {
             streams.err.append(wgettext_fmt!(
-                "%ls: Did you mean `set %ls %ls`?",
+                "%s: Did you mean `set %s %s`?",
                 cmd,
                 &escape(&split.varname[..pos]),
                 &escape(&split.varname[pos + 1..])
@@ -948,7 +948,7 @@ fn set_internal(
             if *ind <= 0 {
                 streams
                     .err
-                    .append(wgettext_fmt!("%ls: array index out of bounds\n", cmd));
+                    .append(wgettext_fmt!("%s: array index out of bounds\n", cmd));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
@@ -956,7 +956,7 @@ fn set_internal(
         // Append and prepend are disallowed.
         if opts.append || opts.prepend {
             streams.err.append(wgettext_fmt!(
-                "%ls: Cannot use --append or --prepend when assigning to a slice",
+                "%s: Cannot use --append or --prepend when assigning to a slice",
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);

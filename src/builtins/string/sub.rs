@@ -22,22 +22,24 @@ impl StringSubCommand<'_> for Sub {
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {
             'l' => {
-                self.length =
-                    Some(fish_wcstol(arg.unwrap())?.try_into().map_err(|_| {
-                        invalid_args!("%ls: Invalid length value '%ls'\n", name, arg)
-                    })?)
+                self.length = Some(
+                    fish_wcstol(arg.unwrap())?
+                        .try_into()
+                        .map_err(|_| invalid_args!("%s: Invalid length value '%s'\n", name, arg))?,
+                )
             }
             's' => {
-                self.start =
-                    Some(fish_wcstol(arg.unwrap())?.try_into().map_err(|_| {
-                        invalid_args!("%ls: Invalid start value '%ls'\n", name, arg)
-                    })?)
+                self.start = Some(
+                    fish_wcstol(arg.unwrap())?
+                        .try_into()
+                        .map_err(|_| invalid_args!("%s: Invalid start value '%s'\n", name, arg))?,
+                )
             }
             'e' => {
                 self.end = Some(
                     fish_wcstol(arg.unwrap())?
                         .try_into()
-                        .map_err(|_| invalid_args!("%ls: Invalid end value '%ls'\n", name, arg))?,
+                        .map_err(|_| invalid_args!("%s: Invalid end value '%s'\n", name, arg))?,
                 )
             }
             'q' => self.quiet = true,

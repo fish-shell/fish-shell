@@ -681,7 +681,7 @@ pub fn update_wait_on_escape_ms(vars: &EnvStack) {
         _ => {
             eprintf!(
                 concat!(
-                    "ignoring fish_escape_delay_ms: value '%ls' ",
+                    "ignoring fish_escape_delay_ms: value '%s' ",
                     "is not an integer or is < 10 or >= 5000 ms\n"
                 ),
                 fish_escape_delay_ms
@@ -706,7 +706,7 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
         _ => {
             eprintf!(
                 concat!(
-                    "ignoring fish_sequence_key_delay_ms: value '%ls' ",
+                    "ignoring fish_sequence_key_delay_ms: value '%s' ",
                     "is not an integer or is < 10 or >= 5000 ms\n"
                 ),
                 sequence_key_time_ms

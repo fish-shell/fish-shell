@@ -393,7 +393,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             let Some(cmd) = input_function_get_code(arg) else {
                 streams
                     .err
-                    .append(wgettext_fmt!("%ls: Unknown input function '%ls'", cmd, arg));
+                    .append(wgettext_fmt!("%s: Unknown input function '%s'", cmd, arg));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             };
@@ -517,7 +517,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             let Ok(new_coord) = usize::try_from(new_coord) else {
                 streams
                     .err
-                    .append(wgettext_fmt!("%ls: line/column index starts at 1", cmd));
+                    .append(wgettext_fmt!("%s: line/column index starts at 1", cmd));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             };
@@ -529,7 +529,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 ) else {
                     streams
                         .err
-                        .append(wgettext_fmt!("%ls: there is no line %ls\n", cmd, arg));
+                        .append(wgettext_fmt!("%s: there is no line %s\n", cmd, arg));
                     builtin_print_error_trailer(parser, streams.err, cmd);
                     return Err(STATUS_INVALID_ARGS);
                 };
@@ -544,7 +544,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                         .unwrap_or(rstate.text.len());
                 if line_offset + new_coord > next_line_offset {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: column %ls exceeds line length\n",
+                        "%s: column %s exceeds line length\n",
                         cmd,
                         arg
                     ));
@@ -601,7 +601,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         let Some(selection) = rstate.selection else {
             return Err(STATUS_CMD_ERROR);
         };
-        streams.out.append(sprintf!("%lu\n", selection.start));
+        streams.out.append(sprintf!("%u\n", selection.start));
         return Ok(SUCCESS);
     }
 
@@ -609,7 +609,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         let Some(selection) = rstate.selection else {
             return Err(STATUS_CMD_ERROR);
         };
-        streams.out.append(sprintf!("%lu\n", selection.end));
+        streams.out.append(sprintf!("%u\n", selection.end));
         return Ok(SUCCESS);
     }
 
@@ -716,7 +716,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         } else {
             streams
                 .out
-                .append(sprintf!("%lu\n", current_cursor_pos - range.start));
+                .append(sprintf!("%u\n", current_cursor_pos - range.start));
         }
         return Ok(SUCCESS);
     }

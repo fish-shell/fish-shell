@@ -273,7 +273,7 @@ impl Pager {
         assert_ne!(rendering.remaining_to_disclose, 1);
         if rendering.remaining_to_disclose > 1 {
             progress_text = wgettext_fmt!(
-                "%lsand %lu more rows",
+                "%sand %u more rows",
                 get_ellipsis_str(),
                 rendering.remaining_to_disclose
             );
@@ -282,7 +282,7 @@ impl Pager {
             // to present things as 1-indexed. We do not add 1 to stop_row or row_count because
             // these are the "past the last value".
             progress_text =
-                wgettext_fmt!("rows %lu to %lu of %lu", start_row + 1, stop_row, row_count);
+                wgettext_fmt!("rows %u to %u of %u", start_row + 1, stop_row, row_count);
         } else if self.search_field_shown && self.completion_infos.is_empty() {
             // Everything is filtered.
             progress_text = wgettext!("(no matches)").to_owned();

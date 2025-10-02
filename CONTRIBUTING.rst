@@ -343,7 +343,7 @@ command-line and graphical user interface programs. For simple use, you can use 
 
 Open up the PO file, for example ``po/sv.po``, and you'll see something like::
 
-    msgid "%ls: No suitable job\n"
+    msgid "%s: No suitable job\n"
     msgstr ""
 
 The ``msgid`` here is the "name" of the string to translate, typically the English string to translate.
@@ -351,10 +351,10 @@ The second line (``msgstr``) is where your translation goes.
 
 For example::
 
-    msgid "%ls: No suitable job\n"
-    msgstr "%ls: Inget passande jobb\n"
+    msgid "%s: No suitable job\n"
+    msgstr "%s: Inget passande jobb\n"
 
-Any ``%s`` / ``%ls`` or ``%d`` are placeholders that fish will use for formatting at runtime. It is important that they match - the translated string should have the same placeholders in the same order.
+Any ``%s`` or ``%d`` are placeholders that fish will use for formatting at runtime. It is important that they match - the translated string should have the same placeholders in the same order.
 
 Also any escaped characters, like that ``\n`` newline at the end, should be kept so the translation has the same behavior.
 
@@ -381,7 +381,7 @@ macros:
 
 ::
 
-    streams.out.append(wgettext_fmt!("%ls: There are no jobs\n", argv[0]));
+    streams.out.append(wgettext_fmt!("%s: There are no jobs\n", argv[0]));
 
 All messages in fish script must be enclosed in single or double quote
 characters for our message extraction script to find them.

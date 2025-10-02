@@ -15,7 +15,7 @@ if not command -sq open
         end
 
         if not set -q argv[1]
-            printf (_ "%ls: Expected at least %d args, got only %d\n") open 1 0 >&2
+            printf (_ "%s: Expected at least %d args, got only %d\n") open 1 0 >&2
             return 1
         end
 

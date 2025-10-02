@@ -208,10 +208,10 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         if errcode != None && errcode != Some(Error::InvalidChar) && errcode != Some(Error::Empty) {
             match errcode.unwrap() {
                 Error::Overflow => {
-                    self.fatal_error(sprintf!("%ls: %ls", s, wgettext!("Number out of range")));
+                    self.fatal_error(sprintf!("%s: %s", s, wgettext!("Number out of range")));
                 }
                 Error::Empty => {
-                    self.fatal_error(sprintf!("%ls: %ls", s, wgettext!("Number was empty")));
+                    self.fatal_error(sprintf!("%s: %s", s, wgettext!("Number was empty")));
                 }
                 Error::InvalidChar => {
                     panic!("Unreachable");
@@ -219,11 +219,11 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
             }
         } else if !end.is_empty() {
             if s.as_ptr() == end.as_ptr() {
-                self.fatal_error(wgettext_fmt!("%ls: expected a numeric value", s));
+                self.fatal_error(wgettext_fmt!("%s: expected a numeric value", s));
             } else {
                 // This isn't entirely fatal - the value should still be printed.
                 self.nonfatal_error(wgettext_fmt!(
-                    "%ls: value not completely converted (can't convert '%ls')",
+                    "%s: value not completely converted (can't convert '%s')",
                     s,
                     end
                 ));
@@ -472,10 +472,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                             if (c_int::MIN as i64) <= width && width <= (c_int::MAX as i64) {
                                 field_width = Some(width);
                             } else {
-                                self.fatal_error(wgettext_fmt!(
-                                    "invalid field width: %ls",
-                                    argv[0]
-                                ));
+                                self.fatal_error(wgettext_fmt!("invalid field width: %s", argv[0]));
                             }
                             argv = &argv[1..];
                             argc -= 1;
@@ -504,7 +501,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                                     precision = Some(-1);
                                 } else if (c_int::MAX as i64) < prec {
                                     self.fatal_error(wgettext_fmt!(
-                                        "invalid precision: %ls",
+                                        "invalid precision: %s",
                                         argv[0]
                                     ));
                                 } else {
@@ -530,7 +527,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                     let conversion = f.char_at(0);
                     if (conversion as usize) > 0xFF || !ok[conversion as usize] {
                         self.fatal_error(wgettext_fmt!(
-                            "%.*ls: invalid conversion specification",
+                            "%.*s: invalid conversion specification",
                             wstr_offset_in(f, directive_start) + 1,
                             directive_start
                         ));

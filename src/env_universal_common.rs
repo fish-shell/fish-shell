@@ -633,7 +633,7 @@ pub fn default_vars_path() -> WString {
 }
 
 /// Error message.
-const PARSE_ERR: &wstr = L!("Unable to parse universal variable message: '%ls'");
+const PARSE_ERR: &wstr = L!("Unable to parse universal variable message: '%s'");
 
 /// Small note about not editing ~/.fishd manually. Inserted at the top of all .fishd files.
 const SAVE_MSG: &[u8] = b"# This file contains fish universal variable definitions.\n";
@@ -747,7 +747,7 @@ fn append_file_entry(
 
     // Append variable name like "fish_color_cwd".
     if !valid_var_name(key_in) {
-        FLOGF!(error, "Illegal variable name: '%ls'", key_in);
+        FLOGF!(error, "Illegal variable name: '%s'", key_in);
         success = false;
     }
     if success {

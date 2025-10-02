@@ -17,7 +17,7 @@ function funcsave --description "Save the current definition of all specified fu
     end
 
     if not set -q argv[1]
-        printf (_ "%ls: Expected at least %d args, got only %d\n") funcsave 1 0 >&2
+        printf (_ "%s: Expected at least %d args, got only %d\n") funcsave 1 0 >&2
         return 1
     end
 

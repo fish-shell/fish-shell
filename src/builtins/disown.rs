@@ -27,7 +27,7 @@ fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
             }
         }
         streams.err.append(wgettext_fmt!(
-            "%ls: job %d ('%ls') was stopped and has been signalled to continue.\n",
+            "%s: job %d ('%s') was stopped and has been signalled to continue.\n",
             cmd,
             j.job_id(),
             j.command()
@@ -71,7 +71,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         } else {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: There are no suitable jobs\n", cmd));
+                .append(wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
             retval = Err(STATUS_CMD_ERROR);
         }
     } else {
@@ -88,7 +88,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     None => {
                         // Invalid identifier
                         streams.err.append(wgettext_fmt!(
-                            "%ls: '%ls' is not a valid job specifier\n",
+                            "%s: '%s' is not a valid job specifier\n",
                             cmd,
                             arg
                         ));
@@ -98,7 +98,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     Some(pid) => parser.job_get_from_pid(pid).or_else(|| {
                         // Valid identifier but no such job
                         streams.err.append(wgettext_fmt!(
-                            "%ls: Could not find job '%d'\n",
+                            "%s: Could not find job '%d'\n",
                             cmd,
                             pid
                         ));

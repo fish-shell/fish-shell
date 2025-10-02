@@ -99,12 +99,12 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             Err(UnknownColor(arg)) => {
                 streams
                     .err
-                    .append(wgettext_fmt!("%ls: Unknown color '%ls'\n", argv[0], arg));
+                    .append(wgettext_fmt!("%s: Unknown color '%s'\n", argv[0], arg));
                 return Err(STATUS_INVALID_ARGS);
             }
             Err(UnknownUnderlineStyle(arg)) => {
                 streams.err.append(wgettext_fmt!(
-                    "%ls: invalid underline style: %ls\n",
+                    "%s: invalid underline style: %s\n",
                     argv[0],
                     arg
                 ));

@@ -350,13 +350,13 @@ impl BuiltinBind {
                 if !self.opts.silent {
                     if seq.len() == 1 {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: No binding found for key '%ls'\n",
+                            "%s: No binding found for key '%s'\n",
                             cmd,
                             seq[0]
                         ));
                     } else {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: No binding found for key sequence '%ls'\n",
+                            "%s: No binding found for key sequence '%s'\n",
                             cmd,
                             eseq
                         ));
@@ -432,7 +432,7 @@ fn parse_cmd_opts(
             'h' => opts.print_help = true,
             'k' => {
                 streams.err.append(wgettext_fmt!(
-                    "%ls: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`\n",
+                    "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`\n",
                     cmd,
                 ));
                 return Err(STATUS_INVALID_ARGS);
@@ -555,7 +555,7 @@ impl BuiltinBind {
             _ => {
                 streams
                     .err
-                    .append(wgettext_fmt!("%ls: Invalid state\n", cmd));
+                    .append(wgettext_fmt!("%s: Invalid state\n", cmd));
                 return Err(STATUS_CMD_ERROR);
             }
         }

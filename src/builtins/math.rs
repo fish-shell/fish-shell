@@ -69,7 +69,7 @@ fn parse_cmd_opts(
                     if scale < 0 || scale > 15 {
                         streams
                             .err
-                            .append(wgettext_fmt!("%ls: %ls: invalid scale\n", cmd, optarg));
+                            .append(wgettext_fmt!("%s: %s: invalid scale\n", cmd, optarg));
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]
@@ -89,7 +89,7 @@ fn parse_cmd_opts(
                 } else {
                     streams
                         .err
-                        .append(wgettext_fmt!("%ls: %ls: invalid mode\n", cmd, optarg));
+                        .append(wgettext_fmt!("%s: %s: invalid mode\n", cmd, optarg));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -103,7 +103,7 @@ fn parse_cmd_opts(
                     let base = fish_wcstoi(optarg).unwrap_or(-1);
                     if base != 8 && base != 16 {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: %ls: invalid base value\n",
+                            "%s: %s: invalid base value\n",
                             cmd,
                             optarg
                         ));
@@ -159,7 +159,7 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
     if opts.base == 16 {
         v = v.trunc();
         let mneg = if v.is_sign_negative() { "-" } else { "" };
-        return sprintf!("%s0x%lx", mneg, v.abs() as u64);
+        return sprintf!("%s0x%x", mneg, v.abs() as u64);
     } else if opts.base == 8 {
         v = v.trunc();
         if v == 0.0 {
@@ -167,7 +167,7 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
             return WString::from_str("0");
         }
         let mneg = if v.is_sign_negative() { "-" } else { "" };
-        return sprintf!("%s0%lo", mneg, v.abs() as u64);
+        return sprintf!("%s0%o", mneg, v.abs() as u64);
     }
 
     v *= pow(10f64, opts.scale);
@@ -245,24 +245,24 @@ fn evaluate_expression(
 
             streams
                 .err
-                .append(sprintf!("%ls: Error: %ls\n", cmd, error_message));
-            streams.err.append(sprintf!("'%ls'\n", expression));
+                .append(sprintf!("%s: Error: %s\n", cmd, error_message));
+            streams.err.append(sprintf!("'%s'\n", expression));
 
             Err(STATUS_CMD_ERROR)
         }
         Err(err) => {
             streams.err.append(sprintf!(
-                L!("%ls: Error: %ls\n"),
+                L!("%s: Error: %s\n"),
                 cmd,
                 err.kind.describe_wstr()
             ));
-            streams.err.append(sprintf!("'%ls'\n", expression));
+            streams.err.append(sprintf!("'%s'\n", expression));
             let padding = WString::from_chars(vec![' '; err.position + 1]);
             if err.len >= 2 {
                 let tildes = WString::from_chars(vec!['~'; err.len - 2]);
-                streams.err.append(sprintf!("%ls^%ls^\n", padding, tildes));
+                streams.err.append(sprintf!("%s^%s^\n", padding, tildes));
             } else {
-                streams.err.append(sprintf!("%ls^\n", padding));
+                streams.err.append(sprintf!("%s^\n", padding));
             }
 
             Err(STATUS_CMD_ERROR)

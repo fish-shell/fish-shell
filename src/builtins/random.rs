@@ -58,7 +58,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         if arg_count == 1 {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: nothing to choose from\n", cmd));
+                .append(wgettext_fmt!("%s: nothing to choose from\n", cmd));
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -71,7 +71,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         if res.is_err() {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: %ls: invalid integer\n", cmd, num));
+                .append(wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
         }
         return res;
     }
@@ -80,7 +80,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         if res.is_err() {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: %ls: invalid integer\n", cmd, num));
+                .append(wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
         }
         return res;
     }
@@ -126,7 +126,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 Ok(0) => {
                     streams
                         .err
-                        .append(wgettext_fmt!("%ls: STEP must be a positive integer\n", cmd,));
+                        .append(wgettext_fmt!("%s: STEP must be a positive integer\n", cmd,));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 Ok(x) => step = x,
@@ -140,7 +140,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         _ => {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: too many arguments\n", cmd,));
+                .append(wgettext_fmt!("%s: too many arguments\n", cmd,));
             return Err(STATUS_CMD_ERROR);
         }
     }

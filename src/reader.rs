@@ -342,7 +342,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
     assert!(input_data.event_storage.is_empty());
     FLOGF!(
         reader,
-        "Returning %lu pending input events",
+        "Returning %u pending input events",
         input_data.queue.len()
     );
 
@@ -956,7 +956,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     match parser.eval_wstr(s, io, None, BlockType::top) {
         Ok(_) => Ok(()),
         Err(msg) => {
-            eprintf!("%ls", msg);
+            eprintf!("%s", msg);
             Err(STATUS_CMD_ERROR)
         }
     }
@@ -1750,7 +1750,7 @@ impl<'a> Reader<'a> {
     /// Paint the last rendered layout.
     /// `reason` is used in FLOG to explain why.
     fn paint_layout(&mut self, reason: &wstr, is_final_rendering: bool) {
-        FLOGF!(reader_render, "Repainting from %ls", reason);
+        FLOGF!(reader_render, "Repainting from %s", reason);
         let cmd_line = &self.data.command_line;
 
         let (full_line, autosuggested_range) = if self.conf.in_silent_mode {
@@ -5043,7 +5043,7 @@ impl<'a> Reader<'a> {
             if complete_load(to_load, self.parser) {
                 FLOGF!(
                     complete,
-                    "Autosuggest found new completions for %ls, restarting",
+                    "Autosuggest found new completions for %s, restarting",
                     to_load
                 );
                 loaded_new = true;
@@ -5452,7 +5452,7 @@ impl ReaderData {
             zelf.pager.extra_progress_text =
                 if !result.matched_commands.is_empty() && *history_pager != (0..history_size + 1) {
                     wgettext_fmt!(
-                        "Items %lu to %lu of %lu",
+                        "Items %u to %u of %u",
                         match history_pager.start {
                             0 => 1,
                             _ => result.first_shown,
@@ -5491,7 +5491,7 @@ fn expand_replacer(
         // Literal replacement cannot fail.
         FLOGF!(
             abbrs,
-            "Expanded literal abbreviation <%ls> -> <%ls>",
+            "Expanded literal abbreviation <%s> -> <%s>",
             token,
             &repl.replacement
         );
@@ -5524,7 +5524,7 @@ fn expand_replacer(
     let result = join_strings(&outputs, '\n');
     FLOGF!(
         abbrs,
-        "Expanded function abbreviation <%ls> -> <%ls>",
+        "Expanded function abbreviation <%s> -> <%s>",
         token,
         result
     );

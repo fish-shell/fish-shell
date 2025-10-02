@@ -281,21 +281,6 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         // Start with everything except the conversion specifier.
         let mut fmt = spec.to_owned();
 
-        // Create a copy of the % directive, with a width modifier substituted for any
-        // existing integer length modifier.
-        match conversion {
-            'x' | 'X' | 'd' | 'i' | 'o' | 'u' => {
-                fmt.push_str("ll");
-            }
-            'a' | 'e' | 'f' | 'g' | 'A' | 'E' | 'F' | 'G' => {
-                fmt.push_str("L");
-            }
-            's' | 'c' => {
-                fmt.push_str("l");
-            }
-            _ => {}
-        }
-
         // Append the conversion itself.
         fmt.push(conversion);
 

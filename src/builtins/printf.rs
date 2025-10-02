@@ -520,10 +520,6 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                         }
                     }
 
-                    while matches!(f.char_at(0), 'l' | 'L' | 'h' | 'j' | 't' | 'z') {
-                        f = &f[1..];
-                    }
-
                     let conversion = f.char_at(0);
                     if (conversion as usize) > 0xFF || !ok[conversion as usize] {
                         self.fatal_error(wgettext_fmt!(

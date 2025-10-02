@@ -47,7 +47,7 @@ complete -c scp -d "Local Path" -n "not string match @ -- (commandline -ct)"
 complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -e ':'" -a '
     (__scp_remote_target):(
         if not set -q __fish_scp_sftp
-            set -l tmp (__fish_mktemp fish-scp)
+            set -l tmp (__fish_mktemp_relative fish-scp)
             if scp -P(__scp2ssh_port_number) -o "BatchMode yes" -q -O $tmp (__scp_remote_target):/dev/null
                 set -g __fish_scp_sftp true
             else

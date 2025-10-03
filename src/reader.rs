@@ -2630,9 +2630,11 @@ impl<'a> Reader<'a> {
                 ImplicitEvent::QueryInterrupted => (),
                 ImplicitEvent::FocusIn => {
                     event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
+                    self.save_screen_state();
                 }
                 ImplicitEvent::FocusOut => {
                     event::fire_generic(self.parser, L!("fish_focus_out").to_owned(), vec![]);
+                    self.save_screen_state();
                 }
                 ImplicitEvent::DisableMouseTracking => {
                     Outputter::stdoutput()

@@ -906,8 +906,28 @@ msgid "An error occurred while setting up pipe"
 msgstr "Fehler beim Einrichten der Pipe aufgetreten"
 
 #, c-format
+msgid "Argument at index %d has conflicting type constraints."
+msgstr ""
+
+#, c-format
 msgid "Argument is not a number: '%ls'"
 msgstr "Argument ist keine Zahl: '%ls'"
+
+#, c-format
+msgid "Argument position %d in format string exceeds number of arguments (%d)."
+msgstr ""
+
+#, c-format
+msgid ""
+"Argument position 0 in format string is invalid. The first valid position is 1. Location in format string:\n"
+"%s"
+msgstr ""
+
+#, c-format
+msgid ""
+"Argument position in format string not terminated by a $:\n"
+"%s"
+msgstr ""
 
 msgid "Await background process completion"
 msgstr "Auf den Abschluss von Hintergrundprozessen warten"
@@ -1114,6 +1134,13 @@ msgid "Failed to assign shell to its own process group"
 msgstr "Konnte Shell nicht einer eigenen Prozessgruppe zuweisen"
 
 #, c-format
+msgid ""
+"Failed to parse argument position in format string. Location in format string:\n"
+"%s\n"
+"Extracted digits: %s"
+msgstr ""
+
+#, c-format
 msgid "Failed to set terminal mode (%s)"
 msgstr ""
 
@@ -1137,6 +1164,9 @@ msgstr "Erzwungene Beendigung"
 
 msgid "Forced stop"
 msgstr "Erzwungener Stopp"
+
+msgid "Format string ends on directive without conversion specifier."
+msgstr ""
 
 msgid "Generate random number"
 msgstr "Zufallszahl generieren"
@@ -1209,6 +1239,10 @@ msgstr "Ungültige Argumente"
 msgid "Invalid code points not yet supported by printf"
 msgstr "Ungültige Codepunkte werden von printf noch nicht unterstützt"
 
+#, c-format
+msgid "Invalid conversion character in format string: '%c'"
+msgstr ""
+
 msgid "Invalid index value"
 msgstr "Ungültiger Indexwert"
 
@@ -1274,6 +1308,13 @@ msgstr "Unausgeglichene Klammern"
 
 msgid "Mismatched parenthesis"
 msgstr "Unausgeglichene Klammer"
+
+#, c-format
+msgid ""
+"Missing argument position in format string.\n"
+"Expected decimal number but found:\n"
+"%s"
+msgstr ""
 
 msgid "Missing closing parenthesis"
 msgstr "Fehlende schließende Klammer"
@@ -1481,6 +1522,10 @@ msgstr "Absoluten Pfad ohne symbolische Verknüpfungen anzeigen"
 msgid "Skip over remaining innermost loop"
 msgstr "Über den Rest der innersten Schleife springen"
 
+#, c-format
+msgid "Specified conversion 'c', but supplied argument '%s' is not a character (single codepoint)."
+msgstr ""
+
 msgid "Stack fault"
 msgstr ""
 
@@ -1624,6 +1669,9 @@ msgstr ""
 msgid "Unable to read input file: %s"
 msgstr ""
 
+msgid "Unclosed directive: Directives cannot end on a number."
+msgstr ""
+
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr ""
 
@@ -1701,6 +1749,10 @@ msgstr "Nicht passender Platzhalter"
 
 #, c-format
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
+msgstr ""
+
+#, c-format
+msgid "Unused argument indices: %s"
 msgstr ""
 
 msgid "Unused signal"

@@ -927,8 +927,28 @@ msgid "An error occurred while setting up pipe"
 msgstr "设置管道时出错"
 
 #, c-format
+msgid "Argument at index %d has conflicting type constraints."
+msgstr ""
+
+#, c-format
 msgid "Argument is not a number: '%ls'"
 msgstr "参数不是数字：'%ls'"
+
+#, c-format
+msgid "Argument position %d in format string exceeds number of arguments (%d)."
+msgstr ""
+
+#, c-format
+msgid ""
+"Argument position 0 in format string is invalid. The first valid position is 1. Location in format string:\n"
+"%s"
+msgstr ""
+
+#, c-format
+msgid ""
+"Argument position in format string not terminated by a $:\n"
+"%s"
+msgstr ""
 
 msgid "Await background process completion"
 msgstr "等待后台进程完成"
@@ -1138,6 +1158,13 @@ msgid "Failed to assign shell to its own process group"
 msgstr "无法将 shell 分配到它自己的进程组"
 
 #, c-format
+msgid ""
+"Failed to parse argument position in format string. Location in format string:\n"
+"%s\n"
+"Extracted digits: %s"
+msgstr ""
+
+#, c-format
 msgid "Failed to set terminal mode (%s)"
 msgstr "设置终端模式 (%s) 失败"
 
@@ -1161,6 +1188,9 @@ msgstr "强制退出"
 
 msgid "Forced stop"
 msgstr "强制停止"
+
+msgid "Format string ends on directive without conversion specifier."
+msgstr ""
 
 msgid "Generate random number"
 msgstr "生成随机数"
@@ -1233,6 +1263,10 @@ msgstr "无效参数"
 msgid "Invalid code points not yet supported by printf"
 msgstr "尚未由 printf 支持的无效码点"
 
+#, c-format
+msgid "Invalid conversion character in format string: '%c'"
+msgstr ""
+
 msgid "Invalid index value"
 msgstr "无效索引值"
 
@@ -1298,6 +1332,13 @@ msgstr "大括号不匹配"
 
 msgid "Mismatched parenthesis"
 msgstr "括号不匹配"
+
+#, c-format
+msgid ""
+"Missing argument position in format string.\n"
+"Expected decimal number but found:\n"
+"%s"
+msgstr ""
 
 msgid "Missing closing parenthesis"
 msgstr "缺少收尾括号"
@@ -1505,6 +1546,10 @@ msgstr "显示绝对路径，不含符号链接"
 msgid "Skip over remaining innermost loop"
 msgstr "跳过剩下的最内层循环"
 
+#, c-format
+msgid "Specified conversion 'c', but supplied argument '%s' is not a character (single codepoint)."
+msgstr ""
+
 msgid "Stack fault"
 msgstr "栈故障"
 
@@ -1648,6 +1693,9 @@ msgstr "无法找到目录 %ls。"
 msgid "Unable to read input file: %s"
 msgstr "无法读取输入文件：%s"
 
+msgid "Unclosed directive: Directives cannot end on a number."
+msgstr ""
+
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "未闭合的括号前出现意外的 ')'"
 
@@ -1726,6 +1774,10 @@ msgstr "未匹配的通配符"
 #, c-format
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr "不支持使用 '='。在 fish 中，请使用 'set %ls %ls'。"
+
+#, c-format
+msgid "Unused argument indices: %s"
+msgstr ""
 
 msgid "Unused signal"
 msgstr "未使用的信号"

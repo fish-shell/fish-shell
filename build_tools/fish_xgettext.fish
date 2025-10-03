@@ -41,7 +41,7 @@ begin
     mark_section tier1-from-rust
 
     # Get rid of duplicates and sort.
-    msguniq --no-wrap --strict --sort-output $rust_extraction_file
+    msguniq --no-wrap --sort-output $rust_extraction_file
     or exit 1
 
     if not set -l --query _flag_use_existing_template

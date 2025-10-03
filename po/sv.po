@@ -901,7 +901,27 @@ msgid "An error occurred while setting up pipe"
 msgstr "Ett fel inträffade under skapandet av ett rör"
 
 #, c-format
+msgid "Argument at index %d has conflicting type constraints."
+msgstr ""
+
+#, c-format
 msgid "Argument is not a number: '%ls'"
+msgstr ""
+
+#, c-format
+msgid "Argument position %d in format string exceeds number of arguments (%d)."
+msgstr ""
+
+#, c-format
+msgid ""
+"Argument position 0 in format string is invalid. The first valid position is 1. Location in format string:\n"
+"%s"
+msgstr ""
+
+#, c-format
+msgid ""
+"Argument position in format string not terminated by a $:\n"
+"%s"
 msgstr ""
 
 msgid "Await background process completion"
@@ -1109,6 +1129,13 @@ msgid "Failed to assign shell to its own process group"
 msgstr ""
 
 #, c-format
+msgid ""
+"Failed to parse argument position in format string. Location in format string:\n"
+"%s\n"
+"Extracted digits: %s"
+msgstr ""
+
+#, c-format
 msgid "Failed to set terminal mode (%s)"
 msgstr ""
 
@@ -1132,6 +1159,9 @@ msgstr "Tvingad avslutning"
 
 msgid "Forced stop"
 msgstr "Tvingad att stoppa"
+
+msgid "Format string ends on directive without conversion specifier."
+msgstr ""
 
 msgid "Generate random number"
 msgstr "Generera ett slumptal"
@@ -1204,6 +1234,10 @@ msgstr ""
 msgid "Invalid code points not yet supported by printf"
 msgstr ""
 
+#, c-format
+msgid "Invalid conversion character in format string: '%c'"
+msgstr ""
+
 msgid "Invalid index value"
 msgstr ""
 
@@ -1268,6 +1302,13 @@ msgid "Mismatched braces"
 msgstr ""
 
 msgid "Mismatched parenthesis"
+msgstr ""
+
+#, c-format
+msgid ""
+"Missing argument position in format string.\n"
+"Expected decimal number but found:\n"
+"%s"
 msgstr ""
 
 msgid "Missing closing parenthesis"
@@ -1476,6 +1517,10 @@ msgstr ""
 msgid "Skip over remaining innermost loop"
 msgstr ""
 
+#, c-format
+msgid "Specified conversion 'c', but supplied argument '%s' is not a character (single codepoint)."
+msgstr ""
+
 msgid "Stack fault"
 msgstr "Stackfel"
 
@@ -1619,6 +1664,9 @@ msgstr ""
 msgid "Unable to read input file: %s"
 msgstr ""
 
+msgid "Unclosed directive: Directives cannot end on a number."
+msgstr ""
+
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr ""
 
@@ -1696,6 +1744,10 @@ msgstr ""
 
 #, c-format
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
+msgstr ""
+
+#, c-format
+msgid "Unused argument indices: %s"
 msgstr ""
 
 msgid "Unused signal"

@@ -1523,7 +1523,7 @@ msgid "State\tCommand\n"
 msgstr "状态\t命令\n"
 
 msgid "Stdin must be attached to a tty."
-msgstr "Stdin 必须连接到 TTY。"
+msgstr "stdin 必须连接到 TTY。"
 
 msgid "Stop from terminal input"
 msgstr "终端输入引发停止"
@@ -2575,7 +2575,7 @@ msgid "Filter writable paths"
 msgstr "过滤可写路径"
 
 msgid "Fish's release notes"
-msgstr "Fish 的发布说明"
+msgstr "fish 的发布说明"
 
 msgid "Frequently Asked Questions"
 msgstr "经常被问到的问题"
@@ -2722,7 +2722,7 @@ msgid "Integer width of the result, default is minimum non-zero width of inputs"
 msgstr "结果的整数宽度，默认值为输入最小的非零宽度"
 
 msgid "Introduction to the fish syntax"
-msgstr "Fish 语法介绍"
+msgstr "fish 语法介绍"
 
 msgid "Invert meaning of filters"
 msgstr "反转过滤器的含义"
@@ -2842,7 +2842,7 @@ msgid "Maximum amount of cpu time in seconds"
 msgstr "CPU 时间的最大值 (秒)"
 
 msgid "Maximum amount of virtual memory available to the shell"
-msgstr "Shell 可用的最大虚拟内存量"
+msgstr "shell 可用的最大虚拟内存量"
 
 msgid "Maximum bytes in POSIX message queues"
 msgstr "POSIX 消息队列中的最大字节"
@@ -3178,7 +3178,7 @@ msgid "Prompt function for Git"
 msgstr "Git 的提示函数"
 
 msgid "Prompt function for svn"
-msgstr "Svn 的提示函数"
+msgstr "SVN 的提示函数"
 
 msgid "Push directory to stack"
 msgstr "将目录推到栈"
@@ -3388,10 +3388,10 @@ msgid "Shared bindings"
 msgstr "共享绑定"
 
 msgid "Shell variable and function names"
-msgstr "Shell 变量和函数名"
+msgstr "shell 变量和函数名"
 
 msgid "Shell variables"
-msgstr "Shell 变量"
+msgstr "shell 变量"
 
 msgid "Show commandname of each job"
 msgstr "显示每个作业的命令名"
@@ -3532,7 +3532,7 @@ msgid "Tab Completions"
 msgstr "Tab 补全"
 
 msgid "Terminal features used by fish"
-msgstr "Fish 使用的终端功能"
+msgstr "fish 使用的终端功能"
 
 msgid "Test if We are specifying a color value for the prompt"
 msgstr "测试是否我们正在指定提示符的颜色值"
@@ -3655,7 +3655,7 @@ msgid "Verbose mode"
 msgstr "详细模式"
 
 msgid "Vi mode commands"
-msgstr "Vi 模式命令"
+msgstr "vi 模式命令"
 
 msgid "Vi-style bindings that inherit emacs-style bindings in all modes"
 msgstr "所有模式中的继承 emacs 样式绑定的 vi 样式绑定"

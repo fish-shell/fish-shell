@@ -3658,7 +3658,7 @@ msgid "Vi mode commands"
 msgstr "Vi 模式命令"
 
 msgid "Vi-style bindings that inherit emacs-style bindings in all modes"
-msgstr "所有模式中的继承 emacs 样式绑定的 Vi 样式绑定"
+msgstr "所有模式中的继承 emacs 样式绑定的 vi 样式绑定"
 
 msgid "View and pick from the sample prompts"
 msgstr "查看并从示例提示中选择"

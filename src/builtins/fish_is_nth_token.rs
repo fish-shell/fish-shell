@@ -72,9 +72,7 @@ pub fn fish_is_nth_token(
     let status = commandline::commandline(parser, &mut sub_streams, &mut subcommand_argv);
     drop(sub_streams);
 
-    if status.is_err() {
-        return status;
-    }
+    status?;
 
     let tokens_output = out_stream.contents();
 
@@ -86,7 +84,7 @@ pub fn fish_is_nth_token(
             if *ch == '\n' {
                 if idx > start {
                     let token = &tokens_output[start..idx];
-                    if token.chars().next().map_or(false, |first| first != '-') {
+                    if token.chars().next().is_some_and(|first| first != '-') {
                         count += 1;
                     }
                 }
@@ -96,7 +94,7 @@ pub fn fish_is_nth_token(
 
         if start < chars.len() {
             let token = &tokens_output[start..];
-            if token.chars().next().map_or(false, |first| first != '-') {
+            if token.chars().next().is_some_and(|first| first != '-') {
                 count += 1;
             }
         }

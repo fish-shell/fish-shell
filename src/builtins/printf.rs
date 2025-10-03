@@ -438,7 +438,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                     let mut continue_looking_for_flags = true;
                     while continue_looking_for_flags {
                         match f.char_at(0) {
-                            'I' | '\'' => {
+                            '\'' => {
                                 modify_allowed_format_specifiers(&mut ok, "aAceEosxX", false);
                             }
 

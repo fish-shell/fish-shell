@@ -204,6 +204,10 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
         func: builtin_gettext,
     },
     BuiltinData {
+        name: L!("__fish_is_nth_token"),
+        func: fish_is_nth_token::fish_is_nth_token,
+    },
+    BuiltinData {
         name: L!("abbr"),
         func: abbr::abbr,
     },

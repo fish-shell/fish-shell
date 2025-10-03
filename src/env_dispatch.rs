@@ -452,6 +452,8 @@ fn update_fish_color_support(vars: &EnvStack) {
     crate::terminal::set_color_support(color_support);
 }
 
+pub const MIDNIGHT_COMMANDER_SID: &wstr = L!("MC_SID");
+
 // Initialize the terminal subsystem
 fn init_terminal(vars: &EnvStack) {
     let term = vars.get(L!("TERM"));
@@ -464,7 +466,7 @@ fn init_terminal(vars: &EnvStack) {
     IS_DUMB.store(term == "dumb");
     ONLY_GRAYSCALE.store(term == "ansi-m" || term == "linux-m" || term == "xterm-mono");
 
-    if vars.get(L!("MC_SID")).is_some() {
+    if vars.get(MIDNIGHT_COMMANDER_SID).is_some() {
         screen_set_midnight_commander_hack();
     }
 

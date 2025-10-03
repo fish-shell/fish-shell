@@ -61,7 +61,6 @@ def makeenv(script_path: Path, home: Path) -> Dict[str, str]:
         "XDG_DATA_DIRS",
         "LANGUAGE",
         "MC_SID",
-        "MC_TMPDIR",
         "COLORTERM",
         "KONSOLE_VERSION",
         "STY",

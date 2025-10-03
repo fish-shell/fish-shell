@@ -66,6 +66,7 @@ use crate::editable_line::{line_at_cursor, range_of_line_at_cursor, Edit, Editab
 use crate::env::EnvStack;
 use crate::env::{EnvMode, Environment, Statuses};
 use crate::env_dispatch::guess_emoji_width;
+use crate::env_dispatch::MIDNIGHT_COMMANDER_SID;
 use crate::exec::exec_subshell;
 use crate::expand::expand_one;
 use crate::expand::{expand_string, expand_tilde, ExpandFlags, ExpandResultCode};
@@ -260,9 +261,9 @@ fn redirect_tty_after_sighup() {
     }
 }
 
-fn querying_allowed() -> bool {
+fn querying_allowed(vars: &dyn Environment) -> bool {
     future_feature_flags::test(FeatureFlag::query_term) &&
-    !is_dumb() && std::env::var_os("MC_TMPDIR").is_none()
+    !is_dumb() && vars.get(MIDNIGHT_COMMANDER_SID).is_none()
         // Could use /dev/tty in future.
         && isatty(STDOUT_FILENO)
 }
@@ -281,7 +282,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
         initialize_tty_protocols();
     });
 
-    if !querying_allowed() {
+    if !querying_allowed(vars) {
         return input_queue;
     }
 
@@ -1644,7 +1645,7 @@ pub fn combine_command_and_autosuggestion(
 
 impl<'a> Reader<'a> {
     pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
-        if !querying_allowed() {
+        if !querying_allowed(self.vars()) {
             return;
         }
         let mut query = self.blocking_query();

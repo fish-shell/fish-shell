@@ -1,4 +1,4 @@
-use crate::ast::{self, is_same_node, Ast, Castable, JobList, JobPipeline, Kind, Node, Traversal};
+use crate::ast::{self, is_same_node, Ast, JobList, JobPipeline, Kind, Node, Traversal};
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
@@ -33,7 +33,7 @@ fn test_parser() {
         if ast.errored() {
             return Err(ParserTestErrorBits::ERROR);
         }
-        let args = &ast.top().arguments;
+        let args = ast.top();
         let first_arg = args.get(0).expect("Failed to parse an argument");
         let mut errors = None;
         parse_util_detect_errors_in_argument(first_arg, first_arg.source(&src), &mut errors)
@@ -597,7 +597,7 @@ fn test_new_parser_errors() {
         ($src:expr, $expected_code:expr) => {
             let mut errors = vec![];
             let ast = ast::parse(L!($src), ParseTreeFlags::default(), Some(&mut errors));
-            assert!(ast.errored());
+            assert!(ast.errored(), "{:?} should have errored", $src);
             assert_eq!(
                 errors.into_iter().map(|e| e.code).collect::<Vec<_>>(),
                 vec![$expected_code],
@@ -784,7 +784,11 @@ fn test_line_counter() {
         assert_eq!(line_offset, expected);
     }
 
-    let pipelines: Vec<_> = ps.ast.walk().filter_map(ast::JobPipeline::cast).collect();
+    let pipelines: Vec<&JobPipeline> = ps
+        .ast
+        .walk()
+        .filter_map(|node| node.kind().try_into().ok())
+        .collect();
     assert_eq!(pipelines.len(), 3);
     let src_offsets = [0, 0, 2];
     assert_eq!(line_counter.source_offset_of_node(), None);

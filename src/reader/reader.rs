@@ -3881,6 +3881,28 @@ impl<'a> Reader<'a> {
                     self.update_command_line_from_history_search();
                 }
             }
+            rl::UpOrSearch => {
+                if self.history_search.active() {
+                    self.handle_readline_command(rl::HistorySearchBackward);
+                    return;
+                }
+
+                if self.is_navigating_pager_contents() || !self.pager.is_empty() {
+                    self.handle_readline_command(rl::UpLine);
+                    return;
+                }
+
+                let on_first_line = {
+                    let (_elt, el) = self.active_edit_line();
+                    get_line_from_offset(el.text(), el.position()) == 0
+                };
+
+                if on_first_line {
+                    self.handle_readline_command(rl::HistorySearchBackward);
+                } else {
+                    self.handle_readline_command(rl::UpLine);
+                }
+            }
             rl::UpLine | rl::DownLine => {
                 if self.is_navigating_pager_contents() {
                     // We are already navigating pager contents.
@@ -6215,6 +6237,7 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::ForwardCharPassive
         | rl::ForwardSingleChar
         | rl::UpLine
+        | rl::UpOrSearch
         | rl::DownLine
         | rl::Repaint
         | rl::SuppressAutosuggestion
@@ -6302,6 +6325,7 @@ fn command_ends_history_search(c: ReadlineCmd) -> bool {
             | rl::ClearScreenAndRepaint
             | rl::Repaint
             | rl::ForceRepaint
+            | rl::UpOrSearch
     )
 }
 

@@ -228,6 +228,18 @@ milestone_number=$(
 gh_api_repo --method PATCH milestones/$milestone_number \
     --raw-field state=closed
 
+next_patch_version=$(
+    echo "$version" | awk -F. '
+        NF == 3 && $3 ~ /[0-9]+/ {
+            printf "%s.%s.%s", $1, $2, $3+1
+        }
+    '
+)
+if [ -n "$next_patch_version" ]; then
+    gh_api_repo --method POST milestones \
+        --raw-field title="fish $next_patch_version"
+fi
+
 exit
 
 }

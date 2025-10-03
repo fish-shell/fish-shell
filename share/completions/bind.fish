@@ -1,21 +1,16 @@
-function __fish_bind_test2
-    set -l args
-    for i in (commandline -pxc)
-        switch $i
-            case "-*"
+set -l bind_optspecs \
+    a/all \
+    e/erase \
+    M/mode= \
+    m/sets-mode= \
+    preset \
+    s/silent \
+    user
 
-            case "*"
-                set -a args $i
-        end
-    end
-
-    switch (count $args)
-        case 2
-            return 0
-    end
-
-    return 1
-
+function __fish_bind_has_keys --inherit-variable bind_optspecs
+    argparse $bind_optspecs -- $argv 2>/dev/null
+    or return
+    test (count $argv) -ge 2
 end
 
 complete -c bind -f
@@ -31,11 +26,10 @@ complete -c bind -s s -l silent -d 'Operate silently'
 complete -c bind -l preset -d 'Operate on preset bindings'
 complete -c bind -l user -d 'Operate on user bindings'
 
-complete -c bind -n __fish_bind_test2 -a '(bind --function-names)' -d 'Function name' -x
+complete -c bind -n '__fish_bind_has_keys (commandline -pcx)' -a '(bind --function-names)' -d 'Function name' -x
 
-function __fish_bind_complete
-    argparse M/mode= m/sets-mode= preset user s/silent \
-        a/all e/erase -- (commandline -xpc)[2..] 2>/dev/null
+function __fish_bind_complete --inherit-variable bind_optspecs
+    argparse $bind_optspecs -- (commandline -xpc)[2..] 2>/dev/null
     or return 1
     set -l token (commandline -ct)
     if test (count $argv) = 0 && set -l prefix (string match -r -- '(.*,)?(ctrl-|alt-|shift-|super-)*' $token)

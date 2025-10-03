@@ -1,8 +1,21 @@
 fish ?.?.? (released ???)
 =========================
 
-fish 4.1.1 (released ???)
+fish 4.1.2 (released ???)
 =========================
+
+This release fixes the following regressions identified in 4.1.0:
+
+- Fixed spurious error output when completing remote file paths for ``scp`` (:issue:`11860`).
+- Stopped printing output that would cause a glitch on old versions of Midnight Commander (:issue:`11869`).
+- Fixed a case where the :doc:`web-based configuration tool <cmds/fish_config>` would generate invalid configuration (:issue:`11861`).
+- Fixed a case where upgrading fish would break old versions of fish that were still running.
+
+  In general, fish still needs to be restarted after it is upgraded,
+  except for `standalone builds <https://github.com/fish-shell/fish-shell/?tab=readme-ov-file#building-fish-with-embedded-data-experimental>`__.
+
+fish 4.1.1 (released September 30, 2025)
+========================================
 
 This release fixes the following regressions identified in 4.1.0:
 

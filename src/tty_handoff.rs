@@ -2,6 +2,8 @@
 //! and reclaiming it after.
 
 use crate::common::{self, safe_write_loop};
+use crate::env::Environment;
+use crate::env_dispatch::MIDNIGHT_COMMANDER_SID;
 use crate::flog::{FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
@@ -60,6 +62,8 @@ pub fn xtversion() -> Option<&'static wstr> {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TtyQuirks {
     None,
+    // Running Midnight Commander which can't parse CSI/OSC/DCS yet.
+    MidnightCommander,
     // Running in iTerm2 before 3.5.12, which causes issues when using the kitty keyboard protocol.
     PreKittyIterm2,
     // Whether we are running under tmux.
@@ -70,9 +74,13 @@ pub enum TtyQuirks {
 
 impl TtyQuirks {
     // Create a new TtyQuirks instance with the current environment.
-    fn detect(xtversion: &wstr) -> Self {
+    fn detect(vars: &dyn Environment, xtversion: &wstr) -> Self {
         use TtyQuirks::*;
-        if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12)) {
+        if vars.get(MIDNIGHT_COMMANDER_SID).is_some()
+            && vars.get(L!("__mc_kitty_keyboard")).is_none()
+        {
+            MidnightCommander
+        } else if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12)) {
             PreKittyIterm2
         } else if xtversion.starts_with(L!("tmux ")) {
             Tmux
@@ -148,7 +156,10 @@ impl TtyQuirks {
     // Determine which keyboard protocol.
     // This is used from a signal handler.
     fn safe_get_supported_protocol(&self) -> ProtocolKind {
-        use TtyQuirks::{PreKittyIterm2, Wezterm};
+        use TtyQuirks::{MidnightCommander, PreKittyIterm2, Wezterm};
+        if *self == MidnightCommander {
+            return ProtocolKind::None;
+        }
         if *self == PreKittyIterm2 {
             return ProtocolKind::Other;
         }
@@ -232,7 +243,7 @@ fn tty_protocols() -> Option<&'static TtyProtocolsSet> {
 }
 
 // Initialize serialized commands for enabling/disabling TTY protocols in signal handlers.
-pub fn initialize_tty_protocols() {
+pub fn initialize_tty_protocols(vars: &dyn Environment) {
     // Default missing query responses.
     KITTY_KEYBOARD_SUPPORTED.get_or_init(|| false);
     SCROLL_CONTENT_UP_SUPPORTED.get_or_init(|| false);
@@ -243,7 +254,7 @@ pub fn initialize_tty_protocols() {
     let mut p = TTY_PROTOCOLS.load(Acquire);
     if p.is_null() {
         // Try to swap in a new TTY protocols set.
-        p = Box::into_raw(Box::new(TtyQuirks::detect(xtversion).get_protocols()));
+        p = Box::into_raw(Box::new(TtyQuirks::detect(vars, xtversion).get_protocols()));
         if let Err(_e) = TTY_PROTOCOLS.compare_exchange(std::ptr::null_mut(), p, Release, Acquire) {
             // Safety: p comes from Box::into_raw right above,
             // and wasn't shared with any other thread.

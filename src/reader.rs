@@ -279,7 +279,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
     );
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
-        initialize_tty_protocols();
+        initialize_tty_protocols(vars);
     });
 
     if !querying_allowed(vars) {

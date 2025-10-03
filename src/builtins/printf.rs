@@ -240,10 +240,16 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     }
 
     fn handle_sprintf_error(&mut self, err: fish_printf::Error) {
-        match err {
-            fish_printf::Error::Overflow => self.fatal_error(wgettext!("Number out of range")),
-            _ => panic!("unhandled error: {err:?}"),
-        }
+        use fish_printf::Error::*;
+        let msg = match err {
+            BadFormatString => wgettext!("Bad format string").into(),
+            MissingArg => wgettext!("Missing argument").into(),
+            ExtraArg => wgettext!("Too many arguments").into(),
+            BadArgType => wgettext!("Argument type does not match conversion character").into(),
+            Overflow => wgettext!("Number out of range").into(),
+            Fmt(error) => wgettext_fmt!("Formatter error: %s", format!("{error:?}")),
+        };
+        self.fatal_error(&msg);
     }
 
     /// Evaluate a printf conversion specification.

@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>https://raw.githubusercontent.com/fish-shell/fish-shell/refs/fish-shell-events/po/sv-removals.atom</id>
+  <title>fish-shell PRs removing sv translations</title>
+  <updated>2025-10-03T08:14:19.012920+00:00</updated>
+  <link href="https://raw.githubusercontent.com/fish-shell/fish-shell/refs/fish-shell-events/po/sv-removals.atom" rel="self"/>
+  <link href="https://github.com/fish-shell/fish-shell/blob/617a6edb134006ffa6c3f7d824d599823293212b/.github/workflows/update-event-feeds.yml" rel="alternate"/>
+  <generator uri="https://lkiesow.github.io/python-feedgen" version="1.0.0">python-feedgen</generator>
+  <subtitle>PRs that remove translations, often due to a change in the messages source</subtitle>
+</feed>

@@ -581,7 +581,7 @@ impl TtyHandoff {
             } else {
                 FLOGF!(
                     warning,
-                    "Could not send job %d ('%ls') with pgid %d to foreground",
+                    "Could not send job %d ('%s') with pgid %d to foreground",
                     jg.job_id.to_wstring(),
                     jg.command,
                     pgid

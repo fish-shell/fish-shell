@@ -200,7 +200,7 @@ fn parse_flags(
             }
             'v' => {
                 streams.out.appendln(wgettext_fmt!(
-                    "%ls, version %s",
+                    "%s, version %s",
                     PROGRAM_NAME.get().unwrap(),
                     crate::BUILD_VERSION
                 ));

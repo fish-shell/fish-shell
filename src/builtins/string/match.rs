@@ -54,7 +54,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
                         .and_then(|v| NonZeroUsize::new(v as usize))
                         .ok_or_else(|| {
                             StringError::InvalidArgs(wgettext_fmt!(
-                                "%ls: Invalid max matches value '%ls'\n",
+                                "%s: Invalid max matches value '%s'\n",
                                 _n,
                                 arg
                             ))
@@ -324,7 +324,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
         let Some(cg) = cg else {
             if self.opts.invert_match && !self.opts.quiet {
                 if self.opts.index {
-                    streams.out.append(sprintf!("1 %lu\n", arg.len()));
+                    streams.out.append(sprintf!("1 %u\n", arg.len()));
                 } else {
                     streams.out.appendln(arg);
                 }
@@ -353,7 +353,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             if self.opts.index {
                 streams
                     .out
-                    .append(sprintf!("%lu %lu\n", m.start() + 1, m.end() - m.start()));
+                    .append(sprintf!("%u %u\n", m.start() + 1, m.end() - m.start()));
             } else {
                 streams.out.appendln(&arg[m.start()..m.end()]);
             }
@@ -401,7 +401,7 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
             self.total_matched += 1;
             if !self.opts.quiet {
                 if self.opts.index {
-                    streams.out.append(sprintf!("1 %lu\n", arg.len()));
+                    streams.out.append(sprintf!("1 %u\n", arg.len()));
                 } else {
                     streams.out.appendln(arg);
                 }

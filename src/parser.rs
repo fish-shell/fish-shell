@@ -133,7 +133,7 @@ impl Block {
             result.push_utfstr(&sprintf!(" (line %d)", src_lineno.get()));
         }
         if let Some(src_filename) = &self.src_filename {
-            result.push_utfstr(&sprintf!(" (file %ls)", src_filename));
+            result.push_utfstr(&sprintf!(" (file %s)", src_filename));
         }
         result
     }
@@ -762,7 +762,7 @@ impl Parser {
         if !self.is_interactive() || self.is_function() {
             if let Some(file) = file {
                 prefix.push_utfstr(&wgettext_fmt!(
-                    "%ls (line %d): ",
+                    "%s (line %d): ",
                     &user_presentable_path(&file, self.vars()),
                     lineno
                 ));
@@ -1126,12 +1126,12 @@ impl Parser {
         let prefix = if let Some(filename) = self.current_filename() {
             if which_line > 0 {
                 wgettext_fmt!(
-                    "%ls (line %lu): ",
+                    "%s (line %u): ",
                     user_presentable_path(&filename, self.vars()),
                     which_line
                 )
             } else {
-                sprintf!("%ls: ", user_presentable_path(&filename, self.vars()))
+                sprintf!("%s: ", user_presentable_path(&filename, self.vars()))
             }
         } else {
             L!("fish: ").to_owned()
@@ -1283,7 +1283,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
             let Some(BlockData::Function { name, args, .. }) = b.data() else {
                 unreachable!()
             };
-            trace.push_utfstr(&wgettext_fmt!("in function '%ls'", name));
+            trace.push_utfstr(&wgettext_fmt!("in function '%s'", name));
             // Print arguments on the same line.
             let mut args_str = WString::new();
             for arg in args {
@@ -1303,7 +1303,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
             }
             if !args_str.is_empty() {
                 // TODO: Escape these.
-                trace.push_utfstr(&wgettext_fmt!(" with arguments '%ls'", args_str));
+                trace.push_utfstr(&wgettext_fmt!(" with arguments '%s'", args_str));
             }
             trace.push('\n');
             print_call_site = true;
@@ -1318,7 +1318,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
             };
             let source_dest = file;
             trace.push_utfstr(&wgettext_fmt!(
-                "from sourcing file %ls\n",
+                "from sourcing file %s\n",
                 &user_presentable_path(source_dest, parser.vars())
             ));
             print_call_site = true;
@@ -1328,7 +1328,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
                 unreachable!()
             };
             let description = event::get_desc(parser, event);
-            trace.push_utfstr(&wgettext_fmt!("in event handler: %ls\n", &description));
+            trace.push_utfstr(&wgettext_fmt!("in event handler: %s\n", &description));
             print_call_site = true;
         }
         BlockType::top
@@ -1345,7 +1345,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
         // Print where the function is called.
         if let Some(file) = b.src_filename.as_ref() {
             trace.push_utfstr(&sprintf!(
-                "\tcalled on line %d of file %ls\n",
+                "\tcalled on line %d of file %s\n",
                 b.src_lineno.map(|n| n.get()).unwrap_or(0),
                 user_presentable_path(file, parser.vars())
             ));

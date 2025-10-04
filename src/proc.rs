@@ -782,7 +782,7 @@ impl Job {
     pub fn continue_job(&self, parser: &Parser) {
         FLOGF!(
             proc_job_run,
-            "Run job %d (%ls), %ls, %ls",
+            "Run job %d (%s), %s, %s",
             self.job_id(),
             self.command(),
             if self.is_completed() {
@@ -822,7 +822,7 @@ impl Job {
         if !self.signal(SIGCONT) {
             FLOGF!(
                 proc_pgroup,
-                "Failed to send SIGCONT to procs in job %ls",
+                "Failed to send SIGCONT to procs in job %s",
                 self.command()
             );
             return false;
@@ -991,7 +991,7 @@ pub fn print_exit_warning_for_jobs(jobs: &JobList) {
         // Unwrap safety: we can't have a background job that doesn't have an external process and
         // external processes always have a pid set.
         printf!(
-            "%6d  %ls\n",
+            "%6d  %s\n",
             j.external_procs().next().and_then(|p| p.pid()).unwrap(),
             j.command()
         );
@@ -1251,7 +1251,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             if status.normal_exited() || status.signal_exited() {
                 FLOGF!(
                     proc_reap_external,
-                    "Reaped external process '%ls' (pid %d, status %d)",
+                    "Reaped external process '%s' (pid %d, status %d)",
                     proc.argv0().unwrap(),
                     pid,
                     proc.status().status_value()
@@ -1260,7 +1260,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                 assert!(status.stopped() || status.continued());
                 FLOGF!(
                     proc_reap_external,
-                    "External process '%ls' (pid %d, %s)",
+                    "External process '%s' (pid %d, %s)",
                     proc.argv0().unwrap(),
                     proc.pid().unwrap(),
                     if proc.status().stopped() {
@@ -1305,7 +1305,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             handle_child_status(j, proc, status);
             FLOGF!(
                 proc_reap_internal,
-                "Reaped internal process '%ls' (id %llu, status %d)",
+                "Reaped internal process '%s' (id %u, status %d)",
                 proc.argv0().unwrap(),
                 internal_proc.get_id(),
                 proc.status().status_value(),

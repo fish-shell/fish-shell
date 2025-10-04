@@ -172,7 +172,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
     if let Some(desc) = opts.description {
         if args.len() != 1 {
             streams.err.append(wgettext_fmt!(
-                "%ls: Expected exactly one function name\n",
+                "%s: Expected exactly one function name\n",
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
@@ -182,7 +182,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
         if !function::exists(current_func, parser) {
             streams.err.append(wgettext_fmt!(
-                "%ls: Function '%ls' does not exist\n",
+                "%s: Function '%s' does not exist\n",
                 cmd,
                 current_func
             ));
@@ -280,7 +280,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             && !event::EVENT_FILTER_NAMES.contains(&opts.handlers_type.unwrap())
         {
             streams.err.append(wgettext_fmt!(
-                "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n",
+                "%s: Expected generic | variable | signal | exit | job-id for --handlers-type\n",
                 cmd
             ));
             return Err(STATUS_INVALID_ARGS);
@@ -320,7 +320,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
     if opts.copy {
         if args.len() != 2 {
             streams.err.append(wgettext_fmt!(
-                "%ls: Expected exactly two names (current function name, and new function name)\n",
+                "%s: Expected exactly two names (current function name, and new function name)\n",
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
@@ -331,7 +331,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
         if !function::exists(current_func, parser) {
             streams.err.append(wgettext_fmt!(
-                "%ls: Function '%ls' does not exist\n",
+                "%s: Function '%s' does not exist\n",
                 cmd,
                 current_func
             ));
@@ -341,7 +341,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
         if !valid_func_name(new_func) || parser_keywords_is_reserved(new_func) {
             streams.err.append(wgettext_fmt!(
-                "%ls: Illegal function name '%ls'\n",
+                "%s: Illegal function name '%s'\n",
                 cmd,
                 new_func
             ));
@@ -351,7 +351,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
         if function::exists(new_func, parser) {
             streams.err.append(wgettext_fmt!(
-                "%ls: Function '%ls' already exists. Cannot create copy of '%ls'\n",
+                "%s: Function '%s' already exists. Cannot create copy of '%s'\n",
                 cmd,
                 new_func,
                 current_func
@@ -391,7 +391,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 }
                 Some(path) => {
                     comment.push_utfstr(&wgettext_fmt!(
-                        "Defined in %ls @ line %d",
+                        "Defined in %s @ line %d",
                         path,
                         props.definition_lineno()
                     ));
@@ -406,7 +406,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                     }
                     Some(path) => {
                         comment.push_utfstr(&wgettext_fmt!(
-                            ", copied in %ls @ line %d",
+                            ", copied in %s @ line %d",
                             path,
                             props.copy_definition_lineno()
                         ));
@@ -420,7 +420,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
         if !comment.is_empty() {
             def.push_utfstr(&sprintf!(
-                "# %ls\n%ls",
+                "# %s\n%s",
                 comment,
                 props.annotated_definition(arg)
             ));

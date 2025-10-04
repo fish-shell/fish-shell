@@ -49,7 +49,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                 self.max = Some(
                     fish_wcstol(arg.unwrap())?
                         .try_into()
-                        .map_err(|_| invalid_args!("%ls: Invalid max value '%ls'\n", name, arg))?,
+                        .map_err(|_| invalid_args!("%s: Invalid max value '%s'\n", name, arg))?,
                 )
             }
             'N' => self.no_newline = true,

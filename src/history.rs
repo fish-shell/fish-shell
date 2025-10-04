@@ -461,7 +461,7 @@ impl HistoryImpl {
             }
         }
 
-        FLOGF!(history, "Loaded %lu old items", self.old_item_offsets.len());
+        FLOGF!(history, "Loaded %u old items", self.old_item_offsets.len());
     }
 
     /// Loads old items if necessary.
@@ -619,7 +619,7 @@ impl HistoryImpl {
     fn save_internal_via_rewrite(&mut self, history_path: &wstr) -> std::io::Result<()> {
         FLOGF!(
             history,
-            "Saving %lu items via rewrite",
+            "Saving %u items via rewrite",
             self.new_items.len() - self.first_unwritten_new_item_index
         );
 
@@ -652,7 +652,7 @@ impl HistoryImpl {
     fn save_internal_via_appending(&mut self, history_path: &wstr) -> std::io::Result<()> {
         FLOGF!(
             history,
-            "Saving %lu items via appending",
+            "Saving %u items via appending",
             self.new_items.len() - self.first_unwritten_new_item_index
         );
         // No deleting allowed.
@@ -1725,7 +1725,7 @@ pub fn history_session_id_from_var(history_name_var: Option<EnvVar>) -> WString 
         FLOG!(
             error,
             wgettext_fmt!(
-                "History session ID '%ls' is not a valid variable name. Falling back to `%ls`.",
+                "History session ID '%s' is not a valid variable name. Falling back to `%s`.",
                 &session_id,
                 DFLT_FISH_HISTORY_SESSION_ID
             ),

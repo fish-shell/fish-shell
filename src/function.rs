@@ -448,10 +448,10 @@ impl FunctionProperties {
             let d = &handler.desc;
             match d {
                 EventDescription::Signal { signal } => {
-                    sprintf!(=> &mut out, " --on-signal %ls", signal.name());
+                    sprintf!(=> &mut out, " --on-signal %s", signal.name());
                 }
                 EventDescription::Variable { name } => {
-                    sprintf!(=> &mut out, " --on-variable %ls", name);
+                    sprintf!(=> &mut out, " --on-variable %s", name);
                 }
                 EventDescription::ProcessExit { pid } => {
                     let pid = pid.map(|p| p.get()).unwrap_or(0);
@@ -465,7 +465,7 @@ impl FunctionProperties {
                     out.push_str(" --on-job-exit caller");
                 }
                 EventDescription::Generic { param } => {
-                    sprintf!(=> &mut out, " --on-event %ls", param);
+                    sprintf!(=> &mut out, " --on-event %s", param);
                 }
                 EventDescription::Any => {
                     panic!("Unexpected event handler type");
@@ -476,7 +476,7 @@ impl FunctionProperties {
         let named = &self.named_arguments;
         if !named.is_empty() {
             for name in named {
-                sprintf!(=> &mut out, " --argument-names %ls", name);
+                sprintf!(=> &mut out, " --argument-names %s", name);
             }
         }
 
@@ -490,7 +490,7 @@ impl FunctionProperties {
         for (name, values) in self.inherit_vars.iter() {
             // We don't know what indentation style the function uses,
             // so we do what fish_indent would.
-            sprintf!(=> &mut out, "\n    set -l %ls", name);
+            sprintf!(=> &mut out, "\n    set -l %s", name);
             for arg in values {
                 out.push(' ');
                 out.push_utfstr(&escape(arg));

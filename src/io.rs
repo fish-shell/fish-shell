@@ -541,9 +541,9 @@ impl IoChain {
                     let next: &wstr = wdirname(dname);
                     if let Ok(md) = wstat(next) {
                         if !md.is_dir() {
-                            FLOGF!(warning, "Path '%ls' is not a directory", next);
+                            FLOGF!(warning, "Path '%s' is not a directory", next);
                         } else {
-                            FLOGF!(warning, "Path '%ls' does not exist", dname);
+                            FLOGF!(warning, "Path '%s' does not exist", dname);
                         }
                         break;
                     }
@@ -631,12 +631,12 @@ impl IoChain {
         }
 
         eprintf!(
-            "Chain %s (%ld items):\n",
+            "Chain %s (%d items):\n",
             format!("{:p}", std::ptr::addr_of!(self)),
             self.0.len()
         );
         for (i, io) in self.0.iter().enumerate() {
-            eprintf!("\t%lu: fd:%d, ", i, io.fd());
+            eprintf!("\t%u: fd:%d, ", i, io.fd());
             io.print();
         }
     }
@@ -910,8 +910,8 @@ impl<'a> IoStreams<'a> {
 }
 
 /// File redirection error message.
-const FILE_ERROR: &wstr = L!("An error occurred while redirecting file '%ls'");
-const NOCLOB_ERROR: &wstr = L!("The file '%ls' already exists");
+const FILE_ERROR: &wstr = L!("An error occurred while redirecting file '%s'");
+const NOCLOB_ERROR: &wstr = L!("The file '%s' already exists");
 
 /// Base open mode to pass to calls to open.
 const OPEN_MASK: Mode = Mode::from_bits_truncate(0o666);

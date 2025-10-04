@@ -757,14 +757,14 @@ mod test_expressions {
                 if !parser.errors.is_empty() {
                     err.push_utfstr(&parser.errors[0]);
                 } else {
-                    sprintf!(=> err, "unexpected argument at index %lu: '%ls'",
+                    sprintf!(=> err, "unexpected argument at index %u: '%s'",
                              result.as_ref().unwrap().range().end + 1,
                              args[result.as_ref().unwrap().range().end]);
                 }
                 err.push('\n');
                 err.push_utfstr(&commandline);
                 err.push('\n');
-                err.push_utfstr(&sprintf!("%*ls%ls\n", len_to_err + 1, " ", "^"));
+                err.push_utfstr(&sprintf!("%*s%s\n", len_to_err + 1, " ", "^"));
             }
 
             if result.is_some() {
@@ -846,12 +846,12 @@ mod test_expressions {
                 if let Ok(prefix_int) = wcstoi_opts(arg, options) {
                     let _: i64 = prefix_int; // to help type inference
                     errors.push(wgettext_fmt!(
-                        "Integer %lld in '%ls' followed by non-digit",
+                        "Integer %d in '%s' followed by non-digit",
                         prefix_int,
                         arg
                     ));
                 } else {
-                    errors.push(wgettext_fmt!("Argument is not a number: '%ls'", arg));
+                    errors.push(wgettext_fmt!("Argument is not a number: '%s'", arg));
                 }
             } else if floating.is_ok_and(|x| x.is_nan()) {
                 // NaN is an error as far as we're concerned.
@@ -859,9 +859,9 @@ mod test_expressions {
             } else if floating.is_ok_and(|x| x.is_infinite()) {
                 errors.push(wgettext!("Number is infinite").to_owned());
             } else if integral == Err(Error::Overflow) {
-                errors.push(wgettext_fmt!("Result too large: %ls", arg));
+                errors.push(wgettext_fmt!("Result too large: %s", arg));
             } else {
-                errors.push(wgettext_fmt!("Invalid number: %ls", arg));
+                errors.push(wgettext_fmt!("Invalid number: %s", arg));
             }
             false
         }
@@ -1023,7 +1023,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     if feature_test(FeatureFlag::test_require_arg) {
         if argc == 0 {
             streams.err.appendln(wgettext_fmt!(
-                "%ls: Expected at least one argument",
+                "%s: Expected at least one argument",
                 program_name
             ));
             builtin_print_error_trailer(parser, streams.err, program_name);
@@ -1038,7 +1038,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     } else if argc == 0 {
         if should_flog!(deprecated_test) {
             streams.err.appendln(wgettext_fmt!(
-                "%ls: called with no arguments. This will be an error in future.",
+                "%s: called with no arguments. This will be an error in future.",
                 program_name
             ));
             streams.err.append(parser.current_line());
@@ -1048,7 +1048,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         if should_flog!(deprecated_test) {
             if args[0] != "-z" {
                 streams.err.appendln(wgettext_fmt!(
-                    "%ls: called with one argument. This will return false in future.",
+                    "%s: called with one argument. This will return false in future.",
                     program_name
                 ));
                 streams.err.append(parser.current_line());

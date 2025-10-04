@@ -53,7 +53,7 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Buil
             pwd = real_pwd;
         } else {
             streams.err.append(wgettext_fmt!(
-                "%ls: realpath failed: %s\n",
+                "%s: realpath failed: %s\n",
                 cmd,
                 errno().to_string()
             ));

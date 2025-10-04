@@ -447,7 +447,7 @@ pub fn char_to_symbol(c: char, is_first_in_token: bool) -> WString {
         // Unmapped key from https://sw.kovidgoyal.net/kitty/keyboard-protocol/#functional-key-definitions
         sprintf!(=> buf, "\\u%04X", u32::from(c));
     } else if fish_wcwidth(c) > 0 {
-        sprintf!(=> buf, "%lc", c);
+        sprintf!(=> buf, "%c", c);
     } else if c <= '\u{FFFF}' {
         // BMP Unicode character
         sprintf!(=> buf, "\\u%04X", u32::from(c));

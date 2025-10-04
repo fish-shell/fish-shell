@@ -119,17 +119,17 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
             'm' => {
                 self.max = fish_wcstol(arg.unwrap())?
                     .try_into()
-                    .map_err(|_| invalid_args!("%ls: Invalid max value '%ls'\n", name, arg))?
+                    .map_err(|_| invalid_args!("%s: Invalid max value '%s'\n", name, arg))?
             }
             'n' => self.no_empty = true,
             'f' => {
                 self.fields = arg.unwrap().try_into().map_err(|e| match e {
                     FieldParseError::Number => StringError::NotANumber,
                     FieldParseError::Range => {
-                        invalid_args!("%ls: Invalid range value for field '%ls'\n", name, arg)
+                        invalid_args!("%s: Invalid range value for field '%s'\n", name, arg)
                     }
                     FieldParseError::Field => {
-                        invalid_args!("%ls: Invalid fields value '%ls'\n", name, arg)
+                        invalid_args!("%s: Invalid fields value '%s'\n", name, arg)
                     }
                 })?;
             }

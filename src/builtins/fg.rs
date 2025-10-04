@@ -38,7 +38,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
             None => {
                 streams
                     .err
-                    .append(wgettext_fmt!("%ls: There are no suitable jobs\n", cmd));
+                    .append(wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
                 return Err(STATUS_INVALID_ARGS);
             }
             Some((pos, j)) => {
@@ -58,13 +58,11 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         if found_job {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: Ambiguous job\n", cmd));
+                .append(wgettext_fmt!("%s: Ambiguous job\n", cmd));
         } else {
-            streams.err.append(wgettext_fmt!(
-                "%ls: '%ls' is not a job\n",
-                cmd,
-                argv[optind]
-            ));
+            streams
+                .err
+                .append(wgettext_fmt!("%s: '%s' is not a job\n", cmd, argv[optind]));
         }
 
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -89,7 +87,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                 {
                     streams
                         .err
-                        .append(wgettext_fmt!("%ls: No suitable job: %d\n", cmd, raw_pid));
+                        .append(wgettext_fmt!("%s: No suitable job: %d\n", cmd, raw_pid));
                     job_pos = None;
                     job = None
                 } else {
@@ -97,7 +95,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                     job_pos = Some(pos);
                     job = if !j.wants_job_control() {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n",
+                            "%s: Can't put job %d, '%s' to foreground because it is not under job control\n",
                             cmd,
                             raw_pid,
                             j.command()

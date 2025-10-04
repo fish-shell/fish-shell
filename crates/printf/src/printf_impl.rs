@@ -62,61 +62,29 @@ impl ModifierFlags {
     }
 }
 
-// The set of prefixes of conversion specifiers.
-// Note that we mostly ignore prefixes - we take sizes of values from the arguments themselves.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[allow(non_camel_case_types)]
-enum ConversionPrefix {
-    Empty,
-    hh,
-    h,
-    l,
-    ll,
-    j,
-    t,
-    z,
-    L,
-}
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 #[rustfmt::skip]
 pub(super) enum ConversionSpec {
-    // Integers, with prefixes "hh", "h", "l", "ll", "j", "t", "z"
+    // Integers.
     // Note that we treat '%i' as '%d'.
     d, o, u, x, X,
 
-    // USizeRef receiver, with same prefixes as ints
+    // USizeRef receiver
     n,
 
-    // Float, with prefixes "l" and "L"
+    // Float
     a, A, e, E, f, F, g, G,
 
-    // Pointer, no prefixes
+    // Pointer
     p,
 
-    // Character or String, with supported prefixes "l"
+    // Character or String.
     // Note that we treat '%C' as '%c' and '%S' as '%s'.
     c, s,
 }
 
 impl ConversionSpec {
-    // Returns true if the given prefix is supported by this conversion specifier.
-    fn supports_prefix(self, prefix: ConversionPrefix) -> bool {
-        use ConversionPrefix::*;
-        use ConversionSpec::*;
-        if matches!(prefix, Empty) {
-            // No prefix is always supported.
-            return true;
-        }
-        match self {
-            d | o | u | x | X | n => matches!(prefix, hh | h | l | ll | j | t | z),
-            a | A | e | E | f | F | g | G => matches!(prefix, l | L),
-            p => false,
-            c | s => matches!(prefix, l),
-        }
-    }
-
     // Returns true if the conversion specifier is lowercase,
     // which affects certain rendering.
     #[inline]
@@ -252,44 +220,13 @@ fn get_int(fmt: &mut impl FormatString) -> Result<usize, Error> {
     Ok(i)
 }
 
-// Read a conversion prefix from a format string, advancing it.
-fn get_prefix(fmt: &mut impl FormatString) -> ConversionPrefix {
-    use ConversionPrefix as CP;
-    let prefix = match fmt.at(0).unwrap_or('\0') {
-        'h' if fmt.at(1) == Some('h') => CP::hh,
-        'h' => CP::h,
-        'l' if fmt.at(1) == Some('l') => CP::ll,
-        'l' => CP::l,
-        'j' => CP::j,
-        't' => CP::t,
-        'z' => CP::z,
-        'L' => CP::L,
-        _ => CP::Empty,
-    };
-    fmt.advance_by(match prefix {
-        CP::Empty => 0,
-        CP::hh | CP::ll => 2,
-        _ => 1,
-    });
-    prefix
-}
-
-// Read an (optionally prefixed) format specifier, such as d, Lf, etc.
+// Read a format specifier, such as d, f, etc.
 // Adjust the cursor to point to the char after the specifier.
 fn get_specifier(fmt: &mut impl FormatString) -> Result<ConversionSpec, Error> {
-    let prefix = get_prefix(fmt);
-    // Awkwardly placed hack to disallow %lC and %lS, since we otherwise treat
-    // them as the same.
-    if prefix != ConversionPrefix::Empty && matches!(fmt.at(0), Some('C' | 'S')) {
-        return Err(Error::BadFormatString);
-    }
     let spec = fmt
         .at(0)
         .and_then(ConversionSpec::from_char)
         .ok_or(Error::BadFormatString)?;
-    if !spec.supports_prefix(prefix) {
-        return Err(Error::BadFormatString);
-    }
     fmt.advance_by(1);
     Ok(spec)
 }

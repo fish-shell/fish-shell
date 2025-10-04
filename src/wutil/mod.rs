@@ -351,7 +351,7 @@ mod path_cd_tests {
     fn relative_path() {
         let wd = L!("/home/user/");
         let path = L!("projects");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/home/user/projects"));
     }
 
@@ -359,7 +359,7 @@ mod path_cd_tests {
     fn absolute_path() {
         let wd = L!("/home/user/");
         let path = L!("/etc");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/etc"));
     }
 
@@ -367,7 +367,7 @@ mod path_cd_tests {
     fn parent_directory() {
         let wd = L!("/home/user/projects/");
         let path = L!("../docs");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/home/user/docs"));
     }
 
@@ -375,7 +375,7 @@ mod path_cd_tests {
     fn current_directory() {
         let wd = L!("/home/user/");
         let path = L!("./");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/home/user"));
     }
 
@@ -383,7 +383,7 @@ mod path_cd_tests {
     fn nested_parent_directory() {
         let wd = L!("/home/user/projects/");
         let path = L!("../../");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/home"));
     }
 
@@ -391,7 +391,7 @@ mod path_cd_tests {
     fn complex_path() {
         let wd = L!("/home/user/projects/");
         let path = L!("./../other/projects/./.././../docs");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(
             path_normalize_for_cd(wd, path),
             L!("/home/user/other/projects/./.././../docs")
@@ -402,7 +402,7 @@ mod path_cd_tests {
     fn root_directory() {
         let wd = L!("/");
         let path = L!("..");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/.."));
     }
 
@@ -410,7 +410,7 @@ mod path_cd_tests {
     fn up_to_root_directory() {
         let wd = L!("/foo/");
         let path = L!("..");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/"));
     }
 
@@ -418,7 +418,7 @@ mod path_cd_tests {
     fn empty_path() {
         let wd = L!("/home/user/");
         let path = L!("");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/home/user/"));
     }
 
@@ -426,7 +426,7 @@ mod path_cd_tests {
     fn trailing_slash() {
         let wd = L!("/home/user/projects/");
         let path = L!("docs/");
-        eprintf!("(%ls, %ls)\n", wd, path);
+        eprintf!("(%s, %s)\n", wd, path);
         assert_eq!(
             path_normalize_for_cd(wd, path),
             L!("/home/user/projects/docs/")

@@ -20,16 +20,17 @@ impl StringSubCommand<'_> for Repeat {
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {
             'n' => {
-                self.count =
-                    Some(fish_wcstol(arg.unwrap())?.try_into().map_err(|_| {
-                        invalid_args!("%ls: Invalid count value '%ls'\n", name, arg)
-                    })?)
+                self.count = Some(
+                    fish_wcstol(arg.unwrap())?
+                        .try_into()
+                        .map_err(|_| invalid_args!("%s: Invalid count value '%s'\n", name, arg))?,
+                )
             }
             'm' => {
                 self.max = Some(
                     fish_wcstol(arg.unwrap())?
                         .try_into()
-                        .map_err(|_| invalid_args!("%ls: Invalid max value '%ls'\n", name, arg))?,
+                        .map_err(|_| invalid_args!("%s: Invalid max value '%s'\n", name, arg))?,
                 )
             }
             'q' => self.quiet = true,
@@ -58,7 +59,7 @@ impl StringSubCommand<'_> for Repeat {
         *optind += 1;
 
         let Ok(Ok(count)) = fish_wcstol(arg).map(|count| count.try_into()) else {
-            string_error!(streams, "%ls: Invalid count value '%ls'\n", name, arg);
+            string_error!(streams, "%s: Invalid count value '%s'\n", name, arg);
             return Err(STATUS_INVALID_ARGS);
         };
 

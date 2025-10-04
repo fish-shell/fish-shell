@@ -7,7 +7,7 @@ printf "%d %d\n" 1 2 3
 printf "Hello %d %i %f %F %g %G\n" 1 2 3 4 5 6
 # CHECK: Hello 1 2 3.000000 4.000000 5 6
 
-printf "%x %X %o %llu\n" 10 11 8 -1
+printf "%x %X %o %u\n" 10 11 8 -1
 # CHECK: a B 10 18446744073709551615
 
 # %a has OS-dependent output - see #1139

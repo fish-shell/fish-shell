@@ -229,7 +229,7 @@ const _: () = _assert_sizes_match();
 #[allow(dead_code)]
 pub fn describe_char(c: i32) -> WString {
     if c > 0 && (c as usize) < R_END_INPUT_FUNCTIONS {
-        return sprintf!("%02x (%ls)", c, INPUT_FUNCTION_METADATA[c as usize].name);
+        return sprintf!("%02x (%s)", c, INPUT_FUNCTION_METADATA[c as usize].name);
     }
     return sprintf!("%02x", c);
 }

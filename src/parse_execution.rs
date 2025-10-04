@@ -277,7 +277,7 @@ impl<'a> ExecutionContext<'a> {
                         ctx,
                         STATUS_NOT_EXECUTABLE,
                         &statement.command,
-                        "Unknown command. A component of '%ls' is not a directory. Check your $PATH.",
+                        "Unknown command. A component of '%s' is not a directory. Check your $PATH.",
                         cmd
                     );
                 } else {
@@ -286,7 +286,7 @@ impl<'a> ExecutionContext<'a> {
                         ctx,
                         STATUS_NOT_EXECUTABLE,
                         &statement.command,
-                        "Unknown command. A component of '%ls' is not a directory.",
+                        "Unknown command. A component of '%s' is not a directory.",
                         cmd
                     );
                 }
@@ -297,7 +297,7 @@ impl<'a> ExecutionContext<'a> {
                 ctx,
                 STATUS_NOT_EXECUTABLE,
                 &statement.command,
-                "Unknown command. '%ls' exists but is not an executable file.",
+                "Unknown command. '%s' exists but is not an executable file.",
                 cmd
             );
         }
@@ -903,7 +903,7 @@ impl<'a> ExecutionContext<'a> {
                 ctx,
                 STATUS_INVALID_ARGS,
                 header.var_name,
-                "%ls: %ls: cannot overwrite read-only variable",
+                "%s: %s: cannot overwrite read-only variable",
                 "for",
                 for_var_name
             );
@@ -1094,7 +1094,7 @@ impl<'a> ExecutionContext<'a> {
                         ctx,
                         STATUS_INVALID_ARGS,
                         &statement.argument,
-                        "switch: Expected at most one argument, got %lu\n",
+                        "switch: Expected at most one argument, got %u\n",
                         switch_values_expanded.len()
                     );
                 }
@@ -1286,7 +1286,7 @@ impl<'a> ExecutionContext<'a> {
 
         let errtext = errs.contents();
         if !errtext.is_empty() {
-            report_error!(self, ctx, err_code, header, "%ls", errtext);
+            report_error!(self, ctx, err_code, header, "%s", errtext);
         }
         result
     }
@@ -1419,7 +1419,7 @@ impl<'a> ExecutionContext<'a> {
                         ctx,
                         STATUS_INVALID_ARGS,
                         redir_node,
-                        "Invalid redirection: %ls",
+                        "Invalid redirection: %s",
                         self.node_source(redir_node)
                     );
                 }
@@ -1445,7 +1445,7 @@ impl<'a> ExecutionContext<'a> {
                     ctx,
                     STATUS_INVALID_ARGS,
                     redir_node,
-                    "Invalid redirection target: %ls",
+                    "Invalid redirection target: %s",
                     target
                 );
                 if oper.mode == RedirectionMode::input && {
@@ -1481,7 +1481,7 @@ impl<'a> ExecutionContext<'a> {
                     ctx,
                     STATUS_INVALID_ARGS,
                     redir_node,
-                    "Requested redirection to '%ls', which is not a valid file descriptor",
+                    "Requested redirection to '%s', which is not a valid file descriptor",
                     &spec.target
                 );
             }

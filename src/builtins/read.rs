@@ -125,7 +125,7 @@ fn parse_cmd_opts(
             }
             'i' => {
                 streams.err.append(wgettext_fmt!(
-                    "%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n",
+                    "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n",
                     cmd
                 ));
                 return Err(STATUS_INVALID_ARGS);
@@ -150,7 +150,7 @@ fn parse_cmd_opts(
                     Ok(n) if n >= 0 => NonZeroUsize::new(n.try_into().unwrap()),
                     Err(wutil::Error::Overflow) => {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: Argument '%ls' is out of range\n",
+                            "%s: Argument '%s' is out of range\n",
                             cmd,
                             w.woptarg.unwrap()
                         ));
@@ -457,7 +457,7 @@ fn validate_read_args(
 ) -> BuiltinResult {
     if opts.prompt.is_some() && opts.prompt_str.is_some() {
         streams.err.append(wgettext_fmt!(
-            "%ls: Options %ls and %ls cannot be used together\n",
+            "%s: Options %s and %s cannot be used together\n",
             cmd,
             "-p",
             "-P",
@@ -468,7 +468,7 @@ fn validate_read_args(
 
     if opts.delimiter.is_some() && opts.one_line {
         streams.err.append(wgettext_fmt!(
-            "%ls: Options %ls and %ls cannot be used together\n",
+            "%s: Options %s and %s cannot be used together\n",
             cmd,
             "--delimiter",
             "--line"
@@ -477,7 +477,7 @@ fn validate_read_args(
     }
     if opts.one_line && opts.split_null {
         streams.err.append(wgettext_fmt!(
-            "%ls: Options %ls and %ls cannot be used together\n",
+            "%s: Options %s and %s cannot be used together\n",
             cmd,
             "-z",
             "--line"
@@ -572,7 +572,7 @@ fn validate_read_args(
         }
         if EnvVar::flags_for(arg).contains(EnvVarFlags::READ_ONLY) {
             streams.err.append(wgettext_fmt!(
-                "%ls: %ls: cannot overwrite read-only variable",
+                "%s: %s: cannot overwrite read-only variable",
                 cmd,
                 arg
             ));
@@ -613,7 +613,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     if streams.stdin_fd < 0 {
         streams
             .err
-            .append(wgettext_fmt!("%ls: stdin is closed\n", cmd));
+            .append(wgettext_fmt!("%s: stdin is closed\n", cmd));
         return Err(STATUS_CMD_ERROR);
     }
 

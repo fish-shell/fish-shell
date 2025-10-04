@@ -185,11 +185,11 @@ function history --description "display or manipulate interactive command histor
         case clear # clear the interactive command history
             if test -n "$search_mode"
                 or set -q show_time[1]
-                printf (_ "%ls: %ls: subcommand takes no options\n") history $hist_cmd >&2
+                printf (_ "%s: %s: subcommand takes no options\n") history $hist_cmd >&2
                 return 1
             end
             if set -q argv[1]
-                printf (_ "%ls: %ls: expected %d arguments; got %d\n") history $hist_cmd 0 (count $argv) >&2
+                printf (_ "%s: %s: expected %d arguments; got %d\n") history $hist_cmd 0 (count $argv) >&2
                 return 1
             end
 
@@ -214,7 +214,7 @@ function history --description "display or manipulate interactive command histor
 
             builtin history append $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $newitem
         case '*'
-            printf "%ls: unexpected subcommand '%ls'\n" $cmd $hist_cmd
+            printf "%s: unexpected subcommand '%s'\n" $cmd $hist_cmd
             return 2
     end
 end

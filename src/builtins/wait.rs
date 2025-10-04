@@ -199,7 +199,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             let mpid: i32 = fish_wcstoi(item).unwrap_or(-1);
             let Some(mpid) = Pid::new(mpid) else {
                 streams.err.append(wgettext_fmt!(
-                    "%ls: '%ls' is not a valid process id\n",
+                    "%s: '%s' is not a valid process id\n",
                     cmd,
                     item,
                 ));
@@ -207,7 +207,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             };
             if !find_wait_handles(WaitHandleQuery::Pid(mpid), parser, &mut wait_handles) {
                 streams.err.append(wgettext_fmt!(
-                    "%ls: Could not find a job with process id '%d'\n",
+                    "%s: Could not find a job with process id '%d'\n",
                     cmd,
                     mpid,
                 ));
@@ -216,7 +216,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             // argument is process name
             if !find_wait_handles(WaitHandleQuery::ProcName(item), parser, &mut wait_handles) {
                 streams.err.append(wgettext_fmt!(
-                    "%ls: Could not find child processes with the name '%ls'\n",
+                    "%s: Could not find child processes with the name '%s'\n",
                     cmd,
                     item,
                 ));

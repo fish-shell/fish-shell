@@ -24,84 +24,84 @@ pub const DEFAULT_READ_PROMPT: &wstr =
 localizable_consts!(
     /// Error message on missing argument.
     pub BUILTIN_ERR_MISSING
-    "%ls: %ls: option requires an argument\n"
+    "%s: %s: option requires an argument\n"
 
     /// Error message on unexpected argument.
     pub BUILTIN_ERR_UNEXP_ARG
-    "%ls: %ls: option does not take an argument\n"
+    "%s: %s: option does not take an argument\n"
 
     /// Error message on missing man page.
     pub BUILTIN_ERR_MISSING_HELP
-    "fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will show an online version\n"
+    "fish: %s: missing man page\nDocumentation may not be installed.\n`help %s` will show an online version\n"
 
     /// Error message on multiple scope levels for variables.
     pub BUILTIN_ERR_GLOCAL
-    "%ls: scope can be only one of: universal function global local\n"
+    "%s: scope can be only one of: universal function global local\n"
 
     /// Error message for specifying both export and unexport to set/read.
     pub BUILTIN_ERR_EXPUNEXP
-    "%ls: cannot both export and unexport\n"
+    "%s: cannot both export and unexport\n"
 
     /// Error message for specifying both path and unpath to set/read.
     pub BUILTIN_ERR_PATHUNPATH
-    "%ls: cannot both path and unpath\n"
+    "%s: cannot both path and unpath\n"
 
     /// Error message for unknown switch.
     pub BUILTIN_ERR_UNKNOWN
-    "%ls: %ls: unknown option\n"
+    "%s: %s: unknown option\n"
 
     /// Error message for invalid bind mode name.
     pub BUILTIN_ERR_BIND_MODE
-    "%ls: %ls: invalid mode name. See `help identifiers`\n"
+    "%s: %s: invalid mode name. See `help identifiers`\n"
 
     /// Error message when too many arguments are supplied to a builtin.
     pub BUILTIN_ERR_TOO_MANY_ARGUMENTS
-    "%ls: too many arguments\n"
+    "%s: too many arguments\n"
 
     /// Error message when integer expected
     pub BUILTIN_ERR_NOT_NUMBER
-    "%ls: %ls: invalid integer\n"
+    "%s: %s: invalid integer\n"
 
     /// Command that requires a subcommand was invoked without a recognized subcommand.
     pub BUILTIN_ERR_MISSING_SUBCMD
-    "%ls: missing subcommand\n"
+    "%s: missing subcommand\n"
 
     pub BUILTIN_ERR_INVALID_SUBCMD
-    "%ls: %ls: invalid subcommand\n"
+    "%s: %s: invalid subcommand\n"
 
     /// Error messages for unexpected args.
     pub BUILTIN_ERR_ARG_COUNT0
-    "%ls: missing argument\n"
+    "%s: missing argument\n"
 
     pub BUILTIN_ERR_ARG_COUNT1
-    "%ls: expected %d arguments; got %d\n"
+    "%s: expected %d arguments; got %d\n"
 
     pub BUILTIN_ERR_ARG_COUNT2
-    "%ls: %ls: expected %d arguments; got %d\n"
+    "%s: %s: expected %d arguments; got %d\n"
 
     pub BUILTIN_ERR_MIN_ARG_COUNT1
-    "%ls: expected >= %d arguments; got %d\n"
+    "%s: expected >= %d arguments; got %d\n"
 
     pub BUILTIN_ERR_MAX_ARG_COUNT1
-    "%ls: expected <= %d arguments; got %d\n"
+    "%s: expected <= %d arguments; got %d\n"
 
     /// Error message for invalid variable name.
     pub BUILTIN_ERR_VARNAME
-    "%ls: %ls: invalid variable name. See `help identifiers`\n"
+    "%s: %s: invalid variable name. See `help identifiers`\n"
 
     /// Error message on invalid combination of options.
     pub BUILTIN_ERR_COMBO
-    "%ls: invalid option combination\n"
+    "%s: invalid option combination\n"
 
     pub BUILTIN_ERR_COMBO2
-    "%ls: invalid option combination, %ls\n"
+    "%s: invalid option combination, %s\n"
 
     pub BUILTIN_ERR_COMBO2_EXCLUSIVE
-    "%ls: %ls %ls: options cannot be used together\n"
+    "%s: %s %s: options cannot be used together\n"
 
     /// The send stuff to foreground message.
     pub FG_MSG
-    "Send job %d (%ls) to foreground\n"
+    "Send job %d (%s) to foreground\n"
 );
 
 // Return values (`$status` values for fish scripts) for various situations.
@@ -530,7 +530,7 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
         // and we avoid 0.
         FLOGF!(
             warning,
-            "builtin %ls returned invalid exit code %d",
+            "builtin %s returned invalid exit code %d",
             argv[0],
             code
         );
@@ -631,7 +631,7 @@ pub fn builtin_print_help(parser: &Parser, streams: &mut IoStreams, cmd: &wstr) 
         return;
     }
     let name_esc = escape(cmd);
-    let cmd = sprintf!("__fish_print_help %ls ", &name_esc);
+    let cmd = sprintf!("__fish_print_help %s ", &name_esc);
     let res = parser.eval(&cmd, streams.io_chain);
     if res.status.normal_exited() && res.status.exit_code() == 2 {
         streams
@@ -708,7 +708,7 @@ pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &
         b.push('\n');
     }
     b.append(wgettext_fmt!(
-        "(Type 'help %ls' for related documentation)\n",
+        "(Type 'help %s' for related documentation)\n",
         cmd
     ));
 }
@@ -991,7 +991,7 @@ fn builtin_break_continue(
     if !has_loop {
         streams
             .err
-            .append(wgettext_fmt!("%ls: Not inside of loop\n", argv[0]));
+            .append(wgettext_fmt!("%s: Not inside of loop\n", argv[0]));
         return Err(STATUS_CMD_ERROR);
     }
 
@@ -1034,7 +1034,7 @@ fn builtin_breakpoint(
             .map_or(true, |b| b.typ() == BlockType::breakpoint)
         {
             streams.err.append(wgettext_fmt!(
-                "%ls: Command not valid at an interactive prompt\n",
+                "%s: Command not valid at an interactive prompt\n",
                 cmd,
             ));
             return Err(STATUS_ILLEGAL_CMD);

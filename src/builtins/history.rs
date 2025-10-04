@@ -113,7 +113,7 @@ fn check_for_unexpected_hist_args(
     if opts.search_type.is_some() || opts.show_time_format.is_some() || opts.null_terminate {
         let subcmd_str = opts.hist_cmd.to_wstr();
         streams.err.append(wgettext_fmt!(
-            "%ls: %ls: subcommand takes no options\n",
+            "%s: %s: subcommand takes no options\n",
             cmd,
             subcmd_str
         ));
@@ -335,7 +335,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
 
             if in_private_mode(parser.vars()) {
                 streams.err.append(wgettext_fmt!(
-                    "%ls: can't merge history in private mode\n",
+                    "%s: can't merge history in private mode\n",
                     cmd
                 ));
                 return Err(STATUS_INVALID_ARGS);

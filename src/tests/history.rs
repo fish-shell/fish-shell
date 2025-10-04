@@ -228,7 +228,7 @@ fn time_barrier() {
 fn generate_history_lines(item_count: usize, idx: usize) -> Vec<WString> {
     let mut result = Vec::with_capacity(item_count);
     for i in 0..item_count {
-        result.push(sprintf!("%lu %lu", idx, i));
+        result.push(sprintf!("%u %u", idx, i));
     }
     result
 }
@@ -317,7 +317,7 @@ fn test_history_races() {
             // in this array were therefore not found in history.
             let removed = list.drain(position..);
             for line in removed.into_iter().rev() {
-                printf!("Item dropped from history: %ls\n", line);
+                printf!("Item dropped from history: %s\n", line);
             }
 
             found = true;
@@ -325,12 +325,12 @@ fn test_history_races() {
         }
         if !found {
             printf!(
-                "Line '%ls' found in history, but not found in some array\n",
+                "Line '%s' found in history, but not found in some array\n",
                 item.str()
             );
             for list in &expected_lines {
                 if !list.is_empty() {
-                    printf!("\tRemaining: %ls\n", list.last().unwrap())
+                    printf!("\tRemaining: %s\n", list.last().unwrap())
                 }
             }
         }

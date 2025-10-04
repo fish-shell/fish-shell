@@ -77,7 +77,7 @@ impl fmt::Write for NullOutput {
 #[test]
 fn smoke() {
     assert_fmt!("Hello, %s!", "world"  => "Hello, world!");
-    assert_fmt!("Hello, %ls!", "world" => "Hello, world!");
+    assert_fmt!("Hello, %s!", "world" => "Hello, world!");
     assert_fmt!("Hello, world! %d %%%%", 3 => "Hello, world! 3 %%");
     assert_fmt!("" => "");
 }
@@ -234,12 +234,10 @@ fn test_int() {
     assert_fmt!("%2o", 4 => " 4");
     assert_fmt!("% 12d", -4 => "          -4");
     assert_fmt!("% 12d", 48 => "          48");
-    assert_fmt!("%ld", -4_i64 => "-4");
-    assert_fmt!("%lld", -4_i64 => "-4");
-    assert_fmt!("%lX", -4_i64 => "FFFFFFFFFFFFFFFC");
-    assert_fmt!("%ld", 48_i64 => "48");
-    assert_fmt!("%lld", 48_i64 => "48");
-    assert_fmt!("%-8hd", -12_i16 => "-12     ");
+    assert_fmt!("%d", -4_i64 => "-4");
+    assert_fmt!("%X", -4_i64 => "FFFFFFFFFFFFFFFC");
+    assert_fmt!("%d", 48_i64 => "48");
+    assert_fmt!("%-8d", -12_i16 => "-12     ");
 
     assert_fmt!("%u", 12 => "12");
     assert_fmt!("~%u~", 148 => "~148~");
@@ -248,12 +246,10 @@ fn test_int() {
     assert_fmt!("%9X", 492 => "      1EC");
     assert_fmt!("% 12u", 4 => "           4");
     assert_fmt!("% 12u", 48 => "          48");
-    assert_fmt!("%lu", 4_u64 => "4");
-    assert_fmt!("%llu", 4_u64 => "4");
-    assert_fmt!("%lX", 4_u64 => "4");
-    assert_fmt!("%lu", 48_u64 => "48");
-    assert_fmt!("%llu", 48_u64 => "48");
-    assert_fmt!("%-8hu", 12_u16 => "12      ");
+    assert_fmt!("%u", 4_u64 => "4");
+    assert_fmt!("%X", 4_u64 => "4");
+    assert_fmt!("%u", 48_u64 => "48");
+    assert_fmt!("%-8u", 12_u16 => "12      ");
 
     // Gross combinations of padding and precision.
     assert_fmt!("%30d", 1234565678 => "                    1234565678");
@@ -414,11 +410,6 @@ fn test_float() {
     assert_fmt1!("%f", 0.0, "0.000000");
     assert_fmt1!("%g", 0.0, "0");
     assert_fmt1!("%#g", 0.0, "0.00000");
-    assert_fmt1!("%la", 0.0, "0x0p+0");
-    assert_fmt1!("%le", 0.0, "0.000000e+00");
-    assert_fmt1!("%lf", 0.0, "0.000000");
-    assert_fmt1!("%lg", 0.0, "0");
-    assert_fmt1!("%#lg", 0.0, "0.00000");
 
     // rounding
     assert_fmt1!("%f", 1.1, "1.100000");
@@ -430,7 +421,6 @@ fn test_float() {
     assert_fmt1!("%.4f", 1.03125, "1.0312"); /* 0x1.08p0 */
     assert_fmt1!("%.2f", 1.375, "1.38");
     assert_fmt1!("%.1f", 1.375, "1.4");
-    assert_fmt1!("%.1lf", 1.375, "1.4");
     assert_fmt1!("%.15f", 1.1, "1.100000000000000");
     assert_fmt1!("%.16f", 1.1, "1.1000000000000001");
     assert_fmt1!("%.17f", 1.1, "1.10000000000000009");
@@ -614,45 +604,6 @@ fn test_float_hex() {
 }
 
 #[test]
-fn test_prefixes() {
-    // Test the valid prefixes.
-    // Note that we generally ignore prefixes, since we know the width of the actual passed-in type.
-    // We don't test prefixed 'n'.
-    // Integer prefixes.
-    use Error::BadFormatString;
-    for spec in "diouxX".chars() {
-        let expected = sprintf_check!(format!("%{}", spec), 5);
-        for prefix in ["", "h", "hh", "l", "ll", "z", "j", "t"] {
-            let actual = sprintf_check!(format!("%{}{}", prefix, spec), 5);
-            assert_eq!(actual, expected);
-        }
-
-        for prefix in ["L", "B", "!"] {
-            sprintf_err!(format!("%{}{}", prefix, spec), 5 => BadFormatString);
-        }
-    }
-
-    // Floating prefixes.
-    for spec in "aAeEfFgG".chars() {
-        let expected = sprintf_check!(format!("%{}", spec), 5.0);
-        for prefix in ["", "l", "L"] {
-            let actual = sprintf_check!(format!("%{}{}", prefix, spec), 5.0);
-            assert_eq!(actual, expected);
-        }
-
-        for prefix in ["h", "hh", "z", "j", "t", "!"] {
-            sprintf_err!(format!("%{}{}", prefix, spec), 5.0 => BadFormatString);
-        }
-    }
-
-    // Character prefixes.
-    assert_eq!(sprintf_check!("%c", 'c'), "c");
-    assert_eq!(sprintf_check!("%lc", 'c'), "c");
-    assert_eq!(sprintf_check!("%s", "cs"), "cs");
-    assert_eq!(sprintf_check!("%ls", "cs"), "cs");
-}
-
-#[test]
 fn test_crate_macros() {
     let mut target = String::new();
     crate::sprintf!(=> &mut target, "%d ok %d", 1, 2);
@@ -755,8 +706,6 @@ fn test_errors() {
     sprintf_err!("%1", => BadFormatString);
     sprintf_err!("%%%k", => BadFormatString);
     sprintf_err!("%B", =>  BadFormatString);
-    sprintf_err!("%lC", 'q' =>  BadFormatString);
-    sprintf_err!("%lS", 'q' =>  BadFormatString);
     sprintf_err!("%d", => MissingArg);
     sprintf_err!("%d %u", 1 => MissingArg);
     sprintf_err!("%*d", 5 => MissingArg);

@@ -94,7 +94,7 @@ fn parse_cmd_opts(
                 if handling_named_arguments {
                     if is_read_only(&woptarg) {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: variable '%ls' is read-only\n",
+                            "%s: variable '%s' is read-only\n",
                             cmd,
                             woptarg
                         ));
@@ -103,7 +103,7 @@ fn parse_cmd_opts(
                     opts.named_arguments.push(woptarg);
                 } else {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: %ls: unexpected positional argument",
+                        "%s: %s: unexpected positional argument",
                         cmd,
                         woptarg
                     ));
@@ -116,7 +116,7 @@ fn parse_cmd_opts(
             's' => {
                 let Some(signal) = Signal::parse(w.woptarg.unwrap()) else {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: Unknown signal '%ls'",
+                        "%s: Unknown signal '%s'",
                         cmd,
                         w.woptarg.unwrap()
                     ));
@@ -149,7 +149,7 @@ fn parse_cmd_opts(
                     };
                     if caller_id == 0 {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: calling job for event handler not found",
+                            "%s: calling job for event handler not found",
                             cmd
                         ));
                         return STATUS_INVALID_ARGS;
@@ -161,7 +161,7 @@ fn parse_cmd_opts(
                 } else {
                     let Ok(pid @ 0..) = fish_wcstoi(woptarg) else {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: %ls: invalid process id",
+                            "%s: %s: invalid process id",
                             cmd,
                             woptarg
                         ));
@@ -187,7 +187,7 @@ fn parse_cmd_opts(
                 let name = w.woptarg.unwrap().to_owned();
                 if is_read_only(&name) {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: variable '%ls' is read-only\n",
+                        "%s: variable '%s' is read-only\n",
                         cmd,
                         name
                     ));
@@ -246,7 +246,7 @@ fn parse_cmd_opts(
 fn validate_function_name(function_name: &wstr, cmd: &wstr, streams: &mut IoStreams) -> c_int {
     if !valid_func_name(function_name) {
         streams.err.append(wgettext_fmt!(
-            "%ls: %ls: invalid function name",
+            "%s: %s: invalid function name",
             cmd,
             function_name,
         ));
@@ -254,7 +254,7 @@ fn validate_function_name(function_name: &wstr, cmd: &wstr, streams: &mut IoStre
     }
     if parser_keywords_is_reserved(function_name) {
         streams.err.append(wgettext_fmt!(
-            "%ls: %ls: cannot use reserved keyword as function name",
+            "%s: %s: cannot use reserved keyword as function name",
             cmd,
             function_name
         ));
@@ -314,7 +314,7 @@ pub fn function(
             }
         } else {
             streams.err.append(wgettext_fmt!(
-                "%ls: %ls: unexpected positional argument",
+                "%s: %s: unexpected positional argument",
                 cmd,
                 argv[optind],
             ));

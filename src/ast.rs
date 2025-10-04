@@ -163,10 +163,10 @@ pub trait Node: Acceptor + AsNode + std::fmt::Debug {
         let mut res = ast_kind_to_string(self.kind()).to_owned();
         if let Some(n) = self.as_token() {
             let token_type = n.token_type().to_wstr();
-            sprintf!(=> &mut res, " '%ls'", token_type);
+            sprintf!(=> &mut res, " '%s'", token_type);
         } else if let Some(n) = self.as_keyword() {
             let keyword = n.keyword().to_wstr();
-            sprintf!(=> &mut res, " '%ls'", keyword);
+            sprintf!(=> &mut res, " '%s'", keyword);
         }
         res
     }
@@ -1447,23 +1447,23 @@ impl<N: Node> Ast<N> {
             if let Kind::Argument(n) = node.kind() {
                 result += "argument";
                 if let Some(argsrc) = n.try_source(orig) {
-                    sprintf!(=> &mut result, ": '%ls'", argsrc);
+                    sprintf!(=> &mut result, ": '%s'", argsrc);
                 }
             } else if let Some(n) = node.as_keyword() {
-                sprintf!(=> &mut result, "keyword: %ls", n.keyword().to_wstr());
+                sprintf!(=> &mut result, "keyword: %s", n.keyword().to_wstr());
             } else if let Some(n) = node.as_token() {
                 let desc = match n.token_type() {
                     ParseTokenType::string => {
                         let mut desc = WString::from_str("string");
                         if let Some(strsource) = n.try_source(orig) {
-                            sprintf!(=> &mut desc, ": '%ls'", strsource);
+                            sprintf!(=> &mut desc, ": '%s'", strsource);
                         }
                         desc
                     }
                     ParseTokenType::redirection => {
                         let mut desc = WString::from_str("redirection");
                         if let Some(strsource) = n.try_source(orig) {
-                            sprintf!(=> &mut desc, ": '%ls'", strsource);
+                            sprintf!(=> &mut desc, ": '%s'", strsource);
                         }
                         desc
                     }
@@ -1804,7 +1804,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
     fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N) {
         FLOGF!(
             ast_construction,
-            "%*swill_visit %ls",
+            "%*swill_visit %s",
             self.spaces(),
             "",
             node.describe()
@@ -1881,7 +1881,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
                 self,
                 header_kw_range,
                 ParseErrorCode::generic,
-                "Missing end to balance this %ls",
+                "Missing end to balance this %s",
                 enclosing_stmt
             );
         } else {
@@ -1889,7 +1889,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
                 self,
                 token,
                 ParseErrorCode::generic,
-                "Expected %ls, but found %ls",
+                "Expected %s, but found %s",
                 keywords_user_presentable_description(error.allowed_keywords),
                 error.token.user_presentable_description(),
             );
@@ -1907,14 +1907,14 @@ impl<'s> NodeVisitorMut for Populator<'s> {
 fn keywords_user_presentable_description(kws: &'static [ParseKeyword]) -> WString {
     assert!(!kws.is_empty(), "Should not be empty list");
     if kws.len() == 1 {
-        return sprintf!("keyword '%ls'", kws[0]);
+        return sprintf!("keyword '%s'", kws[0]);
     }
     let mut res = L!("keywords ").to_owned();
     for (i, kw) in kws.iter().enumerate() {
         if i != 0 {
             res += L!(" or ");
         }
-        res += &sprintf!("'%ls'", *kw)[..];
+        res += &sprintf!("'%s'", *kw)[..];
     }
     res
 }
@@ -2032,7 +2032,7 @@ impl<'s> Populator<'s> {
                 internal_error!(
                     self,
                     list_kind_chomps_newlines,
-                    "Type %ls not handled",
+                    "Type %s not handled",
                     ast_kind_to_string(kind)
                 );
             }
@@ -2082,7 +2082,7 @@ impl<'s> Populator<'s> {
                 internal_error!(
                     self,
                     list_kind_chomps_semis,
-                    "Type %ls not handled",
+                    "Type %s not handled",
                     ast_kind_to_string(kind)
                 );
             }
@@ -2155,7 +2155,7 @@ impl<'s> Populator<'s> {
                 self,
                 tok,
                 ParseErrorCode::generic,
-                "Expected %ls, but found %ls",
+                "Expected %s, but found %s",
                 token_type_user_presentable_description(typ, ParseKeyword::None),
                 tok.user_presentable_description()
             );
@@ -2180,7 +2180,7 @@ impl<'s> Populator<'s> {
                 self,
                 tok,
                 ParseErrorCode::generic,
-                "Expected %ls, but found %ls",
+                "Expected %s, but found %s",
                 token_type_user_presentable_description(ParseTokenType::string, ParseKeyword::None),
                 tok.user_presentable_description()
             );
@@ -2219,7 +2219,7 @@ impl<'s> Populator<'s> {
                         internal_error!(
                             self,
                             consume_excess_token_generating_error,
-                            "Token %ls should not have prevented parsing a job list",
+                            "Token %s should not have prevented parsing a job list",
                             tok.user_presentable_description()
                         );
                     }
@@ -2244,7 +2244,7 @@ impl<'s> Populator<'s> {
                     self,
                     tok,
                     ParseErrorCode::generic,
-                    "Expected a string, but found %ls",
+                    "Expected a string, but found %s",
                     tok.user_presentable_description()
                 );
             }
@@ -2253,7 +2253,7 @@ impl<'s> Populator<'s> {
                     self,
                     tok,
                     ParseErrorCode::from(tok.tok_error),
-                    "%ls",
+                    "%s",
                     tok.tok_error
                 );
             }
@@ -2275,7 +2275,7 @@ impl<'s> Populator<'s> {
                 internal_error!(
                     self,
                     consume_excess_token_generating_error,
-                    "Unexpected excess token type: %ls",
+                    "Unexpected excess token type: %s",
                     tok.user_presentable_description()
                 );
             }
@@ -2301,7 +2301,7 @@ impl<'s> Populator<'s> {
             // Mark in the list that it was unwound.
             FLOGF!(
                 ast_construction,
-                "%*sunwinding %ls",
+                "%*sunwinding %s",
                 self.spaces(),
                 "",
                 ast_kind_to_string(list.kind())
@@ -2379,7 +2379,7 @@ impl<'s> Populator<'s> {
 
         FLOGF!(
             ast_construction,
-            "%*s%ls size: %lu",
+            "%*s%s size: %u",
             self.spaces(),
             "",
             ast_kind_to_string(list.kind()),
@@ -2403,7 +2403,7 @@ impl<'s> Populator<'s> {
                     slf,
                     slf.peek_token(0),
                     ParseErrorCode::generic,
-                    "Expected %s, but found %ls",
+                    "Expected %s, but found %s",
                     token_type_user_presentable_description(
                         ParseTokenType::end,
                         ParseKeyword::None
@@ -2428,7 +2428,7 @@ impl<'s> Populator<'s> {
                 self,
                 self.peek_token(0),
                 ParseErrorCode::generic,
-                "Expected a command, but found %ls",
+                "Expected a command, but found %s",
                 self.peek_token(0).user_presentable_description()
             );
             return got_error(self);
@@ -2517,7 +2517,7 @@ impl<'s> Populator<'s> {
                     self,
                     self.peek_token(0),
                     ParseErrorCode::generic,
-                    "Expected a command, but found %ls",
+                    "Expected a command, but found %s",
                     self.peek_token(0).user_presentable_description()
                 );
                 return got_error(self);
@@ -2659,7 +2659,7 @@ impl<'s> Populator<'s> {
                 self,
                 self.peek_token(0),
                 ParseErrorCode::generic,
-                "Expected %ls, but found %ls",
+                "Expected %s, but found %s",
                 token_types_user_presentable_description(token.allowed_tokens()),
                 self.peek_token(0).user_presentable_description()
             );
@@ -2703,7 +2703,7 @@ impl<'s> Populator<'s> {
                     self,
                     self.peek_token(0),
                     ParseErrorCode::generic,
-                    "Expected %ls, but found %ls",
+                    "Expected %s, but found %s",
                     keywords_user_presentable_description(allowed_keywords),
                     self.peek_token(0).user_presentable_description(),
                 );

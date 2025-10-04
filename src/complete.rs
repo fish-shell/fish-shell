@@ -62,13 +62,13 @@ use crate::{
 // description strings should be defined in the same file?
 
 /// Description for ~USER completion.
-static COMPLETE_USER_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Home for %ls"));
+static COMPLETE_USER_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Home for %s"));
 
 /// Description for short variables. The value is concatenated to this description.
-static COMPLETE_VAR_DESC_VAL: Lazy<&wstr> = Lazy::new(|| wgettext!("Variable: %ls"));
+static COMPLETE_VAR_DESC_VAL: Lazy<&wstr> = Lazy::new(|| wgettext!("Variable: %s"));
 
 /// Description for abbreviations.
-static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %ls"));
+static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %s"));
 
 #[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
 pub struct CompletionMode {
@@ -1481,7 +1481,7 @@ impl<'ctx> Completer<'ctx> {
                     // a completion. By default we avoid using '=' and instead rely on '--switch
                     // switch-arg', since it is more commonly supported by homebrew getopt-like
                     // functions.
-                    let completion = sprintf!("%ls=", whole_opt.slice_from(offset));
+                    let completion = sprintf!("%s=", whole_opt.slice_from(offset));
 
                     // Append a long-style option with a mandatory trailing equal sign
                     if !self.completions.add(Completion::new(
@@ -1590,7 +1590,7 @@ impl<'ctx> Completer<'ctx> {
                     .result,
                 ExpandResultCode::error | ExpandResultCode::overflow,
             ) {
-                FLOGF!(complete, "Error while expanding string '%ls'", s);
+                FLOGF!(complete, "Error while expanding string '%s'", s);
             }
             Self::escape_opening_brackets(&mut self.completions[first_from_start..], s);
         }
@@ -1624,7 +1624,7 @@ impl<'ctx> Completer<'ctx> {
             .result,
             ExpandResultCode::error | ExpandResultCode::overflow
         ) {
-            FLOGF!(complete, "Error while expanding string '%ls'", sep_string);
+            FLOGF!(complete, "Error while expanding string '%s'", sep_string);
         }
 
         Self::escape_opening_brackets(&mut local_completions, s);
@@ -1823,7 +1823,7 @@ impl<'ctx> Completer<'ctx> {
                     ));
                     result = true;
                 } else if string_prefixes_string_case_insensitive(user_name, &pw_name) {
-                    let name = sprintf!("~%ls", &pw_name);
+                    let name = sprintf!("~%s", &pw_name);
                     let desc = sprintf!(*COMPLETE_USER_DESC, &pw_name);
 
                     // Append a user name
@@ -2367,20 +2367,20 @@ fn append_switch_short_arg(out: &mut WString, opt: char, arg: &wstr) {
         return;
     }
 
-    sprintf!(=> out, " -%lc %ls", opt, escape(arg));
+    sprintf!(=> out, " -%c %s", opt, escape(arg));
 }
 fn append_switch_long_arg(out: &mut WString, opt: &wstr, arg: &wstr) {
     if arg.is_empty() {
         return;
     }
 
-    sprintf!(=> out, " --%ls %ls", opt, escape(arg));
+    sprintf!(=> out, " --%s %s", opt, escape(arg));
 }
 fn append_switch_short(out: &mut WString, opt: char) {
-    sprintf!(=> out, " -%lc", opt);
+    sprintf!(=> out, " -%c", opt);
 }
 fn append_switch_long(out: &mut WString, opt: &wstr) {
-    sprintf!(=> out, " --%ls", opt);
+    sprintf!(=> out, " --%s", opt);
 }
 
 fn completion2string(index: &CompletionEntryIndex, o: &CompleteEntryOpt) -> WString {

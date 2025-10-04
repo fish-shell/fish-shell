@@ -90,7 +90,7 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
                 // realpath() just couldn't do it. Report the error and make it clear
                 // this is an error from our builtin, not the system's realpath.
                 streams.err.append(wgettext_fmt!(
-                    "builtin %ls: %ls: %s\n",
+                    "builtin %s: %s: %s\n",
                     cmd,
                     arg,
                     errno.to_string()
@@ -99,7 +99,7 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
                 // Who knows. Probably a bug in our wrealpath() implementation.
                 streams
                     .err
-                    .append(wgettext_fmt!("builtin %ls: Invalid arg: %ls\n", cmd, arg));
+                    .append(wgettext_fmt!("builtin %s: Invalid arg: %s\n", cmd, arg));
             }
 
             return Err(STATUS_CMD_ERROR);
@@ -117,7 +117,7 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
             streams.out.append(normalize_path(&absolute_arg, false));
         } else {
             streams.err.append(wgettext_fmt!(
-                "builtin %ls: realpath failed: %s\n",
+                "builtin %s: realpath failed: %s\n",
                 cmd,
                 errno().to_string()
             ));

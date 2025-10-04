@@ -205,7 +205,7 @@ fn print_features(streams: &mut IoStreams) {
             L!("off")
         };
         streams.out.append(sprintf!(
-            "%-*ls%-3s %ls %ls\n",
+            "%-*s%-3s %s %s\n",
             max_len + 1,
             md.name,
             set,
@@ -237,7 +237,7 @@ fn parse_cmd_opts(
                         Ok(level) if level >= 0 => level,
                         Err(Error::Overflow) | Ok(_) => {
                             streams.err.append(wgettext_fmt!(
-                                "%ls: Invalid level value '%ls'\n",
+                                "%s: Invalid level value '%s'\n",
                                 cmd,
                                 arg
                             ));
@@ -273,7 +273,7 @@ fn parse_cmd_opts(
                 }
                 let Ok(job_mode) = w.woptarg.unwrap().try_into() else {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: Invalid job control mode '%ls'\n",
+                        "%s: Invalid job control mode '%s'\n",
                         cmd,
                         w.woptarg.unwrap()
                     ));
@@ -340,7 +340,7 @@ struct Docs;
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     localizable_consts!(
         #[allow(dead_code)]
-        NO_EMBEDDED_FILES_MSG "%ls: fish was not built with embedded files"
+        NO_EMBEDDED_FILES_MSG "%s: fish was not built with embedded files"
     );
 
     let cmd = args[0];
@@ -391,7 +391,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         };
         streams
             .out
-            .append(wgettext_fmt!("Job control: %ls\n", job_control_mode));
+            .append(wgettext_fmt!("Job control: %s\n", job_control_mode));
         streams.out.append(parser.stack_trace());
 
         return Ok(SUCCESS);
@@ -427,7 +427,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     }
                     let Ok(new_mode) = args[0].try_into() else {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: Invalid job control mode '%ls'\n",
+                            "%s: Invalid job control mode '%s'\n",
                             cmd,
                             args[0]
                         ));
@@ -554,7 +554,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             if args[0] != "scroll-content-up" {
                 streams.err.appendln(wgettext_fmt!(
-                    "%s %s: unrecognized feature '%ls'",
+                    "%s %s: unrecognized feature '%s'",
                     cmd,
                     c.to_wstr(),
                     args[0]
@@ -727,7 +727,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     let path = get_executable_path("fish");
                     if path.is_empty() {
                         streams.err.append(sprintf!(
-                            "%ls: Could not get executable path: '%s'\n",
+                            "%s: Could not get executable path: '%s'\n",
                             cmd,
                             Errno::last().to_string()
                         ));

@@ -909,6 +909,10 @@ msgstr "Fehler beim Einrichten der Pipe aufgetreten"
 msgid "Argument is not a number: '%ls'"
 msgstr "Argument ist keine Zahl: '%ls'"
 
+#
+msgid "Argument type does not match conversion character"
+msgstr ""
+
 msgid "Await background process completion"
 msgstr "Auf den Abschluss von Hintergrundprozessen warten"
 
@@ -917,6 +921,10 @@ msgstr ""
 
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr "Hintergrundbefehle können nicht als Bedingungen benutzt werden"
+
+#
+msgid "Bad format string"
+msgstr ""
 
 msgid "Bad system call"
 msgstr "Fehlerhafter Systemaufruf"
@@ -1138,6 +1146,11 @@ msgstr "Erzwungene Beendigung"
 msgid "Forced stop"
 msgstr "Erzwungener Stopp"
 
+#
+#, c-format
+msgid "Formatter error: %s"
+msgstr ""
+
 msgid "Generate random number"
 msgstr "Zufallszahl generieren"
 
@@ -1274,6 +1287,10 @@ msgstr "Unausgeglichene Klammern"
 
 msgid "Mismatched parenthesis"
 msgstr "Unausgeglichene Klammer"
+
+#
+msgid "Missing argument"
+msgstr ""
 
 msgid "Missing closing parenthesis"
 msgstr "Fehlende schließende Klammer"

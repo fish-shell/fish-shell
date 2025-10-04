@@ -930,6 +930,10 @@ msgstr "设置管道时出错"
 msgid "Argument is not a number: '%ls'"
 msgstr "参数不是数字：'%ls'"
 
+#
+msgid "Argument type does not match conversion character"
+msgstr ""
+
 msgid "Await background process completion"
 msgstr "等待后台进程完成"
 
@@ -938,6 +942,10 @@ msgstr "后台 IO 线程事件"
 
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr "后台命令不能用作条件"
+
+#
+msgid "Bad format string"
+msgstr ""
 
 msgid "Bad system call"
 msgstr "错误的系统调用"
@@ -1162,6 +1170,11 @@ msgstr "强制退出"
 msgid "Forced stop"
 msgstr "强制停止"
 
+#
+#, c-format
+msgid "Formatter error: %s"
+msgstr ""
+
 msgid "Generate random number"
 msgstr "生成随机数"
 
@@ -1298,6 +1311,10 @@ msgstr "大括号不匹配"
 
 msgid "Mismatched parenthesis"
 msgstr "括号不匹配"
+
+#
+msgid "Missing argument"
+msgstr ""
 
 msgid "Missing closing parenthesis"
 msgstr "缺少收尾括号"

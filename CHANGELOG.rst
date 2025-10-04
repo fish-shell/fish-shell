@@ -9,6 +9,7 @@ This release fixes the following regressions identified in 4.1.0:
 - Fixed spurious error output when completing remote file paths for ``scp`` (:issue:`11860`).
 - Fixed an issue where focus events (currently only enabled in ``tmux``) would cause multiline prompts to be redrawn in the wrong line (:issue:`11870`).
 - Stopped printing output that would cause a glitch on old versions of Midnight Commander (:issue:`11869`).
+- Added a workaround for old versions of Zellij where :kbd:`escape` processing was delayed (:issue:`11868`).
 - Fixed a case where the :doc:`web-based configuration tool <cmds/fish_config>` would generate invalid configuration (:issue:`11861`).
 - Fixed a case where upgrading fish would break old versions of fish that were still running.
 

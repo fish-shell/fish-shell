@@ -224,16 +224,6 @@ const fn _assert_sizes_match() {
 }
 const _: () = _assert_sizes_match();
 
-// Keep this function for debug purposes
-// See 031b265
-#[allow(dead_code)]
-pub fn describe_char(c: i32) -> WString {
-    if c > 0 && (c as usize) < R_END_INPUT_FUNCTIONS {
-        return sprintf!("%02x (%s)", c, INPUT_FUNCTION_METADATA[c as usize].name);
-    }
-    return sprintf!("%02x", c);
-}
-
 /// The input mapping set is the set of mappings from character sequences to commands.
 #[derive(Debug, Default)]
 pub struct InputMappingSet {

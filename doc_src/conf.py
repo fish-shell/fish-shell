@@ -6,7 +6,7 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
-import glob
+from glob import glob
 import os.path
 import subprocess
 import sys
@@ -262,7 +262,7 @@ man_pages = [
     ),
     ("faq", "fish-faq", "", [author], 1),
 ]
-for path in sorted(glob.glob("cmds/*")):
+for path in sorted(set(glob("cmds/*.rst")) - set(glob("cmds/*.inc.rst"))):
     docname = os.path.splitext(path)[0]
     cmd = os.path.basename(docname)
     man_pages.append((docname, cmd, get_command_description(path, cmd), "", 1))

@@ -16,6 +16,7 @@ Deprecations and removed features
 
 Interactive improvements
 ------------------------
+- The terminal's tab title can now be set without affecting the window title by defining the :doc:`fish_tab_title <cmds/fish_tab_title>` function (:issue:`2692`).
 - :doc:`fish_config prompt {choose,save} <cmds/fish_config>` have been taught to reset :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` in addition to the other prompt functions (:issue:`11937`).
 - Fish now hides the portion of a multiline prompt that is scrolled out of view due to a huge command line. This prevents duplicate lines after repainting with partially visible prompt (:issue:`11911`).
 - On macOS, fish sets :envvar:`MANPATH` correctly also when that variable was already present in the environment (:issue:`10684`).

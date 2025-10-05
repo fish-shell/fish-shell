@@ -254,7 +254,9 @@ save this in config.fish or :ref:`a function file <syntax-function-autoloading>`
 Programmable title
 ------------------
 
-When using most terminals, it is possible to set the text displayed in the titlebar of the terminal window. Fish does this by running the :doc:`fish_title <cmds/fish_title>` function. It is executed before and after a command and the output is used as a titlebar message.
+Most terminals allow setting the text displayed in the titlebar of the terminal window.
+Fish does this by running the :doc:`fish_title <cmds/fish_title>` function.
+It is executed before and after a command and the output is used as a titlebar message.
 
 The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :doc:`fish_title <cmds/fish_title>` function is called. The first argument will contain the most recently executed foreground command as a string.
 

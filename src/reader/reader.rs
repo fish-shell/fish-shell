@@ -127,8 +127,8 @@ use crate::terminal::BufferedOutputter;
 use crate::terminal::Output;
 use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
-    ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
-    Osc0WindowTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
+    self, ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
+    Osc0WindowTitle, Osc2TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
     QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute, QueryXtgettcap,
     QueryXtversion,
 };
@@ -4638,46 +4638,83 @@ pub fn fish_is_unwinding_for_exit() -> bool {
 /// Write the title to the titlebar. This function is called just before a new application starts
 /// executing and just after it finishes.
 ///
-/// \param cmd Command line string passed to \c fish_title if is defined.
-/// \param parser The parser to use for autoloading fish_title.
+/// \param cmd Command line string passed to the title functions that are defined.
+/// \param parser The parser to use for autoloading title functions.
 /// \param reset_cursor_position If set, issue a \r so the line driver knows where we are
 pub fn reader_write_title(
     cmd: &wstr,
     parser: &Parser,
     reset_cursor_position: bool, /* = true */
 ) {
+    fn write_title<'a>(
+        parser: &Parser,
+        out: &mut BufferedOutputter,
+        cmd: &wstr,
+        osc: fn(&'a [WString]) -> TerminalCommand<'a>,
+        function_name: &wstr,
+        fallback_title: Option<&wstr>,
+        title_buffer: &'a mut Vec<WString>,
+    ) -> bool {
+        let mut title_function_call;
+        let mut title_command = fallback_title;
+        if function::exists(function_name, parser) {
+            title_function_call = function_name.to_owned();
+            if !cmd.is_empty() {
+                title_function_call.push(' ');
+                title_function_call.push_utfstr(&escape_string(
+                    cmd,
+                    EscapeStringStyle::Script(EscapeFlags::NO_QUOTED | EscapeFlags::NO_TILDE),
+                ));
+            }
+            title_command = Some(&title_function_call);
+        }
+        let Some(title_command) = title_command else {
+            return false;
+        };
+        let _ = exec_subshell(
+            title_command,
+            parser,
+            Some(title_buffer),
+            /*apply_exit_status=*/ false,
+        );
+
+        if !title_buffer.is_empty() {
+            out.write_command(osc(&*title_buffer));
+            return true;
+        }
+        false
+    }
+
     let _scoped = parser.push_scope(|s| {
         s.is_interactive = false;
         s.suppress_fish_trace = true;
     });
 
-    let mut fish_title_command = DEFAULT_TITLE.to_owned();
-    if function::exists(L!("fish_title"), parser) {
-        fish_title_command = L!("fish_title").to_owned();
-        if !cmd.is_empty() {
-            fish_title_command.push(' ');
-            fish_title_command.push_utfstr(&escape_string(
-                cmd,
-                EscapeStringStyle::Script(EscapeFlags::NO_QUOTED | EscapeFlags::NO_TILDE),
-            ));
-        }
-    }
-
+    let mut out = BufferedOutputter::new(Outputter::stdoutput());
+    let mut written = false;
     let mut lst = vec![];
-    let _ = exec_subshell(
-        &fish_title_command,
+    written |= write_title(
         parser,
-        Some(&mut lst),
-        /*apply_exit_status=*/ false,
+        &mut out,
+        cmd,
+        Osc0WindowTitle,
+        L!("fish_title"),
+        Some(DEFAULT_TITLE),
+        &mut lst,
+    );
+    written |= write_title(
+        parser,
+        &mut out,
+        cmd,
+        Osc2TabTitle,
+        L!("fish_tab_title"),
+        /*default_title=*/ None,
+        &mut lst,
     );
 
-    let mut out = BufferedOutputter::new(Outputter::stdoutput());
-    if !lst.is_empty() {
-        out.write_command(Osc0WindowTitle(&lst));
-    }
-
     out.reset_text_face();
-    if reset_cursor_position && !lst.is_empty() {
+
+    if reset_cursor_position && written {
         // Put the cursor back at the beginning of the line (issue #2453).
         out.write_bytes(b"\r");
     }

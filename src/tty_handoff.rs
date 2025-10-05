@@ -18,7 +18,7 @@ use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
-use crate::wutil::{fish_wcstoul, perror, wcstoi};
+use crate::wutil::{perror, wcstoi};
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use once_cell::sync::OnceCell;
 use std::mem::MaybeUninit;
@@ -26,11 +26,6 @@ use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 
 /// Whether kitty keyboard protocol support is present in the TTY.
 static KITTY_KEYBOARD_SUPPORTED: OnceCell<bool> = OnceCell::new();
-
-/// Get whether the TTY supports the kitty keyboard protocol.
-pub fn get_kitty_keyboard_capability() -> Option<&'static bool> {
-    KITTY_KEYBOARD_SUPPORTED.get()
-}
 
 /// Set that the TTY supports the kitty keyboard protocol.
 pub fn maybe_set_kitty_keyboard_capability() {
@@ -66,8 +61,6 @@ pub enum TtyQuirks {
     PreCsiMidnightCommander,
     // Running in iTerm2 before 3.5.12, which causes issues when using the kitty keyboard protocol.
     PreKittyIterm2,
-    // Running in Zellij before 0.42.0 which fails to activate the kitty keyboard protocol.
-    PreKittyZellij,
     // Whether we are running under tmux.
     Tmux,
     // Whether we are running under WezTerm.
@@ -84,8 +77,6 @@ impl TtyQuirks {
             PreCsiMidnightCommander
         } else if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12)) {
             PreKittyIterm2
-        } else if get_zellij_version(xtversion).is_some_and(|v| v < 4200) {
-            PreKittyZellij
         } else if xtversion.starts_with(L!("tmux ")) {
             Tmux
         } else if xtversion.starts_with(L!("WezTerm ")) {
@@ -160,11 +151,11 @@ impl TtyQuirks {
     // Determine which keyboard protocol.
     // This is used from a signal handler.
     fn safe_get_supported_protocol(&self) -> ProtocolKind {
-        use TtyQuirks::{PreCsiMidnightCommander, PreKittyIterm2, PreKittyZellij, Wezterm};
+        use TtyQuirks::{PreCsiMidnightCommander, PreKittyIterm2, Wezterm};
         if *self == PreCsiMidnightCommander {
             return ProtocolKind::None;
         }
-        if matches!(*self, PreKittyIterm2 | PreKittyZellij) {
+        if *self == PreKittyIterm2 {
             return ProtocolKind::Other;
         }
         match KITTY_KEYBOARD_SUPPORTED.get() {
@@ -634,9 +625,4 @@ fn get_iterm2_version(xtversion: &wstr) -> Option<(u32, u32, u32)> {
         wcstoi(parts.next()?).ok()?,
         wcstoi(parts.next()?).ok()?,
     ))
-}
-
-fn get_zellij_version(xtversion: &wstr) -> Option<u64> {
-    let number = xtversion.strip_prefix("Zellij(")?.strip_suffix(")")?;
-    fish_wcstoul(number).ok()
 }

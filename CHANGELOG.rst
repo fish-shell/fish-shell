@@ -7,6 +7,7 @@ fish 4.1.2 (released ???)
 This release fixes the following regressions identified in 4.1.0:
 
 - Fixed spurious error output when completing remote file paths for ``scp`` (:issue:`11860`).
+- Fixed the :kbd:`alt-l` binding not formatting ``ls`` output correctly (one entry per line, no colors) (:issue:`11888`).
 - Fixed an issue where focus events (currently only enabled in ``tmux``) would cause multiline prompts to be redrawn in the wrong line (:issue:`11870`).
 - Stopped printing output that would cause a glitch on old versions of Midnight Commander (:issue:`11869`).
 - Added a fix for some configurations of Zellij where :kbd:`escape` key processing was delayed (:issue:`11868`).

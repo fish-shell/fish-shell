@@ -34,6 +34,11 @@ use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::sync::Arc;
 
+#[cfg(any(target_os = "dragonfly", target_os = "freebsd"))]
+const CONFSTR_PATH_KEY: c_int = libc::USER_CS_PATH;
+#[cfg(not(any(target_os = "dragonfly", target_os = "freebsd")))]
+const CONFSTR_PATH_KEY: c_int = libc::_CS_PATH;
+
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
@@ -567,11 +572,11 @@ fn setup_user(vars: &EnvStack) {
 
 pub(crate) static FALLBACK_PATH: Lazy<&[WString]> = Lazy::new(|| {
     // _CS_PATH: colon-separated paths to find POSIX utilities
-    let buf_size = unsafe { confstr(libc::_CS_PATH, std::ptr::null_mut(), 0) };
+    let buf_size = unsafe { confstr(CONFSTR_PATH_KEY, std::ptr::null_mut(), 0) };
     Box::leak(
         (if buf_size > 0 {
             let mut buf = vec![b'\0' as libc::c_char; buf_size];
-            unsafe { confstr(libc::_CS_PATH, buf.as_mut_ptr(), buf_size) };
+            unsafe { confstr(CONFSTR_PATH_KEY, buf.as_mut_ptr(), buf_size) };
             let buf = buf;
             // safety: buf should contain a null-byte, and is not mutable unless we move ownership
             let cstr = unsafe { CStr::from_ptr(buf.as_ptr()) };

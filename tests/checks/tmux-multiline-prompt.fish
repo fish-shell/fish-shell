@@ -49,8 +49,8 @@ isolated-tmux capture-pane -p | tail -n 5
 # CHECK:
 # CHECK:
 
-# Test repainint after running an external program that uses the alternate screen.
-isolated-tmux send-keys "bind ctrl-r 'echo | less +q; commandline \"echo Hello World\"'" Enter C-l
+# Test repainting after running an external program that uses the alternate screen.
+isolated-tmux send-keys "bind ctrl-r 'echo | less -+F -+X +q; commandline \"echo Hello World\"'" Enter C-l
 isolated-tmux send-keys C-r
 tmux-sleep
 isolated-tmux send-keys Enter

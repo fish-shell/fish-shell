@@ -5,7 +5,7 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
 RUN apt-get update \
-  && apt-get -y install \
+  && apt-get -y install --no-install-recommends  \
     build-essential \
     cargo \
     clang \
@@ -13,6 +13,7 @@ RUN apt-get update \
     git \
     libpcre2-dev \
     locales \
+    openssl \
     python3 \
     python3-pexpect \
     rustc \

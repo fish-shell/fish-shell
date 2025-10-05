@@ -5,12 +5,16 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
 RUN apt-get update \
-  && apt-get -y install \
+  && apt-get -y install --no-install-recommends  \
+    adduser \
     build-essential \
+    ca-certificates \
+    curl \
     gettext \
     git \
     libpcre2-dev \
     locales \
+    openssl \
     python3 \
     python3-pexpect \
     tmux \

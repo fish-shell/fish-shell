@@ -12,6 +12,7 @@ This release fixes the following regressions identified in 4.1.0:
 - Added a workaround for old versions of Zellij where :kbd:`escape` processing was delayed (:issue:`11868`).
 - Fixed a case where the :doc:`web-based configuration tool <cmds/fish_config>` would generate invalid configuration (:issue:`11861`).
 - Fixed a case where upgrading fish would break old versions of fish that were still running.
+- Fix Alt+L binding not formatting ls output correctly (one entry per line, no colors).
 
   In general, fish still needs to be restarted after it is upgraded,
   except for `standalone builds <https://github.com/fish-shell/fish-shell/?tab=readme-ov-file#building-fish-with-embedded-data-experimental>`__.

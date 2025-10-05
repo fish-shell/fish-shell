@@ -1024,7 +1024,7 @@ impl<'s> Highlighter<'s> {
         let mut is_set = expanded_cmd == "set";
         // If we have seen a "--" argument, color all options from then on as normal arguments.
         let mut have_dashdash = false;
-        for v in &stmt.args_or_redirs {
+        for v in &stmt.args_or_redirs[..] {
             if v.is_argument() {
                 if is_set {
                     let arg = v.argument().source(self.buff);

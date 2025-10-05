@@ -26,8 +26,13 @@ use crate::tokenizer::{
 use crate::wchar::prelude::*;
 use macro_rules_attribute::derive;
 use std::borrow::Cow;
-use std::convert::AsMut;
-use std::ops::{ControlFlow, Deref};
+
+#[macro_use]
+mod macros;
+
+mod traits;
+use traits::*;
+pub use traits::{Keyword, Leaf, Node, Token};
 
 /**
  * A NodeVisitor is something which can visit an AST node.
@@ -40,183 +45,10 @@ pub trait NodeVisitor<'a> {
     fn visit(&mut self, node: &'a dyn Node);
 }
 
-/**
- * Acceptor is implemented on Nodes which can be visited by a NodeVisitor.
- *
- * It generally invokes the visitor's visit() method on each of its children.
- *
- */
-pub trait Acceptor {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
-}
-
-impl<T: Acceptor> Acceptor for Option<T> {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        if let Some(node) = self {
-            node.accept(visitor)
-        }
-    }
-}
-
-/// A helper trait to invoke the visit() or visit_mut() method on a field.
-trait VisitableField {
-    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
-    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult;
-}
-
-impl<N: Node + NodeMut> VisitableField for N {
-    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        visitor.visit(self);
-    }
-
-    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult {
-        visitor.visit_mut(self)
-    }
-}
-
-impl<N: Node + NodeMut + CheckParse> VisitableField for Option<N> {
-    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        if let Some(node) = self {
-            node.do_visit(visitor);
-        }
-    }
-
-    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult {
-        visitor.visit_optional_mut(self)
-    }
-}
-
+#[derive(Copy, Clone, Debug)]
 pub struct MissingEndError {
     allowed_keywords: &'static [ParseKeyword],
     token: ParseToken,
-}
-
-pub type VisitResult = ControlFlow<MissingEndError>;
-
-/// Similar to NodeVisitor, but for mutable nodes.
-trait NodeVisitorMut {
-    /// will_visit (did_visit) is called before (after) a node's fields are visited.
-    fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N);
-    fn visit_mut<N: NodeMut>(&mut self, node: &mut N) -> VisitResult;
-    fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult);
-
-    // Visit an optional field, perhaps populating it.
-    fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult;
-}
-
-/**
- * A trait implemented on Nodes which can be visited by a NodeVisitorMut.
- *
- * It generally invokes the right visit() method on each of its children.
- */
-trait AcceptorMut {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V);
-}
-
-impl<T: AcceptorMut> AcceptorMut for Option<T> {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-        if let Some(node) = self {
-            node.accept_mut(visitor)
-        }
-    }
-}
-
-/// Node is the base trait of all AST nodes.
-pub trait Node: Acceptor + AsNode + std::fmt::Debug {
-    /// Return the kind of this node.
-    fn kind(&self) -> Kind<'_>;
-
-    /// Return the kind of this node, as a mutable reference.
-    fn kind_mut(&mut self) -> KindMut<'_>;
-
-    /// Helper to try to cast to a keyword.
-    fn as_keyword(&self) -> Option<&dyn Keyword> {
-        match self.kind() {
-            Kind::Keyword(n) => Some(n),
-            _ => None,
-        }
-    }
-
-    /// Helper to try to cast to a token.
-    fn as_token(&self) -> Option<&dyn Token> {
-        match self.kind() {
-            Kind::Token(n) => Some(n),
-            _ => None,
-        }
-    }
-
-    /// Helper to try to cast to a leaf.
-    /// Note this must be kept in sync with Leaf implementors.
-    fn as_leaf(&self) -> Option<&dyn Leaf> {
-        match self.kind() {
-            Kind::Token(n) => Some(Token::as_leaf(n)),
-            Kind::Keyword(n) => Some(Keyword::as_leaf(n)),
-            Kind::VariableAssignment(n) => Some(n),
-            Kind::MaybeNewlines(n) => Some(n),
-            Kind::Argument(n) => Some(n),
-            _ => None,
-        }
-    }
-
-    /// Return a helpful string description of this node.
-    fn describe(&self) -> WString {
-        let mut res = ast_kind_to_string(self.kind()).to_owned();
-        if let Some(n) = self.as_token() {
-            let token_type = n.token_type().to_wstr();
-            sprintf!(=> &mut res, " '%ls'", token_type);
-        } else if let Some(n) = self.as_keyword() {
-            let keyword = n.keyword().to_wstr();
-            sprintf!(=> &mut res, " '%ls'", keyword);
-        }
-        res
-    }
-
-    /// Return the source range for this node, or none if unsourced.
-    /// This may return none if the parse was incomplete or had an error.
-    fn try_source_range(&self) -> Option<SourceRange> {
-        let mut visitor = SourceRangeVisitor {
-            total: SourceRange::new(0, 0),
-            any_unsourced: false,
-        };
-        visitor.visit(self.as_node());
-        if visitor.any_unsourced {
-            None
-        } else {
-            Some(visitor.total)
-        }
-    }
-
-    /// Return the source range for this node, or an empty range {0, 0} if unsourced.
-    fn source_range(&self) -> SourceRange {
-        self.try_source_range().unwrap_or_default()
-    }
-
-    /// Return the source code for this node, or none if unsourced.
-    fn try_source<'s>(&self, orig: &'s wstr) -> Option<&'s wstr> {
-        self.try_source_range().map(|r| &orig[r.start()..r.end()])
-    }
-
-    /// Return the source code for this node, or an empty string if unsourced.
-    fn source<'s>(&self, orig: &'s wstr) -> &'s wstr {
-        self.try_source(orig).unwrap_or_default()
-    }
-
-    /// The raw byte size of this node, excluding children.
-    /// This also excludes the allocations stored in lists.
-    fn self_memory_size(&self) -> usize {
-        std::mem::size_of_val(self)
-    }
-}
-
-// Convert to the dynamic Node type.
-pub trait AsNode {
-    fn as_node(&self) -> &dyn Node;
-}
-
-impl<T: Node + Sized> AsNode for T {
-    fn as_node(&self) -> &dyn Node {
-        self
-    }
 }
 
 /// Return true if two nodes are the same object.
@@ -262,10 +94,6 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
     std::mem::discriminant(&lhs.kind()) == std::mem::discriminant(&rhs.kind())
 }
 
-/// NodeMut is a mutable node.
-trait NodeMut: Node + AcceptorMut {}
-impl<T> NodeMut for T where T: Node + AcceptorMut {}
-
 /// The different kinds of nodes. Note that Token and Keyword have different subtypes.
 #[derive(Copy, Clone)]
 pub enum Kind<'a> {
@@ -273,9 +101,9 @@ pub enum Kind<'a> {
     Token(&'a dyn Token),
     Keyword(&'a dyn Keyword),
     VariableAssignment(&'a VariableAssignment),
-    VariableAssignmentList(&'a VariableAssignmentList),
+    VariableAssignmentList(&'a [VariableAssignment]),
     ArgumentOrRedirection(&'a ArgumentOrRedirection),
-    ArgumentOrRedirectionList(&'a ArgumentOrRedirectionList),
+    ArgumentOrRedirectionList(&'a [ArgumentOrRedirection]),
     Statement(&'a Statement),
     JobPipeline(&'a JobPipeline),
     JobConjunction(&'a JobConjunction),
@@ -288,7 +116,7 @@ pub enum Kind<'a> {
     BraceStatement(&'a BraceStatement),
     IfClause(&'a IfClause),
     ElseifClause(&'a ElseifClause),
-    ElseifClauseList(&'a ElseifClauseList),
+    ElseifClauseList(&'a [ElseifClause]),
     ElseClause(&'a ElseClause),
     IfStatement(&'a IfStatement),
     CaseItem(&'a CaseItem),
@@ -296,341 +124,21 @@ pub enum Kind<'a> {
     DecoratedStatement(&'a DecoratedStatement),
     NotStatement(&'a NotStatement),
     JobContinuation(&'a JobContinuation),
-    JobContinuationList(&'a JobContinuationList),
+    JobContinuationList(&'a [JobContinuation]),
     JobConjunctionContinuation(&'a JobConjunctionContinuation),
     AndorJob(&'a AndorJob),
-    AndorJobList(&'a AndorJobList),
-    FreestandingArgumentList(&'a FreestandingArgumentList),
-    JobConjunctionContinuationList(&'a JobConjunctionContinuationList),
+    AndorJobList(&'a [AndorJob]),
+    JobConjunctionContinuationList(&'a [JobConjunctionContinuation]),
     MaybeNewlines(&'a MaybeNewlines),
-    CaseItemList(&'a CaseItemList),
+    CaseItemList(&'a [CaseItem]),
     Argument(&'a Argument),
-    ArgumentList(&'a ArgumentList),
-    JobList(&'a JobList),
-}
-
-pub enum KindMut<'a> {
-    Redirection(&'a mut Redirection),
-    Token(&'a mut dyn Token),
-    Keyword(&'a mut dyn Keyword),
-    VariableAssignment(&'a mut VariableAssignment),
-    VariableAssignmentList(&'a mut VariableAssignmentList),
-    ArgumentOrRedirection(&'a mut ArgumentOrRedirection),
-    ArgumentOrRedirectionList(&'a mut ArgumentOrRedirectionList),
-    Statement(&'a mut Statement),
-    JobPipeline(&'a mut JobPipeline),
-    JobConjunction(&'a mut JobConjunction),
-    BlockStatementHeader(&'a mut BlockStatementHeader),
-    ForHeader(&'a mut ForHeader),
-    WhileHeader(&'a mut WhileHeader),
-    FunctionHeader(&'a mut FunctionHeader),
-    BeginHeader(&'a mut BeginHeader),
-    BlockStatement(&'a mut BlockStatement),
-    BraceStatement(&'a mut BraceStatement),
-    IfClause(&'a mut IfClause),
-    ElseifClause(&'a mut ElseifClause),
-    ElseifClauseList(&'a mut ElseifClauseList),
-    ElseClause(&'a mut ElseClause),
-    IfStatement(&'a mut IfStatement),
-    CaseItem(&'a mut CaseItem),
-    SwitchStatement(&'a mut SwitchStatement),
-    DecoratedStatement(&'a mut DecoratedStatement),
-    NotStatement(&'a mut NotStatement),
-    JobContinuation(&'a mut JobContinuation),
-    JobContinuationList(&'a mut JobContinuationList),
-    JobConjunctionContinuation(&'a mut JobConjunctionContinuation),
-    AndorJob(&'a mut AndorJob),
-    AndorJobList(&'a mut AndorJobList),
-    FreestandingArgumentList(&'a mut FreestandingArgumentList),
-    JobConjunctionContinuationList(&'a mut JobConjunctionContinuationList),
-    MaybeNewlines(&'a mut MaybeNewlines),
-    CaseItemList(&'a mut CaseItemList),
-    Argument(&'a mut Argument),
-    ArgumentList(&'a mut ArgumentList),
-    JobList(&'a mut JobList),
-}
-
-// Support casting to this type.
-pub trait Castable {
-    fn cast(node: &dyn Node) -> Option<&Self>;
-}
-
-impl<'a> dyn Node + 'a {
-    /// Cast to a concrete node type.
-    pub fn cast<T: Castable>(&self) -> Option<&T> {
-        T::cast(self)
-    }
-}
-
-/// Trait for all "leaf" nodes: nodes with no ast children.
-pub trait Leaf: Node {
-    /// Returns none if this node is "unsourced." This happens if for whatever reason we are
-    /// unable to parse the node, either because we had a parse error and recovered, or because
-    /// we accepted incomplete and the token stream was exhausted.
-    fn range(&self) -> Option<SourceRange>;
-    fn range_mut(&mut self) -> &mut Option<SourceRange>;
-    fn has_source(&self) -> bool {
-        self.range().is_some()
-    }
-}
-
-// A token node is a node which contains a token, which must be one of a fixed set.
-pub trait Token: Leaf {
-    /// The token type which was parsed.
-    fn token_type(&self) -> ParseTokenType;
-    fn token_type_mut(&mut self) -> &mut ParseTokenType;
-    fn allowed_tokens(&self) -> &'static [ParseTokenType];
-    /// Return whether a token type is allowed in this token_t, i.e. is a member of our Toks list.
-    fn allows_token(&self, token_type: ParseTokenType) -> bool {
-        self.allowed_tokens().contains(&token_type)
-    }
-    fn as_leaf(&self) -> &dyn Leaf;
-}
-
-/// A keyword node is a node which contains a keyword, which must be one of a fixed set.
-pub trait Keyword: Leaf {
-    fn keyword(&self) -> ParseKeyword;
-    fn keyword_mut(&mut self) -> &mut ParseKeyword;
-    fn allowed_keywords(&self) -> &'static [ParseKeyword];
-    fn allows_keyword(&self, kw: ParseKeyword) -> bool {
-        self.allowed_keywords().contains(&kw)
-    }
-    fn as_leaf(&self) -> &dyn Leaf;
-}
-
-/// This is for optional values and for lists.
-trait CheckParse: Default {
-    /// A true return means we should descend into the production, false means stop.
-    fn can_be_parsed(pop: &mut Populator<'_>) -> bool;
-}
-
-/// Implement the node trait.
-macro_rules! Node {
-    ($name:ident) => {
-        impl Node for $name {
-            fn kind(&self) -> Kind<'_> {
-                Kind::$name(self)
-            }
-            fn kind_mut(&mut self) -> KindMut<'_> {
-                KindMut::$name(self)
-            }
-        }
-
-        impl Castable for $name {
-            // Try casting a Node to this type.
-            fn cast(node: &dyn Node) -> Option<&Self> {
-                match node.kind() {
-                    Kind::$name(res) => Some(res),
-                    _ => None,
-                }
-            }
-        }
-    };
-
-    ( $(#[$_m:meta])* $_v:vis struct $name:ident $_:tt $(;)? ) => {
-        Node!($name);
-    };
-
-    ( $(#[$_m:meta])* $_v:vis enum $name:ident $_:tt ) => {
-        Node!($name);
-    };
-}
-
-/// Implement the leaf trait.
-macro_rules! Leaf {
-    ($name:ident) => {
-        impl Leaf for $name {
-            fn range(&self) -> Option<SourceRange> {
-                self.range
-            }
-            fn range_mut(&mut self) -> &mut Option<SourceRange> {
-                &mut self.range
-            }
-        }
-        impl Acceptor for $name {
-            #[allow(unused_variables)]
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {}
-        }
-        impl AcceptorMut for $name {
-            #[allow(unused_variables)]
-            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-                visitor.will_visit_fields_of(self);
-                visitor.did_visit_fields_of(self, VisitResult::Continue(()));
-            }
-        }
-    };
-
-    ( $(#[$_m:meta])* $_v:vis struct $name:ident $_:tt $(;)? ) => {
-        Leaf!($name);
-    };
-}
-
-/// Define a node that implements the keyword trait.
-macro_rules! define_keyword_node {
-    ( $name:ident, $($allowed:ident),* $(,)? ) => {
-        #[derive(Default, Debug, Leaf!)]
-        pub struct $name {
-            range: Option<SourceRange>,
-            keyword: ParseKeyword,
-        }
-        impl Node for $name {
-            fn kind(&self) -> Kind<'_> {
-                Kind::Keyword(self)
-            }
-            fn kind_mut(&mut self) -> KindMut<'_> {
-                KindMut::Keyword(self)
-            }
-        }
-        impl Keyword for $name {
-            fn keyword(&self) -> ParseKeyword {
-                self.keyword
-            }
-            fn keyword_mut(&mut self) -> &mut ParseKeyword {
-                &mut self.keyword
-            }
-            fn allowed_keywords(&self) -> &'static [ParseKeyword] {
-                &[$(ParseKeyword::$allowed),*]
-            }
-            fn as_leaf(&self) -> &dyn Leaf {
-                self
-            }
-        }
-    }
-}
-
-/// Define a node that implements the token trait.
-macro_rules! define_token_node {
-    ( $name:ident, $($allowed:ident),* $(,)? ) => {
-        #[derive(Default, Debug, Leaf!)]
-        pub struct $name {
-            range: Option<SourceRange>,
-            parse_token_type: ParseTokenType,
-        }
-        impl Node for $name {
-            fn kind(&self) -> Kind<'_> {
-                Kind::Token(self)
-            }
-            fn kind_mut(&mut self) -> KindMut<'_> {
-                KindMut::Token(self)
-            }
-        }
-        impl Token for $name {
-            fn token_type(&self) -> ParseTokenType {
-                self.parse_token_type
-            }
-            fn token_type_mut(&mut self) -> &mut ParseTokenType {
-                &mut self.parse_token_type
-            }
-            fn allowed_tokens(&self) -> &'static [ParseTokenType] {
-                Self::ALLOWED_TOKENS
-            }
-            fn as_leaf(&self) -> &dyn Leaf {
-                self
-            }
-        }
-        impl CheckParse for $name {
-            fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-                let typ = pop.peek_type(0);
-                Self::ALLOWED_TOKENS.contains(&typ)
-            }
-        }
-        impl $name {
-            const ALLOWED_TOKENS: &'static [ParseTokenType] = &[$(ParseTokenType::$allowed),*];
-        }
-    }
-}
-
-/// Define a list node.
-macro_rules! define_list_node {
-    (
-        $name:ident,
-        $contents:ident
-    ) => {
-        #[derive(Default, Debug, Node!)]
-        pub struct $name(Box<[$contents]>);
-
-        impl Deref for $name {
-            type Target = Box<[$contents]>;
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-
-        impl<'a> IntoIterator for &'a $name {
-            type Item = &'a $contents;
-            type IntoIter = std::slice::Iter<'a, $contents>;
-
-            fn into_iter(self) -> Self::IntoIter {
-                self.0.iter()
-            }
-        }
-
-        impl AsMut<Box<[$contents]>> for $name {
-            fn as_mut(&mut self) -> &mut Box<[$contents]> {
-                &mut self.0
-            }
-        }
-
-        impl Acceptor for $name {
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-                self.iter().for_each(|item| visitor.visit(item));
-            }
-        }
-
-        impl AcceptorMut for $name {
-            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-                visitor.will_visit_fields_of(self);
-                let flow = self
-                    .0
-                    .iter_mut()
-                    .try_for_each(|item| visitor.visit_mut(item));
-                visitor.did_visit_fields_of(self, flow);
-            }
-        }
-    };
-}
-
-/// Implement the acceptor trait for the given branch node.
-macro_rules! Acceptor {
-    (
-        $(#[$_m:meta])*
-        $_v:vis struct $name:ident {
-            $(
-                $(#[$_fm:meta])*
-                $_fv:vis $field_name:ident : $_ft:ty
-            ),* $(,)?
-        }
-    ) => {
-        impl Acceptor for $name {
-            #[allow(unused_variables)]
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>){
-                $(
-                    self.$field_name.do_visit(visitor);
-                )*
-            }
-        }
-        impl AcceptorMut for $name {
-            #[allow(unused_variables)]
-            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-                visitor.will_visit_fields_of(self);
-                let flow = loop {
-                    $(
-                        let result = self.$field_name.do_visit_mut(visitor);
-                        if result.is_break() {
-                            break result;
-                        }
-                    )*
-                    break VisitResult::Continue(());
-                };
-                visitor.did_visit_fields_of(self, flow);
-            }
-        }
-    };
+    ArgumentList(&'a [Argument]),
+    JobList(&'a [JobConjunction]),
 }
 
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.
 /// Note that pipes are not redirections.
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct Redirection {
     pub oper: TokenRedirection,
     pub target: String_,
@@ -642,9 +150,7 @@ impl CheckParse for Redirection {
     }
 }
 
-define_list_node!(VariableAssignmentList, VariableAssignment);
-
-#[derive(Debug, Node!)]
+#[derive(Debug, Node!, Acceptor!)]
 pub enum ArgumentOrRedirection {
     Argument(Argument),
     Redirection(Box<Redirection>), // Boxed because it's bigger
@@ -656,19 +162,19 @@ impl Default for ArgumentOrRedirection {
     }
 }
 
-impl Acceptor for ArgumentOrRedirection {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        match self {
-            Self::Argument(child) => visitor.visit(child),
-            Self::Redirection(child) => visitor.visit(&**child),
-        };
-    }
-}
-impl AcceptorMut for ArgumentOrRedirection {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-        visitor.will_visit_fields_of(self);
-        let flow = visitor.visit_mut(self);
-        visitor.did_visit_fields_of(self, flow);
+impl Parse for ArgumentOrRedirection {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        if let Some(arg) = pop.parse_option::<Argument>() {
+            ArgumentOrRedirection::Argument(arg)
+        } else if let Some(redir) = pop.parse_option::<Redirection>() {
+            ArgumentOrRedirection::Redirection(Box::new(redir))
+        } else {
+            internal_error!(
+                pop,
+                ArgumentOrRedirection_parse,
+                "Unable to parse argument or redirection"
+            );
+        }
     }
 }
 
@@ -707,10 +213,8 @@ impl CheckParse for ArgumentOrRedirection {
     }
 }
 
-define_list_node!(ArgumentOrRedirectionList, ArgumentOrRedirection);
-
 /// A statement is a normal command, or an if / while / etc
-#[derive(Debug, Node!)]
+#[derive(Debug, Node!, Acceptor!)]
 pub enum Statement {
     Decorated(DecoratedStatement),
     Not(Box<NotStatement>),
@@ -726,6 +230,12 @@ impl Default for Statement {
     }
 }
 
+impl Parse for Statement {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        pop.parse_statement()
+    }
+}
+
 impl Statement {
     // Convenience function to get this statement as a decorated statement, if it is one.
     pub fn as_decorated_statement(&self) -> Option<&DecoratedStatement> {
@@ -734,37 +244,11 @@ impl Statement {
             _ => None,
         }
     }
-
-    // Return the node embedded in this statement.
-    fn embedded_node(&self) -> &dyn Node {
-        match self {
-            Self::Not(child) => &**child,
-            Self::Block(child) => &**child,
-            Self::Brace(child) => &**child,
-            Self::If(child) => &**child,
-            Self::Switch(child) => &**child,
-            Self::Decorated(child) => child,
-        }
-    }
-}
-
-impl Acceptor for Statement {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        visitor.visit(self.embedded_node());
-    }
-}
-
-impl AcceptorMut for Statement {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-        visitor.will_visit_fields_of(self);
-        let flow = visitor.visit_mut(self);
-        visitor.did_visit_fields_of(self, flow);
-    }
 }
 
 /// A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
 /// like if statements, where we require a command).
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct JobPipeline {
     /// Maybe the time keyword.
     pub time: Option<KeywordTime>,
@@ -779,7 +263,7 @@ pub struct JobPipeline {
 }
 
 /// A job_conjunction is a job followed by a && or || continuations.
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct JobConjunction {
     /// The job conjunction decorator.
     pub decorator: Option<JobConjunctionDecorator>,
@@ -806,7 +290,7 @@ impl CheckParse for JobConjunction {
     }
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct ForHeader {
     /// 'for'
     pub kw_for: KeywordFor,
@@ -820,7 +304,7 @@ pub struct ForHeader {
     pub semi_nl: SemiNl,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct WhileHeader {
     /// 'while'
     pub kw_while: KeywordWhile,
@@ -828,7 +312,7 @@ pub struct WhileHeader {
     pub andor_tail: AndorJobList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct FunctionHeader {
     pub kw_function: KeywordFunction,
     /// functions require at least one argument.
@@ -837,7 +321,7 @@ pub struct FunctionHeader {
     pub semi_nl: SemiNl,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct BeginHeader {
     pub kw_begin: KeywordBegin,
     /// Note that 'begin' does NOT require a semi or nl afterwards.
@@ -845,7 +329,7 @@ pub struct BeginHeader {
     pub semi_nl: Option<SemiNl>,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct BlockStatement {
     /// A header like for, while, etc.
     pub header: BlockStatementHeader,
@@ -857,7 +341,7 @@ pub struct BlockStatement {
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct BraceStatement {
     /// The opening brace, in command position.
     pub left_brace: TokenLeftBrace,
@@ -869,7 +353,7 @@ pub struct BraceStatement {
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct IfClause {
     /// The 'if' keyword.
     pub kw_if: KeywordIf,
@@ -881,7 +365,7 @@ pub struct IfClause {
     pub body: JobList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct ElseifClause {
     /// The 'else' keyword.
     pub kw_else: KeywordElse,
@@ -895,9 +379,7 @@ impl CheckParse for ElseifClause {
     }
 }
 
-define_list_node!(ElseifClauseList, ElseifClause);
-
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct ElseClause {
     /// else ; body
     pub kw_else: KeywordElse,
@@ -910,7 +392,7 @@ impl CheckParse for ElseClause {
     }
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct IfStatement {
     /// if part
     pub if_clause: IfClause,
@@ -924,7 +406,7 @@ pub struct IfStatement {
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct CaseItem {
     /// case \<arguments\> ; body
     pub kw_case: KeywordCase,
@@ -938,7 +420,7 @@ impl CheckParse for CaseItem {
     }
 }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct SwitchStatement {
     /// switch \<argument\> ; body ; end args_redirs
     pub kw_switch: KeywordSwitch,
@@ -951,7 +433,7 @@ pub struct SwitchStatement {
 
 /// A decorated_statement is a command with a list of arguments_or_redirections, possibly with
 /// "builtin" or "command" or "exec"
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct DecoratedStatement {
     /// An optional decoration (command, builtin, exec, etc).
     pub opt_decoration: Option<DecoratedStatementDecorator>,
@@ -962,7 +444,7 @@ pub struct DecoratedStatement {
 }
 
 /// A not statement like `not true` or `! true`
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct NotStatement {
     /// Keyword, either not or exclam.
     pub kw: KeywordNot,
@@ -984,9 +466,36 @@ impl CheckParse for JobContinuation {
     }
 }
 
-define_list_node!(JobContinuationList, JobContinuation);
+impl Parse for JobContinuation {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        // Special error handling to catch 'and' and 'or' in pipelines, like `true | and false`.
+        let kw = pop.peek_token(1).keyword;
+        if matches!(kw, ParseKeyword::And | ParseKeyword::Or) {
+            parse_error!(
+                pop,
+                pop.peek_token(1),
+                ParseErrorCode::andor_in_pipeline,
+                INVALID_PIPELINE_CMD_ERR_MSG,
+                kw
+            );
+        }
 
-#[derive(Default, Debug, Node!, Acceptor!)]
+        let mut node = Self::default();
+        pop.will_visit_fields_of(&node);
+
+        node = Self {
+            pipe: pop.parse(),
+            newlines: pop.parse(),
+            variables: pop.parse(),
+            statement: pop.parse(),
+        };
+
+        pop.did_visit_fields_of(&node, None);
+        node
+    }
+}
+
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct JobConjunctionContinuation {
     /// The && or || token.
     pub conjunction: TokenConjunction,
@@ -1001,10 +510,10 @@ impl CheckParse for JobConjunctionContinuation {
     }
 }
 
-/// An andor_job just wraps a job, but requires that the job have an 'and' or 'or' job_decorator.
-/// Note this is only used for andor_job_list; jobs that are not part of an andor_job_list are not
+/// An AndorJob just wraps a job, but requires that the job have an 'and' or 'or' decorator.
+/// Note this is only used for AndorJobList; jobs that are not part of an AndorJobList are not
 /// instances of this.
-#[derive(Default, Debug, Node!, Acceptor!)]
+#[derive(Default, Debug, Node!, Acceptor!, Parse!)]
 pub struct AndorJob {
     pub job: JobConjunction,
 }
@@ -1024,26 +533,7 @@ impl CheckParse for AndorJob {
     }
 }
 
-define_list_node!(AndorJobList, AndorJob);
-
-/// A freestanding_argument_list is equivalent to a normal argument list, except it may contain
-/// TOK_END (newlines, and even semicolons, for historical reasons).
-/// In practice the tok_ends are ignored by fish code so we do not bother to store them.
-#[derive(Default, Debug, Node!, Acceptor!)]
-pub struct FreestandingArgumentList {
-    pub arguments: ArgumentList,
-}
-
-define_list_node!(JobConjunctionContinuationList, JobConjunctionContinuation);
-
-define_list_node!(ArgumentList, Argument);
-
-// For historical reasons, a job list is a list of job *conjunctions*. This should be fixed.
-define_list_node!(JobList, JobConjunction);
-
-define_list_node!(CaseItemList, CaseItem);
-
-/// A variable_assignment contains a source range like FOO=bar.
+/// A VariableAssignment contains a source range like FOO=bar.
 #[derive(Default, Debug, Node!, Leaf!)]
 pub struct VariableAssignment {
     range: Option<SourceRange>,
@@ -1067,11 +557,48 @@ impl CheckParse for VariableAssignment {
         }
     }
 }
+impl Parse for VariableAssignment {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        if pop.unsource_leaves() {
+            return Self::unsourced();
+        }
+        if !pop.peek_token(0).may_be_variable_assignment {
+            internal_error!(
+                pop,
+                VariableAssignment_parse,
+                "Should not have created VariableAssignment from this token"
+            );
+        }
+        Self {
+            range: Some(pop.consume_token_type(ParseTokenType::string)),
+        }
+    }
+}
 
 /// Zero or more newlines.
 #[derive(Default, Debug, Node!, Leaf!)]
 pub struct MaybeNewlines {
     range: Option<SourceRange>,
+}
+
+impl Parse for MaybeNewlines {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        if pop.unsource_leaves() {
+            return Self::unsourced();
+        }
+        let mut range = SourceRange::new(0, 0);
+        // TODO: it would be nice to have the start offset be the current position in the token
+        // stream, even if there are no newlines.
+        while pop.peek_token(0).is_newline {
+            let r = pop.consume_token_type(ParseTokenType::end);
+            if range.length == 0 {
+                range = r;
+            } else {
+                range.length = r.start + r.length - range.start
+            }
+        }
+        Self { range: Some(range) }
+    }
 }
 
 /// An argument is just a node whose source range determines its contents.
@@ -1083,6 +610,16 @@ pub struct Argument {
 impl CheckParse for Argument {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::string
+    }
+}
+impl Parse for Argument {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        if pop.unsource_leaves() {
+            return Self::unsourced();
+        }
+        Self {
+            range: Some(pop.consume_token_type(ParseTokenType::string)),
+        }
     }
 }
 
@@ -1157,7 +694,6 @@ impl DecoratedStatement {
         let Some(decorator) = &self.opt_decoration else {
             return StatementDecoration::none;
         };
-        let decorator: &dyn Keyword = decorator;
         match decorator.keyword() {
             ParseKeyword::Command => StatementDecoration::command,
             ParseKeyword::Builtin => StatementDecoration::builtin,
@@ -1167,7 +703,7 @@ impl DecoratedStatement {
     }
 }
 
-#[derive(Debug, Node!)]
+#[derive(Debug, Node!, Acceptor!)]
 pub enum BlockStatementHeader {
     Begin(BeginHeader),
     For(ForHeader),
@@ -1182,7 +718,7 @@ impl Default for BlockStatementHeader {
 }
 
 impl BlockStatementHeader {
-    pub fn embedded_node(&self) -> &dyn Node {
+    fn embedded_node(&self) -> &dyn Node {
         match self {
             Self::Begin(child) => child,
             Self::For(child) => child,
@@ -1192,16 +728,19 @@ impl BlockStatementHeader {
     }
 }
 
-impl Acceptor for BlockStatementHeader {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        visitor.visit(self.embedded_node());
-    }
-}
-impl AcceptorMut for BlockStatementHeader {
-    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
-        visitor.will_visit_fields_of(self);
-        let flow = visitor.visit_mut(self);
-        visitor.did_visit_fields_of(self, flow);
+impl Parse for BlockStatementHeader {
+    fn parse(pop: &mut Populator<'_>) -> Self {
+        match pop.peek_token(0).keyword {
+            ParseKeyword::For => BlockStatementHeader::For(pop.parse()),
+            ParseKeyword::While => BlockStatementHeader::While(pop.parse()),
+            ParseKeyword::Function => BlockStatementHeader::Function(pop.parse()),
+            ParseKeyword::Begin => BlockStatementHeader::Begin(pop.parse()),
+            _ => internal_error!(
+                pop,
+                BlockStatementHeader_parse,
+                "should not have descended into block_header"
+            ),
+        }
     }
 }
 
@@ -1239,7 +778,6 @@ pub fn ast_kind_to_string(k: Kind<'_>) -> &'static wstr {
         Kind::JobConjunctionContinuation(_) => L!("job_conjunction_continuation"),
         Kind::AndorJob(_) => L!("andor_job"),
         Kind::AndorJobList(_) => L!("andor_job_list"),
-        Kind::FreestandingArgumentList(_) => L!("freestanding_argument_list"),
         Kind::JobConjunctionContinuationList(_) => L!("job_conjunction_continuation_list"),
         Kind::MaybeNewlines(_) => L!("maybe_newlines"),
         Kind::CaseItemList(_) => L!("case_item_list"),
@@ -1352,7 +890,7 @@ pub type SourceRangeList = Vec<SourceRange>;
 
 /// Extra source ranges.
 /// These are only generated if the corresponding flags are set.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Extras {
     /// Set of comments, sorted by offset.
     pub comments: SourceRangeList,
@@ -1370,30 +908,28 @@ pub fn parse(src: &wstr, flags: ParseTreeFlags, out_errors: Option<&mut ParseErr
         src, flags, false, /* not freestanding_arguments */
         out_errors,
     );
-    let mut list = JobList::default();
-    pops.populate_list(&mut list, true);
+    let list: JobList = pops.parse_list(true);
     finalize_parse(pops, list)
 }
 
-/// Parse a FreestandingArgumentList.
+/// Parse an argument list.
 pub fn parse_argument_list(
     src: &wstr,
     flags: ParseTreeFlags,
     out_errors: Option<&mut ParseErrorList>,
-) -> Ast<FreestandingArgumentList> {
+) -> Ast<ArgumentList> {
     let mut pops = Populator::new(
         src, flags, true, /* freestanding_arguments */
         out_errors,
     );
-    let mut list = FreestandingArgumentList::default();
-    pops.populate_list(&mut list.arguments, true);
+    let list: ArgumentList = pops.parse_list(true);
     finalize_parse(pops, list)
 }
 
 // Given that we have populated some top node, add all the extras that we want and produce an Ast.
-fn finalize_parse<N: Node>(mut pops: Populator<'_>, top: N) -> Ast<N> {
+fn finalize_parse<N: ListElement>(mut pops: Populator<'_>, top: Box<[N]>) -> Ast<Box<[N]>> {
     // Chomp trailing extras, etc.
-    pops.chomp_extras(top.kind());
+    pops.chomp_extras::<N>();
 
     let any_error = pops.any_error;
     let extras = Extras {
@@ -1410,6 +946,7 @@ fn finalize_parse<N: Node>(mut pops: Populator<'_>, top: N) -> Ast<N> {
 }
 
 /// The ast type itself.
+#[derive(Debug)]
 pub struct Ast<N: Node = JobList> {
     // The top node.
     top: N,
@@ -1639,83 +1176,6 @@ impl<'a> TokenStream<'a> {
     }
 }
 
-/// This indicates a bug in fish code.
-macro_rules! internal_error {
-    (
-        $self:ident,
-        $func:ident,
-        $fmt:expr
-        $(, $args:expr)*
-        $(,)?
-    ) => {
-        FLOG!(
-            debug,
-            concat!(
-                "Internal parse error from {$func} - this indicates a bug in fish.",
-                $fmt,
-            )
-            $(, $args)*
-        );
-        FLOGF!(debug, "Encountered while parsing:<<<<\n%s\n>>>", $self.tokens.src);
-        panic!();
-    };
-}
-
-/// Report an error based on `fmt` for the tokens' range
-macro_rules! parse_error {
-    (
-        $self:ident,
-        $token:expr,
-        $code:expr,
-        $fmt:expr
-        $(, $args:expr)*
-        $(,)?
-    ) => {
-        let range = $token.range();
-        parse_error_range!($self, range, $code, $fmt $(, $args)*);
-    }
-}
-
-/// Report an error based on `fmt` for the source range `range`.
-macro_rules! parse_error_range {
-    (
-        $self:ident,
-        $range:expr,
-        $code:expr,
-        $fmt:expr
-        $(, $args:expr)*
-        $(,)?
-    ) => {
-        let text = if $self.out_errors.is_some() && !$self.unwinding {
-            Some(wgettext_fmt!($fmt $(, $args)*))
-        } else {
-            None
-        };
-        $self.any_error = true;
-
-        // Ignore additional parse errors while unwinding.
-        // These may come about e.g. from `true | and`.
-        if !$self.unwinding {
-            $self.unwinding = true;
-
-            FLOGF!(ast_construction, "%*sparse error - begin unwinding", $self.spaces(), "");
-            // TODO: can store this conditionally dependent on flags.
-            if $range.start() != SOURCE_OFFSET_INVALID {
-                $self.errors.push($range);
-            }
-
-            if let Some(errors) = &mut $self.out_errors {
-                let mut err = ParseError::default();
-                err.text = text.unwrap();
-                err.code = $code;
-                err.source_start = $range.start();
-                err.source_length = $range.length();
-                errors.push(err);
-            }
-        }
-    }
-}
-
 struct Populator<'a> {
     /// Flags controlling parsing.
     flags: ParseTreeFlags,
@@ -1747,61 +1207,8 @@ struct Populator<'a> {
     out_errors: Option<&'a mut ParseErrorList>,
 }
 
-impl<'s> NodeVisitorMut for Populator<'s> {
-    fn visit_mut<N: NodeMut>(&mut self, node: &mut N) -> VisitResult {
-        use KindMut as KM;
-        match node.kind_mut() {
-            // Leaves
-            KM::Argument(node) => self.visit_argument(node),
-            KM::VariableAssignment(node) => self.visit_variable_assignment(node),
-            KM::JobContinuation(node) => self.visit_job_continuation(node),
-            KM::Token(node) => self.visit_token(node),
-            KM::Keyword(node) => return self.visit_keyword(node),
-
-            KM::MaybeNewlines(node) => self.visit_maybe_newlines(node),
-
-            // Branches
-            KM::ArgumentOrRedirection(node) => self.visit_argument_or_redirection(node),
-            KM::BlockStatementHeader(node) => self.visit_block_statement_header(node),
-            KM::Statement(node) => self.visit_statement(node),
-            KM::Redirection(node) => node.accept_mut(self),
-            KM::JobPipeline(node) => node.accept_mut(self),
-            KM::JobConjunction(node) => node.accept_mut(self),
-            KM::ForHeader(node) => node.accept_mut(self),
-            KM::WhileHeader(node) => node.accept_mut(self),
-            KM::FunctionHeader(node) => node.accept_mut(self),
-            KM::BeginHeader(node) => node.accept_mut(self),
-            KM::BlockStatement(node) => node.accept_mut(self),
-            KM::BraceStatement(node) => node.accept_mut(self),
-            KM::IfClause(node) => node.accept_mut(self),
-            KM::ElseifClause(node) => node.accept_mut(self),
-            KM::ElseClause(node) => node.accept_mut(self),
-            KM::IfStatement(node) => node.accept_mut(self),
-            KM::CaseItem(node) => node.accept_mut(self),
-            KM::SwitchStatement(node) => node.accept_mut(self),
-            KM::DecoratedStatement(node) => node.accept_mut(self),
-            KM::NotStatement(node) => node.accept_mut(self),
-            KM::JobConjunctionContinuation(node) => node.accept_mut(self),
-            KM::AndorJob(node) => node.accept_mut(self),
-
-            // Lists
-            KM::VariableAssignmentList(node) => self.populate_list(node, false),
-            KM::ArgumentOrRedirectionList(node) => self.populate_list(node, false),
-            KM::ElseifClauseList(node) => self.populate_list(node, false),
-            KM::JobContinuationList(node) => self.populate_list(node, false),
-            KM::AndorJobList(node) => self.populate_list(node, false),
-            KM::JobConjunctionContinuationList(node) => self.populate_list(node, false),
-            KM::CaseItemList(node) => self.populate_list(node, false),
-            KM::ArgumentList(node) => self.populate_list(node, false),
-            KM::JobList(node) => self.populate_list(node, false),
-
-            // Weird top-level case, not actually a list.
-            KM::FreestandingArgumentList(node) => node.accept_mut(self),
-        }
-        VisitResult::Continue(())
-    }
-
-    fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N) {
+impl<'s> Populator<'s> {
+    fn will_visit_fields_of<N: Node>(&mut self, node: &N) {
         FLOGF!(
             ast_construction,
             "%*swill_visit %ls",
@@ -1812,13 +1219,13 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         self.depth += 1
     }
 
-    fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult) {
+    fn did_visit_fields_of<'a, N: Node>(&'a mut self, node: &'a N, error: Option<MissingEndError>) {
         self.depth -= 1;
 
         if self.unwinding {
             return;
         }
-        let VisitResult::Break(error) = flow else {
+        let Some(error) = error else {
             return;
         };
 
@@ -1895,11 +1302,6 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             );
         }
     }
-
-    fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult {
-        *node = self.try_parse::<N>();
-        VisitResult::Continue(())
-    }
 }
 
 /// Helper to describe a list of keywords.
@@ -1931,6 +1333,63 @@ fn token_types_user_presentable_description(types: &'static [ParseTokenType]) ->
         res += &token_type_user_presentable_description(*typ, ParseKeyword::None)[..];
     }
     res
+}
+
+define_list_nodes! {
+    let pop;
+
+    Argument => ArgumentList {
+        chomp_newlines: pop.freestanding_arguments,
+        // Hackish. If we are producing a freestanding argument list,
+        // then it allows semicolons, for hysterical raisins.
+        // That is, this is OK: complete -c foo -a 'x ; y ; z'
+        // But this is not: foo x ; y ; z
+        chomp_semis: pop.freestanding_arguments,
+    },
+    ArgumentOrRedirection => ArgumentOrRedirectionList {
+        chomp_newlines: false, // No newlines inside arguments.
+        chomp_semis: false,
+    },
+    VariableAssignment => VariableAssignmentList {
+        chomp_newlines: false, // No newlines inside variable assignment lists.
+        chomp_semis: false,
+    },
+    // For historical reasons, a job list is a list of job *conjunctions*.
+    // This should be fixed.
+    JobConjunction => JobList {
+        chomp_newlines: true, // Like echo a \n \n echo b
+        chomp_semis: true, // Like echo a ; ;  echo b
+        stop_unwind: pop.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR),
+    },
+    CaseItem => CaseItemList {
+        chomp_newlines: true, // Like switch foo \n \n \n case a \n end
+        // Like switch foo ; ; ;  case a \n end
+        // This is historically allowed.
+        chomp_semis: true,
+    },
+    AndorJob => AndorJobList {
+        chomp_newlines: true, // Like while true ; \n \n and true ; end
+        chomp_semis: true, // Like while true ; ; ;  and true ; end
+    },
+    ElseifClause => ElseifClauseList {
+        chomp_newlines: true, // Like if true ; \n \n else if false; end
+        chomp_semis: false, // Like if true ; ; ;  else if false; end
+    },
+    JobConjunctionContinuation => JobConjunctionContinuationList {
+        // This would be like echo a && echo b \n && echo c
+        // We could conceivably support this but do not now.
+        chomp_newlines: false,
+        chomp_semis: false, // Like echo a ; ; && echo b. Not supported.
+    },
+    JobContinuation => JobContinuationList {
+        // This would be like echo a \n | echo b
+        // We could conceivably support this but do not now.
+        chomp_newlines: false,
+        // This would be like echo a ; | echo b
+        // Not supported.
+        // We could conceivably support this but do not now.
+        chomp_semis: false,
+    }
 }
 
 impl<'s> Populator<'s> {
@@ -1987,112 +1446,10 @@ impl<'s> Populator<'s> {
         self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
     }
 
-    /// Return whether a list kind allows arbitrary newlines in it.
-    fn list_kind_chomps_newlines(&self, kind: Kind) -> bool {
-        match kind {
-            Kind::ArgumentList(_) | Kind::FreestandingArgumentList(_) => {
-                self.freestanding_arguments
-            }
-
-            Kind::ArgumentOrRedirectionList(_) => {
-                // No newlines inside arguments.
-                false
-            }
-            Kind::VariableAssignmentList(_) => {
-                // No newlines inside variable assignment lists.
-                false
-            }
-            Kind::JobList(_) => {
-                // Like echo a \n \n echo b
-                true
-            }
-            Kind::CaseItemList(_) => {
-                // Like switch foo \n \n \n case a \n end
-                true
-            }
-            Kind::AndorJobList(_) => {
-                // Like while true ; \n \n and true ; end
-                true
-            }
-            Kind::ElseifClauseList(_) => {
-                // Like if true ; \n \n else if false; end
-                true
-            }
-            Kind::JobConjunctionContinuationList(_) => {
-                // This would be like echo a && echo b \n && echo c
-                // We could conceivably support this but do not now.
-                false
-            }
-            Kind::JobContinuationList(_) => {
-                // This would be like echo a \n | echo b
-                // We could conceivably support this but do not now.
-                false
-            }
-            _ => {
-                internal_error!(
-                    self,
-                    list_kind_chomps_newlines,
-                    "Type %ls not handled",
-                    ast_kind_to_string(kind)
-                );
-            }
-        }
-    }
-
-    /// Return whether a list kind allows arbitrary semicolons in it.
-    fn list_kind_chomps_semis(&self, kind: Kind) -> bool {
-        match kind {
-            Kind::ArgumentList(_) | Kind::FreestandingArgumentList(_) => {
-                // Hackish. If we are producing a freestanding argument list, then it allows
-                // semicolons, for hysterical raisins.
-                // That is, this is OK: complete -c foo -a 'x ; y ; z'
-                // But this is not: foo x ; y ; z
-                self.freestanding_arguments
-            }
-
-            Kind::ArgumentOrRedirectionList(_) | Kind::VariableAssignmentList(_) => false,
-            Kind::JobList(_) => {
-                // Like echo a ; ;  echo b
-                true
-            }
-            Kind::CaseItemList(_) => {
-                // Like switch foo ; ; ;  case a \n end
-                // This is historically allowed.
-                true
-            }
-            Kind::AndorJobList(_) => {
-                // Like while true ; ; ;  and true ; end
-                true
-            }
-            Kind::ElseifClauseList(_) => {
-                // Like if true ; ; ;  else if false; end
-                false
-            }
-            Kind::JobConjunctionContinuationList(_) => {
-                // Like echo a ; ; && echo b. Not supported.
-                false
-            }
-            Kind::JobContinuationList(_) => {
-                // This would be like echo a ; | echo b
-                // Not supported.
-                // We could conceivably support this but do not now.
-                false
-            }
-            _ => {
-                internal_error!(
-                    self,
-                    list_kind_chomps_semis,
-                    "Type %ls not handled",
-                    ast_kind_to_string(kind)
-                );
-            }
-        }
-    }
-
     /// Chomp extra comments, semicolons, etc. for a given list kind.
-    fn chomp_extras(&mut self, kind: Kind) {
-        let chomp_semis = self.list_kind_chomps_semis(kind);
-        let chomp_newlines = self.list_kind_chomps_newlines(kind);
+    fn chomp_extras<N: ListElement>(&mut self) {
+        let chomp_semis = N::chomps_semis(self);
+        let chomp_newlines = N::chomps_newlines(self);
         loop {
             let peek = self.tokens.peek(0);
             if chomp_newlines && peek.typ == ParseTokenType::end && peek.is_newline {
@@ -2108,13 +1465,6 @@ impl<'s> Populator<'s> {
                 break;
             }
         }
-    }
-
-    /// Return whether a list kind should recover from errors.
-    /// That is, whether we should stop unwinding when we encounter this type.
-    fn list_kind_stops_unwind(&self, kind: Kind) -> bool {
-        matches!(kind, Kind::JobList(_))
-            && self.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
     }
 
     /// Return a reference to a non-comment token at index `idx`.
@@ -2282,22 +1632,19 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// Given that we are a list of type ListNodeType, whose contents type is ContentsNode,
-    /// populate as many elements as we can.
+    /// Given that we are a list of nodes of type N, populate as many elements as we can.
     /// If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
-    fn populate_list<Contents, List>(&mut self, list: &mut List, exhaust_stream: bool)
-    where
-        Contents: NodeMut + CheckParse + Default,
-        List: Node + Deref<Target = Box<[Contents]>> + AsMut<Box<[Contents]>>,
-    {
-        assert!(list.is_empty(), "List is not initially empty");
-
+    fn parse_list<N: CheckParse + Parse + ListElement>(
+        &mut self,
+        exhaust_stream: bool,
+    ) -> Box<[N]> {
         // Do not attempt to parse a list if we are unwinding.
         if self.unwinding {
             assert!(
                 !exhaust_stream,
                 "exhaust_stream should only be set at top level, and so we should not be unwinding"
             );
+            let list: Box<[N]> = Box::new([]);
             // Mark in the list that it was unwound.
             FLOGF!(
                 ast_construction,
@@ -2306,8 +1653,7 @@ impl<'s> Populator<'s> {
                 "",
                 ast_kind_to_string(list.kind())
             );
-            assert!(list.is_empty(), "Should be an empty list");
-            return;
+            return list;
         }
 
         // We're going to populate a vector with our nodes.
@@ -2317,7 +1663,7 @@ impl<'s> Populator<'s> {
             // If we are unwinding, then either we recover or we break the loop, dependent on the
             // loop type.
             if self.unwinding {
-                if !self.list_kind_stops_unwind(list.kind()) {
+                if !N::stops_unwind(self) {
                     break;
                 }
                 // We are going to stop unwinding.
@@ -2346,10 +1692,10 @@ impl<'s> Populator<'s> {
             }
 
             // Chomp semis and newlines.
-            self.chomp_extras(list.kind());
+            self.chomp_extras::<N>();
 
             // Now try parsing a node.
-            if let Some(node) = self.try_parse::<Contents>() {
+            if let Some(node) = self.parse_option::<N>() {
                 // #7201: Minimize reallocations of contents vector
                 // Empirically, 99.97% of cases are 16 elements or fewer,
                 // with 75% being empty, so this works out best.
@@ -2367,15 +1713,11 @@ impl<'s> Populator<'s> {
             }
         }
 
-        // Populate our list from our contents.
-        if !contents.is_empty() {
-            assert!(
-                contents.len() <= u32::MAX.try_into().unwrap(),
-                "Contents size out of bounds"
-            );
-            assert!(list.is_empty(), "List should still be empty");
-            *list.as_mut() = contents.into_boxed_slice();
-        }
+        assert!(
+            contents.len() <= u32::MAX.try_into().unwrap(),
+            "Contents size out of bounds"
+        );
+        let list = contents.into_boxed_slice();
 
         FLOGF!(
             ast_construction,
@@ -2385,19 +1727,20 @@ impl<'s> Populator<'s> {
             ast_kind_to_string(list.kind()),
             list.len()
         );
+
+        list
     }
 
-    /// Allocate and populate a statement.
-    fn allocate_populate_statement(&mut self) -> Statement {
-        // In case we get a parse error, we still need to return something non-null. Use a
-        // decorated statement; all of its leaf nodes will end up unsourced.
+    fn parse_statement(&mut self) -> Statement {
+        // In case we get a parse error, we still need to return something.
+        // Use a decorated statement; all of its leaf nodes will end up unsourced.
         fn got_error(slf: &mut Populator<'_>) -> Statement {
             assert!(slf.unwinding, "Should have produced an error");
             new_decorated_statement(slf)
         }
 
         fn new_decorated_statement(slf: &mut Populator<'_>) -> Statement {
-            let embedded = slf.allocate_visit::<DecoratedStatement>();
+            let embedded = slf.parse::<DecoratedStatement>();
             if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::left_brace {
                 parse_error!(
                     slf,
@@ -2417,10 +1760,9 @@ impl<'s> Populator<'s> {
         if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
             // This may happen if we just have a 'time' prefix.
             // Construct a decorated statement, which will be unsourced.
-            self.allocate_visit::<DecoratedStatement>();
+            _ = self.parse::<DecoratedStatement>();
         } else if self.peek_token(0).typ == ParseTokenType::left_brace {
-            let embedded = self.allocate_boxed_visit::<BraceStatement>();
-            return Statement::Brace(embedded);
+            return Statement::Brace(self.parse_boxed());
         } else if self.peek_token(0).typ != ParseTokenType::string {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
@@ -2489,30 +1831,20 @@ impl<'s> Populator<'s> {
         }
 
         match self.peek_token(0).keyword {
-            ParseKeyword::Not | ParseKeyword::Exclam => {
-                let embedded = self.allocate_boxed_visit::<NotStatement>();
-                Statement::Not(embedded)
-            }
+            ParseKeyword::Not | ParseKeyword::Exclam => Statement::Not(self.parse_boxed()),
+
             ParseKeyword::For
             | ParseKeyword::While
             | ParseKeyword::Function
-            | ParseKeyword::Begin => {
-                let embedded = self.allocate_boxed_visit::<BlockStatement>();
-                Statement::Block(embedded)
-            }
-            ParseKeyword::If => {
-                let embedded = self.allocate_boxed_visit::<IfStatement>();
-                Statement::If(embedded)
-            }
-            ParseKeyword::Switch => {
-                let embedded = self.allocate_boxed_visit::<SwitchStatement>();
-                Statement::Switch(embedded)
-            }
+            | ParseKeyword::Begin => Statement::Block(self.parse_boxed()),
+
+            ParseKeyword::If => Statement::If(self.parse_boxed()),
+            ParseKeyword::Switch => Statement::Switch(self.parse_boxed()),
             ParseKeyword::End => {
                 // 'end' is forbidden as a command.
                 // For example, `if end` or `while end` will produce this error.
                 // We still have to descend into the decorated statement because
-                // we can't leave our pointer as null.
+                // we have to return a Statement value.
                 parse_error!(
                     self,
                     self.peek_token(0),
@@ -2520,131 +1852,42 @@ impl<'s> Populator<'s> {
                     "Expected a command, but found %ls",
                     self.peek_token(0).user_presentable_description()
                 );
-                return got_error(self);
+                got_error(self)
             }
             _ => new_decorated_statement(self),
         }
     }
 
-    /// Allocate and populate a block statement header.
-    /// This must never return null.
-    fn allocate_populate_block_header(&mut self) -> BlockStatementHeader {
-        match self.peek_token(0).keyword {
-            ParseKeyword::For => {
-                let embedded = self.allocate_visit::<ForHeader>();
-                BlockStatementHeader::For(embedded)
-            }
-            ParseKeyword::While => {
-                let embedded = self.allocate_visit::<WhileHeader>();
-                BlockStatementHeader::While(embedded)
-            }
-            ParseKeyword::Function => {
-                let embedded = self.allocate_visit::<FunctionHeader>();
-                BlockStatementHeader::Function(embedded)
-            }
-            ParseKeyword::Begin => {
-                let embedded = self.allocate_visit::<BeginHeader>();
-                BlockStatementHeader::Begin(embedded)
-            }
-            _ => {
-                internal_error!(
-                    self,
-                    allocate_populate_block_header,
-                    "should not have descended into block_header"
-                );
-            }
-        }
+    fn parse<T: Parse>(&mut self) -> T {
+        Parse::parse(self)
     }
 
-    fn try_parse<T: NodeMut + Default + CheckParse>(&mut self) -> Option<T> {
-        if !T::can_be_parsed(self) {
-            return None;
-        }
-        Some(self.allocate_visit())
+    fn try_parse<T: TryParse>(&mut self) -> ParseResult<T> {
+        TryParse::try_parse(self)
     }
 
-    // Given a node type, allocate it, invoking its default constructor,
-    // and then visit it as a field.
-    // Return the resulting Node.
-    fn allocate_visit<T: NodeMut + Default>(&mut self) -> T {
-        let mut result = T::default();
-        let _ = self.visit_mut(&mut result);
-        result
-    }
-
-    // Like allocate_visit, but returns the value as a Box.
-    fn allocate_boxed_visit<T: NodeMut + Default>(&mut self) -> Box<T> {
-        let mut result = Box::<T>::default();
-        let _ = self.visit_mut(&mut *result);
-        result
-    }
-
-    fn visit_argument_or_redirection(&mut self, node: &mut ArgumentOrRedirection) {
-        if let Some(arg) = self.try_parse::<Argument>() {
-            *node = ArgumentOrRedirection::Argument(arg);
-        } else if let Some(redir) = self.try_parse::<Redirection>() {
-            *node = ArgumentOrRedirection::Redirection(Box::new(redir));
+    // This can't be made into `impl<T: Parse> Parse for Option<T>`,
+    // because it conflicts with the TryParse version of that trait impl.
+    // That version is more important because it's needed for the
+    // automatic Parse impl for branch nodes.
+    fn parse_option<T: Parse + CheckParse>(&mut self) -> Option<T> {
+        if T::can_be_parsed(self) {
+            Some(self.parse::<T>())
         } else {
-            internal_error!(
-                self,
-                visit_argument_or_redirection,
-                "Unable to parse argument or redirection"
-            );
+            None
         }
     }
-    fn visit_block_statement_header(&mut self, node: &mut BlockStatementHeader) {
-        *node = self.allocate_populate_block_header();
-    }
-    fn visit_statement(&mut self, node: &mut Statement) {
-        *node = self.allocate_populate_statement();
+
+    fn parse_boxed<T: Parse>(&mut self) -> Box<T> {
+        Box::new(self.parse())
     }
 
-    fn visit_argument(&mut self, arg: &mut Argument) {
+    fn parse_token<T: Token>(&mut self) -> T {
         if self.unsource_leaves() {
-            arg.range = None;
-            return;
-        }
-        arg.range = Some(self.consume_token_type(ParseTokenType::string));
-    }
-
-    fn visit_variable_assignment(&mut self, varas: &mut VariableAssignment) {
-        if self.unsource_leaves() {
-            varas.range = None;
-            return;
-        }
-        if !self.peek_token(0).may_be_variable_assignment {
-            internal_error!(
-                self,
-                visit_variable_assignment,
-                "Should not have created variable_assignment_t from this token"
-            );
-        }
-        varas.range = Some(self.consume_token_type(ParseTokenType::string));
-    }
-
-    fn visit_job_continuation(&mut self, node: &mut JobContinuation) {
-        // Special error handling to catch 'and' and 'or' in pipelines, like `true | and false`.
-        let kw = self.peek_token(1).keyword;
-        if matches!(kw, ParseKeyword::And | ParseKeyword::Or) {
-            parse_error!(
-                self,
-                self.peek_token(1),
-                ParseErrorCode::andor_in_pipeline,
-                INVALID_PIPELINE_CMD_ERR_MSG,
-                kw
-            );
-        }
-        node.accept_mut(self);
-    }
-
-    // Overload for token fields.
-    fn visit_token(&mut self, token: &mut dyn Token) {
-        if self.unsource_leaves() {
-            *token.range_mut() = None;
-            return;
+            return T::unsourced();
         }
 
-        if !token.allows_token(self.peek_token(0).typ) {
+        if !T::allows_token(self.peek_token(0).typ) {
             if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
                     TokenizerError::unterminated_quote,
@@ -2652,7 +1895,7 @@ impl<'s> Populator<'s> {
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
-                return;
+                return T::unsourced();
             }
 
             parse_error!(
@@ -2660,27 +1903,21 @@ impl<'s> Populator<'s> {
                 self.peek_token(0),
                 ParseErrorCode::generic,
                 "Expected %ls, but found %ls",
-                token_types_user_presentable_description(token.allowed_tokens()),
+                token_types_user_presentable_description(T::allowed_tokens()),
                 self.peek_token(0).user_presentable_description()
             );
-            *token.range_mut() = None;
-            return;
+            return T::unsourced();
         }
         let tok = self.consume_any_token();
-        *token.token_type_mut() = tok.typ;
-        *token.range_mut() = Some(tok.range());
+        Token::new(tok.range(), tok.typ)
     }
 
-    // Overload for keyword fields.
-    fn visit_keyword(&mut self, keyword: &mut dyn Keyword) -> VisitResult {
+    fn parse_keyword<T: Keyword>(&mut self) -> ParseResult<T> {
         if self.unsource_leaves() {
-            *keyword.range_mut() = None;
-            return VisitResult::Continue(());
+            return Ok(T::unsourced());
         }
 
-        if !keyword.allows_keyword(self.peek_token(0).keyword) {
-            *keyword.range_mut() = None;
-
+        if !T::allows_keyword(self.peek_token(0).keyword) {
             if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
                     TokenizerError::unterminated_quote,
@@ -2688,13 +1925,13 @@ impl<'s> Populator<'s> {
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
-                return VisitResult::Continue(());
+                return Ok(T::unsourced());
             }
 
             // Special error reporting for keyword_t<kw_end>.
-            let allowed_keywords = keyword.allowed_keywords();
-            if keyword.allowed_keywords() == [ParseKeyword::End] {
-                return VisitResult::Break(MissingEndError {
+            let allowed_keywords = T::allowed_keywords();
+            if allowed_keywords == [ParseKeyword::End] {
+                return Err(MissingEndError {
                     allowed_keywords,
                     token: *self.peek_token(0),
                 });
@@ -2707,32 +1944,11 @@ impl<'s> Populator<'s> {
                     keywords_user_presentable_description(allowed_keywords),
                     self.peek_token(0).user_presentable_description(),
                 );
-                return VisitResult::Continue(());
+                return Ok(T::unsourced());
             }
         }
         let tok = self.consume_any_token();
-        *keyword.keyword_mut() = tok.keyword;
-        *keyword.range_mut() = Some(tok.range());
-        VisitResult::Continue(())
-    }
-
-    fn visit_maybe_newlines(&mut self, nls: &mut MaybeNewlines) {
-        if self.unsource_leaves() {
-            nls.range = None;
-            return;
-        }
-        let mut range = SourceRange::new(0, 0);
-        // TODO: it would be nice to have the start offset be the current position in the token
-        // stream, even if there are no newlines.
-        while self.peek_token(0).is_newline {
-            let r = self.consume_token_type(ParseTokenType::end);
-            if range.length == 0 {
-                range = r;
-            } else {
-                range.length = r.start + r.length - range.start
-            }
-        }
-        nls.range = Some(range);
+        Ok(T::new(tok.range(), tok.keyword))
     }
 }
 
@@ -2769,7 +1985,7 @@ impl From<ParseTreeFlags> for TokFlags {
     }
 }
 
-/// Convert from Tokenizer's token type to a parse_token_t type.
+/// Convert from Tokenizer's token type to a ParseTokenType.
 impl From<TokenType> for ParseTokenType {
     fn from(token_type: TokenType) -> Self {
         match token_type {

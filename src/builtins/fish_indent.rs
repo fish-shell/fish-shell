@@ -295,7 +295,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
                 .binary_search(&brace_statement.source_range().start())
                 .is_err()
             {
-                for job in &brace_statement.jobs {
+                for job in &brace_statement.jobs[..] {
                     job.semi_nl.as_ref().map(&mut mark_semi_from_input);
                 }
             }

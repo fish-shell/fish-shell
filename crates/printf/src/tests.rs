@@ -225,7 +225,7 @@ fn test_int() {
     assert_fmt!("%d", -123 => "-123");
     assert_fmt!("~%d~", 148 => "~148~");
     assert_fmt!("00%dxx", -91232 => "00-91232xx");
-    assert_fmt!("%x", -9232 => "ffffdbf0");
+    assert_fmt!("%x", -9232 => "ffffffffffffdbf0");
     assert_fmt!("%X", 432 => "1B0");
     assert_fmt!("%09X", 432 => "0000001B0");
     assert_fmt!("%9X", 432 => "      1B0");

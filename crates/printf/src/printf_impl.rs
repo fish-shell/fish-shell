@@ -472,7 +472,7 @@ pub fn sprintf_locale(
                 // If someone passes us a negative value, format it with the width
                 // we were given.
                 let lower = conv_spec.is_lower();
-                let (_, uint) = arg.as_wrapping_sint()?;
+                let uint = arg.as_wrapping_sint()?;
                 if uint != 0 {
                     if flags.alt_form {
                         prefix = if lower { "0x" } else { "0X" };

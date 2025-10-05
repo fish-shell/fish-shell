@@ -297,14 +297,6 @@ pub trait WExt {
         )
     }
 
-    fn strip_suffix<Suffix: IntoCharIter>(&self, suffix: Suffix) -> Option<&wstr> {
-        // Note the above trait requires a double ended iterator.
-        let iter = suffix.chars().rev();
-        let suffix_len = iter.clone().count();
-        iter_prefixes_iter(iter, self.as_char_slice().iter().rev().copied())
-            .then(|| self.slice_to(self.char_count() - suffix_len))
-    }
-
     fn trim_matches(&self, pat: char) -> &wstr {
         let slice = self.as_char_slice();
         let leading_count = slice.chars().take_while(|&c| c == pat).count();

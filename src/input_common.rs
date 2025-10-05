@@ -12,8 +12,8 @@ use crate::key::{
 use crate::reader::reader_test_and_clear_interrupted;
 use crate::threads::iothread_port;
 use crate::tty_handoff::{
-    get_kitty_keyboard_capability, maybe_set_kitty_keyboard_capability,
-    maybe_set_scroll_content_up_capability, SCROLL_CONTENT_UP_TERMINFO_CODE, XTVERSION,
+    maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
+    SCROLL_CONTENT_UP_TERMINFO_CODE, XTVERSION,
 };
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
@@ -983,16 +983,13 @@ pub trait InputEventQueuer {
         let fd = self.get_in_fd();
         if !check_fd_readable(
             fd,
-            Duration::from_millis(
-                if self.paste_is_buffering()
-                    || self.is_blocked_querying()
-                    || get_kitty_keyboard_capability() == Some(&true)
-                {
-                    300
-                } else {
-                    1
-                },
-            ),
+            Duration::from_millis(if self.paste_is_buffering() || self.is_blocked_querying() {
+                300
+            } else if buffer == b"\x1b" {
+                1 // distinguish legacy escape
+            } else {
+                30
+            }),
         ) {
             FLOG!(
                 reader,

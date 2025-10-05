@@ -18,7 +18,7 @@ RUN apt-get update \
     pkg-config \
     python3 \
     python3-pexpect \
-    rust \
+    rustc \
     sudo \
     tmux \
   && locale-gen en_US.UTF-8 \

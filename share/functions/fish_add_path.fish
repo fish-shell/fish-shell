@@ -103,7 +103,7 @@ function fish_add_path --description "Add paths to the PATH"
     else
         if set -q _flag_verbose
             # print a message in verbose mode
-            printf (_ "No paths to add, not setting anything.\n") "$p"
+            printf (_ "No paths to add, not setting anything.\n")
         end
         return 1
     end

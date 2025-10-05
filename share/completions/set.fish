@@ -110,7 +110,7 @@ set -l maybe_filter_private_vars '
     )'
 # We do not *filter* these by the given scope because you might want to set e.g. a global to shadow a universal.
 complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase' -x -a "(set -U | $maybe_filter_private_vars | string replace ' ' \t'Universal Variable: ')"
-complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase' -x -a "(set -g | $maybe_filter_private_vars | string replace -r '^((?:history|fish_killring) ).*' '$1' | string replace ' ' \t'Global Variable: ')"
+complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase' -x -a "(set -g | $maybe_filter_private_vars | string replace -r '^((?:history|fish_killring) ).*' '\$1' | string replace ' ' \t'Global Variable: ')"
 complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase' -x -a "(set -l | $maybe_filter_private_vars | string replace ' ' \t'Local Variable: ')"
 # Complete some fish configuration variables even if they aren't set.
 complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase' -x -a "(__fish_complete_special_vars)"

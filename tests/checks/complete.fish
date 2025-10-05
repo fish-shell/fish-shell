@@ -654,3 +654,11 @@ end
 complete complete-list -l desc -xa '(__fish_complete_list , esc_in_description)'
 complete -C 'complete-list --desc '
 # CHECK: completion{{\t}}escaped {{\\n}} newline
+
+# Tests for #11880
+complete -C "set -S fish_killri"
+# CHECK: fish_killring
+# Currently, the check below behaves the same as above. Ideally, a
+# feature would be added to skip read-only variables here.
+complete -C "set fish_killri"
+# CHECK: fish_killring

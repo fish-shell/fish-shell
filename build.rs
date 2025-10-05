@@ -169,10 +169,7 @@ fn has_small_stack(_: &Target) -> bool {
         // Modern macOS versions default to an 8 MiB main stack but legacy OS X have a 0.5 MiB one.
         let stack_size = unsafe { pthread_get_stacksize_np(pthread_self()) };
         const TWO_MIB: usize = 2 * 1024 * 1024 - 1;
-        match stack_size {
-            0..=TWO_MIB => true,
-            _ => false,
-        }
+        stack_size <= TWO_MIB
     }
 }
 

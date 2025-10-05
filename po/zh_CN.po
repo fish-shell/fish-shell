@@ -3789,9 +3789,6 @@ msgstr "在访达中显示"
 msgid "save function(s) to disk"
 msgstr "将函数保存到磁盘"
 
-msgid "search forward or move down 1 line"
-msgstr "向前搜索或向下移动 1 行"
-
 msgid "separate output with NUL rather than newline"
 msgstr "使用 NUL 而不是新行分隔输出"
 

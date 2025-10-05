@@ -3762,9 +3762,6 @@ msgstr ""
 msgid "save function(s) to disk"
 msgstr ""
 
-msgid "search forward or move down 1 line"
-msgstr ""
-
 msgid "separate output with NUL rather than newline"
 msgstr ""
 

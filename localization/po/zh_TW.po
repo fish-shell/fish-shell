@@ -3643,9 +3643,6 @@ msgstr "在 Finder 中顯示"
 msgid "save function(s) to disk"
 msgstr "儲存函式到磁碟"
 
-msgid "search forward or move down 1 line"
-msgstr "向後搜尋或下移一行"
-
 msgid "separate output with NUL rather than newline"
 msgstr "以 NUL 而非換行分隔輸出"
 

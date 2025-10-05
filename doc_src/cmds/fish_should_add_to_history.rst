@@ -48,7 +48,7 @@ This refuses to store any immediate "vault", "mysql" or "ls" calls. Commands sta
 
     function fish_should_add_to_history
         # I don't want `git pull`s in my history when I'm in a specific repository
-        if string match -qr '^git pull'
+        if string match -qr '^git pull' -- "$argv"
         and string match -qr "^/home/me/my-secret-project/" -- (pwd -P)
             return 1
         end

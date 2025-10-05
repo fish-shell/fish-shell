@@ -60,7 +60,7 @@ complete -c bind -n __fish_bind_test2 -a '(bind --function-names)' -d 'Function 
 
 function __fish_bind_complete
     argparse M/mode= m/sets-mode= preset user s/silent \
-        a/all function-names list-modes e/erase -- (commandline -xpc)[2..] 2>/dev/null
+        a/all e/erase -- (commandline -xpc)[2..] 2>/dev/null
     or return 1
     set -l token (commandline -ct)
     if test (count $argv) = 0 && set -l prefix (string match -r -- '(.*,)?(ctrl-|alt-|shift-|super-)*' $token)

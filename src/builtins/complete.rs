@@ -458,7 +458,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             None => {
                 // No argument given, try to use the current commandline.
                 let commandline_state = commandline_get_state(true);
-                if !is_interactive_session() {
+                if !parser.interactive_initialized.load() && !is_interactive_session() {
                     streams.err.append(cmd);
                     streams
                         .err

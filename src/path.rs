@@ -703,6 +703,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
         // long on 32-bit NetBSD.. and always 4-bytes on macOS (even on 64-bit builds).
         #[allow(clippy::useless_conversion)]
         let flags = u64::from(buf.f_flags);
+        #[allow(clippy::unnecessary_cast)]
         if flags & (libc::MNT_LOCAL as u64) != 0 {
             DirRemoteness::local
         } else {

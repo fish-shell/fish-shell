@@ -3,6 +3,7 @@ LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
+ENV PIP_ROOT_USER_ACTION=ignore
 
 RUN apk add --no-cache \
     bash \
@@ -14,10 +15,14 @@ RUN apk add --no-cache \
     musl-dev \
     pcre2-dev \
     py3-pexpect \
+    py3-pip \
     python3 \
     rust \
+    rustfmt \
     sudo \
     tmux
+
+RUN pip install --break-system-packages black
 
 RUN addgroup -g 1000 fishuser
 

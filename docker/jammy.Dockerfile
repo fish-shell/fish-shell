@@ -19,8 +19,11 @@ RUN apt-get update \
     rustc \
     sudo \
     tmux \
+    python3-pip \
   && locale-gen en_US.UTF-8 \
   && apt-get clean
+
+RUN pip install black
 
 RUN groupadd -g 1000 fishuser \
   && useradd -p $(openssl passwd -1 fish) -d /home/fishuser -m -u 1000 -g 1000 fishuser \

@@ -17,6 +17,7 @@ env:
 
 jobs:
   docker-build:
+    if: github.repository_owner == 'fish-shell'
     permissions:
       contents: read
       packages: write

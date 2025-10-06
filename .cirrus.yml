@@ -25,7 +25,10 @@ linux_task:
         # Unrestriced parallelism results in OOM
         - lscpu || true
         - (cat /proc/meminfo | grep MemTotal) || true
-        - FISH_TEST_MAX_CONCURRENCY=6 build_tools/check.sh
+        - mkdir build && cd build
+        - FISH_TEST_MAX_CONCURRENCY=6 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+        - ninja -j 6 fish
+        - ninja fish_run_tests
     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
 
 linux_arm_task:
@@ -41,7 +44,11 @@ linux_arm_task:
         # Unrestriced parallelism results in OOM
         - lscpu || true
         - (cat /proc/meminfo | grep MemTotal) || true
-        - FISH_TEST_MAX_CONCURRENCY=6 build_tools/check.sh
+        - mkdir build && cd build
+        - FISH_TEST_MAX_CONCURRENCY=6 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+        - ninja -j 6 fish
+        - file ./fish
+        - ninja fish_run_tests
     # CI task disabled during RIIR transition
     only_if: false && $CIRRUS_REPO_OWNER == 'fish-shell'
 
@@ -61,7 +68,10 @@ freebsd_task:
         - pw user add -n fish-user -s /bin/csh -d /home/fish-user
         - mkdir -p /home/fish-user
         - chown -R fish-user /home/fish-user
-        - chown -R fish-user .
+        - mkdir build && cd build
+        - chown -R fish-user ..
         - sudo -u fish-user -s whoami
-        - sudo -u fish-user -s FISH_TEST_MAX_CONCURRENCY=1 build_tools/check.sh
+        - sudo -u fish-user -s FISH_TEST_MAX_CONCURRENCY=1 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+        - sudo -u fish-user -s ninja -j 6 fish
+        - sudo -u fish-user -s ninja fish_run_tests
     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'

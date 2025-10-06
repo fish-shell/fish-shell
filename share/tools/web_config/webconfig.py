@@ -1606,7 +1606,15 @@ def capture_enter(port):
 
 def get_windows_signal():
     """Using socket as a replacement for stdin on Windows."""
-    (sig, sig_port) = create_socket(8000, 9000)
+    # The intent is to get a free port between 8000 and 9000, like for the HTTP
+    # server. But we already know that port 8000..PORT are not available. So
+    # starting from `PORT+1` is more efficient.
+    # More importantly though, Windows allows multiple sockets to bind to the
+    # same port in some circumstances (see SO_EXCLUSIVEADDRUSE documentation),
+    # and thus allows the signal socket to bind to the same port as HTTP.
+    # A browser may then end up reaching the wrong socket and causing
+    # fish_config to shutdown prematurely.
+    (sig, sig_port) = create_socket(PORT + 1, 9000)
     threading.Thread(target=capture_enter, args=(sig_port,)).start()
     return sig
 

@@ -25,7 +25,6 @@ linux_task:
         # Unrestriced parallelism results in OOM
         - lscpu || true
         - (cat /proc/meminfo | grep MemTotal) || true
-        - pip3 install black
         - FISH_TEST_MAX_CONCURRENCY=6 build_tools/check.sh
     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
 
@@ -52,7 +51,7 @@ freebsd_task:
           freebsd_instance:
               image: freebsd-14-3-release-amd64-ufs
     tests_script:
-        - pkg install -y cmake-core devel/pcre2 devel/ninja gettext git-lite lang/rust misc/py-pexpect py311-black
+        - pkg install -y cmake-core devel/pcre2 devel/ninja gettext git-lite lang/rust misc/py-pexpect
         # libclang.so is a required build dependency for rust-c++ ffi bridge
         - pkg install -y llvm
         # BSDs have the following behavior: root may open or access files even if

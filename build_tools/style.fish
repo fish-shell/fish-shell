@@ -78,17 +78,17 @@ end
 if set -q python_files[1]
     if not type -q black
         echo
-        echo $yellow'Please install `black` to style python'$normal
-        exit 127
-    end
-    echo === Running "$green"black"$normal"
-    if set -l -q _flag_check
-        if not black --check $python_files
-            echo $red"Python files are not formatted correctly."$normal
-            exit 1
-        end
+        echo $yellow'Skipping python style checks - install `black` to style python'$normal
     else
-        black $python_files
+        echo === Running "$green"black"$normal"
+        if set -l -q _flag_check
+            if not black --check $python_files
+                echo $red"Python files are not formatted correctly."$normal
+                exit 1
+            end
+        else
+            black $python_files
+        end
     end
 end
 

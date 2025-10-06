@@ -6,12 +6,13 @@ ENV LC_ALL=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-  && apt-get -y install \
+  && apt-get -y install --no-install-recommends  \
     build-essential \
     cargo \
     gettext \
     git \
     locales \
+    openssl \
     pkg-config \
     python3 \
     python3-pexpect \

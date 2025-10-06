@@ -105,3 +105,6 @@ target/
 
 # JetBrains editors.
 .idea/
+
+# AI slop
+.claude/

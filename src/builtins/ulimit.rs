@@ -70,35 +70,19 @@ pub mod limits {
     pub mod bsd {
         use libc;
 
-        #[cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "netbsd"))]
+        #[cfg(not(target_os = "openbsd"))]
         pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
-        #[cfg(not(any(target_os = "dragonfly", target_os = "freebsd", target_os = "netbsd")))]
-        pub const SBSIZE: libc::c_int = -1;
-
-        pub const NICE: libc::c_int = -1;
-
         pub const RSS: libc::c_int = libc::RLIMIT_RSS;
-
-        #[cfg(target_os = "netbsd")]
-        pub const NTHR: libc::c_int = libc::RLIMIT_NTHR;
-        #[cfg(not(target_os = "netbsd"))]
-        pub const NTHR: libc::c_int = -1;
-
-        #[cfg(target_os = "freebsd")]
         pub const SWAP: libc::c_int = libc::RLIMIT_SWAP;
-        #[cfg(not(target_os = "freebsd"))]
-        pub const SWAP: libc::c_int = -1;
-
-        #[cfg(target_os = "freebsd")]
         pub const KQUEUES: libc::c_int = libc::RLIMIT_KQUEUES;
-        #[cfg(not(target_os = "freebsd"))]
-        pub const KQUEUES: libc::c_int = -1;
 
         #[cfg(target_os = "freebsd")]
         pub const NPTS: libc::c_int = libc::RLIMIT_NPTS;
         #[cfg(not(target_os = "freebsd"))]
         pub const NPTS: libc::c_int = -1;
 
+        pub const NICE: libc::c_int = -1;
+        pub const NTHR: libc::c_int = -1;
         pub const SIGPENDING: libc::c_int = -1;
         pub const MSGQUEUE: libc::c_int = -1;
         pub const RTPRIO: libc::c_int = -1;

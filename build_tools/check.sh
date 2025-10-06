@@ -43,6 +43,11 @@ fi
 # Currently, all builds are debug builds.
 build_dir="$target_dir/debug"
 
+if [ -n "$FISH_TEST_MAX_CONCURRENCY" ]; then
+    export RUST_TEST_THREADS="$FISH_TEST_MAX_CONCURRENCY"
+    export CARGO_BUILD_JOBS="$FISH_TEST_MAX_CONCURRENCY"
+fi
+
 template_file=$(mktemp)
 FISH_GETTEXT_EXTRACTION_FILE=$template_file cargo build --workspace --all-targets --features=gettext-extract
 if $lint; then

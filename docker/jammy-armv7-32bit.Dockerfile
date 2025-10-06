@@ -6,7 +6,7 @@ ENV LC_ALL=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-  && apt-get -y install \
+  && apt-get -y install --no-install-recommends  \
     build-essential \
     cargo \
     file \
@@ -15,10 +15,11 @@ RUN apt-get update \
     git \
     libpcre2-dev \
     locales \
+    openssl \
     pkg-config \
     python3 \
     python3-pexpect \
-    rust \
+    rustc \
     sudo \
     tmux \
   && locale-gen en_US.UTF-8 \

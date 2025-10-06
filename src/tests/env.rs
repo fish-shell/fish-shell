@@ -64,6 +64,7 @@ fn return_timezone_hour(tstamp: SystemTime, timezone: &wstr) -> libc::c_int {
 
     let _var = vars.get(L!("TZ"));
 
+    #[allow(deprecated)]
     let tstamp: libc::time_t = tstamp
         .duration_since(UNIX_EPOCH)
         .unwrap()

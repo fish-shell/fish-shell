@@ -174,3 +174,30 @@ jobs:
     - name: make fish_run_tests
       run: |
         make -C build VERBOSE=1 fish_run_tests
+
+  windows:
+
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        msystem: MSYS
+    - name: Install deps
+      # Not using setup-msys2 `install` option to make it easier to copy/paste
+      run: |
+        pacman --noconfirm -S --needed git rust
+    - name: cargo build
+      run: |
+        cargo build
+    - name: smoketest
+      # We can't use `cargo test` yet, there are just too many failures
+      # so this is just a quick check to make sure that fish can swim
+      run: |
+        set -x
+        [ "$(target/debug/fish.exe -c 'echo (math 1 + 1)')" = 2 ]

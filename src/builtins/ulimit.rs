@@ -71,13 +71,13 @@ pub mod limits {
         use libc;
 
         pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
-        pub const NICE: libc::c_int = libc::RLIMIT_NICE;
         pub const RSS: libc::c_int = libc::RLIMIT_RSS;
-        pub const NTHR: libc::c_int = libc::RLIMIT_NTHR;
         pub const SWAP: libc::c_int = libc::RLIMIT_SWAP;
         pub const KQUEUES: libc::c_int = libc::RLIMIT_KQUEUES;
         pub const NPTS: libc::c_int = libc::RLIMIT_NPTS;
 
+        pub const NICE: libc::c_int = -1;
+        pub const NTHR: libc::c_int = -1;
         pub const SIGPENDING: libc::c_int = -1;
         pub const MSGQUEUE: libc::c_int = -1;
         pub const RTPRIO: libc::c_int = -1;

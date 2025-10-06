@@ -26,7 +26,7 @@ use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
 
-use libc::{c_int, confstr, uid_t};
+use libc::{c_int, uid_t};
 use once_cell::sync::{Lazy, OnceCell};
 use std::collections::HashMap;
 use std::ffi::CStr;
@@ -566,25 +566,29 @@ fn setup_user(vars: &EnvStack) {
 }
 
 pub(crate) static FALLBACK_PATH: Lazy<&[WString]> = Lazy::new(|| {
-    // _CS_PATH: colon-separated paths to find POSIX utilities
-    let buf_size = unsafe { confstr(libc::_CS_PATH, std::ptr::null_mut(), 0) };
-    Box::leak(
-        (if buf_size > 0 {
-            let mut buf = vec![b'\0' as libc::c_char; buf_size];
-            unsafe { confstr(libc::_CS_PATH, buf.as_mut_ptr(), buf_size) };
-            let buf = buf;
-            // safety: buf should contain a null-byte, and is not mutable unless we move ownership
-            let cstr = unsafe { CStr::from_ptr(buf.as_ptr()) };
-            colon_split(&[str2wcstring(cstr.to_bytes())])
-        } else {
-            vec![
-                WString::from_str(env!("PREFIX")) + L!("/bin"),
-                L!("/usr/bin").to_owned(),
-                L!("/bin").to_owned(),
-            ]
-        })
-        .into_boxed_slice(),
-    )
+    // _CS_PATH: colon-separated paths to find POSIX utilities. Same as USER_CS_PATH.
+    // BSDs only have the "USER_" form, while Linux only has the "CS_" form.
+    #[cfg(any(apple, bsd))]
+    let cs_path = libc::USER_CS_PATH;
+    #[cfg(not(any(apple, bsd)))]
+    let cs_path = libc::_CS_PATH;
+
+    let buf_size = unsafe { libc::confstr(cs_path, std::ptr::null_mut(), 0) };
+    let paths: Vec<WString> = if buf_size > 0 {
+        let mut buf = vec![b'\0' as libc::c_char; buf_size];
+        unsafe { libc::confstr(cs_path, buf.as_mut_ptr(), buf_size) };
+        let buf = buf;
+        // safety: buf should contain a null-byte, and is not mutable unless we move ownership
+        let cstr = unsafe { CStr::from_ptr(buf.as_ptr()) };
+        colon_split(&[str2wcstring(cstr.to_bytes())])
+    } else {
+        vec![
+            WString::from_str(env!("PREFIX")) + L!("/bin"),
+            WString::from_str("/usr/bin"),
+            WString::from_str("/bin"),
+        ]
+    };
+    Box::leak(paths.into_boxed_slice())
 });
 
 /// Make sure the PATH variable contains something.

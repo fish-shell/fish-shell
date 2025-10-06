@@ -2629,9 +2629,6 @@ msgstr ""
 msgid "How to write your own prompt"
 msgstr ""
 
-msgid "If commandline is empty, run nextd; else move one argument to the right"
-msgstr ""
-
 msgid "If cursor is at the command token, edit the command source file"
 msgstr ""
 

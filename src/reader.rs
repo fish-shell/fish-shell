@@ -3429,7 +3429,15 @@ impl<'a> Reader<'a> {
                     self.rls().last_cmd != Some(rl::KillToken),
                 );
             }
-            rl::ForwardToken => {
+            rl::ForwardToken | rl::NextdOrForwardToken => {
+                if c == rl::NextdOrForwardToken && self.command_line.is_empty() {
+                    self.eval_bind_cmd(L!("nextd"));
+                    self.force_exec_prompt_and_repaint = true;
+                    self.input_data
+                        .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+                    return;
+                }
+
                 if self.is_at_autosuggestion() {
                     let Some(new_position) = self.forward_token(true) else {
                         return;
@@ -5733,6 +5741,7 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::ForwardBigword
         | rl::BackwardBigword
         | rl::ForwardToken
+        | rl::NextdOrForwardToken
         | rl::BackwardToken
         | rl::PrevdOrBackwardToken
         | rl::NextdOrForwardWord

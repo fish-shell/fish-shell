@@ -185,6 +185,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("kill-token"), ReadlineCmd::KillToken),
     make_md(L!("kill-whole-line"), ReadlineCmd::KillWholeLine),
     make_md(L!("kill-word"), ReadlineCmd::KillWord),
+    make_md(L!("nextd-or-forward-token"), ReadlineCmd::NextdOrForwardToken),
     make_md(L!("nextd-or-forward-word"), ReadlineCmd::NextdOrForwardWord),
     make_md(L!("or"), ReadlineCmd::FuncOr),
     make_md(L!("pager-toggle-search"), ReadlineCmd::PagerToggleSearch),

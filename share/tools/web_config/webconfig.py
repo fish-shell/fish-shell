@@ -1544,7 +1544,10 @@ print("%sHit ENTER to stop.%s" % (ENTER_BOLD_MODE, EXIT_ATTRIBUTE_MODE))
 
 
 def runThing():
-    if isMacOS10_12_5_OrLater():
+    if os.environ.get("BROWSER") == "true":
+        # Don't start a browser in this case (see issue #11926)
+        pass
+    elif isMacOS10_12_5_OrLater():
         subprocess.check_call(["open", fileurl])
     elif is_wsl():
         cmd_path = find_executable("cmd.exe", COMMON_WSL_CMD_PATHS)

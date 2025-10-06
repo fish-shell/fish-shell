@@ -268,6 +268,7 @@ define_readline_cmds! {
     ("kill-whole-line", KillWholeLine),
     ("kill-word", KillWordEmacs),
     ("kill-word-vi", KillWordVi),
+    ("nextd-or-forward-token", NextdOrForwardToken),
     ("nextd-or-forward-word", NextdOrForwardWordEmacs),
     ("or", FuncOr),
     ("pager-toggle-search", PagerToggleSearch),

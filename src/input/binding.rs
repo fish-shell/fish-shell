@@ -271,6 +271,7 @@ define_readline_cmds! {
     ("nextd-or-forward-word", NextdOrForwardWordEmacs),
     ("or", FuncOr),
     ("pager-toggle-search", PagerToggleSearch),
+    ("prevd-or-backward-token", PrevdOrBackwardToken),
     ("prevd-or-backward-word", PrevdOrBackwardWord),
     ("redo", Redo),
     ("repaint", Repaint),

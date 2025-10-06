@@ -3757,7 +3757,15 @@ impl<'a> Reader<'a> {
                     self.rls().last_cmd != Some(rl::BackwardKillToken),
                 );
             }
-            rl::BackwardToken => {
+            rl::BackwardToken | rl::PrevdOrBackwardToken => {
+                if c == rl::PrevdOrBackwardToken && self.command_line.is_empty() {
+                    self.eval_bind_cmd(L!("prevd"));
+                    self.force_exec_prompt_and_repaint = true;
+                    self.input_data
+                        .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+                    return;
+                }
+
                 let Some(new_position) = self.backward_token() else {
                     return;
                 };
@@ -6244,6 +6252,7 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::BackwardBigword
         | rl::ForwardToken
         | rl::BackwardToken
+        | rl::PrevdOrBackwardToken
         | rl::NextdOrForwardWordEmacs
         | rl::PrevdOrBackwardWord
         | rl::DeleteChar

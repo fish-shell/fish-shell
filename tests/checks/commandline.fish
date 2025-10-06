@@ -65,3 +65,10 @@ $fish -ic '
 # CHECK: hello
 # CHECK: helloworld
 # CHECK: hello world
+
+$fish -c 'commandline foo'
+# CHECKERR: commandline: Can not set commandline in non-interactive mode
+# CHECKERR: Standard input (line 1):
+# CHECKERR: commandline foo
+# CHECKERR: ^
+# CHECKERR: (Type 'help commandline' for related documentation)

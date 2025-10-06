@@ -245,7 +245,7 @@ if test (string length "$x") -ne $fish_read_limit
     echo reading with a limited amount of input data failed the length test
 end
 
-# Confirm reading non-interactively works -- \#4206 regression
+# Confirm reading non-interactively works -- #4206 regression
 echo abc\ndef | $fish -i -c 'read a; read b; set --show a; set --show b'
 #CHECK: $a: set in global scope, unexported, with 1 elements
 #CHECK: $a[1]: |abc|

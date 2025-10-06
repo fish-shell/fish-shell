@@ -9,6 +9,7 @@ This release fixes the following regressions identified in 4.1.0:
 - Stopped printing output that would cause a glitch on old versions of Midnight Commander (:issue:`11869`).
 - Added a fix for some configurations of Zellij where :kbd:`escape` key processing was delayed (:issue:`11868`).
 - Fixed a case where the :doc:`web-based configuration tool <cmds/fish_config>` would generate invalid configuration (:issue:`11861`).
+- Fixed a case where pasting into ``fish -c read`` would fail with a noisy error (:issue:`11836`).
 - Fixed a case where upgrading fish would break old versions of fish that were still running.
 
   In general, fish still needs to be restarted after it is upgraded,

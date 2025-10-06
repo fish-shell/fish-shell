@@ -635,7 +635,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         transient = parser.libdata().transient_commandline.clone().unwrap();
         current_buffer = &transient;
         current_cursor_pos = transient.len();
-    } else if is_interactive_session() {
+    } else if parser.interactive_initialized.load() || is_interactive_session() {
         current_buffer = &rstate.text;
         current_cursor_pos = rstate.cursor_pos;
     } else {

@@ -34,6 +34,8 @@ use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, MutexGuard};
 use std::time;
 
+pub const BUILD_DIR: &str = env!("FISH_RESOLVED_BUILD_DIR");
+
 pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 
 // Highest legal ASCII value.

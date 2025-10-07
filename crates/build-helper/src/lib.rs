@@ -12,7 +12,7 @@ fn cargo_target_dir() -> Cow<'static, Path> {
 }
 
 pub fn fish_build_dir() -> Cow<'static, Path> {
-    // FISH_BUILD_DIR is set by CMake, if we are using it.
+    // This is set if using CMake.
     option_env!("FISH_BUILD_DIR")
         .map(|d| Cow::Borrowed(Path::new(d)))
         .unwrap_or(cargo_target_dir())

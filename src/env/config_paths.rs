@@ -72,6 +72,8 @@ impl ConfigPaths {
     fn from_exec_path(unresolved_exec_path: PathBuf) -> Self {
         use std::path::Path;
 
+        use crate::common::BUILD_DIR;
+
         let invalid_exec_path = |exec_path: &Path| {
             FLOG!(
                 config,
@@ -116,7 +118,7 @@ impl ConfigPaths {
         }
 
         // If we're in Cargo's target directory or in CMake's build directory, use the source files.
-        if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
+        if exec_path.starts_with(BUILD_DIR) {
             FLOG!(
                 config,
                 format!(

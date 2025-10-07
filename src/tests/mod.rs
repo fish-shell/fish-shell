@@ -29,7 +29,7 @@ mod topic_monitor;
 mod wgetopt;
 
 pub mod prelude {
-    use crate::common::{ScopeGuard, ScopeGuarding};
+    use crate::common::{ScopeGuard, ScopeGuarding, BUILD_DIR};
     use crate::env::{env_init, misc_init};
     use crate::parser::{CancelBehavior, Parser};
     use crate::reader::{reader_deinit, reader_init};
@@ -88,9 +88,9 @@ pub mod prelude {
     pub fn test_init() -> impl ScopeGuarding<Target = ()> {
         static DONE: OnceCell<()> = OnceCell::new();
         DONE.get_or_init(|| {
-            // If we are building with `cargo build` and have build w/ `cmake`, FISH_BUILD_DIR might
-            // not yet exist.
-            let mut test_dir = PathBuf::from(env!("FISH_BUILD_DIR"));
+            // If we are building with `cargo build` and have build w/ `cmake`, this might not
+            // yet exist.
+            let mut test_dir = PathBuf::from(BUILD_DIR);
             test_dir.push("fish-test");
             std::fs::create_dir_all(&test_dir).unwrap();
             set_current_dir(&test_dir).unwrap();

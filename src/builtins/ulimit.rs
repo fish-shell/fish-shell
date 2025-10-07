@@ -14,6 +14,7 @@ pub mod limits {
     /// Note these are uints on Linux but ints everywhere else - we use -1 as a sentinel
     /// so cast to int.
     pub mod common {
+        use cfg_if::cfg_if;
         use libc;
         pub const CORE: libc::c_int = libc::RLIMIT_CORE as _;
         pub const DATA: libc::c_int = libc::RLIMIT_DATA as _;
@@ -23,8 +24,15 @@ pub mod limits {
         pub const STACK: libc::c_int = libc::RLIMIT_STACK as _;
         pub const CPU: libc::c_int = libc::RLIMIT_CPU as _;
         pub const NPROC: libc::c_int = libc::RLIMIT_NPROC as _;
-        pub const AS: libc::c_int = libc::RLIMIT_AS as _;
+        cfg_if!(
+            if #[cfg(target_os = "openbsd")] {
+                pub const AS: libc::c_int = -1;
+            } else {
+                pub const AS: libc::c_int = libc::RLIMIT_AS as _;
+            }
+        );
     }
+
     pub use self::common::*;
 
     #[cfg(target_os = "linux")]
@@ -68,13 +76,33 @@ pub mod limits {
 
     #[cfg(bsd)]
     pub mod bsd {
+        use cfg_if::cfg_if;
         use libc;
 
-        pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
-        pub const RSS: libc::c_int = libc::RLIMIT_RSS;
-        pub const SWAP: libc::c_int = libc::RLIMIT_SWAP;
-        pub const KQUEUES: libc::c_int = libc::RLIMIT_KQUEUES;
-        pub const NPTS: libc::c_int = libc::RLIMIT_NPTS;
+        cfg_if!(
+            if #[cfg(any(target_os = "netbsd", target_os = "openbsd"))] {
+                #[cfg(target_os = "netbsd")]
+                pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
+                #[cfg(target_os = "openbsd")]
+                pub const SBSIZE: libc::c_int = -1;
+                pub const RSS: libc::c_int = libc::RLIMIT_RSS;
+                pub const SWAP: libc::c_int = -1;
+                pub const KQUEUES: libc::c_int = -1;
+            } else {
+                pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
+                pub const RSS: libc::c_int = libc::RLIMIT_RSS;
+                pub const SWAP: libc::c_int = libc::RLIMIT_SWAP;
+                pub const KQUEUES: libc::c_int = libc::RLIMIT_KQUEUES;
+            }
+        );
+
+        cfg_if!(
+            if #[cfg(target_os = "freebsd")] {
+                pub const NPTS: libc::c_int = libc::RLIMIT_NPTS;
+            } else {
+                pub const NPTS: libc::c_int = -1;
+            }
+        );
 
         pub const NICE: libc::c_int = -1;
         pub const NTHR: libc::c_int = -1;

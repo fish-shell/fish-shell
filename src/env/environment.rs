@@ -26,6 +26,7 @@ use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
 
+use cfg_if::cfg_if;
 use libc::{c_int, uid_t};
 use once_cell::sync::{Lazy, OnceCell};
 use std::collections::HashMap;
@@ -567,11 +568,16 @@ fn setup_user(vars: &EnvStack) {
 
 pub(crate) static FALLBACK_PATH: Lazy<&[WString]> = Lazy::new(|| {
     // _CS_PATH: colon-separated paths to find POSIX utilities. Same as USER_CS_PATH.
-    // BSDs only have the "USER_" form, while Linux only has the "CS_" form.
-    #[cfg(any(apple, bsd))]
-    let cs_path = libc::USER_CS_PATH;
-    #[cfg(not(any(apple, bsd)))]
-    let cs_path = libc::_CS_PATH;
+    cfg_if!(
+        // TODO use _CS_PATH (https://github.com/rust-lang/libc/pull/4738)
+        if #[cfg(any(target_os = "netbsd", target_os = "openbsd"))] {
+           let  cs_path = 1;
+        } else if #[cfg(bsd)] {
+           let  cs_path = libc::USER_CS_PATH;
+        } else {
+           let  cs_path = libc::_CS_PATH;
+        }
+    );
 
     let buf_size = unsafe { libc::confstr(cs_path, std::ptr::null_mut(), 0) };
     let paths: Vec<WString> = if buf_size > 0 {

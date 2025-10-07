@@ -19,11 +19,23 @@ pub mod limits {
         pub const CORE: libc::c_int = libc::RLIMIT_CORE as _;
         pub const DATA: libc::c_int = libc::RLIMIT_DATA as _;
         pub const FSIZE: libc::c_int = libc::RLIMIT_FSIZE as _;
-        pub const MEMLOCK: libc::c_int = libc::RLIMIT_MEMLOCK as _;
+        cfg_if!(
+            if #[cfg(cygwin)] {
+                pub const MEMLOCK: libc::c_int = -1;
+            } else {
+                pub const MEMLOCK: libc::c_int = libc::RLIMIT_MEMLOCK as _;
+            }
+        );
         pub const NOFILE: libc::c_int = libc::RLIMIT_NOFILE as _;
         pub const STACK: libc::c_int = libc::RLIMIT_STACK as _;
         pub const CPU: libc::c_int = libc::RLIMIT_CPU as _;
-        pub const NPROC: libc::c_int = libc::RLIMIT_NPROC as _;
+        cfg_if!(
+            if #[cfg(cygwin)] {
+                pub const NPROC: libc::c_int = -1;
+            } else {
+                pub const NPROC: libc::c_int = libc::RLIMIT_NPROC as _;
+            }
+        );
         cfg_if!(
             if #[cfg(target_os = "openbsd")] {
                 pub const AS: libc::c_int = -1;
@@ -113,6 +125,26 @@ pub mod limits {
     }
     #[cfg(bsd)]
     pub use self::bsd::*;
+
+    #[cfg(cygwin)]
+    pub mod cygwin {
+        use libc;
+
+        pub const SIGPENDING: libc::c_int = -1;
+        pub const MSGQUEUE: libc::c_int = -1;
+        pub const RTPRIO: libc::c_int = -1;
+        pub const RTTIME: libc::c_int = -1;
+        pub const RSS: libc::c_int = -1;
+
+        pub const SBSIZE: libc::c_int = -1;
+        pub const NICE: libc::c_int = -1;
+        pub const SWAP: libc::c_int = -1;
+        pub const KQUEUES: libc::c_int = -1;
+        pub const NPTS: libc::c_int = -1;
+        pub const NTHR: libc::c_int = -1;
+    }
+    #[cfg(cygwin)]
+    pub use self::cygwin::*;
 }
 
 /// Calls getrlimit.

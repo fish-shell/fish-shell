@@ -55,6 +55,20 @@ else
 end
 # CHECKERR: pwd: realpath failed: {{.+}}
 
+mkdir $real/subdir
+cd $link
+test "$PWD" = "$link" || echo "Default cd should keep symlink:"\n "\$PWD: $PWD"\n "\$link: $link"\n
+cd -P $link
+test "$PWD" = "$real" || echo "cd -P should resolve symlink:"\n "\$PWD: $PWD"\n "\$real: $real"\n
+cd $link/subdir
+test "$PWD" = "$link/subdir" || echo "Logical cd should keep subdir symlink:"\n "\$PWD: $PWD"\n "\$link/subdir: $link/subdir"\n
+cd -P ..
+test "$PWD" = "$real" || echo "cd -P .. should use physical parent:"\n "\$PWD: $PWD"\n "\$real: $real"\n
+cd $link/subdir
+cd -L ..
+test "$PWD" = "$link" || echo "cd -L .. should use logical parent:"\n "\$PWD: $PWD"\n "\$link: $link"\n
+cd $base
+
 # Create a symlink and verify logical completion.
 # create directory $base/through/the/looking/glass
 # symlink $base/somewhere/rabbithole -> $base/through/the/looking/glass

@@ -6,7 +6,7 @@ Synopsis
 
 .. synopsis::
 
-    cd [DIRECTORY]
+    cd [( -L | --no-dereference ) | ( -P | --dereference )] [DIRECTORY]
 
 Description
 -----------
@@ -18,10 +18,21 @@ Description
 
 ``cd`` changes the current working directory.
 
+The :envvar:`PWD` environment variable is updated with the new working directory, and the previous directory
+is added to the :ref:`directory history <directory-history>`.
+
 If *DIRECTORY* is given, it will become the new directory. If no parameter is given, the :envvar:`HOME` environment variable will be used.
 
 If *DIRECTORY* is a relative path, all the paths in the :envvar:`CDPATH` will be tried as prefixes for it, in addition to :envvar:`PWD`.
 It is recommended to keep **.** as the first element of :envvar:`CDPATH`, or :envvar:`PWD` will be tried last.
+
+The new directory name is partially resolved to remove redundant segments (``.`` or ``..``).
+
+``cd`` defaults to treating symbolic links as real directories, and not resolving them to their underlying
+targets. The ``$PWD`` :ref:`special variable <variables-special>` variable will contain the path that was
+supplied. This default behaviour can be enforced with the ``-L`` or ``--no-dereference`` option.
+
+The ``-P`` or ``--dereference`` option resolves all symbolic links first. This was the default in fish versions before 3.0.0.
 
 Fish will also try to change directory if given a command that looks like a directory (starting with **.**, **/** or **~**, or ending with **/**), without explicitly requiring **cd**.
 
@@ -44,6 +55,9 @@ Examples
 
     cd /usr/src/fish-shell
     # changes the working directory to /usr/src/fish-shell
+
+    cd -P /tmp/link
+    # resolves /tmp/link to its target before recording the directory
 
 See Also
 --------

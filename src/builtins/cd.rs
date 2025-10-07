@@ -7,12 +7,19 @@ use crate::{
     fds::{BEST_O_SEARCH, wopen_dir},
     parser::ParserEnvSetMode,
     path::path_apply_cdpath,
-    wutil::{normalize_path, wreadlink},
+    wutil::{normalize_path, wreadlink, wrealpath},
 };
 use errno::Errno;
 use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
 use nix::unistd::fchdir;
 use std::sync::Arc;
+
+const SHORT_OPTIONS: &wstr = L!("hLP");
+const LONG_OPTIONS: &[WOption] = &[
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("no-dereference"), ArgType::NoArgument, 'L'),
+    wopt(L!("dereference"), ArgType::NoArgument, 'P'),
+];
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
@@ -26,18 +33,43 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         return Err(STATUS_INVALID_ARGS);
     };
 
-    let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
+    let argc = args.len();
+    let mut deref_symlink = false;
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
+    while let Some(opt) = w.next_opt() {
+        match opt {
+            'L' => deref_symlink = false,
+            'P' => deref_symlink = true,
+            'h' => {
+                builtin_print_help(parser, streams, cmd);
+                return Ok(SUCCESS);
+            }
+            ';' => {
+                builtin_unexpected_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            '?' => {
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            _ => panic!("unexpected option {}", opt),
+        }
+    }
 
-    if opts.print_help {
-        builtin_print_help(parser, streams, cmd);
-        return Ok(SUCCESS);
+    let optind = w.wopt_index;
+    let non_option_argc = argc - optind;
+    if non_option_argc > 1 {
+        err_fmt!(Error::UNEXP_ARG_COUNT, 1, non_option_argc)
+            .cmd(cmd)
+            .finish(streams);
+        return Err(STATUS_INVALID_ARGS);
     }
 
     let vars = parser.vars();
     let tmpstr;
 
-    let dir_in: &wstr = if args.len() > opts.optind {
-        args[opts.optind]
+    let dir_in: &wstr = if non_option_argc == 1 {
+        args[optind]
     } else {
         match vars.get_unless_empty(L!("HOME")) {
             Some(v) => {
@@ -63,7 +95,15 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         return Err(STATUS_CMD_ERROR);
     }
 
-    let pwd = vars.get_pwd_slash();
+    let mut pwd = vars.get_pwd_slash();
+    if deref_symlink {
+        if let Some(mut real_pwd) = wrealpath(&pwd) {
+            if !real_pwd.ends_with('/') {
+                real_pwd.push('/');
+            }
+            pwd = real_pwd;
+        }
+    }
 
     let dirs = path_apply_cdpath(dir_in, &pwd, vars);
     assert!(
@@ -120,10 +160,17 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         // Eventually fish will support distinct CWDs for different parsers in different threads.
         parser.libdata_mut().cwd_fd = Some(Arc::new(fd));
 
+        let mut new_pwd = norm_dir;
+        if deref_symlink {
+            if let Some(real_dir) = wrealpath(&new_pwd) {
+                new_pwd = real_dir;
+            }
+        }
+
         parser.set_var_and_fire(
             L!("PWD"),
             ParserEnvSetMode::new(EnvMode::EXPORT | EnvMode::GLOBAL),
-            vec![norm_dir],
+            vec![new_pwd],
         );
         return Ok(SUCCESS);
     }

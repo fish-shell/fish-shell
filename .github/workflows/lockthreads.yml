@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   lock:
+    if: github.repository_owner == 'fish-shell'
     permissions:
       issues: write  # for dessant/lock-threads to lock issues
       pull-requests: write  # for dessant/lock-threads to lock PRs

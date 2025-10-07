@@ -568,10 +568,15 @@ fn setup_user(vars: &EnvStack) {
 pub(crate) static FALLBACK_PATH: Lazy<&[WString]> = Lazy::new(|| {
     // _CS_PATH: colon-separated paths to find POSIX utilities. Same as USER_CS_PATH.
     // BSDs only have the "USER_" form, while Linux only has the "CS_" form.
-    #[cfg(any(apple, bsd))]
+    // NOTE: This can be changed to use libc::_CS_PATH directly once
+    //       https://github.com/rust-lang/libc/pull/4738 (Define _CS_PATH on BSDs)
+    //       makes it to a release
+    #[cfg(all(any(apple, bsd), not(any(target_os = "openbsd", target_os = "netbsd"))))]
     let cs_path = libc::USER_CS_PATH;
     #[cfg(not(any(apple, bsd)))]
     let cs_path = libc::_CS_PATH;
+    #[cfg(any(target_os = "openbsd", target_os = "netbsd"))]
+    let cs_path = 1;
 
     let buf_size = unsafe { libc::confstr(cs_path, std::ptr::null_mut(), 0) };
     let paths: Vec<WString> = if buf_size > 0 {

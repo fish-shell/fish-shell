@@ -8,5 +8,5 @@
 # CHECKERR: config: paths.sysconf: {{.+}}/etc
 
 # CHECKERR: config: paths.bin: {{.*}}
-# CHECKERR: config: sourcing /home/johannes/git/fish-shell/etc/config.fish
+# CHECKERR: config: sourcing {{.+}}/etc/config.fish
 # CHECKERR: config: not sourcing {{.*}}/xdg_config_home/fish/config.fish (not readable or does not exist)

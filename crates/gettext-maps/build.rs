@@ -1,9 +1,10 @@
 use std::{
-    env,
     ffi::OsStr,
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
+
+use fish_build_helper::env_var;
 
 fn main() {
     let cache_dir =
@@ -27,7 +28,7 @@ fn embed_localizations(cache_dir: &Path) {
     std::fs::create_dir_all(cache_dir).unwrap();
 
     let localization_map_path =
-        Path::new(&env::var("OUT_DIR").unwrap()).join("localization_maps.rs");
+        Path::new(&env_var("OUT_DIR").unwrap()).join("localization_maps.rs");
     let mut localization_map_file = BufWriter::new(File::create(&localization_map_path).unwrap());
 
     // This will become a map which maps from language identifiers to maps containing localizations

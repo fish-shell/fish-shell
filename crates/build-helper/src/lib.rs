@@ -1,4 +1,21 @@
-use std::{borrow::Cow, env, path::Path};
+use std::{borrow::Cow, env, os::unix::ffi::OsStrExt, path::Path};
+
+pub fn env_var(name: &str) -> Option<String> {
+    let err = match env::var(name) {
+        Ok(p) => return Some(p),
+        Err(err) => err,
+    };
+    use env::VarError::*;
+    match err {
+        NotPresent => None,
+        NotUnicode(os_string) => {
+            panic!(
+                "Environment variable {name} is not valid Unicode: {:?}",
+                os_string.as_bytes()
+            )
+        }
+    }
+}
 
 pub fn workspace_root() -> &'static Path {
     let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));

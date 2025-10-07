@@ -1,6 +1,6 @@
 #![allow(clippy::uninlined_format_args)]
 
-use fish_build_helper::{fish_build_dir, workspace_root};
+use fish_build_helper::{env_var, fish_build_dir, workspace_root};
 use rsconf::Target;
 use std::env;
 use std::path::{Path, PathBuf};
@@ -30,9 +30,9 @@ fn main() {
     );
 
     // Some build info
-    rsconf::set_env_value("BUILD_TARGET_TRIPLE", &env::var("TARGET").unwrap());
-    rsconf::set_env_value("BUILD_HOST_TRIPLE", &env::var("HOST").unwrap());
-    rsconf::set_env_value("BUILD_PROFILE", &env::var("PROFILE").unwrap());
+    rsconf::set_env_value("BUILD_TARGET_TRIPLE", &env_var("TARGET").unwrap());
+    rsconf::set_env_value("BUILD_HOST_TRIPLE", &env_var("HOST").unwrap());
+    rsconf::set_env_value("BUILD_PROFILE", &env_var("PROFILE").unwrap());
 
     let version = &get_version(&env::current_dir().unwrap());
     // Per https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script,
@@ -114,7 +114,7 @@ fn detect_apple(_: &Target) -> bool {
 
 fn detect_cygwin(_: &Target) -> bool {
     // Cygwin target is usually cross-compiled.
-    std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "cygwin"
+    env_var("CARGO_CFG_TARGET_OS").unwrap() == "cygwin"
 }
 
 /// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
@@ -126,7 +126,7 @@ fn detect_cygwin(_: &Target) -> bool {
 fn detect_bsd(_: &Target) -> bool {
     // Instead of using `uname`, we can inspect the TARGET env variable set by Cargo. This lets us
     // support cross-compilation scenarios.
-    let mut target = std::env::var("TARGET").unwrap();
+    let mut target = env_var("TARGET").unwrap();
     if !target.chars().all(|c| c.is_ascii_lowercase()) {
         target = target.to_ascii_lowercase();
     }
@@ -178,14 +178,14 @@ fn setup_paths() {
     use unix_path::{Path, PathBuf};
 
     fn get_path(name: &str, default: &str, onvar: &Path) -> PathBuf {
-        let mut var = PathBuf::from(env::var(name).unwrap_or(default.to_string()));
+        let mut var = PathBuf::from(env_var(name).unwrap_or(default.to_string()));
         if var.is_relative() {
             var = onvar.join(var);
         }
         var
     }
 
-    let prefix = PathBuf::from(env::var("PREFIX").unwrap_or("/usr/local".to_string()));
+    let prefix = PathBuf::from(env_var("PREFIX").unwrap_or("/usr/local".to_string()));
     rsconf::rebuild_if_env_changed("PREFIX");
     rsconf::set_env_value("PREFIX", prefix.to_str().unwrap());
 
@@ -229,7 +229,7 @@ fn get_version(src_dir: &Path) -> String {
     use std::fs::read_to_string;
     use std::process::Command;
 
-    if let Ok(var) = std::env::var("FISH_BUILD_VERSION") {
+    if let Some(var) = env_var("FISH_BUILD_VERSION") {
         return var;
     }
 

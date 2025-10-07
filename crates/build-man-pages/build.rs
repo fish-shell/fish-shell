@@ -14,12 +14,9 @@ fn main() {
 
 #[cfg(not(clippy))]
 fn build_man(man_dir: &Path) {
-    use std::{
-        env,
-        process::{Command, Stdio},
-    };
+    use std::process::{Command, Stdio};
 
-    use fish_build_helper::workspace_root;
+    use fish_build_helper::{env_var, workspace_root};
 
     let workspace_root = workspace_root();
 
@@ -47,7 +44,7 @@ fn build_man(man_dir: &Path) {
     let _ = std::fs::create_dir_all(sec1_str);
 
     rsconf::rebuild_if_env_changed("FISH_BUILD_DOCS");
-    if env::var("FISH_BUILD_DOCS") == Ok("0".to_string()) {
+    if env_var("FISH_BUILD_DOCS") == Some("0".to_string()) {
         rsconf::warn!("Skipping man pages because $FISH_BUILD_DOCS is set to 0");
         return;
     }
@@ -64,7 +61,7 @@ fn build_man(man_dir: &Path) {
         .spawn()
     {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            if env::var("FISH_BUILD_DOCS") == Ok("1".to_string()) {
+            if env_var("FISH_BUILD_DOCS") == Some("1".to_string()) {
                 panic!("Could not find sphinx-build to build man pages.\nInstall sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0.");
             }
             rsconf::warn!("Cannot find sphinx-build to build man pages.");

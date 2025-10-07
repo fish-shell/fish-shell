@@ -32,6 +32,7 @@ done
 
 repo_root="$(dirname "$0")/.."
 fish_site=$repo_root/../fish-site
+fish_site_repo=git@github.com:$repository_owner/fish-site
 
 for path in . "$fish_site"
 do
@@ -41,6 +42,13 @@ do
         exit 1
     fi
 done
+
+(
+    cd "$fish_site"
+    [ "$(git rev-parse HEAD)" = \
+        "$(git ls-remote "$fish_site_repo" refs/heads/master |
+            awk '{print $1}')" ]
+)
 
 if git tag | grep -qxF "$version"; then
     echo >&2 "$0: tag $version already exists"
@@ -204,7 +212,7 @@ done
     " | sed 's,^\s*| \?,,')"
     # This takes care to support remote names that are different from
     # fish-shell remote name. Also, support detached HEAD state.
-    git push git@github.com:$repository_owner/fish-site HEAD:master
+    git push "$fish_site_repo" HEAD:master
 )
 
 if [ -n "$integration_branch" ]; then {

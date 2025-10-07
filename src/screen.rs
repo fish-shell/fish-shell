@@ -157,6 +157,9 @@ pub struct ScreenData {
     screen_width: Option<usize>,
 
     cursor: Cursor,
+
+    prompt_lines: usize,
+    scroll_amount: usize,
 }
 
 impl ScreenData {
@@ -207,8 +210,6 @@ impl ScreenData {
 pub struct Screen {
     /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
     pub autosuggestion_is_truncated: bool,
-    /// True if the last rendering was so large we could only display part of the command line.
-    pub scrolled: bool,
 
     /// Receiver for our output.
     outp: &'static RefCell<Outputter>,
@@ -244,7 +245,6 @@ impl Screen {
         Self {
             outp: Outputter::stdoutput(),
             autosuggestion_is_truncated: Default::default(),
-            scrolled: Default::default(),
             desired: Default::default(),
             actual: Default::default(),
             actual_left_prompt: Default::default(),
@@ -259,7 +259,7 @@ impl Screen {
 
     /// Return whether the last rendering was so large we could only display part of the command line.
     pub fn scrolled(&self) -> bool {
-        self.scrolled
+        self.desired.scroll_amount != 0
     }
 
     /// This is the main function for the screen output library. It is used to define the desired
@@ -351,10 +351,12 @@ impl Screen {
             !autosuggestion.is_empty() && autosuggestion != layout.autosuggestion;
 
         // Clear the desired screen and set its width.
-        self.desired.screen_width = Some(screen_width);
         self.desired.resize(0);
+        self.desired.screen_width = Some(screen_width);
+        self.desired.prompt_lines = calc_prompt_lines(left_prompt) - 1;
         self.desired.cursor.x = 0;
-        self.desired.cursor.y = 0;
+        self.desired.cursor.y = self.desired.prompt_lines;
+        self.desired.resize(self.desired.prompt_lines);
 
         // Append spaces for the left prompt.
         let prompt_offset = if pager.search_field_shown {
@@ -457,7 +459,7 @@ impl Screen {
             self.desired.add_line();
         }
 
-        let full_line_count = self.desired.cursor.y
+        let full_line_count = self.desired.cursor.y + 1
             - if self.desired.cursor.x == 0
                 && self
                     .desired
@@ -469,8 +471,7 @@ impl Screen {
                 1
             } else {
                 0
-            }
-            + calc_prompt_lines(&layout.left_prompt);
+            };
         let pager_available_height = std::cmp::max(
             1,
             curr_termsize
@@ -514,30 +515,16 @@ impl Screen {
         pager.update_rendering(page_rendering);
         // Append pager_data (none if empty).
         self.desired.append_lines(&page_rendering.screen_data);
-
-        self.scrolled = scrolled_cursor.scroll_amount != 0;
+        self.desired.scroll_amount = if is_final_rendering {
+            0
+        } else {
+            scrolled_cursor.scroll_amount
+        };
 
         self.with_buffered_output(|zelf| {
-            zelf.update(
-                vars,
-                &layout.left_prompt,
-                &layout.right_prompt,
-                is_final_rendering,
-            )
+            zelf.update(vars, &layout.left_prompt, &layout.right_prompt)
         });
         self.save_status();
-    }
-
-    pub fn multiline_prompt_hack(&mut self) {
-        // If the prompt is multi-line, we need to move up to the prompt's initial line. We do this
-        // by lying to ourselves and claiming that we're really below what we consider "line 0"
-        // (which is the last line of the prompt). This will cause us to move up to try to get back
-        // to line 0, but really we're getting back to the initial line of the prompt.
-        let prompt_line_count = self
-            .actual_left_prompt
-            .as_ref()
-            .map_or(1, |p| calc_prompt_lines(p));
-        self.actual.cursor.y += prompt_line_count.checked_sub(1).unwrap();
     }
 
     /// Resets the screen buffer's internal knowledge about the contents of the screen,
@@ -551,7 +538,6 @@ impl Screen {
             std::cmp::max(self.actual_lines_before_reset, self.actual.line_count());
 
         if repaint_prompt {
-            self.multiline_prompt_hack();
             self.actual_left_prompt = None;
             self.need_clear_screen = true;
         }
@@ -566,24 +552,7 @@ impl Screen {
     }
 
     pub fn push_to_scrollback(&mut self, cursor_y: usize) {
-        let prompt_y = self.command_line_y_given_cursor_y(cursor_y);
-        let trailing_prompt_lines = self
-            .actual_left_prompt
-            .as_ref()
-            .map_or(0, |p| calc_prompt_lines(p) - 1);
-        let lines_to_scroll = prompt_y
-            .checked_sub(trailing_prompt_lines)
-            .unwrap_or_else(|| {
-                FLOG!(
-                    reader,
-                    "Number of trailing prompt lines prompt lines",
-                    trailing_prompt_lines,
-                    "exceeds prompt's y",
-                    prompt_y,
-                    "inferred from reported cursor position",
-                );
-                0
-            });
+        let lines_to_scroll = self.command_line_y_given_cursor_y(cursor_y);
         if lines_to_scroll == 0 {
             return;
         }
@@ -629,26 +598,8 @@ impl Screen {
                 0
             });
         let y = y.min(self.actual.line_count() - 1);
-        let Some(viewport_prompt_x) = viewport_cursor.x.checked_sub(self.actual.cursor.x) else {
-            FLOGF!(
-                reader,
-                "Actual cursor x=%d exceeds reported cursor x=%d, \
-                     was the cursor moved by printing to the TTY?",
-                self.actual.cursor.x,
-                viewport_cursor.x
-            );
-            return CharOffset::None;
-        };
-        let Some(x) = viewport_position.x.checked_sub(viewport_prompt_x) else {
-            FLOGF!(
-                reader,
-                "Computed prompt x=%d exceeds mouse click x=%d, \
-                 was the cursor moved by printing to the TTY?",
-                viewport_prompt_x,
-                viewport_position.x
-            );
-            return CharOffset::None;
-        };
+        let viewport_prompt_x = viewport_cursor.x - self.actual.cursor.x;
+        let x = viewport_position.x - viewport_prompt_x;
         let line = self.actual.line(y);
         let x = x.max(line.indentation);
         let offset = line
@@ -1046,13 +997,7 @@ impl Screen {
     }
 
     /// Update the screen to match the desired output.
-    fn update(
-        &mut self,
-        vars: &dyn Environment,
-        left_prompt: &wstr,
-        right_prompt: &wstr,
-        is_final_rendering: bool,
-    ) {
+    fn update(&mut self, vars: &dyn Environment, left_prompt: &wstr, right_prompt: &wstr) {
         // Helper function to set a resolved color, using the caching resolver.
         let mut color_resolver = HighlightColorResolver::new();
         let mut set_color = |zelf: &mut Self, c| {
@@ -1103,47 +1048,65 @@ impl Screen {
             need_clear_screen = true;
         }
 
-        // Output the left prompt if it has changed.
-        if self.scrolled() && !is_final_rendering {
-            self.r#move(0, 0);
-            self.write_command(ClearToEndOfLine);
-            self.actual_left_prompt = None;
-            self.actual.cursor.x = 0;
-        } else if self
+        let cmd_start = self
+            .desired
+            .prompt_lines
+            .saturating_sub(self.desired.scroll_amount);
+        let first_visible = self.desired.prompt_lines >= self.desired.scroll_amount;
+
+        let prompt_changed = self
             .actual_left_prompt
             .as_ref()
-            .is_none_or(|p| p != left_prompt)
-            || (self.scrolled() && is_final_rendering)
-            || Some(left_prompt_width) == screen_width && self.should_wrap(0)
-        {
+            .is_none_or(|p| first_visible && p != left_prompt)
+            || first_visible && self.actual.scroll_amount != self.desired.scroll_amount;
+        let prompt_softwrap =
+            first_visible && Some(left_prompt_width) == screen_width && self.should_wrap(cmd_start);
+
+        // Output the left prompt if it has changed or we need to refresh softwrap.
+        if prompt_changed || prompt_softwrap {
             self.r#move(0, 0);
-            let mut start = 0;
-            let mark_prompt_start = |zelf: &mut Screen| zelf.write_command(Osc133PromptStart);
-            if left_prompt_layout.line_breaks.is_empty() {
-                mark_prompt_start(self);
+            let mut start;
+            if left_prompt_layout.line_breaks.len() <= self.desired.scroll_amount {
+                self.write_command(Osc133PromptStart);
             }
-            if self
-                .actual_left_prompt
-                .as_ref()
-                .is_none_or(|p| p != left_prompt)
-                || (self.scrolled() && is_final_rendering)
-            {
-                for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
+            if prompt_changed {
+                start = if self.desired.scroll_amount == 0 {
+                    0
+                } else if self.desired.prompt_lines > self.desired.scroll_amount {
+                    left_prompt_layout.line_breaks[self.desired.scroll_amount - 1] + 1
+                } else if self.desired.prompt_lines > 0 {
+                    left_prompt_layout.line_breaks[self.desired.prompt_lines - 1] + 1
+                } else {
+                    0
+                };
+                for (i, &line_break) in left_prompt_layout
+                    .line_breaks
+                    .iter()
+                    .skip(self.desired.scroll_amount)
+                    .enumerate()
+                {
                     self.write_command(ClearToEndOfLine);
                     if i == 0 {
-                        mark_prompt_start(self);
+                        self.write_command(Osc133PromptStart);
                     }
                     self.write_str(&left_prompt[start..=line_break]);
                     start = line_break + 1;
                 }
             } else {
-                start = left_prompt_layout.line_breaks.last().map_or(0, |lb| lb + 1);
+                self.r#move(0, cmd_start);
+                start = left_prompt_layout.line_breaks[self.desired.prompt_lines - 1] + 1;
             }
-            self.write_str(&left_prompt[start..]);
+            if first_visible {
+                self.write_str(&left_prompt[start..]);
+                self.actual.cursor.x = left_prompt_width;
+            }
             self.actual_left_prompt = Some(left_prompt.to_owned());
-            self.actual.cursor.x = left_prompt_width;
-            if Some(left_prompt_width) == screen_width && self.should_wrap(0) {
-                self.soft_wrap_location = Some(Cursor { x: 0, y: 1 });
+            self.actual.cursor.y = cmd_start;
+            if prompt_softwrap {
+                self.soft_wrap_location = Some(Cursor {
+                    x: 0,
+                    y: cmd_start + 1,
+                });
             }
         }
 
@@ -1155,9 +1118,9 @@ impl Screen {
         }
 
         // Output all lines.
-        for i in 0..self.desired.line_count() {
+        for i in cmd_start..self.desired.line_count() {
             self.actual.create_line(i);
-            let is_first_line = i == 0 && !self.scrolled();
+            let is_first_line: bool = first_visible && i == cmd_start;
             let start_pos = if is_first_line { left_prompt_width } else { 0 };
             let mut current_width = 0;
             let mut has_cleared_line = false;
@@ -1173,14 +1136,25 @@ impl Screen {
             // Note that skip_remaining is a width, not a character count.
             let mut skip_remaining = start_pos;
 
-            let shared_prefix = if self.scrolled() {
+            let previously_prompt_line = self.actual.prompt_lines >= self.actual.scroll_amount + i;
+            if previously_prompt_line && is_first_line && Some(left_prompt_width) != screen_width {
+                // Clean up first line from previous prompt
+                self.r#move(left_prompt_width, i);
+                self.write_command(ClearToEndOfLine);
+            };
+
+            let shared_prefix = if self.desired.scroll_amount == 0 || previously_prompt_line {
                 0
             } else {
                 line_shared_prefix(o_line(self, i), s_line(self, i))
             };
             let mut skip_prefix = shared_prefix;
-            if shared_prefix < o_line(self, i).indentation {
-                if o_line(self, i).indentation > s_line(self, i).indentation && !has_cleared_screen
+            if shared_prefix < o_line(self, i).indentation
+                || previously_prompt_line && !is_first_line
+            {
+                if !has_cleared_screen
+                    && (o_line(self, i).indentation > s_line(self, i).indentation
+                        || previously_prompt_line && !is_first_line)
                 {
                     set_color(self, HighlightSpec::new());
                     self.r#move(0, i);
@@ -1189,6 +1163,10 @@ impl Screen {
                     } else {
                         ClearToEndOfLine
                     });
+                    if i == 0 {
+                        // Restore prompt start if we deleted it
+                        self.write_command(Osc133PromptStart);
+                    }
                     has_cleared_screen = should_clear_screen_this_line;
                     has_cleared_line = true;
                 }

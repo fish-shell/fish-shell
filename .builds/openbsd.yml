@@ -1,4 +1,4 @@
-image: freebsd/latest
+image: openbsd/latest
 packages:
   - cmake
   - gcc

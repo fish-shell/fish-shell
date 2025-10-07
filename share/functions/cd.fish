@@ -5,14 +5,6 @@
 function cd --description "Change directory"
     set -l MAX_DIR_HIST 25
 
-    if set -q argv[2]; and begin
-            set -q argv[3]
-            or not test "$argv[1]" = --
-        end
-        printf "%s\n" (_ "Too many args for cd command") >&2
-        return 1
-    end
-
     # Skip history in subshells.
     if status --is-command-substitution
         builtin cd $argv

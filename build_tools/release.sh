@@ -161,7 +161,7 @@ gh_api_repo() {
     command gh api \
         -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
-        "/repos/$repository_owner/fish-shell/$1" \
+        "/repos/$repository_owner/fish-shell/$path" \
         "$@"
 }
 

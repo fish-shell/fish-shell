@@ -91,7 +91,7 @@ function fish_config --description "Launch fish's web based configuration"
             switch $cmd
                 case show
                     set -l fish (status fish-path)
-                    set -l prompts (__fish_config_matching tools/web_config/sample_prompts .fish $argv)
+                    set -l prompts (dirs=$prompt_dir __fish_config_matching tools/web_config/sample_prompts .fish $argv)
                     for p in $prompts
                         set -l promptname (string replace -r '.*/([^/]*).fish$' '$1' $p)
                         echo -s (set_color --underline) $promptname (set_color normal)
@@ -240,8 +240,7 @@ function fish_config --description "Launch fish's web based configuration"
                 case show
                     set -l fish (status fish-path)
                     set -l themes \
-                        (path filter $dirs/$argv.theme) \
-                        (__fish_config_matching tools/web_config/themes .theme $argv)
+                        (dirs=$dirs __fish_config_matching tools/web_config/themes .theme $argv)
                     set -l used_themes
 
                     echo -s (set_color normal; set_color --underline) Current (set_color normal)
@@ -384,17 +383,16 @@ function __fish_config_matching
     set -l suffix $argv[2]
     set -e argv[1..2]
     set -l paths
-    if set -q __fish_data_dir[1]
-        if not set -q argv[1]
-            set paths $__fish_data_dir/$prefix/*$suffix
-        else
-            set paths (path filter $__fish_data_dir/$prefix/$argv$suffix)
-        end
+    if not set -q argv[1]
+        set paths $dirs/*$suffix
     else
+        set paths (path filter $dirs/$argv$suffix)
+    end
+    if not set -q __fish_data_dir[1]
         if not set -q argv[1]
-            set paths (status list-files $prefix)
+            set -a paths (status list-files $prefix)
         else
-            set paths (status list-files $prefix | grep -Fx -e"$prefix/"$argv$suffix)
+            set -a paths (status list-files $prefix | grep -Fx -e"$prefix/"$argv$suffix)
         end
     end
     string join \n $paths

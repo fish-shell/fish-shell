@@ -37,7 +37,7 @@ pub mod limits {
         pub const RSS: libc::c_int = libc::RLIMIT_RSS as _;
 
         pub const SBSIZE: libc::c_int = -1;
-        pub const NICE: libc::c_int = -1;
+        pub const NICE: libc::c_int = libc::RLIMIT_NICE as _;
         pub const SWAP: libc::c_int = -1;
         pub const KQUEUES: libc::c_int = -1;
         pub const NPTS: libc::c_int = -1;

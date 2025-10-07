@@ -585,10 +585,10 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
     // the actual $HOME or $XDG_XXX directories. This prevents the tests from failing and/or stops
     // the tests polluting the user's actual $HOME if a sandbox environment has not been set up.
     {
-        use crate::common::str2wcstring;
+        use crate::common::{str2wcstring, BUILD_DIR};
         use std::path::PathBuf;
 
-        let mut build_dir = PathBuf::from(env!("FISH_BUILD_DIR"));
+        let mut build_dir = PathBuf::from(BUILD_DIR);
         build_dir.push("fish-test-home");
 
         let err = match std::fs::create_dir_all(&build_dir) {

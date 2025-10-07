@@ -16,7 +16,7 @@ fn main() {
     // language server.
 
     rsconf::set_env_value(
-        "FISH_BUILD_DIR",
+        "FISH_RESOLVED_BUILD_DIR",
         // If set by CMake, this might include symlinks. Since we want to compare this to the
         // dir fish is executed in we need to canonicalize it.
         canonicalize(fish_build_dir()).to_str().unwrap(),

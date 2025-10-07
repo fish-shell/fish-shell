@@ -347,9 +347,14 @@ impl Pager {
     }
 
     fn measure_completion_infos(&mut self) {
-        let prefix_len = wcswidth_rendered(&self.prefix);
+        let base_prefix_len = usize::try_from(wcswidth_rendered(&self.prefix)).unwrap_or_default();
         for comp in &mut self.unfiltered_completion_infos {
             let comp_strings = &mut comp.comp;
+            let prefix_len = if comp.representative.replaces_token() {
+                0
+            } else {
+                base_prefix_len
+            };
 
             for (j, comp_string) in comp_strings.iter().enumerate() {
                 // If there's more than one, append the length of ', '.
@@ -359,7 +364,7 @@ impl Pager {
 
                 // This can return -1 if it can't calculate the width. So be cautious.
                 let comp_width = wcswidth_rendered(comp_string);
-                comp.comp_width += usize::try_from(prefix_len).unwrap_or_default();
+                comp.comp_width += prefix_len;
                 comp.comp_width += usize::try_from(comp_width).unwrap_or_default();
             }
 
@@ -520,6 +525,11 @@ impl Pager {
 
         // Print the completion part
         let mut comp_remaining = comp_width;
+        let prefix_to_print = if c.representative.replaces_token() {
+            L!("")
+        } else {
+            prefix
+        };
         for (i, comp) in c.comp.iter().enumerate() {
             if i > 0 {
                 comp_remaining -= print_max(
@@ -534,7 +544,7 @@ impl Pager {
 
             comp_remaining -= print_max(
                 offset_in_cmdline,
-                prefix,
+                prefix_to_print,
                 prefix_col,
                 comp_remaining,
                 !comp.is_empty(),

@@ -1,7 +1,7 @@
 use crate::common::wcs2string;
+use crate::common::BUILD_DIR;
 use crate::wchar::prelude::*;
 use crate::{common::get_executable_path, FLOG, FLOGF};
-#[cfg(not(feature = "embed-data"))]
 use fish_build_helper::workspace_root;
 use std::ffi::OsString;
 use std::os::unix::ffi::OsStringExt;
@@ -63,7 +63,14 @@ impl ConfigPaths {
     fn from_exec_path(exec_path: PathBuf) -> Self {
         FLOG!(config, "embed-data feature is active, ignoring data paths");
         Self {
-            sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
+            sysconf: if exec_path
+                .canonicalize()
+                .is_ok_and(|exec_path| exec_path.starts_with(BUILD_DIR))
+            {
+                workspace_root().join("etc")
+            } else {
+                PathBuf::from(SYSCONF_DIR).join("fish")
+            },
             bin: exec_path.parent().map(|x| x.to_path_buf()),
         }
     }
@@ -71,8 +78,6 @@ impl ConfigPaths {
     #[cfg(not(feature = "embed-data"))]
     fn from_exec_path(unresolved_exec_path: PathBuf) -> Self {
         use std::path::Path;
-
-        use crate::common::BUILD_DIR;
 
         let invalid_exec_path = |exec_path: &Path| {
             FLOG!(

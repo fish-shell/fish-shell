@@ -1096,10 +1096,29 @@ impl Screen {
         self.need_clear_lines = false;
         self.need_clear_screen = false;
 
+        // Compare the number of lines in the (new) left prompt compared to the
+        // current prompt before it's dropped so that the lines can be cleared
+        // appropriately later (see #11875).
+        let mut final_prompt_has_fewer_lines = false;
+        if is_final_rendering {
+            let actual_prompt_line_breaks = self.actual_left_prompt.as_ref().map_or(0, |p| {
+                let mut result = 0;
+                if p.chars().any(|c| matches!(c, '\n' | '\x0C')) {
+                    result = cached_layouts
+                        .calc_prompt_layout(p, None, usize::MAX)
+                        .line_breaks
+                        .len();
+                }
+                result
+            });
+            final_prompt_has_fewer_lines |=
+                left_prompt_layout.line_breaks.len() < actual_prompt_line_breaks;
+        }
+
         // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
         // want.
         let lines_with_stuff = std::cmp::max(actual_lines_before_reset, self.actual.line_count());
-        if self.desired.line_count() < lines_with_stuff {
+        if self.desired.line_count() < lines_with_stuff || final_prompt_has_fewer_lines {
             need_clear_screen = true;
         }
 
@@ -1173,14 +1192,16 @@ impl Screen {
             // Note that skip_remaining is a width, not a character count.
             let mut skip_remaining = start_pos;
 
-            let shared_prefix = if self.scrolled() {
+            let shared_prefix = if self.scrolled() || final_prompt_has_fewer_lines {
                 0
             } else {
                 line_shared_prefix(o_line(self, i), s_line(self, i))
             };
             let mut skip_prefix = shared_prefix;
             if shared_prefix < o_line(self, i).indentation {
-                if o_line(self, i).indentation > s_line(self, i).indentation && !has_cleared_screen
+                if (o_line(self, i).indentation > s_line(self, i).indentation
+                    || final_prompt_has_fewer_lines)
+                    && !has_cleared_screen
                 {
                     set_color(self, HighlightSpec::new());
                     self.r#move(0, i);
@@ -1271,6 +1292,8 @@ impl Screen {
             } else if need_clear_lines && screen_width.is_some_and(|sw| current_width < sw) {
                 clear_remainder = true;
             } else if right_prompt_width < self.last_right_prompt_width {
+                clear_remainder = true;
+            } else if final_prompt_has_fewer_lines {
                 clear_remainder = true;
             } else {
                 // This wcswidth shows up strong in the profile.

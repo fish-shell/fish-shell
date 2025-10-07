@@ -1587,7 +1587,7 @@ impl ReaderData {
                 self.pager.selected_completion_idx = Some(idx);
                 self.pager_selection_changed();
             }
-            _ => {}
+            CharOffset::Pager(_) | CharOffset::None => {}
         }
     }
 }

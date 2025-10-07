@@ -629,8 +629,26 @@ impl Screen {
                 0
             });
         let y = y.min(self.actual.line_count() - 1);
-        let viewport_prompt_x = viewport_cursor.x - self.actual.cursor.x;
-        let x = viewport_position.x - viewport_prompt_x;
+        let Some(viewport_prompt_x) = viewport_cursor.x.checked_sub(self.actual.cursor.x) else {
+            FLOGF!(
+                reader,
+                "Actual cursor x=%d exceeds reported cursor x=%d, \
+                     was the cursor moved by printing to the TTY?",
+                self.actual.cursor.x,
+                viewport_cursor.x
+            );
+            return CharOffset::None;
+        };
+        let Some(x) = viewport_position.x.checked_sub(viewport_prompt_x) else {
+            FLOGF!(
+                reader,
+                "Computed prompt x=%d exceeds mouse click x=%d, \
+                 was the cursor moved by printing to the TTY?",
+                viewport_prompt_x,
+                viewport_position.x
+            );
+            return CharOffset::None;
+        };
         let line = self.actual.line(y);
         let x = x.max(line.indentation);
         let offset = line

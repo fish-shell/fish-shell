@@ -120,6 +120,7 @@ Compiling fish requires:
 
 -  Rust (version 1.70 or later)
 -  CMake (version 3.15 or later)
+-  a C compiler (for system feature detection and the test helper binary)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
 -  gettext (only the msgfmt tool) - optional, for translation support
 -  an Internet connection, as other dependencies will be downloaded automatically
@@ -127,7 +128,7 @@ Compiling fish requires:
 Sphinx is also optionally required to build the documentation from a
 cloned git repository.
 
-Additionally, running the full test suite requires a C compiler (``cc``), Python 3.5+, tmux, and the pexpect package.
+Additionally, running the full test suite requires Python 3.5+, tmux, and the pexpect package.
 
 Building from source with CMake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

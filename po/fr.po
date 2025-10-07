@@ -2151,9 +2151,6 @@ msgstr "Il y a %s dossiers uniques dans votre historique alors que je ne peux en
 msgid "This should not happen. Have you changed the cd function?"
 msgstr "Ceci ne devrait pas se produire. Avez-vous modifié la fonction cd ?"
 
-msgid "Too many args for cd command"
-msgstr "Trop d’arguments pour la commande cd"
-
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr ""
 
@@ -3306,6 +3303,9 @@ msgstr "Requérir un paramètre"
 msgid "Require parameter and don't use file completion"
 msgstr ""
 
+msgid "Resolve symbolic links before updating PWD"
+msgstr ""
+
 msgid "Return as soon as the first job completes"
 msgstr ""
 
@@ -3668,6 +3668,9 @@ msgstr ""
 
 msgid "Update PATH when fish_user_paths changes"
 msgstr "Mettre à jour PATH lorsque fish_user_paths est modifié"
+
+msgid "Update PWD without resolving symbolic links"
+msgstr ""
 
 msgid "Update man-page based completions"
 msgstr "Mettre à jour les complétions basées sur les pages de manuel"

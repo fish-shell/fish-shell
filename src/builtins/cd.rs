@@ -37,23 +37,11 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
                 return Ok(SUCCESS);
             }
             ';' => {
-                builtin_unexpected_argument(
-                    parser,
-                    streams,
-                    cmd,
-                    args[w.wopt_index - 1],
-                    false,
-                );
+                builtin_unexpected_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                builtin_unknown_option(
-                    parser,
-                    streams,
-                    cmd,
-                    args[w.wopt_index - 1],
-                    false,
-                );
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             _ => panic!("unexpected option {}", opt),

@@ -2079,9 +2079,6 @@ msgstr "您的历史记录中包含 %s 个唯一目录，但当前仅能处理 %
 msgid "This should not happen. Have you changed the cd function?"
 msgstr "这种情况不应该发生。您是否更改了 cd 函数？"
 
-msgid "Too many args for cd command"
-msgstr "cd 命令的参数太多"
-
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr "输入 %shelp%s 获取 fish 的使用说明"
 
@@ -3234,6 +3231,9 @@ msgstr "需要参数"
 msgid "Require parameter and don't use file completion"
 msgstr "需要参数而不使用文件补全"
 
+msgid "Resolve symbolic links before updating PWD"
+msgstr ""
+
 msgid "Return as soon as the first job completes"
 msgstr "第一个作业结束马上返回"
 
@@ -3596,6 +3596,9 @@ msgstr "直接更新 $PATH"
 
 msgid "Update PATH when fish_user_paths changes"
 msgstr "fish_user_paths 更改时更新 PATH"
+
+msgid "Update PWD without resolving symbolic links"
+msgstr ""
 
 msgid "Update man-page based completions"
 msgstr "更新基于 man-page 的补全"

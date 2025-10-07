@@ -31,8 +31,10 @@ fish_config theme show | grep -E 'fish default|Default Dark|custom-from-userconf
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}fish default{{\x1b\[m}}
 
 # Override a default theme with different colors.
-status get-file tools/web_config/themes/None.theme \
-    >$__fish_config_dir/themes/"fish default.theme"
+{
+    status get-file tools/web_config/themes/None.theme 2>/dev/null ||
+    cat $__fish_data_dir/tools/web_config/themes/None.theme
+} >$__fish_config_dir/themes/"fish default.theme"
 fish_config theme show | grep -E 'fish default|Base16 Default Dark' -A1
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}fish default{{\x1b\[m}}
 # CHECK: {{\x1b\[m}}/bright/vixens{{\x1b\[m}} {{\x1b\[m}}jump{{\x1b\[m}}{{.*}}

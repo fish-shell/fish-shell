@@ -2,6 +2,7 @@ use super::wopendir;
 use crate::common::{str2wcstring, wcs2zstring};
 use crate::wchar::{wstr, WString};
 use crate::wutil::DevInode;
+use cfg_if::cfg_if;
 use libc::{
     DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
     ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG,
@@ -285,14 +286,13 @@ impl DirIter {
 
         self.entry.reset();
         self.entry.name = str2wcstring(d_name);
-        #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
-        {
-            self.entry.inode = dent.d_fileno;
-        }
-        #[cfg(not(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd")))]
-        {
-            self.entry.inode = dent.d_ino;
-        }
+        cfg_if!(
+            if #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))] {
+                self.entry.inode = dent.d_fileno;
+            } else {
+                self.entry.inode = dent.d_ino;
+            }
+        );
         let typ = dirent_type_to_entry_type(dent.d_type);
         // Do not store symlinks as we will need to resolve them.
         if typ != Some(DirEntryType::lnk) {

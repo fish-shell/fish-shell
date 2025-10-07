@@ -11,6 +11,7 @@ repository = "https://github.com/fish-shell/fish-shell"
 [workspace.dependencies]
 bitflags = "2.5.0"
 cc = "1.0.94"
+cfg-if = "1.0.3"
 errno = "0.3.0"
 fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }
@@ -76,6 +77,7 @@ readme = "README.rst"
 
 [dependencies]
 bitflags.workspace = true
+cfg-if.workspace = true
 errno.workspace = true
 fish-build-helper.workspace = true
 fish-build-man-pages = { workspace = true, optional = true }

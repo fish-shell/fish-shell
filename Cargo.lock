@@ -42,9 +42,9 @@ dependencies = [
 
 [[package]]
 name = "cfg-if"
-version = "1.0.0"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+checksum = "2fd1289c04a9ea8cb22300a459a72a385d7c73d3259e2ed7dcb2af674838cfa9"
 
 [[package]]
 name = "cfg_aliases"
@@ -109,6 +109,7 @@ version = "4.1.0-snapshot"
 dependencies = [
  "bitflags",
  "cc",
+ "cfg-if",
  "errno",
  "fish-build-helper",
  "fish-build-man-pages",

@@ -49,7 +49,8 @@ if [ -n "$FISH_TEST_MAX_CONCURRENCY" ]; then
 fi
 
 template_file=$(mktemp)
-FISH_GETTEXT_EXTRACTION_FILE=$template_file cargo build --workspace --all-targets --features=gettext-extract
+export FISH_GETTEXT_EXTRACTION_FILE="$template_file"
+cargo build --workspace --all-targets --features=gettext-extract
 if $lint; then
     PATH="$build_dir:$PATH" "$workspace_root/build_tools/style.fish" --all --check
     for features in "" --no-default-features; do
@@ -61,7 +62,7 @@ cargo test --doc --workspace
 if $lint; then
     cargo doc --workspace
 fi
-FISH_GETTEXT_EXTRACTION_FILE=$template_file "$workspace_root/tests/test_driver.py" "$build_dir"
+"$workspace_root/tests/test_driver.py" "$build_dir"
 
 exit
 }

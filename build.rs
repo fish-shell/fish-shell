@@ -177,51 +177,57 @@ fn setup_paths() {
     #[cfg(windows)]
     use unix_path::{Path, PathBuf};
 
-    fn get_path(name: &str, default: &str, onvar: &Path) -> PathBuf {
-        let mut var = PathBuf::from(env_var(name).unwrap_or(default.to_string()));
-        if var.is_relative() {
-            var = onvar.join(var);
-        }
-        var
+    fn overridable_path(env_var_name: &str, f: impl FnOnce(Option<String>) -> PathBuf) -> PathBuf {
+        rsconf::rebuild_if_env_changed(env_var_name);
+        let path = f(env_var(env_var_name));
+        rsconf::set_env_value(env_var_name, path.to_str().unwrap());
+        path
     }
 
-    let prefix = PathBuf::from(env_var("PREFIX").unwrap_or("/usr/local".to_string()));
-    rsconf::rebuild_if_env_changed("PREFIX");
-    rsconf::set_env_value("PREFIX", prefix.to_str().unwrap());
-
-    let datadir = get_path("DATADIR", "share/", &prefix);
-
-    let sysconfdir = get_path(
-        "SYSCONFDIR",
-        // Embedded builds use "/etc," not "./share/etc".
-        if cfg!(feature = "embed-data") {
-            "/etc/"
+    fn join_if_relative(parent_if_relative: &Path, path: String) -> PathBuf {
+        let path = PathBuf::from(path);
+        if path.is_relative() {
+            parent_if_relative.join(path)
         } else {
-            "etc/"
-        },
-        &datadir,
-    );
-    rsconf::set_env_value("SYSCONFDIR", sysconfdir.to_str().unwrap());
-    rsconf::rebuild_if_env_changed("SYSCONFDIR");
+            path
+        }
+    }
+
+    let prefix = overridable_path("PREFIX", |env_prefix| {
+        PathBuf::from(env_prefix.unwrap_or("/usr/local".to_string()))
+    });
+
+    let datadir = join_if_relative(&prefix, env_var("DATADIR").unwrap_or("share/".to_string()));
+    rsconf::rebuild_if_env_changed("DATADIR");
+    #[cfg(not(feature = "embed-data"))]
+    rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
+
+    overridable_path("SYSCONFDIR", |env_sysconfdir| {
+        join_if_relative(
+            &datadir,
+            env_sysconfdir.unwrap_or(
+                // Embedded builds use "/etc," not "./share/etc".
+                if cfg!(feature = "embed-data") {
+                    "/etc/"
+                } else {
+                    "etc/"
+                }
+                .to_string(),
+            ),
+        )
+    });
 
     #[cfg(not(feature = "embed-data"))]
     {
-        rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
-        rsconf::rebuild_if_env_changed("DATADIR");
-
-        let bindir = get_path("BINDIR", "bin/", &prefix);
-        rsconf::set_env_value("BINDIR", bindir.to_str().unwrap());
-        rsconf::rebuild_if_env_changed("BINDIR");
-
-        let localedir = get_path("LOCALEDIR", "locale/", &datadir);
-        let localedir = localedir.to_str().unwrap();
-        assert!(!localedir.is_empty(), "empty LOCALEDIR is not supported");
-        rsconf::set_env_value("LOCALEDIR", localedir);
-        rsconf::rebuild_if_env_changed("LOCALEDIR");
-
-        let docdir = get_path("DOCDIR", "doc/fish", &datadir);
-        rsconf::set_env_value("DOCDIR", docdir.to_str().unwrap());
-        rsconf::rebuild_if_env_changed("DOCDIR");
+        overridable_path("BINDIR", |env_bindir| {
+            join_if_relative(&prefix, env_bindir.unwrap_or("bin/".to_string()))
+        });
+        overridable_path("LOCALEDIR", |env_localedir| {
+            join_if_relative(&datadir, env_localedir.unwrap_or("locale/".to_string()))
+        });
+        overridable_path("DOCDIR", |env_docdir| {
+            join_if_relative(&datadir, env_docdir.unwrap_or("doc/fish".to_string()))
+        });
     }
 }
 

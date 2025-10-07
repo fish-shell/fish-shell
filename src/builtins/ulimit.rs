@@ -23,7 +23,10 @@ pub mod limits {
         pub const STACK: libc::c_int = libc::RLIMIT_STACK as _;
         pub const CPU: libc::c_int = libc::RLIMIT_CPU as _;
         pub const NPROC: libc::c_int = libc::RLIMIT_NPROC as _;
+        #[cfg(not(target_os = "openbsd"))]
         pub const AS: libc::c_int = libc::RLIMIT_AS as _;
+        #[cfg(target_os = "openbsd")]
+        pub const AS: libc::c_int = -1;
     }
     pub use self::common::*;
 
@@ -72,13 +75,23 @@ pub mod limits {
 
         #[cfg(not(target_os = "openbsd"))]
         pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
+        #[cfg(target_os = "openbsd")]
+        pub const SBSIZE: libc::c_int = -1;
         pub const RSS: libc::c_int = libc::RLIMIT_RSS;
+        #[cfg(not(target_os = "openbsd"))]
         pub const SWAP: libc::c_int = libc::RLIMIT_SWAP;
+        #[cfg(target_os = "openbsd")]
+        pub const SWAP: libc::c_int = -1;
+        #[cfg(not(target_os = "openbsd"))]
         pub const KQUEUES: libc::c_int = libc::RLIMIT_KQUEUES;
+        #[cfg(target_os = "openbsd")]
+        pub const KQUEUES: libc::c_int = -1;
 
         #[cfg(target_os = "freebsd")]
         pub const NPTS: libc::c_int = libc::RLIMIT_NPTS;
-        #[cfg(not(target_os = "freebsd"))]
+        #[cfg(target_os = "openbsd")]
+        pub const NPTS: libc::c_int = -1;
+        #[cfg(all(not(target_os = "freebsd"), not(target_os = "openbsd")))]
         pub const NPTS: libc::c_int = -1;
 
         pub const NICE: libc::c_int = -1;

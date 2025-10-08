@@ -186,4 +186,10 @@ function foo; echo before; end
 foo (functions --erase foo)
 # CHECKERR: error: Unknown function 'foo'
 
+function ()
+end
+# CHECKERR: {{.*}}/tests/checks/function.fish (line {{\d+}}): function: function name required
+# CHECKERR: function ()
+# CHECKERR: ^
+
 exit 0

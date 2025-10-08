@@ -104,6 +104,10 @@ msgid "%.*s: invalid conversion specification"
 msgstr "%.*s: 无效的转换规范"
 
 #, c-format
+msgid "%ls: function name required"
+msgstr "%ls: 函数名称是必须的"
+
+#, c-format
 msgid "%s"
 msgstr "%s"
 

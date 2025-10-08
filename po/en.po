@@ -81,6 +81,10 @@ msgid "%.*s: invalid conversion specification"
 msgstr "%.*s: invalid conversion specification"
 
 #, c-format
+msgid "%ls: function name required"
+msgstr ""
+
+#, c-format
 msgid "%s"
 msgstr ""
 

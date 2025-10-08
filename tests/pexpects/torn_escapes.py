@@ -38,9 +38,7 @@ sendline(
         echo Got SIGUSR1 $sigusr1_count;
         commandline -f repaint;
     end
-""".strip().replace(
-        "\n", os.linesep
-    )
+""".strip().replace("\n", os.linesep)
 )
 expect_prompt()
 
@@ -51,9 +49,7 @@ sendline(
         set wacky_count (math $wacky_count + 1);
         echo Wacky Handler $wacky_count
     end
-""".strip().replace(
-        "\n", os.linesep
-    )
+""".strip().replace("\n", os.linesep)
 )
 expect_prompt()
 

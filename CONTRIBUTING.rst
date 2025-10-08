@@ -110,7 +110,7 @@ before committing your change. That will run our autoformatters:
 
 - ``rustfmt`` for Rust
 - ``fish_indent`` (shipped with fish) for fish script
-- ``black`` for python
+- ``ruff format`` for python
 
 If you’ve already committed your changes that’s okay since it will then
 check the files in the most recent commit. This can be useful after

@@ -44,7 +44,7 @@ if test $all = yes
         end
     end
     set fish_files $workspace_root/{benchmarks,build_tools,etc,share}/**.fish
-    set python_files {doc_src,share,tests}/**.py
+    set python_files .
 else
     # Format the files specified as arguments.
     set -l files $argv
@@ -76,19 +76,19 @@ if set -q fish_files[1]
 end
 
 if set -q python_files[1]
-    if not type -q black
+    if not type -q ruff
         echo
-        echo $yellow'Please install `black` to style python'$normal
+        echo $yellow'Please install `ruff` to style python'$normal
         exit 127
     end
-    echo === Running "$green"black"$normal"
+    echo === Running "$green"ruff format"$normal"
     if set -l -q _flag_check
-        if not black --check $python_files
+        if not ruff format --check $python_files
             echo $red"Python files are not formatted correctly."$normal
             exit 1
         end
     else
-        black $python_files
+        ruff format $python_files
     end
 end
 

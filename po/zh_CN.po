@@ -813,6 +813,10 @@ msgid "%lu\n"
 msgstr "%lu\n"
 
 #, c-format
+msgid "%ls: function name required"
+msgstr "%ls: 函数名称是必须的"
+
+#, c-format
 msgid "%s"
 msgstr "%s"
 

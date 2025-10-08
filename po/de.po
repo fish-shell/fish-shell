@@ -796,6 +796,10 @@ msgid "%lu\n"
 msgstr ""
 
 #, c-format
+msgid "%ls: function name required"
+msgstr "%ls: Brauche Funktionsnamen"
+
+#, c-format
 msgid "%s"
 msgstr ""
 

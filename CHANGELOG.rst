@@ -1,5 +1,12 @@
-fish 4.1.2 (released October 07, 2025)
-======================================
+fish 4.1.3 (released ???)
+=========================
+
+This release fixes the following regressions identified in 4.1.0:
+
+- Crash on invalid :doc:`function <cmds/function>` call (:issue:`11912`).
+
+fish 4.1.2 (released October 7, 2025)
+=====================================
 
 This release fixes the following regressions identified in 4.1.0:
 

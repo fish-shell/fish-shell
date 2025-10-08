@@ -1423,7 +1423,7 @@ fish_bin_path = None
 fish_bin_name = "fish.exe" if is_windows() else "fish"
 
 if not fish_bin_dir:
-    print("The $__fish_bin_dir environment variable is not set. " "Looking in $PATH...")
+    print("The $__fish_bin_dir environment variable is not set. Looking in $PATH...")
     fish_bin_path = find_executable(fish_bin_name)
     if not fish_bin_path:
         print("fish could not be found. Is fish installed correctly?")

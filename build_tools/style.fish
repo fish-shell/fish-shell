@@ -44,7 +44,7 @@ if test $all = yes
         end
     end
     set fish_files $workspace_root/{benchmarks,build_tools,etc,share}/**.fish
-    set python_files .
+    set python_files $workspace_root
 else
     # Format the files specified as arguments.
     set -l files $argv
@@ -101,7 +101,7 @@ end
 echo === Running "$green"rustfmt"$normal"
 if set -l -q _flag_check
     if set -l -q _flag_all
-        if not cargo fmt --check
+        if not cargo fmt --all --check
             echo $red"Rust files are not formatted correctly."$normal
             exit 1
         end
@@ -115,7 +115,7 @@ if set -l -q _flag_check
     end
 else
     if set -l -q _flag_all
-        cargo fmt
+        cargo fmt --all
     else
         if set -q rust_files[1]
             rustfmt $rust_files

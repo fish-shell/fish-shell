@@ -53,3 +53,36 @@ isolated-tmux capture-pane -p
 # CHECK: final line2
 # CHECK: transient line1
 # CHECK: transient line2
+
+# Test that multi-line initial prompt is properly cleared with single-line
+# final.
+isolated-tmux send-keys C-u C-l '
+    function fish_prompt
+        if contains -- --final-rendering $argv
+            echo "2> "
+        else
+            echo "transient prompt line"
+            echo "1> "
+        end
+    end
+' C-l
+isolated-tmux send-keys 'echo foo' Enter
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: 2> echo foo
+# CHECK: foo
+# CHECK: transient prompt line
+# CHECK: 1>
+
+# Test that multi-line initial prompt is properly cleared with single-line
+# final.
+isolated-tmux send-keys C-u C-l
+isolated-tmux send-keys 'echo foo \\' Enter
+isolated-tmux send-keys 'bar' Enter
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: 2> echo foo \
+# CHECK:        bar
+# CHECK: foo bar
+# CHECK: transient prompt line
+# CHECK: 1>

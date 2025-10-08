@@ -16,7 +16,7 @@ use std::collections::LinkedList;
 use std::io::Write;
 use std::ops::Range;
 use std::sync::atomic::AtomicU32;
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 use std::time::SystemTime;
 
 use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
@@ -470,7 +470,7 @@ impl Screen {
             } else {
                 0
             }
-            + calc_prompt_lines(&layout.left_prompt);
+            + calc_prompt_lines(None, &layout.left_prompt);
         let pager_available_height = std::cmp::max(
             1,
             curr_termsize
@@ -536,7 +536,7 @@ impl Screen {
         let prompt_line_count = self
             .actual_left_prompt
             .as_ref()
-            .map_or(1, |p| calc_prompt_lines(p));
+            .map_or(1, |p| calc_prompt_lines(None, p));
         self.actual.cursor.y += prompt_line_count.checked_sub(1).unwrap();
     }
 
@@ -570,7 +570,7 @@ impl Screen {
         let trailing_prompt_lines = self
             .actual_left_prompt
             .as_ref()
-            .map_or(0, |p| calc_prompt_lines(p) - 1);
+            .map_or(0, |p| calc_prompt_lines(None, p) - 1);
         let lines_to_scroll = prompt_y
             .checked_sub(trailing_prompt_lines)
             .unwrap_or_else(|| {
@@ -1096,10 +1096,21 @@ impl Screen {
         self.need_clear_lines = false;
         self.need_clear_screen = false;
 
+        // Compare the number of lines in the (new) left prompt compared to the
+        // current prompt before it's dropped so that the lines can be cleared
+        // appropriately later (see #11875).
+        let final_prompt_has_fewer_lines = is_final_rendering && {
+            let actual_prompt_line_breaks = self
+                .actual_left_prompt
+                .as_ref()
+                .map_or(0, |p| calc_prompt_lines(Some(&mut cached_layouts), p) - 1);
+            left_prompt_layout.line_breaks.len() < actual_prompt_line_breaks
+        };
+
         // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
         // want.
         let lines_with_stuff = std::cmp::max(actual_lines_before_reset, self.actual.line_count());
-        if self.desired.line_count() < lines_with_stuff {
+        if self.desired.line_count() < lines_with_stuff || final_prompt_has_fewer_lines {
             need_clear_screen = true;
         }
 
@@ -1173,14 +1184,16 @@ impl Screen {
             // Note that skip_remaining is a width, not a character count.
             let mut skip_remaining = start_pos;
 
-            let shared_prefix = if self.scrolled() {
+            let shared_prefix = if self.scrolled() || final_prompt_has_fewer_lines {
                 0
             } else {
                 line_shared_prefix(o_line(self, i), s_line(self, i))
             };
             let mut skip_prefix = shared_prefix;
             if shared_prefix < o_line(self, i).indentation {
-                if o_line(self, i).indentation > s_line(self, i).indentation && !has_cleared_screen
+                if (o_line(self, i).indentation > s_line(self, i).indentation
+                    || final_prompt_has_fewer_lines)
+                    && !has_cleared_screen
                 {
                     set_color(self, HighlightSpec::new());
                     self.r#move(0, i);
@@ -1271,6 +1284,8 @@ impl Screen {
             } else if need_clear_lines && screen_width.is_some_and(|sw| current_width < sw) {
                 clear_remainder = true;
             } else if right_prompt_width < self.last_right_prompt_width {
+                clear_remainder = true;
+            } else if final_prompt_has_fewer_lines {
                 clear_remainder = true;
             } else {
                 // This wcswidth shows up strong in the profile.
@@ -1852,19 +1867,24 @@ fn truncate_run(
     *width = curr_width;
 }
 
-fn calc_prompt_lines(prompt: &wstr) -> usize {
+fn calc_prompt_lines(
+    layout_cache: Option<&mut MutexGuard<'_, LayoutCache>>,
+    prompt: &wstr,
+) -> usize {
     // Hack for the common case where there's no newline at all. I don't know if a newline can
     // appear in an escape sequence, so if we detect a newline we have to defer to
     // calc_prompt_width_and_lines.
     let mut result = 1;
     if prompt.chars().any(|c| matches!(c, '\n' | '\x0C')) {
-        result = LAYOUT_CACHE_SHARED
-            .lock()
-            .unwrap()
+        let mut local_cache = None;
+        let layout_cache = layout_cache.unwrap_or_else(|| {
+            local_cache = Some(LAYOUT_CACHE_SHARED.lock().unwrap());
+            local_cache.as_mut().unwrap()
+        });
+        result += layout_cache
             .calc_prompt_layout(prompt, None, usize::MAX)
             .line_breaks
-            .len()
-            + 1;
+            .len();
     }
     result
 }

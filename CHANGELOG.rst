@@ -1,6 +1,12 @@
 fish ?.?.? (released ???)
 =========================
 
+Notable improvements and fixes
+------------------------------
+- Fixed incomplete line clearing with transient prompts when the final prompt has fewer lines than the initial prompt (:issue:`11875`).
+
+--------------
+
 fish 4.1.2 (released ???)
 =========================
 

@@ -703,6 +703,10 @@ msgid "%ls: fish was not built with embedded files"
 msgstr ""
 
 #, c-format
+msgid "%ls: function name required"
+msgstr ""
+
+#, c-format
 msgid "%ls: given %d indexes but %d values\n"
 msgstr ""
 
@@ -788,10 +792,6 @@ msgstr "%lsand %lu więcej rzędów"
 
 #, c-format
 msgid "%lu\n"
-msgstr ""
-
-#, c-format
-msgid "%ls: function name required"
 msgstr ""
 
 #, c-format

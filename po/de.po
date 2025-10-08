@@ -708,6 +708,10 @@ msgid "%ls: fish was not built with embedded files"
 msgstr ""
 
 #, c-format
+msgid "%ls: function name required"
+msgstr "%ls: Brauche Funktionsnamen"
+
+#, c-format
 msgid "%ls: given %d indexes but %d values\n"
 msgstr ""
 
@@ -794,10 +798,6 @@ msgstr "%lsund %lu weitere Zeilen"
 #, c-format
 msgid "%lu\n"
 msgstr ""
-
-#, c-format
-msgid "%ls: function name required"
-msgstr "%ls: Brauche Funktionsnamen"
 
 #, c-format
 msgid "%s"

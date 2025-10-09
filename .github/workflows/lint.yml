@@ -1,4 +1,4 @@
-name: Rust checks
+name: Lint
 
 on: [push, pull_request]
 

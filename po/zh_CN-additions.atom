@@ -13,4 +13,10 @@
     <updated>2025-10-03T08:14:19.451397+00:00</updated>
     <link href="https://github.com/fish-shell/fish-shell/pull/11854"/>
   </entry>
+  <entry>
+    <id>https://github.com/fish-shell/fish-shell/issues/11919</id>
+    <title>l10n(zh-CN): Mistaken translation for --position command</title>
+    <updated>2025-10-09T11:06:07.027929</updated>
+    <link href="https://github.com/fish-shell/fish-shell/issues/11919"/>
+  </entry>
 </feed>

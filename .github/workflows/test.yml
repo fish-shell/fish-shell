@@ -1,4 +1,4 @@
-name: make fish_run_tests
+name: Test
 
 on: [push, pull_request]
 

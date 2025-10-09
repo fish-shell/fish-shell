@@ -6,15 +6,19 @@ permissions:
   contents: read
 
 jobs:
-  rustfmt:
+  format:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/rust-toolchain@stable
       with:
         components: rustfmt
-    - name: cargo fmt
-      run: cargo fmt --check
+    - name: install dependencies
+      run: pip install black
+    - name: build fish
+      run: cargo build
+    - name: check format
+      run: PATH="target/debug:$PATH" build_tools/style.fish --all --check
 
   clippy-stable:
     runs-on: ubuntu-latest

@@ -1,5 +1,5 @@
 #RUN: fish=%fish %fish %s
-#REQUIRES: msgfmt --help
+#REQUIRES: command -v msgfmt
 
 set -l dir (status dirname)
 

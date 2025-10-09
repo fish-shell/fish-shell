@@ -379,7 +379,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     });
     if !opts.commands.is_empty() && position == Position::Command {
         streams.err.appendln(wgettext_fmt!(
-            "%s: --command cannot be combined with --position command",
+            "%s: --command cannot be combined with --position=command",
             CMD,
         ));
         return Err(STATUS_INVALID_ARGS);

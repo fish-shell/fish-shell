@@ -262,7 +262,7 @@ msgid "%s: '%s' is not a valid process id\n"
 msgstr ""
 
 #, c-format
-msgid "%s: --command cannot be combined with --position command"
+msgid "%s: --command cannot be combined with --position=command"
 msgstr ""
 
 #, c-format

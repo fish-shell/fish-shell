@@ -62,6 +62,9 @@ cargo() {
 
 # shellcheck disable=2317,2329
 cleanup () {
+    if [ -n "$fluent_extraction_dir" ] && [ -e "$fluent_extraction_dir" ]; then
+        rm -r "$fluent_extraction_dir"
+    fi
     if [ -n "$gettext_template_dir" ] && [ -e "$gettext_template_dir" ]; then
         rm -r "$gettext_template_dir"
     fi
@@ -88,11 +91,14 @@ if [ -n "$FISH_TEST_MAX_CONCURRENCY" ]; then
     export CARGO_BUILD_JOBS="$FISH_TEST_MAX_CONCURRENCY"
 fi
 
+fluent_extraction_dir=$(mktemp -d)
 gettext_template_dir=$(mktemp -d)
 (
     # shellcheck disable=2030
+    export FISH_FLUENT_EXTRACTION_DIR="$fluent_extraction_dir"
+    # shellcheck disable=2030
     export FISH_GETTEXT_EXTRACTION_DIR="$gettext_template_dir"
-    cargo build --workspace --all-targets --features=gettext-extract
+    cargo build --workspace --all-targets --features=fluent-extract,gettext-extract
 )
 if $lint; then
     if command -v cargo-deny >/dev/null; then
@@ -111,6 +117,10 @@ if $lint; then
     cargo xtask gettext --rust-extraction-dir="$gettext_template_dir" check
 fi
 
+# An outdated `en.ftl` or translations using variables not provided by the source could crash fish,
+# so don't treat this as a lint.
+cargo xtask fluent check --from-source="$fluent_extraction_dir"
+
 # When running `cargo test`, some binaries (e.g. `fish_gettext_extraction`)
 # are dynamically linked against Rust's `std-xxx.dll` instead of being
 # statically link as they usually are.
@@ -124,6 +134,8 @@ fi
         PATH="$PATH:$(rustc --print target-libdir)"
         export PATH
     fi
+    # shellcheck disable=2031
+    export FISH_FLUENT_EXTRACTION_DIR="$fluent_extraction_dir"
     cargo test --no-default-features --workspace --all-targets
 )
 cargo test --doc --workspace

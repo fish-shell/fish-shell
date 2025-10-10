@@ -8,13 +8,14 @@ use std::{
 use anyhow::{Context, Result, bail};
 use walkdir::WalkDir;
 
+pub mod fluent;
 pub mod format;
 pub mod gettext;
 pub mod shellcheck;
 
 pub trait CommandExt {
     fn run(&mut self) -> Result<()>;
-    fn run_with_stdio(&mut self, stdin: Vec<u8>) -> Result<Vec<u8>>;
+    fn run_with_stdio(&mut self, stdin: &[u8]) -> Result<Vec<u8>>;
 }
 
 impl CommandExt for Command {
@@ -29,7 +30,7 @@ impl CommandExt for Command {
         Ok(())
     }
 
-    fn run_with_stdio(&mut self, stdin: Vec<u8>) -> Result<Vec<u8>> {
+    fn run_with_stdio(&mut self, stdin: &[u8]) -> Result<Vec<u8>> {
         let command_name = self.get_program().to_owned();
         let mut child = self
             .stdin(Stdio::piped())
@@ -40,7 +41,7 @@ impl CommandExt for Command {
             .stdin
             .take()
             .unwrap()
-            .write_all(&stdin)
+            .write_all(stdin)
             .with_context(|| format!("Failed to write to stdin of {command_name:?}"))?;
         let command_output = child
             .wait_with_output()

@@ -24,6 +24,7 @@ Other improvements
 
 For distributors and developers
 -------------------------------
+- Messages defined in Rust source code may now be localized using `Fluent <https://projectfluent.org/>`__. To make this easy to work with, we have added Fluent tooling based on the new `fluent-ftl-tools <https://codeberg.org/danielrainer/fluent-ftl-tools>`__ Rust crate, see :ref:`Contributing Translations <localization>` (:issue:`11928`).
 - With the exception of the ``$CMAKE_INSTALL_PREFIX/share/fish/man`` directory, fish no longer installs files to ``$CMAKE_INSTALL_PREFIX/share/fish``.
   In particular, this means that both
   ``$CMAKE_INSTALL_PREFIX/share/fish/completions`` and

@@ -1,5 +1,5 @@
 [package]
-name = "fish-gettext"
+name = "fish-localization"
 version = "0.0.0"
 edition.workspace = true
 rust-version.workspace = true
@@ -7,9 +7,8 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-fish-gettext-maps.workspace = true
-fish-localization.workspace = true
-phf.workspace = true
+fish-build-helper.workspace = true
+phf_shared.workspace = true
 
 [lints]
 workspace = true

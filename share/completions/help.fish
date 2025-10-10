@@ -49,6 +49,8 @@ function __fish_help_describe -a help_item
             return
         case contributing#contributing-translations
             return
+        case contributing#editing-ftl-files
+            return
         case contributing#editing-po-files
             return
         case contributing#fish-script-style-guide
@@ -63,7 +65,7 @@ function __fish_help_describe -a help_item
             return
         case contributing#minimum-supported-rust-version-msrv-policy
             return
-        case contributing#modifications-to-strings-in-source-files
+        case contributing#modifications-to-strings-in-source-files-gettext-only
             return
         case contributing#modifying-existing-translations
             return

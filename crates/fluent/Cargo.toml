@@ -1,0 +1,29 @@
+[package]
+name = "fish-fluent"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+cfg-if.workspace = true
+fish-build-helper.workspace = true
+fish-fluent-extraction = { workspace = true, optional = true }
+fluent.workspace = true
+rust-embed.workspace = true
+widestring.workspace = true
+unic-langid.workspace = true
+
+[build-dependencies]
+fish-build-helper.workspace = true
+
+[dev-dependencies]
+fluent-ftl-tools.workspace = true
+
+[features]
+fluent-extract = ["dep:fish-fluent-extraction"]
+localize-messages = []
+
+[lints]
+workspace = true

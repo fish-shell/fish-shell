@@ -109,6 +109,7 @@ pub enum ReadlineCmd {
     ForceRepaint,
     UpLine,
     DownLine,
+    DownOrSearch,
     SuppressAutosuggestion,
     AcceptAutosuggestion,
     BeginSelection,

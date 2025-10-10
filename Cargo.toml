@@ -19,6 +19,8 @@ fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }
 fish-common = { path = "crates/common" }
 fish-fallback = { path = "crates/fallback" }
+fish-fluent = { path = "crates/fluent" }
+fish-fluent-extraction = { path = "crates/fluent-extraction" }
 fish-gettext = { path = "crates/gettext" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-gettext-maps = { path = "crates/gettext-maps" }
@@ -28,6 +30,8 @@ fish-printf = { path = "crates/printf", features = ["widestring"] }
 fish-tempfile = { path = "crates/tempfile" }
 fish-wchar = { path = "crates/wchar" }
 fish-widecharwidth = { path = "crates/widecharwidth" }
+fluent = "0.17"
+fluent-syntax = "0.12"
 libc = "0.2.177"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
@@ -65,6 +69,7 @@ serial_test = { version = "3", default-features = false }
 # We need 0.9.0 specifically for some crash fixes.
 terminfo = "0.9.0"
 widestring = "1.2.0"
+unic-langid = "0.9.6"
 unicode-segmentation = "1.12.0"
 unicode-width = "0.2.0"
 unix_path = "1.0.1"
@@ -96,12 +101,15 @@ fish-build-helper.workspace = true
 fish-build-man-pages = { workspace = true, optional = true }
 fish-common.workspace = true
 fish-fallback.workspace = true
+fish-fluent.workspace = true
+fish-fluent-extraction = { workspace = true, optional = true }
 fish-gettext = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-printf.workspace = true
 fish-tempfile.workspace = true
 fish-wchar.workspace = true
 fish-widecharwidth.workspace = true
+fluent.workspace = true
 libc.workspace = true
 lru.workspace = true
 macro_rules_attribute = "0.2.2"
@@ -164,9 +172,13 @@ path = "src/bin/fish_key_reader.rs"
 default = ["embed-manpages", "localize-messages"]
 benchmark = []
 embed-manpages = ["dep:fish-build-man-pages"]
-# Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
-# build time.
-localize-messages = ["dep:fish-gettext"]
+# Enable localization at runtime.
+# Requires the `msgfmt` tool to generate catalog data at build time for gettext localization.
+localize-messages = ["fish-fluent/localize-messages", "dep:fish-gettext"]
+# This feature is used to enable extracting Fluent IDs from the source code for localization check.
+# For normal builds, it should be disabled.
+# It only needs to be enabled if checking Fluent Translation List (FTL) files is desired.
+fluent-extract = ["fish-fluent/fluent-extract", "dep:fish-fluent-extraction"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
 # desired. This happens when running tests via `build_tools/check.sh` and when calling

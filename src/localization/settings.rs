@@ -201,6 +201,7 @@ impl LocalizationState {
             if is_c_locale(locale) {
                 self.precedence_origin =
                     LanguagePrecedenceOrigin::LocaleVariable(*precedence_origin);
+                fish_fluent::set_language_precedence(&[]);
                 fish_gettext::set_language_precedence(&[]);
                 return;
             }
@@ -222,6 +223,7 @@ impl LocalizationState {
         } else {
             (LanguagePrecedenceOrigin::Default, vec![])
         };
+
         macro_rules! update_precedence {
             ($backend:tt) => {{
                 let mut seen_languages = HashSet::new();
@@ -236,6 +238,8 @@ impl LocalizationState {
                 $backend::set_language_precedence(&language_precedence);
             }};
         }
+
+        update_precedence!(fish_fluent);
         update_precedence!(fish_gettext);
         self.precedence_origin = precedence_origin;
     }
@@ -263,6 +267,7 @@ impl LocalizationState {
                 }
             };
         }
+        get_langs!(fish_fluent);
         get_langs!(fish_gettext);
         let mut non_existing: Vec<&str> = seen.difference(&all_available_langs).copied().collect();
         non_existing.sort();
@@ -286,6 +291,7 @@ impl LocalizationState {
                 $backend::set_language_precedence(&unique_langs);
             }};
         }
+        update_langs!(fish_fluent);
         update_langs!(fish_gettext);
         self.precedence_origin = LanguagePrecedenceOrigin::StatusLanguage;
 
@@ -371,8 +377,10 @@ pub fn status_language() -> WString {
         "Active languages (source: %s):",
         origin_string
     ));
-    let gettext_language_precedence = fish_gettext::get_language_precedence();
-    append_space_separated_list(&mut result, &gettext_language_precedence);
+    result.push_str("\n  Fluent:");
+    append_space_separated_list(&mut result, fish_fluent::get_language_precedence());
+    result.push_str("\n  gettext:");
+    append_space_separated_list(&mut result, fish_gettext::get_language_precedence());
     result.push('\n');
 
     result
@@ -387,6 +395,7 @@ pub fn list_available_languages() -> WString {
             }
         };
     }
+    get_languages!(fish_fluent);
     get_languages!(fish_gettext);
     let mut language_list = Vec::from_iter(language_set);
     language_list.sort();

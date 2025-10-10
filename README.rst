@@ -128,7 +128,7 @@ Compiling fish requires:
 Sphinx is also optionally required to build the documentation from a
 cloned git repository.
 
-Additionally, running the full test suite requires Python 3.5+, tmux, and the pexpect package.
+Additionally, running the full test suite requires diff, git, Python 3.5+, pexpect, less, tmux and wget.
 
 Building from source with CMake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

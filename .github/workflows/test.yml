@@ -11,18 +11,17 @@ permissions:
 
 jobs:
   ubuntu:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - uses: ./.github/actions/rust-toolchain@oldest-supported
     - name: Install deps
+      uses: ./.github/actions/install-dependencies
+      with:
+        include_sphinx: true
+    - name: Generate a locale that uses a comma as decimal separator.
       run: |
-        sudo apt install gettext libpcre2-dev python3-pexpect python3-sphinx tmux
-        # Generate a locale that uses a comma as decimal separator.
         sudo locale-gen fr_FR.UTF-8
-    - uses: ./.github/actions/install-sphinx-markdown-builder
     - name: cmake
       run: |
         mkdir build && cd build
@@ -43,18 +42,20 @@ jobs:
         git --no-pager diff --exit-code || { echo 'There are uncommitted changes after regenerating the gettext PO files. Make sure to update them via `build_tools/update_translations.fish` after changing source files.'; exit 1; }
 
   ubuntu-32bit-static-pcre2:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - uses: ./.github/actions/rust-toolchain@oldest-supported
       with:
-        targets: "i586-unknown-linux-gnu" # rust-toolchain wants this comma-separated
+        targets: "i586-unknown-linux-gnu"
     - name: Install deps
+      uses: ./.github/actions/install-dependencies
+      with:
+        include_pcre: false
+        include_sphinx: false
+    - name: Install g++-multilib
       run: |
-        sudo apt update
-        sudo apt install gettext python3-pexpect g++-multilib tmux
+        sudo apt install g++-multilib
     - name: cmake
       env:
           CFLAGS: "-m32"
@@ -69,7 +70,6 @@ jobs:
         make -C build VERBOSE=1 fish_run_tests
 
   ubuntu-asan:
-
     runs-on: ubuntu-latest
     env:
         # Rust has two different memory sanitizers of interest; they can't be used at the same time:
@@ -79,7 +79,6 @@ jobs:
         #
         RUSTFLAGS: "-Zsanitizer=address"
         # RUSTFLAGS: "-Zsanitizer=memory -Zsanitizer-memory-track-origins"
-
     steps:
     - uses: actions/checkout@v4
     # All -Z options require running nightly
@@ -89,8 +88,11 @@ jobs:
         # this is comma-separated
         components: rust-src
     - name: Install deps
+      uses: ./.github/actions/install-dependencies
+      with:
+        include_sphinx: false
+    - name: Install llvm
       run: |
-        sudo apt install gettext libpcre2-dev python3-pexpect tmux
         sudo apt install llvm # for llvm-symbolizer
     - name: cmake
       env:
@@ -119,38 +121,8 @@ jobs:
         export LSAN_OPTIONS="$LSAN_OPTIONS:suppressions=$PWD/build_tools/lsan_suppressions.txt"
         make -C build VERBOSE=1 fish_run_tests
 
-  # Our clang++ tsan builds are not recognizing safe rust patterns (such as the fact that Drop
-  # cannot be called while a thread is using the object in question). Rust has its own way of
-  # running TSAN, but for the duration of the port from C++ to Rust, we'll keep this disabled.
-
-  # ubuntu-threadsan:
-  #
-  #   runs-on: ubuntu-latest
-  #
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - uses: ./.github/actions/rust-toolchain@oldest-supported
-  #   - name: Install deps
-  #     run: |
-  #       sudo apt install gettext libpcre2-dev python3-pexpect tmux
-  #   - name: cmake
-  #     env:
-  #         FISH_CI_SAN: 1
-  #         CC: clang
-  #     run: |
-  #       mkdir build && cd build
-  #       cmake ..
-  #   - name: make
-  #     run: |
-  #       make
-  #   - name: make fish_run_tests
-  #     run: |
-  #       make -C build fish_run_tests
-
   macos:
-
     runs-on: macos-latest
-
     env:
       # macOS runners keep having issues loading Cargo.toml dependencies from git (GitHub) instead
       # of crates.io, so give this a try. It's also sometimes significantly faster on all platforms.
@@ -176,9 +148,7 @@ jobs:
         make -C build VERBOSE=1 fish_run_tests
 
   windows:
-
     runs-on: windows-latest
-
     defaults:
       run:
         shell: msys2 {0}

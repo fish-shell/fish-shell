@@ -288,6 +288,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "displaydoc"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ac70aa55017e108007fbaf5aa0f54b021c98f92ff8af59d42eda9da96e3dd4f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "either"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -336,9 +347,12 @@ dependencies = [
  "fish-common",
  "fish-fallback",
  "fish-feature-flags",
+ "fish-fluent",
+ "fish-fluent-extraction",
  "fish-gettext",
  "fish-gettext-extraction",
  "fish-gettext-mo-file-parser",
+ "fish-localization",
  "fish-printf",
  "fish-tempfile",
  "fish-util",
@@ -346,11 +360,12 @@ dependencies = [
  "fish-wgetopt",
  "fish-widecharwidth",
  "fish-widestring",
+ "fluent",
  "itertools",
  "libc",
  "lru",
  "macro_rules_attribute",
- "nix",
+ "nix 0.31.3",
  "num-traits",
  "once_cell",
  "pcre2",
@@ -398,7 +413,7 @@ dependencies = [
  "fish-feature-flags",
  "fish-widestring",
  "libc",
- "nix",
+ "nix 0.31.3",
  "rsconf",
 ]
 
@@ -423,10 +438,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "fish-fluent"
+version = "0.0.0"
+dependencies = [
+ "cfg-if",
+ "fish-build-helper",
+ "fish-fluent-extraction",
+ "fish-localization",
+ "fluent",
+ "fluent-ftl-tools",
+ "rust-embed",
+ "unic-langid",
+ "widestring",
+]
+
+[[package]]
+name = "fish-fluent-extraction"
+version = "0.0.0"
+dependencies = [
+ "fish-tempfile",
+ "fluent-ftl-tools",
+ "fluent-syntax",
+ "proc-macro2",
+ "rsconf",
+ "syn",
+]
+
+[[package]]
 name = "fish-gettext"
 version = "0.0.0"
 dependencies = [
  "fish-gettext-maps",
+ "fish-localization",
  "phf",
 ]
 
@@ -445,6 +488,7 @@ version = "0.0.0"
 dependencies = [
  "fish-build-helper",
  "fish-gettext-mo-file-parser",
+ "fish-localization",
  "phf",
  "phf_codegen",
  "rsconf",
@@ -453,6 +497,14 @@ dependencies = [
 [[package]]
 name = "fish-gettext-mo-file-parser"
 version = "0.0.0"
+
+[[package]]
+name = "fish-localization"
+version = "0.0.0"
+dependencies = [
+ "fish-build-helper",
+ "phf_shared",
+]
 
 [[package]]
 name = "fish-printf"
@@ -469,7 +521,7 @@ dependencies = [
 name = "fish-tempfile"
 version = "0.0.0"
 dependencies = [
- "nix",
+ "nix 0.31.3",
  "rand",
 ]
 
@@ -480,7 +532,7 @@ dependencies = [
  "errno",
  "fish-widestring",
  "libc",
- "nix",
+ "nix 0.31.3",
  "rand",
 ]
 
@@ -514,6 +566,61 @@ dependencies = [
  "libc",
  "unicode-width",
  "widestring",
+]
+
+[[package]]
+name = "fluent"
+version = "0.17.0"
+source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+dependencies = [
+ "fluent-bundle",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-bundle"
+version = "0.16.0"
+source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+dependencies = [
+ "fluent-langneg",
+ "fluent-syntax",
+ "intl-memoizer",
+ "intl_pluralrules",
+ "rustc-hash",
+ "self_cell",
+ "smallvec",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-ftl-tools"
+version = "0.1.0"
+source = "git+https://codeberg.org/danielrainer/fluent-ftl-tools?rev=5917664c8f2e4928ef1e480ff5c13bbe1e226066#5917664c8f2e4928ef1e480ff5c13bbe1e226066"
+dependencies = [
+ "anyhow",
+ "fluent",
+ "fluent-syntax",
+ "gettext-po-file-parser",
+ "nix 0.30.1",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-langneg"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7eebbe59450baee8282d71676f3bfed5689aeab00b27545e83e5f14b1195e8b0"
+dependencies = [
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-syntax"
+version = "0.12.0"
+source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+dependencies = [
+ "memchr",
+ "thiserror",
 ]
 
 [[package]]
@@ -573,6 +680,14 @@ dependencies = [
  "rand_core",
  "wasip2",
  "wasip3",
+]
+
+[[package]]
+name = "gettext-po-file-parser"
+version = "0.0.0"
+source = "git+https://codeberg.org/danielrainer/fluent-ftl-tools?rev=5917664c8f2e4928ef1e480ff5c13bbe1e226066#5917664c8f2e4928ef1e480ff5c13bbe1e226066"
+dependencies = [
+ "anyhow",
 ]
 
 [[package]]
@@ -646,6 +761,24 @@ dependencies = [
  "hashbrown 0.17.1",
  "serde",
  "serde_core",
+]
+
+[[package]]
+name = "intl-memoizer"
+version = "0.5.3"
+source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+dependencies = [
+ "type-map",
+ "unic-langid",
+]
+
+[[package]]
+name = "intl_pluralrules"
+version = "7.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "078ea7b7c29a2b4df841a7f6ac8775ff6074020c6776d48491ce2268e068f972"
+dependencies = [
+ "unic-langid",
 ]
 
 [[package]]
@@ -754,6 +887,18 @@ name = "memchr"
 version = "2.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b947ae49db0d222b1dbc6b113ce7248a3fc3a6ca21b696717bfc000ba4484d8"
+
+[[package]]
+name = "nix"
+version = "0.30.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74523f3a35e05aba87a1d978330aef40f67b0304ac79c1c00b294c9830543db6"
+dependencies = [
+ "bitflags",
+ "cfg-if",
+ "cfg_aliases",
+ "libc",
+]
 
 [[package]]
 name = "nix"
@@ -1033,6 +1178,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustc-hash"
+version = "2.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94300abf3f1ae2e2b8ffb7b58043de3d399c73fa6f4b73826402a5c457614dbe"
+
+[[package]]
 name = "rustc_version"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1072,6 +1223,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "490dcfcbfef26be6800d11870ff2df8774fa6e86d047e3e8c8a76b25655e41ca"
 
 [[package]]
+name = "self_cell"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b12e76d157a900eb52e81bc6e9f3069344290341720e9178cde2407113ac8d89"
+
+[[package]]
 name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1084,6 +1241,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
 dependencies = [
  "serde_core",
+ "serde_derive",
 ]
 
 [[package]]
@@ -1236,10 +1394,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "tinystr"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8323304221c2a851516f22236c5722a72eaa19749016521d6dff0824447d96d"
+dependencies = [
+ "displaydoc",
+ "serde_core",
+ "zerovec",
+]
+
+[[package]]
+name = "type-map"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb30dbbd9036155e74adad6812e9898d03ec374946234fbcebd5dfc7b9187b90"
+dependencies = [
+ "rustc-hash",
+]
+
+[[package]]
 name = "typenum"
 version = "1.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
+
+[[package]]
+name = "unic-langid"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a28ba52c9b05311f4f6e62d5d9d46f094bd6e84cb8df7b3ef952748d752a7d05"
+dependencies = [
+ "unic-langid-impl",
+]
+
+[[package]]
+name = "unic-langid-impl"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dce1bf08044d4b7a94028c93786f8566047edc11110595914de93362559bc658"
+dependencies = [
+ "tinystr",
+]
 
 [[package]]
 name = "unicode-ident"
@@ -1570,6 +1766,8 @@ dependencies = [
  "fish-common",
  "fish-tempfile",
  "fish-widestring",
+ "fluent-ftl-tools",
+ "fluent-syntax",
  "ignore",
  "pcre2",
  "walkdir",
@@ -1580,6 +1778,22 @@ name = "xterm-color"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7008a9d8ba97a7e47d9b2df63fcdb8dade303010c5a7cd5bf2469d4da6eba673"
+
+[[package]]
+name = "zerofrom"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ec05a11813ea801ff6d75110ad09cd0824ddba17dfe17128ea0d5f68e6c5272"
+
+[[package]]
+name = "zerovec"
+version = "0.11.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90f911cbc359ab6af17377d242225f4d75119aec87ea711a880987b18cd7b239"
+dependencies = [
+ "serde",
+ "zerofrom",
+]
 
 [[package]]
 name = "zmij"

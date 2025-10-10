@@ -307,7 +307,7 @@ msgstr "Content-Type: text/plain; charset=UTF-8\n"
             // gettext-extraction output
             let msguniq_output = Command::new("msguniq")
                 .args(["--no-wrap"])
-                .run_with_stdio(template.content)?;
+                .run_with_stdio(&template.content)?;
             Ok(Template {
                 content: msguniq_output,
             })
@@ -349,7 +349,7 @@ msgstr "Content-Type: text/plain; charset=UTF-8\n"
             let msguniq_output = Command::new("msguniq")
                 .args(["--no-wrap", "--sort-output"])
                 .env("LC_ALL", "C.UTF-8")
-                .run_with_stdio(concatenated_content)?;
+                .run_with_stdio(&concatenated_content)?;
             // The Header entry needs to be removed again,
             // because it is added outside of this function.
             let expected_prefix = MINIMAL_HEADER.as_bytes();

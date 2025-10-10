@@ -1,8 +1,9 @@
 use super::{localizable_consts, localizable_string, wgettext, wgettext_fmt};
 use crate::env::{EnvStack, Environment as _};
+use fish_localization::{Language, LocalizationLanguage};
 use fish_widestring::{L, WString, wstr};
-use itertools::Itertools as _;
-use std::collections::{HashMap, HashSet};
+use itertools::{Itertools as _, chain};
+use std::collections::HashSet;
 use std::sync::Mutex;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -98,8 +99,8 @@ fn append_space_separated_list<S: AsRef<str>>(
 }
 
 pub struct SetLanguageLints<'a> {
-    duplicates: Vec<&'a str>,
-    non_existing: Vec<&'a str>,
+    duplicates: Vec<Language<'a>>,
+    non_existing: Vec<Language<'a>>,
 }
 
 impl<'a> SetLanguageLints<'a> {
@@ -151,36 +152,35 @@ impl LocalizationState {
     /// If a country code is present (`ll_CC`), only the catalog named `ll` will be considered as a fallback.
     /// If no country code is present (`ll`), all catalogs whose names start with `ll_` will be used in
     /// arbitrary order.
-    fn find_best_matches<'a, 'b: 'a, L: Copy>(
-        language: &str,
-        available_languages: &'a HashMap<&'b str, L>,
-    ) -> Vec<(&'b str, L)> {
+    fn find_best_matches<'a, LL: LocalizationLanguage>(
+        language: Language<'a>,
+        available_languages: &HashSet<LL>,
+    ) -> Vec<LL> {
         // Try the exact name first.
         // If there already is a corresponding catalog return the language.
-        if let Some((&lang_str, &lang_value)) = available_languages.get_key_value(language) {
-            return vec![(lang_str, lang_value)];
+        if let Some(&lang) = available_languages.get(*language) {
+            return vec![lang];
         }
-        let language_without_country_code =
-            language.split_once('_').map_or(language, |(ll, _cc)| ll);
+        let language_without_country_code = language
+            .split_once('_')
+            .map_or(language, |(ll, _cc)| Language(ll));
         if language == language_without_country_code {
             // We have `ll` format. In this case, try to find any catalog whose name starts with `ll_`.
             // Note that it is important to include the underscore in the pattern, otherwise `ll` might
             // fall back to `llx_CC`, where `llx` is a 3-letter language identifier.
             let ll_prefix = format!("{language}_");
             let mut lang_catalogs = vec![];
-            for (&lang_str, &localization_lang) in available_languages.iter() {
-                if lang_str.starts_with(&ll_prefix) {
-                    lang_catalogs.push((lang_str, localization_lang));
+            for &lang in available_languages.iter() {
+                if lang.as_ref().starts_with(&ll_prefix) {
+                    lang_catalogs.push(lang);
                 }
             }
             lang_catalogs
         } else {
             // If `language` contained a country code, we only try to fall back to a catalog
             // without a country code.
-            if let Some((&lang_str, &lang_value)) =
-                available_languages.get_key_value(language_without_country_code)
-            {
-                vec![(lang_str, lang_value)]
+            if let Some(&lang) = available_languages.get(*language_without_country_code) {
+                vec![lang]
             } else {
                 vec![]
             }
@@ -206,6 +206,7 @@ impl LocalizationState {
             if is_c_locale(locale) {
                 self.precedence_origin =
                     LanguagePrecedenceOrigin::LocaleVariable(*precedence_origin);
+                fish_fluent::set_language_precedence(&[]);
                 fish_gettext::set_language_precedence(&[]);
                 return;
             }
@@ -241,24 +242,29 @@ impl LocalizationState {
                     || lang.starts_with("POSIX"))
             })
             .collect();
-        fn update_precedence<'a, 'b: 'a, LocalizationLanguage: Copy + 'a>(
+        fn update_precedence<LL: LocalizationLanguage>(
             language_list: &[String],
-            get_available_languages: fn() -> &'a HashMap<&'b str, LocalizationLanguage>,
-            set_language_precedence: fn(&[LocalizationLanguage]),
+            available_languages: &HashSet<LL>,
+            set_language_precedence: fn(&[LL]),
         ) {
-            let available_langs = get_available_languages();
             let mut seen_languages = HashSet::new();
             let language_precedence: Vec<_> = language_list
                 .iter()
-                .flat_map(|lang| LocalizationState::find_best_matches(lang, available_langs))
-                .filter(|&(lang_str, _)| seen_languages.insert(lang_str))
-                .map(|(_, localization_lang)| localization_lang)
+                .flat_map(|lang| {
+                    LocalizationState::find_best_matches(Language(lang), available_languages)
+                })
+                .filter(|&lang| seen_languages.insert(lang))
                 .collect();
             set_language_precedence(&language_precedence);
         }
         update_precedence(
             &language_list,
-            fish_gettext::get_available_languages,
+            fish_fluent::get_available_languages(),
+            fish_fluent::set_language_precedence,
+        );
+        update_precedence(
+            &language_list,
+            fish_gettext::get_available_languages(),
             fish_gettext::set_language_precedence,
         );
         self.precedence_origin = precedence_origin;
@@ -268,11 +274,11 @@ impl LocalizationState {
         &mut self,
         langs: &'b [S],
     ) -> SetLanguageLints<'a> {
+        let langs = || langs.iter().map(|lang| Language(lang.as_ref()));
         let mut seen_in_input = HashSet::new();
         let mut unique_lang_strs = vec![];
         let mut duplicates = vec![];
-        for lang in langs {
-            let lang = lang.as_ref();
+        for lang in langs() {
             if seen_in_input.insert(lang) {
                 unique_lang_strs.push(lang);
             } else {
@@ -280,34 +286,38 @@ impl LocalizationState {
             }
         }
         let mut all_available_langs = HashSet::new();
-        fn update_precedence<'a, 'b, 'c: 'a + 'b, LocalizationLanguage: Copy + 'a>(
-            unique_lang_strs: &[&str],
-            get_available_languages: fn() -> &'a HashMap<&'c str, LocalizationLanguage>,
-            set_language_precedence: fn(&[LocalizationLanguage]),
-            all_available_langs: &'b mut HashSet<&'c str>,
+        fn update_precedence<'a, LL: LocalizationLanguage>(
+            unique_lang_strs: &[Language<'a>],
+            available_languages: &HashSet<LL>,
+            set_language_precedence: fn(&[LL]),
+            all_available_langs: &mut HashSet<Language<'static>>,
         ) {
-            let available_langs = get_available_languages();
-            for &lang in available_langs.keys() {
-                all_available_langs.insert(lang);
+            for &lang in available_languages.iter() {
+                all_available_langs.insert(*lang.as_ref());
             }
             let mut existing_langs = vec![];
             for lang in unique_lang_strs {
-                if let Some((&lang_str, &lang_value)) = available_langs.get_key_value(lang) {
-                    existing_langs.push((lang_str, lang_value));
+                if let Some(&lang) = available_languages.get(lang) {
+                    existing_langs.push(lang);
                 }
             }
 
             let mut seen = HashSet::new();
             let unique_langs: Vec<_> = existing_langs
                 .into_iter()
-                .filter(|&(lang, _)| seen.insert(lang))
-                .map(|(_, localization_lang)| localization_lang)
+                .filter(|&lang| seen.insert(lang))
                 .collect();
             set_language_precedence(&unique_langs);
         }
         update_precedence(
             &unique_lang_strs,
-            fish_gettext::get_available_languages,
+            fish_fluent::get_available_languages(),
+            fish_fluent::set_language_precedence,
+            &mut all_available_langs,
+        );
+        update_precedence(
+            &unique_lang_strs,
+            fish_gettext::get_available_languages(),
             fish_gettext::set_language_precedence,
             &mut all_available_langs,
         );
@@ -315,10 +325,8 @@ impl LocalizationState {
         self.precedence_origin = LanguagePrecedenceOrigin::StatusLanguage;
 
         let mut seen_non_existing = HashSet::new();
-        let non_existing: Vec<&str> = langs
-            .iter()
-            .map(|lang| lang.as_ref())
-            .filter(|&lang| !all_available_langs.contains(lang) && seen_non_existing.insert(lang))
+        let non_existing: Vec<Language<'a>> = langs()
+            .filter(|&lang| !all_available_langs.contains(&lang) && seen_non_existing.insert(lang))
             .collect();
 
         SetLanguageLints {
@@ -402,17 +410,26 @@ pub fn status_language() -> WString {
         "Active languages (source: %s):",
         origin_string
     ));
-    let gettext_language_precedence = fish_gettext::get_language_precedence();
-    append_space_separated_list(&mut result, &gettext_language_precedence);
+    result.push_str("\n  Fluent:");
+    append_space_separated_list(&mut result, fish_fluent::get_language_precedence());
+    result.push_str("\n  gettext:");
+    append_space_separated_list(&mut result, fish_gettext::get_language_precedence());
     result.push('\n');
 
     result
 }
 
 pub fn list_available_languages() -> WString {
-    fish_gettext::get_available_languages()
-        .keys()
-        .sorted_unstable()
-        .flat_map(|lang| [lang, "\n"])
-        .collect()
+    chain!(
+        fish_fluent::get_available_languages()
+            .iter()
+            .map(|l| l.as_ref()),
+        fish_gettext::get_available_languages()
+            .iter()
+            .map(|l| l.as_ref()),
+    )
+    .sorted_unstable()
+    .dedup()
+    .flat_map(|s| [s, "\n"])
+    .collect()
 }

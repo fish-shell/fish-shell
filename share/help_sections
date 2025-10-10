@@ -140,6 +140,7 @@ contributing#configuring-your-editor-for-fish-scripts
 contributing#contributing-completions
 contributing#contributing-documentation
 contributing#contributing-translations
+contributing#editing-ftl-files
 contributing#editing-po-files
 contributing#fish-script-style-guide
 contributing#github
@@ -147,7 +148,7 @@ contributing#guidelines
 contributing#local-testing
 contributing#mailing-list
 contributing#minimum-supported-rust-version-msrv-policy
-contributing#modifications-to-strings-in-source-files
+contributing#modifications-to-strings-in-source-files-gettext-only
 contributing#modifying-existing-translations
 contributing#setting-code-up-for-translations
 contributing#testing

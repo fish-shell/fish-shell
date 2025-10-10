@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use fish_build_helper::as_os_strs;
 use std::{path::PathBuf, process::Command};
-use xtask::{CommandExt as _, cargo, format::FormatArgs};
+use xtask::{CommandExt as _, cargo, fluent::FluentCommandArgs, format::FormatArgs};
 
 #[derive(Parser)]
 #[command(
@@ -18,6 +18,9 @@ struct Cli {
 enum Task {
     /// Run various checks on the repo.
     Check,
+    /// Run Fluent-related tools.
+    #[command(subcommand)]
+    Fluent(FluentCommandArgs),
     /// Format files or check if they are correctly formatted.
     Format(FormatArgs),
     /// Build HTML docs
@@ -34,6 +37,7 @@ fn main() {
     let cli = Cli::parse();
     match cli.task {
         Task::Check => run_checks(),
+        Task::Fluent(fluent_command_args) => xtask::fluent::fluent(fluent_command_args),
         Task::Format(format_args) => xtask::format::format(format_args),
         Task::HtmlDocs { fish_indent } => build_html_docs(fish_indent),
         Task::ManPages => cargo(["build", "--package", "fish-build-man-pages"]),

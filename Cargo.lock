@@ -225,6 +225,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "displaydoc"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97369cbbc041bc366949bc74d34658d6cda5621039731c6310521892a3a20ae0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -272,6 +283,8 @@ dependencies = [
  "fish-color",
  "fish-common",
  "fish-fallback",
+ "fish-fluent",
+ "fish-fluent-extraction",
  "fish-gettext",
  "fish-gettext-extraction",
  "fish-gettext-mo-file-parser",
@@ -282,11 +295,12 @@ dependencies = [
  "fish-wgetopt",
  "fish-widecharwidth",
  "fish-widestring",
+ "fluent",
  "itertools",
  "libc",
  "lru",
  "macro_rules_attribute",
- "nix",
+ "nix 0.31.1",
  "num-traits",
  "once_cell",
  "pcre2",
@@ -330,7 +344,7 @@ dependencies = [
  "bitflags",
  "fish-widestring",
  "libc",
- "nix",
+ "nix 0.31.1",
 ]
 
 [[package]]
@@ -344,6 +358,40 @@ dependencies = [
  "libc",
  "rsconf",
  "widestring",
+]
+
+[[package]]
+name = "fish-fluent"
+version = "0.0.0"
+dependencies = [
+ "cfg-if",
+ "fish-build-helper",
+ "fish-fluent-extraction",
+ "fluent",
+ "fluent-ftl-tools",
+ "rust-embed",
+ "unic-langid",
+ "widestring",
+]
+
+[[package]]
+name = "fish-fluent-check"
+version = "0.0.0"
+dependencies = [
+ "fish-build-helper",
+ "fish-fluent",
+ "fish-tempfile",
+ "fluent",
+ "fluent-syntax",
+]
+
+[[package]]
+name = "fish-fluent-extraction"
+version = "0.0.0"
+dependencies = [
+ "fish-localization-extraction",
+ "proc-macro2",
+ "rsconf",
 ]
 
 [[package]]
@@ -401,7 +449,7 @@ dependencies = [
 name = "fish-tempfile"
 version = "0.0.0"
 dependencies = [
- "nix",
+ "nix 0.31.1",
  "rand",
 ]
 
@@ -446,6 +494,60 @@ dependencies = [
 ]
 
 [[package]]
+name = "fluent"
+version = "0.17.0"
+source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+dependencies = [
+ "fluent-bundle",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-bundle"
+version = "0.16.0"
+source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+dependencies = [
+ "fluent-langneg",
+ "fluent-syntax",
+ "intl-memoizer",
+ "intl_pluralrules",
+ "rustc-hash",
+ "self_cell",
+ "smallvec",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-ftl-tools"
+version = "0.1.0"
+source = "git+https://github.com/danielrainer/fluent-ftl-tools?rev=1441967c9c34f40dcc4c52d7951d334798c20446#1441967c9c34f40dcc4c52d7951d334798c20446"
+dependencies = [
+ "fluent",
+ "fluent-syntax",
+ "gettext-po-file-parser",
+ "nix 0.30.1",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-langneg"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7eebbe59450baee8282d71676f3bfed5689aeab00b27545e83e5f14b1195e8b0"
+dependencies = [
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-syntax"
+version = "0.12.0"
+source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+dependencies = [
+ "memchr",
+ "thiserror",
+]
+
+[[package]]
 name = "foldhash"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -485,6 +587,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "gettext-po-file-parser"
+version = "0.0.0"
+source = "git+https://github.com/danielrainer/fluent-ftl-tools?rev=1441967c9c34f40dcc4c52d7951d334798c20446#1441967c9c34f40dcc4c52d7951d334798c20446"
+
+[[package]]
 name = "globset"
 version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -513,6 +620,24 @@ name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+
+[[package]]
+name = "intl-memoizer"
+version = "0.5.3"
+source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+dependencies = [
+ "type-map",
+ "unic-langid",
+]
+
+[[package]]
+name = "intl_pluralrules"
+version = "7.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "078ea7b7c29a2b4df841a7f6ac8775ff6074020c6776d48491ce2268e068f972"
+dependencies = [
+ "unic-langid",
+]
 
 [[package]]
 name = "is_terminal_polyfill"
@@ -600,6 +725,18 @@ name = "memchr"
 version = "2.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
+
+[[package]]
+name = "nix"
+version = "0.30.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74523f3a35e05aba87a1d978330aef40f67b0304ac79c1c00b294c9830543db6"
+dependencies = [
+ "bitflags",
+ "cfg-if",
+ "cfg_aliases",
+ "libc",
+]
 
 [[package]]
 name = "nix"
@@ -884,6 +1021,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustc-hash"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "357703d41365b4b27c590e3ed91eabb1b663f07c4c084095e60cbed4362dff0d"
+
+[[package]]
 name = "same-file"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -914,12 +1057,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "490dcfcbfef26be6800d11870ff2df8774fa6e86d047e3e8c8a76b25655e41ca"
 
 [[package]]
+name = "self_cell"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b12e76d157a900eb52e81bc6e9f3069344290341720e9178cde2407113ac8d89"
+
+[[package]]
 name = "serde"
 version = "1.0.228"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
 dependencies = [
  "serde_core",
+ "serde_derive",
 ]
 
 [[package]]
@@ -1041,10 +1191,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "tinystr"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42d3e9c45c09de15d06dd8acf5f4e0e399e85927b7f00711024eb7ae10fa4869"
+dependencies = [
+ "displaydoc",
+ "serde_core",
+ "zerovec",
+]
+
+[[package]]
+name = "type-map"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb30dbbd9036155e74adad6812e9898d03ec374946234fbcebd5dfc7b9187b90"
+dependencies = [
+ "rustc-hash",
+]
+
+[[package]]
 name = "typenum"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "562d481066bde0658276a35467c4af00bdc6ee726305698a55b86e61d7ad82bb"
+
+[[package]]
+name = "unic-langid"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a28ba52c9b05311f4f6e62d5d9d46f094bd6e84cb8df7b3ef952748d752a7d05"
+dependencies = [
+ "unic-langid-impl",
+]
+
+[[package]]
+name = "unic-langid-impl"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dce1bf08044d4b7a94028c93786f8566047edc11110595914de93362559bc658"
+dependencies = [
+ "tinystr",
+]
 
 [[package]]
 name = "unicode-ident"
@@ -1160,6 +1348,7 @@ dependencies = [
  "clap",
  "fish-build-helper",
  "fish-tempfile",
+ "fluent-ftl-tools",
  "walkdir",
 ]
 
@@ -1187,4 +1376,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "zerofrom"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50cc42e0333e05660c3587f3bf9d0478688e15d870fab3346451ce7f8c9fbea5"
+
+[[package]]
+name = "zerovec"
+version = "0.11.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c28719294829477f525be0186d13efa9a3c602f7ec202ca9e353d310fb9a002"
+dependencies = [
+ "serde",
+ "zerofrom",
 ]

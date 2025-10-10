@@ -23,6 +23,8 @@ fish-build-man-pages = { path = "crates/build-man-pages" }
 fish-color = { path = "crates/color" }
 fish-common = { path = "crates/common" }
 fish-fallback = { path = "crates/fallback" }
+fish-fluent = { path = "crates/fluent" }
+fish-fluent-extraction = { path = "crates/fluent-extraction" }
 fish-gettext = { path = "crates/gettext" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-gettext-maps = { path = "crates/gettext-maps" }
@@ -35,6 +37,9 @@ fish-wcstringutil = { path = "crates/wcstringutil" }
 fish-widecharwidth = { path = "crates/widecharwidth" }
 fish-widestring = { path = "crates/widestring" }
 fish-wgetopt = { path = "crates/wgetopt" }
+fluent = { git = "https://github.com/danielrainer/fluent-rs", rev = "cf712bced280b217b6307edabc2089b3e57204ab" }
+fluent-ftl-tools = { git = "https://github.com/danielrainer/fluent-ftl-tools", rev = "1441967c9c34f40dcc4c52d7951d334798c20446" }
+fluent-syntax = { git = "https://github.com/danielrainer/fluent-rs", rev = "cf712bced280b217b6307edabc2089b3e57204ab" }
 itertools = "0.14.0"
 libc = "0.2.177"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
@@ -75,6 +80,7 @@ rust-embed = { version = "8.11.0", features = [
 ] }
 serial_test = { version = "3", default-features = false }
 widestring = "1.2.0"
+unic-langid = "0.9.6"
 unicode-segmentation = "1.12.0"
 unicode-width = "0.2.0"
 unix_path = "1.0.1"
@@ -109,6 +115,8 @@ fish-build-man-pages = { workspace = true, optional = true }
 fish-color.workspace = true
 fish-common.workspace = true
 fish-fallback.workspace = true
+fish-fluent.workspace = true
+fish-fluent-extraction = { workspace = true, optional = true }
 fish-gettext = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-printf.workspace = true
@@ -118,6 +126,7 @@ fish-wcstringutil.workspace = true
 fish-wgetopt.workspace = true
 fish-widecharwidth.workspace = true
 fish-widestring.workspace = true
+fluent.workspace = true
 itertools.workspace = true
 libc.workspace = true
 lru.workspace = true
@@ -179,9 +188,13 @@ path = "src/bin/fish_key_reader.rs"
 default = ["embed-manpages", "localize-messages"]
 benchmark = []
 embed-manpages = ["dep:fish-build-man-pages"]
-# Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
-# build time.
-localize-messages = ["dep:fish-gettext"]
+# Enable localization at runtime.
+# Requires the `msgfmt` tool to generate catalog data at build time for gettext localization.
+localize-messages = ["fish-fluent/localize-messages", "dep:fish-gettext"]
+# This feature is used to enable extracting Fluent IDs from the source code for localization check.
+# For normal builds, it should be disabled.
+# It only needs to be enabled if checking Fluent Translation List (FTL) files is desired.
+fluent-extract = ["fish-fluent/fluent-extract", "dep:fish-fluent-extraction"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
 # desired. This happens when running tests via `cargo xtask check` and when calling

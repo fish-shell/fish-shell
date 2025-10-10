@@ -64,6 +64,7 @@ pub fn format(args: FormatArgs) {
         }
     }
     format_fish(&args);
+    format_fluent(&args);
     format_python(&args);
     format_rust(&args);
 }
@@ -114,6 +115,27 @@ fn format_fish(args: &FormatArgs) {
     formatter.arg("--");
     formatter.args(fish_paths);
     run_formatter(&mut formatter, "fish_indent");
+}
+
+fn format_fluent(args: &FormatArgs) {
+    println!("=== Running {GREEN}Fluent FTL formatter (built-in){GREEN:#}");
+    let mut ftl_files = files_with_extension(&args.paths, "ftl");
+    if args.all {
+        ftl_files.extend(files_with_extension([fish_build_helper::ftl_dir()], "ftl"));
+    }
+    let mode = if args.check {
+        fluent_ftl_tools::format::FormattingMode::Check
+    } else {
+        fluent_ftl_tools::format::FormattingMode::Rewrite
+    };
+    let errors = ftl_files
+        .iter()
+        .filter_map(|path| fluent_ftl_tools::format::format_path(path, mode).err())
+        .collect::<Vec<String>>()
+        .join("\n");
+    if !errors.is_empty() {
+        fail!("{errors}");
+    }
 }
 
 fn format_python(args: &FormatArgs) {

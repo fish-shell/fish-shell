@@ -1,0 +1,56 @@
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number
+        required: true
+        type: number
+
+permissions:
+  contents: write
+
+jobs:
+  update-event-feeds:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install dependencies
+      run: |
+        sudo apt install python3-git python3-polib
+        sudo pip3 install --break-system-packages feedgen==1.0.0
+    - name: Update event feeds
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        set -x
+        if [ "${{ github.event_name }}" = pull_request ]; then
+          pr_number=${{ github.event.pull_request.number }}
+        else
+          pr_number=${{ inputs.pr_number }}
+        fi
+        # E.g. https://github.com/fish-shell/fish-shell
+        repo_url=${{ github.server_url }}/${{ github.repository }}
+        workflow_sha=${{ github.workflow_sha }}
+        run_id=${{ github.run_id }}
+        events_ref=refs/fish-shell-events
+        git clone "$repo_url" --revision="$events_ref" worktree --depth=1
+        cd worktree
+        git fetch origin "$workflow_sha" --depth=1
+        set -o pipefail
+        git show "$workflow_sha":build_tools/event-feeds.py |
+          python - "$pr_number"
+        git add .
+        if git diff --cached --exit-code; then
+          exit
+        fi
+        git config user.name fish-shell-bot
+        git config user.email fish-shell-bot
+        git commit -m "update via github run ID $run_id"
+        cat >>.git/config <<'EOF'
+        [credential]
+          username = fish-shell-bot
+          helper = !sh -c 'echo "password=$GITHUB_TOKEN"'
+        EOF
+        # Might fail due to a race; that's usually fine to ignore...
+        git push origin HEAD:"$events_ref" ||:

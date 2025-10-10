@@ -2,6 +2,9 @@ name: Rust checks
 
 on: [push, pull_request]
 
+env:
+  FISH_STRICT_CI: "true"
+
 permissions:
   contents: read
 

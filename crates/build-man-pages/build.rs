@@ -14,6 +14,7 @@ fn main() {
 
 #[cfg(not(clippy))]
 fn build_man(man_dir: &Path) {
+    use fish_build_helper::warn;
     use std::process::{Command, Stdio};
 
     use fish_build_helper::{env_var, workspace_root};
@@ -45,7 +46,7 @@ fn build_man(man_dir: &Path) {
 
     rsconf::rebuild_if_env_changed("FISH_BUILD_DOCS");
     if env_var("FISH_BUILD_DOCS") == Some("0".to_string()) {
-        rsconf::warn!("Skipping man pages because $FISH_BUILD_DOCS is set to 0");
+        warn!("Skipping man pages because $FISH_BUILD_DOCS is set to 0");
         return;
     }
 
@@ -64,8 +65,8 @@ fn build_man(man_dir: &Path) {
             if env_var("FISH_BUILD_DOCS") == Some("1".to_string()) {
                 panic!("Could not find sphinx-build to build man pages.\nInstall sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0.");
             }
-            rsconf::warn!("Cannot find sphinx-build to build man pages.");
-            rsconf::warn!("If you install it now you need to run `cargo clean` and rebuild, or set $FISH_BUILD_DOCS=1 explicitly.");
+            warn!("Cannot find sphinx-build to build man pages.");
+            warn!("If you install it now you need to run `cargo clean` and rebuild, or set $FISH_BUILD_DOCS=1 explicitly.");
             return;
         }
         Err(e) => {
@@ -84,7 +85,7 @@ fn build_man(man_dir: &Path) {
         }
         Ok(out) => {
             if !out.stderr.is_empty() {
-                rsconf::warn!("sphinx-build: {}", String::from_utf8_lossy(&out.stderr));
+                warn!("sphinx-build: {}", String::from_utf8_lossy(&out.stderr));
             }
             assert_eq!(&String::from_utf8_lossy(&out.stdout), "");
             if !out.status.success() {

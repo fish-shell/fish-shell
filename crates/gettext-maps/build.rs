@@ -4,7 +4,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use fish_build_helper::env_var;
+use fish_build_helper::{env_var, warn};
 
 fn main() {
     let cache_dir =
@@ -41,15 +41,13 @@ fn embed_localizations(cache_dir: &Path) {
         .status()
     {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            rsconf::warn!(
+            warn!(
                 "Cannot find msgfmt to build gettext message catalogs. Localization will not work."
             );
-            rsconf::warn!(
+            warn!(
                 "If you install it now you need to trigger a rebuild to get localization support."
             );
-            rsconf::warn!(
-                "One way to achieve that is running `touch po` followed by the build command."
-            );
+            warn!("One way to achieve that is running `touch po` followed by the build command.");
         }
         Err(e) => {
             panic!("Error when trying to run `msgfmt -h`: {e:?}");

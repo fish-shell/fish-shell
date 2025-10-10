@@ -94,13 +94,16 @@ def makeenv(script_path: Path, home: Path) -> Dict[str, str]:
 
 
 def compile_test_helper(source_path: Path, binary_path: Path) -> None:
+    argv = [
+        "cc",
+        source_path,
+        "-o",
+        binary_path,
+    ]
+    if os.environ.get("FISH_STRICT_CI", "false") != "false":
+        argv += ["-Wall", "-Werror", "-Wpedantic"]
     subprocess.run(
-        [
-            "cc",
-            source_path,
-            "-o",
-            binary_path,
-        ],
+        argv,
         check=True,
     )
 

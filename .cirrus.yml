@@ -6,29 +6,26 @@ linux_task:
     matrix:
         - name: alpine
           container: &step
-              image: ghcr.io/krobelus/fish-ci/alpine:latest
+              image: ghcr.io/fish-shell/fish-ci/alpine:latest
               memory: 4GB
         - name: jammy
           container:
               <<: *step
-              image: ghcr.io/krobelus/fish-ci/jammy:latest
+              image: ghcr.io/fish-shell/fish-ci/jammy:latest
         # - name: jammy-asan
         #   container:
         #       <<: *step
-        #       image: ghcr.io/krobelus/fish-ci/jammy-asan:latest
+        #       image: ghcr.io/fish-shell/fish-ci/jammy-asan:latest
         # - name: focal-32bit
         #   container:
         #       <<: *step
-        #       image: ghcr.io/krobelus/fish-ci/focal-32bit:latest
+        #       image: ghcr.io/fish-shell/fish-ci/focal-32bit:latest
     tests_script:
         # cirrus at times gives us 32 procs and 2 GB of RAM
         # Unrestriced parallelism results in OOM
         - lscpu || true
         - (cat /proc/meminfo | grep MemTotal) || true
-        - mkdir build && cd build
-        - FISH_TEST_MAX_CONCURRENCY=6 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
-        - ninja -j 6 fish
-        - ninja fish_run_tests
+        - FISH_TEST_MAX_CONCURRENCY=6 build_tools/check.sh
     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
 
 linux_arm_task:
@@ -44,13 +41,8 @@ linux_arm_task:
         # Unrestriced parallelism results in OOM
         - lscpu || true
         - (cat /proc/meminfo | grep MemTotal) || true
-        - mkdir build && cd build
-        - FISH_TEST_MAX_CONCURRENCY=6 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
-        - ninja -j 6 fish
-        - file ./fish
-        - ninja fish_run_tests
-    # CI task disabled during RIIR transition
-    only_if: false && $CIRRUS_REPO_OWNER == 'fish-shell'
+        - FISH_TEST_MAX_CONCURRENCY=6 build_tools/check.sh
+    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
 
 freebsd_task:
     matrix:
@@ -68,10 +60,7 @@ freebsd_task:
         - pw user add -n fish-user -s /bin/csh -d /home/fish-user
         - mkdir -p /home/fish-user
         - chown -R fish-user /home/fish-user
-        - mkdir build && cd build
-        - chown -R fish-user ..
+        - chown -R fish-user .
         - sudo -u fish-user -s whoami
-        - sudo -u fish-user -s FISH_TEST_MAX_CONCURRENCY=1 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
-        - sudo -u fish-user -s ninja -j 6 fish
-        - sudo -u fish-user -s ninja fish_run_tests
+        - sudo -u fish-user -s FISH_TEST_MAX_CONCURRENCY=1 build_tools/check.sh
     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'

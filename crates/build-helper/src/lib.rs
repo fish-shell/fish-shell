@@ -35,6 +35,21 @@ pub fn fish_build_dir() -> Cow<'static, Path> {
         .unwrap_or(cargo_target_dir())
 }
 
+#[macro_export]
+macro_rules! warn {
+     ($msg:tt $(, $($arg:tt)*)?) => {{
+        let msg = format!($msg $(, $($arg)*)?);
+        if std::env::var_os("FISH_STRICT_CI").is_some_and(
+            |val| val != "false"
+        ) {
+            rsconf::warn!("treating warnings as error due to $FISH_DENY_BUILD_SCRIPT_RUNTIME_WARNINGS");
+            panic!("{}", msg);
+        } else {
+            rsconf::warn!("{}", msg);
+        }
+     }};
+ }
+
 // TODO Move this to rsconf
 pub fn rebuild_if_path_changed<P: AsRef<Path>>(path: P) {
     rsconf::rebuild_if_path_changed(path.as_ref().to_str().unwrap());

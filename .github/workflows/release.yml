@@ -8,6 +8,9 @@ on:
         required: true
         type: string
 
+env:
+  FISH_STRICT_CI: "true"
+
 permissions:
   contents: write
 

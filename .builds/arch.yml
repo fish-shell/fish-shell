@@ -20,4 +20,4 @@ tasks:
           ninja
   - test: |
           cd fish/build
-          ninja test
+          ninja fish_run_tests

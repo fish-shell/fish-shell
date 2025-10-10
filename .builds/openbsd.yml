@@ -26,4 +26,4 @@ tasks:
           ninja
   - test: |
           cd fish-shell/build
-          ninja test
+          ninja fish_run_tests

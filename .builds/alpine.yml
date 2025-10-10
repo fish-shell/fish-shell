@@ -1,7 +1,6 @@
 image: alpine/edge
 packages:
   - cargo
-  - clang17-libclang
   - cmake
   - ninja
   - pcre2-dev
@@ -24,4 +23,4 @@ tasks:
           ninja
   - test: |
           cd fish-shell/build
-          ninja test
+          ninja fish_run_tests

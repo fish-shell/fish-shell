@@ -1,0 +1,21 @@
+[package]
+name = "fish-fluent-extraction"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+license.workspace = true
+description = "proc-macro for extracting IDs for fluent translation"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+fish-localization-extraction.workspace = true
+proc-macro2.workspace = true
+
+[build-dependencies]
+rsconf.workspace = true
+
+[lints]
+workspace = true

@@ -899,6 +899,10 @@ msgstr ""
 msgid "Argument is not a number: '%s'"
 msgstr ""
 
+#
+msgid "Argument type does not match conversion character"
+msgstr ""
+
 msgid "Await background process completion"
 msgstr ""
 
@@ -906,6 +910,10 @@ msgid "Background IO thread events"
 msgstr ""
 
 msgid "Backgrounded commands can not be used as conditionals"
+msgstr ""
+
+#
+msgid "Bad format string"
 msgstr ""
 
 msgid "Bad system call"
@@ -1124,6 +1132,11 @@ msgstr "Przymusowe wyjście"
 msgid "Forced stop"
 msgstr "Wymuszono zatrzymanie"
 
+#
+#, c-format
+msgid "Formatter error: %s"
+msgstr ""
+
 msgid "Generate random number"
 msgstr "Zwróć losową liczbę"
 
@@ -1259,6 +1272,10 @@ msgid "Mismatched braces"
 msgstr ""
 
 msgid "Mismatched parenthesis"
+msgstr ""
+
+#
+msgid "Missing argument"
 msgstr ""
 
 msgid "Missing closing parenthesis"

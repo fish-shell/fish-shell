@@ -17,3 +17,11 @@ isolated-tmux capture-pane -p
 # CHECK: fish: Job 1, 'sleep 0.5 &' has ended
 # (I've seen this print " world", I guess it depends on tmux version and how big it thinks the terminal is)
 # CHECK: {{.*}} world
+
+isolated-tmux send-keys C-u C-l "sleep 3 | cat &" Enter "bg %1" Enter
+tmux-sleep
+isolated-tmux capture-pane -p | string match -v '*has stopped*'
+# CHECK: prompt 0> sleep 3 | cat &
+# CHECK: prompt 0> bg %1
+# CHECK: Send job 1 'sleep 3 | cat &' to background
+# CHECK: prompt 1>

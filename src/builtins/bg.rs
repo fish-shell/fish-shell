@@ -1,5 +1,7 @@
 // Implementation of the bg builtin.
 
+use std::collections::HashSet;
+
 use crate::proc::Pid;
 
 use super::prelude::*;
@@ -97,9 +99,12 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
 
     // Background all existing jobs that match the pids.
     // Non-existent jobs aren't an error, but information about them is useful.
+    let mut seen = HashSet::new();
     for pid in pids {
-        if let Some((job_pos, _job)) = parser.job_get_with_index_from_pid(pid) {
-            send_to_bg(parser, streams, cmd, job_pos)?;
+        if let Some((job_pos, job)) = parser.job_get_with_index_from_pid(pid) {
+            if seen.insert(&*job as *const _) {
+                send_to_bg(parser, streams, cmd, job_pos)?;
+            }
         } else {
             streams
                 .err

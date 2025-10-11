@@ -15,7 +15,7 @@ isolated-tmux-start
 isolated-tmux resize-window -x 500
 
 isolated-tmux send-keys "BROWSER=true fish_config" Enter
-tmux-sleep
+sleep-until 'isolated-tmux capture-pane -p | grep ENTER'
 isolated-tmux capture-pane -p
 # CHECK: prompt 0> BROWSER=true fish_config
 # CHECK: Web config started at file://{{.*}}.html
@@ -24,6 +24,7 @@ isolated-tmux capture-pane -p
 
 # Extract the URL from the output
 set -l base_url (isolated-tmux capture-pane -p | string match -r 'http://localhost:\d{4}/\w+/$')
+or exit
 set -l host_port (dirname $base_url)
 
 # Check a bad URL (http://host:port/invalid_auth/)

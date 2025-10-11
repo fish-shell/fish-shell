@@ -26,6 +26,19 @@ function isolated-tmux-start
         or sleep 0.3
     end
 
+    function sleep-until
+        set -l cmd $argv[1]
+        set -l i 0
+        while [ $i -lt 100 ] && not eval "$cmd" >/dev/null
+            tmux-sleep
+            set i (math $i + 1)
+        end
+        if [ $i -eq 100 ]
+            printf '%s\n' "timeout waiting for $cmd" >&2
+            exit 1
+        end
+    end
+
     set -l fish (status fish-path)
     isolated-tmux new-session -x 80 -y 10 -d $fish -C '
         # This is similar to "tests/interactive.config".

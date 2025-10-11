@@ -68,14 +68,6 @@ def find_executable(exe, paths=()):
             return proposed_path
 
 
-def isMacOS10_12_5_OrLater():
-    """Return whether this system is macOS 10.12.5 or a later version."""
-    try:
-        return [int(x) for x in platform.mac_ver()[0].split(".")] >= [10, 12, 5]
-    except ValueError:
-        return False
-
-
 def is_wsl():
     """Return whether we are running under the Windows Subsystem for Linux"""
     if "linux" in platform.system().lower() and os.access("/proc/version", os.R_OK):
@@ -1547,8 +1539,6 @@ def runThing():
     if os.environ.get("BROWSER") == "true":
         # Don't start a browser in this case (see issue #11926)
         pass
-    elif isMacOS10_12_5_OrLater():
-        subprocess.check_call(["open", fileurl])
     elif is_wsl():
         cmd_path = find_executable("cmd.exe", COMMON_WSL_CMD_PATHS)
         if cmd_path:

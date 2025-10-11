@@ -14,7 +14,8 @@ permissions:
 runs:
   using: "composite"
   steps:
-    - uses: dtolnay/rust-toolchain@1.90
+    - uses: ./.github/actions/rust-toolchain
       with:
+        toolchain_channel: "stable"
         targets: ${{ inputs.targets }}
         components: ${{ inputs.components }}

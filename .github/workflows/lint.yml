@@ -20,34 +20,28 @@ jobs:
     - name: check format
       run: PATH="target/debug:$PATH" build_tools/style.fish --all --check
 
-  clippy-stable:
+  clippy:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        features: ["", "--no-default-features"]
+        include:
+          - rust_version: "stable"
+            features: ""
+          - rust_version: "stable"
+            features: "--no-default-features"
+          - rust_version: "msrv"
+            features: ""
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/rust-toolchain@stable
+    - uses: ./.github/actions/rust-toolchain
       with:
+        toolchain_channel: ${{ matrix.rust_version }}
         components: clippy
     - name: Install deps
       run: |
         sudo apt install gettext
     - name: cargo clippy
       run: cargo clippy --workspace --all-targets ${{ matrix.features }} -- --deny=warnings
-
-  clippy-msrv:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: ./.github/actions/rust-toolchain@oldest-supported
-      with:
-        components: clippy
-    - name: Install deps
-      run: |
-        sudo apt install gettext
-    - name: cargo clippy
-      run: cargo clippy --workspace --all-targets -- --deny=warnings
 
   rustdoc:
     runs-on: ubuntu-latest

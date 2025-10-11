@@ -1,0 +1,41 @@
+name: Rust Toolchain
+
+inputs:
+  toolchain_channel:
+    description: Either "stable" or "msrv"
+    required: true
+  targets:
+    description: Comma-separated list of target triples to install for this toolchain
+    required: false
+  components:
+    description: Comma-separated list of components to be additionally installed
+    required: false
+
+permissions:
+  contents: read
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set toolchain
+      env:
+        toolchain_channel: ${{ inputs.toolchain_channel }}
+      shell: bash
+      run: |
+        set -x
+        toolchain=$(
+          case "$toolchain_channel" in
+            (stable) echo 1.90 ;;
+            (msrv)   echo 1.70 ;;
+            (*)
+              printf >&2 "error: unsupported toolchain channel %s" "$toolchain_channel"
+              exit 1
+              ;;
+          esac
+        )
+        printf 'TOOLCHAIN=%s\n' "$toolchain" >>"$GITHUB_ENV"
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ env.TOOLCHAIN }}
+        targets: ${{ inputs.targets }}
+        components: ${{ inputs.components }}

@@ -751,9 +751,10 @@ fn fork_child_for_process(
     }
 
     // We are the parent. Record the pid and store the pgid for the job if it should lead the pgroup.
-    p.set_pid(Pid::new(pid).unwrap());
+    let pid = Pid::new(pid);
+    p.set_pid(pid);
     if matches!(pgroup_policy, PgroupPolicy::Lead) {
-        job.group().set_pgid(Pid::new(pid).unwrap());
+        job.group().set_pgid(pid);
     }
 
     let count = FORK_COUNT.fetch_add(1, Ordering::Relaxed) + 1;
@@ -905,14 +906,15 @@ fn exec_external_command(
         );
 
         // these are all things do_fork() takes care of normally (for forked processes):
-        p.set_pid(Pid::new(pid).unwrap());
+        let pid = Pid::new(pid);
+        p.set_pid(pid);
         if p.leads_pgrp {
-            j.group().set_pgid(Pid::new(pid).unwrap());
+            j.group().set_pgid(pid);
             // posix_spawn should in principle set the pgid before returning.
             // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
             // therefore the parent may not have seen it be set yet.
             // Ensure it gets set. See #4715, also https://github.com/Microsoft/WSL/issues/2997.
-            execute_setpgid(pid, pid, true /* is parent */);
+            execute_setpgid(pid.as_pid_t(), pid.as_pid_t(), true /* is parent */);
         }
         return Ok(());
     }

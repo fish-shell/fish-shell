@@ -1,12 +1,12 @@
 use super::prelude::*;
-use crate::builtins::*;
 use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
 use crate::io::OutputStream;
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
 use crate::parser::{BlockType, LoopStatus};
-use crate::proc::{no_exec, ProcStatus};
+use crate::proc::{no_exec, Pid, ProcStatus};
 use crate::wchar::L;
+use crate::{builtins::*, wutil};
 use errno::errno;
 
 use std::fs::File;
@@ -926,6 +926,41 @@ impl<'args> Iterator for Arguments<'args, '_> {
         let retval = (Cow::Borrowed(self.args[*self.argidx]), true);
         *self.argidx += 1;
         return Some(retval);
+    }
+}
+
+pub fn parse_pid(streams: &mut IoStreams, cmd: &wstr, arg: &wstr) -> Result<Pid, ErrorCode> {
+    parsed_pid(streams, cmd, arg, fish_wcstoi(arg))
+}
+
+pub fn parse_pid_may_be_zero(
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    arg: &wstr,
+) -> Result<Option<Pid>, ErrorCode> {
+    let parsed = fish_wcstoi(arg);
+    if parsed == Ok(0) {
+        return Ok(None);
+    }
+    parsed_pid(streams, cmd, arg, parsed).map(Some)
+}
+
+fn parsed_pid(
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    arg: &wstr,
+    pid: Result<i32, wutil::Error>,
+) -> Result<Pid, ErrorCode> {
+    match pid {
+        Ok(pid @ 1..) => Ok(Pid::new(pid)),
+        _ => {
+            streams.err.append(wgettext_fmt!(
+                "%s: '%s' is not a valid process ID\n",
+                cmd,
+                arg
+            ));
+            Err(STATUS_INVALID_ARGS)
+        }
     }
 }
 

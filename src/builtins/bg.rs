@@ -81,14 +81,9 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
     let mut retval: BuiltinResult = Ok(SUCCESS);
     let pids: Vec<Pid> = args[opts.optind..]
         .iter()
-        .filter_map(|arg| match fish_wcstoi(arg).map(Pid::new) {
-            Ok(Some(pid)) => Some(pid),
+        .filter_map(|arg| match parse_pid(streams, cmd, arg) {
+            Ok(pid) => Some(pid),
             _ => {
-                streams.err.append(wgettext_fmt!(
-                    "%s: '%s' is not a valid job specifier\n",
-                    cmd,
-                    arg
-                ));
                 retval = Err(STATUS_INVALID_ARGS);
                 None
             }

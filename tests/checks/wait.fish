@@ -67,3 +67,12 @@ end
 set trigger_var 123
 sleep .5
 # CHECK: Callback called
+
+wait (math 2 ^ 32)
+# CHECKERR: wait: '4294967296' is not a valid process ID
+wait 0
+# CHECKERR: wait: '0' is not a valid process ID
+wait -- -1
+# CHECKERR: wait: Could not find child processes with the name '-1'
+wait -- -(math 2 ^ 31)
+# CHECKERR: wait: Could not find child processes with the name '-2147483648'

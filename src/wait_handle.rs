@@ -126,7 +126,7 @@ fn test_wait_handles() {
     assert_eq!(whs.size(), 0);
 
     fn p(pid: i32) -> Pid {
-        Pid::new(pid).unwrap()
+        Pid::new(pid)
     }
 
     assert!(whs.get_by_pid(p(5)).is_none());

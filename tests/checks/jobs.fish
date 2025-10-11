@@ -67,7 +67,7 @@ echo $status
 #CHECK: 2
 #CHECKERR: jobs: 'foo' is not a valid process ID
 disown foo
-#CHECKERR: disown: 'foo' is not a valid job specifier
+#CHECKERR: disown: 'foo' is not a valid process ID
 disown (jobs -p)
 or exit 0
 

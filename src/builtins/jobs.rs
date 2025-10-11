@@ -5,7 +5,7 @@ use crate::common::{escape_string, timef, EscapeFlags, EscapeStringStyle};
 use crate::io::IoStreams;
 use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::Parser;
-use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job, Pid};
+use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job};
 use crate::wchar_ext::WExt;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use crate::wutil::wgettext;
@@ -214,19 +214,8 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                     }
                 }
             } else {
-                match fish_wcstoi(arg).ok().and_then(Pid::new) {
-                    None => {
-                        streams.err.append(wgettext_fmt!(
-                            "%s: '%s' is not a valid process ID\n",
-                            cmd,
-                            arg
-                        ));
-                        return Err(STATUS_INVALID_ARGS);
-                    }
-                    Some(job_id) => {
-                        j = parser.job_get_from_pid(job_id);
-                    }
-                }
+                let pid = parse_pid(streams, cmd, arg)?;
+                j = parser.job_get_from_pid(pid)
             }
 
             if let Some(j) = j.filter(|j| !j.is_completed() && j.is_constructed()) {

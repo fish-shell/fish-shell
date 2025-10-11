@@ -157,26 +157,18 @@ fn parse_cmd_opts(
                     e = EventDescription::CallerExit { caller_id };
                 } else if opt == 'p' && woptarg == "%self" {
                     let pid = Pid::new(getpid());
-                    e = EventDescription::ProcessExit { pid };
+                    e = EventDescription::ProcessExit { pid: Some(pid) };
                 } else {
-                    let Ok(pid @ 0..) = fish_wcstoi(woptarg) else {
-                        streams.err.append(wgettext_fmt!(
-                            "%s: %s: invalid process ID",
-                            cmd,
-                            woptarg
-                        ));
-                        return Err(STATUS_INVALID_ARGS);
-                    };
+                    let pid = parse_pid_may_be_zero(streams, cmd, woptarg)?;
                     if opt == 'p' {
-                        e = EventDescription::ProcessExit { pid: Pid::new(pid) };
+                        e = EventDescription::ProcessExit { pid };
                     } else {
                         // TODO: rationalize why a default of 0 is sensible.
-                        let internal_job_id = match Pid::new(pid) {
-                            Some(pid) => job_id_for_pid(pid, parser).unwrap_or(0),
-                            None => 0,
-                        };
+                        let internal_job_id = pid
+                            .and_then(|pid| job_id_for_pid(pid, parser))
+                            .unwrap_or_default();
                         e = EventDescription::JobExit {
-                            pid: Pid::new(pid),
+                            pid,
                             internal_job_id,
                         };
                     }

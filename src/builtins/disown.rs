@@ -3,12 +3,8 @@
 use super::prelude::*;
 use crate::io::IoStreams;
 use crate::parser::Parser;
-use crate::proc::{add_disowned_job, Job, Pid};
-use crate::{
-    builtins::shared::HelpOnlyCmdOpts,
-    wchar::wstr,
-    wutil::{fish_wcstoi, wgettext_fmt},
-};
+use crate::proc::{add_disowned_job, Job};
+use crate::{builtins::shared::HelpOnlyCmdOpts, wchar::wstr, wutil::wgettext_fmt};
 use libc::SIGCONT;
 
 /// Helper for builtin_disown.
@@ -80,31 +76,23 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         // If one argument is not a valid pid (i.e. integer >= 0), fail without disowning anything,
         // but still print errors for all of them.
         // Non-existent jobs aren't an error, but information about them is useful.
-        let mut jobs: Vec<_> = args[1..]
+        let mut jobs: Vec<_> = args[opts.optind..]
             .iter()
             .filter_map(|arg| {
-                // Attempt to convert the argument to a PID.
-                match fish_wcstoi(arg).ok().and_then(Pid::new) {
-                    None => {
-                        // Invalid identifier
-                        streams.err.append(wgettext_fmt!(
-                            "%s: '%s' is not a valid job specifier\n",
-                            cmd,
-                            arg
-                        ));
-                        retval = Err(STATUS_INVALID_ARGS);
-                        None
+                let pid = match parse_pid(streams, cmd, arg) {
+                    Ok(pid) => pid,
+                    Err(code) => {
+                        retval = Err(code);
+                        return None;
                     }
-                    Some(pid) => parser.job_get_from_pid(pid).or_else(|| {
-                        // Valid identifier but no such job
-                        streams.err.append(wgettext_fmt!(
-                            "%s: Could not find job '%d'\n",
-                            cmd,
-                            pid
-                        ));
-                        None
-                    }),
-                }
+                };
+                parser.job_get_from_pid(pid).or_else(|| {
+                    // Valid identifier but no such job
+                    streams
+                        .err
+                        .append(wgettext_fmt!("%s: Could not find job '%d'\n", cmd, pid));
+                    None
+                })
             })
             .collect();
 

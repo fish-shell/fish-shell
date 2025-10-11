@@ -195,21 +195,14 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     let optind = w.wopt_index;
     for item in &argv[optind..argc] {
         if iswnumeric(item) {
-            // argument is pid
-            let mpid: i32 = fish_wcstoi(item).unwrap_or(-1);
-            let Some(mpid) = Pid::new(mpid) else {
-                streams.err.append(wgettext_fmt!(
-                    "%s: '%s' is not a valid process ID\n",
-                    cmd,
-                    item,
-                ));
+            let Ok(pid) = parse_pid(streams, cmd, item) else {
                 continue;
             };
-            if !find_wait_handles(WaitHandleQuery::Pid(mpid), parser, &mut wait_handles) {
+            if !find_wait_handles(WaitHandleQuery::Pid(pid), parser, &mut wait_handles) {
                 streams.err.append(wgettext_fmt!(
                     "%s: Could not find a job with process ID '%d'\n",
                     cmd,
-                    mpid,
+                    pid,
                 ));
             }
         } else {

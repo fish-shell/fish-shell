@@ -6,7 +6,11 @@ fish 4.1.3 (released ???)
 
 This release fixes the following regressions identified in 4.1.0:
 
-- Crash on invalid :doc:`function <cmds/function>` call (:issue:`11912`).
+- Crash on invalid :doc:`function <cmds/function>` command (:issue:`11912`).
+
+as well as the following regressions identified in 4.0.0:
+
+- Crash when passing negative PIDs to :doc:`wait <cmds/wait>` (:issue:`11929`).
 
 fish 4.1.2 (released October 7, 2025)
 =====================================

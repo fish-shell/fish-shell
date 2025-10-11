@@ -274,10 +274,13 @@ pub struct Pid(NonZeroU32);
 
 impl Pid {
     #[inline(always)]
-    pub fn new(pid: i32) -> Option<Pid> {
-        // Construct a pid from an i32, which must be at least zero.
-        assert!(pid >= 0, "Pid must be at least zero");
-        NonZeroU32::new(pid as u32).map(Pid)
+    pub fn new(pid: i32) -> Self {
+        Self(
+            u32::try_from(pid)
+                .ok()
+                .and_then(NonZeroU32::new)
+                .expect("PID must be greater than zero"),
+        )
     }
     #[inline(always)]
     pub fn get(&self) -> i32 {
@@ -1234,9 +1237,10 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                     WNOHANG | WUNTRACED | WCONTINUED,
                 )
             };
-            let Some(pid) = Pid::new(pid) else {
+            if pid == 0 {
                 continue;
-            };
+            }
+            let pid = Pid::new(pid);
             assert!(pid == proc.pid().unwrap(), "Unexpected waitpid() return");
 
             // The process has stopped or exited! Update its status.

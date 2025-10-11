@@ -1,7 +1,6 @@
 //! Implementation of the fg builtin.
 
 use crate::fds::make_fd_blocking;
-use crate::proc::Pid;
 use crate::reader::{reader_save_screen_state, reader_write_title};
 use crate::tokenizer::tok_command;
 use crate::wutil::perror;
@@ -49,9 +48,9 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
     } else if optind + 1 < argv.len() {
         // Specifying more than one job to put to the foreground is a syntax error, we still
         // try to locate the job $argv[1], since we need to determine which error message to
-        // emit (ambiguous job specification vs malformed job id).
+        // emit (ambiguous job specification vs malformed job ID).
         let mut found_job = false;
-        if let Ok(Some(pid)) = fish_wcstoi(argv[optind]).map(Pid::new) {
+        if let Ok(pid) = parse_pid(streams, cmd, argv[optind]) {
             found_job = parser.job_get_from_pid(pid).is_some();
         };
 
@@ -69,27 +68,15 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         job_pos = None;
         job = None;
     } else {
-        match fish_wcstoi(argv[optind]) {
-            Ok(..0) | Err(_) => {
-                streams.err.append(wgettext_fmt!(
-                    "%s: '%s' is not a valid process ID",
-                    cmd,
-                    argv[optind]
-                ));
-                job_pos = None;
-                job = None;
-                builtin_print_error_trailer(parser, streams.err, cmd);
-            }
+        match parse_pid(streams, cmd, argv[optind]) {
             Ok(pid) => {
-                let raw_pid = pid;
-                let pid = Pid::new(pid);
-                let j = pid.and_then(|pid| parser.job_get_with_index_from_pid(pid));
+                let j = parser.job_get_with_index_from_pid(pid);
                 if j.as_ref()
                     .map_or(true, |(_pos, j)| !j.is_constructed() || j.is_completed())
                 {
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: No suitable job: %d\n", cmd, raw_pid));
+                        .append(wgettext_fmt!("%s: No suitable job: %d\n", cmd, pid));
                     job_pos = None;
                     job = None
                 } else {
@@ -97,18 +84,23 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                     job_pos = Some(pos);
                     job = if !j.wants_job_control() {
                         streams.err.append(wgettext_fmt!(
-                            "%s: Can't put job %d, '%s' to foreground because it is not under job control\n",
-                            cmd,
-                            raw_pid,
-                            j.command()
-                        ));
+                                        "%s: Can't put job %d, '%s' to foreground because it is not under job control\n",
+                                        cmd,
+                                        pid,
+                                        j.command()
+                                    ));
                         None
                     } else {
                         Some(j)
                     };
                 }
             }
-        }
+            Err(_err) => {
+                job_pos = None;
+                job = None;
+                builtin_print_error_trailer(parser, streams.err, cmd);
+            }
+        };
     };
 
     let Some(job) = job else {

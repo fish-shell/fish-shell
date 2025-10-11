@@ -306,10 +306,6 @@ msgid "%s: %s: invalid mode name. See `help identifiers`\n"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid process ID"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: invalid scale\n"
 msgstr ""
 
@@ -355,10 +351,6 @@ msgstr "%s : '%s' n’est pas une tâche\n"
 
 #, c-format
 msgid "%s: '%s' is not a valid job ID\n"
-msgstr ""
-
-#, c-format
-msgid "%s: '%s' is not a valid job specifier\n"
 msgstr ""
 
 #, c-format

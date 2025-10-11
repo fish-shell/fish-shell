@@ -637,10 +637,7 @@ fn throwing_main() -> i32 {
         parser.get_last_status()
     };
 
-    event::fire(
-        parser,
-        Event::process_exit(Pid::new(getpid()).unwrap(), exit_status),
-    );
+    event::fire(parser, Event::process_exit(Pid::new(getpid()), exit_status));
 
     // Trigger any exit handlers.
     event::fire_generic(

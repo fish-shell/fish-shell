@@ -147,7 +147,7 @@ rm -r $tmpdir
 functions -e foo
 
 function foo -p bar; end
-# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: bar: invalid process ID
+# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: 'bar' is not a valid process ID
 # CHECKERR: function foo -p bar; end
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~^
 
@@ -213,5 +213,30 @@ function outer
 end
 outer 1 2 3
 #CHECK: 1 2 3
+
+for flag in --on-process-exit --on-job-exit
+    for invalid_pid in (math 2 ^ 31) -1 -(math 2 ^ 31)
+        function invalid $flag=$invalid_pid
+        end
+    end
+    # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '2147483648' is not a valid process ID
+    # CHECKERR:     function invalid $flag=$invalid_pid
+    # CHECKERR:     ^
+    # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '-1' is not a valid process ID
+    # CHECKERR:     function invalid $flag=$invalid_pid
+    # CHECKERR:     ^
+    # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '-2147483648' is not a valid process ID
+    # CHECKERR:     function invalid $flag=$invalid_pid
+    # CHECKERR:     ^
+    # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '2147483648' is not a valid process ID
+    # CHECKERR:     function invalid $flag=$invalid_pid
+    # CHECKERR:     ^
+    # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '-1' is not a valid process ID
+    # CHECKERR:     function invalid $flag=$invalid_pid
+    # CHECKERR:     ^
+    # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '-2147483648' is not a valid process ID
+    # CHECKERR:     function invalid $flag=$invalid_pid
+    # CHECKERR:     ^
+end
 
 exit 0

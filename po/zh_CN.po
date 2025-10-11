@@ -228,10 +228,6 @@ msgid "%s: %s: invalid mode name. See `help identifiers`\n"
 msgstr "%s: %s: 无效模式名。参见 `help identifiers`\n"
 
 #, c-format
-msgid "%s: %s: invalid process ID"
-msgstr "%s: %s: 无效进程 ID"
-
-#, c-format
 msgid "%s: %s: invalid scale\n"
 msgstr "%s: %s: 无效位数\n"
 
@@ -278,10 +274,6 @@ msgstr "%s: '%s' 不是一个作业\n"
 #, c-format
 msgid "%s: '%s' is not a valid job ID\n"
 msgstr "%s: '%s' 不是一个有效的作业 ID\n"
-
-#, c-format
-msgid "%s: '%s' is not a valid job specifier\n"
-msgstr "%s: '%s' 不是有效的作业说明符\n"
 
 #, c-format
 msgid "%s: '%s' is not a valid process ID\n"

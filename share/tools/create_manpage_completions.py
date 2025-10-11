@@ -21,7 +21,6 @@ from __future__ import print_function
 from deroff import Deroffer
 import argparse
 import bz2
-import codecs
 import errno
 import gzip
 import os
@@ -734,7 +733,7 @@ class TypeDeroffManParser(ManParser):
 # Raises IOError if it cannot be opened
 def file_is_overwritable(path):
     result = False
-    file = codecs.open(path, "r", encoding="utf-8")
+    file = open(path, "r", encoding="utf-8")
     for line in file:
         # Skip leading empty lines
         line = line.strip()
@@ -893,7 +892,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
         else:
             fullpath = os.path.join(output_directory, CMDNAME + ".fish")
             try:
-                output_file = codecs.open(fullpath, "w", encoding="utf-8")
+                output_file = open(fullpath, "w", encoding="utf-8")
             except IOError as err:
                 add_diagnostic(
                     "Unable to open file '%s': error(%d): %s"

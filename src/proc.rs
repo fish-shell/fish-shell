@@ -518,7 +518,7 @@ impl Process {
     }
 
     /// Create a wait handle for the process.
-    /// As a process does not know its job id, we pass it in.
+    /// As a process does not know its job ID, we pass it in.
     /// Note this will return null if the process is not waitable (has no pid).
     pub fn make_wait_handle(&self, jid: InternalJobId) -> Option<WaitHandleRef> {
         let pid = self.pid()?;
@@ -646,7 +646,7 @@ impl Job {
     }
 
     /// Returns a truncated version of the job string. Used when a message has already been emitted
-    /// containing the full job string and job id, but using the job id alone would be confusing
+    /// containing the full job string and job ID, but using the job ID alone would be confusing
     /// due to reuse of freed job ids. Prevents overloading the debug comments with the full,
     /// untruncated job string when we don't care what the job is, only which of the currently
     /// running jobs it is.

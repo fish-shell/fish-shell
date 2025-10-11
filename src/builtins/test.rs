@@ -86,7 +86,7 @@ mod test_expressions {
             d // "-d", for directories
             e // "-e", for files that exist
             f // "-f", for for regular files
-            G // "-G", for check effective group id
+            G // "-G", for check effective group ID
             g // "-g", for set-group-id
             k // "-k", for sticky bit
             O // "-O", for check effective user id
@@ -931,7 +931,7 @@ mod test_expressions {
                     StatPredicate::e => true,
                     // "-f", for regular files
                     StatPredicate::f => md.file_type().is_file(),
-                    // "-G", for check effective group id
+                    // "-G", for check effective group ID
                     StatPredicate::G => md.gid() == crate::nix::getegid(),
                     // "-g", for set-group-id
                     StatPredicate::g => md.permissions().mode() & S_ISGID != 0,

@@ -249,7 +249,7 @@ pub struct ScopedData {
     /// Whether we are currently cleaning processes.
     pub is_cleaning_procs: bool,
 
-    /// The internal job id of the job being populated, or 0 if none.
+    /// The internal job ID of the job being populated, or 0 if none.
     /// This supports the '--on-job-exit caller' feature.
     pub caller_id: u64, // TODO should be InternalJobId
 }
@@ -1031,7 +1031,7 @@ impl Parser {
         self.jobs_mut().rotate_left(job_pos);
     }
 
-    /// Return the job with the specified job id. If id is 0 or less, return the last job used.
+    /// Return the job with the specified job ID. If id is 0 or less, return the last job used.
     pub fn job_with_id(&self, job_id: MaybeJobId) -> Option<JobRef> {
         for job in self.jobs().iter() {
             if job_id.is_none() || job_id == job.job_id() {

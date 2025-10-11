@@ -13,7 +13,7 @@ pub struct WaitHandle {
     /// The pid of this process.
     pub pid: Pid,
 
-    /// The internal job id of the job which contained this process.
+    /// The internal job ID of the job which contained this process.
     pub internal_job_id: InternalJobId,
 
     /// The "base name" of this process.
@@ -41,7 +41,7 @@ impl WaitHandle {
 }
 
 impl WaitHandle {
-    /// Construct from a pid, job id, and base name.
+    /// Construct from a pid, job ID, and base name.
     pub fn new(pid: Pid, internal_job_id: InternalJobId, base_name: WString) -> WaitHandleRef {
         Rc::new(WaitHandle {
             pid,

@@ -1468,7 +1468,7 @@ complete -x -c git -n '__fish_git_using_command daemon' -l user-path -d 'Allow ~
 complete -f -c git -n '__fish_git_using_command daemon' -l verbose -d 'Log all details'
 complete -f -c git -n '__fish_git_using_command daemon' -l reuseaddr -d 'Reuse address when binding to listening server'
 complete -f -c git -n '__fish_git_using_command daemon' -l detach -d 'Detach from shell'
-complete -x -c git -n '__fish_git_using_command daemon' -l reuseaddr -d 'Save the process id in file'
+complete -x -c git -n '__fish_git_using_command daemon' -l reuseaddr -d 'Save the process ID in file'
 complete -x -c git -n '__fish_git_using_command daemon' -l user -d 'Change daemon\'s uid'
 complete -x -c git -n '__fish_git_using_command daemon' -l group -d 'Change daemon\'s gid'
 complete -x -c git -n '__fish_git_using_command daemon' -l enable -a 'upload-pack upload-archive receive-pack' -d 'Enable service'

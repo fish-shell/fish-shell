@@ -42,6 +42,6 @@ The typical use is to run something, stop it with ctrl-z, and then continue it i
 
 If only 123 and 789 exist, it will still background them and print an error about 456.
 
-``bg 123 banana`` or ``bg banana 123`` will complain that "banana" is not a valid job specifier.
+``bg 123 banana`` or ``bg banana 123`` will complain that "banana" is not a valid process ID.
 
 ``bg %2`` will background job 2.

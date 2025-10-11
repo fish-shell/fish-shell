@@ -41,7 +41,7 @@ complete -c find -o empty -d "File is empty and is either a regular file or a di
 complete -c find -o executable -d "File is executable"
 complete -c find -o false -d "Always false"
 complete -c find -o fstype -d "File is on filesystem of specified type" -a "(__fish_print_filesystems)" -x
-complete -c find -o gid -d "Numeric group id of file" -x -a "(__fish_complete_group_ids)"
+complete -c find -o gid -d "Numeric group ID of file" -x -a "(__fish_complete_group_ids)"
 complete -c find -o group -d "Group name of file" -x -a "(__fish_complete_groups)"
 
 complete -c find -o ilname -d "File is symlink matching specified case insensitive pattern" -x

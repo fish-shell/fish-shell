@@ -147,7 +147,7 @@ rm -r $tmpdir
 functions -e foo
 
 function foo -p bar; end
-# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: bar: invalid process id
+# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: bar: invalid process ID
 # CHECKERR: function foo -p bar; end
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~^
 

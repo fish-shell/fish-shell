@@ -58,14 +58,14 @@ echo $status
 jobs foo
 echo $status
 #CHECK: 2
-#CHECKERR: jobs: 'foo' is not a valid process id
+#CHECKERR: jobs: 'foo' is not a valid process ID
 jobs -q 1
 echo $status
 #CHECK: 1
 jobs -q foo
 echo $status
 #CHECK: 2
-#CHECKERR: jobs: 'foo' is not a valid process id
+#CHECKERR: jobs: 'foo' is not a valid process ID
 disown foo
 #CHECKERR: disown: 'foo' is not a valid job specifier
 disown (jobs -p)

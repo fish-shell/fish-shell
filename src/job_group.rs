@@ -7,7 +7,7 @@ use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
-/// A job id, corresponding to what is printed by `jobs`. 1 is the first valid job id.
+/// A job ID, corresponding to what is printed by `jobs`. 1 is the first valid job ID.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
 pub struct JobId(NonZeroU32);
@@ -53,7 +53,7 @@ impl<'a> fish_printf::ToArg<'a> for MaybeJobId {
 /// share the same job group.
 /// There is also a notion of a "internal" job group. Internal groups are used when executing a
 /// foreground function or block with no pipeline. These are not jobs as the user understands them -
-/// they do not consume a job id, they do not show up in job lists, and they do not have a pgid
+/// they do not consume a job ID, they do not show up in job lists, and they do not have a pgid
 /// because they contain no external procs. Note that `JobGroup` is intended to eventually be
 /// shared between threads, and so must be thread safe.
 #[derive(Debug)]
@@ -76,8 +76,8 @@ pub struct JobGroup {
     pgid: OnceLock<Pid>,
     /// The original command which produced this job tree.
     pub command: WString,
-    /// Our job id, if any. `None` here should evaluate to `-1` for ffi purposes.
-    /// "Simple block" groups like function calls do not have a job id.
+    /// Our job ID, if any. `None` here should evaluate to `-1` for ffi purposes.
+    /// "Simple block" groups like function calls do not have a job ID.
     pub job_id: MaybeJobId,
     /// The signal causing the group to cancel or `0` if none.
     /// Not using an `Option<Signal>` to be able to atomically load/store to this field.
@@ -111,7 +111,7 @@ impl JobGroup {
         self.is_foreground.store(in_foreground);
     }
 
-    /// Returns whether we have valid job id. "Simple block" groups like function calls do not.
+    /// Returns whether we have valid job ID. "Simple block" groups like function calls do not.
     pub fn has_job_id(&self) -> bool {
         self.job_id.is_some()
     }
@@ -176,7 +176,7 @@ impl JobId {
     fn acquire() -> JobId {
         let mut consumed_job_ids = CONSUMED_JOB_IDS.lock().expect("Poisoned mutex!");
 
-        // The new job id should be greater than the largest currently used id (#6053). The job ids
+        // The new job ID should be greater than the largest currently used id (#6053). The job ids
         // in CONSUMED_JOB_IDS are sorted in ascending order, so we just have to check the last.
         let job_id = consumed_job_ids
             .last()
@@ -204,9 +204,9 @@ impl JobId {
 
 impl JobGroup {
     pub fn new(command: WString, id: MaybeJobId, job_control: bool, wants_term: bool) -> Self {
-        // We *can* have a job id without job control, but not the reverse.
+        // We *can* have a job ID without job control, but not the reverse.
         if job_control {
-            assert!(id.is_some(), "Cannot have job control without a job id!");
+            assert!(id.is_some(), "Cannot have job control without a job ID!");
         }
         if wants_term {
             assert!(job_control, "Cannot take terminal without job control!");

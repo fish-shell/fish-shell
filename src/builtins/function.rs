@@ -161,7 +161,7 @@ fn parse_cmd_opts(
                 } else {
                     let Ok(pid @ 0..) = fish_wcstoi(woptarg) else {
                         streams.err.append(wgettext_fmt!(
-                            "%s: %s: invalid process id",
+                            "%s: %s: invalid process ID",
                             cmd,
                             woptarg
                         ));

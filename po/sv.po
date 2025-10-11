@@ -202,7 +202,7 @@ msgid "%s: %s: invalid mode name. See `help identifiers`\n"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid process id"
+msgid "%s: %s: invalid process ID"
 msgstr ""
 
 #, c-format
@@ -250,7 +250,7 @@ msgid "%s: '%s' is not a job\n"
 msgstr "%s: '%s' är inte ett jobb\n"
 
 #, c-format
-msgid "%s: '%s' is not a valid job id\n"
+msgid "%s: '%s' is not a valid job ID\n"
 msgstr ""
 
 #, c-format
@@ -258,7 +258,7 @@ msgid "%s: '%s' is not a valid job specifier\n"
 msgstr ""
 
 #, c-format
-msgid "%s: '%s' is not a valid process id\n"
+msgid "%s: '%s' is not a valid process ID\n"
 msgstr ""
 
 #, c-format
@@ -350,7 +350,7 @@ msgid "%s: Could not find '%s'\n"
 msgstr ""
 
 #, c-format
-msgid "%s: Could not find a job with process id '%d'\n"
+msgid "%s: Could not find a job with process ID '%d'\n"
 msgstr ""
 
 #, c-format
@@ -3365,8 +3365,8 @@ msgstr ""
 msgid "Show event handlers matching the given type"
 msgstr ""
 
-msgid "Show group id of job"
-msgstr "Visa grupp-id för jobb"
+msgid "Show group ID of job"
+msgstr "Visa grupp-ID för jobb"
 
 msgid "Show help"
 msgstr ""
@@ -3389,7 +3389,7 @@ msgstr "Visa ändringstid"
 msgid "Show seconds since the modification time"
 msgstr ""
 
-msgid "Show the process id of each process in the job"
+msgid "Show the process ID of each process in the job"
 msgstr ""
 
 msgid "Show unavailable key bindings/erase all bindings"
@@ -27171,7 +27171,7 @@ msgid "Force following parameters to be interpreted as user names"
 msgstr "Tvinga efterföljande parametrar att tolkas som användarnamn"
 
 msgid "Force following parameters to be process ID's (The default)"
-msgstr "Tvinga efterföljande parametrar att tolkas som process-id (standard)"
+msgstr "Tvinga efterföljande parametrar att tolkas som process-ID (standard)"
 
 msgid "Force format"
 msgstr ""
@@ -37854,7 +37854,7 @@ msgid "Mojo that performs shading delegating to the Shader component"
 msgstr ""
 
 msgid "Monitor PID"
-msgstr "Bevaka process-id"
+msgstr "Bevaka process-ID"
 
 msgid "Monitor a directory"
 msgstr ""
@@ -38978,7 +38978,7 @@ msgstr ""
 msgid "Numeric UID for user"
 msgstr ""
 
-msgid "Numeric group id of file"
+msgid "Numeric group ID of file"
 msgstr ""
 
 msgid "Numeric output"
@@ -43862,8 +43862,8 @@ msgstr ""
 msgid "Print each row as it is received"
 msgstr ""
 
-msgid "Print effective group id"
-msgstr "Visa effektivt grupp-id"
+msgid "Print effective group ID"
+msgstr "Visa effektivt grupp-ID"
 
 msgid "Print effective user ID"
 msgstr "Visa effektivt användar-id"
@@ -52463,7 +52463,7 @@ msgstr ""
 msgid "Save the payload to a file"
 msgstr ""
 
-msgid "Save the process id in file"
+msgid "Save the process ID in file"
 msgstr ""
 
 msgid "Save this many versions"
@@ -53241,7 +53241,7 @@ msgid "Select author id from a menu"
 msgstr ""
 
 msgid "Select by PID"
-msgstr "Välj via process-id"
+msgstr "Välj via process-ID"
 
 msgid "Select by command"
 msgstr "Välj via kommando"
@@ -53253,7 +53253,7 @@ msgid "Select by jail (name or id)"
 msgstr ""
 
 msgid "Select by parent PID"
-msgstr "Välj via förälders process-id"
+msgstr "Välj via förälders process-ID"
 
 msgid "Select by session ID"
 msgstr "Välj via sessions-id"

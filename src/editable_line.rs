@@ -20,7 +20,7 @@ pub struct Edit {
     pub replacement: WString,
 
     /// edit_t is only for contiguous changes, so to restore a group of arbitrary changes to the
-    /// command line we need to have a group id as forcibly coalescing changes is not enough.
+    /// command line we need to have a group ID as forcibly coalescing changes is not enough.
     group_id: Option<usize>,
 }
 
@@ -170,7 +170,7 @@ impl EditableLine {
             return; // nop
         }
 
-        // Assign a new group id or propagate the old one if we're in a logical grouping of edits
+        // Assign a new group ID or propagate the old one if we're in a logical grouping of edits
         if self.edit_group_level.is_some() {
             edit.group_id = Some(self.edit_group_id);
         }
@@ -273,7 +273,7 @@ impl EditableLine {
         self.undo_history.may_coalesce = false;
         // Indicate that future changes should be coalesced into the same edit if possible.
         self.undo_history.try_coalesce = true;
-        // Assign a logical edit group id to future edits in this group
+        // Assign a logical edit group ID to future edits in this group
         self.edit_group_id += 1;
     }
 

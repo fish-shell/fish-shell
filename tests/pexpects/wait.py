@@ -116,9 +116,9 @@ expect_prompt()
 
 # test error messages
 sendline("wait 0")
-expect_prompt("wait: '0' is not a valid process id")
+expect_prompt("wait: '0' is not a valid process ID")
 sendline("wait 1")
-expect_prompt("wait: Could not find a job with process id '1'")
+expect_prompt("wait: Could not find a job with process ID '1'")
 sendline("wait hoge")
 expect_prompt("wait: Could not find child processes with the name 'hoge'")
 

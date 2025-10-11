@@ -207,7 +207,7 @@ msgid "%s: %s: invalid mode name. See `help identifiers`\n"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid process id"
+msgid "%s: %s: invalid process ID"
 msgstr ""
 
 #, c-format
@@ -255,7 +255,7 @@ msgid "%s: '%s' is not a job\n"
 msgstr "%s: '%s' ist kein Job\n"
 
 #, c-format
-msgid "%s: '%s' is not a valid job id\n"
+msgid "%s: '%s' is not a valid job ID\n"
 msgstr ""
 
 #, c-format
@@ -263,7 +263,7 @@ msgid "%s: '%s' is not a valid job specifier\n"
 msgstr ""
 
 #, c-format
-msgid "%s: '%s' is not a valid process id\n"
+msgid "%s: '%s' is not a valid process ID\n"
 msgstr ""
 
 #, c-format
@@ -355,7 +355,7 @@ msgid "%s: Could not find '%s'\n"
 msgstr "%s: Konnte '%s' nicht finden\n"
 
 #, c-format
-msgid "%s: Could not find a job with process id '%d'\n"
+msgid "%s: Could not find a job with process ID '%d'\n"
 msgstr "%s: Konnte keinen Job mit Prozess-ID '%d' finden\n"
 
 #, c-format
@@ -3370,7 +3370,7 @@ msgstr ""
 msgid "Show event handlers matching the given type"
 msgstr ""
 
-msgid "Show group id of job"
+msgid "Show group ID of job"
 msgstr "Gruppenkennung des Jobs anzeigen"
 
 msgid "Show help"
@@ -3394,7 +3394,7 @@ msgstr "Änderungsdatum anzeigen"
 msgid "Show seconds since the modification time"
 msgstr ""
 
-msgid "Show the process id of each process in the job"
+msgid "Show the process ID of each process in the job"
 msgstr ""
 
 msgid "Show unavailable key bindings/erase all bindings"
@@ -38983,7 +38983,7 @@ msgstr ""
 msgid "Numeric UID for user"
 msgstr ""
 
-msgid "Numeric group id of file"
+msgid "Numeric group ID of file"
 msgstr ""
 
 msgid "Numeric output"
@@ -43867,7 +43867,7 @@ msgstr ""
 msgid "Print each row as it is received"
 msgstr ""
 
-msgid "Print effective group id"
+msgid "Print effective group ID"
 msgstr "Effektive Gruppenkennung ausgeben"
 
 msgid "Print effective user ID"
@@ -52468,7 +52468,7 @@ msgstr ""
 msgid "Save the payload to a file"
 msgstr ""
 
-msgid "Save the process id in file"
+msgid "Save the process ID in file"
 msgstr ""
 
 msgid "Save this many versions"

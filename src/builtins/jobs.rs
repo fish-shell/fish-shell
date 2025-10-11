@@ -22,7 +22,7 @@ enum JobsPrintMode {
     Default,      // print lots of general info
     PrintPid,     // print pid of each process in job
     PrintCommand, // print command name of each process in job
-    PrintGroup,   // print group id of job
+    PrintGroup,   // print group ID of job
     PrintNothing, // print nothing (exit status only)
 }
 
@@ -196,7 +196,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 match fish_wcstoi(&arg[1..]).ok().filter(|&job_id| job_id >= 0) {
                     None => {
                         streams.err.append(wgettext_fmt!(
-                            "%s: '%s' is not a valid job id\n",
+                            "%s: '%s' is not a valid job ID\n",
                             cmd,
                             arg
                         ));
@@ -217,7 +217,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 match fish_wcstoi(arg).ok().and_then(Pid::new) {
                     None => {
                         streams.err.append(wgettext_fmt!(
-                            "%s: '%s' is not a valid process id\n",
+                            "%s: '%s' is not a valid process ID\n",
                             cmd,
                             arg
                         ));

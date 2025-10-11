@@ -199,7 +199,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             let mpid: i32 = fish_wcstoi(item).unwrap_or(-1);
             let Some(mpid) = Pid::new(mpid) else {
                 streams.err.append(wgettext_fmt!(
-                    "%s: '%s' is not a valid process id\n",
+                    "%s: '%s' is not a valid process ID\n",
                     cmd,
                     item,
                 ));
@@ -207,7 +207,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             };
             if !find_wait_handles(WaitHandleQuery::Pid(mpid), parser, &mut wait_handles) {
                 streams.err.append(wgettext_fmt!(
-                    "%s: Could not find a job with process id '%d'\n",
+                    "%s: Could not find a job with process ID '%d'\n",
                     cmd,
                     mpid,
                 ));

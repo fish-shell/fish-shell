@@ -548,8 +548,8 @@ function __fish_complete_ip
                     attach "Attach process to network namespace" \
                     delete "Delete network namespace" \
                     set "Change network namespace attributes" \
-                    identify "Display network namespace for a process id" \
-                    pids "Display process ids of processes running in network namespace" \
+                    identify "Display network namespace for a process ID" \
+                    pids "Display process IDs of processes running in network namespace" \
                     monitor "Report as network namespace names are added and deleted" \
                     exec "Execute command in network namespace" \
                     help "Display help" \

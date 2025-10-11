@@ -161,10 +161,7 @@ async def main():
         files = [
             (os.path.abspath(path), str(path.relative_to(script_path)))
             for path in sorted(script_path.glob("checks/*.fish"))
-        ]
-        files += [
-            (os.path.abspath(path), str(path.relative_to(script_path)))
-            for path in sorted(script_path.glob("pexpects/*.py"))
+            + sorted(script_path.glob("pexpects/*.py"))
         ]
 
     if not PEXPECT and any(x.endswith(".py") for (x, _) in files):
@@ -292,7 +289,7 @@ async def run_test(
     script_path: Path,
     def_subs,
     lconfig,
-    fishdir,
+    fishdir: Path,
 ) -> TestResult:
     if not test_file_path.endswith(".fish") and not test_file_path.endswith(".py"):
         return TestFail(arg, None, f"Not a valid test file: {arg}")

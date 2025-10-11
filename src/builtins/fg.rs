@@ -70,17 +70,19 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         job = None;
     } else {
         match fish_wcstoi(argv[optind]) {
-            Err(_) => {
-                streams
-                    .err
-                    .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, argv[optind]));
+            Ok(..0) | Err(_) => {
+                streams.err.append(wgettext_fmt!(
+                    "%s: '%s' is not a valid process ID",
+                    cmd,
+                    argv[optind]
+                ));
                 job_pos = None;
                 job = None;
                 builtin_print_error_trailer(parser, streams.err, cmd);
             }
             Ok(pid) => {
                 let raw_pid = pid;
-                let pid = Pid::new(pid.abs());
+                let pid = Pid::new(pid);
                 let j = pid.and_then(|pid| parser.job_get_with_index_from_pid(pid));
                 if j.as_ref()
                     .map_or(true, |(_pos, j)| !j.is_constructed() || j.is_completed())

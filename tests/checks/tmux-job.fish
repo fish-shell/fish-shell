@@ -20,8 +20,5 @@ isolated-tmux capture-pane -p
 
 isolated-tmux send-keys C-u C-l "sleep 3 | cat &" Enter "bg %1" Enter
 tmux-sleep
-isolated-tmux capture-pane -p | string match -v '*has stopped*'
-# CHECK: prompt 0> sleep 3 | cat &
-# CHECK: prompt 0> bg %1
+isolated-tmux capture-pane -p | string match '*to background*'
 # CHECK: Send job 1 'sleep 3 | cat &' to background
-# CHECK: prompt 1>

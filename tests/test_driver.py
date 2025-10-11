@@ -297,7 +297,6 @@ async def run_test(
     starttime = datetime.now()
     home = Path(tempfile.mkdtemp(prefix="fishtest-", dir=tmp_root))
     test_env = makeenv(script_path, home)
-    os.chdir(home)
     if test_file_path.endswith(".fish"):
         subs = def_subs.copy()
         subs.update(
@@ -309,7 +308,12 @@ async def run_test(
 
         # littlecheck
         ret = await littlecheck.check_path_async(
-            test_file_path, subs, lconfig, lambda x: print(x.message()), env=test_env
+            test_file_path,
+            subs,
+            lconfig,
+            lambda x: print(x.message()),
+            env=test_env,
+            cwd=home,
         )
         endtime = datetime.now()
         duration_ms = round((endtime - starttime).total_seconds() * 1000)
@@ -339,6 +343,7 @@ async def run_test(
             stdout=PIPE,
             stderr=PIPE,
             env=test_env,
+            cwd=home,
         )
         stdout, stderr = await proc.communicate()
         endtime = datetime.now()

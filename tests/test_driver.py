@@ -159,7 +159,7 @@ async def main():
         files = [(os.path.abspath(path), path) for path in args.file]
     else:
         files = [
-            (os.path.abspath(path), str(path.relative_to(script_path)))
+            (os.path.abspath(path), str(path.relative_to(Path.cwd())))
             for path in sorted(script_path.glob("checks/*.fish"))
             + sorted(script_path.glob("pexpects/*.py"))
         ]

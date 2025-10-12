@@ -1,3 +1,5 @@
+skip: $CIRRUS_REPO_OWNER == 'fish-shell' && $CIRRUS_BRANCH == 'master'
+
 env:
     CIRRUS_CLONE_DEPTH: 100
     CI: 1

@@ -8,7 +8,7 @@ function __fish_print_commands --description "Print a list of documented fish co
         end
     end
     status list-files man/man1/ 2>/dev/null |
-        string replace -r '.*/' '' -- $file |
+        string replace -r '.*/' '' |
         string replace -r '.1(.gz)?$' '' |
         string match -rv '^fish-(?:changelog|completions|doc|tutorial|faq|for-bash-users|interactive|language|releasenotes)$'
 end

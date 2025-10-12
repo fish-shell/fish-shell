@@ -7,6 +7,7 @@ ENV LC_ALL=C.UTF-8
 RUN apt-get update \
   && apt-get -y install --no-install-recommends  \
     build-essential \
+    ca-certificates \
     cargo \
     clang \
     gettext \

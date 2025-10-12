@@ -1,6 +1,4 @@
-if test -d "$__fish_data_dir/man/man1/"
-    complete -c help -x -a '(__fish_print_commands)' -d 'Help for this command'
-end
+complete -c help -x -a '(__fish_print_commands)' -d 'Help for this command'
 
 # Help topics in index.html
 # This was semi-automated with `grep 'class="anchor"' -A1 /usr/share/doc/fish/index.html

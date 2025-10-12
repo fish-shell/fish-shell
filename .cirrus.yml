@@ -28,9 +28,6 @@ linux_arm_task:
         - name: focal-arm64
           arm_container:
               image: ghcr.io/fish-shell/fish-ci/focal-arm64
-        - name: jammy-armv7-32bit
-          arm_container:
-              image: ghcr.io/fish-shell/fish-ci/jammy-armv7-32bit
     tests_script:
         # cirrus at times gives us 32 procs and 2 GB of RAM
         # Unrestriced parallelism results in OOM

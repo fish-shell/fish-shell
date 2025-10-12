@@ -39,7 +39,6 @@ linux_arm_task:
         - mkdir build && cd build
         - FISH_TEST_MAX_CONCURRENCY=6 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
         - ninja -j 6 fish
-        - file ./fish
         - ninja fish_run_tests
     # CI task disabled during RIIR transition
     only_if: false && $CIRRUS_REPO_OWNER == 'fish-shell'

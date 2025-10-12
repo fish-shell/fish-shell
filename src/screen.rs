@@ -31,7 +31,7 @@ use crate::flog::FLOGF;
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{HighlightColorResolver, HighlightSpec};
+use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
 use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
     CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptStart, ScrollContentUp,
@@ -459,12 +459,13 @@ impl Screen {
 
         let full_line_count = self.desired.cursor.y
             - if self.desired.cursor.x == 0
-                && self
-                    .desired
-                    .cursor
-                    .y
-                    .checked_sub(1)
-                    .is_some_and(|y| self.desired.line_datas[y].is_soft_wrapped)
+                && self.desired.cursor.y.checked_sub(1).is_some_and(|y| {
+                    self.desired.line_datas[y].is_soft_wrapped
+                        && self.desired.line_datas[y]
+                            .color_at(self.desired.line_datas[y].len() - 1)
+                            .foreground
+                            == HighlightRole::autosuggestion
+                })
             {
                 1
             } else {

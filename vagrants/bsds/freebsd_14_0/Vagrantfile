@@ -1,0 +1,36 @@
+Vagrant.configure("2") do |config|
+  config.vm.box   = "generic/freebsd14"
+  config.vm.guest = :freebsd
+
+  # Packages provision (runs once on first boot)
+  config.vm.provision "shell", inline: <<~'SH'
+    set -e
+    # Packages (runs as root)
+    pkg install -y git python3 rust
+    git --version
+    python3 --version
+    rustc --version
+    cargo --version
+  SH
+
+
+  # sync fish-shell to /vagrant/fish-shell
+  config.vm.synced_folder "../../..", "/home/vagrant/fish-shell",
+    type: "rsync",
+    rsync__rsync_path: "sudo rsync", # sudo in guest
+    rsync__exclude: [".git/", ".git", "fish-shell/target/", "fish-shell/build/"],
+    rsync__args: [
+      "--archive", "--delete",
+      "--no-owner", "--no-group",
+      "--omit-dir-times",
+      "--info=progress2", "--stats"
+    ]
+
+  config.vm.provider :libvirt do |v|
+    v.cpus = 4
+    v.memory = 2048
+    # Max I/O for disposable builds. Remove if you need durability.
+    v.disk_driver :cache => 'unsafe'
+    v.graphics_type = "none"
+  end
+end

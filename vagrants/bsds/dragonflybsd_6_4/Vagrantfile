@@ -1,0 +1,39 @@
+Vagrant.configure("2") do |config|
+  config.vm.box   = "generic/dragonflybsd6"
+  config.vm.guest = :dragonflybsd
+
+  # Host-only network; not public
+  config.vm.network "private_network", ip: "192.168.121.13"
+
+  # Make /sync once as vagrant:vagrant so rsync doesn't need sudo
+  config.vm.provision "shell", inline: <<~'SH'
+    set -e
+    install -d -o vagrant -g vagrant /sync
+
+    # Packages (runs as root)
+    export PKG_PATH=http://avalon.dragonflybsd.org/dports/dragonfly:6.4:x86:64/LATEST/All/
+    pkg install -y git python3 rust
+    git --version
+    python3 --version
+    rustc --version
+    cargo --version
+  SH
+
+  # sync fish-shell to /vagrant/fish-shell
+  config.vm.synced_folder "../../..", "/home/vagrant/fish-shell",
+    type: "rsync",
+    rsync__rsync_path: "sudo rsync", # sudo in guest
+    rsync__exclude: [".git/", ".git", "fish-shell/target/", "fish-shell/build/"],
+    rsync__args: [
+      "--archive", "--delete",
+      "--no-owner", "--no-group",
+      "--omit-dir-times",
+      "--info=progress2", "--stats"
+    ]
+
+
+  config.vm.provider :libvirt do |v|
+    v.cpus = 4
+    v.graphics_type = "none"
+  end
+end

@@ -1,0 +1,43 @@
+Vagrant.configure("2") do |config|
+  config.vm.box   = "generic/openbsd7"
+  config.vm.guest = :openbsd
+
+  # Host-only network; not public
+  config.vm.network "private_network", ip: "192.168.121.11"
+
+  # Make /sync once as vagrant:vagrant so rsync doesn't need sudo
+  config.vm.provision "shell", inline: <<~'SH'
+    set -e
+    install -d -o vagrant -g vagrant /sync
+
+    # Packages (runs as root)
+    export PKG_PATH="https://ftp.openbsd.org/pub/OpenBSD/$(uname -r)/packages/amd64/"
+    pkg_info -e git           >/dev/null || pkg_add git
+    pkg_info -e python%3.11   >/dev/null || pkg_add python%3.11
+    pkg_info -e rust          >/dev/null || pkg_add rust
+    git --version
+    python3.11 --version
+    rustc --version
+  SH
+
+  # sync fish-shell to /vagrant/fish-shell
+  config.vm.synced_folder "../../..", "/home/vagrant/fish-shell",
+    type: "rsync",
+    rsync__rsync_path: "sudo rsync", # sudo in guest
+    rsync__exclude: [".git/", ".git", "fish-shell/target/", "fish-shell/build/"],
+    rsync__args: [
+      "--archive", "--delete",
+      "--no-owner", "--no-group",
+      "--omit-dir-times",
+      "--info=progress2", "--stats"
+    ]
+
+
+  config.vm.provider :libvirt do |v|
+    v.cpus = 4
+    v.memory = 2048
+    # Max I/O for disposable builds. Remove if you need durability.
+    v.disk_driver :cache => 'unsafe'
+    # Note: OpenBSD needs graphics on; leave default graphics enabled.
+  end
+end

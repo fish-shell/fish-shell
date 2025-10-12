@@ -4,9 +4,9 @@
 # Test all completions where the command exists
 
 # No output is good output
-for f in $__fish_data_dir/completions/*.fish
+for f in (__fish_list_files completions | string match 'completions/*.fish')
     if type -q (string replace -r '.*/([^/]+).fish' '$1' $f)
-        set -l out (source $f 2>&1 | string collect)
+        set -l out (__fish_with_file $f source 2>&1 | string collect)
         test -n "$out"
         and echo -- OUTPUT from $f: $out
     end

@@ -6,6 +6,7 @@ ENV LC_ALL=C.UTF-8
 ENV PIP_ROOT_USER_ACTION=ignore
 
 RUN apk add --no-cache \
+    cmake ninja \
     bash \
     cargo \
     g++ \

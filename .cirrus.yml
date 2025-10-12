@@ -12,14 +12,6 @@ linux_task:
           container:
               <<: *step
               image: ghcr.io/krobelus/fish-ci/jammy:latest
-        # - name: jammy-asan
-        #   container:
-        #       <<: *step
-        #       image: ghcr.io/krobelus/fish-ci/jammy-asan:latest
-        # - name: focal-32bit
-        #   container:
-        #       <<: *step
-        #       image: ghcr.io/krobelus/fish-ci/focal-32bit:latest
     tests_script:
         # cirrus at times gives us 32 procs and 2 GB of RAM
         # Unrestriced parallelism results in OOM

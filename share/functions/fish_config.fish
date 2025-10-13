@@ -153,10 +153,10 @@ function fish_config --description "Launch fish's web based configuration"
                     echo Overwriting
                     # Skip the cp if unnecessary,
                     # or we'd throw an error on a stock fish.
-                    path is $__fish_config_dir/functions/fish_prompt.fish
-                    and cp $__fish_config_dir/functions/fish_prompt.fish{,.bak}
-                    path is $__fish_config_dir/functions/fish_right_prompt.fish
-                    and cp $__fish_config_dir/functions/fish_right_prompt.fish{,.bak}
+                    for function in fish_prompt fish_right_prompt
+                        path is $__fish_config_dir/functions/$function.fish
+                        and cp $__fish_config_dir/functions/$function.fish{,.bak}
+                    end
 
                     set -l have
                     if set -q argv[1]

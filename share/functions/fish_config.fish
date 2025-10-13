@@ -149,8 +149,6 @@ function fish_config --description "Launch fish's web based configuration"
                 return 1
             end
 
-            set -l dirs $__fish_config_dir/themes $__fish_data_dir/tools/web_config/themes
-
             switch $cmd
                 case list ''
                     __fish_config_list_theme_names
@@ -212,7 +210,6 @@ function fish_config --description "Launch fish's web based configuration"
                     end
 
                     set -l scope -g
-                    set -l have_colors
 
                     if contains -- $cmd save
                         read -P"Overwrite your current theme? [y/N] " -l yesno
@@ -278,40 +275,20 @@ fish_pager_color_secondary_description
 
                     # If we are choosing a theme or saving from a named theme, load the theme now.
                     # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
-                    set -l files $dirs/$argv[1].theme
-                    set -l file
-
-                    for f in $files
-                        if test -e "$f"
-                            set file $f
-                            break
-                        end
+                    set -l theme_path (__fish_config_list_themes $argv[1])[1]
+                    if not set -q theme_path[1]
+                        echo "No such theme: $argv[1]" >&2
+                        echo "Searched directories:" (__fish_config_theme_dirs) >&2
+                        return 1
                     end
 
-                    if not set -q file[1]
-                        if status list-files tools/web_config/themes/$argv[1].theme &>/dev/null
-                            set file tools/web_config/themes/$argv[1].theme
-                        else
-                            echo "No such theme: $argv[1]" >&2
-                            echo "Searched directories: $dirs" >&2
-                            return 1
-                        end
-                    end
-
-                    set -l content
-                    if string match -qr '^tools/' -- $file
-                        set content (status get-file $file)
-                    else
-                        read -z content <$file
-                    end
-
-                    printf %s\n $content | while read -lat toks
+                    set -l have_colors
+                    __fish_data_with_file $theme_path cat | while read -lat toks
                         # The whitelist allows only color variables.
                         # Not the specific list, but something named *like* a color variable.
                         # This also takes care of empty lines and comment lines.
                         string match -rq -- $theme_var_filter $toks[1]
                         or continue
-
                         # If we're supposed to set universally, remove any shadowing globals
                         # so the change takes effect immediately (and there's no warning).
                         if test x"$scope" = x-U; and set -qg $toks[1]
@@ -325,7 +302,6 @@ fish_pager_color_secondary_description
                     for c in $known_colors
                         contains -- $c $have_colors
                         and continue
-
                         # Erase conflicting global variables so we don't get a warning and
                         # so changes are observed immediately.
                         set -eg $c
@@ -354,8 +330,14 @@ function __fish_config_list_prompts
 end
 
 function __fish_config_list_themes
-    set -lx dirs $__fish_config_dir/themes $__fish_data_dir/tools/web_config/themes
+    set -lx dirs (__fish_config_theme_dirs)
     __fish_config_matching tools/web_config/themes .theme $argv
+end
+
+function __fish_config_theme_dirs
+    printf %s\n \
+        $__fish_config_dir/themes \
+        $__fish_data_dir/tools/web_config/themes
 end
 
 function __fish_config_list_theme_names

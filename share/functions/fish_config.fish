@@ -130,7 +130,11 @@ function fish_config --description "Launch fish's web based configuration"
                     funcsave fish_prompt
                     or return
 
-                    funcsave fish_right_prompt 2>/dev/null
+                    if functions -q fish_right_prompt
+                        funcsave fish_right_prompt
+                    else
+                        rm -f $__fish_config_dir/functions/fish_right_prompt.fish
+                    end
                     return
             end
 
@@ -362,7 +366,8 @@ function __fish_config_prompt_save
     # if necessary.
     function fish_prompt
     end
-    function fish_right_prompt
+    if functions -q fish_right_prompt
+        functions --erase fish_right_prompt
     end
     source $argv[1] # N.B We're passed either stdin or argv.
 end

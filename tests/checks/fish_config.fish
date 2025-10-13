@@ -43,8 +43,7 @@ echo yes | fish_config prompt save nim >/dev/null
 grep -q nim@Hattori $__fish_config_dir/functions/fish_prompt.fish ||
 echo 'failed to save prompt?'
 cat $__fish_config_dir/functions/fish_right_prompt.fish
-# CHECK: function fish_right_prompt
-# CHECK: end
+# CHECKERR: cat: {{.*}}/functions/fish_right_prompt.fish: No such file or directory
 cat $__fish_config_dir/functions/fish_mode_prompt.fish
 # CHECKERR: cat: {{.*}}/functions/fish_mode_prompt.fish: No such file or directory
 

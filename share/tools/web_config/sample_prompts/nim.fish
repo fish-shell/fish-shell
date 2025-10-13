@@ -93,7 +93,6 @@ function fish_prompt
                 set mode (set_color --bold green)I
             case replace_one
                 set mode (set_color --bold green)R
-                echo '[R]'
             case replace
                 set mode (set_color --bold cyan)R
             case visual

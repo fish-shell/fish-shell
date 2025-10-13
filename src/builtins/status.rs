@@ -505,18 +505,23 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             #[cfg(feature = "embed-data")]
             {
-                let mut have_file = false;
+                use crate::util::wcsfilecmp_glob;
+
+                let mut paths = vec![];
                 let arg = crate::common::wcs2string(args.get(0).unwrap_or(&L!("")));
                 let arg = std::str::from_utf8(&arg).unwrap();
                 for path in crate::autoload::Asset::iter().chain(Docs::iter()) {
                     if arg.is_empty() || path.starts_with(arg) {
-                        have_file = true;
-                        let src = str2wcstring(path.as_bytes());
-                        streams.out.appendln(src);
+                        paths.push(str2wcstring(path.as_bytes()));
                     }
                 }
 
-                if have_file {
+                paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
+                for path in &paths {
+                    streams.out.appendln(path);
+                }
+
+                if !paths.is_empty() {
                     return Ok(SUCCESS);
                 } else {
                     return Err(STATUS_CMD_ERROR);

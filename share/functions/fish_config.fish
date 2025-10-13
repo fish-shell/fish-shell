@@ -153,8 +153,7 @@ function fish_config --description "Launch fish's web based configuration"
 
             switch $cmd
                 case list ''
-                    files=$dirs/*.theme string replace -r '.*/([^/]*).theme$' '$1' \
-                        $files (status list-files tools/web_config/themes/ 2>/dev/null)
+                    __fish_config_list_theme_names
                     return
                 case demo
                     echo -ns (set_color $fish_color_command || set_color $fish_color_normal) /bright/vixens
@@ -182,15 +181,12 @@ function fish_config --description "Launch fish's web based configuration"
                     echo
                 case show
                     set -l fish (status fish-path)
-                    set -l themes \
-                        (dirs=$dirs __fish_config_matching tools/web_config/themes .theme $argv)
                     set -l used_themes
 
                     echo -s (set_color normal; set_color --underline) Current (set_color normal)
                     fish_config theme demo
 
-                    for t in $themes
-                        set -l themename (string replace -r '.*/([^/]*).theme$' '$1' $t)
+                    for themename in (__fish_config_list_theme_names $argv)
                         contains -- $themename $used_themes
                         and continue
                         set -a used_themes $themename
@@ -329,6 +325,16 @@ function __fish_config_list_prompts
         set --erase prompt_paths[2..]
     end
     string join \n -- $prompt_paths
+end
+
+function __fish_config_list_themes
+    set -lx dirs $__fish_config_dir/themes $__fish_data_dir/tools/web_config/themes
+    __fish_config_matching tools/web_config/themes .theme $argv
+end
+
+function __fish_config_list_theme_names
+    __fish_config_list_themes $argv |
+        string replace -r '.*/([^/]*).theme$' '$1'
 end
 
 # NOTE: This outputs a mix of absolute and relative paths!

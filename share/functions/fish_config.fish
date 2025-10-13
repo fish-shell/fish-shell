@@ -143,50 +143,51 @@ function fish_config --description "Launch fish's web based configuration"
                         end
                     end
                 case save
-                    read -P"Overwrite prompt? [y/N]" -l yesno
-                    if string match -riq 'y(es)?' -- $yesno
-                        echo Overwriting
-                        # Skip the cp if unnecessary,
-                        # or we'd throw an error on a stock fish.
-                        path is $__fish_config_dir/functions/fish_prompt.fish
-                        and cp $__fish_config_dir/functions/fish_prompt.fish{,.bak}
-                        path is $__fish_config_dir/functions/fish_right_prompt.fish
-                        and cp $__fish_config_dir/functions/fish_right_prompt.fish{,.bak}
-
-                        set -l have
-                        if set -q argv[1]
-                            for f in $prompt_dir/$argv[1].fish
-                                if test -f $f
-                                    set have $f
-                                    # Set the functions to empty so we empty the file
-                                    # if necessary.
-                                    function fish_prompt
-                                    end
-                                    function fish_right_prompt
-                                    end
-                                    source $f
-                                    or return 2
-                                end
-                            end
-                            if not set -q have[1]
-                                if status list-files tools/web_config/sample_prompts/$argv[1].fish &>/dev/null
-                                    status get-file tools/web_config/sample_prompts/$argv[1].fish | source
-                                else
-                                    echo "No such prompt: '$argv[1]'" >&2
-                                    return 1
-                                end
-                            end
+                    if begin
+                            read -P"Overwrite prompt? [y/N]" -l yesno
+                            not string match -riq 'y(es)?' -- $yesno
                         end
-
-                        funcsave fish_prompt
-                        or return
-
-                        funcsave fish_right_prompt 2>/dev/null
-                        return
-                    else
                         echo Not overwriting
                         return 1
                     end
+                    echo Overwriting
+                    # Skip the cp if unnecessary,
+                    # or we'd throw an error on a stock fish.
+                    path is $__fish_config_dir/functions/fish_prompt.fish
+                    and cp $__fish_config_dir/functions/fish_prompt.fish{,.bak}
+                    path is $__fish_config_dir/functions/fish_right_prompt.fish
+                    and cp $__fish_config_dir/functions/fish_right_prompt.fish{,.bak}
+
+                    set -l have
+                    if set -q argv[1]
+                        for f in $prompt_dir/$argv[1].fish
+                            if test -f $f
+                                set have $f
+                                # Set the functions to empty so we empty the file
+                                # if necessary.
+                                function fish_prompt
+                                end
+                                function fish_right_prompt
+                                end
+                                source $f
+                                or return 2
+                            end
+                        end
+                        if not set -q have[1]
+                            if status list-files tools/web_config/sample_prompts/$argv[1].fish &>/dev/null
+                                status get-file tools/web_config/sample_prompts/$argv[1].fish | source
+                            else
+                                echo "No such prompt: '$argv[1]'" >&2
+                                return 1
+                            end
+                        end
+                    end
+
+                    funcsave fish_prompt
+                    or return
+
+                    funcsave fish_right_prompt 2>/dev/null
+                    return
             end
 
             return 0

@@ -4,8 +4,7 @@ function __fish_data_with_file
     set -l cmd $argv[2..]
     if set -q __fish_data_dir[1]
         if not string match -rq -- ^/ $path
-            echo >&2 "error: $(status function) requires absolute paths on non-embedded builds"
-            return 1
+            set path $__fish_data_dir/$path
         end
         $cmd $path
     else

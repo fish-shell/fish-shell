@@ -57,20 +57,15 @@ function man
         end
     end
 
-    set -l tmpdir
     if not set -q argv[2] && status list-files "man/man1/$argv[1].1" &>/dev/null
-        set tmpdir (__fish_mktemp_relative -d fish-man)
-        or return
-        status get-file "man/man1/$argv[1].1" >$tmpdir/$argv.1
-        set argv $tmpdir/$argv.1
+        set -l basename $argv[1].1
+        function __fish_man -V basename -a man1
+            command man $man1/$basename
+        end
+        __fish_data_with_directory man/man1 \
+            (string escape --style=regex -- $basename) __fish_man
+        __fish_with_status functions --erase __fish_man
+    else
+        command man $argv
     end
-
-    command man $argv
-    set -l saved_status $status
-
-    if set -q tmpdir[1]
-        command rm -r $tmpdir
-    end
-
-    return $saved_status
 end

@@ -19,26 +19,19 @@ function __fish_print_help --description "Print help for the specified fish func
         return
     end
 
-    # NOTE: this is duplicated with share/functions/man.fish, but that
-    # function is not always defined.
-    set -l tmpdir
-    set -l file (path filter -- \
-                    $__fish_data_dir/man/man1/$item.1 \
-                    $__fish_data_dir/man/man1/$item.1.gz)
-    or begin
-        set -l contents "$(status get-file man/man1/$item.1)"
-        or return 2
-        set tmpdir (__fish_mktemp_relative -d fish-print-help)
-        or return
-        set file $tmpdir/$item.1
-        printf %s\n $contents >$file
+    function __fish_print_help_man -V item -a man1
+        if not path is $man1
+            # Trigger the "documentation not be installed" message. Currently
+            # only when called from core.
+            return 2
+        end
+        set -l file (path filter -- $man1/$item.1 $man1/$item.1.gz)
+        command man $file[1]
     end
-    command man $file[1]
-    set -l saved_status $status
-    if set -q tmpdir[1]
-        command rm -r $tmpdir
-    end
-    return $saved_status
+    __fish_data_with_directory man/man1 \
+        "$(string escape --style=regex $item.1)(?:\.gz)?" \
+        __fish_print_help_man
+    __fish_with_status functions --erase __fish_print_help_man
 end
 
 function __fish_print_help_pre_4.1 --description "Print help message for the specified fish function or builtin"

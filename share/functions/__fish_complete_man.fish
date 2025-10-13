@@ -70,9 +70,8 @@ function __fish_complete_man
 
         # Fish commands are not given by apropos
         if not set -ql exclude_fish_commands
-            set -l files $__fish_data_dir/man/man1/*.1*
-            string replace -r '.*/([^/]+)\.1(\.gz)?$' '$1\t1: fish command' \
-                -- $files (status list-files man/man1/ 2>/dev/null)
+            __fish_data_list_files man/man1 |
+                string replace -rf '.*/([^/]+)\.1(\.gz)?$' '$1\t1: fish command'
         end
     else
         return 1

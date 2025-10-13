@@ -124,30 +124,23 @@ function fish_config --description "Launch fish's web based configuration"
                         return 1
                     end
 
-                    set -l have
+                    set -l found false
                     for f in $prompt_dir/$argv[1].fish
                         if test -f $f
+                            __fish_config_prompt_choose
                             source $f
-                            set have $f
+                            set found true
                             break
                         end
                     end
-                    if not set -q have[1]
+                    if not $found
                         if status list-files tools/web_config/sample_prompts/$argv[1].fish &>/dev/null
+                            __fish_config_prompt_choose
                             status get-file tools/web_config/sample_prompts/$argv[1].fish | source
-                            # HACK: `source` gives us a filename of "-", so we check manually if we had a right prompt
-                            set have ""
-                            status get-file tools/web_config/sample_prompts/$argv[1].fish | string match -q '*function fish_right_prompt*'
-                            and set have -
                         else
                             echo "No such prompt: '$argv[1]'" >&2
                             return 1
                         end
-                    end
-
-                    # Erase the right prompt if it didn't have any.
-                    if functions -q fish_right_prompt; and test (functions --details fish_right_prompt) != $have[1]
-                        functions --erase fish_right_prompt
                     end
                 case save
                     read -P"Overwrite prompt? [y/N]" -l yesno
@@ -397,4 +390,12 @@ function __fish_config_matching
         end
     end
     string join \n $paths
+end
+
+function __fish_config_prompt_choose
+    if functions -q fish_right_prompt
+        # Unfortunately this disables autoloading for
+        # the rest of this session.
+        functions --erase fish_right_prompt
+    end
 end

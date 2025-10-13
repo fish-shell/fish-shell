@@ -109,7 +109,7 @@ end
 function __fish_git_remotes
     # Example of output parsed:
     # "remote.upstream.url git@github.com:fish-shell/fish-shell.git" -> "upstream\tgit@github.com:fish-shell/fish-shell.git"
-    __fish_git config --get-regexp 'remote\.[a-z]+\.url' | string replace -rf 'remote\.(.*)\.url (.*)' '$1\t$2'
+    __fish_git config --get-regexp '^remote\.\S+\.url$' | string replace -rf '^remote\.(\S+)\.url (.*)' '$1\t$2'
 end
 
 set -g __fish_git_recent_commits_arg

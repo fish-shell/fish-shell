@@ -65,21 +65,15 @@ function fish_config --description "Launch fish's web based configuration"
                 return 1
             end
 
-            set -l prompt_dir $__fish_data_dir/tools/web_config/sample_prompts
             switch $cmd
                 case show
                     set -l fish (status fish-path)
-                    set -l prompts (dirs=$prompt_dir __fish_config_matching tools/web_config/sample_prompts .fish $argv)
-                    for p in $prompts
+                    for p in (__fish_config_list_prompts $argv)
                         set -l promptname (string replace -r '.*/([^/]*).fish$' '$1' $p)
                         echo -s (set_color --underline) $promptname (set_color normal)
                         $fish -c '
                             functions -e fish_right_prompt
-                            if string match -q "tools/*" -- $argv[1]
-                                status get-file $argv[1] | source
-                            else
-                                source $argv[1]
-                            end
+                            __fish_data_with_file $argv[1] source
                             false
                             fish_prompt
                             echo (set_color normal)
@@ -89,8 +83,8 @@ function fish_config --description "Launch fish's web based configuration"
                         echo
                     end
                 case list ''
-                    files=$prompt_dir/*.theme string replace -r '.*/([^/]*).fish$' '$1' \
-                        $files (status list-files tools/web_config/sample_prompts/ 2>/dev/null)
+                    __fish_config_list_prompts |
+                        string replace -r '.*/([^/]*).fish$' '$1'
                     return
                 case choose
                     if set -q argv[2]
@@ -102,22 +96,12 @@ function fish_config --description "Launch fish's web based configuration"
                         return 1
                     end
 
-                    set -l found false
-                    set -l f $prompt_dir/$argv[1].fish
-                    if set -q f[1] && test -f $f
-                        __fish_config_prompt_choose
-                        source $f
-                        set found true
+                    set -l prompt_path (__fish_config_list_prompts $argv[1])
+                    if not set -q prompt_path[1]
+                        echo "No such prompt: '$argv[1]'" >&2
+                        return 1
                     end
-                    if not $found
-                        if status list-files tools/web_config/sample_prompts/$argv[1].fish &>/dev/null
-                            __fish_config_prompt_choose
-                            status get-file tools/web_config/sample_prompts/$argv[1].fish | source
-                        else
-                            echo "No such prompt: '$argv[1]'" >&2
-                            return 1
-                        end
-                    end
+                    __fish_data_with_file $prompt_path __fish_config_prompt_choose
                 case save
                     if begin
                             read -P"Overwrite prompt? [y/N]" -l yesno
@@ -134,24 +118,13 @@ function fish_config --description "Launch fish's web based configuration"
                         and cp $__fish_config_dir/functions/$function.fish{,.bak}
                     end
 
-                    set -l have
                     if set -q argv[1]
-                        set -l f $prompt_dir/$argv[1].fish
-                        if set -q f[1] && test -f $f
-                            set have $f
-                            __fish_config_prompt_save
-                            source $f
-                            or return 2
+                        set -l prompt_path (__fish_config_list_prompts $argv[1])
+                        if not set -q prompt_path[1]
+                            echo "No such prompt: '$argv[1]'" >&2
+                            return 1
                         end
-                        if not set -q have[1]
-                            if status list-files tools/web_config/sample_prompts/$argv[1].fish &>/dev/null
-                                __fish_config_prompt_save
-                                status get-file tools/web_config/sample_prompts/$argv[1].fish | source
-                            else
-                                echo "No such prompt: '$argv[1]'" >&2
-                                return 1
-                            end
-                        end
+                        __fish_data_with_file $prompt_path __fish_config_prompt_save
                     end
 
                     funcsave fish_prompt
@@ -344,6 +317,17 @@ function fish_config --description "Launch fish's web based configuration"
     end
 end
 
+function __fish_config_list_prompts
+    set -lx dirs $__fish_data_dir/tools/web_config/sample_prompts
+    set -l prompt_paths (__fish_config_matching tools/web_config/sample_prompts .fish $argv)
+    if [ (count $argv) = 1 ] && set -q prompt_paths[2]
+        echo >&2 "fish_config: internal error: multiple prompts matching '$argv' ??"
+        set --erase prompt_paths[2..]
+    end
+    string join \n -- $prompt_paths
+end
+
+# NOTE: This outputs a mix of absolute and relative paths!
 function __fish_config_matching
     set -l prefix $argv[1]
     set -l suffix $argv[2]
@@ -370,6 +354,7 @@ function __fish_config_prompt_choose
         # the rest of this session.
         functions --erase fish_right_prompt
     end
+    source $argv[1] # N.B We're passed either stdin or argv.
 end
 
 function __fish_config_prompt_save
@@ -379,4 +364,5 @@ function __fish_config_prompt_save
     end
     function fish_right_prompt
     end
+    source $argv[1] # N.B We're passed either stdin or argv.
 end

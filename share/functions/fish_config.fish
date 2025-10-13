@@ -194,8 +194,7 @@ function fish_config --description "Launch fish's web based configuration"
                         echo -s (set_color normal; set_color --underline) $themename (set_color normal)
 
                         # Use a new, --no-config, fish to display the theme.
-                        # So we can use this function, explicitly source it before anything else!
-                        functions fish_config | $fish -C "source -" --no-config -c '
+                        $fish --no-config -c '
                             fish_config theme choose $argv
                             fish_config theme demo $argv
                         ' $themename

@@ -28,7 +28,7 @@ const IO_WAIT_FOR_WORK_DURATION: Duration = Duration::from_millis(500);
 
 /// The iothreads [`ThreadPool`] singleton. Used to lift I/O off of the main thread and used for
 /// completions, etc.
-static IO_THREAD_POOL: OnceLock<Mutex<ThreadPool>> = OnceLock::new();
+static IO_THREAD_POOL: OnceLock<ThreadPool> = OnceLock::new();
 
 /// The event signaller singleton used for completions and queued main thread requests.
 static NOTIFY_SIGNALLER: once_cell::sync::Lazy<crate::fd_monitor::FdEventSignaller> =
@@ -67,7 +67,7 @@ pub fn init() {
     }
 
     IO_THREAD_POOL
-        .set(Mutex::new(ThreadPool::new(1, IO_MAX_THREADS)))
+        .set(ThreadPool::new(1, IO_MAX_THREADS))
         .expect("IO_THREAD_POOL has already been initialized!");
 }
 
@@ -293,12 +293,12 @@ impl ThreadPool {
     /// set, the thread limit may be disregarded if extant threads are busy.
     ///
     /// Returns the number of threads that were alive when the work item was enqueued.
-    pub fn perform<F: FnOnce() + 'static + Send>(&mut self, func: F, cant_wait: bool) -> usize {
+    pub fn perform<F: FnOnce() + 'static + Send>(&self, func: F, cant_wait: bool) -> usize {
         let work_item = Box::new(func);
         self.perform_inner(work_item, cant_wait)
     }
 
-    fn perform_inner(&mut self, f: WorkItem, cant_wait: bool) -> usize {
+    fn perform_inner(&self, f: WorkItem, cant_wait: bool) -> usize {
         enum ThreadAction {
             None,
             Wake,
@@ -361,7 +361,7 @@ impl ThreadPool {
     }
 
     /// Attempt to spawn a new worker thread.
-    fn spawn_thread(&mut self) -> bool {
+    fn spawn_thread(&self) -> bool {
         let shared = Arc::clone(&self.shared);
         let soft_min_threads = self.soft_min_threads;
         self::spawn(move || {
@@ -468,18 +468,15 @@ impl WorkerThread {
     }
 }
 
-/// Returns a [`MutexGuard`](std::sync::MutexGuard) containing the IO [`ThreadPool`].
-fn borrow_io_thread_pool() -> std::sync::MutexGuard<'static, ThreadPool> {
-    IO_THREAD_POOL
-        .get()
-        .unwrap()
-        .lock()
-        .expect("Mutex poisoned!")
+/// Returns a reference to the singleton thread pool.
+#[inline]
+fn borrow_io_thread_pool() -> &'static ThreadPool {
+    IO_THREAD_POOL.get().unwrap()
 }
 
 /// Enqueues work on the IO thread pool singleton.
 pub fn iothread_perform(f: impl FnOnce() + 'static + Send) {
-    let mut thread_pool = borrow_io_thread_pool();
+    let thread_pool = borrow_io_thread_pool();
     thread_pool.perform(f, false);
 }
 
@@ -488,7 +485,7 @@ pub fn iothread_perform(f: impl FnOnce() + 'static + Send) {
 /// It does its best to spawn a thread if all other threads are occupied. This is primarily for
 /// cases where deferring creation of a new thread might lead to a deadlock.
 pub fn iothread_perform_cant_wait(f: impl FnOnce() + 'static + Send) {
-    let mut thread_pool = borrow_io_thread_pool();
+    let thread_pool = borrow_io_thread_pool();
     thread_pool.perform(f, true);
 }
 

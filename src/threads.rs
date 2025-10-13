@@ -1,6 +1,7 @@
 //! The rusty version of iothreads from the cpp code, to be consumed by native rust code. This isn't
 //! ported directly from the cpp code so we can use rust threads instead of using pthreads.
 
+use crate::fd_monitor::FdEventSignaller;
 use crate::flog::{FLOG, FloggableDebug};
 use crate::reader::Reader;
 use std::marker::PhantomData;
@@ -29,10 +30,6 @@ const IO_WAIT_FOR_WORK_DURATION: Duration = Duration::from_millis(500);
 /// The iothreads [`ThreadPool`] singleton. Used to lift I/O off of the main thread and used for
 /// completions, etc.
 static IO_THREAD_POOL: OnceLock<ThreadPool> = OnceLock::new();
-
-/// The event signaller singleton used for completions and queued main thread requests.
-static NOTIFY_SIGNALLER: once_cell::sync::Lazy<crate::fd_monitor::FdEventSignaller> =
-    once_cell::sync::Lazy::new(crate::fd_monitor::FdEventSignaller::new);
 
 /// A [`ThreadPool`] work request.
 type WorkItem = Box<dyn FnOnce() + 'static + Send>;
@@ -261,6 +258,8 @@ struct ThreadPoolShared {
 pub struct ThreadPool {
     /// The data which needs to be shared with worker threads.
     shared: Arc<ThreadPoolShared>,
+    /// An event signaller used for completions and queued main thread requests.
+    event_signaller: FdEventSignaller,
     /// The minimum number of threads that will be kept waiting even when idle in the pool.
     soft_min_threads: usize,
     /// The maximum number of threads that will be created to service outstanding work requests, by
@@ -282,6 +281,7 @@ impl ThreadPool {
     pub fn new(soft_min_threads: usize, max_threads: usize) -> Self {
         ThreadPool {
             shared: Default::default(),
+            event_signaller: FdEventSignaller::new(),
             soft_min_threads,
             max_threads,
         }
@@ -490,7 +490,7 @@ pub fn iothread_perform_cant_wait(f: impl FnOnce() + 'static + Send) {
 }
 
 pub fn iothread_port() -> i32 {
-    NOTIFY_SIGNALLER.read_fd()
+    borrow_io_thread_pool().event_signaller.read_fd()
 }
 
 pub fn iothread_service_main_with_timeout(ctx: &mut Reader, timeout: Duration) {
@@ -506,7 +506,8 @@ pub fn iothread_service_main(ctx: &mut Reader) {
 
     // Note: the order here is important. We must consume events before handling requests, as
     // posting uses the opposite order.
-    NOTIFY_SIGNALLER.try_consume();
+    let pool = borrow_io_thread_pool();
+    pool.event_signaller.try_consume();
 
     let queue = std::mem::take(&mut *MAIN_THREAD_QUEUE.lock().expect("Mutex poisoned!"));
 
@@ -630,7 +631,7 @@ impl Debounce {
                 (completion.0)(ctx, result);
             }));
             MAIN_THREAD_QUEUE.lock().unwrap().push(callback);
-            NOTIFY_SIGNALLER.post();
+            borrow_io_thread_pool().event_signaller.post();
         });
         self.perform_inner(work_item)
     }

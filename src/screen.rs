@@ -163,6 +163,10 @@ impl ScreenData {
         self.line_datas.last_mut().unwrap()
     }
 
+    pub fn clear_lines(&mut self) {
+        self.line_datas.clear()
+    }
+
     pub fn resize(&mut self, size: usize) {
         self.line_datas.resize(size, Default::default())
     }
@@ -350,7 +354,7 @@ impl Screen {
 
         // Clear the desired screen and set its width.
         self.desired.screen_width = Some(screen_width);
-        self.desired.resize(0);
+        self.desired.clear_lines();
         self.desired.cursor.x = 0;
         self.desired.cursor.y = 0;
 
@@ -554,7 +558,7 @@ impl Screen {
             self.actual_left_prompt = None;
             self.need_clear_screen = true;
         }
-        self.actual.resize(0);
+        self.actual.clear_lines();
         self.need_clear_lines = true;
 
         // This should prevent resetting the cursor position during the next repaint.
@@ -674,7 +678,7 @@ impl Screen {
     /// The screen width must be provided for the PROMPT_SP hack.
     pub fn reset_abandoning_line(&mut self, screen_width: usize) {
         self.actual.cursor.y = 0;
-        self.actual.resize(0);
+        self.actual.clear_lines();
         self.actual_left_prompt = None;
         self.need_clear_lines = true;
 

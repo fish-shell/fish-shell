@@ -32,7 +32,7 @@ grep '\S' $__fish_config_dir/functions/{fish_prompt,fish_right_prompt,fish_mode_
 echo yes | fish_config prompt save nim >/dev/null
 grep -q nim@Hattori $__fish_config_dir/functions/fish_prompt.fish ||
 echo 'failed to save prompt?'
-grep -E 'function|end' $__fish_config_dir/functions/fish_right_prompt.fish
+cat $__fish_config_dir/functions/fish_right_prompt.fish
 # CHECK: function fish_right_prompt
 # CHECK: end
 cat $__fish_config_dir/functions/fish_mode_prompt.fish

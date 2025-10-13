@@ -161,17 +161,13 @@ function fish_config --description "Launch fish's web based configuration"
                         set -l f $prompt_dir/$argv[1].fish
                         if set -q f[1] && test -f $f
                             set have $f
-                            # Set the functions to empty so we empty the file
-                            # if necessary.
-                            function fish_prompt
-                            end
-                            function fish_right_prompt
-                            end
+                            __fish_config_prompt_save
                             source $f
                             or return 2
                         end
                         if not set -q have[1]
                             if status list-files tools/web_config/sample_prompts/$argv[1].fish &>/dev/null
+                                __fish_config_prompt_save
                                 status get-file tools/web_config/sample_prompts/$argv[1].fish | source
                             else
                                 echo "No such prompt: '$argv[1]'" >&2
@@ -395,5 +391,14 @@ function __fish_config_prompt_choose
         # Unfortunately this disables autoloading for
         # the rest of this session.
         functions --erase fish_right_prompt
+    end
+end
+
+function __fish_config_prompt_save
+    # Set the functions to empty so we empty the file
+    # if necessary.
+    function fish_prompt
+    end
+    function fish_right_prompt
     end
 end

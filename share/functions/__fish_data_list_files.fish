@@ -9,7 +9,7 @@ function __fish_data_list_files
             set dir $__fish_data_dir
         end
         set -l files $dir/**
-        string replace -- $dir/ '' $files
+        string replace -- $__fish_data_dir/ '' $files
     else
         status list-files $dir
     end

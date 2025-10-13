@@ -1,4 +1,14 @@
  #RUN: %fish %s
+ #REQUIRES: command -v diff
+
+fish_config prompt list | string match -r '^(?:acidhub|disco|nim)$'
+# CHECK: acidhub
+# CHECK: disco
+# CHECK: nim
+
+diff \
+    (fish_config prompt list | psub -s config-prompt-list) \
+    (fish_config prompt | psub -s config-prompt)
 
 fish_config prompt show non-existent-prompt
 
@@ -82,6 +92,22 @@ fish_config theme show non-existent-theme
 # CHECK: /bright/vixens{{\x1b\[m}} jump{{\x1b\[m}} |{{\x1b\[m}} "fowl"{{\x1b\[m}} > quack{{\x1b\[m}} &{{\x1b\[m}} # This is a comment
 # CHECK: {{\x1b\[m}}echo{{\x1b\[m}} 'Errors are the portal to discovery
 # CHECK: {{\x1b\[m}}Th{{\x1b\[m}}is an autosuggestion
+
+diff \
+    (fish_config theme list | psub -s config-theme-list) \
+    (fish_config theme | psub -s config-theme)
+
+fish_config theme list | string match -r \
+'^(?:ayu Dark|Base16 Default Light|coolbeans|fish default|None|'\
+'Tomorrow Night Bright|Tomorrow Night|Tomorrow)$'
+# CHECK: ayu Dark
+# CHECK: Base16 Default Light
+# CHECK: coolbeans
+# CHECK: fish default
+# CHECK: None
+# CHECK: Tomorrow Night Bright
+# CHECK: Tomorrow Night
+# CHECK: Tomorrow
 
 fish_config theme show "fish default"
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}

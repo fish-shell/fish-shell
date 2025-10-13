@@ -95,18 +95,19 @@ function fish_config --description "Launch fish's web based configuration"
                     for p in $prompts
                         set -l promptname (string replace -r '.*/([^/]*).fish$' '$1' $p)
                         echo -s (set_color --underline) $promptname (set_color normal)
-                        $fish -c 'functions -e fish_right_prompt;
-                        if string match -q "tools/*" -- $argv[1]
-                            status get-file $argv[1] | source
-                        else
-                            source $argv[1]
-                        end
-                        false
-                        fish_prompt
-                        echo (set_color normal)
-                        if functions -q fish_right_prompt;
-                        echo right prompt: (false; fish_right_prompt)
-                    end' $p
+                        $fish -c '
+                            functions -e fish_right_prompt
+                            if string match -q "tools/*" -- $argv[1]
+                                status get-file $argv[1] | source
+                            else
+                                source $argv[1]
+                            end
+                            false
+                            fish_prompt
+                            echo (set_color normal)
+                            if functions -q fish_right_prompt
+                                echo right prompt: (false; fish_right_prompt)
+                            end' $p
                         echo
                     end
                 case list ''
@@ -257,8 +258,8 @@ function fish_config --description "Launch fish's web based configuration"
                         # Use a new, --no-config, fish to display the theme.
                         # So we can use this function, explicitly source it before anything else!
                         functions fish_config | $fish -C "source -" --no-config -c '
-                        fish_config theme choose $argv
-                        fish_config theme demo $argv
+                            fish_config theme choose $argv
+                            fish_config theme demo $argv
                         ' $themename
                     end
 

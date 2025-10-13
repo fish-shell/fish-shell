@@ -10,7 +10,7 @@ use crate::wutil::perror;
 use super::prelude::*;
 
 pub mod limits {
-    /// Constants that exist everywhere (Linux, macOS, BSD).
+    /// Constants that exist everywhere (except perhaps Cygwin).
     /// Note these are uints on Linux but ints everywhere else - we use -1 as a sentinel
     /// so cast to int.
     pub mod common {
@@ -39,151 +39,29 @@ pub mod limits {
     }
     pub use self::common::*;
 
-    #[cfg(target_os = "linux")]
-    pub mod linux {
-        use libc;
-        pub const SIGPENDING: libc::c_int = libc::RLIMIT_SIGPENDING as _;
-        pub const MSGQUEUE: libc::c_int = libc::RLIMIT_MSGQUEUE as _;
-        pub const RTPRIO: libc::c_int = libc::RLIMIT_RTPRIO as _;
-        pub const RTTIME: libc::c_int = libc::RLIMIT_RTTIME as _;
-        pub const RSS: libc::c_int = libc::RLIMIT_RSS as _;
-        pub const AS: libc::c_int = libc::RLIMIT_AS as _;
+    // Define NAME as libc::LIBC_NAME on the listed OSes; -1 elsewhere.
+    macro_rules! define_on {
+        ($name:ident, $libc_name:ident; $($os:literal),+ $(,)?) => {
+            #[cfg(any($(target_os = $os),+))]
+            pub const $name: libc::c_int = libc::$libc_name as _;
 
-        pub const SBSIZE: libc::c_int = -1;
-        pub const NICE: libc::c_int = -1;
-        pub const SWAP: libc::c_int = -1;
-        pub const KQUEUES: libc::c_int = -1;
-        pub const NPTS: libc::c_int = -1;
-        pub const NTHR: libc::c_int = -1;
+            #[cfg(not(any($(target_os = $os),+)))]
+            pub const $name: libc::c_int = -1;
+        };
     }
-    #[cfg(target_os = "linux")]
-    pub use self::linux::*;
 
-    #[cfg(any(target_os = "ios", target_os = "macos"))]
-    pub mod macos {
-        use libc;
-
-        pub const SIGPENDING: libc::c_int = -1;
-        pub const MSGQUEUE: libc::c_int = -1;
-        pub const RTPRIO: libc::c_int = -1;
-        pub const RTTIME: libc::c_int = -1;
-        pub const AS: libc::c_int = libc::RLIMIT_AS as _;
-
-        pub const SBSIZE: libc::c_int = -1;
-        pub const NICE: libc::c_int = -1;
-        pub const RSS: libc::c_int = -1;
-        pub const SWAP: libc::c_int = -1;
-        pub const KQUEUES: libc::c_int = -1;
-        pub const NPTS: libc::c_int = -1;
-        pub const NTHR: libc::c_int = -1;
-    }
-    #[cfg(any(target_os = "ios", target_os = "macos"))]
-    pub use self::macos::*;
-
-    #[cfg(target_os = "netbsd")]
-    pub mod netbsd {
-        use libc;
-
-        pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
-        pub const RSS: libc::c_int = libc::RLIMIT_RSS;
-        pub const NTHR: libc::c_int = libc::RLIMIT_NTHR;
-        pub const AS: libc::c_int = libc::RLIMIT_AS as _;
-
-        pub const KQUEUES: libc::c_int = -1;
-        pub const NPTS: libc::c_int = -1;
-        pub const SWAP: libc::c_int = -1;
-        pub const NICE: libc::c_int = -1;
-        pub const SIGPENDING: libc::c_int = -1;
-        pub const MSGQUEUE: libc::c_int = -1;
-        pub const RTPRIO: libc::c_int = -1;
-        pub const RTTIME: libc::c_int = -1;
-    }
-    #[cfg(target_os = "netbsd")]
-    pub use self::netbsd::*;
-
-    #[cfg(target_os = "openbsd")]
-    pub mod openbsd {
-        use libc;
-
-        pub const RSS: libc::c_int = libc::RLIMIT_RSS;
-
-        pub const SBSIZE: libc::c_int = -1;
-        pub const NTHR: libc::c_int = -1;
-        pub const KQUEUES: libc::c_int = -1;
-        pub const NPTS: libc::c_int = -1;
-        pub const SWAP: libc::c_int = -1;
-        pub const NICE: libc::c_int = -1;
-        pub const SIGPENDING: libc::c_int = -1;
-        pub const MSGQUEUE: libc::c_int = -1;
-        pub const RTPRIO: libc::c_int = -1;
-        pub const RTTIME: libc::c_int = -1;
-        pub const AS: libc::c_int = -1;
-    }
-    #[cfg(target_os = "openbsd")]
-    pub use self::openbsd::*;
-
-    #[cfg(target_os = "dragonfly")]
-    pub mod dragonfly {
-        use libc;
-
-        pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
-        pub const RSS: libc::c_int = libc::RLIMIT_RSS;
-        pub const AS: libc::c_int = libc::RLIMIT_AS;
-
-        pub const SWAP: libc::c_int = -1;
-        pub const KQUEUES: libc::c_int = -1;
-        pub const NPTS: libc::c_int = -1;
-        pub const NICE: libc::c_int = -1;
-        pub const NTHR: libc::c_int = -1;
-        pub const SIGPENDING: libc::c_int = -1;
-        pub const MSGQUEUE: libc::c_int = -1;
-        pub const RTPRIO: libc::c_int = -1;
-        pub const RTTIME: libc::c_int = -1;
-    }
-    #[cfg(target_os = "dragonfly")]
-    pub use self::dragonfly::*;
-
-    #[cfg(target_os = "freebsd")]
-    pub mod freebsd {
-        use libc;
-
-        pub const SBSIZE: libc::c_int = libc::RLIMIT_SBSIZE;
-        pub const RSS: libc::c_int = libc::RLIMIT_RSS;
-        pub const SWAP: libc::c_int = libc::RLIMIT_SWAP;
-        pub const KQUEUES: libc::c_int = libc::RLIMIT_KQUEUES;
-        pub const NPTS: libc::c_int = libc::RLIMIT_NPTS;
-        pub const AS: libc::c_int = libc::RLIMIT_AS;
-
-        pub const NICE: libc::c_int = -1;
-        pub const NTHR: libc::c_int = -1;
-        pub const SIGPENDING: libc::c_int = -1;
-        pub const MSGQUEUE: libc::c_int = -1;
-        pub const RTPRIO: libc::c_int = -1;
-        pub const RTTIME: libc::c_int = -1;
-    }
-    #[cfg(target_os = "freebsd")]
-    pub use self::freebsd::*;
-
-    #[cfg(cygwin)]
-    pub mod cygwin {
-        use libc;
-
-        pub const SIGPENDING: libc::c_int = -1;
-        pub const MSGQUEUE: libc::c_int = -1;
-        pub const RTPRIO: libc::c_int = -1;
-        pub const RTTIME: libc::c_int = -1;
-        pub const RSS: libc::c_int = -1;
-        pub const AS: libc::c_int = libc::RLIMIT_AS as _;
-
-        pub const SBSIZE: libc::c_int = -1;
-        pub const NICE: libc::c_int = -1;
-        pub const SWAP: libc::c_int = -1;
-        pub const KQUEUES: libc::c_int = -1;
-        pub const NPTS: libc::c_int = -1;
-        pub const NTHR: libc::c_int = -1;
-    }
-    #[cfg(cygwin)]
-    pub use self::cygwin::*;
+    define_on!(SIGPENDING, RLIMIT_SIGPENDING; "linux");
+    define_on!(MSGQUEUE, RLIMIT_MSGQUEUE; "linux");
+    define_on!(RTPRIO, RLIMIT_RTPRIO; "linux");
+    define_on!(RTTIME, RLIMIT_RTTIME; "linux");
+    define_on!(RSS, RLIMIT_RSS; "linux", "freebsd", "netbsd", "openbsd", "dragonfly");
+    define_on!(AS, RLIMIT_AS; "linux", "ios", "macos", "cygwin", "freebsd", "netbsd", "dragonfly");
+    define_on!(SBSIZE, RLIMIT_SBSIZE; "freebsd", "netbsd", "dragonfly");
+    define_on!(NICE, RLIMIT_NICE; "linux");
+    define_on!(KQUEUES, RLIMIT_KQUEUES; "freebsd");
+    define_on!(SWAP, RLIMIT_SWAP; "freebsd");
+    define_on!(NPTS, RLIMIT_NPTS; "freebsd");
+    define_on!(NTHR, RLIMIT_NTHR; "netbsd");
 }
 
 /// Calls getrlimit.

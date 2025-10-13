@@ -224,13 +224,41 @@ function fish_config --description "Launch fish's web based configuration"
                         set scope -U
                     end
 
-                    set -l known_colors fish_color_{normal,command,keyword,quote,redirection,\
-                        end,error,param,option,comment,selection,operator,escape,autosuggestion,\
-                        cwd,user,host,host_remote,cancel,search_match} \
-                        fish_pager_color_{progress,background,prefix,completion,description,\
-                        selected_background,selected_prefix,selected_completion,selected_description,\
-                        secondary_background,secondary_prefix,secondary_completion,secondary_description}
-
+                    set -l known_colors (printf %s "\
+fish_color_normal
+fish_color_command
+fish_color_keyword
+fish_color_quote
+fish_color_redirection
+fish_color_end
+fish_color_error
+fish_color_param
+fish_color_option
+fish_color_comment
+fish_color_selection
+fish_color_operator
+fish_color_escape
+fish_color_autosuggestion
+fish_color_cwd
+fish_color_user
+fish_color_host
+fish_color_host_remote
+fish_color_cancel
+fish_color_search_match
+fish_pager_color_progress
+fish_pager_color_background
+fish_pager_color_prefix
+fish_pager_color_completion
+fish_pager_color_description
+fish_pager_color_selected_background
+fish_pager_color_selected_prefix
+fish_pager_color_selected_completion
+fish_pager_color_selected_description
+fish_pager_color_secondary_background
+fish_pager_color_secondary_prefix
+fish_pager_color_secondary_completion
+fish_pager_color_secondary_description
+")
                     if not set -q argv[1]
                         # We're persisting whatever current colors are loaded (maybe in the global scope)
                         # to the universal scope, without overriding them from a theme file.

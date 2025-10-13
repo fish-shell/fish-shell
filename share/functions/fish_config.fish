@@ -231,63 +231,7 @@ function fish_config --description "Launch fish's web based configuration"
                         selected_background,selected_prefix,selected_completion,selected_description,\
                         secondary_background,secondary_prefix,secondary_completion,secondary_description}
 
-                    # If we are choosing a theme or saving from a named theme, load the theme now.
-                    # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
-                    if set -q argv[1]
-                        set -l files $dirs/$argv[1].theme
-                        set -l file
-
-                        for f in $files
-                            if test -e "$f"
-                                set file $f
-                                break
-                            end
-                        end
-
-                        if not set -q file[1]
-                            if status list-files tools/web_config/themes/$argv[1].theme &>/dev/null
-                                set file tools/web_config/themes/$argv[1].theme
-                            else
-                                echo "No such theme: $argv[1]" >&2
-                                echo "Searched directories: $dirs" >&2
-                                return 1
-                            end
-                        end
-
-                        set -l content
-                        if string match -qr '^tools/' -- $file
-                            set content (status get-file $file)
-                        else
-                            read -z content <$file
-                        end
-
-                        printf %s\n $content | while read -lat toks
-                            # The whitelist allows only color variables.
-                            # Not the specific list, but something named *like* a color variable.
-                            # This also takes care of empty lines and comment lines.
-                            string match -rq -- $theme_var_filter $toks[1]
-                            or continue
-
-                            # If we're supposed to set universally, remove any shadowing globals
-                            # so the change takes effect immediately (and there's no warning).
-                            if test x"$scope" = x-U; and set -qg $toks[1]
-                                set -eg $toks[1]
-                            end
-                            set $scope $toks
-                            set -a have_colors $toks[1]
-                        end
-
-                        # Set all colors that aren't mentioned to empty
-                        for c in $known_colors
-                            contains -- $c $have_colors
-                            and continue
-
-                            # Erase conflicting global variables so we don't get a warning and
-                            # so changes are observed immediately.
-                            set -eg $c
-                            set $scope $c
-                        end
-                    else
+                    if not set -q argv[1]
                         # We're persisting whatever current colors are loaded (maybe in the global scope)
                         # to the universal scope, without overriding them from a theme file.
                         # Like above, make sure to erase from other scopes first and ensure known color
@@ -302,10 +246,65 @@ function fish_config --description "Launch fish's web based configuration"
                                 set -U $color $value
                             end
                         end
+                        return 0
                     end
 
-                    # If we've made it this far, we've either found a theme file or persisted the current
-                    # state (if any). In all cases we haven't failed, so return 0.
+                    # If we are choosing a theme or saving from a named theme, load the theme now.
+                    # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
+                    set -l files $dirs/$argv[1].theme
+                    set -l file
+
+                    for f in $files
+                        if test -e "$f"
+                            set file $f
+                            break
+                        end
+                    end
+
+                    if not set -q file[1]
+                        if status list-files tools/web_config/themes/$argv[1].theme &>/dev/null
+                            set file tools/web_config/themes/$argv[1].theme
+                        else
+                            echo "No such theme: $argv[1]" >&2
+                            echo "Searched directories: $dirs" >&2
+                            return 1
+                        end
+                    end
+
+                    set -l content
+                    if string match -qr '^tools/' -- $file
+                        set content (status get-file $file)
+                    else
+                        read -z content <$file
+                    end
+
+                    printf %s\n $content | while read -lat toks
+                        # The whitelist allows only color variables.
+                        # Not the specific list, but something named *like* a color variable.
+                        # This also takes care of empty lines and comment lines.
+                        string match -rq -- $theme_var_filter $toks[1]
+                        or continue
+
+                        # If we're supposed to set universally, remove any shadowing globals
+                        # so the change takes effect immediately (and there's no warning).
+                        if test x"$scope" = x-U; and set -qg $toks[1]
+                            set -eg $toks[1]
+                        end
+                        set $scope $toks
+                        set -a have_colors $toks[1]
+                    end
+
+                    # Set all colors that aren't mentioned to empty
+                    for c in $known_colors
+                        contains -- $c $have_colors
+                        and continue
+
+                        # Erase conflicting global variables so we don't get a warning and
+                        # so changes are observed immediately.
+                        set -eg $c
+                        set $scope $c
+                    end
+
                     return 0
                 case dump
                     # Write the current theme in .theme format, to stdout.

@@ -692,17 +692,35 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
             }
         }
     }
-    #[cfg(not(any(target_os = "linux", cygwin)))]
+
+    // NetBSD doesn't have statfs, but MNT_LOCAL works for statvfs.
+    #[cfg(target_os = "netbsd")]
     {
         let mut buf = MaybeUninit::uninit();
         if unsafe { libc::statvfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
             return DirRemoteness::unknown;
         }
         let buf = unsafe { buf.assume_init() };
-        // statfs::f_flag is hard-coded as 64-bits on 32/64-bit FreeBSD but it's a (4-byte)
-        // long on 32-bit NetBSD.. and always 4-bytes on macOS (even on 64-bit builds).
         #[allow(clippy::useless_conversion)]
         let flags = buf.f_flag as u64;
+        #[allow(clippy::unnecessary_cast)]
+        if flags & (libc::MNT_LOCAL as u64) != 0 {
+            DirRemoteness::local
+        } else {
+            DirRemoteness::remote
+        }
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "netbsd", cygwin)))]
+    {
+        let mut buf = MaybeUninit::uninit();
+        if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
+            return DirRemoteness::unknown;
+        }
+        let buf = unsafe { buf.assume_init() };
+        // statfs::f_flags types differ.
+        #[allow(clippy::useless_conversion)]
+        let flags = buf.f_flags as u64;
         #[allow(clippy::unnecessary_cast)]
         if flags & (libc::MNT_LOCAL as u64) != 0 {
             DirRemoteness::local

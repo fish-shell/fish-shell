@@ -476,17 +476,13 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             {
                 let arg = crate::common::wcs2string(args[0]);
                 let arg = std::str::from_utf8(&arg).unwrap();
-                if let Some(emfile) = crate::autoload::Asset::get(arg) {
-                    let src = str2wcstring(&emfile.data);
-                    streams.out.append(src);
-                    return Ok(SUCCESS);
-                } else if let Some(emfile) = Docs::get(arg) {
-                    let src = str2wcstring(&emfile.data);
-                    streams.out.append(src);
-                    return Ok(SUCCESS);
-                } else {
+                let Some(emfile) = crate::autoload::Asset::get(arg).or_else(|| Docs::get(arg))
+                else {
                     return Err(STATUS_CMD_ERROR);
-                }
+                };
+                let src = str2wcstring(&emfile.data);
+                streams.out.append(src);
+                return Ok(SUCCESS);
             }
             #[cfg(not(feature = "embed-data"))]
             {
@@ -512,17 +508,10 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 let mut have_file = false;
                 let arg = crate::common::wcs2string(args.get(0).unwrap_or(&L!("")));
                 let arg = std::str::from_utf8(&arg).unwrap();
-                for file in crate::autoload::Asset::iter() {
-                    if arg.is_empty() || file.starts_with(arg) {
+                for path in crate::autoload::Asset::iter().chain(Docs::iter()) {
+                    if arg.is_empty() || path.starts_with(arg) {
                         have_file = true;
-                        let src = str2wcstring(file.as_bytes());
-                        streams.out.appendln(src);
-                    }
-                }
-                for file in Docs::iter() {
-                    if arg.is_empty() || file.starts_with(arg) {
-                        have_file = true;
-                        let src = str2wcstring(file.as_bytes());
+                        let src = str2wcstring(path.as_bytes());
                         streams.out.appendln(src);
                     }
                 }

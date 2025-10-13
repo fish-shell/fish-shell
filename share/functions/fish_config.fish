@@ -124,7 +124,7 @@ function fish_config --description "Launch fish's web based configuration"
                             echo "No such prompt: '$argv[1]'" >&2
                             return 1
                         end
-                        __fish_data_with_file $prompt_path __fish_config_prompt_save
+                        __fish_data_with_file $prompt_path __fish_config_prompt_choose
                     end
 
                     funcsave fish_prompt
@@ -353,15 +353,6 @@ function __fish_config_matching
 end
 
 function __fish_config_prompt_choose
-    if functions -q fish_right_prompt
-        # Unfortunately this disables autoloading for
-        # the rest of this session.
-        functions --erase fish_right_prompt
-    end
-    source $argv[1] # N.B We're passed either stdin or argv.
-end
-
-function __fish_config_prompt_save
     # Set the functions to empty so we empty the file
     # if necessary.
     function fish_prompt

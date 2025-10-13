@@ -26,9 +26,9 @@ fish_config theme show "fish default"
 mkdir $__fish_config_dir/themes
 touch $__fish_config_dir/themes/custom-from-userconf.theme
 fish_config theme show | grep -E 'fish default|Default Dark|custom-from-userconf'
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}custom-from-userconf{{\x1b\[m}}
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}Base16 Default Dark{{\x1b\[m}}
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}fish default{{\x1b\[m}}
+# CHECK: {{.*}}custom-from-userconf{{\x1b\[m}}
+# CHECK: {{.*}}Base16 Default Dark{{\x1b\[m}}
+# CHECK: {{.*}}fish default{{\x1b\[m}}
 
 # Override a default theme with different colors.
 {

@@ -37,7 +37,9 @@ grep '\S' $__fish_config_dir/functions/{fish_prompt,fish_right_prompt,fish_mode_
 # CHECK: {{.*}}/functions/fish_right_prompt.fish:function fish_right_prompt
 # CHECK: {{.*}}/functions/fish_right_prompt.fish:        echo right-prompt
 # CHECK: {{.*}}/functions/fish_right_prompt.fish:end
-# CHECKERR: grep: {{.*}}/fish/functions/fish_mode_prompt.fish: No such file or directory
+# CHECK: {{.*}}/functions/fish_mode_prompt.fish:function fish_mode_prompt
+# CHECK: {{.*}}/functions/fish_mode_prompt.fish:        echo mode-prompt
+# CHECK: {{.*}}/functions/fish_mode_prompt.fish:end
 
 echo yes | fish_config prompt save nim >/dev/null
 grep -q nim@Hattori $__fish_config_dir/functions/fish_prompt.fish ||
@@ -45,7 +47,8 @@ echo 'failed to save prompt?'
 cat $__fish_config_dir/functions/fish_right_prompt.fish
 # CHECKERR: cat: {{.*}}/functions/fish_right_prompt.fish: No such file or directory
 cat $__fish_config_dir/functions/fish_mode_prompt.fish
-# CHECKERR: cat: {{.*}}/functions/fish_mode_prompt.fish: No such file or directory
+# CHECK: function fish_mode_prompt
+# CHECK: end
 
 fish_config prompt choose nim
 type fish_prompt fish_right_prompt fish_mode_prompt |
@@ -58,7 +61,7 @@ type fish_prompt fish_right_prompt fish_mode_prompt |
 # CHECK: --
 # CHECKERR: type: Could not find 'fish_right_prompt'
 # CHECK: function fish_mode_prompt
-# CHECK: echo mode-prompt
+# CHECK:
 
 fish_config prompt choose disco
 type fish_prompt fish_right_prompt fish_mode_prompt |
@@ -72,8 +75,8 @@ grep -EA1 '^function.*|.*cksum$'
 # CHECK: function fish_right_prompt
 # CHECK: set -g __fish_git_prompt_showdirtystate 1
 # CHECK: --
-# CHECK: function fish_mode_prompt
-# CHECK: echo mode-prompt
+# CHECK: function fish_mode_prompt {{.*}}
+# CHECK:     # {{.*}}
 
 fish_config prompt choose default
 type fish_prompt fish_right_prompt fish_mode_prompt |
@@ -82,8 +85,8 @@ type fish_prompt fish_right_prompt fish_mode_prompt |
 # CHECK: set -l last_pipestatus $pipestatus
 # CHECKERR: type: Could not find 'fish_right_prompt'
 # CHECK: --
-# CHECK: function fish_mode_prompt
-# CHECK: echo mode-prompt
+# CHECK: function fish_mode_prompt {{.*}}
+# CHECK:     # {{.*}}
 
 # This still demos the current theme.
 fish_config theme show non-existent-theme

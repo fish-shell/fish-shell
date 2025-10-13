@@ -101,7 +101,11 @@ function fish_config --description "Launch fish's web based configuration"
                         echo "No such prompt: '$argv[1]'" >&2
                         return 1
                     end
-                    __fish_data_with_file $prompt_path __fish_config_prompt_choose
+                    __fish_config_prompt_reset
+                    __fish_data_with_file $prompt_path source
+                    if not functions -q fish_mode_prompt
+                        __fish_data_with_file functions/fish_mode_prompt.fish source
+                    end
                 case save
                     if begin
                             read -P"Overwrite prompt? [y/N]" -l yesno
@@ -113,7 +117,7 @@ function fish_config --description "Launch fish's web based configuration"
                     echo Overwriting
                     # Skip the cp if unnecessary,
                     # or we'd throw an error on a stock fish.
-                    for function in fish_prompt fish_right_prompt
+                    for function in fish_prompt fish_right_prompt fish_mode_prompt
                         path is $__fish_config_dir/functions/$function.fish
                         and cp $__fish_config_dir/functions/$function.fish{,.bak}
                     end
@@ -124,16 +128,22 @@ function fish_config --description "Launch fish's web based configuration"
                             echo "No such prompt: '$argv[1]'" >&2
                             return 1
                         end
-                        __fish_data_with_file $prompt_path __fish_config_prompt_choose
+                        __fish_config_prompt_reset
+                        __fish_data_with_file $prompt_path source
                     end
 
                     funcsave fish_prompt
                     or return
 
-                    if functions -q fish_right_prompt
-                        funcsave fish_right_prompt
-                    else
-                        rm -f $__fish_config_dir/functions/fish_right_prompt.fish
+                    for func in fish_right_prompt fish_mode_prompt
+                        if functions -q $func
+                            funcsave $func
+                        else
+                            rm -f $__fish_config_dir/functions/$func.fish
+                        end
+                    end
+                    if not functions -q fish_mode_prompt
+                        __fish_data_with_file functions/fish_mode_prompt.fish source
                     end
                     return
             end
@@ -366,13 +376,14 @@ function __fish_config_matching
     string join \n $paths
 end
 
-function __fish_config_prompt_choose
+function __fish_config_prompt_reset
     # Set the functions to empty so we empty the file
     # if necessary.
     function fish_prompt
     end
-    if functions -q fish_right_prompt
-        functions --erase fish_right_prompt
+    for func in fish_right_prompt fish_mode_prompt
+        if functions -q $func
+            functions --erase $func
+        end
     end
-    source $argv[1] # N.B We're passed either stdin or argv.
 end

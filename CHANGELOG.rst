@@ -1,6 +1,26 @@
 fish ?.?.? (released ???)
 =========================
 
+Notable improvements and fixes
+------------------------------
+
+Deprecations and removed features
+---------------------------------
+
+Interactive improvements
+------------------------
+- :doc:`fish_config prompt {choose,save} <cmds/fish_config>` have been taught to reset :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` in addition to the other prompt functions (:issue:`11937`).
+
+Scripting improvements
+----------------------
+
+Other improvements
+------------------
+
+For distributors
+----------------
+
+
 fish 4.1.3 (released ???)
 =========================
 

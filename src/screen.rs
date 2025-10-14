@@ -1033,8 +1033,8 @@ impl Screen {
         allow_soft_wrap()
             && self.desired.line(i).is_soft_wrapped
             && i + 1 < self.desired.line_count()
-            && !(i + 1 < self.actual.line_count()
-                && line_shared_prefix(self.actual.line(i + 1), self.desired.line(i + 1)) > 0)
+            && (i + 1 >= self.actual.line_count()
+                || line_shared_prefix(self.actual.line(i + 1), self.desired.line(i + 1)) == 0)
     }
 
     fn with_buffered_output(&mut self, f: impl FnOnce(&mut Self)) {
@@ -1063,7 +1063,7 @@ impl Screen {
 
         // Determine size of left and right prompt. Note these have already been truncated.
         let left_prompt_layout = cached_layouts.calc_prompt_layout(left_prompt, None, usize::MAX);
-        let left_prompt_width = left_prompt_layout.last_line_width;
+        let prompt_last_line_width = left_prompt_layout.last_line_width;
         let right_prompt_width = cached_layouts
             .calc_prompt_layout(right_prompt, None, usize::MAX)
             .last_line_width;
@@ -1107,41 +1107,40 @@ impl Screen {
             self.write_command(ClearToEndOfLine);
             self.actual_left_prompt = None;
             self.actual.cursor.x = 0;
-        } else if self
-            .actual_left_prompt
-            .as_ref()
-            .is_none_or(|p| p != left_prompt)
-            || (self.scrolled && is_final_rendering)
-            || Some(left_prompt_width) == screen_width && self.should_wrap(0)
-        {
-            self.r#move(0, 0);
-            let mut start = 0;
-            let mark_prompt_start = |zelf: &mut Screen| zelf.write_command(Osc133PromptStart);
-            if left_prompt_layout.line_starts.len() <= 1 {
-                mark_prompt_start(self);
-            }
-            if self
+        } else {
+            let prompt_changed = self
                 .actual_left_prompt
                 .as_ref()
                 .is_none_or(|p| p != left_prompt)
-                || (self.scrolled && is_final_rendering)
-            {
-                for (i, &next_line) in left_prompt_layout.line_starts[1..].iter().enumerate() {
-                    self.write_command(ClearToEndOfLine);
-                    if i == 0 {
-                        mark_prompt_start(self);
-                    }
-                    self.write_str(&left_prompt[start..next_line]);
-                    start = next_line;
+                || (self.scrolled && is_final_rendering);
+
+            let prompt_last_line_should_wrap =
+                Some(prompt_last_line_width) == screen_width && self.should_wrap(0);
+
+            if prompt_changed || prompt_last_line_should_wrap {
+                self.r#move(0, 0);
+                let mut start = 0;
+                if left_prompt_layout.line_starts.len() <= 1 {
+                    self.write_command(Osc133PromptStart);
                 }
-            } else {
-                start = *left_prompt_layout.line_starts.last().unwrap();
-            }
-            self.write_str(&left_prompt[start..]);
-            self.actual_left_prompt = Some(left_prompt.to_owned());
-            self.actual.cursor.x = left_prompt_width;
-            if Some(left_prompt_width) == screen_width && self.should_wrap(0) {
-                self.soft_wrap_location = Some(Cursor { x: 0, y: 1 });
+                if prompt_changed {
+                    for (i, &next_line) in left_prompt_layout.line_starts[1..].iter().enumerate() {
+                        self.write_command(ClearToEndOfLine);
+                        if i == 0 {
+                            self.write_command(Osc133PromptStart);
+                        }
+                        self.write_str(&left_prompt[start..next_line]);
+                        start = next_line;
+                    }
+                } else {
+                    start = *left_prompt_layout.line_starts.last().unwrap();
+                }
+                self.write_str(&left_prompt[start..]);
+                self.actual_left_prompt = Some(left_prompt.to_owned());
+                self.actual.cursor.x = prompt_last_line_width;
+                if prompt_last_line_should_wrap {
+                    self.soft_wrap_location = Some(Cursor { x: 0, y: 1 });
+                }
             }
         }
 
@@ -1155,8 +1154,12 @@ impl Screen {
         // Output all lines.
         for i in 0..self.desired.line_count() {
             self.actual.create_line(i);
-            let is_first_line = i == 0 && !self.scrolled;
-            let start_pos = if is_first_line { left_prompt_width } else { 0 };
+            let is_prompt_line = i == 0 && !self.scrolled;
+            let start_pos = if is_prompt_line {
+                prompt_last_line_width
+            } else {
+                0
+            };
             let mut current_width = 0;
             let mut has_cleared_line = false;
 
@@ -1211,8 +1214,8 @@ impl Screen {
                 // If we're soft wrapped, and if we're going to change the first character of the next
                 // line, don't skip over the last two characters so that we maintain soft-wrapping.
                 skip_remaining = skip_remaining.min(screen_width.unwrap() - 2);
-                if is_first_line {
-                    skip_remaining = skip_remaining.max(left_prompt_width);
+                if is_prompt_line {
+                    skip_remaining = skip_remaining.max(prompt_last_line_width);
                 }
             }
 
@@ -1290,7 +1293,7 @@ impl Screen {
             }
 
             // Output any rprompt if this is the first line.
-            if is_first_line && right_prompt_width > 0 {
+            if is_prompt_line && right_prompt_width > 0 {
                 // Move the cursor to the beginning of the line first to be independent of the width.
                 // This helps prevent staircase effects if fish and the terminal disagree.
                 self.r#move(0, 0);

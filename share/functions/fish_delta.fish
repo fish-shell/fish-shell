@@ -111,7 +111,7 @@ function fish_delta
             for file in $files
                 set -l bn (path basename -- $file)
                 set -l def (path filter -rf -- $default_var/$bn)[1]
-                or set -l def (set -q dir[1] && status get-file $dir/$bn >/dev/null && echo embedded)
+                or set -l def (set -q dir[1] && status get-file $dir/$bn &>/dev/null && echo embedded)
                 or begin
                     if test $all_changed = 0
                         set -ql _flag_n

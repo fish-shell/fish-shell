@@ -6,6 +6,76 @@ fish_config prompt show default
 # CHECK: {{\x1b\[4m}}default{{\x1b\[m}}
 # CHECK: {{.*}}@{{.*}}>{{.*}}
 
+function set-all-the-prompts
+    function fish_prompt
+        echo left-prompt
+    end
+    function fish_right_prompt
+        echo right-prompt
+    end
+    function fish_mode_prompt
+        echo mode-prompt
+    end
+end
+
+set-all-the-prompts
+echo yes | fish_config prompt save >/dev/null
+grep '\S' $__fish_config_dir/functions/{fish_prompt,fish_right_prompt,fish_mode_prompt}.fish
+# CHECK: {{.*}}/functions/fish_prompt.fish:function fish_prompt
+# CHECK: {{.*}}/functions/fish_prompt.fish:        echo left-prompt
+# CHECK: {{.*}}/functions/fish_prompt.fish:end
+# CHECK: {{.*}}/functions/fish_right_prompt.fish:function fish_right_prompt
+# CHECK: {{.*}}/functions/fish_right_prompt.fish:        echo right-prompt
+# CHECK: {{.*}}/functions/fish_right_prompt.fish:end
+# CHECKERR: grep: {{.*}}/fish/functions/fish_mode_prompt.fish: No such file or directory
+
+echo yes | fish_config prompt save nim >/dev/null
+grep -q nim@Hattori $__fish_config_dir/functions/fish_prompt.fish ||
+echo 'failed to save prompt?'
+grep -E 'function|end' $__fish_config_dir/functions/fish_right_prompt.fish
+# CHECK: function fish_right_prompt
+# CHECK: end
+cat $__fish_config_dir/functions/fish_mode_prompt.fish
+# CHECKERR: cat: {{.*}}/functions/fish_mode_prompt.fish: No such file or directory
+
+fish_config prompt choose nim
+type fish_prompt fish_right_prompt fish_mode_prompt |
+    grep -EA1 '^function.*|.*\[nim@Hattori:~\].*'
+# CHECK: function fish_prompt
+# CHECK: # This prompt shows:
+# CHECK: --
+# CHECK: # ┬─[nim@Hattori:~]─[11:39:00]
+# CHECK: # ╰─>$ echo here
+# CHECK: --
+# CHECKERR: type: Could not find 'fish_right_prompt'
+# CHECK: function fish_mode_prompt
+# CHECK: echo mode-prompt
+
+fish_config prompt choose disco
+type fish_prompt fish_right_prompt fish_mode_prompt |
+grep -EA1 '^function.*|.*cksum$'
+# CHECK: function fish_prompt
+# CHECK: set -l last_status $status
+# CHECK: --
+# CHECK: if command -sq cksum
+# CHECK:     # randomized cwd color
+# CHECK: --
+# CHECK: function fish_right_prompt
+# CHECK: set -g __fish_git_prompt_showdirtystate 1
+# CHECK: --
+# CHECK: function fish_mode_prompt
+# CHECK: echo mode-prompt
+
+fish_config prompt choose default
+type fish_prompt fish_right_prompt fish_mode_prompt |
+    grep '^function' -A1
+# CHECK: function fish_prompt --description 'Write out the prompt'
+# CHECK: set -l last_pipestatus $pipestatus
+# CHECKERR: type: Could not find 'fish_right_prompt'
+# CHECK: --
+# CHECK: function fish_mode_prompt
+# CHECK: echo mode-prompt
+
 # This still demos the current theme.
 fish_config theme show non-existent-theme
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}

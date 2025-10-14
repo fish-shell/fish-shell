@@ -259,11 +259,6 @@ impl Screen {
         }
     }
 
-    /// Return whether the last rendering was so large we could only display part of the command line.
-    pub fn scrolled(&self) -> bool {
-        self.scrolled
-    }
-
     /// This is the main function for the screen output library. It is used to define the desired
     /// contents of the screen. The screen command will use its knowledge of the current contents of
     /// the screen in order to render the desired output using as few terminal commands as possible.
@@ -1107,7 +1102,7 @@ impl Screen {
         }
 
         // Output the left prompt if it has changed.
-        if self.scrolled() && !is_final_rendering {
+        if self.scrolled && !is_final_rendering {
             self.r#move(0, 0);
             self.write_command(ClearToEndOfLine);
             self.actual_left_prompt = None;
@@ -1116,7 +1111,7 @@ impl Screen {
             .actual_left_prompt
             .as_ref()
             .is_none_or(|p| p != left_prompt)
-            || (self.scrolled() && is_final_rendering)
+            || (self.scrolled && is_final_rendering)
             || Some(left_prompt_width) == screen_width && self.should_wrap(0)
         {
             self.r#move(0, 0);
@@ -1129,7 +1124,7 @@ impl Screen {
                 .actual_left_prompt
                 .as_ref()
                 .is_none_or(|p| p != left_prompt)
-                || (self.scrolled() && is_final_rendering)
+                || (self.scrolled && is_final_rendering)
             {
                 for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
                     self.write_command(ClearToEndOfLine);
@@ -1160,7 +1155,7 @@ impl Screen {
         // Output all lines.
         for i in 0..self.desired.line_count() {
             self.actual.create_line(i);
-            let is_first_line = i == 0 && !self.scrolled();
+            let is_first_line = i == 0 && !self.scrolled;
             let start_pos = if is_first_line { left_prompt_width } else { 0 };
             let mut current_width = 0;
             let mut has_cleared_line = false;
@@ -1176,7 +1171,7 @@ impl Screen {
             // Note that skip_remaining is a width, not a character count.
             let mut skip_remaining = start_pos;
 
-            let shared_prefix = if self.scrolled() {
+            let shared_prefix = if self.scrolled {
                 0
             } else {
                 line_shared_prefix(o_line(self, i), s_line(self, i))

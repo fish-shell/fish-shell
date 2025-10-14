@@ -137,3 +137,46 @@ fish_config theme show | grep -E 'fish default|Base16 Default Dark' -A1
 # CHECK: --
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Base16 Default Dark{{\x1b\[m}}
 # CHECK: {{.*}}/bright/vixens{{.*}}
+
+function print-sample-colors
+    echo "normal=$fish_color_normal"
+    echo "autosuggestion=$fish_color_autosuggestion"
+end
+echo >$__fish_config_dir/themes/custom-from-userconf.theme \
+"fish_color_normal yellow"
+
+{
+    # Since we're noninteractive, we have not loaded a theme yet.
+    print-sample-colors
+    # CHECK: normal=
+    # CHECK: autosuggestion=
+
+    fish_config theme choose custom-from-userconf
+    print-sample-colors
+    # CHECK: normal=yellow
+    # CHECK: autosuggestion=
+    set -S fish_color_normal
+    # CHECK: $fish_color_normal: set in global scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal[1]: |yellow|
+
+    echo yes | fish_config theme save
+    set -S fish_color_normal
+    # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal[1]: |yellow|
+
+    fish_config theme choose 'fish default'
+    print-sample-colors
+    # CHECK: normal=normal
+    # CHECK: autosuggestion=brblack
+
+    set -S fish_color_normal
+    # CHECK: $fish_color_normal: set in global scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal[1]: |normal|
+    # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal[1]: |yellow|
+
+    echo yes | fish_config theme save 'fish default'
+    set -S fish_color_normal
+    # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal[1]: |normal|
+}

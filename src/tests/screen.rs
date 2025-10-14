@@ -80,7 +80,7 @@ fn test_layout_cache() {
             max_line_width: huge,
             trunc_text: input.clone(),
             layout: PromptLayout {
-                line_breaks: vec![],
+                line_starts: vec![],
                 last_line_width: i,
             },
         });
@@ -101,7 +101,7 @@ fn test_layout_cache() {
         max_line_width: huge,
         trunc_text: "whatever".into(),
         layout: PromptLayout {
-            line_breaks: vec![],
+            line_starts: vec![],
             last_line_width: 100,
         },
     });
@@ -127,7 +127,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
+            line_starts: vec![0],
             last_line_width: 4,
         }
     );
@@ -147,7 +147,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![16, 23, 40],
+            line_starts: vec![0, 17, 24, 41],
             last_line_width: 3,
         }
     );
@@ -157,7 +157,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
+            line_starts: vec![0],
             last_line_width: 8,
         },
     );
@@ -177,7 +177,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![8, 15, 24],
+            line_starts: vec![0, 9, 16, 25],
             last_line_width: 3,
         },
     );
@@ -203,7 +203,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
+            line_starts: vec![0],
             last_line_width: 4,
         },
     );
@@ -218,7 +218,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
+            line_starts: vec![0],
             last_line_width: 4,
         },
     );
@@ -232,7 +232,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
+            line_starts: vec![0],
             last_line_width: 1,
         },
     );

@@ -1119,7 +1119,7 @@ impl Screen {
             self.r#move(0, 0);
             let mut start = 0;
             let mark_prompt_start = |zelf: &mut Screen| zelf.write_command(Osc133PromptStart);
-            if left_prompt_layout.line_breaks.is_empty() {
+            if left_prompt_layout.line_starts.len() <= 1 {
                 mark_prompt_start(self);
             }
             if self
@@ -1128,16 +1128,16 @@ impl Screen {
                 .is_none_or(|p| p != left_prompt)
                 || (self.scrolled && is_final_rendering)
             {
-                for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
+                for (i, &next_line) in left_prompt_layout.line_starts[1..].iter().enumerate() {
                     self.write_command(ClearToEndOfLine);
                     if i == 0 {
                         mark_prompt_start(self);
                     }
-                    self.write_str(&left_prompt[start..=line_break]);
-                    start = line_break + 1;
+                    self.write_str(&left_prompt[start..next_line]);
+                    start = next_line;
                 }
             } else {
-                start = left_prompt_layout.line_breaks.last().map_or(0, |lb| lb + 1);
+                start = *left_prompt_layout.line_starts.last().unwrap();
             }
             self.write_str(&left_prompt[start..]);
             self.actual_left_prompt = Some(left_prompt.to_owned());
@@ -1361,9 +1361,9 @@ pub fn screen_force_clear_to_end() {
 /// Information about the layout of a prompt.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct PromptLayout {
-    /// line breaks when rendering the prompt
-    pub line_breaks: Vec<usize>,
-    /// width of the last line
+    /// Start offsets for each line in the truncated prompt.
+    pub line_starts: Vec<usize>,
+    /// Width of the last line.
     pub last_line_width: usize,
 }
 
@@ -1472,6 +1472,7 @@ impl LayoutCache {
         }
 
         let mut layout = PromptLayout::default();
+        layout.line_starts.push(0);
         let mut trunc_prompt = WString::new();
 
         let mut run_start = 0;
@@ -1492,7 +1493,7 @@ impl LayoutCache {
             let endc = prompt_str.char_at(run_end);
             if endc != '\0' {
                 if endc == '\n' || endc == '\x0C' {
-                    layout.line_breaks.push(trunc_prompt.len());
+                    layout.line_starts.push(trunc_prompt.len() + 1);
                     // If the prompt ends in a new line, that's one empty last line.
                     if run_end == prompt_str.len() - 1 {
                         layout.last_line_width = 0;
@@ -1859,9 +1860,8 @@ fn calc_prompt_lines(prompt: &wstr) -> usize {
             .lock()
             .unwrap()
             .calc_prompt_layout(prompt, None, usize::MAX)
-            .line_breaks
-            .len()
-            + 1;
+            .line_starts
+            .len();
     }
     result
 }

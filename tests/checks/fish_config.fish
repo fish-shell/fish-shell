@@ -52,8 +52,8 @@ grep '\S' $__fish_config_dir/functions/{fish_prompt,fish_right_prompt,fish_mode_
 echo yes | fish_config prompt save nim >/dev/null
 grep -q nim@Hattori $__fish_config_dir/functions/fish_prompt.fish ||
 echo 'failed to save prompt?'
-cat $__fish_config_dir/functions/fish_right_prompt.fish
-# CHECKERR: cat: {{.*}}/functions/fish_right_prompt.fish: No such file or directory
+not path is $__fish_config_dir/functions/fish_right_prompt.fish
+or echo "fish_right_prompt.fish ought to be deleted"
 cat $__fish_config_dir/functions/fish_mode_prompt.fish
 # CHECK: function fish_mode_prompt
 # CHECK: end

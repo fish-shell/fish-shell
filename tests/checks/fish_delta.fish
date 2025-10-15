@@ -5,7 +5,8 @@ for path in fish_greeting fish_job_summary
     __fish_data_with_file functions/$path.fish \
         cat >$__fish_config_dir/functions/$path.fish
 end
-sed -i 's/$/ # Modified/' $__fish_config_dir/functions/fish_greeting.fish
+set -l tmp (sed 's/$/ # Modified/' $__fish_config_dir/functions/fish_greeting.fish)
+string join -- \n $tmp >$__fish_config_dir/functions/fish_greeting.fish
 
 fish_delta --no-diff --new |
     string match -r '.*\b(?:delta-test|fish_greeting|fish_job_summary)\b.*'

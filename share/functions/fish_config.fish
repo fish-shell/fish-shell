@@ -285,8 +285,12 @@ fish_pager_color_secondary_description
                     # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
                     set -l theme_path (__fish_config_list_themes $argv[1])[1]
                     if not set -q theme_path[1]
-                        echo "No such theme: $argv[1]" >&2
-                        echo "Searched directories:" (__fish_config_theme_dirs) >&2
+                        echo >&2 "No such theme: $argv[1]"
+                        echo >&2 Searched (__fish_config_theme_dirs) (
+                            if not set -q __fish_data_dir[1]
+                                echo "and `status list-files tools/web_config/themes`"
+                            end
+                        )
                         return 1
                     end
 

@@ -88,8 +88,12 @@ type fish_prompt fish_right_prompt fish_mode_prompt |
 # CHECK: function fish_mode_prompt {{.*}}
 # CHECK:     # {{.*}}
 
+fish_config theme choose non-existent-theme1
+# CHECKERR: No such theme: non-existent-theme1
+# CHECKERR: Searched {{/\S* (/\S*|and `status list-files tools/web_config/themes`)}}
+
 # This still demos the current theme.
-fish_config theme show non-existent-theme
+fish_config theme show non-existent-theme2
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}
 # CHECK: /bright/vixens{{\x1b\[m}} jump{{\x1b\[m}} |{{\x1b\[m}} "fowl"{{\x1b\[m}} > quack{{\x1b\[m}} &{{\x1b\[m}} # This is a comment
 # CHECK: {{\x1b\[m}}echo{{\x1b\[m}} 'Errors are the portal to discovery

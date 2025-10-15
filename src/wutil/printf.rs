@@ -51,8 +51,6 @@ pub use {eprintf, fprintf, printf, sprintf};
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     // Test basic sprintf with both literals and wide strings.
     #[test]
     fn test_sprintf() {

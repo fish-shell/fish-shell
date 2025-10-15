@@ -11,7 +11,7 @@ use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use crate::wutil::wgettext;
 use crate::{
     wchar::{wstr, WString, L},
-    wutil::{fish_wcstoi, sprintf, wgettext_fmt},
+    wutil::{fish_wcstoi, wgettext_fmt},
 };
 use std::num::NonZeroU32;
 

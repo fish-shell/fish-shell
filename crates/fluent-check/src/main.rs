@@ -26,23 +26,35 @@ fn main() {
 }
 
 fn extract_fluent_ids() -> HashSet<String> {
-    let mut tempfile = fish_tempfile::new().unwrap();
-    Command::new("cargo")
-        .args([
-            "check",
-            "--features=fluent-extract",
-            "--workspace",
-            "--all-targets",
-        ])
-        .env("FISH_FLUENT_ID_FILE", tempfile.get_path().as_os_str())
-        .status()
-        .map_err(|e| format!("Failed to extract Fluent IDs: {e}"))
-        .unwrap();
     let mut id_file_content = String::new();
-    tempfile
-        .get_mut()
-        .read_to_string(&mut id_file_content)
-        .unwrap();
+    match std::env::var("FISH_FLUENT_ID_FILE") {
+        Ok(file_path) => {
+            File::open(&file_path)
+                .unwrap_or_else(|_| {
+                    panic!("Failed to open file '{file_path}' (passed via FISH_FLUENT_ID_FILE)")
+                })
+                .read_to_string(&mut id_file_content)
+                .unwrap();
+        }
+        Err(_) => {
+            let mut tempfile = fish_tempfile::new().unwrap();
+            Command::new("cargo")
+                .args([
+                    "check",
+                    "--features=fluent-extract",
+                    "--workspace",
+                    "--all-targets",
+                ])
+                .env("FISH_FLUENT_ID_FILE", tempfile.get_path().as_os_str())
+                .status()
+                .map_err(|e| format!("Failed to extract Fluent IDs: {e}"))
+                .unwrap();
+            tempfile
+                .get_mut()
+                .read_to_string(&mut id_file_content)
+                .unwrap();
+        }
+    };
     HashSet::from_iter(id_file_content.lines().map(|line| line.to_string()))
 }
 
@@ -153,5 +165,15 @@ fn check_for_unsorted_args(
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check() {
+        main();
     }
 }

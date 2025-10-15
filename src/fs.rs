@@ -115,7 +115,7 @@ impl LockingMode {
             Self::Exclusive(WriteMethod::Append) => {
                 OFlag::O_WRONLY | OFlag::O_APPEND | OFlag::O_CREAT
             }
-            Self::Exclusive(WriteMethod::RenameIntoPlace) => OFlag::O_RDONLY | OFlag::O_CREAT,
+            Self::Exclusive(WriteMethod::RenameIntoPlace) => OFlag::O_RDWR | OFlag::O_CREAT,
         }
     }
 }
@@ -192,6 +192,7 @@ pub fn fsync(file: &File) -> std::io::Result<()> {
             -1 => {
                 let os_error = std::io::Error::last_os_error();
                 if os_error.kind() != std::io::ErrorKind::Interrupted {
+                    FLOGF!(synced_file_access, "fsync failed: %s", os_error);
                     return Err(os_error);
                 }
             }

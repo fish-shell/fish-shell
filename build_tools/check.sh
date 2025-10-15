@@ -38,8 +38,8 @@ cargo() {
 }
 
 cleanup () {
-    if [ -n "$template_file" ] && [ -e "$template_file" ]; then
-        rm "$template_file"
+    if [ -n "$gettext_template_file" ] && [ -e "$gettext_template_file" ]; then
+        rm "$gettext_template_file"
     fi
 }
 
@@ -64,9 +64,9 @@ if [ -n "$FISH_TEST_MAX_CONCURRENCY" ]; then
     export CARGO_BUILD_JOBS="$FISH_TEST_MAX_CONCURRENCY"
 fi
 
-template_file=$(mktemp)
+gettext_template_file=$(mktemp)
 (
-    export FISH_GETTEXT_EXTRACTION_FILE="$template_file"
+    export FISH_GETTEXT_EXTRACTION_FILE="$gettext_template_file"
     cargo build --workspace --all-targets --features=gettext-extract
 )
 if $lint; then
@@ -80,7 +80,7 @@ cargo test --doc --workspace
 if $lint; then
     cargo doc --workspace
 fi
-FISH_GETTEXT_EXTRACTION_FILE=$template_file "$workspace_root/tests/test_driver.py" "$build_dir"
+FISH_GETTEXT_EXTRACTION_FILE=$gettext_template_file "$workspace_root/tests/test_driver.py" "$build_dir"
 
 exit
 }

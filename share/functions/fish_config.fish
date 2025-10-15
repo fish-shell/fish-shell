@@ -294,7 +294,7 @@ fish_pager_color_secondary_description
                         return 1
                     end
 
-                    set -l have_colors
+                    set -l defined_colors
                     __fish_data_with_file $theme_path cat | while read -lat toks
                         # The whitelist allows only color variables.
                         # Not the specific list, but something named *like* a color variable.
@@ -307,12 +307,12 @@ fish_pager_color_secondary_description
                             set -eg $toks[1]
                         end
                         set $scope $toks
-                        set -a have_colors $toks[1]
+                        set -a defined_colors $toks[1]
                     end
 
                     # Set all colors that aren't mentioned to empty
                     for c in $known_colors
-                        contains -- $c $have_colors
+                        contains -- $c $defined_colors
                         and continue
                         # Erase conflicting global variables so we don't get a warning and
                         # so changes are observed immediately.

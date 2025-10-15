@@ -22,6 +22,9 @@ cargo() {
 }
 
 cleanup () {
+    if [ -n "$fluent_id_file" ] && [ -e "$fluent_id_file" ]; then
+        rm "$fluent_id_file"
+    fi
     if [ -n "$gettext_template_file" ] && [ -e "$gettext_template_file" ]; then
         rm "$gettext_template_file"
     fi
@@ -48,10 +51,13 @@ if [ -n "$FISH_TEST_MAX_CONCURRENCY" ]; then
     export CARGO_BUILD_JOBS="$FISH_TEST_MAX_CONCURRENCY"
 fi
 
+fluent_id_file=$(mktemp)
 gettext_template_file=$(mktemp)
 (
     export FISH_GETTEXT_EXTRACTION_FILE="$gettext_template_file"
-    cargo build --workspace --all-targets --features=gettext-extract
+    # shellcheck disable=2030
+    export FISH_FLUENT_ID_FILE="$fluent_id_file"
+    cargo build --workspace --all-targets --features=fluent-extract,gettext-extract
 )
 if $lint; then
     PATH="$build_dir:$PATH" "$workspace_root/build_tools/style.fish" --all --check
@@ -59,7 +65,11 @@ if $lint; then
         cargo clippy --workspace --all-targets $features
     done
 fi
-cargo test --no-default-features --workspace --all-targets
+(
+    # shellcheck disable=2031
+    export FISH_FLUENT_ID_FILE="$fluent_id_file"
+    cargo test --no-default-features --workspace --all-targets
+)
 cargo test --doc --workspace
 if $lint; then
     cargo doc --workspace

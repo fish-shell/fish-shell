@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Notable improvements and fixes
 ------------------------------
 - New Taiwanese Chinese translation.
+- Fixed not properly clearing lines when a :ref:`transient prompt <transient-prompt>` contains more lines than the final prompt (:issue:`11875`).
 
 Deprecations and removed features
 ---------------------------------
@@ -11,6 +12,7 @@ Deprecations and removed features
 Interactive improvements
 ------------------------
 - :doc:`fish_config prompt {choose,save} <cmds/fish_config>` have been taught to reset :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` in addition to the other prompt functions (:issue:`11937`).
+- Fish now hides the portion of a multiline prompt that is scrolled out of view due to a huge command line. This prevents duplicate lines after repainting with partially visible prompt (:issue:`11911`).
 
 Scripting improvements
 ----------------------

@@ -61,3 +61,16 @@ isolated-tmux capture-pane -p
 # CHECK: Hello World
 # CHECK: prompt-line-1
 # CHECK: prompt-line-2>
+
+# Test that transient prompt does not break the prompt.
+isolated-tmux send-keys C-l "set fish_transient_prompt 1" Enter : Enter Enter
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt-line-1
+# CHECK: prompt-line-2> set fish_transient_prompt 1
+# CHECK: prompt-line-1
+# CHECK: prompt-line-2> :
+# CHECK: prompt-line-1
+# CHECK: prompt-line-2>
+# CHECK: prompt-line-1
+# CHECK: prompt-line-2>

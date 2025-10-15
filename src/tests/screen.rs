@@ -277,6 +277,7 @@ fn test_compute_layout() {
                 ScreenLayout {
                     left_prompt: L!($left_prompt).to_owned(),
                     left_prompt_space: $left_prompt_space,
+                    left_prompt_lines: 1,
                     right_prompt: L!($right_prompt).to_owned(),
                     autosuggestion: L!($autosuggestion).to_owned(),
                 }

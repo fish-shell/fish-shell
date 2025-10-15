@@ -664,12 +664,9 @@ mod test {
             // opportunities for rounding loss in the future.
             assert!(result == val || (result.unwrap() - val.unwrap()).abs() < f64::EPSILON);
         }
-        if result.is_ok() {
+        if let Ok(f) = result {
             assert_eq!(consumed, input.chars().count());
-            assert_eq!(
-                result.unwrap().is_sign_positive(),
-                val.unwrap().is_sign_positive()
-            );
+            assert_eq!(f.is_sign_positive(), val.unwrap().is_sign_positive());
         }
     }
 

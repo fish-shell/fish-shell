@@ -1129,6 +1129,11 @@ impl Screen {
                     y: prompt_last_line + 1,
                 });
             }
+        } else if self.actual_left_prompt.is_none() {
+            // If we refreshed and prompt is not visible, print prompt marker
+            self.r#move(0, 0);
+            self.write_command(Osc133PromptStart);
+            self.actual_left_prompt = Some(left_prompt.to_owned());
         }
 
         fn o_line(zelf: &Screen, i: usize) -> &Line {
@@ -1182,6 +1187,10 @@ impl Screen {
                     } else {
                         ClearToEndOfLine
                     });
+                    if i == 0 && start_pos == 0 {
+                        // Restore prompt marker if we deleted it
+                        self.write_command(Osc133PromptStart);
+                    }
                     has_cleared_screen = should_clear_screen_this_line;
                     has_cleared_line = true;
                 }
@@ -1237,6 +1246,10 @@ impl Screen {
                     set_color(self, HighlightSpec::new());
                     self.r#move(current_width, i);
                     self.write_command(ClearToEndOfScreen);
+                    if i == 0 && current_width == 0 {
+                        // Restore prompt marker if we deleted it
+                        self.write_command(Osc133PromptStart);
+                    }
                     has_cleared_screen = true;
                 }
                 if done {

@@ -16,6 +16,14 @@ fish_config prompt show default
 # CHECK: {{\x1b\[4m}}default{{\x1b\[m}}
 # CHECK: {{.*}}@{{.*}}>{{.*}}
 
+type fish_mode_prompt
+# CHECK: fish_mode_prompt is a function with definition
+# CHECK: # Defined in {{.*}}functions/fish_mode_prompt.fish @ line 2
+# CHECK: function fish_mode_prompt --description 'Displays the current mode'
+# CHECK:     # {{.*}}
+# CHECK:     fish_default_mode_prompt
+# CHECK: end
+
 function set-all-the-prompts
     function fish_prompt
         echo left-prompt
@@ -87,6 +95,14 @@ type fish_prompt fish_right_prompt fish_mode_prompt |
 # CHECK: --
 # CHECK: function fish_mode_prompt {{.*}}
 # CHECK:     # {{.*}}
+
+type fish_mode_prompt
+# CHECK: fish_mode_prompt is a function with definition
+# CHECK: # Defined {{in .*/functions/fish_mode_prompt.fish @ line 2|via `source`}}
+# CHECK: function fish_mode_prompt --description 'Displays the current mode'
+# CHECK:     # {{.*}}
+# CHECK:     fish_default_mode_prompt
+# CHECK: end
 
 fish_config theme choose non-existent-theme1
 # CHECKERR: No such theme: non-existent-theme1

@@ -16,11 +16,9 @@ function fish_config --description "Launch fish's web based configuration"
     # The web-based configuration UI
     # Also opened with just `fish_config` or `fish_config browse`.
     if contains -- $cmd browse
-        set -lx __fish_bin_dir $__fish_bin_dir
-        set -l fish_path (status fish-path)
-        and set __fish_bin_dir (path dirname -- $fish_path)
         if set -l python (__fish_anypython)
             function __fish_config_webconfig -V python -a web_config
+                set -lx __fish_bin_dir $__fish_bin_dir
                 $python $web_config/webconfig.py
             end
             __fish_data_with_directory tools/web_config '.*' __fish_config_webconfig

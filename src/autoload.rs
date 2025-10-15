@@ -490,7 +490,6 @@ fn test_autoload() {
     let _cleanup = test_init();
     use crate::common::{charptr2wcstring, wcs2zstring};
     use crate::fds::wopen_cloexec;
-    use crate::wutil::sprintf;
     use nix::fcntl::OFlag;
 
     macro_rules! run {

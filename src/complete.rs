@@ -14,7 +14,7 @@ use crate::{
     common::charptr2wcstring,
     reader::{get_quote, is_backslashed},
     util::wcsfilecmp,
-    wutil::{localizable_string, sprintf, LocalizableString},
+    wutil::{localizable_string, LocalizableString},
 };
 use bitflags::bitflags;
 use once_cell::sync::Lazy;

@@ -57,7 +57,5 @@ mod tests {
     #[test]
     fn test_sprintf() {
         assert_eq!(sprintf!("Hello, %s!", "world"), "Hello, world!");
-        assert_eq!(sprintf!("Hello, %s!", "world"), "Hello, world!");
-        assert_eq!(sprintf!("Hello, %s!", "world"), "Hello, world!");
     }
 }

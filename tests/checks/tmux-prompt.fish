@@ -46,3 +46,45 @@ isolated-tmux capture-pane -p
 # CHECK: …<----------------------------------------------two-last-characters-rendered->!!
 # CHECK: test "
 # CHECK: indent"
+
+isolated-tmux send-keys C-c '
+    function fish_prompt
+        string repeat (math $COLUMNS) x
+    end
+' C-l 'echo hello'
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# CHECK: echo hello
+
+isolated-tmux send-keys C-c '
+    function fish_prompt
+        seq (math $LINES + 1)
+    end
+    function fish_right_prompt
+        echo test
+    end
+' Enter
+tmux-sleep
+isolated-tmux capture-pane -p -S -11
+# CHECK: 1
+# CHECK: 2
+# CHECK: 3
+# CHECK: 4
+# CHECK: 5
+# CHECK: 6
+# CHECK: 7
+# CHECK: 8
+# CHECK: 9
+# CHECK: 10
+# CHECK: 11                                                                          test
+# CHECK: 2
+# CHECK: 3
+# CHECK: 4
+# CHECK: 5
+# CHECK: 6
+# CHECK: 7
+# CHECK: 8
+# CHECK: 9
+# CHECK: 10
+# CHECK: 11                                                                          test

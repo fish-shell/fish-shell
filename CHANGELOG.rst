@@ -3,6 +3,8 @@ fish ?.?.? (released ???)
 
 Notable improvements and fixes
 ------------------------------
+- Fish now hides the portion of a multiline prompt that scrolls out of view, preventing duplicate lines after repainting with partially visible prompt.
+- Fixed not properly clearing lines when a :ref:`transient prompt <transient-prompt>` contains more lines than the final prompt (:issue:`11875`).
 
 Deprecations and removed features
 ---------------------------------

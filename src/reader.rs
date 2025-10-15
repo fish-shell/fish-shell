@@ -4733,10 +4733,6 @@ impl<'a> Reader<'a> {
 
                 self.left_prompt_buff =
                     join_strings(&self.exec_prompt_cmd(prompt_cmd, final_prompt), '\n');
-
-                if final_prompt {
-                    self.screen.multiline_prompt_hack();
-                }
             }
 
             // Don't execute the right prompt if it is undefined fish_right_prompt

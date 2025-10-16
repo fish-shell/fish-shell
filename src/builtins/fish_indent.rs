@@ -23,8 +23,6 @@ use crate::env::EnvStack;
 use crate::env::env_init;
 use crate::env::environment::Environment;
 use crate::expand::INTERNAL_SEPARATOR;
-#[allow(unused_imports)]
-use crate::future::IsSomeAnd;
 use crate::future_feature_flags;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};

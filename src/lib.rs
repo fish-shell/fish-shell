@@ -53,7 +53,6 @@ pub mod flog;
 pub mod fork_exec;
 pub mod fs;
 pub mod function;
-pub mod future;
 pub mod future_feature_flags;
 pub mod global_safety;
 pub mod highlight;

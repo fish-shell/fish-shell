@@ -28,8 +28,6 @@ use crate::common::{
 use crate::env::Environment;
 use crate::fallback::fish_wcwidth;
 use crate::flog::FLOGF;
-#[allow(unused_imports)]
-use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightSpec};
 use crate::terminal::TerminalCommand::{

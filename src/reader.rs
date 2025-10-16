@@ -75,8 +75,6 @@ use crate::fallback::fish_wcwidth;
 use crate::fd_readable_set::poll_fd_readable;
 use crate::fds::{AutoCloseFd, make_fd_blocking, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
-#[allow(unused_imports)]
-use crate::future::IsSomeAnd;
 use crate::future_feature_flags;
 use crate::future_feature_flags::FeatureFlag;
 use crate::global_safety::RelaxedAtomicBool;

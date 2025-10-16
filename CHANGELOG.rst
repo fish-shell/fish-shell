@@ -24,6 +24,10 @@ For distributors
 fish 4.1.3 (released ???)
 =========================
 
+Notable improvements and fixes
+------------------------------
+- Let users customize the **man** command (e.g. batman) by setting ``__fish_man_command`` (:issue:`11953`).
+
 This release fixes the following regressions identified in 4.1.0:
 
 - Crash on invalid :doc:`function <cmds/function>` command (:issue:`11912`).

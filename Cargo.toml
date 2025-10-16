@@ -18,6 +18,7 @@ fish-build-man-pages = { path = "crates/build-man-pages" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-gettext-maps = { path = "crates/gettext-maps" }
 fish-gettext-mo-file-parser = { path = "crates/gettext-mo-file-parser" }
+fish-tempfile = { path = "crates/tempfile" }
 fish-printf = { path = "crates/printf", features = ["widestring"] }
 libc = "0.2.177"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
@@ -100,9 +101,14 @@ widestring.workspace = true
 portable-atomic.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-rust-embed = { workspace = true, optional = true, features = ["deterministic-timestamps", "debug-embed"] }
+rust-embed = { workspace = true, optional = true, features = [
+    "deterministic-timestamps",
+    "debug-embed",
+] }
 [target.'cfg(not(windows))'.dependencies]
-rust-embed = { workspace = true, optional = true, features = ["deterministic-timestamps"] }
+rust-embed = { workspace = true, optional = true, features = [
+    "deterministic-timestamps",
+] }
 
 [dev-dependencies]
 serial_test.workspace = true

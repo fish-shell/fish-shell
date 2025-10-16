@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::common;
-use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::should_flog;
 
 mod test_expressions {
@@ -8,8 +8,8 @@ mod test_expressions {
 
     use crate::nix::isatty;
     use crate::wutil::{
-        file_id_for_path, fish_wcswidth, lwstat, waccess, wcstod::wcstod, wcstoi_opts, wstat,
-        Error, Options,
+        Error, Options, file_id_for_path, fish_wcswidth, lwstat, waccess, wcstod::wcstod,
+        wcstoi_opts, wstat,
     };
     use once_cell::sync::Lazy;
     use std::collections::HashMap;

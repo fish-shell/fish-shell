@@ -1,6 +1,6 @@
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
-use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
+use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
 
 #[test]
 fn test_wgetopt() {

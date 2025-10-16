@@ -1,5 +1,5 @@
 use crate::signal::Signal;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::{L, WString, wstr};
 use crate::wcstringutil::join_strings;
 use bitflags::bitflags;
 use libc::c_int;

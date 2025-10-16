@@ -1,19 +1,19 @@
 //! Pager support.
 
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 
 use crate::common::{
-    escape_string, get_ellipsis_char, get_ellipsis_str, get_is_multibyte_locale, EscapeFlags,
-    EscapeStringStyle,
+    EscapeFlags, EscapeStringStyle, escape_string, get_ellipsis_char, get_ellipsis_str,
+    get_is_multibyte_locale,
 };
 use crate::complete::Completion;
 use crate::editable_line::EditableLine;
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
-use crate::highlight::{highlight_shell, HighlightRole, HighlightSpec};
+use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
 use crate::operation_context::OperationContext;
-use crate::screen::{wcswidth_rendered, wcwidth_rendered, CharOffset, Line, ScreenData};
+use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
 use crate::termsize::Termsize;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_fuzzy_match_string;

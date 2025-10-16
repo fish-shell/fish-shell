@@ -6,8 +6,8 @@ use crate::parser::Parser;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
 use std::mem::MaybeUninit;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Termsize {

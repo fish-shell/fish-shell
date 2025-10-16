@@ -18,8 +18,8 @@ use crate::{
     common::cstr2wcstring,
     env::EnvVar,
     fs::{
-        lock_and_load, rewrite_via_temporary_file, LockedFile, LockingMode, PotentialUpdate,
-        WriteMethod, LOCKED_FILE_MODE,
+        LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, lock_and_load,
+        rewrite_via_temporary_file,
     },
     wcstringutil::trim,
 };
@@ -43,15 +43,15 @@ use rand::Rng;
 
 use crate::{
     ast::{self, Kind, Node},
-    common::{str2wcstring, unescape_string, valid_var_name, CancelChecker, UnescapeStringStyle},
+    common::{CancelChecker, UnescapeStringStyle, str2wcstring, unescape_string, valid_var_name},
     env::{EnvMode, EnvStack, Environment},
-    expand::{expand_one, ExpandFlags},
+    expand::{ExpandFlags, expand_one},
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
     fs::fsync,
-    history::file::{append_history_item_to_buffer, HistoryFileContents},
+    history::file::{HistoryFileContents, append_history_item_to_buffer},
     io::IoStreams,
-    operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND},
+    operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
     parse_constants::{ParseTreeFlags, StatementDecoration},
     parse_util::{parse_util_detect_errors, parse_util_unescape_wildcards},
     path::{path_get_config, path_get_data, path_is_valid},
@@ -59,8 +59,8 @@ use crate::{
     util::{find_subslice, get_rng},
     wchar::prelude::*,
     wcstringutil::subsequence_in_string,
-    wildcard::{wildcard_match, ANY_STRING},
-    wutil::{file_id_for_file, wgettext_fmt, wrealpath, wstat, wunlink, FileId, INVALID_FILE_ID},
+    wildcard::{ANY_STRING, wildcard_match},
+    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wgettext_fmt, wrealpath, wstat, wunlink},
 };
 
 mod file;
@@ -370,7 +370,10 @@ impl HistoryImpl {
         }
 
         let Some(mut path) = path_get_data() else {
-            return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Error obtaining data directory. This is a manually constructed error which does not indicate why this happened."));
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "Error obtaining data directory. This is a manually constructed error which does not indicate why this happened.",
+            ));
         };
 
         path.push('/');

@@ -5,7 +5,7 @@ use crate::expand::{
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
 use crate::fallback::fish_wcwidth;
-use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
@@ -17,11 +17,11 @@ use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
 use crate::wcstringutil::wcs2string_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::encoding::{
-    mbrtowc, probe_is_multibyte_locale, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX,
+    AT_LEAST_MB_LEN_MAX, mbrtowc, probe_is_multibyte_locale, wcrtomb, zero_mbstate,
 };
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
-use libc::{SIGTTOU, SIG_IGN, STDIN_FILENO};
+use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use once_cell::sync::OnceCell;
 use std::cell::{Cell, RefCell};
 use std::env;

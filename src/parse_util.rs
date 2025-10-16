@@ -1,29 +1,30 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
 use crate::ast::{
-    self, is_same_node, Ast, Keyword, Kind, Leaf, Node, NodeVisitor, Token, Traversal,
+    self, Ast, Keyword, Kind, Leaf, Node, NodeVisitor, Token, Traversal, is_same_node,
 };
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
-    escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
-    EscapeStringStyle, UnescapeFlags, UnescapeStringStyle,
+    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, escape_string,
+    unescape_string, valid_var_name, valid_var_name_char,
 };
 use crate::expand::{
-    expand_one, expand_to_command_and_args, ExpandFlags, ExpandResultCode, BRACE_BEGIN, BRACE_END,
-    BRACE_SEP, INTERNAL_SEPARATOR, VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE,
+    BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, ExpandResultCode, INTERNAL_SEPARATOR,
+    VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, expand_one,
+    expand_to_command_and_args,
 };
-use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
-    parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
+    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
+    ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID,
+    ERROR_NOT_STATUS, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
+    INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
     ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition, SourceRange,
-    StatementDecoration, ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1,
-    ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
-    ERROR_NOT_PID, ERROR_NOT_STATUS, ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG,
-    INVALID_CONTINUE_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, UNKNOWN_BUILTIN_ERR_MSG,
+    StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
 };
 use crate::tokenizer::{
-    comment_end, is_token_delimiter, quote_end, Tok, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
-    TOK_SHOW_COMMENTS,
+    TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
+    is_token_delimiter, quote_end,
 };
 use crate::wchar::prelude::*;
 use crate::wcstringutil::count_newlines;
@@ -1512,11 +1513,7 @@ pub fn parse_util_detect_errors_in_argument(
 
     err |= check_subtoken(checked, arg_src.len(), out_errors);
 
-    if err.is_empty() {
-        Ok(())
-    } else {
-        Err(err)
-    }
+    if err.is_empty() { Ok(()) } else { Err(err) }
 }
 
 fn detect_errors_in_job_conjunction(

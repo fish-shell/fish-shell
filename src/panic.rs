@@ -1,5 +1,5 @@
 use std::{
-    panic::{set_hook, take_hook, UnwindSafe},
+    panic::{UnwindSafe, set_hook, take_hook},
     sync::atomic::{AtomicBool, Ordering},
     time::Duration,
 };
@@ -8,7 +8,7 @@ use libc::STDIN_FILENO;
 use once_cell::sync::OnceCell;
 
 use crate::{
-    common::{read_blocked, PROGRAM_NAME},
+    common::{PROGRAM_NAME, read_blocked},
     nix::isatty,
     threads::{asan_maybe_exit, is_main_thread},
 };

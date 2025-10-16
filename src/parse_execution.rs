@@ -1,24 +1,24 @@
 //! Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 
 use crate::ast::{
-    self, unescape_keyword, BlockStatementHeader, Keyword, Leaf, Node, Statement, Token,
+    self, BlockStatementHeader, Keyword, Leaf, Node, Statement, Token, unescape_keyword,
 };
 use crate::builtins;
 use crate::builtins::shared::{
-    builtin_exists, BUILTIN_ERR_VARNAME, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
-    STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE,
-    STATUS_UNMATCHED_WILDCARD,
+    BUILTIN_ERR_VARNAME, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR,
+    STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_UNMATCHED_WILDCARD,
+    builtin_exists,
 };
 use crate::common::{
-    escape, should_suppress_stderr_for_tests, truncate_at_nul, valid_var_name, ScopeGuard,
-    ScopeGuarding, ScopedRefCell,
+    ScopeGuard, ScopeGuarding, ScopedRefCell, escape, should_suppress_stderr_for_tests,
+    truncate_at_nul, valid_var_name,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, Statuses};
 use crate::event::{self, Event};
 use crate::exec::exec_job;
 use crate::expand::{
-    expand_one, expand_string, expand_to_command_and_args, ExpandFlags, ExpandResultCode,
+    ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_to_command_and_args,
 };
 use crate::flog::FLOG;
 use crate::function;
@@ -26,33 +26,33 @@ use crate::io::{IoChain, IoStreams, OutputStream, StringOutputStream};
 use crate::job_group::JobGroup;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
-    parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParseTokenType, StatementDecoration, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG, ERROR_TIME_BACKGROUND,
+    CALL_STACK_LIMIT_EXCEEDED_ERR_MSG, ERROR_TIME_BACKGROUND,
     FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, ILLEGAL_FD_ERR_MSG, INFINITE_FUNC_RECURSION_ERR_MSG,
-    WILDCARD_ERR_MSG,
+    ParseError, ParseErrorCode, ParseErrorList, ParseKeyword, ParseTokenType, StatementDecoration,
+    WILDCARD_ERR_MSG, parse_error_offset_source_start,
 };
 use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef};
 use crate::parse_util::{
-    parse_util_locate_cmdsubst_range, parse_util_unescape_wildcards,
-    MaybeParentheses::CommandSubstitution,
+    MaybeParentheses::CommandSubstitution, parse_util_locate_cmdsubst_range,
+    parse_util_unescape_wildcards,
 };
 use crate::parser::{Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
 use crate::proc::{
-    get_job_control_mode, job_reap, no_exec, ConcreteAssignment, Job, JobControl, JobProperties,
-    JobRef, Process, ProcessType,
+    ConcreteAssignment, Job, JobControl, JobProperties, JobRef, Process, ProcessType,
+    get_job_control_mode, job_reap, no_exec,
 };
 use crate::reader::fish_is_unwinding_for_exit;
 use crate::redirection::{RedirectionMode, RedirectionSpec, RedirectionSpecList};
 use crate::signal::Signal;
 use crate::timer::push_timer;
-use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir, TokenType};
+use crate::tokenizer::{PipeOrRedir, TokenType, variable_assignment_equals_pos};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
 use crate::wildcard::wildcard_match;
-use libc::{c_int, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO};
+use libc::{ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
 use std::io::ErrorKind;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -421,11 +421,7 @@ impl<'a> ExecutionContext<'a> {
                     None,
                 )
                 && &cmd == forbidden_function_name;
-            if forbidden {
-                Some(dc)
-            } else {
-                None
-            }
+            if forbidden { Some(dc) } else { None }
         };
 
         // Check main statement.
@@ -1464,7 +1460,9 @@ impl<'a> ExecutionContext<'a> {
                             _ => false,
                         }
                 } {
-                    eprintf!("If you wish to use process substitution, consider the psub command, see: `help psub`\n");
+                    eprintf!(
+                        "If you wish to use process substitution, consider the psub command, see: `help psub`\n"
+                    );
                 }
                 return error_ret;
             }

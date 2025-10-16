@@ -94,7 +94,7 @@ pub fn parse_return_value(
     let (opts, optind) = match parse_options(args, parser, streams) {
         ControlFlow::Continue(o) => o,
         ControlFlow::Break(error_code) => {
-            return ControlFlow::Break(BuiltinResult::Err(error_code))
+            return ControlFlow::Break(BuiltinResult::Err(error_code));
         }
     };
 

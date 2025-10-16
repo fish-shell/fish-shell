@@ -1,7 +1,7 @@
-use crate::common::wcs2string;
 use crate::common::BUILD_DIR;
+use crate::common::wcs2string;
 use crate::wchar::prelude::*;
-use crate::{common::get_executable_path, FLOG, FLOGF};
+use crate::{FLOG, FLOGF, common::get_executable_path};
 use fish_build_helper::workspace_root;
 use std::ffi::OsString;
 use std::os::unix::ffi::OsStringExt;

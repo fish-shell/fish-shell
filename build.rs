@@ -57,7 +57,9 @@ fn main() {
     detect_cfgs(&mut target);
 
     #[cfg(all(target_env = "gnu", target_feature = "crt-static"))]
-    compile_error!("Statically linking against glibc has unavoidable crashes and is unsupported. Use dynamic linking or link statically against musl.");
+    compile_error!(
+        "Statically linking against glibc has unavoidable crashes and is unsupported. Use dynamic linking or link statically against musl."
+    );
 }
 
 /// Check target system support for certain functionality dynamically when the build is invoked,

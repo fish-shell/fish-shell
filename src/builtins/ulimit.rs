@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use libc::{c_uint, rlim_t, RLIM_INFINITY};
+use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
 use once_cell::sync::Lazy;
 

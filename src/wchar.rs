@@ -12,11 +12,11 @@ pub use crate::wchar_ext::IntoCharIter;
 
 pub mod prelude {
     pub use crate::{
-        wchar::{wstr, IntoCharIter, WString, L},
+        wchar::{IntoCharIter, L, WString, wstr},
         wchar_ext::{ToWString, WExt},
         wutil::{
-            eprintf, localizable_consts, localizable_string, sprintf, wgettext, wgettext_fmt,
-            LocalizableString,
+            LocalizableString, eprintf, localizable_consts, localizable_string, sprintf, wgettext,
+            wgettext_fmt,
         },
     };
 }

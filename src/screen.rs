@@ -7,16 +7,16 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
+use crate::FLOG;
 use crate::editable_line::line_at_cursor;
 use crate::key::ViewportPosition;
-use crate::pager::{PageRendering, Pager, PAGER_MIN_HEIGHT};
-use crate::FLOG;
+use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
 use std::cell::RefCell;
 use std::collections::LinkedList;
 use std::io::Write;
 use std::ops::Range;
-use std::sync::atomic::AtomicU32;
 use std::sync::Mutex;
+use std::sync::atomic::AtomicU32;
 use std::time::SystemTime;
 
 use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
@@ -36,8 +36,8 @@ use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
     CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptStart, ScrollContentUp,
 };
-use crate::terminal::{use_terminfo, BufferedOutputter, CardinalDirection, Output, Outputter};
-use crate::termsize::{termsize_last, Termsize};
+use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter, use_terminfo};
+use crate::termsize::{Termsize, termsize_last};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
 use crate::wutil::fstat;

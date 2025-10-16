@@ -15,7 +15,7 @@ use crate::flog::FLOG;
 use crate::threads::assert_is_background_thread;
 use crate::wutil::perror;
 use errno::errno;
-use libc::{c_void, EAGAIN, EINTR, EWOULDBLOCK};
+use libc::{EAGAIN, EINTR, EWOULDBLOCK, c_void};
 
 #[cfg(not(HAVE_EVENTFD))]
 use crate::fds::{make_autoclose_pipes, make_fd_nonblocking};

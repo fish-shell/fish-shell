@@ -3,8 +3,8 @@ mod decimal;
 mod tests;
 
 use super::locale::Locale;
-use super::printf_impl::{pad, ConversionSpec, Error, ModifierFlags};
-use decimal::{Decimal, DigitLimit, DIGIT_WIDTH};
+use super::printf_impl::{ConversionSpec, Error, ModifierFlags, pad};
+use decimal::{DIGIT_WIDTH, Decimal, DigitLimit};
 use std::cmp::min;
 use std::fmt::Write;
 

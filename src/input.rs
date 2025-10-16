@@ -1,4 +1,4 @@
-use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
+use crate::common::{Named, escape, get_by_sorted_name, str2wcstring};
 use crate::env::Environment;
 use crate::event;
 use crate::flog::FLOG;
@@ -7,13 +7,13 @@ use crate::flog::FLOG;
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
-    match_key_event_to_key, CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer,
-    KeyMatchQuality, ReadlineCmd, R_END_INPUT_FUNCTIONS,
+    CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer, KeyMatchQuality,
+    R_END_INPUT_FUNCTIONS, ReadlineCmd, match_key_event_to_key,
 };
-use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
+use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
 use crate::proc::job_reap;
 use crate::reader::{
-    reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint, Reader,
+    Reader, reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint,
 };
 use crate::signal::signal_clear_cancel;
 use crate::threads::{assert_is_main_thread, iothread_service_main};
@@ -21,8 +21,8 @@ use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
 use std::mem;
 use std::sync::{
-    atomic::{AtomicU32, Ordering},
     Mutex, MutexGuard,
+    atomic::{AtomicU32, Ordering},
 };
 
 pub const FISH_BIND_MODE_VAR: &wstr = L!("fish_bind_mode");

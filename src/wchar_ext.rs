@@ -1,9 +1,9 @@
 use std::{iter, slice};
 
 use crate::{
-    common::subslice_position,
-    wchar::{wstr, WString},
     L,
+    common::subslice_position,
+    wchar::{WString, wstr},
 };
 use widestring::utfstr::CharsUtf32;
 

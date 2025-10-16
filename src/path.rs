@@ -4,11 +4,11 @@
 
 use crate::common::{wcs2osstring, wcs2zstring};
 use crate::env::{EnvMode, EnvStack, Environment, FALLBACK_PATH};
-use crate::expand::{expand_tilde, HOME_DIRECTORY};
+use crate::expand::{HOME_DIRECTORY, expand_tilde};
 use crate::flog::{FLOG, FLOGF};
 use crate::wchar::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
-use errno::{errno, set_errno, Errno};
+use errno::{Errno, errno, set_errno};
 use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
 use once_cell::sync::Lazy;
 use std::ffi::OsStr;
@@ -585,7 +585,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
     // the actual $HOME or $XDG_XXX directories. This prevents the tests from failing and/or stops
     // the tests polluting the user's actual $HOME if a sandbox environment has not been set up.
     {
-        use crate::common::{str2wcstring, BUILD_DIR};
+        use crate::common::{BUILD_DIR, str2wcstring};
         use std::path::PathBuf;
 
         let mut build_dir = PathBuf::from(BUILD_DIR);

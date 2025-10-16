@@ -1,17 +1,17 @@
 #![allow(clippy::bad_bit_mask)]
 
 use crate::common::{
-    unescape_string, valid_var_name, wcs2zstring, UnescapeFlags, UnescapeStringStyle,
+    UnescapeFlags, UnescapeStringStyle, unescape_string, valid_var_name, wcs2zstring,
 };
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::flog::{FLOG, FLOGF};
-use crate::fs::{lock_and_load, rewrite_via_temporary_file, PotentialUpdate};
+use crate::fs::{PotentialUpdate, lock_and_load, rewrite_via_temporary_file};
 use crate::path::path_get_config;
 use crate::wchar::{decode_byte_from_char, prelude::*};
-use crate::wcstringutil::{join_strings, LineIterator};
-use crate::wutil::{file_id_for_file, file_id_for_path_narrow, wrealpath, FileId, INVALID_FILE_ID};
-use std::collections::hash_map::Entry;
+use crate::wcstringutil::{LineIterator, join_strings};
+use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
 use std::collections::HashSet;
+use std::collections::hash_map::Entry;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::{Read, Write};

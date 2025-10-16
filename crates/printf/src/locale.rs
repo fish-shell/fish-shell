@@ -66,11 +66,7 @@ impl Locale {
             // Divide remaining digits by repeat_group.
             // Apply any remainder to the first group.
             let res = (digits_left - accum) % (repeat_group as usize);
-            if res > 0 {
-                res
-            } else {
-                repeat_group as usize
-            }
+            if res > 0 { res } else { repeat_group as usize }
         }
     }
 

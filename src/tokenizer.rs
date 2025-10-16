@@ -3,7 +3,7 @@
 
 use crate::ast::unescape_keyword;
 use crate::common::valid_var_name_char;
-use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::redirection::RedirectionMode;

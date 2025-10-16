@@ -5,7 +5,7 @@ use crate::expand::INTERNAL_SEPARATOR;
 use crate::fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
 use crate::flog::FLOGF;
 use crate::wchar::{decode_byte_from_char, prelude::*};
-use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
+use crate::wutil::encoding::{AT_LEAST_MB_LEN_MAX, wcrtomb, zero_mbstate};
 
 /// Return the number of newlines in a string.
 pub fn count_newlines(s: &wstr) -> usize {
@@ -96,11 +96,7 @@ pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Optio
         .position(|window| {
             // In fuzzy matching treat treat `-` and `_` as equal (#3584).
             fn fuzzy_canonicalize(c: char) -> char {
-                if c == '_' {
-                    '-'
-                } else {
-                    c
-                }
+                if c == '_' { '-' } else { c }
             }
 
             wcscasecmp_fuzzy(

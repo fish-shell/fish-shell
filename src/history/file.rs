@@ -9,13 +9,13 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use libc::{mmap, munmap, ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
+use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE, mmap, munmap};
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
     common::{str2wcstring, subslice_position, wcs2string},
     flog::FLOG,
-    path::{path_get_data_remoteness, DirRemoteness},
+    path::{DirRemoteness, path_get_data_remoteness},
 };
 
 /// History file types.
@@ -125,7 +125,7 @@ impl HistoryFileContents {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Unsupported,
                     format!("Cannot convert u64 to usize: {err}"),
-                ))
+                ));
             }
         };
         if len == 0 {

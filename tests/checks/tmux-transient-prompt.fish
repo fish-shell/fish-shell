@@ -1,7 +1,7 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
 
-set -g isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     function fish_prompt
         if set -q transient
             printf "> "
@@ -12,8 +12,6 @@ set -g isolated_tmux_fish_extra_args -C '
     end
     bind ctrl-j "set transient true; commandline -f repaint execute"
 '
-
-isolated-tmux-start
 
 isolated-tmux send-keys 'echo foo' C-j
 tmux-sleep

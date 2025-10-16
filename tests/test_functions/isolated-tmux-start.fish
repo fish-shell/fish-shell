@@ -48,7 +48,7 @@ function isolated-tmux-start
         set fish_history ""
         # No transient prompt.
         set fish_transient_prompt 0
-    ' $isolated_tmux_fish_extra_args
+    ' $argv
     # Set the correct permissions for the newly created socket to allow future connections.
     # This is required at least under WSL or else each invocation will return a permissions error.
     chmod 777 .tmux-socket

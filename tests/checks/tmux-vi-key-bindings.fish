@@ -1,10 +1,9 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
 
-set -g isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     set -g fish_key_bindings fish_vi_key_bindings
 '
-isolated-tmux-start
 
 isolated-tmux send-keys 'echo 124' Escape
 tmux-sleep # disambiguate escape from alt

@@ -1,10 +1,9 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
 
-set -g isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     set -g fish (status fish-path)
 '
-isolated-tmux-start
 
 # Implicit interactive but output is redirected.
 isolated-tmux send-keys \

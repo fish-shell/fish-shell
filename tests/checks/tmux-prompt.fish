@@ -1,7 +1,7 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
 
-set -g isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     function fish_prompt
         printf "prompt $status_generation> <status=$status> <$prompt_var> "
         set prompt_var ''
@@ -14,8 +14,6 @@ set -g isolated_tmux_fish_extra_args -C '
     end
     bind ctrl-g token-info
 '
-
-isolated-tmux-start
 
 isolated-tmux capture-pane -p
 # CHECK: prompt 0> <status=0> <>

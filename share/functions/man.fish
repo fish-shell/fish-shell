@@ -47,13 +47,13 @@ function man
         # So we override them with the good name.
         switch $argv
             case !
-                set $argv not
+                set argv not
             case .
-                set $argv source
+                set argv source
             case :
-                set $argv true
+                set argv true
             case '['
-                set $argv test
+                set argv test
         end
     end
 

@@ -15,23 +15,3 @@ impl<T> IsSomeAnd for Option<T> {
         }
     }
 }
-
-// TODO(MSRV): is_sorted_by was added in rust 1.82
-pub trait IsSorted {
-    type T;
-    fn is_sorted_by(&self, pred: impl Fn(&Self::T, &Self::T) -> Option<std::cmp::Ordering>)
-    -> bool;
-}
-impl<T> IsSorted for &[T] {
-    type T = T;
-    fn is_sorted_by(&self, pred: impl Fn(&T, &T) -> Option<std::cmp::Ordering>) -> bool {
-        self.windows(2)
-            .all(|w| pred(&w[0], &w[1]).is_none_or(|order| order.is_le()))
-    }
-}
-impl<T> IsSorted for Vec<T> {
-    type T = T;
-    fn is_sorted_by(&self, pred: impl Fn(&T, &T) -> Option<std::cmp::Ordering>) -> bool {
-        IsSorted::is_sorted_by(&self.as_slice(), pred)
-    }
-}

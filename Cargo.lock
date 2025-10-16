@@ -231,6 +231,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fish-tempfile"
+version = "0.0.0"
+dependencies = [
+ "nix",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"

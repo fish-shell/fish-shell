@@ -2,9 +2,6 @@ use crate::common::{Named, escape, get_by_sorted_name, str2wcstring};
 use crate::env::Environment;
 use crate::event;
 use crate::flog::FLOG;
-// Polyfill for Option::is_none_or(), stabilized in 1.82.0
-#[allow(unused_imports)]
-use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
     CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer, KeyMatchQuality,

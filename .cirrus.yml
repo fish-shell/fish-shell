@@ -8,10 +8,10 @@ linux_task:
           container: &step
               image: ghcr.io/krobelus/fish-ci/alpine:latest
               memory: 4GB
-        - name: jammy
+        - name: ubuntu-oldest-supported
           container:
               <<: *step
-              image: ghcr.io/krobelus/fish-ci/jammy:latest
+              image: ghcr.io/krobelus/fish-ci/ubuntu-oldest-supported:latest
     tests_script:
         # cirrus at times gives us 32 procs and 2 GB of RAM
         # Unrestriced parallelism results in OOM

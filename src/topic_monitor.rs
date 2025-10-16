@@ -21,8 +21,8 @@ set. This is the real power of topics: you can wait for a sigchld signal OR a th
 */
 
 use crate::fd_readable_set::{FdReadableSet, Timeout};
-use crate::fds::{self, make_fd_nonblocking, AutoClosePipes};
-use crate::flog::{FloggableDebug, FLOG};
+use crate::fds::{self, AutoClosePipes, make_fd_nonblocking};
+use crate::flog::{FLOG, FloggableDebug};
 use crate::wchar::WString;
 use crate::wutil::perror;
 use nix::errno::Errno;

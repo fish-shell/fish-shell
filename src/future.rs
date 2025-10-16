@@ -20,7 +20,7 @@ impl<T> IsSomeAnd for Option<T> {
 pub trait IsSorted {
     type T;
     fn is_sorted_by(&self, pred: impl Fn(&Self::T, &Self::T) -> Option<std::cmp::Ordering>)
-        -> bool;
+    -> bool;
 }
 impl<T> IsSorted for &[T] {
     type T = T;

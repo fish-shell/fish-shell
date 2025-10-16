@@ -1,11 +1,11 @@
 use super::prelude::*;
+use crate::common::EscapeFlags;
+use crate::common::EscapeStringStyle;
 use crate::common::escape;
 use crate::common::escape_string;
 use crate::common::get_ellipsis_char;
 use crate::common::get_ellipsis_str;
 use crate::common::valid_var_name;
-use crate::common::EscapeFlags;
-use crate::common::EscapeStringStyle;
 use crate::env::EnvStackSetResult;
 use crate::env::EnvVarFlags;
 use crate::env::INHERITED_VARS;
@@ -13,8 +13,8 @@ use crate::event;
 use crate::event::Event;
 use crate::expand::expand_escape_string;
 use crate::expand::expand_escape_variable;
-use crate::history::history_session_id;
 use crate::history::History;
+use crate::history::history_session_id;
 use crate::{
     env::{EnvMode, EnvVar, Environment},
     wutil::wcstoi::wcstoi_partial,

@@ -18,7 +18,7 @@ use std::fmt::Write as FmtWrite;
 use std::io::Write;
 use std::time::{Duration, Instant};
 
-use crate::nix::{getrusage, RUsage};
+use crate::nix::{RUsage, getrusage};
 
 enum Unit {
     Minutes,

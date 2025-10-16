@@ -1,17 +1,17 @@
 use std::os::unix::prelude::*;
 
 use super::prelude::*;
-use crate::common::{get_executable_path, str2wcstring, PROGRAM_NAME};
+use crate::common::{PROGRAM_NAME, get_executable_path, str2wcstring};
 use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
-    get_job_control_mode, get_login, is_interactive_session, set_job_control_mode, JobControl,
+    JobControl, get_job_control_mode, get_login, is_interactive_session, set_job_control_mode,
 };
 use crate::reader::reader_in_interactive_read;
 use crate::tty_handoff::{get_scroll_content_up_capability, xtversion};
-use crate::wutil::{waccess, wbasename, wdirname, wrealpath, Error};
+use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use libc::F_OK;
-use nix::errno::Errno;
 use nix::NixPath;
+use nix::errno::Errno;
 
 macro_rules! str_enum {
     ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {

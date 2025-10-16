@@ -2,7 +2,7 @@
 
 use crate::history::{self, History, HistorySearch, SearchDirection, SearchFlags, SearchType};
 use crate::parse_constants::SourceRange;
-use crate::tokenizer::{TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED};
+use crate::tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::ifind;
 use std::collections::HashSet;

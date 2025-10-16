@@ -7,7 +7,7 @@ use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
 use crate::{common::exit_without_destructors, wutil::fstat};
-use libc::{pid_t, O_RDONLY};
+use libc::{O_RDONLY, pid_t};
 use std::ffi::CStr;
 use std::num::NonZeroU32;
 use std::os::unix::fs::MetadataExt;

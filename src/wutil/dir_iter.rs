@@ -1,6 +1,6 @@
 use super::wopendir;
 use crate::common::{str2wcstring, wcs2zstring};
-use crate::wchar::{wstr, WString};
+use crate::wchar::{WString, wstr};
 use crate::wutil::DevInode;
 use cfg_if::cfg_if;
 use libc::{
@@ -12,7 +12,7 @@ use std::cell::Cell;
 use std::io;
 use std::mem::MaybeUninit;
 use std::os::fd::RawFd;
-use std::ptr::{addr_of, NonNull};
+use std::ptr::{NonNull, addr_of};
 use std::rc::Rc;
 
 /// Types of files that may be in a directory.
@@ -372,7 +372,7 @@ fn test_dir_iter() {
     use crate::common::charptr2wcstring;
     use crate::common::wcs2osstring;
     use crate::wchar::L;
-    use libc::{close, mkfifo, open, symlink, O_CREAT, O_WRONLY};
+    use libc::{O_CREAT, O_WRONLY, close, mkfifo, open, symlink};
     use std::ffi::CString;
 
     let baditer = DirIter::new(L!("/definitely/not/a/valid/directory/for/sure"));

@@ -1,8 +1,8 @@
 //! Wrappers around posix_spawn.
 
-use super::blocked_signals_for_job;
 use super::PATH_BSHELL;
-use crate::exec::{is_thompson_shell_script, PgroupPolicy};
+use super::blocked_signals_for_job;
+use crate::exec::{PgroupPolicy, is_thompson_shell_script};
 use crate::proc::Job;
 use crate::redirection::Dup2List;
 use crate::signal::signals_to_default;

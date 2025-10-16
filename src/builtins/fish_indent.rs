@@ -17,27 +17,27 @@ use libc::LC_ALL;
 use super::prelude::*;
 use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
-    str2wcstring, unescape_string, wcs2string, UnescapeFlags, UnescapeStringStyle, PROGRAM_NAME,
+    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, str2wcstring, unescape_string, wcs2string,
 };
+use crate::env::EnvStack;
 use crate::env::env_init;
 use crate::env::environment::Environment;
-use crate::env::EnvStack;
 use crate::expand::INTERNAL_SEPARATOR;
 #[allow(unused_imports)]
 use crate::future::{IsSomeAnd, IsSorted};
 use crate::future_feature_flags;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
+use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
-use crate::parse_util::{apply_indents, parse_util_compute_indents, SPACES_PER_INDENT};
+use crate::parse_util::{SPACES_PER_INDENT, apply_indents, parse_util_compute_indents};
 use crate::print_help::print_help;
 use crate::threads;
-use crate::tokenizer::{TokenType, Tokenizer, TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS};
+use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer};
 use crate::topic_monitor::topic_monitor_init;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::count_preceding_backslashes;
-use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
+use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
 use crate::wutil::fish_iswalnum;
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no

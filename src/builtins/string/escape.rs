@@ -1,5 +1,5 @@
 use super::*;
-use crate::common::{escape_string, EscapeFlags, EscapeStringStyle};
+use crate::common::{EscapeFlags, EscapeStringStyle, escape_string};
 
 #[derive(Default)]
 pub struct Escape {

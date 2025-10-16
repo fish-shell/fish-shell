@@ -1,7 +1,7 @@
 //! Generic utilities library.
 
 use crate::wchar::prelude::*;
-use rand::{rngs::SmallRng, SeedableRng};
+use rand::{SeedableRng, rngs::SmallRng};
 use std::cmp::Ordering;
 use std::time;
 use std::time::{SystemTime, UNIX_EPOCH};

@@ -32,7 +32,7 @@ use std::{
 
 use crate::{
     wchar::prelude::*,
-    wutil::{wcstod::wcstod_underscores, wgettext, Error as wcstodError},
+    wutil::{Error as wcstodError, wcstod::wcstod_underscores, wgettext},
 };
 
 #[derive(Clone, Copy)]
@@ -196,11 +196,7 @@ fn maximum(n: &[f64]) -> f64 {
 
         if a == b {
             // treat +0 as larger than -0
-            if a.is_sign_positive() {
-                a
-            } else {
-                b
-            }
+            if a.is_sign_positive() { a } else { b }
         } else if a > b {
             a
         } else {
@@ -220,11 +216,7 @@ fn minimum(n: &[f64]) -> f64 {
 
         if a == b {
             // treat -0 as smaller than +0
-            if a.is_sign_negative() {
-                a
-            } else {
-                b
-            }
+            if a.is_sign_negative() { a } else { b }
         } else if a < b {
             a
         } else {

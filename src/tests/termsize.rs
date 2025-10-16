@@ -2,8 +2,8 @@ use crate::env::{EnvMode, Environment};
 use crate::termsize::*;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
-use std::sync::atomic::AtomicBool;
 use std::sync::Mutex;
+use std::sync::atomic::AtomicBool;
 
 #[test]
 #[serial]

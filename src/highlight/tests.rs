@@ -7,9 +7,9 @@ use crate::text_face::UnderlineStyle;
 use crate::wchar::prelude::*;
 use crate::{
     env::EnvStack,
-    highlight::file_tester::{is_potential_path, PathFlags},
-    highlight::{highlight_shell, HighlightRole, HighlightSpec},
-    operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT},
+    highlight::file_tester::{PathFlags, is_potential_path},
+    highlight::{HighlightRole, HighlightSpec, highlight_shell},
+    operation_context::{EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT, OperationContext},
 };
 use libc::PATH_MAX;
 
@@ -722,7 +722,7 @@ mod file_tester_tests {
     use super::*;
     use crate::common::charptr2wcstring;
     use crate::redirection::RedirectionMode;
-    use std::fs::{self, create_dir_all, File, Permissions};
+    use std::fs::{self, File, Permissions, create_dir_all};
     use std::os::unix::fs::PermissionsExt;
 
     struct TempDir {

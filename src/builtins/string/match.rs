@@ -6,7 +6,7 @@ use super::*;
 use crate::env::{EnvMode, EnvVar, EnvVarFlags};
 use crate::flog::FLOG;
 use crate::parse_util::parse_util_unescape_wildcards;
-use crate::wildcard::{wildcard_match, ANY_STRING};
+use crate::wildcard::{ANY_STRING, wildcard_match};
 
 #[derive(Default)]
 pub struct Match<'args> {

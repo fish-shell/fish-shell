@@ -1,6 +1,6 @@
 use crate::complete::complete_invalidate_path;
-use crate::env::{setenv_lock, unsetenv_lock, EnvMode, EnvStack, Environment};
 use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
+use crate::env::{EnvMode, EnvStack, Environment, setenv_lock, unsetenv_lock};
 use crate::flog::FLOG;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
 use crate::reader::{
@@ -8,10 +8,10 @@ use crate::reader::{
     reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled, reader_set_transient_prompt,
 };
 use crate::screen::{
-    screen_set_midnight_commander_hack, IS_DUMB, LAYOUT_CACHE_SHARED, ONLY_GRAYSCALE,
+    IS_DUMB, LAYOUT_CACHE_SHARED, ONLY_GRAYSCALE, screen_set_midnight_commander_hack,
 };
-use crate::terminal::use_terminfo;
 use crate::terminal::ColorSupport;
+use crate::terminal::use_terminfo;
 use crate::tty_handoff::xtversion;
 use crate::wchar::prelude::*;
 use crate::wutil::encoding::probe_is_multibyte_locale;

@@ -1,5 +1,5 @@
-use crate::abbrs::{self, abbrs_get_set, abbrs_match, Abbreviation};
-use crate::editable_line::{apply_edit, Edit};
+use crate::abbrs::{self, Abbreviation, abbrs_get_set, abbrs_match};
+use crate::editable_line::{Edit, apply_edit};
 use crate::highlight::HighlightSpec;
 use crate::reader::reader_expand_abbreviation_at_cursor;
 use crate::tests::prelude::*;

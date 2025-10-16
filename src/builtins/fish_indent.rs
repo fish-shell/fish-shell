@@ -24,7 +24,7 @@ use crate::env::env_init;
 use crate::env::environment::Environment;
 use crate::expand::INTERNAL_SEPARATOR;
 #[allow(unused_imports)]
-use crate::future::{IsSomeAnd, IsSorted};
+use crate::future::IsSomeAnd;
 use crate::future_feature_flags;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
@@ -213,7 +213,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
     // Return the gap ranges from our ast.
     fn compute_gaps(&self) -> Vec<SourceRange> {
         let range_compare = |r1: SourceRange, r2: SourceRange| {
-            (r1.start(), r1.length()).cmp(&(r2.start(), r2.length()))
+            (r1.start(), r1.length()) <= (r2.start(), r2.length())
         };
         // Collect the token ranges into a list.
         let mut tok_ranges = vec![];
@@ -229,7 +229,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
         tok_ranges.push(SourceRange::new(self.state.source.len(), 0));
 
         // Our tokens should be sorted.
-        assert!(tok_ranges.is_sorted_by(|x, y| Some(range_compare(*x, *y))));
+        assert!(tok_ranges.is_sorted_by(|x, y| range_compare(*x, *y)));
 
         // For each range, add a gap range between the previous range and this range.
         let mut gaps = vec![];
@@ -369,7 +369,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
                 result.push(brace_statement.source_range().start());
             }
         }
-        assert!(result.is_sorted_by(|l, r| Some(l.cmp(r))));
+        assert!(result.is_sorted_by(|l, r| l <= r));
         result
     }
 }
@@ -587,7 +587,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         let range_is_before = |x: SourceRange, y: SourceRange| x.end().cmp(&y.start());
         // FIXME: We want to have the errors sorted, but in some cases they aren't.
         // I suspect this is when the ast is unwinding because the source is fudged up.
-        if errs.is_sorted_by(|&x, &y| Some(range_is_before(x, y))) {
+        if errs.is_sorted_by(|&x, &y| range_is_before(x, y).is_le()) {
             errs.partition_point(|&range| range_is_before(range, r).is_lt()) != errs.len()
         } else {
             false

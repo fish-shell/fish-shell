@@ -1,0 +1,12 @@
+[package]
+name = "fish-tempfile"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+
+[dependencies]
+nix = { workspace = true, features = ["fs", "feature"] }
+
+[lints]
+workspace = true

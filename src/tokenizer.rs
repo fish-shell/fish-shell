@@ -435,7 +435,7 @@ impl<'c> Iterator for Tokenizer<'c> {
             '}' => {
                 let brace_count = self.brace_statement_parser.as_mut()
                     .map(|parser| &mut parser.unclosed_brace_statements);
-                if brace_count.as_ref().map_or(true, |count| **count == 0) {
+                if brace_count.as_ref().is_none_or(|count| **count == 0) {
                     return Some(self.call_error(
                         TokenizerError::closing_unopened_brace,
                         self.token_cursor,

@@ -143,13 +143,9 @@ jobs:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
       - name: Install Rust
-        uses: ./.github/actions/rust-toolchain@oldest-supported
-        with:
-          targets: x86_64-apple-darwin
-      - name: Install Rust Stable
         uses: ./.github/actions/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
       - name: Install dependencies
         run: brew install gettext
       - name: Build and codesign

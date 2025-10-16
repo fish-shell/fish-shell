@@ -23,6 +23,8 @@ For distributors
 - Fixed build on MIPS machines (:issue:`11965`).
 - Fixed broken universal variables on Cygwin (:issue:`11948`).
 
+The minimum supported Rust version (MSRV) has been updated to 1.85.
+
 
 fish 4.1.3 (released ???)
 =========================

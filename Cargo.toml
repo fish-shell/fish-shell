@@ -4,7 +4,7 @@ members = ["crates/*"]
 
 [workspace.package]
 # To build revisions that use Corrosion (those before 2024-01), use CMake 3.19, Rustc 1.78 and Rustup 1.27.
-rust-version = "1.70"
+rust-version = "1.85"
 edition = "2021"
 repository = "https://github.com/fish-shell/fish-shell"
 
@@ -100,9 +100,14 @@ widestring.workspace = true
 portable-atomic.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-rust-embed = { workspace = true, optional = true, features = ["deterministic-timestamps", "debug-embed"] }
+rust-embed = { workspace = true, optional = true, features = [
+    "deterministic-timestamps",
+    "debug-embed",
+] }
 [target.'cfg(not(windows))'.dependencies]
-rust-embed = { workspace = true, optional = true, features = ["deterministic-timestamps"] }
+rust-embed = { workspace = true, optional = true, features = [
+    "deterministic-timestamps",
+] }
 
 [dev-dependencies]
 serial_test.workspace = true

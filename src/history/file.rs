@@ -129,8 +129,7 @@ impl HistoryFileContents {
             }
         };
         if len == 0 {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            return Err(std::io::Error::other(
                 "History file is empty. Cannot create memory mapping with length 0.",
             ));
         }

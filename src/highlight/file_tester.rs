@@ -2,17 +2,17 @@
 // to support highlighting.
 // Because this may perform blocking I/O, we compute results in a separate thread,
 // and provide them optimistically.
-use crate::common::{unescape_string, UnescapeFlags, UnescapeStringStyle};
+use crate::common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use crate::expand::{
-    expand_one, BRACE_BEGIN, BRACE_END, BRACE_SEP, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF,
-    VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
+    BRACE_BEGIN, BRACE_END, BRACE_SEP, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
+    VARIABLE_EXPAND_SINGLE, expand_one,
 };
-use crate::expand::{expand_tilde, ExpandFlags, HOME_DIRECTORY};
+use crate::expand::{ExpandFlags, HOME_DIRECTORY, expand_tilde};
 use crate::operation_context::OperationContext;
 use crate::path::path_apply_working_directory;
 use crate::redirection::RedirectionMode;
 use crate::threads::assert_is_background_thread;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,

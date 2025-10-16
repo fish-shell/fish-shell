@@ -5,7 +5,7 @@ use crate::signal::signal_check_cancel;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
-use libc::{c_int, EINTR, FD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_NONBLOCK};
+use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
 use nix::fcntl::FcntlArg;
 use nix::{fcntl::OFlag, unistd};
 use std::ffi::CStr;

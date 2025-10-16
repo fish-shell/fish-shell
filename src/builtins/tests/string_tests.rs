@@ -11,7 +11,7 @@ fn test_string() {
     };
     use crate::builtins::string::string;
     use crate::common::escape;
-    use crate::future_feature_flags::{scoped_test, FeatureFlag};
+    use crate::future_feature_flags::{FeatureFlag, scoped_test};
     use crate::io::{IoStreams, OutputStream, StringOutputStream};
     use crate::tests::prelude::*;
     use crate::wchar::prelude::*;

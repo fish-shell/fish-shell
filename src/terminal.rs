@@ -1,13 +1,13 @@
 // Generic output functions.
+use crate::FLOGF;
 use crate::color::{Color, Color24};
 use crate::common::ToCString;
-use crate::common::{self, escape_string, wcs2string, wcs2string_appending, EscapeStringStyle};
+use crate::common::{self, EscapeStringStyle, escape_string, wcs2string, wcs2string_appending};
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
-use crate::FLOGF;
 use bitflags::bitflags;
 use std::cell::{RefCell, RefMut};
 use std::env;
@@ -16,9 +16,9 @@ use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU8, Ordering};
 
 bitflags! {
     #[derive(Copy, Clone, Default)]

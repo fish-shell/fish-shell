@@ -18,9 +18,9 @@
 //! expansion, etc.
 
 use libc::{
-    c_char, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR, IXOFF,
-    IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDERR_FILENO, STDIN_FILENO,
-    STDOUT_FILENO, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
+    _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
+    IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, SIGTTIN, STDERR_FILENO, STDIN_FILENO,
+    STDOUT_FILENO, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
@@ -41,39 +41,39 @@ use std::pin::Pin;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicI32, AtomicU8, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
-use errno::{errno, Errno};
+use errno::{Errno, errno};
 
 use crate::abbrs::abbrs_match;
-use crate::ast::{self, is_same_node, Kind};
+use crate::ast::{self, Kind, is_same_node};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
-    escape, escape_string, exit_without_destructors, get_ellipsis_char, get_is_multibyte_locale,
+    EscapeFlags, EscapeStringStyle, PROGRAM_NAME, ScopeGuard, UTF8_BOM_WCHAR, escape,
+    escape_string, exit_without_destructors, get_ellipsis_char, get_is_multibyte_locale,
     get_obfuscation_read_char, restore_term_foreground_process_group_for_exit, shell_modes,
-    str2wcstring, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, PROGRAM_NAME,
-    UTF8_BOM_WCHAR,
+    str2wcstring, write_loop,
 };
 use crate::complete::{
-    complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
-    CompletionRequestOptions,
+    CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete, complete_load,
+    sort_and_prioritize,
 };
-use crate::editable_line::{line_at_cursor, range_of_line_at_cursor, Edit, EditableLine};
+use crate::editable_line::{Edit, EditableLine, line_at_cursor, range_of_line_at_cursor};
 use crate::env::EnvStack;
 use crate::env::{EnvMode, Environment, Statuses};
-use crate::env_dispatch::guess_emoji_width;
 use crate::env_dispatch::MIDNIGHT_COMMANDER_SID;
+use crate::env_dispatch::guess_emoji_width;
 use crate::exec::exec_subshell;
 use crate::expand::expand_one;
-use crate::expand::{expand_string, expand_tilde, ExpandFlags, ExpandResultCode};
+use crate::expand::{ExpandFlags, ExpandResultCode, expand_string, expand_tilde};
 use crate::fallback::fish_wcwidth;
 use crate::fd_readable_set::poll_fd_readable;
-use crate::fds::{make_fd_blocking, wopen_cloexec, AutoCloseFd};
+use crate::fds::{AutoCloseFd, make_fd_blocking, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
@@ -81,32 +81,32 @@ use crate::future_feature_flags;
 use crate::future_feature_flags::FeatureFlag;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{
-    autosuggest_validate_from_history, highlight_shell, parse_text_face_for_highlight,
-    HighlightRole, HighlightSpec,
+    HighlightRole, HighlightSpec, autosuggest_validate_from_history, highlight_shell,
+    parse_text_face_for_highlight,
 };
 use crate::history::{
-    history_session_id, in_private_mode, History, HistorySearch, PersistenceMode, SearchDirection,
-    SearchFlags, SearchType,
+    History, HistorySearch, PersistenceMode, SearchDirection, SearchFlags, SearchType,
+    history_session_id, in_private_mode,
 };
 use crate::input_common::InputEventQueue;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::QueryResponse;
 use crate::input_common::{
-    stop_query, CharEvent, CharInputStyle, CursorPositionQuery, CursorPositionQueryKind,
-    ImplicitEvent, InputData, QueryResultEvent, ReadlineCmd, TerminalQuery,
+    CharEvent, CharInputStyle, CursorPositionQuery, CursorPositionQueryKind, ImplicitEvent,
+    InputData, QueryResultEvent, ReadlineCmd, TerminalQuery, stop_query,
 };
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::nix::{getpgrp, getpid, isatty};
-use crate::operation_context::{get_bg_context, OperationContext};
+use crate::operation_context::{OperationContext, get_bg_context};
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
 use crate::parse_constants::SourceRange;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
-use crate::parse_util::parse_util_process_extent;
 use crate::parse_util::MaybeParentheses;
 use crate::parse_util::SPACES_PER_INDENT;
+use crate::parse_util::parse_util_process_extent;
 use crate::parse_util::{
     parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_contains_wildcards,
     parse_util_detect_errors, parse_util_escape_string_with_quote, parse_util_escape_wildcards,
@@ -118,9 +118,9 @@ use crate::proc::{
     have_proc_stat, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
     print_exit_warning_for_jobs, proc_update_jiffies,
 };
-use crate::reader_history_search::{smartcase_flags, ReaderHistorySearch, SearchMode};
+use crate::reader_history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
 use crate::screen::is_dumb;
-use crate::screen::{screen_force_clear_to_end, CharOffset, Screen};
+use crate::screen::{CharOffset, Screen, screen_force_clear_to_end};
 use crate::should_flog;
 use crate::signal::{
     signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
@@ -136,28 +136,28 @@ use crate::terminal::TerminalCommand::{
     QueryXtgettcap, QueryXtversion,
 };
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
-use crate::text_face::parse_text_face;
 use crate::text_face::TextFace;
+use crate::text_face::parse_text_face;
 use crate::threads::{
-    assert_is_background_thread, assert_is_main_thread, iothread_service_main_with_timeout,
-    Debounce,
+    Debounce, assert_is_background_thread, assert_is_main_thread,
+    iothread_service_main_with_timeout,
 };
 use crate::tokenizer::quote_end;
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::tokenizer::{
-    tok_command, MoveWordStateMachine, MoveWordStyle, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
-    TOK_SHOW_COMMENTS,
+    MoveWordStateMachine, MoveWordStyle, TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType,
+    Tokenizer, tok_command,
 };
 use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
 use crate::tty_handoff::{
-    get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols, TtyHandoff,
+    TtyHandoff, get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
 };
 use crate::wchar::prelude::*;
-use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
 use crate::wcstringutil::CaseSensitivity;
+use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
 use crate::wcstringutil::{
-    count_preceding_backslashes, join_strings, string_prefixes_string,
-    string_prefixes_string_case_insensitive, StringFuzzyMatch,
+    StringFuzzyMatch, count_preceding_backslashes, join_strings, string_prefixes_string,
+    string_prefixes_string_case_insensitive,
 };
 use crate::wildcard::wildcard_has;
 use crate::wutil::{fstat, perror, write_to_fd, wstat};
@@ -318,9 +318,9 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
                          See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. \
                          This %s process will no longer wait for outstanding queries, \
                          which disables some optional features.",
-                         program,
-                         INITIAL_QUERY_TIMEOUT_SECONDS,
-                         program
+                        program,
+                        INITIAL_QUERY_TIMEOUT_SECONDS,
+                        program
                     ),
                 );
                 input_queue
@@ -2537,17 +2537,19 @@ impl<'a> Reader<'a> {
             return ControlFlow::Break(());
         }
 
-        let event_needing_handling = injected_event.or_else(|| loop {
-            let event_needing_handling = self.read_normal_chars();
-            if event_needing_handling.is_some() {
-                break event_needing_handling;
-            }
-            if self
-                .rls()
-                .nchars
-                .is_some_and(|nchars| usize::from(nchars) <= self.command_line_len())
-            {
-                break None;
+        let event_needing_handling = injected_event.or_else(|| {
+            loop {
+                let event_needing_handling = self.read_normal_chars();
+                if event_needing_handling.is_some() {
+                    break event_needing_handling;
+                }
+                if self
+                    .rls()
+                    .nchars
+                    .is_some_and(|nchars| usize::from(nchars) <= self.command_line_len())
+                {
+                    break None;
+                }
             }
         });
 
@@ -4559,7 +4561,13 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             if check_for_orphaned_process(loop_count, shell_pgid) {
                 // We're orphaned, so we just die. Another sad statistic.
                 let pid = getpid();
-                FLOG!(warning, sprintf!("I appear to be an orphaned process, so I am quitting politely. My pid is %d.", pid));
+                FLOG!(
+                    warning,
+                    sprintf!(
+                        "I appear to be an orphaned process, so I am quitting politely. My pid is %d.",
+                        pid
+                    )
+                );
                 exit_without_destructors(1);
             }
 

@@ -3,36 +3,36 @@
 use crate::ast::{self, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
-    escape_string, wcs2string, CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef,
-    ScopeGuarding, ScopedCell, ScopedRefCell, PROFILING_ACTIVE,
+    CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef, PROFILING_ACTIVE, ScopeGuarding,
+    ScopedCell, ScopedRefCell, escape_string, wcs2string,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStack, EnvStackSetResult, Environment, Statuses};
 use crate::event::{self, Event};
 use crate::expand::{
-    expand_string, replace_home_directory_with_tilde, ExpandFlags, ExpandResultCode,
+    ExpandFlags, ExpandResultCode, expand_string, replace_home_directory_with_tilde,
 };
-use crate::fds::{open_dir, BEST_O_SEARCH};
+use crate::fds::{BEST_O_SEARCH, open_dir};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::TerminalQuery;
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
-use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
+use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext};
 use crate::parse_constants::{
-    ParseError, ParseErrorList, ParseTreeFlags, FISH_MAX_EVAL_DEPTH, FISH_MAX_STACK_DEPTH,
+    FISH_MAX_EVAL_DEPTH, FISH_MAX_STACK_DEPTH, ParseError, ParseErrorList, ParseTreeFlags,
     SOURCE_LOCATION_UNKNOWN,
 };
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
 use crate::parse_tree::NodeRef;
-use crate::parse_tree::{parse_source, LineCounter, ParsedSourceRef};
-use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, Pid, ProcStatus};
-use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
+use crate::parse_tree::{LineCounter, ParsedSourceRef, parse_source};
+use crate::proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap};
+use crate::signal::{Signal, signal_check_cancel, signal_clear_cancel};
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
 use crate::wutil::perror;
-use crate::{function, FLOG};
+use crate::{FLOG, function};
 use libc::c_int;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
@@ -43,9 +43,9 @@ use std::io::Write;
 use std::num::NonZeroU32;
 use std::os::fd::OwnedFd;
 use std::rc::Rc;
+use std::sync::Arc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::Arc;
 use std::time::Duration;
 
 pub enum BlockData {

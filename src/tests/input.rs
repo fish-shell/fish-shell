@@ -1,5 +1,5 @@
 use crate::env::EnvStack;
-use crate::input::{EventQueuePeeker, InputMappingSet, KeyNameStyle, DEFAULT_BIND_MODE};
+use crate::input::{DEFAULT_BIND_MODE, EventQueuePeeker, InputMappingSet, KeyNameStyle};
 use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent};
 use crate::key::Key;
 use crate::wchar::prelude::*;

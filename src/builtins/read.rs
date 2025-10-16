@@ -1,28 +1,28 @@
 //! Implementation of the read builtin.
 
 use super::prelude::*;
+use crate::common::UnescapeStringStyle;
 use crate::common::escape;
 use crate::common::read_blocked;
 use crate::common::str2wcstring;
 use crate::common::unescape_string;
 use crate::common::valid_var_name;
-use crate::common::UnescapeStringStyle;
 use crate::env::EnvMode;
 use crate::env::Environment;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
-use crate::input_common::decode_input_byte;
 use crate::input_common::DecodeState;
 use crate::input_common::InvalidPolicy;
+use crate::input_common::decode_input_byte;
 use crate::nix::isatty;
+use crate::reader::ReaderConfig;
 use crate::reader::commandline_set_buffer;
 use crate::reader::reader_save_screen_state;
-use crate::reader::ReaderConfig;
 use crate::reader::{reader_pop, reader_push, reader_readline};
-use crate::tokenizer::Tok;
-use crate::tokenizer::Tokenizer;
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::TOK_ARGUMENT_LIST;
+use crate::tokenizer::Tok;
+use crate::tokenizer::Tokenizer;
 use crate::tty_handoff::TtyHandoff;
 use crate::wcstringutil::split_about;
 use crate::wcstringutil::split_string_tok;

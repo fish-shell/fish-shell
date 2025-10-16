@@ -1,5 +1,5 @@
 /// Support for the "current locale."
-pub use fish_printf::locale::{Locale, C_LOCALE};
+pub use fish_printf::locale::{C_LOCALE, Locale};
 use std::sync::Mutex;
 
 /// Lock guarding libc `setlocale()` or `localeconv()` calls to avoid races.

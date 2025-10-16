@@ -1,10 +1,10 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::{str2wcstring, wcs2string, EMPTY_STRING};
+use crate::common::{EMPTY_STRING, str2wcstring, wcs2string};
 use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
-    make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec, AutoCloseFd, PIPE_ERROR,
+    AutoCloseFd, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
 };
-use crate::flog::{should_flog, FLOG, FLOGF};
+use crate::flog::{FLOG, FLOGF, should_flog};
 use crate::nix::isatty;
 use crate::path::path_apply_working_directory;
 use crate::proc::JobGroupRef;

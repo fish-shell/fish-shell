@@ -15,14 +15,14 @@ use libc::{STDIN_FILENO, VEOF, VINTR};
 use crate::future::IsSomeAnd;
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
-    common::{shell_modes, str2wcstring, PROGRAM_NAME},
-    env::{env_init, EnvStack, Environment},
+    common::{PROGRAM_NAME, shell_modes, str2wcstring},
+    env::{EnvStack, Environment, env_init},
     future_feature_flags,
     input_common::{
-        match_key_event_to_key, CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer,
-        KeyEvent, QueryResultEvent,
+        CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer, KeyEvent, QueryResultEvent,
+        match_key_event_to_key,
     },
-    key::{char_to_symbol, Key},
+    key::{Key, char_to_symbol},
     nix::isatty,
     panic::panic_handler,
     print_help::print_help,
@@ -34,7 +34,7 @@ use crate::{
     topic_monitor::topic_monitor_init,
     tty_handoff::TtyHandoff,
     wchar::prelude::*,
-    wgetopt::{wopt, ArgType, WGetopter, WOption},
+    wgetopt::{ArgType, WGetopter, WOption, wopt},
 };
 
 use super::prelude::*;

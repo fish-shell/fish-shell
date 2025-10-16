@@ -9,19 +9,19 @@
  *
  * Most clients will be interested in visiting the nodes of an ast.
  */
-use crate::common::{unescape_string, UnescapeStringStyle};
+use crate::common::{UnescapeStringStyle, unescape_string};
 use crate::flog::{FLOG, FLOGF};
 use crate::parse_constants::{
-    token_type_user_presentable_description, ParseError, ParseErrorCode, ParseErrorList,
-    ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
-    ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, SOURCE_OFFSET_INVALID,
+    ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode,
+    ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags, SOURCE_OFFSET_INVALID,
+    SourceRange, StatementDecoration, token_type_user_presentable_description,
 };
 use crate::parse_tree::ParseToken;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::tokenizer::{
-    variable_assignment_equals_pos, TokFlags, TokenType, Tokenizer, TokenizerError,
     TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
+    TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
 };
 use crate::wchar::prelude::*;
 use macro_rules_attribute::derive;
@@ -1297,7 +1297,10 @@ impl<'a> Traversal<'a> {
                 return iter.next().expect("Node is root and has no parent");
             }
         }
-        panic!("Node {:?} has either been popped off of the stack or not yet visited. Cannot find parent.", node.describe());
+        panic!(
+            "Node {:?} has either been popped off of the stack or not yet visited. Cannot find parent.",
+            node.describe()
+        );
     }
 
     // Skip the children of the last visited node, which must be passed

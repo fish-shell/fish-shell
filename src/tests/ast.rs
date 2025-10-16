@@ -1,4 +1,4 @@
-use crate::ast::{self, is_same_node, Node};
+use crate::ast::{self, Node, is_same_node};
 use crate::wchar::prelude::*;
 
 const FISH_FUNC: &str = r#"

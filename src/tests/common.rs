@@ -1,4 +1,4 @@
-use crate::common::{truncate_at_nul, ScopeGuard, ScopedCell, ScopedRefCell};
+use crate::common::{ScopeGuard, ScopedCell, ScopedRefCell, truncate_at_nul};
 use crate::wchar::prelude::*;
 
 #[test]

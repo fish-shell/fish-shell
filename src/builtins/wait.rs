@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::proc::{proc_wait_any, Job, Pid};
+use crate::proc::{Job, Pid, proc_wait_any};
 use crate::signal::SigChecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 

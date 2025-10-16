@@ -7,13 +7,13 @@
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
-use crate::common::{escape, ScopeGuard};
+use crate::common::{ScopeGuard, escape};
 use crate::flog::FLOG;
 use crate::io::{IoChain, IoStreams};
 use crate::job_group::MaybeJobId;
 use crate::parser::{Block, Parser};
 use crate::proc::Pid;
-use crate::signal::{signal_check_cancel, signal_handle, Signal};
+use crate::signal::{Signal, signal_check_cancel, signal_handle};
 use crate::termsize;
 use crate::wchar::prelude::*;
 

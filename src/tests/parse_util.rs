@@ -2,14 +2,14 @@ use pcre2::utf32::Regex;
 
 use crate::common::EscapeFlags;
 use crate::parse_constants::{
-    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1,
-    ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
-    ERROR_NO_VAR_NAME,
+    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
+    ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID,
+    ERROR_NOT_STATUS,
 };
 use crate::parse_util::{
-    parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_detect_errors,
-    parse_util_escape_string_with_quote, parse_util_process_extent, parse_util_slice_length,
-    BOOL_AFTER_BACKGROUND_ERROR_MSG,
+    BOOL_AFTER_BACKGROUND_ERROR_MSG, parse_util_cmdsubst_extent, parse_util_compute_indents,
+    parse_util_detect_errors, parse_util_escape_string_with_quote, parse_util_process_extent,
+    parse_util_slice_length,
 };
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;

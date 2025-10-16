@@ -1,5 +1,5 @@
 use crate::complete::CompleteFlags;
-use crate::operation_context::{no_cancel, OperationContext};
+use crate::operation_context::{OperationContext, no_cancel};
 use crate::reader::{combine_command_and_autosuggestion, completion_apply_to_command_line};
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;

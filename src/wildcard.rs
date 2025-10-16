@@ -6,17 +6,17 @@ use std::collections::HashSet;
 use std::fs;
 
 use crate::common::{
-    char_offset, is_windows_subsystem_for_linux, unescape_string, UnescapeFlags,
-    UnescapeStringStyle, WILDCARD_RESERVED_BASE, WSL,
+    UnescapeFlags, UnescapeStringStyle, WILDCARD_RESERVED_BASE, WSL, char_offset,
+    is_windows_subsystem_for_linux, unescape_string,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
 use crate::expand::ExpandFlags;
 use crate::fallback::wcscasecmp;
-use crate::future_feature_flags::feature_test;
 use crate::future_feature_flags::FeatureFlag;
+use crate::future_feature_flags::feature_test;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{
-    string_fuzzy_match_string, string_suffixes_string_case_insensitive, CaseSensitivity,
+    CaseSensitivity, string_fuzzy_match_string, string_suffixes_string_case_insensitive,
 };
 use crate::wutil::dir_iter::DirEntryType;
 use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
@@ -437,7 +437,7 @@ mod expander {
 
     use crate::{
         path::append_path_component,
-        wutil::{dir_iter::DirIter, normalize_path, DevInode},
+        wutil::{DevInode, dir_iter::DirIter, normalize_path},
     };
 
     use super::*;

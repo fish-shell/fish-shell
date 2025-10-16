@@ -1,6 +1,6 @@
 use crate::arg::ToArg;
-use crate::locale::{Locale, C_LOCALE, EN_US_LOCALE};
-use crate::{sprintf_locale, Error, FormatString};
+use crate::locale::{C_LOCALE, EN_US_LOCALE, Locale};
+use crate::{Error, FormatString, sprintf_locale};
 use libc::c_char;
 use std::f64::consts::{E, PI, TAU};
 use std::fmt;

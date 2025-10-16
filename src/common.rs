@@ -849,8 +849,9 @@ pub fn read_unquoted_escape(
     let mut result_char_or_none: Option<char> = None;
 
     let mut errored = false;
-    let mut in_pos = 1; // in_pos always tracks the next character to read (and therefore the number
-                        // of characters read so far)
+    // in_pos always tracks the next character to read
+    // (and therefore the number of characters read so far)
+    let mut in_pos = 1;
 
     // For multibyte \X sequences.
     let mut byte_buff: Vec<u8> = vec![];

@@ -4373,15 +4373,20 @@ impl ReaderData {
 
 /// Restore terminal settings we care about, to prevent a broken shell.
 fn term_fix_modes(modes: &mut libc::termios) {
-    modes.c_iflag &= !ICRNL; // disable mapping CR (\cM) to NL (\cJ)
-    modes.c_iflag &= !INLCR; // disable mapping NL (\cJ) to CR (\cM)
-    modes.c_lflag &= !ICANON; // turn off canonical mode
-    modes.c_lflag &= !ECHO; // turn off echo mode
-    modes.c_lflag &= !IEXTEN; // turn off handling of discard and lnext characters
-    modes.c_oflag |= OPOST; // turn on "implementation-defined post processing" - this often
-                            // changes how line breaks work.
-    modes.c_oflag |= ONLCR; // "translate newline to carriage return-newline" - without
-                            // you see staircase output.
+    // disable mapping CR (\cM) to NL (\cJ)
+    modes.c_iflag &= !ICRNL;
+    // disable mapping NL (\cJ) to CR (\cM)
+    modes.c_iflag &= !INLCR;
+    // turn off canonical mode
+    modes.c_lflag &= !ICANON;
+    // turn off echo mode
+    modes.c_lflag &= !ECHO;
+    // turn off handling of discard and lnext characters
+    modes.c_lflag &= !IEXTEN;
+    // turn on "implementation-defined post processing" - this often changes how line breaks work.
+    modes.c_oflag |= OPOST;
+    // "translate newline to carriage return-newline" - without you see staircase output.
+    modes.c_oflag |= ONLCR;
 
     modes.c_cc[VMIN] = 1;
     modes.c_cc[VTIME] = 0;

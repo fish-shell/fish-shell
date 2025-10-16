@@ -5,13 +5,12 @@
 # Haunted under CI
 #REQUIRES: test -z "$CI"
 
-set -g isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     bind ctrl-q "functions --erase fish_right_prompt" "commandline \'\'" clear-screen
     set -g fish_autosuggestion_enabled 0
     bind ctrl-g "__fish_echo commandline --current-job"
     bind ctrl-t \'__fish_echo echo cursor is at offset $(commandline --cursor --current-token) in token\'
 '
-isolated-tmux-start
 
 isolated-tmux send-keys 'echo LINES $LINES' Enter
 tmux-sleep

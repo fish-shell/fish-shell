@@ -1,13 +1,12 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
 
-set isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     bind alt-delete backward-kill-token
     bind alt-left backward-token
     bind alt-right forward-token
     set fish_autosuggestion_enabled 0
 '
-isolated-tmux-start
 
 isolated-tmux send-keys "function prepend; commandline --cursor 0; commandline -i echo; end" Enter
 isolated-tmux send-keys "bind ctrl-g prepend" Enter

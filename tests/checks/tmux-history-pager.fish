@@ -4,11 +4,10 @@
 
 # The default history-delete binding is shift-delete which
 # won't work on terminals that don't support CSI u, so rebind.
-set -g isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     set -g fish_autosuggestion_enabled 0
     bind alt-d history-delete or backward-delete-char
 '
-isolated-tmux-start
 
 # Set up history
 for i in (seq 50 -1 1)

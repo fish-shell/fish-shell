@@ -2,12 +2,10 @@
 #REQUIRES: command -v tmux
 #REQUIRES: test -z "$CI"
 
-set -g isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     history append ": $(string repeat $COLUMNS A)"
     complete : -a \'(seq (math "$LINES * $COLUMNS"))\'
 '
-
-isolated-tmux-start
 
 # Check that completions don't break from truncated autosuggestion
 isolated-tmux send-keys : Space Tab Tab

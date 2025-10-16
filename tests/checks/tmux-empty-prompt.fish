@@ -1,8 +1,7 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
 
-isolated-tmux-start
-isolated-tmux send-keys '
+isolated-tmux-start -C '
     function fish_prompt; end
     function fish_right_prompt
         set -q right_prompt
@@ -12,7 +11,7 @@ isolated-tmux send-keys '
     bind ctrl-g "set right_prompt 1" repaint
     bind alt-g "set -e right_prompt" repaint
 ' 
-tmux-sleep
+
 isolated-tmux send-keys M-g C-l Enter  
 tmux-sleep
 isolated-tmux send-keys C-g Enter

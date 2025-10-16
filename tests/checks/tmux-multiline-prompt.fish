@@ -4,15 +4,14 @@
 # disable on github actions because it's flakey
 #REQUIRES: test -z "$CI"
 
-isolated-tmux-start
-
-isolated-tmux send-keys '
+isolated-tmux-start -C '
     function fish_prompt
         printf "prompt-line-1\\nprompt-line-2> "
         commandline -f repaint
     end
-' Enter
-isolated-tmux send-keys C-l ': 1' Enter
+'
+
+isolated-tmux send-keys ': 1' Enter
 tmux-sleep
 isolated-tmux send-keys ': 3' Enter
 tmux-sleep

@@ -1,11 +1,10 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
 
-set -g isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     function fish_prompt; echo \'$ \'; end
     bind ctrl-g "commandline -i \'echo \'(printf %0(math \$COLUMNS - (string length \'\$ echo \'))d 0)"
 '
-isolated-tmux-start
 
 isolated-tmux send-keys C-g Enter
 tmux-sleep

@@ -2,13 +2,12 @@
 #REQUIRES: command -v tmux
 #REQUIRES: test -z "$CI"
 
-set -g isolated_tmux_fish_extra_args -C '
+isolated-tmux-start -C '
     function fish_greeting
         set -l name (read)
         echo hello $name
     end
 '
-isolated-tmux-start
 
 isolated-tmux send-keys name Enter 'echo foo' Enter
 tmux-sleep

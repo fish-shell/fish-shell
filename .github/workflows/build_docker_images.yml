@@ -31,6 +31,8 @@ jobs:
           - os: ubuntu-latest
             target: alpine
           - os: ubuntu-latest
+            target: ubuntu-oldest-supported
+          - os: ubuntu-latest
             target: centos9
           - os: ubuntu-latest
             target: fedora

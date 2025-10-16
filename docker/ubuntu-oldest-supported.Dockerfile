@@ -1,21 +1,21 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
-ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-  && apt-get -y install --no-install-recommends \
+  && apt-get -y install --no-install-recommends  \
+    cmake ninja-build \
     build-essential \
     ca-certificates \
+    clang \
     curl \
-    g++-multilib \
     gettext \
     git \
+    libpcre2-dev \
     locales \
     openssl \
-    pkg-config \
     python3 \
     python3-pexpect \
     sudo \
@@ -34,17 +34,13 @@ USER fishuser
 WORKDIR /home/fishuser
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
-  && sh /tmp/rustup.sh -y --no-modify-path --default-toolchain nightly --component rust-src
+  && sh /tmp/rustup.sh -y --no-modify-path
 ENV PATH=/home/fishuser/.cargo/bin:$PATH
+
+RUN echo $PATH
 
 COPY fish_run_tests.sh /
 
-ENV \
-    CFLAGS=-m32 \
-    PCRE2_SYS_STATIC=1 \
-    FISH_CHECK_TARGET_TRIPLE=i686-unknown-linux-gnu
-
 ENV FISH_CHECK_LINT=false
 
-CMD rustup target add ${FISH_CHECK_TARGET_TRIPLE} \
-    && /fish_run_tests.sh
+CMD /fish_run_tests.sh

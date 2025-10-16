@@ -26,7 +26,7 @@ runs:
         toolchain=$(
           case "$toolchain_channel" in
             (stable) echo 1.90 ;;
-            (msrv)   echo 1.70 ;;
+            (msrv)   echo 1.85 ;;
             (*)
               printf >&2 "error: unsupported toolchain channel %s" "$toolchain_channel"
               exit 1

@@ -37,7 +37,7 @@ use libc::c_int;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
-use std::ffi::{CStr, OsStr};
+use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Write;
 use std::num::NonZeroU32;
@@ -470,7 +470,7 @@ impl Parser {
             blocking_query_timeout: RefCell::new(None),
         };
 
-        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {
+        match open_dir(c".", BEST_O_SEARCH) {
             Ok(fd) => {
                 result.libdata_mut().cwd_fd = Some(Arc::new(fd));
             }

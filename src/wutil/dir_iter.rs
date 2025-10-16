@@ -424,7 +424,7 @@ fn test_dir_iter() {
         ret = symlink(makepath(dirname).as_ptr(), makepath(dirlinkname).as_ptr());
         assert!(ret == 0);
         ret = symlink(
-            b"/this/is/an/invalid/path\0".as_ptr().cast(),
+            c"/this/is/an/invalid/path".as_ptr().cast(),
             makepath(badlinkname).as_ptr(),
         );
         assert!(ret == 0);

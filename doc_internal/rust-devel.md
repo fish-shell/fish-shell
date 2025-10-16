@@ -18,7 +18,7 @@ We use forks of the last two - see the [FFI section](#ffi) below. No special act
 
 ### Build Dependencies
 
-fish-shell currently depends on Rust 1.70 or later. To install Rust, follow https://rustup.rs.
+fish-shell currently depends on Rust 1.85 or later. To install Rust, follow https://rustup.rs.
 
 ### Build via CMake
 

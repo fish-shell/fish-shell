@@ -20,6 +20,8 @@ Other improvements
 For distributors
 ----------------
 
+The minimum supported Rust version (MSRV) has been updated to 1.85.
+
 
 fish 4.1.3 (released ???)
 =========================

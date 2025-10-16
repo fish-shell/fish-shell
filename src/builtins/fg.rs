@@ -72,7 +72,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
             Ok(pid) => {
                 let j = parser.job_get_with_index_from_pid(pid);
                 if j.as_ref()
-                    .map_or(true, |(_pos, j)| !j.is_constructed() || j.is_completed())
+                    .is_none_or(|(_pos, j)| !j.is_constructed() || j.is_completed())
                 {
                     streams
                         .err

@@ -315,9 +315,10 @@ impl Pager {
         let mut search_field_text = self.search_field_line.text().to_owned();
         // Append spaces to make it at least the required width.
         if search_field_text.len() < PAGER_SEARCH_FIELD_WIDTH {
-            search_field_text.extend(
-                std::iter::repeat(' ').take(PAGER_SEARCH_FIELD_WIDTH - search_field_text.len()),
-            );
+            search_field_text.extend(std::iter::repeat_n(
+                ' ',
+                PAGER_SEARCH_FIELD_WIDTH - search_field_text.len(),
+            ));
         }
         let search_field = rendering.screen_data.insert_line_at_index(0);
 
@@ -609,7 +610,7 @@ impl Pager {
             // No description, or it won't fit. Just add spaces.
             print_max(
                 offset_in_cmdline,
-                &WString::from_iter(std::iter::repeat(' ').take(desc_remaining)),
+                &WString::from_iter(std::iter::repeat_n(' ', desc_remaining)),
                 bg,
                 desc_remaining,
                 false,

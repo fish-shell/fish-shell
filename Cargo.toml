@@ -17,6 +17,7 @@ fish-build-man-pages = { path = "crates/build-man-pages" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-gettext-maps = { path = "crates/gettext-maps" }
 fish-gettext-mo-file-parser = { path = "crates/gettext-mo-file-parser" }
+fish-tempfile = { path = "crates/tempfile" }
 fish-printf = { path = "crates/printf", features = ["widestring"] }
 libc = "0.2.177"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.

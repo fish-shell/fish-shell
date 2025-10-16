@@ -9,8 +9,6 @@ use crate::common::{
 };
 use crate::complete::Completion;
 use crate::editable_line::EditableLine;
-#[allow(unused_imports)]
-use crate::future::IsSomeAnd;
 use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
 use crate::operation_context::OperationContext;
 use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};

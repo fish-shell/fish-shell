@@ -24,13 +24,7 @@ SIGN=
 NOTARIZE=
 
 ARM64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=11.0'
-X86_64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=10.9'
-
-# As of this writing, the most recent Rust release supports macOS back to 10.12.
-# The first supported version of macOS on arm64 is 10.15, so any Rust is fine for arm64.
-# We wish to support back to 10.9 on x86-64; the last version of Rust to support that is
-# version 1.73.0.
-RUST_VERSION_X86_64=1.70.0
+X86_64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=10.12'
 
 while getopts "sf:i:p:e:nj:" opt; do
     case $opt in
@@ -65,34 +59,29 @@ OUTPUT_PATH=${FISH_ARTEFACT_PATH:-~/fish_built}
 
 mkdir -p "$PKGDIR/build_x86_64" "$PKGDIR/build_arm64" "$PKGDIR/root" "$PKGDIR/intermediates" "$PKGDIR/dst"
 
+do_cmake() {
+    cmake \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
+        -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+        -DFISH_USE_SYSTEM_PCRE2=OFF \
+        "$@" \
+        "$SRC_DIR"
+}
+
 # Build and install for arm64.
 # Pass FISH_USE_SYSTEM_PCRE2=OFF because a system PCRE2 on macOS will not be signed by fish,
 # and will probably not be built universal, so the package will fail to validate/run on other systems.
 # Note CMAKE_OSX_ARCHITECTURES is still relevant for the Mac app.
 { cd "$PKGDIR/build_arm64" \
-    && cmake \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-        -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
-        -DRust_CARGO_TARGET=aarch64-apple-darwin \
-        -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
-        -DFISH_USE_SYSTEM_PCRE2=OFF \
-        "$SRC_DIR" \
+    && do_cmake -DRust_CARGO_TARGET=aarch64-apple-darwin \
     && env $ARM64_DEPLOY_TARGET make VERBOSE=1 -j 12 \
     && env DESTDIR="$PKGDIR/root/" $ARM64_DEPLOY_TARGET make install;
 }
 
 # Build for x86-64 but do not install; instead we will make some fat binaries inside the root.
-# Set RUST_VERSION_X86_64 to the last version of Rust that supports macOS 10.9.
 { cd "$PKGDIR/build_x86_64" \
-    && cmake \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-        -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
-        -DRust_TOOLCHAIN="$RUST_VERSION_X86_64" \
-        -DRust_CARGO_TARGET=x86_64-apple-darwin \
-        -DRust_COMPILER="$(rustup +$RUST_VERSION_X86_64 which rustc)" \
-        -DRust_CARGO="$(rustup +$RUST_VERSION_X86_64 which cargo)" \
-        -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
-        -DFISH_USE_SYSTEM_PCRE2=OFF "$SRC_DIR" \
+    && do_cmake -DRust_CARGO_TARGET=x86_64-apple-darwin \
     && env $X86_64_DEPLOY_TARGET make VERBOSE=1 -j 12; }
 
 # Fatten them up.

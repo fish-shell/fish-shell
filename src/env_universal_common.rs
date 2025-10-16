@@ -290,7 +290,7 @@ impl EnvUniversal {
             if unsafe {
                 libc::sscanf(
                     cstr.as_ptr(),
-                    b"# VERSION: %64s\0".as_ptr().cast(),
+                    c"# VERSION: %64s".as_ptr().cast(),
                     versionbuf.as_mut_ptr(),
                 )
             } != 1

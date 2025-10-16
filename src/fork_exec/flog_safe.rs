@@ -142,14 +142,13 @@ mod tests {
 
     #[test]
     fn test_str_to_flog_cstr() {
-        use std::ffi::CStr;
         let mut buffer = StackBuffer::uninit();
 
-        let str = CStr::from_bytes_with_nul(b"hello\0").unwrap();
+        let str = c"hello";
         let result = str.to_flog_str_async_safe(&mut buffer);
         assert_eq!(result, b"hello");
 
-        let str = CStr::from_bytes_with_nul(b"\0").unwrap();
+        let str = c"";
         let result = str.to_flog_str_async_safe(&mut buffer);
         assert_eq!(result, b"");
 

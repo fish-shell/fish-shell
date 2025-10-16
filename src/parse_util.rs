@@ -830,9 +830,10 @@ pub fn apply_indents(src: &wstr, indents: &[i32]) -> WString {
         if c != '\n' || i + 1 == src.len() {
             continue;
         }
-        indented.extend(
-            std::iter::repeat(' ').take(SPACES_PER_INDENT * usize::try_from(indents[i]).unwrap()),
-        );
+        indented.extend(std::iter::repeat_n(
+            ' ',
+            SPACES_PER_INDENT * usize::try_from(indents[i]).unwrap(),
+        ));
     }
     indented
 }

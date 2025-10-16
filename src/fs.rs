@@ -262,8 +262,7 @@ where
         // If the file id did not change, we assume that we loaded a consistent state.
         return Ok((final_file_id, loaded_data));
     }
-    Err(std::io::Error::new(
-        std::io::ErrorKind::Other,
+    Err(std::io::Error::other(
         "Failed to update the file. Locking is disabled, and the fallback code did not succeed within the permissible number of attempts.",
     ))
 }
@@ -473,8 +472,7 @@ where
             // (If we did write.)
             return Ok((final_file_id, potential_update));
         }
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
+        Err(std::io::Error::other(
             "Failed to update the file. Locking is disabled, and the fallback code did not succeed within the permissible number of attempts.",
         ))
     }

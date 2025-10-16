@@ -464,8 +464,10 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     // Emit a space or indent as necessary, depending on the previous output.
     fn emit_space_or_indent(&mut self, flags: GapFlags) {
         if self.at_line_start() {
-            self.output
-                .extend(std::iter::repeat(' ').take(SPACES_PER_INDENT * self.current_indent));
+            self.output.extend(std::iter::repeat_n(
+                ' ',
+                SPACES_PER_INDENT * self.current_indent,
+            ));
         } else if !flags.skip_space && !self.has_preceding_space() {
             self.output.push(' ');
         }

@@ -433,9 +433,9 @@ fn update_fish_color_support(vars: &EnvStack) {
         );
     } else {
         supports_24bit = !is_xterm_16color
-            && !vars
+            && vars
                 .get_unless_empty(L!("TERM_PROGRAM"))
-                .is_some_and(|term| term.as_list()[0] == "Apple_Terminal");
+                .is_none_or(|term| term.as_list()[0] != "Apple_Terminal");
         FLOG!(
             term_support,
             "True-color support",
@@ -533,7 +533,7 @@ fn init_locale(vars: &EnvStack) {
     }
 
     let user_locale = {
-        let loc_ptr = unsafe { libc::setlocale(libc::LC_ALL, b"\0".as_ptr().cast()) };
+        let loc_ptr = unsafe { libc::setlocale(libc::LC_ALL, c"".as_ptr().cast()) };
         if loc_ptr.is_null() {
             FLOG!(env_locale, "user has an invalid locale configured");
             None
@@ -571,7 +571,7 @@ fn init_locale(vars: &EnvStack) {
     }
 
     // We *always* use a C-locale for numbers because we want '.' (except for in printf).
-    let loc_ptr = unsafe { libc::setlocale(libc::LC_NUMERIC, b"C\0".as_ptr().cast()) };
+    let loc_ptr = unsafe { libc::setlocale(libc::LC_NUMERIC, c"C".as_ptr().cast()) };
     // should never fail, the C locale should always be defined
     assert_ne!(loc_ptr, ptr::null_mut());
 

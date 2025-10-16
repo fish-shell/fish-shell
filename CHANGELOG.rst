@@ -20,6 +20,7 @@ Other improvements
 
 For distributors
 ----------------
+- The minimum supported Rust version (MSRV) has been updated to 1.85.
 - Fixed build on MIPS machines (:issue:`11965`).
 - Fixed broken universal variables on Cygwin (:issue:`11948`).
 

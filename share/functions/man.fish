@@ -11,7 +11,7 @@ function man
     # man pages priority, without having to put fish's bin directories first in $PATH.
 
     if not set -q __fish_man_command
-	set -g __fish_man_command man
+        set -g __fish_man_command man
     end
 
     # Preserve the existing MANPATH, and default to the system path (the empty string).
@@ -64,12 +64,12 @@ function man
     if not set -q argv[2] && status list-files "man/man1/$argv[1].1" &>/dev/null
         set -l basename $argv[1].1
         function __fish_man -V basename -a man1
-	    command $__fish_man_command $man1/$basename
+            command $__fish_man_command $man1/$basename
         end
         __fish_data_with_directory man/man1 \
             (string escape --style=regex -- $basename) __fish_man
         __fish_with_status functions --erase __fish_man
     else
-	command $__fish_man_command $argv
+        command $__fish_man_command $argv
     end
 end

@@ -132,7 +132,6 @@ fn detect_bsd(_: &Target) -> bool {
     if !target.chars().all(|c| c.is_ascii_lowercase()) {
         target = target.to_ascii_lowercase();
     }
-    #[allow(clippy::let_and_return)] // for old clippy
     let is_bsd = target.ends_with("bsd") || target.ends_with("dragonfly");
     #[cfg(any(
         target_os = "dragonfly",

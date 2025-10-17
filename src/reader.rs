@@ -2709,16 +2709,13 @@ fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
     out.write_command(QueryXtgettcap(cap));
 }
 
-#[allow(renamed_and_removed_lints)]
-#[allow(clippy::blocks_in_if_conditions)] // for old clippy
 fn query_capabilities_via_dcs(out: &mut impl Output, vars: &dyn Environment) {
-    if {
-        vars.get_unless_empty(L!("STY")).is_some()
-            || vars.get_unless_empty(L!("TERM")).is_some_and(|term| {
-                let term = &term.as_list()[0];
-                term == "screen" || term == "screen-256color"
-            })
-    } {
+    if vars.get_unless_empty(L!("STY")).is_some()
+        || vars.get_unless_empty(L!("TERM")).is_some_and(|term| {
+            let term = &term.as_list()[0];
+            term == "screen" || term == "screen-256color"
+        })
+    {
         return;
     }
     out.write_command(DecsetAlternateScreenBuffer); // enable alternative screen buffer
@@ -6358,12 +6355,14 @@ pub fn completion_apply_to_command_line(
             let (tok, _) = parse_util_token_extent(command_line, cursor_pos);
             maybe_add_slash(&mut trailer, &result[tok.start..new_cursor_pos]);
         }
+        // TODO(MSRV/edition 2024): use if let chain for quote instead of `is_some` followed
+        // by unwrap
         if trailer != '/'
             && quote.is_some()
             && unescaped_quote(command_line, insertion_point) != quote
         {
             // This is a quoted parameter, first print a quote.
-            #[allow(clippy::unnecessary_unwrap)] // for old clippy
+            #[allow(clippy::unnecessary_unwrap)]
             result.insert(new_cursor_pos, quote.unwrap());
             new_cursor_pos += 1;
         }

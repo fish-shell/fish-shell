@@ -1700,6 +1700,10 @@ msgstr "Sygnał zdefiniowany przez użytkownika 2"
 msgid "Variable: %s"
 msgstr "Zmienna: %s"
 
+#
+msgid "Variable: [redacted]"
+msgstr ""
+
 #, c-format
 msgid "Variables cannot be bracketed. In fish, please use \"$%s\"."
 msgstr "Zmienne nie mogą znajdować się w nawiasach. W fish używane jest \"$%s\"."

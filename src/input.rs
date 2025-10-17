@@ -143,6 +143,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("delete-char"), ReadlineCmd::DeleteChar),
     make_md(L!("delete-or-exit"), ReadlineCmd::DeleteOrExit),
     make_md(L!("down-line"), ReadlineCmd::DownLine),
+    make_md(L!("down-or-search"), ReadlineCmd::DownOrSearch),
     make_md(L!("downcase-selection"), ReadlineCmd::DowncaseSelection),
     make_md(L!("downcase-word"), ReadlineCmd::DowncaseWord),
     make_md(L!("end-of-buffer"), ReadlineCmd::EndOfBuffer),

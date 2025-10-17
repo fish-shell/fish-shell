@@ -251,8 +251,6 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
     }
 
     // Same base pointer and same vtable => same object.
-    #[allow(renamed_and_removed_lints)]
-    #[allow(clippy::vtable_address_comparisons)] // for old clippy
     if std::ptr::eq(lhs, rhs) {
         return true;
     }

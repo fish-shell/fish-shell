@@ -89,14 +89,8 @@ pub fn parse_return_value(
     parser: &Parser,
     streams: &mut IoStreams,
 ) -> ControlFlow<BuiltinResult, i32> {
-    // TODO: use map_break <https://github.com/rust-lang/rust/issues/75744>
     let cmd = args[0];
-    let (opts, optind) = match parse_options(args, parser, streams) {
-        ControlFlow::Continue(o) => o,
-        ControlFlow::Break(error_code) => {
-            return ControlFlow::Break(BuiltinResult::Err(error_code));
-        }
-    };
+    let (opts, optind) = parse_options(args, parser, streams).map_break(BuiltinResult::Err)?;
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);

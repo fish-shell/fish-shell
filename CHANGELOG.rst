@@ -3,6 +3,7 @@ fish ?.?.? (released ???)
 
 Notable improvements and fixes
 ------------------------------
+- New Taiwanese Chinese translation.
 
 Deprecations and removed features
 ---------------------------------

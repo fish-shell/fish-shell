@@ -1363,8 +1363,6 @@ pub fn screen_force_clear_to_end() {
 pub struct PromptLayout {
     /// line breaks when rendering the prompt
     pub line_breaks: Vec<usize>,
-    /// width of the longest line
-    pub max_line_width: usize,
     /// width of the last line
     pub last_line_width: usize,
 }
@@ -1489,7 +1487,6 @@ impl LayoutCache {
                 truncate_run(&mut run_storage, max_line_width, &mut line_width, self);
                 trunc_prompt.extend(run_storage.chars());
             }
-            layout.max_line_width = std::cmp::max(layout.max_line_width, line_width);
             layout.last_line_width = line_width;
 
             let endc = prompt_str.char_at(run_end);

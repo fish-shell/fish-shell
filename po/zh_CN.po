@@ -104,10 +104,6 @@ msgid "%.*s: invalid conversion specification"
 msgstr "%.*s: 无效的转换规范"
 
 #, c-format
-msgid "%ls: function name required"
-msgstr "%ls: 函数名称是必须的"
-
-#, c-format
 msgid "%s"
 msgstr "%s"
 
@@ -738,6 +734,10 @@ msgstr "%s: 预期收到数值"
 #, c-format
 msgid "%s: fish was not built with embedded files"
 msgstr "%s: fish 构建时未包含嵌入文件"
+
+#, c-format
+msgid "%s: function name required"
+msgstr "%s: 函数名称是必须的"
 
 #, c-format
 msgid "%s: given %d indexes but %d values\n"

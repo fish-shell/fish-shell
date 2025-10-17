@@ -81,10 +81,6 @@ msgid "%.*s: invalid conversion specification"
 msgstr "%.*s: invalid conversion specification"
 
 #, c-format
-msgid "%ls: function name required"
-msgstr ""
-
-#, c-format
 msgid "%s"
 msgstr ""
 
@@ -714,6 +710,10 @@ msgstr "%s: expected a numeric value"
 
 #, c-format
 msgid "%s: fish was not built with embedded files"
+msgstr ""
+
+#, c-format
+msgid "%s: function name required"
 msgstr ""
 
 #, c-format

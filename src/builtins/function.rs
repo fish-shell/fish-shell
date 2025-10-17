@@ -244,7 +244,7 @@ fn validate_function_name(
     if argv.len() < 2 {
         streams
             .err
-            .append(wgettext_fmt!("%ls: function name required", cmd));
+            .append(wgettext_fmt!("%s: function name required", cmd));
         return Err(STATUS_INVALID_ARGS);
     }
     *function_name = argv[1].to_owned();

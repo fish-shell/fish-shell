@@ -18,7 +18,6 @@ RUN apt-get update \
     python3 \
     python3-pexpect \
     tmux \
-    rustc \
     sudo \
   && locale-gen en_US.UTF-8 \
   && apt-get clean
@@ -34,11 +33,11 @@ USER fishuser
 WORKDIR /home/fishuser
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
-  && sh /tmp/rustup.sh -y --default-toolchain 1.75
+  && sh /tmp/rustup.sh -y --no-modify-path --default-toolchain 1.75
+ENV PATH=/home/fishuser/.cargo/bin:$PATH
 
 COPY fish_run_tests.sh /
 
 ENV FISH_CHECK_LINT=false
 
-CMD . ~/.cargo/env \
-  && /fish_run_tests.sh
+CMD /fish_run_tests.sh

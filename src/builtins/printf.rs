@@ -49,15 +49,15 @@
 // This file has been imported from source code of printf command in GNU Coreutils version 6.9.
 
 use super::prelude::*;
-use crate::locale::{get_numeric_locale, Locale};
+use crate::locale::{Locale, get_numeric_locale};
 use crate::wchar::encode_byte_to_char;
 use crate::wutil::{
     errors::Error,
     wcstod::wcstod,
-    wcstoi::{wcstoi_partial, Options as WcstoiOpts},
+    wcstoi::{Options as WcstoiOpts, wcstoi_partial},
     wstr_offset_in,
 };
-use fish_printf::{sprintf_locale, ToArg};
+use fish_printf::{ToArg, sprintf_locale};
 
 /// Return true if `c` is an octal digit.
 fn is_octal_digit(c: char) -> bool {

@@ -1,4 +1,4 @@
-use crate::key::{self, ctrl, function_key, parse_keys, Key};
+use crate::key::{self, Key, ctrl, function_key, parse_keys};
 use crate::wchar::prelude::*;
 
 #[test]

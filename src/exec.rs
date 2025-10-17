@@ -4,19 +4,20 @@
 // performed have been massive.
 
 use crate::builtins::shared::{
-    builtin_run, ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE,
-    STATUS_READ_TOO_MUCH,
+    ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
+    builtin_run,
 };
 use crate::common::{
-    exit_without_destructors, str2wcstring, truncate_at_nul, wcs2string, wcs2zstring, write_loop,
-    ScopeGuard,
+    ScopeGuard, exit_without_destructors, str2wcstring, truncate_at_nul, wcs2string, wcs2zstring,
+    write_loop,
 };
-use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
+use crate::env::{EnvMode, EnvStack, Environment, READ_BYTE_LIMIT, Statuses};
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::make_fd_blocking;
-use crate::fds::{make_autoclose_pipes, open_cloexec, PIPE_ERROR};
+use crate::fds::{PIPE_ERROR, make_autoclose_pipes, open_cloexec};
 use crate::flog::{FLOG, FLOGF};
+use crate::fork_exec::PATH_BSHELL;
 use crate::fork_exec::blocked_signals_for_job;
 use crate::fork_exec::postfork::{
     child_setup_process, execute_fork, execute_setpgid, report_setpgid_error,
@@ -24,7 +25,6 @@ use crate::fork_exec::postfork::{
 };
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::fork_exec::spawn::PosixSpawner;
-use crate::fork_exec::PATH_BSHELL;
 use crate::function::{self, FunctionProperties};
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
@@ -36,11 +36,11 @@ use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::proc::Pid;
 use crate::proc::{
-    hup_jobs, is_interactive_session, jobs_requiring_warning_on_exit, no_exec,
-    print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType,
+    InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType, hup_jobs,
+    is_interactive_session, jobs_requiring_warning_on_exit, no_exec, print_exit_warning_for_jobs,
 };
 use crate::reader::{reader_run_count, safe_restore_term_mode};
-use crate::redirection::{dup2_list_resolve_chain, Dup2List};
+use crate::redirection::{Dup2List, dup2_list_resolve_chain};
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
@@ -49,8 +49,8 @@ use crate::wchar_ext::ToWString;
 use crate::wutil::{fish_wcstol, perror};
 use errno::{errno, set_errno};
 use libc::{
-    c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
-    STDIN_FILENO, STDOUT_FILENO,
+    EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
+    STDIN_FILENO, STDOUT_FILENO, c_char,
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat;
@@ -61,7 +61,7 @@ use std::num::NonZeroU32;
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::slice;
 use std::sync::atomic::Ordering;
-use std::sync::{atomic::AtomicUsize, Arc};
+use std::sync::{Arc, atomic::AtomicUsize};
 
 /// Execute the processes specified by `j` in the parser \p.
 /// On a true return, the job was successfully launched and the parser will take responsibility for
@@ -289,11 +289,7 @@ pub fn exec_subshell_for_expand(
         true,
     );
     // Only return an error code if we should break expansion.
-    if break_expand {
-        ret
-    } else {
-        Ok(())
-    }
+    if break_expand { ret } else { Ok(()) }
 }
 
 /// Number of calls to fork() or posix_spawn().
@@ -1340,7 +1336,9 @@ fn exec_process_in_job(
         }
         ProcessType::Exec => {
             // We should have handled exec up above.
-            panic!("process_type_t::exec process found in pipeline, where it should never be. Aborting.");
+            panic!(
+                "process_type_t::exec process found in pipeline, where it should never be. Aborting."
+            );
         }
     }
 }

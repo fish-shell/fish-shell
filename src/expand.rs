@@ -8,27 +8,27 @@ use crate::builtins::shared::{
     STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD,
 };
 use crate::common::{
-    char_offset, charptr2wcstring, escape, escape_string, escape_string_for_double_quotes,
-    unescape_string, valid_var_name_char, wcs2zstring, EscapeFlags, EscapeStringStyle,
-    UnescapeFlags, UnescapeStringStyle, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
+    EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, EscapeFlags, EscapeStringStyle, UnescapeFlags,
+    UnescapeStringStyle, char_offset, charptr2wcstring, escape, escape_string,
+    escape_string_for_double_quotes, unescape_string, valid_var_name_char, wcs2zstring,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
 use crate::exec::exec_subshell_for_expand;
-use crate::future_feature_flags::{feature_test, FeatureFlag};
-use crate::history::{history_session_id, History};
+use crate::future_feature_flags::{FeatureFlag, feature_test};
+use crate::history::{History, history_session_id};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseError, ParseErrorCode, ParseErrorList, SOURCE_LOCATION_UNKNOWN};
 use crate::parse_util::{
-    parse_util_expand_variable_error, parse_util_locate_cmdsubst_range, MaybeParentheses,
+    MaybeParentheses, parse_util_expand_variable_error, parse_util_locate_cmdsubst_range,
 };
 use crate::path::path_apply_working_directory;
 use crate::util::wcsfilecmp_glob;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{join_strings, trim};
+use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, WildcardResult};
 use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
-use crate::wildcard::{WildcardResult, ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use crate::wutil::{normalize_path, wcstoi_partial, Options};
+use crate::wutil::{Options, normalize_path, wcstoi_partial};
 use bitflags::bitflags;
 use std::mem::MaybeUninit;
 
@@ -1342,11 +1342,11 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                 }
                 MaybeParentheses::CommandSubstitution(parens) => {
                     append_cmdsub_error!(
-                                self.errors,
-                                parens.start(),
-                                parens.end()-1,
-                                "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-                            );
+                        self.errors,
+                        parens.start(),
+                        parens.end() - 1,
+                        "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
+                    );
                     return ExpandResult::make_error(STATUS_EXPAND_ERROR);
                 }
             }

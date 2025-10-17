@@ -1,12 +1,12 @@
 use super::prelude::*;
 use super::read::TokenOutputMode;
 use crate::ast::{self, Kind, Leaf};
-use crate::common::{unescape_string, UnescapeFlags, UnescapeStringStyle};
+use crate::common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use crate::complete::Completion;
-use crate::expand::{expand_string, ExpandFlags, ExpandResultCode};
+use crate::expand::{ExpandFlags, ExpandResultCode, expand_string};
 use crate::input::input_function_get_code;
 use crate::input_common::{CharEvent, ReadlineCmd};
-use crate::operation_context::{no_cancel, OperationContext};
+use crate::operation_context::{OperationContext, no_cancel};
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_util::{
     parse_util_detect_errors, parse_util_get_offset_from_line, parse_util_job_extent,

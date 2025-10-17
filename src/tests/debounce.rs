@@ -1,13 +1,13 @@
 use std::sync::{
-    atomic::{AtomicU32, Ordering},
     Arc, Condvar, Mutex,
+    atomic::{AtomicU32, Ordering},
 };
 use std::time::Duration;
 
 use crate::global_safety::RelaxedAtomicBool;
-use crate::reader::{fake_scoped_reader, Reader};
+use crate::reader::{Reader, fake_scoped_reader};
 use crate::tests::prelude::*;
-use crate::threads::{iothread_drain_all, iothread_service_main, Debounce};
+use crate::threads::{Debounce, iothread_drain_all, iothread_service_main};
 
 #[test]
 #[serial]

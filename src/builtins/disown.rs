@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::io::IoStreams;
 use crate::parser::Parser;
-use crate::proc::{add_disowned_job, Job};
+use crate::proc::{Job, add_disowned_job};
 use crate::{builtins::shared::HelpOnlyCmdOpts, wchar::wstr, wutil::wgettext_fmt};
 use libc::SIGCONT;
 

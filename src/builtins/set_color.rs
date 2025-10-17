@@ -4,9 +4,9 @@ use super::prelude::*;
 use crate::color::Color;
 use crate::common::str2wcstring;
 use crate::screen::{is_dumb, only_grayscale};
-use crate::terminal::{use_terminfo, Outputter};
+use crate::terminal::{Outputter, use_terminfo};
 use crate::text_face::{
-    self, parse_text_face_and_options, PrintColorsArgs, SpecifiedTextFace, TextFace, TextStyling,
+    self, PrintColorsArgs, SpecifiedTextFace, TextFace, TextStyling, parse_text_face_and_options,
 };
 
 fn print_colors(

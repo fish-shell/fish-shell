@@ -1,15 +1,15 @@
 use crate::{
+    FLOG, FLOGF,
     common::{str2wcstring, wcs2osstring, wcs2zstring},
     fds::wopen_cloexec,
-    path::{path_remoteness, DirRemoteness},
+    path::{DirRemoteness, path_remoteness},
     wchar::prelude::*,
     wutil::{
-        file_id_for_file, file_id_for_path, wdirname, wrename, wunlink, FileId, INVALID_FILE_ID,
+        FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, wdirname, wrename, wunlink,
     },
-    FLOG, FLOGF,
 };
 use errno::errno;
-use libc::{c_int, fchown, flock, LOCK_EX, LOCK_SH};
+use libc::{LOCK_EX, LOCK_SH, c_int, flock};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{
     ffi::CString,
@@ -32,7 +32,7 @@ fn fish_mkstemp_cloexec(name_template: CString) -> std::io::Result<(File, CStrin
     };
     #[cfg(apple)]
     let fd = {
-        use libc::{FD_CLOEXEC, F_SETFD};
+        use libc::{F_SETFD, FD_CLOEXEC};
         let fd = unsafe { libc::mkstemp(name) };
         if fd != -1 {
             unsafe { libc::fcntl(fd, F_SETFD, FD_CLOEXEC) };
@@ -262,7 +262,9 @@ where
         // If the file id did not change, we assume that we loaded a consistent state.
         return Ok((final_file_id, loaded_data));
     }
-    Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to update the file. Locking is disabled, and the fallback code did not succeed within the permissible number of attempts."))
+    Err(std::io::Error::other(
+        "Failed to update the file. Locking is disabled, and the fallback code did not succeed within the permissible number of attempts.",
+    ))
 }
 
 pub struct PotentialUpdate<UserData> {
@@ -312,12 +314,11 @@ where
         // did, it would be tricky to set the permissions correctly. (bash doesn't get this
         // case right either).
         if let Ok(md) = old_file.metadata() {
-            // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
-            if unsafe { fchown(new_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
+            if let Err(e) = std::os::unix::fs::fchown(new_file, Some(md.uid()), Some(md.gid())) {
                 FLOG!(
                     synced_file_access,
                     "Error when changing ownership of file:",
-                    errno::errno()
+                    e
                 );
             }
             if let Err(e) = new_file.set_permissions(md.permissions()) {
@@ -470,7 +471,9 @@ where
             // (If we did write.)
             return Ok((final_file_id, potential_update));
         }
-        Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to update the file. Locking is disabled, and the fallback code did not succeed within the permissible number of attempts."))
+        Err(std::io::Error::other(
+            "Failed to update the file. Locking is disabled, and the fallback code did not succeed within the permissible number of attempts.",
+        ))
     }
 
     const TMP_FILE_SUFFIX: &wstr = L!(".XXXXXX");

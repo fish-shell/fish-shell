@@ -1,19 +1,19 @@
 use crate::common::{
-    fish_reserved_codepoint, get_is_multibyte_locale, is_windows_subsystem_for_linux, read_blocked,
-    shell_modes, str2wcstring, WSL,
+    WSL, fish_reserved_codepoint, get_is_multibyte_locale, is_windows_subsystem_for_linux,
+    read_blocked, shell_modes, str2wcstring,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
-use crate::flog::{FloggableDebug, FloggableDisplay, FLOG};
+use crate::flog::{FLOG, FloggableDebug, FloggableDisplay};
 use crate::key::{
-    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol,
-    function_key, shift, Key, Modifiers, ViewportPosition,
+    self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
+    canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
 };
 use crate::reader::reader_test_and_clear_interrupted;
 use crate::threads::iothread_port;
 use crate::tty_handoff::{
-    maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
-    SCROLL_CONTENT_UP_TERMINFO_CODE, XTVERSION,
+    SCROLL_CONTENT_UP_TERMINFO_CODE, XTVERSION, maybe_set_kitty_keyboard_capability,
+    maybe_set_scroll_content_up_capability,
 };
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
@@ -887,7 +887,7 @@ pub trait InputEventQueuer {
                     if key.is_some_and(|key| key.key == Key::from_raw(key::Invalid)) {
                         continue;
                     }
-                    assert!(key.map_or(true, |key| key.codepoint != key::Invalid));
+                    assert!(key.is_none_or(|key| key.codepoint != key::Invalid));
                     let mut consumed = 0;
                     let mut state = zero_mbstate();
                     let mut i = 0;

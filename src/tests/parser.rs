@@ -1,11 +1,11 @@
-use crate::ast::{self, is_same_node, Ast, Castable, JobList, JobPipeline, Kind, Node, Traversal};
+use crate::ast::{self, Ast, Castable, JobList, JobPipeline, Kind, Node, Traversal, is_same_node};
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
 use crate::parse_constants::{
     ParseErrorCode, ParseTokenType, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
 };
-use crate::parse_tree::{parse_source, LineCounter};
+use crate::parse_tree::{LineCounter, parse_source};
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
 use crate::parser::{CancelBehavior, Parser};
 use crate::reader::{fake_scoped_reader, reader_reset_interrupted};

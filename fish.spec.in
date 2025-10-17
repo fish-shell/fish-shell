@@ -11,7 +11,7 @@ URL:                    https://fishshell.com/
 Source0:                %{name}_@VERSION@.orig.tar.xz
 Source1:                %{name}_@VERSION@.orig-cargo-vendor.tar.xz
 BuildRequires:          cargo gettext gcc xz pcre2-devel
-BuildRequires:          rust >= 1.70
+BuildRequires:          rust >= 1.85
 # Packaging guidelines say to use a BuildRequires: rust-packaging, but it adds no value for our package
 
 BuildRequires: cmake >= 3.15

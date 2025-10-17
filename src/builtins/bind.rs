@@ -2,12 +2,12 @@
 
 use super::prelude::*;
 use crate::common::{
-    escape, escape_string, str2wcstring, valid_var_name, EscapeFlags, EscapeStringStyle,
+    EscapeFlags, EscapeStringStyle, escape, escape_string, str2wcstring, valid_var_name,
 };
 use crate::highlight::{colorize, highlight_shell};
-use crate::input::{input_function_get_names, input_mappings, InputMappingSet, KeyNameStyle};
+use crate::input::{InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings};
 use crate::key::{
-    self, char_to_symbol, function_key, parse_keys, Key, Modifiers, KEY_NAMES, MAX_FUNCTION_KEY,
+    self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
 };
 use crate::nix::isatty;
 use std::sync::MutexGuard;

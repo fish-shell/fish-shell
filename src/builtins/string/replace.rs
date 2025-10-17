@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 use pcre2::utf32::{Regex, RegexBuilder};
 
 use super::*;
-use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::future_feature_flags::{FeatureFlag, feature_test};
 
 #[derive(Default)]
 pub struct Replace<'args> {

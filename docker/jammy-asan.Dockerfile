@@ -36,7 +36,8 @@ USER fishuser
 WORKDIR /home/fishuser
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
-  && sh /tmp/rustup.sh -y --default-toolchain nightly --component rust-src
+  && sh /tmp/rustup.sh -y --no-modify-path --default-toolchain nightly --component rust-src
+ENV PATH=/home/fishuser/.cargo/bin:$PATH
 
 COPY fish_run_tests.sh /
 
@@ -54,6 +55,5 @@ ENV \
 
 ENV FISH_CHECK_LINT=false
 
-CMD . ~/.cargo/env \
-    && ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-$(cat /.llvm-version) \
+CMD ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-$(cat /.llvm-version) \
     && /fish_run_tests.sh

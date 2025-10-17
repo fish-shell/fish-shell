@@ -4,7 +4,7 @@
 
 use crate::ast;
 use crate::common::{
-    charptr2wcstring, escape, is_windows_subsystem_for_linux, timef, Timepoint, WSL,
+    Timepoint, WSL, charptr2wcstring, escape, is_windows_subsystem_for_linux, timef,
 };
 use crate::env::Statuses;
 use crate::event::{self, Event};
@@ -16,16 +16,16 @@ use crate::parse_tree::NodeRef;
 use crate::parser::{Block, Parser};
 use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
 use crate::redirection::RedirectionSpecList;
-use crate::signal::{signal_set_handlers_once, Signal};
-use crate::topic_monitor::{topic_monitor_principal, GenerationsList, Topic};
+use crate::signal::{Signal, signal_set_handlers_once};
+use crate::topic_monitor::{GenerationsList, Topic, topic_monitor_principal};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
 use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
 use crate::wutil::{wbasename, wperror};
 use libc::{
-    EXIT_SUCCESS, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
-    SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, WCONTINUED, WEXITSTATUS, WIFCONTINUED,
-    WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED, _SC_CLK_TCK,
+    _SC_CLK_TCK, EXIT_SUCCESS, SIG_DFL, SIG_IGN, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
+    SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, WCONTINUED, WEXITSTATUS,
+    WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
 };
 use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
@@ -891,11 +891,7 @@ impl Job {
             return None;
         }
         st.status = if self.flags().negate {
-            if laststatus == 0 {
-                1
-            } else {
-                0
-            }
+            if laststatus == 0 { 1 } else { 0 }
         } else {
             laststatus
         };

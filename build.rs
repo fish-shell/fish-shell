@@ -57,7 +57,9 @@ fn main() {
     detect_cfgs(&mut target);
 
     #[cfg(all(target_env = "gnu", target_feature = "crt-static"))]
-    compile_error!("Statically linking against glibc has unavoidable crashes and is unsupported. Use dynamic linking or link statically against musl.");
+    compile_error!(
+        "Statically linking against glibc has unavoidable crashes and is unsupported. Use dynamic linking or link statically against musl."
+    );
 }
 
 /// Check target system support for certain functionality dynamically when the build is invoked,
@@ -130,7 +132,6 @@ fn detect_bsd(_: &Target) -> bool {
     if !target.chars().all(|c| c.is_ascii_lowercase()) {
         target = target.to_ascii_lowercase();
     }
-    #[allow(clippy::let_and_return)] // for old clippy
     let is_bsd = target.ends_with("bsd") || target.ends_with("dragonfly");
     #[cfg(any(
         target_os = "dragonfly",

@@ -1,7 +1,7 @@
 use crate::flog::FLOG;
 use std::cell::{Ref, RefMut};
-use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 use std::sync::MutexGuard;
+use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 
 #[derive(Debug, Default)]
 pub struct RelaxedAtomicBool(AtomicBool);

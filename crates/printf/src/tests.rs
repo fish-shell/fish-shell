@@ -1,6 +1,6 @@
 use crate::arg::ToArg;
-use crate::locale::{Locale, C_LOCALE, EN_US_LOCALE};
-use crate::{sprintf_locale, Error, FormatString};
+use crate::locale::{C_LOCALE, EN_US_LOCALE, Locale};
+use crate::{Error, FormatString, sprintf_locale};
 use libc::c_char;
 use std::f64::consts::{E, PI, TAU};
 use std::fmt;
@@ -859,7 +859,7 @@ fn test_float_hex_prec() {
     let c_storage_ptr = c_storage.as_mut_ptr() as *mut c_char;
     let mut rust_str = String::with_capacity(256);
 
-    let c_fmt = b"%.*a\0".as_ptr() as *const c_char;
+    let c_fmt = c"%.*a".as_ptr() as *const c_char;
     let mut failed = false;
     for sign in [1.0, -1.0].into_iter() {
         for mut v in [0.0, 0.5, 1.0, 1.5, PI, TAU, E].into_iter() {
@@ -932,19 +932,19 @@ fn test_exhaustive(rust_fmt: &str, c_fmt: *const c_char) {
 #[ignore]
 fn test_float_g_exhaustive() {
     // To run: cargo test test_float_g_exhaustive --release -- --ignored --nocapture
-    test_exhaustive("%.*g", b"%.*g\0".as_ptr() as *const c_char);
+    test_exhaustive("%.*g", c"%.*g".as_ptr() as *const c_char);
 }
 
 #[test]
 #[ignore]
 fn test_float_e_exhaustive() {
     // To run: cargo test test_float_e_exhaustive --release -- --ignored --nocapture
-    test_exhaustive("%.*e", b"%.*e\0".as_ptr() as *const c_char);
+    test_exhaustive("%.*e", c"%.*e".as_ptr() as *const c_char);
 }
 
 #[test]
 #[ignore]
 fn test_float_f_exhaustive() {
     // To run: cargo test test_float_f_exhaustive --release -- --ignored --nocapture
-    test_exhaustive("%.*f", b"%.*f\0".as_ptr() as *const c_char);
+    test_exhaustive("%.*f", c"%.*f".as_ptr() as *const c_char);
 }

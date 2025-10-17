@@ -4,7 +4,7 @@
 
 use crate::ast::{self, Node};
 use crate::autoload::Autoload;
-use crate::common::{assert_sync, escape, valid_func_name, FilenameRef};
+use crate::common::{FilenameRef, assert_sync, escape, valid_func_name};
 use crate::complete::complete_wrap_map;
 use crate::env::{EnvStack, Environment};
 use crate::event::{self, EventDescription};

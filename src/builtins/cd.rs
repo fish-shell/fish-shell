@@ -3,12 +3,12 @@
 use super::prelude::*;
 use crate::{
     env::{EnvMode, Environment},
-    fds::{wopen_dir, BEST_O_SEARCH},
+    fds::{BEST_O_SEARCH, wopen_dir},
     path::path_apply_cdpath,
     wutil::{normalize_path, wperror, wreadlink},
 };
 use errno::Errno;
-use libc::{fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
+use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM, fchdir};
 use std::{os::fd::AsRawFd, sync::Arc};
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is

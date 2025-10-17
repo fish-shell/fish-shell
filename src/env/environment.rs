@@ -1,18 +1,18 @@
-use super::environment_impl::{
-    colon_split, uvars, EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult,
-    UVAR_SCOPE_IS_GLOBAL,
-};
 use super::ElectricVar;
-use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
+use super::environment_impl::{
+    EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult, UVAR_SCOPE_IS_GLOBAL,
+    colon_split, uvars,
+};
+use crate::abbrs::{Abbreviation, Position, abbrs_get_set};
 use crate::builtins::shared::{BuiltinResult, SUCCESS};
-use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
+use crate::common::{UnescapeStringStyle, str2wcstring, unescape_string, wcs2zstring};
 use crate::env::config_paths::ConfigPaths;
 use crate::env::{EnvMode, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
 use crate::event::Event;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input::{init_input, FISH_BIND_MODE_VAR};
+use crate::input::{FISH_BIND_MODE_VAR, init_input};
 use crate::nix::{geteuid, getpid};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
@@ -441,11 +441,7 @@ fn get_hostname_identifier() -> Option<WString> {
         let cstr = unsafe { CStr::from_ptr(b.as_ptr()) };
         let res = str2wcstring(cstr.to_bytes());
 
-        if res.is_empty() {
-            None
-        } else {
-            Some(res)
-        }
+        if res.is_empty() { None } else { Some(res) }
     } else {
         None
     }

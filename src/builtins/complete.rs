@@ -1,6 +1,6 @@
 use super::prelude::*;
-use crate::common::{unescape_string, ScopeGuard, UnescapeFlags, UnescapeStringStyle};
-use crate::complete::{complete_add_wrapper, complete_remove_wrapper, CompletionRequestOptions};
+use crate::common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle, unescape_string};
+use crate::complete::{CompletionRequestOptions, complete_add_wrapper, complete_remove_wrapper};
 use crate::highlight::colorize;
 use crate::highlight::highlight_shell;
 use crate::nix::isatty;
@@ -14,8 +14,8 @@ use crate::wcstringutil::string_suffixes_string;
 use crate::{
     common::str2wcstring,
     complete::{
-        complete_add, complete_print, complete_remove, complete_remove_all, CompleteFlags,
-        CompleteOptionType, CompletionMode,
+        CompleteFlags, CompleteOptionType, CompletionMode, complete_add, complete_print,
+        complete_remove, complete_remove_all,
     },
 };
 use libc::STDOUT_FILENO;

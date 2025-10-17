@@ -7,8 +7,8 @@ use std::sync::Arc;
 use crate::ast::{self, Ast, JobList, Node};
 use crate::common::{assert_send, assert_sync};
 use crate::parse_constants::{
-    token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange, SOURCE_OFFSET_INVALID,
+    ParseErrorCode, ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags,
+    SOURCE_OFFSET_INVALID, SourceOffset, SourceRange, token_type_user_presentable_description,
 };
 use crate::tokenizer::TokenizerError;
 use crate::wchar::prelude::*;

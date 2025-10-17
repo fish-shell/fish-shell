@@ -1,5 +1,5 @@
 use crate::common::{assert_send, assert_sync};
-use std::ffi::{c_char, CStr, CString};
+use std::ffi::{CStr, CString, c_char};
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::ptr;

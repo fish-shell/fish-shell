@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use libc::{c_uint, rlim_t, RLIM_INFINITY};
+use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
 use once_cell::sync::Lazy;
 
@@ -55,7 +55,28 @@ pub mod limits {
     define_on!(RTPRIO, RLIMIT_RTPRIO; "linux");
     define_on!(RTTIME, RLIMIT_RTTIME; "linux");
     define_on!(RSS, RLIMIT_RSS; "linux", "freebsd", "netbsd", "openbsd", "dragonfly");
-    define_on!(AS, RLIMIT_AS; "linux", "ios", "macos", "cygwin", "freebsd", "netbsd", "dragonfly");
+    // TODO(MSRV >= 1.86): target_os = "cygwin" triggers a warning on Rust 1.85.
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "ios",
+        target_os = "macos",
+        target_os = "freebsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+        cygwin
+    ))]
+    pub const AS: libc::c_int = libc::RLIMIT_AS as _;
+    // TODO(MSRV >= 1.86): target_os = "cygwin" triggers a warning on Rust 1.85.
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "ios",
+        target_os = "macos",
+        target_os = "freebsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+        cygwin
+    )))]
+    pub const AS: libc::c_int = -1;
     define_on!(SBSIZE, RLIMIT_SBSIZE; "freebsd", "netbsd", "dragonfly");
     define_on!(NICE, RLIMIT_NICE; "linux");
     define_on!(KQUEUES, RLIMIT_KQUEUES; "freebsd");

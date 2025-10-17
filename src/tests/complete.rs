@@ -1,13 +1,13 @@
-use crate::abbrs::{self, with_abbrs_mut, Abbreviation};
+use crate::abbrs::{self, Abbreviation, with_abbrs_mut};
 use crate::complete::{
-    complete, complete_add, complete_add_wrapper, complete_get_wrap_targets,
-    complete_remove_wrapper, sort_and_prioritize, CompleteFlags, CompleteOptionType,
-    CompletionMode, CompletionRequestOptions,
+    CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, complete,
+    complete_add, complete_add_wrapper, complete_get_wrap_targets, complete_remove_wrapper,
+    sort_and_prioritize,
 };
 use crate::env::{EnvMode, Environment};
 use crate::io::IoChain;
 use crate::operation_context::{
-    no_cancel, OperationContext, EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT,
+    EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT, OperationContext, no_cancel,
 };
 use crate::reader::completion_apply_to_command_line;
 use crate::tests::prelude::*;
@@ -323,16 +323,20 @@ fn test_complete() {
     let completions = do_complete(L!("cat testfile te"), CompletionRequestOptions::default());
     assert_eq!(completions.len(), 1);
     assert_eq!(completions[0].completion, L!("stfile"));
-    assert!(completions[0]
-        .flags
-        .contains(CompleteFlags::DUPLICATES_ARGUMENT));
+    assert!(
+        completions[0]
+            .flags
+            .contains(CompleteFlags::DUPLICATES_ARGUMENT)
+    );
     let completions = do_complete(L!("cat testfile TE"), CompletionRequestOptions::default());
     assert_eq!(completions.len(), 1);
     assert_eq!(completions[0].completion, L!("testfile"));
     assert!(completions[0].flags.contains(CompleteFlags::REPLACES_TOKEN));
-    assert!(completions[0]
-        .flags
-        .contains(CompleteFlags::DUPLICATES_ARGUMENT));
+    assert!(
+        completions[0]
+            .flags
+            .contains(CompleteFlags::DUPLICATES_ARGUMENT)
+    );
     let completions = do_complete(
         L!("something --abc=te"),
         CompletionRequestOptions::default(),

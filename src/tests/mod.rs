@@ -29,7 +29,7 @@ mod topic_monitor;
 mod wgetopt;
 
 pub mod prelude {
-    use crate::common::{ScopeGuard, ScopeGuarding, BUILD_DIR};
+    use crate::common::{BUILD_DIR, ScopeGuard, ScopeGuarding};
     use crate::env::{env_init, misc_init};
     use crate::parser::{CancelBehavior, Parser};
     use crate::reader::{reader_deinit, reader_init};

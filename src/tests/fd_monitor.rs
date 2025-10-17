@@ -14,7 +14,7 @@ use errno::errno;
 
 use crate::fd_monitor::{FdEventSignaller, FdMonitor};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
-use crate::fds::{make_autoclose_pipes, AutoCloseFd, AutoClosePipes};
+use crate::fds::{AutoCloseFd, AutoClosePipes, make_autoclose_pipes};
 use crate::tests::prelude::*;
 
 /// Helper to make an item which counts how many times its callback was invoked.
@@ -184,11 +184,7 @@ where
         // macOS will eagerly return EBADF if the fd is closed; Linux will hit the timeout.
         let timeout = Timeout::Duration(Duration::from_millis(500));
         let ret = fd_set.check_readable(timeout);
-        if ret < 0 {
-            Err(errno().0)
-        } else {
-            Ok(ret)
-        }
+        if ret < 0 { Err(errno().0) } else { Ok(ret) }
     });
 
     barrier.wait();
@@ -204,7 +200,7 @@ where
 
 #[test]
 fn test_close_during_select_ebadf() {
-    use crate::common::{is_windows_subsystem_for_linux as is_wsl, WSL};
+    use crate::common::{WSL, is_windows_subsystem_for_linux as is_wsl};
     let close_it = |read_fd: OwnedFd| {
         drop(read_fd);
         None

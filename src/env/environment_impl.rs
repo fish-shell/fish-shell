@@ -1,12 +1,12 @@
 use crate::common::wcs2zstring;
 use crate::env::{
-    is_read_only, ElectricVar, EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Statuses, VarTable,
-    ELECTRIC_VARIABLES, PATH_ARRAY_SEP,
+    ELECTRIC_VARIABLES, ElectricVar, EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags,
+    PATH_ARRAY_SEP, Statuses, VarTable, is_read_only,
 };
 use crate::env_universal_common::EnvUniversal;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::history::{history_session_id_from_var, History};
+use crate::history::{History, history_session_id_from_var};
 use crate::kill::kill_entries;
 use crate::nix::umask;
 use crate::null_terminated_array::OwningNullTerminatedArray;
@@ -27,7 +27,7 @@ use std::ops::{Deref, DerefMut};
 use portable_atomic::AtomicU64;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::{atomic::Ordering, Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, atomic::Ordering};
 
 /// Getter for universal variables.
 /// This is typically initialized in env_init(), and is considered empty before then.
@@ -222,7 +222,7 @@ impl Deref for EnvNodeRef {
     type Target = RefCell<EnvNode>;
 
     fn deref(&self) -> &Self::Target {
-        &self.0 .0
+        &self.0.0
     }
 }
 

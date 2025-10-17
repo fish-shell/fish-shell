@@ -222,7 +222,7 @@ pub fn parse_hex_float(
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_hex_float, SyntaxError};
+    use super::{SyntaxError, parse_hex_float};
 
     // Helper to parse a float, expecting to succeed and consume the entire string.
     fn parse(input: &str) -> f64 {

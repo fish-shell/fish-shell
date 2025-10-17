@@ -1,14 +1,14 @@
 use std::sync::MutexGuard;
 
 use crate::common::{
-    escape_string, fish_setlocale, str2wcstring, unescape_string, wcs2string, EscapeFlags,
-    EscapeStringStyle, UnescapeStringStyle, ENCODE_DIRECT_BASE, ENCODE_DIRECT_END,
+    ENCODE_DIRECT_BASE, ENCODE_DIRECT_END, EscapeFlags, EscapeStringStyle, UnescapeStringStyle,
+    escape_string, fish_setlocale, str2wcstring, unescape_string, wcs2string,
 };
 use crate::locale::LOCALE_LOCK;
 use crate::util::{get_rng_seed, get_seeded_rng};
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::{L, WString, wstr};
 use crate::wutil::encoding::{
-    probe_is_multibyte_locale, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX,
+    AT_LEAST_MB_LEN_MAX, probe_is_multibyte_locale, wcrtomb, zero_mbstate,
 };
 use rand::{Rng, RngCore};
 
@@ -124,7 +124,10 @@ fn escape_test(escape_style: EscapeStringStyle, unescape_style: UnescapeStringSt
             let slice = escaped_string.as_char_slice();
             panic!("Failed to unescape string {slice:?}");
         };
-        assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string {random_string:?}, but got back a different string {unescaped_string:?}. The intermediate escape looked like {escaped_string:?}.");
+        assert_eq!(
+            random_string, unescaped_string,
+            "Escaped and then unescaped string {random_string:?}, but got back a different string {unescaped_string:?}. The intermediate escape looked like {escaped_string:?}."
+        );
     }
 }
 
@@ -156,7 +159,10 @@ fn test_escape_no_printables() {
         panic!("Failed to unescape string <{escaped_string}>");
     };
 
-    assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string '{random_string}', but got back a different string '{unescaped_string}'");
+    assert_eq!(
+        random_string, unescaped_string,
+        "Escaped and then unescaped string '{random_string}', but got back a different string '{unescaped_string}'"
+    );
 }
 
 /// The number of tests to run.

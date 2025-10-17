@@ -1,17 +1,17 @@
 //! The classes responsible for autoloading functions and completions.
 
+use crate::FLOGF;
 #[cfg(feature = "embed-data")]
 use crate::common::wcs2string;
-use crate::common::{escape, ScopeGuard};
+use crate::common::{ScopeGuard, escape};
 use crate::env::Environment;
 use crate::io::IoChain;
 use crate::parser::Parser;
 #[cfg(test)]
 use crate::tests::prelude::*;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
-use crate::wutil::{file_id_for_path, FileId, INVALID_FILE_ID};
-use crate::FLOGF;
+use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_path};
 use lru::LruCache;
 #[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
@@ -521,9 +521,11 @@ fn test_autoload() {
     let paths = &[p1.clone(), p2.clone()];
     let mut autoload = Autoload::new(L!("test_var"));
     assert!(autoload.resolve_command_impl(L!("file1"), paths).is_none());
-    assert!(autoload
-        .resolve_command_impl(L!("nothing"), paths)
-        .is_none());
+    assert!(
+        autoload
+            .resolve_command_impl(L!("nothing"), paths)
+            .is_none()
+    );
     assert!(autoload.get_autoloaded_commands().is_empty());
 
     run!("touch %s/file1.fish", p1);
@@ -549,9 +551,11 @@ fn test_autoload() {
         autoload.resolve_command_impl(L!("file1"), paths),
         AutoloadResult::Loaded
     ));
-    assert!(autoload
-        .resolve_command_impl(L!("nothing"), paths)
-        .is_none());
+    assert!(
+        autoload
+            .resolve_command_impl(L!("nothing"), paths)
+            .is_none()
+    );
     assert!(autoload.resolve_command_impl(L!("file2"), paths).is_some());
     assert!(matches!(
         autoload.resolve_command_impl(L!("file2"), paths),
@@ -571,9 +575,11 @@ fn test_autoload() {
         autoload.resolve_command_impl(L!("file1"), paths),
         AutoloadResult::Loaded
     ));
-    assert!(autoload
-        .resolve_command_impl(L!("nothing"), paths)
-        .is_none());
+    assert!(
+        autoload
+            .resolve_command_impl(L!("nothing"), paths)
+            .is_none()
+    );
     assert!(autoload.resolve_command_impl(L!("file2"), paths).is_some());
     assert!(matches!(
         autoload.resolve_command_impl(L!("file2"), paths),

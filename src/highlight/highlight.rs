@@ -7,34 +7,34 @@ use crate::ast::{
 use crate::builtins::shared::builtin_exists;
 use crate::color::Color;
 use crate::common::{
-    valid_var_name, valid_var_name_char, ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
+    ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, valid_var_name, valid_var_name_char,
 };
 use crate::complete::complete_wrap_map;
 use crate::env::{EnvVar, Environment};
 use crate::expand::{
-    expand_one, expand_to_command_and_args, ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR,
+    ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR, expand_one, expand_to_command_and_args,
 };
 use crate::function;
-use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::highlight::file_tester::FileTester;
-use crate::history::{all_paths_are_valid, HistoryItem};
+use crate::history::{HistoryItem, all_paths_are_valid};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
     ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
 };
 use crate::parse_util::{
-    parse_util_locate_cmdsubst_range, parse_util_slice_length, MaybeParentheses,
+    MaybeParentheses, parse_util_locate_cmdsubst_range, parse_util_slice_length,
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{parse_text_face, TextFace, UnderlineStyle};
+use crate::text_face::{TextFace, UnderlineStyle, parse_text_face};
 use crate::threads::assert_is_background_thread;
-use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
-use crate::wchar::{wstr, WString, L};
+use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
+use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::string_prefixes_string;
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 
 use super::file_tester::IsFile;
 

@@ -1,7 +1,7 @@
 //! Implementation of the history builtin.
 
 use crate::history::in_private_mode;
-use crate::history::{self, history_session_id, History};
+use crate::history::{self, History, history_session_id};
 use crate::reader::commandline_get_state;
 
 use super::prelude::*;

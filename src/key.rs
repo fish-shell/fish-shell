@@ -1,10 +1,10 @@
 use libc::VERASE;
 
 use crate::{
-    common::{escape_string, EscapeFlags, EscapeStringStyle},
+    common::{EscapeFlags, EscapeStringStyle, escape_string},
     fallback::fish_wcwidth,
     flog::FloggableDebug,
-    future_feature_flags::{test as feature_test, FeatureFlag},
+    future_feature_flags::{FeatureFlag, test as feature_test},
     reader::safe_get_terminal_mode_on_startup,
     wchar::{decode_byte_from_char, prelude::*},
     wutil::fish_wcstoul,
@@ -285,7 +285,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                             "unknown modifier '%s' in '%s'",
                             modifier,
                             escape_nonprintables(full_key_name)
-                        ))
+                        ));
                     }
                 }
             }

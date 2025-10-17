@@ -254,7 +254,7 @@ macro_rules! should_flog {
     };
 }
 
-pub use {should_flog, FLOG, FLOGF};
+pub use {FLOG, FLOGF, should_flog};
 
 /// For each category, if its name matches the wildcard, set its enabled to the given sense.
 fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {

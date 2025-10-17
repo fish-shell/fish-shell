@@ -3,8 +3,8 @@ use std::{
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     mem,
     sync::{
-        atomic::{self, AtomicUsize},
         Mutex, MutexGuard,
+        atomic::{self, AtomicUsize},
     },
     time::{Duration, Instant},
 };
@@ -14,7 +14,7 @@ use crate::{
     common::charptr2wcstring,
     reader::{get_quote, is_backslashed},
     util::wcsfilecmp,
-    wutil::{localizable_string, LocalizableString},
+    wutil::{LocalizableString, localizable_string},
 };
 use bitflags::bitflags;
 use once_cell::sync::Lazy;
@@ -24,18 +24,18 @@ use crate::{
     autoload::Autoload,
     builtins::shared::{builtin_exists, builtin_get_desc, builtin_get_names},
     common::{
-        escape, unescape_string, valid_var_name_char, ScopeGuard, UnescapeFlags,
-        UnescapeStringStyle,
+        ScopeGuard, UnescapeFlags, UnescapeStringStyle, escape, unescape_string,
+        valid_var_name_char,
     },
     env::{EnvMode, EnvStack, Environment},
     exec::exec_subshell,
     expand::{
-        expand_escape_string, expand_escape_variable, expand_one, expand_string,
-        expand_to_receiver, ExpandFlags, ExpandResultCode,
+        ExpandFlags, ExpandResultCode, expand_escape_string, expand_escape_variable, expand_one,
+        expand_string, expand_to_receiver,
     },
     flog::{FLOG, FLOGF},
     function,
-    history::{history_session_id, History},
+    history::{History, history_session_id},
     operation_context::OperationContext,
     parse_constants::SourceRange,
     parse_util::{
@@ -44,12 +44,12 @@ use crate::{
     parser::{Block, Parser},
     parser_keywords::parser_keywords_is_subcommand,
     path::{path_get_path, path_try_get_path},
-    tokenizer::{variable_assignment_equals_pos, Tok, TokFlags, TokenType, Tokenizer},
+    tokenizer::{Tok, TokFlags, TokenType, Tokenizer, variable_assignment_equals_pos},
     wchar::prelude::*,
     wchar_ext::WExt,
     wcstringutil::{
-        string_fuzzy_match_string, string_prefixes_string, string_prefixes_string_case_insensitive,
-        StringFuzzyMatch,
+        StringFuzzyMatch, string_fuzzy_match_string, string_prefixes_string,
+        string_prefixes_string_case_insensitive,
     },
     wildcard::{wildcard_complete, wildcard_has, wildcard_match},
     wutil::wrealpath,

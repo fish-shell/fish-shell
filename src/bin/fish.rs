@@ -31,21 +31,21 @@ use fish::{
         },
     },
     common::{
-        escape, save_term_foreground_process_group, str2wcstring, wcs2string, PACKAGE_NAME,
-        PROFILING_ACTIVE, PROGRAM_NAME,
+        PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, escape, save_term_foreground_process_group,
+        str2wcstring, wcs2string,
     },
     env::{
-        config_paths::ConfigPaths,
-        environment::{env_init, EnvStack, Environment},
         EnvMode, Statuses,
+        config_paths::ConfigPaths,
+        environment::{EnvStack, Environment, env_init},
     },
     eprintf,
     event::{self, Event},
-    flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
+    flog::{self, FLOG, FLOGF, activate_flog_categories_by_pattern, set_flog_file_fd},
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
     io::IoChain,
-    nix::{getpid, getrusage, isatty, RUsage},
+    nix::{RUsage, getpid, getrusage, isatty},
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
@@ -54,8 +54,8 @@ use fish::{
     path::path_get_config,
     printf,
     proc::{
-        get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
-        set_interactive_session, Pid,
+        Pid, get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
+        set_interactive_session,
     },
     reader::{reader_init, reader_read, term_copy_modes},
     signal::{signal_clear_cancel, signal_unblock_all},
@@ -71,8 +71,8 @@ use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
 use std::path::Path;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::{env, ops::ControlFlow};
 
 #[cfg(feature = "embed-data")]
@@ -242,7 +242,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_in
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
-    use fish::wgetopt::{wopt, ArgType::*, WGetopter, WOption};
+    use fish::wgetopt::{ArgType::*, WGetopter, WOption, wopt};
 
     const RUSAGE_ARG: char = 1 as char;
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;

@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::terminal::{self, get_color_support};
 use crate::wchar::prelude::*;
-use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
+use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
 
 trait StyleSet {
     fn union_prefer_right(self, other: Self) -> Self;

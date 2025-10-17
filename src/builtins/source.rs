@@ -1,7 +1,7 @@
 use std::os::fd::AsRawFd;
 
 use crate::{
-    common::{escape, FilenameRef},
+    common::{FilenameRef, escape},
     fds::wopen_cloexec,
     nix::isatty,
     parser::Block,

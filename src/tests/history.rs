@@ -1,4 +1,4 @@
-use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string, WSL};
+use crate::common::{WSL, is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string};
 use crate::env::{EnvMode, EnvStack};
 use crate::history::{
     self, History, HistoryItem, HistorySearch, PathList, SearchDirection, VACUUM_FREQUENCY,
@@ -10,8 +10,8 @@ use crate::util::get_rng;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
 use fish_build_helper::workspace_root;
-use rand::rngs::SmallRng;
 use rand::Rng;
+use rand::rngs::SmallRng;
 use std::collections::VecDeque;
 use std::ffi::CString;
 use std::io::BufReader;

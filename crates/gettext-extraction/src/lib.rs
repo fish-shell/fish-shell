@@ -50,7 +50,9 @@ fn append_po_entry_to_file(message: &TokenStream, file_name: &OsString) {
         .unwrap_or_else(|e| panic!("Could not open file {file_name:?}: {e}"));
     let message_string = unescape_multiline_rust_string(message.to_string());
     if message_string.contains('\n') {
-        panic!("Gettext strings may not contain unescaped newlines. Unescaped newline found in '{message_string}'")
+        panic!(
+            "Gettext strings may not contain unescaped newlines. Unescaped newline found in '{message_string}'"
+        )
     }
     // Crude check for format strings. This might result in false positives.
     let format_string_annotation = if message_string.contains('%') {
@@ -84,7 +86,9 @@ pub fn gettext_extract(message: TokenStream) -> TokenStream {
             .next()
             .expect("gettext_extract got empty token stream. Expected one token.");
         if token_trees.next().is_some() {
-            panic!("Invalid number of tokens passed to gettext_extract. Expected one token, but got more.")
+            panic!(
+                "Invalid number of tokens passed to gettext_extract. Expected one token, but got more."
+            )
         }
         if let proc_macro2::TokenTree::Group(group) = first_token {
             let mut group_tokens = group.stream().into_iter();
@@ -92,7 +96,9 @@ pub fn gettext_extract(message: TokenStream) -> TokenStream {
                 .next()
                 .expect("gettext_extract expected one group token but got none.");
             if group_tokens.next().is_some() {
-                panic!("Invalid number of tokens in group passed to gettext_extract. Expected one token, but got more.")
+                panic!(
+                    "Invalid number of tokens in group passed to gettext_extract. Expected one token, but got more."
+                )
             }
             if let proc_macro2::TokenTree::Literal(_) = first_group_token {
                 append_po_entry_to_file(&message, &file_path);

@@ -1,19 +1,17 @@
 //! Pager support.
 
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 
 use crate::common::{
-    escape_string, get_ellipsis_char, get_ellipsis_str, get_is_multibyte_locale, EscapeFlags,
-    EscapeStringStyle,
+    EscapeFlags, EscapeStringStyle, escape_string, get_ellipsis_char, get_ellipsis_str,
+    get_is_multibyte_locale,
 };
 use crate::complete::Completion;
 use crate::editable_line::EditableLine;
-#[allow(unused_imports)]
-use crate::future::IsSomeAnd;
-use crate::highlight::{highlight_shell, HighlightRole, HighlightSpec};
+use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
 use crate::operation_context::OperationContext;
-use crate::screen::{wcswidth_rendered, wcwidth_rendered, CharOffset, Line, ScreenData};
+use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
 use crate::termsize::Termsize;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_fuzzy_match_string;
@@ -315,9 +313,10 @@ impl Pager {
         let mut search_field_text = self.search_field_line.text().to_owned();
         // Append spaces to make it at least the required width.
         if search_field_text.len() < PAGER_SEARCH_FIELD_WIDTH {
-            search_field_text.extend(
-                std::iter::repeat(' ').take(PAGER_SEARCH_FIELD_WIDTH - search_field_text.len()),
-            );
+            search_field_text.extend(std::iter::repeat_n(
+                ' ',
+                PAGER_SEARCH_FIELD_WIDTH - search_field_text.len(),
+            ));
         }
         let search_field = rendering.screen_data.insert_line_at_index(0);
 
@@ -609,7 +608,7 @@ impl Pager {
             // No description, or it won't fit. Just add spaces.
             print_max(
                 offset_in_cmdline,
-                &WString::from_iter(std::iter::repeat(' ').take(desc_remaining)),
+                &WString::from_iter(std::iter::repeat_n(' ', desc_remaining)),
                 bg,
                 desc_remaining,
                 false,

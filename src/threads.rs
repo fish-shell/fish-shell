@@ -1,7 +1,7 @@
 //! The rusty version of iothreads from the cpp code, to be consumed by native rust code. This isn't
 //! ported directly from the cpp code so we can use rust threads instead of using pthreads.
 
-use crate::flog::{FloggableDebug, FLOG};
+use crate::flog::{FLOG, FloggableDebug};
 use crate::reader::Reader;
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;

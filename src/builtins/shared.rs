@@ -1,10 +1,10 @@
 use super::prelude::*;
-use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
+use crate::common::{Named, escape, get_by_sorted_name, str2wcstring};
 use crate::io::OutputStream;
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
 use crate::parser::{BlockType, LoopStatus};
-use crate::proc::{no_exec, Pid, ProcStatus};
+use crate::proc::{Pid, ProcStatus, no_exec};
 use crate::wchar::L;
 use crate::{builtins::*, wutil};
 use errno::errno;
@@ -125,11 +125,7 @@ pub trait BuiltinResultExt {
 
 impl BuiltinResultExt for BuiltinResult {
     fn from_dynamic(code: c_int) -> Self {
-        if code == 0 {
-            Ok(SUCCESS)
-        } else {
-            Err(code)
-        }
+        if code == 0 { Ok(SUCCESS) } else { Err(code) }
     }
     fn builtin_status_code(&self) -> c_int {
         match self {

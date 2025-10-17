@@ -16,12 +16,12 @@ use crate::common::{
 };
 use crate::fallback;
 use crate::flog::FLOGF;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, wcs2string_callback};
 use errno::errno;
 pub use gettext::{
-    localizable_consts, localizable_string, wgettext, wgettext_fmt, LocalizableString,
+    LocalizableString, localizable_consts, localizable_string, wgettext, wgettext_fmt,
 };
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
@@ -31,7 +31,7 @@ use std::os::unix::prelude::*;
 pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
 
 pub use fileid::{
-    file_id_for_file, file_id_for_path, file_id_for_path_narrow, DevInode, FileId, INVALID_FILE_ID,
+    DevInode, FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, file_id_for_path_narrow,
 };
 pub use wcstoi::*;
 
@@ -571,11 +571,7 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
     if success {
         success = flush_accum(&mut total_written, &accum, &mut accumlen);
     }
-    if success {
-        Some(total_written)
-    } else {
-        None
-    }
+    if success { Some(total_written) } else { None }
 }
 
 const PUA1_START: char = '\u{E000}';

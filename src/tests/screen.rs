@@ -1,7 +1,7 @@
 use crate::common::get_ellipsis_char;
 use crate::highlight::HighlightSpec;
 use crate::parse_util::parse_util_compute_indents;
-use crate::screen::{compute_layout, LayoutCache, PromptCacheEntry, PromptLayout, ScreenLayout};
+use crate::screen::{LayoutCache, PromptCacheEntry, PromptLayout, ScreenLayout, compute_layout};
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;

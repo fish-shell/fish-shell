@@ -1,13 +1,13 @@
+use crate::common::ENCODE_DIRECT_BASE;
 use crate::common::char_offset;
 use crate::common::wcs2osstring;
-use crate::common::ENCODE_DIRECT_BASE;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::env_universal_common::{EnvUniversal, UvarFormat};
 use crate::reader::fake_scoped_reader;
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;
-use crate::wutil::{file_id_for_path, INVALID_FILE_ID};
+use crate::wutil::{INVALID_FILE_ID, file_id_for_path};
 
 const UVARS_PER_THREAD: usize = 8;
 const UVARS_TEST_PATH: &wstr = L!("test/fish_uvars_test/varsfile.txt");

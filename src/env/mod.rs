@@ -5,7 +5,7 @@ pub mod var;
 
 use crate::common::ToCString;
 pub use environment::*;
-use std::sync::{atomic::AtomicUsize, Mutex};
+use std::sync::{Mutex, atomic::AtomicUsize};
 pub use var::*;
 
 /// Limit `read` to 1 GiB (bytes, not wide chars) by default. This can be overridden with the

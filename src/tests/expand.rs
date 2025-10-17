@@ -3,18 +3,18 @@ use crate::abbrs::{self};
 use crate::abbrs::{with_abbrs, with_abbrs_mut};
 use crate::complete::{CompletionList, CompletionReceiver};
 use crate::env::{EnvMode, EnvStackSetResult};
-use crate::expand::{expand_to_receiver, ExpandResultCode};
-use crate::operation_context::{no_cancel, EXPANSION_LIMIT_DEFAULT};
+use crate::expand::{ExpandResultCode, expand_to_receiver};
+use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, no_cancel};
 use crate::parse_constants::ParseErrorList;
 use crate::tests::prelude::*;
 use crate::wildcard::ANY_STRING;
 use crate::{
-    expand::{expand_string, ExpandFlags},
+    expand::{ExpandFlags, expand_string},
     operation_context::OperationContext,
     wchar::prelude::*,
 };
-use std::collections::hash_map::RandomState;
 use std::collections::HashSet;
+use std::collections::hash_map::RandomState;
 
 fn expand_test_impl(
     input: &wstr,

@@ -10,6 +10,7 @@
 # Étienne Pflieger <fish-fr@depar.is>, 2025.
 #
 # Note aux traducteurs
+# ====================
 #
 # Les traductions qui suivent sont celles qui sont recommandées ; il ne s’agit pas d’un commandement, mais
 # ces traductions devraient être utilisées autant que possible afin d’uniformiser l’ensemble. En dehors de
@@ -34,7 +35,11 @@
 # pouvez la changer, mais vous devrez alors propager ce changement aux traductions existantes pour maintenir leur cohérence.
 #
 # Traductions recommandées
-## Substantifs
+# ========================
+#
+# Substantifs
+# -----------
+#
 # a set                                                   un jeu
 # about                                                   au sujet de
 # additionally                                            de surcroît
@@ -88,7 +93,9 @@
 # vendor                                                  fournisseur
 # working directory                                       dossier de travail
 #
-## Verbes
+# Verbes
+# ------
+#
 # to assume                                               présumer
 # to build (code source)                                  compiler
 # to build (rassembler en un ensemble cohérent : paquet…) construire
@@ -117,7 +124,9 @@
 # to upgrade (paquet)                                     mettre à jour
 # to upgrade (système)                                    mettre à niveau
 #
-## Typographie (mind the unbreakable space)
+# Typographie (mind the unbreakable space)
+# ----------------------------------------
+#
 # >\"< (ouvrant)           >« <
 # >\"< (fermant)           > »<
 # >'< (guillemet ouvrant)  >« <
@@ -125,7 +134,7 @@
 # >'< (apostrophe)         >’<
 # >:<                      > :<
 # >;<                      > ;<
-
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.2.8POT-Creation-Date: 2006-07-10 13:44-0400\n"

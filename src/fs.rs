@@ -9,7 +9,7 @@ use crate::{
     },
 };
 use errno::errno;
-use libc::{LOCK_EX, LOCK_SH, c_int, fchown, flock};
+use libc::{LOCK_EX, LOCK_SH, c_int, flock};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{
     ffi::CString,
@@ -314,12 +314,11 @@ where
         // did, it would be tricky to set the permissions correctly. (bash doesn't get this
         // case right either).
         if let Ok(md) = old_file.metadata() {
-            // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
-            if unsafe { fchown(new_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
+            if let Err(e) = std::os::unix::fs::fchown(new_file, Some(md.uid()), Some(md.gid())) {
                 FLOG!(
                     synced_file_access,
                     "Error when changing ownership of file:",
-                    errno::errno()
+                    e
                 );
             }
             if let Err(e) = new_file.set_permissions(md.permissions()) {

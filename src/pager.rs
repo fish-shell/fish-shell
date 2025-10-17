@@ -910,7 +910,7 @@ impl Pager {
         rendering.search_field_line = self.search_field_line.clone();
         for cols in (1..=PAGER_MAX_COLS).rev() {
             // Initially empty rendering.
-            rendering.screen_data.resize(0);
+            rendering.screen_data.clear_lines();
 
             // Determine how many rows we would need if we had 'cols' columns. Then determine how many
             // columns we want from that. For example, say we had 19 completions. We can fit them into 6

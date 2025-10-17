@@ -80,20 +80,19 @@ fn test_layout_cache() {
             max_line_width: huge,
             trunc_text: input.clone(),
             layout: PromptLayout {
-                line_breaks: vec![],
-                max_line_width: i,
-                last_line_width: 0,
+                line_starts: vec![],
+                last_line_width: i,
             },
         });
         assert!(seqs.find_prompt_layout(&input, usize::MAX));
-        assert_eq!(seqs.prompt_cache.front().unwrap().layout.max_line_width, i);
+        assert_eq!(seqs.prompt_cache.front().unwrap().layout.last_line_width, i);
     }
 
     let expected_evictee = 3;
     for i in 0..LayoutCache::PROMPT_CACHE_MAX_SIZE {
         if i != expected_evictee {
             assert!(seqs.find_prompt_layout(&i.to_wstring(), usize::MAX));
-            assert_eq!(seqs.prompt_cache.front().unwrap().layout.max_line_width, i);
+            assert_eq!(seqs.prompt_cache.front().unwrap().layout.last_line_width, i);
         }
     }
 
@@ -102,15 +101,14 @@ fn test_layout_cache() {
         max_line_width: huge,
         trunc_text: "whatever".into(),
         layout: PromptLayout {
-            line_breaks: vec![],
-            max_line_width: 100,
-            last_line_width: 0,
+            line_starts: vec![],
+            last_line_width: 100,
         },
     });
     assert!(!seqs.find_prompt_layout(&expected_evictee.to_wstring(), usize::MAX));
     assert!(seqs.find_prompt_layout(L!("whatever"), huge));
     assert_eq!(
-        seqs.prompt_cache.front().unwrap().layout.max_line_width,
+        seqs.prompt_cache.front().unwrap().layout.last_line_width,
         100
     );
 }
@@ -129,8 +127,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
-            max_line_width: 4,
+            line_starts: vec![0],
             last_line_width: 4,
         }
     );
@@ -150,8 +147,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![16, 23, 40],
-            max_line_width: 16,
+            line_starts: vec![0, 17, 24, 41],
             last_line_width: 3,
         }
     );
@@ -161,8 +157,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
-            max_line_width: 8,
+            line_starts: vec![0],
             last_line_width: 8,
         },
     );
@@ -182,8 +177,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![8, 15, 24],
-            max_line_width: 8,
+            line_starts: vec![0, 9, 16, 25],
             last_line_width: 3,
         },
     );
@@ -209,8 +203,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
-            max_line_width: 4,
+            line_starts: vec![0],
             last_line_width: 4,
         },
     );
@@ -225,8 +218,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
-            max_line_width: 4,
+            line_starts: vec![0],
             last_line_width: 4,
         },
     );
@@ -240,8 +232,7 @@ fn test_prompt_truncation() {
     assert_eq!(
         layout,
         PromptLayout {
-            line_breaks: vec![],
-            max_line_width: 1,
+            line_starts: vec![0],
             last_line_width: 1,
         },
     );
@@ -286,6 +277,7 @@ fn test_compute_layout() {
                 ScreenLayout {
                     left_prompt: L!($left_prompt).to_owned(),
                     left_prompt_space: $left_prompt_space,
+                    left_prompt_lines: 1,
                     right_prompt: L!($right_prompt).to_owned(),
                     autosuggestion: L!($autosuggestion).to_owned(),
                 }

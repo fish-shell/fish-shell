@@ -31,7 +31,7 @@ use crate::flog::FLOGF;
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{HighlightColorResolver, HighlightSpec};
+use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
 use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
     CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptStart, ScrollContentUp,
@@ -156,13 +156,22 @@ pub struct ScreenData {
     /// The width of the screen once we have rendered.
     screen_width: Option<usize>,
 
+    /// Virtual cursor position used for writing to `line_datas`,
+    /// and also the viewport final cursor position.
     cursor: Cursor,
+
+    /// Number of prompt lines rendered on the screen.
+    visible_prompt_lines: usize,
 }
 
 impl ScreenData {
     pub fn add_line(&mut self) -> &mut Line {
         self.line_datas.push(Line::new());
         self.line_datas.last_mut().unwrap()
+    }
+
+    pub fn clear_lines(&mut self) {
+        self.line_datas.clear()
     }
 
     pub fn resize(&mut self, size: usize) {
@@ -257,11 +266,6 @@ impl Screen {
         }
     }
 
-    /// Return whether the last rendering was so large we could only display part of the command line.
-    pub fn scrolled(&self) -> bool {
-        self.scrolled
-    }
-
     /// This is the main function for the screen output library. It is used to define the desired
     /// contents of the screen. The screen command will use its knowledge of the current contents of
     /// the screen in order to render the desired output using as few terminal commands as possible.
@@ -352,9 +356,11 @@ impl Screen {
 
         // Clear the desired screen and set its width.
         self.desired.screen_width = Some(screen_width);
-        self.desired.resize(0);
         self.desired.cursor.x = 0;
-        self.desired.cursor.y = 0;
+        self.desired.cursor.y = layout.left_prompt_lines - 1;
+
+        self.desired.clear_lines();
+        self.desired.resize(self.desired.cursor.y);
 
         // Append spaces for the left prompt.
         let prompt_offset = if pager.search_field_shown {
@@ -457,20 +463,20 @@ impl Screen {
             self.desired.add_line();
         }
 
-        let full_line_count = self.desired.cursor.y
+        let full_line_count = self.desired.cursor.y + 1
             - if self.desired.cursor.x == 0
-                && self
-                    .desired
-                    .cursor
-                    .y
-                    .checked_sub(1)
-                    .is_some_and(|y| self.desired.line_datas[y].is_soft_wrapped)
+                && self.desired.cursor.y.checked_sub(1).is_some_and(|y| {
+                    self.desired.line_datas[y].is_soft_wrapped
+                        && self.desired.line_datas[y]
+                            .color_at(self.desired.line_datas[y].len() - 1)
+                            .foreground
+                            == HighlightRole::autosuggestion
+                })
             {
                 1
             } else {
                 0
-            }
-            + calc_prompt_lines(&layout.left_prompt);
+            };
         let pager_available_height = std::cmp::max(
             1,
             curr_termsize
@@ -516,28 +522,19 @@ impl Screen {
         self.desired.append_lines(&page_rendering.screen_data);
 
         self.scrolled = scrolled_cursor.scroll_amount != 0;
+        self.desired.visible_prompt_lines =
+            layout
+                .left_prompt_lines
+                .saturating_sub(if is_final_rendering {
+                    0
+                } else {
+                    scrolled_cursor.scroll_amount
+                });
 
         self.with_buffered_output(|zelf| {
-            zelf.update(
-                vars,
-                &layout.left_prompt,
-                &layout.right_prompt,
-                is_final_rendering,
-            )
+            zelf.update(vars, &layout.left_prompt, &layout.right_prompt)
         });
         self.save_status();
-    }
-
-    pub fn multiline_prompt_hack(&mut self) {
-        // If the prompt is multi-line, we need to move up to the prompt's initial line. We do this
-        // by lying to ourselves and claiming that we're really below what we consider "line 0"
-        // (which is the last line of the prompt). This will cause us to move up to try to get back
-        // to line 0, but really we're getting back to the initial line of the prompt.
-        let prompt_line_count = self
-            .actual_left_prompt
-            .as_ref()
-            .map_or(1, |p| calc_prompt_lines(p));
-        self.actual.cursor.y += prompt_line_count.checked_sub(1).unwrap();
     }
 
     /// Resets the screen buffer's internal knowledge about the contents of the screen,
@@ -551,11 +548,10 @@ impl Screen {
             std::cmp::max(self.actual_lines_before_reset, self.actual.line_count());
 
         if repaint_prompt {
-            self.multiline_prompt_hack();
             self.actual_left_prompt = None;
             self.need_clear_screen = true;
         }
-        self.actual.resize(0);
+        self.actual.clear_lines();
         self.need_clear_lines = true;
 
         // This should prevent resetting the cursor position during the next repaint.
@@ -566,24 +562,7 @@ impl Screen {
     }
 
     pub fn push_to_scrollback(&mut self, cursor_y: usize) {
-        let prompt_y = self.command_line_y_given_cursor_y(cursor_y);
-        let trailing_prompt_lines = self
-            .actual_left_prompt
-            .as_ref()
-            .map_or(0, |p| calc_prompt_lines(p) - 1);
-        let lines_to_scroll = prompt_y
-            .checked_sub(trailing_prompt_lines)
-            .unwrap_or_else(|| {
-                FLOG!(
-                    reader,
-                    "Number of trailing prompt lines prompt lines",
-                    trailing_prompt_lines,
-                    "exceeds prompt's y",
-                    prompt_y,
-                    "inferred from reported cursor position",
-                );
-                0
-            });
+        let lines_to_scroll = self.command_line_y_given_cursor_y(cursor_y);
         if lines_to_scroll == 0 {
             return;
         }
@@ -627,8 +606,9 @@ impl Screen {
                     "inferred from reported cursor position",
                 );
                 0
-            });
-        let y = y.min(self.actual.line_count() - 1);
+            })
+            .max(self.actual.visible_prompt_lines - 1)
+            .min(self.actual.line_count() - 1);
         let Some(viewport_prompt_x) = viewport_cursor.x.checked_sub(self.actual.cursor.x) else {
             FLOGF!(
                 reader,
@@ -675,7 +655,7 @@ impl Screen {
     /// The screen width must be provided for the PROMPT_SP hack.
     pub fn reset_abandoning_line(&mut self, screen_width: usize) {
         self.actual.cursor.y = 0;
-        self.actual.resize(0);
+        self.actual.clear_lines();
         self.actual_left_prompt = None;
         self.need_clear_lines = true;
 
@@ -1035,8 +1015,8 @@ impl Screen {
         allow_soft_wrap()
             && self.desired.line(i).is_soft_wrapped
             && i + 1 < self.desired.line_count()
-            && !(i + 1 < self.actual.line_count()
-                && line_shared_prefix(self.actual.line(i + 1), self.desired.line(i + 1)) > 0)
+            && (i + 1 >= self.actual.line_count()
+                || line_shared_prefix(self.actual.line(i + 1), self.desired.line(i + 1)) == 0)
     }
 
     fn with_buffered_output(&mut self, f: impl FnOnce(&mut Self)) {
@@ -1046,13 +1026,7 @@ impl Screen {
     }
 
     /// Update the screen to match the desired output.
-    fn update(
-        &mut self,
-        vars: &dyn Environment,
-        left_prompt: &wstr,
-        right_prompt: &wstr,
-        is_final_rendering: bool,
-    ) {
+    fn update(&mut self, vars: &dyn Environment, left_prompt: &wstr, right_prompt: &wstr) {
         // Helper function to set a resolved color, using the caching resolver.
         let mut color_resolver = HighlightColorResolver::new();
         let mut set_color = |zelf: &mut Self, c| {
@@ -1065,7 +1039,7 @@ impl Screen {
 
         // Determine size of left and right prompt. Note these have already been truncated.
         let left_prompt_layout = cached_layouts.calc_prompt_layout(left_prompt, None, usize::MAX);
-        let left_prompt_width = left_prompt_layout.last_line_width;
+        let prompt_last_line_width = left_prompt_layout.last_line_width;
         let right_prompt_width = cached_layouts
             .calc_prompt_layout(right_prompt, None, usize::MAX)
             .last_line_width;
@@ -1103,48 +1077,63 @@ impl Screen {
             need_clear_screen = true;
         }
 
-        // Output the left prompt if it has changed.
-        if self.scrolled() && !is_final_rendering {
-            self.r#move(0, 0);
-            self.write_command(ClearToEndOfLine);
-            self.actual_left_prompt = None;
-            self.actual.cursor.x = 0;
-        } else if self
-            .actual_left_prompt
-            .as_ref()
-            .is_none_or(|p| p != left_prompt)
-            || (self.scrolled() && is_final_rendering)
-            || Some(left_prompt_width) == screen_width && self.should_wrap(0)
-        {
-            self.r#move(0, 0);
-            let mut start = 0;
-            let mark_prompt_start = |zelf: &mut Screen| zelf.write_command(Osc133PromptStart);
-            if left_prompt_layout.line_breaks.is_empty() {
-                mark_prompt_start(self);
-            }
-            if self
+        let is_prompt_visible = self.desired.visible_prompt_lines > 0;
+        let prompt_last_line = self.desired.visible_prompt_lines.saturating_sub(1);
+
+        let prompt_changed = is_prompt_visible
+            && (self
                 .actual_left_prompt
                 .as_ref()
                 .is_none_or(|p| p != left_prompt)
-                || (self.scrolled() && is_final_rendering)
-            {
-                for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
+                || self.actual.visible_prompt_lines != self.desired.visible_prompt_lines);
+
+        let prompt_last_line_screen_wide =
+            is_prompt_visible && Some(prompt_last_line_width) == screen_width;
+        let prompt_last_line_should_wrap =
+            prompt_last_line_screen_wide && self.should_wrap(prompt_last_line);
+
+        // Output the left prompt if it has changed or we need to refresh softwrap.
+        if prompt_changed || prompt_last_line_should_wrap {
+            let mut start;
+            if prompt_changed {
+                self.r#move(0, 0);
+                let prompt_first_visible_line =
+                    left_prompt_layout.line_starts.len() - self.desired.visible_prompt_lines;
+                start = left_prompt_layout.line_starts[prompt_first_visible_line];
+                if self.desired.visible_prompt_lines == 1 {
+                    self.write_command(Osc133PromptStart);
+                }
+                for (i, &next_line) in left_prompt_layout.line_starts
+                    [prompt_first_visible_line + 1..]
+                    .iter()
+                    .enumerate()
+                {
                     self.write_command(ClearToEndOfLine);
                     if i == 0 {
-                        mark_prompt_start(self);
+                        self.write_command(Osc133PromptStart);
                     }
-                    self.write_str(&left_prompt[start..=line_break]);
-                    start = line_break + 1;
+                    self.write_str(&left_prompt[start..next_line]);
+                    start = next_line;
                 }
             } else {
-                start = left_prompt_layout.line_breaks.last().map_or(0, |lb| lb + 1);
+                self.r#move(0, prompt_last_line);
+                start = *left_prompt_layout.line_starts.last().unwrap();
             }
             self.write_str(&left_prompt[start..]);
             self.actual_left_prompt = Some(left_prompt.to_owned());
-            self.actual.cursor.x = left_prompt_width;
-            if Some(left_prompt_width) == screen_width && self.should_wrap(0) {
-                self.soft_wrap_location = Some(Cursor { x: 0, y: 1 });
+            self.actual.cursor.x = prompt_last_line_width;
+            self.actual.cursor.y = prompt_last_line;
+            if prompt_last_line_should_wrap {
+                self.soft_wrap_location = Some(Cursor {
+                    x: 0,
+                    y: prompt_last_line + 1,
+                });
             }
+        } else if self.actual_left_prompt.is_none() {
+            // If we refreshed and prompt is not visible, print prompt marker
+            self.r#move(0, 0);
+            self.write_command(Osc133PromptStart);
+            self.actual_left_prompt = Some(left_prompt.to_owned());
         }
 
         fn o_line(zelf: &Screen, i: usize) -> &Line {
@@ -1155,10 +1144,15 @@ impl Screen {
         }
 
         // Output all lines.
-        for i in 0..self.desired.line_count() {
+        let commandline_start = prompt_last_line + if prompt_last_line_screen_wide { 1 } else { 0 };
+        for i in commandline_start..self.desired.line_count() {
             self.actual.create_line(i);
-            let is_first_line = i == 0 && !self.scrolled();
-            let start_pos = if is_first_line { left_prompt_width } else { 0 };
+            let is_prompt_line = is_prompt_visible && i == prompt_last_line;
+            let start_pos = if is_prompt_line {
+                prompt_last_line_width
+            } else {
+                0
+            };
             let mut current_width = 0;
             let mut has_cleared_line = false;
 
@@ -1173,22 +1167,30 @@ impl Screen {
             // Note that skip_remaining is a width, not a character count.
             let mut skip_remaining = start_pos;
 
-            let shared_prefix = if self.scrolled() {
+            let previously_prompt_line = self.actual.visible_prompt_lines > i + 1;
+
+            let shared_prefix = if self.scrolled || previously_prompt_line {
                 0
             } else {
                 line_shared_prefix(o_line(self, i), s_line(self, i))
             };
             let mut skip_prefix = shared_prefix;
-            if shared_prefix < o_line(self, i).indentation {
-                if o_line(self, i).indentation > s_line(self, i).indentation && !has_cleared_screen
+            if shared_prefix < o_line(self, i).indentation || previously_prompt_line {
+                if !has_cleared_screen
+                    && (o_line(self, i).indentation > s_line(self, i).indentation
+                        || previously_prompt_line)
                 {
                     set_color(self, HighlightSpec::new());
-                    self.r#move(0, i);
+                    self.r#move(start_pos, i);
                     self.write_command(if should_clear_screen_this_line {
                         ClearToEndOfScreen
                     } else {
                         ClearToEndOfLine
                     });
+                    if i == 0 && start_pos == 0 {
+                        // Restore prompt marker if we deleted it
+                        self.write_command(Osc133PromptStart);
+                    }
                     has_cleared_screen = should_clear_screen_this_line;
                     has_cleared_line = true;
                 }
@@ -1213,8 +1215,8 @@ impl Screen {
                 // If we're soft wrapped, and if we're going to change the first character of the next
                 // line, don't skip over the last two characters so that we maintain soft-wrapping.
                 skip_remaining = skip_remaining.min(screen_width.unwrap() - 2);
-                if is_first_line {
-                    skip_remaining = skip_remaining.max(left_prompt_width);
+                if is_prompt_line {
+                    skip_remaining = skip_remaining.max(prompt_last_line_width);
                 }
             }
 
@@ -1244,6 +1246,10 @@ impl Screen {
                     set_color(self, HighlightSpec::new());
                     self.r#move(current_width, i);
                     self.write_command(ClearToEndOfScreen);
+                    if i == 0 && current_width == 0 {
+                        // Restore prompt marker if we deleted it
+                        self.write_command(Osc133PromptStart);
+                    }
                     has_cleared_screen = true;
                 }
                 if done {
@@ -1292,10 +1298,10 @@ impl Screen {
             }
 
             // Output any rprompt if this is the first line.
-            if is_first_line && right_prompt_width > 0 {
+            if is_prompt_line && right_prompt_width > 0 {
                 // Move the cursor to the beginning of the line first to be independent of the width.
                 // This helps prevent staircase effects if fish and the terminal disagree.
-                self.r#move(0, 0);
+                self.r#move(0, i);
                 self.r#move(screen_width.unwrap() - right_prompt_width, i);
                 set_color(self, HighlightSpec::new());
                 self.write_str(right_prompt);
@@ -1361,11 +1367,9 @@ pub fn screen_force_clear_to_end() {
 /// Information about the layout of a prompt.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct PromptLayout {
-    /// line breaks when rendering the prompt
-    pub line_breaks: Vec<usize>,
-    /// width of the longest line
-    pub max_line_width: usize,
-    /// width of the last line
+    /// Start offsets for each line in the truncated prompt.
+    pub line_starts: Vec<usize>,
+    /// Width of the last line.
     pub last_line_width: usize,
 }
 
@@ -1474,6 +1478,7 @@ impl LayoutCache {
         }
 
         let mut layout = PromptLayout::default();
+        layout.line_starts.push(0);
         let mut trunc_prompt = WString::new();
 
         let mut run_start = 0;
@@ -1489,13 +1494,12 @@ impl LayoutCache {
                 truncate_run(&mut run_storage, max_line_width, &mut line_width, self);
                 trunc_prompt.extend(run_storage.chars());
             }
-            layout.max_line_width = std::cmp::max(layout.max_line_width, line_width);
             layout.last_line_width = line_width;
 
             let endc = prompt_str.char_at(run_end);
             if endc != '\0' {
                 if endc == '\n' || endc == '\x0C' {
-                    layout.line_breaks.push(trunc_prompt.len());
+                    layout.line_starts.push(trunc_prompt.len() + 1);
                     // If the prompt ends in a new line, that's one empty last line.
                     if run_end == prompt_str.len() - 1 {
                         layout.last_line_width = 0;
@@ -1852,23 +1856,6 @@ fn truncate_run(
     *width = curr_width;
 }
 
-fn calc_prompt_lines(prompt: &wstr) -> usize {
-    // Hack for the common case where there's no newline at all. I don't know if a newline can
-    // appear in an escape sequence, so if we detect a newline we have to defer to
-    // calc_prompt_width_and_lines.
-    let mut result = 1;
-    if prompt.chars().any(|c| matches!(c, '\n' | '\x0C')) {
-        result = LAYOUT_CACHE_SHARED
-            .lock()
-            .unwrap()
-            .calc_prompt_layout(prompt, None, usize::MAX)
-            .line_breaks
-            .len()
-            + 1;
-    }
-    result
-}
-
 /// Returns the length of the "shared prefix" of the two lines, which is the run of matching text
 /// and colors. If the prefix ends on a combining character, do not include the previous character
 /// in the prefix.
@@ -1934,6 +1921,8 @@ pub(crate) fn only_grayscale() -> bool {
 pub(crate) struct ScreenLayout {
     // The left prompt that we're going to use.
     pub(crate) left_prompt: WString,
+    // How many lines in the left prompt.
+    pub(crate) left_prompt_lines: usize,
     // How much space to leave for it.
     pub(crate) left_prompt_space: usize,
     // The right prompt.
@@ -2018,6 +2007,7 @@ pub(crate) fn compute_layout(
     // Always visible.
     result.left_prompt = left_prompt;
     result.left_prompt_space = left_prompt_width;
+    result.left_prompt_lines = left_prompt_layout.line_starts.len();
 
     // Hide the right prompt if it doesn't fit on the first line.
     if left_prompt_width + first_command_line_width + right_prompt_width < screen_width {

@@ -175,8 +175,6 @@ pub fn guess_emoji_width(vars: &EnvStack) {
         .map(|v| v.as_string())
         .unwrap_or_else(WString::new);
 
-    #[allow(renamed_and_removed_lints)] // for old clippy
-    #[allow(clippy::blocks_in_if_conditions)] // for old clippy
     if xtversion().unwrap_or(L!("")).starts_with(L!("iTerm2 ")) {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
@@ -610,7 +608,6 @@ pub fn use_posix_spawn() -> bool {
 }
 
 /// Whether or not we are running on an OS where we allow ourselves to use `posix_spawn()`.
-#[allow(clippy::needless_bool)] // for old clippy
 const fn allow_use_posix_spawn() -> bool {
     // OpenBSD's posix_spawn returns status 127 instead of erroring with ENOEXEC when faced with a
     // shebang-less script. Disable posix_spawn on OpenBSD.

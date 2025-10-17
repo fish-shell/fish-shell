@@ -417,7 +417,15 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     #[cfg(any(apple, bsd))]
     signal_entry!(SIGINFO, SIGINFO_DESC),
 
-    #[cfg(target_os = "linux")]
+    #[cfg(all(
+        target_os = "linux",
+        not(any(
+            target_arch = "mips",
+            target_arch = "mips32r6",
+            target_arch = "mips64",
+            target_arch = "mips64r6",
+        ))
+    ))]
     signal_entry!(SIGSTKFLT, SIGSTKFLT_DESC),
 
     #[cfg(target_os = "linux")]

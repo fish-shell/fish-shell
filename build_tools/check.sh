@@ -8,6 +8,64 @@ if [ "$FISH_CHECK_LINT" = false ]; then
     lint=false
 fi
 
+check_dependency_versions=false
+if [ "${FISH_CHECK_DEPENDENCY_VERSIONS:-false}" != false ]; then
+    check_dependency_versions=true
+fi
+
+if $check_dependency_versions; then
+    command -v curl
+    command -v jq
+    command -v rustup
+    sort --version-sort </dev/null
+    # Check that we have latest stable.
+    if rustup check | grep ^stable- | grep 'Update available'; then
+        exit 1
+    fi
+    # Check that GitHub CI uses latest stable Rust version.
+    stable_rust_version=$($(rustup +stable which rustc) --version | cut -d' ' -f2)
+    stable_rust_version=${stable_rust_version%.*}
+    grep -q "(stable) echo $stable_rust_version ;;" \
+        "$(project-root)/.github/actions/rust-toolchain/action.yml"
+
+    # Check that GitHub CI's MSRV is the Rust version available in Debian stable.
+    debian_stable_codename=$(
+        curl -fsS https://ftp.debian.org/debian/dists/stable/Release |
+        grep '^Codename:' | cut -d' ' -f2)
+    debian_stable_rust_version=$(
+    	curl -fsS https://sources.debian.org/api/src/rustc/ |
+            jq -r --arg debian_stable_codename "$debian_stable_codename" '
+            	.versions[] | select(.suites[] == $debian_stable_codename) | .version' |
+            sed 's/^\([0-9]\+\.[0-9]\+\).*/\1/' |
+            sort --version-sort |
+            tail -1)
+    grep -q "(msrv) *echo $debian_stable_rust_version ;;" \
+        "$(project-root)/.github/actions/rust-toolchain/action.yml"
+
+    # Check that Cirrus CI uses the latest minor version of Alpine Linux.
+    alpine_latest_version=$(
+        curl -fsS "https://registry.hub.docker.com/v2/repositories/library/alpine/tags?page_size=10" |
+          jq -r '.results[].name' | grep '^[0-9]\+\.[0-9]\+$' |
+          sort --version-sort |
+          tail -1)
+    grep -qFx "FROM alpine:$alpine_latest_version" docker/alpine.Dockerfile
+
+    # Check that Cirrus CI uses the oldest version of Ubuntu that's not EOL.
+    ubuntu_oldest_alive_version=$(
+        today=$(date --iso-8601)
+        curl -fsS https://endoflife.date/api/ubuntu.json |
+            jq -r --arg today "$today" '
+                .[]
+                | select(.eol >= $today)
+                | "\(.cycle)"
+            ' |
+            sort --version-sort |
+            head -1
+    )
+    grep -qFx "FROM ubuntu:$ubuntu_oldest_alive_version" \
+        docker/ubuntu-oldest-supported.Dockerfile
+fi
+
 cargo_args=$FISH_CHECK_CARGO_ARGS
 target_triple=$FISH_CHECK_TARGET_TRIPLE
 if [ -n "$target_triple" ]; then

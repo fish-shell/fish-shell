@@ -83,10 +83,6 @@ msgid "%.*s: invalid conversion specification"
 msgstr "%.*s: Ungültige Umwandlungsspezifikation"
 
 #, c-format
-msgid "%ls: function name required"
-msgstr "%ls: Brauche Funktionsnamen"
-
-#, c-format
 msgid "%s"
 msgstr ""
 
@@ -717,6 +713,10 @@ msgstr "%s: Erwartete numerischen Wert"
 #, c-format
 msgid "%s: fish was not built with embedded files"
 msgstr ""
+
+#, c-format
+msgid "%s: function name required"
+msgstr "%s: Brauche Funktionsnamen"
 
 #, c-format
 msgid "%s: given %d indexes but %d values\n"

@@ -3261,9 +3261,6 @@ msgstr ""
 msgid "Save the current definition of all specified functions to file"
 msgstr "Save the current definition of all specified functions to file"
 
-msgid "Search back or move cursor up 1 line"
-msgstr ""
-
 msgid "Searchable history"
 msgstr ""
 

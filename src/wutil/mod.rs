@@ -11,14 +11,11 @@ mod tests;
 pub mod wcstod;
 pub mod wcstoi;
 
-use crate::common::{
-    cstr2wcstring, fish_reserved_codepoint, str2wcstring, wcs2osstring, wcs2string, wcs2zstring,
-};
-use crate::fallback;
-use crate::flog::FLOGF;
+use crate::common::{fish_reserved_codepoint, str2wcstring, wcs2osstring, wcs2string, wcs2zstring};
 use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, wcs2string_callback};
+use crate::{FLOG, fallback};
 use errno::errno;
 pub use gettext::{
     LocalizableString, localizable_consts, localizable_string, wgettext, wgettext_fmt,
@@ -104,24 +101,13 @@ pub fn perror_io(s: &str, e: &io::Error) {
 
 /// Wide character version of getcwd().
 pub fn wgetcwd() -> WString {
-    let mut cwd = [b'\0'; libc::PATH_MAX as usize];
-    let res = unsafe {
-        libc::getcwd(
-            std::ptr::addr_of_mut!(cwd).cast(),
-            std::mem::size_of_val(&cwd),
-        )
-    };
-    if !res.is_null() {
-        return cstr2wcstring(&cwd);
+    match std::env::current_dir() {
+        Ok(cwd) => str2wcstring(cwd.into_os_string().as_bytes()),
+        Err(e) => {
+            FLOG!(error, "std::env::current_dir() failed with error:", e);
+            WString::new()
+        }
     }
-
-    FLOGF!(
-        error,
-        "getcwd() failed with errno %d/%s",
-        errno::errno().0,
-        errno::errno().to_string()
-    );
-    WString::new()
 }
 
 /// Wide character version of readlink().

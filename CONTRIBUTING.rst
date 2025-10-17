@@ -178,6 +178,12 @@ made to run fish_indent via e.g.
    (add-hook 'fish-mode-hook (lambda ()
        (add-hook 'before-save-hook 'fish_indent-before-save)))
 
+Minimum Supported Rust Version (MSRV)
+--------------------------------------
+
+We currently track the version of ``rustc`` available in Debian Stable.
+The current MSRV can be found in ``.github/actions/rust-toolchain/action.yml``.
+
 Rust Style Guide
 ----------------
 

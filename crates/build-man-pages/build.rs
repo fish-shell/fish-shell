@@ -63,7 +63,8 @@ fn build_man(man_dir: &Path) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             if env_var("FISH_BUILD_DOCS") == Some("1".to_string()) {
                 panic!(
-                    "Could not find sphinx-build to build man pages.\nInstall sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0."
+                    "Could not find sphinx-build to build man pages.\n\
+                     Install sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0."
                 );
             }
             rsconf::warn!("Cannot find sphinx-build to build man pages.");

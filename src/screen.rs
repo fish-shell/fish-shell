@@ -155,7 +155,7 @@ pub struct ScreenData {
     screen_width: Option<usize>,
 
     /// Virtual cursor position used for writing to `line_datas`,
-    /// and also the viewport final cursor position.
+    /// and also final cursor position from the start of rendered commandline.
     cursor: Cursor,
 
     /// Number of prompt lines rendered on the screen.
@@ -494,10 +494,8 @@ impl Screen {
                     mut cursor,
                     scroll_amount,
                 } = scrolled_cursor;
-                if scroll_amount != 0 {
-                    if !is_final_rendering {
-                        self.desired.line_datas = self.desired.line_datas.split_off(scroll_amount);
-                    }
+                if scroll_amount != 0 && !is_final_rendering {
+                    self.desired.line_datas = self.desired.line_datas.split_off(scroll_amount);
                     cursor.y -= scroll_amount;
                 }
                 cursor
@@ -1322,7 +1320,7 @@ impl Screen {
         // Don't do it when running in midnight_commander because of
         // https://midnight-commander.org/ticket/4258.
         if !MIDNIGHT_COMMANDER_HACK.load() {
-            self.r#move(0, 0);
+            self.r#move(0, self.actual.cursor.y);
         }
 
         // Clear remaining lines (if any) if we haven't cleared the screen.

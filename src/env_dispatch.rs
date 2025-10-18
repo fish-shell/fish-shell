@@ -175,8 +175,6 @@ pub fn guess_emoji_width(vars: &EnvStack) {
         .map(|v| v.as_string())
         .unwrap_or_else(WString::new);
 
-    #[allow(renamed_and_removed_lints)] // for old clippy
-    #[allow(clippy::blocks_in_if_conditions)] // for old clippy
     if xtversion().unwrap_or(L!("")).starts_with(L!("iTerm2 ")) {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
@@ -433,9 +431,9 @@ fn update_fish_color_support(vars: &EnvStack) {
         );
     } else {
         supports_24bit = !is_xterm_16color
-            && !vars
+            && vars
                 .get_unless_empty(L!("TERM_PROGRAM"))
-                .is_some_and(|term| term.as_list()[0] == "Apple_Terminal");
+                .is_none_or(|term| term.as_list()[0] != "Apple_Terminal");
         FLOG!(
             term_support,
             "True-color support",
@@ -533,7 +531,7 @@ fn init_locale(vars: &EnvStack) {
     }
 
     let user_locale = {
-        let loc_ptr = unsafe { libc::setlocale(libc::LC_ALL, b"\0".as_ptr().cast()) };
+        let loc_ptr = unsafe { libc::setlocale(libc::LC_ALL, c"".as_ptr().cast()) };
         if loc_ptr.is_null() {
             FLOG!(env_locale, "user has an invalid locale configured");
             None
@@ -571,7 +569,7 @@ fn init_locale(vars: &EnvStack) {
     }
 
     // We *always* use a C-locale for numbers because we want '.' (except for in printf).
-    let loc_ptr = unsafe { libc::setlocale(libc::LC_NUMERIC, b"C\0".as_ptr().cast()) };
+    let loc_ptr = unsafe { libc::setlocale(libc::LC_NUMERIC, c"C".as_ptr().cast()) };
     // should never fail, the C locale should always be defined
     assert_ne!(loc_ptr, ptr::null_mut());
 
@@ -610,7 +608,6 @@ pub fn use_posix_spawn() -> bool {
 }
 
 /// Whether or not we are running on an OS where we allow ourselves to use `posix_spawn()`.
-#[allow(clippy::needless_bool)] // for old clippy
 const fn allow_use_posix_spawn() -> bool {
     // OpenBSD's posix_spawn returns status 127 instead of erroring with ENOEXEC when faced with a
     // shebang-less script. Disable posix_spawn on OpenBSD.

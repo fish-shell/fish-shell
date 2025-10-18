@@ -119,7 +119,7 @@ const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
 
 /// When we rewrite the history, the number of items we keep.
 // FIXME: https://github.com/rust-lang/rust/issues/67441
-const HISTORY_SAVE_MAX: NonZeroUsize = unsafe { NonZeroUsize::new_unchecked(1024 * 256) };
+const HISTORY_SAVE_MAX: NonZeroUsize = NonZeroUsize::new(1024 * 256).unwrap();
 
 /// Default buffer size for flushing to the history file.
 const HISTORY_OUTPUT_BUFFER_SIZE: usize = 64 * 1024;
@@ -382,10 +382,9 @@ impl HistoryImpl {
         if let Some(canonicalized_path) = wrealpath(&path) {
             Ok(Some(canonicalized_path))
         } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("wrealpath failed to produce a canonical version of '{path}'."),
-            ))
+            Err(std::io::Error::other(format!(
+                "wrealpath failed to produce a canonical version of '{path}'."
+            )))
         }
     }
 

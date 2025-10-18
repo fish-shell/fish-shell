@@ -279,7 +279,6 @@ fn format_a(mut y: f64, params: FormatParams<'_, impl Write>) -> Result<usize, E
 
     // Compute the number of hex digits in the mantissa after the decimal.
     // -1 for leading 1 bit (we are to the range [1, 2)), then divide by 4, rounding up.
-    #[allow(unknown_lints)] // for old clippy
     #[allow(clippy::manual_div_ceil)]
     const MANTISSA_HEX_DIGITS: usize = (MANTISSA_BITS - 1 + 3) / 4;
     if had_prec && prec < MANTISSA_HEX_DIGITS {

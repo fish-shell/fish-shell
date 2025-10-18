@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-    paths:
-      - 'docker/**'
   workflow_dispatch:
 
 concurrency:
@@ -14,10 +12,26 @@ concurrency:
 env:
   REGISTRY: ghcr.io
   NAMESPACE: fish-ci
+  ONLY_FOR_REPO_OWNER: fish-shell
 
 jobs:
+  check-docker-changes:
+    if: github.repository_owner == env.ONLY_FOR_REPO_OWNER
+    runs-on: ubuntu-latest
+    outputs:
+      docker-changed: ${{ steps.changes.outputs.docker }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            docker:
+              - 'docker/**'
+
   docker-build:
-    if: github.repository_owner == 'fish-shell'
+    needs: check-docker-changes
+    if: github.repository_owner == env.ONLY_FOR_REPO_OWNER && needs.check-docker-changes.outputs.docker-changed == 'true'
     permissions:
       contents: read
       packages: write
@@ -82,3 +96,31 @@ jobs:
           file: docker/${{ matrix.target }}.Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  trigger-cirrus:
+    needs: [check-docker-changes, docker-build]
+    if: always() && github.repository_owner == env.ONLY_FOR_REPO_OWNER
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cirrus CI
+        env:
+          CIRRUS_TOKEN: ${{ secrets.CIRRUS_TOKEN }}
+        run: |
+          set -x
+          # N.B. push-triggered workflows are usually from master.
+          branch=${{ github.ref_name }}
+          repository_id=${{ github.repository_id }}
+          curl -X POST \
+            -H "Authorization: Bearer $CIRRUS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "query": "mutation {
+                createBuild(input: {
+                  repositoryId: \"$repository_id\",
+                  branch: \"$branch\"
+                })
+                { build { id } }
+              }"
+            }' \
+            https://api.cirrus-ci.com/graphql
+

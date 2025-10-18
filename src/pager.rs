@@ -5,7 +5,6 @@ use std::collections::hash_map::Entry;
 
 use crate::common::{
     EscapeFlags, EscapeStringStyle, escape_string, get_ellipsis_char, get_ellipsis_str,
-    get_is_multibyte_locale,
 };
 use crate::complete::Completion;
 use crate::editable_line::EditableLine;
@@ -1231,19 +1230,16 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
                 EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED | EscapeFlags::SYMBOLIC,
             ),
         ));
-        if comp.replaces_line()
-            // HACK We want to render a full shell command, with syntax highlighting.  Above we
-            // escape nonprintables, which might make the rendered command longer than the original
-            // completion. In that case we get wrong colors.  However this should only happen in
-            // contrived cases, since our symbolic escaping uses a single character to represent
-            // newline and tab characters; other nonprintables are extremely rare in a command
-            // line. It will only be common for single-byte locales where we don't
-            // use Unicode characters for escaping, so just disable those here.
-            // We should probably fix this by first highlighting the original completion, and
-            // then writing a variant of escape_string() that adjusts highlighting according
-            // so it matches the escaped string.
-            && get_is_multibyte_locale()
-        {
+        // HACK We want to render a full shell command, with syntax highlighting.  Above we
+        // escape nonprintables, which might make the rendered command longer than the original
+        // completion. In that case we get wrong colors.  However this should only happen in
+        // contrived cases, since our symbolic escaping uses a single character to represent
+        // newline and tab characters; other nonprintables are extremely rare in a command
+        // line.
+        // We should probably fix this by first highlighting the original completion, and
+        // then writing a variant of escape_string() that adjusts highlighting according
+        // so it matches the escaped string.
+        if comp.replaces_line() {
             highlight_shell(
                 &comp.completion,
                 &mut comp_info.colors,

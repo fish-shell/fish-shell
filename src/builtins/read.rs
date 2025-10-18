@@ -13,7 +13,7 @@ use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
 use crate::input_common::DecodeState;
 use crate::input_common::InvalidPolicy;
-use crate::input_common::decode_input_byte;
+use crate::input_common::decode_one_codepoint_utf8;
 use crate::nix::isatty;
 use crate::reader::ReaderConfig;
 use crate::reader::commandline_set_buffer;
@@ -27,7 +27,6 @@ use crate::tty_handoff::TtyHandoff;
 use crate::wcstringutil::split_about;
 use crate::wcstringutil::split_string_tok;
 use crate::wutil;
-use crate::wutil::encoding::zero_mbstate;
 use crate::wutil::perror;
 use libc::SEEK_CUR;
 use std::num::NonZeroUsize;
@@ -389,8 +388,6 @@ fn read_one_char_at_a_time(
     let mut unconsumed = vec![];
 
     loop {
-        let mut state = zero_mbstate();
-
         let chars_read = buff.len();
         let res = loop {
             let mut b = [0_u8; 1];
@@ -400,17 +397,9 @@ fn read_one_char_at_a_time(
                 }
                 _ => {}
             }
-            let b = b[0];
-            unconsumed.push(b);
+            unconsumed.push(b[0]);
             nbytes += 1;
-            let mut consumed = 0;
-            match decode_input_byte(
-                buff,
-                InvalidPolicy::Passthrough,
-                &mut state,
-                &unconsumed,
-                &mut consumed,
-            ) {
+            match decode_one_codepoint_utf8(buff, InvalidPolicy::Passthrough, &unconsumed) {
                 DecodeState::Incomplete => continue,
                 DecodeState::Complete => {
                     unconsumed.clear();

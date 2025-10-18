@@ -1,6 +1,6 @@
 use crate::common::{
-    WSL, bytes2wcstring, fish_reserved_codepoint, get_is_multibyte_locale,
-    is_windows_subsystem_for_linux, read_blocked, shell_modes,
+    WSL, bytes2wcstring, fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked,
+    shell_modes,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
@@ -17,7 +17,6 @@ use crate::tty_handoff::{
 };
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
-use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
 use crate::wutil::{fish_is_pua, fish_wcstol};
 use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;
@@ -826,9 +825,7 @@ pub trait InputEventQueuer {
         self.get_input_data_mut().queue.pop_front()
     }
 
-    /// Function used by [`readch`](Self::readch) to read bytes from stdin until enough bytes have been read to
-    /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously
-    /// been read and then 'unread' using \c input_common_unreadch, that character is returned.
+    /// Read the next event, such as a UTF-8-encoded codepoint.
     fn readch(&mut self) -> CharEvent {
         loop {
             // Do we have something enqueued already?
@@ -871,7 +868,7 @@ pub trait InputEventQueuer {
                 InputEventTrigger::Byte(read_byte) => {
                     let mut have_escape_prefix = false;
                     let mut buffer = vec![read_byte];
-                    let key_with_escape = if read_byte == 0x1b {
+                    let mut key = if read_byte == 0x1b {
                         self.parse_escape_sequence(&mut buffer, &mut have_escape_prefix)
                     } else {
                         canonicalize_control_char(read_byte).map(KeyEvent::from)
@@ -883,47 +880,35 @@ pub trait InputEventQueuer {
                         continue;
                     }
                     let mut seq = WString::new();
-                    let mut key = key_with_escape;
                     if key.is_some_and(|key| key.key == Key::from_raw(key::Invalid)) {
                         continue;
                     }
                     assert!(key.is_none_or(|key| key.codepoint != key::Invalid));
-                    let mut consumed = 0;
-                    let mut state = zero_mbstate();
-                    let mut i = 0;
+                    // At this point, the bytes in `buffer` should be parsed as a UTF-8 sequence,
+                    // or, if they are not valid UTF-8, ignored. On incomplete sequences, another
+                    // byte is read and decoding is tried again in the next iteration.
                     let ok = loop {
-                        if i == buffer.len() {
-                            buffer.push(
-                                match next_input_event(self.get_in_fd(), Timeout::Forever) {
-                                    InputEventTrigger::Byte(b) => b,
-                                    _ => 0,
-                                },
-                            );
-                        }
-                        match decode_input_byte(
-                            &mut seq,
-                            InvalidPolicy::Error,
-                            &mut state,
-                            &buffer[..i + 1],
-                            &mut consumed,
-                        ) {
-                            DecodeState::Incomplete => (),
+                        match decode_one_codepoint_utf8(&mut seq, InvalidPolicy::Error, &buffer) {
+                            DecodeState::Incomplete => {
+                                buffer.push(
+                                    match next_input_event(self.get_in_fd(), Timeout::Forever) {
+                                        InputEventTrigger::Byte(b) => b,
+                                        _ => 0,
+                                    },
+                                );
+                            }
                             DecodeState::Complete => {
-                                if have_escape_prefix && i != 0 {
-                                    have_escape_prefix = false;
+                                if have_escape_prefix {
                                     let c = seq.as_char_slice().last().unwrap();
                                     key = Some(KeyEvent::from(alt(*c)));
                                 }
-                                if i + 1 == buffer.len() {
-                                    break true;
-                                }
+                                break true;
                             }
                             DecodeState::Error => {
                                 self.push_front(CharEvent::from_check_exit());
                                 break false;
                             }
                         }
-                        i += 1;
                     };
                     if !ok {
                         continue;
@@ -1686,63 +1671,37 @@ pub(crate) enum InvalidPolicy {
     Passthrough,
 }
 
-pub(crate) fn decode_input_byte(
+pub(crate) fn decode_one_codepoint_utf8(
     out_seq: &mut WString,
     invalid_policy: InvalidPolicy,
-    state: &mut mbstate_t,
     buffer: &[u8],
-    consumed: &mut usize,
 ) -> DecodeState {
     use DecodeState::*;
-    let mut res: char = '\0';
-    let read_byte = *buffer.last().unwrap();
-    if !get_is_multibyte_locale() {
-        // single-byte locale, all values are legal
-        res = read_byte.into();
-        out_seq.push(res);
-        return Complete;
-    }
-    let mut invalid = |out_seq: &mut WString, log_error: fn()| match invalid_policy {
-        InvalidPolicy::Error => {
-            (log_error)();
-            Error
-        }
-        InvalidPolicy::Passthrough => {
-            for &b in &buffer[*consumed..] {
-                out_seq.push(encode_byte_to_char(b));
+    match std::str::from_utf8(buffer) {
+        Ok(parsed_str) => {
+            for c in parsed_str.chars() {
+                if !fish_reserved_codepoint(c) {
+                    out_seq.push(c);
+                }
             }
-            *consumed = buffer.len();
             Complete
         }
-    };
-    let mut codepoint = u32::from(res);
-    match unsafe {
-        mbrtowc(
-            std::ptr::addr_of_mut!(codepoint),
-            std::ptr::addr_of!(read_byte).cast(),
-            1,
-            state,
-        )
-    } as isize
-    {
-        -1 => {
-            return invalid(out_seq, || FLOG!(reader, "Illegal input encoding"));
-        }
-        -2 => {
-            // Sequence not yet complete.
-            return Incomplete;
-        }
-        _ => (),
+        Err(e) => match e.error_len() {
+            Some(_) => match invalid_policy {
+                InvalidPolicy::Error => {
+                    FLOG!(reader, "Illegal input encoding");
+                    Error
+                }
+                InvalidPolicy::Passthrough => {
+                    for &b in buffer {
+                        out_seq.push(encode_byte_to_char(b));
+                    }
+                    Complete
+                }
+            },
+            None => Incomplete,
+        },
     }
-    if let Some(res) = char::from_u32(codepoint) {
-        // Sequence complete.
-        if !fish_reserved_codepoint(res) {
-            *consumed += 1;
-            out_seq.push(res);
-            return Complete;
-        }
-    }
-    invalid(out_seq, || FLOG!(reader, "Illegal codepoint"))
 }
 
 pub(crate) fn stop_query(mut query: RefMut<'_, Option<TerminalQuery>>) -> bool {

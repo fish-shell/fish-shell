@@ -9,6 +9,8 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 
+- Fish now assumes UTF-8 everywhere, regardless of locale settings. Input bytes which are not valid UTF-8 should still be round-tripped correctly.
+
 Interactive improvements
 ------------------------
 - :doc:`fish_config prompt {choose,save} <cmds/fish_config>` have been taught to reset :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` in addition to the other prompt functions (:issue:`11937`).

@@ -55,9 +55,8 @@ use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
     EscapeFlags, EscapeStringStyle, PROGRAM_NAME, ScopeGuard, UTF8_BOM_WCHAR, bytes2wcstring,
-    escape, escape_string, exit_without_destructors, get_ellipsis_char, get_is_multibyte_locale,
-    get_obfuscation_read_char, restore_term_foreground_process_group_for_exit, shell_modes,
-    write_loop,
+    escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
+    restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
 };
 use crate::complete::{
     CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete, complete_load,
@@ -3220,14 +3219,7 @@ impl<'a> Reader<'a> {
                 self.history_pager = Some(0..1);
                 // Update the pager data.
                 self.pager.set_search_field_shown(true);
-                self.pager.set_prefix(
-                    if get_is_multibyte_locale() {
-                        L!("► ")
-                    } else {
-                        L!("> ")
-                    },
-                    /*highlight=*/ false,
-                );
+                self.pager.set_prefix(L!("► "), false);
                 // Update the search field, which triggers the actual history search.
                 let search_string = if !self.history_search.active()
                     || self.history_search.search_string().is_empty()

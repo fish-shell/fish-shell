@@ -1,5 +1,4 @@
 pub mod dir_iter;
-pub mod encoding;
 pub mod errors;
 pub mod fileid;
 pub mod gettext;

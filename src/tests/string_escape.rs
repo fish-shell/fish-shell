@@ -1,39 +1,10 @@
-use std::sync::MutexGuard;
-
 use crate::common::{
     ENCODE_DIRECT_BASE, ENCODE_DIRECT_END, EscapeFlags, EscapeStringStyle, UnescapeStringStyle,
-    bytes2wcstring, escape_string, fish_setlocale, unescape_string, wcs2bytes,
+    bytes2wcstring, escape_string, unescape_string, wcs2bytes,
 };
-use crate::locale::LOCALE_LOCK;
 use crate::util::{get_rng_seed, get_seeded_rng};
 use crate::wchar::{L, WString, wstr};
-use crate::wutil::encoding::{
-    AT_LEAST_MB_LEN_MAX, probe_is_multibyte_locale, wcrtomb, zero_mbstate,
-};
 use rand::{Rng, RngCore};
-
-/// wcs2bytes is locale-dependent, so ensure we have a multibyte locale
-/// before using it in a test.
-fn setlocale() -> MutexGuard<'static, ()> {
-    let guard = LOCALE_LOCK.lock().unwrap();
-
-    #[rustfmt::skip]
-    const UTF8_LOCALES: &[&str] = &[
-        "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",
-    ];
-    if probe_is_multibyte_locale() {
-        return guard;
-    }
-    for locale in UTF8_LOCALES {
-        let locale = std::ffi::CString::new(locale.to_owned()).unwrap();
-        unsafe { libc::setlocale(libc::LC_CTYPE, locale.as_ptr()) };
-        if probe_is_multibyte_locale() {
-            fish_setlocale(); // Update cached locale information.
-            return guard;
-        }
-    }
-    panic!("No UTF-8 locale found");
-}
 
 #[test]
 fn test_escape_string() {
@@ -105,7 +76,6 @@ fn test_escape_var() {
 }
 
 fn escape_test(escape_style: EscapeStringStyle, unescape_style: UnescapeStringStyle) {
-    let _locale_guard = setlocale();
     let seed: u128 = 92348567983274852905629743984572;
     let mut rng = get_seeded_rng(seed);
 
@@ -185,7 +155,6 @@ fn bytes2hex(input: &[u8]) -> String {
 /// string comes back through double conversion.
 #[test]
 fn test_convert() {
-    let _locale_guard = setlocale();
     let seed = get_rng_seed();
     let mut rng = get_seeded_rng(seed);
     let mut origin = Vec::new();
@@ -241,30 +210,18 @@ fn test_convert_ascii() {
     }
 }
 
-/// fish uses the private-use range to encode bytes that could not be decoded using the
-/// user's locale. If the input could be decoded, but decoded to private-use codepoints,
-/// then fish should also use the direct encoding for those bytes. Verify that characters
-/// in the private use area are correctly round-tripped. See #7723.
+/// fish uses the private-use range to encode bytes that are not valid UTF-8.
+/// If the input decodes to these private-use codepoints,
+/// then fish should also use the direct encoding for those bytes.
+/// Verify that characters in the private use area are correctly round-tripped. See #7723.
 #[test]
 fn test_convert_private_use() {
     for c in ENCODE_DIRECT_BASE..ENCODE_DIRECT_END {
-        // Encode the char via the locale. Do not use fish functions which interpret these
-        // specially.
-        let mut converted = [0_u8; AT_LEAST_MB_LEN_MAX];
-        let mut state = zero_mbstate();
-        let len = unsafe {
-            wcrtomb(
-                std::ptr::addr_of_mut!(converted[0]).cast(),
-                c as u32,
-                &mut state,
-            )
-        };
-        if len == 0_usize.wrapping_sub(1) {
-            // Could not be encoded in this locale.
-            continue;
-        }
-        let s = &converted[..len];
-
+        // A `char` represents an Unicode scalar value, which takes up at most 4 bytes when encoded in UTF-8.
+        // TODO MSRV(1.92?) replace 4 by `char::MAX_LEN_UTF8` once that's available in our MSRV.
+        // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX_LEN_UTF8
+        let mut converted = [0_u8; 4];
+        let s = c.encode_utf8(&mut converted).as_bytes();
         // Ask fish to decode this via bytes2wcstring.
         // bytes2wcstring should notice that the decoded form collides with its private use
         // and encode it directly.

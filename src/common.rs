@@ -16,9 +16,6 @@ use crate::termsize::Termsize;
 use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
 use crate::wcstringutil::wcs2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use crate::wutil::encoding::{
-    AT_LEAST_MB_LEN_MAX, mbrtowc, probe_is_multibyte_locale, wcrtomb, zero_mbstate,
-};
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
@@ -190,7 +187,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     let no_quoted = flags.contains(EscapeFlags::NO_QUOTED);
     let no_tilde = flags.contains(EscapeFlags::NO_TILDE);
     let no_qmark = feature_test(FeatureFlag::qmark_noglob);
-    let symbolic = flags.contains(EscapeFlags::SYMBOLIC) && get_is_multibyte_locale();
+    let symbolic = flags.contains(EscapeFlags::SYMBOLIC);
 
     assert!(
         !symbolic || !escape_printables,
@@ -1035,18 +1032,14 @@ pub fn shell_modes() -> MutexGuard<'static, libc::termios> {
 /// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $
 /// on other systems.
 pub fn get_ellipsis_char() -> char {
-    char::from_u32(ELLIPSIS_CHAR.load(Ordering::Relaxed)).unwrap()
+    '\u{2026}'
 }
-
-static ELLIPSIS_CHAR: AtomicU32 = AtomicU32::new(0);
 
 /// The character or string to use where text has been truncated (ellipsis if possible, otherwise
 /// ...)
 pub fn get_ellipsis_str() -> &'static wstr {
-    ELLIPSIS_STRING.load()
+    L!("\u{2026}")
 }
-
-static ELLIPSIS_STRING: AtomicRef<wstr> = AtomicRef::new(&L!(""));
 
 /// Character representing an omitted newline at the end of text.
 pub fn get_omitted_newline_str() -> &'static wstr {
@@ -1063,13 +1056,6 @@ static OBFUSCATION_READ_CHAR: AtomicU32 = AtomicU32::new(0);
 
 pub fn get_obfuscation_read_char() -> char {
     char::from_u32(OBFUSCATION_READ_CHAR.load(Ordering::Relaxed)).unwrap()
-}
-
-static IS_MB_LOCALE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-/// Whether we believe we are in a multibyte locale.
-pub fn get_is_multibyte_locale() -> bool {
-    IS_MB_LOCALE.load()
 }
 
 /// Profiling flag. True if commands should be profiled.
@@ -1102,84 +1088,54 @@ pub static EMPTY_STRING: WString = WString::new();
 /// todo!("Maybe remove the box? It is only needed for get_bg_context.")
 pub type CancelChecker = Box<dyn Fn() -> bool>;
 
-/// Converts the narrow character string \c in into its wide equivalent, and return it.
-///
-/// The string may contain embedded nulls.
-///
-/// This function encodes illegal character sequences in a reversible way using the private use
-/// area.
-pub fn bytes2wcstring(inp: &[u8]) -> WString {
-    if inp.is_empty() {
+/// Encodes the bytes in `input` into a [`WString`], encoding non-UTF-8 bytes into private-use-area
+/// code-points. Bytes which would be parsed into our reserved PUA range are encoded individually,
+/// to allow for correct round-tripping.
+pub fn bytes2wcstring(mut input: &[u8]) -> WString {
+    if input.is_empty() {
         return WString::new();
     }
 
     let mut result = WString::new();
-    result.reserve(inp.len());
-    let mut pos = 0;
-    let mut state = zero_mbstate();
-    while pos < inp.len() {
-        // Append any initial sequence of ascii characters.
-        // Note we do not support character sets which are not supersets of ASCII.
-        let ascii_prefix_length = count_ascii_prefix(&inp[pos..]);
-        result.push_str(std::str::from_utf8(&inp[pos..pos + ascii_prefix_length]).unwrap());
-        pos += ascii_prefix_length;
-        assert!(pos <= inp.len(), "Position overflowed length");
-        if pos == inp.len() {
-            break;
-        }
 
-        // We have found a non-ASCII character.
-        let mut ret = 0;
-        let mut c = '\0';
-
-        let use_encode_direct = if inp[pos] & 0xF8 == 0xF8 {
-            // Protect against broken mbrtowc() implementations which attempt to encode UTF-8
-            // sequences longer than four bytes (e.g., OS X Snow Leopard).
-            // TODO This check used to be conditionally compiled only on affected platforms.
-            true
-        } else {
-            let mut codepoint = u32::from(c);
-            ret = unsafe {
-                mbrtowc(
-                    std::ptr::addr_of_mut!(codepoint),
-                    std::ptr::addr_of!(inp[pos]).cast(),
-                    inp.len() - pos,
-                    &mut state,
-                )
-            };
-            match char::from_u32(codepoint) {
-                Some(codepoint) => {
-                    c = codepoint;
-                    // Determine whether to encode this character with our crazy scheme.
-                    fish_reserved_codepoint(c)
-                    ||
-                    // Incomplete sequence.
-                    ret == 0_usize.wrapping_sub(2)
-                    ||
-                    // Invalid data.
-                    ret == 0_usize.wrapping_sub(1)
-                    ||
-                    // Other error codes? Terrifying, should never happen.
-                    ret > inp.len() - pos
+    fn append_escaped_str(output: &mut WString, input: &str) {
+        for (i, c) in input.char_indices() {
+            if fish_reserved_codepoint(c) {
+                for byte in &input.as_bytes()[i..i + c.len_utf8()] {
+                    output.push(encode_byte_to_char(*byte));
                 }
-                None => true,
+            } else {
+                output.push(c);
             }
-        };
+        }
+    }
 
-        if use_encode_direct {
-            c = encode_byte_to_char(inp[pos]);
-            result.push(c);
-            pos += 1;
-            state = zero_mbstate();
-        } else if ret == 0 {
-            // embedded null byte!
-            result.push('\0');
-            pos += 1;
-            state = zero_mbstate();
-        } else {
-            // normal case
-            result.push(c);
-            pos += ret;
+    while !input.is_empty() {
+        match std::str::from_utf8(input) {
+            Ok(parsed_str) => {
+                append_escaped_str(&mut result, parsed_str);
+                // The entire remaining input could be parsed, so we are done.
+                break;
+            }
+            Err(e) => {
+                let (valid, after_valid) = input.split_at(e.valid_up_to());
+                // SAFETY: The previous `str::from_utf8` call established that the prefix `valid`
+                // is valid UTF-8. This prefix may be empty.
+                let parsed_str = unsafe { std::str::from_utf8_unchecked(valid) };
+                append_escaped_str(&mut result, parsed_str);
+                // The length of the prefix of `after_valid` which is invalid UTF-8.
+                // The remaining bytes of `input` (if any) will be parsed in subsequent iterations
+                // of the loop, starting from the first byte that starts a valid UTF-8-encoded codepoint.
+                // `error_len` can return `None`, if it sees a byte sequence that could be the
+                // prefix of a valid code-point encoding at the end of the byte slice.
+                // This is useful when the input is chunked, but we don't do that, so in this case
+                // we use our custom encoding for all remaining bytes (at most 3).
+                let error_len = e.error_len().unwrap_or(after_valid.len());
+                for byte in &after_valid[..error_len] {
+                    result.push(encode_byte_to_char(*byte));
+                }
+                input = &after_valid[error_len..];
+            }
         }
     }
     result
@@ -1265,12 +1221,6 @@ pub fn wcs2bytes_appending(output: &mut Vec<u8>, input: &wstr) {
     });
 }
 
-/// Return the count of initial characters in `in` which are ASCII.
-fn count_ascii_prefix(inp: &[u8]) -> usize {
-    // The C++ version had manual vectorization.
-    inp.iter().take_while(|c| c.is_ascii()).count()
-}
-
 // Check if we are running in the test mode, where we should suppress error output
 pub const TESTS_PROGRAM_NAME: &wstr = L!("(ignore)");
 
@@ -1302,22 +1252,6 @@ pub fn fish_setlocale() {
         }};
     }
 
-    // Mark if we are a multibyte locale.
-    IS_MB_LOCALE.store(probe_is_multibyte_locale());
-
-    // Use various Unicode symbols if they can be encoded using the current locale, else a simple
-    // ASCII char alternative. All of the can_be_encoded() invocations should return the same
-    // true/false value since the code points are in the BMP but we're going to be paranoid. This
-    // is also technically wrong if we're not in a Unicode locale but we expect (or hope)
-    // can_be_encoded() will return false in that case.
-    if can_be_encoded('\u{2026}') {
-        ELLIPSIS_CHAR.store(u32::from('\u{2026}'), Ordering::Relaxed);
-        ELLIPSIS_STRING.store(LL!("\u{2026}"));
-    } else {
-        ELLIPSIS_CHAR.store(u32::from('$'), Ordering::Relaxed); // "horizontal ellipsis"
-        ELLIPSIS_STRING.store(LL!("..."));
-    }
-
     if is_windows_subsystem_for_linux(WSL::Any) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
@@ -1327,27 +1261,14 @@ pub fn fish_setlocale() {
         OMITTED_NEWLINE_STR.store(LL!("^J"));
         OBFUSCATION_READ_CHAR.store(u32::from('*'), Ordering::Relaxed);
     } else {
-        if can_be_encoded('\u{23CE}') {
-            OMITTED_NEWLINE_STR.store(LL!("\u{23CE}")); // "return symbol" (⏎)
-        } else {
-            OMITTED_NEWLINE_STR.store(LL!("^J"));
-        }
+        OMITTED_NEWLINE_STR.store(LL!("\u{23CE}")); // "return symbol" (⏎)
         OBFUSCATION_READ_CHAR.store(
-            u32::from(if can_be_encoded('\u{25CF}') {
-                '\u{25CF}' // "black circle"
-            } else {
-                '#'
-            }),
+            u32::from(
+                '\u{25CF}', // "black circle"
+            ),
             Ordering::Relaxed,
         );
     }
-}
-
-/// Test if the character can be encoded using the current locale.
-fn can_be_encoded(wc: char) -> bool {
-    let mut converted = [0 as libc::c_char; AT_LEAST_MB_LEN_MAX];
-    let mut state = zero_mbstate();
-    unsafe { wcrtomb(converted.as_mut_ptr(), wc as u32, &mut state) != 0_usize.wrapping_sub(1) }
 }
 
 /// Call read, blocking and repeating on EINTR. Exits on EAGAIN.

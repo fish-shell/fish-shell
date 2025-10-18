@@ -14,7 +14,6 @@ use crate::terminal::ColorSupport;
 use crate::terminal::use_terminfo;
 use crate::tty_handoff::xtversion;
 use crate::wchar::prelude::*;
-use crate::wutil::encoding::probe_is_multibyte_locale;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};
 use std::borrow::Cow;
@@ -25,12 +24,16 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 /// List of all locale environment variable names that might trigger (re)initializing of the locale
 /// subsystem. These are only the variables we're possibly interested in.
-#[rustfmt::skip]
-const LOCALE_VARIABLES: [&wstr; 10] = [
-    L!("LANG"),       L!("LANGUAGE"), L!("LC_ALL"),
-    L!("LC_COLLATE"), L!("LC_CTYPE"), L!("LC_MESSAGES"),
-    L!("LC_NUMERIC"), L!("LC_TIME"),  L!("LOCPATH"),
-    L!("fish_allow_singlebyte_locale"),
+const LOCALE_VARIABLES: [&wstr; 9] = [
+    L!("LANG"),
+    L!("LANGUAGE"),
+    L!("LC_ALL"),
+    L!("LC_COLLATE"),
+    L!("LC_CTYPE"),
+    L!("LC_MESSAGES"),
+    L!("LC_NUMERIC"),
+    L!("LC_TIME"),
+    L!("LOCPATH"),
 ];
 
 #[rustfmt::skip]
@@ -299,8 +302,6 @@ fn handle_tz_change(var_name: &wstr, vars: &EnvStack) {
 
 fn handle_locale_change(vars: &EnvStack) {
     init_locale(vars);
-    // We need to re-guess emoji width because the locale might have changed to a multibyte one.
-    guess_emoji_width(vars);
 }
 
 fn handle_term_change(vars: &EnvStack) {
@@ -502,11 +503,6 @@ pub fn read_terminfo_database(vars: &EnvStack) {
 fn init_locale(vars: &EnvStack) {
     let _guard = crate::locale::LOCALE_LOCK.lock().unwrap();
 
-    #[rustfmt::skip]
-    const UTF8_LOCALES: &[&str] = &[
-        "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",
-    ];
-
     let old_msg_locale: CString = {
         let old = unsafe { libc::setlocale(libc::LC_MESSAGES, ptr::null()) };
         assert_ne!(old, ptr::null_mut());
@@ -540,33 +536,6 @@ fn init_locale(vars: &EnvStack) {
             Some(unsafe { CStr::from_ptr(loc_ptr) })
         }
     };
-
-    // Try to get a multibyte-capable encoding.
-    // A "C" locale is broken for our purposes: any wchar function will break on it. So we try
-    // *really, really, really hard* to not have one.
-    let fix_locale = vars
-        .get_unless_empty(L!("fish_allow_singlebyte_locale"))
-        .map(|v| v.as_string())
-        .map(|allow_c| !crate::wcstringutil::bool_from_string(&allow_c))
-        .unwrap_or(true);
-
-    if fix_locale && !probe_is_multibyte_locale() {
-        FLOG!(env_locale, "Have single byte locale, trying to fix.");
-        let mut fixed = false;
-        for locale in UTF8_LOCALES {
-            let locale_cstr = CString::new(*locale).unwrap();
-            // this can fail, that is fine
-            unsafe { libc::setlocale(libc::LC_CTYPE, locale_cstr.as_ptr()) };
-            if probe_is_multibyte_locale() {
-                FLOG!(env_locale, "Fixed locale:", locale);
-                fixed = true;
-                break;
-            }
-        }
-        if !fixed {
-            FLOG!(env_locale, "Failed to fix locale.");
-        }
-    }
 
     // We *always* use a C-locale for numbers because we want '.' (except for in printf).
     let loc_ptr = unsafe { libc::setlocale(libc::LC_NUMERIC, c"C".as_ptr().cast()) };

@@ -1,10 +1,8 @@
 //! Helper functions for working with wcstring.
 
-use crate::common::{get_ellipsis_char, get_ellipsis_str, get_is_multibyte_locale};
+use crate::common::{get_ellipsis_char, get_ellipsis_str};
 use crate::fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
-use crate::flog::FLOGF;
 use crate::wchar::{decode_byte_from_char, prelude::*};
-use crate::wutil::encoding::{AT_LEAST_MB_LEN_MAX, wcrtomb, zero_mbstate};
 
 /// Return the number of newlines in a string.
 pub fn count_newlines(s: &wstr) -> usize {
@@ -299,54 +297,26 @@ pub fn string_fuzzy_match_string(
 }
 
 /// Implementation of wcs2bytes that accepts a callback.
-/// This invokes `func` with (const char*, size_t) pairs.
+/// This invokes `func` with byte slices containing the UTF-8 encoding of the characters in the
+/// input, doing one invocation per character.
 /// If `func` returns false, it stops; otherwise it continues.
 /// Return false if the callback returned false, otherwise true.
 pub fn wcs2bytes_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
-    let mut state = zero_mbstate();
-    let mut converted = [0_u8; AT_LEAST_MB_LEN_MAX];
-
-    let is_singlebyte_locale = !get_is_multibyte_locale();
+    // A `char` represents an Unicode scalar value, which takes up at most 4 bytes when encoded in UTF-8.
+    let mut converted = [0_u8; 4];
 
     for c in input.chars() {
-        if let Some(byte) = decode_byte_from_char(c) {
+        let bytes = if let Some(byte) = decode_byte_from_char(c) {
             converted[0] = byte;
-            if !func(&converted[..1]) {
-                return false;
-            }
-        } else if is_singlebyte_locale {
-            // single-byte locale (C/POSIX/ISO-8859)
-            // If `c` contains a wide character we emit a question-mark.
-            converted[0] = u8::try_from(u32::from(c)).unwrap_or(b'?');
-            if !func(&converted[..1]) {
-                return false;
-            }
+            &converted[..=0]
         } else {
-            converted = [0; AT_LEAST_MB_LEN_MAX];
-            let len = unsafe {
-                wcrtomb(
-                    std::ptr::addr_of_mut!(converted[0]).cast(),
-                    c as u32,
-                    &mut state,
-                )
-            };
-            if len == 0_usize.wrapping_sub(1) {
-                wcs2bytes_bad_char(c);
-                state = zero_mbstate();
-            } else if !func(&converted[..len]) {
-                return false;
-            }
+            c.encode_utf8(&mut converted).as_bytes()
+        };
+        if !func(bytes) {
+            return false;
         }
     }
     true
-}
-
-fn wcs2bytes_bad_char(c: char) {
-    FLOGF!(
-        char_encoding,
-        L!("Wide character U+%4X has no narrow representation"),
-        c
-    );
 }
 
 /// Split a string by runs of any of the separator characters provided in `seps`.

@@ -2,7 +2,7 @@
 
 use super::prelude::*;
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, escape, escape_string, str2wcstring, valid_var_name,
+    EscapeFlags, EscapeStringStyle, bytes2wcstring, escape, escape_string, valid_var_name,
 };
 use crate::highlight::{colorize, highlight_shell};
 use crate::input::{InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings};
@@ -157,7 +157,7 @@ impl BuiltinBind {
             let mut colors = Vec::new();
             highlight_shell(&out, &mut colors, &parser.context(), false, None);
             let colored = colorize(&out, &colors, parser.vars());
-            streams.out.append(str2wcstring(&colored));
+            streams.out.append(bytes2wcstring(&colored));
         } else {
             streams.out.append(out);
         }

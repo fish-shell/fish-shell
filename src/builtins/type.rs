@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::common::str2wcstring;
+use crate::common::bytes2wcstring;
 use crate::function;
 use crate::highlight::{colorize, highlight_shell};
 
@@ -152,7 +152,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                                 /*io_ok=*/ false,
                                 /*cursor=*/ None,
                             );
-                            let col = str2wcstring(&colorize(&def, &color, parser.vars()));
+                            let col = bytes2wcstring(&colorize(&def, &color, parser.vars()));
                             streams.out.append(col);
                         } else {
                             streams.out.append(def);

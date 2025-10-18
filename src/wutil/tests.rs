@@ -76,7 +76,7 @@ fn test_wwrite_to_fd() {
         }
 
         let amt = wwrite_to_fd(&input, fd.fd()).unwrap();
-        let narrow = wcs2string(&input);
+        let narrow = wcs2bytes(&input);
         assert_eq!(amt, narrow.len());
 
         assert!(unsafe { libc::lseek(fd.fd(), 0, SEEK_SET) } >= 0);

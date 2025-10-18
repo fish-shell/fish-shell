@@ -31,8 +31,8 @@ use fish::{
         },
     },
     common::{
-        PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, escape, save_term_foreground_process_group,
-        str2wcstring, wcs2string,
+        PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, bytes2wcstring, escape,
+        save_term_foreground_process_group, wcs2bytes,
     },
     env::{
         EnvMode, Statuses,
@@ -176,7 +176,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
     #[cfg(feature = "embed-data")]
     {
         let emfile = Asset::get("config.fish").expect("Embedded file not found");
-        let src = str2wcstring(&emfile.data);
+        let src = bytes2wcstring(&emfile.data);
         parser.libdata_mut().within_fish_init = true;
         let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
         let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
@@ -187,7 +187,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
     }
     #[cfg(not(feature = "embed-data"))]
     {
-        let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
+        let datapath = bytes2wcstring(paths.data.as_os_str().as_bytes());
         if !source_config_in_directory(parser, &datapath) {
             // If we cannot read share/config.fish, our internal configuration,
             // something is wrong.
@@ -204,7 +204,10 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
         }
     }
 
-    source_config_in_directory(parser, &str2wcstring(paths.sysconf.as_os_str().as_bytes()));
+    source_config_in_directory(
+        parser,
+        &bytes2wcstring(paths.sysconf.as_os_str().as_bytes()),
+    );
 
     // We need to get the configuration directory before we can source the user configuration file.
     // If path_get_config returns false then we have no configuration directory and no custom config
@@ -217,7 +220,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
 fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_int> {
     let mut retval = Ok(());
     for cmd in cmds {
-        let cmd_wcs = str2wcstring(cmd.as_bytes());
+        let cmd_wcs = bytes2wcstring(cmd.as_bytes());
 
         let mut errors = ParseErrorList::new();
         let ast = ast::parse(&cmd_wcs, ParseTreeFlags::empty(), Some(&mut errors));
@@ -279,10 +282,10 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
         match c {
             'c' => opts
                 .batch_cmds
-                .push(OsString::from_vec(wcs2string(w.woptarg.unwrap()))),
+                .push(OsString::from_vec(wcs2bytes(w.woptarg.unwrap()))),
             'C' => opts
                 .postconfig_cmds
-                .push(OsString::from_vec(wcs2string(w.woptarg.unwrap()))),
+                .push(OsString::from_vec(wcs2bytes(w.woptarg.unwrap()))),
             'd' => {
                 activate_flog_categories_by_pattern(w.woptarg.unwrap());
                 for cat in flog::categories::all_categories() {
@@ -291,7 +294,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                     }
                 }
             }
-            'o' => opts.debug_output = Some(OsString::from_vec(wcs2string(w.woptarg.unwrap()))),
+            'o' => opts.debug_output = Some(OsString::from_vec(wcs2bytes(w.woptarg.unwrap()))),
             'f' => opts.features = w.woptarg.unwrap().to_owned(),
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
@@ -321,11 +324,11 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             }
             // "--profile" - this does not activate profiling right away,
             // rather it's done after startup is finished.
-            'p' => opts.profile_output = Some(OsString::from_vec(wcs2string(w.woptarg.unwrap()))),
+            'p' => opts.profile_output = Some(OsString::from_vec(wcs2bytes(w.woptarg.unwrap()))),
             PROFILE_STARTUP_ARG => {
                 // With "--profile-startup" we immediately turn profiling on.
                 opts.profile_startup_output =
-                    Some(OsString::from_vec(wcs2string(w.woptarg.unwrap())));
+                    Some(OsString::from_vec(wcs2bytes(w.woptarg.unwrap())));
                 PROFILING_ACTIVE.store(true);
             }
             'P' => opts.enable_private_mode = true,
@@ -419,12 +422,12 @@ fn throwing_main() -> i32 {
     // Enable debug categories set in FISH_DEBUG.
     // This is in *addition* to the ones given via --debug.
     if let Some(debug_categories) = env::var_os("FISH_DEBUG") {
-        let s = str2wcstring(debug_categories.as_bytes());
+        let s = bytes2wcstring(debug_categories.as_bytes());
         activate_flog_categories_by_pattern(&s);
     }
 
     let mut args: Vec<WString> = env::args_os()
-        .map(|osstr| str2wcstring(osstr.as_bytes()))
+        .map(|osstr| bytes2wcstring(osstr.as_bytes()))
         .collect();
     let mut opts = FishCmdOpts::default();
     let mut my_optind = match fish_parse_opt(&mut args, &mut opts) {
@@ -592,7 +595,7 @@ fn throwing_main() -> i32 {
         }
         res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
     } else {
-        let n = wcs2string(&args[my_optind]);
+        let n = wcs2bytes(&args[my_optind]);
         let path = OsStr::from_bytes(&n);
         my_optind += 1;
         // Rust sets cloexec by default, see above

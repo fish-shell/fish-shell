@@ -298,11 +298,11 @@ pub fn string_fuzzy_match_string(
     StringFuzzyMatch::try_create(string, match_against, anchor_start)
 }
 
-/// Implementation of wcs2string that accepts a callback.
+/// Implementation of wcs2bytes that accepts a callback.
 /// This invokes `func` with (const char*, size_t) pairs.
 /// If `func` returns false, it stops; otherwise it continues.
 /// Return false if the callback returned false, otherwise true.
-pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
+pub fn wcs2bytes_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
     let mut state = zero_mbstate();
     let mut converted = [0_u8; AT_LEAST_MB_LEN_MAX];
 
@@ -331,7 +331,7 @@ pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) ->
                 )
             };
             if len == 0_usize.wrapping_sub(1) {
-                wcs2string_bad_char(c);
+                wcs2bytes_bad_char(c);
                 state = zero_mbstate();
             } else if !func(&converted[..len]) {
                 return false;
@@ -341,7 +341,7 @@ pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) ->
     true
 }
 
-fn wcs2string_bad_char(c: char) {
+fn wcs2bytes_bad_char(c: char) {
     FLOGF!(
         char_encoding,
         L!("Wide character U+%4X has no narrow representation"),

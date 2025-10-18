@@ -2,7 +2,7 @@
 
 use super::prelude::*;
 use crate::color::Color;
-use crate::common::str2wcstring;
+use crate::common::bytes2wcstring;
 use crate::screen::{is_dumb, only_grayscale};
 use crate::terminal::{Outputter, use_terminfo};
 use crate::text_face::{
@@ -47,7 +47,7 @@ fn print_colors(
     } // conveniently, 'normal' is always the last color so we don't need to reset here
 
     let contents = outp.contents();
-    streams.out.append(str2wcstring(contents));
+    streams.out.append(bytes2wcstring(contents));
 }
 
 /// set_color builtin.
@@ -147,7 +147,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // Output the collected string.
     let contents = outp.contents();
-    streams.out.append(str2wcstring(contents));
+    streams.out.append(bytes2wcstring(contents));
 
     Ok(SUCCESS)
 }

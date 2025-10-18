@@ -1,6 +1,6 @@
 use crate::common::{
-    WSL, fish_reserved_codepoint, get_is_multibyte_locale, is_windows_subsystem_for_linux,
-    read_blocked, shell_modes, str2wcstring,
+    WSL, bytes2wcstring, fish_reserved_codepoint, get_is_multibyte_locale,
+    is_windows_subsystem_for_linux, read_blocked, shell_modes,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
@@ -1421,7 +1421,7 @@ pub trait InputEventQueuer {
             return None;
         }
         XTVERSION.get_or_init(|| {
-            let xtversion = str2wcstring(&buffer[4..buffer.len()]);
+            let xtversion = bytes2wcstring(&buffer[4..buffer.len()]);
             FLOG!(
                 reader,
                 format!("Received XTVERSION response: {}", xtversion)
@@ -1460,7 +1460,7 @@ pub trait InputEventQueuer {
                 reader,
                 format!(
                     "Received XTGETTCAP failure response: {}",
-                    str2wcstring(&parse_hex(buffer)?),
+                    bytes2wcstring(&parse_hex(buffer)?),
                 )
             );
             return None;
@@ -1474,14 +1474,14 @@ pub trait InputEventQueuer {
                 reader,
                 format!(
                     "Received XTGETTCAP response: {}={:?}",
-                    str2wcstring(&key),
-                    str2wcstring(&value)
+                    bytes2wcstring(&key),
+                    bytes2wcstring(&value)
                 )
             );
         } else {
             FLOG!(
                 reader,
-                format!("Received XTGETTCAP response: {}", str2wcstring(&key))
+                format!("Received XTGETTCAP response: {}", bytes2wcstring(&key))
             );
         }
         if key == SCROLL_CONTENT_UP_TERMINFO_CODE.as_bytes() {

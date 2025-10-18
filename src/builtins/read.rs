@@ -2,9 +2,9 @@
 
 use super::prelude::*;
 use crate::common::UnescapeStringStyle;
+use crate::common::bytes2wcstring;
 use crate::common::escape;
 use crate::common::read_blocked;
-use crate::common::str2wcstring;
 use crate::common::unescape_string;
 use crate::common::valid_var_name;
 use crate::env::EnvMode;
@@ -366,7 +366,7 @@ fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool
         }
     }
 
-    *buff = str2wcstring(&narrow_buff);
+    *buff = bytes2wcstring(&narrow_buff);
     if buff.is_empty() && eof {
         exit_res = Err(STATUS_CMD_ERROR);
     }

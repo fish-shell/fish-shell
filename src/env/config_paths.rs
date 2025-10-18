@@ -1,5 +1,5 @@
 use crate::common::BUILD_DIR;
-use crate::common::wcs2string;
+use crate::common::wcs2bytes;
 use crate::wchar::prelude::*;
 use crate::{FLOG, FLOGF, common::get_executable_path};
 use fish_build_helper::workspace_root;
@@ -24,7 +24,7 @@ const DOC_DIR: &str = env!("DOCDIR");
 
 impl ConfigPaths {
     pub fn new(argv0: &wstr) -> Self {
-        let argv0 = PathBuf::from(OsString::from_vec(wcs2string(argv0)));
+        let argv0 = PathBuf::from(OsString::from_vec(wcs2bytes(argv0)));
         let exec_path = get_executable_path(argv0);
         FLOG!(config, format!("executable path: {}", exec_path.display()));
         let paths = Self::from_exec_path(exec_path);

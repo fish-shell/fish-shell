@@ -22,8 +22,8 @@ use std::time::SystemTime;
 use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
 
 use crate::common::{
-    get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
-    has_working_tty_timestamps, shell_modes, str2wcstring, wcs2string, write_loop,
+    bytes2wcstring, get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
+    has_working_tty_timestamps, shell_modes, wcs2bytes, write_loop,
 };
 use crate::env::Environment;
 use crate::fallback::fish_wcwidth;
@@ -312,12 +312,12 @@ impl Screen {
         // If we are using a dumb terminal, don't try any fancy stuff, just print out the text.
         // right_prompt not supported.
         if is_dumb() {
-            let prompt_narrow = wcs2string(left_prompt);
+            let prompt_narrow = wcs2bytes(left_prompt);
 
             let _ = write_loop(&STDOUT_FILENO, b"\r");
             let _ = write_loop(&STDOUT_FILENO, &prompt_narrow);
-            let _ = write_loop(&STDOUT_FILENO, &wcs2string(explicit_before_suggestion));
-            let _ = write_loop(&STDOUT_FILENO, &wcs2string(explicit_after_suggestion));
+            let _ = write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_before_suggestion));
+            let _ = write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_after_suggestion));
 
             return;
         }
@@ -696,7 +696,7 @@ impl Screen {
                     let Some(s) = s else {
                         return false;
                     };
-                    abandon_line_string.push_utfstr(&str2wcstring(s.as_bytes()));
+                    abandon_line_string.push_utfstr(&bytes2wcstring(s.as_bytes()));
                     true
                 };
                 if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
@@ -725,7 +725,7 @@ impl Screen {
             } else {
                 let mut tmp = Vec::<u8>::new();
                 tmp.write_command(EnterDimMode);
-                abandon_line_string.push_utfstr(&str2wcstring(&tmp));
+                abandon_line_string.push_utfstr(&bytes2wcstring(&tmp));
             }
 
             abandon_line_string.push_utfstr(&get_omitted_newline_str());
@@ -733,7 +733,7 @@ impl Screen {
             // normal text ANSI escape sequence
             let mut tmp = Vec::<u8>::new();
             tmp.write_command(ExitAttributeMode);
-            abandon_line_string.push_utfstr(&str2wcstring(&tmp));
+            abandon_line_string.push_utfstr(&bytes2wcstring(&tmp));
 
             for _ in 0..screen_width - non_space_width {
                 abandon_line_string.push(' ');
@@ -756,9 +756,9 @@ impl Screen {
         // actual empty line.
         let mut tmp = Vec::<u8>::new();
         tmp.write_command(ClearToEndOfLine);
-        abandon_line_string.push_utfstr(&str2wcstring(&tmp));
+        abandon_line_string.push_utfstr(&bytes2wcstring(&tmp));
 
-        let narrow_abandon_line_string = wcs2string(&abandon_line_string);
+        let narrow_abandon_line_string = wcs2bytes(&abandon_line_string);
         let _ = write_loop(&STDOUT_FILENO, &narrow_abandon_line_string);
         self.actual.cursor.x = 0;
 

@@ -15,7 +15,7 @@ use libc::{STDIN_FILENO, VEOF, VINTR};
 use crate::future::IsSomeAnd;
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
-    common::{PROGRAM_NAME, shell_modes, str2wcstring},
+    common::{PROGRAM_NAME, bytes2wcstring, shell_modes},
     env::{EnvStack, Environment, env_init},
     future_feature_flags,
     input_common::{
@@ -299,7 +299,7 @@ fn throwing_main() -> i32 {
     let mut verbose = false;
 
     let args: Vec<WString> = std::env::args_os()
-        .map(|osstr| str2wcstring(osstr.as_bytes()))
+        .map(|osstr| bytes2wcstring(osstr.as_bytes()))
         .collect();
     if let ControlFlow::Break(s) =
         parse_flags(&mut streams, args, &mut continuous_mode, &mut verbose)

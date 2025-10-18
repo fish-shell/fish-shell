@@ -2,7 +2,7 @@
 
 use crate::FLOGF;
 #[cfg(feature = "embed-data")]
-use crate::common::wcs2string;
+use crate::common::wcs2bytes;
 use crate::common::{ScopeGuard, escape};
 use crate::env::Environment;
 use crate::io::IoChain;
@@ -150,11 +150,11 @@ impl Autoload {
             }
             #[cfg(feature = "embed-data")]
             AutoloadPath::Embedded(name) => {
-                use crate::common::str2wcstring;
+                use crate::common::bytes2wcstring;
                 use std::sync::Arc;
                 FLOGF!(autoload, "Loading embedded: %s", name);
                 let emfile = Asset::get(name).expect("Embedded file not found");
-                let src = str2wcstring(&emfile.data);
+                let src = bytes2wcstring(&emfile.data);
                 let mut widename = L!("embedded:").to_owned();
                 widename.push_str(name);
                 let ret = parser.eval_file_wstr(src, Arc::new(widename), &IoChain::new(), None);
@@ -474,7 +474,7 @@ impl AutoloadFileCache {
         if cfg!(test) {
             return None;
         }
-        let narrow = wcs2string(cmd);
+        let narrow = wcs2bytes(cmd);
         let cmdstr = std::str::from_utf8(&narrow).ok()?;
         let p = match asset_dir {
             AssetDir::Functions => "functions/".to_owned() + cmdstr + ".fish",

@@ -13,7 +13,7 @@ use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
-    common::{str2wcstring, subslice_position, wcs2string},
+    common::{bytes2wcstring, subslice_position, wcs2bytes},
     flog::FLOG,
     path::{DirRemoteness, path_get_data_remoteness},
 };
@@ -218,7 +218,7 @@ impl TryFrom<MmapRegion> for HistoryFileContents {
 pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
     assert!(item.should_write_to_disk(), "Item should not be persisted");
 
-    let mut cmd = wcs2string(item.str());
+    let mut cmd = wcs2bytes(item.str());
     escape_yaml_fish_2_0(&mut cmd);
     buffer.extend(b"- cmd: ");
     buffer.extend(&cmd);
@@ -229,7 +229,7 @@ pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
     if !paths.is_empty() {
         writeln!(buffer, "  paths:").unwrap();
         for path in paths {
-            let mut path = wcs2string(path);
+            let mut path = wcs2bytes(path);
             escape_yaml_fish_2_0(&mut path);
             buffer.extend(b"    - ");
             buffer.extend(&path);
@@ -374,7 +374,7 @@ fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
     let (_key, value) = extract_prefix_and_unescape_yaml(line)?;
 
     data = &data[advance..];
-    let cmd = str2wcstring(&value);
+    let cmd = bytes2wcstring(&value);
 
     // Read the remaining lines.
     let mut indent = None;
@@ -421,7 +421,7 @@ fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
                 data = &data[advance..];
 
                 let line = maybe_unescape_yaml_fish_2_0(line);
-                paths.push(str2wcstring(&line));
+                paths.push(bytes2wcstring(&line));
             }
         }
     }

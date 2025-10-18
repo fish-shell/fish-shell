@@ -4,7 +4,7 @@ use crate::ast::{self, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
     CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef, PROFILING_ACTIVE, ScopeGuarding,
-    ScopedCell, ScopedRefCell, escape_string, wcs2string,
+    ScopedCell, ScopedRefCell, escape_string, wcs2bytes,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStack, EnvStackSetResult, Environment, Statuses};
@@ -1270,7 +1270,7 @@ fn print_profile(items: &[ProfileItem], out: &mut File) {
             L!("\n"),
             &(WString::from("\n") + &wstr::repeat(L!(" "), indentation_level)[..]),
         );
-        let _ = out.write_all(&wcs2string(&indented_cmd));
+        let _ = out.write_all(&wcs2bytes(&indented_cmd));
         let _ = out.write_all(b"\n");
     }
 }

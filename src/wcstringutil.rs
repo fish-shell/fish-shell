@@ -1,7 +1,6 @@
 //! Helper functions for working with wcstring.
 
 use crate::common::{get_ellipsis_char, get_ellipsis_str, get_is_multibyte_locale};
-use crate::expand::INTERNAL_SEPARATOR;
 use crate::fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
 use crate::flog::FLOGF;
 use crate::wchar::{decode_byte_from_char, prelude::*};
@@ -314,10 +313,7 @@ pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) ->
     let is_singlebyte_locale = !get_is_multibyte_locale();
 
     for c in input.chars() {
-        // TODO: this doesn't seem sound.
-        if c == INTERNAL_SEPARATOR {
-            // do nothing
-        } else if let Some(byte) = decode_byte_from_char(c) {
+        if let Some(byte) = decode_byte_from_char(c) {
             converted[0] = byte;
             if !func(&converted[..1]) {
                 return false;

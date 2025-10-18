@@ -90,7 +90,7 @@ Running fish requires:
 
 -  some common \*nix system utilities (currently ``mktemp``), in
    addition to the basic POSIX utilities (``cat``, ``cut``, ``dirname``,
-   ``file``, ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sh``, ``sort``, ``tee``, ``tr``,
+   ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sh``, ``sort``, ``tee``, ``tr``,
    ``uname`` and ``sed`` at least, but the full coreutils plus ``find`` and
    ``awk`` is preferred)
 
@@ -100,6 +100,7 @@ The following optional features also have specific requirements:
    messages require ``man`` for display
 -  automated completion generation from manual pages requires Python 3.5+
 -  the ``fish_config`` web configuration tool requires Python 3.5+ and a web browser
+-  the :ref:`alt-o <shared-binds-alt-o>` binding requires the ``file`` program.
 -  system clipboard integration (with the default Ctrl-V and Ctrl-X
    bindings) require either the ``xsel``, ``xclip``,
    ``wl-copy``/``wl-paste`` or ``pbcopy``/``pbpaste`` utilities

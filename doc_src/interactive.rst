@@ -353,6 +353,8 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`alt-l` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 
+.. _shared-binds-alt-o:
+
 - :kbd:`alt-o` opens the file at the cursor in a pager. If the cursor is in command position and the command is a script, it will instead open that script in your editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
 
 - :kbd:`alt-p` adds the string ``&| less;`` to the end of the job under the cursor. The result is that the output of the command will be paged. If you set the ``PAGER`` variable, its value is used instead of ``less``.

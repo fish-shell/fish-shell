@@ -1,4 +1,4 @@
-use crate::common::{ScopeGuard, str2wcstring, wcs2osstring, wcs2string};
+use crate::common::{ScopeGuard, bytes2wcstring, wcs2bytes, wcs2osstring};
 use crate::env::{EnvMode, EnvStack};
 use crate::fs::{LockedFile, WriteMethod};
 use crate::history::{
@@ -260,7 +260,7 @@ fn test_history_races() {
     });
     if LockedFile::new(
         crate::fs::LockingMode::Exclusive(WriteMethod::RenameIntoPlace),
-        &str2wcstring(tmp_path.as_os_str().as_bytes()),
+        &bytes2wcstring(tmp_path.as_os_str().as_bytes()),
     )
     .is_err()
     {
@@ -497,7 +497,7 @@ fn test_history_path_detection() {
     let tmpdirbuff = CString::new("/tmp/fish_test_history.XXXXXX").unwrap();
     let tmpdir = unsafe { libc::mkdtemp(tmpdirbuff.into_raw()) };
     let tmpdir = unsafe { CString::from_raw(tmpdir) };
-    let mut tmpdir = str2wcstring(tmpdir.to_bytes());
+    let mut tmpdir = bytes2wcstring(tmpdir.to_bytes());
     if !tmpdir.ends_with('/') {
         tmpdir.push('/');
     }
@@ -602,7 +602,7 @@ fn install_sample_history(name: &wstr) {
     std::fs::copy(
         workspace_root()
             .join("tests")
-            .join(std::str::from_utf8(&wcs2string(name)).unwrap()),
+            .join(std::str::from_utf8(&wcs2bytes(name)).unwrap()),
         wcs2osstring(&(path + L!("/") + name + L!("_history"))),
     )
     .unwrap();

@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::common::{Named, escape, get_by_sorted_name, str2wcstring};
+use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name};
 use crate::io::OutputStream;
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
@@ -895,7 +895,7 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
             _ => unreachable!(),
         };
 
-        let parsed = str2wcstring(&self.buffer[..end]);
+        let parsed = bytes2wcstring(&self.buffer[..end]);
 
         let retval = Some((Cow::Owned(parsed), want_newline));
         self.buffer.clear();

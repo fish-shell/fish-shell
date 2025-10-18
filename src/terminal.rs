@@ -2,7 +2,7 @@
 use crate::FLOGF;
 use crate::color::{Color, Color24};
 use crate::common::ToCString;
-use crate::common::{self, EscapeStringStyle, escape_string, wcs2string, wcs2string_appending};
+use crate::common::{self, EscapeStringStyle, escape_string, wcs2bytes, wcs2bytes_appending};
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
@@ -374,7 +374,7 @@ fn query_kitty_progressive_enhancements(out: &mut impl Output) -> bool {
 fn osc_0_window_title(out: &mut impl Output, title: &[WString]) -> bool {
     out.write_bytes(b"\x1b]0;");
     for title_line in title {
-        out.write_bytes(&wcs2string(title_line));
+        out.write_bytes(&wcs2bytes(title_line));
     }
     out.write_bytes(b"\x07"); // BEL
     true
@@ -636,7 +636,7 @@ impl Outputter {
 
     /// Write a wide string.
     pub fn write_wstr(&mut self, str: &wstr) {
-        wcs2string_appending(&mut self.contents, str);
+        wcs2bytes_appending(&mut self.contents, str);
         self.maybe_flush();
     }
 

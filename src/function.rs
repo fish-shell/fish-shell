@@ -240,7 +240,7 @@ pub fn exists_no_autoload(cmd: &wstr) -> bool {
         return true;
     }
 
-    let narrow = crate::common::wcs2string(cmd);
+    let narrow = crate::common::wcs2bytes(cmd);
     if let Ok(cmdstr) = std::str::from_utf8(&narrow) {
         let cmd = "functions/".to_owned() + cmdstr + ".fish";
         crate::autoload::has_asset(&cmd)

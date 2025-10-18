@@ -54,10 +54,10 @@ use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, PROGRAM_NAME, ScopeGuard, UTF8_BOM_WCHAR, escape,
-    escape_string, exit_without_destructors, get_ellipsis_char, get_is_multibyte_locale,
+    EscapeFlags, EscapeStringStyle, PROGRAM_NAME, ScopeGuard, UTF8_BOM_WCHAR, bytes2wcstring,
+    escape, escape_string, exit_without_destructors, get_ellipsis_char, get_is_multibyte_locale,
     get_obfuscation_read_char, restore_term_foreground_process_group_for_exit, shell_modes,
-    str2wcstring, write_loop,
+    write_loop,
 };
 use crate::complete::{
     CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete, complete_load,
@@ -943,7 +943,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
         }
     }
 
-    let mut s = str2wcstring(&fd_contents);
+    let mut s = bytes2wcstring(&fd_contents);
 
     // Eagerly deallocate to save memory.
     drop(fd_contents);

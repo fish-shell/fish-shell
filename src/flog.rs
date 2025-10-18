@@ -1,4 +1,4 @@
-use crate::common::wcs2string;
+use crate::common::wcs2bytes;
 use crate::wchar::prelude::*;
 use crate::wildcard::wildcard_match;
 use crate::wutil::write_to_fd;
@@ -161,13 +161,13 @@ pub trait FloggableDisplay: std::fmt::Display {
 // Special handling for `WString` to decode PUA codepoints back into the original bytes.
 impl FloggableDisplay for WString {
     fn to_flog_str(&self) -> Vec<u8> {
-        wcs2string(self)
+        wcs2bytes(self)
     }
 }
 
 impl FloggableDisplay for &wstr {
     fn to_flog_str(&self) -> Vec<u8> {
-        wcs2string(self)
+        wcs2bytes(self)
     }
 }
 

@@ -12,7 +12,7 @@ use crate::proc::is_interactive_session;
 use crate::reader::{commandline_get_state, completion_apply_to_command_line};
 use crate::wcstringutil::string_suffixes_string;
 use crate::{
-    common::str2wcstring,
+    common::bytes2wcstring,
     complete::{
         CompleteFlags, CompleteOptionType, CompletionMode, complete_add, complete_print,
         complete_remove, complete_remove_all,
@@ -207,7 +207,7 @@ fn builtin_complete_print(cmd: &wstr, streams: &mut IoStreams, parser: &Parser) 
         highlight_shell(&repr, &mut colors, &parser.context(), false, None);
         streams
             .out
-            .append(str2wcstring(&colorize(&repr, &colors, parser.vars())));
+            .append(bytes2wcstring(&colorize(&repr, &colors, parser.vars())));
     } else {
         streams.out.append(repr);
     }

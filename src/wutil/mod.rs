@@ -11,10 +11,12 @@ mod tests;
 pub mod wcstod;
 pub mod wcstoi;
 
-use crate::common::{fish_reserved_codepoint, str2wcstring, wcs2osstring, wcs2string, wcs2zstring};
+use crate::common::{
+    bytes2wcstring, fish_reserved_codepoint, wcs2bytes, wcs2osstring, wcs2zstring,
+};
 use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
-use crate::wcstringutil::{join_strings, wcs2string_callback};
+use crate::wcstringutil::{join_strings, wcs2bytes_callback};
 use crate::{FLOG, fallback};
 use errno::errno;
 pub use gettext::{
@@ -74,7 +76,7 @@ pub fn wunlink(file_name: &wstr) -> libc::c_int {
 }
 
 pub fn wperror(s: &wstr) {
-    let bytes = wcs2string(s);
+    let bytes = wcs2bytes(s);
     // We can't guarantee the string is 100% Unicode (why?), so we don't use std::str::from_utf8()
     let s = OsStr::from_bytes(&bytes).to_string_lossy();
     perror(&s)
@@ -102,7 +104,7 @@ pub fn perror_io(s: &str, e: &io::Error) {
 /// Wide character version of getcwd().
 pub fn wgetcwd() -> WString {
     match std::env::current_dir() {
-        Ok(cwd) => str2wcstring(cwd.into_os_string().as_bytes()),
+        Ok(cwd) => bytes2wcstring(cwd.into_os_string().as_bytes()),
         Err(e) => {
             FLOG!(error, "std::env::current_dir() failed with error:", e);
             WString::new()
@@ -134,7 +136,7 @@ pub fn wreadlink(file_name: &wstr) -> Option<WString> {
     if nbytes == bufsize {
         return None;
     }
-    Some(str2wcstring(&target_buf[0..nbytes]))
+    Some(bytes2wcstring(&target_buf[0..nbytes]))
 }
 
 /// Wide character realpath. The last path component does not need to be valid. If an error occurs,
@@ -192,7 +194,7 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
         }
     };
 
-    Some(str2wcstring(&real_path))
+    Some(bytes2wcstring(&real_path))
 }
 
 /// Given an input path, "normalize" it:
@@ -534,7 +536,7 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
         true
     };
 
-    let mut success = wcs2string_callback(input, |buff: &[u8]| {
+    let mut success = wcs2bytes_callback(input, |buff: &[u8]| {
         if buff.len() + accumlen > maxaccum {
             // We have to flush.
             if !flush_accum(&mut total_written, &accum, &mut accumlen) {

@@ -14,7 +14,7 @@ use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::terminal::Output;
 use crate::termsize::Termsize;
 use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
-use crate::wcstringutil::wcs2string_callback;
+use crate::wcstringutil::wcs2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::encoding::{
     AT_LEAST_MB_LEN_MAX, mbrtowc, probe_is_multibyte_locale, wcrtomb, zero_mbstate,
@@ -386,7 +386,7 @@ fn byte_to_hex(byte: u8) -> (char, char) {
 
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 fn escape_string_url(input: &wstr) -> WString {
-    let narrow = wcs2string(input);
+    let narrow = wcs2bytes(input);
     let mut out = WString::new();
     for byte in narrow.into_iter() {
         if (byte & 0x80) == 0 {
@@ -409,7 +409,7 @@ fn escape_string_url(input: &wstr) -> WString {
 /// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
 fn escape_string_var(input: &wstr) -> WString {
     let mut prev_was_hex_encoded = false;
-    let narrow = wcs2string(input);
+    let narrow = wcs2bytes(input);
     let mut out = WString::new();
     for c in narrow.into_iter() {
         let ch: char = c.into();
@@ -790,7 +790,7 @@ fn unescape_string_url(input: &wstr) -> Option<WString> {
         i += 1
     }
 
-    Some(str2wcstring(&result))
+    Some(bytes2wcstring(&result))
 }
 
 /// Reverse the effects of `escape_string_var()`. By definition the string should consist of just
@@ -831,7 +831,7 @@ fn unescape_string_var(input: &wstr) -> Option<WString> {
         i += 1;
     }
 
-    Some(str2wcstring(&result))
+    Some(bytes2wcstring(&result))
 }
 
 /// Given a string starting with a backslash, read the escape as if it is unquoted, appending
@@ -1000,7 +1000,7 @@ pub fn read_unquoted_escape(
         }
 
         if !byte_buff.is_empty() {
-            result.push_utfstr(&str2wcstring(&byte_buff));
+            result.push_utfstr(&bytes2wcstring(&byte_buff));
         }
 
         break;
@@ -1108,7 +1108,7 @@ pub type CancelChecker = Box<dyn Fn() -> bool>;
 ///
 /// This function encodes illegal character sequences in a reversible way using the private use
 /// area.
-pub fn str2wcstring(inp: &[u8]) -> WString {
+pub fn bytes2wcstring(inp: &[u8]) -> WString {
     if inp.is_empty() {
         return WString::new();
     }
@@ -1196,12 +1196,12 @@ pub fn truncate_at_nul(input: &wstr) -> &wstr {
 
 pub fn cstr2wcstring(input: &[u8]) -> WString {
     let input = CStr::from_bytes_until_nul(input).unwrap().to_bytes();
-    str2wcstring(input)
+    bytes2wcstring(input)
 }
 
 pub(crate) fn charptr2wcstring(input: *const libc::c_char) -> WString {
     let input: &[u8] = unsafe { CStr::from_ptr(input).to_bytes() };
-    str2wcstring(input)
+    bytes2wcstring(input)
 }
 
 /// Returns a newly allocated multibyte character string equivalent of the specified wide character
@@ -1209,13 +1209,13 @@ pub(crate) fn charptr2wcstring(input: *const libc::c_char) -> WString {
 ///
 /// This function decodes illegal character sequences in a reversible way using the private use
 /// area.
-pub fn wcs2string(input: &wstr) -> Vec<u8> {
+pub fn wcs2bytes(input: &wstr) -> Vec<u8> {
     if input.is_empty() {
         return vec![];
     }
 
     let mut result = vec![];
-    wcs2string_appending(&mut result, input);
+    wcs2bytes_appending(&mut result, input);
     result
 }
 
@@ -1225,11 +1225,11 @@ pub fn wcs2osstring(input: &wstr) -> OsString {
     }
 
     let mut result = vec![];
-    wcs2string_appending(&mut result, input);
+    wcs2bytes_appending(&mut result, input);
     OsString::from_vec(result)
 }
 
-/// Same as [`wcs2string`]. Meant to be used when we need a zero-terminated string to feed legacy APIs.
+/// Same as [`wcs2bytes`]. Meant to be used when we need a zero-terminated string to feed legacy APIs.
 /// Note: if `input` contains any interior NUL bytes, the result will be truncated at the first!
 pub fn wcs2zstring(input: &wstr) -> CString {
     if input.is_empty() {
@@ -1237,7 +1237,7 @@ pub fn wcs2zstring(input: &wstr) -> CString {
     }
 
     let mut vec = Vec::with_capacity(input.len() + 1);
-    wcs2string_callback(input, |buff| {
+    wcs2bytes_callback(input, |buff| {
         vec.extend_from_slice(buff);
         true
     });
@@ -1256,10 +1256,10 @@ pub fn wcs2zstring(input: &wstr) -> CString {
     }
 }
 
-/// Like wcs2string, but appends to `receiver` instead of returning a new string.
-pub fn wcs2string_appending(output: &mut Vec<u8>, input: &wstr) {
+/// Like [`wcs2bytes`], but appends to `output` instead of returning a new string.
+pub fn wcs2bytes_appending(output: &mut Vec<u8>, input: &wstr) {
     output.reserve(input.len());
-    wcs2string_callback(input, |buff| {
+    wcs2bytes_callback(input, |buff| {
         output.extend_from_slice(buff);
         true
     });
@@ -2106,7 +2106,7 @@ macro_rules! env_stack_set_from_env {
             $vars.set_one(
                 L!($var_name),
                 $crate::env::EnvMode::GLOBAL,
-                $crate::common::str2wcstring(var.as_bytes()),
+                $crate::common::bytes2wcstring(var.as_bytes()),
             );
         }
     }};

@@ -2,7 +2,7 @@ use std::sync::MutexGuard;
 
 use crate::common::{
     ENCODE_DIRECT_BASE, ENCODE_DIRECT_END, EscapeFlags, EscapeStringStyle, UnescapeStringStyle,
-    escape_string, fish_setlocale, str2wcstring, unescape_string, wcs2string,
+    bytes2wcstring, escape_string, fish_setlocale, unescape_string, wcs2bytes,
 };
 use crate::locale::LOCALE_LOCK;
 use crate::util::{get_rng_seed, get_seeded_rng};
@@ -12,7 +12,7 @@ use crate::wutil::encoding::{
 };
 use rand::{Rng, RngCore};
 
-/// wcs2string is locale-dependent, so ensure we have a multibyte locale
+/// wcs2bytes is locale-dependent, so ensure we have a multibyte locale
 /// before using it in a test.
 fn setlocale() -> MutexGuard<'static, ()> {
     let guard = LOCALE_LOCK.lock().unwrap();
@@ -173,7 +173,7 @@ const ESCAPE_TEST_LENGTH: usize = 100;
 pub const ESCAPE_TEST_CHAR: usize = 4000;
 
 /// Helper to convert a narrow string to a sequence of hex digits.
-fn str2hex(input: &[u8]) -> String {
+fn bytes2hex(input: &[u8]) -> String {
     let mut output = "".to_string();
     for byte in input {
         output += &format!("0x{:2X} ", *byte);
@@ -195,8 +195,8 @@ fn test_convert() {
         origin.resize(length, 0);
         rng.fill_bytes(&mut origin);
 
-        let w = str2wcstring(&origin[..]);
-        let n = wcs2string(&w);
+        let w = bytes2wcstring(&origin[..]);
+        let n = wcs2bytes(&w);
         assert_eq!(
             origin,
             n,
@@ -205,9 +205,9 @@ fn test_convert() {
                 {:4} chars: {}\n
                 Use this seed to reproduce: {}",
             origin.len(),
-            &str2hex(&origin),
+            &bytes2hex(&origin),
             n.len(),
-            &str2hex(&n),
+            &bytes2hex(&n),
             seed,
         );
     }
@@ -226,8 +226,8 @@ fn test_convert_ascii() {
         for right in 0..16 {
             let len = s.len() - left - right;
             let input = &s[left..left + len];
-            let wide = str2wcstring(input);
-            let narrow = wcs2string(&wide);
+            let wide = bytes2wcstring(input);
+            let narrow = wcs2bytes(&wide);
             assert_eq!(narrow, input);
         }
     }
@@ -236,7 +236,7 @@ fn test_convert_ascii() {
     for i in 0..s.len() {
         let saved = s[i];
         s[i] = 0xF7;
-        assert_eq!(wcs2string(&str2wcstring(&s)), s);
+        assert_eq!(wcs2bytes(&bytes2wcstring(&s)), s);
         s[i] = saved;
     }
 }
@@ -265,13 +265,13 @@ fn test_convert_private_use() {
         }
         let s = &converted[..len];
 
-        // Ask fish to decode this via str2wcstring.
-        // str2wcstring should notice that the decoded form collides with its private use
+        // Ask fish to decode this via bytes2wcstring.
+        // bytes2wcstring should notice that the decoded form collides with its private use
         // and encode it directly.
-        let ws = str2wcstring(s);
+        let ws = bytes2wcstring(s);
 
         // Each byte should be encoded directly, and round tripping should work.
         assert_eq!(ws.len(), s.len());
-        assert_eq!(wcs2string(&ws), s);
+        assert_eq!(wcs2bytes(&ws), s);
     }
 }

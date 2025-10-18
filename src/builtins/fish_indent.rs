@@ -17,7 +17,7 @@ use libc::LC_ALL;
 use super::prelude::*;
 use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
-    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, str2wcstring, unescape_string, wcs2string,
+    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, unescape_string, wcs2bytes,
 };
 use crate::env::EnvStack;
 use crate::env::env_init;
@@ -916,7 +916,7 @@ fn throwing_main() -> i32 {
     }
 
     let args: Vec<WString> = std::env::args_os()
-        .map(|osstr| str2wcstring(osstr.as_bytes()))
+        .map(|osstr| bytes2wcstring(osstr.as_bytes()))
         .collect();
     do_indent(&mut streams, args).builtin_status_code()
 }
@@ -1016,10 +1016,10 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
                 }
             }
             std::mem::forget(fd);
-            src = str2wcstring(&buf);
+            src = bytes2wcstring(&buf);
         } else {
             let arg = args[i];
-            match fs::File::open(OsStr::from_bytes(&wcs2string(arg))) {
+            match fs::File::open(OsStr::from_bytes(&wcs2bytes(arg))) {
                 Ok(file) => {
                     match read_file(file) {
                         Ok(s) => src = s,
@@ -1040,7 +1040,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
 
         if output_type == OutputType::PygmentsCsv {
             let output = make_pygments_csv(&src);
-            streams.out.append(str2wcstring(&output));
+            streams.out.append(bytes2wcstring(&output));
             i += 1;
             continue;
         }
@@ -1104,9 +1104,9 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             }
             OutputType::File => {
                 if output_wtext != src {
-                    match fs::File::create(OsStr::from_bytes(&wcs2string(output_location))) {
+                    match fs::File::create(OsStr::from_bytes(&wcs2bytes(output_location))) {
                         Ok(mut file) => {
-                            let _ = file.write_all(&wcs2string(&output_wtext));
+                            let _ = file.write_all(&wcs2bytes(&output_wtext));
                         }
                         Err(err) => {
                             streams.err.appendln(wgettext_fmt!(
@@ -1138,7 +1138,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             }
         }
 
-        streams.out.append(str2wcstring(&colored_output));
+        streams.out.append(bytes2wcstring(&colored_output));
         i += 1;
     }
     if retval == 0 {
@@ -1154,7 +1154,7 @@ static DUMP_PARSE_TREE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 fn read_file(mut f: impl Read) -> Result<WString, ()> {
     let mut buf = vec![];
     f.read_to_end(&mut buf).map_err(|_| ())?;
-    Ok(str2wcstring(&buf))
+    Ok(bytes2wcstring(&buf))
 }
 
 fn highlight_role_to_string(role: HighlightRole) -> &'static wstr {
@@ -1316,9 +1316,9 @@ fn html_colorize(text: &wstr, colors: &[HighlightSpec]) -> Vec<u8> {
         }
     }
     html.push_str("</span></code></pre>");
-    wcs2string(&html)
+    wcs2bytes(&html)
 }
 
 fn no_colorize(text: &wstr) -> Vec<u8> {
-    wcs2string(text)
+    wcs2bytes(text)
 }

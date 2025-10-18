@@ -8,7 +8,7 @@ use crate::builtins::shared::{
     builtin_run,
 };
 use crate::common::{
-    ScopeGuard, exit_without_destructors, str2wcstring, truncate_at_nul, wcs2string, wcs2zstring,
+    ScopeGuard, bytes2wcstring, exit_without_destructors, truncate_at_nul, wcs2bytes, wcs2zstring,
     write_loop,
 };
 use crate::env::{EnvMode, EnvStack, Environment, READ_BYTE_LIMIT, Statuses};
@@ -822,8 +822,8 @@ fn handle_builtin_output(
     assert!(p.is_builtin(), "Process is not a builtin");
 
     // Figure out any data remaining to write. We may have none, in which case we can short-circuit.
-    let outbuff = wcs2string(out.contents());
-    let errbuff = wcs2string(err.contents());
+    let outbuff = wcs2bytes(out.contents());
+    let errbuff = wcs2bytes(err.contents());
 
     // Some historical behavior.
     if !outbuff.is_empty() {
@@ -1413,7 +1413,7 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
         let data = &elem.contents;
         if elem.is_explicitly_separated() {
             // Just append this one.
-            lst.push(str2wcstring(data));
+            lst.push(bytes2wcstring(data));
             continue;
         }
 
@@ -1431,7 +1431,7 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
                 // If it's not found, just use the end.
                 let stop = stop.map(|rel| cursor + rel).unwrap_or(data.len());
                 // Stop now points at the first character we do not want to copy.
-                lst.push(str2wcstring(&data[cursor..stop]));
+                lst.push(bytes2wcstring(&data[cursor..stop]));
 
                 // If we hit a separator, skip over it; otherwise we're at the end.
                 cursor = stop + if hit_separator { 1 } else { 0 };
@@ -1439,7 +1439,7 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
         } else {
             // We're not splitting output, but we still want to trim off a trailing newline.
             let trailing_newline = if data.last() == Some(&b'\n') { 1 } else { 0 };
-            lst.push(str2wcstring(&data[..data.len() - trailing_newline]));
+            lst.push(bytes2wcstring(&data[..data.len() - trailing_newline]));
         }
     }
 }

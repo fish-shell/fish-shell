@@ -1,5 +1,5 @@
 use super::wopendir;
-use crate::common::{str2wcstring, wcs2zstring};
+use crate::common::{bytes2wcstring, wcs2zstring};
 use crate::wchar::{WString, wstr};
 use crate::wutil::DevInode;
 use cfg_if::cfg_if;
@@ -285,7 +285,7 @@ impl DirIter {
         }
 
         self.entry.reset();
-        self.entry.name = str2wcstring(d_name);
+        self.entry.name = bytes2wcstring(d_name);
         cfg_if!(
             if #[cfg(bsd)] {
                 self.entry.inode = dent.d_fileno;

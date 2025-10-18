@@ -1,5 +1,5 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::{EMPTY_STRING, str2wcstring, wcs2string};
+use crate::common::{EMPTY_STRING, bytes2wcstring, wcs2bytes};
 use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
     AutoCloseFd, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
@@ -731,7 +731,7 @@ impl OutputStream {
     pub fn append_narrow_buffer(&mut self, buffer: &SeparatedBuffer) -> bool {
         for rhs_elem in buffer.elements() {
             if !self.append_with_separation(
-                &str2wcstring(&rhs_elem.contents),
+                &bytes2wcstring(&rhs_elem.contents),
                 rhs_elem.separation,
                 false,
             ) {
@@ -745,7 +745,7 @@ impl OutputStream {
 impl Output for OutputStream {
     fn write_bytes(&mut self, command_part: &[u8]) {
         // TODO Retry on interrupt.
-        self.append(str2wcstring(command_part));
+        self.append(bytes2wcstring(command_part));
     }
 }
 
@@ -834,7 +834,7 @@ impl BufferedOutputStream {
         Self { buffer }
     }
     fn append(&mut self, s: &wstr) -> bool {
-        self.buffer.append(&wcs2string(s), SeparationType::inferred)
+        self.buffer.append(&wcs2bytes(s), SeparationType::inferred)
     }
     fn append_with_separation(
         &mut self,
@@ -842,7 +842,7 @@ impl BufferedOutputStream {
         typ: SeparationType,
         _want_newline: bool,
     ) -> bool {
-        self.buffer.append(&wcs2string(s), typ)
+        self.buffer.append(&wcs2bytes(s), typ)
     }
     fn flush_and_check_error(&mut self) -> libc::c_int {
         if self.buffer.discarded() {

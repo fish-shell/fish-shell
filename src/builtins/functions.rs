@@ -1,7 +1,7 @@
 use super::prelude::*;
+use crate::common::bytes2wcstring;
 use crate::common::escape_string;
 use crate::common::reformat_for_screen;
-use crate::common::str2wcstring;
 use crate::common::valid_func_name;
 use crate::common::{EscapeFlags, EscapeStringStyle};
 use crate::event::{self};
@@ -437,7 +437,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             highlight_shell(&def, &mut colors, &parser.context(), false, None);
             streams
                 .out
-                .append(str2wcstring(&colorize(&def, &colors, parser.vars())));
+                .append(bytes2wcstring(&colorize(&def, &colors, parser.vars())));
         } else {
             streams.out.append(def);
         }

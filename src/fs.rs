@@ -1,6 +1,6 @@
 use crate::{
     FLOG, FLOGF,
-    common::{str2wcstring, wcs2osstring, wcs2zstring},
+    common::{bytes2wcstring, wcs2osstring, wcs2zstring},
     fds::wopen_cloexec,
     path::{DirRemoteness, path_remoteness},
     wchar::prelude::*,
@@ -64,7 +64,7 @@ pub fn create_temporary_file(name_template: &wstr) -> std::io::Result<(File, WSt
             },
         }
     };
-    Ok((fd, str2wcstring(c_string_template.to_bytes())))
+    Ok((fd, bytes2wcstring(c_string_template.to_bytes())))
 }
 
 /// Use this struct for all accesses to file which need mutual exclusion.

@@ -1,7 +1,7 @@
 use std::os::unix::prelude::*;
 
 use super::prelude::*;
-use crate::common::{PROGRAM_NAME, get_executable_path, str2wcstring};
+use crate::common::{PROGRAM_NAME, bytes2wcstring, get_executable_path};
 use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
     JobControl, get_job_control_mode, get_login, is_interactive_session, set_job_control_mode,
@@ -474,13 +474,13 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             #[cfg(feature = "embed-data")]
             {
-                let arg = crate::common::wcs2string(args[0]);
+                let arg = crate::common::wcs2bytes(args[0]);
                 let arg = std::str::from_utf8(&arg).unwrap();
                 let Some(emfile) = crate::autoload::Asset::get(arg).or_else(|| Docs::get(arg))
                 else {
                     return Err(STATUS_CMD_ERROR);
                 };
-                let src = str2wcstring(&emfile.data);
+                let src = bytes2wcstring(&emfile.data);
                 streams.out.append(src);
                 return Ok(SUCCESS);
             }
@@ -508,11 +508,11 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 use crate::util::wcsfilecmp_glob;
 
                 let mut paths = vec![];
-                let arg = crate::common::wcs2string(args.get(0).unwrap_or(&L!("")));
+                let arg = crate::common::wcs2bytes(args.get(0).unwrap_or(&L!("")));
                 let arg = std::str::from_utf8(&arg).unwrap();
                 for path in crate::autoload::Asset::iter().chain(Docs::iter()) {
                     if arg.is_empty() || path.starts_with(arg) {
-                        paths.push(str2wcstring(path.as_bytes()));
+                        paths.push(bytes2wcstring(path.as_bytes()));
                     }
                 }
 
@@ -575,16 +575,16 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             match s {
                 STATUS_BUILD_INFO | STATUS_BUILDINFO => {
-                    let version = str2wcstring(crate::BUILD_VERSION.as_bytes());
-                    let target = str2wcstring(env!("BUILD_TARGET_TRIPLE").as_bytes());
-                    let host = str2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
-                    let profile = str2wcstring(env!("BUILD_PROFILE").as_bytes());
+                    let version = bytes2wcstring(crate::BUILD_VERSION.as_bytes());
+                    let target = bytes2wcstring(env!("BUILD_TARGET_TRIPLE").as_bytes());
+                    let host = bytes2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
+                    let profile = bytes2wcstring(env!("BUILD_PROFILE").as_bytes());
                     streams.out.append(L!("Build system: "));
                     let buildsystem = match option_env!("CMAKE") {
                         Some("1") => "CMake",
                         _ => "Cargo",
                     };
-                    streams.out.appendln(str2wcstring(buildsystem.as_bytes()));
+                    streams.out.appendln(bytes2wcstring(buildsystem.as_bytes()));
                     streams.out.append(L!("Version: "));
                     streams.out.appendln(version);
                     if target == host {
@@ -609,7 +609,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     ];
                     streams
                         .out
-                        .appendln(str2wcstring(features.join(" ").as_bytes()));
+                        .appendln(bytes2wcstring(features.join(" ").as_bytes()));
                     streams.out.appendln("");
                     return Ok(SUCCESS);
                 }
@@ -727,7 +727,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         ));
                     }
                     if path.is_absolute() {
-                        let path = str2wcstring(path.as_os_str().as_bytes());
+                        let path = bytes2wcstring(path.as_os_str().as_bytes());
                         // This is an absolute path, we can canonicalize it
                         let real = match wrealpath(&path) {
                             Some(p) if waccess(&p, F_OK) == 0 => p,
@@ -740,7 +740,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         streams.out.append_char('\n');
                     } else {
                         // This is a relative path, we can't canonicalize it
-                        let path = str2wcstring(path.as_os_str().as_bytes());
+                        let path = bytes2wcstring(path.as_os_str().as_bytes());
                         streams.out.appendln(path);
                     }
                 }

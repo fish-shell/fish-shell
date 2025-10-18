@@ -290,7 +290,7 @@ fn width_without_escapes(ins: &wstr, start_pos: usize) -> usize {
 
 /// Empirically determined.
 /// This is probably down to some pipe buffer or some such,
-/// but too small means we need to call `read(2)` and str2wcstring a lot.
+/// but too small means we need to call `read(2)` and bytes2wcstring a lot.
 const STRING_CHUNK_SIZE: usize = 1024;
 fn arguments<'iter, 'args>(
     args: &'iter [&'args wstr],

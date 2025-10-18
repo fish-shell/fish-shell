@@ -85,8 +85,6 @@ impl StringSubCommand<'_> for Pad {
         let pad_width = max_width.max(self.width);
 
         for (input, width) in inputs {
-            use std::iter::repeat;
-
             let total_pad = pad_width - width;
             let (left_pad, right_pad) = match (self.pad_from, self.center) {
                 (Direction::Left, false) => (total_pad, 0),
@@ -95,8 +93,8 @@ impl StringSubCommand<'_> for Pad {
                 (Direction::Right, true) => (total_pad / 2, total_pad - total_pad / 2),
             };
 
-            let chars = |w| repeat(self.char_to_pad).take(w / self.pad_char_width);
-            let spaces = |w| repeat(' ').take(w % self.pad_char_width);
+            let chars = |w| std::iter::repeat_n(self.char_to_pad, w / self.pad_char_width);
+            let spaces = |w| std::iter::repeat_n(' ', w % self.pad_char_width);
             let mut padded: WString = chars(left_pad)
                 .chain(spaces(left_pad))
                 .chain(input.chars())

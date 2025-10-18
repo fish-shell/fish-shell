@@ -4254,7 +4254,7 @@ impl ReaderData {
         }
 
         let col = pager.get_selected_column(&self.current_page_rendering);
-        !col.is_some_and(|col| col != 0)
+        col.is_none_or(|col| col == 0)
     }
 }
 

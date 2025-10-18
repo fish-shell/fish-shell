@@ -887,7 +887,7 @@ pub trait InputEventQueuer {
                     if key.is_some_and(|key| key.key == Key::from_raw(key::Invalid)) {
                         continue;
                     }
-                    assert!(key.map_or(true, |key| key.codepoint != key::Invalid));
+                    assert!(key.is_none_or(|key| key.codepoint != key::Invalid));
                     let mut consumed = 0;
                     let mut state = zero_mbstate();
                     let mut i = 0;

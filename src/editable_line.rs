@@ -52,7 +52,7 @@ pub fn apply_edit(target: &mut WString, colors: &mut Vec<HighlightSpec>, edit: &
         .unwrap_or_default();
     colors.splice(
         range.clone(),
-        std::iter::repeat(last_color).take(edit.replacement.len()),
+        std::iter::repeat_n(last_color, edit.replacement.len()),
     );
 }
 

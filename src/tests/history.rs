@@ -1,5 +1,6 @@
-use crate::common::{WSL, is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string};
+use crate::common::{ScopeGuard, str2wcstring, wcs2osstring, wcs2string};
 use crate::env::{EnvMode, EnvStack};
+use crate::fs::{LockedFile, WriteMethod};
 use crate::history::{
     self, History, HistoryItem, HistorySearch, PathList, SearchDirection, VACUUM_FREQUENCY,
 };
@@ -15,6 +16,7 @@ use rand::rngs::SmallRng;
 use std::collections::VecDeque;
 use std::ffi::CString;
 use std::io::BufReader;
+use std::os::unix::ffi::OsStrExt;
 use std::sync::Arc;
 use std::time::UNIX_EPOCH;
 use std::time::{Duration, SystemTime};
@@ -248,16 +250,20 @@ fn pound_on_history(item_count: usize, idx: usize) -> Arc<History> {
 #[serial]
 fn test_history_races() {
     let _cleanup = test_init();
-    // This always fails under WSL
-    if is_windows_subsystem_for_linux(WSL::V1) {
-        return;
-    }
 
-    // This fails too often on Github Actions,
-    // leading to a bunch of spurious test failures on unrelated PRs.
-    // For now it's better to disable it.
-    // TODO: Figure out *why* it does that and fix it.
-    if std::env::var_os("CI").is_some() {
+    let tmp_path = std::env::current_dir()
+        .unwrap()
+        .join("history-races-test-balloon");
+    std::fs::write(&tmp_path, []).unwrap();
+    let _cleanup = ScopeGuard::new((), |()| {
+        std::fs::remove_file(&tmp_path).unwrap();
+    });
+    if LockedFile::new(
+        crate::fs::LockingMode::Exclusive(WriteMethod::RenameIntoPlace),
+        &str2wcstring(tmp_path.as_os_str().as_bytes()),
+    )
+    .is_err()
+    {
         return;
     }
 

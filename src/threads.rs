@@ -349,14 +349,8 @@ impl ThreadPool {
     /// Attempt to spawn a new worker thread.
     fn spawn_thread(self: &Arc<Self>) -> bool {
         let pool = Arc::clone(self);
-        let soft_min_threads = self.soft_min_threads;
         self::spawn(move || {
-            let worker = WorkerThread {
-                pool,
-                soft_min_threads,
-            };
-
-            worker.run();
+            pool.run_worker();
         })
     }
 
@@ -415,16 +409,10 @@ impl<T> MainThread<T> {
     }
 }
 
-pub struct WorkerThread {
-    /// The [`ThreadPool`].
-    pool: Arc<ThreadPool>,
-    /// The soft min number of threads for the associated [`ThreadPool`].
-    soft_min_threads: usize,
-}
-
-impl WorkerThread {
+impl ThreadPool {
     /// The worker loop entry point for this thread.
-    fn run(mut self) {
+    /// This is run in a background thread.
+    fn run_worker(&self) {
         while let Some(work_item) = self.dequeue_work_or_commit_to_exit() {
             FLOG!(
                 iothread,
@@ -447,8 +435,8 @@ impl WorkerThread {
 
     /// Dequeue a work item (perhaps waiting on the condition variable) or commit to exiting by
     /// reducing the active thread count.
-    fn dequeue_work_or_commit_to_exit(&mut self) -> Option<WorkItem> {
-        let mut data = self.pool.shared.lock().expect("Mutex poisoned!");
+    fn dequeue_work_or_commit_to_exit(&self) -> Option<WorkItem> {
+        let mut data = self.shared.lock().expect("Mutex poisoned!");
 
         // If the queue is empty, check to see if we should wait. We should wait if our exiting
         // would drop us below our soft thread count minimum.
@@ -458,7 +446,6 @@ impl WorkerThread {
         {
             data.waiting_threads += 1;
             data = self
-                .pool
                 .cond_var
                 .wait_timeout(data, IO_WAIT_FOR_WORK_DURATION)
                 .expect("Mutex poisoned!")

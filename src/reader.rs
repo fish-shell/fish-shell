@@ -42,7 +42,7 @@ use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicI32, AtomicU8, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 use std::time::{Duration, Instant};
 
 use errno::{Errno, errno};
@@ -215,20 +215,20 @@ static GENERATION: AtomicU32 = AtomicU32::new(0);
 /// Get the debouncer for autosuggestions and background highlighting.
 fn debounce_autosuggestions() -> &'static Debounce {
     const AUTOSUGGEST_TIMEOUT: Duration = Duration::from_millis(500);
-    static RES: once_cell::race::OnceBox<Debounce> = once_cell::race::OnceBox::new();
-    RES.get_or_init(|| Box::new(Debounce::new(AUTOSUGGEST_TIMEOUT)))
+    static RES: OnceLock<Debounce> = OnceLock::new();
+    RES.get_or_init(|| Debounce::new(AUTOSUGGEST_TIMEOUT))
 }
 
 fn debounce_highlighting() -> &'static Debounce {
     const HIGHLIGHT_TIMEOUT: Duration = Duration::from_millis(500);
-    static RES: once_cell::race::OnceBox<Debounce> = once_cell::race::OnceBox::new();
-    RES.get_or_init(|| Box::new(Debounce::new(HIGHLIGHT_TIMEOUT)))
+    static RES: OnceLock<Debounce> = OnceLock::new();
+    RES.get_or_init(|| Debounce::new(HIGHLIGHT_TIMEOUT))
 }
 
 fn debounce_history_pager() -> &'static Debounce {
     const HISTORY_PAGER_TIMEOUT: Duration = Duration::from_millis(500);
-    static RES: once_cell::race::OnceBox<Debounce> = once_cell::race::OnceBox::new();
-    RES.get_or_init(|| Box::new(Debounce::new(HISTORY_PAGER_TIMEOUT)))
+    static RES: OnceLock<Debounce> = OnceLock::new();
+    RES.get_or_init(|| Debounce::new(HISTORY_PAGER_TIMEOUT))
 }
 
 fn redirect_tty_after_sighup() {

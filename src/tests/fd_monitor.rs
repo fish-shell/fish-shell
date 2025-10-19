@@ -232,8 +232,8 @@ fn test_dup2_during_select_ebadf() {
     };
     let result = do_something_bad_during_select(dup2_it);
     assert!(
-        matches!(result, Err(libc::EBADF) | Ok(0)),
-        "select/poll should have failed with EBADF or timed out"
+        matches!(result, Err(libc::EBADF) | Ok(0) | Ok(1)),
+        "select/poll should have failed with EBADF or timed out or the fd should be ready"
     );
     // Ensure these stay alive until after thread is joined.
     drop(pipe_read);

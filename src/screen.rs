@@ -753,8 +753,9 @@ impl Screen {
     pub fn cursor_is_wrapped_to_own_line(&self) -> bool {
         // Don't consider dumb terminals to have wrapping for the purposes of this function.
         self.actual.cursor.x == 0
-            && self.actual.cursor.y != 0
+            && self.actual.cursor.y + 1 != self.actual.visible_prompt_lines
             && self.actual.cursor.y + 1 == self.actual.line_count()
+            && self.actual.line(self.actual.cursor.y - 1).is_soft_wrapped
             && !is_dumb()
     }
 

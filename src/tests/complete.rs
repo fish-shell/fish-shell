@@ -549,9 +549,16 @@ fn test_autosuggest_suggest_special() {
     std::fs::create_dir_all("test/autosuggest_test/start/unique2/.hiddenDir/moreStuff").unwrap();
 
     // Ensure symlink don't cause us to chase endlessly.
-    std::fs::create_dir_all("test/autosuggest_test/has_loop/loopy").unwrap();
-    let _ = std::fs::remove_file("test/autosuggest_test/has_loop/loopy/loop");
-    std::os::unix::fs::symlink("../loopy", "test/autosuggest_test/has_loop/loopy/loop").unwrap();
+    // Symbolic link is complicated on Windows/Cygwin (see winsymlinks). The behavior
+    // depends on the env var CYGWIN (or MSYS). Currently, the default is to copy
+    // the target, which will fail with recursive symlinks
+    #[cfg(not(cygwin))]
+    {
+        std::fs::create_dir_all("test/autosuggest_test/has_loop/loopy").unwrap();
+        let _ = std::fs::remove_file("test/autosuggest_test/has_loop/loopy/loop");
+        std::os::unix::fs::symlink("../loopy", "test/autosuggest_test/has_loop/loopy/loop")
+            .unwrap();
+    }
 
     let wd = "test/autosuggest_test";
 

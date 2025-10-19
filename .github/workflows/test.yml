@@ -166,8 +166,9 @@ jobs:
       run: |
         cargo build
     - name: smoketest
-      # We can't use `cargo test` yet, there are just too many failures
+      # We can't run `build_tools/check.sh` yet, there are just too many failures
       # so this is just a quick check to make sure that fish can swim
       run: |
         set -x
         [ "$(target/debug/fish.exe -c 'echo (math 1 + 1)')" = 2 ]
+        cargo test

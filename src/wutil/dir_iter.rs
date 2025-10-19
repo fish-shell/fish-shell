@@ -372,7 +372,9 @@ fn test_dir_iter() {
     use crate::common::charptr2wcstring;
     use crate::common::wcs2osstring;
     use crate::wchar::L;
-    use libc::{O_CREAT, O_WRONLY, close, mkfifo, open, symlink};
+    #[cfg(not(cygwin))]
+    use libc::symlink;
+    use libc::{O_CREAT, O_WRONLY, close, mkfifo, open};
     use std::ffi::CString;
 
     let baditer = DirIter::new(L!("/definitely/not/a/valid/directory/for/sure"));
@@ -403,11 +405,18 @@ fn test_dir_iter() {
     let selflinkname = "selflink"; // link to self
     let fifoname = "fifo";
     #[rustfmt::skip]
-    let names = &[
-        dirname, regname, reglinkname, dirlinkname,
-        badlinkname, selflinkname, fifoname,
-    ];
+    let names = if cfg!(not(cygwin)) {
+        vec![
+            dirname, regname, reglinkname, dirlinkname,
+            badlinkname, selflinkname, fifoname,
+        ]
+    } else {
+        // Symbolic links on Windows are complicated. Their behavior depends
+        // on the CYGWIN or MSYS env variable. So we skip that part of the test
+        vec![dirname, regname, fifoname]
+    };
 
+    #[cfg(not(cygwin))]
     let is_link_name = |name: &wstr| -> bool {
         name == reglinkname || name == dirlinkname || name == badlinkname || name == selflinkname
     };
@@ -419,20 +428,24 @@ fn test_dir_iter() {
         ret = open(makepath(regname).as_ptr(), O_CREAT | O_WRONLY, 0o600);
         assert!(ret >= 0);
         close(ret);
-        ret = symlink(makepath(regname).as_ptr(), makepath(reglinkname).as_ptr());
-        assert!(ret == 0);
-        ret = symlink(makepath(dirname).as_ptr(), makepath(dirlinkname).as_ptr());
-        assert!(ret == 0);
-        ret = symlink(
-            c"/this/is/an/invalid/path".as_ptr().cast(),
-            makepath(badlinkname).as_ptr(),
-        );
-        assert!(ret == 0);
-        ret = symlink(
-            makepath(selflinkname).as_ptr(),
-            makepath(selflinkname).as_ptr(),
-        );
-        assert!(ret == 0);
+        #[cfg(not(cygwin))]
+        {
+            ret = symlink(makepath(regname).as_ptr(), makepath(reglinkname).as_ptr());
+            assert!(ret == 0);
+            ret = symlink(makepath(dirname).as_ptr(), makepath(dirlinkname).as_ptr());
+            assert!(ret == 0);
+            ret = symlink(
+                c"/this/is/an/invalid/path".as_ptr().cast(),
+                makepath(badlinkname).as_ptr(),
+            );
+            assert!(ret == 0);
+            ret = symlink(
+                makepath(selflinkname).as_ptr(),
+                makepath(selflinkname).as_ptr(),
+            );
+            assert!(ret == 0);
+        }
+
         ret = mkfifo(makepath(fifoname).as_ptr(), 0o600);
         assert!(ret == 0);
     }
@@ -465,6 +478,7 @@ fn test_dir_iter() {
 
         // Links should never have a fast type if we are resolving them, since we cannot resolve a
         // symlink from readdir.
+        #[cfg(not(cygwin))]
         if is_link_name(&entry.name) {
             assert!(entry.fast_type().is_none());
         }

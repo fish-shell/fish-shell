@@ -136,7 +136,7 @@ use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::TextFace;
 use crate::text_face::parse_text_face;
 use crate::threads::{
-    Debounce, assert_is_background_thread, assert_is_main_thread,
+    Debounce, assert_is_background_thread, assert_is_main_thread, io_thread_pool,
     iothread_service_main_with_timeout,
 };
 use crate::tokenizer::quote_end;
@@ -216,19 +216,19 @@ static GENERATION: AtomicU32 = AtomicU32::new(0);
 fn debounce_autosuggestions() -> &'static Debounce {
     const AUTOSUGGEST_TIMEOUT: Duration = Duration::from_millis(500);
     static RES: OnceLock<Debounce> = OnceLock::new();
-    RES.get_or_init(|| Debounce::new(AUTOSUGGEST_TIMEOUT))
+    RES.get_or_init(|| io_thread_pool().debouncer(AUTOSUGGEST_TIMEOUT))
 }
 
 fn debounce_highlighting() -> &'static Debounce {
     const HIGHLIGHT_TIMEOUT: Duration = Duration::from_millis(500);
     static RES: OnceLock<Debounce> = OnceLock::new();
-    RES.get_or_init(|| Debounce::new(HIGHLIGHT_TIMEOUT))
+    RES.get_or_init(|| io_thread_pool().debouncer(HIGHLIGHT_TIMEOUT))
 }
 
 fn debounce_history_pager() -> &'static Debounce {
     const HISTORY_PAGER_TIMEOUT: Duration = Duration::from_millis(500);
     static RES: OnceLock<Debounce> = OnceLock::new();
-    RES.get_or_init(|| Debounce::new(HISTORY_PAGER_TIMEOUT))
+    RES.get_or_init(|| io_thread_pool().debouncer(HISTORY_PAGER_TIMEOUT))
 }
 
 fn redirect_tty_after_sighup() {

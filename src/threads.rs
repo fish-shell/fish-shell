@@ -372,6 +372,11 @@ impl ThreadPool {
         }
     }
 
+    /// Return a Debounce instance using this thread pool.
+    pub fn debouncer(self: &Arc<Self>, timeout: Duration) -> Debounce {
+        Debounce::new(Arc::clone(self), timeout)
+    }
+
     /// Drain all threads.
     /// Does nasty polling via select(); only used for testing.
     #[cfg(test)]
@@ -470,13 +475,13 @@ impl ThreadPool {
 
 /// Returns a reference to the singleton thread pool.
 #[inline]
-fn borrow_io_thread_pool() -> &'static Arc<ThreadPool> {
+pub fn io_thread_pool() -> &'static Arc<ThreadPool> {
     IO_THREAD_POOL.get().unwrap()
 }
 
 /// Enqueues work on the IO thread pool singleton.
 pub fn iothread_perform(f: impl FnOnce() + 'static + Send) {
-    let thread_pool = borrow_io_thread_pool();
+    let thread_pool = io_thread_pool();
     thread_pool.perform(f, false);
 }
 
@@ -485,27 +490,27 @@ pub fn iothread_perform(f: impl FnOnce() + 'static + Send) {
 /// It does its best to spawn a thread if all other threads are occupied. This is primarily for
 /// cases where deferring creation of a new thread might lead to a deadlock.
 pub fn iothread_perform_cant_wait(f: impl FnOnce() + 'static + Send) {
-    borrow_io_thread_pool().perform(f, true);
+    io_thread_pool().perform(f, true);
 }
 
 /// Return the read fd of the singleton ThreadPool event signaller.
 /// This may be used with `poll()` or `select()` to multiplex iothread completions with other events.
 pub fn iothread_port() -> i32 {
-    borrow_io_thread_pool().event_signaller.read_fd()
+    io_thread_pool().event_signaller.read_fd()
 }
 
 pub fn iothread_service_main_with_timeout(ctx: &mut Reader, timeout: Duration) {
-    borrow_io_thread_pool().invoke_completions_with_timeout(ctx, timeout);
+    io_thread_pool().invoke_completions_with_timeout(ctx, timeout);
 }
 
 pub fn iothread_service_main(ctx: &mut Reader) {
-    borrow_io_thread_pool().invoke_completions(ctx);
+    io_thread_pool().invoke_completions(ctx);
 }
 
 /// Does nasty polling via select(), only used for testing.
 #[cfg(test)]
 pub(crate) fn iothread_drain_all(ctx: &mut Reader) {
-    borrow_io_thread_pool().drain_all(ctx);
+    io_thread_pool().drain_all(ctx);
 }
 
 /// `Debounce` is a simple class which executes one function on a background thread while enqueuing
@@ -520,12 +525,15 @@ pub(crate) fn iothread_drain_all(ctx: &mut Reader) {
 /// compares its token to the active token; if they differ then this thread was abandoned.
 #[derive(Clone)]
 pub struct Debounce {
+    /// The thread pool to use for background execution.
+    pool: Arc<ThreadPool>,
+    /// The timeout after which a running thread is considered abandoned.
     timeout: Duration,
     /// The data shared between [`Debounce`] instances.
     data: Arc<Mutex<DebounceData>>,
 }
 
-/// The data shared between [`Debounce`] instances.
+/// The data shared between a [`Debounce`] and its thread.
 struct DebounceData {
     /// The (one or none) next enqueued request, overwritten each time a new call to
     /// [`Debounce::perform()`] is made.
@@ -539,8 +547,9 @@ struct DebounceData {
 }
 
 impl Debounce {
-    pub fn new(timeout: Duration) -> Self {
+    pub fn new(pool: Arc<ThreadPool>, timeout: Duration) -> Self {
         Self {
+            pool,
             timeout,
             data: Arc::new(Mutex::new(DebounceData {
                 next_req: None,
@@ -600,13 +609,13 @@ impl Debounce {
     {
         assert_is_main_thread();
         let completion_wrapper = ForceSend(completion);
+        let pool = Arc::clone(&self.pool);
         let work_item = Box::new(move || {
             let result = handler();
             let callback: DebounceCallback = ForceSend(Box::new(move |ctx| {
                 let completion = completion_wrapper;
                 (completion.0)(ctx, result);
             }));
-            let pool = borrow_io_thread_pool();
             pool.completion_queue.lock().unwrap().push(callback);
             pool.event_signaller.post();
         });
@@ -641,11 +650,15 @@ impl Debounce {
         if spawn {
             // We need to clone the Arc to get it to last for the duration of the 'static lifetime.
             let debounce = self.clone();
-            iothread_perform(move || {
-                while debounce.run_next(active_token) {
-                    // Keep thread alive/busy.
-                }
-            });
+            let cant_wait = false;
+            self.pool.perform(
+                move || {
+                    while debounce.run_next(active_token) {
+                        // Keep thread alive/busy.
+                    }
+                },
+                cant_wait,
+            );
         }
 
         active_token

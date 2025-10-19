@@ -7,16 +7,15 @@ use std::time::Duration;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::reader::{Reader, fake_scoped_reader};
 use crate::tests::prelude::*;
-use crate::threads::{Debounce, iothread_drain_all, iothread_service_main};
+use crate::threads::{Debounce, ThreadPool};
 
 #[test]
-#[serial]
 fn test_debounce() {
-    let _cleanup = test_init();
     let parser = TestParser::new();
+    let pool = ThreadPool::new(1, 16);
     // Run 8 functions using a condition variable.
     // Only the first and last should run.
-    let db = Debounce::new(Duration::from_secs(0));
+    let db = pool.debouncer(Duration::from_secs(0));
     const count: usize = 8;
 
     struct Context {
@@ -61,9 +60,9 @@ fn test_debounce() {
     // Wait until the last completion is done.
     let mut reader = fake_scoped_reader(&parser);
     while !ctx.completion_ran.last().unwrap().load() {
-        iothread_service_main(&mut reader);
+        pool.invoke_completions(&mut reader);
     }
-    iothread_drain_all(&mut reader);
+    pool.drain_all(&mut reader);
 
     // Each perform() call may displace an existing queued operation.
     // Each operation waits until all are queued.
@@ -82,12 +81,12 @@ fn test_debounce() {
 }
 
 #[test]
-#[serial]
 fn test_debounce_timeout() {
-    let _cleanup = test_init();
     // Verify that debounce doesn't wait forever.
     // Use a shared_ptr so we don't have to join our threads.
+    let pool = ThreadPool::new(1, 16);
     let timeout = Duration::from_millis(500);
+    let db = pool.debouncer(timeout);
 
     struct Data {
         db: Debounce,
@@ -97,7 +96,7 @@ fn test_debounce_timeout() {
     }
 
     let data = Arc::new(Data {
-        db: Debounce::new(timeout),
+        db,
         exit_ok: Mutex::new(false),
         cv: Condvar::new(),
         running: AtomicU32::new(0),

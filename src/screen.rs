@@ -327,14 +327,11 @@ impl Screen {
         self.check_status();
 
         // Completely ignore impossibly small screens.
-        if screen_width < 4 {
+        if screen_width < 4 || screen_height == 0 {
             return;
         }
         let screen_width = usize::try_from(screen_width).unwrap();
-        if screen_height == 0 {
-            return;
-        }
-        let screen_height = usize::try_from(curr_termsize.height).unwrap();
+        let screen_height = usize::try_from(screen_height).unwrap();
 
         // Compute a layout.
         let layout = compute_layout(
@@ -367,7 +364,7 @@ impl Screen {
             CharOffset::Pointer(0)
         };
         for _ in 0..layout.left_prompt_space {
-            let _ = self.desired_append_char(
+            self.desired_append_char(
                 prompt_offset,
                 usize::MAX,
                 ' ',
@@ -379,7 +376,7 @@ impl Screen {
         }
 
         // If the prompt doesn't occupy the full line, justify the command line to the end of the prompt.
-        let first_line_prompt_space = if layout.left_prompt_space == screen_width {
+        let commandline_indent = if layout.left_prompt_space == screen_width {
             0
         } else {
             layout.left_prompt_space
@@ -392,7 +389,7 @@ impl Screen {
 
         // Output the command line.
         let mut i = 0;
-        assert!((0..=effective_commandline.len()).contains(&cursor_pos));
+        assert!(cursor_pos <= effective_commandline.len());
         let scrolled_cursor = loop {
             // Grab the current cursor's x,y position if this character matches the cursor's offset.
             if i == cursor_pos {
@@ -443,7 +440,7 @@ impl Screen {
                 effective_commandline.as_char_slice()[i],
                 colors[i],
                 usize::try_from(indent[i]).unwrap(),
-                first_line_prompt_space,
+                commandline_indent,
                 wcwidth_rendered_min_0(effective_commandline.as_char_slice()[i]),
             ) {
                 break scrolled_cursor.unwrap();

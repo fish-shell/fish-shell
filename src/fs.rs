@@ -151,6 +151,10 @@ impl LockedFile {
                 return Err(err);
             }
         }
+        #[cfg(cygwin)]
+        // Prevents error 14 "Bad Addr" on Windows (#11933). If the error happens
+        // the process appears deadlocked
+        std::thread::sleep(std::time::Duration::from_nanos(1));
 
         // Open the data file
         let data_file = wopen_cloexec(file_path, locking_mode.file_flags(), LOCKED_FILE_MODE)?;

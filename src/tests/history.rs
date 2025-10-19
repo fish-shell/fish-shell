@@ -251,6 +251,11 @@ fn pound_on_history(item_count: usize, idx: usize) -> Arc<History> {
 fn test_history_races() {
     let _cleanup = test_init();
 
+    // Fail nearly every time on Cygwin (probably caused by flock issue, see #11933)
+    if cfg!(cygwin) {
+        return;
+    }
+
     let tmp_path = std::env::current_dir()
         .unwrap()
         .join("history-races-test-balloon");

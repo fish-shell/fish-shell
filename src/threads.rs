@@ -507,12 +507,6 @@ pub fn iothread_service_main(ctx: &mut Reader) {
     io_thread_pool().invoke_completions(ctx);
 }
 
-/// Does nasty polling via select(), only used for testing.
-#[cfg(test)]
-pub(crate) fn iothread_drain_all(ctx: &mut Reader) {
-    io_thread_pool().drain_all(ctx);
-}
-
 /// `Debounce` is a simple class which executes one function on a background thread while enqueuing
 /// at most one more. Subsequent execution requests overwrite the enqueued one. It takes an optional
 /// timeout; if a handler does not finish within the timeout then a new thread is spawned to service

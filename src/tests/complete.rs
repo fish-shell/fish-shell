@@ -103,7 +103,9 @@ fn test_complete() {
         std::fs::write(r"test/complete_test/colon:abc", []).unwrap();
     }
     std::fs::write(r"test/complete_test/equal=abc", []).unwrap();
-    std::fs::write("test/complete_test/testfile", []).unwrap();
+    // On MSYS, the executable bit cannot be set manually, is set automatically
+    // based on the file content/type. So make it a shell script
+    std::fs::write("test/complete_test/testfile", "#!/bin/sh").unwrap();
     let testfile = CString::new("test/complete_test/testfile").unwrap();
     assert_eq!(unsafe { libc::chmod(testfile.as_ptr(), 0o700,) }, 0);
     std::fs::create_dir_all("test/complete_test/foo1").unwrap();

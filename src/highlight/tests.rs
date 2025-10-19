@@ -866,10 +866,13 @@ mod file_tester_tests {
         assert!(!result);
 
         // Can't redirect from an unreadable file.
-        fs::set_permissions(&file_path, Permissions::from_mode(0o200)).unwrap();
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::input);
-        assert!(!result);
-        fs::set_permissions(&file_path, Permissions::from_mode(0o600)).unwrap();
+        #[cfg(not(cygwin))] // Can't mark a file write-only on MSYS, this may work on true Cygwin
+        {
+            fs::set_permissions(&file_path, Permissions::from_mode(0o200)).unwrap();
+            let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::input);
+            assert!(!result);
+            fs::set_permissions(&file_path, Permissions::from_mode(0o600)).unwrap();
+        }
 
         // try_input syntax highlighting reports an error even though the command will succeed.
         let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::try_input);
@@ -928,15 +931,18 @@ mod file_tester_tests {
         fs::set_permissions(&file_path, Permissions::from_mode(0o600)).unwrap(); // Restore permissions.
 
         // Writing into a directory without write permissions (loop through all modes).
-        fs::set_permissions(&dir_path, Permissions::from_mode(0o500)).unwrap(); // Read and execute, no write.
-        for mode in write_modes {
-            assert!(
-                !tester.test_redirection_target(L!("somedir/newfile.txt"), *mode),
-                "Should not be able to create/write in a read-only directory with mode {:?}",
-                mode
-            );
+        #[cfg(not(cygwin))] // Can't mark a file write-only on MSYS, this may work on true Cygwin
+        {
+            fs::set_permissions(&dir_path, Permissions::from_mode(0o500)).unwrap(); // Read and execute, no write.
+            for mode in write_modes {
+                assert!(
+                    !tester.test_redirection_target(L!("somedir/newfile.txt"), *mode),
+                    "Should not be able to create/write in a read-only directory with mode {:?}",
+                    mode
+                );
+            }
+            fs::set_permissions(&dir_path, Permissions::from_mode(0o700)).unwrap(); // Restore permissions.
         }
-        fs::set_permissions(&dir_path, Permissions::from_mode(0o700)).unwrap(); // Restore permissions.
 
         // Test fd redirections.
         assert!(tester.test_redirection_target(L!("-"), RedirectionMode::fd));

@@ -358,7 +358,7 @@ impl Screen {
         self.desired.cursor.y = layout.left_prompt_lines - 1;
 
         self.desired.clear_lines();
-        self.desired.resize(self.desired.cursor.y);
+        self.desired.resize(layout.left_prompt_lines);
 
         // Append spaces for the left prompt.
         let prompt_offset = if pager.search_field_shown {
@@ -452,12 +452,11 @@ impl Screen {
         };
 
         // Add an empty line if there are no lines or if the last line was soft wrapped (but not by autosuggestion).
-        if self.desired.line_datas.last().is_none_or(|line| {
-            line.len() == screen_width
-                && (commandline.is_empty()
-                    || autosuggestion.is_empty()
-                    || !explicit_after_suggestion.is_empty())
-        }) {
+        if self.desired.line_datas.last().unwrap().len() == screen_width
+            && (commandline.is_empty()
+                || autosuggestion.is_empty()
+                || !explicit_after_suggestion.is_empty())
+        {
             self.desired.add_line();
         }
 

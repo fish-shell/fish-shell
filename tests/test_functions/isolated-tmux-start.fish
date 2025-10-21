@@ -58,10 +58,11 @@ function isolated-tmux-start --wraps fish
     isolated-tmux resize-window $size
 
     # Loop a bit, until we get an initial prompt.
-    for i in (seq 25)
-        if string match -q '*prompt*' -- (isolated-tmux capture-pane -p)
-            break
+    for i in (seq 50)
+        if test -n "$(isolated-tmux capture-pane -p)"
+            return
         end
         sleep .2
     end
+    echo "error: isolated-tmux-start timed out waiting for non-empty first prompt" >&2
 end

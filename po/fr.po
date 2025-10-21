@@ -205,7 +205,7 @@ msgid "$@ is not supported. In fish, please use $argv."
 msgstr "$@ n’est pas supporté. Dans fish, veuillez utiliser $argv."
 
 msgid "$status is not valid as a command. See `help conditions`"
-msgstr "$status n’est pas une commande valide. Voir `help conditions`"
+msgstr "$status n’est pas une commande valide. Voir « help conditions »"
 
 #, c-format
 msgid "%.*s: invalid conversion specification"
@@ -233,11 +233,11 @@ msgstr "%s %s : aucune abréviation nommée %s\n"
 
 #, c-format
 msgid "%s %s: Requires at least two arguments\n"
-msgstr "%s %s : doit être utilisé avec au moins deux arguments\n"
+msgstr "%s %s : doit être utilisée avec au moins deux arguments\n"
 
 #, c-format
 msgid "%s %s: Requires exactly two arguments\n"
-msgstr "%s %s : doit être utilisé avec exactement deux arguments\n"
+msgstr "%s %s : doit être utilisée avec exactement deux arguments\n"
 
 #, c-format
 msgid "%s %s: Unexpected argument -- '%s'\n"
@@ -261,7 +261,7 @@ msgstr ""
 
 #, c-format
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
-msgstr "%s n’a pas pu lire de réponse à une requête « Primary Device Attribute » après avoir attendu %d secondes. Ceci est souvent du à une fonctionnalité manquante de votre terminal. Voir « help terminal-compatibility » ou « man fish-terminal-compatibility ». Le processus %s va désormais ignorer les requêtes importantes, ce qui va désactiver quelques fonctionnalités optionnelles."
+msgstr "%s n’a pas pu lire de réponse à une requête « Primary Device Attribute » après avoir attendu %d secondes. Ceci est souvent dû à une fonctionnalité manquante de votre terminal. Voir « help terminal-compatibility » ou « man fish-terminal-compatibility ». Le processus %s va désormais ignorer les requêtes en attente, ce qui désactive quelques fonctionnalités optionnelles."
 
 #, c-format
 msgid "%s is %s\n"
@@ -329,7 +329,7 @@ msgstr "%s : %s : mode invalide\n"
 
 #, c-format
 msgid "%s: %s: invalid mode name. See `help identifiers`\n"
-msgstr "%s : %s : nom de mode invalide. Voir `help identifiers`\n"
+msgstr "%s : %s : nom de mode invalide. Voir « help identifiers »\n"
 
 #, c-format
 msgid "%s: %s: invalid scale\n"
@@ -341,7 +341,7 @@ msgstr "%s : %s : sous-commande invalide\n"
 
 #, c-format
 msgid "%s: %s: invalid variable name. See `help identifiers`\n"
-msgstr "%s : %s : nom de variable invalide. Voir `help identifiers`\n"
+msgstr "%s : %s : nom de variable invalide. Voir « help identifiers »\n"
 
 #, c-format
 msgid "%s: %s: option does not take an argument\n"
@@ -349,7 +349,7 @@ msgstr "%s : %s : cette option ne prend pas d’argument\n"
 
 #, c-format
 msgid "%s: %s: option requires an argument\n"
-msgstr "%s : %s : cette option doit être utilisé avec un argument\n"
+msgstr "%s : %s : cette option doit être utilisée avec un argument\n"
 
 #, c-format
 msgid "%s: %s: subcommand takes no options\n"
@@ -385,19 +385,19 @@ msgstr "%s : « %s » n’est pas un ID de processus valide\n"
 
 #, c-format
 msgid "%s: --command cannot be combined with --position=command"
-msgstr "%s : --command ne peut pas être utilisé avec l’option --position"
+msgstr "%s : --command ne peut pas être utilisée avec l’option --position=command"
 
 #, c-format
 msgid "%s: --function option requires --add\n"
-msgstr "%s : l’option --function doit être utilisé avec --add\n"
+msgstr "%s : l’option --function doit être utilisée avec --add\n"
 
 #, c-format
 msgid "%s: --position option requires --add\n"
-msgstr "%s : l’option --position doit être utilisé avec --add\n"
+msgstr "%s : l’option --position doit être utilisée avec --add\n"
 
 #, c-format
 msgid "%s: --regex option requires --add\n"
-msgstr "%s : l’option --regex doit être utilisé avec --add\n"
+msgstr "%s : l’option --regex doit être utilisée avec --add\n"
 
 #, c-format
 msgid "%s: --set-cursor argument cannot be empty\n"
@@ -405,19 +405,19 @@ msgstr "%s : l’option --set-cursor ne peut pas être vide\n"
 
 #, c-format
 msgid "%s: --set-cursor option requires --add\n"
-msgstr "%s : l’option --set-cursor doit être utilisé avec --add\n"
+msgstr "%s : l’option --set-cursor doit être utilisée avec --add\n"
 
 #, c-format
 msgid "%s: -l requires a non-empty string\n"
-msgstr "%s : -l doit être utilisé avec une chaîne non-vide\n"
+msgstr "%s : -l doit être utilisée avec une chaîne non-vide\n"
 
 #, c-format
 msgid "%s: -o requires a non-empty string\n"
-msgstr "%s : -o doit être utilisé avec une chaîne non-vide\n"
+msgstr "%s : -o doit être utilisée avec une chaîne non-vide\n"
 
 #, c-format
 msgid "%s: -s requires a non-empty string\n"
-msgstr "%s : -s doit être utilisé avec une chaîne non-vide\n"
+msgstr "%s : -s doit être utilisée avec une chaîne non-vide\n"
 
 #, c-format
 msgid "%s: Ambiguous job\n"
@@ -489,7 +489,7 @@ msgstr "%s : Impossible de trouver la tâche « %d »\n"
 
 #, c-format
 msgid "%s: Did you mean `set %s %s`?"
-msgstr "%s : Vouliez-vous dire `set %s %s` ?"
+msgstr "%s : Vouliez-vous dire « set %s %s » ?"
 
 #, c-format
 msgid "%s: Empty directory '%s' does not exist\n"
@@ -781,7 +781,7 @@ msgstr ""
 
 #, c-format
 msgid "%s: `set --show` does not allow slices with the var names\n"
-msgstr "%s : `set --show` n’autorise pas de tranches avec les noms des variables\n"
+msgstr "%s : « set --show » n’autorise pas de tranches avec les noms des variables\n"
 
 #, c-format
 msgid "%s: array index out of bounds\n"
@@ -1283,7 +1283,7 @@ msgstr ""
 
 #, c-format
 msgid "History session ID '%s' is not a valid variable name. Falling back to `%s`."
-msgstr "L’ID de session d’historique « %s » n’est pas un nom de variable valide ; retour à la valeur par défaut `%s`."
+msgstr "L’ID de session d’historique « %s » n’est pas un nom de variable valide ; retour à la valeur par défaut « %s »."
 
 #, c-format
 msgid "Home for %s"
@@ -18393,7 +18393,7 @@ msgid "Display the current status of RAID sets"
 msgstr ""
 
 msgid "Display the default ignore rules that bzr uses"
-msgstr "Afficher les règles d’ignorance utilisée par bzr"
+msgstr "Afficher les règles d’ignorance utilisées par bzr"
 
 msgid "Display the difference of the working copy with the latest copy in the configured scm url"
 msgstr ""
@@ -52431,7 +52431,7 @@ msgid "Same as show_private_data"
 msgstr ""
 
 msgid "Same as the command --fingerprint but changes only the format of the output and may be used together with another command"
-msgstr "Pareil que la commande « --fingerprint » mais ne changer que le format de sortie ; peut être utilisé avec une autre commande"
+msgstr "Pareil que la commande --fingerprint, mais ne change que le format de sortie et peut être utilisée avec une autre commande"
 
 msgid "Same as using --replacepkgs, --replacefiles, and --oldpackage"
 msgstr ""
@@ -73554,7 +73554,7 @@ msgid "disable input"
 msgstr ""
 
 msgid "disable many display features; used for debugging Emacs"
-msgstr "Désactiver de nombreuses fonctionnalités de l’affichage ; utilisé pour déboguer Emacs"
+msgstr "Désactive de nombreuses fonctionnalités d’affichage ; utilisé pour déboguer Emacs"
 
 msgid "disable multiprocessing"
 msgstr ""

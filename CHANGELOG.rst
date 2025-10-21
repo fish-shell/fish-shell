@@ -25,8 +25,7 @@ Other improvements
 For distributors
 ----------------
 - The minimum supported Rust version (MSRV) has been updated to 1.85.
-- Fixed build on MIPS machines (:issue:`11965`).
-- Fixed broken universal variables on Cygwin (:issue:`11948`).
+- Fixed saving/loading of universal variables on Cygwin (:issue:`11948`).
 
 
 fish 4.1.3 (released ???)
@@ -36,6 +35,7 @@ This release fixes the following regressions identified in 4.1.0:
 
 - Crash on invalid :doc:`function <cmds/function>` command (:issue:`11912`).
 - Fixed the fish ``man`` function for the commands ``!`` ``.`` ``:`` ``[`` (:issue:`11955`).
+- Fixed build on Illumos (:issue:`11982`).
 
 as well as the following regressions identified in 4.0.0:
 

@@ -1,7 +1,7 @@
 use std::{
     ffi::OsStr,
     path::{Path, PathBuf},
-    process::{Command, Stdio},
+    process::Command,
 };
 
 use fish_build_helper::env_var;
@@ -35,11 +35,7 @@ fn embed_localizations(cache_dir: &Path) {
     // for the respective language.
     let mut catalogs = phf_codegen::Map::new();
 
-    match Command::new("msgfmt")
-        .arg("-h")
-        .stdout(Stdio::null())
-        .status()
-    {
+    match Command::new("msgfmt").arg("-h").output() {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             rsconf::warn!(
                 "Cannot find msgfmt to build gettext message catalogs. Localization will not work."
@@ -54,7 +50,9 @@ fn embed_localizations(cache_dir: &Path) {
         Err(e) => {
             panic!("Error when trying to run `msgfmt -h`: {e:?}");
         }
-        Ok(_) => {
+        Ok(output) => {
+            let has_check_format =
+                String::from_utf8_lossy(&output.stdout).contains("--check-format");
             for dir_entry_result in po_dir.read_dir().unwrap() {
                 let dir_entry = dir_entry_result.unwrap();
                 let po_file_path = dir_entry.path();
@@ -96,12 +94,16 @@ fn embed_localizations(cache_dir: &Path) {
                 // Generate the map file.
 
                 // Try to create new MO data and load it into `mo_data`.
-                let output = Command::new("msgfmt")
-                    .arg("--check-format")
-                    .arg("--output-file=-")
-                    .arg(&po_file_path)
-                    .output()
-                    .unwrap();
+                let output = {
+                    let mut cmd = &mut Command::new("msgfmt");
+                    if has_check_format {
+                        cmd = cmd.arg("--check-format");
+                    }
+                    cmd.arg("--output-file=-")
+                        .arg(&po_file_path)
+                        .output()
+                        .unwrap()
+                };
                 if !output.status.success() {
                     panic!(
                         "msgfmt failed:\n{}",

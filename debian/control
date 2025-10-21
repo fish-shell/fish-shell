@@ -4,11 +4,12 @@ Priority: optional
 Maintainer: ridiculous_fish <corydoras@ridiculousfish.com>
 Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>
 Build-Depends: debhelper (>= 12),
- cargo (>= 1.85) | cargo-web (>= 1.85),
+# -web is for Debian's updated version, -X.Y is for Ubuntu's backported versions
+ cargo (>= 1.85) | cargo-web (>= 1.85) | cargo-1.85,
  cmake (>= 3.15.0),
  gettext,
  libpcre2-dev,
- rustc (>= 1.85) | rustc-web (>= 1.85),
+ rustc (>= 1.85) | rustc-web (>= 1.85) | rustc-1.85,
 # Test dependencies
  locales-all,
  ncurses-base,

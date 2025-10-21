@@ -1,10 +1,10 @@
-function isolated-tmux-start
+function isolated-tmux-start --wraps fish
     set -l tmpdir (mktemp -d)
     cd $tmpdir
 
     echo 'set -g mode-keys emacs' >.tmux.conf
 
-    function isolated-tmux --inherit-variable tmpdir
+    function isolated-tmux --inherit-variable tmpdir --wraps tmux
         # tmux can't handle session sockets in paths that are too long, and macOS has a very long
         # $TMPDIR, so use a relative path - except macOS doesn't have `realpath --relative-to`...
         # Luckily, we don't need to call tmux from other directories, so just make sure no one
@@ -40,7 +40,8 @@ function isolated-tmux-start
     end
 
     set -l fish (status fish-path)
-    isolated-tmux new-session -x 80 -y 10 -d $fish -C '
+    set -l size -x 80 -y 10
+    isolated-tmux new-session $size -d $fish -C '
         # This is similar to "tests/interactive.config".
         function fish_greeting; end
         function fish_prompt; printf "prompt $status_generation> "; end
@@ -52,6 +53,9 @@ function isolated-tmux-start
     # Set the correct permissions for the newly created socket to allow future connections.
     # This is required at least under WSL or else each invocation will return a permissions error.
     chmod 777 .tmux-socket
+
+    # Resize window so we can attach to tmux session without changing panel size.
+    isolated-tmux resize-window $size
 
     # Loop a bit, until we get an initial prompt.
     for i in (seq 25)

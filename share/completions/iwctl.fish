@@ -8,7 +8,7 @@ function __iwctl_filter -w iwctl
     # awk does not work on multiline entries, therefore we use string match,
     # which has the added benefit of filtering out the `No devices in ...` lines
 
-    argparse -u all-columns -- $argv
+    argparse -u 'all-columns&' -- $argv
 
     # remove color escape sequences
     set -l results (iwctl $argv_opts -- $argv | string replace -ra '\e\[[\d;]+m' '')

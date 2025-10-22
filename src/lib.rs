@@ -23,6 +23,7 @@
 #![allow(clippy::option_map_unit_fn)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::uninlined_format_args)]
+#![allow(clippy::let_and_return)]
 
 pub const BUILD_VERSION: &str = env!("FISH_BUILD_VERSION");
 

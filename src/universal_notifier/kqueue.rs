@@ -178,33 +178,40 @@ impl UniversalNotifier for KqueueNotifier {
     }
 }
 
-#[test]
-fn test_kqueue_notifiers() {
-    use crate::common::cstr2wcstring;
-    use std::ffi::CStr;
-    use std::fs::remove_dir_all;
-    use std::path::PathBuf;
+#[cfg(test)]
+mod tests {
+    use super::KqueueNotifier;
+    use crate::common::wcs2osstring;
+    use crate::universal_notifier::{UniversalNotifier, test_helpers::test_notifiers};
 
-    let mut template: Box<[u8]> = Box::from(&b"/tmp/fish_kqueue_XXXXXX\0"[..]);
+    #[test]
+    fn test_kqueue_notifiers() {
+        use crate::common::cstr2wcstring;
+        use std::ffi::CStr;
+        use std::fs::remove_dir_all;
+        use std::path::PathBuf;
 
-    let temp_dir_ptr = unsafe { libc::mkdtemp(template.as_mut_ptr().cast()) };
-    if temp_dir_ptr.is_null() {
-        panic!("failed to create temp dir");
+        let mut template: Box<[u8]> = Box::from(&b"/tmp/fish_kqueue_XXXXXX\0"[..]);
+
+        let temp_dir_ptr = unsafe { libc::mkdtemp(template.as_mut_ptr().cast()) };
+        if temp_dir_ptr.is_null() {
+            panic!("failed to create temp dir");
+        }
+        let tmp_dir = unsafe { CStr::from_ptr(temp_dir_ptr) };
+        let fake_uvars_dir = cstr2wcstring(tmp_dir.to_bytes_with_nul());
+        let fake_uvars_path = fake_uvars_dir.clone() + "/fish_variables";
+
+        let mut notifiers = Vec::new();
+        for _ in 0..16 {
+            notifiers
+                .push(KqueueNotifier::new_at(&fake_uvars_path).expect("failed to create notifier"));
+        }
+        let notifiers = notifiers
+            .iter()
+            .map(|n| n as &dyn UniversalNotifier)
+            .collect::<Vec<_>>();
+        test_notifiers(&notifiers, Some(&fake_uvars_path));
+
+        let _ = remove_dir_all(PathBuf::from(wcs2osstring(&fake_uvars_dir)));
     }
-    let tmp_dir = unsafe { CStr::from_ptr(temp_dir_ptr) };
-    let fake_uvars_dir = cstr2wcstring(tmp_dir.to_bytes_with_nul());
-    let fake_uvars_path = fake_uvars_dir.clone() + "/fish_variables";
-
-    let mut notifiers = Vec::new();
-    for _ in 0..16 {
-        notifiers
-            .push(KqueueNotifier::new_at(&fake_uvars_path).expect("failed to create notifier"));
-    }
-    let notifiers = notifiers
-        .iter()
-        .map(|n| n as &dyn UniversalNotifier)
-        .collect::<Vec<_>>();
-    super::test_helpers::test_notifiers(&notifiers, Some(&fake_uvars_path));
-
-    let _ = remove_dir_all(PathBuf::from(wcs2osstring(&fake_uvars_dir)));
 }

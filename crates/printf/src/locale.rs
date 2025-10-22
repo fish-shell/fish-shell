@@ -118,86 +118,91 @@ pub const EN_US_LOCALE: Locale = Locale {
     group_repeat: true,
 };
 
-#[test]
-fn test_apply_grouping() {
-    let input = "123456789";
-    let mut result: String;
+#[cfg(test)]
+mod tests {
+    use super::{C_LOCALE, EN_US_LOCALE, Locale};
 
-    // en_US has commas.
-    assert_eq!(EN_US_LOCALE.thousands_sep, Some(','));
-    result = EN_US_LOCALE.apply_grouping(input);
-    assert_eq!(result, "123,456,789");
+    #[test]
+    fn test_apply_grouping() {
+        let input = "123456789";
+        let mut result: String;
 
-    // Test weird locales.
-    let input: &str = "1234567890123456";
-    let mut locale: Locale = C_LOCALE;
-    locale.thousands_sep = Some('!');
+        // en_US has commas.
+        assert_eq!(EN_US_LOCALE.thousands_sep, Some(','));
+        result = EN_US_LOCALE.apply_grouping(input);
+        assert_eq!(result, "123,456,789");
 
-    locale.grouping = [5, 3, 1, 0];
-    locale.group_repeat = false;
-    result = locale.apply_grouping(input);
-    assert_eq!(result, "1234567!8!901!23456");
+        // Test weird locales.
+        let input: &str = "1234567890123456";
+        let mut locale: Locale = C_LOCALE;
+        locale.thousands_sep = Some('!');
 
-    // group_repeat doesn't matter because trailing group is 0
-    locale.grouping = [5, 3, 1, 0];
-    locale.group_repeat = true;
-    result = locale.apply_grouping(input);
-    assert_eq!(result, "1234567!8!901!23456");
+        locale.grouping = [5, 3, 1, 0];
+        locale.group_repeat = false;
+        result = locale.apply_grouping(input);
+        assert_eq!(result, "1234567!8!901!23456");
 
-    locale.grouping = [5, 3, 1, 2];
-    locale.group_repeat = false;
-    result = locale.apply_grouping(input);
-    assert_eq!(result, "12345!67!8!901!23456");
+        // group_repeat doesn't matter because trailing group is 0
+        locale.grouping = [5, 3, 1, 0];
+        locale.group_repeat = true;
+        result = locale.apply_grouping(input);
+        assert_eq!(result, "1234567!8!901!23456");
 
-    locale.grouping = [5, 3, 1, 2];
-    locale.group_repeat = true;
-    result = locale.apply_grouping(input);
-    assert_eq!(result, "1!23!45!67!8!901!23456");
-}
+        locale.grouping = [5, 3, 1, 2];
+        locale.group_repeat = false;
+        result = locale.apply_grouping(input);
+        assert_eq!(result, "12345!67!8!901!23456");
 
-#[test]
-#[should_panic]
-fn test_thousands_grouping_length_panics_if_no_sep() {
-    // We should panic if we try to group with no thousands separator.
-    assert_eq!(C_LOCALE.thousands_sep, None);
-    C_LOCALE.apply_grouping("123");
-}
-
-#[test]
-fn test_thousands_grouping_length() {
-    fn validate_grouping_length_hint(locale: Locale, mut input: &str) {
-        loop {
-            let expected = locale.separator_count(input.len()) + input.len();
-            let actual = locale.apply_grouping(input).len();
-            assert_eq!(expected, actual);
-            if input.is_empty() {
-                break;
-            }
-            input = &input[1..];
-        }
+        locale.grouping = [5, 3, 1, 2];
+        locale.group_repeat = true;
+        result = locale.apply_grouping(input);
+        assert_eq!(result, "1!23!45!67!8!901!23456");
     }
 
-    validate_grouping_length_hint(EN_US_LOCALE, "123456789");
+    #[test]
+    #[should_panic]
+    fn test_thousands_grouping_length_panics_if_no_sep() {
+        // We should panic if we try to group with no thousands separator.
+        assert_eq!(C_LOCALE.thousands_sep, None);
+        C_LOCALE.apply_grouping("123");
+    }
 
-    // Test weird locales.
-    let input = "1234567890123456";
-    let mut locale: Locale = C_LOCALE;
-    locale.thousands_sep = Some('!');
+    #[test]
+    fn test_thousands_grouping_length() {
+        fn validate_grouping_length_hint(locale: Locale, mut input: &str) {
+            loop {
+                let expected = locale.separator_count(input.len()) + input.len();
+                let actual = locale.apply_grouping(input).len();
+                assert_eq!(expected, actual);
+                if input.is_empty() {
+                    break;
+                }
+                input = &input[1..];
+            }
+        }
 
-    locale.grouping = [5, 3, 1, 0];
-    locale.group_repeat = false;
-    validate_grouping_length_hint(locale, input);
+        validate_grouping_length_hint(EN_US_LOCALE, "123456789");
 
-    // group_repeat doesn't matter because trailing group is 0
-    locale.grouping = [5, 3, 1, 0];
-    locale.group_repeat = true;
-    validate_grouping_length_hint(locale, input);
+        // Test weird locales.
+        let input = "1234567890123456";
+        let mut locale: Locale = C_LOCALE;
+        locale.thousands_sep = Some('!');
 
-    locale.grouping = [5, 3, 1, 2];
-    locale.group_repeat = false;
-    validate_grouping_length_hint(locale, input);
+        locale.grouping = [5, 3, 1, 0];
+        locale.group_repeat = false;
+        validate_grouping_length_hint(locale, input);
 
-    locale.grouping = [5, 3, 1, 2];
-    locale.group_repeat = true;
-    validate_grouping_length_hint(locale, input);
+        // group_repeat doesn't matter because trailing group is 0
+        locale.grouping = [5, 3, 1, 0];
+        locale.group_repeat = true;
+        validate_grouping_length_hint(locale, input);
+
+        locale.grouping = [5, 3, 1, 2];
+        locale.group_repeat = false;
+        validate_grouping_length_hint(locale, input);
+
+        locale.grouping = [5, 3, 1, 2];
+        locale.group_repeat = true;
+        validate_grouping_length_hint(locale, input);
+    }
 }

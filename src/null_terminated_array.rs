@@ -84,32 +84,39 @@ impl OwningNullTerminatedArray {
     }
 }
 
-#[test]
-fn test_null_terminated_array() {
-    let owned_strs = &[CString::new("foo").unwrap(), CString::new("bar").unwrap()];
-    let strs = owned_strs.iter().map(|s| s.as_c_str()).collect::<Vec<_>>();
-    let arr = NullTerminatedArray::new(&strs);
-    let ptr = arr.get();
-    unsafe {
-        assert_eq!(CStr::from_ptr(*ptr).to_str().unwrap(), "foo");
-        assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
-        assert_eq!(*ptr.offset(2), ptr::null());
-    }
-}
+#[cfg(test)]
+mod tests {
+    use super::{NullTerminatedArray, OwningNullTerminatedArray};
+    use std::ffi::{CStr, CString};
+    use std::ptr;
 
-#[test]
-fn test_owning_null_terminated_array() {
-    let owned_strs = vec![CString::new("foo").unwrap(), CString::new("bar").unwrap()];
-    let arr = OwningNullTerminatedArray::new(owned_strs);
-    let ptr = arr.get();
-    unsafe {
-        assert_eq!(CStr::from_ptr(*ptr).to_str().unwrap(), "foo");
-        assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
-        assert_eq!(*ptr.offset(2), ptr::null());
+    #[test]
+    fn test_null_terminated_array() {
+        let owned_strs = &[CString::new("foo").unwrap(), CString::new("bar").unwrap()];
+        let strs = owned_strs.iter().map(|s| s.as_c_str()).collect::<Vec<_>>();
+        let arr = NullTerminatedArray::new(&strs);
+        let ptr = arr.get();
+        unsafe {
+            assert_eq!(CStr::from_ptr(*ptr).to_str().unwrap(), "foo");
+            assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
+            assert_eq!(*ptr.offset(2), ptr::null());
+        }
     }
-    assert_eq!(arr.len(), 2);
-    let mut iter = arr.iter();
-    assert_eq!(iter.next().map(|s| s.to_str().unwrap()), Some("foo"));
-    assert_eq!(iter.next().map(|s| s.to_str().unwrap()), Some("bar"));
-    assert_eq!(iter.next(), None);
+
+    #[test]
+    fn test_owning_null_terminated_array() {
+        let owned_strs = vec![CString::new("foo").unwrap(), CString::new("bar").unwrap()];
+        let arr = OwningNullTerminatedArray::new(owned_strs);
+        let ptr = arr.get();
+        unsafe {
+            assert_eq!(CStr::from_ptr(*ptr).to_str().unwrap(), "foo");
+            assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
+            assert_eq!(*ptr.offset(2), ptr::null());
+        }
+        assert_eq!(arr.len(), 2);
+        let mut iter = arr.iter();
+        assert_eq!(iter.next().map(|s| s.to_str().unwrap()), Some("foo"));
+        assert_eq!(iter.next().map(|s| s.to_str().unwrap()), Some("bar"));
+        assert_eq!(iter.next(), None);
+    }
 }

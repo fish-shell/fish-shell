@@ -83,28 +83,34 @@ pub fn kill_entries() -> Vec<WString> {
     KILL_RING.lock().unwrap().entries()
 }
 
-#[test]
-fn test_killring() {
-    let mut kr = KillRing::new();
+#[cfg(test)]
+mod tests {
+    use super::KillRing;
+    use crate::wchar::prelude::*;
 
-    assert!(kr.is_empty());
+    #[test]
+    fn test_killring() {
+        let mut kr = KillRing::new();
 
-    kr.add(WString::from_str("a"));
-    kr.add(WString::from_str("b"));
-    kr.add(WString::from_str("c"));
+        assert!(kr.is_empty());
 
-    assert!(kr.entries() == [L!("c"), L!("b"), L!("a")]);
+        kr.add(WString::from_str("a"));
+        kr.add(WString::from_str("b"));
+        kr.add(WString::from_str("c"));
 
-    assert!(kr.yank_rotate() == "b");
-    assert!(kr.entries() == [L!("b"), L!("a"), L!("c")]);
+        assert!(kr.entries() == [L!("c"), L!("b"), L!("a")]);
 
-    assert!(kr.yank_rotate() == "a");
-    assert!(kr.entries() == [L!("a"), L!("c"), L!("b")]);
+        assert!(kr.yank_rotate() == "b");
+        assert!(kr.entries() == [L!("b"), L!("a"), L!("c")]);
 
-    kr.add(WString::from_str("d"));
+        assert!(kr.yank_rotate() == "a");
+        assert!(kr.entries() == [L!("a"), L!("c"), L!("b")]);
 
-    assert!((kr.entries() == [L!("d"), L!("a"), L!("c"), L!("b")]));
+        kr.add(WString::from_str("d"));
 
-    assert!(kr.yank_rotate() == "a");
-    assert!((kr.entries() == [L!("a"), L!("c"), L!("b"), L!("d")]));
+        assert!((kr.entries() == [L!("d"), L!("a"), L!("c"), L!("b")]));
+
+        assert!(kr.yank_rotate() == "a");
+        assert!((kr.entries() == [L!("a"), L!("c"), L!("b"), L!("d")]));
+    }
 }

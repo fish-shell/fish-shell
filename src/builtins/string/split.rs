@@ -278,3 +278,43 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         };
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn plain() {
+        let _cleanup = test_init();
+        validate!(["string", "split"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "split", ":"], STATUS_CMD_ERROR, "");
+        validate!(["string", "split", ".", "www.ch.ic.ac.uk"], STATUS_CMD_OK, "www\nch\nic\nac\nuk\n");
+        validate!(["string", "split", "..", "...."], STATUS_CMD_OK, "\n\n\n");
+        validate!(["string", "split", "-m", "x", "..", "...."], STATUS_INVALID_ARGS, "");
+        validate!(["string", "split", "-m1", "..", "...."], STATUS_CMD_OK, "\n..\n");
+        validate!(["string", "split", "-m0", "/", "/usr/local/bin/fish"], STATUS_CMD_ERROR, "/usr/local/bin/fish\n");
+        validate!(["string", "split", "-m2", ":", "a:b:c:d", "e:f:g:h"], STATUS_CMD_OK, "a\nb\nc:d\ne\nf\ng:h\n");
+        validate!(["string", "split", "-m1", "-r", "/", "/usr/local/bin/fish"], STATUS_CMD_OK, "/usr/local/bin\nfish\n");
+        validate!(["string", "split", "-r", ".", "www.ch.ic.ac.uk"], STATUS_CMD_OK, "www\nch\nic\nac\nuk\n");
+        validate!(["string", "split", "--", "--", "a--b---c----d"], STATUS_CMD_OK, "a\nb\n-c\n\nd\n");
+        validate!(["string", "split", "-r", "..", "...."], STATUS_CMD_OK, "\n\n\n");
+        validate!(["string", "split", "-r", "--", "--", "a--b---c----d"], STATUS_CMD_OK, "a\nb-\nc\n\nd\n");
+        validate!(["string", "split", "", ""], STATUS_CMD_ERROR, "\n");
+        validate!(["string", "split", "", "a"], STATUS_CMD_ERROR, "a\n");
+        validate!(["string", "split", "", "ab"], STATUS_CMD_OK, "a\nb\n");
+        validate!(["string", "split", "", "abc"], STATUS_CMD_OK, "a\nb\nc\n");
+        validate!(["string", "split", "-m1", "", "abc"], STATUS_CMD_OK, "a\nbc\n");
+        validate!(["string", "split", "-r", "", ""], STATUS_CMD_ERROR, "\n");
+        validate!(["string", "split", "-r", "", "a"], STATUS_CMD_ERROR, "a\n");
+        validate!(["string", "split", "-r", "", "ab"], STATUS_CMD_OK, "a\nb\n");
+        validate!(["string", "split", "-r", "", "abc"], STATUS_CMD_OK, "a\nb\nc\n");
+        validate!(["string", "split", "-r", "-m1", "", "abc"], STATUS_CMD_OK, "ab\nc\n");
+        validate!(["string", "split", "-q"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "split", "-q", ":"], STATUS_CMD_ERROR, "");
+        validate!(["string", "split", "-q", "x", "axbxc"], STATUS_CMD_OK, "");
+    }
+}

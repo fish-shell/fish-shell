@@ -7,8 +7,6 @@ use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
 
 use crate::parse_constants::SourceRange;
-#[cfg(test)]
-use crate::tests::prelude::*;
 use pcre2::utf32::Regex;
 
 static ABBRS: Lazy<Mutex<AbbreviationSet>> = Lazy::new(|| Mutex::new(Default::default()));
@@ -122,7 +120,6 @@ impl Abbreviation {
 #[derive(Debug, Eq, PartialEq)]
 pub struct Replacer {
     /// The string to use to replace the incoming token, either literal or as a function name.
-    /// Exposed for testing.
     pub replacement: WString,
 
     /// If true, treat 'replacement' as the name of a function.
@@ -274,41 +271,180 @@ pub fn abbrs_match(token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer
         .collect()
 }
 
-#[test]
-#[serial]
-fn rename_abbrs() {
-    let _cleanup = test_init();
-    use crate::abbrs::{Abbreviation, Position};
+#[cfg(test)]
+mod tests {
+    use super::{Abbreviation, Position, abbrs_get_set, abbrs_match, with_abbrs_mut};
+    use crate::editable_line::{Edit, apply_edit};
+    use crate::highlight::HighlightSpec;
+    use crate::reader::reader_expand_abbreviation_at_cursor;
+    use crate::tests::prelude::*;
     use crate::wchar::prelude::*;
 
-    with_abbrs_mut(|abbrs_g| {
-        let mut add = |name: &wstr, repl: &wstr, position: Position| {
-            abbrs_g.add(Abbreviation {
-                name: name.into(),
-                key: name.into(),
-                regex: None,
-                commands: vec![],
-                replacement: repl.into(),
-                replacement_is_function: false,
-                position,
-                set_cursor_marker: None,
-                from_universal: false,
-            })
-        };
-        add(L!("gc"), L!("git checkout"), Position::Command);
-        add(L!("foo"), L!("bar"), Position::Command);
-        add(L!("gx"), L!("git checkout"), Position::Command);
-        add(L!("yin"), L!("yang"), Position::Anywhere);
+    #[test]
+    #[serial]
+    fn test_abbreviations() {
+        let _cleanup = test_init();
+        let parser = TestParser::new();
+        {
+            let mut abbrs = abbrs_get_set();
+            abbrs.add(Abbreviation::new(
+                L!("gc").to_owned(),
+                L!("gc").to_owned(),
+                L!("git checkout").to_owned(),
+                Position::Command,
+                false,
+            ));
+            abbrs.add(Abbreviation::new(
+                L!("foo").to_owned(),
+                L!("foo").to_owned(),
+                L!("bar").to_owned(),
+                Position::Command,
+                false,
+            ));
+            abbrs.add(Abbreviation::new(
+                L!("gx").to_owned(),
+                L!("gx").to_owned(),
+                L!("git checkout").to_owned(),
+                Position::Command,
+                false,
+            ));
+            abbrs.add(Abbreviation::new(
+                L!("yin").to_owned(),
+                L!("yin").to_owned(),
+                L!("yang").to_owned(),
+                Position::Anywhere,
+                false,
+            ));
+        }
 
-        assert!(!abbrs_g.has_name(L!("gcc")));
-        assert!(abbrs_g.has_name(L!("gc")));
+        // Helper to expand an abbreviation, enforcing we have no more than one result.
+        macro_rules! abbr_expand_1 {
+            ($token:expr, $position:expr) => {
+                let result = abbrs_match(L!($token), $position, L!(""));
+                assert_eq!(result, vec![]);
+            };
+            ($token:expr, $position:expr, $expected:expr) => {
+                let result = abbrs_match(L!($token), $position, L!(""));
+                assert_eq!(
+                    result
+                        .into_iter()
+                        .map(|a| a.replacement)
+                        .collect::<Vec<_>>(),
+                    vec![L!($expected).to_owned()]
+                );
+            };
+        }
 
-        abbrs_g.rename(L!("gc"), L!("gcc"));
-        assert!(abbrs_g.has_name(L!("gcc")));
-        assert!(!abbrs_g.has_name(L!("gc")));
+        let cmd = Position::Command;
+        abbr_expand_1!("", cmd);
+        abbr_expand_1!("nothing", cmd);
 
-        assert!(!abbrs_g.erase(L!("gc")));
-        assert!(abbrs_g.erase(L!("gcc")));
-        assert!(!abbrs_g.erase(L!("gcc")));
-    })
+        abbr_expand_1!("gc", cmd, "git checkout");
+        abbr_expand_1!("foo", cmd, "bar");
+
+        let expand_abbreviation_in_command =
+            |cmdline: &wstr, cursor_pos: Option<usize>| -> Option<WString> {
+                let replacement = reader_expand_abbreviation_at_cursor(
+                    cmdline,
+                    cursor_pos.unwrap_or(cmdline.len()),
+                    &parser,
+                )?;
+                let mut cmdline_expanded = cmdline.to_owned();
+                let mut colors = vec![HighlightSpec::new(); cmdline.len()];
+                apply_edit(
+                    &mut cmdline_expanded,
+                    &mut colors,
+                    &Edit::new(replacement.range.into(), replacement.text),
+                );
+                Some(cmdline_expanded)
+            };
+
+        macro_rules! validate {
+            ($cmdline:expr, $cursor:expr) => {{
+                let actual = expand_abbreviation_in_command(L!($cmdline), $cursor);
+                assert_eq!(actual, None);
+            }};
+            ($cmdline:expr, $cursor:expr, $expected:expr) => {{
+                let actual = expand_abbreviation_in_command(L!($cmdline), $cursor);
+                assert_eq!(actual, Some(L!($expected).to_owned()));
+            }};
+        }
+
+        validate!("just a command", Some(3));
+        validate!("gc somebranch", Some(0), "git checkout somebranch");
+
+        validate!(
+            "gc somebranch",
+            Some("gc".chars().count()),
+            "git checkout somebranch"
+        );
+
+        // Space separation.
+        validate!(
+            "gx somebranch",
+            Some("gc".chars().count()),
+            "git checkout somebranch"
+        );
+
+        validate!(
+            "echo hi ; gc somebranch",
+            Some("echo hi ; g".chars().count()),
+            "echo hi ; git checkout somebranch"
+        );
+
+        validate!(
+            "echo (echo (echo (echo (gc ",
+            Some("echo (echo (echo (echo (gc".chars().count()),
+            "echo (echo (echo (echo (git checkout "
+        );
+
+        // If commands should be expanded.
+        validate!("if gc", None, "if git checkout");
+
+        // Others should not be.
+        validate!("of gc", None);
+
+        // Other decorations generally should be.
+        validate!("command gc", None, "command git checkout");
+
+        // yin/yang expands everywhere.
+        validate!("command yin", None, "command yang");
+    }
+
+    #[test]
+    #[serial]
+    fn rename_abbrs() {
+        let _cleanup = test_init();
+
+        with_abbrs_mut(|abbrs_g| {
+            let mut add = |name: &wstr, repl: &wstr, position: Position| {
+                abbrs_g.add(Abbreviation {
+                    name: name.into(),
+                    key: name.into(),
+                    regex: None,
+                    commands: vec![],
+                    replacement: repl.into(),
+                    replacement_is_function: false,
+                    position,
+                    set_cursor_marker: None,
+                    from_universal: false,
+                })
+            };
+            add(L!("gc"), L!("git checkout"), Position::Command);
+            add(L!("foo"), L!("bar"), Position::Command);
+            add(L!("gx"), L!("git checkout"), Position::Command);
+            add(L!("yin"), L!("yang"), Position::Anywhere);
+
+            assert!(!abbrs_g.has_name(L!("gcc")));
+            assert!(abbrs_g.has_name(L!("gc")));
+
+            abbrs_g.rename(L!("gc"), L!("gcc"));
+            assert!(abbrs_g.has_name(L!("gcc")));
+            assert!(!abbrs_g.has_name(L!("gc")));
+
+            assert!(!abbrs_g.erase(L!("gc")));
+            assert!(abbrs_g.erase(L!("gcc")));
+            assert!(!abbrs_g.erase(L!("gcc")));
+        })
+    }
 }

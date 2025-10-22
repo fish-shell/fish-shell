@@ -271,88 +271,6 @@ pub(crate) fn match_key_event_to_key(event: &KeyEvent, key: &Key) -> Option<KeyM
     None
 }
 
-#[test]
-fn test_match_key_event_to_key() {
-    macro_rules! validate {
-        ($evt:expr, $key:expr, $expected:expr) => {
-            assert_eq!(match_key_event_to_key(&$evt, &$key), $expected);
-        };
-    }
-
-    let none = Modifiers::default();
-    let shift = Modifiers::SHIFT;
-    let ctrl = Modifiers::CTRL;
-    let ctrl_shift = Modifiers {
-        ctrl: true,
-        shift: true,
-        ..Default::default()
-    };
-
-    let exact = KeyMatchQuality::Exact;
-    let modulo_shift = KeyMatchQuality::ModuloShift;
-    let base_layout = KeyMatchQuality::BaseLayout;
-    let base_layout_modulo_shift = KeyMatchQuality::BaseLayoutModuloShift;
-
-    validate!(KeyEvent::new(none, 'a'), Key::new(none, 'a'), Some(exact));
-    validate!(KeyEvent::new(none, 'a'), Key::new(none, 'A'), None);
-    validate!(KeyEvent::new(shift, 'a'), Key::new(shift, 'a'), Some(exact));
-    validate!(KeyEvent::new(shift, 'a'), Key::new(none, 'A'), None);
-    validate!(KeyEvent::new(shift, 'ä'), Key::new(none, 'Ä'), None);
-    // For historical reasons we canonicalize notation for ASCII keys like "shift-a" to "A",
-    // but not "shift-a" events - those should send a shifted key.
-    validate!(
-        KeyEvent::new(none, 'A'),
-        Key::new(shift, 'a'),
-        Some(modulo_shift)
-    );
-    validate!(KeyEvent::new(none, 'A'), Key::new(shift, 'A'), None);
-    validate!(KeyEvent::new(none, 'Ä'), Key::new(none, 'Ä'), Some(exact));
-    validate!(KeyEvent::new(none, 'Ä'), Key::new(shift, 'ä'), None);
-
-    // FYI: for codepoints that are not letters with uppercase/lowercase versions, we use
-    // the shifted key in the canonical notation, because the unshifted one may depend on the
-    // keyboard layout.
-    let ctrl_shift_equals = KeyEvent::new_with(ctrl_shift, '=', Some('+'), None);
-    validate!(ctrl_shift_equals, Key::new(ctrl_shift, '='), Some(exact));
-    validate!(ctrl_shift_equals, Key::new(ctrl, '+'), Some(modulo_shift)); // canonical notation
-    validate!(ctrl_shift_equals, Key::new(ctrl_shift, '+'), None);
-    validate!(ctrl_shift_equals, Key::new(ctrl, '='), None);
-
-    // A event like capslock-shift-ä may or may not include a shifted codepoint.
-    //
-    // Without a shifted codepoint, we cannot easily match ctrl-Ä.
-    let caps_ctrl_shift_ä = KeyEvent::new(ctrl_shift, 'ä');
-    validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
-    validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
-    validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), None); // can't match without shifted key
-    validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
-    // With a shifted codepoint, we can match the alternative notation too.
-    let caps_ctrl_shift_ä = KeyEvent::new_with(ctrl_shift, 'ä', Some('Ä'), None);
-    validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
-    validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
-    validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), Some(modulo_shift)); // matched via shifted key
-    validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
-
-    let ctrl_ц = KeyEvent::new_with(ctrl, 'ц', None, Some('w'));
-    let ctrl_shift_ц = KeyEvent::new_with(ctrl_shift, 'ц', Some('Ц'), Some('w'));
-    validate!(ctrl_ц, Key::new(ctrl, 'ц'), Some(exact));
-    validate!(ctrl_ц, Key::new(ctrl, 'w'), Some(base_layout));
-    validate!(ctrl_ц, Key::new(ctrl_shift, 'ц'), None);
-    validate!(ctrl_ц, Key::new(ctrl_shift, 'w'), None);
-    validate!(
-        ctrl_shift_ц,
-        Key::new(ctrl, 'W'),
-        Some(base_layout_modulo_shift)
-    );
-    validate!(ctrl_shift_ц, Key::new(ctrl, 'w'), None);
-
-    // Note that "bind ctrl-Ц" will win over "bind ctrl-shift-w".
-    // This is because we consider shift transformation to be less magic than base-key
-    // transformation.
-    validate!(ctrl_shift_ц, Key::new(ctrl, 'Ц'), Some(modulo_shift));
-    validate!(ctrl_shift_ц, Key::new(ctrl_shift, 'w'), Some(base_layout));
-}
-
 /// Represents an event on the character input stream.
 #[derive(Debug, Clone)]
 pub enum CharEventType {
@@ -1777,7 +1695,156 @@ fn parse_hex(hex: &[u8]) -> Option<Vec<u8>> {
     Some(result)
 }
 
-#[test]
-fn test_parse_hex() {
-    assert_eq!(parse_hex(b"3d"), Some(vec![61]));
+#[cfg(test)]
+mod tests {
+    use super::{
+        CharEvent, InputEventQueue, InputEventQueuer, KeyEvent, KeyMatchQuality, ReadlineCmd,
+        match_key_event_to_key, parse_hex,
+    };
+    use crate::key::{Key, Modifiers};
+
+    #[test]
+    fn test_match_key_event_to_key() {
+        macro_rules! validate {
+            ($evt:expr, $key:expr, $expected:expr) => {
+                assert_eq!(match_key_event_to_key(&$evt, &$key), $expected);
+            };
+        }
+
+        let none = Modifiers::default();
+        let shift = Modifiers::SHIFT;
+        let ctrl = Modifiers::CTRL;
+        let ctrl_shift = Modifiers {
+            ctrl: true,
+            shift: true,
+            ..Default::default()
+        };
+
+        let exact = KeyMatchQuality::Exact;
+        let modulo_shift = KeyMatchQuality::ModuloShift;
+        let base_layout = KeyMatchQuality::BaseLayout;
+        let base_layout_modulo_shift = KeyMatchQuality::BaseLayoutModuloShift;
+
+        validate!(KeyEvent::new(none, 'a'), Key::new(none, 'a'), Some(exact));
+        validate!(KeyEvent::new(none, 'a'), Key::new(none, 'A'), None);
+        validate!(KeyEvent::new(shift, 'a'), Key::new(shift, 'a'), Some(exact));
+        validate!(KeyEvent::new(shift, 'a'), Key::new(none, 'A'), None);
+        validate!(KeyEvent::new(shift, 'ä'), Key::new(none, 'Ä'), None);
+        // For historical reasons we canonicalize notation for ASCII keys like "shift-a" to "A",
+        // but not "shift-a" events - those should send a shifted key.
+        validate!(
+            KeyEvent::new(none, 'A'),
+            Key::new(shift, 'a'),
+            Some(modulo_shift)
+        );
+        validate!(KeyEvent::new(none, 'A'), Key::new(shift, 'A'), None);
+        validate!(KeyEvent::new(none, 'Ä'), Key::new(none, 'Ä'), Some(exact));
+        validate!(KeyEvent::new(none, 'Ä'), Key::new(shift, 'ä'), None);
+
+        // FYI: for codepoints that are not letters with uppercase/lowercase versions, we use
+        // the shifted key in the canonical notation, because the unshifted one may depend on the
+        // keyboard layout.
+        let ctrl_shift_equals = KeyEvent::new_with(ctrl_shift, '=', Some('+'), None);
+        validate!(ctrl_shift_equals, Key::new(ctrl_shift, '='), Some(exact));
+        validate!(ctrl_shift_equals, Key::new(ctrl, '+'), Some(modulo_shift)); // canonical notation
+        validate!(ctrl_shift_equals, Key::new(ctrl_shift, '+'), None);
+        validate!(ctrl_shift_equals, Key::new(ctrl, '='), None);
+
+        // A event like capslock-shift-ä may or may not include a shifted codepoint.
+        //
+        // Without a shifted codepoint, we cannot easily match ctrl-Ä.
+        let caps_ctrl_shift_ä = KeyEvent::new(ctrl_shift, 'ä');
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), None); // can't match without shifted key
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
+        // With a shifted codepoint, we can match the alternative notation too.
+        let caps_ctrl_shift_ä = KeyEvent::new_with(ctrl_shift, 'ä', Some('Ä'), None);
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), Some(modulo_shift)); // matched via shifted key
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
+
+        let ctrl_ц = KeyEvent::new_with(ctrl, 'ц', None, Some('w'));
+        let ctrl_shift_ц = KeyEvent::new_with(ctrl_shift, 'ц', Some('Ц'), Some('w'));
+        validate!(ctrl_ц, Key::new(ctrl, 'ц'), Some(exact));
+        validate!(ctrl_ц, Key::new(ctrl, 'w'), Some(base_layout));
+        validate!(ctrl_ц, Key::new(ctrl_shift, 'ц'), None);
+        validate!(ctrl_ц, Key::new(ctrl_shift, 'w'), None);
+        validate!(
+            ctrl_shift_ц,
+            Key::new(ctrl, 'W'),
+            Some(base_layout_modulo_shift)
+        );
+        validate!(ctrl_shift_ц, Key::new(ctrl, 'w'), None);
+
+        // Note that "bind ctrl-Ц" will win over "bind ctrl-shift-w".
+        // This is because we consider shift transformation to be less magic than base-key
+        // transformation.
+        validate!(ctrl_shift_ц, Key::new(ctrl, 'Ц'), Some(modulo_shift));
+        validate!(ctrl_shift_ц, Key::new(ctrl_shift, 'w'), Some(base_layout));
+    }
+
+    #[test]
+    fn test_push_front_back() {
+        let mut queue = InputEventQueue::new(0, None);
+        queue.push_front(CharEvent::from_char('a'));
+        queue.push_front(CharEvent::from_char('b'));
+        queue.push_back(CharEvent::from_char('c'));
+        queue.push_back(CharEvent::from_char('d'));
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'b');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'a');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'c');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'd');
+        assert!(queue.try_pop().is_none());
+    }
+
+    #[test]
+    fn test_promote_interruptions_to_front() {
+        let mut queue = InputEventQueue::new(0, None);
+        queue.push_back(CharEvent::from_char('a'));
+        queue.push_back(CharEvent::from_char('b'));
+        queue.push_back(CharEvent::from_readline(ReadlineCmd::Undo));
+        queue.push_back(CharEvent::from_readline(ReadlineCmd::Redo));
+        queue.push_back(CharEvent::from_char('c'));
+        queue.push_back(CharEvent::from_char('d'));
+        queue.promote_interruptions_to_front();
+
+        assert_eq!(queue.try_pop().unwrap().get_readline(), ReadlineCmd::Undo);
+        assert_eq!(queue.try_pop().unwrap().get_readline(), ReadlineCmd::Redo);
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'a');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'b');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'c');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'd');
+        assert!(!queue.has_lookahead());
+
+        queue.push_back(CharEvent::from_char('e'));
+        queue.promote_interruptions_to_front();
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'e');
+        assert!(!queue.has_lookahead());
+    }
+
+    #[test]
+    fn test_insert_front() {
+        let mut queue = InputEventQueue::new(0, None);
+        queue.push_back(CharEvent::from_char('a'));
+        queue.push_back(CharEvent::from_char('b'));
+
+        let events = vec![
+            CharEvent::from_char('A'),
+            CharEvent::from_char('B'),
+            CharEvent::from_char('C'),
+        ];
+        queue.insert_front(events);
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'A');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'B');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'C');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'a');
+        assert_eq!(queue.try_pop().unwrap().get_char(), 'b');
+    }
+
+    #[test]
+    fn test_parse_hex() {
+        assert_eq!(parse_hex(b"3d"), Some(vec![61]));
+    }
 }

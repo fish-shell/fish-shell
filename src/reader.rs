@@ -4844,7 +4844,7 @@ fn get_autosuggestion_performer(
     command_line: WString,
     cursor_pos: usize,
     history: Arc<History>,
-) -> impl FnOnce() -> AutosuggestionResult {
+) -> impl FnOnce() -> AutosuggestionResult + use<> {
     let generation_count = read_generation_count();
     let vars = parser.vars().snapshot();
     let working_directory = parser.vars().get_pwd_slash();
@@ -5207,7 +5207,7 @@ fn get_highlight_performer(
     parser: &Parser,
     el: &EditableLine,
     io_ok: bool,
-) -> impl FnOnce() -> HighlightResult {
+) -> impl FnOnce() -> HighlightResult + use<> {
     let vars = parser.vars().snapshot();
     let generation_count = read_generation_count();
     let position = el.position();
@@ -5794,8 +5794,8 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
     // Try reading from the tty; if we get EIO we are orphaned. This is sort of bad because it
     // may block.
     if !we_think_we_are_orphaned && loop_count % 128 == 0 {
-        extern "C" {
-            fn ctermid(buf: *mut c_char) -> *mut c_char;
+        unsafe extern "C" {
+            unsafe fn ctermid(buf: *mut c_char) -> *mut c_char;
         }
         let tty = unsafe { ctermid(std::ptr::null_mut()) };
         if tty.is_null() {

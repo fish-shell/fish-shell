@@ -2350,7 +2350,7 @@ impl<'s> Populator<'s> {
             self.chomp_extras(list.kind());
 
             // Now try parsing a node.
-            if let Some(node) = self.try_parse::<Contents>() {
+            match self.try_parse::<Contents>() { Some(node) => {
                 // #7201: Minimize reallocations of contents vector
                 // Empirically, 99.97% of cases are 16 elements or fewer,
                 // with 75% being empty, so this works out best.
@@ -2358,14 +2358,14 @@ impl<'s> Populator<'s> {
                     contents.reserve(16);
                 }
                 contents.push(node);
-            } else if exhaust_stream && self.peek_type(0) != ParseTokenType::terminate {
+            } _ => if exhaust_stream && self.peek_type(0) != ParseTokenType::terminate {
                 // We aren't allowed to stop. Produce an error and keep going.
                 self.consume_excess_token_generating_error()
             } else {
                 // We either stop once we can't parse any more of this contents node, or we
                 // exhausted the stream as requested.
                 break;
-            }
+            }}
         }
 
         // Populate our list from our contents.

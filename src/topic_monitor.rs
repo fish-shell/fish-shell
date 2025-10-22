@@ -90,14 +90,14 @@ impl GenerationsList {
     #[allow(dead_code)]
     fn describe(&self) -> WString {
         let mut result = WString::new();
-        for gen in self.as_array() {
+        for r#gen in self.as_array() {
             if !result.is_empty() {
                 result.push(',');
             }
-            if gen == INVALID_GENERATION {
+            if r#gen == INVALID_GENERATION {
                 result.push_str("-1");
             } else {
-                result.push_str(&gen.to_string());
+                result.push_str(&r#gen.to_string());
             }
         }
         return result;
@@ -145,8 +145,8 @@ impl GenerationsList {
     /// Return whether any topic is valid.
     pub fn any_valid(&self) -> bool {
         let mut valid = false;
-        for gen in self.as_array() {
-            if gen != INVALID_GENERATION {
+        for r#gen in self.as_array() {
+            if r#gen != INVALID_GENERATION {
                 valid = true;
             }
         }

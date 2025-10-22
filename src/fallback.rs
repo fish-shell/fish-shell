@@ -30,8 +30,8 @@ static WC_LOOKUP_TABLE: Lazy<WcLookupTable> = Lazy::new(WcLookupTable::new);
 /// A safe wrapper around the system `wcwidth()` function
 #[cfg(not(cygwin))]
 pub fn wcwidth(c: char) -> isize {
-    extern "C" {
-        pub fn wcwidth(c: libc::wchar_t) -> libc::c_int;
+    unsafe extern "C" {
+        pub unsafe fn wcwidth(c: libc::wchar_t) -> libc::c_int;
     }
 
     const _: () = assert!(std::mem::size_of::<libc::wchar_t>() >= std::mem::size_of::<char>());

@@ -96,15 +96,15 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
     // Non-existent jobs aren't an error, but information about them is useful.
     let mut seen = HashSet::new();
     for pid in pids {
-        if let Some((job_pos, job)) = parser.job_get_with_index_from_pid(pid) {
+        match parser.job_get_with_index_from_pid(pid) { Some((job_pos, job)) => {
             if seen.insert(&*job as *const _) {
                 send_to_bg(parser, streams, cmd, job_pos)?;
             }
-        } else {
+        } _ => {
             streams
                 .err
                 .append(wgettext_fmt!("%s: Could not find job '%d'\n", cmd, pid));
-        }
+        }}
     }
 
     return Ok(SUCCESS);

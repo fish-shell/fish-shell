@@ -7,17 +7,17 @@ use libc::{c_char, c_int};
 use std::ffi::CString;
 use std::os::fd::{BorrowedFd, RawFd};
 
-extern "C" {
-    fn notify_register_file_descriptor(
+unsafe extern "C" {
+    unsafe fn notify_register_file_descriptor(
         name: *const c_char,
         fd: *mut c_int,
         flags: c_int,
         token: *mut c_int,
     ) -> u32;
 
-    fn notify_post(name: *const c_char) -> u32;
+    unsafe fn notify_post(name: *const c_char) -> u32;
 
-    fn notify_cancel(token: c_int) -> c_int;
+    unsafe fn notify_cancel(token: c_int) -> c_int;
 }
 
 const NOTIFY_STATUS_OK: u32 = 0;

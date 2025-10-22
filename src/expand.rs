@@ -356,7 +356,7 @@ macro_rules! append_syntax_error {
         $errors:expr, $source_start:expr,
         $fmt:expr $(, $arg:expr )* $(,)?
     ) => {
-        if let Some(ref mut errors) = $errors {
+        if let Some(ref mut errors) = $errors.as_mut() {
             let mut error = ParseError::default();
             error.source_start = $source_start;
             error.source_length = 0;
@@ -386,7 +386,7 @@ macro_rules! append_cmdsub_error_formatted {
         $errors:expr, $source_start:expr, $source_end:expr,
         $text:expr $(,)?
     ) => {
-        if let Some(ref mut errors) = $errors {
+        if let Some(ref mut errors) = $errors.as_mut() {
             let mut error = ParseError::default();
             error.source_start = $source_start;
             error.source_length = $source_end - $source_start + 1;
@@ -404,7 +404,7 @@ fn append_overflow_error(
     errors: &mut Option<&mut ParseErrorList>,
     source_start: Option<usize>,
 ) -> ExpandResult {
-    if let Some(ref mut errors) = errors {
+    if let Some(errors) = errors {
         let mut error = ParseError::default();
         error.source_start = source_start.unwrap_or(SOURCE_LOCATION_UNKNOWN);
         error.source_length = 0;
@@ -623,7 +623,7 @@ fn expand_variables(
 
     // It's an error if the name is empty.
     if var_name.is_empty() {
-        if let Some(ref mut errors) = errors {
+        if let Some(errors) = errors {
             parse_util_expand_variable_error(
                 &instr,
                 0, /* global_token_pos */

@@ -1855,7 +1855,7 @@ impl<'ctx> Completer<'ctx> {
     fn apply_var_assignments<T: AsRef<wstr>>(
         &mut self,
         var_assignments: &[T],
-    ) -> Option<ScopeGuard<(), impl FnOnce(()) + 'ctx>> {
+    ) -> Option<ScopeGuard<(), impl FnOnce(()) + 'ctx + use<'ctx, T>>> {
         if !self.ctx.has_parser() || var_assignments.is_empty() {
             return None;
         }

@@ -59,14 +59,14 @@ const LONG_OPTIONS: &[WOption] = &[
 /// Return the internal_job_id for a pid, or None if none.
 /// This looks through both active and finished jobs.
 fn job_id_for_pid(pid: Pid, parser: &Parser) -> Option<u64> {
-    if let Some(job) = parser.job_get_from_pid(pid) {
+    match parser.job_get_from_pid(pid) { Some(job) => {
         Some(job.internal_job_id)
-    } else {
+    } _ => {
         parser
             .get_wait_handles()
             .get_by_pid(pid)
             .map(|h| h.internal_job_id)
-    }
+    }}
 }
 
 /// Parses options to builtin function, populating opts.

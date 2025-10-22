@@ -102,6 +102,11 @@ $fish -c '{ :; } true'
 # CHECKERR: { :; } true
 # CHECKERR:        ^~~^
 
+$fish -c '{$HOME}/bin'
+# CHECKERR: fish: '}' does not take arguments. Did you forget a ';'?
+# CHECKERR: {$HOME}/bin
+# CHECKERR:        ^~~^
+
 ; { echo semi; }
 # CHECK: semi
 

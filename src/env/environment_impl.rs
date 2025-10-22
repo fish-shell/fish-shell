@@ -585,8 +585,8 @@ impl EnvScopedImpl {
 
         let mut cursor = self.export_array_generations.iter().fuse();
         let mut mismatch = false;
-        self.enumerate_generations(|gen| {
-            if cursor.next().cloned() != Some(gen) {
+        self.enumerate_generations(|r#gen| {
+            if cursor.next().cloned() != Some(r#gen) {
                 mismatch = true;
             }
         });
@@ -657,7 +657,7 @@ impl EnvScopedImpl {
 
             // Have to pull this into a local to satisfy the borrow checker.
             let mut generations = std::mem::take(&mut self.export_array_generations);
-            self.enumerate_generations(|gen| generations.push(gen));
+            self.enumerate_generations(|r#gen| generations.push(r#gen));
             self.export_array_generations = generations;
         }
         return self.export_array.as_ref().unwrap().clone();

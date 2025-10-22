@@ -585,16 +585,16 @@ impl Debounce {
     fn run_next(&self, token: NonZeroU64) -> bool {
         let request = {
             let mut data = self.data.lock().expect("Mutex poisoned!");
-            if let Some(req) = data.next_req.take() {
+            match data.next_req.take() { Some(req) => {
                 data.start_time = Instant::now();
                 req
-            } else {
+            } _ => {
                 // There is no pending request. Mark this token as no longer running.
                 if Some(token) == data.active_token {
                     data.active_token = None;
                 }
                 return false;
-            }
+            }}
         };
 
         // Execute request after unlocking the mutex.

@@ -37,7 +37,8 @@ fn main() {
     // the source directory is the current working directory of the build script
     rsconf::set_env_value("FISH_BUILD_VERSION", version);
 
-    std::env::set_var("FISH_BUILD_VERSION", version);
+    // safety: single-threaded code.
+    unsafe { std::env::set_var("FISH_BUILD_VERSION", version) };
 
     // These are necessary if built with embedded functions,
     // but only in release builds (because rust-embed in debug builds reads from the filesystem).
@@ -159,9 +160,9 @@ fn has_small_stack(_: &Target) -> bool {
     {
         use core::ffi;
 
-        extern "C" {
-            fn pthread_get_stacksize_np(thread: *const ffi::c_void) -> usize;
-            fn pthread_self() -> *const ffi::c_void;
+        unsafe extern "C" {
+            unsafe fn pthread_get_stacksize_np(thread: *const ffi::c_void) -> usize;
+            unsafe fn pthread_self() -> *const ffi::c_void;
         }
 
         // build.rs is executed on the main thread, so we are getting the main thread's stack size.

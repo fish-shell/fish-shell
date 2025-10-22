@@ -218,17 +218,17 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 j = parser.job_get_from_pid(pid)
             }
 
-            if let Some(j) = j.filter(|j| !j.is_completed() && j.is_constructed()) {
+            match j.filter(|j| !j.is_completed() && j.is_constructed()) { Some(j) => {
                 builtin_jobs_print(&j, mode, false, streams);
                 found = true;
-            } else {
+            } _ => {
                 if mode != JobsPrintMode::PrintNothing {
                     streams
                         .err
                         .append(wgettext_fmt!("%s: No suitable job: %s\n", cmd, arg));
                 }
                 return Err(STATUS_CMD_ERROR);
-            }
+            }}
         }
     } else {
         for j in &parser.jobs()[..] {

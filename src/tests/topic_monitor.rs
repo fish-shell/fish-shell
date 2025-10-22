@@ -45,8 +45,8 @@ fn test_topic_monitor_torture() {
     let t2 = Topic::sighupint;
     let mut gens_list = vec![GenerationsList::invalid(); THREAD_COUNT];
     let post_count = Arc::new(AtomicU64::new(0));
-    for gen in &mut gens_list {
-        *gen = monitor.current_generations();
+    for r#gen in &mut gens_list {
+        *r#gen = monitor.current_generations();
         post_count.fetch_add(1, Ordering::Relaxed);
         monitor.post(t1);
     }

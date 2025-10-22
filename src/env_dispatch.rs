@@ -148,8 +148,8 @@ fn handle_timezone(var_name: &wstr, vars: &EnvStack) {
         unsetenv_lock(var_name);
     }
 
-    extern "C" {
-        fn tzset();
+    unsafe extern "C" {
+        unsafe fn tzset();
     }
 
     unsafe {

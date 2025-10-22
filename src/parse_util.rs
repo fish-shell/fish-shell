@@ -1368,7 +1368,7 @@ macro_rules! append_syntax_error_formatted {
         $errors:expr, $source_location:expr,
         $source_length:expr, $text:expr
     ) => {{
-        if let Some(ref mut errors) = $errors {
+        if let Some(ref mut errors) = $errors.as_mut() {
             let mut error = ParseError::default();
             error.source_start = $source_location;
             error.source_length = $source_length;
@@ -1441,7 +1441,7 @@ pub fn parse_util_detect_errors_in_argument(
                     && !valid_var_name_char(next_char)
                 {
                     err = ParserTestErrorBits::ERROR;
-                    if let Some(ref mut out_errors) = out_errors {
+                    if let Some(out_errors) = out_errors {
                         let mut first_dollar = idx;
                         while first_dollar > 0
                             && [VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE]
@@ -1504,7 +1504,7 @@ pub fn parse_util_detect_errors_in_argument(
                 // within the string, and the offset of the node.
                 let error_offset = parens.start() + 1 + source_start;
                 parse_error_offset_source_start(&mut subst_errors, error_offset);
-                if let Some(ref mut out_errors) = out_errors {
+                if let Some(out_errors) = out_errors {
                     out_errors.extend(subst_errors);
                 }
 
@@ -1817,7 +1817,7 @@ fn detect_errors_in_decorated_statement(
             }
         }
 
-        if let Some(ref mut parse_errors) = parse_errors {
+        if let Some(parse_errors) = parse_errors {
             // The expansion errors here go from the *command* onwards,
             // so we need to offset them by the *command* offset,
             // excluding the decoration.

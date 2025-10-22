@@ -8,27 +8,27 @@ use crate::builtins::shared::{
     STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD,
 };
 use crate::common::{
-    EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, EscapeFlags, EscapeStringStyle, UnescapeFlags,
-    UnescapeStringStyle, char_offset, charptr2wcstring, escape, escape_string,
-    escape_string_for_double_quotes, unescape_string, valid_var_name_char, wcs2zstring,
+    char_offset, charptr2wcstring, escape, escape_string, escape_string_for_double_quotes,
+    unescape_string, valid_var_name_char, wcs2zstring, EscapeFlags, EscapeStringStyle,
+    UnescapeFlags, UnescapeStringStyle, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
 use crate::exec::exec_subshell_for_expand;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
-use crate::history::{History, history_session_id};
+use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::history::{history_session_id, History};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseError, ParseErrorCode, ParseErrorList, SOURCE_LOCATION_UNKNOWN};
 use crate::parse_util::{
-    MaybeParentheses, parse_util_expand_variable_error, parse_util_locate_cmdsubst_range,
+    parse_util_expand_variable_error, parse_util_locate_cmdsubst_range, MaybeParentheses,
 };
 use crate::path::path_apply_working_directory;
 use crate::util::wcsfilecmp_glob;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{join_strings, trim};
-use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, WildcardResult};
 use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
-use crate::wutil::{Options, normalize_path, wcstoi_partial};
+use crate::wildcard::{WildcardResult, ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
+use crate::wutil::{normalize_path, wcstoi_partial, Options};
 use bitflags::bitflags;
 use std::mem::MaybeUninit;
 
@@ -356,7 +356,7 @@ macro_rules! append_syntax_error {
         $errors:expr, $source_start:expr,
         $fmt:expr $(, $arg:expr )* $(,)?
     ) => {
-        if let Some(ref mut errors) = $errors {
+        if let Some(ref mut errors) = $errors.as_mut() {
             let mut error = ParseError::default();
             error.source_start = $source_start;
             error.source_length = 0;
@@ -386,7 +386,7 @@ macro_rules! append_cmdsub_error_formatted {
         $errors:expr, $source_start:expr, $source_end:expr,
         $text:expr $(,)?
     ) => {
-        if let Some(ref mut errors) = $errors {
+        if let Some(ref mut errors) = $errors.as_mut() {
             let mut error = ParseError::default();
             error.source_start = $source_start;
             error.source_length = $source_end - $source_start + 1;
@@ -404,7 +404,7 @@ fn append_overflow_error(
     errors: &mut Option<&mut ParseErrorList>,
     source_start: Option<usize>,
 ) -> ExpandResult {
-    if let Some(ref mut errors) = errors {
+    if let Some(errors) = errors {
         errors.push(ParseError {
             source_start: source_start.unwrap_or(SOURCE_LOCATION_UNKNOWN),
             source_length: 0,
@@ -623,7 +623,7 @@ fn expand_variables(
 
     // It's an error if the name is empty.
     if var_name.is_empty() {
-        if let Some(ref mut errors) = errors {
+        if let Some(errors) = errors {
             parse_util_expand_variable_error(
                 &instr,
                 0, /* global_token_pos */

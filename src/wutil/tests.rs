@@ -72,7 +72,7 @@ fn test_wwrite_to_fd() {
         assert!(fd.is_valid());
         let mut input = WString::new();
         for _i in 0..size {
-            input.push(rng.gen());
+            input.push(rng.r#gen());
         }
 
         let amt = wwrite_to_fd(&input, fd.fd()).unwrap();

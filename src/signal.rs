@@ -310,13 +310,13 @@ pub fn signal_unblock_all() {
 /// A Sigchecker can be used to check if a SIGINT (or SIGHUP) has been delivered.
 pub struct SigChecker {
     topic: Topic,
-    gen: Generation,
+    r#gen: Generation,
 }
 
 impl SigChecker {
     /// Create a new checker for the given topic.
     pub fn new(topic: Topic) -> Self {
-        let mut res = SigChecker { topic, gen: 0 };
+        let mut res = SigChecker { topic, r#gen: 0 };
         // Call check() to update our generation.
         res.check();
         res
@@ -331,9 +331,9 @@ impl SigChecker {
     /// was created.
     pub fn check(&mut self) -> bool {
         let tm = topic_monitor_principal();
-        let gen = tm.generation_for_topic(self.topic);
-        let changed = self.gen != gen;
-        self.gen = gen;
+        let r#gen = tm.generation_for_topic(self.topic);
+        let changed = self.r#gen != r#gen;
+        self.r#gen = r#gen;
         changed
     }
 
@@ -341,7 +341,7 @@ impl SigChecker {
     pub fn wait(&self) {
         let tm = topic_monitor_principal();
         let gens = GenerationsList::invalid();
-        gens.set(self.topic, self.gen);
+        gens.set(self.topic, self.r#gen);
         tm.check(&gens, true /* wait */);
     }
 }

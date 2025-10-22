@@ -5,7 +5,7 @@ members = ["crates/*"]
 [workspace.package]
 # To build revisions that use Corrosion (those before 2024-01), use CMake 3.19, Rustc 1.78 and Rustup 1.27.
 rust-version = "1.85"
-edition = "2021"
+edition = "2024"
 repository = "https://github.com/fish-shell/fish-shell"
 
 [workspace.dependencies]

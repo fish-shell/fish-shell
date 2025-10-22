@@ -10,18 +10,20 @@ const CHAR_MAX: libc::c_char = libc::c_char::MAX;
 
 /// Return the first character of a C string, or None if null, empty, has a length more than 1, or negative.
 unsafe fn first_char(s: *const libc::c_char) -> Option<char> {
-    #[allow(unused_comparisons, clippy::absurd_extreme_comparisons)]
-    if !s.is_null() && *s > 0 && *s <= 127 && *s.offset(1) == 0 {
-        Some((*s as u8) as char)
-    } else {
-        None
+    unsafe {
+        #[allow(unused_comparisons, clippy::absurd_extreme_comparisons)]
+        if !s.is_null() && *s > 0 && *s <= 127 && *s.offset(1) == 0 {
+            Some((*s as u8) as char)
+        } else {
+            None
+        }
     }
 }
 
 /// Convert a libc lconv to a Locale.
 unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
-    let decimal_point = first_char(lconv.decimal_point).unwrap_or('.');
-    let thousands_sep = first_char(lconv.thousands_sep);
+    let decimal_point = unsafe { first_char(lconv.decimal_point).unwrap_or('.') };
+    let thousands_sep = unsafe { first_char(lconv.thousands_sep) };
     let empty = &[0 as libc::c_char];
 
     // Up to 4 groups.
@@ -35,7 +37,7 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
     let mut last_group: u8 = 0;
     let mut group_repeat = false;
     for group in grouping.iter_mut() {
-        let gc = *group_cursor;
+        let gc = unsafe { *group_cursor };
         if gc == 0 {
             // Preserve last_group, do not advance cursor.
             group_repeat = true;
@@ -46,7 +48,7 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
         } else {
             // Record last group, advance cursor.
             last_group = gc as u8;
-            group_cursor = group_cursor.offset(1);
+            group_cursor = unsafe { group_cursor.offset(1) };
         }
         *group = last_group;
     }
@@ -61,8 +63,8 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
 /// Read the numeric locale, or None on any failure.
 #[cfg(localeconv_l)]
 unsafe fn read_locale() -> Option<Locale> {
-    extern "C" {
-        fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
+    unsafe extern "C" {
+        unsafe fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
     }
 
     const empty: [libc::c_char; 1] = [0];
@@ -70,19 +72,20 @@ unsafe fn read_locale() -> Option<Locale> {
     // We create a new locale (pass 0 locale_t base)
     // and pass no "locale", so everything else is taken from the environment.
     // This is fine because we're only using this for numbers.
-    let loc = libc::newlocale(libc::LC_NUMERIC_MASK, empty.as_ptr(), 0 as libc::locale_t);
+    let loc =
+        unsafe { libc::newlocale(libc::LC_NUMERIC_MASK, empty.as_ptr(), 0 as libc::locale_t) };
     if loc.is_null() {
         return None;
     }
 
-    let lconv = localeconv_l(loc);
+    let lconv = unsafe { localeconv_l(loc) };
     let result = if lconv.is_null() {
         None
     } else {
-        Some(lconv_to_locale(&*lconv))
+        Some(unsafe { lconv_to_locale(&*lconv) })
     };
 
-    libc::freelocale(loc);
+    unsafe { libc::freelocale(loc) };
     result
 }
 
@@ -94,16 +97,20 @@ unsafe fn read_locale() -> Option<Locale> {
     const empty: [libc::c_char; 1] = [0];
     const c_loc_str: [libc::c_char; 2] = [b'C' as libc::c_char, 0];
 
-    libc::setlocale(libc::LC_NUMERIC, empty.as_ptr());
+    unsafe {
+        libc::setlocale(libc::LC_NUMERIC, empty.as_ptr());
+    }
 
-    let lconv = libc::localeconv();
+    let lconv = unsafe { libc::localeconv() };
     let result = if lconv.is_null() {
         None
     } else {
-        Some(lconv_to_locale(&*lconv))
+        Some(unsafe { lconv_to_locale(&*lconv) })
     };
     // Note we *always* use a C-locale for numbers, because we always want "." except for in printf.
-    libc::setlocale(libc::LC_NUMERIC, c_loc_str.as_ptr());
+    unsafe {
+        libc::setlocale(libc::LC_NUMERIC, c_loc_str.as_ptr());
+    }
     result
 }
 

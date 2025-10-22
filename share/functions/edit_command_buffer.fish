@@ -44,12 +44,14 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
                     break
                 end
                 set cursor_from_editor (__fish_mktemp_relative fish-edit_command_buffer)
+                or return
                 set -a editor +$line "+norm! $col|" $f \
                     '+au VimLeave * ++once call writefile([printf("%s %s %s", shellescape(bufname()), line("."), col("."))], "'$cursor_from_editor'")'
             case emacs emacsclient gedit
                 set -a editor +$line:$col $f
             case kak
                 set cursor_from_editor (__fish_mktemp_relative fish-edit_command_buffer)
+                or return
                 set -a editor +$line:$col $f -e "
                         hook -always -once global ClientClose %val{client} %{
                             echo -to-file $cursor_from_editor -quoting shell \

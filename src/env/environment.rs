@@ -127,8 +127,7 @@ pub struct EnvDyn {
 }
 
 impl EnvDyn {
-    // Exposed for testing.
-    pub fn new(inner: Box<dyn Environment + Send + Sync>) -> Self {
+    fn new(inner: Box<dyn Environment + Send + Sync>) -> Self {
         Self { inner }
     }
 }
@@ -840,5 +839,97 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
                 ));
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{EnvMode, EnvStack, Environment};
+    use crate::tests::prelude::*;
+    use crate::wchar::prelude::*;
+
+    #[test]
+    #[serial]
+    fn test_env_snapshot() {
+        let _cleanup = test_init();
+        std::fs::create_dir_all("test/fish_env_snapshot_test/").unwrap();
+        let parser = TestParser::new();
+        let vars = parser.vars();
+        parser.pushd("test/fish_env_snapshot_test/");
+        vars.push(true);
+        let before_pwd = vars.get(L!("PWD")).unwrap().as_string();
+        vars.set_one(
+            L!("test_env_snapshot_var"),
+            EnvMode::default(),
+            L!("before").to_owned(),
+        );
+        let snapshot = vars.snapshot();
+        vars.set_one(L!("PWD"), EnvMode::default(), L!("/newdir").to_owned());
+        vars.set_one(
+            L!("test_env_snapshot_var"),
+            EnvMode::default(),
+            L!("after").to_owned(),
+        );
+        vars.set_one(
+            L!("test_env_snapshot_var_2"),
+            EnvMode::default(),
+            L!("after").to_owned(),
+        );
+
+        // vars should be unaffected by the snapshot
+        assert_eq!(vars.get(L!("PWD")).unwrap().as_string(), L!("/newdir"));
+        assert_eq!(
+            vars.get(L!("test_env_snapshot_var")).unwrap().as_string(),
+            L!("after")
+        );
+        assert_eq!(
+            vars.get(L!("test_env_snapshot_var_2")).unwrap().as_string(),
+            L!("after")
+        );
+
+        // snapshot should have old values of vars
+        assert_eq!(snapshot.get(L!("PWD")).unwrap().as_string(), before_pwd);
+        assert_eq!(
+            snapshot
+                .get(L!("test_env_snapshot_var"))
+                .unwrap()
+                .as_string(),
+            L!("before")
+        );
+        assert_eq!(snapshot.get(L!("test_env_snapshot_var_2")), None);
+
+        // snapshots see global var changes except for perproc like PWD
+        vars.set_one(
+            L!("test_env_snapshot_var_3"),
+            EnvMode::GLOBAL,
+            L!("reallyglobal").to_owned(),
+        );
+        assert_eq!(
+            vars.get(L!("test_env_snapshot_var_3")).unwrap().as_string(),
+            L!("reallyglobal")
+        );
+        assert_eq!(
+            snapshot
+                .get(L!("test_env_snapshot_var_3"))
+                .unwrap()
+                .as_string(),
+            L!("reallyglobal")
+        );
+
+        vars.pop();
+        parser.popd();
+    }
+
+    // Can't push/pop from globals.
+    #[test]
+    #[should_panic]
+    fn test_no_global_push() {
+        EnvStack::globals().push(true);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_no_global_pop() {
+        EnvStack::globals().pop();
     }
 }

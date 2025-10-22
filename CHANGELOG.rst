@@ -36,7 +36,7 @@ This release fixes the following regressions identified in 4.1.0:
 
 - Crash on invalid :doc:`function <cmds/function>` command (:issue:`11912`).
 - Fixed the fish ``man`` function for the commands ``!`` ``.`` ``:`` ``[`` (:issue:`11955`).
-- Fixed build on Illumos (:issue:`11982`).
+- Fixed some build issues on Illumos (:issue:`11982`).
 
 as well as the following regressions identified in 4.0.0:
 

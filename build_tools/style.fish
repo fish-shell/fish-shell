@@ -100,7 +100,7 @@ if not cargo fmt --version >/dev/null
 end
 echo === Running "$green"rustfmt"$normal"
 if set -l -q _flag_check
-    if set -l -q _flag_all
+    if test $all = yes
         if not cargo fmt --all --check
             echo $red"Rust files are not formatted correctly."$normal
             exit 1
@@ -114,7 +114,7 @@ if set -l -q _flag_check
         end
     end
 else
-    if set -l -q _flag_all
+    if test $all = yes
         cargo fmt --all
     else
         if set -q rust_files[1]

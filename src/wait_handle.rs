@@ -121,42 +121,49 @@ impl WaitHandleStore {
     }
 }
 
-#[test]
-fn test_wait_handles() {
-    let limit: usize = 4;
-    let mut whs = WaitHandleStore::new_with_capacity(limit);
-    assert_eq!(whs.size(), 0);
+#[cfg(test)]
+mod tests {
+    use super::{WaitHandle, WaitHandleStore};
+    use crate::proc::Pid;
+    use crate::wchar::prelude::*;
 
-    fn p(pid: i32) -> Pid {
-        Pid::new(pid)
+    #[test]
+    fn test_wait_handles() {
+        let limit: usize = 4;
+        let mut whs = WaitHandleStore::new_with_capacity(limit);
+        assert_eq!(whs.size(), 0);
+
+        fn p(pid: i32) -> Pid {
+            Pid::new(pid)
+        }
+
+        assert!(whs.get_by_pid(p(5)).is_none());
+
+        // Duplicate pids drop oldest.
+        whs.add(WaitHandle::new(p(5), 0, L!("first").to_owned()));
+        whs.add(WaitHandle::new(p(5), 0, L!("second").to_owned()));
+        assert_eq!(whs.size(), 1);
+        assert_eq!(whs.get_by_pid(p(5)).unwrap().base_name, "second");
+
+        whs.remove_by_pid(p(123));
+        assert_eq!(whs.size(), 1);
+        whs.remove_by_pid(p(5));
+        assert_eq!(whs.size(), 0);
+
+        // Test evicting oldest.
+        whs.add(WaitHandle::new(p(1), 0, L!("1").to_owned()));
+        whs.add(WaitHandle::new(p(2), 0, L!("2").to_owned()));
+        whs.add(WaitHandle::new(p(3), 0, L!("3").to_owned()));
+        whs.add(WaitHandle::new(p(4), 0, L!("4").to_owned()));
+        whs.add(WaitHandle::new(p(5), 0, L!("5").to_owned()));
+        assert_eq!(whs.size(), 4);
+
+        let entries = whs.get_list();
+        let mut iter = entries.iter();
+        assert_eq!(iter.next().unwrap().base_name, "5");
+        assert_eq!(iter.next().unwrap().base_name, "4");
+        assert_eq!(iter.next().unwrap().base_name, "3");
+        assert_eq!(iter.next().unwrap().base_name, "2");
+        assert!(iter.next().is_none());
     }
-
-    assert!(whs.get_by_pid(p(5)).is_none());
-
-    // Duplicate pids drop oldest.
-    whs.add(WaitHandle::new(p(5), 0, L!("first").to_owned()));
-    whs.add(WaitHandle::new(p(5), 0, L!("second").to_owned()));
-    assert_eq!(whs.size(), 1);
-    assert_eq!(whs.get_by_pid(p(5)).unwrap().base_name, "second");
-
-    whs.remove_by_pid(p(123));
-    assert_eq!(whs.size(), 1);
-    whs.remove_by_pid(p(5));
-    assert_eq!(whs.size(), 0);
-
-    // Test evicting oldest.
-    whs.add(WaitHandle::new(p(1), 0, L!("1").to_owned()));
-    whs.add(WaitHandle::new(p(2), 0, L!("2").to_owned()));
-    whs.add(WaitHandle::new(p(3), 0, L!("3").to_owned()));
-    whs.add(WaitHandle::new(p(4), 0, L!("4").to_owned()));
-    whs.add(WaitHandle::new(p(5), 0, L!("5").to_owned()));
-    assert_eq!(whs.size(), 4);
-
-    let entries = whs.get_list();
-    let mut iter = entries.iter();
-    assert_eq!(iter.next().unwrap().base_name, "5");
-    assert_eq!(iter.next().unwrap().base_name, "4");
-    assert_eq!(iter.next().unwrap().base_name, "3");
-    assert_eq!(iter.next().unwrap().base_name, "2");
-    assert!(iter.next().is_none());
 }

@@ -1,8 +1,6 @@
 use crate::common::wcs2zstring;
 use crate::flog::FLOG;
 use crate::signal::signal_check_cancel;
-#[cfg(test)]
-use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
 use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
@@ -337,25 +335,33 @@ pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
     Ok(())
 }
 
-#[test]
-#[serial]
-fn test_pipes() {
-    let _cleanup = test_init();
-    // Here we just test that each pipe has CLOEXEC set and is in the high range.
-    // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
-    let mut pipes = vec![];
-    for _i in 0..10 {
-        if let Ok(pipe) = make_autoclose_pipes() {
-            pipes.push(pipe);
+#[cfg(test)]
+mod tests {
+    use super::{FIRST_HIGH_FD, make_autoclose_pipes};
+    use crate::tests::prelude::*;
+    use libc::{F_GETFD, FD_CLOEXEC};
+    use std::os::fd::AsRawFd;
+
+    #[test]
+    #[serial]
+    fn test_pipes() {
+        let _cleanup = test_init();
+        // Here we just test that each pipe has CLOEXEC set and is in the high range.
+        // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
+        let mut pipes = vec![];
+        for _i in 0..10 {
+            if let Ok(pipe) = make_autoclose_pipes() {
+                pipes.push(pipe);
+            }
         }
-    }
-    for pipe in pipes {
-        for fd in [&pipe.read, &pipe.write] {
-            let fd = fd.as_raw_fd();
-            assert!(fd >= FIRST_HIGH_FD);
-            let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };
-            assert!(flags >= 0);
-            assert!(flags & FD_CLOEXEC != 0);
+        for pipe in pipes {
+            for fd in [&pipe.read, &pipe.write] {
+                let fd = fd.as_raw_fd();
+                assert!(fd >= FIRST_HIGH_FD);
+                let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };
+                assert!(flags >= 0);
+                assert!(flags & FD_CLOEXEC != 0);
+            }
         }
     }
 }

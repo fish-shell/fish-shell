@@ -289,3 +289,67 @@ pub fn is_read_only(name: &wstr) -> bool {
         false
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{EnvMode, EnvVar, EnvVarFlags};
+    use crate::env::environment::{EnvStack, Environment};
+    use crate::tests::prelude::*;
+    use crate::wchar::prelude::*;
+    use std::{
+        mem::MaybeUninit,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    /// Helper for test_timezone_env_vars().
+    fn return_timezone_hour(tstamp: SystemTime, timezone: &wstr) -> libc::c_int {
+        let vars = EnvStack::globals().create_child(true /* dispatches_var_changes */);
+
+        vars.set_one(L!("TZ"), EnvMode::EXPORT, timezone.to_owned());
+
+        let _var = vars.get(L!("TZ"));
+
+        #[allow(deprecated)]
+        let tstamp: libc::time_t = tstamp
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            .try_into()
+            .unwrap();
+        let mut local_time = MaybeUninit::uninit();
+        unsafe { libc::localtime_r(&tstamp, local_time.as_mut_ptr()) };
+        let local_time = unsafe { local_time.assume_init() };
+        local_time.tm_hour
+    }
+
+    /// Verify that setting TZ calls tzset() in the current shell process.
+    fn test_timezone_env_vars() {
+        // Confirm changing the timezone affects fish's idea of the local time.
+        let tstamp = SystemTime::now();
+
+        let first_tstamp = return_timezone_hour(tstamp, L!("UTC-1"));
+        let second_tstamp = return_timezone_hour(tstamp, L!("UTC-2"));
+        let delta = second_tstamp - first_tstamp;
+        assert!(delta == 1 || delta == -23);
+    }
+
+    // Verify that setting special env vars have the expected effect on the current shell process.
+    #[test]
+    #[serial]
+    fn test_env_vars() {
+        let _cleanup = test_init();
+        test_timezone_env_vars();
+        // TODO: Add tests for the locale vars.
+
+        let v1 = EnvVar::new(L!("abc").to_owned(), EnvVarFlags::EXPORT);
+        let v2 = EnvVar::new_vec(vec![L!("abc").to_owned()], EnvVarFlags::EXPORT);
+        let v3 = EnvVar::new_vec(vec![L!("abc").to_owned()], EnvVarFlags::empty());
+        let v4 = EnvVar::new_vec(
+            vec![L!("abc").to_owned(), L!("def").to_owned()],
+            EnvVarFlags::EXPORT,
+        );
+        assert_eq!(v1, v2);
+        assert_ne!(v1, v3);
+        assert_ne!(v1, v4);
+    }
+}

@@ -67,27 +67,6 @@ macro_rules! impl_to_wstring_unsigned {
 
 impl_to_wstring_unsigned!(u8, u16, u32, u64, u128, usize);
 
-#[test]
-fn test_to_wstring() {
-    assert_eq!(0_u64.to_wstring(), "0");
-    assert_eq!(1_u64.to_wstring(), "1");
-    assert_eq!(0_i64.to_wstring(), "0");
-    assert_eq!(1_i64.to_wstring(), "1");
-    assert_eq!((-1_i64).to_wstring(), "-1");
-    assert_eq!((-5_i64).to_wstring(), "-5");
-    let mut val: i64 = 1;
-    loop {
-        assert_eq!(val.to_wstring(), val.to_string());
-        let Some(next) = val.checked_mul(-3) else {
-            break;
-        };
-        val = next;
-    }
-    assert_eq!(u64::MAX.to_wstring(), "18446744073709551615");
-    assert_eq!(i64::MIN.to_wstring(), "-9223372036854775808");
-    assert_eq!(i64::MAX.to_wstring(), "9223372036854775807");
-}
-
 /// A trait for a thing that can produce a double-ended, cloneable
 /// iterator of chars.
 /// Common implementations include char, &str, &wstr, &WString.
@@ -325,7 +304,28 @@ impl WExt for wstr {
 mod tests {
     use super::*;
     use crate::wchar::L;
-    /// Write some tests.
+
+    #[test]
+    fn test_to_wstring() {
+        assert_eq!(0_u64.to_wstring(), "0");
+        assert_eq!(1_u64.to_wstring(), "1");
+        assert_eq!(0_i64.to_wstring(), "0");
+        assert_eq!(1_i64.to_wstring(), "1");
+        assert_eq!((-1_i64).to_wstring(), "-1");
+        assert_eq!((-5_i64).to_wstring(), "-5");
+        let mut val: i64 = 1;
+        loop {
+            assert_eq!(val.to_wstring(), val.to_string());
+            let Some(next) = val.checked_mul(-3) else {
+                break;
+            };
+            val = next;
+        }
+        assert_eq!(u64::MAX.to_wstring(), "18446744073709551615");
+        assert_eq!(i64::MIN.to_wstring(), "-9223372036854775808");
+        assert_eq!(i64::MAX.to_wstring(), "9223372036854775807");
+    }
+
     #[test]
     fn test_find_char() {
         assert_eq!(Some(0), L!("abc").find_char('a'));

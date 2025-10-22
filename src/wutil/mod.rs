@@ -5,8 +5,6 @@ pub mod gettext;
 mod hex_float;
 #[macro_use]
 pub mod printf;
-#[cfg(test)]
-mod tests;
 pub mod wcstod;
 pub mod wcstoi;
 
@@ -242,36 +240,6 @@ pub fn normalize_path(path: &wstr, allow_leading_double_slashes: bool) -> WStrin
         result.push('.');
     }
     result
-}
-
-#[test]
-fn test_normalize_path() {
-    fn norm_path(path: &wstr) -> WString {
-        normalize_path(path, true)
-    }
-    assert_eq!(norm_path(L!("")), ".");
-    assert_eq!(norm_path(L!("..")), "..");
-    assert_eq!(norm_path(L!("./")), ".");
-    assert_eq!(norm_path(L!("./.")), ".");
-    assert_eq!(norm_path(L!("/")), "/");
-    assert_eq!(norm_path(L!("//")), "//");
-    assert_eq!(norm_path(L!("///")), "/");
-    assert_eq!(norm_path(L!("////")), "/");
-    assert_eq!(norm_path(L!("/.///")), "/");
-    assert_eq!(norm_path(L!(".//")), ".");
-    assert_eq!(norm_path(L!("/.//../")), "/");
-    assert_eq!(norm_path(L!("////abc")), "/abc");
-    assert_eq!(norm_path(L!("/abc")), "/abc");
-    assert_eq!(norm_path(L!("/abc/")), "/abc");
-    assert_eq!(norm_path(L!("/abc/..def/")), "/abc/..def");
-    assert_eq!(norm_path(L!("//abc/../def/")), "//def");
-    assert_eq!(norm_path(L!("abc/../abc/../abc/../abc")), "abc");
-    assert_eq!(norm_path(L!("../../")), "../..");
-    assert_eq!(norm_path(L!("foo/./bar")), "foo/bar");
-    assert_eq!(norm_path(L!("foo/../")), ".");
-    assert_eq!(norm_path(L!("foo/../foo")), "foo");
-    assert_eq!(norm_path(L!("foo/../foo/")), "foo");
-    assert_eq!(norm_path(L!("foo/././bar/.././baz")), "foo/baz");
 }
 
 /// Given an input path `path` and a working directory `wd`, do a "normalizing join" in a way
@@ -603,12 +571,147 @@ pub fn wstr_offset_in(cursor: &wstr, base: &wstr) -> usize {
     offset as usize
 }
 
-#[test]
-fn test_wstr_offset_in() {
-    use crate::wchar::L;
-    let base = L!("hello world");
-    assert_eq!(wstr_offset_in(&base[6..], base), 6);
-    assert_eq!(wstr_offset_in(&base[0..], base), 0);
-    assert_eq!(wstr_offset_in(&base[6..], &base[6..]), 0);
-    assert_eq!(wstr_offset_in(&base[base.len()..], base), base.len());
+#[cfg(test)]
+mod tests {
+    use super::{normalize_path, wbasename, wdirname, wstr_offset_in, wwrite_to_fd};
+    use crate::common::wcs2bytes;
+    use crate::tests::prelude::*;
+    use crate::util::get_rng;
+    use crate::wchar::prelude::*;
+    use crate::{fds::AutoCloseFd, fs::create_temporary_file};
+    use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET, c_void};
+    use rand::Rng;
+    use std::ffi::CString;
+    use std::ptr;
+
+    #[test]
+    fn test_normalize_path() {
+        fn norm_path(path: &wstr) -> WString {
+            normalize_path(path, true)
+        }
+        assert_eq!(norm_path(L!("")), ".");
+        assert_eq!(norm_path(L!("..")), "..");
+        assert_eq!(norm_path(L!("./")), ".");
+        assert_eq!(norm_path(L!("./.")), ".");
+        assert_eq!(norm_path(L!("/")), "/");
+        assert_eq!(norm_path(L!("//")), "//");
+        assert_eq!(norm_path(L!("///")), "/");
+        assert_eq!(norm_path(L!("////")), "/");
+        assert_eq!(norm_path(L!("/.///")), "/");
+        assert_eq!(norm_path(L!(".//")), ".");
+        assert_eq!(norm_path(L!("/.//../")), "/");
+        assert_eq!(norm_path(L!("////abc")), "/abc");
+        assert_eq!(norm_path(L!("/abc")), "/abc");
+        assert_eq!(norm_path(L!("/abc/")), "/abc");
+        assert_eq!(norm_path(L!("/abc/..def/")), "/abc/..def");
+        assert_eq!(norm_path(L!("//abc/../def/")), "//def");
+        assert_eq!(norm_path(L!("abc/../abc/../abc/../abc")), "abc");
+        assert_eq!(norm_path(L!("../../")), "../..");
+        assert_eq!(norm_path(L!("foo/./bar")), "foo/bar");
+        assert_eq!(norm_path(L!("foo/../")), ".");
+        assert_eq!(norm_path(L!("foo/../foo")), "foo");
+        assert_eq!(norm_path(L!("foo/../foo/")), "foo");
+        assert_eq!(norm_path(L!("foo/././bar/.././baz")), "foo/baz");
+    }
+
+    #[test]
+    fn test_wdirname_wbasename() {
+        // path, dir, base
+        struct Test(&'static wstr, &'static wstr, &'static wstr);
+        const testcases: &[Test] = &[
+            Test(L!(""), L!("."), L!(".")),
+            Test(L!("foo//"), L!("."), L!("foo")),
+            Test(L!("foo//////"), L!("."), L!("foo")),
+            Test(L!("/////foo"), L!("/"), L!("foo")),
+            Test(L!("//foo/////bar"), L!("//foo"), L!("bar")),
+            Test(L!("foo/////bar"), L!("foo"), L!("bar")),
+            // Examples given in XPG4.2.
+            Test(L!("/usr/lib"), L!("/usr"), L!("lib")),
+            Test(L!("usr"), L!("."), L!("usr")),
+            Test(L!("/"), L!("/"), L!("/")),
+            Test(L!("."), L!("."), L!(".")),
+            Test(L!(".."), L!("."), L!("..")),
+        ];
+
+        for tc in testcases {
+            let Test(path, tc_dir, tc_base) = *tc;
+            let dir = wdirname(path);
+            assert_eq!(
+                dir, tc_dir,
+                "\npath: {:?}, dir: {:?}, tc.dir: {:?}",
+                path, dir, tc_dir
+            );
+
+            let base = wbasename(path);
+            assert_eq!(
+                base, tc_base,
+                "\npath: {:?}, base: {:?}, tc.base: {:?}",
+                path, base, tc_base
+            );
+        }
+
+        // Ensure strings which greatly exceed PATH_MAX still work (#7837).
+        const PATH_MAX: usize = libc::PATH_MAX as usize;
+        let mut longpath = WString::new();
+        longpath.reserve(PATH_MAX * 2 + 10);
+        while longpath.char_count() <= PATH_MAX * 2 {
+            longpath.push_str("/overlong");
+        }
+        let last_slash = longpath.chars().rposition(|c| c == '/').unwrap();
+        let longpath_dir = &longpath[..last_slash];
+        assert_eq!(wdirname(&longpath), longpath_dir);
+        assert_eq!(wbasename(&longpath), L!("overlong"));
+    }
+
+    #[test]
+    #[serial]
+    fn test_wwrite_to_fd() {
+        let _cleanup = test_init();
+        let (_file, filename) = create_temporary_file(L!("/tmp/fish_test_wwrite.XXXXXX")).unwrap();
+        let filename = CString::new(filename.to_string()).unwrap();
+        let mut rng = get_rng();
+        let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];
+        for &size in &sizes {
+            let fd = AutoCloseFd::new(unsafe {
+                libc::open(filename.as_ptr(), O_RDWR | O_TRUNC | O_CREAT, 0o666)
+            });
+            assert!(fd.is_valid());
+            let mut input = WString::new();
+            for _i in 0..size {
+                input.push(rng.r#gen());
+            }
+
+            let amt = wwrite_to_fd(&input, fd.fd()).unwrap();
+            let narrow = wcs2bytes(&input);
+            assert_eq!(amt, narrow.len());
+
+            assert!(unsafe { libc::lseek(fd.fd(), 0, SEEK_SET) } >= 0);
+
+            let mut contents = vec![0u8; narrow.len()];
+            let read_amt = unsafe {
+                libc::read(
+                    fd.fd(),
+                    if size == 0 {
+                        ptr::null_mut()
+                    } else {
+                        (&mut contents[0]) as *mut u8 as *mut c_void
+                    },
+                    narrow.len(),
+                )
+            };
+            assert!(usize::try_from(read_amt).unwrap() == narrow.len());
+            assert_eq!(&contents, &narrow);
+        }
+        unsafe { libc::remove(filename.as_ptr()) };
+    }
+
+    #[test]
+    fn test_wstr_offset_in() {
+        use crate::wchar::L;
+        let base = L!("hello world");
+        assert_eq!(wstr_offset_in(&base[6..], base), 6);
+        assert_eq!(wstr_offset_in(&base[0..], base), 0);
+        assert_eq!(wstr_offset_in(&base[6..], &base[6..]), 0);
+        assert_eq!(wstr_offset_in(&base[base.len()..], base), base.len());
+    }
 }

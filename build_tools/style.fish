@@ -58,6 +58,11 @@ set -l green (set_color green)
 set -l yellow (set_color yellow)
 set -l normal (set_color normal)
 
+function die -V red -V normal
+    echo $red$argv[1]$normal
+    exit 1
+end
+
 if set -q fish_files[1]
     if not type -q fish_indent
         echo
@@ -66,10 +71,8 @@ if set -q fish_files[1]
     end
     echo === Running "$green"fish_indent"$normal"
     if set -l -q _flag_check
-        if not fish_indent --check -- $fish_files
-            echo $red"Fish files are not formatted correctly."$normal
-            exit 1
-        end
+        fish_indent --check -- $fish_files
+        or die "Fish files are not formatted correctly."
     else
         fish_indent -w -- $fish_files
     end
@@ -83,10 +86,8 @@ if set -q python_files[1]
     end
     echo === Running "$green"ruff format"$normal"
     if set -l -q _flag_check
-        if not ruff format --check $python_files
-            echo $red"Python files are not formatted correctly."$normal
-            exit 1
-        end
+        ruff format --check $python_files
+        or die "Python files are not formatted correctly."
     else
         ruff format $python_files
     end
@@ -101,16 +102,12 @@ end
 echo === Running "$green"rustfmt"$normal"
 if set -l -q _flag_check
     if test $all = yes
-        if not cargo fmt --all --check
-            echo $red"Rust files are not formatted correctly."$normal
-            exit 1
-        end
+        cargo fmt --all --check
+        or die "Rust files are not formatted correctly."
     else
         if set -q rust_files[1]
-            if not rustfmt --check --files-with-diff $rust_files
-                echo $red"Rust files are not formatted correctly."
-                exit 1
-            end
+            rustfmt --check --files-with-diff $rust_files
+            or die "Rust files are not formatted correctly."
         end
     end
 else

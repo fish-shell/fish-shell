@@ -7,8 +7,6 @@ use crate::common::{ScopeGuard, escape};
 use crate::env::Environment;
 use crate::io::IoChain;
 use crate::parser::Parser;
-#[cfg(test)]
-use crate::tests::prelude::*;
 use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_path};
@@ -209,7 +207,6 @@ impl Autoload {
     }
 
     /// Invalidate any underlying cache.
-    /// This is exposed for testing.
     #[cfg(test)]
     fn invalidate_cache(&mut self) {
         self.cache = Box::new(AutoloadFileCache::with_dirs(self.cache.dirs().to_owned()));
@@ -484,15 +481,21 @@ impl AutoloadFileCache {
     }
 }
 
-#[test]
-#[serial]
-fn test_autoload() {
-    let _cleanup = test_init();
-    use crate::common::{charptr2wcstring, wcs2zstring};
-    use crate::fds::wopen_cloexec;
-    use nix::fcntl::OFlag;
+#[cfg(test)]
+mod tests {
+    use super::{Autoload, AutoloadResult};
+    use crate::tests::prelude::*;
+    use crate::wchar::prelude::*;
 
-    macro_rules! run {
+    #[test]
+    #[serial]
+    fn test_autoload() {
+        let _cleanup = test_init();
+        use crate::common::{charptr2wcstring, wcs2zstring};
+        use crate::fds::wopen_cloexec;
+        use nix::fcntl::OFlag;
+
+        macro_rules! run {
         ( $fmt:expr $(, $arg:expr )* $(,)? ) => {
              let cmd = wcs2zstring(&sprintf!($fmt $(, $arg)*));
              let status = unsafe { libc::system(cmd.as_ptr()) };
@@ -500,102 +503,103 @@ fn test_autoload() {
         };
     }
 
-    fn touch_file(path: &wstr) {
-        use nix::sys::stat::Mode;
-        use std::io::Write;
+        fn touch_file(path: &wstr) {
+            use nix::sys::stat::Mode;
+            use std::io::Write;
 
-        let mut file = wopen_cloexec(
-            path,
-            OFlag::O_RDWR | OFlag::O_CREAT,
-            Mode::from_bits_truncate(0o666),
-        )
-        .unwrap();
-        file.write_all(b"Hello").unwrap();
+            let mut file = wopen_cloexec(
+                path,
+                OFlag::O_RDWR | OFlag::O_CREAT,
+                Mode::from_bits_truncate(0o666),
+            )
+            .unwrap();
+            file.write_all(b"Hello").unwrap();
+        }
+
+        let mut t1 = "/tmp/fish_test_autoload.XXXXXX\0".as_bytes().to_vec();
+        let p1 = charptr2wcstring(unsafe { libc::mkdtemp(t1.as_mut_ptr().cast()) });
+        let mut t2 = "/tmp/fish_test_autoload.XXXXXX\0".as_bytes().to_vec();
+        let p2 = charptr2wcstring(unsafe { libc::mkdtemp(t2.as_mut_ptr().cast()) });
+
+        let paths = &[p1.clone(), p2.clone()];
+        let mut autoload = Autoload::new(L!("test_var"));
+        assert!(autoload.resolve_command_impl(L!("file1"), paths).is_none());
+        assert!(
+            autoload
+                .resolve_command_impl(L!("nothing"), paths)
+                .is_none()
+        );
+        assert!(autoload.get_autoloaded_commands().is_empty());
+
+        run!("touch %s/file1.fish", p1);
+        run!("touch %s/file2.fish", p2);
+        autoload.invalidate_cache();
+
+        assert!(!autoload.autoload_in_progress(L!("file1")));
+        assert!(matches!(
+            autoload.resolve_command_impl(L!("file1"), paths),
+            AutoloadResult::Path(_)
+        ));
+        assert!(matches!(
+            autoload.resolve_command_impl(L!("file1"), paths),
+            AutoloadResult::Pending
+        ));
+        assert!(autoload.autoload_in_progress(L!("file1")));
+        assert!(autoload.get_autoloaded_commands() == vec![L!("file1")]);
+        autoload.mark_autoload_finished(L!("file1"));
+        assert!(!autoload.autoload_in_progress(L!("file1")));
+        assert!(autoload.get_autoloaded_commands() == vec![L!("file1")]);
+
+        assert!(matches!(
+            autoload.resolve_command_impl(L!("file1"), paths),
+            AutoloadResult::Loaded
+        ));
+        assert!(
+            autoload
+                .resolve_command_impl(L!("nothing"), paths)
+                .is_none()
+        );
+        assert!(autoload.resolve_command_impl(L!("file2"), paths).is_some());
+        assert!(matches!(
+            autoload.resolve_command_impl(L!("file2"), paths),
+            AutoloadResult::Pending
+        ));
+        autoload.mark_autoload_finished(L!("file2"));
+        assert!(matches!(
+            autoload.resolve_command_impl(L!("file2"), paths),
+            AutoloadResult::Loaded
+        ));
+        assert!((autoload.get_autoloaded_commands() == vec![L!("file1"), L!("file2")]));
+
+        autoload.clear();
+        assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());
+        autoload.mark_autoload_finished(L!("file1"));
+        assert!(matches!(
+            autoload.resolve_command_impl(L!("file1"), paths),
+            AutoloadResult::Loaded
+        ));
+        assert!(
+            autoload
+                .resolve_command_impl(L!("nothing"), paths)
+                .is_none()
+        );
+        assert!(autoload.resolve_command_impl(L!("file2"), paths).is_some());
+        assert!(matches!(
+            autoload.resolve_command_impl(L!("file2"), paths),
+            AutoloadResult::Pending
+        ));
+        autoload.mark_autoload_finished(L!("file2"));
+
+        assert!(matches!(
+            autoload.resolve_command_impl(L!("file1"), paths),
+            AutoloadResult::Loaded
+        ));
+        touch_file(&sprintf!("%s/file1.fish", p1));
+        autoload.invalidate_cache();
+        assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());
+        autoload.mark_autoload_finished(L!("file1"));
+
+        run!(L!("rm -Rf %s"), p1);
+        run!(L!("rm -Rf %s"), p2);
     }
-
-    let mut t1 = "/tmp/fish_test_autoload.XXXXXX\0".as_bytes().to_vec();
-    let p1 = charptr2wcstring(unsafe { libc::mkdtemp(t1.as_mut_ptr().cast()) });
-    let mut t2 = "/tmp/fish_test_autoload.XXXXXX\0".as_bytes().to_vec();
-    let p2 = charptr2wcstring(unsafe { libc::mkdtemp(t2.as_mut_ptr().cast()) });
-
-    let paths = &[p1.clone(), p2.clone()];
-    let mut autoload = Autoload::new(L!("test_var"));
-    assert!(autoload.resolve_command_impl(L!("file1"), paths).is_none());
-    assert!(
-        autoload
-            .resolve_command_impl(L!("nothing"), paths)
-            .is_none()
-    );
-    assert!(autoload.get_autoloaded_commands().is_empty());
-
-    run!("touch %s/file1.fish", p1);
-    run!("touch %s/file2.fish", p2);
-    autoload.invalidate_cache();
-
-    assert!(!autoload.autoload_in_progress(L!("file1")));
-    assert!(matches!(
-        autoload.resolve_command_impl(L!("file1"), paths),
-        AutoloadResult::Path(_)
-    ));
-    assert!(matches!(
-        autoload.resolve_command_impl(L!("file1"), paths),
-        AutoloadResult::Pending
-    ));
-    assert!(autoload.autoload_in_progress(L!("file1")));
-    assert!(autoload.get_autoloaded_commands() == vec![L!("file1")]);
-    autoload.mark_autoload_finished(L!("file1"));
-    assert!(!autoload.autoload_in_progress(L!("file1")));
-    assert!(autoload.get_autoloaded_commands() == vec![L!("file1")]);
-
-    assert!(matches!(
-        autoload.resolve_command_impl(L!("file1"), paths),
-        AutoloadResult::Loaded
-    ));
-    assert!(
-        autoload
-            .resolve_command_impl(L!("nothing"), paths)
-            .is_none()
-    );
-    assert!(autoload.resolve_command_impl(L!("file2"), paths).is_some());
-    assert!(matches!(
-        autoload.resolve_command_impl(L!("file2"), paths),
-        AutoloadResult::Pending
-    ));
-    autoload.mark_autoload_finished(L!("file2"));
-    assert!(matches!(
-        autoload.resolve_command_impl(L!("file2"), paths),
-        AutoloadResult::Loaded
-    ));
-    assert!((autoload.get_autoloaded_commands() == vec![L!("file1"), L!("file2")]));
-
-    autoload.clear();
-    assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());
-    autoload.mark_autoload_finished(L!("file1"));
-    assert!(matches!(
-        autoload.resolve_command_impl(L!("file1"), paths),
-        AutoloadResult::Loaded
-    ));
-    assert!(
-        autoload
-            .resolve_command_impl(L!("nothing"), paths)
-            .is_none()
-    );
-    assert!(autoload.resolve_command_impl(L!("file2"), paths).is_some());
-    assert!(matches!(
-        autoload.resolve_command_impl(L!("file2"), paths),
-        AutoloadResult::Pending
-    ));
-    autoload.mark_autoload_finished(L!("file2"));
-
-    assert!(matches!(
-        autoload.resolve_command_impl(L!("file1"), paths),
-        AutoloadResult::Loaded
-    ));
-    touch_file(&sprintf!("%s/file1.fish", p1));
-    autoload.invalidate_cache();
-    assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());
-    autoload.mark_autoload_finished(L!("file1"));
-
-    run!(L!("rm -Rf %s"), p1);
-    run!(L!("rm -Rf %s"), p2);
 }

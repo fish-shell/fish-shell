@@ -17,8 +17,6 @@ use crate::parse_constants::{
     SourceRange, StatementDecoration, token_type_user_presentable_description,
 };
 use crate::parse_tree::ParseToken;
-#[cfg(test)]
-use crate::tests::prelude::*;
 use crate::tokenizer::{
     TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
     TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
@@ -2827,11 +2825,116 @@ fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
     ParseKeyword::from(&unescape_keyword(tok, token)[..])
 }
 
-#[test]
-#[serial]
-fn test_ast_parse() {
-    let _cleanup = test_init();
-    let src = L!("echo");
-    let ast = parse(src, ParseTreeFlags::empty(), None);
-    assert!(!ast.any_error);
+#[cfg(test)]
+mod tests {
+    use super::{Node, is_same_node};
+    use crate::ast;
+    use crate::parse_constants::ParseTreeFlags;
+    use crate::tests::prelude::*;
+    use crate::wchar::prelude::*;
+
+    #[test]
+    #[serial]
+    fn test_ast_parse() {
+        let _cleanup = test_init();
+        let src = L!("echo");
+        let ast = ast::parse(src, ParseTreeFlags::empty(), None);
+        assert!(!ast.any_error);
+    }
+
+    // TODO use 'indoc' but that fails on windows:
+    //       0 [main] rustc 550 child_info_fork::abort: address space needed by 'indoc-1058d1a3f55eac1a.dll' (0x400000) is already occupied
+    // error: could not exec the linker `x86_64-pc-cygwin-gcc`
+    const FISH_FUNC: &str = {
+        r#"
+function stuff --description 'Stuff'
+    set -l log "/tmp/chaos_log.(random)"
+    set -x PATH /custom/bin $PATH
+
+    echo "[$USER] Hooray" | tee -a $log 2>/dev/null
+
+    time if test (count $argv) -eq 0
+        echo "No targets specified" >> $log 2>&1
+        return 1
+    end
+
+    for target in $argv
+        command bash -c "echo" >> $log 2> /dev/null
+        switch $status
+            case 0
+                echo "Success" | tee -a $log
+            case '*'
+                echo "Failure" >> $log
+        end
+    end
+    set_color green
+end
+"#
+    };
+
+    #[test]
+    fn test_is_same_node() {
+        // is_same_node is pretty subtle! Let's check it.
+        let src = WString::from_str(FISH_FUNC);
+        let ast = ast::parse(&src, Default::default(), None);
+        assert!(!ast.errored());
+        let all_nodes: Vec<&dyn Node> = ast.walk().collect();
+        for i in 0..all_nodes.len() {
+            for j in 0..all_nodes.len() {
+                let same = is_same_node(all_nodes[i], all_nodes[j]);
+                if i == j {
+                    assert!(same, "Node {} should be the same as itself", i);
+                } else {
+                    assert!(!same, "Node {} should not be the same as node {}", i, j);
+                }
+            }
+        }
+    }
+}
+
+// Run with cargo +nightly bench --features=benchmark
+#[cfg(feature = "benchmark")]
+#[cfg(test)]
+mod bench {
+    extern crate test;
+    use crate::ast;
+    use crate::wchar::prelude::*;
+    use test::Bencher;
+
+    // Return a long string suitable for benchmarking.
+    fn generate_fish_script() -> WString {
+        let mut buff = WString::new();
+        let s = &mut buff;
+
+        for i in 0..1000 {
+            // command with args and redirections
+            sprintf!(=> s,
+                "echo arg%d arg%d > out%d.txt 2> err%d.txt\n",
+                i, i + 1, i, i
+            );
+
+            // simple block
+            sprintf!(=> s, "begin\n    echo inside block %d\nend\n", i );
+
+            // conditional
+            sprintf!(=> s, "if test %d\n    echo even\nelse\n    echo odd\nend\n", i % 2);
+
+            // loop
+            sprintf!(=> s, "for x in a b c\n    echo $x %d\nend\n", i);
+
+            // pipeline
+            sprintf!(=> s, "echo foo%d | grep f | wc -l\n", i);
+        }
+
+        buff
+    }
+
+    #[bench]
+    fn bench_ast_construction(b: &mut Bencher) {
+        let src = generate_fish_script();
+        b.bytes = (src.len() * 4) as u64; // 4 bytes per character
+        b.iter(|| {
+            let _ast = ast::parse(&src, Default::default(), None);
+        });
+    }
 }

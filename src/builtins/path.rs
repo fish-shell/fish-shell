@@ -533,21 +533,6 @@ fn find_extension(path: &wstr) -> Option<usize> {
     }
 }
 
-#[test]
-fn test_find_extension() {
-    let cases = [
-        (L!("foo.wmv"), Some(3)),
-        (L!("verylongfilename.wmv"), Some("verylongfilename".len())),
-        (L!("foo"), None),
-        (L!(".foo"), None),
-        (L!("./foo.wmv"), Some(5)),
-    ];
-
-    for (f, ext_idx) in cases {
-        assert_eq!(find_extension(f), ext_idx);
-    }
-}
-
 fn path_extension(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let mut opts = Options::default();
     let mut optind = 0;
@@ -1011,4 +996,25 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
     }
     let args = &mut args[1..];
     return subcmd(parser, streams, args);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::find_extension;
+    use crate::wchar::prelude::*;
+
+    #[test]
+    fn test_find_extension() {
+        let cases = [
+            (L!("foo.wmv"), Some(3)),
+            (L!("verylongfilename.wmv"), Some("verylongfilename".len())),
+            (L!("foo"), None),
+            (L!(".foo"), None),
+            (L!("./foo.wmv"), Some(5)),
+        ];
+
+        for (f, ext_idx) in cases {
+            assert_eq!(find_extension(f), ext_idx);
+        }
+    }
 }

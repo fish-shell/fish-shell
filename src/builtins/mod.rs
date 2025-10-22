@@ -48,9 +48,6 @@ pub mod r#type;
 pub mod ulimit;
 pub mod wait;
 
-#[cfg(test)]
-mod tests;
-
 mod prelude {
     pub use super::shared::*;
     pub use libc::c_int;

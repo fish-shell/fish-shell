@@ -114,3 +114,42 @@ impl StringSubCommand<'_> for Sub {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn plain() {
+        let _cleanup = test_init();
+        validate!(["string", "sub"], STATUS_CMD_ERROR, "");
+        validate!(["string", "sub", "abcde"], STATUS_CMD_OK, "abcde\n");
+        validate!(["string", "sub", "-l", "x", "abcde"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "sub", "-s", "x", "abcde"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "sub", "-l0", "abcde"], STATUS_CMD_OK, "\n");
+        validate!(["string", "sub", "-l2", "abcde"], STATUS_CMD_OK, "ab\n");
+        validate!(["string", "sub", "-l5", "abcde"], STATUS_CMD_OK, "abcde\n");
+        validate!(["string", "sub", "-l6", "abcde"], STATUS_CMD_OK, "abcde\n");
+        validate!(["string", "sub", "-l-1", "abcde"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "sub", "-s0", "abcde"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "sub", "-s1", "abcde"], STATUS_CMD_OK, "abcde\n");
+        validate!(["string", "sub", "-s5", "abcde"], STATUS_CMD_OK, "e\n");
+        validate!(["string", "sub", "-s6", "abcde"], STATUS_CMD_OK, "\n");
+        validate!(["string", "sub", "-s-1", "abcde"], STATUS_CMD_OK, "e\n");
+        validate!(["string", "sub", "-s-5", "abcde"], STATUS_CMD_OK, "abcde\n");
+        validate!(["string", "sub", "-s-6", "abcde"], STATUS_CMD_OK, "abcde\n");
+        validate!(["string", "sub", "-s1", "-l0", "abcde"], STATUS_CMD_OK, "\n");
+        validate!(["string", "sub", "-s1", "-l1", "abcde"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "sub", "-s2", "-l2", "abcde"], STATUS_CMD_OK, "bc\n");
+        validate!(["string", "sub", "-s-1", "-l1", "abcde"], STATUS_CMD_OK, "e\n");
+        validate!(["string", "sub", "-s-1", "-l2", "abcde"], STATUS_CMD_OK, "e\n");
+        validate!(["string", "sub", "-s-3", "-l2", "abcde"], STATUS_CMD_OK, "cd\n");
+        validate!(["string", "sub", "-s-3", "-l4", "abcde"], STATUS_CMD_OK, "cde\n");
+        validate!(["string", "sub", "-q"], STATUS_CMD_ERROR, "");
+        validate!(["string", "sub", "-q", "abcde"], STATUS_CMD_OK, "");
+    }
+}

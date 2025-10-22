@@ -534,173 +534,182 @@ pub fn fish_wcwidth_visible(c: char) -> isize {
     fish_wcwidth(c).max(0)
 }
 
-#[test]
-fn test_ifind() {
-    macro_rules! validate {
-        ($haystack:expr, $needle:expr, $expected:expr) => {
-            assert_eq!(ifind(L!($haystack), L!($needle), false), $expected);
-        };
+#[cfg(test)]
+mod tests {
+    use super::{
+        CaseSensitivity, ContainType, LineIterator, count_newlines, ifind, join_strings,
+        split_string_tok, string_fuzzy_match_string,
+    };
+    use crate::wchar::prelude::*;
+
+    #[test]
+    fn test_ifind() {
+        macro_rules! validate {
+            ($haystack:expr, $needle:expr, $expected:expr) => {
+                assert_eq!(ifind(L!($haystack), L!($needle), false), $expected);
+            };
+        }
+        validate!("alpha", "alpha", Some(0));
+        validate!("alphab", "alpha", Some(0));
+        validate!("alpha", "balpha", None);
+        validate!("balpha", "alpha", Some(1));
+        validate!("alphab", "balpha", None);
+        validate!("balpha", "lPh", Some(2));
+        validate!("balpha", "Plh", None);
+        validate!("echo Ö", "ö", Some(5));
     }
-    validate!("alpha", "alpha", Some(0));
-    validate!("alphab", "alpha", Some(0));
-    validate!("alpha", "balpha", None);
-    validate!("balpha", "alpha", Some(1));
-    validate!("alphab", "balpha", None);
-    validate!("balpha", "lPh", Some(2));
-    validate!("balpha", "Plh", None);
-    validate!("echo Ö", "ö", Some(5));
-}
 
-#[test]
-fn test_ifind_fuzzy() {
-    macro_rules! validate {
-        ($haystack:expr, $needle:expr, $expected:expr) => {
-            assert_eq!(ifind(L!($haystack), L!($needle), true), $expected);
-        };
+    #[test]
+    fn test_ifind_fuzzy() {
+        macro_rules! validate {
+            ($haystack:expr, $needle:expr, $expected:expr) => {
+                assert_eq!(ifind(L!($haystack), L!($needle), true), $expected);
+            };
+        }
+        validate!("alpha", "alpha", Some(0));
+        validate!("alphab", "alpha", Some(0));
+        validate!("alpha-b", "alpha_b", Some(0));
+        validate!("alpha-_", "alpha_-", Some(0));
+        validate!("alpha-b", "alpha b", None);
     }
-    validate!("alpha", "alpha", Some(0));
-    validate!("alphab", "alpha", Some(0));
-    validate!("alpha-b", "alpha_b", Some(0));
-    validate!("alpha-_", "alpha_-", Some(0));
-    validate!("alpha-b", "alpha b", None);
-}
 
-#[test]
-fn test_fuzzy_match() {
-    // Check that a string fuzzy match has the expected type and case folding.
-    macro_rules! validate {
-        ($needle:expr, $haystack:expr, $contain_type:expr, $case_fold:expr) => {
-            let m = string_fuzzy_match_string(L!($needle), L!($haystack), false).unwrap();
-            assert_eq!(m.typ, $contain_type);
-            assert_eq!(m.case_fold, $case_fold);
-        };
-        ($needle:expr, $haystack:expr, None) => {
-            assert_eq!(
-                string_fuzzy_match_string(L!($needle), L!($haystack), false),
-                None,
-            );
-        };
+    #[test]
+    fn test_fuzzy_match() {
+        // Check that a string fuzzy match has the expected type and case folding.
+        macro_rules! validate {
+            ($needle:expr, $haystack:expr, $contain_type:expr, $case_fold:expr) => {
+                let m = string_fuzzy_match_string(L!($needle), L!($haystack), false).unwrap();
+                assert_eq!(m.typ, $contain_type);
+                assert_eq!(m.case_fold, $case_fold);
+            };
+            ($needle:expr, $haystack:expr, None) => {
+                assert_eq!(
+                    string_fuzzy_match_string(L!($needle), L!($haystack), false),
+                    None,
+                );
+            };
+        }
+        validate!("", "", ContainType::Exact, CaseSensitivity::Sensitive);
+        validate!(
+            "alpha",
+            "alpha",
+            ContainType::Exact,
+            CaseSensitivity::Sensitive
+        );
+        validate!(
+            "alp",
+            "alpha",
+            ContainType::Prefix,
+            CaseSensitivity::Sensitive
+        );
+        validate!("alpha", "AlPhA", ContainType::Exact, CaseSensitivity::Smart);
+        validate!(
+            "alpha",
+            "AlPhA!",
+            ContainType::Prefix,
+            CaseSensitivity::Smart
+        );
+        validate!(
+            "ALPHA",
+            "alpha!",
+            ContainType::Prefix,
+            CaseSensitivity::Insensitive
+        );
+        validate!(
+            "ALPHA!",
+            "alPhA!",
+            ContainType::Exact,
+            CaseSensitivity::Insensitive
+        );
+        validate!(
+            "alPh",
+            "ALPHA!",
+            ContainType::Prefix,
+            CaseSensitivity::Insensitive
+        );
+        validate!(
+            "LPH",
+            "ALPHA!",
+            ContainType::Substr,
+            CaseSensitivity::Sensitive
+        );
+        validate!("lph", "AlPhA!", ContainType::Substr, CaseSensitivity::Smart);
+        validate!(
+            "lPh",
+            "ALPHA!",
+            ContainType::Substr,
+            CaseSensitivity::Insensitive
+        );
+        validate!(
+            "AA",
+            "ALPHA!",
+            ContainType::Subseq,
+            CaseSensitivity::Sensitive
+        );
+        // no subseq icase
+        validate!("lh", "ALPHA!", None);
+        validate!("BB", "ALPHA!", None);
     }
-    validate!("", "", ContainType::Exact, CaseSensitivity::Sensitive);
-    validate!(
-        "alpha",
-        "alpha",
-        ContainType::Exact,
-        CaseSensitivity::Sensitive
-    );
-    validate!(
-        "alp",
-        "alpha",
-        ContainType::Prefix,
-        CaseSensitivity::Sensitive
-    );
-    validate!("alpha", "AlPhA", ContainType::Exact, CaseSensitivity::Smart);
-    validate!(
-        "alpha",
-        "AlPhA!",
-        ContainType::Prefix,
-        CaseSensitivity::Smart
-    );
-    validate!(
-        "ALPHA",
-        "alpha!",
-        ContainType::Prefix,
-        CaseSensitivity::Insensitive
-    );
-    validate!(
-        "ALPHA!",
-        "alPhA!",
-        ContainType::Exact,
-        CaseSensitivity::Insensitive
-    );
-    validate!(
-        "alPh",
-        "ALPHA!",
-        ContainType::Prefix,
-        CaseSensitivity::Insensitive
-    );
-    validate!(
-        "LPH",
-        "ALPHA!",
-        ContainType::Substr,
-        CaseSensitivity::Sensitive
-    );
-    validate!("lph", "AlPhA!", ContainType::Substr, CaseSensitivity::Smart);
-    validate!(
-        "lPh",
-        "ALPHA!",
-        ContainType::Substr,
-        CaseSensitivity::Insensitive
-    );
-    validate!(
-        "AA",
-        "ALPHA!",
-        ContainType::Subseq,
-        CaseSensitivity::Sensitive
-    );
-    // no subseq icase
-    validate!("lh", "ALPHA!", None);
-    validate!("BB", "ALPHA!", None);
-}
 
-#[test]
-fn test_split_string_tok() {
-    macro_rules! validate {
-        ($val:expr, $seps:expr, $max_len:expr, $expected:expr) => {
-            assert_eq!(split_string_tok(L!($val), L!($seps), $max_len), $expected,);
-        };
+    #[test]
+    fn test_split_string_tok() {
+        macro_rules! validate {
+            ($val:expr, $seps:expr, $max_len:expr, $expected:expr) => {
+                assert_eq!(split_string_tok(L!($val), L!($seps), $max_len), $expected,);
+            };
+        }
+        validate!(" hello \t   world", " \t\n", None, vec!["hello", "world"]);
+        validate!(" stuff ", " ", Some(0), vec![] as Vec<&wstr>);
+        validate!(" stuff ", " ", Some(1), vec![" stuff "]);
+        validate!(
+            " hello \t   world  andstuff ",
+            " \t\n",
+            Some(3),
+            vec!["hello", "world", " andstuff "]
+        );
+        // NUL chars are OK.
+        validate!("hello \x00  world", " \0", None, vec!["hello", "world"]);
     }
-    validate!(" hello \t   world", " \t\n", None, vec!["hello", "world"]);
-    validate!(" stuff ", " ", Some(0), vec![] as Vec<&wstr>);
-    validate!(" stuff ", " ", Some(1), vec![" stuff "]);
-    validate!(
-        " hello \t   world  andstuff ",
-        " \t\n",
-        Some(3),
-        vec!["hello", "world", " andstuff "]
-    );
-    // NUL chars are OK.
-    validate!("hello \x00  world", " \0", None, vec!["hello", "world"]);
-}
 
-#[test]
-fn test_join_strings() {
-    let empty: &[&wstr] = &[];
-    assert_eq!(join_strings(empty, '/'), "");
-    assert_eq!(join_strings(&[] as &[&wstr], '/'), "");
-    assert_eq!(join_strings(&[L!("foo")], '/'), "foo");
-    assert_eq!(
-        join_strings(&[L!("foo"), L!("bar"), L!("baz")], '/'),
-        "foo/bar/baz"
-    );
-}
-
-#[test]
-fn test_line_iterator() {
-    let text = b"Alpha\nBeta\nGamma\n\nDelta\n";
-    let mut lines = vec![];
-    let iter = LineIterator::new(text);
-    for line in iter {
-        lines.push(line);
+    #[test]
+    fn test_join_strings() {
+        let empty: &[&wstr] = &[];
+        assert_eq!(join_strings(empty, '/'), "");
+        assert_eq!(join_strings(&[] as &[&wstr], '/'), "");
+        assert_eq!(join_strings(&[L!("foo")], '/'), "foo");
+        assert_eq!(
+            join_strings(&[L!("foo"), L!("bar"), L!("baz")], '/'),
+            "foo/bar/baz"
+        );
     }
-    assert_eq!(
-        lines,
-        vec![
-            &b"Alpha"[..],
-            &b"Beta"[..],
-            &b"Gamma"[..],
-            &b""[..],
-            &b"Delta"[..]
-        ]
-    );
-}
 
-#[test]
-fn test_count_newlines() {
-    assert_eq!(count_newlines(L!("")), 0);
-    assert_eq!(count_newlines(L!("foo")), 0);
-    assert_eq!(count_newlines(L!("foo\nbar")), 1);
-    assert_eq!(count_newlines(L!("foo\nbar\nbaz")), 2);
-    assert_eq!(count_newlines(L!("\n")), 1);
-    assert_eq!(count_newlines(L!("\n\n")), 2);
+    #[test]
+    fn test_line_iterator() {
+        let text = b"Alpha\nBeta\nGamma\n\nDelta\n";
+        let mut lines = vec![];
+        let iter = LineIterator::new(text);
+        for line in iter {
+            lines.push(line);
+        }
+        assert_eq!(
+            lines,
+            vec![
+                &b"Alpha"[..],
+                &b"Beta"[..],
+                &b"Gamma"[..],
+                &b""[..],
+                &b"Delta"[..]
+            ]
+        );
+    }
+
+    #[test]
+    fn test_count_newlines() {
+        assert_eq!(count_newlines(L!("")), 0);
+        assert_eq!(count_newlines(L!("foo")), 0);
+        assert_eq!(count_newlines(L!("foo\nbar")), 1);
+        assert_eq!(count_newlines(L!("foo\nbar\nbaz")), 2);
+        assert_eq!(count_newlines(L!("\n")), 1);
+        assert_eq!(count_newlines(L!("\n\n")), 2);
+    }
 }

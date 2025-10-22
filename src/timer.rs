@@ -184,31 +184,37 @@ impl Unit {
     }
 }
 
-#[test]
-fn timer_format_and_alignment() {
-    let mut t1 = TimerSnapshot::take();
-    t1.cpu_fish.ru_utime.tv_usec = 0;
-    t1.cpu_fish.ru_stime.tv_usec = 0;
-    t1.cpu_children.ru_utime.tv_usec = 0;
-    t1.cpu_children.ru_stime.tv_usec = 0;
+#[cfg(test)]
+mod tests {
+    use super::TimerSnapshot;
+    use std::time::Duration;
 
-    let mut t2 = TimerSnapshot::take();
-    t2.cpu_fish.ru_utime.tv_usec = 999995;
-    t2.cpu_fish.ru_stime.tv_usec = 999994;
-    t2.cpu_children.ru_utime.tv_usec = 1000;
-    t2.cpu_children.ru_stime.tv_usec = 500;
-    t2.wall_time = t1.wall_time + Duration::from_micros(500);
+    #[test]
+    fn timer_format_and_alignment() {
+        let mut t1 = TimerSnapshot::take();
+        t1.cpu_fish.ru_utime.tv_usec = 0;
+        t1.cpu_fish.ru_stime.tv_usec = 0;
+        t1.cpu_children.ru_utime.tv_usec = 0;
+        t1.cpu_children.ru_stime.tv_usec = 0;
 
-    let expected = r#"
+        let mut t2 = TimerSnapshot::take();
+        t2.cpu_fish.ru_utime.tv_usec = 999995;
+        t2.cpu_fish.ru_stime.tv_usec = 999994;
+        t2.cpu_children.ru_utime.tv_usec = 1000;
+        t2.cpu_children.ru_stime.tv_usec = 500;
+        t2.wall_time = t1.wall_time + Duration::from_micros(500);
+
+        let expected = r#"
 ________________________________________________________
 Executed in  500.00 micros    fish         external
    usr time    1.00 secs      1.00 secs    1.00 millis
    sys time    1.00 secs      1.00 secs    0.50 millis
 "#;
-    //        (a)            (b)            (c)
-    // (a) remaining columns should align even if there are different units
-    // (b) carry to the next unit when it would overflow %6.2F
-    // (c) carry to the next unit when the larger one exceeds 1000
-    let actual = TimerSnapshot::get_delta(&t1, &t2, true);
-    assert_eq!(actual, expected);
+        //        (a)            (b)            (c)
+        // (a) remaining columns should align even if there are different units
+        // (b) carry to the next unit when it would overflow %6.2F
+        // (c) carry to the next unit when the larger one exceeds 1000
+        let actual = TimerSnapshot::get_delta(&t1, &t2, true);
+        assert_eq!(actual, expected);
+    }
 }

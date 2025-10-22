@@ -564,40 +564,87 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     }
 }
 
-#[test]
-fn test_exchange() {
-    let base_argv = [
-        L!("0"),
-        L!("1"),
-        L!("2"),
-        L!("3"),
-        L!("4"),
-        L!("5"),
-        L!("6"),
-    ];
-    let argc = base_argv.len();
-    for start in 0..=argc {
-        for mid in start..=argc {
-            for end in mid..=argc {
-                let mut argv: Vec<&wstr> = base_argv.to_vec();
-                // After exchange, we expect the start..mid and mid..end ranges to be swapped.
-                let mut expected = argv[mid..end].to_vec();
-                expected.extend(argv[start..mid].iter());
+#[cfg(test)]
+mod tests {
+    use super::{ArgType, WGetopter, WOption, wopt};
+    use crate::wchar::prelude::*;
+    use crate::wcstringutil::join_strings;
 
-                let mut w = WGetopter::new(L!(""), &[], &mut argv);
+    #[test]
+    fn test_exchange() {
+        let base_argv = [
+            L!("0"),
+            L!("1"),
+            L!("2"),
+            L!("3"),
+            L!("4"),
+            L!("5"),
+            L!("6"),
+        ];
+        let argc = base_argv.len();
+        for start in 0..=argc {
+            for mid in start..=argc {
+                for end in mid..=argc {
+                    let mut argv: Vec<&wstr> = base_argv.to_vec();
+                    // After exchange, we expect the start..mid and mid..end ranges to be swapped.
+                    let mut expected = argv[mid..end].to_vec();
+                    expected.extend(argv[start..mid].iter());
 
-                w.first_nonopt = start;
-                w.last_nonopt = mid;
-                w.wopt_index = end;
-                w.exchange();
+                    let mut w = WGetopter::new(L!(""), &[], &mut argv);
 
-                // Non-options were permuted to the end.
-                let options_scanned = end - mid;
-                assert_eq!(w.first_nonopt, start + options_scanned);
-                assert_eq!(w.last_nonopt, mid + options_scanned);
-                assert_eq!(w.wopt_index, end);
-                assert_eq!(&w.argv[start..end], expected);
+                    w.first_nonopt = start;
+                    w.last_nonopt = mid;
+                    w.wopt_index = end;
+                    w.exchange();
+
+                    // Non-options were permuted to the end.
+                    let options_scanned = end - mid;
+                    assert_eq!(w.first_nonopt, start + options_scanned);
+                    assert_eq!(w.last_nonopt, mid + options_scanned);
+                    assert_eq!(w.wopt_index, end);
+                    assert_eq!(&w.argv[start..end], expected);
+                }
             }
         }
+    }
+
+    #[test]
+    fn test_wgetopt() {
+        // Regression test for a crash.
+        const short_options: &wstr = L!("-a");
+        const long_options: &[WOption] = &[wopt(L!("add"), ArgType::NoArgument, 'a')];
+        let mut argv = [
+            L!("abbr"),
+            L!("--add"),
+            L!("emacsnw"),
+            L!("emacs"),
+            L!("-nw"),
+        ];
+        let mut w = WGetopter::new(short_options, long_options, &mut argv);
+        let mut a_count = 0;
+        let mut arguments = vec![];
+        while let Some(opt) = w.next_opt() {
+            match opt {
+                'a' => {
+                    a_count += 1;
+                }
+                '\x01' => {
+                    // non-option argument
+                    arguments.push(w.woptarg.as_ref().unwrap().to_owned());
+                }
+                '?' => {
+                    // unrecognized option
+                    if let Some(arg) = w.argv.get(w.wopt_index - 1) {
+                        arguments.push(arg.to_owned());
+                    }
+                }
+                _ => {
+                    panic!("unexpected option: {:?}", opt);
+                }
+            }
+        }
+        assert_eq!(a_count, 1);
+        assert_eq!(arguments.len(), 3);
+        assert_eq!(join_strings(&arguments, ' '), "emacsnw emacs -nw");
     }
 }

@@ -30,7 +30,7 @@ mod wgetopt;
 
 pub mod prelude {
     use crate::common::{BUILD_DIR, ScopeGuard, ScopeGuarding};
-    use crate::env::{env_init, misc_init};
+    use crate::env::env_init;
     use crate::parser::{CancelBehavior, Parser};
     use crate::reader::{reader_deinit, reader_init};
     use crate::signal::signal_reset_handlers;
@@ -104,7 +104,6 @@ pub mod prelude {
             crate::threads::init();
             proc_init();
             env_init(None, true, false);
-            misc_init();
 
             // Set default signal handlers, so we can ctrl-C out of this.
             signal_reset_handlers();

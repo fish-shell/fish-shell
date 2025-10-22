@@ -19,6 +19,9 @@ jobs:
       run: cargo build
     - name: check format
       run: PATH="target/debug:$PATH" build_tools/style.fish --all --check
+    - name: check rustfmt
+      run: find build.rs crates src -type f -name '*.rs' | xargs rustfmt --check
+
 
   clippy:
     runs-on: ubuntu-latest

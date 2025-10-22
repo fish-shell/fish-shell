@@ -101,6 +101,10 @@ if test $all = yes; or set -q rust_files[1]
         exit 127
     end
 
+    set -l edition_spec string match -r '^edition\s*=.*'
+    test "$($edition_spec <Cargo.toml)" = "$($edition_spec <.rustfmt.toml)"
+    or die "Cargo.toml and .rustfmt.toml use different editions"
+
     echo === Running "$green"rustfmt"$normal"
     if set -l -q _flag_check
         if test $all = yes

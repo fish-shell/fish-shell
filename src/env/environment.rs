@@ -842,7 +842,3 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         }
     }
 }
-
-/// Various things we need to initialize at run-time that don't really fit any of the other init
-/// routines.
-pub fn misc_init() {}

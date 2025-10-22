@@ -104,6 +104,9 @@ end
 echo === Running "$green"rustfmt"$normal"
 if set -l -q _flag_check
     if test $all = yes
+        set -l edition_spec string match -r '^edition\s*=.*'
+        test "$($edition_spec <Cargo.toml)" = "$($edition_spec <.rustfmt.toml)"
+        or die "Cargo.toml and .rustfmt.toml use different editions"
         if not cargo fmt --all --check
             die "Rust files are not formatted correctly."
         end

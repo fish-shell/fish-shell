@@ -17,9 +17,12 @@ function __fish_macos_set_env -d "set an environment variable like path_helper d
 
     # Merge in any existing path elements
     for existing_entry in $$argv[1]
-        if not contains -- $existing_entry $result
+        if test -n $existing_entry; and not contains -- $existing_entry $result
             set -a result $existing_entry
         end
+    end
+    if test $argv[1] = MANPATH
+        set -a result ""
     end
 
     set -xg $argv[1] $result

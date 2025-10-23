@@ -12,5 +12,5 @@ MANPATH=:/Applications/Ghostty.app/Contents/Resources/ghostty/../man \
 string join \n entry=$MANPATH
 # CHECK: entry=/usr/share/man
 # CHECK: entry=/usr/local/share/man
-# CHECK: entry=
 # CHECK: entry=/Applications/Ghostty.app/Contents/Resources/ghostty/../man
+# CHECK: entry=

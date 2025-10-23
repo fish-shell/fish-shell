@@ -67,6 +67,10 @@ static COMPLETE_USER_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Home for %s"));
 /// Description for short variables. The value is concatenated to this description.
 static COMPLETE_VAR_DESC_VAL: Lazy<&wstr> = Lazy::new(|| wgettext!("Variable: %s"));
 
+/// Description for redacted variables.
+static COMPLETE_VAR_REDACTED_DESC_VAL: Lazy<&wstr> =
+    Lazy::new(|| wgettext!("Variable: [redacted]"));
+
 /// Description for abbreviations.
 static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %s"));
 
@@ -1682,8 +1686,21 @@ impl<'ctx> Completer<'ctx> {
                         continue;
                     };
 
-                    let value = expand_escape_variable(&var);
-                    desc = sprintf!(*COMPLETE_VAR_DESC_VAL, value);
+                    let redacted = self.ctx.vars().get(L!("fish_redact_vars")).is_some_and(
+                        |redact_patterns| {
+                            redact_patterns.as_list().iter().any(|pattern| {
+                                let wc = crate::parse_util::parse_util_unescape_wildcards(pattern);
+                                wildcard_match(&env_name, wc, false)
+                            })
+                        },
+                    );
+
+                    if redacted {
+                        desc = (*COMPLETE_VAR_REDACTED_DESC_VAL).to_owned();
+                    } else {
+                        let value = expand_escape_variable(&var);
+                        desc = sprintf!(*COMPLETE_VAR_DESC_VAL, value);
+                    }
                 }
             }
 

@@ -1730,6 +1730,10 @@ msgstr "用户定义的信号2"
 msgid "Variable: %s"
 msgstr "变量：%s"
 
+#
+msgid "Variable: [redacted]"
+msgstr ""
+
 #, c-format
 msgid "Variables cannot be bracketed. In fish, please use \"$%s\"."
 msgstr "变量不能用方括号包围。在 fish 中，请使用 \"$%s\"。"

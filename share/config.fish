@@ -158,32 +158,6 @@ and __fish_set_locale
 #
 if status --is-login
     if command -sq /usr/libexec/path_helper
-        # Adapt construct_path from the macOS /usr/libexec/path_helper
-        # executable for fish; see
-        # https://opensource.apple.com/source/shell_cmds/shell_cmds-203/path_helper/path_helper.c.auto.html .
-        function __fish_macos_set_env -d "set an environment variable like path_helper does (macOS only)"
-            set -l result
-
-            # Populate path according to config files
-            for path_file in $argv[2] $argv[3]/*
-                for entry in (string split : <? $path_file)
-                    if not contains -- $entry $result
-                        test -n "$entry"
-                        and set -a result $entry
-                    end
-                end
-            end
-
-            # Merge in any existing path elements
-            for existing_entry in $$argv[1]
-                if not contains -- $existing_entry $result
-                    set -a result $existing_entry
-                end
-            end
-
-            set -xg $argv[1] $result
-        end
-
         __fish_macos_set_env PATH /etc/paths '/etc/paths.d'
         if test -n "$MANPATH"
             __fish_macos_set_env MANPATH /etc/manpaths '/etc/manpaths.d'

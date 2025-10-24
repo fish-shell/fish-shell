@@ -408,7 +408,9 @@ fn throwing_main() -> i32 {
     threads::init();
 
     // Safety: single-threaded.
-    unsafe { set_libc_locales() };
+    unsafe {
+        set_libc_locales(/*log_ok=*/ false)
+    };
 
     fish::wutil::gettext::initialize_gettext();
 

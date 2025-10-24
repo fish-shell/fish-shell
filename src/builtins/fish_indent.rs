@@ -890,7 +890,9 @@ fn throwing_main() -> i32 {
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
     streams.stdin_fd = STDIN_FILENO;
     // Safety: single-threaded.
-    unsafe { set_libc_locales() };
+    unsafe {
+        set_libc_locales(/*log_ok=*/ false)
+    };
     crate::wutil::gettext::initialize_gettext();
     env_init(None, true, false);
 

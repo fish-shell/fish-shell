@@ -8,10 +8,35 @@ pub(crate) static LOCALE_LOCK: Mutex<()> = Mutex::new(());
 /// # Safety
 /// Call this either before starting any locale-using thread, or while holding a lock on the
 /// above mutex.
-pub unsafe fn set_libc_locales() -> Option<&'static CStr> {
-    let opaque_locale_str = setlocale(libc::LC_ALL, Some(c""));
-    setlocale(libc::LC_CTYPE, Some(c"C.UTF-8"));
-    opaque_locale_str
+pub unsafe fn set_libc_locales(log_ok: bool) -> bool {
+    let mut ok = true;
+    let mut set = |category_name, category, value| {
+        let locale_string = setlocale(category, Some(value));
+        if log_ok {
+            crate::flog::FLOG!(
+                env_locale,
+                match locale_string {
+                    Some(locale_string) => {
+                        format!("Set {category_name} to {}", locale_string.to_string_lossy())
+                    }
+                    None => {
+                        format!("Failed to set {category_name}",)
+                    }
+                },
+            );
+        }
+        ok &= locale_string.is_some();
+    };
+    let from_environment = c"";
+    // For wcwidth(3p)
+    set("LC_CTYPE", libc::LC_CTYPE, c"C.UTF-8");
+    // For strerror(3p) and strsignal(3p)
+    set("LC_MESSAGES", libc::LC_MESSAGES, from_environment);
+    // For builtin printf
+    set("LC_NUMERIC", libc::LC_NUMERIC, from_environment);
+    // For "history --show-time"
+    set("LC_TIME", libc::LC_TIME, from_environment);
+    ok
 }
 
 fn setlocale(category: libc::c_int, locale: Option<&CStr>) -> Option<&'static CStr> {

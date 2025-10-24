@@ -27,7 +27,9 @@ pub fn test_init() -> impl ScopeGuarding<Target = ()> {
         std::fs::create_dir_all(&test_dir).unwrap();
         set_current_dir(&test_dir).unwrap();
         // Safety: all tests that access locale should go through the enclosing function.
-        unsafe { set_libc_locales() };
+        unsafe {
+            set_libc_locales(/*log_ok=*/ false)
+        };
         topic_monitor_init();
         crate::threads::init();
         proc_init();

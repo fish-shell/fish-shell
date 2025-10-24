@@ -1,5 +1,3 @@
-#![allow(clippy::uninlined_format_args)]
-
 use fish_build_helper::{env_var, fish_build_dir, workspace_root};
 use rsconf::Target;
 use std::env;

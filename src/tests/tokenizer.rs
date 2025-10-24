@@ -162,8 +162,8 @@ fn test_tokenizer() {
     assert_eq!(pipe_or_redir!("2>").fd, STDERR_FILENO);
     assert_eq!(pipe_or_redir!("9999999999999>").fd, -1);
     assert_eq!(pipe_or_redir!("9999999999999>&2").fd, -1);
-    assert_eq!(pipe_or_redir!("9999999999999>&2").is_valid(), false);
-    assert_eq!(pipe_or_redir!("9999999999999>&2").is_valid(), false);
+    assert!(!pipe_or_redir!("9999999999999>&2").is_valid());
+    assert!(!pipe_or_redir!("9999999999999>&2").is_valid());
 
     assert!(pipe_or_redir!("&|").is_pipe);
     assert!(pipe_or_redir!("&|").stderr_merge);

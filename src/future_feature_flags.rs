@@ -246,10 +246,8 @@ impl Features {
                 }
             } else {
                 for md in METADATA {
-                    if md.groups == name || name == L!("all") {
-                        if !md.read_only {
-                            self.set(md.flag, value);
-                        }
+                    if (md.groups == name || name == L!("all")) && !md.read_only {
+                        self.set(md.flag, value);
                     }
                 }
             }

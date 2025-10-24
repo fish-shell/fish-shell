@@ -253,6 +253,7 @@ impl<NodeType: Node> LineCounter<NodeType> {
         }
 
         // We want to return the number of newlines at offsets less than the given offset.
+        #[allow(clippy::comparison_chain)] // TODO(MSRV>=1.90) for old clippy
         if offset > self.cached_offset {
             // Add one for every newline we find in the range [cached_offset, offset).
             // The codegen is substantially better when using a char slice than the char iterator.

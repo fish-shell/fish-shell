@@ -140,7 +140,7 @@ fn parse_cmd_opts(
     parser: &Parser,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
-    let Some(&cmd) = argv.get(0) else {
+    let Some(&cmd) = argv.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 
@@ -243,7 +243,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
 
     parse_cmd_opts(&mut opts, &mut optind, args, parser, streams)?;
 
-    let Some(&cmd) = args.get(0) else {
+    let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 

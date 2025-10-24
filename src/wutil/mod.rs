@@ -305,6 +305,7 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
 
     // Erase leading . and .. components from path_comps, popping from wd_comps as we go.
     while let Some(comp) = path_comps.peek() {
+        #[allow(clippy::if_same_then_else)]
         if comp.is_empty() || comp == "." {
             path_comps.next();
         } else if comp == ".." && wd_comps.pop_back().is_some() {

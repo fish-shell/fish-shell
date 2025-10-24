@@ -177,7 +177,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     /// * `Some('?') for unrecognised options
     /// * `Some(':')` for options missing an argument,
     /// * `Some(';') for options with an unexpected argument (this is only possible when using the
-    ///     --long=value or -long=value syntax where long was declared as taking no arguments).
+    ///   --long=value or -long=value syntax where long was declared as taking no arguments).
     /// * Otherwise, `Some(c)`, where `c` is the option's short character
     pub fn next_opt(&mut self) -> Option<char> {
         assert!(

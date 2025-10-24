@@ -50,8 +50,9 @@ impl SourceRange {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ParseTokenType {
+    #[default]
     invalid = 1,
 
     // Terminal types.
@@ -72,10 +73,11 @@ pub enum ParseTokenType {
     comment,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ParseKeyword {
     // 'None' is not a keyword, it is a sentinel indicating nothing.
     // Note it proves convenient to keep this as a value rather than using Option.
+    #[default]
     None,
     And,
     Begin,
@@ -107,8 +109,9 @@ pub enum StatementDecoration {
 }
 
 // Parse error code list.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ParseErrorCode {
+    #[default]
     none,
 
     // Matching values from enum parser_error.
@@ -184,12 +187,6 @@ impl From<SourceRange> for std::ops::Range<usize> {
     }
 }
 
-impl Default for ParseTokenType {
-    fn default() -> Self {
-        ParseTokenType::invalid
-    }
-}
-
 impl ParseTokenType {
     /// Return a string describing the token type.
     pub fn to_wstr(self) -> &'static wstr {
@@ -209,12 +206,6 @@ impl ParseTokenType {
             ParseTokenType::terminate => L!("ParseTokenType::terminate"),
             ParseTokenType::invalid => L!("ParseTokenType::invalid"),
         }
-    }
-}
-
-impl Default for ParseKeyword {
-    fn default() -> Self {
-        ParseKeyword::None
     }
 }
 
@@ -254,7 +245,7 @@ impl fish_printf::ToArg<'static> for ParseKeyword {
 impl From<&wstr> for ParseKeyword {
     fn from(s: &wstr) -> Self {
         // Note this is called in hot loops.
-        let c0 = s.as_char_slice().get(0).copied().unwrap_or('\0');
+        let c0 = s.as_char_slice().first().copied().unwrap_or('\0');
         match c0 {
             '!' if s == L!("!") => ParseKeyword::Exclam,
             'a' if s == L!("and") => ParseKeyword::And,
@@ -276,12 +267,6 @@ impl From<&wstr> for ParseKeyword {
             'w' if s == L!("while") => ParseKeyword::While,
             _ => ParseKeyword::None,
         }
-    }
-}
-
-impl Default for ParseErrorCode {
-    fn default() -> Self {
-        ParseErrorCode::none
     }
 }
 

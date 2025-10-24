@@ -315,10 +315,11 @@ fn warn_if_uvar_shadows_global(
     streams: &mut IoStreams,
     parser: &Parser,
 ) {
-    if opts.universal && parser.is_interactive() {
-        if parser.vars().getf(dest, EnvMode::GLOBAL).is_some() {
-            streams.err.append(wgettext_fmt!(UVAR_ERR, cmd, dest));
-        }
+    if opts.universal
+        && parser.is_interactive()
+        && parser.vars().getf(dest, EnvMode::GLOBAL).is_some()
+    {
+        streams.err.append(wgettext_fmt!(UVAR_ERR, cmd, dest));
     }
 }
 

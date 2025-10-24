@@ -898,9 +898,9 @@ impl<'ctx> Completer<'ctx> {
     /// the `desc` string is used as a description.
     ///
     /// - `wc_escaped`: the prefix, possibly containing wildcards. The wildcard should not have
-    ///    been unescaped, i.e. '*' should be used for any string, not the `ANY_STRING` character.
+    ///   been unescaped, i.e. '*' should be used for any string, not the `ANY_STRING` character.
     /// - `desc_func`: the function that generates a description for those completions without an
-    ///    embedded description
+    ///   embedded description
     /// - `possible_comp`: the list of possible completions to iterate over
     /// - `flags`: The flags controlling completion
     /// - `extra_expand_flags`: Additional flags controlling expansion.
@@ -2568,7 +2568,7 @@ pub fn complete_get_wrap_targets(command: &wstr) -> Vec<WString> {
     wrappers.get(command).cloned().unwrap_or_default()
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct CompletionRequestOptions {
     /// Requesting autosuggestion
     pub autosuggestion: bool,
@@ -2576,14 +2576,4 @@ pub struct CompletionRequestOptions {
     pub descriptions: bool,
     /// If set, we do not require a prefix match
     pub fuzzy_match: bool,
-}
-
-impl Default for CompletionRequestOptions {
-    fn default() -> Self {
-        Self {
-            autosuggestion: false,
-            descriptions: false,
-            fuzzy_match: false,
-        }
-    }
 }

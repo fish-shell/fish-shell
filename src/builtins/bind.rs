@@ -524,25 +524,25 @@ impl BuiltinBind {
         match self.opts.mode {
             BIND_ERASE => {
                 // If we get both, we erase both.
-                if self.opts.user {
-                    if self.erase(
+                if self.opts.user
+                    && self.erase(
                         &argv[optind..],
                         self.opts.all,
                         true, /* user */
                         streams,
-                    ) {
-                        return Err(STATUS_CMD_ERROR);
-                    }
+                    )
+                {
+                    return Err(STATUS_CMD_ERROR);
                 }
-                if self.opts.preset {
-                    if self.erase(
+                if self.opts.preset
+                    && self.erase(
                         &argv[optind..],
                         self.opts.all,
                         false, /* user */
                         streams,
-                    ) {
-                        return Err(STATUS_CMD_ERROR);
-                    }
+                    )
+                {
+                    return Err(STATUS_CMD_ERROR);
                 }
             }
             BIND_INSERT => {

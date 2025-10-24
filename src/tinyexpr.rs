@@ -278,12 +278,14 @@ const BUILTINS: &[(&wstr, Function)] = &[
         L!("bitxor"),
         Function::Fn2(|a, b| bitwise_op(a, b, BitXor::bitxor)),
     ),
+    #[allow(clippy::incompatible_msrv)]
     (L!("ceil"), Function::Fn1(f64::ceil)),
     (L!("cos"), Function::Fn1(f64::cos)),
     (L!("cosh"), Function::Fn1(f64::cosh)),
     (L!("e"), Function::Constant(E)),
     (L!("exp"), Function::Fn1(f64::exp)),
     (L!("fac"), Function::Fn1(fac)),
+    #[allow(clippy::incompatible_msrv)]
     (L!("floor"), Function::Fn1(f64::floor)),
     (L!("ln"), Function::Fn1(f64::ln)),
     (L!("log"), Function::Fn1(f64::log10)),
@@ -295,6 +297,7 @@ const BUILTINS: &[(&wstr, Function)] = &[
     (L!("npr"), Function::Fn2(npr)),
     (L!("pi"), Function::Constant(PI)),
     (L!("pow"), Function::Fn2(f64::powf)),
+    #[allow(clippy::incompatible_msrv)]
     (L!("round"), Function::Fn1(f64::round)),
     (L!("sin"), Function::Fn1(f64::sin)),
     (L!("sinh"), Function::Fn1(f64::sinh)),

@@ -401,6 +401,7 @@ impl Pager {
     /// \param row_stop the row after the last row to print
     /// \param prefix The string to print before each completion
     /// \param lst The list of completions to print
+    #[allow(clippy::too_many_arguments)]
     fn completion_print(
         &self,
         cols: usize,

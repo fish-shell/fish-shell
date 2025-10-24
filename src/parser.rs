@@ -96,12 +96,6 @@ impl Block {
     }
 }
 
-impl Default for BlockType {
-    fn default() -> Self {
-        BlockType::top
-    }
-}
-
 impl Block {
     /// Construct from a block type.
     pub fn new(block_type: BlockType) -> Self {
@@ -337,12 +331,6 @@ impl LibraryData {
     }
 }
 
-impl Default for LoopStatus {
-    fn default() -> Self {
-        LoopStatus::normals
-    }
-}
-
 /// Status variables set by the main thread as jobs are parsed and read by various consumers.
 #[derive(Default)]
 pub struct StatusVars {
@@ -457,7 +445,7 @@ impl Parser {
             interactive_initialized: RelaxedAtomicBool::new(false),
             line_counter: ScopedRefCell::new(LineCounter::empty()),
             job_list: RefCell::default(),
-            wait_handles: RefCell::new(WaitHandleStore::new()),
+            wait_handles: RefCell::default(),
             block_list: RefCell::default(),
             variables,
             scoped_data: ScopedCell::new(ScopedData::default()),
@@ -776,8 +764,10 @@ impl Parser {
         let skip_caret = self.is_interactive() && !self.is_function();
 
         // Use an error with empty text.
-        let mut empty_error = ParseError::default();
-        empty_error.source_start = source_offset;
+        let empty_error = ParseError {
+            source_start: source_offset,
+            ..Default::default()
+        };
 
         let mut line_info = empty_error.describe_with_prefix(
             self.line_counter.borrow().get_source(),
@@ -1356,7 +1346,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
 }
 
 /// Types of blocks.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum BlockType {
     /// While loop block
     while_block,
@@ -1371,6 +1361,7 @@ pub enum BlockType {
     /// Command substitution scope
     subst,
     /// Outermost block
+    #[default]
     top,
     /// Unconditional block
     begin,
@@ -1385,9 +1376,10 @@ pub enum BlockType {
 }
 
 /// Possible states for a loop.
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Default, Eq, PartialEq)]
 pub enum LoopStatus {
     /// current loop block executed as normal
+    #[default]
     normals,
     /// current loop block should be removed
     breaks,

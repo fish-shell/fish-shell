@@ -1,5 +1,3 @@
-#![allow(clippy::bad_bit_mask)]
-
 use crate::common::{
     UnescapeFlags, UnescapeStringStyle, unescape_string, valid_var_name, wcs2zstring,
 };

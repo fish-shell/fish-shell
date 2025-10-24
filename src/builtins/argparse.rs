@@ -467,7 +467,7 @@ fn collect_option_specs<'args>(
     args: &[&'args wstr],
     streams: &mut IoStreams,
 ) -> BuiltinResult {
-    let Some(&cmd) = args.get(0) else {
+    let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 
@@ -517,7 +517,7 @@ fn parse_cmd_opts<'args>(
     parser: &Parser,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
-    let Some(&cmd) = args.get(0) else {
+    let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 
@@ -1176,7 +1176,7 @@ fn set_argparse_result_vars(vars: &EnvStack, opts: ArgParseCmdOpts) {
 /// version is a builtin it can directly set variables local to the current scope (e.g., a
 /// function). It doesn't need to write anything to stdout that then needs to be eval'd.
 pub fn argparse(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    let Some(&cmd) = args.get(0) else {
+    let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 

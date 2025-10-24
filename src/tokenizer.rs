@@ -913,7 +913,7 @@ fn tok_is_string_character(c: char, next: Option<char>) -> bool {
 /// by adding a fast path for the most common characters. This is obviously not a suitable
 /// replacement for iswalpha.
 fn myal(c: char) -> bool {
-    ('a'..='z').contains(&c) || ('A'..='Z').contains(&c)
+    c.is_ascii_alphabetic()
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

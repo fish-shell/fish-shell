@@ -14,7 +14,7 @@ use std::{os::fd::AsRawFd, sync::Arc};
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
 pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    let Some(&cmd) = args.get(0) else {
+    let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 

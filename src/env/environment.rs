@@ -38,19 +38,14 @@ use std::sync::Arc;
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Return values for `EnvStack::set()`.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum EnvStackSetResult {
-    Ok,       // The variable was set successfully.
+    #[default]
+    Ok, // The variable was set successfully.
     Perm,     // The variable is read-only.
     Scope,    // Variable cannot be set in the given scope.
     Invalid,  // The variable's value is invalid (e.g. umask).
     NotFound, // The variable was not found (only possible when removing a variable).
-}
-
-impl Default for EnvStackSetResult {
-    fn default() -> Self {
-        EnvStackSetResult::Ok
-    }
 }
 
 impl From<EnvStackSetResult> for BuiltinResult {

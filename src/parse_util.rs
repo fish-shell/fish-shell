@@ -598,6 +598,7 @@ pub fn parse_util_contains_wildcards(s: &wstr) -> bool {
     let mut i = 0;
     while i < s.len() {
         let c = s.as_char_slice()[i];
+        #[allow(clippy::if_same_then_else)]
         if c == '*' {
             return true;
         } else if unesc_qmark && c == '?' {

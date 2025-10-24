@@ -583,10 +583,10 @@ impl IoChain {
                         Err(err) => {
                             if oflags.contains(OFlag::O_EXCL) && err == nix::Error::EEXIST {
                                 FLOGF!(warning, NOCLOB_ERROR, spec.target);
-                            } else if spec.mode != RedirectionMode::try_input {
-                                if should_flog!(warning) {
-                                    print_error(errno::errno().0, &spec.target);
-                                }
+                            } else if spec.mode != RedirectionMode::try_input
+                                && should_flog!(warning)
+                            {
+                                print_error(errno::errno().0, &spec.target);
                             }
                             // If opening a file fails, insert a closed FD instead of the file redirection
                             // and return false. This lets execution potentially recover and at least gives

@@ -63,13 +63,15 @@ pub struct WaitHandleStore {
     cache: lru::LruCache<Pid, WaitHandleRef>,
 }
 
-impl WaitHandleStore {
+impl Default for WaitHandleStore {
     /// Construct with the default capacity.
-    pub fn new() -> WaitHandleStore {
+    fn default() -> Self {
         Self::new_with_capacity(WAIT_HANDLE_STORE_DEFAULT_LIMIT)
     }
+}
 
-    pub fn new_with_capacity(capacity: usize) -> WaitHandleStore {
+impl WaitHandleStore {
+    pub fn new_with_capacity(capacity: usize) -> Self {
         let capacity = std::num::NonZeroUsize::new(capacity).unwrap();
         WaitHandleStore {
             cache: lru::LruCache::new(capacity),

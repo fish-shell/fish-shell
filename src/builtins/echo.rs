@@ -25,7 +25,7 @@ fn parse_options(
     parser: &Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), ErrorCode> {
-    let Some(&cmd) = args.get(0) else {
+    let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 

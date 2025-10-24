@@ -508,7 +508,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 use crate::util::wcsfilecmp_glob;
 
                 let mut paths = vec![];
-                let arg = crate::common::wcs2bytes(args.get(0).unwrap_or(&L!("")));
+                let arg = crate::common::wcs2bytes(args.first().unwrap_or(&L!("")));
                 let arg = std::str::from_utf8(&arg).unwrap();
                 for path in crate::autoload::Asset::iter().chain(Docs::iter()) {
                     if arg.is_empty() || path.starts_with(arg) {

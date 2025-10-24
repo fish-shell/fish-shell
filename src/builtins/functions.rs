@@ -13,6 +13,7 @@ use crate::parse_util::parse_util_compute_indents;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::termsize::termsize_last;
 
+#[derive(Default)]
 struct FunctionsCmdOpts<'args> {
     print_help: bool,
     erase: bool,
@@ -26,25 +27,6 @@ struct FunctionsCmdOpts<'args> {
     handlers: bool,
     handlers_type: Option<&'args wstr>,
     description: Option<&'args wstr>,
-}
-
-impl Default for FunctionsCmdOpts<'_> {
-    fn default() -> Self {
-        Self {
-            print_help: false,
-            erase: false,
-            list: false,
-            show_hidden: false,
-            query: false,
-            copy: false,
-            report_metadata: false,
-            no_metadata: false,
-            verbose: false,
-            handlers: false,
-            handlers_type: None,
-            description: None,
-        }
-    }
 }
 
 const NO_METADATA_SHORT: char = 2 as char;
@@ -126,7 +108,7 @@ fn parse_cmd_opts<'args>(
 }
 
 pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    let Some(&cmd) = args.get(0) else {
+    let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 

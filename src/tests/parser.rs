@@ -34,7 +34,7 @@ fn test_parser() {
             return Err(ParserTestErrorBits::ERROR);
         }
         let args = &ast.top().arguments;
-        let first_arg = args.get(0).expect("Failed to parse an argument");
+        let first_arg = args.first().expect("Failed to parse an argument");
         let mut errors = None;
         parse_util_detect_errors_in_argument(first_arg, first_arg.source(&src), &mut errors)
     }

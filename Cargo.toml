@@ -160,9 +160,13 @@ rust.non_camel_case_types = "allow"
 rust.non_upper_case_globals = "allow"
 rust.unknown_lints = "allow"
 rust.unstable_name_collisions = "allow"
+rustdoc.private_intra_doc_links = "allow"
+clippy.len_without_is_empty = "allow" # we're not a library crate
 clippy.manual_range_contains = "allow"
-clippy.needless_return = "allow"
 clippy.needless_lifetimes = "allow"
+clippy.needless_return = "allow"
+clippy.new_without_default = "allow"
+clippy.option_map_unit_fn = "allow"
 
 # We do not want to use the e?print(ln)?! macros.
 # These lints flag their use.

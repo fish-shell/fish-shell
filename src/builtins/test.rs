@@ -1045,14 +1045,12 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         }
         return Err(STATUS_INVALID_ARGS); // Per 1003.1, exit false.
     } else if argc == 1 {
-        if should_flog!(deprecated_test) {
-            if args[0] != "-z" {
-                streams.err.appendln(wgettext_fmt!(
-                    "%s: called with one argument. This will return false in future.",
-                    program_name
-                ));
-                streams.err.append(parser.current_line());
-            }
+        if should_flog!(deprecated_test) && args[0] != "-z" {
+            streams.err.appendln(wgettext_fmt!(
+                "%s: called with one argument. This will return false in future.",
+                program_name
+            ));
+            streams.err.append(parser.current_line());
         }
         // Per 1003.1, exit true if the arg is non-empty.
         return if args[0].is_empty() {

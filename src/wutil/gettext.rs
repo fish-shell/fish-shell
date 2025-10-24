@@ -70,6 +70,7 @@ mod gettext_impl {
     /// 1. `LC_ALL`
     /// 2. `LC_MESSAGES`
     /// 3. `LANG`
+    ///
     /// The value of the first one set to a non-zero value will be considered.
     /// If it is set to the `C` locale (we consider any value starting with `C` as the `C` locale),
     /// localization will be disabled.

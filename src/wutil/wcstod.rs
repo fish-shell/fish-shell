@@ -21,7 +21,7 @@ where
         .map(|c| c.is_ascii_alphabetic())
         .unwrap_or(false)
     {
-        return parse_inf_nan(chars, s.as_bytes().get(0).copied(), consumed);
+        return parse_inf_nan(chars, s.as_bytes().first().copied(), consumed);
     }
 
     while let Some(c) = chars.next_if(|c| c.is_ascii_digit()) {

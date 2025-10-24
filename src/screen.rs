@@ -246,8 +246,8 @@ pub struct Screen {
     mtime_stdout_stderr: (Option<SystemTime>, Option<SystemTime>),
 }
 
-impl Screen {
-    pub fn new() -> Self {
+impl Default for Screen {
+    fn default() -> Self {
         Self {
             outp: Outputter::stdoutput(),
             autosuggestion_is_truncated: Default::default(),
@@ -263,7 +263,9 @@ impl Screen {
             mtime_stdout_stderr: Default::default(),
         }
     }
+}
 
+impl Screen {
     /// This is the main function for the screen output library. It is used to define the desired
     /// contents of the screen. The screen command will use its knowledge of the current contents of
     /// the screen in order to render the desired output using as few terminal commands as possible.
@@ -275,6 +277,7 @@ impl Screen {
     /// of the command line \param colors the colors to use for the commanad line \param indent the
     /// indent to use for the command line \param cursor_pos where the cursor is \param pager the
     /// pager to render below the command line \param page_rendering to cache the current pager view
+    #[allow(clippy::too_many_arguments)]
     pub fn write(
         &mut self,
         left_prompt: &wstr,
@@ -756,6 +759,7 @@ impl Screen {
 
     /// Appends a character to the end of the line that the output cursor is on. This function
     /// automatically handles linebreaks and lines longer than the screen width.
+    #[allow(clippy::too_many_arguments)]
     fn desired_append_char(
         &mut self,
         offset_in_cmdline: CharOffset,
@@ -896,6 +900,7 @@ impl Screen {
         let y_steps =
             isize::try_from(new_y).unwrap() - isize::try_from(self.actual.cursor.y).unwrap();
 
+        #[allow(clippy::comparison_chain)] // TODO(MSRV>=1.90) for old clippy
         let s = if y_steps < 0 {
             Some(CursorUp)
         } else if y_steps > 0 {
@@ -1264,6 +1269,7 @@ impl Screen {
             // Clear the remainder of the line if we need to clear and if we didn't write to the end of
             // the line. If we did write to the end of the line, the "sticky right edge" (as part of
             // auto_right_margin) means that we'll be clearing the last character we wrote!
+            #[allow(clippy::if_same_then_else)]
             if has_cleared_screen || has_cleared_line {
                 // Already cleared everything.
                 clear_remainder = false;
@@ -1940,6 +1946,7 @@ fn truncation_offset_for_width(str: &wstr, max_width: usize) -> usize {
 }
 
 // Exposed for testing.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn compute_layout(
     ellipsis_char: char,
     screen_width: usize,
@@ -1995,12 +2002,13 @@ pub(crate) fn compute_layout(
     // prompt will wrap to the next line. This means that we can't go back to the line that we were
     // on, and things turn to chaos very quickly.
 
-    let mut result = ScreenLayout::default();
-
-    // Always visible.
-    result.left_prompt = left_prompt;
-    result.left_prompt_space = left_prompt_width;
-    result.left_prompt_lines = left_prompt_layout.line_starts.len();
+    let mut result = ScreenLayout {
+        // Always visible.
+        left_prompt,
+        left_prompt_space: left_prompt_width,
+        left_prompt_lines: left_prompt_layout.line_starts.len(),
+        ..Default::default()
+    };
 
     // Hide the right prompt if it doesn't fit on the first line.
     if left_prompt_width + first_command_line_width + right_prompt_width < screen_width {

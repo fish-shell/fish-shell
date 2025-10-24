@@ -52,6 +52,7 @@ impl<Iter: Iterator<Item = char>> CharsIterator<Iter> {
 ///   - Leading 0x or 0X means 16.
 ///   - Leading 0 means 8.
 ///   - Otherwise 10.
+///
 /// The parse result contains the number as a u64, and whether it was negative.
 fn parse_radix<Iter: Iterator<Item = char>>(
     iter: Iter,
@@ -110,7 +111,7 @@ fn parse_radix<Iter: Iterator<Item = char>>(
                 chars.next();
                 16
             }
-            c if ('0'..='9').contains(&c) => 8,
+            c if c.is_ascii_digit() => 8,
             _ => {
                 // Just a 0.
                 return Ok(leading_zero_result.unwrap());
@@ -239,6 +240,7 @@ where
 ///  - Leading whitespace is skipped.
 ///  - 0 means octal, 0x means hex
 ///  - Leading + is supported.
+///
 /// The number of consumed characters is returned in out_consumed.
 pub fn wcstoi_partial<Int, Chars>(
     src: Chars,

@@ -128,8 +128,8 @@ impl LockedFile {
     /// Two modes of modification are supported:
     /// - Appending
     /// - Writing to a temporary file which is then renamed into place.
-    /// File flags are derived from the [`LockingMode`].
-    /// `file_name` should just be a name, not a full path.
+    ///   File flags are derived from the [`LockingMode`].
+    ///   `file_name` should just be a name, not a full path.
     pub fn new(locking_mode: LockingMode, file_path: &wstr) -> std::io::Result<Self> {
         let dir_path = wdirname(file_path);
 
@@ -288,11 +288,12 @@ pub struct PotentialUpdate<UserData> {
 ///
 /// - `path`: The path to the file which should be updated.
 /// - `rewrite`: The function which handles reading from the file and writing to a temporary file.
-/// The first argument is for the file to read from, the second for the temporary file to write to.
-/// On success, the value returned by `rewrite` is included in this functions return value. Be
-/// careful about side effects of `rewrite`. It might get executed multiple times. Try to avoid
-/// side effects and instead extract any data you might need and return them on success.
-/// Then, apply the desired side effects once this function has returned successfully.
+///   The first argument is for the file to read from, the second for the temporary file to
+///   write to.  On success, the value returned by `rewrite` is included in this functions
+///   return value. Be careful about side effects of `rewrite`. It might get executed multiple
+///   times. Try to avoid side effects and instead extract any data you might need and return
+///   them on success.  Then, apply the desired side effects once this function has returned
+///   successfully.
 ///
 /// # Return value
 ///

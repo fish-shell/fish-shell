@@ -1343,7 +1343,7 @@ pub trait InputEventQueuer {
         let Some(mut code) = self.try_readb(buffer) else {
             return Some(KeyEvent::from(alt('O')));
         };
-        while (b'0'..=b'9').contains(&code) {
+        while code.is_ascii_digit() {
             raw_mask = raw_mask * 10 + u32::from(code - b'0');
             code = self.try_readb(buffer).unwrap_or(0xff);
         }

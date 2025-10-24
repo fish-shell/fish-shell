@@ -141,6 +141,7 @@ fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) 
 /// and skipping non-string tokens
 /// \param buffer the original command line buffer
 /// \param cursor_pos the position of the cursor in the command line
+#[allow(clippy::too_many_arguments)]
 fn write_part(
     parser: &Parser,
     range: Range<usize>,
@@ -399,10 +400,10 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             };
             // Don't enqueue a repaint if we're currently in the middle of one,
             // because that's an infinite loop.
-            if matches!(cmd, RL::RepaintMode | RL::ForceRepaint | RL::Repaint) {
-                if parser.libdata().is_repaint {
-                    continue;
-                }
+            if matches!(cmd, RL::RepaintMode | RL::ForceRepaint | RL::Repaint)
+                && parser.libdata().is_repaint
+            {
+                continue;
             }
 
             // Inserts the readline function at the back of the queue.

@@ -405,12 +405,12 @@ fn append_overflow_error(
     source_start: Option<usize>,
 ) -> ExpandResult {
     if let Some(ref mut errors) = errors {
-        let mut error = ParseError::default();
-        error.source_start = source_start.unwrap_or(SOURCE_LOCATION_UNKNOWN);
-        error.source_length = 0;
-        error.code = ParseErrorCode::generic;
-        error.text = wgettext!("Expansion produced too many results").to_owned();
-        errors.push(error);
+        errors.push(ParseError {
+            source_start: source_start.unwrap_or(SOURCE_LOCATION_UNKNOWN),
+            source_length: 0,
+            code: ParseErrorCode::generic,
+            text: wgettext!("Expansion produced too many results").to_owned(),
+        });
     }
     ExpandResult::make_error(STATUS_EXPAND_ERROR)
 }

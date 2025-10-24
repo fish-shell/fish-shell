@@ -791,14 +791,16 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), Error
 /// Read interactively. Read input from stdin while providing editing facilities.
 fn read_i(parser: &Parser) {
     assert_is_main_thread();
-    let mut conf = ReaderConfig::default();
-    conf.event = L!("fish_prompt");
-    conf.complete_ok = true;
-    conf.highlight_ok = true;
-    conf.syntax_check_ok = true;
-    conf.expand_abbrev_ok = true;
-    conf.autosuggest_ok = check_bool_var(parser.vars(), L!("fish_autosuggestion_enabled"), true);
-    conf.transient_prompt = check_bool_var(parser.vars(), L!("fish_transient_prompt"), false);
+    let mut conf = ReaderConfig {
+        event: L!("fish_prompt"),
+        complete_ok: true,
+        highlight_ok: true,
+        syntax_check_ok: true,
+        expand_abbrev_ok: true,
+        autosuggest_ok: check_bool_var(parser.vars(), L!("fish_autosuggestion_enabled"), true),
+        transient_prompt: check_bool_var(parser.vars(), L!("fish_transient_prompt"), false),
+        ..Default::default()
+    };
 
     if parser.is_breakpoint() && function::exists(DEBUG_PROMPT_FUNCTION_NAME, parser) {
         conf.left_prompt_cmd = DEBUG_PROMPT_FUNCTION_NAME.to_owned();
@@ -994,10 +996,8 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
 
     // Set up our fixed terminal modes once,
     // so we don't get flow control just because we inherited it.
-    if is_interactive_session() {
-        if getpgrp() == unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
-            term_donate(/*quiet=*/ true);
-        }
+    if is_interactive_session() && getpgrp() == unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
+        term_donate(/*quiet=*/ true);
     }
 }
 
@@ -1333,7 +1333,7 @@ impl ReaderData {
             first_prompt: true,
             last_flash: Default::default(),
             flash_autosuggestion: false,
-            screen: Screen::new(),
+            screen: Screen::default(),
             input_data,
             queued_repaint: false,
             history,
@@ -3295,10 +3295,10 @@ impl<'a> Reader<'a> {
             }
             rl::BackwardCharPassive => {
                 let (elt, el) = self.active_edit_line();
-                if el.position() != 0 {
-                    if elt == EditableLineTag::SearchField || !self.is_navigating_pager_contents() {
-                        self.update_buff_pos(elt, Some(el.position() - 1));
-                    }
+                if el.position() != 0
+                    && (elt == EditableLineTag::SearchField || !self.is_navigating_pager_contents())
+                {
+                    self.update_buff_pos(elt, Some(el.position() - 1));
                 }
             }
             rl::ForwardChar | rl::ForwardSingleChar => {
@@ -6514,12 +6514,12 @@ impl<'a> Reader<'a> {
     /// Handle the list of completions. This means the following:
     ///
     /// - If the list is empty, flash the terminal.
-    /// - If the list contains one element, write the whole element, and if the element does not end on
-    /// a '/', '@', ':', '.', ',', '-' or a '=', also write a trailing space.
+    /// - If the list contains one element, write the whole element, and if the element does not end
+    ///   on a '/', '@', ':', '.', ',', '-' or a '=', also write a trailing space.
     /// - If the list contains multiple elements, insert their common prefix, if any and display
-    /// the list in the pager.  Depending on terminal size and the length of the list, the pager
-    /// may either show less than a screenfull and exit or use an interactive pager to allow the
-    /// user to scroll through the completions.
+    ///   the list in the pager.  Depending on terminal size and the length of the list, the
+    ///   pager may either show less than a screenfull and exit or use an interactive pager to
+    ///   allow the user to scroll through the completions.
     ///
     /// \param comp the list of completion strings
     /// \param token_begin the position of the token to complete

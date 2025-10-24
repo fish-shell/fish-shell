@@ -279,13 +279,13 @@ fn autosuggest_parse_command(
 
     // Find the first statement.
     let job_list: &ast::JobList = ast.top();
-    let jc = job_list.get(0)?;
+    let jc = job_list.first()?;
     let first_statement = jc.job.statement.as_decorated_statement()?;
 
     if let Some(expanded_command) = statement_get_expanded_command(buff, first_statement, ctx) {
         let mut arg = WString::new();
         // Check if the first argument or redirection is, in fact, an argument.
-        if let Some(arg_or_redir) = first_statement.args_or_redirs.get(0) {
+        if let Some(arg_or_redir) = first_statement.args_or_redirs.first() {
             if arg_or_redir.is_argument() {
                 arg = arg_or_redir.argument().source(buff).to_owned();
             }
@@ -318,21 +318,22 @@ pub fn autosuggest_validate_from_history(
     };
 
     // We handle cd specially.
-    if is_veritable_cd(&parsed_command) && !cd_dir.is_empty() {
-        if expand_one(&mut cd_dir, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None) {
-            if string_prefixes_string(&cd_dir, L!("--help"))
-                || string_prefixes_string(&cd_dir, L!("-h"))
-            {
-                // cd --help is always valid.
-                return true;
-            } else {
-                // Check the directory target, respecting CDPATH.
-                // Permit the autosuggestion if the path is valid and not our directory.
-                let path = path_get_cdpath(&cd_dir, working_directory, ctx.vars());
-                return path
-                    .map(|p| !paths_are_same_file(working_directory, &p))
-                    .unwrap_or(false);
-            }
+    if is_veritable_cd(&parsed_command)
+        && !cd_dir.is_empty()
+        && expand_one(&mut cd_dir, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None)
+    {
+        if string_prefixes_string(&cd_dir, L!("--help"))
+            || string_prefixes_string(&cd_dir, L!("-h"))
+        {
+            // cd --help is always valid.
+            return true;
+        } else {
+            // Check the directory target, respecting CDPATH.
+            // Permit the autosuggestion if the path is valid and not our directory.
+            let path = path_get_cdpath(&cd_dir, working_directory, ctx.vars());
+            return path
+                .map(|p| !paths_are_same_file(working_directory, &p))
+                .unwrap_or(false);
         }
     }
 
@@ -1217,17 +1218,6 @@ impl Default for HighlightRole {
     }
 }
 
-impl Default for HighlightSpec {
-    fn default() -> Self {
-        Self {
-            foreground: Default::default(),
-            background: Default::default(),
-            valid_path: Default::default(),
-            force_underline: Default::default(),
-        }
-    }
-}
-
 /// Describes the role of a span of text.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[repr(u8)]
@@ -1266,7 +1256,7 @@ pub enum HighlightRole {
 }
 
 /// Simple value type describing how a character should be highlighted.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct HighlightSpec {
     pub foreground: HighlightRole,
     pub background: HighlightRole,

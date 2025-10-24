@@ -442,7 +442,7 @@ impl Process {
 
     /// Returns `argv[0]`.
     pub fn argv0(&self) -> Option<&wstr> {
-        self.argv.get(0).map(|s| s.as_utfstr())
+        self.argv.first().map(|s| s.as_utfstr())
     }
 
     /// Returns the status.

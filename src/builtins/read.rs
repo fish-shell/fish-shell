@@ -240,6 +240,7 @@ fn parse_cmd_opts(
 
 /// Read from the tty. This is only valid when the stream is stdin and it is attached to a tty and
 /// we weren't asked to split on null characters.
+#[allow(clippy::too_many_arguments)]
 fn read_interactive(
     parser: &Parser,
     buff: &mut WString,
@@ -254,23 +255,26 @@ fn read_interactive(
     let mut exit_res = Ok(SUCCESS);
 
     // Construct a configuration.
-    let mut conf = ReaderConfig::default();
-    conf.complete_ok = shell;
-    conf.highlight_ok = shell;
-    conf.syntax_check_ok = shell;
+    let conf = ReaderConfig {
+        complete_ok: shell,
+        highlight_ok: shell,
+        syntax_check_ok: shell,
 
-    // No autosuggestions or abbreviations in builtin_read.
-    conf.autosuggest_ok = false;
-    conf.expand_abbrev_ok = false;
+        // No autosuggestions or abbreviations in builtin_read.
+        autosuggest_ok: false,
+        expand_abbrev_ok: false,
 
-    conf.exit_on_interrupt = true;
-    conf.in_silent_mode = silent;
+        exit_on_interrupt: true,
+        in_silent_mode: silent,
 
-    conf.left_prompt_cmd = prompt.to_owned();
-    conf.right_prompt_cmd = right_prompt.to_owned();
-    conf.event = L!("fish_read");
+        left_prompt_cmd: prompt.to_owned(),
+        right_prompt_cmd: right_prompt.to_owned(),
+        event: L!("fish_read"),
 
-    conf.inputfd = inputfd;
+        inputfd,
+
+        ..Default::default()
+    };
 
     // Keep in-memory history only.
     reader_push(parser, L!(""), conf);

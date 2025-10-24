@@ -395,7 +395,7 @@ impl<'a> ExecutionContext<'a> {
         let forbidden_function_name = parent_fn_name;
 
         // Get the first job in the job list.
-        let jc = &jobs.get(0)?;
+        let jc = &jobs.first()?;
         let job = &jc.job;
 
         // Helper to return if a statement is infinitely recursive in this function.
@@ -1591,8 +1591,10 @@ impl<'a> ExecutionContext<'a> {
             return result;
         }
 
-        let mut props = JobProperties::default();
-        props.initial_background = job_is_background;
+        let mut props = JobProperties {
+            initial_background: job_is_background,
+            ..Default::default()
+        };
         {
             let parser = ctx.parser();
             let sc = parser.scope();

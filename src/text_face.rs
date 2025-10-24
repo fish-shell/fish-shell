@@ -295,7 +295,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     }
 
     // Historical behavior: reset only applies if it's the first argument.
-    if is_builtin && fg_args.get(0).is_some_and(|fg| fg == "reset") {
+    if is_builtin && fg_args.first().is_some_and(|fg| fg == "reset") {
         return Ok(ResetFace);
     }
 

@@ -17,7 +17,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     let argc = args.len();
 
     let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
-    let cmd = match args.get(0) {
+    let cmd = match args.first() {
         Some(&cmd) => cmd,
         None => return Err(STATUS_INVALID_ARGS),
     };

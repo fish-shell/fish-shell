@@ -48,7 +48,7 @@ fn send_to_bg(
 pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
 
-    let Some(&cmd) = args.get(0) else {
+    let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 

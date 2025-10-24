@@ -505,12 +505,12 @@ impl Outputter {
     /// In order to set the color to normal, three commands may have to be written.
     ///
     /// - First a command to set the color, such as set_a_foreground. This is needed because otherwise
-    /// the previous strings colors might be removed as well.
+    ///   the previous strings colors might be removed as well.
     ///
     /// - After that we write the exit_attribute_mode command to reset all color attributes.
     ///
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
-    /// color pair to what it should be.
+    ///   color pair to what it should be.
     pub(crate) fn set_text_face(&mut self, face: TextFace) {
         self.set_text_face_internal(face, true)
     }
@@ -541,14 +541,12 @@ impl Outputter {
             // Only way to exit non-resettable ones is a reset of all attributes.
             self.reset_text_face();
         }
-        if salvage_unreadable {
-            if !bg.is_special() && fg == bg {
-                fg = if bg == Color::WHITE {
-                    Color::BLACK
-                } else {
-                    Color::WHITE
-                };
-            }
+        if salvage_unreadable && !bg.is_special() && fg == bg {
+            fg = if bg == Color::WHITE {
+                Color::BLACK
+            } else {
+                Color::WHITE
+            };
         }
 
         if !fg.is_none() && fg != self.last.fg {

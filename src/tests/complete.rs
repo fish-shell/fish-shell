@@ -84,8 +84,10 @@ fn test_complete() {
     sort_and_prioritize(&mut completions, CompletionRequestOptions::default());
     assert_eq!(completions, vec![]);
 
-    let mut fuzzy_options = CompletionRequestOptions::default();
-    fuzzy_options.fuzzy_match = true;
+    let fuzzy_options = CompletionRequestOptions {
+        fuzzy_match: true,
+        ..Default::default()
+    };
     let mut completions = do_complete(L!("$1"), fuzzy_options);
     sort_and_prioritize(&mut completions, fuzzy_options);
     assert_eq!(completions.len(), 3);
@@ -275,8 +277,10 @@ fn test_complete() {
     assert_eq!(&completions, &[]);
 
     // Trailing spaces (#1261).
-    let mut no_files = CompletionMode::default();
-    no_files.no_files = true;
+    let no_files = CompletionMode {
+        no_files: true,
+        ..Default::default()
+    };
     complete_add(
         L!("foobarbaz").into(),
         false,

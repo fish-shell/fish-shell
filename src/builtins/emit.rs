@@ -2,7 +2,7 @@ use super::prelude::*;
 use crate::event;
 
 pub fn emit(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
-    let Some(&cmd) = argv.get(0) else {
+    let Some(&cmd) = argv.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 

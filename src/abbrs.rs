@@ -1,4 +1,3 @@
-#![allow(clippy::extra_unused_lifetimes, clippy::needless_lifetimes)]
 use std::{
     collections::HashSet,
     sync::{Mutex, MutexGuard},
@@ -102,10 +101,8 @@ impl Abbreviation {
         if !self.matches_position(position) {
             return false;
         }
-        if !self.commands.is_empty() {
-            if !self.commands.contains(&command.to_owned()) {
-                return false;
-            }
+        if !self.commands.is_empty() && !self.commands.contains(&command.to_owned()) {
+            return false;
         }
         match &self.regex {
             Some(r) => r

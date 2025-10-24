@@ -465,8 +465,10 @@ fn path_normalize(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
 }
 
 fn path_mtime(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    let mut opts = Options::default();
-    opts.relative_valid = true;
+    let mut opts = Options {
+        relative_valid: true,
+        ..Default::default()
+    };
     let mut optind = 0;
 
     parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
@@ -692,9 +694,11 @@ fn path_resolve(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
 }
 
 fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    let mut opts = Options::default();
-    opts.reverse_valid = true;
-    opts.unique_valid = true;
+    let mut opts = Options {
+        reverse_valid: true,
+        unique_valid: true,
+        ..Default::default()
+    };
     let mut optind = 0;
 
     parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
@@ -861,11 +865,13 @@ fn path_filter_maybe_is(
     args: &mut [&wstr],
     is_is: bool,
 ) -> BuiltinResult {
-    let mut opts = Options::default();
-    opts.types_valid = true;
-    opts.perms_valid = true;
-    opts.invert_valid = true;
-    opts.all_valid = true;
+    let mut opts = Options {
+        types_valid: true,
+        perms_valid: true,
+        invert_valid: true,
+        all_valid: true,
+        ..Default::default()
+    };
     let mut optind = 0;
 
     parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
@@ -959,7 +965,7 @@ fn path_is(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Buil
 
 /// The path builtin, for handling paths.
 pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    let Some(&cmd) = args.get(0) else {
+    let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
     let argc = args.len();

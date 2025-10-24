@@ -26,6 +26,7 @@ use libc::STDOUT_FILENO;
 // complete_add function only accepts one short switch and one long switch.
 
 /// Silly function.
+#[allow(clippy::too_many_arguments)]
 fn builtin_complete_add2(
     cmd: &wstr,
     cmd_is_path: bool,
@@ -96,6 +97,7 @@ fn builtin_complete_add2(
 }
 
 /// Sily function.
+#[allow(clippy::too_many_arguments)]
 fn builtin_complete_add(
     cmds: &[WString],
     paths: &[WString],

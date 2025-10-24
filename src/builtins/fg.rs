@@ -13,7 +13,7 @@ use super::prelude::*;
 pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
 
-    let Some(&cmd) = argv.get(0) else {
+    let Some(&cmd) = argv.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 

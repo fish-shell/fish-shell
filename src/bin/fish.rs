@@ -17,10 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-// Delete this once we require Rust 1.74.
-#![allow(unstable_name_collisions)]
-#![allow(clippy::uninlined_format_args)]
-
 use fish::{
     ast,
     builtins::{

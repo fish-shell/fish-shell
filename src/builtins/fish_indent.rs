@@ -889,9 +889,6 @@ fn throwing_main() -> i32 {
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
     streams.stdin_fd = STDIN_FILENO;
-    // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
-    // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
-    //
     // Safety: single-threaded.
     unsafe { set_libc_locales() };
     crate::wutil::gettext::initialize_gettext();

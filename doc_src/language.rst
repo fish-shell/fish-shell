@@ -1819,24 +1819,24 @@ Whether ``cat`` here will see a SIGPIPE depends on how long the file is and how 
 Locale Variables
 ^^^^^^^^^^^^^^^^
 
-The "locale" of a program is its set of language and regional settings that depend on language and cultural convention. In UNIX, these are made up of several categories. The categories are:
+The "locale" of a program is its set of language and regional settings.
+In UNIX, these are made up of several categories. The categories used by fish are:
 
 .. envvar:: LANG
 
-   This is the typical environment variable for specifying a locale. A user may set this variable to express the language they speak, their region, and a character encoding. The actual values are specific to their platform, except for special values like ``C`` or ``POSIX``.
+   This is the typical environment variable for specifying a locale.
+   A user may set this variable to express the language they speak, their region, and a character encoding.
+   The encoding part is ignored, fish always assumes UTF-8. The actual values are specific to their platform, except for special values like ``C`` or ``POSIX``.
 
-   The value of LANG is used for each category unless the variable for that category was set or LC_ALL is set. So typically you only need to set LANG.
+   The value of ``LANG`` is used for each category unless the variable for that category was set or ``LC_ALL`` is set. So typically you only need to set LANG.
 
-   An example value might be ``en_US.UTF-8`` for the american version of english and the UTF-8 encoding, or ``de_AT.UTF-8`` for the austrian version of german and the UTF-8 encoding.
+   Example values are ``en_US.UTF-8`` for the American English or ``de_AT.UTF-8`` for Austrian German.
    Your operating system might have a ``locale`` command that you can call as ``locale -a`` to see a list of defined locales.
-
-   A UTF-8 encoding is recommended.
 
 .. envvar:: LC_ALL
 
-   Overrides the :envvar:`LANG` environment variable and the values of the other ``LC_*`` variables. If this is set, none of the other variables are used for anything.
-
-   Usually the other variables should be used instead. Use LC_ALL only when you need to override something.
+   Overrides the :envvar:`LANG` and all other ``LC_*`` variables.
+   Please use ``LC_ALL`` only as a temporary override.
 
 .. envvar:: LC_MESSAGES
 

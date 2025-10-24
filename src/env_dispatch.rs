@@ -534,11 +534,6 @@ fn init_locale(vars: &EnvStack) {
         loc
     };
 
-    // We *always* use a C-locale for numbers because we want '.' (except for in printf).
-    let loc_ptr = unsafe { libc::setlocale(libc::LC_NUMERIC, c"C".as_ptr()) };
-    // should never fail, the C locale should always be defined
-    assert_ne!(loc_ptr, ptr::null_mut());
-
     // Update cached locale information.
     crate::common::fish_setlocale();
     FLOG!(

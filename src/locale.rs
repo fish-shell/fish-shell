@@ -108,18 +108,8 @@ unsafe fn read_locale() -> Option<Locale> {
     // Bleh, we have to go through localeconv, which races with setlocale.
     // TODO: There has to be a better way to do this.
     let _guard = LOCALE_LOCK.lock().unwrap();
-
-    unsafe {
-        libc::setlocale(libc::LC_NUMERIC, c"".as_ptr());
-    }
-
     let lconv = unsafe { libc::localeconv() };
-    let result = (!lconv.is_null()).then(|| unsafe { lconv_to_locale(&*lconv) });
-    // Note we *always* use a C-locale for numbers, because we always want "." except for in printf.
-    unsafe {
-        libc::setlocale(libc::LC_NUMERIC, c"C".as_ptr());
-    }
-    result
+    (!lconv.is_null()).then(|| unsafe { lconv_to_locale(&*lconv) })
 }
 
 // Current numeric locale.

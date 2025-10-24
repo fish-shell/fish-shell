@@ -58,6 +58,11 @@ set -l green (set_color green)
 set -l yellow (set_color yellow)
 set -l normal (set_color normal)
 
+function die -V red -V normal
+    echo $red$argv[1]$normal
+    exit 1
+end
+
 if set -q fish_files[1]
     if not type -q fish_indent
         echo
@@ -67,8 +72,7 @@ if set -q fish_files[1]
     echo === Running "$green"fish_indent"$normal"
     if set -l -q _flag_check
         if not fish_indent --check -- $fish_files
-            echo $red"Fish files are not formatted correctly."$normal
-            exit 1
+            die "Fish files are not formatted correctly."
         end
     else
         fish_indent -w -- $fish_files
@@ -84,8 +88,7 @@ if set -q python_files[1]
     echo === Running "$green"ruff format"$normal"
     if set -l -q _flag_check
         if not ruff format --check $python_files
-            echo $red"Python files are not formatted correctly."$normal
-            exit 1
+            die "Python files are not formatted correctly."
         end
     else
         ruff format $python_files
@@ -100,21 +103,22 @@ if not cargo fmt --version >/dev/null
 end
 echo === Running "$green"rustfmt"$normal"
 if set -l -q _flag_check
-    if set -l -q _flag_all
+    if test $all = yes
+        set -l edition_spec string match -r '^edition\s*=.*'
+        test "$($edition_spec <Cargo.toml)" = "$($edition_spec <.rustfmt.toml)"
+        or die "Cargo.toml and .rustfmt.toml use different editions"
         if not cargo fmt --all --check
-            echo $red"Rust files are not formatted correctly."$normal
-            exit 1
+            die "Rust files are not formatted correctly."
         end
     else
         if set -q rust_files[1]
             if not rustfmt --check --files-with-diff $rust_files
-                echo $red"Rust files are not formatted correctly."
-                exit 1
+                die "Rust files are not formatted correctly."
             end
         end
     end
 else
-    if set -l -q _flag_all
+    if test $all = yes
         cargo fmt --all
     else
         if set -q rust_files[1]

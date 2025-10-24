@@ -3,6 +3,3 @@ pub mod file_tester;
 mod highlight;
 pub use file_tester::is_potential_path;
 pub use highlight::*;
-
-#[cfg(test)]
-mod tests;

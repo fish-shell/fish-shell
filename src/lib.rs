@@ -60,6 +60,7 @@ pub mod reader_history_search;
 pub mod redirection;
 pub mod screen;
 pub mod signal;
+pub mod stdx;
 pub mod terminal;
 pub mod termsize;
 pub mod text_face;

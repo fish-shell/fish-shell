@@ -1,6 +1,7 @@
 use crate::common::{BUILD_DIR, ScopeGuard, ScopeGuarding};
 use crate::env::env_init;
 use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
+use crate::locale::set_libc_locales;
 use crate::parser::{CancelBehavior, Parser};
 use crate::reader::{reader_deinit, reader_init};
 use crate::signal::signal_reset_handlers;
@@ -12,7 +13,6 @@ use once_cell::sync::OnceCell;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env::set_current_dir;
-use std::ffi::CString;
 use std::path::PathBuf;
 
 pub use serial_test::serial;
@@ -26,12 +26,8 @@ pub fn test_init() -> impl ScopeGuarding<Target = ()> {
         test_dir.push("fish-test");
         std::fs::create_dir_all(&test_dir).unwrap();
         set_current_dir(&test_dir).unwrap();
-        {
-            let s = CString::new("").unwrap();
-            unsafe {
-                libc::setlocale(libc::LC_ALL, s.as_ptr());
-            }
-        }
+        // Safety: all tests that access locale should go through the enclosing function.
+        unsafe { set_libc_locales() };
         topic_monitor_init();
         crate::threads::init();
         proc_init();

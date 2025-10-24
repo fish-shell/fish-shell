@@ -1,6 +1,9 @@
-# fish-note-sections: Translations are divided into sections, each starting with a fish-section-* pseudo-message.
-# fish-note-sections: The first few sections are more important.
-# fish-note-sections: Ignore the tier3 sections unless you have a lot of time.
+# fish-note: To subscribe to proposed updates, point your feed reader at:
+# fish-note: https://raw.githubusercontent.com/fish-shell/fish-shell/fish-shell-events/po/pt_BR-additions.atom
+# fish-note: https://raw.githubusercontent.com/fish-shell/fish-shell/fish-shell-events/po/pt_BR-removals.atom
+# fish-note: Translations are divided into sections, each starting with a fish-section-* pseudo-message.
+# fish-note: The first few sections are more important.
+# fish-note: Ignore the tier3 sections unless you have a lot of time.
 # Portuguese translations for fish package.
 # Copyright (C) 2014 THE fish'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the fish package.

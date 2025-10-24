@@ -1563,7 +1563,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. describe:: Locale Variables
 
-   The locale variables :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC`, and :envvar:`LANG` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
+   Locale variables such as :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC` and :envvar:`LC_TIME`  set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
 
 .. describe:: Color variables
 
@@ -1844,7 +1844,7 @@ The "locale" of a program is its set of language and regional settings that depe
 
 .. envvar:: LC_MESSAGES
 
-   ``LC_MESSAGES`` determines the language in which messages are diisplayed.
+   Determines the language in which messages are displayed, see :doc:`builtin _ (underscore) <cmds/_>`.
 
 .. envvar:: LC_MONETARY
 
@@ -1852,11 +1852,12 @@ The "locale" of a program is its set of language and regional settings that depe
 
 .. envvar:: LC_NUMERIC
 
-   Sets the locale for formatting numbers.
+   Sets the locale for :doc:`formatting numbers <cmds/printf>`.
 
 .. envvar:: LC_TIME
 
-   Sets the locale for formatting dates and times.
+   Determines how date and time are displayed.
+   Used in the :ref:`history <history-show-time>` builtin.
 
 .. _builtin-overview:
 

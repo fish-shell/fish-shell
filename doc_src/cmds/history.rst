@@ -63,6 +63,8 @@ These flags can appear before or immediately after one of the sub-commands liste
 **-p** or **--prefix**
     Searches items in the history that begin with the specified text string. This is not currently supported by the **delete** subcommand.
 
+.. _history-show-time:
+
 **-t** or **--show-time**
     Prepends each history entry with the date and time the entry was recorded. By default it uses the strftime format ``# %c%n``. You can specify another format; e.g., ``--show-time="%Y-%m-%d %H:%M:%S "`` or ``--show-time="%a%I%p"``. The short option, **-t**, doesn't accept a strftime format string; it only uses the default format. Any strftime format is allowed, including ``%s`` to get the raw UNIX seconds since the epoch.
 

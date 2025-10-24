@@ -6572,7 +6572,15 @@ impl<'a> Reader<'a> {
             // Only use completions that match replace_token.
             let completion_replaces_token = c.flags.contains(CompleteFlags::REPLACES_TOKEN);
             if completion_replaces_token != will_replace_token {
-                continue;
+                // Keep smart/insensitive-case completions even when a same-case completion exists.
+                // They need to replace the token to adjust casing, but should still be offered (#7944).
+                let is_case_insensitive_match = matches!(
+                    c.r#match.case_fold,
+                    CaseSensitivity::Smart | CaseSensitivity::Insensitive
+                );
+                if !(completion_replaces_token && is_case_insensitive_match) {
+                    continue;
+                }
             }
 
             // Don't use completions that want to replace, if we cannot replace them.

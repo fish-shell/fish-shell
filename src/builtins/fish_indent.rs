@@ -1,12 +1,12 @@
 //! The fish_indent program.
 
-use std::ffi::{CString, OsStr};
+use std::ffi::OsStr;
 use std::fs;
 use std::io::{Read, Write};
 use std::os::unix::ffi::OsStrExt;
 
+use crate::locale::set_libc_locales;
 use crate::panic::panic_handler;
-use libc::LC_ALL;
 
 use super::prelude::*;
 use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
@@ -892,10 +892,8 @@ fn throwing_main() -> i32 {
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
     // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
     //
-    {
-        let s = CString::new("").unwrap();
-        unsafe { libc::setlocale(LC_ALL, s.as_ptr()) };
-    }
+    // Safety: single-threaded.
+    unsafe { set_libc_locales() };
     crate::wutil::gettext::initialize_gettext();
     env_init(None, true, false);
 

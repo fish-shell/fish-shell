@@ -3,6 +3,7 @@ use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
 use crate::env::{EnvMode, EnvStack, Environment, setenv_lock, unsetenv_lock};
 use crate::flog::FLOG;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
+use crate::locale::set_libc_locales;
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
     reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled, reader_set_transient_prompt,
@@ -526,18 +527,16 @@ fn init_locale(vars: &EnvStack) {
     }
 
     let user_locale = {
-        let loc_ptr = unsafe { libc::setlocale(libc::LC_ALL, c"".as_ptr().cast()) };
-        if loc_ptr.is_null() {
+        // Safety: we hold the locale lock.
+        let loc = unsafe { set_libc_locales() };
+        if loc.is_none() {
             FLOG!(env_locale, "user has an invalid locale configured");
-            None
-        } else {
-            // safety: setlocale did not return a null-pointer, so it is a valid pointer
-            Some(unsafe { CStr::from_ptr(loc_ptr) })
         }
+        loc
     };
 
     // We *always* use a C-locale for numbers because we want '.' (except for in printf).
-    let loc_ptr = unsafe { libc::setlocale(libc::LC_NUMERIC, c"C".as_ptr().cast()) };
+    let loc_ptr = unsafe { libc::setlocale(libc::LC_NUMERIC, c"C".as_ptr()) };
     // should never fail, the C locale should always be defined
     assert_ne!(loc_ptr, ptr::null_mut());
 

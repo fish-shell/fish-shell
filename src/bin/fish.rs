@@ -41,6 +41,7 @@ use fish::{
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
     io::IoChain,
+    locale::set_libc_locales,
     nix::{RUsage, getpid, getrusage, isatty},
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
@@ -63,7 +64,7 @@ use fish::{
 use libc::STDIN_FILENO;
 #[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
-use std::ffi::{CString, OsStr, OsString};
+use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
 use std::path::Path;
@@ -406,12 +407,8 @@ fn throwing_main() -> i32 {
     topic_monitor::topic_monitor_init();
     threads::init();
 
-    {
-        let s = CString::new("").unwrap();
-        unsafe {
-            libc::setlocale(libc::LC_ALL, s.as_ptr());
-        }
-    }
+    // Safety: single-threaded.
+    unsafe { set_libc_locales() };
 
     fish::wutil::gettext::initialize_gettext();
 

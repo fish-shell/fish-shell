@@ -17,10 +17,7 @@ use crate::tty_handoff::xtversion;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};
-use std::borrow::Cow;
 use std::collections::HashMap;
-use std::ffi::{CStr, CString};
-use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// List of all locale environment variable names that might trigger (re)initializing of the locale
@@ -502,16 +499,6 @@ pub fn read_terminfo_database(vars: &EnvStack) {
 fn init_locale(vars: &EnvStack) {
     let _guard = crate::locale::LOCALE_LOCK.lock().unwrap();
 
-    let old_msg_locale: CString = {
-        let old = unsafe { libc::setlocale(libc::LC_MESSAGES, ptr::null()) };
-        assert_ne!(old, ptr::null_mut());
-        // We have to make a copy because the subsequent setlocale() call to change the locale will
-        // invalidate the pointer from this setlocale() call.
-
-        // safety: `old` is not a null-pointer, and should be a reference to the currently set locale
-        unsafe { CStr::from_ptr(old.cast()) }.to_owned()
-    };
-
     for var_name in LOCALE_VARIABLES {
         let var = vars
             .getf_unless_empty(var_name, EnvMode::EXPORT)
@@ -525,40 +512,15 @@ fn init_locale(vars: &EnvStack) {
         }
     }
 
-    let user_locale = {
-        // Safety: we hold the locale lock.
-        let loc = unsafe { set_libc_locales() };
-        if loc.is_none() {
-            FLOG!(env_locale, "user has an invalid locale configured");
-        }
-        loc
-    };
+    // Safety: we hold the locale lock.
+    if !unsafe {
+        set_libc_locales(/*log_ok=*/ true)
+    } {
+        FLOG!(env_locale, "user has an invalid locale configured");
+    }
 
     // Update cached locale information.
     crate::common::fish_setlocale();
-    FLOG!(
-        env_locale,
-        "init_locale() setlocale():",
-        user_locale
-            .map(CStr::to_string_lossy)
-            .unwrap_or(Cow::Borrowed("(null)"))
-    );
-
-    let new_msg_loc_ptr = unsafe { libc::setlocale(libc::LC_MESSAGES, std::ptr::null()) };
-    // should never fail
-    assert_ne!(new_msg_loc_ptr, ptr::null_mut());
-    // safety: we just asserted it is not a null-pointer.
-    let new_msg_locale = unsafe { CStr::from_ptr(new_msg_loc_ptr) };
-    FLOG!(
-        env_locale,
-        "Old LC_MESSAGES locale:",
-        old_msg_locale.to_string_lossy()
-    );
-    FLOG!(
-        env_locale,
-        "New LC_MESSAGES locale:",
-        new_msg_locale.to_string_lossy()
-    );
 
     #[cfg(feature = "localize-messages")]
     crate::wutil::gettext::update_locale_from_env(vars);

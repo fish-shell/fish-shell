@@ -1,9 +1,10 @@
 use crate::common::{BUILD_DIR, PROGRAM_NAME};
 use crate::{FLOG, FLOGF};
 use fish_build_helper::workspace_root;
+use once_cell::sync::OnceCell;
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
@@ -22,7 +23,7 @@ const DOC_DIR: &str = env!("DOCDIR");
 
 impl ConfigPaths {
     pub fn new() -> Self {
-        let exec_path = get_fish_path();
+        let exec_path = FISH_PATH.get_or_init(compute_fish_path);
         FLOG!(config, format!("executable path: {}", exec_path.display()));
         let paths = Self::from_exec_path(exec_path);
         FLOGF!(
@@ -57,7 +58,7 @@ impl ConfigPaths {
     }
 
     #[cfg(feature = "embed-data")]
-    fn from_exec_path(exec_path: PathBuf) -> Self {
+    fn from_exec_path(exec_path: &Path) -> Self {
         FLOG!(config, "embed-data feature is active, ignoring data paths");
         Self {
             sysconf: if exec_path
@@ -73,9 +74,7 @@ impl ConfigPaths {
     }
 
     #[cfg(not(feature = "embed-data"))]
-    fn from_exec_path(unresolved_exec_path: PathBuf) -> Self {
-        use std::path::Path;
-
+    fn from_exec_path(unresolved_exec_path: &Path) -> Self {
         let invalid_exec_path = |exec_path: &Path| {
             FLOG!(
                 config,
@@ -87,7 +86,7 @@ impl ConfigPaths {
             Self::static_paths()
         };
         let Ok(exec_path) = unresolved_exec_path.canonicalize() else {
-            return invalid_exec_path(&unresolved_exec_path);
+            return invalid_exec_path(unresolved_exec_path);
         };
         let Some(exec_path_parent) = exec_path.parent() else {
             return invalid_exec_path(&exec_path);
@@ -144,8 +143,14 @@ impl ConfigPaths {
     }
 }
 
+static FISH_PATH: OnceCell<PathBuf> = OnceCell::new();
+
 /// Get the absolute path to the fish executable itself
-pub fn get_fish_path() -> PathBuf {
+pub fn get_fish_path() -> &'static PathBuf {
+    FISH_PATH.get().unwrap()
+}
+
+fn compute_fish_path() -> PathBuf {
     let Ok(path) = std::env::current_exe() else {
         assert!(PROGRAM_NAME.get().unwrap() == "fish");
         return PathBuf::from("fish");

@@ -9,7 +9,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     set -l editor (__fish_anyeditor)
     or return 1
 
-    set -l indented_lines (commandline -b | __fish_indent --only-indent)
+    set -l indented_lines (commandline -b | fish_indent --only-indent)
     string join -- \n $indented_lines >$f
     set -l offset (commandline --cursor)
     # compute cursor line/column
@@ -83,7 +83,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     $editor
 
     set -l raw_lines (command cat $f)
-    set -l unindented_lines (string join -- \n $raw_lines | __fish_indent --only-unindent)
+    set -l unindented_lines (string join -- \n $raw_lines | fish_indent --only-unindent)
 
     # Here we're checking the exit status of the editor.
     if test $status -eq 0 -a -s $f

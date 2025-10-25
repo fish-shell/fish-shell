@@ -11,8 +11,6 @@ use crate::reader::reader_in_interactive_read;
 use crate::tty_handoff::{get_scroll_content_up_capability, xtversion};
 use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use libc::F_OK;
-use nix::NixPath;
-use nix::errno::Errno;
 
 macro_rules! str_enum {
     ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
@@ -720,13 +718,6 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 }
                 STATUS_FISH_PATH => {
                     let path = get_fish_path();
-                    if path.is_empty() {
-                        streams.err.append(sprintf!(
-                            "%s: Could not get executable path: '%s'\n",
-                            cmd,
-                            Errno::last().to_string()
-                        ));
-                    }
                     if path.is_absolute() {
                         let path = bytes2wcstring(path.as_os_str().as_bytes());
                         // This is an absolute path, we can canonicalize it

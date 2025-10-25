@@ -1,3 +1,5 @@
+# TODO(embed-data) Remove this after that has been rolled out (on-by-default).
+
 # localization: skip(private)
 set -l dir "$(path dirname -- (status fish-path))"
 

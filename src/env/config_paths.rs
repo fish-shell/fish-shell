@@ -155,6 +155,7 @@ fn compute_fish_path() -> PathBuf {
         assert!(PROGRAM_NAME.get().unwrap() == "fish");
         return PathBuf::from("fish");
     };
+    assert!(path.is_absolute());
     if path.exists() {
         return path;
     }

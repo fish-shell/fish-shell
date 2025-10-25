@@ -25,11 +25,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 /// List of all locale environment variable names that might trigger (re)initializing of the locale
 /// subsystem. These are only the variables we're possibly interested in.
-const LOCALE_VARIABLES: [&wstr; 8] = [
+const LOCALE_VARIABLES: [&wstr; 7] = [
     L!("LANG"),
     L!("LANGUAGE"),
     L!("LC_ALL"),
-    L!("LC_COLLATE"),
     L!("LC_MESSAGES"),
     L!("LC_NUMERIC"),
     L!("LC_TIME"),

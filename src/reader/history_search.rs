@@ -75,6 +75,8 @@ impl ReaderHistorySearch {
     pub fn by_token(&self) -> bool {
         matches!(self.mode, SearchMode::Token | SearchMode::LastToken)
     }
+    // Included for completeness.
+    #[allow(dead_code)]
     pub fn by_line(&self) -> bool {
         self.mode == SearchMode::Line
     }

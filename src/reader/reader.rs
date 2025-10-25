@@ -47,6 +47,7 @@ use std::time::{Duration, Instant};
 
 use errno::{Errno, errno};
 
+use super::history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
 use crate::abbrs::abbrs_match;
 use crate::ast::{self, Kind, is_same_node};
 use crate::builtins::shared::ErrorCode;
@@ -115,7 +116,6 @@ use crate::proc::{
     have_proc_stat, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
     print_exit_warning_for_jobs, proc_update_jiffies,
 };
-use crate::reader_history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
 use crate::screen::is_dumb;
 use crate::screen::{CharOffset, Screen, screen_force_clear_to_end};
 use crate::should_flog;

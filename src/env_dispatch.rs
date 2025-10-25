@@ -1,9 +1,10 @@
+use crate::common::init_special_chars_once;
 use crate::complete::complete_invalidate_path;
 use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
 use crate::env::{EnvMode, EnvStack, Environment, setenv_lock, unsetenv_lock};
 use crate::flog::FLOG;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
-use crate::locale::set_libc_locales;
+use crate::locale::{invalidate_numeric_locale, set_libc_locales};
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
     reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled, reader_set_transient_prompt,
@@ -364,6 +365,7 @@ pub fn env_dispatch_init(vars: &EnvStack) {
 /// Runs the subset of dispatch functions that need to be called at startup.
 fn run_inits(vars: &EnvStack) {
     init_locale(vars);
+    init_special_chars_once();
     init_terminal(vars);
     guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
@@ -519,8 +521,8 @@ fn init_locale(vars: &EnvStack) {
         FLOG!(env_locale, "user has an invalid locale configured");
     }
 
-    // Update cached locale information.
-    crate::common::fish_setlocale();
+    // Invalidate the cached numeric locale.
+    invalidate_numeric_locale();
 
     #[cfg(feature = "localize-messages")]
     crate::wutil::gettext::update_locale_from_env(vars);

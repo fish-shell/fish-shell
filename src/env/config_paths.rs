@@ -4,7 +4,7 @@ use fish_build_helper::workspace_root;
 use once_cell::sync::OnceCell;
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
@@ -23,8 +23,15 @@ const DOC_DIR: &str = env!("DOCDIR");
 
 impl ConfigPaths {
     pub fn new() -> Self {
-        let exec_path = FISH_PATH.get_or_init(compute_fish_path);
-        FLOG!(config, format!("executable path: {}", exec_path.display()));
+        FISH_PATH.get_or_init(compute_fish_path);
+        let exec_path = get_fish_path();
+        FLOG!(
+            config,
+            match exec_path {
+                FishPath::Absolute(path) => format!("executable path: {}", path.display()),
+                FishPath::LookUpInPath => format!("executable path: {}", get_program_name()),
+            }
+        );
         let paths = Self::from_exec_path(exec_path);
         FLOGF!(
             config,
@@ -58,23 +65,29 @@ impl ConfigPaths {
     }
 
     #[cfg(feature = "embed-data")]
-    fn from_exec_path(exec_path: &Path) -> Self {
+    fn from_exec_path(exec_path: &FishPath) -> Self {
         FLOG!(config, "embed-data feature is active, ignoring data paths");
+        use FishPath::*;
+        let exec_path = match exec_path {
+            Absolute(p) => Some(p),
+            LookUpInPath => None,
+        };
         Self {
             sysconf: if exec_path
-                .canonicalize()
-                .is_ok_and(|exec_path| exec_path.starts_with(BUILD_DIR))
+                .is_some_and(|p| p.canonicalize().is_ok_and(|p| p.starts_with(BUILD_DIR)))
             {
                 workspace_root().join("etc")
             } else {
                 PathBuf::from(SYSCONF_DIR).join("fish")
             },
-            bin: exec_path.parent().map(|x| x.to_path_buf()),
+            bin: exec_path.and_then(|p| p.parent().map(|x| x.to_path_buf())),
         }
     }
 
     #[cfg(not(feature = "embed-data"))]
-    fn from_exec_path(unresolved_exec_path: &Path) -> Self {
+    fn from_exec_path(unresolved_exec_path: &FishPath) -> Self {
+        use std::path::Path;
+
         let invalid_exec_path = |exec_path: &Path| {
             FLOG!(
                 config,
@@ -85,8 +98,20 @@ impl ConfigPaths {
             );
             Self::static_paths()
         };
-        let Ok(exec_path) = unresolved_exec_path.canonicalize() else {
-            return invalid_exec_path(unresolved_exec_path);
+
+        let exec_path = {
+            use FishPath::*;
+            match unresolved_exec_path {
+                Absolute(p) => {
+                    let Ok(exec_path) = p.canonicalize() else {
+                        return invalid_exec_path(p);
+                    };
+                    exec_path
+                }
+                LookUpInPath => {
+                    return invalid_exec_path(Path::new("fish"));
+                }
+            }
         };
         let Some(exec_path_parent) = exec_path.parent() else {
             return invalid_exec_path(&exec_path);
@@ -143,34 +168,41 @@ impl ConfigPaths {
     }
 }
 
-static FISH_PATH: OnceCell<PathBuf> = OnceCell::new();
+pub enum FishPath {
+    Absolute(PathBuf),
+    LookUpInPath,
+}
+
+static FISH_PATH: OnceCell<FishPath> = OnceCell::new();
 
 /// Get the absolute path to the fish executable itself
-pub fn get_fish_path() -> &'static PathBuf {
+pub fn get_fish_path() -> &'static FishPath {
     FISH_PATH.get().unwrap()
 }
 
-fn compute_fish_path() -> PathBuf {
-    let Ok(path) = std::env::current_exe() else {
-        assert!(get_program_name() == "fish");
-        return PathBuf::from("fish");
+fn compute_fish_path() -> FishPath {
+    use FishPath::*;
+    let Ok(mut path) = std::env::current_exe() else {
+        return LookUpInPath;
     };
+
     assert!(path.is_absolute());
-    if path.exists() {
-        return path;
-    }
 
     // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
     // then linux adds a " (deleted)" suffix.
     // If that's not a valid path, let's remove that awkward suffix.
-    if let (Some(filename), Some(parent)) = (path.file_name(), path.parent())
-        && let Some(corrected_filename) = filename
-            .as_bytes()
-            .strip_suffix(b" (deleted)")
-            .map(OsStr::from_bytes)
-    {
-        return parent.join(corrected_filename);
+    // TODO(MSRV>=1.88) use if-let-chain
+    if !path.exists() {
+        if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
+            if let Some(corrected_filename) = filename
+                .as_bytes()
+                .strip_suffix(b" (deleted)")
+                .map(OsStr::from_bytes)
+            {
+                path = parent.join(corrected_filename);
+            }
+        }
     }
 
-    path
+    Absolute(path)
 }

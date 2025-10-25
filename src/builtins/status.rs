@@ -717,24 +717,20 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     streams.out.append_char('\n');
                 }
                 STATUS_FISH_PATH => {
-                    let path = get_fish_path();
-                    if path.is_absolute() {
-                        let path = bytes2wcstring(path.as_os_str().as_bytes());
-                        // This is an absolute path, we can canonicalize it
-                        let real = match wrealpath(&path) {
-                            Some(p) if waccess(&p, F_OK) == 0 => p,
-                            // realpath did not work, just append the path
-                            // - maybe this was obtained via $PATH?
-                            _ => path,
-                        };
-
-                        streams.out.append(real);
-                        streams.out.append_char('\n');
-                    } else {
-                        // This is a relative path, we can't canonicalize it
-                        let path = bytes2wcstring(path.as_os_str().as_bytes());
-                        streams.out.appendln(path);
-                    }
+                    use crate::env::config_paths::FishPath::*;
+                    let result = match get_fish_path() {
+                        Absolute(path) => {
+                            let path = bytes2wcstring(path.as_os_str().as_bytes());
+                            Cow::Owned(match wrealpath(&path) {
+                                Some(p) if waccess(&p, F_OK) == 0 => p,
+                                // realpath did not work, just append the path
+                                // - maybe this was obtained via $PATH?
+                                _ => path,
+                            })
+                        }
+                        LookUpInPath => Cow::Borrowed(get_program_name()),
+                    };
+                    streams.out.appendln(result);
                 }
                 STATUS_TERMINAL => {
                     let xtversion = xtversion().unwrap_or_default();

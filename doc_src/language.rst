@@ -1563,7 +1563,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. describe:: Locale Variables
 
-   The locale variables :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_CTYPE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC`, and :envvar:`LANG` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
+   The locale variables :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC`, and :envvar:`LANG` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
 
 .. describe:: Color variables
 
@@ -1841,11 +1841,6 @@ The "locale" of a program is its set of language and regional settings that depe
 .. envvar:: LC_COLLATE
 
    This determines the rules about equivalence of cases and alphabetical ordering: collation.
-
-.. envvar:: LC_CTYPE
-
-   This determines classification rules, like if the type of character is an alpha, digit, and so on.
-   Most importantly, it defines the text *encoding* - which numbers map to which characters. On modern systems, this should typically be something ending in "UTF-8".
 
 .. envvar:: LC_MESSAGES
 

@@ -114,23 +114,12 @@ def is_chromeos_garcon():
 
 
 def run_fish_cmd(text):
-    # Ensure that fish is using UTF-8.
-    ctype = os.environ.get("LC_ALL", os.environ.get("LC_CTYPE", os.environ.get("LANG")))
-    env = None
-    if ctype is None or re.search(r"\.utf-?8$", ctype, flags=re.I) is None:
-        # override LC_CTYPE with en_US.UTF-8
-        # We're assuming this locale exists.
-        # Fish makes the same assumption in config.fish
-        env = os.environ.copy()
-        env.update(LC_CTYPE="en_US.UTF-8", LANG="en_US.UTF-8")
-
     print("$ " + text)
     p = subprocess.Popen(
         [FISH_BIN_PATH],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        env=env,
     )
     out, err = p.communicate(text.encode("utf-8"))
     out = out.decode("utf-8", "replace")
@@ -1272,13 +1261,13 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # In some cases it'll give us the encoding as well,
         # ("application/json;charset=utf-8")
         # but we don't currently care.
-        ctype = self.headers["content-type"].split(";")[0]
+        content_type = self.headers["content-type"].split(";")[0]
 
-        if ctype == "application/x-www-form-urlencoded":
+        if content_type == "application/x-www-form-urlencoded":
             length = int(self.headers["content-length"])
             url_str = self.rfile.read(length).decode("utf-8")
             postvars = parse_qs(url_str, keep_blank_values=1)
-        elif ctype == "application/json":
+        elif content_type == "application/json":
             length = int(self.headers["content-length"])
             # This used to use the provided encoding, but we use utf-8
             # all around the place and nobody has ever complained.
@@ -1288,7 +1277,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # If that happens to anyone we expect bug reports.
             url_str = self.rfile.read(length).decode("utf-8")
             postvars = json.loads(url_str)
-        elif ctype == "multipart/form-data":
+        elif content_type == "multipart/form-data":
             # This used to be a thing, as far as I could find there's
             # no use anymore, but let's keep an error around just in case.
             return self.send_error(500)

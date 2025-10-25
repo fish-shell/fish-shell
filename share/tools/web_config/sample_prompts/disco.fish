@@ -9,7 +9,7 @@ function fish_prompt
 
     set -l delim \U25BA
     # If we don't have unicode use a simpler delimiter
-    string match -qi "*.utf-8" -- $LANG $LC_CTYPE $LC_ALL; or set delim ">"
+    string match -qi "*.utf-8" -- $LANG $LC_ALL; or set delim ">"
 
     fish_is_root_user; and set delim "#"
 
@@ -64,7 +64,7 @@ function fish_right_prompt
     set -g __fish_git_prompt_showcolorhints 1
     set -g __fish_git_prompt_use_informative_chars 1
     # Unfortunately this only works if we have a sensible locale
-    string match -qi "*.utf-8" -- $LANG $LC_CTYPE $LC_ALL
+    string match -qi "*.utf-8" -- $LANG $LC_ALL
     and set -g __fish_git_prompt_char_dirtystate \U1F4a9
     set -g __fish_git_prompt_char_untrackedfiles "?"
 

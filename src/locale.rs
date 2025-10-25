@@ -9,7 +9,9 @@ pub(crate) static LOCALE_LOCK: Mutex<()> = Mutex::new(());
 /// Call this either before starting any locale-using thread, or while holding a lock on the
 /// above mutex.
 pub unsafe fn set_libc_locales() -> Option<&'static CStr> {
-    setlocale(libc::LC_ALL, Some(c""))
+    let opaque_locale_str = setlocale(libc::LC_ALL, Some(c""));
+    setlocale(libc::LC_CTYPE, Some(c"C.UTF-8"));
+    opaque_locale_str
 }
 
 fn setlocale(category: libc::c_int, locale: Option<&CStr>) -> Option<&'static CStr> {

@@ -162,7 +162,7 @@ fn compute_fish_path() -> PathBuf {
     // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
     // then linux adds a " (deleted)" suffix.
     // If that's not a valid path, let's remove that awkward suffix.
-    if path.as_os_str().as_bytes().ends_with(b" (deleted)") {
+    if !path.as_os_str().as_bytes().ends_with(b" (deleted)") {
         return path;
     }
 

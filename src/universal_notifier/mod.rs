@@ -10,7 +10,7 @@ mod inotify;
 #[cfg(bsd)]
 mod kqueue;
 
-#[cfg(test)]
+#[cfg(all(test, any(apple, any(target_os = "android", target_os = "linux"), bsd)))]
 mod test_helpers;
 
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal

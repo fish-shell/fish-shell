@@ -9,7 +9,6 @@ use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
-use crate::locale::invalidate_numeric_locale;
 use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::terminal::Output;
 use crate::termsize::Termsize;
@@ -1237,12 +1236,7 @@ pub fn should_suppress_stderr_for_tests() -> bool {
 /// Stored in blocks to reference the file which created the block.
 pub type FilenameRef = Arc<WString>;
 
-/// This function should be called after calling `setlocale()` to perform fish specific locale
-/// initialization.
-pub fn fish_setlocale() {
-    // Invalidate the cached numeric locale.
-    invalidate_numeric_locale();
-
+pub fn init_special_chars_once() {
     // Helper to make a static reference to a static &'wstr, from a string literal.
     // This is necessary to store them in global atomics, as these can't handle fat pointers.
     macro_rules! LL {

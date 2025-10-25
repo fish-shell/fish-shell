@@ -54,9 +54,9 @@ use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, PROGRAM_NAME, ScopeGuard, UTF8_BOM_WCHAR, bytes2wcstring,
-    escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
-    restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
+    EscapeFlags, EscapeStringStyle, ScopeGuard, UTF8_BOM_WCHAR, bytes2wcstring, escape,
+    escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
+    get_program_name, restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
 };
 use crate::complete::{
     CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete, complete_load,
@@ -306,7 +306,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
                 break;
             }
             CharEvent::QueryResult(Timeout) => {
-                let program = PROGRAM_NAME.get().unwrap();
+                let program = get_program_name();
                 FLOG!(
                     warning,
                     wgettext_fmt!(
@@ -5875,13 +5875,11 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     term_steal(eval_res.status.is_success());
 
     // Provide value for `status current-command`
-    parser.libdata_mut().status_vars.command = (*PROGRAM_NAME.get().unwrap()).to_owned();
+    parser.libdata_mut().status_vars.command = get_program_name().to_owned();
     // Also provide a value for the deprecated fish 2.0 $_ variable
-    parser.vars().set_one(
-        L!("_"),
-        EnvMode::GLOBAL,
-        (*PROGRAM_NAME.get().unwrap()).to_owned(),
-    );
+    parser
+        .vars()
+        .set_one(L!("_"), EnvMode::GLOBAL, get_program_name().to_owned());
     // Provide value for `status current-commandline`
     parser.libdata_mut().status_vars.commandline = L!("").to_owned();
 

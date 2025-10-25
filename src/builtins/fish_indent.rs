@@ -11,7 +11,8 @@ use crate::panic::panic_handler;
 use super::prelude::*;
 use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
-    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, unescape_string, wcs2bytes,
+    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
+    unescape_string, wcs2bytes,
 };
 use crate::env::EnvStack;
 use crate::env::env_init;
@@ -960,7 +961,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             'v' => {
                 streams.out.appendln(wgettext_fmt!(
                     "%s, version %s",
-                    PROGRAM_NAME.get().unwrap(),
+                    get_program_name(),
                     crate::BUILD_VERSION
                 ));
                 return Ok(SUCCESS);
@@ -988,7 +989,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             if output_type == OutputType::File {
                 streams.err.appendln(wgettext_fmt!(
                     "Expected file path to read/write for -w:\n\n $ %s -w foo.fish",
-                    PROGRAM_NAME.get().unwrap()
+                    get_program_name()
                 ));
                 return Err(STATUS_CMD_ERROR);
             }

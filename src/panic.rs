@@ -8,7 +8,7 @@ use libc::STDIN_FILENO;
 use once_cell::sync::OnceCell;
 
 use crate::{
-    common::{PROGRAM_NAME, read_blocked},
+    common::{get_program_name, read_blocked},
     nix::isatty,
     threads::{asan_maybe_exit, is_main_thread},
 };
@@ -34,10 +34,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
             if let Some(at_exit) = AT_EXIT.get() {
                 (at_exit)();
             }
-            eprintf!(
-                "%s crashed, please report a bug.",
-                PROGRAM_NAME.get().unwrap(),
-            );
+            eprintf!("%s crashed, please report a bug.", get_program_name());
             if !is_main_thread() {
                 eprintf!("\n");
                 std::thread::sleep(Duration::from_secs(1));

@@ -1,7 +1,8 @@
 use std::os::unix::prelude::*;
 
 use super::prelude::*;
-use crate::common::{PROGRAM_NAME, bytes2wcstring, get_fish_path};
+use crate::common::{PROGRAM_NAME, bytes2wcstring};
+use crate::env::config_paths::get_fish_path;
 use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
     JobControl, get_job_control_mode, get_login, is_interactive_session, set_job_control_mode,

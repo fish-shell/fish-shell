@@ -25,7 +25,7 @@ use std::ffi::{CStr, CString, OsStr, OsString};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, MutexGuard};
 use std::time;
@@ -1578,9 +1578,10 @@ pub fn valid_var_name(s: &wstr) -> bool {
 }
 
 /// Get the absolute path to the fish executable itself
-pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
+pub fn get_fish_path() -> PathBuf {
     let Ok(path) = std::env::current_exe() else {
-        return argv0.as_ref().to_owned();
+        assert!(PROGRAM_NAME.get().unwrap() == "fish");
+        return PathBuf::from("fish");
     };
     if path.exists() {
         return path;

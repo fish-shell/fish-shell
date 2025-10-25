@@ -1,7 +1,7 @@
 use std::os::unix::prelude::*;
 
 use super::prelude::*;
-use crate::common::{PROGRAM_NAME, bytes2wcstring, get_executable_path};
+use crate::common::{PROGRAM_NAME, bytes2wcstring, get_fish_path};
 use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
     JobControl, get_job_control_mode, get_login, is_interactive_session, set_job_control_mode,
@@ -718,7 +718,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     streams.out.append_char('\n');
                 }
                 STATUS_FISH_PATH => {
-                    let path = get_executable_path("fish");
+                    let path = get_fish_path();
                     if path.is_empty() {
                         streams.err.append(sprintf!(
                             "%s: Could not get executable path: '%s'\n",

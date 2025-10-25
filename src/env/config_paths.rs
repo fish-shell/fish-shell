@@ -1,10 +1,6 @@
-use crate::common::BUILD_DIR;
-use crate::common::wcs2bytes;
-use crate::wchar::prelude::*;
-use crate::{FLOG, FLOGF, common::get_executable_path};
+use crate::common::{BUILD_DIR, get_fish_path};
+use crate::{FLOG, FLOGF};
 use fish_build_helper::workspace_root;
-use std::ffi::OsString;
-use std::os::unix::ffi::OsStringExt;
 use std::path::PathBuf;
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
@@ -23,9 +19,8 @@ const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const DOC_DIR: &str = env!("DOCDIR");
 
 impl ConfigPaths {
-    pub fn new(argv0: &wstr) -> Self {
-        let argv0 = PathBuf::from(OsString::from_vec(wcs2bytes(argv0)));
-        let exec_path = get_executable_path(argv0);
+    pub fn new() -> Self {
+        let exec_path = get_fish_path();
         FLOG!(config, format!("executable path: {}", exec_path.display()));
         let paths = Self::from_exec_path(exec_path);
         FLOGF!(

@@ -8,7 +8,7 @@ use crate::{
     wutil::{normalize_path, wperror, wreadlink},
 };
 use errno::Errno;
-use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM, fchdir};
+use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
 use std::{os::fd::AsRawFd, sync::Arc};
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
@@ -87,7 +87,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         let res = wopen_dir(&norm_dir, BEST_O_SEARCH).map_err(|err| err as i32);
 
         let res = res.and_then(|fd| {
-            if unsafe { fchdir(fd.as_raw_fd()) } == 0 {
+            if unsafe { libc::fchdir(fd.as_raw_fd()) } == 0 {
                 Ok(fd)
             } else {
                 Err(errno::errno().0)

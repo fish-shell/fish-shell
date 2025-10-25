@@ -9,7 +9,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE, mmap, munmap};
+use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
@@ -46,7 +46,7 @@ impl MmapRegion {
     /// Map a region `[0, len)` from a locked file.
     pub fn map_file(file: &File, len: usize) -> std::io::Result<Self> {
         let ptr = unsafe {
-            mmap(
+            libc::mmap(
                 std::ptr::null_mut(),
                 len,
                 PROT_READ,
@@ -67,7 +67,7 @@ impl MmapRegion {
     /// Map anonymous memory of a given length.
     pub fn map_anon(len: usize) -> std::io::Result<Self> {
         let ptr = unsafe {
-            mmap(
+            libc::mmap(
                 std::ptr::null_mut(),
                 len,
                 PROT_READ | PROT_WRITE,
@@ -106,7 +106,7 @@ impl DerefMut for MmapRegion {
 
 impl Drop for MmapRegion {
     fn drop(&mut self) {
-        unsafe { munmap(self.ptr.cast(), self.len) };
+        unsafe { libc::munmap(self.ptr.cast(), self.len) };
     }
 }
 

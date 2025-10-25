@@ -377,9 +377,7 @@ mod tests {
         use crate::common::charptr2wcstring;
         use crate::common::wcs2osstring;
         use crate::wchar::L;
-        #[cfg(not(cygwin))]
-        use libc::symlink;
-        use libc::{EACCES, ENOENT, O_CREAT, O_WRONLY, close, mkfifo, open};
+        use libc::{EACCES, ENOENT, O_CREAT, O_WRONLY};
         use std::ffi::CString;
 
         let baditer = DirIter::new(L!("/definitely/not/a/valid/directory/for/sure"));
@@ -433,28 +431,28 @@ mod tests {
         unsafe {
             let mut ret = libc::mkdir(makepath(dirname).as_ptr(), 0o700);
             assert!(ret == 0);
-            ret = open(makepath(regname).as_ptr(), O_CREAT | O_WRONLY, 0o600);
+            ret = libc::open(makepath(regname).as_ptr(), O_CREAT | O_WRONLY, 0o600);
             assert!(ret >= 0);
-            close(ret);
+            libc::close(ret);
             #[cfg(not(cygwin))]
             {
-                ret = symlink(makepath(regname).as_ptr(), makepath(reglinkname).as_ptr());
+                ret = libc::symlink(makepath(regname).as_ptr(), makepath(reglinkname).as_ptr());
                 assert!(ret == 0);
-                ret = symlink(makepath(dirname).as_ptr(), makepath(dirlinkname).as_ptr());
+                ret = libc::symlink(makepath(dirname).as_ptr(), makepath(dirlinkname).as_ptr());
                 assert!(ret == 0);
-                ret = symlink(
+                ret = libc::symlink(
                     c"/this/is/an/invalid/path".as_ptr().cast(),
                     makepath(badlinkname).as_ptr(),
                 );
                 assert!(ret == 0);
-                ret = symlink(
+                ret = libc::symlink(
                     makepath(selflinkname).as_ptr(),
                     makepath(selflinkname).as_ptr(),
                 );
                 assert!(ret == 0);
             }
 
-            ret = mkfifo(makepath(fifoname).as_ptr(), 0o600);
+            ret = libc::mkfifo(makepath(fifoname).as_ptr(), 0o600);
             assert!(ret == 0);
         }
 

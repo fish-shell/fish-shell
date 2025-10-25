@@ -10,6 +10,7 @@ Deprecations and removed features
 ---------------------------------
 
 - Fish now assumes UTF-8 everywhere, regardless of locale settings. Input bytes which are not valid UTF-8 should still be round-tripped correctly.
+- On systems where no multi-byte locale is available, fish will no longer fall back to using ASCII replacements for Unicode symbols like ``…``.
 
 Interactive improvements
 ------------------------

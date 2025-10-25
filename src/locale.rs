@@ -114,11 +114,7 @@ unsafe fn read_locale() -> Option<Locale> {
     }
 
     let lconv = unsafe { libc::localeconv() };
-    let result = if lconv.is_null() {
-        None
-    } else {
-        Some(unsafe { lconv_to_locale(&*lconv) })
-    };
+    let result = (!lconv.is_null()).then(|| unsafe { lconv_to_locale(&*lconv) });
     // Note we *always* use a C-locale for numbers, because we always want "." except for in printf.
     unsafe {
         libc::setlocale(libc::LC_NUMERIC, c"C".as_ptr());

@@ -496,12 +496,12 @@ mod tests {
         use nix::fcntl::OFlag;
 
         macro_rules! run {
-        ( $fmt:expr $(, $arg:expr )* $(,)? ) => {
-             let cmd = wcs2zstring(&sprintf!($fmt $(, $arg)*));
-             let status = unsafe { libc::system(cmd.as_ptr()) };
-             assert!(status == 0);
-        };
-    }
+            ( $fmt:expr $(, $arg:expr )* $(,)? ) => {
+                 let cmd = wcs2zstring(&sprintf!($fmt $(, $arg)*));
+                 let status = unsafe { libc::system(cmd.as_ptr()) };
+                 assert!(status == 0);
+            };
+        }
 
         fn touch_file(path: &wstr) {
             use nix::sys::stat::Mode;

@@ -52,7 +52,13 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
         }
     }
 
-    let res = parser.eval_with(&new_cmd, &ios, streams.job_group.as_ref(), BlockType::top);
+    let res = parser.eval_with(
+        &new_cmd,
+        &ios,
+        streams.job_group.as_ref(),
+        BlockType::top,
+        false,
+    );
     let status = if res.was_empty {
         // Issue #5692, in particular, to catch `eval ""`, `eval "begin; end;"`, etc.
         // where we have an argument but nothing is executed.

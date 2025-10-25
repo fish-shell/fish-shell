@@ -997,7 +997,7 @@ fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> B
     let node = node.clone();
     Box::new(move |parser: &Parser, _out, _err| {
         parser
-            .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::top)
+            .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::top, false)
             .status
     })
 }
@@ -1033,7 +1033,13 @@ fn get_performer_for_function(
         // Pull out the job list from the function.
         let fb = function_prepare_environment(parser, argv, &props);
         let body_node = props.func_node.child_ref(|n| &n.jobs);
-        let mut res = parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
+        let mut res = parser.eval_node(
+            &body_node,
+            &io_chain,
+            job_group.as_ref(),
+            BlockType::top,
+            false,
+        );
         function_restore_environment(parser, fb);
 
         // If the function did not execute anything, treat it as success.
@@ -1488,7 +1494,7 @@ fn exec_subshell_internal(
 
     let mut io_chain = IoChain::new();
     io_chain.push(bufferfill.clone());
-    let eval_res = parser.eval_with(cmd, &io_chain, job_group, BlockType::subst);
+    let eval_res = parser.eval_with(cmd, &io_chain, job_group, BlockType::subst, false);
     let buffer = IoBufferfill::finish(bufferfill);
     if buffer.discarded() {
         *break_expand = true;

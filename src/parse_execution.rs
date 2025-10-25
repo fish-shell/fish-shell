@@ -10,8 +10,7 @@ use crate::builtins::shared::{
     builtin_exists,
 };
 use crate::common::{
-    ScopeGuard, ScopeGuarding, ScopedRefCell, escape, should_suppress_stderr_for_tests,
-    truncate_at_nul, valid_var_name,
+    ScopeGuard, ScopeGuarding, ScopedRefCell, escape, truncate_at_nul, valid_var_name,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, Statuses};
@@ -90,6 +89,9 @@ pub struct ExecutionContext<'a> {
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
     block_io: IoChain,
+
+    /// Hack to supress non-redirectable stderr in some unit tests.
+    test_only_suppress_stderr: bool,
 }
 
 // Report an error, setting $status to `status`. Always returns
@@ -119,12 +121,14 @@ impl<'a> ExecutionContext<'a> {
         pstree: ParsedSourceRef,
         block_io: IoChain,
         line_counter: &'a ScopedRefCell<LineCounter<ast::JobPipeline>>,
+        test_only_suppress_stderr: bool,
     ) -> Self {
         Self {
             pstree,
             cancel_signal: None,
             line_counter,
             block_io,
+            test_only_suppress_stderr,
         }
     }
 
@@ -242,7 +246,7 @@ impl<'a> ExecutionContext<'a> {
             let backtrace_and_desc = ctx.parser().get_backtrace(&self.pstree().src, error_list);
 
             // Print it.
-            if !should_suppress_stderr_for_tests() {
+            if !self.test_only_suppress_stderr {
                 eprintf!("%s", backtrace_and_desc);
             }
 

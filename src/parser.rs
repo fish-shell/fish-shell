@@ -493,7 +493,7 @@ impl Parser {
     }
 
     pub fn eval(&self, cmd: &wstr, io: &IoChain) -> EvalRes {
-        self.eval_with(cmd, io, None, BlockType::top)
+        self.eval_with(cmd, io, None, BlockType::top, false)
     }
 
     /// Evaluate the expressions contained in cmd.
@@ -510,6 +510,7 @@ impl Parser {
         io: &IoChain,
         job_group: Option<&JobGroupRef>,
         block_type: BlockType,
+        test_only_suppress_stderr: bool,
     ) -> EvalRes {
         // Parse the source into a tree, if we can.
         let mut error_list = ParseErrorList::new();
@@ -518,14 +519,22 @@ impl Parser {
             ParseTreeFlags::empty(),
             Some(&mut error_list),
         ) {
-            return self.eval_parsed_source(&ps, io, job_group, block_type);
+            return self.eval_parsed_source(
+                &ps,
+                io,
+                job_group,
+                block_type,
+                test_only_suppress_stderr,
+            );
         }
 
         // Get a backtrace. This includes the message.
         let backtrace_and_desc = self.get_backtrace(cmd, &error_list);
 
-        // Print it.
-        eprintf!("%s\n", backtrace_and_desc);
+        if !test_only_suppress_stderr {
+            // Print it.
+            eprintf!("%s\n", backtrace_and_desc);
+        }
 
         // Set a valid status.
         self.set_last_statuses(Statuses::just(STATUS_ILLEGAL_CMD));
@@ -545,12 +554,19 @@ impl Parser {
         io: &IoChain,
         job_group: Option<&JobGroupRef>,
         block_type: BlockType,
+        test_only_suppress_stderr: bool,
     ) -> EvalRes {
         assert!(matches!(block_type, BlockType::top | BlockType::subst));
         let job_list = ps.top_job_list();
         if !job_list.is_empty() {
             // Execute the top job list.
-            self.eval_node(&job_list, io, job_group, block_type)
+            self.eval_node(
+                &job_list,
+                io,
+                job_group,
+                block_type,
+                test_only_suppress_stderr,
+            )
         } else {
             let status = ProcStatus::from_exit_code(self.get_last_status());
             EvalRes {
@@ -585,7 +601,7 @@ impl Parser {
         // Construct a parsed source ref.
         // Be careful to transfer ownership, this could be a very large string.
         let ps = Arc::new(ParsedSource::new(src, ast));
-        Ok(self.eval_parsed_source(&ps, io, job_group, block_type))
+        Ok(self.eval_parsed_source(&ps, io, job_group, block_type, false))
     }
 
     pub fn eval_file_wstr(
@@ -616,6 +632,7 @@ impl Parser {
         block_io: &IoChain,
         job_group: Option<&JobGroupRef>,
         block_type: BlockType,
+        test_only_suppress_stderr: bool,
     ) -> EvalRes {
         // Only certain blocks are allowed.
         assert!(
@@ -674,7 +691,12 @@ impl Parser {
         let restore_line_counter = self.line_counter.scoped_replace(ps.line_counter());
 
         // Create a new execution context.
-        let mut execution_context = ExecutionContext::new(ps, block_io.clone(), &self.line_counter);
+        let mut execution_context = ExecutionContext::new(
+            ps,
+            block_io.clone(),
+            &self.line_counter,
+            test_only_suppress_stderr,
+        );
 
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().exec_count;
@@ -1401,6 +1423,7 @@ mod tests {
     };
     use crate::parse_tree::{LineCounter, parse_source};
     use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
+    use crate::parser::BlockType;
     use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
     use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
     use crate::tests::prelude::*;
@@ -2033,12 +2056,15 @@ mod tests {
             &IoChain::new(),
         );
 
-        parser.eval(
+        parser.eval_with(
             L!(concat!(
                 "function recursive1 ; recursive2 ; end ; ",
                 "function recursive2 ; recursive1 ; end ; recursive1; ",
             )),
             &IoChain::new(),
+            None,
+            BlockType::top,
+            /*test_only_suppress_stderr=*/ true,
         );
     }
 
@@ -2049,7 +2075,13 @@ mod tests {
         let parser = TestParser::new();
         macro_rules! validate {
             ($cmd:expr, $result:expr) => {
-                parser.eval($cmd, &IoChain::new());
+                parser.eval_with(
+                    $cmd,
+                    &IoChain::new(),
+                    None,
+                    BlockType::top,
+                    /*test_only_suppress_stderr=*/ true,
+                );
                 let exit_status = parser.get_last_status();
                 assert_eq!(exit_status, parser.get_last_status());
             };
@@ -2073,9 +2105,12 @@ mod tests {
     fn test_eval_empty_function_name() {
         let _cleanup = test_init();
         let parser = TestParser::new();
-        parser.eval(
+        parser.eval_with(
             L!("function '' ; echo fail; exit 42 ; end ; ''"),
             &IoChain::new(),
+            None,
+            BlockType::top,
+            /*test_only_suppress_stderr=*/ true,
         );
     }
 

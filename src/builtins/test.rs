@@ -1072,14 +1072,12 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     let mut eval_errors = Vec::new();
     let result = expr.evaluate(streams, &mut eval_errors);
     if !eval_errors.is_empty() {
-        if !common::should_suppress_stderr_for_tests() {
-            for eval_error in eval_errors {
-                streams.err.appendln(&eval_error);
-            }
-            // Add a backtrace but not the "see help" message
-            // because this isn't about passing the wrong options.
-            streams.err.append(parser.current_line());
+        for eval_error in eval_errors {
+            streams.err.appendln(&eval_error);
         }
+        // Add a backtrace but not the "see help" message
+        // because this isn't about passing the wrong options.
+        streams.err.append(parser.current_line());
         return Err(STATUS_INVALID_ARGS);
     }
 

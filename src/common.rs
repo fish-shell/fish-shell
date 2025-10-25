@@ -1219,19 +1219,6 @@ pub fn wcs2bytes_appending(output: &mut Vec<u8>, input: &wstr) {
     });
 }
 
-// Check if we are running in the test mode, where we should suppress error output
-pub const TESTS_PROGRAM_NAME: &wstr = L!("(ignore)");
-
-/// Hack to not print error messages in the tests. Do not call this from functions in this module
-/// like `debug()`. It is only intended to suppress diagnostic noise from testing things like the
-/// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
-pub fn should_suppress_stderr_for_tests() -> bool {
-    PROGRAM_NAME
-        .get()
-        .map(|p| p == TESTS_PROGRAM_NAME)
-        .unwrap_or_default()
-}
-
 /// Stored in blocks to reference the file which created the block.
 pub type FilenameRef = Arc<WString>;
 

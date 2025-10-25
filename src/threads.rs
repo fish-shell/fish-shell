@@ -279,15 +279,10 @@ impl ThreadPool {
 
     /// Enqueue a new work item onto the thread pool.
     ///
-    /// The function `func` will execute on one of the pool's background threads. If `cant_wait` is
-    /// set, the thread limit may be disregarded if extant threads are busy.
+    /// The function `func` will execute on one of the pool's background threads.
     ///
     /// Returns the number of threads that were alive when the work item was enqueued.
-    pub fn perform<F: FnOnce() + 'static + Send>(
-        self: &Arc<Self>,
-        func: F,
-        cant_wait: bool,
-    ) -> usize {
+    pub fn perform<F: FnOnce() + 'static + Send>(self: &Arc<Self>, func: F) -> usize {
         let work_item = Box::new(func);
         enum ThreadAction {
             None,
@@ -309,7 +304,7 @@ impl ThreadPool {
             if data.waiting_threads >= data.request_queue.len() {
                 // There are enough waiting threads, wake one up.
                 ThreadAction::Wake
-            } else if cant_wait || data.total_threads < self.max_threads {
+            } else if data.total_threads < self.max_threads {
                 // No threads are idle waiting but we can or must spawn a new thread to service the
                 // request.
                 data.total_threads += 1;
@@ -482,15 +477,7 @@ pub fn io_thread_pool() -> &'static Arc<ThreadPool> {
 /// Enqueues work on the IO thread pool singleton.
 pub fn iothread_perform(f: impl FnOnce() + 'static + Send) {
     let thread_pool = io_thread_pool();
-    thread_pool.perform(f, false);
-}
-
-/// Enqueues priority work on the IO thread pool singleton, disregarding the thread limit.
-///
-/// It does its best to spawn a thread if all other threads are occupied. This is primarily for
-/// cases where deferring creation of a new thread might lead to a deadlock.
-pub fn iothread_perform_cant_wait(f: impl FnOnce() + 'static + Send) {
-    io_thread_pool().perform(f, true);
+    thread_pool.perform(f);
 }
 
 /// Return the read fd of the singleton ThreadPool event signaller.
@@ -644,15 +631,11 @@ impl Debounce {
         if spawn {
             // We need to clone the Arc to get it to last for the duration of the 'static lifetime.
             let debounce = self.clone();
-            let cant_wait = false;
-            self.pool.perform(
-                move || {
-                    while debounce.run_next(active_token) {
-                        // Keep thread alive/busy.
-                    }
-                },
-                cant_wait,
-            );
+            self.pool.perform(move || {
+                while debounce.run_next(active_token) {
+                    // Keep thread alive/busy.
+                }
+            });
         }
 
         active_token

@@ -613,33 +613,30 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
     // builtin_run provide this directly, rather than setting it in the process.
     f.success_status = p.status();
 
-    exec_thread_pool().perform(
-        move || {
-            let mut status = f.success_status;
-            if !f.skip_out() {
-                if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
-                    if err.raw_os_error() != Some(EPIPE) {
-                        perror("write");
-                    }
-                    if status.is_success() {
-                        status = ProcStatus::from_exit_code(1);
-                    }
+    exec_thread_pool().perform(move || {
+        let mut status = f.success_status;
+        if !f.skip_out() {
+            if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
+                if err.raw_os_error() != Some(EPIPE) {
+                    perror("write");
+                }
+                if status.is_success() {
+                    status = ProcStatus::from_exit_code(1);
                 }
             }
-            if !f.skip_err() {
-                if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
-                    if err.raw_os_error() != Some(EPIPE) {
-                        perror("write");
-                    }
-                    if status.is_success() {
-                        status = ProcStatus::from_exit_code(1);
-                    }
+        }
+        if !f.skip_err() {
+            if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
+                if err.raw_os_error() != Some(EPIPE) {
+                    perror("write");
+                }
+                if status.is_success() {
+                    status = ProcStatus::from_exit_code(1);
                 }
             }
-            f.internal_proc.mark_exited(status);
-        },
-        true,
-    );
+        }
+        f.internal_proc.mark_exited(status);
+    });
 }
 
 /// If `outdata` or `errdata` are both empty, then mark the process as completed immediately.

@@ -56,12 +56,12 @@ impl_to_wstring_signed!(i8, i16, i32, i64, isize);
 macro_rules! impl_to_wstring_unsigned {
     ($($t:ty), *) => {
         $(
-        impl ToWString for $t {
-            fn to_wstring(&self) -> WString {
-                to_wstring_impl(*self as u64, false)
+            impl ToWString for $t {
+                fn to_wstring(&self) -> WString {
+                    to_wstring_impl(*self as u64, false)
+                }
             }
-        }
-    )*
+        )*
     };
 }
 

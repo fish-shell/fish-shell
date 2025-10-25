@@ -163,15 +163,14 @@ fn compute_fish_path() -> PathBuf {
     // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
     // then linux adds a " (deleted)" suffix.
     // If that's not a valid path, let's remove that awkward suffix.
-    if !path.as_os_str().as_bytes().ends_with(b" (deleted)") {
-        return path;
+    if let (Some(filename), Some(parent)) = (path.file_name(), path.parent())
+        && let Some(corrected_filename) = filename
+            .as_bytes()
+            .strip_suffix(b" (deleted)")
+            .map(OsStr::from_bytes)
+    {
+        return parent.join(corrected_filename);
     }
 
-    if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
-        if let Some(filename) = filename.to_str() {
-            let corrected_filename = OsStr::new(filename.strip_suffix(" (deleted)").unwrap());
-            return parent.join(corrected_filename);
-        }
-    }
     path
 }

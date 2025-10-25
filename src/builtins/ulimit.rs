@@ -1,12 +1,12 @@
 use std::cmp::Ordering;
 
+use cfg_if::cfg_if;
 use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
 use nix::sys::resource::Resource as ResourceEnum;
 use once_cell::sync::Lazy;
 
 use crate::fallback::{fish_wcswidth, wcscasecmp};
-use crate::wutil::perror;
 
 use super::prelude::*;
 
@@ -21,7 +21,7 @@ pub mod limits {
         pub const DATA: libc::c_int = libc::RLIMIT_DATA as _;
         pub const FSIZE: libc::c_int = libc::RLIMIT_FSIZE as _;
         cfg_if!(
-            if #[cfg(cygwin)] {
+            if #[cfg(any(cygwin, illumos))] {
                 pub const MEMLOCK: libc::c_int = -1;
             } else {
                 pub const MEMLOCK: libc::c_int = libc::RLIMIT_MEMLOCK as _;
@@ -31,7 +31,7 @@ pub mod limits {
         pub const STACK: libc::c_int = libc::RLIMIT_STACK as _;
         pub const CPU: libc::c_int = libc::RLIMIT_CPU as _;
         cfg_if!(
-            if #[cfg(cygwin)] {
+            if #[cfg(any(cygwin, illumos))] {
                 pub const NPROC: libc::c_int = -1;
             } else {
                 pub const NPROC: libc::c_int = libc::RLIMIT_NPROC as _;
@@ -96,13 +96,31 @@ fn convert_resource(resource: c_uint) -> ResourceEnum {
 
 /// Calls getrlimit.
 fn getrlimit(resource: c_uint) -> Option<(rlim_t, rlim_t)> {
-    nix::sys::resource::getrlimit(convert_resource(resource))
-        .map_err(|_| perror("getrlimit"))
-        .ok()
+    // TODO Apparently Illumos does have the resource.h header, see
+    // https://github.com/illumos/illumos-gate/blob/68259130dac40eac61d5f30c87a2d23dc845f890/usr/src/ucbhead/sys/resource.h#L66-L71
+    // So we should add that to nix (https://github.com/nix-rust/nix/issues/2675),
+    // then we can discard the changes here.
+    // Might need to also add them to rust-lang/libc first.
+    cfg_if!(
+        if #[cfg(target_os="illumos")] {
+            let result = None;
+        } else {
+            let result = nix::sys::resource::getrlimit(convert_resource(resource)).ok();
+        }
+    );
+    result
 }
 
-fn setrlimit(resource: c_uint, rlim_cur: rlim_t, rlim_max: rlim_t) -> Result<(), Errno> {
-    nix::sys::resource::setrlimit(convert_resource(resource), rlim_cur, rlim_max)
+fn setrlimit(resource: c_uint, rlim_cur: rlim_t, rlim_max: rlim_t) -> Result<(), Option<Errno>> {
+    cfg_if!(
+        if #[cfg(target_os="illumos")] {
+            let result = Err(None);
+        } else {
+            let result = nix::sys::resource::setrlimit(convert_resource(resource), rlim_cur, rlim_max)
+                .map_err(Some);
+        }
+    );
+    result
 }
 
 /// Print the value of the specified resource limit.
@@ -194,13 +212,15 @@ fn set_limit(
     }
 
     if let Err(errno) = setrlimit(resource, rlim_cur, rlim_max) {
-        if errno == Errno::EPERM {
-            streams.err.append(wgettext_fmt!(
-                "ulimit: Permission denied when changing resource of type '%s'\n",
-                get_desc(resource)
-            ));
-        } else {
-            builtin_wperror(L!("ulimit"), streams);
+        if let Some(errno) = errno {
+            if errno == Errno::EPERM {
+                streams.err.append(wgettext_fmt!(
+                    "ulimit: Permission denied when changing resource of type '%s'\n",
+                    get_desc(resource)
+                ));
+            } else {
+                builtin_wperror(L!("ulimit"), streams);
+            }
         }
 
         Err(STATUS_CMD_ERROR)

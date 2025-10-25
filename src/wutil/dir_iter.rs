@@ -293,6 +293,9 @@ impl DirIter {
                 self.entry.inode = dent.d_ino;
             }
         );
+        // TODO add d_type to https://github.com/rust-lang/libc,
+        // probably to src/unix/solarish/mod.rs
+        // it should exist, according to https://github.com/illumos/illumos-gate/blob/68259130dac40eac61d5f30c87a2d23dc845f890/usr/src/boot/sys/sys/dirent.h#L53
         let typ = dirent_type_to_entry_type(dent.d_type);
         // Do not store symlinks as we will need to resolve them.
         if typ != Some(DirEntryType::lnk) {

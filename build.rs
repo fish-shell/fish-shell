@@ -82,6 +82,7 @@ fn detect_cfgs(target: &mut Target) {
         ("apple", &detect_apple),
         ("bsd", &detect_bsd),
         ("cygwin", &detect_cygwin),
+        ("illumos", &|_| env_var("CARGO_CFG_TARGET_OS").unwrap() == "illumos"),
         ("small_main_stack", &has_small_stack),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| {

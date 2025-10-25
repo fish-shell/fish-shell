@@ -25,6 +25,7 @@ use crate::universal_notifier::default_notifier;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
+use cfg_if::cfg_if;
 
 use libc::{c_int, uid_t};
 use once_cell::sync::{Lazy, OnceCell};
@@ -558,7 +559,14 @@ fn setup_user(vars: &EnvStack) {
 
 pub(crate) static FALLBACK_PATH: Lazy<&[WString]> = Lazy::new(|| {
     // _CS_PATH: colon-separated paths to find POSIX utilities. Same as USER_CS_PATH.
-    let cs_path = libc::_CS_PATH;
+    cfg_if!(
+        if #[cfg(illumos)] {
+            // TODO Is it 1 or 65? See https://github.com/search?q=repo%3Aillumos%2Fillumos-gate%20_CS_PATH&type=code
+            let cs_path = 1;
+        } else {
+            let cs_path = libc::_CS_PATH;
+        }
+    );
 
     let buf_size = unsafe { libc::confstr(cs_path, std::ptr::null_mut(), 0) };
     let paths: Vec<WString> = if buf_size > 0 {

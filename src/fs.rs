@@ -25,7 +25,7 @@ use std::{
 // otherwise it uses mkstemp followed by fcntl
 fn fish_mkstemp_cloexec(name_template: CString) -> std::io::Result<(File, CString)> {
     let name = name_template.into_raw();
-    #[cfg(not(apple))]
+    #[cfg(not(any(apple, illumos)))]
     let fd = {
         use libc::O_CLOEXEC;
         unsafe { libc::mkostemp(name, O_CLOEXEC) }

@@ -713,6 +713,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
 
     #[cfg(not(any(target_os = "linux", target_os = "netbsd", cygwin)))]
     {
+        // TODO add statfs() and MNT_LOCAL for illumos to https://github.com/rust-lang/libc
         let mut buf = MaybeUninit::uninit();
         if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
             return DirRemoteness::unknown;

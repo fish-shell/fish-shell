@@ -19,7 +19,7 @@ MANPATH=$PWD/man fish_update_completions
 # CHECK: {{.*}}  1 / 1 : dirname.1{{.*}}
 
 cd $__fish_cache_dir
-find -type f
+find . -type f
 # CHECK: ./generated_completions/dirname.fish
 
 cat ./generated_completions/dirname.fish

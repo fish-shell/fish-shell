@@ -1579,27 +1579,27 @@ pub fn valid_var_name(s: &wstr) -> bool {
 
 /// Get the absolute path to the fish executable itself
 pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
-    if let Ok(path) = std::env::current_exe() {
-        if path.exists() {
-            return path;
-        }
-
-        // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
-        // then linux adds a " (deleted)" suffix.
-        // If that's not a valid path, let's remove that awkward suffix.
-        if path.as_os_str().as_bytes().ends_with(b" (deleted)") {
-            return path;
-        }
-
-        if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
-            if let Some(filename) = filename.to_str() {
-                let corrected_filename = OsStr::new(filename.strip_suffix(" (deleted)").unwrap());
-                return parent.join(corrected_filename);
-            }
-        }
+    let Ok(path) = std::env::current_exe() else {
+        return argv0.as_ref().to_owned();
+    };
+    if path.exists() {
         return path;
     }
-    argv0.as_ref().to_owned()
+
+    // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
+    // then linux adds a " (deleted)" suffix.
+    // If that's not a valid path, let's remove that awkward suffix.
+    if path.as_os_str().as_bytes().ends_with(b" (deleted)") {
+        return path;
+    }
+
+    if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
+        if let Some(filename) = filename.to_str() {
+            let corrected_filename = OsStr::new(filename.strip_suffix(" (deleted)").unwrap());
+            return parent.join(corrected_filename);
+        }
+    }
+    path
 }
 
 /// A wrapper around Cell which supports modifying the contents, scoped to a region of code.

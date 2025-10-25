@@ -62,7 +62,7 @@ previous_minor_version=${previous_version%.*}
 
     if [ "$minor_version" != "$previous_minor_version" ]; then {
         JoinEscaped() {
-            sed 's/\S/\\&/g' |
+            LC_CTYPE=C.UTF-8 sed 's/\S/\\&/g' |
                 awk '
                     NR != 1 { printf ",\n" }
                     { printf "%s", $0 }

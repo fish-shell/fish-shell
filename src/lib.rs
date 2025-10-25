@@ -56,7 +56,6 @@ pub mod print_help;
 pub mod proc;
 pub mod re;
 pub mod reader;
-pub mod reader_history_search;
 pub mod redirection;
 pub mod screen;
 pub mod signal;

@@ -1,7 +1,7 @@
 use std::os::unix::prelude::*;
 
 use super::prelude::*;
-use crate::common::{PROGRAM_NAME, bytes2wcstring};
+use crate::common::{bytes2wcstring, get_program_name};
 use crate::env::config_paths::get_fish_path;
 use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
@@ -708,7 +708,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     if !command.is_empty() {
                         streams.out.appendln(command);
                     } else {
-                        streams.out.appendln(*PROGRAM_NAME.get().unwrap());
+                        streams.out.appendln(get_program_name());
                     }
                 }
                 STATUS_CURRENT_COMMANDLINE => {

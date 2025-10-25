@@ -13,7 +13,7 @@ use libc::{STDIN_FILENO, VEOF, VINTR};
 
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
-    common::{PROGRAM_NAME, bytes2wcstring, shell_modes},
+    common::{PROGRAM_NAME, bytes2wcstring, get_program_name, shell_modes},
     env::{EnvStack, Environment, env_init},
     future_feature_flags,
     input_common::{
@@ -199,7 +199,7 @@ fn parse_flags(
             'v' => {
                 streams.out.appendln(wgettext_fmt!(
                     "%s, version %s",
-                    PROGRAM_NAME.get().unwrap(),
+                    get_program_name(),
                     crate::BUILD_VERSION
                 ));
                 return ControlFlow::Break(Ok(SUCCESS));

@@ -1062,6 +1062,10 @@ pub static PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 /// Name of the current program. Should be set at startup. Used by the debug function.
 pub static PROGRAM_NAME: OnceCell<&'static wstr> = OnceCell::new();
 
+pub fn get_program_name() -> &'static wstr {
+    PROGRAM_NAME.get().unwrap()
+}
+
 /// MS Windows tty devices do not currently have either a read or write timestamp - those respective
 /// fields of `struct stat` are always set to the current time, which means we can't rely on them.
 /// In this case, we assume no external program has written to the terminal behind our back, making

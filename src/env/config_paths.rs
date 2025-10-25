@@ -1,4 +1,4 @@
-use crate::common::{BUILD_DIR, PROGRAM_NAME};
+use crate::common::{BUILD_DIR, get_program_name};
 use crate::{FLOG, FLOGF};
 use fish_build_helper::workspace_root;
 use once_cell::sync::OnceCell;
@@ -152,7 +152,7 @@ pub fn get_fish_path() -> &'static PathBuf {
 
 fn compute_fish_path() -> PathBuf {
     let Ok(path) = std::env::current_exe() else {
-        assert!(PROGRAM_NAME.get().unwrap() == "fish");
+        assert!(get_program_name() == "fish");
         return PathBuf::from("fish");
     };
     assert!(path.is_absolute());

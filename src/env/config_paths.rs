@@ -1,6 +1,8 @@
-use crate::common::{BUILD_DIR, get_fish_path};
+use crate::common::{BUILD_DIR, PROGRAM_NAME};
 use crate::{FLOG, FLOGF};
 use fish_build_helper::workspace_root;
+use std::ffi::OsStr;
+use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
@@ -140,4 +142,30 @@ impl ConfigPaths {
         );
         Self::static_paths()
     }
+}
+
+/// Get the absolute path to the fish executable itself
+pub fn get_fish_path() -> PathBuf {
+    let Ok(path) = std::env::current_exe() else {
+        assert!(PROGRAM_NAME.get().unwrap() == "fish");
+        return PathBuf::from("fish");
+    };
+    if path.exists() {
+        return path;
+    }
+
+    // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
+    // then linux adds a " (deleted)" suffix.
+    // If that's not a valid path, let's remove that awkward suffix.
+    if path.as_os_str().as_bytes().ends_with(b" (deleted)") {
+        return path;
+    }
+
+    if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
+        if let Some(filename) = filename.to_str() {
+            let corrected_filename = OsStr::new(filename.strip_suffix(" (deleted)").unwrap());
+            return parent.join(corrected_filename);
+        }
+    }
+    path
 }

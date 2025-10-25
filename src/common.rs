@@ -21,11 +21,10 @@ use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use once_cell::sync::OnceCell;
 use std::cell::{Cell, RefCell};
 use std::env;
-use std::ffi::{CStr, CString, OsStr, OsString};
+use std::ffi::{CStr, CString, OsString};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, MutexGuard};
 use std::time;
@@ -1575,32 +1574,6 @@ pub fn valid_var_name_char(chr: char) -> bool {
 pub fn valid_var_name(s: &wstr) -> bool {
     // Note do not use c_str(), we want to fail on embedded nul bytes.
     !s.is_empty() && s.chars().all(valid_var_name_char)
-}
-
-/// Get the absolute path to the fish executable itself
-pub fn get_fish_path() -> PathBuf {
-    let Ok(path) = std::env::current_exe() else {
-        assert!(PROGRAM_NAME.get().unwrap() == "fish");
-        return PathBuf::from("fish");
-    };
-    if path.exists() {
-        return path;
-    }
-
-    // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
-    // then linux adds a " (deleted)" suffix.
-    // If that's not a valid path, let's remove that awkward suffix.
-    if path.as_os_str().as_bytes().ends_with(b" (deleted)") {
-        return path;
-    }
-
-    if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
-        if let Some(filename) = filename.to_str() {
-            let corrected_filename = OsStr::new(filename.strip_suffix(" (deleted)").unwrap());
-            return parent.join(corrected_filename);
-        }
-    }
-    path
 }
 
 /// A wrapper around Cell which supports modifying the contents, scoped to a region of code.

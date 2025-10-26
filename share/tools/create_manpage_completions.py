@@ -800,6 +800,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
         "ffmpeg-",
         "flatpak-",
         "git-",
+        "gcloud_",
         "npm-",
         "openssl-",
         "ostree-",

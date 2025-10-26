@@ -29,6 +29,7 @@ Other improvements
 
 For distributors and developers
 -------------------------------
+- Release tags and source code tarballs are GPG-signed again  (:issue:`11996`).
 - Release tarballs are built with the latest release of Sphinx,
   which means that pre-built man pages include :ref:`OSC 8 hyperlinks <term-compat-osc-8>`.
 - The Sphinx dependency is now specified in ``pyproject.toml``,

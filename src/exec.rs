@@ -397,12 +397,12 @@ fn safe_launch_process(
     if err.0 == ENOEXEC && is_thompson_shell_script(actual_cmd) {
         // Construct new argv.
         // We must not allocate memory, so only 128 args are supported.
-        const maxargs: usize = 128;
+        const MAXARGS: usize = 128;
         let nargs = argv.len();
         let argv = unsafe { slice::from_raw_parts(argv.get(), nargs) };
-        if nargs <= maxargs {
+        if nargs <= MAXARGS {
             // +1 for /bin/sh, +1 for terminating nullptr
-            let mut argv2 = [std::ptr::null(); 1 + maxargs + 1];
+            let mut argv2 = [std::ptr::null(); 1 + MAXARGS + 1];
             let bshell = PATH_BSHELL.as_ptr() as *const c_char;
             argv2[0] = bshell as *mut c_char;
             argv2[1..argv.len() + 1].copy_from_slice(argv);

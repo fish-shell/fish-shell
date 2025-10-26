@@ -1181,13 +1181,13 @@ fn format_history_record(
     let mut timestamp = MaybeUninit::uninit();
     if let Some(show_time_format) = show_time_format.and_then(|s| CString::new(s).ok()) {
         if !unsafe { libc::localtime_r(&seconds, timestamp.as_mut_ptr()).is_null() } {
-            const max_tstamp_length: usize = 100;
-            let mut timestamp_str = [0_u8; max_tstamp_length];
+            const MAX_TIMESTAMP_LENGTH: usize = 100;
+            let mut timestamp_str = [0_u8; MAX_TIMESTAMP_LENGTH];
             use libc::strftime;
             if unsafe {
                 strftime(
                     &mut timestamp_str[0] as *mut u8 as *mut libc::c_char,
-                    max_tstamp_length,
+                    MAX_TIMESTAMP_LENGTH,
                     show_time_format.as_ptr(),
                     timestamp.as_ptr(),
                 )

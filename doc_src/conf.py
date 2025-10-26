@@ -90,6 +90,10 @@ else:
         ("../build_tools/git_version_gen.sh", "--stdout"), stderr=subprocess.STDOUT
     ).decode("utf-8")
 
+predetermined_timestamp = os.environ.get("FISH_SPHINX_BUILD_DATE")
+if predetermined_timestamp:
+    today = predetermined_timestamp
+
 # The full version, including alpha/beta/rc tags
 release = ret.strip().split(" ")[-1]
 # The short X.Y version

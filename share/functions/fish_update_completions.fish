@@ -23,7 +23,7 @@ function fish_update_completions --description "Update man-page based completion
         $python $update_args
     end
     __fish_data_with_directory tools \
-        'create_manpage_completions\.py|deroff\.py' \
+        'create_manpage_completions\.py' \
         __fish_update_completions $argv
     __fish_with_status functions --erase __fish_update_completions
 end

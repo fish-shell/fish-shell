@@ -38,8 +38,11 @@ function __fish_print_help_pre_4.1 --description "Print help message for the spe
     set -l item $argv[1]
     set -l error_message $argv[2]
     # Do nothing if the file does not exist
-    if not path is -- $__fish_data_dir/man/man1/$item.1 $__fish_data_dir/man/man1/$item.1.gz
-        and not status get-file man/man1/$item.1 >/dev/null
+    if not if __fish_is_standalone
+            status get-file man/man1/$item.1 >/dev/null
+        else
+            path is -- $__fish_data_dir/man/man1/$item.1 $__fish_data_dir/man/man1/$item.1.gz
+        end
         return 2
     end
 
@@ -71,7 +74,7 @@ function __fish_print_help_pre_4.1 --description "Print help message for the spe
         return 1
     end
 
-    if path is -- $__fish_data_dir/man/man1/$item.1
+    if __fish_is_standalone; and path is -- $__fish_data_dir/man/man1/$item.1
         # Some nroff versions screw up non-ascii characters.
         # (even with the locale set correctly!)
         # Work around that by running preconv first.
@@ -80,7 +83,7 @@ function __fish_print_help_pre_4.1 --description "Print help message for the spe
         else
             set help ($format "$__fish_data_dir/man/man1/$item.1" 2>/dev/null)
         end
-    else if path is -- $__fish_data_dir/man/man1/$item.1.gz
+    else if __fish_is_standalone; and path is -- $__fish_data_dir/man/man1/$item.1.gz
         if command -sq preconv; and test "$format[1]" = nroff
             set help (gunzip -c "$__fish_data_dir/man/man1/$item.1.gz" 2>/dev/null | preconv -e UTF-8 | $format 2>/dev/null)
         else

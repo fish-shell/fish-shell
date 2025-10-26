@@ -22,13 +22,20 @@ if not status --is-interactive
     end
 end
 
+# N.B. can't load __fish_is_standalone.fish this early in non-embedded builds, so reimplement it.
+# We still want it as a separate file for --no-config.
+set -l is_standalone (
+    if status get-file config.fish &>/dev/null
+        echo true
+    else
+        echo false
+    end
+)
+
 #
 # Set default search paths for completions and shellscript functions
 # unless they already exist
 #
-
-# __fish_data_dir, __fish_sysconf_dir, __fish_help_dir, __fish_bin_dir
-# are expected to have been set up by read_init from fish.cpp
 
 # Grab extra directories (as specified by the build process, usually for
 # third-party packages to ship completions &c.
@@ -36,7 +43,7 @@ set -l __extra_completionsdir
 set -l __extra_functionsdir
 set -l __extra_confdir
 # N.B. can't load __fish_data_with_file this early in non-embedded builds, so reimplement it.
-if status get-file __fish_build_paths.fish &>/dev/null
+if $is_standalone
     status get-file __fish_build_paths.fish | source
 else if path is -f -- $__fish_data_dir/__fish_build_paths.fish
     source $__fish_data_dir/__fish_build_paths.fish
@@ -48,7 +55,7 @@ set -l xdg_data_dirs
 if set -q XDG_DATA_DIRS
     set --path xdg_data_dirs $XDG_DATA_DIRS
     set xdg_data_dirs (string replace -r '([^/])/$' '$1' -- $xdg_data_dirs)/fish
-else
+else if not $is_standalone
     set xdg_data_dirs $__fish_data_dir
 end
 
@@ -77,14 +84,21 @@ end
 # default functions/completions are included in the respective path.
 
 if not set -q fish_function_path
-    set fish_function_path $__fish_config_dir/functions $__fish_sysconf_dir/functions $__fish_vendor_functionsdirs $__fish_data_dir/functions
-else if not contains -- $__fish_data_dir/functions $fish_function_path
+    set fish_function_path $__fish_config_dir/functions $__fish_sysconf_dir/functions $__fish_vendor_functionsdirs
+    if not $is_standalone
+        set -a fish_function_path $__fish_data_dir/functions
+    end
+else if not $is_standalone; and not contains -- $__fish_data_dir/functions $fish_function_path
     set -a fish_function_path $__fish_data_dir/functions
 end
 
 if not set -q fish_complete_path
-    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__fish_vendor_completionsdirs $__fish_data_dir/completions $__fish_cache_dir/generated_completions
-else if not contains -- $__fish_data_dir/completions $fish_complete_path
+    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__fish_vendor_completionsdirs
+    if not $is_standalone
+        set -a fish_complete_path $__fish_data_dir/completions
+    end
+    set -a fish_complete_path $__fish_cache_dir/generated_completions
+else if not $is_standalone; and not contains -- $__fish_data_dir/completions $fish_complete_path
     set -a fish_complete_path $__fish_data_dir/completions
 end
 

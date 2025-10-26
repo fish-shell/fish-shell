@@ -9,6 +9,6 @@ runs:
     - shell: bash
       run: |
         set -x
-        commit=b259de1dc97573a71470a1d71c3d83535934136b
-        pip install git+https://github.com/krobelus/sphinx-markdown-builder@"$commit"
+        commit=7c4daaf39a92f93deec948ecc1772e23bac44588
+        pip install git+https://github.com/liran-funaro/sphinx-markdown-builder@"$commit"
         python -c 'import sphinx_markdown_builder'

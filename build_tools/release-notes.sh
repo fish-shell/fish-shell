@@ -93,7 +93,7 @@ sphinx-build >&2 -j auto \
     -d "$relnotes_tmp/doctree" "$relnotes_tmp/fake-workspace/doc_src" "$relnotes_tmp/out" \
     -D markdown_http_base="https://fishshell.com/docs/$minor_version" \
     -D markdown_uri_doc_suffix=".html" \
-    -D markdown_github_flavored=1 \
+    -D markdown_flavor=github \
     "$@"
 
 # Skip changelog header

@@ -86,9 +86,12 @@ if git -C "$workspace_root" tag | grep -q .; then {
     echo
     echo "---"
     echo
-    echo "*Download links: To download the source code for fish, we suggest the file named \"fish-$version.tar.xz\". The file downloaded from \"Source code (tar.gz)\" will not build correctly.*"
+    echo 'Download links:'
+    echo 'To download the source code for fish, we suggest the file named ``fish-'"$version"'.tar.xz``.'
+    echo 'The file downloaded from ``Source code (tar.gz)`` will not build correctly.'
+    echo 'A GPG signature using the key published at '"${FISH_GPG_PUBLIC_KEY_URL:-???}"' is available as ``fish-'"$version"'.tar.xz.asc``.'
     echo
-    echo "*The files called fish-$version-linux-\*.tar.xz are experimental packages containing a single standalone ``fish`` binary for any Linux with the given CPU architecture.*"
+    echo 'The files called ``fish-'"$version"'-linux-\*.tar.xz`` are experimental packages containing a single standalone ``fish`` binary for any Linux with the given CPU architecture.'
 } >"$relnotes_tmp/fake-workspace"/CHANGELOG.rst
 
 sphinx-build >&2 -j auto \

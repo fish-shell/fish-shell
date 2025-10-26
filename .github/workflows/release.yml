@@ -52,7 +52,10 @@ jobs:
           # Need history since the last release (i.e. tag) for stats.
           git fetch --tags
           git fetch --unshallow
-          sh -x ./build_tools/release-notes.sh >"$relnotes"
+          gpg_public_key_url=https://github.com/${{ github.actor }}.gpg
+          curl -sS "$gpg_public_key_url" | grep 'PGP PUBLIC KEY BLOCK' -A5
+          FISH_GPG_PUBLIC_KEY_URL=$gpg_public_key_url \
+            sh -x ./build_tools/release-notes.sh >"$relnotes"
           # Delete title
           sed -n 1p "$relnotes" | grep -q "^## fish .*"
           sed -n 2p "$relnotes" | grep -q '^$'

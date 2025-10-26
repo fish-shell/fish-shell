@@ -27,6 +27,7 @@ Other improvements
 
 For distributors
 ----------------
+- Release tags and source code tarballs are GPG-signed again  (:issue:`11996`).
 - The minimum supported Rust version (MSRV) has been updated to 1.85.
 - Fixed saving/loading of universal variables on Cygwin (:issue:`11948`).
 

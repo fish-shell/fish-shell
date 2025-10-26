@@ -178,7 +178,7 @@ Fish will then read these right from its own binary, and print them out when nee
 To install fish with embedded files, just use ``cargo``, like::
 
    cargo install --path /path/to/fish # if you have a git clone
-   cargo install --git https://github.com/fish-shell/fish-shell --tag "$(curl -s https://api.github.com/repos/fish-shell/fish-shell/releases/latest | jq -r .tag_name)" # to build the latest release
+   cargo install --git https://github.com/fish-shell/fish-shell --tag "$(curl -sS https://api.github.com/repos/fish-shell/fish-shell/releases/latest | jq -r .tag_name)" # to build the latest release
    cargo install --git https://github.com/fish-shell/fish-shell # to build the latest development snapshot
 
 This will place the standalone binaries in ``~/.cargo/bin/``, but you can place them wherever you want.

@@ -57,7 +57,7 @@ endif()
 add_custom_target(fish_run_tests
   # TODO: This should be replaced with a unified solution, possibly build_tools/check.sh.
   COMMAND ${CMAKE_SOURCE_DIR}/tests/test_driver.py ${max_concurrency_flag} ${CMAKE_CURRENT_BINARY_DIR}
-  COMMAND env ${VARS_FOR_CARGO} cargo test --no-default-features ${CARGO_FLAGS} --workspace --target-dir ${rust_target_dir} ${cargo_test_flags}
+  COMMAND env ${VARS_FOR_CARGO} ${Rust_CARGO} test --no-default-features ${CARGO_FLAGS} --workspace --target-dir ${rust_target_dir} ${cargo_test_flags}
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   DEPENDS fish fish_indent fish_key_reader fish_test_helper
   USES_TERMINAL

@@ -90,6 +90,10 @@ else:
         ("../build_tools/git_version_gen.sh", "--stdout"), stderr=subprocess.STDOUT
     ).decode("utf-8")
 
+fixed_timestamp = os.environ.get("FISH_SOURCE_DATE_EPOCH")
+if fixed_timestamp:
+    today = fixed_timestamp
+
 # The full version, including alpha/beta/rc tags
 release = ret.strip().split(" ")[-1]
 # The short X.Y version

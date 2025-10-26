@@ -41,13 +41,21 @@ isolated-tmux capture-pane -p
 
 isolated-tmux send-keys C-c
 tmux-sleep
-isolated-tmux send-keys C-l '
+isolated-tmux send-keys C-l
+tmux-sleep
+isolated-tmux send-keys '
     function fish_right_prompt
         echo right-prompt
     end
 ' 'commandline -i ": \'$(seq (math $LINES \* 2))\'"' Enter Enter
 tmux-sleep
-isolated-tmux capture-pane -p -S -13
+tmux-sleep
+# Detect whether this terminal adds a blank line after prompts with right-prompt.
+# Check if the first line captured with -S -12 is blank.
+set -l probe (isolated-tmux capture-pane -p -S -12 | head -1)
+# If it's blank or just whitespace, we need -13 to go back one more to get the prompt line
+string match -qr '^\s*$' -- $probe && set -l offset -13 || set -l offset -12
+isolated-tmux capture-pane -p -S $offset
 # CHECK: prompt 4> commandline -i ": '$(seq (math $LINES \* 2))'"            right-prompt
 # CHECK: prompt 5> : '1                                                      right-prompt
 # CHECK: 2

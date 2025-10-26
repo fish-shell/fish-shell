@@ -665,8 +665,8 @@ mod tests {
         // This is OK because we do not _depend_ on this behavior; the only
         // true requirement is that we don't panic in the handling code above.
         assert!(
-            is_wsl(WSL::V1) || matches!(result, Err(libc::EBADF) | Ok(1)),
-            "select/poll should have failed with EBADF or marked readable"
+            is_wsl(WSL::V1) || matches!(result, Err(libc::EBADF) | Ok(0 | 1)),
+            "select/poll should have failed with EBADF or timed out or the fd should be ready"
         );
     }
 
@@ -686,7 +686,7 @@ mod tests {
         };
         let result = do_something_bad_during_select(dup2_it);
         assert!(
-            matches!(result, Err(libc::EBADF) | Ok(0) | Ok(1)),
+            matches!(result, Err(libc::EBADF) | Ok(0 | 1)),
             "select/poll should have failed with EBADF or timed out or the fd should be ready"
         );
         // Ensure these stay alive until after thread is joined.

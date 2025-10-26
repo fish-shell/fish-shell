@@ -5434,42 +5434,50 @@ impl ReaderData {
             if canary.upgrade().is_none() {
                 return;
             }
-            if search_term != zelf.pager.search_field_line.text() {
-                return; // Stale request.
-            }
-            let history_size = zelf.history.size();
-            let Some(history_pager) = zelf.history_pager.as_mut() else {
-                return; // Pager has been closed.
-            };
-            assert!(result.range.start < result.range.end);
-            *history_pager = result.range;
-            zelf.pager.extra_progress_text =
-                if !result.matched_commands.is_empty() && *history_pager != (0..history_size + 1) {
-                    wgettext_fmt!(
-                        "Items %u to %u of %u",
-                        match history_pager.start {
-                            0 => 1,
-                            _ => result.first_shown,
-                        },
-                        history_pager.end - 1,
-                        history_size
-                    )
-                } else {
-                    L!("").to_owned()
-                };
-            zelf.pager.set_completions(&result.matched_commands, false);
-            if why == HistoryPagerInvocation::Refresh {
-                zelf.pager.set_selected_completion_index(old_pager_index);
-                zelf.pager_selection_changed();
-            }
-            if let Some(motion) = result.motion {
-                zelf.select_completion_in_direction(motion, true);
-            }
-            zelf.super_highlight_me_plenty();
-            zelf.layout_and_repaint(L!("history-pager"));
+            zelf.fill_history_pager_complete(result, why, old_pager_index);
         };
         let debouncer = debounce_history_pager();
         debouncer.perform_with_completion(performer, completion);
+    }
+}
+
+impl<'a> Reader<'a> {
+    fn fill_history_pager_complete(
+        &mut self,
+        result: HistoryPagerResult,
+        why: HistoryPagerInvocation,
+        old_pager_index: Option<usize>,
+    ) {
+        let history_size = self.history.size();
+        let Some(history_pager) = self.history_pager.as_mut() else {
+            return; // Pager has been closed.
+        };
+        assert!(result.range.start < result.range.end);
+        *history_pager = result.range;
+        self.pager.extra_progress_text =
+            if !result.matched_commands.is_empty() && *history_pager != (0..history_size + 1) {
+                wgettext_fmt!(
+                    "Items %u to %u of %u",
+                    match history_pager.start {
+                        0 => 1,
+                        _ => result.first_shown,
+                    },
+                    history_pager.end - 1,
+                    history_size
+                )
+            } else {
+                L!("").to_owned()
+            };
+        self.pager.set_completions(&result.matched_commands, false);
+        if why == HistoryPagerInvocation::Refresh {
+            self.pager.set_selected_completion_index(old_pager_index);
+            self.pager_selection_changed();
+        }
+        if let Some(motion) = result.motion {
+            self.select_completion_in_direction(motion, true);
+        }
+        self.super_highlight_me_plenty();
+        self.layout_and_repaint(L!("history-pager"));
     }
 }
 

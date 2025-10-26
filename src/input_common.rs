@@ -9,8 +9,7 @@ use crate::key::{
     self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
     canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
 };
-use crate::reader::reader_test_and_clear_interrupted;
-use crate::threads::iothread_port;
+use crate::reader::{iothreads, reader_test_and_clear_interrupted};
 use crate::tty_handoff::{
     SCROLL_CONTENT_UP_TERMINFO_CODE, XTVERSION, maybe_set_kitty_keyboard_capability,
     maybe_set_scroll_content_up_capability,
@@ -566,7 +565,7 @@ fn next_input_event(in_fd: RawFd, timeout: Timeout) -> InputEventTrigger {
         fdset.add(in_fd);
 
         // Add the completion ioport.
-        let ioport_fd = iothread_port();
+        let ioport_fd = iothreads::completion_port();
         fdset.add(ioport_fd);
 
         // Get the uvar notifier fd (possibly none).

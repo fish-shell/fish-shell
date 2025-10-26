@@ -11,7 +11,6 @@ use crate::parser::{CancelBehavior, Parser};
 use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
 use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
 use crate::tests::prelude::*;
-use crate::threads::iothread_perform;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use libc::SIGINT;
@@ -703,7 +702,7 @@ fn test_1_cancellation(parser: &Parser, src: &wstr) {
     let delay = Duration::from_millis(100);
     #[allow(clippy::unnecessary_cast)]
     let thread = unsafe { libc::pthread_self() } as usize;
-    iothread_perform(move || {
+    std::thread::spawn(move || {
         // Wait a while and then SIGINT the main thread.
         std::thread::sleep(delay);
         unsafe {

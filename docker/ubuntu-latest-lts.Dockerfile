@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:latest
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG=C.UTF-8
@@ -23,12 +23,13 @@ RUN apt-get update \
   && locale-gen en_US.UTF-8 \
   && apt-get clean
 
-RUN groupadd -g 1000 fishuser \
+RUN userdel ubuntu \
+  && groupadd -g 1000 fishuser \
   && useradd -p $(openssl passwd -1 fish) -d /home/fishuser -m -u 1000 -g 1000 fishuser \
-  && adduser fishuser sudo \
+       -G sudo \
   && mkdir -p /home/fishuser/fish-build \
   && mkdir /fish-source \
-  && chown -R fishuser:fishuser /home/fishuser /fish-source
+  && chown -R fishuser:1000 /home/fishuser /fish-source
 
 USER fishuser
 WORKDIR /home/fishuser

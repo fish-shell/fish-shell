@@ -93,28 +93,26 @@ if set -q python_files[1]
     end
 end
 
-if not cargo fmt --version >/dev/null
-    echo
-    echo $yellow'Please install "rustfmt" to style Rust, e.g. via:'
-    echo "rustup component add rustfmt"$normal
-    exit 127
-end
-echo === Running "$green"rustfmt"$normal"
-if set -l -q _flag_check
-    if test $all = yes
-        cargo fmt --all --check
+if test $all = yes; or set -q rust_files[1]
+    if not cargo fmt --version >/dev/null
+        echo
+        echo $yellow'Please install "rustfmt" to style Rust, e.g. via:'
+        echo "rustup component add rustfmt"$normal
+        exit 127
+    end
+
+    echo === Running "$green"rustfmt"$normal"
+    if set -l -q _flag_check
+        if test $all = yes
+            cargo fmt --all --check
+        else
+            rustfmt --check --files-with-diff $rust_files
+        end
         or die "Rust files are not formatted correctly."
     else
-        if set -q rust_files[1]
-            rustfmt --check --files-with-diff $rust_files
-            or die "Rust files are not formatted correctly."
-        end
-    end
-else
-    if test $all = yes
-        cargo fmt --all
-    else
-        if set -q rust_files[1]
+        if test $all = yes
+            cargo fmt --all
+        else
             rustfmt $rust_files
         end
     end

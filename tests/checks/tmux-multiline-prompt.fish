@@ -62,7 +62,9 @@ isolated-tmux capture-pane -p
 # CHECK: prompt-line-2>
 
 # Test that transient prompt does not break the prompt.
-isolated-tmux send-keys C-l "set fish_transient_prompt 1" Enter : Enter Enter
+isolated-tmux send-keys C-l "set fish_transient_prompt 1" Enter
+tmux-sleep
+isolated-tmux send-keys : Enter Enter
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt-line-1

@@ -43,23 +43,11 @@ end" >$__fish_config_dir/config.fish
     #
     # Don't do this if we're being invoked as part of running unit tests.
     if not set -q FISH_UNIT_TESTS_RUNNING
-        # Check if our manpage completion script exists because some distros split it out.
-        # (#7183)
-        set -l script $__fish_data_dir/tools/create_manpage_completions.py
-        if not test -d $__fish_cache_dir/generated_completions; and test -e "$script"
-            # Generating completions from man pages needs python (see issue #3588).
-
+        if not test -d $__fish_cache_dir/generated_completions
             # We cannot simply do `fish_update_completions &` because it is a function.
-            # We cannot do `eval` since it is a function.
             # We don't want to call `fish -c` since that is unnecessary and sources config.fish again.
-            # Hence we'll call python directly.
-            # c_m_p.py should work with any python version.
-            set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in $__fish_user_data_dir/generated_completions --cleanup-in $__fish_cache_dir/generated_completions
-            if set -l python (__fish_anypython)
-                # Run python directly in the background and swallow all output
-                # Orphan the job so that it continues to run in case of an early exit (#6269)
-                /bin/sh -c '( "$@" ) >/dev/null 2>&1 &' -- $python $update_args
-            end
+            mkdir -p $__fish_cache_dir/generated_completions
+            fish_update_completions_detach=true fish_update_completions 2>/dev/null
         end
     end
 

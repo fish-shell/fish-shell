@@ -11,15 +11,14 @@ use std::path::{Path, PathBuf};
 pub struct ConfigPaths {
     pub sysconf: PathBuf,     // e.g., /usr/local/etc
     pub bin: Option<PathBuf>, // e.g., /usr/local/bin
-    #[cfg(not(feature = "embed-data"))]
-    pub data: PathBuf, // e.g., /usr/local/share
-    #[cfg(not(feature = "embed-data"))]
-    pub doc: PathBuf, // e.g., /usr/local/share/doc/fish
+    /// Always present if "embed-data" is disabled.
+    pub data: Option<PathBuf>, // e.g., /usr/local/share
+    /// Always present if "embed-data" is disabled.
+    pub doc: Option<PathBuf>, // e.g., /usr/local/share/doc/fish
 }
 
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
-#[cfg(not(feature = "embed-data"))]
-const DOC_DIR: &str = env!("DOCDIR");
+const DOC_DIR: Option<&str> = option_env!("DOCDIR");
 
 /// The kind of directory structure we assume.
 /// Each variants is passed the executable path's parent, if available.
@@ -121,27 +120,28 @@ impl ConfigPaths {
             "paths.sysconf: %s",
             paths.sysconf.display().to_string()
         );
-        FLOGF!(
-            config,
-            "paths.bin: %s",
-            paths
-                .bin
-                .as_ref()
-                .map(|x| x.display().to_string())
-                .unwrap_or("|not found|".to_string()),
-        );
-        #[cfg(not(feature = "embed-data"))]
-        FLOGF!(config, "paths.data: %s", paths.data.display().to_string());
-        #[cfg(not(feature = "embed-data"))]
-        FLOGF!(config, "paths.doc: %s", paths.doc.display().to_string());
+        macro_rules! log_optional_path {
+            ($field:ident) => {
+                FLOGF!(
+                    config,
+                    "paths.%s: %s",
+                    stringify!($field),
+                    paths
+                        .$field
+                        .as_ref()
+                        .map(|x| x.display().to_string())
+                        .unwrap_or("|not found|".to_string()),
+                );
+            };
+        }
+        log_optional_path!(bin);
+        log_optional_path!(data);
+        log_optional_path!(doc);
         paths
     }
 
     fn from_layout(exec_path: DirectoryLayout) -> Self {
         let workspace_root = workspace_root();
-
-        #[cfg(feature = "embed-data")]
-        FLOG!(config, "embed-data feature is active, ignoring data paths");
 
         use DirectoryLayout::*;
         match exec_path {
@@ -150,16 +150,13 @@ impl ConfigPaths {
                 Self {
                     sysconf: prefix.join("etc/fish"),
                     bin: Some(exec_path_parent.to_owned()),
-                    #[cfg(not(feature = "embed-data"))]
-                    data: prefix.join("share/fish"),
-                    // The docs dir may not exist; in that case fall back to the compiled in path.
-                    #[cfg(not(feature = "embed-data"))]
+                    data: Some(prefix.join("share/fish")),
                     doc: {
                         let doc = prefix.join("share/doc/fish");
                         if doc.exists() {
-                            doc
+                            Some(doc)
                         } else {
-                            PathBuf::from(DOC_DIR)
+                            DOC_DIR.map(PathBuf::from)
                         }
                     },
                 }
@@ -167,22 +164,16 @@ impl ConfigPaths {
             BuildDirectory(exec_path_parent) => Self {
                 sysconf: workspace_root.join("etc"),
                 bin: Some(exec_path_parent.to_owned()),
-                #[cfg(not(feature = "embed-data"))]
-                data: workspace_root.join("share"),
-                #[cfg(not(feature = "embed-data"))]
-                doc: workspace_root.join("user_doc/html"),
+                data: Some(workspace_root.join("share")),
+                doc: Some(workspace_root.join("user_doc/html")),
             },
-            #[allow(unused_variables)]
             DefaultLayout(exec_path_parent) => Self {
                 sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
-                #[cfg(feature = "embed-data")]
-                bin: exec_path_parent,
-                #[cfg(not(feature = "embed-data"))]
-                bin: Some(PathBuf::from(env!("BINDIR"))),
-                #[cfg(not(feature = "embed-data"))]
-                data: PathBuf::from(env!("DATADIR")).join("fish"),
-                #[cfg(not(feature = "embed-data"))]
-                doc: DOC_DIR.into(),
+                bin: option_env!("BINDIR")
+                    .map(PathBuf::from)
+                    .or(exec_path_parent),
+                data: option_env!("DATADIR").map(|p| PathBuf::from(p).join("fish")),
+                doc: DOC_DIR.map(PathBuf::from),
             },
         }
     }

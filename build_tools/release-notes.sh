@@ -12,17 +12,20 @@ mkdir -p "$relnotes_tmp/fake-workspace" "$relnotes_tmp/out"
 )
 version=$(sed 's,^fish \(\S*\) .*,\1,; 1q' "$workspace_root/CHANGELOG.rst")
 add_stats=false
-previous_version=$(
-    cd "$workspace_root"
-    git for-each-ref --format='%(objecttype) %(refname:strip=2)' refs/tags |
-        awk '/tag/ {print $2}' | sort --version-sort |
-        grep -vF "$(git describe)" | tail -1
-)
-minor_version=${version%.*}
-previous_minor_version=${previous_version%.*}
-if [ "$minor_version" != "$previous_minor_version" ]; then
-    add_stats=true
-fi
+# Skip on shallow clone (CI) for now.
+if test -z "$CI" || git -C "$workspace_root" tag | grep -q .; then {
+    previous_version=$(
+        cd "$workspace_root"
+        git for-each-ref --format='%(objecttype) %(refname:strip=2)' refs/tags |
+            awk '/tag/ {print $2}' | sort --version-sort |
+            grep -vF "$(git describe)" | tail -1
+    )
+    minor_version=${version%.*}
+    previous_minor_version=${previous_version%.*}
+    if [ "$minor_version" != "$previous_minor_version" ]; then
+        add_stats=true
+    fi
+} fi
 {
     sed -n 1,2p <"$workspace_root/CHANGELOG.rst"
     if $add_stats; then {

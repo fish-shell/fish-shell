@@ -136,7 +136,7 @@ use crate::terminal::TerminalCommand::{
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::TextFace;
 use crate::text_face::parse_text_face;
-use crate::threads::{Debounce, assert_is_background_thread, assert_is_main_thread};
+use crate::threads::{assert_is_background_thread, assert_is_main_thread, debounce::Debounce};
 use crate::tokenizer::quote_end;
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::tokenizer::{

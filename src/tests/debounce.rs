@@ -7,7 +7,7 @@ use std::time::Duration;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::reader::{Reader, fake_scoped_reader};
 use crate::tests::prelude::*;
-use crate::threads::{Debounce, ThreadPool};
+use crate::threads::{ThreadPool, debounce::Debounce};
 
 #[test]
 fn test_debounce() {

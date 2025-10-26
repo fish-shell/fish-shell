@@ -48,6 +48,7 @@ use std::time::{Duration, Instant};
 use errno::{Errno, errno};
 
 use super::history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
+use super::iothreads::thread_pool as io_thread_pool;
 use crate::abbrs::abbrs_match;
 use crate::ast::{self, Kind, is_same_node};
 use crate::builtins::shared::ErrorCode;
@@ -135,10 +136,7 @@ use crate::terminal::TerminalCommand::{
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::TextFace;
 use crate::text_face::parse_text_face;
-use crate::threads::{
-    Debounce, assert_is_background_thread, assert_is_main_thread, io_thread_pool,
-    iothread_service_main_with_timeout,
-};
+use crate::threads::{Debounce, assert_is_background_thread, assert_is_main_thread};
 use crate::tokenizer::quote_end;
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::tokenizer::{
@@ -5284,7 +5282,7 @@ impl<'a> Reader<'a> {
             let deadline = now + HIGHLIGHT_TIMEOUT_FOR_EXECUTION;
             while now < deadline {
                 let timeout = deadline - now;
-                iothread_service_main_with_timeout(self, timeout);
+                io_thread_pool().invoke_completions_with_timeout(self, timeout);
 
                 // Note iothread_service_main_with_timeout will reentrantly modify us,
                 // by invoking a completion.

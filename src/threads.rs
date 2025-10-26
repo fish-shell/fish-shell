@@ -21,16 +21,9 @@ const THREAD_ASSERTS_CFG_FOR_TESTING: bool = cfg!(test);
 /// This allows us to notice when we've forked.
 static IS_FORKED_PROC: AtomicBool = AtomicBool::new(false);
 
-/// Maximum number of threads for the IO thread pool.
-const IO_MAX_THREADS: usize = 1024;
-
 /// How long an idle [`ThreadPool`] thread will wait for work (against the condition variable)
 /// before exiting.
 const IO_WAIT_FOR_WORK_DURATION: Duration = Duration::from_millis(500);
-
-/// The iothreads [`ThreadPool`] singleton. Used to lift I/O off of the main thread and used for
-/// completions, etc.
-static IO_THREAD_POOL: OnceLock<Arc<ThreadPool>> = OnceLock::new();
 
 /// A [`ThreadPool`] work request.
 type WorkItem = Box<dyn FnOnce() + 'static + Send>;
@@ -57,10 +50,6 @@ pub fn init() {
         let result = libc::pthread_atfork(None, None, Some(child_post_fork));
         assert_eq!(result, 0, "pthread_atfork() failure: {}", errno::errno());
     }
-
-    IO_THREAD_POOL
-        .set(ThreadPool::new(1, IO_MAX_THREADS))
-        .expect("IO_THREAD_POOL has already been initialized!");
 }
 
 #[inline(always)]
@@ -359,6 +348,11 @@ impl ThreadPool {
         }
     }
 
+    /// Return the event signaller read port.
+    pub fn event_signaller_read_port(&self) -> i32 {
+        self.event_signaller.read_fd()
+    }
+
     /// Invoke completions, waiting up to `timeout` for completions to be available.
     pub fn invoke_completions_with_timeout(&self, ctx: &mut Reader, timeout: Duration) {
         let timeout = fd_readable_set::Timeout::Duration(timeout);
@@ -466,32 +460,6 @@ impl ThreadPool {
 
         result
     }
-}
-
-/// Returns a reference to the singleton thread pool.
-#[inline]
-pub fn io_thread_pool() -> &'static Arc<ThreadPool> {
-    IO_THREAD_POOL.get().unwrap()
-}
-
-/// Enqueues work on the IO thread pool singleton.
-pub fn iothread_perform(f: impl FnOnce() + 'static + Send) {
-    let thread_pool = io_thread_pool();
-    thread_pool.perform(f);
-}
-
-/// Return the read fd of the singleton ThreadPool event signaller.
-/// This may be used with `poll()` or `select()` to multiplex iothread completions with other events.
-pub fn iothread_port() -> i32 {
-    io_thread_pool().event_signaller.read_fd()
-}
-
-pub fn iothread_service_main_with_timeout(ctx: &mut Reader, timeout: Duration) {
-    io_thread_pool().invoke_completions_with_timeout(ctx, timeout);
-}
-
-pub fn iothread_service_main(ctx: &mut Reader) {
-    io_thread_pool().invoke_completions(ctx);
 }
 
 /// `Debounce` is a simple class which executes one function on a background thread while enqueuing

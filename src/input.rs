@@ -10,10 +10,11 @@ use crate::input_common::{
 use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
 use crate::proc::job_reap;
 use crate::reader::{
-    Reader, reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint,
+    Reader, iothreads, reader_reading_interrupted, reader_reset_interrupted,
+    reader_schedule_prompt_repaint,
 };
 use crate::signal::signal_clear_cancel;
-use crate::threads::{assert_is_main_thread, iothread_service_main};
+use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
 use std::mem;
@@ -419,7 +420,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
     }
 
     fn ioport_notified(&mut self) {
-        iothread_service_main(self);
+        iothreads::invoke_completions(self);
     }
 
     fn paste_start_buffering(&mut self) {

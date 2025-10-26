@@ -17,6 +17,7 @@ if $check_dependency_versions; then
     command -v curl
     command -v jq
     command -v rustup
+    command -v uv
     sort --version-sort </dev/null
     # To match existing behavior, only check Rust/dockerfiles for now.
     # TODO: remove this from this script.

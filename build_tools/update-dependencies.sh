@@ -7,9 +7,15 @@ command -v gcloud
 command -v jq
 command -v rustup
 command -v updatecli
+command -v uv
 sort --version-sort </dev/null
 
+uv lock --check
+
 updatecli "${@:-apply}"
+
+uv lock # Python version constraints may have changed.
+uv lock --upgrade
 
 from_gh() {
     repo=$1

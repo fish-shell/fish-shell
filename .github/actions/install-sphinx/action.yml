@@ -1,0 +1,20 @@
+name: Install sphinx
+
+permissions:
+  contents: read
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        set -x
+        sudo pip install uv --break-system-packages
+        # Check that pyproject.toml and the lock file are in sync.
+        # TODO Use "uv" to install Python as well.
+        : 'Note that --no-managed-python below would be implied but be explicit'
+        uv --no-managed-python lock --check
+        # Install globally.
+        sudo uv --no-managed-python pip install --group=dev --system --break-system-packages
+        # Smoke test.
+        python -c 'import sphinx; import sphinx_markdown_builder'

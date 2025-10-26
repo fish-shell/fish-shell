@@ -1,0 +1,37 @@
+name: "Update Python and Sphinx"
+
+sources:
+  python_version:
+    kind: shell
+    spec:
+      command: |
+        build_tools/version-available-in-debian.sh oldstable python3-defaults
+  sphinx_version:
+    kind: shell
+    spec:
+      shell: bash
+      command: |
+        set -eo pipefail
+        tag=$(curl -fsS https://api.github.com/repos/sphinx-doc/sphinx/releases/latest |
+          jq -r .tag_name)
+        printf %s "$tag" | grep -qE '^v[0-9]+\.[0-9]\..*'
+        version=${tag#v}
+        echo "${version%.*}"
+
+targets:
+  update_python_version:
+    name: "Update Python version"
+    sourceid: python_version
+    kind: file
+    spec:
+      file: pyproject.toml
+      matchpattern: 'requires-python = ">=\d+.\d+".*'
+      replacepattern: 'requires-python = ">={{ source "python_version" }}" # updatecli.d/python.yml'
+  update_sphinx_version:
+    name: "Update Sphinx version"
+    sourceid: sphinx_version
+    kind: file
+    spec:
+      file: pyproject.toml
+      matchpattern: '"sphinx>=\d+\.\d+",(?:\s*#.*)?'
+      replacepattern: '"sphinx>={{ source "sphinx_version" }}", # updatecli.d/python.yml'

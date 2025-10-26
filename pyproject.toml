@@ -1,0 +1,16 @@
+[project]
+name = "fish-shell"
+version = "0.0.0"
+# NOTE: versions for Python and Sphinx are specified for reproducibility.
+# Lower versions will work too.
+requires-python = ">=3.11" # updatecli.d/python.yml
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "sphinx>=8.2", # updatecli.d/python.yml
+    "sphinx-markdown-builder",
+]
+
+[tool.uv.sources]
+sphinx-markdown-builder = { git = "https://github.com/liran-funaro/sphinx-markdown-builder", rev = "7c4daaf39a92f93deec948ecc1772e23bac44588" }

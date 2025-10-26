@@ -277,7 +277,9 @@ Optional Commands
        Since the terminal may be running on a different system than a (remote) shell,
        the hostname (first parameter) will *not* be ``localhost``.
      - iTerm2
-   * - ``\e]8;; Pt \e\\``
+   * - .. _term-compat-osc-8:
+
+       ``\e]8;; Pt \e\\``
      -
      - Create a `hyperlink (OSC 8) <https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda>`_.
        This is used in fish's man pages.

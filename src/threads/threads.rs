@@ -1,11 +1,5 @@
-//! The rusty version of iothreads from the cpp code, to be consumed by native rust code. This isn't
-//! ported directly from the cpp code so we can use rust threads instead of using pthreads.
-
-use super::debounce::DebounceCallback;
-use crate::fd_monitor::FdEventSignaller;
-use crate::fd_readable_set;
+//! Support for thread pools and thread management.
 use crate::flog::{FLOG, FloggableDebug};
-use crate::reader::Reader;
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -221,13 +215,6 @@ pub struct ThreadPool {
     shared: Mutex<ThreadPoolProtected>,
     /// The condition variable used to wake up waiting threads. This is tied to [`mutex`](Self::mutex).
     cond_var: std::sync::Condvar,
-    /// The queue of completions. This is typically executed on the "main thread".
-    pub(super) completion_queue: Mutex<Vec<DebounceCallback>>,
-    /// An event signaller used for completions and queued main thread requests.
-    /// Note the usage order here matters:
-    ///   1. To enqueue a completion, first push it onto the queue, then post the event signaller.
-    ///   2. To service completions, first consume the event signaller, then process the queue.
-    pub(super) event_signaller: FdEventSignaller,
     /// The minimum number of threads that will be kept waiting even when idle in the pool.
     soft_min_threads: usize,
     /// The maximum number of threads that will be created to service outstanding work requests, by
@@ -250,8 +237,6 @@ impl ThreadPool {
         Arc::new(ThreadPool {
             shared: Default::default(),
             cond_var: Default::default(),
-            completion_queue: Default::default(),
-            event_signaller: FdEventSignaller::new(),
             soft_min_threads,
             max_threads,
         })
@@ -327,38 +312,6 @@ impl ThreadPool {
         self::spawn(move || {
             pool.run_worker();
         })
-    }
-
-    /// Invoke completions immediately.
-    pub fn invoke_completions(&self, ctx: &mut Reader) {
-        // Note the order here: consume the event signaller and then process events.
-        self.event_signaller.try_consume();
-        let queue = std::mem::take(&mut *self.completion_queue.lock().expect("Mutex poisoned!"));
-        for callback in queue {
-            (callback.0)(ctx);
-        }
-    }
-
-    /// Return the event signaller read port.
-    pub fn event_signaller_read_port(&self) -> i32 {
-        self.event_signaller.read_fd()
-    }
-
-    /// Invoke completions, waiting up to `timeout` for completions to be available.
-    pub fn invoke_completions_with_timeout(&self, ctx: &mut Reader, timeout: Duration) {
-        let timeout = fd_readable_set::Timeout::Duration(timeout);
-        if fd_readable_set::is_fd_readable(self.event_signaller.read_fd(), timeout) {
-            self.invoke_completions(ctx);
-        }
-    }
-
-    /// Drain all threads.
-    /// Does nasty polling via select(); only used for testing.
-    #[cfg(test)]
-    pub(crate) fn drain_all(&self, ctx: &mut Reader) {
-        while self.shared.lock().expect("Mutex poisoned!").total_threads > 0 {
-            self.invoke_completions_with_timeout(ctx, Duration::from_millis(1000));
-        }
     }
 }
 

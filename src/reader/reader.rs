@@ -38,17 +38,16 @@ use std::ops::Range;
 use std::os::fd::BorrowedFd;
 use std::os::fd::{AsRawFd, RawFd};
 use std::pin::Pin;
-use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicI32, AtomicU8, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
 use errno::{Errno, errno};
 
 use super::history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
-use super::iothreads::thread_pool as io_thread_pool;
+use super::iothreads::{self, Debouncers};
 use crate::abbrs::abbrs_match;
 use crate::ast::{self, Kind, is_same_node};
 use crate::builtins::shared::ErrorCode;
@@ -136,7 +135,7 @@ use crate::terminal::TerminalCommand::{
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::TextFace;
 use crate::text_face::parse_text_face;
-use crate::threads::{assert_is_background_thread, assert_is_main_thread, debounce::Debounce};
+use crate::threads::{assert_is_background_thread, assert_is_main_thread};
 use crate::tokenizer::quote_end;
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::tokenizer::{
@@ -209,25 +208,6 @@ fn commandline_state_snapshot() -> MutexGuard<'static, CommandlineState> {
 /// Any time the contents of a buffer changes, we update the generation count. This allows for our
 /// background threads to notice it and skip doing work that they would otherwise have to do.
 static GENERATION: AtomicU32 = AtomicU32::new(0);
-
-/// Get the debouncer for autosuggestions and background highlighting.
-fn debounce_autosuggestions() -> &'static Debounce {
-    const AUTOSUGGEST_TIMEOUT: Duration = Duration::from_millis(500);
-    static RES: OnceLock<Debounce> = OnceLock::new();
-    RES.get_or_init(|| io_thread_pool().debouncer(AUTOSUGGEST_TIMEOUT))
-}
-
-fn debounce_highlighting() -> &'static Debounce {
-    const HIGHLIGHT_TIMEOUT: Duration = Duration::from_millis(500);
-    static RES: OnceLock<Debounce> = OnceLock::new();
-    RES.get_or_init(|| io_thread_pool().debouncer(HIGHLIGHT_TIMEOUT))
-}
-
-fn debounce_history_pager() -> &'static Debounce {
-    const HISTORY_PAGER_TIMEOUT: Duration = Duration::from_millis(500);
-    static RES: OnceLock<Debounce> = OnceLock::new();
-    RES.get_or_init(|| io_thread_pool().debouncer(HISTORY_PAGER_TIMEOUT))
-}
 
 fn redirect_tty_after_sighup() {
     use std::fs::OpenOptions;
@@ -643,9 +623,6 @@ enum TransientEdit {
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
 /// ReaderData does not contain a Parser - by itself it cannot execute fish script.
 pub struct ReaderData {
-    /// We could put the entire thing in an Rc but Rc::get_unchecked_mut is not yet stable.
-    /// This is sufficient for our use.
-    canary: Rc<()>,
     /// Configuration for the reader.
     conf: ReaderConfig,
     /// String containing the whole current commandline.
@@ -733,9 +710,13 @@ pub struct ReaderData {
     in_flight_autosuggest_request: WString,
 
     rls: Option<ReadlineLoopState>,
+
+    /// Support for I/O threads associated with this reader state, including debouncers.
+    pub(super) debouncers: Debouncers,
 }
 
-/// Reader is ReaderData equippeed with a Parser, so it can execute fish script.
+/// Reader is ReaderData equipped with a Parser, so it can execute fish script.
+/// It also provides access to I/O threads.
 pub struct Reader<'a> {
     pub data: &'a mut ReaderData,
     pub parser: &'a Parser,
@@ -759,6 +740,20 @@ impl<'a> Reader<'a> {
     /// Return the variable set used for e.g. command duration.
     fn vars(&self) -> &dyn Environment {
         self.parser.vars()
+    }
+
+    pub(super) fn service_debounced_results(&mut self) {
+        // Some iothread operation completed, indicating a debouncer has a new result.
+        // Check all of them.
+        if let Some(r) = self.debouncers.autosuggestions.take_result() {
+            self.autosuggest_completed(r);
+        }
+        if let Some(r) = self.debouncers.highlight.take_result() {
+            self.highlight_completed(r);
+        }
+        if let Some(cb) = self.debouncers.history_pager.take_result() {
+            cb(self);
+        }
     }
 }
 
@@ -1317,7 +1312,6 @@ impl ReaderData {
             command_line.set_position(state.cursor_pos);
         }
         Pin::new(Box::new(Self {
-            canary: Rc::new(()),
             conf,
             command_line,
             command_line_transient_edit: None,
@@ -1355,6 +1349,7 @@ impl ReaderData {
             in_flight_highlight_request: Default::default(),
             in_flight_autosuggest_request: Default::default(),
             rls: None,
+            debouncers: Debouncers::new(),
         }))
     }
 
@@ -4763,7 +4758,7 @@ impl<'a> Reader<'a> {
 }
 
 #[derive(Default)]
-struct Autosuggestion {
+pub(super) struct Autosuggestion {
     // The text to use, as an extension/replacement of the current line.
     text: WString,
 
@@ -4791,7 +4786,7 @@ impl Autosuggestion {
 
 /// The result of an autosuggestion computation.
 #[derive(Default)]
-struct AutosuggestionResult {
+pub(super) struct AutosuggestionResult {
     // The autosuggestion.
     autosuggestion: Autosuggestion,
 
@@ -5095,14 +5090,7 @@ impl<'a> Reader<'a> {
             el.position(),
             self.history.clone(),
         );
-        let canary = Rc::downgrade(&self.canary);
-        let completion = move |zelf: &mut Reader, result| {
-            if canary.upgrade().is_none() {
-                return;
-            }
-            zelf.autosuggest_completed(result);
-        };
-        debounce_autosuggestions().perform_with_completion(performer, completion);
+        self.debouncers.autosuggestions.perform(performer);
     }
 
     fn is_at_end(&self) -> bool {
@@ -5194,7 +5182,7 @@ impl<'a> Reader<'a> {
 }
 
 #[derive(Default)]
-struct HighlightResult {
+pub(super) struct HighlightResult {
     colors: Vec<HighlightSpec>,
     text: WString,
 }
@@ -5222,7 +5210,7 @@ fn get_highlight_performer(
 }
 
 impl<'a> Reader<'a> {
-    fn highlight_complete(&mut self, result: HighlightResult) {
+    fn highlight_completed(&mut self, result: HighlightResult) {
         assert_is_main_thread();
         self.in_flight_highlight_request.clear();
         if result.text == self.command_line.text() {
@@ -5249,14 +5237,7 @@ impl<'a> Reader<'a> {
         FLOG!(reader_render, "Highlighting");
         let highlight_performer =
             get_highlight_performer(self.parser, &self.command_line, /*io_ok=*/ true);
-        let canary = Rc::downgrade(&self.canary);
-        let completion = move |zelf: &mut Reader, result| {
-            if canary.upgrade().is_none() {
-                return;
-            }
-            zelf.highlight_complete(result);
-        };
-        debounce_highlighting().perform_with_completion(highlight_performer, completion);
+        self.debouncers.highlight.perform(highlight_performer);
     }
 
     /// Finish up any outstanding syntax highlighting, before execution.
@@ -5282,10 +5263,9 @@ impl<'a> Reader<'a> {
             let deadline = now + HIGHLIGHT_TIMEOUT_FOR_EXECUTION;
             while now < deadline {
                 let timeout = deadline - now;
-                io_thread_pool().invoke_completions_with_timeout(self, timeout);
-
-                // Note iothread_service_main_with_timeout will reentrantly modify us,
-                // by invoking a completion.
+                if let Some(result) = self.debouncers.highlight.take_result_with_timeout(timeout) {
+                    self.highlight_completed(result);
+                }
                 if self.in_flight_highlight_request.is_empty() {
                     break;
                 }
@@ -5301,12 +5281,12 @@ impl<'a> Reader<'a> {
             // We need to do a quick highlight without I/O.
             let highlight_no_io =
                 get_highlight_performer(self.parser, &self.command_line, /*io_ok=*/ false);
-            self.highlight_complete(highlight_no_io());
+            self.highlight_completed(highlight_no_io());
         }
     }
 }
 
-struct HistoryPagerResult {
+pub(super) struct HistoryPagerResult {
     matched_commands: Vec<Completion>,
     range: Range<usize>,
     first_shown: usize,
@@ -5314,7 +5294,7 @@ struct HistoryPagerResult {
 }
 
 #[derive(Eq, PartialEq)]
-enum HistoryPagerInvocation {
+pub(super) enum HistoryPagerInvocation {
     Anew,
     Advance,
     Refresh,
@@ -5422,20 +5402,16 @@ impl ReaderData {
             }
         }
         let search_term = self.pager.search_field_line.text().to_owned();
-        let performer = {
-            let history = self.history.clone();
-            let search_term = search_term.clone();
-            move || history_pager_search(&history, direction, motion, index, &search_term)
+        // Get a performer that produces the history pager result.
+        let history = self.history.clone();
+        let search_term = search_term.clone();
+        let performer = move || -> iothreads::Callback {
+            let result = history_pager_search(&history, direction, motion, index, &search_term);
+            Box::new(move |r: &mut Reader| {
+                r.fill_history_pager_complete(result, why, old_pager_index)
+            })
         };
-        let canary = Rc::downgrade(&self.canary);
-        let completion = move |zelf: &mut Reader, result: HistoryPagerResult| {
-            if canary.upgrade().is_none() {
-                return;
-            }
-            zelf.fill_history_pager_complete(result, why, old_pager_index);
-        };
-        let debouncer = debounce_history_pager();
-        debouncer.perform_with_completion(performer, completion);
+        self.debouncers.history_pager.perform(performer);
     }
 }
 

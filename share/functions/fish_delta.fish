@@ -20,10 +20,16 @@ function fish_delta
     end
 
     # TODO: Do we want to keep the vendor dirs in here?
-    set -l default_function_path $__fish_data_dir/functions
+    set -l default_function_path
+    if not __fish_is_standalone
+        set default_function_path $__fish_data_dir/functions
+    end
     test "$vendormode" = default && set -a default_function_path $__fish_vendor_functionsdirs
 
-    set -l default_complete_path $__fish_data_dir/completions
+    set -l default_complete_path
+    if not __fish_is_standalone
+        set default_complete_path $__fish_data_dir/completions
+    end
     test "$vendormode" = default && set -a default_complete_path $__fish_vendor_completionsdirs
 
     set -l default_conf_path

@@ -47,7 +47,7 @@ isolated-tmux send-keys C-l '
     end
 ' 'commandline -i ": \'$(seq (math $LINES \* 2))\'"' Enter Enter
 tmux-sleep
-isolated-tmux capture-pane -p -S -12
+isolated-tmux capture-pane -p -S -13
 # CHECK: prompt 4> commandline -i ": '$(seq (math $LINES \* 2))'"            right-prompt
 # CHECK: prompt 5> : '1                                                      right-prompt
 # CHECK: 2

@@ -41,8 +41,8 @@ jobs:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
       - name: Install dependencies
-        run: sudo apt install cmake gettext ninja-build python3-pip python3-sphinx
-      - uses: ./.github/actions/install-sphinx-markdown-builder
+        run: sudo apt install cmake gettext ninja-build python3-pip
+      - uses: ./.github/actions/install-sphinx
       - name: Create tarball
         run: |
           set -x
@@ -80,7 +80,8 @@ jobs:
         with:
           targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl
       - name: Install dependencies
-        run: sudo apt install crossbuild-essential-arm64 gettext musl-tools python3-sphinx
+        run: sudo apt install crossbuild-essential-arm64 gettext musl-tools
+      - uses: ./.github/actions/install-sphinx
       - name: Build statically-linked executables
         run: |
           set -x

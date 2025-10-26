@@ -11,37 +11,40 @@ mkdir -p "$relnotes_tmp/fake-workspace" "$relnotes_tmp/out"
     cp -r doc_src CONTRIBUTING.rst README.rst "$relnotes_tmp/fake-workspace"
 )
 version=$(sed 's,^fish \(\S*\) .*,\1,; 1q' "$workspace_root/CHANGELOG.rst")
-previous_version=$(
-    cd "$workspace_root"
-    awk <CHANGELOG.rst '
-        ( /^fish [^ ]*\.[^ ]*\.[^ ]* \(released .*\)$/ &&
-            NR > 1 &&
-            # Skip tags that have not been created yet..
-            system("git rev-parse --verify >/dev/null --quiet refs/tags/"$2) == 0 \
-        ) {
-            print $2; ok = 1; exit
-        }
-        END { exit !ok }
-    '
-)
-minor_version=${version%.*}
-previous_minor_version=${previous_version%.*}
+add_stats=false
+# Skip on shallow clone (CI) for now.
+if git -C "$workspace_root" tag | grep -q .; then {
+    previous_version=$(
+        cd "$workspace_root"
+        awk <CHANGELOG.rst '
+            ( /^fish [^ ]*\.[^ ]*\.[^ ]* \(released .*\)$/ &&
+                NR > 1 &&
+                # Ignore versions that have not been released.
+                $NF !~ /\?\?\?./ \
+            ) {
+                print $2; ok = 1; exit
+            }
+            END { exit !ok }
+        '
+    )
+    minor_version=${version%.*}
+    previous_minor_version=${previous_version%.*}
+    if [ "$minor_version" != "$previous_minor_version" ]; then
+        add_stats=true
+    fi
+} fi
 {
     sed -n 1,2p <"$workspace_root/CHANGELOG.rst"
-
-    ListCommitters() {
-        comm "$@" "$relnotes_tmp/committers-then" "$relnotes_tmp/committers-now"
-    }
-    (
-        cd "$workspace_root"
-        git log "$previous_version" --format="%aN" | sort -u >"$relnotes_tmp/committers-then"
-        git log "$previous_version".. --format="%aN" | sort -u >"$relnotes_tmp/committers-now"
-        ListCommitters -13 >"$relnotes_tmp/committers-new"
-        ListCommitters -12 >"$relnotes_tmp/committers-returning"
-    )
-    if [ "$minor_version" != "$previous_minor_version" ]; then
+    if $add_stats; then {
+        ListCommitters() {
+            comm "$@" "$relnotes_tmp/committers-then" "$relnotes_tmp/committers-now"
+        }
         (
             cd "$workspace_root"
+            git log "$previous_version" --format="%aN" | sort -u >"$relnotes_tmp/committers-then"
+            git log "$previous_version".. --format="%aN" | sort -u >"$relnotes_tmp/committers-now"
+            ListCommitters -13 >"$relnotes_tmp/committers-new"
+            ListCommitters -12 >"$relnotes_tmp/committers-returning"
             num_commits=$(git log --no-merges --format=%H "$previous_version".. | wc -l)
             num_authors=$(wc -l <"$relnotes_tmp/committers-now")
             num_new_authors=$(wc -l <"$relnotes_tmp/committers-new")
@@ -51,7 +54,7 @@ previous_minor_version=${previous_version%.*}
             echo
             echo
         )
-    fi
+    } fi
 
     printf '%s\n' "$(awk <"$workspace_root/CHANGELOG.rst" '
         NR <= 2 || /^\.\. ignore / { next }
@@ -60,7 +63,7 @@ previous_minor_version=${previous_version%.*}
     ' | sed '$d')" |
         sed -e '$s/^----*$//' # Remove spurious transitions at the end of the document.
 
-    if [ "$minor_version" != "$previous_minor_version" ]; then {
+    if $add_stats; then {
         JoinEscaped() {
             LC_CTYPE=C.UTF-8 sed 's/\S/\\&/g' |
                 awk '

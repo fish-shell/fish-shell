@@ -1,0 +1,21 @@
+name: Install sphinx
+
+permissions:
+  contents: read
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        set -x
+        # TODO Use "uv" to install Python as well.
+        sudo pip install uv --break-system-packages
+        # Fail if there are conflicts between the versions in pyproject.toml.
+        uv sync
+        # Fail if uv.lock was stale.
+        git diff --exit-code
+        # Install globally.
+        sudo uv pip install --group=dev --system --break-system-packages
+        # Smoke test.
+        python -c 'import sphinx_markdown_builder'

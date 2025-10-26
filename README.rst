@@ -166,33 +166,37 @@ In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), f
 - WITH_GETTEXT=ON|OFF - whether to include translations.
 - extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
 
-Building fish with embedded data (experimental)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Building fish with Cargo
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can also build fish with the data files embedded.
+You can also build fish with Cargo.
+This example uses `uv <https://github.com/astral-sh/uv>`__ to install Sphinx (which is used for man-pages and ``--help`` options).
+You can also install Sphinx another way and drop the ``uv run --no-managed-python`` prefix.
 
-This will include all the datafiles like the included functions or web configuration tool in the main ``fish`` binary.
+    git clone https://github.com/fish-shell/fish-shell
+    cd fish-shell
 
-Fish will then read these right from its own binary, and print them out when needed. Some files, like the webconfig tool and the manpage completion generator, will be extracted to a temporary directory on-demand. You can list the files with ``status list-files`` and print one with ``status get-file path/to/file`` (e.g. ``status get-file functions/fish_prompt.fish`` to get the default prompt).
+    # Optional: check out a specific version rather than building the latest
+    # development version.
+    git show "$(git for-each-ref refs/tags/ | awk '$2 == "tag" { print $3 }' | tail -1)"
 
-To install fish with embedded files, just use ``cargo``, like::
+    uv run --no-managed-python \
+        cargo install --path .
 
-   cargo install --path /path/to/fish # if you have a git clone
-   cargo install --git https://github.com/fish-shell/fish-shell --tag "$(curl -sS https://api.github.com/repos/fish-shell/fish-shell/releases/latest | jq -r .tag_name)" # to build the latest release
-   cargo install --git https://github.com/fish-shell/fish-shell # to build the latest development snapshot
-
-This will place the standalone binaries in ``~/.cargo/bin/``, but you can place them wherever you want.
-
-This build won't have the HTML docs (``help`` will open the online version).
-It will try to build the man pages with sphinx-build. If that is not available and you would like to include man pages, you need to install it and retrigger the build script, e.g. by setting FISH_BUILD_DOCS=1::
-
-  FISH_BUILD_DOCS=1 cargo install --path .
-
-Setting it to "0" disables the inclusion of man pages.
+This will place standalone binaries in ``~/.cargo/bin/``, but you can move them wherever you want.
 
 To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features --features=embed-data`` to cargo.
 
 You can also link this build statically (but not against glibc) and move it to other computers.
+
+Here are the remaining advantages of a full installation, as currently done by CMake:
+- Man pages like ``fish(1)`` installed in standard locations, easily accessible from outside fish.
+- A local copy of the HTML documentation, typically accessed via the :doc:`help <cmds/help>` function.
+  In Cargo builds, ``help`` will redirect to `<https://fishshell.com/docs/current/>`__
+- Ability to use our CMake options extra_functionsdir, extra_completionsdir and extra_confdir,
+  (also recorded in ``$PREFIX/share/pkgconfig/fish.pc`)
+  which are used by some package managers to house third-party completions.
+  Regardless of build system, fish uses ``$XDG_DATA_DIRS/{vendor_completion.d,vendor_conf.d,vendor_functions.d}``.
 
 Contributing Changes to the Code
 --------------------------------

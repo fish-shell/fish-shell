@@ -381,7 +381,6 @@ By default ``$fish_function_path`` contains the following:
 - A directory for users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
 - A directory for functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
 - Directories for other software to put their own functions. These are in the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable, in a subdirectory called ``fish/vendor_functions.d``. The default value for ``XDG_DATA_DIRS`` is usually ``/usr/share/fish/vendor_functions.d`` and ``/usr/local/share/fish/vendor_functions.d``.
-- The functions shipped with fish, usually installed in ``/usr/share/fish/functions`` (really ``$__fish_data_dir/functions``).
 
 If you are unsure, your functions probably belong in ``~/.config/fish/functions``.
 

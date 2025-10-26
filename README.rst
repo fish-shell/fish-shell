@@ -166,29 +166,23 @@ In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), f
 - WITH_GETTEXT=ON|OFF - whether to include translations.
 - extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
 
-Building fish with embedded data (experimental)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Building fish with Cargo
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can also build fish with the data files embedded.
+You can also build fish with Cargo, for example use either of::
 
-This will include all the datafiles like the included functions or web configuration tool in the main ``fish`` binary.
+    git clone https://github.com/lengyijun/fish-shell
+    cd fish-shell
+    # Optional: check out a specific version
+    # git checkout "$(git tag | sort -V)"
+    uv run cargo install --path .
 
-Fish will then read these right from its own binary, and print them out when needed. Some files, like the webconfig tool and the manpage completion generator, will be extracted to a temporary directory on-demand. You can list the files with ``status list-files`` and print one with ``status get-file path/to/file`` (e.g. ``status get-file functions/fish_prompt.fish`` to get the default prompt).
+This example uses `uv <https://github.com/astral-sh/uv>`__ to install an appropriate version of Sphinx (which is used for man-pages and ``--help`` options).
+Alternatively you can install Sphinx in another way and replace the ``uv`` command with ``cargo install --path .``.
 
-To install fish with embedded files, just use ``cargo``, like::
-
-   cargo install --path /path/to/fish # if you have a git clone
-   cargo install --git https://github.com/fish-shell/fish-shell --tag "$(curl -sS https://api.github.com/repos/fish-shell/fish-shell/releases/latest | jq -r .tag_name)" # to build the latest release
-   cargo install --git https://github.com/fish-shell/fish-shell # to build the latest development snapshot
-
-This will place the standalone binaries in ``~/.cargo/bin/``, but you can place them wherever you want.
+Either way will place standalone binaries in ``~/.cargo/bin/``, but you can move them wherever you want.
 
 This build won't have the HTML docs (``help`` will open the online version).
-It will try to build the man pages with sphinx-build. If that is not available and you would like to include man pages, you need to install it and retrigger the build script, e.g. by setting FISH_BUILD_DOCS=1::
-
-  FISH_BUILD_DOCS=1 cargo install --path .
-
-Setting it to "0" disables the inclusion of man pages.
 
 To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features --features=embed-data`` to cargo.
 

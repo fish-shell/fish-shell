@@ -36,6 +36,13 @@ For distributors and developers
   which allows you to use `uv <https://github.com/astral-sh/uv>`__ to provide Sphinx (e.g. `uv run cargo install --path .`).
 - The minimum supported Rust version (MSRV) has been updated to 1.85.
 - Fixed saving/loading of universal variables on Cygwin (:issue:`11948`).
+- The standalone build mode has been made the default.
+  This means that the files in ``$CMAKE_INSTALL_PREFIX/share/fish`` will generally not be used anymore, with minor exceptions.
+  For now, they are still installed redundantly, to prevent upgrades from breaking already-running shells (:issue:`11921`).
+  This change means that future upgrades will no longer break running shells when an internal function has changed.
+  To turn this off (which should not be necessary),
+  patch out the ``embed-data`` feature from ``cmake/Rust.cmake``.
+  This option will be removed in future.
 
 
 fish 4.1.3 (released ???)

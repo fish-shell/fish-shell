@@ -178,11 +178,16 @@ fn setup_paths() {
     #[cfg(windows)]
     use unix_path::{Path, PathBuf};
 
-    fn overridable_path(env_var_name: &str, f: impl FnOnce(Option<String>) -> PathBuf) -> PathBuf {
+    fn overridable_path(
+        env_var_name: &str,
+        f: impl FnOnce(Option<String>) -> Option<PathBuf>,
+    ) -> Option<PathBuf> {
         rsconf::rebuild_if_env_changed(env_var_name);
-        let path = f(env_var(env_var_name));
-        rsconf::set_env_value(env_var_name, path.to_str().unwrap());
-        path
+        let maybe_path = f(env_var(env_var_name));
+        if let Some(path) = maybe_path.as_ref() {
+            rsconf::set_env_value(env_var_name, path.to_str().unwrap());
+        }
+        maybe_path
     }
 
     fn join_if_relative(parent_if_relative: &Path, path: String) -> PathBuf {
@@ -195,11 +200,14 @@ fn setup_paths() {
     }
 
     let prefix = overridable_path("PREFIX", |env_prefix| {
-        PathBuf::from(env_prefix.unwrap_or("/usr/local".to_string()))
-    });
+        Some(PathBuf::from(
+            env_prefix.unwrap_or("/usr/local".to_string()),
+        ))
+    })
+    .unwrap();
 
     overridable_path("SYSCONFDIR", |env_sysconfdir| {
-        join_if_relative(
+        Some(join_if_relative(
             &prefix,
             env_sysconfdir.unwrap_or(
                 // Embedded builds use "/etc," not "$PREFIX/etc".
@@ -210,21 +218,30 @@ fn setup_paths() {
                 }
                 .to_string(),
             ),
-        )
+        ))
     });
 
-    #[cfg(not(feature = "embed-data"))]
-    {
-        let datadir = overridable_path("DATADIR", |env_datadir| {
-            join_if_relative(&prefix, env_datadir.unwrap_or("share/".to_string()))
-        });
-        overridable_path("BINDIR", |env_bindir| {
-            join_if_relative(&prefix, env_bindir.unwrap_or("bin/".to_string()))
-        });
-        overridable_path("DOCDIR", |env_docdir| {
-            join_if_relative(&datadir, env_docdir.unwrap_or("doc/fish".to_string()))
-        });
-    }
+    let default_ok = !cfg!(feature = "embed-data");
+    let datadir = overridable_path("DATADIR", |env_datadir| {
+        let default = default_ok.then_some("share/".to_string());
+        env_datadir
+            .or(default)
+            .map(|p| join_if_relative(&prefix, p))
+    });
+    overridable_path("BINDIR", |env_bindir| {
+        let default = default_ok.then_some("bin/".to_string());
+        env_bindir.or(default).map(|p| join_if_relative(&prefix, p))
+    });
+    overridable_path("DOCDIR", |env_docdir| {
+        let default = default_ok.then_some("doc/fish".to_string());
+        env_docdir.or(default).map(|p| {
+            join_if_relative(
+                &datadir
+                    .expect("Setting DOCDIR without setting DATADIR is not currently supported"),
+                p,
+            )
+        })
+    });
 }
 
 fn get_version(src_dir: &Path) -> String {

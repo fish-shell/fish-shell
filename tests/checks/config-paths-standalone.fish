@@ -2,6 +2,7 @@
 # REQUIRES: %fish -c 'status build-info' | grep '^Features:.*embed-data'
 
 # CHECKERR: config: executable path: {{.*}}/fish
+# CHECKERR: config: Running out of build directory, using paths relative to $CARGO_MANIFEST_DIR (/home/johannes/git/fish-shell)
 # CHECKERR: config: embed-data feature is active, ignoring data paths
 
 # NOTE: When our executable is located outside the workspace, this is "/etc".

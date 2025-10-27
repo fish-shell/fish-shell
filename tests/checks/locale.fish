@@ -1,7 +1,4 @@
 # RUN: fish=%fish %fish %s
-# This hangs when running on github actions with tsan for unknown reasons,
-# see #7934.
-#REQUIRES: test -z "$GITHUB_WORKFLOW"
 
 # A function to display bytes, necessary because GNU and BSD implementations of `od` have different output.
 # We used to use xxd, but it's not available everywhere. See #3797.

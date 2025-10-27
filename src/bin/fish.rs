@@ -63,8 +63,6 @@ use fish::{
     wutil::waccess,
 };
 use libc::STDIN_FILENO;
-#[cfg(feature = "embed-data")]
-use rust_embed::RustEmbed;
 use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
@@ -72,11 +70,6 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::{env, ops::ControlFlow};
-
-#[cfg(feature = "embed-data")]
-#[derive(RustEmbed)]
-#[folder = "share/"]
-struct Asset;
 
 /// container to hold the options specified within the command line
 #[derive(Default, Debug)]
@@ -173,6 +166,7 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
     cfg_if!(
         if #[cfg(feature = "embed-data")] {
+            use fish::autoload::Asset;
             let emfile = Asset::get("config.fish").expect("Embedded file not found");
             let src = bytes2wcstring(&emfile.data);
             parser.libdata_mut().within_fish_init = true;

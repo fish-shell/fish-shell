@@ -35,7 +35,10 @@ end
 set -l __extra_completionsdir
 set -l __extra_functionsdir
 set -l __extra_confdir
-if path is -f -- $__fish_data_dir/__fish_build_paths.fish
+# N.B. can't load __fish_data_with_file this early in non-embedded builds, so reimplement it.
+if status get-file __fish_build_paths.fish &>/dev/null
+    status get-file __fish_build_paths.fish | source
+else if path is -f -- $__fish_data_dir/__fish_build_paths.fish
     source $__fish_data_dir/__fish_build_paths.fish
 end
 

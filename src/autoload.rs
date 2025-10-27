@@ -42,7 +42,8 @@ pub struct Autoload {
 
 #[cfg(feature = "embed-data")]
 #[derive(RustEmbed)]
-#[folder = "share/"]
+#[folder = "share"]
+#[exclude = "__fish_build_paths.fish.in"]
 pub struct Asset;
 
 cfg_if!(

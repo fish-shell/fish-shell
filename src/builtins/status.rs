@@ -337,6 +337,12 @@ use rust_embed::RustEmbed;
 #[prefix = "man/man1/"]
 struct Docs;
 
+#[cfg(all(using_cmake, feature = "embed-data"))]
+#[derive(RustEmbed)]
+#[folder = "$FISH_CMAKE_BINARY_DIR/share"]
+#[include = "__fish_build_paths.fish"]
+struct CMakeBinaryDir;
+
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     localizable_consts!(
         #[allow(dead_code)]
@@ -481,7 +487,16 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 } else {
                     let arg = crate::common::wcs2bytes(args[0]);
                     let arg = std::str::from_utf8(&arg).unwrap();
-                    let Some(emfile) = crate::autoload::Asset::get(arg).or_else(|| Docs::get(arg))
+                    cfg_if!(
+                        if #[cfg(using_cmake)] {
+                            let emfile = CMakeBinaryDir::get(arg);
+                        } else {
+                            let emfile = None;
+                        }
+                    );
+                    let Some(emfile) = emfile
+                        .or_else(|| crate::autoload::Asset::get(arg))
+                        .or_else(|| Docs::get(arg))
                     else {
                         return Err(STATUS_CMD_ERROR);
                     };
@@ -515,7 +530,10 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     let mut paths = vec![];
                     let arg = crate::common::wcs2bytes(args.first().unwrap_or(&L!("")));
                     let arg = std::str::from_utf8(&arg).unwrap();
-                    for path in crate::autoload::Asset::iter().chain(Docs::iter()) {
+                    let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
+                    #[cfg(using_cmake)]
+                    let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
+                    for path in embedded_files {
                         if arg.is_empty() || path.starts_with(arg) {
                             paths.push(bytes2wcstring(path.as_bytes()));
                         }

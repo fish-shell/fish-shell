@@ -8,13 +8,13 @@ export DH_VERBOSE=1
 export DEB_BUILD_MAINT_OPTIONS=optimize=-lto
 
 %:
-	dh $@
+	dh $@ --buildsystem=cmake
 
 # Setting the build system is still required, because otherwise the GNUmakefile gets picked up
 override_dh_auto_configure:
 	ln -s cargo-vendor/vendor vendor
 	ln -s cargo-vendor/.cargo .cargo
-	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=RelWithDebInfo
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
 override_dh_clean:
 	dh_clean --exclude=Cargo.toml.orig

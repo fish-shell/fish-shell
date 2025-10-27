@@ -221,9 +221,6 @@ fn setup_paths() {
         overridable_path("BINDIR", |env_bindir| {
             join_if_relative(&prefix, env_bindir.unwrap_or("bin/".to_string()))
         });
-        overridable_path("LOCALEDIR", |env_localedir| {
-            join_if_relative(&datadir, env_localedir.unwrap_or("locale/".to_string()))
-        });
         overridable_path("DOCDIR", |env_docdir| {
             join_if_relative(&datadir, env_docdir.unwrap_or("doc/fish".to_string()))
         });

@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
+use cfg_if::cfg_if;
 use fish::{
     ast,
     builtins::{
@@ -170,36 +171,35 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    #[cfg(feature = "embed-data")]
-    {
-        let emfile = Asset::get("config.fish").expect("Embedded file not found");
-        let src = bytes2wcstring(&emfile.data);
-        parser.libdata_mut().within_fish_init = true;
-        let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
-        let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
-        parser.libdata_mut().within_fish_init = false;
-        if let Err(msg) = ret {
-            eprintf!("%s", msg);
+    cfg_if!(
+        if #[cfg(feature = "embed-data")] {
+            let emfile = Asset::get("config.fish").expect("Embedded file not found");
+            let src = bytes2wcstring(&emfile.data);
+            parser.libdata_mut().within_fish_init = true;
+            let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
+            let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
+            parser.libdata_mut().within_fish_init = false;
+            if let Err(msg) = ret {
+                eprintf!("%s", msg);
+            }
+        } else {
+            let datapath = bytes2wcstring(paths.data.as_os_str().as_bytes());
+            if !source_config_in_directory(parser, &datapath) {
+                // If we cannot read share/config.fish, our internal configuration,
+                // something is wrong.
+                // That also means that our functions won't be found,
+                // and so any config we get would almost certainly be broken.
+                let escaped_pathname = escape(&datapath);
+                FLOGF!(
+                    error,
+                    "Fish cannot find its asset files in '%s'.\n\
+                     Refusing to read configuration because of this.",
+                    escaped_pathname,
+                );
+                return;
+            }
         }
-    }
-    #[cfg(not(feature = "embed-data"))]
-    {
-        let datapath = bytes2wcstring(paths.data.as_os_str().as_bytes());
-        if !source_config_in_directory(parser, &datapath) {
-            // If we cannot read share/config.fish, our internal configuration,
-            // something is wrong.
-            // That also means that our functions won't be found,
-            // and so any config we get would almost certainly be broken.
-            let escaped_pathname = escape(&datapath);
-            FLOGF!(
-                error,
-                "Fish cannot find its asset files in '%s'.\n\
-                 Refusing to read configuration because of this.",
-                escaped_pathname,
-            );
-            return;
-        }
-    }
+    );
 
     source_config_in_directory(
         parser,

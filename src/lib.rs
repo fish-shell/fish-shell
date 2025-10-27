@@ -1,4 +1,5 @@
 #![cfg_attr(feature = "benchmark", feature(test))]
+#![allow(non_camel_case_types)]
 
 pub const BUILD_VERSION: &str = env!("FISH_BUILD_VERSION");
 
@@ -60,6 +61,7 @@ pub mod reader_history_search;
 pub mod redirection;
 pub mod screen;
 pub mod signal;
+pub mod stdx;
 pub mod terminal;
 pub mod termsize;
 pub mod text_face;

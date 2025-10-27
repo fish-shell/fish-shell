@@ -381,7 +381,6 @@ By default ``$fish_function_path`` contains the following:
 - A directory for users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
 - A directory for functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
 - Directories for other software to put their own functions. These are in the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable, in a subdirectory called ``fish/vendor_functions.d``. The default value for ``XDG_DATA_DIRS`` is usually ``/usr/share/fish/vendor_functions.d`` and ``/usr/local/share/fish/vendor_functions.d``.
-- The functions shipped with fish, usually installed in ``/usr/share/fish/functions`` (really ``$__fish_data_dir/functions``).
 
 If you are unsure, your functions probably belong in ``~/.config/fish/functions``.
 
@@ -1563,7 +1562,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. describe:: Locale Variables
 
-   The locale variables :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_CTYPE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC`, and :envvar:`LANG` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
+   Locale variables such as :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_MESSAGES`, :envvar:`LC_NUMERIC` and :envvar:`LC_TIME`  set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
 
 .. describe:: Color variables
 
@@ -1819,49 +1818,37 @@ Whether ``cat`` here will see a SIGPIPE depends on how long the file is and how 
 Locale Variables
 ^^^^^^^^^^^^^^^^
 
-The "locale" of a program is its set of language and regional settings that depend on language and cultural convention. In UNIX, these are made up of several categories. The categories are:
+The "locale" of a program is its set of language and regional settings.
+In UNIX, these are made up of several categories. The categories used by fish are:
 
 .. envvar:: LANG
 
-   This is the typical environment variable for specifying a locale. A user may set this variable to express the language they speak, their region, and a character encoding. The actual values are specific to their platform, except for special values like ``C`` or ``POSIX``.
+   This is the typical environment variable for specifying a locale.
+   A user may set this variable to express the language they speak, their region, and a character encoding.
+   The encoding part is ignored, fish always assumes UTF-8. The actual values are specific to their platform, except for special values like ``C`` or ``POSIX``.
 
-   The value of LANG is used for each category unless the variable for that category was set or LC_ALL is set. So typically you only need to set LANG.
+   The value of ``LANG`` is used for each category unless the variable for that category was set or ``LC_ALL`` is set. So typically you only need to set LANG.
 
-   An example value might be ``en_US.UTF-8`` for the american version of english and the UTF-8 encoding, or ``de_AT.UTF-8`` for the austrian version of german and the UTF-8 encoding.
+   Example values are ``en_US.UTF-8`` for the American English or ``de_AT.UTF-8`` for Austrian German.
    Your operating system might have a ``locale`` command that you can call as ``locale -a`` to see a list of defined locales.
-
-   A UTF-8 encoding is recommended.
 
 .. envvar:: LC_ALL
 
-   Overrides the :envvar:`LANG` environment variable and the values of the other ``LC_*`` variables. If this is set, none of the other variables are used for anything.
-
-   Usually the other variables should be used instead. Use LC_ALL only when you need to override something.
-
-.. envvar:: LC_COLLATE
-
-   This determines the rules about equivalence of cases and alphabetical ordering: collation.
-
-.. envvar:: LC_CTYPE
-
-   This determines classification rules, like if the type of character is an alpha, digit, and so on.
-   Most importantly, it defines the text *encoding* - which numbers map to which characters. On modern systems, this should typically be something ending in "UTF-8".
+   Overrides the :envvar:`LANG` and all other ``LC_*`` variables.
+   Prefer using ``LC_ALL`` only as a temporary override.
 
 .. envvar:: LC_MESSAGES
 
-   ``LC_MESSAGES`` determines the language in which messages are diisplayed.
-
-.. envvar:: LC_MONETARY
-
-   Determines currency, how it is formatted, and the symbols used.
+   Determines the language in which messages are displayed, see :doc:`builtin _ <cmds/_>`.
 
 .. envvar:: LC_NUMERIC
 
-   Sets the locale for formatting numbers.
+   Sets the locale for :doc:`formatting numbers <cmds/printf>`.
 
 .. envvar:: LC_TIME
 
-   Sets the locale for formatting dates and times.
+   Determines how date and time are displayed.
+   Used in the :ref:`history <history-show-time>` builtin.
 
 .. _builtin-overview:
 

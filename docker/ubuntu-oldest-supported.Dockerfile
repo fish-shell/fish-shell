@@ -37,8 +37,6 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
   && sh /tmp/rustup.sh -y --no-modify-path
 ENV PATH=/home/fishuser/.cargo/bin:$PATH
 
-RUN echo $PATH
-
 COPY fish_run_tests.sh /
 
 ENV FISH_CHECK_LINT=false

@@ -19,9 +19,12 @@ fi
 
 for tool in \
     bundle \
+    diff \
     gh \
+    gpg \
     jq \
     ruby \
+    tar \
     timeout \
 ; do
     if ! command -v "$tool" >/dev/null; then
@@ -29,6 +32,11 @@ for tool in \
         exit 1
     fi
 done
+
+committer=$(git var GIT_AUTHOR_IDENT)
+committer=${committer% *} # strip timezone
+committer=${committer% *} # strip timestamp
+gpg --local-user="$committer" --sign </dev/null >/dev/null
 
 repo_root="$(dirname "$0")/.."
 fish_site=$repo_root/../fish-site
@@ -82,8 +90,8 @@ Created by ./build_tools/release.sh $version"
 
 CommitVersion "$version" "Release $version"
 
-# N.B. this is not GPG-signed.
-git tag --annotate --message="Release $version" $version
+git -c "user.signingKey=$committer" \
+    tag --sign --message="Release $version" $version
 
 git push $remote $version
 
@@ -108,13 +116,21 @@ done
 # Update fishshell.com
 tag_oid=$(git rev-parse "$version")
 tmpdir=$(mktemp -d)
+fish_tar_xz=fish-$version.tar.xz
+(
+    local_tarball=$tmpdir/local-tarball
+    mkdir "$local_tarball"
+    FISH_ARTEFACT_PATH=$local_tarball ./build_tools/make_tarball.sh
+    cd "$local_tarball"
+    tar xf "$fish_tar_xz"
+)
 # TODO This works on draft releases only if "gh" is configured to
 # have write access to the fish-shell repository. Unless we are fine
 # publishing the release at this point, we should at least fail if
 # "gh" doesn't have write access.
 while ! \
     gh release download "$version" --dir="$tmpdir" \
-        --pattern="fish-$version.tar.xz"
+        --pattern="$fish_tar_xz"
 do
     TIMEOUT=30 gh run watch "$run_id" ||:
     sleep 5
@@ -122,7 +138,16 @@ done
 actual_tag_oid=$(git ls-remote "$remote" |
     awk '$2 == "refs/tags/'"$version"'" { print $1 }')
 [ "$tag_oid" = "$actual_tag_oid" ]
-( cd "$tmpdir" && tar xf fish-$version.tar.xz )
+
+(
+    cd "$tmpdir"
+    tar xf "$fish_tar_xz"
+    diff -ur "fish-$version" "local-tarball/fish-$version"
+    gpg --local-user="$committer" --sign --detach --armor \
+        "$fish_tar_xz"
+    gh release upload "$version" "$fish_tar_xz.asc"
+)
+
 CopyDocs() {
     rm -rf "$fish_site/site/docs/$1"
     cp -r "$tmpdir/fish-$version/user_doc/html" "$fish_site/site/docs/$1"

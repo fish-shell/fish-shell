@@ -767,55 +767,61 @@ pub fn append_path_component(path: &mut WString, component: &wstr) {
     }
 }
 
-#[test]
-fn test_path_make_canonical() {
-    let mut path = L!("//foo//////bar/").to_owned();
-    path_make_canonical(&mut path);
-    assert_eq!(path, "/foo/bar");
+#[cfg(test)]
+mod tests {
+    use super::{path_apply_working_directory, path_make_canonical, paths_are_equivalent};
+    use crate::wchar::prelude::*;
 
-    path = L!("/").to_owned();
-    path_make_canonical(&mut path);
-    assert_eq!(path, "/");
-}
+    #[test]
+    fn test_path_make_canonical() {
+        let mut path = L!("//foo//////bar/").to_owned();
+        path_make_canonical(&mut path);
+        assert_eq!(path, "/foo/bar");
 
-#[test]
-fn test_path() {
-    let mut path = L!("//foo//////bar/").to_owned();
-    path_make_canonical(&mut path);
-    assert_eq!(&path, L!("/foo/bar"));
+        path = L!("/").to_owned();
+        path_make_canonical(&mut path);
+        assert_eq!(path, "/");
+    }
 
-    path = L!("/").to_owned();
-    path_make_canonical(&mut path);
-    assert_eq!(&path, L!("/"));
+    #[test]
+    fn test_path() {
+        let mut path = L!("//foo//////bar/").to_owned();
+        path_make_canonical(&mut path);
+        assert_eq!(&path, L!("/foo/bar"));
 
-    path = L!("/home/fishuser/").to_owned();
-    path_make_canonical(&mut path);
-    assert_eq!(&path, L!("/home/fishuser"));
+        path = L!("/").to_owned();
+        path_make_canonical(&mut path);
+        assert_eq!(&path, L!("/"));
 
-    assert!(!paths_are_equivalent(L!("/foo/bar/baz"), L!("foo/bar/baz")));
-    assert!(paths_are_equivalent(
-        L!("///foo///bar/baz"),
-        L!("/foo/bar////baz//")
-    ));
-    assert!(paths_are_equivalent(L!("/foo/bar/baz"), L!("/foo/bar/baz")));
-    assert!(paths_are_equivalent(L!("/"), L!("/")));
+        path = L!("/home/fishuser/").to_owned();
+        path_make_canonical(&mut path);
+        assert_eq!(&path, L!("/home/fishuser"));
 
-    assert_eq!(
-        path_apply_working_directory(L!("abc"), L!("/def/")),
-        L!("/def/abc")
-    );
-    assert_eq!(
-        path_apply_working_directory(L!("abc/"), L!("/def/")),
-        L!("/def/abc/")
-    );
-    assert_eq!(
-        path_apply_working_directory(L!("/abc/"), L!("/def/")),
-        L!("/abc/")
-    );
-    assert_eq!(
-        path_apply_working_directory(L!("/abc"), L!("/def/")),
-        L!("/abc")
-    );
-    assert!(path_apply_working_directory(L!(""), L!("/def/")).is_empty());
-    assert_eq!(path_apply_working_directory(L!("abc"), L!("")), L!("abc"));
+        assert!(!paths_are_equivalent(L!("/foo/bar/baz"), L!("foo/bar/baz")));
+        assert!(paths_are_equivalent(
+            L!("///foo///bar/baz"),
+            L!("/foo/bar////baz//")
+        ));
+        assert!(paths_are_equivalent(L!("/foo/bar/baz"), L!("/foo/bar/baz")));
+        assert!(paths_are_equivalent(L!("/"), L!("/")));
+
+        assert_eq!(
+            path_apply_working_directory(L!("abc"), L!("/def/")),
+            L!("/def/abc")
+        );
+        assert_eq!(
+            path_apply_working_directory(L!("abc/"), L!("/def/")),
+            L!("/def/abc/")
+        );
+        assert_eq!(
+            path_apply_working_directory(L!("/abc/"), L!("/def/")),
+            L!("/abc/")
+        );
+        assert_eq!(
+            path_apply_working_directory(L!("/abc"), L!("/def/")),
+            L!("/abc")
+        );
+        assert!(path_apply_working_directory(L!(""), L!("/def/")).is_empty());
+        assert_eq!(path_apply_working_directory(L!("abc"), L!("")), L!("abc"));
+    }
 }

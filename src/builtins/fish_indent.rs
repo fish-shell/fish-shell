@@ -1,17 +1,18 @@
 //! The fish_indent program.
 
-use std::ffi::{CString, OsStr};
+use std::ffi::OsStr;
 use std::fs;
 use std::io::{Read, Write};
 use std::os::unix::ffi::OsStrExt;
 
+use crate::locale::set_libc_locales;
 use crate::panic::panic_handler;
-use libc::LC_ALL;
 
 use super::prelude::*;
 use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
-    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, unescape_string, wcs2bytes,
+    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
+    unescape_string, wcs2bytes,
 };
 use crate::env::EnvStack;
 use crate::env::env_init;
@@ -889,13 +890,10 @@ fn throwing_main() -> i32 {
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
     streams.stdin_fd = STDIN_FILENO;
-    // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
-    // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
-    //
-    {
-        let s = CString::new("").unwrap();
-        unsafe { libc::setlocale(LC_ALL, s.as_ptr()) };
-    }
+    // Safety: single-threaded.
+    unsafe {
+        set_libc_locales(/*log_ok=*/ false)
+    };
     crate::wutil::gettext::initialize_gettext();
     env_init(None, true, false);
 
@@ -963,7 +961,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             'v' => {
                 streams.out.appendln(wgettext_fmt!(
                     "%s, version %s",
-                    PROGRAM_NAME.get().unwrap(),
+                    get_program_name(),
                     crate::BUILD_VERSION
                 ));
                 return Ok(SUCCESS);
@@ -991,7 +989,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             if output_type == OutputType::File {
                 streams.err.appendln(wgettext_fmt!(
                     "Expected file path to read/write for -w:\n\n $ %s -w foo.fish",
-                    PROGRAM_NAME.get().unwrap()
+                    get_program_name()
                 ));
                 return Err(STATUS_CMD_ERROR);
             }

@@ -3,7 +3,7 @@ function __fish_data_with_file
     set -l path $argv[1]
     set -l cmd $argv[2..]
     if string match -rq -- ^/ $path; or begin
-            set -q __fish_data_dir[1]
+            not __fish_is_standalone
             and set path $__fish_data_dir/$path
         end
         $cmd $path

@@ -41,8 +41,8 @@ jobs:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
       - name: Install dependencies
-        run: sudo apt install cmake gettext ninja-build python3-pip python3-sphinx
-      - uses: ./.github/actions/install-sphinx-markdown-builder
+        run: sudo apt install cmake gettext ninja-build python3-pip
+      - uses: ./.github/actions/install-sphinx
       - name: Create tarball
         run: |
           set -x
@@ -52,7 +52,10 @@ jobs:
           # Need history since the last release (i.e. tag) for stats.
           git fetch --tags
           git fetch --unshallow
-          sh -x ./build_tools/release-notes.sh >"$relnotes"
+          gpg_public_key_url=https://github.com/${{ github.actor }}.gpg
+          curl -sS "$gpg_public_key_url" | grep 'PGP PUBLIC KEY BLOCK' -A5
+          FISH_GPG_PUBLIC_KEY_URL=$gpg_public_key_url \
+            sh -x ./build_tools/release-notes.sh >"$relnotes"
           # Delete title
           sed -n 1p "$relnotes" | grep -q "^## fish .*"
           sed -n 2p "$relnotes" | grep -q '^$'
@@ -80,7 +83,8 @@ jobs:
         with:
           targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl
       - name: Install dependencies
-        run: sudo apt install crossbuild-essential-arm64 gettext musl-tools python3-sphinx
+        run: sudo apt install crossbuild-essential-arm64 gettext musl-tools
+      - uses: ./.github/actions/install-sphinx
       - name: Build statically-linked executables
         run: |
           set -x

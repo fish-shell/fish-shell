@@ -3,8 +3,8 @@ function fish_clipboard_copy
     if isatty stdin
         # Copy the current selection, or the entire commandline if that is empty.
         # Don't use `string collect -N` here - `commandline` adds a newline.
-        set cmdline (commandline --current-selection | __fish_indent --only-indent | string collect)
-        test -n "$cmdline"; or set cmdline (commandline | __fish_indent --only-indent | string collect)
+        set cmdline (commandline --current-selection | fish_indent --only-indent | string collect)
+        test -n "$cmdline"; or set cmdline (commandline | fish_indent --only-indent | string collect)
     else
         # Read from stdin
         while read -lz line

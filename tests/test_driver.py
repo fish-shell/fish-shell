@@ -86,7 +86,6 @@ def makeenv(script_path: Path, home: Path) -> Dict[str, str]:
             "XDG_CACHE_HOME": str(xdg_cache),
             "fish_test_helper": str(home.parent / "fish_test_helper"),
             "LANG": "C",
-            "LC_CTYPE": "en_US.UTF-8",
         }
     )
 

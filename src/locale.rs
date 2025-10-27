@@ -1,9 +1,53 @@
 /// Support for the "current locale."
 pub use fish_printf::locale::{C_LOCALE, Locale};
-use std::sync::Mutex;
+use std::{ffi::CStr, sync::Mutex};
 
 /// Lock guarding libc `setlocale()` or `localeconv()` calls to avoid races.
 pub(crate) static LOCALE_LOCK: Mutex<()> = Mutex::new(());
+
+/// # Safety
+/// Call this either before starting any locale-using thread, or while holding a lock on the
+/// above mutex.
+pub unsafe fn set_libc_locales(log_ok: bool) -> bool {
+    let mut ok = true;
+    let mut set = |category_name, category, value| {
+        let locale_string = setlocale(category, Some(value));
+        if log_ok {
+            crate::flog::FLOG!(
+                env_locale,
+                match locale_string {
+                    Some(locale_string) => {
+                        format!("Set {category_name} to {}", locale_string.to_string_lossy())
+                    }
+                    None => {
+                        format!("Failed to set {category_name}",)
+                    }
+                },
+            );
+        }
+        ok &= locale_string.is_some();
+    };
+    let from_environment = c"";
+    // For wcwidth(3p)
+    set("LC_CTYPE", libc::LC_CTYPE, c"C.UTF-8");
+    // For strerror(3p) and strsignal(3p)
+    set("LC_MESSAGES", libc::LC_MESSAGES, from_environment);
+    // For builtin printf
+    set("LC_NUMERIC", libc::LC_NUMERIC, from_environment);
+    // For "history --show-time"
+    set("LC_TIME", libc::LC_TIME, from_environment);
+    ok
+}
+
+fn setlocale(category: libc::c_int, locale: Option<&CStr>) -> Option<&'static CStr> {
+    let loc_ptr = {
+        let locale = locale.map_or(std::ptr::null(), |loc| loc.as_ptr());
+        unsafe { libc::setlocale(category, locale) }
+    };
+    (!loc_ptr.is_null()).then(||
+        // Safety: setlocale did not return a null-pointer, so it is a valid pointer
+        unsafe{CStr::from_ptr(loc_ptr)})
+}
 
 /// It's CHAR_MAX.
 const CHAR_MAX: libc::c_char = libc::c_char::MAX;
@@ -67,13 +111,10 @@ unsafe fn read_locale() -> Option<Locale> {
         unsafe fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
     }
 
-    const empty: [libc::c_char; 1] = [0];
-
     // We create a new locale (pass 0 locale_t base)
     // and pass no "locale", so everything else is taken from the environment.
     // This is fine because we're only using this for numbers.
-    let loc =
-        unsafe { libc::newlocale(libc::LC_NUMERIC_MASK, empty.as_ptr(), 0 as libc::locale_t) };
+    let loc = unsafe { libc::newlocale(libc::LC_NUMERIC_MASK, c"".as_ptr(), 0 as libc::locale_t) };
     if loc.is_null() {
         return None;
     }
@@ -94,24 +135,8 @@ unsafe fn read_locale() -> Option<Locale> {
     // Bleh, we have to go through localeconv, which races with setlocale.
     // TODO: There has to be a better way to do this.
     let _guard = LOCALE_LOCK.lock().unwrap();
-    const empty: [libc::c_char; 1] = [0];
-    const c_loc_str: [libc::c_char; 2] = [b'C' as libc::c_char, 0];
-
-    unsafe {
-        libc::setlocale(libc::LC_NUMERIC, empty.as_ptr());
-    }
-
     let lconv = unsafe { libc::localeconv() };
-    let result = if lconv.is_null() {
-        None
-    } else {
-        Some(unsafe { lconv_to_locale(&*lconv) })
-    };
-    // Note we *always* use a C-locale for numbers, because we always want "." except for in printf.
-    unsafe {
-        libc::setlocale(libc::LC_NUMERIC, c_loc_str.as_ptr());
-    }
-    result
+    (!lconv.is_null()).then(|| unsafe { lconv_to_locale(&*lconv) })
 }
 
 // Current numeric locale.

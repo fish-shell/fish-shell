@@ -63,3 +63,27 @@ impl StringSubCommand<'_> for Escape {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn plain() {
+        let _cleanup = test_init();
+        validate!(["string", "escape"], STATUS_CMD_ERROR, "");
+        validate!(["string", "escape", ""], STATUS_CMD_OK, "''\n");
+        validate!(["string", "escape", "-n", ""], STATUS_CMD_OK, "\n");
+        validate!(["string", "escape", "a"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "escape", "\x07"], STATUS_CMD_OK, "\\cg\n");
+        validate!(["string", "escape", "\"x\""], STATUS_CMD_OK, "'\"x\"'\n");
+        validate!(["string", "escape", "hello world"], STATUS_CMD_OK, "'hello world'\n");
+        validate!(["string", "escape", "-n", "hello world"], STATUS_CMD_OK, "hello\\ world\n");
+        validate!(["string", "escape", "hello", "world"], STATUS_CMD_OK, "hello\nworld\n");
+        validate!(["string", "escape", "-n", "~"], STATUS_CMD_OK, "\\~\n");
+    }
+}

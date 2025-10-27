@@ -3,14 +3,12 @@
 
 #include <fcntl.h>
 #include <signal.h>
-#include <sys/wait.h>
-#include <unistd.h>
-
-#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 static void abandon_tty() {
     // The parent may get SIGSTOPed when it tries to call tcsetpgrp if the child has already done
@@ -191,8 +189,7 @@ static void sigint_self() {
     abort();
 }
 
-static void do_nothing(int x) {
-}
+static void do_nothing(int x) {}
 static void stdin_make_nonblocking() {
     const int fd = STDIN_FILENO;
     // Catch SIGCONT so pause() wakes us up.

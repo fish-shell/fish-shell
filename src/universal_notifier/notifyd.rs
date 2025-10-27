@@ -136,15 +136,21 @@ impl UniversalNotifier for NotifydNotifier {
     }
 }
 
-#[test]
-fn test_notifyd_notifiers() {
-    let mut notifiers = Vec::new();
-    for _ in 0..16 {
-        notifiers.push(NotifydNotifier::new().expect("failed to create notifier"));
+#[cfg(test)]
+mod tests {
+    use super::NotifydNotifier;
+    use crate::universal_notifier::{UniversalNotifier, test_helpers::test_notifiers};
+
+    #[test]
+    fn test_notifyd_notifiers() {
+        let mut notifiers = Vec::new();
+        for _ in 0..16 {
+            notifiers.push(NotifydNotifier::new().expect("failed to create notifier"));
+        }
+        let notifiers = notifiers
+            .iter()
+            .map(|n| n as &dyn UniversalNotifier)
+            .collect::<Vec<_>>();
+        test_notifiers(&notifiers, None);
     }
-    let notifiers = notifiers
-        .iter()
-        .map(|n| n as &dyn UniversalNotifier)
-        .collect::<Vec<_>>();
-    super::test_helpers::test_notifiers(&notifiers, None);
 }

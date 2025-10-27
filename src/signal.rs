@@ -565,42 +565,46 @@ impl From<Signal> for NonZeroI32 {
     }
 }
 
-// Need to use add_test for wgettext support.
+#[cfg(test)]
+mod tests {
+    use super::Signal;
+    use crate::wchar::prelude::*;
 
-#[test]
-fn test_signal_name() {
-    let sig = Signal::new(libc::SIGINT);
-    assert_eq!(sig.name(), "SIGINT");
-}
+    #[test]
+    fn test_signal_name() {
+        let sig = Signal::new(libc::SIGINT);
+        assert_eq!(sig.name(), "SIGINT");
+    }
 
-#[rustfmt::skip]
-#[test]
-fn test_signal_parse() {
-    assert_eq!(Signal::parse(L!("SIGHUP")), Some(Signal::new(libc::SIGHUP)));
-    assert_eq!(Signal::parse(L!("sigwinch")), Some(Signal::new(libc::SIGWINCH)));
-    assert_eq!(Signal::parse(L!("TSTP")), Some(Signal::new(libc::SIGTSTP)));
-    assert_eq!(Signal::parse(L!("TstP")), Some(Signal::new(libc::SIGTSTP)));
-    assert_eq!(Signal::parse(L!("sigCONT")), Some(Signal::new(libc::SIGCONT)));
-    assert_eq!(Signal::parse(L!("SIGFOO")), None);
-    assert_eq!(Signal::parse(L!("")), None);
-    assert_eq!(Signal::parse(L!("SIG")), None);
-    assert_eq!(Signal::parse(L!("سلام")), None);
+    #[rustfmt::skip]
+    #[test]
+    fn test_signal_parse() {
+        assert_eq!(Signal::parse(L!("SIGHUP")), Some(Signal::new(libc::SIGHUP)));
+        assert_eq!(Signal::parse(L!("sigwinch")), Some(Signal::new(libc::SIGWINCH)));
+        assert_eq!(Signal::parse(L!("TSTP")), Some(Signal::new(libc::SIGTSTP)));
+        assert_eq!(Signal::parse(L!("TstP")), Some(Signal::new(libc::SIGTSTP)));
+        assert_eq!(Signal::parse(L!("sigCONT")), Some(Signal::new(libc::SIGCONT)));
+        assert_eq!(Signal::parse(L!("SIGFOO")), None);
+        assert_eq!(Signal::parse(L!("")), None);
+        assert_eq!(Signal::parse(L!("SIG")), None);
+        assert_eq!(Signal::parse(L!("سلام")), None);
 
-    assert_eq!(Signal::parse(&libc::SIGINT.to_wstring()), Some(Signal::new(libc::SIGINT)));
-    assert_eq!(Signal::parse(L!("0")), None);
-    assert_eq!(Signal::parse(L!("-0")), None);
-    assert_eq!(Signal::parse(L!("-1")), None);
-}
+        assert_eq!(Signal::parse(&libc::SIGINT.to_wstring()), Some(Signal::new(libc::SIGINT)));
+        assert_eq!(Signal::parse(L!("0")), None);
+        assert_eq!(Signal::parse(L!("-0")), None);
+        assert_eq!(Signal::parse(L!("-1")), None);
+    }
 
-#[test]
-#[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
-/// Verify bsd feature is detected on the known BSDs, which gives us greater confidence it'll work
-/// for the unknown ones too. We don't need to do this for Linux and macOS because we're using
-/// rust's native OS targeting for those.
-fn bsd_signals() {
-    assert_eq!(Signal::parse(L!("SIGEMT")), Some(Signal::new(libc::SIGEMT)));
-    assert_eq!(
-        Signal::parse(L!("SIGINFO")),
-        Some(Signal::new(libc::SIGINFO))
-    );
+    #[test]
+    #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
+    /// Verify bsd feature is detected on the known BSDs, which gives us greater confidence it'll work
+    /// for the unknown ones too. We don't need to do this for Linux and macOS because we're using
+    /// rust's native OS targeting for those.
+    fn bsd_signals() {
+        assert_eq!(Signal::parse(L!("SIGEMT")), Some(Signal::new(libc::SIGEMT)));
+        assert_eq!(
+            Signal::parse(L!("SIGINFO")),
+            Some(Signal::new(libc::SIGINFO))
+        );
+    }
 }

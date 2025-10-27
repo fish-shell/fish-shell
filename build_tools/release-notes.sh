@@ -11,37 +11,40 @@ mkdir -p "$relnotes_tmp/fake-workspace" "$relnotes_tmp/out"
     cp -r doc_src CONTRIBUTING.rst README.rst "$relnotes_tmp/fake-workspace"
 )
 version=$(sed 's,^fish \(\S*\) .*,\1,; 1q' "$workspace_root/CHANGELOG.rst")
-previous_version=$(
-    cd "$workspace_root"
-    awk <CHANGELOG.rst '
-        ( /^fish \S*\.\S*\.\S* \(released .*\)$/ &&
-            NR > 1 &&
-            # Skip tags that have not been created yet..
-            system("git rev-parse --verify >/dev/null --quiet refs/tags/"$2) == 0 \
-        ) {
-            print $2; ok = 1; exit
-        }
-        END { exit !ok }
-    '
-)
-minor_version=${version%.*}
-previous_minor_version=${previous_version%.*}
+add_stats=false
+# Skip on shallow clone (CI) for now.
+if git -C "$workspace_root" tag | grep -q .; then {
+    previous_version=$(
+        cd "$workspace_root"
+        awk <CHANGELOG.rst '
+            ( /^fish [^ ]*\.[^ ]*\.[^ ]* \(released .*\)$/ &&
+                NR > 1 &&
+                # Ignore versions that have not been released.
+                $NF !~ /\?\?\?./ \
+            ) {
+                print $2; ok = 1; exit
+            }
+            END { exit !ok }
+        '
+    )
+    minor_version=${version%.*}
+    previous_minor_version=${previous_version%.*}
+    if [ "$minor_version" != "$previous_minor_version" ]; then
+        add_stats=true
+    fi
+} fi
 {
     sed -n 1,2p <"$workspace_root/CHANGELOG.rst"
-
-    ListCommitters() {
-        comm "$@" "$relnotes_tmp/committers-then" "$relnotes_tmp/committers-now"
-    }
-    (
-        cd "$workspace_root"
-        git log "$previous_version" --format="%aN" | sort -u >"$relnotes_tmp/committers-then"
-        git log "$previous_version".. --format="%aN" | sort -u >"$relnotes_tmp/committers-now"
-        ListCommitters -13 >"$relnotes_tmp/committers-new"
-        ListCommitters -12 >"$relnotes_tmp/committers-returning"
-    )
-    if [ "$minor_version" != "$previous_minor_version" ]; then
+    if $add_stats; then {
+        ListCommitters() {
+            comm "$@" "$relnotes_tmp/committers-then" "$relnotes_tmp/committers-now"
+        }
         (
             cd "$workspace_root"
+            git log "$previous_version" --format="%aN" | sort -u >"$relnotes_tmp/committers-then"
+            git log "$previous_version".. --format="%aN" | sort -u >"$relnotes_tmp/committers-now"
+            ListCommitters -13 >"$relnotes_tmp/committers-new"
+            ListCommitters -12 >"$relnotes_tmp/committers-returning"
             num_commits=$(git log --no-merges --format=%H "$previous_version".. | wc -l)
             num_authors=$(wc -l <"$relnotes_tmp/committers-now")
             num_new_authors=$(wc -l <"$relnotes_tmp/committers-new")
@@ -51,7 +54,7 @@ previous_minor_version=${previous_version%.*}
             echo
             echo
         )
-    fi
+    } fi
 
     printf '%s\n' "$(awk <"$workspace_root/CHANGELOG.rst" '
         NR <= 2 || /^\.\. ignore / { next }
@@ -60,9 +63,9 @@ previous_minor_version=${previous_version%.*}
     ' | sed '$d')" |
         sed -e '$s/^----*$//' # Remove spurious transitions at the end of the document.
 
-    if [ "$minor_version" != "$previous_minor_version" ]; then {
+    if $add_stats; then {
         JoinEscaped() {
-            sed 's/\S/\\&/g' |
+            LC_CTYPE=C.UTF-8 sed 's/\S/\\&/g' |
                 awk '
                     NR != 1 { printf ",\n" }
                     { printf "%s", $0 }
@@ -83,9 +86,12 @@ previous_minor_version=${previous_version%.*}
     echo
     echo "---"
     echo
-    echo "*Download links: To download the source code for fish, we suggest the file named \"fish-$version.tar.xz\". The file downloaded from \"Source code (tar.gz)\" will not build correctly.*"
+    echo 'Download links:'
+    echo 'To download the source code for fish, we suggest the file named ``fish-'"$version"'.tar.xz``.'
+    echo 'The file downloaded from ``Source code (tar.gz)`` will not build correctly.'
+    echo 'A GPG signature using the key published at '"${FISH_GPG_PUBLIC_KEY_URL:-???}"' is available as ``fish-'"$version"'.tar.xz.asc``.'
     echo
-    echo "*The files called fish-$version-linux-\*.tar.xz are experimental packages containing a single standalone ``fish`` binary for any Linux with the given CPU architecture.*"
+    echo 'The files called ``fish-'"$version"'-linux-\*.tar.xz`` are experimental packages containing a single standalone ``fish`` binary for any Linux with the given CPU architecture.'
 } >"$relnotes_tmp/fake-workspace"/CHANGELOG.rst
 
 sphinx-build >&2 -j auto \
@@ -93,7 +99,7 @@ sphinx-build >&2 -j auto \
     -d "$relnotes_tmp/doctree" "$relnotes_tmp/fake-workspace/doc_src" "$relnotes_tmp/out" \
     -D markdown_http_base="https://fishshell.com/docs/$minor_version" \
     -D markdown_uri_doc_suffix=".html" \
-    -D markdown_github_flavored=1 \
+    -D markdown_flavor=github \
     "$@"
 
 # Skip changelog header

@@ -3,6 +3,8 @@ find_package(Rust REQUIRED)
 
 set(FISH_RUST_BUILD_DIR "${CMAKE_BINARY_DIR}/cargo/build")
 
+list(APPEND FISH_CARGO_FEATURES_LIST "embed-data")
+
 if(DEFINED ASAN)
     list(APPEND CARGO_FLAGS "-Z" "build-std")
     list(APPEND FISH_CARGO_FEATURES_LIST "asan")
@@ -31,10 +33,8 @@ list(JOIN FISH_CARGO_FEATURES_LIST , FISH_CARGO_FEATURES)
 
 # Tell Cargo where our build directory is so it can find Cargo.toml.
 set(VARS_FOR_CARGO
-    "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}"
+    "FISH_CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}"
     "PREFIX=${CMAKE_INSTALL_PREFIX}"
-    # Cheesy so we can tell cmake was used to build
-    "CMAKE=1"
     "DOCDIR=${CMAKE_INSTALL_FULL_DOCDIR}"
     "DATADIR=${CMAKE_INSTALL_FULL_DATADIR}"
     "SYSCONFDIR=${CMAKE_INSTALL_FULL_SYSCONFDIR}"

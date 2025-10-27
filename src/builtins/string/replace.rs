@@ -275,3 +275,64 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn plain() {
+        let _cleanup = test_init();
+        validate!(["string", "replace", ""], STATUS_INVALID_ARGS, "");
+        validate!(["string", "replace", "", ""], STATUS_CMD_ERROR, "");
+        validate!(["string", "replace", "", "", ""], STATUS_CMD_ERROR, "\n");
+        validate!(["string", "replace", "", "", " "], STATUS_CMD_ERROR, " \n");
+        validate!(["string", "replace", "a", "b", ""], STATUS_CMD_ERROR, "\n");
+        validate!(["string", "replace", "a", "b", "a"], STATUS_CMD_OK, "b\n");
+        validate!(["string", "replace", "a", "b", "xax"], STATUS_CMD_OK, "xbx\n");
+        validate!(["string", "replace", "a", "b", "xax", "axa"], STATUS_CMD_OK, "xbx\nbxa\n");
+        validate!(["string", "replace", "bar", "x", "red barn"], STATUS_CMD_OK, "red xn\n");
+        validate!(["string", "replace", "x", "bar", "red xn"], STATUS_CMD_OK, "red barn\n");
+        validate!(["string", "replace", "--", "x", "-", "xyz"], STATUS_CMD_OK, "-yz\n");
+        validate!(["string", "replace", "--", "y", "-", "xyz"], STATUS_CMD_OK, "x-z\n");
+        validate!(["string", "replace", "--", "z", "-", "xyz"], STATUS_CMD_OK, "xy-\n");
+        validate!(["string", "replace", "-i", "z", "X", "_Z_"], STATUS_CMD_OK, "_X_\n");
+        validate!(["string", "replace", "-a", "a", "A", "aaa"], STATUS_CMD_OK, "AAA\n");
+        validate!(["string", "replace", "-i", "a", "z", "AAA"], STATUS_CMD_OK, "zAA\n");
+        validate!(["string", "replace", "-q", "x", ">x<", "x"], STATUS_CMD_OK, "");
+        validate!(["string", "replace", "-a", "x", "", "xxx"], STATUS_CMD_OK, "\n");
+        validate!(["string", "replace", "-a", "***", "_", "*****"], STATUS_CMD_OK, "_**\n");
+        validate!(["string", "replace", "-a", "***", "***", "******"], STATUS_CMD_OK, "******\n");
+        validate!(["string", "replace", "-a", "a", "b", "xax", "axa"], STATUS_CMD_OK, "xbx\nbxb\n");
+
+        validate!(["string", "replace", "-r"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "replace", "-r", ""], STATUS_INVALID_ARGS, "");
+        validate!(["string", "replace", "-r", "", ""], STATUS_CMD_ERROR, "");
+        validate!(["string", "replace", "-r", "", "", ""], STATUS_CMD_OK, "\n");  // pcre2 behavior
+        validate!(["string", "replace", "-r", "", "", " "], STATUS_CMD_OK, " \n");  // pcre2 behavior
+        validate!(["string", "replace", "-r", "a", "b", ""], STATUS_CMD_ERROR, "\n");
+        validate!(["string", "replace", "-r", "a", "b", "a"], STATUS_CMD_OK, "b\n");
+        validate!(["string", "replace", "-r", ".", "x", "abc"], STATUS_CMD_OK, "xbc\n");
+        validate!(["string", "replace", "-r", ".", "", "abc"], STATUS_CMD_OK, "bc\n");
+        validate!(["string", "replace", "-r", "(\\w)(\\w)", "$2$1", "ab"], STATUS_CMD_OK, "ba\n");
+        validate!(["string", "replace", "-r", "(\\w)", "$1$1", "ab"], STATUS_CMD_OK, "aab\n");
+        validate!(["string", "replace", "-r", "-a", ".", "x", "abc"], STATUS_CMD_OK, "xxx\n");
+        validate!(["string", "replace", "-r", "-a", "(\\w)", "$1$1", "ab"], STATUS_CMD_OK, "aabb\n");
+        validate!(["string", "replace", "-r", "-a", ".", "", "abc"], STATUS_CMD_OK, "\n");
+        validate!(["string", "replace", "-r", "a", "x", "bc", "cd", "de"], STATUS_CMD_ERROR, "bc\ncd\nde\n");
+        validate!(["string", "replace", "-r", "a", "x", "aba", "caa"], STATUS_CMD_OK, "xba\ncxa\n");
+        validate!(["string", "replace", "-r", "-a", "a", "x", "aba", "caa"], STATUS_CMD_OK, "xbx\ncxx\n");
+        validate!(["string", "replace", "-r", "-i", "A", "b", "xax"], STATUS_CMD_OK, "xbx\n");
+        validate!(["string", "replace", "-r", "-i", "[a-z]", ".", "1A2B"], STATUS_CMD_OK, "1.2B\n");
+        validate!(["string", "replace", "-r", "A", "b", "xax"], STATUS_CMD_ERROR, "xax\n");
+        validate!(["string", "replace", "-r", "a", "$1", "a"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "replace", "-r", "(a)", "$2", "a"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "replace", "-r", "*", ".", "a"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "replace", "-ra", "x", "\\c"], STATUS_CMD_ERROR, "");
+        validate!(["string", "replace", "-r", "^(.)", "\t$1", "abc", "x"], STATUS_CMD_OK, "\tabc\n\tx\n");
+    }
+}

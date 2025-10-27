@@ -54,9 +54,9 @@ use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, PROGRAM_NAME, ScopeGuard, UTF8_BOM_WCHAR, bytes2wcstring,
-    escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
-    restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
+    EscapeFlags, EscapeStringStyle, ScopeGuard, UTF8_BOM_WCHAR, bytes2wcstring, escape,
+    escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
+    get_program_name, restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
 };
 use crate::complete::{
     CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete, complete_load,
@@ -306,7 +306,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
                 break;
             }
             CharEvent::QueryResult(Timeout) => {
-                let program = PROGRAM_NAME.get().unwrap();
+                let program = get_program_name();
                 FLOG!(
                     warning,
                     wgettext_fmt!(
@@ -1594,8 +1594,7 @@ pub fn reader_save_screen_state() {
 }
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
-/// Exposed for testing purposes only.
-pub fn combine_command_and_autosuggestion(
+fn combine_command_and_autosuggestion(
     cmdline: &wstr,
     line_range: Range<usize>,
     autosuggestion: &wstr,
@@ -5876,13 +5875,11 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     term_steal(eval_res.status.is_success());
 
     // Provide value for `status current-command`
-    parser.libdata_mut().status_vars.command = (*PROGRAM_NAME.get().unwrap()).to_owned();
+    parser.libdata_mut().status_vars.command = get_program_name().to_owned();
     // Also provide a value for the deprecated fish 2.0 $_ variable
-    parser.vars().set_one(
-        L!("_"),
-        EnvMode::GLOBAL,
-        (*PROGRAM_NAME.get().unwrap()).to_owned(),
-    );
+    parser
+        .vars()
+        .set_one(L!("_"), EnvMode::GLOBAL, get_program_name().to_owned());
     // Provide value for `status current-commandline`
     parser.libdata_mut().status_vars.commandline = L!("").to_owned();
 
@@ -6733,5 +6730,200 @@ impl<'a> Reader<'a> {
             is_unique,
         );
         self.set_buffer_maintaining_pager(&new_command_line, cursor);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::complete::CompleteFlags;
+    use crate::operation_context::{OperationContext, no_cancel};
+    use crate::reader::{combine_command_and_autosuggestion, completion_apply_to_command_line};
+    use crate::tests::prelude::*;
+    use crate::wchar::prelude::*;
+
+    #[test]
+    fn test_autosuggestion_combining() {
+        assert_eq!(
+            combine_command_and_autosuggestion(L!("alpha"), 0..5, L!("alphabeta")),
+            L!("alphabeta")
+        );
+
+        // When the last token contains no capital letters, we use the case of the autosuggestion.
+        assert_eq!(
+            combine_command_and_autosuggestion(L!("alpha"), 0..5, L!("ALPHABETA")),
+            L!("ALPHABETA")
+        );
+
+        // When the last token contains capital letters, we use its case.
+        assert_eq!(
+            combine_command_and_autosuggestion(L!("alPha"), 0..5, L!("alphabeTa")),
+            L!("alPhabeTa")
+        );
+
+        // If autosuggestion is not longer than input, use the input's case.
+        assert_eq!(
+            combine_command_and_autosuggestion(L!("alpha"), 0..5, L!("ALPHAA")),
+            L!("ALPHAA")
+        );
+        assert_eq!(
+            combine_command_and_autosuggestion(L!("alpha"), 0..5, L!("ALPHA")),
+            L!("ALPHA")
+        );
+
+        assert_eq!(
+            combine_command_and_autosuggestion(L!("al\nbeta"), 0..2, L!("alpha")),
+            L!("alpha\nbeta").to_owned()
+        );
+        assert_eq!(
+            combine_command_and_autosuggestion(L!("alpha\nbe"), 6..8, L!("beta")),
+            L!("alpha\nbeta").to_owned()
+        );
+        assert_eq!(
+            combine_command_and_autosuggestion(L!("alpha\nbe\ngamma"), 6..8, L!("beta")),
+            L!("alpha\nbeta\ngamma").to_owned()
+        );
+    }
+
+    #[test]
+    fn test_completion_insertions() {
+        let parser = TestParser::new();
+
+        macro_rules! validate {
+            (
+                $line:expr, $completion:expr,
+                $flags:expr, $append_only:expr,
+                $expected:expr
+            ) => {
+                // line is given with a caret, which we use to represent the cursor position. Find it.
+                let mut line = L!($line).to_owned();
+                let completion = L!($completion);
+                let mut expected = L!($expected).to_owned();
+                let in_cursor_pos = line.find(L!("^")).unwrap();
+                line.remove(in_cursor_pos);
+
+                let out_cursor_pos = expected.find(L!("^")).unwrap();
+                expected.remove(out_cursor_pos);
+
+                let mut cursor_pos = in_cursor_pos;
+
+                let result = completion_apply_to_command_line(
+                    &OperationContext::test_only_foreground(
+                        &parser,
+                        parser.vars(),
+                        Box::new(no_cancel),
+                    ),
+                    completion,
+                    $flags,
+                    &line,
+                    &mut cursor_pos,
+                    $append_only,
+                    /*is_unique=*/ false,
+                );
+                assert_eq!(result, expected);
+                assert_eq!(cursor_pos, out_cursor_pos);
+            };
+        }
+
+        validate!("foo^", "bar", CompleteFlags::default(), false, "foobar ^");
+        // An unambiguous completion of a token that is already trailed by a space character.
+        // After completing, the cursor moves on to the next token, suggesting to the user that the
+        // current token is finished.
+        validate!(
+            "foo^ baz",
+            "bar",
+            CompleteFlags::default(),
+            false,
+            "foobar ^baz"
+        );
+        validate!(
+            "'foo^",
+            "bar",
+            CompleteFlags::default(),
+            false,
+            "'foobar' ^"
+        );
+        validate!(
+            "'foo'^",
+            "bar",
+            CompleteFlags::default(),
+            false,
+            "'foobar' ^"
+        );
+        validate!(
+            "'foo\\'^",
+            "bar",
+            CompleteFlags::default(),
+            false,
+            "'foo\\'bar' ^"
+        );
+        validate!(
+            "foo\\'^",
+            "bar",
+            CompleteFlags::default(),
+            false,
+            "foo\\'bar ^"
+        );
+
+        // Test append only.
+        validate!("foo^", "bar", CompleteFlags::default(), true, "foobar ^");
+        validate!(
+            "foo^ baz",
+            "bar",
+            CompleteFlags::default(),
+            true,
+            "foobar ^baz"
+        );
+        validate!("'foo^", "bar", CompleteFlags::default(), true, "'foobar' ^");
+        validate!(
+            "'foo'^",
+            "bar",
+            CompleteFlags::default(),
+            true,
+            "'foo'bar ^"
+        );
+        validate!(
+            "'foo\\'^",
+            "bar",
+            CompleteFlags::default(),
+            true,
+            "'foo\\'bar' ^"
+        );
+        validate!(
+            "foo\\'^",
+            "bar",
+            CompleteFlags::default(),
+            true,
+            "foo\\'bar ^"
+        );
+
+        validate!("foo^", "bar", CompleteFlags::NO_SPACE, false, "foobar^");
+        validate!("'foo^", "bar", CompleteFlags::NO_SPACE, false, "'foobar^");
+        validate!("'foo'^", "bar", CompleteFlags::NO_SPACE, false, "'foobar'^");
+        validate!(
+            "'foo\\'^",
+            "bar",
+            CompleteFlags::NO_SPACE,
+            false,
+            "'foo\\'bar^"
+        );
+        validate!(
+            "foo\\'^",
+            "bar",
+            CompleteFlags::NO_SPACE,
+            false,
+            "foo\\'bar^"
+        );
+
+        validate!("foo^", "bar", CompleteFlags::REPLACES_TOKEN, false, "bar ^");
+        validate!(
+            "'foo^",
+            "bar",
+            CompleteFlags::REPLACES_TOKEN,
+            false,
+            "bar ^"
+        );
+
+        // See #6130
+        validate!(": (:^ ''", "", CompleteFlags::default(), false, ": (: ^''");
     }
 }

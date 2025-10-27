@@ -5,7 +5,7 @@ function __fish_data_with_directory
     set -l cmd $argv[3..]
     set -l temp
     set -l directory_ref
-    if set -q __fish_data_dir[1]
+    if not __fish_is_standalone
         set directory_ref $__fish_data_dir/$relative_directory
     else
         set temp (__fish_mktemp_relative -d fish-data)

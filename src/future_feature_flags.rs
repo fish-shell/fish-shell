@@ -273,48 +273,54 @@ pub fn scoped_test(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
     });
 }
 
-#[test]
-fn test_feature_flags() {
-    let f = Features::new();
-    f.set_from_string(L!("stderr-nocaret,nonsense"));
-    assert!(f.test(FeatureFlag::stderr_nocaret));
-    f.set_from_string(L!("stderr-nocaret,no-stderr-nocaret,nonsense"));
-    assert!(f.test(FeatureFlag::stderr_nocaret));
+#[cfg(test)]
+mod tests {
+    use super::{FeatureFlag, Features, METADATA, scoped_test, set, test};
+    use crate::wchar::prelude::*;
 
-    // Ensure every metadata is represented once.
-    let mut counts: [usize; METADATA.len()] = [0; METADATA.len()];
-    for md in METADATA {
-        counts[md.flag as usize] += 1;
+    #[test]
+    fn test_feature_flags() {
+        let f = Features::new();
+        f.set_from_string(L!("stderr-nocaret,nonsense"));
+        assert!(f.test(FeatureFlag::stderr_nocaret));
+        f.set_from_string(L!("stderr-nocaret,no-stderr-nocaret,nonsense"));
+        assert!(f.test(FeatureFlag::stderr_nocaret));
+
+        // Ensure every metadata is represented once.
+        let mut counts: [usize; METADATA.len()] = [0; METADATA.len()];
+        for md in METADATA {
+            counts[md.flag as usize] += 1;
+        }
+        for count in counts {
+            assert_eq!(count, 1);
+        }
+
+        assert_eq!(
+            METADATA[FeatureFlag::stderr_nocaret as usize].name,
+            L!("stderr-nocaret")
+        );
     }
-    for count in counts {
-        assert_eq!(count, 1);
+
+    #[test]
+    fn test_scoped() {
+        scoped_test(FeatureFlag::qmark_noglob, true, || {
+            assert!(test(FeatureFlag::qmark_noglob));
+        });
+
+        set(FeatureFlag::qmark_noglob, true);
+
+        scoped_test(FeatureFlag::qmark_noglob, false, || {
+            assert!(!test(FeatureFlag::qmark_noglob));
+        });
+
+        set(FeatureFlag::qmark_noglob, false);
     }
 
-    assert_eq!(
-        METADATA[FeatureFlag::stderr_nocaret as usize].name,
-        L!("stderr-nocaret")
-    );
-}
-
-#[test]
-fn test_scoped() {
-    scoped_test(FeatureFlag::qmark_noglob, true, || {
-        assert!(test(FeatureFlag::qmark_noglob));
-    });
-
-    set(FeatureFlag::qmark_noglob, true);
-
-    scoped_test(FeatureFlag::qmark_noglob, false, || {
-        assert!(!test(FeatureFlag::qmark_noglob));
-    });
-
-    set(FeatureFlag::qmark_noglob, false);
-}
-
-#[test]
-#[should_panic]
-fn test_nested_scopes_not_supported() {
-    scoped_test(FeatureFlag::qmark_noglob, true, || {
-        scoped_test(FeatureFlag::qmark_noglob, false, || {});
-    });
+    #[test]
+    #[should_panic]
+    fn test_nested_scopes_not_supported() {
+        scoped_test(FeatureFlag::qmark_noglob, true, || {
+            scoped_test(FeatureFlag::qmark_noglob, false, || {});
+        });
+    }
 }

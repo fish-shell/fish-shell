@@ -33,7 +33,7 @@ function man
     set -lx MANPATH $manpath
 
     # Prepend fish's man directory if available.
-    if set -q __fish_data_dir[1]
+    if not __fish_is_standalone
         set -l fish_manpath $__fish_data_dir/man
         if test -d $fish_manpath
             set MANPATH $fish_manpath $MANPATH

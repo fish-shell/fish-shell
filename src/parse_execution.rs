@@ -10,8 +10,7 @@ use crate::builtins::shared::{
     builtin_exists,
 };
 use crate::common::{
-    ScopeGuard, ScopeGuarding, ScopedRefCell, escape, should_suppress_stderr_for_tests,
-    truncate_at_nul, valid_var_name,
+    ScopeGuard, ScopeGuarding, ScopedRefCell, escape, truncate_at_nul, valid_var_name,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, Statuses};
@@ -242,9 +241,7 @@ impl<'a> ExecutionContext<'a> {
             let backtrace_and_desc = ctx.parser().get_backtrace(&self.pstree().src, error_list);
 
             // Print it.
-            if !should_suppress_stderr_for_tests() {
-                eprintf!("%s", backtrace_and_desc);
-            }
+            eprintf!("%s", backtrace_and_desc);
 
             // Mark status.
             ctx.parser().set_last_statuses(Statuses::just(status));

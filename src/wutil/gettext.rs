@@ -2,8 +2,6 @@ use std::sync::Mutex;
 
 #[cfg(feature = "localize-messages")]
 use crate::env::EnvStack;
-#[cfg(test)]
-use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
 
@@ -377,14 +375,21 @@ macro_rules! wgettext_fmt {
 }
 pub use wgettext_fmt;
 
-#[test]
-#[serial]
-fn test_unlocalized() {
-    let _cleanup = test_init();
-    let abc_str = LocalizableString::from_external_source(WString::from("abc"));
-    let s: &'static wstr = wgettext!(abc_str);
-    assert_eq!(s, "abc");
-    let static_str = LocalizableString::from_external_source(WString::from("static"));
-    let s2: &'static wstr = wgettext!(static_str);
-    assert_eq!(s2, "static");
+#[cfg(test)]
+mod tests {
+    use super::LocalizableString;
+    use crate::tests::prelude::*;
+    use crate::wchar::prelude::*;
+
+    #[test]
+    #[serial]
+    fn test_unlocalized() {
+        let _cleanup = test_init();
+        let abc_str = LocalizableString::from_external_source(WString::from("abc"));
+        let s: &'static wstr = wgettext!(abc_str);
+        assert_eq!(s, "abc");
+        let static_str = LocalizableString::from_external_source(WString::from("static"));
+        let s2: &'static wstr = wgettext!(static_str);
+        assert_eq!(s2, "static");
+    }
 }

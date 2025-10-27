@@ -409,3 +409,125 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::future_feature_flags::{FeatureFlag, scoped_test};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn plain() {
+        let _cleanup = test_init();
+        validate!(["string", "match"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "match", ""], STATUS_CMD_ERROR, "");
+        validate!(["string", "match", "", ""], STATUS_CMD_OK, "\n");
+        validate!(["string", "match", "*", ""], STATUS_CMD_OK, "\n");
+        validate!(["string", "match", "**", ""], STATUS_CMD_OK, "\n");
+        validate!(["string", "match", "*", "xyzzy"], STATUS_CMD_OK, "xyzzy\n");
+        validate!(["string", "match", "**", "plugh"], STATUS_CMD_OK, "plugh\n");
+        validate!(["string", "match", "a*b", "axxb"], STATUS_CMD_OK, "axxb\n");
+        validate!(["string", "match", "a*", "axxb"], STATUS_CMD_OK, "axxb\n");
+        validate!(["string", "match", "*a", "xxa"], STATUS_CMD_OK, "xxa\n");
+        validate!(["string", "match", "*a*", "axa"], STATUS_CMD_OK, "axa\n");
+        validate!(["string", "match", "*a*", "xax"], STATUS_CMD_OK, "xax\n");
+        validate!(["string", "match", "*a*", "bxa"], STATUS_CMD_OK, "bxa\n");
+        validate!(["string", "match", "*a", "a"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "match", "a*", "a"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "match", "a*b*c", "axxbyyc"], STATUS_CMD_OK, "axxbyyc\n");
+        validate!(["string", "match", "\\*", "*"], STATUS_CMD_OK, "*\n");
+        validate!(["string", "match", "a*\\", "abc\\"], STATUS_CMD_OK, "abc\\\n");
+
+        validate!(["string", "match", "a*b", "axxbc"], STATUS_CMD_ERROR, "");
+        validate!(["string", "match", "*b", "bbba"], STATUS_CMD_ERROR, "");
+        validate!(["string", "match", "0x[0-9a-fA-F][0-9a-fA-F]", "0xbad"], STATUS_CMD_ERROR, "");
+
+        validate!(["string", "match", "-a", "*", "ab", "cde"], STATUS_CMD_OK, "ab\ncde\n");
+        validate!(["string", "match", "*", "ab", "cde"], STATUS_CMD_OK, "ab\ncde\n");
+        validate!(["string", "match", "-n", "*d*", "cde"], STATUS_CMD_OK, "1 3\n");
+        validate!(["string", "match", "-n", "*x*", "cde"], STATUS_CMD_ERROR, "");
+        validate!(["string", "match", "-q", "a*", "b", "c"], STATUS_CMD_ERROR, "");
+        validate!(["string", "match", "-q", "a*", "b", "a"], STATUS_CMD_OK, "");
+
+        validate!(["string", "match", "-r"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "match", "-r", ""], STATUS_CMD_ERROR, "");
+        validate!(["string", "match", "-r", "", ""], STATUS_CMD_OK, "\n");
+        validate!(["string", "match", "-r", ".", "a"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "match", "-r", ".*", ""], STATUS_CMD_OK, "\n");
+        validate!(["string", "match", "-r", "a*b", "b"], STATUS_CMD_OK, "b\n");
+        validate!(["string", "match", "-r", "a*b", "aab"], STATUS_CMD_OK, "aab\n");
+        validate!(["string", "match", "-r", "-i", "a*b", "Aab"], STATUS_CMD_OK, "Aab\n");
+        validate!(["string", "match", "-r", "-a", "a[bc]", "abadac"], STATUS_CMD_OK, "ab\nac\n");
+        validate!(["string", "match", "-r", "a", "xaxa", "axax"], STATUS_CMD_OK, "a\na\n");
+        validate!(["string", "match", "-r", "-a", "a", "xaxa", "axax"], STATUS_CMD_OK, "a\na\na\na\n");
+        validate!(["string", "match", "-r", "a[bc]", "abadac"], STATUS_CMD_OK, "ab\n");
+        validate!(["string", "match", "-r", "-q", "a[bc]", "abadac"], STATUS_CMD_OK, "");
+        validate!(["string", "match", "-r", "-q", "a[bc]", "ad"], STATUS_CMD_ERROR, "");
+        validate!(["string", "match", "-r", "(a+)b(c)", "aabc"], STATUS_CMD_OK, "aabc\naa\nc\n");
+        validate!(["string", "match", "-r", "-a", "(a)b(c)", "abcabc"], STATUS_CMD_OK, "abc\na\nc\nabc\na\nc\n");
+        validate!(["string", "match", "-r", "(a)b(c)", "abcabc"], STATUS_CMD_OK, "abc\na\nc\n");
+        validate!(["string", "match", "-r", "(a|(z))(bc)", "abc"], STATUS_CMD_OK, "abc\na\nbc\n");
+        validate!(["string", "match", "-r", "-n", "a", "ada", "dad"], STATUS_CMD_OK, "1 1\n2 1\n");
+        validate!(["string", "match", "-r", "-n", "-a", "a", "bacadae"], STATUS_CMD_OK, "2 1\n4 1\n6 1\n");
+        validate!(["string", "match", "-r", "-n", "(a).*(b)", "a---b"], STATUS_CMD_OK, "1 5\n1 1\n5 1\n");
+        validate!(["string", "match", "-r", "-n", "(a)(b)", "ab"], STATUS_CMD_OK, "1 2\n1 1\n2 1\n");
+        validate!(["string", "match", "-r", "-n", "(a)(b)", "abab"], STATUS_CMD_OK, "1 2\n1 1\n2 1\n");
+        validate!(["string", "match", "-r", "-n", "-a", "(a)(b)", "abab"], STATUS_CMD_OK, "1 2\n1 1\n2 1\n3 2\n3 1\n4 1\n");
+        validate!(["string", "match", "-r", "*", ""], STATUS_INVALID_ARGS, "");
+        validate!(["string", "match", "-r", "-a", "a*", "b"], STATUS_CMD_OK, "\n\n");
+        validate!(["string", "match", "-r", "foo\\Kbar", "foobar"], STATUS_CMD_OK, "bar\n");
+        validate!(["string", "match", "-r", "(foo)\\Kbar", "foobar"], STATUS_CMD_OK, "bar\nfoo\n");
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn test_qmark_noglob_true() {
+        scoped_test(FeatureFlag::qmark_noglob, true, || {
+            validate!(["string", "match", "a*b?c", "axxb?c"], STATUS_CMD_OK, "axxb?c\n");
+            validate!(["string", "match", "*?", "a"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "*?", "ab"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "?*", "a"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "?*", "ab"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "a*\\?", "abc?"], STATUS_CMD_ERROR, "");
+
+            validate!(["string", "match", "?", "?"], STATUS_CMD_OK, "?\n");
+            validate!(["string", "match", "a??b", "axxb"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "a??b", "a??b"], STATUS_CMD_OK, "a??b\n");
+            validate!(["string", "match", "-i", "a??B", "axxb"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "-i", "a??b", "A??b"], STATUS_CMD_OK, "A??b\n");
+            validate!(["string", "match", "a*\\?", "abc\\?"], STATUS_CMD_OK, "abc\\?\n");
+
+            validate!(["string", "match", "?", ""], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "?", "ab"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "??", "a"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "?a", "a"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "a?", "a"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "a??B", "axxb"], STATUS_CMD_ERROR, "");
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn test_qmark_glob() {
+        scoped_test(FeatureFlag::qmark_noglob, false, || {
+            validate!(["string", "match", "a*b?c", "axxbyc"], STATUS_CMD_OK, "axxbyc\n");
+            validate!(["string", "match", "*?", "a"], STATUS_CMD_OK, "a\n");
+            validate!(["string", "match", "*?", "ab"], STATUS_CMD_OK, "ab\n");
+            validate!(["string", "match", "?*", "a"], STATUS_CMD_OK, "a\n");
+            validate!(["string", "match", "?*", "ab"], STATUS_CMD_OK, "ab\n");
+            validate!(["string", "match", "a*\\?", "abc?"], STATUS_CMD_OK, "abc?\n");
+
+            validate!(["string", "match", "?", ""], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "?", "ab"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "??", "a"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "?a", "a"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "a?", "a"], STATUS_CMD_ERROR, "");
+            validate!(["string", "match", "a??B", "axxb"], STATUS_CMD_ERROR, "");
+        });
+    }
+}

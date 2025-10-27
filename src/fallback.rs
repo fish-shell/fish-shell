@@ -162,21 +162,26 @@ pub fn wcscasecmp_fuzzy(lhs: &wstr, rhs: &wstr, canonicalize: fn(char) -> char) 
     lhs.cmp(rhs)
 }
 
-#[test]
-fn test_wcscasecmp() {
+#[cfg(test)]
+mod tests {
+    use super::wcscasecmp;
+    use crate::wchar::prelude::*;
     use std::cmp::Ordering;
 
-    // Comparison with empty
-    assert_eq!(wcscasecmp(L!("a"), L!("")), Ordering::Greater);
-    assert_eq!(wcscasecmp(L!(""), L!("a")), Ordering::Less);
-    assert_eq!(wcscasecmp(L!(""), L!("")), Ordering::Equal);
+    #[test]
+    fn test_wcscasecmp() {
+        // Comparison with empty
+        assert_eq!(wcscasecmp(L!("a"), L!("")), Ordering::Greater);
+        assert_eq!(wcscasecmp(L!(""), L!("a")), Ordering::Less);
+        assert_eq!(wcscasecmp(L!(""), L!("")), Ordering::Equal);
 
-    // Basic comparison
-    assert_eq!(wcscasecmp(L!("A"), L!("a")), Ordering::Equal);
-    assert_eq!(wcscasecmp(L!("B"), L!("a")), Ordering::Greater);
-    assert_eq!(wcscasecmp(L!("A"), L!("B")), Ordering::Less);
+        // Basic comparison
+        assert_eq!(wcscasecmp(L!("A"), L!("a")), Ordering::Equal);
+        assert_eq!(wcscasecmp(L!("B"), L!("a")), Ordering::Greater);
+        assert_eq!(wcscasecmp(L!("A"), L!("B")), Ordering::Less);
 
-    // Multi-byte comparison
-    assert_eq!(wcscasecmp(L!("İ"), L!("i\u{307}")), Ordering::Equal);
-    assert_eq!(wcscasecmp(L!("ia"), L!("İa")), Ordering::Less);
+        // Multi-byte comparison
+        assert_eq!(wcscasecmp(L!("İ"), L!("i\u{307}")), Ordering::Equal);
+        assert_eq!(wcscasecmp(L!("ia"), L!("İa")), Ordering::Less);
+    }
 }

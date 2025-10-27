@@ -1,7 +1,7 @@
 # localization: skip(private)
 function __fish_data_list_files
     set -l dir $argv[1]
-    if set -q __fish_data_dir[1]
+    if not __fish_is_standalone
         # Construct a directory prefix without trailing slash.
         if test -n "$dir"
             set dir $__fish_data_dir/$dir

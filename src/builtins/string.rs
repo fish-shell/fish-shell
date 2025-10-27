@@ -17,6 +17,9 @@ mod transform;
 mod trim;
 mod unescape;
 
+#[cfg(test)]
+mod test_helpers;
+
 macro_rules! string_error {
     (
     $streams:expr,

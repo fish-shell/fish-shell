@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
+use cfg_if::cfg_if;
 use fish::{
     ast,
     builtins::{
@@ -41,6 +42,7 @@ use fish::{
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
     io::IoChain,
+    locale::set_libc_locales,
     nix::{RUsage, getpid, getrusage, isatty},
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
@@ -61,20 +63,13 @@ use fish::{
     wutil::waccess,
 };
 use libc::STDIN_FILENO;
-#[cfg(feature = "embed-data")]
-use rust_embed::RustEmbed;
-use std::ffi::{CString, OsStr, OsString};
+use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::{env, ops::ControlFlow};
-
-#[cfg(feature = "embed-data")]
-#[derive(RustEmbed)]
-#[folder = "share/"]
-struct Asset;
 
 /// container to hold the options specified within the command line
 #[derive(Default, Debug)]
@@ -169,36 +164,36 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    #[cfg(feature = "embed-data")]
-    {
-        let emfile = Asset::get("config.fish").expect("Embedded file not found");
-        let src = bytes2wcstring(&emfile.data);
-        parser.libdata_mut().within_fish_init = true;
-        let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
-        let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
-        parser.libdata_mut().within_fish_init = false;
-        if let Err(msg) = ret {
-            eprintf!("%s", msg);
+    cfg_if!(
+        if #[cfg(feature = "embed-data")] {
+            use fish::autoload::Asset;
+            let emfile = Asset::get("config.fish").expect("Embedded file not found");
+            let src = bytes2wcstring(&emfile.data);
+            parser.libdata_mut().within_fish_init = true;
+            let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
+            let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
+            parser.libdata_mut().within_fish_init = false;
+            if let Err(msg) = ret {
+                eprintf!("%s", msg);
+            }
+        } else {
+            let datapath = bytes2wcstring(paths.data.as_ref().unwrap().as_os_str().as_bytes());
+            if !source_config_in_directory(parser, &datapath) {
+                // If we cannot read share/config.fish, our internal configuration,
+                // something is wrong.
+                // That also means that our functions won't be found,
+                // and so any config we get would almost certainly be broken.
+                let escaped_pathname = escape(&datapath);
+                FLOGF!(
+                    error,
+                    "Fish cannot find its asset files in '%s'.\n\
+                     Refusing to read configuration because of this.",
+                    escaped_pathname,
+                );
+                return;
+            }
         }
-    }
-    #[cfg(not(feature = "embed-data"))]
-    {
-        let datapath = bytes2wcstring(paths.data.as_os_str().as_bytes());
-        if !source_config_in_directory(parser, &datapath) {
-            // If we cannot read share/config.fish, our internal configuration,
-            // something is wrong.
-            // That also means that our functions won't be found,
-            // and so any config we get would almost certainly be broken.
-            let escaped_pathname = escape(&datapath);
-            FLOGF!(
-                error,
-                "Fish cannot find its asset files in '%s'.\n\
-                 Refusing to read configuration because of this.",
-                escaped_pathname,
-            );
-            return;
-        }
-    }
+    );
 
     source_config_in_directory(
         parser,
@@ -406,12 +401,10 @@ fn throwing_main() -> i32 {
     topic_monitor::topic_monitor_init();
     threads::init();
 
-    {
-        let s = CString::new("").unwrap();
-        unsafe {
-            libc::setlocale(libc::LC_ALL, s.as_ptr());
-        }
-    }
+    // Safety: single-threaded.
+    unsafe {
+        set_libc_locales(/*log_ok=*/ false)
+    };
 
     fish::wutil::gettext::initialize_gettext();
 
@@ -491,7 +484,7 @@ fn throwing_main() -> i32 {
 
     // If we're not executing, there's no need to find the config.
     let config_paths = if !opts.no_exec {
-        let config_paths = ConfigPaths::new(&args[0]);
+        let config_paths = ConfigPaths::new();
         env_init(
             Some(&config_paths),
             /* do uvars */ !opts.no_config,
@@ -513,7 +506,6 @@ fn throwing_main() -> i32 {
     features::set_from_string(opts.features.as_utfstr());
     fish::env_dispatch::read_terminfo_database(EnvStack::globals());
     proc_init();
-    fish::env::misc_init();
     reader_init(true);
 
     // Construct the root parser!

@@ -76,3 +76,28 @@ impl StringSubCommand<'_> for Length {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn plain() {
+        let _cleanup = test_init();
+        validate!(["string", "length"], STATUS_CMD_ERROR, "");
+        validate!(["string", "length", ""], STATUS_CMD_ERROR, "0\n");
+        validate!(["string", "length", "", "", ""], STATUS_CMD_ERROR, "0\n0\n0\n");
+        validate!(["string", "length", "a"], STATUS_CMD_OK, "1\n");
+
+        validate!(["string", "length", "\u{2008A}"], STATUS_CMD_OK, "1\n");
+        validate!(["string", "length", "um", "dois", "três"], STATUS_CMD_OK, "2\n4\n4\n");
+        validate!(["string", "length", "um", "dois", "três"], STATUS_CMD_OK, "2\n4\n4\n");
+        validate!(["string", "length", "-q"], STATUS_CMD_ERROR, "");
+        validate!(["string", "length", "-q", ""], STATUS_CMD_ERROR, "");
+        validate!(["string", "length", "-q", "a"], STATUS_CMD_OK, "");
+    }
+}

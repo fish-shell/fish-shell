@@ -1155,23 +1155,29 @@ impl<T> EnvMutex<T> {
 unsafe impl<T> Sync for EnvMutex<T> {}
 unsafe impl<T> Send for EnvMutex<T> {}
 
-#[test]
-fn test_colon_split() {
-    assert_eq!(colon_split(&[L!("foo")]), &[L!("foo")]);
-    assert_eq!(
-        colon_split(&[L!("foo:bar:baz")]),
-        &[L!("foo"), L!("bar"), L!("baz")]
-    );
-    assert_eq!(
-        colon_split(&[L!("foo:bar"), L!("baz")]),
-        &[L!("foo"), L!("bar"), L!("baz")]
-    );
-    assert_eq!(
-        colon_split(&[L!("foo:bar"), L!("baz")]),
-        &[L!("foo"), L!("bar"), L!("baz")]
-    );
-    assert_eq!(
-        colon_split(&[L!("1:"), L!("2:"), L!(":3:")]),
-        &[L!("1"), L!(""), L!("2"), L!(""), L!(""), L!("3"), L!("")]
-    );
+#[cfg(test)]
+mod tests {
+    use super::colon_split;
+    use crate::wchar::prelude::*;
+
+    #[test]
+    fn test_colon_split() {
+        assert_eq!(colon_split(&[L!("foo")]), &[L!("foo")]);
+        assert_eq!(
+            colon_split(&[L!("foo:bar:baz")]),
+            &[L!("foo"), L!("bar"), L!("baz")]
+        );
+        assert_eq!(
+            colon_split(&[L!("foo:bar"), L!("baz")]),
+            &[L!("foo"), L!("bar"), L!("baz")]
+        );
+        assert_eq!(
+            colon_split(&[L!("foo:bar"), L!("baz")]),
+            &[L!("foo"), L!("bar"), L!("baz")]
+        );
+        assert_eq!(
+            colon_split(&[L!("1:"), L!("2:"), L!(":3:")]),
+            &[L!("1"), L!(""), L!("2"), L!(""), L!(""), L!("3"), L!("")]
+        );
+    }
 }

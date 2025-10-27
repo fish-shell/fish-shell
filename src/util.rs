@@ -271,52 +271,59 @@ pub fn find_subslice<T: PartialEq>(
     haystack.windows(needle.len()).position(|w| w == needle)
 }
 
-/// Verify the behavior of the `wcsfilecmp()` function.
-#[test]
-fn test_wcsfilecmp() {
-    macro_rules! validate {
-        ($str1:expr, $str2:expr, $expected_rc:expr) => {
-            assert_eq!(wcsfilecmp(L!($str1), L!($str2)), $expected_rc)
-        };
-    }
+#[cfg(test)]
+mod tests {
+    use super::wcsfilecmp;
+    use crate::wchar::prelude::*;
+    use std::cmp::Ordering;
 
-    // Not using L as suffix because the macro munges error locations.
-    validate!("", "", Ordering::Equal);
-    validate!("", "def", Ordering::Less);
-    validate!("abc", "", Ordering::Greater);
-    validate!("abc", "def", Ordering::Less);
-    validate!("abc", "DEF", Ordering::Less);
-    validate!("DEF", "abc", Ordering::Greater);
-    validate!("abc", "abc", Ordering::Equal);
-    validate!("ABC", "ABC", Ordering::Equal);
-    validate!("AbC", "abc", Ordering::Less);
-    validate!("AbC", "ABC", Ordering::Greater);
-    validate!("def", "abc", Ordering::Greater);
-    validate!("1ghi", "1gHi", Ordering::Greater);
-    validate!("1ghi", "2ghi", Ordering::Less);
-    validate!("1ghi", "01ghi", Ordering::Greater);
-    validate!("1ghi", "02ghi", Ordering::Less);
-    validate!("01ghi", "1ghi", Ordering::Less);
-    validate!("1ghi", "002ghi", Ordering::Less);
-    validate!("002ghi", "1ghi", Ordering::Greater);
-    validate!("abc01def", "abc1def", Ordering::Less);
-    validate!("abc1def", "abc01def", Ordering::Greater);
-    validate!("abc12", "abc5", Ordering::Greater);
-    validate!("51abc", "050abc", Ordering::Greater);
-    validate!("abc5", "abc12", Ordering::Less);
-    validate!("5abc", "12ABC", Ordering::Less);
-    validate!("abc0789", "abc789", Ordering::Less);
-    validate!("abc0xA789", "abc0xA0789", Ordering::Greater);
-    validate!("abc002", "abc2", Ordering::Less);
-    validate!("abc002g", "abc002", Ordering::Greater);
-    validate!("abc002g", "abc02g", Ordering::Less);
-    validate!("abc002.txt", "abc02.txt", Ordering::Less);
-    validate!("abc005", "abc012", Ordering::Less);
-    validate!("abc02", "abc002", Ordering::Greater);
-    validate!("abc002.txt", "abc02.txt", Ordering::Less);
-    validate!("GHI1abc2.txt", "ghi1abc2.txt", Ordering::Less);
-    validate!("a0", "a00", Ordering::Less);
-    validate!("a00b", "a0b", Ordering::Less);
-    validate!("a0b", "a00b", Ordering::Greater);
-    validate!("a-b", "azb", Ordering::Greater);
+    /// Verify the behavior of the `wcsfilecmp()` function.
+    #[test]
+    fn test_wcsfilecmp() {
+        macro_rules! validate {
+            ($str1:expr, $str2:expr, $expected_rc:expr) => {
+                assert_eq!(wcsfilecmp(L!($str1), L!($str2)), $expected_rc)
+            };
+        }
+
+        // Not using L as suffix because the macro munges error locations.
+        validate!("", "", Ordering::Equal);
+        validate!("", "def", Ordering::Less);
+        validate!("abc", "", Ordering::Greater);
+        validate!("abc", "def", Ordering::Less);
+        validate!("abc", "DEF", Ordering::Less);
+        validate!("DEF", "abc", Ordering::Greater);
+        validate!("abc", "abc", Ordering::Equal);
+        validate!("ABC", "ABC", Ordering::Equal);
+        validate!("AbC", "abc", Ordering::Less);
+        validate!("AbC", "ABC", Ordering::Greater);
+        validate!("def", "abc", Ordering::Greater);
+        validate!("1ghi", "1gHi", Ordering::Greater);
+        validate!("1ghi", "2ghi", Ordering::Less);
+        validate!("1ghi", "01ghi", Ordering::Greater);
+        validate!("1ghi", "02ghi", Ordering::Less);
+        validate!("01ghi", "1ghi", Ordering::Less);
+        validate!("1ghi", "002ghi", Ordering::Less);
+        validate!("002ghi", "1ghi", Ordering::Greater);
+        validate!("abc01def", "abc1def", Ordering::Less);
+        validate!("abc1def", "abc01def", Ordering::Greater);
+        validate!("abc12", "abc5", Ordering::Greater);
+        validate!("51abc", "050abc", Ordering::Greater);
+        validate!("abc5", "abc12", Ordering::Less);
+        validate!("5abc", "12ABC", Ordering::Less);
+        validate!("abc0789", "abc789", Ordering::Less);
+        validate!("abc0xA789", "abc0xA0789", Ordering::Greater);
+        validate!("abc002", "abc2", Ordering::Less);
+        validate!("abc002g", "abc002", Ordering::Greater);
+        validate!("abc002g", "abc02g", Ordering::Less);
+        validate!("abc002.txt", "abc02.txt", Ordering::Less);
+        validate!("abc005", "abc012", Ordering::Less);
+        validate!("abc02", "abc002", Ordering::Greater);
+        validate!("abc002.txt", "abc02.txt", Ordering::Less);
+        validate!("GHI1abc2.txt", "ghi1abc2.txt", Ordering::Less);
+        validate!("a0", "a00", Ordering::Less);
+        validate!("a00b", "a0b", Ordering::Less);
+        validate!("a0b", "a00b", Ordering::Greater);
+        validate!("a-b", "azb", Ordering::Greater);
+    }
 }

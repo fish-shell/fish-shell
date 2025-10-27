@@ -18,7 +18,6 @@ runs:
   steps:
     - shell: bash
       env:
-        include_sphinx: ${{ inputs.include_sphinx }}
         include_pcre: ${{ inputs.include_pcre }}
       run: |
         set -x
@@ -26,7 +25,6 @@ runs:
         sudo apt install \
           gettext \
           $(if $include_pcre; then echo libpcre2-dev; fi) \
-          $(if $include_sphinx; then echo python3-sphinx; fi) \
         ;
         : "system test dependencies"
         sudo apt install \
@@ -39,5 +37,5 @@ runs:
           tmux \
           wget \
         ;
-    - uses: ./.github/actions/install-sphinx-markdown-builder
+    - uses: ./.github/actions/install-sphinx
       if: ${{ inputs.include_sphinx == 'true' }}

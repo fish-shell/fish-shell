@@ -30,10 +30,11 @@ end
 function __fish_set_is_locale -d 'Test if We are specifying a locale value for the prompt'
     set -l cmd (commandline -pxc)
     set -e cmd[1]
+    set -l locale_vars (__fish_locale_vars)
     for i in $cmd
         switch $i
 
-            case LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY LC_NUMERIC LC_TIME
+            case $locale_vars
                 return 0
 
             case '-*'

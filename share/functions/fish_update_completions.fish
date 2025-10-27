@@ -1,29 +1,37 @@
 function fish_update_completions --description "Update man-page based completions"
+    set -l detach false
+    if test "$fish_update_completions_detach" = true
+        set detach true
+    end
     set -l python (__fish_anypython)
     or begin
         printf "%s\n" (_ "python executable not found") >&2
         return 1
     end
 
-    function __fish_update_completions -V python
-        set -l user_args $argv[..-2]
-        set -l tools $argv[-1]
-        set -l update_args \
-            # Don't write .pyc files.
-            -B \
-            $tools/create_manpage_completions.py \
-            # Use the manpath
-            --manpath \
-            # Clean up old completions
-            --cleanup-in $__fish_user_data_dir/generated_completions \
-            --cleanup-in $__fish_cache_dir/generated_completions \
+    set -l update_argv \
+        $python \
+        # Don't write .pyc files.
+        -B \
+        - \
+        # Use the manpath
+        --manpath \
+        # Clean up old completions
+        --cleanup-in $__fish_user_data_dir/generated_completions \
+        --cleanup-in $__fish_cache_dir/generated_completions
+
+    __fish_data_with_file tools/create_manpage_completions.py cat |
+        if $detach
+            # Run python directly in the background and swallow all output
+            # Orphan the job so that it continues to run in case of an early exit (#6269)
+            # Note that some distros split the manpage completion script out (#7183).
+            # In that case, we silence Python's failure.
+            /bin/sh -c '
+                c=$(cat)
+                ( printf %s "$c" | "$@" ) >/dev/null 2>&1 &
+            ' -- $update_argv $argv
+        else
             # Display progress
-            --progress \
-            $user_args
-        $python $update_args
-    end
-    __fish_data_with_directory tools \
-        'create_manpage_completions\.py|deroff\.py' \
-        __fish_update_completions $argv
-    __fish_with_status functions --erase __fish_update_completions
+            $update_argv --progress $argv
+        end
 end

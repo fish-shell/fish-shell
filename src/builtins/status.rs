@@ -1,7 +1,8 @@
 use std::os::unix::prelude::*;
 
 use super::prelude::*;
-use crate::common::{PROGRAM_NAME, bytes2wcstring, get_executable_path};
+use crate::common::{bytes2wcstring, get_program_name};
+use crate::env::config_paths::get_fish_path;
 use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
     JobControl, get_job_control_mode, get_login, is_interactive_session, set_job_control_mode,
@@ -9,9 +10,8 @@ use crate::proc::{
 use crate::reader::reader_in_interactive_read;
 use crate::tty_handoff::{get_scroll_content_up_capability, xtversion};
 use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
+use cfg_if::cfg_if;
 use libc::F_OK;
-use nix::NixPath;
-use nix::errno::Errno;
 
 macro_rules! str_enum {
     ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
@@ -337,6 +337,12 @@ use rust_embed::RustEmbed;
 #[prefix = "man/man1/"]
 struct Docs;
 
+#[cfg(all(using_cmake, feature = "embed-data"))]
+#[derive(RustEmbed)]
+#[folder = "$FISH_CMAKE_BINARY_DIR/share"]
+#[include = "__fish_build_paths.fish"]
+struct CMakeBinaryDir;
+
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     localizable_consts!(
         #[allow(dead_code)]
@@ -472,25 +478,33 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
-            #[cfg(feature = "embed-data")]
-            {
-                let arg = crate::common::wcs2bytes(args[0]);
-                let arg = std::str::from_utf8(&arg).unwrap();
-                let Some(emfile) = crate::autoload::Asset::get(arg).or_else(|| Docs::get(arg))
-                else {
+            cfg_if!(
+                if #[cfg(not(feature = "embed-data"))] {
+                    streams
+                        .err
+                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
                     return Err(STATUS_CMD_ERROR);
-                };
-                let src = bytes2wcstring(&emfile.data);
-                streams.out.append(src);
-                return Ok(SUCCESS);
-            }
-            #[cfg(not(feature = "embed-data"))]
-            {
-                streams
-                    .err
-                    .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
-                return Err(STATUS_CMD_ERROR);
-            }
+                } else {
+                    let arg = crate::common::wcs2bytes(args[0]);
+                    let arg = std::str::from_utf8(&arg).unwrap();
+                    cfg_if!(
+                        if #[cfg(using_cmake)] {
+                            let emfile = CMakeBinaryDir::get(arg);
+                        } else {
+                            let emfile = None;
+                        }
+                    );
+                    let Some(emfile) = emfile
+                        .or_else(|| crate::autoload::Asset::get(arg))
+                        .or_else(|| Docs::get(arg))
+                    else {
+                        return Err(STATUS_CMD_ERROR);
+                    };
+                    let src = bytes2wcstring(&emfile.data);
+                    streams.out.append(src);
+                    return Ok(SUCCESS);
+                }
+            );
         }
         c @ STATUS_LIST_FILES => {
             if args.len() > 1 {
@@ -503,37 +517,40 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
-            #[cfg(feature = "embed-data")]
-            {
-                use crate::util::wcsfilecmp_glob;
 
-                let mut paths = vec![];
-                let arg = crate::common::wcs2bytes(args.first().unwrap_or(&L!("")));
-                let arg = std::str::from_utf8(&arg).unwrap();
-                for path in crate::autoload::Asset::iter().chain(Docs::iter()) {
-                    if arg.is_empty() || path.starts_with(arg) {
-                        paths.push(bytes2wcstring(path.as_bytes()));
+            cfg_if!(
+                if #[cfg(not(feature = "embed-data"))] {
+                    streams
+                        .err
+                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
+                    return Err(STATUS_CMD_ERROR);
+                } else {
+                    use crate::util::wcsfilecmp_glob;
+
+                    let mut paths = vec![];
+                    let arg = crate::common::wcs2bytes(args.first().unwrap_or(&L!("")));
+                    let arg = std::str::from_utf8(&arg).unwrap();
+                    let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
+                    #[cfg(using_cmake)]
+                    let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
+                    for path in embedded_files {
+                        if arg.is_empty() || path.starts_with(arg) {
+                            paths.push(bytes2wcstring(path.as_bytes()));
+                        }
+                    }
+
+                    paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
+                    for path in &paths {
+                        streams.out.appendln(path);
+                    }
+
+                    if !paths.is_empty() {
+                        return Ok(SUCCESS);
+                    } else {
+                        return Err(STATUS_CMD_ERROR);
                     }
                 }
-
-                paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
-                for path in &paths {
-                    streams.out.appendln(path);
-                }
-
-                if !paths.is_empty() {
-                    return Ok(SUCCESS);
-                } else {
-                    return Err(STATUS_CMD_ERROR);
-                }
-            }
-            #[cfg(not(feature = "embed-data"))]
-            {
-                streams
-                    .err
-                    .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
-                return Err(STATUS_CMD_ERROR);
-            }
+            );
         }
         c @ STATUS_TEST_TERMINAL_FEATURE => {
             if args.len() != 1 {
@@ -580,7 +597,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     let host = bytes2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
                     let profile = bytes2wcstring(env!("BUILD_PROFILE").as_bytes());
                     streams.out.append(L!("Build system: "));
-                    let buildsystem = match option_env!("CMAKE") {
+                    let buildsystem = match option_env!("FISH_CMAKE_BINARY_DIR") {
                         Some("1") => "CMake",
                         _ => "Cargo",
                     };
@@ -709,7 +726,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     if !command.is_empty() {
                         streams.out.appendln(command);
                     } else {
-                        streams.out.appendln(*PROGRAM_NAME.get().unwrap());
+                        streams.out.appendln(get_program_name());
                     }
                 }
                 STATUS_CURRENT_COMMANDLINE => {
@@ -718,31 +735,20 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     streams.out.append_char('\n');
                 }
                 STATUS_FISH_PATH => {
-                    let path = get_executable_path("fish");
-                    if path.is_empty() {
-                        streams.err.append(sprintf!(
-                            "%s: Could not get executable path: '%s'\n",
-                            cmd,
-                            Errno::last().to_string()
-                        ));
-                    }
-                    if path.is_absolute() {
-                        let path = bytes2wcstring(path.as_os_str().as_bytes());
-                        // This is an absolute path, we can canonicalize it
-                        let real = match wrealpath(&path) {
-                            Some(p) if waccess(&p, F_OK) == 0 => p,
-                            // realpath did not work, just append the path
-                            // - maybe this was obtained via $PATH?
-                            _ => path,
-                        };
-
-                        streams.out.append(real);
-                        streams.out.append_char('\n');
-                    } else {
-                        // This is a relative path, we can't canonicalize it
-                        let path = bytes2wcstring(path.as_os_str().as_bytes());
-                        streams.out.appendln(path);
-                    }
+                    use crate::env::config_paths::FishPath::*;
+                    let result = match get_fish_path() {
+                        Absolute(path) => {
+                            let path = bytes2wcstring(path.as_os_str().as_bytes());
+                            Cow::Owned(match wrealpath(&path) {
+                                Some(p) if waccess(&p, F_OK) == 0 => p,
+                                // realpath did not work, just append the path
+                                // - maybe this was obtained via $PATH?
+                                _ => path,
+                            })
+                        }
+                        LookUpInPath => Cow::Borrowed(get_program_name()),
+                    };
+                    streams.out.appendln(result);
                 }
                 STATUS_TERMINAL => {
                     let xtversion = xtversion().unwrap_or_default();

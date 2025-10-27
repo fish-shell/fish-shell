@@ -45,12 +45,12 @@ function funced --description 'Edit function definition'
 
     if test "$editor" = fish
         if functions -q -- $funcname
-            functions --no-details -- $funcname | __fish_indent --only-unindent | __fish_indent --no-indent | read -z init
+            functions --no-details -- $funcname | fish_indent --only-unindent | fish_indent --no-indent | read -z init
         end
 
         set -l prompt 'printf "%s%s%s> " (set_color green) $funcname (set_color normal)'
         if read -p $prompt -c "$init" --shell cmd
-            echo -n $cmd | __fish_indent --only-unindent | read -lz cmd
+            echo -n $cmd | fish_indent --only-unindent | read -lz cmd
             eval "$cmd"
         end
         if set -q _flag_save

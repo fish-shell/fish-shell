@@ -97,3 +97,28 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn plain() {
+        let _cleanup = test_init();
+        validate!(["string", "join"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "join", ""], STATUS_CMD_ERROR, "");
+        validate!(["string", "join", "", "", "", ""], STATUS_CMD_OK, "\n");
+        validate!(["string", "join", "", "a", "b", "c"], STATUS_CMD_OK, "abc\n");
+        validate!(["string", "join", ".", "fishshell", "com"], STATUS_CMD_OK, "fishshell.com\n");
+        validate!(["string", "join", "/", "usr"], STATUS_CMD_ERROR, "usr\n");
+        validate!(["string", "join", "/", "usr", "local", "bin"], STATUS_CMD_OK, "usr/local/bin\n");
+        validate!(["string", "join", "...", "3", "2", "1"], STATUS_CMD_OK, "3...2...1\n");
+        validate!(["string", "join", "-q"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "join", "-q", "."], STATUS_CMD_ERROR, "");
+        validate!(["string", "join", "-q", ".", "."], STATUS_CMD_ERROR, "");
+    }
+}

@@ -136,7 +136,7 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/
         PATTERN "*.1"
         PATTERN ${CONDEMNED_PAGE} EXCLUDE)
 
-install(PROGRAMS share/tools/create_manpage_completions.py share/tools/deroff.py
+install(PROGRAMS share/tools/create_manpage_completions.py
         DESTINATION ${rel_datadir}/fish/tools/)
 
 install(DIRECTORY share/tools/web_config

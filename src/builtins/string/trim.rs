@@ -99,3 +99,40 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn plain() {
+        let _cleanup = test_init();
+        validate!(["string", "trim"], STATUS_CMD_ERROR, "");
+        validate!(["string", "trim", ""], STATUS_CMD_ERROR, "\n");
+        validate!(["string", "trim", " "], STATUS_CMD_OK, "\n");
+        validate!(["string", "trim", "  \x0C\n\r\t"], STATUS_CMD_OK, "\n");
+        validate!(["string", "trim", " a"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "a "], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", " a "], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "-l", " a"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "-l", "a "], STATUS_CMD_ERROR, "a \n");
+        validate!(["string", "trim", "-l", " a "], STATUS_CMD_OK, "a \n");
+        validate!(["string", "trim", "-r", " a"], STATUS_CMD_ERROR, " a\n");
+        validate!(["string", "trim", "-r", "a "], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "-r", " a "], STATUS_CMD_OK, " a\n");
+        validate!(["string", "trim", "-c", ".", " a"], STATUS_CMD_ERROR, " a\n");
+        validate!(["string", "trim", "-c", ".", "a "], STATUS_CMD_ERROR, "a \n");
+        validate!(["string", "trim", "-c", ".", " a "], STATUS_CMD_ERROR, " a \n");
+        validate!(["string", "trim", "-c", ".", ".a"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "-c", ".", "a."], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "-c", ".", ".a."], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "-c", "\\/", "/a\\"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "-c", "\\/", "a/"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "-c", "\\/", "\\a/"], STATUS_CMD_OK, "a\n");
+        validate!(["string", "trim", "-c", "", ".a."], STATUS_CMD_ERROR, ".a.\n");
+    }
+}

@@ -10,11 +10,13 @@ Deprecations and removed features
 ---------------------------------
 
 - Fish now assumes UTF-8 everywhere, regardless of locale settings. Input bytes which are not valid UTF-8 should still be round-tripped correctly.
+- On systems where no multi-byte locale is available, fish will no longer automatically fall back to using ASCII replacements for Unicode symbols like ``…``.
 
 Interactive improvements
 ------------------------
 - :doc:`fish_config prompt {choose,save} <cmds/fish_config>` have been taught to reset :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` in addition to the other prompt functions (:issue:`11937`).
 - Fish now hides the portion of a multiline prompt that is scrolled out of view due to a huge command line. This prevents duplicate lines after repainting with partially visible prompt (:issue:`11911`).
+- On macOS, fish sets :envvar:`MANPATH` correctly also when that variable was already present in the environment (:issue:`10684`).
 
 Scripting improvements
 ----------------------
@@ -25,8 +27,16 @@ Other improvements
 
 For distributors
 ----------------
+- Release tags and source code tarballs are GPG-signed again  (:issue:`11996`).
 - The minimum supported Rust version (MSRV) has been updated to 1.85.
 - Fixed saving/loading of universal variables on Cygwin (:issue:`11948`).
+- The standalone build mode has been made the default.
+  This means that the files in ``/usr/share/fish`` will generally not be used anymore, with some exceptions.
+  For now, they are still installed redundantly to avoid breaking shells when upgrading.
+  This change means that future upgrades will no longer break running shells when an internal function has changed.
+  To turn this off (which should not be necessary),
+  patch out ``embed-data`` from ``cmake/Rust.cmake``.
+  This option will be removed in future.
 
 
 fish 4.1.3 (released ???)
@@ -36,7 +46,7 @@ This release fixes the following regressions identified in 4.1.0:
 
 - Crash on invalid :doc:`function <cmds/function>` command (:issue:`11912`).
 - Fixed the fish ``man`` function for the commands ``!`` ``.`` ``:`` ``[`` (:issue:`11955`).
-- Fixed build on Illumos (:issue:`11982`).
+- Fixed some build issues on Illumos (:issue:`11982`).
 
 as well as the following regressions identified in 4.0.0:
 

@@ -9,7 +9,7 @@ use crate::{
     },
 };
 use errno::errno;
-use libc::{LOCK_EX, LOCK_SH, c_int, flock};
+use libc::{LOCK_EX, LOCK_SH, c_int};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{
     ffi::CString,
@@ -145,7 +145,7 @@ impl LockedFile {
         let dir_fd = wopen_cloexec(dir_path, OFlag::O_RDONLY, Mode::empty())?;
 
         // Try locking the directory. Retry if locking was interrupted.
-        while unsafe { flock(dir_fd.as_raw_fd(), locking_mode.flock_op()) } == -1 {
+        while unsafe { libc::flock(dir_fd.as_raw_fd(), locking_mode.flock_op()) } == -1 {
             let err = std::io::Error::last_os_error();
             if err.kind() != std::io::ErrorKind::Interrupted {
                 return Err(err);

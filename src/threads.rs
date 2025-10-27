@@ -109,14 +109,6 @@ fn thread_id() -> usize {
     id
 }
 
-#[test]
-fn test_thread_ids() {
-    let start_thread_id = thread_id();
-    assert_eq!(start_thread_id, thread_id());
-    let spawned_thread_id = std::thread::spawn(thread_id).join();
-    assert_ne!(start_thread_id, spawned_thread_id.unwrap());
-}
-
 #[inline(always)]
 pub fn is_main_thread() -> bool {
     thread_id() == main_thread_id()
@@ -677,67 +669,250 @@ impl Debounce {
     }
 }
 
-#[test]
-/// Verify that spawning a thread normally via [`std::thread::spawn()`] causes the calling thread's
-/// sigmask to be inherited by the newly spawned thread.
-fn std_thread_inherits_sigmask() {
-    // First change our own thread mask
-    let (saved_set, t1_set) = unsafe {
-        let mut new_set = MaybeUninit::uninit();
-        let new_set = new_set.as_mut_ptr();
-        libc::sigemptyset(new_set);
-        libc::sigaddset(new_set, libc::SIGILL); // mask bad jump
-
-        let mut saved_set: libc::sigset_t = std::mem::zeroed();
-        let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set as *mut _);
-        assert_eq!(result, 0, "Failed to set thread mask!");
-
-        // Now get the current set that includes the masked SIGILL
-        let mut t1_set: libc::sigset_t = std::mem::zeroed();
-        let mut empty_set = MaybeUninit::uninit();
-        let empty_set = empty_set.as_mut_ptr();
-        libc::sigemptyset(empty_set);
-        let result = libc::pthread_sigmask(libc::SIG_UNBLOCK, empty_set, &mut t1_set as *mut _);
-        assert_eq!(result, 0, "Failed to get own altered thread mask!");
-
-        (saved_set, t1_set)
+#[cfg(test)]
+mod tests {
+    use super::{Debounce, iothread_drain_all, iothread_service_main, spawn, thread_id};
+    use crate::global_safety::RelaxedAtomicBool;
+    use crate::reader::{Reader, fake_scoped_reader};
+    use crate::tests::prelude::*;
+    use std::mem::MaybeUninit;
+    use std::sync::{
+        Arc, Condvar, Mutex,
+        atomic::{AtomicI32, AtomicU32, Ordering},
     };
+    use std::time::Duration;
 
-    // Launch a new thread that can access existing variables
-    let t2_set = std::thread::scope(|_| {
-        unsafe {
-            // Set a new thread sigmask and verify that the old one is what we expect it to be
+    #[test]
+    fn test_thread_ids() {
+        let start_thread_id = thread_id();
+        assert_eq!(start_thread_id, thread_id());
+        let spawned_thread_id = std::thread::spawn(thread_id).join();
+        assert_ne!(start_thread_id, spawned_thread_id.unwrap());
+    }
+
+    #[test]
+    /// Verify that spawning a thread normally via [`std::thread::spawn()`] causes the calling thread's
+    /// sigmask to be inherited by the newly spawned thread.
+    fn std_thread_inherits_sigmask() {
+        // First change our own thread mask
+        let (saved_set, t1_set) = unsafe {
             let mut new_set = MaybeUninit::uninit();
             let new_set = new_set.as_mut_ptr();
             libc::sigemptyset(new_set);
-            let mut saved_set2: libc::sigset_t = std::mem::zeroed();
-            let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set2 as *mut _);
-            assert_eq!(result, 0, "Failed to get existing sigmask for new thread");
-            saved_set2
+            libc::sigaddset(new_set, libc::SIGILL); // mask bad jump
+
+            let mut saved_set: libc::sigset_t = std::mem::zeroed();
+            let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set as *mut _);
+            assert_eq!(result, 0, "Failed to set thread mask!");
+
+            // Now get the current set that includes the masked SIGILL
+            let mut t1_set: libc::sigset_t = std::mem::zeroed();
+            let mut empty_set = MaybeUninit::uninit();
+            let empty_set = empty_set.as_mut_ptr();
+            libc::sigemptyset(empty_set);
+            let result = libc::pthread_sigmask(libc::SIG_UNBLOCK, empty_set, &mut t1_set as *mut _);
+            assert_eq!(result, 0, "Failed to get own altered thread mask!");
+
+            (saved_set, t1_set)
+        };
+
+        // Launch a new thread that can access existing variables
+        let t2_set = std::thread::scope(|_| {
+            unsafe {
+                // Set a new thread sigmask and verify that the old one is what we expect it to be
+                let mut new_set = MaybeUninit::uninit();
+                let new_set = new_set.as_mut_ptr();
+                libc::sigemptyset(new_set);
+                let mut saved_set2: libc::sigset_t = std::mem::zeroed();
+                let result =
+                    libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set2 as *mut _);
+                assert_eq!(result, 0, "Failed to get existing sigmask for new thread");
+                saved_set2
+            }
+        });
+
+        // Compare the sigset_t values
+        unsafe {
+            let t1_sigset_slice = std::slice::from_raw_parts(
+                &t1_set as *const _ as *const u8,
+                core::mem::size_of::<libc::sigset_t>(),
+            );
+            let t2_sigset_slice = std::slice::from_raw_parts(
+                &t2_set as *const _ as *const u8,
+                core::mem::size_of::<libc::sigset_t>(),
+            );
+
+            assert_eq!(t1_sigset_slice, t2_sigset_slice);
+        };
+
+        // Restore the thread sigset so we don't affect `cargo test`'s multithreaded test harnesses
+        unsafe {
+            let result = libc::pthread_sigmask(
+                libc::SIG_SETMASK,
+                &saved_set as *const _,
+                core::ptr::null_mut(),
+            );
+            assert_eq!(result, 0, "Failed to restore sigmask!");
         }
-    });
+    }
 
-    // Compare the sigset_t values
-    unsafe {
-        let t1_sigset_slice = std::slice::from_raw_parts(
-            &t1_set as *const _ as *const u8,
-            core::mem::size_of::<libc::sigset_t>(),
-        );
-        let t2_sigset_slice = std::slice::from_raw_parts(
-            &t2_set as *const _ as *const u8,
-            core::mem::size_of::<libc::sigset_t>(),
-        );
+    #[test]
+    fn test_pthread() {
+        struct Context {
+            val: AtomicI32,
+            condvar: Condvar,
+        }
+        let ctx = Arc::new(Context {
+            val: AtomicI32::new(3),
+            condvar: Condvar::new(),
+        });
+        let mutex = Mutex::new(());
+        let ctx2 = ctx.clone();
+        let made = spawn(move || {
+            ctx2.val.fetch_add(2, Ordering::Release);
+            ctx2.condvar.notify_one();
+            printf!("condvar signalled\n");
+        });
+        assert!(made);
 
-        assert_eq!(t1_sigset_slice, t2_sigset_slice);
-    };
+        let lock = mutex.lock().unwrap();
+        let (_lock, timeout) = ctx
+            .condvar
+            .wait_timeout_while(lock, Duration::from_secs(5), |()| {
+                printf!("looping with lock held\n");
+                if ctx.val.load(Ordering::Acquire) != 5 {
+                    printf!("test_pthread: value did not yet reach goal\n");
+                    return true;
+                }
+                false
+            })
+            .unwrap();
+        if timeout.timed_out() {
+            panic!(concat!(
+                "Timeout waiting for condition variable to be notified! ",
+                "Does the platform support signalling a condvar without the mutex held?"
+            ));
+        }
+    }
 
-    // Restore the thread sigset so we don't affect `cargo test`'s multithreaded test harnesses
-    unsafe {
-        let result = libc::pthread_sigmask(
-            libc::SIG_SETMASK,
-            &saved_set as *const _,
-            core::ptr::null_mut(),
-        );
-        assert_eq!(result, 0, "Failed to restore sigmask!");
+    #[test]
+    #[serial]
+    fn test_debounce() {
+        let _cleanup = test_init();
+        let parser = TestParser::new();
+        // Run 8 functions using a condition variable.
+        // Only the first and last should run.
+        let db = Debounce::new(Duration::from_secs(0));
+        const count: usize = 8;
+
+        struct Context {
+            handler_ran: [RelaxedAtomicBool; count],
+            completion_ran: [RelaxedAtomicBool; count],
+            ready_to_go: Mutex<bool>,
+            cv: Condvar,
+        }
+
+        let ctx = Arc::new(Context {
+            handler_ran: std::array::from_fn(|_i| RelaxedAtomicBool::new(false)),
+            completion_ran: std::array::from_fn(|_i| RelaxedAtomicBool::new(false)),
+            ready_to_go: Mutex::new(false),
+            cv: Condvar::new(),
+        });
+
+        // "Enqueue" all functions. Each one waits until ready_to_go.
+        for idx in 0..count {
+            assert!(!ctx.handler_ran[idx].load());
+            let performer = {
+                let ctx = ctx.clone();
+                move || {
+                    let guard = ctx.ready_to_go.lock().unwrap();
+                    let _guard = ctx.cv.wait_while(guard, |ready| !*ready).unwrap();
+                    ctx.handler_ran[idx].store(true);
+                    idx
+                }
+            };
+            let completer = {
+                let ctx = ctx.clone();
+                move |_ctx: &mut Reader, idx: usize| {
+                    ctx.completion_ran[idx].store(true);
+                }
+            };
+            db.perform_with_completion(performer, completer);
+        }
+
+        // We're ready to go.
+        *ctx.ready_to_go.lock().unwrap() = true;
+        ctx.cv.notify_all();
+
+        // Wait until the last completion is done.
+        let mut reader = fake_scoped_reader(&parser);
+        while !ctx.completion_ran.last().unwrap().load() {
+            iothread_service_main(&mut reader);
+        }
+        iothread_drain_all(&mut reader);
+
+        // Each perform() call may displace an existing queued operation.
+        // Each operation waits until all are queued.
+        // Therefore we expect the last perform() to have run, and at most one more.
+        assert!(ctx.handler_ran.last().unwrap().load());
+        assert!(ctx.completion_ran.last().unwrap().load());
+
+        let mut total_ran = 0;
+        for idx in 0..count {
+            if ctx.handler_ran[idx].load() {
+                total_ran += 1;
+            }
+            assert_eq!(ctx.handler_ran[idx].load(), ctx.completion_ran[idx].load());
+        }
+        assert!(total_ran <= 2);
+    }
+
+    #[test]
+    #[serial]
+    fn test_debounce_timeout() {
+        let _cleanup = test_init();
+        // Verify that debounce doesn't wait forever.
+        // Use a shared_ptr so we don't have to join our threads.
+        let timeout = Duration::from_millis(500);
+
+        struct Data {
+            db: Debounce,
+            exit_ok: Mutex<bool>,
+            cv: Condvar,
+            running: AtomicU32,
+        }
+
+        let data = Arc::new(Data {
+            db: Debounce::new(timeout),
+            exit_ok: Mutex::new(false),
+            cv: Condvar::new(),
+            running: AtomicU32::new(0),
+        });
+
+        // Our background handler. Note this just blocks until exit_ok is set.
+        let handler = {
+            let data = data.clone();
+            move || {
+                data.running.fetch_add(1, Ordering::Relaxed);
+                let guard = data.exit_ok.lock().unwrap();
+                let _guard = data.cv.wait_while(guard, |exit_ok| !*exit_ok);
+            }
+        };
+
+        // Spawn the handler twice. This should not modify the thread token.
+        let token1 = data.db.perform(handler.clone());
+        let token2 = data.db.perform(handler.clone());
+        assert_eq!(token1, token2);
+
+        // Wait 75 msec, then enqueue something else; this should spawn a new thread.
+        std::thread::sleep(timeout + timeout / 2);
+        assert!(data.running.load(Ordering::Relaxed) == 1);
+        let token3 = data.db.perform(handler);
+        assert!(token3 > token2);
+
+        // Release all the threads.
+        let mut exit_ok = data.exit_ok.lock().unwrap();
+        *exit_ok = true;
+        data.cv.notify_all();
     }
 }

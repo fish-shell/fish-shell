@@ -45,7 +45,12 @@ proc-macro2 = "1.0"
 # minimum supported version to 10.12.
 rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
 rsconf = "0.2.2"
-rust-embed = { version = "8.7.2", features = ["deterministic-timestamps"] }
+rust-embed = { version = "8.7.2", features = [
+    "deterministic-timestamps",
+    "include-exclude",
+    "interpolate-folder-path",
+] }
+
 serial_test = { version = "3", default-features = false }
 # We need 0.9.0 specifically for some crash fixes.
 terminfo = "0.9.0"
@@ -102,10 +107,14 @@ portable-atomic.workspace = true
 rust-embed = { workspace = true, optional = true, features = [
     "deterministic-timestamps",
     "debug-embed",
+    "include-exclude",
+    "interpolate-folder-path",
 ] }
 [target.'cfg(not(windows))'.dependencies]
 rust-embed = { workspace = true, optional = true, features = [
     "deterministic-timestamps",
+    "include-exclude",
+    "interpolate-folder-path",
 ] }
 
 [dev-dependencies]

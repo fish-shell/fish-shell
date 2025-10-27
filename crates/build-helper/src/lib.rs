@@ -29,8 +29,7 @@ fn cargo_target_dir() -> Cow<'static, Path> {
 }
 
 pub fn fish_build_dir() -> Cow<'static, Path> {
-    // This is set if using CMake.
-    option_env!("FISH_BUILD_DIR")
+    option_env!("FISH_CMAKE_BINARY_DIR")
         .map(|d| Cow::Borrowed(Path::new(d)))
         .unwrap_or(cargo_target_dir())
 }

@@ -579,7 +579,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     let host = bytes2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
                     let profile = bytes2wcstring(env!("BUILD_PROFILE").as_bytes());
                     streams.out.append(L!("Build system: "));
-                    let buildsystem = match option_env!("CMAKE") {
+                    let buildsystem = match option_env!("FISH_CMAKE_BINARY_DIR") {
                         Some("1") => "CMake",
                         _ => "Cargo",
                     };

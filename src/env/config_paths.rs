@@ -137,57 +137,51 @@ impl ConfigPaths {
         paths
     }
 
-    #[cfg(feature = "embed-data")]
-    fn from_layout(exec_path: DirectoryLayout) -> Self {
-        FLOG!(config, "embed-data feature is active, ignoring data paths");
-        use DirectoryLayout::*;
-        match exec_path {
-            RelocatableTree(exec_path_parent) => Self {
-                sysconf: exec_path_parent.parent().unwrap().join("etc/fish"),
-                bin: Some(exec_path_parent.to_owned()),
-            },
-            BuildDirectory(exec_path_parent) => Self {
-                sysconf: workspace_root().join("etc"),
-                bin: Some(exec_path_parent.to_owned()),
-            },
-            DefaultLayout(exec_path_parent) => Self {
-                sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
-                bin: exec_path_parent,
-            },
-        }
-    }
-
-    #[cfg(not(feature = "embed-data"))]
     fn from_layout(exec_path: DirectoryLayout) -> Self {
         let workspace_root = workspace_root();
+
+        #[cfg(feature = "embed-data")]
+        FLOG!(config, "embed-data feature is active, ignoring data paths");
 
         use DirectoryLayout::*;
         match exec_path {
             RelocatableTree(exec_path_parent) => {
                 let prefix = exec_path_parent.parent().unwrap();
-                let doc = prefix.join("share/doc/fish");
                 Self {
                     sysconf: prefix.join("etc/fish"),
                     bin: Some(exec_path_parent.to_owned()),
+                    #[cfg(not(feature = "embed-data"))]
                     data: prefix.join("share/fish"),
                     // The docs dir may not exist; in that case fall back to the compiled in path.
-                    doc: if doc.exists() {
-                        doc
-                    } else {
-                        PathBuf::from(DOC_DIR)
+                    #[cfg(not(feature = "embed-data"))]
+                    doc: {
+                        let doc = prefix.join("share/doc/fish");
+                        if doc.exists() {
+                            doc
+                        } else {
+                            PathBuf::from(DOC_DIR)
+                        }
                     },
                 }
             }
             BuildDirectory(exec_path_parent) => Self {
                 sysconf: workspace_root.join("etc"),
                 bin: Some(exec_path_parent.to_owned()),
+                #[cfg(not(feature = "embed-data"))]
                 data: workspace_root.join("share"),
+                #[cfg(not(feature = "embed-data"))]
                 doc: workspace_root.join("user_doc/html"),
             },
-            DefaultLayout(_exec_path_parent) => Self {
+            #[allow(unused_variables)]
+            DefaultLayout(exec_path_parent) => Self {
                 sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
+                #[cfg(feature = "embed-data")]
+                bin: exec_path_parent,
+                #[cfg(not(feature = "embed-data"))]
                 bin: Some(PathBuf::from(env!("BINDIR"))),
+                #[cfg(not(feature = "embed-data"))]
                 data: PathBuf::from(env!("DATADIR")).join("fish"),
+                #[cfg(not(feature = "embed-data"))]
                 doc: DOC_DIR.into(),
             },
         }

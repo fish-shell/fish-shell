@@ -3290,9 +3290,6 @@ msgstr "保存函数"
 msgid "Save the current definition of all specified functions to file"
 msgstr "将所有指定函数的当前定义保存到文件"
 
-msgid "Search back or move cursor up 1 line"
-msgstr "向后搜索或向上移动光标 1 行"
-
 msgid "Searchable history"
 msgstr "可搜索历史"
 

@@ -202,6 +202,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("transpose-words"), ReadlineCmd::TransposeWords),
     make_md(L!("undo"), ReadlineCmd::Undo),
     make_md(L!("up-line"), ReadlineCmd::UpLine),
+    make_md(L!("up-or-search"), ReadlineCmd::UpOrSearch),
     make_md(L!("upcase-selection"), ReadlineCmd::UpcaseSelection),
     make_md(L!("upcase-word"), ReadlineCmd::UpcaseWord),
     make_md(L!("yank"), ReadlineCmd::Yank),

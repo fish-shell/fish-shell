@@ -198,16 +198,11 @@ fn setup_paths() {
         PathBuf::from(env_prefix.unwrap_or("/usr/local".to_string()))
     });
 
-    let datadir = join_if_relative(&prefix, env_var("DATADIR").unwrap_or("share/".to_string()));
-    rsconf::rebuild_if_env_changed("DATADIR");
-    #[cfg(not(feature = "embed-data"))]
-    rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
-
     overridable_path("SYSCONFDIR", |env_sysconfdir| {
         join_if_relative(
-            &datadir,
+            &prefix,
             env_sysconfdir.unwrap_or(
-                // Embedded builds use "/etc," not "./share/etc".
+                // Embedded builds use "/etc," not "$PREFIX/etc".
                 if cfg!(feature = "embed-data") {
                     "/etc/"
                 } else {
@@ -220,6 +215,9 @@ fn setup_paths() {
 
     #[cfg(not(feature = "embed-data"))]
     {
+        let datadir = overridable_path("DATADIR", |env_datadir| {
+            join_if_relative(&prefix, env_datadir.unwrap_or("share/".to_string()))
+        });
         overridable_path("BINDIR", |env_bindir| {
             join_if_relative(&prefix, env_bindir.unwrap_or("bin/".to_string()))
         });

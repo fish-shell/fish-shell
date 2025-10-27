@@ -126,7 +126,7 @@ impl ConfigPaths {
             "paths.bin: %s",
             paths
                 .bin
-                .clone()
+                .as_ref()
                 .map(|x| x.display().to_string())
                 .unwrap_or("|not found|".to_string()),
         );

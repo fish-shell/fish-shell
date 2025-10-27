@@ -10,6 +10,7 @@ use crate::parser::Parser;
 use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_path};
+use cfg_if::cfg_if;
 use lru::LruCache;
 #[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
@@ -44,15 +45,17 @@ pub struct Autoload {
 #[folder = "share/"]
 pub struct Asset;
 
-#[cfg(feature = "embed-data")]
-pub fn has_asset(cmd: &str) -> bool {
-    Asset::get(cmd).is_some()
-}
-
-#[cfg(not(feature = "embed-data"))]
-pub fn has_asset(_cmd: &str) -> bool {
-    false
-}
+cfg_if!(
+    if #[cfg(feature = "embed-data")] {
+        pub fn has_asset(cmd: &str) -> bool {
+            Asset::get(cmd).is_some()
+        }
+    } else {
+        pub fn has_asset(_cmd: &str) -> bool {
+            false
+        }
+    }
+);
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum AssetDir {
@@ -347,10 +350,13 @@ impl AutoloadFileCache {
 
         // Check hits.
         if let Some(value) = self.known_files.get(cmd) {
-            #[cfg(feature = "embed-data")]
-            let embedded = matches!(value.file, AutoloadableFileInfo::EmbeddedPath(_));
-            #[cfg(not(feature = "embed-data"))]
-            let embedded = false;
+            cfg_if!(
+                if #[cfg(feature = "embed-data")] {
+                    let embedded = matches!(value.file, AutoloadableFileInfo::EmbeddedPath(_));
+                } else {
+                    let embedded = false;
+                }
+            );
             if allow_stale
                 || embedded
                 || Self::is_fresh(value.last_checked, Self::current_timestamp())

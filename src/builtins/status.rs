@@ -10,6 +10,7 @@ use crate::proc::{
 use crate::reader::reader_in_interactive_read;
 use crate::tty_handoff::{get_scroll_content_up_capability, xtversion};
 use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
+use cfg_if::cfg_if;
 use libc::F_OK;
 
 macro_rules! str_enum {
@@ -471,25 +472,24 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
-            #[cfg(feature = "embed-data")]
-            {
-                let arg = crate::common::wcs2bytes(args[0]);
-                let arg = std::str::from_utf8(&arg).unwrap();
-                let Some(emfile) = crate::autoload::Asset::get(arg).or_else(|| Docs::get(arg))
-                else {
+            cfg_if!(
+                if #[cfg(not(feature = "embed-data"))] {
+                    streams
+                        .err
+                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
                     return Err(STATUS_CMD_ERROR);
-                };
-                let src = bytes2wcstring(&emfile.data);
-                streams.out.append(src);
-                return Ok(SUCCESS);
-            }
-            #[cfg(not(feature = "embed-data"))]
-            {
-                streams
-                    .err
-                    .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
-                return Err(STATUS_CMD_ERROR);
-            }
+                } else {
+                    let arg = crate::common::wcs2bytes(args[0]);
+                    let arg = std::str::from_utf8(&arg).unwrap();
+                    let Some(emfile) = crate::autoload::Asset::get(arg).or_else(|| Docs::get(arg))
+                    else {
+                        return Err(STATUS_CMD_ERROR);
+                    };
+                    let src = bytes2wcstring(&emfile.data);
+                    streams.out.append(src);
+                    return Ok(SUCCESS);
+                }
+            );
         }
         c @ STATUS_LIST_FILES => {
             if args.len() > 1 {
@@ -502,37 +502,37 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
-            #[cfg(feature = "embed-data")]
-            {
-                use crate::util::wcsfilecmp_glob;
 
-                let mut paths = vec![];
-                let arg = crate::common::wcs2bytes(args.first().unwrap_or(&L!("")));
-                let arg = std::str::from_utf8(&arg).unwrap();
-                for path in crate::autoload::Asset::iter().chain(Docs::iter()) {
-                    if arg.is_empty() || path.starts_with(arg) {
-                        paths.push(bytes2wcstring(path.as_bytes()));
+            cfg_if!(
+                if #[cfg(not(feature = "embed-data"))] {
+                    streams
+                        .err
+                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
+                    return Err(STATUS_CMD_ERROR);
+                } else {
+                    use crate::util::wcsfilecmp_glob;
+
+                    let mut paths = vec![];
+                    let arg = crate::common::wcs2bytes(args.first().unwrap_or(&L!("")));
+                    let arg = std::str::from_utf8(&arg).unwrap();
+                    for path in crate::autoload::Asset::iter().chain(Docs::iter()) {
+                        if arg.is_empty() || path.starts_with(arg) {
+                            paths.push(bytes2wcstring(path.as_bytes()));
+                        }
+                    }
+
+                    paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
+                    for path in &paths {
+                        streams.out.appendln(path);
+                    }
+
+                    if !paths.is_empty() {
+                        return Ok(SUCCESS);
+                    } else {
+                        return Err(STATUS_CMD_ERROR);
                     }
                 }
-
-                paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
-                for path in &paths {
-                    streams.out.appendln(path);
-                }
-
-                if !paths.is_empty() {
-                    return Ok(SUCCESS);
-                } else {
-                    return Err(STATUS_CMD_ERROR);
-                }
-            }
-            #[cfg(not(feature = "embed-data"))]
-            {
-                streams
-                    .err
-                    .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
-                return Err(STATUS_CMD_ERROR);
-            }
+            );
         }
         c @ STATUS_TEST_TERMINAL_FEATURE => {
             if args.len() != 1 {

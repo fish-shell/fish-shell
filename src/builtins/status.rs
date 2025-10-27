@@ -579,10 +579,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     let host = bytes2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
                     let profile = bytes2wcstring(env!("BUILD_PROFILE").as_bytes());
                     streams.out.append(L!("Build system: "));
-                    let buildsystem = match option_env!("CMAKE") {
-                        Some("1") => "CMake",
-                        _ => "Cargo",
-                    };
+                    let buildsystem = if cfg!(using_cmake) { "CMake" } else { "Cargo" };
                     streams.out.appendln(bytes2wcstring(buildsystem.as_bytes()));
                     streams.out.append(L!("Version: "));
                     streams.out.appendln(version);

@@ -2657,12 +2657,6 @@ msgstr "如何写补全"
 msgid "How to write your own prompt"
 msgstr "如何编写自己的提示符"
 
-msgid "If commandline is empty, run nextd; else move one argument to the right"
-msgstr "如果命令行参数为空，则运行 nextd；否则将将一个参数向右移动"
-
-msgid "If commandline is empty, run prevd; else move one argument to the left"
-msgstr "如果命令行参数为空，则运行 prevd；否则将将一个参数向左移动"
-
 msgid "If cursor is at the command token, edit the command source file"
 msgstr "如果光标位于命令记号上，编辑命令源文件"
 

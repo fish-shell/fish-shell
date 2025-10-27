@@ -55,6 +55,8 @@ pub enum ReadlineCmd {
     BackwardBigword,
     ForwardToken,
     BackwardToken,
+    NextdOrForwardToken,
+    PrevdOrBackwardToken,
     NextdOrForwardWord,
     PrevdOrBackwardWord,
     HistoryDelete,

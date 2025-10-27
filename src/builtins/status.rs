@@ -333,7 +333,7 @@ use rust_embed::RustEmbed;
 
 #[cfg(feature = "embed-data")]
 #[derive(RustEmbed)]
-#[folder = "target/fish-man/man1"]
+#[folder = "$FISH_RESOLVED_BUILD_DIR/fish-man/man1"]
 #[prefix = "man/man1/"]
 struct Docs;
 

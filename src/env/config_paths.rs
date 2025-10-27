@@ -121,14 +121,14 @@ impl ConfigPaths {
 
         // The next check is that we are in a relocatable directory tree
         if exec_path_parent.ends_with("bin") {
-            let base_path = exec_path_parent.parent().unwrap();
-            let data = base_path.join("share/fish");
-            let sysconf = base_path.join("etc/fish");
-            if base_path != workspace_root // Install to repo root is not supported.
+            let prefix = exec_path_parent.parent().unwrap();
+            let data = prefix.join("share/fish");
+            let sysconf = prefix.join("etc/fish");
+            if prefix != workspace_root // Install to repo root is not supported.
                 && data.exists() && sysconf.exists()
             {
                 FLOG!(config, "Running from relocatable tree");
-                let doc = base_path.join("share/doc/fish");
+                let doc = prefix.join("share/doc/fish");
                 return Self {
                     sysconf,
                     bin: Some(exec_path_parent.to_owned()),

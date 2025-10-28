@@ -38,13 +38,10 @@ fn embed_localizations(cache_dir: &Path) {
     match Command::new("msgfmt").arg("-h").output() {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             rsconf::warn!(
-                "Cannot find msgfmt to build gettext message catalogs. Localization will not work."
-            );
-            rsconf::warn!(
-                "If you install it now you need to trigger a rebuild to get localization support."
-            );
-            rsconf::warn!(
-                "One way to achieve that is running `touch po` followed by the build command."
+                "Could not find msgfmt required to build message catalogs. \
+                 Localization will not work. \
+                 If you install gettext now, you need to trigger a rebuild to include localization support. \
+                 For example by running `touch po` followed by the build command."
             );
         }
         Err(e) => {

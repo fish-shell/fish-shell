@@ -63,13 +63,14 @@ fn build_man(man_dir: &Path) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             if env_var("FISH_BUILD_DOCS") == Some("1".to_string()) {
                 panic!(
-                    "Could not find sphinx-build to build man pages.\n\
-                     Install sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0."
+                    "Could not find sphinx-build required to build man pages.\n\
+                     Install Sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0."
                 );
             }
-            rsconf::warn!("Cannot find sphinx-build to build man pages.");
             rsconf::warn!(
-                "If you install it now you need to run `cargo clean` and rebuild, or set $FISH_BUILD_DOCS=1 explicitly."
+                "Could not find sphinx-build required to build man pages. \
+                 If you install Sphinx now, you need to trigger a rebuild to include man pages. \
+                 For example by running `touch doc_src` followed by the build command."
             );
             return;
         }

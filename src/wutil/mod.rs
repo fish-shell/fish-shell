@@ -383,9 +383,9 @@ pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
 /// actually written cannot be obtained.
 pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
     // Accumulate data in a local buffer.
-    let mut accum = [b'\0'; 512];
+    let mut accum = [0u8; 512];
     let mut accumlen = 0;
-    let maxaccum: usize = std::mem::size_of_val(&accum);
+    let accum_capacity = accum.len();
 
     // Helper to perform a write to 'fd', looping as necessary.
     // Return true on success, false on error.
@@ -413,17 +413,15 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
     };
 
     let mut success = wcs2bytes_callback(input, |buff: &[u8]| {
-        if buff.len() + accumlen > maxaccum {
+        if buff.len() + accumlen > accum_capacity {
             // We have to flush.
             if !flush_accum(&mut total_written, &accum, &mut accumlen) {
                 return false;
             }
         }
-        if buff.len() + accumlen <= maxaccum {
+        if buff.len() + accumlen <= accum_capacity {
             // Accumulate more.
-            unsafe {
-                std::ptr::copy(&buff[0], &mut accum[accumlen], buff.len());
-            }
+            accum[accumlen..(accumlen + buff.len())].copy_from_slice(buff);
             accumlen += buff.len();
             true
         } else {

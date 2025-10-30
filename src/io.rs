@@ -683,9 +683,8 @@ impl OutputStream {
         }
     }
 
-    /// Append a &wstr or WString.
-    pub fn append<Str: AsRef<wstr>>(&mut self, s: Str) -> bool {
-        let s = &s.as_ref();
+    /// Append the given characters.
+    pub fn append(&mut self, s: impl IntoCharIter) -> bool {
         match self {
             OutputStream::Null => true,
             OutputStream::Fd(stream) => stream.append(s),
@@ -710,7 +709,7 @@ impl OutputStream {
                     // Try calling "append" less - it might write() to an fd
                     let mut buf = s.to_owned();
                     buf.push('\n');
-                    self.append(buf)
+                    self.append(&buf)
                 } else {
                     self.append(s)
                 }
@@ -721,7 +720,7 @@ impl OutputStream {
     /// Append a &wstr or WString with a newline
     pub fn appendln(&mut self, s: impl Into<WString>) -> bool {
         let s = s.into() + L!("\n");
-        self.append(s)
+        self.append(&s)
     }
 
     pub fn append_char(&mut self, c: char) -> bool {
@@ -729,7 +728,7 @@ impl OutputStream {
     }
 
     pub fn append_narrow(&mut self, s: &str) -> bool {
-        self.append(bytes2wcstring(s.as_bytes()))
+        self.append(&bytes2wcstring(s.as_bytes()))
     }
     // Append data from a narrow buffer, widening it.
     pub fn append_narrow_buffer(&mut self, buffer: &SeparatedBuffer) -> bool {
@@ -749,7 +748,7 @@ impl OutputStream {
 impl Output for OutputStream {
     fn write_bytes(&mut self, command_part: &[u8]) {
         // TODO Retry on interrupt.
-        self.append(bytes2wcstring(command_part));
+        self.append(&bytes2wcstring(command_part));
     }
 }
 
@@ -776,7 +775,7 @@ impl FdOutputStream {
         }
     }
 
-    fn append(&mut self, s: &wstr) -> bool {
+    fn append(&mut self, s: impl IntoCharIter) -> bool {
         if self.errored {
             return false;
         }
@@ -818,8 +817,10 @@ impl StringOutputStream {
     pub fn new() -> Self {
         Default::default()
     }
-    fn append(&mut self, s: &wstr) -> bool {
-        self.contents.push_utfstr(s);
+    fn append(&mut self, s: impl IntoCharIter) -> bool {
+        if !s.extend_wstring(&mut self.contents) {
+            self.contents.extend(s.chars());
+        }
         true
     }
     /// Return the wcstring containing the output.
@@ -837,7 +838,7 @@ impl BufferedOutputStream {
     pub fn new(buffer: IoBuffer) -> Self {
         Self { buffer }
     }
-    fn append(&mut self, s: &wstr) -> bool {
+    fn append(&mut self, s: impl IntoCharIter) -> bool {
         self.buffer.append(&wcs2bytes(s), SeparationType::inferred)
     }
     fn append_with_separation(

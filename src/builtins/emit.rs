@@ -16,7 +16,7 @@ pub fn emit(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     let Some(event_name) = argv.get(opts.optind) else {
         streams
             .err
-            .append(sprintf!(L!("%s: expected event name\n"), cmd));
+            .append(&sprintf!(L!("%s: expected event name\n"), cmd));
         return Err(STATUS_INVALID_ARGS);
     };
 

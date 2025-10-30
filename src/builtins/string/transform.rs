@@ -31,7 +31,7 @@ impl StringSubCommand<'_> for Transform {
                 n_transformed += 1;
             }
             if !self.quiet {
-                streams.out.append(transformed);
+                streams.out.append(&transformed);
                 if want_newline {
                     streams.out.append_char('\n');
                 }

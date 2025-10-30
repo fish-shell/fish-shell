@@ -230,9 +230,9 @@ fn builtin_complete_print(cmd: &wstr, streams: &mut IoStreams, parser: &Parser) 
         highlight_shell(&repr, &mut colors, &parser.context(), false, None);
         streams
             .out
-            .append(bytes2wcstring(&colorize(&repr, &colors, parser.vars())));
+            .append(&bytes2wcstring(&colorize(&repr, &colors, parser.vars())));
     } else {
-        streams.out.append(repr);
+        streams.out.append(&repr);
     }
 }
 
@@ -318,7 +318,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                         cmd_to_complete.push(tmp);
                     }
                 } else {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         "%s: Invalid token '%s'\n",
                         cmd,
                         w.woptarg.unwrap()
@@ -341,7 +341,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 if arg.is_empty() {
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: -s requires a non-empty string\n", cmd,));
+                        .append(&wgettext_fmt!("%s: -s requires a non-empty string\n", cmd,));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -351,7 +351,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 if arg.is_empty() {
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: -l requires a non-empty string\n", cmd,));
+                        .append(&wgettext_fmt!("%s: -l requires a non-empty string\n", cmd,));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -361,7 +361,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 if arg.is_empty() {
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: -o requires a non-empty string\n", cmd,));
+                        .append(&wgettext_fmt!("%s: -o requires a non-empty string\n", cmd,));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -407,7 +407,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
 
     if result_mode.no_files && result_mode.force_files {
         if !have_x {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 "complete",
                 "'--no-files' and '--force-files'"
@@ -415,7 +415,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         } else {
             // The reason for us not wanting files is `-x`,
             // which is short for `-rf`.
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 "complete",
                 "'--exclusive' and '--force-files'"
@@ -435,7 +435,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         } else {
             streams
                 .err
-                .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+                .append(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
@@ -446,7 +446,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         if parse_util_detect_errors(condition_string, Some(&mut errors), false).is_err() {
             for error in errors {
                 let prefix = cmd.to_owned() + L!(": -n '") + &condition_string[..] + L!("': ");
-                streams.err.append(error.describe_with_prefix(
+                streams.err.append(&error.describe_with_prefix(
                     condition_string,
                     &prefix,
                     parser.is_interactive(),
@@ -464,12 +464,12 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         prefix.push_str(": ");
 
         if let Err(err_text) = parse_util_detect_errors_in_argument_list(&comp, &prefix) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: %s: contains a syntax error\n",
                 cmd,
                 comp
             ));
-            streams.err.append(err_text);
+            streams.err.append(&err_text);
             streams.err.append_char('\n');
             return Err(STATUS_CMD_ERROR);
         }
@@ -563,7 +563,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     faux_cmdline_with_completion.push_utfstr(&next.description);
                 }
                 faux_cmdline_with_completion.push('\n');
-                streams.out.append(faux_cmdline_with_completion);
+                streams.out.append(&faux_cmdline_with_completion);
             }
 
             parser.libdata_mut().builtin_complete_current_commandline = false;

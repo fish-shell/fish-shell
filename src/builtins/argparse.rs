@@ -145,7 +145,7 @@ fn check_for_mutually_exclusive_flags(
                         if flag1 > flag2 {
                             std::mem::swap(&mut flag1, &mut flag2);
                         }
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: %s %s: options cannot be used together\n",
                             opts.name,
                             flag1,
@@ -167,7 +167,7 @@ fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> 
     for raw_xflags in &opts.raw_exclusive_flags {
         let xflags: Vec<_> = raw_xflags.split(',').collect();
         if xflags.len() < 2 {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: exclusive flag string '%s' is not valid\n",
                 opts.name,
                 raw_xflags
@@ -185,7 +185,7 @@ fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> 
                 // It's a long flag we store as its short flag equivalent.
                 exclusive_set.push(*short_equiv);
             } else {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: exclusive flag '%s' is not valid\n",
                     opts.name,
                     flag
@@ -214,7 +214,7 @@ fn parse_flag_modifiers<'args>(
         && s.char_at(0) != '!'
         && s.char_at(0) != '&'
     {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: Implicit int short flag '%c' does not allow modifiers like '%c'\n",
             opts.name,
             opt_spec.short_flag,
@@ -249,7 +249,7 @@ fn parse_flag_modifiers<'args>(
 
     if s.char_at(0) == '!' {
         if opt_spec.arg_type == ArgType::NoArgument {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_INVALID_OPT_SPEC,
                 opts.name,
                 option_spec,
@@ -261,7 +261,7 @@ fn parse_flag_modifiers<'args>(
         // Move cursor to the end so we don't expect a long flag.
         s = s.slice_from(s.char_count());
     } else if !s.is_empty() {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_INVALID_OPT_SPEC,
             opts.name,
             option_spec,
@@ -276,7 +276,7 @@ fn parse_flag_modifiers<'args>(
     }
 
     if opts.options.contains_key(&opt_spec.short_flag) {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: Short flag '%c' already defined\n",
             opts.name,
             opt_spec.short_flag
@@ -308,7 +308,7 @@ fn parse_option_spec_sep<'args>(
             *counter += 1;
         }
         if opts.implicit_int_flag != '\0' {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Implicit int flag '%c' already defined\n",
                 opts.name,
                 opts.implicit_int_flag
@@ -327,7 +327,7 @@ fn parse_option_spec_sep<'args>(
             opt_spec.short_flag_valid = false;
             i += 1;
             if i == s.char_count() {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_INVALID_OPT_SPEC,
                     opts.name,
                     option_spec,
@@ -339,7 +339,7 @@ fn parse_option_spec_sep<'args>(
         '/' => {
             i += 1; // the struct is initialized assuming short_flag_valid should be true
             if i == s.char_count() {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_INVALID_OPT_SPEC,
                     opts.name,
                     option_spec,
@@ -350,7 +350,7 @@ fn parse_option_spec_sep<'args>(
         }
         '#' => {
             if opts.implicit_int_flag != '\0' {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: Implicit int flag '%c' already defined\n",
                     opts.name,
                     opts.implicit_int_flag
@@ -394,7 +394,7 @@ fn parse_option_spec<'args>(
     streams: &mut IoStreams,
 ) -> bool {
     if option_spec.is_empty() {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: An option spec must have at least a short or a long flag\n",
             opts.name
         ));
@@ -404,7 +404,7 @@ fn parse_option_spec<'args>(
     let mut s = option_spec;
     if !fish_iswalnum(s.char_at(0)) && s.char_at(0) != '#' && !(s.char_at(0) == '/' && s.len() > 1)
     {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: Short flag '%c' invalid, must be alphanum or '#'\n",
             opts.name,
             s.char_at(0)
@@ -431,7 +431,7 @@ fn parse_option_spec<'args>(
         if long_flag_char_count > 0 {
             opt_spec.long_flag = s.slice_to(long_flag_char_count);
             if opts.long_to_short_flag.contains_key(opt_spec.long_flag) {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: Long flag '%s' already defined\n",
                     opts.name,
                     opt_spec.long_flag
@@ -480,7 +480,7 @@ fn collect_option_specs<'args>(
         if *optind == argc {
             streams
                 .err
-                .append(wgettext_fmt!("%s: Missing -- separator\n", cmd));
+                .append(&wgettext_fmt!("%s: Missing -- separator\n", cmd));
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -502,7 +502,7 @@ fn collect_option_specs<'args>(
     if counter > counter_max {
         streams
             .err
-            .append(wgettext_fmt!("%s: Too many long-only options\n", cmd));
+            .append(&wgettext_fmt!("%s: Too many long-only options\n", cmd));
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -532,7 +532,7 @@ fn parse_cmd_opts<'args>(
             's' => opts.stop_nonopt = true,
             'i' | 'u' => {
                 if opts.unknown_handling != UnknownHandling::Error {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         BUILTIN_ERR_COMBO2_EXCLUSIVE,
                         cmd,
                         "--ignore-unknown",
@@ -556,7 +556,7 @@ fn parse_cmd_opts<'args>(
                 } else if kind == L!("none") {
                     ArgType::NoArgument
                 } else {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         "%s: Invalid --unknown-arguments value '%s'\n",
                         cmd,
                         kind
@@ -573,7 +573,7 @@ fn parse_cmd_opts<'args>(
                 opts.min_args = {
                     let x = fish_wcstol(w.woptarg.unwrap()).unwrap_or(-1);
                     if x < 0 {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: Invalid --min-args value '%s'\n",
                             cmd,
                             w.woptarg.unwrap()
@@ -587,7 +587,7 @@ fn parse_cmd_opts<'args>(
                 opts.max_args = {
                     let x = fish_wcstol(w.woptarg.unwrap()).unwrap_or(-1);
                     if x < 0 {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: Invalid --max-args value '%s'\n",
                             cmd,
                             w.woptarg.unwrap()
@@ -642,7 +642,7 @@ fn parse_cmd_opts<'args>(
         // The user didn't specify any option specs.
         streams
             .err
-            .append(wgettext_fmt!("%s: Missing -- separator\n", cmd));
+            .append(&wgettext_fmt!("%s: Missing -- separator\n", cmd));
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -730,7 +730,7 @@ fn validate_arg<'opts>(
     );
 
     for output in cmd_output {
-        streams.err.append(output);
+        streams.err.append(&output);
         streams.err.append_char('\n');
     }
     vars.pop();
@@ -947,7 +947,7 @@ fn argparse_parse_flags<'args>(
                         streams,
                     )?;
                 } else if opts.unknown_handling == UnknownHandling::Error {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         BUILTIN_ERR_UNKNOWN,
                         opts.name,
                         args_read[w.wopt_index - 1]
@@ -1002,7 +1002,7 @@ fn argparse_parse_flags<'args>(
                             Some(w.argv[w.wopt_index - 1])
                         } else {
                             // the option is at the end of argv, so it has no argument
-                            streams.err.append(wgettext_fmt!(
+                            streams.err.append(&wgettext_fmt!(
                                 BUILTIN_ERR_MISSING,
                                 opts.name,
                                 args_read[w.wopt_index - 1]
@@ -1018,7 +1018,7 @@ fn argparse_parse_flags<'args>(
                         && is_long_flag
                         && arg_contents.contains('=')
                     {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             BUILTIN_ERR_UNEXP_ARG,
                             opts.name,
                             args_read[w.wopt_index - 1]
@@ -1115,7 +1115,7 @@ fn check_min_max_args_constraints(
     let cmd = &opts.name;
 
     if opts.args.len() < opts.min_args {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_MIN_ARG_COUNT1,
             cmd,
             opts.min_args,
@@ -1125,7 +1125,7 @@ fn check_min_max_args_constraints(
     }
 
     if opts.max_args != usize::MAX && opts.args.len() > opts.max_args {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_MAX_ARG_COUNT1,
             cmd,
             opts.max_args,

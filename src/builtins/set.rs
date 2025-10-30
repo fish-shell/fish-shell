@@ -232,14 +232,14 @@ impl Options {
     ) -> Result<(), ErrorCode> {
         // Can't query and erase or list.
         if opts.query && (opts.erase || opts.list) {
-            streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+            streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
 
         // We can't both list and erase variables.
         if opts.erase && opts.list {
-            streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+            streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
@@ -253,14 +253,16 @@ impl Options {
             // ..unless we are erasing a variable, in which case we can erase from several in one go.
             && !opts.erase
         {
-            streams.err.append(wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
+            streams.err.append(&wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
 
         // Variables can only have one export status.
         if opts.exportv && opts.unexport {
-            streams.err.append(wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
+            streams
+                .err
+                .append(&wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
@@ -269,14 +271,14 @@ impl Options {
         if opts.pathvar && opts.unpathvar {
             streams
                 .err
-                .append(wgettext_fmt!(BUILTIN_ERR_PATHUNPATH, cmd));
+                .append(&wgettext_fmt!(BUILTIN_ERR_PATHUNPATH, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
 
         // Trying to erase and (un)export at the same time doesn't make sense.
         if opts.erase && (opts.exportv || opts.unexport) {
-            streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+            streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
@@ -291,7 +293,7 @@ impl Options {
                 || opts.exportv
                 || opts.universal)
         {
-            streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+            streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
@@ -299,7 +301,7 @@ impl Options {
         if args.len() == optind && opts.erase {
             streams
                 .err
-                .append(wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, L!("--erase")));
+                .append(&wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, L!("--erase")));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
@@ -321,7 +323,7 @@ fn warn_if_uvar_shadows_global(
         && parser.is_interactive()
         && parser.vars().getf(dest, EnvMode::GLOBAL).is_some()
     {
-        streams.err.append(wgettext_fmt!(UVAR_ERR, cmd, dest));
+        streams.err.append(&wgettext_fmt!(UVAR_ERR, cmd, dest));
     }
 }
 
@@ -329,28 +331,28 @@ fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams:
     match retval {
         EnvStackSetResult::Ok => (),
         EnvStackSetResult::Perm => {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Tried to change the read-only variable '%s'\n",
                 cmd,
                 key
             ));
         }
         EnvStackSetResult::Scope => {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Tried to modify the special variable '%s' with the wrong scope\n",
                 cmd,
                 key
             ));
         }
         EnvStackSetResult::Invalid => {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Tried to modify the special variable '%s' to an invalid value\n",
                 cmd,
                 key
             ));
         }
         EnvStackSetResult::NotFound => {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: The variable '%s' does not exist\n",
                 cmd,
                 key
@@ -430,7 +432,7 @@ fn split_var_and_indexes<'a>(
     match split_var_and_indexes_internal(arg, mode, vars) {
         Ok(split) => Some(split),
         Err(EnvArrayParseError::InvalidIndex(varname)) => {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Invalid index starting at '%s'\n",
                 "set",
                 &varname,
@@ -590,7 +592,7 @@ fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> BuiltinResu
         }
 
         out.push('\n');
-        streams.out.append(out);
+        streams.out.append(&out);
     }
 
     Ok(SUCCESS)
@@ -659,7 +661,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
         L!("")
     };
     let vals = var.as_list();
-    streams.out.append(wgettext_fmt!(
+    streams.out.append(&wgettext_fmt!(
         "$%s: set in %s scope, %s,%s with %d elements",
         var_name,
         scope_name,
@@ -697,7 +699,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
         );
         streams
             .out
-            .append(sprintf!("$%s[%d]: |%s|\n", var_name, i + 1, &escaped_val));
+            .append(&sprintf!("$%s[%d]: |%s|\n", var_name, i + 1, &escaped_val));
     }
 }
 
@@ -722,7 +724,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     inherited,
                     EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
                 );
-                streams.out.append(wgettext_fmt!(
+                streams.out.append(&wgettext_fmt!(
                     "$%s: originally inherited as |%s|\n",
                     name,
                     escaped_val
@@ -732,13 +734,13 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
     } else {
         for arg in args.iter().copied() {
             if !valid_var_name(arg) {
-                streams.err.append(varname_error(cmd, arg));
+                streams.err.append(&varname_error(cmd, arg));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
 
             if arg.contains('[') {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: `set --show` does not allow slices with the var names\n",
                     cmd
                 ));
@@ -754,7 +756,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     inherited,
                     EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
                 );
-                streams.out.append(wgettext_fmt!(
+                streams.out.append(&wgettext_fmt!(
                     "$%s: originally inherited as |%s|\n",
                     arg,
                     escaped_val
@@ -788,7 +790,7 @@ fn erase(
             };
 
             if !valid_var_name(split.varname) {
-                streams.err.append(varname_error(cmd, split.varname));
+                streams.err.append(&varname_error(cmd, split.varname));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
@@ -909,7 +911,7 @@ fn set_internal(
     if argv.is_empty() {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -925,9 +927,9 @@ fn set_internal(
 
     // Is the variable valid?
     if !valid_var_name(split.varname) {
-        streams.err.append(varname_error(cmd, split.varname));
+        streams.err.append(&varname_error(cmd, split.varname));
         if let Some(pos) = split.varname.chars().position(|c| c == '=') {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Did you mean `set %s %s`?",
                 cmd,
                 &escape(&split.varname[..pos]),
@@ -945,14 +947,14 @@ fn set_internal(
             if *ind <= 0 {
                 streams
                     .err
-                    .append(wgettext_fmt!("%s: array index out of bounds\n", cmd));
+                    .append(&wgettext_fmt!("%s: array index out of bounds\n", cmd));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
         }
         // Append and prepend are disallowed.
         if opts.append || opts.prepend {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Cannot use --append or --prepend when assigning to a slice",
                 cmd
             ));
@@ -962,7 +964,7 @@ fn set_internal(
 
         // Argument count and index count must agree.
         if split.indexes.len() != argv.len() {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 MISMATCHED_ARGS,
                 cmd,
                 split.indexes.len(),

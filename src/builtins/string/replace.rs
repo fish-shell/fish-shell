@@ -114,7 +114,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             replace_count += replaced as usize;
 
             if !self.quiet && (!self.filter || replaced) {
-                streams.out.append(result);
+                streams.out.append(&result);
                 if want_newline {
                     streams.out.append_char('\n');
                 }

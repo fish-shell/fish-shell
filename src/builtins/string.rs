@@ -28,7 +28,7 @@ macro_rules! string_error {
     $(,)?
     ) => {
         $streams.err.append(L!("string "));
-        $streams.err.append(wgettext_fmt!($string, $($args),*));
+        $streams.err.append(&wgettext_fmt!($string, $($args),*));
     };
 }
 use string_error;
@@ -194,7 +194,7 @@ impl RegexError {
                 string_error!(streams, "%s: %s\n", cmd, marker);
             }
             InvalidCaptureGroupName(name) => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "Modification of read-only variable \"%s\" is not allowed\n",
                     name
                 ));
@@ -319,7 +319,7 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     if argc <= 1 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -368,7 +368,7 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         _ => {
             streams
                 .err
-                .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
+                .append(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
             builtin_print_error_trailer(parser, streams.err, cmd);
             Err(STATUS_INVALID_ARGS)
         }

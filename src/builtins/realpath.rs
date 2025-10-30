@@ -69,7 +69,7 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
 
     // TODO: allow arbitrary args. `realpath *` should print many paths
     if optind + 1 != args.len() {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_ARG_COUNT1,
             cmd,
             0,
@@ -83,13 +83,13 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
 
     if !opts.no_symlinks {
         if let Some(real_path) = wrealpath(arg) {
-            streams.out.append(real_path);
+            streams.out.append(&real_path);
         } else {
             let errno = errno();
             if errno.0 != 0 {
                 // realpath() just couldn't do it. Report the error and make it clear
                 // this is an error from our builtin, not the system's realpath.
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "builtin %s: %s: %s\n",
                     cmd,
                     arg,
@@ -99,7 +99,7 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
                 // Who knows. Probably a bug in our wrealpath() implementation.
                 streams
                     .err
-                    .append(wgettext_fmt!("builtin %s: Invalid arg: %s\n", cmd, arg));
+                    .append(&wgettext_fmt!("builtin %s: Invalid arg: %s\n", cmd, arg));
             }
 
             return Err(STATUS_CMD_ERROR);
@@ -114,9 +114,9 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
             } else {
                 path_apply_working_directory(arg, &realpwd)
             };
-            streams.out.append(normalize_path(&absolute_arg, false));
+            streams.out.append(&normalize_path(&absolute_arg, false));
         } else {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "builtin %s: realpath failed: %s\n",
                 cmd,
                 errno().to_string()

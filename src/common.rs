@@ -1151,11 +1151,7 @@ pub(crate) fn charptr2wcstring(input: *const libc::c_char) -> WString {
 ///
 /// This function decodes illegal character sequences in a reversible way using the private use
 /// area.
-pub fn wcs2bytes(input: &wstr) -> Vec<u8> {
-    if input.is_empty() {
-        return vec![];
-    }
-
+pub fn wcs2bytes(input: impl IntoCharIter) -> Vec<u8> {
     let mut result = vec![];
     wcs2bytes_appending(&mut result, input);
     result
@@ -1199,8 +1195,7 @@ pub fn wcs2zstring(input: &wstr) -> CString {
 }
 
 /// Like [`wcs2bytes`], but appends to `output` instead of returning a new string.
-pub fn wcs2bytes_appending(output: &mut Vec<u8>, input: &wstr) {
-    output.reserve(input.len());
+pub fn wcs2bytes_appending(output: &mut Vec<u8>, input: impl IntoCharIter) {
     str2bytes_callback(input, |buff| {
         output.extend_from_slice(buff);
         true

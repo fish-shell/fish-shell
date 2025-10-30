@@ -79,7 +79,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             out += &cmd[..];
 
             out += "\n";
-            streams.out.append(out);
+            streams.out.append(&out);
         }
         JobsPrintMode::PrintGroup => {
             if header {
@@ -87,7 +87,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
                 out += wgettext!("Group\n");
             }
             out += &sprintf!("%s\n", pgid)[..];
-            streams.out.append(out);
+            streams.out.append(&out);
         }
         JobsPrintMode::PrintPid => {
             if header {
@@ -98,7 +98,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             for p in j.external_procs() {
                 out += &sprintf!("%d\n", *p.pid.get().unwrap())[..];
             }
-            streams.out.append(out);
+            streams.out.append(&out);
         }
         JobsPrintMode::PrintCommand => {
             if header {
@@ -109,7 +109,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             for p in j.processes() {
                 out += &sprintf!("%s\n", p.argv0().unwrap())[..];
             }
-            streams.out.append(out);
+            streams.out.append(&out);
         }
     };
 }
@@ -192,7 +192,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             if arg.char_at(0) == '%' {
                 match fish_wcstoi(&arg[1..]).ok().filter(|&job_id| job_id >= 0) {
                     None => {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: '%s' is not a valid job ID\n",
                             cmd,
                             arg
@@ -222,7 +222,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 if mode != JobsPrintMode::PrintNothing {
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: No suitable job: %s\n", cmd, arg));
+                        .append(&wgettext_fmt!("%s: No suitable job: %s\n", cmd, arg));
                 }
                 return Err(STATUS_CMD_ERROR);
             }
@@ -242,7 +242,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         if !streams.out_is_redirected && mode != JobsPrintMode::PrintNothing {
             streams
                 .out
-                .append(wgettext_fmt!("%s: There are no jobs\n", argv[0]));
+                .append(&wgettext_fmt!("%s: There are no jobs\n", argv[0]));
         }
         return Err(STATUS_CMD_ERROR);
     }

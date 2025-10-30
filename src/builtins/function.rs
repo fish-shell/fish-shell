@@ -94,7 +94,7 @@ fn parse_cmd_opts(
                 let woptarg = w.woptarg.unwrap().to_owned();
                 if handling_named_arguments {
                     if is_read_only(&woptarg) {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: variable '%s' is read-only\n",
                             cmd,
                             woptarg
@@ -103,7 +103,7 @@ fn parse_cmd_opts(
                     }
                     opts.named_arguments.push(woptarg);
                 } else {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         "%s: %s: unexpected positional argument",
                         cmd,
                         woptarg
@@ -116,7 +116,7 @@ fn parse_cmd_opts(
             }
             's' => {
                 let Some(signal) = Signal::parse(w.woptarg.unwrap()) else {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         "%s: Unknown signal '%s'",
                         cmd,
                         w.woptarg.unwrap()
@@ -128,7 +128,7 @@ fn parse_cmd_opts(
             'v' => {
                 let name = w.woptarg.unwrap().to_owned();
                 if !valid_var_name(&name) {
-                    streams.err.append(varname_error(cmd, &name));
+                    streams.err.append(&varname_error(cmd, &name));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 opts.events.push(EventDescription::Variable { name });
@@ -147,7 +147,7 @@ fn parse_cmd_opts(
                         0
                     };
                     if caller_id == 0 {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: calling job for event handler not found",
                             cmd
                         ));
@@ -177,7 +177,7 @@ fn parse_cmd_opts(
             'a' => {
                 let name = w.woptarg.unwrap().to_owned();
                 if is_read_only(&name) {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         "%s: variable '%s' is read-only\n",
                         cmd,
                         name
@@ -196,7 +196,7 @@ fn parse_cmd_opts(
             'V' => {
                 let woptarg = w.woptarg.unwrap();
                 if !valid_var_name(woptarg) {
-                    streams.err.append(varname_error(cmd, woptarg));
+                    streams.err.append(&varname_error(cmd, woptarg));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 opts.inherit_vars.push(woptarg.to_owned());
@@ -241,12 +241,12 @@ fn validate_function_name(
     if argv.len() < 2 {
         streams
             .err
-            .append(wgettext_fmt!("%s: function name required", cmd));
+            .append(&wgettext_fmt!("%s: function name required", cmd));
         return Err(STATUS_INVALID_ARGS);
     }
     *function_name = argv[1].to_owned();
     if !valid_func_name(function_name) {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: %s: invalid function name",
             cmd,
             function_name,
@@ -254,7 +254,7 @@ fn validate_function_name(
         return Err(STATUS_INVALID_ARGS);
     }
     if parser_keywords_is_reserved(function_name) {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: %s: cannot use reserved keyword as function name",
             cmd,
             function_name
@@ -300,13 +300,13 @@ pub fn function(
             // Remaining arguments are named arguments.
             for &arg in argv[optind..].iter() {
                 if !valid_var_name(arg) {
-                    streams.err.append(varname_error(cmd, arg));
+                    streams.err.append(&varname_error(cmd, arg));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 opts.named_arguments.push(arg.to_owned());
             }
         } else {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: %s: unexpected positional argument",
                 cmd,
                 argv[optind],
@@ -333,7 +333,7 @@ pub fn function(
 
     for named in &opts.named_arguments {
         if !valid_var_name(named) {
-            streams.err.append(varname_error(cmd, named));
+            streams.err.append(&varname_error(cmd, named));
             return Err(STATUS_INVALID_ARGS);
         }
     }

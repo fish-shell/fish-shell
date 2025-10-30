@@ -168,7 +168,7 @@ impl FloggableDisplay for WString {
 
 impl FloggableDisplay for &wstr {
     fn to_flog_str(&self) -> Vec<u8> {
-        wcs2bytes(self)
+        wcs2bytes(*self)
     }
 }
 

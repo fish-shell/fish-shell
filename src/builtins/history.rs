@@ -92,7 +92,7 @@ fn set_hist_cmd(
     streams: &mut IoStreams,
 ) -> bool {
     if *hist_cmd != HistCmd::None {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2_EXCLUSIVE,
             cmd,
             hist_cmd.to_wstr(),
@@ -112,7 +112,7 @@ fn check_for_unexpected_hist_args(
 ) -> bool {
     if opts.search_type.is_some() || opts.show_time_format.is_some() || opts.null_terminate {
         let subcmd_str = opts.hist_cmd.to_wstr();
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: %s: subcommand takes no options\n",
             cmd,
             subcmd_str
@@ -121,7 +121,7 @@ fn check_for_unexpected_hist_args(
     }
     if !args.is_empty() {
         let subcmd_str = opts.hist_cmd.to_wstr();
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_ARG_COUNT2,
             cmd,
             subcmd_str,
@@ -193,7 +193,7 @@ fn parse_cmd_opts(
             'n' => match fish_wcstol(w.woptarg.unwrap()) {
                 Ok(x) => opts.max_items = Some(x as _), // todo!("historical behavior is to cast")
                 Err(_) => {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         BUILTIN_ERR_NOT_NUMBER,
                         cmd,
                         w.woptarg.unwrap()
@@ -334,7 +334,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
             }
 
             if in_private_mode(parser.vars()) {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: can't merge history in private mode\n",
                     cmd
                 ));

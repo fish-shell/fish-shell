@@ -57,7 +57,7 @@ impl StringSubCommand<'_> for Sub {
     ) -> Result<(), ErrorCode> {
         let cmd = args[0];
         if self.length.is_some() && self.end.is_some() {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 cmd,
                 wgettext!("--end and --length are mutually exclusive")

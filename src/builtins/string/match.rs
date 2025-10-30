@@ -93,7 +93,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         let cmd = args[0];
 
         if self.entire && self.index {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 cmd,
                 wgettext!("--entire and --index are mutually exclusive")
@@ -102,7 +102,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         }
 
         if self.invert_match && self.groups_only {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 cmd,
                 wgettext!("--invert and --groups-only are mutually exclusive")
@@ -111,7 +111,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         }
 
         if self.entire && self.groups_only {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 cmd,
                 wgettext!("--entire and --groups-only are mutually exclusive")
@@ -324,7 +324,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
         let Some(cg) = cg else {
             if self.opts.invert_match && !self.opts.quiet {
                 if self.opts.index {
-                    streams.out.append(sprintf!("1 %u\n", arg.len()));
+                    streams.out.append(&sprintf!("1 %u\n", arg.len()));
                 } else {
                     streams.out.appendln(arg);
                 }
@@ -353,7 +353,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             if self.opts.index {
                 streams
                     .out
-                    .append(sprintf!("%u %u\n", m.start() + 1, m.end() - m.start()));
+                    .append(&sprintf!("%u %u\n", m.start() + 1, m.end() - m.start()));
             } else {
                 streams.out.appendln(&arg[m.start()..m.end()]);
             }
@@ -401,7 +401,7 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
             self.total_matched += 1;
             if !self.opts.quiet {
                 if self.opts.index {
-                    streams.out.append(sprintf!("1 %u\n", arg.len()));
+                    streams.out.append(&sprintf!("1 %u\n", arg.len()));
                 } else {
                     streams.out.appendln(arg);
                 }

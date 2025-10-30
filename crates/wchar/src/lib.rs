@@ -113,6 +113,9 @@ impl_to_wstring_unsigned!(u8, u16, u32, u64, u128, usize);
 pub trait IntoCharIter {
     type Iter: DoubleEndedIterator<Item = char> + Clone;
     fn chars(self) -> Self::Iter;
+    fn extend_wstring(&self, _out: &mut WString) -> bool {
+        false
+    }
 }
 
 impl IntoCharIter for char {
@@ -129,11 +132,22 @@ impl<'a> IntoCharIter for &'a str {
     }
 }
 
+impl<'a> IntoCharIter for &'a String {
+    type Iter = std::str::Chars<'a>;
+    fn chars(self) -> Self::Iter {
+        str::chars(self)
+    }
+}
+
 impl<'a> IntoCharIter for &'a [char] {
     type Iter = iter::Copied<slice::Iter<'a, char>>;
 
     fn chars(self) -> Self::Iter {
         self.iter().copied()
+    }
+    fn extend_wstring(&self, out: &mut WString) -> bool {
+        out.push_utfstr(wstr::from_char_slice(self));
+        true
     }
 }
 
@@ -142,12 +156,18 @@ impl<'a> IntoCharIter for &'a wstr {
     fn chars(self) -> Self::Iter {
         wstr::chars(self)
     }
+    fn extend_wstring(&self, out: &mut WString) -> bool {
+        self.as_char_slice().extend_wstring(out)
+    }
 }
 
 impl<'a> IntoCharIter for &'a WString {
     type Iter = CharsUtf32<'a>;
     fn chars(self) -> Self::Iter {
         wstr::chars(self)
+    }
+    fn extend_wstring(&self, out: &mut WString) -> bool {
+        self.as_char_slice().extend_wstring(out)
     }
 }
 
@@ -164,6 +184,23 @@ impl<'a> IntoCharIter for CharsUtf32<'a> {
     type Iter = Self;
     fn chars(self) -> Self::Iter {
         self
+    }
+}
+
+impl<'a: 'b, 'b> IntoCharIter for &'b std::borrow::Cow<'a, str> {
+    type Iter = std::str::Chars<'b>;
+    fn chars(self) -> Self::Iter {
+        str::chars(self)
+    }
+}
+
+impl<'a: 'b, 'b> IntoCharIter for &'b std::borrow::Cow<'a, wstr> {
+    type Iter = CharsUtf32<'b>;
+    fn chars(self) -> Self::Iter {
+        wstr::chars(self)
+    }
+    fn extend_wstring(&self, out: &mut WString) -> bool {
+        self.as_char_slice().extend_wstring(out)
     }
 }
 

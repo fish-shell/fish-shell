@@ -52,7 +52,7 @@ impl StringSubCommand<'_> for Escape {
                 escaped.push('\n');
             }
 
-            streams.out.append(escaped);
+            streams.out.append(&escaped);
             escaped_any = true;
         }
 

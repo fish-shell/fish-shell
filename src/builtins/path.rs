@@ -23,7 +23,7 @@ macro_rules! path_error {
     $(,)?
     ) => {
         $streams.err.append(L!("path "));
-        $streams.err.append(wgettext_fmt!($string, $($args),*));
+        $streams.err.append(&wgettext_fmt!($string, $($args),*));
     };
 }
 
@@ -171,7 +171,7 @@ fn path_out(streams: &mut IoStreams, opts: &Options<'_>, s: impl AsRef<wstr>) {
             let mut output = WString::with_capacity(s.len() + 1);
             output.push_utfstr(s);
             output.push('\0');
-            streams.out.append(output);
+            streams.out.append(&output);
         }
     }
 }
@@ -953,7 +953,7 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
     if argc <= 1 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -979,7 +979,7 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
         _ => {
             streams
                 .err
-                .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
+                .append(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }

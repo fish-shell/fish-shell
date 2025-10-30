@@ -105,7 +105,7 @@ impl StatusCmdOpts {
     fn try_set_status_cmd(&mut self, subcmd: StatusCmd, streams: &mut IoStreams) -> bool {
         match self.status_cmd.replace(subcmd) {
             Some(existing) => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_COMBO2_EXCLUSIVE,
                     "status",
                     existing.to_wstr(),
@@ -183,7 +183,7 @@ fn print_features(streams: &mut IoStreams) {
         } else {
             L!("off")
         };
-        streams.out.append(sprintf!(
+        streams.out.append(&sprintf!(
             "%-*s%-3s %s %s\n",
             max_len + 1,
             md.name,
@@ -215,7 +215,7 @@ fn parse_cmd_opts(
                     match fish_wcstoi(arg) {
                         Ok(level) if level >= 0 => level,
                         Err(Error::Overflow) | Ok(_) => {
-                            streams.err.append(wgettext_fmt!(
+                            streams.err.append(&wgettext_fmt!(
                                 "%s: Invalid level value '%s'\n",
                                 cmd,
                                 arg
@@ -225,7 +225,7 @@ fn parse_cmd_opts(
                         _ => {
                             streams
                                 .err
-                                .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
+                                .append(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
                             return Err(STATUS_INVALID_ARGS);
                         }
                     }
@@ -251,7 +251,7 @@ fn parse_cmd_opts(
                     return Err(STATUS_CMD_ERROR);
                 }
                 let Ok(job_mode) = w.woptarg.unwrap().try_into() else {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         "%s: Invalid job control mode '%s'\n",
                         cmd,
                         w.woptarg.unwrap()
@@ -373,7 +373,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             None => {
                 streams
                     .err
-                    .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[1]));
+                    .append(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[1]));
                 return Err(STATUS_INVALID_ARGS);
             }
         }
@@ -396,8 +396,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         };
         streams
             .out
-            .append(wgettext_fmt!("Job control: %s\n", job_control_mode));
-        streams.out.append(parser.stack_trace());
+            .append(&wgettext_fmt!("Job control: %s\n", job_control_mode));
+        streams.out.append(&parser.stack_trace());
 
         return Ok(SUCCESS);
     };
@@ -408,7 +408,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 Some(j) => {
                     // Flag form used
                     if !args.is_empty() {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             BUILTIN_ERR_ARG_COUNT2,
                             cmd,
                             c.to_wstr(),
@@ -421,7 +421,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 }
                 None => {
                     if args.len() != 1 {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             BUILTIN_ERR_ARG_COUNT2,
                             cmd,
                             c.to_wstr(),
@@ -431,7 +431,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         return Err(STATUS_INVALID_ARGS);
                     }
                     let Ok(new_mode) = args[0].try_into() else {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: Invalid job control mode '%s'\n",
                             cmd,
                             args[0]
@@ -446,7 +446,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         STATUS_FEATURES => print_features(streams),
         c @ STATUS_TEST_FEATURE => {
             if args.len() != 1 {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
                     c.to_wstr(),
@@ -468,7 +468,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
         c @ STATUS_GET_FILE => {
             if args.len() != 1 {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
                     c.to_wstr(),
@@ -486,7 +486,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Err(STATUS_CMD_ERROR);
             };
             let src = bytes2wcstring(&emfile.data);
-            streams.out.append(src);
+            streams.out.append(&src);
             return Ok(SUCCESS);
         }
         STATUS_LANGUAGE => {
@@ -496,12 +496,12 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     return Err(STATUS_CMD_ERROR);
                 } else {
                     if args.is_empty() {
-                        streams.out.append(crate::localization::status_language());
+                        streams.out.append(&crate::localization::status_language());
                         return Ok(SUCCESS);
                     }
                     match args[0].to_string().as_str() {
                         "list-available" => {
-                            streams.out.append(crate::localization::list_available_languages());
+                            streams.out.append(&crate::localization::list_available_languages());
                             return Ok(SUCCESS);
                         },
                         "set" => {
@@ -523,7 +523,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         invalid => {
                             streams
                                 .err
-                                .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBSUBCMD, cmd, subcmd.to_wstr(), invalid));
+                                .append(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBSUBCMD, cmd, subcmd.to_wstr(), invalid));
                             return Err(STATUS_INVALID_ARGS);
                         }
                     }
@@ -566,7 +566,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
         c @ STATUS_TEST_TERMINAL_FEATURE => {
             if args.len() != 1 {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
                     c.to_wstr(),
@@ -593,7 +593,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
 
         ref s => {
             if !args.is_empty() {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
                     s.to_wstr(),
@@ -728,7 +728,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     }
                 }
                 STATUS_STACK_TRACE => {
-                    streams.out.append(parser.stack_trace());
+                    streams.out.append(&parser.stack_trace());
                 }
                 STATUS_CURRENT_CMD => {
                     let command = &parser.libdata().status_vars.command;

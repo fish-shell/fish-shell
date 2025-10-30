@@ -122,7 +122,7 @@ fn parse_cmd_opts(
                 opts.delimiter = Some(w.woptarg.unwrap().to_owned());
             }
             'i' => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n",
                     cmd
                 ));
@@ -147,7 +147,7 @@ fn parse_cmd_opts(
                 opts.nchars = match fish_wcstoi(w.woptarg.unwrap()) {
                     Ok(n) if n >= 0 => NonZeroUsize::new(n.try_into().unwrap()),
                     Err(wutil::Error::Overflow) => {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: Argument '%s' is out of range\n",
                             cmd,
                             w.woptarg.unwrap()
@@ -156,7 +156,7 @@ fn parse_cmd_opts(
                         return Err(STATUS_INVALID_ARGS);
                     }
                     _ => {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             BUILTIN_ERR_NOT_NUMBER,
                             cmd,
                             w.woptarg.unwrap()
@@ -189,7 +189,7 @@ fn parse_cmd_opts(
                 };
                 if let Some(old_mode) = opts.token_mode {
                     if old_mode != new_mode {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             BUILTIN_ERR_COMBO2,
                             cmd,
                             wgettext_fmt!(
@@ -448,7 +448,7 @@ fn validate_read_args(
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     if opts.prompt.is_some() && opts.prompt_str.is_some() {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: Options %s and %s cannot be used together\n",
             cmd,
             "-p",
@@ -459,7 +459,7 @@ fn validate_read_args(
     }
 
     if opts.delimiter.is_some() && opts.one_line {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: Options %s and %s cannot be used together\n",
             cmd,
             "--delimiter",
@@ -468,7 +468,7 @@ fn validate_read_args(
         return Err(STATUS_INVALID_ARGS);
     }
     if opts.one_line && opts.split_null {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: Options %s and %s cannot be used together\n",
             cmd,
             "-z",
@@ -484,7 +484,9 @@ fn validate_read_args(
     }
 
     if opts.place.contains(EnvMode::UNEXPORT) && opts.place.contains(EnvMode::EXPORT) {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
+        streams
+            .err
+            .append(&wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -496,7 +498,7 @@ fn validate_read_args(
         .count()
         > 1
     {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
+        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -505,21 +507,21 @@ fn validate_read_args(
     if !opts.array && argc < 1 && !opts.to_stdout {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc));
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.array && argc != 1 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc));
+            .append(&wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc));
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.to_stdout && argc > 0 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc));
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -533,7 +535,7 @@ fn validate_read_args(
 
     if let Some(token_mode) = opts.token_mode {
         if opts.delimiter.is_some() {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2_EXCLUSIVE,
                 cmd,
                 "--delimiter",
@@ -543,7 +545,7 @@ fn validate_read_args(
         }
 
         if opts.one_line {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2_EXCLUSIVE,
                 cmd,
                 "--line",
@@ -556,12 +558,12 @@ fn validate_read_args(
     // Verify all variable names.
     for arg in argv {
         if !valid_var_name(arg) {
-            streams.err.append(varname_error(cmd, arg));
+            streams.err.append(&varname_error(cmd, arg));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
         if EnvVar::flags_for(arg).contains(EnvVarFlags::READ_ONLY) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: %s: cannot overwrite read-only variable",
                 cmd,
                 arg
@@ -603,7 +605,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     if streams.stdin_fd < 0 {
         streams
             .err
-            .append(wgettext_fmt!("%s: stdin is closed\n", cmd));
+            .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
         return Err(STATUS_CMD_ERROR);
     }
 
@@ -677,7 +679,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         }
 
         if opts.to_stdout {
-            streams.out.append(buff);
+            streams.out.append(&buff);
             return exit_res;
         }
 

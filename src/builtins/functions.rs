@@ -132,13 +132,13 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         .count()
         > 1
     {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.report_metadata && opts.no_metadata {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -153,7 +153,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if let Some(desc) = opts.description {
         if args.len() != 1 {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Expected exactly one function name\n",
                 cmd
             ));
@@ -163,7 +163,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         let current_func = args[0];
 
         if !function::exists(current_func, parser) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Function '%s' does not exist\n",
                 cmd,
                 current_func
@@ -178,7 +178,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if opts.report_metadata {
         if args.len() != 1 {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_ARG_COUNT2,
                 cmd,
                 // This error is
@@ -261,7 +261,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         if !opts.handlers_type.unwrap_or(L!("")).is_empty()
             && !event::EVENT_FILTER_NAMES.contains(&opts.handlers_type.unwrap())
         {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Expected generic | variable | signal | exit | job-id for --handlers-type\n",
                 cmd
             ));
@@ -290,7 +290,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             }
             streams
                 .out
-                .append(reformat_for_screen(&buff, &termsize_last()));
+                .append(&reformat_for_screen(&buff, &termsize_last()));
         } else {
             for name in names {
                 streams.out.appendln(name);
@@ -301,7 +301,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if opts.copy {
         if args.len() != 2 {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Expected exactly two names (current function name, and new function name)\n",
                 cmd
             ));
@@ -312,7 +312,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         let new_func = args[1];
 
         if !function::exists(current_func, parser) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Function '%s' does not exist\n",
                 cmd,
                 current_func
@@ -322,7 +322,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         }
 
         if !valid_func_name(new_func) || parser_keywords_is_reserved(new_func) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Illegal function name '%s'\n",
                 cmd,
                 new_func
@@ -332,7 +332,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         }
 
         if function::exists(new_func, parser) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Function '%s' already exists. Cannot create copy of '%s'\n",
                 cmd,
                 new_func,
@@ -419,9 +419,9 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             highlight_shell(&def, &mut colors, &parser.context(), false, None);
             streams
                 .out
-                .append(bytes2wcstring(&colorize(&def, &colors, parser.vars())));
+                .append(&bytes2wcstring(&colorize(&def, &colors, parser.vars())));
         } else {
-            streams.out.append(def);
+            streams.out.append(&def);
         }
         first = false;
     }

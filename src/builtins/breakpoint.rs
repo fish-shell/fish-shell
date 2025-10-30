@@ -7,7 +7,7 @@ use libc::STDIN_FILENO;
 pub fn breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     if argv.len() != 1 {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_ARG_COUNT1,
             cmd,
             0,
@@ -28,7 +28,7 @@ pub fn breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
             .block_at_index(1)
             .is_none_or(|b| b.typ() == BlockType::breakpoint)
         {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Command not valid at an interactive prompt\n",
                 cmd,
             ));

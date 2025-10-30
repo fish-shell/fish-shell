@@ -105,7 +105,7 @@ impl StringSubCommand<'_> for Pad {
                 padded.push('\n');
             }
 
-            streams.out.append(padded);
+            streams.out.append(&padded);
         }
 
         Ok(())

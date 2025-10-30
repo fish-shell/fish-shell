@@ -17,7 +17,7 @@ fn send_to_bg(
         let jobs = parser.jobs();
         if !jobs[job_pos].wants_job_control() {
             let job = &jobs[job_pos];
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Can't put job %s, '%s' to background because it is not under job control\n",
                 cmd,
                 job.job_id().to_wstring(),
@@ -27,7 +27,7 @@ fn send_to_bg(
         }
 
         let job = &jobs[job_pos];
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "Send job %s '%s' to background\n",
             job.job_id().to_wstring(),
             job.command()
@@ -68,7 +68,7 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         let Some(job_pos) = job_pos else {
             streams
                 .err
-                .append(wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
+                .append(&wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
             return Err(STATUS_CMD_ERROR);
         };
 
@@ -103,7 +103,7 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         } else {
             streams
                 .err
-                .append(wgettext_fmt!("%s: Could not find job '%d'\n", cmd, pid));
+                .append(&wgettext_fmt!("%s: Could not find job '%d'\n", cmd, pid));
         }
     }
 

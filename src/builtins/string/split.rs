@@ -165,7 +165,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         args: &[&'args wstr],
     ) -> Result<(), ErrorCode> {
         if self.fields.is_empty() && self.allow_empty {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 args[0],
                 wgettext!("--allow-empty is only valid with --fields")

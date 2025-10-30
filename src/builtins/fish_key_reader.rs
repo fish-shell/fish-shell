@@ -59,7 +59,7 @@ fn should_exit(
             {
                 return true;
             }
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "Press ctrl-%c again to exit\n",
                 char::from(modes.c_cc[evt] + 0x60)
             ));
@@ -107,7 +107,7 @@ fn process_input(
         if verbose {
             streams.out.append(L!("# decoded from: "));
             for (i, byte) in kevt.seq.chars().enumerate() {
-                streams.out.append(char_to_symbol(byte, i == 0));
+                streams.out.append(&char_to_symbol(byte, i == 0));
             }
             streams.out.append(L!("\n"));
         }
@@ -125,7 +125,7 @@ fn process_input(
             keys.push((base_layout_key, "physical key"));
         }
         for (key, explanation) in keys {
-            streams.out.append(sprintf!(
+            streams.out.append(&sprintf!(
                 "bind %s 'do something'%s%s\n",
                 key,
                 if explanation.is_empty() { "" } else { " # " },
@@ -208,7 +208,7 @@ fn parse_flags(
                 *verbose = true;
             }
             ';' => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_UNEXP_ARG,
                     "fish_key_reader",
                     w.argv[w.wopt_index - 1]
@@ -216,7 +216,7 @@ fn parse_flags(
                 return ControlFlow::Break(Err(STATUS_CMD_ERROR));
             }
             '?' => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_UNKNOWN,
                     "fish_key_reader",
                     w.argv[w.wopt_index - 1]

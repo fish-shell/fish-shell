@@ -633,7 +633,7 @@ pub fn builtin_print_help(parser: &Parser, streams: &mut IoStreams, cmd: &wstr) 
     if res.status.normal_exited() && res.status.exit_code() == 2 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MISSING_HELP, name_esc, name_esc));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING_HELP, name_esc, name_esc));
     }
 }
 
@@ -647,7 +647,7 @@ pub fn builtin_unknown_option(
 ) {
     streams
         .err
-        .append(wgettext_fmt!(BUILTIN_ERR_UNKNOWN, cmd, opt));
+        .append(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, cmd, opt));
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
     }
@@ -664,7 +664,7 @@ pub fn builtin_missing_argument(
     if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
         // if c in -qc '-qc' is missing the argument, now opt is just 'c'
         opt = &opt[opt.len() - 1..];
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_MISSING,
             cmd,
             L!("-").to_owned() + opt
@@ -672,7 +672,7 @@ pub fn builtin_missing_argument(
     } else {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, opt));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, opt));
     }
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -689,7 +689,7 @@ pub fn builtin_unexpected_argument(
 ) {
     streams
         .err
-        .append(wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, cmd, opt));
+        .append(&wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, cmd, opt));
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
     }
@@ -701,10 +701,10 @@ pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &
     let stacktrace = parser.current_line();
     // Don't print two empty lines if we don't have a stacktrace.
     if !stacktrace.is_empty() {
-        b.append(stacktrace);
+        b.append(&stacktrace);
         b.append_char('\n');
     }
-    b.append(wgettext_fmt!(
+    b.append(&wgettext_fmt!(
         "(Type 'help %s' for related documentation)\n",
         cmd
     ));
@@ -718,7 +718,7 @@ pub fn builtin_wperror(program_name: &wstr, streams: &mut IoStreams) {
     streams.err.append(L!(": "));
     if err.0 != 0 {
         let werr = WString::from_str(&err.to_string());
-        streams.err.append(werr);
+        streams.err.append(&werr);
         streams.err.append_char('\n');
     }
 }
@@ -966,7 +966,7 @@ fn parsed_pid(
     match pid {
         Ok(pid @ 1..) => Ok(Pid::new(pid)),
         _ => {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: '%s' is not a valid process ID\n",
                 cmd,
                 arg
@@ -1017,7 +1017,7 @@ pub fn builtin_break_continue(
     if argc != 1 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]));
+            .append(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]));
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -1036,7 +1036,7 @@ pub fn builtin_break_continue(
     if !has_loop {
         streams
             .err
-            .append(wgettext_fmt!("%s: Not inside of loop\n", argv[0]));
+            .append(&wgettext_fmt!("%s: Not inside of loop\n", argv[0]));
         return Err(STATUS_CMD_ERROR);
     }
 

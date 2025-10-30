@@ -23,7 +23,7 @@ fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
                 libc::killpg(pgid.as_pid_t(), SIGCONT);
             }
         }
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: job %d ('%s') was stopped and has been signalled to continue.\n",
             cmd,
             j.job_id(),
@@ -68,7 +68,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         } else {
             streams
                 .err
-                .append(wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
+                .append(&wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
             retval = Err(STATUS_CMD_ERROR);
         }
     } else {
@@ -91,7 +91,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     // Valid identifier but no such job
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: Could not find job '%d'\n", cmd, pid));
+                        .append(&wgettext_fmt!("%s: Could not find job '%d'\n", cmd, pid));
                     None
                 })
             })

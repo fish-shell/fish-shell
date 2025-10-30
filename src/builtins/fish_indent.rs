@@ -1008,7 +1008,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
             ';' => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_UNEXP_ARG,
                     "fish_indent",
                     w.argv[w.wopt_index - 1]
@@ -1016,7 +1016,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
                 return Err(STATUS_CMD_ERROR);
             }
             '?' => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_UNKNOWN,
                     "fish_indent",
                     w.argv[w.wopt_index - 1]
@@ -1078,7 +1078,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
 
         if output_type == OutputType::PygmentsCsv {
             let output = make_pygments_csv(&src);
-            streams.out.append(bytes2wcstring(&output));
+            streams.out.append(&bytes2wcstring(&output));
             i += 1;
             continue;
         }
@@ -1176,7 +1176,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             }
         }
 
-        streams.out.append(bytes2wcstring(&colored_output));
+        streams.out.append(&bytes2wcstring(&colored_output));
         i += 1;
     }
     if retval == 0 {

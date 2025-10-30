@@ -47,7 +47,7 @@ fn print_colors(
     } // conveniently, 'normal' is always the last color so we don't need to reset here
 
     let contents = outp.contents();
-    streams.out.append(bytes2wcstring(contents));
+    streams.out.append(&bytes2wcstring(contents));
 }
 
 /// set_color builtin.
@@ -99,11 +99,11 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             Err(UnknownColor(arg)) => {
                 streams
                     .err
-                    .append(wgettext_fmt!("%s: Unknown color '%s'\n", argv[0], arg));
+                    .append(&wgettext_fmt!("%s: Unknown color '%s'\n", argv[0], arg));
                 return Err(STATUS_INVALID_ARGS);
             }
             Err(UnknownUnderlineStyle(arg)) => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: invalid underline style: %s\n",
                     argv[0],
                     arg
@@ -147,7 +147,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // Output the collected string.
     let contents = outp.contents();
-    streams.out.append(bytes2wcstring(contents));
+    streams.out.append(&bytes2wcstring(contents));
 
     Ok(SUCCESS)
 }

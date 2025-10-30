@@ -157,9 +157,9 @@ impl BuiltinBind {
             let mut colors = Vec::new();
             highlight_shell(&out, &mut colors, &parser.context(), false, None);
             let colored = colorize(&out, &colors, parser.vars());
-            streams.out.append(bytes2wcstring(&colored));
+            streams.out.append(&bytes2wcstring(&colored));
         } else {
-            streams.out.append(out);
+            streams.out.append(&out);
         }
 
         true
@@ -251,7 +251,7 @@ impl BuiltinBind {
         match parse_keys(seq) {
             Ok(keys) => Some(keys),
             Err(err) => {
-                streams.err.append(sprintf!("bind: %s\n", err));
+                streams.err.append(&sprintf!("bind: %s\n", err));
                 None
             }
         }
@@ -306,7 +306,7 @@ impl BuiltinBind {
         } else {
             // Inserting both on the other hand makes no sense.
             if self.opts.have_preset && self.opts.have_user {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_COMBO2_EXCLUSIVE,
                     cmd,
                     "--preset",
@@ -349,13 +349,13 @@ impl BuiltinBind {
                 );
                 if !self.opts.silent {
                     if seq.len() == 1 {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: No binding found for key '%s'\n",
                             cmd,
                             seq[0]
                         ));
                     } else {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: No binding found for key sequence '%s'\n",
                             cmd,
                             eseq
@@ -425,7 +425,7 @@ fn parse_cmd_opts(
 
     let mut check_mode_name = |mode_name: &wstr| -> Result<(), ErrorCode> {
         if !valid_var_name(mode_name) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_BIND_MODE,
                 cmd,
                 mode_name,
@@ -444,7 +444,7 @@ fn parse_cmd_opts(
             'f' => opts.mode = BIND_FUNCTION_NAMES,
             'h' => opts.print_help = true,
             'k' => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`\n",
                     cmd,
                 ));
@@ -557,7 +557,7 @@ impl BuiltinBind {
             _ => {
                 streams
                     .err
-                    .append(wgettext_fmt!("%s: Invalid state\n", cmd));
+                    .append(&wgettext_fmt!("%s: Invalid state\n", cmd));
                 return Err(STATUS_CMD_ERROR);
             }
         }

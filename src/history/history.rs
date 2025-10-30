@@ -1382,7 +1382,7 @@ impl History {
                 collected.push(formatted_record);
             } else {
                 // We can output this immediately.
-                if !streams.out.append(formatted_record) {
+                if !streams.out.append(&formatted_record) {
                     // This can happen if the user hit Ctrl-C to abort (maybe after the first page?).
                     output_error = true;
                     return ControlFlow::Break(());
@@ -1427,7 +1427,7 @@ impl History {
                 break;
             }
 
-            if !streams.out.append(item) {
+            if !streams.out.append(&item) {
                 // Don't force an error if output was aborted (typically via Ctrl-C/SIGINT); just don't
                 // try writing any more.
                 output_error = true;

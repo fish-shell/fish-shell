@@ -218,7 +218,7 @@ pub fn echo(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
     }
 
     if !out.is_empty() {
-        streams.out.append(out);
+        streams.out.append(&out);
     }
 
     Ok(SUCCESS)

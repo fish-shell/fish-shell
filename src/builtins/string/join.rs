@@ -61,7 +61,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let sep = &self.sep;
+        let sep = self.sep;
         let mut nargs = 0usize;
         let mut print_trailing_newline = true;
         for InputValue { arg, want_newline } in arguments(args, optind, streams) {
@@ -74,7 +74,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
                     streams.out.append(sep);
                 }
 
-                streams.out.append(arg);
+                streams.out.append(&arg);
             } else if nargs > 1 {
                 return Ok(());
             }

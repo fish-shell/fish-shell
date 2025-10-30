@@ -230,7 +230,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             newl.truncate(pos);
             newl.push_utfstr(ell);
             newl.push('\n');
-            streams.out.append(newl);
+            streams.out.append(&newl);
         }
 
         // Return true if we have shortened something and false otherwise.

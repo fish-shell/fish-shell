@@ -313,11 +313,12 @@ pub fn string_fuzzy_match_string(
 }
 
 /// Implementation of wcs2bytes that accepts a callback.
+/// The first argument can be either a `&str` or `&wstr`.
 /// This invokes `func` with byte slices containing the UTF-8 encoding of the characters in the
 /// input, doing one invocation per character.
 /// If `func` returns false, it stops; otherwise it continues.
 /// Return false if the callback returned false, otherwise true.
-pub fn wcs2bytes_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
+pub fn str2bytes_callback(input: impl IntoCharIter, mut func: impl FnMut(&[u8]) -> bool) -> bool {
     // A `char` represents an Unicode scalar value, which takes up at most 4 bytes when encoded in UTF-8.
     let mut converted = [0_u8; 4];
 

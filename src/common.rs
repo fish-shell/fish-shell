@@ -12,7 +12,7 @@ use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::prelude::*;
 use crate::terminal::Output;
 use crate::termsize::Termsize;
-use crate::wcstringutil::wcs2bytes_callback;
+use crate::wcstringutil::str2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
@@ -1179,7 +1179,7 @@ pub fn wcs2zstring(input: &wstr) -> CString {
     }
 
     let mut vec = Vec::with_capacity(input.len() + 1);
-    wcs2bytes_callback(input, |buff| {
+    str2bytes_callback(input, |buff| {
         vec.extend_from_slice(buff);
         true
     });
@@ -1201,7 +1201,7 @@ pub fn wcs2zstring(input: &wstr) -> CString {
 /// Like [`wcs2bytes`], but appends to `output` instead of returning a new string.
 pub fn wcs2bytes_appending(output: &mut Vec<u8>, input: &wstr) {
     output.reserve(input.len());
-    wcs2bytes_callback(input, |buff| {
+    str2bytes_callback(input, |buff| {
         output.extend_from_slice(buff);
         true
     });

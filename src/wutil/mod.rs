@@ -13,7 +13,7 @@ use crate::common::{
 };
 use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
-use crate::wcstringutil::{join_strings, wcs2bytes_callback};
+use crate::wcstringutil::{ToChars, join_strings, str2bytes_callback};
 use crate::{FLOG, fallback};
 use errno::errno;
 pub use gettext::{
@@ -381,7 +381,7 @@ pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
 /// This does NOT retry on EINTR or EAGAIN, it simply returns.
 /// Return -1 on error in which case errno will have been set. In this event, the number of bytes
 /// actually written cannot be obtained.
-pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
+pub fn unescape_bytes_and_write_to_fd(input: impl ToChars, fd: RawFd) -> Option<usize> {
     // Accumulate data in a local buffer.
     let mut accum = [0u8; 512];
     let mut accumlen = 0;
@@ -412,7 +412,7 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
         true
     };
 
-    let mut success = wcs2bytes_callback(input, |buff: &[u8]| {
+    let mut success = str2bytes_callback(input, |buff: &[u8]| {
         if buff.len() + accumlen > accum_capacity {
             // We have to flush.
             if !flush_accum(&mut total_written, &accum, &mut accumlen) {
@@ -479,7 +479,9 @@ pub fn wstr_offset_in(cursor: &wstr, base: &wstr) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_path, wbasename, wdirname, wstr_offset_in, wwrite_to_fd};
+    use super::{
+        normalize_path, unescape_bytes_and_write_to_fd, wbasename, wdirname, wstr_offset_in,
+    };
     use crate::common::wcs2bytes;
     use crate::fds::AutoCloseFd;
     use crate::tests::prelude::*;
@@ -677,7 +679,7 @@ mod tests {
                 input.push(rng.r#gen());
             }
 
-            let amt = wwrite_to_fd(&input, fd.fd()).unwrap();
+            let amt = unescape_bytes_and_write_to_fd(&input, fd.fd()).unwrap();
             let narrow = wcs2bytes(&input);
             assert_eq!(amt, narrow.len());
 

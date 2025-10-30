@@ -26,7 +26,7 @@ macro_rules! fprintf {
     ($fd:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {
         {
             let wide = $crate::wutil::sprintf!($fmt, $( $arg ),*);
-            $crate::wutil::wwrite_to_fd(&wide, $fd);
+            let _ = $crate::wutil::wwrite_to_fd(&wide, $fd);
         }
     }
 }

@@ -1,3 +1,8 @@
+mod fluent;
+pub use fluent::{
+    append_newline, fprint, localized_eprint, localized_eprintln, localized_format,
+    localized_formatln, localized_fprint, localized_fprintln, localized_print, localized_println,
+};
 mod gettext;
 pub use gettext::{
     LocalizableString, localizable_consts, localizable_string, wgettext, wgettext_fmt,

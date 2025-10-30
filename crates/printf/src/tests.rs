@@ -3,6 +3,7 @@ use crate::locale::{C_LOCALE, EN_US_LOCALE, Locale};
 use crate::{Error, FormatString, sprintf_locale};
 use libc::c_char;
 use std::f64::consts::{E, PI, TAU};
+use std::ffi::CStr;
 use std::fmt;
 
 // sprintf, checking length
@@ -855,25 +856,20 @@ fn test_float_hex_prec() {
     // Note that our hex float formatting rounds according to the rounding mode,
     // while libc may not; as a result we may differ in the last digit. So this
     // requires manual comparison.
-    let mut c_storage = [0u8; 256];
-    let c_storage_ptr = c_storage.as_mut_ptr() as *mut c_char;
     let mut rust_str = String::with_capacity(256);
 
-    let c_fmt = c"%.*a".as_ptr() as *const c_char;
+    let mut c_storage = [0u8; 256];
+    let mut libc_sprintf = libc_sprintf_one_float_with_precision(&mut c_storage, c"%.*a");
+
     let mut failed = false;
     for sign in [1.0, -1.0].into_iter() {
         for mut v in [0.0, 0.5, 1.0, 1.5, PI, TAU, E].into_iter() {
             v *= sign;
-            for preci in 1..=200_i32 {
+            for preci in 1..=200_usize {
                 rust_str.clear();
                 crate::sprintf!(=> &mut rust_str, "%.*a", preci, v);
 
-                let printf_str = unsafe {
-                    let len = libc::snprintf(c_storage_ptr, c_storage.len(), c_fmt, preci, v);
-                    assert!(len >= 0);
-                    let sl = std::slice::from_raw_parts(c_storage_ptr as *const u8, len as usize);
-                    std::str::from_utf8(sl).unwrap()
-                };
+                let printf_str = libc_sprintf(preci, v);
                 if rust_str != printf_str {
                     println!(
                         "Our printf and libc disagree on hex formatting of float: {v}
@@ -889,14 +885,27 @@ fn test_float_hex_prec() {
     assert!(!failed);
 }
 
-fn test_exhaustive(rust_fmt: &str, c_fmt: *const c_char) {
+fn libc_sprintf_one_float_with_precision<'a>(
+    storage: &'a mut [u8],
+    fmt: &'a CStr,
+) -> impl FnMut(usize, f64) -> &'a str {
+    |preci, float_val| unsafe {
+        let storage_ptr = storage.as_mut_ptr() as *mut c_char;
+        let len = libc::snprintf(storage_ptr, storage.len(), fmt.as_ptr(), preci, float_val);
+        assert!(len >= 0);
+        let sl = std::slice::from_raw_parts(storage_ptr as *const u8, len as usize);
+        std::str::from_utf8(sl).unwrap()
+    }
+}
+
+fn test_exhaustive(rust_fmt: &str, c_fmt: &CStr) {
     // "There's only 4 billion floats so test them all."
     // This tests a format string expected to be of the form "%.*g" or "%.*e".
     // That is, it takes a precision and a double.
     println!("Testing {rust_fmt}");
     let mut rust_str = String::with_capacity(128);
     let mut c_storage = [0u8; 128];
-    let c_storage_ptr = c_storage.as_mut_ptr() as *mut c_char;
+    let mut libc_sprintf = libc_sprintf_one_float_with_precision(&mut c_storage, c_fmt);
 
     for i in 0..=u32::MAX {
         if i % 1000000 == 0 {
@@ -908,12 +917,7 @@ fn test_exhaustive(rust_fmt: &str, c_fmt: *const c_char) {
             rust_str.clear();
             crate::sprintf!(=> &mut rust_str, rust_fmt, preci, ff);
 
-            let printf_str = unsafe {
-                let len = libc::snprintf(c_storage_ptr, c_storage.len(), c_fmt, preci, ff);
-                assert!(len >= 0);
-                let sl = std::slice::from_raw_parts(c_storage_ptr as *const u8, len as usize);
-                std::str::from_utf8(sl).unwrap()
-            };
+            let printf_str = libc_sprintf(preci, ff);
             if rust_str != printf_str {
                 println!(
                     "Rust and libc disagree on formatting float {i:x}: {ff}\n
@@ -932,19 +936,19 @@ fn test_exhaustive(rust_fmt: &str, c_fmt: *const c_char) {
 #[ignore]
 fn test_float_g_exhaustive() {
     // To run: cargo test test_float_g_exhaustive --release -- --ignored --nocapture
-    test_exhaustive("%.*g", c"%.*g".as_ptr() as *const c_char);
+    test_exhaustive("%.*g", c"%.*g");
 }
 
 #[test]
 #[ignore]
 fn test_float_e_exhaustive() {
     // To run: cargo test test_float_e_exhaustive --release -- --ignored --nocapture
-    test_exhaustive("%.*e", c"%.*e".as_ptr() as *const c_char);
+    test_exhaustive("%.*e", c"%.*e");
 }
 
 #[test]
 #[ignore]
 fn test_float_f_exhaustive() {
     // To run: cargo test test_float_f_exhaustive --release -- --ignored --nocapture
-    test_exhaustive("%.*f", c"%.*f".as_ptr() as *const c_char);
+    test_exhaustive("%.*f", c"%.*f");
 }

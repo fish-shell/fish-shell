@@ -312,6 +312,12 @@ impl ToChars for &String {
     }
 }
 
+impl ToChars for std::borrow::Cow<'_, str> {
+    fn to_chars(&self) -> impl Iterator<Item = char> {
+        self.chars()
+    }
+}
+
 impl ToChars for &wstr {
     fn to_chars(&self) -> impl Iterator<Item = char> {
         self.chars()

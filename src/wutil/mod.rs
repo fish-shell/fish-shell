@@ -11,9 +11,9 @@ use crate::common::{
     bytes2wcstring, fish_reserved_codepoint, wcs2bytes, wcs2osstring, wcs2zstring,
 };
 use crate::flog;
-use crate::wcstringutil::{join_strings, wcs2bytes_callback};
+use crate::wcstringutil::{join_strings, str2bytes_callback};
 use errno::errno;
-use fish_wchar::{L, WExt, WString, wstr};
+use fish_wchar::{IntoCharIter, L, WExt, WString, wstr};
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};
@@ -370,7 +370,7 @@ pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
 /// This does NOT retry on EINTR or EAGAIN, it simply returns.
 /// Return -1 on error in which case errno will have been set. In this event, the number of bytes
 /// actually written cannot be obtained.
-pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
+pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Option<usize> {
     // Accumulate data in a local buffer.
     let mut accum = [0u8; 512];
     let mut accumlen = 0;
@@ -401,7 +401,7 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
         true
     };
 
-    let mut success = wcs2bytes_callback(input, |buff: &[u8]| {
+    let mut success = str2bytes_callback(input, |buff: &[u8]| {
         if buff.len() + accumlen > accum_capacity {
             // We have to flush.
             if !flush_accum(&mut total_written, &accum, &mut accumlen) {
@@ -468,7 +468,9 @@ pub fn wstr_offset_in(cursor: &wstr, base: &wstr) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_path, wbasename, wdirname, wstr_offset_in, wwrite_to_fd};
+    use super::{
+        normalize_path, unescape_bytes_and_write_to_fd, wbasename, wdirname, wstr_offset_in,
+    };
     use crate::common::bytes2wcstring;
     use crate::fds::AutoCloseFd;
     use crate::prelude::*;
@@ -665,7 +667,7 @@ mod tests {
                 input.push(rng.random());
             }
 
-            let amt = wwrite_to_fd(&bytes2wcstring(&input), fd.fd()).unwrap();
+            let amt = unescape_bytes_and_write_to_fd(&bytes2wcstring(&input), fd.fd()).unwrap();
             assert_eq!(amt, input.len());
 
             assert!(unsafe { libc::lseek(fd.fd(), 0, SEEK_SET) } >= 0);

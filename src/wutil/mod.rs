@@ -13,7 +13,7 @@ use crate::common::{
 };
 use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
-use crate::wcstringutil::{join_strings, wcs2bytes_callback};
+use crate::wcstringutil::{ToChars, join_strings, str2bytes_callback};
 use crate::{FLOG, fallback};
 use errno::errno;
 pub use gettext::{
@@ -399,7 +399,7 @@ pub fn write_to_fd(input: &[u8], fd: RawFd) -> std::io::Result<()> {
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.
 /// Retry on interrupts.
 /// Returns an error if writing fails.
-pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> std::io::Result<()> {
+pub fn unescape_and_write_to_fd(input: impl ToChars, fd: RawFd) -> std::io::Result<()> {
     // Accumulate data in a local buffer.
     let mut accum = [0u8; 512];
     let mut accumlen = 0;
@@ -422,7 +422,7 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> std::io::Result<()> {
         Ok(())
     };
 
-    wcs2bytes_callback(input, |buff: &[u8]| {
+    str2bytes_callback(input, |buff: &[u8]| {
         if buff.len() + accumlen > accum_capacity {
             // We have to flush.
             flush_accum(&mut total_written, &accum, &mut accumlen)?;
@@ -484,7 +484,7 @@ pub fn wstr_offset_in(cursor: &wstr, base: &wstr) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_path, wbasename, wdirname, wstr_offset_in, wwrite_to_fd};
+    use super::{normalize_path, unescape_and_write_to_fd, wbasename, wdirname, wstr_offset_in};
     use crate::common::wcs2bytes;
     use crate::tests::prelude::*;
     use crate::util::get_rng;
@@ -683,7 +683,7 @@ mod tests {
                 input.push(rng.r#gen());
             }
 
-            wwrite_to_fd(&input, fd.fd()).unwrap();
+            unescape_and_write_to_fd(&input, fd.fd()).unwrap();
             let narrow = wcs2bytes(&input);
 
             assert!(unsafe { libc::lseek(fd.fd(), 0, SEEK_SET) } >= 0);

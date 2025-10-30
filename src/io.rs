@@ -11,7 +11,7 @@ use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::terminal::Output;
 use crate::wchar::prelude::*;
-use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
+use crate::wutil::{perror, perror_io, unescape_and_write_to_fd, wdirname, wstat};
 use errno::Errno;
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
@@ -767,7 +767,7 @@ impl FdOutputStream {
         if self.errored {
             return false;
         }
-        if let Err(e) = wwrite_to_fd(s, self.fd) {
+        if let Err(e) = unescape_and_write_to_fd(s, self.fd) {
             if e.kind() != std::io::ErrorKind::BrokenPipe {
                 perror("write");
             }

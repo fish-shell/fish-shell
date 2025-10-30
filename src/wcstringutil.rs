@@ -299,9 +299,16 @@ pub fn string_fuzzy_match_string(
 /// Implementation of wcs2bytes that accepts a callback.
 /// This invokes `func` with byte slices containing the UTF-8 encoding of the characters in the
 /// input, doing one invocation per character.
-/// If `func` returns false, it stops; otherwise it continues.
-/// Return false if the callback returned false, otherwise true.
-pub fn wcs2bytes_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
+/// If `func` returns an error, the error is returned immediately; otherwise it continues.
+/// Returns `Ok(())` if the entire input was processed without `func` returning an error.
+// Note that this could be generic in the error type.
+// It currently isn't, since there is no need for it, and some users pass `func`s which always
+// return `Ok(())`, which would require type annotations if this function was generic in the error
+// type.
+pub fn wcs2bytes_callback(
+    input: &wstr,
+    mut func: impl FnMut(&[u8]) -> Result<(), std::io::Error>,
+) -> Result<(), std::io::Error> {
     // A `char` represents an Unicode scalar value, which takes up at most 4 bytes when encoded in UTF-8.
     let mut converted = [0_u8; 4];
 
@@ -312,11 +319,9 @@ pub fn wcs2bytes_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> 
         } else {
             c.encode_utf8(&mut converted).as_bytes()
         };
-        if !func(bytes) {
-            return false;
-        }
+        func(bytes)?;
     }
-    true
+    Ok(())
 }
 
 /// Split a string by runs of any of the separator characters provided in `seps`.

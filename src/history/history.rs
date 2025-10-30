@@ -21,6 +21,7 @@ use crate::{
         LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, lock_and_load,
         rewrite_via_temporary_file,
     },
+    signal::SigChecker,
     threads::ThreadPool,
     wcstringutil::trim,
 };
@@ -1381,7 +1382,6 @@ impl History {
             } else {
                 // We can output this immediately.
                 if !streams.out.append(formatted_record) {
-                    // This can happen if the user hit Ctrl-C to abort (maybe after the first page?).
                     output_error = true;
                     return ControlFlow::Break(());
                 }
@@ -1418,22 +1418,22 @@ impl History {
                 );
             }
         }
+        if output_error {
+            return false;
+        }
+
+        let mut sigcheck = SigChecker::new(crate::topic_monitor::Topic::sighupint);
 
         // Output any items we collected (which only happens in reverse).
         for item in collected.into_iter().rev() {
-            if output_error {
+            if sigcheck.check() {
                 break;
             }
 
             if !streams.out.append(item) {
-                // Don't force an error if output was aborted (typically via Ctrl-C/SIGINT); just don't
-                // try writing any more.
-                output_error = true;
+                return false;
             }
         }
-
-        // We are intentionally not returning false in case of an output error, as the user aborting the
-        // output early (the most common case) isn't a reason to exit w/ a non-zero status code.
         true
     }
 

@@ -155,11 +155,6 @@ msgstr "%s 是函式"
 msgid "%s, version %s"
 msgstr "%s，%s 版"
 
-#
-#, c-format
-msgid "%s, version %s\n"
-msgstr "%s，%s 版\n"
-
 #, c-format
 msgid "%s: %*s\n"
 msgstr "%s：%*s\n"

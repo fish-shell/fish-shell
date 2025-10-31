@@ -32,28 +32,6 @@ jobs:
             target: alpine
           - os: ubuntu-latest
             target: ubuntu-oldest-supported
-          - os: ubuntu-latest
-            target: centos9
-          - os: ubuntu-latest
-            target: fedora
-          - os: ubuntu-latest
-            target: focal-32bit
-          - os: ubuntu-24.04-arm
-            target: focal-arm64
-          - os: ubuntu-latest
-            target: focal
-          - os: ubuntu-24.04-arm
-            target: jammy-armv7-32bit
-          - os: ubuntu-latest
-            target: jammy-asan
-          - os: ubuntu-latest
-            target: jammy-tsan
-          - os: ubuntu-latest
-            target: jammy
-          - os: ubuntu-latest
-            target: noble
-          - os: ubuntu-latest
-            target: opensuse-tumbleweed
     runs-on: ${{ matrix.os }}
 
     steps:

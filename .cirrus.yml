@@ -23,26 +23,6 @@ linux_task:
         - ninja fish_run_tests
     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
 
-linux_arm_task:
-    matrix:
-        - name: focal-arm64
-          arm_container:
-              image: ghcr.io/fish-shell/fish-ci/focal-arm64
-        - name: jammy-armv7-32bit
-          arm_container:
-              image: ghcr.io/fish-shell/fish-ci/jammy-armv7-32bit
-    tests_script:
-        # cirrus at times gives us 32 procs and 2 GB of RAM
-        # Unrestriced parallelism results in OOM
-        - lscpu || true
-        - (cat /proc/meminfo | grep MemTotal) || true
-        - mkdir build && cd build
-        - FISH_TEST_MAX_CONCURRENCY=6 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
-        - ninja -j 6 fish
-        - ninja fish_run_tests
-    # CI task disabled during RIIR transition
-    only_if: false && $CIRRUS_REPO_OWNER == 'fish-shell'
-
 freebsd_task:
     matrix:
         - name: FreeBSD 14

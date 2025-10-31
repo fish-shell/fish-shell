@@ -1836,7 +1836,16 @@ In UNIX, these are made up of several categories. The categories used by fish ar
 
    This is treated like :envvar:`LC_MESSAGES` except that it can hold multiple values,
    which allows to specify a priority list of languages for translation.
-   It's a :ref:`PATH variable <variables-path>`, like in `GNU gettext <https://www.gnu.org/software/gettext/manual/html_node/The-LANGUAGE-variable.html>`__. 
+   It's a :ref:`PATH variable <variables-path>`, like in `GNU gettext <https://www.gnu.org/software/gettext/manual/html_node/The-LANGUAGE-variable.html>`__.
+
+   Language identifiers without a region specified (e.g. ``zh``) result in all available variants of this language being tried in arbitrary order.
+   In this example, we might first look for messages in the ``zh_CN`` catalog, followed by ``zh_TW``, or the other way around.
+   This is different from GNU gettext, which uses a "default" variant of the language instead.
+   If you prefer a certain variant, specify it earlier in the list,
+   e.g. ``zh_TW:zh`` if your preferred language is ``zh_TW``, and you prefer any other variants of ``zh`` over the English default.
+   If ``zh_TW`` is the only variant of ``zh`` you want,
+   specifying ``zh_TW`` in the ``LANGUAGE`` variable will result in messages which are not available in ``zh_TW`` being displayed in English.
+
    See also :doc:`builtin _ (underscore) <cmds/_>`.
 
 .. envvar:: LC_ALL

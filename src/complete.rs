@@ -61,14 +61,16 @@ use crate::{
 // There are a few more completion description strings defined in expand.rs. Maybe all completion
 // description strings should be defined in the same file?
 
-/// Description for ~USER completion.
-static COMPLETE_USER_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Home for %s"));
+localizable_consts!(
+    /// Description for ~USER completion.
+    COMPLETE_USER_DESC "Home for %s"
 
-/// Description for short variables. The value is concatenated to this description.
-static COMPLETE_VAR_DESC_VAL: Lazy<&wstr> = Lazy::new(|| wgettext!("Variable: %s"));
+    /// Description for short variables. The value is concatenated to this description.
+    COMPLETE_VAR_DESC_VAL "Variable: %s"
 
-/// Description for abbreviations.
-static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %s"));
+    /// Description for abbreviations.
+    ABBR_DESC "Abbreviation: %s"
+);
 
 #[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
 pub struct CompletionMode {
@@ -1145,7 +1147,7 @@ impl<'ctx> Completer<'ctx> {
 
         let desc_func = move |key: &wstr| {
             let replacement = descs.get(key).expect("Abbreviation not found");
-            sprintf!(*ABBR_DESC, replacement)
+            wgettext_fmt!(ABBR_DESC, replacement)
         };
         self.complete_strings(
             &cmd,
@@ -1683,7 +1685,7 @@ impl<'ctx> Completer<'ctx> {
                     };
 
                     let value = expand_escape_variable(&var);
-                    desc = sprintf!(*COMPLETE_VAR_DESC_VAL, value);
+                    desc = wgettext_fmt!(COMPLETE_VAR_DESC_VAL, value);
                 }
             }
 
@@ -1812,7 +1814,7 @@ impl<'ctx> Completer<'ctx> {
                 }
 
                 if string_prefixes_string(user_name, &pw_name) {
-                    let desc = sprintf!(*COMPLETE_USER_DESC, &pw_name);
+                    let desc = wgettext_fmt!(COMPLETE_USER_DESC, &pw_name);
                     // Append a user name.
                     // TODO: propagate overflow?
                     let _ = self.completions.add(Completion::new(
@@ -1824,7 +1826,7 @@ impl<'ctx> Completer<'ctx> {
                     result = true;
                 } else if string_prefixes_string_case_insensitive(user_name, &pw_name) {
                     let name = sprintf!("~%s", &pw_name);
-                    let desc = sprintf!(*COMPLETE_USER_DESC, &pw_name);
+                    let desc = wgettext_fmt!(COMPLETE_USER_DESC, &pw_name);
 
                     // Append a user name
                     // TODO: propagate overflow?

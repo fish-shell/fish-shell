@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 
 #[cfg(feature = "localize-messages")]
 mod gettext_impl {
-    use std::sync::Mutex;
+    use std::{collections::HashSet, sync::Mutex};
 
     use once_cell::sync::Lazy;
 
@@ -16,20 +16,18 @@ mod gettext_impl {
 
     use crate::env::{EnvStack, Environment};
 
-    /// Tries to find a catalog for `language`.
+    /// Tries to find catalogs for `language`.
     /// `language` must be an ISO 639 language code, optionally followed by an underscore and an ISO
     /// 3166 country/territory code.
-    /// Always prefers the catalog with the exact same name as `language` if it exists.
+    /// Uses the catalog with the exact same name as `language` if it exists.
     /// If a country code is present (`ll_CC`), only the catalog named `ll` will be considered as a fallback.
-    /// If no country code is present (`ll`), an arbitrary catalog whose name starts with `ll_`
-    /// will be used as a fallback, if one exists.
-    /// If there is a catalog for the language, then `Some(catalog)` will be returned.
-    /// `None` will be returned if no variant of the language has localizations.
-    fn find_existing_catalog(language: &str) -> Option<Catalog> {
+    /// If no country code is present (`ll`), all catalogs whose names start with `ll_` will be used in
+    /// arbitrary order.
+    fn find_existing_catalogs(language: &str) -> Vec<(String, Catalog)> {
         // Try the exact name first.
         // If there already is a corresponding catalog return the language.
         if let Some(catalog) = CATALOGS.get(language) {
-            return Some(catalog);
+            return vec![(language.to_owned(), catalog)];
         }
         let language_without_country_code =
             language.split_once('_').map_or(language, |(ll, _cc)| ll);
@@ -38,17 +36,21 @@ mod gettext_impl {
             // Note that it is important to include the underscore in the pattern, otherwise `ll` might
             // fall back to `llx_CC`, where `llx` is a 3-letter language identifier.
             let ll_prefix = format!("{language}_");
+            let mut lang_catalogs = vec![];
             for (&lang_name, &catalog) in CATALOGS.entries() {
                 if lang_name.starts_with(&ll_prefix) {
-                    return Some(catalog);
+                    lang_catalogs.push((lang_name.to_owned(), catalog));
                 }
             }
-            // No localizations for the language (and any regional variations) exist.
-            None
+            lang_catalogs
         } else {
             // If `language` contained a country code, we only try to fall back to a catalog
             // without a country code.
-            CATALOGS.get(language_without_country_code).copied()
+            if let Some(catalog) = CATALOGS.get(language_without_country_code) {
+                vec![(language_without_country_code.to_owned(), catalog)]
+            } else {
+                vec![]
+            }
         }
     }
 
@@ -143,10 +145,13 @@ mod gettext_impl {
 
     /// Implementation of the function with the same name in super.
     pub(super) fn update_locale_from_env(vars: &EnvStack) {
+        let mut seen_languages = HashSet::new();
         let mut language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();
         *language_precedence = get_language_preferences_from_env(vars)
-            .iter()
-            .filter_map(|lang| find_existing_catalog(lang))
+            .into_iter()
+            .flat_map(|lang| find_existing_catalogs(&lang))
+            .filter(|(lang, _)| seen_languages.insert(lang.to_owned()))
+            .map(|(_, catalog)| catalog)
             .collect();
     }
 }

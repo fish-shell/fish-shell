@@ -25,8 +25,8 @@ runs:
         set -x
         toolchain=$(
           case "$toolchain_channel" in
-            (stable) echo 1.91 ;;
-            (msrv)   echo 1.85 ;;
+            (stable) echo 1.91 ;; # updatecli.d/rust.yml
+            (msrv)   echo 1.85 ;; # updatecli.d/rust.yml
             (*)
               printf >&2 "error: unsupported toolchain channel %s" "$toolchain_channel"
               exit 1

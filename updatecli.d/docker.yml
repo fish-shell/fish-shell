@@ -1,0 +1,65 @@
+name: "Update Linux docker images"
+
+sources:
+  alpine_latest_version:
+    kind: dockerimage
+    spec:
+      image: alpine
+      tagfilter: "^[0-9]+\\.[0-9]+$"
+      versionfilter:
+        kind: semver
+  ubuntu_latest_lts_version:
+    kind: shell
+    spec:
+      shell: bash
+      command: |
+        set -eo pipefail
+        curl -fsS https://endoflife.date/api/ubuntu.json |
+          jq -r --arg today "$today" '
+            .[]
+            | select(.lts)
+            | "\(.cycle)"
+          ' |
+          sort --version-sort |
+          tail -1
+  ubuntu_oldest_non_eol_version:
+    kind: shell
+    spec:
+      shell: bash
+      command: |
+        set -eo pipefail
+        today=$(date --iso-8601)
+        curl -fsS https://endoflife.date/api/ubuntu.json |
+          jq -r --arg today "$today" '
+            .[]
+            | select(.eol >= $today)
+            | "\(.cycle)"
+          ' |
+          sort --version-sort |
+          head -1
+
+targets:
+  update_alpine_dockerfile:
+    name: "Update Alpine Linux version"
+    sourceid: alpine_latest_version
+    kind: file
+    spec:
+      file: docker/alpine.Dockerfile
+      matchpattern: "FROM alpine:.*"
+      replacepattern: 'FROM alpine:{{ source "alpine_latest_version" }} # updatecli.d/docker.yml'
+  ubuntu_latest_version_dockerfile:
+    name: "Update oldest non-EOL Ubuntu Linux version"
+    sourceid: ubuntu_latest_lts_version
+    kind: file
+    spec:
+      file: docker/ubuntu-latest-lts.Dockerfile
+      matchpattern: "FROM ubuntu:.*"
+      replacepattern: 'FROM ubuntu:{{ source "ubuntu_latest_lts_version" }} # updatecli.d/docker.yml'
+  ubuntu_oldest_supported_dockerfile:
+    name: "Update oldest non-EOL Ubuntu Linux version"
+    sourceid: ubuntu_oldest_non_eol_version
+    kind: file
+    spec:
+      file: docker/ubuntu-oldest-supported.Dockerfile
+      matchpattern: "FROM ubuntu:.*"
+      replacepattern: 'FROM ubuntu:{{ source "ubuntu_oldest_non_eol_version" }} # updatecli.d/docker.yml'

@@ -25,9 +25,9 @@ linux_task:
 
 freebsd_task:
     matrix:
-        - name: FreeBSD 14
+        - name: FreeBSD Stable
           freebsd_instance:
-              image: freebsd-14-3-release-amd64-ufs
+              image: freebsd-14-3-release-amd64-ufs # updatecli.d/cirrus-freebsd.yml
     tests_script:
         - pkg install -y cmake-core devel/pcre2 devel/ninja gettext git-lite lang/rust misc/py-pexpect
         # libclang.so is a required build dependency for rust-c++ ffi bridge

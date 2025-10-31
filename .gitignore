@@ -7,7 +7,6 @@
 *.DS_Store
 *.a
 *.app
-*.d
 *.dll
 *.dylib
 *.exe

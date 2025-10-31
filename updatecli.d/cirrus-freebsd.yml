@@ -1,0 +1,21 @@
+name: "Update FreeBSD image used in Cirrus CI"
+
+sources:
+  freebsd_stable_version:
+    kind: shell
+    spec:
+      shell: bash
+      command: |
+        set -eo pipefail
+        gcloud compute images list --project freebsd-org-cloud-dev --no-standard-images |
+          grep -o '^freebsd-.*-release-amd64-ufs' |
+          tail -1
+targets:
+  cirrus_freebsd_stable_version:
+    name: "Update FreeBSD stable version"
+    sourceid: freebsd_stable_version
+    kind: file
+    spec:
+      file: .cirrus.yml
+      matchpattern: "image: freebsd-.*-release-amd64-ufs.*"
+      replacepattern: 'image: {{ source "freebsd_stable_version" }} # updatecli.d/cirrus-freebsd.yml'

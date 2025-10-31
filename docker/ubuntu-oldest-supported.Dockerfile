@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04 # updatecli.d/docker.yml
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG=C.UTF-8
@@ -33,7 +33,7 @@ RUN groupadd -g 1000 fishuser \
 USER fishuser
 WORKDIR /home/fishuser
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
+RUN curl --proto '=https' --tlsv1.2 -fsS https://sh.rustup.rs > /tmp/rustup.sh \
   && sh /tmp/rustup.sh -y --no-modify-path
 ENV PATH=/home/fishuser/.cargo/bin:$PATH
 

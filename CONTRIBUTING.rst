@@ -409,6 +409,12 @@ You can use either single or double quotes to enclose the
 message to be translated. You can also optionally include spaces after
 the opening parentheses or before the closing parentheses.
 
+Updating Dependencies
+=====================
+
+To update dependencies, run ``build_tools/update-dependencies.sh``.
+This currently requires `updatecli <https://github.com/updatecli/updatecli>`__ and a few other tools.
+
 Versioning
 ==========
 

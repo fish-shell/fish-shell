@@ -1,4 +1,4 @@
-FROM alpine:3.22
+FROM alpine:3.22 # updatecli.d/docker.yml
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG=C.UTF-8

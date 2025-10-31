@@ -1213,9 +1213,8 @@ fn get_fallback(role: HighlightRole) -> HighlightRole {
 }
 
 /// Describes the role of a span of text.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 #[repr(u8)]
-#[derive(Default)]
 pub enum HighlightRole {
     #[default]
     normal, // normal text

@@ -3,7 +3,7 @@ use std::sync::atomic::Ordering;
 // Implementation of the block builtin.
 use super::prelude::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 enum Scope {
     #[default]
     Unset,

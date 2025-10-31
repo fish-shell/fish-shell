@@ -133,7 +133,7 @@ echo (_ file)
 set -l LANGUAGE pt_BR de_DE
 status language
 # CHECK: Active languages (source: LANGUAGE variable):
-# CHECK:   Fluent: en
+# CHECK:   Fluent: pt_BR de en
 # CHECK:   gettext: pt_BR de
 echo (_ file)
 # CHECK: arquivo
@@ -143,7 +143,7 @@ status language set fr_FR de pt_BR
 # CHECKERR: No catalogs available for language specifiers: fr_FR
 status language
 # CHECK: Active languages (source: `status language set` command):
-# CHECK:   Fluent: en
+# CHECK:   Fluent: de pt_BR en
 # CHECK:   gettext: de pt_BR
 echo (_ file)
 # CHECK: Datei
@@ -151,7 +151,7 @@ echo (_ file)
 set -l LANGUAGE zh_TW
 status language
 # CHECK: Active languages (source: `status language set` command):
-# CHECK:   Fluent: en
+# CHECK:   Fluent: de pt_BR en
 # CHECK:   gettext: de pt_BR
 echo (_ file)
 # CHECK: Datei
@@ -159,7 +159,7 @@ echo (_ file)
 set -l LC_MESSAGES C
 status language
 # CHECK: Active languages (source: `status language set` command):
-# CHECK:   Fluent: en
+# CHECK:   Fluent: de pt_BR en
 # CHECK:   gettext: de pt_BR
 echo (_ file)
 # CHECK: Datei
@@ -175,7 +175,7 @@ echo (_ file)
 set --erase LC_MESSAGES
 status language
 # CHECK: 使用的語言（來源：LANGUAGE variable）：
-# CHECK:   Fluent: en
+# CHECK:   Fluent: zh_TW en
 # CHECK:   gettext: zh_TW
 echo (_ file)
 # CHECK: 檔案

@@ -43,6 +43,7 @@ use fish::{
     history::{self, start_private_mode},
     io::IoChain,
     locale::set_libc_locales,
+    localized_println,
     nix::{RUsage, getpid, getrusage, isatty},
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
@@ -324,9 +325,10 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             }
             'P' => opts.enable_private_mode = true,
             'v' => {
-                printf!(
-                    "%s",
-                    wgettext_fmt!("%s, version %s\n", PACKAGE_NAME, fish::BUILD_VERSION)
+                localized_println!(
+                    "fish-version",
+                    package_name = PACKAGE_NAME,
+                    version = fish::BUILD_VERSION
                 );
                 return ControlFlow::Break(0);
             }

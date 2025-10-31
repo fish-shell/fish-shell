@@ -153,10 +153,6 @@ msgid "%s, version %s"
 msgstr ""
 
 #, c-format
-msgid "%s, version %s\n"
-msgstr "%s, version %s\n"
-
-#, c-format
 msgid "%s: %*s\n"
 msgstr ""
 

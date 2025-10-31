@@ -20,14 +20,15 @@ use crate::wcstringutil::{
 };
 use crate::wutil::dir_iter::DirEntryType;
 use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
-use once_cell::sync::Lazy;
 
-static COMPLETE_EXEC_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("command"));
-static COMPLETE_EXEC_LINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("command link"));
-static COMPLETE_FILE_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("file"));
-static COMPLETE_SYMLINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("symlink"));
-static COMPLETE_DIRECTORY_SYMLINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("dir symlink"));
-static COMPLETE_DIRECTORY_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("directory"));
+localizable_consts!(
+    COMPLETE_EXEC_DESC "command"
+    COMPLETE_EXEC_LINK_DESC "command link"
+    COMPLETE_FILE_DESC "file"
+    COMPLETE_SYMLINK_DESC "symlink"
+    COMPLETE_DIRECTORY_SYMLINK_DESC "dir symlink"
+    COMPLETE_DIRECTORY_DESC "directory"
+);
 
 /// Character representing any character except '/' (slash).
 pub const ANY_CHAR: char = char_offset(WILDCARD_RESERVED_BASE, 0);
@@ -313,18 +314,18 @@ fn file_get_desc(
 
     return if is_link {
         if is_dir {
-            *COMPLETE_DIRECTORY_SYMLINK_DESC
+            wgettext!(COMPLETE_DIRECTORY_SYMLINK_DESC)
         } else if is_executable(filename) {
-            *COMPLETE_EXEC_LINK_DESC
+            wgettext!(COMPLETE_EXEC_LINK_DESC)
         } else {
-            *COMPLETE_SYMLINK_DESC
+            wgettext!(COMPLETE_SYMLINK_DESC)
         }
     } else if is_dir {
-        *COMPLETE_DIRECTORY_DESC
+        wgettext!(COMPLETE_DIRECTORY_DESC)
     } else if is_executable(filename) {
-        *COMPLETE_EXEC_DESC
+        wgettext!(COMPLETE_EXEC_DESC)
     } else {
-        *COMPLETE_FILE_DESC
+        wgettext!(COMPLETE_FILE_DESC)
     };
 }
 

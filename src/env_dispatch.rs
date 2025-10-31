@@ -532,7 +532,7 @@ fn init_locale(vars: &EnvStack) {
     invalidate_numeric_locale();
 
     #[cfg(feature = "localize-messages")]
-    crate::wutil::gettext::update_locale_from_env(vars);
+    crate::localization::set_language_precedence_from_env(vars);
 }
 
 pub fn use_posix_spawn() -> bool {

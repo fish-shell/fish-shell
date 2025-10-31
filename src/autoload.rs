@@ -36,9 +36,7 @@ pub struct Autoload {
     current_autoloading: HashSet<WString>,
 
     /// The autoload cache.
-    /// This is a unique_ptr because want to change it if the value of our environment variable
-    /// changes. This is never null (but it may be a cache with no paths).
-    cache: Box<AutoloadFileCache>,
+    cache: AutoloadFileCache,
 }
 
 #[cfg(feature = "embed-data")]
@@ -209,7 +207,7 @@ impl Autoload {
     /// Invalidate any underlying cache.
     #[cfg(test)]
     fn invalidate_cache(&mut self) {
-        *self.cache = AutoloadFileCache::with_dirs(self.cache.dirs().to_owned());
+        self.cache = AutoloadFileCache::with_dirs(self.cache.dirs().to_owned());
     }
 
     /// Like resolve_autoload(), but accepts the paths directly.
@@ -224,7 +222,7 @@ impl Autoload {
         // Note we don't have to modify autoloadable_files_. We'll naturally detect if those have
         // changed when we query the cache.
         if paths != self.cache.dirs() {
-            *self.cache = AutoloadFileCache::with_dirs(paths.to_owned());
+            self.cache = AutoloadFileCache::with_dirs(paths.to_owned());
         }
 
         // Do we have an entry to load?

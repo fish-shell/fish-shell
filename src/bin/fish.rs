@@ -406,7 +406,7 @@ fn throwing_main() -> i32 {
         set_libc_locales(/*log_ok=*/ false)
     };
 
-    fish::wutil::gettext::initialize_gettext();
+    fish::localization::initialize_localization();
 
     // Enable debug categories set in FISH_DEBUG.
     // This is in *addition* to the ones given via --debug.

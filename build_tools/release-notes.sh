@@ -11,6 +11,7 @@ mkdir -p "$relnotes_tmp/fake-workspace" "$relnotes_tmp/out"
     cp -r doc_src CONTRIBUTING.rst README.rst "$relnotes_tmp/fake-workspace"
 )
 version=$(sed 's,^fish \(\S*\) .*,\1,; 1q' "$workspace_root/CHANGELOG.rst")
+add_stats=false
 previous_version=$(
     cd "$workspace_root"
     git for-each-ref --format='%(objecttype) %(refname:strip=2)' refs/tags |
@@ -19,22 +20,21 @@ previous_version=$(
 )
 minor_version=${version%.*}
 previous_minor_version=${previous_version%.*}
+if [ "$minor_version" != "$previous_minor_version" ]; then
+    add_stats=true
+fi
 {
     sed -n 1,2p <"$workspace_root/CHANGELOG.rst"
-
-    ListCommitters() {
-        comm "$@" "$relnotes_tmp/committers-then" "$relnotes_tmp/committers-now"
-    }
-    (
-        cd "$workspace_root"
-        git log "$previous_version" --format="%aN" | sort -u >"$relnotes_tmp/committers-then"
-        git log "$previous_version".. --format="%aN" | sort -u >"$relnotes_tmp/committers-now"
-        ListCommitters -13 >"$relnotes_tmp/committers-new"
-        ListCommitters -12 >"$relnotes_tmp/committers-returning"
-    )
-    if [ "$minor_version" != "$previous_minor_version" ]; then
+    if $add_stats; then {
+        ListCommitters() {
+            comm "$@" "$relnotes_tmp/committers-then" "$relnotes_tmp/committers-now"
+        }
         (
             cd "$workspace_root"
+            git log "$previous_version" --format="%aN" | sort -u >"$relnotes_tmp/committers-then"
+            git log "$previous_version".. --format="%aN" | sort -u >"$relnotes_tmp/committers-now"
+            ListCommitters -13 >"$relnotes_tmp/committers-new"
+            ListCommitters -12 >"$relnotes_tmp/committers-returning"
             num_commits=$(git log --no-merges --format=%H "$previous_version".. | wc -l)
             num_authors=$(wc -l <"$relnotes_tmp/committers-now")
             num_new_authors=$(wc -l <"$relnotes_tmp/committers-new")
@@ -44,7 +44,7 @@ previous_minor_version=${previous_version%.*}
             echo
             echo
         )
-    fi
+    } fi
 
     printf '%s\n' "$(awk <"$workspace_root/CHANGELOG.rst" '
         NR <= 2 || /^\.\. ignore / { next }
@@ -53,7 +53,7 @@ previous_minor_version=${previous_version%.*}
     ' | sed '$d')" |
         sed -e '$s/^----*$//' # Remove spurious transitions at the end of the document.
 
-    if [ "$minor_version" != "$previous_minor_version" ]; then {
+    if $add_stats; then {
         JoinEscaped() {
             LC_CTYPE=C.UTF-8 sed 's/\S/\\&/g' |
                 awk '

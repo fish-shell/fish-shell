@@ -1506,9 +1506,7 @@ impl<'ctx> Completer<'ctx> {
             }
         }
 
-        if has_force {
-            *out_do_file = true;
-        } else if s.starts_with('.') || s.starts_with('/') {
+        if has_force || s.starts_with('.') || s.starts_with('/') {
             *out_do_file = true;
         } else if !use_files {
             *out_do_file = false;

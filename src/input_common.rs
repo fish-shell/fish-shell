@@ -10,7 +10,6 @@ use crate::key::{
     canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
 };
 use crate::reader::reader_test_and_clear_interrupted;
-use crate::threads::iothread_port;
 use crate::tty_handoff::{
     SCROLL_CONTENT_UP_TERMINFO_CODE, XTVERSION, maybe_set_kitty_keyboard_capability,
     maybe_set_scroll_content_up_capability,
@@ -477,14 +476,13 @@ fn readb(in_fd: RawFd) -> Option<u8> {
     Some(c)
 }
 
-fn next_input_event(in_fd: RawFd, timeout: Timeout) -> InputEventTrigger {
+fn next_input_event(in_fd: RawFd, ioport_fd: RawFd, timeout: Timeout) -> InputEventTrigger {
     let mut fdset = FdReadableSet::new();
     loop {
         fdset.clear();
         fdset.add(in_fd);
 
-        // Add the completion ioport.
-        let ioport_fd = iothread_port();
+        // Add the completion ioport (possibly -1 - a no-op).
         fdset.add(ioport_fd);
 
         // Get the uvar notifier fd (possibly none).
@@ -761,6 +759,7 @@ pub trait InputEventQueuer {
 
             match next_input_event(
                 self.get_in_fd(),
+                self.get_ioport_fd(),
                 if self.is_blocked_querying() {
                     Timeout::Duration(self.get_input_data().blocking_query_timeout.unwrap())
                 } else {
@@ -809,7 +808,11 @@ pub trait InputEventQueuer {
                         match decode_one_codepoint_utf8(&mut seq, InvalidPolicy::Error, &buffer) {
                             DecodeState::Incomplete => {
                                 buffer.push(
-                                    match next_input_event(self.get_in_fd(), Timeout::Forever) {
+                                    match next_input_event(
+                                        self.get_in_fd(),
+                                        self.get_ioport_fd(),
+                                        Timeout::Forever,
+                                    ) {
                                         InputEventTrigger::Byte(b) => b,
                                         _ => 0,
                                     },
@@ -1423,6 +1426,11 @@ pub trait InputEventQueuer {
     /// Return the fd from which to read.
     fn get_in_fd(&self) -> RawFd {
         self.get_input_data().in_fd
+    }
+
+    /// Return the fd of the IO port, or -1 if none.
+    fn get_ioport_fd(&self) -> RawFd {
+        -1
     }
 
     /// Return the input data. This is to be implemented by the concrete type.

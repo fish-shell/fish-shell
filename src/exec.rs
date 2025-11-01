@@ -41,7 +41,7 @@ use crate::proc::{
 };
 use crate::reader::{reader_run_count, safe_restore_term_mode};
 use crate::redirection::{Dup2List, dup2_list_resolve_chain};
-use crate::threads::{iothread_perform_cant_wait, is_forked_child};
+use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wchar::prelude::*;
@@ -60,8 +60,20 @@ use std::mem::MaybeUninit;
 use std::num::NonZeroU32;
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::slice;
-use std::sync::atomic::Ordering;
-use std::sync::{Arc, atomic::AtomicUsize};
+use std::sync::{
+    Arc, OnceLock,
+    atomic::{AtomicUsize, Ordering},
+};
+
+/// The singleton shared exec thread pool.
+/// This is used to write the output of internal processes (e.g. builtins)
+/// to their target fds.
+/// TODO: this IO could be multiplexed using FdMonitor.
+fn exec_thread_pool() -> &'static Arc<ThreadPool> {
+    static EXEC_THREAD_POOL: OnceLock<Arc<ThreadPool>> = OnceLock::new();
+    // Use an unbounded queue because otherwise we risk deadlock.
+    EXEC_THREAD_POOL.get_or_init(|| ThreadPool::new(1, usize::MAX))
+}
 
 /// Execute the processes specified by `j` in the parser \p.
 /// On a true return, the job was successfully launched and the parser will take responsibility for
@@ -601,7 +613,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
     // builtin_run provide this directly, rather than setting it in the process.
     f.success_status = p.status();
 
-    iothread_perform_cant_wait(move || {
+    exec_thread_pool().perform(move || {
         let mut status = f.success_status;
         if !f.skip_out() {
             if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {

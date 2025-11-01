@@ -1,19 +1,14 @@
-use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name};
+use crate::common::{Named, escape, get_by_sorted_name};
 use crate::env::Environment;
-use crate::event;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
-    CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer, KeyMatchQuality,
+    CharEvent, CharInputStyle, ImplicitEvent, InputEventQueuer, KeyMatchQuality,
     R_END_INPUT_FUNCTIONS, ReadlineCmd, match_key_event_to_key,
 };
 use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
-use crate::proc::job_reap;
-use crate::reader::{
-    Reader, reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint,
-};
-use crate::signal::signal_clear_cancel;
-use crate::threads::{assert_is_main_thread, iothread_service_main};
+use crate::reader::{Reader, reader_reset_interrupted};
+use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
 use std::mem;
@@ -374,68 +369,6 @@ pub fn init_input() {
         add_raw("\x1B[B", "down-line");
         add_raw("\x1B[C", "forward-char");
         add_raw("\x1B[D", "backward-char");
-    }
-}
-
-impl<'a> InputEventQueuer for Reader<'a> {
-    fn get_input_data(&self) -> &InputData {
-        &self.data.input_data
-    }
-
-    fn get_input_data_mut(&mut self) -> &mut InputData {
-        &mut self.data.input_data
-    }
-
-    fn prepare_to_select(&mut self) {
-        // Fire any pending events and reap stray processes, including printing exit status messages.
-        event::fire_delayed(self.parser);
-        if job_reap(self.parser, true) {
-            reader_schedule_prompt_repaint();
-        }
-    }
-
-    fn select_interrupted(&mut self) {
-        // Readline commands may be bound to \cc which also sets the cancel flag.
-        // See #6937, #8125.
-        signal_clear_cancel();
-
-        // Fire any pending events and reap stray processes, including printing exit status messages.
-        let parser = self.parser;
-        event::fire_delayed(parser);
-        if job_reap(parser, true) {
-            reader_schedule_prompt_repaint();
-        }
-
-        // Tell the reader an event occurred.
-        if reader_reading_interrupted(self) != 0 {
-            self.enqueue_interrupt_key();
-            return;
-        }
-        self.push_front(CharEvent::from_check_exit());
-    }
-
-    fn uvar_change_notified(&mut self) {
-        self.parser.sync_uvars_and_fire(true /* always */);
-    }
-
-    fn ioport_notified(&mut self) {
-        iothread_service_main(self);
-    }
-
-    fn paste_start_buffering(&mut self) {
-        self.input_data.paste_buffer = Some(vec![]);
-        self.push_front(CharEvent::from_readline(ReadlineCmd::BeginUndoGroup));
-    }
-
-    fn paste_commit(&mut self) {
-        self.push_front(CharEvent::from_readline(ReadlineCmd::EndUndoGroup));
-        let Some(buffer) = self.input_data.paste_buffer.take() else {
-            return;
-        };
-        self.push_front(CharEvent::Command(sprintf!(
-            "__fish_paste %s",
-            escape(&bytes2wcstring(&buffer))
-        )));
     }
 }
 

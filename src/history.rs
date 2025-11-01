@@ -21,6 +21,7 @@ use crate::{
         LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, lock_and_load,
         rewrite_via_temporary_file,
     },
+    threads::ThreadPool,
     wcstringutil::trim,
 };
 use std::{
@@ -55,7 +56,7 @@ use crate::{
     parse_constants::{ParseTreeFlags, StatementDecoration},
     parse_util::{parse_util_detect_errors, parse_util_unescape_wildcards},
     path::{path_get_config, path_get_data, path_is_valid},
-    threads::{assert_is_background_thread, iothread_perform},
+    threads::assert_is_background_thread,
     util::{find_subslice, get_rng},
     wchar::prelude::*,
     wcstringutil::subsequence_in_string,
@@ -357,6 +358,8 @@ struct HistoryImpl {
     loaded_old: bool, // false
     /// List of old items, as offsets into out mmap data.
     old_item_offsets: Vec<usize>,
+    /// Thread pool for background operations.
+    thread_pool: Arc<ThreadPool>,
 }
 
 impl HistoryImpl {
@@ -809,6 +812,8 @@ impl HistoryImpl {
             countdown_to_vacuum: None,
             loaded_old: false,
             old_item_offsets: Vec::new(),
+            // Up to 8 threads, no soft min.
+            thread_pool: ThreadPool::new(0, 8),
         }
     }
 
@@ -1361,9 +1366,10 @@ impl History {
             // and unblock the item.
             // Don't hold the lock while we perform this file detection.
             imp.add(item, /*pending=*/ true, to_disk);
+            let thread_pool = Arc::clone(&imp.thread_pool);
             drop(imp);
             let vars_snapshot = vars.snapshot();
-            iothread_perform(move || {
+            thread_pool.perform(move || {
                 // Don't hold the lock while we perform this file detection.
                 let validated_paths = expand_and_detect_paths(potential_paths, &vars_snapshot);
                 let mut imp = self.imp();

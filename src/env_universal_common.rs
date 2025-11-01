@@ -809,19 +809,28 @@ mod tests {
     use crate::common::wcs2osstring;
     use crate::env::{EnvVar, EnvVarFlags, VarTable};
     use crate::env_universal_common::{EnvUniversal, UvarFormat};
-    use crate::reader::fake_scoped_reader;
     use crate::tests::prelude::*;
-    use crate::threads::{iothread_drain_all, iothread_perform};
     use crate::wchar::prelude::*;
     use crate::wutil::{INVALID_FILE_ID, file_id_for_path};
 
     const UVARS_PER_THREAD: usize = 8;
-    const UVARS_TEST_PATH: &wstr = L!("test/fish_uvars_test/varsfile.txt");
 
-    fn test_universal_helper(x: usize) {
+    /// Creates a unique temporary directory and file path for universal variable tests.
+    /// Returns (directory_path, file_path).
+    fn make_test_uvar_path(test_name: &str) -> (std::path::PathBuf, WString) {
+        let test_dir = std::env::temp_dir().join(format!(
+            "fish_test_{}_{:?}",
+            test_name,
+            std::thread::current().id()
+        ));
+        let test_path = sprintf!("%s/varsfile.txt", test_dir.to_string_lossy());
+        (test_dir, test_path)
+    }
+
+    fn test_universal_helper(x: usize, path: &wstr) {
         let _cleanup = test_init();
         let mut uvars = EnvUniversal::new();
-        uvars.initialize_at_path(UVARS_TEST_PATH.to_owned());
+        uvars.initialize_at_path(path.to_owned());
 
         for j in 0..UVARS_PER_THREAD {
             let key = sprintf!("key_%d_%d", x, j);
@@ -841,23 +850,28 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn test_universal() {
         let _cleanup = test_init();
-        let _ = std::fs::remove_dir_all("test/fish_uvars_test/");
-        std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
-        let parser = TestParser::new();
-
-        let mut reader = fake_scoped_reader(&parser);
+        let (test_dir, test_path) = make_test_uvar_path("universal");
+        let _ = std::fs::remove_dir_all(&test_dir);
+        std::fs::create_dir_all(&test_dir).unwrap();
 
         let threads = 1;
+        let mut handles = Vec::new();
+
         for i in 0..threads {
-            iothread_perform(move || test_universal_helper(i));
+            let path = test_path.to_owned();
+            handles.push(std::thread::spawn(move || {
+                test_universal_helper(i, &path);
+            }));
         }
-        iothread_drain_all(&mut reader);
+
+        for h in handles {
+            h.join().unwrap();
+        }
 
         let mut uvars = EnvUniversal::new();
-        uvars.initialize_at_path(UVARS_TEST_PATH.to_owned());
+        uvars.initialize_at_path(test_path.to_owned());
 
         for i in 0..threads {
             for j in 0..UVARS_PER_THREAD {
@@ -875,7 +889,7 @@ mod tests {
             }
         }
 
-        std::fs::remove_dir_all("test/fish_uvars_test/").unwrap();
+        std::fs::remove_dir_all(&test_dir).unwrap();
     }
 
     #[test]
@@ -1017,18 +1031,18 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn test_universal_callbacks() {
         let _cleanup = test_init();
-        std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
+        let (test_dir, test_path) = make_test_uvar_path("callbacks");
+        std::fs::create_dir_all(&test_dir).unwrap();
         let mut uvars1 = EnvUniversal::new();
         let mut uvars2 = EnvUniversal::new();
         let mut callbacks = uvars1
-            .initialize_at_path(UVARS_TEST_PATH.to_owned())
+            .initialize_at_path(test_path.to_owned())
             .unwrap_or_default();
         callbacks.append(
             &mut uvars2
-                .initialize_at_path(UVARS_TEST_PATH.to_owned())
+                .initialize_at_path(test_path.to_owned())
                 .unwrap_or_default(),
         );
 
@@ -1084,7 +1098,7 @@ mod tests {
         assert_eq!(callbacks[1].val.as_ref().unwrap().as_string(), L!("1"));
         assert_eq!(callbacks[2].key, L!("delta"));
         assert_eq!(callbacks[2].val, None);
-        std::fs::remove_dir_all("test/fish_uvars_test/").unwrap();
+        std::fs::remove_dir_all(&test_dir).unwrap();
     }
 
     #[test]
@@ -1110,23 +1124,20 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn test_universal_ok_to_save() {
         let _cleanup = test_init();
         // Ensure we don't try to save after reading from a newer fish.
-        std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
+        let (test_dir, test_path) = make_test_uvar_path("ok_to_save");
+        std::fs::create_dir_all(&test_dir).unwrap();
         let contents = b"# VERSION: 99999.99\n";
-        std::fs::write(wcs2osstring(UVARS_TEST_PATH), contents).unwrap();
+        std::fs::write(wcs2osstring(&test_path), contents).unwrap();
 
-        let before_id = file_id_for_path(UVARS_TEST_PATH);
-        assert_ne!(
-            before_id, INVALID_FILE_ID,
-            "UVARS_TEST_PATH should be readable"
-        );
+        let before_id = file_id_for_path(&test_path);
+        assert_ne!(before_id, INVALID_FILE_ID, "test_path should be readable");
 
         let mut uvars = EnvUniversal::new();
         uvars
-            .initialize_at_path(UVARS_TEST_PATH.to_owned())
+            .initialize_at_path(test_path.to_owned())
             .unwrap_or_default();
         assert!(!uvars.is_ok_to_save(), "Should not be OK to save");
         uvars.sync();
@@ -1137,11 +1148,8 @@ mod tests {
         );
 
         // Ensure file is same.
-        let after_id = file_id_for_path(UVARS_TEST_PATH);
-        assert_eq!(
-            before_id, after_id,
-            "UVARS_TEST_PATH should not have changed",
-        );
-        std::fs::remove_dir_all("test/fish_uvars_test/").unwrap();
+        let after_id = file_id_for_path(&test_path);
+        assert_eq!(before_id, after_id, "test_path should not have changed",);
+        std::fs::remove_dir_all(&test_dir).unwrap();
     }
 }

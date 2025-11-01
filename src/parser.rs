@@ -1423,16 +1423,13 @@ mod tests {
     };
     use crate::parse_tree::{LineCounter, parse_source};
     use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
-    use crate::parser::BlockType;
     use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
     use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
     use crate::tests::prelude::*;
-    use crate::threads::iothread_perform;
     use crate::wchar::prelude::*;
     use crate::wcstringutil::join_strings;
     use libc::SIGINT;
     use std::time::Duration;
-
     #[test]
     #[serial]
     fn test_parser() {
@@ -2056,15 +2053,12 @@ mod tests {
             &IoChain::new(),
         );
 
-        parser.eval_with(
+        parser.eval(
             L!(concat!(
                 "function recursive1 ; recursive2 ; end ; ",
                 "function recursive2 ; recursive1 ; end ; recursive1; ",
             )),
             &IoChain::new(),
-            None,
-            BlockType::top,
-            /*test_only_suppress_stderr=*/ true,
         );
     }
 
@@ -2075,13 +2069,7 @@ mod tests {
         let parser = TestParser::new();
         macro_rules! validate {
             ($cmd:expr, $result:expr) => {
-                parser.eval_with(
-                    $cmd,
-                    &IoChain::new(),
-                    None,
-                    BlockType::top,
-                    /*test_only_suppress_stderr=*/ true,
-                );
+                parser.eval($cmd, &IoChain::new());
                 let exit_status = parser.get_last_status();
                 assert_eq!(exit_status, parser.get_last_status());
             };
@@ -2105,12 +2093,9 @@ mod tests {
     fn test_eval_empty_function_name() {
         let _cleanup = test_init();
         let parser = TestParser::new();
-        parser.eval_with(
+        parser.eval(
             L!("function '' ; echo fail; exit 42 ; end ; ''"),
             &IoChain::new(),
-            None,
-            BlockType::top,
-            /*test_only_suppress_stderr=*/ true,
         );
     }
 
@@ -2135,7 +2120,7 @@ mod tests {
         let delay = Duration::from_millis(100);
         #[allow(clippy::unnecessary_cast)]
         let thread = unsafe { libc::pthread_self() } as usize;
-        iothread_perform(move || {
+        std::thread::spawn(move || {
             // Wait a while and then SIGINT the main thread.
             std::thread::sleep(delay);
             unsafe {

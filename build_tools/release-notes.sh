@@ -13,16 +13,9 @@ mkdir -p "$relnotes_tmp/fake-workspace" "$relnotes_tmp/out"
 version=$(sed 's,^fish \(\S*\) .*,\1,; 1q' "$workspace_root/CHANGELOG.rst")
 previous_version=$(
     cd "$workspace_root"
-    awk <CHANGELOG.rst '
-        ( /^fish [^ ]*\.[^ ]*\.[^ ]* \(released .*\)$/ &&
-            NR > 1 &&
-            # Skip tags that have not been created yet..
-            system("git rev-parse --verify >/dev/null --quiet refs/tags/"$2) == 0 \
-        ) {
-            print $2; ok = 1; exit
-        }
-        END { exit !ok }
-    '
+    git for-each-ref --format='%(objecttype) %(refname:strip=2)' refs/tags |
+        awk '/tag/ {print $2}' | sort --version-sort |
+        grep -vF "$(git describe)" | tail -1
 )
 minor_version=${version%.*}
 previous_minor_version=${previous_version%.*}

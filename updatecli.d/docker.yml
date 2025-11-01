@@ -46,7 +46,7 @@ targets:
     spec:
       file: docker/alpine.Dockerfile
       matchpattern: "FROM alpine:.*"
-      replacepattern: 'FROM alpine:{{ source "alpine_latest_version" }} # updatecli.d/docker.yml'
+      replacepattern: 'FROM alpine:{{ source "alpine_latest_version" }}'
   ubuntu_latest_version_dockerfile:
     name: "Update oldest non-EOL Ubuntu Linux version"
     sourceid: ubuntu_latest_lts_version
@@ -54,7 +54,7 @@ targets:
     spec:
       file: docker/ubuntu-latest-lts.Dockerfile
       matchpattern: "FROM ubuntu:.*"
-      replacepattern: 'FROM ubuntu:{{ source "ubuntu_latest_lts_version" }} # updatecli.d/docker.yml'
+      replacepattern: 'FROM ubuntu:{{ source "ubuntu_latest_lts_version" }}'
   ubuntu_oldest_supported_dockerfile:
     name: "Update oldest non-EOL Ubuntu Linux version"
     sourceid: ubuntu_oldest_non_eol_version
@@ -62,4 +62,4 @@ targets:
     spec:
       file: docker/ubuntu-oldest-supported.Dockerfile
       matchpattern: "FROM ubuntu:.*"
-      replacepattern: 'FROM ubuntu:{{ source "ubuntu_oldest_non_eol_version" }} # updatecli.d/docker.yml'
+      replacepattern: 'FROM ubuntu:{{ source "ubuntu_oldest_non_eol_version" }}'

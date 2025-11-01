@@ -1,4 +1,5 @@
-FROM ubuntu:24.04 # updatecli.d/docker.yml
+# Version set by updatecli.d/docker.yml
+FROM ubuntu:24.04
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG=C.UTF-8

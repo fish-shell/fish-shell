@@ -20,89 +20,6 @@ pub struct ConfigPaths {
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const DOC_DIR: Option<&str> = option_env!("DOCDIR");
 
-/// The kind of directory structure we assume.
-/// Each variants is passed the executable path's parent, if available.
-enum DirectoryLayout {
-    /// In a relocatable tree.
-    RelocatableTree(PathBuf),
-    /// In the build directory.
-    BuildDirectory(PathBuf),
-    /// None of the above, or something went wrong.
-    /// Arg may be non-canonicalized here.
-    DefaultLayout(Option<PathBuf>),
-}
-
-fn resolve_exec_path(unresolved_exec_path: &'static FishPath) -> DirectoryLayout {
-    use DirectoryLayout::*;
-
-    let default_layout =
-        |exec_path_parent: Option<&Path>| DefaultLayout(exec_path_parent.map(|p| p.to_owned()));
-
-    let exec_path = {
-        use FishPath::*;
-        match unresolved_exec_path {
-            Absolute(p) => {
-                let Ok(exec_path) = p.canonicalize() else {
-                    FLOG!(
-                        config,
-                        format!(
-                            "Failed to canonicalize executable path '{}'. Using default paths",
-                            p.display()
-                        )
-                    );
-                    return default_layout(p.parent());
-                };
-                exec_path
-            }
-            LookUpInPath => {
-                FLOG!(
-                    config,
-                    "No absolute executable path available. Using default paths",
-                );
-                return default_layout(None);
-            }
-        }
-    };
-
-    let Some(exec_path_parent) = exec_path.parent() else {
-        FLOG!(
-            config,
-            "Executable path reported to be the root directory?! Using default paths.",
-        );
-        return default_layout(None);
-    };
-
-    let workspace_root = workspace_root();
-    if exec_path_parent.ends_with("bin") && {
-        let prefix = exec_path_parent.parent().unwrap();
-        let data = prefix.join("share/fish");
-        let sysconf = prefix.join("etc/fish");
-        // Installations with prefix set to exactly the workspace root are not supported;
-        // those will behave like non-installed builds inside the workspace.
-        // Installing somewhere else inside the workspace is fine.
-        prefix != workspace_root && data.exists() && sysconf.exists()
-    } {
-        FLOG!(config, "Running from relocatable tree");
-        RelocatableTree(exec_path_parent.to_owned())
-    } else if exec_path.starts_with(BUILD_DIR) {
-        FLOG!(
-            config,
-            format!(
-                "Running out of build directory, using paths relative to $CARGO_MANIFEST_DIR ({})",
-                workspace_root.display()
-            ),
-        );
-        // If we're in Cargo's target directory or in CMake's build directory, use the source files.
-        BuildDirectory(exec_path_parent.to_owned())
-    } else {
-        FLOG!(
-            config,
-            "Not in a relocatable tree or build directory, using default paths"
-        );
-        default_layout(Some(exec_path_parent))
-    }
-}
-
 impl ConfigPaths {
     pub fn new() -> Self {
         FISH_PATH.get_or_init(compute_fish_path);
@@ -114,7 +31,7 @@ impl ConfigPaths {
                 FishPath::LookUpInPath => format!("executable path: {}", get_program_name()),
             }
         );
-        let paths = Self::from_layout(resolve_exec_path(exec_path));
+        let paths = Self::from_exec_path(exec_path);
         FLOGF!(
             config,
             "paths.sysconf: %s",
@@ -140,41 +57,99 @@ impl ConfigPaths {
         paths
     }
 
-    fn from_layout(exec_path: DirectoryLayout) -> Self {
-        let workspace_root = workspace_root();
+    fn from_exec_path(unresolved_exec_path: &'static FishPath) -> Self {
+        let default_layout = |exec_path_parent: Option<&Path>| Self {
+            sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
+            bin: option_env!("BINDIR")
+                .map(PathBuf::from)
+                // N.B. the argument may be non-canonical here.
+                .or_else(|| exec_path_parent.map(|p| p.to_owned())),
+            data: option_env!("DATADIR").map(|p| PathBuf::from(p).join("fish")),
+            doc: DOC_DIR.map(PathBuf::from),
+        };
 
-        use DirectoryLayout::*;
-        match exec_path {
-            RelocatableTree(exec_path_parent) => {
-                let prefix = exec_path_parent.parent().unwrap();
-                Self {
-                    sysconf: prefix.join("etc/fish"),
-                    bin: Some(exec_path_parent.to_owned()),
-                    data: Some(prefix.join("share/fish")),
-                    doc: {
-                        let doc = prefix.join("share/doc/fish");
-                        if doc.exists() {
-                            Some(doc)
-                        } else {
-                            DOC_DIR.map(PathBuf::from)
-                        }
-                    },
+        let exec_path = {
+            use FishPath::*;
+            match unresolved_exec_path {
+                Absolute(p) => {
+                    let Ok(exec_path) = p.canonicalize() else {
+                        FLOG!(
+                            config,
+                            format!(
+                                "Failed to canonicalize executable path '{}'. Using default paths",
+                                p.display()
+                            )
+                        );
+                        return default_layout(p.parent());
+                    };
+                    exec_path
+                }
+                LookUpInPath => {
+                    FLOG!(
+                        config,
+                        "No absolute executable path available. Using default paths",
+                    );
+                    return default_layout(None);
                 }
             }
-            BuildDirectory(exec_path_parent) => Self {
+        };
+
+        let Some(exec_path_parent) = exec_path.parent() else {
+            FLOG!(
+                config,
+                "Executable path reported to be the root directory?! Using default paths.",
+            );
+            return default_layout(None);
+        };
+
+        let workspace_root = workspace_root();
+        // TODO(MSRV>=1.88): if-let-chain
+        if exec_path_parent.ends_with("bin") && {
+            let prefix = exec_path_parent.parent().unwrap();
+            let data = prefix.join("share/fish");
+            let sysconf = prefix.join("etc/fish");
+            data.exists() && sysconf.exists()
+            // Installations with prefix set to exactly the workspace root are not supported;
+            // those will behave like non-installed builds inside the workspace.
+            // Installing somewhere else inside the workspace is fine.
+            && prefix != workspace_root
+        } {
+            FLOG!(config, "Running from relocatable tree");
+            let prefix = exec_path_parent.parent().unwrap();
+            Self {
+                sysconf: prefix.join("etc/fish"),
+                bin: Some(exec_path_parent.to_owned()),
+                data: Some(prefix.join("share/fish")),
+                doc: {
+                    let doc = prefix.join("share/doc/fish");
+                    if doc.exists() {
+                        Some(doc)
+                    } else {
+                        DOC_DIR.map(PathBuf::from)
+                    }
+                },
+            }
+        } else if exec_path.starts_with(BUILD_DIR) {
+            FLOG!(
+                config,
+                format!(
+                    "Running out of build directory, using paths relative to $CARGO_MANIFEST_DIR ({})",
+                    workspace_root.display()
+                ),
+            );
+            // If we're in Cargo's target directory or in CMake's build directory, use the source files.
+            Self {
                 sysconf: workspace_root.join("etc"),
                 bin: Some(exec_path_parent.to_owned()),
                 data: Some(workspace_root.join("share")),
                 doc: Some(workspace_root.join("user_doc/html")),
-            },
-            DefaultLayout(exec_path_parent) => Self {
-                sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
-                bin: option_env!("BINDIR")
-                    .map(PathBuf::from)
-                    .or(exec_path_parent),
-                data: option_env!("DATADIR").map(|p| PathBuf::from(p).join("fish")),
-                doc: DOC_DIR.map(PathBuf::from),
-            },
+            }
+        } else {
+            FLOG!(
+                config,
+                "Not in a relocatable tree or build directory, using default paths"
+            );
+            default_layout(Some(exec_path_parent))
         }
     }
 }

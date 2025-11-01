@@ -1833,6 +1833,13 @@ In UNIX, these are made up of several categories. The categories used by fish ar
    Example values are ``en_US.UTF-8`` for the American English or ``de_AT.UTF-8`` for Austrian German.
    Your operating system might have a ``locale`` command that you can call as ``locale -a`` to see a list of defined locales.
 
+.. envvar:: LANGUAGE
+
+   This is treated like :envvar:`LC_MESSAGES` except that it can hold multiple values,
+   which allows to specify a priority list of languages for translation.
+   It's a :ref:`PATH variable <variables-path>`, like in `GNU gettext <https://www.gnu.org/software/gettext/manual/html_node/The-LANGUAGE-variable.html>`__. 
+   See also :doc:`builtin _ (underscore) <cmds/_>`.
+
 .. envvar:: LC_ALL
 
    Overrides the :envvar:`LANG` and all other ``LC_*`` variables.

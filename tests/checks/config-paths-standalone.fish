@@ -1,5 +1,6 @@
-# RUN: %fish -d config | grep -v ^Debug.enabled
+# RUN: %fish -d config | grep -v ^Debug.enabled.for.category
 # REQUIRES: %fish -c 'status build-info' | grep '^Features:.*embed-data'
+# REQUIRES: %fish -d config -c '' 2>| grep 'Running out of build directory'
 
 # CHECKERR: config: executable path: {{.*}}/fish
 # CHECKERR: config: embed-data feature is active, ignoring data paths

@@ -296,27 +296,67 @@ pub fn string_fuzzy_match_string(
     StringFuzzyMatch::try_create(string, match_against, anchor_start)
 }
 
+pub trait ToChars {
+    fn to_chars(&self) -> impl Iterator<Item = char>;
+}
+
+impl ToChars for &str {
+    fn to_chars(&self) -> impl Iterator<Item = char> {
+        self.chars()
+    }
+}
+
+impl ToChars for &String {
+    fn to_chars(&self) -> impl Iterator<Item = char> {
+        self.chars()
+    }
+}
+
+impl ToChars for std::borrow::Cow<'_, str> {
+    fn to_chars(&self) -> impl Iterator<Item = char> {
+        self.chars()
+    }
+}
+
+impl ToChars for &wstr {
+    fn to_chars(&self) -> impl Iterator<Item = char> {
+        self.chars()
+    }
+}
+
+impl ToChars for &WString {
+    fn to_chars(&self) -> impl Iterator<Item = char> {
+        self.chars()
+    }
+}
+
 /// Implementation of wcs2bytes that accepts a callback.
+/// The first argument can be either a `&str` or `&wstr`.
 /// This invokes `func` with byte slices containing the UTF-8 encoding of the characters in the
 /// input, doing one invocation per character.
-/// If `func` returns false, it stops; otherwise it continues.
-/// Return false if the callback returned false, otherwise true.
-pub fn wcs2bytes_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
+/// If `func` returns an error, the error is returned immediately; otherwise it continues.
+/// Returns `Ok(())` if the entire input was processed without `func` returning an error.
+// Note that this could be generic in the error type.
+// It currently isn't, since there is no need for it, and some users pass `func`s which always
+// return `Ok(())`, which would require type annotations if this function was generic in the error
+// type.
+pub fn str2bytes_callback(
+    input: impl ToChars,
+    mut func: impl FnMut(&[u8]) -> Result<(), std::io::Error>,
+) -> Result<(), std::io::Error> {
     // A `char` represents an Unicode scalar value, which takes up at most 4 bytes when encoded in UTF-8.
     let mut converted = [0_u8; 4];
 
-    for c in input.chars() {
+    for c in input.to_chars() {
         let bytes = if let Some(byte) = decode_byte_from_char(c) {
             converted[0] = byte;
             &converted[..=0]
         } else {
             c.encode_utf8(&mut converted).as_bytes()
         };
-        if !func(bytes) {
-            return false;
-        }
+        func(bytes)?;
     }
-    true
+    Ok(())
 }
 
 /// Split a string by runs of any of the separator characters provided in `seps`.

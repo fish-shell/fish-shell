@@ -14,10 +14,15 @@ cfg-if = "1.0.3"
 errno = "0.3.0"
 fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }
+fish-fluent = { path = "crates/fluent" }
+fish-fluent-extraction = { path = "crates/fluent-extraction" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-gettext-maps = { path = "crates/gettext-maps" }
 fish-gettext-mo-file-parser = { path = "crates/gettext-mo-file-parser" }
+fish-tempfile = { path = "crates/tempfile" }
 fish-printf = { path = "crates/printf", features = ["widestring"] }
+fluent = "0.17"
+fluent-syntax = "0.12"
 libc = "0.2.177"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
@@ -55,6 +60,7 @@ serial_test = { version = "3", default-features = false }
 # We need 0.9.0 specifically for some crash fixes.
 terminfo = "0.9.0"
 widestring = "1.2.0"
+unic-langid = "0.9.6"
 unicode-segmentation = "1.12.0"
 unicode-width = "0.2.0"
 unix_path = "1.0.1"
@@ -85,9 +91,12 @@ cfg-if.workspace = true
 errno.workspace = true
 fish-build-helper.workspace = true
 fish-build-man-pages = { workspace = true, optional = true }
+fish-fluent.workspace = true
+fish-fluent-extraction = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-gettext-maps = { workspace = true, optional = true }
 fish-printf.workspace = true
+fluent.workspace = true
 libc.workspace = true
 lru.workspace = true
 macro_rules_attribute = "0.2.2"
@@ -153,6 +162,10 @@ embed-data = ["dep:rust-embed", "dep:fish-build-man-pages"]
 # Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
 # build time.
 localize-messages = ["dep:phf", "dep:fish-gettext-maps"]
+# This feature is used to enable extracting Fluent IDs from the source code for localization check.
+# For normal builds, it should be disabled.
+# It only needs to be enabled if checking FTL files is desired.
+fluent-extract = ["fish-fluent/fluent-extract", "dep:fish-fluent-extraction"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
 # desired. This happens when running tests via `build_tools/check.sh` and when calling

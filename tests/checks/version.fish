@@ -1,2 +1,2 @@
 #RUN: %fish -v
-# CHECK: fish, version {{[0-9].*}}
+# CHECK: {{\u2068}}fish{{\u2069}}, version {{\u2068[0-9].*\u2069}}

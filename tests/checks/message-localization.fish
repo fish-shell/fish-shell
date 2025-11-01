@@ -11,6 +11,10 @@ set -lx LANG de_DE.utf8
 $fish --not-a-real-flag
 # CHECKERR: fish: --not-a-real-flag: unbekannte Option
 
+# check Fluent translations
+$fish --version
+# CHECK: {{\u2068}}fish{{\u2069}}, Version {{\u2068[0-9].*\u2069}}
+
 set --show custom_gettext_var
 # CHECK: $custom_gettext_var: Gesetzt in Geltungsbereich 'local', nicht exportiert, mit 1 Elementen
 # CHECK: $custom_gettext_var[1]: |asdf|
@@ -37,6 +41,10 @@ echo (_ file)
 
 # Test LANGUAGE fallback
 set -lx LANGUAGE pt de_DE
+
+# check Fluent translations
+$fish --version
+# CHECK: {{\u2068}}fish{{\u2069}}, versão {{\u2068[0-9].*\u2069}}
 
 # This is available in Portuguese. (echo is used to get add a newline)
 echo (_ file)

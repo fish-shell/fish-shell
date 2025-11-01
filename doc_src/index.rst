@@ -56,8 +56,6 @@ Once fish has been installed, open a terminal. If fish is not the default shell:
 
     > exit
 
-.. _default-shell:
-
 Default Shell
 -------------
 

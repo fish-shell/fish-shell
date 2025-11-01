@@ -1,6 +1,7 @@
 # RUN: %fish %s
 # REQUIRES: command -v sphinx-build
 # REQUIRES: command -v man
+# REQUIRES: test "$FISH_BUILD_DOCS" != "0"
 # REQUIRES: %fish -c 'status build-info' | grep '^Features:.*embed-data'
 
 set -lx MANWIDTH 80

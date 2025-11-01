@@ -212,7 +212,7 @@ impl Autoload {
     /// This is exposed for testing.
     #[cfg(test)]
     fn invalidate_cache(&mut self) {
-        self.cache = Box::new(AutoloadFileCache::with_dirs(self.cache.dirs().to_owned()));
+        *self.cache = AutoloadFileCache::with_dirs(self.cache.dirs().to_owned());
     }
 
     /// Like resolve_autoload(), but accepts the paths directly.
@@ -227,7 +227,7 @@ impl Autoload {
         // Note we don't have to modify autoloadable_files_. We'll naturally detect if those have
         // changed when we query the cache.
         if paths != self.cache.dirs() {
-            self.cache = Box::new(AutoloadFileCache::with_dirs(paths.to_owned()));
+            *self.cache = AutoloadFileCache::with_dirs(paths.to_owned());
         }
 
         // Do we have an entry to load?

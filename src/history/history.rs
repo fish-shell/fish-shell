@@ -64,8 +64,6 @@ use crate::{
     wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wgettext_fmt, wrealpath, wstat, wunlink},
 };
 
-mod file;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SearchType {
     /// Search for commands exactly matching the given string.
@@ -103,7 +101,7 @@ pub enum SearchDirection {
     Backward,
 }
 
-use self::file::time_to_seconds;
+use super::file::time_to_seconds;
 
 // Our history format is intended to be valid YAML. Here it is:
 //

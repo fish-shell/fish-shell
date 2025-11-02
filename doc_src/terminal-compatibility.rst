@@ -12,7 +12,7 @@ If a valid CSI, OSC or DCS sequence does not represent a command implemented by 
 Control sequences are denoted in a fish-like syntax.
 Special characters other than ``\`` are not escaped.
 Spaces are only added for readability and are not part of the sequence.
-Placeholders are written as ``<Ps>`` for a number or ``<Pt>`` for an arbitrary printable string.
+Placeholders are written as ``Ps`` for a number or ``Pt`` for an arbitrary printable string.
 
 **NOTE:** fish does not rely on your system's terminfo database.
 In this document, terminfo (TI) codes are included for reference only.

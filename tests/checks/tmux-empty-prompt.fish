@@ -10,9 +10,9 @@ isolated-tmux-start -C '
     set right_prompt 1
     bind ctrl-g "set right_prompt 1" repaint
     bind alt-g "set -e right_prompt" repaint
-' 
+'
 
-isolated-tmux send-keys M-g C-l Enter  
+isolated-tmux send-keys M-g C-l Enter
 tmux-sleep
 isolated-tmux send-keys C-g Enter
 tmux-sleep
@@ -46,11 +46,13 @@ isolated-tmux send-keys '
     function fish_prompt
         echo left-prompt\n
     end
-'  
+'
 tmux-sleep
-isolated-tmux send-keys C-l Enter  
+isolated-tmux send-keys C-l Enter
 tmux-sleep
 isolated-tmux send-keys C-g Enter
+tmux-sleep
+tmux-sleep
 tmux-sleep
 isolated-tmux capture-pane -p | string replace -r '$' '+'
 #CHECK: left-prompt+

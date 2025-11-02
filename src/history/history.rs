@@ -103,16 +103,6 @@ pub enum SearchDirection {
 
 use super::file::time_to_seconds;
 
-// Our history format is intended to be valid YAML. Here it is:
-//
-//   - cmd: ssh blah blah blah
-//     when: 2348237
-//     paths:
-//       - /path/to/something
-//       - /path/to/something_else
-//
-//   Newlines are replaced by \n. Backslashes are replaced by \\.
-
 /// This is the history session ID we use by default if the user has not set env var fish_history.
 const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
 

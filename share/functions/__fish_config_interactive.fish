@@ -165,6 +165,9 @@ end" >$__fish_config_dir/config.fish
             if set -q KONSOLE_VERSION
                 set host ''
             end
+            if [ -n "$MSYSTEM" ] && string match -rq -- '^(Konsole|WezTerm) ' (status terminal)
+                return
+            end
             if [ "$TERM" = dumb ]
                 return
             end

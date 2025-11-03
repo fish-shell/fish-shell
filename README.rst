@@ -141,7 +141,7 @@ links above, and up-to-date `development builds of fish are available for many p
 
 To install into ``/usr/local``, run:
 
-.. code:: bash
+.. code:: shell
 
    mkdir build; cd build
    cmake ..
@@ -173,12 +173,14 @@ You can also build fish with Cargo.
 This example uses `uv <https://github.com/astral-sh/uv>`__ to install Sphinx (which is used for man-pages and ``--help`` options).
 You can also install Sphinx another way and drop the ``uv run --no-managed-python`` prefix.
 
+.. code:: shell
+
     git clone https://github.com/fish-shell/fish-shell
     cd fish-shell
 
     # Optional: check out a specific version rather than building the latest
     # development version.
-    git show "$(git for-each-ref refs/tags/ | awk '$2 == "tag" { print $3 }' | tail -1)"
+    git checkout "$(git for-each-ref refs/tags/ | awk '$2 == "tag" { print $3 }' | tail -1)"
 
     uv run --no-managed-python \
         cargo install --path .
@@ -190,11 +192,12 @@ To disable translations, disable the ``localize-messages`` feature by passing ``
 You can also link this build statically (but not against glibc) and move it to other computers.
 
 Here are the remaining advantages of a full installation, as currently done by CMake:
+
 - Man pages like ``fish(1)`` installed in standard locations, easily accessible from outside fish.
-- A local copy of the HTML documentation, typically accessed via the :doc:`help <cmds/help>` function.
+- A local copy of the HTML documentation, typically accessed via the ``help`` fish function.
   In Cargo builds, ``help`` will redirect to `<https://fishshell.com/docs/current/>`__
 - Ability to use our CMake options extra_functionsdir, extra_completionsdir and extra_confdir,
-  (also recorded in ``$PREFIX/share/pkgconfig/fish.pc`)
+  (also recorded in ``$PREFIX/share/pkgconfig/fish.pc``)
   which are used by some package managers to house third-party completions.
   Regardless of build system, fish uses ``$XDG_DATA_DIRS/{vendor_completion.d,vendor_conf.d,vendor_functions.d}``.
 

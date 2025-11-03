@@ -71,7 +71,7 @@ jobs:
 
   packages-for-linux:
     needs: [is-release-tag]
-    name: Build single-file fish for Linux (experimental)
+    name: Build single-file fish for Linux
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

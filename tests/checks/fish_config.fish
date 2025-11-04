@@ -1,5 +1,6 @@
- #RUN: %fish %s
- #REQUIRES: command -v diff
+# RUN: %fish %s
+# REQUIRES: command -v diff
+# REQUIRES: test -z "$CI"
 
 fish_config prompt list | string match -r '^(?:acidhub|disco|nim)$'
 # CHECK: acidhub

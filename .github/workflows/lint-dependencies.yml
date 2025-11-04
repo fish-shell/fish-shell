@@ -1,0 +1,17 @@
+name: CI
+on:
+  pull_request:
+    paths:
+      - 'Cargo.lock'
+      - '**/Cargo.toml'
+      - 'deny.toml'
+jobs:
+  cargo-deny:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: EmbarkStudios/cargo-deny-action@v2
+      with:
+        command: check licenses
+        arguments: --all-features --locked --exclude-dev
+        rust-version: 1.91 # updatecli.d/rust.yml

@@ -90,23 +90,22 @@ pub fn gettext_extract(message: TokenStream) -> TokenStream {
                 "Invalid number of tokens passed to gettext_extract. Expected one token, but got more."
             )
         }
-        if let proc_macro2::TokenTree::Group(group) = first_token {
-            let mut group_tokens = group.stream().into_iter();
-            let first_group_token = group_tokens
-                .next()
-                .expect("gettext_extract expected one group token but got none.");
-            if group_tokens.next().is_some() {
-                panic!(
-                    "Invalid number of tokens in group passed to gettext_extract. Expected one token, but got more."
-                )
-            }
-            if let proc_macro2::TokenTree::Literal(_) = first_group_token {
-                append_po_entry_to_file(&message, &file_path);
-            } else {
-                panic!("Expected literal in gettext_extract, but got: {first_group_token:?}");
-            }
-        } else {
+        let proc_macro2::TokenTree::Group(group) = first_token else {
             panic!("Expected group in gettext_extract, but got: {first_token:?}");
+        };
+        let mut group_tokens = group.stream().into_iter();
+        let first_group_token = group_tokens
+            .next()
+            .expect("gettext_extract expected one group token but got none.");
+        if group_tokens.next().is_some() {
+            panic!(
+                "Invalid number of tokens in group passed to gettext_extract. Expected one token, but got more."
+            )
+        }
+        if let proc_macro2::TokenTree::Literal(_) = first_group_token {
+            append_po_entry_to_file(&message, &file_path);
+        } else {
+            panic!("Expected literal in gettext_extract, but got: {first_group_token:?}");
         }
     }
     message

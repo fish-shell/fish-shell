@@ -1601,7 +1601,7 @@ fn combine_command_and_autosuggestion(
     let available = autosuggestion.len() - line_range.len();
     let line = &cmdline[line_range];
 
-    if !string_prefixes_string(line, autosuggestion) {
+    if !string_prefixes_string(line, autosuggestion) && line.len() < autosuggestion.len() {
         // We have an autosuggestion which is not a prefix of the command line, i.e. a case
         // disagreement. Decide whose case we want to use.
         assert!(string_prefixes_string_case_insensitive(
@@ -6749,7 +6749,7 @@ mod tests {
         );
         assert_eq!(
             combine_command_and_autosuggestion(L!("alpha"), 0..5, L!("ALPHA")),
-            L!("ALPHA")
+            L!("alpha")
         );
 
         assert_eq!(

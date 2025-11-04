@@ -85,6 +85,10 @@ msgid "%s"
 msgstr ""
 
 #, c-format
+msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
+msgstr ""
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\n"
 msgstr ""
 
@@ -97,7 +101,7 @@ msgid "%s %s: Name cannot be empty\n"
 msgstr ""
 
 #, c-format
-msgid "%s %s: No abbreviation named %s\n"
+msgid "%s %s: No abbreviation named %s with the specified command restrictions\n"
 msgstr ""
 
 #, c-format

@@ -8,8 +8,8 @@ Synopsis
 
     abbr --add NAME [--position command | anywhere] [-r | --regex PATTERN] [-c | --command COMMAND]
                     [--set-cursor[=MARKER]] ([-f | --function FUNCTION] | EXPANSION)
-    abbr --erase NAME ...
-    abbr --rename OLD_WORD NEW_WORD
+    abbr --erase [ [-c | --command COMMAND]... ] NAME ...
+    abbr --rename [ [-c | --command COMMAND]... ] OLD_WORD NEW_WORD
     abbr --show
     abbr --list
     abbr --query NAME ...
@@ -134,9 +134,10 @@ Other subcommands
 
 ::
 
-    abbr --rename OLD_NAME NEW_NAME
+    abbr --rename [ [-c | --command COMMAND]... ] OLD_NAME NEW_NAME
 
-Renames an abbreviation, from *OLD_NAME* to *NEW_NAME*
+Renames an abbreviation, from *OLD_NAME* to *NEW_NAME*.
+For command-specific abbreviations, the ``--command`` options must be provided to disambiguate which abbreviation to rename.
 
 ::
 
@@ -152,9 +153,10 @@ Prints the names of all abbreviation
 
 ::
 
-    abbr [-e | --erase] NAME
+    abbr [-e | --erase] [ [-c | --command COMMAND]... ] NAME ...
 
-Erases the abbreviation with the given name
+Erases the abbreviation with the given name.
+For command-specific abbreviations, the ``--command`` options must be provided to disambiguate which abbreviation to rename.
 
 ::
 

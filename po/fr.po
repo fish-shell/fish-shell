@@ -216,6 +216,10 @@ msgid "%s"
 msgstr "%s"
 
 #, c-format
+msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
+msgstr ""
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\n"
 msgstr "%s %s : l’abréviation %s existe déjà ; impossible de renommer %s\n"
 
@@ -227,8 +231,8 @@ msgstr "%s %s : l’abréviation « %s » ne peut pas avoir d’espaces dans 
 msgid "%s %s: Name cannot be empty\n"
 msgstr "%s %s : le nom ne peut pas être vide\n"
 
-#, c-format
-msgid "%s %s: No abbreviation named %s\n"
+#, fuzzy, c-format
+msgid "%s %s: No abbreviation named %s with the specified command restrictions\n"
 msgstr "%s %s : aucune abréviation nommée %s\n"
 
 #, c-format

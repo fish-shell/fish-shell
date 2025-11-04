@@ -64,7 +64,7 @@ abbr | grep __abbr4
 
 # Test renaming a nonexistent abbreviation
 abbr --rename __abbr6 __abbr
-# CHECKERR: abbr --rename: No abbreviation named __abbr6
+# CHECKERR: abbr --rename: No abbreviation named __abbr6 with the specified command restrictions
 
 # Test renaming to a abbreviation with spaces
 abbr __abbr4 omega
@@ -208,3 +208,29 @@ abbr --add regex_name --regex '(*UTF).*' bar
 abbr --add foo --set-cursor 'foo % bar'
 abbr | grep foo
 # CHECK: abbr -a --set-cursor='%' -- foo 'foo % bar'
+
+# Command-specific and general abbrs can coexist
+abbr __abbr_coexist "general def"
+abbr --command foo __abbr_coexist "command def"
+abbr | grep __abbr_coexist
+# CHECK: abbr -a -- __abbr_coexist 'general def'
+# CHECK: abbr -a --position anywhere --command foo -- __abbr_coexist 'command def'
+
+# Erase general abbreviation
+abbr -e __abbr_coexist
+abbr | grep __abbr_coexist
+# CHECK: abbr -a --position anywhere --command foo -- __abbr_coexist 'command def'
+
+# Abbrs with different commands coexist
+abbr --command bar __abbr_coexist "bar command"
+abbr | grep __abbr_coexist
+# CHECK: abbr -a --position anywhere --command foo -- __abbr_coexist 'command def'
+# CHECK: abbr -a --position anywhere --command bar -- __abbr_coexist 'bar command'
+
+# Rename command-specific abbr
+abbr --rename --command bar __abbr_coexist __abbr_coexist_2
+abbr | grep __abbr_coexist
+# CHECK: abbr -a --position anywhere --command foo -- __abbr_coexist 'command def'
+# CHECK: abbr -a --position anywhere --command bar -- __abbr_coexist_2 'bar command'
+abbr -e --command foo __abbr_coexist
+abbr -e --command bar __abbr_coexist_2

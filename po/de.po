@@ -1,6 +1,9 @@
-# fish-note-sections: Translations are divided into sections, each starting with a fish-section-* pseudo-message.
-# fish-note-sections: The first few sections are more important.
-# fish-note-sections: Ignore the tier3 sections unless you have a lot of time.
+# fish-note: To subscribe to proposed updates, point your feed reader at:
+# fish-note: https://raw.githubusercontent.com/fish-shell/fish-shell/fish-shell-events/po/de-additions.atom
+# fish-note: https://raw.githubusercontent.com/fish-shell/fish-shell/fish-shell-events/po/de-removals.atom
+# fish-note: Translations are divided into sections, each starting with a fish-section-* pseudo-message.
+# fish-note: The first few sections are more important.
+# fish-note: Ignore the tier3 sections unless you have a lot of time.
 # translation of de.po to deutsch
 # This file is distributed under the same license as the PACKAGE package.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER.

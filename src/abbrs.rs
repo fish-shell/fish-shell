@@ -99,9 +99,11 @@ impl Abbreviation {
         if !self.matches_position(position) {
             return false;
         }
+
         if !self.commands.is_empty() && !self.commands.contains(&command.to_owned()) {
             return false;
         }
+
         match &self.regex {
             Some(r) => r
                 .is_match(token.as_char_slice())
@@ -211,45 +213,44 @@ impl AbbreviationSet {
             let index = self
                 .abbrs
                 .iter()
-                .position(|a| a.name == abbr.name)
-                .expect("Abbreviation not found though its name was present");
+                .position(|a| a.name == abbr.name && a.commands == abbr.commands);
 
-            self.abbrs.remove(index);
+            if let Some(idx) = index {
+                // Exact match found (name + commands), delete old abbr.
+                self.abbrs.remove(idx);
+            }
         }
         self.abbrs.push(abbr);
     }
 
     /// Rename an abbreviation. This asserts that the old name is used, and the new name is not; the
     /// caller should check these beforehand with has_name().
-    pub fn rename(&mut self, old_name: &wstr, new_name: &wstr) {
-        let erased = self.used_names.remove(old_name);
-        let inserted = self.used_names.insert(new_name.to_owned());
-        assert!(
-            erased && inserted,
-            "Old name not found or new name already present"
-        );
-        for abbr in self.abbrs.iter_mut() {
-            if abbr.name == old_name {
-                abbr.name = new_name.to_owned();
-                break;
-            }
-        }
+    pub fn rename(&mut self, old_name: &wstr, new_name: &wstr, commands: &[WString]) {
+        self.abbrs
+            .iter_mut()
+            .find(|a| a.name == old_name && a.commands == commands)
+            .expect("Abbreviation to rename was not found.")
+            .name = new_name.to_owned();
+
+        self.used_names.insert(new_name.to_owned());
+        self.on_remove(old_name);
     }
 
-    /// Erase an abbreviation by name.
+    /// Erase an abbreviation by name and command restrictions.
     /// Return true if erased, false if not found.
-    pub fn erase(&mut self, name: &wstr) -> bool {
-        let erased = self.used_names.remove(name);
-        if !erased {
+    pub fn erase(&mut self, name: &wstr, commands: &[WString]) -> bool {
+        let Some(idx) = self
+            .abbrs
+            .iter()
+            .position(|a| a.name == name && a.commands == commands)
+        else {
             return false;
-        }
-        for (index, abbr) in self.abbrs.iter().enumerate().rev() {
-            if abbr.name == name {
-                self.abbrs.remove(index);
-                return true;
-            }
-        }
-        panic!("Unable to find named abbreviation");
+        };
+
+        self.abbrs.remove(idx);
+        self.on_remove(name);
+
+        true
     }
 
     /// Return true if we have an abbreviation with the given name.
@@ -260,6 +261,16 @@ impl AbbreviationSet {
     /// Return a reference to the abbreviation list.
     pub fn list(&self) -> &[Abbreviation] {
         &self.abbrs
+    }
+
+    /// Checks if any other abbreviation still uses name, removing it from used_names if not
+    fn on_remove(&mut self, name: &wstr) {
+        if self.abbrs.iter().any(|a| a.name == name) {
+            return;
+        }
+
+        let removed = self.used_names.remove(name);
+        assert!(removed, "Name was not in used_names but should have been");
     }
 }
 
@@ -438,13 +449,13 @@ mod tests {
             assert!(!abbrs_g.has_name(L!("gcc")));
             assert!(abbrs_g.has_name(L!("gc")));
 
-            abbrs_g.rename(L!("gc"), L!("gcc"));
+            abbrs_g.rename(L!("gc"), L!("gcc"), &[]);
             assert!(abbrs_g.has_name(L!("gcc")));
             assert!(!abbrs_g.has_name(L!("gc")));
 
-            assert!(!abbrs_g.erase(L!("gc")));
-            assert!(abbrs_g.erase(L!("gcc")));
-            assert!(!abbrs_g.erase(L!("gcc")));
+            assert!(!abbrs_g.erase(L!("gc"), &[]));
+            assert!(abbrs_g.erase(L!("gcc"), &[]));
+            assert!(!abbrs_g.erase(L!("gcc"), &[]));
         })
     }
 }

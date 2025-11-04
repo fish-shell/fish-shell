@@ -2994,7 +2994,7 @@ mod tests {
         assert_eq!(completions[0].completion, L!("zero"));
         assert!(completions[0].flags.contains(CompleteFlags::NO_SPACE));
         with_abbrs_mut(|abbrset| {
-            abbrset.erase(L!("testabbrsonetwothreezero"));
+            abbrset.erase(L!("testabbrsonetwothreezero"), &[]);
         });
         assert_eq!(completions[1].completion, L!("four"));
         assert!(!completions[1].flags.contains(CompleteFlags::NO_SPACE));

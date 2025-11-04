@@ -229,26 +229,56 @@ fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
         return Err(STATUS_INVALID_ARGS);
     }
     abbrs::with_abbrs_mut(|abbrs| -> BuiltinResult {
-        if !abbrs.has_name(old_name) {
+        if !abbrs
+            .list()
+            .iter()
+            .any(|a| a.name == *old_name && a.commands == opts.commands)
+        {
             streams.err.append(wgettext_fmt!(
-                "%s %s: No abbreviation named %s\n",
+                "%s %s: No abbreviation named %s with the specified command restrictions\n",
                 CMD,
                 subcmd,
                 old_name.as_utfstr()
             ));
             return Err(STATUS_CMD_ERROR);
         }
-        if abbrs.has_name(new_name) {
-            streams.err.append(wgettext_fmt!(
-                "%s %s: Abbreviation %s already exists, cannot rename %s\n",
-                CMD,
-                subcmd,
-                new_name.as_utfstr(),
-                old_name.as_utfstr()
-            ));
+        if abbrs
+            .list()
+            .iter()
+            .any(|a| a.name == *new_name && a.commands == opts.commands)
+        {
+            if opts.commands.is_empty() {
+                streams.err.append(wgettext_fmt!(
+                    "%s %s: Abbreviation %s already exists, cannot rename %s\n",
+                    CMD,
+                    subcmd,
+                    new_name.as_utfstr(),
+                    old_name.as_utfstr()
+                ));
+            } else {
+                let style = EscapeStringStyle::Script(Default::default());
+                let mut cmd_list = WString::new();
+                for (i, cmd) in opts.commands.iter().enumerate() {
+                    if i > 0 {
+                        cmd_list.push_str(", ");
+                    }
+                    cmd_list.push_utfstr(&escape_string(cmd, style));
+                }
+
+                streams.err.append(wgettext_fmt!(
+                    "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n",
+                    CMD,
+                    subcmd,
+                    new_name.as_utfstr(),
+                    cmd_list.as_utfstr(),
+                    old_name.as_utfstr()
+                ));
+            }
+
             return Err(STATUS_INVALID_ARGS);
         }
-        abbrs.rename(old_name, new_name);
+
+        abbrs.rename(old_name, new_name, &opts.commands);
         Ok(SUCCESS)
     })
 }
@@ -414,18 +444,20 @@ fn abbr_erase(opts: &Options, parser: &Parser) -> BuiltinResult {
     abbrs::with_abbrs_mut(|abbrs| -> BuiltinResult {
         let mut result: BuiltinResult = Ok(SUCCESS);
         for arg in &opts.args {
-            if !abbrs.erase(arg) {
+            if !abbrs.erase(arg, &opts.commands) {
                 result = EnvStackSetResult::NotFound.into();
             }
             // Erase the old uvar - this makes `abbr -e` work.
-            let esc_src = escape(arg);
-            if !esc_src.is_empty() {
-                let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
-                let ret = parser.vars().remove(&var_name, EnvMode::UNIVERSAL);
+            if opts.commands.is_empty() {
+                let esc_src = escape(arg);
+                if !esc_src.is_empty() {
+                    let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
+                    let ret = parser.vars().remove(&var_name, EnvMode::UNIVERSAL);
 
-                if ret == EnvStackSetResult::Ok {
-                    result = Ok(SUCCESS)
-                };
+                    if ret == EnvStackSetResult::Ok {
+                        result = Ok(SUCCESS)
+                    };
+                }
             }
         }
         result

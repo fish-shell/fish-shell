@@ -54,7 +54,7 @@ fn build_man(man_dir: &Path) {
     // - if we skipped the docs with sphinx not installed, installing it would not then build the docs.
     // That means you need to explicitly set $FISH_BUILD_DOCS=0 (`FISH_BUILD_DOCS=0 cargo install --path .`),
     // which is unfortunate - but the docs are pretty important because they're also used for --help.
-    let sphinx_build = match Command::new("sphinx-build")
+    let sphinx_build = match Command::new(option_env!("FISH_SPHINX").unwrap_or("sphinx-build"))
         .args(args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

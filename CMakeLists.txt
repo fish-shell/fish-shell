@@ -28,6 +28,24 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 # This defines the FBVF variable.
 include(Version)
 
+# Set up the docs.
+include(cmake/Docs.cmake)
+
+# Tell Cargo where our build directory is so it can find Cargo.toml.
+set(VARS_FOR_CARGO
+    "FISH_CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}"
+    "PREFIX=${CMAKE_INSTALL_PREFIX}"
+    "DOCDIR=${CMAKE_INSTALL_FULL_DOCDIR}"
+    "DATADIR=${CMAKE_INSTALL_FULL_DATADIR}"
+    "SYSCONFDIR=${CMAKE_INSTALL_FULL_SYSCONFDIR}"
+    "BINDIR=${CMAKE_INSTALL_FULL_BINDIR}"
+    "CARGO_TARGET_DIR=${FISH_RUST_BUILD_DIR}"
+    "CARGO_BUILD_RUSTC=${Rust_COMPILER}"
+    "${FISH_PCRE2_BUILDFLAG}"
+    "RUSTFLAGS=$ENV{RUSTFLAGS} ${rust_debugflags}"
+    "FISH_SPHINX=${SPHINX_EXECUTABLE}"
+)
+
 # Let fish pick up when we're running out of the build directory without installing
 get_filename_component(REAL_CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}" REALPATH)
 get_filename_component(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
@@ -70,9 +88,6 @@ create_target(fish_indent)
 
 # Define fish_key_reader.
 create_target(fish_key_reader)
-
-# Set up the docs.
-include(cmake/Docs.cmake)
 
 # Set up tests.
 include(cmake/Tests.cmake)

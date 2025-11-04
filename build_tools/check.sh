@@ -70,6 +70,7 @@ template_file=$(mktemp)
     cargo build --workspace --all-targets --features=gettext-extract
 )
 if $lint; then
+    cargo deny check licenses
     PATH="$build_dir:$PATH" "$workspace_root/build_tools/style.fish" --all --check
     for features in "" --no-default-features; do
         cargo clippy --workspace --all-targets $features

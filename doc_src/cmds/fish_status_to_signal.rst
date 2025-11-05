@@ -1,5 +1,3 @@
-.. _cmd-fish_status_to_signal:
-
 fish_status_to_signal - convert exit codes to human-friendly signals
 ====================================================================
 

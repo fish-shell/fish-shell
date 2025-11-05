@@ -1,7 +1,5 @@
-.. _commands:
-
 Commands
-============
+========
 
 This is a list of all the commands fish ships with.
 

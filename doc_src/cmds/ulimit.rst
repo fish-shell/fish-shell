@@ -1,5 +1,3 @@
-.. _cmd-ulimit:
-
 ulimit - set or get resource usage limits
 =========================================
 

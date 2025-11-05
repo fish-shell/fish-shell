@@ -88,7 +88,7 @@ See Also
 
 .. BEGIN SEEALSO
 
-- :ref:`string<cmd-string>`'s ``pad`` subcommand does the inverse of this command, adding padding to a specific width instead.
+- :doc:`string pad <string-pad>` does the inverse of this command, adding padding to a specific width instead.
   
 - The :doc:`printf <printf>` command can do simple padding, for example ``printf %10s\n`` works like ``string pad -w10``.
 

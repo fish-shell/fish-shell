@@ -1,5 +1,3 @@
-.. _completion-own:
-
 Writing your own completions
 ============================
 

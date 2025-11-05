@@ -1,5 +1,3 @@
-.. _cmd-pushd:
-
 pushd - push directory to directory stack
 =========================================
 

@@ -21,13 +21,13 @@ This page explains how to install and set up fish and where to get more informat
 Where to go?
 ============
 
-If this is your first time using fish, see the :ref:`tutorial <tutorial>`.
+If this is your first time using fish, see the :doc:`tutorial <tutorial>`.
 
-If you are already familiar with other shells like bash and want to see the scripting differences, see :ref:`Fish For Bash Users <fish_for_bash_users>`.
+If you are already familiar with other shells like bash and want to see the scripting differences, see :doc:`Fish For Bash Users <fish_for_bash_users>`.
 
-For an overview of fish's scripting language, see :ref:`The Fish Language <language>`. If it would be useful in a script file, it's here.
+For an overview of fish's scripting language, see :doc:`The Fish Language <language>`. If it would be useful in a script file, it's here.
 
-For information on using fish interactively, see :ref:`Interactive use <interactive>`. If it's about key presses, syntax highlighting or anything else that needs an interactive terminal session, look here.
+For information on using fish interactively, see :doc:`Interactive use <interactive>`. If it's about key presses, syntax highlighting or anything else that needs an interactive terminal session, look here.
 
 If you need to install fish first, read on, the rest of this document will tell you how to get, install and configure fish.
 

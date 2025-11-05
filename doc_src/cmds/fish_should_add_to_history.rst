@@ -1,5 +1,3 @@
-.. _cmd-fish_should_add_to_history:
-
 fish_should_add_to_history - decide whether a command should be added to the history
 ====================================================================================
 

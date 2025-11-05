@@ -1,5 +1,3 @@
-.. _cmd-fish_mode_prompt:
-
 fish_mode_prompt - define the appearance of the mode indicator
 ==============================================================
 

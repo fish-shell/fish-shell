@@ -1,5 +1,3 @@
-.. _cmd-count:
-
 count - count the number of elements of a list
 ================================================
 

@@ -1,5 +1,3 @@
-.. _cmd-fish_title:
-
 fish_title - define the terminal's title
 ========================================
 

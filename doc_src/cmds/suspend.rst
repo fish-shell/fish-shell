@@ -1,5 +1,3 @@
-.. _cmd-suspend:
-
 suspend - suspend the current shell
 ===================================
 

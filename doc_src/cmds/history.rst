@@ -1,5 +1,3 @@
-.. _cmd-history:
-
 history - show and manipulate command history
 =============================================
 

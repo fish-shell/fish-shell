@@ -1,5 +1,3 @@
-.. _cmd-vared:
-
 vared - interactively edit the value of an environment variable
 ===============================================================
 

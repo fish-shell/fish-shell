@@ -1,5 +1,3 @@
-.. _cmd-pwd:
-
 pwd - output the current working directory
 ==========================================
 

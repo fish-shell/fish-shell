@@ -1,5 +1,3 @@
-.. _cmd-fish_svn_prompt:
-
 fish_svn_prompt - output Subversion information for use in a prompt
 ===================================================================
 

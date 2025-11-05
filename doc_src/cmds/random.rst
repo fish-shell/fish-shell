@@ -1,5 +1,3 @@
-.. _cmd-random:
-
 random - generate random number
 ===============================
 

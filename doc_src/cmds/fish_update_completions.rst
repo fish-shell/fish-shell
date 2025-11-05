@@ -1,5 +1,3 @@
-.. _cmd-fish_update_completions:
-
 fish_update_completions - update completions using manual pages
 ===============================================================
 

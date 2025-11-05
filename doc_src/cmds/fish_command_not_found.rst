@@ -1,5 +1,3 @@
-.. _cmd-fish_command_not_found:
-
 fish_command_not_found - what to do when a command wasn't found
 ===============================================================
 

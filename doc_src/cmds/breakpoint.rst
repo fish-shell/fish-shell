@@ -1,5 +1,3 @@
-.. _cmd-breakpoint:
-
 breakpoint - launch debug mode
 ==============================
 

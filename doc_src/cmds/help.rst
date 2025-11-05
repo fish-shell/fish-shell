@@ -1,5 +1,3 @@
-.. _cmd-help:
-
 help - display fish documentation
 =================================
 

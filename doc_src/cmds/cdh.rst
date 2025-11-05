@@ -1,5 +1,3 @@
-.. _cmd-cdh:
-
 cdh - change to a recently visited directory
 ============================================
 

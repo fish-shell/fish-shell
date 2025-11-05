@@ -1,5 +1,3 @@
-.. _cmd-path:
-
 path - manipulate and check paths
 =================================
 

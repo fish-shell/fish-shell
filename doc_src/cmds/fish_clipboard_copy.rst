@@ -1,5 +1,3 @@
-.. _cmd-fish_clipboard_copy:
-
 fish_clipboard_copy - copy text to the system's clipboard
 ==============================================================
 

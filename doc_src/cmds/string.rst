@@ -1,5 +1,3 @@
-.. _cmd-string:
-
 string - manipulate strings
 ===========================
 
@@ -50,8 +48,6 @@ Arguments beginning with ``-`` are normally interpreted as switches; ``--`` caus
 Most subcommands accept a **-q** or **--quiet** switch, which suppresses the usual output but exits with the documented status. In this case these commands will quit early, without reading all of the available input.
 
 The following subcommands are available.
-
-.. _cmd-string-collect:
 
 "collect" subcommand
 --------------------
@@ -235,9 +231,6 @@ Examples
 .. include:: string-replace.rst
    :start-after: BEGIN EXAMPLES
    :end-before: END EXAMPLES
-
-.. _cmd-string-split:
-.. _cmd-string-split0:
 
 "split" and "split0" subcommands
 --------------------------------

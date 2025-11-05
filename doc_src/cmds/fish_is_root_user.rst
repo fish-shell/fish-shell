@@ -1,5 +1,3 @@
-.. _cmd-fish_is_root_user:
-
 fish_is_root_user - check if the current user is root
 =====================================================
 

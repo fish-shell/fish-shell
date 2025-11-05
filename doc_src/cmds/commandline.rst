@@ -1,5 +1,3 @@
-.. _cmd-commandline:
-
 commandline - set or get the current command line buffer
 ========================================================
 

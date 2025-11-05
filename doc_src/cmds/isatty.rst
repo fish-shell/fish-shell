@@ -1,5 +1,3 @@
-.. _cmd-isatty:
-
 isatty - test if a file descriptor is a terminal
 ================================================
 

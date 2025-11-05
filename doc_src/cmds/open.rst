@@ -1,5 +1,3 @@
-.. _cmd-open:
-
 open - open file in its default application
 ===========================================
 

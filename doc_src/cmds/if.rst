@@ -1,5 +1,3 @@
-.. _cmd-if:
-
 if - conditionally execute a command
 ====================================
 

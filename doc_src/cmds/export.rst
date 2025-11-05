@@ -1,5 +1,3 @@
-.. _cmd-export:
-
 export - compatibility function for exporting variables
 =======================================================
 

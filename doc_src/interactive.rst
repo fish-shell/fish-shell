@@ -1,11 +1,9 @@
-.. _interactive:
-
 Interactive use
 ===============
 
 Fish prides itself on being really nice to use interactively. That's down to a few features we'll explain in the next few sections.
 
-Fish is used by giving commands in the fish language, see :ref:`The Fish Language <language>` for information on that.
+Fish is used by giving commands in the fish language, see :doc:`The Fish Language <language>` for information on that.
 
 Help
 ----
@@ -54,7 +52,7 @@ It also provides a large number of program specific scripted completions. Most o
 
 - ``apt``, ``rpm`` and ``yum`` show installed or installable packages
 
-You can also write your own completions or install some you got from someone else. For that, see :ref:`Writing your own completions <completion-own>`.
+You can also write your own completions or install some you got from someone else. For that, see :doc:`Writing your own completions <completions>`.
 
 Completion scripts are loaded on demand, like :ref:`functions are <syntax-function-autoloading>`. The difference is the ``$fish_complete_path`` :ref:`list <variables-lists>` is used instead of ``$fish_function_path``. Typically you can drop new completions in ~/.config/fish/completions/name-of-command.fish and fish will find them automatically.
 

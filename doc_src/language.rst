@@ -1,12 +1,9 @@
-
-.. _language:
-
 The fish language
 =================
 
 This document is a comprehensive overview of fish's scripting language.
 
-For interactive features see :ref:`Interactive use <interactive>`.
+For interactive features see :doc:`Interactive use <interactive>`.
 
 .. _syntax:
 
@@ -914,7 +911,7 @@ If there is nothing between a brace and a comma or two commas, it's interpreted 
 
 To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 
-The very first character of a command token is never interpreted as expanding brace, because it's the beginning of a :ref:`compound statement <cmd-begin>`::
+The very first character of a command token is never interpreted as expanding brace, because it's the beginning of a :doc:`compound statement <cmds/begin>`::
 
     > {echo hello, && echo world}
     hello,
@@ -1881,7 +1878,7 @@ Fish includes a number of commands in the shell directly. We call these "builtin
 
 For a list of all builtins, use ``builtin -n``.
 
-For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch.
+For a list of all builtins, functions and commands shipped with fish, see the :doc:`list of commands <commands>`. The documentation is also available by using the ``--help`` switch.
 
 Command lookup
 --------------

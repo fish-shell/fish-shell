@@ -919,7 +919,7 @@ Notable improvements and fixes
 
   which expands ``!!`` to the last history item, anywhere on the command line, mimicking other shells' history expansion.
 
-  See :ref:`the documentation <cmd-abbr>` for more.
+  See :doc:`the documentation <cmds/abbr>` for more.
 - ``path`` gained a new ``mtime`` subcommand to print the modification time stamp for files. For example, this can be used to handle cache file ages (:issue:`9057`)::
 
     > touch foo
@@ -1344,7 +1344,7 @@ Scripting improvements
     two
     'blue '
 
-- ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
+- ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :doc:`fish_add_path <cmds/fish_add_path>` remains the recommended way to add to $PATH.
 - ``return`` can now be used outside functions. In scripts, it does the same thing as ``exit``. In interactive mode,it sets ``$status`` without exiting (:issue:`8148`).
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks such as ``exec`` not being allowed in a pipeline, and ``$$`` not being a valid variable. Generally, another error was generated anyway.
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).

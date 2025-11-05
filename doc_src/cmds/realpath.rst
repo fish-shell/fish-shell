@@ -1,6 +1,3 @@
-.. _cmd-realpath:
-.. program::realpath
-
 realpath - convert a path to an absolute path without symlinks
 ==============================================================
 

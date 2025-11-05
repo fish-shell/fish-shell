@@ -1,5 +1,3 @@
-.. _cmd-prevd:
-
 prevd - move backward through directory history
 ===============================================
 

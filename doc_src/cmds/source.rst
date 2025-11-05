@@ -1,5 +1,3 @@
-.. _cmd-source:
-
 source - evaluate contents of file
 ==================================
 

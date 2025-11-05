@@ -34,7 +34,6 @@ set -l build_tools (status dirname)
 set -l po_dir $build_tools/../po
 
 set -l extract
-set -l po
 
 argparse dry-run use-existing-template= -- $argv
 or exit $status
@@ -134,15 +133,13 @@ for po_file in $po_files
     if set --query tmpdir[1]
         set po_file $tmpdir/(basename $po_file)
     end
-    if set -l --query po
-        if test -e $po_file
-            merge_po_files $template_file $po_file
-        else
-            begin
-                print_header
-                cat $template_file
-            end >$po_file
-        end
+    if test -e $po_file
+        merge_po_files $template_file $po_file
+    else
+        begin
+            print_header
+            cat $template_file
+        end >$po_file
     end
 end
 

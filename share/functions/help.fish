@@ -154,6 +154,8 @@ chromium-browser
             set fish_help_page "cmds/true.html"
         case "["
             set fish_help_page "cmds/test.html"
+        case "{"
+            set fish_help_page "cmds/begin.html"
         case globbing
             set fish_help_page "language.html#expand"
         case 'completion-*'

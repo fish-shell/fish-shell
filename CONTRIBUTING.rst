@@ -257,9 +257,8 @@ It also means that some features are not supported, such as message context and 
 We also expect all files to be UTF-8-encoded.
 In practice, this should not matter much for contributing translations.
 
-Translation sources are
-stored in the ``po`` directory, named ``ll_CC.po``, where ``ll`` is the
-two (or possibly three) letter ISO 639-1 language code of the target language
+Translation sources are stored in the ``localization/po`` directory and named ``ll_CC.po``,
+where ``ll`` is the two (or possibly three) letter ISO 639-1 language code of the target language
 (e.g. ``pt`` for Portuguese). ``CC`` is an ISO 3166 country/territory code,
 (e.g. ``BR`` for Brazil).
 An example for a valid name is ``pt_BR.po``, indicating Brazilian Portuguese.
@@ -273,7 +272,7 @@ More specifically, you will need ``msguniq`` and ``msgmerge`` for creating trans
 language.
 To create a new translation, run::
 
-    build_tools/update_translations.fish po/ll_CC.po
+    build_tools/update_translations.fish localization/po/ll_CC.po
 
 This will create a new PO file containing all messages available for translation.
 If the file already exists, it will be updated.
@@ -319,7 +318,7 @@ Editing PO files
 Many tools are available for editing translation files, including
 command-line and graphical user interface programs. For simple use, you can use your text editor.
 
-Open up the PO file, for example ``po/sv.po``, and you'll see something like::
+Open up the PO file, for example ``localization/po/sv.po``, and you'll see something like::
 
     msgid "%s: No suitable job\n"
     msgstr ""
@@ -347,7 +346,7 @@ Modifications to strings in source files
 If a string changes in the sources, the old translations will no longer work.
 They will be preserved in the PO files, but commented-out (starting with ``#~``).
 If you add/remove/change a translatable strings in a source file,
-run ``build_tools/update_translations.fish`` to propagate this to all translation files (``po/*.po``).
+run ``build_tools/update_translations.fish`` to propagate this to all translation files (``localization/po/*.po``).
 This is only relevant for developers modifying the source files of fish or fish scripts.
 
 Setting Code Up For Translations

@@ -2,46 +2,61 @@
 use std::path::Path;
 
 fn main() {
-    let mandir = fish_build_helper::fish_build_dir().join("fish-man");
-    let sec1dir = mandir.join("man1");
+    let man_dir = fish_build_helper::fish_build_dir().join("fish-man");
+    let sec1_dir = man_dir.join("man1");
     // Running `cargo clippy` on a clean build directory panics, because when rust-embed tries to
     // embed a directory which does not exist it will panic.
-    let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
+    let _ = std::fs::create_dir_all(&sec1_dir);
 
     #[cfg(not(clippy))]
-    build_man(&mandir);
+    build_man(&man_dir, &sec1_dir);
 }
 
 #[cfg(not(clippy))]
-fn build_man(man_dir: &Path) {
-    use std::process::{Command, Stdio};
+fn build_man(man_dir: &Path, sec1_dir: &Path) {
+    use std::{
+        ffi::OsStr,
+        process::{Command, Stdio},
+    };
 
     use fish_build_helper::{env_var, workspace_root};
 
     let workspace_root = workspace_root();
+    let doc_src_dir = workspace_root.join("doc_src");
 
-    let man_str = man_dir.to_str().unwrap();
+    fish_build_helper::rebuild_if_paths_changed([
+        &workspace_root.join("CHANGELOG.rst"),
+        &workspace_root.join("CONTRIBUTING.rst"),
+        &doc_src_dir,
+    ]);
 
-    let sec1_dir = man_dir.join("man1");
-    let sec1_str = sec1_dir.to_str().unwrap();
-
-    let docsrc_dir = workspace_root.join("doc_src");
-    let docsrc_str = docsrc_dir.to_str().unwrap();
-
-    let sphinx_doc_sources = [
-        workspace_root.join("CHANGELOG.rst"),
-        workspace_root.join("CONTRIBUTING.rst"),
-        docsrc_dir.clone(),
-    ];
-    fish_build_helper::rebuild_if_paths_changed(sphinx_doc_sources);
-
-    let args = &[
-        "-j", "auto", "-q", "-b", "man", "-c", docsrc_str,
-        // doctree path - put this *above* the man1 dir to exclude it.
-        // this is ~6M
-        "-d", man_str, docsrc_str, sec1_str,
-    ];
-    let _ = std::fs::create_dir_all(sec1_str);
+    let args: &[&OsStr] = {
+        fn as_os_str<S: AsRef<OsStr> + ?Sized>(s: &S) -> &OsStr {
+            s.as_ref()
+        }
+        macro_rules! as_os_strs {
+            ( [ $( $x:expr, )* ] ) => {
+                &[
+                    $( as_os_str($x), )*
+                ]
+            }
+        }
+        as_os_strs!([
+            "-j",
+            "auto",
+            "-q",
+            "-b",
+            "man",
+            "-c",
+            &doc_src_dir,
+            // doctree path - put this *above* the man1 dir to exclude it.
+            // this is ~6M
+            "-d",
+            &man_dir,
+            &doc_src_dir,
+            &sec1_dir,
+        ])
+    };
 
     rsconf::rebuild_if_env_changed("FISH_BUILD_DOCS");
     if env_var("FISH_BUILD_DOCS") == Some("0".to_string()) {

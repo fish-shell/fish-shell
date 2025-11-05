@@ -297,8 +297,6 @@ For these reasons, fish does not do this, and instead expects asterisks to be qu
 
 This is similar to bash's "failglob" option.
 
-.. _faq-ssh-interactive:
-
 Why won't SSH/SCP/rsync connect properly when fish is my login shell?
 ---------------------------------------------------------------------
 

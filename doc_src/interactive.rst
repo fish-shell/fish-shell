@@ -58,7 +58,7 @@ You can also write your own completions or install some you got from someone els
 
 Completion scripts are loaded on demand, like :ref:`functions are <syntax-function-autoloading>`. The difference is the ``$fish_complete_path`` :ref:`list <variables-lists>` is used instead of ``$fish_function_path``. Typically you can drop new completions in ~/.config/fish/completions/name-of-command.fish and fish will find them automatically.
 
-.. _color:
+.. _syntax-highlighting:
 
 Syntax highlighting
 -------------------
@@ -144,8 +144,6 @@ If a variable isn't set or is empty, fish usually tries ``$fish_color_normal``, 
 - ``$fish_color_option``, where it tries ``$fish_color_param`` first.
 - For ``$fish_color_valid_path``, if that doesn't have a color, but only modifiers, it adds those to the color that would otherwise be used,
   like ``$fish_color_param``. But if valid paths have a color, it uses that and adds in modifiers from the other color.
-
-.. _variables-color-pager:
 
 Pager color variables
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -236,8 +234,6 @@ You can also change these functions yourself by running ``funced fish_prompt`` a
 
 .. [#] The web interface runs purely locally on your computer and requires python to be installed.
 
-.. _greeting:
-
 Configurable greeting
 ---------------------
 
@@ -256,8 +252,6 @@ or you can script it by changing the function::
   end
 
 save this in config.fish or :ref:`a function file <syntax-function-autoloading>`. You can also use :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/funcsave>` to edit it easily.
-
-.. _title:
 
 Programmable title
 ------------------
@@ -565,8 +559,6 @@ Visual mode
 - :kbd:`g,U` uppercases the selection, and enters :ref:`command mode <vi-mode-command>`.
 
 - :kbd:`",*,y` copies the selection to the clipboard, and enters :ref:`command mode <vi-mode-command>`.
-
-.. _custom-binds:
 
 Custom bindings
 ^^^^^^^^^^^^^^^

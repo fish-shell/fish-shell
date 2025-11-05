@@ -727,6 +727,9 @@ impl OutputStream {
         self.append(wstr::from_char_slice(&[c]))
     }
 
+    pub fn append_narrow(&mut self, s: &str) -> bool {
+        self.append(bytes2wcstring(s.as_bytes()))
+    }
     // Append data from a narrow buffer, widening it.
     pub fn append_narrow_buffer(&mut self, buffer: &SeparatedBuffer) -> bool {
         for rhs_elem in buffer.elements() {

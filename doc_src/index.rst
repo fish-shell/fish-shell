@@ -10,7 +10,7 @@ A shell is a program that helps you operate your computer by starting other prog
 
 Some of the special features of fish are:
 
-- **Extensive UI**: :ref:`Syntax highlighting <color>`, :ref:`autosuggestions`, :ref:`tab completion <tab-completion>` and selection lists that can be navigated and filtered.
+- **Extensive UI**: :ref:`Syntax highlighting <syntax-highlighting>`, :ref:`autosuggestions`, :ref:`tab completion <tab-completion>` and selection lists that can be navigated and filtered.
 
 - **No configuration needed**: fish is designed to be ready to use immediately, without requiring extensive configuration.
 
@@ -55,8 +55,6 @@ Once fish has been installed, open a terminal. If fish is not the default shell:
 - Type :command:`exit` to end the session::
 
     > exit
-
-.. _default-shell:
 
 Default Shell
 -------------
@@ -155,8 +153,6 @@ Resources
 - The official mailing list at `fish-users@lists.sourceforge.net <https://lists.sourceforge.net/lists/listinfo/fish-users>`_
 
 If you have an improvement for fish, you can submit it via the GitHub page.
-
-.. _other_pages:
 
 Other help pages
 ================

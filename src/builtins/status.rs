@@ -64,6 +64,7 @@ enum StatusCmd {
     STATUS_BUILDINFO,
     STATUS_GET_FILE,
     STATUS_LIST_FILES,
+    STATUS_HELP_SECTIONS,
     STATUS_TERMINAL,
     STATUS_TEST_TERMINAL_FEATURE,
 }
@@ -87,6 +88,7 @@ str_enum!(
     (STATUS_FUNCTION, "function"),
     (STATUS_GET_FILE, "get-file"),
     (STATUS_LIST_FILES, "list-files"),
+    (STATUS_HELP_SECTIONS, "help-sections"),
     (STATUS_IS_BLOCK, "is-block"),
     (STATUS_IS_BREAKPOINT, "is-breakpoint"),
     (STATUS_IS_COMMAND_SUB, "is-command-substitution"),
@@ -746,6 +748,13 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         LookUpInPath => Cow::Borrowed(get_program_name()),
                     };
                     streams.out.appendln(result);
+                }
+                STATUS_HELP_SECTIONS => {
+                    #[cfg(feature = "embed-data")]
+                    streams
+                        .out
+                        .append_narrow(fish_build_man_pages::HELP_SECTIONS);
+                    return Ok(SUCCESS);
                 }
                 STATUS_TERMINAL => {
                     let xtversion = xtversion().unwrap_or_default();

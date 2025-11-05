@@ -2009,6 +2009,15 @@ msgstr ""
 msgid "fish-section-tier1-from-script-explicitly-added"
 msgstr ""
 
+msgid "# comments"
+msgstr ""
+
+msgid "$PATH"
+msgstr ""
+
+msgid "$status, the return code"
+msgstr ""
+
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 msgstr "%s : %s est un tableau. Utilisez %svared%s %s[n]%s pour éditer le n-ième élément de %s\\n"
 
@@ -2090,13 +2099,58 @@ msgstr ""
 msgid "%sUnmodified%s: %s\\n"
 msgstr ""
 
+msgid "An overview of fish's builtins"
+msgstr ""
+
+msgid "Autoloading Functions"
+msgstr "Fonctions à chargement automatique"
+
+msgid "Brace expansion {a,b,c}"
+msgstr "Expansion d’accolades {a,b,c}"
+
 msgid "Cancelled function editing"
 msgstr "Édition de fonction annulée"
+
+msgid "Cartesian Products"
+msgstr "Produits cartésiens"
+
+msgid "Combiners (And, Or, Not)"
+msgstr "Combinaisons (and, or, not)"
+
+msgid "Command Substitutions"
+msgstr "Substitutions de commande"
 
 msgid "Command history cleared!\\n"
 msgstr "Historique de commande effacé !\\n"
 
 msgid "Command history for session cleared!\\n"
+msgstr ""
+
+msgid "Command line editor"
+msgstr "Éditeur de ligne de commande"
+
+msgid "Command mode"
+msgstr "Mode commande"
+
+msgid "Command substitution"
+msgstr "Substitution de commande"
+
+msgid "Conditional execution of code and flow control"
+msgstr "Exécution conditionnelle de code et contrôle de flux"
+
+msgid "Conditionals (If, Else, Switch)"
+msgstr "Conditionnelles (if, else, switch)"
+
+msgid "Configurable greeting"
+msgstr "Message de bienvenue configurable"
+
+msgid "Copy and paste (Kill Ring)"
+msgstr "Copier et coller (avec la pile)"
+
+msgid "Debugging fish scripts"
+msgstr "Déboguer des scripts fish"
+
+msgid "Differences from bash"
 msgstr ""
 
 msgid "Edit the file again? [Y/n]"
@@ -2108,13 +2162,82 @@ msgstr "Édition en échec ou annulée"
 msgid "Editor exited but the function was not modified"
 msgstr "Édition arrêtée mais la fonction n’a pas été modifiée"
 
+msgid "Emacs mode commands"
+msgstr "Commande en mode Emacs"
+
 msgid "Error: expected a number between 1 and %d or letter in that range, got \"%s\""
 msgstr "Erreur : un chiffre ou une lettre entre 1 et %d attendu, « %s » reçu"
+
+msgid "Event handlers"
+msgstr "Gestion d’événements"
+
+msgid "Exit Status"
+msgstr "Code de retour"
+
+msgid "Exporting variables"
+msgstr "Exportation de variables"
+
+msgid "Exports (Shell Variables)"
+msgstr "Exportations (variables shell)"
 
 msgid "External editor requested but $VISUAL or $EDITOR not set."
 msgstr ""
 
+msgid "Fish's release notes"
+msgstr ""
+
+msgid "Frequently Asked Questions"
+msgstr ""
+
 msgid "Function saved to %s"
+msgstr ""
+
+msgid "Further help and development"
+msgstr "Encore plus d’aide et développement"
+
+msgid "Getting Help"
+msgstr "Obtenir de l’aide"
+
+msgid "Help for this command"
+msgstr ""
+
+msgid "Home directory expansion ~USER"
+msgstr "Expansion du dossier principal ~USER"
+
+msgid "How \"\" and '' work"
+msgstr ""
+
+msgid "How \\\\ escaping works"
+msgstr ""
+
+msgid "How different expansions work together"
+msgstr ""
+
+msgid "How functions are loaded"
+msgstr ""
+
+msgid "How tab-completion works"
+msgstr "Utilisation de l’autocomplétion par tabulation"
+
+msgid "How to color the pager"
+msgstr ""
+
+msgid "How to define an alias"
+msgstr ""
+
+msgid "How to define functions"
+msgstr ""
+
+msgid "How to handle arguments"
+msgstr ""
+
+msgid "How to make your own prompt"
+msgstr ""
+
+msgid "How to write completions"
+msgstr ""
+
+msgid "How to write your own prompt"
 msgstr ""
 
 msgid "If the editor is still running, check if it waits for completion, maybe a '--wait' option?"
@@ -2129,6 +2252,33 @@ msgstr ""
 msgid "Ignoring the output of your editor since its exit status was non-zero"
 msgstr "Ignorance de la sortie de votre éditeur puisque son code de retour était différent de zéro"
 
+msgid "Index range expansion"
+msgstr "Expansion de plage d’indice"
+
+msgid "Initialization files"
+msgstr "Fichiers d’initialisation"
+
+msgid "Input/Output (IO) redirection"
+msgstr "Redirection d’entrée/sortie (E/S)"
+
+msgid "Insert mode"
+msgstr "Mode insertion"
+
+msgid "Introduction to the fish syntax"
+msgstr "Introduction à la syntaxe de fish"
+
+msgid "Learning fish"
+msgstr "Apprendre fish"
+
+msgid "Locale variables"
+msgstr "Variables régionales"
+
+msgid "More on universal variables"
+msgstr "Plus au sujet des variables universelles"
+
+msgid "Multiline editing"
+msgstr "Édition multiligne"
+
 msgid "No open utility found. Try installing \"xdg-open\" or \"xdg-utils\"."
 msgstr "Pas d’utilitaire trouvé. Essayez d’installer « xdg-open » ou « xdg-utils »."
 
@@ -2141,14 +2291,32 @@ msgstr "Pas de dossiers précédents à sélectionner. Vous devez changer de dos
 msgid "Or open %s in your browser of choice.\\n"
 msgstr ""
 
+msgid "Parameter expansion (Globbing)"
+msgstr "Expansion de paramètres (globs)"
+
+msgid "Pipes and Redirections"
+msgstr "Tubes et redirections"
+
 msgid "Please set VISUAL or EDITOR to your preferred editor."
 msgstr "Veuillez paramétrer VISUAL ou EDITOR avec le nom de votre éditeur favori"
 
 msgid "Please try `BROWSER=some_browser help`, `man fish-doc`, or `man fish-tutorial`.\\n\\n"
 msgstr ""
 
+msgid "Programmable title"
+msgstr "Titre programmable"
+
+msgid "Ready for more?"
+msgstr "Paré pour continuer ?"
+
 msgid "Run funcsave %s to save this function to the configuration directory."
 msgstr ""
+
+msgid "Running Commands"
+msgstr "Exécuter des commandes"
+
+msgid "Running multiple programs"
+msgstr "Exécuter plusieurs programmes"
 
 msgid "Save function to %s? [Y/n]"
 msgstr ""
@@ -2159,8 +2327,23 @@ msgstr ""
 msgid "Saving to user configuration failed. Changes may be lost when fish is closed."
 msgstr ""
 
+msgid "Searchable history"
+msgstr "Historique ouvert à la recherche"
+
 msgid "Select directory by letter or number: "
 msgstr "Sélectionner un dossier par lettre ou chiffre : "
+
+msgid "Separating Commands (Semicolon)"
+msgstr "Séparer les commandes (point-virgule)"
+
+msgid "Setting syntax highlighting colors"
+msgstr "Paramétrage des couleurs de la coloration syntaxique"
+
+msgid "Shared bindings"
+msgstr ""
+
+msgid "Shell variables"
+msgstr "Variables shell"
 
 msgid "Skipping already included path: %s\\n"
 msgstr ""
@@ -2169,6 +2352,21 @@ msgid "Skipping non-existent path: %s\\n"
 msgstr ""
 
 msgid "Skipping path because it is a file instead of a directory: %s\\n"
+msgstr ""
+
+msgid "Special variables"
+msgstr "Variable spéciales"
+
+msgid "Startup (Where's .bashrc?)"
+msgstr "Démarrage (où est « .bashrc » ?)"
+
+msgid "Syntax Highlighting"
+msgstr "Coloration syntaxique"
+
+msgid "Tab Completions"
+msgstr "Complétions par tabulation"
+
+msgid "Terminal features used by fish"
 msgstr ""
 
 msgid "There are %s unique dirs in your history but I can only handle %s"
@@ -2183,11 +2381,47 @@ msgstr "Trop d’arguments pour la commande cd"
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr ""
 
+msgid "Universal Variables"
+msgstr "Variables universelles"
+
+msgid "Useful functions for writing completions"
+msgstr "Fonctions utiles pour écrire des complétions"
+
+msgid "Variable expansion $VARNAME"
+msgstr ""
+
+msgid "Variable scope"
+msgstr "Portée des variable"
+
+msgid "Variables for changing highlighting colors"
+msgstr "Variables de coloration syntaxique"
+
+msgid "Variables with multiple elements"
+msgstr ""
+
+msgid "Visual mode"
+msgstr "Mode visuel"
+
 msgid "Warning: the file containing this function has not been saved. Changes may be lost when fish is closed."
 msgstr ""
 
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr "Bienvenue dans fish, le shell amical et interactif"
+
+msgid "What characters are allowed in names"
+msgstr ""
+
+msgid "Where to put completions"
+msgstr "Où placer les complétions"
+
+msgid "Why $PATH is special"
+msgstr ""
+
+msgid "Why fish?"
+msgstr "Pourquoi fish ?"
+
+msgid "Wildcard expansion *.*"
+msgstr "Expansion des métacaractères *.*"
 
 msgid "You did not say 'yes' so I will not clear your command history\\n"
 msgstr "Vous n’avez pas répondu « yes », donc je n’effacerai pas votre historique de commande\\n"
@@ -2213,6 +2447,9 @@ msgstr ""
 msgid "fish: Unknown command: %s\\n"
 msgstr ""
 
+msgid "foo=bar variable overrides"
+msgstr ""
+
 msgid "funced: The value for $EDITOR '$editor' could not be used because the command '$editor[1]' could not be found"
 msgstr ""
 
@@ -2231,29 +2468,14 @@ msgstr "ou le fichier était vide"
 msgid "python executable not found"
 msgstr "Exécutable python introuvable"
 
+msgid "while, for and begin"
+msgstr ""
+
 msgid "fish-section-tier1-from-script-implicitly-added"
-msgstr ""
-
-msgid "# comments"
-msgstr ""
-
-msgid "$PATH"
-msgstr ""
-
-msgid "$status, the return code"
-msgstr ""
-
-msgid "$variable"
 msgstr ""
 
 msgid "(Used together with -o) Do not overwrite but append"
 msgstr "(Utilisé avec -o) Ne pas écraser le fichier, y concaténer les résultats"
-
-msgid "(command) command substitution"
-msgstr ""
-
-msgid "< and > redirections"
-msgstr ""
 
 msgid "A right prompt to be used when `breakpoint` is executed"
 msgstr ""
@@ -2288,9 +2510,6 @@ msgstr ""
 msgid "Always use file completion"
 msgstr ""
 
-msgid "An overview of fish's builtins"
-msgstr ""
-
 msgid "Append suffix to the filename"
 msgstr ""
 
@@ -2300,29 +2519,11 @@ msgstr ""
 msgid "Append value to a list"
 msgstr ""
 
-msgid "Autoloading Functions"
-msgstr "Fonctions à chargement automatique"
-
-msgid "Autoloading functions"
-msgstr "Fonctions à chargement automatique"
-
 msgid "Automatically funcsave the alias"
 msgstr ""
 
 msgid "Autosave after successful edit"
 msgstr ""
-
-msgid "Background jobs"
-msgstr "Tâches en arrière-plan"
-
-msgid "Brace expansion {a,b,c}"
-msgstr "Expansion d’accolades {a,b,c}"
-
-msgid "Builtin commands"
-msgstr "Commandes intégrées"
-
-msgid "Cartesian Products"
-msgstr "Produits cartésiens"
 
 msgid "Case insensitive"
 msgstr ""
@@ -2366,27 +2567,6 @@ msgstr ""
 msgid "Colorize the output using ANSI escape sequences"
 msgstr "Coloriser la sortie en utilisant les séquences d’échappement ANSI"
 
-msgid "Combiners (And, Or, Not)"
-msgstr "Combinaisons (and, or, not)"
-
-msgid "Combining different expansions"
-msgstr "Combinaison de différentes expansions"
-
-msgid "Command Substitutions"
-msgstr "Substitutions de commande"
-
-msgid "Command line editor"
-msgstr "Éditeur de ligne de commande"
-
-msgid "Command mode"
-msgstr "Mode commande"
-
-msgid "Command substitution"
-msgstr "Substitution de commande"
-
-msgid "Command substitution (SUBCOMMAND)"
-msgstr "Substitution de commandes (SUBCOMMAND)"
-
 msgid "Command to add completion to"
 msgstr "Commande à laquelle ajouter une complétion"
 
@@ -2402,23 +2582,11 @@ msgstr ""
 msgid "Completion only used if command has zero exit status"
 msgstr ""
 
-msgid "Conditional execution of code and flow control"
-msgstr "Exécution conditionnelle de code et contrôle de flux"
-
-msgid "Conditionals (If, Else, Switch)"
-msgstr "Conditionnelles (if, else, switch)"
-
-msgid "Configurable greeting"
-msgstr "Message de bienvenue configurable"
-
 msgid "Control of maximum nice priority"
 msgstr ""
 
 msgid "Convert exit code to signal name"
 msgstr ""
-
-msgid "Copy and paste (Kill Ring)"
-msgstr "Copier et coller (avec la pile)"
 
 msgid "Copy the specified function to the specified new name"
 msgstr "Dupliquer la fonction sous un autre nom"
@@ -2432,16 +2600,7 @@ msgstr ""
 msgid "Creates a function wrapping a command"
 msgstr ""
 
-msgid "Debugging fish scripts"
-msgstr "Déboguer des scripts fish"
-
-msgid "Defining aliases"
-msgstr "Définition d’alias"
-
 msgid "Description of completion"
-msgstr ""
-
-msgid "Differences from bash"
 msgstr ""
 
 msgid "Dim text"
@@ -2546,9 +2705,6 @@ msgstr ""
 msgid "Edit variable value"
 msgstr ""
 
-msgid "Emacs mode commands"
-msgstr "Commande en mode Emacs"
-
 msgid "Empty results excluded"
 msgstr ""
 
@@ -2576,9 +2732,6 @@ msgstr "Effacer la variable"
 msgid "Escape with \\ instead of quotes"
 msgstr ""
 
-msgid "Escaping characters"
-msgstr "Échappement de caractères"
-
 msgid "Event handler, resets prompt when any char changes"
 msgstr ""
 
@@ -2588,23 +2741,11 @@ msgstr ""
 msgid "Event handler, resets prompt when functionality changes"
 msgstr ""
 
-msgid "Event handlers"
-msgstr "Gestion d’événements"
-
-msgid "Exit Status"
-msgstr "Code de retour"
-
 msgid "Expand only as a command, or anywhere"
 msgstr ""
 
 msgid "Export variable to subprocess"
 msgstr "Exporter la variable dans le sous-processus"
-
-msgid "Exporting variables"
-msgstr "Exportation de variables"
-
-msgid "Exports (Shell Variables)"
-msgstr "Exportations (variables shell)"
 
 msgid "FD is a terminal"
 msgstr "Le descripteur de fichier aboutit sur un terminal"
@@ -2660,17 +2801,8 @@ msgstr ""
 msgid "Filter writable paths"
 msgstr ""
 
-msgid "Fish's release notes"
-msgstr ""
-
-msgid "Frequently Asked Questions"
-msgstr ""
-
 msgid "Function name"
 msgstr "Nom de la fonction"
-
-msgid "Further help and development"
-msgstr "Encore plus d’aide et développement"
 
 msgid "GNU-style long option to complete"
 msgstr ""
@@ -2690,9 +2822,6 @@ msgstr ""
 msgid "Gets the umask in symbolic format instead of octal"
 msgstr ""
 
-msgid "Getting Help"
-msgstr "Obtenir de l’aide"
-
 msgid "Give basename for given paths"
 msgstr ""
 
@@ -2705,58 +2834,10 @@ msgstr ""
 msgid "Handle NULL-delimited input"
 msgstr ""
 
-msgid "Help for this command"
-msgstr ""
-
-msgid "Help on how to reuse previously entered commands"
-msgstr "Aide sur la réutilisation des commandes précédentes"
-
 msgid "Helper function for fish_git_prompt"
 msgstr ""
 
 msgid "Helper function to list unused options"
-msgstr ""
-
-msgid "Home directory expansion ~USER"
-msgstr "Expansion du dossier principal ~USER"
-
-msgid "How \"\" and '' work"
-msgstr ""
-
-msgid "How \\\\ escaping works"
-msgstr ""
-
-msgid "How different expansions work together"
-msgstr ""
-
-msgid "How functions are loaded"
-msgstr ""
-
-msgid "How lists combine"
-msgstr ""
-
-msgid "How tab-completion works"
-msgstr "Utilisation de l’autocomplétion par tabulation"
-
-msgid "How to color the pager"
-msgstr ""
-
-msgid "How to define an alias"
-msgstr ""
-
-msgid "How to define functions"
-msgstr ""
-
-msgid "How to handle arguments"
-msgstr ""
-
-msgid "How to make your own prompt"
-msgstr ""
-
-msgid "How to write completions"
-msgstr ""
-
-msgid "How to write your own prompt"
 msgstr ""
 
 msgid "If commandline is empty, run nextd; else move one argument to the right"
@@ -2780,9 +2861,6 @@ msgstr ""
 msgid "Include new files"
 msgstr ""
 
-msgid "Index range expansion"
-msgstr "Expansion de plage d’indice"
-
 msgid "Inherit completions from specified command"
 msgstr ""
 
@@ -2792,38 +2870,20 @@ msgstr "Hériter des complétions de la commande spécifiée"
 msgid "Initial contents of read buffer when reading interactively"
 msgstr ""
 
-msgid "Initialization files"
-msgstr "Fichiers d’initialisation"
-
-msgid "Input/Output (IO) redirection"
-msgstr "Redirection d’entrée/sortie (E/S)"
-
-msgid "Insert mode"
-msgstr "Mode insertion"
-
 msgid "Integer width of the result, default is maximum width of inputs"
 msgstr ""
 
 msgid "Integer width of the result, default is minimum non-zero width of inputs"
 msgstr ""
 
-msgid "Introduction to the fish syntax"
-msgstr "Introduction à la syntaxe de fish"
-
 msgid "Invert meaning of filters"
 msgstr ""
-
-msgid "Job control"
-msgstr "Contrôle des tâches"
 
 msgid "Keep order of arguments instead of sorting alphabetically"
 msgstr ""
 
 msgid "Launch fish's web based configuration"
 msgstr ""
-
-msgid "Learning fish"
-msgstr "Apprendre fish"
 
 msgid "Left file equal to right file"
 msgstr ""
@@ -2864,17 +2924,14 @@ msgstr ""
 msgid "List embedded files contained in the fish binary"
 msgstr ""
 
+msgid "List section arguments for the 'help' command"
+msgstr ""
+
 msgid "List the names of the functions, but not their definition"
 msgstr "Lister les noms des fonctions sans leur définition"
 
 msgid "List the names of the variables, but not their value"
 msgstr ""
-
-msgid "Local, global and universal scope"
-msgstr ""
-
-msgid "Locale variables"
-msgstr "Variables régionales"
 
 msgid "Logical AND"
 msgstr "Faire un ET logique"
@@ -2987,9 +3044,6 @@ msgstr ""
 msgid "Menu based cd command"
 msgstr ""
 
-msgid "More on universal variables"
-msgstr "Plus au sujet des variables universelles"
-
 msgid "Move back in the directory history"
 msgstr ""
 
@@ -2998,9 +3052,6 @@ msgstr ""
 
 msgid "Move path to the front or back"
 msgstr ""
-
-msgid "Multiline editing"
-msgstr "Édition multiligne"
 
 msgid "Negate expression"
 msgstr "Nier logique l’expression"
@@ -3062,9 +3113,6 @@ msgstr ""
 msgid "Operate silently"
 msgstr ""
 
-msgid "Other features"
-msgstr "Autres fonctionnalités"
-
 msgid "Output in HTML format"
 msgstr "Afficher la sortie au format HTML"
 
@@ -3085,9 +3133,6 @@ msgstr ""
 
 msgid "Pad right instead of left"
 msgstr ""
-
-msgid "Parameter expansion (Globbing)"
-msgstr "Expansion de paramètres (globs)"
 
 msgid "Path exists"
 msgstr ""
@@ -3115,9 +3160,6 @@ msgstr "Chemin auquel ajouter une complétion"
 
 msgid "Perform an action when the shell receives a signal"
 msgstr ""
-
-msgid "Pipes and Redirections"
-msgstr "Tubes et redirections"
 
 msgid "Pop directory from the stack and cd to it"
 msgstr ""
@@ -3254,12 +3296,6 @@ msgstr ""
 msgid "Print/set the line the cursor is on"
 msgstr ""
 
-msgid "Programmable prompt"
-msgstr "Invite programmable"
-
-msgid "Programmable title"
-msgstr "Titre programmable"
-
 msgid "Prompt function for Git"
 msgstr ""
 
@@ -3286,9 +3322,6 @@ msgstr ""
 
 msgid "Read the specified number of characters"
 msgstr ""
-
-msgid "Ready for more?"
-msgstr "Paré pour continuer ?"
 
 msgid "Remove completion"
 msgstr "Supprimer la complétion"
@@ -3380,12 +3413,6 @@ msgstr ""
 msgid "Run with comma-separated feature flags enabled"
 msgstr ""
 
-msgid "Running Commands"
-msgstr "Exécuter des commandes"
-
-msgid "Running multiple programs"
-msgstr "Exécuter plusieurs programmes"
-
 msgid "Save function"
 msgstr "Enregistrer la fonction"
 
@@ -3394,9 +3421,6 @@ msgstr ""
 
 msgid "Search back or move cursor up 1 line"
 msgstr ""
-
-msgid "Searchable history"
-msgstr "Historique ouvert à la recherche"
 
 msgid "Select current selection"
 msgstr ""
@@ -3412,9 +3436,6 @@ msgstr "Sélectionner le processus sous le curseur"
 
 msgid "Select token under cursor"
 msgstr "Sélectionner le lexème sous le curseur"
-
-msgid "Separating Commands (Semicolon)"
-msgstr "Séparer les commandes (point-virgule)"
 
 msgid "Set all jobs under job control"
 msgstr ""
@@ -3461,23 +3482,11 @@ msgstr ""
 msgid "Set/get cursor position, not buffer contents"
 msgstr "Paramétrer ou obtenir l’emplacement du curseur, sans tampon"
 
-msgid "Setting syntax highlighting colors"
-msgstr "Paramétrage des couleurs de la coloration syntaxique"
-
 msgid "Share variable persistently across sessions"
 msgstr ""
 
 msgid "Share variable with all the users fish processes on the computer"
 msgstr ""
-
-msgid "Shared bindings"
-msgstr ""
-
-msgid "Shell variable and function names"
-msgstr "Variable shell et noms de fonction"
-
-msgid "Shell variables"
-msgstr "Variables shell"
 
 msgid "Show commandname of each job"
 msgstr "Afficher le nom de commande de toutes les tâches"
@@ -3527,17 +3536,11 @@ msgstr ""
 msgid "Snapshot and define local variable"
 msgstr ""
 
-msgid "Some common words"
-msgstr "Quelques mots courants"
-
 msgid "Sort paths"
 msgstr ""
 
 msgid "Space-separated list of possible arguments"
 msgstr ""
-
-msgid "Special variables"
-msgstr "Variable spéciales"
 
 msgid "Specify command to operate on"
 msgstr "Spécifier la commande sur laquelle opérer"
@@ -3584,9 +3587,6 @@ msgstr ""
 msgid "Start a continuous session"
 msgstr ""
 
-msgid "Startup (Where's .bashrc?)"
-msgstr "Démarrage (où est « .bashrc » ?)"
-
 msgid "Store the results as an array"
 msgstr ""
 
@@ -3608,16 +3608,7 @@ msgstr ""
 msgid "Suspend the current shell."
 msgstr "Suspendre le shell actuel"
 
-msgid "Syntax Highlighting"
-msgstr "Coloration syntaxique"
-
 msgid "TRAP handler: debug prompt"
-msgstr ""
-
-msgid "Tab Completions"
-msgstr "Complétions par tabulation"
-
-msgid "Terminal features used by fish"
 msgstr ""
 
 msgid "Test if We are specifying a color value for the prompt"
@@ -3671,9 +3662,6 @@ msgstr "Vérifier si un descripteur de fichier est un terminal"
 msgid "Tests if builtin exists"
 msgstr ""
 
-msgid "The status variable"
-msgstr "La variable status"
-
 msgid "Treat expansion argument as a fish function"
 msgstr ""
 
@@ -3685,9 +3673,6 @@ msgstr ""
 
 msgid "Underline style"
 msgstr ""
-
-msgid "Universal Variables"
-msgstr "Variables universelles"
 
 msgid "Update $PATH directly"
 msgstr ""
@@ -3719,29 +3704,8 @@ msgstr "Utiliser le format de sortie portable (POSIX 1003.2)"
 msgid "Use the visible width, excluding escape sequences"
 msgstr ""
 
-msgid "Useful functions for writing completions"
-msgstr "Fonctions utiles pour écrire des complétions"
-
-msgid "Variable expansion $VARNAME"
-msgstr ""
-
-msgid "Variable scope"
-msgstr "Portée des variable"
-
-msgid "Variable scope for functions"
-msgstr "Portée des variables des fonctions"
-
-msgid "Variables for changing highlighting colors"
-msgstr "Variables de coloration syntaxique"
-
-msgid "Variables with multiple elements"
-msgstr ""
-
 msgid "Verbose mode"
 msgstr "Mode verbeux"
-
-msgid "Vi mode commands"
-msgstr "Commandes en mode vi"
 
 msgid "Vi-style bindings that inherit emacs-style bindings in all modes"
 msgstr ""
@@ -3752,29 +3716,8 @@ msgstr ""
 msgid "View and pick from the sample themes"
 msgstr ""
 
-msgid "Visual mode"
-msgstr "Mode visuel"
-
-msgid "What characters are allowed in names"
-msgstr ""
-
-msgid "What set -x does"
-msgstr ""
-
 msgid "Where to direct debug output to"
 msgstr ""
-
-msgid "Where to put completions"
-msgstr "Où placer les complétions"
-
-msgid "Why $PATH is special"
-msgstr ""
-
-msgid "Why fish?"
-msgstr "Pourquoi fish ?"
-
-msgid "Wildcard expansion *.*"
-msgstr "Expansion des métacaractères *.*"
 
 msgid "Write out the fossil prompt"
 msgstr ""
@@ -3787,9 +3730,6 @@ msgstr ""
 
 msgid "Write to file"
 msgstr "Écrire dans le fichier spécifié"
-
-msgid "Writing your own completions"
-msgstr "Créer vos propres complétions"
 
 msgid "all components of the path must exist"
 msgstr ""
@@ -3827,13 +3767,7 @@ msgstr ""
 msgid "fish_git_prompt helper, returns the current Git operation and branch"
 msgstr ""
 
-msgid "foo=bar variable overrides"
-msgstr ""
-
 msgid "helper function that does pretty formatting on svn status"
-msgstr ""
-
-msgid "ifs and elses"
 msgstr ""
 
 msgid "increment or decrement the number below the cursor"
@@ -3917,22 +3851,10 @@ msgstr "Masquer la sortie"
 msgid "text color"
 msgstr ""
 
-msgid "var[x..y] slices"
-msgstr ""
-
 msgid "vi-like key bindings for fish"
 msgstr ""
 
 msgid "wait for app to exit"
-msgstr ""
-
-msgid "while, for and begin"
-msgstr ""
-
-msgid "{a,b} brace expansion"
-msgstr ""
-
-msgid "~ expansion"
 msgstr ""
 
 msgid "fish-section-tier3-from-script-explicitly-added"

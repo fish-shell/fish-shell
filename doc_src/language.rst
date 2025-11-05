@@ -41,8 +41,6 @@ Switches differ between commands and are usually documented on a command's manua
 
 So the basic idea of fish is the same as with other unix shells: It gets a commandline, runs :ref:`expansions <expand>`, and the result is then run as a command.
 
-.. _terminology:
-
 Terminology
 -----------
 
@@ -1085,8 +1083,6 @@ The ``~`` (tilde) character at the beginning of a parameter, followed by a usern
 
   echo ~root # prints root's home directory, probably "/root"
 
-.. _combine:
-
 Combining different expansions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1887,8 +1883,6 @@ For a list of all builtins, use ``builtin -n``.
 
 For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch.
 
-.. _command-lookup:
-
 Command lookup
 --------------
 
@@ -1966,8 +1960,6 @@ Let's make up an example. This function will :ref:`glob <expand-wildcard>` the f
     end
 
 If you run this as ``show_files /``, it will most likely ask you until you press Y/y or N/n. If you run this as ``show_files / | cat``, it will print the files without asking. If you run this as ``show_files .``, it might print something without asking because there are fewer than five files.
-
-.. _identifiers:
 
 Shell variable and function names
 ---------------------------------

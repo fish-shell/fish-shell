@@ -1,4 +1,4 @@
-#[cfg(not(clippy))]
+use fish_build_helper::env_var;
 use std::path::Path;
 
 fn main() {
@@ -8,18 +8,25 @@ fn main() {
     // embed a directory which does not exist it will panic.
     let _ = std::fs::create_dir_all(&sec1_dir);
 
+    let help_sections_path = Path::new(&env_var("OUT_DIR").unwrap()).join("help_sections.rs");
+    std::fs::write(
+        help_sections_path.clone(),
+        r#"pub static HELP_SECTIONS: &str = "";"#,
+    )
+    .unwrap();
+
     #[cfg(not(clippy))]
-    build_man(&man_dir, &sec1_dir);
+    build_man(&man_dir, &sec1_dir, &help_sections_path);
 }
 
 #[cfg(not(clippy))]
-fn build_man(man_dir: &Path, sec1_dir: &Path) {
+fn build_man(man_dir: &Path, sec1_dir: &Path, help_sections_path: &Path) {
     use std::{
         ffi::OsStr,
         process::{Command, Stdio},
     };
 
-    use fish_build_helper::{env_var, workspace_root};
+    use fish_build_helper::workspace_root;
 
     let workspace_root = workspace_root();
     let doc_src_dir = workspace_root.join("doc_src");
@@ -30,6 +37,7 @@ fn build_man(man_dir: &Path, sec1_dir: &Path) {
         &doc_src_dir,
     ]);
 
+    let help_sections_arg = format!("fish_help_sections_output={}", help_sections_path.display());
     let args: &[&OsStr] = {
         fn as_os_str<S: AsRef<OsStr> + ?Sized>(s: &S) -> &OsStr {
             s.as_ref()
@@ -55,6 +63,8 @@ fn build_man(man_dir: &Path, sec1_dir: &Path) {
             &man_dir,
             &doc_src_dir,
             &sec1_dir,
+            "-D",
+            &help_sections_arg,
         ])
     };
 

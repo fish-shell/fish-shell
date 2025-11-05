@@ -233,6 +233,16 @@ macro_rules! localize_impl {
 /// If arguments need to be passed, this can be done by specifying a `&FluentArgs` value as the
 /// second argument, or by adding comma-separated `key = value` pairs,
 /// where the key is syntactically a Rust identifier.
+///
+/// ```
+/// # use fish_fluent::localize;
+/// let mut args = fluent::FluentArgs::new();
+/// args.set("first", "foo");
+/// args.set("second", 42);
+/// let message_fluent_args = localize!("test-with-args", &args);
+/// let message_key_value = localize!("test-with-args", first = "foo", second = 42);
+/// assert_eq!(message_fluent_args, message_key_value);
+/// ```
 #[macro_export]
 macro_rules! localize {
     // For passing pre-built `&FluentArgs`

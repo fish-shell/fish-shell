@@ -6,13 +6,13 @@ function help --description 'Show help for the fish shell'
 
     if set -q _flag_help
         __fish_print_help help
-        return 0
+        return
     end
 
     set -l fish_help_item $argv[1]
     if test (count $argv) -gt 1
-        if string match -q string $argv[1]
-            set fish_help_item (string join '-' $argv[1] $argv[2])
+        if test $argv[1] = string
+            set fish_help_item (string join -- '-' $argv[1] $argv[2])
         else
             echo "help: Expected at most 1 args, got 2" >&2
             return 1
@@ -24,8 +24,21 @@ function help --description 'Show help for the fish shell'
     set -l fish_browser $fish_help_browser
 
     # A list of graphical browsers we know about.
-    set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla xdg-open
-    set -a graphical_browsers konqueror epiphany opera netscape rekonq google-chrome chromium-browser
+    set -l graphical_browsers (printf %s "\
+htmlview
+x-www-browser
+firefox
+galeon
+mozilla
+xdg-open
+konqueror
+epiphany
+opera
+netscape
+rekonq
+google-chrome
+chromium-browser
+")
 
     # On mac we may have to write a temporary file that redirects to the desired
     # help page, since `open` will drop fragments from file URIs (issue #4480).
@@ -53,9 +66,12 @@ function help --description 'Show help for the fish shell'
 
             # If we are in a graphical environment, check if there is a graphical
             # browser to use instead.
-            set -f is_graphical 0
-            if test -n "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o -z "$XAUTHORITY" \)
-                set is_graphical 1
+            set -l is_graphical false
+            if test -n "$DISPLAY" &&
+                    { test -z "$XAUTHORITY" ||
+                            test "$XAUTHORITY" = "$HOME/.Xauthority"
+                    }
+                set is_graphical true
                 for i in $graphical_browsers
                     if type -q -f $i
                         set fish_browser $i
@@ -65,7 +81,7 @@ function help --description 'Show help for the fish shell'
             end
 
             # If we're SSH'd into a desktop installation, don't use a regular browser unless X is being forwarded
-            if not set -q SSH_CLIENT || test $is_graphical -eq 1
+            if not set -q SSH_CLIENT || $is_graphical
                 # We use the macOS open, but not otherwise.
                 # On Debian, there is an open command that's a symlink to openvt.
                 if uname | string match -q Darwin && command -sq open

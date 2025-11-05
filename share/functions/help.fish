@@ -42,7 +42,7 @@ chromium-browser
 
     # On mac we may have to write a temporary file that redirects to the desired
     # help page, since `open` will drop fragments from file URIs (issue #4480).
-    set -l need_trampoline
+    set -l need_trampoline false
 
     if not set -q fish_browser[1]
         if set -q BROWSER
@@ -87,7 +87,7 @@ chromium-browser
                 if uname | string match -q Darwin && command -sq open
                     set fish_browser open
                     # The open command needs a trampoline because the macOS version can't handle #-fragments.
-                    set need_trampoline 1
+                    set need_trampoline true
                 end
 
                 # If the OS appears to be Windows (graphical), try to use cygstart
@@ -131,7 +131,7 @@ chromium-browser
             # when the command is finally eval'd.
             set fish_browser cygstart $fish_browser
         else
-            set need_trampoline 1
+            set need_trampoline true
         end
     end
 
@@ -228,7 +228,7 @@ chromium-browser
     else
         set page_url $ext_url
         # We don't need a trampoline for a remote URL.
-        set need_trampoline
+        set need_trampoline false
     end
 
     if not set -q fish_browser[1]
@@ -238,26 +238,22 @@ chromium-browser
         return 1
     end
 
-    if set -q need_trampoline[1]
-        # If string replace doesn't replace anything, we don't actually need a
-        # trampoline (they're only needed if there's a fragment in the path)
-        if set -l clean_url (string match -re '#' $page_url)
-            # Write a temporary file that will redirect where we want.
-            set -l tmpdir (__fish_mktemp_relative -d fish-help)
-            or return 1
-            set -l tmpname $tmpdir/help.html
-            echo '<meta http-equiv="refresh" content="0;URL=\''$clean_url'\'" />' >$tmpname
-            set page_url file://$tmpname
+    if $need_trampoline && string match -rq '#' $page_url
+        # Write a temporary file that will redirect where we want.
+        set -l tmpdir (__fish_mktemp_relative -d fish-help)
+        or return 1
+        set -l tmpname $tmpdir/help.html
+        echo '<meta http-equiv="refresh" content="0;URL=\''$page_url'\'" />' >$tmpname
+        set page_url file://$tmpname
 
-            # For Windows (Cygwin, msys2 and WSL), we need to convert the base help dir to a Windows path
-            # before converting it to a file URL, but only if a Windows browser is being used
-            if type -q cygpath
-                and string match -qr '(cygstart|\.exe)(\s+|$)' $fish_browser[1]
-                set page_url file://(cygpath -m $tmpname)
-            else if type -q wslpath
-                and string match -qr '\.exe(\s+|$)' $fish_browser[1]
-                set page_url file://(wslpath -w $tmpname)
-            end
+        # For Windows (Cygwin, msys2 and WSL), we need to convert the base help dir to a Windows path
+        # before converting it to a file URL, but only if a Windows browser is being used
+        if type -q cygpath
+            and string match -qr '(cygstart|\.exe)(\s+|$)' $fish_browser[1]
+            set page_url file://(cygpath -m $tmpname)
+        else if type -q wslpath
+            and string match -qr '\.exe(\s+|$)' $fish_browser[1]
+            set page_url file://(wslpath -w $tmpname)
         end
     end
 

@@ -9,9 +9,10 @@
 # For developers:
 #   - Run with no args to update all PO files after making changes to Rust/fish sources.
 # For translators:
-#   - Specify the language you want to work on as an argument, which must be a file in the po/
-#     directory. You can specify a language which does not have translations yet by specifying the
-#     name of a file which does not yet exist. Make sure to follow the naming convention.
+#   - Specify the language you want to work on as an argument, which must be a file in the
+#     localization/po/ directory. You can specify a language which does not have translations
+#     yet by specifying the name of a file which does not yet exist.
+#     Make sure to follow the naming convention.
 # For testing:
 #   - Specify `--dry-run` to see if any updates to the PO files would by applied by this script.
 #     If this flag is specified, the script will exit with an error if there are outstanding
@@ -31,7 +32,7 @@
 set -gx LC_ALL C.UTF-8
 
 set -l build_tools (status dirname)
-set -l po_dir $build_tools/../po
+set -l po_dir $build_tools/../localization/po
 
 set -l extract
 
@@ -89,8 +90,9 @@ if set -l --query extract
 end
 
 if set -l --query _flag_dry_run
-    # On a dry run, we do not modify po/ but write to a temporary directory instead and check if
-    # there is a difference between po/ and the tmpdir after re-generating the PO files.
+    # On a dry run, we do not modify localization/po/ but write to a temporary directory instead
+    # and check if there is a difference between localization/po/ and the tmpdir after re-generating
+    # the PO files.
     set -g tmpdir (mktemp -d)
 
     # Ensure tmpdir has the same initial state as the po dir.
@@ -146,7 +148,7 @@ end
 if set -g --query tmpdir[1]
     diff -ur $po_dir $tmpdir
     or begin
-        echo ERROR: translations in ./po/ are stale. Try running build_tools/update_translations.fish
+        echo ERROR: translations in localization/po/ are stale. Try running build_tools/update_translations.fish
         cleanup_exit
     end
 end

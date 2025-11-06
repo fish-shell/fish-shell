@@ -329,8 +329,10 @@ impl Iterator for Iter {
 #[cfg(test)]
 mod tests {
     use super::{DirEntryType, DirIter};
-    use crate::common::wcs2zstring;
     use crate::wchar::prelude::*;
+    use nix::sys::stat::Mode;
+    use std::fs::File;
+    use std::path::PathBuf;
 
     #[test]
     fn test_dir_iter_bad_path() {
@@ -374,11 +376,8 @@ mod tests {
     #[test]
     #[allow(clippy::if_same_then_else)]
     fn test_dir_iter() {
-        use crate::common::charptr2wcstring;
-        use crate::common::wcs2osstring;
         use crate::wchar::L;
-        use libc::{EACCES, ENOENT, O_CREAT, O_WRONLY};
-        use std::ffi::CString;
+        use libc::{EACCES, ENOENT};
 
         let baditer = DirIter::new(L!("/definitely/not/a/valid/directory/for/sure"));
         assert!(baditer.is_err());
@@ -388,17 +387,10 @@ mod tests {
         let err = err.raw_os_error().expect("Should have an errno value");
         assert!(err == ENOENT || err == EACCES);
 
-        let mut t1: [u8; 31] = *b"/tmp/fish_test_dir_iter.XXXXXX\0";
-        let basepath_narrow = unsafe { libc::mkdtemp(t1.as_mut_ptr().cast()) };
-        assert!(!basepath_narrow.is_null(), "mkdtemp failed");
-        let basepath: WString = charptr2wcstring(basepath_narrow);
+        let temp_dir = fish_tempfile::new_dir().unwrap();
+        let basepath = WString::from(temp_dir.path().to_str().unwrap());
 
-        let makepath = |s: &str| -> CString {
-            let mut tmp = basepath.clone();
-            tmp.push('/');
-            tmp.push_str(s);
-            wcs2zstring(&tmp)
-        };
+        let makepath = |s: &str| -> PathBuf { temp_dir.path().join(s) };
 
         let dirname = "dir";
         let regname = "reg";
@@ -428,33 +420,18 @@ mod tests {
         };
 
         // Make our different file types
-        unsafe {
-            let mut ret = libc::mkdir(makepath(dirname).as_ptr(), 0o700);
-            assert!(ret == 0);
-            ret = libc::open(makepath(regname).as_ptr(), O_CREAT | O_WRONLY, 0o600);
-            assert!(ret >= 0);
-            libc::close(ret);
-            #[cfg(not(cygwin))]
-            {
-                ret = libc::symlink(makepath(regname).as_ptr(), makepath(reglinkname).as_ptr());
-                assert!(ret == 0);
-                ret = libc::symlink(makepath(dirname).as_ptr(), makepath(dirlinkname).as_ptr());
-                assert!(ret == 0);
-                ret = libc::symlink(
-                    c"/this/is/an/invalid/path".as_ptr().cast(),
-                    makepath(badlinkname).as_ptr(),
-                );
-                assert!(ret == 0);
-                ret = libc::symlink(
-                    makepath(selflinkname).as_ptr(),
-                    makepath(selflinkname).as_ptr(),
-                );
-                assert!(ret == 0);
-            }
+        nix::unistd::mkdir(&makepath(dirname), Mode::from_bits(0o700).unwrap()).unwrap();
+        File::create(makepath(regname)).unwrap();
+        #[cfg(not(cygwin))]
+        {
+            use std::os::unix::fs::symlink;
 
-            ret = libc::mkfifo(makepath(fifoname).as_ptr(), 0o600);
-            assert!(ret == 0);
+            symlink(makepath(regname), makepath(reglinkname)).unwrap();
+            symlink(makepath(dirname), makepath(dirlinkname)).unwrap();
+            symlink("/this/is/an/invalid/path", makepath(badlinkname)).unwrap();
+            symlink(makepath(selflinkname), makepath(selflinkname)).unwrap();
         }
+        nix::unistd::mkfifo(&makepath(fifoname), Mode::from_bits(0o600).unwrap()).unwrap();
 
         let mut iter1 = DirIter::new(&basepath).expect("Should be able to open directory");
         let mut seen = 0;
@@ -499,8 +476,5 @@ mod tests {
             );
         }
         assert_eq!(seen, names.len());
-
-        // Clean up.
-        let _ = std::fs::remove_dir_all(wcs2osstring(&basepath));
     }
 }

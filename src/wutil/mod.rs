@@ -481,14 +481,13 @@ pub fn wstr_offset_in(cursor: &wstr, base: &wstr) -> usize {
 mod tests {
     use super::{normalize_path, wbasename, wdirname, wstr_offset_in, wwrite_to_fd};
     use crate::common::wcs2bytes;
+    use crate::fds::AutoCloseFd;
     use crate::tests::prelude::*;
     use crate::util::get_rng;
     use crate::wchar::prelude::*;
-    use crate::{fds::AutoCloseFd, fs::create_temporary_file};
     use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET, c_void};
     use rand::Rng;
-    use std::ffi::CString;
-    use std::ptr;
+    use std::{ffi::CString, ptr};
 
     mod test_path_normalize_for_cd {
         use super::super::path_normalize_for_cd;
@@ -664,8 +663,8 @@ mod tests {
     #[serial]
     fn test_wwrite_to_fd() {
         let _cleanup = test_init();
-        let (_file, filename) = create_temporary_file(L!("/tmp/fish_test_wwrite.XXXXXX")).unwrap();
-        let filename = CString::new(filename.to_string()).unwrap();
+        let temp_file = fish_tempfile::new_file().unwrap();
+        let filename = CString::new(temp_file.path().to_str().unwrap()).unwrap();
         let mut rng = get_rng();
         let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];
         for &size in &sizes {
@@ -699,7 +698,6 @@ mod tests {
             assert!(usize::try_from(read_amt).unwrap() == narrow.len());
             assert_eq!(&contents, &narrow);
         }
-        unsafe { libc::remove(filename.as_ptr()) };
     }
 
     #[test]

@@ -1836,7 +1836,6 @@ mod tests {
     use rand::Rng;
     use rand::rngs::SmallRng;
     use std::collections::VecDeque;
-    use std::ffi::CString;
     use std::io::BufReader;
     use std::os::unix::ffi::OsStrExt;
     use std::sync::Arc;
@@ -2314,21 +2313,18 @@ mod tests {
     fn test_history_path_detection() {
         let _cleanup = test_init();
         // Regression test for #7582.
-        let tmpdirbuff = CString::new("/tmp/fish_test_history.XXXXXX").unwrap();
-        let tmpdir = unsafe { libc::mkdtemp(tmpdirbuff.into_raw()) };
-        let tmpdir = unsafe { CString::from_raw(tmpdir) };
-        let mut tmpdir = bytes2wcstring(tmpdir.to_bytes());
-        if !tmpdir.ends_with('/') {
-            tmpdir.push('/');
-        }
+        let tmpdir = fish_tempfile::new_dir().unwrap();
 
         // Place one valid file in the directory.
         let filename = L!("testfile");
-        std::fs::write(wcs2osstring(&(tmpdir.clone() + filename)), []).unwrap();
+        let file_path = tmpdir.path().join(filename.to_string());
+        let wfile_path = WString::from(file_path.to_str().unwrap());
+        std::fs::write(&file_path, []).unwrap();
+        let wdir_path = WString::from(tmpdir.path().to_str().unwrap());
 
         let test_vars = EnvStack::new();
-        test_vars.set_one(L!("PWD"), EnvMode::GLOBAL, tmpdir.clone());
-        test_vars.set_one(L!("HOME"), EnvMode::GLOBAL, tmpdir.clone());
+        test_vars.set_one(L!("PWD"), EnvMode::GLOBAL, wdir_path.clone());
+        test_vars.set_one(L!("HOME"), EnvMode::GLOBAL, wdir_path.clone());
 
         let history = History::with_name(L!("path_detection"));
         history.clear();
@@ -2344,7 +2340,7 @@ mod tests {
             PersistenceMode::Disk,
         );
         history.clone().add_pending_with_file_detection(
-            &(L!("cmd2 ").to_owned() + &tmpdir[..] + L!("/") + filename),
+            &(L!("cmd2 ").to_owned() + &wfile_path[..]),
             &test_vars,
             PersistenceMode::Disk,
         );
@@ -2385,15 +2381,15 @@ mod tests {
 
         // Expected sets of paths.
         let expected_paths = [
-            vec![],                                    // cmd0
-            vec![filename.to_owned()],                 // cmd1
-            vec![tmpdir.clone() + L!("/") + filename], // cmd2
-            vec![L!("$HOME/").to_owned() + filename],  // cmd3
-            vec![],                                    // cmd4
-            vec![L!("~/").to_owned() + filename],      // cmd5
-            vec![],                                    // cmd6
-            vec![],                                    // cmd7 - we do not expand globs
-            vec![],                                    // cmd8
+            vec![],                                   // cmd0
+            vec![filename.to_owned()],                // cmd1
+            vec![wfile_path],                         // cmd2
+            vec![L!("$HOME/").to_owned() + filename], // cmd3
+            vec![],                                   // cmd4
+            vec![L!("~/").to_owned() + filename],     // cmd5
+            vec![],                                   // cmd6
+            vec![],                                   // cmd7 - we do not expand globs
+            vec![],                                   // cmd8
         ];
 
         let maxlap = 128;
@@ -2414,7 +2410,6 @@ mod tests {
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
         history.clear();
-        let _ = std::fs::remove_dir_all(wcs2osstring(&tmpdir));
     }
 
     fn install_sample_history(name: &wstr) {

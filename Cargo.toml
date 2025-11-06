@@ -89,6 +89,7 @@ fish-build-man-pages = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-gettext-maps = { workspace = true, optional = true }
 fish-printf.workspace = true
+fish-tempfile.workspace = true
 libc.workspace = true
 lru.workspace = true
 macro_rules_attribute = "0.2.2"
@@ -170,7 +171,7 @@ rust.non_upper_case_globals = "allow"
 rust.unknown_lints = "allow"
 rust.unstable_name_collisions = "allow"
 rustdoc.private_intra_doc_links = "allow"
-clippy.len_without_is_empty = "allow" # we're not a library crate
+clippy.len_without_is_empty = "allow"     # we're not a library crate
 clippy.let_and_return = "allow"
 clippy.manual_range_contains = "allow"
 clippy.needless_lifetimes = "allow"

@@ -285,3 +285,13 @@ Or add this to your ``config.fish``::
         commandline -f repaint
         functions --erase GNU-screen-workaround
     end
+
+Unicode Codepoints
+------------------
+
+By default, fish outputs the following non-ASCII characters::
+
+    × ► ¶ ⏎ • ● … μ – ’ ‘ “ ” ← → ↑ ↓
+
+as well as control pictures (U+2400 through U+241F),
+and locale-specific ones in :ref:`translated strings <variables-locale>`.

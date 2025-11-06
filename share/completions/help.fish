@@ -378,6 +378,8 @@ function __fish_help_describe -a help_item
             return
         case terminal-compatibility#required-commands
             return
+        case terminal-compatibility#unicode-codepoints
+            return
         case tutorial
             echo (_ Tutorial)
         case tutorial#autoloading-functions

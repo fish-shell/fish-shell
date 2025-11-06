@@ -1389,7 +1389,7 @@ fn get_deferred_process(j: &Job) -> Option<usize> {
 }
 
 /// Given that we failed to execute process `failed_proc` in job `job`, mark that process and
-/// every subsequent process in the pipeline as aborted before launch.
+/// every subsequent process in the pipeline as aborted before launch.
 fn abort_pipeline_from(job: &Job, offset: usize) {
     for p in job.processes().iter().skip(offset) {
         p.mark_aborted_before_launch();

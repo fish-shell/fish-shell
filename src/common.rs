@@ -1032,10 +1032,9 @@ pub fn shell_modes() -> MutexGuard<'static, libc::termios> {
     crate::reader::SHELL_MODES.lock().unwrap()
 }
 
-/// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $
-/// on other systems.
+/// The character to use where the text has been truncated.
 pub fn get_ellipsis_char() -> char {
-    '\u{2026}'
+    '\u{2026}' // ('…')
 }
 
 /// The character or string to use where text has been truncated (ellipsis if possible, otherwise
@@ -1245,7 +1244,7 @@ pub fn init_special_chars_once() {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
         OMITTED_NEWLINE_STR.store(LL!("\u{00b6}")); // "pilcrow"
-        OBFUSCATION_READ_CHAR.store(u32::from('\u{2022}'), Ordering::Relaxed); // "bullet"
+        OBFUSCATION_READ_CHAR.store(u32::from('\u{2022}'), Ordering::Relaxed); // "bullet" (•)
     } else if is_console_session() {
         OMITTED_NEWLINE_STR.store(LL!("^J"));
         OBFUSCATION_READ_CHAR.store(u32::from('*'), Ordering::Relaxed);
@@ -1253,7 +1252,7 @@ pub fn init_special_chars_once() {
         OMITTED_NEWLINE_STR.store(LL!("\u{23CE}")); // "return symbol" (⏎)
         OBFUSCATION_READ_CHAR.store(
             u32::from(
-                '\u{25CF}', // "black circle"
+                '\u{25CF}', // "black circle" (●)
             ),
             Ordering::Relaxed,
         );

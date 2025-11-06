@@ -17,3 +17,20 @@ tmux-sleep
 string match <output -r '.*\e\]133;C.*' |
 string escape
 # CHECK: {{.*}}interactive{{$}}
+
+isolated-tmux send-keys \
+    '$fish -c "read; cat"' Enter
+tmux-sleep
+isolated-tmux send-keys \
+    'read-value ' Enter
+tmux-sleep
+isolated-tmux send-keys cat1 Enter
+tmux-sleep
+isolated-tmux send-keys cat2 Enter
+tmux-sleep
+isolated-tmux capture-pane -p -S 2
+# CHECK: read> read-value
+# CHECK: read-value cat1
+# CHECK: cat1
+# CHECK: cat2
+# CHECK: cat2

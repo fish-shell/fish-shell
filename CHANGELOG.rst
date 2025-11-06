@@ -23,6 +23,7 @@ Interactive improvements
 
 Scripting improvements
 ----------------------
+- Fixed a regression from 4.1.0 where ``fish -c 'read; cat`` would set wrong terminal modes (:issue:`12024`).
 
 Other improvements
 ------------------

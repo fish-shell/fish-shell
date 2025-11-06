@@ -18,7 +18,7 @@ use crate::nix::isatty;
 use crate::reader::ReaderConfig;
 use crate::reader::commandline_set_buffer;
 use crate::reader::reader_save_screen_state;
-use crate::reader::{reader_pop, reader_push, reader_readline};
+use crate::reader::{reader_pop, reader_push, reader_readline, set_shell_modes_temporarily};
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::TOK_ARGUMENT_LIST;
 use crate::tokenizer::Tok;
@@ -276,6 +276,8 @@ fn read_interactive(
         ..Default::default()
     };
 
+    let old_modes = set_shell_modes_temporarily(inputfd);
+
     // Keep in-memory history only.
     reader_push(parser, L!(""), conf);
     let _modifiable_commandline = parser.scope().readonly_commandline.then(|| {
@@ -291,7 +293,7 @@ fn read_interactive(
         let _interactive = parser.push_scope(|s| s.is_interactive = true);
         let mut scoped_handoff = TtyHandoff::new(reader_save_screen_state);
         scoped_handoff.enable_tty_protocols();
-        reader_readline(parser, nchars)
+        reader_readline(parser, old_modes, nchars)
     };
     if let Some(line) = mline {
         *buff = line;

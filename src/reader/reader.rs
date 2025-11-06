@@ -814,7 +814,8 @@ fn read_i(parser: &Parser) {
     while !check_exit_loop_maybe_warning(Some(&mut data)) {
         RUN_COUNT.fetch_add(1, Ordering::Relaxed);
 
-        let Some(command) = data.readline(None) else {
+        let Some(command) = data.readline(set_shell_modes_temporarily(data.conf.inputfd), None)
+        else {
             continue;
         };
 
@@ -1165,10 +1166,14 @@ pub fn reader_reading_interrupted(data: &mut ReaderData) -> i32 {
 /// characters even if a full line has not yet been read. Note: the returned value may be longer
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
-pub fn reader_readline(parser: &Parser, nchars: Option<NonZeroUsize>) -> Option<WString> {
+pub fn reader_readline(
+    parser: &Parser,
+    old_modes: Option<libc::termios>,
+    nchars: Option<NonZeroUsize>,
+) -> Option<WString> {
     let data = current_data().unwrap();
     let mut reader = Reader { parser, data };
-    reader.readline(nchars)
+    reader.readline(old_modes, nchars)
 }
 
 /// Get the command line state. This may be fetched on a background thread.
@@ -2283,7 +2288,11 @@ impl ReaderData {
 impl<'a> Reader<'a> {
     /// Read a command to execute, respecting input bindings.
     /// Return the command, or none if we were asked to cancel (e.g. SIGHUP).
-    fn readline(&mut self, nchars: Option<NonZeroUsize>) -> Option<WString> {
+    fn readline(
+        &mut self,
+        old_modes: Option<libc::termios>,
+        nchars: Option<NonZeroUsize>,
+    ) -> Option<WString> {
         let mut tty = TtyHandoff::new(reader_save_screen_state);
 
         self.rls = Some(ReadlineLoopState::new());
@@ -2301,19 +2310,6 @@ impl<'a> Reader<'a> {
         self.cycle_cursor_pos = 0;
 
         self.history_search.reset();
-
-        // It may happen that a command we ran when job control was disabled nevertheless stole the tty
-        // from us. In that case when we read from our fd, it will trigger SIGTTIN. So just
-        // unconditionally reclaim the tty. See #9181.
-        unsafe { libc::tcsetpgrp(self.conf.inputfd, libc::getpgrp()) };
-
-        // Get the current terminal modes. These will be restored when the function returns.
-        let mut old_modes = MaybeUninit::uninit();
-        let restore_modes =
-            unsafe { libc::tcgetattr(self.conf.inputfd, old_modes.as_mut_ptr()) } == 0;
-
-        // Set the new modes.
-        set_shell_modes(self.conf.inputfd, "readline");
 
         // HACK: Don't abandon line for the first prompt, because
         // if we're started with the terminal it might not have settled,
@@ -2389,11 +2385,13 @@ impl<'a> Reader<'a> {
         if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as _ {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
-            if restore_modes
-                && unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, old_modes.as_ptr()) } == -1
-                && is_interactive_session()
-            {
-                perror("tcsetattr");
+            // TODO(MSRV>=1.88) if-let-chain
+            if let Some(old_modes) = old_modes {
+                if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &old_modes) } == -1
+                    && is_interactive_session()
+                {
+                    perror("tcsetattr");
+                }
             }
             Outputter::stdoutput().borrow_mut().reset_text_face();
         }
@@ -4455,6 +4453,25 @@ pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
         );
     }
     ok
+}
+
+pub fn set_shell_modes_temporarily(inputfd: RawFd) -> Option<libc::termios> {
+    // It may happen that a command we ran when job control was disabled nevertheless stole the tty
+    // from us. In that case when we read from our fd, it will trigger SIGTTIN. So just
+    // unconditionally reclaim the tty. See #9181.
+    unsafe { libc::tcsetpgrp(inputfd, libc::getpgrp()) };
+
+    // Get the current terminal modes. These will be restored when the function returns.
+    let old_modes = {
+        let mut old_modes = MaybeUninit::uninit();
+        let ok = unsafe { libc::tcgetattr(inputfd, old_modes.as_mut_ptr()) } == 0;
+        ok.then(|| unsafe { old_modes.assume_init() })
+    };
+
+    // Set the new modes.
+    set_shell_modes(inputfd, "readline");
+
+    old_modes
 }
 
 /// Grab control of terminal.

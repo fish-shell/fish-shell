@@ -140,9 +140,10 @@ chromium-browser
     switch "$fish_help_item"
         case ''
             set fish_help_page index.html
-        case (status help-sections)
+        case (status help-sections | string replace -r "^index(#|\$)" introduction\$1)
             set fish_help_page (
                 printf %s $fish_help_item |
+                    string replace -r '^introduction(#|$)' 'index$1' |
                     string replace -r -- '(#|$)' '.html$1'
             )
 

@@ -1,6 +1,6 @@
 complete -c help -n __fish_is_first_arg -x -a '(
     {
-        status help-sections
+        status help-sections | string replace -r "^index(#|\$)" introduction\$1
         printf cmds/%s\n ! . : \[ \{
     } |
         while read -l item
@@ -162,29 +162,29 @@ function __fish_help_describe -a help_item
             return
         case fish_for_bash_users#wildcards-globs
             return
-        case index
+        case introduction
             echo (_ Introduction)
-        case index#configuration
+        case introduction#configuration
             echo (_ 'Initialization files')
-        case index#default-shell
+        case introduction#default-shell
             return
-        case index#examples
+        case introduction#examples
             return
-        case index#installation
+        case introduction#installation
             return
-        case index#other-help-pages
+        case introduction#other-help-pages
             return
-        case index#resources
+        case introduction#resources
             echo (_ 'Further help and development')
-        case index#setup
+        case introduction#setup
             return
-        case index#shebang-line
+        case introduction#shebang-line
             return
-        case index#starting-and-exiting
+        case introduction#starting-and-exiting
             return
-        case index#uninstalling
+        case introduction#uninstalling
             return
-        case index#where-to-go
+        case introduction#where-to-go
             return
         case interactive
             return

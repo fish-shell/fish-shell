@@ -496,7 +496,7 @@ mod tests {
     #[serial]
     fn test_autoload() {
         let _cleanup = test_init();
-        use crate::common::{charptr2wcstring, wcs2zstring};
+        use crate::common::wcs2zstring;
         use crate::fds::wopen_cloexec;
         use nix::fcntl::OFlag;
 
@@ -521,10 +521,10 @@ mod tests {
             file.write_all(b"Hello").unwrap();
         }
 
-        let mut t1 = "/tmp/fish_test_autoload.XXXXXX\0".as_bytes().to_vec();
-        let p1 = charptr2wcstring(unsafe { libc::mkdtemp(t1.as_mut_ptr().cast()) });
-        let mut t2 = "/tmp/fish_test_autoload.XXXXXX\0".as_bytes().to_vec();
-        let p2 = charptr2wcstring(unsafe { libc::mkdtemp(t2.as_mut_ptr().cast()) });
+        let p1 = fish_tempfile::new_dir().unwrap();
+        let p1 = WString::from(p1.path().to_str().unwrap());
+        let p2 = fish_tempfile::new_dir().unwrap();
+        let p2 = WString::from(p2.path().to_str().unwrap());
 
         let paths = &[p1.clone(), p2.clone()];
         let mut autoload = Autoload::new(L!("test_var"));
@@ -603,8 +603,5 @@ mod tests {
         autoload.invalidate_cache();
         assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());
         autoload.mark_autoload_finished(L!("file1"));
-
-        run!(L!("rm -Rf %s"), p1);
-        run!(L!("rm -Rf %s"), p2);
     }
 }

@@ -425,49 +425,39 @@ mod tests {
     use crate::tests::prelude::*;
     use crate::wchar::prelude::*;
 
-    use crate::common::charptr2wcstring;
     use crate::redirection::RedirectionMode;
     use std::fs::{self, File, Permissions, create_dir_all};
     use std::os::unix::fs::PermissionsExt;
+    use std::path::PathBuf;
 
-    struct TempDir {
-        basepath: WString,
+    struct TempDirWithCtx {
+        tempdir: fish_tempfile::TempDir,
         ctx: OperationContext<'static>,
     }
 
-    impl TempDir {
-        fn new() -> TempDir {
-            let mut t1 = *b"/tmp/fish_file_tester_dir.XXXXXX\0";
-            let basepath_narrow = unsafe { libc::mkdtemp(t1.as_mut_ptr().cast()) };
-            assert!(!basepath_narrow.is_null(), "mkdtemp failed");
-            let basepath: WString = charptr2wcstring(basepath_narrow);
-            TempDir {
-                basepath,
+    impl TempDirWithCtx {
+        fn new() -> TempDirWithCtx {
+            TempDirWithCtx {
+                tempdir: fish_tempfile::new_dir().unwrap(),
                 ctx: OperationContext::empty(),
             }
         }
 
-        fn filepath(&self, name: &str) -> String {
-            let mut result = self.basepath.to_string();
-            result.push('/');
-            result.push_str(name);
-            result
+        fn filepath(&self, name: &str) -> PathBuf {
+            self.tempdir.path().join(name)
         }
 
         fn file_tester(&self) -> FileTester<'_> {
-            FileTester::new(self.basepath.clone(), &self.ctx)
-        }
-    }
-
-    impl Drop for TempDir {
-        fn drop(&mut self) {
-            let _ = std::fs::remove_dir_all(self.basepath.to_string());
+            FileTester::new(
+                WString::from_str(self.tempdir.path().to_str().unwrap()),
+                &self.ctx,
+            )
         }
     }
 
     #[test]
     fn test_ispath() {
-        let temp = TempDir::new();
+        let temp = TempDirWithCtx::new();
         let tester = temp.file_tester();
 
         let file_path = temp.filepath("file.txt");
@@ -516,7 +506,7 @@ mod tests {
 
     #[test]
     fn test_iscdpath() {
-        let temp = TempDir::new();
+        let temp = TempDirWithCtx::new();
         let tester = temp.file_tester();
 
         // Note cd (unlike file paths) should report IsErr for invalid cd paths,
@@ -547,7 +537,7 @@ mod tests {
     #[test]
     fn test_redirections() {
         // Note we use is_ok and is_err since we don't care about the IsFile part.
-        let temp = TempDir::new();
+        let temp = TempDirWithCtx::new();
         let tester = temp.file_tester();
         let file_path = temp.filepath("file.txt");
         File::create(&file_path).unwrap();

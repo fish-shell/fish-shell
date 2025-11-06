@@ -164,6 +164,7 @@ dependencies = [
  "fish-gettext-maps",
  "fish-gettext-mo-file-parser",
  "fish-printf",
+ "fish-tempfile",
  "libc",
  "lru",
  "macro_rules_attribute",

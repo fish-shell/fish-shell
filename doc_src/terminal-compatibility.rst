@@ -239,10 +239,6 @@ Optional Commands
      - cvvis
      - Enable cursor visibility (DECTCEM).
      - VT220
-   * - ``\e[?1000l``
-     - n/a
-     - Disable mouse reporting.
-     - XTerm
    * - ``\e[?1004h``
      - n/a
      - Enable focus reporting.

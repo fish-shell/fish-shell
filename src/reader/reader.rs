@@ -127,10 +127,10 @@ use crate::terminal::BufferedOutputter;
 use crate::terminal::Output;
 use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
-    ClearScreen, DecrstAlternateScreenBuffer, DecrstMouseTracking, DecsetAlternateScreenBuffer,
-    DecsetShowCursor, Osc0WindowTitle, Osc133CommandFinished, Osc133CommandStart,
-    QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
-    QueryXtgettcap, QueryXtversion,
+    ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
+    Osc0WindowTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
+    QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute, QueryXtgettcap,
+    QueryXtversion,
 };
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::TextFace;
@@ -2621,12 +2621,6 @@ impl<'a> Reader<'a> {
                 }
                 ImplicitEvent::FocusOut => {
                     event::fire_generic(self.parser, L!("fish_focus_out").to_owned(), vec![]);
-                    self.save_screen_state();
-                }
-                ImplicitEvent::DisableMouseTracking => {
-                    Outputter::stdoutput()
-                        .borrow_mut()
-                        .write_command(DecrstMouseTracking);
                     self.save_screen_state();
                 }
                 ImplicitEvent::MouseLeft(position) => {

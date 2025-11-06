@@ -8,25 +8,25 @@ sp.expect_prompt()
 
 # Five char sequence.
 sp.send("\x1b[tDE")
-sp.expect_str("reader: Disabling mouse tracking")
+sp.expect_str("reader: mouse event")
 
 # Six char sequence.
 sp.send("\x1b[MABC")
-sp.expect_str("reader: Disabling mouse tracking")
+sp.expect_str("reader: mouse event")
 
 # Nine char sequences.
 sp.send("\x1b[TABCDEF")
-sp.expect_str("reader: Disabling mouse tracking")
+sp.expect_str("reader: mouse event")
 
 # sleep to catch up under ASAN
 sp.sleep(0.5)
 
 # Extended SGR sequences.
 sp.send("\x1b[<1;2;3M")
-sp.expect_str("reader: Disabling mouse tracking")
+sp.expect_str("reader: mouse event")
 
 sp.send("\x1b[<1;2;3m")
-sp.expect_str("reader: Disabling mouse tracking")
+sp.expect_str("reader: mouse event")
 
 sp.sendline("echo done")
 sp.expect_prompt("done")

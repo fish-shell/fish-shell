@@ -324,8 +324,6 @@ pub enum ImplicitEvent {
     FocusIn,
     /// Our terminal window lost focus.
     FocusOut,
-    /// Request to disable mouse tracking.
-    DisableMouseTracking,
     /// Mouse left click.
     MouseLeft(ViewportPosition),
 }
@@ -1049,7 +1047,7 @@ pub trait InputEventQueuer {
             b'F' => masked_key(key::End),  // PC/xterm style
             b'H' => masked_key(key::Home), // PC/xterm style
             b'M' | b'm' => {
-                self.disable_mouse_tracking();
+                FLOG!(reader, "mouse event");
                 // Generic X10 or modified VT200 sequence, or extended (SGR/1006) mouse
                 // reporting mode, with semicolon-separated parameters for button code, Px,
                 // and Py, ending with 'M' for button press or 'm' for button release.
@@ -1089,14 +1087,14 @@ pub trait InputEventQueuer {
                 return None;
             }
             b't' => {
-                self.disable_mouse_tracking();
+                FLOG!(reader, "mouse event");
                 // VT200 button released in mouse highlighting mode at valid text location. 5 chars.
                 let _ = next_char(self);
                 let _ = next_char(self);
                 return None;
             }
             b'T' => {
-                self.disable_mouse_tracking();
+                FLOG!(reader, "mouse event");
                 // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
                 for _ in 0..6 {
                     let _ = next_char(self);
@@ -1247,16 +1245,6 @@ pub trait InputEventQueuer {
             _ => return None,
         };
         Some(key)
-    }
-
-    fn disable_mouse_tracking(&mut self) {
-        // fish recognizes but does not actually support mouse reporting. We never turn it on, and
-        // it's only ever enabled if a program we spawned enabled it and crashed or forgot to turn
-        // it off before exiting. We turn it off here to avoid wasting resources.
-        FLOG!(reader, "Disabling mouse tracking");
-
-        // We shouldn't directly manipulate stdout from here, so we ask the reader to do it.
-        self.push_front(CharEvent::Implicit(ImplicitEvent::DisableMouseTracking));
     }
 
     fn parse_ss3(&mut self, buffer: &mut Vec<u8>) -> Option<KeyEvent> {

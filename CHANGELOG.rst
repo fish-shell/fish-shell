@@ -20,6 +20,9 @@ Interactive improvements
 - Fish now hides the portion of a multiline prompt that is scrolled out of view due to a huge command line. This prevents duplicate lines after repainting with partially visible prompt (:issue:`11911`).
 - On macOS, fish sets :envvar:`MANPATH` correctly also when that variable was already present in the environment (:issue:`10684`).
 - Added a workaround for MSYS2 to prevent Konsole and WezTerm from opening new tabs in the wrong working directory (:issue:`11981`). 
+- fish no longer disables mouse tracking sequences (DECSET/DECRST 1000),
+  so you can use those to toggle mouse reporting,
+  which allows to move the cursor or select completions items with the mouse (:issue:`4918`).
 
 Scripting improvements
 ----------------------

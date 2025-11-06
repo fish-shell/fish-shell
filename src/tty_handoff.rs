@@ -10,9 +10,9 @@ use crate::job_group::JobGroup;
 use crate::proc::JobGroupRef;
 use crate::terminal::TerminalCommand::{
     self, ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
-    DecrstFocusReporting, DecsetBracketedPaste, DecsetFocusReporting,
-    KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
-    ModifyOtherKeysDisable, ModifyOtherKeysEnable,
+    DecrstFocusReporting, DecrstMouseTracking, DecsetBracketedPaste, DecsetFocusReporting,
+    DecsetMouseTracking, KittyKeyboardProgressiveEnhancementsDisable,
+    KittyKeyboardProgressiveEnhancementsEnable, ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
 use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
@@ -189,35 +189,47 @@ impl TtyQuirks {
         };
         let enablers = ProtocolBytes {
             kitty_keyboard: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,                       // Enable bracketed paste
+                DecsetMouseTracking,
+                DecsetBracketedPaste, // Enable bracketed paste
                 KittyKeyboardProgressiveEnhancementsEnable, // Kitty keyboard progressive enhancements
             ])),
             other: serialize_commands(maybe_enable_focus_reporting(&[
+                DecsetMouseTracking,
                 DecsetBracketedPaste,
                 ModifyOtherKeysEnable,       // XTerm's modifyOtherKeys
                 ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
             ])),
             wezterm_workaround: serialize_commands(maybe_enable_focus_reporting(&[
+                DecsetMouseTracking,
                 DecsetBracketedPaste,
                 ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
             ])),
-            none: serialize_commands(maybe_enable_focus_reporting(&[DecsetBracketedPaste])),
+            none: serialize_commands(maybe_enable_focus_reporting(&[
+                DecsetMouseTracking,
+                DecsetBracketedPaste,
+            ])),
         };
         let disablers = ProtocolBytes {
             kitty_keyboard: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,                        // Disable bracketed paste
+                DecrstMouseTracking,
+                DecrstBracketedPaste, // Disable bracketed paste
                 KittyKeyboardProgressiveEnhancementsDisable, // Kitty keyboard progressive enhancements
             ])),
             other: serialize_commands(maybe_disable_focus_reporting(&[
+                DecrstMouseTracking,
                 DecrstBracketedPaste,
                 ModifyOtherKeysDisable,
                 ApplicationKeypadModeDisable,
             ])),
             wezterm_workaround: serialize_commands(maybe_disable_focus_reporting(&[
+                DecrstMouseTracking,
                 DecrstBracketedPaste,
                 ApplicationKeypadModeDisable,
             ])),
-            none: serialize_commands(maybe_disable_focus_reporting(&[DecrstBracketedPaste])),
+            none: serialize_commands(maybe_disable_focus_reporting(&[
+                DecrstMouseTracking,
+                DecrstBracketedPaste,
+            ])),
         };
         TtyProtocolsSet {
             quirks: self,

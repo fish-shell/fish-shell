@@ -111,6 +111,7 @@ pub(crate) enum TerminalCommand<'a> {
     ScrollContentUp(usize),
 
     DecsetShowCursor,
+    DecsetMouseTracking,
     DecrstMouseTracking,
     DecsetFocusReporting,
     DecrstFocusReporting,
@@ -183,6 +184,7 @@ pub(crate) trait Output {
             QueryCursorPosition => write(self, b"\x1b[6n"),
             ScrollContentUp(lines) => scroll_content_up(self, lines),
             DecsetShowCursor => write(self, b"\x1b[?25h"),
+            DecsetMouseTracking => write(self, b"\x1b[?1000h"),
             DecrstMouseTracking => write(self, b"\x1b[?1000l"),
             DecsetFocusReporting => write(self, b"\x1b[?1004h"),
             DecrstFocusReporting => write(self, b"\x1b[?1004l"),

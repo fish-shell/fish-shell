@@ -8,6 +8,7 @@ use crate::flog::{FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
 use crate::proc::JobGroupRef;
+use crate::reader::check_bool_var;
 use crate::terminal::TerminalCommand::{
     self, ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
     DecrstFocusReporting, DecrstMouseTracking, DecsetBracketedPaste, DecsetFocusReporting,
@@ -185,9 +186,8 @@ impl TtyQuirks {
         }
 
         // Enable mouse tracking depending on settings
-        if let Some(fish_mouse) = vars.get(L!("fish_mouse"))
-            && fish_mouse.as_string() == "1"
-        {
+
+        if check_bool_var(vars, L!("fish_mouse"), false) {
             on_chain.push(DecsetMouseTracking);
             off_chain.push(DecrstMouseTracking);
         }

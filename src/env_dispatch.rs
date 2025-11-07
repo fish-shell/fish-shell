@@ -3,18 +3,21 @@ use crate::complete::complete_invalidate_path;
 use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
 use crate::env::{EnvMode, EnvStack, Environment, setenv_lock, unsetenv_lock};
 use crate::flog::FLOG;
-use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
+use crate::input_common::{
+    CharEvent, ImplicitEvent, update_wait_on_escape_ms, update_wait_on_sequence_key_ms,
+};
 use crate::locale::{invalidate_numeric_locale, set_libc_locales};
 use crate::reader::{
-    reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
-    reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled, reader_set_transient_prompt,
+    check_bool_var, current_data, reader_change_cursor_end_mode,
+    reader_change_cursor_selection_mode, reader_change_history, reader_schedule_prompt_repaint,
+    reader_set_autosuggestion_enabled, reader_set_transient_prompt,
 };
 use crate::screen::{
     IS_DUMB, LAYOUT_CACHE_SHARED, ONLY_GRAYSCALE, screen_set_midnight_commander_hack,
 };
 use crate::terminal::ColorSupport;
 use crate::terminal::use_terminfo;
-use crate::tty_handoff::xtversion;
+use crate::tty_handoff::{initialize_tty_protocols, xtversion};
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};
@@ -89,6 +92,7 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
             L!("fish_cursor_end_mode"),
             handle_fish_cursor_end_mode_change,
         );
+        table.add_anon(L!("fish_mouse"), handle_fish_mouse_change);
 
         table
     });
@@ -278,7 +282,23 @@ fn handle_fish_cursor_end_mode_change(vars: &EnvStack) {
 }
 
 fn handle_autosuggestion_change(vars: &EnvStack) {
+    FLOG!(term_support, L!("fish_autosuggestion_enabled changed"));
     reader_set_autosuggestion_enabled(vars);
+}
+
+fn handle_fish_mouse_change(vars: &EnvStack) {
+    FLOG!(term_support, L!("fish_mouse changed"));
+    let Some(data) = current_data() else {
+        return;
+    };
+
+    if check_bool_var(vars, L!("fish_mouse"), false) {
+        data.input_data
+            .queue_char(CharEvent::Implicit(ImplicitEvent::SetMouseTracking(true)));
+    } else {
+        data.input_data
+            .queue_char(CharEvent::Implicit(ImplicitEvent::SetMouseTracking(false)));
+    }
 }
 
 fn handle_transient_prompt_change(vars: &EnvStack) {

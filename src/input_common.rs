@@ -326,6 +326,8 @@ pub enum ImplicitEvent {
     FocusOut,
     /// Mouse left click.
     MouseLeft(ViewportPosition),
+    /// Enable or disable mouse tracking
+    SetMouseTracking(bool),
 }
 
 #[derive(Debug, Clone)]

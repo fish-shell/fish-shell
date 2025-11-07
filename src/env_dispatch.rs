@@ -17,7 +17,7 @@ use crate::screen::{
 };
 use crate::terminal::ColorSupport;
 use crate::terminal::use_terminfo;
-use crate::tty_handoff::{initialize_tty_protocols, xtversion};
+use crate::tty_handoff::xtversion;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};

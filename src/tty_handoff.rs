@@ -2,7 +2,7 @@
 //! and reclaiming it after.
 
 use crate::common::{self, safe_write_loop};
-use crate::env::{EnvVar, Environment};
+use crate::env::Environment;
 use crate::env_dispatch::MIDNIGHT_COMMANDER_SID;
 use crate::flog::{FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
@@ -21,11 +21,9 @@ use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
 use crate::wutil::{perror, wcstoi};
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
-use lru::IntoIter;
 use once_cell::sync::OnceCell;
 use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
-use widestring::utf32str;
 
 /// Whether kitty keyboard protocol support is present in the TTY.
 static KITTY_KEYBOARD_SUPPORTED: OnceCell<bool> = OnceCell::new();
@@ -198,7 +196,7 @@ impl TtyQuirks {
                     KittyKeyboardProgressiveEnhancementsEnable, // Kitty keyboard progressive enhancements
                 ]
                 .into_iter()
-                .chain(on_chain.clone().into_iter()),
+                .chain(on_chain.clone()),
             ),
             other: serialize_commands(
                 vec![
@@ -206,14 +204,14 @@ impl TtyQuirks {
                     ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
                 ]
                 .into_iter()
-                .chain(on_chain.clone().into_iter()),
+                .chain(on_chain.clone()),
             ),
             wezterm_workaround: serialize_commands(
                 vec![
                     ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
                 ]
                 .into_iter()
-                .chain(on_chain.clone().into_iter()),
+                .chain(on_chain.clone()),
             ),
             none: serialize_commands(on_chain.clone().into_iter()),
         };
@@ -223,19 +221,19 @@ impl TtyQuirks {
                     KittyKeyboardProgressiveEnhancementsDisable, // Kitty keyboard progressive enhancements
                 ]
                 .into_iter()
-                .chain(off_chain.clone().into_iter()),
+                .chain(off_chain.clone()),
             ),
             other: serialize_commands(
                 vec![ModifyOtherKeysDisable, ApplicationKeypadModeDisable]
                     .into_iter()
-                    .chain(off_chain.clone().into_iter()),
+                    .chain(off_chain.clone()),
             ),
             wezterm_workaround: serialize_commands(
                 vec![ApplicationKeypadModeDisable]
                     .into_iter()
-                    .chain(off_chain.clone().into_iter()),
+                    .chain(off_chain.clone()),
             ),
-            none: serialize_commands(vec![].into_iter().chain(off_chain.clone().into_iter())),
+            none: serialize_commands(vec![].into_iter().chain(off_chain.clone())),
         };
         TtyProtocolsSet {
             quirks: self,

@@ -650,8 +650,8 @@ impl Pager {
 
     // Sets the terminal size.
     pub fn set_term_size(&mut self, ts: &Termsize) {
-        self.available_term_width = usize::try_from(ts.width).unwrap_or_default();
-        self.available_term_height = usize::try_from(ts.height).unwrap_or_default();
+        self.available_term_width = ts.width();
+        self.available_term_height = ts.height();
     }
 
     // Changes the selected completion in the given direction according to the layout of the given
@@ -1270,6 +1270,7 @@ mod tests {
     use crate::tests::prelude::*;
     use crate::wchar::prelude::*;
     use crate::wcstringutil::StringFuzzyMatch;
+    use std::num::NonZeroU16;
 
     #[test]
     #[serial]
@@ -1368,8 +1369,11 @@ mod tests {
         // These tests are woefully incomplete
         // They only test the truncation logic for a single completion
 
-        let rendered_line = |pager: &mut Pager, width: isize| {
-            pager.set_term_size(&Termsize::new(width, 24));
+        let rendered_line = |pager: &mut Pager, width: u16| {
+            pager.set_term_size(&Termsize::new(
+                NonZeroU16::new(width).unwrap(),
+                Termsize::DEFAULT_HEIGHT,
+            ));
             let rendering = pager.render();
             let sd = &rendering.screen_data;
             assert_eq!(sd.line_count(), 1);

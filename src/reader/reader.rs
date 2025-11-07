@@ -391,7 +391,7 @@ pub fn reader_pop() {
     if let Some(new_reader) = current_data() {
         new_reader
             .screen
-            .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
+            .reset_abandoning_line(termsize_last().width());
     } else {
         Outputter::stdoutput().borrow_mut().reset_text_face();
         *commandline_state_snapshot() = CommandlineState::new();
@@ -2320,8 +2320,7 @@ impl<'a> Reader<'a> {
         //
         // I can't see a good way around this.
         if !self.first_prompt {
-            self.screen
-                .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
+            self.screen.reset_abandoning_line(termsize_last().width());
         }
         self.first_prompt = false;
 
@@ -2810,8 +2809,7 @@ impl<'a> Reader<'a> {
                     Edit::new(0..self.command_line_len(), L!("").to_owned()),
                 );
                 if c == rl::CancelCommandline {
-                    self.screen
-                        .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
+                    self.screen.reset_abandoning_line(termsize_last().width());
                 }
 
                 // Post fish_cancel.
@@ -3092,8 +3090,7 @@ impl<'a> Reader<'a> {
                         L!("fish_posterror").to_owned(),
                         vec![self.command_line.text().to_owned()],
                     );
-                    self.screen
-                        .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
+                    self.screen.reset_abandoning_line(termsize_last().width());
                 }
             }
             rl::HistoryPrefixSearchBackward
@@ -5358,7 +5355,7 @@ fn history_pager_search(
     // We can still push fish further upward in case the first entry is multiline,
     // but that can't really be helped.
     // (subtract 2 for the search line and the prompt)
-    let page_size = usize::try_from(cmp::max(termsize_last().height / 2 - 2, 12)).unwrap();
+    let page_size = cmp::max(termsize_last().height() / 2 - 2, 12);
     let mut completions = Vec::with_capacity(page_size);
     let mut search = HistorySearch::new_with(
         history.clone(),

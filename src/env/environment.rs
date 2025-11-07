@@ -747,10 +747,14 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     // Initialize termsize variables.
     let termsize = termsize::SHARED_CONTAINER.initialize(vars as &dyn Environment);
     if vars.get_unless_empty(L!("COLUMNS")).is_none() {
-        vars.set_one(L!("COLUMNS"), EnvMode::GLOBAL, termsize.width.to_wstring());
+        vars.set_one(
+            L!("COLUMNS"),
+            EnvMode::GLOBAL,
+            termsize.width().to_wstring(),
+        );
     }
     if vars.get_unless_empty(L!("LINES")).is_none() {
-        vars.set_one(L!("LINES"), EnvMode::GLOBAL, termsize.height.to_wstring());
+        vars.set_one(L!("LINES"), EnvMode::GLOBAL, termsize.height().to_wstring());
     }
 
     // Set fish_bind_mode to "default".

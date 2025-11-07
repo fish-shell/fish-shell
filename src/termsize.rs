@@ -6,75 +6,79 @@ use crate::parser::Parser;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
 use std::mem::MaybeUninit;
+use std::num::NonZeroU16;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Termsize {
     /// Width of the terminal, in columns.
-    // TODO: Change to u32
-    pub width: isize,
+    width: NonZeroU16,
 
     /// Height of the terminal, in rows.
-    // TODO: Change to u32
-    pub height: isize,
+    height: NonZeroU16,
 }
 
 // A counter which is incremented every SIGWINCH, or when the tty is otherwise invalidated.
 static TTY_TERMSIZE_GEN_COUNT: AtomicU32 = AtomicU32::new(0);
 
-/// Convert an environment variable to an int, or return a default value.
+/// Convert an environment variable to an int.
 /// The int must be >0 and <USHRT_MAX (from struct winsize).
-fn var_to_int_or(var: Option<EnvVar>, default: isize) -> isize {
-    let val: WString = var.map(|v| v.as_string()).unwrap_or_default();
-    if !val.is_empty() {
-        if let Ok(proposed) = fish_wcstoi(&val) {
-            if proposed > 0 && proposed <= u16::MAX as i32 {
-                return proposed as isize;
-            }
-        }
-    }
-    default
+fn var_to_int(var: Option<EnvVar>) -> Option<NonZeroU16> {
+    var.and_then(|v| fish_wcstoi(&v.as_string()).ok())
+        .and_then(|i| u16::try_from(i).ok())
+        .and_then(NonZeroU16::new)
 }
 
 /// Return a termsize from ioctl, or None on error or if not supported.
 fn read_termsize_from_tty() -> Option<Termsize> {
-    let mut ret: Option<Termsize> = None;
     // Note: historically we've supported libc::winsize not existing.
-    let mut winsize = MaybeUninit::<libc::winsize>::uninit();
-    if unsafe { libc::ioctl(0, libc::TIOCGWINSZ, winsize.as_mut_ptr()) } >= 0 {
-        let mut winsize = unsafe { winsize.assume_init() };
-        // 0 values are unusable, fall back to the default instead.
-        if winsize.ws_col == 0 {
-            FLOG!(
-                term_support,
-                L!("Terminal has 0 columns, falling back to default width")
-            );
-            winsize.ws_col = Termsize::DEFAULT_WIDTH as u16;
+    let winsize = {
+        let mut winsize = MaybeUninit::<libc::winsize>::uninit();
+        if unsafe { libc::ioctl(0, libc::TIOCGWINSZ, winsize.as_mut_ptr()) } < 0 {
+            return None;
         }
-        if winsize.ws_row == 0 {
-            FLOG!(
-                term_support,
-                L!("Terminal has 0 rows, falling back to default height")
-            );
-            winsize.ws_row = Termsize::DEFAULT_HEIGHT as u16;
-        }
-        ret = Some(Termsize::new(
-            winsize.ws_col as isize,
-            winsize.ws_row as isize,
-        ));
-    }
-    ret
+        unsafe { winsize.assume_init() }
+    };
+    let width = NonZeroU16::new(winsize.ws_col).unwrap_or_else(|| {
+        FLOG!(
+            term_support,
+            L!("Terminal has 0 columns, falling back to default width")
+        );
+        Termsize::DEFAULT_WIDTH
+    });
+    let height = NonZeroU16::new(winsize.ws_row).unwrap_or_else(|| {
+        FLOG!(
+            term_support,
+            L!("Terminal has 0 rows, falling back to default height")
+        );
+        Termsize::DEFAULT_HEIGHT
+    });
+    Some(Termsize::new(width, height))
 }
 
 impl Termsize {
     /// Default width and height.
-    pub const DEFAULT_WIDTH: isize = 80;
-    pub const DEFAULT_HEIGHT: isize = 24;
+    pub const DEFAULT_WIDTH: NonZeroU16 = NonZeroU16::new(80).unwrap();
+    pub const DEFAULT_HEIGHT: NonZeroU16 = NonZeroU16::new(24).unwrap();
 
     /// Construct from width and height.
-    pub fn new(width: isize, height: isize) -> Self {
+    pub fn new(width: NonZeroU16, height: NonZeroU16) -> Self {
         Self { width, height }
+    }
+
+    pub fn width_u16(&self) -> NonZeroU16 {
+        self.width
+    }
+    pub fn height_u16(&self) -> NonZeroU16 {
+        self.height
+    }
+
+    pub fn width(&self) -> usize {
+        usize::from(self.width.get())
+    }
+    pub fn height(&self) -> usize {
+        usize::from(self.height.get())
     }
 
     /// Return a default-sized termsize.
@@ -147,14 +151,11 @@ impl TermsizeContainer {
     /// This will prefer to use COLUMNS and LINES, but will fall back to the tty size reader.
     /// This does not change any variables in the environment.
     pub fn initialize(&self, vars: &dyn Environment) -> Termsize {
-        let new_termsize = Termsize {
-            width: var_to_int_or(vars.getf(L!("COLUMNS"), EnvMode::GLOBAL), -1),
-            height: var_to_int_or(vars.getf(L!("LINES"), EnvMode::GLOBAL), -1),
-        };
-
+        let width = var_to_int(vars.getf(L!("COLUMNS"), EnvMode::GLOBAL));
+        let height = var_to_int(vars.getf(L!("LINES"), EnvMode::GLOBAL));
         let mut data = self.data.lock().unwrap();
-        if new_termsize.width > 0 && new_termsize.height > 0 {
-            data.mark_override_from_env(new_termsize);
+        if let (Some(width), Some(height)) = (width, height) {
+            data.mark_override_from_env(Termsize { width, height });
         } else {
             data.last_tty_gen_count = TTY_TERMSIZE_GEN_COUNT.load(Ordering::Relaxed);
             data.last_from_tty = (self.tty_size_reader)();
@@ -197,8 +198,16 @@ impl TermsizeContainer {
 
     fn set_columns_lines_vars(&self, val: Termsize, parser: &Parser) {
         let saved = self.setting_env_vars.swap(true, Ordering::Relaxed);
-        parser.set_var_and_fire(L!("COLUMNS"), EnvMode::GLOBAL, vec![val.width.to_wstring()]);
-        parser.set_var_and_fire(L!("LINES"), EnvMode::GLOBAL, vec![val.height.to_wstring()]);
+        parser.set_var_and_fire(
+            L!("COLUMNS"),
+            EnvMode::GLOBAL,
+            vec![val.width().to_wstring()],
+        );
+        parser.set_var_and_fire(
+            L!("LINES"),
+            EnvMode::GLOBAL,
+            vec![val.height().to_wstring()],
+        );
         self.setting_env_vars.store(saved, Ordering::Relaxed);
     }
 
@@ -210,15 +219,9 @@ impl TermsizeContainer {
         }
         // Construct a new termsize from COLUMNS and LINES, then set it in our data.
         let new_termsize = Termsize {
-            width: vars
-                .getf(L!("COLUMNS"), EnvMode::GLOBAL)
-                .map(|v| v.as_string())
-                .and_then(|v| fish_wcstoi(&v).ok().map(|h| h as isize))
+            width: var_to_int(vars.getf(L!("COLUMNS"), EnvMode::GLOBAL))
                 .unwrap_or(Termsize::DEFAULT_WIDTH),
-            height: vars
-                .getf(L!("LINES"), EnvMode::GLOBAL)
-                .map(|v| v.as_string())
-                .and_then(|v| fish_wcstoi(&v).ok().map(|h| h as isize))
+            height: var_to_int(vars.getf(L!("LINES"), EnvMode::GLOBAL))
                 .unwrap_or(Termsize::DEFAULT_HEIGHT),
         };
 
@@ -289,8 +292,8 @@ mod tests {
 
         // Haha we change the value, it doesn't even know.
         *STUBBY_TERMSIZE.lock().unwrap() = Some(Termsize {
-            width: 42,
-            height: 84,
+            width: NonZeroU16::new(42).unwrap(),
+            height: NonZeroU16::new(84).unwrap(),
         });
         assert_eq!(ts.last(), Termsize::defaults());
 
@@ -299,9 +302,16 @@ mod tests {
         handle_winch();
         assert_eq!(ts.last(), Termsize::defaults());
 
+        let new_test_termsize = |width, height| {
+            Termsize::new(
+                NonZeroU16::new(width).unwrap(),
+                NonZeroU16::new(height).unwrap(),
+            )
+        };
+
         // Ok now we tell it to update.
         ts.updating(&parser);
-        assert_eq!(ts.last(), Termsize::new(42, 84));
+        assert_eq!(ts.last(), new_test_termsize(42, 84));
         assert_eq!(vars.get(L!("COLUMNS")).unwrap().as_string(), "42");
         assert_eq!(vars.get(L!("LINES")).unwrap().as_string(), "84");
 
@@ -310,17 +320,17 @@ mod tests {
         vars.set_one(L!("COLUMNS"), env_global, L!("75").to_owned());
         vars.set_one(L!("LINES"), env_global, L!("150").to_owned());
         ts.handle_columns_lines_var_change(parser.vars());
-        assert_eq!(ts.last(), Termsize::new(75, 150));
+        assert_eq!(ts.last(), new_test_termsize(75, 150));
         assert_eq!(vars.get(L!("COLUMNS")).unwrap().as_string(), "75");
         assert_eq!(vars.get(L!("LINES")).unwrap().as_string(), "150");
 
         vars.set_one(L!("COLUMNS"), env_global, L!("33").to_owned());
         ts.handle_columns_lines_var_change(parser.vars());
-        assert_eq!(ts.last(), Termsize::new(33, 150));
+        assert_eq!(ts.last(), new_test_termsize(33, 150));
 
         // Oh it got SIGWINCH, now the tty matters again.
         handle_winch();
-        assert_eq!(ts.last(), Termsize::new(33, 150));
+        assert_eq!(ts.last(), new_test_termsize(33, 150));
         assert_eq!(ts.updating(&parser), stubby_termsize().unwrap());
         assert_eq!(vars.get(L!("COLUMNS")).unwrap().as_string(), "42");
         assert_eq!(vars.get(L!("LINES")).unwrap().as_string(), "84");
@@ -329,7 +339,7 @@ mod tests {
         vars.set_one(L!("COLUMNS"), env_global, L!("83").to_owned());
         vars.set_one(L!("LINES"), env_global, L!("38").to_owned());
         ts.initialize(vars);
-        assert_eq!(ts.last(), Termsize::new(83, 38));
+        assert_eq!(ts.last(), new_test_termsize(83, 38));
 
         // initialize() even beats the tty reader until a sigwinch.
         let ts2 = TermsizeContainer {
@@ -339,7 +349,7 @@ mod tests {
         };
         ts.initialize(parser.vars());
         ts2.updating(&parser);
-        assert_eq!(ts.last(), Termsize::new(83, 38));
+        assert_eq!(ts.last(), new_test_termsize(83, 38));
         handle_winch();
         assert_eq!(ts2.updating(&parser), stubby_termsize().unwrap());
     }

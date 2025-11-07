@@ -14,6 +14,7 @@ use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
 use std::cell::RefCell;
 use std::collections::LinkedList;
 use std::io::Write;
+use std::num::NonZeroU16;
 use std::ops::Range;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicU32;
@@ -294,8 +295,8 @@ impl Screen {
         is_final_rendering: bool,
     ) {
         let curr_termsize = termsize_last();
-        let screen_width = curr_termsize.width;
-        let screen_height = curr_termsize.height;
+        let screen_width = curr_termsize.width();
+        let screen_height = curr_termsize.height();
         static REPAINTS: AtomicU32 = AtomicU32::new(0);
         FLOGF!(
             screen,
@@ -333,8 +334,6 @@ impl Screen {
         if screen_width < 4 || screen_height == 0 {
             return;
         }
-        let screen_width = usize::try_from(screen_width).unwrap();
-        let screen_height = usize::try_from(screen_height).unwrap();
 
         // Compute a layout.
         let layout = compute_layout(
@@ -474,18 +473,20 @@ impl Screen {
             } else {
                 0
             };
-        let pager_available_height = std::cmp::max(
-            1,
-            curr_termsize
-                .height
-                .saturating_sub_unsigned(full_line_count),
-        );
+        fn saturating_sub(m: NonZeroU16, s: usize) -> NonZeroU16 {
+            NonZeroU16::new(std::cmp::max(
+                1,
+                m.get().saturating_sub(s.try_into().unwrap_or(u16::MAX)),
+            ))
+            .unwrap()
+        }
+        let pager_available_height = saturating_sub(curr_termsize.height_u16(), full_line_count);
 
         // Now that we've output everything, set the cursor to the position that we saved in the loop
         // above.
         self.desired.cursor = match pager_search_field_position {
             Some(pager_cursor_pos)
-                if pager_available_height >= isize::try_from(PAGER_MIN_HEIGHT).unwrap() =>
+                if usize::from(pager_available_height.get()) >= PAGER_MIN_HEIGHT =>
             {
                 Cursor {
                     x: pager_cursor_pos,
@@ -508,7 +509,7 @@ impl Screen {
         // Re-render our completions page if necessary. Limit the term size of the pager to the true
         // term size, minus the number of lines consumed by our string.
         pager.set_term_size(&Termsize::new(
-            std::cmp::max(1, curr_termsize.width),
+            curr_termsize.width_u16(),
             pager_available_height,
         ));
 

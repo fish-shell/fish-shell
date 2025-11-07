@@ -1339,7 +1339,7 @@ macro_rules! write_to_output {
 pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
     let mut buff = WString::new();
 
-    let screen_width = termsize.width;
+    let screen_width = isize::try_from(termsize.width()).unwrap();
     if screen_width != 0 {
         let mut start = 0;
         let mut pos = start;

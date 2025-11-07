@@ -1049,6 +1049,7 @@ pub trait InputEventQueuer {
             b'F' => masked_key(key::End),  // PC/xterm style
             b'H' => masked_key(key::Home), // PC/xterm style
             b'M' | b'm' => {
+                FLOG!(reader, "mouse event");
                 // Generic X10 or modified VT200 sequence, or extended (SGR/1006) mouse
                 // reporting mode, with semicolon-separated parameters for button code, Px,
                 // and Py, ending with 'M' for button press or 'm' for button release.
@@ -1088,12 +1089,14 @@ pub trait InputEventQueuer {
                 return None;
             }
             b't' => {
+                FLOG!(reader, "mouse event");
                 // VT200 button released in mouse highlighting mode at valid text location. 5 chars.
                 let _ = next_char(self);
                 let _ = next_char(self);
                 return None;
             }
             b'T' => {
+                FLOG!(reader, "mouse event");
                 // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
                 for _ in 0..6 {
                     let _ = next_char(self);

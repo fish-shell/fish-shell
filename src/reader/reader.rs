@@ -1637,7 +1637,7 @@ fn combine_command_and_autosuggestion(
 }
 
 impl<'a> Reader<'a> {
-    pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
+    pub fn request_cursor_position(&mut self, q: CursorPositionQuery) {
         if !querying_allowed(self.vars()) {
             return;
         }
@@ -1645,6 +1645,7 @@ impl<'a> Reader<'a> {
         assert!(query.is_none());
         *query = Some(TerminalQuery::CursorPosition(q));
         {
+            let mut out = Outputter::stdoutput().borrow_mut();
             out.begin_buffering();
             out.write_command(QueryCursorPosition);
             out.write_command(QueryPrimaryDeviceAttribute);
@@ -2622,10 +2623,9 @@ impl<'a> Reader<'a> {
                 }
                 ImplicitEvent::MouseLeft(position) => {
                     FLOG!(reader, "Mouse left click", position);
-                    self.request_cursor_position(
-                        &mut Outputter::stdoutput().borrow_mut(),
-                        CursorPositionQuery::new(CursorPositionQueryKind::MouseLeft(position)),
-                    );
+                    self.request_cursor_position(CursorPositionQuery::new(
+                        CursorPositionQueryKind::MouseLeft(position),
+                    ));
                 }
             },
             CharEvent::QueryResult(query_result) => {
@@ -3959,10 +3959,9 @@ impl<'a> Reader<'a> {
                 let query = self.blocking_query();
                 let Some(query) = &*query else {
                     drop(query);
-                    self.request_cursor_position(
-                        &mut Outputter::stdoutput().borrow_mut(),
-                        CursorPositionQuery::new(CursorPositionQueryKind::ScrollbackPush),
-                    );
+                    self.request_cursor_position(CursorPositionQuery::new(
+                        CursorPositionQueryKind::ScrollbackPush,
+                    ));
                     return;
                 };
                 match query {

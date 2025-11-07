@@ -14,7 +14,7 @@ use crate::job_group::MaybeJobId;
 use crate::parser::{Block, Parser};
 use crate::proc::Pid;
 use crate::signal::{Signal, signal_check_cancel, signal_handle};
-use crate::termsize;
+use crate::termsize::termsize_update;
 use crate::wchar::prelude::*;
 
 pub enum event_type_t {
@@ -523,12 +523,10 @@ fn fire_internal(parser: &Parser, event: &Event) {
 
 /// Fire all delayed events attached to the given parser.
 pub fn fire_delayed(parser: &Parser) {
-    {
-        // Do not invoke new event handlers from within event handlers.
-        if parser.scope().is_event {
-            return;
-        };
-    }
+    // Do not invoke new event handlers from within event handlers.
+    if parser.scope().is_event {
+        return;
+    };
 
     // Do not invoke new event handlers if we are unwinding (#6649).
     if signal_check_cancel() != 0 {
@@ -551,7 +549,7 @@ pub fn fire_delayed(parser: &Parser) {
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
         if sig == libc::SIGWINCH {
-            termsize::SHARED_CONTAINER.updating(parser);
+            termsize_update(parser);
         }
         let event = Event {
             desc: EventDescription::Signal { signal: sig },

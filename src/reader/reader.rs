@@ -132,7 +132,7 @@ use crate::terminal::TerminalCommand::{
     QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute, QueryXtgettcap,
     QueryXtversion,
 };
-use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
+use crate::termsize::{safe_termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::TextFace;
 use crate::text_face::parse_text_face;
 use crate::threads::{assert_is_background_thread, assert_is_main_thread};
@@ -2430,7 +2430,7 @@ impl<'a> Reader<'a> {
         // ECHO mode, causing a race between new input and restoring the mode (#7770). So we leave the
         // tty alone, run the commands in shell mode, and then restore shell modes.
         set_shell_modes(STDIN_FILENO, "bind scripts");
-        termsize_invalidate_tty();
+        safe_termsize_invalidate_tty();
     }
 
     /// Read normal characters, inserting them into the command line.
@@ -4472,7 +4472,7 @@ fn term_steal(copy_modes: bool) {
         term_copy_modes();
     }
     set_shell_modes(STDIN_FILENO, "shell");
-    termsize_invalidate_tty();
+    safe_termsize_invalidate_tty();
 }
 
 // Ensure that fish owns the terminal, possibly waiting. If we cannot acquire the terminal, then
@@ -4610,7 +4610,7 @@ fn reader_interactive_init() {
         set_shell_modes(STDIN_FILENO, "startup");
     }
 
-    termsize_invalidate_tty();
+    safe_termsize_invalidate_tty();
 }
 
 /// Return whether fish is currently unwinding the stack in preparation to exit.

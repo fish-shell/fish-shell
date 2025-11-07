@@ -5,7 +5,7 @@ use crate::common::exit_without_destructors;
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::nix::getpid;
 use crate::reader::{reader_handle_sigint, reader_sighup, safe_restore_term_mode};
-use crate::termsize::TermsizeContainer;
+use crate::termsize::safe_termsize_invalidate_tty;
 use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_principal};
 use crate::tty_handoff::{safe_deactivate_tty_protocols, safe_mark_tty_invalid};
 use crate::wchar::prelude::*;
@@ -78,7 +78,7 @@ extern "C" fn fish_signal_handler(
     match sig {
         libc::SIGWINCH => {
             // Respond to a winch signal by telling the termsize container.
-            TermsizeContainer::handle_winch();
+            safe_termsize_invalidate_tty();
         }
         libc::SIGHUP => {
             // Exit unless the signal was trapped.

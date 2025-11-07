@@ -166,7 +166,7 @@ impl TermsizeContainer {
     /// registered for COLUMNS and LINES.
     /// This requires a shared reference so it can work from a static.
     /// Return the updated termsize.
-    pub fn updating(&self, parser: &Parser) -> Termsize {
+    fn updating(&self, parser: &Parser) -> Termsize {
         let new_size;
         let prev_size;
 
@@ -228,16 +228,6 @@ impl TermsizeContainer {
             .unwrap()
             .mark_override_from_env(new_termsize);
     }
-
-    /// Note that a WINCH signal is received.
-    /// Naturally this may be called from within a signal handler.
-    pub fn handle_winch() {
-        TTY_TERMSIZE_GEN_COUNT.fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn invalidate_tty() {
-        TTY_TERMSIZE_GEN_COUNT.fetch_add(1, Ordering::Relaxed);
-    }
 }
 
 pub static SHARED_CONTAINER: TermsizeContainer = TermsizeContainer {
@@ -250,7 +240,7 @@ const _: () = assert_sync::<TermsizeContainer>();
 
 /// Convenience helper to return the last known termsize.
 pub fn termsize_last() -> Termsize {
-    return SHARED_CONTAINER.last();
+    SHARED_CONTAINER.last()
 }
 
 /// Called when the COLUMNS or LINES variables are changed.
@@ -262,8 +252,9 @@ pub fn termsize_update(parser: &Parser) -> Termsize {
     SHARED_CONTAINER.updating(parser)
 }
 
-pub fn termsize_invalidate_tty() {
-    TermsizeContainer::invalidate_tty();
+/// May be called form a signal handler (WINCH).
+pub fn safe_termsize_invalidate_tty() {
+    TTY_TERMSIZE_GEN_COUNT.fetch_add(1, Ordering::Relaxed);
 }
 
 #[cfg(test)]
@@ -304,7 +295,8 @@ mod tests {
         assert_eq!(ts.last(), Termsize::defaults());
 
         // Ok let's tell it. But it still doesn't update right away.
-        TermsizeContainer::handle_winch();
+        let handle_winch = safe_termsize_invalidate_tty;
+        handle_winch();
         assert_eq!(ts.last(), Termsize::defaults());
 
         // Ok now we tell it to update.
@@ -327,7 +319,7 @@ mod tests {
         assert_eq!(ts.last(), Termsize::new(33, 150));
 
         // Oh it got SIGWINCH, now the tty matters again.
-        TermsizeContainer::handle_winch();
+        handle_winch();
         assert_eq!(ts.last(), Termsize::new(33, 150));
         assert_eq!(ts.updating(&parser), stubby_termsize().unwrap());
         assert_eq!(vars.get(L!("COLUMNS")).unwrap().as_string(), "42");
@@ -348,7 +340,7 @@ mod tests {
         ts.initialize(parser.vars());
         ts2.updating(&parser);
         assert_eq!(ts.last(), Termsize::new(83, 38));
-        TermsizeContainer::handle_winch();
+        handle_winch();
         assert_eq!(ts2.updating(&parser), stubby_termsize().unwrap());
     }
 }

@@ -101,7 +101,7 @@ fn process_input(
             }
             CharEvent::Key(kevt) => kevt,
             CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
-            CharEvent::QueryResult(Timeout) => panic!("should not be querying"),
+            CharEvent::QueryResult(Timeout | Interrupted) => panic!("should not be querying"),
             CharEvent::QueryResult(Response(_)) => continue,
         };
         if verbose {

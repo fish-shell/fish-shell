@@ -274,15 +274,15 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
 
     while !check_exit_loop_maybe_warning(None) {
         use CharEvent::{Command, Implicit, Key, Readline};
-        use ImplicitEvent::{CheckExit, Eof, QueryInterrupted};
+        use ImplicitEvent::{CheckExit, Eof};
         use QueryResultEvent::*;
         match input_queue.readch() {
             Implicit(Eof) => reader_sighup(),
             Implicit(CheckExit) => {}
-            Implicit(QueryInterrupted) => break,
             CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute)) => {
                 break;
             }
+            CharEvent::QueryResult(Response(_)) => (),
             CharEvent::QueryResult(Timeout) => {
                 let program = get_program_name();
                 FLOG!(
@@ -304,7 +304,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
                     .replace(Duration::from_millis(30));
                 break;
             }
-            CharEvent::QueryResult(Response(_)) => (),
+            CharEvent::QueryResult(Interrupted) => break,
             Key(_) | Readline(_) | Command(_) | Implicit(_) => panic!(),
         };
     }
@@ -2614,7 +2614,6 @@ impl<'a> Reader<'a> {
             CharEvent::Implicit(implicit_event) => match implicit_event {
                 ImplicitEvent::Eof => reader_sighup(),
                 ImplicitEvent::CheckExit => (),
-                ImplicitEvent::QueryInterrupted => (),
                 ImplicitEvent::FocusIn => {
                     event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
                     self.save_screen_state();
@@ -2647,7 +2646,7 @@ impl<'a> Reader<'a> {
                     }
                     (
                         Some(TerminalQuery::CursorPosition(cursor_pos_query)),
-                        Response(PrimaryDeviceAttribute) | Timeout,
+                        Response(PrimaryDeviceAttribute) | Timeout | Interrupted,
                     ) => {
                         let cursor_pos_query = cursor_pos_query.clone();
                         drop(maybe_query);

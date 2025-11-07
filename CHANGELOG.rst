@@ -49,7 +49,7 @@ For distributors and developers
   To turn this off (which should not be necessary),
   patch out the ``embed-data`` feature from ``cmake/Rust.cmake``.
   This option will be removed in future.
-
+- Fix build on Linux/SPARC by disabling SIGSTKFLT
 
 fish 4.1.3 (released ???)
 =========================

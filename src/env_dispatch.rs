@@ -282,12 +282,10 @@ fn handle_fish_cursor_end_mode_change(vars: &EnvStack) {
 }
 
 fn handle_autosuggestion_change(vars: &EnvStack) {
-    FLOG!(term_support, L!("fish_autosuggestion_enabled changed"));
     reader_set_autosuggestion_enabled(vars);
 }
 
 fn handle_fish_mouse_change(vars: &EnvStack) {
-    FLOG!(term_support, L!("fish_mouse changed"));
     let Some(data) = current_data() else {
         return;
     };

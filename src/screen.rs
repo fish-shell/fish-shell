@@ -556,8 +556,8 @@ impl Screen {
         self.save_status();
     }
 
-    pub fn push_to_scrollback(&mut self, cursor_y: usize) {
-        let lines_to_scroll = self.command_line_y_given_cursor_y(cursor_y);
+    pub fn push_to_scrollback(&mut self, viewport_cursor_y: usize) {
+        let lines_to_scroll = self.command_line_y_given_cursor_y(viewport_cursor_y);
         if lines_to_scroll == 0 {
             return;
         }
@@ -585,9 +585,9 @@ impl Screen {
     pub fn offset_in_cmdline_given_cursor(
         &mut self,
         viewport_position: ViewportPosition,
-        viewport_cursor: ViewportPosition,
+        viewport_cursor_y: usize,
     ) -> CharOffset {
-        let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_cursor.y);
+        let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_cursor_y);
         let y = viewport_position
             .y
             .checked_sub(viewport_prompt_y)
@@ -604,28 +604,8 @@ impl Screen {
             })
             .max(self.actual.visible_prompt_lines - 1)
             .min(self.actual.line_count() - 1);
-        let Some(viewport_prompt_x) = viewport_cursor.x.checked_sub(self.actual.cursor.x) else {
-            FLOGF!(
-                reader,
-                "Actual cursor x=%d exceeds reported cursor x=%d, \
-                     was the cursor moved by printing to the TTY?",
-                self.actual.cursor.x,
-                viewport_cursor.x
-            );
-            return CharOffset::None;
-        };
-        let Some(x) = viewport_position.x.checked_sub(viewport_prompt_x) else {
-            FLOGF!(
-                reader,
-                "Computed prompt x=%d exceeds mouse click x=%d, \
-                 was the cursor moved by printing to the TTY?",
-                viewport_prompt_x,
-                viewport_position.x
-            );
-            return CharOffset::None;
-        };
         let line = self.actual.line(y);
-        let x = x.max(line.indentation);
+        let x = viewport_position.x.max(line.indentation);
         let offset = line
             .text
             .get(x)

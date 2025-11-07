@@ -1562,17 +1562,16 @@ impl ReaderData {
         true
     }
 
-    pub fn mouse_left_click(&mut self, cursor: ViewportPosition, click_position: ViewportPosition) {
-        FLOG!(
+    pub fn mouse_left_click(&mut self, viewport_cursor_y: usize, click_position: ViewportPosition) {
+        FLOGF!(
             reader,
-            "Cursor is at",
-            cursor,
-            "; received left mouse click at",
-            click_position
+            "Received left mouse click at %u. Cursor is at %u",
+            format!("{:?}", click_position),
+            viewport_cursor_y,
         );
         match self
             .screen
-            .offset_in_cmdline_given_cursor(click_position, cursor)
+            .offset_in_cmdline_given_cursor(click_position, viewport_cursor_y)
         {
             CharOffset::Cmd(new_pos) | CharOffset::Pointer(new_pos) => {
                 let (elt, _el) = self.active_edit_line();
@@ -2655,7 +2654,7 @@ impl<'a> Reader<'a> {
                         match cursor_pos_query.kind {
                             MouseLeft(click_position) => {
                                 if let Some(cursor_pos) = cursor_pos {
-                                    self.mouse_left_click(cursor_pos, click_position);
+                                    self.mouse_left_click(cursor_pos.y, click_position);
                                 }
                             }
                             ScrollbackPush => {

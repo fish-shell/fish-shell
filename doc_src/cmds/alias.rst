@@ -1,5 +1,3 @@
-.. _cmd-alias:
-
 alias - create a function
 =========================
 

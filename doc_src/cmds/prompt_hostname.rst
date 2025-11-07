@@ -1,5 +1,3 @@
-.. _cmd-prompt_hostname:
-
 prompt_hostname - print the hostname, shortened for use in the prompt
 =====================================================================
 

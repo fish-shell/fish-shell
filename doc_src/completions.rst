@@ -1,5 +1,3 @@
-.. _completion-own:
-
 Writing your own completions
 ============================
 
@@ -116,8 +114,6 @@ As a more comprehensive example, here's a commented excerpt of the completions f
 
 For examples of how to write your own complex completions, study the completions in ``/usr/share/fish/completions``. (The exact path depends on your chosen installation prefix and may be slightly different)
 
-.. _completion-func:
-
 Useful functions for writing completions
 ----------------------------------------
 
@@ -142,8 +138,6 @@ Functions beginning with the string ``__fish_print_`` print a newline separated 
 - ``__fish_print_hostnames`` prints a list of all known hostnames. This function searches the fstab for nfs servers, ssh for known hosts and checks the ``/etc/hosts`` file.
 
 - ``__fish_print_interfaces`` prints a list of all known network interfaces.
-
-.. _completion-path:
 
 Where to put completions
 ------------------------

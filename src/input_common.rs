@@ -324,8 +324,6 @@ pub enum ImplicitEvent {
     FocusIn,
     /// Our terminal window lost focus.
     FocusOut,
-    /// Request to disable mouse tracking.
-    DisableMouseTracking,
     /// Mouse left click.
     MouseLeft(ViewportPosition),
 }

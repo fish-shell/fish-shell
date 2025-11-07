@@ -1,5 +1,3 @@
-.. _cmd-fish_vi_key_bindings:
-
 fish_vi_key_bindings - set vi key bindings for fish
 ===============================================================
 

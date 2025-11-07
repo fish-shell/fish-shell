@@ -1,5 +1,3 @@
-.. _cmd-fish_default_key_bindings:
-
 fish_default_key_bindings - set emacs key bindings for fish
 ===============================================================
 

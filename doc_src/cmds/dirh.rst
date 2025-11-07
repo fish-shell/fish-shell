@@ -1,5 +1,3 @@
-.. _cmd-dirh:
-
 dirh - print directory history
 ==============================
 

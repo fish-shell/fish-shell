@@ -1,7 +1,5 @@
-.. _commands:
-
 Commands
-============
+========
 
 This is a list of all the commands fish ships with.
 
@@ -60,6 +58,7 @@ Known functions are a customization point. You can change them to change how you
 - :doc:`fish_prompt <cmds/fish_prompt>` and :doc:`fish_right_prompt <cmds/fish_right_prompt>` and :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` to print your prompt.
 - :doc:`fish_command_not_found <cmds/fish_command_not_found>` to tell fish what to do when a command is not found.
 - :doc:`fish_title <cmds/fish_title>` to change the terminal's title.
+- :doc:`fish_tab_title <cmds/fish_tab_title>` to change the terminal tab's title.
 - :doc:`fish_greeting <cmds/fish_greeting>` to show a greeting when fish starts.
 - :doc:`fish_should_add_to_history <cmds/fish_should_add_to_history>` to determine if a command should be added to history
 

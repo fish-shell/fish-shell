@@ -17,13 +17,18 @@ Deprecations and removed features
 
 Interactive improvements
 ------------------------
+- The terminal's tab title can now be set without affecting the window title by defining the :doc:`fish_tab_title <cmds/fish_tab_title>` function (:issue:`2692`).
 - :doc:`fish_config prompt {choose,save} <cmds/fish_config>` have been taught to reset :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` in addition to the other prompt functions (:issue:`11937`).
 - Fish now hides the portion of a multiline prompt that is scrolled out of view due to a huge command line. This prevents duplicate lines after repainting with partially visible prompt (:issue:`11911`).
 - On macOS, fish sets :envvar:`MANPATH` correctly also when that variable was already present in the environment (:issue:`10684`).
 - Added a workaround for MSYS2 to prevent Konsole and WezTerm from opening new tabs in the wrong working directory (:issue:`11981`). 
+- fish no longer disables mouse tracking sequences (DECSET/DECRST 1000),
+  so you can use those to toggle mouse reporting,
+  which allows to move the cursor or select completions items with the mouse (:issue:`4918`).
 
 Scripting improvements
 ----------------------
+- Fixed a regression from 4.1.0 where ``fish -c 'read; cat`` would set wrong terminal modes (:issue:`12024`).
 
 Other improvements
 ------------------
@@ -920,7 +925,7 @@ Notable improvements and fixes
 
   which expands ``!!`` to the last history item, anywhere on the command line, mimicking other shells' history expansion.
 
-  See :ref:`the documentation <cmd-abbr>` for more.
+  See :doc:`the documentation <cmds/abbr>` for more.
 - ``path`` gained a new ``mtime`` subcommand to print the modification time stamp for files. For example, this can be used to handle cache file ages (:issue:`9057`)::
 
     > touch foo
@@ -1345,7 +1350,7 @@ Scripting improvements
     two
     'blue '
 
-- ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
+- ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :doc:`fish_add_path <cmds/fish_add_path>` remains the recommended way to add to $PATH.
 - ``return`` can now be used outside functions. In scripts, it does the same thing as ``exit``. In interactive mode,it sets ``$status`` without exiting (:issue:`8148`).
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks such as ``exec`` not being allowed in a pipeline, and ``$$`` not being a valid variable. Generally, another error was generated anyway.
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).

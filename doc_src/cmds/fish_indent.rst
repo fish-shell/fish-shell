@@ -1,6 +1,3 @@
-.. _cmd-fish_indent:
-.. program::fish_indent
-
 fish_indent - indenter and prettifier
 =====================================
 

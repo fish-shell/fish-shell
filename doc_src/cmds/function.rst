@@ -1,5 +1,3 @@
-.. _cmd-function:
-
 function - create a function
 ============================
 

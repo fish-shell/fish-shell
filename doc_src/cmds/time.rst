@@ -1,5 +1,3 @@
-.. _cmd-time:
-
 time - measure how long a command or block takes
 ================================================
 

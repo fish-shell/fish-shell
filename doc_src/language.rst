@@ -1,12 +1,9 @@
-
-.. _language:
-
 The fish language
 =================
 
 This document is a comprehensive overview of fish's scripting language.
 
-For interactive features see :ref:`Interactive use <interactive>`.
+For interactive features see :doc:`Interactive use <interactive>`.
 
 .. _syntax:
 
@@ -40,8 +37,6 @@ A switch is a very common special type of argument. Switches almost always start
 Switches differ between commands and are usually documented on a command's manual page. There are some switches, however, that are common to most commands. For example, ``--help`` will usually display a help text, ``--version`` will usually display the command version, and ``-i`` will often turn on interactive prompting before taking action. Try ``man your-command-here`` to get information on your command's switches.
 
 So the basic idea of fish is the same as with other unix shells: It gets a commandline, runs :ref:`expansions <expand>`, and the result is then run as a command.
-
-.. _terminology:
 
 Terminology
 -----------
@@ -916,7 +911,7 @@ If there is nothing between a brace and a comma or two commas, it's interpreted 
 
 To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 
-The very first character of a command token is never interpreted as expanding brace, because it's the beginning of a :ref:`compound statement <cmd-begin>`::
+The very first character of a command token is never interpreted as expanding brace, because it's the beginning of a :doc:`compound statement <cmds/begin>`::
 
     > {echo hello, && echo world}
     hello,
@@ -1084,8 +1079,6 @@ The ``~`` (tilde) character at the beginning of a parameter, followed by a usern
   ls ~/Music # lists my music directory
 
   echo ~root # prints root's home directory, probably "/root"
-
-.. _combine:
 
 Combining different expansions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1885,9 +1878,7 @@ Fish includes a number of commands in the shell directly. We call these "builtin
 
 For a list of all builtins, use ``builtin -n``.
 
-For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch.
-
-.. _command-lookup:
+For a list of all builtins, functions and commands shipped with fish, see the :doc:`list of commands <commands>`. The documentation is also available by using the ``--help`` switch.
 
 Command lookup
 --------------
@@ -1966,8 +1957,6 @@ Let's make up an example. This function will :ref:`glob <expand-wildcard>` the f
     end
 
 If you run this as ``show_files /``, it will most likely ask you until you press Y/y or N/n. If you run this as ``show_files / | cat``, it will print the files without asking. If you run this as ``show_files .``, it might print something without asking because there are fewer than five files.
-
-.. _identifiers:
 
 Shell variable and function names
 ---------------------------------

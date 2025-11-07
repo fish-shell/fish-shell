@@ -1,5 +1,3 @@
-.. _cmd-eval:
-
 eval - evaluate the specified commands
 ======================================
 

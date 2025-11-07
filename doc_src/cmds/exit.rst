@@ -1,6 +1,3 @@
-.. _cmd-exit:
-.. program::exit
-
 exit - exit the shell
 =====================
 

@@ -1,5 +1,3 @@
-.. _cmd-prompt_pwd:
-
 prompt_pwd - print pwd suitable for prompt
 ==========================================
 

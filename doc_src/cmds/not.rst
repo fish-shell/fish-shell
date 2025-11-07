@@ -1,5 +1,3 @@
-.. _cmd-not:
-
 not - negate the exit status of a job
 =====================================
 

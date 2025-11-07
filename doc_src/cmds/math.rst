@@ -1,5 +1,3 @@
-.. _cmd-math:
-
 math - perform mathematics calculations
 =======================================
 

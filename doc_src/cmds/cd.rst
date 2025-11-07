@@ -1,5 +1,3 @@
-.. _cmd-cd:
-
 cd - change directory
 =====================
 

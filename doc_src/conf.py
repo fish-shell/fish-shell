@@ -6,10 +6,11 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
-import glob
+from glob import glob
 import os.path
 import subprocess
 import sys
+from pathlib import Path
 from sphinx.highlighting import lexers
 from sphinx.errors import SphinxWarning
 from docutils import nodes
@@ -45,6 +46,39 @@ def issue_role(name, rawtext, text, lineno, inliner, options=None, content=None)
     return [link], []
 
 
+def extract_sections(app, env):
+    if app.builder.name != "man":
+        return
+    output_file = app.config.fish_help_sections_output
+    if output_file == "":
+        return
+
+    import re
+
+    sections = []
+    for docname, info in env.tocs.items():
+        for node in info.traverse():
+            if not isinstance(node, nodes.reference):
+                continue
+            anchor = node["anchorname"]
+            if re.match(r"^#id\d+$", anchor):
+                continue
+            if anchor and docname.startswith("cmds/"):
+                continue
+            if anchor and docname == "relnotes":
+                continue
+            sections.append(docname + anchor)
+    sections.sort()
+    for section in sections:
+        assert re.match(r"[\w-]", section), (
+            f"Unsupported characters in section path: {section}"
+        )
+    help_sections = "".join(f"{section}\n" for section in sections)
+    Path(output_file).write_text(
+        f"""pub static HELP_SECTIONS: &str = "{help_sections}";"""
+    )
+
+
 def remove_fish_indent_lexer(app):
     if app.builder.name in ("man", "markdown"):
         del lexers["fish-docs-samples"]
@@ -63,9 +97,11 @@ def setup(app):
     app.add_directive("synopsis", FishSynopsisDirective)
 
     app.add_config_value("issue_url", default=None, rebuild="html")
+    app.add_config_value("fish_help_sections_output", "", "man", str)
     app.add_role("issue", issue_role)
 
     app.connect("builder-inited", remove_fish_indent_lexer)
+    app.connect("env-updated", extract_sections)
 
 
 # The default language to assume
@@ -226,7 +262,7 @@ man_pages = [
     ),
     ("faq", "fish-faq", "", [author], 1),
 ]
-for path in sorted(glob.glob("cmds/*")):
+for path in sorted(set(glob("cmds/*.rst")) - set(glob("cmds/*.inc.rst"))):
     docname = os.path.splitext(path)[0]
     cmd = os.path.basename(docname)
     man_pages.append((docname, cmd, get_command_description(path, cmd), "", 1))

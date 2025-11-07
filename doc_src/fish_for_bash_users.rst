@@ -1,5 +1,3 @@
-.. _fish_for_bash_users:
-
 Fish for bash users
 ===================
 

@@ -1,5 +1,3 @@
-.. _cmd-test:
-
 test - perform tests on files and text
 ======================================
 

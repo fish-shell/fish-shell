@@ -1,5 +1,3 @@
-.. _cmd-fish_clipboard_paste:
-
 fish_clipboard_paste - get text from the system's clipboard
 ==============================================================
 

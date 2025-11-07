@@ -204,7 +204,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
 
     let mut out = WString::new();
 
-    for c in input.chars() {
+    for (i, c) in input.chars().enumerate() {
         if let Some(val) = decode_byte_from_char(c) {
             out += "\\X";
 
@@ -308,7 +308,12 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 if c == '$' {
                     dollars += 1;
                 }
-                let char_is_normal = (c == '~' && no_tilde) || (c == '?' && no_qmark);
+                let char_is_normal = (c == '~' && no_tilde)
+                    || (c == '?' && no_qmark)
+                    || (c == '#'
+                        && i.checked_sub(1)
+                            .map(|previ| input.char_at(previ).is_alphanumeric())
+                            .unwrap_or_default());
                 if !char_is_normal {
                     need_escape = true;
                     if escape_printables {

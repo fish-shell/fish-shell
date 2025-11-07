@@ -112,8 +112,6 @@ The following optional features also have specific requirements:
 Building
 --------
 
-.. _dependencies-1:
-
 Dependencies
 ~~~~~~~~~~~~
 

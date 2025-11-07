@@ -1,5 +1,3 @@
-.. _cmd-fish_prompt:
-
 fish_prompt - define the appearance of the command line prompt
 ==============================================================
 

@@ -1,5 +1,3 @@
-.. _cmd-false:
-
 false - return an unsuccessful result
 =====================================
 

@@ -1,5 +1,3 @@
-.. _design:
-
 Design
 ======
 

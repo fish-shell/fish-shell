@@ -1,5 +1,3 @@
-.. _cmd-status:
-
 status - query fish runtime information
 =======================================
 
@@ -33,6 +31,7 @@ Synopsis
     status build-info
     status get-file FILE
     status list-files [PATH]
+    status help-sections
     status terminal
     status test-terminal-feature FEATURE
 
@@ -124,6 +123,13 @@ The following operations (subcommands) are available:
 
     This lists the files embedded in the fish binary at compile time. Only files where the path starts with the optional *FILE* argument are shown.
     Returns 0 if something was printed, 1 otherwise.
+
+**help-sections**
+    NOTE: this subcommand is intended for fish's internal use.
+
+    List section arguments for the :doc:`help <help>` command.
+    If you have the latest version of fish, these URL fragments are valid on `<https://fishshell.com/docs/current/>`__.
+    Always returns 0.
 
 .. _status-terminal:
 

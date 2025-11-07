@@ -4,7 +4,7 @@ Frequently asked questions
 What is the equivalent to this thing from bash (or other shells)?
 -----------------------------------------------------------------
 
-See :ref:`Fish for bash users <fish_for_bash_users>`
+See :doc:`Fish for bash users <fish_for_bash_users>`
 
 How do I set or clear an environment variable?
 ----------------------------------------------
@@ -296,8 +296,6 @@ But it also means that these commands can stop working at any moment once a matc
 For these reasons, fish does not do this, and instead expects asterisks to be quoted or escaped if they aren't supposed to be expanded.
 
 This is similar to bash's "failglob" option.
-
-.. _faq-ssh-interactive:
 
 Why won't SSH/SCP/rsync connect properly when fish is my login shell?
 ---------------------------------------------------------------------

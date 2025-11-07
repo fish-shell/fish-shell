@@ -54,6 +54,8 @@ function man
                 set argv true
             case '['
                 set argv test
+            case '{'
+                set argv begin
         end
     end
 

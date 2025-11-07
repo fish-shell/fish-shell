@@ -1,5 +1,3 @@
-.. _cmd-psub:
-
 psub - perform process substitution
 ===================================
 

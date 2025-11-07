@@ -1,5 +1,3 @@
-.. _cmd-functions:
-
 functions - print or erase functions
 ====================================
 

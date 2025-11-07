@@ -1,5 +1,3 @@
-.. _cmd-complete:
-
 complete - edit command-specific tab-completions
 ================================================
 
@@ -16,7 +14,7 @@ Description
 
 ``complete`` defines, removes or lists completions for a command.
 
-For an introduction to writing your own completions, see :ref:`Writing your own completions <completion-own>` in
+For an introduction to writing your own completions, see :doc:`Writing your own completions <../completions>` in
 the fish manual.
 
 The following options are available:

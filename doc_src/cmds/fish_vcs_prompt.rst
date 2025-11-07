@@ -1,5 +1,3 @@
-.. _cmd-fish_vcs_prompt:
-
 fish_vcs_prompt - output version control system information for use in a prompt
 ===============================================================================
 

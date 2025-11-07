@@ -239,10 +239,6 @@ Optional Commands
      - cvvis
      - Enable cursor visibility (DECTCEM).
      - VT220
-   * - ``\e[?1000l``
-     - n/a
-     - Disable mouse reporting.
-     - XTerm
    * - ``\e[?1004h``
      - n/a
      - Enable focus reporting.
@@ -267,10 +263,16 @@ Optional Commands
      -
      - Disable bracketed paste.
      - XTerm
-   * - ``\e]0; Pt \x07``
+   * - .. _term-compat-osc-0:
+
+       ``\e]0; Pt \x07``
      - ts
-     - Set window title (OSC 0).
+     - Set terminal window title (OSC 0). Used in :doc:`fish_title <cmds/fish_title>`.
      - XTerm
+   * - ``\e]2; Pt \x07``
+     - ts
+     - Set terminal tab title (OSC 2). Used in :doc:`fish_tab_title <cmds/fish_tab_title>`.
+     - iTerm2
    * - ``\e]7;file:// Pt / Pt \x07``
      -
      - Report working directory (OSC 7).

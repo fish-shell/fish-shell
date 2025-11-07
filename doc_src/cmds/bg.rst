@@ -1,5 +1,3 @@
-.. _cmd-bg:
-
 bg - send jobs to background
 ============================
 

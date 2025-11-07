@@ -1,5 +1,3 @@
-.. _cmd-type:
-
 type - locate a command and describe its type
 =============================================
 

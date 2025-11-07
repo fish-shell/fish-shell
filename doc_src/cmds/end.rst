@@ -1,5 +1,3 @@
-.. _cmd-end:
-
 end - end a block of commands
 =============================
 

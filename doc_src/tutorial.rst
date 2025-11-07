@@ -1,7 +1,5 @@
 .. highlight:: fish-docs-samples
 
-.. _tutorial:
-
 Tutorial
 ========
 
@@ -39,11 +37,11 @@ This tutorial assumes a basic understanding of command line shells and Unix comm
 
 If you have a strong understanding of other shells, and want to know what fish does differently, search for the magic phrase *unlike other shells*, which is used to call out important differences.
 
-Or, if you want a quick overview over the differences to other shells like Bash, see :ref:`Fish For Bash Users <fish_for_bash_users>`.
+Or, if you want a quick overview over the differences to other shells like Bash, see :doc:`Fish For Bash Users <fish_for_bash_users>`.
 
-For the full, detailed description of how to use fish interactively, see :ref:`Interactive Use <interactive>`.
+For the full, detailed description of how to use fish interactively, see :doc:`Interactive Use <interactive>`.
 
-For a comprehensive description of fish's scripting language, see :ref:`The Fish Language<language>`.
+For a comprehensive description of fish's scripting language, see :doc:`The Fish Language <language>`.
 
 Running Commands
 ----------------
@@ -484,8 +482,6 @@ As mentioned in :ref:`the section on the semicolon <tut-semicolon>`, this can al
     and echo "Backup successful"
     or echo "Backup failed"
 
-.. _tut-conditionals:
-
 Conditionals (If, Else, Switch)
 -------------------------------
 
@@ -583,7 +579,7 @@ You can see the source for any function by passing its name to ``functions``::
 
 For more, see :ref:`Functions <syntax-function>`.
 
-.. [#] There is a function called :doc:`alias <cmds/alias>`, but it's just a shortcut to make functions. fish also provides :ref:`abbreviations <abbreviations>`, through the :ref:`abbr <cmd-abbr>` command.
+.. [#] There is a function called :doc:`alias <cmds/alias>`, but it's just a shortcut to make functions. fish also provides :ref:`abbreviations <abbreviations>`, through the :doc:`abbr <cmds/abbr>` command.
 
 Loops
 -----

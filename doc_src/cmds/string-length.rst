@@ -1,5 +1,3 @@
-.. _cmd-string-length:
-
 string-length - print string lengths
 ====================================
 

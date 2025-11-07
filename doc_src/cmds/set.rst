@@ -1,5 +1,3 @@
-.. _cmd-set:
-
 set - display and change shell variables
 ========================================
 

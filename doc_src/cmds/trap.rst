@@ -1,5 +1,3 @@
-.. _cmd-trap:
-
 trap - perform an action when the shell receives a signal
 =========================================================
 

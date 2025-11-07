@@ -305,7 +305,10 @@ string escape --style=script 'a b#c"\'d'
 # CHECK: 'a b#c"\'d'
 
 string escape --no-quoted --style=script 'a b#c"\'d'
-# CHECK: a\ b\#c\"\'d
+# CHECK: a\ b#c\"\'d
+
+string escape --no-quoted --style=script 'a #b'
+# CHECK: a\ \#b
 
 string escape --style=url 'a b#c"\'d'
 # CHECK: a%20b%23c%22%27d

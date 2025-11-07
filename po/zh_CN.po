@@ -1907,6 +1907,15 @@ msgstr "|& 无效。在 fish 中，用 &| 来同时管道链接 stdout 和 stder
 msgid "fish-section-tier1-from-script-explicitly-added"
 msgstr ""
 
+msgid "# comments"
+msgstr "# 注释"
+
+msgid "$PATH"
+msgstr ""
+
+msgid "$status, the return code"
+msgstr "$status 退出代码"
+
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 msgstr "%s: %s 是一个数组变量。使用 %svared%s %s[n]%s 编辑第 n 个元素于 %s\\n"
 
@@ -1988,14 +1997,59 @@ msgstr "%s可能更改%s: %s\\n"
 msgid "%sUnmodified%s: %s\\n"
 msgstr "%s未更改%s: %s\\n"
 
+msgid "An overview of fish's builtins"
+msgstr "fish 内建命令概览"
+
+msgid "Autoloading Functions"
+msgstr "自动加载函数"
+
+msgid "Brace expansion {a,b,c}"
+msgstr "大括号展开 {a,b,c}"
+
 msgid "Cancelled function editing"
 msgstr "已取消的函数编辑"
+
+msgid "Cartesian Products"
+msgstr "笛卡尔积"
+
+msgid "Combiners (And, Or, Not)"
+msgstr "组合器 (与、或、非)"
+
+msgid "Command Substitutions"
+msgstr "命令替换"
 
 msgid "Command history cleared!\\n"
 msgstr "命令历史已清除！\\n"
 
 msgid "Command history for session cleared!\\n"
 msgstr "会话的命令历史已清除！\\n"
+
+msgid "Command line editor"
+msgstr "命令行编辑器"
+
+msgid "Command mode"
+msgstr "命令模式"
+
+msgid "Command substitution"
+msgstr "命令替换"
+
+msgid "Conditional execution of code and flow control"
+msgstr "有条件地执行代码和流程控制"
+
+msgid "Conditionals (If, Else, Switch)"
+msgstr "条件 (If, Else, Switch)"
+
+msgid "Configurable greeting"
+msgstr "可配置的问候语"
+
+msgid "Copy and paste (Kill Ring)"
+msgstr "复制并粘贴 (Kill Ring)"
+
+msgid "Debugging fish scripts"
+msgstr "调试 fish 脚本"
+
+msgid "Differences from bash"
+msgstr "与 bash 的区别"
 
 msgid "Edit the file again? [Y/n]"
 msgstr "再次编辑文件吗 ? [Y/n]"
@@ -2006,14 +2060,83 @@ msgstr "编辑失败或取消"
 msgid "Editor exited but the function was not modified"
 msgstr "编辑器退出了，但函数没有修改"
 
+msgid "Emacs mode commands"
+msgstr "Emacs 模式命令"
+
 msgid "Error: expected a number between 1 and %d or letter in that range, got \"%s\""
 msgstr "错误：预期输入 1 到 %d 之间的数字或该范围内的字母，实际输入为 \"%s\""
+
+msgid "Event handlers"
+msgstr "事件处理程序"
+
+msgid "Exit Status"
+msgstr "退出代码"
+
+msgid "Exporting variables"
+msgstr "导出变量"
+
+msgid "Exports (Shell Variables)"
+msgstr "导出 (shell 变量)"
 
 msgid "External editor requested but $VISUAL or $EDITOR not set."
 msgstr "请求外部编辑器，但未设置 $VISUAL 或 $EDITOR。"
 
+msgid "Fish's release notes"
+msgstr "Fish 的发布说明"
+
+msgid "Frequently Asked Questions"
+msgstr "经常被问到的问题"
+
 msgid "Function saved to %s"
 msgstr "函数已保存到 %s"
+
+msgid "Further help and development"
+msgstr "进一步的帮助和开发"
+
+msgid "Getting Help"
+msgstr "获取帮助"
+
+msgid "Help for this command"
+msgstr "此命令的帮助"
+
+msgid "Home directory expansion ~USER"
+msgstr "主目录展开 ~USER"
+
+msgid "How \"\" and '' work"
+msgstr "\"\" 和 '' 如何工作"
+
+msgid "How \\\\ escaping works"
+msgstr "\\\\ 转义如何工作"
+
+msgid "How different expansions work together"
+msgstr "不同的展开如何一起工作"
+
+msgid "How functions are loaded"
+msgstr "函数如何加载"
+
+msgid "How tab-completion works"
+msgstr "Tab 补全如何工作"
+
+msgid "How to color the pager"
+msgstr "如何为分页器设置颜色"
+
+msgid "How to define an alias"
+msgstr "如何定义别名"
+
+msgid "How to define functions"
+msgstr "如何定义函数"
+
+msgid "How to handle arguments"
+msgstr "如何处理参数"
+
+msgid "How to make your own prompt"
+msgstr "如何构建自己的提示符"
+
+msgid "How to write completions"
+msgstr "如何写补全"
+
+msgid "How to write your own prompt"
+msgstr "如何编写自己的提示符"
 
 msgid "If the editor is still running, check if it waits for completion, maybe a '--wait' option?"
 msgstr "如果编辑器还在运行，请检查它是否在等待完成，也许是一个 '--wait' 选项？"
@@ -2027,6 +2150,33 @@ msgstr "忽略无效历史记录条目 ID \"%s\"\\n"
 msgid "Ignoring the output of your editor since its exit status was non-zero"
 msgstr "忽略编辑器的输出，因为其退出代码为非零"
 
+msgid "Index range expansion"
+msgstr "索引范围展开"
+
+msgid "Initialization files"
+msgstr "初始化文件"
+
+msgid "Input/Output (IO) redirection"
+msgstr "输入/输出 (IO) 重定向"
+
+msgid "Insert mode"
+msgstr "插入模式"
+
+msgid "Introduction to the fish syntax"
+msgstr "Fish 语法介绍"
+
+msgid "Learning fish"
+msgstr "学习 fish"
+
+msgid "Locale variables"
+msgstr "区域变量"
+
+msgid "More on universal variables"
+msgstr "关于通用变量的更多内容"
+
+msgid "Multiline editing"
+msgstr "多行编辑"
+
 msgid "No open utility found. Try installing \"xdg-open\" or \"xdg-utils\"."
 msgstr "未找到可用的打开工具。请尝试安装 \"xdg-open\" 或 \"xdg-utils\"。"
 
@@ -2039,14 +2189,32 @@ msgstr "没有可选的先前目录。您必须至少执行一次 cd 命令。"
 msgid "Or open %s in your browser of choice.\\n"
 msgstr "或在您首选的浏览器中打开 %s。\\n"
 
+msgid "Parameter expansion (Globbing)"
+msgstr "参数展开 (通配符)"
+
+msgid "Pipes and Redirections"
+msgstr "管道和重定向"
+
 msgid "Please set VISUAL or EDITOR to your preferred editor."
 msgstr "请将 VISUAL 或 EDITOR 设置为您首选的编辑器。"
 
 msgid "Please try `BROWSER=some_browser help`, `man fish-doc`, or `man fish-tutorial`.\\n\\n"
 msgstr "请尝试 `BROWSER=some_browser help`、`man fish-doc` 或 `man fish-tutorial`。\\n\\n"
 
+msgid "Programmable title"
+msgstr "可编程标题"
+
+msgid "Ready for more?"
+msgstr "准备好更多了吗？"
+
 msgid "Run funcsave %s to save this function to the configuration directory."
 msgstr "运行 funcsave %s 以保存此函数到配置目录."
+
+msgid "Running Commands"
+msgstr "运行命令"
+
+msgid "Running multiple programs"
+msgstr "运行多个程序"
 
 msgid "Save function to %s? [Y/n]"
 msgstr "将函数保存到 %s 吗？[Y/n]"
@@ -2057,8 +2225,23 @@ msgstr "保存到原始位置失败；保存到用户配置。"
 msgid "Saving to user configuration failed. Changes may be lost when fish is closed."
 msgstr "保存到用户配置失败；fish 关闭后可能会失去更改。"
 
+msgid "Searchable history"
+msgstr "可搜索历史"
+
 msgid "Select directory by letter or number: "
 msgstr "通过字母或编号选择目录："
+
+msgid "Separating Commands (Semicolon)"
+msgstr "命令分隔符 (分号)"
+
+msgid "Setting syntax highlighting colors"
+msgstr "设置语法高亮着色"
+
+msgid "Shared bindings"
+msgstr "共享绑定"
+
+msgid "Shell variables"
+msgstr "Shell 变量"
 
 msgid "Skipping already included path: %s\\n"
 msgstr "跳过已包含的路径：%s\\n"
@@ -2068,6 +2251,21 @@ msgstr "跳过不存在的路径：%s\\n"
 
 msgid "Skipping path because it is a file instead of a directory: %s\\n"
 msgstr "跳过路径，因为它是文件而不是目录：%s\\n"
+
+msgid "Special variables"
+msgstr "特殊变量"
+
+msgid "Startup (Where's .bashrc?)"
+msgstr "启动 (.bashrc 在哪里？)"
+
+msgid "Syntax Highlighting"
+msgstr "语法高亮"
+
+msgid "Tab Completions"
+msgstr "Tab 补全"
+
+msgid "Terminal features used by fish"
+msgstr "Fish 使用的终端功能"
 
 msgid "There are %s unique dirs in your history but I can only handle %s"
 msgstr "您的历史记录中包含 %s 个唯一目录，但当前仅能处理 %s 个。"
@@ -2081,11 +2279,47 @@ msgstr "cd 命令的参数太多"
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr "输入 %shelp%s 获取 fish 的使用说明"
 
+msgid "Universal Variables"
+msgstr "通用变量"
+
+msgid "Useful functions for writing completions"
+msgstr "写补全的有用函数"
+
+msgid "Variable expansion $VARNAME"
+msgstr "变量展开 $VARNAME"
+
+msgid "Variable scope"
+msgstr "变量作用域"
+
+msgid "Variables for changing highlighting colors"
+msgstr "用于改变高亮颜色的变量"
+
+msgid "Variables with multiple elements"
+msgstr "有多种元素的变量"
+
+msgid "Visual mode"
+msgstr "可视模式"
+
 msgid "Warning: the file containing this function has not been saved. Changes may be lost when fish is closed."
 msgstr "警告: 包含此函数的文件没有保存。fish 关闭后可能会失去更改。"
 
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr "欢迎来到 fish，友好交互的 shell"
+
+msgid "What characters are allowed in names"
+msgstr "名称中允许什么字符"
+
+msgid "Where to put completions"
+msgstr "将补全放在哪里"
+
+msgid "Why $PATH is special"
+msgstr "为什么 $PATH 特殊"
+
+msgid "Why fish?"
+msgstr "为什么用 fish？"
+
+msgid "Wildcard expansion *.*"
+msgstr "通配符展开 *.*"
 
 msgid "You did not say 'yes' so I will not clear your command history\\n"
 msgstr "您没有输入 'yes'，因此我不会清除您的命令历史记录。\\n"
@@ -2111,6 +2345,9 @@ msgstr "fish: 进程 %s, '%s' 自 %s, '%s' 终止于信号 %s (%s)\\n"
 msgid "fish: Unknown command: %s\\n"
 msgstr "fish: 未知的命令：%s\\n"
 
+msgid "foo=bar variable overrides"
+msgstr "foo=bar 变量覆盖"
+
 msgid "funced: The value for $EDITOR '$editor' could not be used because the command '$editor[1]' could not be found"
 msgstr "funced: 无法使用 $EDITOR '$editor' 的值，因为找不到命令 '$editor[1]'"
 
@@ -2129,29 +2366,14 @@ msgstr "或文件为空"
 msgid "python executable not found"
 msgstr "找不到 python 可执行文件"
 
+msgid "while, for and begin"
+msgstr "while、for 和 begin"
+
 msgid "fish-section-tier1-from-script-implicitly-added"
 msgstr ""
 
-msgid "# comments"
-msgstr "# 注释"
-
-msgid "$PATH"
-msgstr ""
-
-msgid "$status, the return code"
-msgstr "$status 退出代码"
-
-msgid "$variable"
-msgstr "$variable 变量"
-
 msgid "(Used together with -o) Do not overwrite but append"
 msgstr "(与 -o 一起使用) 不覆写但追加"
-
-msgid "(command) command substitution"
-msgstr "(命令) 命令替换"
-
-msgid "< and > redirections"
-msgstr "< 和 > 重定向"
 
 msgid "A right prompt to be used when `breakpoint` is executed"
 msgstr "执行 `breakpoint` 时使用的正确提示符"
@@ -2186,9 +2408,6 @@ msgstr "总是打印空参数"
 msgid "Always use file completion"
 msgstr "总是使用文件补全"
 
-msgid "An overview of fish's builtins"
-msgstr "fish 内建命令概览"
-
 msgid "Append suffix to the filename"
 msgstr "在文件名后添加后缀"
 
@@ -2198,29 +2417,11 @@ msgstr "将给定的字符串添加到命令行末尾, 若该字符串已存在�
 msgid "Append value to a list"
 msgstr "添加值到列表末尾"
 
-msgid "Autoloading Functions"
-msgstr "自动加载函数"
-
-msgid "Autoloading functions"
-msgstr "自动加载函数"
-
 msgid "Automatically funcsave the alias"
 msgstr "自动保存 (funcsave) 别名"
 
 msgid "Autosave after successful edit"
 msgstr "成功编辑后自动保存"
-
-msgid "Background jobs"
-msgstr "后台作业"
-
-msgid "Brace expansion {a,b,c}"
-msgstr "大括号展开 {a,b,c}"
-
-msgid "Builtin commands"
-msgstr "内建命令"
-
-msgid "Cartesian Products"
-msgstr "笛卡尔积"
 
 msgid "Case insensitive"
 msgstr "不区分大小写"
@@ -2264,27 +2465,6 @@ msgstr "选择如何计数供应商文件"
 msgid "Colorize the output using ANSI escape sequences"
 msgstr "使用 ANSI 转义序列输出颜色"
 
-msgid "Combiners (And, Or, Not)"
-msgstr "组合器 (与、或、非)"
-
-msgid "Combining different expansions"
-msgstr "合并不同的展开"
-
-msgid "Command Substitutions"
-msgstr "命令替换"
-
-msgid "Command line editor"
-msgstr "命令行编辑器"
-
-msgid "Command mode"
-msgstr "命令模式"
-
-msgid "Command substitution"
-msgstr "命令替换"
-
-msgid "Command substitution (SUBCOMMAND)"
-msgstr "命令替换 (子命令)"
-
 msgid "Command to add completion to"
 msgstr "添加补全的命令"
 
@@ -2300,23 +2480,11 @@ msgstr "使用普通文件而不是命名管道通信"
 msgid "Completion only used if command has zero exit status"
 msgstr "只有在命令退出代码为零时才使用的补全"
 
-msgid "Conditional execution of code and flow control"
-msgstr "有条件地执行代码和流程控制"
-
-msgid "Conditionals (If, Else, Switch)"
-msgstr "条件 (If, Else, Switch)"
-
-msgid "Configurable greeting"
-msgstr "可配置的问候语"
-
 msgid "Control of maximum nice priority"
 msgstr "控制最高 nice 优先级"
 
 msgid "Convert exit code to signal name"
 msgstr "将退出代码转换为信号名称"
-
-msgid "Copy and paste (Kill Ring)"
-msgstr "复制并粘贴 (Kill Ring)"
 
 msgid "Copy the specified function to the specified new name"
 msgstr "将指定的函数复制到指定的新名称"
@@ -2330,17 +2498,8 @@ msgstr "创建局域 (自动清除) 事件块"
 msgid "Creates a function wrapping a command"
 msgstr "创建包装命令的函数"
 
-msgid "Debugging fish scripts"
-msgstr "调试 fish 脚本"
-
-msgid "Defining aliases"
-msgstr "定义别名"
-
 msgid "Description of completion"
 msgstr "补全描述"
-
-msgid "Differences from bash"
-msgstr "与 bash 的区别"
 
 msgid "Dim text"
 msgstr "暗色文本"
@@ -2444,9 +2603,6 @@ msgstr "在外部编辑器中编辑命令缓冲区"
 msgid "Edit variable value"
 msgstr "编辑变量值"
 
-msgid "Emacs mode commands"
-msgstr "Emacs 模式命令"
-
 msgid "Empty results excluded"
 msgstr "排除空结果"
 
@@ -2474,9 +2630,6 @@ msgstr "擦除变量"
 msgid "Escape with \\ instead of quotes"
 msgstr "使用 \\ 代替引号转义"
 
-msgid "Escaping characters"
-msgstr "转义字符"
-
 msgid "Event handler, resets prompt when any char changes"
 msgstr "事件处理程序，当任何字符变化时重置提示符"
 
@@ -2486,23 +2639,11 @@ msgstr "事件处理程序，当任何颜色变化时重置提示符"
 msgid "Event handler, resets prompt when functionality changes"
 msgstr "事件处理程序，当功能变化时重置提示符"
 
-msgid "Event handlers"
-msgstr "事件处理程序"
-
-msgid "Exit Status"
-msgstr "退出代码"
-
 msgid "Expand only as a command, or anywhere"
 msgstr "仅作为命令，或在任何位置展开"
 
 msgid "Export variable to subprocess"
 msgstr "导出变量到子进程"
-
-msgid "Exporting variables"
-msgstr "导出变量"
-
-msgid "Exports (Shell Variables)"
-msgstr "导出 (shell 变量)"
 
 msgid "FD is a terminal"
 msgstr "FD 是终端"
@@ -2558,17 +2699,8 @@ msgstr "过滤符号链接"
 msgid "Filter writable paths"
 msgstr "过滤可写路径"
 
-msgid "Fish's release notes"
-msgstr "Fish 的发布说明"
-
-msgid "Frequently Asked Questions"
-msgstr "经常被问到的问题"
-
 msgid "Function name"
 msgstr "函数名"
-
-msgid "Further help and development"
-msgstr "进一步的帮助和开发"
 
 msgid "GNU-style long option to complete"
 msgstr "要补全的 GNU 风格长选项"
@@ -2588,9 +2720,6 @@ msgstr "以可以用作命令的格式获取 umask"
 msgid "Gets the umask in symbolic format instead of octal"
 msgstr "以符号格式而不是八进制格式获取 umask"
 
-msgid "Getting Help"
-msgstr "获取帮助"
-
 msgid "Give basename for given paths"
 msgstr "为给定的路径提供基础名"
 
@@ -2603,59 +2732,11 @@ msgstr "为给定路径提供扩展名"
 msgid "Handle NULL-delimited input"
 msgstr "处理以 NULL 分隔的输入"
 
-msgid "Help for this command"
-msgstr "此命令的帮助"
-
-msgid "Help on how to reuse previously entered commands"
-msgstr "关于如何重复使用先前输入的命令的帮助"
-
 msgid "Helper function for fish_git_prompt"
 msgstr "fish_git_prompt 的辅助函数"
 
 msgid "Helper function to list unused options"
 msgstr "列出未使用的选项的辅助函数"
-
-msgid "Home directory expansion ~USER"
-msgstr "主目录展开 ~USER"
-
-msgid "How \"\" and '' work"
-msgstr "\"\" 和 '' 如何工作"
-
-msgid "How \\\\ escaping works"
-msgstr "\\\\ 转义如何工作"
-
-msgid "How different expansions work together"
-msgstr "不同的展开如何一起工作"
-
-msgid "How functions are loaded"
-msgstr "函数如何加载"
-
-msgid "How lists combine"
-msgstr "列表如何组合"
-
-msgid "How tab-completion works"
-msgstr "Tab 补全如何工作"
-
-msgid "How to color the pager"
-msgstr "如何为分页器设置颜色"
-
-msgid "How to define an alias"
-msgstr "如何定义别名"
-
-msgid "How to define functions"
-msgstr "如何定义函数"
-
-msgid "How to handle arguments"
-msgstr "如何处理参数"
-
-msgid "How to make your own prompt"
-msgstr "如何构建自己的提示符"
-
-msgid "How to write completions"
-msgstr "如何写补全"
-
-msgid "How to write your own prompt"
-msgstr "如何编写自己的提示符"
 
 msgid "If commandline is empty, run nextd; else move one argument to the right"
 msgstr "如果命令行参数为空，则运行 nextd；否则将将一个参数向右移动"
@@ -2678,9 +2759,6 @@ msgstr "忽略函数文件"
 msgid "Include new files"
 msgstr "包含新文件"
 
-msgid "Index range expansion"
-msgstr "索引范围展开"
-
 msgid "Inherit completions from specified command"
 msgstr "从指定的命令继承补全"
 
@@ -2690,38 +2768,20 @@ msgstr "从给定命令继承补全"
 msgid "Initial contents of read buffer when reading interactively"
 msgstr "交互式读取时读缓冲区的初始内容"
 
-msgid "Initialization files"
-msgstr "初始化文件"
-
-msgid "Input/Output (IO) redirection"
-msgstr "输入/输出 (IO) 重定向"
-
-msgid "Insert mode"
-msgstr "插入模式"
-
 msgid "Integer width of the result, default is maximum width of inputs"
 msgstr "结果的整数宽度，默认为输入的最大宽度"
 
 msgid "Integer width of the result, default is minimum non-zero width of inputs"
 msgstr "结果的整数宽度，默认值为输入最小的非零宽度"
 
-msgid "Introduction to the fish syntax"
-msgstr "Fish 语法介绍"
-
 msgid "Invert meaning of filters"
 msgstr "反转过滤器的含义"
-
-msgid "Job control"
-msgstr "作业控制"
 
 msgid "Keep order of arguments instead of sorting alphabetically"
 msgstr "保持参数的顺序而不是按字母排序"
 
 msgid "Launch fish's web based configuration"
 msgstr "启动 fish 的基于网页的配置"
-
-msgid "Learning fish"
-msgstr "学习 fish"
 
 msgid "Left file equal to right file"
 msgstr "左侧文件等于右侧文件"
@@ -2762,17 +2822,14 @@ msgstr "如果光标下的记号是目录，则列出其内容；否则列出当
 msgid "List embedded files contained in the fish binary"
 msgstr "列出 fish 二进制文件包含的嵌入文件"
 
+msgid "List section arguments for the 'help' command"
+msgstr ""
+
 msgid "List the names of the functions, but not their definition"
 msgstr "列出函数的名称，但不列出其定义"
 
 msgid "List the names of the variables, but not their value"
 msgstr "列出变量的名称，但不列出其值"
-
-msgid "Local, global and universal scope"
-msgstr "局域、全局和通用作用域"
-
-msgid "Locale variables"
-msgstr "区域变量"
 
 msgid "Logical AND"
 msgstr "逻辑与"
@@ -2885,9 +2942,6 @@ msgstr "最大交换空间"
 msgid "Menu based cd command"
 msgstr "基于菜单的 cd 命令"
 
-msgid "More on universal variables"
-msgstr "关于通用变量的更多内容"
-
 msgid "Move back in the directory history"
 msgstr "在目录历史中后退"
 
@@ -2896,9 +2950,6 @@ msgstr "在目录历史中前进"
 
 msgid "Move path to the front or back"
 msgstr "将路径移到前端或后端"
-
-msgid "Multiline editing"
-msgstr "多行编辑"
 
 msgid "Negate expression"
 msgstr "取反表达式"
@@ -2960,9 +3011,6 @@ msgstr "在用户绑定上操作"
 msgid "Operate silently"
 msgstr "静默操作"
 
-msgid "Other features"
-msgstr "其他功能"
-
 msgid "Output in HTML format"
 msgstr "以 HTML 格式输出"
 
@@ -2983,9 +3031,6 @@ msgstr "左右两侧填充"
 
 msgid "Pad right instead of left"
 msgstr "填充右侧而非左侧"
-
-msgid "Parameter expansion (Globbing)"
-msgstr "参数展开 (通配符)"
 
 msgid "Path exists"
 msgstr "路径存在"
@@ -3013,9 +3058,6 @@ msgstr "添加补全到路径"
 
 msgid "Perform an action when the shell receives a signal"
 msgstr "当 shell 收到信号时执行动作"
-
-msgid "Pipes and Redirections"
-msgstr "管道和重定向"
 
 msgid "Pop directory from the stack and cd to it"
 msgstr "从栈弹出目录并切换到该目录"
@@ -3152,12 +3194,6 @@ msgstr "打印/设置光标所在的列"
 msgid "Print/set the line the cursor is on"
 msgstr "打印/设置光标所在的行"
 
-msgid "Programmable prompt"
-msgstr "可编程提示符"
-
-msgid "Programmable title"
-msgstr "可编程标题"
-
 msgid "Prompt function for Git"
 msgstr "Git 的提示函数"
 
@@ -3184,9 +3220,6 @@ msgstr "如同 shell 一样读取"
 
 msgid "Read the specified number of characters"
 msgstr "读取指定的字符数"
-
-msgid "Ready for more?"
-msgstr "准备好更多了吗？"
 
 msgid "Remove completion"
 msgstr "移除补全"
@@ -3278,12 +3311,6 @@ msgstr "运行指定的命令而不是交互式会话"
 msgid "Run with comma-separated feature flags enabled"
 msgstr "启用以逗号分隔的功能标识运行"
 
-msgid "Running Commands"
-msgstr "运行命令"
-
-msgid "Running multiple programs"
-msgstr "运行多个程序"
-
 msgid "Save function"
 msgstr "保存函数"
 
@@ -3292,9 +3319,6 @@ msgstr "将所有指定函数的当前定义保存到文件"
 
 msgid "Search back or move cursor up 1 line"
 msgstr "向后搜索或向上移动光标 1 行"
-
-msgid "Searchable history"
-msgstr "可搜索历史"
 
 msgid "Select current selection"
 msgstr "选择当前选项"
@@ -3310,9 +3334,6 @@ msgstr "选择在光标下的进程"
 
 msgid "Select token under cursor"
 msgstr "选择在光标下的记号"
-
-msgid "Separating Commands (Semicolon)"
-msgstr "命令分隔符 (分号)"
 
 msgid "Set all jobs under job control"
 msgstr "将所有作业置于作业控制之下"
@@ -3359,23 +3380,11 @@ msgstr "设定哪些作业处于作业控制之下"
 msgid "Set/get cursor position, not buffer contents"
 msgstr "设置/获取光标位置, 而非缓冲区内容"
 
-msgid "Setting syntax highlighting colors"
-msgstr "设置语法高亮着色"
-
 msgid "Share variable persistently across sessions"
 msgstr "在不同会话中持久共享变量"
 
 msgid "Share variable with all the users fish processes on the computer"
 msgstr "与计算机上所有用户 fish 进程共享变量"
-
-msgid "Shared bindings"
-msgstr "共享绑定"
-
-msgid "Shell variable and function names"
-msgstr "Shell 变量和函数名"
-
-msgid "Shell variables"
-msgstr "Shell 变量"
 
 msgid "Show commandname of each job"
 msgstr "显示每个作业的命令名"
@@ -3425,17 +3434,11 @@ msgstr "显示变量"
 msgid "Snapshot and define local variable"
 msgstr "快照并定义局域变量"
 
-msgid "Some common words"
-msgstr "一些常用词"
-
 msgid "Sort paths"
 msgstr "排序路径"
 
 msgid "Space-separated list of possible arguments"
 msgstr "空格分隔的可能参数列表"
-
-msgid "Special variables"
-msgstr "特殊变量"
 
 msgid "Specify command to operate on"
 msgstr "指定要操作的命令"
@@ -3482,9 +3485,6 @@ msgstr "右向左分割"
 msgid "Start a continuous session"
 msgstr "开始连续会话"
 
-msgid "Startup (Where's .bashrc?)"
-msgstr "启动 (.bashrc 在哪里？)"
-
 msgid "Store the results as an array"
 msgstr "将结果存储为数组"
 
@@ -3506,17 +3506,8 @@ msgstr "禁止函数和内建命令查询"
 msgid "Suspend the current shell."
 msgstr "挂起当前 shell。"
 
-msgid "Syntax Highlighting"
-msgstr "语法高亮"
-
 msgid "TRAP handler: debug prompt"
 msgstr "TRAP 处理函数：调试提示符"
-
-msgid "Tab Completions"
-msgstr "Tab 补全"
-
-msgid "Terminal features used by fish"
-msgstr "Fish 使用的终端功能"
 
 msgid "Test if We are specifying a color value for the prompt"
 msgstr "测试是否我们正在指定提示符的颜色值"
@@ -3569,9 +3560,6 @@ msgstr "测试文件描述符是否为 TTY"
 msgid "Tests if builtin exists"
 msgstr "测试内建命令是否存在"
 
-msgid "The status variable"
-msgstr "状况变量"
-
 msgid "Treat expansion argument as a fish function"
 msgstr "将展开参数视为 fish 函数"
 
@@ -3583,9 +3571,6 @@ msgstr "只修建结尾字符"
 
 msgid "Underline style"
 msgstr "下划线样式"
-
-msgid "Universal Variables"
-msgstr "通用变量"
 
 msgid "Update $PATH directly"
 msgstr "直接更新 $PATH"
@@ -3617,29 +3602,8 @@ msgstr "使用可移植输出格式"
 msgid "Use the visible width, excluding escape sequences"
 msgstr "使用可见宽度，不包括转义序列"
 
-msgid "Useful functions for writing completions"
-msgstr "写补全的有用函数"
-
-msgid "Variable expansion $VARNAME"
-msgstr "变量展开 $VARNAME"
-
-msgid "Variable scope"
-msgstr "变量作用域"
-
-msgid "Variable scope for functions"
-msgstr "函数的变量作用域"
-
-msgid "Variables for changing highlighting colors"
-msgstr "用于改变高亮颜色的变量"
-
-msgid "Variables with multiple elements"
-msgstr "有多种元素的变量"
-
 msgid "Verbose mode"
 msgstr "详细模式"
-
-msgid "Vi mode commands"
-msgstr "Vi 模式命令"
 
 msgid "Vi-style bindings that inherit emacs-style bindings in all modes"
 msgstr "所有模式中的继承 emacs 样式绑定的 vi 样式绑定"
@@ -3650,29 +3614,8 @@ msgstr "查看并从示例提示中选择"
 msgid "View and pick from the sample themes"
 msgstr "查看并从示例主题中选择"
 
-msgid "Visual mode"
-msgstr "可视模式"
-
-msgid "What characters are allowed in names"
-msgstr "名称中允许什么字符"
-
-msgid "What set -x does"
-msgstr "`set -x` 做什么"
-
 msgid "Where to direct debug output to"
 msgstr "将调试输出导向何处"
-
-msgid "Where to put completions"
-msgstr "将补全放在哪里"
-
-msgid "Why $PATH is special"
-msgstr "为什么 $PATH 特殊"
-
-msgid "Why fish?"
-msgstr "为什么用 fish？"
-
-msgid "Wildcard expansion *.*"
-msgstr "通配符展开 *.*"
 
 msgid "Write out the fossil prompt"
 msgstr "写出 fossil 提示"
@@ -3685,9 +3628,6 @@ msgstr "写出提示"
 
 msgid "Write to file"
 msgstr "写入文件"
-
-msgid "Writing your own completions"
-msgstr "自己写补全"
 
 msgid "all components of the path must exist"
 msgstr "路径的所有组件必须存在"
@@ -3725,14 +3665,8 @@ msgstr "fish_git_prompt 辅助工具，检查颜色变量"
 msgid "fish_git_prompt helper, returns the current Git operation and branch"
 msgstr "fish_git_prompt 辅助工具，返回当前 Git 操作和分支"
 
-msgid "foo=bar variable overrides"
-msgstr "foo=bar 变量覆盖"
-
 msgid "helper function that does pretty formatting on svn status"
 msgstr "在 svn 状况下漂亮格式化的辅助函数"
-
-msgid "ifs and elses"
-msgstr "if 和 else"
 
 msgid "increment or decrement the number below the cursor"
 msgstr "递增或递减光标下方的数字"
@@ -3815,23 +3749,11 @@ msgstr "禁用输出"
 msgid "text color"
 msgstr "文本颜色"
 
-msgid "var[x..y] slices"
-msgstr "var[x..y] 切片"
-
 msgid "vi-like key bindings for fish"
 msgstr "fish 中类似 vi 的键位绑定"
 
 msgid "wait for app to exit"
 msgstr "等待应用程序退出"
-
-msgid "while, for and begin"
-msgstr "while、for 和 begin"
-
-msgid "{a,b} brace expansion"
-msgstr "{a,b} 大括号展开"
-
-msgid "~ expansion"
-msgstr "~ 展开"
 
 msgid "fish-section-tier3-from-script-explicitly-added"
 msgstr ""

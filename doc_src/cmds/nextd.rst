@@ -1,5 +1,3 @@
-.. _cmd-nextd:
-
 nextd - move forward through directory history
 ==============================================
 

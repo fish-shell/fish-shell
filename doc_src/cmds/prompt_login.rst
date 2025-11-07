@@ -1,5 +1,3 @@
-.. _cmd-prompt_login:
-
 prompt_login - describe the login suitable for prompt
 =====================================================
 

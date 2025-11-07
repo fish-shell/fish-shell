@@ -127,10 +127,10 @@ use crate::terminal::BufferedOutputter;
 use crate::terminal::Output;
 use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
-    ClearScreen, DecrstAlternateScreenBuffer, DecrstMouseTracking, DecsetAlternateScreenBuffer,
-    DecsetShowCursor, Osc0WindowTitle, Osc133CommandFinished, Osc133CommandStart,
-    QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
-    QueryXtgettcap, QueryXtversion,
+    self, ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
+    Osc0WindowTitle, Osc2TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
+    QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute, QueryXtgettcap,
+    QueryXtversion,
 };
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::TextFace;
@@ -814,7 +814,8 @@ fn read_i(parser: &Parser) {
     while !check_exit_loop_maybe_warning(Some(&mut data)) {
         RUN_COUNT.fetch_add(1, Ordering::Relaxed);
 
-        let Some(command) = data.readline(None) else {
+        let Some(command) = data.readline(set_shell_modes_temporarily(data.conf.inputfd), None)
+        else {
             continue;
         };
 
@@ -1165,10 +1166,14 @@ pub fn reader_reading_interrupted(data: &mut ReaderData) -> i32 {
 /// characters even if a full line has not yet been read. Note: the returned value may be longer
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
-pub fn reader_readline(parser: &Parser, nchars: Option<NonZeroUsize>) -> Option<WString> {
+pub fn reader_readline(
+    parser: &Parser,
+    old_modes: Option<libc::termios>,
+    nchars: Option<NonZeroUsize>,
+) -> Option<WString> {
     let data = current_data().unwrap();
     let mut reader = Reader { parser, data };
-    reader.readline(nchars)
+    reader.readline(old_modes, nchars)
 }
 
 /// Get the command line state. This may be fetched on a background thread.
@@ -2283,7 +2288,11 @@ impl ReaderData {
 impl<'a> Reader<'a> {
     /// Read a command to execute, respecting input bindings.
     /// Return the command, or none if we were asked to cancel (e.g. SIGHUP).
-    fn readline(&mut self, nchars: Option<NonZeroUsize>) -> Option<WString> {
+    fn readline(
+        &mut self,
+        old_modes: Option<libc::termios>,
+        nchars: Option<NonZeroUsize>,
+    ) -> Option<WString> {
         let mut tty = TtyHandoff::new(reader_save_screen_state);
 
         self.rls = Some(ReadlineLoopState::new());
@@ -2301,19 +2310,6 @@ impl<'a> Reader<'a> {
         self.cycle_cursor_pos = 0;
 
         self.history_search.reset();
-
-        // It may happen that a command we ran when job control was disabled nevertheless stole the tty
-        // from us. In that case when we read from our fd, it will trigger SIGTTIN. So just
-        // unconditionally reclaim the tty. See #9181.
-        unsafe { libc::tcsetpgrp(self.conf.inputfd, libc::getpgrp()) };
-
-        // Get the current terminal modes. These will be restored when the function returns.
-        let mut old_modes = MaybeUninit::uninit();
-        let restore_modes =
-            unsafe { libc::tcgetattr(self.conf.inputfd, old_modes.as_mut_ptr()) } == 0;
-
-        // Set the new modes.
-        set_shell_modes(self.conf.inputfd, "readline");
 
         // HACK: Don't abandon line for the first prompt, because
         // if we're started with the terminal it might not have settled,
@@ -2389,11 +2385,13 @@ impl<'a> Reader<'a> {
         if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as _ {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
-            if restore_modes
-                && unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, old_modes.as_ptr()) } == -1
-                && is_interactive_session()
-            {
-                perror("tcsetattr");
+            // TODO(MSRV>=1.88) if-let-chain
+            if let Some(old_modes) = old_modes {
+                if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &old_modes) } == -1
+                    && is_interactive_session()
+                {
+                    perror("tcsetattr");
+                }
             }
             Outputter::stdoutput().borrow_mut().reset_text_face();
         }
@@ -2623,12 +2621,6 @@ impl<'a> Reader<'a> {
                 }
                 ImplicitEvent::FocusOut => {
                     event::fire_generic(self.parser, L!("fish_focus_out").to_owned(), vec![]);
-                    self.save_screen_state();
-                }
-                ImplicitEvent::DisableMouseTracking => {
-                    Outputter::stdoutput()
-                        .borrow_mut()
-                        .write_command(DecrstMouseTracking);
                     self.save_screen_state();
                 }
                 ImplicitEvent::MouseLeft(position) => {
@@ -4457,6 +4449,25 @@ pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
     ok
 }
 
+pub fn set_shell_modes_temporarily(inputfd: RawFd) -> Option<libc::termios> {
+    // It may happen that a command we ran when job control was disabled nevertheless stole the tty
+    // from us. In that case when we read from our fd, it will trigger SIGTTIN. So just
+    // unconditionally reclaim the tty. See #9181.
+    unsafe { libc::tcsetpgrp(inputfd, libc::getpgrp()) };
+
+    // Get the current terminal modes. These will be restored when the function returns.
+    let old_modes = {
+        let mut old_modes = MaybeUninit::uninit();
+        let ok = unsafe { libc::tcgetattr(inputfd, old_modes.as_mut_ptr()) } == 0;
+        ok.then(|| unsafe { old_modes.assume_init() })
+    };
+
+    // Set the new modes.
+    set_shell_modes(inputfd, "readline");
+
+    old_modes
+}
+
 /// Grab control of terminal.
 fn term_steal(copy_modes: bool) {
     if copy_modes {
@@ -4627,46 +4638,83 @@ pub fn fish_is_unwinding_for_exit() -> bool {
 /// Write the title to the titlebar. This function is called just before a new application starts
 /// executing and just after it finishes.
 ///
-/// \param cmd Command line string passed to \c fish_title if is defined.
-/// \param parser The parser to use for autoloading fish_title.
+/// \param cmd Command line string passed to the title functions that are defined.
+/// \param parser The parser to use for autoloading title functions.
 /// \param reset_cursor_position If set, issue a \r so the line driver knows where we are
 pub fn reader_write_title(
     cmd: &wstr,
     parser: &Parser,
     reset_cursor_position: bool, /* = true */
 ) {
+    fn write_title<'a>(
+        parser: &Parser,
+        out: &mut BufferedOutputter,
+        cmd: &wstr,
+        osc: fn(&'a [WString]) -> TerminalCommand<'a>,
+        function_name: &wstr,
+        fallback_title: Option<&wstr>,
+        title_buffer: &'a mut Vec<WString>,
+    ) -> bool {
+        let mut title_function_call;
+        let mut title_command = fallback_title;
+        if function::exists(function_name, parser) {
+            title_function_call = function_name.to_owned();
+            if !cmd.is_empty() {
+                title_function_call.push(' ');
+                title_function_call.push_utfstr(&escape_string(
+                    cmd,
+                    EscapeStringStyle::Script(EscapeFlags::NO_QUOTED | EscapeFlags::NO_TILDE),
+                ));
+            }
+            title_command = Some(&title_function_call);
+        }
+        let Some(title_command) = title_command else {
+            return false;
+        };
+        let _ = exec_subshell(
+            title_command,
+            parser,
+            Some(title_buffer),
+            /*apply_exit_status=*/ false,
+        );
+
+        if !title_buffer.is_empty() {
+            out.write_command(osc(&*title_buffer));
+            return true;
+        }
+        false
+    }
+
     let _scoped = parser.push_scope(|s| {
         s.is_interactive = false;
         s.suppress_fish_trace = true;
     });
 
-    let mut fish_title_command = DEFAULT_TITLE.to_owned();
-    if function::exists(L!("fish_title"), parser) {
-        fish_title_command = L!("fish_title").to_owned();
-        if !cmd.is_empty() {
-            fish_title_command.push(' ');
-            fish_title_command.push_utfstr(&escape_string(
-                cmd,
-                EscapeStringStyle::Script(EscapeFlags::NO_QUOTED | EscapeFlags::NO_TILDE),
-            ));
-        }
-    }
-
+    let mut out = BufferedOutputter::new(Outputter::stdoutput());
+    let mut written = false;
     let mut lst = vec![];
-    let _ = exec_subshell(
-        &fish_title_command,
+    written |= write_title(
         parser,
-        Some(&mut lst),
-        /*apply_exit_status=*/ false,
+        &mut out,
+        cmd,
+        Osc0WindowTitle,
+        L!("fish_title"),
+        Some(DEFAULT_TITLE),
+        &mut lst,
+    );
+    written |= write_title(
+        parser,
+        &mut out,
+        cmd,
+        Osc2TabTitle,
+        L!("fish_tab_title"),
+        /*default_title=*/ None,
+        &mut lst,
     );
 
-    let mut out = BufferedOutputter::new(Outputter::stdoutput());
-    if !lst.is_empty() {
-        out.write_command(Osc0WindowTitle(&lst));
-    }
-
     out.reset_text_face();
-    if reset_cursor_position && !lst.is_empty() {
+
+    if reset_cursor_position && written {
         // Put the cursor back at the beginning of the line (issue #2453).
         out.write_bytes(b"\r");
     }

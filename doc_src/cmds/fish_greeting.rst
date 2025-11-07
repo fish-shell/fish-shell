@@ -1,5 +1,3 @@
-.. _cmd-fish_greeting:
-
 fish_greeting - display a welcome message in interactive shells
 ===============================================================
 

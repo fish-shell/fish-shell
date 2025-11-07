@@ -2610,24 +2610,27 @@ impl<'a> Reader<'a> {
                 }
                 self.rls_mut().last_cmd = None;
             }
-            CharEvent::Implicit(implicit_event) => match implicit_event {
-                ImplicitEvent::Eof => reader_sighup(),
-                ImplicitEvent::CheckExit => (),
-                ImplicitEvent::FocusIn => {
-                    event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
-                    self.save_screen_state();
+            CharEvent::Implicit(implicit_event) => {
+                use ImplicitEvent::*;
+                match implicit_event {
+                    Eof => reader_sighup(),
+                    CheckExit => (),
+                    FocusIn => {
+                        event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
+                        self.save_screen_state();
+                    }
+                    FocusOut => {
+                        event::fire_generic(self.parser, L!("fish_focus_out").to_owned(), vec![]);
+                        self.save_screen_state();
+                    }
+                    MouseLeft(position) => {
+                        FLOG!(reader, "Mouse left click", position);
+                        self.request_cursor_position(CursorPositionQuery::new(
+                            CursorPositionQueryKind::MouseLeft(position),
+                        ));
+                    }
                 }
-                ImplicitEvent::FocusOut => {
-                    event::fire_generic(self.parser, L!("fish_focus_out").to_owned(), vec![]);
-                    self.save_screen_state();
-                }
-                ImplicitEvent::MouseLeft(position) => {
-                    FLOG!(reader, "Mouse left click", position);
-                    self.request_cursor_position(CursorPositionQuery::new(
-                        CursorPositionQueryKind::MouseLeft(position),
-                    ));
-                }
-            },
+            }
             CharEvent::QueryResult(query_result) => {
                 let mut maybe_query = self.blocking_query();
                 let query = &mut maybe_query;

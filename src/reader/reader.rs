@@ -2334,10 +2334,10 @@ impl<'a> Reader<'a> {
         // Start out as initially dirty.
         self.force_exec_prompt_and_repaint = true;
 
-        while !self.rls().finished && !check_exit_loop_maybe_warning(Some(self)) {
+        while !check_exit_loop_maybe_warning(Some(self)) {
             // Enable tty protocols while we read input.
             tty.enable_tty_protocols();
-            if self.handle_char_event(None).is_break() {
+            if self.handle_char_event(None).is_break() || self.rls().finished {
                 break;
             }
         }

@@ -236,44 +236,6 @@ Or you can run them on a fish, without involving cmake::
 Here, the first argument to test_driver.py refers to a directory with ``fish``, ``fish_indent`` and ``fish_key_reader`` in it.
 In this example we're in the root of the git repo and have run ``cargo build`` without ``--release``, so it's a debug build.
 
-Git hooks
----------
-
-Since developers sometimes forget to run the tests, it can be helpful to
-use git hooks (see githooks(5)) to automate it.
-
-One possibility is a pre-push hook script like this one:
-
-.. code:: sh
-
-   #!/bin/sh
-   #### A pre-push hook for the fish-shell project
-   # This will run the tests when a push to master is detected, and will stop that if the tests fail
-   # Save this as .git/hooks/pre-push and make it executable
-
-   protected_branch='master'
-
-   # Git gives us lines like "refs/heads/frombranch SOMESHA1 refs/heads/tobranch SOMESHA1"
-   # We're only interested in the branches
-   isprotected=false
-   while read from _ to _; do
-       if [ "$to" = "refs/heads/$protected_branch" ]; then
-           isprotected=true
-       fi
-   done
-   if "$isprotected"; then
-       echo "Running checks before push to master"
-       build_tools/check.sh
-   fi
-
-This will check if the push is to the master branch and, if it is, only
-allow the push if running ``build_tools/check.sh`` succeeds. In some circumstances
-it may be advisable to circumvent this check with
-``git push --no-verify``, but usually that isn’t necessary.
-
-To install the hook, place the code in a new file
-``.git/hooks/pre-push`` and make it executable.
-
 Contributing Translations
 =========================
 

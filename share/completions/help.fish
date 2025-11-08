@@ -50,8 +50,6 @@ function __fish_help_describe -a help_item
             return
         case contributing#fish-script-style-guide
             return
-        case contributing#git-hooks
-            return
         case contributing#github
             return
         case contributing#guidelines

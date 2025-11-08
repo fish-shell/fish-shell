@@ -112,12 +112,12 @@ impl Drop for MmapRegion {
     }
 }
 
-/// HistoryFileContents holds the read-only contents of a file.
-pub struct HistoryFileContents {
+/// RawHistoryFile holds the read-only contents of a file, before decoding it.
+pub struct RawHistoryFile {
     region: MmapRegion,
 }
 
-impl HistoryFileContents {
+impl RawHistoryFile {
     /// Construct a history file contents from a [`File`] reference.
     pub fn create(mut history_file: &File) -> std::io::Result<Self> {
         // Check that the file is seekable, and its size.
@@ -191,12 +191,55 @@ impl HistoryFileContents {
     pub fn contents(&self) -> &[u8] {
         &self.region
     }
+
+    /// Decode this history file.
+    /// If cutoff is given, skip items whose timestamp is newer than cutoff.
+    pub fn decode(self, cutoff: Option<SystemTime>) -> HistoryFile {
+        let offsets = self.offsets(cutoff).collect();
+        HistoryFile {
+            contents: Some(self),
+            offsets,
+        }
+    }
+}
+
+/// A combination of a history file and its offsets.
+pub struct HistoryFile {
+    // Contents of the file. May be None if there was no file.
+    contents: Option<RawHistoryFile>,
+    // Offsets of items within the file. Always empty if contents is None.
+    offsets: Vec<usize>,
+}
+
+impl HistoryFile {
+    /// Create an empty history file.
+    pub fn create_empty() -> Self {
+        Self {
+            contents: None,
+            offsets: Vec::new(),
+        }
+    }
+
+    /// Return whether this file is empty.
+    pub fn is_empty(&self) -> bool {
+        self.offsets.is_empty()
+    }
+
+    /// Return the offsets of items in this file.
+    pub fn offsets(&self) -> &[usize] {
+        &self.offsets
+    }
+
+    /// Decode an item at a given offset.
+    pub fn decode_item(&self, offset: usize) -> Option<HistoryItem> {
+        self.contents.as_ref()?.decode_item(offset)
+    }
 }
 
 /// Iterator over offsets within a history file.
 struct HistoryFileOffsetIter<'a> {
     // The file contents.
-    contents: &'a HistoryFileContents,
+    contents: &'a RawHistoryFile,
     // Current offset within the file.
     cursor: usize,
     // Optional cutoff time. If given, skip items newer than this.
@@ -223,7 +266,7 @@ fn infer_file_type(contents: &[u8]) -> HistoryFileType {
     }
 }
 
-impl TryFrom<MmapRegion> for HistoryFileContents {
+impl TryFrom<MmapRegion> for RawHistoryFile {
     type Error = std::io::Error;
 
     fn try_from(region: MmapRegion) -> std::io::Result<Self> {

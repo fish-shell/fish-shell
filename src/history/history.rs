@@ -50,7 +50,7 @@ use crate::{
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
     fs::fsync,
-    history::file::{HistoryFileContents, append_history_item_to_buffer},
+    history::file::{HistoryFile, RawHistoryFile, append_history_item_to_buffer},
     io::IoStreams,
     operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
     parse_constants::{ParseTreeFlags, StatementDecoration},
@@ -329,8 +329,8 @@ struct HistoryImpl {
     /// Boolean describes if it should be deleted only in this session or in all
     /// (used in deduplication).
     deleted_items: HashMap<WString, bool>,
-    /// The buffer containing the history file contents.
-    file_contents: Option<HistoryFileContents>,
+    /// The history file contents.
+    file_contents: Option<HistoryFile>,
     /// The file ID of the history file.
     history_file_id: FileId, // INVALID_FILE_ID
     /// The boundary timestamp distinguishes old items from new items. Items whose timestamps are <=
@@ -342,10 +342,6 @@ struct HistoryImpl {
     last_identifier: HistoryIdentifier, // 0
     /// How many items we add until the next vacuum. Initially a random value.
     countdown_to_vacuum: Option<usize>,
-    /// Whether we've loaded old items.
-    loaded_old: bool, // false
-    /// List of old items, as offsets into out mmap data.
-    old_item_offsets: Vec<usize>,
     /// Thread pool for background operations.
     thread_pool: Arc<ThreadPool>,
 }
@@ -412,8 +408,6 @@ impl HistoryImpl {
     fn clear_file_state(&mut self) {
         // Erase everything we know about our file.
         self.file_contents = None;
-        self.loaded_old = false;
-        self.old_item_offsets.clear();
     }
 
     /// Returns a timestamp for new items - see the implementation for a subtlety.
@@ -441,37 +435,35 @@ impl HistoryImpl {
         self.last_identifier
     }
 
-    /// Figure out the offsets of our file contents.
-    fn populate_from_file_contents(&mut self) {
-        self.old_item_offsets.clear();
-        if let Some(file_contents) = &self.file_contents {
-            self.old_item_offsets
-                .extend(file_contents.offsets(Some(self.boundary_timestamp)));
-        }
-        FLOGF!(history, "Loaded %u old items", self.old_item_offsets.len());
-    }
-
     /// Loads old items if necessary.
-    fn load_old_if_needed(&mut self) {
-        if self.loaded_old {
-            return;
-        }
-        self.loaded_old = true;
+    /// Return a reference to the loaded history file.
+    fn load_old_if_needed(&mut self) -> &HistoryFile {
+        if self.file_contents.is_some() {
+            return self.file_contents.as_ref().unwrap();
+        };
+        let Ok(Some(history_path)) = self.history_file_path() else {
+            return self.file_contents.insert(HistoryFile::create_empty());
+        };
 
         let _profiler = TimeProfiler::new("load_old");
-        if let Ok(Some(history_path)) = self.history_file_path() {
-            match lock_and_load(&history_path, HistoryFileContents::create) {
-                Ok((file_id, file_contents)) => {
-                    self.file_contents = Some(file_contents);
-                    self.history_file_id = file_id;
-                    let _profiler = TimeProfiler::new("populate_from_file_contents");
-                    self.populate_from_file_contents();
-                }
-                Err(e) => {
-                    FLOG!(history_file, "Error reading from history file:", e);
-                }
+        let file_contents = match lock_and_load(&history_path, RawHistoryFile::create) {
+            Ok((file_id, history_file)) => {
+                self.history_file_id = file_id;
+                let _profiler = TimeProfiler::new("populate_from_file_contents");
+                let file_contents = history_file.decode(Some(self.boundary_timestamp));
+                FLOGF!(
+                    history,
+                    "Loaded %u old items",
+                    file_contents.offsets().len()
+                );
+                file_contents
             }
-        }
+            Err(e) => {
+                FLOG!(history_file, "Error reading from history file:", e);
+                HistoryFile::create_empty()
+            }
+        };
+        self.file_contents.insert(file_contents)
     }
 
     /// Deletes duplicates in new_items.
@@ -531,7 +523,7 @@ impl HistoryImpl {
 
         // Read in existing items (which may have changed out from underneath us, so don't trust our
         // old file contents).
-        if let Ok(local_file) = HistoryFileContents::create(existing_file) {
+        if let Ok(local_file) = RawHistoryFile::create(existing_file) {
             for offset in local_file.offsets(None) {
                 // Try decoding an old item.
                 let Some(old_item) = local_file.decode_item(offset) else {
@@ -791,8 +783,6 @@ impl HistoryImpl {
             boundary_timestamp: SystemTime::now(),
             last_identifier: 0,
             countdown_to_vacuum: None,
-            loaded_old: false,
-            old_item_offsets: Vec::new(),
             // Up to 8 threads, no soft min.
             thread_pool: ThreadPool::new(0, 8),
         }
@@ -811,9 +801,9 @@ impl HistoryImpl {
             return false;
         }
 
-        if self.loaded_old {
+        if let Some(file_contents) = &self.file_contents {
             // If we've loaded old items, see if we have any offsets.
-            self.old_item_offsets.is_empty()
+            file_contents.is_empty()
         } else {
             // If we have not loaded old items, don't actually load them (which may be expensive); just
             // stat the file and see if it exists and is nonempty.
@@ -873,7 +863,7 @@ impl HistoryImpl {
         self.new_items.clear();
         self.deleted_items.clear();
         self.first_unwritten_new_item_index = 0;
-        self.old_item_offsets.clear();
+        self.file_contents = None;
         if let Ok(Some(filename)) = self.history_file_path() {
             wunlink(&filename);
         }
@@ -1013,9 +1003,9 @@ impl HistoryImpl {
         }
 
         // Append old items.
-        self.load_old_if_needed();
-        for &offset in self.old_item_offsets.iter().rev() {
-            let Some(item) = self.file_contents.as_ref().unwrap().decode_item(offset) else {
+        let file_contents = self.load_old_if_needed();
+        for &offset in file_contents.offsets().iter().rev() {
+            let Some(item) = file_contents.decode_item(offset) else {
                 continue;
             };
             if seen.insert(item.str().to_owned()) {
@@ -1091,18 +1081,17 @@ impl HistoryImpl {
 
         // Now look in our old items.
         idx -= resolved_new_item_count;
-        self.load_old_if_needed();
-        if let Some(file_contents) = &self.file_contents {
-            let old_item_count = self.old_item_offsets.len();
-            if idx < old_item_count {
-                // idx == 0 corresponds to last item in old_item_offsets.
-                let offset = self.old_item_offsets[old_item_count - idx - 1];
-                return file_contents.decode_item(offset).map(Cow::Owned);
-            }
+        let file_contents = self.load_old_if_needed();
+        let old_item_offsets = file_contents.offsets();
+        let old_item_count = old_item_offsets.len();
+        if idx < old_item_count {
+            // idx == 0 corresponds to last item in old_item_offsets.
+            let offset = old_item_offsets[old_item_count - idx - 1];
+            return file_contents.decode_item(offset).map(Cow::Owned);
         }
 
         // Index past the valid range, so return None.
-        return None;
+        None
     }
 
     /// Return the number of history entries.
@@ -1111,9 +1100,8 @@ impl HistoryImpl {
         if self.has_pending_item && new_item_count > 0 {
             new_item_count -= 1;
         }
-        self.load_old_if_needed();
-        let old_item_count = self.old_item_offsets.len();
-        return new_item_count + old_item_count;
+        let old_item_offsets = self.load_old_if_needed().offsets();
+        new_item_count + old_item_offsets.len()
     }
 }
 
@@ -2357,7 +2345,7 @@ mod tests {
         );
         history.resolve_pending();
 
-        const hist_size: usize = 9;
+        const HIST_SIZE: usize = 9;
         assert_eq!(history.size(), 9);
 
         // Expected sets of paths.
@@ -2376,9 +2364,9 @@ mod tests {
         let maxlap = 128;
         for _lap in 0..maxlap {
             let mut failures = 0;
-            for i in 1..=hist_size {
+            for i in 1..=HIST_SIZE {
                 if history.item_at_index(i).unwrap().get_required_paths()
-                    != expected_paths[hist_size - i]
+                    != expected_paths[HIST_SIZE - i]
                 {
                     failures += 1;
                 }

@@ -71,7 +71,7 @@ Completion scripts should
 
 1. Use as few dependencies as possible - try to use fish's builtins like ``string`` instead of ``grep`` and ``awk``,
    use ``python`` to read json instead of ``jq`` (because it's already a soft dependency for fish's tools)
-2. If it uses a common unix tool, use posix-compatible invocations - ideally it would work on GNU/Linux, macOS, the BSDs and other systems
+2. If it uses a common unix tool, use POSIX-compatible invocations - ideally it would work on GNU/Linux, macOS, the BSDs and other systems
 3. Option and argument descriptions should be kept short.
    The shorter the description, the more likely it is that fish can use more columns.
 4. Function names should start with ``__fish``, and functions should be kept in the completion file unless they're used elsewhere.
@@ -100,33 +100,18 @@ The builtins and various functions shipped with fish are documented in doc_src/c
 Code Style
 ==========
 
-To ensure your changes conform to the style rules run
-
-::
-
-   build_tools/style.fish
-
-before committing your change. That will run our autoformatters:
+For formatting, we use:
 
 - ``rustfmt`` for Rust
 - ``fish_indent`` (shipped with fish) for fish script
-- ``ruff format`` for python
+- ``ruff format`` for Python
 
-If you’ve already committed your changes that’s okay since it will then
-check the files in the most recent commit. This can be useful after
-you’ve merged another person’s change and want to check that it’s style
-is acceptable. However, in that case it will run ``clang-format`` to
-ensure the entire file, not just the lines modified by the commit,
-conform to the style.
-
-If you want to check the style of the entire code base run
+To reformat files, there is a script
 
 ::
 
    build_tools/style.fish --all
-
-That command will refuse to restyle any files if you have uncommitted
-changes.
+   build_tools/style.fish somefile.rs some.fish
 
 Fish Script Style Guide
 -----------------------
@@ -183,11 +168,6 @@ Minimum Supported Rust Version (MSRV) Policy
 
 We support at least the version of ``rustc`` available in Debian Stable.
 
-Rust Style Guide
-----------------
-
-Use ``cargo fmt`` and ``cargo clippy``. Clippy warnings can be turned off if there's a good reason to.
-
 Testing
 =======
 
@@ -201,40 +181,47 @@ You are strongly encouraged to add tests when changing the functionality
 of fish, especially if you are fixing a bug to help ensure there are no
 regressions in the future (i.e., we don’t reintroduce the bug).
 
-The tests can be found in three places:
+Unit tests live next to the implementation in Rust source files, in inline submodules (``mod tests {}``).
 
-- src/tests for unit tests.
-- tests/checks for script tests, run by `littlecheck <https://github.com/ridiculousfish/littlecheck>`__
-- tests/pexpects for interactive tests using `pexpect <https://pexpect.readthedocs.io/en/stable/>`__
+System tests live in ``tests/``:
 
-When in doubt, the bulk of the tests should be added as a littlecheck test in tests/checks, as they are the easiest to modify and run, and much faster and more dependable than pexpect tests. The syntax is fairly self-explanatory. It's a fish script with the expected output in ``# CHECK:`` or ``# CHECKERR:`` (for stderr) comments.
-If your littlecheck test has a specific dependency, use ``# REQUIRE: ...`` with a posix sh script.
+- ``tests/checks`` are run by `littlecheck <https://github.com/ridiculousfish/littlecheck>`__
+  and test noninteractive (script) behavior,
+  except for ``tests/checks/tmux-*`` which test interactive scenarios.
+- ``tests/pexpects`` tests interactive scenarios using `pexpect <https://pexpect.readthedocs.io/en/stable/>`__
 
-The pexpects are written in python and can simulate input and output to/from a terminal, so they are needed for anything that needs actual interactivity. The runner is in tests/pexpect_helper.py, in case you need to modify something there.
+When in doubt, the bulk of the tests should be added as a littlecheck test in tests/checks, as they are the easiest to modify and run, and much faster and more dependable than pexpect tests.
+The syntax is fairly self-explanatory.
+It's a fish script with the expected output in ``# CHECK:`` or ``# CHECKERR:`` (for stderr) comments.
+If your littlecheck test has a specific dependency, use ``# REQUIRE: ...`` with a POSIX sh script.
 
-These tests can be run via the tests/test_driver.py python script, which will set up the environment.
+The pexpect tests are written in Python and can simulate input and output to/from a terminal, so they are needed for anything that needs actual interactivity.
+The runner is in tests/pexpect_helper.py, in case you need to modify something there.
+
+These tests can be run via the tests/test_driver.py Python script, which will set up the environment.
 It sets up a temporary $HOME and also uses it as the current directory, so you do not need to create a temporary directory in them.
 
-If you need a command to do something weird to test something, maybe add it to the ``fish_test_helper`` binary (in tests/fish_test_helper.c), or see if it can already do it.
+If you need a command to do something weird to test something, maybe add it to the ``fish_test_helper`` binary (in ``tests/fish_test_helper.c``).
 
 Local testing
 -------------
 
-The tests can be run on your local computer on all operating systems.
+The tests can be run on your local system::
 
-::
-
-   cmake path/to/fish-shell
-   make fish_run_tests
-
-Or you can run them on a fish, without involving cmake::
-
-  cargo build
-  cargo test # for the unit tests
-  tests/test_driver.py target/debug # for the script and interactive tests
+    cargo build
+    # Run unit tests
+    cargo test
+    # Run system tests
+    tests/test_driver.py target/debug
+    # Run a specific system test.
+    tests/test_driver.py target/debug tests/checks/abbr.fish
 
 Here, the first argument to test_driver.py refers to a directory with ``fish``, ``fish_indent`` and ``fish_key_reader`` in it.
-In this example we're in the root of the git repo and have run ``cargo build`` without ``--release``, so it's a debug build.
+In this example we're in the root of the workspace and have run ``cargo build`` without ``--release``, so it's a debug build.
+
+To run all tests and linters, use::
+
+    build_tools/check.sh
 
 Contributing Translations
 =========================

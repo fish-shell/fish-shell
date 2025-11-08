@@ -64,8 +64,6 @@ function __fish_help_describe -a help_item
             return
         case contributing#modifying-existing-translations
             return
-        case contributing#rust-style-guide
-            return
         case contributing#setting-code-up-for-translations
             return
         case contributing#testing

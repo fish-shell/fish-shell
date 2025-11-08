@@ -8,6 +8,7 @@ packages:
   - ninja
   - pcre2
   - py311-pexpect
+  - py311-sphinx
   - python
   - rust
   - tmux

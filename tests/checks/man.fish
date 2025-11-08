@@ -1,4 +1,8 @@
 # RUN: %fish %s
+
+# Override the test-override again.
+__fish_data_with_file functions/__fish_print_help.fish source
+
 # REQUIRES: command -v sphinx-build
 # REQUIRES: command -v man
 # REQUIRES: test "$FISH_BUILD_DOCS" != "0"

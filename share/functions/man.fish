@@ -6,6 +6,14 @@ if not command -qs man
 end
 
 function man
+    # If we have an embedded page, reuse a function that happens to do the
+    # right thing.
+    if not set -q argv[2] &&
+            status list-files "man/man1/$(__fish_canonicalize_builtin $argv).1" &>/dev/null
+        __fish_print_help $argv[1]
+        return
+    end
+
     set -l manpath
     if not __fish_is_standalone
         and set -l fish_manpath (path filter -d $__fish_data_dir/man)
@@ -35,25 +43,13 @@ function man
                 echo ''
             end
         )
-    end
 
-    if test (count $argv) -eq 1
-        set argv (__fish_canonicalize_builtin $argv)
-    end
-
-    if not set -q argv[2] && status list-files "man/man1/$argv[1].1" &>/dev/null
-        set -l basename $argv[1].1
-        function __fish_man -V basename -a man1
-            # mandoc man needs "-l" or it'll refuse to open a file
-            command man -l $man1/$basename
+        if test (count $argv) -eq 1
+            set argv (__fish_canonicalize_builtin $argv)
         end
-        __fish_data_with_directory man/man1 \
-            (string escape --style=regex -- $basename) __fish_man
-        __fish_with_status functions --erase __fish_man
-    else
-        set -q manpath[1]
-        and set -lx MANPATH $manpath
-
-        command man $argv
     end
+    set -q manpath[1]
+    and set -lx MANPATH $manpath
+
+    command man $argv
 end

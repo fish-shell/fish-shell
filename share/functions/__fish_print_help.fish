@@ -26,7 +26,8 @@ function __fish_print_help --description "Print help for the specified fish func
             return 2
         end
         set -l file (path filter -- $man1/$item.1 $man1/$item.1.gz)
-        command man $file[1]
+        # "-l" to read a local file, required for mandoc
+        command man -l $file[1]
     end
     __fish_data_with_directory man/man1 \
         "$(string escape --style=regex $item.1)(?:\.gz)?" \

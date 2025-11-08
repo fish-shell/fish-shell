@@ -29,11 +29,9 @@ msgstr ""
 msgid " (%s)\n"
 msgstr "（%s）\n"
 
-#
 msgid " (read-only)\n"
 msgstr "（唯讀）\n"
 
-#
 msgid " a path variable"
 msgstr "路徑變數"
 
@@ -41,15 +39,12 @@ msgstr "路徑變數"
 msgid " with arguments '%s'"
 msgstr "，引數為「%s」"
 
-#
 msgid " with definition"
 msgstr "，定義為"
 
-#
 msgid "$# is not supported. In fish, please use 'count $argv'."
 msgstr "不支援 $#。在 fish 中請使用「count $argv」。"
 
-#
 msgid "$$ is not the pid. In fish, please use $fish_pid."
 msgstr "$$ 不是 PID。在 fish 中請使用 $fish_pid。"
 
@@ -65,19 +60,15 @@ msgstr "$%s：原繼承值為 |%s|\n"
 msgid "$%s: set in %s scope, %s,%s with %d elements"
 msgstr "$%s：設定於%s，%s，%s，包含 %d 個元素"
 
-#
 msgid "$* is not supported. In fish, please use $argv."
 msgstr "不支援 $*。在 fish 中請使用 $argv。"
 
-#
 msgid "$? is not the exit status. In fish, please use $status."
 msgstr "$? 不是結束代碼。在 fish 中請使用 $status。"
 
-#
 msgid "$@ is not supported. In fish, please use $argv."
 msgstr "不支援 $@。在 fish 中請使用 $argv。"
 
-#
 msgid "$status is not valid as a command. See `help conditions`"
 msgstr "$status 不是有效的命令。參見「help conditions」"
 
@@ -137,7 +128,6 @@ msgstr "%s（第 %u 行）："
 msgid "%s and %s are mutually exclusive"
 msgstr "%s 和 %s 不能同時使用"
 
-#
 #, c-format
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
 msgstr "%s 在過了 %d 秒後仍無法讀取到查詢主要裝置特性的回應。這通常是由於你的終端機缺少功能，參見「help terminal-compatibility」或「man fish-terminal-compatibility」。此 %s 行程不再會等待未決的查詢，一些非必要的功能將因此停用。"
@@ -154,12 +144,10 @@ msgstr "%s 是內建命令\n"
 msgid "%s is a function"
 msgstr "%s 是函式"
 
-#
 #, c-format
 msgid "%s, version %s"
 msgstr "%s，%s 版"
 
-#
 #, c-format
 msgid "%s, version %s\n"
 msgstr "%s，%s 版\n"
@@ -817,35 +805,27 @@ msgstr "%s還有 %u 列"
 msgid "%u\n"
 msgstr "%u\n"
 
-#
 msgid "'break' while not inside of loop"
 msgstr "「break」不在迴圈裡面"
 
-#
 msgid "'case' builtin not inside of switch block"
 msgstr "「case」不在 switch 區塊裡面"
 
-#
 msgid "'continue' while not inside of loop"
 msgstr "「continue」不在迴圈裡面"
 
-#
 msgid "'else' builtin not inside of if block"
 msgstr "「else」不在 if 區塊裡面"
 
-#
 msgid "'end' does not take arguments. Did you forget a ';'?"
 msgstr "「end」不需要引數。你是不是忘了「;」？"
 
-#
 msgid "'end' outside of a block"
 msgstr "「end」在區塊外面"
 
-#
 msgid "'time' is not supported for background jobs. Consider using 'command time'."
 msgstr "「time」不支援背景作業。請考慮改用「command time」。"
 
-#
 msgid "'}' does not take arguments. Did you forget a ';'?"
 msgstr "「}」不需要引數。你是不是忘了「;」？"
 
@@ -853,7 +833,6 @@ msgstr "「}」不需要引數。你是不是忘了「;」？"
 msgid "(Type 'help %s' for related documentation)\n"
 msgstr "（輸入「help %s」來查閱相關文件）\n"
 
-#
 msgid "(no matches)"
 msgstr "（無匹配）"
 
@@ -861,47 +840,36 @@ msgstr "（無匹配）"
 msgid ", copied in %s @ line %d"
 msgstr "，從 %s 第 %d 行複製"
 
-#
 msgid ", copied interactively"
 msgstr "，互動地複製"
 
-#
 msgid ", copied via `source`"
 msgstr "，透過「source」複製"
 
-#
 msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty 只在與 --fields 使用時有效"
 
-#
 msgid "--end and --length are mutually exclusive"
 msgstr "--end 和 --length 不能同時使用"
 
-#
 msgid "--entire and --groups-only are mutually exclusive"
 msgstr "--entire 和 --groups-only 不能同時使用"
 
-#
 msgid "--entire and --index are mutually exclusive"
 msgstr "--entire 和 --index 不能同時使用"
 
-#
 msgid "--invert and --groups-only are mutually exclusive"
 msgstr "--invert 和 --groups-only 不能同時使用"
 
-#
 msgid "--query and --names are mutually exclusive"
 msgstr "--query 和 --names 不能同時使用"
 
-#
 msgid "--tokens options are mutually exclusive"
 msgstr "--tokens 選項不能同時使用"
 
-#
 msgid "A second attempt to exit will terminate them.\n"
 msgstr "第二次嘗試退出將終止它們。\n"
 
-#
 msgid "Abbreviation expansion"
 msgstr "縮寫展開"
 
@@ -909,23 +877,18 @@ msgstr "縮寫展開"
 msgid "Abbreviation: %s"
 msgstr "縮寫：%s"
 
-#
 msgid "Abort"
 msgstr "中止"
 
-#
 msgid "Abort (Alias for SIGABRT)"
 msgstr "中止（SIGABRT 的別名）"
 
-#
 msgid "Address boundary error"
 msgstr "位址邊界錯誤"
 
-#
 msgid "Always"
 msgstr "總是"
 
-#
 msgid "An error occurred while setting up pipe"
 msgstr "設置管道時發生錯誤"
 
@@ -933,133 +896,101 @@ msgstr "設置管道時發生錯誤"
 msgid "Argument is not a number: '%s'"
 msgstr "引數不是數字：「%s」"
 
-#
 msgid "Await background process completion"
 msgstr "等待背景行程完成"
 
-#
 msgid "Background IO thread events"
 msgstr "背景 IO 執行緒事件"
 
-#
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr "背景命令不能用作條件"
 
-#
 msgid "Bad system call"
 msgstr "無效的系統呼叫"
 
-#
 msgid "Block of code to run conditionally"
 msgstr "條件執行的程式碼區塊"
 
-#
 msgid "Broken pipe"
 msgstr "損壞的管道"
 
-#
 msgid "CPU\t"
 msgstr "CPU\t"
 
-#
 msgid "CPU time limit exceeded"
 msgstr "CPU 時間超過限制"
 
-#
 msgid "Calls to fork()"
 msgstr "fork() 呼叫"
 
-#
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "互動時不能使用不執行模式"
 
-#
 #, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr "不能將 control 修飾鍵加到控制字元「%s」上"
 
-#
 msgid "Cannot use stdin (fd 0) as pipe output"
 msgstr "不能將 stdin（fd 0）用作管道輸出"
 
-#
 msgid "Change working directory"
 msgstr "變更工作目錄"
 
-#
 msgid "Changes to exported variables"
 msgstr "已匯出變數的變更"
 
-#
 msgid "Changes to locale variables"
 msgstr "地區設定變數的變更"
 
-#
 msgid "Character encoding issues"
 msgstr "字元編碼問題"
 
-#
 msgid "Check if a thing is a thing"
 msgstr "確認下什麼是什麼"
 
-#
 msgid "Child process status changed"
 msgstr "子行程的狀態變更了"
 
-#
 msgid "Command\n"
 msgstr "命令\n"
 
-#
 msgid "Command history events"
 msgstr "命令歷史紀錄的事件"
 
-#
 msgid "Command not executable"
 msgstr "命令不可執行"
 
-#
 msgid "Commandname was invalid"
 msgstr "命令名稱無效"
 
-#
 msgid "Conditionally run blocks of code"
 msgstr "有條件地執行程式碼區塊"
 
-#
 msgid "Continue previously stopped process"
 msgstr "繼續先前停止的行程"
 
-#
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "無法確定目前工作目錄。你正確設定好地區了嗎？"
 
-#
 msgid "Could not set terminal mode for new job"
 msgstr "無法設定新作業的終端機模式"
 
-#
 msgid "Could not show help message"
 msgstr "無法顯示幫助訊息"
 
-#
 #, c-format
 msgid "Could not write profiling information to file '%s': %s"
 msgstr "無法將效能分析資訊寫入檔案「%s」：%s"
 
-#
 msgid "Count the number of arguments"
 msgstr "計算引數的個數"
 
-#
 msgid "Create a block of code"
 msgstr "建立一個程式碼區塊"
 
-#
 msgid "Debugging aid (on by default)"
 msgstr "除錯援助（預設開啟）"
 
-#
 msgid "Define a new function"
 msgstr "定義一個新函式"
 
@@ -1067,36 +998,28 @@ msgstr "定義一個新函式"
 msgid "Defined in %s @ line %d"
 msgstr "定義於 %s 第 %d 行"
 
-#
 msgid "Defined interactively"
 msgstr "互動地定義"
 
-#
 msgid "Defined via `source`"
 msgstr "透過「source」定義"
 
-#
 msgid "Division by zero"
 msgstr "除以零"
 
-#
 msgid "Edit command specific completions"
 msgstr "編輯特定命令的補全"
 
-#
 msgid "Emit an event"
 msgstr "發出事件"
 
-#
 msgid "End a block of commands"
 msgstr "結束一個程式碼區塊"
 
-#
 #, c-format
 msgid "Error reading script file '%s':"
 msgstr "讀取命令稿檔「%s」時發生錯誤："
 
-#
 #, c-format
 msgid "Error when renaming file: %s"
 msgstr "重新命名檔案時發生錯誤：%s"
@@ -1105,43 +1028,33 @@ msgstr "重新命名檔案時發生錯誤：%s"
 msgid "Error while reading file %s\n"
 msgstr "讀取檔案 %s 時發生錯誤\n"
 
-#
 msgid "Errors reported by exec (on by default)"
 msgstr "exec 回報的錯誤（預設開啟）"
 
-#
 msgid "Evaluate a string as a statement"
 msgstr "將字串作為述句執行"
 
-#
 msgid "Evaluate block if condition is false"
 msgstr "條件為 false 才執行區塊"
 
-#
 msgid "Evaluate block if condition is true"
 msgstr "條件為 true 才執行區塊"
 
-#
 msgid "Evaluate contents of file"
 msgstr "執行檔案內容"
 
-#
 msgid "Evaluate math expressions"
 msgstr "對數學表示式求值"
 
-#
 msgid "Execute command if previous command failed"
 msgstr "前一個命令失敗才執行命令"
 
-#
 msgid "Exit the shell"
 msgstr "退出 shell"
 
-#
 msgid "Expansion error"
 msgstr "展開錯誤"
 
-#
 msgid "Expansion produced too many results"
 msgstr "展開出了太多結果"
 
@@ -1157,11 +1070,9 @@ msgstr "預期是命令，卻找到 %s"
 msgid "Expected a string, but found %s"
 msgstr "預期是字串，卻找到 %s"
 
-#
 msgid "Expected a string, but found a redirection"
 msgstr "預期是字串，卻找到重新導向"
 
-#
 msgid "Expected a variable name after this $."
 msgstr "預期 $ 之後是變數名稱。"
 
@@ -1175,93 +1086,71 @@ msgstr ""
 "\n"
 " $ %s -w foo.fish"
 
-#
 #, c-format
 msgid "Expected no arguments, got %d"
 msgstr "預期沒有引數，卻收到 %d 個"
 
-#
 msgid "Expression is bogus"
 msgstr "表示式是虛假的"
 
-#
 msgid "FD monitor events"
 msgstr "FD 監聽事件"
 
-#
 msgid "Failed to assign shell to its own process group"
 msgstr "無法將 shell 指派到它的行程群組"
 
-#
 #, c-format
 msgid "Failed to set terminal mode (%s)"
 msgstr "無法設定終端機模式（%s）"
 
-#
 msgid "Failed to take control of the terminal"
 msgstr "無法取得終端機的操控權"
 
-#
 msgid "File size limit exceeded"
 msgstr "檔案大小超過了限制"
 
-#
 msgid "Finding and reading configuration"
 msgstr "組態尋找和讀取"
 
-#
 msgid "Firing events"
 msgstr "事件發出"
 
-#
 msgid "Floating point exception"
 msgstr "浮點數例外"
 
-#
 msgid "Forced quit"
 msgstr "強制退出"
 
-#
 msgid "Forced stop"
 msgstr "強制停止"
 
-#
 msgid "Generate random number"
 msgstr "產生隨機數"
 
-#
 msgid "Get/set resource usage limits"
 msgstr "取得／設定資源用量限制"
 
-#
 msgid "Group\n"
 msgstr "群組\n"
 
-#
 msgid "Halt execution and start debug prompt"
 msgstr "停止執行並顯示除錯提示"
 
-#
 msgid "Handle environment variables"
 msgstr "處理環境變數"
 
-#
 msgid "Handle fish key bindings"
 msgstr "處理 fish 按鍵綁定"
 
-#
 msgid "Handle paths"
 msgstr "處理路徑"
 
-#
 msgid "Hint: a leading '0' without an 'x' indicates an octal number"
 msgstr "提示：以「0」開頭且沒有「x」的數字是八進位"
 
-#
 msgid "History of commands executed by user"
 msgstr "使用者執行的命令歷史紀錄"
 
-#
 msgid "History performance measurements"
 msgstr "效能測量紀錄"
 
@@ -1273,7 +1162,6 @@ msgstr "歷史紀錄階段 ID「%s」不是有效的變數名稱。回退至「%
 msgid "Home for %s"
 msgstr "%s 的家目錄"
 
-#
 msgid "I/O on asynchronous file descriptor is possible"
 msgstr "非同步檔案描述子的 I/O 是可行的"
 
@@ -1281,7 +1169,6 @@ msgstr "非同步檔案描述子的 I/O 是可行的"
 msgid "Illegal file descriptor in redirection '%s'"
 msgstr "重新導向「%s」中有非法的檔案描述子"
 
-#
 msgid "Illegal instruction"
 msgstr "非法的指令"
 
@@ -1289,7 +1176,6 @@ msgstr "非法的指令"
 msgid "Incomplete escape sequence '%s'"
 msgstr "未完成的轉義序列「%s」"
 
-#
 msgid "Information request"
 msgstr "資訊請求"
 
@@ -1297,27 +1183,21 @@ msgstr "資訊請求"
 msgid "Integer %d in '%s' followed by non-digit"
 msgstr "整數 %d 後跟著非數字字元，於「%s」"
 
-#
 msgid "Internal (non-forked) process events"
 msgstr "內部（非分叉的）行程事件"
 
-#
 msgid "Internal details of the topic monitor"
 msgstr "主題監聽的內部資訊"
 
-#
 msgid "Invalid arguments"
 msgstr "引數無效"
 
-#
 msgid "Invalid code points not yet supported by printf"
 msgstr "printf 尚不支援無效的碼位"
 
-#
 msgid "Invalid index value"
 msgstr "索引值無效"
 
-#
 msgid "Invalid input/output redirection"
 msgstr "無效的輸入／輸出重新導向"
 
@@ -1341,7 +1221,6 @@ msgstr "無效的詞元「%s」"
 msgid "Items %u to %u of %u"
 msgstr "第 %u 至 %u 個項目，共 %u 個"
 
-#
 msgid "Job\tGroup\t"
 msgstr "作業\t群組\t"
 
@@ -1349,51 +1228,39 @@ msgstr "作業\t群組\t"
 msgid "Job control: %s\n"
 msgstr "作業控制：%s\n"
 
-#
 msgid "Jobs being executed"
 msgstr "作業執行"
 
-#
 msgid "Jobs changing status"
 msgstr "作業變更狀態"
 
-#
 msgid "Jobs getting started or continued"
 msgstr "作業開始或繼續"
 
-#
 msgid "List or remove functions"
 msgstr "列出或移除函式"
 
-#
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "不支援邏輯運算，請改用「test」"
 
-#
 msgid "Manage abbreviations"
 msgstr "管理縮寫"
 
-#
 msgid "Manipulate strings"
 msgstr "操作字串"
 
-#
 msgid "Measure how long a command or block takes"
 msgstr "測量一個命令或區塊執行的時間"
 
-#
 msgid "Misaligned address error"
 msgstr "位址對齊錯誤"
 
-#
 msgid "Mismatched braces"
 msgstr "不對稱的大括弧"
 
-#
 msgid "Mismatched parenthesis"
 msgstr "不對稱的小括弧"
 
-#
 msgid "Missing closing parenthesis"
 msgstr "缺少右小括弧"
 
@@ -1401,11 +1268,9 @@ msgstr "缺少右小括弧"
 msgid "Missing end to balance this %s"
 msgstr "缺少 %s 對應的 end"
 
-#
 msgid "Missing hexadecimal number in Unicode escape"
 msgstr "Unicode 轉義序列中缺少十六進位數字"
 
-#
 msgid "Missing operator"
 msgstr "缺少運算子"
 
@@ -1413,15 +1278,12 @@ msgstr "缺少運算子"
 msgid "Modification of read-only variable \"%s\" is not allowed\n"
 msgstr "不允許修改唯讀變數「%s」\n"
 
-#
 msgid "Negate exit status of job"
 msgstr "反轉作業的結束狀態"
 
-#
 msgid "Never"
 msgstr "永不"
 
-#
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "沒有互動式 shell 所需的 TTY（tcgetpgrp 失敗了）"
 
@@ -1429,56 +1291,43 @@ msgstr "沒有互動式 shell 所需的 TTY（tcgetpgrp 失敗了）"
 msgid "No matches for wildcard '%s'. See `help wildcards-globbing`."
 msgstr "wildcard「%s」無匹配項目。參見「help wildcards-globbing」。"
 
-#
 msgid "Not a function"
 msgstr "不是函式"
 
-#
 msgid "Not a number"
 msgstr "不是數字"
 
-#
 msgid "Notifications about universal variable changes"
 msgstr "通域變數變更通知"
 
-#
 msgid "Number is infinite"
 msgstr "數字是無窮"
 
-#
 msgid "Number is too large"
 msgstr "數字太大"
 
-#
 msgid "Number out of range"
 msgstr "數字超出範圍"
 
-#
 msgid "Number was empty"
 msgstr "數字空白"
 
-#
 msgid "Only on interactive jobs"
 msgstr "僅限互動式作業"
 
-#
 #, c-format
 msgid "Opening \"%s\" failed: %s"
 msgstr "開啟「%s」失敗：%s"
 
-#
 msgid "Parse options in fish script"
 msgstr "解析 fish 命令稿的選項"
 
-#
 msgid "Parsing fish AST"
 msgstr "fish AST 解析"
 
-#
 msgid "Perform a command multiple times"
 msgstr "執行一個命令數次"
 
-#
 msgid "Perform a set of commands multiple times"
 msgstr "執行一組命令數次"
 
@@ -1490,85 +1339,65 @@ msgstr "請將 $%s 設定為你有寫入權限的目錄。"
 msgid "Please set the %s or HOME environment variable before starting fish."
 msgstr "請在啟動 fish 前先設定 %s 或 HOME 環境變數。"
 
-#
 msgid "Polite quit request"
 msgstr "有禮的結束請求"
 
-#
 msgid "Power failure"
 msgstr "電源中斷"
 
-#
 #, c-format
 msgid "Press ctrl-%c again to exit\n"
 msgstr "再次按下 ctrl-%c 來離開\n"
 
-#
 msgid "Print arguments"
 msgstr "印出引數"
 
-#
 msgid "Print currently running jobs"
 msgstr "印出目前執行的作業"
 
 # #-#-#-#-#  -  #-#-#-#-#
-#
 msgid "Print the working directory"
 msgstr "印出工作目錄"
 
-#
 msgid "Prints formatted text"
 msgstr "印出格式化的文字"
 
-#
 msgid "Process\n"
 msgstr "行程\n"
 
-#
 msgid "Process groups"
 msgstr "行程群組"
 
-#
 msgid "Profiling timer expired"
 msgstr "效能分析計時器到時間了"
 
-#
 msgid "Quit request from job control (^C)"
 msgstr "來自作業控制的結束請求（^C）"
 
-#
 msgid "Quit request from job control with core dump (^\\)"
 msgstr "來自作業控制的結束並磁芯傾印請求（^\\）"
 
-#
 msgid "Reacting to variables"
 msgstr "對變數的反應"
 
-#
 msgid "Read a line of input into variables"
 msgstr "讀取一行輸入到變數"
 
-#
 msgid "Reading/Writing the history file"
 msgstr "讀取／寫入歷史紀錄檔"
 
-#
 msgid "Reaping external (forked) processes"
 msgstr "收割外部（分叉的）行程"
 
-#
 msgid "Reaping internal (non-forked) processes"
 msgstr "收割內部（非分叉的）行程"
 
-#
 msgid "Refcell dynamic borrowing"
 msgstr "Refcell 動態借用"
 
-#
 msgid "Remove job from job list"
 msgstr "從作業列表中移除作業"
 
-#
 msgid "Rendering the command line"
 msgstr "繪製命令行"
 
@@ -1580,43 +1409,33 @@ msgstr "請求重新導向至「%s」，但其不是有效的檔案描述子"
 msgid "Result too large: %s"
 msgstr "結果太大：%s"
 
-#
 msgid "Return a successful result"
 msgstr "回傳成功值"
 
-#
 msgid "Return an unsuccessful result"
 msgstr "回傳失敗值"
 
-#
 msgid "Return status information about fish"
 msgstr "回傳 fish 的狀態資訊"
 
-#
 msgid "Run a builtin specifically"
 msgstr "明確執行一個內建命令"
 
-#
 msgid "Run a command specifically"
 msgstr "明確執行一個命令"
 
-#
 msgid "Run command if last command succeeded"
 msgstr "前一個命令成功才執行命令"
 
-#
 msgid "Run command in current process"
 msgstr "在目前行程執行命令"
 
-#
 msgid "Screen repaints"
 msgstr "畫面重繪"
 
-#
 msgid "Search for a specified string in a list"
 msgstr "從列表中搜尋特定字串"
 
-#
 msgid "Searching/using paths"
 msgstr "搜尋／使用路徑"
 
@@ -1628,101 +1447,77 @@ msgstr "將作業 %d（%s）置於前景\n"
 msgid "Send job %s '%s' to background\n"
 msgstr "將作業 %s（%s）置於背景\n"
 
-#
 msgid "Send job to background"
 msgstr "將作業置於背景"
 
-#
 msgid "Send job to foreground"
 msgstr "將作業置於前景"
 
-#
 msgid "Serious unexpected errors (on by default)"
 msgstr "嚴重的非預期錯誤（預設開啟）"
 
-#
 msgid "Set or get the commandline"
 msgstr "設定或取得命令行"
 
-#
 msgid "Set the terminal color"
 msgstr "設定終端機顏色"
 
-#
 msgid "Show absolute path sans symlinks"
 msgstr "顯示不包含象徵式連結的絕對路徑"
 
-#
 msgid "Skip over remaining innermost loop"
 msgstr "略過最內層迴圈的剩餘部分"
 
-#
 msgid "Stack fault"
 msgstr "堆疊錯誤"
 
-#
 msgid "Standard input"
 msgstr "標準輸入流"
 
-#
 #, c-format
 msgid "Standard input (line %d): "
 msgstr "標準輸入流（第 %d 行）："
 
-#
 #, c-format
 msgid "Startup (line %d): "
 msgstr "啟動命令稿（第 %d 行）："
 
-#
 msgid "State\tCommand\n"
 msgstr "狀態\t命令\n"
 
-#
 msgid "Stdin must be attached to a tty."
 msgstr "stdin 必須貼附於 TTY。"
 
-#
 msgid "Stop from terminal input"
 msgstr "因終端機輸入停止"
 
-#
 msgid "Stop from terminal output"
 msgstr "因終端機輸出停止"
 
-#
 msgid "Stop request from job control (^Z)"
 msgstr "來自作業控制的停止請求（^Z）"
 
-#
 msgid "Stop the currently evaluated function"
 msgstr "停止目前執行的函式"
 
-#
 msgid "Stop the innermost loop"
 msgstr "停止最內層的迴圈"
 
-#
 msgid "Synchronized file access"
 msgstr "同步檔案存取"
 
-#
 msgid "Temporarily block delivery of events"
 msgstr "暫時阻塞事件發送"
 
-#
 msgid "Terminal feature detection"
 msgstr "終端機功能偵測"
 
-#
 msgid "Terminal hung up"
 msgstr "終端機掛起"
 
-#
 msgid "Terminal ownership events"
 msgstr "終端機所有權事件"
 
-#
 msgid "Test a condition"
 msgstr "檢查條件"
 
@@ -1734,28 +1529,22 @@ msgstr "「%s」命令不能緊跟在背景作業之後使用"
 msgid "The '%s' command can not be used in a pipeline"
 msgstr "「%s」命令不能在管道中使用"
 
-#
 msgid "The 'time' command may only be at the beginning of a pipeline"
 msgstr "「time」命令只能在管道的開頭"
 
-#
 msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
 msgstr "呼叫堆疊達到限制。你是不是意外造成了無限迴圈？"
 
-#
 msgid "The completion system"
 msgstr "補全系統"
 
-#
 #, c-format
 msgid "The error was '%s'."
 msgstr "該錯誤是「%s」。"
 
-#
 msgid "The expanded command is a keyword."
 msgstr "展開的命令是關鍵字。"
 
-#
 msgid "The expanded command was empty."
 msgstr "展開的命令空白。"
 
@@ -1763,51 +1552,39 @@ msgstr "展開的命令空白。"
 msgid "The function '%s' calls itself immediately, which would result in an infinite loop."
 msgstr "函式「%s」立刻呼叫了它自己，這會造成無限迴圈。"
 
-#
 msgid "The interactive reader/input system"
 msgstr "互動式讀取器／輸入系統"
 
-#
 msgid "There are still jobs active:\n"
 msgstr "仍有活動中的作業：\n"
 
-#
 msgid "This is a login shell\n"
 msgstr "這是登入 shell\n"
 
-#
 msgid "This is not a login shell\n"
 msgstr "這不是登入 shell\n"
 
-#
 msgid "Timer expired"
 msgstr "計時器到時間了"
 
-#
 msgid "Too few arguments"
 msgstr "引數太少"
 
-#
 msgid "Too many active file descriptors"
 msgstr "使用中的檔案描述子太多"
 
-#
 msgid "Too many arguments"
 msgstr "引數太多"
 
-#
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr "命令替換發出的資料太多，丟棄之"
 
-#
 msgid "Trace or breakpoint trap"
 msgstr "追蹤或斷點陷阱"
 
-#
 msgid "Translate a string"
 msgstr "翻譯字串"
 
-#
 msgid "Trying to print invalid output"
 msgstr "嘗試印出無效的輸出"
 
@@ -1815,7 +1592,6 @@ msgstr "嘗試印出無效的輸出"
 msgid "Unable to create temporary file '%s': %s"
 msgstr "無法建立暫存檔「%s」：%s"
 
-#
 msgid "Unable to evaluate string substitution"
 msgstr "無法執行字串替換"
 
@@ -1831,61 +1607,47 @@ msgstr "無法定位 %s 目錄，由 $%s 推導：%s。"
 msgid "Unable to locate the %s directory."
 msgstr "無法定位 %s 目錄。"
 
-#
 #, c-format
 msgid "Unable to read input file: %s"
 msgstr "無法讀取輸入檔案：%s"
 
-#
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "非預期的不對稱「)」"
 
-#
 msgid "Unexpected ')' found, expecting '}'"
 msgstr "找到了非預期的「)」，預期「}」"
 
-#
 msgid "Unexpected '[' at this location"
 msgstr "在此處有非預期的「[」"
 
-#
 msgid "Unexpected '}' for unopened brace"
 msgstr "非預期的不對稱「}」"
 
-#
 msgid "Unexpected '}' found, expecting ')'"
 msgstr "找到了非預期的「}」，預期「)」"
 
-#
 msgid "Unexpected end of string, expecting ')'"
 msgstr "非預期的字串結尾，預期「)」"
 
-#
 msgid "Unexpected end of string, incomplete escape sequence"
 msgstr "非預期的字串結尾，有未完成的轉義序列"
 
-#
 msgid "Unexpected end of string, incomplete parameter expansion"
 msgstr "非預期的字串結尾，有未完成的參數展開"
 
-#
 msgid "Unexpected end of string, quotes are not balanced"
 msgstr "非預期的字串結尾，引號不對稱"
 
-#
 msgid "Unexpected end of string, square brackets do not match"
 msgstr "非預期的字串結尾，中括弧不對稱"
 
-#
 msgid "Unexpected token"
 msgstr "非預期的詞元"
 
-#
 #, c-format
 msgid "Unicode character out of range: \\%c%0*x"
 msgstr "Unicode 字元超出範圍：\\%c%0*x"
 
-#
 msgid "Unknown"
 msgstr "未知"
 
@@ -1893,7 +1655,6 @@ msgstr "未知"
 msgid "Unknown builtin '%s'"
 msgstr "未知內建命令「%s」"
 
-#
 msgid "Unknown command"
 msgstr "未知命令"
 
@@ -1909,15 +1670,12 @@ msgstr "未知命令。「%s」的一部分不是目錄。"
 msgid "Unknown command. A component of '%s' is not a directory. Check your $PATH."
 msgstr "未知命令。「%s」的一部分不是目錄。請檢查你的 $PATH。"
 
-#
 msgid "Unknown command:"
 msgstr "未知命令："
 
-#
 msgid "Unknown error while evaluating command substitution"
 msgstr "執行命令替換時發生未知錯誤"
 
-#
 msgid "Unknown function"
 msgstr "未知函式"
 
@@ -1925,7 +1683,6 @@ msgstr "未知函式"
 msgid "Unknown function '%s'"
 msgstr "未知函式「%s」"
 
-#
 msgid "Unmatched wildcard"
 msgstr "未匹配的 wildcard"
 
@@ -1933,23 +1690,18 @@ msgstr "未匹配的 wildcard"
 msgid "Unsupported use of '='. In fish, please use 'set %s %s'."
 msgstr "不支援使用「=」。在 fish 中請使用「set %s %s」。"
 
-#
 msgid "Unused signal"
 msgstr "未使用的訊號"
 
-#
 msgid "Urgent socket condition"
 msgstr "緊急插口狀況"
 
-#
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr "使用「disown PID」從列表中移除作業而不將其終止。\n"
 
-#
 msgid "User defined signal 1"
 msgstr "使用者定義訊號 1"
 
-#
 msgid "User defined signal 2"
 msgstr "使用者定義訊號 2"
 
@@ -1965,39 +1717,30 @@ msgstr "變數不能加上括弧。在 fish 中請使用 \"$%s\"。"
 msgid "Variables cannot be bracketed. In fish, please use {$%s}."
 msgstr "變數不能加上括弧。在 fish 中請使用 {$%s}。"
 
-#
 msgid "Virtual timer expired"
 msgstr "虛擬計時器到時間了"
 
-#
 msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
 msgstr "test 使用零個或一個引數之模式（test -d $foo）的警告，這些模式在之後會變更。"
 
-#
 msgid "Warnings (on by default)"
 msgstr "警告（預設開啟）"
 
-#
 msgid "Warnings about unusable paths for config/history (on by default)"
 msgstr "組態／歷史紀錄之路徑不可用的警告（預設開啟）"
 
-#
 msgid "Window size change"
 msgstr "視窗大小變更"
 
-#
 msgid "Writing/reading the universal variable store"
 msgstr "通域變數存檔寫入／讀取"
 
-#
 msgid "[: the last argument must be ']'"
 msgstr "[：最後一個引數必須是「]」"
 
-#
 msgid "array indices start at 1, not 0."
 msgstr "陣列索引值從 1 開始而非 0。"
 
-#
 msgid "autoloading"
 msgstr "自動載入"
 
@@ -2013,64 +1756,49 @@ msgstr "內建命令 %s：無效的引數：%s\n"
 msgid "builtin %s: realpath failed: %s\n"
 msgstr "內建命令 %s：realpath 失敗：%s\n"
 
-#
 msgid "builtin history delete --exact requires --case-sensitive\n"
 msgstr "內建命令 history delete --exact 需要 --case-sensitive\n"
 
-#
 msgid "builtin history delete only supports --exact\n"
 msgstr "內建命令 history delete 只支援 --exact\n"
 
-#
 msgid "can not save history"
 msgstr "無法儲存歷史紀錄"
 
-#
 msgid "can not save universal variables or functions"
 msgstr "無法儲存通域變數或函式"
 
-#
 #, c-format
 msgid "cannot parse key '%s'"
 msgstr "無法解析按鍵「%s」"
 
-#
 msgid "command"
 msgstr "命令"
 
-#
 msgid "command link"
 msgstr "命令連結"
 
-#
 msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
 msgstr "不允許在命令處進行命令替換。試試 var=(命令) $var ..."
 
-#
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr "補全達到最大遞迴深度，可能是循環？"
 
-#
 msgid "dir symlink"
 msgstr "目錄象徵式連結"
 
-#
 msgid "directory"
 msgstr "目錄"
 
-#
 msgid "error\n"
 msgstr "錯誤\n"
 
-#
 msgid "explore what characters keyboard keys send"
 msgstr "探索鍵盤按鍵發送的是什麼字元"
 
-#
 msgid "exported"
 msgstr "已匯出"
 
-#
 msgid "file"
 msgstr "檔案"
 
@@ -2088,7 +1816,6 @@ msgstr ""
 msgid "from sourcing file %s\n"
 msgstr "在載入的檔案 %s\n"
 
-#
 msgid "in command substitution\n"
 msgstr "在命令替換\n"
 
@@ -2108,16 +1835,13 @@ msgstr "無效的欄位寬度：%s"
 msgid "invalid precision: %s"
 msgstr "無效的精度：%s"
 
-#
 msgid "missing hexadecimal number in escape"
 msgstr "轉義序列缺少十六進位數字"
 
-#
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"
 msgstr "只支援 f1 至 f%d，不包括「f%s」"
 
-#
 #, c-format
 msgid "or press ctrl-%c or ctrl-%c twice in a row."
 msgstr "或者連續按下 ctrl-%c 或 ctrl-%c 兩次。"
@@ -2126,15 +1850,12 @@ msgstr "或者連續按下 ctrl-%c 或 ctrl-%c 兩次。"
 msgid "rows %u to %u of %u"
 msgstr "第 %u 至 %u 列，共 %u 列"
 
-#
 msgid "running"
 msgstr "執行中"
 
-#
 msgid "search: "
 msgstr "搜尋："
 
-#
 msgid "stopped"
 msgstr "已停止"
 
@@ -2142,7 +1863,6 @@ msgstr "已停止"
 msgid "switch: Expected at most one argument, got %u\n"
 msgstr "switch：預期至多有一個引數，卻收到 %u 個\n"
 
-#
 msgid "symlink"
 msgstr "象徵式連結"
 
@@ -2150,20 +1870,16 @@ msgstr "象徵式連結"
 msgid "ulimit: Permission denied when changing resource of type '%s'\n"
 msgstr "ulimit：變更「%s」此類資源時存取遭拒\n"
 
-#
 msgid "unexported"
 msgstr "未匯出"
 
-#
 #, c-format
 msgid "unknown modifier '%s' in '%s'"
 msgstr "未知的修飾鍵「%s」，於「%s」"
 
-#
 msgid "unlimited\n"
 msgstr "無限制\n"
 
-#
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr "|& 無效。在 fish 中請使用 &| 來同時管道傳輸 stdout 和 stderr。"
 

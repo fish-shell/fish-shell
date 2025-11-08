@@ -139,7 +139,8 @@ jobs:
     - name: cmake
       run: |
         mkdir build && cd build
-        cmake -DCMAKE_BUILD_TYPE=Debug ..
+        FISH_TEST_MAX_CONCURRENCY=1 \
+          cmake -DCMAKE_BUILD_TYPE=Debug ..
     - name: make
       run: |
         make -C build VERBOSE=1

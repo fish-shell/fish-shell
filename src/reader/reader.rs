@@ -127,8 +127,9 @@ use crate::terminal::BufferedOutputter;
 use crate::terminal::Output;
 use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
-    self, ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
-    Osc0WindowTitle, Osc2TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
+    self, ClearScreen, DecrstAlternateScreenBuffer, DecrstMouseTracking,
+    DecsetAlternateScreenBuffer, DecsetMouseTracking, DecsetShowCursor, Osc0WindowTitle,
+    Osc2TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
     QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute, QueryXtgettcap,
     QueryXtversion,
 };
@@ -1056,7 +1057,7 @@ pub fn reader_change_cursor_end_mode(end_mode: CursorEndMode) {
     }
 }
 
-fn check_bool_var(vars: &dyn Environment, name: &wstr, default: bool) -> bool {
+pub fn check_bool_var(vars: &dyn Environment, name: &wstr, default: bool) -> bool {
     vars.get(name)
         .map(|v| v.as_string())
         .map(|v| v != L!("0"))
@@ -2629,6 +2630,18 @@ impl<'a> Reader<'a> {
                         &mut Outputter::stdoutput().borrow_mut(),
                         CursorPositionQuery::new(CursorPositionQueryKind::MouseLeft(position)),
                     );
+                }
+                ImplicitEvent::SetMouseTracking(enabled) => {
+                    FLOG!(reader, "Set mouse tracking enabled:", enabled);
+                    Outputter::stdoutput()
+                        .borrow_mut()
+                        .write_command(if enabled {
+                            DecsetMouseTracking
+                        } else {
+                            DecrstMouseTracking
+                        });
+
+                    self.save_screen_state();
                 }
             },
             CharEvent::QueryResult(query_result) => {

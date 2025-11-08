@@ -8,11 +8,12 @@ use crate::flog::{FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
 use crate::proc::JobGroupRef;
+use crate::reader::check_bool_var;
 use crate::terminal::TerminalCommand::{
     self, ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
-    DecrstFocusReporting, DecsetBracketedPaste, DecsetFocusReporting,
-    KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
-    ModifyOtherKeysDisable, ModifyOtherKeysEnable,
+    DecrstFocusReporting, DecrstMouseTracking, DecsetBracketedPaste, DecsetFocusReporting,
+    DecsetMouseTracking, KittyKeyboardProgressiveEnhancementsDisable,
+    KittyKeyboardProgressiveEnhancementsEnable, ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
 use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
@@ -172,52 +173,67 @@ impl TtyQuirks {
     }
 
     // Return the protocols set to enable or disable TTY protocols.
-    fn get_protocols(self) -> TtyProtocolsSet {
+    fn get_protocols(self, vars: &dyn Environment) -> TtyProtocolsSet {
+        let mut on_chain = vec![DecsetBracketedPaste];
+        let mut off_chain = vec![DecrstBracketedPaste];
+
         // Enable focus reporting under tmux
-        let (focus_reporting_on, focus_reporting_off) = {
-            let is_tmux = self == TtyQuirks::Tmux;
-            (
-                move || is_tmux.then_some(DecsetFocusReporting).into_iter(),
-                move || is_tmux.then_some(DecrstFocusReporting).into_iter(),
-            )
-        };
-        let maybe_enable_focus_reporting = |protocols: &'static [TerminalCommand<'static>]| {
-            protocols.iter().cloned().chain(focus_reporting_on())
-        };
-        let maybe_disable_focus_reporting = |protocols: &'static [TerminalCommand<'static>]| {
-            protocols.iter().cloned().chain(focus_reporting_off())
-        };
+        if self == TtyQuirks::Tmux {
+            on_chain.push(DecsetFocusReporting);
+            off_chain.push(DecrstFocusReporting);
+        }
+
+        // Enable mouse tracking depending on settings
+
+        if check_bool_var(vars, L!("fish_mouse"), false) {
+            on_chain.push(DecsetMouseTracking);
+            off_chain.push(DecrstMouseTracking);
+        }
+
         let enablers = ProtocolBytes {
-            kitty_keyboard: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,                       // Enable bracketed paste
-                KittyKeyboardProgressiveEnhancementsEnable, // Kitty keyboard progressive enhancements
-            ])),
-            other: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,
-                ModifyOtherKeysEnable,       // XTerm's modifyOtherKeys
-                ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
-            ])),
-            wezterm_workaround: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,
-                ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
-            ])),
-            none: serialize_commands(maybe_enable_focus_reporting(&[DecsetBracketedPaste])),
+            kitty_keyboard: serialize_commands(
+                vec![
+                    KittyKeyboardProgressiveEnhancementsEnable, // Kitty keyboard progressive enhancements
+                ]
+                .into_iter()
+                .chain(on_chain.clone()),
+            ),
+            other: serialize_commands(
+                vec![
+                    ModifyOtherKeysEnable,       // XTerm's modifyOtherKeys
+                    ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
+                ]
+                .into_iter()
+                .chain(on_chain.clone()),
+            ),
+            wezterm_workaround: serialize_commands(
+                vec![
+                    ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
+                ]
+                .into_iter()
+                .chain(on_chain.clone()),
+            ),
+            none: serialize_commands(on_chain.clone().into_iter()),
         };
         let disablers = ProtocolBytes {
-            kitty_keyboard: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,                        // Disable bracketed paste
-                KittyKeyboardProgressiveEnhancementsDisable, // Kitty keyboard progressive enhancements
-            ])),
-            other: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,
-                ModifyOtherKeysDisable,
-                ApplicationKeypadModeDisable,
-            ])),
-            wezterm_workaround: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,
-                ApplicationKeypadModeDisable,
-            ])),
-            none: serialize_commands(maybe_disable_focus_reporting(&[DecrstBracketedPaste])),
+            kitty_keyboard: serialize_commands(
+                vec![
+                    KittyKeyboardProgressiveEnhancementsDisable, // Kitty keyboard progressive enhancements
+                ]
+                .into_iter()
+                .chain(off_chain.clone()),
+            ),
+            other: serialize_commands(
+                vec![ModifyOtherKeysDisable, ApplicationKeypadModeDisable]
+                    .into_iter()
+                    .chain(off_chain.clone()),
+            ),
+            wezterm_workaround: serialize_commands(
+                vec![ApplicationKeypadModeDisable]
+                    .into_iter()
+                    .chain(off_chain.clone()),
+            ),
+            none: serialize_commands(vec![].into_iter().chain(off_chain.clone())),
         };
         TtyProtocolsSet {
             quirks: self,
@@ -249,7 +265,9 @@ pub fn initialize_tty_protocols(vars: &dyn Environment) {
     let mut p = TTY_PROTOCOLS.load(Acquire);
     if p.is_null() {
         // Try to swap in a new TTY protocols set.
-        p = Box::into_raw(Box::new(TtyQuirks::detect(vars, xtversion).get_protocols()));
+        p = Box::into_raw(Box::new(
+            TtyQuirks::detect(vars, xtversion).get_protocols(vars),
+        ));
         if let Err(_e) = TTY_PROTOCOLS.compare_exchange(std::ptr::null_mut(), p, Release, Acquire) {
             // Safety: p comes from Box::into_raw right above,
             // and wasn't shared with any other thread.

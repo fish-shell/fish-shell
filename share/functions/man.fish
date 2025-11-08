@@ -62,7 +62,8 @@ function man
     if not set -q argv[2] && status list-files "man/man1/$argv[1].1" &>/dev/null
         set -l basename $argv[1].1
         function __fish_man -V basename -a man1
-            command man $man1/$basename
+            # mandoc man needs "-l" or it'll refuse to open a file
+            command man -l $man1/$basename
         end
         __fish_data_with_directory man/man1 \
             (string escape --style=regex -- $basename) __fish_man

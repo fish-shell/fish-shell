@@ -19,6 +19,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import typing
 from itertools import chain
 
 COMMON_WSL_CMD_PATHS = (
@@ -240,7 +241,7 @@ def parse_color(color_str):
         else:
 
             def parse_opt(
-                current_best: str, i: int, long_opt: str, short_opt: str | None
+                current_best: str, i: int, long_opt: str, short_opt: Optional[str]
             ) -> str:
                 if comp.startswith(long_opt):
                     c = comp[len(long_opt) :]

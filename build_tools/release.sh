@@ -26,6 +26,7 @@ for tool in \
     ruby \
     tar \
     timeout \
+    uv \
 ; do
     if ! command -v "$tool" >/dev/null; then
         echo >&2 "$0: missing command: $1"
@@ -120,7 +121,7 @@ fish_tar_xz=fish-$version.tar.xz
 (
     local_tarball=$tmpdir/local-tarball
     mkdir "$local_tarball"
-    FISH_ARTEFACT_PATH=$local_tarball ./build_tools/make_tarball.sh
+    FISH_ARTEFACT_PATH=$local_tarball uv run ./build_tools/make_tarball.sh
     cd "$local_tarball"
     tar xf "$fish_tar_xz"
 )

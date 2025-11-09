@@ -213,14 +213,13 @@ pub fn fsync(file: &File) -> std::io::Result<()> {
 /// If the file does not exist this function will return an error.
 pub fn lock_and_load<F, UserData>(path: &wstr, load: F) -> std::io::Result<(FileId, UserData)>
 where
-    F: Fn(&File) -> std::io::Result<UserData>,
+    F: Fn(&File, FileId) -> std::io::Result<UserData>,
 {
     match LockedFile::new(LockingMode::Shared, path) {
         Ok(locked_file) => {
-            return Ok((
-                file_id_for_file(locked_file.get()),
-                load(locked_file.get())?,
-            ));
+            let file_id = file_id_for_file(locked_file.get());
+            let user_data = load(locked_file.get(), file_id.clone())?;
+            return Ok((file_id, user_data));
         }
         Err(e) => {
             FLOGF!(
@@ -246,11 +245,11 @@ where
     // Fallback implementation for situations where locking is unavailable.
     let max_attempts = 1000;
     for _ in 0..max_attempts {
-        let initial_file_id = file_id_for_path(path);
         // If we cannot open the file, there is nothing we can do,
         // so just return immediately.
         let file = wopen_cloexec(path, OFlag::O_RDONLY, Mode::empty())?;
-        let loaded_data = match load(&file) {
+        let initial_file_id = file_id_for_file(&file);
+        let loaded_data = match load(&file, initial_file_id.clone()) {
             Ok(update_data) => update_data,
             Err(_) => {
                 // Retry if load function failed. Because we do not hold a lock, this might be

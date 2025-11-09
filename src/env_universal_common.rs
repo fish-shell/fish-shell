@@ -175,7 +175,7 @@ impl EnvUniversal {
         let rewrite = |old_file: &File,
                        tmp_file: &mut File|
          -> std::io::Result<PotentialUpdate<Option<UniversalReadUpdate>>> {
-            match self.load_from_file(old_file) {
+            match self.load_from_file(old_file, file_id_for_file(old_file)) {
                 Some(potential_update) => {
                     if potential_update.do_save {
                         let contents = Self::serialize_with_vars(&potential_update.data.new_vars);
@@ -364,8 +364,8 @@ impl EnvUniversal {
         }
 
         FLOG!(uvar_file, "universal log reading from file");
-        match lock_and_load(&self.vars_path, |f| {
-            Ok(self.load_from_file(f).map(|update| update.data))
+        match lock_and_load(&self.vars_path, |f, file_id| {
+            Ok(self.load_from_file(f, file_id).map(|update| update.data))
         }) {
             Ok((
                 file_id,
@@ -402,9 +402,12 @@ impl EnvUniversal {
     // IMPORTANT: Callers of this code assume that a return value of None means that the file id has
     // not changed. Do not return None in other situations without modifying the callers
     // accordingly. Otherwise, problems with self.ok_to_save are expected to occur.
-    fn load_from_file(&self, file: &File) -> Option<PotentialUpdate<UniversalReadUpdate>> {
+    fn load_from_file(
+        &self,
+        file: &File,
+        current_file_id: FileId,
+    ) -> Option<PotentialUpdate<UniversalReadUpdate>> {
         // Get the dev / inode.
-        let current_file_id = file_id_for_file(file);
         if current_file_id == self.last_read_file_id {
             FLOG!(uvar_file, "universal log sync elided based on fstat()");
             None

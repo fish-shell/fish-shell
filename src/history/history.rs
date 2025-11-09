@@ -31,7 +31,6 @@ use std::{
     fs::File,
     io::{BufRead, Read, Write},
     mem::MaybeUninit,
-    num::NonZeroUsize,
     ops::ControlFlow,
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -108,7 +107,7 @@ const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
 
 /// When we rewrite the history, the number of items we keep.
 // FIXME: https://github.com/rust-lang/rust/issues/67441
-const HISTORY_SAVE_MAX: NonZeroUsize = NonZeroUsize::new(1024 * 256).unwrap();
+const HISTORY_SAVE_MAX: usize = 1024 * 256;
 
 /// Default buffer size for flushing to the history file.
 const HISTORY_OUTPUT_BUFFER_SIZE: usize = 64 * 1024;
@@ -519,11 +518,12 @@ impl HistoryImpl {
         // We are reading FROM existing_file and writing TO dst
 
         // Make an LRU cache to save only the last N elements.
-        let mut lru = LruCache::new(HISTORY_SAVE_MAX);
+        let mut lru = LruCache::new(HISTORY_SAVE_MAX.try_into().unwrap());
 
         // Read in existing items (which may have changed out from underneath us, so don't trust our
         // old file contents).
-        if let Ok(local_file) = RawHistoryFile::create(existing_file) {
+        let file_id = file_id_for_file(existing_file);
+        if let Ok(local_file) = RawHistoryFile::create(existing_file, file_id) {
             for offset in local_file.offsets(None) {
                 // Try decoding an old item.
                 let Some(old_item) = local_file.decode_item(offset) else {

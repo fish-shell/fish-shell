@@ -2,7 +2,7 @@
 
 use std::{
     fs::File,
-    io::{Read, Seek, SeekFrom, Write},
+    io::{Read, Write},
     ops::{Deref, DerefMut},
     os::fd::AsRawFd,
     time::{SystemTime, UNIX_EPOCH},
@@ -18,13 +18,14 @@ use crate::{
     common::wcs2bytes,
     flog::FLOG,
     path::{DirRemoteness, path_get_data_remoteness},
+    wutil::FileId,
 };
 
 /// History file types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HistoryFileType {
-    Fish2_0,
-    Fish1_x,
+    Fish2_0, // old format with just timestamp and item
+    Fish1_x, // YAML-style format
 }
 
 /// A type wrapping up the logic around mmap and munmap.
@@ -118,10 +119,10 @@ pub struct RawHistoryFile {
 }
 
 impl RawHistoryFile {
-    /// Construct a history file contents from a [`File`] reference.
-    pub fn create(mut history_file: &File) -> std::io::Result<Self> {
+    /// Construct a history file contents from a [`File`] reference and its file id.
+    pub fn create(history_file: &File, file_id: FileId) -> std::io::Result<Self> {
         // Check that the file is seekable, and its size.
-        let len: usize = match history_file.seek(SeekFrom::End(0))?.try_into() {
+        let len: usize = match file_id.size.try_into() {
             Ok(len) => len,
             Err(err) => {
                 return Err(std::io::Error::new(
@@ -138,7 +139,6 @@ impl RawHistoryFile {
         let map_anon = |mut file: &File, len: usize| -> std::io::Result<MmapRegion> {
             let mut region = MmapRegion::map_anon(len)?;
             // If we mapped anonymous memory, we have to read from the file.
-            file.seek(SeekFrom::Start(0))?;
             file.read_exact(&mut region)?;
             Ok(region)
         };

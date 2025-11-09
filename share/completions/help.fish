@@ -323,7 +323,7 @@ function __fish_help_describe -a help_item
         case language#the-if-statement
             return
         case language#the-status-variable
-            echo (_ "$status, the return code")
+            echo (_ '$status, the return code')
         case language#the-switch-statement
             return
         case language#universal-variables
@@ -405,7 +405,7 @@ function __fish_help_describe -a help_item
         case tutorial#loops
             echo (_ Loops)
         case tutorial#path
-            echo (_ "$PATH")
+            echo (_ '$PATH')
         case tutorial#pipes-and-redirections
             echo (_ 'Pipes and Redirections')
         case tutorial#prompt

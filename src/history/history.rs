@@ -180,7 +180,6 @@ impl LruCacheExt for LruCache<WString, HistoryItem> {
 }
 
 pub type PathList = Vec<WString>;
-pub type HistoryIdentifier = u64;
 
 #[derive(Clone, Debug)]
 pub struct HistoryItem {
@@ -190,8 +189,6 @@ pub struct HistoryItem {
     creation_timestamp: SystemTime,
     /// Paths that we require to be valid for this item to be autosuggested.
     required_paths: Vec<WString>,
-    /// Sometimes unique identifier used for hinting.
-    identifier: HistoryIdentifier,
     /// Whether to write this item to disk.
     persist_mode: PersistenceMode,
 }
@@ -202,14 +199,12 @@ impl HistoryItem {
     pub fn new(
         s: WString,
         when: SystemTime,              /*=0*/
-        ident: HistoryIdentifier,      /*=0*/
         persist_mode: PersistenceMode, /*=Disk*/
     ) -> Self {
         Self {
             contents: s,
             creation_timestamp: when,
             required_paths: vec![],
-            identifier: ident,
             persist_mode,
         }
     }
@@ -301,9 +296,6 @@ impl HistoryItem {
         if self.required_paths.len() < item.required_paths.len() {
             self.required_paths = item.required_paths.clone();
         }
-        if self.identifier < item.identifier {
-            self.identifier = item.identifier;
-        }
         true
     }
 }
@@ -337,8 +329,6 @@ struct HistoryImpl {
     /// ignored by this instance (unless they came from this instance). The timestamp may be adjusted
     /// by incorporate_external_changes().
     boundary_timestamp: SystemTime,
-    /// The most recent "unique" identifier for a history item.
-    last_identifier: HistoryIdentifier, // 0
     /// How many items we add until the next vacuum. Initially a random value.
     countdown_to_vacuum: Option<usize>,
     /// Thread pool for background operations.
@@ -426,12 +416,6 @@ impl HistoryImpl {
             when += Duration::from_secs(1);
         }
         when
-    }
-
-    /// Returns a new item identifier, incrementing our counter.
-    fn next_identifier(&mut self) -> HistoryIdentifier {
-        self.last_identifier += 1;
-        self.last_identifier
     }
 
     /// Loads old items if necessary.
@@ -781,7 +765,6 @@ impl HistoryImpl {
             file_contents: None,
             history_file_id: INVALID_FILE_ID,
             boundary_timestamp: SystemTime::now(),
-            last_identifier: 0,
             countdown_to_vacuum: None,
             // Up to 8 threads, no soft min.
             thread_pool: ThreadPool::new(0, 8),
@@ -946,7 +929,7 @@ impl HistoryImpl {
             // Add this line if it doesn't contain anything we know we can't handle.
             if should_import_bash_history_line(&wide_line) {
                 self.add(
-                    HistoryItem::new(wide_line, when, 0, PersistenceMode::Disk),
+                    HistoryItem::new(wide_line, when, PersistenceMode::Disk),
                     /*pending=*/ false,
                     /*do_save=*/ false,
                 );
@@ -1039,16 +1022,13 @@ impl HistoryImpl {
         result
     }
 
-    /// Sets the valid file paths for the history item with the given identifier.
-    fn set_valid_file_paths(&mut self, valid_file_paths: Vec<WString>, ident: HistoryIdentifier) {
-        // 0 identifier is used to mean "not necessary".
-        if ident == 0 {
-            return;
-        }
-
+    /// Sets the valid file paths for the history item matching the snapshotted item.
+    fn set_valid_file_paths(&mut self, valid_file_paths: Vec<WString>, snapshot: &HistoryItem) {
         // Look for an item with the given identifier. It is likely to be at the end of new_items.
         for item in self.new_items.iter_mut().rev() {
-            if item.identifier == ident {
+            if item.creation_timestamp == snapshot.creation_timestamp
+                && item.contents == snapshot.contents
+            {
                 // found it
                 item.required_paths = valid_file_paths;
                 break;
@@ -1231,7 +1211,7 @@ impl History {
     pub fn add_commandline(&self, s: WString) {
         let mut imp = self.imp();
         let when = imp.timestamp_now();
-        let item = HistoryItem::new(s, when, 0, PersistenceMode::Disk);
+        let item = HistoryItem::new(s, when, PersistenceMode::Disk);
         imp.add(item, false, true)
     }
 
@@ -1324,8 +1304,7 @@ impl History {
 
         // Make our history item.
         let when = imp.timestamp_now();
-        let identifier = imp.next_identifier();
-        let item = HistoryItem::new(s.to_owned(), when, identifier, persist_mode);
+        let item = HistoryItem::new(s.to_owned(), when, persist_mode);
         let to_disk = persist_mode == PersistenceMode::Disk;
 
         if wants_file_detection {
@@ -1334,15 +1313,18 @@ impl History {
             // Add the item. Then check for which paths are valid on a background thread,
             // and unblock the item.
             // Don't hold the lock while we perform this file detection.
+            let snapshot_item = item.clone();
             imp.add(item, /*pending=*/ true, to_disk);
             let thread_pool = Arc::clone(&imp.thread_pool);
             drop(imp);
             let vars_snapshot = vars.snapshot();
             thread_pool.perform(move || {
                 // Don't hold the lock while we perform this file detection.
-                let validated_paths = expand_and_detect_paths(potential_paths, &vars_snapshot);
+                let valid_file_paths = expand_and_detect_paths(potential_paths, &vars_snapshot);
                 let mut imp = self.imp();
-                imp.set_valid_file_paths(validated_paths, identifier);
+                if !valid_file_paths.is_empty() {
+                    imp.set_valid_file_paths(valid_file_paths, &snapshot_item);
+                }
                 imp.enable_automatic_saving();
                 if to_disk {
                     imp.save_unless_disabled();
@@ -1962,7 +1944,7 @@ mod tests {
                 .collect();
 
             // Record this item.
-            let mut item = HistoryItem::new(value, SystemTime::now(), 0, PersistenceMode::Disk);
+            let mut item = HistoryItem::new(value, SystemTime::now(), PersistenceMode::Disk);
             item.set_required_paths(paths);
             before.push_back(item.clone());
             history.add(item, false);

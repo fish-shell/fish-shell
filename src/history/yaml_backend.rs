@@ -207,7 +207,7 @@ pub fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
         }
     }
 
-    let mut result = HistoryItem::new(cmd, when, 0, PersistenceMode::Disk);
+    let mut result = HistoryItem::new(cmd, when, PersistenceMode::Disk);
     result.set_required_paths(paths);
     Some(result)
 }

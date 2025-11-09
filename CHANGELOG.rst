@@ -1,4 +1,4 @@
-fish ?.?.? (released ???)
+fish 4.2.0 (released ???)
 =========================
 
 Notable improvements and fixes
@@ -9,15 +9,14 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
-
 - Fish now assumes UTF-8 for all character encodings, regardless of locale settings.
   Input bytes which are not valid UTF-8 are still round-tripped correctly,
   but may be rendered differently on the command line.
-- On systems where no multi-byte locale is available, fish will no longer fall back to using ASCII replacements for Unicode symbols like ``…``.
+- On systems where no multi-byte locale is available, fish will no longer fall back to using ASCII replacements for Unicode characters like ``…``.
 
 Interactive improvements
 ------------------------
-- The terminal's tab title can now be set without affecting the window title by defining the :doc:`fish_tab_title <cmds/fish_tab_title>` function (:issue:`2692`).
+- The terminal's tab title can now be set without affecting the terminal's window title by defining the :doc:`fish_tab_title <cmds/fish_tab_title>` function (:issue:`2692`).
 - :doc:`fish_config prompt {choose,save} <cmds/fish_config>` have been taught to reset :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` in addition to the other prompt functions (:issue:`11937`).
 - Fish now hides the portion of a multiline prompt that is scrolled out of view due to a huge command line. This prevents duplicate lines after repainting with partially visible prompt (:issue:`11911`).
 - On macOS, fish sets :envvar:`MANPATH` correctly also when that variable was already present in the environment (:issue:`10684`).
@@ -25,10 +24,6 @@ Interactive improvements
 - fish no longer disables mouse tracking sequences (DECSET/DECRST 1000),
   so you can use those to toggle mouse reporting,
   which allows to move the cursor or select completions items with the mouse (:issue:`4918`).
-
-Scripting improvements
-----------------------
-- Fixed a regression from 4.1.0 where ``fish -c 'read; cat`` would set wrong terminal modes (:issue:`12024`).
 
 Other improvements
 ------------------
@@ -42,7 +37,6 @@ For distributors and developers
 - The Sphinx dependency is now specified in ``pyproject.toml``,
   which allows you to use `uv <https://github.com/astral-sh/uv>`__ to provide Sphinx (e.g. `uv run cargo install --path .`).
 - The minimum supported Rust version (MSRV) has been updated to 1.85.
-- Fixed saving/loading of universal variables on Cygwin (:issue:`11948`).
 - The standalone build mode has been made the default.
   This means that the files in ``$CMAKE_INSTALL_PREFIX/share/fish`` will generally not be used anymore, with minor exceptions.
   For now, they are still installed redundantly, to prevent upgrades from breaking already-running shells (:issue:`11921`).
@@ -50,20 +44,15 @@ For distributors and developers
   To turn this off (which should not be necessary),
   patch out the ``embed-data`` feature from ``cmake/Rust.cmake``.
   This option will be removed in future.
-- Fix build on Linux/SPARC by disabling SIGSTKFLT
 
-fish 4.1.3 (released ???)
-=========================
-
-This release fixes the following regressions identified in 4.1.0:
-
-- Crash on invalid :doc:`function <cmds/function>` command (:issue:`11912`).
-- Fixed the fish ``man`` function for the commands ``!`` ``.`` ``:`` ``[`` (:issue:`11955`).
-- Fixed some build issues on Illumos (:issue:`11982`).
-
-as well as the following regressions identified in 4.0.0:
-
-- Crash when passing negative PIDs to :doc:`wait <cmds/wait>` (:issue:`11929`).
+Regression fixes:
+-----------------
+- (from 4.1.0) Wrong terminal modes set by ``fish -c 'read; cat`` (:issue:`12024`).
+- (from 4.1.0) On Cygwin, saving/loading of universal variables was broken (:issue:`11948`).
+- (from 4.1.0) ``man`` function for the commands ``!`` ``.`` ``:`` ``[`` (:issue:`11955`).
+- (from 4.1.0) Build issues on Illumos (:issue:`11982`).
+- (from 4.1.0) Crash on invalid :doc:`function <cmds/function>` command (:issue:`11912`).
+- (from 4.0.0) Crash when passing negative PIDs to :doc:`wait <cmds/wait>` (:issue:`11929`).
 
 fish 4.1.2 (released October 7, 2025)
 =====================================

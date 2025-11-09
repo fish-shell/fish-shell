@@ -8,9 +8,12 @@ function __fish_print_help --description "Print help for the specified fish func
             # only when called from core.
             return 2
         end
-        set -l file (path filter -- $man1/$item.1 $man1/$item.1.gz)
-        # "-l" to read a local file, required for mandoc
-        command man -l $file[1]
+        set -l args -l (path filter -- $man1/$item.1 $man1/$item.1.gz)[1]
+        # Work around macOS/FreeBSD man not supporting -l yet (only mandoc really needs it).
+        if not MANPAGER=cat WHATISPAGER=cat command man -l $args[2] &>/dev/null
+            set -e args[1]
+        end
+        command man $args
     end
     __fish_data_with_directory man/man1 \
         "$(string escape --style=regex $item.1)(?:\.gz)?" \

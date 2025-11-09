@@ -287,6 +287,8 @@ Or add this to your ``config.fish``::
         functions --erase GNU-screen-workaround
     end
 
+.. _term-compat-unicode-codepoints:
+
 Unicode Codepoints
 ------------------
 

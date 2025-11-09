@@ -89,7 +89,7 @@ if test -z "$CI" || git -C "$workspace_root" tag | grep -q .; then {
     echo 'The file downloaded from ``Source code (tar.gz)`` will not build correctly.'
     echo 'A GPG signature using the key published at '"${FISH_GPG_PUBLIC_KEY_URL:-???}"' is available as ``fish-'"$version"'.tar.xz.asc``.'
     echo
-    echo 'The files called ``fish-'"$version"'-linux-\*.tar.xz`` contain'
+    echo 'The files called ``fish-'"$version"'-linux-*.tar.xz`` contain'
     echo '`standalone fish binaries <https://github.com/fish-shell/fish-shell/?tab=readme-ov-file#building-fish-with-cargo>`__'
     echo 'for any Linux with the given CPU architecture.'
 } >"$relnotes_tmp/fake-workspace"/CHANGELOG.rst

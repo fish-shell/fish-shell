@@ -3,56 +3,65 @@ fish 4.2.0 (released ???)
 
 Notable improvements and fixes
 ------------------------------
-- New Taiwanese Chinese translation.
-- :ref:`Transient prompt <transient-prompt>` containing more lines than the final prompt will now be cleared properly (:issue:`11875`).
 - History-based autosuggestions now include multi-line commands.
+- A :ref:`transient prompt <transient-prompt>` containing more lines than the final prompt will now be cleared properly (:issue:`11875`).
+- Taiwanese Chinese translations have been added.
+- French translations have been supplemented (:issue:`11842`).
 
 Deprecations and removed features
 ---------------------------------
-- Fish now assumes UTF-8 for all character encodings, regardless of locale settings.
-  Input bytes which are not valid UTF-8 are still round-tripped correctly,
+- fish now assumes UTF-8 for character encoding even if the system does not have a UTF-8 locale.
+  Input bytes which are not valid UTF-8 are still round-tripped correctly.
+  For example, file paths using legacy encodings can still be used,
   but may be rendered differently on the command line.
-- On systems where no multi-byte locale is available, fish will no longer fall back to using ASCII replacements for Unicode characters like ``…``.
+- On systems where no multi-byte locale is available,
+  fish will no longer fall back to using ASCII replacements for :ref:`Unicode characters <term-compat-unicode-codepoints>` such as "…".
 
 Interactive improvements
 ------------------------
-- The terminal's tab title can now be set without affecting the terminal's window title by defining the :doc:`fish_tab_title <cmds/fish_tab_title>` function (:issue:`2692`).
-- :doc:`fish_config prompt {choose,save} <cmds/fish_config>` have been taught to reset :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` in addition to the other prompt functions (:issue:`11937`).
-- Fish now hides the portion of a multiline prompt that is scrolled out of view due to a huge command line. This prevents duplicate lines after repainting with partially visible prompt (:issue:`11911`).
-- On macOS, fish sets :envvar:`MANPATH` correctly also when that variable was already present in the environment (:issue:`10684`).
-- Added a workaround for MSYS2 to prevent Konsole and WezTerm from opening new tabs in the wrong working directory (:issue:`11981`). 
-- fish no longer disables mouse tracking sequences (DECSET/DECRST 1000),
-  so you can use those to toggle mouse reporting,
-  which allows to move the cursor or select completions items with the mouse (:issue:`4918`).
-
-Other improvements
-------------------
-- Improved French translations (:issue:`11842`).
+- The title of the terminal tab can now be set separately from the window title by defining the :doc:`fish_tab_title <cmds/fish_tab_title>` function (:issue:`2692`).
+- fish now hides the portion of a multiline prompt that is scrolled out of view due to a huge command line. This prevents duplicate lines after repainting with partially visible prompt (:issue:`11911`).
+- :doc:`fish_config prompt <cmds/fish_config>`'s ``choose`` and ``save`` subcommands have been taught to reset :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` in addition to the other prompt functions (:issue:`11937`).
+- fish no longer force-disables mouse capture (DECSET/DECRST 1000),
+  so you can use those commands
+  to let mouse clicks move the cursor or select completions items (:issue:`4918`).
+- The :kbd:`alt-p` binding no longer adds a redundant space to the command line.
+- When run as a login shell on macOS, fish now sets :envvar:`MANPATH` correctly when that variable was already present in the environment (:issue:`10684`).
+- A Windows-specific case of the :doc:`web-based config <cmds/fish_config>` failing to launch has been fixed (:issue:`11805`).
+- A MSYS2-specific workaround for Konsole and WezTerm has been added,
+  to prevent them from using the wrong working directory when opening new tabs (:issue:`11981`).
 
 For distributors and developers
 -------------------------------
-- Release tags and source code tarballs are GPG-signed again  (:issue:`11996`).
-- Release tarballs are built with the latest release of Sphinx,
+- Release tags and source code tarballs are GPG-signed again (:issue:`11996`).
+- Documentation in release tarballs is now built with the latest version of Sphinx,
   which means that pre-built man pages include :ref:`OSC 8 hyperlinks <term-compat-osc-8>`.
 - The Sphinx dependency is now specified in ``pyproject.toml``,
-  which allows you to use `uv <https://github.com/astral-sh/uv>`__ to provide Sphinx (e.g. `uv run cargo install --path .`).
+  which allows you to use `uv <https://github.com/astral-sh/uv>`__ to provide Sphinx for building documentation (e.g. ``uv run cargo install --path .``).
 - The minimum supported Rust version (MSRV) has been updated to 1.85.
 - The standalone build mode has been made the default.
-  This means that the files in ``$CMAKE_INSTALL_PREFIX/share/fish`` will generally not be used anymore, with minor exceptions.
-  For now, they are still installed redundantly, to prevent upgrades from breaking already-running shells (:issue:`11921`).
-  This change means that future upgrades will no longer break running shells when an internal function has changed.
-  To turn this off (which should not be necessary),
+  This means that the files in ``$CMAKE_INSTALL_PREFIX/share/fish`` will not be used anymore, except for HTML docs.
+  As a result, future upgrades will no longer break running shells
+  if one of fish's internal helper functions has been changed in the updated version.
+  For now, the data files are still installed redundantly,
+  to prevent upgrades from breaking already-running shells (:issue:`11921`).
+  To reverse this change (which should not be necessary),
   patch out the ``embed-data`` feature from ``cmake/Rust.cmake``.
   This option will be removed in future.
+- OpenBSD 7.8 revealed an issue with fish's approach for displaying builtin man pages, which has been fixed.
 
 Regression fixes:
 -----------------
-- (from 4.1.0) Wrong terminal modes set by ``fish -c 'read; cat`` (:issue:`12024`).
-- (from 4.1.0) On Cygwin, saving/loading of universal variables was broken (:issue:`11948`).
-- (from 4.1.0) ``man`` function for the commands ``!`` ``.`` ``:`` ``[`` (:issue:`11955`).
-- (from 4.1.0) Build issues on Illumos (:issue:`11982`).
-- (from 4.1.0) Crash on invalid :doc:`function <cmds/function>` command (:issue:`11912`).
-- (from 4.0.0) Crash when passing negative PIDs to :doc:`wait <cmds/wait>` (:issue:`11929`).
+- (from 4.1.0) Fix the :doc:`web-based config <cmds/fish_config>` for Python 3.9 and older (:issue:`12039`).
+- (from 4.1.0) Correct wrong terminal modes set by ``fish -c 'read; cat`` (:issue:`12024`).
+- (from 4.1.0) On VTE-based terminals, stop redrawing the prompt on resize again, to avoid glitches.
+- (from 4.1.0) On MSYS2, fix saving/loading of universal variables (:issue:`11948`).
+- (from 4.1.0) Fix error using ``man`` for the commands ``!`` ``.`` ``:`` ``[`` ``{`` (:issue:`11955`).
+- (from 4.1.0) Fix build issues on illumos systems (:issue:`11982`).
+- (from 4.1.0) Fix crash on invalid :doc:`function <cmds/function>` command (:issue:`11912`).
+- (from 4.0.0) Fix build on SPARC and MIPS Linux by disabling ``SIGSTKFLT``.
+- (from 4.0.0) Fix crash when passing negative PIDs to builtin :doc:`wait <cmds/wait>` (:issue:`11929`).
+- (from 4.0.0) On Linux, fix :doc:`status fish-path <cmds/status>` output when fish has been reinstalled since it was started.
 
 fish 4.1.2 (released October 7, 2025)
 =====================================

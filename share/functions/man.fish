@@ -41,22 +41,7 @@ function man
     end
 
     if test (count $argv) -eq 1
-        # Some of these don't have their own page,
-        # and adding one would be awkward given that the filename
-        # isn't guaranteed to be allowed.
-        # So we override them with the good name.
-        switch $argv
-            case !
-                set argv not
-            case .
-                set argv source
-            case :
-                set argv true
-            case '['
-                set argv test
-            case '{'
-                set argv begin
-        end
+        set argv (__fish_canonicalize_builtin $argv)
     end
 
     if not set -q argv[2] && status list-files "man/man1/$argv[1].1" &>/dev/null

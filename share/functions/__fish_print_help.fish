@@ -1,16 +1,6 @@
 # localization: skip(private)
 function __fish_print_help --description "Print help for the specified fish function or builtin"
-    set -l item $argv[1]
-    switch $item
-        case !
-            set item not
-        case .
-            set item source
-        case :
-            set item true
-        case '['
-            set item test
-    end
+    set -l item (__fish_canonicalize_builtin $argv[1])
 
     if not command -v man >/dev/null
         __fish_print_help_pre_4.1 \

@@ -129,7 +129,7 @@ use crate::terminal::Output;
 use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
     self, ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
-    Osc0WindowTitle, Osc2TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
+    Osc0WindowTitle, Osc1TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
     QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute, QueryXtgettcap,
     QueryXtversion,
 };
@@ -4647,14 +4647,13 @@ pub fn reader_write_title(
     parser: &Parser,
     reset_cursor_position: bool, /* = true */
 ) {
-    fn write_title<'a>(
+    fn write_title(
         parser: &Parser,
         out: &mut BufferedOutputter,
         cmd: &wstr,
-        osc: fn(&'a [WString]) -> TerminalCommand<'a>,
+        osc: fn(&[WString]) -> TerminalCommand<'_>,
         function_name: &wstr,
         fallback_title: Option<&wstr>,
-        title_buffer: &'a mut Vec<WString>,
     ) -> bool {
         let mut title_function_call;
         let mut title_command = fallback_title;
@@ -4672,15 +4671,16 @@ pub fn reader_write_title(
         let Some(title_command) = title_command else {
             return false;
         };
+        let mut title_buffer = vec![];
         let _ = exec_subshell(
             title_command,
             parser,
-            Some(title_buffer),
+            Some(&mut title_buffer),
             /*apply_exit_status=*/ false,
         );
 
         if !title_buffer.is_empty() {
-            out.write_command(osc(&*title_buffer));
+            out.write_command(osc(&title_buffer));
             return true;
         }
         false
@@ -4693,24 +4693,21 @@ pub fn reader_write_title(
 
     let mut out = BufferedOutputter::new(Outputter::stdoutput());
     let mut written = false;
-    let mut lst = vec![];
     written |= write_title(
         parser,
         &mut out,
         cmd,
-        Osc0WindowTitle,
+        |title_buffer| Osc0WindowTitle(title_buffer),
         L!("fish_title"),
         Some(DEFAULT_TITLE),
-        &mut lst,
     );
     written |= write_title(
         parser,
         &mut out,
         cmd,
-        Osc2TabTitle,
+        |title_buffer| Osc1TabTitle(title_buffer),
         L!("fish_tab_title"),
         /*default_title=*/ None,
-        &mut lst,
     );
 
     out.reset_text_face();

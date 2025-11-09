@@ -102,7 +102,7 @@ pub(crate) enum TerminalCommand<'a> {
     // Note that OSC 7 and OSC 52 are written from fish script, and OSC 8 is written in our
     // man pages (via "man_show_urls").
     Osc0WindowTitle(&'a [WString]),
-    Osc2TabTitle(&'a [WString]),
+    Osc1TabTitle(&'a [WString]),
     Osc133CommandStart(&'a wstr),
     Osc133PromptStart,
     Osc133CommandFinished(libc::c_int),
@@ -176,8 +176,8 @@ pub(crate) trait Output {
             ModifyOtherKeysDisable => write(self, b"\x1b[>4;0m"),
             ApplicationKeypadModeEnable => write(self, b"\x1b="),
             ApplicationKeypadModeDisable => write(self, b"\x1b>"),
-            Osc0WindowTitle(title) => osc_0_or_2_terminal_title(self, false, title),
-            Osc2TabTitle(title) => osc_0_or_2_terminal_title(self, true, title),
+            Osc0WindowTitle(title) => osc_0_or_1_terminal_title(self, false, title),
+            Osc1TabTitle(title) => osc_0_or_1_terminal_title(self, true, title),
             Osc133PromptStart => osc_133_prompt_start(self),
             Osc133CommandStart(command) => osc_133_command_start(self, command),
             Osc133CommandFinished(s) => osc_133_command_finished(self, s),
@@ -371,8 +371,8 @@ fn query_kitty_progressive_enhancements(out: &mut impl Output) -> bool {
     true
 }
 
-fn osc_0_or_2_terminal_title(out: &mut impl Output, is_2: bool, title: &[WString]) -> bool {
-    out.write_bytes(if is_2 { b"\x1b]2;" } else { b"\x1b]0;" });
+fn osc_0_or_1_terminal_title(out: &mut impl Output, is_1: bool, title: &[WString]) -> bool {
+    out.write_bytes(if is_1 { b"\x1b]1;" } else { b"\x1b]0;" });
     for title_line in title {
         out.write_bytes(&wcs2bytes(title_line));
     }

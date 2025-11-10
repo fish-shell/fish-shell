@@ -41,12 +41,8 @@ impl Drop for TempDir {
     }
 }
 
-fn get_tmpdir() -> PathBuf {
-    PathBuf::from(std::env::var_os("TMPDIR").unwrap_or("/tmp".into()))
-}
-
 fn get_template() -> PathBuf {
-    get_tmpdir().join("fish_tmp_XXXXXX")
+    std::env::temp_dir().join("fish_tmp_XXXXXX")
 }
 
 /// Tries to create a new temporary file using `mkstemp`.

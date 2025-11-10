@@ -407,7 +407,6 @@ impl EnvUniversal {
         file: &File,
         current_file_id: FileId,
     ) -> Option<PotentialUpdate<UniversalReadUpdate>> {
-        // Get the dev / inode.
         if current_file_id == self.last_read_file_id {
             FLOG!(uvar_file, "universal log sync elided based on fstat()");
             None

@@ -121,7 +121,7 @@ pub struct RawHistoryFile {
 impl RawHistoryFile {
     /// Construct a history file contents from a [`File`] reference and its file id.
     pub fn create(history_file: &File, file_id: FileId) -> std::io::Result<Self> {
-        // Check that the file is seekable, and its size.
+        // Check the file size.
         let len: usize = match file_id.size.try_into() {
             Ok(len) => len,
             Err(err) => {

@@ -106,7 +106,6 @@ use super::file::time_to_seconds;
 const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
 
 /// When we rewrite the history, the number of items we keep.
-// FIXME: https://github.com/rust-lang/rust/issues/67441
 const HISTORY_SAVE_MAX: usize = 1024 * 256;
 
 /// Default buffer size for flushing to the history file.

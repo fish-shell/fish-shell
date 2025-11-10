@@ -295,6 +295,7 @@ class Deroffer:
     g_re_word = re.compile(r"[a-zA-Z_]+")  # equivalent to the word() method
     g_re_number = re.compile(r"[+-]?\d+")  # equivalent to the number() method
     g_re_esc_char = re.compile(
+        # novermin
         r"""([a-zA-Z_]) |   # Word
                                    ([+-]?\d)   |   # Number
                                    \\              # Backslash (for escape seq)
@@ -309,6 +310,7 @@ class Deroffer:
     g_re_newline_collapse = re.compile(r"\n{3,}")
 
     g_re_font = re.compile(
+        # novermin
         r"""\\f(         # Starts with backslash f
                                (\(\S{2}) |  # Open paren, then two printable chars
                                (\[\S*?\]) |  # Open bracket, zero or more printable characters, then close bracket
@@ -2090,6 +2092,7 @@ def get_paths_from_man_locations():
             with open("/etc/man.conf", "r") as file:
                 data = file.read()
                 for key in ["MANPATH", "_default"]:
+                    # novermin
                     for match in re.findall(r"^%s\s+(.*)$" % key, data, re.I | re.M):
                         parent_paths.append(match)
         except FileNotFoundError:

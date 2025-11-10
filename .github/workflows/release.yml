@@ -152,6 +152,7 @@ jobs:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
       - name: Install dependencies
         run: brew install gettext
+      - uses: ./.github/actions/install-sphinx
       - name: Build and codesign
         run: |
           die() { echo >&2 "$*"; exit 1; }

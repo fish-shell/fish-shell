@@ -136,6 +136,7 @@ jobs:
         # this is CI so we don't actually care.
         sudo pip3 install --break-system-packages pexpect
         brew install gettext tmux
+    - uses: ./.github/actions/install-sphinx
     - name: cmake
       run: |
         mkdir build && cd build
@@ -147,6 +148,9 @@ jobs:
     - name: make fish_run_tests
       run: |
         make -C build VERBOSE=1 fish_run_tests
+    - name: Setup tmate session
+      if: ${{ failure() }}
+      uses: mxschmitt/action-tmate@v3
 
   windows:
     runs-on: windows-latest

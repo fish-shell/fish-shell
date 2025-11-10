@@ -10,6 +10,8 @@ runs:
       run: |
         set -x
         sudo pip install uv --break-system-packages
+        command -v uv
+        command -v uvx
         # Check that pyproject.toml and the lock file are in sync.
         # TODO Use "uv" to install Python as well.
         : 'Note that --no-managed-python below would be implied but be explicit'

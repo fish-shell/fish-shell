@@ -1,13 +1,8 @@
-from __future__ import unicode_literals
-from __future__ import print_function
 import binascii
-
-try:
-    from html import escape as escape_html
-except ImportError:
-    from cgi import escape as escape_html
 import errno
 import glob
+import http.server as SimpleHTTPServer
+import json
 import multiprocessing.pool
 import operator
 import os
@@ -15,12 +10,15 @@ import platform
 import re
 import select
 import socket
+import socketserver as SocketServer
 import subprocess
 import sys
 import tempfile
 import threading
-from typing import Optional
+from html import escape as escape_html
 from itertools import chain
+from typing import Optional
+from urllib.parse import parse_qs
 
 COMMON_WSL_CMD_PATHS = (
     "/mnt/c/Windows/System32",
@@ -28,21 +26,6 @@ COMMON_WSL_CMD_PATHS = (
     "/c/Windows/System32",
 )
 FISH_BIN_PATH = False  # will be set later
-IS_PY2 = sys.version_info[0] == 2
-
-if IS_PY2:
-    import SimpleHTTPServer
-    import SocketServer
-    from urlparse import parse_qs
-else:
-    import http.server as SimpleHTTPServer
-    import socketserver as SocketServer
-    from urllib.parse import parse_qs
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
 
 
 ENTER_BOLD_MODE = "\x1b[1m"

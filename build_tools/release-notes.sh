@@ -13,12 +13,12 @@ mkdir -p "$relnotes_tmp/fake-workspace" "$relnotes_tmp/out"
 version=$(sed 's,^fish \(\S*\) .*,\1,; 1q' "$workspace_root/CHANGELOG.rst")
 add_stats=false
 # Skip on shallow clone (CI) for now.
-if test -z "$CI" || git -C "$workspace_root" tag | grep -q .; then {
+if test -z "$CI" || [ "$(git -C "$workspace_root" tag | wc -l)" -gt 1 ]; then {
     previous_version=$(
         cd "$workspace_root"
         git for-each-ref --format='%(objecttype) %(refname:strip=2)' refs/tags |
             awk '/tag/ {print $2}' | sort --version-sort |
-            grep -vF "$(git describe)" | tail -1
+            grep -vxF "$(git describe)" | tail -1
     )
     minor_version=${version%.*}
     previous_minor_version=${previous_version%.*}

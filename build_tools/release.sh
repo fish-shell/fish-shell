@@ -255,23 +255,27 @@ EOF
     git push $remote HEAD:master
 } fi
 
+milestone_version="$(
+    if echo "$version" | grep -q '\.0$'; then
+        echo "$minor_version"
+    else
+        echo "$version"
+    fi
+)"
 milestone_number=$(
     gh_api_repo milestones?state=open |
-        jq '.[] | select(.title == "fish '"$version"'") | .number'
+        jq --arg name "fish $1" '
+            .[] | select(.title == $name) | .number
+        '
 )
-gh_api_repo milestones/$milestone_number --method PATCH \
+gh_api_repo milestones/"$milestone_number" --method PATCH \
     --raw-field state=closed
 
-next_patch_version=$(
-    echo "$version" | awk -F. '
-        NF == 3 && $3 ~ /[0-9]+/ {
-            printf "%s.%s.%s", $1, $2, $3+1
-        }
-    '
-)
-if [ -n "$next_patch_version" ]; then
+next_minor_version=$(echo "$minor_version" |
+    awk -F. '{ printf "%s.%s", $1, $2+1 }')
+if [ -z "$(milestone_number "$next_minor_version")" ]; then
     gh_api_repo milestones --method POST \
-        --raw-field title="fish $next_patch_version"
+        --raw-field title="fish $next_minor_version"
 fi
 
 exit

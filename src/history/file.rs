@@ -24,8 +24,8 @@ use crate::{
 /// History file types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HistoryFileType {
-    Fish2_0, // old format with just timestamp and item
-    Fish1_x, // YAML-style format
+    Fish1_x, // old format with just timestamp and item
+    Fish2_0, // YAML-style format
 }
 
 /// A type wrapping up the logic around mmap and munmap.

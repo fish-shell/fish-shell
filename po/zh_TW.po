@@ -82,7 +82,7 @@ msgstr "%s"
 
 #, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
-msgstr ""
+msgstr "%s %s：名為 %s 且適用於命令 %s 的縮寫已存在，無法重新命名 %s\n"
 
 #, c-format
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\n"
@@ -96,9 +96,9 @@ msgstr "%s %s：縮寫「%s」中不能包含空格\n"
 msgid "%s %s: Name cannot be empty\n"
 msgstr "%s %s：名稱不能空白\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s %s: No abbreviation named %s with the specified command restrictions\n"
-msgstr "%s %s：沒有縮寫名為 %s\n"
+msgstr "%s %s：沒有縮寫名為 %s 且符合指定命令限制\n"
 
 #, c-format
 msgid "%s %s: Requires at least two arguments\n"
@@ -2802,7 +2802,7 @@ msgid "List embedded files contained in the fish binary"
 msgstr "列出 fish 二進位檔中嵌入的檔案"
 
 msgid "List section arguments for the 'help' command"
-msgstr ""
+msgstr "列出傳給「help」命令的段落名稱引數"
 
 msgid "List the names of the functions, but not their definition"
 msgstr "列出函式名稱，不包括其定義"

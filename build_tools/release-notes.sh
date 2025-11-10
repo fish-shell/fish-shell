@@ -29,13 +29,18 @@ if test -z "$CI" || git -C "$workspace_root" tag | grep -q .; then {
 {
     sed -n 1,2p <"$workspace_root/CHANGELOG.rst"
     if $add_stats; then {
+        ExtractCommitters() {
+            git log "$1" --format="%aN"
+            trailers='Co-authored-by|Signed-off-by'
+            git log "$1" --format="%b" | sed -En "/^($trailers):\s*/{s///;s/\s*<.*//;p}"
+        }
         ListCommitters() {
             comm "$@" "$relnotes_tmp/committers-then" "$relnotes_tmp/committers-now"
         }
         (
             cd "$workspace_root"
-            git log "$previous_version" --format="%aN" | sort -u >"$relnotes_tmp/committers-then"
-            git log "$previous_version".. --format="%aN" | sort -u >"$relnotes_tmp/committers-now"
+            ExtractCommitters "$previous_version" | sort -u >"$relnotes_tmp/committers-then"
+            ExtractCommitters "$previous_version".. | sort -u >"$relnotes_tmp/committers-now"
             ListCommitters -13 >"$relnotes_tmp/committers-new"
             ListCommitters -12 >"$relnotes_tmp/committers-returning"
             num_commits=$(git log --no-merges --format=%H "$previous_version".. | wc -l)

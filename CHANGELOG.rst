@@ -1,5 +1,5 @@
-fish 4.2.0 (released ???)
-=========================
+fish 4.2.0 (released November 10, 2025)
+=======================================
 
 Notable improvements and fixes
 ------------------------------

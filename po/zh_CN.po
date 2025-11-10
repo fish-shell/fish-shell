@@ -109,7 +109,7 @@ msgstr "%s"
 
 #, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
-msgstr ""
+msgstr "%s %s: 名为 %s 且适用于命令 %s 的缩写已存在，无法重命名 %s\n"
 
 #, c-format
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\n"
@@ -123,9 +123,9 @@ msgstr "%s %s: 缩写词 '%s' 不能包含空格\n"
 msgid "%s %s: Name cannot be empty\n"
 msgstr "%s %s: 名称不能为空\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s %s: No abbreviation named %s with the specified command restrictions\n"
-msgstr "%s %s: 没有命名为 %s 的缩写\n"
+msgstr "%s %s: 没有命名为 %s 且符合指定命令限制的缩写\n"
 
 #, c-format
 msgid "%s %s: Requires at least two arguments\n"
@@ -343,11 +343,11 @@ msgstr "%s: 无法将作业 %s，'%s' 放到后台，因为它不受作业控制
 msgid "%s: Cannot combine options %s\n"
 msgstr "%s: 无法合并选项 %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Cannot specify multiple positions\n"
 msgstr "%s: 无法指定多个位置\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Cannot specify multiple regex patterns\n"
 msgstr "%s: 无法指定多种正则匹配规则\n"
 
@@ -367,11 +367,11 @@ msgstr "%s: 命令在交互提示符下无效\n"
 msgid "%s: Could not find '%s'\n"
 msgstr "%s: 找不到 '%s'\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Could not find a job with process ID '%d'\n"
 msgstr "%s: 无法找到进程 ID 为 '%d' 的作业\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Could not find child processes with the name '%s'\n"
 msgstr "%s: 无法找到名为 '%s' 的子进程\n"
 
@@ -431,7 +431,7 @@ msgstr "%s: 非法函数名 '%s'\n"
 msgid "%s: Implicit int flag '%c' already defined\n"
 msgstr "%s: 隐式整形标识 '%c' 已被定义\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'\n"
 msgstr "%s: 隐式整形短标识 '%c' 不能带有形如 '%c' 的修饰符\n"
 
@@ -447,7 +447,7 @@ msgstr "%s: 无效的 --min-args 值 '%s'\n"
 msgid "%s: Invalid --unknown-arguments value '%s'\n"
 msgstr "%s: 无效的 --unknown-arguments 值 '%s'\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Invalid count value '%s'\n"
 msgstr "%s: 无效的计数值 '%s'\n"
 
@@ -459,11 +459,11 @@ msgstr "%s: 无效的终止值 '%s'\n"
 msgid "%s: Invalid escape style '%s'\n"
 msgstr "%s: 无效的转义格式 '%s'\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Invalid fields value '%s'\n"
 msgstr "%s: 无效的字段值 '%s'\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Invalid function name: %s\n"
 msgstr "%s: 无效的函数名：%s\n"
 
@@ -475,11 +475,11 @@ msgstr "%s: 无效的起始索引值 '%s'\n"
 msgid "%s: Invalid job control mode '%s'\n"
 msgstr "%s: 无效的作业控制模式 '%s'\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Invalid length value '%s'\n"
 msgstr "%s: 无效的长度值 '%s'\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Invalid level value '%s'\n"
 msgstr "%s: 无效的级别值 '%s'\n"
 
@@ -491,11 +491,11 @@ msgstr "%s: 无效的限制 '%s'\n"
 msgid "%s: Invalid max matches value '%s'\n"
 msgstr "%s: 无效的最大匹配值 '%s'\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Invalid max value '%s'\n"
 msgstr "%s: 无效的最大值 '%s'\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Invalid option spec '%s' at char '%c'\n"
 msgstr "%s: 无效的选项规范 '%s' 于字符 '%c'\n"
 
@@ -519,7 +519,7 @@ msgstr "%s: 字段 '%s' 的范围值无效\n"
 msgid "%s: Invalid sort key '%s'\n"
 msgstr "%s: 无效的排序键 '%s'\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Invalid start value '%s'\n"
 msgstr "%s: 无效的起始值 '%s'\n"
 
@@ -611,7 +611,7 @@ msgstr "%s: 该操作系统不支持资源限制\n"
 msgid "%s: STEP must be a positive integer\n"
 msgstr "%s: STEP 必须是正整数\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Short flag '%c' already defined\n"
 msgstr "%s: 已经定义了短标识 '%c'\n"
 
@@ -1357,7 +1357,7 @@ msgstr "多次执行一条命令"
 msgid "Perform a set of commands multiple times"
 msgstr "多次执行一组指令"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Please set $%s to a directory where you have write access."
 msgstr "请将 $%s 设置为您有写入权限的目录。"
 
@@ -1468,7 +1468,7 @@ msgstr "搜索/使用路径"
 msgid "Send job %d (%s) to foreground\n"
 msgstr "将作业 %d (%s) 发送到前台\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Send job %s '%s' to background\n"
 msgstr "将作业 %s '%s' 发送到后台\n"
 
@@ -1624,7 +1624,7 @@ msgstr "无法求值字符串替换"
 msgid "Unable to expand variable name '%s'"
 msgstr "无法展开变量名称 '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to locate %s directory derived from $%s: '%s'."
 msgstr "无法定位目录 %s 导出自 $%s：'%s'。"
 
@@ -1871,7 +1871,7 @@ msgstr "仅支持 f1 至 f%d，不支持 'f%s'"
 msgid "or press ctrl-%c or ctrl-%c twice in a row."
 msgstr "或按下 ctrl-%c 键，或连续按两次 ctrl-%c 键。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "rows %u to %u of %u"
 msgstr "第 %u 行至第 %u 行，共 %u 行"
 
@@ -2827,7 +2827,7 @@ msgid "List embedded files contained in the fish binary"
 msgstr "列出 fish 二进制文件包含的嵌入文件"
 
 msgid "List section arguments for the 'help' command"
-msgstr ""
+msgstr "列出传给 'help' 命令的段落名称参数"
 
 msgid "List the names of the functions, but not their definition"
 msgstr "列出函数的名称，但不列出其定义"

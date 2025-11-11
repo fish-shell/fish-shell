@@ -392,7 +392,7 @@ pub fn reader_pop() {
     if let Some(new_reader) = current_data() {
         new_reader
             .screen
-            .reset_abandoning_line(termsize_last().width());
+            .reset_abandoning_line(Some(termsize_last().width()));
     } else {
         Outputter::stdoutput().borrow_mut().reset_text_face();
         *commandline_state_snapshot() = CommandlineState::new();
@@ -2338,12 +2338,9 @@ impl<'a> Reader<'a> {
         // This means that `printf %s foo; fish` will overwrite the `foo`,
         // but that's a smaller problem than having the omitted newline char
         // appear constantly.
-        //
-        // I can't see a good way around this.
-        if !self.first_prompt {
-            self.screen.reset_abandoning_line(termsize_last().width());
-        }
+        let trusted_width = (!self.first_prompt).then_some(termsize_last().width());
         self.first_prompt = false;
+        self.screen.reset_abandoning_line(trusted_width);
 
         if !self.conf.event.is_empty() {
             event::fire_generic(self.parser, self.conf.event.to_owned(), vec![]);
@@ -2836,7 +2833,8 @@ impl<'a> Reader<'a> {
                     Edit::new(0..self.command_line_len(), L!("").to_owned()),
                 );
                 if c == rl::CancelCommandline {
-                    self.screen.reset_abandoning_line(termsize_last().width());
+                    self.screen
+                        .reset_abandoning_line(Some(termsize_last().width()));
                 }
 
                 // Post fish_cancel.
@@ -3117,7 +3115,8 @@ impl<'a> Reader<'a> {
                         L!("fish_posterror").to_owned(),
                         vec![self.command_line.text().to_owned()],
                     );
-                    self.screen.reset_abandoning_line(termsize_last().width());
+                    self.screen
+                        .reset_abandoning_line(Some(termsize_last().width()));
                 }
             }
             rl::HistoryPrefixSearchBackward

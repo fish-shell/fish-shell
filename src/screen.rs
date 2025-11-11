@@ -672,7 +672,7 @@ impl Screen {
     /// abandoning the current line and going to the next line.
     /// If clear_to_eos is set,
     /// The screen width must be provided for the PROMPT_SP hack.
-    pub fn reset_abandoning_line(&mut self, screen_width: usize) {
+    pub fn reset_abandoning_line(&mut self, screen_width: Option<usize>) {
         self.actual.cursor.y = 0;
         self.actual.clear_lines();
         self.actual_left_prompt = None;
@@ -685,11 +685,16 @@ impl Screen {
     }
 }
 
-fn abandon_line_string(screen_width: usize) -> Vec<u8> {
+fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
     use std::iter::repeat_n;
-    // Do the PROMPT_SP hack.
+
+    let Some(screen_width) = screen_width else {
+        return vec![b'\r'];
+    };
+
     let mut abandon_line_string = Vec::with_capacity(screen_width + 32);
 
+    // Do the PROMPT_SP hack.
     // Don't need to check for fish_wcwidth errors; this is done when setting up
     // omitted_newline_char in common.rs.
     let non_space_width = get_omitted_newline_width();
@@ -745,6 +750,13 @@ fn abandon_line_string(screen_width: usize) -> Vec<u8> {
     // it. So append enough spaces to overwrite the omitted newline char, and then clear all the
     // spaces from the new line.
     abandon_line_string.extend(repeat_n(b' ', non_space_width));
+    abandon_line_string.push(b'\r');
+    // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
+    // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
+    // line above your prompt. This doesn't make a difference in normal usage, but copying and
+    // pasting your terminal log becomes a pain. This commit clears that line, making it an
+    // actual empty line.
+    abandon_line_string.write_command(ClearToEndOfLine);
     abandon_line_string.push(b'\r');
     // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
     // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty

@@ -57,6 +57,10 @@ function isolated-tmux-start --wraps fish
     # Resize window so we can attach to tmux session without changing panel size.
     isolated-tmux resize-window $size
 
+    if test "$tmux_wait" = false
+        return
+    end
+
     # Loop a bit, until we get an initial prompt.
     for i in (seq 50)
         if test -n "$(isolated-tmux capture-pane -p)"

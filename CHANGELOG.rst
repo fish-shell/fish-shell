@@ -1,6 +1,19 @@
 fish ?.?.? (released ???)
 =========================
 
+Notable improvements and fixes
+------------------------------
+
+Deprecations and removed features
+---------------------------------
+
+Interactive improvements
+------------------------
+- When typing immediately after starting fish, the first prompt is now rendered correctly.
+
+For distributors and developers
+-------------------------------
+
 fish 4.2.1 (released November 13, 2025)
 =======================================
 

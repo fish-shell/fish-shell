@@ -19,7 +19,7 @@ import subprocess
 import sys
 import tempfile
 import threading
-import typing
+from typing import Optional
 from itertools import chain
 
 COMMON_WSL_CMD_PATHS = (

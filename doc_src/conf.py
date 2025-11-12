@@ -97,7 +97,12 @@ def setup(app):
     app.add_directive("synopsis", FishSynopsisDirective)
 
     app.add_config_value("issue_url", default=None, rebuild="html")
-    app.add_config_value("fish_help_sections_output", "", "man", str)
+    app.add_config_value(
+        "fish_help_sections_output",
+        default=os.environ.get("FISH_SPHINX_HELP_SECTIONS_OUTPUT", ""),
+        rebuild="man",
+        types=str,
+    )
     app.add_role("issue", issue_role)
 
     app.connect("builder-inited", remove_fish_indent_lexer)

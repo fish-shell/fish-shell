@@ -44,6 +44,7 @@ set(VARS_FOR_CARGO
     "${FISH_PCRE2_BUILDFLAG}"
     "RUSTFLAGS=$ENV{RUSTFLAGS} ${rust_debugflags}"
     "FISH_SPHINX=${SPHINX_EXECUTABLE}"
+    "FISH_USE_PREBUILT_DOCS=${USE_PREBUILT_DOCS}"
 )
 
 # Let fish pick up when we're running out of the build directory without installing

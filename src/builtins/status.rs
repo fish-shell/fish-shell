@@ -334,10 +334,19 @@ fn parse_cmd_opts(
 use rust_embed::RustEmbed;
 
 #[cfg(feature = "embed-data")]
-#[derive(RustEmbed)]
-#[folder = "$FISH_RESOLVED_BUILD_DIR/fish-man/man1"]
-#[prefix = "man/man1/"]
-struct Docs;
+cfg_if!(
+    if #[cfg(use_prebuilt_docs)] {
+        #[derive(RustEmbed)]
+        #[folder = "user_doc/man/man1"]
+        #[prefix = "man/man1/"]
+        struct Docs;
+    } else {
+        #[derive(RustEmbed)]
+        #[folder = "$FISH_RESOLVED_BUILD_DIR/fish-man/man1"]
+        #[prefix = "man/man1/"]
+        struct Docs;
+    }
+);
 
 #[cfg(all(using_cmake, feature = "embed-data"))]
 #[derive(RustEmbed)]

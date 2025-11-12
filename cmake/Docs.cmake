@@ -66,6 +66,7 @@ endif()
 
 add_feature_info(Documentation INSTALL_DOCS "user manual and documentation")
 
+set(USE_PREBUILT_DOCS FALSE)
 if(BUILD_DOCS)
     configure_file("${SPHINX_SRC_DIR}/conf.py" "${SPHINX_BUILD_DIR}/conf.py" @ONLY)
     add_custom_target(doc ALL
@@ -76,6 +77,7 @@ if(BUILD_DOCS)
                  PROPERTY FOLDER cmake/DocTargets)
 
 elseif(HAVE_PREBUILT_DOCS)
+    set(USE_PREBUILT_DOCS TRUE)
     if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
         # Out of tree build - link the prebuilt documentation to the build tree
         add_custom_target(link_doc ALL)

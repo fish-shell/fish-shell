@@ -3,6 +3,8 @@ fish 4.2.1 (released ???)
 
 This release fixes the following problems identified in 4.2.0:
 
+- When building from a tarball without Sphinx (that is, with ``-DBUILD_DOCS=OFF`` or when ``sphinx-build`` is not found),
+  builtin man pages and help files were missing, which has been fixed (:issue:`12052`).
 - ``fish_config``'s theme selector (the "colors" tab) was broken, which has been fixed (:issue:`12053`).
 
 fish 4.2.0 (released November 10, 2025)

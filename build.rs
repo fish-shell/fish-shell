@@ -82,6 +82,7 @@ fn detect_cfgs(target: &mut Target) {
         ("apple", &detect_apple),
         ("bsd", &detect_bsd),
         ("using_cmake", &|_| option_env!("FISH_CMAKE_BINARY_DIR").is_some()),
+        ("use_prebuilt_docs", &|_| env_var("FISH_USE_PREBUILT_DOCS").is_some_and(|v| v == "TRUE") ),
         ("cygwin", &detect_cygwin),
         ("small_main_stack", &has_small_stack),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).

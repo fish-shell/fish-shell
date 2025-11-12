@@ -1,4 +1,4 @@
-use fish_build_helper::env_var;
+use fish_build_helper::{env_var, workspace_root};
 use std::path::Path;
 
 fn main() {
@@ -9,6 +9,16 @@ fn main() {
     let _ = std::fs::create_dir_all(&sec1_dir);
 
     let help_sections_path = Path::new(&env_var("OUT_DIR").unwrap()).join("help_sections.rs");
+
+    if env_var("FISH_USE_PREBUILT_DOCS").is_some_and(|v| v == "TRUE") {
+        std::fs::copy(
+            workspace_root().join("user_doc/src/help_sections.rs"),
+            help_sections_path,
+        )
+        .unwrap();
+        return;
+    }
+
     std::fs::write(
         help_sections_path.clone(),
         r#"pub static HELP_SECTIONS: &str = "";"#,
@@ -25,8 +35,6 @@ fn build_man(man_dir: &Path, sec1_dir: &Path, help_sections_path: &Path) {
         ffi::OsStr,
         process::{Command, Stdio},
     };
-
-    use fish_build_helper::workspace_root;
 
     let workspace_root = workspace_root();
     let doc_src_dir = workspace_root.join("doc_src");

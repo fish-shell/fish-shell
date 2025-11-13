@@ -87,7 +87,7 @@ if test -z "$CI" || [ "$(git -C "$workspace_root" tag | wc -l)" -gt 1 ]; then {
     echo 'Download links:'
     echo 'To download the source code for fish, we suggest the file named ``fish-'"$version"'.tar.xz``.'
     echo 'The file downloaded from ``Source code (tar.gz)`` will not build correctly.'
-    echo 'A GPG signature using the key published at '"${FISH_GPG_PUBLIC_KEY_URL:-???}"' is available as ``fish-'"$version"'.tar.xz.asc``.'
+    echo 'A GPG signature using [this key]('"${FISH_GPG_PUBLIC_KEY_URL:-???}"') is available as ``fish-'"$version"'.tar.xz.asc``.'
     echo
     echo 'The files called ``fish-'"$version"'-linux-*.tar.xz`` contain'
     echo '`standalone fish binaries <https://github.com/fish-shell/fish-shell/?tab=readme-ov-file#building-fish-with-cargo>`__'

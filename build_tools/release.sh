@@ -239,6 +239,8 @@ done
     # This takes care to support remote names that are different from
     # fish-shell remote name. Also, support detached HEAD state.
     git push "$fish_site_repo" HEAD:master
+    git fetch "$fish_site_repo" \
+        "$(git rev-parse HEAD):refs/remotes/origin/master"
 )
 
 if [ -n "$integration_branch" ]; then {
@@ -262,17 +264,15 @@ milestone_version="$(
         echo "$version"
     fi
 )"
-milestone_number=$(
+milestone_number() {
     gh_api_repo milestones?state=open |
         jq --arg name "fish $1" '
             .[] | select(.title == $name) | .number
         '
-)
-gh_api_repo milestones/"$milestone_number" --method PATCH \
-    --raw-field state=closed
+}
+gh_api_repo milestones/"$(milestone_number "$milestone_version")" \
+    --method PATCH --raw-field state=closed
 
-next_minor_version=$(echo "$minor_version" |
-    awk -F. '{ printf "%s.%s", $1, $2+1 }')
 if [ -z "$(milestone_number "$next_minor_version")" ]; then
     gh_api_repo milestones --method POST \
         --raw-field title="fish $next_minor_version"

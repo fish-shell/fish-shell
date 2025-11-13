@@ -1044,11 +1044,11 @@ pub fn get_ellipsis_str() -> &'static wstr {
 }
 
 /// Character representing an omitted newline at the end of text.
-pub fn get_omitted_newline_str() -> &'static wstr {
+pub fn get_omitted_newline_str() -> &'static str {
     OMITTED_NEWLINE_STR.load()
 }
 
-static OMITTED_NEWLINE_STR: AtomicRef<wstr> = AtomicRef::new(&L!(""));
+static OMITTED_NEWLINE_STR: AtomicRef<str> = AtomicRef::new(&"");
 
 pub fn get_omitted_newline_width() -> usize {
     OMITTED_NEWLINE_STR.load().len()
@@ -1231,25 +1231,16 @@ pub fn wcs2bytes_appending(output: &mut Vec<u8>, input: &wstr) {
 pub type FilenameRef = Arc<WString>;
 
 pub fn init_special_chars_once() {
-    // Helper to make a static reference to a static &'wstr, from a string literal.
-    // This is necessary to store them in global atomics, as these can't handle fat pointers.
-    macro_rules! LL {
-        ($s:literal) => {{
-            const S: &'static wstr = L!($s);
-            &S
-        }};
-    }
-
     if is_windows_subsystem_for_linux(WSL::Any) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
-        OMITTED_NEWLINE_STR.store(LL!("\u{00b6}")); // "pilcrow"
+        OMITTED_NEWLINE_STR.store(&"\u{00b6}"); // "pilcrow"
         OBFUSCATION_READ_CHAR.store(u32::from('\u{2022}'), Ordering::Relaxed); // "bullet" (•)
     } else if is_console_session() {
-        OMITTED_NEWLINE_STR.store(LL!("^J"));
+        OMITTED_NEWLINE_STR.store(&"^J");
         OBFUSCATION_READ_CHAR.store(u32::from('*'), Ordering::Relaxed);
     } else {
-        OMITTED_NEWLINE_STR.store(LL!("\u{23CE}")); // "return symbol" (⏎)
+        OMITTED_NEWLINE_STR.store(&"\u{23CE}"); // "return symbol" (⏎)
         OBFUSCATION_READ_CHAR.store(
             u32::from(
                 '\u{25CF}', // "black circle" (●)

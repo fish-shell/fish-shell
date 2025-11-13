@@ -24,7 +24,7 @@ use std::time::SystemTime;
 use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
 
 use crate::common::{
-    bytes2wcstring, get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
+    get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
     has_working_tty_timestamps, shell_modes, wcs2bytes, write_loop,
 };
 use crate::env::Environment;
@@ -673,13 +673,15 @@ impl Screen {
     /// If clear_to_eos is set,
     /// The screen width must be provided for the PROMPT_SP hack.
     pub fn reset_abandoning_line(&mut self, screen_width: usize) {
+        use std::iter::repeat_n;
+
         self.actual.cursor.y = 0;
         self.actual.clear_lines();
         self.actual_left_prompt = None;
         self.need_clear_lines = true;
 
         // Do the PROMPT_SP hack.
-        let mut abandon_line_string = WString::with_capacity(screen_width + 32);
+        let mut abandon_line_string = Vec::with_capacity(screen_width + 32);
 
         // Don't need to check for fish_wcwidth errors; this is done when setting up
         // omitted_newline_char in common.rs.
@@ -691,11 +693,11 @@ impl Screen {
                 use std::ffi::CString;
                 let term = crate::terminal::term();
                 let mut justgrey = true;
-                let add = |abandon_line_string: &mut WString, s: Option<CString>| {
+                let add = |abandon_line_string: &mut Vec<u8>, s: Option<CString>| {
                     let Some(s) = s else {
                         return false;
                     };
-                    abandon_line_string.push_utfstr(&bytes2wcstring(s.as_bytes()));
+                    abandon_line_string.extend(s.as_bytes());
                     true
                 };
                 if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
@@ -722,43 +724,29 @@ impl Screen {
                     }
                 }
             } else {
-                let mut tmp = Vec::<u8>::new();
-                tmp.write_command(EnterDimMode);
-                abandon_line_string.push_utfstr(&bytes2wcstring(&tmp));
+                abandon_line_string.write_command(EnterDimMode);
             }
 
-            abandon_line_string.push_utfstr(&get_omitted_newline_str());
-
-            // normal text ANSI escape sequence
-            let mut tmp = Vec::<u8>::new();
-            tmp.write_command(ExitAttributeMode);
-            abandon_line_string.push_utfstr(&bytes2wcstring(&tmp));
-
-            for _ in 0..screen_width - non_space_width {
-                abandon_line_string.push(' ');
-            }
+            abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
+            abandon_line_string.write_command(ExitAttributeMode);
+            abandon_line_string.extend(repeat_n(b' ', screen_width - non_space_width));
         }
 
-        abandon_line_string.push('\r');
-        abandon_line_string.push_utfstr(get_omitted_newline_str());
+        abandon_line_string.push(b'\r');
+        abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
         // Now we are certainly on a new line. But we may have dropped the omitted newline char on
         // it. So append enough spaces to overwrite the omitted newline char, and then clear all the
         // spaces from the new line.
-        for _ in 0..non_space_width {
-            abandon_line_string.push(' ');
-        }
-        abandon_line_string.push('\r');
+        abandon_line_string.extend(repeat_n(b' ', non_space_width));
+        abandon_line_string.push(b'\r');
         // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
         // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
         // line above your prompt. This doesn't make a difference in normal usage, but copying and
         // pasting your terminal log becomes a pain. This commit clears that line, making it an
         // actual empty line.
-        let mut tmp = Vec::<u8>::new();
-        tmp.write_command(ClearToEndOfLine);
-        abandon_line_string.push_utfstr(&bytes2wcstring(&tmp));
+        abandon_line_string.write_command(ClearToEndOfLine);
 
-        let narrow_abandon_line_string = wcs2bytes(&abandon_line_string);
-        let _ = write_loop(&STDOUT_FILENO, &narrow_abandon_line_string);
+        let _ = write_loop(&STDOUT_FILENO, &abandon_line_string);
         self.actual.cursor.x = 0;
 
         self.save_status();

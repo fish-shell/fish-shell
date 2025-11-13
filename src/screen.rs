@@ -673,85 +673,89 @@ impl Screen {
     /// If clear_to_eos is set,
     /// The screen width must be provided for the PROMPT_SP hack.
     pub fn reset_abandoning_line(&mut self, screen_width: usize) {
-        use std::iter::repeat_n;
-
         self.actual.cursor.y = 0;
         self.actual.clear_lines();
         self.actual_left_prompt = None;
         self.need_clear_lines = true;
 
-        // Do the PROMPT_SP hack.
-        let mut abandon_line_string = Vec::with_capacity(screen_width + 32);
-
-        // Don't need to check for fish_wcwidth errors; this is done when setting up
-        // omitted_newline_char in common.rs.
-        let non_space_width = get_omitted_newline_width();
-        // We do `>` rather than `>=` because the code below might require one extra space.
-        if screen_width > non_space_width {
-            if use_terminfo() {
-                use crate::terminal::tparm1;
-                use std::ffi::CString;
-                let term = crate::terminal::term();
-                let mut justgrey = true;
-                let add = |abandon_line_string: &mut Vec<u8>, s: Option<CString>| {
-                    let Some(s) = s else {
-                        return false;
-                    };
-                    abandon_line_string.extend(s.as_bytes());
-                    true
-                };
-                if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
-                    if add(&mut abandon_line_string, Some(enter_dim_mode.clone())) {
-                        // Use dim if they have it, so the color will be based on their actual normal
-                        // color and the background of the terminal.
-                        justgrey = false;
-                    }
-                }
-                if let (true, Some(set_a_foreground)) = (justgrey, term.set_a_foreground.as_ref()) {
-                    let max_colors = term.max_colors.unwrap_or_default();
-                    if max_colors >= 238 {
-                        // draw the string in a particular grey
-                        add(&mut abandon_line_string, tparm1(set_a_foreground, 237));
-                    } else if max_colors >= 9 {
-                        // bright black (the ninth color, looks grey)
-                        add(&mut abandon_line_string, tparm1(set_a_foreground, 8));
-                    } else if max_colors >= 2 {
-                        if let Some(enter_bold_mode) = term.enter_bold_mode.as_ref() {
-                            // we might still get that color by setting black and going bold for bright
-                            add(&mut abandon_line_string, Some(enter_bold_mode.clone()));
-                            add(&mut abandon_line_string, tparm1(set_a_foreground, 0));
-                        }
-                    }
-                }
-            } else {
-                abandon_line_string.write_command(EnterDimMode);
-            }
-
-            abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
-            abandon_line_string.write_command(ExitAttributeMode);
-            abandon_line_string.extend(repeat_n(b' ', screen_width - non_space_width));
-        }
-
-        abandon_line_string.push(b'\r');
-        abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
-        // Now we are certainly on a new line. But we may have dropped the omitted newline char on
-        // it. So append enough spaces to overwrite the omitted newline char, and then clear all the
-        // spaces from the new line.
-        abandon_line_string.extend(repeat_n(b' ', non_space_width));
-        abandon_line_string.push(b'\r');
-        // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
-        // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
-        // line above your prompt. This doesn't make a difference in normal usage, but copying and
-        // pasting your terminal log becomes a pain. This commit clears that line, making it an
-        // actual empty line.
-        abandon_line_string.write_command(ClearToEndOfLine);
-
-        let _ = write_loop(&STDOUT_FILENO, &abandon_line_string);
+        let _ = write_loop(&STDOUT_FILENO, &abandon_line_string(screen_width));
         self.actual.cursor.x = 0;
 
         self.save_status();
     }
+}
 
+fn abandon_line_string(screen_width: usize) -> Vec<u8> {
+    use std::iter::repeat_n;
+    // Do the PROMPT_SP hack.
+    let mut abandon_line_string = Vec::with_capacity(screen_width + 32);
+
+    // Don't need to check for fish_wcwidth errors; this is done when setting up
+    // omitted_newline_char in common.rs.
+    let non_space_width = get_omitted_newline_width();
+    // We do `>` rather than `>=` because the code below might require one extra space.
+    if screen_width > non_space_width {
+        if use_terminfo() {
+            use crate::terminal::tparm1;
+            use std::ffi::CString;
+            let term = crate::terminal::term();
+            let mut justgrey = true;
+            let add = |abandon_line_string: &mut Vec<u8>, s: Option<CString>| {
+                let Some(s) = s else {
+                    return false;
+                };
+                abandon_line_string.extend(s.as_bytes());
+                true
+            };
+            if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
+                if add(&mut abandon_line_string, Some(enter_dim_mode.clone())) {
+                    // Use dim if they have it, so the color will be based on their actual normal
+                    // color and the background of the terminal.
+                    justgrey = false;
+                }
+            }
+            if let (true, Some(set_a_foreground)) = (justgrey, term.set_a_foreground.as_ref()) {
+                let max_colors = term.max_colors.unwrap_or_default();
+                if max_colors >= 238 {
+                    // draw the string in a particular grey
+                    add(&mut abandon_line_string, tparm1(set_a_foreground, 237));
+                } else if max_colors >= 9 {
+                    // bright black (the ninth color, looks grey)
+                    add(&mut abandon_line_string, tparm1(set_a_foreground, 8));
+                } else if max_colors >= 2 {
+                    if let Some(enter_bold_mode) = term.enter_bold_mode.as_ref() {
+                        // we might still get that color by setting black and going bold for bright
+                        add(&mut abandon_line_string, Some(enter_bold_mode.clone()));
+                        add(&mut abandon_line_string, tparm1(set_a_foreground, 0));
+                    }
+                }
+            }
+        } else {
+            abandon_line_string.write_command(EnterDimMode);
+        }
+
+        abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
+        abandon_line_string.write_command(ExitAttributeMode);
+        abandon_line_string.extend(repeat_n(b' ', screen_width - non_space_width));
+    }
+
+    abandon_line_string.push(b'\r');
+    abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
+    // Now we are certainly on a new line. But we may have dropped the omitted newline char on
+    // it. So append enough spaces to overwrite the omitted newline char, and then clear all the
+    // spaces from the new line.
+    abandon_line_string.extend(repeat_n(b' ', non_space_width));
+    abandon_line_string.push(b'\r');
+    // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
+    // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
+    // line above your prompt. This doesn't make a difference in normal usage, but copying and
+    // pasting your terminal log becomes a pain. This commit clears that line, making it an
+    // actual empty line.
+    abandon_line_string.write_command(ClearToEndOfLine);
+    abandon_line_string
+}
+
+impl Screen {
     /// Stat stdout and stderr and save result as the current timestamp.
     /// This is used to avoid reacting to changes that we ourselves made to the screen.
     pub fn save_status(&mut self) {

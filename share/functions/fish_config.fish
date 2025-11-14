@@ -376,7 +376,7 @@ function __fish_config_matching
         if not set -q argv[1]
             set -a paths (status list-files $prefix)
         else
-            set -a paths (status list-files $prefix | grep -Fx -e"$prefix/"$argv$suffix)
+            set -a paths (status list-files "$prefix/"$argv$suffix)
         end
     end
     string join \n $paths

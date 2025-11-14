@@ -4,7 +4,6 @@ function __fish_print_port_packages
 
     __fish_cached -t 250 -k port '
     	printf "all\ncurrent\nactive\ninactive\ninstalled\nuninstalled\noutdated\n"
-    	port echo all | awk \'{$1=$1};1\'
-    '
+    	port echo all | awk \'{$1=$1};1\''
     return 0
 end

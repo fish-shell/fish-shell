@@ -2330,6 +2330,9 @@ msgstr "foo=bar 變數覆寫"
 msgid "funced: The value for $EDITOR '$editor' could not be used because the command '$editor[1]' could not be found"
 msgstr "funced：$EDITOR 的值「$editor」無法使用，找不到命令「$editor[1]」"
 
+msgid "funced: The value for $VISUAL '$editor' could not be used because the command '$editor[1]' could not be found"
+msgstr "funced：$VISUAL 的值「$editor」無法使用，找不到命令「$editor[1]」"
+
 msgid "help: %s is not a valid command: %s\\n"
 msgstr "help：%s 不是有效的命令：%s\\n"
 

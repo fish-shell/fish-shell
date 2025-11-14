@@ -2326,6 +2326,9 @@ msgstr ""
 msgid "funced: The value for $EDITOR '$editor' could not be used because the command '$editor[1]' could not be found"
 msgstr ""
 
+msgid "funced: The value for $VISUAL '$editor' could not be used because the command '$editor[1]' could not be found"
+msgstr ""
+
 msgid "help: %s is not a valid command: %s\\n"
 msgstr ""
 

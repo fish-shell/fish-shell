@@ -17,6 +17,12 @@ if test (__fish_uname) = Darwin
 
     function __fish_apropos -V dir
         # macOS has a read only filesystem where the whatis database should be.
+
+        if functions -q apropos || test "$(command -v apropos)" != /usr/bin/apropos
+            __fish_without_manpager apropos "$argv"
+            return
+        end
+
         # The whatis database is non-existent, so apropos tries (and fails) to create it every time,
         # which can take seconds.
         #
@@ -32,7 +38,7 @@ if test (__fish_uname) = Darwin
             set age (path mtime -R -- $whatis)
         end
 
-        MANPATH="$dir" __fish_without_manpager apropos "$argv"
+        MANPATH="$dir" __fish_without_manpager /usr/bin/apropos "$argv"
 
         if test $age -ge $max_age
             test -d "$dir" || mkdir -m 700 -p $dir

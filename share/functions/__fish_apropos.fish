@@ -5,9 +5,7 @@ if not type -q apropos
     exit
 end
 
-# Check for macOS Catalina or above.
 if test (__fish_uname) = Darwin
-    and test (string match -r "^\d+" "$(uname -r)") -ge 19
     and test -x /usr/libexec/makewhatis
 
     set -l dir
@@ -18,7 +16,7 @@ if test (__fish_uname) = Darwin
     end
 
     function __fish_apropos -V dir
-        # macOS 10.15 "Catalina" has a read only filesystem where the whatis database should be.
+        # macOS has a read only filesystem where the whatis database should be.
         # The whatis database is non-existent, so apropos tries (and fails) to create it every time,
         # which can take seconds.
         #

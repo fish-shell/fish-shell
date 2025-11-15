@@ -144,17 +144,21 @@ impl LockedFile {
         // This is required to avoid racing modifications by other threads/processes.
         let dir_fd = wopen_cloexec(dir_path, OFlag::O_RDONLY, Mode::empty())?;
 
-        // Try locking the directory. Retry if locking was interrupted.
-        while unsafe { libc::flock(dir_fd.as_raw_fd(), locking_mode.flock_op()) } == -1 {
-            let err = std::io::Error::last_os_error();
-            if err.kind() != std::io::ErrorKind::Interrupted {
-                return Err(err);
+        {
+            // Cygwin's `flock` is currently not thread safe (#11933)
+            #[cfg(cygwin)]
+            static FLOCK_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+            #[cfg(cygwin)]
+            let _lock = FLOCK_LOCK.lock().unwrap();
+
+            // Try locking the directory. Retry if locking was interrupted.
+            while unsafe { libc::flock(dir_fd.as_raw_fd(), locking_mode.flock_op()) } == -1 {
+                let err = std::io::Error::last_os_error();
+                if err.kind() != std::io::ErrorKind::Interrupted {
+                    return Err(err);
+                }
             }
         }
-        #[cfg(cygwin)]
-        // Prevents error 14 "Bad Addr" on Windows (#11933). If the error happens
-        // the process appears deadlocked
-        std::thread::sleep(std::time::Duration::from_nanos(1));
 
         // Open the data file
         let data_file = wopen_cloexec(file_path, locking_mode.file_flags(), LOCKED_FILE_MODE)?;

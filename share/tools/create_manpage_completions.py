@@ -17,7 +17,6 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from __future__ import print_function
 import argparse
 import bz2
 import errno
@@ -28,23 +27,13 @@ import string
 import subprocess
 import sys
 import traceback
+from subprocess import DEVNULL
 
 lzma_available = True
 try:
-    try:
-        import lzma
-    except ImportError:
-        from backports import lzma
+    import lzma
 except ImportError:
     lzma_available = False
-
-try:
-    from subprocess import DEVNULL
-except ImportError:
-    DEVNULL = open(os.devnull, "wb")
-
-# Whether we're Python 3
-IS_PY3 = sys.version_info[0] >= 3
 
 
 class Deroffer:
@@ -459,7 +448,7 @@ class Deroffer:
         # Note this returns false for empty strings (idx >= len(self.s))
         return self.s[idx : idx + 1].isspace()
 
-    def str_eq(offset, other, len):
+    def str_eq(self, offset, other, len):
         return self.s[offset : offset + len] == other[:len]
 
     def prch(self, idx):
@@ -864,10 +853,7 @@ class Deroffer:
             self.tr_to += ns
 
         # Update our table, then swap in the slower tr-savvy condputs
-        try:  # Python2
-            self.tr = string.maketrans(self.tr_from, self.tr_to)
-        except AttributeError:  # Python3
-            self.tr = "".maketrans(self.tr_from, self.tr_to)
+        self.tr = str.maketrans(self.tr_from, self.tr_to)
         self.condputs = self.condputs_tr
         return True
 
@@ -1060,10 +1046,7 @@ class Deroffer:
                 self.tr_to += ns
 
             # Update our table, then swap in the slower tr-savvy condputs
-            try:  # Python2
-                self.tr = string.maketrans(self.tr_from, self.tr_to)
-            except AttributeError:  # Python3
-                self.tr = "".maketrans(self.tr_from, self.tr_to)
+            self.tr = str.maketrans(self.tr_from, self.tr_to)
             self.condputs = self.condputs_tr
 
             return True
@@ -1239,29 +1222,13 @@ def fish_escape_single_quote(str):
     return "'" + str + "'"
 
 
-# Make a string Unicode by attempting to decode it as latin-1, or UTF8. See #658
-def lossy_unicode(s):
-    # All strings are unicode in Python 3
-    if IS_PY3 or isinstance(s, unicode):
-        return s
-    try:
-        return s.decode("latin-1")
-    except UnicodeEncodeError:
-        pass
-    try:
-        return s.decode("utf-8")
-    except UnicodeEncodeError:
-        pass
-    return s.decode("latin-1", "ignore")
-
-
 def output_complete_command(cmdname, args, description, output_list):
     comps = ["complete -c", cmdname]
     comps.extend(args)
     if description:
         comps.append("-d")
         comps.append(description)
-    output_list.append(lossy_unicode(" ").join([lossy_unicode(c) for c in comps]))
+    output_list.append(" ".join(comps))
 
 
 def built_command(options, description):
@@ -1300,11 +1267,7 @@ def built_command(options, description):
 
     # Here's what we'll use to truncate if necessary
     max_description_width = 78
-    if IS_PY3:
-        truncation_suffix = "…"
-    else:
-        ELLIPSIS_CODE_POINT = 0x2026
-        truncation_suffix = unichr(ELLIPSIS_CODE_POINT)
+    truncation_suffix = "…"
 
     # Try to include as many whole sentences as will fit
     # Clean up some probably bogus escapes in the process
@@ -1317,16 +1280,14 @@ def built_command(options, description):
     if not sentences:
         sentences = [""]
 
-    udot = lossy_unicode(".")
-    uspace = lossy_unicode(" ")
+    udot = "."
+    uspace = " "
 
-    truncated_description = lossy_unicode(sentences[0]) + udot
+    truncated_description = sentences[0] + udot
     for line in sentences[1:]:
         if not line:
             continue
-        proposed_description = (
-            lossy_unicode(truncated_description) + uspace + lossy_unicode(line) + udot
-        )
+        proposed_description = truncated_description + uspace + line + udot
         if len(proposed_description) <= max_description_width:
             # It fits
             truncated_description = proposed_description
@@ -1543,7 +1504,7 @@ class Type2ManParser(ManParser):
 
 class Type3ManParser(ManParser):
     def is_my_type(self, manpage):
-        return compile_and_search(r"\.SH DESCRIPTION(.*?)", manpage) != None
+        return compile_and_search(r"\.SH DESCRIPTION(.*?)", manpage) is not None
 
     def parse_man_page(self, manpage):
         options_section_regex = re.compile(r"\.SH DESCRIPTION(.*?)(\.SH|\Z)", re.DOTALL)
@@ -1557,7 +1518,7 @@ class Type3ManParser(ManParser):
             add_diagnostic("Unable to find options section")
             return False
 
-        while options_matched != None:
+        while options_matched is not None:
             data = options_matched.group(1)
 
             data = remove_groff_formatting(data)
@@ -1584,7 +1545,7 @@ class Type3ManParser(ManParser):
 
 class Type4ManParser(ManParser):
     def is_my_type(self, manpage):
-        return compile_and_search(r"\.SH FUNCTION LETTERS(.*?)", manpage) != None
+        return compile_and_search(r"\.SH FUNCTION LETTERS(.*?)", manpage) is not None
 
     def parse_man_page(self, manpage):
         options_section_regex = re.compile(
@@ -1600,7 +1561,7 @@ class Type4ManParser(ManParser):
             print("Unable to find options section", file=sys.stderr)
             return False
 
-        while options_matched != None:
+        while options_matched is not None:
             data = options_matched.group(1)
 
             data = remove_groff_formatting(data)
@@ -1631,7 +1592,7 @@ class TypeScdocManParser(ManParser):
             compile_and_search(
                 r"\.(\\)(\") Generated by scdoc(.*?)\.SH OPTIONS(.*?)", manpage
             )
-            != None
+            is not None
         )
 
     def parse_man_page(self, manpage):
@@ -1760,7 +1721,7 @@ class TypeDarwinManParser(ManParser):
             # Extract the description
             desc_lines = []
             while lines and not self.is_option(lines[0]):
-                line = lossy_unicode(lines.pop(0).strip())
+                line = lines.pop(0).strip()
                 # Ignore comments
                 if line.startswith(r".\""):
                     continue
@@ -1875,7 +1836,7 @@ def cleanup_autogenerated_completions_in_directory(dir):
                 continue
             path = os.path.join(dir, filename)
             cleanup_autogenerated_file(path)
-    except OSError as err:
+    except OSError:
         return False
 
 
@@ -1939,25 +1900,19 @@ def parse_manpage_at_path(manpage_path, output_directory):
     if manpage_path.endswith(".gz"):
         fd = gzip.open(manpage_path, "r")
         manpage = fd.read()
-        if IS_PY3:
-            manpage = manpage.decode("latin-1")
+        manpage = manpage.decode("latin-1")
     elif manpage_path.endswith(".bz2"):
         fd = bz2.BZ2File(manpage_path, "r")
         manpage = fd.read()
-        if IS_PY3:
-            manpage = manpage.decode("latin-1")
+        manpage = manpage.decode("latin-1")
     elif manpage_path.endswith(".xz") or manpage_path.endswith(".lzma"):
         if not lzma_available:
             return
         fd = lzma.LZMAFile(str(manpage_path), "r")
         manpage = fd.read()
-        if IS_PY3:
-            manpage = manpage.decode("latin-1")
+        manpage = manpage.decode("latin-1")
     elif manpage_path.endswith((".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9")):
-        if IS_PY3:
-            fd = open(manpage_path, "r", encoding="latin-1")
-        else:
-            fd = open(manpage_path, "r")
+        fd = open(manpage_path, "r", encoding="latin-1")
         manpage = fd.read()
     else:
         return
@@ -2121,8 +2076,7 @@ def get_paths_from_man_locations():
     for prog in [["man", "--path"], ["manpath"]]:
         try:
             output = subprocess.check_output(prog, stderr=DEVNULL)
-            if IS_PY3:
-                output = output.decode("latin-1")
+            output = output.decode("latin-1")
             parent_paths = output.strip().split(":")
             break
         except (OSError, subprocess.CalledProcessError):

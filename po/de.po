@@ -962,6 +962,10 @@ msgstr "Befehl\n"
 msgid "Command history events"
 msgstr ""
 
+#, c-format
+msgid "Command name exceeds maximum length: '%s'"
+msgstr "Befehlsname überschreitet die maximale Länge: '%s'"
+
 msgid "Command not executable"
 msgstr "Befehl nicht ausführbar"
 

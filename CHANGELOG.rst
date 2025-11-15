@@ -1,5 +1,6 @@
 fish ?.?.? (released ???)
 =========================
+- Add error message for when a command name is too long (:issue:`11788`)
 
 fish 4.2.1 (released November 13, 2025)
 =======================================

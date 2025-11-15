@@ -38,7 +38,7 @@ complete -c man -n 'string match -q -- "*/*" (commandline -t | string collect)' 
 if command -q man
     # We have a conditionally-defined man function,
     # so we need to check for existence here.
-    if echo | MANPAGER=cat command man -l - &>/dev/null
+    if echo | __fish_without_manpager command man -l - &>/dev/null
         complete -c man -s l -l local-file -d "Local file" -r
     end
 end

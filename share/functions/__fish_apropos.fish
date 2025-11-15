@@ -5,9 +5,7 @@ if not type -q apropos
     exit
 end
 
-# Check for macOS Catalina or above.
 if test (__fish_uname) = Darwin
-    and test (string match -r "^\d+" "$(uname -r)") -ge 19
     and test -x /usr/libexec/makewhatis
 
     set -l dir
@@ -18,6 +16,11 @@ if test (__fish_uname) = Darwin
     end
 
     function __fish_apropos -V dir
+        if test "$(command -v apropos)" != /usr/bin/apropos
+            __fish_without_manpager apropos "$argv"
+            return
+        end
+
         # macOS 10.15 "Catalina" has a read only filesystem where the whatis database should be.
         # The whatis database is non-existent, so apropos tries (and fails) to create it every time,
         # which can take seconds.
@@ -34,17 +37,19 @@ if test (__fish_uname) = Darwin
             set age (path mtime -R -- $whatis)
         end
 
-        MANPATH="$dir" MANPAGER=cat WHATISPAGER=cat apropos "$argv"
+        MANPATH="$dir" __fish_without_manpager apropos "$argv"
 
         if test $age -ge $max_age
             test -d "$dir" || mkdir -m 700 -p $dir
-            /bin/sh -c '( "$@" ) >/dev/null 2>&1 </dev/null &' -- /usr/libexec/makewhatis -o "$whatis" (/usr/bin/manpath | string split : | xargs realpath)
+            /bin/sh -c '( "$@" ) >/dev/null 2>&1 </dev/null &' -- \
+                /usr/libexec/makewhatis -o "$whatis" \
+                (/usr/bin/manpath | string split : | xargs realpath)
         end
     end
 else
     function __fish_apropos
         # we only ever prefix match for completions. This also ensures results for bare apropos <TAB>
         # (apropos '' gives no results, but apropos '^' lists all manpages)
-        MANPAGER=cat WHATISPAGER=cat apropos "$argv"
+        __fish_without_manpager apropos "$argv"
     end
 end

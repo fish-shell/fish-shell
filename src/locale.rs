@@ -57,6 +57,7 @@ unsafe fn first_char(s: *const libc::c_char) -> Option<char> {
     unsafe {
         #[allow(unused_comparisons, clippy::absurd_extreme_comparisons)]
         if !s.is_null() && *s > 0 && *s <= 127 && *s.offset(1) == 0 {
+            #[allow(clippy::unnecessary_cast)]
             Some((*s as u8) as char)
         } else {
             None

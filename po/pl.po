@@ -21009,6 +21009,9 @@ msgstr ""
 msgid "Don't download latest ostree/RPM data"
 msgstr ""
 
+msgid "Don't drop capabilities"
+msgstr ""
+
 msgid "Don't edit auto-generated merge message"
 msgstr ""
 
@@ -21397,6 +21400,9 @@ msgid "Don't pause isolates on start when running with --enable-vm-service"
 msgstr ""
 
 msgid "Don't perform a dependency check"
+msgstr ""
+
+msgid "Don't perform security domain transition related to mandatory access control"
 msgstr ""
 
 msgid "Don't perform the actions. Just show them"
@@ -21805,6 +21811,9 @@ msgid "Don't suppress output of update-eix and emerge"
 msgstr ""
 
 msgid "Don't suppress warnings"
+msgstr ""
+
+msgid "Don't switch to the container cgroup"
 msgstr ""
 
 msgid "Don't symblink package executables"
@@ -72450,6 +72459,9 @@ msgstr ""
 msgid "analyze (lint) Aura component code"
 msgstr ""
 
+msgid "android properties controller"
+msgstr ""
+
 msgid "annotate all files recursively"
 msgstr ""
 
@@ -72472,6 +72484,9 @@ msgid "append graft info to log message"
 msgstr ""
 
 msgid "append to the given FILEs, do not overwrite"
+msgstr ""
+
+msgid "applications controller"
 msgstr ""
 
 msgid "apply all patches"
@@ -72795,6 +72810,9 @@ msgstr ""
 msgid "clear space cache (repair only)"
 msgstr ""
 
+msgid "clear the log"
+msgstr ""
+
 msgid "clone a sandbox org"
 msgstr ""
 
@@ -72966,6 +72984,9 @@ msgstr ""
 msgid "consider hidden changesets"
 msgstr ""
 
+msgid "container controller"
+msgstr ""
+
 msgid "continually stream logs"
 msgstr ""
 
@@ -73000,6 +73021,9 @@ msgid "copyright statement"
 msgstr ""
 
 msgid "copyright style to use"
+msgstr ""
+
+msgid "count of initial output lines"
 msgstr ""
 
 msgid "crankshaft harvests type feedback from stub cache"
@@ -73128,7 +73152,16 @@ msgstr ""
 msgid "critical-chain: also show units which finished timespan earlier than last unit in same level"
 msgstr ""
 
+msgid "custom path to waydroid images"
+msgstr ""
+
+msgid "custom system channel"
+msgstr ""
+
 msgid "custom template to format error messages"
+msgstr ""
+
+msgid "custom vendor channel"
 msgstr ""
 
 msgid "datetime at which to schedule"
@@ -73588,6 +73621,9 @@ msgid "do not load user known_hosts file"
 msgstr ""
 
 msgid "do not modify working directory during strip"
+msgstr ""
+
+msgid "do not output any log messages"
 msgstr ""
 
 msgid "do not pass files through decoders"
@@ -74334,6 +74370,9 @@ msgstr ""
 msgid "follow links"
 msgstr ""
 
+msgid "follow the waydroid logfile"
+msgstr ""
+
 msgid "for --disable-eprt"
 msgstr ""
 
@@ -74487,6 +74526,9 @@ msgstr ""
 msgid "fragment packets"
 msgstr ""
 
+msgid "freeze container"
+msgstr ""
+
 msgid "freshen existing files, create none"
 msgstr ""
 
@@ -74620,6 +74662,9 @@ msgid "get org description"
 msgstr ""
 
 msgid "get secret but publicly accessible URL of a backup"
+msgstr ""
+
+msgid "get value of property from container"
 msgstr ""
 
 msgid "get/set config vars"
@@ -74886,6 +74931,9 @@ msgstr ""
 msgid "initialize new module in current directory"
 msgstr ""
 
+msgid "initialize waydroid and start it"
+msgstr ""
+
 msgid "initiate query"
 msgstr ""
 
@@ -75010,6 +75058,9 @@ msgid "json layoutfile to be loaded"
 msgstr ""
 
 msgid "junk paths (do not make directories)"
+msgstr ""
+
+msgid "just for updating configs"
 msgstr ""
 
 msgid "just instantiate the interpreter and quit"
@@ -75279,6 +75330,9 @@ msgstr ""
 msgid "list installed addons"
 msgstr ""
 
+msgid "list installed applications"
+msgstr ""
+
 msgid "list installed packages"
 msgstr ""
 
@@ -75298,6 +75352,9 @@ msgid "list more information about each org shape"
 msgstr ""
 
 msgid "list of build tags"
+msgstr ""
+
+msgid "list of package names"
 msgstr ""
 
 msgid "list only docopt usage strings"
@@ -76347,6 +76404,9 @@ msgstr ""
 msgid "path to config files; they are merged if multiple"
 msgstr ""
 
+msgid "path to log file"
+msgstr ""
+
 msgid "path to log file, 'stdout', 'stderr' or 'false'"
 msgstr ""
 
@@ -76591,6 +76651,9 @@ msgid "print debugging information"
 msgstr ""
 
 msgid "print detailed info about command NAME"
+msgstr ""
+
+msgid "print details to stdout"
 msgstr ""
 
 msgid "print diagnostic information"
@@ -76884,6 +76947,9 @@ msgstr ""
 msgid "punctuation characters"
 msgstr ""
 
+msgid "push a single package to the container and install it"
+msgstr ""
+
 msgid "push source to a scratch org from the project"
 msgstr ""
 
@@ -76908,6 +76974,9 @@ msgstr ""
 msgid "query various internal information"
 msgstr ""
 
+msgid "quick check for the waydroid"
+msgstr ""
+
 msgid "quiet mode"
 msgstr ""
 
@@ -76927,6 +76996,9 @@ msgid "randomize hashes(w/ snapshots cannot override baked-in seed)"
 msgstr ""
 
 msgid "randomize local and remote ports"
+msgstr ""
+
+msgid "re-initialize configs and images"
 msgstr ""
 
 msgid "re-try self-optimization if it failed"
@@ -77106,6 +77178,9 @@ msgstr ""
 msgid "remove revs only reachable from given bookmark"
 msgstr ""
 
+msgid "remove single app package from the container"
+msgstr ""
+
 msgid "remove the corresponding installed archive or binary"
 msgstr ""
 
@@ -77259,6 +77334,9 @@ msgstr ""
 msgid "restart an app dyno"
 msgstr ""
 
+msgid "restart container"
+msgstr ""
+
 msgid "restart from build by calling (FUNC argv)"
 msgstr ""
 
@@ -77373,6 +77451,9 @@ msgstr ""
 msgid "roll back to an older release"
 msgstr ""
 
+msgid "rom type"
+msgstr ""
+
 msgid "root of directory tree of files to deploy"
 msgstr ""
 
@@ -77443,6 +77524,9 @@ msgid "run one-off commands (console, rake)"
 msgstr ""
 
 msgid "run procedure to use to process batch events"
+msgstr ""
+
+msgid "run remote shell command"
 msgstr ""
 
 msgid "run server in background"
@@ -77616,6 +77700,9 @@ msgstr ""
 msgid "serial number embedded in the certificate"
 msgstr ""
 
+msgid "session controller"
+msgstr ""
+
 msgid "set BootNext to XXXX (hex)"
 msgstr ""
 
@@ -77778,10 +77865,16 @@ msgstr ""
 msgid "set up a Salesforce DX project"
 msgstr ""
 
+msgid "set up configs and install images"
+msgstr ""
+
 msgid "set up terminal for reading keystrokes"
 msgstr ""
 
 msgid "set username aliases for the Salesforce CLI"
+msgstr ""
+
+msgid "set value to property on container"
 msgstr ""
 
 msgid "set/list network variables"
@@ -77839,6 +77932,12 @@ msgid "show all the documentation for the package"
 msgstr ""
 
 msgid "show also inactive controls"
+msgstr ""
+
+msgid "show android full screen in window"
+msgstr ""
+
+msgid "show android logcat"
 msgstr ""
 
 msgid "show bookmarks"
@@ -77911,6 +78010,9 @@ msgid "show help for specific platform(s)"
 msgstr ""
 
 msgid "show help message"
+msgstr ""
+
+msgid "show help message and exit"
 msgstr ""
 
 msgid "show help with GEGL options"
@@ -78100,6 +78202,9 @@ msgid "show version"
 msgstr ""
 
 msgid "show version number"
+msgstr ""
+
+msgid "show version number and exit"
 msgstr ""
 
 msgid "show what dependent ports are, and are not inst… [See Man Page]"
@@ -78372,6 +78477,9 @@ msgstr ""
 msgid "start and print only the URL"
 msgstr ""
 
+msgid "start container"
+msgstr ""
+
 msgid "start debug logging and display logs"
 msgstr ""
 
@@ -78382,6 +78490,12 @@ msgid "start emacs with specified init directory"
 msgstr ""
 
 msgid "start running no tunnels"
+msgstr ""
+
+msgid "start session"
+msgstr ""
+
+msgid "start single application"
 msgstr ""
 
 msgid "start tmux server if not running; do not create a session"
@@ -78396,10 +78510,16 @@ msgstr ""
 msgid "stop an app dyno"
 msgstr ""
 
+msgid "stop container"
+msgstr ""
+
 msgid "stop daily backups"
 msgstr ""
 
 msgid "stop interrupted graft"
+msgstr ""
+
+msgid "stop session"
 msgstr ""
 
 msgid "store matte channel if the image has one"
@@ -78462,6 +78582,9 @@ msgstr ""
 msgid "sysfs device path"
 msgstr ""
 
+msgid "system type"
+msgstr ""
+
 msgid "target API version for the retrieve (default 46.0)"
 msgstr ""
 
@@ -78513,10 +78636,16 @@ msgstr ""
 msgid "tests to run if --testlevel RunSpecifiedTests"
 msgstr ""
 
+msgid "the GID to run as"
+msgstr ""
+
 msgid "the ID of the batch whose status you want to view"
 msgstr ""
 
 msgid "the ID of the record you’re deleting"
+msgstr ""
+
+msgid "the UID to run as"
 msgstr ""
 
 msgid "the class which is to perform logging"
@@ -78654,6 +78783,9 @@ msgstr ""
 msgid "transform image colors to match this set of colors"
 msgstr ""
 
+msgid "transition to the specified SELinux or AppArmor security context"
+msgstr ""
+
 msgid "translate from a WSL path to a Windows path"
 msgstr ""
 
@@ -78750,6 +78882,9 @@ msgstr ""
 msgid "undo the effects of a previous disable command"
 msgstr ""
 
+msgid "unfreeze container"
+msgstr ""
+
 msgid "uninstall climate"
 msgstr ""
 
@@ -78814,6 +78949,9 @@ msgid "update to the latest filelist. This requires write permission to /var/cac
 msgstr ""
 
 msgid "upgrade an existing addon"
+msgstr ""
+
+msgid "upgrade images"
 msgstr ""
 
 msgid "upper-case characters"
@@ -79179,6 +79317,9 @@ msgstr ""
 msgid "wait for async suite definition"
 msgstr ""
 
+msgid "wait for init before running"
+msgstr ""
+
 msgid "wait time for command to finish in minutes (default: -1 (no limit))"
 msgstr ""
 
@@ -79288,6 +79429,9 @@ msgid "work with Apex tests"
 msgstr ""
 
 msgid "write a .license file to files with unrecognised comment styles"
+msgstr ""
+
+msgid "write even more to the logfiles"
 msgstr ""
 
 msgid "write messages to mbox file instead of sending them"

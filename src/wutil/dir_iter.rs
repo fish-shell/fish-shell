@@ -54,7 +54,8 @@ pub struct DirEntry {
 
 impl DirEntry {
     /// Return the type of this entry if it is already available, otherwise none().
-    pub fn fast_type(&self) -> Option<DirEntryType> {
+    #[cfg(test)]
+    fn fast_type(&self) -> Option<DirEntryType> {
         self.typ.get()
     }
 

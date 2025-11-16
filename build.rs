@@ -82,7 +82,7 @@ fn detect_cfgs(target: &mut Target) {
         ("cygwin", &detect_cygwin),
         ("have_eventfd", &|target| {
             // FIXME: NetBSD 10 has eventfd, but the libc crate does not expose it.
-            if cfg!(target_os = "netbsd") {
+            if target_os() == "netbsd" {
                 false
             } else {
                 target.has_header("sys/eventfd.h")
@@ -108,13 +108,17 @@ fn detect_cfgs(target: &mut Target) {
     }
 }
 
+// Target OS for compiling our crates, as opposed to the build script.
+fn target_os() -> String {
+    env_var("CARGO_CFG_TARGET_OS").unwrap()
+}
+
 fn detect_apple(_: &Target) -> bool {
-    cfg!(any(target_os = "ios", target_os = "macos"))
+    matches!(target_os().as_str(), "ios" | "macos")
 }
 
 fn detect_cygwin(_: &Target) -> bool {
-    // Cygwin target is usually cross-compiled.
-    env_var("CARGO_CFG_TARGET_OS").unwrap() == "cygwin"
+    target_os() == "cygwin"
 }
 
 /// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
@@ -124,20 +128,14 @@ fn detect_cygwin(_: &Target) -> bool {
 /// doesn't necessarily include less-popular forks nor does it group them into families more
 /// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
 fn detect_bsd(_: &Target) -> bool {
-    // Instead of using `uname`, we can inspect the TARGET env variable set by Cargo. This lets us
-    // support cross-compilation scenarios.
-    let mut target = env_var("TARGET").unwrap();
-    if !target.chars().all(|c| c.is_ascii_lowercase()) {
-        target = target.to_ascii_lowercase();
+    let target_os = target_os();
+    let is_bsd = target_os.ends_with("bsd") || target_os == "dragonfly";
+    if matches!(
+        target_os.as_str(),
+        "dragonfly" | "freebsd" | "netbsd" | "openbsd"
+    ) {
+        assert!(is_bsd, "Target incorrectly detected as not BSD!");
     }
-    let is_bsd = target.ends_with("bsd") || target.ends_with("dragonfly");
-    #[cfg(any(
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "openbsd",
-    ))]
-    assert!(is_bsd, "Target incorrectly detected as not BSD!");
     is_bsd
 }
 

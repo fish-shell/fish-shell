@@ -2320,7 +2320,7 @@ msgstr ""
 msgid "foo=bar variable overrides"
 msgstr ""
 
-msgid "funced: The value for $%s '%s' could not be used because the command '%s' could not be found"
+msgid "funced: The value for $%s '%s' could not be used because the command '%s' could not be found\\n"
 msgstr ""
 
 msgid "help: %s is not a valid command: %s\\n"

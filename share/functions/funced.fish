@@ -40,7 +40,7 @@ function funced --description 'Edit function definition'
 
     if not type -q -f "$editor[1]"
         printf >&2 \
-            (_ "funced: The value for \$%s '%s' could not be used because the command '%s' could not be found") \
+            (_ "funced: The value for \$%s '%s' could not be used because the command '%s' could not be found\n") \
             (set -q VISUAL && echo VISUAL || echo EDITOR) \
             "$editor" \
             $editor[1]

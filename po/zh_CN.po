@@ -2352,8 +2352,8 @@ msgstr "fish: 未知的命令：%s\\n"
 msgid "foo=bar variable overrides"
 msgstr "foo=bar 变量覆盖"
 
-msgid "funced: The value for $%s '%s' could not be used because the command '%s' could not be found"
-msgstr "funced: 无法使用 $%s '%s' 的值，因为找不到命令 '%s'"
+msgid "funced: The value for $%s '%s' could not be used because the command '%s' could not be found\\n"
+msgstr "funced: 无法使用 $%s '%s' 的值，因为找不到命令 '%s'\\n"
 
 msgid "help: %s is not a valid command: %s\\n"
 msgstr "help: %s 不是有效的命令：%s\\n"

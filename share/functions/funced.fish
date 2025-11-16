@@ -39,11 +39,11 @@ function funced --description 'Edit function definition'
     end
 
     if not type -q -f "$editor[1]"
-        if set -q VISUAL
-            echo (_ "funced: The value for \$VISUAL '$editor' could not be used because the command '$editor[1]' could not be found") >&2
-        else
-            echo (_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor[1]' could not be found") >&2
-        end
+        printf >&2 \
+            (_ "funced: The value for \$%s '%s' could not be used because the command '%s' could not be found") \
+            (set -q VISUAL && echo VISUAL || echo EDITOR) \
+            "$editor" \
+            $editor[1]
         set editor fish
     end
 

@@ -23,7 +23,7 @@ function __fish_cached --description "Cache the command output for a given amoun
     set -l cache_file (path normalize $cache_dir/$cache_key)
     set -l cache_age (path mtime --relative $cache_file)
 
-    set -l populate_cache sh -c "
+    set -l populate_cache /bin/sh -c "
         {
             $argv
         } >$cache_file || rm $cache_file 2>/dev/null

@@ -73,37 +73,34 @@ fn main() {
 /// `Cargo.toml`) behind a feature we just enabled.
 ///
 /// [0]: https://github.com/rust-lang/cargo/issues/5499
-#[rustfmt::skip]
 fn detect_cfgs(target: &mut Target) {
     for (name, handler) in [
-        // Ignore the first entry, it just sets up the type inference. Model new entries after the
-        // second line.
+        // Ignore the first entry, it just sets up the type inference.
         ("", &(|_: &Target| false) as &dyn Fn(&Target) -> bool),
         ("apple", &detect_apple),
         ("bsd", &detect_bsd),
-        ("using_cmake", &|_| option_env!("FISH_CMAKE_BINARY_DIR").is_some()),
-        ("use_prebuilt_docs", &|_| env_var("FISH_USE_PREBUILT_DOCS").is_some_and(|v| v == "TRUE") ),
         ("cygwin", &detect_cygwin),
-        ("small_main_stack", &has_small_stack),
-        // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
-        ("localeconv_l", &|target| {
-            target.has_symbol("localeconv_l")
-        }),
-        ("FISH_USE_POSIX_SPAWN", &|target| {
-            target.has_header("spawn.h")
-        }),
-        ("HAVE_PIPE2", &|target| {
-            target.has_symbol("pipe2")
-        }),
-        ("HAVE_EVENTFD", &|target| {
+        ("have_eventfd", &|target| {
             // FIXME: NetBSD 10 has eventfd, but the libc crate does not expose it.
             if cfg!(target_os = "netbsd") {
-                 false
-             } else {
-                 target.has_header("sys/eventfd.h")
+                false
+            } else {
+                target.has_header("sys/eventfd.h")
             }
         }),
-        ("HAVE_WAITSTATUS_SIGNAL_RET", &|target| {
+        ("have_localeconv_l", &|target| {
+            target.has_symbol("localeconv_l")
+        }),
+        ("have_pipe2", &|target| target.has_symbol("pipe2")),
+        ("have_posix_spawn", &|target| target.has_header("spawn.h")),
+        ("small_main_stack", &has_small_stack),
+        ("use_prebuilt_docs", &|_| {
+            env_var("FISH_USE_PREBUILT_DOCS").is_some_and(|v| v == "TRUE")
+        }),
+        ("using_cmake", &|_| {
+            option_env!("FISH_CMAKE_BINARY_DIR").is_some()
+        }),
+        ("waitstatus_signal_ret", &|target| {
             target.r#if("WEXITSTATUS(0x007f) == 0x7f", &["sys/wait.h"])
         }),
     ] {

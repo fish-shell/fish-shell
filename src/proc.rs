@@ -22,6 +22,7 @@ use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleSto
 use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
 use crate::wutil::{wbasename, wperror};
+use cfg_if::cfg_if;
 use libc::{
     _SC_CLK_TCK, EXIT_SUCCESS, SIG_DFL, SIG_IGN, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
     SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, WCONTINUED, WEXITSTATUS,
@@ -125,14 +126,17 @@ impl ProcStatus {
 
     /// Encode a return value `ret` and signal `sig` into a status value like waitpid() does.
     const fn w_exitcode(ret: i32, sig: i32) -> i32 {
-        #[cfg(HAVE_WAITSTATUS_SIGNAL_RET)]
-        // It's encoded signal and then status
-        // The return status is in the lower byte.
-        return (sig << 8) | ret;
-        #[cfg(not(HAVE_WAITSTATUS_SIGNAL_RET))]
-        // The status is encoded in the upper byte.
-        // This should be W_EXITCODE(ret, sig) but that's not available everywhere.
-        return (ret << 8) | sig;
+        cfg_if!(
+            if #[cfg(waitstatus_signal_ret)] {
+                // It's encoded signal and then status
+                // The return status is in the lower byte.
+                return (sig << 8) | ret;
+            } else {
+                // The status is encoded in the upper byte.
+                // This should be W_EXITCODE(ret, sig) but that's not available everywhere.
+                return (ret << 8) | sig;
+            }
+        );
     }
 
     /// Construct from a status returned from a waitpid call.

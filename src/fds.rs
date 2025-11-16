@@ -3,6 +3,7 @@ use crate::flog::FLOG;
 use crate::signal::signal_check_cancel;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
+use cfg_if::cfg_if;
 use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
 use nix::fcntl::FcntlArg;
 use nix::{fcntl::OFlag, unistd};
@@ -136,27 +137,30 @@ pub struct AutoClosePipes {
 pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
     #[allow(unused_mut, unused_assignments)]
     let mut already_cloexec = false;
-    #[cfg(HAVE_PIPE2)]
-    let pipes = match nix::unistd::pipe2(OFlag::O_CLOEXEC) {
-        Ok(pipes) => {
-            already_cloexec = true;
-            pipes
+    cfg_if!(
+        if #[cfg(have_pipe2)] {
+            let pipes = match nix::unistd::pipe2(OFlag::O_CLOEXEC) {
+                Ok(pipes) => {
+                    already_cloexec = true;
+                    pipes
+                }
+                Err(err) => {
+                    FLOG!(warning, PIPE_ERROR.localize());
+                    perror("pipe2");
+                    return Err(err);
+                }
+            };
+        } else {
+            let pipes = match nix::unistd::pipe() {
+                Ok(pipes) => pipes,
+                Err(err) => {
+                    FLOG!(warning, PIPE_ERROR.localize());
+                    perror("pipe");
+                    return Err(err);
+                }
+            };
         }
-        Err(err) => {
-            FLOG!(warning, PIPE_ERROR.localize());
-            perror("pipe2");
-            return Err(err);
-        }
-    };
-    #[cfg(not(HAVE_PIPE2))]
-    let pipes = match nix::unistd::pipe() {
-        Ok(pipes) => pipes,
-        Err(err) => {
-            FLOG!(warning, PIPE_ERROR.localize());
-            perror("pipe");
-            return Err(err);
-        }
-    };
+    );
 
     let readp = pipes.0;
     let writep = pipes.1;

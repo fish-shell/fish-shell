@@ -12,7 +12,7 @@ use crate::common::{
     write_loop,
 };
 use crate::env::{EnvMode, EnvStack, Environment, READ_BYTE_LIMIT, Statuses};
-#[cfg(FISH_USE_POSIX_SPAWN)]
+#[cfg(have_posix_spawn)]
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::make_fd_blocking;
 use crate::fds::{PIPE_ERROR, make_autoclose_pipes, open_cloexec};
@@ -23,7 +23,7 @@ use crate::fork_exec::postfork::{
     child_setup_process, execute_fork, execute_setpgid, report_setpgid_error,
     safe_report_exec_error,
 };
-#[cfg(FISH_USE_POSIX_SPAWN)]
+#[cfg(have_posix_spawn)]
 use crate::fork_exec::spawn::PosixSpawner;
 use crate::function::{self, FunctionProperties};
 use crate::io::{
@@ -33,7 +33,7 @@ use crate::io::{
 use crate::nix::{getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
-#[cfg(FISH_USE_POSIX_SPAWN)]
+#[cfg(have_posix_spawn)]
 use crate::proc::Pid;
 use crate::proc::{
     InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType, hup_jobs,
@@ -456,7 +456,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
 // To avoid the race between the caller calling tcsetpgrp() and the client checking the
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
-#[cfg(FISH_USE_POSIX_SPAWN)]
+#[cfg(have_posix_spawn)]
 fn can_use_posix_spawn_for_job(job: &Job, dup2s: &Dup2List) -> bool {
     // Is it globally disabled?
     if !use_posix_spawn() {
@@ -884,7 +884,7 @@ fn exec_external_command(
 
     let actual_cmd = wcs2zstring(&p.actual_cmd);
 
-    #[cfg(FISH_USE_POSIX_SPAWN)]
+    #[cfg(have_posix_spawn)]
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
     if can_use_posix_spawn_for_job(j, &dup2s) {
         let file = &parser.libdata().current_filename;

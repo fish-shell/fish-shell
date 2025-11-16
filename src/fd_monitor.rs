@@ -1,3 +1,4 @@
+use cfg_if::cfg_if;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::collections::HashMap;
@@ -17,10 +18,13 @@ use crate::wutil::perror;
 use errno::errno;
 use libc::{EAGAIN, EINTR, EWOULDBLOCK, c_void};
 
-#[cfg(not(HAVE_EVENTFD))]
-use crate::fds::{make_autoclose_pipes, make_fd_nonblocking};
-#[cfg(HAVE_EVENTFD)]
-use libc::{EFD_CLOEXEC, EFD_NONBLOCK};
+cfg_if!(
+    if #[cfg(have_eventfd)] {
+        use libc::{EFD_CLOEXEC, EFD_NONBLOCK};
+    } else {
+        use crate::fds::{make_autoclose_pipes, make_fd_nonblocking};
+    }
+);
 
 /// An event signaller implemented using a file descriptor, so it can plug into
 /// [`select()`](libc::select).
@@ -33,7 +37,7 @@ use libc::{EFD_CLOEXEC, EFD_NONBLOCK};
 pub struct FdEventSignaller {
     // Always the read end of the fd; maybe the write end as well.
     fd: OwnedFd,
-    #[cfg(not(HAVE_EVENTFD))]
+    #[cfg(not(have_eventfd))]
     write: OwnedFd,
 }
 
@@ -41,31 +45,30 @@ impl FdEventSignaller {
     /// The default constructor will abort on failure (fd exhaustion).
     /// This should only be used during startup.
     pub fn new() -> Self {
-        #[cfg(HAVE_EVENTFD)]
-        {
-            // Note we do not want to use EFD_SEMAPHORE because we are binary (not counting) semaphore.
-            let fd = unsafe { libc::eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK) };
-            if fd < 0 {
-                perror("eventfd");
-                exit_without_destructors(1);
+        cfg_if!(
+            if #[cfg(have_eventfd)] {
+                // Note we do not want to use EFD_SEMAPHORE because we are binary (not counting) semaphore.
+                let fd = unsafe { libc::eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK) };
+                if fd < 0 {
+                    perror("eventfd");
+                    exit_without_destructors(1);
+                }
+                return Self {
+                    fd: unsafe { OwnedFd::from_raw_fd(fd) },
+                };
+            } else {
+                // Implementation using pipes.
+                let Ok(pipes) = make_autoclose_pipes() else {
+                    exit_without_destructors(1);
+                };
+                make_fd_nonblocking(pipes.read.as_raw_fd()).unwrap();
+                make_fd_nonblocking(pipes.write.as_raw_fd()).unwrap();
+                return Self {
+                    fd: pipes.read,
+                    write: pipes.write,
+                };
             }
-            Self {
-                fd: unsafe { OwnedFd::from_raw_fd(fd) },
-            }
-        }
-        #[cfg(not(HAVE_EVENTFD))]
-        {
-            // Implementation using pipes.
-            let Ok(pipes) = make_autoclose_pipes() else {
-                exit_without_destructors(1);
-            };
-            make_fd_nonblocking(pipes.read.as_raw_fd()).unwrap();
-            make_fd_nonblocking(pipes.write.as_raw_fd()).unwrap();
-            Self {
-                fd: pipes.read,
-                write: pipes.write,
-            }
-        }
+        );
     }
 
     /// Return the fd to read from, for notification.
@@ -80,10 +83,13 @@ impl FdEventSignaller {
         // If we are using eventfd, we want to read a single uint64.
         // If we are using pipes, read a lot; note this may leave data on the pipe if post has been
         // called many more times. In no case do we care about the data which is read.
-        #[cfg(HAVE_EVENTFD)]
-        let mut buff = [0_u64; 1];
-        #[cfg(not(HAVE_EVENTFD))]
-        let mut buff = [0_u8; 1024];
+        cfg_if!(
+            if #[cfg(have_eventfd)] {
+                let mut buff = [0_u64; 1];
+            } else {
+                let mut buff = [0_u8; 1024];
+            }
+        );
         let mut ret;
         loop {
             ret = unsafe {
@@ -107,10 +113,13 @@ impl FdEventSignaller {
     /// This retries on EINTR.
     pub fn post(&self) {
         // eventfd writes uint64; pipes write 1 byte.
-        #[cfg(HAVE_EVENTFD)]
-        let c = 1_u64;
-        #[cfg(not(HAVE_EVENTFD))]
-        let c = 1_u8;
+        cfg_if!(
+            if #[cfg(have_eventfd)] {
+                let c = 1_u64;
+            } else {
+                let c = 1_u8;
+            }
+        );
         let mut ret;
         loop {
             let bytes = c.to_ne_bytes();
@@ -146,10 +155,13 @@ impl FdEventSignaller {
 
     /// Return the fd to write to.
     fn write_fd(&self) -> RawFd {
-        #[cfg(HAVE_EVENTFD)]
-        return self.fd.as_raw_fd();
-        #[cfg(not(HAVE_EVENTFD))]
-        return self.write.as_raw_fd();
+        cfg_if!(
+            if #[cfg(have_eventfd)] {
+                return self.fd.as_raw_fd();
+            } else {
+                return self.write.as_raw_fd();
+            }
+        );
     }
 }
 

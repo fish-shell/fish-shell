@@ -37293,6 +37293,9 @@ msgstr "Marquer vos paquets préférés"
 msgid "Markov mode"
 msgstr ""
 
+msgid "Markov stats file"
+msgstr ""
+
 msgid "Marks all unapplied changes to the database as applied in the change log"
 msgstr ""
 
@@ -37530,9 +37533,6 @@ msgstr ""
 msgid "Maximum time to sleep(in microseconds) after each request (default: 0)"
 msgstr ""
 
-msgid "Maximum unique characters in subset"
-msgstr ""
-
 msgid "Maximum uploads at once"
 msgstr ""
 
@@ -37729,9 +37729,6 @@ msgid "Minimum stability (empty or one of: stable, RC, beta, alpha, dev)"
 msgstr ""
 
 msgid "Minimum time to sleep(in microseconds) after each request (default: 0)"
-msgstr ""
-
-msgid "Minimum unique characters in subset"
 msgstr ""
 
 msgid "Minimum-stability allowed (unless a version is specified)"
@@ -43276,12 +43273,6 @@ msgid "Print Hugo version and environment info"
 msgstr "Afficher la version de Hugo et des informations sur l’environnement"
 
 msgid "Print IP addresses numerically"
-msgstr ""
-
-msgid "Print JohnTheRipper hash formats"
-msgstr ""
-
-msgid "Print JohnTheRipper rules"
 msgstr ""
 
 msgid "Print Kitchen's version information"
@@ -65232,9 +65223,6 @@ msgstr ""
 msgid "The KMS ARNs the new group should contain"
 msgstr ""
 
-msgid "The N first characters of subsets charset are the required set"
-msgstr ""
-
 msgid "The Node.js version to use"
 msgstr ""
 
@@ -72846,6 +72834,9 @@ msgstr ""
 msgid "cat-config: skip comments, empty lines and section headers"
 msgstr ""
 
+msgid "catch up with existing (paused) session NAME"
+msgstr ""
+
 msgid "change access time (atime)"
 msgstr ""
 
@@ -74118,7 +74109,7 @@ msgstr ""
 msgid "enable liveedit experimental feature"
 msgstr ""
 
-msgid "enable memory saving"
+msgid "enable memory saving at level"
 msgstr ""
 
 msgid "enable node's debugger breaking on thefirst line"
@@ -75582,6 +75573,9 @@ msgstr ""
 msgid "load buffer from path, use - for stdin"
 msgstr ""
 
+msgid "load certain salts"
+msgstr ""
+
 msgid "load configuration defaults from file"
 msgstr "charger la configuration par défaut depuis un fichier"
 
@@ -75603,10 +75597,7 @@ msgstr ""
 msgid "load resources from file [default]"
 msgstr ""
 
-msgid "load salts"
-msgstr ""
-
-msgid "load salts with or without cost value"
+msgid "load salts with or without specific cost values"
 msgstr ""
 
 msgid "load system known_hosts file before reading user known_hosts"
@@ -75852,9 +75843,6 @@ msgstr "Inclure les fichiers ajoutés ou supprimés à la validation"
 msgid "mark new/missing files as added/removed before shelving"
 msgstr ""
 
-msgid "markov stats file"
-msgstr ""
-
 msgid "mask mode"
 msgstr ""
 
@@ -75900,10 +75888,10 @@ msgstr "Nombre maximum de requêtes réseau simultanées"
 msgid "maximum number of elements per chain"
 msgstr ""
 
-msgid "mbox splitter"
+msgid "maximum unique characters in subset"
 msgstr ""
 
-msgid "memory-map infile"
+msgid "mbox splitter"
 msgstr ""
 
 msgid "merge copyright lines if copyright statements are identical"
@@ -75928,6 +75916,9 @@ msgid "minimum length for automatic enable preparsing"
 msgstr ""
 
 msgid "minimum number of elements per chain"
+msgstr ""
+
+msgid "minimum unique characters in subset"
 msgstr ""
 
 msgid "minutes to wait for the package version to be created (default: 2 minutes)"
@@ -76275,6 +76266,9 @@ msgstr ""
 msgid "operate on patch repository"
 msgstr "Opérer sur le dépôt des patchs"
 
+msgid "opportunistic dupe suppression for wordlist+rules"
+msgstr ""
+
 msgid "optimization filter"
 msgstr ""
 
@@ -76425,7 +76419,7 @@ msgstr ""
 msgid "package version in major.minor format, for example, 3.2"
 msgstr ""
 
-msgid "parse .pot file as a wordlist"
+msgid "parse a .pot file as a wordlist"
 msgstr ""
 
 msgid "partition containing loader (Default: 1)"
@@ -76591,6 +76585,12 @@ msgid "preallocate some memory to build stack traces"
 msgstr ""
 
 msgid "predefined layout"
+msgstr ""
+
+msgid "prefer shorter candidates over smaller subsets"
+msgstr ""
+
+msgid "prefer smaller subsets over shorter candidates"
 msgstr ""
 
 msgid "prefix of generated files"
@@ -78564,9 +78564,6 @@ msgstr ""
 msgid "suffix for installation directory"
 msgstr "Suffixe pour le dossier d’installation"
 
-msgid "suppress all dupes in wordlist"
-msgstr ""
-
 msgid "suppress diagnostics about file/dir-creation failure"
 msgstr ""
 
@@ -78652,6 +78649,9 @@ msgid "the ID of the batch whose status you want to view"
 msgstr ""
 
 msgid "the ID of the record you’re deleting"
+msgstr ""
+
+msgid "the N first characters of subsets charset are the required set"
 msgstr ""
 
 msgid "the class which is to perform logging"

@@ -497,10 +497,6 @@ msgid "%s: Invalid max value '%s'\n"
 msgstr "%s: 无效的最大值 '%s'\n"
 
 #, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'\n"
-msgstr "%s: 无效的选项规范 '%s' 于字符 '%c'\n"
-
-#, c-format
 msgid "%s: Invalid padding character of width zero '%s'\n"
 msgstr "%s: 宽度为零的无效的填充字符 '%s'\n"
 

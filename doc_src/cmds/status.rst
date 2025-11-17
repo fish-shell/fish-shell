@@ -30,7 +30,7 @@ Synopsis
     status test-feature FEATURE
     status build-info
     status get-file FILE
-    status list-files [PATH]
+    status list-files [PATH ...]
     status help-sections
     status terminal
     status test-terminal-feature FEATURE
@@ -118,7 +118,7 @@ The following operations (subcommands) are available:
     as well as the man pages and themes. Which files are included depends on build settings.
     Returns 0 if the file was included, 1 otherwise.
 
-**list-files** *FILE*
+**list-files** *FILE...*
     NOTE: this subcommand is mainly intended for fish's internal use; let us know if you want to use it elsewhere.
 
     This lists the files embedded in the fish binary at compile time. Only files where the path starts with the optional *FILE* argument are shown.

@@ -517,18 +517,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 }
             );
         }
-        c @ STATUS_LIST_FILES => {
-            if args.len() > 1 {
-                streams.err.append(wgettext_fmt!(
-                    BUILTIN_ERR_ARG_COUNT2,
-                    cmd,
-                    c.to_wstr(),
-                    1,
-                    args.len()
-                ));
-                return Err(STATUS_INVALID_ARGS);
-            }
-
+        STATUS_LIST_FILES => {
             cfg_if!(
                 if #[cfg(not(feature = "embed-data"))] {
                     streams
@@ -537,16 +526,24 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     return Err(STATUS_CMD_ERROR);
                 } else {
                     use crate::util::wcsfilecmp_glob;
-
                     let mut paths = vec![];
-                    let arg = crate::common::wcs2bytes(args.first().unwrap_or(&L!("")));
-                    let arg = std::str::from_utf8(&arg).unwrap();
-                    let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
-                    #[cfg(using_cmake)]
-                    let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
-                    for path in embedded_files {
-                        if arg.is_empty() || path.starts_with(arg) {
-                            paths.push(bytes2wcstring(path.as_bytes()));
+                    let mut add = |arg| {
+                        let arg = crate::common::wcs2bytes(arg);
+                        let arg = std::str::from_utf8(&arg).unwrap();
+                        let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
+                        #[cfg(using_cmake)]
+                        let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
+                        for path in embedded_files {
+                            if arg.is_empty() || path.starts_with(arg) {
+                                paths.push(bytes2wcstring(path.as_bytes()));
+                            }
+                        }
+                    };
+                    if args.is_empty() {
+                            add(L!(""));
+                    } else {
+                        for arg in args {
+                            add(arg);
                         }
                     }
 

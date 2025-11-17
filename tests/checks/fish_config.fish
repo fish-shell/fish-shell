@@ -142,6 +142,10 @@ fish_config theme show "fish default"
 # CHECK: {{\x1b\[m}}{{\x1b\[m}}echo{{\x1b\[m}} {{\x1b\[91m}}'{{\x1b\[33m}}Errors are the portal to discovery
 # CHECK: {{\x1b\[m}}{{\x1b\[m}}Th{{\x1b\[m}}{{\x1b\[90m}}is an autosuggestion
 
+fish_config theme show ayu\ Dark ayu\ Light | string match -r '^.*ayu.*'
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu Dark{{\x1b\[m}}
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu Light{{\x1b\[m}}
+
 mkdir $__fish_config_dir/themes
 touch $__fish_config_dir/themes/custom-from-userconf.theme
 fish_config theme show | grep -E 'fish default|Default Dark|custom-from-userconf'

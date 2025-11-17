@@ -1,6 +1,6 @@
 #RUN: fish=%fish %fish %s
 
-# REQUIRES: %fish -c "is_cygwin"
+# REQUIRES: %fish -c "__fish_is_cygwin"
 
 mkdir dir
 echo "#!/bin/sh" >dir/foo.exe

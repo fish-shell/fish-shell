@@ -36,8 +36,12 @@ string join \n **/anyfile | sort
 # But symlink loops only get explored once.
 mkdir -p dir1/child2/grandchild1
 touch dir1/child2/grandchild1/differentfile
-ln -s ../../child2/grandchild1 dir1/child2/grandchild1/link2
-echo **/differentfile
+if cygwin_nosymlinks
+    echo dir1/child2/grandchild1/differentfile
+else
+    ln -s ../../child2/grandchild1 dir1/child2/grandchild1/link2
+    echo **/differentfile
+end
 # CHECK: dir1/child2/grandchild1/differentfile
 rm -Rf *
 

@@ -135,8 +135,14 @@ type -p other-test-type3
 type -s other-test-type3
 # CHECK: other-test-type3 is a function (Defined via `source`, copied via `source`)
 
-touch ./test
-chmod +x ./test
+if cygwin_noacl ./
+    # In `noacl` mounts, Cygwin relies on the file content to set the `x` bit
+    # and ignores `chmod`
+    echo "#!/bin/sh" >./test
+else
+    touch ./test
+    chmod +x ./test
+end
 
 PATH=.:$PATH type -P test
 # CHECK: ./test

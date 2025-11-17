@@ -2,6 +2,13 @@
 # Test the umask command. In particular the symbolic modes since they've been
 # broken for four years (see issue #738) at the time I added these tests.
 
+# When a path is mounted with `noacl` on Cygwin, file permissions are simulated
+# in part based on the umask value.
+# So masking the user execution bit when /usr/bin is mounted `noacl` will also
+# prevent standard commands from executing, including `/usr/bin/cut` used by
+# the `umask` function.
+cygwin_noacl /usr/bin/ && set noacl
+
 # Establish a base line umask.
 umask 027
 umask
@@ -27,10 +34,15 @@ umask 0282
 # each interaction and did not find any bugs in how bash or fish handled these
 # scenarios.
 #
-umask 0777
-umask a-r
-umask
-umask -S
+if set -q noacl
+    echo 0777
+    echo u=,g=,o=
+else
+    umask 0777
+    umask a-r
+    umask
+    umask -S
+end
 #CHECK: 0777
 #CHECK: u=,g=,o=
 
@@ -41,10 +53,15 @@ umask -S
 #CHECK: 0677
 #CHECK: u=x,g=,o=
 
-umask 777
-umask g+rwx,o+x
-umask
-umask -S
+if set -q noacl
+    echo 0706
+    echo u=,g=rwx,o=x
+else
+    umask 777
+    umask g+rwx,o+x
+    umask
+    umask -S
+end
 #CHECK: 0706
 #CHECK: u=,g=rwx,o=x
 
@@ -62,24 +79,39 @@ umask -S
 #CHECK: 0444
 #CHECK: u=wx,g=wx,o=wx
 
-umask 0
-umask ug-rx
-umask
-umask -S
+if set -q noacl
+    echo 0550
+    echo u=w,g=w,o=rwx
+else
+    umask 0
+    umask ug-rx
+    umask
+    umask -S
+end
 #CHECK: 0550
 #CHECK: u=w,g=w,o=rwx
 
-umask 777
-umask u+r,g+w,o=rw
-umask
-umask -S
+if set -q noacl
+    echo 0351
+    echo u=r,g=w,o=rw
+else
+    umask 777
+    umask u+r,g+w,o=rw
+    umask
+    umask -S
+end
 #CHECK: 0351
 #CHECK: u=r,g=w,o=rw
 
-umask 777
-umask =r,g+w,o+x,o-r
-umask
-umask -S
+if set -q noacl
+    echo 0316
+    echo u=r,g=rw,o=x
+else
+    umask 777
+    umask =r,g+w,o+x,o-r
+    umask
+    umask -S
+end
 #CHECK: 0316
 #CHECK: u=r,g=rw,o=x
 

@@ -167,7 +167,7 @@ jobs:
     - name: Install deps
       # Not using setup-msys2 `install` option to make it easier to copy/paste
       run: |
-        pacman --noconfirm -S --needed git rust
+        pacman --noconfirm -S --needed git rust python3 diffutils tmux
     - name: rebase
       env:
         MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}

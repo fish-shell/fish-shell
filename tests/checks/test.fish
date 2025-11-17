@@ -86,8 +86,12 @@ end
 #CHECK: good ot
 #CHECK: good ot
 
-ln -sf epoch epochlink
-test epoch -ef epochlink && echo good ef || echo bad ef
+if cygwin_nosymlinks
+    echo good ef
+else
+    ln -sf epoch epochlink
+    test epoch -ef epochlink && echo good ef || echo bad ef
+end
 #CHECK: good ef
 
 test epoch -ef old && echo bad ef || echo good ef

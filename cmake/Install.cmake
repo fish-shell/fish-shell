@@ -1,7 +1,5 @@
 set(CMAKE_INSTALL_MESSAGE NEVER)
 
-set(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/fish ${CMAKE_CURRENT_BINARY_DIR}/fish_indent ${CMAKE_CURRENT_BINARY_DIR}/fish_key_reader)
-
 set(prefix ${CMAKE_INSTALL_PREFIX})
 set(bindir ${CMAKE_INSTALL_BINDIR})
 set(sysconfdir ${CMAKE_INSTALL_SYSCONFDIR})
@@ -75,10 +73,18 @@ function(FISH_TRY_CREATE_DIRS)
   endforeach()
 endfunction(FISH_TRY_CREATE_DIRS)
 
-install(PROGRAMS ${PROGRAMS}
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/fish
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
                     GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
         DESTINATION ${bindir})
+
+if(NOT IS_ABSOLUTE ${bindir})
+  set(abs_bindir "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${bindir}")
+else()
+  set(abs_bindir "\$ENV{DESTDIR}${bindir}")
+endif()
+install(CODE "file(CREATE_LINK ${abs_bindir}/fish ${abs_bindir}/fish_indent)")
+install(CODE "file(CREATE_LINK ${abs_bindir}/fish ${abs_bindir}/fish_key_reader)")
 
 fish_create_dirs(${sysconfdir}/fish/conf.d ${sysconfdir}/fish/completions
     ${sysconfdir}/fish/functions)

@@ -58,37 +58,40 @@ if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST build_types)
   message(WARNING "Unsupported build type ${CMAKE_BUILD_TYPE}. If this doesn't build, try one of Release, RelWithDebInfo or Debug")
 endif()
 
-# Define a function to build and link dependencies.
-function(CREATE_TARGET target)
+add_custom_target(
+  fish ALL
+  COMMAND
+    "${CMAKE_COMMAND}" -E
+      env ${VARS_FOR_CARGO}
+        ${Rust_CARGO}
+          build --bin fish
+          $<$<CONFIG:Release>:--release>
+          $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>
+          --target ${Rust_CARGO_TARGET}
+          --no-default-features
+          --features=${FISH_CARGO_FEATURES}
+          ${CARGO_FLAGS}
+    &&
+    "${CMAKE_COMMAND}" -E
+      copy "${rust_target_dir}/${rust_profile}/fish" "${CMAKE_CURRENT_BINARY_DIR}"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+  USES_TERMINAL
+)
+
+function(CREATE_LINK target)
   add_custom_target(
     ${target} ALL
-    COMMAND
-      "${CMAKE_COMMAND}" -E
-        env ${VARS_FOR_CARGO}
-          ${Rust_CARGO}
-            build --bin ${target}
-            $<$<CONFIG:Release>:--release>
-            $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>
-            --target ${Rust_CARGO_TARGET}
-            --no-default-features
-            --features=${FISH_CARGO_FEATURES}
-            ${CARGO_FLAGS}
-      &&
-      "${CMAKE_COMMAND}" -E
-        copy "${rust_target_dir}/${rust_profile}/${target}" "${CMAKE_CURRENT_BINARY_DIR}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    USES_TERMINAL
+    DEPENDS fish
+    COMMAND ln -f fish ${target}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
   )
-endfunction(CREATE_TARGET)
-
-# Define fish.
-create_target(fish)
+endfunction(CREATE_LINK)
 
 # Define fish_indent.
-create_target(fish_indent)
+create_link(fish_indent)
 
 # Define fish_key_reader.
-create_target(fish_key_reader)
+create_link(fish_key_reader)
 
 # Set up tests.
 include(cmake/Tests.cmake)

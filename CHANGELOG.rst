@@ -13,6 +13,7 @@ Interactive improvements
 
 For distributors and developers
 -------------------------------
+- ``fish_key_reader`` and ``fish_indent`` are now hardlinks to ``fish``.
 
 fish 4.2.1 (released November 13, 2025)
 =======================================

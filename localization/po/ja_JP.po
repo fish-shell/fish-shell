@@ -447,10 +447,6 @@ msgid "%s: Invalid max value '%s'"
 msgstr "%s: 最大値 '%s' が無効です"
 
 #, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
-msgstr "%s: オプション仕様 '%s' の文字 '%c' が無効です"
-
-#, c-format
 msgid "%s: Invalid padding character of width zero '%s'"
 msgstr "%s: 幅がゼロのパディング文字 '%s' は無効です"
 

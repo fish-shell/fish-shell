@@ -1,5 +1,8 @@
 # RUN: %fish %s
 
+# Shebangless scripts cannot be marked executable without POSIX file permissions
+# REQUIRES: %fish -c 'not cygwin_noacl $TMPDIR'
+
 # Test for shebangless scripts - see 7802.
 
 set testdir (mktemp -d)

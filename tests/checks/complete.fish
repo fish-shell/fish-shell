@@ -1,4 +1,5 @@
 #RUN: fish=%fish %fish %s
+
 function complete_test_alpha1
     echo $argv
 end
@@ -420,8 +421,12 @@ rm -r $dir
 set -l dir (mktemp -d)
 cd $dir
 
-: >command-not-in-path
-chmod +x command-not-in-path
+if cygwin_noacl ./
+    echo "#!/bin/sh" >command-not-in-path
+else
+    : >command-not-in-path
+    chmod +x command-not-in-path
+end
 complete -p $PWD/command-not-in-path -xa relative-path
 complete -C './command-not-in-path '
 # CHECK: relative-path
@@ -434,8 +439,12 @@ HOME=$PWD complete -C '~/command-not-in-path '
 
 # Non-canonical command path
 mkdir -p subdir
-: >subdir/command-in-subdir
-chmod +x subdir/command-in-subdir
+if cygwin_noacl ./
+    echo "#!/bin/sh" >subdir/command-in-subdir
+else
+    : >subdir/command-in-subdir
+    chmod +x subdir/command-in-subdir
+end
 complete -p "$PWD/subdir/command-in-subdir" -xa custom-completions
 complete -C './subdir/../subdir/command-in-subdir '
 # CHECK: custom-completions

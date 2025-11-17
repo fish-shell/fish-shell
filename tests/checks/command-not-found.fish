@@ -1,5 +1,13 @@
 #RUN: fish=%fish %fish %s
-set -g PATH
+
+if is_cygwin
+    # The Cygwin/MSYS DLLs must be in the path, otherwise Fish cannot be
+    # executed
+    set -g PATH /usr/bin
+else
+    set -g PATH
+end
+
 $fish -c "nonexistent-command-1234 banana rama"
 #CHECKERR: fish: Unknown command: nonexistent-command-1234
 #CHECKERR: fish:

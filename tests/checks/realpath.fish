@@ -1,4 +1,7 @@
 # RUN: %fish %s
+
+cygwin_nosymlinks && set nosymlinks
+
 # $XDG_DATA_HOME can itself be a relative path. So force it to an absolute
 # path so we can remove it from any resolved paths below. This is needed
 # because the contents of the builtin realpath.out file can't include any $PWD
@@ -55,7 +58,9 @@ popd
 ln -fs fish $XDG_DATA_HOME/fish-symlink
 set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink)
 set -l expected_real_path "$data_home_realpath/fish"
-if test "$real_path" = "$expected_real_path"
+if set -q nosymlinks
+    echo "fish-symlink handled correctly"
+else if test "$real_path" = "$expected_real_path"
     echo "fish-symlink handled correctly"
 else
     echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
@@ -99,12 +104,16 @@ or echo builtin realpath -s does not resolve .. or resolves symlink wrong
 
 # A nonexistent file relative to a valid symlink to a directory gets converted.
 # This depends on the symlink created by the previous test.
-set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/nonexistent-file-relative-to-a-symlink)
-set -l expected_real_path "$data_home_realpath/fish/nonexistent-file-relative-to-a-symlink"
-if test "$real_path" = "$expected_real_path"
+if set -q nosymlinks
     echo "fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted"
 else
-    echo "failure nonexistent-file-relative-to-a-symlink: $real_path != $expected_real_path" >&2
+    set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/nonexistent-file-relative-to-a-symlink)
+    set -l expected_real_path "$data_home_realpath/fish/nonexistent-file-relative-to-a-symlink"
+    if test "$real_path" = "$expected_real_path"
+        echo "fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted"
+    else
+        echo "failure nonexistent-file-relative-to-a-symlink: $real_path != $expected_real_path" >&2
+    end
 end
 # CHECK: fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted
 
@@ -118,15 +127,19 @@ builtin realpath -s //bin
 # CHECK: /bin
 
 # A path with two symlinks, first to a directory, second to a file, is correctly resolved.
-ln -fs fish $XDG_DATA_HOME/fish-symlink2
-touch $XDG_DATA_HOME/fish/real_file
-ln -fs real_file $XDG_DATA_HOME/fish/symlink_file
-set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/symlink_file)
-set -l expected_real_path "$data_home_realpath/fish/real_file"
-if test "$real_path" = "$expected_real_path"
+if set -q nosymlinks
     echo "fish-symlink/symlink_file handled correctly"
 else
-    echo "fish-symlink/symlink_file not handled correctly: $real_path != expected_real_path" >&2
+    ln -fs fish $XDG_DATA_HOME/fish-symlink2
+    touch $XDG_DATA_HOME/fish/real_file
+    ln -fs real_file $XDG_DATA_HOME/fish/symlink_file
+    set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/symlink_file)
+    set -l expected_real_path "$data_home_realpath/fish/real_file"
+    if test "$real_path" = "$expected_real_path"
+        echo "fish-symlink/symlink_file handled correctly"
+    else
+        echo "fish-symlink/symlink_file not handled correctly: $real_path != expected_real_path" >&2
+    end
 end
 # CHECK: fish-symlink/symlink_file handled correctly
 

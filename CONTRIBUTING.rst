@@ -21,10 +21,10 @@ Archives are available at https://lists.sr.ht/~krobelus/fish-shell/.
 GitHub
 ======
 
-Fish is available on Github, at https://github.com/fish-shell/fish-shell.
+Fish is available on GitHub, at https://github.com/fish-shell/fish-shell.
 
 First, you'll need an account there, and you'll need a git clone of fish.
-Fork it on Github and then run::
+Fork it on GitHub and then run::
 
   git clone https://github.com/<USERNAME>/fish-shell.git
 
@@ -175,7 +175,7 @@ The source code for fish includes a large collection of tests. If you
 are making any changes to fish, running these tests is a good way to make
 sure the behaviour remains consistent and regressions are not
 introduced. Even if you don’t run the tests on your machine, they will
-still be run via Github Actions.
+still be run via GitHub Actions.
 
 You are strongly encouraged to add tests when changing the functionality
 of fish, especially if you are fixing a bug to help ensure there are no

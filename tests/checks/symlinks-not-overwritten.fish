@@ -1,4 +1,5 @@
 # RUN: fish=%fish %fish %s
+# REQUIRES: %fish -c "not cygwin_nosymlinks"
 
 # fish_variables
 set -l target_file $XDG_CONFIG_HOME/fish/target_fish_variables

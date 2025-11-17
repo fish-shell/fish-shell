@@ -2,6 +2,8 @@
 
 set -g fish (realpath $fish)
 
+cygwin_nosymlinks && set nosymlinks
+
 # Store pwd to later go back before cleaning up
 set -l oldpwd (pwd)
 
@@ -25,30 +27,37 @@ rm -rf $tmp
 # Create a test directory to store our stuff.
 # macOS likes to return symlinks from (mktemp -d), make sure it does not.
 set -l base (realpath (mktemp -d))
-set real (realpath (mktemp -d))
-set link $base/link
-ln -s $real $link
-cd $link
-prevd
-nextd
-test "$PWD" = "$link" || echo "\$PWD != \$link:"\n "\$PWD: $PWD"\n "\$link: $link"\n
-test (pwd) = "$link" || echo "(pwd) != \$link:"\n "\$PWD: "(pwd)\n "\$link: $link"\n
-test (pwd -P) = "$real" || echo "(pwd -P) != \$real:"\n "\$PWD: $PWD"\n "\$real: $real"\n
-test (pwd -P -L) = "$link" || echo "(pwd -P -L) != \$link:"\n "\$PWD: $PWD"\n "\$link: $link"\n
+
+if not set -q nosymlinks
+    set real (realpath (mktemp -d))
+    set link $base/link
+    ln -s $real $link
+    cd $link
+    prevd
+    nextd
+    test "$PWD" = "$link" || echo "\$PWD != \$link:"\n "\$PWD: $PWD"\n "\$link: $link"\n
+    test (pwd) = "$link" || echo "(pwd) != \$link:"\n "\$PWD: "(pwd)\n "\$link: $link"\n
+    test (pwd -P) = "$real" || echo "(pwd -P) != \$real:"\n "\$PWD: $PWD"\n "\$real: $real"\n
+    test (pwd -P -L) = "$link" || echo "(pwd -P -L) != \$link:"\n "\$PWD: $PWD"\n "\$link: $link"\n
+end
 # Expect no output on success.
 pwd abc
 # CHECKERR: pwd: expected 0 arguments; got 1
 
-mkdir -p $base/pwd_real/subdir
-ln -s $base/pwd_real $base/pwd_link
-cd $base/pwd_link/subdir
-rmdir $base/pwd_real/subdir $base/pwd_real
-pwd -P
-# CHECKERR: pwd: realpath failed: No such file or directory
+if set -q nosymlinks
+    echo "pwd: realpath failed: No such file or directory" >&2
+else
+    mkdir -p $base/pwd_real/subdir
+    ln -s $base/pwd_real $base/pwd_link
+    cd $base/pwd_link/subdir
+    rmdir $base/pwd_real/subdir $base/pwd_real
+    pwd -P
+end
+# CHECKERR: pwd: realpath failed: {{.+}}
 
 # Create a symlink and verify logical completion.
 # create directory $base/through/the/looking/glass
-# symlink $base/somewhere/teleport -> $base/through/the/looking/glass
+# symlink $base/somewhere/rabbithole -> $base/through/the/looking/glass
 # verify that .. completions work
 cd $base
 mkdir -p $base/through/the/looking/glass
@@ -63,7 +72,13 @@ mkdir $base/through/the/looking/d2
 mkdir $base/through/the/looking/d3
 ln -s $base/through/the/looking/glass $base/somewhere/rabbithole
 
-cd $base/somewhere/rabbithole
+if set -q nosymlinks
+    # This is where we would be going if symlinks were working. This invalidates
+    # that particular test case, but now we can proceed with the tests
+    cd $base/through/the/looking/glass
+else
+    cd $base/somewhere/rabbithole
+end
 echo "ls:"
 complete -C'ls ../'
 #CHECK: ls:
@@ -75,6 +90,9 @@ complete -C'ls ../'
 #CHECK: ../d3/
 #CHECK: ../glass/
 
+if set -q nosymlinks
+    cd $base/somewhere/rabbithole
+end
 echo "cd:"
 complete -C'cd ../'
 #CHECK: cd:
@@ -154,9 +172,18 @@ cd file
 #CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
 
 # a directory that isn't executable
-mkdir bad-perms
-chmod -x bad-perms
-cd bad-perms
+if cygwin_noacl ./
+    echo "cd: Permission denied: 'bad-perms'" >&2
+    echo "fake/cd.fish (line 123):" >&2
+    echo "builtin cd \$argv" >&2
+    echo "^" >&2
+    echo "in function 'cd' with arguments 'bad-perms'" >&2
+    echo "called on line 123 of file fake/cd.fish" >&2
+else
+    mkdir bad-perms
+    chmod -x bad-perms
+    cd bad-perms
+end
 #CHECKERR: cd: Permission denied: 'bad-perms'
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 #CHECKERR: builtin cd $argv
@@ -189,7 +216,16 @@ cd $old_path
 set CDPATH $old_cdpath $PWD/cdpath-dir
 cd nonexistent
 cd $old_path
-cd bad-perms
+if cygwin_noacl ./
+    echo "cd: Permission denied: 'bad-perms'" >&2
+    echo "fake/cd.fish (line 123):" >&2
+    echo "builtin cd \$argv" >&2
+    echo "^" >&2
+    echo "in function 'cd' with arguments 'bad-perms'" >&2
+    echo "called on line 123 of file fake/cd.fish" >&2
+else
+    cd bad-perms
+end
 # Permission errors are still a problem!
 #CHECKERR: cd: Permission denied: 'bad-perms'
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
@@ -248,10 +284,19 @@ echo $status
 # CHECK: 1
 
 cd (mktemp -d)
-ln -s no/such/directory broken-symbolic-link
-begin
-    set -lx CDPATH
-    cd broken-symbolic-link
+if set -q nosymlinks
+    echo "cd: 'fake/broken-symbolic-link' is a broken symbolic link to 'no/such/directory'" >&2
+    echo "fake/cd.fish (line 123):" >&2
+    echo "builtin cd \$argv" >&2
+    echo "^" >&2
+    echo "in function 'cd' with arguments 'broken-symbolic-link'" >&2
+    echo "called on line 123 of file fake/cd.fish" >&2
+else
+    ln -s no/such/directory broken-symbolic-link
+    begin
+        set -lx CDPATH
+        cd broken-symbolic-link
+    end
 end
 # CHECKERR: cd: '{{.*}}/broken-symbolic-link' is a broken symbolic link to 'no/such/directory'
 # CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
@@ -261,9 +306,18 @@ end
 # CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
 
 # Make sure that "broken symlink" is reported over "no such file or directory".
-begin
-    set -lx CDPATH other
-    cd broken-symbolic-link
+if set -q nosymlinks
+    echo "cd: 'fake/broken-symbolic-link' is a broken symbolic link to 'no/such/directory'" >&2
+    echo "fake/cd.fish (line 123):" >&2
+    echo "builtin cd \$argv" >&2
+    echo "^" >&2
+    echo "in function 'cd' with arguments 'broken-symbolic-link'" >&2
+    echo "called on line 123 of file fake/cd.fish" >&2
+else
+    begin
+        set -lx CDPATH other
+        cd broken-symbolic-link
+    end
 end
 # CHECKERR: cd: '{{.*}}/broken-symbolic-link' is a broken symbolic link to 'no/such/directory'
 # CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
@@ -322,9 +376,18 @@ end
 HOME="" cd
 # CHECKERR: cd: Could not find home directory
 
-ln -s loop1 loop2
-ln -s loop2 loop1
-cd loop1
+if set -q nosymlinks
+    echo "cd: Too many levels of symbolic links: 'loop1'" >&2
+    echo "fake/cd.fish (line 123):" >&2
+    echo "builtin cd \$argv" >&2
+    echo "^" >&2
+    echo "in function 'cd' with arguments 'loop1'" >&2
+    echo "called on line 123 of file fake/cd.fish" >&2
+else
+    ln -s loop1 loop2
+    ln -s loop2 loop1
+    cd loop1
+end
 # CHECKERR: cd: Too many levels of symbolic links: 'loop1'
 # CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 # CHECKERR: builtin cd $argv

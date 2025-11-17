@@ -440,10 +440,6 @@ msgid "%s: Invalid max value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
-msgstr ""
-
-#, c-format
 msgid "%s: Invalid padding character of width zero '%s'"
 msgstr ""
 

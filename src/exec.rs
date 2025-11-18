@@ -210,7 +210,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
                 parser,
                 &job.processes()[dp],
                 job,
-                block_io,
+                block_io.clone(),
                 deferred_pipes,
                 &PartialPipes::default(),
                 true,
@@ -243,7 +243,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     }
 
     if !job.is_initially_background() {
-        job.continue_job(parser);
+        job.continue_job(parser, Some(&block_io));
     }
 
     if job.is_stopped() {

@@ -151,7 +151,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
     handoff.to_job_group(job.group.as_ref().unwrap());
     let resumed = job.resume();
     if resumed {
-        job.continue_job(parser);
+        job.continue_job(parser, /*block_io=*/ None);
     }
     if job.is_stopped() {
         handoff.save_tty_modes();

@@ -1672,7 +1672,7 @@ impl<'a> ExecutionContext<'a> {
             profile_item.skipped = pop_result != EndExecutionReason::Ok;
         }
 
-        job_reap(ctx.parser(), false); // clean up jobs
+        job_reap(ctx.parser(), false, Some(&self.block_io)); // clean up jobs
         pop_result
     }
 

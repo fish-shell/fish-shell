@@ -4865,7 +4865,7 @@ impl<'a> Reader<'a> {
         // Reap jobs but do NOT trigger a repaint.
         // This is to prevent infinite loops in case a job from the prompt triggers a repaint.
         // See #9796.
-        job_reap(self.parser, true);
+        job_reap(self.parser, true, None);
 
         // Some prompt may have requested an exit (#8033).
         let exit_current_script = self.parser.libdata().exit_current_script;
@@ -5995,7 +5995,7 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
 
     let time_before = Instant::now();
     let eval_res = parser.eval(cmd, &IoChain::new());
-    job_reap(parser, true);
+    job_reap(parser, true, None);
 
     // Update the execution duration iff a command is requested for execution
     // issue - #4926

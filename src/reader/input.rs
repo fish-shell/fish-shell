@@ -25,7 +25,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
     fn prepare_to_select(&mut self) {
         // Fire any pending events and reap stray processes, including printing exit status messages.
         event::fire_delayed(self.parser);
-        if job_reap(self.parser, true) {
+        if job_reap(self.parser, true, None) {
             reader_schedule_prompt_repaint();
         }
     }
@@ -38,7 +38,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
         // Fire any pending events and reap stray processes, including printing exit status messages.
         let parser = self.parser;
         event::fire_delayed(parser);
-        if job_reap(parser, true) {
+        if job_reap(parser, true, None) {
             reader_schedule_prompt_repaint();
         }
 

@@ -672,7 +672,7 @@ impl Parser {
             return EvalRes::new(ProcStatus::from_signal(sig));
         }
 
-        job_reap(self, false); // not sure why we reap jobs here
+        job_reap(self, false, Some(block_io)); // not sure why we reap jobs here
 
         // Start it up
         let mut op_ctx = self.context();
@@ -707,7 +707,7 @@ impl Parser {
         ScopeGuarding::commit(restore_line_counter);
         self.pop_block(scope_block);
 
-        job_reap(self, false); // reap again
+        job_reap(self, false, Some(block_io)); // reap again
 
         let sig = signal_check_cancel();
         if sig != 0 {

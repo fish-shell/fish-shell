@@ -1,5 +1,10 @@
 # localization: skip(private)
 function __fish_print_help --description "Print help for the specified fish function or builtin"
+    if not type -q man
+        fish_command_not_found man
+        return 1
+    end
+
     set -l item (__fish_canonicalize_builtin $argv[1])
 
     function __fish_print_help_man -V item -a man1

@@ -8,6 +8,7 @@ while others enable optional features and may be ignored by the terminal.
 The terminal must be able to parse Control Sequence Introducer (CSI) commands, Operating System Commands (OSC) and :ref:`optionally <term-compat-dcs-gnu-screen>` Device Control Strings (DCS).
 These are defined by ECMA-48.
 If a valid CSI, OSC or DCS sequence does not represent a command implemented by the terminal, the terminal must ignore it.
+For historical reasons, OSC sequences may be terminated with ``\x07`` instead of ``\e\\``.
 
 Control sequences are denoted in a fish-like syntax.
 Special characters other than ``\`` are not escaped.
@@ -216,13 +217,13 @@ Optional Commands
      - Disable bracketed paste.
    * - .. _term-compat-osc-0:
 
-       ``\e]0; Pt \x07``
+       ``\e]0; Pt \e\\``
      - ts
      - Set terminal window title (OSC 0). Used in :doc:`fish_title <cmds/fish_title>`.
-   * - ``\e]2; Pt \x07``
+   * - ``\e]2; Pt \e\\``
      - ts
      - Set terminal tab title (OSC 1). Used in :doc:`fish_tab_title <cmds/fish_tab_title>`.
-   * - ``\e]7;file:// Pt / Pt \x07``
+   * - ``\e]7;file:// Pt / Pt \e\\``
      -
      - Report working directory (OSC 7).
        Since the terminal may be running on a different system than a (remote) shell,
@@ -235,20 +236,20 @@ Optional Commands
        This is used in fish's man pages.
    * - .. _term-compat-osc-52:
 
-       ``\e]52;c; Pt \x07``
+       ``\e]52;c; Pt \e\\``
      -
      - Copy to clipboard (OSC 52). Used by :doc:`fish_clipboard_copy <cmds/fish_clipboard_copy>`.
    * - .. _term-compat-osc-133:
 
-       ``\e]133;A; click_events=1\x07``
+       ``\e]133;A; click_events=1\e\\``
      -
      - Mark prompt start (OSC 133), with kitty's ``click_events`` extension.
        The ``click_events`` extension enables mouse clicks to move the cursor or select pager items,
        assuming that :ref:`cursor position reporting <term-compat-cursor-position-report>` is available.
-   * - ``\e]133;C; cmdline_url= Pt \x07``
+   * - ``\e]133;C; cmdline_url= Pt \e\\``
      -
      - Mark command start (OSC 133), with kitty's ``cmdline_url`` extension whose parameter is the URL-encoded command line.
-   * - ``\e]133;D; Ps \x07``
+   * - ``\e]133;D; Ps \e\\``
      -
      - Mark command end (OSC 133);  Ps is the exit status.
    * - .. _term-compat-xtgettcap:

@@ -9,6 +9,7 @@ use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use bitflags::bitflags;
+use once_cell::sync::OnceCell;
 use std::cell::{RefCell, RefMut};
 use std::env;
 use std::ffi::{CStr, CString};
@@ -384,7 +385,12 @@ fn osc_133_prompt_start(out: &mut impl Output) -> bool {
     if !future_feature_flags::test(FeatureFlag::mark_prompt) {
         return false;
     }
-    write_to_output!(out, "\x1b]133;A;click_events=1\x07");
+    static TEST_BALLOON: OnceCell<()> = OnceCell::new();
+    if TEST_BALLOON.set(()).is_ok() {
+        write_to_output!(out, "\x1b]133;A;click_events=1\x1b\\");
+    } else {
+        write_to_output!(out, "\x1b]133;A;click_events=1\x07");
+    }
     true
 }
 

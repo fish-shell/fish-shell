@@ -317,14 +317,14 @@ pub struct IoBufferfill {
 impl IoBufferfill {
     /// Create an IoBufferfill which, when written from, fills a buffer with the contents.
     /// Returns an error on failure, e.g. too many open fds.
-    pub fn create() -> io::Result<Arc<IoBufferfill>> {
+    pub fn create() -> io::Result<Arc<Self>> {
         Self::create_opts(0, STDOUT_FILENO)
     }
     /// Create an IoBufferfill which, when written from, fills a buffer with the contents.
     /// Returns an error on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.
-    pub fn create_opts(buffer_limit: usize, target: RawFd) -> io::Result<Arc<IoBufferfill>> {
+    pub fn create_opts(buffer_limit: usize, target: RawFd) -> io::Result<Arc<Self>> {
         assert!(target >= 0, "Invalid target fd");
 
         // Construct our pipes.
@@ -343,7 +343,7 @@ impl IoBufferfill {
         // Our fillthread gets the read end of the pipe. Our returned Bufferfill gets the write end.
         let buffer = IoBuffer::new(buffer_limit);
         let item_id = begin_filling(buffer.clone(), pipes.read);
-        Ok(Arc::new(IoBufferfill {
+        Ok(Arc::new(Self {
             target,
             write_fd: pipes.write,
             buffer,

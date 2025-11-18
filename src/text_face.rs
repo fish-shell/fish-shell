@@ -150,7 +150,8 @@ pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
     use ParsedArgs::*;
     match parse_text_face_and_options(&mut argv, /*is_builtin=*/ false) {
         Ok(SetFace(specified_face)) => specified_face,
-        Ok(ResetFace) | Ok(PrintColors(_)) | Ok(PrintHelp) | Err(_) => unreachable!(),
+        Err(_) => Default::default(),
+        Ok(ResetFace) | Ok(PrintColors(_)) | Ok(PrintHelp) => unreachable!(),
     }
 }
 
@@ -248,10 +249,8 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
                     UnderlineStyle::Dotted
                 } else if arg == "dashed" {
                     UnderlineStyle::Dashed
-                } else if is_builtin {
-                    return Err(UnknownUnderlineStyle(arg));
                 } else {
-                    continue;
+                    return Err(UnknownUnderlineStyle(arg));
                 });
             }
             'c' => {
@@ -259,19 +258,13 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
                 print_color_mode = true;
             }
             ':' => {
-                if is_builtin {
-                    return Err(MissingOptArg);
-                }
+                return Err(MissingOptArg);
             }
             ';' => {
-                if is_builtin {
-                    return Err(UnexpectedOptArg(w.wopt_index - 1));
-                }
+                return Err(UnexpectedOptArg(w.wopt_index - 1));
             }
             '?' => {
-                if is_builtin {
-                    return Err(UnknownOption(w.wopt_index - 1));
-                }
+                return Err(UnknownOption(w.wopt_index - 1));
             }
             _ => unreachable!("unexpected retval from WGetopter"),
         }

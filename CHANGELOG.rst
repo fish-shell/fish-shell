@@ -19,6 +19,10 @@ For distributors and developers
 -------------------------------
 - ``fish_key_reader`` and ``fish_indent`` are now hardlinks to ``fish``.
 
+Regression fixes:
+-----------------
+- (from 4.1.0) Crash on invalid colors variables (:issue:`12078`).
+
 fish 4.2.1 (released November 13, 2025)
 =======================================
 

@@ -3517,7 +3517,7 @@ msgstr "Test if new jobs are never put under job control"
 msgid "Test if only interactive new jobs are put under job control"
 msgstr "Test if only interactive new jobs are put under job control"
 
-msgid "Test if the terminal suports the given feature"
+msgid "Test if the terminal supports the given feature"
 msgstr ""
 
 msgid "Test if this is a login shell"
@@ -4702,10 +4702,10 @@ msgstr ""
 msgid "=PKG Remove a package"
 msgstr ""
 
-msgid "=PKG Remove overlayed additional package"
+msgid "=PKG Remove overlaid additional package"
 msgstr ""
 
-msgid "=PKG Remove overlayed package"
+msgid "=PKG Remove overlaid package"
 msgstr ""
 
 msgid "=PROXY HTTP proxy"
@@ -4816,7 +4816,7 @@ msgstr ""
 msgid "=time Sets the latency the scheduler should assume for typical memory references"
 msgstr ""
 
-msgid "=unit Generate floating point arithmetics for selected unit unit"
+msgid "=unit Generate floating point arithmetic for selected unit unit"
 msgstr ""
 
 msgid "=version The earliest version of MacOS X that this executable will run on is version"
@@ -7567,7 +7567,7 @@ msgstr ""
 msgid "Apply <file> patch"
 msgstr "Apply <file> patch"
 
-msgid "Apply Paeth rotation to the image [degrees]"
+msgid "Apply Path rotation to the image [degrees]"
 msgstr ""
 
 msgid "Apply a Hald color lookup table to the image"
@@ -10048,7 +10048,7 @@ msgstr "Change the behavior of cleartext signatures so that they can be used for
 msgid "Change the current configuration"
 msgstr ""
 
-msgid "Change the default algorothms for key generation"
+msgid "Change the default algorithms for key generation"
 msgstr ""
 
 msgid "Change the default version, but more gently than set_default_version"
@@ -10525,7 +10525,7 @@ msgstr ""
 msgid "Check if the needs-reboot flag was set"
 msgstr ""
 
-msgid "Check if the package is uptodate"
+msgid "Check if the package is up-to-date"
 msgstr ""
 
 msgid "Check if the requirements are installed and available to bundler"
@@ -17923,7 +17923,7 @@ msgstr ""
 msgid "Display memory and timing of different steps of the program"
 msgstr ""
 
-msgid "Display memory informations (physical, usage limits)"
+msgid "Display memory information (physical, usage limits)"
 msgstr ""
 
 msgid "Display method information when a method is defined"
@@ -19210,7 +19210,7 @@ msgstr ""
 msgid "Do not emit \"use strict\" directives in module output"
 msgstr ""
 
-msgid "Do not emit code to use C++ ABI routines for thread-safe initialization of local statics"
+msgid "Do not emit code to use C++ ABI routines for thread-safe initialization of local statistics"
 msgstr ""
 
 msgid "Do not emit colored output"
@@ -27277,7 +27277,7 @@ msgstr ""
 msgid "Force raw printing of non-printable characters"
 msgstr ""
 
-msgid "Force re-using existing instance"
+msgid "Force reusing existing instance"
 msgstr ""
 
 msgid "Force readline use for command-line editing"
@@ -29548,10 +29548,10 @@ msgstr ""
 msgid "Goal to generate the third-party license file"
 msgstr ""
 
-msgid "Goal which creates Eclipse lauch configurations for GWT modules"
+msgid "Goal which creates Eclipse launch configurations for GWT modules"
 msgstr ""
 
-msgid "Goal which creates Eclipse lauch configurations for GWTTestCases"
+msgid "Goal which creates Eclipse launch configurations for GWTTestCases"
 msgstr ""
 
 msgid "Goal which creates a nicely formatted Changes Report in html format from a changes.xml file"
@@ -30784,7 +30784,7 @@ msgstr ""
 msgid "Ignore the upgrade of PACKAGE"
 msgstr ""
 
-msgid "Ignore the ~/.clojure/deps.edn config file"
+msgid "Ignore the ~/.clojure/deps.end config file"
 msgstr ""
 
 msgid "Ignore unknown options"
@@ -45340,7 +45340,7 @@ msgstr ""
 msgid "Print usage information"
 msgstr ""
 
-msgid "Print usage informations and quit"
+msgid "Print usage information and quit"
 msgstr ""
 
 msgid "Print usage message"
@@ -47857,7 +47857,7 @@ msgstr ""
 msgid "Reduce your working tree to a subset of tracked files"
 msgstr ""
 
-msgid "Reenable the systemd unit for a profile"
+msgid "Re-enable the systemd unit for a profile"
 msgstr ""
 
 msgid "Reencryption hotzone checksums hash"
@@ -48484,7 +48484,7 @@ msgstr "Remove all gz files from cache"
 msgid "Remove all mutations"
 msgstr ""
 
-msgid "Remove all overlayed packages"
+msgid "Remove all overlaid packages"
 msgstr ""
 
 msgid "Remove all overrides"
@@ -48850,7 +48850,7 @@ msgstr ""
 msgid "Remove output files empty after patching"
 msgstr ""
 
-msgid "Remove overlayed additional packages"
+msgid "Remove overlaid additional packages"
 msgstr ""
 
 msgid "Remove package"
@@ -48859,7 +48859,7 @@ msgstr ""
 msgid "Remove package and all dependencies"
 msgstr ""
 
-msgid "Remove package and its dependees not required by others"
+msgid "Remove package and its dependencies not required by others"
 msgstr ""
 
 msgid "Remove package and sources"
@@ -57412,7 +57412,7 @@ msgstr ""
 msgid "Show detailed information, including options"
 msgstr ""
 
-msgid "Show detailed link statics"
+msgid "Show detailed link statistics"
 msgstr ""
 
 msgid "Show details"
@@ -71689,7 +71689,7 @@ msgstr ""
 msgid "Write a pom.xml file to disk for Maven interoperability."
 msgstr ""
 
-msgid "Write a trace.edn file that traces deps expansion"
+msgid "Write a trace.end file that traces deps expansion"
 msgstr ""
 
 msgid "Write agile documentation in HTML format to file"
@@ -75268,7 +75268,7 @@ msgstr ""
 msgid "list files from all revisions"
 msgstr ""
 
-msgid "list files in archive (als)"
+msgid "list files in archive (also)"
 msgstr ""
 
 msgid "list files of a given package; similar to \"pacman -Ql\""

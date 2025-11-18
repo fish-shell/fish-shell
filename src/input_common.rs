@@ -5,6 +5,7 @@ use crate::common::{
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::flog::{FLOG, FloggableDebug, FloggableDisplay};
+use crate::future_feature_flags::{FeatureFlag, test as feature_test};
 use crate::key::{
     self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
     canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
@@ -723,6 +724,8 @@ pub enum TerminalQuery {
     CursorPosition(CursorPositionQuery),
 }
 
+pub const LONG_READ_TIMEOUT: Duration = Duration::from_secs(2);
+
 /// A trait which knows how to produce a stream of input events.
 /// Note this is conceptually a "base class" with override points.
 pub trait InputEventQueuer {
@@ -889,20 +892,37 @@ pub trait InputEventQueuer {
 
     fn read_sequence_byte(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
         let fd = self.get_in_fd();
+        let strict = feature_test(FeatureFlag::omit_term_workarounds);
+        let historical_millis = |ms| {
+            if strict {
+                LONG_READ_TIMEOUT
+            } else {
+                Duration::from_millis(ms)
+            }
+        };
         if !check_fd_readable(
             fd,
-            Duration::from_millis(if self.paste_is_buffering() || self.is_blocked_querying() {
-                300
+            if self.paste_is_buffering() || self.is_blocked_querying() {
+                historical_millis(300)
             } else if buffer == b"\x1b" {
-                1 // distinguish legacy escape
+                Duration::from_millis(1) // distinguish legacy escape
             } else {
-                30
-            }),
+                historical_millis(30)
+            },
         ) {
             FLOG!(
                 reader,
                 format!("Incomplete escape sequence: {}", DisplayBytes(buffer))
             );
+            if strict {
+                FLOG!(
+                    error,
+                    format!(
+                        "Incomplete escape sequence seen (logging because omit-term-workarounds is on): {}",
+                        DisplayBytes(buffer)
+                    )
+                );
+            }
             return None;
         }
         let next = readb(fd)?;

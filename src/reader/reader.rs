@@ -90,8 +90,8 @@ use crate::input_common::InputEventQueue;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::QueryResponse;
 use crate::input_common::{
-    CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData, QueryResultEvent,
-    ReadlineCmd, TerminalQuery, stop_query,
+    CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData, LONG_READ_TIMEOUT,
+    QueryResultEvent, ReadlineCmd, TerminalQuery, stop_query,
 };
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
@@ -253,11 +253,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
     assert!(isatty(inputfd));
     reader_interactive_init();
 
-    const INITIAL_QUERY_TIMEOUT_SECONDS: u64 = 2;
-    let mut input_queue = InputEventQueue::new(
-        inputfd,
-        Some(Duration::from_secs(INITIAL_QUERY_TIMEOUT_SECONDS)),
-    );
+    let mut input_queue = InputEventQueue::new(inputfd, Some(LONG_READ_TIMEOUT));
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
         initialize_tty_protocols(vars);
@@ -300,7 +296,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
                          This %s process will no longer wait for outstanding queries, \
                          which disables some optional features.",
                         program,
-                        INITIAL_QUERY_TIMEOUT_SECONDS,
+                        LONG_READ_TIMEOUT.as_secs(),
                         program
                     ),
                 );

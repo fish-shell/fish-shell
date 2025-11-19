@@ -93,9 +93,11 @@ fn detect_cfgs(target: &mut Target) {
         }),
         ("have_pipe2", &|target| target.has_symbol("pipe2")),
         ("have_posix_spawn", &|target| {
-            if target_os() == "openbsd" {
+            if matches!(target_os().as_str(), "openbsd" | "android") {
                 // OpenBSD's posix_spawn returns status 127 instead of erroring with ENOEXEC when faced with a
                 // shebang-less script. Disable posix_spawn on OpenBSD.
+                //
+                // Android is broken for unclear reasons
                 false
             } else {
                 target.has_header("spawn.h")

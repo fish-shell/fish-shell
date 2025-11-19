@@ -887,7 +887,7 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn try_readb(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
+    fn read_sequence_byte(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
         let fd = self.get_in_fd();
         if !check_fd_readable(
             fd,
@@ -917,7 +917,7 @@ pub trait InputEventQueuer {
     ) -> Option<KeyEvent> {
         assert!(buffer.len() <= 2);
         let recursive_invocation = buffer.len() == 2;
-        let Some(next) = self.try_readb(buffer) else {
+        let Some(next) = self.read_sequence_byte(buffer) else {
             return Some(KeyEvent::from_raw(key::Escape));
         };
         let invalid = KeyEvent::from_raw(key::Invalid);
@@ -962,10 +962,10 @@ pub trait InputEventQueuer {
     fn parse_csi(&mut self, buffer: &mut Vec<u8>) -> Option<KeyEvent> {
         // The maximum number of CSI parameters is defined by NPAR, nominally 16.
         let mut params = [[0_u32; 4]; 16];
-        let Some(mut c) = self.try_readb(buffer) else {
+        let Some(mut c) = self.read_sequence_byte(buffer) else {
             return Some(KeyEvent::from(alt('[')));
         };
-        let mut next_char = |zelf: &mut Self| zelf.try_readb(buffer).unwrap_or(0xff);
+        let mut next_char = |zelf: &mut Self| zelf.read_sequence_byte(buffer).unwrap_or(0xff);
         let private_mode;
         if matches!(c, b'?' | b'<' | b'=' | b'>') {
             // private mode
@@ -1253,12 +1253,12 @@ pub trait InputEventQueuer {
 
     fn parse_ss3(&mut self, buffer: &mut Vec<u8>) -> Option<KeyEvent> {
         let mut raw_mask = 0;
-        let Some(mut code) = self.try_readb(buffer) else {
+        let Some(mut code) = self.read_sequence_byte(buffer) else {
             return Some(KeyEvent::from(alt('O')));
         };
         while code.is_ascii_digit() {
             raw_mask = raw_mask * 10 + u32::from(code - b'0');
-            code = self.try_readb(buffer).unwrap_or(0xff);
+            code = self.read_sequence_byte(buffer).unwrap_or(0xff);
         }
         let (modifiers, _caps_lock) = parse_mask(raw_mask.saturating_sub(1));
         #[rustfmt::skip]
@@ -1301,7 +1301,7 @@ pub trait InputEventQueuer {
     fn read_until_sequence_terminator(&mut self, buffer: &mut Vec<u8>) -> Option<()> {
         let mut escape = false;
         loop {
-            let b = self.try_readb(buffer)?;
+            let b = self.read_sequence_byte(buffer)?;
             if escape && b == b'\\' {
                 break;
             }
@@ -1331,7 +1331,7 @@ pub trait InputEventQueuer {
 
     fn parse_dcs(&mut self, buffer: &mut Vec<u8>) -> Option<KeyEvent> {
         assert!(buffer.len() == 2);
-        let Some(success) = self.try_readb(buffer) else {
+        let Some(success) = self.read_sequence_byte(buffer) else {
             return Some(KeyEvent::from(alt('P')));
         };
         let success = match success {
@@ -1343,10 +1343,10 @@ pub trait InputEventQueuer {
             }
             _ => return None,
         };
-        if self.try_readb(buffer)? != b'+' {
+        if self.read_sequence_byte(buffer)? != b'+' {
             return None;
         }
-        if self.try_readb(buffer)? != b'r' {
+        if self.read_sequence_byte(buffer)? != b'r' {
             return None;
         }
         self.read_until_sequence_terminator(buffer)?;

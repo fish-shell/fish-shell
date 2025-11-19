@@ -246,6 +246,9 @@ Optional Commands
      - Mark prompt start (OSC 133), with kitty's ``click_events`` extension.
        The ``click_events`` extension enables mouse clicks to move the cursor or select pager items,
        assuming that :ref:`cursor position reporting <term-compat-cursor-position-report>` is available.
+   * - ``\e]133;B\e\\``
+     -
+     - Mark prompt end (OSC 133).
    * - ``\e]133;C; cmdline_url= Pt \e\\``
      -
      - Mark command start (OSC 133), with kitty's ``cmdline_url`` extension whose parameter is the URL-encoded command line.

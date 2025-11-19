@@ -17,9 +17,8 @@ function __fish_anypython
     set -l minor_version
     for path in (path filter -fx -- $PATH/python3.*)
         string match -rq -- '.*/python3\.(?<minor_version>\d+)$' $path
+        and test $minor_version -ge 5 # Python 3.5+
         or continue
-        test $minor_version -lt 5 # Python 3.5+
-        and continue
         and begin
             not set -q best_path[1]
             or test $minor_version -gt $best_minor_version

@@ -104,8 +104,9 @@ pub(crate) enum TerminalCommand<'a> {
     // man pages (via "man_show_urls").
     Osc0WindowTitle(&'a [WString]),
     Osc1TabTitle(&'a [WString]),
-    Osc133CommandStart(&'a wstr),
     Osc133PromptStart,
+    Osc133PromptEnd,
+    Osc133CommandStart(&'a wstr),
     Osc133CommandFinished(libc::c_int),
 
     // Other terminal features
@@ -180,6 +181,7 @@ pub(crate) trait Output {
             Osc0WindowTitle(title) => osc_0_or_1_terminal_title(self, false, title),
             Osc1TabTitle(title) => osc_0_or_1_terminal_title(self, true, title),
             Osc133PromptStart => osc_133_prompt_start(self),
+            Osc133PromptEnd => osc_133_prompt_end(self),
             Osc133CommandStart(command) => osc_133_command_start(self, command),
             Osc133CommandFinished(s) => osc_133_command_finished(self, s),
             QueryCursorPosition => write(self, b"\x1b[6n"),
@@ -395,6 +397,14 @@ fn osc_133_prompt_start(out: &mut impl Output) -> bool {
     } else {
         write_to_output!(out, "\x1b]133;A;click_events=1\x07");
     }
+    true
+}
+
+fn osc_133_prompt_end(out: &mut impl Output) -> bool {
+    if !future_feature_flags::test(FeatureFlag::mark_prompt) {
+        return false;
+    }
+    write_to_output!(out, "\x1b]133;B\x07");
     true
 }
 

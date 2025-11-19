@@ -34,7 +34,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
 use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
-    CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptStart, ScrollContentUp,
+    CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
 };
 use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter, use_terminfo};
 use crate::termsize::Termsize;
@@ -1146,6 +1146,7 @@ impl Screen {
                 start = *left_prompt_layout.line_starts.last().unwrap();
             }
             self.write_str(&left_prompt[start..]);
+            self.write_command(Osc133PromptEnd);
             self.actual_left_prompt = Some(left_prompt.to_owned());
             self.actual.cursor.x = prompt_last_line_width;
             self.actual.cursor.y = prompt_last_line;
@@ -1159,6 +1160,7 @@ impl Screen {
             // If we refreshed and prompt is not visible, print prompt marker
             self.r#move(0, 0);
             self.write_command(Osc133PromptStart);
+            self.write_command(Osc133PromptEnd);
             self.actual_left_prompt = Some(left_prompt.to_owned());
         }
 
@@ -1214,8 +1216,9 @@ impl Screen {
                         ClearToEndOfLine
                     });
                     if i == 0 && start_pos == 0 {
-                        // Restore prompt marker if we deleted it
+                        // Restore prompt markers if we deleted them
                         self.write_command(Osc133PromptStart);
+                        self.write_command(Osc133PromptEnd);
                     }
                     has_cleared_screen = should_clear_screen_this_line;
                     has_cleared_line = true;

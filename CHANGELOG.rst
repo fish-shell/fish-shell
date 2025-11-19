@@ -13,6 +13,7 @@ Interactive improvements
 
 Improved terminal support
 -------------------------
+- OSC 133 prompt markers now also mark the prompt end, which improves shell integration with terminals like iTerm2 (:issue:`11837`).
 - New :ref:`feature flag <featureflags>` ``omit-term-workarounds`` can be turned on to prevent fish from trying to work around incompatible terminals.
 
 For distributors and developers

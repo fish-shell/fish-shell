@@ -311,7 +311,7 @@ fn handle_term_change(vars: &EnvStack) {
 
 fn handle_fish_use_posix_spawn_change(vars: &EnvStack) {
     // Note that if the variable is missing or empty we default to true (if allowed).
-    if !allow_use_posix_spawn() {
+    if !cfg!(have_posix_spawn) {
         USE_POSIX_SPAWN.store(false, Ordering::Relaxed);
     } else if let Some(var) = vars.get(L!("fish_use_posix_spawn")) {
         let use_posix_spawn =
@@ -537,21 +537,4 @@ fn init_locale(vars: &EnvStack) {
 
 pub fn use_posix_spawn() -> bool {
     USE_POSIX_SPAWN.load(Ordering::Relaxed)
-}
-
-/// Whether or not we are running on an OS where we allow ourselves to use `posix_spawn()`.
-const fn allow_use_posix_spawn() -> bool {
-    // OpenBSD's posix_spawn returns status 127 instead of erroring with ENOEXEC when faced with a
-    // shebang-less script. Disable posix_spawn on OpenBSD.
-    if cfg!(target_os = "openbsd") {
-        false
-    } else if cfg!(not(target_os = "linux")) {
-        true
-    } else {
-        // The C++ code used __GLIBC_PREREQ(2, 24) && !defined(__UCLIBC__) to determine if we'll use
-        // posix_spawn() by default on Linux. Surprise! We don't have to worry about porting that
-        // logic here because the libc crate only supports 2.26+ atm.
-        // See https://github.com/rust-lang/libc/issues/1412
-        true
-    }
 }

@@ -3174,6 +3174,9 @@ msgstr "打印当前函数的名称"
 msgid "Print the name of the currently running command or function"
 msgstr "打印当前运行的命令或函数的名称"
 
+msgid "Print the operating system the terminal is running on"
+msgstr ""
+
 msgid "Print the path (without the file name) of the currently running script"
 msgstr "打印当前运行的脚本的路径 (不含文件名)"
 

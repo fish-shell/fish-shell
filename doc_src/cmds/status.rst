@@ -138,6 +138,13 @@ The following operations (subcommands) are available:
     This is not available during early startup but only starting from when the first interactive prompt is shown, possibly via builtin :doc:`read <read>`,
     so before the first ``fish_prompt`` or ``fish_read`` :ref:`event <event>`.
 
+.. _status-terminal-os:
+
+**terminal-os**
+    Prints the name of the operating system (OS) the terminal is running on, as reported via :ref:`XTGETTCAP query-os-name <term-compat-xtgettcap>`.
+    Like :ref:`status terminal <status-terminal>`, this only works once the first interactive prompt is shown.
+    Returns 1 if the OS name is not available.
+
 .. _status-test-terminal-features:
 
 **test-terminal-feature** *FEATURE*

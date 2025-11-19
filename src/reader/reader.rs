@@ -143,6 +143,7 @@ use crate::tokenizer::{
     Tokenizer, tok_command,
 };
 use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
+use crate::tty_handoff::XTGETTCAP_QUERY_OS_NAME;
 use crate::tty_handoff::{
     TtyHandoff, get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
 };
@@ -2724,6 +2725,7 @@ fn query_capabilities_via_dcs(out: &mut impl Output, vars: &dyn Environment) {
     }
     out.write_command(DecsetAlternateScreenBuffer); // enable alternative screen buffer
     send_xtgettcap_query(out, SCROLL_CONTENT_UP_TERMINFO_CODE);
+    send_xtgettcap_query(out, XTGETTCAP_QUERY_OS_NAME);
     out.write_command(DecrstAlternateScreenBuffer); // disable alternative screen buffer
 }
 

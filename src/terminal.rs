@@ -79,7 +79,7 @@ pub(crate) enum TerminalCommand<'a> {
     CursorRight,
     CursorMove(CardinalDirection, usize),
 
-    // Commands related to querying (used for backwards-incompatible features).
+    // Commands related to querying (used mainly for backwards-incompatible features).
     QueryPrimaryDeviceAttribute,
     QueryXtversion,
     QueryXtgettcap(&'static str),

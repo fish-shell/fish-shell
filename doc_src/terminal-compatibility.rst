@@ -261,12 +261,19 @@ Optional Commands
      -
      - Request terminfo capability (XTGETTCAP).
        The parameter is the capability's hex-encoded terminfo code.
-       To advertise a capability, the response must be of the form
-       ``\eP1+q Pt \e\\`` or ``\eP1+q Pt = Pt \e\\``.
-       In either variant the first parameter must be the hex-encoded terminfo code.
-       The second variant's second parameter is ignored.
 
-       Currently, fish only queries the :ref:`indn <term-compat-indn>` string capability.
+       The response must be of the form
+       ``\eP1+q Pt \e\\`` ("boolean") or ``\eP1+q Pt = Pt \e\\`` ("string").
+       In either variant, the first parameter must be the same as the request parameter.
+
+       fish queries the following string capabilities:
+
+       * :ref:`indn <term-compat-indn>`
+
+         The response's second parameter is ignored.
+       * ``query-os-name`` (for :ref:`status terminal-os <status-terminal-os>`)
+
+         Terminals running on Unix should respond with the hex encoding of ``uname=$(uname)`` as second parameter.
 
 .. _term-compat-dcs-gnu-screen:
 

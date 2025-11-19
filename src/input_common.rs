@@ -12,8 +12,8 @@ use crate::key::{
 };
 use crate::reader::reader_test_and_clear_interrupted;
 use crate::tty_handoff::{
-    SCROLL_CONTENT_UP_TERMINFO_CODE, XTVERSION, maybe_set_kitty_keyboard_capability,
-    maybe_set_scroll_content_up_capability,
+    SCROLL_CONTENT_UP_TERMINFO_CODE, TERMINAL_OS_NAME, XTGETTCAP_QUERY_OS_NAME, XTVERSION,
+    maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
 };
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
@@ -1386,7 +1386,7 @@ pub trait InputEventQueuer {
         let mut buffer = buffer.splitn(2, |&c| c == b'=');
         let key = buffer.next().unwrap();
         let key = parse_hex(key)?;
-        if let Some(value) = buffer.next() {
+        let value = if let Some(value) = buffer.next() {
             let value = parse_hex(value)?;
             FLOG!(
                 reader,
@@ -1396,14 +1396,20 @@ pub trait InputEventQueuer {
                     bytes2wcstring(&value)
                 )
             );
+            Some(value)
         } else {
             FLOG!(
                 reader,
                 format!("Received XTGETTCAP response: {}", bytes2wcstring(&key))
             );
-        }
+            None
+        };
         if key == SCROLL_CONTENT_UP_TERMINFO_CODE.as_bytes() {
             maybe_set_scroll_content_up_capability();
+        } else if key == XTGETTCAP_QUERY_OS_NAME.as_bytes() {
+            if let Some(value) = value {
+                TERMINAL_OS_NAME.get_or_init(|| Some(bytes2wcstring(&value)));
+            }
         }
         return None;
     }

@@ -47,6 +47,9 @@ pub fn maybe_set_scroll_content_up_capability() {
     });
 }
 
+pub static TERMINAL_OS_NAME: OnceCell<Option<WString>> = OnceCell::new();
+pub(crate) const XTGETTCAP_QUERY_OS_NAME: &str = "query-os-name";
+
 pub static XTVERSION: OnceCell<WString> = OnceCell::new();
 
 pub fn xtversion() -> Option<&'static wstr> {
@@ -242,6 +245,7 @@ pub fn initialize_tty_protocols(vars: &dyn Environment) {
     // Default missing query responses.
     KITTY_KEYBOARD_SUPPORTED.get_or_init(|| false);
     SCROLL_CONTENT_UP_SUPPORTED.get_or_init(|| false);
+    TERMINAL_OS_NAME.get_or_init(|| None);
     let xtversion = XTVERSION.get_or_init(WString::new);
 
     use std::sync::atomic::Ordering::{Acquire, Release};

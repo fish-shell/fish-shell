@@ -3141,6 +3141,9 @@ msgstr ""
 msgid "Print the name of the currently running command or function"
 msgstr ""
 
+msgid "Print the operating system the terminal is running on"
+msgstr ""
+
 msgid "Print the path (without the file name) of the currently running script"
 msgstr ""
 

@@ -33,7 +33,6 @@ use crate::io::{
 use crate::nix::{getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
-#[cfg(have_posix_spawn)]
 use crate::proc::Pid;
 use crate::proc::{
     InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType, hup_jobs,

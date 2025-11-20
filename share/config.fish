@@ -22,16 +22,6 @@ if not status --is-interactive
     end
 end
 
-# N.B. can't load __fish_is_standalone.fish this early in non-embedded builds, so reimplement it.
-# We still want it as a separate file for --no-config.
-set -l is_standalone (
-    if status get-file config.fish &>/dev/null
-        echo true
-    else
-        echo false
-    end
-)
-
 #
 # Set default search paths for completions and shellscript functions
 # unless they already exist
@@ -42,12 +32,7 @@ set -l is_standalone (
 set -l __extra_completionsdir
 set -l __extra_functionsdir
 set -l __extra_confdir
-# N.B. can't load __fish_data_with_file this early in non-embedded builds, so reimplement it.
-if $is_standalone
-    status get-file __fish_build_paths.fish | source
-else if path is -f -- $__fish_data_dir/__fish_build_paths.fish
-    source $__fish_data_dir/__fish_build_paths.fish
-end
+__fish_data_with_file __fish_build_paths.fish source
 
 # Compute the directories for vendor configuration.  We want to include
 # all of XDG_DATA_DIRS, as well as the __extra_* dirs defined above.
@@ -55,8 +40,6 @@ set -l xdg_data_dirs
 if set -q XDG_DATA_DIRS
     set --path xdg_data_dirs $XDG_DATA_DIRS
     set xdg_data_dirs (string replace -r '([^/])/$' '$1' -- $xdg_data_dirs)/fish
-else if not $is_standalone
-    set xdg_data_dirs $__fish_data_dir
 end
 
 set -g __fish_vendor_completionsdirs
@@ -85,21 +68,11 @@ end
 
 if not set -q fish_function_path
     set fish_function_path $__fish_config_dir/functions $__fish_sysconf_dir/functions $__fish_vendor_functionsdirs
-    if not $is_standalone
-        set -a fish_function_path $__fish_data_dir/functions
-    end
-else if not $is_standalone; and not contains -- $__fish_data_dir/functions $fish_function_path
-    set -a fish_function_path $__fish_data_dir/functions
 end
 
 if not set -q fish_complete_path
     set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__fish_vendor_completionsdirs
-    if not $is_standalone
-        set -a fish_complete_path $__fish_data_dir/completions
-    end
     set -a fish_complete_path $__fish_cache_dir/generated_completions
-else if not $is_standalone; and not contains -- $__fish_data_dir/completions $fish_complete_path
-    set -a fish_complete_path $__fish_data_dir/completions
 end
 
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH

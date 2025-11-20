@@ -86,7 +86,7 @@ bitflags.workspace = true
 cfg-if.workspace = true
 errno.workspace = true
 fish-build-helper.workspace = true
-fish-build-man-pages = { workspace = true, optional = true }
+fish-build-man-pages.workspace = true
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-gettext-maps = { workspace = true, optional = true }
 fish-printf.workspace = true
@@ -107,14 +107,14 @@ widestring.workspace = true
 portable-atomic.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-rust-embed = { workspace = true, optional = true, features = [
+rust-embed = { workspace = true, features = [
     "deterministic-timestamps",
     "debug-embed",
     "include-exclude",
     "interpolate-folder-path",
 ] }
 [target.'cfg(not(windows))'.dependencies]
-rust-embed = { workspace = true, optional = true, features = [
+rust-embed = { workspace = true, features = [
     "deterministic-timestamps",
     "include-exclude",
     "interpolate-folder-path",
@@ -150,9 +150,8 @@ name = "fish_key_reader"
 path = "src/bin/fish_key_reader.rs"
 
 [features]
-default = ["embed-data", "localize-messages"]
+default = ["localize-messages"]
 benchmark = []
-embed-data = ["dep:rust-embed", "dep:fish-build-man-pages"]
 # Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
 # build time.
 localize-messages = ["dep:phf", "dep:fish-gettext-maps"]

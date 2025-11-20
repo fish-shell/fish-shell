@@ -646,13 +646,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         set_path(FISH_SYSCONFDIR_VAR, Some(&paths.sysconf));
         set_path(FISH_BIN_DIR, paths.bin.as_ref());
 
-        let datadir = paths.data.as_ref();
-        set_path(FISH_DATADIR_VAR, datadir);
-        if !cfg!(feature = "embed-data") && default_paths {
-            let mut scstr = datadir.unwrap().clone();
-            scstr.push("functions");
-            set_path(L!("fish_function_path"), Some(&scstr));
-        }
+        set_path(FISH_DATADIR_VAR, paths.data.as_ref());
         set_path(FISH_HELPDIR_VAR, paths.doc.as_ref());
     }
 

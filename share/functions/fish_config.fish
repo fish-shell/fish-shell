@@ -286,11 +286,7 @@ fish_pager_color_secondary_description
                     set -l theme_path (__fish_config_list_themes $argv[1])[1]
                     if not set -q theme_path[1]
                         echo >&2 "No such theme: $argv[1]"
-                        echo >&2 Searched (__fish_config_theme_dirs) (
-                            if __fish_is_standalone
-                                echo "and `status list-files tools/web_config/themes`"
-                            end
-                        )
+                        echo >&2 Searched (__fish_config_theme_dir) "and `status list-files tools/web_config/themes`"
                         return 1
                     end
 
@@ -332,10 +328,7 @@ fish_pager_color_secondary_description
 end
 
 function __fish_config_list_prompts
-    set -lx dirs
-    if not __fish_is_standalone
-        set dirs $__fish_data_dir/tools/web_config/sample_prompts
-    end
+    set -lx dir
     set -l prompt_paths (__fish_config_matching tools/web_config/sample_prompts .fish $argv)
     if [ (count $argv) = 1 ] && set -q prompt_paths[2]
         echo >&2 "fish_config: internal error: multiple prompts matching '$argv' ??"
@@ -345,15 +338,12 @@ function __fish_config_list_prompts
 end
 
 function __fish_config_list_themes
-    set -lx dirs (__fish_config_theme_dirs)
+    set -lx dir (__fish_config_theme_dir)
     __fish_config_matching tools/web_config/themes .theme $argv
 end
 
-function __fish_config_theme_dirs
-    printf %s\n $__fish_config_dir/themes
-    if not __fish_is_standalone
-        printf %s\n $__fish_data_dir/tools/web_config/themes
-    end
+function __fish_config_theme_dir
+    echo $__fish_config_dir/themes
 end
 
 function __fish_config_list_theme_names
@@ -368,16 +358,14 @@ function __fish_config_matching
     set -e argv[1..2]
     set -l paths
     if not set -q argv[1]
-        set paths $dirs/*$suffix
+        set paths $dir/*$suffix
     else
-        set paths (path filter $dirs/$argv$suffix)
+        set paths (path filter $dir/$argv$suffix)
     end
-    if __fish_is_standalone
-        if not set -q argv[1]
-            set -a paths (status list-files $prefix)
-        else
-            set -a paths (status list-files "$prefix/"$argv$suffix)
-        end
+    if not set -q argv[1]
+        set -a paths (status list-files $prefix)
+    else
+        set -a paths (status list-files "$prefix/"$argv$suffix)
     end
     string join \n $paths
 end

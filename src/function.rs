@@ -336,7 +336,6 @@ pub fn get_names(get_hidden: bool, vars: &dyn Environment) -> Vec<WString> {
         names.insert(name.clone());
     }
 
-    #[cfg(feature = "embed-data")]
     for name in crate::autoload::Asset::iter() {
         let Some(bname) = name.strip_prefix("functions/") else {
             continue;

@@ -9,12 +9,10 @@ use std::path::{Path, PathBuf};
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
 pub struct ConfigPaths {
-    pub sysconf: PathBuf,     // e.g., /usr/local/etc
-    pub bin: Option<PathBuf>, // e.g., /usr/local/bin
-    /// Always present if "embed-data" is disabled.
+    pub sysconf: PathBuf,      // e.g., /usr/local/etc
+    pub bin: Option<PathBuf>,  // e.g., /usr/local/bin
     pub data: Option<PathBuf>, // e.g., /usr/local/share
-    /// Always present if "embed-data" is disabled.
-    pub doc: Option<PathBuf>, // e.g., /usr/local/share/doc/fish
+    pub doc: Option<PathBuf>,  // e.g., /usr/local/share/doc/fish
 }
 
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");

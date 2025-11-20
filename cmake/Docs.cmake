@@ -35,7 +35,6 @@ add_custom_target(sphinx-manpages
         -c "${SPHINX_SRC_DIR}"
         -d "${SPHINX_ROOT_DIR}/.doctrees-man"
         "${SPHINX_SRC_DIR}"
-        # TODO: This only works if we only have section 1 manpages.
         "${SPHINX_MANPAGE_DIR}/man1"
     DEPENDS CHECK-FISH-BUILD-VERSION-FILE
     COMMENT "Building man pages with Sphinx")

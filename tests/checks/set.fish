@@ -472,7 +472,7 @@ env | grep __fish_empty_uvar
 for a,b in y 1 z 3
     echo $a,$b
 end
-# CHECKERR: {{.*}} for: a,b: invalid variable name. See `help identifiers`
+# CHECKERR: {{.*}} for: a,b: invalid variable name. See `help language#shell-variable-and-function-names`
 # CHECKERR: for a,b in y 1 z 3
 # CHECKERR:     ^~^
 
@@ -531,7 +531,7 @@ sh -c 'EDITOR=vim "$@" -c "set -S EDITOR"' uselessargument $FISH | string match 
 
 # Verify behavior of `set --show` given an invalid var name
 set --show 'argle bargle'
-#CHECKERR: set: argle bargle: invalid variable name. See `help identifiers`
+#CHECKERR: set: argle bargle: invalid variable name. See `help language#shell-variable-and-function-names`
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set --show 'argle bargle'
 #CHECKERR: ^
@@ -757,21 +757,21 @@ echo $status
 true
 
 set "" foo
-#CHECKERR: set: : invalid variable name. See `help identifiers`
+#CHECKERR: set: : invalid variable name. See `help language#shell-variable-and-function-names`
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set "" foo
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
 
 set --show ""
-#CHECKERR: set: : invalid variable name. See `help identifiers`
+#CHECKERR: set: : invalid variable name. See `help language#shell-variable-and-function-names`
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set --show ""
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
 
 set foo="ba nana"
-#CHECKERR: set: foo=ba nana: invalid variable name. See `help identifiers`
+#CHECKERR: set: foo=ba nana: invalid variable name. See `help language#shell-variable-and-function-names`
 #CHECKERR: set: Did you mean `set foo 'ba nana'`?
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set foo="ba nana"

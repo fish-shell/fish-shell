@@ -1711,7 +1711,8 @@ fn detect_errors_in_decorated_statement(
             parse_errors,
             source_start,
             source_length,
-            "$status is not valid as a command. See `help conditions`"
+            "$status is not valid as a command. See `help %s`",
+            help_section!("language#conditions")
         );
     }
 

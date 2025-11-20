@@ -165,7 +165,10 @@ fn abbr_show(streams: &mut IoStreams) -> BuiltinResult {
                 add_arg(&escape_string(&abbr.replacement, style));
             }
             if abbr.from_universal {
-                add_arg(L!("# imported from a universal variable, see `help abbr`"));
+                add_arg(&sprintf!(
+                    "# imported from a universal variable, see `help %s`",
+                    help_section!("cmds/abbr")
+                ));
             }
             result.push('\n');
             streams.out.append(&result);

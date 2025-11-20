@@ -152,7 +152,7 @@ function foo -p bar; end
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~^
 
 function foo --argument-names "banana pajama"; end
-# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: banana pajama: invalid variable name. See `help identifiers`
+# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: banana pajama: invalid variable name. See `help language#shell-variable-and-function-names`
 # CHECKERR: function foo --argument-names "banana pajama"; end
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 

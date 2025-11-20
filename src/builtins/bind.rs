@@ -423,6 +423,19 @@ fn parse_cmd_opts(
         wopt(L!("user"), NoArgument, 'u'),
     ];
 
+    let mut check_mode_name = |mode_name: &wstr| -> Result<(), ErrorCode> {
+        if !valid_var_name(mode_name) {
+            streams.err.append(wgettext_fmt!(
+                BUILTIN_ERR_BIND_MODE,
+                cmd,
+                mode_name,
+                help_section!("language#shell-variable-and-function-names")
+            ));
+            return Err(STATUS_INVALID_ARGS);
+        }
+        Ok(())
+    };
+
     let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(c) = w.next_opt() {
         match c {
@@ -443,25 +456,14 @@ fn parse_cmd_opts(
                 return Ok(SUCCESS);
             }
             'M' => {
-                if !valid_var_name(w.woptarg.unwrap()) {
-                    streams.err.append(wgettext_fmt!(
-                        BUILTIN_ERR_BIND_MODE,
-                        cmd,
-                        w.woptarg.unwrap()
-                    ));
-                    return Err(STATUS_INVALID_ARGS);
-                }
-                opts.bind_mode = w.woptarg.unwrap().to_owned();
+                let applicable_mode = w.woptarg.unwrap();
+                check_mode_name(applicable_mode)?;
+                opts.bind_mode = applicable_mode.to_owned();
                 opts.bind_mode_given = true;
             }
             'm' => {
                 let new_mode = w.woptarg.unwrap();
-                if !valid_var_name(new_mode) {
-                    streams
-                        .err
-                        .append(wgettext_fmt!(BUILTIN_ERR_BIND_MODE, cmd, new_mode));
-                    return Err(STATUS_INVALID_ARGS);
-                }
+                check_mode_name(new_mode)?;
                 opts.sets_bind_mode = Some(new_mode.to_owned());
             }
             'p' => {

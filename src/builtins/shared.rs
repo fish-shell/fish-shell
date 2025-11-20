@@ -50,7 +50,7 @@ localizable_consts!(
 
     /// Error message for invalid bind mode name.
     pub BUILTIN_ERR_BIND_MODE
-    "%s: %s: invalid mode name. See `help identifiers`\n"
+    "%s: %s: invalid mode name. See `help %s`\n"
 
     /// Error message when too many arguments are supplied to a builtin.
     pub BUILTIN_ERR_TOO_MANY_ARGUMENTS
@@ -85,7 +85,7 @@ localizable_consts!(
 
     /// Error message for invalid variable name.
     pub BUILTIN_ERR_VARNAME
-    "%s: %s: invalid variable name. See `help identifiers`\n"
+    "%s: %s: invalid variable name. See `help %s`\n"
 
     /// Error message on invalid combination of options.
     pub BUILTIN_ERR_COMBO

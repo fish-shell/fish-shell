@@ -15,6 +15,7 @@ use crate::expand::expand_escape_string;
 use crate::expand::expand_escape_variable;
 use crate::history::History;
 use crate::history::history_session_id;
+use crate::parse_execution::varname_error;
 use crate::{
     env::{EnvMode, EnvVar, Environment},
     wutil::wcstoi::wcstoi_partial,
@@ -183,8 +184,9 @@ impl Options {
                     // implicit drop(w); here
                     if args[optind - 1].starts_with("-o") {
                         // TODO: translate this
-                        streams.err.appendln(L!(
-                            "Fish does not have shell options. See `help fish-for-bash-users`."
+                        streams.err.appendln(sprintf!(
+                            "Fish does not have shell options. See `help %s`.",
+                            help_section!("fish_for_bash_users")
                         ));
                         if optind < args.len() {
                             if args[optind] == "vi" {
@@ -730,9 +732,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
     } else {
         for arg in args.iter().copied() {
             if !valid_var_name(arg) {
-                streams
-                    .err
-                    .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, arg));
+                streams.err.append(varname_error(cmd, arg));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
@@ -788,9 +788,7 @@ fn erase(
             };
 
             if !valid_var_name(split.varname) {
-                streams
-                    .err
-                    .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, split.varname));
+                streams.err.append(varname_error(cmd, split.varname));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
@@ -927,9 +925,7 @@ fn set_internal(
 
     // Is the variable valid?
     if !valid_var_name(split.varname) {
-        streams
-            .err
-            .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, split.varname));
+        streams.err.append(varname_error(cmd, split.varname));
         if let Some(pos) = split.varname.chars().position(|c| c == '=') {
             streams.err.append(wgettext_fmt!(
                 "%s: Did you mean `set %s %s`?",

@@ -469,7 +469,7 @@ localizable_consts!(
 
     /// Error message for wildcards with no matches.
     pub WILDCARD_ERR_MSG
-    "No matches for wildcard '%s'. See `help wildcards-globbing`."
+    "No matches for wildcard '%s'. See `help %s`."
 
     /// Error when using break outside of loop.
     pub INVALID_BREAK_ERR_MSG

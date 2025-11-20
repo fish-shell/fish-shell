@@ -24,11 +24,11 @@ echo >&2 bind output evaluation works
 
 # Verify that an invalid bind mode is rejected.
 bind -m 'bad bind mode' \cX true
-# CHECKERR: bind: bad bind mode: invalid mode name. See `help identifiers`
+# CHECKERR: bind: bad bind mode: invalid mode name. See `help language#shell-variable-and-function-names`
 
 # Verify that an invalid bind mode target is rejected.
 bind -M bind-mode \cX true
-# CHECKERR: bind: bind-mode: invalid mode name. See `help identifiers`
+# CHECKERR: bind: bind-mode: invalid mode name. See `help language#shell-variable-and-function-names`
 
 # This should succeed and result in a success, zero, status.
 bind -M bind_mode \cX true

@@ -11,7 +11,7 @@
 
 # NOTE: When our executable is located outside the build directory, these are different.
 # CHECKERR: config: paths.data: {{.*}}/share
-# CHECKERR: config: paths.doc: {{.*}}/user_doc/html
+# CHECKERR: config: paths.doc: {{.*}}
 
 # CHECKERR: config: sourcing {{.+}}/etc/config.fish
 # CHECKERR: config: not sourcing {{.*}}/xdg_config_home/fish/config.fish (not readable or does not exist)

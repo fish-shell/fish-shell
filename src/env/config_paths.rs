@@ -140,7 +140,12 @@ impl ConfigPaths {
                 sysconf: workspace_root.join("etc"),
                 bin: Some(exec_path_parent.to_owned()),
                 data: Some(workspace_root.join("share")),
-                doc: Some(workspace_root.join("user_doc/html")),
+                doc: if cfg!(use_prebuilt_docs) {
+                    Some(workspace_root)
+                } else {
+                    cfg!(using_cmake).then_some(Path::new(BUILD_DIR))
+                }
+                .map(|p| p.join("user_doc/html")),
             }
         } else {
             FLOG!(

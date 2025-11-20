@@ -185,7 +185,7 @@ You can also install Sphinx another way and drop the ``uv run --no-managed-pytho
 
 This will place standalone binaries in ``~/.cargo/bin/``, but you can move them wherever you want.
 
-To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features --features=embed-data`` to cargo.
+To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features`` to cargo.
 
 You can also link this build statically (but not against glibc) and move it to other computers.
 

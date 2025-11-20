@@ -12,6 +12,7 @@ use crate::tty_handoff::{TERMINAL_OS_NAME, get_scroll_content_up_capability, xtv
 use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use cfg_if::cfg_if;
 use libc::F_OK;
+use rust_embed::RustEmbed;
 
 macro_rules! str_enum {
     ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
@@ -332,10 +333,6 @@ fn parse_cmd_opts(
     return Ok(SUCCESS);
 }
 
-#[cfg(feature = "embed-data")]
-use rust_embed::RustEmbed;
-
-#[cfg(feature = "embed-data")]
 cfg_if!(
     if #[cfg(use_prebuilt_docs)] {
         #[derive(RustEmbed)]
@@ -350,7 +347,7 @@ cfg_if!(
     }
 );
 
-#[cfg(all(using_cmake, feature = "embed-data"))]
+#[cfg(using_cmake)]
 #[derive(RustEmbed)]
 #[folder = "$FISH_CMAKE_BINARY_DIR/share"]
 #[include = "__fish_build_paths.fish"]
@@ -491,76 +488,58 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
+            let arg = crate::common::wcs2bytes(args[0]);
+            let arg = std::str::from_utf8(&arg).unwrap();
             cfg_if!(
-                if #[cfg(not(feature = "embed-data"))] {
-                    streams
-                        .err
-                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
-                    return Err(STATUS_CMD_ERROR);
+                if #[cfg(using_cmake)] {
+                    let emfile = CMakeBinaryDir::get(arg);
                 } else {
-                    let arg = crate::common::wcs2bytes(args[0]);
-                    let arg = std::str::from_utf8(&arg).unwrap();
-                    cfg_if!(
-                        if #[cfg(using_cmake)] {
-                            let emfile = CMakeBinaryDir::get(arg);
-                        } else {
-                            let emfile = None;
-                        }
-                    );
-                    let Some(emfile) = emfile
-                        .or_else(|| crate::autoload::Asset::get(arg))
-                        .or_else(|| Docs::get(arg))
-                    else {
-                        return Err(STATUS_CMD_ERROR);
-                    };
-                    let src = bytes2wcstring(&emfile.data);
-                    streams.out.append(src);
-                    return Ok(SUCCESS);
+                    let emfile = None;
                 }
             );
+            let Some(emfile) = emfile
+                .or_else(|| crate::autoload::Asset::get(arg))
+                .or_else(|| Docs::get(arg))
+            else {
+                return Err(STATUS_CMD_ERROR);
+            };
+            let src = bytes2wcstring(&emfile.data);
+            streams.out.append(src);
+            return Ok(SUCCESS);
         }
         STATUS_LIST_FILES => {
-            cfg_if!(
-                if #[cfg(not(feature = "embed-data"))] {
-                    streams
-                        .err
-                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
-                    return Err(STATUS_CMD_ERROR);
-                } else {
-                    use crate::util::wcsfilecmp_glob;
-                    let mut paths = vec![];
-                    let mut add = |arg| {
-                        let arg = crate::common::wcs2bytes(arg);
-                        let arg = std::str::from_utf8(&arg).unwrap();
-                        let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
-                        #[cfg(using_cmake)]
-                        let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
-                        for path in embedded_files {
-                            if arg.is_empty() || path.starts_with(arg) {
-                                paths.push(bytes2wcstring(path.as_bytes()));
-                            }
-                        }
-                    };
-                    if args.is_empty() {
-                            add(L!(""));
-                    } else {
-                        for arg in args {
-                            add(arg);
-                        }
-                    }
-
-                    paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
-                    for path in &paths {
-                        streams.out.appendln(path);
-                    }
-
-                    if !paths.is_empty() {
-                        return Ok(SUCCESS);
-                    } else {
-                        return Err(STATUS_CMD_ERROR);
+            use crate::util::wcsfilecmp_glob;
+            let mut paths = vec![];
+            let mut add = |arg| {
+                let arg = crate::common::wcs2bytes(arg);
+                let arg = std::str::from_utf8(&arg).unwrap();
+                let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
+                #[cfg(using_cmake)]
+                let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
+                for path in embedded_files {
+                    if arg.is_empty() || path.starts_with(arg) {
+                        paths.push(bytes2wcstring(path.as_bytes()));
                     }
                 }
-            );
+            };
+            if args.is_empty() {
+                add(L!(""));
+            } else {
+                for arg in args {
+                    add(arg);
+                }
+            }
+
+            paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
+            for path in &paths {
+                streams.out.appendln(path);
+            }
+
+            if !paths.is_empty() {
+                return Ok(SUCCESS);
+            } else {
+                return Err(STATUS_CMD_ERROR);
+            }
         }
         c @ STATUS_TEST_TERMINAL_FEATURE => {
             if args.len() != 1 {
@@ -624,8 +603,6 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     streams.out.appendln(profile);
                     streams.out.append(L!("Features: "));
                     let features: &[&str] = &[
-                        #[cfg(feature = "embed-data")]
-                        "embed-data",
                         #[cfg(feature = "localize-messages")]
                         "localize-messages",
                         #[cfg(target_feature = "crt-static")]
@@ -758,7 +735,6 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     streams.out.appendln(result);
                 }
                 STATUS_HELP_SECTIONS => {
-                    #[cfg(feature = "embed-data")]
                     streams
                         .out
                         .append_narrow(fish_build_man_pages::HELP_SECTIONS);

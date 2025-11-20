@@ -15,7 +15,7 @@ function man
     end
 
     set -l manpath
-    if not __fish_is_standalone
+    if false
         and set -l fish_manpath (path filter -d $__fish_data_dir/man)
         # Prepend fish's man directory if available.
 

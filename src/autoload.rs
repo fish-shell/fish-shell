@@ -1,7 +1,6 @@
 //! The classes responsible for autoloading functions and completions.
 
 use crate::FLOGF;
-#[cfg(feature = "embed-data")]
 use crate::common::wcs2bytes;
 use crate::common::{ScopeGuard, escape};
 use crate::env::Environment;
@@ -10,9 +9,7 @@ use crate::parser::Parser;
 use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_path};
-use cfg_if::cfg_if;
 use lru::LruCache;
-#[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
 use std::collections::{HashMap, HashSet};
 use std::num::NonZeroUsize;
@@ -40,23 +37,14 @@ pub struct Autoload {
     cache: AutoloadFileCache,
 }
 
-#[cfg(feature = "embed-data")]
 #[derive(RustEmbed)]
 #[folder = "share"]
 #[exclude = "__fish_build_paths.fish.in"]
 pub struct Asset;
 
-cfg_if!(
-    if #[cfg(feature = "embed-data")] {
-        pub fn has_asset(cmd: &str) -> bool {
-            Asset::get(cmd).is_some()
-        }
-    } else {
-        pub fn has_asset(_cmd: &str) -> bool {
-            false
-        }
-    }
-);
+pub fn has_asset(cmd: &str) -> bool {
+    Asset::get(cmd).is_some()
+}
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum AssetDir {
@@ -65,7 +53,6 @@ enum AssetDir {
 }
 
 pub enum AutoloadPath {
-    #[cfg(feature = "embed-data")]
     Embedded(String),
     Path(WString),
 }
@@ -114,7 +101,6 @@ impl Autoload {
         ) {
             AutoloadResult::Path(path) => {
                 match &path {
-                    #[cfg(feature = "embed-data")]
                     AutoloadPath::Embedded(_) => {
                         FLOGF!(autoload, "Embedded: %s", cmd);
                     }
@@ -148,7 +134,6 @@ impl Autoload {
                 let script_source = L!("source ").to_owned() + &escape(p)[..];
                 parser.eval(&script_source, &IoChain::new());
             }
-            #[cfg(feature = "embed-data")]
             AutoloadPath::Embedded(name) => {
                 use crate::common::bytes2wcstring;
                 use std::sync::Arc;
@@ -236,7 +221,6 @@ impl Autoload {
 
         let file_id = match &file {
             AutoloadableFileInfo::FileInfo(file) => &file.file_id,
-            #[cfg(feature = "embed-data")]
             AutoloadableFileInfo::EmbeddedPath(_) => &INVALID_FILE_ID,
         };
 
@@ -254,7 +238,6 @@ impl Autoload {
             .insert(cmd.to_owned(), file_id.clone());
         AutoloadResult::Path(match file {
             AutoloadableFileInfo::FileInfo(path) => AutoloadPath::Path(path.path),
-            #[cfg(feature = "embed-data")]
             AutoloadableFileInfo::EmbeddedPath(path) => AutoloadPath::Embedded(path),
         })
     }
@@ -277,7 +260,6 @@ enum AutoloadableFileInfo {
     /// An on-disk file.
     FileInfo(FileInfo),
     /// An embedded file.
-    #[cfg(feature = "embed-data")]
     EmbeddedPath(String),
 }
 
@@ -340,24 +322,15 @@ impl AutoloadFileCache {
         cmd: &wstr,
         allow_stale: bool,
     ) -> Option<AutoloadableFileInfo> {
-        let asset_dir =
-            cfg!(feature = "embed-data")
-                .then_some(())
-                .and_then(|()| match env_var_name {
-                    s if s == "fish_function_path" => Some(AssetDir::Functions),
-                    s if s == "fish_complete_path" => Some(AssetDir::Completions),
-                    _ => None,
-                });
+        let asset_dir = match env_var_name {
+            s if s == "fish_function_path" => Some(AssetDir::Functions),
+            s if s == "fish_complete_path" => Some(AssetDir::Completions),
+            _ => None,
+        };
 
         // Check hits.
         if let Some(value) = self.known_files.get(cmd) {
-            cfg_if!(
-                if #[cfg(feature = "embed-data")] {
-                    let embedded = matches!(value.file, AutoloadableFileInfo::EmbeddedPath(_));
-                } else {
-                    let embedded = false;
-                }
-            );
+            let embedded = matches!(value.file, AutoloadableFileInfo::EmbeddedPath(_));
             if allow_stale
                 || embedded
                 || Self::is_fresh(value.last_checked, Self::current_timestamp())
@@ -465,11 +438,6 @@ impl AutoloadFileCache {
         None
     }
 
-    #[cfg(not(feature = "embed-data"))]
-    fn locate_asset(&self, _cmd: &wstr, _asset_dir: AssetDir) -> Option<AutoloadableFileInfo> {
-        None
-    }
-    #[cfg(feature = "embed-data")]
     fn locate_asset(&self, cmd: &wstr, asset_dir: AssetDir) -> Option<AutoloadableFileInfo> {
         // HACK: In cargo tests, this used to never load functions
         // It will hang for reasons unrelated to this.

@@ -2,7 +2,7 @@
 # REQUIRES: command -v sphinx-build
 # REQUIRES: command -v diff
 
-status help-sections | grep -v ^cmds/ >expected
+__fish_data_with_file help_sections (command -v cat) | grep -v ^cmds/ >expected
 
 __fish_data_with_file completions/help.fish cat |
     awk '

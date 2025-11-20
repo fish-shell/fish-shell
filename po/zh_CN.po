@@ -2826,9 +2826,6 @@ msgstr "如果光标下的记号是目录，则列出其内容；否则列出当
 msgid "List embedded files contained in the fish binary"
 msgstr "列出 fish 二进制文件包含的嵌入文件"
 
-msgid "List section arguments for the 'help' command"
-msgstr "列出传给 'help' 命令的段落名称参数"
-
 msgid "List the names of the functions, but not their definition"
 msgstr "列出函数的名称，但不列出其定义"
 

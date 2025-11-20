@@ -2801,9 +2801,6 @@ msgstr "若游標所在的詞元是目錄，則列出其內容，否則列出目
 msgid "List embedded files contained in the fish binary"
 msgstr "列出 fish 二進位檔中嵌入的檔案"
 
-msgid "List section arguments for the 'help' command"
-msgstr "列出傳給「help」命令的段落名稱引數"
-
 msgid "List the names of the functions, but not their definition"
 msgstr "列出函式名稱，不包括其定義"
 

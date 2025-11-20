@@ -157,7 +157,7 @@ In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), f
 - Rust_COMPILER=path - the path to rustc. If not set, cmake will check $PATH and ~/.cargo/bin
 - Rust_CARGO=path - the path to cargo. If not set, cmake will check $PATH and ~/.cargo/bin
 - Rust_CARGO_TARGET=target - the target to pass to cargo. Set this for cross-compilation.
-- BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when Sphinx isn't installed.
+- WITH_DOCS=ON|OFF - whether to build the documentation. By default, this is ON when Sphinx is installed.
 - FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
 - MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
 - WITH_GETTEXT=ON|OFF - whether to include translations.

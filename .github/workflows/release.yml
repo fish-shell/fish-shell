@@ -172,7 +172,7 @@ jobs:
           echo "$MACOS_NOTARIZE_JSON" >/tmp/notarize.json
           ./build_tools/make_macos_pkg.sh -s -f /tmp/app.p12 \
             -i /tmp/installer.p12 -p "$MAC_CODESIGN_PASSWORD" \
-            -n -j /tmp/notarize.json -- -c "-DBUILD_DOCS=ON"
+            -n -j /tmp/notarize.json -- -c "-DWITH_DOCS=ON"
           version=$(git describe)
           [ -f "${FISH_ARTEFACT_PATH}/fish-$version.app.zip" ]
           [ -f "${FISH_ARTEFACT_PATH}/fish-$version.pkg" ]

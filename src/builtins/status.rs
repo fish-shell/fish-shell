@@ -326,12 +326,7 @@ impl RustEmbed for EmptyEmbed {
 }
 
 cfg_if!(
-    if #[cfg(use_prebuilt_docs)] {
-        #[derive(RustEmbed)]
-        #[folder = "user_doc/man/man1"]
-        #[prefix = "man/man1/"]
-        struct Docs;
-    } else if #[cfg(feature = "embed-manpages")] {
+    if #[cfg(feature = "embed-manpages")] {
         #[derive(RustEmbed)]
         #[folder = "$FISH_RESOLVED_BUILD_DIR/fish-man/man1"]
         #[prefix = "man/man1/"]

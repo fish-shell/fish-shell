@@ -136,12 +136,9 @@ impl ConfigPaths {
                 ),
             );
             let user_doc_join = |dir| {
-                if cfg!(use_prebuilt_docs) {
-                    Some(workspace_root)
-                } else {
-                    cfg!(using_cmake).then_some(Path::new(BUILD_DIR))
-                }
-                .map(|path| path.join("user_doc").join(dir))
+                cfg!(using_cmake)
+                    .then_some(Path::new(BUILD_DIR))
+                    .map(|path| path.join("user_doc").join(dir))
             };
             // If we're in Cargo's target directory or in CMake's build directory, use the source files.
             Self {

@@ -23,6 +23,9 @@ Improved terminal support
 
 For distributors and developers
 -------------------------------
+- Tarballs no longer contain prebuilt documentation,
+  so building and installing documentation requires Sphinx.
+  To avoid users accidentally losing docs, the ``BUILD_DOCS`` and ``INSTALL_DOCS`` configuration options have been replaced with a new ``WITH_DOCS`` option.
 - ``fish_key_reader`` and ``fish_indent`` are now hardlinks to ``fish``.
 
 Regression fixes:

@@ -1,26 +1,12 @@
 #!/bin/sh
 
 # Script to generate a tarball
-# We use git to output a tree. But we also want to build the user documentation
-# and put that in the tarball, so that nobody needs to have sphinx installed
-# to build it.
 # Outputs to $FISH_ARTEFACT_PATH or ~/fish_built by default
 
 # Exit on error
 set -e
 
 # We will generate a tarball with a prefix "fish-VERSION"
-# git can do that automatically for us via git-archive
-# but to get the documentation in, we need to make a symlink called "fish-VERSION"
-# and tar from that, so that the documentation gets the right prefix
-
-# Use Ninja if available, as it automatically parallelises
-BUILD_TOOL="make"
-BUILD_GENERATOR="Unix Makefiles"
-if command -v ninja >/dev/null; then
-    BUILD_TOOL="ninja"
-    BUILD_GENERATOR="Ninja"
-fi
 
 # We need GNU tar as that supports the --mtime and --transform options
 TAR=notfound
@@ -41,12 +27,6 @@ wd="$PWD"
 
 # Get the version
 VERSION=$(build_tools/git_version_gen.sh --stdout 2>/dev/null)
-tag_creation_date=$(
-    # If not dirty (i.e. we're building an immutable tag), pin the build date.
-    if [ "$VERSION" = "$(git describe)" ]; then
-        git log --format=%ad '--date=format:%b %d, %Y' -1
-    fi
-)
 
 # The name of the prefix, which is the directory that you get when you untar
 prefix="fish-$VERSION"
@@ -65,16 +45,10 @@ git archive --format=tar --prefix="$prefix"/ HEAD > "$path"
 PREFIX_TMPDIR=$(mktemp -d)
 cd "$PREFIX_TMPDIR"
 echo "$VERSION" > version
-cmake -G "$BUILD_GENERATOR" -DCMAKE_BUILD_TYPE=Debug "$wd"
-mkdir $PWD/user_doc/src
-FISH_SPHINX_BUILD_DATE=$tag_creation_date \
-$BUILD_TOOL doc
 
-TAR_APPEND="$TAR --append --file=$path --mtime=now --owner=0 --group=0 \
-    --mode=g+w,a+rX --transform s/^/$prefix\//"
-$TAR_APPEND --no-recursion user_doc
-$TAR_APPEND user_doc/html user_doc/man
-$TAR_APPEND version
+$TAR --append --file=$path --mtime=now --owner=0 --group=0 \
+    --mode=g+w,a+rX --transform "s/^/$prefix\//" \
+    version
 
 cd -
 rm -r "$PREFIX_TMPDIR"

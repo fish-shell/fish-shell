@@ -45,3 +45,9 @@ pub fn rebuild_if_paths_changed<P: AsRef<Path>, I: IntoIterator<Item = P>>(paths
         rsconf::rebuild_if_path_changed(path.as_ref().to_str().unwrap());
     }
 }
+
+pub fn rebuild_if_embedded_path_changed<P: AsRef<Path>>(path: P) {
+    if cfg!(any(not(debug_assertions), windows)) {
+        rebuild_if_path_changed(path);
+    }
+}

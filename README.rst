@@ -184,13 +184,14 @@ You can also install Sphinx another way and drop the ``uv run --no-managed-pytho
 
 This will place standalone binaries in ``~/.cargo/bin/``, but you can move them wherever you want.
 
-To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features`` to cargo.
+To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features --features=embed-manpages`` to cargo.
 
 You can also link this build statically (but not against glibc) and move it to other computers.
 
 Here are the remaining advantages of a full installation, as currently done by CMake:
 
 - Man pages like ``fish(1)`` installed in standard locations, easily accessible from outside fish.
+- Separate files for builtins (e.g. ``$PREFIX/share/fish/man/man1/abbr.1``).
 - A local copy of the HTML documentation, typically accessed via the ``help`` fish function.
   In Cargo builds, ``help`` will redirect to `<https://fishshell.com/docs/current/>`__
 - Ability to use our CMake options extra_functionsdir, extra_completionsdir and extra_confdir,

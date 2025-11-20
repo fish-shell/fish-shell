@@ -70,8 +70,7 @@ function __fish_complete_man
 
         # Fish commands are not given by apropos
         if not set -ql exclude_fish_commands
-            __fish_data_list_files man/man1 |
-                string replace -rf '.*/([^/]+)\.1(\.gz)?$' '$1\t1: fish command'
+            string join \n -- (__fish_man1_pages)\t'1: fish command'
         end
     else
         return 1

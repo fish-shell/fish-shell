@@ -337,10 +337,15 @@ cfg_if!(
         #[folder = "user_doc/man/man1"]
         #[prefix = "man/man1/"]
         struct Docs;
-    } else {
+    } else if #[cfg(feature = "embed-manpages")] {
         #[derive(RustEmbed)]
         #[folder = "$FISH_RESOLVED_BUILD_DIR/fish-man/man1"]
         #[prefix = "man/man1/"]
+        struct Docs;
+    } else {
+        #[derive(RustEmbed)]
+        #[folder = "$FISH_RESOLVED_BUILD_DIR"]
+        #[include = ""]
         struct Docs;
     }
 );
@@ -601,6 +606,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     streams.out.appendln(profile);
                     streams.out.append(L!("Features: "));
                     let features: &[&str] = &[
+                        #[cfg(feature = "embed-manpages")]
+                        "embed-manpages",
                         #[cfg(feature = "localize-messages")]
                         "localize-messages",
                         #[cfg(target_feature = "crt-static")]

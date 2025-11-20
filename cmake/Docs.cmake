@@ -27,7 +27,6 @@ add_custom_target(sphinx-docs
     DEPENDS ${SPHINX_SRC_DIR}/fish_indent_lexer.py fish_indent
     COMMENT "Building HTML documentation with Sphinx")
 
-# sphinx-manpages needs the fish_indent binary for the version number
 add_custom_target(sphinx-manpages
     env FISH_BUILD_VERSION_FILE=${CMAKE_CURRENT_BINARY_DIR}/${FBVF}
         ${SPHINX_EXECUTABLE}

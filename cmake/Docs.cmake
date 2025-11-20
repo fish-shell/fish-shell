@@ -39,48 +39,30 @@ add_custom_target(sphinx-manpages
     DEPENDS CHECK-FISH-BUILD-VERSION-FILE
     COMMENT "Building man pages with Sphinx")
 
-if(SPHINX_EXECUTABLE)
-    option(BUILD_DOCS "build documentation (requires Sphinx)" ON)
-else(SPHINX_EXECUTABLE)
-    option(BUILD_DOCS "build documentation (requires Sphinx)" OFF)
-endif(SPHINX_EXECUTABLE)
+if(DEFINED BUILD_DOCS)
+    message(FATAL_ERROR "the BUILD_DOCS option is no longer supported, use -DDOCS=ON|OFF")
+endif()
+if(DEFINED INSTALL_DOCS)
+    message(FATAL_ERROR "the INSTALL_DOCS option is no longer supported, use -DDOCS=ON|OFF")
+endif()
 
-if(BUILD_DOCS AND NOT SPHINX_EXECUTABLE)
+if(SPHINX_EXECUTABLE)
+    option(DOCS "build documentation (requires Sphinx)" ON)
+else()
+    option(DOCS "build documentation (requires Sphinx)" OFF)
+endif()
+
+if(DOCS AND NOT SPHINX_EXECUTABLE)
     message(FATAL_ERROR "build documentation selected, but sphinx-build could not be found")
 endif()
 
-if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/user_doc/html
-   AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/user_doc/man)
-    set(HAVE_PREBUILT_DOCS TRUE)
-else()
-    set(HAVE_PREBUILT_DOCS FALSE)
-endif()
+add_feature_info(Documentation DOCS "user manual and documentation")
 
-if(BUILD_DOCS OR HAVE_PREBUILT_DOCS)
-    set(INSTALL_DOCS ON)
-else()
-    set(INSTALL_DOCS OFF)
-endif()
-
-add_feature_info(Documentation INSTALL_DOCS "user manual and documentation")
-
-set(USE_PREBUILT_DOCS FALSE)
-if(BUILD_DOCS)
+if(DOCS)
     configure_file("${SPHINX_SRC_DIR}/conf.py" "${SPHINX_BUILD_DIR}/conf.py" @ONLY)
     add_custom_target(doc ALL
                       DEPENDS sphinx-docs sphinx-manpages)
-
     # Group docs targets into a DocsTargets folder
     set_property(TARGET doc sphinx-docs sphinx-manpages
                  PROPERTY FOLDER cmake/DocTargets)
-
-elseif(HAVE_PREBUILT_DOCS)
-    set(USE_PREBUILT_DOCS TRUE)
-    if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
-        # Out of tree build - link the prebuilt documentation to the build tree
-        add_custom_target(link_doc ALL)
-        add_custom_command(TARGET link_doc
-            COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/user_doc ${CMAKE_CURRENT_BINARY_DIR}/user_doc
-            POST_BUILD)
-    endif()
-endif(BUILD_DOCS)
+endif(DOCS)

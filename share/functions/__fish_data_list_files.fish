@@ -1,7 +1,7 @@
 # localization: skip(private)
 function __fish_data_list_files
     set -l dir $argv[1]
-    if false
+    if not __fish_tried_to_embed_manpages
         # Construct a directory prefix without trailing slash.
         if test -n "$dir"
             set dir $__fish_data_dir/$dir

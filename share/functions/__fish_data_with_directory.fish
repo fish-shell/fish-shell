@@ -5,7 +5,7 @@ function __fish_data_with_directory
     set -l cmd $argv[3..]
     set -l temp
     set -l directory_ref
-    if false
+    if not __fish_tried_to_embed_manpages
         set directory_ref $__fish_data_dir/$relative_directory
     else
         set temp (__fish_mktemp_relative -d fish-data)

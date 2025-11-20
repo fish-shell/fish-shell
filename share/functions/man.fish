@@ -15,7 +15,7 @@ function man
     end
 
     set -l manpath
-    if false
+    if not __fish_tried_to_embed_manpages
         and set -l fish_manpath (path filter -d $__fish_data_dir/man)
         # Prepend fish's man directory if available.
 

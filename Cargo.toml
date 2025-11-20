@@ -86,7 +86,7 @@ bitflags.workspace = true
 cfg-if.workspace = true
 errno.workspace = true
 fish-build-helper.workspace = true
-fish-build-man-pages.workspace = true
+fish-build-man-pages = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-gettext-maps = { workspace = true, optional = true }
 fish-printf.workspace = true
@@ -150,8 +150,9 @@ name = "fish_key_reader"
 path = "src/bin/fish_key_reader.rs"
 
 [features]
-default = ["localize-messages"]
+default = ["embed-manpages", "localize-messages"]
 benchmark = []
+embed-manpages = ["dep:fish-build-man-pages"]
 # Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
 # build time.
 localize-messages = ["dep:phf", "dep:fish-gettext-maps"]

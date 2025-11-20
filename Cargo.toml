@@ -27,6 +27,7 @@ fish-gettext = { path = "crates/gettext" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-gettext-maps = { path = "crates/gettext-maps" }
 fish-gettext-mo-file-parser = { path = "crates/gettext-mo-file-parser" }
+fish-localization-extraction = { path = "crates/localization-extraction" }
 fish-printf = { path = "crates/printf", features = ["widestring"] }
 fish-tempfile = { path = "crates/tempfile" }
 fish-util = { path = "crates/util" }

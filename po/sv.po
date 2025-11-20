@@ -2794,9 +2794,6 @@ msgstr ""
 msgid "List embedded files contained in the fish binary"
 msgstr ""
 
-msgid "List section arguments for the 'help' command"
-msgstr ""
-
 msgid "List the names of the functions, but not their definition"
 msgstr ""
 

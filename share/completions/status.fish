@@ -25,7 +25,6 @@ set -l __fish_status_all_commands \
     job-control \
     line-number \
     list-files \
-    help-sections \
     print-stack-trace \
     stack-trace \
     terminal \
@@ -67,7 +66,6 @@ complete -f -c status -n "__fish_seen_subcommand_from test-feature" -a '(status 
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a fish-path -d "Print the path to the current instance of fish"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a get-file -d "Print an embedded file from the fish binary"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a list-files -d "List embedded files contained in the fish binary"
-complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a help-sections -d "List section arguments for the 'help' command"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a fish-path -d "Print the path to the current instance of fish"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a terminal -d "Print name and version of the terminal fish is running in"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a terminal-os -d "Print the operating system the terminal is running on"

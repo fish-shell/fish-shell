@@ -74,9 +74,7 @@ def extract_sections(app, env):
             f"Unsupported characters in section path: {section}"
         )
     help_sections = "".join(f"{section}\n" for section in sections)
-    Path(output_file).write_text(
-        f"""pub static HELP_SECTIONS: &str = "{help_sections}";"""
-    )
+    Path(output_file).write_text(help_sections)
 
 
 def remove_fish_indent_lexer(app):
@@ -99,7 +97,7 @@ def setup(app):
     app.add_config_value("issue_url", default=None, rebuild="html")
     app.add_config_value(
         "fish_help_sections_output",
-        default=os.environ.get("FISH_SPHINX_HELP_SECTIONS_OUTPUT", ""),
+        default="",
         rebuild="man",
         types=str,
     )

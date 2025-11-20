@@ -68,13 +68,12 @@ echo "$VERSION" > version
 cmake -G "$BUILD_GENERATOR" -DCMAKE_BUILD_TYPE=Debug "$wd"
 mkdir $PWD/user_doc/src
 FISH_SPHINX_BUILD_DATE=$tag_creation_date \
-FISH_SPHINX_HELP_SECTIONS_OUTPUT=$PWD/user_doc/src/help_sections.rs \
-    $BUILD_TOOL doc
+$BUILD_TOOL doc
 
 TAR_APPEND="$TAR --append --file=$path --mtime=now --owner=0 --group=0 \
     --mode=g+w,a+rX --transform s/^/$prefix\//"
 $TAR_APPEND --no-recursion user_doc
-$TAR_APPEND user_doc/html user_doc/man user_doc/src/help_sections.rs
+$TAR_APPEND user_doc/html user_doc/man
 $TAR_APPEND version
 
 cd -

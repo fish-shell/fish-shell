@@ -40,10 +40,7 @@ fn main() {
     // safety: single-threaded code.
     unsafe { std::env::set_var("FISH_BUILD_VERSION", version) };
 
-    // These are necessary if built with embedded functions,
-    // but only in release builds (because rust-embed in debug builds reads from the filesystem).
-    #[cfg(any(windows, not(debug_assertions)))]
-    rsconf::rebuild_if_path_changed("share");
+    fish_build_helper::rebuild_if_embedded_path_changed("share");
 
     #[cfg(feature = "gettext-extract")]
     rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");

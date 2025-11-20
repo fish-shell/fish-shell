@@ -358,7 +358,7 @@ dependencies = [
 name = "fish-gettext-extraction"
 version = "0.0.0"
 dependencies = [
- "fish-tempfile",
+ "fish-localization-extraction",
  "proc-macro2",
  "rsconf",
 ]
@@ -377,6 +377,14 @@ dependencies = [
 [[package]]
 name = "fish-gettext-mo-file-parser"
 version = "0.0.0"
+
+[[package]]
+name = "fish-localization-extraction"
+version = "0.0.0"
+dependencies = [
+ "fish-tempfile",
+ "proc-macro2",
+]
 
 [[package]]
 name = "fish-printf"

@@ -11,7 +11,11 @@ fn main() {
         PathBuf::from(fish_build_helper::fish_build_dir()).join("fish-localization-map-cache");
     embed_localizations(&cache_dir);
 
-    fish_build_helper::rebuild_if_path_changed(fish_build_helper::workspace_root().join("po"));
+    fish_build_helper::rebuild_if_path_changed(
+        fish_build_helper::workspace_root()
+            .join("localization")
+            .join("po"),
+    );
 }
 
 fn embed_localizations(cache_dir: &Path) {
@@ -21,7 +25,9 @@ fn embed_localizations(cache_dir: &Path) {
         io::{BufWriter, Write},
     };
 
-    let po_dir = fish_build_helper::workspace_root().join("po");
+    let po_dir = fish_build_helper::workspace_root()
+        .join("localization")
+        .join("po");
 
     // Ensure that the directory is created, because clippy cannot compile the code if the
     // directory does not exist.
@@ -41,7 +47,7 @@ fn embed_localizations(cache_dir: &Path) {
                 "Could not find msgfmt required to build message catalogs. \
                  Localization will not work. \
                  If you install gettext now, you need to trigger a rebuild to include localization support. \
-                 For example by running `touch po` followed by the build command."
+                 For example by running `touch localization/po` followed by the build command."
             );
         }
         Err(e) => {

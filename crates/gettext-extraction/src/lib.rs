@@ -1,6 +1,7 @@
 extern crate proc_macro;
+use fish_localization_extraction::localization_extract;
 use proc_macro::TokenStream;
-use std::{ffi::OsString, fs::OpenOptions, io::Write};
+use std::{fs::File, io::Write};
 
 fn unescape_multiline_rust_string(s: String) -> String {
     if !s.contains('\n') {
@@ -42,13 +43,9 @@ fn unescape_multiline_rust_string(s: String) -> String {
     unescaped
 }
 
-fn append_po_entry_to_file(message: &TokenStream, file_name: &OsString) {
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(file_name)
-        .unwrap_or_else(|e| panic!("Could not open file {file_name:?}: {e}"));
-    let message_string = unescape_multiline_rust_string(message.to_string());
+// TODO: needs synchronization
+fn append_po_entry_to_file(message: String, mut file: File) {
+    let message_string = unescape_multiline_rust_string(message);
     if message_string.contains('\n') {
         panic!(
             "Gettext strings may not contain unescaped newlines. Unescaped newline found in '{message_string}'"
@@ -79,34 +76,9 @@ fn append_po_entry_to_file(message: &TokenStream, file_name: &OsString) {
 /// string literal.
 #[proc_macro]
 pub fn gettext_extract(message: TokenStream) -> TokenStream {
-    if let Some(file_path) = std::env::var_os("FISH_GETTEXT_EXTRACTION_FILE") {
-        let pm2_message = proc_macro2::TokenStream::from(message.clone());
-        let mut token_trees = pm2_message.into_iter();
-        let first_token = token_trees
-            .next()
-            .expect("gettext_extract got empty token stream. Expected one token.");
-        if token_trees.next().is_some() {
-            panic!(
-                "Invalid number of tokens passed to gettext_extract. Expected one token, but got more."
-            )
-        }
-        let proc_macro2::TokenTree::Group(group) = first_token else {
-            panic!("Expected group in gettext_extract, but got: {first_token:?}");
-        };
-        let mut group_tokens = group.stream().into_iter();
-        let first_group_token = group_tokens
-            .next()
-            .expect("gettext_extract expected one group token but got none.");
-        if group_tokens.next().is_some() {
-            panic!(
-                "Invalid number of tokens in group passed to gettext_extract. Expected one token, but got more."
-            )
-        }
-        if let proc_macro2::TokenTree::Literal(_) = first_group_token {
-            append_po_entry_to_file(&message, &file_path);
-        } else {
-            panic!("Expected literal in gettext_extract, but got: {first_group_token:?}");
-        }
-    }
-    message
+    localization_extract(
+        message,
+        "FISH_GETTEXT_EXTRACTION_FILE",
+        append_po_entry_to_file,
+    )
 }

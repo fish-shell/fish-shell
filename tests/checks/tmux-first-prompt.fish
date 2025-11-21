@@ -1,5 +1,6 @@
-#RUN: %fish %s
-#REQUIRES: command -v tmux
+# RUN: %fish %s
+# REQUIRES: command -v tmux
+# REQUIRES: test -z "$FISH_CI_SAN"
 
 tmux_wait=false \
     isolated-tmux-start -C '

@@ -1,5 +1,6 @@
 fish 4.3.0 (released ???)
 =========================
+- Add error message for when a command name is too long (:issue:`11788`)
 
 Notable improvements and fixes
 ------------------------------

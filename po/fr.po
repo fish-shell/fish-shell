@@ -1091,6 +1091,10 @@ msgstr "Commande\n"
 msgid "Command history events"
 msgstr ""
 
+#, c-format
+msgid "Command name exceeds maximum length: '%s'"
+msgstr ""
+
 msgid "Command not executable"
 msgstr ""
 

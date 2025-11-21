@@ -9,12 +9,10 @@ use std::path::{Path, PathBuf};
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
 pub struct ConfigPaths {
-    pub sysconf: PathBuf,     // e.g., /usr/local/etc
-    pub bin: Option<PathBuf>, // e.g., /usr/local/bin
-    /// Always present if "embed-data" is disabled.
+    pub sysconf: PathBuf,      // e.g., /usr/local/etc
+    pub bin: Option<PathBuf>,  // e.g., /usr/local/bin
     pub data: Option<PathBuf>, // e.g., /usr/local/share
-    /// Always present if "embed-data" is disabled.
-    pub doc: Option<PathBuf>, // e.g., /usr/local/share/doc/fish
+    pub doc: Option<PathBuf>,  // e.g., /usr/local/share/doc/fish
 }
 
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
@@ -142,7 +140,7 @@ impl ConfigPaths {
                 sysconf: workspace_root.join("etc"),
                 bin: Some(exec_path_parent.to_owned()),
                 data: Some(workspace_root.join("share")),
-                doc: Some(workspace_root.join("user_doc/html")),
+                doc: cfg!(using_cmake).then_some(Path::new(BUILD_DIR).join("user_doc/html")),
             }
         } else {
             FLOG!(

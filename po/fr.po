@@ -204,8 +204,9 @@ msgstr "$? n’est pas le code de retour. Dans fish, veuillez utiliser $status."
 msgid "$@ is not supported. In fish, please use $argv."
 msgstr "$@ n’est pas supporté. Dans fish, veuillez utiliser $argv."
 
-msgid "$status is not valid as a command. See `help conditions`"
-msgstr "$status n’est pas une commande valide. Voir « help conditions »"
+#, fuzzy, c-format
+msgid "$status is not valid as a command. See `help %s`"
+msgstr "$status n’est pas une commande valide. Voir « help %s »"
 
 #, c-format
 msgid "%.*s: invalid conversion specification"
@@ -264,8 +265,8 @@ msgid "%s and %s are mutually exclusive"
 msgstr ""
 
 #, c-format
-msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
-msgstr "%s n’a pas pu lire de réponse à une requête « Primary Device Attribute » après avoir attendu %d secondes. Ceci est souvent dû à une fonctionnalité manquante de votre terminal. Voir « help terminal-compatibility » ou « man fish-terminal-compatibility ». Le processus %s va désormais ignorer les requêtes en attente, ce qui désactive quelques fonctionnalités optionnelles."
+msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help %s' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
+msgstr "%s n’a pas pu lire de réponse à une requête « Primary Device Attribute » après avoir attendu %d secondes. Ceci est souvent dû à une fonctionnalité manquante de votre terminal. Voir « help %s » ou « man fish-terminal-compatibility ». Le processus %s va désormais ignorer les requêtes en attente, ce qui désactive quelques fonctionnalités optionnelles."
 
 #, c-format
 msgid "%s is %s\n"
@@ -332,8 +333,8 @@ msgid "%s: %s: invalid mode\n"
 msgstr "%s : %s : mode invalide\n"
 
 #, c-format
-msgid "%s: %s: invalid mode name. See `help identifiers`\n"
-msgstr "%s : %s : nom de mode invalide. Voir « help identifiers »\n"
+msgid "%s: %s: invalid mode name. See `help %s`\n"
+msgstr "%s : %s : nom de mode invalide. Voir « help %s »\n"
 
 #, c-format
 msgid "%s: %s: invalid scale\n"
@@ -344,8 +345,8 @@ msgid "%s: %s: invalid subcommand\n"
 msgstr "%s : %s : sous-commande invalide\n"
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help identifiers`\n"
-msgstr "%s : %s : nom de variable invalide. Voir « help identifiers »\n"
+msgid "%s: %s: invalid variable name. See `help %s`\n"
+msgstr "%s : %s : nom de variable invalide. Voir « help %s »\n"
 
 #, c-format
 msgid "%s: %s: option does not take an argument\n"
@@ -1419,7 +1420,7 @@ msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Pas de TTY pour shell interactif (tcgetpgrp a échoué)"
 
 #, c-format
-msgid "No matches for wildcard '%s'. See `help wildcards-globbing`."
+msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr ""
 
 msgid "Not a function"
@@ -2926,9 +2927,6 @@ msgid "List contents of token under the cursor if it is a directory, otherwise l
 msgstr ""
 
 msgid "List embedded files contained in the fish binary"
-msgstr ""
-
-msgid "List section arguments for the 'help' command"
 msgstr ""
 
 msgid "List the names of the functions, but not their definition"

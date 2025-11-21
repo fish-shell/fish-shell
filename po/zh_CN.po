@@ -96,8 +96,9 @@ msgstr "$? 不是退出代码。在 fish 中，请使用 $status。"
 msgid "$@ is not supported. In fish, please use $argv."
 msgstr "不支持 $@。在 fish 中，请使用 $argv。"
 
-msgid "$status is not valid as a command. See `help conditions`"
-msgstr "$status 不是有效的命令。参见 `help conditions`"
+#, c-format
+msgid "$status is not valid as a command. See `help %s`"
+msgstr "$status 不是有效的命令。参见 `help %s`"
 
 #, c-format
 msgid "%.*s: invalid conversion specification"
@@ -156,8 +157,8 @@ msgid "%s and %s are mutually exclusive"
 msgstr "%s 与 %s 互斥"
 
 #, c-format
-msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
-msgstr "%s 等待 %d 秒后仍无法读取 Primary Device Attribute 查询的响应。这通常是由于终端缺少相应功能所致。参见 'help terminal-compatibility' 或 'man fish-terminal-compatibility'。此 %s 进程将不再等待未处理的查询，这将禁用某些可选功能。"
+msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help %s' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
+msgstr "%s 等待 %d 秒后仍无法读取 Primary Device Attribute 查询的响应。这通常是由于终端缺少相应功能所致。参见 'help %s' 或 'man fish-terminal-compatibility'。此 %s 进程将不再等待未处理的查询，这将禁用某些可选功能。"
 
 #, c-format
 msgid "%s is %s\n"
@@ -224,8 +225,8 @@ msgid "%s: %s: invalid mode\n"
 msgstr "%s: %s: 无效舍入模式\n"
 
 #, c-format
-msgid "%s: %s: invalid mode name. See `help identifiers`\n"
-msgstr "%s: %s: 无效模式名。参见 `help identifiers`\n"
+msgid "%s: %s: invalid mode name. See `help %s`\n"
+msgstr "%s: %s: 无效模式名。参见 `help %s`\n"
 
 #, c-format
 msgid "%s: %s: invalid scale\n"
@@ -236,8 +237,8 @@ msgid "%s: %s: invalid subcommand\n"
 msgstr "%s: %s: 无效的子命令\n"
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help identifiers`\n"
-msgstr "%s: %s: 无效的变量名。参见 `help identifiers`\n"
+msgid "%s: %s: invalid variable name. See `help %s`\n"
+msgstr "%s: %s: 无效的变量名。参见 `help %s`\n"
 
 #, c-format
 msgid "%s: %s: option does not take an argument\n"
@@ -1314,8 +1315,8 @@ msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "交互 shell 没有 TTY (tcgetpgrp 失败)"
 
 #, c-format
-msgid "No matches for wildcard '%s'. See `help wildcards-globbing`."
-msgstr "未找到通配符 '%s' 的匹配项。参见 `help wildcards-globbing`。"
+msgid "No matches for wildcard '%s'. See `help %s`."
+msgstr "未找到通配符 '%s' 的匹配项。参见 `help %s`。"
 
 msgid "Not a function"
 msgstr "不是一个函数"
@@ -2825,9 +2826,6 @@ msgstr "如果光标下的记号是目录，则列出其内容；否则列出当
 
 msgid "List embedded files contained in the fish binary"
 msgstr "列出 fish 二进制文件包含的嵌入文件"
-
-msgid "List section arguments for the 'help' command"
-msgstr "列出传给 'help' 命令的段落名称参数"
 
 msgid "List the names of the functions, but not their definition"
 msgstr "列出函数的名称，但不列出其定义"

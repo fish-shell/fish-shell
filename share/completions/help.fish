@@ -1,6 +1,7 @@
 complete -c help -n __fish_is_first_arg -x -a '(
     {
-        status help-sections | string replace -r "^index(#|\$)" introduction\$1
+        __fish_data_with_file help_sections (command -v cat) |
+            string replace -r "^index(#|\$)" introduction\$1
         printf cmds/%s\n ! . : \[ \{
     } |
         while read -l item

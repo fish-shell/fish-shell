@@ -60,3 +60,10 @@ jobs:
     - name: cargo doctest
       run: |
         cargo test --doc --workspace
+
+  check-licenses:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/rust-toolchain@stable
+    - run: cargo deny check licenses

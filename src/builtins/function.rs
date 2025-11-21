@@ -8,6 +8,7 @@ use crate::event::{self, EventDescription, EventHandler};
 use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::nix::getpid;
+use crate::parse_execution::varname_error;
 use crate::parse_tree::NodeRef;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::proc::Pid;
@@ -127,9 +128,7 @@ fn parse_cmd_opts(
             'v' => {
                 let name = w.woptarg.unwrap().to_owned();
                 if !valid_var_name(&name) {
-                    streams
-                        .err
-                        .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, name));
+                    streams.err.append(varname_error(cmd, &name));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 opts.events.push(EventDescription::Variable { name });
@@ -197,9 +196,7 @@ fn parse_cmd_opts(
             'V' => {
                 let woptarg = w.woptarg.unwrap();
                 if !valid_var_name(woptarg) {
-                    streams
-                        .err
-                        .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, woptarg));
+                    streams.err.append(varname_error(cmd, woptarg));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 opts.inherit_vars.push(woptarg.to_owned());
@@ -303,9 +300,7 @@ pub fn function(
             // Remaining arguments are named arguments.
             for &arg in argv[optind..].iter() {
                 if !valid_var_name(arg) {
-                    streams
-                        .err
-                        .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, arg));
+                    streams.err.append(varname_error(cmd, arg));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 opts.named_arguments.push(arg.to_owned());
@@ -338,9 +333,7 @@ pub fn function(
 
     for named in &opts.named_arguments {
         if !valid_var_name(named) {
-            streams
-                .err
-                .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, named));
+            streams.err.append(varname_error(cmd, named));
             return Err(STATUS_INVALID_ARGS);
         }
     }

@@ -74,7 +74,8 @@ msgstr ""
 msgid "$@ is not supported. In fish, please use $argv."
 msgstr ""
 
-msgid "$status is not valid as a command. See `help conditions`"
+#, c-format
+msgid "$status is not valid as a command. See `help %s`"
 msgstr ""
 
 #, c-format
@@ -134,7 +135,7 @@ msgid "%s and %s are mutually exclusive"
 msgstr ""
 
 #, c-format
-msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
+msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help %s' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
 msgstr ""
 
 #, c-format
@@ -202,7 +203,7 @@ msgid "%s: %s: invalid mode\n"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid mode name. See `help identifiers`\n"
+msgid "%s: %s: invalid mode name. See `help %s`\n"
 msgstr ""
 
 #, c-format
@@ -214,7 +215,7 @@ msgid "%s: %s: invalid subcommand\n"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help identifiers`\n"
+msgid "%s: %s: invalid variable name. See `help %s`\n"
 msgstr ""
 
 #, c-format
@@ -1289,7 +1290,7 @@ msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Não há TTY para shell interativo (falha em tcgetpgrp)"
 
 #, c-format
-msgid "No matches for wildcard '%s'. See `help wildcards-globbing`."
+msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr ""
 
 msgid "Not a function"
@@ -2796,9 +2797,6 @@ msgid "List contents of token under the cursor if it is a directory, otherwise l
 msgstr ""
 
 msgid "List embedded files contained in the fish binary"
-msgstr ""
-
-msgid "List section arguments for the 'help' command"
 msgstr ""
 
 msgid "List the names of the functions, but not their definition"

@@ -28,7 +28,7 @@ use crate::parse_constants::{
     CALL_STACK_LIMIT_EXCEEDED_ERR_MSG, ERROR_TIME_BACKGROUND,
     FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, ILLEGAL_FD_ERR_MSG, INFINITE_FUNC_RECURSION_ERR_MSG,
     ParseError, ParseErrorCode, ParseErrorList, ParseKeyword, ParseTokenType, StatementDecoration,
-    WILDCARD_ERR_MSG, parse_error_offset_source_start,
+    parse_error_offset_source_start,
 };
 use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef};
 use crate::parse_util::{
@@ -112,6 +112,15 @@ macro_rules! report_error_formatted {
         error.text = $text;
         $self.report_errors($ctx, $status, &vec![error])
     }};
+}
+
+pub fn varname_error(command: &wstr, bad_name: &wstr) -> WString {
+    wgettext_fmt!(
+        BUILTIN_ERR_VARNAME,
+        command,
+        bad_name,
+        help_section!("language#shell-variable-and-function-names")
+    )
 }
 
 impl<'a> ExecutionContext<'a> {
@@ -449,6 +458,22 @@ impl<'a> ExecutionContext<'a> {
         infinite_recursive_statement
     }
 
+    fn report_wildcard_error(
+        &self,
+        ctx: &OperationContext<'_>,
+        node: &dyn ast::Node,
+    ) -> EndExecutionReason {
+        report_error!(
+            self,
+            ctx,
+            STATUS_UNMATCHED_WILDCARD,
+            node,
+            crate::parse_constants::WILDCARD_ERR_MSG,
+            self.node_source(node),
+            help_section!("language#wildcards-globbing")
+        )
+    }
+
     // Expand a command which may contain variables, producing an expand command and possibly
     // arguments. Prints an error message on error.
     fn expand_command(
@@ -486,14 +511,7 @@ impl<'a> ExecutionContext<'a> {
                 return self.report_errors(ctx, STATUS_ILLEGAL_CMD, &errors);
             }
             ExpandResultCode::wildcard_no_match => {
-                return report_error!(
-                    self,
-                    ctx,
-                    STATUS_UNMATCHED_WILDCARD,
-                    statement,
-                    WILDCARD_ERR_MSG,
-                    self.node_source(statement)
-                );
+                return self.report_wildcard_error(ctx, statement);
             }
             ExpandResultCode::cancel => {
                 return EndExecutionReason::cancelled;
@@ -882,9 +900,8 @@ impl<'a> ExecutionContext<'a> {
                 ctx,
                 STATUS_INVALID_ARGS,
                 header.var_name,
-                BUILTIN_ERR_VARNAME,
-                "for",
-                for_var_name
+                "%s",
+                varname_error(L!("for"), &for_var_name)
             );
         }
 
@@ -1078,14 +1095,7 @@ impl<'a> ExecutionContext<'a> {
                 return EndExecutionReason::cancelled;
             }
             ExpandResultCode::wildcard_no_match => {
-                return report_error!(
-                    self,
-                    ctx,
-                    STATUS_UNMATCHED_WILDCARD,
-                    &statement.argument,
-                    WILDCARD_ERR_MSG,
-                    self.node_source(&statement.argument)
-                );
+                return self.report_wildcard_error(ctx, &statement.argument);
             }
             ExpandResultCode::ok => {
                 if switch_values_expanded.len() > 1 {
@@ -1337,7 +1347,7 @@ impl<'a> ExecutionContext<'a> {
         // Get all argument nodes underneath the statement. We guess we'll have that many arguments (but
         // may have more or fewer, if there are wildcards involved).
         out_arguments.reserve(argument_nodes.len());
-        for arg_node in argument_nodes {
+        for &arg_node in argument_nodes {
             // Expect all arguments to have source.
             assert!(arg_node.has_source(), "Argument should have source");
 
@@ -1345,7 +1355,7 @@ impl<'a> ExecutionContext<'a> {
             let mut errors = ParseErrorList::new();
             let mut arg_expanded = CompletionList::new();
             let expand_ret = expand_string(
-                self.node_source_owned(*arg_node),
+                self.node_source_owned(arg_node),
                 &mut arg_expanded,
                 ExpandFlags::default(),
                 ctx,
@@ -1366,14 +1376,7 @@ impl<'a> ExecutionContext<'a> {
                             return EndExecutionReason::ok;
                         }
                         // Report the unmatched wildcard error and stop processing.
-                        return report_error!(
-                            self,
-                            ctx,
-                            STATUS_UNMATCHED_WILDCARD,
-                            arg_node,
-                            WILDCARD_ERR_MSG,
-                            self.node_source(*arg_node)
-                        );
+                        return self.report_wildcard_error(ctx, arg_node);
                     }
                 }
                 ExpandResultCode::ok => {}
@@ -1465,7 +1468,8 @@ impl<'a> ExecutionContext<'a> {
                         }
                 } {
                     eprintf!(
-                        "If you wish to use process substitution, consider the psub command, see: `help psub`\n"
+                        "If you wish to use process substitution, consider the psub command, see: `help %s`\n",
+                        help_section!("cmds/psub")
                     );
                 }
                 return error_ret;

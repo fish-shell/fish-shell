@@ -2116,7 +2116,7 @@ mod tests {
         let mut escaped_string;
         for _ in 0..(ESCAPE_TEST_COUNT as u32) {
             random_string.clear();
-            let length = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
+            let length = rng.random_range(0..=(2 * ESCAPE_TEST_LENGTH));
             for _ in 0..length {
                 random_string
                     .push(char::from_u32((rng.next_u32() % ESCAPE_TEST_CHAR as u32) + 1).unwrap());
@@ -2192,7 +2192,7 @@ mod tests {
         let mut origin = Vec::new();
 
         for _ in 0..ESCAPE_TEST_COUNT {
-            let length: usize = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
+            let length: usize = rng.random_range(0..=(2 * ESCAPE_TEST_LENGTH));
             origin.resize(length, 0);
             rng.fill_bytes(&mut origin);
 

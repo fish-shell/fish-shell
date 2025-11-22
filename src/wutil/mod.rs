@@ -674,7 +674,7 @@ mod tests {
             assert!(fd.is_valid());
             let mut input = WString::new();
             for _i in 0..size {
-                input.push(rng.r#gen());
+                input.push(rng.random());
             }
 
             let amt = wwrite_to_fd(&input, fd.fd()).unwrap();

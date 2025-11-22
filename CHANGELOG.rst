@@ -24,6 +24,7 @@ For distributors and developers
 Regression fixes:
 -----------------
 - (from 4.1.0) Crash on invalid colors variables (:issue:`12078`).
+- (from 4.2.0) Incorrect emoji width computation on macOS.
 
 fish 4.2.1 (released November 13, 2025)
 =======================================

@@ -442,6 +442,9 @@ pub struct ReaderConfig {
     /// Whether to allow autosuggestions.
     pub autosuggest_ok: bool,
 
+    /// Whether to automatically show completion candidates while typing.
+    pub autoshow_completions: bool,
+
     /// Whether to reexecute prompt function before final rendering.
     pub transient_prompt: bool,
 
@@ -644,6 +647,8 @@ pub struct ReaderData {
     pager: Pager,
     /// The output of the pager.
     current_page_rendering: PageRendering,
+    /// Whether the pager currently shows automatically generated completions.
+    autoshow_pager_active: bool,
     /// When backspacing, we temporarily suppress autosuggestions.
     suppress_autosuggestion: bool,
 
@@ -794,6 +799,11 @@ fn read_i(parser: &Parser) {
         syntax_check_ok: true,
         expand_abbrev_ok: true,
         autosuggest_ok: check_bool_var(parser.vars(), L!("fish_autosuggestion_enabled"), true),
+        autoshow_completions: check_bool_var(
+            parser.vars(),
+            L!("fish_autocomplete_autoshow"),
+            false,
+        ),
         transient_prompt: check_bool_var(parser.vars(), L!("fish_transient_prompt"), false),
         ..Default::default()
     };
@@ -1080,6 +1090,22 @@ pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
     }
 }
 
+/// Enable or disable automatic completion popups based on the associated variable.
+pub fn reader_set_autocomplete_autoshow(vars: &dyn Environment) {
+    if let Some(data) = current_data() {
+        let enable = check_bool_var(vars, L!("fish_autocomplete_autoshow"), false);
+        if data.conf.autoshow_completions != enable {
+            data.conf.autoshow_completions = enable;
+            if !enable {
+                data.clear_autoshow_pager();
+            } else {
+                data.input_data
+                    .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+            }
+        }
+    }
+}
+
 /// Enable or disable transient prompt based on the associated variable.
 pub fn reader_set_transient_prompt(vars: &dyn Environment) {
     // We don't need to _change_ if we're not initialized yet.
@@ -1250,6 +1276,8 @@ const ENV_CMD_DURATION: &wstr = L!("CMD_DURATION");
 /// Maximum length of prefix string when printing completion list. Longer prefixes will be
 /// ellipsized.
 const PREFIX_MAX_LEN: usize = 9;
+/// Maximum number of cheap completions we surface automatically while typing.
+const AUTOSHOW_COMPLETION_LIMIT: usize = 40;
 
 /// A simple prompt for reading shell commands that does not rely on fish specific commands, meaning
 /// it will work even if fish is not installed. This is used by read_i.
@@ -1341,6 +1369,7 @@ impl ReaderData {
             saved_autosuggestion: Default::default(),
             pager: Default::default(),
             current_page_rendering: Default::default(),
+            autoshow_pager_active: false,
             suppress_autosuggestion: Default::default(),
             reset_loop_state: Default::default(),
             first_prompt: true,
@@ -1449,6 +1478,7 @@ impl ReaderData {
                         self.suppress_autosuggestion = false;
                     }
                 }
+                self.clear_autoshow_pager();
             }
             EditableLineTag::SearchField => {
                 if self.history_pager.is_some() {
@@ -4208,10 +4238,21 @@ impl<'a> Reader<'a> {
 impl ReaderData {
     // Ensure we have no pager contents.
     fn clear_pager(&mut self) {
+        self.reset_pager_state();
+    }
+
+    fn clear_autoshow_pager(&mut self) {
+        if self.autoshow_pager_active {
+            self.reset_pager_state();
+        }
+    }
+
+    fn reset_pager_state(&mut self) {
         self.pager.clear();
         self.history_pager = None;
         self.clear(EditableLineTag::SearchField);
         self.command_line_transient_edit = None;
+        self.autoshow_pager_active = false;
     }
 
     fn get_selection(&self) -> Option<Range<usize>> {
@@ -4843,6 +4884,9 @@ pub(super) struct AutosuggestionResult {
 
     // The list of completions which may need loading.
     needs_load: Vec<WString>,
+
+    // Cheap completions we can surface automatically.
+    cheap_completions: CompletionList,
 }
 
 impl std::ops::Deref for AutosuggestionResult {
@@ -4859,6 +4903,7 @@ impl AutosuggestionResult {
         text: WString,
         icase: bool,
         is_whole_item_from_history: bool,
+        cheap_completions: CompletionList,
     ) -> Self {
         Self {
             autosuggestion: Autosuggestion {
@@ -4869,6 +4914,7 @@ impl AutosuggestionResult {
             },
             command_line,
             needs_load: vec![],
+            cheap_completions,
         }
     }
 
@@ -4988,6 +5034,7 @@ fn get_autosuggestion_performer(
                         matched_part.into(),
                         icase,
                         is_whole,
+                        CompletionList::new(),
                     );
                     if icase {
                         icase_history_result = Some(result);
@@ -5028,6 +5075,7 @@ fn get_autosuggestion_performer(
         let (mut completions, needs_load) =
             complete(&command_line[..would_be_cursor], complete_flags, &ctx);
 
+        let mut cheap_menu = CompletionList::new();
         let suggestion = if completions.is_empty() {
             // If there are no completions to suggest, fall back to icase history.
             if let Some(result) = icase_history_result {
@@ -5036,6 +5084,11 @@ fn get_autosuggestion_performer(
             WString::new()
         } else {
             sort_and_prioritize(&mut completions, complete_flags);
+            cheap_menu = completions
+                .iter()
+                .take(AUTOSHOW_COMPLETION_LIMIT)
+                .cloned()
+                .collect();
             let comp = &completions[0];
 
             // Prefer icase history over smartcase/icase completions.
@@ -5062,6 +5115,7 @@ fn get_autosuggestion_performer(
             suggestion,
             true, // normal completions are case-insensitive
             /*is_whole_item_from_history=*/ false,
+            cheap_menu,
         );
         result.needs_load = needs_load;
         result
@@ -5076,11 +5130,17 @@ enum AutosuggestionPortion {
 
 impl<'a> Reader<'a> {
     fn can_autosuggest(&self) -> bool {
-        // We autosuggest if suppress_autosuggestion is not set, if we're not doing a history search,
-        // and our command line contains a non-whitespace character.
+        self.conf.autosuggest_ok && self.commandline_ready_for_background_completion()
+    }
+
+    fn should_compute_background_completion(&self) -> bool {
+        (self.conf.autosuggest_ok || self.conf.autoshow_completions)
+            && self.commandline_ready_for_background_completion()
+    }
+
+    fn commandline_ready_for_background_completion(&self) -> bool {
         let (elt, el) = self.active_edit_line();
-        self.conf.autosuggest_ok
-            && !self.suppress_autosuggestion
+        !self.suppress_autosuggestion
             && self.history_search.is_at_present()
             && elt == EditableLineTag::Commandline
             && el
@@ -5090,7 +5150,7 @@ impl<'a> Reader<'a> {
     }
 
     // Called after an autosuggestion has been computed on a background thread.
-    fn autosuggest_completed(&mut self, result: AutosuggestionResult) {
+    fn autosuggest_completed(&mut self, mut result: AutosuggestionResult) {
         assert_is_main_thread();
         if result.command_line == self.data.in_flight_autosuggest_request {
             self.data.in_flight_autosuggest_request.clear();
@@ -5115,27 +5175,32 @@ impl<'a> Reader<'a> {
             // We loaded new completions for this command.
             // Re-do our autosuggestion.
             self.update_autosuggestion();
-        } else if !result.is_empty()
-            && self.can_autosuggest()
-            && string_prefixes_string_maybe_case_insensitive(
-                result.icase,
-                result.search_string(),
-                &result.text,
-            )
-        {
-            // Autosuggestion is active and the search term has not changed, so we're good to go.
-            self.autosuggestion = result.autosuggestion;
-            if self.is_repaint_needed(None) {
-                self.layout_and_repaint(L!("autosuggest"));
+        } else {
+            let cheap_menu = std::mem::take(&mut result.cheap_completions);
+            self.update_autoshow_completions(cheap_menu);
+            if !result.is_empty()
+                && self.can_autosuggest()
+                && string_prefixes_string_maybe_case_insensitive(
+                    result.icase,
+                    result.search_string(),
+                    &result.text,
+                )
+            {
+                // Autosuggestion is active and the search term has not changed, so we're good to go.
+                self.autosuggestion = result.autosuggestion;
+                if self.is_repaint_needed(None) {
+                    self.layout_and_repaint(L!("autosuggest"));
+                }
             }
         }
     }
 
     fn update_autosuggestion(&mut self) {
         // If we can't autosuggest, just clear it.
-        if !self.can_autosuggest() {
+        if !self.should_compute_background_completion() {
             self.data.in_flight_autosuggest_request.clear();
             self.data.autosuggestion.clear();
+            self.clear_autoshow_pager();
             return;
         }
 
@@ -5273,6 +5338,89 @@ impl<'a> Reader<'a> {
         self.data
             .replace_substring(EditableLineTag::Commandline, range, replacement);
     }
+
+    fn update_autoshow_completions(&mut self, completions: CompletionList) {
+        if completions.is_empty() {
+            self.clear_autoshow_pager();
+            return;
+        }
+
+        if !self.conf.autoshow_completions || !self.conf.complete_ok {
+            self.clear_autoshow_pager();
+            return;
+        }
+
+        if self.history_pager.is_some() {
+            self.clear_autoshow_pager();
+            return;
+        }
+
+        if !self.autoshow_pager_active && !self.pager.is_empty() {
+            // Another pager (history search or manual completion) owns the view.
+            return;
+        }
+
+        if self.active_edit_line_tag() != EditableLineTag::Commandline {
+            self.clear_autoshow_pager();
+            return;
+        }
+
+        let prefix = self.autoshow_prefix_for_current_token();
+        self.pager.set_search_field_shown(false);
+        self.pager.set_prefix(&prefix, true);
+        self.pager.set_completions(&completions, true);
+        self.autoshow_pager_active = true;
+        self.layout_and_repaint(L!("autoshow"));
+    }
+
+    fn autoshow_prefix_for_current_token(&self) -> WString {
+        let el = &self.command_line;
+        if el.is_empty() {
+            return WString::new();
+        }
+
+        let cursor_pos = el.position();
+        let text = el.text();
+        if cursor_pos > text.len() {
+            return WString::new();
+        }
+
+        let cmdsub = parse_util_cmdsubst_extent(text, cursor_pos);
+        let position_in_cmdsub = cursor_pos - cmdsub.start;
+        let (mut token_range, _) =
+            parse_util_token_extent(&text[cmdsub.clone()], position_in_cmdsub);
+        if token_range.end > cmdsub.len() {
+            token_range.end = cmdsub.len();
+        }
+        token_range.start += cmdsub.start;
+        token_range.end += cmdsub.start;
+        let token = &text[token_range];
+        autoshow_prefix_from_token(token)
+    }
+}
+
+fn autoshow_prefix_from_token(token: &wstr) -> WString {
+    if token.is_empty() {
+        return WString::new();
+    }
+    if token.len() <= PREFIX_MAX_LEN {
+        return token.to_owned();
+    }
+
+    let mut prefix = WString::new();
+    prefix.push(get_ellipsis_char());
+    let truncated = &token[token.len() - PREFIX_MAX_LEN..];
+    if let Some((idx, last_component)) = truncated.split('/').enumerate().last() {
+        if idx == 0 {
+            prefix.push_utfstr(truncated);
+        } else {
+            prefix.push('/');
+            prefix.push_utfstr(last_component);
+        }
+    } else {
+        prefix.push_utfstr(truncated);
+    }
+    prefix
 }
 
 #[derive(Default)]
@@ -6474,6 +6622,7 @@ impl<'a> Reader<'a> {
 
         // Remove a trailing backslash. This may trigger an extra repaint, but this is
         // rare.
+        self.autoshow_pager_active = false;
         let el = &self.command_line;
         if is_backslashed(el.text(), el.position()) {
             self.delete_char(true);
@@ -7002,5 +7151,25 @@ mod tests {
 
         // See #6130
         validate!(": (:^ ''", "", CompleteFlags::default(), false, ": (: ^''");
+        }
     }
-}
+
+    #[test]
+    fn test_autoshow_prefix_helper() {
+        let ellipsis = get_ellipsis_char();
+        assert_eq!(autoshow_prefix_from_token(L!("git")), L!("git"));
+
+        let mut expected = WString::new();
+        expected.push(ellipsis);
+        expected.push_utfstr(L!("longtoken"));
+        assert_eq!(autoshow_prefix_from_token(L!("averylongtoken")), expected);
+
+        let mut expected_path = WString::new();
+        expected_path.push(ellipsis);
+        expected_path.push('/');
+        expected_path.push_utfstr(L!("gamma"));
+        assert_eq!(
+            autoshow_prefix_from_token(L!("/alpha/beta/gamma")),
+            expected_path
+        );
+    }

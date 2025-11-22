@@ -62,7 +62,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
             return Err(STATUS_INVALID_ARGS);
         }
 
-        let rand = RNG.lock().unwrap().gen_range(0..arg_count - 1);
+        let rand = RNG.lock().unwrap().random_range(0..arg_count - 1);
         streams.out.appendln(argv[i + 1 + rand]);
         return Ok(SUCCESS);
     }
@@ -156,7 +156,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
 
     let rand = {
         let mut engine = RNG.lock().unwrap();
-        engine.gen_range(0..=possibilities)
+        engine.random_range(0..=possibilities)
     };
 
     // Safe because end was a valid i64 and the result here is in the range start..=end.

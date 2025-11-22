@@ -373,15 +373,33 @@ pub fn wrename(old_name: &wstr, new_name: &wstr) -> libc::c_int {
     unsafe { libc::rename(old_narrow.as_ptr(), new_narrow.as_ptr()) }
 }
 
-pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
-    nix::unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, input)
+/// Writes the input bytes to the provided file descriptor, retrying on interrupts.
+pub fn write_to_fd(input: &[u8], fd: RawFd) -> std::io::Result<()> {
+    let mut written = 0;
+    while written < input.len() {
+        let res = unsafe {
+            libc::write(
+                fd,
+                input[written..].as_ptr().cast(),
+                (input.len() as libc::size_t) - written,
+            )
+        };
+        if res == -1 {
+            let error = std::io::Error::last_os_error();
+            if error.kind() != std::io::ErrorKind::Interrupted {
+                return Err(error);
+            }
+            continue;
+        }
+        written += res as usize;
+    }
+    Ok(())
 }
 
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.
-/// This does NOT retry on EINTR or EAGAIN, it simply returns.
-/// Return -1 on error in which case errno will have been set. In this event, the number of bytes
-/// actually written cannot be obtained.
-pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
+/// Retry on interrupts.
+/// Returns an error if writing fails.
+pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> std::io::Result<()> {
     // Accumulate data in a local buffer.
     let mut accum = [0u8; 512];
     let mut accumlen = 0;
@@ -391,49 +409,36 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
     // Return true on success, false on error.
     let mut total_written = 0;
 
-    fn do_write(fd: RawFd, total_written: &mut usize, mut buf: &[u8]) -> bool {
-        while !buf.is_empty() {
-            let Ok(amt) = write_to_fd(buf, fd) else {
-                return false;
-            };
-            *total_written += amt;
-            assert!(amt <= buf.len(), "Wrote more than requested");
-            buf = &buf[amt..];
-        }
-        true
+    fn do_write(fd: RawFd, total_written: &mut usize, buf: &[u8]) -> std::io::Result<()> {
+        write_to_fd(buf, fd)?;
+        *total_written += buf.len();
+        Ok(())
     }
 
     // Helper to flush the accumulation buffer.
     let flush_accum = |total_written: &mut usize, accum: &[u8], accumlen: &mut usize| {
-        if !do_write(fd, total_written, &accum[..*accumlen]) {
-            return false;
-        }
+        do_write(fd, total_written, &accum[..*accumlen])?;
         *accumlen = 0;
-        true
+        Ok(())
     };
 
-    let mut success = wcs2bytes_callback(input, |buff: &[u8]| {
+    wcs2bytes_callback(input, |buff: &[u8]| {
         if buff.len() + accumlen > accum_capacity {
             // We have to flush.
-            if !flush_accum(&mut total_written, &accum, &mut accumlen) {
-                return false;
-            }
+            flush_accum(&mut total_written, &accum, &mut accumlen)?;
         }
         if buff.len() + accumlen <= accum_capacity {
             // Accumulate more.
             accum[accumlen..(accumlen + buff.len())].copy_from_slice(buff);
             accumlen += buff.len();
-            true
+            Ok(())
         } else {
             // Too much data to even fit, just write it immediately.
             do_write(fd, &mut total_written, buff)
         }
-    });
+    })?;
     // Flush any remaining.
-    if success {
-        success = flush_accum(&mut total_written, &accum, &mut accumlen);
-    }
-    if success { Some(total_written) } else { None }
+    flush_accum(&mut total_written, &accum, &mut accumlen)
 }
 
 const PUA1_START: char = '\u{E000}';
@@ -677,9 +682,8 @@ mod tests {
                 input.push(rng.r#gen());
             }
 
-            let amt = wwrite_to_fd(&input, fd.fd()).unwrap();
+            wwrite_to_fd(&input, fd.fd()).unwrap();
             let narrow = wcs2bytes(&input);
-            assert_eq!(amt, narrow.len());
 
             assert!(unsafe { libc::lseek(fd.fd(), 0, SEEK_SET) } >= 0);
 

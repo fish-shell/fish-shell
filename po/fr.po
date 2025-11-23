@@ -213,6 +213,10 @@ msgid "%s"
 msgstr "%s"
 
 #, c-format
+msgid "%s %s: %s: invalid subcommand\n"
+msgstr "%s %s : %s : sous-commande invalide\n"
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
 msgstr ""
 
@@ -1010,6 +1014,10 @@ msgstr "Abandon"
 msgid "Abort (Alias for SIGABRT)"
 msgstr "Abandon (Alias pour SIGABRT)"
 
+#, c-format
+msgid "Active languages (%s):"
+msgstr ""
+
 msgid "Address boundary error"
 msgstr "Erreur de frontière d’adresse"
 
@@ -1358,6 +1366,9 @@ msgstr ""
 msgid "Jobs getting started or continued"
 msgstr ""
 
+msgid "Language specifiers appear repeatedly:"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "Lister ou supprimer des fonctions"
 
@@ -1407,6 +1418,9 @@ msgstr "Jamais"
 
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Pas de TTY pour shell interactif (tcgetpgrp a échoué)"
+
+msgid "No catalogs available for language specifiers:"
+msgstr ""
 
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
@@ -1904,6 +1918,9 @@ msgstr ""
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr ""
 
+msgid "default"
+msgstr ""
+
 msgid "dir symlink"
 msgstr ""
 
@@ -1929,9 +1946,16 @@ msgid ""
 "`help %s` will show an online version\n"
 msgstr ""
 
+msgid "from command `status language set`"
+msgstr ""
+
 #, c-format
 msgid "from sourcing file %s\n"
 msgstr "du fichier source %s\n"
+
+#, c-format
+msgid "from variable %s"
+msgstr ""
 
 msgid "in command substitution\n"
 msgstr "dans la substitution de commande\n"
@@ -3514,6 +3538,9 @@ msgstr ""
 
 msgid "Show modification time"
 msgstr "Afficher l’horodatage de modification"
+
+msgid "Show or change fish's language settings"
+msgstr ""
 
 msgid "Show seconds since the modification time"
 msgstr ""

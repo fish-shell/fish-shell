@@ -23,6 +23,7 @@ set -l __fish_status_all_commands \
     is-login \
     is-no-job-control \
     job-control \
+    language \
     line-number \
     list-files \
     print-stack-trace \
@@ -80,3 +81,19 @@ complete -f -c status -n "__fish_seen_subcommand_from job-control" -a none -d "S
 
 complete -f -c status -n "__fish_seen_subcommand_from get-file" -a '(status list-files 2>/dev/null)'
 complete -f -c status -n "__fish_seen_subcommand_from list-files" -a '(status list-files 2>/dev/null)'
+
+# Tests equality between the command line with the first item removed
+# and the function's arguments.
+function __fish_status_is_exact_subcommand
+    set -l line (commandline -pxc)[2..]
+    test "$line" = "$argv"
+end
+# Tests if the command line with the first item removed starts with the provided arguments.
+function __fish_status_is_subcommand_prefix
+    set -l prefix (string escape --style=regex -- (string join -- ' ' $argv))
+    set -l line (string join -- ' ' (commandline -pxc)[2..])
+    string match -rq -- "^$prefix" $line
+end
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a language -d "Show or change fish's language settings"
+complete -f -c status -n "__fish_status_is_exact_subcommand language" -a "(echo list-available\tShow languages usable with \'status language set\'\nset\tSet the language\(s\) used for fish\'s messages\nunset\tUndo effects of \'status language set\'\n)"
+complete -f -c status -n "__fish_status_is_subcommand_prefix language set" -a "(status language list-available)"

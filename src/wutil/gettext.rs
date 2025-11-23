@@ -1,18 +1,194 @@
 use std::sync::Mutex;
 
 #[cfg(feature = "localize-messages")]
-use crate::env::EnvStack;
+use crate::env::{EnvStack, Environment};
 use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
 
 #[cfg(feature = "localize-messages")]
 mod gettext_impl {
-    use crate::env::{EnvStack, Environment};
     use fish_gettext_maps::CATALOGS;
     use once_cell::sync::Lazy;
     use std::{collections::HashSet, sync::Mutex};
 
     type Catalog = &'static phf::Map<&'static str, &'static str>;
+
+    pub struct SetLanguageLints<'a> {
+        pub duplicates: Vec<&'a str>,
+        pub non_existing: Vec<&'a str>,
+    }
+
+    #[derive(PartialEq, Eq, Clone, Copy)]
+    pub enum LanguagePrecedenceOrigin {
+        Default,
+        LocaleVariable(LocaleVariable),
+        LanguageEnvVar,
+        StatusLanguage,
+    }
+
+    #[derive(PartialEq, Eq, Clone, Copy)]
+    pub enum LocaleVariable {
+        #[allow(clippy::upper_case_acronyms)]
+        LANG,
+        LC_MESSAGES,
+        LC_ALL,
+    }
+
+    impl LocaleVariable {
+        fn as_language_precedence_origin(&self) -> LanguagePrecedenceOrigin {
+            LanguagePrecedenceOrigin::LocaleVariable(*self)
+        }
+
+        pub fn as_str(&self) -> &'static str {
+            match self {
+                Self::LANG => "LANG",
+                Self::LC_MESSAGES => "LC_MESSAGES",
+                Self::LC_ALL => "LC_ALL",
+            }
+        }
+    }
+
+    impl std::fmt::Display for LocaleVariable {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.as_str())
+        }
+    }
+
+    struct InternalLocalizationState {
+        precedence_origin: LanguagePrecedenceOrigin,
+        language_precedence: Vec<(String, Catalog)>,
+    }
+
+    pub struct PublicLocalizationState {
+        pub precedence_origin: LanguagePrecedenceOrigin,
+        pub language_precedence: Vec<String>,
+    }
+
+    /// Stores the current localization status.
+    /// `is_active` indicates whether localization is currently active, and the reason if it is
+    /// not.
+    /// The `origin` indicates where the values in `language_precedence` were taken from.
+    /// `language_precedence` stores the catalogs in the order they should be used.
+    ///
+    /// This struct should be updated when the relevant variables change or `status language` is used
+    /// to modify the localization state.
+    static LOCALIZATION_STATE: Lazy<Mutex<InternalLocalizationState>> =
+        Lazy::new(|| Mutex::new(InternalLocalizationState::new()));
+
+    impl InternalLocalizationState {
+        fn new() -> Self {
+            Self {
+                precedence_origin: LanguagePrecedenceOrigin::Default,
+                language_precedence: vec![],
+            }
+        }
+
+        fn to_public(&self) -> PublicLocalizationState {
+            PublicLocalizationState {
+                precedence_origin: self.precedence_origin,
+                language_precedence: self
+                    .language_precedence
+                    .iter()
+                    .map(|(lang, _)| lang.to_owned())
+                    .collect(),
+            }
+        }
+
+        fn update_from_env(
+            &mut self,
+            message_locale: Option<(LocaleVariable, String)>,
+            language_var: Option<Vec<String>>,
+        ) {
+            // Do not override values set via `status language`.
+            if self.precedence_origin == LanguagePrecedenceOrigin::StatusLanguage {
+                return;
+            }
+
+            if let Some((precedence_origin, locale)) = &message_locale {
+                // Regular locale names start with lowercase letters (`ll_CC`, followed by some suffix).
+                // The C or POSIX locale is special, and often used to disable localization.
+                // Their names are upper-case, but variants with suffixes (`C.UTF-8`) exist.
+                // To ensure that such variants are accounted for, we match on prefixes of the
+                // locale name.
+                // https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap07.html#tag_07_02
+                fn is_c_locale(locale: &str) -> bool {
+                    locale.starts_with('C') || locale.starts_with("POSIX")
+                }
+                if is_c_locale(locale) {
+                    self.precedence_origin =
+                        LanguagePrecedenceOrigin::LocaleVariable(*precedence_origin);
+                    self.language_precedence.clear();
+                    return;
+                }
+            }
+
+            let (precedence_origin, language_list) = if let Some(list) = language_var {
+                (LanguagePrecedenceOrigin::LanguageEnvVar, list)
+            } else if let Some((precedence_origin, locale)) = message_locale {
+                let mut normalized_name = String::new();
+                // Strip off encoding and modifier. (We always expect UTF-8 and don't support modifiers.)
+                for c in locale.chars() {
+                    if c.is_alphabetic() || c == '_' {
+                        normalized_name.push(c);
+                    } else {
+                        break;
+                    }
+                }
+                // At this point, the normalized_name should have the shape `ll` or `ll_CC`.
+                (
+                    precedence_origin.as_language_precedence_origin(),
+                    vec![normalized_name],
+                )
+            } else {
+                (LanguagePrecedenceOrigin::Default, vec![])
+            };
+
+            let mut seen_languages = HashSet::new();
+            self.language_precedence = language_list
+                .into_iter()
+                .flat_map(|lang| find_existing_catalogs(&lang))
+                .filter(|(lang, _)| seen_languages.insert(lang.to_owned()))
+                .collect();
+            self.precedence_origin = precedence_origin;
+        }
+
+        fn update_from_status_language_builtin<'a, 'b: 'a, S: AsRef<str> + 'a>(
+            &mut self,
+            langs: &'b [S],
+        ) -> SetLanguageLints<'a> {
+            let mut seen = HashSet::new();
+            let mut duplicates = vec![];
+            for lang in langs {
+                let lang = lang.as_ref();
+                if !seen.insert(lang) {
+                    duplicates.push(lang)
+                }
+            }
+            let mut existing_langs = vec![];
+            let mut non_existing = vec![];
+            for lang in langs {
+                let lang = lang.as_ref();
+                if let Some(catalog) = CATALOGS.get(lang) {
+                    existing_langs.push((lang.to_owned(), *catalog));
+                } else {
+                    non_existing.push(lang);
+                }
+            }
+
+            let mut seen = HashSet::new();
+            let unique_langs = existing_langs
+                .into_iter()
+                .filter(|(lang, _)| seen.insert(lang.to_owned()))
+                .collect();
+            self.language_precedence = unique_langs;
+            self.precedence_origin = LanguagePrecedenceOrigin::StatusLanguage;
+
+            SetLanguageLints {
+                duplicates,
+                non_existing,
+            }
+        }
+    }
 
     /// Tries to find catalogs for `language`.
     /// `language` must be an ISO 639 language code, optionally followed by an underscore and an ISO
@@ -52,125 +228,220 @@ mod gettext_impl {
         }
     }
 
-    /// The precedence list of user-preferred languages, obtained from the relevant environment
-    /// variables.
-    /// This should be updated when the relevant variables change.
-    static LANGUAGE_PRECEDENCE: Lazy<Mutex<Vec<Catalog>>> = Lazy::new(|| Mutex::new(Vec::new()));
-
-    /// Four environment variables can be used to select languages.
-    /// A detailed description is available at
-    /// <https://www.gnu.org/software/gettext/manual/html_node/Setting-the-POSIX-Locale.html>
-    /// Our does not replicate the behavior exactly.
-    /// See the following description.
-    ///
-    /// There are three variables which can be used for setting the locale for messages:
-    /// 1. `LC_ALL`
-    /// 2. `LC_MESSAGES`
-    /// 3. `LANG`
-    ///
-    /// The value of the first one set to a non-zero value will be considered.
-    /// If it is set to the `C` locale (we consider any value starting with `C` as the `C` locale),
-    /// localization will be disabled.
-    /// Otherwise, the variable `LANGUAGE` is checked. If it is non-empty, it is considered a
-    /// colon-separated list of languages. Languages are listed with descending priority, meaning
-    /// we will localize each message into the first language with a localization available.
-    /// Each language is specified by a 2 or 3 letter ISO 639 language code, optionally followed by
-    /// an underscore and an ISO 3166 country/territory code. If the second part is omitted, some
-    /// variant of the language will be used if localizations exist for one. We make no guarantees
-    /// about which variant that will be.
-    /// In addition to the colon-separated format, using a list with one language per element is
-    /// also supported.
-    ///
-    /// Returns the (possibly empty) preference list of languages.
-    fn get_language_preferences_from_env(vars: &EnvStack) -> Vec<String> {
-        use crate::wchar::L;
-
-        fn normalize_locale_name(locale: &str) -> String {
-            // Strips off the encoding and modifier parts.
-            let mut normalized_name = String::new();
-            // Strip off encoding and modifier. (We always expect UTF-8 and don't support modifiers.)
-            for c in locale.chars() {
-                if c.is_alphabetic() || c == '_' {
-                    normalized_name.push(c);
-                } else {
-                    break;
-                }
-            }
-            // At this point, the normalized_name should have the shape `ll` or `ll_CC`.
-            normalized_name
-        }
-
-        fn check_language_var(vars: &EnvStack) -> Option<Vec<String>> {
-            let langs = vars.get(L!("LANGUAGE"))?;
-            let langs = langs.as_list();
-            let filtered_langs: Vec<String> = langs
-                .iter()
-                .filter(|lang| !lang.is_empty())
-                .map(|lang| normalize_locale_name(&lang.to_string()))
-                .collect();
-            if filtered_langs.is_empty() {
-                return None;
-            }
-            Some(filtered_langs)
-        }
-
-        // Locale value is determined by the first of these three variables set to a non-zero
-        // value.
-        if let Some(locale) = vars
-            .get(L!("LC_ALL"))
-            .or_else(|| vars.get(L!("LC_MESSAGES")).or_else(|| vars.get(L!("LANG"))))
-        {
-            let locale = locale.as_string().to_string();
-            if locale.starts_with('C') {
-                // Do not localize in C locale.
-                return vec![];
-            }
-            // `LANGUAGE` has higher precedence than the locale value.
-            if let Some(precedence_list) = check_language_var(vars) {
-                return precedence_list;
-            }
-            // Use the locale value if `LANGUAGE` is not set.
-            vec![normalize_locale_name(&locale)]
-        } else if let Some(precedence_list) = check_language_var(vars) {
-            // Use the `LANGUAGE` value if locale is not set.
-            return precedence_list;
-        } else {
-            // None of the relevant variables are set, so we will not localize.
-            vec![]
-        }
+    pub(super) fn update_from_env(
+        locale: Option<(LocaleVariable, String)>,
+        language_var: Option<Vec<String>>,
+    ) {
+        let mut localization_state = LOCALIZATION_STATE.lock().unwrap();
+        localization_state.update_from_env(locale, language_var);
     }
 
-    /// Implementation of the function with the same name in super.
-    pub(super) fn update_locale_from_env(vars: &EnvStack) {
-        let mut seen_languages = HashSet::new();
-        let mut language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();
-        *language_precedence = get_language_preferences_from_env(vars)
-            .into_iter()
-            .flat_map(|lang| find_existing_catalogs(&lang))
-            .filter(|(lang, _)| seen_languages.insert(lang.to_owned()))
-            .map(|(_, catalog)| catalog)
-            .collect();
+    pub(super) fn update_from_status_language_builtin<'a, 'b: 'a, S: AsRef<str> + 'a>(
+        langs: &'b [S],
+    ) -> SetLanguageLints<'a> {
+        let mut localization_state = LOCALIZATION_STATE.lock().unwrap();
+        localization_state.update_from_status_language_builtin(langs)
+    }
+
+    pub(super) fn unset_from_status_language_builtin(
+        locale: Option<(LocaleVariable, String)>,
+        language_var: Option<Vec<String>>,
+    ) {
+        let mut localization_state = LOCALIZATION_STATE.lock().unwrap();
+        localization_state.precedence_origin = LanguagePrecedenceOrigin::Default;
+        localization_state.update_from_env(locale, language_var);
+    }
+
+    pub(super) fn status_language() -> PublicLocalizationState {
+        let localization_state = LOCALIZATION_STATE.lock().unwrap();
+        localization_state.to_public()
     }
 
     pub(super) fn gettext(message_str: &'static str) -> Option<&'static str> {
-        let language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();
+        let localization_state = LOCALIZATION_STATE.lock().unwrap();
 
         // Use the localization from the highest-precedence language that has one available.
-        for catalog in language_precedence.iter() {
+        for (_, catalog) in localization_state.language_precedence.iter() {
             if let Some(localized_str) = catalog.get(message_str) {
                 return Some(localized_str);
             }
         }
         None
     }
+
+    pub(super) fn list_available_languages() -> Vec<&'static str> {
+        let mut langs: Vec<_> = CATALOGS.entries().map(|(&lang, _)| lang).collect();
+        langs.sort();
+        langs
+    }
+}
+
+#[cfg(feature = "localize-messages")]
+fn get_message_locale(vars: &EnvStack) -> Option<(gettext_impl::LocaleVariable, String)> {
+    use gettext_impl::LocaleVariable;
+    let get = |var_str: &wstr, var: LocaleVariable| {
+        vars.get_unless_empty(var_str)
+            .map(|val| (var, val.as_string().to_string()))
+    };
+    get(L!("LC_ALL"), LocaleVariable::LC_ALL)
+        .or_else(|| get(L!("LC_MESSAGES"), LocaleVariable::LC_MESSAGES))
+        .or_else(|| get(L!("LANG"), LocaleVariable::LANG))
+}
+
+#[cfg(feature = "localize-messages")]
+fn get_language_var(vars: &EnvStack) -> Option<Vec<String>> {
+    let langs = vars.get_unless_empty(L!("LANGUAGE"))?;
+    let langs = langs.as_list();
+    let filtered_langs: Vec<String> = langs
+        .iter()
+        .filter(|lang| !lang.is_empty())
+        .map(|lang| lang.to_string())
+        .collect();
+    if filtered_langs.is_empty() {
+        return None;
+    }
+    Some(filtered_langs)
 }
 
 /// Call this when one of `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG` changes.
 /// Updates internal state such that the correct localizations will be used in subsequent
 /// localization requests.
+///
+/// For deciding how to localize, the following is done:
+///
+/// 1. If the language precedence was set via `status language`, env vars are ignored.
+/// 2. Check the first non-empty value of the env vars `LC_ALL`, `LC_MESSAGES`, `LANG`. If it
+///    starts with `C` we consider this a C locale and disable localization.
+/// 3. Otherwise, the value of the `LANGUAGE` env var is used, if non-empty. This allows specifying
+///    multiple languages, with languages specified first taking precedence, e.g.
+///    `LANGUAGE=zh_TW:zh_CN:pt_BR`
+/// 4. Otherwise, the first non-empty value of the env vars `LC_ALL`, `LC_MESSAGES`, `LANG` is
+///    used. This can only specify a single language, e.g. `LANG=de_AT.UTF-8`.
+///    There, we normalize locale names by stripping off the suffix, leaving only the `ll_CC` part.
+/// 5. Otherwise, localization will not happen.
+///
+/// If users specify `ll_CC` as a language and we don't have a catalog for this language, but we
+/// have one for `ll`, that will be used instead. If users specify `ll` (without specifying a
+/// language variant), which we discourage, and we don't have a catalog for `ll`, but we do have
+/// one for `ll_CC`, that will be used as a fallback. If we have multiple `ll_*` catalogs, all of
+/// them will be used, in arbitrary order.
 #[cfg(feature = "localize-messages")]
-pub fn update_locale_from_env(vars: &EnvStack) {
-    gettext_impl::update_locale_from_env(vars);
+pub fn update_from_env(vars: &EnvStack) {
+    gettext_impl::update_from_env(get_message_locale(vars), get_language_var(vars));
+}
+
+#[cfg(feature = "localize-messages")]
+fn append_space_separated_list<S: AsRef<str>>(
+    string: &mut WString,
+    list: impl IntoIterator<Item = S>,
+) {
+    for lang in list.into_iter() {
+        string.push(' ');
+        string.push_utfstr(&crate::common::escape(
+            WString::from_str(lang.as_ref()).as_utfstr(),
+        ));
+    }
+}
+
+#[cfg(feature = "localize-messages")]
+pub struct SetLanguageLints<'a> {
+    duplicates: Vec<&'a str>,
+    non_existing: Vec<&'a str>,
+}
+
+#[cfg(feature = "localize-messages")]
+impl<'a> From<gettext_impl::SetLanguageLints<'a>> for SetLanguageLints<'a> {
+    fn from(lints: gettext_impl::SetLanguageLints<'a>) -> Self {
+        Self {
+            duplicates: lints.duplicates,
+            non_existing: lints.non_existing,
+        }
+    }
+}
+
+#[cfg(feature = "localize-messages")]
+impl<'a> SetLanguageLints<'a> {
+    pub fn display_duplicates(&self) -> WString {
+        let mut result = WString::new();
+        if self.duplicates.is_empty() {
+            return result;
+        }
+        result.push_utfstr(wgettext!("Language specifiers appear repeatedly:"));
+        append_space_separated_list(&mut result, &self.duplicates);
+        result.push('\n');
+        result
+    }
+
+    pub fn display_non_existing(&self) -> WString {
+        let mut result = WString::new();
+        if self.non_existing.is_empty() {
+            return result;
+        }
+        result.push_utfstr(wgettext!("No catalogs available for language specifiers:"));
+        append_space_separated_list(&mut result, &self.non_existing);
+        result.push('\n');
+        result
+    }
+
+    pub fn display_all(&self) -> WString {
+        let mut result = WString::new();
+        result.push_utfstr(&self.display_duplicates());
+        result.push_utfstr(&self.display_non_existing());
+        result
+    }
+}
+/// Call this when the `status language` builtin should update the language precedence.
+/// `langs` should be the list of languages the precedence should be set to.
+#[cfg(feature = "localize-messages")]
+pub fn update_from_status_language_builtin<'a, 'b: 'a, S: AsRef<str> + 'a>(
+    langs: &'b [S],
+) -> SetLanguageLints<'a> {
+    gettext_impl::update_from_status_language_builtin(langs).into()
+}
+
+#[cfg(feature = "localize-messages")]
+pub fn unset_from_status_language_builtin(vars: &EnvStack) {
+    gettext_impl::unset_from_status_language_builtin(
+        get_message_locale(vars),
+        get_language_var(vars),
+    );
+}
+
+#[cfg(feature = "localize-messages")]
+pub fn status_language() -> WString {
+    use gettext_impl::LanguagePrecedenceOrigin;
+    let localization_state = gettext_impl::status_language();
+    let mut result = WString::new();
+    localizable_consts!(
+        LANGUAGE_LIST_VARIABLE_ORIGIN "from variable %s"
+    );
+    let origin_string = match localization_state.precedence_origin {
+        LanguagePrecedenceOrigin::Default => wgettext!("default").to_owned(),
+        LanguagePrecedenceOrigin::LocaleVariable(var) => {
+            wgettext_fmt!(LANGUAGE_LIST_VARIABLE_ORIGIN, var.as_str())
+        }
+        LanguagePrecedenceOrigin::LanguageEnvVar => {
+            wgettext_fmt!(LANGUAGE_LIST_VARIABLE_ORIGIN, "LANGUAGE")
+        }
+        LanguagePrecedenceOrigin::StatusLanguage => {
+            wgettext!("from command `status language set`").to_owned()
+        }
+    };
+    result.push_utfstr(&wgettext_fmt!("Active languages (%s):", origin_string));
+    append_space_separated_list(&mut result, &localization_state.language_precedence);
+    result.push('\n');
+
+    result
+}
+
+#[cfg(feature = "localize-messages")]
+pub fn list_available_languages() -> WString {
+    let mut languages = WString::new();
+    for lang in gettext_impl::list_available_languages() {
+        languages.push_str(lang);
+        languages.push('\n');
+    }
+    languages
 }
 
 #[cfg(not(feature = "localize-messages"))]
@@ -180,13 +451,13 @@ pub fn initialize_gettext() {}
 /// available. Without this, early error messages cannot be localized.
 #[cfg(feature = "localize-messages")]
 pub fn initialize_gettext() {
-    let locale_vars = EnvStack::new();
-    env_stack_set_from_env!(locale_vars, "LANGUAGE");
-    env_stack_set_from_env!(locale_vars, "LC_ALL");
-    env_stack_set_from_env!(locale_vars, "LC_MESSAGES");
-    env_stack_set_from_env!(locale_vars, "LANG");
+    let vars = EnvStack::new();
+    env_stack_set_from_env!(vars, "LANGUAGE");
+    env_stack_set_from_env!(vars, "LC_ALL");
+    env_stack_set_from_env!(vars, "LC_MESSAGES");
+    env_stack_set_from_env!(vars, "LANG");
 
-    gettext_impl::update_locale_from_env(&locale_vars);
+    gettext_impl::update_from_env(get_message_locale(&vars), get_language_var(&vars));
 }
 
 /// Use this function to localize a message.

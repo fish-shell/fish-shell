@@ -20,6 +20,9 @@ Color and key binding variables are no longer set in universal scope
   2. universal variables as a source of truth are easy to misunderstand,
      compared to configuration files like ``config.fish``.
 
+Notable improvements and fixes
+------------------------------
+- New :ref:`status language <status-language>` commands allow showing and modifying language settings for fish messages without having to modify environment variables.
 
 Deprecations and removed features
 ---------------------------------

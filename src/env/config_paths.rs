@@ -16,7 +16,6 @@ pub struct ConfigPaths {
 }
 
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
-const DOC_DIR: Option<&str> = option_env!("DOCDIR");
 
 impl ConfigPaths {
     pub fn new() -> Self {
@@ -63,7 +62,7 @@ impl ConfigPaths {
                 // N.B. the argument may be non-canonical here.
                 .or_else(|| exec_path_parent.map(|p| p.to_owned())),
             data: option_env!("DATADIR").map(|p| PathBuf::from(p).join("fish")),
-            doc: DOC_DIR.map(PathBuf::from),
+            doc: option_env!("DOCDIR").map(PathBuf::from),
         };
 
         let exec_path = {
@@ -112,21 +111,13 @@ impl ConfigPaths {
             // Installing somewhere else inside the workspace is fine.
             && prefix != workspace_root
         } {
-            const _: () = assert!(!cfg!(using_cmake) || DOC_DIR.is_some());
             FLOG!(config, "Running from relocatable tree");
             let prefix = exec_path_parent.parent().unwrap();
             Self {
                 sysconf: prefix.join("etc/fish"),
                 bin: Some(exec_path_parent.to_owned()),
                 data: Some(prefix.join("share/fish")),
-                doc: {
-                    let doc = prefix.join("share/doc/fish");
-                    Some(if doc.exists() {
-                        doc
-                    } else {
-                        PathBuf::from(DOC_DIR.unwrap())
-                    })
-                },
+                doc: Some(prefix.join("share/doc/fish")),
             }
         } else if exec_path.starts_with(BUILD_DIR) {
             FLOG!(

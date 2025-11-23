@@ -1,7 +1,14 @@
-name: CI
+name: Lint Dependencies
 on:
+  push:
+    paths:
+      - '.github/workflows/lint-dependencies.yml'
+      - 'Cargo.lock'
+      - '**/Cargo.toml'
+      - 'deny.toml'
   pull_request:
     paths:
+      - '.github/workflows/lint-dependencies.yml'
       - 'Cargo.lock'
       - '**/Cargo.toml'
       - 'deny.toml'

@@ -40,7 +40,7 @@ macro_rules! str_enum {
 use StatusCmd::*;
 #[derive(Clone, Copy)]
 enum StatusCmd {
-    STATUS_CURRENT_CMD = 1,
+    STATUS_CURRENT_CMD,
     STATUS_BASENAME,
     STATUS_DIRNAME,
     STATUS_FEATURES,
@@ -110,7 +110,7 @@ str_enum!(
 /// Values that may be returned from the test-feature option to status.
 #[repr(i32)]
 enum TestFeatureRetVal {
-    TEST_FEATURE_ON = 0,
+    TEST_FEATURE_ON,
     TEST_FEATURE_OFF,
     TEST_FEATURE_NOT_RECOGNIZED,
 }

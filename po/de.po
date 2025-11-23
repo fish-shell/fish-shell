@@ -84,6 +84,10 @@ msgid "%s"
 msgstr ""
 
 #, c-format
+msgid "%s %s: %s: invalid subcommand\n"
+msgstr "%s %s: %s: ungültiger Unterbefehl\n"
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
 msgstr ""
 
@@ -1229,6 +1233,12 @@ msgstr ""
 msgid "Jobs getting started or continued"
 msgstr ""
 
+msgid "Language specifiers appear repeatedly:"
+msgstr ""
+
+msgid "Language specifiers do not have catalogs:"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "Funktionen auflisten oder entfernen"
 
@@ -1548,6 +1558,19 @@ msgid "The function '%s' calls itself immediately, which would result in an infi
 msgstr "Die Funktion '%s' ruft sich sofort selbst auf. Dies wäre eine Endlosschleife."
 
 msgid "The interactive reader/input system"
+msgstr ""
+
+#, c-format
+msgid "The language list is set based on the %s environment variable.\n"
+msgstr ""
+
+msgid "The language list is set to the default value because no explicit value was specified.\n"
+msgstr ""
+
+msgid "The language list is set to the following value:"
+msgstr ""
+
+msgid "The language list is set via the `status language` builtin.\n"
 msgstr ""
 
 msgid "There are still jobs active:\n"
@@ -3385,6 +3408,9 @@ msgstr ""
 
 msgid "Show modification time"
 msgstr "Änderungsdatum anzeigen"
+
+msgid "Show or change fish's language settings"
+msgstr ""
 
 msgid "Show seconds since the modification time"
 msgstr ""

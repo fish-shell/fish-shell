@@ -105,6 +105,10 @@ msgid "%s"
 msgstr "%s"
 
 #, c-format
+msgid "%s %s: %s: invalid subcommand\n"
+msgstr "%s %s: %s: 无效的子命令\n"
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
 msgstr "%s %s: 名为 %s 且适用于命令 %s 的缩写已存在，无法重命名 %s\n"
 
@@ -1253,6 +1257,12 @@ msgstr "正在改变状况的作业"
 msgid "Jobs getting started or continued"
 msgstr "正在启动或继续的作业"
 
+msgid "Language specifiers appear repeatedly:"
+msgstr ""
+
+msgid "Language specifiers do not have catalogs:"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "列出或移除函数"
 
@@ -1573,6 +1583,19 @@ msgstr "函数 '%s' 立即调用自身，会导致无限循环。"
 
 msgid "The interactive reader/input system"
 msgstr "交互式阅读器/输入系统"
+
+#, c-format
+msgid "The language list is set based on the %s environment variable.\n"
+msgstr ""
+
+msgid "The language list is set to the default value because no explicit value was specified.\n"
+msgstr ""
+
+msgid "The language list is set to the following value:"
+msgstr ""
+
+msgid "The language list is set via the `status language` builtin.\n"
+msgstr ""
 
 msgid "There are still jobs active:\n"
 msgstr "仍然活动的作业：\n"
@@ -3412,6 +3435,9 @@ msgstr "显示与光标下记号相关的 man 页面条目或函数描述"
 
 msgid "Show modification time"
 msgstr "显示修改时间"
+
+msgid "Show or change fish's language settings"
+msgstr ""
 
 msgid "Show seconds since the modification time"
 msgstr "显示自修改时间以来的秒数"

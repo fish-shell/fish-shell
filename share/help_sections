@@ -56,7 +56,6 @@ cmds/fish_status_to_signal
 cmds/fish_svn_prompt
 cmds/fish_tab_title
 cmds/fish_title
-cmds/fish_title.inc
 cmds/fish_update_completions
 cmds/fish_vcs_prompt
 cmds/fish_vi_key_bindings

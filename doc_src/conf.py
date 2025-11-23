@@ -162,7 +162,8 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+fish_exclude_patterns = "cmds/*.inc.rst"
+exclude_patterns = [fish_exclude_patterns]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -265,7 +266,7 @@ man_pages = [
     ),
     ("faq", "fish-faq", "", [author], 1),
 ]
-for path in sorted(set(glob("cmds/*.rst")) - set(glob("cmds/*.inc.rst"))):
+for path in sorted(set(glob("cmds/*.rst")) - set(glob(fish_exclude_patterns))):
     docname = os.path.splitext(path)[0]
     cmd = os.path.basename(docname)
     man_pages.append((docname, cmd, get_command_description(path, cmd), "", 1))

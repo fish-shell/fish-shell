@@ -2025,6 +2025,9 @@ msgstr "可設定的招呼語"
 msgid "Copy and paste (Kill Ring)"
 msgstr "複製和貼上（kill ring）"
 
+msgid "Cygwin / MSYS2 / Windows"
+msgstr ""
+
 msgid "Debugging fish scripts"
 msgstr "除錯 fish 命令稿"
 

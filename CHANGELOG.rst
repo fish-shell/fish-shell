@@ -10,6 +10,8 @@ Deprecations and removed features
 Interactive improvements
 ------------------------
 - When typing immediately after starting fish, the first prompt is now rendered correctly.
+- On Cygwin, completion will favor the non-exe name (``foo``) unless the user started typing the extension
+- When using the exe name (``foo.exe``), Fish will use to the description and completions for ``foo`` if there are none for ``foo.exe``
 
 Improved terminal support
 -------------------------

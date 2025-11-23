@@ -130,6 +130,7 @@ commands#known-functions
 commands#the-full-list
 commands#tools
 completions
+completions#cygwin-msys2-windows
 completions#useful-functions-for-writing-completions
 completions#where-to-put-completions
 contributing

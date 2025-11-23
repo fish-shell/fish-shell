@@ -4,6 +4,7 @@ use libc::X_OK;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fs;
+use std::os::unix::fs::MetadataExt;
 
 use crate::common::{
     UnescapeFlags, UnescapeStringStyle, WILDCARD_RESERVED_BASE, WSL, char_offset,
@@ -382,9 +383,35 @@ fn wildcard_test_flags_then_complete(
         .check_type()
         .map(|x| x == DirEntryType::reg)
         .unwrap_or(false);
-    if executables_only && (!is_regular_file || waccess(filepath, X_OK) != 0) {
+    let is_executable = is_regular_file && waccess(filepath, X_OK) == 0;
+    if executables_only && !is_executable {
         return false;
     }
+
+    // For executables on Cygwin, prefer the name without the .exe, to match
+    // better with Unix names, but only if there isn't also a file without that
+    // extension and the user hasn't started to type the extension
+    let filename = if cfg!(cygwin)
+        && is_executable
+        && string_suffixes_string_case_insensitive(L!(".exe"), filename)
+        && wc.len() + 4 <= filename.len()
+    {
+        let filepath_stripped = &filepath[0..filepath.len() - 4];
+        let stat_stripped = lwstat(filepath_stripped).map(|stat| (stat.dev(), stat.ino()));
+        let stat = lwstat(filepath).map(|stat| (stat.dev(), stat.ino()));
+
+        // TODO(MSRV>=1.88) use if-let-chain
+        //   if let Ok(stat_stripped) = stat_stripped
+        //       && let Ok(stat) = stat
+        //       && stat_stripped == stat
+        if stat_stripped.is_ok() && stat.is_ok() && stat_stripped.unwrap() == stat.unwrap() {
+            &filename[0..filename.len() - 4]
+        } else {
+            filename
+        }
+    } else {
+        filename
+    };
 
     // Compute the description.
     // This is effectively only for command completions,
@@ -1109,7 +1136,7 @@ pub fn wildcard_expand_string<'closure>(
 /// Test whether the given wildcard matches the string. Does not perform any I/O.
 ///
 /// \param str The string to test
-/// \param wc The wildcard to test against
+/// \param pattern The wildcard to test against
 /// \param leading_dots_fail_to_match if set, strings with leading dots are assumed to be hidden
 /// files and are not matched (default was false)
 ///

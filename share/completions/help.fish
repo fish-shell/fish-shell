@@ -29,6 +29,8 @@ function __fish_help_describe -a help_item
             return
         case completions
             echo (_ "How to write completions")
+        case completions#cygwin-msys2-windows
+            echo (_ "Cygwin / MSYS2 / Windows")
         case completions#useful-functions-for-writing-completions
             echo (_ 'Useful functions for writing completions')
         case completions#where-to-put-completions

@@ -3,6 +3,9 @@ Writing your own completions
 
 To specify a completion, use the ``complete`` command. ``complete`` takes as a parameter the name of the command to specify a completion for. For example, to add a completion for the program ``myprog``, start the completion command with ``complete -c myprog ...``
 
+.. note:: On Windows, binary executables have a ``.exe`` extension, but this extension is not required when calling the application (and if the name is not ambiguous, i.e. there isn't a script called ``myprog`` in the same directory).
+  To unify completions between Windows and other OSes, on Cygwin/MSYS2/Windows, completions for ``myprog`` will also be used for ``myprog.exe`` (if there are no ambiguities, i.e. if there are no completions for ``myprog.exe`` specifically).
+
 For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the :doc:`complete <cmds/complete>` builtin, or write ``complete --help`` inside the ``fish`` shell.
 
 To provide a list of possible completions for myprog, use the ``-a`` switch. If ``myprog`` accepts the arguments start and stop, this can be specified as ``complete -c myprog -a 'start stop'``. The argument to the ``-a`` switch is always a single string. At completion time, it will be tokenized on spaces and tabs, and variable expansion, command substitution and other forms of parameter expansion will take place::
@@ -161,3 +164,7 @@ If you have written new completions for a common Unix command, please consider s
 
 If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable completionsdir fish``.
 
+Cygwin / MSYS2 / Windows
+------------------------
+
+On Windows, executable binaries have a `.exe` extension. 

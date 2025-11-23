@@ -57,7 +57,7 @@ pub enum AutoloadPath {
     Path(WString),
 }
 
-enum AutoloadResult {
+pub enum AutoloadResult {
     Path(AutoloadPath),
     Loaded,
     Pending,
@@ -91,33 +91,30 @@ impl Autoload {
     /// After returning a path, the command is marked in-progress until the caller calls
     /// mark_autoload_finished() with the same command. Note this does not actually execute any
     /// code; it is the caller's responsibility to load the file.
-    pub fn resolve_command(&mut self, cmd: &wstr, env: &dyn Environment) -> Option<AutoloadPath> {
-        match self.resolve_command_impl(
+    pub fn resolve_command(&mut self, cmd: &wstr, env: &dyn Environment) -> AutoloadResult {
+        let result = self.resolve_command_impl(
             cmd,
             env.get(self.env_var_name)
                 .as_ref()
                 .map(|var| var.as_list())
                 .unwrap_or_default(),
-        ) {
-            AutoloadResult::Path(path) => {
-                match &path {
-                    AutoloadPath::Embedded(_) => {
-                        FLOGF!(autoload, "Embedded: %s", cmd);
-                    }
-                    AutoloadPath::Path(path) => {
-                        FLOGF!(
-                            autoload,
-                            "Loading %s from var %s from path %s",
-                            cmd,
-                            self.env_var_name,
-                            path
-                        )
-                    }
-                }
-                Some(path)
+        );
+        match result {
+            AutoloadResult::Path(AutoloadPath::Embedded(_)) => {
+                FLOGF!(autoload, "Embedded: %s", cmd);
             }
-            AutoloadResult::Loaded | AutoloadResult::Pending | AutoloadResult::None => None,
-        }
+            AutoloadResult::Path(AutoloadPath::Path(ref path)) => {
+                FLOGF!(
+                    autoload,
+                    "Loading %s from var %s from path %s",
+                    cmd,
+                    self.env_var_name,
+                    path
+                );
+            }
+            AutoloadResult::Loaded | AutoloadResult::Pending | AutoloadResult::None => {}
+        };
+        result
     }
 
     /// Helper to actually perform an autoload.

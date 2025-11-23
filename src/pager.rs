@@ -6,7 +6,7 @@ use std::collections::hash_map::Entry;
 use crate::common::{
     EscapeFlags, EscapeStringStyle, escape_string, get_ellipsis_char, get_ellipsis_str,
 };
-use crate::complete::Completion;
+use crate::complete::{CompleteFlags, Completion};
 use crate::editable_line::EditableLine;
 use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
 use crate::operation_context::OperationContext;
@@ -349,6 +349,11 @@ impl Pager {
         for comp in &mut self.unfiltered_completion_infos {
             let comp_strings = &mut comp.comp;
 
+            let show_prefix = !comp
+                .representative
+                .flags
+                .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX);
+
             for (j, comp_string) in comp_strings.iter().enumerate() {
                 // If there's more than one, append the length of ', '.
                 if j >= 1 {
@@ -357,7 +362,9 @@ impl Pager {
 
                 // This can return -1 if it can't calculate the width. So be cautious.
                 let comp_width = wcswidth_rendered(comp_string);
-                comp.comp_width += usize::try_from(prefix_len).unwrap_or_default();
+                if show_prefix {
+                    comp.comp_width += usize::try_from(prefix_len).unwrap_or_default();
+                }
                 comp.comp_width += usize::try_from(comp_width).unwrap_or_default();
             }
 
@@ -432,9 +439,13 @@ impl Pager {
                 let is_selected = Some(idx) == effective_selected_idx;
 
                 // Print this completion on its own "line".
+                let show_prefix = !el
+                    .representative
+                    .flags
+                    .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX);
                 let mut line = self.completion_print_item(
                     CharOffset::Pager(idx),
-                    prefix,
+                    show_prefix.then_some(prefix),
                     el,
                     col_width,
                     row % 2 != 0,
@@ -459,7 +470,7 @@ impl Pager {
     fn completion_print_item(
         &self,
         offset_in_cmdline: CharOffset,
-        prefix: &wstr,
+        prefix: Option<&wstr>,
         c: &PagerComp,
         width: usize,
         secondary: bool,
@@ -531,14 +542,16 @@ impl Pager {
                 );
             }
 
-            comp_remaining -= print_max(
-                offset_in_cmdline,
-                prefix,
-                prefix_col,
-                comp_remaining,
-                !comp.is_empty(),
-                &mut line_data,
-            );
+            if let Some(prefix) = prefix {
+                comp_remaining -= print_max(
+                    offset_in_cmdline,
+                    prefix,
+                    prefix_col,
+                    comp_remaining,
+                    !comp.is_empty(),
+                    &mut line_data,
+                );
+            }
             comp_remaining -= print_max_impl(
                 offset_in_cmdline,
                 comp,

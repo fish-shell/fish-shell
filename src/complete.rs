@@ -110,6 +110,8 @@ bitflags! {
         const KEEP_VARIABLE_OVERRIDE_PREFIX = 1 << 8;
         /// This is a variable name.
         const VARIABLE_NAME = 1 << 9;
+        /// Suppress showing the pager prefix for this completion.
+        const SUPPRESS_PAGER_PREFIX = 1 << 10;
     }
 }
 

@@ -6646,8 +6646,16 @@ impl<'a> Reader<'a> {
 
             // Only use completions that match replace_token.
             let completion_replaces_token = c.flags.contains(CompleteFlags::REPLACES_TOKEN);
+            let replaces_only_due_to_case_mismatch = {
+                c.flags.contains(CompleteFlags::REPLACES_TOKEN)
+                    && c.r#match.is_exact_or_prefix()
+                    && !matches!(c.r#match.case_fold, CaseSensitivity::Sensitive)
+            };
             if completion_replaces_token != will_replace_token {
-                continue;
+                // Keep smart/samecase results even if we prefer not to replace the token.
+                if will_replace_token || !replaces_only_due_to_case_mismatch {
+                    continue;
+                }
             }
 
             // Don't use completions that want to replace, if we cannot replace them.
@@ -6655,10 +6663,13 @@ impl<'a> Reader<'a> {
                 continue;
             }
 
-            // This completion survived.
-            surviving_completions.push(c.clone());
-            all_matches_exact_or_prefix =
-                all_matches_exact_or_prefix && c.r#match.is_exact_or_prefix();
+            all_matches_exact_or_prefix &= c.r#match.is_exact_or_prefix();
+
+            let mut completion = c.clone();
+            if replaces_only_due_to_case_mismatch && !will_replace_token {
+                completion.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
+            }
+            surviving_completions.push(completion);
         }
 
         if surviving_completions.len() == 1 {
@@ -6735,6 +6746,11 @@ impl<'a> Reader<'a> {
 
         if use_prefix {
             for c in &mut surviving_completions {
+                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                    // Keep replacement semantics and the original prefix so these completions can
+                    // fix casing when selected.
+                    continue;
+                }
                 c.flags &= !CompleteFlags::REPLACES_TOKEN;
                 c.completion.replace_range(0..common_prefix.len(), L!(""));
             }

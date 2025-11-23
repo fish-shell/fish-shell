@@ -737,10 +737,6 @@ msgid "%s: expected a numeric value"
 msgstr "%s: 预期收到数值"
 
 #, c-format
-msgid "%s: fish was not built with embedded files"
-msgstr "%s: fish 构建时未包含嵌入文件"
-
-#, c-format
 msgid "%s: function name required"
 msgstr "%s: 函数名称是必须的"
 

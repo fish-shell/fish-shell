@@ -845,10 +845,6 @@ msgid "%s: expected a numeric value"
 msgstr "%s : valeur numérique attendue"
 
 #, c-format
-msgid "%s: fish was not built with embedded files"
-msgstr "%s : fish n’a pas été compilé avec les fichiers embarqués"
-
-#, c-format
 msgid "%s: function name required"
 msgstr ""
 

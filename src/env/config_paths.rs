@@ -102,7 +102,7 @@ impl ConfigPaths {
 
         let workspace_root = workspace_root();
         // TODO(MSRV>=1.88): if-let-chain
-        if exec_path_parent.ends_with("bin") && {
+        if cfg!(using_cmake) && exec_path_parent.ends_with("bin") && {
             let prefix = exec_path_parent.parent().unwrap();
             let data = prefix.join("share/fish");
             let sysconf = prefix.join("etc/fish");
@@ -112,6 +112,7 @@ impl ConfigPaths {
             // Installing somewhere else inside the workspace is fine.
             && prefix != workspace_root
         } {
+            const _: () = assert!(!cfg!(using_cmake) || DOC_DIR.is_some());
             FLOG!(config, "Running from relocatable tree");
             let prefix = exec_path_parent.parent().unwrap();
             Self {
@@ -120,11 +121,11 @@ impl ConfigPaths {
                 data: Some(prefix.join("share/fish")),
                 doc: {
                     let doc = prefix.join("share/doc/fish");
-                    if doc.exists() {
-                        Some(doc)
+                    Some(if doc.exists() {
+                        doc
                     } else {
-                        DOC_DIR.map(PathBuf::from)
-                    }
+                        PathBuf::from(DOC_DIR.unwrap())
+                    })
                 },
             }
         } else if exec_path.starts_with(BUILD_DIR) {

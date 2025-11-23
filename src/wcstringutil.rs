@@ -36,6 +36,14 @@ pub fn string_prefixes_string_maybe_case_insensitive(
     })(proposed_prefix, value)
 }
 
+/// Remove the optional executable extension if there is one
+/// Always returns None on non-Cygwin platforms
+pub fn strip_executable_suffix(path: &wstr) -> Option<&wstr> {
+    const DOT_EXE: &wstr = L!(".exe");
+    (cfg!(cygwin) && { string_suffixes_string_case_insensitive(DOT_EXE, path) })
+        .then(|| &path[..path.len() - DOT_EXE.len()])
+}
+
 /// Test if a string is a suffix of another.
 pub fn string_suffixes_string_case_insensitive(proposed_suffix: &wstr, value: &wstr) -> bool {
     let suffix_size = proposed_suffix.len();

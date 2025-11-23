@@ -3,7 +3,7 @@
 // the parser and to some degree the builtin handling library.
 
 use crate::ast::{self, Node};
-use crate::autoload::Autoload;
+use crate::autoload::{Autoload, AutoloadResult};
 use crate::common::{FilenameRef, assert_sync, escape, valid_func_name};
 use crate::complete::complete_wrap_map;
 use crate::env::{EnvStack, Environment};
@@ -117,7 +117,7 @@ pub fn load(name: &wstr, parser: &Parser) -> bool {
     {
         let mut funcset: std::sync::MutexGuard<FunctionSet> = FUNCTION_SET.lock().unwrap();
         if funcset.allow_autoload(name) {
-            if let Some(path) = funcset
+            if let AutoloadResult::Path(path) = funcset
                 .autoloader
                 .resolve_command(name, EnvStack::globals())
             {

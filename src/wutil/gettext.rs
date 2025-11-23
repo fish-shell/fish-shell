@@ -7,14 +7,12 @@ use once_cell::sync::Lazy;
 
 #[cfg(feature = "localize-messages")]
 mod gettext_impl {
+    use crate::env::{EnvStack, Environment};
+    use fish_gettext_maps::CATALOGS;
+    use once_cell::sync::Lazy;
     use std::{collections::HashSet, sync::Mutex};
 
-    use once_cell::sync::Lazy;
-
-    use fish_gettext_maps::CATALOGS;
     type Catalog = &'static phf::Map<&'static str, &'static str>;
-
-    use crate::env::{EnvStack, Environment};
 
     /// Tries to find catalogs for `language`.
     /// `language` must be an ISO 639 language code, optionally followed by an underscore and an ISO

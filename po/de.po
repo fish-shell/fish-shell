@@ -84,6 +84,10 @@ msgid "%s"
 msgstr ""
 
 #, c-format
+msgid "%s %s: %s: invalid subcommand\n"
+msgstr "%s %s: %s: ungültiger Unterbefehl\n"
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
 msgstr ""
 
@@ -881,6 +885,10 @@ msgstr "Abbruch"
 msgid "Abort (Alias for SIGABRT)"
 msgstr ""
 
+#, c-format
+msgid "Active languages (%s):"
+msgstr ""
+
 msgid "Address boundary error"
 msgstr "Adressbereichsfehler"
 
@@ -1229,6 +1237,9 @@ msgstr ""
 msgid "Jobs getting started or continued"
 msgstr ""
 
+msgid "Language specifiers appear repeatedly:"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "Funktionen auflisten oder entfernen"
 
@@ -1278,6 +1289,9 @@ msgstr "Nie"
 
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Kein TTY für interaktive Shell (tcgetpgrp schlug fehl)"
+
+msgid "No catalogs available for language specifiers:"
+msgstr ""
 
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
@@ -1775,6 +1789,9 @@ msgstr "Befehlsersetzung sind in Befehlsposition nicht erlaubt. Probier stattdes
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr "Vervollständigung hat die maximale Rekursionstiefe erreicht, möglicher Kreis?"
 
+msgid "default"
+msgstr ""
+
 msgid "dir symlink"
 msgstr "Verweis auf ein Verzeichnis"
 
@@ -1800,9 +1817,16 @@ msgid ""
 "`help %s` will show an online version\n"
 msgstr ""
 
+msgid "from command `status language set`"
+msgstr ""
+
 #, c-format
 msgid "from sourcing file %s\n"
 msgstr "aus der Quelldatei %s\n"
+
+#, c-format
+msgid "from variable %s"
+msgstr ""
 
 msgid "in command substitution\n"
 msgstr "in der Befehlsersetzung\n"
@@ -3385,6 +3409,9 @@ msgstr ""
 
 msgid "Show modification time"
 msgstr "Änderungsdatum anzeigen"
+
+msgid "Show or change fish's language settings"
+msgstr ""
 
 msgid "Show seconds since the modification time"
 msgstr ""

@@ -105,6 +105,10 @@ msgid "%s"
 msgstr "%s"
 
 #, c-format
+msgid "%s %s: %s: invalid subcommand\n"
+msgstr "%s %s: %s: 无效的子命令\n"
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
 msgstr "%s %s: 名为 %s 且适用于命令 %s 的缩写已存在，无法重命名 %s\n"
 
@@ -902,6 +906,10 @@ msgstr "中止"
 msgid "Abort (Alias for SIGABRT)"
 msgstr "中止 (SIGABRT 的别名)"
 
+#, c-format
+msgid "Active languages (%s):"
+msgstr ""
+
 msgid "Address boundary error"
 msgstr "地址边界错误"
 
@@ -1253,6 +1261,9 @@ msgstr "正在改变状况的作业"
 msgid "Jobs getting started or continued"
 msgstr "正在启动或继续的作业"
 
+msgid "Language specifiers appear repeatedly:"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "列出或移除函数"
 
@@ -1302,6 +1313,9 @@ msgstr "从不"
 
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "交互 shell 没有 TTY (tcgetpgrp 失败)"
+
+msgid "No catalogs available for language specifiers:"
+msgstr ""
 
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
@@ -1799,6 +1813,9 @@ msgstr "在命令位置不允许替换命令。试使用 var=(你的命令) $var
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr "补全达到了最大的递归深度，可能存在循环？"
 
+msgid "default"
+msgstr ""
+
 msgid "dir symlink"
 msgstr "目录符号链接"
 
@@ -1827,9 +1844,16 @@ msgstr ""
 "文档可能未安装。\n"
 "`help %s` 将显示在线版本\n"
 
+msgid "from command `status language set`"
+msgstr ""
+
 #, c-format
 msgid "from sourcing file %s\n"
 msgstr "从源文件 %s\n"
+
+#, c-format
+msgid "from variable %s"
+msgstr ""
 
 msgid "in command substitution\n"
 msgstr "在命令替换中\n"
@@ -3412,6 +3436,9 @@ msgstr "显示与光标下记号相关的 man 页面条目或函数描述"
 
 msgid "Show modification time"
 msgstr "显示修改时间"
+
+msgid "Show or change fish's language settings"
+msgstr ""
 
 msgid "Show seconds since the modification time"
 msgstr "显示自修改时间以来的秒数"

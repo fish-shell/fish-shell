@@ -33,6 +33,7 @@ Synopsis
     status list-files [PATH ...]
     status terminal
     status test-terminal-feature FEATURE
+    status language [list-available|set [LANGUAGE ...]|unset]
 
 Description
 -----------
@@ -145,6 +146,32 @@ The following operations (subcommands) are available:
 
     Currently the only available *FEATURE* is :ref:`scroll-content-up <term-compat-indn>`.
     An error will be printed when passed an unrecognized feature.
+
+.. _status-language:
+
+**language**
+    Show or modify message localization settings.
+    When invoked without arguments, the current language settings are shown.
+
+    Available subcommands:
+
+    **list-available**
+    prints the language names for which fish has translations.
+    These names can be used with the **set** subcommand.
+
+    **set**
+    sets the language precedence for fish's messages.
+    Overrides language settings configured via :ref:`environment variables <variables-locale>`, but only applies to fish itself, not to any child processes.
+    Takes a list of language names from the set shown by the **list-available** subcommand.
+    For some languages, fish's translation catalogs are incomplete, meaning not all messages can be shown in these languages.
+    Therefore, we allow specifying a list here, with translations taken from the first specified language which has a translation available for a message.
+    For example, after running ``status language set pt_BR fr``, all messages which have a translation into Brazilian Portuguese will be shown in that language.
+    The remaining messages will be shown in French, if a French translation is available.
+    If none of the specified languages have a translation available for a message, the message will be shown in English.
+
+    **unset**
+    undoes the effects of the **set** subcommand.
+    Language settings will be taken from environment variables again.
 
 Notes
 -----

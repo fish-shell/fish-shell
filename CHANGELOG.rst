@@ -20,7 +20,6 @@ Color and key binding variables are no longer set in universal scope
   2. universal variables as a source of truth are easy to misunderstand,
      compared to configuration files like ``config.fish``.
 
-
 Deprecations and removed features
 ---------------------------------
 - Erasing a color variable (e.g. by running ``set -e fish_color_command``)
@@ -29,6 +28,10 @@ Deprecations and removed features
   set it to an empty list (``set fish_color_command``) or an equivalent (``set fish_color_command normal``).
 - ``fish_config theme choose`` now clears only color variables that were set by earlier invocations of a ``fish_config theme choose`` command
   (which includes fish's default theme).
+
+Scripting improvements
+----------------------
+- New :ref:`status language <status-language>` commands allow showing and modifying language settings for fish messages without having to modify environment variables.
 
 Interactive improvements
 ------------------------

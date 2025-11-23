@@ -79,6 +79,10 @@ msgid "%s"
 msgstr ""
 
 #, c-format
+msgid "%s %s: %s: invalid subcommand\n"
+msgstr ""
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
 msgstr ""
 
@@ -876,6 +880,10 @@ msgstr "Avbrott"
 msgid "Abort (Alias for SIGABRT)"
 msgstr "Avbrott (Alias för SIGABRT)"
 
+#, c-format
+msgid "Active languages (%s):"
+msgstr ""
+
 msgid "Address boundary error"
 msgstr "Minnesadress korsar segmentgräns"
 
@@ -1224,6 +1232,9 @@ msgstr ""
 msgid "Jobs getting started or continued"
 msgstr ""
 
+msgid "Language specifiers appear repeatedly:"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "Visa eller ta bort funktioner"
 
@@ -1272,6 +1283,9 @@ msgid "Never"
 msgstr "Aldrig"
 
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
+msgstr ""
+
+msgid "No catalogs available for language specifiers:"
 msgstr ""
 
 #, c-format
@@ -1770,6 +1784,9 @@ msgstr ""
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr ""
 
+msgid "default"
+msgstr ""
+
 msgid "dir symlink"
 msgstr ""
 
@@ -1795,8 +1812,15 @@ msgid ""
 "`help %s` will show an online version\n"
 msgstr ""
 
+msgid "from command `status language set`"
+msgstr ""
+
 #, c-format
 msgid "from sourcing file %s\n"
+msgstr ""
+
+#, c-format
+msgid "from variable %s"
 msgstr ""
 
 msgid "in command substitution\n"
@@ -3380,6 +3404,9 @@ msgstr ""
 
 msgid "Show modification time"
 msgstr "Visa ändringstid"
+
+msgid "Show or change fish's language settings"
+msgstr ""
 
 msgid "Show seconds since the modification time"
 msgstr ""

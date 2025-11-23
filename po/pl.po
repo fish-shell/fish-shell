@@ -78,6 +78,10 @@ msgid "%s"
 msgstr ""
 
 #, c-format
+msgid "%s %s: %s: invalid subcommand\n"
+msgstr ""
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
 msgstr ""
 
@@ -875,6 +879,10 @@ msgstr "Przerwij"
 msgid "Abort (Alias for SIGABRT)"
 msgstr ""
 
+#, c-format
+msgid "Active languages (%s):"
+msgstr ""
+
 msgid "Address boundary error"
 msgstr ""
 
@@ -1223,6 +1231,9 @@ msgstr ""
 msgid "Jobs getting started or continued"
 msgstr ""
 
+msgid "Language specifiers appear repeatedly:"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "Wypisz lub usuń funkcje"
 
@@ -1271,6 +1282,9 @@ msgid "Never"
 msgstr "Nigdy"
 
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
+msgstr ""
+
+msgid "No catalogs available for language specifiers:"
 msgstr ""
 
 #, c-format
@@ -1769,6 +1783,9 @@ msgstr ""
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr ""
 
+msgid "default"
+msgstr ""
+
 msgid "dir symlink"
 msgstr ""
 
@@ -1794,8 +1811,15 @@ msgid ""
 "`help %s` will show an online version\n"
 msgstr ""
 
+msgid "from command `status language set`"
+msgstr ""
+
 #, c-format
 msgid "from sourcing file %s\n"
+msgstr ""
+
+#, c-format
+msgid "from variable %s"
 msgstr ""
 
 msgid "in command substitution\n"
@@ -3378,6 +3402,9 @@ msgid "Show man page entries or function description related to the token under 
 msgstr ""
 
 msgid "Show modification time"
+msgstr ""
+
+msgid "Show or change fish's language settings"
 msgstr ""
 
 msgid "Show seconds since the modification time"

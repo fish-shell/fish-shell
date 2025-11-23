@@ -14,23 +14,37 @@ use cfg_if::cfg_if;
 use libc::F_OK;
 use rust_embed::RustEmbed;
 
+/// Create an enum with name `$name`.
+/// Its variants are given as comma-separated tuples, with each tuple containing the variant name,
+/// as well as a string representations of the variant.
+/// Optionally, additional strings can be provided, which are considered aliases for the enum
+/// variant.
+/// The generated enum will implement a `from_str` function, mapping from `&str` to the associated
+/// enum variant if any, and `to_wstr`, which maps from a variant to the associated
+/// `$default_name`.
+/// It is the user's responsibility to ensure than none of the string arguments appears more than
+/// once.
 macro_rules! str_enum {
-    ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
+    ($name:ident, $(($val:ident, $default_name:expr $(, $alias:expr)* $(,)?)),* $(,)?) => {
+        #[derive(Clone, Copy)]
+        enum $name {
+            $($val),*,
+        }
+
         impl $name {
-            fn from_wstr(s: &str) -> Option<Self> {
+            fn from_str(s: &str) -> Option<Self> {
                 // matching on str's lets us avoid having to do binary search and friends ourselves,
-                // this is ascii only anyways
+                // this is ASCII only anyways
                 match s {
-                    $($str => Some(Self::$val)),*,
+                    $($default_name => Some(Self::$val)),*,
+                    $($($alias => Some(Self::$val),)*)*
                     _ => None,
                 }
             }
 
             fn to_wstr(self) -> &'static wstr {
-                // There can be multiple vals => str mappings, and that's okay
-                #[allow(unreachable_patterns)]
                 match self {
-                    $(Self::$val => L!($str)),*,
+                    $(Self::$val => L!($default_name)),*,
                 }
             }
         }
@@ -38,53 +52,17 @@ macro_rules! str_enum {
 }
 
 use StatusCmd::*;
-#[derive(Clone, Copy)]
-enum StatusCmd {
-    STATUS_BASENAME,
-    STATUS_BUILD_INFO,
-    STATUS_CURRENT_CMD,
-    STATUS_CURRENT_COMMANDLINE,
-    STATUS_DIRNAME,
-    STATUS_FEATURES,
-    STATUS_FILENAME,
-    STATUS_FISH_PATH,
-    STATUS_FUNCTION,
-    STATUS_GET_FILE,
-    STATUS_IS_BLOCK,
-    STATUS_IS_BREAKPOINT,
-    STATUS_IS_COMMAND_SUB,
-    STATUS_IS_FULL_JOB_CTRL,
-    STATUS_IS_INTERACTIVE,
-    STATUS_IS_INTERACTIVE_JOB_CTRL,
-    STATUS_IS_INTERACTIVE_READ,
-    STATUS_IS_LOGIN,
-    STATUS_IS_NO_JOB_CTRL,
-    STATUS_LINE_NUMBER,
-    STATUS_LIST_FILES,
-    STATUS_SET_JOB_CONTROL,
-    STATUS_STACK_TRACE,
-    STATUS_TERMINAL,
-    STATUS_TERMINAL_OS,
-    STATUS_TEST_FEATURE,
-    STATUS_TEST_TERMINAL_FEATURE,
-}
-
 str_enum!(
     StatusCmd,
-    (STATUS_BASENAME, "basename"),
-    (STATUS_BASENAME, "current-basename"),
-    (STATUS_BUILD_INFO, "build-info"),
-    (STATUS_BUILD_INFO, "buildinfo"),
+    (STATUS_BASENAME, "basename", "current-basename"),
+    (STATUS_BUILD_INFO, "build-info", "buildinfo"),
     (STATUS_CURRENT_CMD, "current-command"),
     (STATUS_CURRENT_COMMANDLINE, "current-commandline"),
-    (STATUS_DIRNAME, "current-dirname"),
-    (STATUS_DIRNAME, "dirname"),
+    (STATUS_DIRNAME, "dirname", "current-dirname"),
     (STATUS_FEATURES, "features"),
-    (STATUS_FILENAME, "current-filename"),
-    (STATUS_FILENAME, "filename"),
+    (STATUS_FILENAME, "filename", "current-filename"),
     (STATUS_FISH_PATH, "fish-path"),
-    (STATUS_FUNCTION, "current-function"),
-    (STATUS_FUNCTION, "function"),
+    (STATUS_FUNCTION, "function", "current-function"),
     (STATUS_GET_FILE, "get-file"),
     (STATUS_IS_BLOCK, "is-block"),
     (STATUS_IS_BREAKPOINT, "is-breakpoint"),
@@ -95,12 +73,10 @@ str_enum!(
     (STATUS_IS_INTERACTIVE_READ, "is-interactive-read"),
     (STATUS_IS_LOGIN, "is-login"),
     (STATUS_IS_NO_JOB_CTRL, "is-no-job-control"),
-    (STATUS_LINE_NUMBER, "current-line-number"),
-    (STATUS_LINE_NUMBER, "line-number"),
+    (STATUS_LINE_NUMBER, "line-number", "current-line-number"),
     (STATUS_LIST_FILES, "list-files"),
     (STATUS_SET_JOB_CONTROL, "job-control"),
-    (STATUS_STACK_TRACE, "print-stack-trace"),
-    (STATUS_STACK_TRACE, "stack-trace"),
+    (STATUS_STACK_TRACE, "stack-trace", "print-stack-trace"),
     (STATUS_TERMINAL, "terminal"),
     (STATUS_TERMINAL_OS, "terminal-os"),
     (STATUS_TEST_FEATURE, "test-feature"),
@@ -376,7 +352,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     // If a status command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     if optind < argc {
-        match StatusCmd::from_wstr(args[optind].to_string().as_str()) {
+        match StatusCmd::from_str(args[optind].to_string().as_str()) {
             Some(s) => {
                 if !opts.try_set_status_cmd(s, streams) {
                     return Err(STATUS_CMD_ERROR);

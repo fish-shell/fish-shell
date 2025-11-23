@@ -1264,8 +1264,27 @@ msgstr "正在改变状况的作业"
 msgid "Jobs getting started or continued"
 msgstr "正在启动或继续的作业"
 
+#, c-format
+msgid "Language specifiers appear repeatedly: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Language specifiers are not well-formed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Language specifiers do not have catalogs: %s\n"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "列出或移除函数"
+
+msgid "Localization is active.\n"
+msgstr ""
+
+#, c-format
+msgid "Localization is disabled because %s is set to a C locale.\n"
+msgstr ""
 
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "不支持逻辑运算，使用 `test` 替代"
@@ -1580,6 +1599,20 @@ msgstr "函数 '%s' 立即调用自身，会导致无限循环。"
 
 msgid "The interactive reader/input system"
 msgstr "交互式阅读器/输入系统"
+
+#, c-format
+msgid "The language list is set based on the %s environment variable.\n"
+msgstr ""
+
+msgid "The language list is set to the default value because no explicit value was specified.\n"
+msgstr ""
+
+#, c-format
+msgid "The language list is set to the following value: %s\n"
+msgstr ""
+
+msgid "The language list is set via the `status locale` builtin.\n"
+msgstr ""
 
 msgid "There are still jobs active:\n"
 msgstr "仍然活动的作业：\n"

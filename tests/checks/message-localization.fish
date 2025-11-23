@@ -73,6 +73,13 @@ end
 echo (_ file)
 # CHECK: arquivo
 
+# Check that empty vars are ignored
+begin
+    set -l LC_ALL
+    echo (_ file)
+    # CHECK: arquivo
+end
+
 # Check that all relevant locale variables are respected.
 set --erase LANG
 set --erase LC_MESSAGES
@@ -104,3 +111,85 @@ echo (_ file)
 set -l LC_ALL de_DE.utf8
 echo (_ file)
 # CHECK: Datei
+
+# Check `status locale` builtin
+set --erase LANG
+set --erase LC_MESSAGES
+set --erase LC_ALL
+set --erase LANGUAGE
+status locale get
+# CHECK: {{.*}} active{{.*}}
+# CHECK: {{.*}} default value {{.*}}
+# CHECK: {{.*}} value: []
+echo (_ file)
+# CHECK: file
+
+set -l LANGUAGE pt_BR de_DE
+status locale get
+# CHECK: {{.*}} active{{.*}}
+# CHECK: {{.*}} LANGUAGE {{.*}}
+# CHECK: {{.*}} value: ["pt_BR", "de"]
+echo (_ file)
+# CHECK: arquivo
+
+status locale set fr_FR de_DE
+status locale get
+# CHECK: {{.*}} active{{.*}}
+# CHECK: {{.*}} `status locale` {{.*}}
+# CHECK: {{.*}} value: ["fr", "de"]
+echo (_ file)
+# CHECK: fichier
+
+set -l LANGUAGE zh_TW
+status locale get
+# CHECK: {{.*}} active{{.*}}
+# CHECK: {{.*}} `status locale` {{.*}}
+# CHECK: {{.*}} value: ["fr", "de"]
+echo (_ file)
+# CHECK: fichier
+
+set -l LC_MESSAGES C
+status locale get
+# CHECK: {{.*}} disabled{{.*}}
+# CHECK: {{.*}} `status locale` {{.*}}
+# CHECK: {{.*}} value: ["fr", "de"]
+echo (_ file)
+# CHECK: file
+
+status locale unset
+status locale get
+# CHECK: {{.*}} disabled{{.*}}
+# CHECK: {{.*}} LANGUAGE {{.*}}
+# CHECK: {{.*}} value: ["zh_TW"]
+echo (_ file)
+# CHECK: file
+
+set --erase LC_MESSAGES
+status locale get
+# CHECK: {{.*}} active{{.*}}
+# CHECK: {{.*}} LANGUAGE {{.*}}
+# CHECK: {{.*}} value: ["zh_TW"]
+echo (_ file)
+# CHECK: 檔案
+
+set --erase LANGUAGE
+status locale get
+# CHECK: {{.*}} active{{.*}}
+# CHECK: {{.*}} default value {{.*}}
+# CHECK: {{.*}} value: []
+echo (_ file)
+# CHECK: file
+
+# Check `status locale set` warnings
+status locale set asdf
+# CHECKERR: Language specifiers are not well-formed: ["asdf"]
+
+# This will have to be changed if we add catalogs for languages used here.
+status locale set zh_HK it_IT
+# CHECKERR: Language specifiers do not have catalogs: ["zh_HK", "it_IT"]
+
+status locale set de_DE de_DE
+# CHECKERR: Language specifiers appear repeatedly: ["de_DE"]
+
+# This should be fine even if we map both to the same catalog
+status locale set de_AT de_DE

@@ -6461,6 +6461,12 @@ fn get_best_rank(comp: &[Completion]) -> u32 {
     best_rank
 }
 
+fn completion_needs_case_fix(comp: &Completion) -> bool {
+    comp.flags.contains(CompleteFlags::REPLACES_TOKEN)
+        && comp.r#match.is_exact_or_prefix()
+        && !matches!(comp.r#match.case_fold, CaseSensitivity::Sensitive)
+}
+
 impl<'a> Reader<'a> {
     /// Compute completions and update the pager and/or commandline as needed.
     fn compute_and_apply_completions(&mut self, c: ReadlineCmd) {
@@ -6637,6 +6643,7 @@ impl<'a> Reader<'a> {
         // Decide which completions survived. There may be a lot of them; it would be nice if we could
         // figure out how to avoid copying them here.
         let mut surviving_completions = vec![];
+        let mut deferred_case_fixes = vec![];
         let mut all_matches_exact_or_prefix = true;
         for c in comp {
             // Ignore completions with a less suitable match rank than the best.
@@ -6646,8 +6653,12 @@ impl<'a> Reader<'a> {
 
             // Only use completions that match replace_token.
             let completion_replaces_token = c.flags.contains(CompleteFlags::REPLACES_TOKEN);
+            let needs_case_fix = completion_needs_case_fix(c);
             if completion_replaces_token != will_replace_token {
-                continue;
+                // Keep smart/samecase results even if we prefer not to replace the token.
+                if !needs_case_fix || will_replace_token {
+                    continue;
+                }
             }
 
             // Don't use completions that want to replace, if we cannot replace them.
@@ -6655,11 +6666,18 @@ impl<'a> Reader<'a> {
                 continue;
             }
 
-            // This completion survived.
-            surviving_completions.push(c.clone());
-            all_matches_exact_or_prefix =
-                all_matches_exact_or_prefix && c.r#match.is_exact_or_prefix();
+            all_matches_exact_or_prefix &= c.r#match.is_exact_or_prefix();
+
+            let mut completion = c.clone();
+            if needs_case_fix && !will_replace_token {
+                completion.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
+                deferred_case_fixes.push(completion);
+            } else {
+                surviving_completions.push(completion);
+            }
         }
+
+        surviving_completions.extend(deferred_case_fixes);
 
         if surviving_completions.len() == 1 {
             // After sorting and stuff only one completion is left, use it.
@@ -6735,6 +6753,11 @@ impl<'a> Reader<'a> {
 
         if use_prefix {
             for c in &mut surviving_completions {
+                if completion_needs_case_fix(c) {
+                    // Keep replacement semantics and the original prefix so these completions can
+                    // fix casing when selected.
+                    continue;
+                }
                 c.flags &= !CompleteFlags::REPLACES_TOKEN;
                 c.completion.replace_range(0..common_prefix.len(), L!(""));
             }

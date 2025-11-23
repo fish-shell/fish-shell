@@ -23,6 +23,15 @@ tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 1> cat cmake/
 
+# Keep mixed-case completions visible when typing lowercase (#7944).
+isolated-tmux send-keys C-u C-l 'rm -rf dog Dodo' Enter \
+    'mkdir dog Dodo' Enter C-l \
+    'cd do' Tab
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt {{\d+}}> cd do
+# CHECK: dog/{{ +}}Dodo/
+
 # Correct case in pager when prefixes differ in case (#7743).
 isolated-tmux send-keys C-u C-l 'complete -c foo2 -a "aabc aaBd" -f' Enter C-l \
     'foo2 A' Tab

@@ -1,7 +1,7 @@
 Writing your own completions
 ============================
 
-To specify a completion, use the ``complete`` command. ``complete`` takes as a parameter the name of the command to specify a completion for. For example, to add a completion for the program ``myprog``, start the completion command with ``complete -c myprog ...``
+To specify a completion, use the ``complete`` command. ``complete`` takes as a parameter the name of the command to specify a completion for. For example, to add a completion for the program ``myprog`` (or ``myprog.exe`` on :ref:`Cygwin/MSYS2 <completions-cygwin>`), start the completion command with ``complete -c myprog ...``
 
 For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the :doc:`complete <cmds/complete>` builtin, or write ``complete --help`` inside the ``fish`` shell.
 
@@ -160,4 +160,3 @@ This wide search may be confusing. If you are unsure, your completions probably 
 If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in :ref:`Further help and development <more-help>`.
 
 If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable completionsdir fish``.
-

@@ -7151,25 +7151,25 @@ mod tests {
 
         // See #6130
         validate!(": (:^ ''", "", CompleteFlags::default(), false, ": (: ^''");
-        }
     }
+}
 
-    #[test]
-    fn test_autoshow_prefix_helper() {
-        let ellipsis = get_ellipsis_char();
-        assert_eq!(autoshow_prefix_from_token(L!("git")), L!("git"));
+#[test]
+fn test_autoshow_prefix_helper() {
+    let ellipsis = get_ellipsis_char();
+    assert_eq!(autoshow_prefix_from_token(L!("git")), L!("git"));
 
-        let mut expected = WString::new();
-        expected.push(ellipsis);
-        expected.push_utfstr(L!("longtoken"));
-        assert_eq!(autoshow_prefix_from_token(L!("averylongtoken")), expected);
+    let mut expected = WString::new();
+    expected.push(ellipsis);
+    expected.push_utfstr(L!("longtoken"));
+    assert_eq!(autoshow_prefix_from_token(L!("averylongtoken")), expected);
 
-        let mut expected_path = WString::new();
-        expected_path.push(ellipsis);
-        expected_path.push('/');
-        expected_path.push_utfstr(L!("gamma"));
-        assert_eq!(
-            autoshow_prefix_from_token(L!("/alpha/beta/gamma")),
-            expected_path
-        );
-    }
+    let mut expected_path = WString::new();
+    expected_path.push(ellipsis);
+    expected_path.push('/');
+    expected_path.push_utfstr(L!("gamma"));
+    assert_eq!(
+        autoshow_prefix_from_token(L!("/alpha/beta/gamma")),
+        expected_path
+    );
+}

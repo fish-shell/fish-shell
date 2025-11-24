@@ -13,5 +13,8 @@ proc-macro = true
 [dependencies]
 proc-macro2.workspace = true
 
+[build-dependencies]
+rsconf.workspace = true
+
 [lints]
 workspace = true

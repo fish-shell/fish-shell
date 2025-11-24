@@ -5,6 +5,16 @@
 # This function is called by the __fish_on_interactive function, which is defined in config.fish.
 #
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
+    # Create empty configuration directores if they do not already exist
+    test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/ ||
+        mkdir -p $__fish_config_dir/{completions, conf.d, functions}
+
+    # Create config.fish with some boilerplate if it does not exist
+    test -e $__fish_config_dir/config.fish || echo "\
+if status is-interactive
+# Commands to run in interactive sessions can go here
+end" >$__fish_config_dir/config.fish
+
     # For one-off upgrades of the fish version
     if not set -q __fish_initialized
         set -U __fish_initialized 0
@@ -21,16 +31,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     # If we are starting up for the first time, set various defaults.
     if test $__fish_initialized -lt 3400
-        # Create empty configuration directores if they do not already exist
-        test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/ ||
-            mkdir -p $__fish_config_dir/{completions, conf.d, functions}
-
-        # Create config.fish with some boilerplate if it does not exist
-        test -e $__fish_config_dir/config.fish || echo "\
-if status is-interactive
-    # Commands to run in interactive sessions can go here
-end" >$__fish_config_dir/config.fish
-
         echo yes | fish_config theme save "fish default"
         set -Ue fish_color_keyword fish_color_option
     end

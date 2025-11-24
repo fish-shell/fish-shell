@@ -22,13 +22,6 @@ end" >$__fish_config_dir/config.fish
 
     set -g __fish_active_key_bindings
 
-    # usage: __init_uvar VARIABLE VALUES...
-    function __init_uvar -d "Sets a universal variable if it's not already set"
-        if not set --query $argv[1]
-            set --universal $argv
-        end
-    end
-
     # If we are starting up for the first time, set various defaults.
     if test $__fish_initialized -lt 3400
         echo yes | fish_config theme save "fish default"
@@ -81,7 +74,9 @@ end" >$__fish_config_dir/config.fish
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
         # Make sure some key bindings are set
-        __init_uvar fish_key_bindings fish_default_key_bindings
+        if not set --query fish_key_bindings
+            set --universal fish_key_bindings fish_default_key_bindings
+        end
 
         # Do nothing if the key bindings didn't actually change.
         # This could be because the variable was set to the existing value

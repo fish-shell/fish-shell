@@ -1,0 +1,15 @@
+[package]
+name = "fish-gettext"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+fish-gettext-maps.workspace = true
+once_cell.workspace = true
+phf.workspace = true
+
+[lints]
+workspace = true

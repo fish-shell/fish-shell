@@ -27,7 +27,7 @@ begin
     else
         set rust_extraction_file (mktemp)
         # We need to build to ensure that the proc macro for extracting strings runs.
-        FISH_GETTEXT_EXTRACTION_FILE=$rust_extraction_file cargo check --no-default-features --features=gettext-extract
+        FISH_GETTEXT_EXTRACTION_FILE=$rust_extraction_file cargo check --features=gettext-extract
         or exit 1
     end
 

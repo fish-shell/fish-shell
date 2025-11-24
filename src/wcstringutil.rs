@@ -140,13 +140,18 @@ pub enum CaseSensitivity {
 /// A lightweight value-type describing how closely a string fuzzy-matches another string.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct StringFuzzyMatch {
+    pub from_separator: bool,
     pub typ: ContainType,
     pub case_fold: CaseSensitivity,
 }
 
 impl StringFuzzyMatch {
     pub fn new(typ: ContainType, case_fold: CaseSensitivity) -> Self {
-        Self { typ, case_fold }
+        Self {
+            from_separator: false,
+            typ,
+            case_fold,
+        }
     }
     // Helper to return an exact match.
     #[inline(always)]
@@ -282,8 +287,10 @@ impl StringFuzzyMatch {
             self.case_fold
         };
 
-        // Type dominates fold.
-        effective_type as u32 * 8 + effective_case as u32
+        // Separator dominates type dominates fold.
+        ((self.from_separator as u32) << 4)
+            + ((effective_type as u32) << 2)
+            + (effective_case as u32)
     }
 }
 

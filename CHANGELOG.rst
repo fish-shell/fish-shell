@@ -10,6 +10,7 @@ Deprecations and removed features
 Interactive improvements
 ------------------------
 - When typing immediately after starting fish, the first prompt is now rendered correctly.
+- Completion accuracy was improved for file paths containing ``=`` or ``:`` (:issue:`5363`).
 
 Improved terminal support
 -------------------------

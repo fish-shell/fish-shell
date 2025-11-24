@@ -160,8 +160,8 @@ dependencies = [
  "errno",
  "fish-build-helper",
  "fish-build-man-pages",
+ "fish-gettext",
  "fish-gettext-extraction",
- "fish-gettext-maps",
  "fish-gettext-mo-file-parser",
  "fish-printf",
  "fish-tempfile",
@@ -172,7 +172,6 @@ dependencies = [
  "num-traits",
  "once_cell",
  "pcre2",
- "phf 0.12.1",
  "phf_codegen 0.12.1",
  "portable-atomic",
  "rand 0.9.2",
@@ -198,6 +197,15 @@ version = "0.0.0"
 dependencies = [
  "fish-build-helper",
  "rsconf",
+]
+
+[[package]]
+name = "fish-gettext"
+version = "0.0.0"
+dependencies = [
+ "fish-gettext-maps",
+ "once_cell",
+ "phf 0.12.1",
 ]
 
 [[package]]

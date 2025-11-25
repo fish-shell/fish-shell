@@ -257,7 +257,7 @@ pub fn expand_escape_variable(var: &EnvVar) -> WString {
     let lst = var.as_list();
     for el in lst {
         if !buff.is_empty() {
-            buff.push_str("  ");
+            buff.push_str(" ");
         }
 
         // We want to use quotes if we have more than one string, or the string contains a space.

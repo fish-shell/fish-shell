@@ -168,10 +168,10 @@ end
 begin
     argparse h/help -- help --help me -h 'a lot more'
     set -l
-    # CHECK: _flag_h '--help'  '-h'
-    # CHECK: _flag_help '--help'  '-h'
-    # CHECK: argv 'help'  'me'  'a lot more'
-    # CHECK: argv_opts '--help'  '-h'
+    # CHECK: _flag_h '--help' '-h'
+    # CHECK: _flag_help '--help' '-h'
+    # CHECK: argv 'help' 'me' 'a lot more'
+    # CHECK: argv_opts '--help' '-h'
 end
 
 # Required, optional, and multiple flags
@@ -182,12 +182,12 @@ begin
     # CHECK: _flag_abc ABC
     # CHECK: _flag_d
     # CHECK: _flag_def
-    # CHECK: _flag_g 'g1'  'g2'  'g3'
-    # CHECK: _flag_ghk 'g1'  'g2'  'g3'
+    # CHECK: _flag_g 'g1' 'g2' 'g3'
+    # CHECK: _flag_ghk 'g1' 'g2' 'g3'
     # CHECK: _flag_h --help
     # CHECK: _flag_help --help
-    # CHECK: argv 'help'  'me'
-    # CHECK: argv_opts '--help'  '--ghk=g1'  '--abc=ABC'  '--ghk'  'g2'  '-d'  '-g'  'g3'
+    # CHECK: argv 'help' 'me'
+    # CHECK: argv_opts '--help' '--ghk=g1' '--abc=ABC' '--ghk' 'g2' '-d' '-g' 'g3'
 end
 
 # --stop-nonopt works
@@ -198,8 +198,8 @@ begin
     # CHECK: _flag_abc A2
     # CHECK: _flag_h -h
     # CHECK: _flag_help -h
-    # CHECK: argv 'non-opt'  'second non-opt'  '--help'
-    # CHECK: argv_opts '-a'  'A1'  '-h'  '--abc'  'A2'
+    # CHECK: argv 'non-opt' 'second non-opt' '--help'
+    # CHECK: argv_opts '-a' 'A1' '-h' '--abc' 'A2'
 end
 
 # Implicit int flags work
@@ -207,7 +207,7 @@ begin
     argparse '#-val' -- abc -123 def
     set -l
     # CHECK: _flag_val 123
-    # CHECK: argv 'abc'  'def'
+    # CHECK: argv 'abc' 'def'
     # CHECK: argv_opts -123
 end
 begin
@@ -215,11 +215,11 @@ begin
     set -l
     # CHECK: _flag_t woohoo
     # CHECK: _flag_token woohoo
-    # CHECK: _flag_v '-v'  '--verbose'
+    # CHECK: _flag_v '-v' '--verbose'
     # CHECK: _flag_val -234
-    # CHECK: _flag_verbose '-v'  '--verbose'
-    # CHECK: argv 'a1'  'a2'
-    # CHECK: argv_opts '-123'  '--token'  'woohoo'  '--234'  '-v'  '--verbose'
+    # CHECK: _flag_verbose '-v' '--verbose'
+    # CHECK: argv 'a1' 'a2'
+    # CHECK: argv_opts '-123' '--token' 'woohoo' '--234' '-v' '--verbose'
 end
 
 # Should be set to 987
@@ -228,7 +228,7 @@ begin
     set -l
     # CHECK: _flag_m 987
     # CHECK: _flag_max 987
-    # CHECK: argv 'argle'  'bargle'
+    # CHECK: argv 'argle' 'bargle'
     # CHECK: argv_opts -987
 end
 
@@ -238,8 +238,8 @@ begin
     set -l
     # CHECK: _flag_m 765
     # CHECK: _flag_max 765
-    # CHECK: argv 'argle'  'bargle'
-    # CHECK: argv_opts '-987'  '--max'  '765'
+    # CHECK: argv 'argle' 'bargle'
+    # CHECK: argv_opts '-987' '--max' '765'
 end
 
 # Bool short flag only
@@ -247,42 +247,42 @@ begin
     argparse C v -- -C -v arg1 -v arg2
     set -l
     # CHECK: _flag_C -C
-    # CHECK: _flag_v '-v'  '-v'
-    # CHECK: argv 'arg1'  'arg2'
-    # CHECK: argv_opts '-C'  '-v'  '-v'
+    # CHECK: _flag_v '-v' '-v'
+    # CHECK: argv 'arg1' 'arg2'
+    # CHECK: argv_opts '-C' '-v' '-v'
 end
 
 # Value taking short flag only
 begin
     argparse 'x=' v/verbose -- --verbose arg1 -v -x arg2
     set -l
-    # CHECK: _flag_v '--verbose'  '-v'
-    # CHECK: _flag_verbose '--verbose'  '-v'
+    # CHECK: _flag_v '--verbose' '-v'
+    # CHECK: _flag_verbose '--verbose' '-v'
     # CHECK: _flag_x arg2
     # CHECK: argv arg1
-    # CHECK: argv_opts '--verbose'  '-v'  '-x'  'arg2'
+    # CHECK: argv_opts '--verbose' '-v' '-x' 'arg2'
 end
 
 # Implicit int short flag only
 begin
     argparse 'x#' v/verbose -- -v -v argle -v -x 321 bargle
     set -l
-    # CHECK: _flag_v '-v'  '-v'  '-v'
-    # CHECK: _flag_verbose '-v'  '-v'  '-v'
+    # CHECK: _flag_v '-v' '-v' '-v'
+    # CHECK: _flag_verbose '-v' '-v' '-v'
     # CHECK: _flag_x 321
-    # CHECK: argv 'argle'  'bargle'
-    # CHECK: argv_opts '-v'  '-v'  '-v'  '-x'  '321'
+    # CHECK: argv 'argle' 'bargle'
+    # CHECK: argv_opts '-v' '-v' '-v' '-x' '321'
 end
 
 # Implicit int short flag only with custom validation passes
 begin
     argparse 'x#!_validate_int --max 500' v/verbose -- -v -v -x 499 -v
     set -l
-    # CHECK: _flag_v '-v'  '-v'  '-v'
-    # CHECK: _flag_verbose '-v'  '-v'  '-v'
+    # CHECK: _flag_v '-v' '-v' '-v'
+    # CHECK: _flag_verbose '-v' '-v' '-v'
     # CHECK: _flag_x 499
     # CHECK: argv
-    # CHECK: argv_opts '-v'  '-v'  '-x'  '499'  '-v'
+    # CHECK: argv_opts '-v' '-v' '-x' '499' '-v'
 end
 
 # Implicit int short flag only with custom validation fails
@@ -357,7 +357,7 @@ begin
     argparse -i o -- --long=value --long
     or echo unexpected argparse return status $status >&2
     set -l
-    # CHECK: argv '--long=value'  '--long'
+    # CHECK: argv '--long=value' '--long'
     # CHECK: argv_opts
 end
 
@@ -417,7 +417,7 @@ begin
     or echo unexpected argparse return status $status >&2
     set -l
     # CHECK: argv
-    # CHECK: argv_opts '--long=value'  '--long'
+    # CHECK: argv_opts '--long=value' '--long'
 end
 
 
@@ -444,7 +444,7 @@ begin
     argparse -U none -i b= -- -abv=val in --long between -u
     set -l
     # CHECK: _flag_b v=val
-    # CHECK: argv '-a'  'in'  '--long'  'between'  '-u'
+    # CHECK: argv '-a' 'in' '--long' 'between' '-u'
     # CHECK: argv_opts -bv=val
 end
 
@@ -452,16 +452,16 @@ begin
     argparse -U none b= -- -abv in --long between -u
     set -l
     # CHECK: _flag_b v
-    # CHECK: argv 'in'  'between'
-    # CHECK: argv_opts '-abv'  '--long'  '-u'
+    # CHECK: argv 'in' 'between'
+    # CHECK: argv_opts '-abv' '--long' '-u'
 end
 
 begin
     argparse -iU required b= -- -abv -b -b --long -b -u -b
     set -l
     # CHECK: _flag_b -b
-    # CHECK: argv '-abv'  '--long'  '-b'  '-u'  '-b'
-    # CHECK: argv_opts '-b'  '-b'
+    # CHECK: argv '-abv' '--long' '-b' '-u' '-b'
+    # CHECK: argv_opts '-b' '-b'
 end
 
 begin
@@ -469,7 +469,7 @@ begin
     set -l
     # CHECK: _flag_b -b
     # CHECK: argv
-    # CHECK: argv_opts '-abv'  '-b'  '-b'  '--long'  '-b'  '-u'  '-b'
+    # CHECK: argv_opts '-abv' '-b' '-b' '--long' '-b' '-u' '-b'
 end
 
 begin
@@ -495,7 +495,7 @@ begin
     # CHECK: _flag_i 2
     # CHECK: _flag_o 3
     # CHECK: argv
-    # CHECK: argv_opts '-i'  '2'  '-o'  '3'
+    # CHECK: argv_opts '-i' '2' '-o' '3'
 end
 
 # long-only flags
@@ -505,7 +505,7 @@ begin
     # CHECK: _flag_foo --foo
     # CHECK: _flag_installed no
     # CHECK: argv
-    # CHECK: argv_opts '--installed=no'  '--foo'
+    # CHECK: argv_opts '--installed=no' '--foo'
 end
 
 # long-only flags with one letter
@@ -515,7 +515,7 @@ begin
     # CHECK: _flag_f --f
     # CHECK: _flag_i no
     # CHECK: argv
-    # CHECK: argv_opts '--i=no'  '--f'
+    # CHECK: argv_opts '--i=no' '--f'
 end
 
 begin
@@ -524,7 +524,7 @@ begin
     # CHECK: _flag_foo --foo
     # CHECK: _flag_installed 5
     # CHECK: argv
-    # CHECK: argv_opts '--installed=5'  '--foo'
+    # CHECK: argv_opts '--installed=5' '--foo'
 end
 
 begin
@@ -533,7 +533,7 @@ begin
     # CHECK: _flag_installed 5
     # CHECK: _flag_num 5
     # CHECK: argv
-    # CHECK: argv_opts '--installed=5'  '-5'
+    # CHECK: argv_opts '--installed=5' '-5'
 end
 
 begin
@@ -710,19 +710,19 @@ end
 begin
     argparse 'a/long&' -- before -a inbetween --long after
     set -l
-    # CHECK: _flag_a '-a'  '--long'
-    # CHECK: _flag_long '-a'  '--long'
-    # CHECK: argv 'before'  'inbetween'  'after'
+    # CHECK: _flag_a '-a' '--long'
+    # CHECK: _flag_long '-a' '--long'
+    # CHECK: argv 'before' 'inbetween' 'after'
     # CHECK: argv_opts
 end
 
 begin
     argparse 'a/long=+&' '#int&' -- -123 before -a -a inbetween -astuck ater -long=long
     set -l
-    # CHECK: _flag_a '-a'  'stuck'  'long'
+    # CHECK: _flag_a '-a' 'stuck' 'long'
     # CHECK: _flag_int 123
-    # CHECK: _flag_long '-a'  'stuck'  'long'
-    # CHECK: argv 'before'  'inbetween'  'ater'
+    # CHECK: _flag_long '-a' 'stuck' 'long'
+    # CHECK: argv 'before' 'inbetween' 'ater'
     # CHECK: argv_opts
 end
 
@@ -734,18 +734,18 @@ begin
     # CHECK: _flag_b -b
     # CHECK: _flag_d 345
     # CHECK: argv
-    # CHECK: argv_opts '-a'  '-b'
+    # CHECK: argv_opts '-a' '-b'
 end
 
 begin
     argparse 'd&' a b 'v='  -- 0 -adbv124 1 -abdv125 2 -dabv124 3 -vd3
     set -l
-    # CHECK: _flag_a '-a'  '-a'  '-a'
-    # CHECK: _flag_b '-b'  '-b'  '-b'
-    # CHECK: _flag_d '-d'  '-d'  '-d'
+    # CHECK: _flag_a '-a' '-a' '-a'
+    # CHECK: _flag_b '-b' '-b' '-b'
+    # CHECK: _flag_d '-d' '-d' '-d'
     # CHECK: _flag_v d3
-    # CHECK: argv '0'  '1'  '2'  '3'
-    # CHECK: argv_opts '-abv124'  '-abv125'  '-abv124'  '-vd3'
+    # CHECK: argv '0' '1' '2' '3'
+    # CHECK: argv_opts '-abv124' '-abv125' '-abv124' '-vd3'
 end
 
 argparse a/alpha -- --banna=value
@@ -758,10 +758,10 @@ argparse a/alpha -- --alpha=value --banna=value
 begin
     argparse long valu=+ -- --lon -long -lon -valu=3 -valu 4 -val=3 -val 4
     set -lL
-    # CHECK: _flag_long '--long'  '--long'  '--long'
-    # CHECK: _flag_valu '3'  '4'  '3'  '4'
+    # CHECK: _flag_long '--long' '--long' '--long'
+    # CHECK: _flag_valu '3' '4' '3' '4'
     # CHECK: argv
-    # CHECK: argv_opts '--lon'  '-long'  '-lon'  '-valu=3'  '-valu'  '4'  '-val=3'  '-val'  '4'
+    # CHECK: argv_opts '--lon' '-long' '-lon' '-valu=3' '-valu' '4' '-val=3' '-val' '4'
     argparse amb ambig -- -am
     # CHECKERR: argparse: -am: unknown option
     argparse a ambig -- -ambig
@@ -789,10 +789,10 @@ begin
     set -l _flag_o previous value
     argparse 'o/opt=*' -- -o non-value -oval --opt arg --opt=456
     set -l
-    # CHECK: _flag_o ''  'val'  ''  '456'
-    # CHECK: _flag_opt ''  'val'  ''  '456'
-    # CHECK: argv 'non-value'  'arg'
-    # CHECK: argv_opts '-o'  '-oval'  '--opt'  '--opt=456'
+    # CHECK: _flag_o '' 'val' '' '456'
+    # CHECK: _flag_opt '' 'val' '' '456'
+    # CHECK: argv 'non-value' 'arg'
+    # CHECK: argv_opts '-o' '-oval' '--opt' '--opt=456'
 end
 
 # Check that the argparse's are properly wrapped in begin blocks

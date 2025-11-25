@@ -132,7 +132,9 @@ function fish_delta
                         end
                     end
                     function __fish_delta_diff_maybe_file -a maybe_default_file
-                        set -l tmpfile (mktemp)
+                        # TODO Use "set -l foo (cat)" instead of the temp file.
+                        # https://github.com/fish-shell/fish-shell/issues/206
+                        set -l tmpfile (__fish_mktemp_relative fish-delta)
                         cat $maybe_default_file >$tmpfile
                         __fish_delta_diff $tmpfile
                         command rm $tmpfile

@@ -50,9 +50,6 @@ function fish_config --description "Launch fish's web based configuration"
         return 1
     end
 
-    # Variables a theme is allowed to set
-    set -l theme_var_filter '^fish_(?:pager_)?color_.*$'
-
     switch $cmd
         case prompt
             # prompt - for prompt switching
@@ -114,12 +111,7 @@ function fish_config --description "Launch fish's web based configuration"
                         return 1
                     end
                     echo Overwriting
-                    # Skip the cp if unnecessary,
-                    # or we'd throw an error on a stock fish.
-                    for function in fish_prompt fish_right_prompt fish_mode_prompt
-                        path is $__fish_config_dir/functions/$function.fish
-                        and cp $__fish_config_dir/functions/$function.fish{,.bak}
-                    end
+                    __fish_backup_config_files functions/{fish_prompt,fish_right_prompt,fish_mode_prompt}.fish
 
                     if set -q argv[1]
                         set -l prompt_path (__fish_config_list_prompts $argv[1])
@@ -237,7 +229,7 @@ function fish_config --description "Launch fish's web based configuration"
                         # variables are defined, even if empty.
                         # This branch is only reachable in the case of `theme save` so $scope is always `-U`.
 
-                        for color in (set --names | string match -r $theme_var_filter)
+                        for color in (__fish_theme_variables)
                             # Cache the value from whatever scope currently defines it
                             set -l value $$color
                             set -eg $color
@@ -253,7 +245,7 @@ function fish_config --description "Launch fish's web based configuration"
                         __fish_config_cat_theme $argv[1]
                         or return
                     end |
-                        string match -r -- $theme_var_filter |
+                        string match -r -- (__fish_theme_variable_filter) |
                         while read -lat toks
                             # If we're supposed to set universally, remove any shadowing globals
                             # so the change takes effect immediately (and there's no warning).
@@ -281,7 +273,7 @@ function fish_config --description "Launch fish's web based configuration"
                         return 1
                     end
                     # Write the current theme in .theme format, to stdout.
-                    set -L | string match -r $theme_var_filter
+                    set -L | string match -r (__fish_theme_variable_filter)
                 case '*'
                     echo "No such command: $cmd" >&2
                     return 1

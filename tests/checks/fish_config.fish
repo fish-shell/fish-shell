@@ -149,11 +149,11 @@ fish_config theme show ayu-dark ayu-light | string match -r '^.*ayu.*'
 mkdir $__fish_config_dir/themes
 touch $__fish_config_dir/themes/custom-from-userconf.theme
 fish_config theme show | grep -E '[^-]default|base16-default-dark|custom-from-userconf'
+# CHECK: {{.*}}default{{\x1b\[m}}
 # CHECK: {{.*}}custom-from-userconf{{\x1b\[m}}
 # CHECK: {{.*}}base16-default-dark{{\x1b\[m}}
 # CHECK: {{.*}}default-dark{{\x1b\[m}}
 # CHECK: {{.*}}default-light{{\x1b\[m}}
-# CHECK: {{.*}}default{{\x1b\[m}}
 
 # Override a default theme with different colors.
 __fish_data_with_file themes/none.theme \

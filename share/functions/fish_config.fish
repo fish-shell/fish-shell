@@ -252,20 +252,17 @@ function fish_config --description "Launch fish's web based configuration"
                     begin
                         __fish_config_cat_theme $argv[1]
                         or return
-                    end | while read -lat toks
-                        # The whitelist allows only color variables.
-                        # Not the specific list, but something named *like* a color variable.
-                        # This also takes care of empty lines and comment lines.
-                        string match -rq -- $theme_var_filter $toks[1]
-                        or continue
-                        # If we're supposed to set universally, remove any shadowing globals
-                        # so the change takes effect immediately (and there's no warning).
-                        if test x"$scope" = x-U; and set -qg $toks[1]
-                            set -eg $toks[1]
+                    end |
+                        string match -r -- $theme_var_filter |
+                        while read -lat toks
+                            # If we're supposed to set universally, remove any shadowing globals
+                            # so the change takes effect immediately (and there's no warning).
+                            if test x"$scope" = x-U; and set -qg $toks[1]
+                                set -eg $toks[1]
+                            end
+                            set $scope $toks
+                            set -a defined_colors $toks[1]
                         end
-                        set $scope $toks
-                        set -a defined_colors $toks[1]
-                    end
 
                     # Set all colors that aren't mentioned to empty
                     for c in $known_colors

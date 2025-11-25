@@ -14,8 +14,6 @@
 .gitattributes export-ignore
 .gitignore export-ignore
 /build_tools/make_tarball.sh export-ignore
-/debian export-ignore
-/debian/* export-ignore
 /.github export-ignore
 /.github/* export-ignore
 /.builds export-ignore

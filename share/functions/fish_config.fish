@@ -248,15 +248,11 @@ function fish_config --description "Launch fish's web based configuration"
 
                     # If we are choosing a theme or saving from a named theme, load the theme now.
                     # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
-                    set -l theme_path (__fish_config_list_themes $argv[1])[1]
-                    if not set -q theme_path[1]
-                        echo >&2 "No such theme: $argv[1]"
-                        echo >&2 Searched (__fish_config_theme_dir) "and `status list-files tools/web_config/themes`"
-                        return 1
-                    end
-
                     set -l defined_colors
-                    __fish_data_with_file $theme_path cat | while read -lat toks
+                    begin
+                        __fish_config_cat_theme $argv[1]
+                        or return
+                    end | while read -lat toks
                         # The whitelist allows only color variables.
                         # Not the specific list, but something named *like* a color variable.
                         # This also takes care of empty lines and comment lines.
@@ -304,6 +300,26 @@ function __fish_config_list_prompts
         set --erase prompt_paths[2..]
     end
     string join \n -- $prompt_paths
+end
+
+function __fish_config_cat_theme -a theme_name
+    switch $theme_name
+        case 'fish default'
+            set theme_name fish-default
+        case 'ayu Dark' 'ayu Light' 'ayu Mirage' 'Base16 Default Dark' \
+            'Base16 Default Light' 'Base16 Eighties' 'Bay Cruise' Dracula \
+            Fairground 'Just a Touch' Lava 'Mono Lace' 'Mono Smoke' None Nord \
+            'Old School' Seaweed 'Snow Day' 'Solarized Dark' 'Solarized Light' \
+            'Tomorrow Night Bright' 'Tomorrow Night' Tomorrow
+            set theme_name (string lower (string replace -a " " "-" $theme_name))
+    end
+    set -l theme_path (__fish_config_list_themes $theme_name)[1]
+    if not set -q theme_path[1]
+        echo >&2 "No such theme: $argv[1]"
+        echo >&2 Searched (__fish_config_theme_dir) "and `status list-files tools/web_config/themes`"
+        return 1
+    end
+    __fish_data_with_file $theme_path cat
 end
 
 function __fish_config_list_themes

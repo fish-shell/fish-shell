@@ -121,46 +121,46 @@ diff \
     (fish_config theme | psub -s config-theme)
 
 fish_config theme list | string match -r \
-'^(?:ayu Dark|Base16 Default Light|coolbeans|fish default|None|'\
-'Tomorrow Night Bright|Tomorrow Night|Tomorrow)$'
-# CHECK: ayu Dark
-# CHECK: Base16 Default Light
+'^(?:ayu-dark|base16-default-light|coolbeans|fish-default|none|'\
+'tomorrow-night-bright|tomorrow-night|tomorrow)$'
+# CHECK: ayu-dark
+# CHECK: base16-default-light
 # CHECK: coolbeans
-# CHECK: fish default
-# CHECK: None
-# CHECK: Tomorrow Night Bright
-# CHECK: Tomorrow Night
-# CHECK: Tomorrow
+# CHECK: fish-default
+# CHECK: none
+# CHECK: tomorrow-night-bright
+# CHECK: tomorrow-night
+# CHECK: tomorrow
 
-fish_config theme show "fish default"
+fish_config theme show "fish-default"
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}
 # CHECK: /bright/vixens{{\x1b\[m}} jump{{\x1b\[m}} |{{\x1b\[m}} "fowl"{{\x1b\[m}} > quack{{\x1b\[m}} &{{\x1b\[m}} # This is a comment
 # CHECK: {{\x1b\[m}}echo{{\x1b\[m}} 'Errors are the portal to discovery
 # CHECK: {{\x1b\[m}}Th{{\x1b\[m}}is an autosuggestion
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}fish default{{\x1b\[m}}
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}fish-default{{\x1b\[m}}
 # CHECK: {{\x1b\[m}}/bright/vixens{{\x1b\[m}} {{\x1b\[36m}}jump{{\x1b\[m}} {{\x1b\[36m}}{{\x1b\[1m}}|{{\x1b\[m}} {{\x1b\[33m}}"fowl"{{\x1b\[m}} {{\x1b\[36m}}{{\x1b\[1m}}> quack{{\x1b\[m}} {{\x1b\[32m}}&{{\x1b\[m}}{{\x1b\[31m}} # This is a comment
 # CHECK: {{\x1b\[m}}{{\x1b\[m}}echo{{\x1b\[m}} {{\x1b\[91m}}'{{\x1b\[33m}}Errors are the portal to discovery
 # CHECK: {{\x1b\[m}}{{\x1b\[m}}Th{{\x1b\[m}}{{\x1b\[90m}}is an autosuggestion
 
-fish_config theme show ayu\ Dark ayu\ Light | string match -r '^.*ayu.*'
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu Dark{{\x1b\[m}}
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu Light{{\x1b\[m}}
+fish_config theme show ayu-dark ayu-light | string match -r '^.*ayu.*'
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu-dark{{\x1b\[m}}
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu-light{{\x1b\[m}}
 
 mkdir $__fish_config_dir/themes
 touch $__fish_config_dir/themes/custom-from-userconf.theme
-fish_config theme show | grep -E 'fish default|Default Dark|custom-from-userconf'
+fish_config theme show | grep -E 'fish-default|default-dark|custom-from-userconf'
 # CHECK: {{.*}}custom-from-userconf{{\x1b\[m}}
-# CHECK: {{.*}}Base16 Default Dark{{\x1b\[m}}
-# CHECK: {{.*}}fish default{{\x1b\[m}}
+# CHECK: {{.*}}base16-default-dark{{\x1b\[m}}
+# CHECK: {{.*}}fish-default{{\x1b\[m}}
 
 # Override a default theme with different colors.
-__fish_data_with_file tools/web_config/themes/None.theme \
-    cat >$__fish_config_dir/themes/"fish default.theme"
-fish_config theme show | grep -E 'fish default|Base16 Default Dark' -A1
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}fish default{{\x1b\[m}}
+__fish_data_with_file tools/web_config/themes/none.theme \
+    cat >$__fish_config_dir/themes/fish-default.theme
+fish_config theme show | grep -E 'fish-default|base16-default-dark' -A1
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}fish-default{{\x1b\[m}}
 # CHECK: {{\x1b\[m}}/bright/vixens{{\x1b\[m}} {{\x1b\[m}}jump{{\x1b\[m}}{{.*}}
 # CHECK: --
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}Base16 Default Dark{{\x1b\[m}}
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}base16-default-dark{{\x1b\[m}}
 # CHECK: {{.*}}/bright/vixens{{.*}}
 
 function print-sample-colors
@@ -189,7 +189,7 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
     # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
     # CHECK: $fish_color_normal[1]: |yellow|
 
-    fish_config theme choose 'fish default'
+    fish_config theme choose 'fish-default'
     print-sample-colors
     # CHECK: normal=normal
     # CHECK: autosuggestion=brblack
@@ -200,7 +200,7 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
     # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
     # CHECK: $fish_color_normal[1]: |yellow|
 
-    echo yes | fish_config theme save 'fish default'
+    echo yes | fish_config theme save 'fish-default'
     set -S fish_color_normal
     # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
     # CHECK: $fish_color_normal[1]: |normal|

@@ -25,7 +25,7 @@ end" >$__fish_config_dir/config.fish
 
     # If we are starting up for the first time, set various defaults.
     if test $__fish_initialized -lt 3400
-        echo yes | fish_config theme save "fish default"
+        echo yes | fish_config theme save fish-default
         set -Ue fish_color_keyword fish_color_option
     end
     if test $__fish_initialized -lt 3800 && test "$fish_color_search_match[1]" = bryellow

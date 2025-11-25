@@ -113,7 +113,7 @@ These colors, and many more, can be changed by running ``fish_config``, or by mo
 
 For example, if you want to disable (almost) all coloring::
 
-  fish_config theme choose None
+  fish_config theme choose none
 
 This picks the "none" theme. To see all themes::
 

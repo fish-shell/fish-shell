@@ -152,7 +152,7 @@ function fish_config --description "Launch fish's web based configuration"
 
             switch $cmd
                 case list ''
-                    __fish_config_list_theme_names
+                    __fish_theme_names
                     return
                 case demo
                     echo -ns (set_color $fish_color_command || set_color $fish_color_normal) /bright/vixens
@@ -185,7 +185,7 @@ function fish_config --description "Launch fish's web based configuration"
                     echo -s (set_color normal; set_color --underline) Current (set_color normal)
                     fish_config theme demo
 
-                    for themename in (__fish_config_list_theme_names $argv)
+                    for themename in (__fish_theme_names $argv)
                         contains -- $themename $used_themes
                         and continue
                         set -a used_themes $themename
@@ -218,32 +218,12 @@ end
 
 function __fish_config_list_prompts
     set -lx dir
-    set -l prompt_paths (__fish_config_matching tools/web_config/sample_prompts .fish $argv)
+    set -l prompt_paths (__fish_config_files tools/web_config/sample_prompts .fish $argv)
     if [ (count $argv) = 1 ] && set -q prompt_paths[2]
         echo >&2 "fish_config: internal error: multiple prompts matching '$argv' ??"
         set --erase prompt_paths[2..]
     end
     string join \n -- $prompt_paths
-end
-
-function __fish_config_cat_theme -a theme_name
-    switch $theme_name
-        case 'fish default'
-            set theme_name default
-        case 'ayu Dark' 'ayu Light' 'ayu Mirage' 'Base16 Default Dark' \
-            'Base16 Default Light' 'Base16 Eighties' 'Bay Cruise' Dracula \
-            Fairground 'Just a Touch' Lava 'Mono Lace' 'Mono Smoke' None Nord \
-            'Old School' Seaweed 'Snow Day' 'Solarized Dark' 'Solarized Light' \
-            'Tomorrow Night Bright' 'Tomorrow Night' Tomorrow
-            set theme_name (string lower (string replace -a " " "-" $theme_name))
-    end
-    set -l theme_path (__fish_config_list_themes $theme_name)[1]
-    if not set -q theme_path[1]
-        echo >&2 "No such theme: $argv[1]"
-        echo >&2 Searched (__fish_config_theme_dir) "and `status list-files tools/web_config/themes`"
-        return 1
-    end
-    __fish_data_with_file $theme_path cat
 end
 
 function __fish_config_theme_choose
@@ -291,7 +271,9 @@ function __fish_config_theme_choose
     # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
     set -l defined_colors
     begin
-        __fish_config_cat_theme $argv[1]
+        set -l theme_name $argv[1]
+        __fish_config_theme_canonicalize
+        __fish_theme_cat $theme_name
         or return
     end |
         string match -r -- (__fish_theme_variable_filter) |
@@ -317,37 +299,22 @@ function __fish_config_theme_choose
 
 end
 
-function __fish_config_list_themes
-    set -lx dir (__fish_config_theme_dir)
-    __fish_config_matching tools/web_config/themes .theme $argv
-end
-
-function __fish_config_theme_dir
-    echo $__fish_config_dir/themes
-end
-
-function __fish_config_list_theme_names
-    __fish_config_list_themes $argv |
-        string replace -r '.*/([^/]*).theme$' '$1'
-end
-
-# NOTE: This outputs a mix of absolute and relative paths!
-function __fish_config_matching
-    set -l prefix $argv[1]
-    set -l suffix $argv[2]
-    set -e argv[1..2]
-    set -l paths
-    if not set -q argv[1]
-        set paths $dir/*$suffix
-    else
-        set paths (path filter $dir/$argv$suffix)
+function __fish_config_theme_canonicalize --no-scope-shadowing
+    # theme_name
+    if not path is (__fish_theme_dir)/$theme_name.theme
+        switch $theme_name
+            case 'fish default'
+                set theme_name default
+            case 'ayu Dark' 'ayu Light' 'ayu Mirage' \
+                'Base16 Default Dark' 'Base16 Default Light' 'Base16 Eighties' \
+                'Bay Cruise' Dracula Fairground 'Just a Touch' Lava \
+                'Mono Lace' 'Mono Smoke' \
+                None Nord 'Old School' Seaweed 'Snow Day' \
+                'Solarized Dark' 'Solarized Light' \
+                'Tomorrow Night Bright' 'Tomorrow Night' Tomorrow
+                set theme_name (string lower (string replace -a " " "-" $theme_name))
+        end
     end
-    if not set -q argv[1]
-        set -a paths (status list-files $prefix)
-    else
-        set -a paths (status list-files "$prefix/"$argv$suffix)
-    end
-    string join \n $paths
 end
 
 function __fish_config_prompt_reset

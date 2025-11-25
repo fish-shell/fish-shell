@@ -3596,6 +3596,9 @@ msgstr "使用可移植输出格式"
 msgid "Use the visible width, excluding escape sequences"
 msgstr "使用可见宽度，不包括转义序列"
 
+msgid "Use this variant, overriding $fish_terminal_color_theme"
+msgstr ""
+
 msgid "Verbose mode"
 msgstr "详细模式"
 

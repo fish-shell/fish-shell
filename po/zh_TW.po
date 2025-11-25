@@ -3571,6 +3571,9 @@ msgstr "使用可攜的輸出格式"
 msgid "Use the visible width, excluding escape sequences"
 msgstr "使用可見寬度，排除轉義序列"
 
+msgid "Use this variant, overriding $fish_terminal_color_theme"
+msgstr ""
+
 msgid "Verbose mode"
 msgstr "詳盡模式"
 

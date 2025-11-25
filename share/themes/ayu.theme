@@ -1,0 +1,66 @@
+# name: ayu
+# url: https://github.com/dempfi/ayu
+
+[light]
+# preferred_background: FAFAFA
+fish_color_normal 575F66
+fish_color_autosuggestion 8A9199
+fish_color_cancel -r
+fish_color_command 55B4D4
+fish_color_comment ABB0B6
+fish_color_cwd 399EE6
+fish_color_cwd_root red
+fish_color_end ED9366
+fish_color_error F51818
+fish_color_escape 4CBF99
+fish_color_history_current --bold
+fish_color_host normal
+fish_color_host_remote yellow
+fish_color_keyword 55B4D4
+fish_color_operator FF9940
+fish_color_option 575F66
+fish_color_param 575F66
+fish_color_quote 86B300
+fish_color_redirection A37ACC
+fish_color_search_match --background=FF9940 --bold
+fish_color_selection --background=FF9940 --bold
+fish_color_status red
+fish_color_user brgreen
+fish_color_valid_path --underline
+fish_pager_color_completion normal
+fish_pager_color_description B3A06D yellow
+fish_pager_color_prefix normal --bold --underline
+fish_pager_color_progress brwhite --background=cyan --bold
+fish_pager_color_selected_background --background=FF9940
+
+[dark]
+# preferred_background: 0A0E14
+fish_color_normal B3B1AD
+fish_color_command 39BAE6
+fish_color_quote C2D94C
+fish_color_redirection FFEE99
+fish_color_end F29668
+fish_color_error FF3333
+fish_color_param B3B1AD
+fish_color_comment 626A73
+fish_color_selection --background=E6B450 --bold
+fish_color_search_match --background=E6B450 --bold
+fish_color_history_current --bold
+fish_color_operator E6B450
+fish_color_escape 95E6CB
+fish_color_cwd 59C2FF
+fish_color_cwd_root red
+fish_color_valid_path --underline
+fish_color_autosuggestion 4D5566
+fish_color_user brgreen
+fish_color_host normal
+fish_color_cancel -r
+fish_pager_color_completion normal
+fish_pager_color_description B3A06D yellow
+fish_pager_color_prefix normal --bold --underline
+fish_pager_color_progress brwhite --background=cyan --bold
+fish_pager_color_selected_background --background=E6B450
+fish_color_option B3B1AD
+fish_color_keyword 39BAE6
+fish_color_host_remote yellow
+fish_color_status red

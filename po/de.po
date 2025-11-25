@@ -3569,6 +3569,9 @@ msgstr ""
 msgid "Use the visible width, excluding escape sequences"
 msgstr ""
 
+msgid "Use this variant, overriding $fish_terminal_color_theme"
+msgstr ""
+
 msgid "Verbose mode"
 msgstr "Ausführlicher Modus"
 

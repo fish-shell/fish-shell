@@ -239,6 +239,8 @@ pub struct ElectricVar {
     flags: electric::ElectricVarFlags,
 }
 
+pub const FISH_TERMINAL_COLOR_THEME_VAR: &wstr = L!("fish_terminal_color_theme");
+
 // Keep sorted alphabetically
 #[rustfmt::skip]
 pub const ELECTRIC_VARIABLES: &[ElectricVar] = &[
@@ -249,6 +251,7 @@ pub const ELECTRIC_VARIABLES: &[ElectricVar] = &[
     ElectricVar{name: L!("fish_kill_signal"), flags:electric::READONLY | electric::COMPUTED},
     ElectricVar{name: L!("fish_killring"), flags:electric::READONLY | electric::COMPUTED},
     ElectricVar{name: L!("fish_pid"), flags:electric::READONLY},
+    ElectricVar{name: FISH_TERMINAL_COLOR_THEME_VAR, flags:electric::READONLY},
     ElectricVar{name: L!("history"), flags:electric::READONLY | electric::COMPUTED},
     ElectricVar{name: L!("hostname"), flags:electric::READONLY},
     ElectricVar{name: L!("pipestatus"), flags:electric::READONLY | electric::COMPUTED},

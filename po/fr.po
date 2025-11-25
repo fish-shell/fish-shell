@@ -3698,6 +3698,9 @@ msgstr "Utiliser le format de sortie portable (POSIX 1003.2)"
 msgid "Use the visible width, excluding escape sequences"
 msgstr ""
 
+msgid "Use this variant, overriding $fish_terminal_color_theme"
+msgstr ""
+
 msgid "Verbose mode"
 msgstr "Mode verbeux"
 

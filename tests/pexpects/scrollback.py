@@ -4,7 +4,7 @@ import os
 
 env = os.environ.copy()
 env["TERM"] = "not-dumb"
-env["FISH_TEST_NO_CURSOR_POSITION_QUERY"] = ""
+env["FISH_TEST_NO_RECURRENT_QUERIES"] = ""
 
 sp = SpawnedProc(env=env, scroll_content_up_supported=True)
 sendline, expect_prompt = sp.sendline, sp.expect_prompt

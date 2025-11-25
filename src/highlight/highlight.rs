@@ -27,7 +27,7 @@ use crate::parse_util::{
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{TextFace, UnderlineStyle, parse_text_face};
+use crate::text_face::{SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use crate::wchar::{L, WString, wstr};
@@ -137,17 +137,25 @@ impl HighlightColorResolver {
             }
         }
     }
-    pub(crate) fn resolve_spec_uncached(
-        highlight: &HighlightSpec,
-        vars: &dyn Environment,
-    ) -> TextFace {
+    fn resolve_spec_uncached(highlight: &HighlightSpec, vars: &dyn Environment) -> TextFace {
         let resolve_role = |role| {
-            vars.get_unless_empty(get_highlight_var_name(role))
-                .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
-                .or_else(|| vars.get_unless_empty(get_highlight_var_name(HighlightRole::normal)))
-                .as_ref()
-                .map(parse_text_face_for_highlight)
-                .unwrap_or_else(TextFace::default)
+            let mut roles: &[HighlightRole] = &[role, get_fallback(role), HighlightRole::normal];
+            // TODO(MSRV>=?) partition_dedup
+            for i in [2, 1] {
+                if roles[i - 1] == roles[i] {
+                    roles = &roles[..i];
+                }
+            }
+            for &role in roles {
+                if let Some(face) = vars
+                    .get_unless_empty(get_highlight_var_name(role))
+                    .as_ref()
+                    .and_then(parse_text_face_for_highlight)
+                {
+                    return face;
+                }
+            }
+            TextFace::default()
         };
         let mut face = resolve_role(highlight.foreground);
 
@@ -164,7 +172,8 @@ impl HighlightColorResolver {
         if highlight.valid_path {
             if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
                 // Historical behavior is to not apply background.
-                let valid_path_face = parse_text_face_for_highlight(&valid_path_var);
+                let valid_path_face =
+                    parse_text_face_for_highlight(&valid_path_var).unwrap_or_default();
                 // Apply the foreground, except if it's normal. The intention here is likely
                 // to only override foreground if the valid path color has an explicit foreground.
                 if !valid_path_face.fg.is_normal() {
@@ -183,19 +192,21 @@ impl HighlightColorResolver {
 }
 
 /// Return the internal color code representing the specified color.
-pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> TextFace {
+pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> Option<TextFace> {
     let face = parse_text_face(var.as_list());
-    let default = TextFace::default();
-    let fg = face.fg.unwrap_or(default.fg);
-    let bg = face.bg.unwrap_or(default.bg);
-    let underline_color = face.underline_color.unwrap_or(default.underline_color);
-    let style = face.style;
-    TextFace {
-        fg,
-        bg,
-        underline_color,
-        style,
-    }
+    (face != SpecifiedTextFace::default()).then(|| {
+        let default = TextFace::default();
+        let fg = face.fg.unwrap_or(default.fg);
+        let bg = face.bg.unwrap_or(default.bg);
+        let underline_color = face.underline_color.unwrap_or(default.underline_color);
+        let style = face.style.unwrap_or_default();
+        TextFace {
+            fg,
+            bg,
+            underline_color,
+            style,
+        }
+    })
 }
 
 fn command_is_valid(
@@ -1266,8 +1277,9 @@ pub struct HighlightSpec {
 mod tests {
     use super::{HighlightColorResolver, HighlightRole, HighlightSpec, highlight_shell};
     use crate::common::ScopeGuard;
-    use crate::env::EnvMode;
+    use crate::env::{EnvMode, Environment};
     use crate::future_feature_flags::{self, FeatureFlag};
+    use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
     use crate::tests::prelude::*;
     use crate::text_face::UnderlineStyle;
@@ -1831,5 +1843,30 @@ mod tests {
                 i
             );
         }
+    }
+
+    #[test]
+    #[serial]
+    fn test_resolve_role() {
+        let _cleanup = test_init();
+        let parser = TestParser::new();
+        let vars = parser.vars();
+
+        let set = |var: &wstr, value: Vec<WString>| {
+            vars.set(var, EnvMode::LOCAL, value);
+        };
+        set(L!("fish_color_normal"), vec![L!("normal").into()]);
+        set(
+            L!("fish_color_command"),
+            vec![L!("red").into(), L!("--bold").into()],
+        );
+        set(L!("fish_color_keyword"), vec![L!("--theme=default").into()]);
+
+        let keyword_spec = HighlightSpec::with_both(HighlightRole::keyword);
+        let face = HighlightColorResolver::resolve_spec_uncached(&keyword_spec, vars);
+
+        let command_face =
+            parse_text_face_for_highlight(&vars.get(L!("fish_color_command")).unwrap()).unwrap();
+        assert_eq!(face, command_face);
     }
 }

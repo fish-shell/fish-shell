@@ -73,7 +73,7 @@ Detected errors include:
 To customize the syntax highlighting, you can set the environment variables listed in the :ref:`Variables for changing highlighting colors <variables-color>` section.
 
 Fish also provides pre-made color themes you can pick with :doc:`fish_config <cmds/fish_config>`.
-Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` in the terminal.
+Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` from fish.
 
 For example, to disable nearly all coloring::
 
@@ -82,6 +82,20 @@ For example, to disable nearly all coloring::
 Or, to see all themes, right in your terminal::
 
   fish_config theme show
+
+.. _syntax-highlighting-instant-update:
+
+To update the theme of all shell sessions without restarting them,
+first have those sessions define an :ref:`event handler <event>` by adding the following to your :ref:`config.fish <configuration>` and restarting them::
+
+    function apply-my-theme --on-variable=my_theme
+        fish_config theme choose $my_theme
+    end
+
+Then, set the corresponding :ref:`universal variable <variables-universal>` from any session::
+
+    > set -U my_theme lava
+    > set -U my_theme snow-day
 
 .. _variables-color:
 
@@ -137,7 +151,8 @@ Variable                                          Meaning
 
 ==========================================        =====================================================================
 
-If a variable isn't set or is empty, fish usually tries ``$fish_color_normal``, except for:
+If a variable isn't set or is empty after subtracting any ``--theme=THEME`` options,
+fish usually tries ``$fish_color_normal``, except for:
 
 - ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
 - ``$fish_color_option``, where it tries ``$fish_color_param`` first.

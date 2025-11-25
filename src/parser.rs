@@ -7,7 +7,9 @@ use crate::common::{
     ScopedCell, ScopedRefCell, escape_string, wcs2bytes,
 };
 use crate::complete::CompletionList;
-use crate::env::{EnvMode, EnvStack, EnvStackSetResult, Environment, Statuses};
+use crate::env::{
+    EnvMode, EnvStack, EnvStackSetResult, Environment, FISH_TERMINAL_COLOR_THEME_VAR, Statuses,
+};
 use crate::event::{self, Event};
 use crate::expand::{
     ExpandFlags, ExpandResultCode, expand_string, replace_home_directory_with_tilde,
@@ -32,7 +34,7 @@ use crate::wait_handle::WaitHandleStore;
 use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
 use crate::wutil::perror;
-use crate::{FLOG, function};
+use crate::{FLOG, FLOGF, function};
 use libc::c_int;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
@@ -1222,6 +1224,32 @@ impl Parser {
     /// Checks if the max eval depth has been exceeded
     pub fn is_eval_depth_exceeded(&self) -> bool {
         self.scope().eval_level >= FISH_MAX_EVAL_DEPTH
+    }
+
+    pub fn set_color_theme(&self, background_color: Option<&xterm_color::Color>) {
+        let color_theme = match background_color.map(|c| c.perceived_lightness()) {
+            Some(x) if x < 0.5 => L!("dark"),
+            Some(_) => L!("light"),
+            None => L!("unknown"),
+        };
+        if self
+            .vars()
+            .get(FISH_TERMINAL_COLOR_THEME_VAR)
+            .is_some_and(|var| var.as_list() == [color_theme])
+        {
+            return;
+        };
+        FLOGF!(
+            reader,
+            "Setting %s to %s",
+            FISH_TERMINAL_COLOR_THEME_VAR,
+            color_theme
+        );
+        self.set_var_and_fire(
+            FISH_TERMINAL_COLOR_THEME_VAR,
+            EnvMode::GLOBAL,
+            vec![color_theme.to_owned()],
+        );
     }
 }
 

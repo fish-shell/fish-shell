@@ -204,6 +204,11 @@ if command -q kill
     end
 end
 
+if status is-interactive
+    __fish_theme_migrate
+end
+fish_config theme choose default --no-override
+
 # As last part of initialization, source the conf directories.
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".
 set -l sourcelist

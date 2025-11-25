@@ -54,7 +54,6 @@ rust-embed = { version = "8.9.0", features = [
     "include-exclude",
     "interpolate-folder-path",
 ] }
-
 serial_test = { version = "3", default-features = false }
 # We need 0.9.0 specifically for some crash fixes.
 terminfo = "0.9.0"
@@ -62,6 +61,7 @@ widestring = "1.2.0"
 unicode-segmentation = "1.12.0"
 unicode-width = "0.2.0"
 unix_path = "1.0.1"
+xterm-color = "1.0.1"
 
 [profile.release]
 overflow-checks = true
@@ -101,6 +101,7 @@ pcre2.workspace = true
 phf = { workspace = true, optional = true }
 rand.workspace = true
 terminfo.workspace = true
+xterm-color.workspace = true
 widestring.workspace = true
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]

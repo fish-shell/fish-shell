@@ -106,12 +106,18 @@ impl TextStyling {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct TextFace {
     pub(crate) fg: Color,
     pub(crate) bg: Color,
     pub(crate) underline_color: Color,
     pub(crate) style: TextStyling,
+}
+
+impl Default for TextFace {
+    fn default() -> Self {
+        Self::default()
+    }
 }
 
 impl TextFace {
@@ -134,12 +140,12 @@ impl TextFace {
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub(crate) struct SpecifiedTextFace {
     pub(crate) fg: Option<Color>,
     pub(crate) bg: Option<Color>,
     pub(crate) underline_color: Option<Color>,
-    pub(crate) style: TextStyling,
+    pub(crate) style: Option<TextStyling>,
 }
 
 pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
@@ -159,7 +165,7 @@ pub(crate) struct PrintColorsArgs<'argarray, 'args> {
     pub(crate) fg_args: &'argarray [&'args wstr],
     pub(crate) bg: Option<Color>,
     pub(crate) underline_color: Option<Color>,
-    pub(crate) style: TextStyling,
+    pub(crate) style: Option<TextStyling>,
 }
 
 pub(crate) enum ParsedArgs<'argarray, 'args> {
@@ -192,6 +198,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         wopt(L!("italics"), ArgType::NoArgument, 'i'),
         wopt(L!("dim"), ArgType::NoArgument, 'd'),
         wopt(L!("reverse"), ArgType::NoArgument, 'r'),
+        wopt(L!("theme"), ArgType::RequiredArgument, '\x01'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("print-colors"), ArgType::NoArgument, 'c'),
     ];
@@ -213,7 +220,10 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
 
     let mut bg_colors = vec![];
     let mut underline_colors = vec![];
-    let mut style = TextStyling::default();
+    let mut style: Option<TextStyling> = None;
+    fn init_style(style: &mut Option<TextStyling>) -> &mut TextStyling {
+        style.get_or_insert_default()
+    }
     let mut print_color_mode = false;
 
     let mut w = WGetopter::new(short_options, long_options, argv);
@@ -224,6 +234,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
                     bg_colors.push(bg);
                 }
             }
+            '\x01' => (),
             '\x02' => {
                 if let Some(underline_color) = parse_color(w.woptarg.unwrap())? {
                     underline_colors.push(underline_color);
@@ -233,13 +244,13 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
                 assert!(is_builtin);
                 return Ok(PrintHelp);
             }
-            'o' => style.bold = true,
-            'i' => style.italics = true,
-            'd' => style.dim = true,
-            'r' => style.reverse = true,
+            'o' => init_style(&mut style).bold = true,
+            'i' => init_style(&mut style).italics = true,
+            'd' => init_style(&mut style).dim = true,
+            'r' => init_style(&mut style).reverse = true,
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
-                style.underline_style = Some(if arg == "single" {
+                init_style(&mut style).underline_style = Some(if arg == "single" {
                     UnderlineStyle::Single
                 } else if arg == "double" {
                     UnderlineStyle::Double
@@ -309,4 +320,31 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         underline_color,
         style,
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        color::{Color, Color24},
+        text_face::SpecifiedTextFace,
+    };
+
+    use super::parse_text_face;
+
+    #[test]
+    fn test_parse_text_face() {
+        assert_eq!(
+            parse_text_face(&["0000ee".into(), "--theme=default".into()]),
+            SpecifiedTextFace {
+                fg: Some(Color::Rgb(Color24 {
+                    r: 0,
+                    g: 0,
+                    b: 0xee
+                })),
+                bg: None,
+                underline_color: None,
+                style: None
+            }
+        );
+    }
 }

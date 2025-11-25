@@ -111,6 +111,7 @@ pub(crate) enum TerminalCommand<'a> {
 
     // Other terminal features
     QueryCursorPosition,
+    QueryBackgroundColor,
     ScrollContentUp(usize),
 
     DecsetShowCursor,
@@ -118,6 +119,8 @@ pub(crate) enum TerminalCommand<'a> {
     DecrstFocusReporting,
     DecsetBracketedPaste,
     DecrstBracketedPaste,
+    DecsetColorThemeReporting,
+    DecrstColorThemeReporting,
 }
 
 pub(crate) trait Output {
@@ -185,12 +188,15 @@ pub(crate) trait Output {
             Osc133CommandStart(command) => osc_133_command_start(self, command),
             Osc133CommandFinished(s) => osc_133_command_finished(self, s),
             QueryCursorPosition => write(self, b"\x1b[6n"),
+            QueryBackgroundColor => write(self, b"\x1b]11;?\x1b\\"),
             ScrollContentUp(lines) => scroll_content_up(self, lines),
             DecsetShowCursor => write(self, b"\x1b[?25h"),
             DecsetFocusReporting => write(self, b"\x1b[?1004h"),
             DecrstFocusReporting => write(self, b"\x1b[?1004l"),
             DecsetBracketedPaste => write(self, b"\x1b[?2004h"),
             DecrstBracketedPaste => write(self, b"\x1b[?2004l"),
+            DecsetColorThemeReporting => write(self, b"\x1b[?2031h"),
+            DecrstColorThemeReporting => write(self, b"\x1b[?2031l"),
         }
     }
 }

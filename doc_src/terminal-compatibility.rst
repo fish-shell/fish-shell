@@ -215,6 +215,14 @@ Optional Commands
    * - ``\e[?2004l``
      -
      - Disable bracketed paste.
+   * - ``\e[?2031h``
+     -
+     - Enable unsolicited `color theme reporting <https://contour-terminal.org/vt-extensions/color-palette-update-notifications/>`_.
+       When enabled, the terminal should send ``\e[?997;1n`` or ``\e[?997;2n`` whenever its color theme has changed.
+       This prompts fish to query for :ref:`background color <term-compat-query-background-color>`.
+   * - ``\e[?2031l``
+     -
+     - Disable unsolicited color theme reporting.
    * - .. _term-compat-osc-0:
 
        ``\e]0; Pt \e\\``
@@ -234,6 +242,17 @@ Optional Commands
      -
      - Create a `hyperlink (OSC 8) <https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda>`_.
        This is used in fish's man pages.
+   * - .. _term-compat-query-background-color:
+
+       ``\e]11;?\e\\``
+     - n/a
+     - Query background color.
+
+       A valid response would be of the form ``\e]11;rgb: Pt / Pt / Pt \e\\`` or ``\e]11;rgba: Pt / Pt / Pt / Pt\e\\``
+       where the first three parameters consist of one to four hex digits each, representing red, blue and green components.
+
+       This is used to populate :envvar:`fish_terminal_color_theme`,
+       which is used to select a :ref:`theme variant <fish-config-theme-files>` optimized for the terminal's color theme.
    * - .. _term-compat-osc-52:
 
        ``\e]52;c; Pt \e\\``

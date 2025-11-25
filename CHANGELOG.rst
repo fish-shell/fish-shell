@@ -1,11 +1,34 @@
 fish 4.3.0 (released ???)
 =========================
 
-Notable improvements and fixes
-------------------------------
+Color and key binding variables are no longer set in universal scope
+--------------------------------------------------------------------
+
+- fish no longer sets :ref:`universal variables <variables-universal>` by default.
+  Specifically, the ``fish_color_*``, ``fish_pager_color_*`` and ``fish_key_bindings`` variables are now set in the global scope by default.
+  After upgrading to 4.3.0, fish will (once and never again) migrate these universals to globals set at startup in
+  ``~/.config/fish/conf.d/fish_frozen_theme.fish`` and
+  ``~/.config/fish/conf.d/fish_frozen_key_bindings.fish``.
+  We suggest that you delete those files and manage the variables as you please.
+- You can still have theme changes propagate to all running shells instantly,
+  see :ref:`here <syntax-highlighting-instant-update>` for an example.
+- You can still opt into storing color variables in the universal scope
+  (via the deprecated ``fish_config theme save``) instead,
+  but that's not recommended because
+
+  1. it is at odds with dynamic theme switching based on the terminal's color theme (see below).
+  2. universal variables as a source of truth are easy to misunderstand,
+     compared to configuration files like ``config.fish``.
+
 
 Deprecations and removed features
 ---------------------------------
+- Erasing a color variable (e.g. by running ``set -e fish_color_command``)
+  no longer prevents fish from overwriting it with the default theme's version.
+  To set a color to the terminal's default,
+  set it to an empty list (``set fish_color_command``) or an equivalent (``set fish_color_command normal``).
+- ``fish_config theme choose`` now clears only color variables that were set by earlier invocations of a ``fish_config theme choose`` command
+  (which includes fish's default theme).
 
 Interactive improvements
 ------------------------
@@ -17,6 +40,8 @@ Interactive improvements
 
 Improved terminal support
 -------------------------
+- Themes can now be made color-theme-aware (i.e. light mode vs. dark mode) by including both ``[light]`` and ``[dark]`` sections in the :ref:`theme file <fish-config-theme-files>`.
+- Some default themes have been made color-theme-aware, meaning they dynamically adjust as your terminal's background color switches between light and dark colors (:issue:`11580`).
 - OSC 133 prompt markers now also mark the prompt end, which improves shell integration with terminals like iTerm2 (:issue:`11837`).
 - Operating-system-specific key bindings are now decided based on the :ref:`terminal's host OS <status-terminal-os>`.
 - Focus reporting is enabled unconditionally, not just inside tmux.

@@ -179,10 +179,8 @@ class SpawnedProc(object):
         self.colorize = sys.stdout.isatty() or env.get("FISH_FORCE_COLOR", "0") == "1"
         self.messages = []
         self.start_time = None
-        if "FISH_PEXPECT_TESTS_RUNNING" not in env:
-            env["FISH_PEXPECT_TESTS_RUNNING"] = "1"
-        if "FISH_TEST_NO_CURSOR_POSITION_QUERY" not in env:
-            env["FISH_TEST_NO_CURSOR_POSITION_QUERY"] = "1"
+        if "FISH_TEST_NO_RECURRENT_QUERIES" not in env:
+            env["FISH_TEST_NO_RECURRENT_QUERIES"] = "1"
         self.spawn = pexpect.spawn(
             exe_path, env=env, encoding="utf-8", timeout=timeout, **kwargs
         )

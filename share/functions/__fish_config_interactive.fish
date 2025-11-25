@@ -16,21 +16,9 @@ if status is-interactive
 # Commands to run in interactive sessions can go here
 end" >$__fish_config_dir/config.fish
 
-    # For one-off upgrades of the fish version
-    if not set -q __fish_initialized
-        set -U __fish_initialized 0
-    end
-
     set -g __fish_active_key_bindings
 
-    # If we are starting up for the first time, set various defaults.
-    if test $__fish_initialized -lt 3400
-        echo yes | fish_config theme save default
-        set -Ue fish_color_keyword fish_color_option
-    end
-    if test $__fish_initialized -lt 3800 && test "$fish_color_search_match[1]" = bryellow
-        set --universal fish_color_search_match[1] white
-    end
+    functions -q __fish_webconfig_update_color_hook
 
     #
     # Generate man page completions if not present.
@@ -76,7 +64,8 @@ end" >$__fish_config_dir/config.fish
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
         # Make sure some key bindings are set
         if not set --query fish_key_bindings
-            set --universal fish_key_bindings fish_default_key_bindings
+            set --global fish_key_bindings fish_default_key_bindings
+            return
         end
 
         # Do nothing if the key bindings didn't actually change.
@@ -172,8 +161,4 @@ end" >$__fish_config_dir/config.fish
         end
     end
     __fish_update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
-
-    # Bump this whenever some code below needs to run once when upgrading to a new version.
-    # The universal variable __fish_initialized is initialized in share/config.fish.
-    set __fish_initialized 3800
 end

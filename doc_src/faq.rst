@@ -129,16 +129,14 @@ If you want to change or disable this display, modify the ``fish_mode_prompt`` f
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
-Use the web configuration tool, :doc:`fish_config <cmds/fish_config>`, or alter the :ref:`fish_color family of environment variables <variables-color>`.
-
-You can also use ``fish_config`` on the commandline, like::
+Use the web configuration tool started by :doc:`fish_config <cmds/fish_config>`,
+or alter the :ref:`fish_color family of environment variables <variables-color>`,
+or use the :doc:`fish_config theme <cmds/fish_config>` subcommand, like::
 
   > fish_config theme show
   # to demonstrate all the colorschemes
   > fish_config theme choose coolbeans
   # to load the "coolbeans" theme
-  > fish_config theme save
-  # to make the change permanent
 
 How do I change the greeting message?
 -------------------------------------

@@ -57,6 +57,15 @@ The following options are available:
 **-u** or **--underline**, or **-uSTYLE** or **--underline=STYLE**
     Set the underline mode; supported styles are **single** (default), **double**, **curly**, **dotted** and **dashed**.
 
+**--theme=THEME**
+    Ignored.
+    :ref:`Color variables <variables-color>` that contain only this option are treated like missing / empty color variables,
+    i.e. fish will use the fallback color instead.
+    :doc:`fish_config theme choose <fish_config>` erases all :ref:`color variable <fish_config-color-variables>`
+    whose value includes this option, and adds this option to all color variables it sets.
+    This allows identifying variables set by a theme,
+    and it allows fish to update color variables whenever :envvar:`fish_terminal_color_theme` changes.
+
 **-h** or **--help**
     Displays help about using this command.
 

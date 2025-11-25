@@ -10,9 +10,9 @@ use crate::job_group::JobGroup;
 use crate::proc::JobGroupRef;
 use crate::terminal::TerminalCommand::{
     self, ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
-    DecrstFocusReporting, DecsetBracketedPaste, DecsetFocusReporting,
-    KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
-    ModifyOtherKeysDisable, ModifyOtherKeysEnable,
+    DecrstColorThemeReporting, DecrstFocusReporting, DecsetBracketedPaste,
+    DecsetColorThemeReporting, DecsetFocusReporting, KittyKeyboardProgressiveEnhancementsDisable,
+    KittyKeyboardProgressiveEnhancementsEnable, ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
 use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
@@ -172,8 +172,16 @@ impl TtyQuirks {
 
     // Return the protocols set to enable or disable TTY protocols.
     fn get_protocols(self) -> TtyProtocolsSet {
-        let on_chain = vec![DecsetFocusReporting, DecsetBracketedPaste];
-        let off_chain = vec![DecrstFocusReporting, DecrstBracketedPaste];
+        let on_chain = vec![
+            DecsetFocusReporting,
+            DecsetBracketedPaste,
+            DecsetColorThemeReporting,
+        ];
+        let off_chain = vec![
+            DecrstFocusReporting,
+            DecrstBracketedPaste,
+            DecrstColorThemeReporting,
+        ];
 
         let on_chain = || on_chain.clone().into_iter();
         let off_chain = || off_chain.clone().into_iter();

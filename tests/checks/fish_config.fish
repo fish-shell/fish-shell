@@ -106,6 +106,7 @@ type fish_mode_prompt
 # CHECK: end
 
 fish_config theme choose non-existent-theme1
+__fish_apply_theme
 # CHECKERR: No such theme: non-existent-theme1
 # CHECKERR: Searched {{/\S* (/\S*|and `status list-files themes`)}}
 
@@ -121,54 +122,57 @@ diff \
     (fish_config theme | psub -s config-theme)
 
 fish_config theme list | string match -r \
-'^(?:ayu-dark|base16-default-light|coolbeans|default|none|'\
-'tomorrow-night-bright|tomorrow-night|tomorrow)$'
-# CHECK: ayu-dark
-# CHECK: base16-default-light
+'^(?:ayu|base16-default|coolbeans|default|none|'\
+'tomorrow-night-bright|tomorrow)$'
+# CHECK: ayu
+# CHECK: base16-default
 # CHECK: coolbeans
 # CHECK: default
 # CHECK: none
 # CHECK: tomorrow-night-bright
-# CHECK: tomorrow-night
 # CHECK: tomorrow
 
-fish_config theme show "default"
+fish_config theme show default
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}
 # CHECK: /bright/vixens{{\x1b\[m}} jump{{\x1b\[m}} |{{\x1b\[m}} "fowl"{{\x1b\[m}} > quack{{\x1b\[m}} &{{\x1b\[m}} # This is a comment
 # CHECK: {{\x1b\[m}}echo{{\x1b\[m}} 'Errors are the portal to discovery
 # CHECK: {{\x1b\[m}}Th{{\x1b\[m}}is an autosuggestion
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}default{{\x1b\[m}}
-# CHECK: {{\x1b\[m}}/bright/vixens{{\x1b\[m}} {{\x1b\[36m}}jump{{\x1b\[m}} {{\x1b\[36m}}{{\x1b\[1m}}|{{\x1b\[m}} {{\x1b\[33m}}"fowl"{{\x1b\[m}} {{\x1b\[36m}}{{\x1b\[1m}}> quack{{\x1b\[m}} {{\x1b\[32m}}&{{\x1b\[m}}{{\x1b\[31m}} # This is a comment
-# CHECK: {{\x1b\[m}}{{\x1b\[m}}echo{{\x1b\[m}} {{\x1b\[91m}}'{{\x1b\[33m}}Errors are the portal to discovery
-# CHECK: {{\x1b\[m}}{{\x1b\[m}}Th{{\x1b\[m}}{{\x1b\[90m}}is an autosuggestion
 
-fish_config theme show ayu-dark ayu-light | string match -r '^.*ayu.*'
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu-dark{{\x1b\[m}}
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu-light{{\x1b\[m}}
+# CHECK: {{\x1b\[m\x1b\[4mdefault \(light color theme\)\x1b\[m}}
+# CHECK: {{\x1b\[38;2;0;0;238m/bright/vixens\x1b\[m \x1b\[38;2;0;160;160mjump\x1b.*}}
+# CHECK: {{.*}}
+# CHECK: {{.*}}
+# CHECK: {{\x1b\[m\x1b\[4mdefault \(dark color theme\)\x1b\[m}}
+# CHECK: {{\x1b\[38;2;92;92;255m.*}}
+# CHECK: {{.*}}
+# CHECK: {{.*}}
+# CHECK: {{\x1b\[m\x1b\[4mdefault \(unknown color theme\)\x1b\[m}}
+# CHECK: {{\x1b\[m/bright/vixens\x1b\[m \x1b\[36mjump\x1b\[m.*}}
+# CHECK: {{.*}}
+# CHECK: {{.*}}
+
+fish_config theme show ayu | string match -r '^.*ayu.*'
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu (light color theme){{\x1b\[m}}
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu (dark color theme){{\x1b\[m}}
 
 mkdir $__fish_config_dir/themes
 touch $__fish_config_dir/themes/custom-from-userconf.theme
-fish_config theme show | grep -E '[^-]default|base16-default-dark|custom-from-userconf'
-# CHECK: {{.*}}default{{\x1b\[m}}
-# CHECK: {{.*}}custom-from-userconf{{\x1b\[m}}
-# CHECK: {{.*}}base16-default-dark{{\x1b\[m}}
-# CHECK: {{.*}}default-dark{{\x1b\[m}}
-# CHECK: {{.*}}default-light{{\x1b\[m}}
+fish_config theme show | grep -E 'default|base16-default|custom-from-userconf'
+# CHECK: {{.*}}default (light color theme){{\x1b\[m}}
+# CHECK: {{.*}}default (dark color theme){{\x1b\[m}}
+# CHECK: {{.*}}default (unknown color theme){{\x1b\[m}}
+# CHECK: {{.*}}custom-from-userconf (unknown color theme){{\x1b\[m}}
+# CHECK: {{.*}}base16-default (light color theme){{\x1b\[m}}
+# CHECK: {{.*}}base16-default (dark color theme){{\x1b\[m}}
 
-# Override a default theme with different colors.
+# Override the default theme with different colors.
 __fish_data_with_file themes/none.theme \
     cat >$__fish_config_dir/themes/default.theme
-fish_config theme show | grep -E '[^-]default|base16-default-dark' -A1
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}default{{\x1b\[m}}
-# CHECK: {{\x1b\[m}}/bright/vixens{{\x1b\[m}} {{\x1b\[m}}jump{{\x1b\[m}}{{.*}}
+fish_config theme show default ayu | grep -E 'default|ayu.*dark' -A1
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}default (unknown color theme){{\x1b\[m}}
+# CHECK: /bright/vixens{{.*}}
 # CHECK: --
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}base16-default-dark{{\x1b\[m}}
-# CHECK: {{.*}}/bright/vixens{{.*}}
-# CHECK: --
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}default-dark{{\x1b\[m}}
-# CHECK: {{.*}}/bright/vixens{{.*}}
-# CHECK: --
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}default-light{{\x1b\[m}}
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu (dark color theme){{\x1b\[m}}
 # CHECK: {{.*}}/bright/vixens{{.*}}
 
 function print-sample-colors
@@ -184,34 +188,39 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
     # CHECK: normal=
     # CHECK: autosuggestion=
 
-    fish_config theme choose custom-from-userconf
+    fish_config theme choose custom-from-userconf --color-theme=unknown
     print-sample-colors
-    # CHECK: normal=yellow
+    # CHECK: normal=yellow --theme=custom-from-userconf
     # CHECK: autosuggestion=
     set -S fish_color_normal
-    # CHECK: $fish_color_normal: set in global scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal: set in global scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |yellow|
+    # CHECK: $fish_color_normal[2]: |--theme=custom-from-userconf|
 
     echo yes | fish_config theme save
     set -S fish_color_normal
-    # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal: set in universal scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |yellow|
+    # CHECK: $fish_color_normal[2]: |--theme=custom-from-userconf|
 
-    fish_config theme choose 'default'
+    fish_config theme choose default --color-theme=unknown
     print-sample-colors
-    # CHECK: normal=normal
-    # CHECK: autosuggestion=brblack
+    # CHECK: normal=normal --theme=default
+    # CHECK: autosuggestion=brblack --theme=default
 
     set -S fish_color_normal
-    # CHECK: $fish_color_normal: set in global scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal: set in global scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |normal|
-    # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal[2]: |--theme=default|
+    # CHECK: $fish_color_normal: set in universal scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |yellow|
+    # CHECK: $fish_color_normal[2]: |--theme=custom-from-userconf|
 
-    echo yes | fish_config theme save 'default'
+    echo yes | fish_config theme save default
     set -S fish_color_normal
-    # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal: set in universal scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |normal|
+    # CHECK: $fish_color_normal[2]: |--theme=default|
 }
 
 fish_config theme dump badarg

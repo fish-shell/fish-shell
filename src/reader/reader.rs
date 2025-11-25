@@ -85,13 +85,14 @@ use crate::history::{
     History, HistorySearch, PersistenceMode, SearchDirection, SearchFlags, SearchType,
     history_session_id, in_private_mode,
 };
+use crate::input_common::BackgroundColorQuery;
 use crate::input_common::CursorPositionQueryReason;
 use crate::input_common::InputEventQueue;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::QueryResponse;
 use crate::input_common::{
     CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData, LONG_READ_TIMEOUT,
-    QueryResultEvent, ReadlineCmd, TerminalQuery, stop_query,
+    QueryResultEvent, ReadlineCmd, RecurrentQuery, TerminalQuery, stop_query,
 };
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
@@ -128,9 +129,9 @@ use crate::terminal::Output;
 use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
     self, ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
-    Osc0WindowTitle, Osc1TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
-    QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute, QueryXtgettcap,
-    QueryXtversion,
+    Osc0WindowTitle, Osc1TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryBackgroundColor,
+    QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
+    QueryXtgettcap, QueryXtversion,
 };
 use crate::termsize::{safe_termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::TextFace;
@@ -250,18 +251,27 @@ fn querying_allowed(vars: &dyn Environment) -> bool {
         }
 }
 
-pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue {
+pub struct TerminalInitResult {
+    pub input_queue: InputEventQueue,
+    pub background_color: Option<xterm_color::Color>,
+}
+
+pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResult {
     assert!(isatty(inputfd));
     reader_interactive_init();
 
     let mut input_queue = InputEventQueue::new(inputfd, Some(LONG_READ_TIMEOUT));
+    let mut background_color = None;
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
         initialize_tty_protocols(vars);
     });
 
     if !querying_allowed(vars) {
-        return input_queue;
+        return TerminalInitResult {
+            input_queue,
+            background_color,
+        };
     }
 
     set_shell_modes(inputfd, "initial query");
@@ -270,6 +280,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
         // Query for kitty keyboard protocol support.
         out.write_command(QueryKittyKeyboardProgressiveEnhancements);
         out.write_command(QueryXtversion);
+        out.write_command(QueryBackgroundColor);
         query_capabilities_via_dcs(out.by_ref(), vars);
         out.write_command(QueryPrimaryDeviceAttribute);
     }
@@ -285,7 +296,12 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
             CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute)) => {
                 break;
             }
-            CharEvent::QueryResult(Response(_)) => (),
+            CharEvent::QueryResult(Response(QueryResponse::BackgroundColor(bg))) => {
+                if background_color.is_none() {
+                    background_color = Some(bg);
+                }
+            }
+            CharEvent::QueryResult(Response(QueryResponse::CursorPosition(_))) => (),
             CharEvent::QueryResult(Timeout) => {
                 let program = get_program_name();
                 FLOG!(
@@ -325,7 +341,10 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
         input_data.queue.len()
     );
 
-    input_queue
+    TerminalInitResult {
+        input_queue,
+        background_color,
+    }
 }
 
 /// The stack of current interactive reading contexts.
@@ -361,7 +380,10 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
     assert_is_main_thread();
     let inputfd = conf.inputfd;
     let input_data = if !parser.interactive_initialized.swap(true) {
-        let mut input_queue = terminal_init(parser.vars(), inputfd);
+        let TerminalInitResult {
+            mut input_queue,
+            background_color,
+        } = terminal_init(parser.vars(), inputfd);
         let input_data = input_queue.get_input_data_mut();
         guess_emoji_width(parser.vars());
 
@@ -375,6 +397,7 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
             .blocking_query_timeout
             .replace(input_data.blocking_query_timeout);
         assert!(old.is_none());
+        parser.set_color_theme(background_color.as_ref());
         std::mem::take(input_data)
     } else {
         InputData::new(inputfd, *parser.blocking_query_timeout.borrow())
@@ -1112,7 +1135,7 @@ pub fn reader_update_termsize(parser: &Parser) {
         return;
     };
     let mut data = Reader { parser, data };
-    data.push_front(CharEvent::Implicit(ImplicitEvent::WindowHeight));
+    data.push_front(CharEvent::Implicit(ImplicitEvent::NewWindowHeight));
 }
 
 pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
@@ -1649,10 +1672,11 @@ fn combine_command_and_autosuggestion(
 }
 
 impl<'a> Reader<'a> {
-    pub fn request_cursor_position(&mut self, reason: CursorPositionQueryReason) {
+    fn query(&mut self, query_state: RecurrentQuery) {
+        assert!(query_state != RecurrentQuery::default());
         if self
             .vars()
-            .get_unless_empty(L!("FISH_TEST_NO_CURSOR_POSITION_QUERY"))
+            .get_unless_empty(L!("FISH_TEST_NO_RECURRENT_QUERIES"))
             .is_some()
         {
             return;
@@ -1662,16 +1686,19 @@ impl<'a> Reader<'a> {
         }
         let mut query = self.blocking_query();
         assert!(query.is_none());
-        *query = Some(TerminalQuery::CursorPosition(CursorPositionQuery::new(
-            reason,
-        )));
         {
             let mut out = Outputter::stdoutput().borrow_mut();
             out.begin_buffering();
-            out.write_command(QueryCursorPosition);
+            if query_state.background_color.is_some() {
+                out.write_command(QueryBackgroundColor);
+            }
+            if query_state.cursor_position.is_some() {
+                out.write_command(QueryCursorPosition);
+            }
             out.write_command(QueryPrimaryDeviceAttribute);
             out.end_buffering();
         }
+        *query = Some(TerminalQuery::Recurrent(query_state));
         drop(query);
         self.save_screen_state();
     }
@@ -2355,7 +2382,12 @@ impl<'a> Reader<'a> {
         // Start out as initially dirty.
         self.force_exec_prompt_and_repaint = true;
 
-        self.request_cursor_position(CursorPositionQueryReason::NewPrompt);
+        self.query(RecurrentQuery {
+            cursor_position: Some(CursorPositionQuery::new(
+                CursorPositionQueryReason::NewPrompt,
+            )),
+            background_color: Some(BackgroundColorQuery::default()),
+        });
 
         while !check_exit_loop_maybe_warning(Some(self)) {
             // Enable tty protocols while we read input.
@@ -2642,9 +2674,20 @@ impl<'a> Reader<'a> {
                         FLOG!(reader, "Mouse left click", position);
                         self.mouse_left_click(position);
                     }
-                    WindowHeight => {
+                    NewColorTheme => {
+                        self.query(RecurrentQuery {
+                            background_color: Some(BackgroundColorQuery::default()),
+                            ..Default::default()
+                        });
+                    }
+                    NewWindowHeight => {
                         FLOG!(reader, "Handling window height change");
-                        self.request_cursor_position(CursorPositionQueryReason::WindowHeightChange);
+                        self.query(RecurrentQuery {
+                            cursor_position: Some(CursorPositionQuery::new(
+                                CursorPositionQueryReason::WindowHeightChange,
+                            )),
+                            ..Default::default()
+                        });
                     }
                 }
             }
@@ -2656,32 +2699,54 @@ impl<'a> Reader<'a> {
                 let query = match (&mut **query, query_result) {
                     (Some(TerminalQuery::Initial), _) => panic!(),
                     (
-                        Some(TerminalQuery::CursorPosition(cursor_pos_query)),
+                        Some(TerminalQuery::Recurrent(RecurrentQuery {
+                            background_color: Some(color_query),
+                            ..
+                        })),
+                        Response(BackgroundColor(background_color)),
+                    ) => {
+                        color_query.result = Some(background_color);
+                        return ControlFlow::Continue(());
+                    }
+                    (
+                        Some(TerminalQuery::Recurrent(RecurrentQuery {
+                            cursor_position: Some(cursor_pos_query),
+                            ..
+                        })),
                         Response(CursorPosition(cursor_pos)),
                     ) => {
                         cursor_pos_query.result = Some(cursor_pos);
                         return ControlFlow::Continue(());
                     }
                     (
-                        Some(TerminalQuery::CursorPosition(cursor_pos_query)),
+                        Some(TerminalQuery::Recurrent(query_state)),
                         Response(PrimaryDeviceAttribute) | Timeout | Interrupted,
                     ) => {
-                        let cursor_pos_query = cursor_pos_query.clone();
+                        let query = query_state.clone();
                         drop(maybe_query);
-                        let cursor_pos = cursor_pos_query.result;
-                        use CursorPositionQueryReason::*;
-                        let reason = cursor_pos_query.reason;
-                        let whence = match reason {
-                            NewPrompt => "cursor position query on new prompt",
-                            WindowHeightChange => "cursor position query on window height change",
-                        };
-                        let y = cursor_pos.map(|cursor_pos| match reason {
-                            NewPrompt => cursor_pos.y,
-                            WindowHeightChange => {
-                                self.screen.command_line_y_given_cursor_y(cursor_pos.y)
+                        if let Some(cursor_pos_query) = query.cursor_position {
+                            let cursor_pos = cursor_pos_query.result;
+                            use CursorPositionQueryReason::*;
+                            let reason = cursor_pos_query.reason;
+                            let whence = match reason {
+                                NewPrompt => "cursor position query on new prompt",
+                                WindowHeightChange => {
+                                    "cursor position query on window height change"
+                                }
+                            };
+                            let y = cursor_pos.map(|cursor_pos| match reason {
+                                NewPrompt => cursor_pos.y,
+                                WindowHeightChange => {
+                                    self.screen.command_line_y_given_cursor_y(cursor_pos.y)
+                                }
+                            });
+                            self.screen.set_position_in_viewport(whence, y);
+                        }
+                        if let Some(background_color_query) = query.background_color {
+                            if let Some(background_color) = &background_color_query.result {
+                                self.parser.set_color_theme(Some(background_color));
                             }
-                        });
-                        self.screen.set_position_in_viewport(whence, y);
+                        }
                         self.blocking_query()
                     }
                     // Rogue reply
@@ -2818,7 +2883,9 @@ impl<'a> Reader<'a> {
 
                     let mut outp = Outputter::stdoutput().borrow_mut();
                     if let Some(fish_color_cancel) = self.vars().get(L!("fish_color_cancel")) {
-                        outp.set_text_face(parse_text_face_for_highlight(&fish_color_cancel));
+                        outp.set_text_face(
+                            parse_text_face_for_highlight(&fish_color_cancel).unwrap_or_default(),
+                        );
                     }
                     outp.write_wstr(L!("^C"));
                     outp.reset_text_face();

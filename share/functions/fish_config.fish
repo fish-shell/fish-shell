@@ -1,5 +1,8 @@
 function fish_config --description "Launch fish's web based configuration"
-    argparse h/help -- $argv
+    set -l _flag_color_theme
+    set -l _flag_no_override
+
+    argparse h/help color-theme= no-override -- $argv
     or return
 
     if set -q _flag_help
@@ -13,12 +16,32 @@ function fish_config --description "Launch fish's web based configuration"
     set -q cmd[1]
     or set cmd browse
 
+    if set -q _flag_color_theme[1]
+        if test $cmd != theme
+            or not contains -- "$argv[1]" choose save
+            echo >&2 "fish_config: --color-theme: unknown option"
+            return 1
+        end
+        if not contains -- $_flag_color_theme dark light unknown
+            echo >&2 "fish_config theme: --color-theme argument must be one of 'dark', 'light' or 'unknown', got: '$_flag_color_theme'"
+            return 1
+        end
+    end
+    if set -q _flag_no_override[1]
+        if test $cmd != theme
+            or test "$argv[1]" != choose
+            echo >&2 "fish_config: --no-override: unknown option"
+            return 1
+        end
+    end
+
     # The web-based configuration UI
     # Also opened with just `fish_config` or `fish_config browse`.
     if test $cmd = browse
         if set -l python (__fish_anypython)
             function __fish_config_webconfig -V python -a web_config
                 set -lx __fish_bin_dir $__fish_bin_dir
+                set -lx __fish_terminal_color_theme $fish_terminal_color_theme
                 $python $web_config/webconfig.py
             end
             __fish_data_with_directory tools/web_config '.*' __fish_config_webconfig
@@ -182,8 +205,8 @@ function fish_config --description "Launch fish's web based configuration"
                     fish_config theme demo
                     __fish_theme_for_each __fish_config_theme_demo $argv
                 case choose save
-                    __fish_config_theme_choose $cmd $argv
-                    return 0
+                    __fish_config_theme_choose $cmd $argv --color-theme=$_flag_color_theme $_flag_no_override
+                    return
                 case dump
                     if set -q argv[1]
                         echo "Too many arguments" >&2
@@ -211,9 +234,17 @@ function __fish_config_list_prompts
     string join \n -- $prompt_paths
 end
 
+function __fish_config_theme_choose_bad_color_theme -a theme_name desired_color_theme source
+    echo >&2 "fish_config theme choose: failed to find '[$desired_color_theme]' section (implied by $source) in '$theme_name' theme"
+end
+
 function __fish_config_theme_choose
     set -l cmd $argv[1]
     set -e argv[1]
+    set -l _flag_color_theme
+    set -l _flag_no_override
+    argparse color-theme= no-override -- $argv
+    or return
     if set -q argv[2]
         echo "Too many arguments" >&2
         return 1
@@ -235,13 +266,16 @@ function __fish_config_theme_choose
         set scope -U
     end
 
-    if not set -q argv[1]
+    set -l theme_name $argv[1]
+    set -l desired_color_theme $_flag_color_theme
+
+    # Persist the currently loaded/themed variables (in case of `theme save`).
+    if not set -q theme_name[1]
         # We're persisting whatever current colors are loaded (maybe in the global scope)
         # to the universal scope, without overriding them from a theme file.
         # Like above, make sure to erase from other scopes first and ensure known color
         # variables are defined, even if empty.
         # This branch is only reachable in the case of `theme save` so $scope is always `-U`.
-
         for color in (__fish_theme_variables)
             # Cache the value from whatever scope currently defines it
             set -l value $$color
@@ -251,29 +285,104 @@ function __fish_config_theme_choose
         return 0
     end
 
-    # If we are choosing a theme or saving from a named theme, load the theme now.
-    # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
-    set -l defined_colors
-    begin
-        set -l theme_name $argv[1]
-        __fish_config_theme_canonicalize
-        __fish_theme_cat $theme_name
-        or return
-    end |
-        string match -r -- (__fish_theme_variable_filter) |
-        while read -lat toks
-            # If we're supposed to set universally, remove any shadowing globals
-            # so the change takes effect immediately (and there's no warning).
-            if test x"$scope" = x-U; and set -qg $toks[1]
-                set -eg $toks[1]
-            end
-            set $scope $toks
-            set -a defined_colors $toks[1]
+    function __fish_apply_theme --on-variable fish_terminal_color_theme \
+        -V theme_name -V desired_color_theme -V scope
+        if set -q __fish_color_theme[1]
+            set desired_color_theme $__fish_color_theme
         end
+
+        set -l color_theme
+        __fish_config_theme_canonicalize
+        if set -q color_theme[1] && not set -q desired_color_theme[1]
+            set desired_color_theme $color_theme
+        end
+        set -l theme_data (__fish_theme_cat $theme_name)
+        or return
+        set -l override (test -n "$__fish_override" && builtin echo true || builtin echo false)
+        set -l theme_is_color_theme_aware false
+        set -l color_themes dark light unknown
+        for ct in $color_themes
+            if contains -- [$ct] $theme_data
+                set theme_is_color_theme_aware true
+            end
+        end
+
+        if $theme_is_color_theme_aware
+            if set -q desired_color_theme[1]
+                if not contains -- "[$desired_color_theme]" $theme_data
+                    __fish_config_theme_choose_bad_color_theme $theme_name "$desired_color_theme" --color-theme=$desired_color_theme
+                    return 1
+                end
+            else
+                set desired_color_theme $fish_terminal_color_theme
+                if not set -q desired_color_theme[1]
+                    echo >&2 "fish_config theme choose: internal error: \$fish_terminal_color_theme not yet initialized"
+                    return 1
+                end
+                if not contains -- "[$desired_color_theme]" $theme_data
+                    __fish_config_theme_choose_bad_color_theme $theme_name "$desired_color_theme" \$fish_terminal_color_theme = $desired_color_theme
+                    echo >&2 "fish_config theme choose: hint: if your terminal does not report colors, pass --color-theme=light or --color-theme=dark when using color-theme-aware themes"
+                    return 1
+                end
+            end
+        else
+            if set -q desired_color_theme[1]
+                and test "$desired_color_theme" != unknown
+                and not contains -- "[$desired_color_theme]" $theme_data
+                __fish_config_theme_choose_bad_color_theme $theme_name "$desired_color_theme" --color-theme=$desired_color_theme
+                return 1
+            end
+        end
+
+        set -l color_theme
+        string join \n -- $theme_data |
+            while read -lat toks
+                if $theme_is_color_theme_aware
+                    for ct in $color_themes
+                        if test "$toks" = [$ct]
+                            set color_theme $ct
+                            break
+                        end
+                    end
+                    if test "$color_theme" != $desired_color_theme
+                        continue
+                    end
+                end
+                set -l varname $toks[1]
+                string match -rq -- (__fish_theme_variable_filter) "$varname"
+                or continue
+                # If we're supposed to set universally, remove any shadowing globals
+                # so the change takes effect immediately (and there's no warning).
+                if test $scope = -U; and set -qg $varname
+                    set -eg $varname
+                end
+                if $override || not set -q $varname || string match -rq -- '--theme=.*' $$varname
+                    set $scope $toks --theme=$theme_name
+                end
+            end
+        if $override
+            for c in (__fish_theme_variables)
+                string match -rq -- "^--theme=(?!$(string escape --style=regex -- $theme_name)\$).*" $$c
+                or continue
+                # Erase conflicting global variables so we don't get a warning and
+                # so changes are observed immediately.
+                set -eg $c
+                set $scope $c
+            end
+        end
+    end
+    set -l color_theme
+    __fish_config_theme_canonicalize
+    if set -q desired_color_theme[1] || set -q color_theme[1] || test -n "$fish_terminal_color_theme" || test $cmd = save
+        if not set -q _flag_no_override[1]
+            __fish_override=true __fish_apply_theme
+        end
+    end
 end
 
 function __fish_config_theme_canonicalize --no-scope-shadowing
     # theme_name
+    # color_theme
     if not path is (__fish_theme_dir)/$theme_name.theme
         switch $theme_name
             case 'fish default'
@@ -288,21 +397,36 @@ function __fish_config_theme_canonicalize --no-scope-shadowing
                 set theme_name (string lower (string replace -a " " "-" $theme_name))
         end
     end
+    switch $theme_name
+        case \
+            ayu-dark ayu-light \
+            base16-default-dark base16-default-light \
+            solarized-dark solarized-light
+            string match -rq -- '^(?<theme_name>.*)-(?<color_theme>dark|light)$' $theme_name
+        case tomorrow
+            set color_theme light
+        case tomorrow-night
+            set theme_name tomorrow
+            set color_theme dark
+    end
 end
 
 function __fish_config_theme_demo
-    argparse name= data=+ -- $argv
+    argparse name= data=+ color-themes=+ -- $argv
     or return
     set -l name $_flag_name
+    set -l color_themes $_flag_color_themes
     # Use a new, --no-config, fish to display the theme.
     set -l fish (status fish-path)
     $fish --no-config -c '
         set -l name $argv[1]
-        echo -s (set_color normal; set_color --underline) "$name" \
-            (set_color normal)
-        fish_config theme choose $name
-        fish_config theme demo
-    ' $name
+        for color_theme in $argv[2..]
+            echo -s (set_color normal; set_color --underline) "$name" \
+                " ($color_theme color theme)" (set_color normal)
+            fish_config theme choose $name --color-theme=$color_theme
+            fish_config theme demo
+        end
+    ' $name $color_themes
 end
 
 function __fish_config_prompt_reset

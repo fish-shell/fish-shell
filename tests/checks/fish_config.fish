@@ -148,9 +148,11 @@ fish_config theme show ayu-dark ayu-light | string match -r '^.*ayu.*'
 
 mkdir $__fish_config_dir/themes
 touch $__fish_config_dir/themes/custom-from-userconf.theme
-fish_config theme show | grep -E '[^-]default|default-dark|custom-from-userconf'
+fish_config theme show | grep -E '[^-]default|base16-default-dark|custom-from-userconf'
 # CHECK: {{.*}}custom-from-userconf{{\x1b\[m}}
 # CHECK: {{.*}}base16-default-dark{{\x1b\[m}}
+# CHECK: {{.*}}default-dark{{\x1b\[m}}
+# CHECK: {{.*}}default-light{{\x1b\[m}}
 # CHECK: {{.*}}default{{\x1b\[m}}
 
 # Override a default theme with different colors.
@@ -161,6 +163,12 @@ fish_config theme show | grep -E '[^-]default|base16-default-dark' -A1
 # CHECK: {{\x1b\[m}}/bright/vixens{{\x1b\[m}} {{\x1b\[m}}jump{{\x1b\[m}}{{.*}}
 # CHECK: --
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}base16-default-dark{{\x1b\[m}}
+# CHECK: {{.*}}/bright/vixens{{.*}}
+# CHECK: --
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}default-dark{{\x1b\[m}}
+# CHECK: {{.*}}/bright/vixens{{.*}}
+# CHECK: --
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}default-light{{\x1b\[m}}
 # CHECK: {{.*}}/bright/vixens{{.*}}
 
 function print-sample-colors

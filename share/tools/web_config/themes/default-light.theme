@@ -1,0 +1,34 @@
+# name: fish default (light mode)
+# preferred_background: ffffff
+
+fish_color_normal 000000
+fish_color_autosuggestion 7f7f7f
+fish_color_cancel ffffff --background=000000
+fish_color_command 0000ee
+fish_color_comment cd0000
+fish_color_cwd 00cd00
+fish_color_cwd_root cd0000
+fish_color_end 00cd00
+fish_color_error ff0000
+fish_color_escape 00cdcd
+fish_color_history_current --bold
+fish_color_host 000000
+fish_color_host_remote a0a000
+fish_color_keyword 0000ee
+fish_color_operator 00cdcd
+fish_color_option 00a0a0
+fish_color_param 00a0a0
+fish_color_quote a0a000
+fish_color_redirection 00a0a0 --bold
+fish_color_search_match 060606 --bold --background=cdcdcd
+fish_color_selection 060606 --bold --background=cdcdcd
+fish_color_status cd0000
+fish_color_user 00cd00
+fish_color_valid_path --underline
+fish_pager_color_description a0a000 --italics
+fish_pager_color_prefix 000000 --bold --underline
+fish_pager_color_progress ffffff --background=00a0a0 --bold
+fish_pager_color_selected_background --background=cdcdcd
+fish_pager_color_selected_prefix 060606 --bold
+fish_pager_color_selected_completion 060606 --bold
+fish_pager_color_selected_description 060606 --bold --italics

@@ -912,11 +912,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             result.pop()  # trim off the trailing element
         return result
 
-    def do_get_color_for_variable(self, name):
-        "Return the color with the given name, or the empty string if there is none."
-        out, err = run_fish_cmd("echo -n $" + name)
-        return out
-
     def do_set_color_for_variable(self, name, color):
         "Sets a color for a fish color name, like 'fish_color_autosuggestion'"
         if not name:
@@ -1151,9 +1146,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # print "History: ", end - start
         elif p == "/sample_prompts/":
             output = self.do_get_sample_prompts_list()
-        elif re.match(r"/color/(\w+)/", p):
-            name = re.match(r"/color/(\w+)/", p).group(1)
-            output = self.do_get_color_for_variable(name)
         elif p == "/bindings/":
             output = self.do_get_bindings()
         else:

@@ -41,8 +41,6 @@ import webbrowser
 if term is not None:
     os.environ["TERM"] = term
 
-KNOWN_COLORS = set(os.environ["fish_color_variables"].splitlines())
-
 
 def find_executable(exe, paths=()):
     final_path = os.environ["PATH"].split(os.pathsep)
@@ -804,11 +802,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         colors.sort(key=operator.itemgetter("name"))
 
-        # Ensure that we have all the color names we know about, so that if the
-        # user deletes one he can still set it again via the web interface
-        for color_name in KNOWN_COLORS - {color["name"] for color in colors}:
-            add_color(color_name, "")
-
         info["colors"] = colors
         return info
 
@@ -1199,19 +1192,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         if p == "/set_color/":
             print("# Colorscheme: " + postvars.get("theme"))
-            have_colors = set()
             output = ""
             for item in postvars.get("colors"):
                 what = item.get("what")
                 color = item.get("color")
                 if what:
-                    have_colors.add(what)
                     output = self.do_set_color_for_variable(what, color)
-
-            # Set all known colors that weren't defined in this theme
-            # to empty, to avoid keeping around coloration from an earlier theme.
-            for what in KNOWN_COLORS - have_colors:
-                output += "\n" + self.do_set_color_for_variable(what, "")
 
         elif p == "/get_function/":
             what = postvars.get("what")

@@ -19,7 +19,6 @@ function fish_config --description "Launch fish's web based configuration"
         if set -l python (__fish_anypython)
             function __fish_config_webconfig -V python -a web_config
                 set -lx __fish_bin_dir $__fish_bin_dir
-                set -lx fish_color_variables "$(__fish_color_variables)"
                 $python $web_config/webconfig.py
             end
             __fish_data_with_directory tools/web_config '.*' __fish_config_webconfig
@@ -236,7 +235,6 @@ function __fish_config_theme_choose
         set scope -U
     end
 
-    set -l known_colors (__fish_color_variables)
     if not set -q argv[1]
         # We're persisting whatever current colors are loaded (maybe in the global scope)
         # to the universal scope, without overriding them from a theme file.
@@ -272,17 +270,6 @@ function __fish_config_theme_choose
             set $scope $toks
             set -a defined_colors $toks[1]
         end
-
-    # Set all colors that aren't mentioned to empty
-    for c in $known_colors
-        contains -- $c $defined_colors
-        and continue
-        # Erase conflicting global variables so we don't get a warning and
-        # so changes are observed immediately.
-        set -eg $c
-        set $scope $c
-    end
-
 end
 
 function __fish_config_theme_canonicalize --no-scope-shadowing

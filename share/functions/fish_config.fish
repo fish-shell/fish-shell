@@ -190,8 +190,11 @@ function fish_config --description "Launch fish's web based configuration"
                         echo "Too many arguments" >&2
                         return 1
                     end
-                    # Write the current theme in .theme format, to stdout.
-                    set -L | string match -r (__fish_theme_variable_filter)
+                    # Write some of the current theme in .theme format, to stdout.
+                    for varname in (__fish_theme_variables)
+                        __fish_posix_quote $varname $$varname
+                        echo
+                    end
                 case '*'
                     echo "No such command: $cmd" >&2
                     return 1

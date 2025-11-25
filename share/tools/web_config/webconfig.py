@@ -815,12 +815,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_get_functions(self):
         out, err = run_fish_cmd("functions")
         out = out.strip()
-
-        # Not sure why fish sometimes returns this with newlines
-        if "\n" in out:
-            return out.split("\n")
-        else:
-            return out.strip().split(", ")
+        return out.split("\n")
 
     def do_get_variable_names(self, cmd):
         "Given a command like 'set -U' return all the variable names"

@@ -1142,9 +1142,7 @@ pub trait InputEventQueuer {
                 };
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
                 let cursor_pos = ViewportPosition { x, y };
-                self.push_front(CharEvent::QueryResult(QueryResultEvent::Response(
-                    QueryResponse::CursorPosition(cursor_pos),
-                )));
+                self.push_query_response(QueryResponse::CursorPosition(cursor_pos));
                 return None;
             }
             b'S' => masked_key(function_key(4)),
@@ -1196,9 +1194,7 @@ pub trait InputEventQueuer {
             },
             b'c' if private_mode == Some(b'?') => {
                 FLOG!(reader, "Received Primary Device Attribute response");
-                self.push_front(CharEvent::QueryResult(QueryResultEvent::Response(
-                    QueryResponse::PrimaryDeviceAttribute,
-                )));
+                self.push_query_response(QueryResponse::PrimaryDeviceAttribute);
                 return None;
             }
             b'u' => {
@@ -1499,6 +1495,10 @@ pub trait InputEventQueuer {
     /// will be the next character returned by readch.
     fn push_front(&mut self, ch: CharEvent) {
         self.get_input_data_mut().queue.push_front(ch);
+    }
+
+    fn push_query_response(&mut self, response: QueryResponse) {
+        self.push_front(CharEvent::QueryResult(QueryResultEvent::Response(response)));
     }
 
     /// Find the first sequence of non-char events, and promote them to the front.

@@ -5,6 +5,7 @@
 # This function is called by the __fish_on_interactive function, which is defined in config.fish.
 #
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
+    functions -e __fish_config_interactive
     # Create empty configuration directores if they do not already exist
     test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/ ||
         mkdir -p $__fish_config_dir/{completions, conf.d, functions}
@@ -175,6 +176,4 @@ end" >$__fish_config_dir/config.fish
     # Bump this whenever some code below needs to run once when upgrading to a new version.
     # The universal variable __fish_initialized is initialized in share/config.fish.
     set __fish_initialized 3800
-
-    functions -e __fish_config_interactive
 end

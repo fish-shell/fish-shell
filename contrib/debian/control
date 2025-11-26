@@ -12,7 +12,6 @@ Build-Depends: debhelper (>= 12),
  rustc (>= 1.85) | rustc-web (>= 1.85) | rustc-1.85,
 # Test dependencies
  locales-all,
- ncurses-base,
  python3
 # 4.6.2 is Debian 12/Ubuntu Noble 24.04; Ubuntu Jammy is 4.6.0.1
 Standards-Version: 4.6.2
@@ -22,15 +21,11 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-# for col and lock - bsdmainutils is required in Ubuntu focal
-Depends: bsdextrautils | bsdmainutils,
+# for col and lock
+Depends: bsdextrautils,
  file,
-# for the msgfmt command
- gettext-base,
 # for man
  man-db,
-# for terminal definitions
- ncurses-base,
 # for kill
  procps,
  python3 (>=3.5),

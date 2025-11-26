@@ -14,7 +14,8 @@ Build-Depends: debhelper (>= 12),
  locales-all,
  ncurses-base,
  python3
-Standards-Version: 4.1.5
+# 4.6.2 is Debian 12/Ubuntu Noble 24.04; Ubuntu Jammy is 4.6.0.1
+Standards-Version: 4.6.2
 Homepage: https://fishshell.com/
 Vcs-Git: https://github.com/fish-shell/fish-shell.git
 Vcs-Browser: https://github.com/fish-shell/fish-shell

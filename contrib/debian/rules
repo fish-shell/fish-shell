@@ -1,8 +1,10 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-# Uncomment this to turn on verbose mode.
-export DH_VERBOSE=1
+ifeq (,$(filter terse,$(DEB_BUILD_OPTIONS)))
+  export DH_VERBOSE=1
+  export CARGO_TERM_VERBOSE=true # required by Debian policy 4.9, version 4.2.0
+endif
 # The LTO profile sets CFLAGS/CXXFLAGS which confuse the compilation process; disable it
 # LTO is still performed by rustc based on Cargo.toml
 export DEB_BUILD_MAINT_OPTIONS=optimize=-lto

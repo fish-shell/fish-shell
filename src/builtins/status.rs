@@ -14,23 +14,37 @@ use cfg_if::cfg_if;
 use libc::F_OK;
 use rust_embed::RustEmbed;
 
+/// Create an enum with name `$name`.
+/// Its variants are given as comma-separated tuples, with each tuple containing the variant name,
+/// as well as a string representations of the variant.
+/// Optionally, additional strings can be provided, which are considered aliases for the enum
+/// variant.
+/// The generated enum will implement a `from_str` function, mapping from `&str` to the associated
+/// enum variant if any, and `to_wstr`, which maps from a variant to the associated
+/// `$default_name`.
+/// It is the user's responsibility to ensure than none of the string arguments appears more than
+/// once.
 macro_rules! str_enum {
-    ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
+    ($name:ident, $(($val:ident, $default_name:expr $(, $alias:expr)* $(,)?)),* $(,)?) => {
+        #[derive(Clone, Copy)]
+        enum $name {
+            $($val),*,
+        }
+
         impl $name {
-            fn from_wstr(s: &str) -> Option<Self> {
+            fn from_str(s: &str) -> Option<Self> {
                 // matching on str's lets us avoid having to do binary search and friends ourselves,
-                // this is ascii only anyways
+                // this is ASCII only anyways
                 match s {
-                    $($str => Some(Self::$val)),*,
+                    $($default_name => Some(Self::$val)),*,
+                    $($($alias => Some(Self::$val),)*)*
                     _ => None,
                 }
             }
 
             fn to_wstr(self) -> &'static wstr {
-                // There can be multiple vals => str mappings, and that's okay
-                #[allow(unreachable_patterns)]
                 match self {
-                    $(Self::$val => L!($str)),*,
+                    $(Self::$val => L!($default_name)),*,
                 }
             }
         }
@@ -38,57 +52,18 @@ macro_rules! str_enum {
 }
 
 use StatusCmd::*;
-#[derive(Clone, Copy)]
-enum StatusCmd {
-    STATUS_CURRENT_CMD = 1,
-    STATUS_BASENAME,
-    STATUS_DIRNAME,
-    STATUS_FEATURES,
-    STATUS_FILENAME,
-    STATUS_FISH_PATH,
-    STATUS_FUNCTION,
-    STATUS_IS_BLOCK,
-    STATUS_IS_BREAKPOINT,
-    STATUS_IS_COMMAND_SUB,
-    STATUS_IS_FULL_JOB_CTRL,
-    STATUS_IS_INTERACTIVE,
-    STATUS_IS_INTERACTIVE_JOB_CTRL,
-    STATUS_IS_INTERACTIVE_READ,
-    STATUS_IS_LOGIN,
-    STATUS_IS_NO_JOB_CTRL,
-    STATUS_LINE_NUMBER,
-    STATUS_SET_JOB_CONTROL,
-    STATUS_STACK_TRACE,
-    STATUS_TEST_FEATURE,
-    STATUS_CURRENT_COMMANDLINE,
-    STATUS_BUILD_INFO,
-    STATUS_BUILDINFO,
-    STATUS_GET_FILE,
-    STATUS_LIST_FILES,
-    STATUS_TERMINAL,
-    STATUS_TERMINAL_OS,
-    STATUS_TEST_TERMINAL_FEATURE,
-}
-
 str_enum!(
     StatusCmd,
-    (STATUS_BASENAME, "basename"),
-    (STATUS_BASENAME, "current-basename"),
-    (STATUS_BUILD_INFO, "build-info"),
-    (STATUS_BUILDINFO, "buildinfo"),
+    (STATUS_BASENAME, "basename", "current-basename"),
+    (STATUS_BUILD_INFO, "build-info", "buildinfo"),
     (STATUS_CURRENT_CMD, "current-command"),
     (STATUS_CURRENT_COMMANDLINE, "current-commandline"),
-    (STATUS_DIRNAME, "current-dirname"),
-    (STATUS_FILENAME, "current-filename"),
-    (STATUS_FUNCTION, "current-function"),
-    (STATUS_LINE_NUMBER, "current-line-number"),
-    (STATUS_DIRNAME, "dirname"),
+    (STATUS_DIRNAME, "dirname", "current-dirname"),
     (STATUS_FEATURES, "features"),
-    (STATUS_FILENAME, "filename"),
+    (STATUS_FILENAME, "filename", "current-filename"),
     (STATUS_FISH_PATH, "fish-path"),
-    (STATUS_FUNCTION, "function"),
+    (STATUS_FUNCTION, "function", "current-function"),
     (STATUS_GET_FILE, "get-file"),
-    (STATUS_LIST_FILES, "list-files"),
     (STATUS_IS_BLOCK, "is-block"),
     (STATUS_IS_BREAKPOINT, "is-breakpoint"),
     (STATUS_IS_COMMAND_SUB, "is-command-substitution"),
@@ -98,10 +73,11 @@ str_enum!(
     (STATUS_IS_INTERACTIVE_READ, "is-interactive-read"),
     (STATUS_IS_LOGIN, "is-login"),
     (STATUS_IS_NO_JOB_CTRL, "is-no-job-control"),
+    (STATUS_LINE_NUMBER, "line-number", "current-line-number"),
+    (STATUS_LIST_FILES, "list-files"),
+    (STATUS_LOCALE, "locale"),
     (STATUS_SET_JOB_CONTROL, "job-control"),
-    (STATUS_LINE_NUMBER, "line-number"),
-    (STATUS_STACK_TRACE, "print-stack-trace"),
-    (STATUS_STACK_TRACE, "stack-trace"),
+    (STATUS_STACK_TRACE, "stack-trace", "print-stack-trace"),
     (STATUS_TERMINAL, "terminal"),
     (STATUS_TERMINAL_OS, "terminal-os"),
     (STATUS_TEST_FEATURE, "test-feature"),
@@ -111,7 +87,7 @@ str_enum!(
 /// Values that may be returned from the test-feature option to status.
 #[repr(i32)]
 enum TestFeatureRetVal {
-    TEST_FEATURE_ON = 0,
+    TEST_FEATURE_ON,
     TEST_FEATURE_OFF,
     TEST_FEATURE_NOT_RECOGNIZED,
 }
@@ -377,7 +353,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     // If a status command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     if optind < argc {
-        match StatusCmd::from_wstr(args[optind].to_string().as_str()) {
+        match StatusCmd::from_str(args[optind].to_string().as_str()) {
             Some(s) => {
                 if !opts.try_set_status_cmd(s, streams) {
                     return Err(STATUS_CMD_ERROR);
@@ -510,6 +486,55 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             streams.out.append(src);
             return Ok(SUCCESS);
         }
+        STATUS_LOCALE => {
+            cfg_if! {
+                if #[cfg(not(feature = "localize-messages"))]
+                {
+                    streams.err.append(L!("fish was built with the `localize-messages` feature disabled. The `status locale` command is unavailable.\n"));
+                    return Err(STATUS_CMD_ERROR);
+                } else {
+                    if args.is_empty() {
+                        streams.err.append(wgettext_fmt!(
+                            BUILTIN_ERR_MISSING_SUBCMD,
+                            STATUS_LOCALE.to_wstr(),
+                        ));
+                        return Err(STATUS_INVALID_ARGS);
+                    }
+                    match args[0].to_string().as_str() {
+                        "get" => {
+                            streams.out.append(crate::wutil::gettext::status_locale_get());
+                            return Ok(SUCCESS);
+                        }
+                        "set" => {
+                            let owned_langs = args[1..]
+                                .iter()
+                                .map(|lang| lang.to_string())
+                                .collect::<Vec<_>>();
+                            let langs = owned_langs
+                                .iter()
+                                .map(|lang| lang.as_str())
+                                .collect::<Vec<_>>();
+                            let lints = crate::wutil::gettext::update_from_status_locale_builtin(&langs);
+                            let formatted_lints = lints.display_all();
+                            if !formatted_lints.is_empty() {
+                                streams.err.append(&formatted_lints);
+                            }
+                            return Ok(SUCCESS);
+                        }
+                        "unset" => {
+                            crate::wutil::gettext::unset_from_status_locale_builtin(parser.vars());
+                            return Ok(SUCCESS);
+                        }
+                        invalid => {
+                            streams
+                                .err
+                                .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, invalid));
+                            return Err(STATUS_INVALID_ARGS);
+                        }
+                    }
+                }
+            }
+        }
         STATUS_LIST_FILES => {
             use crate::util::wcsfilecmp_glob;
             let mut paths = vec![];
@@ -583,7 +608,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Err(STATUS_INVALID_ARGS);
             }
             match s {
-                STATUS_BUILD_INFO | STATUS_BUILDINFO => {
+                STATUS_BUILD_INFO => {
                     let version = bytes2wcstring(crate::BUILD_VERSION.as_bytes());
                     let target = bytes2wcstring(env!("BUILD_TARGET_TRIPLE").as_bytes());
                     let host = bytes2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
@@ -754,6 +779,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 | STATUS_TEST_FEATURE
                 | STATUS_GET_FILE
                 | STATUS_LIST_FILES
+                | STATUS_LOCALE
                 | STATUS_TEST_TERMINAL_FEATURE => {
                     unreachable!("")
                 }

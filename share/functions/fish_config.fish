@@ -270,13 +270,11 @@ fish_pager_color_secondary_description
                         # variables are defined, even if empty.
                         # This branch is only reachable in the case of `theme save` so $scope is always `-U`.
 
-                        for color in (printf "%s\n" $known_colors (set --names | string match -r $theme_var_filter) | sort -u)
-                            if set -q $color
-                                # Cache the value from whatever scope currently defines it
-                                set -l value $$color
-                                set -eg $color
-                                set -U $color $value
-                            end
+                        for color in (set --names | string match -r $theme_var_filter)
+                            # Cache the value from whatever scope currently defines it
+                            set -l value $$color
+                            set -eg $color
+                            set -U $color $value
                         end
                         return 0
                     end

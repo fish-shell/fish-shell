@@ -55,55 +55,55 @@
                             </template>
                         </div>
                         <!-- This is the sample text -->
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
-                            @click="selectColorSetting('command')">/bright/vixens</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'param'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.param)}"
-                            @click="selectColorSetting('param')">jump</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'end'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.end)}"
-                            @click="selectColorSetting('end')">|</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
-                            @click="selectColorSetting('command')">dozy</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'quote'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.quote)}"
-                            @click="selectColorSetting('quote')"> "fowl"</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'redirection'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.redirection)}"
-                            @click="selectColorSetting('redirection')">&gt; quack</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'end'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.end)}"
-                            @click="selectColorSetting('end')">&</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_command'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_command)}"
+                            @click="selectColorSetting('fish_color_command')">/bright/vixens</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_param'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_param)}"
+                            @click="selectColorSetting('fish_color_param')">jump</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_end'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_end)}"
+                            @click="selectColorSetting('fish_color_end')">|</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_command'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_command)}"
+                            @click="selectColorSetting('fish_color_command')">dozy</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_quote'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_quote)}"
+                            @click="selectColorSetting('fish_color_quote')"> "fowl"</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_redirection'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_redirection)}"
+                            @click="selectColorSetting('fish_color_redirection')">&gt; quack</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_end'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_end)}"
+                            @click="selectColorSetting('fish_color_end')">&</span>
                         <br>
 
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
-                            @click="selectColorSetting('command')">echo</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_command'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_command)}"
+                            @click="selectColorSetting('fish_color_command')">echo</span>
 
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'error'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.error)}"
-                            @click="selectColorSetting('error')">'</span><span
-                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'quote'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.quote)}"
-                            @click="selectColorSetting('quote')">Errors are the portals to discovery</span>
-
-                        <br>
-
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'comment'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.comment)}"
-                            @click="selectColorSetting('comment')"># This is a comment</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_error'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_error)}"
+                            @click="selectColorSetting('fish_color_error')">'</span><span
+                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_quote'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_quote)}"
+                            @click="selectColorSetting('fish_color_quote')">Errors are the portals to discovery</span>
 
                         <br>
 
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
-                            @click="selectColorSetting('command')">Th</span><span class="fake_cursor"><span
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_comment'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_comment)}"
+                            @click="selectColorSetting('fish_color_comment')"># This is a comment</span>
+
+                        <br>
+
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_command'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_command)}"
+                            @click="selectColorSetting('fish_color_command')">Th</span><span class="fake_cursor"><span
                                 style="visibility: hidden">i</span></span><span
-                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'autosuggestion'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.autosuggestion)}"
-                            @click="selectColorSetting('autosuggestion')">s is an autosuggestion</span>
+                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_autosuggestion'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.colors.fish_color_autosuggestion)}"
+                            @click="selectColorSetting('fish_color_autosuggestion')">s is an autosuggestion</span>
 
 
                         <div style="position: absolute; right: 5px; bottom: 5px;">
@@ -132,7 +132,7 @@
                                                 :style="{'background-color': interpret_color(color)}"
                                                 @click="changeSelectedTextColor(color)">
                                                 <div class="colorpicker_term256_selection_indicator"
-                                                    x-show="selectedColorScheme[selectedColorSetting] == color"
+                                                    x-show="selectedColorScheme.colors[selectedColorSetting] == color"
                                                     :style="{'border-color': interpret_color(border_color_for_color(color))}">
                                                 </div>
                                             </td>
@@ -160,26 +160,26 @@
                                     <div class="colorpicker_text_sample_tight"
                                         :style="{'background-color': colorScheme.preferred_background}">
                                         <span
-                                            :style="{'color': interpret_color(colorScheme.command)}">/bright/vixens</span>
-                                        <span :style="{'color': interpret_color(colorScheme.param)}">jump</span>
-                                        <span :style="{'color': interpret_color(colorScheme.end)}">|</span>
-                                        <span :style="{'color': interpret_color(colorScheme.command)}">dozy</span>
-                                        <span :style="{'color': interpret_color(colorScheme.quote)}"> "fowl" </span>
-                                        <span :style="{'color': interpret_color(colorScheme.redirection)}">&gt;
+                                            :style="{'color': interpret_color(colorScheme.colors.fish_color_command)}">/bright/vixens</span>
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_param)}">jump</span>
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_end)}">|</span>
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_command)}">dozy</span>
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_quote)}"> "fowl" </span>
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_redirection)}">&gt;
                                             quack</span>
-                                        <span :style="{'color': interpret_color(colorScheme.end)}">&</span>
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_end)}">&</span>
                                         <br>
-                                        <span :style="{'color': interpret_color(colorScheme.command)}">echo</span>
-                                        <span :style="{'color': interpret_color(colorScheme.error)}">'</span><span
-                                            :style="{'color': interpret_color(colorScheme.quote)}">Errors are the
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_command)}">echo</span>
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_error)}">'</span><span
+                                            :style="{'color': interpret_color(colorScheme.colors.fish_color_quote)}">Errors are the
                                             portals to discovery</span>
                                         <br>
-                                        <span :style="{'color': interpret_color(colorScheme.comment)}"># This is a
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_comment)}"># This is a
                                             comment</span>
                                         <br>
-                                        <span :style="{'color': interpret_color(colorScheme.command)}">Th</span><span
+                                        <span :style="{'color': interpret_color(colorScheme.colors.fish_color_command)}">Th</span><span
                                             class="fake_cursor"><span style="visibility: hidden">i</span></span><span
-                                            :style="{ 'color': interpret_color(colorScheme.autosuggestion)}">s is an
+                                            :style="{ 'color': interpret_color(colorScheme.colors.fish_color_autosuggestion)}">s is an
                                             autosuggestion</span>
                                     </div>
                                 </div>

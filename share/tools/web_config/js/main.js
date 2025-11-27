@@ -2,7 +2,10 @@
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("colors", () => ({
         // TODO make null
-        selectedColorScheme: {},
+        selectedColorScheme: {
+            colors: {},
+            colordata: {},
+        },
         terminalBackgroundColor: "black",
         showSaveButton: false,
         csUserVisibleTitle: "",
@@ -58,7 +61,7 @@ document.addEventListener("alpine:init", () => {
 
         toggleCustomizationActive() {
             if (!this.customizationActive) {
-                this.beginCustomizationWithSetting(this.selectedColorSetting || "command");
+                this.beginCustomizationWithSetting(this.selectedColorSetting || "fish_color_command");
             } else {
                 this.customizationActive = false;
                 this.selectedColorSetting = "";
@@ -67,8 +70,8 @@ document.addEventListener("alpine:init", () => {
         },
 
         changeSelectedTextColor(color) {
-            this.selectedColorScheme[this.selectedColorSetting] = color;
-            this.selectedColorScheme["colordata-" + this.selectedColorSetting].color = color;
+            this.selectedColorScheme.colors[this.selectedColorSetting] = color;
+            this.selectedColorScheme.colordata[this.selectedColorSetting].color = color;
             this.noteThemeChanged();
         },
 
@@ -86,7 +89,7 @@ document.addEventListener("alpine:init", () => {
         /* Array of FishColorSchemes */
         colorSchemes: [],
         isValidColor(col) {
-            if (col == "normal") return true;
+            if (col == "fish_color_normal") return true;
             var s = new Option().style;
             s.color = col;
             return !!s.color;
@@ -100,32 +103,32 @@ document.addEventListener("alpine:init", () => {
 
         async setTheme() {
             var settingNames = [
-                "normal",
-                "command",
-                "keyword",
-                "quote",
-                "redirection",
-                "end",
-                "error",
-                "param",
-                "comment",
-                "match",
-                "selection",
-                "search_match",
-                "history_current",
-                "operator",
-                "escape",
-                "cwd",
-                "cwd_root",
-                "option",
-                "valid_path",
-                "autosuggestion",
-                "user",
-                "host",
-                "host_remote",
-                "history_current",
-                "status",
-                "cancel",
+                "fish_color_normal",
+                "fish_color_command",
+                "fish_color_keyword",
+                "fish_color_quote",
+                "fish_color_redirection",
+                "fish_color_end",
+                "fish_color_error",
+                "fish_color_param",
+                "fish_color_comment",
+                "fish_color_match",
+                "fish_color_selection",
+                "fish_color_search_match",
+                "fish_color_history_current",
+                "fish_color_operator",
+                "fish_color_escape",
+                "fish_color_cwd",
+                "fish_color_cwd_root",
+                "fish_color_option",
+                "fish_color_valid_path",
+                "fish_color_autosuggestion",
+                "fish_color_user",
+                "fish_color_host",
+                "fish_color_host_remote",
+                "fish_color_history_current",
+                "fish_color_status",
+                "fish_color_cancel",
                 // Cheesy hardcoded variable names ahoy!
                 // These are all the pager vars,
                 // we should really just save all these in a dictionary.
@@ -153,17 +156,16 @@ document.addEventListener("alpine:init", () => {
             };
             for (var name of settingNames) {
                 var selected;
-                var realname = "colordata-" + name;
                 // Skip colors undefined in the current theme
                 // js is dumb - the empty string is false,
                 // but we want that to mean unsetting a var.
                 if (
-                    !this.selectedColorScheme[realname] &&
-                    this.selectedColorScheme[realname] !== ""
+                    !this.selectedColorScheme.colordata[name] &&
+                    this.selectedColorScheme.colordata[name] !== ""
                 ) {
                     continue;
                 } else {
-                    selected = this.selectedColorScheme[realname];
+                    selected = this.selectedColorScheme.colordata[name];
                 }
                 postdata.colors.push({
                     what: name,
@@ -186,7 +188,8 @@ document.addEventListener("alpine:init", () => {
             for (var scheme of schemes) {
                 var currentScheme = {
                     name: "Current",
-                    colors: [],
+                    colors: {},
+                    colordata: {},
                     preferred_background: "black",
                 };
                 currentScheme["name"] = scheme["theme"];
@@ -200,12 +203,12 @@ document.addEventListener("alpine:init", () => {
                 if (scheme["url"]) currentScheme["url"] = scheme["url"];
 
                 for (var i in data) {
-                    currentScheme[data[i].name] = interpret_color(data[i].color).replace(/#/, "");
+                    currentScheme.colors[data[i].name] = interpret_color(data[i].color).replace(/#/, "");
                     // HACK: For some reason the colors array is cleared later
-                    // So we cheesily encode the actual objects as colordata-, so we can send them.
+                    // So we cheesily encode the actual objects in colordata, so we can send them.
                     // TODO: We should switch to keeping the objects, and also displaying them
                     // with underlines and such.
-                    currentScheme["colordata-" + data[i].name] = data[i];
+                    currentScheme.colordata[data[i].name] = data[i];
                 }
                 this.colorSchemes.push(currentScheme);
             }

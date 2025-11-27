@@ -763,24 +763,24 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Make sure we return at least these
         remaining = set(
             [
-                "normal",
-                "error",
-                "command",
-                "end",
-                "param",
-                "comment",
-                "match",
-                "selection",
-                "search_match",
-                "operator",
-                "escape",
-                "quote",
-                "redirection",
-                "valid_path",
-                "autosuggestion",
-                "user",
-                "host",
-                "cancel",
+                "fish_color_normal",
+                "fish_color_error",
+                "fish_color_command",
+                "fish_color_end",
+                "fish_color_param",
+                "fish_color_comment",
+                "fish_color_match",
+                "fish_color_selection",
+                "fish_color_search_match",
+                "fish_color_operator",
+                "fish_color_escape",
+                "fish_color_quote",
+                "fish_color_redirection",
+                "fish_color_valid_path",
+                "fish_color_autosuggestion",
+                "fish_color_user",
+                "fish_color_host",
+                "fish_color_cancel",
             ]
         )
 
@@ -818,10 +818,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                         value = "#" + value
                 info[key] = value
 
-            for match in re.finditer(r"^fish_(pager_)?color_(\S+) ?(.*)", line):
-                color_name, color_value = [x.strip() for x in match.group(2, 3)]
-                if match.group(1):
-                    color_name = "fish_pager_color_" + color_name
+            for match in re.finditer(
+                r"^((?:fish_color_|fish_pager_color_)\S+) ?(.*)", line
+            ):
+                color_name, color_value = [x.strip() for x in match.group(1, 2)]
                 add_color(color_name, color_value)
                 remaining.discard(color_name)
 
@@ -946,29 +946,22 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return out
 
     def do_set_color_for_variable(self, name, color):
-        "Sets a color for a fish color name, like 'autosuggestion'"
+        "Sets a color for a fish color name, like 'fish_color_autosuggestion'"
         if not name:
             raise ValueError
         if not color and not color == "":
             color = "normal"
         else:
             color = unparse_color(color)
-        if not name.startswith("fish_pager_color_"):
-            varname = "fish_color_" + name
-        # If the name already starts with "fish_", use it as the varname
-        # This is needed for 'fish_pager_color' vars.
-        if name.startswith("fish_"):
-            varname = name
-        # Check if the varname is allowable.
-        varname = varname.strip()
-        if not re.match("^[a-zA-Z0-9_]+$", varname):
-            print("Refusing to use variable name: '", varname, "'")
+        name = name.strip()
+        if not re.match("^[a-zA-Z0-9_]+$", name):
+            print("Refusing to use variable name: '", name, "'")
             return
         color = color.strip()
         if not re.match("^[a-zA-Z0-9_= -]*$", color):
             print("Refusing to use color value: ", color)
             return
-        command = "set -U " + varname
+        command = "set -U " + name
         command += " " + color
 
         out, err = run_fish_cmd(command)
@@ -1285,14 +1278,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             for item in postvars.get("colors"):
                 what = item.get("what")
                 color = item.get("color")
-
                 if what:
-                    if not what.startswith("fish_pager_color_") and not what.startswith(
-                        "fish_color_"
-                    ):
-                        have_colors.add("fish_color_" + what)
-                    else:
-                        have_colors.add(what)
+                    have_colors.add(what)
                     output = self.do_set_color_for_variable(what, color)
 
             # Set all known colors that weren't defined in this theme

@@ -1238,8 +1238,27 @@ msgstr ""
 msgid "Jobs getting started or continued"
 msgstr ""
 
+#, c-format
+msgid "Language specifiers appear repeatedly: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Language specifiers are not well-formed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Language specifiers do not have catalogs: %s\n"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "List or remove functions"
+
+msgid "Localization is active.\n"
+msgstr ""
+
+#, c-format
+msgid "Localization is disabled because %s is set to a C locale.\n"
+msgstr ""
 
 msgid "Logical operations are not supported, use `test` instead"
 msgstr ""
@@ -1553,6 +1572,20 @@ msgid "The function '%s' calls itself immediately, which would result in an infi
 msgstr "The function “%s” calls itself immediately, which would result in an infinite loop."
 
 msgid "The interactive reader/input system"
+msgstr ""
+
+#, c-format
+msgid "The language list is set based on the %s environment variable.\n"
+msgstr ""
+
+msgid "The language list is set to the default value because no explicit value was specified.\n"
+msgstr ""
+
+#, c-format
+msgid "The language list is set to the following value: %s\n"
+msgstr ""
+
+msgid "The language list is set via the `status locale` builtin.\n"
 msgstr ""
 
 msgid "There are still jobs active:\n"

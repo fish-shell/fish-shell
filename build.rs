@@ -42,9 +42,6 @@ fn main() {
 
     fish_build_helper::rebuild_if_embedded_path_changed("share");
 
-    #[cfg(feature = "gettext-extract")]
-    rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
-
     let build = cc::Build::new();
     let mut target = Target::new_from(build).unwrap();
     // Keep verbose mode on until we've ironed out rust build script stuff

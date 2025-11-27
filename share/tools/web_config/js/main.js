@@ -102,71 +102,14 @@ document.addEventListener("alpine:init", () => {
         },
 
         async setTheme() {
-            var settingNames = [
-                "fish_color_normal",
-                "fish_color_command",
-                "fish_color_keyword",
-                "fish_color_quote",
-                "fish_color_redirection",
-                "fish_color_end",
-                "fish_color_error",
-                "fish_color_param",
-                "fish_color_comment",
-                "fish_color_match",
-                "fish_color_selection",
-                "fish_color_search_match",
-                "fish_color_history_current",
-                "fish_color_operator",
-                "fish_color_escape",
-                "fish_color_cwd",
-                "fish_color_cwd_root",
-                "fish_color_option",
-                "fish_color_valid_path",
-                "fish_color_autosuggestion",
-                "fish_color_user",
-                "fish_color_host",
-                "fish_color_host_remote",
-                "fish_color_history_current",
-                "fish_color_status",
-                "fish_color_cancel",
-                // Cheesy hardcoded variable names ahoy!
-                // These are all the pager vars,
-                // we should really just save all these in a dictionary.
-                "fish_pager_color_background",
-                "fish_pager_color_prefix",
-                "fish_pager_color_progress",
-                "fish_pager_color_completion",
-                "fish_pager_color_description",
-                "fish_pager_color_selected_background",
-                "fish_pager_color_selected_prefix",
-                "fish_pager_color_selected_completion",
-                "fish_pager_color_selected_description",
-                "fish_pager_color_secondary_background",
-                "fish_pager_color_secondary_prefix",
-                "fish_pager_color_secondary_completion",
-                "fish_pager_color_secondary_description",
-            ];
-            var remaining = settingNames.length;
             var postdata = {
                 theme: this.selectedColorScheme["name"],
                 colors: [],
             };
-            for (var name of settingNames) {
-                var selected;
-                // Skip colors undefined in the current theme
-                // js is dumb - the empty string is false,
-                // but we want that to mean unsetting a var.
-                if (
-                    !this.selectedColorScheme.colordata[name] &&
-                    this.selectedColorScheme.colordata[name] !== ""
-                ) {
-                    continue;
-                } else {
-                    selected = this.selectedColorScheme.colordata[name];
-                }
+            for (let [name, value] of Object.entries(this.selectedColorScheme.colordata)) {
                 postdata.colors.push({
                     what: name,
-                    color: selected,
+                    color: value,
                 });
             }
             let resp = await fetch("set_color/", {

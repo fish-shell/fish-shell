@@ -77,7 +77,7 @@ The other lines are just like ``set variable value``, except that no expansions 
 
 Any color variable fish knows about that the theme doesn't set will be set to empty when it is loaded, so the old theme is completely overwritten.
 
-Other than that, .theme files can contain any variable with a name that matches the regular expression ``'^fish_(?:pager_)?color.*$'`` - starts with ``fish_``, an optional ``pager_``, then ``color`` and then anything.
+Other than that, .theme files can contain any variable with a name that matches the regular expression ``'^fish_(?:pager_)?color_.*$'`` - starts with ``fish_``, an optional ``pager_``, then ``color_`` and then anything.
 
 Example
 -------

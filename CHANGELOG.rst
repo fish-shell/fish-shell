@@ -7,6 +7,10 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 
+Scripting improvements
+----------------------
+- ``math`` gained a new ``logb`` function.
+
 Interactive improvements
 ------------------------
 - When typing immediately after starting fish, the first prompt is now rendered correctly.

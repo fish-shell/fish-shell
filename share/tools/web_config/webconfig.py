@@ -720,10 +720,9 @@ class FishVar:
 class FishBinding:
     """A class that represents keyboard binding"""
 
-    def __init__(self, command, raw_binding, readable_binding, description=None):
+    def __init__(self, command, raw_binding, readable_binding):
         self.command = command
         self.bindings = []
-        self.description = description
         self.add_binding(raw_binding, readable_binding)
 
     def add_binding(self, raw_binding, readable_binding):
@@ -740,7 +739,6 @@ class FishBinding:
         return {
             "command": self.command,
             "bindings": self.bindings,
-            "description": self.description,
         }
 
 
@@ -786,31 +784,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             ]
         )
 
-        # Here are our color descriptions
-        descriptions = {
-            "normal": "Default text",
-            "command": "Ordinary commands",
-            "quote": "Text within quotes",
-            "redirection": "Like | and >",
-            "end": "Like ; and &",
-            "error": "Potential errors",
-            "param": "Command parameters",
-            "comment": "Comments start with #",
-            "match": "Matching parenthesis",
-            "selection": "Selected text",
-            "search_match": "History searching",
-            "history_current": "Directory history",
-            "operator": "Like * and ~",
-            "escape": "Escapes like \\n",
-            "cwd": "Current directory",
-            "cwd_root": "cwd for root user",
-            "valid_path": "Valid paths",
-            "autosuggestion": "Suggested completion",
-            "user": "Username in the prompt",
-            "host": "Hostname in the prompt",
-            "cancel": "The ^C cancel indicator",
-        }
-
         # If we don't have a path, we get the current theme.
         if not path:
             out, err = run_fish_cmd("set -L")
@@ -822,8 +795,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         colors = []
 
         def add_color(color_name, color_value):
-            color_desc = descriptions.get(color_name, "")
-            data = {"name": color_name, "description": color_desc}
+            data = {"name": color_name}
             data.update(parse_color(color_value))
             colors.append(data)
 

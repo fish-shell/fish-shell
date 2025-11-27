@@ -761,9 +761,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_get_colors(self, path=None):
         """Read the colors from a .theme file in path, or the current shell if no path has been given"""
-        # Looks for fish_color_*.
-        # Returns an array of lists [color_name, color_description, color_value]
-        result = []
 
         # Make sure we return at least these
         remaining = set(
@@ -820,7 +817,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         else:
             with open(path) as f:
                 out = f.read()
+
         info = {}
+        colors = []
+
+        def add_color(color_name, color_value):
+            color_desc = descriptions.get(color_name, "")
+            data = {"name": color_name, "description": color_desc}
+            data.update(parse_color(color_value))
+            colors.append(data)
+
         for line in out.split("\n"):
             # Ignore empty lines
             if not line:
@@ -844,22 +850,17 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 color_name, color_value = [x.strip() for x in match.group(2, 3)]
                 if match.group(1):
                     color_name = "fish_pager_color_" + color_name
-                color_desc = descriptions.get(color_name, "")
-                data = {"name": color_name, "description": color_desc}
-                data.update(parse_color(color_value))
-                result.append(data)
+                add_color(color_name, color_value)
                 remaining.discard(color_name)
 
-        # Sort our result (by their keys)
-        result.sort(key=operator.itemgetter("name"))
+        colors.sort(key=operator.itemgetter("name"))
 
         # Ensure that we have all the color names we know about, so that if the
         # user deletes one he can still set it again via the web interface
         for color_name in remaining:
-            color_desc = descriptions.get(color_name, "")
-            result.append([color_name, color_desc, parse_color("")])
+            add_color(color_name, "")
 
-        info["colors"] = result
+        info["colors"] = colors
         return info
 
     def do_get_functions(self):

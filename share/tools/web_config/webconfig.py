@@ -764,7 +764,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # If we don't have a path, we get the current theme.
         if not path:
-            out, err = run_fish_cmd("set -L")
+            out, err = run_fish_cmd("fish_config theme dump")
         else:
             with open(path) as f:
                 out = f.read()

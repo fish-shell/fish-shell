@@ -11,7 +11,6 @@ document.addEventListener("alpine:init", () => {
         text_color_for_color: window.text_color_for_color,
 
         changeSelectedColorScheme(newScheme) {
-            console.log(newScheme);
             this.selectedColorScheme = newScheme;
             if (this.selectedColorScheme.preferred_background) {
                 this.terminalBackgroundColor = this.selectedColorScheme.preferred_background;

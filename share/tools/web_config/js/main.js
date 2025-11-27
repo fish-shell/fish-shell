@@ -141,13 +141,10 @@ document.addEventListener("alpine:init", () => {
                 "fish_pager_color_selected_prefix",
                 "fish_pager_color_selected_completion",
                 "fish_pager_color_selected_description",
-                // TODO: Setting these to empty currently makes them weird. Figure out why!
-                /*
-                                "fish_pager_color_secondary_background",
-                                "fish_pager_color_secondary_prefix",
-                                "fish_pager_color_secondary_completion",
-                                "fish_pager_color_secondary_description",
-                                */
+                "fish_pager_color_secondary_background",
+                "fish_pager_color_secondary_prefix",
+                "fish_pager_color_secondary_completion",
+                "fish_pager_color_secondary_description",
             ];
             var remaining = settingNames.length;
             var postdata = {

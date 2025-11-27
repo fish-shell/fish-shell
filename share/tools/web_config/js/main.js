@@ -12,8 +12,7 @@ document.addEventListener("alpine:init", () => {
 
         changeSelectedColorScheme(newScheme) {
             console.log(newScheme);
-            // TODO find out if angular.copy is deep copy
-            this.selectedColorScheme = { ...newScheme };
+            this.selectedColorScheme = newScheme;
             if (this.selectedColorScheme.preferred_background) {
                 this.terminalBackgroundColor = this.selectedColorScheme.preferred_background;
             }
@@ -211,7 +210,7 @@ document.addEventListener("alpine:init", () => {
                 }
                 this.colorSchemes.push(currentScheme);
             }
-            this.changeSelectedColorScheme(this.colorSchemes[0]);
+            this.changeSelectedColorScheme(JSON.parse(JSON.stringify(this.colorSchemes[0])));
         },
     }));
 

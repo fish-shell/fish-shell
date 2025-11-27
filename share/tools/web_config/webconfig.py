@@ -38,7 +38,7 @@ term = os.environ.pop("TERM", None)
 # which will block the whole process - see https://docs.python.org/3/library/webbrowser.html
 import webbrowser
 
-if term:
+if term is not None:
     os.environ["TERM"] = term
 
 

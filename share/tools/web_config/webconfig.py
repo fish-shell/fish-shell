@@ -820,7 +820,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         else:
             with open(path) as f:
                 out = f.read()
-        extrainfo = {}
+        info = {}
         for line in out.split("\n"):
             # Ignore empty lines
             if not line:
@@ -838,7 +838,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if key == "preferred_background":
                     if value not in named_colors and not value.startswith("#"):
                         value = "#" + value
-                extrainfo[key] = value
+                info[key] = value
 
             for match in re.finditer(r"^fish_(pager_)?color_(\S+) ?(.*)", line):
                 color_name, color_value = [x.strip() for x in match.group(2, 3)]
@@ -859,7 +859,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             color_desc = descriptions.get(color_name, "")
             result.append([color_name, color_desc, parse_color("")])
 
-        return result, extrainfo
+        info["colors"] = result
+        return info
 
     def do_get_functions(self):
         out, err = run_fish_cmd("functions")
@@ -1181,11 +1182,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # Construct our colorschemes.
             # Add the current scheme first, then the default.
             # The rest in alphabetical order.
-            curcolors, curinfo = self.do_get_colors()
-            defcolors, definfo = self.do_get_colors("themes/fish default.theme")
-            curinfo.update({"theme": "Current", "colors": curcolors})
-            definfo.update({"theme": "fish default", "colors": defcolors})
-            output = [curinfo, definfo]
+            output = []
+            output += [self.do_get_colors() | {"theme": "Current"}]
+            output += [
+                self.do_get_colors("themes/fish default.theme")
+                | {"theme": "fish default"}
+            ]
 
             confighome = (
                 os.environ["XDG_CONFIG_HOME"]
@@ -1200,9 +1202,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 theme = os.path.splitext(os.path.basename(p))[0]
                 if any(theme == d["theme"] for d in output):
                     continue
-                out, outinfo = self.do_get_colors(p)
-                outinfo.update({"theme": theme, "colors": out})
-                output.append(outinfo)
+                output += [self.do_get_colors(p) | {"theme": theme}]
         elif p == "/functions/":
             output = self.do_get_functions()
         elif p == "/variables/":

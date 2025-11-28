@@ -1,5 +1,5 @@
-# name: 'Just a Touch'
-# preferred_background: 'black'
+# name: Just a Touch
+# preferred_background: black
 
 fish_color_normal normal
 fish_color_autosuggestion 9C9C9C

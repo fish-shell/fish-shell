@@ -1,6 +1,6 @@
-# name: 'Tomorrow Night Bright'
-# preferred_background: 'black'
-# url: 'https://github.com/chriskempson/tomorrow-theme'
+# name: Tomorrow Night Bright
+# preferred_background: black
+# url: https://github.com/chriskempson/tomorrow-theme
 
 fish_color_normal normal
 fish_color_autosuggestion 969896

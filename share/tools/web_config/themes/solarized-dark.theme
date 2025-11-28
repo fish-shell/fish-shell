@@ -1,6 +1,6 @@
 # name: Solarized Dark
 # preferred_background: 002b36
-# url: 'http://ethanschoonover.com/solarized'
+# url: http://ethanschoonover.com/solarized
 
 fish_color_normal normal
 fish_color_autosuggestion 586e75

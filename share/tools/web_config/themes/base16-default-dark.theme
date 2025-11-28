@@ -1,6 +1,6 @@
-# name: 'Base16 Default Dark'
+# name: Base16 Default Dark
 # preferred_background: 181818
-# url: 'https://github.com/chriskempson/base16-default-schemes'
+# url: https://github.com/chriskempson/base16-default-schemes
 
 fish_color_normal normal
 fish_color_autosuggestion 585858

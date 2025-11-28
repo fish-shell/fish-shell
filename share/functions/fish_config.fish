@@ -203,7 +203,7 @@ function fish_config --description "Launch fish's web based configuration"
                         # Use a new, --no-config, fish to display the theme.
                         $fish --no-config -c '
                             fish_config theme choose $argv
-                            fish_config theme demo $argv
+                            fish_config theme demo
                         ' $themename
                     end
 

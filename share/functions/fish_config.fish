@@ -305,7 +305,7 @@ end
 function __fish_config_cat_theme -a theme_name
     switch $theme_name
         case 'fish default'
-            set theme_name fish-default
+            set theme_name default
         case 'ayu Dark' 'ayu Light' 'ayu Mirage' 'Base16 Default Dark' \
             'Base16 Default Light' 'Base16 Eighties' 'Bay Cruise' Dracula \
             Fairground 'Just a Touch' Lava 'Mono Lace' 'Mono Smoke' None Nord \

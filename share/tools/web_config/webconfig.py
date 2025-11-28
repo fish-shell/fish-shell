@@ -1123,8 +1123,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             output = []
             output += [self.do_get_colors() | {"theme": "Current"}]
             output += [
-                self.do_get_colors("themes/fish-default.theme")
-                | {"theme": "fish-default"}
+                self.do_get_colors("themes/default.theme") | {"theme": "default"}
             ]
 
             confighome = (

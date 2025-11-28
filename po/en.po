@@ -78,10 +78,6 @@ msgid "$status is not valid as a command. See `help %s`"
 msgstr ""
 
 #, c-format
-msgid "%.*s: invalid conversion specification"
-msgstr "%.*s: invalid conversion specification"
-
-#, c-format
 msgid "%s"
 msgstr ""
 
@@ -724,6 +720,10 @@ msgstr ""
 #, c-format
 msgid "%s: given %d indexes but %d values\n"
 msgstr ""
+
+#, c-format
+msgid "%s: invalid conversion specification"
+msgstr "%s: invalid conversion specification"
 
 #, c-format
 msgid "%s: invalid option combination\n"

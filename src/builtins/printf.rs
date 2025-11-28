@@ -50,7 +50,7 @@
 
 use super::prelude::*;
 use crate::locale::{Locale, get_numeric_locale};
-use crate::wchar::encode_byte_to_char;
+use crate::wchar::{decode_byte_from_char, encode_byte_to_char};
 use crate::wutil::{
     errors::Error,
     wcstod::wcstod,
@@ -665,20 +665,26 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 uni_value = uni_value * 16 + p.char_at(0).to_digit(16).unwrap();
                 p = &p[1..];
             }
-            // N.B. we assume __STDC_ISO_10646__.
-            if uni_value > 0x10FFFF {
-                self.fatal_error(wgettext_fmt!(
-                    "Unicode character out of range: \\%c%0*x",
-                    esc_char,
-                    exp_esc_length,
-                    uni_value
-                ));
-            } else {
-                // TODO-RUST: if uni_value is a surrogate, we need to encode it using our PUA scheme.
-                if let Some(c) = char::from_u32(uni_value) {
-                    self.append_output(c);
-                } else {
-                    self.fatal_error(wgettext!("Invalid code points not yet supported by printf"));
+            match char::from_u32(uni_value) {
+                Some(c) => {
+                    // Test if this character would be treated specially when decoding.
+                    // If so, PUA-encode it.
+                    if decode_byte_from_char(c).is_some() {
+                        // A `char` represents an Unicode scalar value, which takes up at most 4 bytes when encoded in UTF-8.
+                        let mut converted = [0_u8; 4];
+                        for byte in c.encode_utf8(&mut converted).as_bytes() {
+                            self.append_output(encode_byte_to_char(*byte));
+                        }
+                    } else {
+                        self.append_output(c);
+                    }
+                }
+                None => {
+                    let escaped_char_string = format!("\\{esc_char}{uni_value:0exp_esc_length$x}");
+                    self.fatal_error(wgettext_fmt!(
+                        "Not a valid Unicode character: %s",
+                        escaped_char_string
+                    ));
                 }
             }
         } else {

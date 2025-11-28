@@ -1185,9 +1185,6 @@ msgstr ""
 msgid "Invalid arguments"
 msgstr ""
 
-msgid "Invalid code points not yet supported by printf"
-msgstr ""
-
 msgid "Invalid index value"
 msgstr ""
 
@@ -1289,6 +1286,10 @@ msgstr ""
 
 msgid "Not a number"
 msgstr ""
+
+#, c-format
+msgid "Not a valid Unicode character: %s"
+msgstr "Not a valid Unicode character: %s"
 
 msgid "Notifications about universal variable changes"
 msgstr ""
@@ -1635,10 +1636,6 @@ msgstr "Unexpected end of string, square brackets do not match"
 
 msgid "Unexpected token"
 msgstr ""
-
-#, c-format
-msgid "Unicode character out of range: \\%c%0*x"
-msgstr "Unicode character out of range: \\%c%0*x"
 
 msgid "Unknown"
 msgstr "Unknown"

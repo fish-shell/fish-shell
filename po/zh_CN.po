@@ -1219,9 +1219,6 @@ msgstr "主题监视器的内部细节"
 msgid "Invalid arguments"
 msgstr "无效参数"
 
-msgid "Invalid code points not yet supported by printf"
-msgstr "尚未由 printf 支持的无效码点"
-
 msgid "Invalid index value"
 msgstr "无效索引值"
 
@@ -1323,6 +1320,10 @@ msgstr "不是一个函数"
 
 msgid "Not a number"
 msgstr "非数字"
+
+#, c-format
+msgid "Not a valid Unicode character: %s"
+msgstr ""
 
 msgid "Notifications about universal variable changes"
 msgstr "通用变量变更通知"
@@ -1669,10 +1670,6 @@ msgstr "字符串意外结束，方括号不匹配"
 
 msgid "Unexpected token"
 msgstr "意外的记号"
-
-#, c-format
-msgid "Unicode character out of range: \\%c%0*x"
-msgstr "Unicode 字符超出范围：\\%c%0*x"
 
 msgid "Unknown"
 msgstr "未知"

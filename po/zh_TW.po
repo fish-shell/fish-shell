@@ -1193,9 +1193,6 @@ msgstr "主題監聽的內部資訊"
 msgid "Invalid arguments"
 msgstr "引數無效"
 
-msgid "Invalid code points not yet supported by printf"
-msgstr "printf 尚不支援無效的碼位"
-
 msgid "Invalid index value"
 msgstr "索引值無效"
 
@@ -1297,6 +1294,10 @@ msgstr "不是函式"
 
 msgid "Not a number"
 msgstr "不是數字"
+
+#, c-format
+msgid "Not a valid Unicode character: %s"
+msgstr ""
 
 msgid "Notifications about universal variable changes"
 msgstr "通域變數變更通知"
@@ -1644,10 +1645,6 @@ msgstr "非預期的字串結尾，中括弧不對稱"
 
 msgid "Unexpected token"
 msgstr "非預期的詞元"
-
-#, c-format
-msgid "Unicode character out of range: \\%c%0*x"
-msgstr "Unicode 字元超出範圍：\\%c%0*x"
 
 msgid "Unknown"
 msgstr "未知"

@@ -1,7 +1,4 @@
 # name: fish default
-# NOTE: These should only use named colors
-# to give us the maximum chance they are
-# visible in whatever terminal setup.
 
 fish_color_normal normal
 fish_color_autosuggestion brblack
@@ -27,8 +24,7 @@ fish_color_selection white --background=brblack --bold
 fish_color_status red
 fish_color_user brgreen
 fish_color_valid_path --underline
-fish_pager_color_completion normal
-fish_pager_color_description yellow -i
+fish_pager_color_description yellow --italics
 fish_pager_color_prefix normal --bold --underline
 fish_pager_color_progress brwhite --background=cyan --bold
 fish_pager_color_selected_background -r

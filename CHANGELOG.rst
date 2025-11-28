@@ -25,6 +25,7 @@ Regression fixes:
 -----------------
 - (from 4.1.0) Crash on invalid colors variables (:issue:`12078`).
 - (from 4.2.0) Incorrect emoji width computation on macOS.
+- (from 4.2.0) Mouse clicks and :kbd:`ctrl-l` edge cases in multiline commandlines (:issue:`12121`).
 
 fish 4.2.1 (released November 13, 2025)
 =======================================

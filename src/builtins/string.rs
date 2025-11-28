@@ -187,7 +187,11 @@ impl RegexError {
                     &WString::from(e.error_message())
                 );
                 string_error!(streams, "%s: %s\n", cmd, pattern);
-                string_error!(streams, "%s: %*s\n", cmd, e.offset().unwrap_or(0), "^");
+                // TODO: This is misaligned if `pattern` contains characters which are not exactly 1
+                // terminal cell wide.
+                let mut marker = " ".repeat(e.offset().unwrap_or(0).saturating_sub(1));
+                marker.push('^');
+                string_error!(streams, "%s: %s\n", cmd, marker);
             }
             InvalidCaptureGroupName(name) => {
                 streams.err.append(wgettext_fmt!(

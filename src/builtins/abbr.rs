@@ -353,8 +353,12 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
             if let Some(offset) = error.offset() {
                 streams
                     .err
-                    .append(wgettext_fmt!("%s: %s\n", CMD, regex_pattern.as_utfstr()));
-                streams.err.append(sprintf!("%s: %*s\n", CMD, offset, "^"));
+                    .append(sprintf!("%s: %s\n", CMD, regex_pattern.as_utfstr()));
+                // TODO: This is misaligned if `regex_pattern` contains characters which are not
+                // exactly 1 terminal cell wide.
+                let mut marker = " ".repeat(offset.saturating_sub(1));
+                marker.push('^');
+                streams.err.append(sprintf!("%s: %s\n", CMD, marker));
             }
             return Err(STATUS_INVALID_ARGS);
         }

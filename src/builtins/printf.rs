@@ -526,10 +526,12 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
                     let conversion = f.char_at(0);
                     if (conversion as usize) > 0xFF || !ok[conversion as usize] {
+                        let directive = &directive_start[0..directive_start
+                            .len()
+                            .min(wstr_offset_in(f, directive_start) + 1)];
                         self.fatal_error(wgettext_fmt!(
-                            "%.*s: invalid conversion specification",
-                            wstr_offset_in(f, directive_start) + 1,
-                            directive_start
+                            "%s: invalid conversion specification",
+                            directive
                         ));
                         return 0;
                     }

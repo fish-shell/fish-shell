@@ -74,10 +74,6 @@ msgid "$status is not valid as a command. See `help %s`"
 msgstr "$status 不是有效的命令。參見「help %s」"
 
 #, c-format
-msgid "%.*s: invalid conversion specification"
-msgstr "%.*s：轉換規格無效"
-
-#, c-format
 msgid "%s"
 msgstr "%s"
 
@@ -720,6 +716,10 @@ msgstr "%s：需要函式名稱"
 #, c-format
 msgid "%s: given %d indexes but %d values\n"
 msgstr "%s：指定了 %d 個索引卻有 %d 個值\n"
+
+#, c-format
+msgid "%s: invalid conversion specification"
+msgstr "%s：轉換規格無效"
 
 #, c-format
 msgid "%s: invalid option combination\n"

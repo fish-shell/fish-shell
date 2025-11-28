@@ -273,7 +273,7 @@ Optional Commands
          The response's second parameter is ignored.
        * ``query-os-name`` (for :ref:`status terminal-os <status-terminal-os>`)
 
-         Terminals running on Unix should respond with the hex encoding of ``uname=$(uname)`` as second parameter.
+         Terminals running on Unix should respond with the hex encoding of ``$(uname -s)`` as second parameter.
 
 .. _term-compat-dcs-gnu-screen:
 

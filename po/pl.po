@@ -2017,6 +2017,9 @@ msgstr ""
 msgid "Copy and paste (Kill Ring)"
 msgstr ""
 
+msgid "Cygwin / MSYS2 / Windows"
+msgstr ""
+
 msgid "Debugging fish scripts"
 msgstr ""
 

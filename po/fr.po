@@ -2152,6 +2152,9 @@ msgstr "Message de bienvenue configurable"
 msgid "Copy and paste (Kill Ring)"
 msgstr "Copier et coller (avec la pile)"
 
+msgid "Cygwin / MSYS2 / Windows"
+msgstr ""
+
 msgid "Debugging fish scripts"
 msgstr "Déboguer des scripts fish"
 

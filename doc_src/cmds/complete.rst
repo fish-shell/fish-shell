@@ -103,6 +103,25 @@ When erasing completions, it is possible to either erase all completions for a s
 
 When ``complete`` is called without anything that would define or erase completions (options, arguments, wrapping, ...), it shows matching completions instead. So ``complete`` without any arguments shows all loaded completions, ``complete -c foo`` shows all loaded completions for ``foo``. Since completions are :ref:`autoloaded <syntax-function-autoloading>`, you will have to trigger them first.
 
+Cygwin / MSYS2 / Windows
+------------------------
+
+*COMMAND* does not require the ``.exe`` extension. Completions that do include the extension will only be used when ``.exe`` is also used on the command line. Completions that do not include it will be used regardless if ``.exe`` is used on the command line if there are no other completion specifically for it.
+
+::
+
+    complete -c myprog ...  #1
+
+will work for both ``myprog`` and ``myprog.exe``
+  
+::
+
+    complete -c myprog.exe ...  #2
+
+will only work for ``myprog.exe``
+
+If both exists, ``myprog.exe`` will only use #2
+
 Examples
 --------
 

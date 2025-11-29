@@ -2050,6 +2050,9 @@ msgstr "可配置的问候语"
 msgid "Copy and paste (Kill Ring)"
 msgstr "复制并粘贴 (Kill Ring)"
 
+msgid "Cygwin / MSYS2 / Windows"
+msgstr ""
+
 msgid "Debugging fish scripts"
 msgstr "调试 fish 脚本"
 

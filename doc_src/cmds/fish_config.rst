@@ -32,12 +32,12 @@ With the ``theme`` command ``fish_config`` can be used to view and choose a them
 
 Available subcommands for the ``theme`` command:
 
-- ``choose`` loads a sample theme in the current session.
+- ``choose`` loads a theme in the current session.
 - ``demo`` displays some sample text in the current theme.
 - ``dump`` prints the current theme in a loadable format.
-- ``list`` lists the names of the available sample themes.
+- ``list`` lists the names of the available themes.
 - ``save`` saves the given theme to :ref:`universal variables <variables-universal>`.
-- ``show`` shows what the given sample theme (or all) would look like.
+- ``show`` shows what the given themes (or all) would look like.
 
 The **-h** or **--help** option displays help about using this command.
 

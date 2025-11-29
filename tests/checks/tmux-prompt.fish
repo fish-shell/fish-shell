@@ -4,7 +4,7 @@
 isolated-tmux-start -C '
     function fish_prompt
         printf "prompt $status_generation> <status=$status> <$prompt_var> "
-        set prompt_var ''
+        set prompt_var ""
     end
     function on_prompt_var --on-variable prompt_var
         commandline -f repaint

@@ -357,11 +357,6 @@ cfg_if!(
 struct CMakeBinaryDir;
 
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    localizable_consts!(
-        #[allow(dead_code)]
-        NO_EMBEDDED_FILES_MSG "%s: fish was not built with embedded files"
-    );
-
     let cmd = args[0];
     let argc = args.len();
 

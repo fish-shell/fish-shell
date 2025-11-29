@@ -1584,6 +1584,13 @@ You can change the settings of fish by changing the values of certain variables.
 
    controls if :ref:`autosuggestions` are enabled. Set it to 0 to disable, anything else to enable. By default they are on.
 
+.. envvar:: fish_autocomplete_autoshow
+
+   controls whether fish should surface the completion pager automatically as you type.
+   Set it to 1 to display "cheap" completions derived from autosuggestions without
+   pressing :kbd:`tab`. This also works when :envvar:`fish_autosuggestion_enabled` is 0,
+   if you only want the live completion list.
+
 .. envvar:: fish_transient_prompt
 
    If this is set to 1, fish will redraw prompts with a ``--final-rendering`` argument before running a commandline, allowing you to change it before pushing it to the scrollback. This enables :ref:`transient prompts <transient-prompt>`.

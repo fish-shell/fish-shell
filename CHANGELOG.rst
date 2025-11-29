@@ -10,6 +10,9 @@ Deprecations and removed features
 Interactive improvements
 ------------------------
 - When typing immediately after starting fish, the first prompt is now rendered correctly.
+- Setting :envvar:`fish_autocomplete_autoshow` to ``1`` now surfaces a live completion menu
+  using the same "cheap" completions that power autosuggestions, so the pager can appear
+  automatically while you type (:issue:`3567`).
 
 Improved terminal support
 -------------------------

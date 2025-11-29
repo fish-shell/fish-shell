@@ -6,7 +6,7 @@ use std::collections::hash_map::Entry;
 use crate::common::{
     EscapeFlags, EscapeStringStyle, escape_string, get_ellipsis_char, get_ellipsis_str,
 };
-use crate::complete::Completion;
+use crate::complete::{CompleteFlags, Completion};
 use crate::editable_line::EditableLine;
 use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
 use crate::operation_context::OperationContext;
@@ -467,6 +467,10 @@ impl Pager {
     ) -> Line {
         let mut comp_width;
         let mut line_data = Line::new();
+        let show_prefix = !c
+            .representative
+            .flags
+            .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX);
 
         if c.preferred_width() <= width {
             // The entry fits, we give it as much space as it wants.
@@ -531,14 +535,16 @@ impl Pager {
                 );
             }
 
-            comp_remaining -= print_max(
-                offset_in_cmdline,
-                prefix,
-                prefix_col,
-                comp_remaining,
-                !comp.is_empty(),
-                &mut line_data,
-            );
+            if show_prefix {
+                comp_remaining -= print_max(
+                    offset_in_cmdline,
+                    prefix,
+                    prefix_col,
+                    comp_remaining,
+                    !comp.is_empty(),
+                    &mut line_data,
+                );
+            }
             comp_remaining -= print_max_impl(
                 offset_in_cmdline,
                 comp,

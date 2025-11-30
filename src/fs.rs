@@ -1,70 +1,64 @@
 use crate::{
     FLOG, FLOGF,
-    common::{bytes2wcstring, wcs2osstring, wcs2zstring},
+    common::{bytes2wcstring, wcs2bytes, wcs2osstring},
     fds::wopen_cloexec,
     path::{DirRemoteness, path_remoteness},
+    util,
     wchar::prelude::*,
     wutil::{
         FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, wdirname, wrename, wunlink,
     },
 };
-use errno::errno;
 use libc::{LOCK_EX, LOCK_SH, c_int};
 use nix::{fcntl::OFlag, sys::stat::Mode};
+use rand::distr::{Alphanumeric, Distribution};
 use std::{
-    ffi::CString,
+    ffi::OsString,
     fs::{File, OpenOptions},
+    io::ErrorKind,
     os::{
-        fd::{AsRawFd, FromRawFd},
-        unix::fs::MetadataExt,
+        fd::AsRawFd,
+        unix::{ffi::OsStringExt, fs::MetadataExt},
     },
 };
 
-// Replacement for mkostemp(str, O_CLOEXEC)
-// This uses mkostemp if available,
-// otherwise it uses mkstemp followed by fcntl
-fn fish_mkstemp_cloexec(name_template: CString) -> std::io::Result<(File, CString)> {
-    let name = name_template.into_raw();
-    #[cfg(not(apple))]
-    let fd = {
-        use libc::O_CLOEXEC;
-        unsafe { libc::mkostemp(name, O_CLOEXEC) }
-    };
-    #[cfg(apple)]
-    let fd = {
-        use libc::{F_SETFD, FD_CLOEXEC};
-        let fd = unsafe { libc::mkstemp(name) };
-        if fd != -1 {
-            unsafe { libc::fcntl(fd, F_SETFD, FD_CLOEXEC) };
+/// Creates a temporary file in the same directory as as `original_path`, meaning `original_path`
+/// must be a valid file path. The filename will be created by appending random alphanumeric ASCII
+/// chars to the `original_filename`.
+fn create_temporary_file(original_path: &wstr) -> std::io::Result<(File, WString)> {
+    let original_path = wcs2bytes(original_path);
+    loop {
+        let mut path = original_path.clone();
+        // Re-initialize the RNG every iteration to avoid being stuck with a bad seed causing
+        // generation of the same path each iteration.
+        let mut rng = util::get_rng();
+        let mut random_char_iter = Alphanumeric.sample_iter(&mut rng);
+        for _ in 0..10 {
+            // RNG iter should never run out of elements.
+            path.push(random_char_iter.next().unwrap());
         }
-        fd
-    };
-    if fd == -1 {
-        Err(std::io::Error::from(errno()))
-    } else {
-        unsafe { Ok((File::from_raw_fd(fd), CString::from_raw(name))) }
-    }
-}
-
-/// Creates a temporary file created according to the template and its name if successful.
-pub fn create_temporary_file(name_template: &wstr) -> std::io::Result<(File, WString)> {
-    let (fd, c_string_template) = loop {
-        match fish_mkstemp_cloexec(wcs2zstring(name_template)) {
-            Ok(tmp_file_data) => break tmp_file_data,
-            Err(e) => match e.kind() {
-                std::io::ErrorKind::Interrupted => {}
-                _ => {
+        let path = OsString::from_vec(path);
+        let path_to_wstring = || bytes2wcstring(path.as_encoded_bytes());
+        match OpenOptions::new().write(true).create_new(true).open(&path) {
+            Ok(file) => {
+                return Ok((file, path_to_wstring()));
+            }
+            Err(e) => {
+                if e.kind() != ErrorKind::AlreadyExists {
                     FLOG!(
                         error,
-                        wgettext_fmt!("Unable to create temporary file '%s': %s", name_template, e)
+                        wgettext_fmt!(
+                            "Unable to create temporary file '%s': %s",
+                            // TODO(MSRV>=1.87): use OsString::display()
+                            format!("{:?}", path),
+                            e
+                        )
                     );
-
                     return Err(e);
                 }
-            },
+            }
         }
-    };
-    Ok((fd, bytes2wcstring(c_string_template.to_bytes())))
+    }
 }
 
 /// Use this struct for all accesses to file which need mutual exclusion.
@@ -484,9 +478,7 @@ where
         ))
     }
 
-    const TMP_FILE_SUFFIX: &wstr = L!(".XXXXXX");
-    let tmp_file_template = path.to_owned() + TMP_FILE_SUFFIX;
-    let (tmp_file, tmp_name) = create_temporary_file(&tmp_file_template)?;
+    let (tmp_file, tmp_name) = create_temporary_file(path)?;
     let result = try_rewriting(path, rewrite, &tmp_name, tmp_file);
     // Do not leave the tmpfile around.
     // Note that we do not unlink when renaming succeeded.

@@ -4,7 +4,6 @@ use crate::wchar::prelude::*;
 use rand::{SeedableRng, rngs::SmallRng};
 use std::cmp::Ordering;
 use std::time;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Compares two wide character strings with an (arguably) intuitive ordering. This function tries
 /// to order strings in a way which is intuitive to humans with regards to sorting strings
@@ -172,25 +171,12 @@ pub fn get_time() -> i64 {
     }
 }
 
-// Helper to get a small RNG seed, based on nanoseconds.
-pub fn get_rng_seed() -> u128 {
-    // Note we use an explicit seed to avoid the "getrandom" crate, which uses `getentropy()` on macOS which
-    // is not available before macOS 10.12.
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos()
-}
-
-// Helper to get a small RNG with a seed.
-pub fn get_seeded_rng(seed: u128) -> SmallRng {
-    let seed = ((seed >> 64) as u64) ^ (seed as u64);
+/// Helper to get a small RNG with a seed.
+/// This should only be used for testing, where a PRNG which always produces the same output for a
+/// given seed is useful, e.g. to reproduce a failing test.
+/// In cases where reproducible results are not important, prefer `rand::rng()`.
+pub fn get_seeded_rng(seed: u64) -> SmallRng {
     SmallRng::seed_from_u64(seed)
-}
-
-// Helper to get a small RNG using the current time.
-pub fn get_rng() -> SmallRng {
-    get_seeded_rng(get_rng_seed())
 }
 
 // Compare the strings to see if they begin with an integer that can be compared and return the

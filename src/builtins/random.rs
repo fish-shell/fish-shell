@@ -1,13 +1,14 @@
 use super::prelude::*;
 
-use crate::util::get_rng;
+use crate::util::get_seeded_rng;
 use crate::wutil;
 use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use rand::{Rng, RngCore};
 use std::sync::Mutex;
 
-static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(get_rng()));
+static RNG: Lazy<Mutex<SmallRng>> =
+    Lazy::new(|| Mutex::new(get_seeded_rng(rand::rng().next_u64())));
 
 pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
@@ -96,7 +97,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(x) => {
                     let mut engine = RNG.lock().unwrap();
-                    *engine = SmallRng::seed_from_u64(x as u64);
+                    *engine = get_seeded_rng(x as u64);
                 }
             }
             return Ok(SUCCESS);

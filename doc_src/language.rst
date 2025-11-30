@@ -1178,7 +1178,7 @@ All variables in fish have a scope. For example they can be global or local to a
 
   echo $name, I am $place and my instrument is $instrument
   # Will print:
-  # Patrick, I am at the Krusty Krab and my instrument is 
+  # Patrick, I am at the Krusty Krab and my instrument is
 
 There are four kinds of variable scopes in fish: universal, global, function and local variables.
 

@@ -85,7 +85,7 @@ will run the ``ls`` command, using the ``-l`` option, while passing on any addit
     # prints: [DEBUG] foo: bar
 
     # OR
-    
+
     function debug2 -a var
         echo [DEBUG] $var: $$var >&2
     end
@@ -106,7 +106,7 @@ will create a ``debug`` command to print chosen variables to `stderr`.
         if test $status = 0
             switch $argv[(count $argv)]
                 case '-*'
-    
+
                 case '*'
                     cd $argv[(count $argv)]
                     return
@@ -124,7 +124,7 @@ This will run the ``mkdir`` command, and if it is successful, change the current
     function notify
         set -l job (jobs -l -g)
         or begin; echo "There are no jobs" >&2; return 1; end
-    
+
         function _notify_job_$job --on-job-exit $job --inherit-variable job
             echo -n \a # beep
             functions -e _notify_job_$job

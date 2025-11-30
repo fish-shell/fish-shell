@@ -323,7 +323,7 @@ This also means that, if the list is empty, there will be no argument::
 
     > set empty # no argument
     > echo $empty/this_is_gone # prints an empty line
-    
+
 If you quote the list, it will be used as one string and so you'll get one argument even if it is empty.
 
 For more, see :ref:`Lists <variables-lists>`.
@@ -431,7 +431,7 @@ Like other shells, fish allows multiple commands either on separate lines or the
 To write them on the same line, use the semicolon (";"). That means the following two examples are equivalent::
 
     echo fish; echo chips
-    
+
     # or
     echo fish
     echo chips
@@ -504,9 +504,9 @@ To compare strings or numbers or check file properties (whether a file exists or
     if test "$fish" = "flounder"
         echo FLOUNDER
     end
-    
+
     # or
-    
+
     if test "$number" -gt 5
         echo $number is greater than five
     else
@@ -698,9 +698,9 @@ It is possible to directly create functions and variables in ``config.fish`` fil
 ::
 
     > cat ~/.config/fish/config.fish
-    
+
     set -x PATH $PATH /sbin/
-    
+
     function ll
         ls -lh $argv
     end

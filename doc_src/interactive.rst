@@ -446,7 +446,7 @@ The ``fish_vi_cursor`` function will be used to change the cursor's shape depend
    # Set the replace mode cursors to an underscore
    set fish_cursor_replace_one underscore
    set fish_cursor_replace underscore
-   # Set the external cursor to a line. The external cursor appears when a command is started. 
+   # Set the external cursor to a line. The external cursor appears when a command is started.
    # The cursor shape takes the value of fish_cursor_default when fish_cursor_external is not specified.
    set fish_cursor_external line
    # The following variable can be used to configure cursor shape in
@@ -592,7 +592,7 @@ To find out the name of a key, you can use :doc:`fish_key_reader <cmds/fish_key_
   > fish_key_reader # Press Alt + right-arrow
   Press a key:
   bind alt-right 'do something'
-  
+
 Note that the historical way the terminal encodes keys and sends them to the application (fish, in this case) makes a lot of combinations indistinguishable or unbindable. In the usual encoding, :kbd:`ctrl-i` *is the same* as the tab key, and shift cannot be detected when ctrl is also pressed.
 
 There are more powerful encoding schemes, and fish tries to tell the terminal to turn them on, but there are still many terminals that do not support them. When ``fish_key_reader`` prints the same sequence for two different keys, then that is because your terminal sends the same sequence for them, and there isn't anything fish can do about it. It is our hope that these schemes will become more widespread, making input more flexible.

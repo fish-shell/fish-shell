@@ -263,7 +263,7 @@ and could be written in other shells as
   xterm
   rxvt-unicode
   EOF
-  
+
 So heredocs really are minor syntactical sugar that introduces a lot of special rules, which is why fish doesn't have them. Pipes are a core concept, and are simpler and compose nicer.
 
 .. [#] For example, the "EOF" is just a convention, the terminator can be an arbitrary string, something like "THISISTHEEND" also works. And using ``<<-`` trims leading *tab* characters (but not other whitespace), so you can indent the lines, but only with tabs. Substitutions (variables, commands) are done on the heredoc by default, but not if the terminator is quoted: ``cat << "EOF"``.
@@ -341,7 +341,7 @@ Fish's blocking constructs look a little different. They all start with a word, 
   done
 
   # becomes
-  
+
   for i in 1 2 3
      echo $i
   end
@@ -361,7 +361,7 @@ Fish's blocking constructs look a little different. They all start with a word, 
   }
 
   # becomes
-  
+
   begin
      echo Hello
   end

@@ -51,7 +51,7 @@ The following options are available:
     when :command:`fish` exits, output timing information on all executed commands to the specified file.
     This excludes time spent starting up and reading the configuration.
 
-**--profile-startup=PROFILE_FILE** 
+**--profile-startup=PROFILE_FILE**
     Will write timing for ``fish`` startup to specified file.
 
 **-P** or **--private**

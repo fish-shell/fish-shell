@@ -133,7 +133,7 @@ This release fixes the following regressions identified in 4.1.0:
   This will not affect fish's child processes unless ``LC_MESSAGES`` was already exported.
 
 - Some :doc:`fish_config <cmds/fish_config>` subcommands for showing prompts and themes had been broken in standalone Linux builds (those using the ``embed-data`` cargo feature), which has been fixed (:issue:`11832`).
-- On Windows Terminal, we observed an issue where fish would fail to read the terminal's response to our new startup queries, causing noticeable lags and a misleading error message. A workaround has been added (:issue:`11841`). 
+- On Windows Terminal, we observed an issue where fish would fail to read the terminal's response to our new startup queries, causing noticeable lags and a misleading error message. A workaround has been added (:issue:`11841`).
 - A WezTerm `issue breaking shifted key input <https://github.com/wezterm/wezterm/issues/6087>`__ has resurfaced on some versions of WezTerm; our workaround has been extended to cover all versions for now (:issue:`11204`).
 - Fixed a crash in :doc:`the web-based configuration tool <cmds/fish_config>` when using the new underline styles (:issue:`11840`).
 

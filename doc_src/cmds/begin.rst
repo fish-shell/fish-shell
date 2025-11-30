@@ -33,10 +33,10 @@ The following code sets a number of variables inside of a block scope. Since the
 
     begin
         set -l PIRATE Yarrr
-    
+
         ...
     end
-    
+
     echo $PIRATE
     # This will not output anything, since the PIRATE variable
     # went out of scope at the end of the block

@@ -116,7 +116,7 @@ fn get_shell_name() -> &'static wstr {
 #### The wchar prelude
 
 We have a prelude to make working with these string types a whole lot more ergonomic. In particular `WExt` supplies the null-terminated-compatible `.char_at(usize)`,
-and a whole lot more methods that makes porting C++ code easier. It is also preferred to use char-based-methods like `.char_count()` and `.slice_{from,to}()` 
+and a whole lot more methods that makes porting C++ code easier. It is also preferred to use char-based-methods like `.char_count()` and `.slice_{from,to}()`
 of the `WExt` trait over directly calling `.len()` and `[usize..]/[..usize]`, as that makes the code compatible with a potential future change to UTF8-strings.
 
 ```rust

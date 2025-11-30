@@ -46,7 +46,7 @@ Combining these features, it is possible to create custom syntaxes, where a regu
 
      > abbr >> ~/.config/fish/config.fish
      > abbr --erase (abbr --list)
-   
+
    Alternatively you can keep them in a separate :ref:`configuration file <configuration>` by doing something like the following::
 
      > abbr > ~/.config/fish/conf.d/myabbrs.fish

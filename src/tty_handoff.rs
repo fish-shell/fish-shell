@@ -176,51 +176,40 @@ impl TtyQuirks {
 
     // Return the protocols set to enable or disable TTY protocols.
     fn get_protocols(self) -> TtyProtocolsSet {
+        let mut on_chain = vec![DecsetBracketedPaste];
+        let mut off_chain = vec![DecrstBracketedPaste];
+
         // Enable focus reporting under tmux
-        let (focus_reporting_on, focus_reporting_off) = {
-            let is_tmux = self == TtyQuirks::Tmux;
-            (
-                move || is_tmux.then_some(DecsetFocusReporting).into_iter(),
-                move || is_tmux.then_some(DecrstFocusReporting).into_iter(),
-            )
-        };
-        let maybe_enable_focus_reporting = |protocols: &'static [TerminalCommand<'static>]| {
-            protocols.iter().cloned().chain(focus_reporting_on())
-        };
-        let maybe_disable_focus_reporting = |protocols: &'static [TerminalCommand<'static>]| {
-            protocols.iter().cloned().chain(focus_reporting_off())
-        };
+        if self == TtyQuirks::Tmux {
+            on_chain.push(DecsetFocusReporting);
+            off_chain.push(DecrstFocusReporting);
+        }
+
+        let on_chain = || on_chain.clone().into_iter();
+        let off_chain = || off_chain.clone().into_iter();
+
         let enablers = ProtocolBytes {
-            kitty_keyboard: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,                       // Enable bracketed paste
-                KittyKeyboardProgressiveEnhancementsEnable, // Kitty keyboard progressive enhancements
-            ])),
-            other: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,
+            kitty_keyboard: serialize_commands(
+                on_chain().chain([KittyKeyboardProgressiveEnhancementsEnable]),
+            ),
+            other: serialize_commands(on_chain().chain([
                 ModifyOtherKeysEnable,       // XTerm's modifyOtherKeys
                 ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
             ])),
-            wezterm_workaround: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,
-                ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
-            ])),
-            none: serialize_commands(maybe_enable_focus_reporting(&[DecsetBracketedPaste])),
+            wezterm_workaround: serialize_commands(on_chain().chain([ApplicationKeypadModeEnable])),
+            none: serialize_commands(on_chain()),
         };
         let disablers = ProtocolBytes {
-            kitty_keyboard: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,                        // Disable bracketed paste
-                KittyKeyboardProgressiveEnhancementsDisable, // Kitty keyboard progressive enhancements
-            ])),
-            other: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,
-                ModifyOtherKeysDisable,
-                ApplicationKeypadModeDisable,
-            ])),
-            wezterm_workaround: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,
-                ApplicationKeypadModeDisable,
-            ])),
-            none: serialize_commands(maybe_disable_focus_reporting(&[DecrstBracketedPaste])),
+            kitty_keyboard: serialize_commands(
+                off_chain().chain([KittyKeyboardProgressiveEnhancementsDisable]),
+            ),
+            other: serialize_commands(
+                off_chain().chain([ModifyOtherKeysDisable, ApplicationKeypadModeDisable]),
+            ),
+            wezterm_workaround: serialize_commands(
+                off_chain().chain([ApplicationKeypadModeDisable]),
+            ),
+            none: serialize_commands(off_chain()),
         };
         TtyProtocolsSet {
             quirks: self,

@@ -203,6 +203,7 @@ dependencies = [
 name = "fish-gettext-extraction"
 version = "0.0.0"
 dependencies = [
+ "fish-tempfile",
  "proc-macro2",
  "rsconf",
 ]

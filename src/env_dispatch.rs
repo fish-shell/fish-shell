@@ -16,6 +16,7 @@ use crate::terminal::ColorSupport;
 use crate::terminal::use_terminfo;
 use crate::tty_handoff::xtversion;
 use crate::wchar::prelude::*;
+use crate::wcstringutil::string_prefixes_string;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};
 use std::collections::HashMap;
@@ -213,6 +214,13 @@ pub fn env_dispatch_var_change(key: &wstr, vars: &EnvStack) {
     // We want to ignore variable changes until the dispatch table is explicitly initialized.
     if let Some(dispatch_table) = Lazy::get(&VAR_DISPATCH_TABLE) {
         dispatch_table.dispatch(key, vars);
+    }
+
+    if string_prefixes_string(L!("fish_color_"), key)
+        // TODO Don't re-exec prompt when only pager color changed.
+        || string_prefixes_string(L!("fish_pager_color_"), key)
+    {
+        reader_schedule_prompt_repaint();
     }
 }
 

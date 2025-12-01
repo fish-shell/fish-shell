@@ -11,6 +11,7 @@ description = "proc-macro for extracting strings for gettext translation"
 proc-macro = true
 
 [dependencies]
+fish-tempfile.workspace = true
 proc-macro2.workspace = true
 
 [build-dependencies]

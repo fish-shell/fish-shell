@@ -17,14 +17,14 @@
 #     If this flag is specified, the script will exit with an error if there are outstanding
 #     changes, and will display the diff. Do not specify other flags if `--dry-run` is specified.
 #
-# Specify `--use-existing-template=FILE` to prevent running cargo for extracting an up-to-date
+# Specify `--use-existing-template=DIR` to prevent running cargo for extracting an up-to-date
 # version of the localized strings. This flag is intended for testing setups which make it
 # inconvenient to run cargo here, but run it in an earlier step to ensure up-to-date values.
 # This argument is passed on to the `fish_xgettext.fish` script and has no other uses.
-# `FILE` must be the path to a gettext template file generated from our compilation process.
+# `DIR` must be the path to a gettext template file generated from our compilation process.
 # It can be obtained by running:
-#   set -l FILE (mktemp)
-#   FISH_GETTEXT_EXTRACTION_FILE=$FILE cargo check --features=gettext-extract
+#   set -l DIR (mktemp -d)
+#   FISH_GETTEXT_EXTRACTION_DIR=$DIR cargo check --features=gettext-extract
 
 # The sort utility is locale-sensitive.
 # Ensure that sorting output is consistent by setting LC_ALL here.

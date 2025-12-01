@@ -21,13 +21,13 @@ begin
 
     set -g workspace_root (path resolve (status dirname)/..)
 
-    set -l rust_extraction_file
+    set -l rust_extraction_dir
     if set -l --query _flag_use_existing_template
-        set rust_extraction_file $_flag_use_existing_template
+        set rust_extraction_dir $_flag_use_existing_template
     else
-        set rust_extraction_file (mktemp)
+        set rust_extraction_dir (mktemp -d)
         # We need to build to ensure that the proc macro for extracting strings runs.
-        FISH_GETTEXT_EXTRACTION_FILE=$rust_extraction_file cargo check --features=gettext-extract
+        FISH_GETTEXT_EXTRACTION_DIR=$rust_extraction_dir cargo check --features=gettext-extract
         or exit 1
     end
 
@@ -41,11 +41,11 @@ begin
     mark_section tier1-from-rust
 
     # Get rid of duplicates and sort.
-    msguniq --no-wrap --sort-output $rust_extraction_file
+    find $rust_extraction_dir -type f -exec cat {} + | msguniq --no-wrap --sort-output
     or exit 1
 
     if not set -l --query _flag_use_existing_template
-        rm $rust_extraction_file
+        rm -r $rust_extraction_dir
     end
 
     function extract_fish_script_messages_impl

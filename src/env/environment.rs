@@ -418,6 +418,7 @@ impl Environment for EnvStack {
 const FISH_DATADIR_VAR: &wstr = L!("__fish_data_dir");
 const FISH_SYSCONFDIR_VAR: &wstr = L!("__fish_sysconf_dir");
 const FISH_HELPDIR_VAR: &wstr = L!("__fish_help_dir");
+const FISH_MANDIR_VAR: &wstr = L!("__fish_man_dir");
 const FISH_BIN_DIR: &wstr = L!("__fish_bin_dir");
 const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
 const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
@@ -646,13 +647,8 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         set_path(FISH_SYSCONFDIR_VAR, Some(&paths.sysconf));
         set_path(FISH_BIN_DIR, paths.bin.as_ref());
 
-        let datadir = paths.data.as_ref();
-        set_path(FISH_DATADIR_VAR, datadir);
-        if !cfg!(feature = "embed-data") && default_paths {
-            let mut scstr = datadir.unwrap().clone();
-            scstr.push("functions");
-            set_path(L!("fish_function_path"), Some(&scstr));
-        }
+        set_path(FISH_DATADIR_VAR, paths.data.as_ref());
+        set_path(FISH_MANDIR_VAR, paths.man.as_ref());
         set_path(FISH_HELPDIR_VAR, paths.doc.as_ref());
     }
 

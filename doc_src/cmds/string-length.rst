@@ -46,7 +46,7 @@ Examples
     # depending on $fish_emoji_width, this is either 4 or 8
     # in new terminals it should be
     8
-    
+
     >_ string length --visible abcdef\r123
     # this displays as "123def", so the width is 6
     6

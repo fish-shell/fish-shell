@@ -6,6 +6,9 @@ members = ["crates/*"]
 rust-version = "1.85"
 edition = "2024"
 repository = "https://github.com/fish-shell/fish-shell"
+# see doc_src/license.rst for details
+# don't forget to update COPYING and debian/copyright too
+license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
 
 [workspace.dependencies]
 bitflags = "2.5.0"
@@ -74,9 +77,7 @@ version = "4.2.1-snapshot"
 edition.workspace = true
 rust-version.workspace = true
 default-run = "fish"
-# see doc_src/license.rst for details
-# don't forget to update COPYING and debian/copyright too
-license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
+license.workspace = true
 homepage = "https://fishshell.com"
 readme = "README.rst"
 
@@ -106,14 +107,14 @@ widestring.workspace = true
 portable-atomic.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-rust-embed = { workspace = true, optional = true, features = [
+rust-embed = { workspace = true, features = [
     "deterministic-timestamps",
     "debug-embed",
     "include-exclude",
     "interpolate-folder-path",
 ] }
 [target.'cfg(not(windows))'.dependencies]
-rust-embed = { workspace = true, optional = true, features = [
+rust-embed = { workspace = true, features = [
     "deterministic-timestamps",
     "include-exclude",
     "interpolate-folder-path",
@@ -149,9 +150,9 @@ name = "fish_key_reader"
 path = "src/bin/fish_key_reader.rs"
 
 [features]
-default = ["embed-data", "localize-messages"]
+default = ["embed-manpages", "localize-messages"]
 benchmark = []
-embed-data = ["dep:rust-embed", "dep:fish-build-man-pages"]
+embed-manpages = ["dep:fish-build-man-pages"]
 # Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
 # build time.
 localize-messages = ["dep:phf", "dep:fish-gettext-maps"]

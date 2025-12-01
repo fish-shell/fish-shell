@@ -156,6 +156,8 @@ Functions
     the base-10 logarithm
 ``log2``
     the base-2 logarithm
+``logb(b,x)``
+    returns the logarithm with base b of x
 ``max``
     returns the largest of the given numbers - this takes an arbitrary number of arguments (but at least one)
 ``min``

@@ -7,12 +7,17 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 
+Scripting improvements
+----------------------
+- ``math`` gained a new ``logb`` function.
+
 Interactive improvements
 ------------------------
 - When typing immediately after starting fish, the first prompt is now rendered correctly.
 - Setting :envvar:`fish_autocomplete_autoshow` to ``1`` now surfaces a live completion menu
   using the same "cheap" completions that power autosuggestions, so the pager can appear
   automatically while you type (:issue:`3567`).
+- Completion accuracy was improved for file paths containing ``=`` or ``:`` (:issue:`5363`).
 
 Improved terminal support
 -------------------------
@@ -27,6 +32,9 @@ For distributors and developers
 Regression fixes:
 -----------------
 - (from 4.1.0) Crash on invalid colors variables (:issue:`12078`).
+- (from 4.2.0) Incorrect emoji width computation on macOS.
+- (from 4.2.0) Mouse clicks and :kbd:`ctrl-l` edge cases in multiline commandlines (:issue:`12121`).
+- (from 4.2.0) Completions for Git remote names on some non-glibc systems.
 
 fish 4.2.1 (released November 13, 2025)
 =======================================
@@ -132,7 +140,7 @@ This release fixes the following regressions identified in 4.1.0:
   This will not affect fish's child processes unless ``LC_MESSAGES`` was already exported.
 
 - Some :doc:`fish_config <cmds/fish_config>` subcommands for showing prompts and themes had been broken in standalone Linux builds (those using the ``embed-data`` cargo feature), which has been fixed (:issue:`11832`).
-- On Windows Terminal, we observed an issue where fish would fail to read the terminal's response to our new startup queries, causing noticeable lags and a misleading error message. A workaround has been added (:issue:`11841`). 
+- On Windows Terminal, we observed an issue where fish would fail to read the terminal's response to our new startup queries, causing noticeable lags and a misleading error message. A workaround has been added (:issue:`11841`).
 - A WezTerm `issue breaking shifted key input <https://github.com/wezterm/wezterm/issues/6087>`__ has resurfaced on some versions of WezTerm; our workaround has been extended to cover all versions for now (:issue:`11204`).
 - Fixed a crash in :doc:`the web-based configuration tool <cmds/fish_config>` when using the new underline styles (:issue:`11840`).
 

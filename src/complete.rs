@@ -1601,18 +1601,6 @@ impl<'ctx> Completer<'ctx> {
             return;
         };
 
-        // We generally expand both, the whole token ("foo=bar") and also just the "bar"
-        // suffix. If the whole token is a valid path prefix, completions of just the suffix
-        // are probably false positives, and are confusing when I'm using completions to list
-        // directory contents. Apply a wonky heuristic to work around the most visible case --
-        // the empty suffix -- where all files in $PWD are completed/autosuggested.
-        if self.completions[first_from_start..]
-            .iter()
-            .any(|c| !c.replaces_token())
-            && sep_index + 1 == s.len()
-        {
-            return;
-        }
         let sep_string = s.slice_from(sep_index + 1);
         let mut local_completions = Vec::new();
         if matches!(
@@ -1635,6 +1623,7 @@ impl<'ctx> Completer<'ctx> {
         let prefix_with_sep = s.as_char_slice()[..sep_index + 1].into();
         for comp in &mut local_completions {
             comp.prepend_token_prefix(prefix_with_sep);
+            comp.r#match.from_separator = true;
         }
         if !self.completions.extend(local_completions) {
             return;
@@ -2680,6 +2669,7 @@ mod tests {
         assert_eq!(completions[1].completion, L!("$Foo1"));
         assert_eq!(completions[2].completion, L!("$gamma1"));
 
+        let _ = std::fs::remove_dir_all("test/complete_test");
         std::fs::create_dir_all("test/complete_test").unwrap();
         std::fs::write("test/complete_test/has space", []).unwrap();
         std::fs::write("test/complete_test/bracket[abc]", []).unwrap();
@@ -2687,7 +2677,7 @@ mod tests {
         // Backslashes and colons are not legal filename characters on WIN32/CYGWIN
         {
             std::fs::write(r"test/complete_test/gnarlybracket\[abc]", []).unwrap();
-            std::fs::write(r"test/complete_test/colon:abc", []).unwrap();
+            std::fs::write(r"test/complete_test/colon:TTestWithColon", []).unwrap();
         }
         std::fs::write(r"test/complete_test/equal=abc", []).unwrap();
         // On MSYS, the executable bit cannot be set manually, is set automatically
@@ -2731,12 +2721,47 @@ mod tests {
         #[cfg(not(cygwin))]
         // Backslashes and colons are not legal filename characters on WIN32/CYGWIN
         {
-            completions = do_complete(
-                L!(": test/complete_test/colon:"),
+            macro_rules! whole_token_completion_dominates {
+                (
+                    $cmd:literal,
+                    $options:expr,
+                    $completion_from_token_start:literal,
+                    $completion_from_separator:literal,
+                ) => {
+                    completions = do_complete(L!($cmd), $options);
+                    assert_eq!(completions.len(), 2);
+                    let c0 = &completions[0];
+                    let c1 = &completions[1];
+                    // Might be replacing.
+                    assert_eq!(c0.completion, L!($completion_from_token_start));
+                    assert!(!c0.r#match.from_separator);
+                    assert_eq!(c1.completion, L!($completion_from_separator));
+                    assert!(c1.r#match.from_separator);
+                    // Completion pager will only show better (lower) rank.
+                    assert!(c0.r#match.rank() < c1.r#match.rank());
+                };
+            }
+
+            whole_token_completion_dominates!(
+                ": test/complete_test/colon:",
                 CompletionRequestOptions::default(),
+                "TTestWithColon",
+                "test/",
             );
-            assert_eq!(completions.len(), 1);
-            assert_eq!(completions[0].completion, L!("abc"));
+            // Even when it has a case mismatch.
+            whole_token_completion_dominates!(
+                ": test/complete_test/colon:t",
+                CompletionRequestOptions::default(),
+                "test/complete_test/colon:TTestWithColon",
+                "est/",
+            );
+            // Even when it is not a prefix.
+            whole_token_completion_dominates!(
+                ": test/complete_test/colon:Tes",
+                fuzzy_options,
+                "test/complete_test/colon:TTestWithColon",
+                "test/complete_test/colon:test/",
+            );
         }
 
         macro_rules! unique_completion_applies_as {
@@ -2800,18 +2825,14 @@ mod tests {
         {
             unique_completion_applies_as!(
                 r"touch test/complete_test/colon",
-                r":abc",
-                r"touch test/complete_test/colon:abc ",
+                r":TTestWithColon",
+                r"touch test/complete_test/colon:TTestWithColon ",
             );
-            unique_completion_applies_as!(
-                r"touch test/complete_test/colon:",
-                r"abc",
-                r"touch test/complete_test/colon:abc ",
-            );
+
             unique_completion_applies_as!(
                 r#"touch "test/complete_test/colon:"#,
-                r"abc",
-                r#"touch "test/complete_test/colon:abc" "#,
+                r"TTestWithColon",
+                r#"touch "test/complete_test/colon:TTestWithColon" "#,
             );
         }
 

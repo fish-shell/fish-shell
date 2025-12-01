@@ -291,6 +291,7 @@ const BUILTINS: &[(&wstr, Function)] = &[
     (L!("log"), Function::Fn1(f64::log10)),
     (L!("log10"), Function::Fn1(f64::log10)),
     (L!("log2"), Function::Fn1(f64::log2)),
+    (L!("logb"), Function::Fn2(|base, x| x.log(base))),
     (L!("max"), Function::FnN(maximum)),
     (L!("min"), Function::FnN(minimum)),
     (L!("ncr"), Function::Fn2(ncr)),

@@ -40,14 +40,7 @@ fn main() {
     // safety: single-threaded code.
     unsafe { std::env::set_var("FISH_BUILD_VERSION", version) };
 
-    // These are necessary if built with embedded functions,
-    // but only in release builds (because rust-embed in debug builds reads from the filesystem).
-    #[cfg(feature = "embed-data")]
-    #[cfg(any(windows, not(debug_assertions)))]
-    rsconf::rebuild_if_path_changed("share");
-
-    #[cfg(feature = "gettext-extract")]
-    rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
+    fish_build_helper::rebuild_if_embedded_path_changed("share");
 
     let build = cc::Build::new();
     let mut target = Target::new_from(build).unwrap();
@@ -215,32 +208,18 @@ fn setup_paths() {
     overridable_path("SYSCONFDIR", |env_sysconfdir| {
         Some(join_if_relative(
             &prefix,
-            env_sysconfdir.unwrap_or(
-                // Embedded builds use "/etc," not "$PREFIX/etc".
-                if cfg!(feature = "embed-data") {
-                    "/etc/"
-                } else {
-                    "etc/"
-                }
-                .to_string(),
-            ),
+            env_sysconfdir.unwrap_or("/etc/".to_string()),
         ))
     });
 
-    let default_ok = !cfg!(feature = "embed-data");
     let datadir = overridable_path("DATADIR", |env_datadir| {
-        let default = default_ok.then_some("share/".to_string());
-        env_datadir
-            .or(default)
-            .map(|p| join_if_relative(&prefix, p))
+        env_datadir.map(|p| join_if_relative(&prefix, p))
     });
     overridable_path("BINDIR", |env_bindir| {
-        let default = default_ok.then_some("bin/".to_string());
-        env_bindir.or(default).map(|p| join_if_relative(&prefix, p))
+        env_bindir.map(|p| join_if_relative(&prefix, p))
     });
     overridable_path("DOCDIR", |env_docdir| {
-        let default = default_ok.then_some("doc/fish".to_string());
-        env_docdir.or(default).map(|p| {
+        env_docdir.map(|p| {
             join_if_relative(
                 &datadir
                     .expect("Setting DOCDIR without setting DATADIR is not currently supported"),

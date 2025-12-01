@@ -25,9 +25,11 @@ NOTARIZE=
 
 ARM64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=11.0'
 X86_64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=10.12'
+cmake_args=
 
-while getopts "sf:i:p:e:nj:" opt; do
+while getopts "c:sf:i:p:e:nj:" opt; do
     case $opt in
+        c) cmake_args+=("$OPTARG");;
         s) SIGN=1;;
         f) P12_APP_FILE=$(realpath "$OPTARG");;
         i) P12_INSTALL_FILE=$(realpath "$OPTARG");;
@@ -65,6 +67,7 @@ do_cmake() {
         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
         -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
         -DFISH_USE_SYSTEM_PCRE2=OFF \
+        "${cmake_args[@]}" \
         "$@" \
         "$SRC_DIR"
 }

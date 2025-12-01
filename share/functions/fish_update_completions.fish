@@ -26,7 +26,8 @@ function fish_update_completions --description "Update man-page based completion
             # Orphan the job so that it continues to run in case of an early exit (#6269)
             # Note that some distros split the manpage completion script out (#7183).
             # In that case, we silence Python's failure.
-            /bin/sh -c '
+            set -l sh (__fish_posix_shell)
+            $sh -c '
                 c=$(cat)
                 ( printf %s "$c" | "$@" ) >/dev/null 2>&1 &
             ' -- $update_argv $argv

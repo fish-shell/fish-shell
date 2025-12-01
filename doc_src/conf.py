@@ -74,9 +74,7 @@ def extract_sections(app, env):
             f"Unsupported characters in section path: {section}"
         )
     help_sections = "".join(f"{section}\n" for section in sections)
-    Path(output_file).write_text(
-        f"""pub static HELP_SECTIONS: &str = "{help_sections}";"""
-    )
+    Path(output_file).write_text(help_sections)
 
 
 def remove_fish_indent_lexer(app):
@@ -99,7 +97,7 @@ def setup(app):
     app.add_config_value("issue_url", default=None, rebuild="html")
     app.add_config_value(
         "fish_help_sections_output",
-        default=os.environ.get("FISH_SPHINX_HELP_SECTIONS_OUTPUT", ""),
+        default="",
         rebuild="man",
         types=str,
     )
@@ -164,7 +162,8 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+fish_exclude_patterns = "cmds/*.inc.rst"
+exclude_patterns = [fish_exclude_patterns]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -267,7 +266,7 @@ man_pages = [
     ),
     ("faq", "fish-faq", "", [author], 1),
 ]
-for path in sorted(set(glob("cmds/*.rst")) - set(glob("cmds/*.inc.rst"))):
+for path in sorted(set(glob("cmds/*.rst")) - set(glob(fish_exclude_patterns))):
     docname = os.path.splitext(path)[0]
     cmd = os.path.basename(docname)
     man_pages.append((docname, cmd, get_command_description(path, cmd), "", 1))

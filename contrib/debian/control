@@ -3,7 +3,7 @@ Section: shells
 Priority: optional
 Maintainer: ridiculous_fish <corydoras@ridiculousfish.com>
 Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>
-Build-Depends: debhelper (>= 12),
+Build-Depends: debhelper-compat (= 13),
 # -web is for Debian's updated version, -X.Y is for Ubuntu's backported versions
  cargo (>= 1.85) | cargo-web (>= 1.85) | cargo-1.85,
  cmake (>= 3.15.0),
@@ -12,24 +12,20 @@ Build-Depends: debhelper (>= 12),
  rustc (>= 1.85) | rustc-web (>= 1.85) | rustc-1.85,
 # Test dependencies
  locales-all,
- ncurses-base,
  python3
-Standards-Version: 4.1.5
+# 4.6.2 is Debian 12/Ubuntu Noble 24.04; Ubuntu Jammy is 4.6.0.1
+Standards-Version: 4.6.2
 Homepage: https://fishshell.com/
 Vcs-Git: https://github.com/fish-shell/fish-shell.git
 Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-# for col and lock - bsdmainutils is required in Ubuntu focal
-Depends: bsdextrautils | bsdmainutils,
+# for col and lock
+Depends: bsdextrautils,
  file,
-# for the msgfmt command
- gettext-base,
 # for man
  man-db,
-# for terminal definitions
- ncurses-base,
 # for kill
  procps,
  python3 (>=3.5),

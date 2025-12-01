@@ -158,7 +158,6 @@ In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), f
 - Rust_CARGO=path - the path to cargo. If not set, cmake will check $PATH and ~/.cargo/bin
 - Rust_CARGO_TARGET=target - the target to pass to cargo. Set this for cross-compilation.
 - BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when Sphinx isn't installed.
-- INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).
 - FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
 - MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
 - WITH_GETTEXT=ON|OFF - whether to include translations.
@@ -185,13 +184,14 @@ You can also install Sphinx another way and drop the ``uv run --no-managed-pytho
 
 This will place standalone binaries in ``~/.cargo/bin/``, but you can move them wherever you want.
 
-To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features --features=embed-data`` to cargo.
+To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features --features=embed-manpages`` to cargo.
 
 You can also link this build statically (but not against glibc) and move it to other computers.
 
 Here are the remaining advantages of a full installation, as currently done by CMake:
 
 - Man pages like ``fish(1)`` installed in standard locations, easily accessible from outside fish.
+- Separate files for builtins (e.g. ``$PREFIX/share/fish/man/man1/abbr.1``).
 - A local copy of the HTML documentation, typically accessed via the ``help`` fish function.
   In Cargo builds, ``help`` will redirect to `<https://fishshell.com/docs/current/>`__
 - Ability to use our CMake options extra_functionsdir, extra_completionsdir and extra_confdir,

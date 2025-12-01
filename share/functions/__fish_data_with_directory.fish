@@ -5,8 +5,8 @@ function __fish_data_with_directory
     set -l cmd $argv[3..]
     set -l temp
     set -l directory_ref
-    if not __fish_is_standalone
-        set directory_ref $__fish_data_dir/$relative_directory
+    if test $relative_directory = man/man1 && not __fish_tried_to_embed_manpages
+        set directory_ref $__fish_man_dir/man1
     else
         set temp (__fish_mktemp_relative -d fish-data)
         or return

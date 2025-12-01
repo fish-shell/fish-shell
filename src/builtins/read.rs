@@ -15,6 +15,7 @@ use crate::input_common::DecodeState;
 use crate::input_common::InvalidPolicy;
 use crate::input_common::decode_one_codepoint_utf8;
 use crate::nix::isatty;
+use crate::parse_execution::varname_error;
 use crate::reader::ReaderConfig;
 use crate::reader::commandline_set_buffer;
 use crate::reader::reader_save_screen_state;
@@ -559,9 +560,7 @@ fn validate_read_args(
     // Verify all variable names.
     for arg in argv {
         if !valid_var_name(arg) {
-            streams
-                .err
-                .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, arg));
+            streams.err.append(varname_error(cmd, arg));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }

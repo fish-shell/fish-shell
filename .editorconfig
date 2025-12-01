@@ -14,7 +14,6 @@ indent_style = tab
 
 [*.{md,rst}]
 max_line_length = unset
-trim_trailing_whitespace = false
 
 [*.sh]
 indent_size = 4

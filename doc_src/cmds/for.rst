@@ -23,7 +23,7 @@ Example
 ::
 
     for i in foo bar baz; echo $i; end
-    
+
     # would output:
     foo
     bar

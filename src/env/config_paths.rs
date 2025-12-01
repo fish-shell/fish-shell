@@ -9,16 +9,14 @@ use std::path::{Path, PathBuf};
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
 pub struct ConfigPaths {
-    pub sysconf: PathBuf,     // e.g., /usr/local/etc
-    pub bin: Option<PathBuf>, // e.g., /usr/local/bin
-    /// Always present if "embed-data" is disabled.
+    pub sysconf: PathBuf,      // e.g., /usr/local/etc
+    pub bin: Option<PathBuf>,  // e.g., /usr/local/bin
     pub data: Option<PathBuf>, // e.g., /usr/local/share
-    /// Always present if "embed-data" is disabled.
-    pub doc: Option<PathBuf>, // e.g., /usr/local/share/doc/fish
+    pub man: Option<PathBuf>,  // e.g., /usr/local/share/fish/man
+    pub doc: Option<PathBuf>,  // e.g., /usr/local/share/doc/fish
 }
 
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
-const DOC_DIR: Option<&str> = option_env!("DOCDIR");
 
 impl ConfigPaths {
     pub fn new() -> Self {
@@ -53,19 +51,24 @@ impl ConfigPaths {
         }
         log_optional_path!(bin);
         log_optional_path!(data);
+        log_optional_path!(man);
         log_optional_path!(doc);
         paths
     }
 
     fn from_exec_path(unresolved_exec_path: &'static FishPath) -> Self {
-        let default_layout = |exec_path_parent: Option<&Path>| Self {
-            sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
-            bin: option_env!("BINDIR")
-                .map(PathBuf::from)
-                // N.B. the argument may be non-canonical here.
-                .or_else(|| exec_path_parent.map(|p| p.to_owned())),
-            data: option_env!("DATADIR").map(|p| PathBuf::from(p).join("fish")),
-            doc: DOC_DIR.map(PathBuf::from),
+        let default_layout = |exec_path_parent: Option<&Path>| {
+            let data = option_env!("DATADIR").map(|p| PathBuf::from(p).join("fish"));
+            Self {
+                sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
+                bin: option_env!("BINDIR")
+                    .map(PathBuf::from)
+                    // N.B. the argument may be non-canonical here.
+                    .or_else(|| exec_path_parent.map(|p| p.to_owned())),
+                data: data.clone(),
+                man: data.map(|data| data.join("man")),
+                doc: option_env!("DOCDIR").map(PathBuf::from),
+            }
         };
 
         let exec_path = {
@@ -104,7 +107,7 @@ impl ConfigPaths {
 
         let workspace_root = workspace_root();
         // TODO(MSRV>=1.88): if-let-chain
-        if exec_path_parent.ends_with("bin") && {
+        if cfg!(using_cmake) && exec_path_parent.ends_with("bin") && {
             let prefix = exec_path_parent.parent().unwrap();
             let data = prefix.join("share/fish");
             let sysconf = prefix.join("etc/fish");
@@ -116,18 +119,13 @@ impl ConfigPaths {
         } {
             FLOG!(config, "Running from relocatable tree");
             let prefix = exec_path_parent.parent().unwrap();
+            let data = prefix.join("share/fish");
             Self {
                 sysconf: prefix.join("etc/fish"),
                 bin: Some(exec_path_parent.to_owned()),
-                data: Some(prefix.join("share/fish")),
-                doc: {
-                    let doc = prefix.join("share/doc/fish");
-                    if doc.exists() {
-                        Some(doc)
-                    } else {
-                        DOC_DIR.map(PathBuf::from)
-                    }
-                },
+                data: Some(data.clone()),
+                man: Some(data.join("man")),
+                doc: Some(prefix.join("share/doc/fish")),
             }
         } else if exec_path.starts_with(BUILD_DIR) {
             FLOG!(
@@ -137,12 +135,21 @@ impl ConfigPaths {
                     workspace_root.display()
                 ),
             );
+            let user_doc_join = |dir| {
+                if cfg!(use_prebuilt_docs) {
+                    Some(workspace_root)
+                } else {
+                    cfg!(using_cmake).then_some(Path::new(BUILD_DIR))
+                }
+                .map(|path| path.join("user_doc").join(dir))
+            };
             // If we're in Cargo's target directory or in CMake's build directory, use the source files.
             Self {
                 sysconf: workspace_root.join("etc"),
                 bin: Some(exec_path_parent.to_owned()),
                 data: Some(workspace_root.join("share")),
-                doc: Some(workspace_root.join("user_doc/html")),
+                man: user_doc_join("man"),
+                doc: user_doc_join("html"),
             }
         } else {
             FLOG!(

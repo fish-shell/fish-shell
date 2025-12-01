@@ -3,7 +3,7 @@
 # Compiling in this test is too expensive.
 # We need the gettext template extracted from the Rust sources passed in via env var,
 # in order to pass it on.
-#REQUIRES: test -e "$FISH_GETTEXT_EXTRACTION_FILE"
+#REQUIRES: test -e "$FISH_GETTEXT_EXTRACTION_DIR"
 
 set -l dir (status dirname)
 
@@ -16,5 +16,5 @@ set -lxp PATH (path dirname $fish)
 # The `--use-existing-template` argument allows using the pre-built version of the gettext template
 # file.
 $dir/../../build_tools/update_translations.fish --dry-run \
-    --use-existing-template=$FISH_GETTEXT_EXTRACTION_FILE
+    --use-existing-template=$FISH_GETTEXT_EXTRACTION_DIR
 or exit 1

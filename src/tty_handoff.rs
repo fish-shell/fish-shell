@@ -64,8 +64,6 @@ pub enum TtyQuirks {
     PreCsiMidnightCommander,
     // Running in iTerm2 before 3.5.12, which causes issues when using the kitty keyboard protocol.
     PreKittyIterm2,
-    // Whether we are running under tmux.
-    Tmux,
     // Whether we are running under WezTerm.
     Wezterm,
 }
@@ -80,8 +78,6 @@ impl TtyQuirks {
             PreCsiMidnightCommander
         } else if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12)) {
             PreKittyIterm2
-        } else if xtversion.starts_with(L!("tmux ")) {
-            Tmux
         } else if xtversion.starts_with(L!("WezTerm ")) {
             Wezterm
         } else {
@@ -176,14 +172,8 @@ impl TtyQuirks {
 
     // Return the protocols set to enable or disable TTY protocols.
     fn get_protocols(self) -> TtyProtocolsSet {
-        let mut on_chain = vec![DecsetBracketedPaste];
-        let mut off_chain = vec![DecrstBracketedPaste];
-
-        // Enable focus reporting under tmux
-        if self == TtyQuirks::Tmux {
-            on_chain.push(DecsetFocusReporting);
-            off_chain.push(DecrstFocusReporting);
-        }
+        let on_chain = vec![DecsetFocusReporting, DecsetBracketedPaste];
+        let off_chain = vec![DecrstFocusReporting, DecrstBracketedPaste];
 
         let on_chain = || on_chain.clone().into_iter();
         let off_chain = || off_chain.clone().into_iter();

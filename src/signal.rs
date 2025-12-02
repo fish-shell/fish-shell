@@ -152,7 +152,7 @@ fn sigaction(sig: i32, act: &libc::sigaction, oact: *mut libc::sigaction) -> lib
 }
 
 fn set_interactive_handlers() {
-    let signal_handler: usize = fish_signal_handler as usize;
+    let signal_handler: usize = fish_signal_handler as *const () as usize;
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
     let mut oact: libc::sigaction = unsafe { std::mem::zeroed() };
     act.sa_flags = 0;
@@ -216,12 +216,12 @@ pub fn signal_set_handlers(interactive: bool) {
     sigaction(libc::SIGQUIT, &act, nullptr);
 
     // Apply our SIGINT handler.
-    act.sa_sigaction = fish_signal_handler as usize;
+    act.sa_sigaction = fish_signal_handler as *const () as usize;
     act.sa_flags = libc::SA_SIGINFO;
     sigaction(libc::SIGINT, &act, nullptr);
 
     // Whether or not we're interactive we want SIGCHLD to not interrupt restartable syscalls.
-    act.sa_sigaction = fish_signal_handler as usize;
+    act.sa_sigaction = fish_signal_handler as *const () as usize;
     act.sa_flags = libc::SA_SIGINFO | libc::SA_RESTART;
     if sigaction(libc::SIGCHLD, &act, nullptr) != 0 {
         perror("sigaction");
@@ -274,7 +274,7 @@ pub fn signal_handle(sig: Signal) {
     act.sa_flags = 0;
     unsafe { libc::sigemptyset(&mut act.sa_mask) };
     act.sa_flags = libc::SA_SIGINFO;
-    act.sa_sigaction = fish_signal_handler as usize;
+    act.sa_sigaction = fish_signal_handler as *const () as usize;
     sigaction(sig, &act, std::ptr::null_mut());
 }
 

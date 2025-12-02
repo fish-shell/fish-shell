@@ -515,12 +515,14 @@ fn throwing_main() -> i32 {
     parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
 
     // TODO: if-let-chains
-    if opts.profile_startup_output.is_some() && opts.profile_startup_output != opts.profile_output {
-        parser.emit_profiling(&opts.profile_startup_output.unwrap());
+    if let Some(path) = &opts.profile_startup_output {
+        if opts.profile_startup_output != opts.profile_output {
+            parser.emit_profiling(path);
 
-        // If we are profiling both, ensure the startup data only
-        // ends up in the startup file.
-        parser.clear_profiling();
+            // If we are profiling both, ensure the startup data only
+            // ends up in the startup file.
+            parser.clear_profiling();
+        }
     }
 
     PROFILING_ACTIVE.store(opts.profile_output.is_some());

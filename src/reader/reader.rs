@@ -4927,11 +4927,44 @@ impl AutosuggestionResult {
 
 // Returns a function that can be invoked (potentially
 // on a background thread) to determine the autosuggestion
+fn cd_relative_stub_for_autoshow(
+    line: &wstr,
+    line_range: &Range<usize>,
+    cursor: usize,
+) -> Option<WString> {
+    let line_text = &line[line_range.clone()];
+    let mut string_tokens = vec![];
+    for token in Tokenizer::new(line_text, TOK_ACCEPT_UNFINISHED) {
+        if token.type_ == TokenType::string {
+            string_tokens.push(token);
+        }
+    }
+    if string_tokens.len() < 2 {
+        return None;
+    }
+    if string_tokens[0].get_source(line_text) != L!("cd") {
+        return None;
+    }
+
+    let arg_tok = string_tokens.last().unwrap();
+    let arg_start = line_range.start + arg_tok.offset();
+    let arg_end = arg_start + arg_tok.length();
+    if cursor < arg_start || cursor > arg_end {
+        return None;
+    }
+    let arg_text = arg_tok.get_source(line_text);
+    match arg_text.as_char_slice() {
+        ['.'] | ['.', '/'] | ['.', '.'] | ['.', '.', '/'] => Some(arg_text.to_owned()),
+        _ => None,
+    }
+}
+
 fn get_autosuggestion_performer(
     parser: &Parser,
     command_line: WString,
     cursor_pos: usize,
     history: Arc<History>,
+    want_autoshow: bool,
 ) -> impl FnOnce() -> AutosuggestionResult + use<> {
     let generation_count = read_generation_count();
     let vars = parser.vars().snapshot();
@@ -4945,11 +4978,16 @@ fn get_autosuggestion_performer(
         }
 
         // Only to be used if no case-sensitive suggestions are found.
+        let mut history_result = None;
+        let mut history_result_is_whole = false;
         let mut icase_history_result = None;
 
         let line_range = range_of_line_at_cursor(&command_line, cursor_pos);
+        let cd_stub_for_autoshow = want_autoshow
+            .then(|| cd_relative_stub_for_autoshow(&command_line, &line_range, cursor_pos))
+            .flatten();
         // Search history for a matching item unless this line is not a continuation line or quoted.
-        for (search_type, range) in [
+        'history_search: for (search_type, range) in [
             (SearchType::Prefix, 0..command_line.len()),
             (SearchType::LinePrefix, line_range.clone()),
         ] {
@@ -5038,9 +5076,13 @@ fn get_autosuggestion_performer(
                         CompletionList::new(),
                     );
                     if icase {
-                        icase_history_result = Some(result);
+                        if icase_history_result.is_none() {
+                            icase_history_result = Some(result);
+                        }
                     } else {
-                        return result;
+                        history_result_is_whole = is_whole;
+                        history_result = Some(result);
+                        break 'history_search;
                     }
                 }
             }
@@ -5049,6 +5091,12 @@ fn get_autosuggestion_performer(
         // Maybe cancel here.
         if ctx.check_cancel() {
             return nothing;
+        }
+
+        if !want_autoshow && history_result_is_whole {
+            if let Some(result) = history_result.take() {
+                return result;
+            }
         }
 
         let Some(last_char) = command_line[line_range.clone()].chars().next_back() else {
@@ -5070,56 +5118,106 @@ fn get_autosuggestion_performer(
             return nothing;
         }
 
-        // Try normal completions.
-        let complete_flags = CompletionRequestOptions::autosuggest();
-        let mut would_be_cursor = line_range.end;
-        let (mut completions, needs_load) =
-            complete(&command_line[..would_be_cursor], complete_flags, &ctx);
-
-        let mut cheap_menu = CompletionList::new();
-        let suggestion = if completions.is_empty() {
-            // If there are no completions to suggest, fall back to icase history.
-            if let Some(result) = icase_history_result {
+        if !want_autoshow {
+            if let Some(result) = history_result {
                 return result;
             }
-            WString::new()
-        } else {
-            sort_and_prioritize(&mut completions, complete_flags);
-            cheap_menu = completions
-                .iter()
-                .take(AUTOSHOW_COMPLETION_LIMIT)
-                .cloned()
-                .collect();
-            let comp = &completions[0];
+        }
 
-            // Prefer icase history over smartcase/icase completions.
-            if let (Some(result), CaseSensitivity::Smart | CaseSensitivity::Insensitive) =
-                (icase_history_result, comp.r#match.case_fold)
-            {
-                return result;
+        let mut completion_result = None;
+        let mut completion_case_fold = None;
+        if history_result.is_none() || want_autoshow || !history_result_is_whole {
+            // Try normal completions.
+            let complete_flags = CompletionRequestOptions::autosuggest();
+            let mut would_be_cursor = line_range.end;
+            let (mut completions, mut needs_load) =
+                complete(&command_line[..would_be_cursor], complete_flags, &ctx);
+            if completions.is_empty() {
+                if let Some(stub) = cd_stub_for_autoshow.clone() {
+                    let fallback_line = L!("cd ").to_owned();
+                    let (mut fallback_completions, fallback_needs_load) =
+                        complete(&fallback_line, complete_flags, &ctx);
+                    if !fallback_completions.is_empty() {
+                        for comp in &mut fallback_completions {
+                            comp.completion.insert_utfstr(0, &stub);
+                        }
+                        completions = fallback_completions;
+                        needs_load = fallback_needs_load;
+                    }
+                }
             }
 
-            let full_line = completion_apply_to_command_line(
-                &OperationContext::background_interruptible(&vars),
-                &comp.completion,
-                comp.flags,
-                &command_line,
-                &mut would_be_cursor,
-                /*append_only=*/ true,
-                /*is_unique=*/ false,
-            );
-            line_at_cursor(&full_line, would_be_cursor).to_owned()
-        };
-        let mut result = AutosuggestionResult::new(
-            command_line,
-            line_range,
-            suggestion,
-            true, // normal completions are case-insensitive
-            /*is_whole_item_from_history=*/ false,
-            cheap_menu,
-        );
-        result.needs_load = needs_load;
-        result
+            if !completions.is_empty() {
+                sort_and_prioritize(&mut completions, complete_flags);
+                let cheap_menu: CompletionList = completions
+                    .iter()
+                    .take(AUTOSHOW_COMPLETION_LIMIT)
+                    .cloned()
+                    .collect();
+                let comp = &completions[0];
+                completion_case_fold = Some(comp.r#match.case_fold);
+
+                let full_line = completion_apply_to_command_line(
+                    &OperationContext::background_interruptible(&vars),
+                    &comp.completion,
+                    comp.flags,
+                    &command_line,
+                    &mut would_be_cursor,
+                    /*append_only=*/ true,
+                    /*is_unique=*/ false,
+                );
+                let suggestion = line_at_cursor(&full_line, would_be_cursor).to_owned();
+                let mut result = AutosuggestionResult::new(
+                    command_line.clone(),
+                    line_range.clone(),
+                    suggestion,
+                    true, // normal completions are case-insensitive
+                    /*is_whole_item_from_history=*/ false,
+                    cheap_menu,
+                );
+                result.needs_load = needs_load;
+                completion_result = Some(result);
+            }
+        }
+
+        if let Some(mut history_res) = history_result {
+            if !history_result_is_whole {
+                if let Some(comp_res) = completion_result {
+                    return comp_res;
+                }
+                return history_res;
+            }
+            if let Some(comp_res) = &completion_result {
+                history_res.cheap_completions = comp_res.cheap_completions.clone();
+                history_res.needs_load = comp_res.needs_load.clone();
+            }
+            return history_res;
+        }
+
+        if let Some(case_fold) = completion_case_fold {
+            if matches!(
+                case_fold,
+                CaseSensitivity::Smart | CaseSensitivity::Insensitive
+            ) {
+                if let Some(mut icase_res) = icase_history_result.take() {
+                    if let Some(comp_res) = &completion_result {
+                        icase_res.cheap_completions = comp_res.cheap_completions.clone();
+                        icase_res.needs_load = comp_res.needs_load.clone();
+                    }
+                    return icase_res;
+                }
+            }
+        }
+
+        if let Some(result) = completion_result {
+            return result;
+        }
+
+        if let Some(result) = icase_history_result {
+            return result;
+        }
+
+        nothing
     }
 }
 
@@ -5230,6 +5328,7 @@ impl<'a> Reader<'a> {
             el.text().to_owned(),
             el.position(),
             self.history.clone(),
+            self.conf.autoshow_completions,
         );
         self.debouncers.autosuggestions.perform(performer);
     }
@@ -7173,4 +7272,41 @@ fn test_autoshow_prefix_helper() {
         autoshow_prefix_from_token(L!("/alpha/beta/gamma")),
         expected_path
     );
+}
+
+#[test]
+fn test_cd_autoshow_lists_directories() {
+    use crate::tests::prelude::*;
+
+    let _cleanup = test_init();
+    let parser = TestParser::new();
+    std::fs::remove_dir_all("test/autoshow_cd").ok();
+    std::fs::create_dir_all("test/autoshow_cd/dir_one").unwrap();
+    std::fs::create_dir_all("test/autoshow_cd/dir_two").unwrap();
+    std::fs::create_dir_all("test/autoshow_cd/dir_from_history").unwrap();
+    parser.pushd("test/autoshow_cd");
+
+    let history = History::with_name(L!("autoshow_cd_history"));
+    history.clear();
+    history.add_commandline(L!("cd dir_from_history").to_owned());
+    let performer =
+        get_autosuggestion_performer(&parser, L!("cd ").to_owned(), 3, history.clone(), true);
+    let result = performer();
+    assert!(
+        !result.cheap_completions.is_empty(),
+        "cd with an empty argument should surface directory completions"
+    );
+    assert_eq!(result.autosuggestion.text, L!("cd dir_from_history"));
+
+    let performer =
+        get_autosuggestion_performer(&parser, L!("cd ./").to_owned(), 5, history.clone(), true);
+    let result = performer();
+    assert!(
+        !result.cheap_completions.is_empty(),
+        "cd ./ should still produce autoshow completions"
+    );
+
+    parser.popd();
+    history.clear();
+    std::fs::remove_dir_all("test/autoshow_cd").unwrap();
 }

@@ -9,8 +9,8 @@ use crate::locale::{invalidate_numeric_locale, set_libc_locales};
 use crate::prelude::*;
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
-    reader_current_data, reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled,
-    reader_set_autocomplete_autoshow, reader_set_transient_prompt,
+    reader_current_data, reader_schedule_prompt_repaint, reader_set_autocomplete_autoshow,
+    reader_set_autosuggestion_enabled, reader_set_transient_prompt,
 };
 use crate::screen::{IS_DUMB, ONLY_GRAYSCALE, screen_set_midnight_commander_hack};
 use crate::terminal::ColorSupport;

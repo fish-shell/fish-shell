@@ -1,9 +1,11 @@
+// cspell:disable
 // Enumeration of all wildcard types.
 
 use libc::X_OK;
+use once_cell::sync::Lazy;
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::fs;
+use std::os::unix::fs::MetadataExt;
 
 use crate::common::{
     UnescapeFlags, UnescapeStringStyle, WILDCARD_RESERVED_BASE, WSL, char_offset,
@@ -334,7 +336,7 @@ fn file_get_desc(
 /// up. Note that the filename came from a readdir() call, so we know it exists.
 fn wildcard_test_flags_then_complete(
     filepath: &wstr,
-    filename: &wstr,
+    mut filename: &wstr,
     wc: &wstr,
     expand_flags: ExpandFlags,
     out: &mut CompletionReceiver,
@@ -382,8 +384,32 @@ fn wildcard_test_flags_then_complete(
         .check_type()
         .map(|x| x == DirEntryType::reg)
         .unwrap_or(false);
-    if executables_only && (!is_regular_file || waccess(filepath, X_OK) != 0) {
+    let is_executable = Lazy::new(|| is_regular_file && waccess(filepath, X_OK) == 0);
+    if executables_only && !*is_executable {
         return false;
+    }
+
+    let filepath_stat = Lazy::new(|| lwstat(filepath));
+
+    // For executables on Cygwin, prefer the name without the .exe, to match
+    // better with Unix names, but only if there isn't also a file without that
+    // extension and the user hasn't started to type the extension
+    if cfg!(cygwin)
+        && string_suffixes_string_case_insensitive(L!(".exe"), filename)
+        && wc.len() + 4 <= filename.len()
+        && *is_executable
+    {
+        let filepath_stripped = &filepath[0..filepath.len() - 4];
+        let stat_stripped = lwstat(filepath_stripped).map(|stat| (stat.dev(), stat.ino()));
+        let stat = filepath_stat.as_ref().map(|stat| (stat.dev(), stat.ino()));
+
+        // TODO(MSRV>=1.88) use if-let-chain
+        //   if let Ok(stat_stripped) = stat_stripped
+        //       && let Ok(stat) = stat
+        //       && stat_stripped == stat
+        if stat_stripped.is_ok() && stat.is_ok() && stat_stripped.unwrap() == stat.unwrap() {
+            filename = &filename[0..filename.len() - 4];
+        }
     }
 
     // Compute the description.
@@ -395,8 +421,7 @@ fn wildcard_test_flags_then_complete(
             None => {
                 // We do not know it's a link from the d_type,
                 // so we will have to do an lstat().
-                let lstat: Option<fs::Metadata> = lwstat(filepath).ok();
-                if let Some(md) = &lstat {
+                if let Ok(md) = filepath_stat.as_ref() {
                     md.is_symlink()
                 } else {
                     // This file is no longer be usable, skip it.
@@ -1109,7 +1134,7 @@ pub fn wildcard_expand_string<'closure>(
 /// Test whether the given wildcard matches the string. Does not perform any I/O.
 ///
 /// \param str The string to test
-/// \param wc The wildcard to test against
+/// \param pattern The wildcard to test against
 /// \param leading_dots_fail_to_match if set, strings with leading dots are assumed to be hidden
 /// files and are not matched (default was false)
 ///

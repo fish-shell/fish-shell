@@ -415,9 +415,9 @@ impl HistoryImpl {
     /// Loads old items if necessary.
     /// Return a reference to the loaded history file.
     fn load_old_if_needed(&mut self) -> &HistoryFile {
-        if self.file_contents.is_some() {
-            return self.file_contents.as_ref().unwrap();
-        };
+        if let Some(ref file_contents) = self.file_contents {
+            return file_contents;
+        }
         let Ok(Some(history_path)) = self.history_file_path() else {
             return self.file_contents.insert(HistoryFile::create_empty());
         };

@@ -9,8 +9,7 @@ use crate::prelude::*;
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
     reader_current_data, reader_schedule_prompt_repaint, reader_set_autocomplete_autoshow,
-    reader_set_autosuggestion_enabled,
-    reader_set_transient_prompt,
+    reader_set_autosuggestion_enabled, reader_set_transient_prompt,
 };
 use crate::screen::{
     IS_DUMB, LAYOUT_CACHE_SHARED, ONLY_GRAYSCALE, screen_set_midnight_commander_hack,
@@ -89,7 +88,7 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         );
         table.add_anon(
             L!("fish_autocomplete_autoshow"),
-            handle_autocomplete_autoshow_change,
+            vars!(handle_autocomplete_autoshow_change),
         );
         table.add_anon(
             L!("fish_transient_prompt"),

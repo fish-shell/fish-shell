@@ -806,7 +806,10 @@ fn skip_spaces(mut s: &wstr) -> &wstr {
 
 #[cfg(test)]
 mod tests {
+    use fish_tempfile::TempDir;
+
     use crate::common::ENCODE_DIRECT_BASE;
+    use crate::common::bytes2wcstring;
     use crate::common::char_offset;
     use crate::common::wcs2osstring;
     use crate::env::{EnvVar, EnvVarFlags, VarTable};
@@ -817,16 +820,14 @@ mod tests {
 
     const UVARS_PER_THREAD: usize = 8;
 
-    /// Creates a unique temporary directory and file path for universal variable tests.
-    /// Returns (directory_path, file_path).
-    fn make_test_uvar_path(test_name: &str) -> (std::path::PathBuf, WString) {
-        let test_dir = std::env::temp_dir().join(format!(
-            "fish_test_{}_{:?}",
-            test_name,
-            std::thread::current().id()
-        ));
-        let test_path = sprintf!("%s/varsfile.txt", test_dir.to_string_lossy());
-        (test_dir, test_path)
+    /// Creates a unique temporary directory and file path for universal variable tests inside the
+    /// new tempdir.
+    /// Returns (temp_dir, file_path).
+    fn make_test_uvar_path() -> std::io::Result<(TempDir, WString)> {
+        let temp_dir = fish_tempfile::new_dir()?;
+        let file_path = temp_dir.path().join("varsfile.txt");
+        let file_path = bytes2wcstring(file_path.as_os_str().as_encoded_bytes());
+        Ok((temp_dir, file_path))
     }
 
     fn test_universal_helper(x: usize, path: &wstr) {
@@ -854,9 +855,7 @@ mod tests {
     #[test]
     fn test_universal() {
         let _cleanup = test_init();
-        let (test_dir, test_path) = make_test_uvar_path("universal");
-        let _ = std::fs::remove_dir_all(&test_dir);
-        std::fs::create_dir_all(&test_dir).unwrap();
+        let (_test_dir, test_path) = make_test_uvar_path().unwrap();
 
         let threads = 1;
         let mut handles = Vec::new();
@@ -890,8 +889,6 @@ mod tests {
                 assert_eq!(var, expected_val);
             }
         }
-
-        std::fs::remove_dir_all(&test_dir).unwrap();
     }
 
     #[test]
@@ -1035,8 +1032,7 @@ mod tests {
     #[test]
     fn test_universal_callbacks() {
         let _cleanup = test_init();
-        let (test_dir, test_path) = make_test_uvar_path("callbacks");
-        std::fs::create_dir_all(&test_dir).unwrap();
+        let (_test_dir, test_path) = make_test_uvar_path().unwrap();
         let mut uvars1 = EnvUniversal::new();
         let mut uvars2 = EnvUniversal::new();
         let mut callbacks = uvars1
@@ -1100,7 +1096,6 @@ mod tests {
         assert_eq!(callbacks[1].val.as_ref().unwrap().as_string(), L!("1"));
         assert_eq!(callbacks[2].key, L!("delta"));
         assert_eq!(callbacks[2].val, None);
-        std::fs::remove_dir_all(&test_dir).unwrap();
     }
 
     #[test]
@@ -1129,8 +1124,7 @@ mod tests {
     fn test_universal_ok_to_save() {
         let _cleanup = test_init();
         // Ensure we don't try to save after reading from a newer fish.
-        let (test_dir, test_path) = make_test_uvar_path("ok_to_save");
-        std::fs::create_dir_all(&test_dir).unwrap();
+        let (_test_dir, test_path) = make_test_uvar_path().unwrap();
         let contents = b"# VERSION: 99999.99\n";
         std::fs::write(wcs2osstring(&test_path), contents).unwrap();
 
@@ -1152,6 +1146,5 @@ mod tests {
         // Ensure file is same.
         let after_id = file_id_for_path(&test_path);
         assert_eq!(before_id, after_id, "test_path should not have changed",);
-        std::fs::remove_dir_all(&test_dir).unwrap();
     }
 }

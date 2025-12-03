@@ -158,7 +158,14 @@ impl PosixSpawner {
     ) -> Result<libc::pid_t, Errno> {
         let mut pid = -1;
         let spawned = check_fail(unsafe {
-            libc::posix_spawn(&raw mut pid, cmd, &raw const self.actions.0, &raw const self.attr.0, argv, envp)
+            libc::posix_spawn(
+                &raw mut pid,
+                cmd,
+                &raw const self.actions.0,
+                &raw const self.attr.0,
+                argv,
+                envp,
+            )
         });
         if spawned.is_ok() {
             return Ok(pid);

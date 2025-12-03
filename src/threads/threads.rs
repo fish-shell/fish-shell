@@ -446,8 +446,7 @@ mod tests {
                 let new_set = new_set.as_mut_ptr();
                 libc::sigemptyset(new_set);
                 let mut saved_set2: libc::sigset_t = std::mem::zeroed();
-                let result =
-                    libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &raw mut saved_set2);
+                let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &raw mut saved_set2);
                 assert_eq!(result, 0, "Failed to get existing sigmask for new thread");
                 saved_set2
             }

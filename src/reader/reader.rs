@@ -2408,7 +2408,8 @@ impl<'a> Reader<'a> {
             // in all cases, but only complain if interactive.
             // TODO(MSRV>=1.88) if-let-chain
             if let Some(old_modes) = old_modes {
-                if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &raw const old_modes) } == -1
+                if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &raw const old_modes) }
+                    == -1
                     && is_interactive_session()
                 {
                     perror("tcsetattr");
@@ -5888,13 +5889,7 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
         }
 
         let mut tmp = 0 as libc::c_char;
-        if unsafe {
-            libc::read(
-                tty_fd.fd(),
-                (&raw mut tmp).cast::<libc::c_void>(),
-                1,
-            )
-        } < 0
+        if unsafe { libc::read(tty_fd.fd(), (&raw mut tmp).cast::<libc::c_void>(), 1) } < 0
             && errno().0 == EIO
         {
             we_think_we_are_orphaned = true;

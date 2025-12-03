@@ -177,7 +177,7 @@ impl PosixSpawner {
             // The command to call should use the full path,
             // not what we would pass as argv0.
             let cmd2: CString = CString::new(cmdcstr.to_bytes()).unwrap();
-            argv2.push(cmd2.as_ptr() as *mut c_char);
+            argv2.push(cmd2.as_ptr().cast_mut());
             for i in 1.. {
                 let ptr = unsafe { argv.offset(i).read() };
                 if ptr.is_null() {

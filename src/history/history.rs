@@ -1138,7 +1138,7 @@ fn format_history_record(
             let mut timestamp_str = [0_u8; MAX_TIMESTAMP_LENGTH];
             if unsafe {
                 libc::strftime(
-                    &raw mut timestamp_str[0] as *mut libc::c_char,
+                    (&raw mut timestamp_str[0]).cast::<libc::c_char>(),
                     MAX_TIMESTAMP_LENGTH,
                     show_time_format.as_ptr(),
                     timestamp.as_ptr(),

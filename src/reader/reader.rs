@@ -5891,7 +5891,7 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
         if unsafe {
             libc::read(
                 tty_fd.fd(),
-                &raw mut tmp as *mut libc::c_void,
+                (&raw mut tmp).cast::<libc::c_void>(),
                 1,
             )
         } < 0

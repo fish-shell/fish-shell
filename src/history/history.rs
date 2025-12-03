@@ -1133,12 +1133,12 @@ fn format_history_record(
     let seconds = seconds as libc::time_t;
     let mut timestamp = MaybeUninit::uninit();
     if let Some(show_time_format) = show_time_format.and_then(|s| CString::new(s).ok()) {
-        if !unsafe { libc::localtime_r(&seconds, timestamp.as_mut_ptr()).is_null() } {
+        if !unsafe { libc::localtime_r(&raw const seconds, timestamp.as_mut_ptr()).is_null() } {
             const MAX_TIMESTAMP_LENGTH: usize = 100;
             let mut timestamp_str = [0_u8; MAX_TIMESTAMP_LENGTH];
             if unsafe {
                 libc::strftime(
-                    &mut timestamp_str[0] as *mut u8 as *mut libc::c_char,
+                    &raw mut timestamp_str[0] as *mut libc::c_char,
                     MAX_TIMESTAMP_LENGTH,
                     show_time_format.as_ptr(),
                     timestamp.as_ptr(),

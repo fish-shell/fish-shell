@@ -317,7 +317,7 @@ mod tests {
             .try_into()
             .unwrap();
         let mut local_time = MaybeUninit::uninit();
-        unsafe { libc::localtime_r(&tstamp, local_time.as_mut_ptr()) };
+        unsafe { libc::localtime_r(&raw const tstamp, local_time.as_mut_ptr()) };
         let local_time = unsafe { local_time.assume_init() };
         local_time.tm_hour
     }

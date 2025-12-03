@@ -964,7 +964,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     // Save the initial terminal mode.
     // Note this field is read by a signal handler, so do it atomically, with a leaked mode.
     let mut terminal_mode_on_startup = unsafe { std::mem::zeroed::<libc::termios>() };
-    let ret = unsafe { libc::tcgetattr(libc::STDIN_FILENO, &mut terminal_mode_on_startup) };
+    let ret = unsafe { libc::tcgetattr(libc::STDIN_FILENO, &raw mut terminal_mode_on_startup) };
     // TODO: rationalize behavior if initial tcgetattr() fails.
     if ret == 0 {
         TERMINAL_MODE_ON_STARTUP.get_or_init(|| terminal_mode_on_startup);
@@ -1634,7 +1634,7 @@ fn combine_command_and_autosuggestion(
             // Use the autosuggestion's case.
             let start: usize = unsafe {
                 (line.as_char_slice().first().unwrap() as *const char)
-                    .offset_from(&cmdline.as_char_slice()[0])
+                    .offset_from(&raw const cmdline.as_char_slice()[0])
             }
             .try_into()
             .unwrap();
@@ -2408,7 +2408,7 @@ impl<'a> Reader<'a> {
             // in all cases, but only complain if interactive.
             // TODO(MSRV>=1.88) if-let-chain
             if let Some(old_modes) = old_modes {
-                if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &old_modes) } == -1
+                if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &raw const old_modes) } == -1
                     && is_interactive_session()
                 {
                     perror("tcsetattr");
@@ -4396,7 +4396,7 @@ fn term_donate(quiet: bool /* = false */) {
         libc::tcsetattr(
             STDIN_FILENO,
             TCSANOW,
-            &*TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap(),
+            &raw const *TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap(),
         )
     } == -1
     {
@@ -4439,7 +4439,7 @@ pub fn term_copy_modes() {
 
 pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
     let ok = loop {
-        let ok = unsafe { libc::tcsetattr(fd, TCSANOW, &*shell_modes()) } != -1;
+        let ok = unsafe { libc::tcsetattr(fd, TCSANOW, &raw const *shell_modes()) } != -1;
         if ok || errno().0 != EINTR {
             break ok;
         }
@@ -5891,7 +5891,7 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
         if unsafe {
             libc::read(
                 tty_fd.fd(),
-                &mut tmp as *mut libc::c_char as *mut libc::c_void,
+                &raw mut tmp as *mut libc::c_void,
                 1,
             )
         } < 0

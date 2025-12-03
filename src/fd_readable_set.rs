@@ -66,7 +66,7 @@ impl FdReadableSet {
     pub fn clear(&mut self) {
         self.nfds_ = 0;
         unsafe {
-            libc::FD_ZERO(&mut self.fdset_);
+            libc::FD_ZERO(&raw mut self.fdset_);
         }
     }
 
@@ -77,7 +77,7 @@ impl FdReadableSet {
             return;
         }
         if fd >= 0 {
-            unsafe { libc::FD_SET(fd, &mut self.fdset_) };
+            unsafe { libc::FD_SET(fd, &raw mut self.fdset_) };
             self.nfds_ = std::cmp::max(self.nfds_, fd + 1);
         }
     }
@@ -85,7 +85,7 @@ impl FdReadableSet {
     /// Returns `true` if the given `fd` is marked as set, in our set. Returns `false` if `fd` is
     /// negative.
     pub fn test(&self, fd: RawFd) -> bool {
-        fd >= 0 && unsafe { libc::FD_ISSET(fd, &self.fdset_) }
+        fd >= 0 && unsafe { libc::FD_ISSET(fd, &raw const self.fdset_) }
     }
 
     /// Call `select()`. Note this destructively modifies the set. Returns the result of
@@ -104,7 +104,7 @@ impl FdReadableSet {
             }
         };
         unsafe {
-            return libc::select(self.nfds_, &mut self.fdset_, null, null, timeout);
+            return libc::select(self.nfds_, &raw mut self.fdset_, null, null, timeout);
         }
     }
 

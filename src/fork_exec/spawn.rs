@@ -33,26 +33,26 @@ impl Attr {
     }
 
     fn set_flags(&mut self, flags: libc::c_short) -> Result<(), Errno> {
-        unsafe { check_fail(libc::posix_spawnattr_setflags(&mut self.0, flags)) }
+        unsafe { check_fail(libc::posix_spawnattr_setflags(&raw mut self.0, flags)) }
     }
 
     fn set_pgroup(&mut self, pgroup: libc::pid_t) -> Result<(), Errno> {
-        unsafe { check_fail(libc::posix_spawnattr_setpgroup(&mut self.0, pgroup)) }
+        unsafe { check_fail(libc::posix_spawnattr_setpgroup(&raw mut self.0, pgroup)) }
     }
 
     fn set_sigdefault(&mut self, sigs: &libc::sigset_t) -> Result<(), Errno> {
-        unsafe { check_fail(libc::posix_spawnattr_setsigdefault(&mut self.0, sigs)) }
+        unsafe { check_fail(libc::posix_spawnattr_setsigdefault(&raw mut self.0, sigs)) }
     }
 
     fn set_sigmask(&mut self, sigs: &libc::sigset_t) -> Result<(), Errno> {
-        unsafe { check_fail(libc::posix_spawnattr_setsigmask(&mut self.0, sigs)) }
+        unsafe { check_fail(libc::posix_spawnattr_setsigmask(&raw mut self.0, sigs)) }
     }
 }
 
 impl Drop for Attr {
     fn drop(&mut self) {
         unsafe {
-            let _ = libc::posix_spawnattr_destroy(&mut self.0);
+            let _ = libc::posix_spawnattr_destroy(&raw mut self.0);
         }
     }
 }
@@ -70,13 +70,13 @@ impl FileActions {
     }
 
     fn add_close(&mut self, fd: libc::c_int) -> Result<(), Errno> {
-        unsafe { check_fail(libc::posix_spawn_file_actions_addclose(&mut self.0, fd)) }
+        unsafe { check_fail(libc::posix_spawn_file_actions_addclose(&raw mut self.0, fd)) }
     }
 
     fn add_dup2(&mut self, src: libc::c_int, target: libc::c_int) -> Result<(), Errno> {
         unsafe {
             check_fail(libc::posix_spawn_file_actions_adddup2(
-                &mut self.0,
+                &raw mut self.0,
                 src,
                 target,
             ))
@@ -87,7 +87,7 @@ impl FileActions {
 impl Drop for FileActions {
     fn drop(&mut self) {
         unsafe {
-            let _ = libc::posix_spawn_file_actions_destroy(&mut self.0);
+            let _ = libc::posix_spawn_file_actions_destroy(&raw mut self.0);
         }
     }
 }
@@ -158,7 +158,7 @@ impl PosixSpawner {
     ) -> Result<libc::pid_t, Errno> {
         let mut pid = -1;
         let spawned = check_fail(unsafe {
-            libc::posix_spawn(&mut pid, cmd, &self.actions.0, &self.attr.0, argv, envp)
+            libc::posix_spawn(&raw mut pid, cmd, &raw const self.actions.0, &raw const self.attr.0, argv, envp)
         });
         if spawned.is_ok() {
             return Ok(pid);
@@ -188,10 +188,10 @@ impl PosixSpawner {
             argv2.push(std::ptr::null_mut());
             check_fail(unsafe {
                 libc::posix_spawn(
-                    &mut pid,
+                    &raw mut pid,
                     PATH_BSHELL.as_ptr() as *const c_char,
-                    &self.actions.0,
-                    &self.attr.0,
+                    &raw const self.actions.0,
+                    &raw const self.attr.0,
                     argv2.as_ptr(),
                     envp,
                 )

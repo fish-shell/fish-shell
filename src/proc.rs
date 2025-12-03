@@ -1089,11 +1089,11 @@ fn handle_child_status(job: &Job, proc: &Process, status: ProcStatus) {
             } else if !event::is_signal_observed(sig) {
                 // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
                 let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
-                unsafe { libc::sigemptyset(&mut act.sa_mask) };
+                unsafe { libc::sigemptyset(&raw mut act.sa_mask) };
                 act.sa_flags = 0;
                 act.sa_sigaction = SIG_DFL;
                 unsafe {
-                    libc::sigaction(sig, &act, std::ptr::null_mut());
+                    libc::sigaction(sig, &raw const act, std::ptr::null_mut());
                     libc::kill(libc::getpid(), sig);
                 }
             }
@@ -1162,7 +1162,7 @@ fn reap_disowned_pids() {
     // if it has changed or an error occurs (presumably ECHILD because the child does not exist)
     disowned_pids.retain(|pid| {
         let mut status: libc::c_int = 0;
-        let ret = unsafe { libc::waitpid(pid.as_pid_t(), &mut status, WNOHANG) };
+        let ret = unsafe { libc::waitpid(pid.as_pid_t(), &raw mut status, WNOHANG) };
         if ret > 0 {
             FLOGF!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
         }
@@ -1233,7 +1233,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             let pid = unsafe {
                 libc::waitpid(
                     proc.pid().unwrap().as_pid_t(),
-                    &mut statusv,
+                    &raw mut statusv,
                     WNOHANG | WUNTRACED | WCONTINUED,
                 )
             };

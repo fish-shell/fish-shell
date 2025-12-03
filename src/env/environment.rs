@@ -459,7 +459,7 @@ pub fn get_home() -> Option<String> {
             userinfo.as_mut_ptr(),
             buf.as_mut_ptr(),
             buf.len(),
-            &mut result,
+            &raw mut result,
         )
     };
     if retval != 0 || result.is_null() {
@@ -495,7 +495,7 @@ fn setup_user(vars: &EnvStack) {
                 userinfo.as_mut_ptr(),
                 buf.as_mut_ptr(),
                 buf.len(),
-                &mut result,
+                &raw mut result,
             )
         };
         if retval == 0 && !result.is_null() {
@@ -527,7 +527,7 @@ fn setup_user(vars: &EnvStack) {
             userinfo.as_mut_ptr(),
             buf.as_mut_ptr(),
             buf.len(),
-            &mut result,
+            &raw mut result,
         )
     };
     if retval == 0 && !result.is_null() {

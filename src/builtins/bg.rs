@@ -97,7 +97,7 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
     let mut seen = HashSet::new();
     for pid in pids {
         if let Some((job_pos, job)) = parser.job_get_with_index_from_pid(pid) {
-            if seen.insert(&*job as *const _) {
+            if seen.insert(&raw const *job) {
                 send_to_bg(parser, streams, cmd, job_pos)?;
             }
         } else {

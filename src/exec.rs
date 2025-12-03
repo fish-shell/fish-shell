@@ -421,7 +421,7 @@ fn safe_launch_process(
             // not what we would pass as argv0.
             argv2[1] = actual_cmd.as_ptr();
             unsafe {
-                libc::execve(bshell, &argv2[0], envv.get());
+                libc::execve(bshell, &raw const argv2[0], envv.get());
             }
         }
     }

@@ -690,7 +690,7 @@ mod tests {
                     if size == 0 {
                         ptr::null_mut()
                     } else {
-                        (&mut contents[0]) as *mut u8 as *mut c_void
+                        &raw mut contents[0] as *mut c_void
                     },
                     narrow.len(),
                 )

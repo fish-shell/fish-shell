@@ -559,24 +559,24 @@ pub fn check_fd_readable(in_fd: RawFd, timeout: Duration) -> bool {
         fdset.assume_init()
     };
     unsafe {
-        libc::FD_SET(in_fd, &mut fdset);
+        libc::FD_SET(in_fd, &raw mut fdset);
     }
 
     let res = unsafe {
         libc::pselect(
             in_fd + 1,
-            &mut fdset,
+            &raw mut fdset,
             ptr::null_mut(),
             ptr::null_mut(),
-            &timeout,
-            &sigs,
+            &raw const timeout,
+            &raw const sigs,
         )
     };
 
     // Prevent signal starvation on WSL causing the `torn_escapes.py` test to fail
     if is_windows_subsystem_for_linux(WSL::V1) {
         // Merely querying the current thread's sigmask is sufficient to deliver a pending signal
-        let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), &mut sigs) };
+        let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), &raw mut sigs) };
     }
     res > 0
 }

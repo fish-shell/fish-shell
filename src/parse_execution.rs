@@ -1525,7 +1525,7 @@ impl<'a> ExecutionContext<'a> {
         // Save the executing node.
         let _saved_node = self
             .line_counter
-            .scoped_set(job_node as *const _, |s| &mut s.node);
+            .scoped_set(std::ptr::from_ref(job_node), |s| &mut s.node);
 
         // Profiling support.
         let profile_item_id = ctx.parser().create_profile_item();

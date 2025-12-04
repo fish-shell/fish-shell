@@ -12,7 +12,7 @@ use std::cell::Cell;
 use std::io;
 use std::mem::MaybeUninit;
 use std::os::fd::RawFd;
-use std::ptr::{NonNull, addr_of};
+use std::ptr::NonNull;
 use std::rc::Rc;
 
 /// Types of files that may be in a directory.
@@ -273,11 +273,9 @@ impl DirIter {
 
         // Do not rely on `libc::dirent::d_name.len()` as dirent names may exceed
         // the nominal buffer size; instead use the terminating nul byte.
-        // TODO: This should use &raw from Rust 1.82 on
         // https://github.com/rust-lang/libc/issues/2669
         // https://github.com/fish-shell/fish-shell/issues/11221
-        let d_name_ptr = addr_of!(dent.d_name);
-        let d_name = unsafe { std::ffi::CStr::from_ptr(d_name_ptr.cast()) }.to_bytes();
+        let d_name = unsafe { std::ffi::CStr::from_ptr(dent.d_name.as_ptr().cast()) }.to_bytes();
 
         // Skip . and ..,
         // unless we've been told not to.

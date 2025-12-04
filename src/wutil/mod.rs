@@ -115,13 +115,7 @@ pub fn wreadlink(file_name: &wstr) -> Option<WString> {
     let bufsize = usize::try_from(md.len()).unwrap() + 1;
     let mut target_buf = vec![b'\0'; bufsize];
     let tmp = wcs2zstring(file_name);
-    let nbytes = unsafe {
-        libc::readlink(
-            tmp.as_ptr(),
-            std::ptr::addr_of_mut!(target_buf[0]).cast(),
-            bufsize,
-        )
-    };
+    let nbytes = unsafe { libc::readlink(tmp.as_ptr(), target_buf.as_mut_ptr().cast(), bufsize) };
     if nbytes == -1 {
         perror("readlink");
         return None;

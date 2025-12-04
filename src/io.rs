@@ -417,13 +417,8 @@ impl IoBuffer {
 
         // We want to swallow EINTR only; in particular EAGAIN needs to be returned back to the caller.
         let amt = loop {
-            let amt = unsafe {
-                libc::read(
-                    fd,
-                    std::ptr::addr_of_mut!(bytes).cast(),
-                    std::mem::size_of_val(&bytes),
-                )
-            };
+            let amt =
+                unsafe { libc::read(fd, bytes.as_mut_ptr().cast(), std::mem::size_of_val(&bytes)) };
             if amt < 0 && errno::errno().0 == EINTR {
                 continue;
             }
@@ -623,16 +618,13 @@ impl IoChain {
     /// Output debugging information to stderr.
     pub fn print(&self) {
         if self.0.is_empty() {
-            eprintf!(
-                "Empty chain %s\n",
-                format!("{:p}", std::ptr::addr_of!(self))
-            );
+            eprintf!("Empty chain %s\n", format!("{:p}", &raw const self));
             return;
         }
 
         eprintf!(
             "Chain %s (%d items):\n",
-            format!("{:p}", std::ptr::addr_of!(self)),
+            format!("{:p}", &raw const self),
             self.0.len()
         );
         for (i, io) in self.0.iter().enumerate() {

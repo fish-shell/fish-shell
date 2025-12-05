@@ -8,6 +8,7 @@ license.workspace = true
 
 [dependencies]
 nix = { workspace = true, features = ["fs", "feature"] }
+rand.workspace = true
 
 [lints]
 workspace = true

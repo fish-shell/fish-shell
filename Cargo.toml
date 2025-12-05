@@ -44,10 +44,10 @@ portable-atomic = { version = "1", default-features = false, features = [
     "fallback",
 ] }
 proc-macro2 = "1.0"
-# Don't use the "getrandom" feature as it requires "getentropy" which was not
-# available on macOS < 10.12. We can enable "getrandom" when we raise the
-# minimum supported version to 10.12.
-rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
+rand = { version = "0.9.2", default-features = false, features = [
+    "small_rng",
+    "thread_rng",
+] }
 rsconf = "0.2.2"
 rust-embed = { version = "8.7.2", features = [
     "deterministic-timestamps",

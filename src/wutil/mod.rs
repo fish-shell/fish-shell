@@ -483,7 +483,6 @@ mod tests {
     use crate::common::wcs2bytes;
     use crate::fds::AutoCloseFd;
     use crate::tests::prelude::*;
-    use crate::util::get_rng;
     use crate::wchar::prelude::*;
     use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET, c_void};
     use rand::Rng;
@@ -665,7 +664,7 @@ mod tests {
         let _cleanup = test_init();
         let temp_file = fish_tempfile::new_file().unwrap();
         let filename = CString::new(temp_file.path().to_str().unwrap()).unwrap();
-        let mut rng = get_rng();
+        let mut rng = rand::rng();
         let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];
         for &size in &sizes {
             let fd = AutoCloseFd::new(unsafe {
@@ -674,7 +673,7 @@ mod tests {
             assert!(fd.is_valid());
             let mut input = WString::new();
             for _i in 0..size {
-                input.push(rng.r#gen());
+                input.push(rng.random());
             }
 
             let amt = wwrite_to_fd(&input, fd.fd()).unwrap();

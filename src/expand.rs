@@ -1165,9 +1165,9 @@ fn expand_home_directory(input: &mut WString, vars: &dyn Environment) {
             libc::getpwnam_r(
                 name_cstr.as_ptr(),
                 userinfo.as_mut_ptr(),
-                &mut buf[0],
+                &raw mut buf[0],
                 std::mem::size_of_val(&buf),
-                &mut result,
+                &raw mut result,
             )
         };
         if retval == 0 && !result.is_null() {

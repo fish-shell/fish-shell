@@ -890,7 +890,7 @@ fn libc_sprintf_one_float_with_precision<'a>(
     fmt: &'a CStr,
 ) -> impl FnMut(usize, f64) -> &'a str {
     |preci, float_val| unsafe {
-        let storage_ptr = storage.as_mut_ptr() as *mut c_char;
+        let storage_ptr = storage.as_mut_ptr().cast::<c_char>();
         let len = libc::snprintf(storage_ptr, storage.len(), fmt.as_ptr(), preci, float_val);
         assert!(len >= 0);
         let sl = std::slice::from_raw_parts(storage_ptr as *const u8, len as usize);

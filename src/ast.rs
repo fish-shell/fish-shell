@@ -242,8 +242,8 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
     // Note this is performance-sensitive.
 
     // Different base pointers => not the same.
-    let lptr = lhs as *const dyn Node as *const ();
-    let rptr = rhs as *const dyn Node as *const ();
+    let lptr = std::ptr::from_ref(lhs).cast::<()>();
+    let rptr = std::ptr::from_ref(rhs).cast::<()>();
     if !std::ptr::eq(lptr, rptr) {
         return false;
     }

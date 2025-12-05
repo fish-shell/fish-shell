@@ -81,7 +81,7 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
 
     // Up to 4 groups.
     // group_cursor is terminated by either a 0 or CHAR_MAX.
-    let mut group_cursor = lconv.grouping as *const libc::c_char;
+    let mut group_cursor = lconv.grouping.cast_const();
     if group_cursor.is_null() {
         group_cursor = empty.as_ptr();
     }

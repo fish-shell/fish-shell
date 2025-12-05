@@ -141,7 +141,7 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
         libc::sigdelset(new_set, libc::SIGKILL); // unblockable
 
         let mut saved_set: libc::sigset_t = std::mem::zeroed();
-        let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set as *mut _);
+        let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &raw mut saved_set);
         assert_eq!(result, 0, "Failed to override thread signal mask!");
         saved_set
     };
@@ -169,7 +169,7 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     unsafe {
         let result = libc::pthread_sigmask(
             libc::SIG_SETMASK,
-            &saved_set as *const _,
+            &raw const saved_set,
             std::ptr::null_mut(),
         );
         assert_eq!(result, 0, "Failed to restore thread signal mask!");
@@ -424,7 +424,7 @@ mod tests {
             libc::sigaddset(new_set, libc::SIGILL); // mask bad jump
 
             let mut saved_set: libc::sigset_t = std::mem::zeroed();
-            let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set as *mut _);
+            let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &raw mut saved_set);
             assert_eq!(result, 0, "Failed to set thread mask!");
 
             // Now get the current set that includes the masked SIGILL
@@ -432,7 +432,7 @@ mod tests {
             let mut empty_set = MaybeUninit::uninit();
             let empty_set = empty_set.as_mut_ptr();
             libc::sigemptyset(empty_set);
-            let result = libc::pthread_sigmask(libc::SIG_UNBLOCK, empty_set, &mut t1_set as *mut _);
+            let result = libc::pthread_sigmask(libc::SIG_UNBLOCK, empty_set, &raw mut t1_set);
             assert_eq!(result, 0, "Failed to get own altered thread mask!");
 
             (saved_set, t1_set)
@@ -446,8 +446,7 @@ mod tests {
                 let new_set = new_set.as_mut_ptr();
                 libc::sigemptyset(new_set);
                 let mut saved_set2: libc::sigset_t = std::mem::zeroed();
-                let result =
-                    libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set2 as *mut _);
+                let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &raw mut saved_set2);
                 assert_eq!(result, 0, "Failed to get existing sigmask for new thread");
                 saved_set2
             }
@@ -456,11 +455,11 @@ mod tests {
         // Compare the sigset_t values
         unsafe {
             let t1_sigset_slice = std::slice::from_raw_parts(
-                &t1_set as *const _ as *const u8,
+                (&raw const t1_set).cast::<u8>(),
                 core::mem::size_of::<libc::sigset_t>(),
             );
             let t2_sigset_slice = std::slice::from_raw_parts(
-                &t2_set as *const _ as *const u8,
+                (&raw const t2_set).cast::<u8>(),
                 core::mem::size_of::<libc::sigset_t>(),
             );
 
@@ -471,7 +470,7 @@ mod tests {
         unsafe {
             let result = libc::pthread_sigmask(
                 libc::SIG_SETMASK,
-                &saved_set as *const _,
+                &raw const saved_set,
                 core::ptr::null_mut(),
             );
             assert_eq!(result, 0, "Failed to restore sigmask!");

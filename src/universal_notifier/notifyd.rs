@@ -47,7 +47,7 @@ impl NotifydNotifier {
         let mut notify_fd = -1;
         let mut token = -1;
         let status = unsafe {
-            notify_register_file_descriptor(name.as_ptr(), &mut notify_fd, 0, &mut token)
+            notify_register_file_descriptor(name.as_ptr(), &raw mut notify_fd, 0, &raw mut token)
         };
         if status != NOTIFY_STATUS_OK || notify_fd < 0 {
             FLOGF!(

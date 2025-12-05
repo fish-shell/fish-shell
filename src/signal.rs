@@ -126,7 +126,7 @@ extern "C" fn fish_signal_handler(
 /// This is called after fork - it should be async signal safe.
 pub fn signal_reset_handlers() {
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
-    unsafe { libc::sigemptyset(&mut act.sa_mask) };
+    unsafe { libc::sigemptyset(&raw mut act.sa_mask) };
     act.sa_flags = 0;
     act.sa_sigaction = libc::SIG_DFL;
 
@@ -140,7 +140,7 @@ pub fn signal_reset_handlers() {
             }
         }
         unsafe {
-            libc::sigaction(data.signal.code(), &act, std::ptr::null_mut());
+            libc::sigaction(data.signal.code(), &raw const act, std::ptr::null_mut());
         };
     }
 }
@@ -157,7 +157,7 @@ fn set_interactive_handlers() {
     let mut oact: libc::sigaction = unsafe { std::mem::zeroed() };
     act.sa_flags = 0;
     oact.sa_flags = 0;
-    unsafe { libc::sigemptyset(&mut act.sa_mask) };
+    unsafe { libc::sigemptyset(&raw mut act.sa_mask) };
 
     let nullptr = std::ptr::null_mut();
 
@@ -177,7 +177,7 @@ fn set_interactive_handlers() {
     act.sa_flags = libc::SA_SIGINFO;
     sigaction(libc::SIGTERM, &act, nullptr);
 
-    unsafe { libc::sigaction(libc::SIGHUP, nullptr, &mut oact) };
+    unsafe { libc::sigaction(libc::SIGHUP, nullptr, &raw mut oact) };
     if oact.sa_sigaction == libc::SIG_DFL {
         act.sa_sigaction = signal_handler;
         act.sa_flags = libc::SA_SIGINFO;
@@ -204,7 +204,7 @@ pub fn signal_set_handlers(interactive: bool) {
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
 
     act.sa_flags = 0;
-    unsafe { libc::sigemptyset(&mut act.sa_mask) };
+    unsafe { libc::sigemptyset(&raw mut act.sa_mask) };
 
     // Ignore SIGPIPE. We'll detect failed writes and deal with them appropriately. We don't want
     // this signal interrupting other syscalls or terminating us.
@@ -272,7 +272,7 @@ pub fn signal_handle(sig: Signal) {
     }
 
     act.sa_flags = 0;
-    unsafe { libc::sigemptyset(&mut act.sa_mask) };
+    unsafe { libc::sigemptyset(&raw mut act.sa_mask) };
     act.sa_flags = libc::SA_SIGINFO;
     act.sa_sigaction = fish_signal_handler as usize;
     sigaction(sig, &act, std::ptr::null_mut());

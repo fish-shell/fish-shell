@@ -551,7 +551,8 @@ impl TtyHandoff {
             } else if errno::errno().0 == EPERM {
                 // Retry so long as this isn't because the process group is dead.
                 let mut result: libc::c_int = 0;
-                let wait_result = unsafe { libc::waitpid(-pgid.as_pid_t(), &mut result, WNOHANG) };
+                let wait_result =
+                    unsafe { libc::waitpid(-pgid.as_pid_t(), &raw mut result, WNOHANG) };
                 if wait_result == -1 {
                     // Note that -1 is technically an "error" for waitpid in the sense that an
                     // invalid argument was specified because no such process group exists any

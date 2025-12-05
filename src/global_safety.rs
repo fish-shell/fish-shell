@@ -35,9 +35,7 @@ pub struct AtomicRef<T: ?Sized + 'static>(AtomicPtr<&'static T>);
 
 impl<T: ?Sized> AtomicRef<T> {
     pub const fn new(value: &'static &'static T) -> Self {
-        Self(AtomicPtr::new(
-            value as *const &'static T as *mut &'static T,
-        ))
+        Self(AtomicPtr::new(std::ptr::from_ref(value).cast_mut()))
     }
 
     pub fn load(&self) -> &'static T {
@@ -45,10 +43,8 @@ impl<T: ?Sized> AtomicRef<T> {
     }
 
     pub fn store(&self, value: &'static &'static T) {
-        self.0.store(
-            value as *const &'static T as *mut &'static T,
-            Ordering::Relaxed,
-        )
+        self.0
+            .store(std::ptr::from_ref(value).cast_mut(), Ordering::Relaxed)
     }
 }
 

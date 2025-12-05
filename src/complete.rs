@@ -1856,8 +1856,8 @@ impl<'ctx> Completer<'ctx> {
 
         let vars = parser.vars();
         assert_eq!(
-            self.ctx.vars() as *const _ as *const (),
-            vars as *const _ as *const (),
+            std::ptr::from_ref(self.ctx.vars()).cast::<()>(),
+            std::ptr::from_ref(vars).cast::<()>(),
             "Don't know how to tab complete with a parser but a different variable set"
         );
 

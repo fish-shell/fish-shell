@@ -1,9 +1,5 @@
 # RUN: %fish %s
 
-# Do not run under sanitizers in CI, as they intercept a busted posix_spawn
-# which mishandles shebangless scripts.
-# REQUIRES: test -z "$FISH_CI_SAN"
-
 # Test for shebangless scripts - see 7802.
 
 set testdir (mktemp -d)

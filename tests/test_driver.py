@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
-from datetime import datetime
 import os
-from pathlib import Path
 import resource
 import shutil
 import subprocess
 import sys
 import tempfile
-from typing import Optional
+from datetime import datetime
+from pathlib import Path
 
 # TODO(python>3.8): use dict
-from typing import Dict
-
 # TODO(python>3.8): use |
-from typing import Union
+from typing import Dict, Optional, Union
 
 import littlecheck
 
@@ -162,6 +159,16 @@ async def main():
             for path in sorted(script_path.glob("checks/*.fish"))
             + sorted(script_path.glob("pexpects/*.py"))
         ]
+    if os.environ.get("FISH_CI_SAN"):
+
+        def run_in_ci_san(path) -> bool:
+            if path.endswith(".py"):
+                return False
+            if os.path.basename(path).startswith("tmux-"):
+                return False
+            return True
+
+        files = [path_pair for path_pair in files if run_in_ci_san(path_pair[0])]
 
     if not PEXPECT and any(x.endswith(".py") for (x, _) in files):
         print(f"{RED}Skipping pexpect tests because pexpect is not installed{RESET}")

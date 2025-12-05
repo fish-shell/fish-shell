@@ -276,20 +276,10 @@ echo $status
 math 'log2(8)'
 # CHECK: 3
 
-math 'logb(2, 8)'
+math 'log(8) / log(2)'
 # CHECK: 3
-math 'logb(67, 406067677556641)'
-# CHECK: 8
-math 'logb(42, 230539333248)'
-# CHECK: 7
-math 'logb(12, 8916100448256)'
-# CHECK: 12
-math 'logb(3, 5559060566555523)'
-# CHECK: 33
-math 'logb(5, 2384185791015625)'
-# CHECK: 22
-math 'logb(7, 343)'
-# CHECK: 3
+math 'log(625) / log(5)'
+# CHECK: 4
 
 # same as sin(cos(2 x pi))
 math sin cos 2 x pi

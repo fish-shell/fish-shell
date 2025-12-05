@@ -153,11 +153,9 @@ Functions
 ``ln``
     the base-e logarithm
 ``log`` or ``log10``
-    the base-10 logarithm
+    the base-10 logarithm. To compute the logarithm for an arbitrary base ``b``, use ``log(x) / log(b)``.
 ``log2``
     the base-2 logarithm
-``logb(b,x)``
-    returns the logarithm with base b of x
 ``max``
     returns the largest of the given numbers - this takes an arbitrary number of arguments (but at least one)
 ``min``

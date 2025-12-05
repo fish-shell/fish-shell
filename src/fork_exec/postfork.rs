@@ -495,13 +495,7 @@ fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr>
     if fd >= 0 {
         while idx + 1 < buffer.len() {
             let mut ch = b'\0';
-            let amt = unsafe {
-                libc::read(
-                    fd,
-                    std::ptr::addr_of_mut!(ch).cast(),
-                    std::mem::size_of_val(&ch),
-                )
-            };
+            let amt = unsafe { libc::read(fd, (&raw mut ch).cast(), std::mem::size_of_val(&ch)) };
             if amt <= 0 || ch == b'\n' {
                 break;
             }

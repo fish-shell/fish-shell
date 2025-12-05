@@ -1,5 +1,7 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
+# This failed repeatedly in the ubuntu-asan job.
+#REQUIRES: test -z "$FISH_CI_SAN"
 
 isolated-tmux-start -C '
     function fish_prompt

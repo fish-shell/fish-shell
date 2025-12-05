@@ -1,6 +1,4 @@
 #RUN: fish=%fish %fish %s
-# disable on CI ASAN because it's suuuper slow
-#REQUIRES: test -z "$FISH_CI_SAN"
 
 set -l workspace_root (path resolve -- (status dirname)/../../)
 set timestamp_file $workspace_root/tests/.last-check-all-files

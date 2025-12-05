@@ -2,12 +2,7 @@
 from pexpect_helper import SpawnedProc
 import platform
 
-import os
 import sys
-
-# Disable under SAN - keeps failing because the timing is too tight
-if "FISH_CI_SAN" in os.environ:
-    sys.exit(0)
 
 
 # Set a 0 terminal size
@@ -58,9 +53,6 @@ sendline("stty ixon ixoff")
 expect_prompt()
 sendline("stty -a | string match -q '*ixon ixoff*'; echo $status")
 expect_prompt("0")
-
-# TODO
-import sys
 
 sys.exit(0)
 # HACK: This fails on FreeBSD, macOS and NetBSD for some reason, maybe

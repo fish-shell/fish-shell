@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
-import os
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt = (
@@ -12,8 +11,6 @@ send, sendline, sleep, expect_prompt = (
 
 
 def use_suggestion(*, delay=0.1):
-    if "FISH_CI_SAN" in os.environ:
-        delay *= 5
     sleep(delay)
     send("\033[C")
     sendline("")

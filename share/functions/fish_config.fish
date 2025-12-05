@@ -15,7 +15,7 @@ function fish_config --description "Launch fish's web based configuration"
 
     # The web-based configuration UI
     # Also opened with just `fish_config` or `fish_config browse`.
-    if contains -- $cmd browse
+    if test $cmd = browse
         if set -l python (__fish_anypython)
             function __fish_config_webconfig -V python -a web_config
                 set -lx __fish_bin_dir $__fish_bin_dir
@@ -200,72 +200,7 @@ function fish_config --description "Launch fish's web based configuration"
                     end
 
                 case choose save
-                    if set -q argv[2]
-                        echo "Too many arguments" >&2
-                        return 1
-                    end
-                    # The name of the theme to save *from* is optional for `fish_config theme save`
-                    if not set -q argv[1] && contains -- $cmd choose
-                        echo "Too few arguments" >&2
-                        return 1
-                    end
-
-                    set -l scope -g
-
-                    if contains -- $cmd save
-                        read -P"Overwrite your current theme? [y/N] " -l yesno
-                        if not string match -riq 'y(es)?' -- $yesno
-                            echo Not overwriting >&2
-                            return 1
-                        end
-                        set scope -U
-                    end
-
-                    set -l known_colors (__fish_color_variables)
-                    if not set -q argv[1]
-                        # We're persisting whatever current colors are loaded (maybe in the global scope)
-                        # to the universal scope, without overriding them from a theme file.
-                        # Like above, make sure to erase from other scopes first and ensure known color
-                        # variables are defined, even if empty.
-                        # This branch is only reachable in the case of `theme save` so $scope is always `-U`.
-
-                        for color in (__fish_theme_variables)
-                            # Cache the value from whatever scope currently defines it
-                            set -l value $$color
-                            set -eg $color
-                            set -U $color $value
-                        end
-                        return 0
-                    end
-
-                    # If we are choosing a theme or saving from a named theme, load the theme now.
-                    # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
-                    set -l defined_colors
-                    begin
-                        __fish_config_cat_theme $argv[1]
-                        or return
-                    end |
-                        string match -r -- (__fish_theme_variable_filter) |
-                        while read -lat toks
-                            # If we're supposed to set universally, remove any shadowing globals
-                            # so the change takes effect immediately (and there's no warning).
-                            if test x"$scope" = x-U; and set -qg $toks[1]
-                                set -eg $toks[1]
-                            end
-                            set $scope $toks
-                            set -a defined_colors $toks[1]
-                        end
-
-                    # Set all colors that aren't mentioned to empty
-                    for c in $known_colors
-                        contains -- $c $defined_colors
-                        and continue
-                        # Erase conflicting global variables so we don't get a warning and
-                        # so changes are observed immediately.
-                        set -eg $c
-                        set $scope $c
-                    end
-
+                    __fish_config_theme_choose $cmd $argv
                     return 0
                 case dump
                     if set -q argv[1]
@@ -309,6 +244,77 @@ function __fish_config_cat_theme -a theme_name
         return 1
     end
     __fish_data_with_file $theme_path cat
+end
+
+function __fish_config_theme_choose
+    set -l cmd $argv[1]
+    set -e argv[1]
+    if set -q argv[2]
+        echo "Too many arguments" >&2
+        return 1
+    end
+    # The name of the theme to save *from* is optional for `fish_config theme save`
+    if not set -q argv[1] && contains -- $cmd choose
+        echo "Too few arguments" >&2
+        return 1
+    end
+
+    set -l scope -g
+
+    if test $cmd = save
+        read -P"Overwrite your current theme? [y/N] " -l yesno
+        if not string match -riq 'y(es)?' -- $yesno
+            echo Not overwriting >&2
+            return 1
+        end
+        set scope -U
+    end
+
+    set -l known_colors (__fish_color_variables)
+    if not set -q argv[1]
+        # We're persisting whatever current colors are loaded (maybe in the global scope)
+        # to the universal scope, without overriding them from a theme file.
+        # Like above, make sure to erase from other scopes first and ensure known color
+        # variables are defined, even if empty.
+        # This branch is only reachable in the case of `theme save` so $scope is always `-U`.
+
+        for color in (__fish_theme_variables)
+            # Cache the value from whatever scope currently defines it
+            set -l value $$color
+            set -eg $color
+            set -U $color $value
+        end
+        return 0
+    end
+
+    # If we are choosing a theme or saving from a named theme, load the theme now.
+    # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
+    set -l defined_colors
+    begin
+        __fish_config_cat_theme $argv[1]
+        or return
+    end |
+        string match -r -- (__fish_theme_variable_filter) |
+        while read -lat toks
+            # If we're supposed to set universally, remove any shadowing globals
+            # so the change takes effect immediately (and there's no warning).
+            if test x"$scope" = x-U; and set -qg $toks[1]
+                set -eg $toks[1]
+            end
+            set $scope $toks
+            set -a defined_colors $toks[1]
+        end
+
+    # Set all colors that aren't mentioned to empty
+    for c in $known_colors
+        contains -- $c $defined_colors
+        and continue
+        # Erase conflicting global variables so we don't get a warning and
+        # so changes are observed immediately.
+        set -eg $c
+        set $scope $c
+    end
+
 end
 
 function __fish_config_list_themes

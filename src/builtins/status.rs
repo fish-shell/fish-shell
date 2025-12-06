@@ -75,6 +75,7 @@ str_enum!(
     (STATUS_IS_NO_JOB_CTRL, "is-no-job-control"),
     (STATUS_LINE_NUMBER, "line-number", "current-line-number"),
     (STATUS_LIST_FILES, "list-files"),
+    (STATUS_LOCALE, "locale"),
     (STATUS_SET_JOB_CONTROL, "job-control"),
     (STATUS_STACK_TRACE, "stack-trace", "print-stack-trace"),
     (STATUS_TERMINAL, "terminal"),
@@ -480,6 +481,44 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             streams.out.append(src);
             return Ok(SUCCESS);
         }
+        STATUS_LOCALE => {
+            cfg_if! {
+                if #[cfg(not(feature = "localize-messages"))]
+                {
+                    streams.err.append(L!("fish was built with the `localize-messages` feature disabled. The `status locale` command is unavailable.\n"));
+                    return Err(STATUS_CMD_ERROR);
+                } else {
+                    if args.is_empty() {
+                        streams.out.append(crate::wutil::gettext::status_locale_get());
+                        return Ok(SUCCESS);
+                    }
+                    match args[0].to_string().as_str() {
+                        "set" => {
+                            let langs = args[1..]
+                                .iter()
+                                .map(|lang| lang.to_string())
+                                .collect::<Vec<_>>();
+                            let lints = crate::wutil::gettext::update_from_status_locale_builtin(&langs);
+                            let formatted_lints = lints.display_all();
+                            if !formatted_lints.is_empty() {
+                                streams.err.append(&formatted_lints);
+                            }
+                            return Ok(SUCCESS);
+                        }
+                        "unset" => {
+                            crate::wutil::gettext::unset_from_status_locale_builtin(parser.vars());
+                            return Ok(SUCCESS);
+                        }
+                        invalid => {
+                            streams
+                                .err
+                                .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBSUBCMD, cmd, subcmd.to_wstr(), invalid));
+                            return Err(STATUS_INVALID_ARGS);
+                        }
+                    }
+                }
+            }
+        }
         STATUS_LIST_FILES => {
             use crate::util::wcsfilecmp_glob;
             let mut paths = vec![];
@@ -724,6 +763,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 | STATUS_TEST_FEATURE
                 | STATUS_GET_FILE
                 | STATUS_LIST_FILES
+                | STATUS_LOCALE
                 | STATUS_TEST_TERMINAL_FEATURE => {
                     unreachable!("")
                 }

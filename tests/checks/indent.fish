@@ -487,6 +487,54 @@ level 2 } }
     # CHECK: {{^\}$}}
 } | $fish_indent
 
+echo 'false or {
+    echo hi
+}' | $fish_indent
+# CHECK: false or {
+# CHECK: {{^    }}echo hi
+# CHECK: {{^}}}
+
+echo 'true and {
+    echo hi
+}' | $fish_indent
+# CHECK: true and {
+# CHECK: {{^    }}echo hi
+# CHECK: {{^}}}
+
+echo 'test 1 -eq 1; or {
+    echo a
+    echo b
+}' | $fish_indent
+# CHECK: test 1 -eq 1; or {
+# CHECK: {{^    }}echo a
+# CHECK: {{^    }}echo b
+# CHECK: {{^}}}
+
+# Test single-line braces after conjunctions/operators stay on same line
+echo 'false and { echo yes }' | $fish_indent
+# CHECK: false and { echo yes }
+
+echo 'false or { echo yes }' | $fish_indent
+# CHECK: false or { echo yes }
+
+echo 'echo hi | { read line; echo $line }' | $fish_indent
+# CHECK: echo hi | { read line; echo $line }
+
+echo 'echo err || { echo error }' | $fish_indent
+# CHECK: echo err || { echo error }
+
+echo 'not { false }' | $fish_indent
+# CHECK: not { false }
+
+echo 'time { sleep 0.1 }' | $fish_indent
+# CHECK: time { sleep 0.1 }
+
+echo 'command { echo raw }' | $fish_indent
+# CHECK: command { echo raw }
+
+echo 'builtin { echo raw }' | $fish_indent
+# CHECK: builtin { echo raw }
+
 echo 'multiline-\\
 -word' | $fish_indent --check
 echo $status #CHECK: 0

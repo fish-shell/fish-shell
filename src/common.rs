@@ -1201,8 +1201,9 @@ pub fn wcs2zstring(input: &wstr) -> CString {
     let mut vec = Vec::with_capacity(input.len() + 1);
     wcs2bytes_callback(input, |buff| {
         vec.extend_from_slice(buff);
-        true
-    });
+        Ok(())
+    })
+    .unwrap();
     vec.push(b'\0');
 
     match CString::from_vec_with_nul(vec) {
@@ -1223,8 +1224,9 @@ pub fn wcs2bytes_appending(output: &mut Vec<u8>, input: &wstr) {
     output.reserve(input.len());
     wcs2bytes_callback(input, |buff| {
         output.extend_from_slice(buff);
-        true
-    });
+        Ok(())
+    })
+    .unwrap();
 }
 
 /// Stored in blocks to reference the file which created the block.

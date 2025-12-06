@@ -1,3 +1,5 @@
+use crate::signal::SigChecker;
+
 use super::*;
 
 #[derive(Default)]
@@ -88,7 +90,11 @@ impl StringSubCommand<'_> for Repeat {
         let mut first = true;
         let mut print_trailing_newline = true;
 
+        let mut sigcheck = SigChecker::new(crate::topic_monitor::Topic::sighupint);
         for (w, want_newline) in arguments(args, optind, streams) {
+            if sigcheck.check() {
+                return Err(STATUS_CMD_ERROR);
+            }
             print_trailing_newline = want_newline;
             if w.is_empty() {
                 continue;
@@ -130,6 +136,9 @@ impl StringSubCommand<'_> for Repeat {
 
             let mut i = max;
             while i > 0 {
+                if sigcheck.check() {
+                    return Err(STATUS_CMD_ERROR);
+                }
                 if i >= w.len() {
                     chunk.push_utfstr(&w);
                 } else {
@@ -143,6 +152,9 @@ impl StringSubCommand<'_> for Repeat {
                     // We hit the chunk size, write it repeatedly until we can't anymore.
                     streams.out.append(&chunk);
                     while i >= chunk.len() {
+                        if sigcheck.check() {
+                            return Err(STATUS_CMD_ERROR);
+                        }
                         streams.out.append(&chunk);
                         // We can easily be asked to write *a lot* of data,
                         // so we need to check every so often if the pipe has been closed.

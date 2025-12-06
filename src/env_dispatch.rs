@@ -7,7 +7,8 @@ use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_
 use crate::locale::{invalidate_numeric_locale, set_libc_locales};
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
-    reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled, reader_set_transient_prompt,
+    reader_schedule_prompt_repaint, reader_set_autocomplete_autoshow,
+    reader_set_autosuggestion_enabled, reader_set_transient_prompt,
 };
 use crate::screen::{
     IS_DUMB, LAYOUT_CACHE_SHARED, ONLY_GRAYSCALE, screen_set_midnight_commander_hack,
@@ -74,6 +75,10 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         table.add_anon(
             L!("fish_autosuggestion_enabled"),
             handle_autosuggestion_change,
+        );
+        table.add_anon(
+            L!("fish_autocomplete_autoshow"),
+            handle_autocomplete_autoshow_change,
         );
         table.add_anon(L!("fish_transient_prompt"), handle_transient_prompt_change);
         table.add_anon(
@@ -280,6 +285,10 @@ fn handle_fish_cursor_end_mode_change(vars: &EnvStack) {
 
 fn handle_autosuggestion_change(vars: &EnvStack) {
     reader_set_autosuggestion_enabled(vars);
+}
+
+fn handle_autocomplete_autoshow_change(vars: &EnvStack) {
+    reader_set_autocomplete_autoshow(vars);
 }
 
 fn handle_transient_prompt_change(vars: &EnvStack) {

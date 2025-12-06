@@ -78,6 +78,10 @@ msgid "%s"
 msgstr "%s"
 
 #, c-format
+msgid "%s %s: %s: invalid subcommand\n"
+msgstr "%s %s：%s：無效的子命令\n"
+
+#, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
 msgstr "%s %s：名為 %s 且適用於命令 %s 的縮寫已存在，無法重新命名 %s\n"
 
@@ -1227,8 +1231,27 @@ msgstr "作業變更狀態"
 msgid "Jobs getting started or continued"
 msgstr "作業開始或繼續"
 
+#, c-format
+msgid "Language specifiers appear repeatedly: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Language specifiers are not well-formed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Language specifiers do not have catalogs: %s\n"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "列出或移除函式"
+
+msgid "Localization is active.\n"
+msgstr ""
+
+#, c-format
+msgid "Localization is disabled because %s is set to a C locale.\n"
+msgstr ""
 
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "不支援邏輯運算，請改用「test」"
@@ -1548,6 +1571,20 @@ msgstr "函式「%s」立刻呼叫了它自己，這會造成無限迴圈。"
 
 msgid "The interactive reader/input system"
 msgstr "互動式讀取器／輸入系統"
+
+#, c-format
+msgid "The language list is set based on the %s environment variable.\n"
+msgstr ""
+
+msgid "The language list is set to the default value because no explicit value was specified.\n"
+msgstr ""
+
+#, c-format
+msgid "The language list is set to the following value: %s\n"
+msgstr ""
+
+msgid "The language list is set via the `status locale` builtin.\n"
+msgstr ""
 
 msgid "There are still jobs active:\n"
 msgstr "仍有活動中的作業：\n"

@@ -67,6 +67,9 @@ localizable_consts!(
     pub BUILTIN_ERR_INVALID_SUBCMD
     "%s: %s: invalid subcommand\n"
 
+    pub BUILTIN_ERR_INVALID_SUBSUBCMD
+    "%s %s: %s: invalid subcommand\n"
+
     /// Error messages for unexpected args.
     pub BUILTIN_ERR_ARG_COUNT0
     "%s: missing argument\n"

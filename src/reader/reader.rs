@@ -1800,23 +1800,26 @@ impl<'a> Reader<'a> {
         let mut colors = data.colors.clone();
 
         // Highlight any history search.
-        if !self.conf.in_silent_mode && data.history_search_range.is_some() {
-            let mut range = data.history_search_range.unwrap().as_usize();
-            if range.end > colors.len() {
-                range.start = range.start.min(colors.len());
-                range.end = colors.len();
-            }
-
-            let explicit_foreground = self
-                .vars()
-                .get_unless_empty(L!("fish_color_search_match"))
-                .is_some_and(|var| parse_text_face(var.as_list()).fg.is_some());
-
-            for color in &mut colors[range] {
-                if explicit_foreground {
-                    color.foreground = HighlightRole::search_match;
+        if let Some(range) = data.history_search_range {
+            // TODO(MSRV>=1.88): let chain
+            if !self.conf.in_silent_mode {
+                let mut range = range.as_usize();
+                if range.end > colors.len() {
+                    range.start = range.start.min(colors.len());
+                    range.end = colors.len();
                 }
-                color.background = HighlightRole::search_match;
+
+                let explicit_foreground = self
+                    .vars()
+                    .get_unless_empty(L!("fish_color_search_match"))
+                    .is_some_and(|var| parse_text_face(var.as_list()).fg.is_some());
+
+                for color in &mut colors[range] {
+                    if explicit_foreground {
+                        color.foreground = HighlightRole::search_match;
+                    }
+                    color.background = HighlightRole::search_match;
+                }
             }
         }
 

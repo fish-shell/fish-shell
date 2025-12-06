@@ -57,7 +57,7 @@ use crate::{
     parse_util::{parse_util_detect_errors, parse_util_unescape_wildcards},
     path::{path_get_config, path_get_data, path_is_valid},
     threads::assert_is_background_thread,
-    util::{find_subslice, get_rng},
+    util::find_subslice,
     wchar::prelude::*,
     wcstringutil::subsequence_in_string,
     wildcard::{ANY_STRING, wildcard_match},
@@ -731,7 +731,7 @@ impl HistoryImpl {
         // the counter.
         let countdown_to_vacuum = self
             .countdown_to_vacuum
-            .get_or_insert_with(|| get_rng().gen_range(0..VACUUM_FREQUENCY));
+            .get_or_insert_with(|| rand::rng().random_range(0..VACUUM_FREQUENCY));
 
         // Determine if we're going to vacuum.
         let mut vacuum = false;
@@ -1779,12 +1779,11 @@ mod tests {
     use crate::fs::{LockedFile, WriteMethod};
     use crate::path::path_get_data;
     use crate::tests::prelude::*;
-    use crate::util::get_rng;
     use crate::wchar::prelude::*;
     use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
     use fish_build_helper::workspace_root;
     use rand::Rng;
-    use rand::rngs::SmallRng;
+    use rand::rngs::ThreadRng;
     use std::collections::VecDeque;
     use std::io::BufReader;
     use std::os::unix::ffi::OsStrExt;
@@ -1806,12 +1805,13 @@ mod tests {
         false
     }
 
-    fn random_string(rng: &mut SmallRng) -> WString {
+    fn random_string(rng: &mut ThreadRng) -> WString {
         let mut result = WString::new();
-        let max = rng.gen_range(1..=32);
+        let max = rng.random_range(1..=32);
         for _ in 0..max {
-            let c = char::from_u32(u32::try_from(1 + rng.gen_range(0..ESCAPE_TEST_CHAR)).unwrap())
-                .unwrap();
+            let c =
+                char::from_u32(u32::try_from(1 + rng.random_range(0..ESCAPE_TEST_CHAR)).unwrap())
+                    .unwrap();
             result.push(c);
         }
         result
@@ -1927,7 +1927,7 @@ mod tests {
         let mut after: VecDeque<HistoryItem> = VecDeque::new();
         history.clear();
         let max = 100;
-        let mut rng = get_rng();
+        let mut rng = rand::rng();
         for i in 1..=max {
             // Generate a value.
             let mut value = WString::from_str("test item ") + &i.to_wstring()[..];
@@ -1938,7 +1938,7 @@ mod tests {
             }
 
             // Generate some paths.
-            let paths: PathList = (0..rng.gen_range(0..6))
+            let paths: PathList = (0..rng.random_range(0..6))
                 .map(|_| random_string(&mut rng))
                 .collect();
 

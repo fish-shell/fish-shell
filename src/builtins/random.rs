@@ -1,13 +1,14 @@
 use super::prelude::*;
 
-use crate::util::get_rng;
+use crate::util::get_seeded_rng;
 use crate::wutil;
 use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use rand::{Rng, RngCore};
 use std::sync::Mutex;
 
-static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(get_rng()));
+static RNG: Lazy<Mutex<SmallRng>> =
+    Lazy::new(|| Mutex::new(get_seeded_rng(rand::rng().next_u64())));
 
 pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
@@ -62,7 +63,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
             return Err(STATUS_INVALID_ARGS);
         }
 
-        let rand = RNG.lock().unwrap().gen_range(0..arg_count - 1);
+        let rand = RNG.lock().unwrap().random_range(0..arg_count - 1);
         streams.out.appendln(argv[i + 1 + rand]);
         return Ok(SUCCESS);
     }
@@ -96,7 +97,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(x) => {
                     let mut engine = RNG.lock().unwrap();
-                    *engine = SmallRng::seed_from_u64(x as u64);
+                    *engine = get_seeded_rng(x as u64);
                 }
             }
             return Ok(SUCCESS);
@@ -156,7 +157,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
 
     let rand = {
         let mut engine = RNG.lock().unwrap();
-        engine.gen_range(0..=possibilities)
+        engine.random_range(0..=possibilities)
     };
 
     // Safe because end was a valid i64 and the result here is in the range start..=end.

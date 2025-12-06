@@ -2035,8 +2035,10 @@ mod tests {
         ScopeGuard, ScopedCell, ScopedRefCell, UnescapeStringStyle, bytes2wcstring, escape_string,
         truncate_at_nul, unescape_string, wcs2bytes,
     };
-    use crate::util::{get_rng_seed, get_seeded_rng};
-    use crate::wchar::{L, WString, wstr};
+    use crate::{
+        util::get_seeded_rng,
+        wchar::{L, WString, wstr},
+    };
     use rand::{Rng, RngCore};
 
     #[test]
@@ -2109,14 +2111,14 @@ mod tests {
     }
 
     fn escape_test(escape_style: EscapeStringStyle, unescape_style: UnescapeStringStyle) {
-        let seed: u128 = 92348567983274852905629743984572;
+        let seed = rand::rng().next_u64();
         let mut rng = get_seeded_rng(seed);
 
         let mut random_string = WString::new();
         let mut escaped_string;
         for _ in 0..(ESCAPE_TEST_COUNT as u32) {
             random_string.clear();
-            let length = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
+            let length = rng.random_range(0..=(2 * ESCAPE_TEST_LENGTH));
             for _ in 0..length {
                 random_string
                     .push(char::from_u32((rng.next_u32() % ESCAPE_TEST_CHAR as u32) + 1).unwrap());
@@ -2125,11 +2127,13 @@ mod tests {
             escaped_string = escape_string(&random_string, escape_style);
             let Some(unescaped_string) = unescape_string(&escaped_string, unescape_style) else {
                 let slice = escaped_string.as_char_slice();
-                panic!("Failed to unescape string {slice:?}");
+                panic!("Failed to unescape string {slice:?}. Generated from seed {seed}.");
             };
             assert_eq!(
                 random_string, unescaped_string,
-                "Escaped and then unescaped string {random_string:?}, but got back a different string {unescaped_string:?}. The intermediate escape looked like {escaped_string:?}."
+                "Escaped and then unescaped string {random_string:?}, but got back a different string {unescaped_string:?}. \
+                The intermediate escape looked like {escaped_string:?}. \
+                Generated from seed {seed}."
             );
         }
     }
@@ -2187,12 +2191,12 @@ mod tests {
     /// string comes back through double conversion.
     #[test]
     fn test_convert() {
-        let seed = get_rng_seed();
+        let seed = rand::rng().next_u64();
         let mut rng = get_seeded_rng(seed);
         let mut origin = Vec::new();
 
         for _ in 0..ESCAPE_TEST_COUNT {
-            let length: usize = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
+            let length: usize = rng.random_range(0..=(2 * ESCAPE_TEST_LENGTH));
             origin.resize(length, 0);
             rng.fill_bytes(&mut origin);
 

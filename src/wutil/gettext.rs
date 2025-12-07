@@ -7,14 +7,12 @@ use once_cell::sync::Lazy;
 
 #[cfg(feature = "localize-messages")]
 mod gettext_impl {
+    use crate::env::{EnvStack, Environment};
+    use fish_gettext_maps::CATALOGS;
+    use once_cell::sync::Lazy;
     use std::{collections::HashSet, sync::Mutex};
 
-    use once_cell::sync::Lazy;
-
-    pub(super) use fish_gettext_maps::CATALOGS;
     type Catalog = &'static phf::Map<&'static str, &'static str>;
-
-    use crate::env::{EnvStack, Environment};
 
     /// Tries to find catalogs for `language`.
     /// `language` must be an ISO 639 language code, optionally followed by an underscore and an ISO
@@ -57,8 +55,7 @@ mod gettext_impl {
     /// The precedence list of user-preferred languages, obtained from the relevant environment
     /// variables.
     /// This should be updated when the relevant variables change.
-    pub(super) static LANGUAGE_PRECEDENCE: Lazy<Mutex<Vec<Catalog>>> =
-        Lazy::new(|| Mutex::new(Vec::new()));
+    static LANGUAGE_PRECEDENCE: Lazy<Mutex<Vec<Catalog>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
     /// Four environment variables can be used to select languages.
     /// A detailed description is available at
@@ -154,6 +151,18 @@ mod gettext_impl {
             .map(|(_, catalog)| catalog)
             .collect();
     }
+
+    pub(super) fn gettext(message_str: &'static str) -> Option<&'static str> {
+        let language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();
+
+        // Use the localization from the highest-precedence language that has one available.
+        for catalog in language_precedence.iter() {
+            if let Some(localized_str) = catalog.get(message_str) {
+                return Some(localized_str);
+            }
+        }
+        None
+    }
 }
 
 /// Call this when one of `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG` changes.
@@ -215,22 +224,16 @@ fn gettext(message: MaybeStatic) -> &'static wstr {
     let () = message_str;
     #[cfg(feature = "localize-messages")]
     {
-        let language_precedence = gettext_impl::LANGUAGE_PRECEDENCE.lock().unwrap();
-
-        // Use the localization from the highest-precedence language that has one available.
-
-        for catalog in language_precedence.iter() {
-            if let Some(localization_str) = catalog.get(message_str) {
-                static LOCALIZATION_TO_WIDE: Lazy<Mutex<HashMap<&'static str, &'static wstr>>> =
-                    Lazy::new(|| Mutex::new(HashMap::default()));
-                let mut locatizations_to_wide = LOCALIZATION_TO_WIDE.lock().unwrap();
-                if !locatizations_to_wide.contains_key(localization_str) {
-                    let localization_wstr =
-                        Box::leak(WString::from_str(localization_str).into_boxed_utfstr());
-                    locatizations_to_wide.insert(localization_str, localization_wstr);
-                }
-                return locatizations_to_wide.get(localization_str).unwrap();
+        if let Some(localized_str) = gettext_impl::gettext(message_str) {
+            static LOCALIZATION_TO_WIDE: Lazy<Mutex<HashMap<&'static str, &'static wstr>>> =
+                Lazy::new(|| Mutex::new(HashMap::default()));
+            let mut localizations_to_wide = LOCALIZATION_TO_WIDE.lock().unwrap();
+            if !localizations_to_wide.contains_key(localized_str) {
+                let localization_wstr =
+                    Box::leak(WString::from_str(localized_str).into_boxed_utfstr());
+                localizations_to_wide.insert(localized_str, localization_wstr);
             }
+            return localizations_to_wide.get(localized_str).unwrap();
         }
     }
 

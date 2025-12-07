@@ -89,11 +89,18 @@ Contributing documentation
 
 The documentation is stored in ``doc_src/``, and written in ReStructured Text and built with Sphinx.
 
-To build it locally, run from the main fish-shell directory::
+To build it locally, run either::
 
-    sphinx-build -j 8 -b html -n doc_src/ /tmp/fish-doc/
+    sphinx-build -j auto -b html doc_src/ /tmp/fish-doc/
 
-which will build the docs as html in /tmp/fish-doc. You can open it in a browser and see that it looks okay.
+which will output HTML docs to /tmp/fish-doc.
+You can open it in a browser and see that it looks okay.
+
+Alternatively, you can use::
+
+    cmake --build build -t sphinx-docs
+
+which outputs to build/user_doc/html/.
 
 The builtins and various functions shipped with fish are documented in doc_src/cmds/.
 

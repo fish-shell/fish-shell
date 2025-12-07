@@ -12,24 +12,39 @@ use crate::tty_handoff::{TERMINAL_OS_NAME, get_scroll_content_up_capability, xtv
 use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use cfg_if::cfg_if;
 use libc::F_OK;
+use rust_embed::RustEmbed;
 
+/// Create an enum with name `$name`.
+/// Its variants are given as comma-separated tuples, with each tuple containing the variant name,
+/// as well as a string representations of the variant.
+/// Optionally, additional strings can be provided, which are considered aliases for the enum
+/// variant.
+/// The generated enum will implement a `from_str` function, mapping from `&str` to the associated
+/// enum variant if any, and `to_wstr`, which maps from a variant to the associated
+/// `$default_name`.
+/// It is the user's responsibility to ensure than none of the string arguments appears more than
+/// once.
 macro_rules! str_enum {
-    ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
+    ($name:ident, $(($val:ident, $default_name:expr $(, $alias:expr)* $(,)?)),* $(,)?) => {
+        #[derive(Clone, Copy)]
+        enum $name {
+            $($val),*,
+        }
+
         impl $name {
-            fn from_wstr(s: &str) -> Option<Self> {
+            fn from_str(s: &str) -> Option<Self> {
                 // matching on str's lets us avoid having to do binary search and friends ourselves,
-                // this is ascii only anyways
+                // this is ASCII only anyways
                 match s {
-                    $($str => Some(Self::$val)),*,
+                    $($default_name => Some(Self::$val)),*,
+                    $($($alias => Some(Self::$val),)*)*
                     _ => None,
                 }
             }
 
             fn to_wstr(self) -> &'static wstr {
-                // There can be multiple vals => str mappings, and that's okay
-                #[allow(unreachable_patterns)]
                 match self {
-                    $(Self::$val => L!($str)),*,
+                    $(Self::$val => L!($default_name)),*,
                 }
             }
         }
@@ -37,59 +52,18 @@ macro_rules! str_enum {
 }
 
 use StatusCmd::*;
-#[derive(Clone, Copy)]
-enum StatusCmd {
-    STATUS_CURRENT_CMD = 1,
-    STATUS_BASENAME,
-    STATUS_DIRNAME,
-    STATUS_FEATURES,
-    STATUS_FILENAME,
-    STATUS_FISH_PATH,
-    STATUS_FUNCTION,
-    STATUS_IS_BLOCK,
-    STATUS_IS_BREAKPOINT,
-    STATUS_IS_COMMAND_SUB,
-    STATUS_IS_FULL_JOB_CTRL,
-    STATUS_IS_INTERACTIVE,
-    STATUS_IS_INTERACTIVE_JOB_CTRL,
-    STATUS_IS_INTERACTIVE_READ,
-    STATUS_IS_LOGIN,
-    STATUS_IS_NO_JOB_CTRL,
-    STATUS_LINE_NUMBER,
-    STATUS_SET_JOB_CONTROL,
-    STATUS_STACK_TRACE,
-    STATUS_TEST_FEATURE,
-    STATUS_CURRENT_COMMANDLINE,
-    STATUS_BUILD_INFO,
-    STATUS_BUILDINFO,
-    STATUS_GET_FILE,
-    STATUS_LIST_FILES,
-    STATUS_HELP_SECTIONS,
-    STATUS_TERMINAL,
-    STATUS_TERMINAL_OS,
-    STATUS_TEST_TERMINAL_FEATURE,
-}
-
 str_enum!(
     StatusCmd,
-    (STATUS_BASENAME, "basename"),
-    (STATUS_BASENAME, "current-basename"),
-    (STATUS_BUILD_INFO, "build-info"),
-    (STATUS_BUILDINFO, "buildinfo"),
+    (STATUS_BASENAME, "basename", "current-basename"),
+    (STATUS_BUILD_INFO, "build-info", "buildinfo"),
     (STATUS_CURRENT_CMD, "current-command"),
     (STATUS_CURRENT_COMMANDLINE, "current-commandline"),
-    (STATUS_DIRNAME, "current-dirname"),
-    (STATUS_FILENAME, "current-filename"),
-    (STATUS_FUNCTION, "current-function"),
-    (STATUS_LINE_NUMBER, "current-line-number"),
-    (STATUS_DIRNAME, "dirname"),
+    (STATUS_DIRNAME, "dirname", "current-dirname"),
     (STATUS_FEATURES, "features"),
-    (STATUS_FILENAME, "filename"),
+    (STATUS_FILENAME, "filename", "current-filename"),
     (STATUS_FISH_PATH, "fish-path"),
-    (STATUS_FUNCTION, "function"),
+    (STATUS_FUNCTION, "function", "current-function"),
     (STATUS_GET_FILE, "get-file"),
-    (STATUS_LIST_FILES, "list-files"),
-    (STATUS_HELP_SECTIONS, "help-sections"),
     (STATUS_IS_BLOCK, "is-block"),
     (STATUS_IS_BREAKPOINT, "is-breakpoint"),
     (STATUS_IS_COMMAND_SUB, "is-command-substitution"),
@@ -99,10 +73,10 @@ str_enum!(
     (STATUS_IS_INTERACTIVE_READ, "is-interactive-read"),
     (STATUS_IS_LOGIN, "is-login"),
     (STATUS_IS_NO_JOB_CTRL, "is-no-job-control"),
+    (STATUS_LINE_NUMBER, "line-number", "current-line-number"),
+    (STATUS_LIST_FILES, "list-files"),
     (STATUS_SET_JOB_CONTROL, "job-control"),
-    (STATUS_LINE_NUMBER, "line-number"),
-    (STATUS_STACK_TRACE, "print-stack-trace"),
-    (STATUS_STACK_TRACE, "stack-trace"),
+    (STATUS_STACK_TRACE, "stack-trace", "print-stack-trace"),
     (STATUS_TERMINAL, "terminal"),
     (STATUS_TERMINAL_OS, "terminal-os"),
     (STATUS_TEST_FEATURE, "test-feature"),
@@ -112,7 +86,7 @@ str_enum!(
 /// Values that may be returned from the test-feature option to status.
 #[repr(i32)]
 enum TestFeatureRetVal {
-    TEST_FEATURE_ON = 0,
+    TEST_FEATURE_ON,
     TEST_FEATURE_OFF,
     TEST_FEATURE_NOT_RECOGNIZED,
 }
@@ -332,36 +306,32 @@ fn parse_cmd_opts(
     return Ok(SUCCESS);
 }
 
-#[cfg(feature = "embed-data")]
-use rust_embed::RustEmbed;
-
-#[cfg(feature = "embed-data")]
 cfg_if!(
     if #[cfg(use_prebuilt_docs)] {
         #[derive(RustEmbed)]
         #[folder = "user_doc/man/man1"]
         #[prefix = "man/man1/"]
         struct Docs;
-    } else {
+    } else if #[cfg(feature = "embed-manpages")] {
         #[derive(RustEmbed)]
         #[folder = "$FISH_RESOLVED_BUILD_DIR/fish-man/man1"]
         #[prefix = "man/man1/"]
         struct Docs;
+    } else {
+        #[derive(RustEmbed)]
+        #[folder = "$FISH_RESOLVED_BUILD_DIR"]
+        #[include = ""]
+        struct Docs;
     }
 );
 
-#[cfg(all(using_cmake, feature = "embed-data"))]
+#[cfg(using_cmake)]
 #[derive(RustEmbed)]
 #[folder = "$FISH_CMAKE_BINARY_DIR/share"]
 #[include = "__fish_build_paths.fish"]
 struct CMakeBinaryDir;
 
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    localizable_consts!(
-        #[allow(dead_code)]
-        NO_EMBEDDED_FILES_MSG "%s: fish was not built with embedded files"
-    );
-
     let cmd = args[0];
     let argc = args.len();
 
@@ -377,7 +347,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     // If a status command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     if optind < argc {
-        match StatusCmd::from_wstr(args[optind].to_string().as_str()) {
+        match StatusCmd::from_str(args[optind].to_string().as_str()) {
             Some(s) => {
                 if !opts.try_set_status_cmd(s, streams) {
                     return Err(STATUS_CMD_ERROR);
@@ -491,76 +461,58 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
+            let arg = crate::common::wcs2bytes(args[0]);
+            let arg = std::str::from_utf8(&arg).unwrap();
             cfg_if!(
-                if #[cfg(not(feature = "embed-data"))] {
-                    streams
-                        .err
-                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
-                    return Err(STATUS_CMD_ERROR);
+                if #[cfg(using_cmake)] {
+                    let emfile = CMakeBinaryDir::get(arg);
                 } else {
-                    let arg = crate::common::wcs2bytes(args[0]);
-                    let arg = std::str::from_utf8(&arg).unwrap();
-                    cfg_if!(
-                        if #[cfg(using_cmake)] {
-                            let emfile = CMakeBinaryDir::get(arg);
-                        } else {
-                            let emfile = None;
-                        }
-                    );
-                    let Some(emfile) = emfile
-                        .or_else(|| crate::autoload::Asset::get(arg))
-                        .or_else(|| Docs::get(arg))
-                    else {
-                        return Err(STATUS_CMD_ERROR);
-                    };
-                    let src = bytes2wcstring(&emfile.data);
-                    streams.out.append(src);
-                    return Ok(SUCCESS);
+                    let emfile = None;
                 }
             );
+            let Some(emfile) = emfile
+                .or_else(|| crate::autoload::Asset::get(arg))
+                .or_else(|| Docs::get(arg))
+            else {
+                return Err(STATUS_CMD_ERROR);
+            };
+            let src = bytes2wcstring(&emfile.data);
+            streams.out.append(src);
+            return Ok(SUCCESS);
         }
         STATUS_LIST_FILES => {
-            cfg_if!(
-                if #[cfg(not(feature = "embed-data"))] {
-                    streams
-                        .err
-                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
-                    return Err(STATUS_CMD_ERROR);
-                } else {
-                    use crate::util::wcsfilecmp_glob;
-                    let mut paths = vec![];
-                    let mut add = |arg| {
-                        let arg = crate::common::wcs2bytes(arg);
-                        let arg = std::str::from_utf8(&arg).unwrap();
-                        let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
-                        #[cfg(using_cmake)]
-                        let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
-                        for path in embedded_files {
-                            if arg.is_empty() || path.starts_with(arg) {
-                                paths.push(bytes2wcstring(path.as_bytes()));
-                            }
-                        }
-                    };
-                    if args.is_empty() {
-                            add(L!(""));
-                    } else {
-                        for arg in args {
-                            add(arg);
-                        }
-                    }
-
-                    paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
-                    for path in &paths {
-                        streams.out.appendln(path);
-                    }
-
-                    if !paths.is_empty() {
-                        return Ok(SUCCESS);
-                    } else {
-                        return Err(STATUS_CMD_ERROR);
+            use crate::util::wcsfilecmp_glob;
+            let mut paths = vec![];
+            let mut add = |arg| {
+                let arg = crate::common::wcs2bytes(arg);
+                let arg = std::str::from_utf8(&arg).unwrap();
+                let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
+                #[cfg(using_cmake)]
+                let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
+                for path in embedded_files {
+                    if arg.is_empty() || path.starts_with(arg) {
+                        paths.push(bytes2wcstring(path.as_bytes()));
                     }
                 }
-            );
+            };
+            if args.is_empty() {
+                add(L!(""));
+            } else {
+                for arg in args {
+                    add(arg);
+                }
+            }
+
+            paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
+            for path in &paths {
+                streams.out.appendln(path);
+            }
+
+            if !paths.is_empty() {
+                return Ok(SUCCESS);
+            } else {
+                return Err(STATUS_CMD_ERROR);
+            }
         }
         c @ STATUS_TEST_TERMINAL_FEATURE => {
             if args.len() != 1 {
@@ -601,7 +553,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Err(STATUS_INVALID_ARGS);
             }
             match s {
-                STATUS_BUILD_INFO | STATUS_BUILDINFO => {
+                STATUS_BUILD_INFO => {
                     let version = bytes2wcstring(crate::BUILD_VERSION.as_bytes());
                     let target = bytes2wcstring(env!("BUILD_TARGET_TRIPLE").as_bytes());
                     let host = bytes2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
@@ -624,8 +576,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     streams.out.appendln(profile);
                     streams.out.append(L!("Features: "));
                     let features: &[&str] = &[
-                        #[cfg(feature = "embed-data")]
-                        "embed-data",
+                        #[cfg(feature = "embed-manpages")]
+                        "embed-manpages",
                         #[cfg(feature = "localize-messages")]
                         "localize-messages",
                         #[cfg(target_feature = "crt-static")]
@@ -756,13 +708,6 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         LookUpInPath => Cow::Borrowed(get_program_name()),
                     };
                     streams.out.appendln(result);
-                }
-                STATUS_HELP_SECTIONS => {
-                    #[cfg(feature = "embed-data")]
-                    streams
-                        .out
-                        .append_narrow(fish_build_man_pages::HELP_SECTIONS);
-                    return Ok(SUCCESS);
                 }
                 STATUS_TERMINAL => {
                     let xtversion = xtversion().unwrap_or_default();

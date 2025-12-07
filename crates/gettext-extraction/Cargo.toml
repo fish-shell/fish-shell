@@ -4,6 +4,7 @@ edition.workspace = true
 rust-version.workspace = true
 version = "0.0.0"
 repository.workspace = true
+license.workspace = true
 description = "proc-macro for extracting strings for gettext translation"
 
 [lib]
@@ -11,6 +12,9 @@ proc-macro = true
 
 [dependencies]
 proc-macro2.workspace = true
+
+[build-dependencies]
+rsconf.workspace = true
 
 [lints]
 workspace = true

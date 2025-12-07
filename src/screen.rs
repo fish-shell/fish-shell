@@ -564,12 +564,10 @@ impl Screen {
     }
 
     pub fn push_to_scrollback(&mut self) {
-        let Some(viewport_cursor_y) = self.viewport_y else {
+        let Some(lines_to_scroll) = self.viewport_y else {
             return;
         };
         FLOG!(reader, "Pushing to scrollback");
-        let lines_to_scroll = self.command_line_y_given_cursor_y(viewport_cursor_y);
-        self.set_position_in_viewport("scrollback-push", Some(0));
         if lines_to_scroll == 0 {
             return;
         }
@@ -578,6 +576,7 @@ impl Screen {
         out.write_command(ScrollContentUp(lines_to_scroll));
         // Reposition cursor.
         out.write_command(CursorMove(CardinalDirection::Up, lines_to_scroll));
+        self.set_position_in_viewport("scrollback-push", Some(0));
     }
 
     pub fn set_position_in_viewport(&mut self, whence: &str, viewport_y: Option<usize>) {
@@ -631,17 +630,16 @@ impl Screen {
         let Some(viewport_y) = self.viewport_y else {
             return CharOffset::None;
         };
-        let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_y);
         let y = viewport_position
             .y
-            .checked_sub(viewport_prompt_y)
+            .checked_sub(viewport_y)
             .unwrap_or_else(|| {
                 FLOG!(
                     reader,
                     "Given y",
                     viewport_position.y,
                     "exceeds the prompt's y",
-                    viewport_prompt_y,
+                    viewport_y,
                     "inferred from reported cursor position",
                 );
                 0

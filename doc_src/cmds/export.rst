@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-``export`` is a function included for compatibility with POSIX shells. In general, the :doc:`set <set>` 
+``export`` is a function included for compatibility with POSIX shells. In general, the :doc:`set <set>`
 builtin should be used instead.
 
 When called without arguments, ``export`` prints a list of currently-exported variables, like ``set

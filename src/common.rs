@@ -1326,6 +1326,42 @@ macro_rules! write_to_output {
     }};
 }
 
+pub const fn help_section_exists(section: &str) -> bool {
+    let haystack = include_str!("../share/help_sections");
+    let needle = section;
+
+    let needle = needle.as_bytes();
+    let haystack = haystack.as_bytes();
+    let nlen = needle.len();
+    let mut line_start = 0;
+    let mut i = 0;
+    while i <= haystack.len() {
+        if i == haystack.len() || haystack[i] == b'\n' {
+            let line_len = i - line_start;
+
+            if line_len == nlen {
+                let mut j = 0;
+                while j < nlen && haystack[line_start + j] == needle[j] {
+                    j += 1;
+                }
+                if j == nlen {
+                    return true;
+                }
+            }
+            line_start = i + 1;
+        }
+        i += 1;
+    }
+    false
+}
+
+macro_rules! help_section {
+    ($section:expr) => {{
+        const _: () = assert!(crate::common::help_section_exists($section));
+        $section
+    }};
+}
+
 /// Write the given paragraph of output, redoing linebreaks to fit `termsize`.
 pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
     let mut buff = WString::new();

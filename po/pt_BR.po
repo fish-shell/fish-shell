@@ -74,12 +74,9 @@ msgstr ""
 msgid "$@ is not supported. In fish, please use $argv."
 msgstr ""
 
-msgid "$status is not valid as a command. See `help conditions`"
-msgstr ""
-
 #, c-format
-msgid "%.*s: invalid conversion specification"
-msgstr "%.*s: especificação de conversão inválida"
+msgid "$status is not valid as a command. See `help %s`"
+msgstr ""
 
 #, c-format
 msgid "%s"
@@ -134,7 +131,7 @@ msgid "%s and %s are mutually exclusive"
 msgstr ""
 
 #, c-format
-msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
+msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help %s' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
 msgstr ""
 
 #, c-format
@@ -156,10 +153,6 @@ msgstr ""
 #, c-format
 msgid "%s, version %s\n"
 msgstr "%s, versão %s\n"
-
-#, c-format
-msgid "%s: %*s\n"
-msgstr ""
 
 #, c-format
 msgid "%s: %s\n"
@@ -202,7 +195,7 @@ msgid "%s: %s: invalid mode\n"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid mode name. See `help identifiers`\n"
+msgid "%s: %s: invalid mode name. See `help %s`\n"
 msgstr ""
 
 #, c-format
@@ -214,7 +207,7 @@ msgid "%s: %s: invalid subcommand\n"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help identifiers`\n"
+msgid "%s: %s: invalid variable name. See `help %s`\n"
 msgstr ""
 
 #, c-format
@@ -714,16 +707,16 @@ msgid "%s: expected a numeric value"
 msgstr "%s: esperava valor numérico"
 
 #, c-format
-msgid "%s: fish was not built with embedded files"
-msgstr ""
-
-#, c-format
 msgid "%s: function name required"
 msgstr ""
 
 #, c-format
 msgid "%s: given %d indexes but %d values\n"
 msgstr ""
+
+#, c-format
+msgid "%s: invalid conversion specification"
+msgstr "%s: especificação de conversão inválida"
 
 #, c-format
 msgid "%s: invalid option combination\n"
@@ -1193,9 +1186,6 @@ msgstr ""
 msgid "Invalid arguments"
 msgstr ""
 
-msgid "Invalid code points not yet supported by printf"
-msgstr ""
-
 msgid "Invalid index value"
 msgstr ""
 
@@ -1289,13 +1279,17 @@ msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Não há TTY para shell interativo (falha em tcgetpgrp)"
 
 #, c-format
-msgid "No matches for wildcard '%s'. See `help wildcards-globbing`."
+msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr ""
 
 msgid "Not a function"
 msgstr ""
 
 msgid "Not a number"
+msgstr ""
+
+#, c-format
+msgid "Not a valid Unicode character: %s"
 msgstr ""
 
 msgid "Notifications about universal variable changes"
@@ -1643,10 +1637,6 @@ msgstr "Final inesperado de string, colchetes não batem"
 
 msgid "Unexpected token"
 msgstr ""
-
-#, c-format
-msgid "Unicode character out of range: \\%c%0*x"
-msgstr "Caracter Unicode fora dos limites: \\%c%0*x"
 
 msgid "Unknown"
 msgstr "Desconhecido"
@@ -2796,9 +2786,6 @@ msgid "List contents of token under the cursor if it is a directory, otherwise l
 msgstr ""
 
 msgid "List embedded files contained in the fish binary"
-msgstr ""
-
-msgid "List section arguments for the 'help' command"
 msgstr ""
 
 msgid "List the names of the functions, but not their definition"

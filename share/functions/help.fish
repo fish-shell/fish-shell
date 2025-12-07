@@ -140,7 +140,7 @@ chromium-browser
     switch "$fish_help_item"
         case ''
             set fish_help_page index.html
-        case (status help-sections | string replace -r "^index(#|\$)" introduction\$1)
+        case (__fish_data_with_file help_sections (command -v cat) | string replace -r "^index(#|\$)" introduction\$1)
             set fish_help_page (
                 printf %s $fish_help_item |
                     string replace -r '^introduction(#|$)' 'index$1' |
@@ -228,7 +228,8 @@ chromium-browser
         # The space before the /c is to prevent msys2 from expanding it to a path
         $fish_browser " /c" start $page_url
     else if contains -- $fish_browser[1] $graphical_browsers
-        /bin/sh -c '( "$@" ) &' -- $fish_browser $page_url
+        set -l sh (__fish_posix_shell)
+        $sh -c '( "$@" ) &' -- $fish_browser $page_url
     else
         $fish_browser $page_url
     end

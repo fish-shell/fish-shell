@@ -110,7 +110,7 @@ This will call ``env``, which then goes through :envvar:`PATH` to find a program
 The shebang line is only used when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script``, a shebang is not required (but it doesn't hurt!).
 
 When executing files without an interpreter, fish, like other shells, tries your system shell, typically ``/bin/sh``. This is needed because some scripts are shipped without a shebang line.
-       
+
 Configuration
 =============
 
@@ -158,7 +158,7 @@ Other help pages
 ================
 .. toctree::
    :maxdepth: 1
-              
+
    self
    faq
    interactive

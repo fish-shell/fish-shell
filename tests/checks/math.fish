@@ -276,6 +276,11 @@ echo $status
 math 'log2(8)'
 # CHECK: 3
 
+math 'log(8) / log(2)'
+# CHECK: 3
+math 'log(625) / log(5)'
+# CHECK: 4
+
 # same as sin(cos(2 x pi))
 math sin cos 2 x pi
 # CHECK: 0.841471

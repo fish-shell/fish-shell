@@ -3359,13 +3359,14 @@ impl<'a> Reader<'a> {
                     newv,
                 )
             }
-            rl::KillWord | rl::KillBigword => {
+            rl::KillWord | rl::KillPathComponent | rl::KillBigword => {
                 // The "bigword" functions differ only in that they move to the next whitespace, not
                 // punctuation.
-                let style = if c == rl::KillWord {
-                    MoveWordStyle::Punctuation
-                } else {
-                    MoveWordStyle::Whitespace
+                let style = match c {
+                    rl::KillBigword => MoveWordStyle::Whitespace,
+                    rl::KillPathComponent => MoveWordStyle::PathComponents,
+                    rl::KillWord => MoveWordStyle::Punctuation,
+                    _ => unreachable!(),
                 };
                 self.data.move_word(
                     self.active_edit_line_tag(),
@@ -3436,7 +3437,10 @@ impl<'a> Reader<'a> {
                     self.update_buff_pos(elt, Some(new_position));
                 }
             }
-            rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
+            rl::BackwardWord
+            | rl::BackwardPathComponent
+            | rl::BackwardBigword
+            | rl::PrevdOrBackwardWord => {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("prevd"));
                     self.force_exec_prompt_and_repaint = true;
@@ -3445,10 +3449,11 @@ impl<'a> Reader<'a> {
                     return;
                 }
 
-                let style = if c != rl::BackwardBigword {
-                    MoveWordStyle::Punctuation
-                } else {
-                    MoveWordStyle::Whitespace
+                let style = match c {
+                    rl::BackwardBigword => MoveWordStyle::Whitespace,
+                    rl::BackwardPathComponent => MoveWordStyle::PathComponents,
+                    rl::BackwardWord | rl::PrevdOrBackwardWord => MoveWordStyle::Punctuation,
+                    _ => unreachable!(),
                 };
                 self.data.move_word(
                     self.active_edit_line_tag(),
@@ -3458,7 +3463,10 @@ impl<'a> Reader<'a> {
                     false,
                 );
             }
-            rl::ForwardWord | rl::ForwardBigword | rl::NextdOrForwardWord => {
+            rl::ForwardWord
+            | rl::ForwardPathComponent
+            | rl::ForwardBigword
+            | rl::NextdOrForwardWord => {
                 if c == rl::NextdOrForwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("nextd"));
                     self.force_exec_prompt_and_repaint = true;
@@ -3467,11 +3475,13 @@ impl<'a> Reader<'a> {
                     return;
                 }
 
-                let style = if c != rl::ForwardBigword {
-                    MoveWordStyle::Punctuation
-                } else {
-                    MoveWordStyle::Whitespace
+                let style = match c {
+                    rl::ForwardBigword => MoveWordStyle::Whitespace,
+                    rl::ForwardPathComponent => MoveWordStyle::PathComponents,
+                    rl::ForwardWord | rl::NextdOrForwardWord => MoveWordStyle::Punctuation,
+                    _ => unreachable!(),
                 };
+
                 if self.is_at_autosuggestion() {
                     self.accept_autosuggestion(AutosuggestionPortion::PerMoveWordStyle(style));
                 } else if !self.is_at_end() {

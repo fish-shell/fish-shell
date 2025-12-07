@@ -13,6 +13,10 @@ Interactive improvements
 - Completion accuracy was improved for file paths containing ``=`` or ``:`` (:issue:`5363`).
 - Prefix-matching completions are now shown even if they don't have the case typed by the user (:issue:`7944`).
 
+New or improved bindings
+------------------------
+- Added `backward-path-component`, `forward-path-component` and `kill-path-component` (:issue:`12127`).
+
 Improved terminal support
 -------------------------
 - OSC 133 prompt markers now also mark the prompt end, which improves shell integration with terminals like iTerm2 (:issue:`11837`).

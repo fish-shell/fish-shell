@@ -49,7 +49,7 @@ proc-macro2 = "1.0"
 # minimum supported version to 10.12.
 rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
 rsconf = "0.2.2"
-rust-embed = { version = "8.7.2", features = [
+rust-embed = { version = "8.9.0", features = [
     "deterministic-timestamps",
     "include-exclude",
     "interpolate-folder-path",

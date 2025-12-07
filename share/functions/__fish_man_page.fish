@@ -11,7 +11,7 @@ function __fish_man_page
 
     # Skip leading commands and display the manpage of following command
     while set -q args[2]
-        and string match -qr -- '^(and|begin|builtin|caffeinate|command|doas|entr|env|exec|if|mosh|nice|not|or|pipenv|prime-run|setsid|sudo|systemd-nspawn|time|watch|while|xargs|.*=.*)$' $args[1]
+        and string match -qr -- '^(and|begin|builtin|caffeinate|command|doas|entr|env|exec|if|mosh|nice|not|or|pipenv|please|prime-run|run0|setsid|sudo|systemd-nspawn|time|watch|while|xargs|.*=.*)$' $args[1]
         set -e args[1]
     end
 

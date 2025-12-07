@@ -39,6 +39,10 @@ Interactive improvements
 - When using the exe name (``foo.exe``), fish will use to the description and completions for ``foo`` if there are none for ``foo.exe``.
 - Autosuggestions now also show soft-wrapped portions (:issue:`12045`).
 
+New or improved bindings
+------------------------
+- Added `backward-path-component`, `forward-path-component` and `kill-path-component` (:issue:`12127`).
+
 Improved terminal support
 -------------------------
 - Themes can now be made color-theme-aware (i.e. light mode vs. dark mode) by including both ``[light]`` and ``[dark]`` sections in the :ref:`theme file <fish-config-theme-files>`.

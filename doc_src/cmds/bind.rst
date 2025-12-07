@@ -145,11 +145,16 @@ The following special input functions are available:
 ``backward-kill-line``
     move everything from the beginning of the line to the cursor to the killring
 
+.. _cmd-bind-backward-kill-path-component:
+
 ``backward-kill-path-component``
     move one path component to the left of the cursor to the killring. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
 
 ``backward-kill-word``
     move the word to the left of the cursor to the killring. The "word" here is everything up to punctuation or whitespace.
+
+``backward-path-component``
+    move one :ref:`path component <cmd-bind-backward-kill-path-component>` to the left.
 
 ``backward-word``
     move one word to the left
@@ -241,6 +246,9 @@ The following special input functions are available:
     commandline, does not accept the current autosuggestion (if any). Does not change the selected item in the completion pager,
     if shown.
 
+``forward-path-component``
+    move one :ref:`path component <cmd-bind-backward-kill-path-component>` to the right; or if at the end of the commandline, accept a path component from the current autosuggestion.
+
 ``forward-single-char``
     move one character to the right; or if at the end of the commandline, accept a single char from the current autosuggestion.
 
@@ -307,6 +315,9 @@ The following special input functions are available:
 
 ``kill-line``
     move everything from the cursor to the end of the line to the killring
+
+``kill-path-component``
+    move one :ref:`path component <cmd-bind-backward-kill-path-component>` to the killring.
 
 ``kill-selection``
     move the selected text to the killring

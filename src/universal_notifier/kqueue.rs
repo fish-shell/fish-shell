@@ -181,7 +181,6 @@ impl UniversalNotifier for KqueueNotifier {
 #[cfg(test)]
 mod tests {
     use super::KqueueNotifier;
-    use crate::common::wcs2osstring;
     use crate::{
         universal_notifier::{UniversalNotifier, test_helpers::test_notifiers},
         wchar::WString,

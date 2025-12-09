@@ -306,6 +306,25 @@ fn parse_cmd_opts(
     return Ok(SUCCESS);
 }
 
+struct EmptyEmbed;
+impl RustEmbed for EmptyEmbed {
+    fn get(_file_path: &str) -> Option<rust_embed::EmbeddedFile> {
+        None
+    }
+    fn iter() -> rust_embed::Filenames {
+        use rust_embed::Filenames::*;
+        cfg_if!(
+            // TODO This is a clone of rebuild_if_embedded_path_changed.
+            if #[cfg(any(not(debug_assertions), windows))] {
+                let nothing = Embedded([].iter());
+            } else {
+                let nothing = Dynamic(Box::new(None.into_iter()));
+            }
+        );
+        nothing
+    }
+}
+
 cfg_if!(
     if #[cfg(use_prebuilt_docs)] {
         #[derive(RustEmbed)]
@@ -318,18 +337,20 @@ cfg_if!(
         #[prefix = "man/man1/"]
         struct Docs;
     } else {
-        #[derive(RustEmbed)]
-        #[folder = "$FISH_RESOLVED_BUILD_DIR"]
-        #[include = ""]
-        struct Docs;
+        type Docs = EmptyEmbed;
     }
 );
 
-#[cfg(using_cmake)]
-#[derive(RustEmbed)]
-#[folder = "$FISH_CMAKE_BINARY_DIR/share"]
-#[include = "__fish_build_paths.fish"]
-struct CMakeBinaryDir;
+cfg_if!(
+    if #[cfg(using_cmake)] {
+        #[derive(RustEmbed)]
+        #[folder = "$FISH_CMAKE_BINARY_DIR/share"]
+        #[include = "__fish_build_paths.fish"]
+        struct CMakeBinaryDir;
+    } else {
+        type CMakeBinaryDir = EmptyEmbed;
+    }
+);
 
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let cmd = args[0];
@@ -463,16 +484,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             let arg = crate::common::wcs2bytes(args[0]);
             let arg = std::str::from_utf8(&arg).unwrap();
-            cfg_if!(
-                if #[cfg(using_cmake)] {
-                    let emfile = CMakeBinaryDir::get(arg);
-                } else {
-                    let emfile = None;
-                }
-            );
-            let Some(emfile) = emfile
-                .or_else(|| crate::autoload::Asset::get(arg))
+            let Some(emfile) = crate::autoload::Asset::get(arg)
                 .or_else(|| Docs::get(arg))
+                .or_else(|| CMakeBinaryDir::get(arg))
             else {
                 return Err(STATUS_CMD_ERROR);
             };
@@ -486,10 +500,10 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             let mut add = |arg| {
                 let arg = crate::common::wcs2bytes(arg);
                 let arg = std::str::from_utf8(&arg).unwrap();
-                let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
-                #[cfg(using_cmake)]
-                let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
-                for path in embedded_files {
+                for path in crate::autoload::Asset::iter()
+                    .chain(Docs::iter())
+                    .chain(CMakeBinaryDir::iter())
+                {
                     if arg.is_empty() || path.starts_with(arg) {
                         paths.push(bytes2wcstring(path.as_bytes()));
                     }

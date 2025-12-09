@@ -61,6 +61,7 @@ add_custom_target(fish_run_tests
             ${Rust_CARGO}
             test
             --no-default-features
+            --features=${FISH_CARGO_FEATURES}
             ${CARGO_FLAGS}
             --workspace
             --target-dir ${rust_target_dir}

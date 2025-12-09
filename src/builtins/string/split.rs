@@ -182,7 +182,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
             false => SplitBehavior::Newline,
             true => SplitBehavior::Never,
         });
-        for (arg, _) in argiter {
+        for InputValue { arg, .. } in argiter {
             let splits: Vec<Cow<'args, wstr>> = match (self.split_from, arg) {
                 (Direction::Right, arg) => {
                     let mut rev = arg.into_owned();

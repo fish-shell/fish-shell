@@ -407,7 +407,7 @@ fn path_transform(
         true => SplitBehavior::Null,
         false => SplitBehavior::InferNull,
     });
-    for (arg, _) in arguments {
+    for InputValue { arg, .. } in arguments {
         // Empty paths make no sense, but e.g. wbasename returns true for them.
         if arg.is_empty() {
             continue;
@@ -484,7 +484,7 @@ fn path_mtime(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         true => SplitBehavior::Null,
         false => SplitBehavior::InferNull,
     });
-    for (arg, _) in arguments {
+    for InputValue { arg, .. } in arguments {
         let ret = file_id_for_path(&arg);
 
         if ret != INVALID_FILE_ID {
@@ -544,7 +544,7 @@ fn path_extension(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         true => SplitBehavior::Null,
         false => SplitBehavior::InferNull,
     });
-    for (arg, _) in arguments {
+    for InputValue { arg, .. } in arguments {
         let pos = find_extension(&arg);
         let Some(pos) = pos else {
             // If there is no extension the extension is empty.
@@ -583,7 +583,7 @@ fn path_change_extension(
         true => SplitBehavior::Null,
         false => SplitBehavior::InferNull,
     });
-    for (mut arg, _) in arguments {
+    for InputValue { mut arg, .. } in arguments {
         let pos = find_extension(&arg);
         let mut ext = match pos {
             Some(pos) => {
@@ -626,7 +626,7 @@ fn path_resolve(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
         true => SplitBehavior::Null,
         false => SplitBehavior::InferNull,
     });
-    for (arg, _) in arguments {
+    for InputValue { arg, .. } in arguments {
         let mut real = match wrealpath(&arg) {
             Some(p) => p,
             None => {
@@ -708,7 +708,7 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
         false => SplitBehavior::InferNull,
     });
 
-    let mut list: Vec<_> = arguments.map(|(f, _)| f).collect();
+    let mut list: Vec<_> = arguments.map(|input_value| input_value.arg).collect();
 
     if opts.key.is_some() {
         // sort_by is stable
@@ -887,17 +887,13 @@ fn path_filter_maybe_is(
     // Collect arguments into a Vec so we can use .len()
     let arguments_vec: Vec<_> = arguments.collect();
 
-    for (arg, _) in arguments_vec
-        .iter()
-        .filter(|&(f, _)| {
-            (opts.perms.is_none() && opts.types.is_none())
-                || (filter_path(&opts, f, uid, gid) != opts.invert)
-        })
-        .cloned()
-    {
+    for InputValue { arg, .. } in arguments_vec.iter().filter(|&InputValue { arg, .. }| {
+        (opts.perms.is_none() && opts.types.is_none())
+            || (filter_path(&opts, arg, uid, gid) != opts.invert)
+    }) {
         // If we don't have filters, check if it exists.
         if opts.perms.is_none() && opts.types.is_none() {
-            let ok = waccess(&arg, F_OK) == 0;
+            let ok = waccess(arg, F_OK) == 0;
             if ok == opts.invert {
                 // For --all, fail early if any path does not match the filter.
                 if opts.all {

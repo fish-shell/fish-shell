@@ -81,13 +81,13 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             // else
             //     echo whatever
             // end
-            for (arg, _) in iter {
+            for InputValue { arg, .. } in iter {
                 streams.out.appendln(arg);
             }
             return Ok(());
         }
 
-        for (arg, _) in iter {
+        for InputValue { arg, .. } in iter {
             // Visible width only makes sense line-wise.
             // So either we have no-newlines (which means we shorten on the first newline),
             // or we handle the lines separately.

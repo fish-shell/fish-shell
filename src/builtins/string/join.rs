@@ -64,7 +64,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         let sep = &self.sep;
         let mut nargs = 0usize;
         let mut print_trailing_newline = true;
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             if !self.quiet {
                 if self.no_empty && arg.is_empty() {
                     continue;

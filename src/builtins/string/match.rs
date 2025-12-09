@@ -127,7 +127,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
             }
         };
 
-        for (arg, _) in arguments(args, optind, streams) {
+        for InputValue { arg, .. } in arguments(args, optind, streams) {
             if let Err(e) = matcher.report_matches(arg.as_ref(), streams) {
                 FLOG!(error, "pcre2_match unexpected error:", e.error_message())
             }

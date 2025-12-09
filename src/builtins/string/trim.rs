@@ -72,7 +72,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
                 .count()
         };
 
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let trim_start = if self.left { to_trim_start(&arg) } else { 0 };
             // collision is only an issue if the whole string is getting trimmed
             let trim_end = if self.right && trim_start != arg.len() {

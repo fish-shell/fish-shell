@@ -285,7 +285,7 @@ pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     }
 
     let mut expression = WString::new();
-    for (arg, _) in Arguments::new(argv, &mut optind, streams, MATH_CHUNK_SIZE) {
+    for InputValue { arg, .. } in Arguments::new(argv, &mut optind, streams, MATH_CHUNK_SIZE) {
         if !expression.is_empty() {
             expression.push(' ')
         }

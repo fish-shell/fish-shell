@@ -798,6 +798,17 @@ pub enum SplitBehavior {
     Never,
 }
 
+pub struct InputValue<'args> {
+    pub arg: Cow<'args, wstr>,
+    pub want_newline: bool,
+}
+
+impl<'args> InputValue<'args> {
+    pub fn new(arg: Cow<'args, wstr>, want_newline: bool) -> Self {
+        Self { arg, want_newline }
+    }
+}
+
 /// A helper type for extracting arguments from either argv or stdin.
 pub struct Arguments<'args, 'iter> {
     /// The list of arguments passed to the string builtin.
@@ -850,7 +861,7 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
         self
     }
 
-    fn get_arg_stdin(&mut self) -> Option<(Cow<'args, wstr>, bool)> {
+    fn get_arg_stdin(&mut self) -> Option<InputValue<'args>> {
         use SplitBehavior::*;
         let reader = self.reader.as_mut().unwrap();
 
@@ -896,10 +907,9 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
         };
 
         let parsed = bytes2wcstring(&self.buffer[..end]);
-
-        let retval = Some((Cow::Owned(parsed), want_newline));
         self.buffer.clear();
-        retval
+
+        Some(InputValue::new(Cow::Owned(parsed), want_newline))
     }
 }
 
@@ -909,7 +919,7 @@ impl<'args> Iterator for Arguments<'args, '_> {
     // This is an edge case -- we expect text input, which is conventionally terminated by a
     // newline character. But if it isn't, we use this to avoid creating one out of thin air,
     // to not corrupt input data.
-    type Item = (Cow<'args, wstr>, bool);
+    type Item = InputValue<'args>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.reader.is_some() {
@@ -919,7 +929,10 @@ impl<'args> Iterator for Arguments<'args, '_> {
         if *self.argidx >= self.args.len() {
             return None;
         }
-        let retval = (Cow::Borrowed(self.args[*self.argidx]), true);
+        let retval = InputValue::new(
+            Cow::Borrowed(self.args[*self.argidx]),
+            /*want_newline=*/ true,
+        );
         *self.argidx += 1;
         return Some(retval);
     }

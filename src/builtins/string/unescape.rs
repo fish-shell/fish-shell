@@ -38,7 +38,7 @@ impl StringSubCommand<'_> for Unescape {
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
         let mut nesc = 0;
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             if let Some(res) = unescape_string(&arg, self.style) {
                 streams.out.append(res);
                 if want_newline {

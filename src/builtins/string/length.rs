@@ -31,7 +31,7 @@ impl StringSubCommand<'_> for Length {
     ) -> Result<(), ErrorCode> {
         let mut nnonempty = 0usize;
 
-        for (arg, _) in arguments(args, optind, streams) {
+        for InputValue { arg, .. } in arguments(args, optind, streams) {
             if self.visible {
                 // Visible length only makes sense line-wise.
                 for line in {

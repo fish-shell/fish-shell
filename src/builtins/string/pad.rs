@@ -75,7 +75,7 @@ impl StringSubCommand<'_> for Pad {
         let mut inputs: Vec<(Cow<'args, wstr>, usize)> = Vec::new();
         let mut print_trailing_newline = true;
 
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let width = width_without_escapes(&arg, 0);
             max_width = max_width.max(width);
             inputs.push((arg, width));

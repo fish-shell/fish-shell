@@ -449,7 +449,7 @@ static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::ne
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 type WrapperMap = HashMap<WString, Vec<WString>>;
-static wrapper_map: Lazy<Mutex<WrapperMap>> = Lazy::new(|| Mutex::new(HashMap::new()));
+static WRAPPER_MAP: Lazy<Mutex<WrapperMap>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Clear the [`CompleteFlags::AUTO_SPACE`] flag, and set [`CompleteFlags::NO_SPACE`] appropriately
 /// depending on the suffix of the string.
@@ -2474,7 +2474,7 @@ pub fn complete_print(cmd: &wstr) -> WString {
     }
 
     // Append wraps.
-    let wrappers = wrapper_map.lock().expect("poisoned mutex");
+    let wrappers = WRAPPER_MAP.lock().expect("poisoned mutex");
     for (src, targets) in wrappers.iter() {
         if !cmd.is_empty() && src != cmd {
             continue;
@@ -2518,7 +2518,7 @@ pub fn complete_add_wrapper(command: WString, new_target: WString) -> bool {
         return false;
     }
 
-    let mut wrappers = wrapper_map.lock().expect("poisoned mutex");
+    let mut wrappers = WRAPPER_MAP.lock().expect("poisoned mutex");
     let targets = wrappers.entry(command).or_default();
     // If it's already present, we do nothing.
     if !targets.contains(&new_target) {
@@ -2534,7 +2534,7 @@ pub fn complete_remove_wrapper(command: WString, target_to_remove: &wstr) -> boo
         return false;
     }
 
-    let mut wrappers = wrapper_map.lock().expect("poisoned mutex");
+    let mut wrappers = WRAPPER_MAP.lock().expect("poisoned mutex");
     let mut result = false;
     for targets in wrappers.values_mut() {
         if let Some(pos) = targets.iter().position(|t| t == target_to_remove) {
@@ -2548,7 +2548,7 @@ pub fn complete_remove_wrapper(command: WString, target_to_remove: &wstr) -> boo
 
 /// Returns a list of wrap targets for a given command.
 pub fn complete_wrap_map() -> MutexGuard<'static, HashMap<WString, Vec<WString>>> {
-    wrapper_map.lock().unwrap()
+    WRAPPER_MAP.lock().unwrap()
 }
 
 /// Returns a list of wrap targets for a given command.
@@ -2557,7 +2557,7 @@ pub fn complete_get_wrap_targets(command: &wstr) -> Vec<WString> {
         return vec![];
     }
 
-    let wrappers = wrapper_map.lock().expect("poisoned mutex");
+    let wrappers = WRAPPER_MAP.lock().expect("poisoned mutex");
     wrappers.get(command).cloned().unwrap_or_default()
 }
 

@@ -2,6 +2,9 @@
 # Test file for fish_indent
 # Note that littlecheck ignores leading whitespace, so we have to use {{    }} to explicitly match it.
 
+fish_indent --no-such-option
+#CHECKERR: fish_indent: --no-such-option: unknown option
+
 echo 'echo foo \\
 | cat' | $fish_indent
 #CHECK: echo foo \

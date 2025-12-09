@@ -974,7 +974,23 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             '\x02' => output_type = OutputType::Ansi,
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
-            _ => return Err(STATUS_CMD_ERROR),
+            ';' => {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_UNEXP_ARG,
+                    "fish_indent",
+                    w.argv[w.wopt_index - 1]
+                ));
+                return Err(STATUS_CMD_ERROR);
+            }
+            '?' => {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_UNKNOWN,
+                    "fish_indent",
+                    w.argv[w.wopt_index - 1]
+                ));
+                return Err(STATUS_CMD_ERROR);
+            }
+            _ => panic!(),
         }
     }
 

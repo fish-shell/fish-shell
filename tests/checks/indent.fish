@@ -494,6 +494,12 @@ echo $status #CHECK: 0
 echo 'PATH={$PATH[echo " "' | $fish_indent --ansi
 # CHECK: PATH={$PATH[echo " "
 
+fish_config theme choose "ayu Dark"
+echo -n 'echo hello' | builtin fish_indent --ansi
+echo end
+# CHECK: {{\x1b\[38;2;57;186;230mecho\x1b\[38;2;179;177;173m hello\x1b\[38;2;242;150;104m\x1b\[m}}
+# CHECK: end
+
 echo a\> | $fish_indent
 # CHECK: a >
 

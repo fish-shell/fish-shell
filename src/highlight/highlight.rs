@@ -76,6 +76,9 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
             outp.set_text_face(face);
             last_color = color;
         }
+        if i + 1 == text.char_count() && c == '\n' {
+            outp.set_text_face(TextFace::default());
+        }
         outp.writech(c);
     }
     outp.set_text_face(TextFace::default());

@@ -2328,6 +2328,7 @@ pub fn complete_remove_all(cmd: WString, cmd_is_path: bool, explicit: bool) {
         is_path: cmd_is_path,
     };
     let removed = completion_map.remove(&idx).is_some();
+    WRAPPER_MAP.lock().unwrap().remove(&idx.name);
     if explicit && !removed && !idx.is_path {
         COMPLETION_TOMBSTONES.lock().unwrap().insert(idx.name);
     }

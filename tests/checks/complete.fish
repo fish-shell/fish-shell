@@ -662,3 +662,29 @@ complete -C "set -S fish_killri"
 # feature would be added to skip read-only variables here.
 complete -C "set fish_killri"
 # CHECK: fish_killring
+
+# Erasing completions for a command also erases wraps.
+complete somewrapper1 --wraps wrapped
+complete somewrapper1 -l long
+complete somewrapper1 -e
+complete somewrapper1
+
+# Erasing the wrapper erases nothing else.
+complete somewrapper2 --wraps wrapped
+complete somewrapper2 -l long
+complete somewrapper2 -e --wraps wrapped
+complete somewrapper2
+# CHECK: complete somewrapper2 -l long
+# CHECK: complete somewrapper2
+
+# Erasing one out of two wrappers leaves the other.
+complete somewrapper3 --wraps wrapped1
+complete somewrapper3 --wraps wrapped2
+complete somewrapper3 -l long2
+complete somewrapper3 -e --wraps wrapped2
+complete somewrapper3
+# CHECK: complete somewrapper3 -l long2
+# TODO: here's a stale entry.
+# CHECK: complete somewrapper3
+# CHECK: complete somewrapper3
+# CHECK: complete somewrapper3 --wraps wrapped1

@@ -146,6 +146,7 @@ fn builtin_complete_remove_cmd(
     short_opt: &wstr,
     gnu_opt: &[&wstr],
     old_opt: &[&wstr],
+    wrap_targets: &[WString],
 ) {
     let mut removed = false;
     for s in short_opt.chars() {
@@ -178,6 +179,11 @@ fn builtin_complete_remove_cmd(
         removed = true;
     }
 
+    for wrap_target in wrap_targets {
+        complete_remove_wrapper(cmd.to_owned(), wrap_target);
+        removed = true;
+    }
+
     if !removed {
         // This means that all loops were empty.
         complete_remove_all(cmd.to_owned(), cmd_is_path, /*explicit=*/ true);
@@ -190,13 +196,28 @@ fn builtin_complete_remove(
     short_opt: &wstr,
     gnu_opt: &[&wstr],
     old_opt: &[&wstr],
+    wrap_targets: &[WString],
 ) {
     for cmd in cmds {
-        builtin_complete_remove_cmd(cmd, false /* not path */, short_opt, gnu_opt, old_opt);
+        builtin_complete_remove_cmd(
+            cmd,
+            false, /* not path */
+            short_opt,
+            gnu_opt,
+            old_opt,
+            wrap_targets,
+        );
     }
 
     for path in paths {
-        builtin_complete_remove_cmd(path, true /* is path */, short_opt, gnu_opt, old_opt);
+        builtin_complete_remove_cmd(
+            path,
+            true, /* is path */
+            short_opt,
+            gnu_opt,
+            old_opt,
+            wrap_targets,
+        );
     }
 }
 
@@ -579,7 +600,14 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         }
 
         if remove {
-            builtin_complete_remove(&cmd_to_complete, &path, &short_opt, &gnu_opt, &old_opt);
+            builtin_complete_remove(
+                &cmd_to_complete,
+                &path,
+                &short_opt,
+                &gnu_opt,
+                &old_opt,
+                &wrap_targets,
+            );
         } else {
             builtin_complete_add(
                 &cmd_to_complete,
@@ -593,14 +621,9 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 &desc,
                 flags,
             );
-        }
-
-        // Handle wrap targets (probably empty). We only wrap commands, not paths.
-        for wrap_target in wrap_targets {
-            for i in &cmd_to_complete {
-                if remove {
-                    complete_remove_wrapper(i.clone(), &wrap_target);
-                } else {
+            // Handle wrap targets (probably empty). We only wrap commands, not paths.
+            for wrap_target in wrap_targets {
+                for i in &cmd_to_complete {
                     complete_add_wrapper(i.clone(), wrap_target.clone());
                 }
             }

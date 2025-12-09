@@ -205,3 +205,6 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
     # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
     # CHECK: $fish_color_normal[1]: |normal|
 }
+
+fish_config theme dump badarg
+# CHECKERR: Too many arguments

@@ -318,6 +318,10 @@ fish_pager_color_secondary_description
 
                     return 0
                 case dump
+                    if set -q argv[1]
+                        echo "Too many arguments" >&2
+                        return 1
+                    end
                     # Write the current theme in .theme format, to stdout.
                     set -L | string match -r $theme_var_filter
                 case '*'

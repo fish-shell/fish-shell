@@ -455,11 +455,11 @@ mod tests {
         // Compare the sigset_t values
         unsafe {
             let t1_sigset_slice = std::slice::from_raw_parts(
-                &raw const t1_set as *const u8,
+                (&raw const t1_set).cast::<u8>(),
                 core::mem::size_of::<libc::sigset_t>(),
             );
             let t2_sigset_slice = std::slice::from_raw_parts(
-                &raw const t2_set as *const u8,
+                (&raw const t2_set).cast::<u8>(),
                 core::mem::size_of::<libc::sigset_t>(),
             );
 

@@ -5891,9 +5891,7 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
         }
 
         let mut tmp = 0 as libc::c_char;
-        if unsafe { libc::read(tty_fd.fd(), &raw mut tmp as *mut libc::c_void, 1) } < 0
-            && errno().0 == EIO
-        {
+        if unsafe { libc::read(tty_fd.fd(), (&raw mut tmp).cast(), 1) } < 0 && errno().0 == EIO {
             we_think_we_are_orphaned = true;
         }
     }

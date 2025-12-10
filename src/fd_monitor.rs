@@ -16,7 +16,7 @@ use crate::flog::FLOG;
 use crate::threads::assert_is_background_thread;
 use crate::wutil::perror;
 use errno::errno;
-use libc::{EAGAIN, EINTR, EWOULDBLOCK, c_void};
+use libc::{EAGAIN, EINTR, EWOULDBLOCK};
 
 cfg_if!(
     if #[cfg(have_eventfd)] {
@@ -95,7 +95,7 @@ impl FdEventSignaller {
             ret = unsafe {
                 libc::read(
                     self.read_fd(),
-                    buff.as_mut_ptr() as *mut c_void,
+                    buff.as_mut_ptr().cast(),
                     std::mem::size_of_val(&buff),
                 )
             };

@@ -494,11 +494,11 @@ impl IoChain {
     }
     pub fn remove(&mut self, element: &dyn IoData) {
         // Discard vtable pointers when comparing.
-        let e1 = std::ptr::from_ref(element) as *const ();
+        let e1 = std::ptr::from_ref(element).cast::<()>();
         let idx = self
             .0
             .iter()
-            .position(|e2| Arc::as_ptr(e2) as *const () == e1)
+            .position(|e2| Arc::as_ptr(e2).cast::<()>() == e1)
             .expect("Element not found");
         self.0.remove(idx);
     }

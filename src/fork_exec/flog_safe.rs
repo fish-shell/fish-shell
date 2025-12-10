@@ -85,7 +85,7 @@ pub fn flog_impl_async_safe(fd: i32, s: impl FloggableDisplayAsyncSafe) {
     // Note we deliberately do not retry on signals, etc.
     // This is used to report error messages after fork() in the child process.
     unsafe {
-        let _ = libc::write(fd, bytes.as_ptr() as *const libc::c_void, bytes.len());
+        let _ = libc::write(fd, bytes.as_ptr().cast(), bytes.len());
     }
 }
 

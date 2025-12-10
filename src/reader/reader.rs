@@ -1633,7 +1633,7 @@ fn combine_command_and_autosuggestion(
         if !last_token_contains_uppercase {
             // Use the autosuggestion's case.
             let start: usize = unsafe {
-                (line.as_char_slice().first().unwrap() as *const char)
+                std::ptr::from_ref(line.as_char_slice().first().unwrap())
                     .offset_from(&cmdline.as_char_slice()[0])
             }
             .try_into()

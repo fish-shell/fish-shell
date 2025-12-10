@@ -95,7 +95,7 @@ impl FdEventSignaller {
             ret = unsafe {
                 libc::read(
                     self.read_fd(),
-                    &mut buff as *mut _ as *mut c_void,
+                    buff.as_mut_ptr() as *mut c_void,
                     std::mem::size_of_val(&buff),
                 )
             };

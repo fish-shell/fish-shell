@@ -233,7 +233,7 @@ mod tests {
         assert!(matches!(42u64.to_arg(), Arg::UInt(42)));
         assert!(matches!(42usize.to_arg(), Arg::UInt(42)));
 
-        let ptr = &42f32 as *const f32;
+        let ptr = std::ptr::from_ref(&42f32);
         assert!(matches!(ptr.to_arg(), Arg::UInt(_)));
     }
 

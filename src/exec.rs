@@ -415,7 +415,7 @@ fn safe_launch_process(
             // +1 for /bin/sh, +1 for terminating nullptr
             let mut argv2 = [std::ptr::null(); 1 + MAXARGS + 1];
             let bshell = PATH_BSHELL.as_ptr() as *const c_char;
-            argv2[0] = bshell as *mut c_char;
+            argv2[0] = bshell;
             argv2[1..argv.len() + 1].copy_from_slice(argv);
             // The command to call should use the full path,
             // not what we would pass as argv0.

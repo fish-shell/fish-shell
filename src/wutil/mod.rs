@@ -478,7 +478,7 @@ mod tests {
     use crate::fds::AutoCloseFd;
     use crate::tests::prelude::*;
     use crate::wchar::prelude::*;
-    use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET, c_void};
+    use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
     use rand::Rng;
     use std::{ffi::CString, ptr};
 
@@ -683,7 +683,7 @@ mod tests {
                     if size == 0 {
                         ptr::null_mut()
                     } else {
-                        contents.as_mut_ptr() as *mut c_void
+                        contents.as_mut_ptr().cast()
                     },
                     narrow.len(),
                 )

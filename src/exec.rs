@@ -49,7 +49,7 @@ use crate::wutil::{fish_wcstol, perror};
 use errno::{errno, set_errno};
 use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
-    STDIN_FILENO, STDOUT_FILENO, c_char,
+    STDIN_FILENO, STDOUT_FILENO,
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat;
@@ -414,7 +414,7 @@ fn safe_launch_process(
         if nargs <= MAXARGS {
             // +1 for /bin/sh, +1 for terminating nullptr
             let mut argv2 = [std::ptr::null(); 1 + MAXARGS + 1];
-            let bshell = PATH_BSHELL.as_ptr() as *const c_char;
+            let bshell = PATH_BSHELL.as_ptr().cast();
             argv2[0] = bshell;
             argv2[1..argv.len() + 1].copy_from_slice(argv);
             // The command to call should use the full path,

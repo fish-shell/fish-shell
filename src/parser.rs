@@ -2208,7 +2208,7 @@ mod tests {
         assert_eq!(line_counter.line_offset_of_node(), None);
 
         for (idx, &node) in pipelines.iter().enumerate() {
-            line_counter.node = node as *const _;
+            line_counter.node = std::ptr::from_ref(node);
             assert_eq!(
                 line_counter.source_offset_of_node(),
                 Some(node.source_range().start())
@@ -2217,7 +2217,7 @@ mod tests {
         }
 
         for (idx, &node) in pipelines.iter().enumerate().rev() {
-            line_counter.node = node as *const _;
+            line_counter.node = std::ptr::from_ref(node);
             assert_eq!(
                 line_counter.source_offset_of_node(),
                 Some(node.source_range().start())

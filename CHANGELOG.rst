@@ -3,6 +3,7 @@ fish 4.3.0 (released ???)
 
 Notable improvements and fixes
 ------------------------------
+- New :ref:`status language <status-language>` commands allow showing and modifying language settings for fish messages without having to modify environment variables.
 
 Deprecations and removed features
 ---------------------------------

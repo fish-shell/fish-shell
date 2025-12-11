@@ -73,6 +73,13 @@ end
 echo (_ file)
 # CHECK: arquivo
 
+# Check that empty vars are ignored
+begin
+    set -l LC_ALL
+    echo (_ file)
+    # CHECK: arquivo
+end
+
 # Check that all relevant locale variables are respected.
 set --erase LANG
 set --erase LC_MESSAGES
@@ -104,3 +111,79 @@ echo (_ file)
 set -l LC_ALL de_DE.utf8
 echo (_ file)
 # CHECK: Datei
+
+# Check `status language` builtin
+set --erase LANG
+set --erase LC_MESSAGES
+set --erase LC_ALL
+set --erase LANGUAGE
+status language
+# CHECK: {{.*}} default value {{.*}}
+# CHECK: {{.*}} value:
+echo (_ file)
+# CHECK: file
+
+set -l LANGUAGE pt_BR de_DE
+status language
+# CHECK: {{.*}} LANGUAGE {{.*}}
+# CHECK: {{.*}} value: pt_BR de
+echo (_ file)
+# CHECK: arquivo
+
+# We have fr but not fr_FR. For the builtin command, only exact matches are allowed.
+status language set fr_FR de pt_BR
+# CHECKERR: Language specifiers do not have catalogs: fr_FR
+status language
+# CHECK: {{.*}} `status language` {{.*}}
+# CHECK: {{.*}} value: de pt_BR
+echo (_ file)
+# CHECK: Datei
+
+set -l LANGUAGE zh_TW
+status language
+# CHECK: {{.*}} `status language` {{.*}}
+# CHECK: {{.*}} value: de pt_BR
+echo (_ file)
+# CHECK: Datei
+
+set -l LC_MESSAGES C
+status language
+# CHECK: {{.*}} `status language` {{.*}}
+# CHECK: {{.*}} value: de pt_BR
+echo (_ file)
+# CHECK: Datei
+
+status language unset
+status language
+# CHECK: {{.*}} LC_MESSAGES {{.*}}
+# CHECK: {{.*}} value:
+echo (_ file)
+# CHECK: file
+
+set --erase LC_MESSAGES
+status language
+# CHECK: {{.*}} LANGUAGE {{.*}}
+# CHECK: {{.*}} value: zh_TW
+echo (_ file)
+# CHECK: 檔案
+
+set --erase LANGUAGE
+status language
+# CHECK: {{.*}} default value {{.*}}
+# CHECK: {{.*}} value:
+echo (_ file)
+# CHECK: file
+
+# Check `status language set` warnings
+status language set asdf
+# CHECKERR: Language specifiers do not have catalogs: asdf
+
+# This will have to be changed if we add catalogs for languages used here.
+status language set zh_HK it_IT
+# CHECKERR: Language specifiers do not have catalogs: zh_HK it_IT
+
+status language set de de
+# CHECKERR: Language specifiers appear repeatedly: de
+
+status language set \xff quote\"
+# CHECKERR: Language specifiers do not have catalogs: \Xff 'quote"'

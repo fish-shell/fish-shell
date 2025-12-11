@@ -15,6 +15,10 @@ Interactive improvements
 - On Cygwin/MSYS, command name completion will favor the non-exe name (``foo``) unless the user started typing the extension
 - When using the exe name (``foo.exe``), fish will use to the description and completions for ``foo`` if there are none for ``foo.exe``
 
+New or improved bindings
+------------------------
+- Added `backward-path-component`, `forward-path-component` and `kill-path-component` (:issue:`12127`).
+
 Improved terminal support
 -------------------------
 - OSC 133 prompt markers now also mark the prompt end, which improves shell integration with terminals like iTerm2 (:issue:`11837`).

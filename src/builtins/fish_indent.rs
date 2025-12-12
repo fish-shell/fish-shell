@@ -729,10 +729,40 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             .binary_search(&brace.source_range().start())
             .is_ok()
     }
+
+    fn brace_follows_conjunction_or_pipe(&self, node: &dyn ast::Token) -> bool {
+        let brace_parent = self.traversal.parent(node.as_node());
+        let Kind::BraceStatement(_) = brace_parent.kind() else {
+            return false;
+        };
+
+        let statement_parent = self.traversal.parent(brace_parent);
+        let Kind::Statement(_) = statement_parent.kind() else {
+            return false;
+        };
+
+        let pipeline_parent = self.traversal.parent(statement_parent);
+        let Kind::JobPipeline(_) = pipeline_parent.kind() else {
+            return false;
+        };
+
+        let parent = self.traversal.parent(pipeline_parent);
+
+        match parent.kind() {
+            Kind::JobConjunctionContinuation(_) | Kind::JobContinuation(_) => true,
+            Kind::JobConjunction(conj) => conj.decorator.is_some(),
+            _ => false,
+        }
+    }
+
     fn visit_left_brace(&mut self, node: &dyn ast::Token) {
         let range = node.source_range();
         let flags = self.gap_text_flags_before_node(node.as_node());
-        if self.is_multi_line_brace(node) && !self.at_line_start() {
+        self.emit_gap_text_before(range, flags);
+        if self.is_multi_line_brace(node)
+            && !self.at_line_start()
+            && !self.brace_follows_conjunction_or_pipe(node)
+        {
             self.emit_newline();
         }
         self.current_indent = self.indent(range.start());

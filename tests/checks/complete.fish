@@ -135,6 +135,14 @@ complete -C'foo -y' | string match -- -y-single-long
 # CHECK: -zARGZ
 complete -C'foo -z'
 
+# Regression test for issue #23: argument providers should not run while completing an option.
+complete -c complete_test_issue23 -f -s q -d option
+complete -c complete_test_issue23 -f -a '(printf "%s\n" arg-one arg-two)'
+count (complete -C'complete_test_issue23 -')
+# CHECK: 1
+count (complete -C'complete_test_issue23 ')
+# CHECK: 2
+
 function foo2; end
 complete -c foo2 -s s -l long -xa "hello-world goodbye-friend"
 complete -C"foo2 -sfrie"

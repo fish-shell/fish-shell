@@ -1240,6 +1240,9 @@ impl<'ctx> Completer<'ctx> {
     ) -> bool {
         let mut use_files = true;
         let mut has_force = false;
+        // When we're completing an explicit option prefix (starts with '-') we should not invoke
+        // argument completions because they may execute arbitrary commands (#23).
+        let completing_option_prefix = use_switches && !s.is_empty() && s.char_at(0) == '-';
 
         let CmdString { cmd, path } = parse_cmd_string(cmd_orig, self.ctx.vars());
 
@@ -1425,6 +1428,9 @@ impl<'ctx> Completer<'ctx> {
                     continue;
                 }
                 if o.option.is_empty() {
+                    if completing_option_prefix {
+                        continue;
+                    }
                     use_files &= !o.result_mode.no_files;
                     has_force |= o.result_mode.force_files;
                     self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);

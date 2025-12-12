@@ -179,26 +179,9 @@ function fish_config --description "Launch fish's web based configuration"
                     echo is an autosuggestion
                     echo
                 case show
-                    set -l fish (status fish-path)
-                    set -l used_themes
-
                     echo -s (set_color normal; set_color --underline) Current (set_color normal)
                     fish_config theme demo
-
-                    for themename in (__fish_theme_names $argv)
-                        contains -- $themename $used_themes
-                        and continue
-                        set -a used_themes $themename
-
-                        echo -s (set_color normal; set_color --underline) $themename (set_color normal)
-
-                        # Use a new, --no-config, fish to display the theme.
-                        $fish --no-config -c '
-                            fish_config theme choose $argv
-                            fish_config theme demo
-                        ' $themename
-                    end
-
+                    __fish_theme_for_each __fish_config_theme_demo $argv
                 case choose save
                     __fish_config_theme_choose $cmd $argv
                     return 0
@@ -315,6 +298,21 @@ function __fish_config_theme_canonicalize --no-scope-shadowing
                 set theme_name (string lower (string replace -a " " "-" $theme_name))
         end
     end
+end
+
+function __fish_config_theme_demo
+    argparse name= data=+ -- $argv
+    or return
+    set -l name $_flag_name
+    # Use a new, --no-config, fish to display the theme.
+    set -l fish (status fish-path)
+    $fish --no-config -c '
+        set -l name $argv[1]
+        echo -s (set_color normal; set_color --underline) "$name" \
+            (set_color normal)
+        fish_config theme choose $name
+        fish_config theme demo
+    ' $name
 end
 
 function __fish_config_prompt_reset

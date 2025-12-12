@@ -72,7 +72,8 @@ Detected errors include:
 
 To customize the syntax highlighting, you can set the environment variables listed in the :ref:`Variables for changing highlighting colors <variables-color>` section.
 
-Fish also provides pre-made color themes you can pick with :doc:`fish_config <cmds/fish_config>`. Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` in the terminal.
+Fish also provides pre-made color themes you can pick with :doc:`fish_config <cmds/fish_config>`.
+Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` in the terminal.
 
 For example, to disable nearly all coloring::
 

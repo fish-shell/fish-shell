@@ -914,7 +914,7 @@ pub trait InputEventQueuer {
                 reader,
                 format!("Incomplete escape sequence: {}", DisplayBytes(buffer))
             );
-            if strict {
+            if buffer != b"\x1b" && strict {
                 FLOG!(
                     error,
                     format!(

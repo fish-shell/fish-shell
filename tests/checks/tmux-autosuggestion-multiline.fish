@@ -16,8 +16,8 @@ tmux-sleep
 isolated-tmux capture-pane -p | sed /if/,/end/s/^/^/
 # CHECK: ^prompt> if true
 # CHECK: ^            echo 00000000000000000000000000000000000000000000000000
-# CHECK: ^            echo 00000000000000000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^            echo 000000000000000000000000000000000000000000000000000000000000000
+# CHECK: ^0000000000000000000000000000000000000
 # CHECK: ^        end
 
 # Enter does not invalidate autosuggestion.
@@ -26,8 +26,8 @@ tmux-sleep
 isolated-tmux capture-pane -p | sed /if/,/end/s/^/^/
 # CHECK: ^prompt> if true
 # CHECK: ^            echo 00000000000000000000000000000000000000000000000000
-# CHECK: ^            echo 00000000000000000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^            echo 000000000000000000000000000000000000000000000000000000000000000
+# CHECK: ^0000000000000000000000000000000000000
 # CHECK: ^        end
 
 # Autosuggestion is also computed after Enter.
@@ -36,8 +36,8 @@ tmux-sleep
 isolated-tmux capture-pane -p  \; send-keys C-u C-u C-u C-l | sed /if/,/end/s/^/^/
 # CHECK: ^prompt> if true
 # CHECK: ^            echo 00000000000000000000000000000000000000000000000000
-# CHECK: ^            echo 00000000000000000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^            echo 000000000000000000000000000000000000000000000000000000000000000
+# CHECK: ^0000000000000000000000000000000000000
 # CHECK: ^        end
 
 # Test smaller windows; only the lines that fit will be shown.
@@ -46,8 +46,8 @@ tmux-sleep
 isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^prompt> if true
 # CHECK: ^            echo 00000000000000000000000000000000000000000000000000
-# CHECK: ^            echo 00000000000000000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^            echo 000000000000000000000000000000000000000000000000000000000000000
+# CHECK: ^0000000000000000000000000000000000000…
 
 # Currently, we take either all or nothing from soft-wrapped suggestion-lines.
 # The ellipsis means that we'll get more lines.
@@ -73,8 +73,8 @@ isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^prompt>
 # CHECK: ^prompt> if true
 # CHECK: ^            echo 00000000000000000000000000000000000000000000000000
-# CHECK: ^            echo 00000000000000000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^            echo 000000000000000000000000000000000000000000000000000000000000000
+# CHECK: ^0000000000000000000000000000000000000…
 
 # Again, we take all or nothing from a soft-wrapped line.
 isolated-tmux send-keys C-u Enter if
@@ -114,8 +114,8 @@ isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^prompt-line1/2>
 # CHECK: ^prompt-line2/2> if true
 # CHECK: ^                    echo 00000000000000000000000000000000000000000000000000
-# CHECK: ^                    echo 000000000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^                    echo 0000000000000000000000000000000000000000000000000000000
+# CHECK: ^000000000000000000000000000000000000000000000…
 
 # Autosuggestion with a line that barely wraps.
 isolated-tmux resize-window -x 80 -y 4 \; send-keys C-u \
@@ -131,8 +131,8 @@ tmux-sleep
 isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^prompt-line1
 # CHECK: ^> begin
-# CHECK: ^      : 00000000000000000000000000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^      : 000000000000000000000000000000000000000000000000000000000000000000000000
+# CHECK: ^…
 
 # Autosuggestions on a soft-wrapped commandline don't push the prompt.
 isolated-tmux resize-window -x 6 -y 4 \; send-keys C-u \
@@ -142,8 +142,8 @@ isolated-tmux resize-window -x 6 -y 4 \; send-keys C-u \
 tmux-sleep
 isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^>
-# CHECK: ^> ech…
-# CHECK: ^
+# CHECK: ^> echo
+# CHECK: ^ l1 \…
 # CHECK: ^
 
 isolated-tmux resize-window -x 6 -y 4 \; send-keys C-u \
@@ -156,7 +156,7 @@ isolated-tmux resize-window -x 6 -y 4 \; send-keys C-u \
     'echo'
 tmux-sleep
 isolated-tmux capture-pane -p | sed s/^/^/
-# CHECK: ^>
-# CHECK: ^>
 # CHECK: ^> echo
-# CHECK: ^ wrap…
+# CHECK: ^ wrapp
+# CHECK: ^ed \
+# CHECK: ^

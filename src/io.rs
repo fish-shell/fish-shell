@@ -762,7 +762,7 @@ impl FdOutputStream {
         assert!(fd >= 0, "Invalid fd");
         FdOutputStream {
             fd,
-            sigcheck: SigChecker::new(Topic::sighupint),
+            sigcheck: SigChecker::new(Topic::SIGHUPINT),
             errored: false,
         }
     }

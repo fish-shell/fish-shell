@@ -68,7 +68,7 @@ impl ParseToken {
     }
     /// Return whether we are a string with the dash prefix set.
     pub fn is_dash_prefix_string(&self) -> bool {
-        self.typ == ParseTokenType::string && self.has_dash_prefix
+        self.typ == ParseTokenType::String && self.has_dash_prefix
     }
     /// Returns a string description of the given parse token.
     pub fn describe(&self) -> WString {
@@ -86,15 +86,13 @@ impl ParseToken {
 impl From<TokenizerError> for ParseErrorCode {
     fn from(err: TokenizerError) -> Self {
         match err {
-            TokenizerError::None => ParseErrorCode::none,
-            TokenizerError::UnterminatedQuote => ParseErrorCode::tokenizer_unterminated_quote,
-            TokenizerError::UnterminatedSubshell => {
-                ParseErrorCode::tokenizer_unterminated_subshell
-            }
-            TokenizerError::UnterminatedSlice => ParseErrorCode::tokenizer_unterminated_slice,
-            TokenizerError::UnterminatedEscape => ParseErrorCode::tokenizer_unterminated_escape,
+            TokenizerError::None => ParseErrorCode::None,
+            TokenizerError::UnterminatedQuote => ParseErrorCode::TokenizerUnterminatedQuote,
+            TokenizerError::UnterminatedSubshell => ParseErrorCode::TokenizerUnterminatedSubshell,
+            TokenizerError::UnterminatedSlice => ParseErrorCode::TokenizerUnterminatedSlice,
+            TokenizerError::UnterminatedEscape => ParseErrorCode::TokenizerUnterminatedEscape,
             // To-do: maybe also unbalancing brace?
-            _ => ParseErrorCode::tokenizer_other,
+            _ => ParseErrorCode::TokenizerOther,
         }
     }
 }

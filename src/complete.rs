@@ -2,6 +2,7 @@ use std::{
     cmp::Ordering,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     mem,
+    ops::{Deref, DerefMut},
     sync::{
         Mutex, MutexGuard,
         atomic::{self, AtomicUsize},
@@ -246,7 +247,7 @@ pub struct CompletionReceiver {
 
 // We are only wrapping a `Vec<Completion>`, any non-mutable methods can be safely deferred to the
 // Vec-impl
-impl std::ops::Deref for CompletionReceiver {
+impl Deref for CompletionReceiver {
     type Target = [Completion];
 
     fn deref(&self) -> &Self::Target {
@@ -254,7 +255,7 @@ impl std::ops::Deref for CompletionReceiver {
     }
 }
 
-impl std::ops::DerefMut for CompletionReceiver {
+impl DerefMut for CompletionReceiver {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.completions.as_mut_slice()
     }

@@ -486,7 +486,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn test_qmark_noglob_true() {
-        scoped_test(FeatureFlag::qmark_noglob, true, || {
+        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
             validate!(["string", "match", "a*b?c", "axxb?c"], STATUS_CMD_OK, "axxb?c\n");
             validate!(["string", "match", "*?", "a"], STATUS_CMD_ERROR, "");
             validate!(["string", "match", "*?", "ab"], STATUS_CMD_ERROR, "");
@@ -514,7 +514,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn test_qmark_glob() {
-        scoped_test(FeatureFlag::qmark_noglob, false, || {
+        scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {
             validate!(["string", "match", "a*b?c", "axxbyc"], STATUS_CMD_OK, "axxbyc\n");
             validate!(["string", "match", "*?", "a"], STATUS_CMD_OK, "a\n");
             validate!(["string", "match", "*?", "ab"], STATUS_CMD_OK, "ab\n");

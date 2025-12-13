@@ -382,10 +382,10 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             Kind::Token(token) => {
                 // Allow escaped newlines before && and ||, and also pipes.
                 match token.token_type() {
-                    ParseTokenType::andand | ParseTokenType::oror | ParseTokenType::pipe => {
+                    ParseTokenType::AndAnd | ParseTokenType::OrOr | ParseTokenType::Pipe => {
                         result.allow_escaped_newlines = true;
                     }
-                    ParseTokenType::string => {
+                    ParseTokenType::String => {
                         // Allow escaped newlines before commands that follow a variable assignment
                         // since both can be long (#7955).
                         let p = self.traversal.parent(node);
@@ -819,9 +819,9 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             }
             if let Some(token) = node.as_token() {
                 match token.token_type() {
-                    ParseTokenType::end => self.visit_semi_nl(token),
-                    ParseTokenType::left_brace => self.visit_left_brace(token),
-                    ParseTokenType::right_brace => self.visit_right_brace(token),
+                    ParseTokenType::End => self.visit_semi_nl(token),
+                    ParseTokenType::LeftBrace => self.visit_left_brace(token),
+                    ParseTokenType::RightBrace => self.visit_right_brace(token),
                     _ => self.emit_node_text(node),
                 }
                 continue;

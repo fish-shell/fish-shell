@@ -14,7 +14,7 @@ pub fn no_cancel() -> bool {
 
 // Default limits for expansion.
 /// The default maximum number of items from expansion.
-pub const EXPANSION_LIMIT_DEFAULT: usize = 512 * 1024;
+pub const EXPANSION_LIMIT_DEFAULT: usize = 524288; // 512 * 1024
 /// A smaller limit for background operations like syntax highlighting.
 pub const EXPANSION_LIMIT_BACKGROUND: usize = 512;
 

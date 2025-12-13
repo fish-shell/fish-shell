@@ -897,7 +897,7 @@ fn tok_is_string_character(c: char, next: Option<char>) -> bool {
         // Unconditional separators.
         '\0' | ' ' | '\n' | '|' | '\t' | ';' | '\r' | '<' | '>' => false,
         '&' => {
-            if feature_test(FeatureFlag::ampersand_nobg_in_token) {
+            if feature_test(FeatureFlag::AmpersandNoBgInToken) {
                 // Unlike in other shells, '&' is not special if followed by a string character.
                 next.map(|nc| tok_is_string_character(nc, None))
                     .unwrap_or(false)

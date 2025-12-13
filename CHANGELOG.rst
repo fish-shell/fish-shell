@@ -12,8 +12,8 @@ Interactive improvements
 - When typing immediately after starting fish, the first prompt is now rendered correctly.
 - Completion accuracy was improved for file paths containing ``=`` or ``:`` (:issue:`5363`).
 - Prefix-matching completions are now shown even if they don't have the case typed by the user (:issue:`7944`).
-- On Cygwin/MSYS, command name completion will favor the non-exe name (``foo``) unless the user started typing the extension
-- When using the exe name (``foo.exe``), fish will use to the description and completions for ``foo`` if there are none for ``foo.exe``
+- On Cygwin/MSYS, command name completion will favor the non-exe name (``foo``) unless the user started typing the extension.
+- When using the exe name (``foo.exe``), fish will use to the description and completions for ``foo`` if there are none for ``foo.exe``.
 
 Improved terminal support
 -------------------------
@@ -21,14 +21,14 @@ Improved terminal support
 - Operating-system-specific key bindings are now decided based on the :ref:`terminal's host OS <status-terminal-os>`.
 - Focus reporting is enabled unconditionally, not just inside tmux.
   To use it, define functions that handle the ``fish_focus_in`` or ``fish_focus_out`` :ref:`events <event>`.
-- New :ref:`feature flag <featureflags>` ``omit-term-workarounds`` can be turned on to prevent fish from trying to work around incompatible terminals.
+- New :ref:`feature flag <featureflags>` ``omit-term-workarounds`` can be turned on to prevent fish from trying to work around some incompatible terminals.
 
 For distributors and developers
 -------------------------------
 - Tarballs no longer contain prebuilt documentation,
   so building and installing documentation requires Sphinx.
   To avoid users accidentally losing docs, the ``BUILD_DOCS`` and ``INSTALL_DOCS`` configuration options have been replaced with a new ``WITH_DOCS`` option.
-- ``fish_key_reader`` and ``fish_indent`` are now hardlinks to ``fish``.
+- ``fish_key_reader`` and ``fish_indent`` are now installed as hardlinks to ``fish``, to save some space.
 
 Regression fixes:
 -----------------

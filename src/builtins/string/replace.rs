@@ -190,7 +190,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                     .build(pattern.as_char_slice())
                     .map_err(|e| RegexError::Compile(pattern.to_owned(), e))?;
 
-                let replacement = if feature_test(FeatureFlag::string_replace_backslash) {
+                let replacement = if feature_test(FeatureFlag::StringReplaceBackslash) {
                     replacement.to_owned()
                 } else {
                     Self::interpret_escape(replacement)

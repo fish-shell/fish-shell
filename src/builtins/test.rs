@@ -551,7 +551,7 @@ mod test_expressions {
                 );
             }
 
-            if feature_test(FeatureFlag::test_require_arg) {
+            if feature_test(FeatureFlag::TestRequireArg) {
                 return self.error(start, sprintf!("Unknown option at index %u", start));
             }
 
@@ -1019,7 +1019,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         .collect();
     let args: &[WString] = &args;
 
-    if feature_test(FeatureFlag::test_require_arg) {
+    if feature_test(FeatureFlag::TestRequireArg) {
         if argc == 0 {
             streams.err.appendln(wgettext_fmt!(
                 "%s: Expected at least one argument",

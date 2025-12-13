@@ -8,12 +8,12 @@ use std::os::fd::RawFd;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum RedirectionMode {
-    overwrite, // normal redirection: > file.txt
-    append,    // appending redirection: >> file.txt
-    input,     // input redirection: < file.txt
-    try_input, // try-input redirection: <? file.txt
-    fd,        // fd redirection: 2>&1
-    noclob,    // noclobber redirection: >? file.txt
+    Overwrite, // normal redirection: > file.txt
+    Append,    // appending redirection: >> file.txt
+    Input,     // input redirection: < file.txt
+    TryInput,  // try-input redirection: <? file.txt
+    Fd,        // fd redirection: 2>&1
+    NoClob,    // noclobber redirection: >? file.txt
 }
 
 /// A type that represents the action dup2(src, target).
@@ -36,10 +36,10 @@ impl RedirectionMode {
     /// The open flags for this redirection mode.
     pub fn oflags(self) -> Option<OFlag> {
         match self {
-            RedirectionMode::append => Some(OFlag::O_CREAT | OFlag::O_APPEND | OFlag::O_WRONLY),
-            RedirectionMode::overwrite => Some(OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC),
-            RedirectionMode::noclob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
-            RedirectionMode::input | RedirectionMode::try_input => Some(OFlag::O_RDONLY),
+            RedirectionMode::Append => Some(OFlag::O_CREAT | OFlag::O_APPEND | OFlag::O_WRONLY),
+            RedirectionMode::Overwrite => Some(OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC),
+            RedirectionMode::NoClob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
+            RedirectionMode::Input | RedirectionMode::TryInput => Some(OFlag::O_RDONLY),
             _ => None,
         }
     }
@@ -69,7 +69,7 @@ impl RedirectionSpec {
     }
     /// Return if this is a close-type redirection.
     pub fn is_close(&self) -> bool {
-        self.mode == RedirectionMode::fd && self.target == "-"
+        self.mode == RedirectionMode::Fd && self.target == "-"
     }
 
     /// Attempt to parse target as an fd.

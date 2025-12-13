@@ -62,16 +62,16 @@ use std::sync::Arc;
 #[derive(Eq, PartialEq)]
 pub enum EndExecutionReason {
     /// Evaluation was successful.
-    ok,
+    Ok,
 
     /// Evaluation was skipped due to control flow (break or return).
-    control_flow,
+    ControlFlow,
 
     /// Evaluation was cancelled, e.g. because of a signal or exit.
-    cancelled,
+    Cancelled,
 
     /// A parse error or failed expansion (but not an error exit status from a command).
-    error,
+    Error,
 }
 
 pub struct ExecutionContext<'a> {
@@ -108,7 +108,7 @@ macro_rules! report_error_formatted {
         let mut error = ParseError::default();
         error.source_start = r.start();
         error.source_length = r.length();
-        error.code = ParseErrorCode::syntax; // hackish
+        error.code = ParseErrorCode::Syntax; // hackish
         error.text = $text;
         $self.report_errors($ctx, $status, &vec![error])
     }};
@@ -224,18 +224,18 @@ impl<'a> ExecutionContext<'a> {
         // If one of our jobs ended with SIGINT, we stop execution.
         // Likewise if fish itself got a SIGINT, or if something ran exit, etc.
         if self.cancel_signal.is_some() || ctx.check_cancel() || fish_is_unwinding_for_exit() {
-            return Some(EndExecutionReason::cancelled);
+            return Some(EndExecutionReason::Cancelled);
         }
         let parser = ctx.parser();
         let ld = &parser.libdata();
         if ld.exit_current_script {
-            return Some(EndExecutionReason::cancelled);
+            return Some(EndExecutionReason::Cancelled);
         }
         if ld.returning {
-            return Some(EndExecutionReason::control_flow);
+            return Some(EndExecutionReason::ControlFlow);
         }
         if ld.loop_status != LoopStatus::normals {
-            return Some(EndExecutionReason::control_flow);
+            return Some(EndExecutionReason::ControlFlow);
         }
         None
     }
@@ -262,7 +262,7 @@ impl<'a> ExecutionContext<'a> {
             // Mark status.
             ctx.parser().set_last_statuses(Statuses::just(status));
         }
-        EndExecutionReason::error
+        EndExecutionReason::Error
     }
 
     /// Command not found support.
@@ -322,7 +322,7 @@ impl<'a> ExecutionContext<'a> {
             let args = Self::get_argument_nodes_no_redirs(&statement.args_or_redirs);
             let arg_result =
                 self.expand_arguments_from_nodes(ctx, &args, &mut event_args, Globspec::failglob);
-            if arg_result != EndExecutionReason::ok {
+            if arg_result != EndExecutionReason::Ok {
                 return arg_result;
             }
 
@@ -336,7 +336,7 @@ impl<'a> ExecutionContext<'a> {
         let mut list = RedirectionSpecList::new();
         list.push(RedirectionSpec::new(
             STDOUT_FILENO,
-            RedirectionMode::fd,
+            RedirectionMode::Fd,
             L!("2").to_owned(),
         ));
         io.append_from_specs(&list, L!(""));
@@ -420,7 +420,7 @@ impl<'a> ExecutionContext<'a> {
 
             // Ignore statements with decorations like 'builtin' or 'command', since those
             // are not infinite recursion. In particular that is what enables 'wrapper functions'.
-            if dc.decoration() != StatementDecoration::none {
+            if dc.decoration() != StatementDecoration::None {
                 return None;
             }
 
@@ -514,7 +514,7 @@ impl<'a> ExecutionContext<'a> {
                 return self.report_wildcard_error(ctx, statement);
             }
             ExpandResultCode::cancel => {
-                return EndExecutionReason::cancelled;
+                return EndExecutionReason::Cancelled;
             }
             ExpandResultCode::ok => {}
         }
@@ -536,7 +536,7 @@ impl<'a> ExecutionContext<'a> {
         //
         // (skipping in no-exec because we don't have the actual variable value)
         if !no_exec()
-            && &unescape_keyword(TokenType::string, unexp_cmd) != out_cmd
+            && &unescape_keyword(TokenType::String, unexp_cmd) != out_cmd
             && parser_keywords_is_subcommand(out_cmd)
         {
             return report_error!(
@@ -547,7 +547,7 @@ impl<'a> ExecutionContext<'a> {
                 "The expanded command is a keyword."
             );
         }
-        EndExecutionReason::ok
+        EndExecutionReason::Ok
     }
 
     /// Indicates whether a job is a simple block (one block, no redirections).
@@ -583,10 +583,10 @@ impl<'a> ExecutionContext<'a> {
         // Determine the process type, which depends on the statement decoration (command, builtin,
         // etc).
         match statement.decoration() {
-            StatementDecoration::exec => ProcessType::Exec,
-            StatementDecoration::command => ProcessType::External,
-            StatementDecoration::builtin => ProcessType::Builtin,
-            StatementDecoration::none => {
+            StatementDecoration::Exec => ProcessType::Exec,
+            StatementDecoration::Command => ProcessType::External,
+            StatementDecoration::Builtin => ProcessType::Builtin,
+            StatementDecoration::None => {
                 if function::exists(cmd, ctx.parser()) {
                     ProcessType::Function
                 } else if builtin_exists(cmd) {
@@ -606,7 +606,7 @@ impl<'a> ExecutionContext<'a> {
         block: &mut Option<BlockId>,
     ) -> EndExecutionReason {
         if variable_assignment_list.is_empty() {
-            return EndExecutionReason::ok;
+            return EndExecutionReason::Ok;
         }
         *block = Some(ctx.parser().push_block(Block::variable_assignment_block()));
         for variable_assignment in variable_assignment_list {
@@ -633,7 +633,7 @@ impl<'a> ExecutionContext<'a> {
                     return self.report_errors(ctx, expand_ret.status, &errors);
                 }
                 ExpandResultCode::cancel => {
-                    return EndExecutionReason::cancelled;
+                    return EndExecutionReason::Cancelled;
                 }
                 ExpandResultCode::wildcard_no_match // nullglob (equivalent to set)
                     | ExpandResultCode::ok => {}
@@ -651,7 +651,7 @@ impl<'a> ExecutionContext<'a> {
             ctx.parser()
                 .set_var_and_fire(variable_name, EnvMode::LOCAL | EnvMode::EXPORT, vals);
         }
-        EndExecutionReason::ok
+        EndExecutionReason::Ok
     }
 
     // These create process_t structures from statements.
@@ -671,7 +671,7 @@ impl<'a> ExecutionContext<'a> {
                 ctx.parser().pop_block(block);
             }
         });
-        if result != EndExecutionReason::ok {
+        if result != EndExecutionReason::Ok {
             return result;
         }
 
@@ -722,13 +722,13 @@ impl<'a> ExecutionContext<'a> {
         let mut cmd = WString::new();
         let mut args_from_cmd_expansion = vec![];
         let ret = self.expand_command(ctx, statement, &mut cmd, &mut args_from_cmd_expansion);
-        if ret != EndExecutionReason::ok {
+        if ret != EndExecutionReason::Ok {
             return ret;
         }
 
         // For no-exec, having an empty command is okay. We can't do anything more with it tho.
         if no_exec() {
-            return EndExecutionReason::ok;
+            return EndExecutionReason::Ok;
         }
 
         assert!(
@@ -749,7 +749,7 @@ impl<'a> ExecutionContext<'a> {
                 path = external_cmd.path;
             } else {
                 // If the specified command does not exist, and is undecorated, try using an implicit cd.
-                if statement.decoration() == StatementDecoration::none {
+                if statement.decoration() == StatementDecoration::None {
                     // Implicit cd requires an empty argument and redirection list.
                     if statement.args_or_redirs.is_empty() {
                         // Ok, no arguments or redirections; check to see if the command is a directory.
@@ -808,14 +808,14 @@ impl<'a> ExecutionContext<'a> {
             let arg_nodes = Self::get_argument_nodes_no_redirs(&statement.args_or_redirs);
             let arg_result =
                 self.expand_arguments_from_nodes(ctx, &arg_nodes, &mut cmd_args, glob_behavior);
-            if arg_result != EndExecutionReason::ok {
+            if arg_result != EndExecutionReason::Ok {
                 return arg_result;
             }
 
             // The set of IO redirections that we construct for the process.
             let reason =
                 self.determine_redirections(ctx, &statement.args_or_redirs, &mut redirections);
-            if reason != EndExecutionReason::ok {
+            if reason != EndExecutionReason::Ok {
                 return reason;
             }
         }
@@ -825,7 +825,7 @@ impl<'a> ExecutionContext<'a> {
         proc.set_argv(cmd_args);
         proc.set_redirection_specs(redirections);
         proc.actual_cmd = external_cmd;
-        EndExecutionReason::ok
+        EndExecutionReason::Ok
     }
 
     fn populate_block_process(
@@ -848,7 +848,7 @@ impl<'a> ExecutionContext<'a> {
 
         let mut redirections = RedirectionSpecList::new();
         let reason = self.determine_redirections(ctx, args_or_redirs, &mut redirections);
-        if reason == EndExecutionReason::ok {
+        if reason == EndExecutionReason::Ok {
             proc.typ = ProcessType::BlockNode(NodeRef::new(Arc::clone(self.pstree()), statement));
             proc.set_redirection_specs(redirections);
         }
@@ -910,7 +910,7 @@ impl<'a> ExecutionContext<'a> {
         let arg_nodes = Self::get_argument_nodes(&header.args);
         let ret =
             self.expand_arguments_from_nodes(ctx, &arg_nodes, &mut arguments, Globspec::nullglob);
-        if ret != EndExecutionReason::ok {
+        if ret != EndExecutionReason::Ok {
             return ret;
         }
         let var = ctx.parser().vars().get(&for_var_name);
@@ -939,7 +939,7 @@ impl<'a> ExecutionContext<'a> {
         let evt = Event::variable_set(for_var_name.clone());
 
         // Now drive the for loop.
-        let mut ret = EndExecutionReason::ok;
+        let mut ret = EndExecutionReason::Ok;
         for val in arguments {
             if let Some(reason) = self.check_end_execution(ctx) {
                 ret = reason;
@@ -963,7 +963,7 @@ impl<'a> ExecutionContext<'a> {
             self.run_job_list(ctx, block_contents, Some(fb));
             ctx.parser().pop_block(fb);
 
-            if self.check_end_execution(ctx) == Some(EndExecutionReason::control_flow) {
+            if self.check_end_execution(ctx) == Some(EndExecutionReason::ControlFlow) {
                 // Handle break or continue.
                 let do_break = ctx.parser().libdata().loop_status == LoopStatus::breaks;
                 ctx.parser().libdata_mut().loop_status = LoopStatus::normals;
@@ -983,7 +983,7 @@ impl<'a> ExecutionContext<'a> {
         statement: &'a ast::IfStatement,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
-        let mut result = EndExecutionReason::ok;
+        let mut result = EndExecutionReason::Ok;
 
         // We have a sequence of if clauses, with a final else, resulting in a single job list that we
         // execute.
@@ -1008,10 +1008,10 @@ impl<'a> ExecutionContext<'a> {
             // in accordance with historic behavior.
             let mut cond_ret =
                 self.run_job_conjunction(ctx, &if_clause.condition, associated_block);
-            if cond_ret == EndExecutionReason::ok {
+            if cond_ret == EndExecutionReason::Ok {
                 cond_ret = self.run_andor_job_list(ctx, &if_clause.andor_tail, associated_block);
             }
-            let take_branch = cond_ret == EndExecutionReason::ok
+            let take_branch = cond_ret == EndExecutionReason::Ok
                 && ctx.parser().get_last_status() == EXIT_SUCCESS;
 
             if take_branch {
@@ -1092,7 +1092,7 @@ impl<'a> ExecutionContext<'a> {
                 return self.report_errors(ctx, expand_ret.status, &errors);
             }
             ExpandResultCode::cancel => {
-                return EndExecutionReason::cancelled;
+                return EndExecutionReason::Cancelled;
             }
             ExpandResultCode::wildcard_no_match => {
                 return self.report_wildcard_error(ctx, &statement.argument);
@@ -1122,7 +1122,7 @@ impl<'a> ExecutionContext<'a> {
             switch_values_expanded.remove(0).completion
         };
 
-        let mut result = EndExecutionReason::ok;
+        let mut result = EndExecutionReason::Ok;
 
         trace_if_enabled_with_args(ctx.parser(), L!("switch"), &[&switch_value_expanded]);
         let sb = ctx.parser().push_block(Block::switch_block());
@@ -1146,7 +1146,7 @@ impl<'a> ExecutionContext<'a> {
                 &mut case_args,
                 Globspec::failglob,
             );
-            if case_result == EndExecutionReason::ok {
+            if case_result == EndExecutionReason::Ok {
                 for arg in case_args {
                     // Unescape wildcards so they can be expanded again.
                     let unescaped_arg = parse_util_unescape_wildcards(&arg);
@@ -1164,7 +1164,7 @@ impl<'a> ExecutionContext<'a> {
 
         if let Some(case_item) = matching_case_item {
             // Success, evaluate the job list.
-            assert!(result == EndExecutionReason::ok, "Expected success");
+            assert!(result == EndExecutionReason::Ok, "Expected success");
             result = self.run_job_list(ctx, &case_item.body, Some(sb));
         }
 
@@ -1180,7 +1180,7 @@ impl<'a> ExecutionContext<'a> {
         contents: &'a ast::JobList,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
-        let mut ret = EndExecutionReason::ok;
+        let mut ret = EndExecutionReason::Ok;
 
         // "The exit status of the while loop shall be the exit status of the last compound-list-2
         // executed, or zero if none was executed."
@@ -1208,14 +1208,14 @@ impl<'a> ExecutionContext<'a> {
 
             // Check the condition.
             let mut cond_ret = self.run_job_conjunction(ctx, &header.condition, associated_block);
-            if cond_ret == EndExecutionReason::ok {
+            if cond_ret == EndExecutionReason::Ok {
                 cond_ret = self.run_andor_job_list(ctx, &header.andor_tail, associated_block);
             }
 
             // If the loop condition failed to execute, then exit the loop without modifying the exit
             // status. If the loop condition executed with a failure status, restore the status and then
             // exit the loop.
-            if cond_ret != EndExecutionReason::ok {
+            if cond_ret != EndExecutionReason::Ok {
                 break;
             } else if ctx.parser().get_last_status() != EXIT_SUCCESS {
                 ctx.parser().set_last_statuses(cond_saved_status);
@@ -1236,7 +1236,7 @@ impl<'a> ExecutionContext<'a> {
             let cancel_reason = self.check_end_execution(ctx);
             ctx.parser().pop_block(wb);
 
-            if cancel_reason == Some(EndExecutionReason::control_flow) {
+            if cancel_reason == Some(EndExecutionReason::ControlFlow) {
                 // Handle break or continue.
                 let do_break = ctx.parser().libdata().loop_status == LoopStatus::breaks;
                 ctx.parser().libdata_mut().loop_status = LoopStatus::normals;
@@ -1271,7 +1271,7 @@ impl<'a> ExecutionContext<'a> {
         let result =
             self.expand_arguments_from_nodes(ctx, &arg_nodes, &mut arguments, Globspec::failglob);
 
-        if result != EndExecutionReason::ok {
+        if result != EndExecutionReason::Ok {
             return result;
         }
 
@@ -1367,13 +1367,13 @@ impl<'a> ExecutionContext<'a> {
                     return self.report_errors(ctx, expand_ret.status, &errors);
                 }
                 ExpandResultCode::cancel => {
-                    return EndExecutionReason::cancelled;
+                    return EndExecutionReason::Cancelled;
                 }
                 ExpandResultCode::wildcard_no_match => {
                     if glob_behavior == Globspec::failglob {
                         // For no_exec, ignore the error - this might work at runtime.
                         if no_exec() {
-                            return EndExecutionReason::ok;
+                            return EndExecutionReason::Ok;
                         }
                         // Report the unmatched wildcard error and stop processing.
                         return self.report_wildcard_error(ctx, arg_node);
@@ -1398,7 +1398,7 @@ impl<'a> ExecutionContext<'a> {
             return ret;
         }
 
-        EndExecutionReason::ok
+        EndExecutionReason::Ok
     }
 
     // Determines the list of redirections for a node.
@@ -1453,7 +1453,7 @@ impl<'a> ExecutionContext<'a> {
                     "Invalid redirection target: %s",
                     target
                 );
-                if oper.mode == RedirectionMode::input && {
+                if oper.mode == RedirectionMode::Input && {
                     let redir_unexpanded = self.node_source(redir_node);
                     redir_unexpanded.starts_with(L!("<("))
                         && match parse_util_locate_cmdsubst_range(
@@ -1480,7 +1480,7 @@ impl<'a> ExecutionContext<'a> {
             let spec = RedirectionSpec::new(oper.fd, oper.mode, target);
 
             // Validate this spec.
-            if spec.mode == RedirectionMode::fd
+            if spec.mode == RedirectionMode::Fd
                 && !spec.is_close()
                 && spec.get_target_as_fd().is_none()
             {
@@ -1501,7 +1501,7 @@ impl<'a> ExecutionContext<'a> {
                 out_redirections.push(get_stderr_merge());
             }
         }
-        EndExecutionReason::ok
+        EndExecutionReason::Ok
     }
 
     fn run_1_job(
@@ -1516,7 +1516,7 @@ impl<'a> ExecutionContext<'a> {
 
         // We definitely do not want to execute anything if we're told we're --no-execute!
         if no_exec() {
-            return EndExecutionReason::ok;
+            return EndExecutionReason::Ok;
         }
 
         // Increment the eval_level for the duration of this command.
@@ -1567,7 +1567,7 @@ impl<'a> ExecutionContext<'a> {
 
             let statement = &job_node.statement;
             assert!(statement_is_redirectable_block(statement));
-            if result == EndExecutionReason::ok {
+            if result == EndExecutionReason::Ok {
                 result = match statement {
                     Statement::Block(block_statement) => {
                         self.run_block_statement(ctx, block_statement, associated_block)
@@ -1626,7 +1626,7 @@ impl<'a> ExecutionContext<'a> {
         ScopeGuarding::commit(_caller_id);
 
         // Clean up the job on failure or cancellation.
-        if pop_result == EndExecutionReason::ok {
+        if pop_result == EndExecutionReason::Ok {
             self.setup_group(ctx, &mut job);
             assert!(job.group.is_some(), "Should have a group");
         }
@@ -1634,7 +1634,7 @@ impl<'a> ExecutionContext<'a> {
         // Now that we're done mutating the Job, we can stick it in an Arc
         let job = Rc::new(job);
 
-        if pop_result == EndExecutionReason::ok {
+        if pop_result == EndExecutionReason::Ok {
             // Give the job to the parser - it will clean it up.
             {
                 let parser = ctx.parser();
@@ -1669,7 +1669,7 @@ impl<'a> ExecutionContext<'a> {
             profile_item.duration = ProfileItem::now() - start_time;
             profile_item.level = ctx.parser().scope().eval_level;
             profile_item.cmd = job.command().to_owned();
-            profile_item.skipped = pop_result != EndExecutionReason::ok;
+            profile_item.skipped = pop_result != EndExecutionReason::Ok;
         }
 
         job_reap(ctx.parser(), false); // clean up jobs
@@ -1705,7 +1705,7 @@ impl<'a> ExecutionContext<'a> {
         }
         // Skipping is treated as success.
         if skip {
-            EndExecutionReason::ok
+            EndExecutionReason::Ok
         } else {
             self.run_job_conjunction(ctx, jc, associated_block)
         }
@@ -1722,7 +1722,7 @@ impl<'a> ExecutionContext<'a> {
         }
         let mut result = self.run_1_job(ctx, &job_expr.job, associated_block);
         for jc in &job_expr.continuations {
-            if result != EndExecutionReason::ok {
+            if result != EndExecutionReason::Ok {
                 return result;
             }
             if let Some(reason) = self.check_end_execution(ctx) {
@@ -1731,11 +1731,11 @@ impl<'a> ExecutionContext<'a> {
             // Check the conjunction type.
             let last_status = ctx.parser().get_last_status();
             let skip = match jc.conjunction.token_type() {
-                ParseTokenType::andand => {
+                ParseTokenType::AndAnd => {
                     // AND. Skip if the last job failed.
                     last_status != 0
                 }
-                ParseTokenType::oror => {
+                ParseTokenType::OrOr => {
                     // OR. Skip if the last job succeeded.
                     last_status == 0
                 }
@@ -1754,7 +1754,7 @@ impl<'a> ExecutionContext<'a> {
         job_list_node: &'a ast::JobList,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
-        let mut result = EndExecutionReason::ok;
+        let mut result = EndExecutionReason::Ok;
         for jc in job_list_node {
             result = self.test_and_run_1_job_conjunction(ctx, jc, associated_block);
         }
@@ -1768,7 +1768,7 @@ impl<'a> ExecutionContext<'a> {
         job_list_node: &'a ast::AndorJobList,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
-        let mut result = EndExecutionReason::ok;
+        let mut result = EndExecutionReason::Ok;
         for aoj in job_list_node {
             result = self.test_and_run_1_job_conjunction(ctx, &aoj.job, associated_block);
         }
@@ -1798,7 +1798,7 @@ impl<'a> ExecutionContext<'a> {
 
         // Construct Processes for job continuations (pipelines).
         for jc in &job_node.continuation {
-            if result != EndExecutionReason::ok {
+            if result != EndExecutionReason::Ok {
                 break;
             }
             // Handle the pipe, whose fd may not be the obvious stdout.
@@ -1842,7 +1842,7 @@ impl<'a> ExecutionContext<'a> {
         processes.last_mut().unwrap().is_last_in_job = true;
 
         // Return what happened.
-        if result == EndExecutionReason::ok {
+        if result == EndExecutionReason::Ok {
             // Link up the processes.
             assert!(!processes.is_empty());
             *j.processes_mut() = processes.into_boxed_slice();
@@ -1944,7 +1944,7 @@ fn profiling_cmd_name_for_redirectable_block(
 /// Get a redirection from stderr to stdout (i.e. 2>&1).
 fn get_stderr_merge() -> RedirectionSpec {
     let stdout_fileno_str = L!("1").to_owned();
-    RedirectionSpec::new(STDERR_FILENO, RedirectionMode::fd, stdout_fileno_str)
+    RedirectionSpec::new(STDERR_FILENO, RedirectionMode::Fd, stdout_fileno_str)
 }
 
 /// Decide if a job node should be 'time'd.

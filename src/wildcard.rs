@@ -382,7 +382,7 @@ fn wildcard_test_flags_then_complete(
     // regular file *excludes* broken links - we have no use for them as commands.
     let is_regular_file = entry
         .check_type()
-        .map(|x| x == DirEntryType::reg)
+        .map(|x| x == DirEntryType::Reg)
         .unwrap_or(false);
     let is_executable = Lazy::new(|| is_regular_file && waccess(filepath, X_OK) == 0);
     if executables_only && !*is_executable {
@@ -1227,7 +1227,7 @@ pub fn wildcard_has_internal(s: impl AsRef<wstr>) -> bool {
 #[must_use]
 pub fn wildcard_has(s: impl AsRef<wstr>) -> bool {
     let s = s.as_ref();
-    let qmark_is_wild = !feature_test(FeatureFlag::qmark_noglob);
+    let qmark_is_wild = !feature_test(FeatureFlag::QuestionMarkNoGlob);
     // Fast check for * or ?; if none there is no wildcard.
     // Note some strings contain * but no wildcards, e.g. if they are quoted.
     if !s.contains('*') && (!qmark_is_wild || !s.contains('?')) {
@@ -1254,12 +1254,12 @@ mod tests {
         let wc = unescape_string(wc, UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)).unwrap();
         assert!(!wildcard_has(&wc) && wildcard_has_internal(&wc));
 
-        scoped_test(FeatureFlag::qmark_noglob, false, || {
+        scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {
             assert!(wildcard_has(L!("?")));
             assert!(!wildcard_has(L!("\\?")));
         });
 
-        scoped_test(FeatureFlag::qmark_noglob, true, || {
+        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
             assert!(!wildcard_has(L!("?")));
             assert!(!wildcard_has(L!("\\?")));
         });

@@ -13,29 +13,20 @@ function __fish_systemctl_services
     set -l mode
     for t in $tokens
         switch $t
-            case --system
-                set mode system
+            case --system --user
+                set mode $t
                 break
             case --global
                 # journalctl does not have `global` option
-                if test $cmdline != journalctl
-                    set mode global
+                if test "$cmdline" != journalctl
+                    set mode $t
+                    break
                 end
-            case --user
-                set mode user
-                break
         end
     end
 
-    if test $mode
-        # list-unit-files will also show disabled units
-        systemctl --$mode list-unit-files --full --no-legend --no-pager --plain --type=service 2>/dev/null $argv | string split -f 1 ' '
-        # list-units will not show disabled units but will show instances (like wpa_supplicant@wlan0.service)
-        systemctl --$mode list-units --state=loaded --full --no-legend --no-pager --plain --type=service 2>/dev/null | string split -f 1 ' '
-    else
-        # list-unit-files will also show disabled units
-        systemctl list-unit-files --full --no-legend --no-pager --plain --type=service 2>/dev/null $argv | string split -f 1 ' '
-        # list-units will not show disabled units but will show instances (like wpa_supplicant@wlan0.service)
-        systemctl list-units --state=loaded --full --no-legend --no-pager --plain --type=service 2>/dev/null | string split -f 1 ' '
-    end
+    # list-unit-files will also show disabled units
+    systemctl $mode list-unit-files --full --no-legend --no-pager --plain --type=service 2>/dev/null $argv | string split -f 1 ' '
+    # list-units will not show disabled units but will show instances (like wpa_supplicant@wlan0.service)
+    systemctl $mode list-units --state=loaded --full --no-legend --no-pager --plain --type=service 2>/dev/null | string split -f 1 ' '
 end

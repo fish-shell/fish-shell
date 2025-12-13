@@ -9677,6 +9677,9 @@ msgstr ""
 msgid "Calculate accurate disk space usage for a path"
 msgstr ""
 
+msgid "Calculate and display packet round-trip time"
+msgstr ""
+
 msgid "Calculate some improvement hints when combined with --templateMetrics"
 msgstr ""
 
@@ -17954,6 +17957,9 @@ msgstr ""
 msgid "Display metrics about template executions"
 msgstr ""
 
+msgid "Display minimal output for each responding host"
+msgstr ""
+
 msgid "Display modules found via autodetection"
 msgstr ""
 
@@ -18081,6 +18087,9 @@ msgid "Display pool event log"
 msgstr ""
 
 msgid "Display profile properties"
+msgstr ""
+
+msgid "Display program version and exit"
 msgstr ""
 
 msgid "Display progress as a simple progress bar"
@@ -18407,6 +18416,9 @@ msgstr ""
 msgid "Display usage information and exit"
 msgstr ""
 
+msgid "Display usage message and exit"
+msgstr ""
+
 msgid "Display usage summary"
 msgstr ""
 
@@ -18423,6 +18435,9 @@ msgid "Display various internal configuration parameters of libgcrypt"
 msgstr ""
 
 msgid "Display verbose information"
+msgstr ""
+
+msgid "Display verbose progress messages"
 msgstr ""
 
 msgid "Display version"
@@ -20994,6 +21009,9 @@ msgid "Don't display code for syntax-related errors and warnings"
 msgstr ""
 
 msgid "Don't display detailed information of gem(s)"
+msgstr ""
+
+msgid "Don't display duplicate packets"
 msgstr ""
 
 msgid "Don't display funding info"
@@ -25343,6 +25361,9 @@ msgstr ""
 msgid "Exit after receiving count packets"
 msgstr ""
 
+msgid "Exit after the specified number of hosts have responded"
+msgstr ""
+
 msgid "Exit after utility completes"
 msgstr ""
 
@@ -28224,6 +28245,9 @@ msgid "Generate a visual representation of your dependencies"
 msgstr ""
 
 msgid "Generate additional code to check that indices used to access arrays are within bounds"
+msgstr ""
+
+msgid "Generate addresses from interface configuration"
 msgstr ""
 
 msgid "Generate an ODF TOC"
@@ -46946,6 +46970,9 @@ msgstr ""
 msgid "Random threshold the image [low,high]"
 msgstr ""
 
+msgid "Randomise the target host list"
+msgstr ""
+
 msgid "Randomize file list before displaying"
 msgstr ""
 
@@ -47214,6 +47241,9 @@ msgid "Read groups that have the given suffix"
 msgstr ""
 
 msgid "Read hostname(s) from a file"
+msgstr ""
+
+msgid "Read hostnames or addresses from file"
 msgstr ""
 
 msgid "Read in binary mode"
@@ -50198,6 +50228,9 @@ msgstr ""
 msgid "Resolve project dependencies"
 msgstr ""
 
+msgid "Resolve responding addresses to hostnames"
+msgstr ""
+
 msgid "Resolve the latest released version of this project"
 msgstr ""
 
@@ -53048,6 +53081,9 @@ msgstr ""
 msgid "Seed a new sequence of pseudo-random numbers [value]"
 msgstr ""
 
+msgid "Seed the pseudo random number generator"
+msgstr ""
+
 msgid "Seed used for threading test randomness"
 msgstr ""
 
@@ -54272,6 +54308,9 @@ msgstr ""
 msgid "Set background color"
 msgstr ""
 
+msgid "Set backoff factor"
+msgstr ""
+
 msgid "Set base address for executable image"
 msgstr ""
 
@@ -54692,6 +54731,9 @@ msgstr ""
 msgid "Set initial TimeCode value"
 msgstr ""
 
+msgid "Set initial per host timeout"
+msgstr ""
+
 msgid "Set initial response timeout"
 msgstr ""
 
@@ -54708,6 +54750,9 @@ msgid "Set internal buffer size for storing file names"
 msgstr ""
 
 msgid "Set internal debugging flags"
+msgstr ""
+
+msgid "Set interval between send attempts"
 msgstr ""
 
 msgid "Set ioprio class (see ionice(1) manpage)"
@@ -54866,6 +54911,9 @@ msgstr ""
 msgid "Set minimum message severity"
 msgstr ""
 
+msgid "Set minimum packet interval"
+msgstr ""
+
 msgid "Set minimum width of line number field"
 msgstr ""
 
@@ -54941,6 +54989,9 @@ msgstr ""
 msgid "Set number of retries to number"
 msgstr ""
 
+msgid "Set number of send attempts"
+msgstr ""
+
 msgid "Set object-file output file name"
 msgstr ""
 
@@ -55011,6 +55062,9 @@ msgid "Set or view the targeted org or space"
 msgstr ""
 
 msgid "Set out buffering to None, Line, or Block"
+msgstr ""
+
+msgid "Set outbound bandwidth"
 msgstr ""
 
 msgid "Set output LOGFILE"
@@ -55433,6 +55487,18 @@ msgstr ""
 msgid "Set the ACL of file(s), replacing the current ACL"
 msgstr ""
 
+msgid "Set the ARP hardware type"
+msgstr ""
+
+msgid "Set the ARP protocol type"
+msgstr ""
+
+msgid "Set the ARP source Ethernet address"
+msgstr ""
+
+msgid "Set the ARP target Ethernet address"
+msgstr ""
+
 msgid "Set the C name of the generated data"
 msgstr ""
 
@@ -55604,6 +55670,9 @@ msgstr ""
 msgid "Set the desired package architecture"
 msgstr ""
 
+msgid "Set the destination MAC address"
+msgstr ""
+
 msgid "Set the directory of the root package"
 msgstr ""
 
@@ -55668,6 +55737,9 @@ msgid "Set the giaddr field"
 msgstr ""
 
 msgid "Set the grace time before starting to write to ># seconds"
+msgstr ""
+
+msgid "Set the hardware address length"
 msgstr ""
 
 msgid "Set the hash table size close"
@@ -55862,6 +55934,9 @@ msgstr ""
 msgid "Set the path to a CommonJS config file to set option defaults"
 msgstr ""
 
+msgid "Set the pcap snap length"
+msgstr ""
+
 msgid "Set the pinentry mode"
 msgstr ""
 
@@ -55899,6 +55974,9 @@ msgid "Set the prompt to the specified format"
 msgstr ""
 
 msgid "Set the property value: --set <prop> <value>"
+msgstr ""
+
+msgid "Set the protocol address length"
 msgstr ""
 
 msgid "Set the proxy type; One of: socks,http_connect"
@@ -55962,6 +56040,12 @@ msgid "Set the shada file location"
 msgstr ""
 
 msgid "Set the size of the largest RGB cube xpdf will try to allocate"
+msgstr ""
+
+msgid "Set the source Ethernet MAC address"
+msgstr ""
+
+msgid "Set the source IPv4 address"
 msgstr ""
 
 msgid "Set the space between two letters [value]"
@@ -56133,6 +56217,9 @@ msgid "Set to the time of the host running virsh"
 msgstr ""
 
 msgid "Set torrents as current for subsequent options"
+msgstr ""
+
+msgid "Set total number of attempts per host"
 msgstr ""
 
 msgid "Set total number of bytes to be transferred"
@@ -56424,6 +56511,9 @@ msgid "Sets seconds between status screen updates"
 msgstr ""
 
 msgid "Sets size in MB to cache from the wordfile"
+msgstr ""
+
+msgid "Sets the Ethernet protocol type"
 msgstr ""
 
 msgid "Sets the SCSI target for the CD/DVD-Recorder"
@@ -61955,6 +62045,9 @@ msgstr ""
 msgid "Specify owner password for the PDF"
 msgstr ""
 
+msgid "Specify padding after packet data"
+msgstr ""
+
 msgid "Specify parameters for a function as a JSON array"
 msgstr ""
 
@@ -62240,6 +62333,9 @@ msgstr ""
 msgid "Specify the .NET SDK version"
 msgstr ""
 
+msgid "Specify the ARP operation"
+msgstr ""
+
 msgid "Specify the CSS selectors"
 msgstr ""
 
@@ -62502,6 +62598,9 @@ msgid "Specify the output file or stdout"
 msgstr ""
 
 msgid "Specify the output format"
+msgstr ""
+
+msgid "Specify the output format string"
 msgstr ""
 
 msgid "Specify the owner password for the PDF file"
@@ -64184,6 +64283,9 @@ msgstr ""
 msgid "Suppresses the compiler's generation of specified warnings"
 msgstr ""
 
+msgid "Supress header and footer text"
+msgstr ""
+
 msgid "Surround image with a border of color [geometry]"
 msgstr ""
 
@@ -64686,6 +64788,9 @@ msgid "Target triple to clean output for"
 msgstr ""
 
 msgid "Target triple which compiles will be for"
+msgstr ""
+
+msgid "Targets must be IP addresses, not hostnames"
 msgstr ""
 
 msgid "Tasks to run"
@@ -67952,6 +68057,9 @@ msgstr ""
 msgid "Use 64-bit \"float\""
 msgstr ""
 
+msgid "Use 802.1Q tagging with specified VLAN id"
+msgstr ""
+
 msgid "Use <command> to build"
 msgstr ""
 
@@ -68250,6 +68358,9 @@ msgid "Use RCS kopt -k option on checkout."
 msgstr ""
 
 msgid "Use RCS kopt -k option on checkout. (is sticky)"
+msgstr ""
+
+msgid "Use RFC 1042 LLC/SNAP encapsulation for 802.2 networks"
 msgstr ""
 
 msgid "Use RFC 2822 output format"
@@ -68828,6 +68939,9 @@ msgstr ""
 msgid "Use custom gamma gable"
 msgstr ""
 
+msgid "Use custom vendor mapping file"
+msgstr ""
+
 msgid "Use daily bug report"
 msgstr ""
 
@@ -69239,6 +69353,9 @@ msgstr ""
 msgid "Use near-lossless image preprocessing (integer 0…100:off; default: 100)"
 msgstr ""
 
+msgid "Use network interface"
+msgstr ""
+
 msgid "Use new encoder heuristics"
 msgstr ""
 
@@ -69516,6 +69633,9 @@ msgid "Use specific merge resolution program"
 msgstr ""
 
 msgid "Use specified CTF archive member as the CTF parent"
+msgstr ""
+
+msgid "Use specified IEEE registry vendor mapping file"
 msgstr ""
 
 msgid "Use specified URL as a preferred keyserver for data signatures"
@@ -71874,6 +71994,9 @@ msgid "Write progress to FD"
 msgstr ""
 
 msgid "Write raw packet data to the given file (\"-\" means stdout)"
+msgstr ""
+
+msgid "Write received packets to pcap savefile"
 msgstr ""
 
 msgid "Write result to (source) file instead of stdout"

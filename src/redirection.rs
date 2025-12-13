@@ -13,7 +13,7 @@ pub enum RedirectionMode {
     Input,     // input redirection: < file.txt
     TryInput,  // try-input redirection: <? file.txt
     Fd,        // fd redirection: 2>&1
-    Noclob,    // noclobber redirection: >? file.txt
+    NoClob,    // noclobber redirection: >? file.txt
 }
 
 /// A type that represents the action dup2(src, target).
@@ -38,7 +38,7 @@ impl RedirectionMode {
         match self {
             RedirectionMode::Append => Some(OFlag::O_CREAT | OFlag::O_APPEND | OFlag::O_WRONLY),
             RedirectionMode::Overwrite => Some(OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC),
-            RedirectionMode::Noclob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
+            RedirectionMode::NoClob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
             RedirectionMode::Input | RedirectionMode::TryInput => Some(OFlag::O_RDONLY),
             _ => None,
         }

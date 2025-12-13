@@ -1081,7 +1081,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
                     // But here "noclobber" means the file must not exist, so appending
                     // can be ignored.
                     if try_consume(&mut cursor, '?') {
-                        result.mode = RedirectionMode::Noclob;
+                        result.mode = RedirectionMode::NoClob;
                     }
                 }
             }
@@ -1116,7 +1116,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
                         result.mode = RedirectionMode::Append; // like &>>
                     }
                     if try_consume(&mut cursor, '?') {
-                        result.mode = RedirectionMode::Noclob; // like &>? or &>>?
+                        result.mode = RedirectionMode::NoClob; // like &>? or &>>?
                     }
                 } else {
                     return Err(());
@@ -1586,10 +1586,10 @@ mod tests {
         assert_eq!(get_redir_mode!("2>"), RedirectionMode::Overwrite);
         assert_eq!(get_redir_mode!(">>"), RedirectionMode::Append);
         assert_eq!(get_redir_mode!("2>>"), RedirectionMode::Append);
-        assert_eq!(get_redir_mode!("2>?"), RedirectionMode::Noclob);
+        assert_eq!(get_redir_mode!("2>?"), RedirectionMode::NoClob);
         assert_eq!(
             get_redir_mode!("9999999999999999>?"),
-            RedirectionMode::Noclob
+            RedirectionMode::NoClob
         );
         assert_eq!(get_redir_mode!("2>&3"), RedirectionMode::Fd);
         assert_eq!(get_redir_mode!("3<&0"), RedirectionMode::Fd);

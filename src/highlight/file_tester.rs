@@ -163,7 +163,7 @@ impl<'s> FileTester<'s> {
                 waccess(&target_path, libc::R_OK) == 0
                     && wstat(&target_path).is_ok_and(|md| !md.file_type().is_dir())
             }
-            RedirectionMode::Overwrite | RedirectionMode::Append | RedirectionMode::Noclob => {
+            RedirectionMode::Overwrite | RedirectionMode::Append | RedirectionMode::NoClob => {
                 if string_suffixes_string(L!("/"), &target) {
                     // Redirections to things that are directories is definitely not
                     // allowed.
@@ -206,8 +206,8 @@ impl<'s> FileTester<'s> {
                         }
                     }
                 }
-                // NOCLOB means that we must not overwrite files that exist.
-                file_is_writable && !(file_exists && mode == RedirectionMode::Noclob)
+                // NoClob means that we must not overwrite files that exist.
+                file_is_writable && !(file_exists && mode == RedirectionMode::NoClob)
             }
         }
     }

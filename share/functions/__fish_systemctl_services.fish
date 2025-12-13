@@ -15,13 +15,13 @@ function __fish_systemctl_services
         switch $t
             case --system --user
                 set mode $t
-                break
             case --global
                 # journalctl does not have `global` option
                 if test "$cmdline" != journalctl
                     set mode $t
-                    break
                 end
+            case --
+                break
         end
     end
 

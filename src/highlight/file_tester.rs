@@ -546,36 +546,36 @@ mod tests {
         create_dir_all(&dir_path).unwrap();
 
         // Normal redirection.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::input);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::Input);
         assert!(result);
 
         // Can't redirect from a missing file
-        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::input);
+        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::Input);
         assert!(!result);
         let result =
-            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::input);
+            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::Input);
         assert!(!result);
 
         // Can't redirect from a directory.
-        let result = tester.test_redirection_target(L!("somedir"), RedirectionMode::input);
+        let result = tester.test_redirection_target(L!("somedir"), RedirectionMode::Input);
         assert!(!result);
 
         // Can't redirect from an unreadable file.
         #[cfg(not(cygwin))] // Can't mark a file write-only on MSYS, this may work on true Cygwin
         {
             fs::set_permissions(&file_path, Permissions::from_mode(0o200)).unwrap();
-            let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::input);
+            let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::Input);
             assert!(!result);
             fs::set_permissions(&file_path, Permissions::from_mode(0o600)).unwrap();
         }
 
         // try_input syntax highlighting reports an error even though the command will succeed.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::try_input);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::TryInput);
         assert!(result);
-        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::try_input);
+        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::TryInput);
         assert!(!result);
         let result =
-            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::try_input);
+            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::TryInput);
         assert!(!result);
 
         // Test write redirections.
@@ -584,7 +584,7 @@ mod tests {
         assert!(result);
 
         // Append to an existing file.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::append);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::Append);
         assert!(result);
 
         // Write to a missing file.
@@ -592,17 +592,17 @@ mod tests {
         assert!(result);
 
         // No-clobber write to existing file should fail.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::noclob);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::NoClob);
         assert!(!result);
 
         // No-clobber write to missing file should succeed.
-        let result = tester.test_redirection_target(L!("unique.txt"), RedirectionMode::noclob);
+        let result = tester.test_redirection_target(L!("unique.txt"), RedirectionMode::NoClob);
         assert!(result);
 
         let write_modes = &[
             RedirectionMode::Overwrite,
-            RedirectionMode::append,
-            RedirectionMode::noclob,
+            RedirectionMode::Append,
+            RedirectionMode::NoClob,
         ];
 
         // Can't write to a directory.
@@ -640,28 +640,28 @@ mod tests {
         }
 
         // Test fd redirections.
-        assert!(tester.test_redirection_target(L!("-"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("0"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("1"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("2"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("3"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("500"), RedirectionMode::fd));
+        assert!(tester.test_redirection_target(L!("-"), RedirectionMode::Fd));
+        assert!(tester.test_redirection_target(L!("0"), RedirectionMode::Fd));
+        assert!(tester.test_redirection_target(L!("1"), RedirectionMode::Fd));
+        assert!(tester.test_redirection_target(L!("2"), RedirectionMode::Fd));
+        assert!(tester.test_redirection_target(L!("3"), RedirectionMode::Fd));
+        assert!(tester.test_redirection_target(L!("500"), RedirectionMode::Fd));
 
         // We are base 10, despite the leading 0.
-        assert!(tester.test_redirection_target(L!("000"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("01"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("07"), RedirectionMode::fd));
+        assert!(tester.test_redirection_target(L!("000"), RedirectionMode::Fd));
+        assert!(tester.test_redirection_target(L!("01"), RedirectionMode::Fd));
+        assert!(tester.test_redirection_target(L!("07"), RedirectionMode::Fd));
 
         // Invalid fd redirections.
-        assert!(!tester.test_redirection_target(L!("0x2"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("0x3F"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("0F"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("-1"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("-0009"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("--"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("derp"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("123boo"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("18446744073709551616"), RedirectionMode::fd));
+        assert!(!tester.test_redirection_target(L!("0x2"), RedirectionMode::Fd));
+        assert!(!tester.test_redirection_target(L!("0x3F"), RedirectionMode::Fd));
+        assert!(!tester.test_redirection_target(L!("0F"), RedirectionMode::Fd));
+        assert!(!tester.test_redirection_target(L!("-1"), RedirectionMode::Fd));
+        assert!(!tester.test_redirection_target(L!("-0009"), RedirectionMode::Fd));
+        assert!(!tester.test_redirection_target(L!("--"), RedirectionMode::Fd));
+        assert!(!tester.test_redirection_target(L!("derp"), RedirectionMode::Fd));
+        assert!(!tester.test_redirection_target(L!("123boo"), RedirectionMode::Fd));
+        assert!(!tester.test_redirection_target(L!("18446744073709551616"), RedirectionMode::Fd));
     }
 
     #[test]

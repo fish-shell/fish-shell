@@ -336,7 +336,7 @@ impl<'a> ExecutionContext<'a> {
         let mut list = RedirectionSpecList::new();
         list.push(RedirectionSpec::new(
             STDOUT_FILENO,
-            RedirectionMode::fd,
+            RedirectionMode::Fd,
             L!("2").to_owned(),
         ));
         io.append_from_specs(&list, L!(""));
@@ -536,7 +536,7 @@ impl<'a> ExecutionContext<'a> {
         //
         // (skipping in no-exec because we don't have the actual variable value)
         if !no_exec()
-            && &unescape_keyword(TokenType::string, unexp_cmd) != out_cmd
+            && &unescape_keyword(TokenType::String, unexp_cmd) != out_cmd
             && parser_keywords_is_subcommand(out_cmd)
         {
             return report_error!(
@@ -1453,7 +1453,7 @@ impl<'a> ExecutionContext<'a> {
                     "Invalid redirection target: %s",
                     target
                 );
-                if oper.mode == RedirectionMode::input && {
+                if oper.mode == RedirectionMode::Input && {
                     let redir_unexpanded = self.node_source(redir_node);
                     redir_unexpanded.starts_with(L!("<("))
                         && match parse_util_locate_cmdsubst_range(
@@ -1480,7 +1480,7 @@ impl<'a> ExecutionContext<'a> {
             let spec = RedirectionSpec::new(oper.fd, oper.mode, target);
 
             // Validate this spec.
-            if spec.mode == RedirectionMode::fd
+            if spec.mode == RedirectionMode::Fd
                 && !spec.is_close()
                 && spec.get_target_as_fd().is_none()
             {
@@ -1944,7 +1944,7 @@ fn profiling_cmd_name_for_redirectable_block(
 /// Get a redirection from stderr to stdout (i.e. 2>&1).
 fn get_stderr_merge() -> RedirectionSpec {
     let stdout_fileno_str = L!("1").to_owned();
-    RedirectionSpec::new(STDERR_FILENO, RedirectionMode::fd, stdout_fileno_str)
+    RedirectionSpec::new(STDERR_FILENO, RedirectionMode::Fd, stdout_fileno_str)
 }
 
 /// Decide if a job node should be 'time'd.

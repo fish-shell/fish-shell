@@ -425,14 +425,14 @@ fn job_or_process_extent(
             break;
         }
         match token.type_ {
-            TokenType::pipe
-            | TokenType::end
-            | TokenType::background
-            | TokenType::andand
-            | TokenType::oror
-            | TokenType::left_brace
-            | TokenType::right_brace
-                if (token.type_ != TokenType::pipe || process) =>
+            TokenType::Pipe
+            | TokenType::End
+            | TokenType::Background
+            | TokenType::AndAnd
+            | TokenType::OrOr
+            | TokenType::LeftBrace
+            | TokenType::RightBrace
+                if (token.type_ != TokenType::Pipe || process) =>
             {
                 if tok_begin >= pos {
                     finished = true;
@@ -475,7 +475,7 @@ pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>,
         let mut tok_end = tok_begin;
 
         // Calculate end of token.
-        if token.type_ == TokenType::string {
+        if token.type_ == TokenType::String {
             tok_end += token.length();
         }
 
@@ -489,14 +489,14 @@ pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>,
 
         // If cursor is inside the token, this is the token we are looking for. If so, set
         // cur_begin and cur_end and break.
-        if token.type_ == TokenType::string && tok_end >= offset_within_cmdsubst {
+        if token.type_ == TokenType::String && tok_end >= offset_within_cmdsubst {
             cur_begin = cmdsubst_begin + token.offset();
             cur_end = cur_begin + token.length();
             break;
         }
 
         // Remember previous string token.
-        if token.type_ == TokenType::string {
+        if token.type_ == TokenType::String {
             prev_begin = cmdsubst_begin + token.offset();
             prev_end = prev_begin + token.length();
         }

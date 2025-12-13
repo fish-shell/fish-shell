@@ -1625,7 +1625,7 @@ impl<'a> TokenStream<'a> {
         result.set_source_start(token.offset());
         result.set_source_length(token.length());
 
-        if token.error != TokenizerError::none {
+        if token.error != TokenizerError::None {
             let subtoken_offset = token.error_offset_within_token();
             // Skip invalid tokens that have a zero length, especially if they are at EOF.
             if subtoken_offset < result.source_length() {
@@ -1824,7 +1824,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         let token = &error.token;
         // To-do: maybe extend this to other tokenizer errors?
         if token.typ == ParseTokenType::tokenizer_error
-            && token.tok_error == TokenizerError::closing_unopened_brace
+            && token.tok_error == TokenizerError::ClosingUnopenedBrace
         {
             parse_error_range!(
                 self,
@@ -2646,8 +2646,8 @@ impl<'s> Populator<'s> {
         if !token.allows_token(self.peek_token(0).typ) {
             if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
-                    TokenizerError::unterminated_quote,
-                    TokenizerError::unterminated_subshell,
+                    TokenizerError::UnterminatedQuote,
+                    TokenizerError::UnterminatedSubshell,
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
@@ -2682,8 +2682,8 @@ impl<'s> Populator<'s> {
 
             if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
-                    TokenizerError::unterminated_quote,
-                    TokenizerError::unterminated_subshell,
+                    TokenizerError::UnterminatedQuote,
+                    TokenizerError::UnterminatedSubshell,
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
@@ -2772,17 +2772,17 @@ impl From<ParseTreeFlags> for TokFlags {
 impl From<TokenType> for ParseTokenType {
     fn from(token_type: TokenType) -> Self {
         match token_type {
-            TokenType::string => ParseTokenType::string,
-            TokenType::pipe => ParseTokenType::pipe,
-            TokenType::andand => ParseTokenType::andand,
-            TokenType::oror => ParseTokenType::oror,
-            TokenType::end => ParseTokenType::end,
-            TokenType::background => ParseTokenType::background,
-            TokenType::left_brace => ParseTokenType::left_brace,
-            TokenType::right_brace => ParseTokenType::right_brace,
-            TokenType::redirect => ParseTokenType::redirection,
-            TokenType::error => ParseTokenType::tokenizer_error,
-            TokenType::comment => ParseTokenType::comment,
+            TokenType::String => ParseTokenType::string,
+            TokenType::Pipe => ParseTokenType::pipe,
+            TokenType::AndAnd => ParseTokenType::andand,
+            TokenType::OrOr => ParseTokenType::oror,
+            TokenType::End => ParseTokenType::end,
+            TokenType::Background => ParseTokenType::background,
+            TokenType::LeftBrace => ParseTokenType::left_brace,
+            TokenType::RightBrace => ParseTokenType::right_brace,
+            TokenType::Redirect => ParseTokenType::redirection,
+            TokenType::Error => ParseTokenType::tokenizer_error,
+            TokenType::Comment => ParseTokenType::comment,
         }
     }
 }
@@ -2794,7 +2794,7 @@ fn is_keyword_char(c: char) -> bool {
 /// Given a token, returns unescaped keyword, or the empty string.
 pub(crate) fn unescape_keyword(tok: TokenType, token: &wstr) -> Cow<'_, wstr> {
     /* Only strings can be keywords */
-    if tok != TokenType::string {
+    if tok != TokenType::String {
         return Cow::Borrowed(L!(""));
     }
 

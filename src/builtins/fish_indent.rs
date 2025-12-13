@@ -531,17 +531,17 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                 }
             } else if self.gap_text_mask_newline {
                 // When told to mask newlines, we do it as long as we get semicolon or newline.
-                if tok.type_ == TokenType::end {
+                if tok.type_ == TokenType::End {
                     continue;
                 }
                 self.gap_text_mask_newline = false;
             }
 
-            if tok.type_ == TokenType::comment {
+            if tok.type_ == TokenType::Comment {
                 self.emit_space_or_indent(GapFlags::default());
                 self.output.push_utfstr(tok_text);
                 needs_nl = true;
-            } else if tok.type_ == TokenType::end {
+            } else if tok.type_ == TokenType::End {
                 // This may be either a newline or semicolon.
                 // Semicolons found here are not part of the ast and can simply be removed.
                 // Newlines are preserved unless mask_newline is set.

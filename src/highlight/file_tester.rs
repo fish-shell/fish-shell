@@ -147,7 +147,7 @@ impl<'s> FileTester<'s> {
         // redirections). Note that the target is now unescaped.
         let target_path = path_apply_working_directory(&target, &self.working_directory);
         match mode {
-            RedirectionMode::fd => {
+            RedirectionMode::Fd => {
                 if target == "-" {
                     return true;
                 }
@@ -156,14 +156,14 @@ impl<'s> FileTester<'s> {
                     Err(_) => false,
                 }
             }
-            RedirectionMode::input | RedirectionMode::try_input => {
+            RedirectionMode::Input | RedirectionMode::TryInput => {
                 // Input redirections must have a readable non-directory.
                 // Note we color "try_input" files as errors if they are invalid,
                 // even though it's possible to execute these (replaced via /dev/null).
                 waccess(&target_path, libc::R_OK) == 0
                     && wstat(&target_path).is_ok_and(|md| !md.file_type().is_dir())
             }
-            RedirectionMode::overwrite | RedirectionMode::append | RedirectionMode::noclob => {
+            RedirectionMode::Overwrite | RedirectionMode::Append | RedirectionMode::Noclob => {
                 if string_suffixes_string(L!("/"), &target) {
                     // Redirections to things that are directories is definitely not
                     // allowed.
@@ -207,7 +207,7 @@ impl<'s> FileTester<'s> {
                     }
                 }
                 // NOCLOB means that we must not overwrite files that exist.
-                file_is_writable && !(file_exists && mode == RedirectionMode::noclob)
+                file_is_writable && !(file_exists && mode == RedirectionMode::Noclob)
             }
         }
     }
@@ -580,7 +580,7 @@ mod tests {
 
         // Test write redirections.
         // Overwrite an existing file.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::overwrite);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::Overwrite);
         assert!(result);
 
         // Append to an existing file.
@@ -588,7 +588,7 @@ mod tests {
         assert!(result);
 
         // Write to a missing file.
-        let result = tester.test_redirection_target(L!("newfile.txt"), RedirectionMode::overwrite);
+        let result = tester.test_redirection_target(L!("newfile.txt"), RedirectionMode::Overwrite);
         assert!(result);
 
         // No-clobber write to existing file should fail.
@@ -600,7 +600,7 @@ mod tests {
         assert!(result);
 
         let write_modes = &[
-            RedirectionMode::overwrite,
+            RedirectionMode::Overwrite,
             RedirectionMode::append,
             RedirectionMode::noclob,
         ];

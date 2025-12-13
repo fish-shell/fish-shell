@@ -44,7 +44,7 @@ impl ParseToken {
             is_help_argument: false,
             is_newline: false,
             may_be_variable_assignment: false,
-            tok_error: TokenizerError::none,
+            tok_error: TokenizerError::None,
             source_start: SOURCE_OFFSET_INVALID.try_into().unwrap(),
             source_length: 0,
         }
@@ -86,13 +86,13 @@ impl ParseToken {
 impl From<TokenizerError> for ParseErrorCode {
     fn from(err: TokenizerError) -> Self {
         match err {
-            TokenizerError::none => ParseErrorCode::none,
-            TokenizerError::unterminated_quote => ParseErrorCode::tokenizer_unterminated_quote,
-            TokenizerError::unterminated_subshell => {
+            TokenizerError::None => ParseErrorCode::none,
+            TokenizerError::UnterminatedQuote => ParseErrorCode::tokenizer_unterminated_quote,
+            TokenizerError::UnterminatedSubshell => {
                 ParseErrorCode::tokenizer_unterminated_subshell
             }
-            TokenizerError::unterminated_slice => ParseErrorCode::tokenizer_unterminated_slice,
-            TokenizerError::unterminated_escape => ParseErrorCode::tokenizer_unterminated_escape,
+            TokenizerError::UnterminatedSlice => ParseErrorCode::tokenizer_unterminated_slice,
+            TokenizerError::UnterminatedEscape => ParseErrorCode::tokenizer_unterminated_escape,
             // To-do: maybe also unbalancing brace?
             _ => ParseErrorCode::tokenizer_other,
         }

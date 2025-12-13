@@ -17,11 +17,11 @@ Files: share/tools/web_config/js/alpine.js
 Copyright: 2019-2021 Caleb Porzio and contributors
 License: MIT
 
-Files: share/tools/web_config/themes/Dracula.theme
+Files: share/themes/Dracula.theme
 Copyright: 2018 Dracula Team
 License: MIT
 
-Files: share/tools/web_config/themes/Nord.theme
+Files: share/themes/Nord.theme
 Copyright: 2016-2024 Sven Greb
 License: MIT
 

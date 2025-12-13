@@ -97,7 +97,7 @@ def is_chromeos_garcon():
         return False
 
 
-def run_fish_cmd(text):
+def run_fish_cmd(text, strict=False):
     print("$ " + text)
     p = subprocess.Popen(
         [FISH_BIN_PATH],
@@ -108,7 +108,25 @@ def run_fish_cmd(text):
     out, err = p.communicate(text.encode("utf-8"))
     out = out.decode("utf-8", "replace")
     err = err.decode("utf-8", "replace")
+    if strict:
+        assert err == ""
+        # TODO use check_output()
+        return out
     return out, err
+
+
+def list_embedded_files(path, suffix):
+    return [
+        path
+        for path in run_fish_cmd(
+            "status list-files " + escape_fish_cmd(path), strict=True
+        ).splitlines()
+        if path.endswith(suffix)
+    ]
+
+
+def get_embedded_file(path):
+    return run_fish_cmd("status get-file " + escape_fish_cmd(path), strict=True)
 
 
 def escape_fish_cmd(text):
@@ -764,8 +782,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if not path:
             out, err = run_fish_cmd("fish_config theme dump")
         else:
-            with open(path) as f:
-                out = f.read()
+            out = get_embedded_file(path)
 
         info = {}
         colors = []
@@ -1018,32 +1035,30 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def read_one_sample_prompt(self, path):
         try:
-            with open(path, "rb") as fd:
-                extras_dict = {}
-                # Read one sample prompt from fd
-                function_lines = []
-                parsing_hashes = True
-                unicode_lines = (line.decode("utf-8") for line in fd)
-                for line in unicode_lines:
-                    # Parse hashes until parse_one_sample_prompt_hash return
-                    # False.
-                    if parsing_hashes:
-                        parsing_hashes = self.parse_one_sample_prompt_hash(
-                            line, extras_dict
-                        )
-                    # Maybe not we're not parsing hashes, or maybe we already
-                    # were not.
-                    if not parsing_hashes:
-                        function_lines.append(line)
-                func = "".join(function_lines).strip()
-                result = self.do_get_sample_prompt(func, extras_dict)
-                return result
+            extras_dict = {}
+            # Read one sample prompt from out
+            function_lines = []
+            parsing_hashes = True
+            for line in get_embedded_file(path).splitlines(keepends=True):
+                # Parse hashes until parse_one_sample_prompt_hash return
+                # False.
+                if parsing_hashes:
+                    parsing_hashes = self.parse_one_sample_prompt_hash(
+                        line, extras_dict
+                    )
+                # Maybe not we're not parsing hashes, or maybe we already
+                # were not.
+                if not parsing_hashes:
+                    function_lines.append(line)
+            func = "".join(function_lines).strip()
+            result = self.do_get_sample_prompt(func, extras_dict)
+            return result
         except IOError:
             # Ignore unreadable files, etc.
             return None
 
     def do_get_sample_prompts_list(self):
-        paths = sorted(glob.iglob("sample_prompts/*.fish"))
+        paths = list_embedded_files("prompts", ".fish")
         result = []
         try:
             pool = multiprocessing.pool.ThreadPool(processes=8)
@@ -1120,7 +1135,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 else os.path.expanduser("~")
             )
             paths = list(glob.iglob(os.path.join(confighome, "fish", "themes/*.theme")))
-            paths.extend(list(glob.iglob("themes/*.theme")))
+            paths.extend(list_embedded_files("themes", ".theme"))
             paths.sort(key=str.casefold)
 
             for p in paths:

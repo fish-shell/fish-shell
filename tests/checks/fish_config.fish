@@ -107,7 +107,7 @@ type fish_mode_prompt
 
 fish_config theme choose non-existent-theme1
 # CHECKERR: No such theme: non-existent-theme1
-# CHECKERR: Searched {{/\S* (/\S*|and `status list-files tools/web_config/themes`)}}
+# CHECKERR: Searched {{/\S* (/\S*|and `status list-files themes`)}}
 
 # This still demos the current theme.
 fish_config theme show non-existent-theme2
@@ -156,7 +156,7 @@ fish_config theme show | grep -E '[^-]default|base16-default-dark|custom-from-us
 # CHECK: {{.*}}default{{\x1b\[m}}
 
 # Override a default theme with different colors.
-__fish_data_with_file tools/web_config/themes/none.theme \
+__fish_data_with_file themes/none.theme \
     cat >$__fish_config_dir/themes/default.theme
 fish_config theme show | grep -E '[^-]default|base16-default-dark' -A1
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}default{{\x1b\[m}}

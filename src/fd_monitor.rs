@@ -270,7 +270,7 @@ impl FdMonitor {
         };
 
         if start_thread {
-            FLOG!(fd_monitor, "Thread starting");
+            FLOG!(FD_MONITOR, "Thread starting");
             let background_monitor = BackgroundFdMonitor {
                 data: Arc::clone(&self.data),
                 change_signaller: Arc::clone(&self.change_signaller),
@@ -439,7 +439,7 @@ impl BackgroundFdMonitor {
                         data.running,
                         "Thread should be running because we're that thread"
                     );
-                    FLOG!(fd_monitor, "Thread exiting");
+                    FLOG!(FD_MONITOR, "Thread exiting");
                     data.running = false;
                     break;
                 }

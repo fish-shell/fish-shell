@@ -154,7 +154,7 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     let result = match std::thread::Builder::new().spawn(callback) {
         Ok(handle) => {
             let thread_id = thread_id();
-            FLOG!(iothread, "rust thread", thread_id, "spawned");
+            FLOG!(IOTHREAD, "rust thread", thread_id, "spawned");
             // Drop the handle to detach the thread
             drop(handle);
             true
@@ -253,7 +253,7 @@ impl ThreadPool {
             local_thread_count = data.total_threads;
             data.request_queue.push_back(work_item);
             FLOG!(
-                iothread,
+                IOTHREAD,
                 "enqueuing work item (count is ",
                 data.request_queue.len(),
                 ")"
@@ -277,7 +277,7 @@ impl ThreadPool {
             ThreadAction::None => (),
             ThreadAction::Wake => {
                 // Wake a thread if we decided to do so.
-                FLOG!(iothread, "notifying thread ", std::thread::current().id());
+                FLOG!(IOTHREAD, "notifying thread ", std::thread::current().id());
                 self.cond_var.notify_one();
             }
             ThreadAction::Spawn => {
@@ -287,7 +287,7 @@ impl ThreadPool {
                 // some degree of confidence. (This is also not an error we expect to routinely run
                 // into under normal, non-resource-starved circumstances.)
                 if self.spawn_thread() {
-                    FLOG!(iothread, "pthread spawned");
+                    FLOG!(IOTHREAD, "pthread spawned");
                 } else {
                     // We failed to spawn a thread; decrement the thread count.
                     self.shared.lock().expect("Mutex poisoned!").total_threads -= 1;
@@ -340,7 +340,7 @@ impl ThreadPool {
     fn run_worker(&self) {
         while let Some(work_item) = self.dequeue_work_or_commit_to_exit() {
             FLOG!(
-                iothread,
+                IOTHREAD,
                 "pthread ",
                 std::thread::current().id(),
                 " got work"
@@ -351,7 +351,7 @@ impl ThreadPool {
         }
 
         FLOG!(
-            iothread,
+            IOTHREAD,
             "pthread ",
             std::thread::current().id(),
             " exiting"

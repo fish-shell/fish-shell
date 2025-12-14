@@ -35,7 +35,7 @@ fn create_temporary_file(original_path: &wstr) -> std::io::Result<(File, WString
         Ok(file) => Ok((file, bytes2wcstring(path.as_os_str().as_encoded_bytes()))),
         Err(e) => {
             FLOG!(
-                error,
+                ERROR,
                 wgettext_fmt!(
                     "Unable to create temporary file '%s': %s",
                     // TODO(MSRV>=1.87): use OsString::display()
@@ -181,7 +181,7 @@ pub fn fsync(file: &File) -> std::io::Result<()> {
             -1 => {
                 let os_error = std::io::Error::last_os_error();
                 if os_error.kind() != std::io::ErrorKind::Interrupted {
-                    FLOGF!(synced_file_access, "fsync failed: %s", os_error);
+                    FLOGF!(SYNCED_FILE_ACCESS, "fsync failed: %s", os_error);
                     return Err(os_error);
                 }
             }
@@ -208,7 +208,7 @@ where
         }
         Err(e) => {
             FLOGF!(
-                synced_file_access,
+                SYNCED_FILE_ACCESS,
                 "Error acquiring shared lock on the directory of '%s': %s",
                 path,
                 e,
@@ -223,7 +223,7 @@ where
     }
 
     FLOG!(
-        synced_file_access,
+        SYNCED_FILE_ACCESS,
         "flock-based locking is disabled. Using fallback implementation."
     );
 
@@ -305,16 +305,16 @@ where
         if let Ok(md) = old_file.metadata() {
             if let Err(e) = std::os::unix::fs::fchown(new_file, Some(md.uid()), Some(md.gid())) {
                 FLOG!(
-                    synced_file_access,
+                    SYNCED_FILE_ACCESS,
                     "Error when changing ownership of file:",
                     e
                 );
             }
             if let Err(e) = new_file.set_permissions(md.permissions()) {
-                FLOG!(synced_file_access, "Error when changing mode of file:", e);
+                FLOG!(SYNCED_FILE_ACCESS, "Error when changing mode of file:", e);
             }
         } else {
-            FLOG!(synced_file_access, "Could not get metadata for file");
+            FLOG!(SYNCED_FILE_ACCESS, "Could not get metadata for file");
         }
         // Linux by default stores the mtime with low precision, low enough that updates that occur
         // in quick succession may result in the same mtime (even the nanoseconds field). So
@@ -343,7 +343,7 @@ where
         if wrename(old_name, new_name) == -1 {
             let error_number = errno::errno();
             FLOG!(
-                error,
+                ERROR,
                 wgettext_fmt!("Error when renaming file: %s", error_number.to_string())
             );
             return Err(std::io::Error::from(error_number));
@@ -388,7 +388,7 @@ where
             }
             Err(e) => {
                 FLOGF!(
-                    synced_file_access,
+                    SYNCED_FILE_ACCESS,
                     "Error acquiring exclusive lock on the directory of '%s': %s",
                     path,
                     e,
@@ -401,7 +401,7 @@ where
         // possible that some writes are lost.
 
         FLOG!(
-            synced_file_access,
+            SYNCED_FILE_ACCESS,
             "flock-based locking is disabled. Using fallback implementation."
         );
 

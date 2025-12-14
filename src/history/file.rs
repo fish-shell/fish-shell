@@ -273,7 +273,7 @@ impl TryFrom<MmapRegion> for RawHistoryFile {
         let type_ = infer_file_type(&region);
         if type_ == HistoryFileType::Fish1_x {
             let error_message = "unsupported history file format 1.x";
-            FLOG!(error, error_message);
+            FLOG!(ERROR, error_message);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 error_message,

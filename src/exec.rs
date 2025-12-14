@@ -148,7 +148,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         std::mem::swap(&mut proc_pipes.read, &mut pipe_next_read);
         if !p.is_last_in_job {
             let Ok(pipes) = make_autoclose_pipes() else {
-                FLOG!(warning, wgettext!(PIPE_ERROR));
+                FLOG!(WARNING, wgettext!(PIPE_ERROR));
                 aborted_pipeline = true;
                 abort_pipeline_from(job, i);
                 break;
@@ -222,7 +222,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     }
 
     FLOGF!(
-        exec_job_exec,
+        EXEC_JOB_EXEC,
         "Executed job %d from command '%s'",
         job.job_id(),
         job.command()
@@ -580,7 +580,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
     });
 
     FLOGF!(
-        proc_internal_proc,
+        PROC_INTERNAL_PROC,
         "Created internal proc %u to write output for proc '%s'",
         internal_proc.get_id(),
         p.argv0().unwrap()
@@ -652,7 +652,7 @@ fn run_internal_process_or_short_circuit(
         p.completed.store(true);
         if p.is_last_in_job {
             FLOGF!(
-                exec_job_status,
+                EXEC_JOB_STATUS,
                 "Set status of job %d (%s) to %d using short circuit",
                 j.job_id(),
                 j.preview(),
@@ -766,7 +766,7 @@ fn fork_child_for_process(
 
     let count = FORK_COUNT.fetch_add(1, Ordering::Relaxed) + 1;
     FLOGF!(
-        exec_fork,
+        EXEC_FORK,
         "Fork #%d, pid %d fork external command for '%s'",
         count,
         pid,
@@ -902,7 +902,7 @@ fn exec_external_command(
             }
         };
         FLOGF!(
-            exec_fork,
+            EXEC_FORK,
             "Fork #%d, pid %d: spawn external command '%s' from '%s'",
             count,
             pid,
@@ -1034,7 +1034,7 @@ fn get_performer_for_function(
     // This may occur if the function was erased as part of its arguments or in other strange edge cases.
     let Some(props) = function::get_props(p.argv0().unwrap()) else {
         FLOG!(
-            error,
+            ERROR,
             wgettext_fmt!("Unknown function '%s'", p.argv0().unwrap())
         );
         return Err(());

@@ -42,7 +42,7 @@ pub fn get_scroll_content_up_capability() -> Option<bool> {
 
 pub fn maybe_set_scroll_content_up_capability() {
     SCROLL_CONTENT_UP_SUPPORTED.get_or_init(|| {
-        FLOG!(reader, "SCROLL UP is supported");
+        FLOG!(READER, "SCROLL UP is supported");
         true
     });
 }
@@ -415,10 +415,10 @@ impl TtyHandoff {
         assert!(!self.reclaimed, "Terminal already reclaimed");
         self.reclaimed = true;
         if self.owner.is_some() {
-            FLOG!(proc_pgroup, "fish reclaiming terminal");
+            FLOG!(PROC_PGROUP, "fish reclaiming terminal");
             if unsafe { libc::tcsetpgrp(STDIN_FILENO, libc::getpgrp()) } == -1 {
                 FLOG!(
-                    warning,
+                    WARNING,
                     "Could not return shell to foreground:",
                     errno::errno()
                 );
@@ -499,7 +499,7 @@ impl TtyHandoff {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while unsafe { libc::tcsetpgrp(STDIN_FILENO, pgid.as_pid_t()) } != 0 {
-            FLOGF!(proc_termowner, "tcsetpgrp failed: %d", errno::errno().0);
+            FLOGF!(PROC_TERMOWNER, "tcsetpgrp failed: %d", errno::errno().0);
 
             // Before anything else, make sure that it's even necessary to call tcsetpgrp.
             // Since it usually _is_ necessary, we only check in case it fails so as to avoid the
@@ -521,7 +521,7 @@ impl TtyHandoff {
             }
             if getpgrp_res == pgid.get() {
                 FLOGF!(
-                    proc_termowner,
+                    PROC_TERMOWNER,
                     "Process group %d already has control of terminal",
                     pgid
                 );
@@ -549,7 +549,7 @@ impl TtyHandoff {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
                     FLOGF!(
-                        proc_termowner,
+                        PROC_TERMOWNER,
                         "terminal_give_to_job(): EPERM with pgid %d.",
                         pgid
                     );
@@ -561,7 +561,7 @@ impl TtyHandoff {
                 return false;
             } else {
                 FLOGF!(
-                    warning,
+                    WARNING,
                     "Could not send job %d ('%s') with pgid %d to foreground",
                     jg.job_id.to_wstring(),
                     jg.command,
@@ -578,7 +578,7 @@ impl TtyHandoff {
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
                 FLOGF!(
-                    proc_termowner,
+                    PROC_TERMOWNER,
                     "tcsetpgrp called but process group %d has terminated.\n",
                     pgid
                 );

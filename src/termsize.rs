@@ -42,14 +42,14 @@ fn read_termsize_from_tty() -> Option<Termsize> {
     };
     let width = NonZeroU16::new(winsize.ws_col).unwrap_or_else(|| {
         FLOG!(
-            term_support,
+            TERM_SUPPORT,
             L!("Terminal has 0 columns, falling back to default width")
         );
         Termsize::DEFAULT_WIDTH
     });
     let height = NonZeroU16::new(winsize.ws_row).unwrap_or_else(|| {
         FLOG!(
-            term_support,
+            TERM_SUPPORT,
             L!("Terminal has 0 rows, falling back to default height")
         );
         Termsize::DEFAULT_HEIGHT

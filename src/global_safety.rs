@@ -53,7 +53,7 @@ pub struct DebugRef<'a, T>(Ref<'a, T>);
 impl<'a, T> DebugRef<'a, T> {
     pub fn new(r: Ref<'a, T>) -> Self {
         FLOG!(
-            refcell,
+            REFCELL,
             "CREATE DebugRef",
             std::backtrace::Backtrace::capture()
         );
@@ -64,7 +64,7 @@ impl<'a, T> DebugRef<'a, T> {
 impl<'a, T> Drop for DebugRef<'a, T> {
     fn drop(&mut self) {
         FLOG!(
-            refcell,
+            REFCELL,
             "DROP DebugRef",
             std::backtrace::Backtrace::capture()
         );
@@ -83,7 +83,7 @@ pub struct DebugRefMut<'a, T>(RefMut<'a, T>);
 impl<'a, T> DebugRefMut<'a, T> {
     pub fn new(r: RefMut<'a, T>) -> Self {
         FLOG!(
-            refcell,
+            REFCELL,
             "CREATE DebugRefMut",
             std::backtrace::Backtrace::capture()
         );
@@ -94,7 +94,7 @@ impl<'a, T> DebugRefMut<'a, T> {
 impl<'a, T> Drop for DebugRefMut<'a, T> {
     fn drop(&mut self) {
         FLOG!(
-            refcell,
+            REFCELL,
             "DROP DebugRefMut",
             std::backtrace::Backtrace::capture()
         );
@@ -118,7 +118,7 @@ pub struct DebugMutexGuard<'a, T>(MutexGuard<'a, T>);
 impl<'a, T> DebugMutexGuard<'a, T> {
     pub fn new(r: MutexGuard<'a, T>) -> Self {
         FLOG!(
-            refcell,
+            REFCELL,
             "CREATE DebugMutexGuard",
             std::backtrace::Backtrace::capture()
         );
@@ -129,7 +129,7 @@ impl<'a, T> DebugMutexGuard<'a, T> {
 impl<'a, T> Drop for DebugMutexGuard<'a, T> {
     fn drop(&mut self) {
         FLOG!(
-            refcell,
+            REFCELL,
             "DROP DebugMutexGuard",
             std::backtrace::Backtrace::capture()
         );

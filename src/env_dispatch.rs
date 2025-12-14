@@ -132,7 +132,7 @@ impl VarDispatchTable {
 fn handle_timezone(var_name: &wstr, vars: &EnvStack) {
     let var = vars.get_unless_empty(var_name).map(|v| v.as_string());
     FLOG!(
-        env_dispatch,
+        ENV_DISPATCH,
         "handle_timezone() current timezone var:",
         var_name,
         "=>",
@@ -164,7 +164,7 @@ pub fn guess_emoji_width(vars: &EnvStack) {
         let new_width = fish_wcstoi(&width_str.as_string()).unwrap_or(1).clamp(1, 2) as isize;
         FISH_EMOJI_WIDTH.store(new_width, Ordering::Relaxed);
         FLOG!(
-            term_support,
+            TERM_SUPPORT,
             "Overriding default fish_emoji_width w/",
             new_width
         );
@@ -180,7 +180,7 @@ pub fn guess_emoji_width(vars: &EnvStack) {
     if xtversion().unwrap_or(L!("")).starts_with(L!("iTerm2 ")) {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
-        FLOG!(term_support, "default emoji width 2 for iTerm2");
+        FLOG!(TERM_SUPPORT, "default emoji width 2 for iTerm2");
     } else if term_program == "Apple_Terminal" && {
         let version = vars
             .get(L!("TERM_PROGRAM_VERSION"))
@@ -194,7 +194,7 @@ pub fn guess_emoji_width(vars: &EnvStack) {
     } {
         // Apple Terminal on High Sierra
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
-        FLOG!(term_support, "default emoji width: 2 for", term_program);
+        FLOG!(TERM_SUPPORT, "default emoji width: 2 for", term_program);
     } else {
         // Default to whatever the system's wcwidth gives for U+1F603, but only if it's at least
         // 1 and at most 2.
@@ -203,7 +203,7 @@ pub fn guess_emoji_width(vars: &EnvStack) {
         #[cfg(cygwin)]
         let width = 2_isize;
         FISH_EMOJI_WIDTH.store(width, Ordering::Relaxed);
-        FLOG!(term_support, "default emoji width:", width);
+        FLOG!(TERM_SUPPORT, "default emoji width:", width);
     }
 }
 
@@ -345,7 +345,7 @@ fn handle_read_limit_change(vars: &EnvStack) {
                 Some(v) => Some(v),
                 None => {
                     // We intentionally warn here even in non-interactive mode.
-                    FLOG!(warning, "Ignoring invalid $fish_read_limit");
+                    FLOG!(WARNING, "Ignoring invalid $fish_read_limit");
                     None
                 }
             }
@@ -396,7 +396,7 @@ fn update_fish_color_support(vars: &EnvStack) {
     let supports_256color = if let Some(fish_term256) = vars.get(L!("fish_term256")) {
         let ok = crate::wcstringutil::bool_from_string(&fish_term256.as_string());
         FLOG!(
-            term_support,
+            TERM_SUPPORT,
             "256-color support determined by $fish_term256:",
             ok
         );
@@ -411,7 +411,7 @@ fn update_fish_color_support(vars: &EnvStack) {
         // $fish_term24bit
         supports_24bit = crate::wcstringutil::bool_from_string(&fish_term24bit);
         FLOG!(
-            term_support,
+            TERM_SUPPORT,
             "$fish_term24bit preference: 24-bit color",
             if supports_24bit {
                 "enabled"
@@ -426,12 +426,12 @@ fn update_fish_color_support(vars: &EnvStack) {
         // Screen requires "truecolor on" to enable true-color sequences, so we ignore them
         // unless force-enabled.
         supports_24bit = false;
-        FLOG!(term_support, "True-color support: disabled for screen");
+        FLOG!(TERM_SUPPORT, "True-color support: disabled for screen");
     } else if let Some(ct) = vars.get(L!("COLORTERM")).map(|v| v.as_string()) {
         // If someone sets $COLORTERM, that's the sort of color they want.
         supports_24bit = ct == "truecolor" || ct == "24bit";
         FLOG!(
-            term_support,
+            TERM_SUPPORT,
             "True-color support",
             if supports_24bit {
                 "enabled"
@@ -448,7 +448,7 @@ fn update_fish_color_support(vars: &EnvStack) {
                 .is_none_or(|term| term.as_list()[0] != "Apple_Terminal")
         };
         FLOG!(
-            term_support,
+            TERM_SUPPORT,
             "True-color support",
             if supports_24bit {
                 "enabled"
@@ -498,10 +498,10 @@ pub fn read_terminfo_database(vars: &EnvStack) {
             .getf_unless_empty(var_name, EnvMode::EXPORT)
             .map(|v| v.as_string())
         {
-            FLOG!(term_support, "curses var", var_name, "=", value);
+            FLOG!(TERM_SUPPORT, "curses var", var_name, "=", value);
             setenv_lock(var_name, &value, true);
         } else {
-            FLOG!(term_support, "curses var", var_name, "is missing or empty");
+            FLOG!(TERM_SUPPORT, "curses var", var_name, "is missing or empty");
             unsetenv_lock(var_name);
         }
     }
@@ -521,10 +521,10 @@ fn init_locale(vars: &EnvStack) {
             .getf_unless_empty(var_name, EnvMode::EXPORT)
             .map(|v| v.as_string());
         if let Some(value) = var {
-            FLOG!(env_locale, "locale var", var_name, "=", value);
+            FLOG!(ENV_LOCALE, "locale var", var_name, "=", value);
             setenv_lock(var_name, &value, true);
         } else {
-            FLOG!(env_locale, "locale var", var_name, "is missing or empty");
+            FLOG!(ENV_LOCALE, "locale var", var_name, "is missing or empty");
             unsetenv_lock(var_name);
         }
     }
@@ -533,7 +533,7 @@ fn init_locale(vars: &EnvStack) {
     if !unsafe {
         set_libc_locales(/*log_ok=*/ true)
     } {
-        FLOG!(env_locale, "user has an invalid locale configured");
+        FLOG!(ENV_LOCALE, "user has an invalid locale configured");
     }
 
     // Invalidate the cached numeric locale.

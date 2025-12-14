@@ -887,7 +887,7 @@ pub fn setup() {
             let mut path = PathBuf::from(dir);
             path.push(first_char.clone());
             path.push(t.clone());
-            FLOGF!(term_support, "Trying path '%s'", path.to_str().unwrap());
+            FLOGF!(TERM_SUPPORT, "Trying path '%s'", path.to_str().unwrap());
             if let Ok(db) = terminfo::Database::from_path(path) {
                 return Ok(db);
             }

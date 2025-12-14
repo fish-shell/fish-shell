@@ -101,11 +101,11 @@ impl Autoload {
         );
         match result {
             AutoloadResult::Path(AutoloadPath::Embedded(_)) => {
-                FLOGF!(autoload, "Embedded: %s", cmd);
+                FLOGF!(AUTOLOAD, "Embedded: %s", cmd);
             }
             AutoloadResult::Path(AutoloadPath::Path(ref path)) => {
                 FLOGF!(
-                    autoload,
+                    AUTOLOAD,
                     "Loading %s from var %s from path %s",
                     cmd,
                     self.env_var_name,
@@ -134,7 +134,7 @@ impl Autoload {
             AutoloadPath::Embedded(name) => {
                 use crate::common::bytes2wcstring;
                 use std::sync::Arc;
-                FLOGF!(autoload, "Loading embedded: %s", name);
+                FLOGF!(AUTOLOAD, "Loading embedded: %s", name);
                 let emfile = Asset::get(name).expect("Embedded file not found");
                 let src = bytes2wcstring(&emfile.data);
                 let mut widename = L!("embedded:").to_owned();

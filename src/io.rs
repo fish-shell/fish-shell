@@ -335,7 +335,7 @@ impl IoBufferfill {
         match make_fd_nonblocking(pipes.read.as_raw_fd()) {
             Ok(_) => (),
             Err(e) => {
-                FLOG!(warning, PIPE_ERROR);
+                FLOG!(WARNING, PIPE_ERROR);
                 perror_io("fcntl", &e);
                 return Err(e);
             }
@@ -530,15 +530,15 @@ impl IoChain {
             // or there's a non-directory component,
             // find the first problematic component for a better message.
             if [ENOENT, ENOTDIR].contains(&err) {
-                FLOGF!(warning, FILE_ERROR, target);
+                FLOGF!(WARNING, FILE_ERROR, target);
                 let mut dname: &wstr = target;
                 while !dname.is_empty() {
                     let next: &wstr = wdirname(dname);
                     if let Ok(md) = wstat(next) {
                         if !md.is_dir() {
-                            FLOGF!(warning, "Path '%s' is not a directory", next);
+                            FLOGF!(WARNING, "Path '%s' is not a directory", next);
                         } else {
-                            FLOGF!(warning, "Path '%s' does not exist", dname);
+                            FLOGF!(WARNING, "Path '%s' does not exist", dname);
                         }
                         break;
                     }
@@ -548,14 +548,14 @@ impl IoChain {
                 // If we get EINTR we had a cancel signal.
                 // That's expected (ctrl-c on the commandline),
                 // so no warning.
-                FLOGF!(warning, FILE_ERROR, target);
+                FLOGF!(WARNING, FILE_ERROR, target);
                 perror("open");
             }
         };
 
         for spec in specs {
             match spec.mode {
-                RedirectionMode::fd => {
+                RedirectionMode::Fd => {
                     if spec.is_close() {
                         self.push(Arc::new(IoClose::new(spec.fd)));
                     } else {
@@ -577,16 +577,16 @@ impl IoChain {
                         }
                         Err(err) => {
                             if oflags.contains(OFlag::O_EXCL) && err == nix::Error::EEXIST {
-                                FLOGF!(warning, NOCLOB_ERROR, spec.target);
-                            } else if spec.mode != RedirectionMode::try_input
-                                && should_flog!(warning)
+                                FLOGF!(WARNING, NOCLOB_ERROR, spec.target);
+                            } else if spec.mode != RedirectionMode::TryInput
+                                && should_flog!(WARNING)
                             {
                                 print_error(errno::errno().0, &spec.target);
                             }
                             // If opening a file fails, insert a closed FD instead of the file redirection
                             // and return false. This lets execution potentially recover and at least gives
                             // the shell a chance to gracefully regain control of the shell (see #7038).
-                            if spec.mode != RedirectionMode::try_input {
+                            if spec.mode != RedirectionMode::TryInput {
                                 self.push(Arc::new(IoClose::new(spec.fd)));
                                 have_error = true;
                                 continue;
@@ -598,7 +598,7 @@ impl IoChain {
                                     }
                                     _ => {
                                         // /dev/null can't be opened???
-                                        if should_flog!(warning) {
+                                        if should_flog!(WARNING) {
                                             print_error(errno::errno().0, L!("/dev/null"));
                                         }
                                         self.push(Arc::new(IoClose::new(spec.fd)));

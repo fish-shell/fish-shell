@@ -99,8 +99,8 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
             vars,
         );
     }
-    if data.remoteness == DirRemoteness::remote {
-        FLOG!(path, "data path appears to be on a network volume");
+    if data.remoteness == DirRemoteness::Remote {
+        FLOG!(PATH, "data path appears to be on a network volume");
     }
 
     let config = get_config_directory();
@@ -115,8 +115,8 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
             vars,
         );
     }
-    if config.remoteness == DirRemoteness::remote {
-        FLOG!(path, "config path appears to be on a network volume");
+    if config.remoteness == DirRemoteness::Remote {
+        FLOG!(PATH, "config path appears to be on a network volume");
     }
 }
 
@@ -146,14 +146,14 @@ fn maybe_issue_path_warning(
         L!("1").to_owned(),
     );
 
-    FLOG!(error, custom_error_msg);
+    FLOG!(ERROR, custom_error_msg);
     if path.is_empty() {
         FLOG!(
-            warning_path,
+            WARNING_PATH,
             wgettext_fmt!("Unable to locate the %s directory.", which_dir)
         );
         FLOG!(
-            warning_path,
+            WARNING_PATH,
             wgettext_fmt!(
                 "Please set the %s or HOME environment variable before starting fish.",
                 xdg_var
@@ -162,7 +162,7 @@ fn maybe_issue_path_warning(
     } else {
         let env_var = if using_xdg { xdg_var } else { L!("HOME") };
         FLOG!(
-            warning_path,
+            WARNING_PATH,
             wgettext_fmt!(
                 "Unable to locate %s directory derived from $%s: '%s'.",
                 which_dir,
@@ -171,11 +171,11 @@ fn maybe_issue_path_warning(
             )
         );
         FLOG!(
-            warning_path,
+            WARNING_PATH,
             wgettext_fmt!("The error was '%s'.", Errno(saved_errno).to_string())
         );
         FLOG!(
-            warning_path,
+            WARNING_PATH,
             wgettext_fmt!(
                 "Please set $%s to a directory where you have write access.",
                 env_var
@@ -236,7 +236,7 @@ fn path_check_executable(path: &wstr) -> Result<(), std::io::Error> {
 
 /// Return all the paths that match the given command.
 pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
-    FLOGF!(path, "path_get_paths('%s')", cmd);
+    FLOGF!(PATH, "path_get_paths('%s')", cmd);
     let mut paths = vec![];
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother

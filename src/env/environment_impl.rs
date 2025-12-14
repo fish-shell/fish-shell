@@ -619,7 +619,7 @@ impl EnvScopedImpl {
 
     /// Return a newly allocated export array.
     fn create_export_array(&self) -> Arc<OwningNullTerminatedArray> {
-        FLOG!(env_export, "create_export_array() recalc");
+        FLOG!(ENV_EXPORT, "create_export_array() recalc");
         let mut vals = VarTable::new();
         Self::get_exported(&self.globals, &mut vals);
         Self::get_exported(&self.locals, &mut vals);

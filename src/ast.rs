@@ -1648,14 +1648,14 @@ macro_rules! internal_error {
         $(,)?
     ) => {
         FLOG!(
-            debug,
+            DEBUG,
             concat!(
                 "Internal parse error from {$func} - this indicates a bug in fish.",
                 $fmt,
             )
             $(, $args)*
         );
-        FLOGF!(debug, "Encountered while parsing:<<<<\n%s\n>>>", $self.tokens.src);
+        FLOGF!(DEBUG, "Encountered while parsing:<<<<\n%s\n>>>", $self.tokens.src);
         panic!();
     };
 }
@@ -1697,7 +1697,7 @@ macro_rules! parse_error_range {
         if !$self.unwinding {
             $self.unwinding = true;
 
-            FLOGF!(ast_construction, "%*sparse error - begin unwinding", $self.spaces(), "");
+            FLOGF!(AST_CONSTRUCTION, "%*sparse error - begin unwinding", $self.spaces(), "");
             // TODO: can store this conditionally dependent on flags.
             if $range.start() != SOURCE_OFFSET_INVALID {
                 $self.errors.push($range);
@@ -1802,7 +1802,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
 
     fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N) {
         FLOGF!(
-            ast_construction,
+            AST_CONSTRUCTION,
             "%*swill_visit %s",
             self.spaces(),
             "",
@@ -2299,7 +2299,7 @@ impl<'s> Populator<'s> {
             );
             // Mark in the list that it was unwound.
             FLOGF!(
-                ast_construction,
+                AST_CONSTRUCTION,
                 "%*sunwinding %s",
                 self.spaces(),
                 "",
@@ -2325,14 +2325,14 @@ impl<'s> Populator<'s> {
                     let typ = self.peek_type(0);
                     if matches!(
                         typ,
-                        ParseTokenType::string | ParseTokenType::terminate | ParseTokenType::end
+                        ParseTokenType::String | ParseTokenType::Terminate | ParseTokenType::End
                     ) {
                         break;
                     }
                     let tok = self.tokens.pop();
                     self.errors.push(tok.range());
                     FLOGF!(
-                        ast_construction,
+                        AST_CONSTRUCTION,
                         "%*schomping range %u-%u",
                         self.spaces(),
                         "",
@@ -2340,7 +2340,7 @@ impl<'s> Populator<'s> {
                         tok.source_length()
                     );
                 }
-                FLOGF!(ast_construction, "%*sdone unwinding", self.spaces(), "");
+                FLOGF!(AST_CONSTRUCTION, "%*sdone unwinding", self.spaces(), "");
                 self.unwinding = false;
             }
 
@@ -2377,7 +2377,7 @@ impl<'s> Populator<'s> {
         }
 
         FLOGF!(
-            ast_construction,
+            AST_CONSTRUCTION,
             "%*s%s size: %u",
             self.spaces(),
             "",

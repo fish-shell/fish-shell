@@ -267,7 +267,7 @@ pub fn offset_of_next_item_fish_2_0(
 
         if line.starts_with(b"\0") {
             FLOG!(
-                error,
+                ERROR,
                 "ignoring corrupted history entry around offset",
                 *cursor
             );
@@ -276,7 +276,7 @@ pub fn offset_of_next_item_fish_2_0(
 
         if !line.starts_with(b"- cmd") {
             FLOG!(
-                history,
+                HISTORY,
                 "ignoring corrupted history entry around offset",
                 *cursor
             );

@@ -1099,7 +1099,7 @@ impl Parser {
             Ok(f) => f,
             Err(err) => {
                 FLOG!(
-                    warning,
+                    WARNING,
                     wgettext_fmt!(
                         "Could not write profiling information to file '%s': %s",
                         path.to_string_lossy(),
@@ -1240,7 +1240,7 @@ impl Parser {
             return;
         };
         FLOGF!(
-            reader,
+            READER,
             "Setting %s to %s",
             FISH_TERMINAL_COLOR_THEME_VAR,
             color_theme

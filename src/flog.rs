@@ -72,77 +72,77 @@ pub mod categories {
     }
 
     categories!(
-        (error, "error", "Serious unexpected errors (on by default)", true);
+        (ERROR, "error", "Serious unexpected errors (on by default)", true);
 
-        (debug, "debug", "Debugging aid (on by default)", true);
+        (DEBUG, "debug", "Debugging aid (on by default)", true);
 
-        (warning, "warning", "Warnings (on by default)", true);
+        (WARNING, "warning", "Warnings (on by default)", true);
 
-        (warning_path, "warning-path", "Warnings about unusable paths for config/history (on by default)", true);
+        (WARNING_PATH, "warning-path", "Warnings about unusable paths for config/history (on by default)", true);
 
-        (deprecated_test, "deprecated-test", "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future.");
+        (DEPRECATED_TEST, "deprecated-test", "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future.");
 
-        (config, "config", "Finding and reading configuration");
+        (CONFIG, "config", "Finding and reading configuration");
 
-        (event, "event", "Firing events");
+        (EVENT, "event", "Firing events");
 
-        (exec, "exec", "Errors reported by exec (on by default)", true);
+        (EXEC, "exec", "Errors reported by exec (on by default)", true);
 
-        (exec_job_status, "exec-job-status", "Jobs changing status");
+        (EXEC_JOB_STATUS, "exec-job-status", "Jobs changing status");
 
-        (exec_job_exec, "exec-job-exec", "Jobs being executed");
+        (EXEC_JOB_EXEC, "exec-job-exec", "Jobs being executed");
 
-        (exec_fork, "exec-fork", "Calls to fork()");
+        (EXEC_FORK, "exec-fork", "Calls to fork()");
 
-        (output_invalid, "output-invalid", "Trying to print invalid output");
-        (ast_construction, "ast-construction", "Parsing fish AST");
+        (OUTPUT_INVALID, "output-invalid", "Trying to print invalid output");
+        (AST_CONSTRUCTION, "ast-construction", "Parsing fish AST");
 
-        (proc_job_run, "proc-job-run", "Jobs getting started or continued");
+        (PROC_JOB_RUN, "proc-job-run", "Jobs getting started or continued");
 
-        (proc_termowner, "proc-termowner", "Terminal ownership events");
+        (PROC_TERMOWNER, "proc-termowner", "Terminal ownership events");
 
-        (proc_internal_proc, "proc-internal-proc", "Internal (non-forked) process events");
+        (PROC_INTERNAL_PROC, "proc-internal-proc", "Internal (non-forked) process events");
 
-        (proc_reap_internal, "proc-reap-internal", "Reaping internal (non-forked) processes");
+        (PROC_REAP_INTERNAL, "proc-reap-internal", "Reaping internal (non-forked) processes");
 
-        (proc_reap_external, "proc-reap-external", "Reaping external (forked) processes");
-        (proc_pgroup, "proc-pgroup", "Process groups");
+        (PROC_REAP_EXTERNAL, "proc-reap-external", "Reaping external (forked) processes");
+        (PROC_PGROUP, "proc-pgroup", "Process groups");
 
-        (env_locale, "env-locale", "Changes to locale variables");
+        (ENV_LOCALE, "env-locale", "Changes to locale variables");
 
-        (env_export, "env-export", "Changes to exported variables");
+        (ENV_EXPORT, "env-export", "Changes to exported variables");
 
-        (env_dispatch, "env-dispatch", "Reacting to variables");
+        (ENV_DISPATCH, "env-dispatch", "Reacting to variables");
 
-        (uvar_file, "uvar-file", "Writing/reading the universal variable store");
-        (uvar_notifier, "uvar-notifier", "Notifications about universal variable changes");
+        (UVAR_FILE, "uvar-file", "Writing/reading the universal variable store");
+        (UVAR_NOTIFIER, "uvar-notifier", "Notifications about universal variable changes");
 
-        (topic_monitor, "topic-monitor", "Internal details of the topic monitor");
-        (char_encoding, "char-encoding", "Character encoding issues");
+        (TOPIC_MONITOR, "topic-monitor", "Internal details of the topic monitor");
+        (CHAR_ENCODING, "char-encoding", "Character encoding issues");
 
-        (history, "history", "Command history events");
-        (history_file, "history-file", "Reading/Writing the history file");
+        (HISTORY, "history", "Command history events");
+        (HISTORY_FILE, "history-file", "Reading/Writing the history file");
 
-        (profile_history, "profile-history", "History performance measurements");
+        (PROFILE_HISTORY, "profile-history", "History performance measurements");
 
-        (synced_file_access, "synced-file-access", "Synchronized file access");
+        (SYNCED_FILE_ACCESS, "synced-file-access", "Synchronized file access");
 
-        (iothread, "iothread", "Background IO thread events");
-        (fd_monitor, "fd-monitor", "FD monitor events");
+        (IOTHREAD, "iothread", "Background IO thread events");
+        (FD_MONITOR, "fd-monitor", "FD monitor events");
 
-        (term_support, "term-support", "Terminal feature detection");
+        (TERM_SUPPORT, "term-support", "Terminal feature detection");
 
-        (reader, "reader", "The interactive reader/input system");
-        (reader_render, "reader-render", "Rendering the command line");
-        (complete, "complete", "The completion system");
-        (path, "path", "Searching/using paths");
+        (READER, "reader", "The interactive reader/input system");
+        (READER_RENDER, "reader-render", "Rendering the command line");
+        (COMPLETE, "complete", "The completion system");
+        (PATH, "path", "Searching/using paths");
 
-        (screen, "screen", "Screen repaints");
+        (SCREEN, "screen", "Screen repaints");
 
-        (abbrs, "abbrs", "Abbreviation expansion");
+        (ABBRS, "abbrs", "Abbreviation expansion");
 
-        (refcell, "refcell", "Refcell dynamic borrowing");
-        (autoload, "autoload", "autoloading");
+        (REFCELL, "refcell", "Refcell dynamic borrowing");
+        (AUTOLOAD, "autoload", "autoloading");
     );
 }
 

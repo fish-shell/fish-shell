@@ -67,14 +67,14 @@ impl KqueueNotifier {
         let kq = match nix::sys::event::Kqueue::new() {
             Ok(kq) => kq,
             Err(e) => {
-                FLOGF!(warning, "Failed to create kqueue: {}", e.desc());
+                FLOGF!(WARNING, "Failed to create kqueue: {}", e.desc());
                 return None;
             }
         };
         // Calling kevent with an empty event list causes it to add without watching for events.
         if let Err(e) = kq.kevent(&[change_event], &mut [], None) {
             FLOGF!(
-                warning,
+                WARNING,
                 "Could not register fs watch event with kqueue: {}",
                 e.desc()
             );
@@ -136,7 +136,7 @@ impl UniversalNotifier for KqueueNotifier {
                     if event.flags().contains(EvFlags::EV_ERROR) {
                         // Error encountered processing this changelist item
                         FLOGF!(
-                            warning,
+                            WARNING,
                             "EV_ERROR in kqueue uvar monitor! Errno: {}",
                             event.data()
                         );

@@ -1035,7 +1035,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             }
         }
     } else if argc == 0 {
-        if should_flog!(deprecated_test) {
+        if should_flog!(DEPRECATED_TEST) {
             streams.err.appendln(wgettext_fmt!(
                 "%s: called with no arguments. This will be an error in future.",
                 program_name
@@ -1044,7 +1044,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         }
         return Err(STATUS_INVALID_ARGS); // Per 1003.1, exit false.
     } else if argc == 1 {
-        if should_flog!(deprecated_test) && args[0] != "-z" {
+        if should_flog!(DEPRECATED_TEST) && args[0] != "-z" {
             streams.err.appendln(wgettext_fmt!(
                 "%s: called with one argument. This will return false in future.",
                 program_name

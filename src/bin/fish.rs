@@ -145,13 +145,13 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     let escaped_pathname = escape(dir) + L!("/config.fish");
     if waccess(&config_pathname, libc::R_OK) != 0 {
         FLOGF!(
-            config,
+            CONFIG,
             "not sourcing %s (not readable or does not exist)",
             escaped_pathname
         );
         return false;
     }
-    FLOG!(config, "sourcing", escaped_pathname);
+    FLOG!(CONFIG, "sourcing", escaped_pathname);
 
     let cmd: WString = L!("builtin source ").to_owned() + escaped_pathname.as_utfstr();
 
@@ -435,7 +435,7 @@ fn throwing_main() -> i32 {
     // No-exec is prohibited when in interactive mode.
     if opts.is_interactive_session && opts.no_exec {
         FLOG!(
-            warning,
+            WARNING,
             wgettext!("Can not use the no-execute mode when running an interactive session")
         );
         opts.no_exec = false;
@@ -556,7 +556,7 @@ fn throwing_main() -> i32 {
         // Implicitly interactive mode.
         if opts.no_exec && isatty(libc::STDIN_FILENO) {
             FLOG!(
-                error,
+                ERROR,
                 "no-execute mode enabled and no script given. Exiting"
             );
             // above line should always exit
@@ -572,7 +572,7 @@ fn throwing_main() -> i32 {
         match File::open(path) {
             Err(e) => {
                 FLOGF!(
-                    error,
+                    ERROR,
                     wgettext!("Error reading script file '%s':"),
                     path.to_string_lossy()
                 );
@@ -594,7 +594,7 @@ fn throwing_main() -> i32 {
                 res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
                 if res.is_err() {
                     FLOGF!(
-                        warning,
+                        WARNING,
                         wgettext!("Error while reading file %s\n"),
                         path.to_string_lossy()
                     );

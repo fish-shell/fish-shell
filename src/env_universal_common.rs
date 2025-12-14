@@ -162,15 +162,15 @@ impl EnvUniversal {
             return (false, None);
         }
 
-        FLOG!(uvar_file, "universal log sync");
+        FLOG!(UVAR_FILE, "universal log sync");
         // If we have no changes, just load.
         if self.modified.is_empty() {
             let callbacks = self.load_from_path_narrow();
-            FLOG!(uvar_file, "universal log no modifications");
+            FLOG!(UVAR_FILE, "universal log no modifications");
             return (false, callbacks);
         }
 
-        FLOG!(uvar_file, "universal log performing full sync");
+        FLOG!(UVAR_FILE, "universal log performing full sync");
 
         let rewrite = |old_file: &File,
                        tmp_file: &mut File|
@@ -221,7 +221,7 @@ impl EnvUniversal {
                 }
             }
             Err(e) => {
-                FLOG!(uvar_file, "universal log sync failed:", e);
+                FLOG!(UVAR_FILE, "universal log sync failed:", e);
                 (false, None)
             }
         }
@@ -359,11 +359,11 @@ impl EnvUniversal {
         if self.last_read_file_id != INVALID_FILE_ID
             && file_id_for_path_narrow(&self.narrow_vars_path) == self.last_read_file_id
         {
-            FLOG!(uvar_file, "universal log sync elided based on fast stat()");
+            FLOG!(UVAR_FILE, "universal log sync elided based on fast stat()");
             return None;
         }
 
-        FLOG!(uvar_file, "universal log reading from file");
+        FLOG!(UVAR_FILE, "universal log reading from file");
         match lock_and_load(&self.vars_path, |f, file_id| {
             Ok(self.load_from_file(f, file_id).map(|update| update.data))
         }) {
@@ -388,7 +388,7 @@ impl EnvUniversal {
                 None
             }
             Err(e) => {
-                FLOG!(uvar_file, "Failed to load from universal variable file:", e);
+                FLOG!(UVAR_FILE, "Failed to load from universal variable file:", e);
                 None
             }
         }
@@ -408,7 +408,7 @@ impl EnvUniversal {
         current_file_id: FileId,
     ) -> Option<PotentialUpdate<UniversalReadUpdate>> {
         if current_file_id == self.last_read_file_id {
-            FLOG!(uvar_file, "universal log sync elided based on fstat()");
+            FLOG!(UVAR_FILE, "universal log sync elided based on fstat()");
             None
         } else {
             // Read a variables table from the file.
@@ -546,7 +546,7 @@ impl EnvUniversal {
 
         let mut cursor = msg;
         if !r#match(&mut cursor, f3::SETUVAR) {
-            FLOGF!(warning, PARSE_ERR, msg);
+            FLOGF!(WARNING, PARSE_ERR, msg);
             return;
         }
         // Parse out flags.
@@ -570,7 +570,7 @@ impl EnvUniversal {
 
         // Populate the variable with these flags.
         if !Self::populate_1_variable(cursor, flags, vars, storage) {
-            FLOGF!(warning, PARSE_ERR, msg);
+            FLOGF!(WARNING, PARSE_ERR, msg);
         }
     }
 
@@ -587,12 +587,12 @@ impl EnvUniversal {
             flags |= EnvVarFlags::EXPORT;
         } else if r#match(&mut cursor, f2x::SET) {
         } else {
-            FLOGF!(warning, PARSE_ERR, msg);
+            FLOGF!(WARNING, PARSE_ERR, msg);
             return;
         }
 
         if !Self::populate_1_variable(cursor, flags, vars, storage) {
-            FLOGF!(warning, PARSE_ERR, msg);
+            FLOGF!(WARNING, PARSE_ERR, msg);
         }
     }
 
@@ -604,7 +604,7 @@ impl EnvUniversal {
             .take(u64::try_from(MAX_READ_SIZE).expect("MAX_READ_SIZE must fit into u64"))
             .read_to_end(&mut contents)
         {
-            FLOG!(warning, "Failed to read file:", e);
+            FLOG!(WARNING, "Failed to read file:", e);
         }
 
         // Handle overlong files.
@@ -743,7 +743,7 @@ fn append_file_entry(
 
     // Append variable name like "fish_color_cwd".
     if !valid_var_name(key_in) {
-        FLOGF!(error, "Illegal variable name: '%s'", key_in);
+        FLOGF!(ERROR, "Illegal variable name: '%s'", key_in);
         success = false;
     }
     if success {

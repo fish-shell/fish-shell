@@ -1561,7 +1561,7 @@ pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
         use crate::flog::FLOG;
         if env::var_os("FISH_NO_WSL_CHECK").is_none() {
             FLOG!(
-                error,
+                ERROR,
                 concat!(
                     "This version of WSL has known bugs that prevent fish from working.\n",
                     "Please upgrade to Windows 10 1809 (17763) or higher to use fish!"

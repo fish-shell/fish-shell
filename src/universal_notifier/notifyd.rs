@@ -51,12 +51,12 @@ impl NotifydNotifier {
         };
         if status != NOTIFY_STATUS_OK || notify_fd < 0 {
             FLOGF!(
-                warning,
+                WARNING,
                 "notify_register_file_descriptor() failed with status %u.",
                 status
             );
             FLOG!(
-                warning,
+                WARNING,
                 "Universal variable notifications may not be received."
             );
             return None;
@@ -92,11 +92,11 @@ impl Drop for NotifydNotifier {
 
 impl UniversalNotifier for NotifydNotifier {
     fn post_notification(&self) {
-        FLOG!(uvar_notifier, "posting notification");
+        FLOG!(UVAR_NOTIFIER, "posting notification");
         let status = unsafe { notify_post(self.name.as_ptr()) };
         if status != NOTIFY_STATUS_OK {
             FLOGF!(
-                warning,
+                WARNING,
                 "notify_post() failed with status %u. Uvar notifications may not be sent.",
                 status,
             );
@@ -128,7 +128,7 @@ impl UniversalNotifier for NotifydNotifier {
             }
         }
         FLOGF!(
-            uvar_notifier,
+            UVAR_NOTIFIER,
             "notify fd %s readable",
             if read_something { "was" } else { "was not" },
         );

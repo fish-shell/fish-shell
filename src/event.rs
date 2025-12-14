@@ -500,7 +500,7 @@ fn fire_internal(parser: &Parser, event: &Event) {
         });
 
         FLOG!(
-            event,
+            EVENT,
             "Firing event '",
             event.desc.str_param1().unwrap_or(L!("")),
             "' to handler '",

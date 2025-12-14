@@ -262,7 +262,7 @@ impl EnvStack {
         let cwd = wgetcwd();
         if cwd.is_empty() {
             FLOG!(
-                error,
+                ERROR,
                 wgettext!(
                     "Could not determine current working directory. Is your locale set correctly?"
                 )

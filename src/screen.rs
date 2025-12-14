@@ -303,7 +303,7 @@ impl Screen {
         let screen_height = curr_termsize.height();
         static REPAINTS: AtomicU32 = AtomicU32::new(0);
         FLOGF!(
-            screen,
+            SCREEN,
             "Repaint %u",
             1 + REPAINTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         );
@@ -567,7 +567,7 @@ impl Screen {
         let Some(lines_to_scroll) = self.viewport_y else {
             return;
         };
-        FLOG!(reader, "Pushing to scrollback");
+        FLOG!(READER, "Pushing to scrollback");
         if lines_to_scroll == 0 {
             return;
         }
@@ -581,7 +581,7 @@ impl Screen {
 
     pub fn set_position_in_viewport(&mut self, whence: &str, viewport_y: Option<usize>) {
         FLOGF!(
-            reader,
+            READER,
             "Setting screen y to %s due to %s",
             viewport_y.map_or("<none>".to_string(), |y| format!("{y}")),
             whence,
@@ -597,7 +597,7 @@ impl Screen {
         let remaining_vertical_space = screen_height.saturating_sub(actual_lines);
         if viewport_y > remaining_vertical_space {
             FLOGF!(
-                reader,
+                READER,
                 "printing %u lines at y=%u would exceed window height (%u); \
                      assuming the extra lines have been pushed to scrollback, setting screen y to %d",
                 actual_lines,
@@ -613,7 +613,7 @@ impl Screen {
         let prompt_y = viewport_cursor_y.checked_sub(self.actual.cursor.y);
         prompt_y.unwrap_or_else(|| {
             FLOG!(
-                reader,
+                READER,
                 "Reported cursor line index",
                 viewport_cursor_y,
                 "is above fish's cursor",
@@ -635,7 +635,7 @@ impl Screen {
             .checked_sub(viewport_y)
             .unwrap_or_else(|| {
                 FLOG!(
-                    reader,
+                    READER,
                     "Given y",
                     viewport_position.y,
                     "exceeds the prompt's y",

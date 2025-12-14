@@ -305,7 +305,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
             CharEvent::QueryResult(Timeout) => {
                 let program = get_program_name();
                 FLOG!(
-                    warning,
+                    WARNING,
                     wgettext_fmt!(
                         "%s could not read response to Primary Device Attribute query after waiting for %d seconds. \
                          This is often due to a missing feature in your terminal. \
@@ -336,7 +336,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
     assert!(input_data.input_function_args.is_empty());
     assert!(input_data.event_storage.is_empty());
     FLOGF!(
-        reader,
+        READER,
         "Returning %u pending input events",
         input_data.queue.len()
     );
@@ -912,7 +912,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
         Ok(md) => md,
         Err(err) => {
             FLOG!(
-                error,
+                ERROR,
                 wgettext_fmt!("Unable to read input file: %s", err.to_string())
             );
             return Err(STATUS_CMD_ERROR);
@@ -924,7 +924,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     // This can be seen e.g. with node's "spawn" api.
     if fd != STDIN_FILENO && md.is_dir() {
         FLOG!(
-            error,
+            ERROR,
             wgettext_fmt!("Unable to read input file: %s", Errno(EISDIR).to_string())
         );
         return Err(STATUS_CMD_ERROR);
@@ -954,7 +954,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
                 } else {
                     // Fatal error.
                     FLOG!(
-                        error,
+                        ERROR,
                         wgettext_fmt!("Unable to read input file: %s", err.to_string())
                     );
                     return Err(STATUS_CMD_ERROR);
@@ -1603,7 +1603,7 @@ impl ReaderData {
 
     pub fn mouse_left_click(&mut self, click_position: ViewportPosition) {
         FLOGF!(
-            reader,
+            READER,
             "Received left mouse click at %u",
             format!("{:?}", click_position),
         );
@@ -1711,7 +1711,7 @@ impl<'a> Reader<'a> {
         // The pager is the problem child, it has its own update logic.
         let check = |val: bool, reason: &str| {
             if val {
-                FLOG!(reader_render, "repaint needed because", reason, "change");
+                FLOG!(READER_RENDER, "repaint needed because", reason, "change");
             }
             val
         };
@@ -1792,7 +1792,7 @@ impl<'a> Reader<'a> {
     /// Paint the last rendered layout.
     /// `reason` is used in FLOG to explain why.
     fn paint_layout(&mut self, reason: &wstr, is_final_rendering: bool) {
-        FLOGF!(reader_render, "Repainting from %s", reason);
+        FLOGF!(READER_RENDER, "Repainting from %s", reason);
         let cmd_line = &self.data.command_line;
 
         let (full_line, autosuggested_range) = if self.conf.in_silent_mode {
@@ -2671,7 +2671,7 @@ impl<'a> Reader<'a> {
                         self.save_screen_state();
                     }
                     MouseLeft(position) => {
-                        FLOG!(reader, "Mouse left click", position);
+                        FLOG!(READER, "Mouse left click", position);
                         self.mouse_left_click(position);
                     }
                     NewColorTheme => {
@@ -2681,7 +2681,7 @@ impl<'a> Reader<'a> {
                         });
                     }
                     NewWindowHeight => {
-                        FLOG!(reader, "Handling window height change");
+                        FLOG!(READER, "Handling window height change");
                         self.query(RecurrentQuery {
                             cursor_position: Some(CursorPositionQuery::new(
                                 CursorPositionQueryReason::WindowHeightChange,
@@ -2761,11 +2761,11 @@ impl<'a> Reader<'a> {
 }
 
 fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
-    if should_flog!(reader) {
+    if should_flog!(READER) {
         let mut tmp = Vec::<u8>::new();
         tmp.write_command(QueryXtgettcap(cap));
         FLOG!(
-            reader,
+            READER,
             format!("Sending XTGETTCAP request for {}: {:?}", cap, tmp)
         );
     }
@@ -4461,7 +4461,7 @@ fn term_donate(quiet: bool /* = false */) {
         if errno().0 != EINTR {
             if !quiet {
                 FLOG!(
-                    warning,
+                    WARNING,
                     wgettext!("Could not set terminal mode for new job")
                 );
                 perror("tcsetattr");
@@ -4505,7 +4505,7 @@ pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
     if !ok {
         perror("tcsetattr");
         FLOG!(
-            warning,
+            WARNING,
             wgettext_fmt!("Failed to set terminal mode (%s)", whence)
         );
     }
@@ -4600,7 +4600,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             }
             // No TTY, cannot be interactive?
             FLOG!(
-                warning,
+                WARNING,
                 wgettext!("No TTY for interactive shell (tcgetpgrp failed)")
             );
             perror("setpgid");
@@ -4613,7 +4613,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
                 // We're orphaned, so we just die. Another sad statistic.
                 let pid = getpid();
                 FLOG!(
-                    warning,
+                    WARNING,
                     sprintf!(
                         "I appear to be an orphaned process, so I am quitting politely. My pid is %d.",
                         pid
@@ -4656,7 +4656,7 @@ fn reader_interactive_init() {
             // This should be harmless, so we ignore it.
             if errno().0 != EPERM {
                 FLOG!(
-                    error,
+                    ERROR,
                     wgettext!("Failed to assign shell to its own process group")
                 );
                 perror("setpgid");
@@ -4666,7 +4666,7 @@ fn reader_interactive_init() {
 
         // Take control of the terminal
         if unsafe { libc::tcsetpgrp(STDIN_FILENO, shell_pgid) } == -1 {
-            FLOG!(error, wgettext!("Failed to take control of the terminal"));
+            FLOG!(ERROR, wgettext!("Failed to take control of the terminal"));
             perror("tcsetpgrp");
             exit_without_destructors(1);
         }
@@ -5163,7 +5163,7 @@ impl<'a> Reader<'a> {
         for to_load in &result.needs_load {
             if complete_load(to_load, self.parser) {
                 FLOGF!(
-                    complete,
+                    COMPLETE,
                     "Autosuggest found new completions for %s, restarting",
                     to_load
                 );
@@ -5216,7 +5216,7 @@ impl<'a> Reader<'a> {
         self.data.in_flight_autosuggest_request = el.text().to_owned();
 
         // Clear the autosuggestion and kick it off in the background.
-        FLOG!(reader_render, "Autosuggesting");
+        FLOG!(READER_RENDER, "Autosuggesting");
         self.data.autosuggestion.clear();
         let performer = get_autosuggestion_performer(
             self.parser,
@@ -5387,7 +5387,7 @@ impl<'a> Reader<'a> {
         }
         self.in_flight_highlight_request = self.command_line.text().to_owned();
 
-        FLOG!(reader_render, "Highlighting");
+        FLOG!(READER_RENDER, "Highlighting");
         let highlight_performer =
             get_highlight_performer(self.parser, &self.command_line, /*io_ok=*/ true);
         self.debouncers.highlight.perform(highlight_performer);
@@ -5619,7 +5619,7 @@ fn expand_replacer(
     if !repl.is_function {
         // Literal replacement cannot fail.
         FLOGF!(
-            abbrs,
+            ABBRS,
             "Expanded literal abbreviation <%s> -> <%s>",
             token,
             &repl.replacement
@@ -5652,7 +5652,7 @@ fn expand_replacer(
     }
     let result = join_strings(&outputs, '\n');
     FLOGF!(
-        abbrs,
+        ABBRS,
         "Expanded function abbreviation <%s> -> <%s>",
         token,
         result

@@ -248,7 +248,7 @@ impl<'a> ExecutionContext<'a> {
     ) -> EndExecutionReason {
         if !ctx.check_cancel() {
             if error_list.is_empty() {
-                FLOG!(error, "Error reported but no error text found.");
+                FLOG!(ERROR, "Error reported but no error text found.");
             }
 
             // Get a backtrace.
@@ -1944,7 +1944,7 @@ fn profiling_cmd_name_for_redirectable_block(
 /// Get a redirection from stderr to stdout (i.e. 2>&1).
 fn get_stderr_merge() -> RedirectionSpec {
     let stdout_fileno_str = L!("1").to_owned();
-    RedirectionSpec::new(STDERR_FILENO, RedirectionMode::fd, stdout_fileno_str)
+    RedirectionSpec::new(STDERR_FILENO, RedirectionMode::Fd, stdout_fileno_str)
 }
 
 /// Decide if a job node should be 'time'd.

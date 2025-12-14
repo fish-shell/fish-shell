@@ -428,7 +428,7 @@ impl TopicMonitor {
             if changed_topic_bits & topic_to_bit(topic) != 0 {
                 data.current.set(topic, data.current.get(topic) + 1);
                 FLOG!(
-                    topic_monitor,
+                    TOPIC_MONITOR,
                     "Updating topic",
                     topic,
                     "to",

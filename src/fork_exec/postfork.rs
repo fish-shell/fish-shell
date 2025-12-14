@@ -48,7 +48,7 @@ pub(crate) fn report_setpgid_error(
     let cur_group = unsafe { libc::getpgid(pid) };
 
     FLOG_SAFE!(
-        warning,
+        WARNING,
         "Could not send ",
         if is_parent { "child" } else { "self" },
         " ",
@@ -66,11 +66,11 @@ pub(crate) fn report_setpgid_error(
     );
 
     match err {
-        libc::EACCES => FLOG_SAFE!(error, "setpgid: Process ", pid, " has already exec'd"),
-        libc::EINVAL => FLOG_SAFE!(error, "setpgid: pgid ", cur_group, " unsupported"),
+        libc::EACCES => FLOG_SAFE!(ERROR, "setpgid: Process ", pid, " has already exec'd"),
+        libc::EINVAL => FLOG_SAFE!(ERROR, "setpgid: pgid ", cur_group, " unsupported"),
         libc::EPERM => {
             FLOG_SAFE!(
-                error,
+                ERROR,
                 "setpgid: Process ",
                 pid,
                 " is a session leader or pgid ",
@@ -78,8 +78,8 @@ pub(crate) fn report_setpgid_error(
                 " does not match"
             );
         }
-        libc::ESRCH => FLOG_SAFE!(error, "setpgid: Process ID ", pid, " does not match"),
-        _ => FLOG_SAFE!(error, "setpgid: Unknown error number ", err),
+        libc::ESRCH => FLOG_SAFE!(ERROR, "setpgid: Process ID ", pid, " does not match"),
+        _ => FLOG_SAFE!(ERROR, "setpgid: Unknown error number ", err),
     }
 }
 
@@ -108,7 +108,7 @@ pub fn execute_setpgid(pid: libc::pid_t, pgroup: libc::pid_t, is_parent: bool) -
             // the case in fish, anywhere) or to change the process group ID of a session
             // leader (again, can never be the case). I'm pretty sure this is a WSL bug, as
             // we see the same with tcsetpgrp(2) in other places and it disappears on retry.
-            FLOG_SAFE!(proc_pgroup, "setpgid(2) returned EPERM. Retrying");
+            FLOG_SAFE!(PROC_PGROUP, "setpgid(2) returned EPERM. Retrying");
             continue;
         }
 
@@ -153,7 +153,7 @@ pub fn child_setup_process(
         if err < 0 {
             if is_forked {
                 FLOG_SAFE!(
-                    warning,
+                    WARNING,
                     "failed to set up file descriptors in child_setup_process"
                 );
                 exit_without_destructors(1);
@@ -212,15 +212,15 @@ pub fn execute_fork() -> pid_t {
     match err {
         libc::EAGAIN => {
             FLOG_SAFE!(
-                error,
+                ERROR,
                 "fork: Out of resources. Check RLIMIT_NPROC and pid_max."
             );
         }
         libc::ENOMEM => {
-            FLOG_SAFE!(error, "fork: Out of memory.");
+            FLOG_SAFE!(ERROR, "fork: Out of memory.");
         }
         _ => {
-            FLOG_SAFE!(error, "fork: Unknown error number", err);
+            FLOG_SAFE!(ERROR, "fork: Unknown error number", err);
         }
     }
     exit_without_destructors(1)
@@ -242,7 +242,7 @@ pub(crate) fn safe_report_exec_error(
                 let arg_max = arg_max as usize;
                 if sz >= arg_max {
                     FLOG_SAFE!(
-                        exec,
+                        EXEC,
                         "Failed to execute process '",
                         actual_cmd,
                         "': the total size of the argument list and exported variables (",
@@ -256,7 +256,7 @@ pub(crate) fn safe_report_exec_error(
                     // defined in binfmts.h, but we don't want to include that just to be able to
                     // print the real limit.
                     FLOG_SAFE!(
-                        exec,
+                        EXEC,
                         "Failed to execute process '",
                         actual_cmd,
                         "': An argument or exported variable exceeds the OS argument length limit."
@@ -265,14 +265,14 @@ pub(crate) fn safe_report_exec_error(
 
                 if szenv >= arg_max / 2 {
                     FLOG_SAFE!(
-                        exec,
+                        EXEC,
                         "Hint: Your exported variables take up over half the limit. Try \
                          erasing or unexporting variables."
                     );
                 }
             } else {
                 FLOG_SAFE!(
-                    exec,
+                    EXEC,
                     "Failed to execute process '",
                     actual_cmd,
                     "': the total size of the argument list and exported variables (",
@@ -284,7 +284,7 @@ pub(crate) fn safe_report_exec_error(
 
         libc::ENOEXEC => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process: '",
                 actual_cmd,
                 "' the file could not be run by the operating system."
@@ -294,14 +294,14 @@ pub(crate) fn safe_report_exec_error(
                 // Paths ending in ".fish" need to start with a shebang
                 if actual_cmd.to_bytes().ends_with(b".fish") {
                     FLOG_SAFE!(
-                        exec,
+                        EXEC,
                         "fish scripts require an interpreter directive (must \
                          start with '#!/path/to/fish')."
                     );
                 } else {
                     // If the shebang line exists, we would get an ENOENT or similar instead,
                     // so I don't know how to reach this.
-                    FLOG_SAFE!(exec, "Maybe the interpreter directive (#! line) is broken?");
+                    FLOG_SAFE!(EXEC, "Maybe the interpreter directive (#! line) is broken?");
                 }
             }
         }
@@ -324,14 +324,14 @@ pub(crate) fn safe_report_exec_error(
                     let interpreter = interpreter.to_bytes();
                     if interpreter.last() == Some(&b'\r') {
                         FLOG_SAFE!(
-                            exec,
+                            EXEC,
                             "Failed to execute process '",
                             actual_cmd,
                             "':  The file uses Windows line endings (\\r\\n). Run dos2unix or similar to fix it."
                         );
                     } else {
                         FLOG_SAFE!(
-                            exec,
+                            EXEC,
                             "Failed to execute process '",
                             actual_cmd,
                             "': The file specified the interpreter '",
@@ -348,7 +348,7 @@ pub(crate) fn safe_report_exec_error(
                     } else if metadata.mode() & u32::from(libc::S_IFMT) == u32::from(libc::S_IFDIR)
                     {
                         FLOG_SAFE!(
-                            exec,
+                            EXEC,
                             "Failed to execute process '",
                             actual_cmd,
                             "': The file specified the interpreter '",
@@ -361,21 +361,21 @@ pub(crate) fn safe_report_exec_error(
                 }
             } else if unsafe { libc::access(actual_cmd.as_ptr(), libc::X_OK) } == 0 {
                 FLOG_SAFE!(
-                    exec,
+                    EXEC,
                     "Failed to execute process '",
                     actual_cmd,
                     "': The file exists and is executable. Check the interpreter or linker?"
                 );
             } else if err == libc::ENOENT {
                 FLOG_SAFE!(
-                    exec,
+                    EXEC,
                     "Failed to execute process '",
                     actual_cmd,
                     "': The file does not exist or could not be executed."
                 );
             } else {
                 FLOG_SAFE!(
-                    exec,
+                    EXEC,
                     "Failed to execute process '",
                     actual_cmd,
                     "': The file could not be accessed."
@@ -384,12 +384,12 @@ pub(crate) fn safe_report_exec_error(
         }
 
         libc::ENOMEM => {
-            FLOG_SAFE!(exec, "Out of memory");
+            FLOG_SAFE!(EXEC, "Out of memory");
         }
 
         libc::ETXTBSY => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': File is currently open for writing.",
@@ -398,7 +398,7 @@ pub(crate) fn safe_report_exec_error(
 
         libc::ELOOP => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': Too many layers of symbolic links. Maybe a loop?"
@@ -407,7 +407,7 @@ pub(crate) fn safe_report_exec_error(
 
         libc::EINVAL => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': Unsupported format."
@@ -415,7 +415,7 @@ pub(crate) fn safe_report_exec_error(
         }
         libc::EISDIR => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': File is a directory."
@@ -423,7 +423,7 @@ pub(crate) fn safe_report_exec_error(
         }
         libc::ENOTDIR => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': A path component is not a directory."
@@ -432,7 +432,7 @@ pub(crate) fn safe_report_exec_error(
 
         libc::EMFILE => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': Too many open files in this process."
@@ -440,7 +440,7 @@ pub(crate) fn safe_report_exec_error(
         }
         libc::ENFILE => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': Too many open files on the system."
@@ -448,7 +448,7 @@ pub(crate) fn safe_report_exec_error(
         }
         libc::ENAMETOOLONG => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': Name is too long."
@@ -456,7 +456,7 @@ pub(crate) fn safe_report_exec_error(
         }
         libc::EPERM => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': No permission. \
@@ -467,7 +467,7 @@ pub(crate) fn safe_report_exec_error(
         #[cfg(apple)]
         libc::EBADARCH => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "': Bad CPU type in executable."
@@ -476,7 +476,7 @@ pub(crate) fn safe_report_exec_error(
 
         err => {
             FLOG_SAFE!(
-                exec,
+                EXEC,
                 "Failed to execute process '",
                 actual_cmd,
                 "', unknown error number ",

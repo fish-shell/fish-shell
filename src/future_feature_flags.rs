@@ -12,33 +12,33 @@ use std::cell::RefCell;
 #[derive(Clone, Copy)]
 pub enum FeatureFlag {
     /// Whether ^ is supported for stderr redirection.
-    stderr_nocaret,
+    StderrNoCaret,
 
     /// Whether ? is supported as a glob.
-    qmark_noglob,
+    QuestionMarkNoGlob,
 
     /// Whether string replace -r double-unescapes the replacement.
-    string_replace_backslash,
+    StringReplaceBackslash,
 
     /// Whether "&" is not-special if followed by a word character.
-    ampersand_nobg_in_token,
+    AmpersandNoBgInToken,
     /// Whether "%self" is expanded to fish's pid
-    remove_percent_self,
+    RemovePercentSelf,
 
     /// Remove `test`'s one and zero arg mode (make `test -n` return false etc)
-    test_require_arg,
+    TestRequireArg,
 
     /// Whether to write OSC 133 prompt markers
-    mark_prompt,
+    MarkPrompt,
 
     /// Do not look up $TERM in terminfo database.
-    ignore_terminfo,
+    IgnoreTerminfo,
 
     /// Whether we are allowed to query the TTY for extra information.
-    query_term,
+    QueryTerm,
 
     /// Do not try to work around incompatible terminal.
-    omit_term_workarounds,
+    OmitTermWorkarounds,
 }
 
 struct Features {
@@ -72,7 +72,7 @@ pub struct FeatureMetadata {
 /// The metadata, indexed by flag.
 pub const METADATA: &[FeatureMetadata] = &[
     FeatureMetadata {
-        flag: FeatureFlag::stderr_nocaret,
+        flag: FeatureFlag::StderrNoCaret,
         name: L!("stderr-nocaret"),
         groups: L!("3.0"),
         description: L!("^ no longer redirects stderr (historical, can no longer be changed)"),
@@ -80,7 +80,7 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: true,
     },
     FeatureMetadata {
-        flag: FeatureFlag::qmark_noglob,
+        flag: FeatureFlag::QuestionMarkNoGlob,
         name: L!("qmark-noglob"),
         groups: L!("3.0"),
         description: L!("? no longer globs"),
@@ -88,7 +88,7 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: false,
     },
     FeatureMetadata {
-        flag: FeatureFlag::string_replace_backslash,
+        flag: FeatureFlag::StringReplaceBackslash,
         name: L!("regex-easyesc"),
         groups: L!("3.1"),
         description: L!("string replace -r needs fewer \\'s"),
@@ -96,7 +96,7 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: false,
     },
     FeatureMetadata {
-        flag: FeatureFlag::ampersand_nobg_in_token,
+        flag: FeatureFlag::AmpersandNoBgInToken,
         name: L!("ampersand-nobg-in-token"),
         groups: L!("3.4"),
         description: L!("& only backgrounds if followed by a separator"),
@@ -104,7 +104,7 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: false,
     },
     FeatureMetadata {
-        flag: FeatureFlag::remove_percent_self,
+        flag: FeatureFlag::RemovePercentSelf,
         name: L!("remove-percent-self"),
         groups: L!("4.0"),
         description: L!("%self is no longer expanded (use $fish_pid)"),
@@ -112,7 +112,7 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: false,
     },
     FeatureMetadata {
-        flag: FeatureFlag::test_require_arg,
+        flag: FeatureFlag::TestRequireArg,
         name: L!("test-require-arg"),
         groups: L!("4.0"),
         description: L!("builtin test requires an argument"),
@@ -120,7 +120,7 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: false,
     },
     FeatureMetadata {
-        flag: FeatureFlag::mark_prompt,
+        flag: FeatureFlag::MarkPrompt,
         name: L!("mark-prompt"),
         groups: L!("4.0"),
         description: L!("write OSC 133 prompt markers to the terminal"),
@@ -128,7 +128,7 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: false,
     },
     FeatureMetadata {
-        flag: FeatureFlag::ignore_terminfo,
+        flag: FeatureFlag::IgnoreTerminfo,
         name: L!("ignore-terminfo"),
         groups: L!("4.1"),
         description: L!("do not look up $TERM in terminfo database"),
@@ -136,7 +136,7 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: false,
     },
     FeatureMetadata {
-        flag: FeatureFlag::query_term,
+        flag: FeatureFlag::QueryTerm,
         name: L!("query-term"),
         groups: L!("4.1"),
         description: L!("query the TTY to enable extra functionality"),
@@ -144,7 +144,7 @@ pub const METADATA: &[FeatureMetadata] = &[
         read_only: false,
     },
     FeatureMetadata {
-        flag: FeatureFlag::omit_term_workarounds,
+        flag: FeatureFlag::OmitTermWorkarounds,
         name: L!("omit-term-workarounds"),
         groups: L!("4.3"),
         description: L!("skip workarounds for incompatible terminals"),
@@ -294,9 +294,9 @@ mod tests {
     fn test_feature_flags() {
         let f = Features::new();
         f.set_from_string(L!("stderr-nocaret,nonsense"));
-        assert!(f.test(FeatureFlag::stderr_nocaret));
+        assert!(f.test(FeatureFlag::StderrNoCaret));
         f.set_from_string(L!("stderr-nocaret,no-stderr-nocaret,nonsense"));
-        assert!(f.test(FeatureFlag::stderr_nocaret));
+        assert!(f.test(FeatureFlag::StderrNoCaret));
 
         // Ensure every metadata is represented once.
         let mut counts: [usize; METADATA.len()] = [0; METADATA.len()];
@@ -308,31 +308,31 @@ mod tests {
         }
 
         assert_eq!(
-            METADATA[FeatureFlag::stderr_nocaret as usize].name,
+            METADATA[FeatureFlag::StderrNoCaret as usize].name,
             L!("stderr-nocaret")
         );
     }
 
     #[test]
     fn test_scoped() {
-        scoped_test(FeatureFlag::qmark_noglob, true, || {
-            assert!(test(FeatureFlag::qmark_noglob));
+        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
+            assert!(test(FeatureFlag::QuestionMarkNoGlob));
         });
 
-        set(FeatureFlag::qmark_noglob, true);
+        set(FeatureFlag::QuestionMarkNoGlob, true);
 
-        scoped_test(FeatureFlag::qmark_noglob, false, || {
-            assert!(!test(FeatureFlag::qmark_noglob));
+        scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {
+            assert!(!test(FeatureFlag::QuestionMarkNoGlob));
         });
 
-        set(FeatureFlag::qmark_noglob, false);
+        set(FeatureFlag::QuestionMarkNoGlob, false);
     }
 
     #[test]
     #[should_panic]
     fn test_nested_scopes_not_supported() {
-        scoped_test(FeatureFlag::qmark_noglob, true, || {
-            scoped_test(FeatureFlag::qmark_noglob, false, || {});
+        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
+            scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {});
         });
     }
 }

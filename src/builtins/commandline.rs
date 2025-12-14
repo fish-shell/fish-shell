@@ -220,11 +220,11 @@ fn write_part(
                 break;
             }
             let is_redirection_target = in_redirection;
-            in_redirection = token.type_ == TokenType::redirect;
-            if is_redirection_target && token.type_ == TokenType::string {
+            in_redirection = token.type_ == TokenType::Redirect;
+            if is_redirection_target && token.type_ == TokenType::String {
                 continue;
             }
-            if token.type_ != TokenType::string {
+            if token.type_ != TokenType::String {
                 continue;
             }
 

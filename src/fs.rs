@@ -114,7 +114,7 @@ impl LockedFile {
     pub fn new(locking_mode: LockingMode, file_path: &wstr) -> std::io::Result<Self> {
         let dir_path = wdirname(file_path);
 
-        if path_remoteness(dir_path) == DirRemoteness::remote {
+        if path_remoteness(dir_path) == DirRemoteness::Remote {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Unsupported,
                 "Directory considered remote. Locking is disabled on remote file systems.",

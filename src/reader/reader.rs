@@ -239,7 +239,7 @@ fn redirect_tty_after_sighup() {
 }
 
 fn querying_allowed(vars: &dyn Environment) -> bool {
-    future_feature_flags::test(FeatureFlag::query_term)
+    future_feature_flags::test(FeatureFlag::QueryTerm)
         && !is_dumb()
         && {
             // TODO(term-workaround)
@@ -4122,7 +4122,7 @@ impl<'a> Reader<'a> {
 
         let cmdsubst_range = parse_util_cmdsubst_extent(&buffer, pos);
         for token in Tokenizer::new(&buffer[cmdsubst_range.clone()], TOK_ACCEPT_UNFINISHED) {
-            if token.type_ != TokenType::string {
+            if token.type_ != TokenType::String {
                 continue;
             }
             let tok_end = cmdsubst_range.start + token.end();
@@ -4138,7 +4138,7 @@ impl<'a> Reader<'a> {
 fn text_ends_in_comment(text: &wstr) -> bool {
     Tokenizer::new(text, TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS)
         .last()
-        .is_some_and(|token| token.type_ == TokenType::comment)
+        .is_some_and(|token| token.type_ == TokenType::Comment)
 }
 
 impl<'a> Reader<'a> {

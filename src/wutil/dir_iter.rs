@@ -18,14 +18,14 @@ use std::rc::Rc;
 /// Types of files that may be in a directory.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DirEntryType {
-    fifo = 1, // FIFO file
-    chr,      // character device
-    dir,      // directory
-    blk,      // block device
-    reg,      // regular file
-    lnk,      // symlink
-    sock,     // socket
-    whiteout, // whiteout (from BSD)
+    Fifo = 1, // FIFO file
+    Chr,      // character device
+    Dir,      // directory
+    Blk,      // block device
+    Reg,      // regular file
+    Lnk,      // symlink
+    Sock,     // socket
+    Whiteout, // whiteout (from BSD)
 }
 
 /// An entry returned by DirIter.
@@ -72,7 +72,7 @@ impl DirEntry {
 
     /// Return whether this is a directory. This may call stat().
     pub fn is_dir(&self) -> bool {
-        self.check_type() == Some(DirEntryType::dir)
+        self.check_type() == Some(DirEntryType::Dir)
     }
 
     /// Return false if we know this can't be a link via d_type, true if it could be.
@@ -119,7 +119,7 @@ impl DirEntry {
         } else {
             match errno::errno().0 {
                 ELOOP => {
-                    self.typ.set(Some(DirEntryType::lnk));
+                    self.typ.set(Some(DirEntryType::Lnk));
                 }
                 EACCES | EIO | ENOENT | ENOTDIR | ENAMETOOLONG | ENODEV => {
                     // These are "expected" errors.
@@ -140,13 +140,13 @@ impl DirEntry {
 
 fn dirent_type_to_entry_type(dt: u8) -> Option<DirEntryType> {
     match dt {
-        DT_FIFO => Some(DirEntryType::fifo),
-        DT_CHR => Some(DirEntryType::chr),
-        DT_DIR => Some(DirEntryType::dir),
-        DT_BLK => Some(DirEntryType::blk),
-        DT_REG => Some(DirEntryType::reg),
-        DT_LNK => Some(DirEntryType::lnk),
-        DT_SOCK => Some(DirEntryType::sock),
+        DT_FIFO => Some(DirEntryType::Fifo),
+        DT_CHR => Some(DirEntryType::Chr),
+        DT_DIR => Some(DirEntryType::Dir),
+        DT_BLK => Some(DirEntryType::Blk),
+        DT_REG => Some(DirEntryType::Reg),
+        DT_LNK => Some(DirEntryType::Lnk),
+        DT_SOCK => Some(DirEntryType::Sock),
         // todo!("whiteout")
         _ => None,
     }
@@ -154,13 +154,13 @@ fn dirent_type_to_entry_type(dt: u8) -> Option<DirEntryType> {
 
 fn stat_mode_to_entry_type(m: libc::mode_t) -> Option<DirEntryType> {
     match m & S_IFMT {
-        S_IFIFO => Some(DirEntryType::fifo),
-        S_IFCHR => Some(DirEntryType::chr),
-        S_IFDIR => Some(DirEntryType::dir),
-        S_IFBLK => Some(DirEntryType::blk),
-        S_IFREG => Some(DirEntryType::reg),
-        S_IFLNK => Some(DirEntryType::lnk),
-        S_IFSOCK => Some(DirEntryType::sock),
+        S_IFIFO => Some(DirEntryType::Fifo),
+        S_IFCHR => Some(DirEntryType::Chr),
+        S_IFDIR => Some(DirEntryType::Dir),
+        S_IFBLK => Some(DirEntryType::Blk),
+        S_IFREG => Some(DirEntryType::Reg),
+        S_IFLNK => Some(DirEntryType::Lnk),
+        S_IFSOCK => Some(DirEntryType::Sock),
         _ => {
             // todo!("whiteout")
             None
@@ -294,11 +294,11 @@ impl DirIter {
         );
         let typ = dirent_type_to_entry_type(dent.d_type);
         // Do not store symlinks as we will need to resolve them.
-        if typ != Some(DirEntryType::lnk) {
+        if typ != Some(DirEntryType::Lnk) {
             self.entry.typ.set(typ);
         }
         // This entry could be a link if it is a link or unknown.
-        self.entry.possible_link = typ.map(|t| t == DirEntryType::lnk);
+        self.entry.possible_link = typ.map(|t| t == DirEntryType::Lnk);
 
         Some(Ok(&self.entry))
     }
@@ -441,19 +441,19 @@ mod tests {
             assert!(names.iter().any(|&n| entry.name == n));
 
             let expected = if entry.name == dirname {
-                Some(DirEntryType::dir)
+                Some(DirEntryType::Dir)
             } else if entry.name == regname {
-                Some(DirEntryType::reg)
+                Some(DirEntryType::Reg)
             } else if entry.name == reglinkname {
-                Some(DirEntryType::reg)
+                Some(DirEntryType::Reg)
             } else if entry.name == dirlinkname {
-                Some(DirEntryType::dir)
+                Some(DirEntryType::Dir)
             } else if entry.name == badlinkname {
                 None
             } else if entry.name == selflinkname {
-                Some(DirEntryType::lnk)
+                Some(DirEntryType::Lnk)
             } else if entry.name == fifoname {
-                Some(DirEntryType::fifo)
+                Some(DirEntryType::Fifo)
             } else {
                 panic!("Unexpected file type");
             };

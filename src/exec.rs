@@ -790,21 +790,21 @@ fn create_output_stream_for_builtin(
         return OutputStream::Fd(FdOutputStream::new(fd));
     };
     match io.io_mode() {
-        IoMode::bufferfill => {
+        IoMode::BufferFill => {
             // Our IO redirection is to an internal buffer, e.g. a command substitution.
             // We will write directly to it.
             let buffer = io.as_bufferfill().unwrap().buffer();
             OutputStream::Buffered(BufferedOutputStream::new(buffer.clone()))
         }
-        IoMode::close => {
+        IoMode::Close => {
             // Like 'echo foo >&-'
             OutputStream::Null
         }
-        IoMode::file => {
+        IoMode::File => {
             // Output is to a file which has been opened.
             OutputStream::Fd(FdOutputStream::new(io.source_fd()))
         }
-        IoMode::pipe => {
+        IoMode::Pipe => {
             // Output is to a pipe. We may need to buffer.
             if piped_output_needs_buffering {
                 OutputStream::String(StringOutputStream::new())
@@ -812,7 +812,7 @@ fn create_output_stream_for_builtin(
                 OutputStream::Fd(FdOutputStream::new(io.source_fd()))
             }
         }
-        IoMode::fd => {
+        IoMode::Fd => {
             // This is a case like 'echo foo >&5'
             // It's uncommon and unclear what should happen.
             OutputStream::String(StringOutputStream::new())
@@ -1158,7 +1158,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
                 // which is internal to fish. We still respect this redirection in
                 // that we pass it on as a block IO to the code that source runs,
                 // and therefore this is not an error.
-                let ignore_redirect = inp.io_mode() == IoMode::fd && inp.source_fd() >= 3;
+                let ignore_redirect = inp.io_mode() == IoMode::Fd && inp.source_fd() >= 3;
                 if !ignore_redirect {
                     local_builtin_stdin = inp.source_fd();
                 }
@@ -1171,8 +1171,8 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
             streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
             streams.out_is_redirected = out_io.is_some();
             streams.err_is_redirected = err_io.is_some();
-            streams.out_is_piped = out_io.is_some_and(|io| io.io_mode() == IoMode::pipe);
-            streams.err_is_piped = err_io.is_some_and(|io| io.io_mode() == IoMode::pipe);
+            streams.out_is_piped = out_io.is_some_and(|io| io.io_mode() == IoMode::Pipe);
+            streams.err_is_piped = err_io.is_some_and(|io| io.io_mode() == IoMode::Pipe);
 
             // Disallow nul bytes in the arguments, as they are not allowed in builtins.
             let mut shim_argv: Vec<&wstr> =

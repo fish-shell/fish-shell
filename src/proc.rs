@@ -252,7 +252,7 @@ impl InternalProc {
     /// Mark this process as having exited with the given `status`.
     pub fn mark_exited(&self, status: ProcStatus) {
         self.status.set(status).expect("Status already set");
-        topic_monitor_principal().post(Topic::internal_exit);
+        topic_monitor_principal().post(Topic::InternalExit);
         FLOG!(
             proc_internal_proc,
             "Internal proc",
@@ -1191,13 +1191,13 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
 
             if proc.has_pid() {
                 // Reaps with a pid.
-                reapgens.set_min_from(Topic::sigchld, &proc.gens);
-                reapgens.set_min_from(Topic::sighupint, &proc.gens);
+                reapgens.set_min_from(Topic::SigChld, &proc.gens);
+                reapgens.set_min_from(Topic::SigHupInt, &proc.gens);
             }
             if proc.internal_proc.borrow().is_some() {
                 // Reaps with an internal process.
-                reapgens.set_min_from(Topic::internal_exit, &proc.gens);
-                reapgens.set_min_from(Topic::sighupint, &proc.gens);
+                reapgens.set_min_from(Topic::InternalExit, &proc.gens);
+                reapgens.set_min_from(Topic::SigHupInt, &proc.gens);
             }
         }
     }

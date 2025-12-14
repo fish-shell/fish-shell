@@ -714,7 +714,7 @@ impl Parser {
             EvalRes::new(ProcStatus::from_signal(Signal::new(sig)))
         } else {
             let status = ProcStatus::from_exit_code(self.get_last_status());
-            let break_expand = reason == EndExecutionReason::error;
+            let break_expand = reason == EndExecutionReason::Error;
             EvalRes {
                 status,
                 break_expand,
@@ -1901,53 +1901,53 @@ mod tests {
             };
         }
 
-        validate!("echo hello", "echo", "hello", StatementDecoration::none);
+        validate!("echo hello", "echo", "hello", StatementDecoration::None);
         validate!(
             "command echo hello",
             "echo",
             "hello",
-            StatementDecoration::command
+            StatementDecoration::Command
         );
         validate!(
             "exec echo hello",
             "echo",
             "hello",
-            StatementDecoration::exec
+            StatementDecoration::Exec
         );
         validate!(
             "command command hello",
             "command",
             "hello",
-            StatementDecoration::command
+            StatementDecoration::Command
         );
         validate!(
             "builtin command hello",
             "command",
             "hello",
-            StatementDecoration::builtin
+            StatementDecoration::Builtin
         );
         validate!(
             "command --help",
             "command",
             "--help",
-            StatementDecoration::none
+            StatementDecoration::None
         );
-        validate!("command -h", "command", "-h", StatementDecoration::none);
-        validate!("command", "command", "", StatementDecoration::none);
-        validate!("command -", "command", "-", StatementDecoration::none);
-        validate!("command --", "command", "--", StatementDecoration::none);
+        validate!("command -h", "command", "-h", StatementDecoration::None);
+        validate!("command", "command", "", StatementDecoration::None);
+        validate!("command -", "command", "-", StatementDecoration::None);
+        validate!("command --", "command", "--", StatementDecoration::None);
         validate!(
             "builtin --names",
             "builtin",
             "--names",
-            StatementDecoration::none
+            StatementDecoration::None
         );
-        validate!("function", "function", "", StatementDecoration::none);
+        validate!("function", "function", "", StatementDecoration::None);
         validate!(
             "function --help",
             "function",
             "--help",
-            StatementDecoration::none
+            StatementDecoration::None
         );
 
         // Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
@@ -2010,7 +2010,7 @@ mod tests {
             Some(&mut errors),
         );
         assert!(errors.len() == 1);
-        assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_subshell);
+        assert!(errors[0].code == ParseErrorCode::TokenizerUnterminatedSubshell);
 
         errors.clear();
         ast::parse(
@@ -2019,7 +2019,7 @@ mod tests {
             Some(&mut errors),
         );
         assert!(errors.len() == 1);
-        assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_subshell);
+        assert!(errors[0].code == ParseErrorCode::TokenizerUnterminatedSubshell);
 
         errors.clear();
         ast::parse(
@@ -2028,7 +2028,7 @@ mod tests {
             Some(&mut errors),
         );
         assert!(errors.len() == 1);
-        assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_quote);
+        assert!(errors[0].code == ParseErrorCode::TokenizerUnterminatedQuote);
     }
 
     #[test]
@@ -2047,24 +2047,24 @@ mod tests {
             };
         }
 
-        validate!("echo 'abc", ParseErrorCode::tokenizer_unterminated_quote);
-        validate!("'", ParseErrorCode::tokenizer_unterminated_quote);
-        validate!("echo (abc", ParseErrorCode::tokenizer_unterminated_subshell);
+        validate!("echo 'abc", ParseErrorCode::TokenizerUnterminatedQuote);
+        validate!("'", ParseErrorCode::TokenizerUnterminatedQuote);
+        validate!("echo (abc", ParseErrorCode::TokenizerUnterminatedSubshell);
 
-        validate!("end", ParseErrorCode::unbalancing_end);
-        validate!("echo hi ; end", ParseErrorCode::unbalancing_end);
+        validate!("end", ParseErrorCode::UnbalancingEnd);
+        validate!("echo hi ; end", ParseErrorCode::UnbalancingEnd);
 
-        validate!("else", ParseErrorCode::unbalancing_else);
-        validate!("if true ; end ; else", ParseErrorCode::unbalancing_else);
+        validate!("else", ParseErrorCode::UnbalancingElse);
+        validate!("if true ; end ; else", ParseErrorCode::UnbalancingElse);
 
-        validate!("case", ParseErrorCode::unbalancing_case);
-        validate!("if true ; case ; end", ParseErrorCode::unbalancing_case);
+        validate!("case", ParseErrorCode::UnbalancingCase);
+        validate!("if true ; case ; end", ParseErrorCode::UnbalancingCase);
 
-        validate!("begin ; }", ParseErrorCode::unbalancing_brace);
+        validate!("begin ; }", ParseErrorCode::UnbalancingBrace);
 
-        validate!("true | and", ParseErrorCode::andor_in_pipeline);
+        validate!("true | and", ParseErrorCode::AndOrInPipeline);
 
-        validate!("a=", ParseErrorCode::bare_variable_assignment);
+        validate!("a=", ParseErrorCode::BareVariableAssignment);
     }
 
     #[test]
@@ -2416,7 +2416,7 @@ mod tests {
         while let Some(node) = traversal.next() {
             if let Kind::DecoratedStatement(_) = node.kind() {
                 decorated_statement = Some(node);
-            } else if node.as_token().map(|t| t.token_type()) == Some(ParseTokenType::end) {
+            } else if node.as_token().map(|t| t.token_type()) == Some(ParseTokenType::End) {
                 // should panic as the decorated_statement is not on the stack.
                 let _ = traversal.parent(decorated_statement.unwrap());
             }

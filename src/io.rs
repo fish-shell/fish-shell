@@ -162,11 +162,11 @@ impl SeparatedBuffer {
 /// Describes what type of IO operation an io_data_t represents.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum IoMode {
-    file,
-    pipe,
-    fd,
-    close,
-    bufferfill,
+    File,
+    Pipe,
+    Fd,
+    Close,
+    BufferFill,
 }
 
 /// Represents a FD redirection.
@@ -196,7 +196,7 @@ impl IoClose {
 }
 impl IoData for IoClose {
     fn io_mode(&self) -> IoMode {
-        IoMode::close
+        IoMode::Close
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -222,7 +222,7 @@ impl IoFd {
 }
 impl IoData for IoFd {
     fn io_mode(&self) -> IoMode {
-        IoMode::fd
+        IoMode::Fd
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -251,7 +251,7 @@ impl IoFile {
 }
 impl IoData for IoFile {
     fn io_mode(&self) -> IoMode {
-        IoMode::file
+        IoMode::File
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -283,7 +283,7 @@ impl IoPipe {
 }
 impl IoData for IoPipe {
     fn io_mode(&self) -> IoMode {
-        IoMode::pipe
+        IoMode::Pipe
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -367,7 +367,7 @@ impl IoBufferfill {
 }
 impl IoData for IoBufferfill {
     fn io_mode(&self) -> IoMode {
-        IoMode::bufferfill
+        IoMode::BufferFill
     }
     fn fd(&self) -> RawFd {
         self.target
@@ -555,7 +555,7 @@ impl IoChain {
 
         for spec in specs {
             match spec.mode {
-                RedirectionMode::fd => {
+                RedirectionMode::Fd => {
                     if spec.is_close() {
                         self.push(Arc::new(IoClose::new(spec.fd)));
                     } else {
@@ -578,7 +578,7 @@ impl IoChain {
                         Err(err) => {
                             if oflags.contains(OFlag::O_EXCL) && err == nix::Error::EEXIST {
                                 FLOGF!(warning, NOCLOB_ERROR, spec.target);
-                            } else if spec.mode != RedirectionMode::try_input
+                            } else if spec.mode != RedirectionMode::TryInput
                                 && should_flog!(warning)
                             {
                                 print_error(errno::errno().0, &spec.target);
@@ -586,7 +586,7 @@ impl IoChain {
                             // If opening a file fails, insert a closed FD instead of the file redirection
                             // and return false. This lets execution potentially recover and at least gives
                             // the shell a chance to gracefully regain control of the shell (see #7038).
-                            if spec.mode != RedirectionMode::try_input {
+                            if spec.mode != RedirectionMode::TryInput {
                                 self.push(Arc::new(IoClose::new(spec.fd)));
                                 have_error = true;
                                 continue;
@@ -762,7 +762,7 @@ impl FdOutputStream {
         assert!(fd >= 0, "Invalid fd");
         FdOutputStream {
             fd,
-            sigcheck: SigChecker::new(Topic::sighupint),
+            sigcheck: SigChecker::new(Topic::SigHupInt),
             errored: false,
         }
     }

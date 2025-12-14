@@ -906,7 +906,7 @@ pub trait InputEventQueuer {
 
     fn read_sequence_byte(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
         let fd = self.get_in_fd();
-        let strict = feature_test(FeatureFlag::omit_term_workarounds);
+        let strict = feature_test(FeatureFlag::OmitTermWorkarounds);
         let historical_millis = |ms| {
             if strict {
                 LONG_READ_TIMEOUT

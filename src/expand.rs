@@ -360,7 +360,7 @@ macro_rules! append_syntax_error {
             let mut error = ParseError::default();
             error.source_start = $source_start;
             error.source_length = 0;
-            error.code = ParseErrorCode::syntax;
+            error.code = ParseErrorCode::Syntax;
             error.text = wgettext_fmt!($fmt $(, $arg)*);
             errors.push(error);
         }
@@ -390,7 +390,7 @@ macro_rules! append_cmdsub_error_formatted {
             let mut error = ParseError::default();
             error.source_start = $source_start;
             error.source_length = $source_end - $source_start + 1;
-            error.code = ParseErrorCode::cmdsubst;
+            error.code = ParseErrorCode::CmdSubst;
             error.text = $text;
             if !errors.iter().any(|e| e.text == error.text) {
                 errors.push(error);
@@ -408,7 +408,7 @@ fn append_overflow_error(
         errors.push(ParseError {
             source_start: source_start.unwrap_or(SOURCE_LOCATION_UNKNOWN),
             source_length: 0,
-            code: ParseErrorCode::generic,
+            code: ParseErrorCode::Generic,
             text: wgettext!("Expansion produced too many results").to_owned(),
         });
     }
@@ -1395,7 +1395,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         out: &mut CompletionReceiver,
     ) -> ExpandResult {
         expand_home_directory(&mut input, self.ctx.vars());
-        if !feature_test(FeatureFlag::remove_percent_self) {
+        if !feature_test(FeatureFlag::RemovePercentSelf) {
             expand_percent_self(&mut input);
         }
         if !out.add(input) {

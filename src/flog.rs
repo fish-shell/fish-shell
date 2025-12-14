@@ -12,7 +12,7 @@ pub mod categories {
     use crate::wchar::prelude::*;
     use std::sync::atomic::AtomicBool;
 
-    pub struct category_t {
+    pub struct Category {
         pub name: &'static wstr,
         pub description: LocalizableString,
         pub enabled: AtomicBool,
@@ -24,7 +24,7 @@ pub mod categories {
         (
             ($var:ident, $name:literal, $description:literal, $enabled:expr)
         ) => {
-            pub static $var: category_t = category_t {
+            pub static $var: Category = Category {
                 name: L!($name),
                 description: localizable_string!($description),
                 enabled: AtomicBool::new($enabled),
@@ -61,7 +61,7 @@ pub mod categories {
             )*
 
             // Define a function which gives you a Vector of all categories.
-            pub fn all_categories() -> Vec<&'static category_t> {
+            pub fn all_categories() -> Vec<&'static Category> {
                 vec![
                     $(
                         & category_name!($cats),

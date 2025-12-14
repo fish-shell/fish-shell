@@ -44,7 +44,7 @@ impl ParseToken {
             is_help_argument: false,
             is_newline: false,
             may_be_variable_assignment: false,
-            tok_error: TokenizerError::none,
+            tok_error: TokenizerError::None,
             source_start: SOURCE_OFFSET_INVALID.try_into().unwrap(),
             source_length: 0,
         }
@@ -68,7 +68,7 @@ impl ParseToken {
     }
     /// Return whether we are a string with the dash prefix set.
     pub fn is_dash_prefix_string(&self) -> bool {
-        self.typ == ParseTokenType::string && self.has_dash_prefix
+        self.typ == ParseTokenType::String && self.has_dash_prefix
     }
     /// Returns a string description of the given parse token.
     pub fn describe(&self) -> WString {
@@ -86,15 +86,13 @@ impl ParseToken {
 impl From<TokenizerError> for ParseErrorCode {
     fn from(err: TokenizerError) -> Self {
         match err {
-            TokenizerError::none => ParseErrorCode::none,
-            TokenizerError::unterminated_quote => ParseErrorCode::tokenizer_unterminated_quote,
-            TokenizerError::unterminated_subshell => {
-                ParseErrorCode::tokenizer_unterminated_subshell
-            }
-            TokenizerError::unterminated_slice => ParseErrorCode::tokenizer_unterminated_slice,
-            TokenizerError::unterminated_escape => ParseErrorCode::tokenizer_unterminated_escape,
+            TokenizerError::None => ParseErrorCode::None,
+            TokenizerError::UnterminatedQuote => ParseErrorCode::TokenizerUnterminatedQuote,
+            TokenizerError::UnterminatedSubshell => ParseErrorCode::TokenizerUnterminatedSubshell,
+            TokenizerError::UnterminatedSlice => ParseErrorCode::TokenizerUnterminatedSlice,
+            TokenizerError::UnterminatedEscape => ParseErrorCode::TokenizerUnterminatedEscape,
             // To-do: maybe also unbalancing brace?
-            _ => ParseErrorCode::tokenizer_other,
+            _ => ParseErrorCode::TokenizerOther,
         }
     }
 }

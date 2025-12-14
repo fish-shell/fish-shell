@@ -311,7 +311,7 @@ pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
 /// Don't try mmap() on non-local filesystems.
 fn should_mmap() -> bool {
     // mmap only if we are known not-remote.
-    path_get_data_remoteness() != DirRemoteness::remote
+    path_get_data_remoteness() != DirRemoteness::Remote
 }
 
 pub fn time_to_seconds(ts: SystemTime) -> i64 {

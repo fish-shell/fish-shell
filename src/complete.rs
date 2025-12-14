@@ -2,6 +2,7 @@ use std::{
     cmp::Ordering,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     mem,
+    ops::{Deref, DerefMut},
     sync::{
         Mutex, MutexGuard,
         atomic::{self, AtomicUsize},
@@ -246,7 +247,7 @@ pub struct CompletionReceiver {
 
 // We are only wrapping a `Vec<Completion>`, any non-mutable methods can be safely deferred to the
 // Vec-impl
-impl std::ops::Deref for CompletionReceiver {
+impl Deref for CompletionReceiver {
     type Target = [Completion];
 
     fn deref(&self) -> &Self::Target {
@@ -254,7 +255,7 @@ impl std::ops::Deref for CompletionReceiver {
     }
 }
 
-impl std::ops::DerefMut for CompletionReceiver {
+impl DerefMut for CompletionReceiver {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.completions.as_mut_slice()
     }
@@ -705,25 +706,25 @@ impl<'ctx> Completer<'ctx> {
             &cmdline[first_token.offset()..]
         };
 
-        if tokens.last().unwrap().type_ == TokenType::comment {
+        if tokens.last().unwrap().type_ == TokenType::Comment {
             return;
         }
-        tokens.retain(|tok| tok.type_ != TokenType::comment);
+        tokens.retain(|tok| tok.type_ != TokenType::Comment);
         assert!(!tokens.is_empty());
 
         let cmd_tok = tokens.first().unwrap();
         let cur_tok = tokens.last().unwrap();
 
         // Since fish does not currently support redirect in command position, we return here.
-        if cmd_tok.type_ != TokenType::string {
+        if cmd_tok.type_ != TokenType::String {
             return;
         }
-        if cur_tok.type_ == TokenType::error {
+        if cur_tok.type_ == TokenType::Error {
             return;
         }
         for tok in &tokens {
             // If there was an error, it was in the last token.
-            assert!(matches!(tok.type_, TokenType::string | TokenType::redirect));
+            assert!(matches!(tok.type_, TokenType::String | TokenType::Redirect));
         }
         // If we are completing a variable name or a tilde expansion user name, we do that and
         // return. No need for any other completions.
@@ -756,12 +757,12 @@ impl<'ctx> Completer<'ctx> {
             return;
         }
         // See whether we are in an argument, in a redirection or in the whitespace in between.
-        let mut in_redirection = cur_tok.type_ == TokenType::redirect;
+        let mut in_redirection = cur_tok.type_ == TokenType::Redirect;
 
         let mut had_ddash = false;
         let mut current_argument = L!("");
         let mut previous_argument = L!("");
-        if cur_tok.type_ == TokenType::string
+        if cur_tok.type_ == TokenType::String
             && cur_tok.location_in_or_at_end_of_source_range(position_in_statement)
         {
             // If the cursor is in whitespace, then the "current" argument is empty and the
@@ -775,10 +776,10 @@ impl<'ctx> Completer<'ctx> {
                 current_argument = current_token;
                 if tokens.len() >= 2 {
                     let prev_tok = &tokens[tokens.len() - 2];
-                    if prev_tok.type_ == TokenType::string {
+                    if prev_tok.type_ == TokenType::String {
                         previous_argument = prev_tok.get_source(&cmdline);
                     }
-                    in_redirection = prev_tok.type_ == TokenType::redirect;
+                    in_redirection = prev_tok.type_ == TokenType::Redirect;
                 }
             }
 

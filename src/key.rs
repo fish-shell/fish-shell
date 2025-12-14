@@ -421,7 +421,7 @@ fn ctrl_to_symbol(buf: &mut WString, c: char) {
 fn must_escape(is_first_in_token: bool, c: char) -> bool {
     "[]()<>{}*\\$;&|'\"".contains(c)
         || (is_first_in_token && "~#".contains(c))
-        || (c == '?' && !feature_test(FeatureFlag::qmark_noglob))
+        || (c == '?' && !feature_test(FeatureFlag::QuestionMarkNoGlob))
 }
 
 fn ascii_printable_to_symbol(buf: &mut WString, is_first_in_token: bool, c: char) {

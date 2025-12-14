@@ -223,14 +223,14 @@ fn command_is_valid(
     let mut implicit_cd_ok = true;
     if matches!(
         decoration,
-        StatementDecoration::command | StatementDecoration::exec
+        StatementDecoration::Command | StatementDecoration::Exec
     ) {
         builtin_ok = false;
         function_ok = false;
         abbreviation_ok = false;
         command_ok = true;
         implicit_cd_ok = false;
-    } else if decoration == StatementDecoration::builtin {
+    } else if decoration == StatementDecoration::Builtin {
         builtin_ok = true;
         function_ok = false;
         abbreviation_ok = false;
@@ -569,7 +569,7 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                             in_pos -= 1;
                         }
                         '?' => {
-                            if !feature_test(FeatureFlag::qmark_noglob) {
+                            if !feature_test(FeatureFlag::QuestionMarkNoGlob) {
                                 colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
                             }
                         }
@@ -878,14 +878,14 @@ impl<'s> Highlighter<'s> {
     fn visit_token(&mut self, tok: &dyn Token) {
         let mut role = HighlightRole::normal;
         match tok.token_type() {
-            ParseTokenType::end | ParseTokenType::pipe | ParseTokenType::background => {
+            ParseTokenType::End | ParseTokenType::Pipe | ParseTokenType::Background => {
                 role = HighlightRole::statement_terminator
             }
-            ParseTokenType::left_brace | ParseTokenType::right_brace => {
+            ParseTokenType::LeftBrace | ParseTokenType::RightBrace => {
                 role = HighlightRole::keyword;
             }
-            ParseTokenType::andand | ParseTokenType::oror => role = HighlightRole::operat,
-            ParseTokenType::string => {
+            ParseTokenType::AndAnd | ParseTokenType::OrOr => role = HighlightRole::operat,
+            ParseTokenType::String => {
                 // Assume all strings are params. This handles e.g. the variables a for header or
                 // function header. Other strings (like arguments to commands) need more complex
                 // handling, which occurs in their respective overrides of visit().
@@ -1121,7 +1121,7 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
             return self.visit_keyword(keyword);
         }
         if let Some(token) = node.as_token() {
-            if token.token_type() == ParseTokenType::end {
+            if token.token_type() == ParseTokenType::End {
                 self.visit_semi_nl(node);
                 return;
             }
@@ -1379,10 +1379,10 @@ mod tests {
         let mut param_valid_path = HighlightSpec::with_fg(HighlightRole::param);
         param_valid_path.valid_path = true;
 
-        let saved_flag = future_feature_flags::test(FeatureFlag::ampersand_nobg_in_token);
-        future_feature_flags::set(FeatureFlag::ampersand_nobg_in_token, true);
+        let saved_flag = future_feature_flags::test(FeatureFlag::AmpersandNoBgInToken);
+        future_feature_flags::set(FeatureFlag::AmpersandNoBgInToken, true);
         let _restore_saved_flag = ScopeGuard::new((), |_| {
-            future_feature_flags::set(FeatureFlag::ampersand_nobg_in_token, saved_flag);
+            future_feature_flags::set(FeatureFlag::AmpersandNoBgInToken, saved_flag);
         });
 
         let fg = HighlightSpec::with_fg;

@@ -162,11 +162,11 @@ impl SeparatedBuffer {
 /// Describes what type of IO operation an io_data_t represents.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum IoMode {
-    file,
-    pipe,
-    fd,
-    close,
-    bufferfill,
+    File,
+    Pipe,
+    Fd,
+    Close,
+    BufferFill,
 }
 
 /// Represents a FD redirection.
@@ -196,7 +196,7 @@ impl IoClose {
 }
 impl IoData for IoClose {
     fn io_mode(&self) -> IoMode {
-        IoMode::close
+        IoMode::Close
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -222,7 +222,7 @@ impl IoFd {
 }
 impl IoData for IoFd {
     fn io_mode(&self) -> IoMode {
-        IoMode::fd
+        IoMode::Fd
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -251,7 +251,7 @@ impl IoFile {
 }
 impl IoData for IoFile {
     fn io_mode(&self) -> IoMode {
-        IoMode::file
+        IoMode::File
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -283,7 +283,7 @@ impl IoPipe {
 }
 impl IoData for IoPipe {
     fn io_mode(&self) -> IoMode {
-        IoMode::pipe
+        IoMode::Pipe
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -367,7 +367,7 @@ impl IoBufferfill {
 }
 impl IoData for IoBufferfill {
     fn io_mode(&self) -> IoMode {
-        IoMode::bufferfill
+        IoMode::BufferFill
     }
     fn fd(&self) -> RawFd {
         self.target
@@ -762,7 +762,7 @@ impl FdOutputStream {
         assert!(fd >= 0, "Invalid fd");
         FdOutputStream {
             fd,
-            sigcheck: SigChecker::new(Topic::sighupint),
+            sigcheck: SigChecker::new(Topic::SigHupInt),
             errored: false,
         }
     }

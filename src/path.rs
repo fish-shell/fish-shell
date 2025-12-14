@@ -66,11 +66,11 @@ pub fn path_get_cache() -> Option<WString> {
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum DirRemoteness {
     /// directory status is unknown
-    unknown,
+    Unknown,
     /// directory is known local
-    local,
+    Local,
     /// directory is known remote
-    remote,
+    Remote,
 }
 
 /// Return the remoteness of the fish data directory.
@@ -600,7 +600,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 
         return BaseDirectory {
             path: bytes2wcstring(build_dir.as_os_str().as_bytes()),
-            remoteness: DirRemoteness::unknown,
+            remoteness: DirRemoteness::Unknown,
             used_xdg: false,
             err,
         };
@@ -625,7 +625,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 
     set_errno(Errno(0));
     let err;
-    let mut remoteness = DirRemoteness::unknown;
+    let mut remoteness = DirRemoteness::Unknown;
     if path.is_empty() {
         err = ENOENT;
     } else if let Err(io_error) = create_dir_all_with_mode(wcs2osstring(&path), 0o700) {
@@ -662,7 +662,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     {
         let mut buf = MaybeUninit::uninit();
         if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
-            return DirRemoteness::unknown;
+            return DirRemoteness::Unknown;
         }
         let buf = unsafe { buf.assume_init() };
         // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
@@ -686,9 +686,9 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
             0x013111A7 | 0x013111A8 | // IBRIX. Undocumented.
             0x65735546 | // FUSE_SUPER_MAGIC
             0xA501FCF5 // VXFS_SUPER_MAGIC
-                => DirRemoteness::remote,
+                => DirRemoteness::Remote,
             _ => {
-                DirRemoteness::unknown
+                DirRemoteness::Unknown
             }
         }
     }
@@ -698,16 +698,16 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     {
         let mut buf = MaybeUninit::uninit();
         if unsafe { libc::statvfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
-            return DirRemoteness::unknown;
+            return DirRemoteness::Unknown;
         }
         let buf = unsafe { buf.assume_init() };
         #[allow(clippy::useless_conversion)]
         let flags = buf.f_flag as u64;
         #[allow(clippy::unnecessary_cast)]
         if flags & (libc::MNT_LOCAL as u64) != 0 {
-            DirRemoteness::local
+            DirRemoteness::Local
         } else {
-            DirRemoteness::remote
+            DirRemoteness::Remote
         }
     }
 
@@ -715,7 +715,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     {
         let mut buf = MaybeUninit::uninit();
         if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
-            return DirRemoteness::unknown;
+            return DirRemoteness::Unknown;
         }
         let buf = unsafe { buf.assume_init() };
         // statfs::f_flags types differ.
@@ -723,9 +723,9 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
         let flags = buf.f_flags as u64;
         #[allow(clippy::unnecessary_cast)]
         if flags & (libc::MNT_LOCAL as u64) != 0 {
-            DirRemoteness::local
+            DirRemoteness::Local
         } else {
-            DirRemoteness::remote
+            DirRemoteness::Remote
         }
     }
 }

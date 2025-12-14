@@ -1284,7 +1284,7 @@ impl History {
                 // Also skip it for 'echo'. This is because echo doesn't take file paths, but also
                 // because the history file test wants to find the commands in the history file
                 // immediately after running them, so it can't tolerate the asynchronous file detection.
-                if stmt.decoration() == StatementDecoration::exec {
+                if stmt.decoration() == StatementDecoration::Exec {
                     needs_sync_write = true;
                 }
 

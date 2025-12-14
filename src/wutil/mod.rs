@@ -103,7 +103,7 @@ pub fn wgetcwd() -> WString {
     match std::env::current_dir() {
         Ok(cwd) => bytes2wcstring(cwd.into_os_string().as_bytes()),
         Err(e) => {
-            FLOG!(error, "std::env::current_dir() failed with error:", e);
+            FLOG!(ERROR, "std::env::current_dir() failed with error:", e);
             WString::new()
         }
     }

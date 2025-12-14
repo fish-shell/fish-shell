@@ -634,7 +634,7 @@ pub struct Redirection {
 
 impl CheckParse for Redirection {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_type(0) == ParseTokenType::redirection
+        pop.peek_type(0) == ParseTokenType::Redirection
     }
 }
 
@@ -699,7 +699,7 @@ impl ArgumentOrRedirection {
 impl CheckParse for ArgumentOrRedirection {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let typ = pop.peek_type(0);
-        matches!(typ, ParseTokenType::string | ParseTokenType::redirection)
+        matches!(typ, ParseTokenType::String | ParseTokenType::Redirection)
     }
 }
 
@@ -793,8 +793,8 @@ impl CheckParse for JobConjunction {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let token = pop.peek_token(0);
         // These keywords end a job list.
-        token.typ == ParseTokenType::left_brace
-            || (token.typ == ParseTokenType::string
+        token.typ == ParseTokenType::LeftBrace
+            || (token.typ == ParseTokenType::String
                 && !matches!(
                     token.keyword,
                     ParseKeyword::Case | ParseKeyword::End | ParseKeyword::Else
@@ -976,7 +976,7 @@ pub struct JobContinuation {
 }
 impl CheckParse for JobContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_type(0) == ParseTokenType::pipe
+        pop.peek_type(0) == ParseTokenType::Pipe
     }
 }
 
@@ -993,7 +993,7 @@ pub struct JobConjunctionContinuation {
 impl CheckParse for JobConjunctionContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let typ = pop.peek_type(0);
-        matches!(typ, ParseTokenType::andand | ParseTokenType::oror)
+        matches!(typ, ParseTokenType::AndAnd | ParseTokenType::OrOr)
     }
 }
 
@@ -1015,7 +1015,7 @@ impl CheckParse for AndorJob {
         let next_token = pop.peek_token(1);
         matches!(
             next_token.typ,
-            ParseTokenType::string | ParseTokenType::left_brace
+            ParseTokenType::String | ParseTokenType::LeftBrace
         ) && !next_token.is_help_argument
     }
 }
@@ -1053,9 +1053,9 @@ impl CheckParse for VariableAssignment {
         // What is the token after it?
         match pop.peek_type(1) {
             // We have `a= cmd` and should treat it as a variable assignment.
-            ParseTokenType::string | ParseTokenType::left_brace => true,
+            ParseTokenType::String | ParseTokenType::LeftBrace => true,
             // We have `a=` which is OK if we are allowing incomplete, an error otherwise.
-            ParseTokenType::terminate => pop.allow_incomplete(),
+            ParseTokenType::Terminate => pop.allow_incomplete(),
             // We have e.g. `a= >` which is an error.
             // Note that we do not produce an error here. Instead we return false
             // so this the token will be seen by allocate_populate_statement.
@@ -1078,18 +1078,18 @@ pub struct Argument {
 }
 impl CheckParse for Argument {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_type(0) == ParseTokenType::string
+        pop.peek_type(0) == ParseTokenType::String
     }
 }
 
-define_token_node!(SemiNl, end);
-define_token_node!(String_, string);
-define_token_node!(TokenBackground, background);
-define_token_node!(TokenConjunction, andand, oror);
-define_token_node!(TokenPipe, pipe);
-define_token_node!(TokenLeftBrace, left_brace);
-define_token_node!(TokenRightBrace, right_brace);
-define_token_node!(TokenRedirection, redirection);
+define_token_node!(SemiNl, End);
+define_token_node!(String_, String);
+define_token_node!(TokenBackground, Background);
+define_token_node!(TokenConjunction, AndAnd, OrOr);
+define_token_node!(TokenPipe, Pipe);
+define_token_node!(TokenLeftBrace, LeftBrace);
+define_token_node!(TokenRightBrace, RightBrace);
+define_token_node!(TokenRedirection, Redirection);
 
 define_keyword_node!(DecoratedStatementDecorator, Command, Builtin, Exec);
 define_keyword_node!(JobConjunctionDecorator, And, Or);
@@ -1132,7 +1132,7 @@ impl CheckParse for DecoratedStatementDecorator {
             return false;
         }
         let next_token = pop.peek_token(1);
-        next_token.typ == ParseTokenType::string && !next_token.is_dash_prefix_string()
+        next_token.typ == ParseTokenType::String && !next_token.is_dash_prefix_string()
     }
 }
 
@@ -1151,13 +1151,13 @@ impl DecoratedStatement {
     /// Return the decoration for this statement.
     pub fn decoration(&self) -> StatementDecoration {
         let Some(decorator) = &self.opt_decoration else {
-            return StatementDecoration::none;
+            return StatementDecoration::None;
         };
         let decorator: &dyn Keyword = decorator;
         match decorator.keyword() {
-            ParseKeyword::Command => StatementDecoration::command,
-            ParseKeyword::Builtin => StatementDecoration::builtin,
-            ParseKeyword::Exec => StatementDecoration::exec,
+            ParseKeyword::Command => StatementDecoration::Command,
+            ParseKeyword::Builtin => StatementDecoration::Builtin,
+            ParseKeyword::Exec => StatementDecoration::Exec,
             _ => panic!("Unexpected keyword in statement decoration"),
         }
     }
@@ -1452,22 +1452,22 @@ impl<N: Node> Ast<N> {
                 sprintf!(=> &mut result, "keyword: %s", n.keyword().to_wstr());
             } else if let Some(n) = node.as_token() {
                 let desc = match n.token_type() {
-                    ParseTokenType::string => {
+                    ParseTokenType::String => {
                         let mut desc = WString::from_str("string");
                         if let Some(strsource) = n.try_source(orig) {
                             sprintf!(=> &mut desc, ": '%s'", strsource);
                         }
                         desc
                     }
-                    ParseTokenType::redirection => {
+                    ParseTokenType::Redirection => {
                         let mut desc = WString::from_str("redirection");
                         if let Some(strsource) = n.try_source(orig) {
                             sprintf!(=> &mut desc, ": '%s'", strsource);
                         }
                         desc
                     }
-                    ParseTokenType::end => WString::from_str("<;>"),
-                    ParseTokenType::invalid => {
+                    ParseTokenType::End => WString::from_str("<;>"),
+                    ParseTokenType::Invalid => {
                         // This may occur with errors, e.g. we expected to see a string but saw a
                         // redirection.
                         WString::from_str("<error>")
@@ -1550,7 +1550,7 @@ impl<'a> TokenStream<'a> {
             flags |= TOK_ARGUMENT_LIST;
         }
         Self {
-            lookahead: [ParseToken::new(ParseTokenType::invalid); Self::MAX_LOOKAHEAD],
+            lookahead: [ParseToken::new(ParseTokenType::Invalid); Self::MAX_LOOKAHEAD],
             start: 0,
             count: 0,
             src,
@@ -1593,7 +1593,7 @@ impl<'a> TokenStream<'a> {
     fn next_from_tok(&mut self) -> ParseToken {
         loop {
             let res = self.advance_1();
-            if res.typ == ParseTokenType::comment {
+            if res.typ == ParseTokenType::Comment {
                 self.comment_ranges.push(res.range());
                 continue;
             }
@@ -1605,7 +1605,7 @@ impl<'a> TokenStream<'a> {
     /// This returns comments.
     fn advance_1(&mut self) -> ParseToken {
         let Some(token) = self.tok.next() else {
-            return ParseToken::new(ParseTokenType::terminate);
+            return ParseToken::new(ParseTokenType::Terminate);
         };
         // Set the type, keyword, and whether there's a dash prefix. Note that this is quite
         // sketchy, because it ignores quotes. This is the historical behavior. For example,
@@ -1617,7 +1617,7 @@ impl<'a> TokenStream<'a> {
         result.keyword = keyword_for_token(token.type_, text);
         result.has_dash_prefix = text.starts_with('-');
         result.is_help_argument = [L!("-h"), L!("--help")].contains(&text);
-        result.is_newline = result.typ == ParseTokenType::end && text == "\n";
+        result.is_newline = result.typ == ParseTokenType::End && text == "\n";
         result.may_be_variable_assignment = variable_assignment_equals_pos(text).is_some();
         result.tok_error = token.error;
 
@@ -1625,7 +1625,7 @@ impl<'a> TokenStream<'a> {
         result.set_source_start(token.offset());
         result.set_source_length(token.length());
 
-        if token.error != TokenizerError::none {
+        if token.error != TokenizerError::None {
             let subtoken_offset = token.error_offset_within_token();
             // Skip invalid tokens that have a zero length, especially if they are at EOF.
             if subtoken_offset < result.source_length() {
@@ -1823,13 +1823,13 @@ impl<'s> NodeVisitorMut for Populator<'s> {
 
         let token = &error.token;
         // To-do: maybe extend this to other tokenizer errors?
-        if token.typ == ParseTokenType::tokenizer_error
-            && token.tok_error == TokenizerError::closing_unopened_brace
+        if token.typ == ParseTokenType::TokenizerError
+            && token.tok_error == TokenizerError::ClosingUnopenedBrace
         {
             parse_error_range!(
                 self,
                 token.range(),
-                ParseErrorCode::unbalancing_brace,
+                ParseErrorCode::UnbalancingBrace,
                 "%s",
                 <TokenizerError as Into<&wstr>>::into(token.tok_error)
             );
@@ -1868,7 +1868,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
 
         if let Some((header_kw_range, enclosing_stmt)) = header {
             let next_token = self.peek_token(0);
-            if next_token.typ == ParseTokenType::string
+            if next_token.typ == ParseTokenType::String
                 && matches!(
                     next_token.keyword,
                     ParseKeyword::Case | ParseKeyword::Else | ParseKeyword::End
@@ -1879,7 +1879,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             parse_error_range!(
                 self,
                 header_kw_range,
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Missing end to balance this %s",
                 enclosing_stmt
             );
@@ -1887,7 +1887,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             parse_error!(
                 self,
                 token,
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected %s, but found %s",
                 keywords_user_presentable_description(error.allowed_keywords),
                 error.token.user_presentable_description(),
@@ -1965,7 +1965,7 @@ impl<'s> Populator<'s> {
         if self.unwinding {
             ParserStatus::unwinding
         } else if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
-            && self.peek_type(0) == ParseTokenType::terminate
+            && self.peek_type(0) == ParseTokenType::Terminate
         {
             ParserStatus::unsourcing
         } else {
@@ -2094,10 +2094,10 @@ impl<'s> Populator<'s> {
         let chomp_newlines = self.list_kind_chomps_newlines(kind);
         loop {
             let peek = self.tokens.peek(0);
-            if chomp_newlines && peek.typ == ParseTokenType::end && peek.is_newline {
+            if chomp_newlines && peek.typ == ParseTokenType::End && peek.is_newline {
                 // Just skip this newline, no need to save it.
                 self.tokens.pop();
-            } else if chomp_semis && peek.typ == ParseTokenType::end && !peek.is_newline {
+            } else if chomp_semis && peek.typ == ParseTokenType::End && !peek.is_newline {
                 let tok = self.tokens.pop();
                 // Perhaps save this extra semi.
                 if self.flags.contains(ParseTreeFlags::SHOW_EXTRA_SEMIS) {
@@ -2132,11 +2132,11 @@ impl<'s> Populator<'s> {
     fn consume_any_token(&mut self) -> ParseToken {
         let tok = self.tokens.pop();
         assert!(
-            tok.typ != ParseTokenType::comment,
+            tok.typ != ParseTokenType::Comment,
             "Should not be a comment"
         );
         assert!(
-            tok.typ != ParseTokenType::terminate,
+            tok.typ != ParseTokenType::Terminate,
             "Cannot consume terminate token, caller should check status first"
         );
         tok
@@ -2145,7 +2145,7 @@ impl<'s> Populator<'s> {
     /// Consume the next token which is expected to be of the given type.
     fn consume_token_type(&mut self, typ: ParseTokenType) -> SourceRange {
         assert!(
-            typ != ParseTokenType::terminate,
+            typ != ParseTokenType::Terminate,
             "Should not attempt to consume terminate token"
         );
         let tok = self.consume_any_token();
@@ -2153,7 +2153,7 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 tok,
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected %s, but found %s",
                 token_type_user_presentable_description(typ, ParseKeyword::None),
                 tok.user_presentable_description()
@@ -2178,23 +2178,23 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 tok,
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected %s, but found %s",
-                token_type_user_presentable_description(ParseTokenType::string, ParseKeyword::None),
+                token_type_user_presentable_description(ParseTokenType::String, ParseKeyword::None),
                 tok.user_presentable_description()
             );
             return;
         }
 
         match tok.typ {
-            ParseTokenType::string => {
+            ParseTokenType::String => {
                 // There are three keywords which end a job list.
                 match tok.keyword {
                     ParseKeyword::Case => {
                         parse_error!(
                             self,
                             tok,
-                            ParseErrorCode::unbalancing_case,
+                            ParseErrorCode::UnbalancingCase,
                             "'case' builtin not inside of switch block"
                         );
                     }
@@ -2202,7 +2202,7 @@ impl<'s> Populator<'s> {
                         parse_error!(
                             self,
                             tok,
-                            ParseErrorCode::unbalancing_end,
+                            ParseErrorCode::UnbalancingEnd,
                             "'end' outside of a block"
                         );
                     }
@@ -2210,7 +2210,7 @@ impl<'s> Populator<'s> {
                         parse_error!(
                             self,
                             tok,
-                            ParseErrorCode::unbalancing_else,
+                            ParseErrorCode::UnbalancingElse,
                             "'else' builtin not inside of if block"
                         );
                     }
@@ -2224,30 +2224,30 @@ impl<'s> Populator<'s> {
                     }
                 }
             }
-            ParseTokenType::redirection if self.peek_type(0) == ParseTokenType::string => {
+            ParseTokenType::Redirection if self.peek_type(0) == ParseTokenType::String => {
                 let next = self.tokens.pop();
                 parse_error_range!(
                     self,
                     next.range().combine(tok.range()),
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected a string, but found a redirection"
                 );
             }
-            ParseTokenType::pipe
-            | ParseTokenType::redirection
-            | ParseTokenType::right_brace
-            | ParseTokenType::background
-            | ParseTokenType::andand
-            | ParseTokenType::oror => {
+            ParseTokenType::Pipe
+            | ParseTokenType::Redirection
+            | ParseTokenType::RightBrace
+            | ParseTokenType::Background
+            | ParseTokenType::AndAnd
+            | ParseTokenType::OrOr => {
                 parse_error!(
                     self,
                     tok,
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected a string, but found %s",
                     tok.user_presentable_description()
                 );
             }
-            ParseTokenType::tokenizer_error => {
+            ParseTokenType::TokenizerError => {
                 parse_error!(
                     self,
                     tok,
@@ -2256,14 +2256,14 @@ impl<'s> Populator<'s> {
                     tok.tok_error
                 );
             }
-            ParseTokenType::end => {
+            ParseTokenType::End => {
                 internal_error!(
                     self,
                     consume_excess_token_generating_error,
                     "End token should never be excess"
                 );
             }
-            ParseTokenType::terminate => {
+            ParseTokenType::Terminate => {
                 internal_error!(
                     self,
                     consume_excess_token_generating_error,
@@ -2356,7 +2356,7 @@ impl<'s> Populator<'s> {
                     contents.reserve(16);
                 }
                 contents.push(node);
-            } else if exhaust_stream && self.peek_type(0) != ParseTokenType::terminate {
+            } else if exhaust_stream && self.peek_type(0) != ParseTokenType::Terminate {
                 // We aren't allowed to stop. Produce an error and keep going.
                 self.consume_excess_token_generating_error()
             } else {
@@ -2397,14 +2397,14 @@ impl<'s> Populator<'s> {
 
         fn new_decorated_statement(slf: &mut Populator<'_>) -> Statement {
             let embedded = slf.allocate_visit::<DecoratedStatement>();
-            if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::left_brace {
+            if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::LeftBrace {
                 parse_error!(
                     slf,
                     slf.peek_token(0),
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected %s, but found %s",
                     token_type_user_presentable_description(
-                        ParseTokenType::end,
+                        ParseTokenType::End,
                         ParseKeyword::None
                     ),
                     slf.peek_token(0).user_presentable_description()
@@ -2413,20 +2413,20 @@ impl<'s> Populator<'s> {
             Statement::Decorated(embedded)
         }
 
-        if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
+        if self.peek_token(0).typ == ParseTokenType::Terminate && self.allow_incomplete() {
             // This may happen if we just have a 'time' prefix.
             // Construct a decorated statement, which will be unsourced.
             self.allocate_visit::<DecoratedStatement>();
-        } else if self.peek_token(0).typ == ParseTokenType::left_brace {
+        } else if self.peek_token(0).typ == ParseTokenType::LeftBrace {
             let embedded = self.allocate_boxed_visit::<BraceStatement>();
             return Statement::Brace(embedded);
-        } else if self.peek_token(0).typ != ParseTokenType::string {
+        } else if self.peek_token(0).typ != ParseTokenType::String {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
             parse_error!(
                 self,
                 self.peek_token(0),
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected a command, but found %s",
                 self.peek_token(0).user_presentable_description()
             );
@@ -2444,7 +2444,7 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 token,
-                ParseErrorCode::bare_variable_assignment,
+                ParseErrorCode::BareVariableAssignment,
                 ERROR_BAD_COMMAND_ASSIGN_ERR_MSG,
                 variable,
                 value
@@ -2459,7 +2459,7 @@ impl<'s> Populator<'s> {
         // If we are 'function' or another block starter, then we are a non-block if we are invoked with -h or --help
         // If we are anything else, we require an argument, so do the same thing if the subsequent
         // token is a statement terminator.
-        if self.peek_token(0).typ == ParseTokenType::string {
+        if self.peek_token(0).typ == ParseTokenType::String {
             // If we are one of these, then look for specifically help arguments. Otherwise, if the next token
             // looks like an option (starts with a dash), then parse it as a decorated statement.
             let help_only_kws = [
@@ -2481,7 +2481,7 @@ impl<'s> Populator<'s> {
             // e.g. a "naked if".
             let naked_invocation_invokes_help =
                 ![ParseKeyword::Begin, ParseKeyword::End].contains(&self.peek_token(0).keyword);
-            if naked_invocation_invokes_help && self.peek_token(1).typ == ParseTokenType::terminate
+            if naked_invocation_invokes_help && self.peek_token(1).typ == ParseTokenType::Terminate
             {
                 return new_decorated_statement(self);
             }
@@ -2515,7 +2515,7 @@ impl<'s> Populator<'s> {
                 parse_error!(
                     self,
                     self.peek_token(0),
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected a command, but found %s",
                     self.peek_token(0).user_presentable_description()
                 );
@@ -2603,7 +2603,7 @@ impl<'s> Populator<'s> {
             arg.range = None;
             return;
         }
-        arg.range = Some(self.consume_token_type(ParseTokenType::string));
+        arg.range = Some(self.consume_token_type(ParseTokenType::String));
     }
 
     fn visit_variable_assignment(&mut self, varas: &mut VariableAssignment) {
@@ -2618,7 +2618,7 @@ impl<'s> Populator<'s> {
                 "Should not have created variable_assignment_t from this token"
             );
         }
-        varas.range = Some(self.consume_token_type(ParseTokenType::string));
+        varas.range = Some(self.consume_token_type(ParseTokenType::String));
     }
 
     fn visit_job_continuation(&mut self, node: &mut JobContinuation) {
@@ -2628,7 +2628,7 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 self.peek_token(1),
-                ParseErrorCode::andor_in_pipeline,
+                ParseErrorCode::AndOrInPipeline,
                 INVALID_PIPELINE_CMD_ERR_MSG,
                 kw
             );
@@ -2646,8 +2646,8 @@ impl<'s> Populator<'s> {
         if !token.allows_token(self.peek_token(0).typ) {
             if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
-                    TokenizerError::unterminated_quote,
-                    TokenizerError::unterminated_subshell,
+                    TokenizerError::UnterminatedQuote,
+                    TokenizerError::UnterminatedSubshell,
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
@@ -2657,7 +2657,7 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 self.peek_token(0),
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected %s, but found %s",
                 token_types_user_presentable_description(token.allowed_tokens()),
                 self.peek_token(0).user_presentable_description()
@@ -2682,8 +2682,8 @@ impl<'s> Populator<'s> {
 
             if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
-                    TokenizerError::unterminated_quote,
-                    TokenizerError::unterminated_subshell,
+                    TokenizerError::UnterminatedQuote,
+                    TokenizerError::UnterminatedSubshell,
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
@@ -2701,7 +2701,7 @@ impl<'s> Populator<'s> {
                 parse_error!(
                     self,
                     self.peek_token(0),
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected %s, but found %s",
                     keywords_user_presentable_description(allowed_keywords),
                     self.peek_token(0).user_presentable_description(),
@@ -2724,7 +2724,7 @@ impl<'s> Populator<'s> {
         // TODO: it would be nice to have the start offset be the current position in the token
         // stream, even if there are no newlines.
         while self.peek_token(0).is_newline {
-            let r = self.consume_token_type(ParseTokenType::end);
+            let r = self.consume_token_type(ParseTokenType::End);
             if range.length == 0 {
                 range = r;
             } else {
@@ -2772,17 +2772,17 @@ impl From<ParseTreeFlags> for TokFlags {
 impl From<TokenType> for ParseTokenType {
     fn from(token_type: TokenType) -> Self {
         match token_type {
-            TokenType::string => ParseTokenType::string,
-            TokenType::pipe => ParseTokenType::pipe,
-            TokenType::andand => ParseTokenType::andand,
-            TokenType::oror => ParseTokenType::oror,
-            TokenType::end => ParseTokenType::end,
-            TokenType::background => ParseTokenType::background,
-            TokenType::left_brace => ParseTokenType::left_brace,
-            TokenType::right_brace => ParseTokenType::right_brace,
-            TokenType::redirect => ParseTokenType::redirection,
-            TokenType::error => ParseTokenType::tokenizer_error,
-            TokenType::comment => ParseTokenType::comment,
+            TokenType::String => ParseTokenType::String,
+            TokenType::Pipe => ParseTokenType::Pipe,
+            TokenType::AndAnd => ParseTokenType::AndAnd,
+            TokenType::OrOr => ParseTokenType::OrOr,
+            TokenType::End => ParseTokenType::End,
+            TokenType::Background => ParseTokenType::Background,
+            TokenType::LeftBrace => ParseTokenType::LeftBrace,
+            TokenType::RightBrace => ParseTokenType::RightBrace,
+            TokenType::Redirect => ParseTokenType::Redirection,
+            TokenType::Error => ParseTokenType::TokenizerError,
+            TokenType::Comment => ParseTokenType::Comment,
         }
     }
 }
@@ -2794,7 +2794,7 @@ fn is_keyword_char(c: char) -> bool {
 /// Given a token, returns unescaped keyword, or the empty string.
 pub(crate) fn unescape_keyword(tok: TokenType, token: &wstr) -> Cow<'_, wstr> {
     /* Only strings can be keywords */
-    if tok != TokenType::string {
+    if tok != TokenType::String {
         return Cow::Borrowed(L!(""));
     }
 

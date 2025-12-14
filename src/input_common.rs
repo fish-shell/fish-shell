@@ -475,7 +475,7 @@ fn readb(in_fd: RawFd) -> Option<u8> {
         return None;
     }
     let c = arr[0];
-    FLOG!(reader, "Read byte", char_to_symbol(char::from(c), true));
+    FLOG!(READER, "Read byte", char_to_symbol(char::from(c), true));
     // The common path is to return a u8.
     Some(c)
 }
@@ -866,7 +866,7 @@ pub trait InputEventQueuer {
                     };
                     if self.is_blocked_querying() {
                         FLOG!(
-                            reader,
+                            READER,
                             "Still blocked on response from terminal, deferring key event",
                             key_evt
                         );
@@ -884,7 +884,7 @@ pub trait InputEventQueuer {
                             })
                         {
                             FLOG!(
-                                reader,
+                                READER,
                                 "Received interrupt key, giving up waiting for response from terminal"
                             );
                             let ok = stop_query(self.blocking_query());
@@ -906,7 +906,7 @@ pub trait InputEventQueuer {
 
     fn read_sequence_byte(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
         let fd = self.get_in_fd();
-        let strict = feature_test(FeatureFlag::omit_term_workarounds);
+        let strict = feature_test(FeatureFlag::OmitTermWorkarounds);
         let historical_millis = |ms| {
             if strict {
                 LONG_READ_TIMEOUT
@@ -925,12 +925,12 @@ pub trait InputEventQueuer {
             },
         ) {
             FLOG!(
-                reader,
+                READER,
                 format!("Incomplete escape sequence: {}", DisplayBytes(buffer))
             );
             if buffer != b"\x1b" && strict {
                 FLOG!(
-                    error,
+                    ERROR,
                     format!(
                         "Incomplete escape sequence seen (logging because omit-term-workarounds is on): {}",
                         DisplayBytes(buffer)
@@ -1092,7 +1092,7 @@ pub trait InputEventQueuer {
             b'F' => masked_key(key::End),  // PC/xterm style
             b'H' => masked_key(key::Home), // PC/xterm style
             b'M' | b'm' => {
-                FLOG!(reader, "mouse event");
+                FLOG!(READER, "mouse event");
                 // Generic X10 or modified VT200 sequence, or extended (SGR/1006) mouse
                 // reporting mode, with semicolon-separated parameters for button code, Px,
                 // and Py, ending with 'M' for button press or 'm' for button release.
@@ -1132,14 +1132,14 @@ pub trait InputEventQueuer {
                 return None;
             }
             b't' => {
-                FLOG!(reader, "mouse event");
+                FLOG!(READER, "mouse event");
                 // VT200 button released in mouse highlighting mode at valid text location. 5 chars.
                 let _ = next_char(self);
                 let _ = next_char(self);
                 return None;
             }
             b'T' => {
-                FLOG!(reader, "mouse event");
+                FLOG!(READER, "mouse event");
                 // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
                 for _ in 0..6 {
                     let _ = next_char(self);
@@ -1161,7 +1161,7 @@ pub trait InputEventQueuer {
                 else {
                     return invalid_sequence(buffer);
                 };
-                FLOG!(reader, "Received cursor position report y:", y, "x:", x);
+                FLOG!(READER, "Received cursor position report y:", y, "x:", x);
                 let cursor_pos = ViewportPosition { x, y };
                 self.push_query_response(QueryResponse::CursorPosition(cursor_pos));
                 return None;
@@ -1214,7 +1214,7 @@ pub trait InputEventQueuer {
                 _ => return None,
             },
             b'c' if private_mode == Some(b'?') => {
-                FLOG!(reader, "Received Primary Device Attribute response");
+                FLOG!(READER, "Received Primary Device Attribute response");
                 self.push_query_response(QueryResponse::PrimaryDeviceAttribute);
                 return None;
             }
@@ -1223,7 +1223,7 @@ pub trait InputEventQueuer {
                     [1, 0, 0, 0] | [2, 0, 0, 0] => (),
                     _ => return None,
                 };
-                FLOG!(reader, "Received color theme change");
+                FLOG!(READER, "Received color theme change");
                 self.push_front(CharEvent::Implicit(ImplicitEvent::NewColorTheme));
                 return None;
             }
@@ -1367,7 +1367,7 @@ pub trait InputEventQueuer {
         XTVERSION.get_or_init(|| {
             let xtversion = bytes2wcstring(&buffer[4..buffer.len()]);
             FLOG!(
-                reader,
+                READER,
                 format!("Received XTVERSION response: {}", xtversion)
             );
             xtversion
@@ -1382,7 +1382,7 @@ pub trait InputEventQueuer {
         let buffer = &buffer[osc_prefix.len()..];
         let buffer = buffer.strip_prefix(b"11;")?;
         let c = xterm_color::Color::parse(buffer).ok()?;
-        FLOG!(reader, format!("Received background color {c:?}"));
+        FLOG!(READER, format!("Received background color {c:?}"));
         self.push_query_response(QueryResponse::BackgroundColor(c));
         None
     }
@@ -1413,7 +1413,7 @@ pub trait InputEventQueuer {
         let buffer = &buffer[5..];
         if !success {
             FLOG!(
-                reader,
+                READER,
                 format!(
                     "Received XTGETTCAP failure response: {}",
                     bytes2wcstring(&parse_hex(buffer)?),
@@ -1427,7 +1427,7 @@ pub trait InputEventQueuer {
         let value = if let Some(value) = buffer.next() {
             let value = parse_hex(value)?;
             FLOG!(
-                reader,
+                READER,
                 format!(
                     "Received XTGETTCAP response: {}={:?}",
                     bytes2wcstring(&key),
@@ -1437,7 +1437,7 @@ pub trait InputEventQueuer {
             Some(value)
         } else {
             FLOG!(
-                reader,
+                READER,
                 format!("Received XTGETTCAP response: {}", bytes2wcstring(&key))
             );
             None
@@ -1615,7 +1615,7 @@ pub trait InputEventQueuer {
             let interrupt_evt = CharEvent::from_key(KeyEvent::from_single_byte(vintr));
             if stop_query(self.blocking_query()) {
                 FLOG!(
-                    reader,
+                    READER,
                     "Received interrupt, giving up on waiting for terminal response"
                 );
                 self.get_input_data_mut().queue.clear();
@@ -1675,7 +1675,7 @@ pub(crate) fn decode_one_codepoint_utf8(
         Err(e) => match e.error_len() {
             Some(_) => match invalid_policy {
                 InvalidPolicy::Error => {
-                    FLOG!(reader, "Illegal input encoding");
+                    FLOG!(READER, "Illegal input encoding");
                     Error
                 }
                 InvalidPolicy::Passthrough => {
@@ -1696,7 +1696,7 @@ pub(crate) fn stop_query(mut query: RefMut<'_, Option<TerminalQuery>>) -> bool {
 
 fn invalid_sequence(buffer: &[u8]) -> Option<KeyEvent> {
     FLOG!(
-        reader,
+        READER,
         "Error: invalid escape sequence: ",
         DisplayBytes(buffer)
     );

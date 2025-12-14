@@ -41,14 +41,14 @@ sleep 0.1
 chmod a+x file.fish
 set -g fish_use_posix_spawn 0
 ./file.fish
-#CHECKERR: exec: {{.*}}
-#CHECKERR: exec: {{.*}}
+#CHECKERR: EXEC: {{.*}}
+#CHECKERR: EXEC: {{.*}}
 echo $status
 #CHECK: 126
 set -g fish_use_posix_spawn 1
 ./file.fish
-#CHECKERR: exec: {{.*}}
-#CHECKERR: exec: {{.*}}
+#CHECKERR: EXEC: {{.*}}
+#CHECKERR: EXEC: {{.*}}
 echo $status
 #CHECK: 126
 rm file.fish
@@ -67,24 +67,24 @@ echo -n -e 'true\x00' >file
 sleep 0.1
 runfile
 #CHECK: 126
-#CHECKERR: exec: {{.*}}
-#CHECKERR: exec: {{.*}}
+#CHECKERR: EXEC: {{.*}}
+#CHECKERR: EXEC: {{.*}}
 
 #CHECK: 126
-#CHECKERR: exec: {{.*}}
-#CHECKERR: exec: {{.*}}
+#CHECKERR: EXEC: {{.*}}
+#CHECKERR: EXEC: {{.*}}
 
 # Doesn't meet our heuristic as there is no lowercase before newline.
 echo -n -e 'NOPE\n\x00' >file
 sleep 0.1
 runfile
 #CHECK: 126
-#CHECKERR: exec: {{.*}}
-#CHECKERR: exec: {{.*}}
+#CHECKERR: EXEC: {{.*}}
+#CHECKERR: EXEC: {{.*}}
 
 #CHECK: 126
-#CHECKERR: exec: {{.*}}
-#CHECKERR: exec: {{.*}}
+#CHECKERR: EXEC: {{.*}}
+#CHECKERR: EXEC: {{.*}}
 
 echo 'echo foo' >./-
 sleep 0.1

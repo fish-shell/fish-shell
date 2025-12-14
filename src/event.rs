@@ -17,14 +17,14 @@ use crate::reader::reader_update_termsize;
 use crate::signal::{Signal, signal_check_cancel, signal_handle};
 use crate::wchar::prelude::*;
 
-pub enum event_type_t {
-    any,
-    signal,
-    variable,
-    process_exit,
-    job_exit,
-    caller_exit,
-    generic,
+pub enum EventType {
+    Any,
+    Signal,
+    Variable,
+    ProcessExit,
+    JobExit,
+    CallerExit,
+    Generic,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -105,16 +105,16 @@ impl EventDescription {
     }
 }
 
-impl From<&EventDescription> for event_type_t {
+impl From<&EventDescription> for EventType {
     fn from(desc: &EventDescription) -> Self {
         match desc {
-            EventDescription::Any => event_type_t::any,
-            EventDescription::Signal { .. } => event_type_t::signal,
-            EventDescription::Variable { .. } => event_type_t::variable,
-            EventDescription::ProcessExit { .. } => event_type_t::process_exit,
-            EventDescription::JobExit { .. } => event_type_t::job_exit,
-            EventDescription::CallerExit { .. } => event_type_t::caller_exit,
-            EventDescription::Generic { .. } => event_type_t::generic,
+            EventDescription::Any => EventType::Any,
+            EventDescription::Signal { .. } => EventType::Signal,
+            EventDescription::Variable { .. } => EventType::Variable,
+            EventDescription::ProcessExit { .. } => EventType::ProcessExit,
+            EventDescription::JobExit { .. } => EventType::JobExit,
+            EventDescription::CallerExit { .. } => EventType::CallerExit,
+            EventDescription::Generic { .. } => EventType::Generic,
         }
     }
 }

@@ -289,9 +289,9 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) {
     // Flog any terminal protocol changes of interest.
     let mode = if enable { "Enabling" } else { "Disabling" };
     match protocols.quirks.safe_get_supported_protocol() {
-        ProtocolKind::KittyKeyboard => FLOG!(reader, mode, "kitty keyboard protocol"),
-        ProtocolKind::Other => FLOG!(reader, mode, "other extended keys"),
-        ProtocolKind::WorkAroundWezTerm => FLOG!(reader, mode, "wezterm; no modifyOtherKeys"),
+        ProtocolKind::KittyKeyboard => FLOG!(READER, mode, "kitty keyboard protocol"),
+        ProtocolKind::Other => FLOG!(READER, mode, "other extended keys"),
+        ProtocolKind::WorkAroundWezTerm => FLOG!(READER, mode, "wezterm; no modifyOtherKeys"),
         ProtocolKind::None => (),
     };
     (on_write)();

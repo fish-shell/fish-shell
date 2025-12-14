@@ -86,7 +86,7 @@ extern "C" fn fish_signal_handler(
                 reader_sighup();
                 safe_mark_tty_invalid();
             }
-            topic_monitor_principal().post(Topic::sighupint);
+            topic_monitor_principal().post(Topic::SigHupInt);
         }
         libc::SIGTERM => {
             // Handle sigterm. The only thing we do is restore the front process ID and disable protocols, then die.
@@ -106,11 +106,11 @@ extern "C" fn fish_signal_handler(
                 CANCELLATION_SIGNAL.store(libc::SIGINT, Ordering::Relaxed);
             }
             reader_handle_sigint();
-            topic_monitor_principal().post(Topic::sighupint);
+            topic_monitor_principal().post(Topic::SigHupInt);
         }
         libc::SIGCHLD => {
             // A child process stopped or exited.
-            topic_monitor_principal().post(Topic::sigchld);
+            topic_monitor_principal().post(Topic::SigChld);
         }
         libc::SIGALRM => {
             // We have a sigalarm handler that does nothing. This is used in the signal torture
@@ -324,7 +324,7 @@ impl SigChecker {
 
     /// Create a new checker for SIGHUP and SIGINT.
     pub fn new_sighupint() -> Self {
-        Self::new(Topic::sighupint)
+        Self::new(Topic::SigHupInt)
     }
 
     /// Check if a sigint has been delivered since the last call to check(), or since the detector

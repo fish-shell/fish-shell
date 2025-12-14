@@ -285,9 +285,6 @@ pub struct LibraryData {
     /// A counter incremented every time a command executes.
     pub exec_count: u64,
 
-    /// A counter incremented every time an external command executes.
-    pub exec_external_count: u64,
-
     /// A counter incremented every time a command produces a $status.
     pub status_count: u64,
 

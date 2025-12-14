@@ -1344,7 +1344,6 @@ fn exec_process_in_job(
             piped_output_needs_buffering,
         ),
         ProcessType::External => {
-            parser.libdata_mut().exec_external_count += 1;
             exec_external_command(parser, j, p, &process_net_io_chain)?;
             // It's possible (though unlikely) that this is a background process which recycled a
             // pid from another, previous background process. Forget any such old process.

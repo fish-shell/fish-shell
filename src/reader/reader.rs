@@ -2366,9 +2366,7 @@ impl<'a> Reader<'a> {
         }
 
         // Disable tty protocols now that we're going to execute a command.
-        if tty.disable_tty_protocols() {
-            self.save_screen_state();
-        }
+        tty.disable_tty_protocols();
 
         if self.conf.transient_prompt {
             self.exec_prompt(true, true);
@@ -2428,20 +2426,13 @@ impl<'a> Reader<'a> {
 
     fn eval_bind_cmd(&mut self, cmd: &wstr) {
         let last_statuses = self.parser.vars().get_last_statuses();
-        let prev_exec_external_count = self.parser.libdata().exec_external_count;
         // Disable TTY protocols while we run a bind command, because it may call out.
         let mut scoped_tty = TtyHandoff::new(reader_save_screen_state);
-        let mut modified_tty = scoped_tty.disable_tty_protocols();
+        scoped_tty.disable_tty_protocols();
 
         self.parser.eval(cmd, &IoChain::new());
         self.parser.set_last_statuses(last_statuses);
-        modified_tty |= scoped_tty.reclaim();
-        if modified_tty
-            || (self.parser.libdata().exec_external_count != prev_exec_external_count
-                && self.data.left_prompt_buff.contains('\n'))
-        {
-            self.save_screen_state();
-        }
+        scoped_tty.reclaim();
     }
 
     /// Run a sequence of commands from an input binding.
@@ -2928,9 +2919,7 @@ impl<'a> Reader<'a> {
                     let mut tty = TtyHandoff::new(reader_save_screen_state);
                     tty.disable_tty_protocols();
                     self.compute_and_apply_completions(c);
-                    if tty.reclaim() {
-                        self.save_screen_state();
-                    }
+                    tty.reclaim();
                 }
             }
             rl::PagerToggleSearch => {

@@ -271,17 +271,17 @@ static TTY_INVALID: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 // Enable or disable TTY protocols by writing the appropriate commands to the tty.
 // Return true if we emitted any bytes to the tty.
 // Note this does NOT intialize the TTY protocls if not already initialized.
-fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
+fn set_tty_protocols_active(on_write: fn(), enable: bool) {
     assert_is_main_thread();
     // Have protocols at all? We require someone else to have initialized them.
     let Some(protocols) = tty_protocols() else {
-        return false;
+        return;
     };
     // Already set?
     // Note we don't need atomic swaps as this is only called on the main thread.
     // Also note we (logically) set and clear this even if we got SIGHUP.
     if TTY_PROTOCOLS_ACTIVE.load(Ordering::Relaxed) == enable {
-        return false;
+        return;
     }
     if enable {
         TTY_PROTOCOLS_ACTIVE.store(true, Ordering::Release);
@@ -289,7 +289,7 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
 
     // Did we get SIGHUP?
     if TTY_INVALID.load() {
-        return false;
+        return;
     }
 
     // Write the commands to the tty, ignoring errors.
@@ -308,7 +308,6 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
         ProtocolKind::None => (),
     };
     (on_write)();
-    true
 }
 
 // Helper to check if TTY protocols are active.
@@ -385,22 +384,22 @@ impl TtyHandoff {
 
     /// Mark terminal modes as enabled.
     /// Return true if something was written to the tty.
-    pub fn enable_tty_protocols(&mut self) -> bool {
+    pub fn enable_tty_protocols(&mut self) {
         if self.tty_protocols_applied {
-            return false; // Already enabled.
+            return; // Already enabled.
         }
         self.tty_protocols_applied = true;
-        set_tty_protocols_active(self.on_write, true)
+        set_tty_protocols_active(self.on_write, true);
     }
 
     /// Mark terminal modes as disabled.
     /// Return true if something was written to the tty.
-    pub fn disable_tty_protocols(&mut self) -> bool {
+    pub fn disable_tty_protocols(&mut self) {
         if !self.tty_protocols_applied {
-            return false; // Already disabled.
+            return; // Already disabled.
         };
         self.tty_protocols_applied = false;
-        set_tty_protocols_active(self.on_write, false)
+        set_tty_protocols_active(self.on_write, false);
     }
 
     /// Transfer to the given job group, if it wants to own the terminal.
@@ -415,7 +414,7 @@ impl TtyHandoff {
     /// Reclaim the tty if we transferred it.
     /// Returns true if data was written to the tty, as part of
     /// re-enabling terminal protocols.
-    pub fn reclaim(mut self) -> bool {
+    pub fn reclaim(mut self) {
         self.reclaim_impl()
     }
 
@@ -425,7 +424,7 @@ impl TtyHandoff {
     }
 
     /// Implementation of reclaim, factored out for use in Drop.
-    fn reclaim_impl(&mut self) -> bool {
+    fn reclaim_impl(&mut self) {
         assert!(!self.reclaimed, "Terminal already reclaimed");
         self.reclaimed = true;
         if self.owner.is_some() {
@@ -442,9 +441,9 @@ impl TtyHandoff {
         }
         // Restore the terminal protocols. Note this does nothing if they were unchanged.
         if self.tty_protocols_initial {
-            self.enable_tty_protocols()
+            self.enable_tty_protocols();
         } else {
-            self.disable_tty_protocols()
+            self.disable_tty_protocols();
         }
     }
 

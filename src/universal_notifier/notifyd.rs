@@ -1,6 +1,6 @@
 use crate::common::PROGRAM_NAME;
 use crate::fds::{make_fd_nonblocking, set_cloexec};
-use crate::flog::{FLOG, FLOGF};
+use crate::flog::{flog, flogf};
 use crate::universal_notifier::UniversalNotifier;
 use crate::wchar::prelude::*;
 use libc::{c_char, c_int};
@@ -50,12 +50,12 @@ impl NotifydNotifier {
             notify_register_file_descriptor(name.as_ptr(), &mut notify_fd, 0, &mut token)
         };
         if status != NOTIFY_STATUS_OK || notify_fd < 0 {
-            FLOGF!(
+            flogf!(
                 warning,
                 "notify_register_file_descriptor() failed with status %u.",
                 status
             );
-            FLOG!(
+            flog!(
                 warning,
                 "Universal variable notifications may not be received."
             );
@@ -92,10 +92,10 @@ impl Drop for NotifydNotifier {
 
 impl UniversalNotifier for NotifydNotifier {
     fn post_notification(&self) {
-        FLOG!(uvar_notifier, "posting notification");
+        flog!(uvar_notifier, "posting notification");
         let status = unsafe { notify_post(self.name.as_ptr()) };
         if status != NOTIFY_STATUS_OK {
-            FLOGF!(
+            flogf!(
                 warning,
                 "notify_post() failed with status %u. Uvar notifications may not be sent.",
                 status,
@@ -127,7 +127,7 @@ impl UniversalNotifier for NotifydNotifier {
                 _ => continue,
             }
         }
-        FLOGF!(
+        flogf!(
             uvar_notifier,
             "notify fd %s readable",
             if read_something { "was" } else { "was not" },

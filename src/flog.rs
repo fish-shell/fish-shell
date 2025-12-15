@@ -146,7 +146,7 @@ pub mod categories {
     );
 }
 
-/// FLOG formats values. By default we would like to use Display, and fall back to Debug.
+/// flog formats values. By default we would like to use Display, and fall back to Debug.
 /// However that would require specialization. So instead we make two "separate" traits, bring them both in scope,
 /// and let Rust figure it out.
 /// Clients can opt a Debug type into Floggable by implementing FloggableDebug:
@@ -206,7 +206,7 @@ pub trait FloggableDebug: std::fmt::Debug {
     }
 }
 
-/// Write to our FLOG file.
+/// Write to our flog file.
 pub fn flog_impl(s: &[u8]) {
     let fd = get_flog_file_fd();
     if fd < 0 {
@@ -217,7 +217,7 @@ pub fn flog_impl(s: &[u8]) {
 
 /// The entry point for flogging.
 #[macro_export]
-macro_rules! FLOG {
+macro_rules! flog {
     ($category:ident, $($elem:expr),+ $(,)*) => {
         if $crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
             #[allow(unused_imports)]
@@ -239,9 +239,9 @@ macro_rules! FLOG {
 }
 
 #[macro_export]
-macro_rules! FLOGF {
+macro_rules! flogf {
     ($category:ident, $fmt: expr, $($elem:expr),+ $(,)*) => {
-        $crate::flog::FLOG!($category, $crate::wutil::sprintf!($fmt, $($elem),*))
+        $crate::flog::flog!($category, $crate::wutil::sprintf!($fmt, $($elem),*))
     }
 }
 
@@ -254,7 +254,7 @@ macro_rules! should_flog {
     };
 }
 
-pub use {FLOG, FLOGF, should_flog};
+pub use {flog, flogf, should_flog};
 
 /// For each category, if its name matches the wildcard, set its enabled to the given sense.
 fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {

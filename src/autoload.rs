@@ -1,9 +1,9 @@
 //! The classes responsible for autoloading functions and completions.
 
-use crate::FLOGF;
 use crate::common::wcs2bytes;
 use crate::common::{ScopeGuard, escape};
 use crate::env::Environment;
+use crate::flogf;
 use crate::io::IoChain;
 use crate::parser::Parser;
 use crate::wchar::{L, WString, wstr};
@@ -101,10 +101,10 @@ impl Autoload {
         );
         match result {
             AutoloadResult::Path(AutoloadPath::Embedded(_)) => {
-                FLOGF!(autoload, "Embedded: %s", cmd);
+                flogf!(autoload, "Embedded: %s", cmd);
             }
             AutoloadResult::Path(AutoloadPath::Path(ref path)) => {
-                FLOGF!(
+                flogf!(
                     autoload,
                     "Loading %s from var %s from path %s",
                     cmd,
@@ -134,7 +134,7 @@ impl Autoload {
             AutoloadPath::Embedded(name) => {
                 use crate::common::bytes2wcstring;
                 use std::sync::Arc;
-                FLOGF!(autoload, "Loading embedded: %s", name);
+                flogf!(autoload, "Loading embedded: %s", name);
                 let emfile = Asset::get(name).expect("Embedded file not found");
                 let src = bytes2wcstring(&emfile.data);
                 let mut widename = L!("embedded:").to_owned();

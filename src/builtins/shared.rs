@@ -480,7 +480,7 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     }
 
     let Some(builtin) = builtin_lookup(argv[0]) else {
-        FLOGF!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, argv[0]));
+        flogf!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, argv[0]));
         return ProcStatus::from_exit_code(STATUS_CMD_ERROR);
     };
 
@@ -522,7 +522,7 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
         // would assert() out, which is a terrible failure mode
         // So instead, what we do is we get a positive code,
         // and we avoid 0.
-        FLOGF!(
+        flogf!(
             warning,
             "builtin %s returned invalid exit code %d",
             argv[0],

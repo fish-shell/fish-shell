@@ -4,7 +4,7 @@ use crate::env::{
     PATH_ARRAY_SEP, Statuses, VarTable, is_read_only,
 };
 use crate::env_universal_common::EnvUniversal;
-use crate::flog::FLOG;
+use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::history::{History, history_session_id_from_var};
 use crate::kill::kill_entries;
@@ -619,7 +619,7 @@ impl EnvScopedImpl {
 
     /// Return a newly allocated export array.
     fn create_export_array(&self) -> Arc<OwningNullTerminatedArray> {
-        FLOG!(env_export, "create_export_array() recalc");
+        flog!(env_export, "create_export_array() recalc");
         let mut vals = VarTable::new();
         Self::get_exported(&self.globals, &mut vals);
         Self::get_exported(&self.locals, &mut vals);

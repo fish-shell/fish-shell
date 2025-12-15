@@ -8,7 +8,7 @@ use crate::common::{
 };
 use crate::env::Statuses;
 use crate::event::{self, Event};
-use crate::flog::{FLOG, FLOGF};
+use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::io::IoChain;
 use crate::job_group::{JobGroup, MaybeJobId};
@@ -253,7 +253,7 @@ impl InternalProc {
     pub fn mark_exited(&self, status: ProcStatus) {
         self.status.set(status).expect("Status already set");
         topic_monitor_principal().post(Topic::InternalExit);
-        FLOG!(
+        flog!(
             proc_internal_proc,
             "Internal proc",
             self.internal_proc_id,
@@ -787,7 +787,7 @@ impl Job {
 
     /// Run ourselves. Returning once we complete or stop.
     pub fn continue_job(&self, parser: &Parser) {
-        FLOGF!(
+        flogf!(
             proc_job_run,
             "Run job %d (%s), %s, %s",
             self.job_id(),
@@ -827,7 +827,7 @@ impl Job {
     pub fn resume(&self) -> bool {
         self.mut_flags().notified_of_stop = false;
         if !self.signal(SIGCONT) {
-            FLOGF!(
+            flogf!(
                 proc_pgroup,
                 "Failed to send SIGCONT to procs in job %s",
                 self.command()
@@ -1164,7 +1164,7 @@ fn reap_disowned_pids() {
         let mut status: libc::c_int = 0;
         let ret = unsafe { libc::waitpid(pid.as_pid_t(), &mut status, WNOHANG) };
         if ret > 0 {
-            FLOGF!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
+            flogf!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
         }
         ret == 0
     });
@@ -1253,7 +1253,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                 j.mut_flags().notified_of_stop = false;
             }
             if status.normal_exited() || status.signal_exited() {
-                FLOGF!(
+                flogf!(
                     proc_reap_external,
                     "Reaped external process '%s' (pid %d, status %d)",
                     proc.argv0().unwrap(),
@@ -1262,7 +1262,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                 );
             } else {
                 assert!(status.stopped() || status.continued());
-                FLOGF!(
+                flogf!(
                     proc_reap_external,
                     "External process '%s' (pid %d, %s)",
                     proc.argv0().unwrap(),
@@ -1307,7 +1307,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             // The process gets the status from its internal proc.
             let status = internal_proc.get_status();
             handle_child_status(j, proc, status);
-            FLOGF!(
+            flogf!(
                 proc_reap_internal,
                 "Reaped internal process '%s' (id %u, status %d)",
                 proc.argv0().unwrap(),

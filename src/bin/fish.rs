@@ -37,7 +37,7 @@ use fish::{
     },
     eprintf,
     event::{self, Event},
-    flog::{self, FLOG, FLOGF, activate_flog_categories_by_pattern, set_flog_file_fd},
+    flog::{self, activate_flog_categories_by_pattern, flog, flogf, set_flog_file_fd},
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
     io::IoChain,
@@ -144,14 +144,14 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     let config_pathname = dir.to_owned() + L!("/config.fish");
     let escaped_pathname = escape(dir) + L!("/config.fish");
     if waccess(&config_pathname, libc::R_OK) != 0 {
-        FLOGF!(
+        flogf!(
             config,
             "not sourcing %s (not readable or does not exist)",
             escaped_pathname
         );
         return false;
     }
-    FLOG!(config, "sourcing", escaped_pathname);
+    flog!(config, "sourcing", escaped_pathname);
 
     let cmd: WString = L!("builtin source ").to_owned() + escaped_pathname.as_utfstr();
 
@@ -311,7 +311,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             }
             'D' => {
                 // TODO: Option is currently useless.
-                // Either remove it or make it work with FLOG.
+                // Either remove it or make it work with flog.
             }
             '?' => {
                 eprintf!(
@@ -434,7 +434,7 @@ fn throwing_main() -> i32 {
 
     // No-exec is prohibited when in interactive mode.
     if opts.is_interactive_session && opts.no_exec {
-        FLOG!(
+        flog!(
             warning,
             wgettext!("Can not use the no-execute mode when running an interactive session")
         );
@@ -555,7 +555,7 @@ fn throwing_main() -> i32 {
     } else if my_optind == args.len() {
         // Implicitly interactive mode.
         if opts.no_exec && isatty(libc::STDIN_FILENO) {
-            FLOG!(
+            flog!(
                 error,
                 "no-execute mode enabled and no script given. Exiting"
             );
@@ -571,7 +571,7 @@ fn throwing_main() -> i32 {
         // We don't need autoclose_fd_t when we use File, it will be closed on drop.
         match File::open(path) {
             Err(e) => {
-                FLOGF!(
+                flogf!(
                     error,
                     wgettext!("Error reading script file '%s':"),
                     path.to_string_lossy()
@@ -593,7 +593,7 @@ fn throwing_main() -> i32 {
                     });
                 res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
                 if res.is_err() {
-                    FLOGF!(
+                    flogf!(
                         warning,
                         wgettext!("Error while reading file %s\n"),
                         path.to_string_lossy()

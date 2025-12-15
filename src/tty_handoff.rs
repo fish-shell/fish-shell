@@ -4,7 +4,7 @@
 use crate::common::{self, safe_write_loop};
 use crate::env::Environment;
 use crate::env_dispatch::MIDNIGHT_COMMANDER_SID;
-use crate::flog::{FLOG, FLOGF};
+use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
 use crate::proc::JobGroupRef;
@@ -42,7 +42,7 @@ pub fn get_scroll_content_up_capability() -> Option<bool> {
 
 pub fn maybe_set_scroll_content_up_capability() {
     SCROLL_CONTENT_UP_SUPPORTED.get_or_init(|| {
-        FLOG!(reader, "SCROLL UP is supported");
+        flog!(reader, "SCROLL UP is supported");
         true
     });
 }
@@ -289,9 +289,9 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) {
     // Flog any terminal protocol changes of interest.
     let mode = if enable { "Enabling" } else { "Disabling" };
     match protocols.quirks.safe_get_supported_protocol() {
-        ProtocolKind::KittyKeyboard => FLOG!(reader, mode, "kitty keyboard protocol"),
-        ProtocolKind::Other => FLOG!(reader, mode, "other extended keys"),
-        ProtocolKind::WorkAroundWezTerm => FLOG!(reader, mode, "wezterm; no modifyOtherKeys"),
+        ProtocolKind::KittyKeyboard => flog!(reader, mode, "kitty keyboard protocol"),
+        ProtocolKind::Other => flog!(reader, mode, "other extended keys"),
+        ProtocolKind::WorkAroundWezTerm => flog!(reader, mode, "wezterm; no modifyOtherKeys"),
         ProtocolKind::None => (),
     };
     (on_write)();
@@ -415,9 +415,9 @@ impl TtyHandoff {
         assert!(!self.reclaimed, "Terminal already reclaimed");
         self.reclaimed = true;
         if self.owner.is_some() {
-            FLOG!(proc_pgroup, "fish reclaiming terminal");
+            flog!(proc_pgroup, "fish reclaiming terminal");
             if unsafe { libc::tcsetpgrp(STDIN_FILENO, libc::getpgrp()) } == -1 {
-                FLOG!(
+                flog!(
                     warning,
                     "Could not return shell to foreground:",
                     errno::errno()
@@ -499,7 +499,7 @@ impl TtyHandoff {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while unsafe { libc::tcsetpgrp(STDIN_FILENO, pgid.as_pid_t()) } != 0 {
-            FLOGF!(proc_termowner, "tcsetpgrp failed: %d", errno::errno().0);
+            flogf!(proc_termowner, "tcsetpgrp failed: %d", errno::errno().0);
 
             // Before anything else, make sure that it's even necessary to call tcsetpgrp.
             // Since it usually _is_ necessary, we only check in case it fails so as to avoid the
@@ -520,7 +520,7 @@ impl TtyHandoff {
                 }
             }
             if getpgrp_res == pgid.get() {
-                FLOGF!(
+                flogf!(
                     proc_termowner,
                     "Process group %d already has control of terminal",
                     pgid
@@ -548,7 +548,7 @@ impl TtyHandoff {
                 } else {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
-                    FLOGF!(
+                    flogf!(
                         proc_termowner,
                         "terminal_give_to_job(): EPERM with pgid %d.",
                         pgid
@@ -560,7 +560,7 @@ impl TtyHandoff {
                 // call's EBADF handler above.
                 return false;
             } else {
-                FLOGF!(
+                flogf!(
                     warning,
                     "Could not send job %d ('%s') with pgid %d to foreground",
                     jg.job_id.to_wstring(),
@@ -577,7 +577,7 @@ impl TtyHandoff {
                 // job/group have been started, the only way this can happen is if the very last
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
-                FLOGF!(
+                flogf!(
                     proc_termowner,
                     "tcsetpgrp called but process group %d has terminated.\n",
                     pgid

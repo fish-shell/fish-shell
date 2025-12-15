@@ -5,7 +5,7 @@
 use crate::common::{wcs2osstring, wcs2zstring};
 use crate::env::{EnvMode, EnvStack, Environment, FALLBACK_PATH};
 use crate::expand::{HOME_DIRECTORY, expand_tilde};
-use crate::flog::{FLOG, FLOGF};
+use crate::flog::{flog, flogf};
 use crate::wchar::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use errno::{Errno, errno, set_errno};
@@ -100,7 +100,7 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
         );
     }
     if data.remoteness == DirRemoteness::Remote {
-        FLOG!(path, "data path appears to be on a network volume");
+        flog!(path, "data path appears to be on a network volume");
     }
 
     let config = get_config_directory();
@@ -116,7 +116,7 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
         );
     }
     if config.remoteness == DirRemoteness::Remote {
-        FLOG!(path, "config path appears to be on a network volume");
+        flog!(path, "config path appears to be on a network volume");
     }
 }
 
@@ -146,13 +146,13 @@ fn maybe_issue_path_warning(
         L!("1").to_owned(),
     );
 
-    FLOG!(error, custom_error_msg);
+    flog!(error, custom_error_msg);
     if path.is_empty() {
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!("Unable to locate the %s directory.", which_dir)
         );
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!(
                 "Please set the %s or HOME environment variable before starting fish.",
@@ -161,7 +161,7 @@ fn maybe_issue_path_warning(
         );
     } else {
         let env_var = if using_xdg { xdg_var } else { L!("HOME") };
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!(
                 "Unable to locate %s directory derived from $%s: '%s'.",
@@ -170,11 +170,11 @@ fn maybe_issue_path_warning(
                 path
             )
         );
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!("The error was '%s'.", Errno(saved_errno).to_string())
         );
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!(
                 "Please set $%s to a directory where you have write access.",
@@ -236,7 +236,7 @@ fn path_check_executable(path: &wstr) -> Result<(), std::io::Error> {
 
 /// Return all the paths that match the given command.
 pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
-    FLOGF!(path, "path_get_paths('%s')", cmd);
+    flogf!(path, "path_get_paths('%s')", cmd);
     let mut paths = vec![];
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother

@@ -1,6 +1,6 @@
 use crate::common::{Named, escape, get_by_sorted_name};
 use crate::env::Environment;
-use crate::flog::FLOG;
+use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
     CharEvent, CharInputStyle, ImplicitEvent, InputEventQueuer, KeyMatchQuality,
@@ -438,7 +438,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         // Use either readch or readch_timed, per our param.
         if self.idx == self.peeked.len() {
             let newevt = if escaped {
-                FLOG!(reader, "reading timed escape");
+                flog!(reader, "reading timed escape");
                 match self.event_queue.readch_timed_esc() {
                     Some(evt) => evt,
                     None => {
@@ -447,7 +447,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     }
                 }
             } else {
-                FLOG!(reader, "readch timed sequence key");
+                flog!(reader, "readch timed sequence key");
                 match self.event_queue.readch_timed_sequence_key() {
                     Some(evt) => evt,
                     None => {
@@ -456,7 +456,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     }
                 }
             };
-            FLOG!(reader, format!("adding peeked {:?}", newevt));
+            flog!(reader, format!("adding peeked {:?}", newevt));
             self.peeked.push(newevt);
         }
         // Now we have peeked far enough; check the event.
@@ -466,7 +466,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         if kevt.seq == L!("\x1b") && key.modifiers == Modifiers::ALT {
             self.idx += 1;
             self.subidx = 0;
-            FLOG!(reader, "matched delayed escape prefix in alt sequence");
+            flog!(reader, "matched delayed escape prefix in alt sequence");
             return self.next_is_char(style, Key::from_raw(key.codepoint), true);
         }
         if *style == KeyNameStyle::Plain {
@@ -474,7 +474,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             if let Some(key_match) = &result {
                 assert!(self.subidx == 0);
                 self.idx += 1;
-                FLOG!(reader, "matched full key", key, "kind", key_match);
+                flog!(reader, "matched full key", key, "kind", key_match);
             }
             return result;
         }
@@ -487,7 +487,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     self.idx += 1;
                     self.subidx = 0;
                 }
-                FLOG!(
+                flog!(
                     reader,
                     format!(
                         "matched char {} with offset {} within raw sequence of length {}",
@@ -502,7 +502,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                 if self.subidx + 1 == actual_seq.len() {
                     self.idx += 1;
                     self.subidx = 0;
-                    FLOG!(reader, "matched escape prefix in raw escape sequence");
+                    flog!(reader, "matched escape prefix in raw escape sequence");
                     return self.next_is_char(style, Key::from_raw(key.codepoint), true);
                 } else if actual_seq
                     .get(self.subidx + 1)
@@ -515,7 +515,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                         self.idx += 1;
                         self.subidx = 0;
                     }
-                    FLOG!(reader, format!("matched {key} against raw escape sequence"));
+                    flog!(reader, format!("matched {key} against raw escape sequence"));
                     return Some(KeyMatchQuality::Exact);
                 }
             }
@@ -570,7 +570,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             prev = *key;
         }
         if self.subidx != 0 {
-            FLOG!(
+            flog!(
                 reader,
                 "legacy binding matched prefix of key encoding but did not consume all of it"
             );
@@ -619,7 +619,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                 continue;
             }
 
-            // FLOG!(reader, "trying mapping", format!("{:?}", m));
+            // flog!(reader, "trying mapping", format!("{:?}", m));
             if self.try_peek_sequence(&m.key_name_style, &m.seq, &mut quality) {
                 // // A binding for just escape should also be deferred
                 // // so escape sequences take precedence.
@@ -647,7 +647,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         }
         if self.char_sequence_interrupted() {
             // We might have matched a longer sequence, but we were interrupted, e.g. by a signal.
-            FLOG!(reader, "torn sequence, rearranging events");
+            flog!(reader, "torn sequence, rearranging events");
             return None;
         }
 
@@ -725,7 +725,7 @@ impl<'a> Reader<'a> {
                     return evt;
                 }
                 CharEvent::Key(ref kevt) => {
-                    FLOG!(
+                    flog!(
                         reader,
                         "Read char",
                         kevt.key,
@@ -751,7 +751,7 @@ impl<'a> Reader<'a> {
         // Check for ordinary mappings.
         let ip = input_mappings();
         if let Some(mapping) = peeker.find_mapping(vars, &ip) {
-            FLOG!(
+            flog!(
                 reader,
                 format!("Found mapping {:?} from {:?}", &mapping, &peeker.peeked)
             );
@@ -771,7 +771,7 @@ impl<'a> Reader<'a> {
             return;
         }
 
-        FLOG!(reader, "no generic found, ignoring char...");
+        flog!(reader, "no generic found, ignoring char...");
         let _ = peeker.next();
         peeker.consume();
     }

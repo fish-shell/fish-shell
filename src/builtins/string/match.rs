@@ -4,7 +4,7 @@ use std::num::NonZeroUsize;
 
 use super::*;
 use crate::env::{EnvMode, EnvVar, EnvVarFlags};
-use crate::flog::FLOG;
+use crate::flog::flog;
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wildcard::{ANY_STRING, wildcard_match};
 
@@ -129,7 +129,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
 
         for InputValue { arg, .. } in arguments(args, optind, streams) {
             if let Err(e) = matcher.report_matches(arg.as_ref(), streams) {
-                FLOG!(error, "pcre2_match unexpected error:", e.error_message())
+                flog!(error, "pcre2_match unexpected error:", e.error_message())
             }
             let match_count = matcher.match_count();
             if self.quiet && match_count > 0

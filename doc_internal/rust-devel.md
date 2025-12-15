@@ -58,7 +58,7 @@ The basic development loop for this port:
    - Do this even if it results in less idiomatic Rust, but avoid being super-dogmatic either way.
    - One technique is to paste the C++ into the Rust code, commented out, and go line by line.
 4. Decide whether any existing C++ callers should invoke the Rust implementation, or whether we should keep the C++ one.
-   - Utility functions may have both a Rust and C++ implementation. An example is `FLOG` where interop is too hard.
+   - Utility functions may have both a Rust and C++ implementation. An example is `flog` where interop is too hard.
    - Major components (e.g. builtin implementations) should _not_ be duplicated; instead the Rust should call C++ or vice-versa.
 5. Remember to run `cargo fmt` and `cargo clippy` to keep the codebase somewhat clean (otherwise CI will fail). If you use rust-analyzer, you can run clippy automatically by setting `rust-analyzer.checkOnSave.command = "clippy"`.
 
@@ -144,7 +144,7 @@ These types should be confined to the FFI modules, in particular `wchar_ffi`. Th
 
 ### Format strings
 
-Rust's builtin `std::fmt` modules do not accept runtime-provided format strings, so we mostly won't use them, except perhaps for FLOG / other non-translated text.
+Rust's builtin `std::fmt` modules do not accept runtime-provided format strings, so we mostly won't use them, except perhaps for flog / other non-translated text.
 
 Instead we'll continue to use printf-style strings, with a Rust printf implementation.
 

@@ -73,7 +73,7 @@ impl FdReadableSet {
     /// Add an fd to the set. The fd is ignored if negative (for convenience).
     pub fn add(&mut self, fd: RawFd) {
         if fd >= (libc::FD_SETSIZE as RawFd) {
-            //FLOGF(error, "fd %d too large for select()", fd);
+            //flogf!(error, "fd %d too large for select()", fd);
             return;
         }
         if fd >= 0 {

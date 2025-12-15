@@ -22,7 +22,7 @@ set. This is the real power of topics: you can wait for a sigchld signal OR a th
 
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::{self, AutoClosePipes, make_fd_nonblocking};
-use crate::flog::{FLOG, FloggableDebug};
+use crate::flog::{FloggableDebug, flog};
 use crate::wchar::WString;
 use crate::wutil::perror;
 use nix::errno::Errno;
@@ -427,7 +427,7 @@ impl TopicMonitor {
         for topic in all_topics() {
             if changed_topic_bits & topic_to_bit(topic) != 0 {
                 data.current.set(topic, data.current.get(topic) + 1);
-                FLOG!(
+                flog!(
                     topic_monitor,
                     "Updating topic",
                     topic,
@@ -470,7 +470,7 @@ impl TopicMonitor {
         loop {
             // See if the updated gen list has changed. If so we don't need to become the reader.
             let current = self.updated_gens_in_data(&mut data);
-            // FLOG(topic_monitor, "TID", thread_id(), "local ", gens->describe(), ": current",
+            // flog!(topic_monitor, "TID", thread_id(), "local ", gens->describe(), ": current",
             //      current.describe());
             if *gens != current {
                 *gens = current;
@@ -509,7 +509,7 @@ impl TopicMonitor {
                 }
                 // We successfully did a CAS from 0 -> STATUS_NEEDS_WAKEUP.
                 // Now any successive topic post must signal us.
-                //FLOG(topic_monitor, "TID", thread_id(), "becoming reader");
+                //flog!(topic_monitor, "TID", thread_id(), "becoming reader");
                 become_reader = true;
                 data.has_reader = true;
                 break;
@@ -539,7 +539,7 @@ impl TopicMonitor {
                 // variable to wake up any other threads waiting for us to finish reading.
                 let mut data = self.data_.lock().unwrap();
                 gens = data.current.clone();
-                // FLOG(topic_monitor, "TID", thread_id(), "local", input_gens.describe(),
+                // flog!(topic_monitor, "TID", thread_id(), "local", input_gens.describe(),
                 //      "read() complete, current is", gens.describe());
                 assert!(data.has_reader, "We should be the reader");
                 data.has_reader = false;

@@ -10,7 +10,7 @@ use crate::env::config_paths::ConfigPaths;
 use crate::env::{EnvMode, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
 use crate::event::Event;
-use crate::flog::FLOG;
+use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input::{FISH_BIND_MODE_VAR, init_input};
 use crate::nix::{geteuid, getpid};
@@ -261,7 +261,7 @@ impl EnvStack {
     pub fn set_pwd_from_getcwd(&self) {
         let cwd = wgetcwd();
         if cwd.is_empty() {
-            FLOG!(
+            flog!(
                 error,
                 wgettext!(
                     "Could not determine current working directory. Is your locale set correctly?"

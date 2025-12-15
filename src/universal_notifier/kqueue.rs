@@ -1,6 +1,6 @@
-use crate::FLOGF;
 use crate::common::wcs2osstring;
 use crate::env_universal_common::default_vars_path;
+use crate::flogf;
 use crate::universal_notifier::UniversalNotifier;
 use crate::wchar::prelude::*;
 use crate::wutil::wdirname;
@@ -67,13 +67,13 @@ impl KqueueNotifier {
         let kq = match nix::sys::event::Kqueue::new() {
             Ok(kq) => kq,
             Err(e) => {
-                FLOGF!(warning, "Failed to create kqueue: {}", e.desc());
+                flogf!(warning, "Failed to create kqueue: {}", e.desc());
                 return None;
             }
         };
         // Calling kevent with an empty event list causes it to add without watching for events.
         if let Err(e) = kq.kevent(&[change_event], &mut [], None) {
-            FLOGF!(
+            flogf!(
                 warning,
                 "Could not register fs watch event with kqueue: {}",
                 e.desc()
@@ -135,7 +135,7 @@ impl UniversalNotifier for KqueueNotifier {
                 for event in &events[..event_count] {
                     if event.flags().contains(EvFlags::EV_ERROR) {
                         // Error encountered processing this changelist item
-                        FLOGF!(
+                        flogf!(
                             warning,
                             "EV_ERROR in kqueue uvar monitor! Errno: {}",
                             event.data()

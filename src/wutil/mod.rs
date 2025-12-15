@@ -14,7 +14,7 @@ use crate::common::{
 use crate::wchar::{L, WString, wstr};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, wcs2bytes_callback};
-use crate::{FLOG, fallback};
+use crate::{fallback, flog};
 use errno::errno;
 pub use gettext::{
     LocalizableString, localizable_consts, localizable_string, wgettext, wgettext_fmt,
@@ -103,7 +103,7 @@ pub fn wgetcwd() -> WString {
     match std::env::current_dir() {
         Ok(cwd) => bytes2wcstring(cwd.into_os_string().as_bytes()),
         Err(e) => {
-            FLOG!(error, "std::env::current_dir() failed with error:", e);
+            flog!(error, "std::env::current_dir() failed with error:", e);
             WString::new()
         }
     }

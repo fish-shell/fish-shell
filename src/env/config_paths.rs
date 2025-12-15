@@ -1,5 +1,5 @@
 use crate::common::{BUILD_DIR, get_program_name};
-use crate::{FLOG, FLOGF};
+use crate::{flog, flogf};
 use fish_build_helper::workspace_root;
 use once_cell::sync::OnceCell;
 use std::ffi::OsStr;
@@ -22,7 +22,7 @@ impl ConfigPaths {
     pub fn new() -> Self {
         FISH_PATH.get_or_init(compute_fish_path);
         let exec_path = get_fish_path();
-        FLOG!(
+        flog!(
             config,
             match exec_path {
                 FishPath::Absolute(path) => format!("executable path: {}", path.display()),
@@ -30,14 +30,14 @@ impl ConfigPaths {
             }
         );
         let paths = Self::from_exec_path(exec_path);
-        FLOGF!(
+        flogf!(
             config,
             "paths.sysconf: %s",
             paths.sysconf.display().to_string()
         );
         macro_rules! log_optional_path {
             ($field:ident) => {
-                FLOGF!(
+                flogf!(
                     config,
                     "paths.%s: %s",
                     stringify!($field),
@@ -76,7 +76,7 @@ impl ConfigPaths {
             match unresolved_exec_path {
                 Absolute(p) => {
                     let Ok(exec_path) = p.canonicalize() else {
-                        FLOG!(
+                        flog!(
                             config,
                             format!(
                                 "Failed to canonicalize executable path '{}'. Using default paths",
@@ -88,7 +88,7 @@ impl ConfigPaths {
                     exec_path
                 }
                 LookUpInPath => {
-                    FLOG!(
+                    flog!(
                         config,
                         "No absolute executable path available. Using default paths",
                     );
@@ -98,7 +98,7 @@ impl ConfigPaths {
         };
 
         let Some(exec_path_parent) = exec_path.parent() else {
-            FLOG!(
+            flog!(
                 config,
                 "Executable path reported to be the root directory?! Using default paths.",
             );
@@ -117,7 +117,7 @@ impl ConfigPaths {
             // Installing somewhere else inside the workspace is fine.
             && prefix != workspace_root
         } {
-            FLOG!(config, "Running from relocatable tree");
+            flog!(config, "Running from relocatable tree");
             let prefix = exec_path_parent.parent().unwrap();
             let data = prefix.join("share/fish");
             Self {
@@ -128,7 +128,7 @@ impl ConfigPaths {
                 doc: Some(prefix.join("share/doc/fish")),
             }
         } else if exec_path.starts_with(BUILD_DIR) {
-            FLOG!(
+            flog!(
                 config,
                 format!(
                     "Running out of build directory, using paths relative to $CARGO_MANIFEST_DIR ({})",
@@ -149,7 +149,7 @@ impl ConfigPaths {
                 doc: user_doc_join("html"),
             }
         } else {
-            FLOG!(
+            flog!(
                 config,
                 "Not in a relocatable tree or build directory, using default paths"
             );

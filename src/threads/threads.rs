@@ -1,5 +1,5 @@
 //! Support for thread pools and thread management.
-use crate::flog::{FLOG, FloggableDebug};
+use crate::flog::{FloggableDebug, flog};
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -154,7 +154,7 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     let result = match std::thread::Builder::new().spawn(callback) {
         Ok(handle) => {
             let thread_id = thread_id();
-            FLOG!(iothread, "rust thread", thread_id, "spawned");
+            flog!(iothread, "rust thread", thread_id, "spawned");
             // Drop the handle to detach the thread
             drop(handle);
             true
@@ -252,7 +252,7 @@ impl ThreadPool {
             let mut data = self.shared.lock().expect("Mutex poisoned!");
             local_thread_count = data.total_threads;
             data.request_queue.push_back(work_item);
-            FLOG!(
+            flog!(
                 iothread,
                 "enqueuing work item (count is ",
                 data.request_queue.len(),
@@ -277,7 +277,7 @@ impl ThreadPool {
             ThreadAction::None => (),
             ThreadAction::Wake => {
                 // Wake a thread if we decided to do so.
-                FLOG!(iothread, "notifying thread ", std::thread::current().id());
+                flog!(iothread, "notifying thread ", std::thread::current().id());
                 self.cond_var.notify_one();
             }
             ThreadAction::Spawn => {
@@ -287,7 +287,7 @@ impl ThreadPool {
                 // some degree of confidence. (This is also not an error we expect to routinely run
                 // into under normal, non-resource-starved circumstances.)
                 if self.spawn_thread() {
-                    FLOG!(iothread, "pthread spawned");
+                    flog!(iothread, "pthread spawned");
                 } else {
                     // We failed to spawn a thread; decrement the thread count.
                     self.shared.lock().expect("Mutex poisoned!").total_threads -= 1;
@@ -339,7 +339,7 @@ impl ThreadPool {
     /// This is run in a background thread.
     fn run_worker(&self) {
         while let Some(work_item) = self.dequeue_work_or_commit_to_exit() {
-            FLOG!(
+            flog!(
                 iothread,
                 "pthread ",
                 std::thread::current().id(),
@@ -350,7 +350,7 @@ impl ThreadPool {
             work_item();
         }
 
-        FLOG!(
+        flog!(
             iothread,
             "pthread ",
             std::thread::current().id(),

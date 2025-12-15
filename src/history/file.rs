@@ -16,7 +16,7 @@ use super::yaml_backend::{
 };
 use crate::{
     common::wcs2bytes,
-    flog::FLOG,
+    flog::flog,
     path::{DirRemoteness, path_get_data_remoteness},
     wutil::FileId,
 };
@@ -273,7 +273,7 @@ impl TryFrom<MmapRegion> for RawHistoryFile {
         let type_ = infer_file_type(&region);
         if type_ == HistoryFileType::Fish1_x {
             let error_message = "unsupported history file format 1.x";
-            FLOG!(error, error_message);
+            flog!(error, error_message);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 error_message,

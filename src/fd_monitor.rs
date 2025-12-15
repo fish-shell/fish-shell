@@ -12,7 +12,7 @@ use std::time::Duration;
 use crate::common::exit_without_destructors;
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::AutoCloseFd;
-use crate::flog::FLOG;
+use crate::flog::flog;
 use crate::threads::assert_is_background_thread;
 use crate::wutil::perror;
 use errno::errno;
@@ -270,7 +270,7 @@ impl FdMonitor {
         };
 
         if start_thread {
-            FLOG!(fd_monitor, "Thread starting");
+            flog!(fd_monitor, "Thread starting");
             let background_monitor = BackgroundFdMonitor {
                 data: Arc::clone(&self.data),
                 change_signaller: Arc::clone(&self.change_signaller),
@@ -439,7 +439,7 @@ impl BackgroundFdMonitor {
                         data.running,
                         "Thread should be running because we're that thread"
                     );
-                    FLOG!(fd_monitor, "Thread exiting");
+                    flog!(fd_monitor, "Thread exiting");
                     data.running = false;
                     break;
                 }

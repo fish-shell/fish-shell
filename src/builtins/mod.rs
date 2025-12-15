@@ -55,7 +55,7 @@ mod prelude {
 
     #[allow(unused_imports)]
     pub(crate) use crate::{
-        flog::{FLOG, FLOGF},
+        flog::{flog, flogf},
         io::{IoStreams, SeparationType},
         parser::Parser,
         wchar::prelude::*,

@@ -39,6 +39,8 @@ function __fish_help_describe -a help_item
             return
         case contributing#code-style
             return
+        case contributing#commit-history
+            return
         case contributing#configuring-your-editor-for-fish-scripts
             return
         case contributing#contributing-completions

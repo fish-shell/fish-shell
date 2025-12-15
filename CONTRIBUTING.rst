@@ -52,6 +52,23 @@ In short:
 - Be conservative in what you need (keep to the agreed minimum supported Rust version, limit new dependencies)
 - Use automated tools to help you (``build_tools/check.sh``)
 
+Commit History
+==============
+
+We use a linear, `recipe-style <https://www.bitsnbites.eu/git-history-work-log-vs-recipe/>`__ history.
+Every commit should pass our checks.
+We do not want "fixup" commits in our history.
+If you notice an issue with a commit in a pull request, or get feedback suggesting changes,
+you should rewrite the commit history and fix the relevant commits directly,
+instead of adding new "fixup" commits.
+When a pull request is ready, we rebase it on top of the current master branch,
+so don't be shy about rewriting the history of commits which are not on master yet.
+Rebasing (not merging) your pull request on the latest version of master is also welcome, especially if it resolves conflicts.
+
+If you're using Git, consider using `jj <https://www.jj-vcs.dev/>`__ to make this easier.
+
+If a commit should close an issue, add a ``Fixes #<issue-number>`` line at the end of the commit description.
+
 Contributing completions
 ========================
 

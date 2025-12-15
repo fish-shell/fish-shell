@@ -7,8 +7,8 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
-use crate::FLOG;
 use crate::editable_line::line_at_cursor;
+use crate::flog;
 use crate::key::ViewportPosition;
 use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
 use std::borrow::Cow;
@@ -29,7 +29,7 @@ use crate::common::{
 };
 use crate::env::Environment;
 use crate::fallback::fish_wcwidth;
-use crate::flog::FLOGF;
+use crate::flog::flogf;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
 use crate::terminal::TerminalCommand::{
@@ -302,7 +302,7 @@ impl Screen {
         let screen_width = curr_termsize.width();
         let screen_height = curr_termsize.height();
         static REPAINTS: AtomicU32 = AtomicU32::new(0);
-        FLOGF!(
+        flogf!(
             SCREEN,
             "Repaint %u",
             1 + REPAINTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
@@ -567,7 +567,7 @@ impl Screen {
         let Some(lines_to_scroll) = self.viewport_y else {
             return;
         };
-        FLOG!(READER, "Pushing to scrollback");
+        flog!(READER, "Pushing to scrollback");
         if lines_to_scroll == 0 {
             return;
         }
@@ -580,7 +580,7 @@ impl Screen {
     }
 
     pub fn set_position_in_viewport(&mut self, whence: &str, viewport_y: Option<usize>) {
-        FLOGF!(
+        flogf!(
             READER,
             "Setting screen y to %s due to %s",
             viewport_y.map_or("<none>".to_string(), |y| format!("{y}")),
@@ -596,7 +596,7 @@ impl Screen {
         let actual_lines = self.actual.line_count();
         let remaining_vertical_space = screen_height.saturating_sub(actual_lines);
         if viewport_y > remaining_vertical_space {
-            FLOGF!(
+            flogf!(
                 READER,
                 "printing %u lines at y=%u would exceed window height (%u); \
                      assuming the extra lines have been pushed to scrollback, setting screen y to %d",
@@ -612,7 +612,7 @@ impl Screen {
     pub fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
         let prompt_y = viewport_cursor_y.checked_sub(self.actual.cursor.y);
         prompt_y.unwrap_or_else(|| {
-            FLOG!(
+            flog!(
                 READER,
                 "Reported cursor line index",
                 viewport_cursor_y,
@@ -634,7 +634,7 @@ impl Screen {
             .y
             .checked_sub(viewport_y)
             .unwrap_or_else(|| {
-                FLOG!(
+                flog!(
                     READER,
                     "Given y",
                     viewport_position.y,

@@ -1,5 +1,5 @@
 use crate::common::wcs2zstring;
-use crate::flog::FLOG;
+use crate::flog::flog;
 use crate::signal::signal_check_cancel;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
@@ -145,7 +145,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
                     pipes
                 }
                 Err(err) => {
-                    FLOG!(WARNING, PIPE_ERROR.localize());
+                    flog!(WARNING, PIPE_ERROR.localize());
                     perror("pipe2");
                     return Err(err);
                 }
@@ -154,7 +154,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
             let pipes = match nix::unistd::pipe() {
                 Ok(pipes) => pipes,
                 Err(err) => {
-                    FLOG!(WARNING, PIPE_ERROR.localize());
+                    flog!(WARNING, PIPE_ERROR.localize());
                     perror("pipe");
                     return Err(err);
                 }

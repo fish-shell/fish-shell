@@ -48,7 +48,7 @@ use crate::{
     env::{EnvMode, EnvStack, Environment},
     expand::{ExpandFlags, expand_one},
     fds::wopen_cloexec,
-    flog::{FLOG, FLOGF},
+    flog::{flog, flogf},
     fs::fsync,
     history::file::{HistoryFile, RawHistoryFile, append_history_item_to_buffer},
     io::IoStreams,
@@ -136,7 +136,7 @@ impl Drop for TimeProfiler {
             let ns_per_ms = 1_000_000;
             let ms = duration.as_millis();
             let ns = duration.as_nanos() - (ms * ns_per_ms);
-            FLOGF!(
+            flogf!(
                 PROFILE_HISTORY,
                 "%s: %d.%06d ms",
                 self.what,
@@ -144,7 +144,7 @@ impl Drop for TimeProfiler {
                 ns as u32
             )
         } else {
-            FLOGF!(PROFILE_HISTORY, "%s: ??? ms", self.what)
+            flogf!(PROFILE_HISTORY, "%s: ??? ms", self.what)
         }
     }
 }
@@ -428,7 +428,7 @@ impl HistoryImpl {
                 self.history_file_id = file_id;
                 let _profiler = TimeProfiler::new("populate_from_file_contents");
                 let file_contents = history_file.decode(Some(self.boundary_timestamp));
-                FLOGF!(
+                flogf!(
                     HISTORY,
                     "Loaded %u old items",
                     file_contents.offsets().len()
@@ -436,7 +436,7 @@ impl HistoryImpl {
                 file_contents
             }
             Err(e) => {
-                FLOG!(HISTORY_FILE, "Error reading from history file:", e);
+                flog!(HISTORY_FILE, "Error reading from history file:", e);
                 HistoryFile::create_empty()
             }
         };
@@ -565,7 +565,7 @@ impl HistoryImpl {
             }
         }
         if let Some(err) = err {
-            FLOG!(
+            flog!(
                 HISTORY_FILE,
                 "Error writing to temporary history file:",
                 err
@@ -578,7 +578,7 @@ impl HistoryImpl {
 
     /// Saves history by rewriting the file.
     fn save_internal_via_rewrite(&mut self, history_path: &wstr) -> std::io::Result<()> {
-        FLOGF!(
+        flogf!(
             HISTORY,
             "Saving %u items via rewrite",
             self.new_items.len() - self.first_unwritten_new_item_index
@@ -611,7 +611,7 @@ impl HistoryImpl {
 
     /// Saves history by appending to the file.
     fn save_internal_via_appending(&mut self, history_path: &wstr) -> std::io::Result<()> {
-        FLOGF!(
+        flogf!(
             HISTORY,
             "Saving %u items via appending",
             self.new_items.len() - self.first_unwritten_new_item_index
@@ -694,7 +694,7 @@ impl HistoryImpl {
         let history_path = match self.history_file_path() {
             Ok(history_path) => history_path.unwrap(),
             Err(e) => {
-                FLOG!(HISTORY, "Saving history failed:", e);
+                flog!(HISTORY, "Saving history failed:", e);
                 return;
             }
         };
@@ -705,7 +705,7 @@ impl HistoryImpl {
         if !vacuum && self.deleted_items.is_empty() {
             // Try doing a fast append.
             if let Err(e) = self.save_internal_via_appending(&history_path) {
-                FLOG!(HISTORY, "Appending to history failed:", e);
+                flog!(HISTORY, "Appending to history failed:", e);
             } else {
                 ok = true;
             }
@@ -713,7 +713,7 @@ impl HistoryImpl {
         if !ok {
             // We did not or could not append; rewrite the file ("vacuum" it).
             if let Err(e) = self.save_internal_via_rewrite(&history_path) {
-                FLOG!(HISTORY, "Rewriting history failed:", e)
+                flog!(HISTORY, "Rewriting history failed:", e)
             }
         }
     }
@@ -894,7 +894,7 @@ impl HistoryImpl {
         ) {
             Ok(file) => file,
             Err(err) => {
-                FLOG!(HISTORY_FILE, "Error when writing history file:", err);
+                flog!(HISTORY_FILE, "Error when writing history file:", err);
                 return;
             }
         };
@@ -906,7 +906,7 @@ impl HistoryImpl {
             }
 
             if let Err(err) = dst_file.write_all(&buf[..n]) {
-                FLOG!(HISTORY_FILE, "Error when writing history file:", err);
+                flog!(HISTORY_FILE, "Error when writing history file:", err);
                 break;
             }
         }
@@ -1679,7 +1679,7 @@ pub fn history_session_id_from_var(history_name_var: Option<EnvVar>) -> WString 
     if session_id.is_empty() || valid_var_name(&session_id) {
         session_id
     } else {
-        FLOG!(
+        flog!(
             ERROR,
             wgettext_fmt!(
                 "History session ID '%s' is not a valid variable name. Falling back to `%s`.",

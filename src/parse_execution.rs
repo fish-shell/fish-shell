@@ -19,7 +19,7 @@ use crate::exec::exec_job;
 use crate::expand::{
     ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_to_command_and_args,
 };
-use crate::flog::FLOG;
+use crate::flog::flog;
 use crate::function;
 use crate::io::{IoChain, IoStreams, OutputStream, StringOutputStream};
 use crate::job_group::JobGroup;
@@ -248,7 +248,7 @@ impl<'a> ExecutionContext<'a> {
     ) -> EndExecutionReason {
         if !ctx.check_cancel() {
             if error_list.is_empty() {
-                FLOG!(ERROR, "Error reported but no error text found.");
+                flog!(ERROR, "Error reported but no error text found.");
             }
 
             // Get a backtrace.

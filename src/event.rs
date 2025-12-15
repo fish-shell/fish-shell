@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
 use crate::common::{ScopeGuard, escape};
-use crate::flog::FLOG;
+use crate::flog::flog;
 use crate::io::{IoChain, IoStreams};
 use crate::job_group::MaybeJobId;
 use crate::parser::{Block, Parser};
@@ -499,7 +499,7 @@ fn fire_internal(parser: &Parser, event: &Event) {
             parser.set_last_statuses(saved_statuses);
         });
 
-        FLOG!(
+        flog!(
             EVENT,
             "Firing event '",
             event.desc.str_param1().unwrap_or(L!("")),

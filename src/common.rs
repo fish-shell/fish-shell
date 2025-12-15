@@ -1558,9 +1558,9 @@ pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
         // this check: if the environment variable FISH_NO_WSL_CHECK is present, this test
         // is bypassed. We intentionally do not include this in the error message because
         // it'll only allow fish to run but not to actually work. Here be dragons!
-        use crate::flog::FLOG;
+        use crate::flog::flog;
         if env::var_os("FISH_NO_WSL_CHECK").is_none() {
-            FLOG!(
+            flog!(
                 ERROR,
                 concat!(
                     "This version of WSL has known bugs that prevent fish from working.\n",

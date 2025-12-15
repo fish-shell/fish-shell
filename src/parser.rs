@@ -34,7 +34,7 @@ use crate::wait_handle::WaitHandleStore;
 use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
 use crate::wutil::perror;
-use crate::{FLOG, FLOGF, function};
+use crate::{flog, flogf, function};
 use libc::c_int;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
@@ -1098,7 +1098,7 @@ impl Parser {
         let mut f = match std::fs::File::create(path) {
             Ok(f) => f,
             Err(err) => {
-                FLOG!(
+                flog!(
                     WARNING,
                     wgettext_fmt!(
                         "Could not write profiling information to file '%s': %s",
@@ -1239,7 +1239,7 @@ impl Parser {
         {
             return;
         };
-        FLOGF!(
+        flogf!(
             READER,
             "Setting %s to %s",
             FISH_TERMINAL_COLOR_THEME_VAR,

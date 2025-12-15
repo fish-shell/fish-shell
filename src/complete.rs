@@ -36,7 +36,7 @@ use crate::{
         ExpandFlags, ExpandResultCode, expand_escape_string, expand_escape_variable, expand_one,
         expand_string, expand_to_receiver,
     },
-    flog::{FLOG, FLOGF},
+    flog::{flog, flogf},
     function,
     history::{History, history_session_id},
     operation_context::OperationContext,
@@ -628,7 +628,7 @@ impl<'ctx> Completer<'ctx> {
         if let Some(parser) = self.ctx.maybe_parser() {
             let level = &mut parser.libdata_mut().complete_recursion_level;
             if *level >= 24 {
-                FLOG!(
+                flog!(
                     ERROR,
                     wgettext!("completion reached maximum recursion depth, possible cycle?"),
                 );
@@ -1255,7 +1255,7 @@ impl<'ctx> Completer<'ctx> {
             // This prevents errors caused during the execution of completion providers for
             // tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
             // and automatic completions ("gi" autosuggestion provider -> git)
-            FLOG!(COMPLETE, "Skipping completions for non-existent command");
+            flog!(COMPLETE, "Skipping completions for non-existent command");
         } else if let Some(parser) = self.ctx.maybe_parser() {
             complete_load(&cmd, parser);
         } else if !completion_autoloader
@@ -1618,7 +1618,7 @@ impl<'ctx> Completer<'ctx> {
                     .result,
                 ExpandResultCode::error | ExpandResultCode::overflow,
             ) {
-                FLOGF!(COMPLETE, "Error while expanding string '%s'", s);
+                flogf!(COMPLETE, "Error while expanding string '%s'", s);
             }
             Self::escape_opening_brackets(&mut self.completions[first_from_start..], s);
         }
@@ -1640,7 +1640,7 @@ impl<'ctx> Completer<'ctx> {
             .result,
             ExpandResultCode::error | ExpandResultCode::overflow
         ) {
-            FLOGF!(COMPLETE, "Error while expanding string '%s'", sep_string);
+            flogf!(COMPLETE, "Error while expanding string '%s'", sep_string);
         }
 
         Self::escape_opening_brackets(&mut local_completions, s);
@@ -2105,7 +2105,7 @@ impl<'ctx> Completer<'ctx> {
             // for username completion and variable name completion. They shouldn't end up here
             // anyway because they won't contain '['.
             if comp.flags.contains(CompleteFlags::DONT_ESCAPE) {
-                FLOG!(WARNING, "unexpected completion flag");
+                flog!(WARNING, "unexpected completion flag");
             }
             comp.completion.insert_utfstr(0, &unescaped_argument);
         }

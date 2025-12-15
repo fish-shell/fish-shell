@@ -10,7 +10,7 @@
  * Most clients will be interested in visiting the nodes of an ast.
  */
 use crate::common::{UnescapeStringStyle, unescape_string};
-use crate::flog::{FLOG, FLOGF};
+use crate::flog::{flog, flogf};
 use crate::parse_constants::{
     ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode,
     ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags, SOURCE_OFFSET_INVALID,
@@ -1647,7 +1647,7 @@ macro_rules! internal_error {
         $(, $args:expr)*
         $(,)?
     ) => {
-        FLOG!(
+        flog!(
             DEBUG,
             concat!(
                 "Internal parse error from {$func} - this indicates a bug in fish.",
@@ -1655,7 +1655,7 @@ macro_rules! internal_error {
             )
             $(, $args)*
         );
-        FLOGF!(DEBUG, "Encountered while parsing:<<<<\n%s\n>>>", $self.tokens.src);
+        flogf!(DEBUG, "Encountered while parsing:<<<<\n%s\n>>>", $self.tokens.src);
         panic!();
     };
 }
@@ -1697,7 +1697,7 @@ macro_rules! parse_error_range {
         if !$self.unwinding {
             $self.unwinding = true;
 
-            FLOGF!(AST_CONSTRUCTION, "%*sparse error - begin unwinding", $self.spaces(), "");
+            flogf!(AST_CONSTRUCTION, "%*sparse error - begin unwinding", $self.spaces(), "");
             // TODO: can store this conditionally dependent on flags.
             if $range.start() != SOURCE_OFFSET_INVALID {
                 $self.errors.push($range);
@@ -1801,7 +1801,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
     }
 
     fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N) {
-        FLOGF!(
+        flogf!(
             AST_CONSTRUCTION,
             "%*swill_visit %s",
             self.spaces(),
@@ -2298,7 +2298,7 @@ impl<'s> Populator<'s> {
                 "exhaust_stream should only be set at top level, and so we should not be unwinding"
             );
             // Mark in the list that it was unwound.
-            FLOGF!(
+            flogf!(
                 AST_CONSTRUCTION,
                 "%*sunwinding %s",
                 self.spaces(),
@@ -2331,7 +2331,7 @@ impl<'s> Populator<'s> {
                     }
                     let tok = self.tokens.pop();
                     self.errors.push(tok.range());
-                    FLOGF!(
+                    flogf!(
                         AST_CONSTRUCTION,
                         "%*schomping range %u-%u",
                         self.spaces(),
@@ -2340,7 +2340,7 @@ impl<'s> Populator<'s> {
                         tok.source_length()
                     );
                 }
-                FLOGF!(AST_CONSTRUCTION, "%*sdone unwinding", self.spaces(), "");
+                flogf!(AST_CONSTRUCTION, "%*sdone unwinding", self.spaces(), "");
                 self.unwinding = false;
             }
 
@@ -2376,7 +2376,7 @@ impl<'s> Populator<'s> {
             *list.as_mut() = contents.into_boxed_slice();
         }
 
-        FLOGF!(
+        flogf!(
             AST_CONSTRUCTION,
             "%*s%s size: %u",
             self.spaces(),

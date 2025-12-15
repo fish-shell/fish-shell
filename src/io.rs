@@ -4,7 +4,7 @@ use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
     AutoCloseFd, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
 };
-use crate::flog::{FLOG, FLOGF, should_flog};
+use crate::flog::{flog, flogf, should_flog};
 use crate::nix::isatty;
 use crate::path::path_apply_working_directory;
 use crate::proc::JobGroupRef;
@@ -335,7 +335,7 @@ impl IoBufferfill {
         match make_fd_nonblocking(pipes.read.as_raw_fd()) {
             Ok(_) => (),
             Err(e) => {
-                FLOG!(WARNING, PIPE_ERROR);
+                flog!(WARNING, PIPE_ERROR);
                 perror_io("fcntl", &e);
                 return Err(e);
             }
@@ -530,15 +530,15 @@ impl IoChain {
             // or there's a non-directory component,
             // find the first problematic component for a better message.
             if [ENOENT, ENOTDIR].contains(&err) {
-                FLOGF!(WARNING, FILE_ERROR, target);
+                flogf!(WARNING, FILE_ERROR, target);
                 let mut dname: &wstr = target;
                 while !dname.is_empty() {
                     let next: &wstr = wdirname(dname);
                     if let Ok(md) = wstat(next) {
                         if !md.is_dir() {
-                            FLOGF!(WARNING, "Path '%s' is not a directory", next);
+                            flogf!(WARNING, "Path '%s' is not a directory", next);
                         } else {
-                            FLOGF!(WARNING, "Path '%s' does not exist", dname);
+                            flogf!(WARNING, "Path '%s' does not exist", dname);
                         }
                         break;
                     }
@@ -548,7 +548,7 @@ impl IoChain {
                 // If we get EINTR we had a cancel signal.
                 // That's expected (ctrl-c on the commandline),
                 // so no warning.
-                FLOGF!(WARNING, FILE_ERROR, target);
+                flogf!(WARNING, FILE_ERROR, target);
                 perror("open");
             }
         };
@@ -577,7 +577,7 @@ impl IoChain {
                         }
                         Err(err) => {
                             if oflags.contains(OFlag::O_EXCL) && err == nix::Error::EEXIST {
-                                FLOGF!(WARNING, NOCLOB_ERROR, spec.target);
+                                flogf!(WARNING, NOCLOB_ERROR, spec.target);
                             } else if spec.mode != RedirectionMode::TryInput
                                 && should_flog!(WARNING)
                             {

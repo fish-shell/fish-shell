@@ -1,8 +1,8 @@
 // Generic output functions.
-use crate::FLOGF;
 use crate::color::{Color, Color24};
 use crate::common::ToCString;
 use crate::common::{self, EscapeStringStyle, escape_string, wcs2bytes, wcs2bytes_appending};
+use crate::flogf;
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
@@ -887,7 +887,7 @@ pub fn setup() {
             let mut path = PathBuf::from(dir);
             path.push(first_char.clone());
             path.push(t.clone());
-            FLOGF!(TERM_SUPPORT, "Trying path '%s'", path.to_str().unwrap());
+            flogf!(TERM_SUPPORT, "Trying path '%s'", path.to_str().unwrap());
             if let Ok(db) = terminfo::Database::from_path(path) {
                 return Ok(db);
             }

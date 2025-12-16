@@ -13,7 +13,10 @@ Source1:                %{name}_@VERSION@.orig-cargo-vendor.tar.xz
 BuildRequires:          cargo gettext gcc xz pcre2-devel
 BuildRequires:          rust >= 1.85
 # Packaging guidelines say to use a BuildRequires: rust-packaging, but it adds no value for our package
-
+BuildRequires:          /usr/bin/sphinx-build
+# OBS: add eg "FileProvides: /usr/bin/sphinx-build python3-sphinx python3-Sphinx" to project config
+BuildRequires:          /usr/bin/man
+# OBS: add eg "FileProvides: /usr/bin/man man-db man" to project config
 BuildRequires: cmake >= 3.15
 
 %if 0%{?suse_version}

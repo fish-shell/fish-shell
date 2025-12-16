@@ -10,8 +10,10 @@ Build-Depends: debhelper-compat (= 13),
  gettext,
  libpcre2-dev,
  rustc (>= 1.85) | rustc-web (>= 1.85) | rustc-1.85,
+ sphinx-doc,
 # Test dependencies
  locales-all,
+ man-db,
  python3
 # 4.6.2 is Debian 12/Ubuntu Noble 24.04; Ubuntu Jammy is 4.6.0.1
 Standards-Version: 4.6.2

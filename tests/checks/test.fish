@@ -73,14 +73,14 @@ if not path mtime epoch | string match -qr -- '^[^-]'
 end
 
 for file in epoch old newest
-    test $file -nt nonexist && echo good nt || echo $file: bad nt;
+    test $file -nt nonexist && echo good nt || echo $file: bad nt
 end
 #CHECK: good nt
 #CHECK: good nt
 #CHECK: good nt
 
 for file in epoch old newest
-    test nonexist -ot $file && echo good ot || echo $file: bad ot;
+    test nonexist -ot $file && echo good ot || echo $file: bad ot
 end
 #CHECK: good ot
 #CHECK: good ot
@@ -110,12 +110,12 @@ test -d
 #CHECKERR: test -d
 #CHECKERR: ^
 
-test "foo"
+test foo
 #CHECKERR: test: Missing argument at index 2
 #CHECKERR: foo
 #CHECKERR: ^
 #CHECKERR: {{.*}}test.fish (line {{\d+}}): 
-#CHECKERR: test "foo"
+#CHECKERR: test foo
 #CHECKERR: ^
 
 test ""

@@ -74,7 +74,6 @@ complete -C'cd ../'
 #CHECK: ../a3/
 #CHECK: ../rabbithole/
 
-
 # PWD should be imported and respected by fish
 cd $oldpwd
 mkdir -p $base/realhome
@@ -83,7 +82,6 @@ cd $base/linkhome
 set -l real_getcwd (pwd -P)
 env HOME=$base/linkhome $fish -c 'echo PWD is $PWD'
 #CHECK: PWD is {{.*}}/linkhome
-
 
 # Do not inherit a virtual PWD that fails to resolve to getcwd (#5647)
 env HOME=$base/linkhome PWD=/tmp $fish -c 'echo $PWD' | read output_pwd
@@ -225,10 +223,10 @@ function __fish_test_thrash_cd
     end
 end
 __fish_test_thrash_cd |
-__fish_test_thrash_cd |
-__fish_test_thrash_cd |
-__fish_test_thrash_cd |
-__fish_test_thrash_cd
+    __fish_test_thrash_cd |
+    __fish_test_thrash_cd |
+    __fish_test_thrash_cd |
+    __fish_test_thrash_cd
 
 cd ""
 # CHECKERR: cd: Empty directory '' does not exist
@@ -285,7 +283,7 @@ complete -C'cd .'
 # Note that there is no kern.osproductversion under older OS X releases!
 #
 # NetBSD 10 does not support it.
-if test (uname) = NetBSD || begin; test (uname) = "Darwin" && test (sysctl kern.osproductversion 2>/dev/null | string match -r \\d+; or echo 10) -lt 12; end
+if test (uname) = NetBSD || { test (uname) = Darwin && test (sysctl kern.osproductversion 2>/dev/null | string match -r \\d+; or echo 10) -lt 12 }
     # Not supported. Satisfy the CHECKs below.
     echo fake/a
     echo fake/a/b
@@ -297,7 +295,8 @@ else
     mkdir -p a/b/c
     chmod -r a
 
-    cd a; pwd
+    cd a
+    pwd
     # CHECK: {{.*}}/a
 
     cd b

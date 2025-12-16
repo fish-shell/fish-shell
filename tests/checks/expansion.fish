@@ -284,7 +284,7 @@ mkdir $tmpdir/realhome
 ln -s $tmpdir/realhome $tmpdir/linkhome
 set expandedtilde (env HOME=$tmpdir/linkhome $fish -c 'echo ~')
 if test $expandedtilde != $tmpdir/linkhome
-	echo '~ expands to' $expandedtilde ' - expected ' $tmpdir/linkhome
+    echo '~ expands to' $expandedtilde ' - expected ' $tmpdir/linkhome
 end
 rm $tmpdir/linkhome
 rmdir $tmpdir/realhome
@@ -341,7 +341,7 @@ echo foo | $pager
 #CHECKERR: echo foo | $pager
 #CHECKERR:            ^~~~~^
 
-"command" -h
+command -h
 #CHECKERR: Documentation for command
 
 echo {~,asdf}

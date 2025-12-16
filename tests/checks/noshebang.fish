@@ -53,7 +53,6 @@ echo $status
 #CHECK: 126
 rm file.fish
 
-
 # On to NUL bytes.
 # The heuristic is that there must be a line containing a lowercase letter before the first NUL byte.
 echo -n -e 'true\n\x00' >file

@@ -993,7 +993,9 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
         TERMINAL_MODE_ON_STARTUP.get_or_init(|| terminal_mode_on_startup);
     }
 
-    assert!(cfg!(test) || AT_EXIT.get().is_none());
+    if !cfg!(test) {
+        assert!(AT_EXIT.get().is_none());
+    }
     AT_EXIT.get_or_init(|| Box::new(move || reader_deinit(will_restore_foreground_pgroup)));
 
     // Set the mode used for program execution, initialized to the current mode.

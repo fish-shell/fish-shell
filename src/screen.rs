@@ -2036,9 +2036,6 @@ fn compute_layout(
             .filter(|&c| c == '\n')
             .count();
 
-    struct SuggestionLine<'a> {
-        autosuggestion_line: &'a wstr,
-    }
     let mut suggestion_lines = vec![];
 
     let mut available_vertical_space = screen_viewport_y.map_or(
@@ -2095,22 +2092,14 @@ fn compute_layout(
             }
         };
 
-        suggestion_lines.push(SuggestionLine {
-            autosuggestion_line,
-        });
+        suggestion_lines.push(autosuggestion_line);
 
         suggestion_start += autosuggestion_line.len() + "\n".len();
     }
 
     let mut autosuggestion = WString::new();
     let mut displayed_len = 0;
-    for (
-        line_idx,
-        &SuggestionLine {
-            autosuggestion_line,
-        },
-    ) in suggestion_lines.iter().enumerate()
-    {
+    for (line_idx, autosuggestion_line) in suggestion_lines.iter().enumerate() {
         if line_idx != 0 {
             autosuggestion.push('\n');
             displayed_len += "\n".len();

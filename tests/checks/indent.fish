@@ -490,6 +490,34 @@ level 2 } }
     # CHECK: {{^\}$}}
 } | $fish_indent
 
+echo 'test 1 -eq 1; or {
+    echo a
+    echo b
+}' | $fish_indent
+# CHECK: test 1 -eq 1; or {
+# CHECK: {{^    }}echo a
+# CHECK: {{^    }}echo b
+# CHECK: {{^}}{{[}]}}
+
+echo 'not {
+    echo hi
+}' | $fish_indent
+# CHECK: not {
+# CHECK: {{^    }}echo hi
+# CHECK: {{^}}{{[}]}}
+
+echo 'time {
+    echo hi
+}' | $fish_indent
+# CHECK: time {
+# CHECK: {{^    }}echo hi
+# CHECK: {{^}}{{[}]}}
+
+echo 'echo x{a,
+  b}y' | $fish_indent
+# CHECK: echo x{a,
+# CHECK: {{^  }}b}y
+
 echo 'multiline-\\
 -word' | $fish_indent --check
 echo $status #CHECK: 0

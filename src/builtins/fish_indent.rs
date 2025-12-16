@@ -9,7 +9,7 @@ use crate::locale::set_libc_locales;
 use crate::panic::panic_handler;
 
 use super::prelude::*;
-use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
+use crate::ast::{self, AsNode, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
     PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
     unescape_string, wcs2bytes,
@@ -729,10 +729,43 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             .binary_search(&brace.source_range().start())
             .is_ok()
     }
+
+    fn brace_is_continuation(&self, node: &dyn ast::Token) -> bool {
+        let Kind::BraceStatement(brace) = self.traversal.parent(node.as_node()).kind() else {
+            return false;
+        };
+        let Kind::Statement(stmt) = self.traversal.parent(brace.as_node()).kind() else {
+            return false;
+        };
+        let parent = self.traversal.parent(stmt.as_node());
+
+        if matches!(parent.kind(), Kind::NotStatement(_)) {
+            return true;
+        }
+
+        let Kind::JobPipeline(pipeline) = parent.kind() else {
+            return false;
+        };
+
+        if pipeline.time.is_some() {
+            return true;
+        }
+
+        let Kind::JobConjunction(conj) = self.traversal.parent(pipeline.as_node()).kind() else {
+            return false;
+        };
+
+        conj.decorator.is_some()
+    }
+
     fn visit_left_brace(&mut self, node: &dyn ast::Token) {
         let range = node.source_range();
         let flags = self.gap_text_flags_before_node(node.as_node());
-        if self.is_multi_line_brace(node) && !self.at_line_start() {
+
+        if self.is_multi_line_brace(node)
+            && !self.at_line_start()
+            && !self.brace_is_continuation(node)
+        {
             self.emit_newline();
         }
         self.current_indent = self.indent(range.start());

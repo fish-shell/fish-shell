@@ -2378,6 +2378,9 @@ msgstr "(Används tillsamans med -o) Skriv inte över utan lägg till"
 msgid "A right prompt to be used when `breakpoint` is executed"
 msgstr ""
 
+msgid "Accumulate a digit for the next command"
+msgstr ""
+
 msgid "Add abbreviation"
 msgstr ""
 
@@ -3294,6 +3297,9 @@ msgid "Reverse color text"
 msgstr ""
 
 msgid "Reverse the order"
+msgstr ""
+
+msgid "Run a command $__fish_vi_count times"
 msgstr ""
 
 msgid "Run as a login shell"

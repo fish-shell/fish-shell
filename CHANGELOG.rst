@@ -9,6 +9,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- Vi mode key bindings now support counts for movement and deletion commands (e.g. `d3w` or `3l`), via a new operator mode (:issue:`2192`).
 
 New or improved bindings
 ------------------------

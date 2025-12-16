@@ -2410,6 +2410,9 @@ msgstr "(与 -o 一起使用) 不覆写但追加"
 msgid "A right prompt to be used when `breakpoint` is executed"
 msgstr "执行 `breakpoint` 时使用的正确提示符"
 
+msgid "Accumulate a digit for the next command"
+msgstr ""
+
 msgid "Add abbreviation"
 msgstr "添加缩写"
 
@@ -3327,6 +3330,9 @@ msgstr "反色文本"
 
 msgid "Reverse the order"
 msgstr "倒转顺序"
+
+msgid "Run a command $__fish_vi_count times"
+msgstr ""
 
 msgid "Run as a login shell"
 msgstr "作为登录 shell 运行"

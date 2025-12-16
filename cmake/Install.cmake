@@ -91,7 +91,7 @@ fish_create_dirs(${sysconfdir}/fish/conf.d ${sysconfdir}/fish/completions
 install(FILES etc/config.fish DESTINATION ${sysconfdir}/fish/)
 
 fish_create_dirs(${rel_datadir}/fish ${rel_datadir}/fish/completions
-                 ${rel_datadir}/fish/functions ${rel_datadir}/fish/groff
+                 ${rel_datadir}/fish/functions
                  ${rel_datadir}/fish/man/man1 ${rel_datadir}/fish/tools
                  ${rel_datadir}/fish/tools/web_config
                  ${rel_datadir}/fish/tools/web_config/js
@@ -130,9 +130,6 @@ install(DIRECTORY share/completions/
 install(DIRECTORY share/functions/
         DESTINATION ${rel_datadir}/fish/functions
         FILES_MATCHING PATTERN "*.fish")
-
-install(DIRECTORY share/groff
-        DESTINATION ${rel_datadir}/fish)
 
 # CONDEMNED_PAGE is managed by the conditional above
 # Building the man pages is optional: if sphinx isn't installed, they're not built

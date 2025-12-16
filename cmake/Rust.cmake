@@ -19,7 +19,6 @@ else()
 endif()
 
 set(rust_profile $<IF:$<CONFIG:Debug>,debug,$<IF:$<CONFIG:RelWithDebInfo>,release-with-debug,release>>)
-set(rust_debugflags "$<$<CONFIG:Debug>:-g>$<$<CONFIG:RelWithDebInfo>:-g>")
 
 option(WITH_GETTEXT "Build with gettext localization support. Requires `msgfmt` to work." ON)
 # Enable gettext feature unless explicitly disabled.

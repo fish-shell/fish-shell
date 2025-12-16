@@ -2198,8 +2198,7 @@ impl ReaderData {
         let mut buff_pos = el.position();
         while buff_pos != boundary {
             let idx = if move_right { buff_pos } else { buff_pos - 1 };
-            let c = el.at(idx);
-            if !state.consume_char(c) {
+            if !state.consume_char(el.text(), idx) {
                 break;
             }
             buff_pos = if move_right {
@@ -5329,8 +5328,7 @@ impl<'a> Reader<'a> {
                 let have = search_string_range.len();
                 let mut want = have;
                 while want < autosuggestion_text.len() {
-                    let wc = autosuggestion_text.as_char_slice()[want];
-                    if !state.consume_char(wc) {
+                    if !state.consume_char(autosuggestion_text, want) {
                         break;
                     }
                     want += 1;

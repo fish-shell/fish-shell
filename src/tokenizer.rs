@@ -6,6 +6,7 @@ use crate::common::valid_var_name_char;
 use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::parser_keywords::parser_keywords_is_subcommand;
+use crate::reader::is_backslashed;
 use crate::redirection::RedirectionMode;
 use crate::wchar::prelude::*;
 use libc::{STDIN_FILENO, STDOUT_FILENO};
@@ -1179,10 +1180,11 @@ impl MoveWordStateMachine {
         MoveWordStateMachine { state: 0, style }
     }
 
-    pub fn consume_char(&mut self, c: char) -> bool {
+    pub fn consume_char(&mut self, text: &wstr, idx: usize) -> bool {
+        let c = text.as_char_slice()[idx];
         match self.style {
             MoveWordStyle::Punctuation => self.consume_char_punctuation(c),
-            MoveWordStyle::PathComponents => self.consume_char_path_components(c),
+            MoveWordStyle::PathComponents => self.consume_char_path_components(text, idx, c),
             MoveWordStyle::Whitespace => self.consume_char_whitespace(c),
         }
     }
@@ -1254,7 +1256,7 @@ impl MoveWordStateMachine {
         consumed
     }
 
-    fn consume_char_path_components(&mut self, c: char) -> bool {
+    fn consume_char_path_components(&mut self, s: &wstr, idx: usize, c: char) -> bool {
         const S_INITIAL_PUNCTUATION: u8 = 0;
         const S_WHITESPACE: u8 = 1;
         const S_SEPARATOR: u8 = 2;
@@ -1263,30 +1265,35 @@ impl MoveWordStateMachine {
         const S_INITIAL_SEPARATOR: u8 = 5;
         const S_END: u8 = 6;
 
+        let is_escaped = is_backslashed(s, idx);
+        let is_whitespace = c.is_whitespace() && !is_escaped;
+        let is_path_component_character =
+            is_path_component_character(c) || (c.is_whitespace() && is_escaped);
+
         let mut consumed = false;
         while self.state != S_END && !consumed {
             match self.state {
                 S_INITIAL_PUNCTUATION => {
-                    if !is_path_component_character(c) && !c.is_whitespace() {
+                    if !is_path_component_character && !is_whitespace {
                         self.state = S_INITIAL_SEPARATOR;
                     } else {
-                        if !is_path_component_character(c) {
+                        if !is_path_component_character {
                             consumed = true;
                         }
                         self.state = S_WHITESPACE;
                     }
                 }
                 S_WHITESPACE => {
-                    if c.is_whitespace() {
+                    if is_whitespace {
                         consumed = true; // consumed whitespace
-                    } else if c == '/' || is_path_component_character(c) {
+                    } else if c == '/' || is_path_component_character {
                         self.state = S_SLASH; // path component
                     } else {
                         self.state = S_SEPARATOR; // path separator
                     }
                 }
                 S_SEPARATOR => {
-                    if !c.is_whitespace() && !is_path_component_character(c) {
+                    if !is_whitespace && !is_path_component_character {
                         consumed = true; // consumed separator
                     } else {
                         self.state = S_END;
@@ -1300,17 +1307,17 @@ impl MoveWordStateMachine {
                     }
                 }
                 S_PATH_COMPONENT_CHARACTERS => {
-                    if is_path_component_character(c) {
+                    if is_path_component_character {
                         consumed = true; // consumed string character except slash
                     } else {
                         self.state = S_END;
                     }
                 }
                 S_INITIAL_SEPARATOR => {
-                    if is_path_component_character(c) {
+                    if is_path_component_character {
                         consumed = true;
                         self.state = S_PATH_COMPONENT_CHARACTERS;
-                    } else if c.is_whitespace() {
+                    } else if is_whitespace {
                         self.state = S_END;
                     } else {
                         consumed = true;
@@ -1637,8 +1644,7 @@ mod tests {
                 } else {
                     idx
                 };
-                let c = command.as_char_slice()[char_idx];
-                let will_stop = !sm.consume_char(c, || is_backslashed(&command, char_idx));
+                let will_stop = !sm.consume_char(&command, char_idx);
                 let expected_stop = stops.contains(&idx);
                 if will_stop != expected_stop {
                     on_failure(&format!(
@@ -1730,6 +1736,16 @@ mod tests {
             Direction::Left,
             MoveWordStyle::PathComponents,
             "^aa^@@  ^aa@@^a^"
+        );
+        validate!(
+            Direction::Left,
+            MoveWordStyle::PathComponents,
+            r#"^a\  ^b\ c/^d"^e\ f"^g"#
+        );
+        validate!(
+            Direction::Left,
+            MoveWordStyle::PathComponents,
+            r#"^a\"^bc^"#
         );
 
         validate!(Direction::Right, MoveWordStyle::Punctuation, "^a^ bcd^");

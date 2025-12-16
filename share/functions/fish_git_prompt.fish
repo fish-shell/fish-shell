@@ -596,7 +596,9 @@ end
 function __fish_git_prompt_set_color
     set -l user_variable_name "$argv[1]"
 
-    set -l default default_done
+    set -l default
+    set -l default_done
+
     switch (count $argv)
         case 1 # No defaults given, use prompt color
             set default $___fish_git_prompt_color

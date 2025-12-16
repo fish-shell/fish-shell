@@ -154,7 +154,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
             let pipes = match nix::unistd::pipe() {
                 Ok(pipes) => pipes,
                 Err(err) => {
-                    flog!(WARNING, PIPE_ERROR.localize());
+                    flog!(warning, PIPE_ERROR.localize());
                     perror("pipe");
                     return Err(err);
                 }

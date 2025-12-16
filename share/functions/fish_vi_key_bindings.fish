@@ -1,5 +1,10 @@
-alias fish_vi_dec 'fish_vi_inc_dec dec'
-alias fish_vi_inc 'fish_vi_inc_dec inc'
+function fish_vi_dec
+    fish_vi_inc_dec dec
+end
+
+function fish_vi_inc
+    fish_vi_inc_dec inc
+end
 
 # TODO: Currently we do not support hexadecimal and octal values.
 function fish_vi_inc_dec --description 'increment or decrement the number below the cursor'

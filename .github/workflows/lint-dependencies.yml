@@ -21,4 +21,4 @@ jobs:
       with:
         command: check licenses
         arguments: --all-features --locked --exclude-dev
-        rust-version: 1.91 # updatecli.d/rust.yml
+        rust-version: 1.92 # updatecli.d/rust.yml

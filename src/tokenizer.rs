@@ -1605,50 +1605,61 @@ mod tests {
             Right,
         }
 
+        fn validate_visitor(
+            direction: Direction,
+            style: MoveWordStyle,
+            line: &str,
+            on_failure: fn(&str),
+        ) {
+            let mut command = WString::new();
+            let mut stops = HashSet::new();
+
+            // Carets represent stops and should be cut out of the command.
+            for c in line.chars() {
+                if c == '^' {
+                    stops.insert(command.len());
+                } else {
+                    command.push(c);
+                }
+            }
+
+            let (mut idx, end) = if direction == Direction::Left {
+                (*stops.iter().max().unwrap(), 0)
+            } else {
+                (*stops.iter().min().unwrap(), command.len())
+            };
+            stops.remove(&idx);
+
+            let mut sm = MoveWordStateMachine::new(style);
+            while idx != end {
+                let char_idx = if direction == Direction::Left {
+                    idx - 1
+                } else {
+                    idx
+                };
+                let c = command.as_char_slice()[char_idx];
+                let will_stop = !sm.consume_char(c, || is_backslashed(&command, char_idx));
+                let expected_stop = stops.contains(&idx);
+                if will_stop != expected_stop {
+                    on_failure(&format!(
+                        "Expected to stop={expected_stop} at index {idx} but got stop={will_stop}. String: {command:?}"
+                    ));
+                }
+                // We don't expect to stop here next time.
+                if expected_stop {
+                    stops.remove(&idx);
+                    sm.reset();
+                } else if direction == Direction::Left {
+                    idx -= 1;
+                } else {
+                    idx += 1;
+                }
+            }
+        }
+
         macro_rules! validate {
             ($direction:expr, $style:expr, $line:expr) => {
-                let mut command = WString::new();
-                let mut stops = HashSet::new();
-
-                // Carets represent stops and should be cut out of the command.
-                for c in $line.chars() {
-                    if c == '^' {
-                        stops.insert(command.len());
-                    } else {
-                        command.push(c);
-                    }
-                }
-
-                let (mut idx, end) = if $direction == Direction::Left {
-                    (stops.iter().max().unwrap().clone(), 0)
-                } else {
-                    (stops.iter().min().unwrap().clone(), command.len())
-                };
-                stops.remove(&idx);
-
-                let mut sm = MoveWordStateMachine::new($style);
-                while idx != end {
-                    let char_idx = if $direction == Direction::Left {
-                        idx - 1
-                    } else {
-                        idx
-                    };
-                    let c = command.as_char_slice()[char_idx];
-                    let will_stop = !sm.consume_char(c);
-                    let expected_stop = stops.contains(&idx);
-                    assert_eq!(will_stop, expected_stop);
-                    // We don't expect to stop here next time.
-                    if expected_stop {
-                        stops.remove(&idx);
-                        sm.reset();
-                    } else {
-                        if $direction == Direction::Left {
-                            idx -= 1;
-                        } else {
-                            idx += 1;
-                        }
-                    }
-                }
+                validate_visitor($direction, $style, $line, |error| assert!(false, "{error}"));
             };
         }
 

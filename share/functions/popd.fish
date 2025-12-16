@@ -9,7 +9,7 @@ function popd --description "Pop directory from the stack and cd to it"
     end
 
     if set -q dirstack[1]
-        cd $dirstack[1]
+        builtin cd $dirstack[1]
         set -e dirstack[1]
     else
         printf (_ "%s: Directory stack is empty…\n") popd 1>&2

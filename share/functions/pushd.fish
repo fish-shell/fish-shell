@@ -36,7 +36,7 @@ function pushd --description 'Push directory to stack'
 
         # alter the top of dirstack and move to directory
         set -g dirstack[1] $top_dir
-        cd $next_dir
+        builtin cd $next_dir
         return
     end
 
@@ -68,7 +68,7 @@ function pushd --description 'Push directory to stack'
 
             # now reconstruct dirstack and change directory
             set -g dirstack $stack[2..(count $stack)]
-            cd $stack[1]
+            builtin cd $stack[1]
         end
 
         # print the new stack
@@ -78,5 +78,5 @@ function pushd --description 'Push directory to stack'
 
     # argv[1] is a directory
     set -l old_pwd $PWD
-    cd $argv[1]; and set -g -p dirstack $old_pwd
+    builtin cd $argv[1]; and set -g -p dirstack $old_pwd
 end

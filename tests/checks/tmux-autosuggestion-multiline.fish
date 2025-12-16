@@ -49,22 +49,21 @@ isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^            echo 000000000000000000000000000000000000000000000000000000000000000
 # CHECK: ^0000000000000000000000000000000000000…
 
-# Currently, we take either all or nothing from soft-wrapped suggestion-lines.
 # The ellipsis means that we'll get more lines.
 isolated-tmux resize-window -y 3
 tmux-sleep
 isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^prompt> if true
-# CHECK: ^            echo 00000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^            echo 00000000000000000000000000000000000000000000000000
+# CHECK: ^            echo 00000000000000000000000000000000000000000000000000000000000000…
 
 # Test that truncation also works after the resize.
 isolated-tmux send-keys C-u if
 tmux-sleep
 isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^prompt> if true
-# CHECK: ^            echo 00000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^            echo 00000000000000000000000000000000000000000000000000
+# CHECK: ^            echo 00000000000000000000000000000000000000000000000000000000000000…
 
 # Test that we truncate such that the prompt is never pushed up.
 isolated-tmux resize-window -y 5 \; send-keys C-u Enter if
@@ -83,8 +82,8 @@ isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^prompt>
 # CHECK: ^prompt>
 # CHECK: ^prompt> if true
-# CHECK: ^            echo 00000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^            echo 00000000000000000000000000000000000000000000000000
+# CHECK: ^            echo 00000000000000000000000000000000000000000000000000000000000000…
 
 # Now try with a multiline prompt.
 isolated-tmux send-keys C-u 'function fish_prompt; printf "prompt-line%d/2> \n" 1 2; end' Enter C-l Enter if
@@ -103,8 +102,8 @@ isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^prompt-line2/2>
 # CHECK: ^prompt-line1/2>
 # CHECK: ^prompt-line2/2> if true
-# CHECK: ^                    echo 00000000000000000000000000000000000000000000000000…
-# CHECK: ^
+# CHECK: ^                    echo 00000000000000000000000000000000000000000000000000
+# CHECK: ^                    echo 000000000000000000000000000000000000000000000000000000…
 
 isolated-tmux send-keys C-u \; resize-window -y 7 \; send-keys if
 tmux-sleep
@@ -132,7 +131,7 @@ isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^prompt-line1
 # CHECK: ^> begin
 # CHECK: ^      : 000000000000000000000000000000000000000000000000000000000000000000000000
-# CHECK: ^
+# CHECK: ^…
 
 # Autosuggestions on a soft-wrapped commandline don't push the prompt.
 isolated-tmux resize-window -x 6 -y 4 \; send-keys C-u \
@@ -159,4 +158,4 @@ isolated-tmux capture-pane -p | sed s/^/^/
 # CHECK: ^>
 # CHECK: ^>
 # CHECK: ^> echo
-# CHECK: ^
+# CHECK: ^ wrap…

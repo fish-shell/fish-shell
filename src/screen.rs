@@ -2049,6 +2049,10 @@ fn compute_layout(
         .split(|&c| c == '\n')
         .enumerate()
     {
+        if available_vertical_space == 0 {
+            truncated_vertically = true;
+            break;
+        }
         let autosuggestion_line = wstr::from_char_slice(autosuggestion_line);
 
         // Calculate space available for autosuggestion.
@@ -2063,36 +2067,56 @@ fn compute_layout(
             } else {
                 indent_width(suggestion_start - "\n".len())
             };
+        available_vertical_space = available_vertical_space.saturating_sub(width / screen_width);
+        if available_vertical_space == 0 {
+            truncated_vertically = true;
+            break;
+        }
         let column = width % screen_width;
-        let suggestion_line_height = {
-            let mut column = column;
+        fn consumed_lines_or_truncated_suggestion(
+            screen_width: usize,
+            available_vertical_space: usize,
+            mut column: usize,
+            autosuggestion_line: &wstr,
+        ) -> Result<usize, &wstr> {
             let mut lines = 1;
-            for ch in autosuggestion_line.chars() {
+            for (i, ch) in autosuggestion_line.char_indices() {
                 let ch_width = wcwidth_rendered_min_0(ch);
                 let new_column = column + ch_width;
-                if new_column > screen_width {
+                if new_column >= screen_width {
                     column = 0;
-                }
-                if column == 0 && ch_width != 0 {
                     lines += 1;
                 }
-                column = if new_column == screen_width {
-                    0
-                } else {
-                    column + ch_width
-                };
+                let barely_softwrapped = new_column == screen_width;
+                if !barely_softwrapped {
+                    column += ch_width;
+                }
+                if lines > available_vertical_space {
+                    return Err(autosuggestion_line.slice_to(i));
+                }
             }
-            lines
-        };
-        match available_vertical_space.checked_sub(suggestion_line_height) {
-            Some(lines) => available_vertical_space = lines,
-            None => {
-                truncated_vertically = true;
-                break;
-            }
-        };
-
-        suggestion_lines.push(autosuggestion_line);
+            Ok(lines)
+        }
+        suggestion_lines.push(
+            match consumed_lines_or_truncated_suggestion(
+                screen_width,
+                available_vertical_space,
+                column,
+                autosuggestion_line,
+            ) {
+                Ok(lines) => {
+                    available_vertical_space -= lines;
+                    autosuggestion_line
+                }
+                Err(truncated) => {
+                    truncated_vertically = true;
+                    truncated
+                }
+            },
+        );
+        if truncated_vertically {
+            break;
+        }
 
         suggestion_start += autosuggestion_line.len() + "\n".len();
     }

@@ -16,6 +16,6 @@ function dirs --description 'Print directory stack'
     end
 
     # Replace $HOME with ~.
-    string replace -r '^'"$HOME"'($|/)' '~$1' -- $PWD $dirstack | string join " "
+    string replace -r '^'"$HOME"'($|/)' '~$1' -- $PWD $dirstack
     return 0
 end

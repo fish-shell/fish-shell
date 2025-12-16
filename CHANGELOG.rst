@@ -45,6 +45,7 @@ Interactive improvements
 
 New or improved bindings
 ------------------------
+- Vi mode key bindings now support counts for movement and deletion commands (e.g. `d3w` or `3l`), via a new operator mode.
 - Added `backward-path-component`, `forward-path-component` and `kill-path-component` (:issue:`12127`).
 
 Improved terminal support

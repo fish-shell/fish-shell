@@ -37,12 +37,20 @@ sleep(10 if "CI" in os.environ else 1)
 send("\033")
 sleep(10 if "CI" in os.environ else 1)
 
+# operator mode
+send("d")
+sleep(10 if "CI" in os.environ else 1)
+
+# back to normal mode
+send("\033")
+sleep(10 if "CI" in os.environ else 1)
+
 # insert mode again
 send("i")
 sleep(10 if "CI" in os.environ else 1)
 
 send("echo mode changes: $MODE_CHANGES\r")
-expect_prompt("\r\n.*mode changes: default insert default insert\r\n")
+expect_prompt("\r\n.*mode changes: default insert default operator default insert\r\n")
 
 # Regression test for #8125.
 # Control-C should return us to insert mode.

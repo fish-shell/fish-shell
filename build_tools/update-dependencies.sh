@@ -15,7 +15,7 @@ uv lock --check
 updatecli "${@:-apply}"
 
 uv lock # Python version constraints may have changed.
-uv lock --upgrade
+uv lock --upgrade --exclude-newer="$(date --date='7 days ago' --iso-8601)"
 
 from_gh() {
     repo=$1

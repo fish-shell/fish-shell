@@ -20,7 +20,7 @@ Description
 
 The ``fish_mode_prompt`` function outputs the mode indicator for use in vi mode.
 
-The default ``fish_mode_prompt`` function will output indicators about the current vi editor mode displayed to the left of the regular prompt. Define your own function to customize the appearance of the mode indicator. The ``$fish_bind_mode variable`` can be used to determine the current mode. It will be one of ``default``, ``insert``, ``replace_one``, ``replace``, or ``visual``.
+The default ``fish_mode_prompt`` function will output indicators about the current vi editor mode displayed to the left of the regular prompt. Define your own function to customize the appearance of the mode indicator. The ``$fish_bind_mode variable`` can be used to determine the current mode. It will be one of ``default``, ``insert``, ``replace_one``, ``replace``, ``visual``, or ``operator``.
 
 You can also define an empty ``fish_mode_prompt`` function to remove the vi mode indicators::
 
@@ -55,6 +55,9 @@ Example
         case visual
           set_color --bold brmagenta
           echo 'V'
+        case operator
+          set_color --bold cyan
+          echo 'N'
         case '*'
           set_color --bold red
           echo '?'

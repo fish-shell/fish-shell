@@ -86,6 +86,8 @@ function fish_prompt
         switch $fish_bind_mode
             case default
                 set mode (set_color --bold red)N
+            case operator
+                set mode (set_color --bold cyan)N
             case insert
                 set mode (set_color --bold green)I
             case replace_one

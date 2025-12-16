@@ -2512,6 +2512,9 @@ msgstr "(Utilisé avec -o) Ne pas écraser le fichier, y concaténer les résult
 msgid "A right prompt to be used when `breakpoint` is executed"
 msgstr ""
 
+msgid "Accumulate a digit for the next command"
+msgstr ""
+
 msgid "Add abbreviation"
 msgstr "Ajouter une abréviation"
 
@@ -3428,6 +3431,9 @@ msgid "Reverse color text"
 msgstr ""
 
 msgid "Reverse the order"
+msgstr ""
+
+msgid "Run a command $__fish_vi_count times"
 msgstr ""
 
 msgid "Run as a login shell"

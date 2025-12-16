@@ -100,6 +100,7 @@ New or improved bindings
 ------------------------
 - :kbd:`ctrl-w` (``backward-kill-path-component``) also deletes escaped spaces (:issue:`2016`).
 - New special input functions ``backward-path-component``, ``forward-path-component`` and ``kill-path-component`` (:issue:`12127`).
+- Vi mode key bindings now support counts for movement and deletion commands (e.g. `d3w` or `3l`), via a new operator mode (:issue:`2192`).
 
 Improved terminal support
 -------------------------

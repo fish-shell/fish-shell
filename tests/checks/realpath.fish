@@ -57,20 +57,20 @@ set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink)
 set -l expected_real_path "$data_home_realpath/fish"
 if test "$real_path" = "$expected_real_path"
     echo "fish-symlink handled correctly"
-    # CHECK: fish-symlink handled correctly
 else
     echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
 end
+# CHECK: fish-symlink handled correctly
 
 # With "-s" the symlink is not resolved.
 set -l real_path (builtin realpath -s $data_home_realpath/fish-symlink)
 set -l expected_real_path "$data_home_realpath/fish-symlink"
 if test "$real_path" = "$expected_real_path"
-    echo "fish-symlink handled correctly"
-    # CHECK: fish-symlink handled correctly
+    echo "fish-symlink with -s handled correctly"
 else
-    echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
+    echo "fish-symlink with -s not handled correctly: $real_path != $expected_real_path" >&2
 end
+# CHECK: fish-symlink with -s handled correctly
 
 # But the $PWD is still resolved
 set -l oldpwd $PWD
@@ -78,21 +78,21 @@ cd $XDG_DATA_HOME/fish-symlink
 set -l real_path (builtin realpath -s $data_home_realpath/fish-symlink)
 set -l expected_real_path "$data_home_realpath/fish-symlink"
 if test "$real_path" = "$expected_real_path"
-    echo "fish-symlink handled correctly"
-    # CHECK: fish-symlink handled correctly
+    echo "fish-symlink after cd handled correctly"
 else
-    echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
+    echo "fish-symlink after cd not handled correctly: $real_path != $expected_real_path" >&2
 end
+# CHECK: fish-symlink after cd handled correctly
 cd $oldpwd
 
 set -l real_path (builtin realpath -s .)
 set -l expected_real_path (pwd -P) # Physical working directory.
 if test "$real_path" = "$expected_real_path"
     echo "relative path correctly handled"
-    # CHECK: relative path correctly handled
 else
     echo "relative path not handled correctly: $real_path != $expected_real_path" >&2
 end
+# CHECK: relative path correctly handled
 
 test (builtin realpath -s /usr/bin/../) = /usr
 or echo builtin realpath -s does not resolve .. or resolves symlink wrong
@@ -103,10 +103,10 @@ set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/nonexistent-file-
 set -l expected_real_path "$data_home_realpath/fish/nonexistent-file-relative-to-a-symlink"
 if test "$real_path" = "$expected_real_path"
     echo "fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted"
-    # CHECK: fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted
 else
     echo "failure nonexistent-file-relative-to-a-symlink: $real_path != $expected_real_path" >&2
 end
+# CHECK: fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted
 
 # We remove leading slashes even with "-s".
 # This is how GNU realpath -s behaves, and also e.g.
@@ -125,9 +125,9 @@ set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/symlink_file)
 set -l expected_real_path "$data_home_realpath/fish/real_file"
 if test "$real_path" = "$expected_real_path"
     echo "fish-symlink/symlink_file handled correctly"
-    # CHECK: fish-symlink/symlink_file handled correctly
 else
     echo "fish-symlink/symlink_file not handled correctly: $real_path != expected_real_path" >&2
 end
+# CHECK: fish-symlink/symlink_file handled correctly
 
 exit 0

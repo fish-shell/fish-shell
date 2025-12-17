@@ -5,6 +5,7 @@ use crate::env::{EnvMode, EnvStack, Environment, setenv_lock, unsetenv_lock};
 use crate::flog::flog;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
 use crate::locale::{invalidate_numeric_locale, set_libc_locales};
+use crate::prelude::*;
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
     reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled, reader_set_transient_prompt,
@@ -15,7 +16,6 @@ use crate::screen::{
 use crate::terminal::ColorSupport;
 use crate::terminal::use_terminfo;
 use crate::tty_handoff::xtversion;
-use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};

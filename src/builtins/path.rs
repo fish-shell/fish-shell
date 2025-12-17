@@ -997,7 +997,7 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
 #[cfg(test)]
 mod tests {
     use super::find_extension;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_find_extension() {

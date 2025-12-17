@@ -7,12 +7,12 @@ use crate::fds::{
 use crate::flog::{flog, flogf, should_flog};
 use crate::nix::isatty;
 use crate::path::path_apply_working_directory;
+use crate::prelude::*;
 use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
 use crate::terminal::Output;
 use crate::topic_monitor::Topic;
-use crate::wchar::prelude::*;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
 use errno::Errno;
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};

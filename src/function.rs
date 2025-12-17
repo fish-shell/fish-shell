@@ -12,7 +12,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::parse_tree::NodeRef;
 use crate::parser::Parser;
 use crate::parser_keywords::parser_keywords_is_reserved;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wutil::dir_iter::DirIter;
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};

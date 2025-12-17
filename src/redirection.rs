@@ -1,7 +1,7 @@
 //! This file supports specifying and applying redirections.
 
 use crate::io::IoChain;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wutil::fish_wcstoi;
 use nix::fcntl::OFlag;
 use std::os::fd::RawFd;

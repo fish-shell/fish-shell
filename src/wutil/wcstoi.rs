@@ -1,5 +1,5 @@
 pub use super::errors::Error;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use num_traits::{NumCast, PrimInt};
 use std::default::Default;
 use std::iter::{Fuse, Peekable};

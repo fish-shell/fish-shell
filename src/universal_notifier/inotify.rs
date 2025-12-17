@@ -1,7 +1,7 @@
 use crate::common::wcs2osstring;
 use crate::env_universal_common::default_vars_path;
+use crate::prelude::*;
 use crate::universal_notifier::UniversalNotifier;
-use crate::wchar::prelude::*;
 use crate::wutil::{wbasename, wdirname};
 use nix::sys::inotify::{AddWatchFlags, InitFlags, Inotify};
 use std::ffi::OsString;

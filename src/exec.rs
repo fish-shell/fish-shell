@@ -33,6 +33,7 @@ use crate::io::{
 use crate::nix::{getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
+use crate::prelude::*;
 use crate::proc::Pid;
 use crate::proc::{
     InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType, hup_jobs,
@@ -43,7 +44,6 @@ use crate::redirection::{Dup2List, dup2_list_resolve_chain};
 use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
-use crate::wchar::prelude::*;
 use crate::wutil::{fish_wcstol, perror};
 use errno::{errno, set_errno};
 use fish_wchar::ToWString;

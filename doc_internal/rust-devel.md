@@ -93,7 +93,7 @@ None of the Rust string types are nul-terminated. We're taking this opportunity 
 One may create a `&wstr` from a string literal using the `wchar::L!` macro:
 
 ```rust
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 // This imports wstr, the L! macro, WString, a ToWString trait that supplies .to_wstring() along with other things
 
 fn get_shell_name() -> &'static wstr {

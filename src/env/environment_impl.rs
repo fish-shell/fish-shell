@@ -10,9 +10,9 @@ use crate::history::{History, history_session_id_from_var};
 use crate::kill::kill_entries;
 use crate::nix::umask;
 use crate::null_terminated_array::OwningNullTerminatedArray;
+use crate::prelude::*;
 use crate::reader::{commandline_get_state, reader_status_count};
 use crate::threads::{is_forked_child, is_main_thread};
-use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstol_radix;
 
 use once_cell::sync::Lazy;
@@ -1158,7 +1158,7 @@ unsafe impl<T> Send for EnvMutex<T> {}
 #[cfg(test)]
 mod tests {
     use super::colon_split;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_colon_split() {

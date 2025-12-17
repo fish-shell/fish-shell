@@ -1,7 +1,7 @@
 use crate::global_safety::RelaxedAtomicBool;
+use crate::prelude::*;
 use crate::proc::{JobGroupRef, Pid};
 use crate::signal::Signal;
-use crate::wchar::prelude::*;
 use std::cell::RefCell;
 use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicI32, Ordering};

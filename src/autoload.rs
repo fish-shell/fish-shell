@@ -453,8 +453,8 @@ impl AutoloadFileCache {
 #[cfg(test)]
 mod tests {
     use super::{Autoload, AutoloadResult};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     #[test]
     #[serial]

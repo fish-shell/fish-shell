@@ -10,8 +10,8 @@ use crate::parse_constants::{
     ParseErrorCode, ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags,
     SOURCE_OFFSET_INVALID, SourceOffset, SourceRange, token_type_user_presentable_description,
 };
+use crate::prelude::*;
 use crate::tokenizer::TokenizerError;
-use crate::wchar::prelude::*;
 use crate::wcstringutil::count_newlines;
 
 /// A struct representing the token type that we use internally.

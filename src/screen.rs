@@ -29,13 +29,13 @@ use crate::env::Environment;
 use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
+use crate::prelude::*;
 use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
     CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
 };
 use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter, use_terminfo};
 use crate::termsize::Termsize;
-use crate::wchar::prelude::*;
 use crate::wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
 use crate::wutil::fstat;
 use fish_fallback::fish_wcwidth;
@@ -2175,11 +2175,11 @@ mod tests {
     use crate::common::get_ellipsis_char;
     use crate::highlight::HighlightSpec;
     use crate::parse_util::parse_util_compute_indents;
+    use crate::prelude::*;
     use crate::screen::{
         LayoutCache, PromptCacheEntry, PromptLayout, ScreenLayout, compute_layout,
     };
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use crate::wcstringutil::join_strings;
 
     #[test]

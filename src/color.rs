@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Color24 {
@@ -322,7 +322,7 @@ fn term256_color_for_rgb(color: Color24) -> u8 {
 #[cfg(test)]
 mod tests {
     use crate::color::{Color, Color24};
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn parse() {

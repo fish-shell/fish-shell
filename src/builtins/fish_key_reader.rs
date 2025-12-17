@@ -23,6 +23,7 @@ use crate::{
     key::{Key, char_to_symbol},
     nix::isatty,
     panic::panic_handler,
+    prelude::*,
     print_help::print_help,
     proc::set_interactive_session,
     reader::{
@@ -31,7 +32,6 @@ use crate::{
     threads,
     topic_monitor::topic_monitor_init,
     tty_handoff::TtyHandoff,
-    wchar::prelude::*,
     wgetopt::{ArgType, WGetopter, WOption, wopt},
 };
 

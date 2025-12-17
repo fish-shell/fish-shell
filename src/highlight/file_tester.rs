@@ -421,8 +421,8 @@ mod tests {
     use super::{FileTester, IsErr, IsFile, PathFlags, is_potential_path};
     use crate::env::EnvStack;
     use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     use crate::redirection::RedirectionMode;
     use std::fs::{self, File, Permissions, create_dir_all};

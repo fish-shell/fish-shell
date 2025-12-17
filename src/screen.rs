@@ -642,7 +642,7 @@ impl Screen {
                 );
                 0
             })
-            .max(self.actual.visible_prompt_lines - 1)
+            .max(self.actual.visible_prompt_lines.saturating_sub(1))
             .min(self.actual.line_count() - 1);
         let line = self.actual.line(y);
         let x = viewport_position.x.max(line.indentation);

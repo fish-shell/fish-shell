@@ -9,8 +9,8 @@ use crate::builtins::shared::{
 };
 use crate::common::{
     EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, EscapeFlags, EscapeStringStyle, UnescapeFlags,
-    UnescapeStringStyle, char_offset, charptr2wcstring, escape, escape_string,
-    escape_string_for_double_quotes, unescape_string, valid_var_name_char, wcs2zstring,
+    UnescapeStringStyle, charptr2wcstring, escape, escape_string, escape_string_for_double_quotes,
+    unescape_string, valid_var_name_char, wcs2zstring,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
@@ -30,6 +30,7 @@ use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, WildcardResult
 use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
 use crate::wutil::{Options, normalize_path, wcstoi_partial};
 use bitflags::bitflags;
+use fish_common::char_offset;
 use std::mem::MaybeUninit;
 
 bitflags! {

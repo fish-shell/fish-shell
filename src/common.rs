@@ -17,6 +17,7 @@ use crate::wcstringutil::wcs2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
+use fish_common::{ENCODE_DIRECT_END, char_offset, subslice_position};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use once_cell::sync::OnceCell;
 use std::cell::{Cell, RefCell};
@@ -60,21 +61,6 @@ pub const WILDCARD_RESERVED_END: char = char_offset(WILDCARD_RESERVED_BASE, 16);
 // This is to make sure we didn't do something stupid in subdividing the
 // Unicode range for our needs.
 const _: () = assert!(WILDCARD_RESERVED_END <= RESERVED_CHAR_END);
-
-// These are in the Unicode private-use range. We really shouldn't use this
-// range but have little choice in the matter given how our lexer/parser works.
-// We can't use non-characters for these two ranges because there are only 66 of
-// them and we need at least 256 + 64.
-//
-// If sizeof(wchar_t))==4 we could avoid using private-use chars; however, that
-// would result in fish having different behavior on machines with 16 versus 32
-// bit wchar_t. It's better that fish behave the same on both types of systems.
-//
-// Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
-// of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
-// on Mac OS X. See http://www.unicode.org/faq/private_use.html.
-pub const ENCODE_DIRECT_BASE: char = '\u{F600}';
-pub const ENCODE_DIRECT_END: char = char_offset(ENCODE_DIRECT_BASE, 256);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EscapeStringStyle {
@@ -1016,13 +1002,6 @@ pub fn read_unquoted_escape(
     Some(in_pos)
 }
 
-pub const fn char_offset(base: char, offset: u32) -> char {
-    match char::from_u32(base as u32 + offset) {
-        Some(c) => c,
-        None => panic!("not a valid char"),
-    }
-}
-
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 pub fn exit_without_destructors(code: libc::c_int) -> ! {
     unsafe { libc::_exit(code) };
@@ -1466,13 +1445,6 @@ pub fn restore_term_foreground_process_group_for_exit() {
 // This function is unused in some configurations/on some platforms
 fn slice_contains_slice<T: Eq>(a: &[T], b: &[T]) -> bool {
     subslice_position(a, b).is_some()
-}
-
-pub fn subslice_position<T: Eq>(a: &[T], b: &[T]) -> Option<usize> {
-    if b.is_empty() {
-        return Some(0);
-    }
-    a.windows(b.len()).position(|aw| aw == b)
 }
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq)]
@@ -2031,14 +2003,15 @@ pub const ESCAPE_TEST_CHAR: usize = 4000;
 #[cfg(test)]
 mod tests {
     use super::{
-        ENCODE_DIRECT_BASE, ENCODE_DIRECT_END, ESCAPE_TEST_CHAR, EscapeFlags, EscapeStringStyle,
-        ScopeGuard, ScopedCell, ScopedRefCell, UnescapeStringStyle, bytes2wcstring, escape_string,
+        ENCODE_DIRECT_END, ESCAPE_TEST_CHAR, EscapeFlags, EscapeStringStyle, ScopeGuard,
+        ScopedCell, ScopedRefCell, UnescapeStringStyle, bytes2wcstring, escape_string,
         truncate_at_nul, unescape_string, wcs2bytes,
     };
     use crate::{
         util::get_seeded_rng,
         wchar::{L, WString, wstr},
     };
+    use fish_common::ENCODE_DIRECT_BASE;
     use rand::{Rng, RngCore};
 
     #[test]

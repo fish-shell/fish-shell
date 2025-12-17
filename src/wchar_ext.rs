@@ -2,9 +2,9 @@ use std::{iter, slice};
 
 use crate::{
     L,
-    common::subslice_position,
     wchar::{WString, wstr},
 };
+use fish_common::subslice_position;
 use widestring::utfstr::CharsUtf32;
 
 /// Helpers to convert things to widestring.

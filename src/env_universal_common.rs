@@ -806,11 +806,11 @@ fn skip_spaces(mut s: &wstr) -> &wstr {
 
 #[cfg(test)]
 mod tests {
+    use fish_common::ENCODE_DIRECT_BASE;
+    use fish_common::char_offset;
     use fish_tempfile::TempDir;
 
-    use crate::common::ENCODE_DIRECT_BASE;
     use crate::common::bytes2wcstring;
-    use crate::common::char_offset;
     use crate::common::wcs2osstring;
     use crate::env::{EnvVar, EnvVarFlags, VarTable};
     use crate::env_universal_common::{EnvUniversal, UvarFormat};

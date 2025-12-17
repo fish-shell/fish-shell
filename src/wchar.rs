@@ -4,7 +4,7 @@
 //!   - wstr: a string slice without a nul terminator. Like `&str` but wide chars.
 //!   - WString: an owning string without a nul terminator. Like `String` but wide chars.
 
-use crate::common::{ENCODE_DIRECT_BASE, ENCODE_DIRECT_END};
+use fish_common::{ENCODE_DIRECT_BASE, ENCODE_DIRECT_END};
 pub use widestring::{Utf32Str as wstr, Utf32String as WString};
 
 /// Pull in our extensions.

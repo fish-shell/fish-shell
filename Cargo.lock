@@ -160,6 +160,7 @@ dependencies = [
  "errno",
  "fish-build-helper",
  "fish-build-man-pages",
+ "fish-common",
  "fish-gettext",
  "fish-gettext-extraction",
  "fish-gettext-mo-file-parser",
@@ -199,6 +200,10 @@ dependencies = [
  "fish-build-helper",
  "rsconf",
 ]
+
+[[package]]
+name = "fish-common"
+version = "0.0.0"
 
 [[package]]
 name = "fish-gettext"

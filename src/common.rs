@@ -9,9 +9,9 @@ use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
 use crate::parse_util::parse_util_escape_string_with_quote;
+use crate::prelude::*;
 use crate::terminal::Output;
 use crate::termsize::Termsize;
-use crate::wchar::prelude::*;
 use crate::wcstringutil::wcs2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
@@ -1807,7 +1807,7 @@ pub const fn assert_sync<T: Sync>() {}
 /// # Examples
 ///
 /// ```
-/// use fish::wchar::prelude::*;
+/// use fish::prelude::*;
 /// use fish::assert_sorted_by_name;
 ///
 /// const COLORS: &[(&wstr, u32)] = &[
@@ -1823,7 +1823,7 @@ pub const fn assert_sync<T: Sync>() {}
 /// While this example would fail to compile:
 ///
 /// ```compile_fail
-/// use fish::wchar::prelude::*;
+/// use fish::prelude::*;
 /// use fish::assert_sorted_by_name;
 ///
 /// const COLORS: &[(&wstr, u32)] = &[

@@ -1,6 +1,6 @@
 use crate::color::Color;
+use crate::prelude::*;
 use crate::terminal::{self, get_color_support};
-use crate::wchar::prelude::*;
 use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
 
 trait StyleSet {

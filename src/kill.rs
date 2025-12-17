@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 
 struct KillRing(VecDeque<WString>);
 
@@ -86,7 +86,7 @@ pub fn kill_entries() -> Vec<WString> {
 #[cfg(test)]
 mod tests {
     use super::KillRing;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_killring() {

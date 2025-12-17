@@ -328,7 +328,7 @@ impl Iterator for Iter {
 #[cfg(test)]
 mod tests {
     use super::{DirEntryType, DirIter};
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
     use fish_wchar::L;
     use nix::sys::stat::Mode;
     use std::fs::File;

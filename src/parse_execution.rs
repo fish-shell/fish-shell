@@ -38,6 +38,7 @@ use crate::parse_util::{
 use crate::parser::{Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
+use crate::prelude::*;
 use crate::proc::{
     ConcreteAssignment, Job, JobControl, JobProperties, JobRef, Process, ProcessType,
     get_job_control_mode, job_reap, no_exec,
@@ -48,7 +49,6 @@ use crate::signal::Signal;
 use crate::timer::push_timer;
 use crate::tokenizer::{PipeOrRedir, TokenType, variable_assignment_equals_pos};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
-use crate::wchar::prelude::*;
 use crate::wildcard::wildcard_match;
 use fish_wchar::WExt;
 use libc::{ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};

@@ -3,7 +3,7 @@ use crate::common::assert_sync;
 use crate::env::{EnvMode, EnvVar, Environment};
 use crate::flog::flog;
 use crate::parser::Parser;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wutil::fish_wcstoi;
 use std::mem::MaybeUninit;
 use std::num::NonZeroU16;

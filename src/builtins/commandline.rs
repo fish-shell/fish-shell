@@ -12,6 +12,7 @@ use crate::parse_util::{
     parse_util_detect_errors, parse_util_get_offset_from_line, parse_util_job_extent,
     parse_util_lineno, parse_util_process_extent, parse_util_token_extent,
 };
+use crate::prelude::*;
 use crate::proc::is_interactive_session;
 use crate::reader::{
     commandline_get_state, commandline_set_buffer, commandline_set_search_field,
@@ -19,7 +20,6 @@ use crate::reader::{
 };
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::{TokenType, Tokenizer};
-use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use std::ops::Range;
 

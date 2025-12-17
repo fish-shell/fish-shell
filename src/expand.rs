@@ -23,8 +23,8 @@ use crate::parse_util::{
     MaybeParentheses, parse_util_expand_variable_error, parse_util_locate_cmdsubst_range,
 };
 use crate::path::path_apply_working_directory;
+use crate::prelude::*;
 use crate::util::wcsfilecmp_glob;
-use crate::wchar::prelude::*;
 use crate::wcstringutil::{join_strings, trim};
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, WildcardResult};
 use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
@@ -1606,7 +1606,7 @@ mod tests {
     use crate::{
         expand::{ExpandFlags, expand_string},
         operation_context::OperationContext,
-        wchar::prelude::*,
+        prelude::*,
     };
     use std::collections::HashSet;
     use std::collections::hash_map::RandomState;

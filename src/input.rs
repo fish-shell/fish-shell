@@ -7,9 +7,9 @@ use crate::input_common::{
     R_END_INPUT_FUNCTIONS, ReadlineCmd, match_key_event_to_key,
 };
 use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
+use crate::prelude::*;
 use crate::reader::{Reader, reader_reset_interrupted};
 use crate::threads::assert_is_main_thread;
-use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
 use std::mem;
 use std::sync::{
@@ -973,7 +973,7 @@ mod tests {
     use crate::env::EnvStack;
     use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent};
     use crate::key::Key;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     struct TestInputEventQueuer {
         input_data: InputData,

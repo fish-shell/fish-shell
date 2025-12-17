@@ -1,8 +1,8 @@
 use crate::common::PROGRAM_NAME;
 use crate::fds::{make_fd_nonblocking, set_cloexec};
 use crate::flog::{flog, flogf};
+use crate::prelude::*;
 use crate::universal_notifier::UniversalNotifier;
-use crate::wchar::prelude::*;
 use libc::{c_char, c_int};
 use std::ffi::CString;
 use std::os::fd::{BorrowedFd, RawFd};

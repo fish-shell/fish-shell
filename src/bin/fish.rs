@@ -49,6 +49,7 @@ use fish::{
     parse_util::parse_util_detect_errors_in_ast,
     parser::{BlockType, CancelBehavior, Parser},
     path::path_get_config,
+    prelude::*,
     printf,
     proc::{
         Pid, get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
@@ -58,7 +59,6 @@ use fish::{
     signal::{signal_clear_cancel, signal_unblock_all},
     threads::{self},
     topic_monitor,
-    wchar::prelude::*,
     wutil::waccess,
 };
 use libc::STDIN_FILENO;

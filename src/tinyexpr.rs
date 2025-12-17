@@ -31,7 +31,7 @@ use std::{
 };
 
 use crate::{
-    wchar::prelude::*,
+    prelude::*,
     wutil::{Error as wcstodError, wcstod::wcstod_underscores, wgettext},
 };
 

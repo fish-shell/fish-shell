@@ -1,7 +1,7 @@
 //! Helper functions for working with wcstring.
 
 use crate::common::{get_ellipsis_char, get_ellipsis_str};
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use fish_fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
 use fish_wchar::decode_byte_from_char;
 
@@ -556,7 +556,7 @@ mod tests {
         CaseSensitivity, ContainType, LineIterator, count_newlines, ifind, join_strings,
         split_string_tok, string_fuzzy_match_string,
     };
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_ifind() {

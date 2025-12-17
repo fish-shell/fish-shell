@@ -22,11 +22,11 @@ use crate::parse_constants::{
     ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition, SourceRange,
     StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
 };
+use crate::prelude::*;
 use crate::tokenizer::{
     TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
     is_token_delimiter, quote_end,
 };
-use crate::wchar::prelude::*;
 use crate::wcstringutil::count_newlines;
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
@@ -1982,8 +1982,8 @@ mod tests {
         ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
         ERROR_NOT_PID, ERROR_NOT_STATUS,
     };
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use pcre2::utf32::Regex;
 
     #[test]

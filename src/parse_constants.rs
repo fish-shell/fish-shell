@@ -1,6 +1,6 @@
 //! Constants used in the programmatic representation of fish code.
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use bitflags::bitflags;
 use fish_fallback::{fish_wcswidth, fish_wcwidth};
 

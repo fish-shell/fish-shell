@@ -24,7 +24,7 @@ from_gh() {
     contents=$(curl -fsS https://raw.githubusercontent.com/"${repo}"/refs/heads/master/"${path}")
     printf '%s\n' >"$out_dir/$(basename "$path")" "$contents"
 }
-from_gh ridiculousfish/widecharwidth widechar_width.rs src/widecharwidth/
+from_gh ridiculousfish/widecharwidth widechar_width.rs crates/widecharwidth/src/
 from_gh ridiculousfish/littlecheck littlecheck/littlecheck.py tests/
 
 # Update Cargo.lock

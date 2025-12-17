@@ -165,6 +165,7 @@ dependencies = [
  "fish-gettext-mo-file-parser",
  "fish-printf",
  "fish-tempfile",
+ "fish-widecharwidth",
  "libc",
  "lru",
  "macro_rules_attribute",
@@ -249,6 +250,10 @@ dependencies = [
  "nix",
  "rand 0.9.2",
 ]
+
+[[package]]
+name = "fish-widecharwidth"
+version = "0.0.0"
 
 [[package]]
 name = "fnv"

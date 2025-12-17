@@ -474,7 +474,7 @@ pub fn wstr_offset_in(cursor: &wstr, base: &wstr) -> usize {
 #[cfg(test)]
 mod tests {
     use super::{normalize_path, wbasename, wdirname, wstr_offset_in, wwrite_to_fd};
-    use crate::common::wcs2bytes;
+    use crate::common::bytes2wcstring;
     use crate::fds::AutoCloseFd;
     use crate::tests::prelude::*;
     use crate::wchar::prelude::*;
@@ -665,18 +665,17 @@ mod tests {
                 libc::open(filename.as_ptr(), O_RDWR | O_TRUNC | O_CREAT, 0o666)
             });
             assert!(fd.is_valid());
-            let mut input = WString::new();
+            let mut input = Vec::new();
             for _i in 0..size {
                 input.push(rng.random());
             }
 
-            let amt = wwrite_to_fd(&input, fd.fd()).unwrap();
-            let narrow = wcs2bytes(&input);
-            assert_eq!(amt, narrow.len());
+            let amt = wwrite_to_fd(&bytes2wcstring(&input), fd.fd()).unwrap();
+            assert_eq!(amt, input.len());
 
             assert!(unsafe { libc::lseek(fd.fd(), 0, SEEK_SET) } >= 0);
 
-            let mut contents = vec![0u8; narrow.len()];
+            let mut contents = vec![0u8; input.len()];
             let read_amt = unsafe {
                 libc::read(
                     fd.fd(),
@@ -685,11 +684,11 @@ mod tests {
                     } else {
                         contents.as_mut_ptr().cast()
                     },
-                    narrow.len(),
+                    input.len(),
                 )
             };
-            assert!(usize::try_from(read_amt).unwrap() == narrow.len());
-            assert_eq!(&contents, &narrow);
+            assert!(usize::try_from(read_amt).unwrap() == input.len());
+            assert_eq!(&contents, &input);
         }
     }
 

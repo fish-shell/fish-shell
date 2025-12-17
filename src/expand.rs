@@ -1394,6 +1394,8 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         mut input: WString,
         out: &mut CompletionReceiver,
     ) -> ExpandResult {
+        remove_internal_separator(&mut input, self.flags.contains(ExpandFlags::SKIP_WILDCARDS));
+
         expand_home_directory(&mut input, self.ctx.vars());
         if !feature_test(FeatureFlag::RemovePercentSelf) {
             expand_percent_self(&mut input);
@@ -1406,15 +1408,11 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
 
     fn stage_wildcards(
         &mut self,
-        mut path_to_expand: WString,
+        path_to_expand: WString,
         out: &mut CompletionReceiver,
     ) -> ExpandResult {
         let mut result = ExpandResult::ok();
 
-        remove_internal_separator(
-            &mut path_to_expand,
-            self.flags.contains(ExpandFlags::SKIP_WILDCARDS),
-        );
         let has_wildcard = wildcard_has_internal(&path_to_expand); // e.g. ANY_STRING
         let for_completions = self.flags.contains(ExpandFlags::FOR_COMPLETIONS);
         let skip_wildcards = self.flags.contains(ExpandFlags::SKIP_WILDCARDS);

@@ -37,7 +37,7 @@ fish can be installed:
 -  using the `installer from fishshell.com <https://fishshell.com/>`__
 -  as a `standalone app from fishshell.com <https://fishshell.com/>`__
 
-Note: The minimum supported macOS version is 10.10 "Yosemite".
+Note: The minimum supported macOS version is 10.12.
 
 Packages for Linux
 ~~~~~~~~~~~~~~~~~~

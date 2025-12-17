@@ -19,26 +19,15 @@ BuildRequires:          /usr/bin/man
 # OBS: add eg "FileProvides: /usr/bin/man man-db man" to project config
 BuildRequires: cmake >= 3.15
 
-%if 0%{?suse_version}
 # for tests
-BuildRequires: groff
-%else
-BuildRequires: groff-base
-%endif
-
-# for tests
+BuildRequires:          python3 procps
 %if 0%{?fedora}
 # Need the en_US.utf-8 locale at a minimum
 BuildRequires: glibc-langpack-en
 %endif
-BuildRequires: python3 procps
 
-%if 0%{?suse_version}
-Requires:      terminfo-base groff
-%else
-Requires:      ncurses-base groff-base
-%endif
 Requires:      file
+Requires:      /usr/bin/man
 Requires:      python3
 Requires:      procps
 

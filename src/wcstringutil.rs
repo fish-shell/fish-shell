@@ -1,6 +1,7 @@
 //! Helper functions for working with wcstring.
 
 use crate::common::{get_ellipsis_char, get_ellipsis_str};
+use crate::expand::INTERNAL_SEPARATOR;
 use crate::fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
 use crate::wchar::{decode_byte_from_char, prelude::*};
 
@@ -321,6 +322,11 @@ pub fn wcs2bytes_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> 
     let mut converted = [0_u8; 4];
 
     for c in input.chars() {
+        if c == INTERNAL_SEPARATOR {
+            // do nothing, this is important for ~$user handling
+            continue;
+        }
+
         let bytes = if let Some(byte) = decode_byte_from_char(c) {
             converted[0] = byte;
             &converted[..=0]

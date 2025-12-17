@@ -3,7 +3,7 @@ use std::{
     sync::{Mutex, MutexGuard},
 };
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use once_cell::sync::Lazy;
 
 use crate::parse_constants::SourceRange;
@@ -287,9 +287,9 @@ mod tests {
     use super::{Abbreviation, Position, abbrs_get_set, abbrs_match, with_abbrs_mut};
     use crate::editable_line::{Edit, apply_edit};
     use crate::highlight::HighlightSpec;
+    use crate::prelude::*;
     use crate::reader::reader_expand_abbreviation_at_cursor;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     #[test]
     #[serial]

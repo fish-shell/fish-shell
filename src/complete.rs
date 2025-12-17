@@ -35,8 +35,8 @@ use crate::{
     parser::{Block, Parser},
     parser_keywords::parser_keywords_is_subcommand,
     path::{path_get_path, path_try_get_path},
+    prelude::*,
     tokenizer::{Tok, TokFlags, TokenType, Tokenizer, variable_assignment_equals_pos},
-    wchar::prelude::*,
     wcstringutil::{
         StringFuzzyMatch, string_fuzzy_match_string, string_prefixes_string,
         string_prefixes_string_case_insensitive,
@@ -2637,9 +2637,9 @@ mod tests {
     use crate::operation_context::{
         EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT, OperationContext, no_cancel,
     };
+    use crate::prelude::*;
     use crate::reader::completion_apply_to_command_line;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use crate::wcstringutil::join_strings;
     use std::collections::HashMap;
     use std::ffi::CString;

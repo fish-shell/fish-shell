@@ -12,10 +12,10 @@ use crate::flog::flog;
 use crate::io::{IoChain, IoStreams};
 use crate::job_group::MaybeJobId;
 use crate::parser::{Block, Parser};
+use crate::prelude::*;
 use crate::proc::Pid;
 use crate::reader::reader_update_termsize;
 use crate::signal::{Signal, signal_check_cancel, signal_handle};
-use crate::wchar::prelude::*;
 
 pub enum EventType {
     Any,

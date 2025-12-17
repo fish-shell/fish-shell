@@ -58,7 +58,7 @@ mod prelude {
         flog::{flog, flogf},
         io::{IoStreams, SeparationType},
         parser::Parser,
-        wchar::prelude::*,
+        prelude::*,
         wgetopt::{
             ArgType::{self, *},
             NON_OPTION_CHAR, WGetopter, WOption, wopt,

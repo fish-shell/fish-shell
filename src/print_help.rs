@@ -1,7 +1,7 @@
 //! Helper for executables (not builtins) to print a help message
 //! Uses the fish in PATH, not necessarily the matching fish binary
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 
 use std::ffi::{OsStr, OsString};
 use std::process::Command;

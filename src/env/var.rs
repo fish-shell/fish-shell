@@ -297,8 +297,8 @@ pub fn is_read_only(name: &wstr) -> bool {
 mod tests {
     use super::{EnvMode, EnvVar, EnvVarFlags};
     use crate::env::environment::{EnvStack, Environment};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use std::{
         mem::MaybeUninit,
         time::{SystemTime, UNIX_EPOCH},

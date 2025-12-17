@@ -5,7 +5,7 @@ use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::flog::{flog, flogf};
 use crate::fs::{PotentialUpdate, lock_and_load, rewrite_via_temporary_file};
 use crate::path::path_get_config;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wcstringutil::{LineIterator, join_strings};
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
 use fish_wchar::decode_byte_from_char;
@@ -815,8 +815,8 @@ mod tests {
     use crate::common::wcs2osstring;
     use crate::env::{EnvVar, EnvVarFlags, VarTable};
     use crate::env_universal_common::{EnvUniversal, UvarFormat};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use crate::wutil::{INVALID_FILE_ID, file_id_for_path};
 
     const UVARS_PER_THREAD: usize = 8;

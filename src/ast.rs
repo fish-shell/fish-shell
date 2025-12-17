@@ -17,11 +17,11 @@ use crate::parse_constants::{
     SourceRange, StatementDecoration, token_type_user_presentable_description,
 };
 use crate::parse_tree::ParseToken;
+use crate::prelude::*;
 use crate::tokenizer::{
     TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
     TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
 };
-use crate::wchar::prelude::*;
 use macro_rules_attribute::derive;
 use std::borrow::Cow;
 use std::convert::AsMut;
@@ -2830,8 +2830,8 @@ mod tests {
     use super::{Node, is_same_node};
     use crate::ast;
     use crate::parse_constants::ParseTreeFlags;
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     #[test]
     #[serial]
@@ -2898,7 +2898,7 @@ end
 mod bench {
     extern crate test;
     use crate::ast;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
     use test::Bencher;
 
     // Return a long string suitable for benchmarking.

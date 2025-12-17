@@ -10,9 +10,9 @@ use crate::complete::{CompleteFlags, Completion};
 use crate::editable_line::EditableLine;
 use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
 use crate::operation_context::OperationContext;
+use crate::prelude::*;
 use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
 use crate::termsize::Termsize;
-use crate::wchar::prelude::*;
 use crate::wcstringutil::string_fuzzy_match_string;
 
 /// Represents rendering from the pager.
@@ -1279,9 +1279,9 @@ mod tests {
     use super::{Pager, SelectionMotion};
     use crate::common::get_ellipsis_char;
     use crate::complete::{CompleteFlags, Completion};
+    use crate::prelude::*;
     use crate::termsize::Termsize;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use crate::wcstringutil::StringFuzzyMatch;
     use std::num::NonZeroU16;
 

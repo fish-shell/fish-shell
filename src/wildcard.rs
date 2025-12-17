@@ -16,7 +16,7 @@ use crate::expand::ExpandFlags;
 use crate::fallback::wcscasecmp;
 use crate::future_feature_flags::FeatureFlag;
 use crate::future_feature_flags::feature_test;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wcstringutil::{
     CaseSensitivity, string_fuzzy_match_string, string_suffixes_string_case_insensitive,
     strip_executable_suffix,

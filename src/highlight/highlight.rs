@@ -1280,9 +1280,9 @@ mod tests {
     use crate::future_feature_flags::{self, FeatureFlag};
     use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
     use crate::text_face::UnderlineStyle;
-    use crate::wchar::prelude::*;
     use libc::PATH_MAX;
 
     // Helper to return a string whose length greatly exceeds PATH_MAX.

@@ -3,7 +3,7 @@ use crate::{
     fds::wopen_cloexec,
     flog, flogf,
     path::{DirRemoteness, path_remoteness},
-    wchar::prelude::*,
+    prelude::*,
     wutil::{
         FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, wdirname, wrename, wunlink,
     },

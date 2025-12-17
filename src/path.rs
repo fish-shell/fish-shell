@@ -6,7 +6,7 @@ use crate::common::{wcs2osstring, wcs2zstring};
 use crate::env::{EnvMode, EnvStack, Environment, FALLBACK_PATH};
 use crate::expand::{HOME_DIRECTORY, expand_tilde};
 use crate::flog::{flog, flogf};
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use errno::{Errno, errno, set_errno};
 use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
@@ -770,7 +770,7 @@ pub fn append_path_component(path: &mut WString, component: &wstr) {
 #[cfg(test)]
 mod tests {
     use super::{path_apply_working_directory, path_make_canonical, paths_are_equivalent};
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_path_make_canonical() {

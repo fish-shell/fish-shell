@@ -1,6 +1,6 @@
 //! Generic utilities library.
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use rand::{SeedableRng, rngs::SmallRng};
 use std::cmp::Ordering;
 use std::time;
@@ -260,7 +260,7 @@ pub fn find_subslice<T: PartialEq>(
 #[cfg(test)]
 mod tests {
     use super::wcsfilecmp;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
     use std::cmp::Ordering;
 
     /// Verify the behavior of the `wcsfilecmp()` function.

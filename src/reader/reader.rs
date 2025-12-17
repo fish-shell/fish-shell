@@ -113,6 +113,7 @@ use crate::parse_util::{
     parse_util_lineno, parse_util_locate_cmdsubst_range, parse_util_token_extent,
 };
 use crate::parser::{BlockType, EvalRes, Parser};
+use crate::prelude::*;
 use crate::proc::{
     have_proc_stat, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
     print_exit_warning_for_jobs, proc_update_jiffies,
@@ -148,7 +149,6 @@ use crate::tty_handoff::XTGETTCAP_QUERY_OS_NAME;
 use crate::tty_handoff::{
     TtyHandoff, get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
 };
-use crate::wchar::prelude::*;
 use crate::wcstringutil::CaseSensitivity;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
 use crate::wcstringutil::{
@@ -6892,8 +6892,8 @@ mod tests {
     use super::{combine_command_and_autosuggestion, completion_apply_to_command_line};
     use crate::complete::CompleteFlags;
     use crate::operation_context::{OperationContext, no_cancel};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     #[test]
     fn test_autosuggestion_combining() {

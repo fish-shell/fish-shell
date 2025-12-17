@@ -475,8 +475,8 @@ mod tests {
     use super::{normalize_path, wbasename, wdirname, wstr_offset_in, wwrite_to_fd};
     use crate::common::wcs2bytes;
     use crate::fds::AutoCloseFd;
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
     use rand::Rng;
     use std::{ffi::CString, ptr};

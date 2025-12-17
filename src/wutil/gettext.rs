@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 #[cfg(feature = "localize-messages")]
 use crate::env::EnvStack;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use once_cell::sync::Lazy;
 
 #[cfg(feature = "localize-messages")]
@@ -386,8 +386,8 @@ pub use wgettext_fmt;
 #[cfg(test)]
 mod tests {
     use super::LocalizableString;
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     #[test]
     #[serial]

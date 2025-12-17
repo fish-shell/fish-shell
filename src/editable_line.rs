@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use crate::highlight::HighlightSpec;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 
 /// An edit action that can be undone.
 #[derive(Clone, Eq, PartialEq)]
@@ -369,7 +369,7 @@ pub fn line_at_cursor(buffer: &wstr, cursor: usize) -> &wstr {
 mod tests {
     use crate::{
         editable_line::{Edit, EditableLine},
-        wchar::prelude::*,
+        prelude::*,
     };
 
     #[test]

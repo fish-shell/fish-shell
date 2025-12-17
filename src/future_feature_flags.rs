@@ -1,6 +1,6 @@
 //! Flags to enable upcoming features
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 
@@ -288,7 +288,7 @@ pub fn scoped_test(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
 #[cfg(test)]
 mod tests {
     use super::{FeatureFlag, Features, METADATA, scoped_test, set, test};
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_feature_flags() {

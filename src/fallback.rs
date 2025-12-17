@@ -3,7 +3,7 @@
 //!
 //! Many of these functions are more or less broken and incomplete.
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use fish_widecharwidth::{WcLookupTable, WcWidth};
 use once_cell::sync::Lazy;
 use std::cmp;
@@ -165,7 +165,7 @@ pub fn wcscasecmp_fuzzy(lhs: &wstr, rhs: &wstr, canonicalize: fn(char) -> char) 
 #[cfg(test)]
 mod tests {
     use super::wcscasecmp;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
     use std::cmp::Ordering;
 
     #[test]

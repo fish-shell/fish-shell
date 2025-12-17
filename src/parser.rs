@@ -27,11 +27,11 @@ use crate::parse_constants::{
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
 use crate::parse_tree::NodeRef;
 use crate::parse_tree::{LineCounter, ParsedSourceRef, parse_source};
+use crate::prelude::*;
 use crate::proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap};
 use crate::signal::{Signal, signal_check_cancel, signal_clear_cancel};
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
-use crate::wchar::prelude::*;
 use crate::wutil::perror;
 use crate::{flog, flogf, function};
 use fish_wchar::WExt;
@@ -1448,10 +1448,10 @@ mod tests {
     };
     use crate::parse_tree::{LineCounter, parse_source};
     use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
+    use crate::prelude::*;
     use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
     use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use crate::wcstringutil::join_strings;
     use libc::SIGINT;
     use std::time::Duration;

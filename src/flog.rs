@@ -1,5 +1,5 @@
 use crate::common::wcs2bytes;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wildcard::wildcard_match;
 use crate::wutil::write_to_fd;
 use crate::{parse_util::parse_util_unescape_wildcards, wutil::wwrite_to_fd};
@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicI32, Ordering};
 #[rustfmt::skip::macros(category)]
 pub mod categories {
     use super::wstr;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
     use std::sync::atomic::AtomicBool;
 
     pub struct Category {

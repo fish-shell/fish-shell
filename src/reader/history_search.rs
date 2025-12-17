@@ -2,8 +2,8 @@
 
 use crate::history::{self, History, HistorySearch, SearchDirection, SearchFlags, SearchType};
 use crate::parse_constants::SourceRange;
+use crate::prelude::*;
 use crate::tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer};
-use crate::wchar::prelude::*;
 use crate::wcstringutil::ifind;
 use std::collections::HashSet;
 use std::ops::Range;

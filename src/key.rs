@@ -5,8 +5,8 @@ use crate::{
     fallback::fish_wcwidth,
     flog::FloggableDebug,
     future_feature_flags::{FeatureFlag, test as feature_test},
+    prelude::*,
     reader::safe_get_terminal_mode_on_startup,
-    wchar::prelude::*,
     wutil::fish_wcstoul,
 };
 use fish_wchar::decode_byte_from_char;
@@ -461,7 +461,7 @@ pub fn char_to_symbol(c: char, is_first_in_token: bool) -> WString {
 #[cfg(test)]
 mod tests {
     use crate::key::{self, Key, ctrl, function_key, parse_keys};
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_parse_key() {

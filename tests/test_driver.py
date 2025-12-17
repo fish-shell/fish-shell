@@ -334,7 +334,7 @@ async def run_test(
         elif ret:
             return TestPass(arg, duration_ms)
         else:
-            return TestFail(arg, duration_ms, f"{error_message}\nTmpdir is {home}")
+            return TestFail(arg, duration_ms, error_message)
     elif test_file_path.endswith(".py"):
         test_env.update(
             {
@@ -371,7 +371,6 @@ async def run_test(
                 error_message += stdout.decode("utf-8")
             if stderr:
                 error_message += stderr.decode("utf-8")
-            error_message += f"Tmpdir is {home}"
             return TestFail(arg, duration_ms, error_message)
     else:
         return TestFail(arg, None, "Error in test driver. This should be unreachable.")

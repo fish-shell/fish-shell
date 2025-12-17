@@ -340,6 +340,10 @@ impl ParseError {
             .position(|c| *c == '\n')
             .map(|pos| pos + last_char_in_range)
             .unwrap_or(src.len());
+        // We can only report squiggles on one line
+        if start + len > line_end {
+            len = line_end - start;
+        }
 
         assert!(line_end >= line_start);
         assert!(start >= line_start);

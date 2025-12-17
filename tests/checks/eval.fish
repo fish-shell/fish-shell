@@ -67,7 +67,7 @@ function eval
 end
 # CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): function: eval: cannot use reserved keyword as function name
 # CHECKERR: function eval
-# CHECKERR: ^
+# CHECKERR: ^~~~~~~~~~~~^
 
 
 function evil --no-scope-shadowing

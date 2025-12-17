@@ -62,7 +62,7 @@ function -a arg1 arg2 name2
 end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: -a: invalid function name
 #CHECKERR: function -a arg1 arg2 name2
-#CHECKERR: ^
+#CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~^
 function name3 --argument-names arg1 arg2
     echo hello
     echo goodbye
@@ -71,12 +71,12 @@ function --argument-names arg1 arg2 name4
 end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: --argument-names: invalid function name
 #CHECKERR: function --argument-names arg1 arg2 name4
-#CHECKERR: ^
+#CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 function name5 abc --argument-names def
 end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: abc: unexpected positional argument
 #CHECKERR: function name5 abc --argument-names def
-#CHECKERR: ^
+#CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 functions -q name1; and echo "Function name1 found"
 functions -q name2; or echo "Function name2 not found as expected"
 functions -q name3; and echo "Function name3 found"
@@ -124,7 +124,7 @@ function test
 end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: test: cannot use reserved keyword as function name
 #CHECKERR: function test
-#CHECKERR: ^
+#CHECKERR: ^~~~~~~~~~~~^
 
 functions -q; or echo False
 #CHECK: False
@@ -190,7 +190,7 @@ function ()
 end
 # CHECKERR: {{.*}}/tests/checks/function.fish (line {{\d+}}): function: function name required
 # CHECKERR: function ()
-# CHECKERR: ^
+# CHECKERR: ^~~~~~~~~~^
 
 # Tests the --argument-names and --inherit-variable can overwrite argv
 function t --argument-names a argv c
@@ -221,22 +221,22 @@ for flag in --on-process-exit --on-job-exit
     end
     # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '2147483648' is not a valid process ID
     # CHECKERR:     function invalid $flag=$invalid_pid
-    # CHECKERR:     ^
+    # CHECKERR:     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
     # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '-1' is not a valid process ID
     # CHECKERR:     function invalid $flag=$invalid_pid
-    # CHECKERR:     ^
+    # CHECKERR:     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
     # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '-2147483648' is not a valid process ID
     # CHECKERR:     function invalid $flag=$invalid_pid
-    # CHECKERR:     ^
+    # CHECKERR:     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
     # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '2147483648' is not a valid process ID
     # CHECKERR:     function invalid $flag=$invalid_pid
-    # CHECKERR:     ^
+    # CHECKERR:     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
     # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '-1' is not a valid process ID
     # CHECKERR:     function invalid $flag=$invalid_pid
-    # CHECKERR:     ^
+    # CHECKERR:     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
     # CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: '-2147483648' is not a valid process ID
     # CHECKERR:     function invalid $flag=$invalid_pid
-    # CHECKERR:     ^
+    # CHECKERR:     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 end
 
 exit 0

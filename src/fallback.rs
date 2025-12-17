@@ -4,7 +4,7 @@
 //! Many of these functions are more or less broken and incomplete.
 
 use crate::wchar::prelude::*;
-use crate::widecharwidth::{WcLookupTable, WcWidth};
+use fish_widecharwidth::{WcLookupTable, WcWidth};
 use once_cell::sync::Lazy;
 use std::cmp;
 use std::sync::atomic::{AtomicIsize, Ordering};

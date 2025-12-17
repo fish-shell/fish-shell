@@ -78,7 +78,6 @@ pub mod wchar;
 pub mod wchar_ext;
 pub mod wcstringutil;
 pub mod wgetopt;
-pub mod widecharwidth;
 pub mod wildcard;
 
 #[cfg(feature = "gettext-extract")]

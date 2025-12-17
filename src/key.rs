@@ -6,9 +6,10 @@ use crate::{
     flog::FloggableDebug,
     future_feature_flags::{FeatureFlag, test as feature_test},
     reader::safe_get_terminal_mode_on_startup,
-    wchar::{decode_byte_from_char, prelude::*},
+    wchar::prelude::*,
     wutil::fish_wcstoul,
 };
+use fish_wchar::decode_byte_from_char;
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
 pub(crate) const Delete: char = '\u{F501}';

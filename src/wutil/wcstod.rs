@@ -1,6 +1,6 @@
 use super::errors::Error;
 use super::hex_float;
-use crate::wchar::IntoCharIter;
+use fish_wchar::IntoCharIter;
 
 // Parse a decimal float from a sequence of characters.
 // Return the parsed float, and (on success) the number of characters consumed.

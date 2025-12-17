@@ -181,10 +181,8 @@ impl UniversalNotifier for KqueueNotifier {
 #[cfg(test)]
 mod tests {
     use super::KqueueNotifier;
-    use crate::{
-        universal_notifier::{UniversalNotifier, test_helpers::test_notifiers},
-        wchar::WString,
-    };
+    use crate::universal_notifier::{UniversalNotifier, test_helpers::test_notifiers};
+    use fish_wchar::WString;
 
     #[test]
     fn test_kqueue_notifiers() {

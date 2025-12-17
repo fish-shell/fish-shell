@@ -1,7 +1,7 @@
 use crate::signal::Signal;
-use crate::wchar::{L, WString, wstr};
 use crate::wcstringutil::join_strings;
 use bitflags::bitflags;
+use fish_wchar::{L, WString, wstr};
 use libc::c_int;
 use std::collections::HashMap;
 use std::sync::Arc;

@@ -75,7 +75,6 @@ pub mod universal_notifier;
 pub mod util;
 pub mod wait_handle;
 pub mod wchar;
-pub mod wchar_ext;
 pub mod wcstringutil;
 pub mod wgetopt;
 pub mod wildcard;

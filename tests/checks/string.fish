@@ -936,7 +936,7 @@ function string
 end
 # CHECKERR: {{.*}}checks/string.fish (line {{\d+}}): function: string: cannot use reserved keyword as function name
 # CHECKERR: function string
-# CHECKERR: ^
+# CHECKERR: ^~~~~~~~~~~~~~^
 
 string escape \x7F
 # CHECK: \x7f

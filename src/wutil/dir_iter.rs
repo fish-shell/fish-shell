@@ -1,8 +1,8 @@
 use super::wopendir;
 use crate::common::{bytes2wcstring, wcs2zstring};
-use crate::wchar::{WString, wstr};
 use crate::wutil::DevInode;
 use cfg_if::cfg_if;
+use fish_wchar::{WString, wstr};
 use libc::{
     DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
     ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG,
@@ -329,6 +329,7 @@ impl Iterator for Iter {
 mod tests {
     use super::{DirEntryType, DirIter};
     use crate::wchar::prelude::*;
+    use fish_wchar::L;
     use nix::sys::stat::Mode;
     use std::fs::File;
     use std::path::PathBuf;
@@ -336,14 +337,12 @@ mod tests {
     #[test]
     fn test_dir_iter_bad_path() {
         // Regression test: DirIter does not crash given a bad path.
-        use crate::wchar::L;
         let dir = DirIter::new(L!("/a/bogus/path/which/does/notexist"));
         assert!(dir.is_err());
     }
 
     #[test]
     fn test_no_dots() {
-        use crate::wchar::L;
         // DirIter does not return . or .. by default.
         let dir = DirIter::new(L!(".")).expect("Should be able to open CWD");
         for entry in dir {
@@ -355,7 +354,6 @@ mod tests {
 
     #[test]
     fn test_dots() {
-        use crate::wchar::L;
         // DirIter returns . or .. if you ask nicely.
         let dir = DirIter::new_with_dots(L!(".")).expect("Should be able to open CWD");
         let mut seen_dot = false;
@@ -375,7 +373,6 @@ mod tests {
     #[test]
     #[allow(clippy::if_same_then_else)]
     fn test_dir_iter() {
-        use crate::wchar::L;
         use libc::{EACCES, ENOENT};
 
         let baditer = DirIter::new(L!("/definitely/not/a/valid/directory/for/sure"));

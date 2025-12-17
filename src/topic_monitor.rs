@@ -23,8 +23,8 @@ set. This is the real power of topics: you can wait for a sigchld signal OR a th
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::{self, AutoClosePipes, make_fd_nonblocking};
 use crate::flog::{FloggableDebug, flog};
-use crate::wchar::WString;
 use crate::wutil::perror;
+use fish_wchar::WString;
 use nix::errno::Errno;
 use nix::unistd;
 use std::cell::Cell;

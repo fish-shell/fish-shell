@@ -5,9 +5,9 @@ use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
 use crate::parser::{BlockType, LoopStatus};
 use crate::proc::{Pid, ProcStatus, no_exec};
-use crate::wchar::L;
 use crate::{builtins::*, wutil};
 use errno::errno;
+use fish_wchar::L;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};

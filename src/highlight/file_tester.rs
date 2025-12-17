@@ -12,8 +12,6 @@ use crate::operation_context::OperationContext;
 use crate::path::path_apply_working_directory;
 use crate::redirection::RedirectionMode;
 use crate::threads::assert_is_background_thread;
-use crate::wchar::{L, WString, wstr};
-use crate::wchar_ext::WExt;
 use crate::wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
 };
@@ -21,6 +19,7 @@ use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::{
     dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat,
 };
+use fish_wchar::{L, WExt, WString, wstr};
 use libc::PATH_MAX;
 use std::collections::{HashMap, HashSet};
 use std::os::fd::RawFd;

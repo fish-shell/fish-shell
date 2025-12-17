@@ -50,7 +50,6 @@
 
 use super::prelude::*;
 use crate::locale::{Locale, get_numeric_locale};
-use crate::wchar::{decode_byte_from_char, encode_byte_to_char};
 use crate::wutil::{
     errors::Error,
     wcstod::wcstod,
@@ -58,6 +57,7 @@ use crate::wutil::{
     wstr_offset_in,
 };
 use fish_printf::{ToArg, sprintf_locale};
+use fish_wchar::{decode_byte_from_char, encode_byte_to_char};
 
 /// Return true if `c` is an octal digit.
 fn is_octal_digit(c: char) -> bool {

@@ -17,8 +17,8 @@ use crate::terminal::TerminalCommand::{
 use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
-use crate::wchar_ext::ToWString;
 use crate::wutil::{perror, wcstoi};
+use fish_wchar::ToWString;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use once_cell::sync::OnceCell;
 use std::mem::MaybeUninit;

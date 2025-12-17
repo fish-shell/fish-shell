@@ -16,8 +16,9 @@ use crate::tty_handoff::{
     maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
 };
 use crate::universal_notifier::default_notifier;
-use crate::wchar::{encode_byte_to_char, prelude::*};
+use crate::wchar::prelude::*;
 use crate::wutil::{fish_is_pua, fish_wcstol};
+use fish_wchar::encode_byte_to_char;
 use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;
 use std::mem::MaybeUninit;

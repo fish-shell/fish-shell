@@ -30,9 +30,8 @@ use crate::terminal::Outputter;
 use crate::text_face::{SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
-use crate::wchar::{L, WString, wstr};
-use crate::wchar_ext::WExt;
 use crate::wcstringutil::string_prefixes_string;
+use fish_wchar::{L, WExt, WString, wstr};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 

@@ -12,12 +12,13 @@ use crate::key;
 use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::terminal::Output;
 use crate::termsize::Termsize;
-use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
+use crate::wchar::prelude::*;
 use crate::wcstringutil::wcs2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
 use fish_common::{ENCODE_DIRECT_END, char_offset, subslice_position};
+use fish_wchar::{decode_byte_from_char, encode_byte_to_char};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use once_cell::sync::OnceCell;
 use std::cell::{Cell, RefCell};
@@ -2002,16 +2003,15 @@ pub const ESCAPE_TEST_CHAR: usize = 4000;
 
 #[cfg(test)]
 mod tests {
+
     use super::{
         ENCODE_DIRECT_END, ESCAPE_TEST_CHAR, EscapeFlags, EscapeStringStyle, ScopeGuard,
         ScopedCell, ScopedRefCell, UnescapeStringStyle, bytes2wcstring, escape_string,
         truncate_at_nul, unescape_string, wcs2bytes,
     };
-    use crate::{
-        util::get_seeded_rng,
-        wchar::{L, WString, wstr},
-    };
+    use crate::util::get_seeded_rng;
     use fish_common::ENCODE_DIRECT_BASE;
+    use fish_wchar::{L, WString, wstr};
     use rand::{Rng, RngCore};
 
     #[test]

@@ -44,9 +44,9 @@ use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wchar::prelude::*;
-use crate::wchar_ext::ToWString;
 use crate::wutil::{fish_wcstol, perror};
 use errno::{errno, set_errno};
+use fish_wchar::ToWString;
 use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO,

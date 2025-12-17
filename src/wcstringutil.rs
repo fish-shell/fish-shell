@@ -3,7 +3,8 @@
 use crate::common::{get_ellipsis_char, get_ellipsis_str};
 use crate::expand::INTERNAL_SEPARATOR;
 use crate::fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
-use crate::wchar::{decode_byte_from_char, prelude::*};
+use crate::wchar::prelude::*;
+use fish_wchar::decode_byte_from_char;
 
 /// Return the number of newlines in a string.
 pub fn count_newlines(s: &wstr) -> usize {

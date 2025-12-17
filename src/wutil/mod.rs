@@ -11,11 +11,10 @@ pub mod wcstoi;
 use crate::common::{
     bytes2wcstring, fish_reserved_codepoint, wcs2bytes, wcs2osstring, wcs2zstring,
 };
-use crate::wchar::{L, WString, wstr};
-use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, wcs2bytes_callback};
 use crate::{fallback, flog};
 use errno::errno;
+use fish_wchar::{L, WExt, WString, wstr};
 pub use gettext::{
     LocalizableString, localizable_consts, localizable_string, wgettext, wgettext_fmt,
 };
@@ -484,7 +483,7 @@ mod tests {
 
     mod test_path_normalize_for_cd {
         use super::super::path_normalize_for_cd;
-        use crate::wchar::L;
+        use fish_wchar::L;
 
         #[test]
         fn relative_path() {
@@ -695,7 +694,7 @@ mod tests {
 
     #[test]
     fn test_wstr_offset_in() {
-        use crate::wchar::L;
+        use fish_wchar::L;
         let base = L!("hello world");
         assert_eq!(wstr_offset_in(&base[6..], base), 6);
         assert_eq!(wstr_offset_in(&base[0..], base), 0);

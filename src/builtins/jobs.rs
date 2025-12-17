@@ -6,13 +6,10 @@ use crate::io::IoStreams;
 use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::Parser;
 use crate::proc::{Job, clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies};
-use crate::wchar_ext::WExt;
 use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
 use crate::wutil::wgettext;
-use crate::{
-    wchar::{L, WString, wstr},
-    wutil::{fish_wcstoi, wgettext_fmt},
-};
+use crate::wutil::{fish_wcstoi, wgettext_fmt};
+use fish_wchar::{L, WExt, WString, wstr};
 use std::num::NonZeroU32;
 
 /// Print modes for the jobs builtin.

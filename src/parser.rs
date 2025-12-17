@@ -32,9 +32,9 @@ use crate::signal::{Signal, signal_check_cancel, signal_clear_cancel};
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::prelude::*;
-use crate::wchar_ext::WExt;
 use crate::wutil::perror;
 use crate::{flog, flogf, function};
+use fish_wchar::WExt;
 use libc::c_int;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;

@@ -83,7 +83,7 @@ mod gettext_impl {
     ///
     /// Returns the (possibly empty) preference list of languages.
     fn get_language_preferences_from_env(vars: &EnvStack) -> Vec<String> {
-        use crate::wchar::L;
+        use fish_wchar::L;
 
         fn normalize_locale_name(locale: &str) -> String {
             // Strips off the encoding and modifier parts.
@@ -136,7 +136,7 @@ mod gettext_impl {
             return precedence_list;
         } else {
             // None of the relevant variables are set, so we will not localize.
-            vec![]
+            return vec![];
         }
     }
 

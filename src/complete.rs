@@ -11,18 +11,6 @@ use std::{
 };
 
 use crate::{
-    ast::unescape_keyword,
-    autoload::AutoloadResult,
-    common::charptr2wcstring,
-    reader::{get_quote, is_backslashed},
-    util::wcsfilecmp,
-    wcstringutil::{string_suffixes_string_case_insensitive, strip_executable_suffix},
-    wutil::{LocalizableString, localizable_string},
-};
-use bitflags::bitflags;
-use once_cell::sync::Lazy;
-
-use crate::{
     abbrs::with_abbrs,
     autoload::Autoload,
     builtins::shared::{builtin_exists, builtin_get_desc, builtin_get_names},
@@ -49,7 +37,6 @@ use crate::{
     path::{path_get_path, path_try_get_path},
     tokenizer::{Tok, TokFlags, TokenType, Tokenizer, variable_assignment_equals_pos},
     wchar::prelude::*,
-    wchar_ext::WExt,
     wcstringutil::{
         StringFuzzyMatch, string_fuzzy_match_string, string_prefixes_string,
         string_prefixes_string_case_insensitive,
@@ -57,6 +44,18 @@ use crate::{
     wildcard::{wildcard_complete, wildcard_has, wildcard_match},
     wutil::wrealpath,
 };
+use crate::{
+    ast::unescape_keyword,
+    autoload::AutoloadResult,
+    common::charptr2wcstring,
+    reader::{get_quote, is_backslashed},
+    util::wcsfilecmp,
+    wcstringutil::{string_suffixes_string_case_insensitive, strip_executable_suffix},
+    wutil::{LocalizableString, localizable_string},
+};
+use bitflags::bitflags;
+use fish_wchar::WExt;
+use once_cell::sync::Lazy;
 
 // Completion description strings, mostly for different types of files, such as sockets, block
 // devices, etc.

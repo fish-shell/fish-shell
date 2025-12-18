@@ -21,6 +21,7 @@ use crate::{
     env::{EnvMode, EnvVar, Environment},
     wutil::wcstoi::wcstoi_partial,
 };
+use fish_common::help_section;
 
 localizable_consts!(
     MISMATCHED_ARGS

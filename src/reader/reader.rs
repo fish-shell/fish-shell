@@ -18,7 +18,7 @@
 //! expansion, etc.
 
 use crate::portable_atomic::AtomicU64;
-use fish_common::UTF8_BOM_WCHAR;
+use fish_common::{UTF8_BOM_WCHAR, help_section};
 use libc::{
     _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
     IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, SIGTTIN, STDERR_FILENO, STDIN_FILENO,

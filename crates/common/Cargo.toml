@@ -7,8 +7,10 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+bitflags.workspace = true
 libc.workspace = true
 nix.workspace = true
+widestring.workspace = true
 
 [lints]
 workspace = true

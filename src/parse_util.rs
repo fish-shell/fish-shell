@@ -30,6 +30,7 @@ use crate::tokenizer::{
 use crate::wcstringutil::count_newlines;
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
+use fish_common::help_section;
 use std::ops::Range;
 use std::{iter, ops};
 

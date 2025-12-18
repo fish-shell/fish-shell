@@ -10,6 +10,7 @@ use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
 use crate::prelude::*;
 use crate::reader::{Reader, reader_reset_interrupted};
 use crate::threads::assert_is_main_thread;
+use fish_common::assert_sorted_by_name;
 use std::mem;
 use std::sync::{
     LazyLock, Mutex, MutexGuard,

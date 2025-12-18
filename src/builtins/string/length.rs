@@ -19,7 +19,7 @@ impl StringSubCommand<'_> for Length {
             'V' => self.visible = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(

@@ -937,7 +937,7 @@ impl<'args> Iterator for Arguments<'args, '_> {
             /*want_newline=*/ true,
         );
         *self.argidx += 1;
-        return Some(retval);
+        Some(retval)
     }
 }
 

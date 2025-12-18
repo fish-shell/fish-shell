@@ -171,7 +171,7 @@ impl RawStringToScalarType for f64 {
         if result.is_ok() {
             *end = s.slice_from(consumed);
         }
-        return result;
+        result
     }
 }
 
@@ -694,7 +694,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 p = &p[1..];
             }
         }
-        return wstr_offset_in(p, escstart) - 1;
+        wstr_offset_in(p, escstart) - 1
     }
 
     /// Print string str, evaluating \ escapes.
@@ -800,5 +800,5 @@ pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> 
             break;
         }
     }
-    return state.exit_code;
+    state.exit_code
 }

@@ -41,7 +41,7 @@ fn send_to_bg(
     }
     parser.job_promote_at(job_pos);
 
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }
 
 /// Builtin for putting a job in the background.
@@ -107,5 +107,5 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         }
     }
 
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }

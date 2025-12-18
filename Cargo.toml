@@ -187,7 +187,6 @@ clippy.let_and_return = "allow"
 clippy.manual_range_contains = "allow"
 clippy.map_unwrap_or = "warn"
 clippy.needless_lifetimes = "allow"
-clippy.needless_return = "allow"
 clippy.new_without_default = "allow"
 clippy.option_map_unit_fn = "allow"
 

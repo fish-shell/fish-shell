@@ -61,7 +61,7 @@ impl StringSubCommand<'_> for Pad {
             'C' => self.center = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle<'args>(

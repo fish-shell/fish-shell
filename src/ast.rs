@@ -2519,7 +2519,7 @@ impl<'s> Populator<'s> {
                     "Expected a command, but found %s",
                     self.peek_token(0).user_presentable_description()
                 );
-                return got_error(self);
+                got_error(self)
             }
             _ => new_decorated_statement(self),
         }

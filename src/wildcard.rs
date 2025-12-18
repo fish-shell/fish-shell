@@ -216,14 +216,7 @@ fn wildcard_complete_internal(
             if s.is_empty() {
                 return WildcardResult::NoMatch;
             }
-            return wildcard_complete_internal(
-                s.slice_from(1),
-                wc.slice_from(1),
-                params,
-                flags,
-                out,
-                false,
-            );
+            wildcard_complete_internal(s.slice_from(1), wc.slice_from(1), params, flags, out, false)
         }
         ANY_STRING => {
             // Hackish. If this is the last character of the wildcard, then just complete with
@@ -268,10 +261,10 @@ fn wildcard_complete_internal(
                 }
             }
 
-            return match has_match {
+            match has_match {
                 true => WildcardResult::Match,
                 false => WildcardResult::NoMatch,
-            };
+            }
         }
         // We don't even try with this one.
         ANY_STRING_RECURSIVE => WildcardResult::NoMatch,
@@ -293,7 +286,7 @@ pub fn wildcard_complete(
         expand_flags,
     };
 
-    return wildcard_complete_internal(s, wc, &params, flags, out, true);
+    wildcard_complete_internal(s, wc, &params, flags, out, true)
 }
 
 /// Obtain a description string for the file specified by the filename.
@@ -315,7 +308,7 @@ fn file_get_desc(
     let is_executable =
         |filename: &wstr| -> bool { definitely_executable || waccess(filename, X_OK) == 0 };
 
-    return if is_link {
+    if is_link {
         if is_dir {
             wgettext!(COMPLETE_DIRECTORY_SYMLINK_DESC)
         } else if is_executable(filename) {
@@ -329,7 +322,7 @@ fn file_get_desc(
         wgettext!(COMPLETE_EXEC_DESC)
     } else {
         wgettext!(COMPLETE_FILE_DESC)
-    };
+    }
 }
 
 /// Test if the given file is an executable (if executables_only) or directory (if
@@ -672,9 +665,9 @@ mod expander {
 
         pub fn status_code(&self) -> WildcardResult {
             if self.did_interrupt {
-                return WildcardResult::Cancel;
+                WildcardResult::Cancel
             } else if self.did_overflow {
-                return WildcardResult::Overflow;
+                WildcardResult::Overflow
             } else if self.did_add {
                 WildcardResult::Match
             } else {
@@ -972,7 +965,7 @@ mod expander {
                 abs_unique_hierarchy.push('/');
             }
 
-            return unique_hierarchy;
+            unique_hierarchy
         }
 
         fn try_add_completion_result(
@@ -1048,10 +1041,10 @@ mod expander {
                 path = normalize_path(&path, true);
             }
 
-            return match dotdot {
+            match dotdot {
                 true => DirIter::new_with_dots(&path),
                 false => DirIter::new(&path),
-            };
+            }
         }
     }
 }
@@ -1124,7 +1117,7 @@ pub fn wildcard_expand_string<'closure>(
 
     let mut expander = WildCardExpander::new(prefix, flags, &mut cancel_checker, output);
     expander.expand(base_dir, effective_wc, base_dir, ParentInfo::default());
-    return expander.status_code();
+    expander.status_code()
 }
 
 /// Test whether the given wildcard matches the string. Does not perform any I/O.
@@ -1233,7 +1226,7 @@ pub fn wildcard_has(s: impl AsRef<wstr>) -> bool {
     }
     let unescaped =
         unescape_string(s, UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)).unwrap_or_default();
-    return wildcard_has_internal(unescaped);
+    wildcard_has_internal(unescaped)
 }
 
 #[cfg(test)]

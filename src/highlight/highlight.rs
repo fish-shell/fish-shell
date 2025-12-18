@@ -266,7 +266,7 @@ fn command_is_valid(
     }
 
     // Return what we got.
-    return is_valid;
+    is_valid
 }
 
 fn has_expand_reserved(s: &wstr) -> bool {
@@ -1083,9 +1083,9 @@ impl<'s> Highlighter<'s> {
 fn has_cmdsub(src: &wstr) -> bool {
     let mut cursor = 0;
     match parse_util_locate_cmdsubst_range(src, &mut cursor, true, None, None) {
-        MaybeParentheses::Error => return false,
-        MaybeParentheses::None => return false,
-        MaybeParentheses::CommandSubstitution(_) => return true,
+        MaybeParentheses::Error => false,
+        MaybeParentheses::None => false,
+        MaybeParentheses::CommandSubstitution(_) => true,
     }
 }
 

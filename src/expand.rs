@@ -1332,14 +1332,12 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         if self.flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) {
             let mut cursor = 0;
             match parse_util_locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
-                MaybeParentheses::Error => {
-                    return ExpandResult::make_error(STATUS_EXPAND_ERROR);
-                }
+                MaybeParentheses::Error => ExpandResult::make_error(STATUS_EXPAND_ERROR),
                 MaybeParentheses::None => {
                     if !out.add(input) {
                         return append_overflow_error(self.errors, None);
                     }
-                    return ExpandResult::ok();
+                    ExpandResult::ok()
                 }
                 MaybeParentheses::CommandSubstitution(parens) => {
                     append_cmdsub_error!(
@@ -1348,7 +1346,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                         parens.end() - 1,
                         "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
                     );
-                    return ExpandResult::make_error(STATUS_EXPAND_ERROR);
+                    ExpandResult::make_error(STATUS_EXPAND_ERROR)
                 }
             }
         } else {

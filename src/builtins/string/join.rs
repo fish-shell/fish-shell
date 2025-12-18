@@ -31,7 +31,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
             'n' => self.no_empty = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(

@@ -100,7 +100,7 @@ impl GenerationsList {
                 result.push_str(&r#gen.to_string());
             }
         }
-        return result;
+        result
     }
 
     /// Sets the generation for `topic` to `value`.
@@ -438,13 +438,13 @@ impl TopicMonitor {
         }
         // Report our change.
         self.data_notifier_.notify_all();
-        return data.current.clone();
+        data.current.clone()
     }
 
     /// Return the current generation list, opportunistically applying any pending updates.
     fn updated_gens(&self) -> GenerationsList {
         let mut data = self.data_.lock().unwrap();
-        return self.updated_gens_in_data(&mut data);
+        self.updated_gens_in_data(&mut data)
     }
 
     /// Access the current generations.
@@ -515,7 +515,7 @@ impl TopicMonitor {
                 break;
             }
         }
-        return become_reader;
+        become_reader
     }
 
     /// Wait for some entry in the list of generations to change.
@@ -546,7 +546,7 @@ impl TopicMonitor {
                 self.data_notifier_.notify_all();
             }
         }
-        return gens;
+        gens
     }
 
     /// For each valid topic in `gens`, check to see if the current topic is larger than
@@ -584,7 +584,7 @@ impl TopicMonitor {
             // Wait until our gens change.
             current = self.await_gens(&current);
         }
-        return changed;
+        changed
     }
 }
 

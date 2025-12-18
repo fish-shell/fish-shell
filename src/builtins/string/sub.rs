@@ -45,7 +45,7 @@ impl StringSubCommand<'_> for Sub {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(

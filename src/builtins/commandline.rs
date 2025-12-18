@@ -130,7 +130,7 @@ fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) 
         }
     }
     stripped.push_utfstr(&source[have..]);
-    return Some(stripped);
+    Some(stripped)
 }
 
 /// Output the specified selection.
@@ -189,11 +189,9 @@ fn write_part(
                         // Maybe hit expansion limit, forward the unexpanded string.
                         args.push(Completion::from_completion(token_text.to_owned()));
                     }
-                    ExpandResultCode::cancel => {
-                        return;
-                    }
+                    ExpandResultCode::cancel => {}
                     ExpandResultCode::ok => (),
-                };
+                }
             }
             TokenOutputMode::Raw => {
                 args.push(Completion::from_completion(token_text.to_owned()));

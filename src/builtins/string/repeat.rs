@@ -37,7 +37,7 @@ impl StringSubCommand<'_> for Repeat {
             'N' => self.no_newline = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(

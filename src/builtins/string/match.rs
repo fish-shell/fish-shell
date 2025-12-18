@@ -64,7 +64,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -188,7 +188,7 @@ impl<'opts, 'args> StringMatcher<'opts, 'args> {
             Ok(Self::Regex(m))
         } else {
             let m = WildCardMatcher::new(pattern, opts);
-            return Ok(Self::WildCard(m));
+            Ok(Self::WildCard(m))
         }
     }
 
@@ -243,7 +243,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             first_match_captures,
             opts,
         };
-        return Ok(m);
+        Ok(m)
     }
 
     fn report_matches(&mut self, arg: &wstr, streams: &mut IoStreams) -> Result<(), pcre2::Error> {
@@ -312,7 +312,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
                 return Err(RegexError::InvalidCaptureGroupName(wname));
             }
         }
-        return Ok(());
+        Ok(())
     }
 
     fn report_match<'a>(
@@ -359,7 +359,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             }
         }
 
-        return MatchResult::Match(Some(cg));
+        MatchResult::Match(Some(cg))
     }
 }
 

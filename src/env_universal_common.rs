@@ -305,7 +305,7 @@ impl EnvUniversal {
             };
         }
         // No version found, assume 2.x
-        return UvarFormat::Fish_2_x;
+        UvarFormat::Fish_2_x
     }
 
     /// Serialize a variable list.

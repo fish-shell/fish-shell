@@ -53,7 +53,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -172,7 +172,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                 cursor = cursor.slice_from(1);
             }
         }
-        return Some(result);
+        Some(result)
     }
 
     fn new(
@@ -236,7 +236,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                     Cow::Borrowed(_slice_of_arg) => (false, arg),
                     Cow::Owned(s) => (true, Cow::Owned(WString::from_chars(s))),
                 };
-                return Ok(res);
+                Ok(res)
             }
             StringReplacer::Literal {
                 pattern,

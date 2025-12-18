@@ -41,7 +41,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(

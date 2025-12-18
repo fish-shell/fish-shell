@@ -219,5 +219,5 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     if wait_handles.is_empty() {
         return Err(STATUS_INVALID_ARGS);
     }
-    return wait_for_completion(parser, &wait_handles, any_flag);
+    wait_for_completion(parser, &wait_handles, any_flag)
 }

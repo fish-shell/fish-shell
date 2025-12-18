@@ -45,7 +45,7 @@ impl FdEventSignaller {
     /// The default constructor will abort on failure (fd exhaustion).
     /// This should only be used during startup.
     pub fn new() -> Self {
-        cfg_if!(
+        cfg_if! {
             if #[cfg(have_eventfd)] {
                 // Note we do not want to use EFD_SEMAPHORE because we are binary (not counting) semaphore.
                 let fd = unsafe { libc::eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK) };
@@ -53,9 +53,9 @@ impl FdEventSignaller {
                     perror("eventfd");
                     exit_without_destructors(1);
                 }
-                return Self {
+                Self {
                     fd: unsafe { OwnedFd::from_raw_fd(fd) },
-                };
+                }
             } else {
                 // Implementation using pipes.
                 let Ok(pipes) = make_autoclose_pipes() else {
@@ -63,12 +63,12 @@ impl FdEventSignaller {
                 };
                 make_fd_nonblocking(pipes.read.as_raw_fd()).unwrap();
                 make_fd_nonblocking(pipes.write.as_raw_fd()).unwrap();
-                return Self {
+                Self {
                     fd: pipes.read,
                     write: pipes.write,
-                };
+                }
             }
-        );
+        }
     }
 
     /// Return the fd to read from, for notification.
@@ -155,13 +155,13 @@ impl FdEventSignaller {
 
     /// Return the fd to write to.
     fn write_fd(&self) -> RawFd {
-        cfg_if!(
+        cfg_if! {
             if #[cfg(have_eventfd)] {
-                return self.fd.as_raw_fd();
+                self.fd.as_raw_fd()
             } else {
-                return self.write.as_raw_fd();
+                self.write.as_raw_fd()
             }
-        );
+        }
     }
 }
 

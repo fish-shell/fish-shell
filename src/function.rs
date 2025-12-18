@@ -318,7 +318,7 @@ pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
     funcset.funcs.entry(new_name).or_insert(Arc::new(new_props));
-    return true;
+    true
 }
 
 /// Returns all function names.

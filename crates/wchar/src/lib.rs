@@ -197,10 +197,10 @@ impl<'a> Iterator for WStrCharSplitIter<'a> {
         if let Some(idx) = chars.iter().position(|c| *c == self.split) {
             let (prefix, rest) = chars.split_at(idx);
             self.chars = Some(&rest[1..]);
-            return Some(wstr::from_char_slice(prefix));
+            Some(wstr::from_char_slice(prefix))
         } else {
             self.chars = None;
-            return Some(wstr::from_char_slice(chars));
+            Some(wstr::from_char_slice(chars))
         }
     }
 }

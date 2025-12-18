@@ -27,7 +27,7 @@ impl StringSubCommand<'_> for Unescape {
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(

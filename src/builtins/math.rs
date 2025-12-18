@@ -33,7 +33,7 @@ fn parse_cmd_opts(
     parser: &Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), ErrorCode> {
-    const cmd: &wstr = L!("math");
+    let cmd = L!("math");
     let print_hints = true;
 
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.

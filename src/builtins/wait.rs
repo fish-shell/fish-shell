@@ -140,8 +140,8 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     let mut print_help = false;
     let print_hints = false;
 
-    const shortopts: &wstr = L!("nh");
-    const longopts: &[WOption] = &[
+    let shortopts: &wstr = L!("nh");
+    let longopts: &[WOption] = &[
         wopt(L!("any"), ArgType::NoArgument, 'n'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];

@@ -607,7 +607,7 @@ mod tests {
     fn test_wdirname_wbasename() {
         // path, dir, base
         struct Test(&'static wstr, &'static wstr, &'static wstr);
-        const testcases: &[Test] = &[
+        let testcases: &[Test] = &[
             Test(L!(""), L!("."), L!(".")),
             Test(L!("foo//"), L!("."), L!("foo")),
             Test(L!("foo//////"), L!("."), L!("foo")),

@@ -12,8 +12,8 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let print_hints = false;
     let mut opts: builtin_cmd_opts_t = Default::default();
 
-    const shortopts: &wstr = L!("hnq");
-    const longopts: &[WOption] = &[
+    let shortopts: &wstr = L!("hnq");
+    let longopts: &[WOption] = &[
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("names"), ArgType::NoArgument, 'n'),
         wopt(L!("query"), ArgType::NoArgument, 'q'),

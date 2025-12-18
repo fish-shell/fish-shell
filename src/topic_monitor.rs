@@ -362,7 +362,7 @@ impl TopicMonitor {
         // Beware, we may be in a signal handler!
         // Atomically update the pending topics.
         let topicbit = topic_to_bit(topic);
-        const relaxed: Ordering = Ordering::Relaxed;
+        let relaxed = Ordering::Relaxed;
 
         // CAS in our bit, capturing the old status value.
         let mut oldstatus: StatusBits = 0;
@@ -405,7 +405,7 @@ impl TopicMonitor {
         // Atomically acquire the pending updates, swapping in 0.
         // If there are no pending updates (likely) or a thread is waiting, just return.
         // Otherwise CAS in 0 and update our topics.
-        const relaxed: Ordering = Ordering::Relaxed;
+        let relaxed = Ordering::Relaxed;
         let mut changed_topic_bits: TopicBitmask = 0;
         let mut cas_success = false;
         while !cas_success {

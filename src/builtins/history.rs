@@ -66,8 +66,8 @@ struct HistoryCmdOpts {
 /// the non-flag subcommand form. While many of these flags are deprecated they must be
 /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
 /// config.fish and other scripts.
-const short_options: &wstr = L!("CRcehmn:pt::z");
-const longopts: &[WOption] = &[
+const SHORT_OPTIONS: &wstr = L!("CRcehmn:pt::z");
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("prefix"), ArgType::NoArgument, 'p'),
     wopt(L!("contains"), ArgType::NoArgument, 'c'),
     wopt(L!("help"), ArgType::NoArgument, 'h'),
@@ -144,7 +144,7 @@ fn parse_cmd_opts(
         return Err(STATUS_INVALID_ARGS);
     };
 
-    let mut w = WGetopter::new(short_options, longopts, argv);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(opt) = w.next_opt() {
         match opt {
             '\x01' => {

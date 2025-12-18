@@ -180,7 +180,7 @@ fn abbr_show(streams: &mut IoStreams) -> BuiltinResult {
 
 // Print the list of abbreviation names.
 fn abbr_list(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
-    const subcmd: &wstr = L!("--list");
+    let subcmd = L!("--list");
     if !opts.args.is_empty() {
         streams.err.append(wgettext_fmt!(
             "%s %s: Unexpected argument -- '%s'\n",
@@ -203,7 +203,7 @@ fn abbr_list(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
 
 // Rename an abbreviation, deleting any existing one with the given name.
 fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
-    const subcmd: &wstr = L!("--rename");
+    let subcmd = L!("--rename");
 
     if opts.args.len() != 2 {
         streams.err.append(wgettext_fmt!(
@@ -305,7 +305,7 @@ fn abbr_query(opts: &Options) -> BuiltinResult {
 
 // Add a named abbreviation.
 fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
-    const subcmd: &wstr = L!("--add");
+    let subcmd = L!("--add");
 
     if opts.args.len() < 2 && opts.function.is_none() {
         streams.err.append(wgettext_fmt!(
@@ -484,9 +484,9 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
     // could be given literally, for example `abbr e emacs -nw`.
-    const short_options: &wstr = L!("-ac:f:r:seqgUh");
+    let short_options: &wstr = L!("-ac:f:r:seqgUh");
 
-    const longopts: &[WOption] = &[
+    let longopts: &[WOption] = &[
         wopt(L!("add"), ArgType::NoArgument, 'a'),
         wopt(L!("command"), ArgType::RequiredArgument, 'c'),
         wopt(L!("position"), ArgType::RequiredArgument, 'p'),

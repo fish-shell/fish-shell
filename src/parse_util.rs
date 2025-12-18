@@ -37,8 +37,8 @@ use std::{iter, ops};
 /// Return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
 /// This never accepts incomplete slices.
 pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
-    const openc: char = '[';
-    const closec: char = ']';
+    let openc = '[';
+    let closec = ']';
     let mut escaped = false;
 
     // Check for initial opening [
@@ -2082,7 +2082,7 @@ mod tests {
     #[serial]
     fn test_parse_util_cmdsubst_extent() {
         let _cleanup = test_init();
-        const a: &wstr = L!("echo (echo (echo hi");
+        let a = L!("echo (echo (echo hi");
         assert_eq!(parse_util_cmdsubst_extent(a, 0), 0..a.len());
         assert_eq!(parse_util_cmdsubst_extent(a, 1), 0..a.len());
         assert_eq!(parse_util_cmdsubst_extent(a, 2), 0..a.len());

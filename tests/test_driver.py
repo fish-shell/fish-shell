@@ -25,8 +25,11 @@ except ImportError:
 
 RESET = "\033[0m"
 GREEN = "\033[32m"
+YELLOW = "\033[33m"
 BLUE = "\033[34m"
 RED = "\033[31m"
+
+IS_CYGWIN = os.uname().sysname.startswith(("CYGWIN_", "MSYS_"))
 
 
 def makeenv(script_path: Path, home: Path) -> Dict[str, str]:
@@ -101,6 +104,10 @@ def compile_test_helper(source_path: Path, binary_path: Path) -> None:
     )
 
 
+def is_tmux_test(path) -> bool:
+    return os.path.basename(path).startswith("tmux-")
+
+
 async def main():
     if len(sys.argv) < 2:
         print("Usage: test_driver.py FISH_DIRECTORY TESTS")
@@ -164,7 +171,7 @@ async def main():
         def run_in_ci_san(path) -> bool:
             if path.endswith(".py"):
                 return False
-            if os.path.basename(path).startswith("tmux-"):
+            if is_tmux_test(path):
                 return False
             return True
 
@@ -172,6 +179,11 @@ async def main():
 
     if not PEXPECT and any(x.endswith(".py") for (x, _) in files):
         print(f"{RED}Skipping pexpect tests because pexpect is not installed{RESET}")
+
+    if IS_CYGWIN and any(is_tmux_test(x) for (x, _) in files):
+        print(
+            f"{YELLOW}Skipping tmux tests because they are unreliable on Cygwin/MSYS{RESET}"
+        )
 
     longest_test_name_length = max([len(arg) for _, arg in files])
     max_expected_digits_duration = 5
@@ -304,7 +316,9 @@ async def run_test(
     starttime = datetime.now()
     home = Path(tempfile.mkdtemp(prefix="fishtest-", dir=tmp_root))
     test_env = makeenv(script_path, home)
-    if test_file_path.endswith(".fish"):
+    if IS_CYGWIN and is_tmux_test(test_file_path):
+        return TestSkip(arg)
+    elif test_file_path.endswith(".fish"):
         subs = def_subs.copy()
         subs.update(
             {

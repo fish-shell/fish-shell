@@ -447,7 +447,7 @@ fn split_var_and_indexes_internal<'a>(
 ) -> Result<SplitVar<'a>, EnvArrayParseError> {
     let mut res = SplitVar::default();
     let open_bracket = arg.find_char('[');
-    res.varname = open_bracket.map(|b| &arg[..b]).unwrap_or(arg);
+    res.varname = open_bracket.map_or(arg, |b| &arg[..b]);
     res.var = vars.getf(res.varname, mode);
     let Some(open_bracket) = open_bracket else {
         // Common case of no bracket

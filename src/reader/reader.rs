@@ -1087,8 +1087,7 @@ pub fn reader_change_cursor_end_mode(end_mode: CursorEndMode) {
 fn check_bool_var(vars: &dyn Environment, name: &wstr, default: bool) -> bool {
     vars.get(name)
         .map(|v| v.as_string())
-        .map(|v| v != L!("0"))
-        .unwrap_or(default)
+        .map_or(default, |v| v != L!("0"))
 }
 
 /// Enable or disable autosuggestions based on the associated variable.
@@ -4986,7 +4985,7 @@ fn get_autosuggestion_performer(
                     parse_util_process_extent(&command_line, cursor_pos, Some(&mut tokens));
                     range_of_line_at_cursor(
                         &command_line,
-                        tokens.first().map(|tok| tok.offset()).unwrap_or(cursor_pos),
+                        tokens.first().map_or(cursor_pos, |tok| tok.offset()),
                     ) == range
                 };
                 if !cursor_line_has_process_start {
@@ -6282,14 +6281,12 @@ fn replace_line_at_cursor(
         .as_char_slice()
         .iter()
         .rposition(|&c| c == '\n')
-        .map(|newline| newline + 1)
-        .unwrap_or(0);
+        .map_or(0, |newline| newline + 1);
     let end = text[cursor..]
         .as_char_slice()
         .iter()
         .position(|&c| c == '\n')
-        .map(|pos| cursor + pos)
-        .unwrap_or(text.len());
+        .map_or(text.len(), |pos| cursor + pos);
     *inout_cursor_pos = start + replacement.len();
     text[..start].to_owned() + replacement + &text[end..]
 }

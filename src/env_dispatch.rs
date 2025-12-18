@@ -173,8 +173,7 @@ pub fn guess_emoji_width(vars: &EnvStack) {
 
     let term_program = vars
         .get(L!("TERM_PROGRAM"))
-        .map(|v| v.as_string())
-        .unwrap_or_else(WString::new);
+        .map_or_else(WString::new, |v| v.as_string());
 
     // TODO(term-workaround)
     if xtversion().unwrap_or(L!("")).starts_with(L!("iTerm2 ")) {
@@ -257,8 +256,7 @@ fn handle_fish_cursor_selection_mode_change(vars: &EnvStack) {
         .get(L!("fish_cursor_selection_mode"))
         .as_ref()
         .map(|v| v.as_string())
-        .map(|v| v == "inclusive")
-        .unwrap_or(false);
+        .is_some_and(|v| v == "inclusive");
     let mode = if inclusive {
         CursorSelectionMode::Inclusive
     } else {
@@ -275,8 +273,7 @@ fn handle_fish_cursor_end_mode_change(vars: &EnvStack) {
         .get(L!("fish_cursor_end_mode"))
         .as_ref()
         .map(|v| v.as_string())
-        .map(|v| v == "inclusive")
-        .unwrap_or(false);
+        .is_some_and(|v| v == "inclusive");
     let mode = if inclusive {
         CursorEndMode::Inclusive
     } else {

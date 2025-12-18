@@ -16,11 +16,7 @@ where
     if let Some(sign) = chars.next_if(|c| ['-', '+'].contains(c)) {
         s.push(sign);
     }
-    if chars
-        .peek()
-        .map(|c| c.is_ascii_alphabetic())
-        .unwrap_or(false)
-    {
+    if chars.peek().is_some_and(|c| c.is_ascii_alphabetic()) {
         return parse_inf_nan(chars, s.as_bytes().first().copied(), consumed);
     }
 

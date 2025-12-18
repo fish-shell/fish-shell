@@ -381,10 +381,7 @@ fn wildcard_test_flags_then_complete(
     }
 
     // regular file *excludes* broken links - we have no use for them as commands.
-    let is_regular_file = entry
-        .check_type()
-        .map(|x| x == DirEntryType::Reg)
-        .unwrap_or(false);
+    let is_regular_file = entry.check_type().is_some_and(|x| x == DirEntryType::Reg);
     let is_executable = Lazy::new(|| is_regular_file && waccess(filepath, X_OK) == 0);
     if executables_only && !*is_executable {
         return false;

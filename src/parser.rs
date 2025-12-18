@@ -815,7 +815,7 @@ impl Parser {
 
     /// Returns the current line number, indexed from 1, or zero if not sourced.
     pub fn get_lineno_for_display(&self) -> u32 {
-        self.get_lineno().map(|val| val.get()).unwrap_or(0)
+        self.get_lineno().map_or(0, |val| val.get())
     }
 
     /// Return whether we are currently evaluating a "block" such as an if statement.
@@ -1383,7 +1383,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
         if let Some(file) = b.src_filename.as_ref() {
             trace.push_utfstr(&sprintf!(
                 "\tcalled on line %d of file %s\n",
-                b.src_lineno.map(|n| n.get()).unwrap_or(0),
+                b.src_lineno.map_or(0, |n| n.get()),
                 user_presentable_path(file, parser.vars())
             ));
         } else if parser.libdata().within_fish_init {

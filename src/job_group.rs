@@ -25,7 +25,7 @@ impl std::ops::Deref for MaybeJobId {
 
 impl MaybeJobId {
     pub fn as_num(&self) -> i64 {
-        self.0.map(|j| i64::from(u32::from(j.0))).unwrap_or(-1)
+        self.0.map_or(-1, |j| i64::from(u32::from(j.0)))
     }
 }
 
@@ -180,8 +180,7 @@ impl JobId {
         // in CONSUMED_JOB_IDS are sorted in ascending order, so we just have to check the last.
         let job_id = consumed_job_ids
             .last()
-            .map(JobId::next)
-            .unwrap_or(JobId(1.try_into().unwrap()));
+            .map_or(JobId(1.try_into().unwrap()), JobId::next);
         consumed_job_ids.push(job_id);
         job_id
     }

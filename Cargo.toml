@@ -185,6 +185,7 @@ rustdoc.private_intra_doc_links = "allow"
 clippy.len_without_is_empty = "allow"     # we're not a library crate
 clippy.let_and_return = "allow"
 clippy.manual_range_contains = "allow"
+clippy.map_unwrap_or = "warn"
 clippy.needless_lifetimes = "allow"
 clippy.needless_return = "allow"
 clippy.new_without_default = "allow"

@@ -562,7 +562,7 @@ impl<'s> State<'s> {
                     // a closing parenthesis should be more obvious.
                     //
                     // Vararg functions need at least one argument.
-                    let err = if f.arity().map(|arity| i < arity).unwrap_or(i == 0) {
+                    let err = if f.arity().map_or(i == 0, |arity| i < arity) {
                         ErrorKind::TooFewArgs
                     } else {
                         ErrorKind::TooManyArgs

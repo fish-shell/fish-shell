@@ -929,8 +929,7 @@ fn get_num_cap(db: &terminfo::Database, code: &str) -> Option<usize> {
 /// Panics if the given code string does not contain exactly two bytes.
 fn get_flag_cap(db: &terminfo::Database, code: &str) -> bool {
     db.raw(code)
-        .map(|cap| matches!(cap, terminfo::Value::True))
-        .unwrap_or(false)
+        .is_some_and(|cap| matches!(cap, terminfo::Value::True))
 }
 
 /// Covers over tparm() with one parameter.

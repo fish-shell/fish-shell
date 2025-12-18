@@ -344,9 +344,7 @@ pub fn autosuggest_validate_from_history(
             // Check the directory target, respecting CDPATH.
             // Permit the autosuggestion if the path is valid and not our directory.
             let path = path_get_cdpath(&cd_dir, working_directory, ctx.vars());
-            return path
-                .map(|p| !paths_are_same_file(working_directory, &p))
-                .unwrap_or(false);
+            return path.is_some_and(|p| !paths_are_same_file(working_directory, &p));
         }
     }
 

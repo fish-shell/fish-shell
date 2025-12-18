@@ -346,14 +346,12 @@ pub fn range_of_line_at_cursor(buffer: &wstr, cursor: usize) -> Range<usize> {
         .as_char_slice()
         .iter()
         .rposition(|&c| c == '\n')
-        .map(|newline| newline + 1)
-        .unwrap_or(0);
+        .map_or(0, |newline| newline + 1);
     let mut end = buffer[cursor..]
         .as_char_slice()
         .iter()
         .position(|&c| c == '\n')
-        .map(|pos| cursor + pos)
-        .unwrap_or(buffer.len());
+        .map_or(buffer.len(), |pos| cursor + pos);
     // Remove any trailing newline
     if end != start && buffer.char_at(end - 1) == '\n' {
         end -= 1;

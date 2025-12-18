@@ -1611,8 +1611,23 @@ complete -f -c git -n '__fish_git_using_command init' -s q -l quiet -d 'Only pri
 complete -f -c git -n '__fish_git_using_command init' -l bare -d 'Create a bare repository'
 # TODO options
 
-### log
+### shortlog
 complete -c git -n __fish_git_needs_command -a shortlog -d 'Show commit shortlog'
+complete -c git -n '__fish_git_using_command shortlog' -a '(__fish_git ls-files)'
+complete -c git -n '__fish_git_using_command shortlog' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command shortlog' -s n -l numbered -d 'Sort output by number of commits per group'
+complete -c git -n '__fish_git_using_command shortlog' -l no-numbered -d 'Sort output alphabetically by author'
+complete -c git -n '__fish_git_using_command shortlog' -s s -l summary -d 'Only show commit counts per group'
+complete -c git -n '__fish_git_using_command shortlog' -l no-summary -d 'Show commit subjects for each entry'
+complete -c git -n '__fish_git_using_command shortlog' -s e -l email -d 'Display email address alongside each name'
+complete -c git -n '__fish_git_using_command shortlog' -l no-email -d 'Hide email addresses in the output'
+complete -c git -n '__fish_git_using_command shortlog' -s c -l committer -d 'Group commits by committer instead of author'
+complete -c git -n '__fish_git_using_command shortlog' -l no-committer -d 'Group commits by author (default)'
+complete -x -c git -n '__fish_git_using_command shortlog' -l group -a 'author\tGroup\ by\ author committer\tGroup\ by\ committer trailer:\tGroup\ by\ trailer format:\tGroup\ by\ pretty\ format' -d 'Group commits by author, committer, trailer, or format'
+complete -c git -n '__fish_git_using_command shortlog' -l no-group -d 'Disable custom groupings'
+complete -c git -n '__fish_git_using_command shortlog' -s w -d 'Linewrap entries as width[,indent1[,indent2]]'
+
+### log
 complete -c git -n __fish_git_needs_command -a log -d 'Show commit logs'
 complete -c git -n '__fish_git_using_command log' -a '(__fish_git ls-files)'
 complete -c git -n '__fish_git_using_command log' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_ranges)'
@@ -1624,64 +1639,65 @@ complete -c git -n '__fish_git_using_command log' -l use-mailmap
 complete -c git -n '__fish_git_using_command log' -l full-diff
 complete -c git -n '__fish_git_using_command log' -l log-size
 complete -r -F -c git -n '__fish_git_using_command log' -s L -d 'Trace the evolution of the line range given by <start>,<end>, or regex <funcname>, within the <file>'
-complete -x -c git -n '__fish_git_using_command log rev-list' -s n -l max-count -d 'Limit the number of commits before starting to show the commit output'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l skip -d 'Skip given number of commits'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l since -d 'Show commits more recent than specified date'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l after -d 'Show commits more recent than specified date'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l until -d 'Show commits older than specified date'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l before -d 'Show commits older than specified date'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l author -d 'Limit commits from given author'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -s n -l max-count -d 'Limit the number of commits before starting to show the commit output'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l skip -d 'Skip given number of commits'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l since -d 'Show commits more recent than specified date'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l since-as-filter -d 'Show commits more recent than date without stopping traversal early'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l after -d 'Show commits more recent than specified date'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l until -d 'Show commits older than specified date'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l before -d 'Show commits older than specified date'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l author -d 'Limit commits from given author'
 complete -x -c git -n '__fish_git_using_command log rev-list' -l committer -d 'Limit commits from given committer'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l grep-reflog -d 'Limit commits to ones with reflog entries matching given pattern'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l grep -d 'Limit commits with message that match given pattern'
-complete -c git -n '__fish_git_using_command log rev-list' -l all-match -d 'Limit commits to ones that match all given --grep'
-complete -c git -n '__fish_git_using_command log rev-list' -l invert-grep -d 'Limit commits to ones with message that don\'t match --grep'
-complete -c git -n '__fish_git_using_command log rev-list' -l regexp-ignore-case -s i -d 'Case insensitive match'
-complete -c git -n '__fish_git_using_command log rev-list' -l basic-regexp -d 'Patterns are basic regular expressions (default)'
-complete -c git -n '__fish_git_using_command log rev-list' -l extended-regexp -s E -d 'Patterns are extended regular expressions'
-complete -c git -n '__fish_git_using_command log rev-list' -l fixed-strings -s F -d 'Patterns are fixed strings'
-complete -c git -n '__fish_git_using_command log rev-list' -l perl-regexp -d 'Patterns are Perl-compatible regular expressions'
-complete -c git -n '__fish_git_using_command log rev-list' -l remove-empty -d 'Stop when given path disappears from tree'
-complete -c git -n '__fish_git_using_command log rev-list' -l merges -d 'Print only merge commits'
-complete -c git -n '__fish_git_using_command log rev-list' -l no-merges -d 'Don\'t print commits with more than one parent'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l min-parents -d 'Show only commit with at least the given number of parents'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l max-parents -d 'Show only commit with at most the given number of parents'
-complete -c git -n '__fish_git_using_command log rev-list' -l no-min-parents -d 'Show only commit without a minimum number of parents'
-complete -c git -n '__fish_git_using_command log rev-list' -l no-max-parents -d 'Show only commit without a maximum number of parents'
-complete -c git -n '__fish_git_using_command log rev-list' -l first-parent -d 'Follow only the first parent commit upon seeing a merge commit'
-complete -c git -n '__fish_git_using_command log rev-list' -l not -d 'Reverse meaning of ^ prefix'
-complete -c git -n '__fish_git_using_command log rev-list' -l all -d 'Show log for all branches, tags, and remotes'
-complete -f -c git -n '__fish_git_using_command log rev-list' -l branches -d 'Show log for all matching branches'
-complete -f -c git -n '__fish_git_using_command log rev-list' -l tags -d 'Show log for all matching tags'
-complete -f -c git -n '__fish_git_using_command log rev-list' -l remotes -d 'Show log for all matching remotes'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l glob -d 'Show log for all matching branches, tags, and remotes'
-complete -x -c git -n '__fish_git_using_command log rev-list' -l exclude -d 'Do not include refs matching given glob pattern'
-complete -c git -n '__fish_git_using_command log rev-list' -l reflog -d 'Show log for all reflogs entries'
-complete -c git -n '__fish_git_using_command log rev-list' -l ignore-missing -d 'Ignore invalid object names'
-complete -c git -n '__fish_git_using_command log rev-list' -l bisect
-complete -c git -n '__fish_git_using_command log rev-list' -l stdin -d 'Read commits from stdin'
-complete -c git -n '__fish_git_using_command log rev-list' -l cherry-mark -d 'Mark equivalent commits with = and inequivalent with +'
-complete -c git -n '__fish_git_using_command log rev-list' -l cherry-pick -d 'Omit equivalent commits'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l grep-reflog -d 'Limit commits to ones with reflog entries matching given pattern'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l grep -d 'Limit commits with message that match given pattern'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l all-match -d 'Limit commits to ones that match all given --grep'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l invert-grep -d 'Limit commits to ones with message that don\'t match --grep'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l regexp-ignore-case -s i -d 'Case insensitive match'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l basic-regexp -d 'Patterns are basic regular expressions (default)'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l extended-regexp -s E -d 'Patterns are extended regular expressions'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l fixed-strings -s F -d 'Patterns are fixed strings'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l perl-regexp -d 'Patterns are Perl-compatible regular expressions'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l remove-empty -d 'Stop when given path disappears from tree'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l merges -d 'Print only merge commits'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l no-merges -d 'Don\'t print commits with more than one parent'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l min-parents -d 'Show only commit with at least the given number of parents'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l max-parents -d 'Show only commit with at most the given number of parents'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l no-min-parents -d 'Show only commit without a minimum number of parents'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l no-max-parents -d 'Show only commit without a maximum number of parents'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l first-parent -d 'Follow only the first parent commit upon seeing a merge commit'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l not -d 'Reverse meaning of ^ prefix'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l all -d 'Show log for all branches, tags, and remotes'
+complete -f -c git -n '__fish_git_using_command log shortlog rev-list' -l branches -d 'Show log for all matching branches'
+complete -f -c git -n '__fish_git_using_command log shortlog rev-list' -l tags -d 'Show log for all matching tags'
+complete -f -c git -n '__fish_git_using_command log shortlog rev-list' -l remotes -d 'Show log for all matching remotes'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l glob -d 'Show log for all matching branches, tags, and remotes'
+complete -x -c git -n '__fish_git_using_command log shortlog rev-list' -l exclude -d 'Do not include refs matching given glob pattern'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l reflog -d 'Show log for all reflogs entries'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l ignore-missing -d 'Ignore invalid object names'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l bisect
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l stdin -d 'Read commits from stdin'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l cherry-mark -d 'Mark equivalent commits with = and inequivalent with +'
+complete -c git -n '__fish_git_using_command log shortlog rev-list' -l cherry-pick -d 'Omit equivalent commits'
 complete -f -c git -n '__fish_git_using_command rev-list' -l filter -ra '(__fish_git_filters)' -d 'Omits objects from the list of printed objects'
-complete -c git -n '__fish_git_using_command log' -l left-only
-complete -c git -n '__fish_git_using_command log' -l right-only
-complete -c git -n '__fish_git_using_command log' -l cherry
-complete -c git -n '__fish_git_using_command log' -l walk-reflogs -s g
-complete -c git -n '__fish_git_using_command log' -l merge
-complete -c git -n '__fish_git_using_command log' -l boundary
-complete -c git -n '__fish_git_using_command log' -l simplify-by-decoration
-complete -c git -n '__fish_git_using_command log' -l full-history
-complete -c git -n '__fish_git_using_command log' -l dense
-complete -c git -n '__fish_git_using_command log' -l sparse
-complete -c git -n '__fish_git_using_command log' -l simplify-merges
-complete -c git -n '__fish_git_using_command log' -l ancestry-path
-complete -c git -n '__fish_git_using_command log' -l date-order
-complete -c git -n '__fish_git_using_command log' -l author-date-order
-complete -c git -n '__fish_git_using_command log' -l topo-order
-complete -c git -n '__fish_git_using_command log' -l reverse
-complete -f -c git -n '__fish_git_using_command log' -l no-walk -a "sorted unsorted"
-complete -c git -n '__fish_git_using_command log' -l do-walk
-complete -c git -n '__fish_git_using_command log' -l format
+complete -c git -n '__fish_git_using_command log shortlog' -l left-only
+complete -c git -n '__fish_git_using_command log shortlog' -l right-only
+complete -c git -n '__fish_git_using_command log shortlog' -l cherry
+complete -c git -n '__fish_git_using_command log shortlog' -l walk-reflogs -s g
+complete -c git -n '__fish_git_using_command log shortlog' -l merge
+complete -c git -n '__fish_git_using_command log shortlog' -l boundary
+complete -c git -n '__fish_git_using_command log shortlog' -l simplify-by-decoration
+complete -c git -n '__fish_git_using_command log shortlog' -l full-history
+complete -c git -n '__fish_git_using_command log shortlog' -l dense
+complete -c git -n '__fish_git_using_command log shortlog' -l sparse
+complete -c git -n '__fish_git_using_command log shortlog' -l simplify-merges
+complete -c git -n '__fish_git_using_command log shortlog' -l ancestry-path
+complete -c git -n '__fish_git_using_command log shortlog' -l date-order
+complete -c git -n '__fish_git_using_command log shortlog' -l author-date-order
+complete -c git -n '__fish_git_using_command log shortlog' -l topo-order
+complete -c git -n '__fish_git_using_command log shortlog' -l reverse
+complete -f -c git -n '__fish_git_using_command log shortlog' -l no-walk -a "sorted unsorted"
+complete -c git -n '__fish_git_using_command log shortlog' -l do-walk
+complete -x -c git -n '__fish_git_using_command log shortlog' -l format -a '(__fish_git_show_opt format)' -d 'Pretty format string or preset name'
 complete -c git -n '__fish_git_using_command log' -l abbrev-commit
 complete -c git -n '__fish_git_using_command log' -l no-abbrev-commit
 complete -c git -n '__fish_git_using_command log' -l oneline
@@ -1695,7 +1711,7 @@ complete -c git -n '__fish_git_using_command log' -l standard-notes
 complete -c git -n '__fish_git_using_command log' -l no-standard-notes
 complete -c git -n '__fish_git_using_command log' -l show-signature
 complete -c git -n '__fish_git_using_command log' -l relative-date
-complete -x -c git -n '__fish_git_using_command log' -l date -a '
+complete -x -c git -n '__fish_git_using_command log shortlog' -l date -a '
   relative
   local
   iso

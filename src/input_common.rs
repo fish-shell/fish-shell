@@ -1347,23 +1347,30 @@ pub trait InputEventQueuer {
         Some(key)
     }
 
-    fn read_until_sequence_terminator(&mut self, buffer: &mut Vec<u8>) -> Option<()> {
+    fn read_until_sequence_terminator(
+        &mut self,
+        buffer: &mut Vec<u8>,
+        allow_bel: bool,
+    ) -> Option<()> {
         let mut escape = false;
         loop {
             let b = self.read_sequence_byte(buffer)?;
+            if allow_bel && b == b'\x07' {
+                buffer.pop();
+                return Some(());
+            }
             if escape && b == b'\\' {
-                break;
+                buffer.pop();
+                buffer.pop();
+                return Some(());
             }
             escape = b == b'\x1b';
         }
-        buffer.pop();
-        buffer.pop();
-        Some(())
     }
 
     fn parse_xtversion(&mut self, buffer: &mut Vec<u8>) -> Option<()> {
         assert_eq!(buffer, b"\x1bP>");
-        self.read_until_sequence_terminator(buffer)?;
+        self.read_until_sequence_terminator(buffer, false)?;
         if buffer.get(3)? != &b'|' {
             return None;
         }
@@ -1381,7 +1388,7 @@ pub trait InputEventQueuer {
     fn parse_osc(&mut self, buffer: &mut Vec<u8>) -> Option<()> {
         let osc_prefix = b"\x1b]";
         assert!(buffer == osc_prefix);
-        self.read_until_sequence_terminator(buffer)?;
+        self.read_until_sequence_terminator(buffer, /*allow_bel=*/ true)?;
         let buffer = &buffer[osc_prefix.len()..];
         let buffer = buffer.strip_prefix(b"11;")?;
         let c = xterm_color::Color::parse(buffer).ok()?;
@@ -1410,7 +1417,7 @@ pub trait InputEventQueuer {
         if self.read_sequence_byte(buffer)? != b'r' {
             return None;
         }
-        self.read_until_sequence_terminator(buffer)?;
+        self.read_until_sequence_terminator(buffer, false)?;
         // \e P 1 r + Pn ST
         // \e P 0 r + msg ST
         let buffer = &buffer[5..];

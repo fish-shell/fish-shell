@@ -1,6 +1,7 @@
 use crate::signal::Signal;
 use crate::wcstringutil::join_strings;
 use bitflags::bitflags;
+use fish_common::assert_sorted_by_name;
 use fish_wchar::{L, WString, wstr};
 use libc::c_int;
 use std::collections::HashMap;

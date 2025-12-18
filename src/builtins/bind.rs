@@ -11,6 +11,7 @@ use crate::input::{
 use crate::key::{
     self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
 };
+use fish_common::help_section;
 use std::sync::MutexGuard;
 
 const DEFAULT_BIND_MODE: &wstr = L!("default");

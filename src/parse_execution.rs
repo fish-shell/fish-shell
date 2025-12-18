@@ -52,6 +52,7 @@ use crate::timer::push_timer;
 use crate::tokenizer::{PipeOrRedir, TokenType, variable_assignment_equals_pos};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wildcard::wildcard_match;
+use fish_common::help_section;
 use fish_wchar::WExt;
 use libc::{ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
 use std::io::ErrorKind;

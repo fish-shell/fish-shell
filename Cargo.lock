@@ -207,8 +207,10 @@ dependencies = [
 name = "fish-common"
 version = "0.0.0"
 dependencies = [
+ "bitflags",
  "libc",
  "nix",
+ "widestring",
 ]
 
 [[package]]

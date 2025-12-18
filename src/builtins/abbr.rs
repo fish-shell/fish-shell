@@ -5,6 +5,7 @@ use crate::env::{EnvMode, EnvStackSetResult};
 use crate::highlight::highlight_and_colorize;
 use crate::parser::ParserEnvSetMode;
 use crate::re::{regex_make_anchored, to_boxed_chars};
+use fish_common::help_section;
 use pcre2::utf32::{Regex, RegexBuilder};
 
 const CMD: &wstr = L!("abbr");

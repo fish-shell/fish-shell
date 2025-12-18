@@ -34,6 +34,7 @@ use crate::{
     prelude::*,
     wutil::{Error as wcstodError, wcstod::wcstod_underscores},
 };
+use fish_common::assert_sorted_by_name;
 
 #[derive(Clone, Copy)]
 enum Function {

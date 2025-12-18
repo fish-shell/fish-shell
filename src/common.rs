@@ -16,7 +16,10 @@ use crate::wcstringutil::str2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
-use fish_common::{ENCODE_DIRECT_END, char_offset, is_console_session, subslice_position};
+use fish_common::{
+    ASCII_MAX, BYTE_MAX, ENCODE_DIRECT_END, RESERVED_CHAR_BASE, RESERVED_CHAR_END, UCS2_MAX,
+    is_console_session, subslice_position,
+};
 use fish_fallback::fish_wcwidth;
 use fish_wchar::{decode_byte_from_char, encode_byte_to_char};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
@@ -34,34 +37,6 @@ use std::time;
 pub const BUILD_DIR: &str = env!("FISH_RESOLVED_BUILD_DIR");
 
 pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
-
-// Highest legal ASCII value.
-pub const ASCII_MAX: char = 127 as char;
-
-// Highest legal 16-bit Unicode value.
-pub const UCS2_MAX: char = '\u{FFFF}';
-
-// Highest legal byte value.
-pub const BYTE_MAX: char = 0xFF as char;
-
-// Unicode BOM value.
-pub const UTF8_BOM_WCHAR: char = '\u{FEFF}';
-
-// Use Unicode "non-characters" for internal characters as much as we can. This
-// gives us 32 "characters" for internal use that we can guarantee should not
-// appear in our input stream. See http://www.unicode.org/faq/private_use.html.
-pub const RESERVED_CHAR_BASE: char = '\u{FDD0}';
-pub const RESERVED_CHAR_END: char = '\u{FDF0}';
-// Split the available non-character values into two ranges to ensure there are
-// no conflicts among the places we use these special characters.
-pub const EXPAND_RESERVED_BASE: char = RESERVED_CHAR_BASE;
-pub const EXPAND_RESERVED_END: char = char_offset(EXPAND_RESERVED_BASE, 16);
-pub const WILDCARD_RESERVED_BASE: char = EXPAND_RESERVED_END;
-pub const WILDCARD_RESERVED_END: char = char_offset(WILDCARD_RESERVED_BASE, 16);
-// Make sure the ranges defined above don't exceed the range for non-characters.
-// This is to make sure we didn't do something stupid in subdividing the
-// Unicode range for our needs.
-const _: () = assert!(WILDCARD_RESERVED_END <= RESERVED_CHAR_END);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EscapeStringStyle {

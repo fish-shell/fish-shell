@@ -184,7 +184,8 @@ async def main():
         )
         suffix_str = "" if suffix is None else f"\n{suffix}"
         print(
-            f"{arg.ljust(longest_test_name_length)}  {color}{result}{RESET}  {duration_str}{suffix_str}"
+            f"{arg.ljust(longest_test_name_length)}  {color}{result}{RESET}  {duration_str}{suffix_str}",
+            flush=True,
         )
 
     with tempfile.TemporaryDirectory(prefix="fishtest-root-") as tmp_root:

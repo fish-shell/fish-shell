@@ -99,7 +99,7 @@ trait StringSubCommand<'args> {
             }
         }
 
-        return Ok(w.wopt_index);
+        Ok(w.wopt_index)
     }
 
     /// Take any positional arguments after options have been parsed.
@@ -157,7 +157,7 @@ trait StringSubCommand<'args> {
             return Err(STATUS_INVALID_ARGS);
         }
 
-        return self.handle(parser, streams, &mut optind, args);
+        self.handle(parser, streams, &mut optind, args)
     }
 }
 
@@ -366,7 +366,7 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            Err(STATUS_INVALID_ARGS)
         }
     }
 }

@@ -346,7 +346,7 @@ impl<'s> State<'s> {
     }
 
     pub fn eval(&mut self) -> f64 {
-        return self.expr();
+        self.expr()
     }
 
     fn set_error(&mut self, kind: ErrorKind, pos_len: Option<(usize, usize)>) {
@@ -385,11 +385,11 @@ impl<'s> State<'s> {
                 Ok(num) => Some((consumed, Some(Token::Number(num)))),
                 Err(wcstodError::InvalidChar) => {
                     self.set_error(ErrorKind::Unknown, Some((self.pos + consumed, 1)));
-                    return Some((consumed, Some(Token::Error)));
+                    Some((consumed, Some(Token::Error)))
                 }
                 Err(wcstodError::Overflow) => {
                     self.set_error(ErrorKind::NumberTooLarge, Some((self.pos, consumed)));
-                    return Some((consumed, Some(Token::Error)));
+                    Some((consumed, Some(Token::Error)))
                 }
                 Err(wcstodError::Empty) => {
                     // We have a matches! above, this can't be?

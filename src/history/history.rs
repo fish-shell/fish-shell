@@ -1086,7 +1086,7 @@ impl HistoryImpl {
 
 fn string_could_be_path(potential_path: &wstr) -> bool {
     // Assume that things with leading dashes aren't paths.
-    return !(potential_path.is_empty() || potential_path.starts_with('-'));
+    !(potential_path.is_empty() || potential_path.starts_with('-'))
 }
 
 /// Perform a search of `hist` for `search_string`. Invoke a function `func` for each match. If

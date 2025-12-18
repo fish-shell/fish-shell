@@ -139,5 +139,5 @@ pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
         parser.global_event_blocks.fetch_add(1, Ordering::Relaxed);
     }
 
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }

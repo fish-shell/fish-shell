@@ -493,7 +493,7 @@ fn parse_cmd_opts(
         }
     }
     *optind = w.wopt_index;
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }
 
 impl BuiltinBind {

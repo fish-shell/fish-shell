@@ -1460,7 +1460,7 @@ pub trait InputEventQueuer {
                 TERMINAL_OS_NAME.get_or_init(|| Some(bytes2wcstring(&value)));
             }
         }
-        return None;
+        None
     }
 
     fn readch_timed_esc(&mut self) -> Option<CharEvent> {

@@ -991,7 +991,7 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
         return Ok(SUCCESS);
     }
     let args = &mut args[1..];
-    return subcmd(parser, streams, args);
+    subcmd(parser, streams, args)
 }
 
 #[cfg(test)]

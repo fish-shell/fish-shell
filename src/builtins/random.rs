@@ -74,7 +74,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 .err
                 .append(wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
         }
-        return res;
+        res
     }
     fn parse_ull(streams: &mut IoStreams, cmd: &wstr, num: &wstr) -> Result<u64, wutil::Error> {
         let res = fish_wcstoul(num);
@@ -83,7 +83,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 .err
                 .append(wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
         }
-        return res;
+        res
     }
 
     match arg_count {
@@ -164,5 +164,5 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
     let result: i64 = start.checked_add_unsigned(rand * step).unwrap();
 
     streams.out.appendln(result.to_wstring());
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }

@@ -181,19 +181,19 @@ impl FdReadableSet {
             debug_assert_eq!(pollfd.fd, fd);
             return pollfd.revents & (libc::POLLIN | libc::POLLHUP) != 0;
         }
-        return false;
+        false
     }
 
     fn do_poll(fds: &mut [libc::pollfd], timeout: Timeout) -> c_int {
         let count = fds.len();
         assert!(count <= libc::nfds_t::MAX as usize, "count too big");
-        return unsafe {
+        unsafe {
             libc::poll(
                 fds.as_mut_ptr(),
                 count as libc::nfds_t,
                 timeout.as_poll_msecs(),
             )
-        };
+        }
     }
 
     /// Call poll(). Note this destructively modifies the set. Return the result of poll().
@@ -201,7 +201,7 @@ impl FdReadableSet {
         if self.pollfds_.is_empty() {
             return 0;
         }
-        return Self::do_poll(&mut self.pollfds_, timeout);
+        Self::do_poll(&mut self.pollfds_, timeout)
     }
 
     /// Check if a single fd is readable, with a given timeout.
@@ -216,12 +216,12 @@ impl FdReadableSet {
             revents: 0,
         };
         let ret = Self::do_poll(std::slice::from_mut(&mut pfd), timeout);
-        return ret > 0 && (pfd.revents & libc::POLLIN) != 0;
+        ret > 0 && (pfd.revents & libc::POLLIN) != 0
     }
 
     /// Check if a single fd is readable, without blocking.
     /// Return true if readable, false if not.
     pub fn poll_fd_readable(fd: RawFd) -> bool {
-        return Self::is_fd_readable(fd, Timeout::ZERO);
+        Self::is_fd_readable(fd, Timeout::ZERO)
     }
 }

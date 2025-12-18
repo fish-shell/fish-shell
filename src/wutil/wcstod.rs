@@ -98,7 +98,7 @@ pub fn parse_inf_nan(
         }
         return Some(f64::NEG_INFINITY);
     }
-    return None;
+    None
 }
 
 fn wcstod_inner<I>(mut chars: I, decimal_sep: char, consumed: &mut usize) -> Result<f64, Error>

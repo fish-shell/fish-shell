@@ -57,7 +57,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(

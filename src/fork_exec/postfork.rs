@@ -29,9 +29,9 @@ fn clear_cloexec(fd: i32) -> i32 {
     }
     let new_flags = flags & !libc::FD_CLOEXEC;
     if flags == new_flags {
-        return 0;
+        0
     } else {
-        return unsafe { libc::fcntl(fd, libc::F_SETFD, new_flags) };
+        unsafe { libc::fcntl(fd, libc::F_SETFD, new_flags) }
     }
 }
 

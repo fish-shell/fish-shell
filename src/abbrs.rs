@@ -114,7 +114,7 @@ impl Abbreviation {
 
     // Return if we expand in a given position.
     fn matches_position(&self, position: Position) -> bool {
-        return self.position == Position::Anywhere || self.position == position;
+        self.position == Position::Anywhere || self.position == position
     }
 }
 
@@ -194,7 +194,7 @@ impl AbbreviationSet {
                 });
             }
         }
-        return result;
+        result
     }
 
     /// Return whether we would have at least one replacer for a given token.

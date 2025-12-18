@@ -404,7 +404,7 @@ mod test_expressions {
                 // OR it in.
                 or_result = or_result || and_result;
             }
-            return or_result;
+            or_result
         }
 
         fn range(&self) -> Range {
@@ -555,11 +555,11 @@ mod test_expressions {
                 return self.error(start, sprintf!("Unknown option at index %u", start));
             }
 
-            return JustAString {
+            JustAString {
                 arg: self.arg(start).to_owned(),
                 range: start..start + 1,
             }
-            .into_some_box();
+            .into_some_box()
         }
 
         fn parse_binary_primary(

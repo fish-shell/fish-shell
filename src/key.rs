@@ -209,7 +209,7 @@ pub(crate) fn canonicalize_unkeyed_control_char(c: u8) -> char {
     // Represent Ctrl-symbol combinations in "upper-case", as they are
     // traditionally-rendered.
     assert!(c < 32);
-    return char::from(c - 1 + b'A');
+    char::from(c - 1 + b'A')
 }
 
 pub(crate) fn canonicalize_key(mut key: Key) -> Result<Key, WString> {

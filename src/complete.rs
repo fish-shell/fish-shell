@@ -282,7 +282,7 @@ impl CompletionReceiver {
             return false;
         }
         self.completions.push(comp.into());
-        return true;
+        true
     }
 
     /// Adds a completion with the given string, and default other properties. Returns `true` on
@@ -1650,9 +1650,7 @@ impl<'ctx> Completer<'ctx> {
             comp.prepend_token_prefix(prefix_with_sep);
             comp.r#match.from_separator = true;
         }
-        if !self.completions.extend(local_completions) {
-            return;
-        }
+        if !self.completions.extend(local_completions) {}
     }
 
     /// Complete the specified string as an environment variable.

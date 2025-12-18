@@ -2268,7 +2268,7 @@ impl ReaderData {
             }
             tmp_r_pos += 1;
         }
-        return false;
+        false
     }
 
     fn jump_and_remember_last_jump(
@@ -2332,7 +2332,7 @@ impl ReaderData {
                     }
                     tmp_pos += 1;
                 }
-                return false;
+                false
             }
         }
     }

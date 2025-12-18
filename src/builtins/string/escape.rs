@@ -25,7 +25,7 @@ impl StringSubCommand<'_> for Escape {
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(

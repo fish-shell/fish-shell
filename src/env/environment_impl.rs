@@ -371,10 +371,10 @@ impl EnvScopedImpl {
                 let session_id = history_session_id_from_var(fish_history_var);
                 History::with_name(&session_id)
             });
-            return Some(EnvVar::new_from_name_vec(
+            Some(EnvVar::new_from_name_vec(
                 L!("history"),
                 history.get_history(),
-            ));
+            ))
         } else if key == "fish_killring" {
             Some(EnvVar::new_from_name_vec(
                 L!("fish_killring"),
@@ -593,7 +593,7 @@ impl EnvScopedImpl {
         if cursor.next().is_some() {
             mismatch = true;
         }
-        return mismatch;
+        mismatch
     }
 
     /// Get the exported variables into a variable table.
@@ -646,7 +646,7 @@ impl EnvScopedImpl {
             str.push_utfstr(&val.as_string());
             export_list.push(wcs2zstring(&str));
         }
-        return Arc::new(OwningNullTerminatedArray::new(export_list));
+        Arc::new(OwningNullTerminatedArray::new(export_list))
     }
 
     // Exported variable array used by execv.
@@ -660,7 +660,7 @@ impl EnvScopedImpl {
             self.enumerate_generations(|r#gen| generations.push(r#gen));
             self.export_array_generations = generations;
         }
-        return self.export_array.as_ref().unwrap().clone();
+        self.export_array.as_ref().unwrap().clone()
     }
 }
 
@@ -986,7 +986,7 @@ impl EnvStackImpl {
             pathvar: Some(false),
         };
         Self::set_in_node(&mut self.base.globals, key, val, flags);
-        return Some(EnvStackSetResult::Ok);
+        Some(EnvStackSetResult::Ok)
     }
 
     /// Set a universal variable, inheriting as applicable from the given old variable.
@@ -1068,7 +1068,7 @@ impl EnvStackImpl {
                 return cursor;
             }
         }
-        return self.base.globals.clone();
+        self.base.globals.clone()
     }
 
     /// Get an existing variable, or None.

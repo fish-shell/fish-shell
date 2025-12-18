@@ -186,7 +186,6 @@ clippy.len_without_is_empty = "allow"     # we're not a library crate
 clippy.let_and_return = "allow"
 clippy.manual_range_contains = "allow"
 clippy.needless_lifetimes = "allow"
-clippy.needless_return = "allow"
 clippy.new_without_default = "allow"
 clippy.option_map_unit_fn = "allow"
 

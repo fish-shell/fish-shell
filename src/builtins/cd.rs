@@ -172,5 +172,5 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         streams.err.append(parser.current_line());
     }
 
-    return Err(STATUS_CMD_ERROR);
+    Err(STATUS_CMD_ERROR)
 }

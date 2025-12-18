@@ -285,7 +285,7 @@ fn parse_flag_modifiers<'args>(
     }
 
     *opt_spec_str = s;
-    return true;
+    true
 }
 
 /// Parse the text following the short flag letter.
@@ -384,7 +384,7 @@ fn parse_option_spec_sep<'args>(
     }
 
     *opt_spec_str = s.slice_from(i);
-    return true;
+    true
 }
 
 fn parse_option_spec<'args>(
@@ -457,7 +457,7 @@ fn parse_option_spec<'args>(
     // Record our option under its short flag.
     opts.options.insert(opt_spec.short_flag, opt_spec);
 
-    return true;
+    true
 }
 
 fn collect_option_specs<'args>(
@@ -506,7 +506,7 @@ fn collect_option_specs<'args>(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }
 
 fn parse_cmd_opts<'args>(
@@ -655,7 +655,7 @@ fn parse_cmd_opts<'args>(
     }
 
     *optind = w.wopt_index;
-    return collect_option_specs(opts, optind, argc, args, streams);
+    collect_option_specs(opts, optind, argc, args, streams)
 }
 
 fn populate_option_strings<'args>(
@@ -1080,7 +1080,7 @@ fn argparse_parse_flags<'args>(
     opts.args_opts = w.argv_opts;
 
     *optind = w.wopt_index;
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }
 
 // This function mimics the `next_opt()` usage found elsewhere in our other builtin commands.

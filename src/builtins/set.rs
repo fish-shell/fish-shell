@@ -1021,5 +1021,5 @@ pub fn set(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Buil
         });
     }
 
-    return retval;
+    retval
 }

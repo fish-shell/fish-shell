@@ -18,6 +18,7 @@ errno = "0.3.0"
 fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }
 fish-common = { path = "crates/common" }
+fish-fallback = { path = "crates/fallback" }
 fish-gettext = { path = "crates/gettext" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-gettext-maps = { path = "crates/gettext-maps" }
@@ -93,6 +94,7 @@ errno.workspace = true
 fish-build-helper.workspace = true
 fish-build-man-pages = { workspace = true, optional = true }
 fish-common.workspace = true
+fish-fallback.workspace = true
 fish-gettext = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-printf.workspace = true

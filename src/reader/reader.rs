@@ -71,7 +71,6 @@ use crate::env_dispatch::guess_emoji_width;
 use crate::exec::exec_subshell;
 use crate::expand::expand_one;
 use crate::expand::{ExpandFlags, ExpandResultCode, expand_string, expand_tilde};
-use crate::fallback::fish_wcwidth;
 use crate::fd_readable_set::poll_fd_readable;
 use crate::fds::{AutoCloseFd, make_fd_blocking, wopen_cloexec};
 use crate::flog::{flog, flogf};
@@ -158,6 +157,7 @@ use crate::wcstringutil::{
 use crate::wildcard::wildcard_has;
 use crate::wutil::{fstat, perror, write_to_fd, wstat};
 use crate::{abbrs, event, function};
+use fish_fallback::fish_wcwidth;
 
 /// A description of where fish is in the process of exiting.
 #[repr(u8)]

@@ -5,8 +5,8 @@ use nix::errno::Errno;
 use nix::sys::resource::Resource as ResourceEnum;
 use once_cell::sync::Lazy;
 
-use crate::fallback::{fish_wcswidth, wcscasecmp};
 use crate::wutil::perror;
+use fish_fallback::{fish_wcswidth, wcscasecmp};
 
 use super::prelude::*;
 

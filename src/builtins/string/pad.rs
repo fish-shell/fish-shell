@@ -1,5 +1,5 @@
 use super::*;
-use crate::fallback::fish_wcwidth;
+use fish_fallback::fish_wcwidth;
 
 pub struct Pad {
     char_to_pad: char,

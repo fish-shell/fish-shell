@@ -13,7 +13,6 @@ use crate::common::{
 };
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
 use crate::expand::ExpandFlags;
-use crate::fallback::wcscasecmp;
 use crate::future_feature_flags::FeatureFlag;
 use crate::future_feature_flags::feature_test;
 use crate::wchar::prelude::*;
@@ -23,6 +22,7 @@ use crate::wcstringutil::{
 };
 use crate::wutil::dir_iter::DirEntryType;
 use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
+use fish_fallback::wcscasecmp;
 
 localizable_consts!(
     COMPLETE_EXEC_DESC "command"

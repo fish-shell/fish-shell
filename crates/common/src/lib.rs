@@ -1,3 +1,8 @@
+use libc::STDIN_FILENO;
+use once_cell::sync::OnceCell;
+use std::env;
+use std::os::unix::ffi::OsStrExt;
+
 // These are in the Unicode private-use range. We really shouldn't use this
 // range but have little choice in the matter given how our lexer/parser works.
 // We can't use non-characters for these two ranges because there are only 66 of
@@ -25,4 +30,31 @@ pub fn subslice_position<T: Eq>(a: &[T], b: &[T]) -> Option<usize> {
         return Some(0);
     }
     a.windows(b.len()).position(|aw| aw == b)
+}
+
+/// This function attempts to distinguish between a console session (at the actual login vty) and a
+/// session within a terminal emulator inside a desktop environment or over SSH. Unfortunately
+/// there are few values of $TERM that we can interpret as being exclusively console sessions, and
+/// most common operating systems do not use them. The value is cached for the duration of the fish
+/// session. We err on the side of assuming it's not a console session. This approach isn't
+/// bullet-proof and that's OK.
+pub fn is_console_session() -> bool {
+    static IS_CONSOLE_SESSION: OnceCell<bool> = OnceCell::new();
+    // TODO(terminal-workaround)
+    *IS_CONSOLE_SESSION.get_or_init(|| {
+        nix::unistd::ttyname(unsafe { std::os::fd::BorrowedFd::borrow_raw(STDIN_FILENO) })
+            .is_ok_and(|buf| {
+                // Check if the tty matches /dev/(console|dcons|tty[uv\d])
+                let is_console_tty = match buf.as_os_str().as_bytes() {
+                    b"/dev/console" => true,
+                    b"/dev/dcons" => true,
+                    bytes => bytes.strip_prefix(b"/dev/tty").is_some_and(|rest| {
+                        matches!(rest.first(), Some(b'u' | b'v' | b'0'..=b'9'))
+                    }),
+                };
+
+                // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something` or `sun-color`.
+                is_console_tty && env::var_os("TERM").is_none_or(|t| !t.as_bytes().contains(&b'-'))
+            })
+    })
 }

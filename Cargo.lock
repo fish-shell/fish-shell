@@ -161,6 +161,7 @@ dependencies = [
  "fish-build-helper",
  "fish-build-man-pages",
  "fish-common",
+ "fish-fallback",
  "fish-gettext-extraction",
  "fish-gettext-maps",
  "fish-gettext-mo-file-parser",
@@ -206,6 +207,24 @@ dependencies = [
 [[package]]
 name = "fish-common"
 version = "0.0.0"
+dependencies = [
+ "libc",
+ "once_cell",
+]
+
+[[package]]
+name = "fish-fallback"
+version = "0.0.0"
+dependencies = [
+ "fish-build-helper",
+ "fish-common",
+ "fish-wchar",
+ "fish-widecharwidth",
+ "libc",
+ "once_cell",
+ "rsconf",
+ "widestring",
+]
 
 [[package]]
 name = "fish-gettext-extraction"

@@ -26,7 +26,6 @@ use crate::common::{
     has_working_tty_timestamps, shell_modes, wcs2bytes, write_loop,
 };
 use crate::env::Environment;
-use crate::fallback::fish_wcwidth;
 use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
@@ -39,6 +38,7 @@ use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter, u
 use crate::termsize::Termsize;
 use crate::wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
 use crate::wutil::fstat;
+use fish_fallback::fish_wcwidth;
 
 #[derive(Copy, Clone, Default)]
 pub enum CharOffset {

@@ -3,7 +3,7 @@
 //!
 //! Many of these functions are more or less broken and incomplete.
 
-use crate::prelude::*;
+use fish_wchar::prelude::*;
 use fish_widecharwidth::{WcLookupTable, WcWidth};
 use once_cell::sync::Lazy;
 use std::cmp;
@@ -46,7 +46,7 @@ pub fn fish_wcwidth(c: char) -> isize {
     // in the console session, but knows nothing about the capabilities of other terminal emulators
     // or ttys. Use it from the start only if we are logged in to the physical console.
     #[cfg(not(cygwin))]
-    if crate::common::is_console_session() {
+    if fish_common::is_console_session() {
         return wcwidth(c);
     }
 
@@ -165,7 +165,7 @@ pub fn wcscasecmp_fuzzy(lhs: &wstr, rhs: &wstr, canonicalize: fn(char) -> char) 
 #[cfg(test)]
 mod tests {
     use super::wcscasecmp;
-    use crate::prelude::*;
+    use fish_wchar::prelude::*;
     use std::cmp::Ordering;
 
     #[test]

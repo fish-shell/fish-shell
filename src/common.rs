@@ -4,7 +4,6 @@ use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
-use crate::fallback::fish_wcwidth;
 use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
@@ -17,7 +16,8 @@ use crate::wcstringutil::wcs2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
-use fish_common::{ENCODE_DIRECT_END, char_offset, subslice_position};
+use fish_common::{ENCODE_DIRECT_END, char_offset, is_console_session, subslice_position};
+use fish_fallback::fish_wcwidth;
 use fish_wchar::{decode_byte_from_char, encode_byte_to_char};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use once_cell::sync::OnceCell;
@@ -1795,40 +1795,6 @@ impl<T, F: FnOnce(T)> ScopeGuarding for ScopeGuard<T, F> {}
 
 pub const fn assert_send<T: Send>() {}
 pub const fn assert_sync<T: Sync>() {}
-
-/// This function attempts to distinguish between a console session (at the actual login vty) and a
-/// session within a terminal emulator inside a desktop environment or over SSH. Unfortunately
-/// there are few values of $TERM that we can interpret as being exclusively console sessions, and
-/// most common operating systems do not use them. The value is cached for the duration of the fish
-/// session. We err on the side of assuming it's not a console session. This approach isn't
-/// bullet-proof and that's OK.
-pub fn is_console_session() -> bool {
-    static IS_CONSOLE_SESSION: OnceCell<bool> = OnceCell::new();
-    // TODO(terminal-workaround)
-    *IS_CONSOLE_SESSION.get_or_init(|| {
-        const PATH_MAX: usize = libc::PATH_MAX as usize;
-        let mut tty_name = [0u8; PATH_MAX];
-        unsafe {
-            if libc::ttyname_r(STDIN_FILENO, tty_name.as_mut_ptr().cast(), tty_name.len()) != 0 {
-                return false;
-            }
-        }
-        // Check if the tty matches /dev/(console|dcons|tty[uv\d])
-        const LEN: usize = b"/dev/tty".len();
-        (
-        (
-            tty_name.starts_with(b"/dev/tty") &&
-                ([b'u', b'v'].contains(&tty_name[LEN]) || tty_name[LEN].is_ascii_digit())
-        ) ||
-        tty_name.starts_with(b"/dev/dcons\0") ||
-        tty_name.starts_with(b"/dev/console\0"))
-        // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something` or `sun-color`.
-        && match env::var_os("TERM") {
-            Some(term) => !term.as_bytes().contains(&b'-'),
-            None => true,
-        }
-    })
-}
 
 /// Asserts that a slice is alphabetically sorted by a <code>&[wstr]</code> `name` field.
 ///

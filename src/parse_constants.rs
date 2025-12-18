@@ -1,8 +1,8 @@
 //! Constants used in the programmatic representation of fish code.
 
-use crate::fallback::{fish_wcswidth, fish_wcwidth};
 use crate::prelude::*;
 use bitflags::bitflags;
+use fish_fallback::{fish_wcswidth, fish_wcwidth};
 
 pub type SourceOffset = u32;
 

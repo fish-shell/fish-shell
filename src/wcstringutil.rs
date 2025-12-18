@@ -2,8 +2,8 @@
 
 use crate::common::{get_ellipsis_char, get_ellipsis_str};
 use crate::expand::INTERNAL_SEPARATOR;
-use crate::fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
 use crate::prelude::*;
+use fish_fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
 use fish_wchar::decode_byte_from_char;
 
 /// Return the number of newlines in a string.

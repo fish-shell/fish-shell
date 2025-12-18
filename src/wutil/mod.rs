@@ -11,8 +11,8 @@ pub mod wcstoi;
 use crate::common::{
     bytes2wcstring, fish_reserved_codepoint, wcs2bytes, wcs2osstring, wcs2zstring,
 };
+use crate::flog;
 use crate::wcstringutil::{join_strings, wcs2bytes_callback};
-use crate::{fallback, flog};
 use errno::errno;
 use fish_wchar::{L, WExt, WString, wstr};
 pub use gettext::{
@@ -448,7 +448,7 @@ pub fn fish_iswalnum(c: char) -> bool {
 }
 
 pub fn fish_wcswidth(s: &wstr) -> isize {
-    fallback::fish_wcswidth(s)
+    fish_fallback::fish_wcswidth(s)
 }
 
 /// Given that `cursor` is a pointer into `base`, return the offset in characters.

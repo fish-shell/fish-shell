@@ -155,9 +155,9 @@ fn handle_timezone(var_name: &wstr, vars: &EnvStack) {
     }
 }
 
-/// Update the value of [`FISH_EMOJI_WIDTH`](crate::fallback::FISH_EMOJI_WIDTH).
+/// Update the value of [`FISH_EMOJI_WIDTH`](fish_fallback::FISH_EMOJI_WIDTH).
 pub fn guess_emoji_width(vars: &EnvStack) {
-    use crate::fallback::FISH_EMOJI_WIDTH;
+    use fish_fallback::FISH_EMOJI_WIDTH;
 
     if let Some(width_str) = vars.get(L!("fish_emoji_width")) {
         // The only valid values are 1 or 2; we default to 1 if it was an invalid int.
@@ -199,7 +199,7 @@ pub fn guess_emoji_width(vars: &EnvStack) {
         // Default to whatever the system's wcwidth gives for U+1F603, but only if it's at least
         // 1 and at most 2.
         #[cfg(not(cygwin))]
-        let width = crate::fallback::wcwidth('😃').clamp(1, 2);
+        let width = fish_fallback::wcwidth('😃').clamp(1, 2);
         #[cfg(cygwin)]
         let width = 2_isize;
         FISH_EMOJI_WIDTH.store(width, Ordering::Relaxed);
@@ -238,7 +238,7 @@ fn handle_change_ambiguous_width(vars: &EnvStack) {
         .unwrap_or(1)
         // Clamp in case of negative values.
         .max(0) as isize;
-    crate::fallback::FISH_AMBIGUOUS_WIDTH.store(new_width, Ordering::Relaxed);
+    fish_fallback::FISH_AMBIGUOUS_WIDTH.store(new_width, Ordering::Relaxed);
 }
 
 fn handle_term_size_change(vars: &EnvStack) {

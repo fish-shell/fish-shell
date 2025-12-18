@@ -22,7 +22,6 @@ pub mod env_universal_common;
 pub mod event;
 pub mod exec;
 pub mod expand;
-pub mod fallback;
 pub mod fd_monitor;
 pub mod fd_readable_set;
 pub mod fds;

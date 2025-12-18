@@ -24,6 +24,7 @@ pub mod categories {
         (
             ($var:ident, $name:literal, $description:literal, $enabled:expr)
         ) => {
+            #[allow(non_upper_case_globals)]
             pub static $var: Category = Category {
                 name: L!($name),
                 description: localizable_string!($description),

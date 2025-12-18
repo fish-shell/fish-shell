@@ -18,6 +18,7 @@
 //! expansion, etc.
 
 use crate::portable_atomic::AtomicU64;
+use fish_common::UTF8_BOM_WCHAR;
 use libc::{
     _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
     IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, SIGTTIN, STDERR_FILENO, STDIN_FILENO,
@@ -54,9 +55,9 @@ use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, ScopeGuard, UTF8_BOM_WCHAR, bytes2wcstring, escape,
-    escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
-    get_program_name, restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
+    EscapeFlags, EscapeStringStyle, ScopeGuard, bytes2wcstring, escape, escape_string,
+    exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char, get_program_name,
+    restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
 };
 use crate::complete::{
     CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete, complete_load,

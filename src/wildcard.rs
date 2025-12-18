@@ -1,6 +1,6 @@
 // Enumeration of all wildcard types.
 
-use fish_common::char_offset;
+use fish_common::{WILDCARD_RESERVED_BASE, char_offset};
 use libc::X_OK;
 use std::cmp::Ordering;
 use std::collections::HashSet;
@@ -8,8 +8,7 @@ use std::os::unix::fs::MetadataExt;
 use std::sync::LazyLock;
 
 use crate::common::{
-    UnescapeFlags, UnescapeStringStyle, WILDCARD_RESERVED_BASE, WSL,
-    is_windows_subsystem_for_linux, unescape_string,
+    UnescapeFlags, UnescapeStringStyle, WSL, is_windows_subsystem_for_linux, unescape_string,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
 use crate::expand::ExpandFlags;

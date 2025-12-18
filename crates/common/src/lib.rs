@@ -3,6 +3,36 @@ use std::env;
 use std::os::unix::ffi::OsStrExt;
 use std::sync::OnceLock;
 
+pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
+
+// Highest legal ASCII value.
+pub const ASCII_MAX: char = 127 as char;
+
+// Highest legal 16-bit Unicode value.
+pub const UCS2_MAX: char = '\u{FFFF}';
+
+// Highest legal byte value.
+pub const BYTE_MAX: char = 0xFF as char;
+
+// Unicode BOM value.
+pub const UTF8_BOM_WCHAR: char = '\u{FEFF}';
+
+// Use Unicode "non-characters" for internal characters as much as we can. This
+// gives us 32 "characters" for internal use that we can guarantee should not
+// appear in our input stream. See http://www.unicode.org/faq/private_use.html.
+pub const RESERVED_CHAR_BASE: char = '\u{FDD0}';
+pub const RESERVED_CHAR_END: char = '\u{FDF0}';
+// Split the available non-character values into two ranges to ensure there are
+// no conflicts among the places we use these special characters.
+pub const EXPAND_RESERVED_BASE: char = RESERVED_CHAR_BASE;
+pub const EXPAND_RESERVED_END: char = char_offset(EXPAND_RESERVED_BASE, 16);
+pub const WILDCARD_RESERVED_BASE: char = EXPAND_RESERVED_END;
+pub const WILDCARD_RESERVED_END: char = char_offset(WILDCARD_RESERVED_BASE, 16);
+// Make sure the ranges defined above don't exceed the range for non-characters.
+// This is to make sure we didn't do something stupid in subdividing the
+// Unicode range for our needs.
+const _: () = assert!(WILDCARD_RESERVED_END <= RESERVED_CHAR_END);
+
 // These are in the Unicode private-use range. We really shouldn't use this
 // range but have little choice in the matter given how our lexer/parser works.
 // We can't use non-characters for these two ranges because there are only 66 of

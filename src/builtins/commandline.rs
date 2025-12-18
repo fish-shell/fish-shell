@@ -616,8 +616,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     // At this point we have (nearly) exhausted the options which always operate on the true command
     // line. Now we respect the possibility of a transient command line due to evaluating a wrapped
-    // completion. Don't do this in cursor_mode: it makes no sense to move the cursor based on a
-    // transient commandline.
+    // completion.
     let current_buffer;
     let current_cursor_pos;
     let transient;
@@ -632,7 +631,15 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     } else if let Some(override_buffer) = &override_buffer {
         current_buffer = override_buffer;
         current_cursor_pos = current_buffer.len();
-    } else if parser.libdata().transient_commandline.is_some() && !cursor_mode {
+    } else if parser.libdata().transient_commandline.is_some() {
+        if cursor_mode && positional_args != 0 {
+            streams.err.append(wgettext_fmt!(
+                "%s: setting cursor while evaluating 'complete --arguments' is not yet supported",
+                cmd
+            ));
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return Err(STATUS_CMD_ERROR);
+        }
         transient = parser.libdata().transient_commandline.clone().unwrap();
         current_buffer = &transient;
         current_cursor_pos = transient.len();

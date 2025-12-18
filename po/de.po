@@ -768,6 +768,10 @@ msgid "%s: scope can be only one of: universal function global local\n"
 msgstr ""
 
 #, c-format
+msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet supported"
+msgstr ""
+
+#, c-format
 msgid "%s: stdin is closed\n"
 msgstr "%s: stdin ist geschlossen\n"
 

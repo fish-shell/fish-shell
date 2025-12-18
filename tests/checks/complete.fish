@@ -686,3 +686,8 @@ complete somewrapper3
 # CHECK: complete somewrapper3
 # CHECK: complete somewrapper3
 # CHECK: complete somewrapper3 --wraps wrapped1
+
+complete command-line-aware-completions -xa "(commandline --cursor; commandline --current-process)"
+complete -C"command-line-aware-completions "
+# CHECK: 31
+# CHECK: command-line-aware-completions

@@ -32,6 +32,7 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - New :ref:`status language <status-language>` commands allow showing and modifying language settings for fish messages without having to modify environment variables.
+- When using a noninteractive fish instance to compute completions, ``commandline --cursor`` no works as expected instead of throwing an error (:issue:`11993`).
 
 Interactive improvements
 ------------------------

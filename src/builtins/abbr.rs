@@ -90,8 +90,7 @@ impl Options {
         if self
             .set_cursor_marker
             .as_ref()
-            .map(|m| m.is_empty())
-            .unwrap_or(false)
+            .is_some_and(|m| m.is_empty())
         {
             streams.err.append(wgettext_fmt!(
                 "%s: --set-cursor argument cannot be empty\n",

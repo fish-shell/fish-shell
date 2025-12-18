@@ -900,8 +900,7 @@ fn tok_is_string_character(c: char, next: Option<char>) -> bool {
         '&' => {
             if feature_test(FeatureFlag::AmpersandNoBgInToken) {
                 // Unlike in other shells, '&' is not special if followed by a string character.
-                next.map(|nc| tok_is_string_character(nc, None))
-                    .unwrap_or(false)
+                next.is_some_and(|nc| tok_is_string_character(nc, None))
             } else {
                 false
             }

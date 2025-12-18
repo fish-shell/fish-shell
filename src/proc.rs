@@ -1452,7 +1452,7 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
             if j.external_procs().count() > 1 {
                 // I don't think it's safe to blindly unwrap here because even though we exited with
                 // a signal, the job could have contained a fish function?
-                let pid = p.pid().map(|p| p.to_string()).unwrap_or("-".to_string());
+                let pid = p.pid().map_or("-".to_string(), |p| p.to_string());
                 buffer += &sprintf!(" %s", pid)[..];
 
                 buffer.push(' ');

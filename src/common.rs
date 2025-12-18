@@ -607,7 +607,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                             // HACK: To reduce accidental use of brace expansion, treat a brace
                             // with zero or one items as literal input. See #4632. (The hack is
                             // doing it here and like this.)
-                            if vars_or_seps.last().map(|i| *i < brace).unwrap_or(true) {
+                            if vars_or_seps.last().is_none_or(|i| *i < brace) {
                                 result.as_char_slice_mut()[brace] = '{';
                                 // We also need to turn all spaces back.
                                 for i in brace + 1..result.len() {

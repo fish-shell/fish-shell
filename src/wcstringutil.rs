@@ -366,8 +366,7 @@ pub fn split_string_tok<'val>(
         let next_sep = val[pos..]
             .iter()
             .position(|c| seps.contains(*c))
-            .map(|p| pos + p)
-            .unwrap_or(end);
+            .map_or(end, |p| pos + p);
         out.push(wstr::from_char_slice(&val[pos..next_sep]));
         // Note we skip exactly one sep here. This is because on the last iteration we retain all
         // but the first leading separators. This is historical.
@@ -529,8 +528,7 @@ impl<'a> Iterator for LineIterator<'a> {
         let newline_or_end = self.coll[self.current..]
             .iter()
             .position(|b| *b == b'\n')
-            .map(|pos| self.current + pos)
-            .unwrap_or(self.coll.len());
+            .map_or(self.coll.len(), |pos| self.current + pos);
         let result = &self.coll[self.current..newline_or_end];
         self.current = newline_or_end;
 

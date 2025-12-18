@@ -146,12 +146,15 @@ pub fn wcscasecmp_fuzzy(lhs: &wstr, rhs: &wstr, canonicalize: fn(char) -> char) 
     impl<'a, Canonicalize: Fn(char) -> char> ToLowerBuffer<'a, Canonicalize> {
         pub fn new(mut chars: std::iter::Map<CharsUtf32<'a>, Canonicalize>) -> Self {
             Self {
-                current: chars.next().map(|c| c.to_lowercase()).unwrap_or_else(|| {
-                    let mut empty = 'a'.to_lowercase();
-                    let _ = empty.next();
-                    debug_assert!(empty.next().is_none());
-                    empty
-                }),
+                current: chars.next().map_or_else(
+                    || {
+                        let mut empty = 'a'.to_lowercase();
+                        let _ = empty.next();
+                        debug_assert!(empty.next().is_none());
+                        empty
+                    },
+                    |c| c.to_lowercase(),
+                ),
                 chars,
             }
         }

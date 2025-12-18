@@ -1445,7 +1445,7 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
                 let stop = data[cursor..].iter().position(|c| *c == b'\n');
                 let hit_separator = stop.is_some();
                 // If it's not found, just use the end.
-                let stop = stop.map(|rel| cursor + rel).unwrap_or(data.len());
+                let stop = stop.map_or(data.len(), |rel| cursor + rel);
                 // Stop now points at the first character we do not want to copy.
                 lst.push(bytes2wcstring(&data[cursor..stop]));
 

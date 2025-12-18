@@ -399,8 +399,7 @@ impl BackgroundFdMonitor {
             //
             // Note that WSLv1 doesn't throw EBADF if the fd is closed is mid-select.
             drop(data);
-            let ret =
-                fds.check_readable(timeout.map(Timeout::Duration).unwrap_or(Timeout::Forever));
+            let ret = fds.check_readable(timeout.map_or(Timeout::Forever, Timeout::Duration));
             // Cygwin reports ret < 0 && errno == 0 as success.
             let err = errno().0;
             if ret < 0 && !matches!(err, libc::EINTR | libc::EBADF) && !(cfg!(cygwin) && err == 0) {

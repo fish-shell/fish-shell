@@ -433,15 +433,13 @@ impl Screen {
                 if is_final_rendering {
                     usize::MAX
                 } else {
-                    scrolled_cursor
-                        .map(|sc| {
-                            if sc.scroll_amount != 0 {
-                                sc.cursor.y
-                            } else {
-                                screen_height - 1
-                            }
-                        })
-                        .unwrap_or(usize::MAX)
+                    scrolled_cursor.map_or(usize::MAX, |sc| {
+                        if sc.scroll_amount != 0 {
+                            sc.cursor.y
+                        } else {
+                            screen_height - 1
+                        }
+                    })
                 },
                 effective_commandline.as_char_slice()[i],
                 colors[i],
@@ -655,8 +653,7 @@ impl Screen {
             } else {
                 None
             })
-            .map(|char| char.offset_in_cmdline)
-            .unwrap_or(CharOffset::Pointer(0));
+            .map_or(CharOffset::Pointer(0), |char| char.offset_in_cmdline);
         match offset {
             CharOffset::Cmd(value) if x >= line.len() => CharOffset::Cmd(value + 1),
             CharOffset::Pager(_) if x >= line.len() => CharOffset::None,

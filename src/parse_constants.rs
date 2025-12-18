@@ -338,8 +338,7 @@ impl ParseError {
         let line_end = src.as_char_slice()[last_char_in_range..]
             .iter()
             .position(|c| *c == '\n')
-            .map(|pos| pos + last_char_in_range)
-            .unwrap_or(src.len());
+            .map_or(src.len(), |pos| pos + last_char_in_range);
         // We can only report squiggles on one line
         if start + len > line_end {
             len = line_end - start;

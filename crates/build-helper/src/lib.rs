@@ -52,3 +52,34 @@ pub fn rebuild_if_embedded_path_changed<P: AsRef<Path>>(path: P) {
         rebuild_if_path_changed(path);
     }
 }
+
+// Target OS for compiling our crates, as opposed to the build script.
+pub fn target_os() -> String {
+    env_var("CARGO_CFG_TARGET_OS").unwrap()
+}
+
+pub fn target_os_is_apple() -> bool {
+    matches!(target_os().as_str(), "ios" | "macos")
+}
+
+/// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
+/// `#[cfg(bsd)]`.
+///
+/// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
+/// doesn't necessarily include less-popular forks nor does it group them into families more
+/// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
+pub fn target_os_is_bsd() -> bool {
+    let target_os = target_os();
+    let is_bsd = target_os.ends_with("bsd") || target_os == "dragonfly";
+    if matches!(
+        target_os.as_str(),
+        "dragonfly" | "freebsd" | "netbsd" | "openbsd"
+    ) {
+        assert!(is_bsd, "Target incorrectly detected as not BSD!");
+    }
+    is_bsd
+}
+
+pub fn target_os_is_cygwin() -> bool {
+    target_os() == "cygwin"
+}

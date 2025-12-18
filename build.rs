@@ -1,4 +1,7 @@
-use fish_build_helper::{env_var, fish_build_dir, workspace_root};
+use fish_build_helper::{
+    env_var, fish_build_dir, target_os, target_os_is_apple, target_os_is_bsd, target_os_is_cygwin,
+    workspace_root,
+};
 use rsconf::Target;
 use std::env;
 use std::path::{Path, PathBuf};
@@ -70,9 +73,9 @@ fn detect_cfgs(target: &mut Target) {
     for (name, handler) in [
         // Ignore the first entry, it just sets up the type inference.
         ("", &(|_: &Target| false) as &dyn Fn(&Target) -> bool),
-        ("apple", &detect_apple),
-        ("bsd", &detect_bsd),
-        ("cygwin", &detect_cygwin),
+        ("apple", &(|_| target_os_is_apple())),
+        ("bsd", &(|_| target_os_is_bsd())),
+        ("cygwin", &(|_| target_os_is_cygwin())),
         ("have_eventfd", &|target| {
             // FIXME: NetBSD 10 has eventfd, but the libc crate does not expose it.
             if target_os() == "netbsd" {
@@ -106,37 +109,6 @@ fn detect_cfgs(target: &mut Target) {
     ] {
         rsconf::declare_cfg(name, handler(target))
     }
-}
-
-// Target OS for compiling our crates, as opposed to the build script.
-fn target_os() -> String {
-    env_var("CARGO_CFG_TARGET_OS").unwrap()
-}
-
-fn detect_apple(_: &Target) -> bool {
-    matches!(target_os().as_str(), "ios" | "macos")
-}
-
-fn detect_cygwin(_: &Target) -> bool {
-    target_os() == "cygwin"
-}
-
-/// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
-/// `#[cfg(bsd)]`.
-///
-/// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
-/// doesn't necessarily include less-popular forks nor does it group them into families more
-/// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
-fn detect_bsd(_: &Target) -> bool {
-    let target_os = target_os();
-    let is_bsd = target_os.ends_with("bsd") || target_os == "dragonfly";
-    if matches!(
-        target_os.as_str(),
-        "dragonfly" | "freebsd" | "netbsd" | "openbsd"
-    ) {
-        assert!(is_bsd, "Target incorrectly detected as not BSD!");
-    }
-    is_bsd
 }
 
 /// Rust sets the stack size of newly created threads to a sane value, but is at at the mercy of the

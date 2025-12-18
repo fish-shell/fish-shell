@@ -541,7 +541,7 @@ begin
     # CHECK: Empty completions
 end
 
-rm -$f $tmpdir/*
+rm $tmpdir/*
 
 # Leading dots are not completed for default file completion,
 # but may be for custom command (e.g. git add).
@@ -556,8 +556,6 @@ echo "Should be nothing"
 # CHECK: Should be nothing
 complete -C'dotty '
 # CHECK: .abc
-
-rm -r $tmpdir
 
 complete -C'complete --command=mktemp' | string replace -rf '=mktemp\t.*' '=mktemp'
 # (one "--command=" is okay, we used to get "--command=--command="

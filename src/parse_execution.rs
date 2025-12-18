@@ -51,7 +51,7 @@ use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
 use crate::wildcard::wildcard_match;
-use libc::{ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
+use libc::{ENAMETOOLONG, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
 use std::io::ErrorKind;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -280,7 +280,6 @@ impl<'a> ExecutionContext<'a> {
             // TODO: We currently handle all errors here the same,
             // but this mainly applies to EACCES. We could also feasibly get:
             // ELOOP
-            // ENAMETOOLONG
             if err.raw_os_error() == Some(ENOTDIR) {
                 // If the original command did not include a "/", assume we found it via $PATH.
                 let src = self.node_source(&statement.command);
@@ -303,6 +302,15 @@ impl<'a> ExecutionContext<'a> {
                         cmd
                     );
                 }
+            } else if err.raw_os_error() == Some(ENAMETOOLONG) {
+                return report_error!(
+                    self,
+                    ctx,
+                    STATUS_NOT_EXECUTABLE,
+                    &statement.command,
+                    "Command name exceeds maximum length: '%s'",
+                    cmd
+                );
             }
 
             return report_error!(

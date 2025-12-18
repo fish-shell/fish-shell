@@ -950,6 +950,10 @@ msgstr "命令\n"
 msgid "Command history events"
 msgstr "命令歷史紀錄的事件"
 
+#, c-format
+msgid "Command name exceeds maximum length: '%s'"
+msgstr ""
+
 msgid "Command not executable"
 msgstr "命令不可執行"
 

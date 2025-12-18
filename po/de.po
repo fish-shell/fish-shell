@@ -955,6 +955,10 @@ msgstr "Befehl\n"
 msgid "Command history events"
 msgstr ""
 
+#, c-format
+msgid "Command name exceeds maximum length: '%s'"
+msgstr "Befehlsname überschreitet die maximale Länge: '%s'"
+
 msgid "Command not executable"
 msgstr "Befehl nicht ausführbar"
 
@@ -1020,7 +1024,7 @@ msgstr "Die Script-Datei '%s' kann nicht gelesen werden:"
 
 #, c-format
 msgid "Error when renaming file: %s"
-msgstr ""
+msgstr "Fehler beim Umbenennen der Datei: %s"
 
 #, c-format
 msgid "Error while reading file %s\n"
@@ -1072,7 +1076,7 @@ msgid "Expected a string, but found a redirection"
 msgstr "Erwartete einen String, fand aber eine Umlenkung"
 
 msgid "Expected a variable name after this $."
-msgstr ""
+msgstr "Erwartete einen Variablennamen nach diesem $."
 
 #, c-format
 msgid ""
@@ -1083,7 +1087,7 @@ msgstr ""
 
 #, c-format
 msgid "Expected no arguments, got %d"
-msgstr ""
+msgstr "Erwartete keine Argumente, fand %d"
 
 msgid "Expression is bogus"
 msgstr "Ausdruck ist Unsinn"

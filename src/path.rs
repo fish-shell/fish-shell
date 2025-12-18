@@ -9,7 +9,7 @@ use crate::flog::{flog, flogf};
 use crate::wchar::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use errno::{Errno, errno, set_errno};
-use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
+use libc::{EACCES, ENAMETOOLONG, ENOENT, ENOTDIR, F_OK, X_OK};
 use once_cell::sync::Lazy;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
@@ -296,6 +296,16 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
     // looking for a matching command.
     if cmd.contains('/') {
         return GetPathResult::new(test_path(cmd).err(), cmd.to_owned());
+    }
+
+    let narrow_cmd = wcs2zstring(cmd);
+    if unsafe { libc::access(narrow_cmd.as_ptr(), X_OK) } != 0 {
+        let err = errno();
+        if err.0 == ENAMETOOLONG {
+            // The command name is too long, regardless of the path, so bail,
+            // returning `cmd` as the path.
+            return GetPathResult::new(Some(err), cmd.to_owned());
+        }
     }
 
     let mut best = noent_res;

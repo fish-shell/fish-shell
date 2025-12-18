@@ -16156,6 +16156,9 @@ msgstr ""
 msgid "Disable curlrc"
 msgstr ""
 
+msgid "Disable custom groupings"
+msgstr ""
+
 msgid "Disable data"
 msgstr ""
 
@@ -17420,6 +17423,9 @@ msgid "Display dynamic symbols instead of normal symbols"
 msgstr ""
 
 msgid "Display each file's MAC label"
+msgstr ""
+
+msgid "Display email address alongside each name"
 msgstr ""
 
 msgid "Display environment variables as an s-expression"
@@ -29689,6 +29695,15 @@ msgstr ""
 msgid "Grep through source files recursively"
 msgstr ""
 
+msgid "Group commits by author (default)"
+msgstr ""
+
+msgid "Group commits by author, committer, trailer, or format"
+msgstr ""
+
+msgid "Group commits by committer instead of author"
+msgstr ""
+
 msgid "Group directories before files"
 msgstr ""
 
@@ -29963,6 +29978,9 @@ msgid "Hide accounts/postings deeper than this"
 msgstr ""
 
 msgid "Hide attached picture for audio"
+msgstr ""
+
+msgid "Hide email addresses in the output"
 msgstr ""
 
 msgid "Hide errors"
@@ -33527,6 +33545,9 @@ msgid "Lines after EOF are blank"
 msgstr ""
 
 msgid "Lines end with 0 byte"
+msgstr ""
+
+msgid "Linewrap entries as width[,indent1[,indent2]]"
 msgstr ""
 
 msgid "Link against framework (Darwin)"
@@ -39613,6 +39634,9 @@ msgstr ""
 msgid "Only show basic information in JSON format (bits/s)"
 msgstr ""
 
+msgid "Only show commit counts per group"
+msgstr ""
+
 msgid "Only show differences to the previously saved database and exit"
 msgstr ""
 
@@ -42998,6 +43022,9 @@ msgid "Pretend the symbol symbol is undefined, to force linking of library modul
 msgstr ""
 
 msgid "Prettify the format of displayed values, make it more human readable"
+msgstr ""
+
+msgid "Pretty format string or preset name"
 msgstr ""
 
 msgid "Pretty-print JSON"
@@ -57361,10 +57388,16 @@ msgstr ""
 msgid "Show commit shortlog"
 msgstr ""
 
+msgid "Show commit subjects for each entry"
+msgstr ""
+
 msgid "Show commit summary"
 msgstr ""
 
 msgid "Show commit time"
+msgstr ""
+
+msgid "Show commits more recent than date without stopping traversal early"
 msgstr ""
 
 msgid "Show commits more recent than specified date"
@@ -60487,7 +60520,13 @@ msgstr ""
 msgid "Sort object keys in output"
 msgstr ""
 
+msgid "Sort output alphabetically by author"
+msgstr ""
+
 msgid "Sort output by file location"
+msgstr ""
+
+msgid "Sort output by number of commits per group"
 msgstr ""
 
 msgid "Sort output by slots/versions (toggle)"

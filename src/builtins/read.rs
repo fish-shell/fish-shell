@@ -18,13 +18,11 @@ use crate::nix::isatty;
 use crate::parse_execution::varname_error;
 use crate::reader::ReaderConfig;
 use crate::reader::commandline_set_buffer;
-use crate::reader::reader_save_screen_state;
 use crate::reader::{reader_pop, reader_push, reader_readline, set_shell_modes_temporarily};
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::TOK_ARGUMENT_LIST;
 use crate::tokenizer::Tok;
 use crate::tokenizer::Tokenizer;
-use crate::tty_handoff::TtyHandoff;
 use crate::wcstringutil::split_about;
 use crate::wcstringutil::split_string_tok;
 use crate::wutil;
@@ -292,8 +290,6 @@ fn read_interactive(
 
     let mline = {
         let _interactive = parser.push_scope(|s| s.is_interactive = true);
-        let mut scoped_handoff = TtyHandoff::new(reader_save_screen_state);
-        scoped_handoff.enable_tty_protocols();
         reader_readline(parser, old_modes, nchars)
     };
     if let Some(line) = mline {

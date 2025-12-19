@@ -37,7 +37,8 @@ nix = { version = "0.30.1", default-features = false, features = [
     "inotify",
     "resource",
     "fs",
-    "term",
+    # Features we shouldn't use:
+    # term # (breaks on OpenBSD because of "termios" and "pty" being missing)
 ] }
 num-traits = "0.2.19"
 once_cell = "1.19.0"

@@ -42,19 +42,26 @@ pub fn is_console_session() -> bool {
     static IS_CONSOLE_SESSION: OnceCell<bool> = OnceCell::new();
     // TODO(terminal-workaround)
     *IS_CONSOLE_SESSION.get_or_init(|| {
-        nix::unistd::ttyname(unsafe { std::os::fd::BorrowedFd::borrow_raw(STDIN_FILENO) })
-            .is_ok_and(|buf| {
-                // Check if the tty matches /dev/(console|dcons|tty[uv\d])
-                let is_console_tty = match buf.as_os_str().as_bytes() {
-                    b"/dev/console" => true,
-                    b"/dev/dcons" => true,
-                    bytes => bytes.strip_prefix(b"/dev/tty").is_some_and(|rest| {
-                        matches!(rest.first(), Some(b'u' | b'v' | b'0'..=b'9'))
-                    }),
-                };
-
-                // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something` or `sun-color`.
-                is_console_tty && env::var_os("TERM").is_none_or(|t| !t.as_bytes().contains(&b'-'))
-            })
+        const PATH_MAX: usize = libc::PATH_MAX as usize;
+        let mut tty_name = [0u8; PATH_MAX];
+        unsafe {
+            if libc::ttyname_r(STDIN_FILENO, tty_name.as_mut_ptr().cast(), tty_name.len()) != 0 {
+                return false;
+            }
+        }
+        // Check if the tty matches /dev/(console|dcons|tty[uv\d])
+        const LEN: usize = b"/dev/tty".len();
+        (
+        (
+            tty_name.starts_with(b"/dev/tty") &&
+                ([b'u', b'v'].contains(&tty_name[LEN]) || tty_name[LEN].is_ascii_digit())
+        ) ||
+        tty_name.starts_with(b"/dev/dcons\0") ||
+        tty_name.starts_with(b"/dev/console\0"))
+        // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something` or `sun-color`.
+        && match env::var_os("TERM") {
+            Some(term) => !term.as_bytes().contains(&b'-'),
+            None => true,
+        }
     })
 }

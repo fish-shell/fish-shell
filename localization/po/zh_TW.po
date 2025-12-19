@@ -130,6 +130,10 @@ msgid "%s and %s are mutually exclusive"
 msgstr "%s 和 %s 不能同時使用"
 
 #, c-format
+msgid "%s command"
+msgstr ""
+
+#, c-format
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help %s' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
 msgstr "%s 在過了 %d 秒後仍無法讀取到查詢主要裝置特性的回應。這通常是由於你的終端機缺少功能，參見「help %s」或「man fish-terminal-compatibility」。此 %s 行程不再會等待未決的查詢，一些非必要的功能將因此停用。"
 
@@ -144,6 +148,10 @@ msgstr "%s 是內建命令\n"
 #, c-format
 msgid "%s is a function"
 msgstr "%s 是函式"
+
+#, c-format
+msgid "%s variable"
+msgstr ""
 
 #, c-format
 msgid "%s, version %s"
@@ -885,7 +893,7 @@ msgid "Abort (Alias for SIGABRT)"
 msgstr "中止（SIGABRT 的別名）"
 
 #, c-format
-msgid "Active languages (%s):"
+msgid "Active languages (source: %s):"
 msgstr ""
 
 msgid "Address boundary error"
@@ -1823,16 +1831,9 @@ msgstr ""
 "可能未安裝文件。\n"
 "「help %s」將顯示線上版本\n"
 
-msgid "from command `status language set`"
-msgstr ""
-
 #, c-format
 msgid "from sourcing file %s\n"
 msgstr "在載入的檔案 %s\n"
-
-#, c-format
-msgid "from variable %s"
-msgstr ""
 
 msgid "in command substitution\n"
 msgstr "在命令替換\n"

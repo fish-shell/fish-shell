@@ -124,13 +124,13 @@ set --erase LC_MESSAGES
 set --erase LC_ALL
 set --erase LANGUAGE
 status language
-# CHECK: Active languages (default):
+# CHECK: Active languages (source: default):
 echo (_ file)
 # CHECK: file
 
 set -l LANGUAGE pt_BR de_DE
 status language
-# CHECK: Active languages (from variable LANGUAGE): pt_BR de
+# CHECK: Active languages (source: LANGUAGE variable): pt_BR de
 echo (_ file)
 # CHECK: arquivo
 
@@ -138,37 +138,37 @@ echo (_ file)
 status language set fr_FR de pt_BR
 # CHECKERR: No catalogs available for language specifiers: fr_FR
 status language
-# CHECK: Active languages (from command `status language set`): de pt_BR
+# CHECK: Active languages (source: `status language set` command): de pt_BR
 echo (_ file)
 # CHECK: Datei
 
 set -l LANGUAGE zh_TW
 status language
-# CHECK: Active languages (from command `status language set`): de pt_BR
+# CHECK: Active languages (source: `status language set` command): de pt_BR
 echo (_ file)
 # CHECK: Datei
 
 set -l LC_MESSAGES C
 status language
-# CHECK: Active languages (from command `status language set`): de pt_BR
+# CHECK: Active languages (source: `status language set` command): de pt_BR
 echo (_ file)
 # CHECK: Datei
 
 status language unset
 status language
-# CHECK: Active languages (from variable LC_MESSAGES):
+# CHECK: Active languages (source: LC_MESSAGES variable):
 echo (_ file)
 # CHECK: file
 
 set --erase LC_MESSAGES
 status language
-# CHECK: Active languages (from variable LANGUAGE): zh_TW
+# CHECK: Active languages (source: LANGUAGE variable): zh_TW
 echo (_ file)
 # CHECK: 檔案
 
 set --erase LANGUAGE
 status language
-# CHECK: Active languages (default):
+# CHECK: Active languages (source: default):
 echo (_ file)
 # CHECK: file
 

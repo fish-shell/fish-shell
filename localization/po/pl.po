@@ -130,6 +130,10 @@ msgid "%s and %s are mutually exclusive"
 msgstr ""
 
 #, c-format
+msgid "%s command"
+msgstr ""
+
+#, c-format
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help %s' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
 msgstr ""
 
@@ -143,6 +147,10 @@ msgstr ""
 
 #, c-format
 msgid "%s is a function"
+msgstr ""
+
+#, c-format
+msgid "%s variable"
 msgstr ""
 
 #, c-format
@@ -884,7 +892,7 @@ msgid "Abort (Alias for SIGABRT)"
 msgstr ""
 
 #, c-format
-msgid "Active languages (%s):"
+msgid "Active languages (source: %s):"
 msgstr ""
 
 msgid "Address boundary error"
@@ -1815,15 +1823,8 @@ msgid ""
 "`help %s` will show an online version\n"
 msgstr ""
 
-msgid "from command `status language set`"
-msgstr ""
-
 #, c-format
 msgid "from sourcing file %s\n"
-msgstr ""
-
-#, c-format
-msgid "from variable %s"
 msgstr ""
 
 msgid "in command substitution\n"

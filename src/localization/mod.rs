@@ -142,7 +142,7 @@ pub fn status_language() -> WString {
     let localization_state = fish_gettext::status_language();
     let mut result = WString::new();
     localizable_consts!(
-        LANGUAGE_LIST_VARIABLE_ORIGIN "from variable %s"
+        LANGUAGE_LIST_VARIABLE_ORIGIN "%s variable"
     );
     let origin_string = match localization_state.precedence_origin {
         LanguagePrecedenceOrigin::Default => wgettext!("default").to_owned(),
@@ -153,10 +153,13 @@ pub fn status_language() -> WString {
             wgettext_fmt!(LANGUAGE_LIST_VARIABLE_ORIGIN, "LANGUAGE")
         }
         LanguagePrecedenceOrigin::StatusLanguage => {
-            wgettext!("from command `status language set`").to_owned()
+            wgettext_fmt!("%s command", "`status language set`")
         }
     };
-    result.push_utfstr(&wgettext_fmt!("Active languages (%s):", origin_string));
+    result.push_utfstr(&wgettext_fmt!(
+        "Active languages (source: %s):",
+        origin_string
+    ));
     append_space_separated_list(&mut result, &localization_state.language_precedence);
     result.push('\n');
 

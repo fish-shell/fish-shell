@@ -141,7 +141,8 @@ end" >$__fish_config_dir/config.fish
 
     # Notify terminals when $PWD changes via OSC 7 (issue #906).
     if not functions --query __fish_update_cwd_osc
-        function __fish_update_cwd_osc --on-variable PWD --description 'Notify terminals when $PWD changes'
+        function __fish_update_cwd_osc --description 'Notify terminals when $PWD might have changed' \
+            --on-variable=PWD --on-event=fish_prompt
             set -l host $hostname
             # if set -l konsole_version (string match -r -- '^Konsole (\d+)\..*' (status terminal))[2]
             #     # To-do: use a Konsole version where KF6_DEP_VERSION is >= 6.12

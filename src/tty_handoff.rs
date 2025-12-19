@@ -370,7 +370,6 @@ impl TtyHandoff {
     }
 
     /// Mark terminal modes as enabled.
-    /// Return true if something was written to the tty.
     pub fn enable_tty_protocols(&mut self) {
         if self.tty_protocols_applied {
             return; // Already enabled.
@@ -380,7 +379,6 @@ impl TtyHandoff {
     }
 
     /// Mark terminal modes as disabled.
-    /// Return true if something was written to the tty.
     pub fn disable_tty_protocols(&mut self) {
         if !self.tty_protocols_applied {
             return; // Already disabled.
@@ -399,8 +397,6 @@ impl TtyHandoff {
     }
 
     /// Reclaim the tty if we transferred it.
-    /// Returns true if data was written to the tty, as part of
-    /// re-enabling terminal protocols.
     pub fn reclaim(mut self) {
         self.reclaim_impl()
     }

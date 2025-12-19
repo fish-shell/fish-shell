@@ -13,6 +13,7 @@ use crate::event::Event;
 use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input::{FISH_BIND_MODE_VAR, init_input};
+use crate::localization::wgettext;
 use crate::nix::{geteuid, getpid};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
@@ -24,7 +25,7 @@ use crate::proc::is_interactive_session;
 use crate::termsize;
 use crate::universal_notifier::default_notifier;
 use crate::wcstringutil::join_strings;
-use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
+use crate::wutil::{fish_wcstol, wgetcwd};
 
 use libc::{c_int, uid_t};
 use once_cell::sync::{Lazy, OnceCell};

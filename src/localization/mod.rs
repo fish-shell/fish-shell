@@ -307,7 +307,7 @@ impl std::fmt::Display for LocalizableString {
 #[cfg(feature = "gettext-extract")]
 macro_rules! localizable_string {
     ($string:literal) => {
-        $crate::wutil::gettext::LocalizableString::Static(widestring::utf32str!(
+        $crate::localization::LocalizableString::Static(widestring::utf32str!(
             fish_gettext_extraction::gettext_extract!($string)
         ))
     };
@@ -316,7 +316,7 @@ macro_rules! localizable_string {
 #[cfg(not(feature = "gettext-extract"))]
 macro_rules! localizable_string {
     ($string:literal) => {
-        $crate::wutil::gettext::LocalizableString::Static(widestring::utf32str!($string))
+        $crate::localization::LocalizableString::Static(widestring::utf32str!($string))
     };
 }
 pub use localizable_string;
@@ -334,7 +334,7 @@ macro_rules! localizable_consts {
     ) => {
         $(
             $(#[$attr])*
-            $vis const $name: $crate::wutil::gettext::LocalizableString =
+            $vis const $name: $crate::localization::LocalizableString =
                 localizable_string!($string);
         )*
     };
@@ -385,8 +385,7 @@ pub use wgettext_fmt;
 
 #[cfg(test)]
 mod tests {
-    use super::LocalizableString;
-    use crate::prelude::*;
+    use super::*;
     use crate::tests::prelude::*;
 
     #[test]

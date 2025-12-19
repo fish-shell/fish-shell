@@ -1,7 +1,6 @@
 pub mod dir_iter;
 pub mod errors;
 pub mod fileid;
-pub mod gettext;
 mod hex_float;
 #[macro_use]
 pub mod printf;
@@ -15,9 +14,6 @@ use crate::flog;
 use crate::wcstringutil::{join_strings, wcs2bytes_callback};
 use errno::errno;
 use fish_wchar::{L, WExt, WString, wstr};
-pub use gettext::{
-    LocalizableString, localizable_consts, localizable_string, wgettext, wgettext_fmt,
-};
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};

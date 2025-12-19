@@ -48,10 +48,10 @@ use crate::{
     ast::unescape_keyword,
     autoload::AutoloadResult,
     common::charptr2wcstring,
+    localization::{LocalizableString, localizable_string},
     reader::{get_quote, is_backslashed},
     util::wcsfilecmp,
     wcstringutil::{string_suffixes_string_case_insensitive, strip_executable_suffix},
-    wutil::{LocalizableString, localizable_string},
 };
 use bitflags::bitflags;
 use fish_wchar::WExt;

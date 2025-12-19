@@ -496,12 +496,12 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     return Err(STATUS_CMD_ERROR);
                 } else {
                     if args.is_empty() {
-                        streams.out.append(crate::wutil::gettext::status_language());
+                        streams.out.append(crate::localization::status_language());
                         return Ok(SUCCESS);
                     }
                     match args[0].to_string().as_str() {
                         "list-available" => {
-                            streams.out.append(crate::wutil::gettext::list_available_languages());
+                            streams.out.append(crate::localization::list_available_languages());
                             return Ok(SUCCESS);
                         },
                         "set" => {
@@ -509,7 +509,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                                 .iter()
                                 .map(|lang| lang.to_string())
                                 .collect::<Vec<_>>();
-                            let lints = crate::wutil::gettext::update_from_status_language_builtin(&langs);
+                            let lints = crate::localization::update_from_status_language_builtin(&langs);
                             let formatted_lints = lints.display_all();
                             if !formatted_lints.is_empty() {
                                 streams.err.append(&formatted_lints);
@@ -517,7 +517,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                             return Ok(SUCCESS);
                         }
                         "unset" => {
-                            crate::wutil::gettext::unset_from_status_language_builtin(parser.vars());
+                            crate::localization::unset_from_status_language_builtin(parser.vars());
                             return Ok(SUCCESS);
                         }
                         invalid => {

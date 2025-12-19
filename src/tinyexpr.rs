@@ -32,7 +32,7 @@ use std::{
 
 use crate::{
     prelude::*,
-    wutil::{Error as wcstodError, wcstod::wcstod_underscores, wgettext},
+    wutil::{Error as wcstodError, wcstod::wcstod_underscores},
 };
 
 #[derive(Clone, Copy)]

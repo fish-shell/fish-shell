@@ -222,7 +222,11 @@ impl From<crate::wutil::wcstoi::Error> for StringError {
 
 macro_rules! invalid_args {
     ($msg:expr, $name:expr, $arg:expr) => {
-        StringError::InvalidArgs(crate::wutil::wgettext_fmt!($msg, $name, $arg.unwrap()))
+        StringError::InvalidArgs(crate::localization::wgettext_fmt!(
+            $msg,
+            $name,
+            $arg.unwrap()
+        ))
     };
 }
 use invalid_args;

@@ -894,7 +894,7 @@ fn throwing_main() -> i32 {
     unsafe {
         set_libc_locales(/*log_ok=*/ false)
     };
-    crate::wutil::gettext::initialize_gettext();
+    crate::localization::initialize_gettext();
     env_init(None, true, false);
 
     // Only set these here so you can't set them via the builtin.

@@ -4,11 +4,11 @@ use super::prelude::*;
 use crate::common::{EscapeFlags, EscapeStringStyle, escape_string, timef};
 use crate::io::IoStreams;
 use crate::job_group::{JobId, MaybeJobId};
+use crate::localization::{wgettext, wgettext_fmt};
 use crate::parser::Parser;
 use crate::proc::{Job, clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies};
 use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
-use crate::wutil::wgettext;
-use crate::wutil::{fish_wcstoi, wgettext_fmt};
+use crate::wutil::fish_wcstoi;
 use fish_wchar::{L, WExt, WString, wstr};
 use std::num::NonZeroU32;
 

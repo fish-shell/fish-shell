@@ -52,6 +52,7 @@ use crate::{
     fs::fsync,
     history::file::{HistoryFile, RawHistoryFile, append_history_item_to_buffer},
     io::IoStreams,
+    localization::wgettext_fmt,
     operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
     parse_constants::{ParseTreeFlags, StatementDecoration},
     parse_util::{parse_util_detect_errors, parse_util_unescape_wildcards},
@@ -61,7 +62,7 @@ use crate::{
     util::find_subslice,
     wcstringutil::subsequence_in_string,
     wildcard::{ANY_STRING, wildcard_match},
-    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wgettext_fmt, wrealpath, wstat, wunlink},
+    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

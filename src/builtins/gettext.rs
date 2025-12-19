@@ -7,7 +7,8 @@ use super::prelude::*;
 pub fn gettext(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     for arg in &argv[1..] {
         streams.out.append(
-            crate::wutil::LocalizableString::from_external_source((*arg).to_owned()).localize(),
+            crate::localization::LocalizableString::from_external_source((*arg).to_owned())
+                .localize(),
         );
     }
     Ok(SUCCESS)

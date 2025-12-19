@@ -178,10 +178,10 @@ status language set asdf
 
 # This will have to be changed if we add catalogs for languages used here.
 status language set zh_HK it_IT
-# CHECKERR: No catalogs available for language specifiers: zh_HK it_IT
+# CHECKERR: No catalogs available for language specifiers: it_IT zh_HK
 
 status language set de de
 # CHECKERR: Language specifiers appear repeatedly: de
 
 status language set \xff quote\"
-# CHECKERR: No catalogs available for language specifiers: \Xff 'quote"'
+# CHECKERR: No catalogs available for language specifiers: 'quote"' \Xff

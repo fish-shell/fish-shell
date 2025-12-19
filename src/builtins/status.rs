@@ -314,15 +314,14 @@ impl RustEmbed for EmptyEmbed {
     }
     fn iter() -> rust_embed::Filenames {
         use rust_embed::Filenames::*;
-        cfg_if!(
+        cfg_if! {
             // TODO This is a clone of rebuild_if_embedded_path_changed.
             if #[cfg(any(not(debug_assertions), windows))] {
-                let nothing = Embedded([].iter());
+                Embedded([].iter())
             } else {
-                let nothing = Dynamic(Box::new(None.into_iter()));
+                Dynamic(Box::new(None.into_iter()))
             }
-        );
-        nothing
+        }
     }
 }
 

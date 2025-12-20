@@ -2263,9 +2263,6 @@ msgstr ""
 msgid "This should not happen. Have you changed the cd function?"
 msgstr ""
 
-msgid "Too many args for cd command"
-msgstr ""
-
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr "Skriv %shelp%s för instruktioner om hur man använder fish"
 
@@ -3253,6 +3250,9 @@ msgstr "Kräv parameter"
 msgid "Require parameter and don't use file completion"
 msgstr ""
 
+msgid "Resolve symbolic links before updating PWD"
+msgstr ""
+
 msgid "Return as soon as the first job completes"
 msgstr ""
 
@@ -3569,6 +3569,9 @@ msgid "Update $PATH directly"
 msgstr ""
 
 msgid "Update PATH when fish_user_paths changes"
+msgstr ""
+
+msgid "Update PWD without resolving symbolic links"
 msgstr ""
 
 msgid "Update man-page based completions"

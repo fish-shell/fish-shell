@@ -6,7 +6,7 @@ Synopsis
 
 .. synopsis::
 
-    cd [DIRECTORY]
+    cd [-L|-P] [DIRECTORY]
 
 Description
 -----------
@@ -17,6 +17,12 @@ Description
           To see the documentation on any non-fish versions, use ``command man cd``.
 
 ``cd`` changes the current working directory.
+
+``cd`` defaults to logical path handling (``-L``): the :envvar:`PWD` variable records the path that
+was supplied, subject only to removing redundant ``.`` or ``..`` segments. Passing ``-P`` or
+``--physical`` resolves all symbolic links instead. Passing ``-L`` or ``--logical`` resets the
+behavior back to logical handling, which may be useful when multiple options are provided and the
+last one should take effect.
 
 If *DIRECTORY* is given, it will become the new directory. If no parameter is given, the :envvar:`HOME` environment variable will be used.
 
@@ -44,6 +50,9 @@ Examples
 
     cd /usr/src/fish-shell
     # changes the working directory to /usr/src/fish-shell
+
+    cd -P /tmp/link
+    # resolves /tmp/link to its target before recording the directory
 
 See Also
 --------

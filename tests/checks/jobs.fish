@@ -15,11 +15,14 @@ sleep 0.1
 # There could already be zombies from previous tests run in this session or a test could be run
 # simultaneously that causes a zombie to spawn, so limit the output only to processes started by
 # this fish instance.
-if not contains (uname) SunOS
-    ps -o ppid,stat
-else
-    ps -o ppid,s
-end | string match -e $fish_pid | string match '*Z*'
+# Cygwin does not have zombies (or at least, `ps` cannot show if they are or not)
+if not is_cygwin
+    if not contains (uname) SunOS
+        ps -o ppid,stat
+    else
+        ps -o ppid,s
+    end | string match -e $fish_pid | string match '*Z*'
+end
 
 # Verify disown can be used with last_pid, even if it is separate from the pgroup.
 # This should silently succeed.

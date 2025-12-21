@@ -1,6 +1,8 @@
 #RUN: %fish %s
 # The "path" builtin for dealing with paths
 
+cygwin_nosymlinks && set nosymlinks
+
 # Extension - for figuring out the file extension of a given path.
 path extension /
 or echo None
@@ -85,6 +87,7 @@ path basename /usr/bin/
 # CHECK: bin
 
 cd $TMPDIR
+cygwin_noacl ./ && set -l noacl
 mkdir -p bin
 touch bin/{bash,bssh,chsh,dash,fish,slsh,ssh,zsh}
 ln -s $TMPDIR/bin/bash bin/sh
@@ -134,13 +137,24 @@ path filter --type file,dir --perm exec,write bin/fish .
 
 mkdir -p sbin
 touch sbin/setuid-exe sbin/setgid-exe
-chmod u+s,a+x sbin/setuid-exe
-path filter --perm suid sbin/*
+
+# Without POSIX permission, there is no way to set the setuid bit, so fake
+# the output.
+if set -q noacl
+    echo sbin/setuid-exe
+else
+    chmod u+s,a+x sbin/setuid-exe
+    path filter --perm suid sbin/*
+end
 # CHECK: sbin/setuid-exe
 
-# On at least FreeBSD on our CI this fails with "permission denied".
-# So we can't test it, and we fake the output instead.
-if chmod g+s,a+x sbin/setgid-exe 2>/dev/null
+# Without POSIX permission, there is no way to set the setgid bit, so fake
+# the result.
+# And on at least FreeBSD on our CI this fails with "permission denied".
+# So we can't test it, and we fake the output there too.
+if set -q noacl
+    echo sbin/setgid-exe
+else if chmod g+s,a+x sbin/setgid-exe 2>/dev/null
     path filter --perm sgid sbin/*
 else
     echo sbin/setgid-exe
@@ -149,6 +163,12 @@ end
 
 mkdir stuff
 touch stuff/{read,write,exec,readwrite,readexec,writeexec,all,none}
+if set -q noacl
+    echo "#!/bin/sh" >stuff/exec
+    echo "#!/bin/sh" >stuff/readexec
+    echo "#!/bin/sh" >stuff/writeexec
+    echo "#!/bin/sh" >stuff/all
+end
 chmod 400 stuff/read
 chmod 200 stuff/write
 chmod 100 stuff/exec
@@ -161,17 +181,37 @@ chmod 000 stuff/none
 # Validate that globs are sorted.
 test (path filter stuff/* | path sort | string join ",") = (path filter stuff/* | string join ",")
 
-path filter --perm read stuff/*
+# echo/CHECK to separate the output of different tests since they all blend
+# together otherwise, making it hard to know which test failed.
+echo "=== test --perm read"
+# CHECK: === test --perm read
+
+if set -q noacl
+    # noacl cannot mark files non-readable, filter out known bad files
+    path filter --perm read stuff/* | string match -rv ".*/(?:write|exec|writeexec|none).*"
+else
+    path filter --perm read stuff/*
+end
 # CHECK: stuff/all
 # CHECK: stuff/read
 # CHECK: stuff/readexec
 # CHECK: stuff/readwrite
 
-path filter -r stuff/*
+echo "=== test -r"
+# CHECK: === test -r
+
+if set -q noacl
+    path filter -r stuff/* | string match -rv ".*/(?:write|exec|writeexec|none).*"
+else
+    path filter -r stuff/*
+end
 # CHECK: stuff/all
 # CHECK: stuff/read
 # CHECK: stuff/readexec
 # CHECK: stuff/readwrite
+
+echo "=== test --perm write"
+# CHECK: === test --perm write
 
 path filter --perm write stuff/*
 # CHECK: stuff/all
@@ -179,11 +219,17 @@ path filter --perm write stuff/*
 # CHECK: stuff/write
 # CHECK: stuff/writeexec
 
+echo "=== test -w"
+# CHECK: === test -w
+
 path filter -w stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/readwrite
 # CHECK: stuff/write
 # CHECK: stuff/writeexec
+
+echo "=== test --perm exec"
+# CHECK: === test --perm exec
 
 path filter --perm exec stuff/*
 # CHECK: stuff/all
@@ -191,26 +237,56 @@ path filter --perm exec stuff/*
 # CHECK: stuff/readexec
 # CHECK: stuff/writeexec
 
+echo "=== test -x"
+# CHECK: === test -x
+
 path filter -x stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/exec
 # CHECK: stuff/readexec
 # CHECK: stuff/writeexec
 
-path filter --perm read,write stuff/*
+echo "=== test --perm read,write"
+# CHECK: === test --perm read,write
+
+if set -q noacl
+    path filter --perm read,write stuff/* | string match -rv ".*/(?:write|writeexec).*"
+else
+    path filter --perm read,write stuff/*
+end
 # CHECK: stuff/all
 # CHECK: stuff/readwrite
 
-path filter --perm read,exec stuff/*
+echo "=== test --perm read,exec"
+# CHECK: === test --perm read,exec
+
+if set -q noacl
+    path filter --perm read,exec stuff/* | string match -rv ".*/(?:exec|writeexec).*"
+else
+    path filter --perm read,exec stuff/*
+end
 # CHECK: stuff/all
 # CHECK: stuff/readexec
+
+echo "=== test --perm write,exec"
+# CHECK: === test --perm write,exec
 
 path filter --perm write,exec stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/writeexec
 
-path filter --perm read,write,exec stuff/*
+echo "=== test --perm read,write,exec"
+# CHECK: === test --perm read,write,exec
+
+if set -q noacl
+    path filter --perm read,write,exec stuff/* | string match -rv ".*/(?:writeexec).*"
+else
+    path filter --perm read,write,exec stuff/*
+end
 # CHECK: stuff/all
+
+echo "=== test all"
+# CHECK: === test all
 
 path filter stuff/*
 # CHECK: stuff/all
@@ -242,7 +318,11 @@ path filter -f -- -foo
 # CHECK: ./-foo
 
 # We need to remove the rest of the path because we have no idea what its value looks like.
-path resolve bin//sh | string match -r -- 'bin/bash$'
+if set -q nosymlinks
+    echo bin/bash
+else
+    path resolve bin//sh | string match -r -- 'bin/bash$'
+end
 # The "//" is squashed, and the symlink is resolved.
 # sh here is bash
 # CHECK: bin/bash
@@ -290,15 +370,21 @@ path sort --unique --key=basename {def,abc}/{456,123,789} def/{abc,def,0} abc/{f
 
 # Symlink loop.
 # It goes brrr.
-ln -s target link
-ln -s link target
+if not set -q nosymlinks
+    ln -s target link
+    ln -s link target
+end
 
-test (path resolve target) = (pwd -P)/target
-and echo target resolves to target
+if set -q nosymlinks ||
+        test (path resolve target) = (pwd -P)/target
+    echo target resolves to target
+end
 # CHECK: target resolves to target
 
-test (path resolve link) = (pwd -P)/link
-and echo link resolves to link
+if set -q nosymlinks ||
+        test (path resolve link) = (pwd -P)/link
+    echo link resolves to link
+end
 # CHECK: link resolves to link
 
 # path mtime

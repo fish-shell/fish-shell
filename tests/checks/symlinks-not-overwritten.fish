@@ -1,4 +1,5 @@
 # RUN: fish=%fish %fish %s
+# REQUIRES: %fish -c "not cygwin_nosymlinks"
 
 # fish_variables
 set -l target_file $XDG_CONFIG_HOME/fish/target_fish_variables
@@ -19,7 +20,6 @@ else
 end
 # CHECK: fish_variables is still a symlink
 rm $fish_variables
-
 
 # fish_history
 set -l history_file $XDG_DATA_HOME/fish/fish_history

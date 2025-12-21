@@ -1,3 +1,3 @@
 function is_cygwin
-    string match -qr "^(MSYS|CYGWIN)" -- (uname)
+    __fish_uname | string match -qr "^(MSYS|CYGWIN)"
 end

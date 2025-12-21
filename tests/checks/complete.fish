@@ -1,4 +1,5 @@
 #RUN: fish=%fish %fish %s
+
 function complete_test_alpha1
     echo $argv
 end
@@ -135,7 +136,8 @@ complete -C'foo -y' | string match -- -y-single-long
 # CHECK: -zARGZ
 complete -C'foo -z'
 
-function foo2; end
+function foo2
+end
 complete -c foo2 -s s -l long -xa "hello-world goodbye-friend"
 complete -C"foo2 -sfrie"
 # CHECK: -sgoodbye-friend
@@ -419,8 +421,12 @@ rm -r $dir
 set -l dir (mktemp -d)
 cd $dir
 
-: >command-not-in-path
-chmod +x command-not-in-path
+if cygwin_noacl ./
+    echo "#!/bin/sh" >command-not-in-path
+else
+    : >command-not-in-path
+    chmod +x command-not-in-path
+end
 complete -p $PWD/command-not-in-path -xa relative-path
 complete -C './command-not-in-path '
 # CHECK: relative-path
@@ -433,8 +439,12 @@ HOME=$PWD complete -C '~/command-not-in-path '
 
 # Non-canonical command path
 mkdir -p subdir
-: >subdir/command-in-subdir
-chmod +x subdir/command-in-subdir
+if cygwin_noacl ./
+    echo "#!/bin/sh" >subdir/command-in-subdir
+else
+    : >subdir/command-in-subdir
+    chmod +x subdir/command-in-subdir
+end
 complete -p "$PWD/subdir/command-in-subdir" -xa custom-completions
 complete -C './subdir/../subdir/command-in-subdir '
 # CHECK: custom-completions
@@ -483,17 +493,17 @@ complete -c thing -x -F
 # CHECKERR: complete: invalid option combination, '--exclusive' and '--force-files'
 # Multiple conditions
 complete -f -c shot
-complete -fc shot -n 'test (count (commandline -xpc) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a 'through'
+complete -fc shot -n 'test (count (commandline -xpc) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a through
 # CHECKERR: complete: -n 'test (count (commandline -xpc) -eq 1': Unexpected end of string, expecting ')'
 # CHECKERR: test (count (commandline -xpc) -eq 1
 # CHECKERR: ^
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a 'through'
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 2' -n 'test (commandline -xpc)[-1] = through' -a 'the'
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 3' -n 'test (commandline -xpc)[-1] = the' -a 'heart'
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 4' -n 'test (commandline -xpc)[-1] = heart' -a 'and'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a through
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 2' -n 'test (commandline -xpc)[-1] = through' -a the
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 3' -n 'test (commandline -xpc)[-1] = the' -a heart
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 4' -n 'test (commandline -xpc)[-1] = heart' -a and
 complete -fc shot -n 'test (count (commandline -xpc)) -eq 5' -n 'test (commandline -xpc)[-1] = and' -a "you\'re"
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 6' -n 'test (commandline -xpc)[-1] = "you\'re"' -a 'to'
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 7' -n 'test (commandline -xpc)[-1] = to' -a 'blame'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 6' -n 'test (commandline -xpc)[-1] = "you\'re"' -a to
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 7' -n 'test (commandline -xpc)[-1] = to' -a blame
 
 complete -C"shot "
 # CHECK: through
@@ -503,17 +513,16 @@ complete -C"shot through "
 # See that conditions after a failing one aren't executed.
 set -g oops 0
 complete -fc oooops
-complete -fc oooops -n true -n true -n true -n 'false' -n 'set -g oops 1' -a oops
+complete -fc oooops -n true -n true -n true -n false -n 'set -g oops 1' -a oops
 complete -C'oooops '
 echo $oops
 # CHECK: 0
 
-complete -fc oooops -n 'true' -n 'set -g oops 1' -a oops
+complete -fc oooops -n true -n 'set -g oops 1' -a oops
 complete -C'oooops '
 # CHECK: oops
 echo $oops
 # CHECK: 1
-
 
 # See that we load completions only if the command exists in $PATH,
 # as a workaround for #3117.
@@ -620,7 +629,7 @@ function __fish_describe_command
     echo -e "whoami\twho am i"
     echo -e "which\which is it"
 end
-test (count (complete -C"wh" | string match -rv "\tcommand|^while")) -gt 0 && echo "found" || echo "fail"
+test (count (complete -C"wh" | string match -rv "\tcommand|^while")) -gt 0 && echo found || echo fail
 # CHECK: found
 
 set -l commands check search show

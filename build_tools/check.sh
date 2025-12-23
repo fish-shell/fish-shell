@@ -81,7 +81,7 @@ fi
 cargo test --no-default-features --workspace --all-targets
 cargo test --doc --workspace
 if $lint; then
-    cargo doc --workspace
+    cargo doc --workspace --no-deps
 fi
 FISH_GETTEXT_EXTRACTION_DIR=$template_dir "$workspace_root/tests/test_driver.py" "$build_dir"
 

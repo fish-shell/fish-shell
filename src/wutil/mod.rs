@@ -472,12 +472,15 @@ mod tests {
         normalize_path, unescape_bytes_and_write_to_fd, wbasename, wdirname, wstr_offset_in,
     };
     use crate::common::bytes2wcstring;
-    use crate::fds::AutoCloseFd;
     use crate::prelude::*;
     use crate::tests::prelude::*;
     use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
     use rand::Rng;
-    use std::{ffi::CString, ptr};
+    use std::{
+        ffi::CString,
+        os::fd::{AsRawFd, FromRawFd, OwnedFd},
+        ptr,
+    };
 
     mod test_path_normalize_for_cd {
         use super::super::path_normalize_for_cd;
@@ -658,24 +661,26 @@ mod tests {
         let mut rng = rand::rng();
         let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];
         for &size in &sizes {
-            let fd = AutoCloseFd::new(unsafe {
-                libc::open(filename.as_ptr(), O_RDWR | O_TRUNC | O_CREAT, 0o666)
-            });
-            assert!(fd.is_valid());
+            let fd = unsafe {
+                let res = libc::open(filename.as_ptr(), O_RDWR | O_TRUNC | O_CREAT, 0o666);
+                assert!(res != 0);
+                OwnedFd::from_raw_fd(res)
+            };
             let mut input = Vec::new();
             for _i in 0..size {
                 input.push(rng.random());
             }
 
-            let amt = unescape_bytes_and_write_to_fd(&bytes2wcstring(&input), fd.fd()).unwrap();
+            let amt =
+                unescape_bytes_and_write_to_fd(&bytes2wcstring(&input), fd.as_raw_fd()).unwrap();
             assert_eq!(amt, input.len());
 
-            assert!(unsafe { libc::lseek(fd.fd(), 0, SEEK_SET) } >= 0);
+            assert!(unsafe { libc::lseek(fd.as_raw_fd(), 0, SEEK_SET) } >= 0);
 
             let mut contents = vec![0u8; input.len()];
             let read_amt = unsafe {
                 libc::read(
-                    fd.fd(),
+                    fd.as_raw_fd(),
                     if size == 0 {
                         ptr::null_mut()
                     } else {

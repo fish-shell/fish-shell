@@ -6,10 +6,10 @@ use crate::wutil::perror;
 use cfg_if::cfg_if;
 use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
 use nix::fcntl::FcntlArg;
-use nix::{fcntl::OFlag, unistd};
+use nix::fcntl::OFlag;
 use std::ffi::CStr;
 use std::fs::File;
-use std::io::{self, Read, Write};
+use std::io;
 use std::os::unix::prelude::*;
 
 localizable_consts!(
@@ -23,105 +23,6 @@ pub const FIRST_HIGH_FD: RawFd = 10;
 
 /// A sentinel value indicating no timeout.
 pub const NO_TIMEOUT: u64 = u64::MAX;
-
-/// A helper type for managing and automatically closing a file descriptor.
-/// Importantly this supports an invalid state with an fd of -1.
-pub struct AutoCloseFd {
-    fd_: RawFd,
-}
-
-impl Read for AutoCloseFd {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        nix::unistd::read(self, buf).map_err(std::io::Error::from)
-    }
-}
-
-impl Write for AutoCloseFd {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        nix::unistd::write(self, buf).map_err(std::io::Error::from)
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        // We don't buffer anything so this is a no-op.
-        Ok(())
-    }
-}
-
-impl AutoCloseFd {
-    // Closes the fd if not already closed.
-    pub fn close(&mut self) {
-        if self.fd_ != -1 {
-            _ = unistd::close(self.fd_);
-            self.fd_ = -1;
-        }
-    }
-
-    // Returns the fd.
-    pub fn fd(&self) -> RawFd {
-        self.fd_
-    }
-
-    // Returns the fd, transferring ownership to the caller.
-    pub fn acquire(&mut self) -> RawFd {
-        let temp = self.fd_;
-        self.fd_ = -1;
-        temp
-    }
-
-    // Resets to a new fd, taking ownership.
-    pub fn reset(&mut self, fd: RawFd) {
-        if fd == self.fd_ {
-            return;
-        }
-        self.close();
-        self.fd_ = fd;
-    }
-
-    // Returns if this has a valid fd.
-    pub fn is_valid(&self) -> bool {
-        self.fd_ >= 0
-    }
-
-    // Create a new AutoCloseFd instance taking ownership of the passed fd
-    pub fn new(fd: RawFd) -> Self {
-        AutoCloseFd { fd_: fd }
-    }
-
-    // Create a new AutoCloseFd without an open fd
-    pub fn empty() -> Self {
-        AutoCloseFd { fd_: -1 }
-    }
-}
-
-impl FromRawFd for AutoCloseFd {
-    unsafe fn from_raw_fd(fd: RawFd) -> Self {
-        AutoCloseFd { fd_: fd }
-    }
-}
-
-impl AsRawFd for AutoCloseFd {
-    fn as_raw_fd(&self) -> RawFd {
-        self.fd()
-    }
-}
-
-impl AsFd for AutoCloseFd {
-    fn as_fd(&self) -> BorrowedFd<'_> {
-        unsafe { BorrowedFd::borrow_raw(self.fd()) }
-    }
-}
-
-impl Default for AutoCloseFd {
-    fn default() -> AutoCloseFd {
-        AutoCloseFd { fd_: -1 }
-    }
-}
-
-impl Drop for AutoCloseFd {
-    fn drop(&mut self) {
-        self.close()
-    }
-}
 
 /// Helper type returned from make_autoclose_pipes.
 pub struct AutoClosePipes {

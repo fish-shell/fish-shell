@@ -1,9 +1,7 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
 use crate::common::{EMPTY_STRING, bytes2wcstring, wcs2bytes};
 use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
-use crate::fds::{
-    AutoCloseFd, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
-};
+use crate::fds::{PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec};
 use crate::flog::{flog, flogf, should_flog};
 use crate::nix::isatty;
 use crate::path::path_apply_working_directory;
@@ -21,7 +19,7 @@ use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use std::fs::File;
 use std::io;
-use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd, OwnedFd, RawFd};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
@@ -439,28 +437,31 @@ impl IoBuffer {
         amt
     }
 
-    pub fn read_all_available(&self, fd: &AutoCloseFd) {
+    pub fn read_all_available(&self, fd: BorrowedFd) {
         let mut locked_buff = self.0.lock().unwrap();
         self.do_read_all_available(fd, &mut locked_buff);
     }
 
     fn do_read_all_available(
         &self,
-        fd: &AutoCloseFd,
+        fd: BorrowedFd,
         locked_buff: &mut MutexGuard<'_, SeparatedBuffer>,
     ) {
         // Read any remaining data from the pipe.
-        while fd.is_valid() && IoBuffer::read_once(fd.as_raw_fd(), &mut *locked_buff) > 0 {
+        while IoBuffer::read_once(fd.as_raw_fd(), &mut *locked_buff) > 0 {
             // pass
         }
     }
 
     /// End the background fillthread operation, and return the buffer, transferring ownership.
     /// The read end of the pipe is provided.
-    pub fn complete_and_take_buffer(&self, fd: AutoCloseFd) -> SeparatedBuffer {
+    pub fn complete_and_take_buffer(&self, fd: Option<OwnedFd>) -> SeparatedBuffer {
         // Read any remaining data from the pipe.
         let mut locked_buff = self.0.lock().unwrap();
-        self.do_read_all_available(&fd, &mut locked_buff);
+
+        if let Some(fd) = fd {
+            self.do_read_all_available(fd.as_fd(), &mut locked_buff);
+        }
 
         // Return our buffer, transferring ownership.
         let mut result = SeparatedBuffer::new(locked_buff.limit());
@@ -487,17 +488,15 @@ fn begin_filling(iobuffer: IoBuffer, fd: OwnedFd) -> FdMonitorItemId {
     // In this case, when complete_background_fillthread() is called, we grab the file descriptor
     // and read until we get EAGAIN and then give up.
     // Run our function to read until the receiver is closed.
-    let item_callback: Callback = Box::new(move |fd: &mut AutoCloseFd| {
-        assert!(fd.as_raw_fd() >= 0, "Invalid fd");
+    let item_callback: Callback = Box::new(move |fd: &mut Option<OwnedFd>| {
         let mut buf = iobuffer.0.lock().unwrap();
-        let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
+        let ret = IoBuffer::read_once(fd.as_ref().unwrap().as_raw_fd(), &mut buf);
         if ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0)) {
             // Either it's finished or some other error - we're done.
-            fd.close();
+            drop(fd.take());
         }
     });
 
-    let fd = AutoCloseFd::new(fd.into_raw_fd());
     fd_monitor().add(fd, item_callback)
 }
 

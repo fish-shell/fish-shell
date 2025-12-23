@@ -11,7 +11,6 @@ use std::time::Duration;
 
 use crate::common::exit_without_destructors;
 use crate::fd_readable_set::{FdReadableSet, Timeout};
-use crate::fds::AutoCloseFd;
 use crate::flog::flog;
 use crate::threads::assert_is_background_thread;
 use crate::wutil::perror;
@@ -185,13 +184,13 @@ impl From<u64> for FdMonitorItemId {
 /// The callback type used by [`FdMonitorItem`]. It is passed a mutable reference to the
 /// `FdMonitorItem`'s [`FdMonitorItem::fd`]. If the fd is closed, the callback will not
 /// be invoked again.
-pub type Callback = Box<dyn Fn(&mut AutoCloseFd) + Send + Sync>;
+pub type Callback = Box<dyn Fn(&mut Option<OwnedFd>) + Send + Sync>;
 
 /// An item containing an fd and callback, which can be monitored to watch when it becomes readable
 /// and invoke the callback.
 pub struct FdMonitorItem {
     /// The fd to monitor
-    fd: AutoCloseFd,
+    fd: Option<OwnedFd>,
     /// A callback to be invoked when the fd is readable, or for another reason given by the wake reason.
     /// If the fd is invalid on return from the function, then the item is removed from the [`FdMonitor`] set.
     callback: Callback,
@@ -249,12 +248,13 @@ struct BackgroundFdMonitor {
 
 impl FdMonitor {
     /// Add an item to the monitor. Returns the [`FdMonitorItemId`] assigned to the item.
-    pub fn add(&self, fd: AutoCloseFd, callback: Callback) -> FdMonitorItemId {
-        assert!(fd.is_valid());
-
+    pub fn add(&self, fd: OwnedFd, callback: Callback) -> FdMonitorItemId {
         let item_id = self.last_id.fetch_add(1, Ordering::Relaxed) + 1;
         let item_id = FdMonitorItemId(item_id);
-        let item: FdMonitorItem = FdMonitorItem { fd, callback };
+        let item: FdMonitorItem = FdMonitorItem {
+            fd: Some(fd),
+            callback,
+        };
         let start_thread = {
             // Lock around a local region
             let mut data = self.data.lock().expect("Mutex poisoned!");
@@ -286,16 +286,18 @@ impl FdMonitor {
         item_id
     }
 
-    pub fn with_fd(&self, item_id: FdMonitorItemId, cb: impl FnOnce(&AutoCloseFd)) {
+    pub fn with_fd(&self, item_id: FdMonitorItemId, cb: impl FnOnce(BorrowedFd)) {
         let data = self.data.lock().expect("Mutex poisoned!");
-        cb(&data.items.get(&item_id).unwrap().fd);
+        if let Some(fd) = &data.items.get(&item_id).unwrap().fd {
+            cb(fd.as_fd());
+        }
     }
 
     /// Remove an item from the monitor and return its file descriptor.
     /// Note we may remove an item whose fd is currently being waited on in select(); this is
     /// considered benign because the underlying item will no longer be present and so its
     /// callback will not be invoked.
-    pub fn remove_item(&self, item_id: FdMonitorItemId) -> AutoCloseFd {
+    pub fn remove_item(&self, item_id: FdMonitorItemId) -> Option<OwnedFd> {
         assert!(item_id.0 > 0, "Invalid item id!");
         let mut data = self.data.lock().expect("Mutex poisoned!");
         let removed = data.items.remove(&item_id).expect("Item ID not found");
@@ -374,9 +376,8 @@ impl BackgroundFdMonitor {
             item_ids.clear();
             item_ids.reserve(data.items.len());
             for (item_id, item) in &data.items {
-                let fd = item.fd.as_raw_fd();
-                if fd >= 0 {
-                    fds.add(fd);
+                if let Some(fd) = &item.fd {
+                    fds.add(fd.as_raw_fd());
                     item_ids.push(*item_id);
                 }
             }
@@ -423,7 +424,7 @@ impl BackgroundFdMonitor {
                     // Note there is no risk of an ABA problem because ItemIDs are never recycled.
                     continue;
                 };
-                if fds.test(item.fd.as_raw_fd()) {
+                if item.fd.as_ref().is_some_and(|fd| fds.test(fd.as_raw_fd())) {
                     item.service();
                 }
             }
@@ -472,7 +473,7 @@ mod tests {
     use portable_atomic::AtomicU64;
     use std::fs::File;
     use std::io::Write;
-    use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd};
+    use std::os::fd::{AsRawFd, OwnedFd};
     #[cfg(target_has_atomic = "64")]
     use std::sync::atomic::AtomicU64;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -484,7 +485,7 @@ mod tests {
 
     use crate::fd_monitor::{FdEventSignaller, FdMonitor};
     use crate::fd_readable_set::{FdReadableSet, Timeout};
-    use crate::fds::{AutoCloseFd, AutoClosePipes, make_autoclose_pipes};
+    use crate::fds::{AutoClosePipes, make_autoclose_pipes};
     use crate::tests::prelude::*;
 
     /// Helper to make an item which counts how many times its callback was invoked.
@@ -520,25 +521,25 @@ mod tests {
             let result = Arc::new(result);
             let callback = {
                 let result = Arc::clone(&result);
-                move |fd: &mut AutoCloseFd| result.callback(fd)
+                move |fd: &mut Option<OwnedFd>| result.callback(fd)
             };
-            let fd = AutoCloseFd::new(pipes.read.into_raw_fd());
+            let fd = pipes.read;
             let item_id = monitor.add(fd, Box::new(callback));
             result.item_id.store(u64::from(item_id), Ordering::Relaxed);
 
             result
         }
 
-        fn callback(&self, fd: &mut AutoCloseFd) {
+        fn callback(&self, fd: &mut Option<OwnedFd>) {
             let mut buf = [0u8; 1024];
-            let res = nix::unistd::read(&fd, &mut buf);
+            let res = nix::unistd::read(fd.as_ref().unwrap(), &mut buf);
             let amt = res.expect("read error!");
             self.length_read.fetch_add(amt, Ordering::Relaxed);
             let was_closed = amt == 0;
 
             self.total_calls.fetch_add(1, Ordering::Relaxed);
             if was_closed || self.always_close {
-                fd.close();
+                drop(fd.take());
             }
         }
 

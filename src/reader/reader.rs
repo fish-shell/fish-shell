@@ -36,6 +36,8 @@ use std::num::NonZeroUsize;
 use std::ops::ControlFlow;
 use std::ops::Range;
 use std::os::fd::BorrowedFd;
+use std::os::fd::FromRawFd;
+use std::os::fd::OwnedFd;
 use std::os::fd::{AsRawFd, RawFd};
 use std::pin::Pin;
 #[cfg(target_has_atomic = "64")]
@@ -72,7 +74,7 @@ use crate::exec::exec_subshell;
 use crate::expand::expand_one;
 use crate::expand::{ExpandFlags, ExpandResultCode, expand_string, expand_tilde};
 use crate::fd_readable_set::poll_fd_readable;
-use crate::fds::{AutoCloseFd, make_fd_blocking, wopen_cloexec};
+use crate::fds::{make_fd_blocking, wopen_cloexec};
 use crate::flog::{flog, flogf};
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
@@ -5948,14 +5950,19 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
         }
 
         // Open the tty. Presumably this is stdin, but maybe not?
-        let tty_fd = AutoCloseFd::new(unsafe { libc::open(tty, O_RDONLY | O_NONBLOCK) });
-        if !tty_fd.is_valid() {
-            perror("open");
-            exit_without_destructors(1);
-        }
+        let tty_fd = {
+            let res = unsafe { libc::open(tty, O_RDONLY | O_NONBLOCK) };
+            if res < 0 {
+                perror("open");
+                exit_without_destructors(1);
+            }
+            unsafe { OwnedFd::from_raw_fd(res) }
+        };
 
         let mut tmp = 0 as libc::c_char;
-        if unsafe { libc::read(tty_fd.fd(), (&raw mut tmp).cast(), 1) } < 0 && errno().0 == EIO {
+        if unsafe { libc::read(tty_fd.as_raw_fd(), (&raw mut tmp).cast(), 1) } < 0
+            && errno().0 == EIO
+        {
             we_think_we_are_orphaned = true;
         }
     }

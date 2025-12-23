@@ -103,9 +103,7 @@ impl FdReadableSet {
                 &mut tvs
             }
         };
-        unsafe {
-            return libc::select(self.nfds_, &mut self.fdset_, null, null, timeout);
-        }
+        unsafe { libc::select(self.nfds_, &mut self.fdset_, null, null, timeout) }
     }
 
     /// Check if a single fd is readable, with a given timeout.
@@ -117,13 +115,13 @@ impl FdReadableSet {
         let mut s = Self::new();
         s.add(fd);
         let res = s.check_readable(timeout);
-        return res > 0 && s.test(fd);
+        res > 0 && s.test(fd)
     }
 
     /// Check if a single fd is readable, without blocking.
     /// Returns `true` if readable, `false` if not.
     pub fn poll_fd_readable(fd: RawFd) -> bool {
-        return Self::is_fd_readable(fd, Timeout::ZERO);
+        Self::is_fd_readable(fd, Timeout::ZERO)
     }
 }
 

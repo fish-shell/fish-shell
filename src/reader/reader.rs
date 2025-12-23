@@ -6113,11 +6113,8 @@ impl<'a> Reader<'a> {
             } else {
                 PersistenceMode::Disk
             };
-            self.history.clone().add_pending_with_file_detection(
-                &text,
-                &self.parser.variables,
-                mode,
-            );
+            self.history
+                .add_pending_with_file_detection(&text, &self.parser.variables, mode);
         }
     }
 

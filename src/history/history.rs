@@ -1256,7 +1256,7 @@ impl History {
     /// determine which arguments are paths. Arguments may be expanded (e.g. with PWD and variables)
     /// using the given `vars`. The item has the given `persist_mode`.
     pub fn add_pending_with_file_detection(
-        self: Arc<Self>,
+        self: &Arc<Self>,
         s: &wstr,
         vars: &EnvStack,
         persist_mode: PersistenceMode, /*=disk*/
@@ -1318,10 +1318,11 @@ impl History {
             let thread_pool = Arc::clone(&imp.thread_pool);
             drop(imp);
             let vars_snapshot = vars.snapshot();
+            let self_clone = Arc::clone(self);
             thread_pool.perform(move || {
                 // Don't hold the lock while we perform this file detection.
                 let valid_file_paths = expand_and_detect_paths(potential_paths, &vars_snapshot);
-                let mut imp = self.imp();
+                let mut imp = self_clone.imp();
                 if !valid_file_paths.is_empty() {
                     imp.set_valid_file_paths(valid_file_paths, &snapshot_item);
                 }
@@ -2275,47 +2276,47 @@ mod tests {
         let history = History::with_name(L!("path_detection"));
         history.clear();
         assert_eq!(history.size(), 0);
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd0 not/a/valid/path"),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             &(L!("cmd1 ").to_owned() + filename),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             &(L!("cmd2 ").to_owned() + &wfile_path[..]),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             &(L!("cmd3  $HOME/").to_owned() + filename),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd4  $HOME/notafile"),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             &(L!("cmd5  ~/").to_owned() + filename),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd6  ~/notafile"),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd7  ~/*f*"),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd8  ~/*zzz*"),
             &test_vars,
             PersistenceMode::Disk,

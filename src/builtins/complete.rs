@@ -452,7 +452,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     parser.is_interactive(),
                     false,
                 ));
-                streams.err.push('\n');
+                streams.err.append_char('\n');
             }
             return Err(STATUS_CMD_ERROR);
         }
@@ -470,7 +470,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 comp
             ));
             streams.err.append(err_text);
-            streams.err.push('\n');
+            streams.err.append_char('\n');
             return Err(STATUS_CMD_ERROR);
         }
     }

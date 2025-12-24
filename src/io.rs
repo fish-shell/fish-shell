@@ -709,15 +709,6 @@ impl OutputStream {
     pub fn append_char(&mut self, c: char) -> bool {
         self.append(wstr::from_char_slice(&[c]))
     }
-    pub fn append1(&mut self, c: char) -> bool {
-        self.append_char(c)
-    }
-    pub fn push_back(&mut self, c: char) -> bool {
-        self.append_char(c)
-    }
-    pub fn push(&mut self, c: char) -> bool {
-        self.append(wstr::from_char_slice(&[c]))
-    }
 
     pub fn append_narrow(&mut self, s: &str) -> bool {
         self.append(bytes2wcstring(s.as_bytes()))

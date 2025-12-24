@@ -672,7 +672,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
     if EnvVar::flags_for(var_name).contains(EnvVarFlags::READ_ONLY) {
         streams.out.append(wgettext!(" (read-only)\n"));
     } else {
-        streams.out.push('\n');
+        streams.out.append_char('\n');
     }
 
     for i in 0..vals.len() {
@@ -684,7 +684,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
                 } else {
                     get_ellipsis_str()
                 });
-                streams.out.push('\n');
+                streams.out.append_char('\n');
             }
             if i >= 50 && i < vals.len() - 50 {
                 continue;

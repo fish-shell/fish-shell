@@ -42,7 +42,7 @@ impl StringSubCommand<'_> for Unescape {
             if let Some(res) = unescape_string(&arg, self.style) {
                 streams.out.append(res);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append_char('\n');
                 }
                 nesc += 1;
             }

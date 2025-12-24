@@ -160,7 +160,7 @@ fn write_part(
         } else {
             streams.out.append(&buffer[range]);
         }
-        streams.out.push('\n');
+        streams.out.append_char('\n');
         return;
     };
 

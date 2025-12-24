@@ -116,7 +116,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             if !self.quiet && (!self.filter || replaced) {
                 streams.out.append(result);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append_char('\n');
                 }
             }
 

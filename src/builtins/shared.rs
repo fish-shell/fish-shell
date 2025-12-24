@@ -697,12 +697,12 @@ pub fn builtin_unexpected_argument(
 
 /// Print the backtrace and call for help that we use at the end of error messages.
 pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &wstr) {
-    b.push('\n');
+    b.append_char('\n');
     let stacktrace = parser.current_line();
     // Don't print two empty lines if we don't have a stacktrace.
     if !stacktrace.is_empty() {
         b.append(stacktrace);
-        b.push('\n');
+        b.append_char('\n');
     }
     b.append(wgettext_fmt!(
         "(Type 'help %s' for related documentation)\n",
@@ -719,7 +719,7 @@ pub fn builtin_wperror(program_name: &wstr, streams: &mut IoStreams) {
     if err.0 != 0 {
         let werr = WString::from_str(&err.to_string());
         streams.err.append(werr);
-        streams.err.push('\n');
+        streams.err.append_char('\n');
     }
 }
 

@@ -1,23 +1,6 @@
-#[cfg(feature = "localize-messages")]
-use crate::env::EnvStack;
 use fish_wchar::{L, WString, wstr};
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
-
-#[cfg(not(feature = "localize-messages"))]
-pub fn initialize_gettext() {}
-
-/// This function only exists to provide a way for initializing gettext before an [`EnvStack`] is
-/// available. Without this, early error messages cannot be localized.
-#[cfg(feature = "localize-messages")]
-pub fn initialize_gettext() {
-    let vars = EnvStack::new();
-    env_stack_set_from_env!(vars, "LANGUAGE");
-    env_stack_set_from_env!(vars, "LC_ALL");
-    env_stack_set_from_env!(vars, "LC_MESSAGES");
-    env_stack_set_from_env!(vars, "LANG");
-    super::update_from_env(&vars);
-}
 
 /// Use this function to localize a message.
 /// The [`MaybeStatic`] wrapper type allows avoiding allocating and leaking a new [`wstr`] when no

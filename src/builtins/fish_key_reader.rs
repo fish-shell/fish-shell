@@ -289,7 +289,8 @@ fn throwing_main() -> i32 {
     set_interactive_session(true);
     topic_monitor_init();
     threads::init();
-    crate::localization::initialize_gettext();
+    #[cfg(feature = "localize-messages")]
+    crate::localization::initialize_localization();
     env_init(None, true, false);
     reader_init(false);
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {

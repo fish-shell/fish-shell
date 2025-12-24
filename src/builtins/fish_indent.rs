@@ -930,7 +930,8 @@ fn throwing_main() -> i32 {
     unsafe {
         set_libc_locales(/*log_ok=*/ false)
     };
-    crate::localization::initialize_gettext();
+    #[cfg(feature = "localize-messages")]
+    crate::localization::initialize_localization();
     env_init(None, true, false);
 
     // Only set these here so you can't set them via the builtin.

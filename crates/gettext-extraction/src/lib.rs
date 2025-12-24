@@ -71,7 +71,7 @@ fn write_po_entry_to_file(message: &TokenStream, dir: &OsString) {
 
 /// The `message` is passed through unmodified.
 /// If `FISH_GETTEXT_EXTRACTION_DIR` is defined in the environment,
-/// this file is used to write the message,
+/// the message ID is written into a new file in this directory,
 /// so that it can then be used for generating gettext PO files.
 /// The `message` must be a string literal.
 ///

@@ -62,7 +62,7 @@ set --erase --universal fish_key_bindings"
     if $removing_uvars
         set -Ue fish_key_bindings $theme_uvars
         set -l sh (__fish_posix_shell)
-        $sh -c "sleep 7 # Please read above notice about universal variables" &
+        eval "$sh -c 'sleep 7 # Please read above notice about universal variables' &"
     end
 end
 

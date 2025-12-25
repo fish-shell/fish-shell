@@ -14,9 +14,9 @@ fish_color_escape 00a6b2
 fish_color_history_current --bold
 fish_color_host normal
 fish_color_host_remote yellow
-fish_color_keyword 009999
+# fish_color_keyword $fish_color_command
 fish_color_operator 00a6b2
-fish_color_option 33CCCC
+# fish_color_option $fish_color_param
 fish_color_param 33CCCC
 fish_color_quote 5CCCCC
 fish_color_redirection BF7130

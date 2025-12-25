@@ -16,9 +16,9 @@ fish_color_escape 00a6b2
 fish_color_history_current --bold
 fish_color_host normal
 fish_color_host_remote yellow
-fish_color_keyword 8959a8
+# fish_color_keyword $fish_color_command
 fish_color_operator 00a6b2
-fish_color_option 4271ae
+# fish_color_option $fish_color_param
 fish_color_param 4271ae
 fish_color_quote 718c00
 fish_color_redirection 3e999f
@@ -60,7 +60,7 @@ fish_pager_color_description B3A06D yellow
 fish_pager_color_prefix normal --bold --underline
 fish_pager_color_progress brwhite --background=cyan --bold
 fish_pager_color_selected_background --background=brblack
-fish_color_option 81a2be
-fish_color_keyword b294bb
+# fish_color_option $fish_color_param
+# fish_color_keyword $fish_color_command
 fish_color_host_remote yellow
 fish_color_status red

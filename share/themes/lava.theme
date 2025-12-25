@@ -26,7 +26,7 @@ fish_pager_color_description B3A06D yellow
 fish_pager_color_prefix normal --bold --underline
 fish_pager_color_progress brwhite --background=cyan --bold
 fish_pager_color_selected_background --background=brblack
-fish_color_option FFC000
-fish_color_keyword FF9400
+# fish_color_option $fish_color_param
+# fish_color_keyword $fish_color_command
 fish_color_host_remote yellow
 fish_color_status red

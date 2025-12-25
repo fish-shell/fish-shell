@@ -15,9 +15,9 @@ fish_color_escape 00cdcd
 fish_color_history_current --bold
 fish_color_host 000000
 fish_color_host_remote a0a000
-fish_color_keyword 0000ee
+# fish_color_keyword $fish_color_command
 fish_color_operator 00cdcd
-fish_color_option 00a0a0
+# fish_color_option $fish_color_param
 fish_color_param 00a0a0
 fish_color_quote a0a000
 fish_color_redirection 00a0a0 --bold
@@ -49,9 +49,9 @@ fish_color_escape 00ffff
 fish_color_history_current --bold
 fish_color_host ffffff
 fish_color_host_remote cdcd00
-fish_color_keyword 5c5cff
+# fish_color_keyword $fish_color_command
 fish_color_operator 00ffff
-fish_color_option 00cdcd
+# fish_color_option $fish_color_param
 fish_color_param 00cdcd
 fish_color_quote cdcd00
 fish_color_redirection 00cdcd --bold
@@ -83,9 +83,9 @@ fish_color_escape brcyan
 fish_color_history_current --bold
 fish_color_host normal
 fish_color_host_remote yellow
-fish_color_keyword normal
+# fish_color_keyword $fish_color_command
 fish_color_operator brcyan
-fish_color_option cyan
+# fish_color_option $fish_color_param
 fish_color_param cyan
 fish_color_quote yellow
 fish_color_redirection cyan --bold

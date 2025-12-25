@@ -47,6 +47,12 @@ function __fish_set_is_locale -d 'Test if We are specifying a locale value for t
     return 1
 end
 
+function __fish_complete_special_vars_ifndef -a varname description
+    if not set -q $varname
+        printf "%s\t%s\n" $varname "Undefined Variable; $description"
+    end
+end
+
 function __fish_complete_special_vars
     printf "%s\t%s\n" \
         PATH "list of dirs to look for commands in" \
@@ -69,7 +75,8 @@ function __fish_complete_special_vars
         fish_trace "Enables execution tracing (if set to non-empty value)" \
         fish_transient_prompt "set to 1 to re-run prompts before pushing them to scrollback" \
         fish_user_paths "A list of dirs to prepend to PATH"
-
+    __fish_complete_special_vars_ifndef fish_color_option 'defaults to $fish_color_param'
+    __fish_complete_special_vars_ifndef fish_color_keyword 'defaults to $fish_color_command'
 end
 
 #

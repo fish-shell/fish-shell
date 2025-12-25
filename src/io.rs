@@ -464,10 +464,8 @@ impl IoBuffer {
         }
 
         // Return our buffer, transferring ownership.
-        let mut result = SeparatedBuffer::new(locked_buff.limit());
-        std::mem::swap(&mut result, &mut locked_buff);
-        locked_buff.clear();
-        result
+        let limit = locked_buff.limit();
+        std::mem::replace(&mut locked_buff, SeparatedBuffer::new(limit))
     }
 }
 

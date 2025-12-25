@@ -200,7 +200,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
         }
         self.state.emit_newline();
 
-        std::mem::replace(&mut self.state.output, WString::new())
+        std::mem::take(&mut self.state.output)
     }
 
     // Return the gap ranges from our ast.

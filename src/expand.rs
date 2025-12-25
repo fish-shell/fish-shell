@@ -154,8 +154,7 @@ pub fn expand_string(
     ctx: &OperationContext,
     errors: Option<&mut ParseErrorList>,
 ) -> ExpandResult {
-    let mut completions = vec![];
-    std::mem::swap(&mut completions, out_completions);
+    let completions = std::mem::take(out_completions);
     let mut recv = CompletionReceiver::from_list(completions, ctx.expansion_limit);
     let result = expand_to_receiver(input, &mut recv, flags, ctx, errors);
     *out_completions = recv.take();
@@ -188,18 +187,17 @@ pub fn expand_one(
     ctx: &OperationContext,
     errors: Option<&mut ParseErrorList>,
 ) -> bool {
-    let mut completions = CompletionList::new();
-
     if !flags.contains(ExpandFlags::FOR_COMPLETIONS) && expand_is_clean(s) {
         return true;
     }
 
-    let mut tmp = WString::new();
-    std::mem::swap(s, &mut tmp);
-    if expand_string(tmp, &mut completions, flags, ctx, errors) == ExpandResultCode::ok
-        && completions.len() == 1
-    {
-        std::mem::swap(s, &mut completions[0].completion);
+    let mut completions = CompletionList::new();
+    let input = std::mem::take(s);
+
+    let ok = expand_string(input, &mut completions, flags, ctx, errors) == ExpandResultCode::ok;
+
+    if ok && completions.len() == 1 {
+        *s = std::mem::take(&mut completions[0].completion);
         return true;
     }
 

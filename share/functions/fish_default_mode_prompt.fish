@@ -18,6 +18,20 @@ function fish_default_mode_prompt --description "Display vi prompt mode"
             case visual
                 set_color --bold magenta
                 echo '[V]'
+            case operator
+                set_color --bold cyan
+                set -l op d
+                switch $__fish_vi_operator
+                    case change
+                        set op c
+                    case delete
+                        set op d
+                    case yank
+                        set op y
+                    case swap-case
+                        set op '~'
+                end
+                echo "[$op]"
         end
         set_color normal
         echo -n ' '

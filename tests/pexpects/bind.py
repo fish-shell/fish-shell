@@ -270,10 +270,58 @@ sleep(0.200)
 send("0$i34\r")
 expect_prompt("echo 12345")
 
+# Test operator mode with count (d3w)
+send("echo one two three four five")
+send("\033")
+sleep(0.200)
+send("0w")
+send("d3w")
+sendline("")
+expect_prompt("echo four five")
+
+# Test count before operator (3dw)
+send("echo one two three four five")
+send("\033")
+sleep(0.200)
+send("0w")
+send("3dw")
+sendline("")
+expect_prompt("echo four five")
+
+# Test count on both (2d2w -> 4 words)
+send("echo one two three four five six")
+send("\033")
+sleep(0.200)
+send("0w")
+send("2d2w")
+sendline("")
+expect_prompt("echo five six")
+
+# Test change operator with count (c2w)
+send("echo one two three")
+send("\033")
+sleep(0.200)
+send("0w")
+send("c2wREPLACED")
+sendline("")
+expect_prompt("echo REPLACEDthree")
+
+# Test escape cancelling count
+send("echo one two three")
+send("\033")
+sleep(0.200)
+send("0w")
+send("3")
+send("\033")
+sleep(0.100)
+send("dw")
+sendline("")
+expect_prompt("echo two three")
+
 # Now test that exactly the expected bind modes are defined
 sendline("bind --list-modes")
 expect_prompt(
-    "default\r\ninsert\r\nreplace\r\nreplace_one\r\nvisual\r\n",
+    "default\r\ninsert\r\noperator\r\nreplace\r\nreplace_one\r\nvisual\r\n",
     unmatched="Unexpected vi bind modes",
 )
 

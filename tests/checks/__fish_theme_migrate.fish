@@ -31,10 +31,13 @@ echo no default universal variables
 
     provoke-migration
     $fish -c __fish_theme_migrate
-    # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{.*}}
+    # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{upgraded.*}}
+    # CHECK: {{.*Color.*no.longer.*universal.*}}
     # CHECK: Migrated {{.*}} {{\S*}}/xdg_config_home/fish/conf.d/fish_frozen_theme.fish{{\x1b\[m}}
-    # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{.*}}
+    # CHECK: {{.*restart.*}}
+    # CHECK: {{.*fish_key_bindings.*no.longer.*universal.*}}
     # CHECK: Migrated {{.*}} {{\S*}}/xdg_config_home/fish/conf.d/fish_frozen_key_bindings.fish{{\x1b\[m}}
+    # CHECK: {{.*help relnotes.*}}
     grep -v '^#' $__fish_config_dir/conf.d/fish_frozen_theme.fish | grep . | head -3
     # CHECK: set --global fish_color_autosuggestion 7f7f7f
     # CHECK: set --global fish_color_cancel ffffff --background=000000
@@ -54,13 +57,17 @@ echo no default universal variables
     set -Ue fish_color_autosuggestion
 }
 
-# If existing universal variables match old defaults exactly (common case), pretend they don't
-# exist at all (silently delete them).
+# If existing universal colors match old defaults exactly (common case), don't migrate but
+# delete them.
 {
     echo yes | fish_config theme save default --color-theme=unknown
     fake-old-uvars
     provoke-migration
     $fish -c __fish_theme_migrate
+    # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{upgraded.*}}
+    # CHECK: {{.*Color.*no.longer.*universal.*}}
+    # CHECK: {{.*restart.*}}
+    # CHECK: {{.*help relnotes.*}}
     not path is $__fish_config_dir/conf.d/fish_frozen_theme.fish
     and echo ok
     # CHECK: ok
@@ -86,14 +93,18 @@ echo no default universal variables
     '
 }
 
-# If existing universal variables match old defaults exactly (common case),
-# don't migrate them and silently delete them).
+# If existing universal key bindings match old defaults exactly (common case), don't migrate
+# but delete them).
 {
     set -U fish_key_bindings fish_vi_key_bindings
     provoke-migration
     $fish -c __fish_theme_migrate
-    # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{.*}}.
+    # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{upgraded.*}}
+    # CHECK: {{.*Color.*no.longer.*universal.*}}
+    # CHECK: {{.*restart.*}}
+    # CHECK: {{.*fish_key_bindings.*no.longer.*universal.*}}
     # CHECK: Migrated {{.*}} {{\S*}}/xdg_config_home/fish/conf.d/fish_frozen_key_bindings.fish{{\x1b\[m}}
+    # CHECK: {{.*help relnotes.*}}
     path is $__fish_config_dir/conf.d/fish_frozen_key_bindings.fish
     and echo ok
     # CHECK: ok

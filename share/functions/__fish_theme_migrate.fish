@@ -8,9 +8,11 @@ function __fish_theme_migrate
     end
 
     set -l removing_uvars false
+    set -l msg
     # Copy legacy uvars to globals.
     if set -l theme_uvars (__fish_theme_variables --universal)
         set removing_uvars true
+        set -l msg_suffix .
         if not __fish_config_theme_uvars_subset_of_historical_default $theme_uvars
             for varname in $theme_uvars
                 set -g $varname $$varname
@@ -20,11 +22,12 @@ function __fish_theme_migrate
                 set -a theme_data "$(string escape -- $varname $$varname | string join " ")"
             end
             __fish_theme_freeze __fish_theme_migrate $theme_data
-            echo -s (set_color --bold) 'fish:' (set_color normal)' color variables are no longer set in universal scope by default.'
-            echo "Migrated them to global variables set in $(set_color --underline)$(
+            set msg_suffix " by default."\n"  Migrated them to global variables set in $(set_color --underline)$(
                     __fish_unexpand_tilde $__fish_config_dir/conf.d/fish_frozen_theme.fish
                 )$(set_color normal)"
         end
+        set -a msg "* Color variables are no longer set in universal scope$msg_suffix"
+        set -a msg '  To restore syntax highlighting in other fish sessions, please restart them.'
     end
     if set -Uq fish_key_bindings
         set removing_uvars true
@@ -32,10 +35,10 @@ function __fish_theme_migrate
         set -l filename $__fish_config_dir/$relative_filename
         __fish_backup_config_files $relative_filename
         echo >$filename "\
-# This file was created by fish to migrate the 'fish_key_bindings' variable
-# from its old default scope (universal) to its new default scope (global).
-# It is recommended you delete this file and configure key bindings however
-# you prefer.
+# This file was created by fish when upgrading to version 4.3, to migrate
+# the 'fish_key_bindings' variable from its old default scope (universal)
+# to its new default scope (global).  We recommend you delete this file
+# and configure key bindings in ~/.config/fish/config.fish if needed.
 
 $(
     # No need to freeze the default value.
@@ -50,16 +53,19 @@ $(
 # whenever the fish_key_bindings variable is erased.
 # This means that as long as any fish < 4.3 is still running on this system,
 # we cannot complete the migration.
-# As a workaround, we erase the universal variable at every shell startup.
+# As a workaround, erase the universal variable at every shell startup.
 set --erase --universal fish_key_bindings"
-        echo -s (set_color --bold) 'fish:' (set_color normal) ' the fish_key_bindings variable is no longer set in universal scope by default.'
-        echo -s "Migrated it to a global variable set in  " \
+        set -a msg '* The fish_key_bindings variable is no longer set in universal scope by default.'
+        set -a msg (echo -s "  Migrated it to a global variable set in  " \
             "$(set_color --underline)$(__fish_unexpand_tilde $filename)" \
-            (set_color normal)
+            (set_color normal))
         source $__fish_config_dir/$relative_filename
     end
     set -U __fish_initialized 4300
     if $removing_uvars
+        echo -s (set_color --bold) 'fish:' (set_color normal) " upgraded to version 4.3:"
+        string join \n -- $msg
+        echo 'See also the release notes (type `help relnotes`).'
         set -Ue fish_key_bindings $theme_uvars
         set -l sh (__fish_posix_shell)
         eval "$sh -c 'sleep 7 # Please read above notice about universal variables' &"

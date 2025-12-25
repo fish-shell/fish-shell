@@ -299,7 +299,7 @@ Optional Commands
 DCS commands and GNU screen
 ---------------------------
 
-Fully-correct DCS parsing is optional because fish switches to the alternate screen before printing any DCS commands.
+DCS parsing is optional because fish temporarily switches to the alternate screen before printing any DCS commands.
 However, since GNU screen neither allows turning on the alternate screen buffer by default,
 nor treats DCS commands in a compatible way,
 fish's initial prompt may be garbled by a DCS payload like ``+q696e646e``.

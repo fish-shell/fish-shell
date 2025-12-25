@@ -276,7 +276,7 @@ Optional Commands
      - Mark command end (OSC 133);  Ps is the exit status.
    * - .. _term-compat-xtgettcap:
 
-        ``\eP+q Pt \e\\``
+       ``\eP+q Pt \e\\``
      -
      - Request terminfo capability (XTGETTCAP).
        The parameter is the capability's hex-encoded terminfo code.

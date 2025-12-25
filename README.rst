@@ -159,7 +159,6 @@ In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), f
 - Rust_CARGO_TARGET=target - the target to pass to cargo. Set this for cross-compilation.
 - WITH_DOCS=ON|OFF - whether to build the documentation. By default, this is ON when Sphinx is installed.
 - FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
-- MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
 - WITH_GETTEXT=ON|OFF - whether to include translations.
 - extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
 

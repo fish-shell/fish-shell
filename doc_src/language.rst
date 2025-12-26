@@ -1625,8 +1625,9 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: fish_trace
 
-   if set and not empty, will cause fish to print commands before they execute, similar to ``set -x``
-   in bash. The trace is printed to the path given by the `--debug-output` option to fish or the :envvar:`FISH_DEBUG_OUTPUT` variable. It goes to stderr by default.
+   if set and not empty, will cause fish to print commands before they execute, similar to ``set -x`` in bash.
+   The trace is printed to the path given by the `--debug-output` option to fish or the :envvar:`FISH_DEBUG_OUTPUT` variable.
+   It goes to stderr by default.
 
 .. envvar:: FISH_DEBUG
 

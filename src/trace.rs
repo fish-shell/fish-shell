@@ -3,13 +3,18 @@ use crate::parser::Parser;
 use crate::{common::escape, global_safety::RelaxedAtomicBool, prelude::*};
 
 static DO_TRACE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static DO_TRACE_ALL: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
-pub fn trace_set_enabled(do_enable: bool) {
-    DO_TRACE.store(do_enable);
+pub fn trace_set_enabled(enable: Vec<WString>) {
+    DO_TRACE.store(!enable.is_empty());
+    DO_TRACE_ALL.store(enable.iter().any(|s| s == "all"));
 }
 
 /// return whether tracing is enabled.
 pub fn trace_enabled(parser: &Parser) -> bool {
+    if DO_TRACE_ALL.load() {
+        return true;
+    }
     if parser.scope().suppress_fish_trace {
         return false;
     }

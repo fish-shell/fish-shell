@@ -164,15 +164,6 @@ impl EnvVar {
         join_strings(&self.values, self.get_delimiter())
     }
 
-    /// Copies the variable's values into an existing list, avoiding reallocation if possible.
-    pub fn to_list(&self, out: &mut Vec<WString>) {
-        // Try to avoid reallocation as much as possible.
-        out.resize(self.values.len(), WString::new());
-        for (i, val) in self.values.iter().enumerate() {
-            out[i].clone_from(val);
-        }
-    }
-
     /// Returns the variable's values.
     pub fn as_list(&self) -> &[WString] {
         &self.values

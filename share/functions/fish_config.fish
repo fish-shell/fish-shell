@@ -285,7 +285,7 @@ function __fish_config_theme_choose
         return 0
     end
 
-    function __fish_apply_theme --on-variable fish_terminal_color_theme \
+    function __fish_apply_theme (test $cmd != save && printf %s\n --on-variable fish_terminal_color_theme) \
         -V theme_name -V desired_color_theme -V scope
         if set -q __fish_color_theme[1]
             set desired_color_theme $__fish_color_theme
@@ -357,7 +357,7 @@ function __fish_config_theme_choose
                     set -eg $varname
                 end
                 if $override || not set -q $varname || string match -rq -- '--theme=.*' $$varname
-                    set $scope $toks --theme=$theme_name
+                    set $scope $toks (test $scope != -U && echo --theme=$theme_name)
                 end
             end
         if $override

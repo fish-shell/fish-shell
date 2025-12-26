@@ -217,9 +217,8 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
 
     echo yes | fish_config theme save default
     set -S fish_color_normal
-    # CHECK: $fish_color_normal: set in universal scope, unexported, with 2 elements
+    # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
     # CHECK: $fish_color_normal[1]: |normal|
-    # CHECK: $fish_color_normal[2]: |--theme=default|
 }
 
 fish_config theme dump badarg

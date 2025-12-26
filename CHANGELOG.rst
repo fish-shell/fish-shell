@@ -1,57 +1,56 @@
 fish 4.3.0 (released ???)
 =========================
 
-Color and key binding variables are no longer set in universal scope
---------------------------------------------------------------------
-
-- fish no longer sets :ref:`universal variables <variables-universal>` by default.
-  Specifically, the ``fish_color_*``, ``fish_pager_color_*`` and ``fish_key_bindings`` variables are now set in the global scope by default.
-  After upgrading to 4.3.0, fish will (once and never again) migrate these universals to globals set at startup in
-  ``~/.config/fish/conf.d/fish_frozen_theme.fish`` and
-  ``~/.config/fish/conf.d/fish_frozen_key_bindings.fish``.
-  We suggest that you delete those files and manage the variables as you please.
-- You can still have theme changes propagate to all running shells instantly,
-  see :ref:`here <syntax-highlighting-instant-update>` for an example.
-- You can still opt into storing color variables in the universal scope
-  (via the deprecated ``fish_config theme save``) instead,
-  but that's not recommended because
-
-  1. it is at odds with dynamic theme switching based on the terminal's color theme (see below).
-  2. universal variables as a source of truth are easy to misunderstand,
-     compared to configuration files like ``config.fish``.
-
 Deprecations and removed features
 ---------------------------------
-- Erasing a color variable (e.g. by running ``set -e fish_color_command``)
+- fish no longer sets :ref:`universal variables <variables-universal>` by default.
+  Specifically, the ``fish_color_*``, ``fish_pager_color_*`` and ``fish_key_bindings`` variables are now set in the global scope by default.
+  After upgrading to 4.3.0, fish will (once and never again) migrate these universals to globals set at startup in the
+  ``~/.config/fish/conf.d/fish_frozen_theme.fish`` and
+  ``~/.config/fish/conf.d/fish_frozen_key_bindings.fish`` files.
+  We suggest that you delete those files and :ref:`set your theme <syntax-highlighting>` in your ``~/.config/fish/config.fish`` file.
+
+  - You can still configure fish to propagate theme changes; see :ref:`here <syntax-highlighting-instant-update>` for an example.
+  - You can still opt into storing color variables in the universal scope
+    (via the deprecated ``fish_config theme save``) instead.
+    It's no longer the recommended approach because
+
+    1. it is at odds with dynamic theme switching based on the terminal's color theme (see below).
+    2. universal variables as a source of truth are easy to misunderstand,
+       compared to configuration files like ``config.fish``.
+- Erasing a color variable (e.g. by running ``set --erase fish_color_command``)
   no longer prevents fish from overwriting it with the default theme's version.
-  To set a color to the terminal's default,
+  To set a color to its fallback value (which is :envvar:`fish_color_normal` for most colors),
   set it to an empty list (``set fish_color_command``) or an equivalent (``set fish_color_command normal``).
-- ``fish_config theme choose`` now clears only color variables that were set by earlier invocations of a ``fish_config theme choose`` command
-  (which includes fish's default theme).
+- In addition to setting the variables which are explicitly defined in the given theme,
+  ``fish_config theme choose`` now clears only color variables that were set by earlier invocations of a ``fish_config theme choose`` command
+  (which is how fish's default theme is set).
 
 Scripting improvements
 ----------------------
-- New :ref:`status language <status-language>` commands allow showing and modifying language settings for fish messages without having to modify environment variables.
-- When using a noninteractive fish instance to compute completions, ``commandline --cursor`` no works as expected instead of throwing an error (:issue:`11993`).
+- New :ref:`status language <status-language>` command allows showing and modifying language settings for fish messages without having to modify environment variables.
+- When using a noninteractive fish instance to compute completions, ``commandline --cursor`` works as expected instead of throwing an error (:issue:`11993`).
 - :envvar:`fish_trace` can now be set to ``all`` to also trace execution of key bindings, event handlers as well as prompt and title functions.
 
 Interactive improvements
 ------------------------
 - When typing immediately after starting fish, the first prompt is now rendered correctly.
 - Completion accuracy was improved for file paths containing ``=`` or ``:`` (:issue:`5363`).
-- Prefix-matching completions are now shown even if they don't have the case typed by the user (:issue:`7944`).
+- Prefix-matching completions are now shown even if they don't match the case typed by the user (:issue:`7944`).
 - On Cygwin/MSYS, command name completion will favor the non-exe name (``foo``) unless the user started typing the extension.
 - When using the exe name (``foo.exe``), fish will use to the description and completions for ``foo`` if there are none for ``foo.exe``.
 - Autosuggestions now also show soft-wrapped portions (:issue:`12045`).
 
 New or improved bindings
 ------------------------
-- Added `backward-path-component`, `forward-path-component` and `kill-path-component` (:issue:`12127`).
+- :kbd:`ctrl-w` (``backward-kill-path-component``) also deletes escaped spaces (:issue:`2016`).
+- New special input functions ``backward-path-component``, ``forward-path-component`` and ``kill-path-component`` (:issue:`12127`).
 
 Improved terminal support
 -------------------------
-- Themes can now be made color-theme-aware (i.e. light mode vs. dark mode) by including both ``[light]`` and ``[dark]`` sections in the :ref:`theme file <fish-config-theme-files>`.
-- Some default themes have been made color-theme-aware, meaning they dynamically adjust as your terminal's background color switches between light and dark colors (:issue:`11580`).
+- Themes can now be made color-theme-aware by including both ``[light]`` and ``[dark]`` sections in the :ref:`theme file <fish-config-theme-files>`.
+  Some default themes have been made color-theme-aware, meaning they dynamically adjust as your terminal's background color switches between light and dark colors (:issue:`11580`).
+- The working directory is now reported on every fresh prompt (via OSC 7), fixing scenarios where a child process (like ``ssh``) left behind a stale working directory (:issue:`12191`).
 - OSC 133 prompt markers now also mark the prompt end, which improves shell integration with terminals like iTerm2 (:issue:`11837`).
 - Operating-system-specific key bindings are now decided based on the :ref:`terminal's host OS <status-terminal-os>`.
 - Focus reporting is enabled unconditionally, not just inside tmux.
@@ -67,9 +66,9 @@ For distributors and developers
 
 Regression fixes:
 -----------------
-- (from 4.1.0) Crash on invalid colors variables (:issue:`12078`).
+- (from 4.1.0) Crash on incorrectly-set color variables (:issue:`12078`).
 - (from 4.2.0) Incorrect emoji width computation on macOS.
-- (from 4.2.0) Mouse clicks and :kbd:`ctrl-l` edge cases in multiline commandlines (:issue:`12121`).
+- (from 4.2.0) Mouse clicks and :kbd:`ctrl-l` edge cases in multiline command lines (:issue:`12121`).
 - (from 4.2.0) Completions for Git remote names on some non-glibc systems.
 
 fish 4.2.1 (released November 13, 2025)

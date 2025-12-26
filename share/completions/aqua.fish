@@ -1,0 +1,1 @@
+aqua completion fish | source

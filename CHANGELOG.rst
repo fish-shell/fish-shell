@@ -35,6 +35,9 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - When typing immediately after starting fish, the first prompt is now rendered correctly.
+- Setting :envvar:`fish_autocomplete_autoshow` to ``1`` now surfaces a live completion menu
+  using the same "cheap" completions that power autosuggestions, so the pager can appear
+  automatically while you type (:issue:`3567`).
 - Completion accuracy was improved for file paths containing ``=`` or ``:`` (:issue:`5363`).
 - Prefix-matching completions are now shown even if they don't match the case typed by the user (:issue:`7944`).
 - On Cygwin/MSYS, command name completion will favor the non-exe name (``foo``) unless the user started typing the extension.

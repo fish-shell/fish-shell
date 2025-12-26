@@ -158,10 +158,6 @@ msgid "%s, version %s"
 msgstr ""
 
 #, c-format
-msgid "%s, version %s\n"
-msgstr "%s, wersja %s\n"
-
-#, c-format
 msgid "%s: %s\n"
 msgstr ""
 
@@ -471,10 +467,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: Invalid max value '%s'\n"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'\n"
 msgstr ""
 
 #, c-format

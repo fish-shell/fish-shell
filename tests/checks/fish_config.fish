@@ -105,7 +105,6 @@ type fish_mode_prompt
 # CHECK: end
 
 fish_config theme choose non-existent-theme1
-__fish_apply_theme
 # CHECKERR: No such theme: non-existent-theme1
 # CHECKERR: Searched {{/\S* (/\S*|and `status list-files themes`)}}
 

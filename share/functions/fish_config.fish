@@ -289,8 +289,16 @@ function __fish_config_theme_choose
     __fish_config_theme_canonicalize
     set -l theme_data (type -q cat && __fish_theme_cat $theme_name)
     or return
+    set -l color_themes dark light unknown
+    set -l theme_is_color_theme_aware false
+    for ct in $color_themes
+        if contains -- [$ct] $theme_data
+            set theme_is_color_theme_aware true
+        end
+    end
     function __fish_apply_theme (test $cmd != save && printf %s\n --on-variable fish_terminal_color_theme) \
-        -V theme_name -V color_theme -V theme_data -V desired_color_theme -V scope
+        -V color_themes -V theme_name -V color_theme -V theme_data -V theme_is_color_theme_aware \
+        -V desired_color_theme -V scope
         if set -q __fish_color_theme[1]
             set desired_color_theme $__fish_color_theme
         end
@@ -299,13 +307,6 @@ function __fish_config_theme_choose
             set desired_color_theme $color_theme
         end
         set -l override (test -n "$__fish_override" && builtin echo true || builtin echo false)
-        set -l theme_is_color_theme_aware false
-        set -l color_themes dark light unknown
-        for ct in $color_themes
-            if contains -- [$ct] $theme_data
-                set theme_is_color_theme_aware true
-            end
-        end
 
         if $theme_is_color_theme_aware
             if set -q desired_color_theme[1]

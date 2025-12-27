@@ -377,7 +377,9 @@ function __fish_config_theme_choose
         end
     end
     if test -n "$fish_terminal_color_theme" || not $need_hook
-        if not set -q _flag_no_override[1]
+        if set -q _flag_no_override[1]
+            __fish_apply_theme
+        else
             __fish_override=true __fish_apply_theme
         end
     end

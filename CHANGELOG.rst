@@ -14,10 +14,6 @@ Deprecations and removed features
   - You can still opt into storing color variables in the universal scope
     via ``fish_config theme save`` though unlike ``fish_config theme choose``,
     it does not support dynamic theme switching based on the terminal's color theme (see below).
-- Erasing a color variable (e.g. by running ``set --erase fish_color_command``)
-  no longer prevents fish from overwriting it with the default theme's version.
-  To set a color to its fallback value (which is :envvar:`fish_color_normal` for most colors),
-  set it to an empty list (``set fish_color_command``) or an equivalent (``set fish_color_command normal``).
 - In addition to setting the variables which are explicitly defined in the given theme,
   ``fish_config theme choose`` now clears only color variables that were set by earlier invocations of a ``fish_config theme choose`` command
   (which is how fish's default theme is set).

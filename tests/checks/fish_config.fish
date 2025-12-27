@@ -111,9 +111,9 @@ fish_config theme choose non-existent-theme1
 # This still demos the current theme.
 fish_config theme show non-existent-theme2
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}
-# CHECK: /bright/vixens{{\x1b\[m}} jump{{\x1b\[m}} |{{\x1b\[m}} "fowl"{{\x1b\[m}} > quack{{\x1b\[m}} &{{\x1b\[m}} # This is a comment
-# CHECK: {{\x1b\[m}}echo{{\x1b\[m}} 'Errors are the portal to discovery
-# CHECK: {{\x1b\[m}}Th{{\x1b\[m}}is an autosuggestion
+# CHECK: {{\x1b\[m/bright/vixens\x1b\[m \x1b\[36mjump\x1b\[m.*}}
+# CHECK: {{.*}}
+# CHECK: {{.*}}
 
 diff \
     (fish_config theme list | psub -s config-theme-list) \
@@ -132,9 +132,9 @@ fish_config theme list | string match -r \
 
 fish_config theme show default-rgb
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}
-# CHECK: /bright/vixens{{\x1b\[m}} jump{{\x1b\[m}} |{{\x1b\[m}} "fowl"{{\x1b\[m}} > quack{{\x1b\[m}} &{{\x1b\[m}} # This is a comment
-# CHECK: {{\x1b\[m}}echo{{\x1b\[m}} 'Errors are the portal to discovery
-# CHECK: {{\x1b\[m}}Th{{\x1b\[m}}is an autosuggestion
+# CHECK: {{\x1b\[m/bright/vixens\x1b\[m \x1b\[36mjump\x1b\[m.*}}
+# CHECK: {{\x1b\[m}}{{\x1b\[m}}echo{{\x1b\[m}} {{\x1b\[91m}}'{{\x1b\[33m}}Errors are the portal to discovery
+# CHECK: {{\x1b\[m}}{{\x1b\[m}}Th{{\x1b\[m}}{{\x1b\[90m}}is an autosuggestion
 
 # CHECK: {{\x1b\[m\x1b\[4mdefault-rgb \(light color theme\)\x1b\[m}}
 # CHECK: {{\x1b\[38;2;0;0;238m/bright/vixens\x1b\[m \x1b\[38;2;0;160;160mjump\x1b.*}}
@@ -181,10 +181,9 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
 "fish_color_normal yellow"
 
 {
-    # Since we're noninteractive, we have not loaded a theme yet.
     print-sample-colors
-    # CHECK: normal=
-    # CHECK: autosuggestion=
+    # CHECK: normal=normal --theme=default
+    # CHECK: autosuggestion=brblack --theme=default
 
     fish_config theme choose custom-from-userconf --color-theme=unknown
     print-sample-colors

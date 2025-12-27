@@ -38,12 +38,14 @@ With the ``theme`` command ``fish_config`` can be used to view and choose a them
 Available subcommands for the ``theme`` command:
 
 - ``choose`` loads a theme in the current session.
+  If the theme has light and dark variants (see below), the one matching :envvar:`fish_terminal_color_theme` will be applied (also whenever that variable changes).
   To override :envvar:`fish_terminal_color_theme`, pass the ``--color-theme`` argument.
 - ``demo`` displays some sample text in the current theme.
 - ``dump`` prints the current theme in a loadable format.
 - ``list`` lists the names of the available themes.
 - ``show`` shows what the given themes (or all) would look like.
-- *(deprecated, avoid use)* ``save`` saves the given theme to :ref:`universal variables <variables-universal>`.
+- *(not recommended)* ``save`` saves the given theme to :ref:`universal variables <variables-universal>`.
+  A theme set this way will not update as :envvar:`fish_terminal_color_theme` changes.
 
 The **-h** or **--help** option displays help about using this command.
 

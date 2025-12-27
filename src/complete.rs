@@ -2782,14 +2782,26 @@ mod tests {
                     $completion_from_separator:literal,
                 ) => {
                     completions = do_complete(L!($cmd), $options);
-                    assert_eq!(completions.len(), 2);
+                    let actual: Vec<_> = completions
+                        .iter()
+                        .map(|c| (c.completion.as_utfstr(), c.r#match.from_separator))
+                        .collect();
+                    assert_eq!(
+                        actual,
+                        [
+                            (
+                                L!($completion_from_token_start),
+                                /*from_separator=*/ false,
+                            ),
+                            (
+                                L!($completion_from_separator),
+                                /*from_separator=*/ true,
+                            ),
+                        ]
+                    );
                     let c0 = &completions[0];
                     let c1 = &completions[1];
                     // Might be replacing.
-                    assert_eq!(c0.completion, L!($completion_from_token_start));
-                    assert!(!c0.r#match.from_separator);
-                    assert_eq!(c1.completion, L!($completion_from_separator));
-                    assert!(c1.r#match.from_separator);
                     // Completion pager will only show better (lower) rank.
                     assert!(c0.r#match.rank() < c1.r#match.rank());
                 };

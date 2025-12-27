@@ -19,7 +19,7 @@ echo no default universal variables
 
 # Existing universal variables are migrated as-is.
 {
-    echo yes | fish_config theme save default --color-theme=light
+    echo yes | fish_config theme save default-rgb --color-theme=light
     fake-old-uvars
     set -U fish_key_bindings fish_vi_key_bindings
     set -U | head -2
@@ -60,7 +60,7 @@ echo no default universal variables
 # If existing universal colors match old defaults exactly (common case), don't migrate but
 # delete them.
 {
-    echo yes | fish_config theme save default --color-theme=unknown
+    echo yes | fish_config theme save default
     fake-old-uvars
     provoke-migration
     $fish -c __fish_theme_migrate

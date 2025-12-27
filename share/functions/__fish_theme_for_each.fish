@@ -7,7 +7,8 @@ function __fish_theme_for_each
         set -l matching_names (__fish_theme_names $theme_names)
         if not set -q theme_names[1]
             echo default
-            string match -v -- default $matching_names
+            echo default-rgb
+            string match -rv -- '^(default|default-rgb)$' $matching_names
         else
             string join -- \n $matching_names
         end

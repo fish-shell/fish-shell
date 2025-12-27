@@ -131,21 +131,21 @@ fish_config theme list | string match -r \
 # CHECK: tomorrow-night-bright
 # CHECK: tomorrow
 
-fish_config theme show default
+fish_config theme show default-rgb
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}
 # CHECK: /bright/vixens{{\x1b\[m}} jump{{\x1b\[m}} |{{\x1b\[m}} "fowl"{{\x1b\[m}} > quack{{\x1b\[m}} &{{\x1b\[m}} # This is a comment
 # CHECK: {{\x1b\[m}}echo{{\x1b\[m}} 'Errors are the portal to discovery
 # CHECK: {{\x1b\[m}}Th{{\x1b\[m}}is an autosuggestion
 
-# CHECK: {{\x1b\[m\x1b\[4mdefault \(light color theme\)\x1b\[m}}
+# CHECK: {{\x1b\[m\x1b\[4mdefault-rgb \(light color theme\)\x1b\[m}}
 # CHECK: {{\x1b\[38;2;0;0;238m/bright/vixens\x1b\[m \x1b\[38;2;0;160;160mjump\x1b.*}}
 # CHECK: {{.*}}
 # CHECK: {{.*}}
-# CHECK: {{\x1b\[m\x1b\[4mdefault \(dark color theme\)\x1b\[m}}
+# CHECK: {{\x1b\[m\x1b\[4mdefault-rgb \(dark color theme\)\x1b\[m}}
 # CHECK: {{\x1b\[38;2;92;92;255m.*}}
 # CHECK: {{.*}}
 # CHECK: {{.*}}
-# CHECK: {{\x1b\[m\x1b\[4mdefault \(unknown color theme\)\x1b\[m}}
+# CHECK: {{\x1b\[m\x1b\[4mdefault-rgb \(unknown color theme\)\x1b\[m}}
 # CHECK: {{\x1b\[m/bright/vixens\x1b\[m \x1b\[36mjump\x1b\[m.*}}
 # CHECK: {{.*}}
 # CHECK: {{.*}}
@@ -156,10 +156,10 @@ fish_config theme show ayu | string match -r '^.*ayu.*'
 
 mkdir $__fish_config_dir/themes
 touch $__fish_config_dir/themes/custom-from-userconf.theme
-fish_config theme show | grep -E 'default|base16-default|custom-from-userconf'
-# CHECK: {{.*}}default (light color theme){{\x1b\[m}}
-# CHECK: {{.*}}default (dark color theme){{\x1b\[m}}
-# CHECK: {{.*}}default (unknown color theme){{\x1b\[m}}
+fish_config theme show | grep -E 'default-rgb|base16-default|custom-from-userconf'
+# CHECK: {{.*}}default-rgb (light color theme){{\x1b\[m}}
+# CHECK: {{.*}}default-rgb (dark color theme){{\x1b\[m}}
+# CHECK: {{.*}}default-rgb (unknown color theme){{\x1b\[m}}
 # CHECK: {{.*}}custom-from-userconf (unknown color theme){{\x1b\[m}}
 # CHECK: {{.*}}base16-default (light color theme){{\x1b\[m}}
 # CHECK: {{.*}}base16-default (dark color theme){{\x1b\[m}}

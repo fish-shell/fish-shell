@@ -296,7 +296,11 @@ function __fish_config_theme_choose
             set theme_is_color_theme_aware true
         end
     end
-    function __fish_apply_theme (test $cmd != save && printf %s\n --on-variable fish_terminal_color_theme) \
+    set -l need_hook true
+    if not $theme_is_color_theme_aware || set -q desired_color_theme[1] || set -q color_theme[1] || test $cmd = save
+        set need_hook false
+    end
+    function __fish_apply_theme ($need_hook && printf %s\n --on-variable fish_terminal_color_theme) \
         -V color_themes -V theme_name -V color_theme -V theme_data -V theme_is_color_theme_aware \
         -V desired_color_theme -V scope
         if set -q __fish_color_theme[1]
@@ -372,7 +376,7 @@ function __fish_config_theme_choose
             end
         end
     end
-    if set -q desired_color_theme[1] || set -q color_theme[1] || test -n "$fish_terminal_color_theme" || test $cmd = save
+    if test -n "$fish_terminal_color_theme" || not $need_hook
         if not set -q _flag_no_override[1]
             __fish_override=true __fish_apply_theme
         end

@@ -10,7 +10,8 @@ function __fish_theme_migrate
     set -l removing_uvars false
     set -l msg
     # Copy legacy uvars to globals.
-    if set -l theme_uvars (__fish_theme_variables --universal)
+    set -l theme_uvars (__fish_theme_variables --universal)
+    if set -q theme_uvars[1]
         set removing_uvars true
         set -l msg_suffix .
         if not __fish_config_theme_uvars_subset_of_historical_default $theme_uvars

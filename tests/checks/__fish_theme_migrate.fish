@@ -100,8 +100,6 @@ echo no default universal variables
     provoke-migration
     $fish -c __fish_theme_migrate
     # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{upgraded.*}}
-    # CHECK: {{.*Color.*no.longer.*universal.*}}
-    # CHECK: {{.*restart.*}}
     # CHECK: {{.*fish_key_bindings.*no.longer.*universal.*}}
     # CHECK: Migrated {{.*}} {{\S*}}/xdg_config_home/fish/conf.d/fish_frozen_key_bindings.fish{{\x1b\[m}}
     # CHECK: {{.*help relnotes.*}}

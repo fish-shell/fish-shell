@@ -94,13 +94,11 @@ pub fn execute_setpgid(pid: libc::pid_t, pgroup: libc::pid_t, is_parent: bool) -
             return 0;
         }
         let err = errno::errno().0;
+        assert!(err != libc::EINTR);
         if err == libc::EACCES && is_parent {
             // We are the parent process and our child has called exec().
             // This is an unavoidable benign race.
             return 0;
-        } else if err == libc::EINTR {
-            // Paranoia.
-            continue;
         } else if err == libc::EPERM && eperm_count < 100 {
             eperm_count += 1;
             // The setpgid(2) man page says that EPERM is returned only if attempts are made

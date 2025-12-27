@@ -3,7 +3,7 @@
 //!
 //! Many of these functions are more or less broken and incomplete.
 
-use fish_wchar::prelude::*;
+use fish_wchar::{CharsUtf32, prelude::*};
 use fish_widecharwidth::{WcLookupTable, WcWidth};
 use once_cell::sync::Lazy;
 use std::cmp;
@@ -116,7 +116,17 @@ pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
 }
 
 /// Compare two wide strings in a case-insensitive fashion
-pub fn wcscasecmp_fuzzy(lhs: &wstr, rhs: &wstr, canonicalize: fn(char) -> char) -> cmp::Ordering {
+pub fn wcscasecmp_fuzzy(
+    lhs: &wstr,
+    rhs: &wstr,
+    extra_canonicalization: fn(char) -> char,
+) -> cmp::Ordering {
+    lowercase(lhs.chars())
+        .map(extra_canonicalization)
+        .cmp(lowercase(rhs.chars()).map(extra_canonicalization))
+}
+
+pub fn lowercase(chars: CharsUtf32) -> impl Iterator<Item = char> {
     use std::char::ToLowercase;
     use widestring::utfstr::CharsUtf32;
 
@@ -125,12 +135,12 @@ pub fn wcscasecmp_fuzzy(lhs: &wstr, rhs: &wstr, canonicalize: fn(char) -> char) 
     /// `char::to_lowercase()` returns an iterator of chars and we sometimes need to cmp the last
     /// char of one char's `to_lowercase()` with the first char of the other char's
     /// `to_lowercase()`. This makes that possible.
-    struct ToLowerBuffer<'a, Canonicalize: Fn(char) -> char> {
+    struct ToLowerBuffer<'a> {
         current: ToLowercase,
-        chars: std::iter::Map<CharsUtf32<'a>, Canonicalize>,
+        chars: CharsUtf32<'a>,
     }
 
-    impl<'a, Canonicalize: Fn(char) -> char> Iterator for ToLowerBuffer<'a, Canonicalize> {
+    impl<'a> Iterator for ToLowerBuffer<'a> {
         type Item = char;
 
         fn next(&mut self) -> Option<Self::Item> {
@@ -143,8 +153,8 @@ pub fn wcscasecmp_fuzzy(lhs: &wstr, rhs: &wstr, canonicalize: fn(char) -> char) 
         }
     }
 
-    impl<'a, Canonicalize: Fn(char) -> char> ToLowerBuffer<'a, Canonicalize> {
-        pub fn new(mut chars: std::iter::Map<CharsUtf32<'a>, Canonicalize>) -> Self {
+    impl<'a> ToLowerBuffer<'a> {
+        pub fn new(mut chars: CharsUtf32<'a>) -> Self {
             Self {
                 current: chars.next().map_or_else(
                     || {
@@ -160,9 +170,7 @@ pub fn wcscasecmp_fuzzy(lhs: &wstr, rhs: &wstr, canonicalize: fn(char) -> char) 
         }
     }
 
-    let lhs = ToLowerBuffer::new(lhs.chars().map(canonicalize));
-    let rhs = ToLowerBuffer::new(rhs.chars().map(canonicalize));
-    lhs.cmp(rhs)
+    ToLowerBuffer::new(chars)
 }
 
 #[cfg(test)]

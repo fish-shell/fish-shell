@@ -3,7 +3,7 @@
 //!
 //! Many of these functions are more or less broken and incomplete.
 
-use fish_wchar::{CharsUtf32, prelude::*};
+use fish_wchar::prelude::*;
 use fish_widecharwidth::{WcLookupTable, WcWidth};
 use once_cell::sync::Lazy;
 use std::cmp;
@@ -126,21 +126,26 @@ pub fn wcscasecmp_fuzzy(
         .cmp(lowercase(rhs.chars()).map(extra_canonicalization))
 }
 
-pub fn lowercase(chars: CharsUtf32) -> impl Iterator<Item = char> {
-    use std::char::ToLowercase;
-    use widestring::utfstr::CharsUtf32;
-
-    /// This struct streams the underlying lowercase chars of a `UTF32String` without allocating.
-    ///
-    /// `char::to_lowercase()` returns an iterator of chars and we sometimes need to cmp the last
-    /// char of one char's `to_lowercase()` with the first char of the other char's
-    /// `to_lowercase()`. This makes that possible.
-    struct ToLowerBuffer<'a> {
+pub fn lowercase(chars: impl Iterator<Item = char>) -> impl Iterator<Item = char> {
+    lowercase_impl(chars, |c| c.to_lowercase())
+}
+pub fn lowercase_rev(chars: impl DoubleEndedIterator<Item = char>) -> impl Iterator<Item = char> {
+    lowercase_impl(chars.rev(), |c| c.to_lowercase().rev())
+}
+fn lowercase_impl<ToLowercase: Iterator<Item = char>>(
+    chars: impl Iterator<Item = char>,
+    to_lowercase: fn(char) -> ToLowercase,
+) -> impl Iterator<Item = char> {
+    /// This struct streams the underlying lowercase chars of a string without allocating.
+    struct ToLowerBuffer<Chars: Iterator<Item = char>, ToLowercase: Iterator<Item = char>> {
+        to_lowercase: fn(char) -> ToLowercase,
         current: ToLowercase,
-        chars: CharsUtf32<'a>,
+        chars: Chars,
     }
 
-    impl<'a> Iterator for ToLowerBuffer<'a> {
+    impl<Chars: Iterator<Item = char>, ToLowercase: Iterator<Item = char>> Iterator
+        for ToLowerBuffer<Chars, ToLowercase>
+    {
         type Item = char;
 
         fn next(&mut self) -> Option<Self::Item> {
@@ -148,29 +153,31 @@ pub fn lowercase(chars: CharsUtf32) -> impl Iterator<Item = char> {
                 return Some(c);
             }
 
-            self.current = self.chars.next()?.to_lowercase();
+            self.current = (self.to_lowercase)(self.chars.next()?);
             self.current.next()
         }
     }
 
-    impl<'a> ToLowerBuffer<'a> {
-        pub fn new(mut chars: CharsUtf32<'a>) -> Self {
+    impl<Chars: Iterator<Item = char>, ToLowercase: Iterator<Item = char>>
+        ToLowerBuffer<Chars, ToLowercase>
+    {
+        pub fn new(mut chars: Chars, to_lowercase: fn(char) -> ToLowercase) -> Self {
             Self {
+                to_lowercase,
                 current: chars.next().map_or_else(
                     || {
-                        let mut empty = 'a'.to_lowercase();
+                        let mut empty = to_lowercase('a');
                         let _ = empty.next();
                         debug_assert!(empty.next().is_none());
                         empty
                     },
-                    |c| c.to_lowercase(),
+                    to_lowercase,
                 ),
                 chars,
             }
         }
     }
-
-    ToLowerBuffer::new(chars)
+    ToLowerBuffer::new(chars, to_lowercase)
 }
 
 #[cfg(test)]

@@ -45,3 +45,8 @@ isolated-tmux send-keys C-l 'echo ('
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt {{\d+}}> echo (echo)
+
+isolated-tmux send-keys C-u 'echo İ___' Enter C-l 'echo i'
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt {{\d+}}> echo İ___

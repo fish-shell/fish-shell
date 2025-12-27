@@ -2,7 +2,7 @@
 
 use crate::common::{get_ellipsis_char, get_ellipsis_str};
 use crate::prelude::*;
-use fish_fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
+use fish_fallback::{fish_wcwidth, lowercase, lowercase_rev, wcscasecmp, wcscasecmp_fuzzy};
 use fish_wchar::decode_byte_from_char;
 
 /// Return the number of newlines in a string.
@@ -21,8 +21,9 @@ pub fn count_newlines(s: &wstr) -> usize {
 
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 pub fn string_prefixes_string_case_insensitive(proposed_prefix: &wstr, value: &wstr) -> bool {
-    let prefix_size = proposed_prefix.len();
-    prefix_size <= value.len() && wcscasecmp(&value[..prefix_size], proposed_prefix).is_eq()
+    let mut proposed_prefix = lowercase(proposed_prefix.chars());
+    let value = lowercase(value.chars());
+    proposed_prefix.by_ref().zip(value).all(|(a, b)| a == b) && proposed_prefix.next().is_none()
 }
 
 pub fn string_prefixes_string_maybe_case_insensitive(
@@ -47,9 +48,9 @@ pub fn strip_executable_suffix(path: &wstr) -> Option<&wstr> {
 
 /// Test if a string is a suffix of another.
 pub fn string_suffixes_string_case_insensitive(proposed_suffix: &wstr, value: &wstr) -> bool {
-    let suffix_size = proposed_suffix.len();
-    suffix_size <= value.len()
-        && wcscasecmp(&value[value.len() - suffix_size..], proposed_suffix).is_eq()
+    let mut proposed_suffix = lowercase_rev(proposed_suffix.chars());
+    let value = lowercase_rev(value.chars());
+    proposed_suffix.by_ref().zip(value).all(|(a, b)| a == b) && proposed_suffix.next().is_none()
 }
 
 /// Test if a string prefixes another. Returns true if a is a prefix of b.
@@ -553,9 +554,43 @@ pub fn fish_wcwidth_visible(c: char) -> isize {
 mod tests {
     use super::{
         CaseSensitivity, ContainType, LineIterator, count_newlines, ifind, join_strings,
-        split_string_tok, string_fuzzy_match_string,
+        split_string_tok, string_fuzzy_match_string, string_prefixes_string_case_insensitive,
+        string_suffixes_string_case_insensitive,
     };
     use crate::prelude::*;
+
+    #[test]
+    fn test_string_prefixes_string_case_insensitive() {
+        macro_rules! validate {
+            ($prefix:literal, $s:literal, $expected:expr) => {
+                assert_eq!(
+                    string_prefixes_string_case_insensitive(L!($prefix), L!($s)),
+                    $expected
+                );
+            };
+        }
+        validate!("i", "i_", true);
+        validate!("İ", "i\u{307}_", true);
+        validate!("i\u{307}", "İ", true); // prefix is longer
+        validate!("i", "İ", true);
+    }
+
+    #[test]
+    fn test_string_suffixes_string_case_insensitive() {
+        macro_rules! validate {
+            ($suffix:literal, $s:literal, $expected:expr) => {
+                assert_eq!(
+                    string_suffixes_string_case_insensitive(L!($suffix), L!($s)),
+                    $expected
+                );
+            };
+        }
+        validate!("i", "_i", true);
+        validate!("i\u{307}", "İ", true);
+        validate!("İ", "i\u{307}", true); // suffix is longer
+        validate!("İ", "_İ", true);
+        validate!("i", "_İ", false);
+    }
 
     #[test]
     fn test_ifind() {

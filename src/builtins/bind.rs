@@ -2,7 +2,7 @@
 
 use super::prelude::*;
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, bytes2wcstring, escape, escape_string, valid_var_name,
+    EscapeFlags, EscapeStringStyle, FilenameRef, bytes2wcstring, escape, escape_string, valid_var_name,
 };
 use crate::highlight::highlight_and_colorize;
 use crate::input::{
@@ -132,6 +132,7 @@ impl BuiltinBind {
             out.push(' ');
             out.push_utfstr(&escape(ecmd));
         }
+
         out.push('\n');
 
         out
@@ -233,6 +234,7 @@ impl BuiltinBind {
     }
 
     /// Add specified key binding.
+    #[allow(clippy::too_many_arguments)]
     fn add(
         &mut self,
         seq: &wstr,
@@ -240,6 +242,7 @@ impl BuiltinBind {
         mode: WString,
         sets_mode: Option<WString>,
         user: bool,
+        parser: &Parser,
         streams: &mut IoStreams,
     ) -> bool {
         let cmds = cmds.iter().map(|&s| s.to_owned()).collect();
@@ -252,8 +255,9 @@ impl BuiltinBind {
         } else {
             KeyNameStyle::Plain
         };
+        let definition_file = parser.current_filename();
         self.input_mappings
-            .add(key_seq, key_name_style, cmds, mode, sets_mode, user);
+            .add(key_seq, key_name_style, cmds, mode, sets_mode, user, definition_file);
         false
     }
 
@@ -380,6 +384,7 @@ impl BuiltinBind {
                     .unwrap_or(DEFAULT_BIND_MODE.to_owned()),
                 self.opts.sets_bind_mode.clone(),
                 self.opts.user,
+                parser,
                 streams,
             ) {
                 return true;

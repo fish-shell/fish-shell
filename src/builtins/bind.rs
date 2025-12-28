@@ -261,8 +261,15 @@ impl BuiltinBind {
             KeyNameStyle::Plain
         };
         let definition_file = parser.current_filename();
-        self.input_mappings
-            .add(key_seq, key_name_style, cmds, mode, sets_mode, user, definition_file);
+        self.input_mappings.add(
+            key_seq,
+            key_name_style,
+            cmds,
+            mode,
+            sets_mode,
+            user,
+            definition_file,
+        );
         false
     }
 

@@ -86,9 +86,10 @@ sed -i \
 CommitVersion() {
     sed -i "s/^version = \".*\"/version = \"$1\"/g" Cargo.toml
     cargo fetch --offline
-    # debchange is a Debian script to manage the Debian changelog, but
-    # it's too annoying to install everywhere. Just do it by hand.
-    cat - contrib/debian/changelog > contrib/debian/changelog.new <<EOF
+    if [ "$1" = "$version" ]; then
+        # debchange is a Debian script to manage the Debian changelog, but
+        # it's too annoying to install everywhere. Just do it by hand.
+        cat - contrib/debian/changelog > contrib/debian/changelog.new <<EOF
 fish (${version}-1) stable; urgency=medium
 
   * Release of new version $version.
@@ -98,8 +99,10 @@ fish (${version}-1) stable; urgency=medium
  -- $committer  $(date -R)
 
 EOF
-    mv contrib/debian/changelog.new contrib/debian/changelog
-    git add CHANGELOG.rst Cargo.toml Cargo.lock contrib/debian/changelog
+        mv contrib/debian/changelog.new contrib/debian/changelog
+        git add contrib/debian/changelog
+    fi
+    git add CHANGELOG.rst Cargo.toml Cargo.lock
     git commit -m "$2
 
 Created by ./build_tools/release.sh $version"

@@ -9,10 +9,11 @@ for bindings in true fish_default_key_bindings fish_vi_key_bindings
         $bindings
         or echo >&2 error setting bindings: status=\$status
         bind > $tmpdir/old
+        bind | string replace -r ' # defined in .*' '' > $tmpdir/old
         bind --erase --all --preset
         bind --erase --all
         source $tmpdir/old
-        bind >$tmpdir/new
+        bind | string replace -r ' # defined in .*' '' >$tmpdir/new
         diff -u $tmpdir/{old,new}
     "
 end
@@ -35,8 +36,8 @@ bind -M bind-mode \cX true
 bind -M bind_mode \cX true
 
 # Listing bindings
-bind | string match -v '*\e\\[*' # Hide raw bindings.
-bind --user --preset | string match -v '*\e\\[*'
+bind | string match -v '*\e\\[*' | string replace -r ' # defined in .*' '' # Hide raw bindings.
+bind --user --preset | string match -v '*\e\\[*' | string replace -r ' # defined in .*' ''
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset enter execute
 # CHECK: bind --preset tab complete
@@ -75,7 +76,7 @@ bind --user --preset | string match -v '*\e\\[*'
 # CHECK: bind -M bind_mode ctrl-x true
 
 # Preset only
-bind --preset | string match -v '*\e\\[*'
+bind --preset | string match -v '*\e\\[*' | string replace -r ' # defined in .*' ''
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset enter execute
 # CHECK: bind --preset tab complete
@@ -95,12 +96,12 @@ bind --preset | string match -v '*\e\\[*'
 # CHECK: bind --preset ctrl-f forward-char
 
 # User only
-bind --user | string match -v '*\e\\[*'
+bind --user | string match -v '*\e\\[*' | string replace -r ' # defined in .*' ''
 # CHECK: bind -M bind_mode ctrl-x true
 
 # Adding bindings
 bind tab 'echo banana'
-bind | string match -v '*\e\\[*'
+bind | string match -v '*\e\\[*' | string replace -r ' # defined in .*' ''
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset enter execute
 # CHECK: bind --preset tab complete

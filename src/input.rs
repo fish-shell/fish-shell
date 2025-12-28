@@ -297,7 +297,14 @@ impl InputMappingSet {
         }
 
         // Add a new mapping, using the next order.
-        let new_mapping = InputMapping::new(sequence, commands, mode, sets_mode, key_name_style, definition_file);
+        let new_mapping = InputMapping::new(
+            sequence,
+            commands,
+            mode,
+            sets_mode,
+            key_name_style,
+            definition_file,
+        );
         input_mapping_insert_sorted(ml, new_mapping);
     }
 
@@ -343,7 +350,15 @@ pub fn init_input() {
         let mut add = |key: Vec<Key>, cmd: &str| {
             let mode = DEFAULT_BIND_MODE.to_owned();
             let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
-            input_mapping.add1(key, KeyNameStyle::Plain, cmd.into(), mode, sets_mode, false, None);
+            input_mapping.add1(
+                key,
+                KeyNameStyle::Plain,
+                cmd.into(),
+                mode,
+                sets_mode,
+                false,
+                None,
+            );
         };
 
         add(vec![], "self-insert");

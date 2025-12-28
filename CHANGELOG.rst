@@ -40,7 +40,7 @@ Interactive improvements
 - Completion accuracy was improved for file paths containing ``=`` or ``:`` (:issue:`5363`).
 - Prefix-matching completions are now shown even if they don't match the case typed by the user (:issue:`7944`).
 - On Cygwin/MSYS, command name completion will favor the non-exe name (``foo``) unless the user started typing the extension.
-- When using the exe name (``foo.exe``), fish will use to the description and completions for ``foo`` if there are none for ``foo.exe``.
+- When using the exe name (``foo.exe``), fish will use the description and completions for ``foo`` if there are none for ``foo.exe``.
 - Autosuggestions now also show soft-wrapped portions (:issue:`12045`).
 
 New or improved bindings

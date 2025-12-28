@@ -10,7 +10,7 @@ Deprecations and removed features
   ``~/.config/fish/conf.d/fish_frozen_key_bindings.fish`` files.
   We suggest that you delete those files and :ref:`set your theme <syntax-highlighting>` in ``~/.config/fish/config.fish``.
 
-  - You can still configure fish to propagate theme changes; see :ref:`here <syntax-highlighting-instant-update>` for an example.
+  - You can still configure fish to propagate theme changes instantly; see :ref:`here <syntax-highlighting-instant-update>` for an example.
   - You can still opt into storing color variables in the universal scope
     via ``fish_config theme save`` though unlike ``fish_config theme choose``,
     it does not support dynamic theme switching based on the terminal's color theme (see below).

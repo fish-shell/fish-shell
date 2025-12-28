@@ -32,7 +32,7 @@ end
 set -l __extra_completionsdir
 set -l __extra_functionsdir
 set -l __extra_confdir
-__fish_data_with_file __fish_build_paths.fish source
+status get-file __fish_build_paths.fish | source
 
 # Compute the directories for vendor configuration.  We want to include
 # all of XDG_DATA_DIRS, as well as the __extra_* dirs defined above.

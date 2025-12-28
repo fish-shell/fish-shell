@@ -1,5 +1,5 @@
-fish 4.3.0 (released ???)
-=========================
+fish 4.3.0 (released December 28, 2025)
+=======================================
 
 Deprecations and removed features
 ---------------------------------

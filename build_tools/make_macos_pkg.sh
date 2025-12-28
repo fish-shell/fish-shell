@@ -25,7 +25,7 @@ NOTARIZE=
 
 ARM64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=11.0'
 X86_64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=10.12'
-cmake_args=
+cmake_args=()
 
 while getopts "c:sf:i:p:e:nj:" opt; do
     case $opt in

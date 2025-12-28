@@ -269,6 +269,7 @@ fn input_mapping_insert_sorted(ml: &mut Vec<InputMapping>, new_mapping: InputMap
 
 impl InputMappingSet {
     /// Adds an input mapping.
+    #[allow(clippy::too_many_arguments)]
     pub fn add(
         &mut self,
         sequence: Vec<Key>,
@@ -301,6 +302,7 @@ impl InputMappingSet {
     }
 
     // Like add(), but takes a single command.
+    #[allow(clippy::too_many_arguments)]
     pub fn add1(
         &mut self,
         sequence: Vec<Key>,
@@ -1022,6 +1024,7 @@ mod tests {
             default_mode(),
             None,
             true,
+            None,
         );
         input_mappings.add1(
             desired_binding.clone(),
@@ -1030,6 +1033,7 @@ mod tests {
             default_mode(),
             None,
             true,
+            None,
         );
 
         // Push the desired binding to the queue.

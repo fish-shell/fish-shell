@@ -232,6 +232,7 @@ impl BuiltinBind {
     }
 
     /// Add specified key binding.
+    #[allow(clippy::too_many_arguments)]
     fn add(
         &mut self,
         seq: &wstr,

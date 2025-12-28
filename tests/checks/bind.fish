@@ -131,16 +131,16 @@ bind super-alt-\~
 
 # Legacy
 bind \cx\cax 'echo foo'
-bind \cx\cax
+bind \cx\cax | string replace -r ' # defined in .*' ''
 # CHECK: bind ctrl-x,ctrl-a,x 'echo foo'
 bind \ef forward-word
-bind \ef
+bind \ef | string replace -r ' # defined in .*' ''
 # CHECK: bind alt-f forward-word
 
 
 # Erasing bindings
 bind --erase tab
-bind tab
+bind tab | string replace -r ' # defined in .*' ''
 bind tab 'echo wurst'
 # CHECK: bind --preset tab complete
 bind --erase --user --preset tab
@@ -154,7 +154,7 @@ bind -k nul 'echo foo'
 # CHECKERR: bind: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`
 
 # Either Return or ctrl-m.
-bind \r
+bind \r | string replace -r ' # defined in .*' ''
 # CHECK: bind --preset enter execute
 # Never Return, probably always ctrl-j.
 bind \n 2>&1

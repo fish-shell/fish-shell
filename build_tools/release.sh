@@ -18,15 +18,18 @@ fi
 [ -n "$version" ]
 
 for tool in \
+    cmake \
     bundle \
     diff \
     gh \
     gpg \
     jq \
+    ninja \
     ruby \
     tar \
     timeout \
     uv \
+    xz \
 ; do
     if ! command -v "$tool" >/dev/null; then
         echo >&2 "$0: missing command: $1"
@@ -134,7 +137,7 @@ fish_tar_xz=fish-$version.tar.xz
 (
     local_tarball=$tmpdir/local-tarball
     mkdir "$local_tarball"
-    FISH_ARTEFACT_PATH=$local_tarball uv run ./build_tools/make_tarball.sh
+    FISH_ARTEFACT_PATH=$local_tarball ./build_tools/make_tarball.sh
     cd "$local_tarball"
     tar xf "$fish_tar_xz"
 )
@@ -162,9 +165,16 @@ actual_tag_oid=$(git ls-remote "$remote" |
     gh release upload "$version" "$fish_tar_xz.asc"
 )
 
+(
+    cd "$tmpdir/local-tarball/fish-$version"
+    uv --no-managed-python venv
+    . .venv/bin/activate
+    cmake -GNinja -DCMAKE_BUILD_TYPE=Debug .
+    ninja doc
+)
 CopyDocs() {
     rm -rf "$fish_site/site/docs/$1"
-    cp -r "$tmpdir/fish-$version/user_doc/html" "$fish_site/site/docs/$1"
+    cp -r "$tmpdir/local-tarball/fish-$version/user_doc/html" "$fish_site/site/docs/$1"
     git -C $fish_site add "site/docs/$1"
 }
 minor_version=${version%.*}

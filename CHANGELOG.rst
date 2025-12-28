@@ -1,5 +1,9 @@
-fish ?.?.? (released ???)
+fish 4.3.1 (released ???)
 =========================
+
+This release fixes the following problem identified in 4.3.0:
+
+- Possible crash after expanding an abbreviation (:issue:`12223`).
 
 fish 4.3.0 (released December 28, 2025)
 =======================================

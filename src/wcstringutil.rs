@@ -19,11 +19,25 @@ pub fn count_newlines(s: &wstr) -> usize {
     count
 }
 
+fn is_prefix(mut lhs: impl Iterator<Item = char>, mut rhs: impl Iterator<Item = char>) -> bool {
+    loop {
+        match (lhs.next(), rhs.next()) {
+            (None, _) => return true,
+            (Some(_), None) => return false,
+            (Some(lhs), Some(rhs)) => {
+                if lhs != rhs {
+                    return false;
+                }
+            }
+        }
+    }
+}
+
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 pub fn string_prefixes_string_case_insensitive(proposed_prefix: &wstr, value: &wstr) -> bool {
-    let mut proposed_prefix = lowercase(proposed_prefix.chars());
+    let proposed_prefix = lowercase(proposed_prefix.chars());
     let value = lowercase(value.chars());
-    proposed_prefix.by_ref().zip(value).all(|(a, b)| a == b) && proposed_prefix.next().is_none()
+    is_prefix(proposed_prefix, value)
 }
 
 pub fn string_prefixes_string_maybe_case_insensitive(
@@ -48,9 +62,9 @@ pub fn strip_executable_suffix(path: &wstr) -> Option<&wstr> {
 
 /// Test if a string is a suffix of another.
 pub fn string_suffixes_string_case_insensitive(proposed_suffix: &wstr, value: &wstr) -> bool {
-    let mut proposed_suffix = lowercase_rev(proposed_suffix.chars());
+    let proposed_suffix = lowercase_rev(proposed_suffix.chars());
     let value = lowercase_rev(value.chars());
-    proposed_suffix.by_ref().zip(value).all(|(a, b)| a == b) && proposed_suffix.next().is_none()
+    is_prefix(proposed_suffix, value)
 }
 
 /// Test if a string prefixes another. Returns true if a is a prefix of b.
@@ -573,6 +587,8 @@ mod tests {
         validate!("İ", "i\u{307}_", true);
         validate!("i\u{307}", "İ", true); // prefix is longer
         validate!("i", "İ", true);
+        validate!("gs", "gs_", true);
+        validate!("gs_", "gs", false);
     }
 
     #[test]
@@ -590,6 +606,8 @@ mod tests {
         validate!("İ", "i\u{307}", true); // suffix is longer
         validate!("İ", "_İ", true);
         validate!("i", "_İ", false);
+        validate!("gs", "_gs", true);
+        validate!("_gs ", "gs", false);
     }
 
     #[test]

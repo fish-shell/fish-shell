@@ -6,7 +6,7 @@ function __fish_theme_freeze
     __fish_backup_config_files $relative_path
 
     set -l help_section interactive#syntax-highlighting
-    __fish_data_with_file help_sections $(command -v grep) -Fxq $help_section
+    status get-file help_sections | string match -q $help_section
     or echo "fish: internal error: missing help section '$help_section'"
 
     mkdir -p -- (path dirname -- $__fish_config_dir/conf.d)

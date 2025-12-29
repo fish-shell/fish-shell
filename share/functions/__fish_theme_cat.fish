@@ -6,7 +6,7 @@ function __fish_theme_cat -a theme_name
         echo >&2 Searched (__fish_theme_dir) "and `status list-files themes`"
         return 1
     end
-    set -l theme_data (__fish_data_with_file $theme_path cat)
+    set -l theme_data (__fish_config_with_file $theme_path cat)
     set -l allowed_lines \
         '\s*' \
         '\s*#.*' \

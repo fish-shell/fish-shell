@@ -164,8 +164,7 @@ fish_config theme show | grep -E 'default-rgb|base16-default|custom-from-usercon
 # CHECK: {{.*}}base16-default (dark color theme){{\x1b\[m}}
 
 # Override the default theme with different colors.
-__fish_data_with_file themes/none.theme \
-    cat >$__fish_config_dir/themes/default.theme
+status get-file themes/none.theme >$__fish_config_dir/themes/default.theme
 fish_config theme show default ayu | grep -E 'default|ayu.*dark' -A1
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}default (unknown color theme){{\x1b\[m}}
 # CHECK: /bright/vixens{{.*}}

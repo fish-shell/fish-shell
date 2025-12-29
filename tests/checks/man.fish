@@ -5,7 +5,7 @@
 # REQUIRES: test "$FISH_BUILD_DOCS" != "0"
 
 # Override the test-override again.
-__fish_data_with_file functions/__fish_print_help.fish source
+status get-file functions/__fish_print_help.fish | source
 
 set -l deroff col -b -p -x
 

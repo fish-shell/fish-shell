@@ -20,7 +20,7 @@ function fish_update_completions --description "Update man-page based completion
         --cleanup-in $__fish_user_data_dir/generated_completions \
         --cleanup-in $__fish_cache_dir/generated_completions
 
-    __fish_data_with_file tools/create_manpage_completions.py cat |
+    status get-file tools/create_manpage_completions.py |
         if $detach
             # Run python directly in the background and swallow all output
             # Orphan the job so that it continues to run in case of an early exit (#6269)

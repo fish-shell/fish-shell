@@ -91,7 +91,7 @@ function fish_config --description "Launch fish's web based configuration"
                         echo -s (set_color --underline) $promptname (set_color normal)
                         $fish -c '
                             functions -e fish_right_prompt
-                            __fish_data_with_file $argv[1] source
+                            __fish_config_with_file $argv[1] source
                             false
                             fish_prompt
                             echo (set_color normal)
@@ -120,9 +120,9 @@ function fish_config --description "Launch fish's web based configuration"
                         return 1
                     end
                     __fish_config_prompt_reset
-                    __fish_data_with_file $prompt_path source
+                    __fish_config_with_file $prompt_path source
                     if not functions -q fish_mode_prompt
-                        __fish_data_with_file functions/fish_mode_prompt.fish source
+                        status get-file functions/fish_mode_prompt.fish | source
                     end
                 case save
                     if begin
@@ -142,7 +142,7 @@ function fish_config --description "Launch fish's web based configuration"
                             return 1
                         end
                         __fish_config_prompt_reset
-                        __fish_data_with_file $prompt_path source
+                        __fish_config_with_file $prompt_path source
                     end
 
                     funcsave fish_prompt
@@ -156,7 +156,7 @@ function fish_config --description "Launch fish's web based configuration"
                         end
                     end
                     if not functions -q fish_mode_prompt
-                        __fish_data_with_file functions/fish_mode_prompt.fish source
+                        status get-file functions/fish_mode_prompt.fish | source
                     end
                     return
             end

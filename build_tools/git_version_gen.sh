@@ -13,9 +13,9 @@ git_permission_failed=0
 
 # First see if there is a version file (included in release tarballs),
 # then try git-describe, then default.
-if test -f version
+if test -f "$FISH_BASE_DIR"/version
 then
-	VN=$(cat version) || VN="$DEF_VER"
+	VN=$(cat "$FISH_BASE_DIR"/version) || VN="$DEF_VER"
 else
     if VN=$(git -C "$FISH_BASE_DIR" describe --always --dirty 2>/dev/null); then
        :

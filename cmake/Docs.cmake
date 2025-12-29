@@ -16,7 +16,8 @@ set(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
 # Prepend the output dir of fish_indent to PATH.
 add_custom_target(sphinx-docs
     mkdir -p ${SPHINX_HTML_DIR}/_static/
-    COMMAND env PATH="${CMAKE_BINARY_DIR}:$$PATH"
+    COMMAND env FISH_BUILD_VERSION_FILE=${CMAKE_CURRENT_BINARY_DIR}/${FBVF}
+        PATH="${CMAKE_BINARY_DIR}:$$PATH"
         ${SPHINX_EXECUTABLE}
         -j auto
         -q -b html
@@ -24,7 +25,7 @@ add_custom_target(sphinx-docs
         -d "${SPHINX_ROOT_DIR}/.doctrees-html"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_HTML_DIR}"
-    DEPENDS ${SPHINX_SRC_DIR}/fish_indent_lexer.py fish_indent
+    DEPENDS CHECK-FISH-BUILD-VERSION-FILE ${SPHINX_SRC_DIR}/fish_indent_lexer.py fish_indent
     COMMENT "Building HTML documentation with Sphinx")
 
 add_custom_target(sphinx-manpages

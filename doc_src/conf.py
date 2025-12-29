@@ -118,13 +118,15 @@ author = "fish-shell developers"
 issue_url = "https://github.com/fish-shell/fish-shell/issues"
 
 # Parsing FISH-BUILD-VERSION-FILE is possible but hard to ensure that it is in the right place
-# fish_indent is guaranteed to be on PATH for the Pygments highlighter anyway
 if "FISH_BUILD_VERSION_FILE" in os.environ:
+    # From Cmake
     f = open(os.environ["FISH_BUILD_VERSION_FILE"], "r")
     ret = f.readline().strip()
 elif "FISH_BUILD_VERSION" in os.environ:
+    # From Cargo
     ret = os.environ["FISH_BUILD_VERSION"]
 else:
+    # No build system.
     ret = subprocess.check_output(
         ("../build_tools/git_version_gen.sh", "--stdout"), stderr=subprocess.STDOUT
     ).decode("utf-8")

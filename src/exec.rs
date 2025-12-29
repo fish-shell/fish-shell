@@ -325,8 +325,8 @@ fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
             STATUS_NOT_EXECUTABLE
         }
         #[cfg(apple)]
-        libc::EBADARCH => {
-            // This is for e.g. running ARM app on Intel Mac.
+        libc::EBADARCH | libc::EBADMACHO => {
+            // This is for e.g. running ARM app on Intel Mac or a bad Mach-O executable
             STATUS_NOT_EXECUTABLE
         }
         _ => {

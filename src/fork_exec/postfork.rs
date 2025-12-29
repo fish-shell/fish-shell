@@ -472,6 +472,16 @@ pub(crate) fn safe_report_exec_error(
             );
         }
 
+        #[cfg(apple)]
+        libc::EBADMACHO => {
+            flog_safe!(
+                exec,
+                "Failed to execute process '",
+                actual_cmd,
+                "': Malformed Mach-O file."
+            );
+        }
+
         err => {
             flog_safe!(
                 exec,

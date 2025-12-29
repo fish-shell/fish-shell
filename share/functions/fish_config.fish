@@ -287,7 +287,7 @@ function __fish_config_theme_choose
 
     set -l color_theme
     __fish_config_theme_canonicalize
-    set -l theme_data (type -q cat && __fish_theme_cat $theme_name)
+    set -l theme_data (__fish_theme_cat $theme_name)
     or return
     set -l color_themes dark light unknown
     set -l theme_is_color_theme_aware false
@@ -340,7 +340,7 @@ function __fish_config_theme_choose
         end
 
         set -l color_theme
-        string join \n -- $theme_data |
+        string match -re -- (__fish_theme_variable_filter)'|^\[.*\]$' $theme_data |
             while read -lat toks
                 if $theme_is_color_theme_aware
                     for ct in $color_themes
@@ -354,8 +354,8 @@ function __fish_config_theme_choose
                     end
                 end
                 set -l varname $toks[1]
-                string match -rq -- (__fish_theme_variable_filter) "$varname"
-                or continue
+                string match -q '[*' -- $varname
+                and continue
                 # If we're supposed to set universally, remove any shadowing globals
                 # so the change takes effect immediately (and there's no warning).
                 if test $scope = -U; and set -qg $varname

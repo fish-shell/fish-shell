@@ -40,9 +40,6 @@ fn main() {
     // the source directory is the current working directory of the build script
     rsconf::set_env_value("FISH_BUILD_VERSION", version);
 
-    // safety: single-threaded code.
-    unsafe { std::env::set_var("FISH_BUILD_VERSION", version) };
-
     fish_build_helper::rebuild_if_embedded_path_changed("share");
 
     let build = cc::Build::new();

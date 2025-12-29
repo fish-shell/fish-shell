@@ -122,11 +122,8 @@ if "FISH_BUILD_VERSION_FILE" in os.environ:
     # From Cmake
     f = open(os.environ["FISH_BUILD_VERSION_FILE"], "r")
     ret = f.readline().strip()
-elif "FISH_BUILD_VERSION" in os.environ:
-    # From Cargo
-    ret = os.environ["FISH_BUILD_VERSION"]
 else:
-    # No build system.
+    # From Cargo, or no build system.
     ret = subprocess.check_output(
         ("../build_tools/git_version_gen.sh", "--stdout"), stderr=subprocess.STDOUT
     ).decode("utf-8")

@@ -1,4 +1,5 @@
 #RUN: fish=%fish %fish %s
+__fish_migrate # make sure the interactive fish doesn't need mkdir in PATH
 set -g PATH
 $fish -c "nonexistent-command-1234 banana rama"
 #CHECKERR: fish: Unknown command: nonexistent-command-1234

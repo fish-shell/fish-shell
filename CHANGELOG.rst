@@ -13,7 +13,7 @@ fish 4.3.0 (released December 28, 2025)
 
 Deprecations and removed features
 ---------------------------------
-- fish no longer sets :ref:`universal variables <variables-universal>` by default, making the configuration easier to understand.
+- fish no longer sets user-facing :ref:`universal variables <variables-universal>` by default, making the configuration easier to understand.
   Specifically, the ``fish_color_*``, ``fish_pager_color_*`` and ``fish_key_bindings`` variables are now set in the global scope by default.
   After upgrading to 4.3.0, fish will (once and never again) migrate these universals to globals set at startup in the
   ``~/.config/fish/conf.d/fish_frozen_theme.fish`` and

@@ -205,7 +205,7 @@ if command -q kill
 end
 
 if status is-interactive
-    __fish_theme_migrate
+    __fish_migrate
 end
 fish_config theme choose default --no-override
 

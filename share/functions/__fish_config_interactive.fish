@@ -6,15 +6,6 @@
 #
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
     functions -e __fish_config_interactive
-    # Create empty configuration directores if they do not already exist
-    test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/ ||
-        mkdir -p $__fish_config_dir/{completions, conf.d, functions}
-
-    # Create config.fish with some boilerplate if it does not exist
-    test -e $__fish_config_dir/config.fish || echo "\
-if status is-interactive
-# Commands to run in interactive sessions can go here
-end" >$__fish_config_dir/config.fish
 
     set -g __fish_active_key_bindings
 

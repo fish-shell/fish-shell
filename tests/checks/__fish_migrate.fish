@@ -30,7 +30,7 @@ echo no default universal variables
     # CHECK: ok
 
     provoke-migration
-    $fish -c __fish_theme_migrate
+    $fish -c __fish_migrate
     # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{upgraded.*}}
     # CHECK: {{.*Color.*no.longer.*universal.*}}
     # CHECK: Migrated {{.*}} {{\S*}}/xdg_config_home/fish/conf.d/fish_frozen_theme.fish{{\x1b\[m}}
@@ -49,7 +49,7 @@ echo no default universal variables
     # But the migration is only done once, in case the user really wants these as universals.
     set -U fish_color_autosuggestion 8e8e8e
     $fish -c '
-        __fish_theme_migrate
+        __fish_migrate
         set -eg fish_color_autosuggestion
         echo $fish_color_autosuggestion
         # CHECK: 8e8e8e
@@ -63,7 +63,7 @@ echo no default universal variables
     echo yes | fish_config theme save default
     fake-old-uvars
     provoke-migration
-    $fish -c __fish_theme_migrate
+    $fish -c __fish_migrate
     # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{upgraded.*}}
     # CHECK: {{.*Color.*no.longer.*universal.*}}
     # CHECK: {{.*restart.*}}
@@ -80,7 +80,7 @@ echo no default universal variables
     $fish -c '
         set -g fish_color_autosuggestion red
         set -g fish_color_command green --theme=default
-        __fish_theme_migrate
+        __fish_migrate
         for cmd in "" "__fish_color_theme=unknown __fish_apply_theme"
             eval $cmd
             echo fish_color_autosuggestion $fish_color_autosuggestion
@@ -98,7 +98,7 @@ echo no default universal variables
 {
     set -U fish_key_bindings fish_vi_key_bindings
     provoke-migration
-    $fish -c __fish_theme_migrate
+    $fish -c __fish_migrate
     # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{upgraded.*}}
     # CHECK: {{.*fish_key_bindings.*no.longer.*universal.*}}
     # CHECK: Migrated {{.*}} {{\S*}}/xdg_config_home/fish/conf.d/fish_frozen_key_bindings.fish{{\x1b\[m}}

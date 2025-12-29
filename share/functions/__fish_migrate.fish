@@ -1,9 +1,27 @@
 # localization: skip(private)
-function __fish_theme_migrate
-    functions -e __fish_theme_migrate
+function __fish_migrate
+    functions -e __fish_migrate
+
+    set -l migration_version 4300
 
     # Maybe migrate.
-    if not set -q __fish_initialized || test $__fish_initialized -ge 4300
+    if set -q __fish_initialized && test $__fish_initialized -ge $migration_version
+        return
+    end
+
+    # Create empty configuration directores if they do not already exist
+    test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/ ||
+        mkdir -p $__fish_config_dir/{completions, conf.d, functions}
+
+    # Create config.fish with some boilerplate if it does not exist
+    test -e $__fish_config_dir/config.fish || echo "\
+if status is-interactive
+# Commands to run in interactive sessions can go here
+end" >$__fish_config_dir/config.fish
+
+    set -l mark_migration_done set -U __fish_initialized $migration_version
+    if not set -q __fish_initialized
+        $mark_migration_done
         return
     end
 
@@ -22,7 +40,7 @@ function __fish_theme_migrate
             for varname in $theme_uvars
                 set -a theme_data "$(string escape -- $varname $$varname | string join " ")"
             end
-            __fish_theme_freeze __fish_theme_migrate $theme_data
+            __fish_theme_freeze __fish_migrate $theme_data
             set msg_suffix " by default."\n"  Migrated them to global variables set in $(set_color --underline)$(
                     __fish_unexpand_tilde $__fish_config_dir/conf.d/fish_frozen_theme.fish
                 )$(set_color normal)"
@@ -35,6 +53,7 @@ function __fish_theme_migrate
         set -l relative_filename conf.d/fish_frozen_key_bindings.fish
         set -l filename $__fish_config_dir/$relative_filename
         __fish_backup_config_files $relative_filename
+        mkdir -p -- (path dirname -- $filename)
         echo >$filename "\
 # This file was created by fish when upgrading to version 4.3, to migrate
 # the 'fish_key_bindings' variable from its old default scope (universal)
@@ -62,7 +81,7 @@ set --erase --universal fish_key_bindings"
             (set_color normal))
         source $__fish_config_dir/$relative_filename
     end
-    set -U __fish_initialized 4300
+    $mark_migration_done
     if $removing_uvars
         echo -s (set_color --bold) 'fish:' (set_color normal) " upgraded to version 4.3:"
         string join \n -- $msg

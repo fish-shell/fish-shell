@@ -1,5 +1,13 @@
-fish ?.?.? (released ???)
+fish 4.3.2 (released ???)
 =========================
+
+This release fixes the following problems identified in 4.3.0:
+
+- Pre-built macOS packages failed to start due to a ``Malformed Mach-O file`` error (:issue:`12224`).
+- ``extra_functionsdir`` (usually ``vendor_functions.d``) and friends were not used (:issue:`12226`).
+- Sample config file ``~/.config/fish/config.fish/`` and config directories ``~/.config/fish/conf.d/``, ``~/.config/fish/completions/`` and ``~/.config/fish/functions/`` were recreated on every startup instead of only the first time fish runs on a system (:issue:`12230`).
+- The removal of pre-built HTML docs from tarballs revealed that cross compilation is broken because we use ``${CMAKE_BINARY_DIR}/fish_indent`` for building HTML docs.
+  As a workaround, the new CMake build option ``FISH_INDENT_FOR_BUILDING_DOCS`` can be set to the path of a runnable ``fish_indent`` binary.
 
 fish 4.3.1 (released December 28, 2025)
 =======================================

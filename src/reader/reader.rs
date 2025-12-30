@@ -1617,7 +1617,7 @@ impl ReaderData {
         }
     }
 
-    fn schedule_prompt_repaint(&mut self) {
+    pub fn schedule_prompt_repaint(&mut self) {
         if self.force_exec_prompt_and_repaint {
             return;
         }

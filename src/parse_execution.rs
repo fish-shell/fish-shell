@@ -35,7 +35,9 @@ use crate::parse_util::{
     MaybeParentheses::CommandSubstitution, parse_util_locate_cmdsubst_range,
     parse_util_unescape_wildcards,
 };
-use crate::parser::{Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
+use crate::parser::{
+    Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ParserEnvSetMode, ProfileItem,
+};
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
 use crate::prelude::*;
@@ -648,8 +650,11 @@ impl<'a> ExecutionContext<'a> {
                     vals.clone(),
                 ));
             }
-            ctx.parser()
-                .set_var_and_fire(variable_name, EnvMode::LOCAL | EnvMode::EXPORT, vals);
+            ctx.parser().set_var_and_fire(
+                variable_name,
+                ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
+                vals,
+            );
         }
         EndExecutionReason::Ok
     }
@@ -928,7 +933,7 @@ impl<'a> ExecutionContext<'a> {
 
         let retval = ctx.parser().set_var(
             &for_var_name,
-            EnvMode::LOCAL | EnvMode::USER,
+            ParserEnvSetMode::user(EnvMode::LOCAL),
             var.map_or(vec![], |var| var.as_list().to_owned()),
         );
         assert!(retval == EnvStackSetResult::Ok);
@@ -946,9 +951,11 @@ impl<'a> ExecutionContext<'a> {
                 break;
             }
 
-            let retval = ctx
-                .parser()
-                .set_var(&for_var_name, EnvMode::USER, vec![val]);
+            let retval = ctx.parser().set_var(
+                &for_var_name,
+                ParserEnvSetMode::user(EnvMode::empty()),
+                vec![val],
+            );
             assert!(
                 retval == EnvStackSetResult::Ok,
                 "for loop variable should have been successfully set"

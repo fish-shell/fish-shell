@@ -1,6 +1,7 @@
 //! Implementation of the fg builtin.
 
 use crate::fds::make_fd_blocking;
+use crate::parser::ParserEnvSetMode;
 use crate::reader::{reader_save_screen_state, reader_write_title};
 use crate::tokenizer::tok_command;
 use crate::wutil::perror;
@@ -123,7 +124,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         // Provide value for `status current-command`
         parser.libdata_mut().status_vars.command = ft.clone();
         // Also provide a value for the deprecated fish 2.0 $_ variable
-        parser.set_var_and_fire(L!("_"), EnvMode::EXPORT, vec![ft]);
+        parser.set_var_and_fire(L!("_"), ParserEnvSetMode::new(EnvMode::EXPORT), vec![ft]);
         // Provide value for `status current-commandline`
         parser.libdata_mut().status_vars.commandline = job.command().to_owned();
     }

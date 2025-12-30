@@ -7,8 +7,8 @@ use crate::abbrs::{Abbreviation, Position, abbrs_get_set};
 use crate::builtins::shared::{BuiltinResult, SUCCESS};
 use crate::common::{UnescapeStringStyle, bytes2wcstring, unescape_string, wcs2zstring};
 use crate::env::config_paths::ConfigPaths;
-use crate::env::{EnvMode, EnvVar, Statuses};
-use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
+use crate::env::{EnvMode, EnvSetMode, EnvVar, Statuses};
+use crate::env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change};
 use crate::event::Event;
 use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
@@ -212,7 +212,7 @@ impl EnvStack {
     }
 
     /// Sets the variable with the specified name to the given values.
-    pub fn set(&self, key: &wstr, mode: EnvMode, mut vals: Vec<WString>) -> EnvStackSetResult {
+    pub fn set(&self, key: &wstr, mode: EnvSetMode, mut vals: Vec<WString>) -> EnvStackSetResult {
         // Historical behavior.
         if vals.len() == 1 && (key == "PWD" || key == "HOME") {
             path_make_canonical(vals.first_mut().unwrap());
@@ -238,7 +238,14 @@ impl EnvStack {
             // Dispatch changes if we modified the global state or have 'dispatches_var_changes' set.
             // Important to not hold the lock here.
             if ret.global_modified || self.dispatches_var_changes {
-                env_dispatch_var_change(key, self);
+                env_dispatch_var_change(
+                    VarChangeMilieu {
+                        is_repainting: mode.is_repainting,
+                        global_or_universal: ret.global_modified || ret.uvar_modified,
+                    },
+                    key,
+                    self,
+                );
             }
         }
         // Mark if we modified a uvar.
@@ -249,12 +256,12 @@ impl EnvStack {
     }
 
     /// Sets the variable with the specified name to a single value.
-    pub fn set_one(&self, key: &wstr, mode: EnvMode, val: WString) -> EnvStackSetResult {
+    pub fn set_one(&self, key: &wstr, mode: EnvSetMode, val: WString) -> EnvStackSetResult {
         self.set(key, mode, vec![val])
     }
 
     /// Sets the variable with the specified name to no values.
-    pub fn set_empty(&self, key: &wstr, mode: EnvMode) -> EnvStackSetResult {
+    pub fn set_empty(&self, key: &wstr, mode: EnvSetMode) -> EnvStackSetResult {
         self.set(key, mode, Vec::new())
     }
 
@@ -269,24 +276,32 @@ impl EnvStack {
                 )
             );
         }
-        self.set_one(L!("PWD"), EnvMode::EXPORT | EnvMode::GLOBAL, cwd);
+        let global_exported_mode =
+            EnvSetMode::new_at_early_startup(EnvMode::GLOBAL | EnvMode::EXPORT);
+        self.set_one(L!("PWD"), global_exported_mode, cwd);
     }
 
     /// Remove environment variable.
     ///
     /// \param key The name of the variable to remove
-    /// \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If
-    /// this is a user request, read-only variables can not be removed. The mode may also specify
-    /// the scope of the variable that should be erased.
+    /// \param mode If this is a user request, read-only variables can not be removed. The mode
+    /// may also specify the scope of the variable that should be erased.
     ///
     /// Return the set result.
-    pub fn remove(&self, key: &wstr, mode: EnvMode) -> EnvStackSetResult {
+    pub fn remove(&self, key: &wstr, mode: EnvSetMode) -> EnvStackSetResult {
         let ret = self.lock().remove(key, mode);
         #[allow(clippy::collapsible_if)]
         if ret.status == EnvStackSetResult::Ok {
             if ret.global_modified || self.dispatches_var_changes {
                 // Important to not hold the lock here.
-                env_dispatch_var_change(key, self);
+                env_dispatch_var_change(
+                    VarChangeMilieu {
+                        is_repainting: mode.is_repainting,
+                        global_or_universal: ret.global_modified || ret.uvar_modified,
+                    },
+                    key,
+                    self,
+                );
             }
         }
         if ret.uvar_modified {
@@ -307,14 +322,21 @@ impl EnvStack {
     }
 
     /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
-    pub fn pop(&self) {
+    pub fn pop(&self, is_repainting: bool) {
         assert!(self.can_push_pop, "push/pop not allowed on global stack");
         let popped = self.lock().pop();
         if self.dispatches_var_changes {
             // TODO: we would like to coalesce locale changes, so that we only re-initialize
             // once.
             for key in popped {
-                env_dispatch_var_change(&key, self);
+                env_dispatch_var_change(
+                    VarChangeMilieu {
+                        is_repainting,
+                        global_or_universal: false,
+                    },
+                    &key,
+                    self,
+                );
             }
         }
     }
@@ -335,7 +357,7 @@ impl EnvStack {
     /// If `always` is set, perform synchronization even if there's no pending changes from this
     /// instance (that is, look for changes from other fish instances).
     /// Return a list of events for changed variables.
-    pub fn universal_sync(&self, always: bool) -> Vec<Event> {
+    pub fn universal_sync(&self, always: bool, is_repainting: bool) -> Vec<Event> {
         if UVAR_SCOPE_IS_GLOBAL.load() {
             return Vec::new();
         }
@@ -353,7 +375,14 @@ impl EnvStack {
         if let Some(callbacks) = callbacks {
             for callback in callbacks {
                 let name = callback.key;
-                env_dispatch_var_change(&name, self);
+                env_dispatch_var_change(
+                    VarChangeMilieu {
+                        is_repainting,
+                        global_or_universal: true,
+                    },
+                    &name,
+                    self,
+                );
                 let evt = if callback.val.is_none() {
                     Event::variable_erase(name)
                 } else {
@@ -378,8 +407,12 @@ impl EnvStack {
         })
     }
 
-    pub fn set_argv(&self, argv: Vec<WString>) {
-        self.set(L!("argv"), EnvMode::LOCAL, argv);
+    pub fn set_argv(&self, argv: Vec<WString>, is_repainting: bool) {
+        self.set(
+            L!("argv"),
+            EnvSetMode::new(EnvMode::LOCAL, is_repainting),
+            argv,
+        );
     }
 }
 
@@ -478,7 +511,7 @@ pub fn get_home() -> Option<String> {
 }
 
 /// Set up the USER and HOME variable.
-fn setup_user(vars: &EnvStack) {
+fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
     let uid: uid_t = geteuid();
     let user_var = vars.get_unless_empty(L!("USER"));
 
@@ -508,11 +541,11 @@ fn setup_user(vars: &EnvStack) {
                         let s = unsafe { CStr::from_ptr(userinfo.pw_dir) };
                         vars.set_one(
                             L!("HOME"),
-                            EnvMode::GLOBAL | EnvMode::EXPORT,
+                            global_exported_mode,
                             bytes2wcstring(s.to_bytes()),
                         );
                     } else {
-                        vars.set_empty(L!("HOME"), EnvMode::GLOBAL | EnvMode::EXPORT);
+                        vars.set_empty(L!("HOME"), global_exported_mode);
                     }
                 }
                 return;
@@ -535,7 +568,7 @@ fn setup_user(vars: &EnvStack) {
         let userinfo = unsafe { userinfo.assume_init() };
         let s = unsafe { CStr::from_ptr(userinfo.pw_name) };
         let uname = bytes2wcstring(s.to_bytes());
-        vars.set_one(L!("USER"), EnvMode::GLOBAL | EnvMode::EXPORT, uname);
+        vars.set_one(L!("USER"), global_exported_mode, uname);
         // Only change $HOME if it's empty, so we allow e.g. `HOME=(mktemp -d)`.
         // This is okay with common `su` and `sudo` because they set $HOME.
         if vars.get_unless_empty(L!("HOME")).is_none() {
@@ -543,18 +576,18 @@ fn setup_user(vars: &EnvStack) {
                 let s = unsafe { CStr::from_ptr(userinfo.pw_dir) };
                 vars.set_one(
                     L!("HOME"),
-                    EnvMode::GLOBAL | EnvMode::EXPORT,
+                    global_exported_mode,
                     bytes2wcstring(s.to_bytes()),
                 );
             } else {
                 // We cannot get $HOME. This triggers warnings for history and config.fish already,
                 // so it isn't necessary to warn here as well.
-                vars.set_empty(L!("HOME"), EnvMode::GLOBAL | EnvMode::EXPORT);
+                vars.set_empty(L!("HOME"), global_exported_mode);
             }
         }
     } else if vars.get_unless_empty(L!("HOME")).is_none() {
         // If $USER is empty as well (which we tried to set above), we can't get $HOME.
-        vars.set_empty(L!("HOME"), EnvMode::GLOBAL | EnvMode::EXPORT);
+        vars.set_empty(L!("HOME"), global_exported_mode);
     }
 }
 
@@ -581,15 +614,11 @@ pub(crate) static FALLBACK_PATH: Lazy<&[WString]> = Lazy::new(|| {
 });
 
 /// Make sure the PATH variable contains something.
-fn setup_path() {
+fn setup_path(global_exported_mode: EnvSetMode) {
     let vars = EnvStack::globals();
     let path = vars.get_unless_empty(L!("PATH"));
     if path.is_none() {
-        vars.set(
-            L!("PATH"),
-            EnvMode::GLOBAL | EnvMode::EXPORT,
-            FALLBACK_PATH.to_vec(),
-        );
+        vars.set(L!("PATH"), global_exported_mode, FALLBACK_PATH.to_vec());
     }
 }
 
@@ -599,6 +628,9 @@ pub static INHERITED_VARS: OnceCell<HashMap<WString, WString>> = OnceCell::new()
 
 pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
     let vars = EnvStack::globals();
+
+    let global_mode = EnvSetMode::new_at_early_startup(EnvMode::GLOBAL);
+    let global_exported_mode = EnvSetMode::new_at_early_startup(EnvMode::GLOBAL | EnvMode::EXPORT);
 
     let env_iter: Vec<_> = std::env::vars_os()
         .map(|(k, v)| (bytes2wcstring(k.as_bytes()), bytes2wcstring(v.as_bytes())))
@@ -619,7 +651,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
             // a value we previously (due to user error) exported will cause impossibly
             // difficult to debug PATH problems.
             if key != "fish_user_paths" {
-                vars.set(&key, EnvMode::EXPORT | EnvMode::GLOBAL, vec![val.clone()]);
+                vars.set(&key, global_exported_mode, vec![val.clone()]);
             }
         }
         inherited_vars.insert(key, val);
@@ -631,14 +663,14 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
     // Set $USER, $HOME and $EUID
     // This involves going to passwd and stuff.
-    vars.set_one(L!("EUID"), EnvMode::GLOBAL, geteuid().to_wstring());
-    setup_user(vars);
+    vars.set_one(L!("EUID"), global_mode, geteuid().to_wstring());
+    setup_user(global_exported_mode, vars);
 
     if let Some(paths) = paths {
         let set_path = |key: &wstr, maybe_path: Option<&PathBuf>| {
             vars.set(
                 key,
-                EnvMode::GLOBAL,
+                global_mode,
                 maybe_path
                     .map(|path| vec![bytes2wcstring(path.as_os_str().as_bytes())])
                     .unwrap_or_default(),
@@ -656,45 +688,49 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     let user_config_dir = path_get_config();
     vars.set_one(
         FISH_CONFIG_DIR,
-        EnvMode::GLOBAL,
+        global_mode,
         user_config_dir.unwrap_or_default(),
     );
 
     let user_data_dir = path_get_data();
     vars.set_one(
         FISH_USER_DATA_DIR,
-        EnvMode::GLOBAL,
+        global_mode,
         user_data_dir.unwrap_or_default(),
     );
 
     let user_cache_dir = path_get_cache();
     vars.set_one(
         FISH_CACHE_DIR,
-        EnvMode::GLOBAL,
+        global_mode,
         user_cache_dir.unwrap_or_default(),
     );
     // Set up a default PATH
-    setup_path();
+    setup_path(global_exported_mode);
 
     // Set up $IFS - this used to be in share/config.fish, but really breaks if it isn't done.
-    vars.set_one(L!("IFS"), EnvMode::GLOBAL, "\n \t".into());
+    vars.set_one(L!("IFS"), global_mode, "\n \t".into());
 
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
     // prompt is written.
-    vars.set_one(L!("CMD_DURATION"), EnvMode::UNEXPORT, "0".into());
+    vars.set_one(
+        L!("CMD_DURATION"),
+        EnvSetMode::new_at_early_startup(EnvMode::UNEXPORT),
+        "0".into(),
+    );
 
     // Set up the version variable.
     let version = bytes2wcstring(crate::BUILD_VERSION.as_bytes());
-    vars.set_one(L!("version"), EnvMode::GLOBAL, version.clone());
-    vars.set_one(L!("FISH_VERSION"), EnvMode::GLOBAL, version);
+    vars.set_one(L!("version"), global_mode, version.clone());
+    vars.set_one(L!("FISH_VERSION"), global_mode, version);
 
     // Set the $fish_pid variable.
-    vars.set_one(L!("fish_pid"), EnvMode::GLOBAL, getpid().to_wstring());
+    vars.set_one(L!("fish_pid"), global_mode, getpid().to_wstring());
 
     // Set the $hostname variable
     let hostname: WString = get_hostname_identifier().unwrap_or("fish".into());
-    vars.set_one(L!("hostname"), EnvMode::GLOBAL, hostname);
+    vars.set_one(L!("hostname"), global_mode, hostname);
 
     // Set up SHLVL variable. Not we can't use vars.get() because SHLVL is read-only, and therefore
     // was not inherited from the environment.
@@ -709,13 +745,13 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         } else {
             L!("1").to_owned()
         };
-        vars.set_one(L!("SHLVL"), EnvMode::GLOBAL | EnvMode::EXPORT, nshlvl_str);
+        vars.set_one(L!("SHLVL"), global_exported_mode, nshlvl_str);
     } else {
         // If we're not interactive, simply pass the value along.
         if let Some(shlvl_var) = std::env::var_os("SHLVL") {
             vars.set_one(
                 L!("SHLVL"),
-                EnvMode::GLOBAL | EnvMode::EXPORT,
+                global_exported_mode,
                 bytes2wcstring(shlvl_var.as_os_str().as_bytes()),
             );
         }
@@ -736,7 +772,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         && incoming_pwd.char_at(0) == '/'
         && paths_are_same_file(&incoming_pwd, L!("."))
     {
-        vars.set_one(L!("PWD"), EnvMode::EXPORT | EnvMode::GLOBAL, incoming_pwd);
+        vars.set_one(L!("PWD"), global_exported_mode, incoming_pwd);
     } else {
         vars.set_pwd_from_getcwd();
     }
@@ -744,18 +780,14 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     // Initialize termsize variables.
     let termsize = termsize::SHARED_CONTAINER.initialize(vars as &dyn Environment);
     if vars.get_unless_empty(L!("COLUMNS")).is_none() {
-        vars.set_one(
-            L!("COLUMNS"),
-            EnvMode::GLOBAL,
-            termsize.width().to_wstring(),
-        );
+        vars.set_one(L!("COLUMNS"), global_mode, termsize.width().to_wstring());
     }
     if vars.get_unless_empty(L!("LINES")).is_none() {
-        vars.set_one(L!("LINES"), EnvMode::GLOBAL, termsize.height().to_wstring());
+        vars.set_one(L!("LINES"), global_mode, termsize.height().to_wstring());
     }
 
     // Set fish_bind_mode to "default".
-    vars.set_one(FISH_BIND_MODE_VAR, EnvMode::GLOBAL, "default".into());
+    vars.set_one(FISH_BIND_MODE_VAR, global_mode, "default".into());
 
     // Allow changes to variables to produce events.
     env_dispatch_init(vars);
@@ -776,7 +808,14 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     // Set up universal variables using the default path.
     let callbacks = uvars().initialize().unwrap_or_default();
     for callback in callbacks {
-        env_dispatch_var_change(&callback.key, vars);
+        env_dispatch_var_change(
+            VarChangeMilieu {
+                is_repainting: false,
+                global_or_universal: true,
+            },
+            &callback.key,
+            vars,
+        );
     }
 
     // Do not import variables that have the same name and value as
@@ -798,7 +837,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         to_skip
     };
     for name in &globals_to_skip {
-        EnvStack::globals().remove(name, EnvMode::GLOBAL | EnvMode::EXPORT);
+        EnvStack::globals().remove(name, global_exported_mode);
     }
 
     // Import any abbreviations from uvars.
@@ -830,6 +869,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 #[cfg(test)]
 mod tests {
     use super::{EnvMode, EnvStack, Environment};
+    use crate::env::EnvSetMode;
     use crate::prelude::*;
     use crate::tests::prelude::*;
 
@@ -845,19 +885,19 @@ mod tests {
         let before_pwd = vars.get(L!("PWD")).unwrap().as_string();
         vars.set_one(
             L!("test_env_snapshot_var"),
-            EnvMode::default(),
+            EnvSetMode::default(),
             L!("before").to_owned(),
         );
         let snapshot = vars.snapshot();
-        vars.set_one(L!("PWD"), EnvMode::default(), L!("/newdir").to_owned());
+        vars.set_one(L!("PWD"), EnvSetMode::default(), L!("/newdir").to_owned());
         vars.set_one(
             L!("test_env_snapshot_var"),
-            EnvMode::default(),
+            EnvSetMode::default(),
             L!("after").to_owned(),
         );
         vars.set_one(
             L!("test_env_snapshot_var_2"),
-            EnvMode::default(),
+            EnvSetMode::default(),
             L!("after").to_owned(),
         );
 
@@ -886,7 +926,7 @@ mod tests {
         // snapshots see global var changes except for perproc like PWD
         vars.set_one(
             L!("test_env_snapshot_var_3"),
-            EnvMode::GLOBAL,
+            EnvSetMode::new(EnvMode::GLOBAL, false),
             L!("reallyglobal").to_owned(),
         );
         assert_eq!(
@@ -901,7 +941,7 @@ mod tests {
             L!("reallyglobal")
         );
 
-        vars.pop();
+        vars.pop(false);
         parser.popd();
     }
 
@@ -915,6 +955,6 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_no_global_pop() {
-        EnvStack::globals().pop();
+        EnvStack::globals().pop(false);
     }
 }

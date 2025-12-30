@@ -32,7 +32,7 @@ use crate::{
     parse_util::{
         parse_util_cmdsubst_extent, parse_util_process_extent, parse_util_unescape_wildcards,
     },
-    parser::{Block, Parser},
+    parser::{Block, Parser, ParserEnvSetMode},
     parser_keywords::parser_keywords_is_subcommand,
     path::{path_get_path, path_try_get_path},
     prelude::*,
@@ -1914,7 +1914,11 @@ impl<'ctx> Completer<'ctx> {
             } else {
                 Vec::new()
             };
-            parser.set_var(variable_name, EnvMode::LOCAL | EnvMode::EXPORT, vals);
+            parser.set_var(
+                variable_name,
+                ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
+                vals,
+            );
             if self.ctx.check_cancel() {
                 break;
             }
@@ -2628,11 +2632,12 @@ mod tests {
         sort_and_prioritize,
     };
     use crate::abbrs::{self, Abbreviation, with_abbrs_mut};
-    use crate::env::{EnvMode, Environment};
+    use crate::env::{EnvMode, EnvSetMode, Environment};
     use crate::io::IoChain;
     use crate::operation_context::{
         EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT, OperationContext, no_cancel,
     };
+    use crate::parser::ParserEnvSetMode;
     use crate::prelude::*;
     use crate::reader::completion_apply_to_command_line;
     use crate::tests::prelude::*;
@@ -3219,9 +3224,9 @@ mod tests {
         // This is to ensure tilde expansion is handled. See the `cd ~/test_autosuggest_suggest_specia`
         // test below.
         // Fake out the home directory
-        parser.vars().set_one(
+        parser.set_one(
             L!("HOME"),
-            EnvMode::LOCAL | EnvMode::EXPORT,
+            ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
             L!("test/test-home").to_owned(),
         );
         std::fs::create_dir_all("test/test-home/test_autosuggest_suggest_special/").unwrap();
@@ -3331,9 +3336,10 @@ mod tests {
         perform_one_completion_cd_test!("cd ~absolutelynosuchus", "er/");
         perform_one_completion_cd_test!("cd ~absolutelynosuchuser/", "path1/");
 
-        parser
-            .vars()
-            .remove(L!("HOME"), EnvMode::LOCAL | EnvMode::EXPORT);
+        parser.vars().remove(
+            L!("HOME"),
+            EnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT, false),
+        );
         parser.popd();
     }
 

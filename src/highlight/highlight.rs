@@ -1274,7 +1274,7 @@ pub struct HighlightSpec {
 mod tests {
     use super::{HighlightColorResolver, HighlightRole, HighlightSpec, highlight_shell};
     use crate::common::ScopeGuard;
-    use crate::env::{EnvMode, Environment};
+    use crate::env::{EnvMode, EnvSetMode, Environment};
     use crate::future_feature_flags::{self, FeatureFlag};
     use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
@@ -1386,26 +1386,15 @@ mod tests {
 
         // Verify variables and wildcards in commands using /bin/cat.
         let vars = parser.vars();
-        vars.set_one(
-            L!("CDPATH"),
-            EnvMode::LOCAL,
-            L!("./cdpath-entry").to_owned(),
-        );
+        let local_mode = EnvSetMode::new_at_early_startup(EnvMode::LOCAL);
+        vars.set_one(L!("CDPATH"), local_mode, L!("./cdpath-entry").to_owned());
 
-        vars.set_one(
-            L!("VARIABLE_IN_COMMAND"),
-            EnvMode::LOCAL,
-            L!("a").to_owned(),
-        );
-        vars.set_one(
-            L!("VARIABLE_IN_COMMAND2"),
-            EnvMode::LOCAL,
-            L!("at").to_owned(),
-        );
+        vars.set_one(L!("VARIABLE_IN_COMMAND"), local_mode, L!("a").to_owned());
+        vars.set_one(L!("VARIABLE_IN_COMMAND2"), local_mode, L!("at").to_owned());
 
         let _cleanup = ScopeGuard::new((), |_| {
-            vars.remove(L!("VARIABLE_IN_COMMAND"), EnvMode::default());
-            vars.remove(L!("VARIABLE_IN_COMMAND2"), EnvMode::default());
+            vars.remove(L!("VARIABLE_IN_COMMAND"), EnvSetMode::default());
+            vars.remove(L!("VARIABLE_IN_COMMAND2"), EnvSetMode::default());
         });
 
         validate!(
@@ -1798,7 +1787,7 @@ mod tests {
         // First, set up fish_color_command to include underline
         vars.set_one(
             L!("fish_color_command"),
-            EnvMode::LOCAL,
+            EnvSetMode::new_at_early_startup(EnvMode::LOCAL),
             L!("--underline").to_owned(),
         );
 
@@ -1850,7 +1839,7 @@ mod tests {
         let vars = parser.vars();
 
         let set = |var: &wstr, value: Vec<WString>| {
-            vars.set(var, EnvMode::LOCAL, value);
+            vars.set(var, EnvSetMode::new(EnvMode::LOCAL, false), value);
         };
         set(L!("fish_color_normal"), vec![L!("normal").into()]);
         set(

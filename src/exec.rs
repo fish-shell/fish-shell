@@ -11,7 +11,7 @@ use crate::common::{
     ScopeGuard, bytes2wcstring, exit_without_destructors, truncate_at_nul, wcs2bytes, wcs2zstring,
     write_loop,
 };
-use crate::env::{EnvMode, EnvStack, Environment, READ_BYTE_LIMIT, Statuses};
+use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment, READ_BYTE_LIMIT, Statuses};
 #[cfg(have_posix_spawn)]
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::make_fd_blocking;
@@ -32,7 +32,7 @@ use crate::io::{
 };
 use crate::nix::{getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
-use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
+use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser, ParserEnvSetMode};
 use crate::prelude::*;
 use crate::proc::Pid;
 use crate::proc::{
@@ -98,12 +98,12 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         for assignment in &job.processes()[0].variable_assignments {
             parser.set_var(
                 &assignment.variable_name,
-                EnvMode::LOCAL | EnvMode::EXPORT,
+                ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
                 assignment.values.clone(),
             );
         }
 
-        internal_exec(parser.vars(), job, block_io);
+        internal_exec(parser.vars(), parser.is_repainting(), job, block_io);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
         let status = if job.flags().negate { 0 } else { 1 };
@@ -234,11 +234,13 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     // a pgroup, so error out before setting last_pid.
     if !job.is_foreground() {
         if let Some(last_pid) = job.get_last_pid() {
-            parser
-                .vars()
-                .set_one(L!("last_pid"), EnvMode::GLOBAL, last_pid.to_wstring());
+            parser.set_one(
+                L!("last_pid"),
+                ParserEnvSetMode::new(EnvMode::GLOBAL),
+                last_pid.to_wstring(),
+            );
         } else {
-            parser.vars().set_empty(L!("last_pid"), EnvMode::GLOBAL);
+            parser.set_empty(L!("last_pid"), ParserEnvSetMode::new(EnvMode::GLOBAL));
         }
     }
 
@@ -479,7 +481,7 @@ fn can_use_posix_spawn_for_job(job: &Job, dup2s: &Dup2List) -> bool {
     !wants_terminal
 }
 
-fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
+fn internal_exec(vars: &EnvStack, is_repainting: bool, j: &Job, block_io: IoChain) {
     // Do a regular launch -  but without forking first...
     let mut all_ios = block_io;
     if !all_ios.append_from_specs(j.processes()[0].redirection_specs(), &vars.get_pwd_slash()) {
@@ -508,7 +510,8 @@ fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
     {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         if is_interactive_session() {
-            let shlvl_var = vars.getf(L!("SHLVL"), EnvMode::GLOBAL | EnvMode::EXPORT);
+            let global_exported_mode = EnvMode::GLOBAL | EnvMode::EXPORT;
+            let shlvl_var = vars.getf(L!("SHLVL"), global_exported_mode);
             let mut shlvl_str = L!("0").to_owned();
             if let Some(shlvl_var) = shlvl_var {
                 if let Ok(shlvl) = fish_wcstol(&shlvl_var.as_string()) {
@@ -517,7 +520,11 @@ fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
                     }
                 }
             }
-            vars.set_one(L!("SHLVL"), EnvMode::GLOBAL | EnvMode::EXPORT, shlvl_str);
+            vars.set_one(
+                L!("SHLVL"),
+                EnvSetMode::new(global_exported_mode, is_repainting),
+                shlvl_str,
+            );
         }
 
         // launch_process _never_ returns.
@@ -957,15 +964,17 @@ fn function_prepare_environment(
     // 2. inherited variables
     // 3. argv
 
+    let mode = parser.convert_env_set_mode(ParserEnvSetMode::user(EnvMode::LOCAL));
+
     let mut overwrite_argv = false;
     for (idx, named_arg) in props.named_arguments.iter().enumerate() {
         if named_arg == L!("argv") {
             overwrite_argv = true
         };
         if idx < argv.len() {
-            vars.set_one(named_arg, EnvMode::LOCAL | EnvMode::USER, argv[idx].clone());
+            vars.set_one(named_arg, mode, argv[idx].clone());
         } else {
-            vars.set_empty(named_arg, EnvMode::LOCAL | EnvMode::USER);
+            vars.set_empty(named_arg, mode);
         }
     }
 
@@ -973,11 +982,11 @@ fn function_prepare_environment(
         if key == L!("argv") {
             overwrite_argv = true
         };
-        vars.set(key, EnvMode::LOCAL | EnvMode::USER, value.clone());
+        vars.set(key, mode, value.clone());
     }
 
     if !overwrite_argv {
-        vars.set_argv(argv);
+        vars.set_argv(argv, mode.is_repainting);
     }
     fb
 }
@@ -1310,7 +1319,7 @@ fn exec_process_in_job(
     for assignment in &p.variable_assignments {
         parser.set_var(
             &assignment.variable_name,
-            EnvMode::LOCAL | EnvMode::EXPORT,
+            ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
             assignment.values.clone(),
         );
     }

@@ -16,7 +16,7 @@
 
 use crate::{
     common::cstr2wcstring,
-    env::EnvVar,
+    env::{EnvSetMode, EnvVar},
     fs::{
         LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, lock_and_load,
         rewrite_via_temporary_file,
@@ -1760,8 +1760,9 @@ pub fn all_paths_are_valid<P: IntoIterator<Item = WString>>(
 
 /// Sets private mode on. Once in private mode, it cannot be turned off.
 pub fn start_private_mode(vars: &EnvStack) {
-    vars.set_one(L!("fish_history"), EnvMode::GLOBAL, L!("").to_owned());
-    vars.set_one(L!("fish_private_mode"), EnvMode::GLOBAL, L!("1").to_owned());
+    let global_mode = EnvSetMode::new_at_early_startup(EnvMode::GLOBAL);
+    vars.set_one(L!("fish_history"), global_mode, L!("").to_owned());
+    vars.set_one(L!("fish_private_mode"), global_mode, L!("1").to_owned());
 }
 
 /// Queries private mode status.
@@ -1777,7 +1778,7 @@ mod tests {
     };
     use crate::common::ESCAPE_TEST_CHAR;
     use crate::common::{ScopeGuard, bytes2wcstring, wcs2bytes, wcs2osstring};
-    use crate::env::{EnvMode, EnvStack};
+    use crate::env::{EnvMode, EnvSetMode, EnvStack};
     use crate::fs::{LockedFile, WriteMethod};
     use crate::path::path_get_data;
     use crate::prelude::*;
@@ -2270,8 +2271,9 @@ mod tests {
         let wdir_path = WString::from(tmpdir.path().to_str().unwrap());
 
         let test_vars = EnvStack::new();
-        test_vars.set_one(L!("PWD"), EnvMode::GLOBAL, wdir_path.clone());
-        test_vars.set_one(L!("HOME"), EnvMode::GLOBAL, wdir_path.clone());
+        let global_mode = EnvSetMode::new(EnvMode::GLOBAL, false);
+        test_vars.set_one(L!("PWD"), global_mode, wdir_path.clone());
+        test_vars.set_one(L!("HOME"), global_mode, wdir_path.clone());
 
         let history = History::with_name(L!("path_detection"));
         history.clear();

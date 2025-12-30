@@ -87,7 +87,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     // points to the end of argv. Otherwise we want to skip the file name to get to the args if any.
     let remaining_args = &args[optind + if argc == optind { 0 } else { 1 }..];
     let argv_list = remaining_args.iter().map(|&arg| arg.to_owned()).collect();
-    parser.vars().set_argv(argv_list);
+    parser.vars().set_argv(argv_list, parser.is_repainting());
 
     let retval = reader_read(parser, fd, streams.io_chain);
 

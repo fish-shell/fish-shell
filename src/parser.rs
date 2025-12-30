@@ -8,7 +8,8 @@ use crate::common::{
 };
 use crate::complete::CompletionList;
 use crate::env::{
-    EnvMode, EnvStack, EnvStackSetResult, Environment, FISH_TERMINAL_COLOR_THEME_VAR, Statuses,
+    EnvMode, EnvSetMode, EnvStack, EnvStackSetResult, Environment, FISH_TERMINAL_COLOR_THEME_VAR,
+    Statuses,
 };
 use crate::event::{self, Event};
 use crate::expand::{
@@ -435,6 +436,21 @@ pub struct Parser {
 
     // Timeout for blocking terminal queries.
     pub blocking_query_timeout: RefCell<Option<Duration>>,
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct ParserEnvSetMode {
+    pub mode: EnvMode,
+    pub user: bool,
+}
+
+impl ParserEnvSetMode {
+    pub fn new(mode: EnvMode) -> Self {
+        Self { mode, user: false }
+    }
+    pub fn user(mode: EnvMode) -> Self {
+        Self { mode, user: true }
+    }
 }
 
 impl Parser {
@@ -945,7 +961,7 @@ impl Parser {
     pub fn set_var_and_fire(
         &self,
         key: &wstr,
-        mode: EnvMode,
+        mode: ParserEnvSetMode,
         vals: Vec<WString>,
     ) -> EnvStackSetResult {
         let res = self.set_var(key, mode, vals);
@@ -955,9 +971,41 @@ impl Parser {
         res
     }
 
+    pub fn is_repainting(&self) -> bool {
+        self.libdata().is_repaint
+    }
+
+    pub fn convert_env_set_mode(&self, mode: ParserEnvSetMode) -> EnvSetMode {
+        EnvSetMode::new_with(mode.mode, mode.user, self.is_repainting())
+    }
+
     /// Cover of vars().set(), without firing events
-    pub fn set_var(&self, key: &wstr, mode: EnvMode, vals: Vec<WString>) -> EnvStackSetResult {
+    pub fn set_var(
+        &self,
+        key: &wstr,
+        mode: ParserEnvSetMode,
+        vals: Vec<WString>,
+    ) -> EnvStackSetResult {
+        let mode = self.convert_env_set_mode(mode);
         self.vars().set(key, mode, vals)
+    }
+
+    /// Cover of vars().set_one(), without firing events
+    pub fn set_one(&self, key: &wstr, mode: ParserEnvSetMode, val: WString) -> EnvStackSetResult {
+        let mode = self.convert_env_set_mode(mode);
+        self.vars().set_one(key, mode, val)
+    }
+
+    /// Cover of vars().set_empty(), without firing events
+    pub fn set_empty(&self, key: &wstr, mode: ParserEnvSetMode) -> EnvStackSetResult {
+        let mode = self.convert_env_set_mode(mode);
+        self.vars().set_empty(key, mode)
+    }
+
+    /// Cover of vars().remove(), without firing events
+    pub fn remove_var(&self, key: &wstr, mode: ParserEnvSetMode) -> EnvStackSetResult {
+        let mode = self.convert_env_set_mode(mode);
+        self.vars().remove(key, mode)
     }
 
     /// Update any universal variables and send event handlers.
@@ -965,7 +1013,7 @@ impl Parser {
     /// changes from other fish instances); otherwise only sync if this instance has changed uvars.
     pub fn sync_uvars_and_fire(&self, always: bool) {
         if self.syncs_uvars.load() {
-            let evts = self.vars().universal_sync(always);
+            let evts = self.vars().universal_sync(always, self.is_repainting());
             for evt in evts {
                 event::fire(self, evt);
             }
@@ -994,7 +1042,7 @@ impl Parser {
             block_list.pop().unwrap()
         };
         if block.wants_pop_env() {
-            self.vars().pop();
+            self.vars().pop(self.is_repainting());
         }
     }
 
@@ -1247,7 +1295,7 @@ impl Parser {
         );
         self.set_var_and_fire(
             FISH_TERMINAL_COLOR_THEME_VAR,
-            EnvMode::GLOBAL,
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
             vec![color_theme.to_owned()],
         );
     }

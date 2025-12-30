@@ -3,9 +3,10 @@ use std::collections::HashMap;
 use std::num::NonZeroUsize;
 
 use super::*;
-use crate::env::{EnvMode, EnvVar, EnvVarFlags};
+use crate::env::{EnvVar, EnvVarFlags};
 use crate::flog::flog;
 use crate::parse_util::parse_util_unescape_wildcards;
+use crate::parser::ParserEnvSetMode;
 use crate::wildcard::{ANY_STRING, wildcard_match};
 
 #[derive(Default)]
@@ -146,7 +147,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         }) = matcher
         {
             for (name, vals) in first_match_captures.into_iter() {
-                parser.set_var(&WString::from(name), EnvMode::default(), vals);
+                parser.set_var(&WString::from(name), ParserEnvSetMode::default(), vals);
             }
         }
 

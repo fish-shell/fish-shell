@@ -1597,6 +1597,7 @@ mod tests {
     use crate::expand::{ExpandResultCode, expand_to_receiver};
     use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, no_cancel};
     use crate::parse_constants::ParseErrorList;
+    use crate::parser::ParserEnvSetMode;
     use crate::tests::prelude::*;
     use crate::wildcard::ANY_STRING;
     use crate::{
@@ -1957,7 +1958,7 @@ mod tests {
 
         let parser = TestParser::new();
         parser.vars().push(true);
-        let set = parser.vars().set(L!("bigvar"), EnvMode::LOCAL, vals);
+        let set = parser.set_var(L!("bigvar"), ParserEnvSetMode::new(EnvMode::LOCAL), vals);
         assert_eq!(set, EnvStackSetResult::Ok);
 
         let mut errors = ParseErrorList::new();
@@ -1977,7 +1978,7 @@ mod tests {
         assert_ne!(errors, vec![]);
         assert_eq!(res, ExpandResultCode::error);
 
-        parser.vars().pop();
+        parser.vars().pop(false);
     }
 
     #[test]

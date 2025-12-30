@@ -16,6 +16,7 @@ use crate::expand::expand_escape_variable;
 use crate::history::History;
 use crate::history::history_session_id;
 use crate::parse_execution::varname_error;
+use crate::parser::ParserEnvSetMode;
 use crate::{
     env::{EnvMode, EnvVar, Environment},
     wutil::wcstoi::wcstoi_partial,
@@ -78,7 +79,7 @@ impl Default for Options {
 
 impl Options {
     fn env_mode(&self) -> EnvMode {
-        let mut scope = EnvMode::USER;
+        let mut scope = EnvMode::empty();
         for (is_mode, mode) in [
             (self.local, EnvMode::LOCAL),
             (self.function, EnvMode::FUNCTION),
@@ -372,10 +373,11 @@ fn env_set_reporting_errors(
     streams: &mut IoStreams,
     parser: &Parser,
 ) -> EnvStackSetResult {
+    let mode = ParserEnvSetMode::user(mode);
     let retval = if opts.no_event {
-        parser.set_var(key, mode | EnvMode::USER, list)
+        parser.set_var(key, mode, list)
     } else {
-        parser.set_var_and_fire(key, mode | EnvMode::USER, list)
+        parser.set_var_and_fire(key, mode, list)
     };
     // If this returned OK, the parser already fired the event.
     handle_env_return(retval, cmd, key, streams);
@@ -791,7 +793,7 @@ fn erase(
             let retval;
             if split.indexes.is_empty() {
                 // unset the var
-                retval = parser.vars().remove(split.varname, mode);
+                retval = parser.remove_var(split.varname, ParserEnvSetMode::new(mode));
                 // When a non-existent-variable is unset, return NotFound as $status
                 // but do not emit any errors at the console as a compromise between user
                 // friendliness and correctness.

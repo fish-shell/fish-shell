@@ -1951,7 +1951,7 @@ macro_rules! env_stack_set_from_env {
         if let Some(var) = std::env::var_os($var_name) {
             $vars.set_one(
                 L!($var_name),
-                $crate::env::EnvMode::GLOBAL,
+                $crate::env::EnvSetMode::new_at_early_startup($crate::env::EnvMode::GLOBAL),
                 $crate::common::bytes2wcstring(var.as_bytes()),
             );
         }

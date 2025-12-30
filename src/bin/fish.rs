@@ -47,7 +47,7 @@ use fish::{
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
     parse_util::parse_util_detect_errors_in_ast,
-    parser::{BlockType, CancelBehavior, Parser},
+    parser::{BlockType, CancelBehavior, Parser, ParserEnvSetMode},
     path::path_get_config,
     prelude::*,
     printf,
@@ -498,9 +498,9 @@ fn throwing_main() -> i32 {
 
     if is_interactive_session() && opts.no_config && !opts.no_exec {
         // If we have no config, we default to the default key bindings.
-        parser.vars().set_one(
+        parser.set_one(
             L!("fish_key_bindings"),
-            EnvMode::UNEXPORT,
+            ParserEnvSetMode::new(EnvMode::UNEXPORT),
             L!("fish_default_key_bindings").to_owned(),
         );
         if function::exists(L!("fish_default_key_bindings"), parser) {
@@ -547,7 +547,7 @@ fn throwing_main() -> i32 {
         let list = &args[my_optind..];
         parser.set_var(
             L!("argv"),
-            EnvMode::default(),
+            ParserEnvSetMode::default(),
             list.iter().map(|s| s.to_owned()).collect(),
         );
         res = run_command_list(parser, &opts.batch_cmds);
@@ -582,7 +582,7 @@ fn throwing_main() -> i32 {
                 let list = &args[my_optind..];
                 parser.set_var(
                     L!("argv"),
-                    EnvMode::default(),
+                    ParserEnvSetMode::default(),
                     list.iter().map(|s| s.to_owned()).collect(),
                 );
                 let rel_filename = &args[my_optind - 1];

@@ -399,7 +399,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             // Don't enqueue a repaint if we're currently in the middle of one,
             // because that's an infinite loop.
             if matches!(cmd, RL::RepaintMode | RL::ForceRepaint | RL::Repaint)
-                && parser.libdata().is_repaint
+                && parser.is_repainting()
             {
                 continue;
             }

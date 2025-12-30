@@ -3,7 +3,7 @@
 //! path-related issues.
 
 use crate::common::{wcs2osstring, wcs2zstring};
-use crate::env::{EnvMode, EnvStack, Environment, FALLBACK_PATH};
+use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment, FALLBACK_PATH};
 use crate::expand::{HOME_DIRECTORY, expand_tilde};
 use crate::flog::{flog, flogf};
 use crate::prelude::*;
@@ -134,15 +134,13 @@ fn maybe_issue_path_warning(
     vars: &EnvStack,
 ) {
     let warning_var_name = L!("_FISH_WARNED_").to_owned() + which_dir;
-    if vars
-        .getf(&warning_var_name, EnvMode::GLOBAL | EnvMode::EXPORT)
-        .is_some()
-    {
+    let global_exported_mode = EnvMode::GLOBAL | EnvMode::EXPORT;
+    if vars.getf(&warning_var_name, global_exported_mode).is_some() {
         return;
     }
     vars.set_one(
         &warning_var_name,
-        EnvMode::GLOBAL | EnvMode::EXPORT,
+        EnvSetMode::new_at_early_startup(global_exported_mode),
         L!("1").to_owned(),
     );
 

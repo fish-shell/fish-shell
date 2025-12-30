@@ -2,6 +2,7 @@ use super::prelude::*;
 use crate::abbrs::{self, Abbreviation, Position};
 use crate::common::{EscapeStringStyle, escape, escape_string, valid_func_name};
 use crate::env::{EnvMode, EnvStackSetResult};
+use crate::parser::ParserEnvSetMode;
 use crate::re::{regex_make_anchored, to_boxed_chars};
 use pcre2::utf32::{Regex, RegexBuilder};
 
@@ -460,7 +461,8 @@ fn abbr_erase(opts: &Options, parser: &Parser) -> BuiltinResult {
                 let esc_src = escape(arg);
                 if !esc_src.is_empty() {
                     let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
-                    let ret = parser.vars().remove(&var_name, EnvMode::UNIVERSAL);
+                    let ret =
+                        parser.remove_var(&var_name, ParserEnvSetMode::new(EnvMode::UNIVERSAL));
 
                     if ret == EnvStackSetResult::Ok {
                         result = Ok(SUCCESS)

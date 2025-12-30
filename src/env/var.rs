@@ -31,11 +31,6 @@ bitflags! {
         const PATHVAR = 1 << 6;
         /// Flag to unmark a variable as a path variable.
         const UNPATHVAR = 1 << 7;
-        /// Flag for variable update request from the user. All variable changes that are made directly
-        /// by the user, such as those from the `read` and `set` builtin must have this flag set. It
-        /// serves one purpose: to indicate that an error should be returned if the user is attempting
-        /// to modify a var that should not be modified by direct user action; e.g., a read-only var.
-        const USER = 1 << 8;
     }
 }
 
@@ -49,6 +44,35 @@ impl EnvMode {
 impl From<EnvMode> for u16 {
     fn from(val: EnvMode) -> Self {
         val.bits()
+    }
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct EnvSetMode {
+    pub mode: EnvMode,
+
+    /// Flag for variable update request from the user. All variable changes that are made directly
+    /// by the user, such as those from the `read` and `set` builtin must have this flag set. It
+    /// serves to indicate that an error should be returned if the user is attempting to modify
+    /// a var that should not be modified by direct user action; e.g., a read-only var.
+    pub user: bool,
+
+    pub is_repainting: bool,
+}
+
+impl EnvSetMode {
+    pub fn new(mode: EnvMode, is_repainting: bool) -> Self {
+        Self::new_with(mode, false, is_repainting)
+    }
+    pub fn new_with(mode: EnvMode, user: bool, is_repainting: bool) -> Self {
+        Self {
+            mode,
+            user,
+            is_repainting,
+        }
+    }
+    pub fn new_at_early_startup(mode: EnvMode) -> Self {
+        Self::new_with(mode, false, false)
     }
 }
 
@@ -294,6 +318,7 @@ pub fn is_read_only(name: &wstr) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{EnvMode, EnvVar, EnvVarFlags};
+    use crate::env::EnvSetMode;
     use crate::env::environment::{EnvStack, Environment};
     use crate::prelude::*;
     use crate::tests::prelude::*;
@@ -306,7 +331,11 @@ mod tests {
     fn return_timezone_hour(tstamp: SystemTime, timezone: &wstr) -> libc::c_int {
         let vars = EnvStack::globals().create_child(true /* dispatches_var_changes */);
 
-        vars.set_one(L!("TZ"), EnvMode::EXPORT, timezone.to_owned());
+        vars.set_one(
+            L!("TZ"),
+            EnvSetMode::new(EnvMode::EXPORT, false),
+            timezone.to_owned(),
+        );
 
         let _var = vars.get(L!("TZ"));
 

@@ -4,6 +4,7 @@ use super::prelude::*;
 use crate::{
     env::{EnvMode, Environment},
     fds::{BEST_O_SEARCH, wopen_dir},
+    parser::ParserEnvSetMode,
     path::path_apply_cdpath,
     wutil::{normalize_path, wperror, wreadlink},
 };
@@ -127,7 +128,11 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         // Stash the fd for the cwd in the parser.
         parser.libdata_mut().cwd_fd = Some(dir_fd);
 
-        parser.set_var_and_fire(L!("PWD"), EnvMode::EXPORT | EnvMode::GLOBAL, vec![norm_dir]);
+        parser.set_var_and_fire(
+            L!("PWD"),
+            ParserEnvSetMode::new(EnvMode::EXPORT | EnvMode::GLOBAL),
+            vec![norm_dir],
+        );
         return Ok(SUCCESS);
     }
 

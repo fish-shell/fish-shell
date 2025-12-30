@@ -113,6 +113,7 @@ use crate::parse_util::{
     parse_util_get_line_from_offset, parse_util_get_offset, parse_util_get_offset_from_line,
     parse_util_lineno, parse_util_locate_cmdsubst_range, parse_util_token_extent,
 };
+use crate::parser::ParserEnvSetMode;
 use crate::parser::{BlockType, EvalRes, Parser};
 use crate::prelude::*;
 use crate::proc::{
@@ -392,9 +393,11 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
         // Provide value for `status current-command`
         parser.libdata_mut().status_vars.command = L!("fish").to_owned();
         // Also provide a value for the deprecated fish 2.0 $_ variable
-        parser
-            .vars()
-            .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
+        parser.set_one(
+            L!("_"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            L!("fish").to_owned(),
+        );
         let old = parser
             .blocking_query_timeout
             .replace(input_data.blocking_query_timeout);
@@ -5988,9 +5991,11 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
         parser.libdata_mut().status_vars.command = ft.to_owned();
         parser.libdata_mut().status_vars.commandline = cmd.to_owned();
         // Also provide a value for the deprecated fish 2.0 $_ variable
-        parser
-            .vars()
-            .set_one(L!("_"), EnvMode::GLOBAL, ft.to_owned());
+        parser.set_one(
+            L!("_"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            ft.to_owned(),
+        );
     }
 
     reader_write_title(cmd, parser, true);
@@ -6008,9 +6013,9 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     if !ft.is_empty() {
         let time_after = Instant::now();
         let duration = time_after.duration_since(time_before);
-        parser.vars().set_one(
+        parser.set_one(
             ENV_CMD_DURATION,
-            EnvMode::UNEXPORT,
+            ParserEnvSetMode::new(EnvMode::UNEXPORT),
             duration.as_millis().to_wstring(),
         );
     }
@@ -6020,9 +6025,11 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     // Provide value for `status current-command`
     parser.libdata_mut().status_vars.command = get_program_name().to_owned();
     // Also provide a value for the deprecated fish 2.0 $_ variable
-    parser
-        .vars()
-        .set_one(L!("_"), EnvMode::GLOBAL, get_program_name().to_owned());
+    parser.set_one(
+        L!("_"),
+        ParserEnvSetMode::new(EnvMode::GLOBAL),
+        get_program_name().to_owned(),
+    );
     // Provide value for `status current-commandline`
     parser.libdata_mut().status_vars.commandline = L!("").to_owned();
 

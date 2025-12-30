@@ -1239,7 +1239,7 @@ pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
 }
 
 pub trait ReadExt {
-    /// Like [`read_to_end`], but does not retry on EINTR.
+    /// Like [`std::io::Read::read_to_end`], but does not retry on EINTR.
     fn read_to_end_interruptible(&mut self, buf: &mut Vec<u8>) -> std::io::Result<()>;
 }
 

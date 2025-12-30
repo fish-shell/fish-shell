@@ -74,7 +74,6 @@ fn job_id_for_pid(pid: Pid, parser: &Parser) -> Option<u64> {
 /// Returns an exit status.
 fn parse_cmd_opts(
     opts: &mut FunctionCmdOpts,
-    optind: &mut usize,
     argv: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
@@ -228,7 +227,27 @@ fn parse_cmd_opts(
         }
     }
 
-    *optind = w.wopt_index;
+    let optind = w.wopt_index;
+    if argv.len() != optind {
+        if !opts.named_arguments.is_empty() {
+            // Remaining arguments are named arguments.
+            for &arg in argv[optind..].iter() {
+                if !valid_var_name(arg) {
+                    streams.err.append(&varname_error(cmd, arg));
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                opts.named_arguments.push(arg.to_owned());
+            }
+        } else {
+            streams.err.append(&wgettext_fmt!(
+                "%s: %s: unexpected positional argument",
+                cmd,
+                argv[optind],
+            ));
+            return Err(STATUS_INVALID_ARGS);
+        }
+    }
+
     Ok(SUCCESS)
 }
 
@@ -287,32 +306,11 @@ pub fn function(
     let argv = &mut argv[1..];
 
     let mut opts = FunctionCmdOpts::default();
-    let mut optind = 0;
-    parse_cmd_opts(&mut opts, &mut optind, argv, parser, streams)?;
+    parse_cmd_opts(&mut opts, argv, parser, streams)?;
 
     if opts.print_help {
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Ok(SUCCESS);
-    }
-
-    if argv.len() != optind {
-        if !opts.named_arguments.is_empty() {
-            // Remaining arguments are named arguments.
-            for &arg in argv[optind..].iter() {
-                if !valid_var_name(arg) {
-                    streams.err.append(&varname_error(cmd, arg));
-                    return Err(STATUS_INVALID_ARGS);
-                }
-                opts.named_arguments.push(arg.to_owned());
-            }
-        } else {
-            streams.err.append(&wgettext_fmt!(
-                "%s: %s: unexpected positional argument",
-                cmd,
-                argv[optind],
-            ));
-            return Err(STATUS_INVALID_ARGS);
-        }
     }
 
     // Extract the current filename.

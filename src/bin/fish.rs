@@ -545,7 +545,7 @@ fn throwing_main() -> i32 {
         // Pass additional args as $argv.
         // Note that we *don't* support setting argv[0]/$0, unlike e.g. bash.
         let list = &args[my_optind..];
-        parser.vars().set(
+        parser.set_var(
             L!("argv"),
             EnvMode::default(),
             list.iter().map(|s| s.to_owned()).collect(),
@@ -580,7 +580,7 @@ fn throwing_main() -> i32 {
             }
             Ok(f) => {
                 let list = &args[my_optind..];
-                parser.vars().set(
+                parser.set_var(
                     L!("argv"),
                     EnvMode::default(),
                     list.iter().map(|s| s.to_owned()).collect(),

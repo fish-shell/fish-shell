@@ -948,7 +948,7 @@ impl Parser {
         mode: EnvMode,
         vals: Vec<WString>,
     ) -> EnvStackSetResult {
-        let res = self.vars().set(key, mode, vals);
+        let res = self.set_var(key, mode, vals);
         if res == EnvStackSetResult::Ok {
             event::fire(self, Event::variable_set(key.to_owned()));
         }

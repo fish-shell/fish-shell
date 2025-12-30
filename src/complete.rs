@@ -1914,9 +1914,7 @@ impl<'ctx> Completer<'ctx> {
             } else {
                 Vec::new()
             };
-            parser
-                .vars()
-                .set(variable_name, EnvMode::LOCAL | EnvMode::EXPORT, vals);
+            parser.set_var(variable_name, EnvMode::LOCAL | EnvMode::EXPORT, vals);
             if self.ctx.check_cancel() {
                 break;
             }

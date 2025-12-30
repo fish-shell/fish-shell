@@ -96,7 +96,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
 
         // Apply foo=bar variable assignments
         for assignment in &job.processes()[0].variable_assignments {
-            parser.vars().set(
+            parser.set_var(
                 &assignment.variable_name,
                 EnvMode::LOCAL | EnvMode::EXPORT,
                 assignment.values.clone(),
@@ -1308,7 +1308,7 @@ fn exec_process_in_job(
         }
     });
     for assignment in &p.variable_assignments {
-        parser.vars().set(
+        parser.set_var(
             &assignment.variable_name,
             EnvMode::LOCAL | EnvMode::EXPORT,
             assignment.values.clone(),

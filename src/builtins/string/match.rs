@@ -145,9 +145,8 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
             ..
         }) = matcher
         {
-            let vars = parser.vars();
             for (name, vals) in first_match_captures.into_iter() {
-                vars.set(&WString::from(name), EnvMode::default(), vals);
+                parser.set_var(&WString::from(name), EnvMode::default(), vals);
             }
         }
 

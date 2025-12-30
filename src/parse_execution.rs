@@ -926,7 +926,7 @@ impl<'a> ExecutionContext<'a> {
             );
         }
 
-        let retval = ctx.parser().vars().set(
+        let retval = ctx.parser().set_var(
             &for_var_name,
             EnvMode::LOCAL | EnvMode::USER,
             var.map_or(vec![], |var| var.as_list().to_owned()),
@@ -948,8 +948,7 @@ impl<'a> ExecutionContext<'a> {
 
             let retval = ctx
                 .parser()
-                .vars()
-                .set(&for_var_name, EnvMode::USER, vec![val]);
+                .set_var(&for_var_name, EnvMode::USER, vec![val]);
             assert!(
                 retval == EnvStackSetResult::Ok,
                 "for loop variable should have been successfully set"

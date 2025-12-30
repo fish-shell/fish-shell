@@ -37,7 +37,11 @@ complete -c signify --short-option n --no-files \
     --description 'When signing with -z, store a zero timestamp in the gzip header' \
     --condition '__fish_seen_subcommand_from -S && __fish_seen_argument -s z'
 
-complete -c signify --short-option p --force-files --require-parameter \
+# This is deliberately split up to only add a description to the flag and not all its argument completions
+complete -c signify --short-option p --no-files --keep-order --require-parameter \
+    --arguments '(__fish_complete_suffix .pub)' \
+    --condition '__fish_seen_subcommand_from -C -G -V'
+complete -c signify --short-option p --no-files --keep-order --require-parameter \
     --description 'Public key produced by -G, and used by -V to check a signature' \
     --condition '__fish_seen_subcommand_from -C -G -V'
 
@@ -45,7 +49,10 @@ complete -c signify --short-option q --no-files \
     --description 'Quiet mode.  Suppress informational output' \
     --condition '__fish_seen_subcommand_from -C -V'
 
-complete -c signify --short-option s --force-files --require-parameter \
+complete -c signify --short-option s --no-files --keep-order --require-parameter \
+    --arguments '(__fish_complete_suffix .sec)' \
+    --condition '__fish_seen_subcommand_from -G -S'
+complete -c signify --short-option s --no-files --keep-order --require-parameter \
     --description 'Secret (private) key produced by -G, and used by -S to sign a message' \
     --condition '__fish_seen_subcommand_from -G -S'
 
@@ -56,7 +63,10 @@ complete -c signify --short-option t --no-files --require-parameter \
     --description 'When inferring a key to verify with, only use keys with this keytype suffix' \
     --condition '__fish_seen_subcommand_from -C -V'
 
-complete -c signify --short-option x --force-files --require-parameter \
+complete -c signify --short-option x --no-files --keep-order --require-parameter \
+    --arguments '(__fish_complete_suffix .sig)' \
+    --condition '__fish_seen_subcommand_from -C -S -V'
+complete -c signify --short-option x --no-files --keep-order --require-parameter \
     --description 'The signature file to create or verify. The default is message.sig' \
     --condition '__fish_seen_subcommand_from -C -S -V'
 

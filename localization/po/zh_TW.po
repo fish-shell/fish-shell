@@ -59870,9 +59870,6 @@ msgstr ""
 msgid "Sign project artifact, the POM, and attached artifacts with GnuPG for deployment"
 msgstr ""
 
-msgid "Sign specified message"
-msgstr ""
-
 msgid "Sign the extension so it can be installed in Firefox"
 msgstr ""
 
@@ -70611,12 +70608,6 @@ msgid "Verify a correct encoding"
 msgstr ""
 
 msgid "Verify a signed NuGet package"
-msgstr ""
-
-msgid "Verify a signed checksum list"
-msgstr ""
-
-msgid "Verify a signed message and sig"
 msgstr ""
 
 msgid "Verify and commit firmware to a specific slot"

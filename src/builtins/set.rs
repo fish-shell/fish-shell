@@ -708,7 +708,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
     let vars = parser.vars();
     if args.is_empty() {
         // show all vars
-        let mut names = vars.get_names(EnvMode::USER);
+        let mut names = vars.get_names(EnvMode::empty());
         names.sort();
         for name in names {
             if name == "history" {

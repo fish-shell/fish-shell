@@ -162,6 +162,11 @@ function foo --argument-names status; end
 # CHECKERR: function foo --argument-names status; end
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 
+function foo --inherit-variable status; end
+# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: variable 'status' is read-only
+# CHECKERR: function foo --inherit-variable status; end
+# CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+
 echo status $status
 # CHECK: status 2
 

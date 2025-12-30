@@ -1042,6 +1042,13 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
                 ));
                 return Err(STATUS_CMD_ERROR);
             }
+            if streams.stdin_fd < 0 {
+                let cmd = "fish_indent";
+                streams
+                    .err
+                    .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
+                return Err(STATUS_CMD_ERROR);
+            }
             use std::os::fd::FromRawFd;
             let mut fd = unsafe { std::fs::File::from_raw_fd(streams.stdin_fd) };
             let mut buf = vec![];

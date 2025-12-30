@@ -652,3 +652,7 @@ cat $tmpdir/indent_test.fish
 # See that the builtin can be redirected
 printf %s\n a b c | builtin fish_indent | grep b
 # CHECK: b
+
+# Regression test that fish_indent doesn't panic with closed stdin.
+fish_indent <&-
+# CHECKERR: fish_indent: stdin is closed

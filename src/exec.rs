@@ -14,8 +14,9 @@ use crate::common::{
 use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment, READ_BYTE_LIMIT, Statuses};
 #[cfg(have_posix_spawn)]
 use crate::env_dispatch::use_posix_spawn;
-use crate::fds::make_fd_blocking;
-use crate::fds::{PIPE_ERROR, make_autoclose_pipes, open_cloexec};
+use crate::fds::{
+    BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_blocking, open_cloexec,
+};
 use crate::flog::{flog, flogf};
 use crate::fork_exec::PATH_BSHELL;
 use crate::fork_exec::blocked_signals_for_job;
@@ -57,7 +58,7 @@ use std::ffi::CStr;
 use std::io::{Read, Write};
 use std::mem::MaybeUninit;
 use std::num::NonZeroU32;
-use std::os::fd::{AsRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
 use std::slice;
 use std::sync::{
     Arc, OnceLock,
@@ -1160,23 +1161,28 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
             let err_io = io_chain.io_for_fd(STDERR_FILENO);
 
             // Figure out what fd to use for the builtin's stdin.
-            let mut local_builtin_stdin = STDIN_FILENO;
+            let mut local_builtin_stdin = Some(BorrowedFdFile::stdin());
             if let Some(inp) = io_chain.io_for_fd(STDIN_FILENO) {
+                // An fd of -1 is treated as closing stdin.
                 // Ignore fd redirections from an fd other than the
                 // standard ones. e.g. in source <&3 don't actually read from fd 3,
                 // which is internal to fish. We still respect this redirection in
                 // that we pass it on as a block IO to the code that source runs,
                 // and therefore this is not an error.
-                let ignore_redirect = inp.io_mode() == IoMode::Fd && inp.source_fd() >= 3;
-                if !ignore_redirect {
-                    local_builtin_stdin = inp.source_fd();
+                let fd = inp.source_fd();
+                let ignore_redirect = fd >= 3 && inp.io_mode() == IoMode::Fd;
+                if fd == -1 {
+                    local_builtin_stdin = None;
+                } else if !ignore_redirect {
+                    // Safety: the fd may in principal be closed, but this only panics on negative values.
+                    local_builtin_stdin = Some(unsafe { BorrowedFdFile::from_raw_fd(fd) });
                 }
             }
 
             // Populate our IoStreams. This is a bag of information for the builtin.
             let mut streams = IoStreams::new(output_stream, errput_stream, &io_chain);
             streams.job_group = job_group;
-            streams.stdin_fd = local_builtin_stdin;
+            streams.stdin_file = local_builtin_stdin;
             streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
             streams.out_is_redirected = out_io.is_some();
             streams.err_is_redirected = err_io.is_some();

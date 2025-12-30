@@ -910,10 +910,9 @@ pub fn main() {
 
 fn throwing_main() -> i32 {
     // TODO: Duplicated with fish_key_reader
-    use crate::io::FdOutputStream;
-    use crate::io::IoChain;
-    use crate::io::OutputStream::Fd;
-    use libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+    use crate::fds::BorrowedFdFile;
+    use crate::io::{FdOutputStream, IoChain, OutputStream::Fd};
+    use libc::{STDERR_FILENO, STDOUT_FILENO};
 
     topic_monitor_init();
     threads::init();
@@ -922,7 +921,7 @@ fn throwing_main() -> i32 {
     let mut err = Fd(FdOutputStream::new(STDERR_FILENO));
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
-    streams.stdin_fd = STDIN_FILENO;
+    streams.stdin_file = Some(BorrowedFdFile::stdin());
     // Safety: single-threaded.
     unsafe {
         set_libc_locales(/*log_ok=*/ false)
@@ -1042,21 +1041,17 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
                 ));
                 return Err(STATUS_CMD_ERROR);
             }
-            if streams.stdin_fd < 0 {
+            let Some(stdin_file) = streams.stdin_file.as_mut() else {
                 let cmd = "fish_indent";
                 streams
                     .err
                     .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
                 return Err(STATUS_CMD_ERROR);
-            }
-            use std::os::fd::FromRawFd;
-            let mut fd = unsafe { std::fs::File::from_raw_fd(streams.stdin_fd) };
+            };
             let mut buf = vec![];
-            match fd.read_to_end_interruptible(&mut buf) {
+            match stdin_file.read_to_end_interruptible(&mut buf) {
                 Ok(_) => {}
                 Err(err) => {
-                    // Don't close the fd
-                    std::mem::forget(fd);
                     return if err.kind() == std::io::ErrorKind::Interrupted {
                         Err(128 + libc::SIGINT)
                     } else {
@@ -1064,7 +1059,6 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
                     };
                 }
             }
-            std::mem::forget(fd);
             src = bytes2wcstring(&buf);
         } else {
             let arg = args[i];

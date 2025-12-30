@@ -36,14 +36,14 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     let optind = opts.optind;
 
     if argc == optind || args[optind] == "-" {
-        if streams.stdin_fd < 0 {
+        if streams.is_stdin_closed() {
             streams
                 .err
                 .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
             return Err(STATUS_CMD_ERROR);
         }
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
-        if argc == optind && isatty(streams.stdin_fd) {
+        if argc == optind && isatty(streams.stdin_fd()) {
             // Don't implicitly read from the terminal.
             streams.err.append(&wgettext_fmt!(
                 "%s: missing filename argument or input redirection\n",
@@ -52,7 +52,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             return Err(STATUS_CMD_ERROR);
         }
         func_filename = FilenameRef::new(L!("-").to_owned());
-        fd = streams.stdin_fd;
+        fd = streams.stdin_fd();
     } else {
         match wopen_cloexec(args[optind], OFlag::O_RDONLY, Mode::empty()) {
             Ok(file) => {

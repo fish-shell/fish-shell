@@ -1,5 +1,6 @@
 use super::prelude::*;
 use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name};
+use crate::fds::BorrowedFdFile;
 use crate::io::OutputStream;
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
@@ -8,10 +9,7 @@ use crate::proc::{Pid, ProcStatus, no_exec};
 use crate::{builtins::*, wutil};
 use errno::errno;
 use fish_wchar::L;
-
-use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
-use std::os::fd::FromRawFd;
 
 pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;
 
@@ -832,20 +830,8 @@ enum ArgvSource<'args, 'iter> {
         /// Reused storage for reading.
         buffer: Vec<u8>,
         /// The reader to read from.
-        /// This is never None; we use Option to avoid closing stdin on drop.
-        reader: Option<BufReader<File>>,
+        reader: BufReader<BorrowedFdFile>,
     },
-}
-
-impl Drop for ArgvSource<'_, '_> {
-    fn drop(&mut self) {
-        if let ArgvSource::Stdin { reader, .. } = self {
-            if let Some(reader) = reader.take() {
-                // we should not close stdin
-                std::mem::forget(reader.into_inner());
-            }
-        }
-    }
 }
 
 impl<'args, 'iter> Arguments<'args, 'iter> {
@@ -858,13 +844,13 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
         let source: ArgvSource = if !streams.stdin_is_directly_redirected {
             ArgvSource::Args { args, argidx }
         } else {
-            let stdin_fd = streams.stdin_fd;
-            assert!(stdin_fd >= 0, "should have a valid fd");
-            // safety: this should be a valid fd, and already open
-            let fd = unsafe { File::from_raw_fd(stdin_fd) };
+            let stdin_file = streams
+                .stdin_file
+                .clone()
+                .expect("should have stdin if redirected");
             ArgvSource::Stdin {
                 buffer: Vec::new(),
-                reader: Some(BufReader::with_capacity(chunk_size, fd)),
+                reader: BufReader::with_capacity(chunk_size, stdin_file),
             }
         };
         Arguments {
@@ -892,11 +878,7 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
     /// Return the next argument by reading from stdin ArgvSource.
     fn get_arg_stdin(&mut self) -> Option<InputValue<'args>> {
         use SplitBehavior::*;
-        let ArgvSource::Stdin {
-            reader: Some(reader),
-            buffer,
-        } = &mut self.source
-        else {
+        let ArgvSource::Stdin { reader, buffer } = &mut self.source else {
             panic!("Not reading from stdin")
         };
 

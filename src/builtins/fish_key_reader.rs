@@ -251,7 +251,7 @@ pub fn fish_key_reader(
         return s;
     }
 
-    if streams.stdin_fd < 0 || !isatty(streams.stdin_fd) {
+    if streams.stdin_fd() < 0 || !isatty(streams.stdin_fd()) {
         streams.err.appendln("Stdin must be attached to a tty.");
         return Err(STATUS_CMD_ERROR);
     }
@@ -261,7 +261,7 @@ pub fn fish_key_reader(
         continuous_mode,
         verbose,
         // Won't be querying, so no timeout value needed.
-        InputEventQueue::new(streams.stdin_fd, None),
+        InputEventQueue::new(streams.stdin_fd(), None),
     )
 }
 

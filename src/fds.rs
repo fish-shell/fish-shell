@@ -10,6 +10,9 @@ use nix::fcntl::OFlag;
 use std::ffi::CStr;
 use std::fs::File;
 use std::io;
+use std::mem::ManuallyDrop;
+use std::ops::{Deref, DerefMut};
+use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd};
 use std::os::unix::prelude::*;
 
 localizable_consts!(
@@ -240,12 +243,84 @@ pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
     Ok(())
 }
 
+/// A helper type for a File that does not close on drop.
+/// Note the underlying file is never dropped; this is equivalent to mem::forget.
+pub struct BorrowedFdFile(ManuallyDrop<File>);
+
+impl Deref for BorrowedFdFile {
+    type Target = File;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for BorrowedFdFile {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl FromRawFd for BorrowedFdFile {
+    // Note this does NOT take ownership.
+    unsafe fn from_raw_fd(fd: RawFd) -> Self {
+        Self(ManuallyDrop::new(unsafe { File::from_raw_fd(fd) }))
+    }
+}
+
+impl AsRawFd for BorrowedFdFile {
+    #[inline]
+    fn as_raw_fd(&self) -> RawFd {
+        self.0.as_raw_fd()
+    }
+}
+
+impl IntoRawFd for BorrowedFdFile {
+    #[inline]
+    fn into_raw_fd(self) -> RawFd {
+        ManuallyDrop::into_inner(self.0).into_raw_fd()
+    }
+}
+
+impl BorrowedFdFile {
+    /// Return a BorrowedFdFile from stdin.
+    pub fn stdin() -> Self {
+        unsafe { Self::from_raw_fd(libc::STDIN_FILENO) }
+    }
+}
+
+impl Clone for BorrowedFdFile {
+    // BorrowedFdFile may be cloned: this just shares the borrowed fd.
+    // It does NOT duplicate the underlying fd.
+    fn clone(&self) -> Self {
+        // Safety: just re-borrow the same fd.
+        unsafe { Self::from_raw_fd(self.as_raw_fd()) }
+    }
+}
+
+impl std::io::Read for BorrowedFdFile {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.deref_mut().read(buf)
+    }
+    fn read_vectored(&mut self, bufs: &mut [io::IoSliceMut<'_>]) -> io::Result<usize> {
+        self.deref_mut().read_vectored(bufs)
+    }
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        self.deref_mut().read_to_end(buf)
+    }
+    fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
+        self.deref_mut().read_to_string(buf)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{FIRST_HIGH_FD, make_autoclose_pipes};
+    use super::{BorrowedFdFile, FIRST_HIGH_FD, make_autoclose_pipes};
     use crate::tests::prelude::*;
     use libc::{F_GETFD, FD_CLOEXEC};
-    use std::os::fd::AsRawFd;
+    use std::os::fd::{AsRawFd, FromRawFd};
 
     #[test]
     #[serial]
@@ -268,5 +343,19 @@ mod tests {
                 assert!(flags & FD_CLOEXEC != 0);
             }
         }
+    }
+
+    #[test]
+    fn test_borrowed_fd_file_does_not_close() {
+        let file = std::fs::File::open("/dev/null").unwrap();
+        let fd = file.as_raw_fd();
+        let borrowed = unsafe { BorrowedFdFile::from_raw_fd(fd) };
+        #[allow(clippy::drop_non_drop)]
+        drop(borrowed);
+        let flags = unsafe { libc::fcntl(fd, libc::F_GETFD, 0) };
+        assert!(flags >= 0);
+        drop(file);
+        let flags = unsafe { libc::fcntl(fd, libc::F_GETFD, 0) };
+        assert!(flags < 0);
     }
 }

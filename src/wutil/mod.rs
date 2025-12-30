@@ -10,6 +10,7 @@ pub mod wcstoi;
 use crate::common::{
     bytes2wcstring, fish_reserved_codepoint, wcs2bytes, wcs2osstring, wcs2zstring,
 };
+use crate::fds::BorrowedFdFile;
 use crate::flog;
 use crate::wcstringutil::{join_strings, str2bytes_callback};
 use errno::errno;
@@ -47,12 +48,8 @@ pub fn lwstat(file_name: &wstr) -> io::Result<fs::Metadata> {
 
 /// Cover over fstat().
 pub fn fstat(fd: impl AsRawFd) -> io::Result<fs::Metadata> {
-    let fd = fd.as_raw_fd();
-    let file = unsafe { fs::File::from_raw_fd(fd) };
-    let res = file.metadata();
-    let fd2 = file.into_raw_fd();
-    assert_eq!(fd, fd2);
-    res
+    let file = unsafe { BorrowedFdFile::from_raw_fd(fd.as_raw_fd()) };
+    file.metadata()
 }
 
 /// Wide character version of access().

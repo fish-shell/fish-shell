@@ -604,7 +604,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     validate_read_args(cmd, &mut opts, argv, parser, streams)?;
 
     // stdin may have been explicitly closed
-    if streams.stdin_fd < 0 {
+    if streams.is_stdin_closed() {
         streams
             .err
             .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
@@ -627,7 +627,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         }
     };
 
-    let stream_stdin_is_a_tty = isatty(streams.stdin_fd);
+    let stream_stdin_is_a_tty = streams.stdin_fd() >= 0 && isatty(streams.stdin_fd());
 
     // Normally, we either consume a line of input or all available input. But if we are reading a
     // line at a time, we need a middle ground where we only consume as many lines as we need to
@@ -646,7 +646,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 opts.prompt.as_ref().unwrap(),
                 &opts.right_prompt,
                 &opts.commandline,
-                streams.stdin_fd,
+                streams.stdin_fd(),
             );
         } else if opts.nchars.is_none() && !stream_stdin_is_a_tty &&
                    // "one_line" is implemented as reading n-times to a new line,
@@ -655,7 +655,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                    !opts.one_line &&
                        (
                            streams.stdin_is_directly_redirected ||
-                               unsafe {libc::lseek(streams.stdin_fd, 0, SEEK_CUR)} != -1)
+                               unsafe {libc::lseek(streams.stdin_fd(), 0, SEEK_CUR)} != -1)
         {
             // We read in chunks when we either can seek (so we put the bytes back),
             // or we have the bytes to ourselves (because it's directly redirected).
@@ -665,14 +665,18 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             // You don't rewind VHS tapes before throwing them in the trash.
             // TODO: Do this when nchars is set by seeking back.
             exit_res = read_in_chunks(
-                streams.stdin_fd,
+                streams.stdin_fd(),
                 &mut buff,
                 opts.split_null,
                 !streams.stdin_is_directly_redirected,
             );
         } else {
-            exit_res =
-                read_one_char_at_a_time(streams.stdin_fd, &mut buff, opts.nchars, opts.split_null);
+            exit_res = read_one_char_at_a_time(
+                streams.stdin_fd(),
+                &mut buff,
+                opts.nchars,
+                opts.split_null,
+            );
         }
 
         if exit_res.is_err() {

@@ -164,7 +164,7 @@ mod test_expressions {
             }
             let bint = self.base as i32;
             if bint == 0 {
-                match streams.stdin_fd {
+                match streams.stdin_fd() {
                     -1 => false,
                     fd => isatty(fd),
                 }

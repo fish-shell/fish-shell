@@ -24,6 +24,7 @@ use once_cell::sync::OnceCell;
 use std::cell::{Cell, RefCell};
 use std::env;
 use std::ffi::{CStr, CString, OsString};
+use std::io::Read;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
@@ -1234,6 +1235,23 @@ pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
             continue;
         }
         return res;
+    }
+}
+
+pub trait ReadExt {
+    /// Like [`read_to_end`], but does not retry on EINTR.
+    fn read_to_end_interruptible(&mut self, buf: &mut Vec<u8>) -> std::io::Result<()>;
+}
+
+impl<T: Read + ?Sized> ReadExt for T {
+    fn read_to_end_interruptible(&mut self, buf: &mut Vec<u8>) -> std::io::Result<()> {
+        let mut chunk = [0_u8; 4096];
+        loop {
+            match self.read(&mut chunk)? {
+                0 => return Ok(()),
+                n => buf.extend_from_slice(&chunk[..n]),
+            }
+        }
     }
 }
 

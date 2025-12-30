@@ -11,7 +11,7 @@ use crate::panic::panic_handler;
 use super::prelude::*;
 use crate::ast::{self, AsNode, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
-    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
+    PROGRAM_NAME, ReadExt, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
     unescape_string, wcs2bytes,
 };
 use crate::env::EnvStack;
@@ -1045,12 +1045,16 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             use std::os::fd::FromRawFd;
             let mut fd = unsafe { std::fs::File::from_raw_fd(streams.stdin_fd) };
             let mut buf = vec![];
-            match fd.read_to_end(&mut buf) {
+            match fd.read_to_end_interruptible(&mut buf) {
                 Ok(_) => {}
-                Err(_) => {
+                Err(err) => {
                     // Don't close the fd
                     std::mem::forget(fd);
-                    return Err(STATUS_CMD_ERROR);
+                    return if err.kind() == std::io::ErrorKind::Interrupted {
+                        Err(128 + libc::SIGINT)
+                    } else {
+                        Err(STATUS_CMD_ERROR)
+                    };
                 }
             }
             std::mem::forget(fd);

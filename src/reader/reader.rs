@@ -1099,9 +1099,7 @@ pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
         let enable = check_bool_var(vars, L!("fish_autosuggestion_enabled"), true);
         if data.conf.autosuggest_ok != enable {
             data.conf.autosuggest_ok = enable;
-            data.force_exec_prompt_and_repaint = true;
-            data.input_data
-                .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+            data.schedule_prompt_repaint();
         }
     }
 }
@@ -1121,11 +1119,7 @@ pub fn reader_schedule_prompt_repaint() {
     let Some(data) = current_data() else {
         return;
     };
-    if !data.force_exec_prompt_and_repaint {
-        data.force_exec_prompt_and_repaint = true;
-        data.input_data
-            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
-    }
+    data.schedule_prompt_repaint();
 }
 
 pub fn reader_update_termsize(parser: &Parser) {
@@ -1621,6 +1615,15 @@ impl ReaderData {
             }
             CharOffset::Pager(_) | CharOffset::None => {}
         }
+    }
+
+    fn schedule_prompt_repaint(&mut self) {
+        if self.force_exec_prompt_and_repaint {
+            return;
+        }
+        self.force_exec_prompt_and_repaint = true;
+        self.input_data
+            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
     }
 }
 
@@ -3503,9 +3506,7 @@ impl<'a> Reader<'a> {
             | rl::PrevdOrBackwardWord => {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("prevd"));
-                    self.force_exec_prompt_and_repaint = true;
-                    self.input_data
-                        .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+                    self.schedule_prompt_repaint();
                     return;
                 }
 
@@ -3529,9 +3530,7 @@ impl<'a> Reader<'a> {
             | rl::NextdOrForwardWord => {
                 if c == rl::NextdOrForwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("nextd"));
-                    self.force_exec_prompt_and_repaint = true;
-                    self.input_data
-                        .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+                    self.schedule_prompt_repaint();
                     return;
                 }
 

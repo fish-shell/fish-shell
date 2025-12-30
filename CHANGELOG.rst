@@ -1,5 +1,5 @@
-fish 4.3.2 (released ???)
-=========================
+fish 4.3.2 (released December 30, 2025)
+=======================================
 
 This release fixes the following problems identified in 4.3.0:
 

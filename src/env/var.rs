@@ -39,6 +39,13 @@ bitflags! {
     }
 }
 
+impl EnvMode {
+    pub const ANY_SCOPE: EnvMode = EnvMode::LOCAL
+        .union(EnvMode::FUNCTION)
+        .union(EnvMode::GLOBAL)
+        .union(EnvMode::UNIVERSAL);
+}
+
 impl From<EnvMode> for u16 {
     fn from(val: EnvMode) -> Self {
         val.bits()

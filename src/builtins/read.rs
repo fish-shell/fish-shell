@@ -491,13 +491,7 @@ fn validate_read_args(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    if opts
-        .place
-        .intersection(EnvMode::LOCAL | EnvMode::FUNCTION | EnvMode::GLOBAL | EnvMode::UNIVERSAL)
-        .iter()
-        .count()
-        > 1
-    {
+    if opts.place.intersection(EnvMode::ANY_SCOPE).iter().count() > 1 {
         streams.err.append(&wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);

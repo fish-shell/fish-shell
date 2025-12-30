@@ -119,8 +119,7 @@ struct Query {
 impl Query {
     /// Creates a `Query` from env mode flags.
     fn new(mode: EnvMode) -> Self {
-        let has_scope = mode
-            .intersects(EnvMode::LOCAL | EnvMode::FUNCTION | EnvMode::GLOBAL | EnvMode::UNIVERSAL);
+        let has_scope = mode.intersects(EnvMode::ANY_SCOPE);
         let has_export_unexport = mode.intersects(EnvMode::EXPORT | EnvMode::UNEXPORT);
         Query {
             has_scope,

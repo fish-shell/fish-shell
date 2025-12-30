@@ -77,7 +77,7 @@ impl Default for Options {
 }
 
 impl Options {
-    fn scope(&self) -> EnvMode {
+    fn env_mode(&self) -> EnvMode {
         let mut scope = EnvMode::USER;
         for (is_mode, mode) in [
             (self.local, EnvMode::LOCAL),
@@ -367,15 +367,15 @@ fn env_set_reporting_errors(
     cmd: &wstr,
     opts: &Options,
     key: &wstr,
-    scope: EnvMode,
+    mode: EnvMode,
     list: Vec<WString>,
     streams: &mut IoStreams,
     parser: &Parser,
 ) -> EnvStackSetResult {
     let retval = if opts.no_event {
-        parser.set_var(key, scope | EnvMode::USER, list)
+        parser.set_var(key, mode | EnvMode::USER, list)
     } else {
-        parser.set_var_and_fire(key, scope | EnvMode::USER, list)
+        parser.set_var_and_fire(key, mode | EnvMode::USER, list)
     };
     // If this returned OK, the parser already fired the event.
     handle_env_return(retval, cmd, key, streams);
@@ -554,7 +554,7 @@ fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<isize>) -> Vec<WS
 /// `set --names` flag was used.
 fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> BuiltinResult {
     let names_only = opts.list;
-    let mut names = parser.vars().get_names(opts.scope());
+    let mut names = parser.vars().get_names(opts.env_mode());
     names.sort();
 
     for key in names {
@@ -573,7 +573,7 @@ fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> BuiltinResu
                     }
                     val += &expand_escape_string(history.item_at_index(i).unwrap().str())[..]
                 }
-            } else if let Some(var) = parser.vars().getf_unless_empty(&key, opts.scope()) {
+            } else if let Some(var) = parser.vars().getf_unless_empty(&key, opts.env_mode()) {
                 val = expand_escape_variable(&var);
             }
             if !val.is_empty() {
@@ -606,7 +606,7 @@ fn query(
     args: &[&wstr],
 ) -> BuiltinResult {
     let mut retval = 0;
-    let scope = opts.scope();
+    let mode = opts.env_mode();
 
     // No variables given, this is an error.
     // 255 is the maximum return code we allow.
@@ -615,7 +615,7 @@ fn query(
     }
 
     for arg in args {
-        let Some(split) = split_var_and_indexes(arg, scope, parser.vars(), streams) else {
+        let Some(split) = split_var_and_indexes(arg, mode, parser.vars(), streams) else {
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_CMD_ERROR);
         };
@@ -776,11 +776,11 @@ fn erase(
     args: &[&wstr],
 ) -> BuiltinResult {
     let mut ret = Ok(SUCCESS);
-    let scopes = opts.scope();
+    let mode = opts.env_mode();
     // `set -e` is allowed to be called with multiple scopes.
     for bit in (0..).take_while(|bit| 1 << bit <= EnvMode::USER.bits()) {
-        let scope = scopes.intersection(EnvMode::from_bits(1 << bit).unwrap());
-        if scope.bits() == 0 || (scope == EnvMode::USER && scopes != EnvMode::USER) {
+        let scope = mode.intersection(EnvMode::from_bits(1 << bit).unwrap());
+        if scope.bits() == 0 || (scope == EnvMode::USER && mode != EnvMode::USER) {
             continue;
         }
         for arg in args {
@@ -916,11 +916,11 @@ fn set_internal(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    let scope = opts.scope();
+    let mode = opts.env_mode();
     let var_expr = argv[0];
     let argv = &argv[1..];
 
-    let Some(split) = split_var_and_indexes(var_expr, scope, parser.vars(), streams) else {
+    let Some(split) = split_var_and_indexes(var_expr, mode, parser.vars(), streams) else {
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     };
@@ -984,7 +984,7 @@ fn set_internal(
 
     // Set the value back in the variable stack and fire any events.
     let retval =
-        env_set_reporting_errors(cmd, opts, split.varname, scope, new_values, streams, parser);
+        env_set_reporting_errors(cmd, opts, split.varname, mode, new_values, streams, parser);
 
     if retval == EnvStackSetResult::Ok {
         warn_if_uvar_shadows_global(cmd, opts, split.varname, streams, parser);

@@ -770,58 +770,59 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
     if !do_uvars {
         UVAR_SCOPE_IS_GLOBAL.store(true);
-    } else {
-        // Set up universal variables using the default path.
-        let callbacks = uvars().initialize().unwrap_or_default();
-        for callback in callbacks {
-            env_dispatch_var_change(&callback.key, vars);
-        }
+        return;
+    }
 
-        // Do not import variables that have the same name and value as
-        // an exported universal variable. See issues #5258 and #5348.
-        let globals_to_skip = {
-            let mut to_skip = vec![];
-            let uvars_locked = uvars();
-            for (name, uvar) in uvars_locked.get_table() {
-                if !uvar.exports() {
-                    continue;
-                }
+    // Set up universal variables using the default path.
+    let callbacks = uvars().initialize().unwrap_or_default();
+    for callback in callbacks {
+        env_dispatch_var_change(&callback.key, vars);
+    }
 
-                // Look for a global exported variable with the same name.
-                let global = EnvStack::globals().getf(name, EnvMode::GLOBAL | EnvMode::EXPORT);
-                if global.is_some_and(|x| x.as_string() == uvar.as_string()) {
-                    to_skip.push(name.to_owned());
-                }
-            }
-            to_skip
-        };
-        for name in &globals_to_skip {
-            EnvStack::globals().remove(name, EnvMode::GLOBAL | EnvMode::EXPORT);
-        }
-
-        // Import any abbreviations from uvars.
-        // Note we do not dynamically react to changes.
-        let prefix = L!("_fish_abbr_");
-        let prefix_len = prefix.char_count();
-        let from_universal = true;
-        let mut abbrs = abbrs_get_set();
+    // Do not import variables that have the same name and value as
+    // an exported universal variable. See issues #5258 and #5348.
+    let globals_to_skip = {
+        let mut to_skip = vec![];
         let uvars_locked = uvars();
         for (name, uvar) in uvars_locked.get_table() {
-            if !name.starts_with(prefix) {
+            if !uvar.exports() {
                 continue;
             }
-            let escaped_name = name.slice_from(prefix_len);
-            if let Some(name) = unescape_string(escaped_name, UnescapeStringStyle::Var) {
-                let key = name.clone();
-                let replacement: WString = join_strings(uvar.as_list(), ' ');
-                abbrs.add(Abbreviation::new(
-                    name,
-                    key,
-                    replacement,
-                    Position::Command,
-                    from_universal,
-                ));
+
+            // Look for a global exported variable with the same name.
+            let global = EnvStack::globals().getf(name, EnvMode::GLOBAL | EnvMode::EXPORT);
+            if global.is_some_and(|x| x.as_string() == uvar.as_string()) {
+                to_skip.push(name.to_owned());
             }
+        }
+        to_skip
+    };
+    for name in &globals_to_skip {
+        EnvStack::globals().remove(name, EnvMode::GLOBAL | EnvMode::EXPORT);
+    }
+
+    // Import any abbreviations from uvars.
+    // Note we do not dynamically react to changes.
+    let prefix = L!("_fish_abbr_");
+    let prefix_len = prefix.char_count();
+    let from_universal = true;
+    let mut abbrs = abbrs_get_set();
+    let uvars_locked = uvars();
+    for (name, uvar) in uvars_locked.get_table() {
+        if !name.starts_with(prefix) {
+            continue;
+        }
+        let escaped_name = name.slice_from(prefix_len);
+        if let Some(name) = unescape_string(escaped_name, UnescapeStringStyle::Var) {
+            let key = name.clone();
+            let replacement: WString = join_strings(uvar.as_list(), ' ');
+            abbrs.add(Abbreviation::new(
+                name,
+                key,
+                replacement,
+                Position::Command,
+                from_universal,
+            ));
         }
     }
 }

@@ -753,6 +753,7 @@ impl EnvStackImpl {
                 result.uvar_modified = true;
             } else if query.global || (query.universal && UVAR_SCOPE_IS_GLOBAL.load()) {
                 Self::set_in_node(&mut self.base.globals, key, val, flags);
+                result.global_modified = true;
             } else if query.local {
                 assert!(
                     !self.base.locals.ptr_eq(&self.base.globals),

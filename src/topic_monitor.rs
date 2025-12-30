@@ -343,18 +343,18 @@ unsafe impl Sync for TopicMonitor {}
 
 /// The principal topic monitor.
 /// Do not attempt to move this into a lazy_static, it must be accessed from a signal handler.
-static mut s_principal: *const TopicMonitor = std::ptr::null();
+static mut PRINCIPAL: *const TopicMonitor = std::ptr::null();
 
 impl TopicMonitor {
     /// Initialize the principal monitor, and return it.
     /// This should be called only on the main thread.
     pub fn initialize() -> &'static Self {
         unsafe {
-            if s_principal.is_null() {
+            if PRINCIPAL.is_null() {
                 // We simply leak.
-                s_principal = Box::into_raw(Box::default());
+                PRINCIPAL = Box::into_raw(Box::default());
             }
-            &*s_principal
+            &*PRINCIPAL
         }
     }
 
@@ -595,10 +595,10 @@ pub fn topic_monitor_init() {
 pub fn topic_monitor_principal() -> &'static TopicMonitor {
     unsafe {
         assert!(
-            !s_principal.is_null(),
+            !PRINCIPAL.is_null(),
             "Principal topic monitor not initialized"
         );
-        &*s_principal
+        &*PRINCIPAL
     }
 }
 

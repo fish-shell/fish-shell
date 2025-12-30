@@ -263,7 +263,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     let mut override_buffer = None;
 
-    const short_options: &wstr = L!("abijpctfxorhI:CBELSsP");
+    let short_options = L!("abijpctfxorhI:CBELSsP");
     let long_options: &[WOption] = &[
         wopt(L!("append"), ArgType::NoArgument, 'a'),
         wopt(L!("insert"), ArgType::NoArgument, 'i'),

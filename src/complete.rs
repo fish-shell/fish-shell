@@ -401,7 +401,7 @@ impl CompleteEntryOpt {
 }
 
 /// Last value used in the order field of [`CompletionEntry`].
-static complete_order: AtomicUsize = AtomicUsize::new(0);
+static COMPLETE_ORDER: AtomicUsize = AtomicUsize::new(0);
 
 struct CompletionEntry {
     /// List of all options.
@@ -415,7 +415,7 @@ impl CompletionEntry {
     pub fn new() -> Self {
         Self {
             options: vec![],
-            order: complete_order.fetch_add(1, atomic::Ordering::Relaxed),
+            order: COMPLETE_ORDER.fetch_add(1, atomic::Ordering::Relaxed),
         }
     }
 
@@ -606,7 +606,7 @@ struct Completer<'ctx> {
     condition_cache: HashMap<WString, bool>,
 }
 
-static completion_autoloader: Lazy<Mutex<Autoload>> =
+static COMPLETION_AUTOLOADER: Lazy<Mutex<Autoload>> =
     Lazy::new(|| Mutex::new(Autoload::new(L!("fish_complete_path"))));
 
 impl<'ctx> Completer<'ctx> {
@@ -1257,7 +1257,7 @@ impl<'ctx> Completer<'ctx> {
             flog!(complete, "Skipping completions for non-existent command");
         } else if let Some(parser) = self.ctx.maybe_parser() {
             complete_load(&cmd, parser);
-        } else if !completion_autoloader
+        } else if !COMPLETION_AUTOLOADER
             .lock()
             .unwrap()
             .has_attempted_autoload(&cmd)
@@ -1793,7 +1793,7 @@ impl<'ctx> Completer<'ctx> {
         }
         #[cfg(not(target_os = "android"))]
         {
-            static s_setpwent_lock: Mutex<()> = Mutex::new(());
+            static SETPWENT_LOCK: Mutex<()> = Mutex::new(());
 
             if s.char_at(0) != '~' || s.contains('/') {
                 return false;
@@ -1817,7 +1817,7 @@ impl<'ctx> Completer<'ctx> {
                 Some(charptr2wcstring(pw.pw_name))
             }
 
-            let _guard = s_setpwent_lock.lock().unwrap();
+            let _guard = SETPWENT_LOCK.lock().unwrap();
 
             unsafe { libc::setpwent() };
             while let Some(pw_name) = getpwent_name() {
@@ -2477,14 +2477,14 @@ pub fn complete_load(cmd: &wstr, parser: &Parser) -> bool {
     // We need to take the lock to decide what to load, drop it to perform the load, then reacquire
     // it.
     // Note we only look at the global fish_function_path and fish_complete_path.
-    let path_to_load = completion_autoloader
+    let path_to_load = COMPLETION_AUTOLOADER
         .lock()
         .expect("mutex poisoned")
         .resolve_command(cmd, EnvStack::globals());
     match path_to_load {
         AutoloadResult::Path(path_to_load) => {
             Autoload::perform_autoload(&path_to_load, parser);
-            completion_autoloader
+            COMPLETION_AUTOLOADER
                 .lock()
                 .expect("mutex poisoned")
                 .mark_autoload_finished(cmd);
@@ -2545,7 +2545,7 @@ pub fn complete_invalidate_path() {
     // unload any completions that the user may specified on the command line. We should in
     // principle track those completions loaded by the autoloader alone.
 
-    let cmds = completion_autoloader
+    let cmds = COMPLETION_AUTOLOADER
         .lock()
         .expect("mutex poisoned")
         .get_autoloaded_commands();

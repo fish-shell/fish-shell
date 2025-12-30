@@ -566,7 +566,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
 #[cfg(test)]
 mod tests {
-    use super::{ArgType, WGetopter, WOption, wopt};
+    use super::{ArgType, WGetopter, wopt};
     use crate::prelude::*;
     use crate::wcstringutil::join_strings;
 
@@ -611,8 +611,8 @@ mod tests {
     #[test]
     fn test_wgetopt() {
         // Regression test for a crash.
-        const short_options: &wstr = L!("-a");
-        const long_options: &[WOption] = &[wopt(L!("add"), ArgType::NoArgument, 'a')];
+        let short_options = L!("-a");
+        let long_options = &[wopt(L!("add"), ArgType::NoArgument, 'a')];
         let mut argv = [
             L!("abbr"),
             L!("--add"),

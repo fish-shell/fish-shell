@@ -776,15 +776,9 @@ fn erase(
     args: &[&wstr],
 ) -> BuiltinResult {
     let mut ret = Ok(SUCCESS);
-    let mode = opts.env_mode();
-    // `set -e` is allowed to be called with multiple scopes.
-    for bit in (0..).take_while(|bit| 1 << bit <= EnvMode::USER.bits()) {
-        let scope = mode.intersection(EnvMode::from_bits(1 << bit).unwrap());
-        if scope.bits() == 0 || (scope == EnvMode::USER && mode != EnvMode::USER) {
-            continue;
-        }
+    let mut erase_with_mode = |mode| {
         for arg in args {
-            let Some(split) = split_var_and_indexes(arg, scope, parser.vars(), streams) else {
+            let Some(split) = split_var_and_indexes(arg, mode, parser.vars(), streams) else {
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_CMD_ERROR);
             };
@@ -797,7 +791,7 @@ fn erase(
             let retval;
             if split.indexes.is_empty() {
                 // unset the var
-                retval = parser.vars().remove(split.varname, scope);
+                retval = parser.vars().remove(split.varname, mode);
                 // When a non-existent-variable is unset, return NotFound as $status
                 // but do not emit any errors at the console as a compromise between user
                 // friendliness and correctness.
@@ -817,7 +811,7 @@ fn erase(
                     cmd,
                     opts,
                     split.varname,
-                    scope,
+                    mode,
                     result,
                     streams,
                     parser,
@@ -830,8 +824,47 @@ fn erase(
                 ret = retval.into();
             }
         }
+        Ok(())
+    };
+    // `set -e` is allowed to be called with multiple scopes.
+    let mode = opts.env_mode();
+    let any_scope = EnvMode::ANY_SCOPE;
+    let scopes = mode.intersection(any_scope);
+    if scopes.is_empty() {
+        erase_with_mode(mode)?;
+    } else {
+        // Historical behavior is to go from inner to outer, which may be relevant for scopes that
+        // collide with the function scope (i.e. local and global).
+        assert!(is_subsequence(
+            scopes.iter(),
+            [
+                EnvMode::LOCAL,
+                EnvMode::FUNCTION,
+                EnvMode::GLOBAL,
+                EnvMode::UNIVERSAL
+            ]
+            .into_iter()
+        ));
+        for scope in scopes.iter() {
+            let other_scopes = any_scope - scope;
+            erase_with_mode(mode - other_scopes)?;
+        }
     }
     ret
+}
+
+fn is_subsequence<T: Eq>(
+    mut lhs: impl Iterator<Item = T>,
+    mut rhs: impl Iterator<Item = T>,
+) -> bool {
+    lhs.all(|l| {
+        for r in rhs.by_ref() {
+            if r == l {
+                return true;
+            }
+        }
+        false
+    })
 }
 
 /// Return a list of new values for the variable `varname`, respecting the `opts`.

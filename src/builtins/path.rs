@@ -743,6 +743,89 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
     Ok(SUCCESS)
 }
 
+/// Convert from canonical /mnt/x/... Windows-mapped WSL paths to their Windows equivalents
+fn from_wsl(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+    let mut opts = Options {
+        ..Default::default()
+    };
+    let mut optind = 0;
+
+    parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
+
+    let arguments = arguments(args, &mut optind, streams).with_split_behavior(match opts.null_in {
+        true => SplitBehavior::Null,
+        false => SplitBehavior::InferNull,
+    });
+
+    for path in arguments.map(|input_value| input_value.arg) {
+        if path.len() < "/mnt/x/".len()
+            || !path.starts_with("/mnt/")
+            || !path.char_at(5).is_ascii_alphabetic()
+            || path.char_at(6) != '/'
+        {
+            streams
+                .err
+                .append(&wgettext_fmt!("Invalid WSL path: %s", &path));
+            return Err(STATUS_CMD_ERROR);
+        }
+
+        let mut winpath = WString::with_capacity(path.len());
+        let drive = path.char_at(5).to_ascii_uppercase();
+        winpath.push(drive);
+        winpath.push(':');
+        for c in path.split_at(6).1.chars() {
+            winpath.push(if c == '/' { '\\' } else { c });
+        }
+
+        path_out(streams, &opts, &winpath);
+    }
+
+    Ok(SUCCESS)
+}
+
+/// Convert from Windows paths to canonical /mnt/x/... Windows-mapped WSL paths
+fn to_wsl(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+    let mut opts = Options {
+        ..Default::default()
+    };
+    let mut optind = 0;
+
+    parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
+
+    let arguments = arguments(args, &mut optind, streams).with_split_behavior(match opts.null_in {
+        true => SplitBehavior::Null,
+        false => SplitBehavior::InferNull,
+    });
+
+    for path in arguments.map(|input_value| input_value.arg) {
+        let mut path_chars = path.chars();
+        if !path_chars
+            .next()
+            .is_some_and(|c| char::is_ascii_alphabetic(&c))
+            || !matches!(path_chars.next(), Some(':'))
+            || !matches!(path_chars.next(), Some('/' | '\\'))
+        {
+            streams
+                .err
+                .append(&wgettext_fmt!("Invalid Windows path: %s", &path));
+            return Err(STATUS_CMD_ERROR);
+        }
+
+        let mut wslpath = WString::with_capacity(path.len() + 4);
+        let drive = path.chars().next().unwrap().to_ascii_lowercase();
+        wslpath.push_str("/mnt/");
+        wslpath.push(drive);
+        wslpath.push('/');
+        for c in path_chars {
+            wslpath.push(if c == '\\' { '/' } else { c });
+        }
+
+        path_out(streams, &opts, &wslpath);
+    }
+
+    Ok(SUCCESS)
+}
+
 fn filter_path(opts: &Options, path: &wstr, uid: Option<u32>, gid: Option<u32>) -> bool {
     // TODO: Add moar stuff:
     // fifos, sockets, size greater than zero, setuid, ...
@@ -976,6 +1059,8 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
         "normalize" => path_normalize,
         "resolve" => path_resolve,
         "sort" => path_sort,
+        "from-wsl" => from_wsl,
+        "to-wsl" => to_wsl,
         _ => {
             streams
                 .err

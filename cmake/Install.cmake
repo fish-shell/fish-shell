@@ -131,6 +131,14 @@ install(DIRECTORY share/functions/
         DESTINATION ${rel_datadir}/fish/functions
         FILES_MATCHING PATTERN "*.fish")
 
+install(DIRECTORY share/prompts/
+        DESTINATION ${rel_datadir}/fish/prompts
+        FILES_MATCHING PATTERN "*.fish")
+
+install(DIRECTORY share/themes/
+        DESTINATION ${rel_datadir}/fish/themes
+        FILES_MATCHING PATTERN "*.theme")
+
 # CONDEMNED_PAGE is managed by the conditional above
 # Building the man pages is optional: if sphinx isn't installed, they're not built
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/
@@ -149,9 +157,7 @@ install(DIRECTORY share/tools/web_config
         PATTERN "*.css"
         PATTERN "*.html"
         PATTERN "*.py"
-        PATTERN "*.js"
-        PATTERN "*.theme"
-        PATTERN "*.fish")
+        PATTERN "*.js")
 
 # Building the man pages is optional: if Sphinx isn't installed, they're not built
 install(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)

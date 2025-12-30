@@ -1,6 +1,8 @@
 fish ?.?.? (released ???)
 =========================
 
+- Install the prompts and themes files again (:issue:`12241`).
+
 fish 4.3.2 (released December 30, 2025)
 =======================================
 

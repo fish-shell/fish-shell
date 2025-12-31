@@ -1250,7 +1250,7 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     }
 
     let mut token_ranges: Vec<TokenRange> = vec![];
-    for (i, color) in colors.iter().cloned().enumerate() {
+    for (i, color) in colors.iter().copied().enumerate() {
         let role = color.foreground;
         // See if we can extend the last range.
         if let Some(last) = token_ranges.last_mut() {

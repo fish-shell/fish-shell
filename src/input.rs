@@ -509,7 +509,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     return self.next_is_char(style, Key::from_raw(key.codepoint), true);
                 } else if actual_seq
                     .get(self.subidx + 1)
-                    .cloned()
+                    .copied()
                     .map(|c| Key::from_single_char(c).codepoint)
                     == Some(key.codepoint)
                 {

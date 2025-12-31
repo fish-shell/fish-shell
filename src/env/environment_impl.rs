@@ -595,7 +595,7 @@ impl EnvScopedImpl {
         let mut cursor = self.export_array_generations.iter().fuse();
         let mut mismatch = false;
         self.enumerate_generations(|r#gen| {
-            if cursor.next().cloned() != Some(r#gen) {
+            if cursor.next().copied() != Some(r#gen) {
                 mismatch = true;
             }
         });

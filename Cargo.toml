@@ -182,19 +182,22 @@ rust.non_upper_case_globals = "allow"
 rust.unknown_lints = "allow"
 rust.unstable_name_collisions = "allow"
 rustdoc.private_intra_doc_links = "allow"
-clippy.len_without_is_empty = "allow"     # we're not a library crate
-clippy.let_and_return = "allow"
-clippy.manual_range_contains = "allow"
-clippy.map_unwrap_or = "warn"
-clippy.needless_lifetimes = "allow"
-clippy.new_without_default = "allow"
-clippy.option_map_unit_fn = "allow"
+
+[workspace.lints.clippy]
+cloned_instead_of_copied = "warn"
+len_without_is_empty = "allow"     # we're not a library crate
+let_and_return = "allow"
+manual_range_contains = "allow"
+map_unwrap_or = "warn"
+needless_lifetimes = "allow"
+new_without_default = "allow"
+option_map_unit_fn = "allow"
 
 # We do not want to use the e?print(ln)?! macros.
 # These lints flag their use.
 # In the future, they might change to flag other methods of printing.
-clippy.print_stdout = "deny"
-clippy.print_stderr = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
 
 [lints]
 workspace = true

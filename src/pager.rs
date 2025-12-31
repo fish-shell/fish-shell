@@ -434,7 +434,7 @@ impl Pager {
         let effective_selected_idx = self.visual_selected_completion_index(rows, cols);
 
         for row in row_start..row_stop {
-            for (col, col_width) in width_by_column.iter().cloned().enumerate() {
+            for (col, col_width) in width_by_column.iter().copied().enumerate() {
                 let idx = col * rows + row;
                 if lst.len() <= idx {
                     continue;

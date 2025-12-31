@@ -2,7 +2,7 @@
 
 use std::{
     fs::File,
-    io::{Read, Write},
+    io::Read,
     ops::{Deref, DerefMut},
     os::fd::AsRawFd,
     time::{SystemTime, UNIX_EPOCH},
@@ -283,27 +283,30 @@ impl TryFrom<MmapRegion> for RawHistoryFile {
     }
 }
 
-/// Append a history item to a buffer, in preparation for outputting it to the history file.
-pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
-    assert!(item.should_write_to_disk(), "Item should not be persisted");
+impl HistoryItem {
+    /// Write this history item to some writer.
+    pub fn write_to(&self, writer: &mut impl std::io::Write) -> std::io::Result<()> {
+        assert!(self.should_write_to_disk(), "Item should not be persisted");
 
-    let mut cmd = wcs2bytes(item.str());
-    escape_yaml_fish_2_0(&mut cmd);
-    buffer.extend(b"- cmd: ");
-    buffer.extend(&cmd);
-    buffer.push(b'\n');
-    writeln!(buffer, "  when: {}", time_to_seconds(item.timestamp())).unwrap();
+        let mut cmd = wcs2bytes(self.str());
+        escape_yaml_fish_2_0(&mut cmd);
+        writer.write_all(b"- cmd: ")?;
+        writer.write_all(&cmd)?;
+        writer.write_all(b"\n")?;
+        writeln!(writer, "  when: {}", time_to_seconds(self.timestamp()))?;
 
-    let paths = item.get_required_paths();
-    if !paths.is_empty() {
-        writeln!(buffer, "  paths:").unwrap();
-        for path in paths {
-            let mut path = wcs2bytes(path);
-            escape_yaml_fish_2_0(&mut path);
-            buffer.extend(b"    - ");
-            buffer.extend(&path);
-            buffer.push(b'\n');
+        let paths = self.get_required_paths();
+        if !paths.is_empty() {
+            writeln!(writer, "  paths:")?;
+            for path in paths {
+                let mut path = wcs2bytes(path);
+                escape_yaml_fish_2_0(&mut path);
+                writer.write_all(b"    - ")?;
+                writer.write_all(&path)?;
+                writer.write_all(b"\n")?;
+            }
         }
+        Ok(())
     }
 }
 

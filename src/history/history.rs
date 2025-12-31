@@ -29,7 +29,7 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
     ffi::CString,
     fs::File,
-    io::{BufRead, Read, Write},
+    io::{BufRead, BufWriter, Read, Write},
     mem::MaybeUninit,
     num::NonZeroUsize,
     ops::ControlFlow,
@@ -50,7 +50,7 @@ use crate::{
     fds::wopen_cloexec,
     flog::{flog, flogf},
     fs::fsync,
-    history::file::{HistoryFile, RawHistoryFile, append_history_item_to_buffer},
+    history::file::{HistoryFile, RawHistoryFile},
     io::IoStreams,
     localization::wgettext_fmt,
     operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
@@ -108,16 +108,6 @@ use super::file::time_to_seconds;
 const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
 
 pub const VACUUM_FREQUENCY: usize = 25;
-
-/// Output the contents `buffer` to `file` and clear the `buffer`.
-fn flush_to_file(buffer: &mut Vec<u8>, file: &mut File, min_size: usize) -> std::io::Result<()> {
-    if buffer.is_empty() || buffer.len() < min_size {
-        return Ok(());
-    }
-    file.write_all(buffer)?;
-    buffer.clear();
-    Ok(())
-}
 
 struct TimeProfiler {
     what: &'static str,
@@ -551,30 +541,21 @@ impl HistoryImpl {
         /// Default buffer size for flushing to the history file.
         const HISTORY_OUTPUT_BUFFER_SIZE: usize = 64 * 1024;
         // Write them out.
-        let mut err = None;
-        let mut buffer = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
-        for item in items {
-            append_history_item_to_buffer(&item, &mut buffer);
-            if let Err(e) = flush_to_file(&mut buffer, dst, HISTORY_OUTPUT_BUFFER_SIZE) {
-                err = Some(e);
-                break;
+        let result: Result<(), std::io::Error> = {
+            let mut buffer = BufWriter::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128, dst);
+            for item in items {
+                item.write_to(&mut buffer)?;
             }
-        }
-        if err.is_none() {
-            if let Err(e) = flush_to_file(&mut buffer, dst, 0) {
-                err = Some(e);
-            }
-        }
-        if let Some(err) = err {
+            buffer.flush()
+        };
+        if let Err(err) = &result {
             flog!(
                 history_file,
                 "Error writing to temporary history file:",
                 err
             );
-            Err(err)
-        } else {
-            Ok(())
         }
+        result
     }
 
     /// Saves history by rewriting the file.
@@ -646,19 +627,20 @@ impl HistoryImpl {
         // So far so good. Write all items at or after first_unwritten_new_item_index. Note that we
         // write even a pending item - pending items are ignored by history within the command
         // itself, but should still be written to the file.
-        // Use a small buffer size for appending, we usually only have 1 item
+        // Use a small buffer size for appending, as we usually only have 1 item.
+        // Buffer everything and then write it all at once to avoid tearing writes (O_APPEND).
         let mut buffer = Vec::new();
         let mut new_first_index = self.first_unwritten_new_item_index;
         while new_first_index < self.new_items.len() {
             let item = &self.new_items[new_first_index];
             if item.should_write_to_disk() {
-                append_history_item_to_buffer(item, &mut buffer);
+                // Can't error writing to a buffer.
+                item.write_to(&mut buffer).unwrap();
             }
             // We wrote or skipped this item, hooray.
             new_first_index += 1;
         }
-
-        flush_to_file(&mut buffer, locked_history_file.get_mut(), 0)?;
+        locked_history_file.get_mut().write_all(&buffer)?;
         fsync(locked_history_file.get())?;
         self.first_unwritten_new_item_index = new_first_index;
 

@@ -370,8 +370,8 @@ impl BuiltinBind {
             if self.add(
                 seq,
                 &argv[optind + 1..],
-                self.opts.bind_mode.to_owned(),
-                self.opts.sets_bind_mode.to_owned(),
+                self.opts.bind_mode.clone(),
+                self.opts.sets_bind_mode.clone(),
                 self.opts.user,
                 streams,
             ) {

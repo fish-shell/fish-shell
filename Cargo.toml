@@ -184,6 +184,7 @@ rust.unstable_name_collisions = "allow"
 rustdoc.private_intra_doc_links = "allow"
 
 [workspace.lints.clippy]
+implicit_clone = "warn"
 cloned_instead_of_copied = "warn"
 len_without_is_empty = "allow"     # we're not a library crate
 let_and_return = "allow"

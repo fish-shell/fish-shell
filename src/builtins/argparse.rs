@@ -196,7 +196,7 @@ fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> 
         }
 
         // Store the set of exclusive flags for use when parsing the supplied set of arguments.
-        opts.exclusive_flag_sets.push(exclusive_set.to_vec());
+        opts.exclusive_flag_sets.push(exclusive_set.clone());
     }
     Ok(SUCCESS)
 }

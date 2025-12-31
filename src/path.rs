@@ -24,7 +24,7 @@ use std::os::unix::prelude::*;
 pub fn path_get_config() -> Option<WString> {
     let dir = get_config_directory();
     if dir.success() {
-        Some(dir.path.to_owned())
+        Some(dir.path.clone())
     } else {
         None
     }
@@ -40,7 +40,7 @@ pub fn path_get_config() -> Option<WString> {
 pub fn path_get_data() -> Option<WString> {
     let dir = get_data_directory();
     if dir.success() {
-        Some(dir.path.to_owned())
+        Some(dir.path.clone())
     } else {
         None
     }
@@ -57,7 +57,7 @@ pub fn path_get_data() -> Option<WString> {
 pub fn path_get_cache() -> Option<WString> {
     let dir = get_cache_directory();
     if dir.success() {
-        Some(dir.path.to_owned())
+        Some(dir.path.clone())
     } else {
         None
     }

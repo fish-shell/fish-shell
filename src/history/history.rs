@@ -451,7 +451,7 @@ impl HistoryImpl {
                 continue;
             }
 
-            if !seen.insert(item.contents.to_owned()) {
+            if !seen.insert(item.contents.clone()) {
                 // This item was not inserted because it was already in the set, so delete the item at
                 // this index.
                 self.new_items.remove(idx);

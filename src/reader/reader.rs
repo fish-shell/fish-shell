@@ -5989,14 +5989,10 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
 
     // Provide values for `status current-command` and `status current-commandline`
     if !ft.is_empty() {
-        parser.libdata_mut().status_vars.command = ft.to_owned();
+        parser.libdata_mut().status_vars.command = ft.clone();
         parser.libdata_mut().status_vars.commandline = cmd.to_owned();
         // Also provide a value for the deprecated fish 2.0 $_ variable
-        parser.set_one(
-            L!("_"),
-            ParserEnvSetMode::new(EnvMode::GLOBAL),
-            ft.to_owned(),
-        );
+        parser.set_one(L!("_"), ParserEnvSetMode::new(EnvMode::GLOBAL), ft.clone());
     }
 
     reader_write_title(cmd, parser, true);

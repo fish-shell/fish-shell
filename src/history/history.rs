@@ -541,21 +541,12 @@ impl HistoryImpl {
         /// Default buffer size for flushing to the history file.
         const HISTORY_OUTPUT_BUFFER_SIZE: usize = 64 * 1024;
         // Write them out.
-        let result: Result<(), std::io::Error> = {
-            let mut buffer = BufWriter::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128, dst);
-            for item in items {
-                item.write_to(&mut buffer)?;
-            }
-            buffer.flush()
-        };
-        if let Err(err) = &result {
-            flog!(
-                history_file,
-                "Error writing to temporary history file:",
-                err
-            );
+        let mut buffer = BufWriter::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128, dst);
+        for item in items {
+            item.write_to(&mut buffer)?;
         }
-        result
+        buffer.flush()?;
+        Ok(())
     }
 
     /// Saves history by rewriting the file.
@@ -568,7 +559,15 @@ impl HistoryImpl {
 
         let rewrite =
             |old_file: &File, tmp_file: &mut File| -> std::io::Result<PotentialUpdate<()>> {
-                self.rewrite_to_temporary_file(old_file, tmp_file)?;
+                let result = self.rewrite_to_temporary_file(old_file, tmp_file);
+                if let Err(err) = result {
+                    flog!(
+                        history_file,
+                        "Error writing to temporary history file:",
+                        err
+                    );
+                    return Err(err);
+                }
                 Ok(PotentialUpdate {
                     do_save: true,
                     data: (),

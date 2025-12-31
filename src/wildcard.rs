@@ -500,7 +500,7 @@ mod expander {
                 working_directory,
                 completion_set: resolved_completions
                     .iter()
-                    .map(|c| c.completion.to_owned())
+                    .map(|c| c.completion.clone())
                     .collect(),
                 visited_files: HashSet::new(),
                 flags,
@@ -944,7 +944,7 @@ mod expander {
                         break;
                     } else if entry.is_dir() && unique_entry.is_empty() {
                         // first candidate
-                        unique_entry = entry.name.to_owned();
+                        unique_entry = entry.name.clone();
                     } else {
                         // We either have two or more candidates, or the child is not a directory. We're
                         // done.

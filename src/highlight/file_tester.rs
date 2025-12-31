@@ -88,7 +88,7 @@ impl<'s> FileTester<'s> {
         is_potential_path(
             &token,
             prefix,
-            &[self.working_directory.to_owned()],
+            std::slice::from_ref(&self.working_directory),
             self.ctx,
             PathFlags {
                 expand_tilde: true,

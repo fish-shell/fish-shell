@@ -862,7 +862,7 @@ mod tests {
         let mut handles = Vec::new();
 
         for i in 0..threads {
-            let path = test_path.to_owned();
+            let path = test_path.clone();
             handles.push(std::thread::spawn(move || {
                 test_universal_helper(i, &path);
             }));
@@ -873,7 +873,7 @@ mod tests {
         }
 
         let mut uvars = EnvUniversal::new();
-        uvars.initialize_at_path(test_path.to_owned());
+        uvars.initialize_at_path(test_path.clone());
 
         for i in 0..threads {
             for j in 0..UVARS_PER_THREAD {
@@ -1037,11 +1037,11 @@ mod tests {
         let mut uvars1 = EnvUniversal::new();
         let mut uvars2 = EnvUniversal::new();
         let mut callbacks = uvars1
-            .initialize_at_path(test_path.to_owned())
+            .initialize_at_path(test_path.clone())
             .unwrap_or_default();
         callbacks.append(
             &mut uvars2
-                .initialize_at_path(test_path.to_owned())
+                .initialize_at_path(test_path.clone())
                 .unwrap_or_default(),
         );
 
@@ -1134,7 +1134,7 @@ mod tests {
 
         let mut uvars = EnvUniversal::new();
         uvars
-            .initialize_at_path(test_path.to_owned())
+            .initialize_at_path(test_path.clone())
             .unwrap_or_default();
         assert!(!uvars.is_ok_to_save(), "Should not be OK to save");
         uvars.sync();

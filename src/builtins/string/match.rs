@@ -295,7 +295,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             // empty/null members so we're going to have to use an empty string as the
             // sentinel value.
 
-            if let Some(m) = cg.as_ref().and_then(|cg| cg.name(&name.to_string())) {
+            if let Some(m) = cg.as_ref().and_then(|cg| cg.name(&name.clone())) {
                 captures.push(WString::from(m.as_bytes()));
             } else if opts.all {
                 captures.push(WString::new());

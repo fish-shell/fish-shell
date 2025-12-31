@@ -737,7 +737,7 @@ fn expand_variables(
                 // here, So tmp < 1 means it's definitely not in.
                 // Note we are 1-based.
                 if item_index >= 1 && item_index <= all_var_items.len() {
-                    var_item_list.push(all_var_items[item_index - 1].to_owned());
+                    var_item_list.push(all_var_items[item_index - 1].clone());
                 }
             }
         }
@@ -1038,7 +1038,7 @@ pub fn expand_cmdsubst(
                 continue;
             }
             // -1 to convert from 1-based slice index to 0-based vector index.
-            sub_res2.push(sub_res[idx as usize - 1].to_owned());
+            sub_res2.push(sub_res[idx as usize - 1].clone());
         }
         sub_res = sub_res2;
     }

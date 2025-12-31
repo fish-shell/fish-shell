@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 This release fixes the following problems identified in fish 4.3.0:
 
 - The sample prompts and themes are correctly installed (:issue:`12241`).
+- Last line of command output could be hidden when missing newline (:issue:`12246`).
 
 fish 4.3.2 (released December 30, 2025)
 =======================================

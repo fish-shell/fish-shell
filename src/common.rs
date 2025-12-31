@@ -1031,10 +1031,6 @@ pub fn get_omitted_newline_str() -> &'static str {
 
 static OMITTED_NEWLINE_STR: AtomicRef<str> = AtomicRef::new(&"");
 
-pub fn get_omitted_newline_width() -> usize {
-    OMITTED_NEWLINE_STR.load().len()
-}
-
 static OBFUSCATION_READ_CHAR: AtomicU32 = AtomicU32::new(0);
 
 pub fn get_obfuscation_read_char() -> char {

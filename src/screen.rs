@@ -22,8 +22,8 @@ use std::time::SystemTime;
 use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
 
 use crate::common::{
-    get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
-    has_working_tty_timestamps, shell_modes, wcs2bytes, write_loop,
+    get_ellipsis_char, get_omitted_newline_str, has_working_tty_timestamps, shell_modes, wcs2bytes,
+    write_loop,
 };
 use crate::env::Environment;
 use crate::flog::{flog, flogf};
@@ -687,10 +687,12 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
 
     let mut abandon_line_string = Vec::with_capacity(screen_width + 32);
 
+    let omitted_newline_str = get_omitted_newline_str();
+
     // Do the PROMPT_SP hack.
     // Don't need to check for fish_wcwidth errors; this is done when setting up
     // omitted_newline_char in common.rs.
-    let non_space_width = get_omitted_newline_width();
+    let non_space_width = omitted_newline_str.chars().count();
     // We do `>` rather than `>=` because the code below might require one extra space.
     if screen_width > non_space_width {
         if use_terminfo() {
@@ -732,13 +734,13 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
             abandon_line_string.write_command(EnterDimMode);
         }
 
-        abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
+        abandon_line_string.extend_from_slice(omitted_newline_str.as_bytes());
         abandon_line_string.write_command(ExitAttributeMode);
         abandon_line_string.extend(repeat_n(b' ', screen_width - non_space_width));
     }
 
     abandon_line_string.push(b'\r');
-    abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
+    abandon_line_string.extend_from_slice(omitted_newline_str.as_bytes());
     // Now we are certainly on a new line. But we may have dropped the omitted newline char on
     // it. So append enough spaces to overwrite the omitted newline char, and then clear all the
     // spaces from the new line.

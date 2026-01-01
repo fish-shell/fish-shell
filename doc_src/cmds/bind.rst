@@ -6,8 +6,8 @@ Synopsis
 .. synopsis::
 
     bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [-s | --silent] KEYS COMMAND ...
-    bind [(-M | --mode) MODE] [--preset] [--user] [KEYS]
-    bind [-a | --all] [--preset] [--user]
+    bind [(-M | --mode) MODE] [--preset] [--user] [--color WHEN] [KEYS]
+    bind [-a | --all] [--preset] [--user] [--color WHEN]
     bind (-f | --function-names)
     bind (-K | --key-names)
     bind (-L | --list-modes)
@@ -103,6 +103,10 @@ The following options are available:
 
 **-s** or **--silent**
     Silences some of the error messages, including for unknown key names and unbound sequences.
+
+**--color** *WHEN*
+    Controls when to use syntax highlighting colors when listing bindings.
+    *WHEN* can be ``auto`` (the default, colorize if the output :doc:`is a terminal <isatty>`), ``always``, or ``never``.
 
 **-h** or **--help**
     Displays help about using this command.

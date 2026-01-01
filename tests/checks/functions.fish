@@ -234,3 +234,21 @@ functions --all=arg
 # CHECKERR: functions: --all=arg: option does not take an argument
 echo $status
 # CHECK: 2
+
+# Test --color option
+function test_color_option
+    echo hello
+end
+
+functions --color=invalid
+# CHECKERR: functions: Invalid value for '--color' option: 'invalid'. Expected 'always', 'never', or 'auto'
+
+functions --no-details --color=never test_color_option
+# CHECK: function test_color_option
+# CHECK:     echo hello
+# CHECK: end
+
+string escape (functions --no-details --color=always test_color_option)
+# CHECK: function\ \e\[36mtest_color_option\e\[32m
+# CHECK: \e\[m\ \ \ \ echo\ \e\[36mhello\e\[32m
+# CHECK: \e\[mend\e\[32m\e\[m

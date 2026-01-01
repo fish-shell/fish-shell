@@ -6,7 +6,7 @@ function history --description "display or manipulate interactive command histor
     set -l cmd history
     set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,X'
     set -a options h/help c/contains e/exact p/prefix
-    set -a options C/case-sensitive R/reverse z/null 't/show-time=?' 'n#max'
+    set -a options C/case-sensitive R/reverse z/null 't/show-time=?' 'n#max' 'color='
     # The following options are deprecated and will be removed in the next major release.
     # Note that they do not have usable short flags.
     set -a options S-search D-delete M-merge V-save X-clear
@@ -22,8 +22,11 @@ function history --description "display or manipulate interactive command histor
     set -l show_time
     set -l max_count
     set -l search_mode
+    set -l color_opt
     set -q _flag_max
     set max_count -n$_flag_max
+
+    set color_opt --color=$_flag_color
 
     set -q _flag_with_time
     and set -l _flag_show_time $_flag_with_time
@@ -78,7 +81,7 @@ function history --description "display or manipulate interactive command histor
                 # If the user hasn't preconfigured less with the $LESS environment variable,
                 # we do so to have it behave like cat if output fits on one screen.
                 if not set -qx LESS
-                    set -fx LESS --quit-if-one-screen
+                    set -fx LESS --quit-if-one-screen --RAW-CONTROL-CHARS
                     # Also set --no-init for less < v530, see #8157.
                     if type -q less; and test (less --version | string match -r 'less (\d+)')[2] -lt 530 2>/dev/null
                         set LESS $LESS --no-init
@@ -87,9 +90,15 @@ function history --description "display or manipulate interactive command histor
                 not set -qx LV # ask the pager lv not to strip colors
                 and set -fx LV -c
 
-                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | $pager
+                if contains -- "$color_opt" '' '--color=auto'
+                    and test "$pager" = less
+                    and string match -rq -- '^(-\w*R|--RAW-CONTROL-CHARS$)' $LESS
+                    set color_opt --color=always
+                end
+
+                builtin history search $color_opt $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | $pager
             else
-                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
+                builtin history search $color_opt $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
             end
 
         case delete # interactively delete history
@@ -100,15 +109,15 @@ function history --description "display or manipulate interactive command histor
             end
 
             if test "$search_mode" = --exact
-                builtin history delete $search_mode $_flag_case_sensitive -- $searchterm
+                builtin history delete $color_opt $search_mode $_flag_case_sensitive -- $searchterm
                 builtin history save
                 return
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
-            #   set -l found_items (builtin history search $search_mode $show_time -- $argv)
+            #   set -l found_items (builtin history search $color_opt $search_mode $show_time -- $argv)
             set -l found_items
-            set found_items (builtin history search $search_mode $_flag_case_sensitive --null -- $searchterm | string split0)
+            set found_items (builtin history search $color_opt $search_mode $_flag_case_sensitive --null -- $searchterm | string split0)
             if set -q found_items[1]
                 set -l found_items_count (count $found_items)
                 for i in (seq $found_items_count)
@@ -132,7 +141,7 @@ function history --description "display or manipulate interactive command histor
                 if test "$choice" = all
                     printf "Deleting all matching entries!\n"
                     for item in $found_items
-                        builtin history delete --exact --case-sensitive -- $item
+                        builtin history delete $color_opt --exact --case-sensitive -- $item
                     end
                     builtin history save
                     return
@@ -173,15 +182,15 @@ function history --description "display or manipulate interactive command histor
                 echo Deleting choices: $choices
                 for x in $choices
                     printf "Deleting history entry %s: \"%s\"\n" $x $found_items[$x]
-                    builtin history delete --exact --case-sensitive -- "$found_items[$x]"
+                    builtin history delete $color_opt --exact --case-sensitive -- "$found_items[$x]"
                 end
                 builtin history save
             end
 
         case save # save our interactive command history to the persistent history
-            builtin history save $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
+            builtin history save $color_opt $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
         case merge # merge the persistent interactive command history with our history
-            builtin history merge $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
+            builtin history merge $color_opt $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
         case clear # clear the interactive command history
             if test -n "$search_mode"
                 or set -q show_time[1]
@@ -197,13 +206,13 @@ function history --description "display or manipulate interactive command histor
             read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
             or return $status
             if test "$choice" = yes
-                builtin history clear $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
+                builtin history clear $color_opt $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
                 and printf (_ "Command history cleared!\n")
             else
                 printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end
         case clear-session # clears only session
-            builtin history clear-session $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
+            builtin history clear-session $color_opt $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
             and printf (_ "Command history for session cleared!\n")
         case append
             set -l newitem $argv
@@ -212,7 +221,7 @@ function history --description "display or manipulate interactive command histor
                 or return $status
             end
 
-            builtin history append $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $newitem
+            builtin history append $color_opt $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $newitem
         case '*'
             printf "%s: unexpected subcommand '%s'\n" $cmd $hist_cmd
             return 2

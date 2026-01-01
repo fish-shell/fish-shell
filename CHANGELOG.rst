@@ -57,6 +57,7 @@ Scripting improvements
 - New :ref:`status language <status-language>` command allows showing and modifying language settings for fish messages without having to modify environment variables.
 - When using a noninteractive fish instance to compute completions, ``commandline --cursor`` works as expected instead of throwing an error (:issue:`11993`).
 - :envvar:`fish_trace` can now be set to ``all`` to also trace execution of key bindings, event handlers as well as prompt and title functions.
+- The ``abbr``, ``bind``, ``complete``, ``functions``, ``history`` and ``type`` commands now support a ``--color`` option to control syntax highlighting in their output. Valid values are ``auto`` (default), ``always``, or ``never``.
 
 Interactive improvements
 ------------------------

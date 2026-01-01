@@ -50,12 +50,14 @@ use crate::{
     fds::wopen_cloexec,
     flog::{flog, flogf},
     fs::fsync,
+    highlight::highlight_and_colorize,
     history::file::{HistoryFile, RawHistoryFile},
     io::IoStreams,
     localization::wgettext_fmt,
     operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
     parse_constants::{ParseTreeFlags, StatementDecoration},
     parse_util::{parse_util_detect_errors, parse_util_unescape_wildcards},
+    parser::Parser,
     path::{path_get_config, path_get_data, path_is_valid},
     prelude::*,
     threads::assert_is_background_thread,
@@ -1342,6 +1344,8 @@ impl History {
     #[allow(clippy::too_many_arguments)]
     pub fn search(
         self: &Arc<Self>,
+        parser: &Parser,
+        streams: &mut IoStreams,
         search_type: SearchType,
         search_args: &[&wstr],
         show_time_format: Option<&str>,
@@ -1350,7 +1354,7 @@ impl History {
         null_terminate: bool,
         reverse: bool,
         cancel_check: &CancelChecker,
-        streams: &mut IoStreams,
+        color_enabled: bool,
     ) -> bool {
         let mut remaining = max_items;
         let mut collected = Vec::new();
@@ -1362,7 +1366,17 @@ impl History {
                 return ControlFlow::Break(());
             }
             remaining -= 1;
-            let formatted_record = format_history_record(item, show_time_format, null_terminate);
+            let mut formatted_record =
+                format_history_record(item, show_time_format, null_terminate);
+
+            if color_enabled {
+                formatted_record = bytes2wcstring(&highlight_and_colorize(
+                    &formatted_record,
+                    &parser.context(),
+                    parser.vars(),
+                ));
+            }
+
             if reverse {
                 // We need to collect this for later.
                 collected.push(formatted_record);

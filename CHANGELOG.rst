@@ -6,6 +6,10 @@ This release fixes the following problems identified in fish 4.3.0:
 - The sample prompts and themes are correctly installed (:issue:`12241`).
 - Last line of command output could be hidden when missing newline (:issue:`12246`).
 
+For distributors and developers
+-------------------------------
+- The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.
+
 fish 4.3.2 (released December 30, 2025)
 =======================================
 
@@ -80,7 +84,6 @@ For distributors and developers
 - Tarballs no longer contain prebuilt documentation,
   so building and installing documentation requires Sphinx.
   To avoid users accidentally losing docs, the ``BUILD_DOCS`` and ``INSTALL_DOCS`` configuration options have been replaced with a new ``WITH_DOCS`` option.
-- The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.
 - ``fish_key_reader`` and ``fish_indent`` are now installed as hardlinks to ``fish``, to save some space.
 
 Regression fixes:

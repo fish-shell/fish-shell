@@ -287,6 +287,13 @@ impl HistoryItem {
 
 static HISTORIES: Mutex<BTreeMap<WString, Arc<History>>> = Mutex::new(BTreeMap::new());
 
+/// When deleting, whether the deletion should be only for this session or for all sessions.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum DeletionScope {
+    SessionOnly,
+    AllSessions,
+}
+
 struct HistoryImpl {
     /// The name of this list. Used for picking a suitable filename and for switching modes.
     name: WString,
@@ -301,10 +308,8 @@ struct HistoryImpl {
     has_pending_item: bool, // false
     /// Whether we should disable saving to the file for a time.
     disable_automatic_save_counter: u32, // 0
-    /// Deleted item contents.
-    /// Boolean describes if it should be deleted only in this session or in all
-    /// (used in deduplication).
-    deleted_items: HashMap<WString, bool>,
+    /// Deleted item contents, and the scope of the deletion.
+    deleted_items: HashMap<WString, DeletionScope>,
     /// The history file contents.
     file_contents: Option<HistoryFile>,
     /// The file ID of the history file.
@@ -501,23 +506,21 @@ impl HistoryImpl {
                 let Some(old_item) = local_file.decode_item(offset) else {
                     continue;
                 };
-
-                // If old item is newer than session always erase if in deleted.
-                if old_item.timestamp() > self.boundary_timestamp {
-                    if old_item.is_empty() || self.deleted_items.contains_key(old_item.str()) {
-                        continue;
-                    }
-                    lru.add_item(old_item);
-                } else {
-                    // If old item is older and in deleted items don't erase if added by
-                    // clear_session.
-                    if old_item.is_empty() || self.deleted_items.get(old_item.str()) == Some(&false)
-                    {
-                        continue;
-                    }
-                    // Add this old item.
-                    lru.add_item(old_item);
+                if old_item.is_empty() {
+                    continue;
                 }
+
+                // Check if this item should be deleted.
+                if let Some(&scope) = self.deleted_items.get(old_item.str()) {
+                    // If old item is newer than session always erase if in deleted.
+                    // If old item is older and in deleted items don't erase if added by clear_session.
+                    let delete = old_item.timestamp() > self.boundary_timestamp
+                        || scope == DeletionScope::AllSessions;
+                    if delete {
+                        continue;
+                    }
+                }
+                lru.add_item(old_item);
             }
         }
 
@@ -789,7 +792,8 @@ impl HistoryImpl {
     /// Remove a history item.
     fn remove(&mut self, str_to_remove: &wstr) {
         // Add to our list of deleted items.
-        self.deleted_items.insert(str_to_remove.to_owned(), false);
+        self.deleted_items
+            .insert(str_to_remove.to_owned(), DeletionScope::AllSessions);
 
         for idx in (0..self.new_items.len()).rev() {
             let matched = self.new_items[idx].str() == str_to_remove;
@@ -837,7 +841,8 @@ impl HistoryImpl {
     /// Clears only session.
     fn clear_session(&mut self) {
         for item in &self.new_items {
-            self.deleted_items.insert(item.str().to_owned(), true);
+            self.deleted_items
+                .insert(item.str().to_owned(), DeletionScope::SessionOnly);
         }
 
         self.new_items.clear();

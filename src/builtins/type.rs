@@ -1,8 +1,7 @@
 use super::prelude::*;
 use crate::common::bytes2wcstring;
 use crate::function;
-use crate::highlight::{colorize, highlight_shell};
-
+use crate::highlight::highlight_and_colorize;
 use crate::parse_util::{apply_indents, parse_util_compute_indents};
 use crate::path::{path_get_path, path_get_paths};
 
@@ -15,6 +14,7 @@ struct type_cmd_opts_t {
     path: bool,
     force_path: bool,
     query: bool,
+    color: ColorEnabled,
 }
 
 pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
@@ -34,6 +34,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         wopt(L!("force-path"), ArgType::NoArgument, 'P'),
         wopt(L!("query"), ArgType::NoArgument, 'q'),
         wopt(L!("quiet"), ArgType::NoArgument, 'q'),
+        wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
     ];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);
@@ -67,6 +68,9 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return Err(STATUS_INVALID_ARGS);
+            }
+            COLOR_OPTION_CHAR => {
+                opts.color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
             }
             _ => {
                 panic!("unexpected retval from wgeopter.next()");
@@ -143,17 +147,12 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                             def = apply_indents(&def, &parse_util_compute_indents(&def));
                         }
 
-                        if streams.out_is_terminal() {
-                            let mut color = vec![];
-                            highlight_shell(
+                        if opts.color.enabled(streams) {
+                            streams.out.append(&bytes2wcstring(&highlight_and_colorize(
                                 &def,
-                                &mut color,
                                 &parser.context(),
-                                /*io_ok=*/ false,
-                                /*cursor=*/ None,
-                            );
-                            let col = bytes2wcstring(&colorize(&def, &color, parser.vars()));
-                            streams.out.append(&col);
+                                parser.vars(),
+                            )));
                         } else {
                             streams.out.append(&def);
                         }

@@ -106,6 +106,16 @@ pub fn highlight_shell(
     *color = highlighter.highlight();
 }
 
+pub fn highlight_and_colorize(
+    text: &wstr,
+    ctx: &OperationContext<'_>,
+    vars: &dyn Environment,
+) -> Vec<u8> {
+    let mut colors = Vec::new();
+    highlight_shell(text, &mut colors, ctx, false, None);
+    colorize(text, &colors, vars)
+}
+
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
 /// It maintains a cache with no invalidation mechanism. The lifetime of these should typically be
 /// one screen redraw.

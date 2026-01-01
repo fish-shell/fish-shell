@@ -56,6 +56,10 @@ The following options are available:
 **-V** or **--inherit-variable NAME**
     Snapshots the value of the variable ``NAME`` and defines a local variable with that same name and value when the function is defined. This is similar to a closure in other languages like Python but a bit different. Note the word "snapshot" in the first sentence. If you change the value of the variable after defining the function, even if you do so in the same scope (typically another function) the new value will not be used by the function you just created using this option. See the ``function notify`` example below for how this might be used.
 
+**--color** *WHEN*
+    Controls when to use syntax highlighting colors when printing the function definition.
+    *WHEN* can be ``auto`` (the default, colorize if the output :doc:`is a terminal <isatty>`), ``always``, or ``never``.
+
 The event handler switches (``on-event``, ``on-variable``, ``on-job-exit``, ``on-process-exit`` and ``on-signal``) cause a function to run automatically at specific events. New named events for ``--on-event`` can be fired using the :doc:`emit <emit>` builtin. Fish already generates a few events, see :ref:`event` for more.
 
 Functions names cannot be reserved words. These are elements of fish syntax or builtin commands which are essential for the operations of the shell. Current reserved words are ``[``, ``_``, ``and``, ``argparse``, ``begin``, ``break``, ``builtin``, ``case``, ``command``, ``continue``, ``else``, ``end``, ``eval``, ``exec``, ``for``, ``function``, ``if``, ``not``, ``or``, ``read``, ``return``, ``set``, ``status``, ``string``, ``switch``, ``test``, ``time``, and ``while``.

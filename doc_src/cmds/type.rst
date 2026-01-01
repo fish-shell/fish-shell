@@ -41,6 +41,10 @@ The following options are available:
 **-q** or **--query**
     Suppresses all output; this is useful when testing the exit status. For compatibility with old fish versions this is also **--quiet**.
 
+**--color** *WHEN*
+    Controls when to use syntax highlighting colors when printing function definitions.
+    *WHEN* can be ``auto`` (the default, colorize if the output :doc:`is a terminal <isatty>`), ``always``, or ``never``.
+
 **-h** or **--help**
     Displays help about using this command.
 

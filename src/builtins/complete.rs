@@ -1,9 +1,7 @@
 use super::prelude::*;
 use crate::common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle, unescape_string};
 use crate::complete::{CompletionRequestOptions, complete_add_wrapper, complete_remove_wrapper};
-use crate::highlight::colorize;
-use crate::highlight::highlight_shell;
-use crate::nix::isatty;
+use crate::highlight::highlight_and_colorize;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::ParseErrorList;
 use crate::parse_util::parse_util_detect_errors_in_argument_list;
@@ -18,7 +16,6 @@ use crate::{
         complete_remove, complete_remove_all,
     },
 };
-use libc::STDOUT_FILENO;
 
 // builtin_complete_* are a set of rather silly looping functions that make sure that all the proper
 // combinations of complete_add or complete_remove get called. This is needed since complete allows
@@ -221,16 +218,20 @@ fn builtin_complete_remove(
     }
 }
 
-fn builtin_complete_print(cmd: &wstr, streams: &mut IoStreams, parser: &Parser) {
+fn builtin_complete_print(
+    cmd: &wstr,
+    streams: &mut IoStreams,
+    parser: &Parser,
+    color: ColorEnabled,
+) {
     let repr = complete_print(cmd);
 
-    // colorize if interactive
-    if !streams.out_is_redirected && isatty(STDOUT_FILENO) {
-        let mut colors = vec![];
-        highlight_shell(&repr, &mut colors, &parser.context(), false, None);
-        streams
-            .out
-            .append(&bytes2wcstring(&colorize(&repr, &colors, parser.vars())));
+    if color.enabled(streams) {
+        streams.out.append(&bytes2wcstring(&highlight_and_colorize(
+            &repr,
+            &parser.context(),
+            parser.vars(),
+        )));
     } else {
         streams.out.append(&repr);
     }
@@ -259,9 +260,10 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let mut wrap_targets = vec![];
     let mut preserve_order = false;
     let mut unescape_output = true;
+    let mut color = ColorEnabled::default();
 
-    const short_options: &wstr = L!("a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
-    const long_options: &[WOption] = &[
+    let short_options: &wstr = L!("a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
+    let long_options: &[WOption] = &[
         wopt(L!("exclusive"), ArgType::NoArgument, 'x'),
         wopt(L!("no-files"), ArgType::NoArgument, 'f'),
         wopt(L!("force-files"), ArgType::NoArgument, 'F'),
@@ -282,6 +284,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("keep-order"), ArgType::NoArgument, 'k'),
         wopt(L!("escape"), ArgType::NoArgument, OPT_ESCAPE),
+        wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
     ];
 
     let mut have_x = false;
@@ -400,6 +403,9 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
+            }
+            COLOR_OPTION_CHAR => {
+                color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
             }
             _ => panic!("unexpected retval from WGetopter"),
         }
@@ -584,10 +590,10 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         // No arguments that would add or remove anything specified, so we print the definitions of
         // all matching completions.
         if cmd_to_complete.is_empty() {
-            builtin_complete_print(L!(""), streams, parser);
+            builtin_complete_print(L!(""), streams, parser, color);
         } else {
             for cmd in cmd_to_complete {
-                builtin_complete_print(&cmd, streams, parser);
+                builtin_complete_print(&cmd, streams, parser, color);
             }
         }
     } else {

@@ -4,12 +4,11 @@ use super::prelude::*;
 use crate::common::{
     EscapeFlags, EscapeStringStyle, bytes2wcstring, escape, escape_string, valid_var_name,
 };
-use crate::highlight::{colorize, highlight_shell};
+use crate::highlight::highlight_and_colorize;
 use crate::input::{InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings};
 use crate::key::{
     self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
 };
-use crate::nix::isatty;
 use std::sync::MutexGuard;
 
 const DEFAULT_BIND_MODE: &wstr = L!("default");
@@ -32,6 +31,7 @@ struct Options {
     mode: c_int,
     bind_mode: WString,
     sets_bind_mode: Option<WString>,
+    color: ColorEnabled,
 }
 
 impl Options {
@@ -49,6 +49,7 @@ impl Options {
             mode: BIND_INSERT,
             bind_mode: DEFAULT_BIND_MODE.to_owned(),
             sets_bind_mode: None,
+            color: ColorEnabled::default(),
         }
     }
 }
@@ -153,11 +154,12 @@ impl BuiltinBind {
         }
         out.push('\n');
 
-        if !streams.out_is_redirected && isatty(libc::STDOUT_FILENO) {
-            let mut colors = Vec::new();
-            highlight_shell(&out, &mut colors, &parser.context(), false, None);
-            let colored = colorize(&out, &colors, parser.vars());
-            streams.out.append(&bytes2wcstring(&colored));
+        if self.opts.color.enabled(streams) {
+            streams.out.append(&bytes2wcstring(&highlight_and_colorize(
+                &out,
+                &parser.context(),
+                parser.vars(),
+            )));
         } else {
             streams.out.append(&out);
         }
@@ -408,7 +410,7 @@ fn parse_cmd_opts(
 ) -> BuiltinResult {
     let cmd = argv[0];
     let short_options = L!("aehkKfM:Lm:s");
-    const long_options: &[WOption] = &[
+    let long_options: &[WOption] = &[
         wopt(L!("all"), NoArgument, 'a'),
         wopt(L!("erase"), NoArgument, 'e'),
         wopt(L!("function-names"), NoArgument, 'f'),
@@ -421,9 +423,10 @@ fn parse_cmd_opts(
         wopt(L!("sets-mode"), RequiredArgument, 'm'),
         wopt(L!("silent"), NoArgument, 's'),
         wopt(L!("user"), NoArgument, 'u'),
+        wopt(L!("color"), RequiredArgument, COLOR_OPTION_CHAR),
     ];
 
-    let mut check_mode_name = |mode_name: &wstr| -> Result<(), ErrorCode> {
+    let check_mode_name = |streams: &mut IoStreams, mode_name: &wstr| -> Result<(), ErrorCode> {
         if !valid_var_name(mode_name) {
             streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_BIND_MODE,
@@ -457,13 +460,13 @@ fn parse_cmd_opts(
             }
             'M' => {
                 let applicable_mode = w.woptarg.unwrap();
-                check_mode_name(applicable_mode)?;
+                check_mode_name(streams, applicable_mode)?;
                 opts.bind_mode = applicable_mode.to_owned();
                 opts.bind_mode_given = true;
             }
             'm' => {
                 let new_mode = w.woptarg.unwrap();
-                check_mode_name(new_mode)?;
+                check_mode_name(streams, new_mode)?;
                 opts.sets_bind_mode = Some(new_mode.to_owned());
             }
             'p' => {
@@ -486,6 +489,9 @@ fn parse_cmd_opts(
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
+            }
+            COLOR_OPTION_CHAR => {
+                opts.color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
             }
             _ => {
                 panic!("unexpected retval from WGetopter")

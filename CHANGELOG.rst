@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 This release fixes the following problems identified in fish 4.3.0:
 
 - Selecting a completion could insert only part of the token (:issue:`12249`).
+- Glitch with soft-wrapped autosuggestions and :doc:`cmds/fish_right_prompt` (:issue:`12255`).
 - The sample prompts and themes are correctly installed (:issue:`12241`).
 - Last line of command output could be hidden when missing newline (:issue:`12246`).
 

@@ -560,6 +560,12 @@ enum JumpPrecision {
     To,
 }
 
+#[derive(Copy, Clone, Eq, PartialEq)]
+enum CompletionAction {
+    ShownAmbiguous,
+    InsertedUnique,
+}
+
 /// readline_loop_state_t encapsulates the state used in a readline loop.
 struct ReadlineLoopState {
     /// The last command that was executed.
@@ -569,10 +575,7 @@ struct ReadlineLoopState {
     yank_len: usize,
 
     /// If the last "complete" readline command has inserted text into the command line.
-    complete_did_insert: bool,
-
-    /// List of completions.
-    comp: Vec<Completion>,
+    completion_action: Option<CompletionAction>,
 
     /// Whether the loop has finished, due to reaching the character limit or through executing a
     /// command.
@@ -587,8 +590,7 @@ impl ReadlineLoopState {
         Self {
             last_cmd: None,
             yank_len: 0,
-            complete_did_insert: true,
-            comp: vec![],
+            completion_action: Some(CompletionAction::InsertedUnique),
             finished: false,
             nchars: None,
         }
@@ -2558,7 +2560,7 @@ impl<'a> Reader<'a> {
         if self.reset_loop_state {
             self.reset_loop_state = false;
             self.rls_mut().last_cmd = None;
-            self.rls_mut().complete_did_insert = false;
+            self.rls_mut().completion_action = None;
         }
         // Perhaps update the termsize. This is cheap if it has not changed.
         reader_update_termsize(self.parser);
@@ -2920,7 +2922,7 @@ impl<'a> Reader<'a> {
                 // but never complete{,_and_search})
                 //
                 // Also paging is already cancelled above.
-                if self.rls().complete_did_insert
+                if self.rls().completion_action == Some(CompletionAction::InsertedUnique)
                     && matches!(
                         self.rls().last_cmd,
                         Some(rl::Complete | rl::CompleteAndSearch)
@@ -2969,8 +2971,7 @@ impl<'a> Reader<'a> {
                     return;
                 }
                 if self.is_navigating_pager_contents()
-                    || (!self.rls().comp.is_empty()
-                        && !self.rls().complete_did_insert
+                    || (self.rls().completion_action == Some(CompletionAction::ShownAmbiguous)
                         && self.rls().last_cmd == Some(rl::Complete))
                 {
                     // The user typed complete more than once in a row. If we are not yet fully
@@ -6590,8 +6591,7 @@ impl<'a> Reader<'a> {
                 return;
             }
             ExpandResultCode::ok => {
-                self.rls_mut().comp.clear();
-                self.rls_mut().complete_did_insert = false;
+                self.rls_mut().completion_action = None;
                 self.push_edit(
                     EditableLineTag::Commandline,
                     Edit::new(token_range, wc_expanded),
@@ -6604,12 +6604,11 @@ impl<'a> Reader<'a> {
         // up to the end of the token we're completing.
         let cmdsub = &el.text()[cmdsub_range.start..token_range.end];
 
-        let (comp, _needs_load) = complete(
+        let (mut comp, _needs_load) = complete(
             cmdsub,
             CompletionRequestOptions::normal(),
             &self.parser.context(),
         );
-        self.rls_mut().comp = comp;
 
         let el = &self.command_line;
         // User-supplied completions may have changed the commandline - prevent buffer
@@ -6618,23 +6617,22 @@ impl<'a> Reader<'a> {
         token_range.end = std::cmp::min(token_range.end, el.text().len());
 
         // Munge our completions.
-        sort_and_prioritize(
-            &mut self.rls_mut().comp,
-            CompletionRequestOptions::default(),
-        );
+        sort_and_prioritize(&mut comp, CompletionRequestOptions::default());
 
         let el = &self.command_line;
         // Record our cycle_command_line.
         self.cycle_command_line = el.text().to_owned();
         self.cycle_cursor_pos = token_range.end;
 
-        self.rls_mut().complete_did_insert = self.handle_completions(token_range);
+        let inserted_unique = self.handle_completions(token_range, comp);
+        self.rls_mut().completion_action = if inserted_unique {
+            Some(CompletionAction::InsertedUnique)
+        } else {
+            (!self.pager.is_empty()).then_some(CompletionAction::ShownAmbiguous)
+        };
 
         // Show the search field if requested and if we printed a list of completions.
-        if c == ReadlineCmd::CompleteAndSearch
-            && !self.rls().complete_did_insert
-            && !self.pager.is_empty()
-        {
+        if c == ReadlineCmd::CompleteAndSearch && !inserted_unique && !self.pager.is_empty() {
             self.pager.set_search_field_shown(true);
             self.select_completion_in_direction(SelectionMotion::Next, false);
         }
@@ -6668,10 +6666,10 @@ impl<'a> Reader<'a> {
     /// \param token_end the position after the token to complete
     ///
     /// Return true if we inserted text into the command line, false if we did not.
-    fn handle_completions(&mut self, token_range: Range<usize>) -> bool {
+    fn handle_completions(&mut self, token_range: Range<usize>, comp: Vec<Completion>) -> bool {
         let tok = self.command_line.text()[token_range.clone()].to_owned();
 
-        let comp = &self.rls().comp;
+        let comp = &comp;
         // Check trivial cases.
         let len = comp.len();
         if len == 0 {

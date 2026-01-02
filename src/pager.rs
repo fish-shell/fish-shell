@@ -1,5 +1,6 @@
 //! Pager support.
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
@@ -108,7 +109,7 @@ pub struct Pager {
     // then we definitely need to re-render.
     have_unrendered_completions: bool,
 
-    prefix: WString,
+    prefix: Cow<'static, wstr>,
     highlight_prefix: bool,
 
     // The text of the search field.
@@ -390,8 +391,12 @@ impl Pager {
 
         // Match against the completion strings.
         for candidate in &info.comp {
-            if string_fuzzy_match_string(needle, &(self.prefix.clone() + &candidate[..]), false)
-                .is_some()
+            if string_fuzzy_match_string(
+                needle,
+                &(self.prefix.clone().into_owned() + &candidate[..]),
+                false,
+            )
+            .is_some()
             {
                 return true;
             }
@@ -639,7 +644,7 @@ impl Pager {
         self.unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
         // Maybe join them.
-        if self.prefix == "-" {
+        if *self.prefix == "-" {
             join_completions(&mut self.unfiltered_completion_infos);
         }
 
@@ -656,8 +661,8 @@ impl Pager {
     }
 
     // Sets the prefix.
-    pub fn set_prefix(&mut self, pref: &wstr, highlight: bool /* = true */) {
-        self.prefix = pref.to_owned();
+    pub fn set_prefix(&mut self, prefix: Cow<'static, wstr>, highlight: bool /* = true */) {
+        self.prefix = prefix;
         self.highlight_prefix = highlight;
     }
 
@@ -995,7 +1000,7 @@ impl Pager {
     pub fn clear(&mut self) {
         self.unfiltered_completion_infos.clear();
         self.completion_infos.clear();
-        self.prefix.clear();
+        self.prefix = Cow::Borrowed(L!(""));
         self.highlight_prefix = false;
         self.selected_completion_idx = None;
         self.fully_disclosed = false;
@@ -1283,6 +1288,7 @@ mod tests {
     use crate::termsize::Termsize;
     use crate::tests::prelude::*;
     use crate::wcstringutil::StringFuzzyMatch;
+    use std::borrow::Cow;
     use std::num::NonZeroU16;
 
     #[test]
@@ -1484,7 +1490,7 @@ mod tests {
             StringFuzzyMatch::exact_match(),
             CompleteFlags::default(),
         )];
-        pager.set_prefix(L!("{\\\n"), false); // }
+        pager.set_prefix(Cow::Borrowed(L!("{\\\n")), false); // }
         pager.set_completions(&c4s, true);
         validate!(&mut pager, 30, L!("{\\␊Hello")); // }
     }

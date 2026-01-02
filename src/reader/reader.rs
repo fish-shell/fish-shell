@@ -3297,7 +3297,7 @@ impl<'a> Reader<'a> {
                 self.history_pager = Some(0..1);
                 // Update the pager data.
                 self.pager.set_search_field_shown(true);
-                self.pager.set_prefix(L!("► "), false);
+                self.pager.set_prefix(Cow::Borrowed(L!("► ")), false);
                 // Update the search field, which triggers the actual history search.
                 let search_string = if !self.history_search.active()
                     || self.history_search.search_string().is_empty()
@@ -6842,7 +6842,7 @@ impl<'a> Reader<'a> {
         }
 
         // Update the pager data.
-        self.pager.set_prefix(&prefix, true);
+        self.pager.set_prefix(Cow::Owned(prefix), true);
         self.pager.set_completions(&surviving_completions, true);
         // Modify the command line to reflect the new pager.
         self.pager_selection_changed();

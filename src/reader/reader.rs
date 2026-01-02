@@ -6742,7 +6742,7 @@ impl<'a> Reader<'a> {
         }
 
         let mut use_prefix = false;
-        let mut common_prefix = L!("").to_owned();
+        let mut common_prefix = L!("");
         if all_matches_exact_or_prefix {
             // Try to find a common prefix to insert among the surviving completions.
             let mut flags = CompleteFlags::empty();
@@ -6751,7 +6751,7 @@ impl<'a> Reader<'a> {
             for c in &surviving_completions {
                 if first {
                     // First entry, use the whole string.
-                    common_prefix = c.completion.clone();
+                    common_prefix = &c.completion;
                     flags = c.flags;
                     first = false;
                 } else {
@@ -6766,7 +6766,7 @@ impl<'a> Reader<'a> {
                     }
 
                     // idx is now the length of the new common prefix.
-                    common_prefix.truncate(idx);
+                    common_prefix = common_prefix.slice_to(idx);
                     prefix_is_partial_completion = true;
 
                     // Early out if we decide there's no common prefix.
@@ -6790,25 +6790,13 @@ impl<'a> Reader<'a> {
                     flags |= CompleteFlags::NO_SPACE;
                 }
                 self.completion_insert(
-                    &common_prefix,
+                    common_prefix,
                     token_range.end,
                     flags,
                     /*is_unique=*/ false,
                 );
                 self.cycle_command_line = self.command_line.text().to_owned();
                 self.cycle_cursor_pos = self.command_line.position();
-            }
-        }
-
-        if use_prefix {
-            for c in &mut surviving_completions {
-                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
-                    // Keep replacement semantics and the original prefix so these completions can
-                    // fix casing when selected.
-                    continue;
-                }
-                c.flags &= !CompleteFlags::REPLACES_TOKEN;
-                c.completion.replace_range(0..common_prefix.len(), L!(""));
             }
         }
 
@@ -6826,7 +6814,7 @@ impl<'a> Reader<'a> {
             // Collapse parent directories and append end of string
             prefix.push(get_ellipsis_char());
 
-            let full = tok + &common_prefix[..];
+            let full = tok + common_prefix;
             let truncated = &full[full.len() - PREFIX_MAX_LEN..];
             let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
             if i == 0 {
@@ -6838,6 +6826,19 @@ impl<'a> Reader<'a> {
                 prefix.push('/');
                 prefix.push_utfstr(last_component);
             };
+        }
+
+        if use_prefix {
+            let common_prefix_len = common_prefix.len();
+            for c in &mut surviving_completions {
+                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                    // Keep replacement semantics and the original prefix so these completions can
+                    // fix casing when selected.
+                    continue;
+                }
+                c.flags &= !CompleteFlags::REPLACES_TOKEN;
+                c.completion.replace_range(0..common_prefix_len, L!(""));
+            }
         }
 
         // Update the pager data.

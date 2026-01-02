@@ -10,7 +10,8 @@ command -v updatecli
 command -v uv
 sort --version-sort </dev/null
 
-uv lock --check
+# TODO This is copied from .github/actions/install-sphinx/action.yml
+uv lock --check --exclude-newer="$(awk -F'"' <uv.lock '/^exclude-newer[[:space:]]*=/ {print $2}')"
 
 updatecli "${@:-apply}"
 

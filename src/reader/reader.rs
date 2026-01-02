@@ -6520,15 +6520,6 @@ fn reader_can_replace(s: &wstr, flags: CompleteFlags) -> bool {
         .any(|c| matches!(c, '$' | '*' | '?' | '(' | '{' | '}' | ')'))
 }
 
-/// Determine the best (lowest) match rank for a set of completions.
-fn get_best_rank(comp: &[Completion]) -> u32 {
-    let mut best_rank = u32::MAX;
-    for c in comp {
-        best_rank = best_rank.min(c.rank());
-    }
-    best_rank
-}
-
 impl<'a> Reader<'a> {
     /// Compute completions and update the pager and/or commandline as needed.
     fn compute_and_apply_completions(&mut self, c: ReadlineCmd) {
@@ -6687,28 +6678,22 @@ impl<'a> Reader<'a> {
             return true;
         }
 
-        let best_rank = get_best_rank(comp);
+        let best_rank = comp.iter().map(|c| c.rank()).min().unwrap_or(u32::MAX);
+        let comp = comp.iter().filter(|c| {
+            // Ignore completions with a less suitable match rank than the best.
+            assert!(c.rank() >= best_rank);
+            c.rank() == best_rank
+        });
 
         // Determine whether we are going to replace the token or not. If any commands of the best
         // rank do not require replacement, then ignore all those that want to use replacement.
-        let mut will_replace_token = true;
-        for c in comp {
-            if c.rank() <= best_rank && !c.replaces_token() {
-                will_replace_token = false;
-                break;
-            }
-        }
+        let will_replace_token = comp.clone().all(|c| c.replaces_token());
 
         // Decide which completions survived. There may be a lot of them; it would be nice if we could
         // figure out how to avoid copying them here.
         let mut surviving_completions = vec![];
         let mut all_matches_exact_or_prefix = true;
         for c in comp {
-            // Ignore completions with a less suitable match rank than the best.
-            if c.rank() > best_rank {
-                continue;
-            }
-
             // Only use completions that match replace_token.
             let completion_replaces_token = c.replaces_token();
             let replaces_only_due_to_case_mismatch = {

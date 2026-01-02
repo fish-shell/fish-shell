@@ -138,7 +138,7 @@ pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Optio
 // Note that the order of entries below affects the sort order of completions.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ContainType {
-    /// Exact match: `foobar` matches `foo`
+    /// Exact match
     Exact,
     /// Prefix match: `foo` matches `foobar`
     Prefix,

@@ -809,7 +809,6 @@ mod expander {
                 let Some(m) = string_fuzzy_match_string(wc_segment, &entry.name, false) else {
                     continue;
                 };
-                // The first port had !n.is_samecase_exact
                 if m.is_samecase_exact() {
                     continue;
                 }

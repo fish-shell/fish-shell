@@ -27,6 +27,7 @@ use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
+use std::borrow::Borrow;
 use std::borrow::Cow;
 use std::cell::UnsafeCell;
 use std::cmp;
@@ -6657,10 +6658,9 @@ impl<'a> Reader<'a> {
     /// \param token_end the position after the token to complete
     ///
     /// Return true if we inserted text into the command line, false if we did not.
-    fn handle_completions(&mut self, token_range: Range<usize>, comp: Vec<Completion>) -> bool {
+    fn handle_completions(&mut self, token_range: Range<usize>, mut comp: Vec<Completion>) -> bool {
         let tok = self.command_line.text()[token_range.clone()].to_owned();
 
-        let comp = &comp;
         // Check trivial cases.
         let len = comp.len();
         if len == 0 {
@@ -6673,27 +6673,33 @@ impl<'a> Reader<'a> {
             return false;
         } else if len == 1 {
             // Exactly one suitable completion found - insert it.
-            let c = &comp[0];
-            self.try_insert(c.clone(), &tok, token_range);
+            let c = std::mem::take(&mut comp[0]);
+            self.try_insert(c, &tok, token_range);
             return true;
         }
 
         let best_rank = comp.iter().map(|c| c.rank()).min().unwrap_or(u32::MAX);
-        let comp = comp.iter().filter(|c| {
-            // Ignore completions with a less suitable match rank than the best.
-            assert!(c.rank() >= best_rank);
-            c.rank() == best_rank
-        });
+        fn best<T: Borrow<Completion>>(
+            best_rank: u32,
+            comp: impl Iterator<Item = T>,
+        ) -> impl Iterator<Item = T> {
+            comp.filter(move |c| {
+                let c = c.borrow();
+                // Ignore completions with a less suitable match rank than the best.
+                assert!(c.rank() >= best_rank);
+                c.rank() == best_rank
+            })
+        }
 
         // Determine whether we are going to replace the token or not. If any commands of the best
         // rank do not require replacement, then ignore all those that want to use replacement.
-        let will_replace_token = comp.clone().all(|c| c.replaces_token());
+        let will_replace_token = best(best_rank, comp.iter()).all(|c| c.replaces_token());
 
         // Decide which completions survived. There may be a lot of them; it would be nice if we could
         // figure out how to avoid copying them here.
         let mut surviving_completions = vec![];
         let mut all_matches_exact_or_prefix = true;
-        for c in comp {
+        for c in best(best_rank, comp.into_iter()) {
             // Only use completions that match replace_token.
             let completion_replaces_token = c.replaces_token();
             let replaces_only_due_to_case_mismatch = {
@@ -6715,11 +6721,11 @@ impl<'a> Reader<'a> {
 
             all_matches_exact_or_prefix &= c.r#match.is_exact_or_prefix();
 
-            let mut completion = c.clone();
+            let mut c = c;
             if replaces_only_due_to_case_mismatch && !will_replace_token {
-                completion.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
+                c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
             }
-            surviving_completions.push(completion);
+            surviving_completions.push(c);
         }
 
         if surviving_completions.len() == 1 {

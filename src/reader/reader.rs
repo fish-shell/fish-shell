@@ -6791,31 +6791,35 @@ impl<'a> Reader<'a> {
         }
 
         // Print the completion list.
-        let mut prefix = WString::new();
-        if will_replace_token {
-            if use_prefix {
-                prefix.push_utfstr(&common_prefix);
-            }
-        } else if tok.len() + common_prefix.len() <= PREFIX_MAX_LEN {
-            prefix.push_utfstr(&tok);
-            prefix.push_utfstr(&common_prefix);
+        let prefix = if will_replace_token && !use_prefix {
+            Cow::Borrowed(L!(""))
         } else {
-            // Collapse parent directories and append end of string
-            prefix.push(get_ellipsis_char());
-
-            let full = tok + common_prefix;
-            let truncated = &full[full.len() - PREFIX_MAX_LEN..];
-            let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
-            if i == 0 {
-                // No path separators were found in the common prefix, so we can't collapse
-                // any further
-                prefix.push_utfstr(&truncated);
+            let mut prefix = WString::new();
+            let full = if will_replace_token {
+                common_prefix.to_owned()
             } else {
-                // Discard any parent directories and include whats left
-                prefix.push('/');
-                prefix.push_utfstr(last_component);
+                tok + common_prefix
             };
-        }
+            if full.len() <= PREFIX_MAX_LEN {
+                prefix = full;
+            } else {
+                // Collapse parent directories and append end of string
+                prefix.push(get_ellipsis_char());
+
+                let truncated = &full[full.len() - PREFIX_MAX_LEN..];
+                let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
+                if i == 0 {
+                    // No path separators were found in the common prefix, so we can't collapse
+                    // any further
+                    prefix.push_utfstr(&truncated);
+                } else {
+                    // Discard any parent directories and include whats left
+                    prefix.push('/');
+                    prefix.push_utfstr(last_component);
+                };
+            }
+            Cow::Owned(prefix)
+        };
 
         if use_prefix {
             let common_prefix_len = common_prefix.len();
@@ -6831,7 +6835,7 @@ impl<'a> Reader<'a> {
         }
 
         // Update the pager data.
-        self.pager.set_prefix(Cow::Owned(prefix), true);
+        self.pager.set_prefix(prefix, true);
         self.pager.set_completions(&surviving_completions, true);
         // Modify the command line to reflect the new pager.
         self.pager_selection_changed();

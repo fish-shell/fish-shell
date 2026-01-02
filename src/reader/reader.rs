@@ -6736,6 +6736,9 @@ impl<'a> Reader<'a> {
             let mut prefix_is_partial_completion = false;
             let mut first = true;
             for c in &surviving_completions {
+                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                    continue;
+                }
                 if first {
                     // First entry, use the whole string.
                     common_prefix = &c.completion;

@@ -36,3 +36,18 @@ tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 1> echo $FISH_TEST_VAR_
 # CHECK: $FISH_TEST_VAR_1  (Variable: /)  $FISH_TEST_VAR_2  (Variable: /)
+
+mkdir -p clang/include
+touch clang/INSTALL.txt
+isolated-tmux send-keys C-u ': clang/in' Tab
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 1> : clang/include/
+# CHECK: clang/INSTALL.txt  …/
+
+mkdir -p clang/include-2
+isolated-tmux send-keys C-u ': clang/in' Tab
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 1> : clang/include
+# CHECK: clang/INSTALL.txt  …/include/  …/include-2/

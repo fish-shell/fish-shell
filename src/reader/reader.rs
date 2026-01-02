@@ -590,7 +590,7 @@ impl ReadlineLoopState {
         Self {
             last_cmd: None,
             yank_len: 0,
-            completion_action: Some(CompletionAction::InsertedUnique),
+            completion_action: None,
             finished: false,
             nchars: None,
         }

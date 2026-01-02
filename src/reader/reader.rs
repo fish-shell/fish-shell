@@ -6698,30 +6698,16 @@ impl<'a> Reader<'a> {
         // Decide which completions survived. There may be a lot of them; it would be nice if we could
         // figure out how to avoid copying them here.
         let mut surviving_completions = vec![];
-        for c in best(best_rank, comp.into_iter()) {
-            // Only use completions that match replace_token.
-            let completion_replaces_token = c.replaces_token();
-            let replaces_only_due_to_case_mismatch = {
-                completion_replaces_token
-                    && c.r#match.is_exact_or_prefix()
-                    && !matches!(c.r#match.case_fold, CaseSensitivity::Sensitive)
-            };
-            if completion_replaces_token != will_replace_token {
-                // Keep smart/samecase results even if we prefer not to replace the token.
-                if will_replace_token || !replaces_only_due_to_case_mismatch {
+        for mut c in best(best_rank, comp.into_iter()) {
+            if c.replaces_token() {
+                if !reader_can_replace(&tok, c.flags) {
                     continue;
+                }
+                if !will_replace_token {
+                    c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
                 }
             }
 
-            // Don't use completions that want to replace, if we cannot replace them.
-            if completion_replaces_token && !reader_can_replace(&tok, c.flags) {
-                continue;
-            }
-
-            let mut c = c;
-            if replaces_only_due_to_case_mismatch && !will_replace_token {
-                c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
-            }
             surviving_completions.push(c);
         }
 

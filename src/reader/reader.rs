@@ -6808,7 +6808,8 @@ impl<'a> Reader<'a> {
 
         // Print the completion list.
         let mut prefix = WString::new();
-        if will_replace_token || !all_matches_exact_or_prefix {
+        assert!(will_replace_token || all_matches_exact_or_prefix);
+        if will_replace_token {
             if use_prefix {
                 prefix.push_utfstr(&common_prefix);
             }

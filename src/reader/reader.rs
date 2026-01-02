@@ -6698,7 +6698,6 @@ impl<'a> Reader<'a> {
         // Decide which completions survived. There may be a lot of them; it would be nice if we could
         // figure out how to avoid copying them here.
         let mut surviving_completions = vec![];
-        let mut all_matches_exact_or_prefix = true;
         for c in best(best_rank, comp.into_iter()) {
             // Only use completions that match replace_token.
             let completion_replaces_token = c.replaces_token();
@@ -6718,8 +6717,6 @@ impl<'a> Reader<'a> {
             if completion_replaces_token && !reader_can_replace(&tok, c.flags) {
                 continue;
             }
-
-            all_matches_exact_or_prefix &= c.r#match.is_exact_or_prefix();
 
             let mut c = c;
             if replaces_only_due_to_case_mismatch && !will_replace_token {
@@ -6743,6 +6740,10 @@ impl<'a> Reader<'a> {
 
         let mut use_prefix = false;
         let mut common_prefix = L!("");
+        let all_matches_exact_or_prefix = surviving_completions
+            .iter()
+            .all(|c| c.r#match.is_exact_or_prefix());
+        assert!(will_replace_token || all_matches_exact_or_prefix);
         if all_matches_exact_or_prefix {
             // Try to find a common prefix to insert among the surviving completions.
             let mut flags = CompleteFlags::empty();
@@ -6802,7 +6803,6 @@ impl<'a> Reader<'a> {
 
         // Print the completion list.
         let mut prefix = WString::new();
-        assert!(will_replace_token || all_matches_exact_or_prefix);
         if will_replace_token {
             if use_prefix {
                 prefix.push_utfstr(&common_prefix);

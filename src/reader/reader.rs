@@ -6641,7 +6641,7 @@ impl<'a> Reader<'a> {
     fn try_insert(&mut self, c: Completion, tok: &wstr, token_range: Range<usize>) {
         // If this is a replacement completion, check that we know how to replace it, e.g. that
         // the token doesn't contain evil operators like {}.
-        if !c.flags.contains(CompleteFlags::REPLACES_TOKEN) || reader_can_replace(tok, c.flags) {
+        if !c.replaces_token() || reader_can_replace(tok, c.flags) {
             self.completion_insert(
                 &c.completion,
                 token_range.end,
@@ -6693,7 +6693,7 @@ impl<'a> Reader<'a> {
         // rank do not require replacement, then ignore all those that want to use replacement.
         let mut will_replace_token = true;
         for c in comp {
-            if c.rank() <= best_rank && !c.flags.contains(CompleteFlags::REPLACES_TOKEN) {
+            if c.rank() <= best_rank && !c.replaces_token() {
                 will_replace_token = false;
                 break;
             }
@@ -6710,9 +6710,9 @@ impl<'a> Reader<'a> {
             }
 
             // Only use completions that match replace_token.
-            let completion_replaces_token = c.flags.contains(CompleteFlags::REPLACES_TOKEN);
+            let completion_replaces_token = c.replaces_token();
             let replaces_only_due_to_case_mismatch = {
-                c.flags.contains(CompleteFlags::REPLACES_TOKEN)
+                completion_replaces_token
                     && c.r#match.is_exact_or_prefix()
                     && !matches!(c.r#match.case_fold, CaseSensitivity::Sensitive)
             };

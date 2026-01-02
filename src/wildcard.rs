@@ -1002,8 +1002,7 @@ mod expander {
                 // Note that prepend_token_prefix is a no-op unless COMPLETE_REPLACES_TOKEN is set
                 let after = self.resolved_completions.len();
                 for c in self.resolved_completions[before..after].iter_mut() {
-                    if info.has_fuzzy_ancestor && !(c.flags.contains(CompleteFlags::REPLACES_TOKEN))
-                    {
+                    if info.has_fuzzy_ancestor && !c.replaces_token() {
                         c.flags |= CompleteFlags::REPLACES_TOKEN;
                         c.prepend_token_prefix(wildcard);
                     }

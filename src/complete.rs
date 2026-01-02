@@ -207,7 +207,7 @@ impl Completion {
 
     /// If this completion replaces the entire token, prepend a prefix. Otherwise do nothing.
     pub fn prepend_token_prefix(&mut self, prefix: &wstr) {
-        if self.flags.contains(CompleteFlags::REPLACES_TOKEN) {
+        if self.replaces_token() {
             self.completion.insert_utfstr(0, prefix)
         }
     }
@@ -2093,7 +2093,7 @@ impl<'ctx> Completer<'ctx> {
             return;
         };
         for comp in completions {
-            if comp.flags.contains(CompleteFlags::REPLACES_TOKEN) {
+            if comp.replaces_token() {
                 continue;
             }
             comp.flags |= CompleteFlags::REPLACES_TOKEN;
@@ -2128,7 +2128,7 @@ impl<'ctx> Completer<'ctx> {
         let mut comp_str;
         for comp in self.completions.get_list_mut() {
             comp_str = comp.completion.clone();
-            if !comp.flags.contains(CompleteFlags::REPLACES_TOKEN) {
+            if !comp.replaces_token() {
                 comp_str.insert_utfstr(0, prefix);
             }
             if arg_strs.binary_search(&comp_str).is_ok() {
@@ -3000,7 +3000,7 @@ mod tests {
         let completions = do_complete(L!("cat te"), CompletionRequestOptions::default());
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
-        assert!(!(completions[0].flags.contains(CompleteFlags::REPLACES_TOKEN)));
+        assert!(!completions[0].replaces_token());
         assert!(
             !(completions[0]
                 .flags
@@ -3017,7 +3017,7 @@ mod tests {
         let completions = do_complete(L!("cat testfile TE"), CompletionRequestOptions::default());
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("testfile"));
-        assert!(completions[0].flags.contains(CompleteFlags::REPLACES_TOKEN));
+        assert!(completions[0].replaces_token());
         assert!(
             completions[0]
                 .flags

@@ -6700,11 +6700,6 @@ impl<'a> Reader<'a> {
 
         if comp.len() == 1 {
             // After sorting and stuff only one completion is left, use it.
-            //
-            // TODO: This happens when smartcase kicks in, e.g.
-            // the token is "cma" and the options are "cmake/" and "CMakeLists.txt"
-            // it would be nice if we could figure
-            // out how to use it more.
             let c = std::mem::take(&mut comp[0]);
 
             self.try_insert(c, &tok, token_range);

@@ -10,6 +10,10 @@ This release fixes the following problems identified in fish 4.3.0:
 - The sample prompts and themes are correctly installed (:issue:`12241`).
 - Last line of command output could be hidden when missing newline (:issue:`12246`).
 
+Interactive improvements
+------------------------
+- Existing file paths in redirection targets such as ``> file.txt`` are now highlighted using :envvar:`fish_color_valid_path`, indicating that ``file.txt`` will be clobbered (:issue:`12260`).
+
 For distributors and developers
 -------------------------------
 - The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.

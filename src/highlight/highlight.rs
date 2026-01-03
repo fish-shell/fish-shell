@@ -985,6 +985,11 @@ impl<'s> Highlighter<'s> {
                 HighlightRole::error
             }),
         );
+        if target_is_valid && self.io_still_ok() && self.file_tester.test_path(&target, false) {
+            for i in redir.target.source_range().as_usize() {
+                self.color_array[i].valid_path = true;
+            }
+        }
     }
 
     fn visit_variable_assignment(&mut self, varas: &VariableAssignment) {
@@ -1392,6 +1397,9 @@ mod tests {
         let mut param_valid_path = HighlightSpec::with_fg(HighlightRole::param);
         param_valid_path.valid_path = true;
 
+        let mut redirection_valid_path = HighlightSpec::with_fg(HighlightRole::redirection);
+        redirection_valid_path.valid_path = true;
+
         let saved_flag = future_feature_flags::test(FeatureFlag::AmpersandNoBgInToken);
         future_feature_flags::set(FeatureFlag::AmpersandNoBgInToken, true);
         let _restore_saved_flag = ScopeGuard::new((), |_| {
@@ -1529,7 +1537,7 @@ mod tests {
             ("param1", fg(HighlightRole::param)),
             // Input redirection.
             ("<", fg(HighlightRole::redirection)),
-            ("/bin/echo", fg(HighlightRole::redirection)),
+            ("/dev/null", redirection_valid_path),
             // Output redirection to a valid fd.
             ("1>&2", fg(HighlightRole::redirection)),
             // Output redirection to an invalid fd.

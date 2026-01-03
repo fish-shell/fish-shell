@@ -226,7 +226,7 @@ end
 
 function __fish_config_list_prompts
     set -lx dir
-    set -l prompt_paths (__fish_config_files prompts .fish $argv)
+    set -l prompt_paths (__fish_config_files --user-dir=(__fish_prompt_dir) prompts .fish $argv)
     if [ (count $argv) = 1 ] && set -q prompt_paths[2]
         echo >&2 "fish_config: internal error: multiple prompts matching '$argv' ??"
         set --erase prompt_paths[2..]

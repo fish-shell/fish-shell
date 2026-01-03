@@ -6660,23 +6660,6 @@ impl<'a> Reader<'a> {
     fn handle_completions(&mut self, token_range: Range<usize>, mut comp: Vec<Completion>) -> bool {
         let tok = self.command_line.text()[token_range.clone()].to_owned();
 
-        // Check trivial cases.
-        let len = comp.len();
-        if len == 0 {
-            // No suitable completions found, flash screen and return.
-            if token_range.is_empty() {
-                self.flash(0..self.command_line.len());
-            } else {
-                self.flash(token_range);
-            }
-            return false;
-        } else if len == 1 {
-            // Exactly one suitable completion found - insert it.
-            let c = std::mem::take(&mut comp[0]);
-            self.try_insert(c, &tok, token_range);
-            return true;
-        }
-
         comp.retain({
             let best_rank = comp.iter().map(|c| c.rank()).min().unwrap_or(u32::MAX);
             move |c| {
@@ -6698,10 +6681,18 @@ impl<'a> Reader<'a> {
             }
         }
 
-        if comp.len() == 1 {
-            // After sorting and stuff only one completion is left, use it.
+        let len = comp.len();
+        if len == 0 {
+            // No suitable completions found, flash screen and return.
+            if token_range.is_empty() {
+                self.flash(0..self.command_line.len());
+            } else {
+                self.flash(token_range);
+            }
+            return false;
+        } else if len == 1 {
+            // Exactly one suitable completion found - insert it.
             let c = std::mem::take(&mut comp[0]);
-
             self.try_insert(c, &tok, token_range);
             return true;
         }

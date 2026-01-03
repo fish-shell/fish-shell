@@ -1053,3 +1053,51 @@ pub fn builtin_break_continue(
     };
     Ok(SUCCESS)
 }
+
+/// Option character for --color flag
+pub const COLOR_OPTION_CHAR: char = '\x10';
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ColorEnabled {
+    #[default]
+    Auto,
+    Always,
+    Never,
+}
+
+impl TryFrom<&wstr> for ColorEnabled {
+    type Error = ();
+    fn try_from(s: &wstr) -> Result<Self, Self::Error> {
+        match s {
+            s if s == "auto" => Ok(ColorEnabled::Auto),
+            s if s == "always" => Ok(ColorEnabled::Always),
+            s if s == "never" => Ok(ColorEnabled::Never),
+            _ => Err(()),
+        }
+    }
+}
+
+impl ColorEnabled {
+    pub fn enabled(&self, streams: &crate::io::IoStreams) -> bool {
+        match self {
+            ColorEnabled::Always => true,
+            ColorEnabled::Never => false,
+            ColorEnabled::Auto => streams.out_is_terminal(),
+        }
+    }
+
+    pub fn parse_from_opt(
+        streams: &mut IoStreams,
+        cmd: &wstr,
+        arg: &wstr,
+    ) -> Result<Self, ErrorCode> {
+        Self::try_from(arg).map_err(|()| {
+            streams.err.append(&wgettext_fmt!(
+                "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n",
+                cmd,
+                arg
+            ));
+            STATUS_INVALID_ARGS
+        })
+    }
+}

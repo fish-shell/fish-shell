@@ -6,8 +6,8 @@ Synopsis
 
 .. synopsis::
 
-    functions [-a | --all] [-n | --names]
-    functions [-D | --details] [-v] FUNCTION
+    functions [-a | --all] [-n | --names] [--color WHEN]
+    functions [-D | --details] [-v] [--color WHEN] FUNCTION
     functions -c OLDNAME NEWNAME
     functions -d DESCRIPTION FUNCTION
     functions [-e | -q] FUNCTION ...
@@ -59,6 +59,10 @@ The following options are available:
 
 **-t** or **--handlers-type** *TYPE*
     Show all event handlers matching the given *TYPE*.
+
+**--color** *WHEN*
+    Controls when to use syntax highlighting colors when printing function definitions.
+    *WHEN* can be ``auto`` (the default, colorize if the output :doc:`is a terminal <isatty>`), ``always``, or ``never``.
 
 **-h** or **--help**
     Displays help about using this command.

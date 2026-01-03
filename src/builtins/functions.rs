@@ -6,8 +6,7 @@ use crate::common::valid_func_name;
 use crate::common::{EscapeFlags, EscapeStringStyle};
 use crate::event::{self};
 use crate::function;
-use crate::highlight::colorize;
-use crate::highlight::highlight_shell;
+use crate::highlight::highlight_and_colorize;
 use crate::parse_util::apply_indents;
 use crate::parse_util::parse_util_compute_indents;
 use crate::parser_keywords::parser_keywords_is_reserved;
@@ -25,6 +24,7 @@ struct FunctionsCmdOpts<'args> {
     no_metadata: bool,
     verbose: bool,
     handlers: bool,
+    color: ColorEnabled,
     handlers_type: Option<&'args wstr>,
     description: Option<&'args wstr>,
 }
@@ -46,6 +46,7 @@ const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("verbose"), ArgType::NoArgument, 'v'),
     wopt(L!("handlers"), ArgType::NoArgument, 'H'),
     wopt(L!("handlers-type"), ArgType::RequiredArgument, 't'),
+    wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
 ];
 
 /// Parses options to builtin function, populating opts.
@@ -78,6 +79,9 @@ fn parse_cmd_opts<'args>(
             't' => {
                 opts.handlers = true;
                 opts.handlers_type = Some(w.woptarg.unwrap());
+            }
+            COLOR_OPTION_CHAR => {
+                opts.color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
@@ -278,7 +282,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
     if opts.list || args.is_empty() {
         let mut names = function::get_names(opts.show_hidden, parser.vars());
         names.sort();
-        if streams.out_is_terminal() {
+        if opts.color.enabled(streams) {
             let mut buff = WString::new();
             let mut first: bool = true;
             for name in names {
@@ -414,12 +418,12 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             def = apply_indents(&def, &parse_util_compute_indents(&def));
         }
 
-        if streams.out_is_terminal() {
-            let mut colors = vec![];
-            highlight_shell(&def, &mut colors, &parser.context(), false, None);
-            streams
-                .out
-                .append(&bytes2wcstring(&colorize(&def, &colors, parser.vars())));
+        if opts.color.enabled(streams) {
+            streams.out.append(&bytes2wcstring(&highlight_and_colorize(
+                &def,
+                &parser.context(),
+                parser.vars(),
+            )));
         } else {
             streams.out.append(&def);
         }

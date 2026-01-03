@@ -545,6 +545,10 @@ msgid "%s: Invalid type '%s'\n"
 msgstr "%s: 无效类型 '%s'\n"
 
 #, c-format
+msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n"
+msgstr "%s: 无效的 '--color' 选项值 '%s'。应为 'always'、'never' 或 'auto'\n"
+
+#, c-format
 msgid "%s: Invalid width value '%s'\n"
 msgstr "%s: 无效的宽度值 '%s'\n"
 
@@ -3642,6 +3646,9 @@ msgstr "查看并从示例提示中选择"
 
 msgid "View and pick from the sample themes"
 msgstr "查看并从示例主题中选择"
+
+msgid "When to colorize output"
+msgstr ""
 
 msgid "Where to direct debug output to"
 msgstr "将调试输出导向何处"

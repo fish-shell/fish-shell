@@ -19,3 +19,4 @@ complete -c functions -s D -l details -d "Display information about the function
 complete -c functions -s v -l verbose -d "Print more output"
 complete -c functions -s H -l handlers -d "Show event handlers"
 complete -c functions -s t -l handlers-type -d "Show event handlers matching the given type" -x -a "signal variable exit job-id generic"
+complete -c functions -l color -d 'When to colorize output' -x -a 'always never auto'

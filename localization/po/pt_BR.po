@@ -523,6 +523,10 @@ msgid "%s: Invalid type '%s'\n"
 msgstr ""
 
 #, c-format
+msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n"
+msgstr "%s: Valor inválido para a opção '--color': '%s'. Esperado 'always', 'never' ou 'auto'\n"
+
+#, c-format
 msgid "%s: Invalid width value '%s'\n"
 msgstr ""
 
@@ -3613,6 +3617,9 @@ msgid "View and pick from the sample prompts"
 msgstr ""
 
 msgid "View and pick from the sample themes"
+msgstr ""
+
+msgid "When to colorize output"
 msgstr ""
 
 msgid "Where to direct debug output to"

@@ -6,7 +6,7 @@ Synopsis
 
 .. synopsis::
 
-    complete ((-c | --command) | (-p | --path)) COMMAND [OPTIONS]
+    complete ((-c | --command) | (-p | --path)) COMMAND [OPTIONS] [--color WHEN]
     complete (-C | --do-complete) [--escape] STRING
 
 Description
@@ -73,6 +73,10 @@ The following options are available:
 
 **--escape**
     When used with ``-C``, escape special characters in completions.
+
+**--color** *WHEN*
+    Controls when to use syntax highlighting colors when printing completions.
+    *WHEN* can be ``auto`` (the default, colorize if the output :doc:`is a terminal <isatty>`), ``always``, or ``never``.
 
 **-h** or **--help**
     Displays help about using this command.

@@ -60,6 +60,7 @@ struct HistoryCmdOpts {
     case_sensitive: bool,
     null_terminate: bool,
     reverse: bool,
+    color: ColorEnabled,
 }
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
@@ -82,6 +83,7 @@ const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("clear"), ArgType::NoArgument, '\x04'),
     wopt(L!("merge"), ArgType::NoArgument, '\x05'),
     wopt(L!("reverse"), ArgType::NoArgument, 'R'),
+    wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
 ];
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.
@@ -226,6 +228,9 @@ fn parse_cmd_opts(
                 }
                 w.remaining_text = L!("");
             }
+            COLOR_OPTION_CHAR => {
+                opts.color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
+            }
             _ => {
                 panic!("unexpected retval from WGetopter");
             }
@@ -278,6 +283,8 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
     match opts.hist_cmd {
         HistCmd::None | HistCmd::Search => {
             if !history.search(
+                parser,
+                streams,
                 opts.search_type
                     .unwrap_or(history::SearchType::ContainsGlob),
                 args,
@@ -287,7 +294,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
                 opts.null_terminate,
                 opts.reverse,
                 &parser.context().cancel_checker,
-                streams,
+                opts.color.enabled(streams),
             ) {
                 status = Err(STATUS_CMD_ERROR);
             }

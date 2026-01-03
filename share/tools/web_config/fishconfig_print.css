@@ -3,7 +3,8 @@ body {
     font-size: 8pt;
 }
 
-.tab, .print_hidden {
+.tab,
+.print_hidden {
     display: none;
 }
 

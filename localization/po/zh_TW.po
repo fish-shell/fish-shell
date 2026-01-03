@@ -158,10 +158,6 @@ msgid "%s, version %s"
 msgstr "%s，%s 版"
 
 #, c-format
-msgid "%s, version %s\n"
-msgstr "%s，%s 版\n"
-
-#, c-format
 msgid "%s: %s\n"
 msgstr "%s：%s\n"
 
@@ -472,10 +468,6 @@ msgstr "%s：無效的最大匹配數「%s」\n"
 #, c-format
 msgid "%s: Invalid max value '%s'\n"
 msgstr "%s：無效的最大值「%s」\n"
-
-#, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'\n"
-msgstr "%s：無效的選項規格「%s」，在「%c」處\n"
 
 #, c-format
 msgid "%s: Invalid padding character of width zero '%s'\n"

@@ -4,15 +4,14 @@ use super::prelude::*;
 
 use crate::env::{EnvMode, EnvSetMode, EnvStack};
 use crate::exec::exec_subshell;
+use crate::localized_formatln;
 use crate::parser::ParserEnvSetMode;
 use crate::wutil::fish_iswalnum;
+use fish_fluent::{FluentID, fluent_id};
 
 const VAR_NAME_PREFIX: &wstr = L!("_flag_");
 
-localizable_consts!(
-    BUILTIN_ERR_INVALID_OPT_SPEC
-    "%s: Invalid option spec '%s' at char '%c'\n"
-);
+static BUILTIN_ERR_INVALID_OPT_SPEC: FluentID = fluent_id!("argparse-invalid-option-spec");
 
 #[derive(Default)]
 struct OptionSpec<'args> {
@@ -250,11 +249,11 @@ fn parse_flag_modifiers<'args>(
 
     if s.char_at(0) == '!' {
         if opt_spec.arg_type == ArgType::NoArgument {
-            streams.err.append(&wgettext_fmt!(
+            streams.err.append(&localized_formatln!(
                 BUILTIN_ERR_INVALID_OPT_SPEC,
-                opts.name,
-                option_spec,
-                s.char_at(0)
+                command_name = opts.name.to_string(),
+                option_spec = option_spec.to_string(),
+                bad_char = s.char_at(0).to_string()
             ));
         }
         s = s.slice_from(1);
@@ -262,11 +261,11 @@ fn parse_flag_modifiers<'args>(
         // Move cursor to the end so we don't expect a long flag.
         s = s.slice_from(s.char_count());
     } else if !s.is_empty() {
-        streams.err.append(&wgettext_fmt!(
+        streams.err.append(&localized_formatln!(
             BUILTIN_ERR_INVALID_OPT_SPEC,
-            opts.name,
-            option_spec,
-            s.char_at(0)
+            command_name = opts.name.to_string(),
+            option_spec = option_spec.to_string(),
+            bad_char = s.char_at(0).to_string(),
         ));
         return false;
     }
@@ -328,11 +327,11 @@ fn parse_option_spec_sep<'args>(
             opt_spec.short_flag_valid = false;
             i += 1;
             if i == s.char_count() {
-                streams.err.append(&wgettext_fmt!(
+                streams.err.append(&localized_formatln!(
                     BUILTIN_ERR_INVALID_OPT_SPEC,
-                    opts.name,
-                    option_spec,
-                    s.char_at(i - 1)
+                    command_name = opts.name.to_string(),
+                    option_spec = option_spec.to_string(),
+                    bad_char = s.char_at(i - 1).to_string(),
                 ));
                 return false;
             }
@@ -340,11 +339,11 @@ fn parse_option_spec_sep<'args>(
         '/' => {
             i += 1; // the struct is initialized assuming short_flag_valid should be true
             if i == s.char_count() {
-                streams.err.append(&wgettext_fmt!(
+                streams.err.append(&localized_formatln!(
                     BUILTIN_ERR_INVALID_OPT_SPEC,
-                    opts.name,
-                    option_spec,
-                    s.char_at(i - 1)
+                    command_name = opts.name.to_string(),
+                    option_spec = option_spec.to_string(),
+                    bad_char = s.char_at(i - 1).to_string()
                 ));
                 return false;
             }

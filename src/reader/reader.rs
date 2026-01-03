@@ -27,7 +27,6 @@ use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
-use std::borrow::Borrow;
 use std::borrow::Cow;
 use std::cell::UnsafeCell;
 use std::cmp;
@@ -6678,47 +6677,35 @@ impl<'a> Reader<'a> {
             return true;
         }
 
-        let best_rank = comp.iter().map(|c| c.rank()).min().unwrap_or(u32::MAX);
-        fn best<T: Borrow<Completion>>(
-            best_rank: u32,
-            comp: impl Iterator<Item = T>,
-        ) -> impl Iterator<Item = T> {
-            comp.filter(move |c| {
-                let c = c.borrow();
+        comp.retain({
+            let best_rank = comp.iter().map(|c| c.rank()).min().unwrap_or(u32::MAX);
+            move |c| {
                 // Ignore completions with a less suitable match rank than the best.
                 assert!(c.rank() >= best_rank);
                 c.rank() == best_rank
-            })
-        }
+            }
+        });
 
         // Determine whether we are going to replace the token or not. If any commands of the best
         // rank do not require replacement, then ignore all those that want to use replacement.
-        let will_replace_token = best(best_rank, comp.iter()).all(|c| c.replaces_token());
+        let will_replace_token = comp.iter().all(|c| c.replaces_token());
 
-        // Decide which completions survived. There may be a lot of them; it would be nice if we could
-        // figure out how to avoid copying them here.
-        let mut surviving_completions = vec![];
-        for mut c in best(best_rank, comp.into_iter()) {
-            if c.replaces_token() {
-                if !reader_can_replace(&tok, c.flags) {
-                    continue;
-                }
-                if !will_replace_token {
-                    c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
-                }
+        comp.retain(|c| !c.replaces_token() || reader_can_replace(&tok, c.flags));
+
+        for c in &mut comp {
+            if !will_replace_token && c.replaces_token() {
+                c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
             }
-
-            surviving_completions.push(c);
         }
 
-        if surviving_completions.len() == 1 {
+        if comp.len() == 1 {
             // After sorting and stuff only one completion is left, use it.
             //
             // TODO: This happens when smartcase kicks in, e.g.
             // the token is "cma" and the options are "cmake/" and "CMakeLists.txt"
             // it would be nice if we could figure
             // out how to use it more.
-            let c = std::mem::take(&mut surviving_completions[0]);
+            let c = std::mem::take(&mut comp[0]);
 
             self.try_insert(c, &tok, token_range);
             return true;
@@ -6726,16 +6713,14 @@ impl<'a> Reader<'a> {
 
         let mut use_prefix = false;
         let mut common_prefix = L!("");
-        let all_matches_exact_or_prefix = surviving_completions
-            .iter()
-            .all(|c| c.r#match.is_exact_or_prefix());
+        let all_matches_exact_or_prefix = comp.iter().all(|c| c.r#match.is_exact_or_prefix());
         assert!(will_replace_token || all_matches_exact_or_prefix);
         if all_matches_exact_or_prefix {
             // Try to find a common prefix to insert among the surviving completions.
             let mut flags = CompleteFlags::empty();
             let mut prefix_is_partial_completion = false;
             let mut first = true;
-            for c in &surviving_completions {
+            for c in &comp {
                 if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
                     continue;
                 }
@@ -6823,7 +6808,7 @@ impl<'a> Reader<'a> {
 
         if use_prefix {
             let common_prefix_len = common_prefix.len();
-            for c in &mut surviving_completions {
+            for c in &mut comp {
                 if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
                     // Keep replacement semantics and the original prefix so these completions can
                     // fix casing when selected.
@@ -6836,7 +6821,7 @@ impl<'a> Reader<'a> {
 
         // Update the pager data.
         self.pager.set_prefix(prefix, true);
-        self.pager.set_completions(&surviving_completions, true);
+        self.pager.set_completions(&comp, true);
         // Modify the command line to reflect the new pager.
         self.pager_selection_changed();
         false

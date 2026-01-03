@@ -86,6 +86,9 @@ impl ReaderHistorySearch {
     pub fn mode(&self) -> SearchMode {
         self.mode
     }
+    pub fn token_offset(&self) -> usize {
+        self.token_offset
+    }
 
     /// Move the history search in the given direction `dir`.
     pub fn move_in_direction(&mut self, dir: SearchDirection) -> bool {
@@ -138,6 +141,12 @@ impl ReaderHistorySearch {
     /// Return whether we are at the youngest match (original search string) in our search.
     pub fn is_at_present(&self) -> bool {
         self.match_index == 0
+    }
+
+    /// Return whether the underlying history has been modified since the search was created.
+    /// If true, the search results may be stale and should be reset.
+    pub fn is_stale(&self) -> bool {
+        self.search.as_ref().is_some_and(|s| s.is_stale())
     }
 
     // Add an item to skip.

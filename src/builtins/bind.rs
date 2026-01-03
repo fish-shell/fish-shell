@@ -2,7 +2,8 @@
 
 use super::prelude::*;
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, bytes2wcstring, escape, escape_string, valid_var_name,
+    EscapeFlags, EscapeStringStyle, FilenameRef, bytes2wcstring, escape, escape_string,
+    valid_var_name,
 };
 use crate::highlight::{colorize, highlight_shell};
 use crate::input::{InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings};
@@ -82,6 +83,7 @@ impl BuiltinBind {
         let mut ecmds: &[_] = &[];
         let mut sets_mode = None;
         let mut key_name_style = KeyNameStyle::Plain;
+        let mut definition_file: Option<&FilenameRef> = None;
         let mut out = WString::new();
         if !self.input_mappings.get(
             seq,
@@ -90,6 +92,7 @@ impl BuiltinBind {
             user,
             &mut sets_mode,
             &mut key_name_style,
+            &mut definition_file,
         ) {
             return false;
         }
@@ -151,6 +154,13 @@ impl BuiltinBind {
             out.push(' ');
             out.push_utfstr(&escape(ecmd));
         }
+
+        // Show where the binding was defined
+        if let Some(def_file) = definition_file {
+            out.push_str(" # defined in ");
+            out.push_utfstr(&escape(def_file));
+        }
+
         out.push('\n');
 
         if !streams.out_is_redirected && isatty(libc::STDOUT_FILENO) {
@@ -223,6 +233,7 @@ impl BuiltinBind {
     }
 
     /// Add specified key binding.
+    #[allow(clippy::too_many_arguments)]
     fn add(
         &mut self,
         seq: &wstr,
@@ -230,6 +241,7 @@ impl BuiltinBind {
         mode: WString,
         sets_mode: Option<WString>,
         user: bool,
+        parser: &Parser,
         streams: &mut IoStreams,
     ) -> bool {
         let cmds = cmds.iter().map(|&s| s.to_owned()).collect();
@@ -242,8 +254,16 @@ impl BuiltinBind {
         } else {
             KeyNameStyle::Plain
         };
-        self.input_mappings
-            .add(key_seq, key_name_style, cmds, mode, sets_mode, user);
+        let definition_file = parser.current_filename();
+        self.input_mappings.add(
+            key_seq,
+            key_name_style,
+            cmds,
+            mode,
+            sets_mode,
+            user,
+            definition_file,
+        );
         false
     }
 
@@ -373,6 +393,7 @@ impl BuiltinBind {
                 self.opts.bind_mode.clone(),
                 self.opts.sets_bind_mode.clone(),
                 self.opts.user,
+                parser,
                 streams,
             ) {
                 return true;

@@ -5295,6 +5295,9 @@ msgstr ""
 msgid "Actually commit changes"
 msgstr ""
 
+msgid "Actually write object into object database"
+msgstr ""
+
 msgid "Ad-hoc \"chat server\""
 msgstr ""
 
@@ -5916,6 +5919,9 @@ msgstr ""
 msgid "Add new key/value pairs to a dictionary"
 msgstr ""
 
+msgid "Add new line without altering existing values"
+msgstr ""
+
 msgid "Add new mode"
 msgstr ""
 
@@ -5929,6 +5935,9 @@ msgid "Add new user to extra groups defined in the configuration file"
 msgstr ""
 
 msgid "Add new virtual devices to pool"
+msgstr ""
+
+msgid "Add non-tracked file to the archive"
 msgstr ""
 
 msgid "Add notes for a given object"
@@ -5974,6 +5983,9 @@ msgid "Add path to head of function search path"
 msgstr ""
 
 msgid "Add path to head of image search path"
+msgstr ""
+
+msgid "Add pattern to exclude from removal"
 msgstr ""
 
 msgid "Add prefix"
@@ -6124,6 +6136,9 @@ msgid "Add to the list of destinations"
 msgstr ""
 
 msgid "Add torrents to transmission"
+msgstr ""
+
+msgid "Add trailer to commit message"
 msgstr ""
 
 msgid "Add transactions using guided prompts"
@@ -6705,6 +6720,9 @@ msgstr ""
 msgid "Allow given sessions only"
 msgstr ""
 
+msgid "Allow hashing any garbage"
+msgstr ""
+
 msgid "Allow import into non-empty target directory"
 msgstr ""
 
@@ -6742,6 +6760,9 @@ msgid "Allow merging even when branches do not share a common history"
 msgstr ""
 
 msgid "Allow missing config file"
+msgstr ""
+
+msgid "Allow missing objects"
 msgstr ""
 
 msgid "Allow multi session CDs to be made"
@@ -6871,6 +6892,12 @@ msgid "Allow the generation of parallel instructions"
 msgstr ""
 
 msgid "Allow the import and use of keys with user IDs which are not self-signed"
+msgstr ""
+
+msgid "Allow the pre-merge and commit-msg hooks to run (default)"
+msgstr ""
+
+msgid "Allow the pre-push hook to run (default)"
 msgstr ""
 
 msgid "Allow the pre-rebase hook to run"
@@ -8871,6 +8898,9 @@ msgstr ""
 msgid "Be quiet at startup"
 msgstr ""
 
+msgid "Be quiet if files exist or are not in the index"
+msgstr ""
+
 msgid "Be quiet when installing a new compiler"
 msgstr ""
 
@@ -9789,6 +9819,9 @@ msgstr ""
 msgid "Cancel the operation"
 msgstr ""
 
+msgid "Cancel the operation and return to pre-sequence state"
+msgstr ""
+
 msgid "Cancels a job or build"
 msgstr ""
 
@@ -10635,6 +10668,12 @@ msgstr ""
 msgid "Check out a working copy from a repository"
 msgstr ""
 
+msgid "Check out all files in the index"
+msgstr ""
+
+msgid "Check out all files including sparse entries"
+msgstr ""
+
 msgid "Check out files to standard output (avoids stickiness)."
 msgstr ""
 
@@ -10657,6 +10696,9 @@ msgid "Check plist files for syntax errors"
 msgstr ""
 
 msgid "Check presence of keyboard accelerators for menu items"
+msgstr ""
+
+msgid "Check refs from stdin that do not exist"
 msgstr ""
 
 msgid "Check registry"
@@ -11226,6 +11268,9 @@ msgstr ""
 msgid "Clear the selected local resources or cache location"
 msgstr ""
 
+msgid "Clear the sequencer state after a failed revert"
+msgstr ""
+
 msgid "Clear the tree log. Usable if it's corrupted and prevents mount."
 msgstr ""
 
@@ -11395,6 +11440,9 @@ msgid "Color output"
 msgstr ""
 
 msgid "Color text"
+msgstr ""
+
+msgid "Color the status sign"
 msgstr ""
 
 msgid "Color to use when filling a graphic primitive [color]"
@@ -11649,7 +11697,13 @@ msgstr ""
 msgid "Commit even if nothing has changed"
 msgstr ""
 
+msgid "Commit message"
+msgstr ""
+
 msgid "Commit object name"
+msgstr ""
+
+msgid "Commit only from paths specified on command line"
 msgstr ""
 
 msgid "Commit target path to an OSTree repo"
@@ -11779,6 +11833,12 @@ msgid "Compare the working tree with the \"our branch\""
 msgstr ""
 
 msgid "Compare the working tree with the \"their branch\""
+msgstr ""
+
+msgid "Compare tree to index"
+msgstr ""
+
+msgid "Compare tree to working tree or index"
 msgstr ""
 
 msgid "Compare two commit ranges"
@@ -12099,6 +12159,9 @@ msgstr ""
 msgid "Compute clusters"
 msgstr ""
 
+msgid "Compute object ID and optionally create an object"
+msgstr ""
+
 msgid "Compute size of directories by their contents"
 msgstr ""
 
@@ -12154,6 +12217,9 @@ msgid "Config file to use"
 msgstr ""
 
 msgid "Config file to use instead of ~/.nodeenvrc"
+msgstr ""
+
+msgid "Config key"
 msgstr ""
 
 msgid "Config option"
@@ -12552,6 +12618,9 @@ msgstr ""
 msgid "Continue running even if no broadcast interfaces were found"
 msgstr ""
 
+msgid "Continue the operation after resolving conflicts"
+msgstr ""
+
 msgid "Continue the operation in progress"
 msgstr ""
 
@@ -12643,6 +12712,9 @@ msgid "Control or query domain emulator affinity"
 msgstr ""
 
 msgid "Control or query domain vcpu affinity"
+msgstr ""
+
+msgid "Control recursive pushing of submodules"
 msgstr ""
 
 msgid "Control the amount of debugging output the scheduler prints"
@@ -12828,6 +12900,9 @@ msgstr ""
 msgid "Convert repositories between various formats"
 msgstr ""
 
+msgid "Convert shallow repository to complete one"
+msgstr ""
+
 msgid "Convert stdout to HTML and redirect to file"
 msgstr ""
 
@@ -12969,6 +13044,9 @@ msgstr ""
 msgid "Copy files"
 msgstr ""
 
+msgid "Copy files from index to working tree"
+msgstr ""
+
 msgid "Copy files from one VFS to another VFS"
 msgstr ""
 
@@ -12994,6 +13072,9 @@ msgid "Copy magnet link with given ID to clipboard"
 msgstr ""
 
 msgid "Copy message id to the end of commit message"
+msgstr ""
+
+msgid "Copy modified files to a temporary location and perform dir diff"
 msgstr ""
 
 msgid "Copy note from object"
@@ -13314,6 +13395,9 @@ msgstr ""
 msgid "Create a new cluster"
 msgstr ""
 
+msgid "Create a new commit object"
+msgstr ""
+
 msgid "Create a new directory under version control"
 msgstr ""
 
@@ -13416,6 +13500,9 @@ msgstr ""
 msgid "Create a readonly snapshot"
 msgstr ""
 
+msgid "Create a reflog"
+msgstr ""
+
 msgid "Create a repository"
 msgstr ""
 
@@ -13498,6 +13585,9 @@ msgid "Create a tarball from a package"
 msgstr ""
 
 msgid "Create a thumbnail of the image [geometry]"
+msgstr ""
+
+msgid "Create a tree object from the current index"
 msgstr ""
 
 msgid "Create a url route in a space for later use"
@@ -13668,6 +13758,9 @@ msgstr ""
 msgid "Create final release from dev release tarball"
 msgstr ""
 
+msgid "Create git dir at specified path"
+msgstr ""
+
 msgid "Create group with name of added user if -g is not specified"
 msgstr ""
 
@@ -13771,6 +13864,9 @@ msgid "Create pseudo-terminal for the session"
 msgstr ""
 
 msgid "Create raw targets for archive command"
+msgstr ""
+
+msgid "Create reflog for the tag"
 msgstr ""
 
 msgid "Create registry cache"
@@ -14244,6 +14340,9 @@ msgstr ""
 msgid "Debug blacklisting"
 msgstr ""
 
+msgid "Debug gitignore / exclude files"
+msgstr ""
+
 msgid "Debug level[default 0]"
 msgstr ""
 
@@ -14373,13 +14472,28 @@ msgstr ""
 msgid "Deduplicate mode"
 msgstr ""
 
+msgid "Deepen history after specified date"
+msgstr ""
+
+msgid "Deepen history excluding branch"
+msgstr ""
+
+msgid "Deepen history excluding commits reachable from branch"
+msgstr ""
+
 msgid "Deepen history of shallow clone, excluding rev"
 msgstr ""
 
 msgid "Deepen history of shallow clones"
 msgstr ""
 
+msgid "Deepen history of shallow repository"
+msgstr ""
+
 msgid "Deepen history of shallow repository based on time"
+msgstr ""
+
+msgid "Deepen history of shallow repository by specified commits"
 msgstr ""
 
 msgid "Default ACME CA HTTP timeout"
@@ -15042,10 +15156,16 @@ msgstr ""
 msgid "Delete the optional user-defined chain specified"
 msgstr ""
 
+msgid "Delete the reference"
+msgstr ""
+
 msgid "Delete the specified backend"
 msgstr ""
 
 msgid "Delete the specified print file after printing"
+msgstr ""
+
+msgid "Delete the symbolic ref"
 msgstr ""
 
 msgid "Delete the symlink in ~/.atom/packages for the package"
@@ -15276,6 +15396,9 @@ msgstr ""
 msgid "Dereference symlinks"
 msgstr ""
 
+msgid "Dereference tags"
+msgstr ""
+
 msgid "Descend into directories and audit them as well"
 msgstr ""
 
@@ -15400,6 +15523,9 @@ msgid "Destroy the specified set or all sets"
 msgstr ""
 
 msgid "Destructively split a volume into multiple partitions"
+msgstr ""
+
+msgid "Detach HEAD at named commit"
 msgstr ""
 
 msgid "Detach HEAD in the new working tree"
@@ -15670,6 +15796,9 @@ msgid "Directory for site-specific, non-platform-specific files"
 msgstr ""
 
 msgid "Directory for site-specific, platform-specific files"
+msgstr ""
+
+msgid "Directory from which templates will be used"
 msgstr ""
 
 msgid "Directory in which files should be stored when used with -o/--output"
@@ -16185,6 +16314,9 @@ msgstr ""
 msgid "Disable diagnostics that the standard says a compiler does not need to issue"
 msgstr ""
 
+msgid "Disable diff output, only set exit status"
+msgstr ""
+
 msgid "Disable different kinds of pages"
 msgstr ""
 
@@ -16540,6 +16672,9 @@ msgid "Disable slideshow mode"
 msgstr ""
 
 msgid "Disable sound"
+msgstr ""
+
+msgid "Disable sparse checkout support"
 msgstr ""
 
 msgid "Disable sparse mode"
@@ -17379,6 +17514,9 @@ msgstr ""
 msgid "Display deduplication histogram"
 msgstr ""
 
+msgid "Display detailed ahead/behind upstream-branch counts"
+msgstr ""
+
 msgid "Display detailed help on every command"
 msgstr ""
 
@@ -18195,6 +18333,9 @@ msgstr ""
 msgid "Display system message buffer"
 msgstr ""
 
+msgid "Display tag listing in columns"
+msgstr ""
+
 msgid "Display technologies"
 msgstr ""
 
@@ -18430,6 +18571,9 @@ msgid "Display timing and memory usage information"
 msgstr ""
 
 msgid "Display toolbar or menubar"
+msgstr ""
+
+msgid "Display untracked files in columns"
 msgstr ""
 
 msgid "Display upgradeable ZFS versions"
@@ -18816,6 +18960,15 @@ msgstr ""
 msgid "Do not (do) assume that unaligned memory references will be handled by the system"
 msgstr ""
 
+msgid "Do not GPG-sign commit"
+msgstr ""
+
+msgid "Do not GPG-sign commits"
+msgstr ""
+
+msgid "Do not GPG-sign the push"
+msgstr ""
+
 msgid "Do not abbreviate text in tables"
 msgstr ""
 
@@ -19134,6 +19287,9 @@ msgstr ""
 msgid "Do not create an internal pool file for quicker generation of random numbers"
 msgstr ""
 
+msgid "Do not create files that do not exist"
+msgstr ""
+
 msgid "Do not create headings"
 msgstr ""
 
@@ -19141,6 +19297,9 @@ msgid "Do not create objects in the object database"
 msgstr ""
 
 msgid "Do not create output files"
+msgstr ""
+
+msgid "Do not create reflog for the tag"
 msgstr ""
 
 msgid "Do not create the archive"
@@ -19179,6 +19338,9 @@ msgstr ""
 msgid "Do not dereference symbolic links"
 msgstr ""
 
+msgid "Do not dereference symbolic refs"
+msgstr ""
+
 msgid "Do not descend dirs with more than # files in them"
 msgstr ""
 
@@ -19212,7 +19374,13 @@ msgstr ""
 msgid "Do not display progress bar"
 msgstr ""
 
+msgid "Do not display tag listing in columns"
+msgstr ""
+
 msgid "Do not display the progress bar"
+msgstr ""
+
+msgid "Do not display untracked files in columns"
 msgstr ""
 
 msgid "Do not do any DNS or service lookups on any specified addresses, hostnames or ports"
@@ -19255,6 +19423,9 @@ msgid "Do not dump unlogged table data"
 msgstr ""
 
 msgid "Do not edit build files"
+msgstr ""
+
+msgid "Do not edit the commit message"
 msgstr ""
 
 msgid "Do not ellipsize anything"
@@ -19330,6 +19501,9 @@ msgid "Do not execute the hooks after emerge --sync (@@ entries)"
 msgstr ""
 
 msgid "Do not execute the hooks of /etc/eix-sync.conf"
+msgstr ""
+
+msgid "Do not exit when diff tool returns non-zero"
 msgstr ""
 
 msgid "Do not exit with nonzero on unreadable files"
@@ -19452,6 +19626,9 @@ msgstr ""
 msgid "Do not guess branch probabilities using heuristics"
 msgstr ""
 
+msgid "Do not guess remote tracking branch"
+msgstr ""
+
 msgid "Do not handle sequences of /../ or /./ in the given URL path"
 msgstr ""
 
@@ -19486,6 +19663,9 @@ msgid "Do not include esbuild dependencies and assets"
 msgstr ""
 
 msgid "Do not include features that block migration"
+msgstr ""
+
+msgid "Do not include git status output in commit message template"
 msgstr ""
 
 msgid "Do not include refs matching given glob pattern"
@@ -19557,10 +19737,16 @@ msgstr ""
 msgid "Do not invoke man to verify the existence of man pages"
 msgstr ""
 
+msgid "Do not issue error if ref is not a symbolic ref"
+msgstr ""
+
 msgid "Do not launch wineserver process"
 msgstr ""
 
 msgid "Do not lift the usual restrictions on the size of the global offset table"
+msgstr ""
+
+msgid "Do not limit listing to current directory"
 msgstr ""
 
 msgid "Do not link in the C run-time initialization object file"
@@ -19603,6 +19789,9 @@ msgid "Do not load ~/.pythonrc.py"
 msgstr ""
 
 msgid "Do not look for a conf.py"
+msgstr ""
+
+msgid "Do not look in the index when undertaking checks"
 msgstr ""
 
 msgid "Do not make any changes"
@@ -19656,7 +19845,13 @@ msgstr ""
 msgid "Do not output any message"
 msgstr ""
 
+msgid "Do not output anything, just set exit status"
+msgstr ""
+
 msgid "Do not output download progress"
+msgstr ""
+
+msgid "Do not output the filename for each match"
 msgstr ""
 
 msgid "Do not output the trailing newline"
@@ -19755,6 +19950,9 @@ msgstr ""
 msgid "Do not print additional debug info"
 msgstr ""
 
+msgid "Do not print any results"
+msgstr ""
+
 msgid "Do not print anything including errors"
 msgstr ""
 
@@ -19791,6 +19989,9 @@ msgstr ""
 msgid "Do not print progress information to stdout"
 msgstr ""
 
+msgid "Do not print remote URL"
+msgstr ""
+
 msgid "Do not print status messages"
 msgstr ""
 
@@ -19810,6 +20011,9 @@ msgid "Do not probe for filesystems"
 msgstr ""
 
 msgid "Do not prompt before launching a diff tool"
+msgstr ""
+
+msgid "Do not prompt before launching diff tool"
 msgstr ""
 
 msgid "Do not prompt before overwriting"
@@ -19953,6 +20157,9 @@ msgstr ""
 msgid "Do not report the resulting job IDs (silent mode)"
 msgstr ""
 
+msgid "Do not request atomic transaction"
+msgstr ""
+
 msgid "Do not require a confirmation before deleting"
 msgstr ""
 
@@ -19963,6 +20170,9 @@ msgid "Do not resolve host names"
 msgstr ""
 
 msgid "Do not resolve hostnames"
+msgstr ""
+
+msgid "Do not respect include directives"
 msgstr ""
 
 msgid "Do not restart the domain on the destination host"
@@ -20019,7 +20229,13 @@ msgstr ""
 msgid "Do not run passwd to set the password"
 msgstr ""
 
+msgid "Do not run pre-applypatch and applypatch-msg hooks"
+msgstr ""
+
 msgid "Do not run pre-commit and commit-msg hooks"
+msgstr ""
+
+msgid "Do not run pre-merge and commit-msg hooks"
 msgstr ""
 
 msgid "Do not run tests belonging to the given suite"
@@ -20032,6 +20248,9 @@ msgid "Do not run the check() function of the PKGBUILD"
 msgstr ""
 
 msgid "Do not run the packet-matching code optimizer"
+msgstr ""
+
+msgid "Do not run the pre-push hook"
 msgstr ""
 
 msgid "Do not run unit tests"
@@ -20091,6 +20310,9 @@ msgstr ""
 msgid "Do not show any source or destination prefix"
 msgstr ""
 
+msgid "Do not show commits in reverse chronological order"
+msgstr ""
+
 msgid "Do not show flags"
 msgstr ""
 
@@ -20116,6 +20338,9 @@ msgid "Do not show obsolete types and members"
 msgstr ""
 
 msgid "Do not show package suggestions"
+msgstr ""
+
+msgid "Do not show peeled tags or pseudorefs"
 msgstr ""
 
 msgid "Do not show program banner"
@@ -20313,6 +20538,9 @@ msgstr ""
 msgid "Do not try to use the GnuPG-Agent"
 msgstr ""
 
+msgid "Do not update index or working tree"
+msgstr ""
+
 msgid "Do not update the cache in vendor/cache with the newly bundled gems"
 msgstr ""
 
@@ -20445,6 +20673,9 @@ msgstr ""
 msgid "Do not use submodule remote-tracking branch to update"
 msgstr ""
 
+msgid "Do not use symlinks in dir-diff mode"
+msgstr ""
+
 msgid "Do not use synchronized snapshots in parallel jobs"
 msgstr ""
 
@@ -20479,6 +20710,9 @@ msgid "Do not use the standard system startup files when linking"
 msgstr ""
 
 msgid "Do not use the ~/.cvsrc file."
+msgstr ""
+
+msgid "Do not use thin pack"
 msgstr ""
 
 msgid "Do not use unicode but ASCII characters for graph meters"
@@ -20542,6 +20776,9 @@ msgid "Do not wipe device after format"
 msgstr ""
 
 msgid "Do not write #: filename:line lines"
+msgstr ""
+
+msgid "Do not write FETCH_HEAD file"
 msgstr ""
 
 msgid "Do not write a ~/.fehbg file"
@@ -22971,6 +23208,9 @@ msgstr ""
 msgid "Edit tag"
 msgstr ""
 
+msgid "Edit the commit message before committing"
+msgstr ""
+
 msgid "Edit the commit message prior to committing"
 msgstr ""
 
@@ -24075,6 +24315,9 @@ msgstr ""
 msgid "Enable stricter checking of the bind, call, and apply methods on functions"
 msgstr ""
 
+msgid "Enable stricter reference checking"
+msgstr ""
+
 msgid "Enable string operation inlining even without alignment"
 msgstr ""
 
@@ -24607,6 +24850,9 @@ msgid "Ensure that there is a server running"
 msgstr ""
 
 msgid "Ensure transactions are ordered by date"
+msgstr ""
+
+msgid "Ensure value is of given type"
 msgstr ""
 
 msgid "Enter commit message as a string"
@@ -25485,7 +25731,13 @@ msgstr ""
 msgid "Exit with same status as COMMAND"
 msgstr ""
 
+msgid "Exit with status 2 if no matching refs are found"
+msgstr ""
+
 msgid "Exit with success status if the specified group already exists"
+msgstr ""
+
+msgid "Exit with zero if object exists and is valid"
 msgstr ""
 
 msgid "Exits once the scenario is over, without displaying dialog"
@@ -26838,6 +27090,9 @@ msgstr ""
 msgid "Follow symlinks (excluding dirs)"
 msgstr ""
 
+msgid "Follow symlinks when using --batch"
+msgstr ""
+
 msgid "Font for active icons"
 msgstr ""
 
@@ -27289,6 +27544,9 @@ msgid "Force output to be statically linked"
 msgstr ""
 
 msgid "Force overwrite"
+msgstr ""
+
+msgid "Force overwrite existing files"
 msgstr ""
 
 msgid "Force overwrite existing filesystem on the disk"
@@ -27783,6 +28041,9 @@ msgstr ""
 msgid "Format of the output: text or json"
 msgstr ""
 
+msgid "Format of the resulting archive"
+msgstr ""
+
 msgid "Format of the resulting archive: tar or zip"
 msgstr ""
 
@@ -27954,7 +28215,16 @@ msgstr ""
 msgid "GPG directory to verify signatures"
 msgstr ""
 
+msgid "GPG-sign commit"
+msgstr ""
+
+msgid "GPG-sign commits"
+msgstr ""
+
 msgid "GPG-sign the merge commit"
+msgstr ""
+
+msgid "GPG-sign the push"
 msgstr ""
 
 msgid "GTYPE-group-format=GFMT  Similar, but format GTYPE input groups with GFMT."
@@ -28680,6 +28950,9 @@ msgstr ""
 msgid "Generate package from source"
 msgstr ""
 
+msgid "Generate patch"
+msgstr ""
+
 msgid "Generate patch series to send upstream"
 msgstr ""
 
@@ -28696,6 +28969,9 @@ msgid "Generate position-independent EABI code"
 msgstr ""
 
 msgid "Generate quad-word (long double) floating point instructions"
+msgstr ""
+
+msgid "Generate raw diff output"
 msgstr ""
 
 msgid "Generate relax relocations"
@@ -29091,6 +29367,9 @@ msgstr ""
 msgid "Get all thumbnails from folder"
 msgstr ""
 
+msgid "Get all values for a multi-valued key"
+msgstr ""
+
 msgid "Get all values matching key"
 msgstr ""
 
@@ -29427,6 +29706,12 @@ msgstr ""
 msgid "Get value according to current domain state"
 msgstr ""
 
+msgid "Get value for URL-specific key"
+msgstr ""
+
+msgid "Get value for given key"
+msgstr ""
+
 msgid "Get value from running domain"
 msgstr ""
 
@@ -29434,6 +29719,9 @@ msgid "Get value specific for the section url"
 msgstr ""
 
 msgid "Get value to be used on next boot"
+msgstr ""
+
+msgid "Get values for keys matching regex"
 msgstr ""
 
 msgid "Get various information about Buckets or Files"
@@ -29562,6 +29850,9 @@ msgstr ""
 msgid "Give the output in a stable, easy-to-parse format"
 msgstr ""
 
+msgid "Give the output in the long-format (default)"
+msgstr ""
+
 msgid "Give the output in the short-format"
 msgstr ""
 
@@ -29602,6 +29893,9 @@ msgid "Globally override a configuration option"
 msgstr ""
 
 msgid "GnuTLS priority string."
+msgstr ""
+
+msgid "Go N more commits beyond common ancestor"
 msgstr ""
 
 msgid "Go ahead with migration even if some imported files have not yet been migrated"
@@ -29754,6 +30048,9 @@ msgstr ""
 msgid "Guess lexer"
 msgstr ""
 
+msgid "Guess remote tracking branch (default)"
+msgstr ""
+
 msgid "HT capabilities"
 msgstr ""
 
@@ -29830,6 +30127,12 @@ msgid "Hardlink instead of renaming"
 msgstr ""
 
 msgid "Hardlink to files in DIR when unchanged"
+msgstr ""
+
+msgid "Hash contents as-is, without any input filters"
+msgstr ""
+
+msgid "Hash object as if it were at the given path"
 msgstr ""
 
 msgid "Have nc give more verbose output"
@@ -30228,6 +30531,9 @@ msgstr ""
 msgid "How the Configure call should run the config tests"
 msgstr ""
 
+msgid "How to clean up the tag message"
+msgstr ""
+
 msgid "How to connect to agent."
 msgstr ""
 
@@ -30616,6 +30922,9 @@ msgid "Ignore changes due to tab expansion"
 msgstr ""
 
 msgid "Ignore changes in amount of whitespace"
+msgstr ""
+
+msgid "Ignore changes in submodules"
 msgstr ""
 
 msgid "Ignore changes in the amount of white space"
@@ -31407,6 +31716,9 @@ msgstr ""
 msgid "Include general information"
 msgstr ""
 
+msgid "Include git status output in commit message template"
+msgstr ""
+
 msgid "Include high-level source"
 msgstr ""
 
@@ -31570,6 +31882,9 @@ msgid "Include tests that match the filter"
 msgstr ""
 
 msgid "Include the HTTP response headers in the output"
+msgstr ""
+
+msgid "Include the current branch to the list of revs"
 msgstr ""
 
 msgid "Include the date at the end of the docs"
@@ -32430,6 +32745,9 @@ msgstr ""
 msgid "Instead of merging, show a diff of the merge"
 msgstr ""
 
+msgid "Instead of reading tree object, empty the index"
+msgstr ""
+
 msgid "Instead of setting given time, synchronize from domain's RTC"
 msgstr ""
 
@@ -32530,6 +32848,9 @@ msgid "Interactively create or update `package.json`"
 msgstr ""
 
 msgid "Interactively select hunks"
+msgstr ""
+
+msgid "Interactively select hunks to reset"
 msgstr ""
 
 msgid "Interchange the meaning of the orientations landscape and seascape"
@@ -33342,6 +33663,12 @@ msgstr ""
 msgid "Limit dependency graph to specified depth"
 msgstr ""
 
+msgid "Limit fetching to specified depth"
+msgstr ""
+
+msgid "Limit fetching to specified number of commits"
+msgstr ""
+
 msgid "Limit for total execution time in seconds. 0 means unlimited (default: 0)"
 msgstr ""
 
@@ -33499,6 +33826,12 @@ msgid "Limit to processes matching pattern"
 msgstr ""
 
 msgid "Limit to processes on specified TTY"
+msgstr ""
+
+msgid "Limit to refs/heads"
+msgstr ""
+
+msgid "Limit to refs/tags"
 msgstr ""
 
 msgid "Limit transfer rate"
@@ -34089,6 +34422,9 @@ msgstr ""
 msgid "List all variables"
 msgstr ""
 
+msgid "List all variables set in config"
+msgstr ""
+
 msgid "List all xsv commands"
 msgstr ""
 
@@ -34336,6 +34672,9 @@ msgid "List contents of a generation in kdirstat cache format"
 msgstr ""
 
 msgid "List contents of a package matching pattern"
+msgstr ""
+
+msgid "List contents of a tree object"
 msgstr ""
 
 msgid "List contents of packages"
@@ -35253,6 +35592,12 @@ msgstr ""
 msgid "List recursively."
 msgstr ""
 
+msgid "List references in a local repository"
+msgstr ""
+
+msgid "List references in a remote repository"
+msgstr ""
+
 msgid "List registered packages in the package database (pkgdb)"
 msgstr ""
 
@@ -35430,7 +35775,16 @@ msgstr ""
 msgid "List tags"
 msgstr ""
 
+msgid "List tags of the given object"
+msgstr ""
+
 msgid "List tags that contain a commit"
+msgstr ""
+
+msgid "List tags whose commits are not reachable from specified commit"
+msgstr ""
+
+msgid "List tags whose commits are reachable from specified commit"
 msgstr ""
 
 msgid "List tasks of an app"
@@ -37395,6 +37749,9 @@ msgstr ""
 msgid "Maximum depth of a certification chain (default is 5)"
 msgstr ""
 
+msgid "Maximum depth of directory traversal"
+msgstr ""
+
 msgid "Maximum depth of submodules"
 msgstr ""
 
@@ -38178,7 +38535,19 @@ msgstr ""
 msgid "NEVER fail the build, regardless of project result"
 msgstr ""
 
+msgid "NUL line termination"
+msgstr ""
+
+msgid "NUL line termination on output"
+msgstr ""
+
 msgid "NUL path separators"
+msgstr ""
+
+msgid "NUL separator for pathspec-from-file"
+msgstr ""
+
+msgid "NUL-terminated format for stdin"
 msgstr ""
 
 msgid "NUMA cell number"
@@ -38203,6 +38572,9 @@ msgid "Name and email of person signing the repository"
 msgstr ""
 
 msgid "Name commits with unique prefix"
+msgstr ""
+
+msgid "Name commits with unique prefix of SHA-1"
 msgstr ""
 
 msgid "Name for new zone|policy|ipset|service|helper|icmptype"
@@ -38431,6 +38803,9 @@ msgid "Never prompt for password"
 msgstr ""
 
 msgid "Never prompt for removal"
+msgstr ""
+
+msgid "Never remove files from working tree in checkout"
 msgstr ""
 
 msgid "Never remove files when restoring"
@@ -38796,6 +39171,9 @@ msgstr ""
 msgid "Number of files to create (default: 128)"
 msgstr ""
 
+msgid "Number of grep worker threads to use"
+msgstr ""
+
 msgid "Number of index UPDATE queries in a single transaction (default: 1)"
 msgstr ""
 
@@ -38851,6 +39229,9 @@ msgid "Number of octets per line"
 msgstr ""
 
 msgid "Number of pages to scan before the shared memory service goes to sleep"
+msgstr ""
+
+msgid "Number of parallel children for fetching"
 msgstr ""
 
 msgid "Number of parallel jobs to dump"
@@ -39321,6 +39702,9 @@ msgstr ""
 msgid "Only emit ‘.d.ts’ declaration files"
 msgstr ""
 
+msgid "Only expire loose objects older than date"
+msgstr ""
+
 msgid "Only expire unused working trees older than <time>"
 msgstr ""
 
@@ -39636,6 +40020,9 @@ msgstr ""
 msgid "Only set options, don't actually scan"
 msgstr ""
 
+msgid "Only show SHA-1 hash"
+msgstr ""
+
 msgid "Only show basic information in CSV format (bits/s)"
 msgstr ""
 
@@ -39646,6 +40033,9 @@ msgid "Only show commit counts per group"
 msgstr ""
 
 msgid "Only show differences to the previously saved database and exit"
+msgstr ""
+
+msgid "Only show histogram of delta chain length"
 msgstr ""
 
 msgid "Only show image which are larger than given size"
@@ -39676,6 +40066,9 @@ msgid "Only show tasks that are not assigned"
 msgstr ""
 
 msgid "Only show the homepage or repository URL"
+msgstr ""
+
+msgid "Only show trees"
 msgstr ""
 
 msgid "Only show unique (:X.Y) names"
@@ -39822,6 +40215,9 @@ msgstr ""
 msgid "Open composition window with attached files"
 msgstr ""
 
+msgid "Open config file in editor"
+msgstr ""
+
 msgid "Open configuration in an editor"
 msgstr ""
 
@@ -39856,6 +40252,9 @@ msgid "Open horizontally split windows for each file"
 msgstr ""
 
 msgid "Open interactive console"
+msgstr ""
+
+msgid "Open matching files in pager"
 msgstr ""
 
 msgid "Open menu to configure link group"
@@ -40641,6 +41040,9 @@ msgstr ""
 msgid "Output only last line of the stat"
 msgstr ""
 
+msgid "Output only names of config variables"
+msgstr ""
+
 msgid "Output only the last line of the --stat format containing the total"
 msgstr ""
 
@@ -40933,6 +41335,9 @@ msgid "Override cache method for a specified overlay"
 msgstr ""
 
 msgid "Override configured lint engine for this project"
+msgstr ""
+
+msgid "Override configured repository"
 msgstr ""
 
 msgid "Override configured unit engine for this project"
@@ -41421,6 +41826,9 @@ msgstr ""
 msgid "Paranoid cow"
 msgstr ""
 
+msgid "Parent commit object"
+msgstr ""
+
 msgid "Parsable list format"
 msgstr ""
 
@@ -41590,6 +41998,9 @@ msgid "Pass option as an option to the linker"
 msgstr ""
 
 msgid "Pass option as an option to the preprocessor"
+msgstr ""
+
+msgid "Pass option to the merge strategy"
 msgstr ""
 
 msgid "Pass options to git-crypt if installed"
@@ -41800,6 +42211,15 @@ msgid "Path to emulator binary (/domain/devices/emulator)"
 msgstr ""
 
 msgid "Path to filter on in `git log -- <path>`"
+msgstr ""
+
+msgid "Path to git-receive-pack on remote"
+msgstr ""
+
+msgid "Path to git-upload-archive on the remote side"
+msgstr ""
+
+msgid "Path to git-upload-pack on remote"
 msgstr ""
 
 msgid "Path to image file/directory"
@@ -42103,6 +42523,9 @@ msgid "Perform a live core dump if supported"
 msgstr ""
 
 msgid "Perform a local commit in a bound branch (pushed to master on normal commit)"
+msgstr ""
+
+msgid "Perform a merge"
 msgstr ""
 
 msgid "Perform a number of minor optimizations that are relatively expensive"
@@ -42795,6 +43218,9 @@ msgstr ""
 msgid "Prefix to strip on patch"
 msgstr ""
 
+msgid "Prefix to use when creating files"
+msgstr ""
+
 msgid "Preload images"
 msgstr ""
 
@@ -42868,6 +43294,9 @@ msgid "Prepend file to input"
 msgstr ""
 
 msgid "Prepend given path to all filenames"
+msgstr ""
+
+msgid "Prepend prefix to each pathname in the archive"
 msgstr ""
 
 msgid "Prepend string to config file"
@@ -43042,6 +43471,9 @@ msgid "Pretty-print any JSON output"
 msgstr ""
 
 msgid "Pretty-print any qemu monitor protocol output"
+msgstr ""
+
+msgid "Pretty-print object content"
 msgstr ""
 
 msgid "Pretty-print the contents of the commit logs in a given format"
@@ -43281,6 +43713,9 @@ msgstr ""
 msgid "Print URL instead of opening"
 msgstr ""
 
+msgid "Print URL of remote"
+msgstr ""
+
 msgid "Print Unix form (/cygdrive/c/winnt)"
 msgstr ""
 
@@ -43372,6 +43807,9 @@ msgid "Print a list of deps for the listed ports"
 msgstr ""
 
 msgid "Print a list of detached screen sessions"
+msgstr ""
+
+msgid "Print a list of diff tools that may be used"
 msgstr ""
 
 msgid "Print a list of diff tools that may be used with `--tool`"
@@ -43881,6 +44319,9 @@ msgstr ""
 msgid "Print email addresses (abook)"
 msgstr ""
 
+msgid "Print empty line between matches from different files"
+msgstr ""
+
 msgid "Print encryption parameters and memory/CPU limits"
 msgstr ""
 
@@ -44113,6 +44554,9 @@ msgid "Print in human readable format"
 msgstr ""
 
 msgid "Print indexing status"
+msgstr ""
+
+msgid "Print info for all objects"
 msgstr ""
 
 msgid "Print info from the specified BLOCK only"
@@ -46308,6 +46752,9 @@ msgstr ""
 msgid "Prompt before deleting anything"
 msgstr ""
 
+msgid "Prompt before each invocation of diff tool"
+msgstr ""
+
 msgid "Prompt before each invocation of the diff tool"
 msgstr ""
 
@@ -46474,6 +46921,9 @@ msgid "Provide an alternate PATH"
 msgstr ""
 
 msgid "Provide application manifest file"
+msgstr ""
+
+msgid "Provide content or type info for repository objects"
 msgstr ""
 
 msgid "Provide debugging timings information"
@@ -47208,6 +47658,9 @@ msgstr ""
 msgid "Read commit comment from a file"
 msgstr ""
 
+msgid "Read commit message from file"
+msgstr ""
+
 msgid "Read commits from stdin"
 msgstr ""
 
@@ -47215,6 +47668,9 @@ msgid "Read config from blob"
 msgstr ""
 
 msgid "Read config from file"
+msgstr ""
+
+msgid "Read config from given blob object"
 msgstr ""
 
 msgid "Read configuration from XML file"
@@ -47254,6 +47710,9 @@ msgid "Read extra exclude patterns that apply only to the dir and its subdirs in
 msgstr ""
 
 msgid "Read file from stdin"
+msgstr ""
+
+msgid "Read file paths from stdin"
 msgstr ""
 
 msgid "Read filenames from pipe"
@@ -47325,6 +47784,9 @@ msgstr ""
 msgid "Read input using this SQL query"
 msgstr ""
 
+msgid "Read instructions from stdin"
+msgstr ""
+
 msgid "Read into selection"
 msgstr ""
 
@@ -47355,7 +47817,16 @@ msgstr ""
 msgid "Read note message from file"
 msgstr ""
 
+msgid "Read object from stdin"
+msgstr ""
+
 msgid "Read object names from stdin"
+msgstr ""
+
+msgid "Read objects from stdin and print info"
+msgstr ""
+
+msgid "Read objects from stdin and print type/size info"
 msgstr ""
 
 msgid "Read one line at a time"
@@ -47406,6 +47877,12 @@ msgstr ""
 msgid "Read patch from FILE instead of stdin"
 msgstr ""
 
+msgid "Read pathnames from stdin"
+msgstr ""
+
+msgid "Read pathspec from file"
+msgstr ""
+
 msgid "Read pattern list from file. Skip files whose base name matches list"
 msgstr ""
 
@@ -47443,6 +47920,9 @@ msgid "Read symbol table from <file>"
 msgstr ""
 
 msgid "Read symbol table from <file> and execute it"
+msgstr ""
+
+msgid "Read tag message from file"
 msgstr ""
 
 msgid "Read tags from file"
@@ -47484,6 +47964,12 @@ msgstr ""
 msgid "Read throughput limit, as scaled integer (default bytes)"
 msgstr ""
 
+msgid "Read tree info into the index"
+msgstr ""
+
+msgid "Read tree into subdirectory"
+msgstr ""
+
 msgid "Read uncompressed tar file from standard in (stdin)"
 msgstr ""
 
@@ -47494,6 +47980,9 @@ msgid "Read user input from specified file descriptor"
 msgstr ""
 
 msgid "Read y4m frames from stdin"
+msgstr ""
+
+msgid "Read, modify, delete symbolic refs"
 msgstr ""
 
 msgid "Read-only mode"
@@ -47766,6 +48255,9 @@ msgstr ""
 msgid "Recurse into subdirectories"
 msgstr ""
 
+msgid "Recurse into subtrees"
+msgstr ""
+
 msgid "Recurse subdirectories"
 msgstr ""
 
@@ -47854,6 +48346,9 @@ msgid "Recursively rename children snapshots"
 msgstr ""
 
 msgid "Recursively resolves up to the root package"
+msgstr ""
+
+msgid "Recursively search in each submodule"
 msgstr ""
 
 msgid "Recursively search in each submodule that is active and checked out in the repository"
@@ -48576,6 +49071,9 @@ msgstr ""
 msgid "Remove all gz files from cache"
 msgstr ""
 
+msgid "Remove all lines matching key"
+msgstr ""
+
 msgid "Remove all mutations"
 msgstr ""
 
@@ -48810,6 +49308,9 @@ msgstr ""
 msgid "Remove files from version control"
 msgstr ""
 
+msgid "Remove files from working tree not in tree-ish"
+msgstr ""
+
 msgid "Remove files when restoring (default)"
 msgstr ""
 
@@ -48826,6 +49327,9 @@ msgid "Remove funsinged-bitfields"
 msgstr ""
 
 msgid "Remove given option from the DHCP message"
+msgstr ""
+
+msgid "Remove given section"
 msgstr ""
 
 msgid "Remove global package"
@@ -48859,6 +49363,9 @@ msgid "Remove key from the secret and public keyring"
 msgstr ""
 
 msgid "Remove leftover items pertaining to the deprecated inode cache feature"
+msgstr ""
+
+msgid "Remove line matching key"
 msgstr ""
 
 msgid "Remove listed inactive devices"
@@ -49368,6 +49875,9 @@ msgstr ""
 msgid "Rename files... to P... or all to P/all"
 msgstr ""
 
+msgid "Rename given section"
+msgstr ""
+
 msgid "Rename instance or snapshot."
 msgstr ""
 
@@ -49534,6 +50044,9 @@ msgid "Replace a rule in a chain"
 msgstr ""
 
 msgid "Replace all control chars with underscores"
+msgstr ""
+
+msgid "Replace all matching lines"
 msgstr ""
 
 msgid "Replace all matching variables"
@@ -49881,6 +50394,9 @@ msgstr ""
 msgid "Request allocation of a pseudo TTY for stdio"
 msgstr ""
 
+msgid "Request atomic transaction on remote side"
+msgstr ""
+
 msgid "Request charset conversion of filenames"
 msgstr ""
 
@@ -50118,6 +50634,12 @@ msgstr ""
 msgid "Reset head without touching the index or the working tree"
 msgstr ""
 
+msgid "Reset index and update files in working tree that differ"
+msgstr ""
+
+msgid "Reset index but keep changes in working tree"
+msgstr ""
+
 msgid "Reset local repo to match remote"
 msgstr ""
 
@@ -50302,6 +50824,9 @@ msgid "Resource to target"
 msgstr ""
 
 msgid "Respect `[source]` config in `.cargo/config`"
+msgstr ""
+
+msgid "Respect any colors in format"
 msgstr ""
 
 msgid "Respect include directives"
@@ -50523,6 +51048,9 @@ msgstr ""
 msgid "Restrict the lock to the specified repository"
 msgstr ""
 
+msgid "Restrict three-way merge to trivial cases"
+msgstr ""
+
 msgid "Restrict upgrade to specified repository"
 msgstr ""
 
@@ -50638,6 +51166,9 @@ msgid "Retrieve `user@host` entries from history"
 msgstr ""
 
 msgid "Retrieve a list of artifacts from the repository and unpacks them in a defined location"
+msgstr ""
+
+msgid "Retrieve a tar archive from a remote repository"
 msgstr ""
 
 msgid "Retrieve an archetype from the remote repository"
@@ -52248,6 +52779,9 @@ msgstr ""
 msgid "Same as --preserve=mode,ownership,timestamps"
 msgstr ""
 
+msgid "Same as --receive-pack"
+msgstr ""
+
 msgid "Same as --ssl-allow-beast but used in HTTPS proxy context"
 msgstr ""
 
@@ -52291,6 +52825,9 @@ msgid "Same as -dpR"
 msgstr ""
 
 msgid "Same as -k, --insecure but used in HTTPS proxy context"
+msgstr ""
+
+msgid "Same as -m, but discard unmerged entries"
 msgstr ""
 
 msgid "Same as -m4a-nofpu, except that it implicitly passes -dsp to the assembler"
@@ -52740,6 +53277,9 @@ msgstr ""
 msgid "Search files according to the specified search mask"
 msgstr ""
 
+msgid "Search files in current directory that is not managed by Git"
+msgstr ""
+
 msgid "Search files in the current directory not managed by Git"
 msgstr ""
 
@@ -52882,6 +53422,9 @@ msgid "Search ignores lowercase case"
 msgstr ""
 
 msgid "Search in all man pages"
+msgstr ""
+
+msgid "Search in untracked files"
 msgstr ""
 
 msgid "Search into the package list"
@@ -53413,6 +53956,9 @@ msgid "Select packages by plain name, not by capability"
 msgstr ""
 
 msgid "Select packages from the specified repository"
+msgstr ""
+
+msgid "Select parent number for reverting merge commits"
 msgstr ""
 
 msgid "Select particular graphical display (e.g. "
@@ -56865,6 +57411,9 @@ msgstr ""
 msgid "Shorten the plan output"
 msgstr ""
 
+msgid "Shorten the ref name"
+msgstr ""
+
 msgid "Shorthand for \"--pretty=oneline --abbrev-commit\""
 msgstr ""
 
@@ -56887,6 +57436,9 @@ msgid "Show Copyright information"
 msgstr ""
 
 msgid "Show EXIF information"
+msgstr ""
+
+msgid "Show HEAD reference"
 msgstr ""
 
 msgid "Show Help"
@@ -57007,6 +57559,9 @@ msgid "Show a single security group"
 msgstr ""
 
 msgid "Show a word diff"
+msgstr ""
+
+msgid "Show abbreviated object names"
 msgstr ""
 
 msgid "Show ac adapter information"
@@ -57130,6 +57685,12 @@ msgid "Show all properties, including empty ones"
 msgstr ""
 
 msgid "Show all refs (branches, tags, etc.)"
+msgstr ""
+
+msgid "Show all refs under refs/heads and refs/remotes"
+msgstr ""
+
+msgid "Show all refs under refs/remotes"
 msgstr ""
 
 msgid "Show all saved package snapshot filenames"
@@ -57306,6 +57867,9 @@ msgstr ""
 msgid "Show both remote-tracking branches and local branches"
 msgstr ""
 
+msgid "Show branches and their commits"
+msgstr ""
+
 msgid "Show bug tracker settings in bzr"
 msgstr ""
 
@@ -57405,6 +57969,9 @@ msgstr ""
 msgid "Show commit time"
 msgstr ""
 
+msgid "Show commits in chronological order"
+msgstr ""
+
 msgid "Show commits more recent than date without stopping traversal early"
 msgstr ""
 
@@ -57438,7 +58005,22 @@ msgstr ""
 msgid "Show conflicts"
 msgstr ""
 
+msgid "Show content as transformed by a textconv filter"
+msgstr ""
+
+msgid "Show content as transformed by filters"
+msgstr ""
+
 msgid "Show contents of a config file"
+msgstr ""
+
+msgid "Show context lines after matches"
+msgstr ""
+
+msgid "Show context lines before and after matches"
+msgstr ""
+
+msgid "Show context lines before matches"
 msgstr ""
 
 msgid "Show cooling device information"
@@ -57750,6 +58332,12 @@ msgstr ""
 msgid "Show file versions"
 msgstr ""
 
+msgid "Show filename above matches in that file"
+msgstr ""
+
+msgid "Show filename for each match (default)"
+msgstr ""
+
 msgid "Show files from date."
 msgstr ""
 
@@ -57792,6 +58380,9 @@ msgstr ""
 msgid "Show full information for specified products"
 msgstr ""
 
+msgid "Show full path names"
+msgstr ""
+
 msgid "Show full traceback on exception"
 msgstr ""
 
@@ -57799,6 +58390,9 @@ msgid "Show full versions for packages"
 msgstr ""
 
 msgid "Show given attribute"
+msgstr ""
+
+msgid "Show given paths which do not match any pattern"
 msgstr ""
 
 msgid "Show group instead of owner in long format"
@@ -58158,6 +58752,9 @@ msgstr ""
 msgid "Show logs with difference each commit introduces"
 msgstr ""
 
+msgid "Show long format output for dry-run (default)"
+msgstr ""
+
 msgid "Show long help"
 msgstr ""
 
@@ -58179,7 +58776,13 @@ msgstr ""
 msgid "Show market-price records"
 msgstr ""
 
+msgid "Show matching pattern for each file"
+msgstr ""
+
 msgid "Show maximum number of rows"
+msgstr ""
+
+msgid "Show merges only reachable from one tip"
 msgstr ""
 
 msgid "Show message at which patch failures occurred"
@@ -58264,6 +58867,15 @@ msgid "Show number of new items"
 msgstr ""
 
 msgid "Show number of new items for feed"
+msgstr ""
+
+msgid "Show object size"
+msgstr ""
+
+msgid "Show object type"
+msgstr ""
+
+msgid "Show objects contained in pack"
 msgstr ""
 
 msgid "Show objects that are referenced in properties"
@@ -58362,6 +58974,12 @@ msgstr ""
 msgid "Show only mounted btrfs"
 msgstr ""
 
+msgid "Show only names"
+msgstr ""
+
+msgid "Show only names (same as name-only)"
+msgstr ""
+
 msgid "Show only names and status of changed files"
 msgstr ""
 
@@ -58441,6 +59059,9 @@ msgid "Show org info"
 msgstr ""
 
 msgid "Show org users by role"
+msgstr ""
+
+msgid "Show origin of config"
 msgstr ""
 
 msgid "Show origin of configuration"
@@ -58537,6 +59158,9 @@ msgid "Show pkg's upstream information"
 msgstr ""
 
 msgid "Show plain list of available options and commands, for auto-completion"
+msgstr ""
+
+msgid "Show porcelain format output for dry-run"
 msgstr ""
 
 msgid "Show postings in one or more accounts & running total"
@@ -58734,6 +59358,9 @@ msgstr ""
 msgid "Show scan progress"
 msgstr ""
 
+msgid "Show scope of config"
+msgstr ""
+
 msgid "Show server hostname and port"
 msgstr ""
 
@@ -58759,6 +59386,9 @@ msgid "Show short account names as a list"
 msgstr ""
 
 msgid "Show short account names as a tree"
+msgstr ""
+
+msgid "Show short format output for dry-run"
 msgstr ""
 
 msgid "Show short usage message"
@@ -59142,6 +59772,9 @@ msgstr ""
 msgid "Show the notes that annotate the commit"
 msgstr ""
 
+msgid "Show the number of entries currently stashed"
+msgstr ""
+
 msgid "Show the operating system label"
 msgstr ""
 
@@ -59346,7 +59979,13 @@ msgstr ""
 msgid "Show transfer buffer percentage"
 msgstr ""
 
+msgid "Show tree entries even when recursing"
+msgstr ""
+
 msgid "Show tunnel-related capabilities and state"
+msgstr ""
+
+msgid "Show underlying ref for symbolic refs"
 msgstr ""
 
 msgid "Show uniquely abbreviated commit object as fallback"
@@ -59464,6 +60103,9 @@ msgid "Show what last modified each line of a file"
 msgstr ""
 
 msgid "Show what revision and author last modified each line of a file"
+msgstr ""
+
+msgid "Show what would be committed without committing"
 msgstr ""
 
 msgid "Show what would be done"
@@ -60279,6 +60921,9 @@ msgstr ""
 msgid "Skip the building phase"
 msgstr ""
 
+msgid "Skip the current commit and continue with the rest"
+msgstr ""
+
 msgid "Skip the current commit and continue with the rest of the sequence"
 msgstr ""
 
@@ -60450,6 +61095,9 @@ msgstr ""
 msgid "Sort ascending by key"
 msgstr ""
 
+msgid "Sort based on the given key"
+msgstr ""
+
 msgid "Sort branches by status instead of time"
 msgstr ""
 
@@ -60556,6 +61204,9 @@ msgid "Sort symbols by size"
 msgstr ""
 
 msgid "Sort symbols numerically by address"
+msgstr ""
+
+msgid "Sort tags based on the given key"
 msgstr ""
 
 msgid "Sort the entries returned based on attribute"
@@ -61848,6 +62499,9 @@ msgstr ""
 msgid "Specify general options"
 msgstr ""
 
+msgid "Specify hash algorithm for objects"
+msgstr ""
+
 msgid "Specify hcstat2 file to use"
 msgstr ""
 
@@ -62079,6 +62733,9 @@ msgstr ""
 msgid "Specify number of sector per cluster"
 msgstr ""
 
+msgid "Specify object type"
+msgstr ""
+
 msgid "Specify options"
 msgstr ""
 
@@ -62229,6 +62886,9 @@ msgstr ""
 msgid "Specify reference to VB Runtime Library or disable library referencing"
 msgstr ""
 
+msgid "Specify refspec to map the refs to remote-tracking branches"
+msgstr ""
+
 msgid "Specify regular expression type"
 msgstr ""
 
@@ -62359,6 +63019,9 @@ msgid "Specify that the choices are case-sensitive"
 msgstr ""
 
 msgid "Specify that the installation is user-wide"
+msgstr ""
+
+msgid "Specify that the repository is shared"
 msgstr ""
 
 msgid "Specify that the target processor is the V850"
@@ -62907,6 +63570,9 @@ msgstr ""
 msgid "Specify, as the last argument, a temporary pool name"
 msgstr ""
 
+msgid "Spend extra cycles to minimize number of objects"
+msgstr ""
+
 msgid "Spend extra time to make sure the smallest possible diff is produced"
 msgstr ""
 
@@ -62971,6 +63637,9 @@ msgid "Stabilize sort"
 msgstr ""
 
 msgid "Stack alignment in bytes in simulator (4/8, 8 is default)"
+msgstr ""
+
+msgid "Stage contents of given paths before committing"
 msgstr ""
 
 msgid "Standard darcs patch format [DEFAULT]"
@@ -64161,6 +64830,9 @@ msgstr ""
 msgid "Suppress checkout"
 msgstr ""
 
+msgid "Suppress commit summary message"
+msgstr ""
+
 msgid "Suppress compiler copyright message"
 msgstr ""
 
@@ -64984,6 +65656,9 @@ msgid "Terminate after receiving an <end cmd> marker in the stream"
 msgstr ""
 
 msgid "Terminate after receiving recvlimit packets from the network"
+msgstr ""
+
+msgid "Terminate entries with NUL in dry-run"
 msgstr ""
 
 msgid "Terminate entries with null character"
@@ -66327,6 +67002,9 @@ msgstr ""
 msgid "Translates SQLJ source code using the SQLJ Translator"
 msgstr ""
 
+msgid "Transmit string to server"
+msgstr ""
+
 msgid "Transmit string to the server when using protocol version 2"
 msgstr ""
 
@@ -66556,6 +67234,9 @@ msgid "Try every single probe"
 msgstr ""
 
 msgid "Try harder on risky reverts"
+msgstr ""
+
+msgid "Try harder to resolve trivial cases"
 msgstr ""
 
 msgid "Try mid-side coding for each frame"
@@ -67623,7 +68304,13 @@ msgstr ""
 msgid "Update ngrok to the latest version"
 msgstr ""
 
+msgid "Update object name stored in a ref safely"
+msgstr ""
+
 msgid "Update only the database, not the filesystem"
+msgstr ""
+
+msgid "Update only the index, leave working tree alone"
 msgstr ""
 
 msgid "Update open archives immediately, flush cached data to disk"
@@ -67653,6 +68340,9 @@ msgstr ""
 msgid "Update ports"
 msgstr ""
 
+msgid "Update reflog with given reason"
+msgstr ""
+
 msgid "Update remote refs along with associated objects"
 msgstr ""
 
@@ -67675,6 +68365,9 @@ msgid "Update sources"
 msgstr ""
 
 msgid "Update specified packages (defaults to all packages)"
+msgstr ""
+
+msgid "Update stat information in the index"
 msgstr ""
 
 msgid "Update subarray"
@@ -67783,6 +68476,9 @@ msgid "Update version"
 msgstr ""
 
 msgid "Update wineprefix directory"
+msgstr ""
+
+msgid "Update working tree with merge result"
 msgstr ""
 
 msgid "Update wraps that does not seems to come from WrapDB"
@@ -69021,6 +69717,9 @@ msgstr ""
 msgid "Use default value when missing entry"
 msgstr ""
 
+msgid "Use default value when variable is missing"
+msgstr ""
+
 msgid "Use deprecated Adler32 instead of CRC32C for SCTP checksums"
 msgstr ""
 
@@ -69105,6 +69804,9 @@ msgstr ""
 msgid "Use file (ala /dev/ttyS0) instead of network"
 msgstr ""
 
+msgid "Use file as commit message template"
+msgstr ""
+
 msgid "Use file as input KEYMAP"
 msgstr ""
 
@@ -69178,6 +69880,9 @@ msgid "Use given color for label"
 msgstr ""
 
 msgid "Use given color for label background"
+msgstr ""
+
+msgid "Use given config file"
 msgstr ""
 
 msgid "Use given directory as the EFI System Partition root"
@@ -69765,6 +70470,9 @@ msgstr ""
 msgid "Use specified mnemonic"
 msgstr ""
 
+msgid "Use specified name for initial branch"
+msgstr ""
+
 msgid "Use specified network namespace"
 msgstr ""
 
@@ -70002,6 +70710,9 @@ msgstr ""
 msgid "Use the given message as the commit message for the merge commit"
 msgstr ""
 
+msgid "Use the given tag message"
+msgstr ""
+
 msgid "Use the given target atom"
 msgstr ""
 
@@ -70174,6 +70885,9 @@ msgid "Use this flag to show full diffs instead of a patch"
 msgstr ""
 
 msgid "Use this instance by mod_mono to create ASP.NET applications on demand"
+msgstr ""
+
+msgid "Use this key to sign tag"
 msgstr ""
 
 msgid "Use this netrc file"
@@ -70416,6 +71130,9 @@ msgstr ""
 msgid "Validate all spices"
 msgstr ""
 
+msgid "Validate packed Git archive files"
+msgstr ""
+
 msgid "Validate scm connection string"
 msgstr ""
 
@@ -70464,7 +71181,13 @@ msgstr ""
 msgid "Value is an expiry date"
 msgstr ""
 
+msgid "Value is bool or int"
+msgstr ""
+
 msgid "Value is of given type"
+msgstr ""
+
+msgid "Value is true or false"
 msgstr ""
 
 msgid "Value to use for $TERM (default \"screen\")"
@@ -71631,6 +72354,9 @@ msgstr ""
 msgid "Which source URL to open (1-indexed)"
 msgstr ""
 
+msgid "Which stage to check out"
+msgstr ""
+
 msgid "Which test setup to use"
 msgstr ""
 
@@ -71841,6 +72567,9 @@ msgstr ""
 msgid "Write CD-Text info based on file containing ascii info"
 msgstr ""
 
+msgid "Write FETCH_HEAD file (default)"
+msgstr ""
+
 msgid "Write I/O operations limit per second"
 msgstr ""
 
@@ -71875,6 +72604,9 @@ msgid "Write a pom.xml file to disk for Maven interoperability."
 msgstr ""
 
 msgid "Write a trace.edn file that traces deps expansion"
+msgstr ""
+
+msgid "Write a tree object for a subdirectory"
 msgstr ""
 
 msgid "Write agile documentation in HTML format to file"
@@ -71946,6 +72678,9 @@ msgstr ""
 msgid "Write file to stdout instead of to disk"
 msgstr ""
 
+msgid "Write files to temporary files"
+msgstr ""
+
 msgid "Write image to a file [filename]"
 msgstr ""
 
@@ -71953,6 +72688,9 @@ msgid "Write images to this file [filename]"
 msgstr ""
 
 msgid "Write index to a file"
+msgstr ""
+
+msgid "Write index to specified file"
 msgstr ""
 
 msgid "Write line numbers for errors"
@@ -72081,6 +72819,9 @@ msgstr ""
 msgid "Write the"
 msgstr ""
 
+msgid "Write the archive to file instead of stdout"
+msgstr ""
+
 msgid "Write the archive to this directory"
 msgstr ""
 
@@ -72120,6 +72861,9 @@ msgstr ""
 msgid "Write throughput limit, as scaled integer (default bytes)"
 msgstr ""
 
+msgid "Write to .git/config.worktree"
+msgstr ""
+
 msgid "Write to /run/log/journal/ instead of /var/log/journal/"
 msgstr ""
 
@@ -72129,10 +72873,19 @@ msgstr ""
 msgid "Write to devices as files (implies --inplace)"
 msgstr ""
 
+msgid "Write to global ~/.gitconfig"
+msgstr ""
+
+msgid "Write to repository .git/config"
+msgstr ""
+
 msgid "Write to specified log file"
 msgstr ""
 
 msgid "Write to stdout instead of file"
+msgstr ""
+
+msgid "Write to system-wide /etc/gitconfig"
 msgstr ""
 
 msgid "Write to the system utmp log file"

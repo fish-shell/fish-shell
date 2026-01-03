@@ -5,7 +5,15 @@ body {
     color: #222;
 }
 
-.prompt_demo, .prompt_demo_text, .data_table_row, .colorpicker_text_sample_tight, .colorpicker_text_sample, .history_text, pre, code, tt {
+.prompt_demo,
+.prompt_demo_text,
+.data_table_row,
+.colorpicker_text_sample_tight,
+.colorpicker_text_sample,
+.history_text,
+pre,
+code,
+tt {
     font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Ubuntu Mono", "Hack", "Noto Sans Mono", Liberation Mono, monospace;
 }
 
@@ -48,14 +56,14 @@ body {
 .tab:hover,
 #tab_contents .master_element:hover,
 .color_scheme_choice_container:hover,
-.prompt_choices_list > .ng-scope:hover
-{
+.prompt_choices_list > .ng-scope:hover {
     background-color: #DDE;
 }
 
-#tab_parent{
+#tab_parent {
     border: red 1px;
 }
+
 #tab_parent :first-child {
     border-top-left-radius: 8px;
     border-left: none;
@@ -65,7 +73,8 @@ body {
     border-top-right-radius: 8px;
 }
 
-.selected_tab, .selected_tab:hover {
+.selected_tab,
+.selected_tab:hover {
     background-color: #eeeefa;
     border-bottom: none;
 }
@@ -139,30 +148,39 @@ body {
 .detail_function .fish_color_autosuggestion {
     color: #555;
 }
+
 .detail_function .fish_color_command {
     color: #005fd7;
 }
+
 .detail_function .fish_color_param {
     color: #00afff;
 }
+
 .detail_function .fish_color_redirection {
     color: #00afff;
 }
+
 .detail_function .fish_color_comment {
     color: #990000;
 }
+
 .detail_function .fish_color_error {
     color: #ff0000;
 }
+
 .detail_function .fish_color_escape {
     color: #00a6b2;
 }
+
 .detail_function .fish_color_operator {
     color: #00a6b2;
 }
+
 .detail_function .fish_color_quote {
     color: #999900;
 }
+
 .detail_function .fish_color_statement_terminator {
     color: #009900;
 }
@@ -221,6 +239,7 @@ body {
 .master_element > br {
     display: none;
 }
+
 .selected_master_elem > br {
     display: inherit;
 }
@@ -267,8 +286,7 @@ body {
     padding-right: 10px;
 }
 
-.data_table_row {
-}
+.data_table_row {}
 
 .data_table_cell {
     padding-top: 5px;
@@ -625,6 +643,7 @@ button.delete_button:hover {
     #parent {
         margin-top: 0;
     }
+
     #tab_contents {
         margin-bottom: 0;
     }
@@ -632,27 +651,29 @@ button.delete_button:hover {
 
 @media (prefers-color-scheme: dark) {
     body {
-        background: linear-gradient(to top, #1f1f3f 0%,#051f3a 100%);
+        background: linear-gradient(to top, #1f1f3f 0%, #051f3a 100%);
         color: #DDD;
     }
 
     #ancestor {
         box-shadow: 0 0 5px 1px #000;
     }
+
     .tab {
         background-color: black;
         border: 1px solid #222;
         border-top: none;
     }
+
     .tab:hover,
     #tab_contents .master_element:hover,
     .color_scheme_choice_container:hover,
-    .prompt_choices_list > .ng-scope:hover
-    {
+    .prompt_choices_list > .ng-scope:hover {
         background-color: #223;
     }
 
-    .selected_tab, .selected_tab:hover {
+    .selected_tab,
+    .selected_tab:hover {
         background-color: #202028;
         border-bottom: none;
     }
@@ -660,12 +681,60 @@ button.delete_button:hover {
     #tab_contents {
         background-color: #202028;
     }
-    .detail, .selected_master_elem {
+
+    .detail,
+    .selected_master_elem {
         background-color: black;
     }
+
     input {
         background-color: #222;
         color: #AAA;
+    }
+
+    /* Fix .function-body background in dark mode */
+    .function-body {
+        background-color: black;
+    }
+
+    .detail_function .fish_color_autosuggestion {
+        color: #808080; /* brblack */
+    }
+
+    .detail_function .fish_color_command {
+        color: #c397d8;
+    }
+
+    .detail_function .fish_color_param {
+        color: #7aa6da;
+    }
+
+    .detail_function .fish_color_redirection {
+        color: #70c0b1;
+    }
+
+    .detail_function .fish_color_comment {
+        color: #e7c547;
+    }
+
+    .detail_function .fish_color_error {
+        color: #d54e53;
+    }
+
+    .detail_function .fish_color_escape {
+        color: #00a6b2;
+    }
+
+    .detail_function .fish_color_operator {
+        color: #00a6b2;
+    }
+
+    .detail_function .fish_color_quote {
+        color: #b9ca4a;
+    }
+
+    .detail_function .fish_color_statement_terminator {
+        color: #c397d8;
     }
 }
 

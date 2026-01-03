@@ -114,13 +114,13 @@ function fish_config --description "Launch fish's web based configuration"
                         return 1
                     end
 
-                    set -l prompt_path (__fish_config_list_prompts $argv[1])
-                    if not set -q prompt_path[1]
+                    set -l prompt_paths (__fish_config_list_prompts $argv[1])
+                    if not set -q prompt_paths[1]
                         echo "No such prompt: '$argv[1]'" >&2
                         return 1
                     end
                     __fish_config_prompt_reset
-                    __fish_config_with_file $prompt_path source
+                    __fish_config_with_file $prompt_paths[1] source
                     if not functions -q fish_mode_prompt
                         status get-file functions/fish_mode_prompt.fish | source
                     end
@@ -136,13 +136,13 @@ function fish_config --description "Launch fish's web based configuration"
                     __fish_backup_config_files functions/{fish_prompt,fish_right_prompt,fish_mode_prompt}.fish
 
                     if set -q argv[1]
-                        set -l prompt_path (__fish_config_list_prompts $argv[1])
-                        if not set -q prompt_path[1]
+                        set -l prompt_paths (__fish_config_list_prompts $argv[1])
+                        if not set -q prompt_paths[1]
                             echo "No such prompt: '$argv[1]'" >&2
                             return 1
                         end
                         __fish_config_prompt_reset
-                        __fish_config_with_file $prompt_path source
+                        __fish_config_with_file $prompt_paths[1] source
                     end
 
                     funcsave fish_prompt
@@ -225,13 +225,7 @@ function fish_config --description "Launch fish's web based configuration"
 end
 
 function __fish_config_list_prompts
-    set -lx dir
-    set -l prompt_paths (__fish_config_files prompts .fish $argv)
-    if [ (count $argv) = 1 ] && set -q prompt_paths[2]
-        echo >&2 "fish_config: internal error: multiple prompts matching '$argv' ??"
-        set --erase prompt_paths[2..]
-    end
-    string join \n -- $prompt_paths
+    __fish_config_files --user-dir=$__fish_config_dir/prompts prompts .fish $argv
 end
 
 function __fish_config_theme_choose_bad_color_theme -a theme_name desired_color_theme source

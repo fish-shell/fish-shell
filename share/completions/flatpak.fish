@@ -58,8 +58,7 @@ function __fish_flatpak
     flatpak $argv | string replace -rf '^([^A-Z].*?)(?: +|\t)(.*?)\s*$' '$1\t$2'
 end
 
-complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(__fish_flatpak list --app --columns=application,name)"
-complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(__fish_flatpak list --columns=application,name)"
+complete -f -c flatpak -n "__fish_seen_subcommand_from run info uninstall" -a "(__fish_flatpak list --app --columns=application,name)"
 complete -f -c flatpak -n "__fish_seen_subcommand_from enter kill" -a "(__fish_flatpak ps --columns=instance,application)"
 complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(__fish_flatpak remotes --columns=name,title)"
 

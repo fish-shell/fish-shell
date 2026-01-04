@@ -756,6 +756,10 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         };
 
         conj.decorator.is_some()
+            || matches!(
+                self.traversal.parent(conj.as_node()).kind(),
+                Kind::IfClause(_) | Kind::WhileHeader(_)
+            )
     }
 
     fn visit_left_brace(&mut self, node: &dyn ast::Token) {

@@ -513,6 +513,28 @@ echo 'time {
 # CHECK: {{^    }}echo hi
 # CHECK: {{^}}{{[}]}}
 
+echo 'if {
+    true
+}
+    echo ok
+end' | $fish_indent
+# CHECK: if {
+# CHECK: {{^        }}true
+# CHECK: {{^    }}{{[}]}}
+# CHECK: {{^    }}echo ok
+# CHECK: {{^}}end
+
+echo 'while {
+    true
+}
+    echo ok
+end' | $fish_indent
+# CHECK: while {
+# CHECK: {{^        }}true
+# CHECK: {{^    }}{{[}]}}
+# CHECK: {{^    }}echo ok
+# CHECK: {{^}}end
+
 echo 'echo x{a,
   b}y' | $fish_indent
 # CHECK: echo x{a,

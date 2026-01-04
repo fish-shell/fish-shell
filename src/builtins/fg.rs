@@ -157,7 +157,6 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
     if job.is_stopped() {
         handoff.save_tty_modes();
     }
-    handoff.reclaim();
     if resumed {
         Ok(SUCCESS)
     } else {

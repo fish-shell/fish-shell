@@ -2474,7 +2474,6 @@ impl<'a> Reader<'a> {
 
         self.parser.eval(cmd, &IoChain::new());
         self.parser.set_last_statuses(last_statuses);
-        scoped_tty.reclaim();
     }
 
     /// Run a sequence of commands from an input binding.
@@ -2995,7 +2994,6 @@ impl<'a> Reader<'a> {
                     let mut tty = TtyHandoff::new(reader_save_screen_state);
                     tty.disable_tty_protocols();
                     self.compute_and_apply_completions(c);
-                    tty.reclaim();
                 }
             }
             rl::PagerToggleSearch => {

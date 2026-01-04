@@ -252,7 +252,6 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     if job.is_stopped() {
         handoff.save_tty_modes();
     }
-    handoff.reclaim();
     true
 }
 

@@ -349,14 +349,12 @@ pub struct TtyHandoff {
     // The job group which owns the tty, or empty if none.
     owner: Option<JobGroupRef>,
     // Whether terminal protocols were initially enabled.
-    // reclaim() restores the state to this.
+    // Restored on drop.
     tty_protocols_initial: bool,
     // The state of terminal protocols that we set.
     // Note we track this separately from TTY_PROTOCOLS_ACTIVE. We undo the changes
     // we make.
     tty_protocols_applied: bool,
-    // Whether reclaim was called, restoring the tty to its pre-scoped value.
-    reclaimed: bool,
     // Called after writing to the TTY.
     on_write: fn(),
 }
@@ -368,7 +366,6 @@ impl TtyHandoff {
             owner: None,
             tty_protocols_initial: protocols_active,
             tty_protocols_applied: protocols_active,
-            reclaimed: false,
             on_write,
         }
     }
@@ -397,40 +394,6 @@ impl TtyHandoff {
         assert!(self.owner.is_none(), "Terminal already transferred");
         if Self::try_transfer(jg) {
             self.owner = Some(jg.clone());
-        }
-    }
-
-    /// Reclaim the tty if we transferred it.
-    pub fn reclaim(mut self) {
-        self.reclaim_impl()
-    }
-
-    /// Release the tty, meaning no longer restore anything in Drop - similar to `mem::forget`.
-    pub fn release(mut self) {
-        self.reclaimed = true;
-    }
-
-    /// Implementation of reclaim, factored out for use in Drop.
-    fn reclaim_impl(&mut self) {
-        assert!(!self.reclaimed, "Terminal already reclaimed");
-        self.reclaimed = true;
-        if self.owner.is_some() {
-            flog!(proc_pgroup, "fish reclaiming terminal");
-            if unsafe { libc::tcsetpgrp(STDIN_FILENO, libc::getpgrp()) } == -1 {
-                flog!(
-                    warning,
-                    "Could not return shell to foreground:",
-                    errno::errno()
-                );
-                perror("tcsetpgrp");
-            }
-            self.owner = None;
-        }
-        // Restore the terminal protocols. Note this does nothing if they were unchanged.
-        if self.tty_protocols_initial {
-            self.enable_tty_protocols();
-        } else {
-            self.disable_tty_protocols();
         }
     }
 
@@ -591,11 +554,25 @@ impl TtyHandoff {
     }
 }
 
-/// The destructor will assert if reclaim() has not been called.
 impl Drop for TtyHandoff {
     fn drop(&mut self) {
-        if !self.reclaimed {
-            self.reclaim_impl();
+        if self.owner.is_some() {
+            flog!(proc_pgroup, "fish reclaiming terminal");
+            if unsafe { libc::tcsetpgrp(STDIN_FILENO, libc::getpgrp()) } == -1 {
+                flog!(
+                    warning,
+                    "Could not return shell to foreground:",
+                    errno::errno()
+                );
+                perror("tcsetpgrp");
+            }
+            self.owner = None;
+        }
+        // Restore the terminal protocols. Note this does nothing if they were unchanged.
+        if self.tty_protocols_initial {
+            self.enable_tty_protocols();
+        } else {
+            self.disable_tty_protocols();
         }
     }
 }

@@ -656,3 +656,9 @@ printf %s\n a b c | builtin fish_indent | grep b
 # Regression test that fish_indent doesn't panic with closed stdin.
 fish_indent <&-
 # CHECKERR: fish_indent: stdin is closed
+
+function __fish_print_help
+    echo Help using PATH[1]=$PATH[1]
+end
+PATH=hello fish_indent --help
+# CHECK: Help using PATH[1]=hello

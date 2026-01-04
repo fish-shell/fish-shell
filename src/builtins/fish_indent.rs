@@ -939,15 +939,19 @@ fn throwing_main() -> i32 {
     let args: Vec<WString> = std::env::args_os()
         .map(|osstr| bytes2wcstring(osstr.as_bytes()))
         .collect();
-    do_indent(&mut streams, args).builtin_status_code()
+    do_indent(None, &mut streams, args).builtin_status_code()
 }
 
-pub fn fish_indent(_parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn fish_indent(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let args = args.iter_mut().map(|x| x.to_owned()).collect();
-    do_indent(streams, args)
+    do_indent(Some(parser), streams, args)
 }
 
-fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
+fn do_indent(
+    parser: Option<&Parser>,
+    streams: &mut IoStreams,
+    args: Vec<WString>,
+) -> BuiltinResult {
     // Types of output we support
     #[derive(Eq, PartialEq)]
     enum OutputType {
@@ -987,7 +991,11 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
         match c {
             'P' => DUMP_PARSE_TREE.store(true),
             'h' => {
-                print_help("fish_indent");
+                if let Some(parser) = parser {
+                    builtin_print_help(parser, streams, L!("fish_indent"));
+                } else {
+                    print_help("fish_indent");
+                }
                 return Ok(SUCCESS);
             }
             'v' => {

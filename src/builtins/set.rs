@@ -890,7 +890,7 @@ fn new_var_values(
         // So do not use the given variable: we must re-fetch it.
         // TODO: this races under concurrent execution.
         if let Some(existing) = vars.get(varname) {
-            result = existing.as_list().to_owned();
+            existing.as_list().clone_into(&mut result);
         }
 
         if opts.prepend {
@@ -914,10 +914,12 @@ fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
     // Inherit any existing values.
     // Note unlike the append/prepend case, we start with a variable in the same scope as we are
     // setting.
-    let mut result = vec![];
-    if let Some(var) = split.var.as_ref() {
-        result = var.as_list().to_owned();
-    }
+    let mut result = split
+        .var
+        .as_ref()
+        .map(EnvVar::as_list)
+        .unwrap_or_default()
+        .to_owned();
 
     // For each (index, argument) pair, set the element in our `result` to the replacement string.
     // Extend the list with empty strings as needed. The indexes are 1-based.

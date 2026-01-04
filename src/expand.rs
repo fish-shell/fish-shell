@@ -297,9 +297,9 @@ pub fn expand_tilde(input: &mut WString, vars: &dyn Environment) {
     }
 }
 
-/// Perform the opposite of tilde expansion on the string, which is modified in place.
-pub fn replace_home_directory_with_tilde(s: &wstr, vars: &dyn Environment) -> WString {
-    let mut result = s.to_owned();
+/// Perform the opposite of tilde expansion on the string.
+pub fn replace_home_directory_with_tilde(s: impl Into<WString>, vars: &dyn Environment) -> WString {
+    let mut result = s.into();
     // Only absolute paths get this treatment.
     if result.starts_with(L!("/")) {
         let mut home_directory = L!("~").to_owned();
@@ -2048,5 +2048,23 @@ mod tests {
         );
 
         assert_eq!(abbr_expand_1(L!("foo"), cmd), Some(L!("bar").into()));
+    }
+
+    #[test]
+    fn test_replace_home_directory_with_tilde() {
+        use super::replace_home_directory_with_tilde as rhdwt;
+        use crate::env::{EnvMode, EnvSetMode, EnvStack};
+        let vars = EnvStack::new();
+        vars.set_one(
+            L!("HOME"),
+            EnvSetMode::new(EnvMode::GLOBAL, false),
+            L!("/home/testuser").to_owned(),
+        );
+
+        assert_eq!(rhdwt("/home/testuser/", &vars), "~/");
+        assert_eq!(rhdwt("/home/testuser/Documents/", &vars), "~/Documents/");
+        assert_eq!(rhdwt("/home/testuser", &vars), "/home/testuser");
+        assert_eq!(rhdwt("/other/path/", &vars), "/other/path/");
+        assert_eq!(rhdwt("relative/path", &vars), "relative/path");
     }
 }

@@ -281,7 +281,7 @@ impl HistoryItem {
         // Ok, merge this item.
         self.creation_timestamp = self.creation_timestamp.max(item.creation_timestamp);
         if self.required_paths.len() < item.required_paths.len() {
-            self.required_paths = item.required_paths.clone();
+            self.required_paths.clone_from(&item.required_paths);
         }
         true
     }

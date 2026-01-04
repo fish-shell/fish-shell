@@ -453,7 +453,7 @@ impl<'a> ExecutionContext<'a> {
             });
 
         if infinite_recursive_statement.is_some() {
-            *out_func_name = forbidden_function_name.to_owned();
+            forbidden_function_name.clone_into(out_func_name);
         }
 
         // may be none
@@ -1865,7 +1865,7 @@ impl<'a> ExecutionContext<'a> {
             .is_some_and(|job_group| job_group.has_job_id() || !j.wants_job_id())
             && !j.is_initially_background()
         {
-            j.group = ctx.job_group.clone();
+            j.group.clone_from(&ctx.job_group);
             return;
         }
 

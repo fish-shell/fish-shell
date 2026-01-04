@@ -401,6 +401,9 @@ function __fish_config_theme_canonicalize --no-scope-shadowing
             None Nord 'Old School' Seaweed 'Snow Day' \
             'Solarized Dark' 'Solarized Light' \
             'Tomorrow Night Bright' 'Tomorrow Night' Tomorrow
+            if test $theme_name = Tomorrow
+                set color_theme light
+            end
             set theme_name (string lower (string replace -a " " "-" $theme_name))
     end
     switch $theme_name
@@ -409,8 +412,6 @@ function __fish_config_theme_canonicalize --no-scope-shadowing
             base16-default-dark base16-default-light \
             solarized-dark solarized-light
             string match -rq -- '^(?<theme_name>.*)-(?<color_theme>dark|light)$' $theme_name
-        case tomorrow
-            set color_theme light
         case tomorrow-night
             set theme_name tomorrow
             set color_theme dark

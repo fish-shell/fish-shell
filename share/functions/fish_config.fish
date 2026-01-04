@@ -388,19 +388,20 @@ end
 function __fish_config_theme_canonicalize --no-scope-shadowing
     # theme_name
     # color_theme
-    if not path is (__fish_theme_dir)/$theme_name.theme
-        switch $theme_name
-            case 'fish default'
-                set theme_name default
-            case 'ayu Dark' 'ayu Light' 'ayu Mirage' \
-                'Base16 Default Dark' 'Base16 Default Light' 'Base16 Eighties' \
-                'Bay Cruise' Dracula Fairground 'Just a Touch' Lava \
-                'Mono Lace' 'Mono Smoke' \
-                None Nord 'Old School' Seaweed 'Snow Day' \
-                'Solarized Dark' 'Solarized Light' \
-                'Tomorrow Night Bright' 'Tomorrow Night' Tomorrow
-                set theme_name (string lower (string replace -a " " "-" $theme_name))
-        end
+    if path is (__fish_theme_dir)/$theme_name.theme
+        return
+    end
+    switch $theme_name
+        case 'fish default'
+            set theme_name default
+        case 'ayu Dark' 'ayu Light' 'ayu Mirage' \
+            'Base16 Default Dark' 'Base16 Default Light' 'Base16 Eighties' \
+            'Bay Cruise' Dracula Fairground 'Just a Touch' Lava \
+            'Mono Lace' 'Mono Smoke' \
+            None Nord 'Old School' Seaweed 'Snow Day' \
+            'Solarized Dark' 'Solarized Light' \
+            'Tomorrow Night Bright' 'Tomorrow Night' Tomorrow
+            set theme_name (string lower (string replace -a " " "-" $theme_name))
     end
     switch $theme_name
         case \

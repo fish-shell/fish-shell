@@ -184,8 +184,12 @@ impl TtyQuirks {
             on_chain.push(DecsetFocusReporting);
             off_chain.push(DecrstFocusReporting);
         }
-        on_chain.extend_from_slice(&[DecsetBracketedPaste, DecsetColorThemeReporting]);
-        off_chain.extend_from_slice(&[DecrstBracketedPaste, DecrstColorThemeReporting]);
+        on_chain.push(DecsetBracketedPaste);
+        off_chain.push(DecrstBracketedPaste);
+        if self != TtyQuirks::Tmux {
+            on_chain.push(DecsetColorThemeReporting);
+            off_chain.push(DecrstColorThemeReporting);
+        }
 
         let on_chain = || on_chain.clone().into_iter();
         let off_chain = || off_chain.clone().into_iter();

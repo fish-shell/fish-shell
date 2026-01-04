@@ -15,5 +15,6 @@ isolated-tmux capture-pane -p
 # But not if the completion pager wasn't empty.
 mkdir somedirectory2 somedirectory3
 isolated-tmux send-keys Tab
+tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 0> : somedirectory/

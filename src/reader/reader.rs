@@ -6111,19 +6111,20 @@ impl<'a> Reader<'a> {
 
         // Remove ephemeral items - even if the text is empty.
         self.history.remove_ephemeral_items();
-
-        if !text.is_empty() {
-            // Mark this item as ephemeral if should_add_to_history says no (#615).
-            let mode = if !self.should_add_to_history(&text) {
-                PersistenceMode::Ephemeral
-            } else if in_private_mode(self.vars()) {
-                PersistenceMode::Memory
-            } else {
-                PersistenceMode::Disk
-            };
-            self.history
-                .add_pending_with_file_detection(&text, &self.parser.variables, mode);
+        if text.is_empty() {
+            return;
         }
+
+        // Mark this item as ephemeral if should_add_to_history says no (#615).
+        let mode = if !self.should_add_to_history(&text) {
+            PersistenceMode::Ephemeral
+        } else if in_private_mode(self.vars()) {
+            PersistenceMode::Memory
+        } else {
+            PersistenceMode::Disk
+        };
+        self.history
+            .add_pending_with_file_detection(&text, &self.parser.variables, mode);
     }
 
     /// Check if we have background jobs that we have not warned about.

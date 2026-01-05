@@ -33,8 +33,13 @@ fi
 cargo() {
     subcmd=$1
     shift
-    # shellcheck disable=2086
-    command cargo "$subcmd" $cargo_args "$@"
+    if [ -n "$FISH_CHECK_RUST_TOOLCHAIN" ]; then
+        # shellcheck disable=2086
+        command cargo "+$FISH_CHECK_RUST_TOOLCHAIN" "$subcmd" $cargo_args "$@"
+    else
+        # shellcheck disable=2086
+        command cargo "$subcmd" $cargo_args "$@"
+    fi
 }
 
 cleanup () {

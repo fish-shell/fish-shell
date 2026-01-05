@@ -5,7 +5,9 @@ use crate::common::{
     EscapeFlags, EscapeStringStyle, bytes2wcstring, escape, escape_string, valid_var_name,
 };
 use crate::highlight::highlight_and_colorize;
-use crate::input::{InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings};
+use crate::input::{
+    InputMapping, InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings,
+};
 use crate::key::{
     self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
 };
@@ -20,7 +22,6 @@ const BIND_FUNCTION_NAMES: c_int = 3;
 
 struct Options {
     all: bool,
-    bind_mode_given: bool,
     list_modes: bool,
     print_help: bool,
     silent: bool,
@@ -29,7 +30,7 @@ struct Options {
     have_preset: bool,
     preset: bool,
     mode: c_int,
-    bind_mode: WString,
+    bind_mode: Option<WString>,
     sets_bind_mode: Option<WString>,
     color: ColorEnabled,
 }
@@ -38,7 +39,6 @@ impl Options {
     fn new() -> Options {
         Options {
             all: false,
-            bind_mode_given: false,
             list_modes: false,
             print_help: false,
             silent: false,
@@ -47,7 +47,7 @@ impl Options {
             have_preset: false,
             preset: false,
             mode: BIND_INSERT,
-            bind_mode: DEFAULT_BIND_MODE.to_owned(),
+            bind_mode: None,
             sets_bind_mode: None,
             color: ColorEnabled::default(),
         }
@@ -70,30 +70,9 @@ impl BuiltinBind {
         }
     }
 
-    /// List a single key binding.
-    /// Returns false if no binding with that sequence and mode exists.
-    fn list_one(
-        &self,
-        seq: &[Key],
-        bind_mode: &wstr,
-        user: bool,
-        parser: &Parser,
-        streams: &mut IoStreams,
-    ) -> bool {
-        let mut ecmds: &[_] = &[];
-        let mut sets_mode = None;
-        let mut key_name_style = KeyNameStyle::Plain;
+    /// Returns a WString for the output line of a bind
+    fn generate_output_string(seq: &[Key], user: bool, bind: &InputMapping) -> WString {
         let mut out = WString::new();
-        if !self.input_mappings.get(
-            seq,
-            bind_mode,
-            &mut ecmds,
-            user,
-            &mut sets_mode,
-            &mut key_name_style,
-        ) {
-            return false;
-        }
 
         out.push_str("bind");
 
@@ -101,20 +80,20 @@ impl BuiltinBind {
         if !user {
             out.push_str(" --preset");
         }
-        if bind_mode != DEFAULT_BIND_MODE {
+        if bind.mode != DEFAULT_BIND_MODE {
             out.push_str(" -M ");
-            out.push_utfstr(&escape(bind_mode));
+            out.push_utfstr(&escape(&bind.mode));
         }
 
-        if let Some(sets_mode) = sets_mode {
-            if sets_mode != bind_mode {
+        if let Some(sets_mode) = &bind.sets_mode {
+            if *sets_mode != bind.mode {
                 out.push_str(" -m ");
                 out.push_utfstr(&escape(sets_mode));
             }
         }
 
         out.push(' ');
-        match key_name_style {
+        match bind.key_name_style {
             KeyNameStyle::Plain => {
                 // Append the name.
                 for (i, key) in seq.iter().enumerate() {
@@ -148,31 +127,59 @@ impl BuiltinBind {
         }
 
         // Now show the list of commands.
-        for ecmd in ecmds {
+        for ecmd in &bind.commands {
             out.push(' ');
             out.push_utfstr(&escape(ecmd));
         }
         out.push('\n');
 
-        if self.opts.color.enabled(streams) {
-            streams.out.append(&bytes2wcstring(&highlight_and_colorize(
-                &out,
-                &parser.context(),
-                parser.vars(),
-            )));
-        } else {
-            streams.out.append(&out);
+        out
+    }
+
+    /// List a single binding of a specific sequence from the specified mode.
+    /// Returns false if no binding with that sequence and mode exists.
+    ///
+    /// If bind_mode is None, then binds from all modes are listed.
+    fn list_one(
+        &self,
+        seq: &[Key],
+        bind_mode: Option<&wstr>,
+        user: bool,
+        parser: &Parser,
+        streams: &mut IoStreams,
+    ) -> bool {
+        let results = self.input_mappings.get(seq, bind_mode, user);
+
+        // no binds found
+        if results.is_empty() {
+            return false;
+        }
+
+        for bind in results {
+            let out = Self::generate_output_string(seq, user, bind);
+
+            if self.opts.color.enabled(streams) {
+                streams.out.append(&bytes2wcstring(&highlight_and_colorize(
+                    &out,
+                    &parser.context(),
+                    parser.vars(),
+                )));
+            } else {
+                streams.out.append(&out);
+            }
         }
 
         true
     }
 
-    // Overload with both kinds of bindings.
-    // Returns false only if neither exists.
+    /// Overload with both preset and user bindings.
+    /// Returns false only if neither exists.
+    ///
+    /// If bind_mode is None, then binds from all modes are listed.
     fn list_one_user_andor_preset(
         &self,
         seq: &[Key],
-        bind_mode: &wstr,
+        bind_mode: Option<&wstr>,
         user: bool,
         preset: bool,
         parser: &Parser,
@@ -196,7 +203,7 @@ impl BuiltinBind {
                 continue;
             }
 
-            self.list_one(&binding.seq, &binding.mode, user, parser, streams);
+            self.list_one(&binding.seq, Some(&binding.mode), user, parser, streams);
         }
     }
 
@@ -267,24 +274,20 @@ impl BuiltinBind {
     ///    if specified, _all_ key bindings will be erased
     ///
     fn erase(&mut self, seq: &[&wstr], all: bool, user: bool, streams: &mut IoStreams) -> bool {
-        let mode = if self.opts.bind_mode_given {
-            Some(self.opts.bind_mode.as_utfstr())
-        } else {
-            None
-        };
+        let bind_mode = self.opts.bind_mode.as_deref();
 
         if all {
-            self.input_mappings.clear(mode, user);
+            self.input_mappings.clear(bind_mode, user);
             return false;
         }
 
-        let mode = mode.unwrap_or(DEFAULT_BIND_MODE);
+        let bind_mode = bind_mode.unwrap_or(DEFAULT_BIND_MODE);
 
         for s in seq {
             let Some(s) = self.compute_seq(streams, s) else {
                 return true;
             };
-            self.input_mappings.erase(&s, mode, user);
+            self.input_mappings.erase(&s, bind_mode, user);
         }
         false
     }
@@ -321,11 +324,7 @@ impl BuiltinBind {
         if arg_count == 0 {
             // We don't overload this with user and def because we want them to be grouped.
             // First the presets, then the users (because of scrolling).
-            let bind_mode = if self.opts.bind_mode_given {
-                Some(self.opts.bind_mode.as_utfstr())
-            } else {
-                None
-            };
+            let bind_mode = self.opts.bind_mode.as_deref();
             if self.opts.preset {
                 self.list(bind_mode, false, parser, streams);
             }
@@ -337,9 +336,11 @@ impl BuiltinBind {
                 return true;
             };
 
+            let bind_mode = self.opts.bind_mode.as_deref();
+
             if !self.list_one_user_andor_preset(
                 &seq,
-                &self.opts.bind_mode,
+                bind_mode,
                 self.opts.user,
                 self.opts.preset,
                 parser,
@@ -372,7 +373,10 @@ impl BuiltinBind {
             if self.add(
                 seq,
                 &argv[optind + 1..],
-                self.opts.bind_mode.clone(),
+                self.opts
+                    .bind_mode
+                    .clone()
+                    .unwrap_or(DEFAULT_BIND_MODE.to_owned()),
                 self.opts.sets_bind_mode.clone(),
                 self.opts.user,
                 streams,
@@ -461,8 +465,7 @@ fn parse_cmd_opts(
             'M' => {
                 let applicable_mode = w.woptarg.unwrap();
                 check_mode_name(streams, applicable_mode)?;
-                opts.bind_mode = applicable_mode.to_owned();
-                opts.bind_mode_given = true;
+                opts.bind_mode = Some(applicable_mode.to_owned());
             }
             'm' => {
                 let new_mode = w.woptarg.unwrap();

@@ -9,6 +9,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- The `bind` builtin lists mappings from all modes if `--mode` is not provided (:issue:`12214`).
 
 New or improved bindings
 ------------------------

@@ -44,11 +44,11 @@ pub struct InputMapping {
     /// We wish to preserve the user-specified order. This is just an incrementing value.
     specification_order: u32,
     /// Mode in which this command should be evaluated.
-    mode: WString,
+    pub mode: WString,
     /// New mode that should be switched to after command evaluation, or None to leave the mode unchanged.
-    sets_mode: Option<WString>,
+    pub sets_mode: Option<WString>,
     /// Perhaps this binding was created using a raw escape sequence.
-    key_name_style: KeyNameStyle,
+    pub key_name_style: KeyNameStyle,
 }
 
 impl InputMapping {
@@ -922,31 +922,37 @@ impl InputMappingSet {
         result
     }
 
-    /// Gets the command bound to the specified key sequence in the specified mode. Returns true if
-    /// it exists, false if not.
+    /// Returns the command bound to the specified bind mode.
+    ///
+    /// If bind_mode is None, then binds from all modes are returned.
     pub fn get<'a>(
         &'a self,
         sequence: &[Key],
-        mode: &wstr,
-        out_cmds: &mut &'a [WString],
+        bind_mode: Option<&wstr>,
         user: bool,
-        out_sets_mode: &mut Option<&'a wstr>,
-        out_key_name_style: &mut KeyNameStyle,
-    ) -> bool {
+    ) -> Vec<&'a InputMapping> {
         let ml = if user {
             &self.mapping_list
         } else {
             &self.preset_mapping_list
         };
-        for m in ml {
-            if m.seq == sequence && m.mode == mode {
-                *out_cmds = &m.commands;
-                *out_sets_mode = m.sets_mode.as_deref();
-                *out_key_name_style = m.key_name_style.clone();
-                return true;
-            }
-        }
-        false
+
+        let mut results: Vec<&'a InputMapping> = if let Some(mode) = bind_mode {
+            // if a mode is set, return the specific mapping for the mode
+            return ml
+                .iter()
+                .filter(|mapping| mapping.seq == sequence && mapping.mode == mode)
+                .collect();
+        } else {
+            // otherwise, return all mappings for this sequence
+            ml.iter()
+                .filter(|mapping| mapping.seq == sequence)
+                .collect()
+        };
+
+        // sort by specification_order to ensure consistent output
+        results.sort_unstable_by_key(|mapping| mapping.specification_order);
+        results
     }
 }
 

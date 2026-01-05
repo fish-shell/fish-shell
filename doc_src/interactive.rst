@@ -133,7 +133,7 @@ Variable                                          Meaning
 .. envvar:: fish_color_end                        process separators like ``;`` and ``&``
 .. envvar:: fish_color_error                      syntax errors
 .. envvar:: fish_color_param                      ordinary command parameters
-.. envvar:: fish_color_valid_path                 parameters that are filenames (if the file exists)
+.. envvar:: fish_color_valid_path                 parameters and redirection targets that are filenames (if the file exists)
 .. envvar:: fish_color_option                     options starting with "-", up to the first "--" parameter
 .. envvar:: fish_color_comment                    comments like '# important'
 .. envvar:: fish_color_selection                  selected text in vi visual mode

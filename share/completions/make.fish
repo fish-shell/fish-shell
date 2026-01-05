@@ -21,8 +21,10 @@ function __fish_print_make_targets --argument-names directory file
                 is_continuation = $0 ~ "^([^#]*[^#" bs_regex "])?(" bs_regex bs_regex ")*" bs_regex "$";
             }' 2>/dev/null
     else
-        # BSD make
-        make $makeflags -d g1 -rn >/dev/null 2>| awk -F, '/^#\*\*\* Input graph:/,/^$/ {if ($1 !~ "^#... ") {gsub(/# /,"",$1); print $1}}' 2>/dev/null
+        # FreeBSD/NetBSD
+        make $makeflags -V .ALLTARGETS 2>/dev/null | string split ' '
+        # OpenBSD
+        or make $makeflags -d g1 -rn 2>/dev/null | awk '/^[^#. \t].+:/ { gsub(/:.*/, "", $1); print $1 }'
     end
 end
 

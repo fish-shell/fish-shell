@@ -19,8 +19,8 @@ Description
 ``bind`` manages key bindings.
 
 If both ``KEYS`` and ``COMMAND`` are given, ``bind`` adds (or replaces) a binding in ``MODE``.
-If only ``KEYS`` is given, any existing binding for those keys in the given ``MODE`` will be printed.
-If no ``KEYS`` argument is provided, all bindings (in the given ``MODE``) are printed.
+If only ``KEYS`` is given, ``bind`` lists any existing bindings for those keys in ``MODE`` or in all modes.
+If no ``KEYS`` argument is provided, ``bind`` lists all bindings in ``MODE`` or in all modes.
 
 ``KEYS`` is a comma-separated list of key names.
 Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``, ``alt-``, ``shift-`` and ``super-`` (i.e. the "windows" or "command" key).

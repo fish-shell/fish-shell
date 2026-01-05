@@ -178,4 +178,17 @@ bind ctrl-shift-a
 bind ctrl-shift-ä
 # CHECKERR: bind: No binding found for key 'ctrl-shift-ä'
 
+# Verify binds from all modes are returned when querying a sequence
+fish_vi_key_bindings
+bind --preset ctrl-q 'echo preset'
+bind ctrl-q 'echo default'
+bind ctrl-q --mode insert 'echo insert'
+bind ctrl-q --mode replace 'echo replace'
+bind ctrl-q
+# CHECK: bind --preset ctrl-q 'echo preset'
+# CHECK: bind ctrl-q 'echo default'
+# CHECK: bind -M insert ctrl-q 'echo insert'
+# CHECK: bind -M replace ctrl-q 'echo replace'
+fish_default_key_bindings
+
 exit 0

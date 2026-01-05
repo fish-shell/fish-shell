@@ -88,7 +88,7 @@ set --erase --universal fish_key_bindings"
         echo 'See also the release notes (type `help relnotes`).'
         set -Ue fish_key_bindings $theme_uvars
         set -l sh (__fish_posix_shell)
-        eval "$sh -c 'sleep 7 # Please read above notice about universal variables' &"
+        eval "$sh -c 'sleep 7 # Please read above notice about universal variables' </dev/null &>/dev/null &"
     end
 end
 

@@ -967,25 +967,25 @@ impl<'s> Highlighter<'s> {
         }
         // No command substitution, so we can highlight the target file or fd. For example,
         // disallow redirections into a non-existent directory.
-        let target_is_valid = if !self.io_still_ok() {
+        let (role, file_exists) = if !self.io_still_ok() {
             // I/O is disallowed, so we don't have much hope of catching anything but gross
             // errors. Assume it's valid.
-            true
+            (HighlightRole::redirection, false)
         } else if contains_pending_variable(&self.pending_variables, &target) {
-            true
+            // Target uses a variable defined by the current commandline. Assume it's valid.
+            (HighlightRole::redirection, false)
         } else {
             // Validate the redirection target..
-            self.file_tester.test_redirection_target(&target, oper.mode)
-        };
-        self.color_node(
-            &redir.target,
-            HighlightSpec::with_fg(if target_is_valid {
-                HighlightRole::redirection
+            if let Ok(IsFile(file_exists)) =
+                self.file_tester.test_redirection_target(&target, oper.mode)
+            {
+                (HighlightRole::redirection, file_exists)
             } else {
-                HighlightRole::error
-            }),
-        );
-        if target_is_valid && self.io_still_ok() && self.file_tester.test_path(&target, false) {
+                (HighlightRole::error, false)
+            }
+        };
+        self.color_node(&redir.target, HighlightSpec::with_fg(role));
+        if file_exists {
             for i in redir.target.source_range().as_usize() {
                 self.color_array[i].valid_path = true;
             }

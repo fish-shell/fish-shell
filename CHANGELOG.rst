@@ -18,6 +18,10 @@ For distributors and developers
 -------------------------------
 - The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.
 
+Completions
+-------------------------------
+- Sync partitions from Xiaomi images for `fastboot flash` command.
+
 fish 4.3.2 (released December 30, 2025)
 =======================================
 

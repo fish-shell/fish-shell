@@ -24,7 +24,6 @@ use libc::{
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
-use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::borrow::Cow;
@@ -43,7 +42,7 @@ use std::pin::Pin;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicI32, AtomicU8, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
 use errno::{Errno, errno};
@@ -175,8 +174,8 @@ enum ExitState {
 
 static EXIT_STATE: AtomicU8 = AtomicU8::new(ExitState::None as u8);
 
-pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
-    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+pub static SHELL_MODES: LazyLock<Mutex<libc::termios>> =
+    LazyLock::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// The valid terminal modes on startup.
 /// Warning: this is read from the SIGTERM handler! Hence the raw global.
@@ -184,8 +183,8 @@ static TERMINAL_MODE_ON_STARTUP: once_cell::sync::OnceCell<libc::termios> =
     once_cell::sync::OnceCell::new();
 
 /// Mode we use to execute programs.
-static TTY_MODES_FOR_EXTERNAL_CMDS: Lazy<Mutex<libc::termios>> =
-    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+static TTY_MODES_FOR_EXTERNAL_CMDS: LazyLock<Mutex<libc::termios>> =
+    LazyLock::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 static RUN_COUNT: AtomicU64 = AtomicU64::new(0);
 

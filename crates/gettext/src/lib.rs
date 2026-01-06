@@ -1,5 +1,4 @@
 use fish_gettext_maps::CATALOGS;
-use once_cell::sync::Lazy;
 use std::{
     collections::HashMap,
     sync::{LazyLock, Mutex},
@@ -7,8 +6,8 @@ use std::{
 
 type Catalog = &'static phf::Map<&'static str, &'static str>;
 
-static LANGUAGE_PRECEDENCE: Lazy<Mutex<Vec<(&'static str, Catalog)>>> =
-    Lazy::new(|| Mutex::new(vec![]));
+static LANGUAGE_PRECEDENCE: LazyLock<Mutex<Vec<(&'static str, Catalog)>>> =
+    LazyLock::new(|| Mutex::new(vec![]));
 
 pub fn gettext(message_str: &'static str) -> Option<&'static str> {
     let language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();

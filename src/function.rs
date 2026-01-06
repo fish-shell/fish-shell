@@ -14,10 +14,9 @@ use crate::parser::Parser;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::prelude::*;
 use crate::wutil::dir_iter::DirIter;
-use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
 use std::num::NonZeroU32;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 
 #[derive(Clone)]
 pub struct FunctionProperties {
@@ -100,7 +99,7 @@ impl FunctionSet {
 }
 
 /// The big set of all functions.
-static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
+static FUNCTION_SET: LazyLock<Mutex<FunctionSet>> = LazyLock::new(|| {
     Mutex::new(FunctionSet {
         funcs: HashMap::new(),
         autoload_tombstones: HashSet::new(),

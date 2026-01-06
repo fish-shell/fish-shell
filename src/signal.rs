@@ -11,8 +11,10 @@ use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_pri
 use crate::tty_handoff::{safe_deactivate_tty_protocols, safe_mark_tty_invalid};
 use crate::wutil::{fish_wcstoi, perror};
 use errno::{errno, set_errno};
-use once_cell::sync::Lazy;
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::{
+    LazyLock,
+    atomic::{AtomicI32, Ordering},
+};
 
 /// Store the "main" pid. This allows us to reliably determine if we are in a forked child.
 static MAIN_PID: AtomicI32 = AtomicI32::new(0);
@@ -278,7 +280,7 @@ pub fn signal_handle(sig: Signal) {
     sigaction(sig, &act, std::ptr::null_mut());
 }
 
-pub static signals_to_default: Lazy<libc::sigset_t> = Lazy::new(|| {
+pub static signals_to_default: LazyLock<libc::sigset_t> = LazyLock::new(|| {
     let mut set = MaybeUninit::uninit();
     unsafe { libc::sigemptyset(set.as_mut_ptr()) };
     for data in SIGNAL_TABLE.iter() {

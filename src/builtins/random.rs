@@ -2,13 +2,12 @@ use super::prelude::*;
 
 use crate::util::get_seeded_rng;
 use crate::wutil;
-use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
 use rand::{Rng, RngCore};
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
-static RNG: Lazy<Mutex<SmallRng>> =
-    Lazy::new(|| Mutex::new(get_seeded_rng(rand::rng().next_u64())));
+static RNG: LazyLock<Mutex<SmallRng>> =
+    LazyLock::new(|| Mutex::new(get_seeded_rng(rand::rng().next_u64())));
 
 pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];

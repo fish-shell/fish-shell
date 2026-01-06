@@ -221,7 +221,6 @@ dependencies = [
  "fish-wchar",
  "fish-widecharwidth",
  "libc",
- "once_cell",
  "rsconf",
  "widestring",
 ]
@@ -231,7 +230,6 @@ name = "fish-gettext"
 version = "0.0.0"
 dependencies = [
  "fish-gettext-maps",
- "once_cell",
  "phf 0.13.1",
 ]
 

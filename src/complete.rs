@@ -4,7 +4,7 @@ use std::{
     mem,
     ops::{Deref, DerefMut},
     sync::{
-        Mutex, MutexGuard,
+        LazyLock, Mutex, MutexGuard,
         atomic::{self, AtomicUsize},
     },
     time::{Duration, Instant},
@@ -55,7 +55,6 @@ use crate::{
 };
 use bitflags::bitflags;
 use fish_wchar::WExt;
-use once_cell::sync::Lazy;
 
 // Completion description strings, mostly for different types of files, such as sockets, block
 // devices, etc.
@@ -451,7 +450,7 @@ static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::ne
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 type WrapperMap = HashMap<WString, Vec<WString>>;
-static WRAPPER_MAP: Lazy<Mutex<WrapperMap>> = Lazy::new(|| Mutex::new(HashMap::new()));
+static WRAPPER_MAP: LazyLock<Mutex<WrapperMap>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Clear the [`CompleteFlags::AUTO_SPACE`] flag, and set [`CompleteFlags::NO_SPACE`] appropriately
 /// depending on the suffix of the string.
@@ -606,8 +605,8 @@ struct Completer<'ctx> {
     condition_cache: HashMap<WString, bool>,
 }
 
-static COMPLETION_AUTOLOADER: Lazy<Mutex<Autoload>> =
-    Lazy::new(|| Mutex::new(Autoload::new(L!("fish_complete_path"))));
+static COMPLETION_AUTOLOADER: LazyLock<Mutex<Autoload>> =
+    LazyLock::new(|| Mutex::new(Autoload::new(L!("fish_complete_path"))));
 
 impl<'ctx> Completer<'ctx> {
     pub fn new(ctx: &'ctx OperationContext<'ctx>, flags: CompletionRequestOptions) -> Self {

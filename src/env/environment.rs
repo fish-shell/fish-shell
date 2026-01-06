@@ -28,13 +28,13 @@ use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd};
 
 use libc::{c_int, uid_t};
-use once_cell::sync::{Lazy, OnceCell};
+use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -591,7 +591,7 @@ fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
     }
 }
 
-pub(crate) static FALLBACK_PATH: Lazy<&[WString]> = Lazy::new(|| {
+pub(crate) static FALLBACK_PATH: LazyLock<&[WString]> = LazyLock::new(|| {
     // _CS_PATH: colon-separated paths to find POSIX utilities. Same as USER_CS_PATH.
     let cs_path = libc::_CS_PATH;
 

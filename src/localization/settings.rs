@@ -1,9 +1,8 @@
 use super::{localizable_consts, localizable_string, wgettext, wgettext_fmt};
 use crate::env::{EnvStack, Environment};
 use fish_wchar::{L, WString, wstr};
-use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 enum LanguagePrecedenceOrigin {
@@ -318,8 +317,8 @@ impl LocalizationState {
 ///
 /// This struct should be updated when the relevant variables change or `status language` is used
 /// to modify the localization state.
-static LOCALIZATION_STATE: Lazy<Mutex<LocalizationState>> =
-    Lazy::new(|| Mutex::new(LocalizationState::new()));
+static LOCALIZATION_STATE: LazyLock<Mutex<LocalizationState>> =
+    LazyLock::new(|| Mutex::new(LocalizationState::new()));
 
 /// Call this when one of `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG` changes.
 /// Updates internal state such that the correct localizations will be used in subsequent

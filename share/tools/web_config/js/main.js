@@ -214,7 +214,7 @@ document.addEventListener("alpine:init", () => {
         overriddenTerminalBackgroundColor: undefined,
 
         async fetchSamplePrompts() {
-            this.samplePrompts = await (await fetch("sample_prompts/")).json();
+            this.samplePrompts = await (await fetch("prompts/")).json();
 
             if (this.selectedPrompt === null) {
                 this.selectPrompt(this.samplePrompts[0]);

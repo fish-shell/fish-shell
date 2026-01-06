@@ -9,7 +9,6 @@ use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use bitflags::bitflags;
-use once_cell::sync::OnceCell;
 use std::cell::{RefCell, RefMut};
 use std::env;
 use std::ffi::{CStr, CString};
@@ -17,9 +16,8 @@ use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
-use std::sync::Arc;
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::{Arc, Mutex, OnceLock};
 
 bitflags! {
     #[derive(Copy, Clone, Default)]
@@ -397,7 +395,7 @@ fn osc_133_prompt_start(out: &mut impl Output) -> bool {
     if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
         return false;
     }
-    static TEST_BALLOON: OnceCell<()> = OnceCell::new();
+    static TEST_BALLOON: OnceLock<()> = OnceLock::new();
     if TEST_BALLOON.set(()).is_ok() {
         write_to_output!(out, "\x1b]133;A;click_events=1\x1b\\");
     } else {

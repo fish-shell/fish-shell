@@ -1,5 +1,4 @@
-use once_cell::sync::OnceCell;
-use std::os::fd::RawFd;
+use std::{os::fd::RawFd, sync::OnceLock};
 
 #[cfg(apple)]
 mod notifyd;
@@ -69,7 +68,7 @@ pub fn create_notifier() -> Box<dyn UniversalNotifier> {
 }
 
 // Default instance. Other instances are possible for testing.
-static DEFAULT_NOTIFIER: OnceCell<Box<dyn UniversalNotifier>> = OnceCell::new();
+static DEFAULT_NOTIFIER: OnceLock<Box<dyn UniversalNotifier>> = OnceLock::new();
 
 pub fn default_notifier() -> &'static dyn UniversalNotifier {
     DEFAULT_NOTIFIER.get_or_init(create_notifier).as_ref()

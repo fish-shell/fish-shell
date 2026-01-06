@@ -9,7 +9,6 @@ license.workspace = true
 [dependencies]
 libc.workspace = true
 nix.workspace = true
-once_cell.workspace = true
 
 [lints]
 workspace = true

@@ -1,10 +1,10 @@
 use crate::common::{BUILD_DIR, get_program_name};
 use crate::{flog, flogf};
 use fish_build_helper::workspace_root;
-use once_cell::sync::OnceCell;
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
@@ -163,7 +163,7 @@ pub enum FishPath {
     LookUpInPath,
 }
 
-static FISH_PATH: OnceCell<FishPath> = OnceCell::new();
+static FISH_PATH: OnceLock<FishPath> = OnceLock::new();
 
 /// Get the absolute path to the fish executable itself
 pub fn get_fish_path() -> &'static FishPath {

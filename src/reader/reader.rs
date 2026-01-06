@@ -42,7 +42,7 @@ use std::pin::Pin;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicI32, AtomicU8, AtomicU32, Ordering};
-use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
+use std::sync::{Arc, LazyLock, Mutex, MutexGuard, OnceLock};
 use std::time::{Duration, Instant};
 
 use errno::{Errno, errno};
@@ -179,8 +179,7 @@ pub static SHELL_MODES: LazyLock<Mutex<libc::termios>> =
 
 /// The valid terminal modes on startup.
 /// Warning: this is read from the SIGTERM handler! Hence the raw global.
-static TERMINAL_MODE_ON_STARTUP: once_cell::sync::OnceCell<libc::termios> =
-    once_cell::sync::OnceCell::new();
+static TERMINAL_MODE_ON_STARTUP: OnceLock<libc::termios> = OnceLock::new();
 
 /// Mode we use to execute programs.
 static TTY_MODES_FOR_EXTERNAL_CMDS: LazyLock<Mutex<libc::termios>> =

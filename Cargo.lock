@@ -209,7 +209,6 @@ version = "0.0.0"
 dependencies = [
  "libc",
  "nix",
- "once_cell",
 ]
 
 [[package]]

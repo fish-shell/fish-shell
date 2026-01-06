@@ -1,9 +1,8 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, sync::LazyLock};
 
 use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
 use nix::sys::resource::Resource as ResourceEnum;
-use once_cell::sync::Lazy;
 
 use crate::wutil::perror;
 use fish_fallback::{fish_wcswidth, wcscasecmp};
@@ -434,7 +433,7 @@ impl Resource {
 }
 
 /// Array of resource_t structs, describing all known resource types.
-static RESOURCE_ARR: Lazy<Box<[Resource]>> = Lazy::new(|| {
+static RESOURCE_ARR: LazyLock<Box<[Resource]>> = LazyLock::new(|| {
     let resources_info = [
         (
             limits::SBSIZE,

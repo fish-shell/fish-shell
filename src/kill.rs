@@ -3,15 +3,14 @@
 //! Works like the killring in emacs and readline. The killring is cut and paste with a memory of
 //! previous cuts.
 
-use once_cell::sync::Lazy;
 use std::collections::VecDeque;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 use crate::prelude::*;
 
 struct KillRing(VecDeque<WString>);
 
-static KILL_RING: Lazy<Mutex<KillRing>> = Lazy::new(|| Mutex::new(KillRing::new()));
+static KILL_RING: LazyLock<Mutex<KillRing>> = LazyLock::new(|| Mutex::new(KillRing::new()));
 
 impl KillRing {
     /// Create a new killring.

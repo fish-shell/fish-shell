@@ -231,6 +231,7 @@ pub fn env_dispatch_var_change(milieu: VarChangeMilieu, key: &wstr, vars: &EnvSt
     let suppress_repaint = milieu.is_repainting || !milieu.global_or_universal;
 
     // We want to ignore variable changes until the dispatch table is explicitly initialized.
+    // TODO(MSRV>=1.94): Use std::sync::LazyLock. (LazyLock::get is stabilized in Rust 1.94)
     if let Some(dispatch_table) = Lazy::get(&VAR_DISPATCH_TABLE) {
         dispatch_table.dispatch(key, vars, suppress_repaint);
     }

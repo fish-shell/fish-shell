@@ -1,15 +1,14 @@
 use std::{
     collections::HashSet,
-    sync::{Mutex, MutexGuard},
+    sync::{LazyLock, Mutex, MutexGuard},
 };
 
 use crate::prelude::*;
-use once_cell::sync::Lazy;
 
 use crate::parse_constants::SourceRange;
 use pcre2::utf32::Regex;
 
-static ABBRS: Lazy<Mutex<AbbreviationSet>> = Lazy::new(|| Mutex::new(Default::default()));
+static ABBRS: LazyLock<Mutex<AbbreviationSet>> = LazyLock::new(|| Mutex::new(Default::default()));
 
 pub fn with_abbrs<R>(cb: impl FnOnce(&AbbreviationSet) -> R) -> R {
     let abbrs_g = ABBRS.lock().unwrap();

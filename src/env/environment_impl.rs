@@ -15,13 +15,13 @@ use crate::reader::{commandline_get_state, reader_status_count};
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wutil::fish_wcstol_radix;
 
-use once_cell::sync::Lazy;
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
+use std::sync::LazyLock;
 
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
@@ -294,7 +294,7 @@ impl Iterator for EnvNodeIter {
     }
 }
 
-static GLOBAL_NODE: Lazy<EnvNodeRef> = Lazy::new(|| EnvNodeRef::new(false, None));
+static GLOBAL_NODE: LazyLock<EnvNodeRef> = LazyLock::new(|| EnvNodeRef::new(false, None));
 
 /// Recursive helper to snapshot a series of nodes.
 fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {

@@ -2,10 +2,10 @@
 
 use fish_common::char_offset;
 use libc::X_OK;
-use once_cell::sync::Lazy;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::os::unix::fs::MetadataExt;
+use std::sync::LazyLock;
 
 use crate::common::{
     UnescapeFlags, UnescapeStringStyle, WILDCARD_RESERVED_BASE, WSL,
@@ -375,12 +375,12 @@ fn wildcard_test_flags_then_complete(
 
     // regular file *excludes* broken links - we have no use for them as commands.
     let is_regular_file = entry.check_type().is_some_and(|x| x == DirEntryType::Reg);
-    let is_executable = Lazy::new(|| is_regular_file && waccess(filepath, X_OK) == 0);
+    let is_executable = LazyLock::new(|| is_regular_file && waccess(filepath, X_OK) == 0);
     if executables_only && !*is_executable {
         return false;
     }
 
-    let filepath_stat = Lazy::new(|| lwstat(filepath));
+    let filepath_stat = LazyLock::new(|| lwstat(filepath));
 
     // For executables on Cygwin, prefer the name without the .exe, to match
     // better with Unix names, but only if there isn't also a file without that

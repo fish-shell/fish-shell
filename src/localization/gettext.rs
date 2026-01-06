@@ -1,6 +1,5 @@
 use fish_wchar::{L, WString, wstr};
-use once_cell::sync::Lazy;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 /// Use this function to localize a message.
 /// The [`MaybeStatic`] wrapper type allows avoiding allocating and leaking a new [`wstr`] when no
@@ -17,8 +16,8 @@ fn gettext(message: MaybeStatic) -> &'static wstr {
         MaybeStatic::Static(s) => s,
         MaybeStatic::Local(s) => s,
     };
-    static MESSAGE_TO_NARROW: Lazy<Mutex<HashMap<&'static wstr, NarrowMessage>>> =
-        Lazy::new(|| Mutex::new(HashMap::default()));
+    static MESSAGE_TO_NARROW: LazyLock<Mutex<HashMap<&'static wstr, NarrowMessage>>> =
+        LazyLock::new(|| Mutex::new(HashMap::default()));
     let mut message_to_narrow = MESSAGE_TO_NARROW.lock().unwrap();
     if !message_to_narrow.contains_key(message_wstr) {
         let message_wstr: &'static wstr = match message {
@@ -38,8 +37,8 @@ fn gettext(message: MaybeStatic) -> &'static wstr {
     #[cfg(feature = "localize-messages")]
     {
         if let Some(localized_str) = fish_gettext::gettext(message_str) {
-            static LOCALIZATION_TO_WIDE: Lazy<Mutex<HashMap<&'static str, &'static wstr>>> =
-                Lazy::new(|| Mutex::new(HashMap::default()));
+            static LOCALIZATION_TO_WIDE: LazyLock<Mutex<HashMap<&'static str, &'static wstr>>> =
+                LazyLock::new(|| Mutex::new(HashMap::default()));
             let mut localizations_to_wide = LOCALIZATION_TO_WIDE.lock().unwrap();
             if !localizations_to_wide.contains_key(localized_str) {
                 let localization_wstr =

@@ -10,10 +10,9 @@ use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
 use crate::prelude::*;
 use crate::reader::{Reader, reader_reset_interrupted};
 use crate::threads::assert_is_main_thread;
-use once_cell::sync::Lazy;
 use std::mem;
 use std::sync::{
-    Mutex, MutexGuard,
+    LazyLock, Mutex, MutexGuard,
     atomic::{AtomicU32, Ordering},
 };
 
@@ -228,8 +227,8 @@ pub struct InputMappingSet {
 
 /// Access the singleton input mapping set.
 pub fn input_mappings() -> MutexGuard<'static, InputMappingSet> {
-    static INPUT_MAPPINGS: Lazy<Mutex<InputMappingSet>> =
-        Lazy::new(|| Mutex::new(InputMappingSet::default()));
+    static INPUT_MAPPINGS: LazyLock<Mutex<InputMappingSet>> =
+        LazyLock::new(|| Mutex::new(InputMappingSet::default()));
     INPUT_MAPPINGS.lock().unwrap()
 }
 

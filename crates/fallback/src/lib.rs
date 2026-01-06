@@ -5,9 +5,11 @@
 
 use fish_wchar::prelude::*;
 use fish_widecharwidth::{WcLookupTable, WcWidth};
-use once_cell::sync::Lazy;
 use std::cmp;
-use std::sync::atomic::{AtomicIsize, Ordering};
+use std::sync::{
+    LazyLock,
+    atomic::{AtomicIsize, Ordering},
+};
 
 /// Width of ambiguous East Asian characters and, as of TR11, all private-use characters.
 /// 1 is the typical default, but we accept any non-negative override via `$fish_ambiguous_width`.
@@ -25,7 +27,7 @@ pub static FISH_AMBIGUOUS_WIDTH: AtomicIsize = AtomicIsize::new(1);
 // For some reason, this is declared here and exposed here, but is set in `env_dispatch`.
 pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(1);
 
-static WC_LOOKUP_TABLE: Lazy<WcLookupTable> = Lazy::new(WcLookupTable::new);
+static WC_LOOKUP_TABLE: LazyLock<WcLookupTable> = LazyLock::new(WcLookupTable::new);
 
 /// A safe wrapper around the system `wcwidth()` function
 #[cfg(not(cygwin))]

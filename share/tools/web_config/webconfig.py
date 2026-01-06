@@ -3,7 +3,6 @@ import errno
 import shlex
 import http.server as SimpleHTTPServer
 import json
-import multiprocessing.pool
 import operator
 import os
 import platform
@@ -1127,6 +1126,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         result = []
         try:
+            import multiprocessing.pool
+
             pool = multiprocessing.pool.ThreadPool(processes=8)
 
             # Kick off the "Current" meta-sample

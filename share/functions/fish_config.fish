@@ -321,10 +321,11 @@ function __fish_config_theme_choose
             else
                 set desired_color_theme $fish_terminal_color_theme
                 if not set -q desired_color_theme[1]
-                    echo >&2 "fish_config theme choose: internal error: \$fish_terminal_color_theme not yet initialized"
-                    return 1
-                end
-                if not contains -- "[$desired_color_theme]" $theme_data
+                    if test $scope = -U
+                        echo >&2 "fish_config theme save: error: \$fish_terminal_color_theme not yet initialized"
+                        return 1
+                    end
+                else if not contains -- "[$desired_color_theme]" $theme_data
                     __fish_config_theme_choose_bad_color_theme $theme_name "$desired_color_theme" \$fish_terminal_color_theme = $desired_color_theme
                     echo >&2 "fish_config theme choose: hint: if your terminal does not report colors, pass --color-theme=light or --color-theme=dark when using color-theme-aware themes"
                     return 1
@@ -342,7 +343,7 @@ function __fish_config_theme_choose
         set -l color_theme
         string match -re -- (__fish_theme_variable_filter)'|^\[.*\]$' $theme_data |
             while read -lat toks
-                if $theme_is_color_theme_aware
+                if $theme_is_color_theme_aware && set -q desired_color_theme[1]
                     for ct in $color_themes
                         if test "$toks" = [$ct]
                             set color_theme $ct
@@ -362,7 +363,11 @@ function __fish_config_theme_choose
                     set -eg $varname
                 end
                 if $override || not set -q $varname || string match -rq -- '--theme=.*' $$varname
-                    set $scope $toks (test $scope != -U && echo --theme=$theme_name)
+                    set $scope $toks[1] (
+                        if not $theme_is_color_theme_aware || set -q desired_color_theme[1]
+                            string join \n -- $toks[2..]
+                        end
+                    ) (test $scope != -U && echo --theme=$theme_name)
                 end
             end
         if $override
@@ -376,12 +381,15 @@ function __fish_config_theme_choose
             end
         end
     end
-    if test -n "$fish_terminal_color_theme" || not $need_hook
-        if set -q _flag_no_override[1]
-            __fish_apply_theme
-        else
-            __fish_override=true __fish_apply_theme
+    if not $need_hook || test -n "$fish_terminal_color_theme" ||
+            # comment to work around fish_indent bug
+            {
+                $theme_is_color_theme_aware && test -z "$fish_terminal_color_theme"
+            }
+        if not set -q _flag_no_override[1]
+            set -fx __fish_override true
         end
+        __fish_apply_theme
     end
 end
 

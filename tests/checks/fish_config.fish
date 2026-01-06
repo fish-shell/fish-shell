@@ -1,6 +1,8 @@
 # RUN: %fish %s
 # REQUIRES: command -v diff
 
+set -g fish (status fish-path)
+
 fish_config prompt list | string match -r '^(?:acidhub|disco|nim)$'
 # CHECK: acidhub
 # CHECK: disco
@@ -216,6 +218,32 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
     set -S fish_color_normal
     # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
     # CHECK: $fish_color_normal[1]: |normal|
+}
+
+{
+    echo >$__fish_config_dir/conf.d/fish_frozen_theme.fish "\
+set --global fish_color_command 0a0a0a
+set --global fish_color_option 0b0b0b"
+    echo >$__fish_config_dir/themes/from-cli.theme "\
+[light]
+fish_color_command black
+fish_color_param 0c0c0c
+[dark]
+fish_color_command white
+fish_color_param c0c0c0"
+    $fish -c '
+        fish_config theme choose from-cli
+        echo $fish_color_command
+        # CHECK: --theme=from-cli
+        echo $fish_color_option
+        # CHECK: 0b0b0b
+        echo $fish_color_param
+        # CHECK: --theme=from-cli
+        echo yes | fish_config theme save from-cli
+        # CHECKERR: fish_config theme save: error: $fish_terminal_color_theme not yet initialized
+        and echo assertion failure
+    '
+    rm -f $__fish_config_dir/conf.d/fish_frozen_theme.fish
 }
 
 fish_config theme dump badarg

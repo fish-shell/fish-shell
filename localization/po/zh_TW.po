@@ -519,7 +519,7 @@ msgstr "%s：無效的類型「%s」\n"
 
 #, c-format
 msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n"
-msgstr "%s：無效的 '--color' 選項值「%s」。應為 'always'、'never' 或 'auto'\n"
+msgstr "%s：「--color」選項的值「%s」無效。應為「always」、「never」、或「auto」\n"
 
 #, c-format
 msgid "%s: Invalid width value '%s'\n"
@@ -775,7 +775,7 @@ msgstr "%s：作用域只能是以下之一：universal、function、global、lo
 
 #, c-format
 msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet supported"
-msgstr ""
+msgstr "%s：尚不支援於執行「complete --arguments」時設定游標"
 
 #, c-format
 msgid "%s: stdin is closed\n"
@@ -898,7 +898,7 @@ msgstr "中止（SIGABRT 的別名）"
 
 #, c-format
 msgid "Active languages (source: %s):"
-msgstr ""
+msgstr "使用的語言（來源：%s）："
 
 msgid "Address boundary error"
 msgstr "位址邊界錯誤"
@@ -1252,7 +1252,7 @@ msgid "Jobs getting started or continued"
 msgstr "作業開始或繼續"
 
 msgid "Language specifiers appear repeatedly:"
-msgstr ""
+msgstr "語言指定子重複："
 
 msgid "List or remove functions"
 msgstr "列出或移除函式"
@@ -1305,7 +1305,7 @@ msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "沒有互動式 shell 所需的 TTY（tcgetpgrp 失敗了）"
 
 msgid "No catalogs available for language specifiers:"
-msgstr ""
+msgstr "語言指定子查無對應條目："
 
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
@@ -1319,7 +1319,7 @@ msgstr "不是數字"
 
 #, c-format
 msgid "Not a valid Unicode character: %s"
-msgstr ""
+msgstr "無效的 Unicode 字元：%s"
 
 msgid "Notifications about universal variable changes"
 msgstr "通域變數變更通知"
@@ -1805,7 +1805,7 @@ msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr "補全達到最大遞迴深度，可能是循環？"
 
 msgid "default"
-msgstr ""
+msgstr "預設"
 
 msgid "dir symlink"
 msgstr "目錄象徵式連結"
@@ -3170,7 +3170,7 @@ msgid "Print the name of the currently running command or function"
 msgstr "印出目前執行的命令或函式名稱"
 
 msgid "Print the operating system the terminal is running on"
-msgstr ""
+msgstr "印出終端機正執行於的作業系統"
 
 msgid "Print the path (without the file name) of the currently running script"
 msgstr "印出目前執行的命令稿路徑（不包括檔名）"
@@ -3422,7 +3422,7 @@ msgid "Show modification time"
 msgstr "顯示修改時間"
 
 msgid "Show or change fish's language settings"
-msgstr ""
+msgstr "顯示或更改 fish 語言設定"
 
 msgid "Show seconds since the modification time"
 msgstr "顯示自修改時間以來的秒數"
@@ -3608,7 +3608,7 @@ msgid "Use the visible width, excluding escape sequences"
 msgstr "使用可見寬度，排除轉義序列"
 
 msgid "Use this variant, overriding $fish_terminal_color_theme"
-msgstr ""
+msgstr "使用此變體，覆寫 $fish_terminal_color_theme"
 
 msgid "Verbose mode"
 msgstr "詳盡模式"
@@ -3623,7 +3623,7 @@ msgid "View and pick from the sample themes"
 msgstr "檢視主題範本並從中挑選"
 
 msgid "When to colorize output"
-msgstr ""
+msgstr "為輸出上色的時機"
 
 msgid "Where to direct debug output to"
 msgstr "除錯輸出要放到的地方"

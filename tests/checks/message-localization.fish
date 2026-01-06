@@ -162,7 +162,7 @@ echo (_ file)
 
 set --erase LC_MESSAGES
 status language
-# CHECK: Active languages (source: LANGUAGE variable): zh_TW
+# CHECK: 使用的語言（來源：LANGUAGE variable）： zh_TW
 echo (_ file)
 # CHECK: 檔案
 

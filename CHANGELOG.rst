@@ -11,9 +11,27 @@ This release fixes the following problems identified in fish 4.3.0:
 - The sample prompts and themes are correctly installed (:issue:`12241`).
 - Last line of command output could be hidden when missing newline (:issue:`12246`).
 
+Notable improvements and fixes
+------------------------------
+
+Deprecations and removed features
+---------------------------------
+
+Scripting improvements
+----------------------
+
 Interactive improvements
 ------------------------
 - Existing file paths in redirection targets such as ``> file.txt`` are now highlighted using :envvar:`fish_color_valid_path`, indicating that ``file.txt`` will be clobbered (:issue:`12260`).
+
+New or improved bindings
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Improved terminal support
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Other improvements
+------------------
 
 For distributors and developers
 -------------------------------

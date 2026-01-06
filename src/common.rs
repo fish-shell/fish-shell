@@ -20,7 +20,6 @@ use fish_common::{ENCODE_DIRECT_END, char_offset, is_console_session, subslice_p
 use fish_fallback::fish_wcwidth;
 use fish_wchar::{decode_byte_from_char, encode_byte_to_char};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
-use once_cell::sync::OnceCell;
 use std::cell::{Cell, RefCell};
 use std::env;
 use std::ffi::{CStr, CString, OsString};
@@ -29,7 +28,7 @@ use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
-use std::sync::{Arc, MutexGuard};
+use std::sync::{Arc, MutexGuard, OnceLock};
 use std::time;
 
 pub const BUILD_DIR: &str = env!("FISH_RESOLVED_BUILD_DIR");
@@ -1041,7 +1040,7 @@ pub fn get_obfuscation_read_char() -> char {
 pub static PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Name of the current program. Should be set at startup. Used by the debug function.
-pub static PROGRAM_NAME: OnceCell<&'static wstr> = OnceCell::new();
+pub static PROGRAM_NAME: OnceLock<&'static wstr> = OnceLock::new();
 
 pub fn get_program_name() -> &'static wstr {
     PROGRAM_NAME.get().unwrap()

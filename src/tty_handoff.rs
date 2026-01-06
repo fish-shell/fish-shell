@@ -20,19 +20,21 @@ use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror, wcstoi};
 use fish_wchar::ToWString;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
-use once_cell::sync::OnceCell;
 use std::mem::MaybeUninit;
-use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
+use std::sync::{
+    OnceLock,
+    atomic::{AtomicBool, AtomicPtr, Ordering},
+};
 
 /// Whether kitty keyboard protocol support is present in the TTY.
-static KITTY_KEYBOARD_SUPPORTED: OnceCell<bool> = OnceCell::new();
+static KITTY_KEYBOARD_SUPPORTED: OnceLock<bool> = OnceLock::new();
 
 /// Set that the TTY supports the kitty keyboard protocol.
 pub fn maybe_set_kitty_keyboard_capability() {
     KITTY_KEYBOARD_SUPPORTED.get_or_init(|| true);
 }
 
-pub(crate) static SCROLL_CONTENT_UP_SUPPORTED: OnceCell<bool> = OnceCell::new();
+pub(crate) static SCROLL_CONTENT_UP_SUPPORTED: OnceLock<bool> = OnceLock::new();
 pub(crate) const SCROLL_CONTENT_UP_TERMINFO_CODE: &str = "indn";
 
 // Get the support capability for kitty keyboard protocol.
@@ -47,10 +49,10 @@ pub fn maybe_set_scroll_content_up_capability() {
     });
 }
 
-pub static TERMINAL_OS_NAME: OnceCell<Option<WString>> = OnceCell::new();
+pub static TERMINAL_OS_NAME: OnceLock<Option<WString>> = OnceLock::new();
 pub(crate) const XTGETTCAP_QUERY_OS_NAME: &str = "query-os-name";
 
-pub static XTVERSION: OnceCell<WString> = OnceCell::new();
+pub static XTVERSION: OnceLock<WString> = OnceLock::new();
 
 pub fn xtversion() -> Option<&'static wstr> {
     XTVERSION.get().as_ref().map(|s| s.as_utfstr())

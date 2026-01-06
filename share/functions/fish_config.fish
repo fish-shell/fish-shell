@@ -42,6 +42,7 @@ function fish_config --description "Launch fish's web based configuration"
             function __fish_config_webconfig -V python -a web_config
                 set -lx __fish_bin_dir $__fish_bin_dir
                 set -lx __fish_terminal_color_theme $fish_terminal_color_theme
+                set -lx __fish_config_dir $__fish_config_dir
                 $python $web_config/webconfig.py
             end
             __fish_data_with_directory tools/web_config '.*' __fish_config_webconfig

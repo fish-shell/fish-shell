@@ -1,5 +1,9 @@
-fish ?.?.? (released ???)
-=========================
+For distributors and developers
+-------------------------------
+- The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.
+
+fish 4.3.3 (released January 7, 2026)
+=====================================
 
 This release fixes the following problems identified in fish 4.3.0:
 
@@ -11,31 +15,9 @@ This release fixes the following problems identified in fish 4.3.0:
 - The sample prompts and themes are correctly installed (:issue:`12241`).
 - Last line of command output could be hidden when missing newline (:issue:`12246`).
 
-Notable improvements and fixes
-------------------------------
-
-Deprecations and removed features
----------------------------------
-
-Scripting improvements
-----------------------
-
-Interactive improvements
-------------------------
+Other improvements include:
+- The ``abbr``, ``bind``, ``complete``, ``functions``, ``history`` and ``type`` commands now support a ``--color`` option to control syntax highlighting in their output. Valid values are ``auto`` (default), ``always``, or ``never``.
 - Existing file paths in redirection targets such as ``> file.txt`` are now highlighted using :envvar:`fish_color_valid_path`, indicating that ``file.txt`` will be clobbered (:issue:`12260`).
-
-New or improved bindings
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Improved terminal support
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Other improvements
-------------------
-
-For distributors and developers
--------------------------------
-- The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.
 
 fish 4.3.2 (released December 30, 2025)
 =======================================
@@ -82,7 +64,6 @@ Scripting improvements
 - New :ref:`status language <status-language>` command allows showing and modifying language settings for fish messages without having to modify environment variables.
 - When using a noninteractive fish instance to compute completions, ``commandline --cursor`` works as expected instead of throwing an error (:issue:`11993`).
 - :envvar:`fish_trace` can now be set to ``all`` to also trace execution of key bindings, event handlers as well as prompt and title functions.
-- The ``abbr``, ``bind``, ``complete``, ``functions``, ``history`` and ``type`` commands now support a ``--color`` option to control syntax highlighting in their output. Valid values are ``auto`` (default), ``always``, or ``never``.
 
 Interactive improvements
 ------------------------

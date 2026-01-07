@@ -1185,8 +1185,6 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
 
 pub struct History {
     imp: Mutex<HistoryImpl>,
-    /// Generation counter that increments on any history modification.
-    /// Used for staleness detection in HistorySearch without requiring mutex lock.
     generation: AtomicU64,
 }
 
@@ -1195,15 +1193,10 @@ impl History {
         self.imp.lock().unwrap()
     }
 
-    /// Returns the current generation counter value.
-    /// This is a lock-free operation used for staleness detection.
     pub fn generation(&self) -> u64 {
         self.generation.load(Ordering::Acquire)
     }
 
-    /// Increments the generation counter, signaling that history has been modified.
-    /// IMPORTANT: Any method that mutates history state MUST call this to ensure
-    /// staleness detection works correctly. See issue #11696.
     fn bump_generation(&self) {
         self.generation.fetch_add(1, Ordering::Release);
     }

@@ -65,7 +65,7 @@ pub enum TtyQuirks {
     // Running in iTerm2 before 3.5.12, which causes issues when using the kitty keyboard protocol.
     PreKittyIterm2,
     // Whether we are running under tmux.
-    Tmux,
+    Tmux((u32, u32)),
     // Whether we are running under WezTerm.
     Wezterm,
 }
@@ -80,8 +80,8 @@ impl TtyQuirks {
             PreCsiMidnightCommander
         } else if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12)) {
             PreKittyIterm2
-        } else if xtversion.starts_with(L!("tmux ")) {
-            Tmux
+        } else if let Some(version) = get_tmux_version(xtversion) {
+            Tmux(version)
         } else if xtversion.starts_with(L!("WezTerm ")) {
             Wezterm
         } else {
@@ -180,13 +180,15 @@ impl TtyQuirks {
         let mut off_chain = vec![];
 
         // Enable focus reporting under tmux
-        if self == TtyQuirks::Tmux {
+        if matches!(self, TtyQuirks::Tmux(_)) {
             on_chain.push(DecsetFocusReporting);
             off_chain.push(DecrstFocusReporting);
         }
         on_chain.push(DecsetBracketedPaste);
         off_chain.push(DecrstBracketedPaste);
-        if self != TtyQuirks::Tmux {
+        if !matches!(
+            self, TtyQuirks::Tmux(version) if version < (3, 7)
+        ) {
             on_chain.push(DecsetColorThemeReporting);
             off_chain.push(DecrstColorThemeReporting);
         }
@@ -585,15 +587,24 @@ impl Drop for TtyHandoff {
 fn get_iterm2_version(xtversion: &wstr) -> Option<(u32, u32, u32)> {
     // TODO split_once
     let mut xtversion = xtversion.split(' ');
-    let name = xtversion.next().unwrap();
-    let version = xtversion.next()?;
-    if name != "iTerm2" {
+    if xtversion.next().unwrap() != "iTerm2" {
         return None;
     }
-    let mut parts = version.split('.');
+    let mut version = xtversion.next()?.split('.');
     Some((
-        wcstoi(parts.next()?).ok()?,
-        wcstoi(parts.next()?).ok()?,
-        wcstoi(parts.next()?).ok()?,
+        wcstoi(version.next()?).ok()?,
+        wcstoi(version.next()?).ok()?,
+        wcstoi(version.next()?).ok()?,
     ))
+}
+
+// If we are running under iTerm2, get the version as a tuple of (major, minor, patch).
+fn get_tmux_version(xtversion: &wstr) -> Option<(u32, u32)> {
+    // TODO split_once
+    let mut xtversion = xtversion.split(' ');
+    if xtversion.next().unwrap() != "tmux" {
+        return None;
+    }
+    let mut version = xtversion.next()?.split('.');
+    Some((wcstoi(version.next()?).ok()?, wcstoi(version.next()?).ok()?))
 }

@@ -1,6 +1,28 @@
 fish ?.?.? (released ???)
 =========================
 
+Deprecations and removed features
+---------------------------------
+
+Scripting improvements
+----------------------
+
+Interactive improvements
+------------------------
+
+New or improved bindings
+------------------------
+
+Improved terminal support
+-------------------------
+
+For distributors and developers
+-------------------------------
+- The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.
+
+Regression fixes:
+-----------------
+
 fish 4.3.3 (released January 07, 2026)
 ======================================
 

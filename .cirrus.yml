@@ -29,6 +29,7 @@ freebsd_task:
           freebsd_instance:
               image: freebsd-15-0-release-amd64-ufs # updatecli.d/cirrus-freebsd.yml
     tests_script:
+        - pkg update
         - pkg install -y cmake-core devel/pcre2 devel/ninja gettext git-lite lang/rust misc/py-pexpect
         # libclang.so is a required build dependency for rust-c++ ffi bridge
         - pkg install -y llvm

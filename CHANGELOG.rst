@@ -1,7 +1,3 @@
-For distributors and developers
--------------------------------
-- The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.
-
 fish 4.3.3 (released January 07, 2026)
 ======================================
 

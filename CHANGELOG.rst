@@ -2,13 +2,13 @@ For distributors and developers
 -------------------------------
 - The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.
 
-fish 4.3.3 (released January 7, 2026)
-=====================================
+fish 4.3.3 (released January 07, 2026)
+======================================
 
 This release fixes the following problems identified in fish 4.3.0:
 
 - Selecting a completion could insert only part of the token (:issue:`12249`).
-- Glitch with soft-wrapped autosuggestions and :doc:`cmds/fish_right_prompt` (:issue:`12255`).
+- Glitch with soft-wrapped autosuggestions and :doc:`fish_right_prompt <cmds/fish_right_prompt>` (:issue:`12255`).
 - Spurious echo in tmux when typing a command really fast (:issue:`12261`).
 - ``tomorrow`` theme always using the light variant (:issue:`12266`).
 - ``fish_config theme choose`` sometimes not shadowing themes set by e.g. webconfig (:issue:`12278`).
@@ -16,6 +16,7 @@ This release fixes the following problems identified in fish 4.3.0:
 - Last line of command output could be hidden when missing newline (:issue:`12246`).
 
 Other improvements include:
+
 - The ``abbr``, ``bind``, ``complete``, ``functions``, ``history`` and ``type`` commands now support a ``--color`` option to control syntax highlighting in their output. Valid values are ``auto`` (default), ``always``, or ``never``.
 - Existing file paths in redirection targets such as ``> file.txt`` are now highlighted using :envvar:`fish_color_valid_path`, indicating that ``file.txt`` will be clobbered (:issue:`12260`).
 

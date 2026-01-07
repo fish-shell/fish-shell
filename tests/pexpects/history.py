@@ -242,14 +242,15 @@ send("\x1b[A")  # up-arrow again - should find findme_alpha
 expect_re("echo findme_alpha")
 
 # While search is active and NOT at the most recent match,
-# trigger history merge via keybinding. This causes staleness.
+# trigger history merge via keybinding. This causes staleness but should
+# NOT reset search because we're not at present position (per krobelus's review).
 send("\x07")  # ctrl-g to trigger history merge binding
 sleep(0.5)  # Wait for history merge to complete before next input
 
-# Now press up-arrow again - the search should detect staleness, reset,
-# and start fresh from the most recent match (findme_beta)
+# Press up-arrow again - since we're not at present, staleness is ignored.
+# No older matches exist, so we stay at findme_alpha.
 send("\x1b[A")
-expect_re("echo findme_beta")
+expect_re("echo findme_alpha")
 
 # Clean up - accept the current line
 sendline("")

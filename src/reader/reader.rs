@@ -3214,31 +3214,12 @@ impl<'a> Reader<'a> {
 
                 let was_active_before = self.history_search.active();
 
-                // If history was modified since the search started (e.g., by `history merge`
-                // from a key binding), reset the search so we see the updated history.
-                // We preserve the original search string to reinitialize correctly.
-                let stale_search_info =
-                    if self.history_search.is_stale() && self.history_search.active() {
-                        let search_str = self.history_search.search_string().to_owned();
-                        let search_mode = self.history_search.mode();
-                        let token_offset = self.history_search.token_offset();
-                        self.history_search.reset();
-                        Some((search_str, search_mode, token_offset))
-                    } else {
-                        None
-                    };
+                // Reset search if history was modified while at present position.
+                if self.history_search.is_stale() && self.history_search.is_at_present() {
+                    self.history_search.reset();
+                }
 
-                // If we have stale search info, reinitialize with the original search string
-                // instead of the current command line (which may show a navigated history item).
-                if let Some((search_str, search_mode, token_offset)) = stale_search_info {
-                    self.data.history_search.reset_to_mode(
-                        search_str,
-                        self.history.clone(),
-                        search_mode,
-                        token_offset,
-                    );
-                } else if self.history_search.is_at_present() && mode != self.history_search.mode()
-                {
+                if self.history_search.is_at_present() && mode != self.history_search.mode() {
                     let el = &self.data.command_line;
                     if matches!(mode, SearchMode::Token | SearchMode::LastToken) {
                         // Searching by token.

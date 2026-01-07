@@ -86,9 +86,6 @@ impl ReaderHistorySearch {
     pub fn mode(&self) -> SearchMode {
         self.mode
     }
-    pub fn token_offset(&self) -> usize {
-        self.token_offset
-    }
 
     /// Move the history search in the given direction `dir`.
     pub fn move_in_direction(&mut self, dir: SearchDirection) -> bool {

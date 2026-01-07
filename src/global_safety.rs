@@ -3,6 +3,11 @@ use std::cell::{Ref, RefMut};
 use std::sync::MutexGuard;
 use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 
+#[cfg(not(target_has_atomic = "64"))]
+pub use portable_atomic::AtomicU64;
+#[cfg(target_has_atomic = "64")]
+pub use std::sync::atomic::AtomicU64;
+
 #[derive(Debug, Default)]
 pub struct RelaxedAtomicBool(AtomicBool);
 

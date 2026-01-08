@@ -570,6 +570,14 @@ msgid "%s: Not inside of loop\n"
 msgstr "%s: Not inside of loop\n"
 
 #, c-format
+msgid "%s: Number out of range"
+msgstr ""
+
+#, c-format
+msgid "%s: Number was empty"
+msgstr ""
+
+#, c-format
 msgid "%s: Options %s and %s cannot be used together\n"
 msgstr ""
 
@@ -1331,9 +1339,6 @@ msgid "Number is too large"
 msgstr ""
 
 msgid "Number out of range"
-msgstr ""
-
-msgid "Number was empty"
 msgstr ""
 
 msgid "Only on interactive jobs"

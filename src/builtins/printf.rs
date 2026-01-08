@@ -208,10 +208,10 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         if errcode != None && errcode != Some(Error::InvalidChar) && errcode != Some(Error::Empty) {
             match errcode.unwrap() {
                 Error::Overflow => {
-                    self.fatal_error(sprintf!("%s: %s", s, wgettext!("Number out of range")));
+                    self.fatal_error(wgettext_fmt!("%s: Number out of range", s));
                 }
                 Error::Empty => {
-                    self.fatal_error(sprintf!("%s: %s", s, wgettext!("Number was empty")));
+                    self.fatal_error(wgettext_fmt!("%s: Number was empty", s));
                 }
                 Error::InvalidChar => {
                     panic!("Unreachable");

@@ -572,6 +572,14 @@ msgid "%s: Not inside of loop\n"
 msgstr "%s: Nicht innerhalb einer Schleife\n"
 
 #, c-format
+msgid "%s: Number out of range"
+msgstr ""
+
+#, c-format
+msgid "%s: Number was empty"
+msgstr "%s: Zahl war leer"
+
+#, c-format
 msgid "%s: Options %s and %s cannot be used together\n"
 msgstr ""
 
@@ -1334,9 +1342,6 @@ msgstr ""
 
 msgid "Number out of range"
 msgstr ""
-
-msgid "Number was empty"
-msgstr "Zahl war leer"
 
 msgid "Only on interactive jobs"
 msgstr ""

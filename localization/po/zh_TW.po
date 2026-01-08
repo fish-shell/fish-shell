@@ -566,6 +566,14 @@ msgid "%s: Not inside of loop\n"
 msgstr "%s：不在迴圈裡面\n"
 
 #, c-format
+msgid "%s: Number out of range"
+msgstr "%s：數字超出範圍"
+
+#, c-format
+msgid "%s: Number was empty"
+msgstr "%s：數字空白"
+
+#, c-format
 msgid "%s: Options %s and %s cannot be used together\n"
 msgstr "%s：選項 %s 和 %s 不能同時使用\n"
 
@@ -1332,9 +1340,6 @@ msgstr "數字太大"
 
 msgid "Number out of range"
 msgstr "數字超出範圍"
-
-msgid "Number was empty"
-msgstr "數字空白"
 
 msgid "Only on interactive jobs"
 msgstr "僅限互動式作業"

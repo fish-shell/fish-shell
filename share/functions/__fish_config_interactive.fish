@@ -149,7 +149,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
             if [ "$TERM" = dumb ]
                 return
             end
-            printf \e\]7\;file://%s%s\a $host (string escape --style=url -- $PWD)
+            printf \e\]7\;file://%s%s\a (string escape --style=url -- $host $PWD)
         end
     end
     __fish_update_cwd_osc # Run once because we might have already inherited a PWD from an old tab

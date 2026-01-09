@@ -1733,13 +1733,12 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
 /// Given a list of proposed paths and a context, expand each one and see if it refers to a file.
 /// Wildcard expansions are suppressed.
 /// Returns `true` if `paths` is empty or every path is valid.
-pub fn all_paths_are_valid<P: IntoIterator<Item = WString>>(
-    paths: P,
-    ctx: &OperationContext<'_>,
-) -> bool {
+pub fn all_paths_are_valid(paths: &[WString], ctx: &OperationContext<'_>) -> bool {
     assert_is_background_thread();
     let working_directory = ctx.vars().get_pwd_slash();
-    for mut path in paths {
+    let mut path = WString::new();
+    for unexpanded_path in paths {
+        path.clone_from(unexpanded_path);
         if ctx.check_cancel() {
             return false;
         }

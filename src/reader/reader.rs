@@ -5010,19 +5010,19 @@ fn get_autosuggestion_performer(
             while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
                 let item = searcher.current_item();
 
-                let (matched_part, icase) = if search_type == SearchType::Prefix {
-                    let mut matched_part =
+                let (suggested_command, icase) = if search_type == SearchType::Prefix {
+                    let mut suggested_command =
                         item.str().starts_with(search_string).then_some(item.str());
                     let mut icase = false;
                     // Only check for a case-insensitive match if we haven't already found one
-                    if matched_part.is_none() && icase_history_result.is_none() {
+                    if suggested_command.is_none() && icase_history_result.is_none() {
                         icase = true;
-                        matched_part =
+                        suggested_command =
                             string_prefixes_string_case_insensitive(search_string, item.str())
                                 .then_some(item.str());
                     }
 
-                    (matched_part, icase)
+                    (suggested_command, icase)
                 } else {
                     // The history items may have multiple lines of text.
                     // Only suggest the line that actually contains the search string.
@@ -5034,20 +5034,20 @@ fn get_autosuggestion_performer(
                         .map(wstr::from_char_slice);
 
                     let mut icase = false;
-                    let mut matched_part =
+                    let mut suggested_command =
                         lines.clone().find(|line| line.starts_with(search_string));
 
                     // Only check for a case-insensitive match if we haven't already found one
-                    if matched_part.is_none() && icase_history_result.is_none() {
+                    if suggested_command.is_none() && icase_history_result.is_none() {
                         icase = true;
-                        matched_part = lines.into_iter().find(|line| {
+                        suggested_command = lines.into_iter().find(|line| {
                             string_prefixes_string_case_insensitive(search_string, line)
                         });
                     }
 
-                    (matched_part, icase)
+                    (suggested_command, icase)
                 };
-                let Some(matched_part) = matched_part else {
+                let Some(suggested_command) = suggested_command else {
                     assert!(
                         icase_history_result.is_some(),
                         "couldn't find line matching search {search_string:?} in history item {item:?} (did history search yield a bogus result?)"
@@ -5055,13 +5055,18 @@ fn get_autosuggestion_performer(
                     continue;
                 };
 
-                if autosuggest_validate_from_history(item, &working_directory, &ctx) {
+                if autosuggest_validate_from_history(
+                    suggested_command,
+                    item.get_required_paths(),
+                    &working_directory,
+                    &ctx,
+                ) {
                     // The command autosuggestion was handled specially, so we're done.
-                    let is_whole = matched_part.len() == item.str().len();
+                    let is_whole = suggested_command.len() == item.str().len();
                     let result = AutosuggestionResult::new(
                         command_line.clone(),
                         range.clone(),
-                        matched_part.into(),
+                        suggested_command.into(),
                         icase,
                         is_whole,
                     );

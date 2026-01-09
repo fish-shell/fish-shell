@@ -2859,8 +2859,14 @@ impl<'a> Reader<'a> {
                     .update_buff_pos(EditableLineTag::Commandline, Some(0));
             }
             rl::EndOfBuffer => {
-                self.data
-                    .update_buff_pos(EditableLineTag::Commandline, Some(self.command_line_len()));
+                if self.is_at_autosuggestion() {
+                    self.accept_autosuggestion(AutosuggestionPortion::Count(usize::MAX));
+                } else {
+                    self.data.update_buff_pos(
+                        EditableLineTag::Commandline,
+                        Some(self.command_line_len()),
+                    );
+                }
             }
             rl::CancelCommandline | rl::ClearCommandline => {
                 if self.conf.exit_on_interrupt {

@@ -215,7 +215,8 @@ The following special input functions are available:
     make the current word lowercase
 
 ``end-of-buffer``
-    moves to the end of the buffer, i.e. the end of the first line
+    moves to the end of the buffer, i.e. the end of the last line;
+    or if already at the end of the commandline, accept the current autosuggestion.
 
 ``end-of-history``
     move to the end of the history

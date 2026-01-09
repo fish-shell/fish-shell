@@ -90,13 +90,7 @@ function history --description "display or manipulate interactive command histor
                 not set -qx LV # ask the pager lv not to strip colors
                 and set -fx LV -c
 
-                if contains -- "$color_opt" '' '--color=auto'
-                    and test "$pager" = less
-                    and string match -rq -- '^(-\w*R|--RAW-CONTROL-CHARS$)' $LESS
-                    set color_opt --color=always
-                end
-
-                builtin history search $color_opt $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | $pager
+                builtin history search --color=always $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | $pager
             else
                 builtin history search $color_opt $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
             end

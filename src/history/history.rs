@@ -1107,9 +1107,6 @@ fn do_1_history_search(
 }
 
 /// Formats a single history record, including a trailing newline.
-///
-/// Returns nothing. The only possible failure involves formatting the timestamp. If that happens we
-/// simply omit the timestamp from the output.
 fn format_history_record(
     item: &HistoryItem,
     show_time_format: Option<&str>,

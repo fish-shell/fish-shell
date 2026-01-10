@@ -635,6 +635,10 @@ function __fish_git_needs_command
     return 0
 end
 
+function __fish_git_dash_in_token
+    commandline -t | string match -q -- '*-*'
+end
+
 function __fish_git_config_keys
     # Print already defined config values first
     # Config keys may span multiple lines, so parse using null char
@@ -1146,7 +1150,7 @@ complete -f -c git -n '__fish_git_using_command show' -s s -l no-patch -d 'Suppr
 complete -f -c git -n '__fish_git_using_command show' -l show-signature -d 'Check the validity of a signed commit object'
 
 ### show-branch
-complete -f -c git -n __fish_git_needs_command -a show-branch -d 'Show the commits on branches'
+complete -f -c git -n '__fish_git_needs_command && __fish_git_dash_in_token' -a show-branch -d 'Show the commits on branches'
 complete -f -c git -n '__fish_git_using_command show-branch' -ka '(__fish_git_refs)' -d Rev
 complete -f -c git -n '__fish_git_using_command show-branch' -s r -l remotes -d "Shows the remote tracking branches"
 complete -f -c git -n '__fish_git_using_command show-branch' -s a -l all -d "Show both remote-tracking branches and local branches"
@@ -2846,7 +2850,7 @@ complete -f -c git -n '__fish_git_using_command ls-tree' -l abbrev -d 'Show abbr
 complete -f -c git -n '__fish_git_using_command ls-tree' -a '(__fish_git_refs)' -d Ref
 
 ### show-ref
-complete -f -c git -n __fish_git_needs_command -a show-ref -d 'List references in a local repository'
+complete -f -c git -n '__fish_git_needs_command && __fish_git_dash_in_token' -a show-ref -d 'List references in a local repository'
 complete -f -c git -n '__fish_git_using_command show-ref' -l head -d 'Show HEAD reference'
 complete -f -c git -n '__fish_git_using_command show-ref' -l heads -d 'Limit to refs/heads'
 complete -f -c git -n '__fish_git_using_command show-ref' -l tags -d 'Limit to refs/tags'
@@ -2865,7 +2869,7 @@ complete -f -c git -n '__fish_git_using_command symbolic-ref' -l short -d 'Short
 complete -x -c git -n '__fish_git_using_command symbolic-ref' -s m -d 'Update reflog with given reason'
 
 ### check-ignore
-complete -f -c git -n __fish_git_needs_command -a check-ignore -d 'Debug gitignore / exclude files'
+complete -f -c git -n '__fish_git_needs_command && __fish_git_dash_in_token' -a check-ignore -d 'Debug gitignore / exclude files'
 complete -f -c git -n '__fish_git_using_command check-ignore' -s q -l quiet -d 'Do not output anything, just set exit status'
 complete -f -c git -n '__fish_git_using_command check-ignore' -s v -l verbose -d 'Show matching pattern for each file'
 complete -f -c git -n '__fish_git_using_command check-ignore' -l stdin -d 'Read pathnames from stdin'
@@ -2874,7 +2878,7 @@ complete -f -c git -n '__fish_git_using_command check-ignore' -s n -l non-matchi
 complete -f -c git -n '__fish_git_using_command check-ignore' -l no-index -d 'Do not look in the index when undertaking checks'
 
 ### checkout-index
-complete -c git -n __fish_git_needs_command -a checkout-index -d 'Copy files from index to working tree'
+complete -c git -n '__fish_git_needs_command && __fish_git_dash_in_token' -a checkout-index -d 'Copy files from index to working tree'
 complete -f -c git -n '__fish_git_using_command checkout-index' -s a -l all -d 'Check out all files in the index'
 complete -f -c git -n '__fish_git_using_command checkout-index' -s f -l force -d 'Force overwrite existing files'
 complete -f -c git -n '__fish_git_using_command checkout-index' -s n -l no-create -d 'Do not create files that do not exist'
@@ -2886,7 +2890,7 @@ complete -x -c git -n '__fish_git_using_command checkout-index' -l stage -a 'all
 complete -f -c git -n '__fish_git_using_command checkout-index' -l temp -d 'Write files to temporary files'
 
 ### commit-tree
-complete -f -c git -n __fish_git_needs_command -a commit-tree -d 'Create a new commit object'
+complete -f -c git -n '__fish_git_needs_command && __fish_git_dash_in_token' -a commit-tree -d 'Create a new commit object'
 complete -x -c git -n '__fish_git_using_command commit-tree' -s p -d 'Parent commit object'
 complete -x -c git -n '__fish_git_using_command commit-tree' -s m -d 'Commit message'
 complete -F -c git -n '__fish_git_using_command commit-tree' -s F -d 'Read commit message from file'
@@ -2894,7 +2898,7 @@ complete -x -c git -n '__fish_git_using_command commit-tree' -s S -l gpg-sign -d
 complete -f -c git -n '__fish_git_using_command commit-tree' -l no-gpg-sign -d 'Do not GPG-sign commit'
 
 ### diff-index
-complete -f -c git -n __fish_git_needs_command -a diff-index -d 'Compare tree to working tree or index'
+complete -f -c git -n '__fish_git_needs_command && __fish_git_dash_in_token' -a diff-index -d 'Compare tree to working tree or index'
 complete -f -c git -n '__fish_git_using_command diff-index' -l cached -d 'Compare tree to index'
 complete -f -c git -n '__fish_git_using_command diff-index' -s m -d 'Ignore changes in submodules'
 complete -f -c git -n '__fish_git_using_command diff-index' -l raw -d 'Generate raw diff output'

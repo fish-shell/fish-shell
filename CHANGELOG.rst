@@ -9,6 +9,9 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- Improves vi-mode to make its word movements more vim-compatible.
+  - The behavior of ``{,d}{w,W}``, ``{,d}{,g}{e,E}`` bindings in vi-mode is now more compatible with vim, except that the underscore is not a keyword (which can be archived by setting ``set iskeyword-=_`` in vim).
+  - Add commands ``{forward,kill}-{word,bigword}-vi``, ``{forward,backward,kill,backward-kill}-{word,bigword}-end`` and ``kill-{a,inner}-{word,bigword}`` corresponding to above-mentioned bindings.
 
 New or improved bindings
 ------------------------

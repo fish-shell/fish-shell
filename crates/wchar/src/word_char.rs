@@ -117,10 +117,10 @@ static CLASSES: &[ClassInterval] = {
     use ClassInterval as I;
     use WordCharClass::*;
     &[
-        I::single('\u{037e}', Punctuation), // Greek question mark
-        I::single('\u{0387}', Punctuation), // Greek ano teleia
+        I::single('\u{037e}', Punctuation),          // Greek question mark
+        I::single('\u{0387}', Punctuation),          // Greek ano teleia
         I::new('\u{055a}', '\u{055f}', Punctuation), // Armenian punctuation
-        I::single('\u{0589}', Punctuation), // Armenian full stop
+        I::single('\u{0589}', Punctuation),          // Armenian full stop
         I::single('\u{05be}', Punctuation),
         I::single('\u{05c0}', Punctuation),
         I::single('\u{05c3}', Punctuation),

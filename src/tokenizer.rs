@@ -7,8 +7,8 @@ use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::prelude::*;
-use crate::reader::is_backslashed;
 use crate::redirection::RedirectionMode;
+use fish_wchar::word_char::{WordCharClass, is_blank};
 use libc::{STDIN_FILENO, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, Range};
@@ -103,6 +103,7 @@ pub struct PipeOrRedir {
     pub consumed: usize,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MoveWordStyle {
     /// stop at punctuation
     Punctuation,
@@ -112,10 +113,18 @@ pub enum MoveWordStyle {
     Whitespace,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum MoveWordDir {
+    Left,
+    Right,
+}
+
 /// Our state machine that implements "one word" movement or erasure.
 pub struct MoveWordStateMachine {
     state: u8,
     style: MoveWordStyle,
+    direction: MoveWordDir,
+    last_char_cls: Option<WordCharClass>,
 }
 
 #[derive(Clone, Copy)]
@@ -1174,201 +1183,174 @@ fn parse_fd(s: &wstr) -> RawFd {
     s.parse().unwrap_or(-1)
 }
 
+const S_INIT: u8 = 0;
+
 impl MoveWordStateMachine {
-    pub fn new(style: MoveWordStyle) -> Self {
-        MoveWordStateMachine { state: 0, style }
+    pub fn new(style: MoveWordStyle, direction: MoveWordDir) -> Self {
+        MoveWordStateMachine {
+            state: S_INIT,
+            last_char_cls: None,
+            style,
+            direction,
+        }
     }
 
     pub fn consume_char(&mut self, text: &wstr, idx: usize) -> bool {
         let c = text.as_char_slice()[idx];
         match self.style {
-            MoveWordStyle::Punctuation => self.consume_char_punctuation(c),
-            MoveWordStyle::PathComponents => self.consume_char_path_components(text, idx, c),
-            MoveWordStyle::Whitespace => self.consume_char_whitespace(c),
+            MoveWordStyle::Punctuation => self.consume_char_word_movement(c, false),
+            MoveWordStyle::PathComponents => {
+                let mut escaped: bool = false;
+                for j in (0..idx).rev() {
+                    if text.as_char_slice()[j] == '\\' {
+                        escaped = !escaped;
+                    } else {
+                        break;
+                    }
+                }
+                match self.direction {
+                    MoveWordDir::Right => self.consume_char_path_component_forward(c, escaped),
+                    MoveWordDir::Left => self.consume_char_path_component_backward(c, escaped),
+                }
+            }
+            MoveWordStyle::Whitespace => self.consume_char_word_movement(c, true),
         }
     }
 
     pub fn reset(&mut self) {
-        self.state = 0;
+        self.state = S_INIT;
+        self.last_char_cls = None;
     }
 
-    fn consume_char_punctuation(&mut self, c: char) -> bool {
-        const S_ALWAYS_ONE: u8 = 0;
-        const S_REST: u8 = 1;
-        const S_WHITESPACE_REST: u8 = 2;
-        const S_WHITESPACE: u8 = 3;
-        const S_ALPHANUMERIC: u8 = 4;
-        const S_END: u8 = 5;
+    fn consume_char_path_component_forward(&mut self, c: char, escaped: bool) -> bool {
+        // Forward path component movement: skip current homogeneous component, stop at next.
+        // Each component type (word, slash, punctuation, whitespace) is a unit.
+        const S_WORD: u8 = 1;
+        const S_SEP: u8 = 2;
+        const S_SPACE: u8 = 3;
+        const S_END: u8 = 4;
 
-        let mut consumed = false;
-        while self.state != S_END && !consumed {
-            match self.state {
-                S_ALWAYS_ONE => {
-                    // Always consume the first character.
-                    consumed = true;
-                    if c.is_whitespace() {
-                        self.state = S_WHITESPACE;
-                    } else if c.is_alphanumeric() {
-                        self.state = S_ALPHANUMERIC;
-                    } else {
-                        // Don't allow switching type (ws->nonws) after non-whitespace and
-                        // non-alphanumeric.
-                        self.state = S_REST;
-                    }
-                }
-                S_REST => {
-                    if c.is_whitespace() {
-                        // Consume only trailing whitespace.
-                        self.state = S_WHITESPACE_REST;
-                    } else if c.is_alphanumeric() {
-                        // Consume only alnums.
-                        self.state = S_ALPHANUMERIC;
-                    } else {
-                        consumed = false;
-                        self.state = S_END;
-                    }
-                }
-                S_WHITESPACE_REST | S_WHITESPACE => {
-                    // "whitespace" consumes whitespace and switches to alnums,
-                    // "whitespace_rest" only consumes whitespace.
-                    if c.is_whitespace() {
-                        // Consumed whitespace.
-                        consumed = true;
-                    } else {
-                        self.state = if self.state == S_WHITESPACE {
-                            S_ALPHANUMERIC
-                        } else {
-                            S_END
-                        };
-                    }
-                }
-                S_ALPHANUMERIC => {
-                    if c.is_alphanumeric() {
-                        consumed = true; // consumed alphanumeric
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                _ => {}
-            }
-        }
-        consumed
+        if c == '\\' && !escaped {
+            return true;
+        };
+
+        let transition_idx = if is_blank(c) && !escaped {
+            0
+        } else if is_path_component_character(c) || (is_blank(c) && escaped) {
+            1
+        } else {
+            2
+        };
+
+        #[rustfmt::skip]
+        const TRANSITION_TABLE: &[[(u8, bool); 3]] = &[
+            // space,         word,           sep,
+            [(S_SPACE, true), (S_WORD, true), (S_SEP, true)],  // S_INIT
+            [(S_SPACE, true), (S_WORD, true), (S_SEP, true)],  // S_WORD
+            [(S_SPACE, true), (S_END, false), (S_SEP, true)],  // S_SEP
+            [(S_SPACE, true), (S_END, false), (S_END, false)], // S_SPACE
+            [(S_END, false),  (S_END, false), (S_END, false)], // S_END
+        ];
+
+        let (new_state, result) = TRANSITION_TABLE[self.state as usize][transition_idx];
+        self.state = new_state;
+        result
     }
 
-    fn consume_char_path_components(&mut self, s: &wstr, idx: usize, c: char) -> bool {
-        const S_INITIAL_PUNCTUATION: u8 = 0;
-        const S_WHITESPACE: u8 = 1;
-        const S_SEPARATOR: u8 = 2;
-        const S_SLASH: u8 = 3;
-        const S_PATH_COMPONENT_CHARACTERS: u8 = 4;
-        const S_INITIAL_SEPARATOR: u8 = 5;
-        const S_END: u8 = 6;
+    fn consume_char_path_component_backward(&mut self, c: char, escaped: bool) -> bool {
+        const S_PUNC: u8 = 1;
+        const S_WORD: u8 = 2;
+        const S_SPACE: u8 = 3;
+        const S_END_WORD: u8 = 4;
+        const S_END_PUNC: u8 = 5;
+        const S_END: u8 = 7;
 
-        let is_escaped = is_backslashed(s, idx);
-        let is_whitespace = c.is_whitespace() && !is_escaped;
-        let is_path_component_character =
-            is_path_component_character(c) || (c.is_whitespace() && is_escaped);
+        // a path component contains either
+        // - [space +] end word
+        // - punc + end word
+        // - space + end punc
 
-        let mut consumed = false;
-        while self.state != S_END && !consumed {
-            match self.state {
-                S_INITIAL_PUNCTUATION => {
-                    if !is_path_component_character && !is_whitespace {
-                        self.state = S_INITIAL_SEPARATOR;
-                    } else {
-                        if !is_path_component_character {
-                            consumed = true;
-                        }
-                        self.state = S_WHITESPACE;
-                    }
-                }
-                S_WHITESPACE => {
-                    if is_whitespace {
-                        consumed = true; // consumed whitespace
-                    } else if c == '/' || is_path_component_character {
-                        self.state = S_SLASH; // path component
-                    } else {
-                        self.state = S_SEPARATOR; // path separator
-                    }
-                }
-                S_SEPARATOR => {
-                    if !is_whitespace && !is_path_component_character {
-                        consumed = true; // consumed separator
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                S_SLASH => {
-                    if c == '/' {
-                        consumed = true; // consumed slash
-                    } else {
-                        self.state = S_PATH_COMPONENT_CHARACTERS;
-                    }
-                }
-                S_PATH_COMPONENT_CHARACTERS => {
-                    if is_path_component_character {
-                        consumed = true; // consumed string character except slash
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                S_INITIAL_SEPARATOR => {
-                    if is_path_component_character {
-                        consumed = true;
-                        self.state = S_PATH_COMPONENT_CHARACTERS;
-                    } else if is_whitespace {
-                        self.state = S_END;
-                    } else {
-                        consumed = true;
-                    }
-                }
-                _ => {}
-            }
-        }
-        consumed
+        if c == '\\' && !escaped {
+            return true;
+        };
+
+        let transition_idx = if is_blank(c) && !escaped {
+            0
+        } else if is_path_component_character(c) || (is_blank(c) && escaped) {
+            1
+        } else {
+            2
+        };
+
+        #[rustfmt::skip]
+        const TRANSITION_TABLE: &[[(u8, bool); 3]] = &[
+            // space,         word,               punc,
+            [(S_SPACE, true), (S_WORD, true),     (S_PUNC, true)],     // S_INIT
+            [(S_END, false),  (S_END_WORD, true), (S_PUNC, true)],     // S_PUNC
+            [(S_END, false),  (S_WORD, true),     (S_SPACE, false)],   // S_WORD
+            [(S_SPACE, true), (S_WORD, true),     (S_END_PUNC, true)], // S_SPACE
+            [(S_END, false),  (S_END_WORD, true), (S_SPACE, false)],   // S_END_WORD
+            [(S_END, false),  (S_END, false),     (S_END_PUNC, true)], // S_END_PUNC
+            [(S_END, true),   (S_WORD, true),     (S_PUNC, true)],     // S_END
+        ];
+
+        let (new_state, result) = TRANSITION_TABLE[self.state as usize][transition_idx];
+        self.state = new_state;
+        result
     }
 
-    fn consume_char_whitespace(&mut self, c: char) -> bool {
-        // Consume a "word" of printable characters plus any leading whitespace.
-        const S_ALWAYS_ONE: u8 = 0;
-        const S_BLANK: u8 = 1;
-        const S_GRAPH: u8 = 2;
-        const S_END: u8 = 3;
-
-        let mut consumed = false;
-        while self.state != S_END && !consumed {
-            match self.state {
-                S_ALWAYS_ONE => {
-                    // always consume the first character
-                    // If it's not whitespace, only consume those from here.
-                    consumed = true;
-                    if !c.is_whitespace() {
-                        self.state = S_GRAPH;
-                    } else {
-                        // If it's whitespace, keep consuming whitespace until the graphs.
-                        self.state = S_BLANK;
-                    }
-                }
-                S_BLANK => {
-                    if c.is_whitespace() {
-                        // consumed whitespace
-                        consumed = true;
-                    } else {
-                        self.state = S_GRAPH;
-                    }
-                }
-                S_GRAPH => {
-                    if !c.is_whitespace() {
-                        // consumed printable non-space
-                        consumed = true;
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                _ => {}
+    fn consume_char_word_movement(&mut self, c: char, is_bigword: bool) -> bool {
+        const S_SPACE: u8 = 1; // when seeing initial or midway space
+        const S_NEWLINE: u8 = 2; // when seeing a newline
+        const S_WORD: u8 = 3; // when seeing the word that will jump over
+        const S_END: u8 = 4;
+        let cur_cls = if is_bigword {
+            if c == '\n' {
+                WordCharClass::Newline
+            } else if is_blank(c) {
+                WordCharClass::Blank
+            } else {
+                WordCharClass::Word
             }
-        }
-        consumed
+        } else {
+            WordCharClass::from(c)
+        };
+        let transition_idx = if cur_cls == WordCharClass::Blank {
+            0
+        } else if cur_cls == WordCharClass::Newline {
+            1
+        } else if self.last_char_cls == Some(cur_cls) {
+            2
+        } else {
+            3
+        };
+        // Transition tables for forward and backward word movement
+        #[rustfmt::skip]
+        const FORWARD_TABLE: &[[(u8, bool); 4]] = &[
+            // space,         newline,           same-class,     different-class
+            [(S_SPACE, true), (S_NEWLINE, true), (S_WORD, true), (S_WORD, true)], // S_INIT
+            [(S_SPACE, true), (S_NEWLINE, true), (S_END, false), (S_END, false)], // S_SPACE
+            [(S_SPACE, true), (S_END, false),    (S_END, false), (S_END, false)], // S_NEWLINE
+            [(S_SPACE, true), (S_NEWLINE, true), (S_WORD, true), (S_END, false)], // S_WORD
+            [(S_END, false),  (S_END, false),    (S_END, false), (S_END, false)], // S_END
+        ];
+        #[rustfmt::skip]
+        const BACKWARD_TABLE: &[[(u8, bool); 4]] = &[
+            // space,         newline,           same-class,     different-class
+            [(S_SPACE, true), (S_NEWLINE, true), (S_WORD, true), (S_WORD, true)], // S_INIT
+            [(S_SPACE, true), (S_NEWLINE, true), (S_WORD, true), (S_WORD, true)], // S_SPACE
+            [(S_SPACE, true), (S_END, false),    (S_WORD, true), (S_WORD, true)], // S_NEWLINE
+            [(S_END, false),  (S_END, false),    (S_WORD, true), (S_END, false)], // S_WORD
+            [(S_END, false),  (S_END, false),    (S_END, false), (S_END, false)], // S_END
+        ];
+        let table = match self.direction {
+            MoveWordDir::Right => FORWARD_TABLE,
+            MoveWordDir::Left => BACKWARD_TABLE,
+        };
+        let (new_state, result) = table[self.state as usize][transition_idx];
+        self.state = new_state;
+        self.last_char_cls = Some(cur_cls);
+        result
     }
 }
 
@@ -1407,13 +1389,13 @@ pub fn variable_assignment_equals_pos(txt: &wstr) -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use super::{
-        MoveWordStateMachine, MoveWordStyle, PipeOrRedir, TokFlags, TokenType, Tokenizer,
-        TokenizerError,
+        MoveWordDir, MoveWordStateMachine, MoveWordStyle, PipeOrRedir, TokFlags, TokenType,
+        Tokenizer, TokenizerError,
     };
     use crate::prelude::*;
     use crate::redirection::RedirectionMode;
     use libc::{STDERR_FILENO, STDOUT_FILENO};
-    use std::collections::HashSet;
+    use std::collections::VecDeque;
 
     #[test]
     fn test_tokenizer() {
@@ -1605,70 +1587,78 @@ mod tests {
     /// Test word motion (forward-word, etc.). Carets represent cursor stops.
     #[test]
     fn test_word_motion() {
-        #[derive(Eq, PartialEq, Copy, Clone)]
-        pub enum Direction {
-            Left,
-            Right,
-        }
-
-        fn validate_visitor(
-            direction: Direction,
-            style: MoveWordStyle,
+        fn validate_helper(
+            direction: MoveWordDir,
             line: &str,
-            on_failure: fn(&str),
-        ) {
+        ) -> (WString, VecDeque<usize>, usize, usize) {
             let mut command = WString::new();
-            let mut stops = HashSet::new();
+            let mut stops = VecDeque::new();
 
             // Carets represent stops and should be cut out of the command.
             for c in line.chars() {
                 if c == '^' {
-                    stops.insert(command.len());
+                    if direction == MoveWordDir::Left {
+                        stops.push_front(command.len());
+                    } else {
+                        stops.push_back(command.len());
+                    }
                 } else {
                     command.push(c);
                 }
             }
+            stops.pop_back();
 
-            let (mut idx, end) = if direction == Direction::Left {
-                (*stops.iter().max().unwrap(), 0)
+            let idx = stops.pop_front().unwrap();
+            let end = if direction == MoveWordDir::Left {
+                0
             } else {
-                (*stops.iter().min().unwrap(), command.len())
+                command.len()
             };
-            stops.remove(&idx);
 
-            let mut sm = MoveWordStateMachine::new(style);
-            while idx != end {
-                let char_idx = if direction == Direction::Left {
-                    idx - 1
-                } else {
-                    idx
-                };
-                let will_stop = !sm.consume_char(&command, char_idx);
-                let expected_stop = stops.contains(&idx);
-                if will_stop != expected_stop {
-                    on_failure(&format!(
-                        "Expected to stop={expected_stop} at index {idx} but got stop={will_stop}. String: {command:?}"
-                    ));
-                }
-                // We don't expect to stop here next time.
-                if expected_stop {
-                    stops.remove(&idx);
-                    sm.reset();
-                } else if direction == Direction::Left {
-                    idx -= 1;
-                } else {
-                    idx += 1;
-                }
-            }
+            (command, stops, idx, end)
         }
 
         macro_rules! validate {
-            ($direction:expr, $style:expr, $line:expr) => {
-                validate_visitor($direction, $style, $line, |error| assert!(false, "{error}"));
-            };
+             ($direction:expr, $style:expr, $line:expr) => {
+                let direction = $direction;
+                let (command, mut stops, mut idx, end) = validate_helper(direction, $line);
+                assert!(!command.is_empty());
+                let mut sm = MoveWordStateMachine::new($style, direction);
+                while idx != end {
+                    let word_idx = if direction == MoveWordDir::Left {
+                        idx - 1
+                    } else {
+                        idx
+                    };
+                    let consumed = sm.consume_char(&command, word_idx);
+                    if consumed {
+                        idx = if direction == MoveWordDir::Left {
+                            idx - 1
+                        } else {
+                            idx + 1
+                        };
+                    } else {
+                        assert!(
+                            !stops.is_empty(),
+                            "unexpected stop at {idx}. String: {command:?}"
+                        );
+                        let expected_idx = stops.front().unwrap();
+                        assert_eq!(
+                            idx, *expected_idx,
+                            "Expected to stop={expected_idx} but stopped at {idx}. String: {command:?}"
+                        );
+                        stops.pop_front();
+                        sm.reset();
+                    }
+                }
+                assert!(
+                    stops.is_empty(),
+                    "expected to stop at {stops:?} but not. String: {command:?}"
+                );
+             }
         }
 
-        use Direction::*;
+        use MoveWordDir::*;
         use MoveWordStyle::*;
 
         // PathComponents tests
@@ -1683,27 +1673,69 @@ mod tests {
         validate!(Left, PathComponents, "^aaa ^@@@ ^@@^aa^");
         validate!(Left, PathComponents, "^aa^@@  ^aa@@^a^");
         validate!(Left, PathComponents, r#"^a\  ^b\ c/^d"^e\ f"^g"#);
+        validate!(Left, PathComponents, r#"^a\  ^b\ c/^d"^e\\\ f"^g"#);
         validate!(Left, PathComponents, r#"^a\"^bc^"#);
 
-        validate!(Left, PathComponents, "^/^foo/^bar/^baz/^");
-        validate!(Left, PathComponents, "^echo ^--foo ^--bar^");
-        validate!(Left, PathComponents, "^echo ^hi ^> ^/^dev/^null^");
+        validate!(Right, PathComponents, "^/^foo/^bar/^baz/^");
+        validate!(Right, PathComponents, "^echo ^--foo ^--bar^");
+        validate!(Right, PathComponents, "^echo ^hi ^> ^/^dev/^null^");
+        validate!(Right, PathComponents, "^echo ^/^foo/^bar{^aaa,^ccc}^bak/^");
+        validate!(Right, PathComponents, "^echo ^bak ^///^");
+        validate!(Right, PathComponents, "^aaa ^@ ^@^aaa^");
+        validate!(Right, PathComponents, "^aa@@ ^aa@@^a^");
 
         // General punctuation tests
-        validate!(Right, Punctuation, "^a^ bcd^");
-        validate!(Right, Punctuation, "a^b^ cde^");
-        validate!(Right, Punctuation, "^ab^ cde^");
-        validate!(Right, Punctuation, "^ab^&cd^ ^& ^e^ f^&");
+        validate!(Left, Punctuation, "^a ^bcd^");
+        validate!(Left, Punctuation, "^ab ^cd^e");
+        validate!(Left, Punctuation, "^ab ^c^de");
+        validate!(Left, Punctuation, "^ab ^cde^");
+        validate!(Right, Punctuation, "^a ^bcd^");
+        validate!(Right, Punctuation, "a^b ^cde^");
+        validate!(Right, Punctuation, "ab^ ^cde^");
+        validate!(Right, Punctuation, "^ab ^cde^");
 
-        validate!(Left, Punctuation, "^echo ^hello_^world.^txt^");
-        validate!(Right, Punctuation, "^echo^ hello^_world^.txt^");
+        validate!(Left, Punctuation, "^echo ^hello^_^world^.^txt^");
+        validate!(Right, Punctuation, "^echo ^hello^_^world^.^txt^");
 
-        validate!(Left, Punctuation, "echo ^foo_^foo_^foo/^/^/^/^/^    ^");
-        validate!(Right, Punctuation, "^echo^ foo^_foo^_foo^/^/^/^/^/    ^");
+        validate!(Left, Punctuation, "^echo ^foo^__^foo^_^foo^//    ^");
+        validate!(Right, Punctuation, "^echo ^foo^__^foo^_^foo^//^");
 
-        // General whitespace tests
-        validate!(Right, Whitespace, "^^a-b-c^ d-e-f");
-        validate!(Right, Whitespace, "^a-b-c^\n d-e-f^ ");
-        validate!(Right, Whitespace, "^a-b-c^\n\nd-e-f^ ");
+        validate!(Right, Punctuation, "^ab^&^cd ^& ^e ^f^&^");
+        validate!(Left, Punctuation, "^ab^&^cd ^& ^e ^f^&^");
+
+        // General Whiltespace tests
+        validate!(Left, Whitespace, "^a ^bcd^");
+        validate!(Left, Whitespace, "^ab ^cd^e");
+        validate!(Left, Whitespace, "^ab ^c^de");
+        validate!(Left, Whitespace, "^ab ^cde^");
+        validate!(Right, Whitespace, "^a ^bcd^");
+        validate!(Right, Whitespace, "a^b ^cde^");
+        validate!(Right, Whitespace, "ab^ ^cde^");
+        validate!(Right, Whitespace, "^ab ^cde^");
+
+        // Newline-related tests
+        validate!(Right, Punctuation, "^a \n ^bcd^");
+        validate!(Left, Punctuation, "^a \n ^bcd^");
+        validate!(Right, Whitespace, "^a \n ^bcd^");
+        validate!(Left, Whitespace, "^a \n ^bcd^");
+
+        validate!(Right, Punctuation, "^a\n^\n^b^-^cd^");
+        validate!(Left, Punctuation, "^a\n^\n^b^_^cd^");
+        validate!(Right, Whitespace, "^a\n^\n^b_cd^");
+        validate!(Left, Whitespace, "^a\n^\n^b_cd^");
+
+        validate!(Right, Punctuation, "^a \n  \n \n^\n ^bcd^");
+        validate!(Left, Punctuation, "^a \n  \n \n^\n ^bcd^");
+        validate!(Right, Whitespace, "^a \n  \n \n^\n ^bcd^");
+        validate!(Left, Whitespace, "^a \n  \n \n^\n ^bcd^");
+
+        // Unicode-related tests
+        validate!(Right, Punctuation, "^hello ^中^@^文^あいう^漢字^");
+        validate!(Left, Punctuation, "^hello ^中^@^文^あいう^漢字^");
+        validate!(Right, Whitespace, "^hello ^中文あいう漢字^");
+        validate!(Left, Whitespace, "^hello ^中文あいう漢字^");
+
+        validate!(Right, Punctuation, "^café ^naïve^");
+        validate!(Left, Punctuation, "^café ^naïve^");
     }
 }

@@ -180,12 +180,15 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset j down-or-search
     bind -s --preset b backward-word
     bind -s --preset B backward-bigword
-    bind -s --preset g,e backward-word
-    bind -s --preset g,E backward-bigword
-    bind -s --preset w forward-word forward-single-char
-    bind -s --preset W forward-bigword forward-single-char
-    bind -s --preset e 'set fish_cursor_end_mode exclusive' forward-single-char forward-word backward-char 'set fish_cursor_end_mode inclusive'
-    bind -s --preset E 'set fish_cursor_end_mode exclusive' forward-single-char forward-bigword backward-char 'set fish_cursor_end_mode inclusive'
+    bind -s --preset g,e backward-word-end
+    bind -s --preset g,E backward-bigword-end
+    bind -s --preset w forward-word-vi
+    bind -s --preset W forward-bigword-vi
+    bind -s --preset e forward-word-end
+    bind -s --preset E forward-bigword-end
+
+    __fish_per_os_bind --preset $argv ctrl-right forward-token forward-word-vi
+    # ctrl-left is same as emacs mode
 
     bind -s --preset -M insert ctrl-n accept-autosuggestion
 
@@ -212,18 +215,18 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset d,\$ kill-line
     bind -s --preset d,\^ backward-kill-line
     bind -s --preset d,0 backward-kill-line
-    bind -s --preset d,w kill-word
-    bind -s --preset d,W kill-bigword
-    bind -s --preset d,i,w forward-single-char forward-single-char backward-word kill-word
-    bind -s --preset d,i,W forward-single-char forward-single-char backward-bigword kill-bigword
-    bind -s --preset d,a,w forward-single-char forward-single-char backward-word kill-word
-    bind -s --preset d,a,W forward-single-char forward-single-char backward-bigword kill-bigword
-    bind -s --preset d,e kill-word
-    bind -s --preset d,E kill-bigword
+    bind -s --preset d,w kill-word-vi
+    bind -s --preset d,W kill-bigword-vi
+    bind -s --preset d,i,w kill-inner-word
+    bind -s --preset d,i,W kill-inner-bigword
+    bind -s --preset d,a,w kill-a-word
+    bind -s --preset d,a,W kill-a-bigword
+    bind -s --preset d,e kill-word-end
+    bind -s --preset d,E kill-bigword-end
     bind -s --preset d,b backward-kill-word
     bind -s --preset d,B backward-kill-bigword
-    bind -s --preset d,g,e backward-kill-word
-    bind -s --preset d,g,E backward-kill-bigword
+    bind -s --preset d,g,e backward-kill-word-end
+    bind -s --preset d,g,E backward-kill-bigword-end
     bind -s --preset d,f begin-selection forward-jump kill-selection end-selection
     bind -s --preset d,t begin-selection forward-jump backward-char kill-selection end-selection
     bind -s --preset d,F begin-selection backward-jump kill-selection end-selection
@@ -244,14 +247,14 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert c,\$ kill-line repaint-mode
     bind -s --preset -m insert c,\^ backward-kill-line repaint-mode
     bind -s --preset -m insert c,0 backward-kill-line repaint-mode
-    bind -s --preset -m insert c,w kill-word repaint-mode
-    bind -s --preset -m insert c,W kill-bigword repaint-mode
-    bind -s --preset -m insert c,i,w forward-single-char forward-single-char backward-word kill-word repaint-mode
-    bind -s --preset -m insert c,i,W forward-single-char forward-single-char backward-bigword kill-bigword repaint-mode
-    bind -s --preset -m insert c,a,w forward-single-char forward-single-char backward-word kill-word repaint-mode
-    bind -s --preset -m insert c,a,W forward-single-char forward-single-char backward-bigword kill-bigword repaint-mode
-    bind -s --preset -m insert c,e kill-word repaint-mode
-    bind -s --preset -m insert c,E kill-bigword repaint-mode
+    bind -s --preset -m insert c,w kill-word-vi repaint-mode
+    bind -s --preset -m insert c,W kill-bigword-vi repaint-mode
+    bind -s --preset -m insert c,i,w kill-inner-word repaint-mode
+    bind -s --preset -m insert c,i,W kill-inner-bigword repaint-mode
+    bind -s --preset -m insert c,a,w kill-a-word repaint-mode
+    bind -s --preset -m insert c,a,W kill-a-bigword repaint-mode
+    bind -s --preset -m insert c,e kill-word-end repaint-mode
+    bind -s --preset -m insert c,E kill-bigword-end repaint-mode
     bind -s --preset -m insert c,b backward-kill-word repaint-mode
     bind -s --preset -m insert c,B backward-kill-bigword repaint-mode
     bind -s --preset -m insert c,g,e backward-kill-word repaint-mode
@@ -284,16 +287,16 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset y,0 backward-kill-line yank
     bind -s --preset y,w kill-word yank
     bind -s --preset y,W kill-bigword yank
-    bind -s --preset y,i,w forward-single-char forward-single-char backward-word kill-word yank
-    bind -s --preset y,i,W forward-single-char forward-single-char backward-bigword kill-bigword yank
-    bind -s --preset y,a,w forward-single-char forward-single-char backward-word kill-word yank
-    bind -s --preset y,a,W forward-single-char forward-single-char backward-bigword kill-bigword yank
-    bind -s --preset y,e kill-word yank
-    bind -s --preset y,E kill-bigword yank
+    bind -s --preset y,i,w kill-inner-word yank
+    bind -s --preset y,i,W kill-inner-bigword yank
+    bind -s --preset y,a,w kill-a-word yank
+    bind -s --preset y,a,W kill-a-bigword yank
+    bind -s --preset y,e kill-word-end yank
+    bind -s --preset y,E kill-bigword-end yank
     bind -s --preset y,b backward-kill-word yank
     bind -s --preset y,B backward-kill-bigword yank
-    bind -s --preset y,g,e backward-kill-word yank
-    bind -s --preset y,g,E backward-kill-bigword yank
+    bind -s --preset y,g,e backward-kill-word-end yank
+    bind -s --preset y,g,E backward-kill-bigword-end yank
     bind -s --preset y,f begin-selection forward-jump kill-selection yank end-selection
     bind -s --preset y,t begin-selection forward-jump-till kill-selection yank end-selection
     bind -s --preset y,F begin-selection backward-jump kill-selection yank end-selection
@@ -370,12 +373,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind -s --preset -M visual b backward-word
     bind -s --preset -M visual B backward-bigword
-    bind -s --preset -M visual g,e backward-word
-    bind -s --preset -M visual g,E backward-bigword
-    bind -s --preset -M visual w forward-word
-    bind -s --preset -M visual W forward-bigword
-    bind -s --preset -M visual e 'set fish_cursor_end_mode exclusive' forward-single-char forward-word backward-char 'set fish_cursor_end_mode inclusive'
-    bind -s --preset -M visual E 'set fish_cursor_end_mode exclusive' forward-single-char forward-bigword backward-char 'set fish_cursor_end_mode inclusive'
+    bind -s --preset -M visual g,e backward-word-end
+    bind -s --preset -M visual g,E backward-bigword-end
+    bind -s --preset -M visual w forward-word-vi
+    bind -s --preset -M visual W forward-bigword-vi
+    bind -s --preset -M visual e forward-word-end
+    bind -s --preset -M visual E forward-bigword-end
     bind -s --preset -M visual o swap-selection-start-stop repaint-mode
 
     bind -s --preset -M visual % jump-to-matching-bracket

@@ -23,7 +23,8 @@ use crate::parse_constants::{
     ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
 };
 use crate::parse_util::{
-    MaybeParentheses, parse_util_locate_cmdsubst_range, parse_util_slice_length,
+    MaybeParentheses, parse_util_locate_cmdsubst_range, parse_util_process_first_token_offset,
+    parse_util_slice_length,
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
@@ -334,14 +335,23 @@ pub fn is_veritable_cd(expanded_command: &wstr) -> bool {
 /// autosuggestion is valid. It may not be valid if e.g. it is attempting to cd into a directory
 /// which does not exist.
 pub fn autosuggest_validate_from_history(
-    suggested_command: &wstr,
+    item_commandline: &wstr,
+    suggested_range: std::ops::Range<usize>,
     required_paths: &[WString],
     working_directory: &wstr,
     ctx: &OperationContext<'_>,
 ) -> bool {
     assert_is_background_thread();
 
+    if suggested_range != (0..item_commandline.char_count())
+        && parse_util_process_first_token_offset(item_commandline, suggested_range.start)
+            .is_some_and(|offset| offset != suggested_range.start)
+    {
+        return false;
+    }
+
     // Parse the string.
+    let suggested_command = &item_commandline[suggested_range];
     let Some((parsed_command, mut cd_dir)) = autosuggest_parse_command(suggested_command, ctx)
     else {
         // This is for autosuggestions which are not decorated commands, e.g. function declarations.

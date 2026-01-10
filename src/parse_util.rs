@@ -387,6 +387,12 @@ pub fn parse_util_process_extent(
     job_or_process_extent(true, buff, cursor_pos, out_tokens)
 }
 
+pub fn parse_util_process_first_token_offset(buff: &wstr, cursor_pos: usize) -> Option<usize> {
+    let mut tokens = vec![];
+    parse_util_process_extent(buff, cursor_pos, Some(&mut tokens));
+    tokens.first().map(|tok| tok.offset())
+}
+
 /// Find the beginning and end of the process definition under the cursor
 ///
 /// \param buff the string to search for subshells

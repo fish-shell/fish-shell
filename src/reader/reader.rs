@@ -106,6 +106,7 @@ use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_util::MaybeParentheses;
 use crate::parse_util::SPACES_PER_INDENT;
 use crate::parse_util::parse_util_process_extent;
+use crate::parse_util::parse_util_process_first_token_offset;
 use crate::parse_util::{
     parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_contains_wildcards,
     parse_util_detect_errors, parse_util_escape_string_with_quote, parse_util_escape_wildcards,
@@ -4992,7 +4993,8 @@ fn get_autosuggestion_performer(
                     parse_util_process_extent(&command_line, cursor_pos, Some(&mut tokens));
                     range_of_line_at_cursor(
                         &command_line,
-                        tokens.first().map_or(cursor_pos, |tok| tok.offset()),
+                        parse_util_process_first_token_offset(&command_line, cursor_pos)
+                            .unwrap_or(cursor_pos),
                     ) == range
                 };
                 if !cursor_line_has_process_start {
@@ -5010,44 +5012,51 @@ fn get_autosuggestion_performer(
             while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
                 let item = searcher.current_item();
 
-                let (suggested_command, icase) = if search_type == SearchType::Prefix {
-                    let mut suggested_command =
-                        item.str().starts_with(search_string).then_some(item.str());
+                let full = item.str();
+                let (suggested_range, icase) = if search_type == SearchType::Prefix {
+                    let mut suggested_range =
+                        full.starts_with(search_string).then_some(0..full.len());
                     let mut icase = false;
                     // Only check for a case-insensitive match if we haven't already found one
-                    if suggested_command.is_none() && icase_history_result.is_none() {
+                    if suggested_range.is_none() && icase_history_result.is_none() {
                         icase = true;
-                        suggested_command =
-                            string_prefixes_string_case_insensitive(search_string, item.str())
-                                .then_some(item.str());
+                        suggested_range =
+                            string_prefixes_string_case_insensitive(search_string, full)
+                                .then_some(0..full.len());
                     }
 
-                    (suggested_command, icase)
+                    (suggested_range, icase)
                 } else {
                     // The history items may have multiple lines of text.
                     // Only suggest the line that actually contains the search string.
-                    let lines = item
-                        .str()
-                        .as_char_slice()
-                        .split(|&c| c == '\n')
-                        .rev()
-                        .map(wstr::from_char_slice);
+                    let newlines = full
+                        .char_indices()
+                        .filter_map(|(i, c)| (c == '\n').then_some(i));
+                    let line_ranges = Some(0)
+                        .into_iter()
+                        .chain(newlines.clone().map(|i| i + 1))
+                        .zip(newlines.chain(Some(full.char_count()).into_iter()))
+                        .map(|(start, end)| start..end);
 
                     let mut icase = false;
-                    let mut suggested_command =
-                        lines.clone().find(|line| line.starts_with(search_string));
+                    let mut suggested_range = line_ranges
+                        .clone()
+                        .find(|range| full[range.clone()].starts_with(search_string));
 
                     // Only check for a case-insensitive match if we haven't already found one
-                    if suggested_command.is_none() && icase_history_result.is_none() {
+                    if suggested_range.is_none() && icase_history_result.is_none() {
                         icase = true;
-                        suggested_command = lines.into_iter().find(|line| {
-                            string_prefixes_string_case_insensitive(search_string, line)
+                        suggested_range = line_ranges.into_iter().find(|range| {
+                            string_prefixes_string_case_insensitive(
+                                search_string,
+                                &full[range.clone()],
+                            )
                         });
                     }
 
-                    (suggested_command, icase)
+                    (suggested_range, icase)
                 };
-                let Some(suggested_command) = suggested_command else {
+                let Some(suggested_range) = suggested_range else {
                     assert!(
                         icase_history_result.is_some(),
                         "couldn't find line matching search {search_string:?} in history item {item:?} (did history search yield a bogus result?)"
@@ -5056,17 +5065,18 @@ fn get_autosuggestion_performer(
                 };
 
                 if autosuggest_validate_from_history(
-                    suggested_command,
+                    full,
+                    suggested_range.clone(),
                     item.get_required_paths(),
                     &working_directory,
                     &ctx,
                 ) {
                     // The command autosuggestion was handled specially, so we're done.
-                    let is_whole = suggested_command.len() == item.str().len();
+                    let is_whole = suggested_range.len() == item.str().len();
                     let result = AutosuggestionResult::new(
                         command_line.clone(),
                         range.clone(),
-                        suggested_command.into(),
+                        full[suggested_range].into(),
                         icase,
                         is_whole,
                     );

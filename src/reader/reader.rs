@@ -49,7 +49,7 @@ use errno::{Errno, errno};
 
 use super::history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
 use super::iothreads::{self, Debouncers};
-use super::word_motion::{MoveWordStateMachine, MoveWordStyle};
+use super::word_motion::{MoveWordDir, MoveWordStateMachine, MoveWordStyle};
 use crate::abbrs::abbrs_match;
 use crate::ast::{self, Kind, is_same_node};
 use crate::builtins::shared::ErrorCode;
@@ -121,7 +121,6 @@ use crate::proc::{
     have_proc_stat, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
     print_exit_warning_for_jobs, proc_update_jiffies,
 };
-use crate::reader::word_motion::MoveWordDir;
 use crate::screen::is_dumb;
 use crate::screen::{CharOffset, Screen, screen_force_clear_to_end};
 use crate::should_flog;
@@ -376,6 +375,7 @@ pub fn current_data() -> Option<&'static mut ReaderData> {
         .map(|data| unsafe { Pin::get_unchecked_mut(Pin::as_mut(data)) })
 }
 pub use current_data as reader_current_data;
+use fish_wchar::word_char::is_blank;
 
 /// Add a new reader to the reader stack.
 /// If `history_name` is empty, then save history in-memory only; do not write it to disk.
@@ -2187,39 +2187,64 @@ impl ReaderData {
         erase: bool,
         style: MoveWordStyle,
         newv: bool,
+        to_word_end: bool,
     ) {
         let move_right = direction == MoveWordDir::Right;
-        // Return if we are already at the edge.
+        let state_machine_dir = if to_word_end {
+            match direction {
+                MoveWordDir::Left => MoveWordDir::Right,
+                MoveWordDir::Right => MoveWordDir::Left,
+            }
+        } else {
+            direction
+        };
         let el = self.edit_line(elt);
         let boundary = if move_right { el.len() } else { 0 };
+
+        // Return if we are already at the edge.
         if el.position() == boundary {
             return;
         }
 
         // When moving left, a value of 1 means the character at index 0.
-        let mut state = MoveWordStateMachine::new(style);
+        let mut state = MoveWordStateMachine::new(style, state_machine_dir);
         let start_buff_pos = el.position();
 
         let mut buff_pos = el.position();
-        while buff_pos != boundary {
-            let idx = if move_right { buff_pos } else { buff_pos - 1 };
-            if !state.consume_char(el.text(), idx) {
+
+        let end = if move_right {
+            if to_word_end { el.len() - 1 } else { el.len() }
+        } else if to_word_end {
+            usize::MAX
+        } else {
+            0
+        };
+
+        while buff_pos != end {
+            if move_right && buff_pos >= el.len() {
                 break;
             }
-            buff_pos = if move_right {
-                buff_pos + 1
+            let char_pos = if move_right {
+                if to_word_end { buff_pos + 1 } else { buff_pos }
+            } else if to_word_end {
+                buff_pos
             } else {
-                buff_pos - 1
+                buff_pos.wrapping_sub(1)
             };
+            let consumed = state.consume_char(el.text(), char_pos);
+            if consumed {
+                buff_pos = if move_right {
+                    buff_pos + 1
+                } else {
+                    buff_pos.wrapping_sub(1)
+                };
+            } else {
+                break;
+            }
         }
 
-        // Always consume at least one character.
-        if buff_pos == start_buff_pos {
-            buff_pos = if move_right {
-                buff_pos + 1
-            } else {
-                buff_pos - 1
-            };
+        if buff_pos == usize::MAX {
+            buff_pos = 0;
         }
 
         // If we are moving left, buff_pos-1 is the index of the first character we do not delete
@@ -2231,12 +2256,147 @@ impl ReaderData {
             }
 
             if move_right {
-                self.kill(elt, start_buff_pos..buff_pos, Kill::Append, newv);
+                self.kill(
+                    elt,
+                    start_buff_pos..(buff_pos + if to_word_end { 1 } else { 0 }),
+                    Kill::Append,
+                    newv,
+                );
             } else {
-                self.kill(elt, buff_pos..start_buff_pos, Kill::Prepend, newv);
+                self.kill(
+                    elt,
+                    buff_pos..start_buff_pos + if to_word_end { 1 } else { 0 },
+                    Kill::Prepend,
+                    newv,
+                );
             }
         } else {
             self.update_buff_pos(elt, Some(buff_pos));
+        }
+    }
+
+    fn delete_a_word(&mut self, elt: EditableLineTag, style: MoveWordStyle, newv: bool) {
+        let el = self.edit_line(elt);
+        if el.is_empty() {
+            return;
+        }
+        let text_slice = el.text().as_char_slice();
+        let pos = el.position();
+        let on_blank = is_blank(text_slice[pos]);
+
+        if on_blank {
+            // first move backward until non-spaces
+            let mut begin_pos = 0;
+            for idx in (0..pos).rev() {
+                if !is_blank(text_slice[idx]) {
+                    begin_pos = idx + 1;
+                    break;
+                }
+            }
+            self.update_buff_pos(elt, Some(begin_pos));
+            // then delete to next word end
+            self.move_word(elt, MoveWordDir::Right, true, style, newv, true)
+        } else {
+            // first, move right by 1
+            if pos < el.len() - 1 {
+                self.update_buff_pos(elt, Some(el.position() + 1));
+            }
+            // then move to word start
+            self.move_word(
+                elt,
+                MoveWordDir::Left,
+                /*erase=*/ false,
+                style,
+                newv,
+                false,
+            );
+            let word_start = self.edit_line(elt).position();
+            self.move_word(
+                elt,
+                MoveWordDir::Right,
+                /*erase=*/ false,
+                style,
+                newv,
+                true,
+            );
+
+            let el = self.edit_line(elt);
+            let word_end = el.position() + 1;
+            let text_slice = el.text().as_char_slice();
+            let len = el.len();
+            let kill_range = if word_end < len && is_blank(text_slice[word_end]) {
+                let mut end_pos = len;
+                for (idx, &c) in text_slice.iter().enumerate().skip(word_end + 1) {
+                    if !is_blank(c) {
+                        end_pos = idx;
+                        break;
+                    }
+                }
+                word_start..end_pos
+            } else if word_start > 0 && is_blank(text_slice[word_start - 1]) {
+                let mut begin_pos = 0;
+                for idx in (0..word_start - 1).rev() {
+                    if !is_blank(text_slice[idx]) {
+                        begin_pos = idx + 1;
+                        break;
+                    }
+                }
+                begin_pos..word_end
+            } else {
+                word_start..word_end
+            };
+            self.update_buff_pos(elt, Some(word_start));
+            self.kill(elt, kill_range, Kill::Append, newv);
+        }
+    }
+
+    fn delete_inner_word(&mut self, elt: EditableLineTag, style: MoveWordStyle, newv: bool) {
+        let el = self.edit_line(elt);
+        let len = el.len();
+        if len == 0 {
+            return;
+        }
+        let pos = el.position();
+        let text_slice = el.text().as_char_slice();
+        if is_blank(text_slice[pos]) {
+            // Cursor is on whitespace: delete whitespace only
+            let mut begin_pos = 0;
+            for idx in (0..pos).rev() {
+                if !is_blank(text_slice[idx]) {
+                    begin_pos = idx + 1;
+                    break;
+                }
+            }
+            let mut end_pos = len;
+            for (idx, &c) in text_slice.iter().enumerate().skip(pos) {
+                if !is_blank(c) {
+                    end_pos = idx;
+                    break;
+                }
+            }
+            self.kill(elt, begin_pos..end_pos, Kill::Append, newv);
+        } else {
+            if el.position() != 0 {
+                // first, move right by 1
+                self.update_buff_pos(elt, Some(el.position() + 1));
+                // then move to word start
+                self.move_word(
+                    elt,
+                    MoveWordDir::Left,
+                    /*erase=*/ false,
+                    style,
+                    newv,
+                    false,
+                );
+            }
+            self.move_word(
+                elt,
+                MoveWordDir::Right,
+                /*erase=*/ true,
+                style,
+                newv,
+                true,
+            );
         }
     }
 
@@ -3403,21 +3563,77 @@ impl<'a> Reader<'a> {
                     }
                 }
             }
-            rl::BackwardKillWord | rl::BackwardKillPathComponent | rl::BackwardKillBigword => {
+            rl::ForwardWordEmacs
+            | rl::ForwardBigwordEmacs
+            | rl::KillWordEmacs
+            | rl::KillBigwordEmacs
+            | rl::NextdOrForwardWordEmacs => {
+                if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
+                    self.eval_bind_cmd(L!("prevd"));
+                    self.schedule_prompt_repaint();
+                    return;
+                }
+                let (elt, el) = self.active_edit_line();
+                let is_kill = matches!(c, rl::KillWordEmacs | rl::KillBigwordEmacs);
                 let style = match c {
-                    rl::BackwardKillBigword => MoveWordStyle::Whitespace,
-                    rl::BackwardKillPathComponent => MoveWordStyle::PathComponents,
-                    rl::BackwardKillWord => MoveWordStyle::Punctuation,
+                    rl::ForwardWordEmacs | rl::NextdOrForwardWordEmacs | rl::KillWordEmacs => {
+                        MoveWordStyle::Punctuation
+                    }
+                    rl::ForwardBigwordEmacs | rl::KillBigwordEmacs => MoveWordStyle::Whitespace,
                     _ => unreachable!(),
                 };
+                let is_word_end = el.position() + 1 < el.len()
+                    && !is_blank(el.at(el.position()))
+                    && is_blank(el.at(el.position() + 1));
+
+                // if at word end, forward/kill char, otherwise forward/kill word end
+                if self.is_at_autosuggestion() {
+                    self.accept_autosuggestion(AutosuggestionPortion::PerMoveWordStyle {
+                        style,
+                        to_word_end: true,
+                    });
+                } else if is_word_end {
+                    if is_kill {
+                        self.delete_char(/*backward*/ false);
+                    } else {
+                        let (_elt, el) = self.active_edit_line_mut();
+                        el.set_position(el.position() + 1);
+                    }
+                } else {
+                    self.data.move_word(
+                        elt,
+                        MoveWordDir::Right,
+                        is_kill,
+                        style,
+                        self.rls().last_cmd != Some(c),
+                        true,
+                    );
+                    if !is_kill {
+                        let (_elt, el) = self.active_edit_line_mut();
+                        if el.position() + 1 < el.len() {
+                            el.set_position(el.position() + 1);
+                        }
+                    }
+                }
+            }
+            rl::BackwardKillWord
+            | rl::BackwardKillPathComponent
+            | rl::BackwardKillBigword
+            | rl::BackwardKillWordEnd
+            | rl::BackwardKillBigwordEnd => {
+                let style = match c {
+                    rl::BackwardKillWord | rl::BackwardKillWordEnd => MoveWordStyle::Punctuation,
+                    rl::BackwardKillBigword | rl::BackwardKillBigwordEnd => {
+                        MoveWordStyle::Whitespace
+                    }
+                    rl::BackwardKillPathComponent => MoveWordStyle::PathComponents,
+                    _ => unreachable!(),
+                };
+                let to_word_end = matches!(c, rl::BackwardKillWordEnd | rl::BackwardKillBigwordEnd);
                 // Is this the same killring item as the last kill?
                 let newv = !matches!(
                     self.rls().last_cmd,
-                    Some(
-                        rl::BackwardKillWord
-                            | rl::BackwardKillPathComponent
-                            | rl::BackwardKillBigword
-                    )
+                    Some(rl::BackwardKillWord | rl::BackwardKillBigword)
                 );
                 self.data.move_word(
                     self.active_edit_line_tag(),
@@ -3425,24 +3641,51 @@ impl<'a> Reader<'a> {
                     /*erase=*/ true,
                     style,
                     newv,
+                    to_word_end,
                 )
             }
-            rl::KillWord | rl::KillPathComponent | rl::KillBigword => {
+            rl::KillWordVi
+            | rl::KillBigwordVi
+            | rl::KillPathComponent
+            | rl::KillWordEnd
+            | rl::KillBigwordEnd => {
                 // The "bigword" functions differ only in that they move to the next whitespace, not
                 // punctuation.
                 let style = match c {
-                    rl::KillBigword => MoveWordStyle::Whitespace,
+                    rl::KillWordVi | rl::KillWordEnd => MoveWordStyle::Punctuation,
+                    rl::KillBigwordVi | rl::KillBigwordEnd => MoveWordStyle::Whitespace,
                     rl::KillPathComponent => MoveWordStyle::PathComponents,
-                    rl::KillWord => MoveWordStyle::Punctuation,
                     _ => unreachable!(),
                 };
+                let to_word_end = matches!(c, rl::KillWordEnd | rl::KillBigwordEnd);
                 self.data.move_word(
                     self.active_edit_line_tag(),
                     MoveWordDir::Right,
                     /*erase=*/ true,
                     style,
                     self.rls().last_cmd != Some(c),
+                    to_word_end,
                 );
+            }
+            rl::KillInnerWord | rl::KillInnerBigWord => {
+                let style = match c {
+                    rl::KillInnerBigWord => MoveWordStyle::Whitespace,
+                    rl::KillInnerWord => MoveWordStyle::Punctuation,
+                    _ => unreachable!(),
+                };
+                let elt = self.active_edit_line_tag();
+                let newv = self.rls().last_cmd != Some(c);
+                self.data.delete_inner_word(elt, style, newv);
+            }
+            rl::KillAWord | rl::KillABigWord => {
+                let style = match c {
+                    rl::KillABigWord => MoveWordStyle::Whitespace,
+                    rl::KillAWord => MoveWordStyle::Punctuation,
+                    _ => unreachable!(),
+                };
+                let elt = self.active_edit_line_tag();
+                let newv = self.rls().last_cmd != Some(c);
+                self.data.delete_a_word(elt, style, newv);
             }
             rl::BackwardKillToken => {
                 let Some(new_position) = self.backward_token() else {
@@ -3506,51 +3749,59 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::BackwardWord
+            | rl::BackwardWordEnd
             | rl::BackwardPathComponent
             | rl::BackwardBigword
+            | rl::BackwardBigwordEnd
             | rl::PrevdOrBackwardWord => {
-                if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
-                    self.eval_bind_cmd(L!("prevd"));
-                    self.schedule_prompt_repaint();
-                    return;
-                }
+                let to_word_end = matches!(c, rl::BackwardWordEnd | rl::BackwardBigwordEnd);
 
                 let style = match c {
-                    rl::BackwardBigword => MoveWordStyle::Whitespace,
+                    rl::BackwardWord | rl::BackwardWordEnd | rl::PrevdOrBackwardWord => {
+                        MoveWordStyle::Punctuation
+                    }
+                    rl::BackwardBigword | rl::BackwardBigwordEnd => MoveWordStyle::Whitespace,
                     rl::BackwardPathComponent => MoveWordStyle::PathComponents,
-                    rl::BackwardWord | rl::PrevdOrBackwardWord => MoveWordStyle::Punctuation,
                     _ => unreachable!(),
                 };
+
                 self.data.move_word(
                     self.active_edit_line_tag(),
                     MoveWordDir::Left,
                     /*erase=*/ false,
                     style,
                     false,
+                    to_word_end,
                 );
             }
-            rl::ForwardWord
-            | rl::ForwardPathComponent
-            | rl::ForwardBigword
-            | rl::NextdOrForwardWord => {
-                if c == rl::NextdOrForwardWord && self.command_line.is_empty() {
-                    self.eval_bind_cmd(L!("nextd"));
-                    self.schedule_prompt_repaint();
-                    return;
-                }
-
+            rl::ForwardWordVi
+            | rl::ForwardBigwordVi
+            | rl::ForwardWordEnd
+            | rl::ForwardBigwordEnd
+            | rl::ForwardPathComponent => {
                 let style = match c {
-                    rl::ForwardBigword => MoveWordStyle::Whitespace,
+                    rl::ForwardWordVi | rl::ForwardWordEnd => MoveWordStyle::Punctuation,
+                    rl::ForwardBigwordVi | rl::ForwardBigwordEnd => MoveWordStyle::Whitespace,
                     rl::ForwardPathComponent => MoveWordStyle::PathComponents,
-                    rl::ForwardWord | rl::NextdOrForwardWord => MoveWordStyle::Punctuation,
                     _ => unreachable!(),
                 };
+                let to_word_end = matches!(c, rl::ForwardWordEnd | rl::ForwardBigwordEnd);
 
                 if self.is_at_autosuggestion() {
-                    self.accept_autosuggestion(AutosuggestionPortion::PerMoveWordStyle(style));
+                    self.accept_autosuggestion(AutosuggestionPortion::PerMoveWordStyle {
+                        style,
+                        to_word_end,
+                    });
                 } else if !self.is_at_end() {
                     let (elt, _el) = self.active_edit_line();
-                    self.move_word(elt, MoveWordDir::Right, /*erase=*/ false, style, false);
+                    self.move_word(
+                        elt,
+                        MoveWordDir::Right,
+                        /*erase=*/ false,
+                        style,
+                        false,
+                        to_word_end,
+                    );
                 }
             }
             rl::BeginningOfHistory | rl::EndOfHistory => {
@@ -3809,6 +4060,7 @@ impl<'a> Reader<'a> {
                     MoveWordDir::Right,
                     false,
                     MoveWordStyle::Punctuation,
+                    false,
                     false,
                 );
                 let (elt, el) = self.active_edit_line();
@@ -5160,7 +5412,10 @@ fn get_autosuggestion_performer(
 enum AutosuggestionPortion {
     Count(usize),
     Line,
-    PerMoveWordStyle(MoveWordStyle),
+    PerMoveWordStyle {
+        style: MoveWordStyle,
+        to_word_end: bool,
+    },
 }
 
 impl<'a> Reader<'a> {
@@ -5341,16 +5596,24 @@ impl<'a> Reader<'a> {
                     suggested[..line_end].to_owned(),
                 )
             }
-            AutosuggestionPortion::PerMoveWordStyle(style) => {
+            AutosuggestionPortion::PerMoveWordStyle { style, to_word_end } => {
                 // Accept characters according to the specified style.
-                let mut state = MoveWordStateMachine::new(style);
+
+                let state_machine_dir = if to_word_end {
+                    MoveWordDir::Left
+                } else {
+                    MoveWordDir::Right
+                };
+                let mut state = MoveWordStateMachine::new(style, state_machine_dir);
                 let have = search_string_range.len();
                 let mut want = have;
                 while want < autosuggestion_text.len() {
-                    if !state.consume_char(autosuggestion_text, want) {
+                    let consumed = state.consume_char(autosuggestion_text, want);
+                    if consumed {
+                        want += 1;
+                    } else {
                         break;
                     }
-                    want += 1;
                 }
                 (
                     search_string_range.end..search_string_range.end,
@@ -5878,13 +6141,19 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         }
         rl::BeginningOfLine
         | rl::EndOfLine
-        | rl::ForwardWord
+        | rl::ForwardBigwordVi
+        | rl::ForwardWordVi
+        | rl::KillBigwordVi
+        | rl::KillWordVi
+        | rl::ForwardWordEmacs
+        | rl::ForwardBigwordEmacs
+        | rl::KillWordEmacs
+        | rl::KillBigwordEmacs
         | rl::BackwardWord
-        | rl::ForwardBigword
         | rl::BackwardBigword
         | rl::ForwardToken
         | rl::BackwardToken
-        | rl::NextdOrForwardWord
+        | rl::NextdOrForwardWordEmacs
         | rl::PrevdOrBackwardWord
         | rl::DeleteChar
         | rl::BackwardDeleteChar
@@ -5894,8 +6163,6 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::BackwardKillLine
         | rl::KillWholeLine
         | rl::KillInnerLine
-        | rl::KillWord
-        | rl::KillBigword
         | rl::KillToken
         | rl::BackwardKillWord
         | rl::BackwardKillPathComponent

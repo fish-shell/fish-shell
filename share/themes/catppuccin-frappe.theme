@@ -1,0 +1,61 @@
+# name: 'Catppuccin Frappé'
+# url: 'https://github.com/catppuccin/fish'
+
+[light]
+# preferred_background: eff1f5
+fish_color_normal 4c4f69
+fish_color_command 1e66f5
+fish_color_param dd7878
+fish_color_keyword 8839ef
+fish_color_quote 40a02b
+fish_color_redirection ea76cb
+fish_color_end fe640b
+fish_color_comment 8c8fa1
+fish_color_error d20f39
+fish_color_gray 9ca0b0
+fish_color_selection --background=ccd0da
+fish_color_search_match --background=ccd0da
+fish_color_option 40a02b
+fish_color_operator ea76cb
+fish_color_escape e64553
+fish_color_autosuggestion 9ca0b0
+fish_color_cancel d20f39
+fish_color_cwd df8e1d
+fish_color_user 179299
+fish_color_host 1e66f5
+fish_color_host_remote 40a02b
+fish_color_status d20f39
+fish_pager_color_progress 9ca0b0
+fish_pager_color_prefix ea76cb
+fish_pager_color_completion 4c4f69
+fish_pager_color_description 9ca0b0
+
+[dark]
+# preferred_background: 303446
+fish_color_normal c6d0f5
+fish_color_command 8caaee
+fish_color_param eebebe
+fish_color_keyword ca9ee6
+fish_color_quote a6d189
+fish_color_redirection f4b8e4
+fish_color_end ef9f76
+fish_color_comment 838ba7
+fish_color_error e78284
+fish_color_gray 737994
+fish_color_selection --background=414559
+fish_color_search_match --background=414559
+fish_color_option a6d189
+fish_color_operator f4b8e4
+fish_color_escape ea999c
+fish_color_autosuggestion 737994
+fish_color_cancel e78284
+fish_color_cwd e5c890
+fish_color_user 81c8be
+fish_color_host 8caaee
+fish_color_host_remote a6d189
+fish_color_status e78284
+fish_pager_color_progress 737994
+fish_pager_color_prefix f4b8e4
+fish_pager_color_completion c6d0f5
+fish_pager_color_description 737994
+

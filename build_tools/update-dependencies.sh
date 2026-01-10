@@ -21,12 +21,16 @@ uv lock --upgrade --exclude-newer="$(date --date='7 days ago' --iso-8601)"
 from_gh() {
     repo=$1
     path=$2
-    out_dir=$3
+    destination=$3
     contents=$(curl -fsS https://raw.githubusercontent.com/"${repo}"/refs/heads/master/"${path}")
-    printf '%s\n' >"$out_dir/$(basename "$path")" "$contents"
+    printf '%s\n' >"$destination" "$contents"
 }
-from_gh ridiculousfish/widecharwidth widechar_width.rs crates/widecharwidth/src/
-from_gh ridiculousfish/littlecheck littlecheck/littlecheck.py tests/
+
+from_gh ridiculousfish/widecharwidth widechar_width.rs crates/widecharwidth/src/widechar_width.rs
+from_gh ridiculousfish/littlecheck littlecheck/littlecheck.py tests/littlecheck.py
+from_gh catppuccin/fish 'themes/Catppuccin Frappe.theme' share/themes/catppuccin-frappe.theme
+from_gh catppuccin/fish 'themes/Catppuccin Macchiato.theme' share/themes/catppuccin-macchiato.theme
+from_gh catppuccin/fish 'themes/Catppuccin Mocha.theme' share/themes/catppuccin-mocha.theme
 
 # Update Cargo.lock
 cargo update

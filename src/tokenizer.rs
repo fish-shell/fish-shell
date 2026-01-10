@@ -1605,7 +1605,7 @@ mod tests {
     /// Test word motion (forward-word, etc.). Carets represent cursor stops.
     #[test]
     fn test_word_motion() {
-        #[derive(Eq, PartialEq)]
+        #[derive(Eq, PartialEq, Copy, Clone)]
         pub enum Direction {
             Left,
             Right,
@@ -1668,108 +1668,42 @@ mod tests {
             };
         }
 
-        validate!(
-            Direction::Left,
-            MoveWordStyle::Punctuation,
-            "^echo ^hello_^world.^txt^"
-        );
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Punctuation,
-            "^echo^ hello^_world^.txt^"
-        );
+        use Direction::*;
+        use MoveWordStyle::*;
 
+        // PathComponents tests
         validate!(
-            Direction::Left,
-            MoveWordStyle::Punctuation,
-            "echo ^foo_^foo_^foo/^/^/^/^/^    ^"
-        );
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Punctuation,
-            "^echo^ foo^_foo^_foo^/^/^/^/^/    ^"
-        );
-
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^/^foo/^bar/^baz/^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^echo ^--foo ^--bar^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^echo ^hi ^> ^/^dev/^null^"
-        );
-
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
+            Left,
+            PathComponents,
             "^echo ^/^foo/^bar{^aaa,^bbb,^ccc}^bak/^"
         );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^echo ^bak ^///^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^aaa ^@ ^@^aaa^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^aaa ^a ^@^aaa^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^aaa ^@@@ ^@@^aa^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^aa^@@  ^aa@@^a^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            r#"^a\  ^b\ c/^d"^e\ f"^g"#
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            r#"^a\"^bc^"#
-        );
+        validate!(Left, PathComponents, "^echo ^bak ^///^");
+        validate!(Left, PathComponents, "^aaa ^@ ^@^aaa^");
+        validate!(Left, PathComponents, "^aaa ^a ^@^aaa^");
+        validate!(Left, PathComponents, "^aaa ^@@@ ^@@^aa^");
+        validate!(Left, PathComponents, "^aa^@@  ^aa@@^a^");
+        validate!(Left, PathComponents, r#"^a\  ^b\ c/^d"^e\ f"^g"#);
+        validate!(Left, PathComponents, r#"^a\"^bc^"#);
 
-        validate!(Direction::Right, MoveWordStyle::Punctuation, "^a^ bcd^");
-        validate!(Direction::Right, MoveWordStyle::Punctuation, "a^b^ cde^");
-        validate!(Direction::Right, MoveWordStyle::Punctuation, "^ab^ cde^");
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Punctuation,
-            "^ab^&cd^ ^& ^e^ f^&"
-        );
+        validate!(Left, PathComponents, "^/^foo/^bar/^baz/^");
+        validate!(Left, PathComponents, "^echo ^--foo ^--bar^");
+        validate!(Left, PathComponents, "^echo ^hi ^> ^/^dev/^null^");
 
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Whitespace,
-            "^^a-b-c^ d-e-f"
-        );
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Whitespace,
-            "^a-b-c^\n d-e-f^ "
-        );
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Whitespace,
-            "^a-b-c^\n\nd-e-f^ "
-        );
+        // General punctuation tests
+        validate!(Right, Punctuation, "^a^ bcd^");
+        validate!(Right, Punctuation, "a^b^ cde^");
+        validate!(Right, Punctuation, "^ab^ cde^");
+        validate!(Right, Punctuation, "^ab^&cd^ ^& ^e^ f^&");
+
+        validate!(Left, Punctuation, "^echo ^hello_^world.^txt^");
+        validate!(Right, Punctuation, "^echo^ hello^_world^.txt^");
+
+        validate!(Left, Punctuation, "echo ^foo_^foo_^foo/^/^/^/^/^    ^");
+        validate!(Right, Punctuation, "^echo^ foo^_foo^_foo^/^/^/^/^/    ^");
+
+        // General whitespace tests
+        validate!(Right, Whitespace, "^^a-b-c^ d-e-f");
+        validate!(Right, Whitespace, "^a-b-c^\n d-e-f^ ");
+        validate!(Right, Whitespace, "^a-b-c^\n\nd-e-f^ ");
     }
 }

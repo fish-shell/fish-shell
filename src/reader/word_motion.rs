@@ -3,7 +3,7 @@ use crate::tokenizer::tok_is_string_character;
 use crate::prelude::*;
 use crate::reader::is_backslashed;
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub enum MoveWordDir {
     Left,
     Right,
@@ -229,69 +229,78 @@ fn is_path_component_character(c: char) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
-
     use super::{MoveWordDir, MoveWordStateMachine, MoveWordStyle};
     use crate::prelude::*;
+    use std::collections::VecDeque;
 
-    /// Test word motion (forward-word, etc.). Carets represent cursor stops.
     #[test]
     fn test_word_motion() {
-        fn validate_visitor(
-            direction: MoveWordDir,
-            style: MoveWordStyle,
-            line: &str,
-            on_failure: fn(&str),
-        ) {
+        fn setup(direction: MoveWordDir, line: &str) -> (WString, VecDeque<usize>, usize, usize) {
             let mut command = WString::new();
-            let mut stops = HashSet::new();
+            let mut stops = VecDeque::new();
 
             // Carets represent stops and should be cut out of the command.
             for c in line.chars() {
                 if c == '^' {
-                    stops.insert(command.len());
+                    if direction == MoveWordDir::Left {
+                        stops.push_front(command.len());
+                    } else {
+                        stops.push_back(command.len());
+                    }
                 } else {
                     command.push(c);
                 }
             }
+            stops.pop_back();
 
-            let (mut idx, end) = if direction == MoveWordDir::Left {
-                (*stops.iter().max().unwrap(), 0)
+            let idx = stops.pop_front().unwrap();
+            let end = if direction == MoveWordDir::Left {
+                0
             } else {
-                (*stops.iter().min().unwrap(), command.len())
+                command.len()
             };
-            stops.remove(&idx);
 
-            let mut sm = MoveWordStateMachine::new(style);
-            while idx != end {
-                let char_idx = if direction == MoveWordDir::Left {
-                    idx - 1
-                } else {
-                    idx
-                };
-                let will_stop = !sm.consume_char(&command, char_idx);
-                let expected_stop = stops.contains(&idx);
-                if will_stop != expected_stop {
-                    on_failure(&format!(
-                        "Expected to stop={expected_stop} at index {idx} but got stop={will_stop}. String: {command:?}"
-                    ));
-                }
-                // We don't expect to stop here next time.
-                if expected_stop {
-                    stops.remove(&idx);
-                    sm.reset();
-                } else if direction == MoveWordDir::Left {
-                    idx -= 1;
-                } else {
-                    idx += 1;
-                }
-            }
+            (command, stops, idx, end)
         }
 
         macro_rules! validate {
-            ($direction:expr, $style:expr, $line:expr) => {
-                validate_visitor($direction, $style, $line, |error| assert!(false, "{error}"));
-            };
+             ($direction:expr, $style:expr, $line:expr) => {
+                let direction = $direction;
+                let (command, mut stops, mut idx, end) = setup(direction, $line);
+                assert!(!command.is_empty());
+                let mut sm = MoveWordStateMachine::new($style);
+                while idx != end {
+                    let word_idx = if direction == MoveWordDir::Left {
+                        idx - 1
+                    } else {
+                        idx
+                    };
+                    let consumed = sm.consume_char(&command, word_idx);
+                    if consumed {
+                        idx = if direction == MoveWordDir::Left {
+                            idx - 1
+                        } else {
+                            idx + 1
+                        };
+                    } else {
+                        assert!(
+                            !stops.is_empty(),
+                            "unexpected stop at {idx}. String: {command:?}"
+                        );
+                        let expected_idx = stops.front().unwrap();
+                        assert_eq!(
+                            idx, *expected_idx,
+                            "Expected to stop={expected_idx} but stopped at {idx}. String: {command:?}"
+                        );
+                        stops.pop_front();
+                        sm.reset();
+                    }
+                }
+                assert!(
+                    stops.is_empty(),
+                    "expected to stop at {stops:?} but not. String: {command:?}"
+                );
+             }
         }
 
         use MoveWordDir::*;
@@ -319,17 +328,17 @@ mod tests {
         validate!(Right, Punctuation, "^a^ bcd^");
         validate!(Right, Punctuation, "a^b^ cde^");
         validate!(Right, Punctuation, "^ab^ cde^");
-        validate!(Right, Punctuation, "^ab^&cd^ ^& ^e^ f^&");
+        validate!(Right, Punctuation, "^ab^&cd^ ^& ^e^ f^&^");
 
         validate!(Left, Punctuation, "^echo ^hello_^world.^txt^");
         validate!(Right, Punctuation, "^echo^ hello^_world^.txt^");
 
-        validate!(Left, Punctuation, "echo ^foo_^foo_^foo/^/^/^/^/^    ^");
+        validate!(Left, Punctuation, "^echo ^foo_^foo_^foo/^/^/^/^/^    ^");
         validate!(Right, Punctuation, "^echo^ foo^_foo^_foo^/^/^/^/^/    ^");
 
         // General whitespace tests
-        validate!(Right, Whitespace, "^^a-b-c^ d-e-f");
-        validate!(Right, Whitespace, "^a-b-c^\n d-e-f^ ");
-        validate!(Right, Whitespace, "^a-b-c^\n\nd-e-f^ ");
+        validate!(Right, Whitespace, "^a-b-c^ d-e-f^");
+        validate!(Right, Whitespace, "^a-b-c^\n d-e-f^ ^");
+        validate!(Right, Whitespace, "^a-b-c^\n\nd-e-f^ ^");
     }
 }

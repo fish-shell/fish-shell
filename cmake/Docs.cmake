@@ -8,7 +8,6 @@ include(FeatureSummary)
 
 set(SPHINX_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/doc_src")
 set(SPHINX_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}/user_doc")
-set(SPHINX_BUILD_DIR "${SPHINX_ROOT_DIR}/build")
 set(SPHINX_HTML_DIR "${SPHINX_ROOT_DIR}/html")
 set(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
 
@@ -74,7 +73,6 @@ endif()
 add_feature_info(Documentation WITH_DOCS "user manual and documentation")
 
 if(WITH_DOCS)
-    configure_file("${SPHINX_SRC_DIR}/conf.py" "${SPHINX_BUILD_DIR}/conf.py" @ONLY)
     add_custom_target(doc ALL
                       DEPENDS sphinx-docs sphinx-manpages)
     # Group docs targets into a DocsTargets folder

@@ -4,6 +4,8 @@
 //!   - wstr: a string slice without a nul terminator. Like `&str` but wide chars.
 //!   - WString: an owning string without a nul terminator. Like `String` but wide chars.
 
+pub mod word_char;
+
 use fish_common::{ENCODE_DIRECT_BASE, ENCODE_DIRECT_END, subslice_position};
 use std::{iter, slice};
 pub use widestring::{Utf32Str as wstr, Utf32String as WString, utfstr::CharsUtf32};

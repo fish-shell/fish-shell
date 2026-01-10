@@ -660,7 +660,6 @@ mod tests {
         for &size in &sizes {
             let fd = unsafe {
                 let res = libc::open(filename.as_ptr(), O_RDWR | O_TRUNC | O_CREAT, 0o666);
-                assert!(res != 0);
                 OwnedFd::from_raw_fd(res)
             };
             let mut input = Vec::new();

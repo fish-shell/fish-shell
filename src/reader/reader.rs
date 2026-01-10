@@ -479,6 +479,8 @@ pub struct ReaderConfig {
     /// Whether to exit on interrupt (^C).
     pub exit_on_interrupt: bool,
 
+    pub read_prompt_str_is_empty: bool,
+
     /// If set, do not show what is typed.
     pub in_silent_mode: bool,
 
@@ -2372,16 +2374,17 @@ impl<'a> Reader<'a> {
 
         self.history_search.reset();
 
-        // HACK: Don't abandon line for the first prompt, because
-        // if we're started with the terminal it might not have settled,
-        // so the width is quite likely to be in flight.
+        // HACK: Use a simple \r for the first prompt, because if we're started with the terminal
+        // it might not have settled, so the width is quite likely to be in flight.
         //
         // This means that `printf %s foo; fish` will overwrite the `foo`,
         // but that's a smaller problem than having the omitted newline char
         // appear constantly.
-        let trusted_width = (!self.first_prompt).then_some(termsize_last().width());
+        if !self.first_prompt || !self.conf.read_prompt_str_is_empty {
+            let trusted_width = (!self.first_prompt).then_some(termsize_last().width());
+            self.screen.reset_abandoning_line(trusted_width);
+        }
         self.first_prompt = false;
-        self.screen.reset_abandoning_line(trusted_width);
 
         if !self.conf.event.is_empty() {
             event::fire_generic(self.parser, self.conf.event.to_owned(), vec![]);

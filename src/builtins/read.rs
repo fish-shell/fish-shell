@@ -248,6 +248,7 @@ fn read_interactive(
     shell: bool,
     silent: bool,
     prompt: &wstr,
+    prompt_str_is_empty: bool,
     right_prompt: &wstr,
     commandline: &Option<WString>,
     inputfd: RawFd,
@@ -265,6 +266,7 @@ fn read_interactive(
         expand_abbrev_ok: false,
 
         exit_on_interrupt: true,
+        read_prompt_str_is_empty: prompt_str_is_empty,
         in_silent_mode: silent,
 
         left_prompt_cmd: prompt.to_owned(),
@@ -644,6 +646,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 opts.shell,
                 opts.silent,
                 opts.prompt.as_ref().unwrap(),
+                opts.prompt_str.as_ref().is_some_and(|ps| ps.is_empty()),
                 &opts.right_prompt,
                 &opts.commandline,
                 streams.stdin_fd(),

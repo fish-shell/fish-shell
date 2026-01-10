@@ -1,0 +1,61 @@
+# name: 'Catppuccin Macchiato'
+# url: 'https://github.com/catppuccin/fish'
+
+[light]
+# preferred_background: eff1f5
+fish_color_normal 4c4f69
+fish_color_command 1e66f5
+fish_color_param dd7878
+fish_color_keyword 8839ef
+fish_color_quote 40a02b
+fish_color_redirection ea76cb
+fish_color_end fe640b
+fish_color_comment 8c8fa1
+fish_color_error d20f39
+fish_color_gray 9ca0b0
+fish_color_selection --background=ccd0da
+fish_color_search_match --background=ccd0da
+fish_color_option 40a02b
+fish_color_operator ea76cb
+fish_color_escape e64553
+fish_color_autosuggestion 9ca0b0
+fish_color_cancel d20f39
+fish_color_cwd df8e1d
+fish_color_user 179299
+fish_color_host 1e66f5
+fish_color_host_remote 40a02b
+fish_color_status d20f39
+fish_pager_color_progress 9ca0b0
+fish_pager_color_prefix ea76cb
+fish_pager_color_completion 4c4f69
+fish_pager_color_description 9ca0b0
+
+[dark]
+# preferred_background: 24273a
+fish_color_normal cad3f5
+fish_color_command 8aadf4
+fish_color_param f0c6c6
+fish_color_keyword c6a0f6
+fish_color_quote a6da95
+fish_color_redirection f5bde6
+fish_color_end f5a97f
+fish_color_comment 8087a2
+fish_color_error ed8796
+fish_color_gray 6e738d
+fish_color_selection --background=363a4f
+fish_color_search_match --background=363a4f
+fish_color_option a6da95
+fish_color_operator f5bde6
+fish_color_escape ee99a0
+fish_color_autosuggestion 6e738d
+fish_color_cancel ed8796
+fish_color_cwd eed49f
+fish_color_user 8bd5ca
+fish_color_host 8aadf4
+fish_color_host_remote a6da95
+fish_color_status ed8796
+fish_pager_color_progress 6e738d
+fish_pager_color_prefix f5bde6
+fish_pager_color_completion cad3f5
+fish_pager_color_description 6e738d
+

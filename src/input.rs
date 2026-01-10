@@ -1,4 +1,4 @@
-use crate::common::{Named, escape, get_by_sorted_name};
+use crate::common::{FilenameRef, Named, escape, get_by_sorted_name};
 use crate::env::Environment;
 use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
@@ -49,6 +49,8 @@ pub struct InputMapping {
     sets_mode: Option<WString>,
     /// Perhaps this binding was created using a raw escape sequence.
     key_name_style: KeyNameStyle,
+    /// The file from which the binding was created, or None if not from a file.
+    pub definition_file: Option<FilenameRef>,
 }
 
 impl InputMapping {
@@ -59,6 +61,7 @@ impl InputMapping {
         mode: WString,
         sets_mode: Option<WString>,
         key_name_style: KeyNameStyle,
+        definition_file: Option<FilenameRef>,
     ) -> InputMapping {
         static LAST_INPUT_MAP_SPEC_ORDER: AtomicU32 = AtomicU32::new(0);
         let specification_order = 1 + LAST_INPUT_MAP_SPEC_ORDER.fetch_add(1, Ordering::Relaxed);
@@ -73,6 +76,7 @@ impl InputMapping {
             mode,
             sets_mode,
             key_name_style,
+            definition_file,
         }
     }
 
@@ -264,6 +268,7 @@ fn input_mapping_insert_sorted(ml: &mut Vec<InputMapping>, new_mapping: InputMap
 
 impl InputMappingSet {
     /// Adds an input mapping.
+    #[allow(clippy::too_many_arguments)]
     pub fn add(
         &mut self,
         sequence: Vec<Key>,
@@ -272,6 +277,7 @@ impl InputMappingSet {
         mode: WString,
         sets_mode: Option<WString>,
         user: bool,
+        definition_file: Option<FilenameRef>,
     ) {
         // Update any existing mapping with this sequence.
         // FIXME: this makes adding multiple bindings quadratic.
@@ -284,16 +290,25 @@ impl InputMappingSet {
             if m.seq == sequence && m.mode == mode {
                 m.commands = commands;
                 m.sets_mode = sets_mode;
+                m.definition_file = definition_file;
                 return;
             }
         }
 
         // Add a new mapping, using the next order.
-        let new_mapping = InputMapping::new(sequence, commands, mode, sets_mode, key_name_style);
+        let new_mapping = InputMapping::new(
+            sequence,
+            commands,
+            mode,
+            sets_mode,
+            key_name_style,
+            definition_file,
+        );
         input_mapping_insert_sorted(ml, new_mapping);
     }
 
     // Like add(), but takes a single command.
+    #[allow(clippy::too_many_arguments)]
     pub fn add1(
         &mut self,
         sequence: Vec<Key>,
@@ -302,6 +317,7 @@ impl InputMappingSet {
         mode: WString,
         sets_mode: Option<WString>,
         user: bool,
+        definition_file: Option<FilenameRef>,
     ) {
         self.add(
             sequence,
@@ -310,6 +326,7 @@ impl InputMappingSet {
             mode,
             sets_mode,
             user,
+            definition_file,
         );
     }
 }
@@ -332,7 +349,15 @@ pub fn init_input() {
         let mut add = |key: Vec<Key>, cmd: &str| {
             let mode = DEFAULT_BIND_MODE.to_owned();
             let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
-            input_mapping.add1(key, KeyNameStyle::Plain, cmd.into(), mode, sets_mode, false);
+            input_mapping.add1(
+                key,
+                KeyNameStyle::Plain,
+                cmd.into(),
+                mode,
+                sets_mode,
+                false,
+                None,
+            );
         };
 
         add(vec![], "self-insert");
@@ -365,6 +390,7 @@ pub fn init_input() {
                 mode,
                 sets_mode,
                 false,
+                None,
             );
         };
         add_raw("\x1B[A", "up-line");
@@ -932,6 +958,7 @@ impl InputMappingSet {
         user: bool,
         out_sets_mode: &mut Option<&'a wstr>,
         out_key_name_style: &mut KeyNameStyle,
+        out_definition_file: &mut Option<&'a FilenameRef>,
     ) -> bool {
         let ml = if user {
             &self.mapping_list
@@ -943,6 +970,7 @@ impl InputMappingSet {
                 *out_cmds = &m.commands;
                 *out_sets_mode = m.sets_mode.as_deref();
                 *out_key_name_style = m.key_name_style.clone();
+                *out_definition_file = m.definition_file.as_ref();
                 return true;
             }
         }
@@ -1010,6 +1038,7 @@ mod tests {
             default_mode(),
             None,
             true,
+            None,
         );
         input_mappings.add1(
             desired_binding.clone(),
@@ -1018,6 +1047,7 @@ mod tests {
             default_mode(),
             None,
             true,
+            None,
         );
 
         // Push the desired binding to the queue.

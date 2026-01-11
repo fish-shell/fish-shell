@@ -239,7 +239,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # and without this would then have subtly broken bindings.
     if test "$fish_key_bindings" != fish_vi_key_bindings
         and test "$rebind" = true
-        __fish_change_key_bindings fish_vi_key_bindings || return
+        __fish_change_key_bindings fish_vi_key_bindings
     end
 
     set -l init_mode insert

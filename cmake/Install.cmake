@@ -114,9 +114,9 @@ configure_file(fish.pc.in fish.pc.noversion @ONLY)
 add_custom_command(OUTPUT fish.pc
     COMMAND sed '/Version/d' fish.pc.noversion > fish.pc
     COMMAND printf "Version: " >> fish.pc
-    COMMAND cat ${FBVF} >> fish.pc
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh --stdout >> fish.pc
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS CHECK-FISH-BUILD-VERSION-FILE ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 
 add_custom_target(build_fish_pc ALL DEPENDS fish.pc)
 
@@ -166,7 +166,7 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/html/ # Trailing slash is
 install(FILES CHANGELOG.rst DESTINATION ${docdir})
 
 # Group install targets into a InstallTargets folder
-set_property(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
+set_property(TARGET build_fish_pc
              PROPERTY FOLDER cmake/InstallTargets)
 
 # Make a target build_root that installs into the buildroot directory, for testing.

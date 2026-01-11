@@ -49,6 +49,7 @@ use errno::{Errno, errno};
 
 use super::history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
 use super::iothreads::{self, Debouncers};
+use super::word_motion::{MoveWordStateMachine, MoveWordStyle};
 use crate::abbrs::abbrs_match;
 use crate::ast::{self, Kind, is_same_node};
 use crate::builtins::shared::ErrorCode;
@@ -143,8 +144,7 @@ use crate::threads::{assert_is_background_thread, assert_is_main_thread};
 use crate::tokenizer::quote_end;
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::tokenizer::{
-    MoveWordStateMachine, MoveWordStyle, TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType,
-    Tokenizer, tok_command,
+    TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType, Tokenizer, tok_command,
 };
 use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
 use crate::tty_handoff::XTGETTCAP_QUERY_OS_NAME;

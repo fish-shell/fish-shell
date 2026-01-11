@@ -24,8 +24,7 @@ endif()
 
 add_custom_target(sphinx-docs
     mkdir -p ${SPHINX_HTML_DIR}/_static/
-    COMMAND env FISH_BUILD_VERSION_FILE=${CMAKE_CURRENT_BINARY_DIR}/${FBVF}
-        PATH="${SPHINX_HTML_FISH_INDENT_PATH}:$$PATH"
+    COMMAND env PATH="${SPHINX_HTML_FISH_INDENT_PATH}:$$PATH"
         ${SPHINX_EXECUTABLE}
         -j auto
         -q -b html
@@ -34,21 +33,18 @@ add_custom_target(sphinx-docs
         "${SPHINX_SRC_DIR}"
         "${SPHINX_HTML_DIR}"
     DEPENDS
-        CHECK-FISH-BUILD-VERSION-FILE
         ${SPHINX_SRC_DIR}/fish_indent_lexer.py
         ${SPHINX_HTML_FISH_INDENT_DEP}
     COMMENT "Building HTML documentation with Sphinx")
 
 add_custom_target(sphinx-manpages
-    env FISH_BUILD_VERSION_FILE=${CMAKE_CURRENT_BINARY_DIR}/${FBVF}
-        ${SPHINX_EXECUTABLE}
+    ${SPHINX_EXECUTABLE}
         -j auto
         -q -b man
         -c "${SPHINX_SRC_DIR}"
         -d "${SPHINX_ROOT_DIR}/.doctrees-man"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_MANPAGE_DIR}/man1"
-    DEPENDS CHECK-FISH-BUILD-VERSION-FILE
     COMMENT "Building man pages with Sphinx")
 
 if(NOT DEFINED WITH_DOCS) # Don't check for legacy options if the new one is defined, to help bisecting.

@@ -8,6 +8,7 @@ function __fish_change_key_bindings --argument-names bindings
     # We try to use `set --no-event`, but to avoid leaving the user without bindings
     # if they run this with an older version we fall back on setting the variable
     # with an event.
+    true
     if ! set --no-event $scope fish_key_bindings $bindings 2>/dev/null
         # This triggers the handler, which calls us again
         set $scope fish_key_bindings $bindings

@@ -7,6 +7,7 @@ set -l tmpdir (mktemp -d)
 for bindings in true fish_default_key_bindings fish_vi_key_bindings
     $fish -c "
         $bindings
+        or echo >&2 error setting bindings: status=\$status
         bind > $tmpdir/old
         bind --erase --all --preset
         bind --erase --all

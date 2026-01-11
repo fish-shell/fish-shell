@@ -38,11 +38,6 @@ impl MoveWordStateMachine {
         }
     }
 
-    #[cfg(test)]
-    fn reset(&mut self) {
-        self.state = 0;
-    }
-
     fn consume_char_punctuation(&mut self, c: char) -> bool {
         const S_ALWAYS_ONE: u8 = 0;
         const S_REST: u8 = 1;
@@ -268,7 +263,8 @@ mod tests {
                 let direction = $direction;
                 let (command, mut stops, mut idx, end) = setup(direction, $line);
                 assert!(!command.is_empty());
-                let mut sm = MoveWordStateMachine::new($style);
+                let new_sm = || MoveWordStateMachine::new($style);
+                let mut sm = new_sm();
                 while idx != end {
                     let word_idx = if direction == MoveWordDir::Left {
                         idx - 1
@@ -293,7 +289,7 @@ mod tests {
                             "Expected to stop={expected_idx} but stopped at {idx}. String: {command:?}"
                         );
                         stops.pop_front();
-                        sm.reset();
+                        sm = new_sm();
                     }
                 }
                 assert!(

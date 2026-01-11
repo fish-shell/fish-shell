@@ -114,7 +114,7 @@ configure_file(fish.pc.in fish.pc.noversion @ONLY)
 add_custom_command(OUTPUT fish.pc
     COMMAND sed '/Version/d' fish.pc.noversion > fish.pc
     COMMAND printf "Version: " >> fish.pc
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh --stdout >> fish.pc
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh >> fish.pc
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 

@@ -119,7 +119,7 @@ issue_url = "https://github.com/fish-shell/fish-shell/issues"
 
 # From Cargo, or no build system.
 ret = subprocess.check_output(
-    ("../build_tools/git_version_gen.sh", "--stdout"), stderr=subprocess.STDOUT
+    ("../build_tools/git_version_gen.sh"), stderr=subprocess.STDOUT
 ).decode("utf-8")
 
 # The full version, including alpha/beta/rc tags

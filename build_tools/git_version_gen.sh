@@ -21,9 +21,4 @@ else
     VN="$DEF_VER"
 fi
 
-# If the first param is --stdout, then output to stdout and exit.
-if test "$1" = '--stdout'
-then
-    echo "$VN"
-    exit 0
-fi
+echo "$VN"

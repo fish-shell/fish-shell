@@ -49,7 +49,7 @@ if [ -n "$NOTARIZE" ] && [ -z "$API_KEY_FILE" ]; then
     usage
 fi
 
-VERSION=$(build_tools/git_version_gen.sh --stdout 2>/dev/null)
+VERSION=$(build_tools/git_version_gen.sh 2>/dev/null)
 
 echo "Version is $VERSION"
 

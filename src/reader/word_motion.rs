@@ -3,6 +3,12 @@ use crate::tokenizer::tok_is_string_character;
 use crate::prelude::*;
 use crate::reader::is_backslashed;
 
+#[derive(Eq, PartialEq)]
+pub enum MoveWordDir {
+    Left,
+    Right,
+}
+
 pub enum MoveWordStyle {
     /// stop at punctuation
     Punctuation,
@@ -225,20 +231,14 @@ fn is_path_component_character(c: char) -> bool {
 mod tests {
     use std::collections::HashSet;
 
-    use super::{MoveWordStateMachine, MoveWordStyle};
+    use super::{MoveWordDir, MoveWordStateMachine, MoveWordStyle};
     use crate::prelude::*;
 
     /// Test word motion (forward-word, etc.). Carets represent cursor stops.
     #[test]
     fn test_word_motion() {
-        #[derive(Eq, PartialEq)]
-        pub enum Direction {
-            Left,
-            Right,
-        }
-
         fn validate_visitor(
-            direction: Direction,
+            direction: MoveWordDir,
             style: MoveWordStyle,
             line: &str,
             on_failure: fn(&str),
@@ -255,7 +255,7 @@ mod tests {
                 }
             }
 
-            let (mut idx, end) = if direction == Direction::Left {
+            let (mut idx, end) = if direction == MoveWordDir::Left {
                 (*stops.iter().max().unwrap(), 0)
             } else {
                 (*stops.iter().min().unwrap(), command.len())
@@ -264,7 +264,7 @@ mod tests {
 
             let mut sm = MoveWordStateMachine::new(style);
             while idx != end {
-                let char_idx = if direction == Direction::Left {
+                let char_idx = if direction == MoveWordDir::Left {
                     idx - 1
                 } else {
                     idx
@@ -280,7 +280,7 @@ mod tests {
                 if expected_stop {
                     stops.remove(&idx);
                     sm.reset();
-                } else if direction == Direction::Left {
+                } else if direction == MoveWordDir::Left {
                     idx -= 1;
                 } else {
                     idx += 1;
@@ -294,7 +294,7 @@ mod tests {
             };
         }
 
-        use Direction::*;
+        use MoveWordDir::*;
         use MoveWordStyle::*;
 
         // PathComponents tests

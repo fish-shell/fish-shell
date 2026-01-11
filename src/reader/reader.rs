@@ -121,6 +121,7 @@ use crate::proc::{
     have_proc_stat, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
     print_exit_warning_for_jobs, proc_update_jiffies,
 };
+use crate::reader::word_motion::MoveWordDir;
 use crate::screen::is_dumb;
 use crate::screen::{CharOffset, Screen, screen_force_clear_to_end};
 use crate::should_flog;
@@ -2170,12 +2171,6 @@ impl ReaderData {
         self.erase_substring(elt, pos..pos_end);
         self.update_buff_pos(elt, None);
     }
-}
-
-#[derive(Eq, PartialEq)]
-enum MoveWordDir {
-    Left,
-    Right,
 }
 
 impl ReaderData {

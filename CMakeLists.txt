@@ -24,10 +24,6 @@ include(cmake/Rust.cmake)
 # Work around issue where archive-built libs go in the wrong place.
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-# Set up the machinery around FISH-BUILD-VERSION-FILE
-# This defines the FBVF variable.
-include(Version)
-
 # Set up the docs.
 include(cmake/Docs.cmake)
 

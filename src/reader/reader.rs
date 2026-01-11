@@ -17,6 +17,7 @@
 //! control-C from generating SIGINT, so failing to disable these would prevent cancellation of wildcard
 //! expansion, etc.
 
+use crate::portable_atomic::AtomicU64;
 use libc::{
     _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
     IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, SIGTTIN, STDERR_FILENO, STDIN_FILENO,
@@ -24,8 +25,6 @@ use libc::{
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
-#[cfg(not(target_has_atomic = "64"))]
-use portable_atomic::AtomicU64;
 use std::borrow::Cow;
 use std::cell::UnsafeCell;
 use std::cmp;
@@ -39,8 +38,6 @@ use std::os::fd::FromRawFd;
 use std::os::fd::OwnedFd;
 use std::os::fd::{AsRawFd, RawFd};
 use std::pin::Pin;
-#[cfg(target_has_atomic = "64")]
-use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicI32, AtomicU8, AtomicU32, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, MutexGuard, OnceLock};
 use std::time::{Duration, Instant};

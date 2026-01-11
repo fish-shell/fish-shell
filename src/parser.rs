@@ -28,6 +28,7 @@ use crate::parse_constants::{
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
 use crate::parse_tree::NodeRef;
 use crate::parse_tree::{LineCounter, ParsedSourceRef, parse_source};
+use crate::portable_atomic::AtomicU64;
 use crate::prelude::*;
 use crate::proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap};
 use crate::signal::{Signal, signal_check_cancel, signal_clear_cancel};
@@ -37,8 +38,6 @@ use crate::wutil::perror;
 use crate::{flog, flogf, function};
 use fish_wchar::WExt;
 use libc::c_int;
-#[cfg(not(target_has_atomic = "64"))]
-use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::OsStr;
 use std::fs::File;
@@ -47,8 +46,6 @@ use std::num::NonZeroU32;
 use std::os::fd::OwnedFd;
 use std::rc::Rc;
 use std::sync::Arc;
-#[cfg(target_has_atomic = "64")]
-use std::sync::atomic::AtomicU64;
 use std::time::Duration;
 
 pub enum BlockData {

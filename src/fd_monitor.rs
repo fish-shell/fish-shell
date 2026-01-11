@@ -1,10 +1,7 @@
+use crate::portable_atomic::AtomicU64;
 use cfg_if::cfg_if;
-#[cfg(not(target_has_atomic = "64"))]
-use portable_atomic::AtomicU64;
 use std::collections::HashMap;
 use std::os::unix::prelude::*;
-#[cfg(target_has_atomic = "64")]
-use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -472,13 +469,10 @@ impl Drop for FdMonitor {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(target_has_atomic = "64"))]
-    use portable_atomic::AtomicU64;
+    use crate::portable_atomic::AtomicU64;
     use std::fs::File;
     use std::io::Write;
     use std::os::fd::{AsRawFd, OwnedFd};
-    #[cfg(target_has_atomic = "64")]
-    use std::sync::atomic::AtomicU64;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::{Arc, Barrier, Mutex};
     use std::thread;

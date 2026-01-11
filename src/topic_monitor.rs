@@ -605,11 +605,8 @@ pub fn topic_monitor_principal() -> &'static TopicMonitor {
 #[cfg(test)]
 mod tests {
     use super::{GenerationsList, Topic, TopicMonitor};
+    use crate::portable_atomic::AtomicU64;
     use crate::tests::prelude::*;
-    #[cfg(not(target_has_atomic = "64"))]
-    use portable_atomic::AtomicU64;
-    #[cfg(target_has_atomic = "64")]
-    use std::sync::atomic::AtomicU64;
     use std::sync::{
         Arc,
         atomic::{AtomicU32, Ordering},

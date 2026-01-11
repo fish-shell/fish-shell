@@ -14,6 +14,7 @@ use crate::io::IoChain;
 use crate::job_group::{JobGroup, MaybeJobId};
 use crate::parse_tree::NodeRef;
 use crate::parser::{Block, Parser};
+use crate::portable_atomic::AtomicU64;
 use crate::prelude::*;
 use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
 use crate::redirection::RedirectionSpecList;
@@ -28,16 +29,12 @@ use libc::{
     SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED,
     WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
 };
-#[cfg(not(target_has_atomic = "64"))]
-use portable_atomic::AtomicU64;
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};
 use std::num::NonZeroU32;
 use std::os::fd::RawFd;
 use std::rc::Rc;
-#[cfg(target_has_atomic = "64")]
-use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 

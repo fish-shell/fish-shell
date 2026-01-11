@@ -26,7 +26,7 @@ add_executable(fish_macapp EXCLUDE_FROM_ALL
 # so cmake must be re-run after version changes for the app to be updated. But
 # generally this will be run by make_macos_pkg.sh which always re-runs cmake.
 execute_process(
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh --stdout
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh
     COMMAND cut -d- -f1
     OUTPUT_VARIABLE FISH_SHORT_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE)

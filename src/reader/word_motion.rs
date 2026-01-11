@@ -1,14 +1,8 @@
-use crate::tokenizer::tok_is_string_character;
-
 use crate::prelude::*;
 use crate::reader::is_backslashed;
+use crate::tokenizer::tok_is_string_character;
 
-#[derive(Clone, Copy, Eq, PartialEq)]
-pub enum MoveWordDir {
-    Left,
-    Right,
-}
-
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MoveWordStyle {
     /// stop at punctuation
     Punctuation,
@@ -18,208 +12,252 @@ pub enum MoveWordStyle {
     Whitespace,
 }
 
-/// Our state machine that implements "one word" movement or erasure.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum MoveWordDir {
+    Left,
+    Right,
+}
+
 pub struct MoveWordStateMachine {
-    state: u8,
-    style: MoveWordStyle,
+    state: MoveWordState,
+}
+
+enum MoveWordState {
+    SmallWord(State<SmallWordMovementState>),
+    PathComponent(State<PathComponentState>),
+    BigWord(State<BigWordMovementState>),
+}
+
+enum State<S: HasNextState> {
+    Initial,
+    Live(S),
+    Final,
+}
+
+enum NonFinalState<S> {
+    Initial,
+    Live(S),
+}
+
+trait HasNextState {
+    fn next_state(state: NonFinalState<&Self>, text: &wstr, idx: usize, c: char) -> State<Self>
+    where
+        Self: Sized;
 }
 
 impl MoveWordStateMachine {
     pub fn new(style: MoveWordStyle) -> Self {
-        MoveWordStateMachine { state: 0, style }
+        use MoveWordState as MWS;
+        use MoveWordStyle as Style;
+        let state = match style {
+            Style::Punctuation => MWS::SmallWord(State::Initial),
+            Style::PathComponents => MWS::PathComponent(State::Initial),
+            Style::Whitespace => MWS::BigWord(State::Initial),
+        };
+        Self { state }
     }
-
     pub fn consume_char(&mut self, text: &wstr, idx: usize) -> bool {
+        use MoveWordState as MWS;
+        match &mut self.state {
+            MWS::SmallWord(state) => Self::to_next_state(state, text, idx),
+            MWS::PathComponent(state) => Self::to_next_state(state, text, idx),
+            MWS::BigWord(state) => Self::to_next_state(state, text, idx),
+        }
+    }
+    fn to_next_state<MWS: HasNextState>(state: &mut State<MWS>, text: &wstr, idx: usize) -> bool {
+        let input_state = match &*state {
+            State::Initial => NonFinalState::Initial,
+            State::Live(s) => NonFinalState::Live(s),
+            State::Final => panic!(),
+        };
         let c = text.as_char_slice()[idx];
-        match self.style {
-            MoveWordStyle::Punctuation => self.consume_char_punctuation(c),
-            MoveWordStyle::PathComponents => self.consume_char_path_components(text, idx, c),
-            MoveWordStyle::Whitespace => self.consume_char_whitespace(c),
-        }
+        *state = MWS::next_state(input_state, text, idx, c);
+        !matches!(*state, State::Final)
     }
+}
 
-    fn consume_char_punctuation(&mut self, c: char) -> bool {
-        const S_ALWAYS_ONE: u8 = 0;
-        const S_REST: u8 = 1;
-        const S_WHITESPACE_REST: u8 = 2;
-        const S_WHITESPACE: u8 = 3;
-        const S_ALPHANUMERIC: u8 = 4;
-        const S_END: u8 = 5;
-
-        let mut consumed = false;
-        while self.state != S_END && !consumed {
-            match self.state {
-                S_ALWAYS_ONE => {
-                    // Always consume the first character.
-                    consumed = true;
-                    if c.is_whitespace() {
-                        self.state = S_WHITESPACE;
-                    } else if c.is_alphanumeric() {
-                        self.state = S_ALPHANUMERIC;
-                    } else {
-                        // Don't allow switching type (ws->nonws) after non-whitespace and
-                        // non-alphanumeric.
-                        self.state = S_REST;
-                    }
+#[derive(Clone, Copy)]
+enum SmallWordMovementState {
+    Rest,
+    WhitespaceRest,
+    Whitespace,
+    Alphanumeric,
+}
+impl HasNextState for SmallWordMovementState {
+    fn next_state(state: NonFinalState<&Self>, _text: &wstr, _idx: usize, c: char) -> State<Self> {
+        use {NonFinalState as NFS, SmallWordMovementState as S};
+        let final_state = State::Final;
+        State::Live(match state {
+            NFS::Initial => {
+                if c.is_whitespace() {
+                    S::Whitespace
+                } else if c.is_alphanumeric() {
+                    S::Alphanumeric
+                } else {
+                    // Don't allow switching type (ws->nonws) after non-whitespace and
+                    // non-alphanumeric.
+                    S::Rest
                 }
-                S_REST => {
-                    if c.is_whitespace() {
-                        // Consume only trailing whitespace.
-                        self.state = S_WHITESPACE_REST;
-                    } else if c.is_alphanumeric() {
-                        // Consume only alnums.
-                        self.state = S_ALPHANUMERIC;
-                    } else {
-                        consumed = false;
-                        self.state = S_END;
-                    }
+            }
+            NFS::Live(S::Rest) => {
+                if c.is_whitespace() {
+                    // Consume only trailing whitespace.
+                    S::WhitespaceRest
+                } else if c.is_alphanumeric() {
+                    // Consume only alnums.
+                    S::Alphanumeric
+                } else {
+                    return final_state;
                 }
-                S_WHITESPACE_REST | S_WHITESPACE => {
-                    // "whitespace" consumes whitespace and switches to alnums,
-                    // "whitespace_rest" only consumes whitespace.
-                    if c.is_whitespace() {
-                        // Consumed whitespace.
-                        consumed = true;
-                    } else {
-                        self.state = if self.state == S_WHITESPACE {
-                            S_ALPHANUMERIC
-                        } else {
-                            S_END
-                        };
+            }
+            NFS::Live(s @ S::WhitespaceRest) | NFS::Live(s @ S::Whitespace) => {
+                // "whitespace" consumes whitespace and switches to alnums,
+                // "whitespace_rest" only consumes whitespace.
+                if c.is_whitespace() {
+                    // Consumed whitespace.
+                    *s
+                } else {
+                    if !matches!(s, S::Whitespace) {
+                        return final_state;
                     }
-                }
-                S_ALPHANUMERIC => {
                     if c.is_alphanumeric() {
-                        consumed = true; // consumed alphanumeric
+                        S::Alphanumeric
                     } else {
-                        self.state = S_END;
+                        return final_state;
                     }
                 }
-                _ => {}
             }
-        }
-        consumed
+            NFS::Live(S::Alphanumeric) => {
+                if c.is_alphanumeric() {
+                    S::Alphanumeric
+                } else {
+                    return final_state;
+                }
+            }
+        })
     }
+}
 
-    fn consume_char_path_components(&mut self, s: &wstr, idx: usize, c: char) -> bool {
-        const S_INITIAL_PUNCTUATION: u8 = 0;
-        const S_WHITESPACE: u8 = 1;
-        const S_SEPARATOR: u8 = 2;
-        const S_SLASH: u8 = 3;
-        const S_PATH_COMPONENT_CHARACTERS: u8 = 4;
-        const S_INITIAL_SEPARATOR: u8 = 5;
-        const S_END: u8 = 6;
-
-        let is_escaped = is_backslashed(s, idx);
-        let is_whitespace = c.is_whitespace() && !is_escaped;
-        let is_path_component_character =
-            is_path_component_character(c) || (c.is_whitespace() && is_escaped);
-
-        let mut consumed = false;
-        while self.state != S_END && !consumed {
-            match self.state {
-                S_INITIAL_PUNCTUATION => {
-                    if !is_path_component_character && !is_whitespace {
-                        self.state = S_INITIAL_SEPARATOR;
-                    } else {
-                        if !is_path_component_character {
-                            consumed = true;
-                        }
-                        self.state = S_WHITESPACE;
-                    }
+// Consume a "word" of printable characters plus any leading whitespace.
+enum BigWordMovementState {
+    Blank,
+    Graph,
+}
+impl HasNextState for BigWordMovementState {
+    fn next_state(state: NonFinalState<&Self>, _text: &wstr, _idx: usize, c: char) -> State<Self> {
+        use {BigWordMovementState as S, NonFinalState as NFS};
+        State::Live(match state {
+            NFS::Initial => {
+                // always consume the first character
+                // If it's not whitespace, only consume those from here.
+                if !c.is_whitespace() {
+                    S::Graph
+                } else {
+                    // If it's whitespace, keep consuming whitespace until the graphs.
+                    S::Blank
                 }
-                S_WHITESPACE => {
-                    if is_whitespace {
-                        consumed = true; // consumed whitespace
-                    } else if c == '/' || is_path_component_character {
-                        self.state = S_SLASH; // path component
-                    } else {
-                        self.state = S_SEPARATOR; // path separator
-                    }
-                }
-                S_SEPARATOR => {
-                    if !is_whitespace && !is_path_component_character {
-                        consumed = true; // consumed separator
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                S_SLASH => {
-                    if c == '/' {
-                        consumed = true; // consumed slash
-                    } else {
-                        self.state = S_PATH_COMPONENT_CHARACTERS;
-                    }
-                }
-                S_PATH_COMPONENT_CHARACTERS => {
-                    if is_path_component_character {
-                        consumed = true; // consumed string character except slash
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                S_INITIAL_SEPARATOR => {
-                    if is_path_component_character {
-                        consumed = true;
-                        self.state = S_PATH_COMPONENT_CHARACTERS;
-                    } else if is_whitespace {
-                        self.state = S_END;
-                    } else {
-                        consumed = true;
-                    }
-                }
-                _ => {}
             }
-        }
-        consumed
-    }
-
-    fn consume_char_whitespace(&mut self, c: char) -> bool {
-        // Consume a "word" of printable characters plus any leading whitespace.
-        const S_ALWAYS_ONE: u8 = 0;
-        const S_BLANK: u8 = 1;
-        const S_GRAPH: u8 = 2;
-        const S_END: u8 = 3;
-
-        let mut consumed = false;
-        while self.state != S_END && !consumed {
-            match self.state {
-                S_ALWAYS_ONE => {
-                    // always consume the first character
-                    // If it's not whitespace, only consume those from here.
-                    consumed = true;
-                    if !c.is_whitespace() {
-                        self.state = S_GRAPH;
-                    } else {
-                        // If it's whitespace, keep consuming whitespace until the graphs.
-                        self.state = S_BLANK;
-                    }
+            NFS::Live(S::Blank) => {
+                if c.is_whitespace() {
+                    // consumed whitespace
+                    S::Blank
+                } else {
+                    S::Graph
                 }
-                S_BLANK => {
-                    if c.is_whitespace() {
-                        // consumed whitespace
-                        consumed = true;
-                    } else {
-                        self.state = S_GRAPH;
-                    }
-                }
-                S_GRAPH => {
-                    if !c.is_whitespace() {
-                        // consumed printable non-space
-                        consumed = true;
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                _ => {}
             }
-        }
-        consumed
+            NFS::Live(S::Graph) => {
+                if !c.is_whitespace() {
+                    // consumed printable non-space
+                    S::Graph
+                } else {
+                    return State::Final;
+                }
+            }
+        })
     }
 }
 
 fn is_path_component_character(c: char) -> bool {
     tok_is_string_character(c, None) && !L!("/={,}'\":@#").as_char_slice().contains(&c)
+}
+
+/// a path component contains either
+/// - [space +] end word
+/// - punc + end word
+/// - space + end punc
+#[derive(Clone, Copy)]
+enum PathComponentState {
+    Whitespace,
+    Separator,
+    Slash,
+    PathComponentCharacters,
+    InitialSeparator,
+}
+impl HasNextState for PathComponentState {
+    fn next_state(state: NonFinalState<&Self>, text: &wstr, idx: usize, c: char) -> State<Self> {
+        use {NonFinalState as NFS, PathComponentState as S};
+        let is_escaped = is_backslashed(text, idx);
+        let is_whitespace = c.is_whitespace() && !is_escaped;
+        let is_path_component_character =
+            is_path_component_character(c) || (c.is_whitespace() && is_escaped);
+
+        let final_state = State::Final;
+
+        State::Live(match state {
+            NFS::Initial => {
+                if !is_path_component_character && !is_whitespace {
+                    S::InitialSeparator
+                } else {
+                    if is_path_component_character {
+                        S::PathComponentCharacters
+                    } else {
+                        S::Whitespace
+                    }
+                }
+            }
+            NFS::Live(S::Whitespace) => {
+                if is_whitespace {
+                    S::Whitespace
+                } else if c == '/' {
+                    S::Slash // path component
+                } else if is_path_component_character {
+                    S::PathComponentCharacters
+                } else {
+                    S::Separator // path separator
+                }
+            }
+            NFS::Live(S::Separator) => {
+                if !is_whitespace && !is_path_component_character {
+                    S::Separator
+                } else {
+                    return final_state;
+                }
+            }
+            NFS::Live(S::Slash) => {
+                if c == '/' {
+                    S::Slash
+                } else {
+                    S::PathComponentCharacters
+                }
+            }
+            NFS::Live(S::PathComponentCharacters) => {
+                if is_path_component_character {
+                    S::PathComponentCharacters
+                } else {
+                    return final_state;
+                }
+            }
+            NFS::Live(S::InitialSeparator) => {
+                if is_path_component_character {
+                    S::PathComponentCharacters
+                } else if is_whitespace {
+                    return final_state;
+                } else {
+                    S::InitialSeparator
+                }
+            }
+        })
+    }
 }
 
 #[cfg(test)]

@@ -79,7 +79,7 @@ debug = true
 
 [package]
 name = "fish"
-version = "4.3.3-snapshot"
+version = "4.3.3"
 edition.workspace = true
 rust-version.workspace = true
 default-run = "fish"

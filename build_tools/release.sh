@@ -83,13 +83,18 @@ sed -i \
     -e "2c$(printf %s "$changelog_title" | sed s/./=/g)" \
     CHANGELOG.rst
 
-CommitVersion() {
-    sed -i "s/^version = \".*\"/version = \"$1\"/g" Cargo.toml
-    cargo fetch --offline
-    if [ "$1" = "$version" ]; then
-        # debchange is a Debian script to manage the Debian changelog, but
-        # it's too annoying to install everywhere. Just do it by hand.
-        cat - contrib/debian/changelog > contrib/debian/changelog.new <<EOF
+CreateCommit() {
+    git commit -m "$2
+
+Created by ./build_tools/release.sh $version"
+}
+
+sed -i "s/^version = \".*\"/version = \"$1\"/g" Cargo.toml
+cargo fetch --offline
+if [ "$1" = "$version" ]; then
+    # debchange is a Debian script to manage the Debian changelog, but
+    # it's too annoying to install everywhere. Just do it by hand.
+    cat - contrib/debian/changelog > contrib/debian/changelog.new <<EOF
 fish (${version}-1) stable; urgency=medium
 
   * Release of new version $version.
@@ -99,16 +104,11 @@ fish (${version}-1) stable; urgency=medium
  -- $committer  $(date -R)
 
 EOF
-        mv contrib/debian/changelog.new contrib/debian/changelog
-        git add contrib/debian/changelog
-    fi
-    git add CHANGELOG.rst Cargo.toml Cargo.lock
-    git commit -m "$2
-
-Created by ./build_tools/release.sh $version"
-}
-
-CommitVersion "$version" "Release $version"
+    mv contrib/debian/changelog.new contrib/debian/changelog
+    git add contrib/debian/changelog
+fi
+git add CHANGELOG.rst Cargo.toml Cargo.lock
+CreateCommit "Release $version"
 
 git -c "user.signingKey=$committer" \
     tag --sign --message="Release $version" $version
@@ -279,7 +279,8 @@ fish ?.?.? (released ???)
 EOF
     )
     printf %s\\n "$changelog" >CHANGELOG.rst
-    CommitVersion ${version}-snapshot "start new cycle"
+    git add CHANGELOG.rst
+    CreateCommit "start new cycle"
     git push $remote HEAD:master
 } fi
 

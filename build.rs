@@ -35,7 +35,7 @@ fn main() {
     rsconf::set_env_value("BUILD_HOST_TRIPLE", &env_var("HOST").unwrap());
     rsconf::set_env_value("BUILD_PROFILE", &env_var("PROFILE").unwrap());
 
-    let version = &get_version(&env::current_dir().unwrap());
+    let version = &get_version();
     // Per https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script,
     // the source directory is the current working directory of the build script
     rsconf::set_env_value("FISH_BUILD_VERSION", version);
@@ -195,17 +195,12 @@ fn setup_paths() {
     });
 }
 
-fn get_version(src_dir: &Path) -> String {
+fn get_version() -> String {
     use std::fs::read_to_string;
     use std::process::Command;
 
     if let Some(var) = env_var("FISH_BUILD_VERSION") {
         return var;
-    }
-
-    let path = src_dir.join("version");
-    if let Ok(strver) = read_to_string(path) {
-        return strver;
     }
 
     let args = &["describe", "--always", "--dirty=-dirty"];

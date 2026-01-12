@@ -1,24 +1,21 @@
 #!/bin/sh
 # Originally from the git sources (GIT-VERSION-GEN)
-# Presumably (C) Junio C Hamano <junkio@cox.net>
-# Reused under GPL v2.0
-# Modified for fish by David Adam <zanchey@ucc.gu.uwa.edu.au>
 
 set -e
 
 # Find the fish directory as two levels up from script directory.
 FISH_BASE_DIR="$( cd "$( dirname "$( dirname "$0" )" )" && pwd )"
-DEF_VER=unknown
 
-# First see if there is a version file (included in release tarballs),
-# then try git-describe, then default.
-if test -f "$FISH_BASE_DIR"/version
-then
-    VN=$(cat "$FISH_BASE_DIR"/version) || VN="$DEF_VER"
-elif VN=$(git -C "$FISH_BASE_DIR" describe --always --dirty 2>/dev/null); then
-   :
-else
-    VN="$DEF_VER"
+version=$(
+    awk <"$FISH_BASE_DIR/Cargo.toml" -F'"' '$1 == "version = " { print $2 }'
+)
+if git_version=$(
+    GIT_CEILING_DIRECTORIES=$FISH_BASE_DIR/.. \
+        git -C "$FISH_BASE_DIR" describe --always --dirty 2>/dev/null); then
+    if [ "$git_version" = "${git_version#"$version"}" ]; then
+        echo >&2 "$0: warning: Cargo.toml version '$version' is not a prefix of Git version '$git_version'"
+    fi
+    version=$git_version
 fi
 
-echo "$VN"
+echo "$version"

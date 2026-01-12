@@ -14,7 +14,6 @@ path=${FISH_ARTEFACT_PATH:-~/fish_built}/$prefix.tar.xz
 
 git archive \
     --prefix="$prefix/" \
-    --add-virtual-file="$prefix/version:$VERSION" \
     HEAD |
     xz >"$path"
 

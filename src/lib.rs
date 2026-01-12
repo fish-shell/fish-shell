@@ -74,7 +74,6 @@ pub mod topic_monitor;
 pub mod trace;
 pub mod tty_handoff;
 pub mod universal_notifier;
-pub mod util;
 pub mod wait_handle;
 pub mod wcstringutil;
 pub mod wgetopt;

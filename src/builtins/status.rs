@@ -527,7 +527,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
         }
         STATUS_LIST_FILES => {
-            use crate::util::wcsfilecmp_glob;
+            use fish_util::wcsfilecmp_glob;
             let mut paths = vec![];
             let mut add = |arg| {
                 let arg = crate::common::wcs2bytes(arg);

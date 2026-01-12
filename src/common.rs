@@ -12,10 +12,10 @@ use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::prelude::*;
 use crate::terminal::Output;
 use crate::termsize::Termsize;
-use crate::wcstringutil::str2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use fish_fallback::fish_wcwidth;
+use fish_wcstringutil::str2bytes_callback;
 use fish_widestring::{
     ENCODE_DIRECT_END, decode_byte_from_char, encode_byte_to_char, subslice_position,
 };

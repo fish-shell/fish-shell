@@ -75,7 +75,6 @@ pub mod tty_handoff;
 pub mod universal_notifier;
 pub mod util;
 pub mod wait_handle;
-pub mod wcstringutil;
 pub mod wgetopt;
 pub mod wildcard;
 

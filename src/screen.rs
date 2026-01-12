@@ -36,9 +36,9 @@ use crate::terminal::TerminalCommand::{
 };
 use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter, use_terminfo};
 use crate::termsize::Termsize;
-use crate::wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
 use crate::wutil::fstat;
 use fish_fallback::fish_wcwidth;
+use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
 
 #[derive(Copy, Clone, Default)]
 pub enum CharOffset {
@@ -2191,7 +2191,7 @@ mod tests {
         LayoutCache, PromptCacheEntry, PromptLayout, ScreenLayout, compute_layout,
     };
     use crate::tests::prelude::*;
-    use crate::wcstringutil::join_strings;
+    use fish_wcstringutil::join_strings;
 
     #[test]
     #[serial]

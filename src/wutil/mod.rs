@@ -12,8 +12,8 @@ use crate::common::{
 };
 use crate::fds::BorrowedFdFile;
 use crate::flog;
-use crate::wcstringutil::{join_strings, str2bytes_callback};
 use errno::errno;
+use fish_wcstringutil::{join_strings, str2bytes_callback};
 use fish_widestring::{IntoCharIter, L, WExt, WString, wstr};
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};

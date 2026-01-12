@@ -29,9 +29,9 @@ use crate::print_help::print_help;
 use crate::threads;
 use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer};
 use crate::topic_monitor::topic_monitor_init;
-use crate::wcstringutil::count_preceding_backslashes;
 use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
 use crate::wutil::fish_iswalnum;
+use fish_wcstringutil::count_preceding_backslashes;
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex

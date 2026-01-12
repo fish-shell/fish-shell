@@ -17,9 +17,9 @@ use crate::screen::{
 use crate::terminal::ColorSupport;
 use crate::terminal::use_terminfo;
 use crate::tty_handoff::xtversion;
-use crate::wcstringutil::string_prefixes_string;
 use crate::wutil::fish_wcstoi;
 use crate::{function, terminal};
+use fish_wcstringutil::{bool_from_string, string_prefixes_string};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -349,8 +349,7 @@ fn handle_fish_use_posix_spawn_change(vars: &EnvStack) {
     if !cfg!(have_posix_spawn) {
         USE_POSIX_SPAWN.store(false, Ordering::Relaxed);
     } else if let Some(var) = vars.get(L!("fish_use_posix_spawn")) {
-        let use_posix_spawn =
-            var.is_empty() || crate::wcstringutil::bool_from_string(&var.as_string());
+        let use_posix_spawn = var.is_empty() || bool_from_string(&var.as_string());
         USE_POSIX_SPAWN.store(use_posix_spawn, Ordering::Relaxed);
     } else {
         USE_POSIX_SPAWN.store(true, Ordering::Relaxed);
@@ -424,7 +423,7 @@ fn update_fish_color_support(vars: &EnvStack) {
     let is_xterm_16color = term == "xterm-16color";
 
     let supports_256color = if let Some(fish_term256) = vars.get(L!("fish_term256")) {
-        let ok = crate::wcstringutil::bool_from_string(&fish_term256.as_string());
+        let ok = bool_from_string(&fish_term256.as_string());
         flog!(
             term_support,
             "256-color support determined by $fish_term256:",
@@ -439,7 +438,7 @@ fn update_fish_color_support(vars: &EnvStack) {
     #[allow(unused_parens)]
     if let Some(fish_term24bit) = vars.get(L!("fish_term24bit")).map(|v| v.as_string()) {
         // $fish_term24bit
-        supports_24bit = crate::wcstringutil::bool_from_string(&fish_term24bit);
+        supports_24bit = bool_from_string(&fish_term24bit);
         flog!(
             term_support,
             "$fish_term24bit preference: 24-bit color",

@@ -1,4 +1,5 @@
-use crate::{screen::escape_code_length, wcstringutil::fish_wcwidth_visible};
+use crate::screen::escape_code_length;
+use fish_wcstringutil::fish_wcwidth_visible;
 // Forward some imports to make subcmd implementations easier
 use super::prelude::*;
 

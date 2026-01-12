@@ -8,7 +8,6 @@ use crate::parse_util::parse_util_detect_errors_in_argument_list;
 use crate::parse_util::{parse_util_detect_errors, parse_util_token_extent};
 use crate::proc::is_interactive_session;
 use crate::reader::{commandline_get_state, completion_apply_to_command_line};
-use crate::wcstringutil::string_suffixes_string;
 use crate::{
     common::bytes2wcstring,
     complete::{
@@ -16,6 +15,7 @@ use crate::{
         complete_remove, complete_remove_all,
     },
 };
+use fish_wcstringutil::string_suffixes_string;
 
 // builtin_complete_* are a set of rather silly looping functions that make sure that all the proper
 // combinations of complete_add or complete_remove get called. This is needed since complete allows

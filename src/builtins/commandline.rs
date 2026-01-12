@@ -20,7 +20,7 @@ use crate::reader::{
 };
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::{TokenType, Tokenizer};
-use crate::wcstringutil::join_strings;
+use fish_wcstringutil::join_strings;
 use std::ops::Range;
 
 /// Which part of the comandbuffer are we operating on.

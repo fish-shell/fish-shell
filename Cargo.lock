@@ -168,6 +168,7 @@ dependencies = [
  "fish-gettext-mo-file-parser",
  "fish-printf",
  "fish-tempfile",
+ "fish-util",
  "fish-wcstringutil",
  "fish-widecharwidth",
  "fish-widestring",
@@ -282,6 +283,14 @@ name = "fish-tempfile"
 version = "0.0.0"
 dependencies = [
  "nix",
+ "rand 0.9.2",
+]
+
+[[package]]
+name = "fish-util"
+version = "0.0.0"
+dependencies = [
+ "fish-widestring",
  "rand 0.9.2",
 ]
 

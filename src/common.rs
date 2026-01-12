@@ -1382,7 +1382,7 @@ mod tests {
         ENCODE_DIRECT_END, ESCAPE_TEST_CHAR, EscapeFlags, EscapeStringStyle, UnescapeStringStyle,
         bytes2wcstring, escape_string, unescape_string, wcs2bytes,
     };
-    use crate::util::get_seeded_rng;
+    use fish_util::get_seeded_rng;
     use fish_widestring::{ENCODE_DIRECT_BASE, L, WString, wstr};
     use rand::{Rng, RngCore};
 

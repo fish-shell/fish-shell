@@ -61,10 +61,10 @@ use crate::{
     path::{path_get_config, path_get_data, path_is_valid},
     prelude::*,
     threads::assert_is_background_thread,
-    util::find_subslice,
     wildcard::{ANY_STRING, wildcard_match},
     wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
+use fish_util::find_subslice;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SearchType {

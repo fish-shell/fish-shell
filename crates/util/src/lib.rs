@@ -239,7 +239,7 @@ fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (Ordering, usize, usize) {
 /// # Examples
 ///
 /// ```
-/// use fish::util::find_subslice;
+/// use fish_util::find_subslice;
 /// let haystack = b"ABC ABCDAB ABCDABCDABDE";
 ///
 /// assert_eq!(find_subslice(b"ABCDABD", haystack), Some(15));

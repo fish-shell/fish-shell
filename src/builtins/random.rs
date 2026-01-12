@@ -1,7 +1,7 @@
 use super::prelude::*;
 
-use crate::util::get_seeded_rng;
 use crate::wutil;
+use fish_util::get_seeded_rng;
 use rand::rngs::SmallRng;
 use rand::{Rng, RngCore};
 use std::sync::{LazyLock, Mutex};

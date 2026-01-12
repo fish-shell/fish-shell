@@ -46,9 +46,9 @@ use crate::{
     common::charptr2wcstring,
     localization::{LocalizableString, localizable_string},
     reader::{get_quote, is_backslashed},
-    util::wcsfilecmp,
 };
 use bitflags::bitflags;
+use fish_util::wcsfilecmp;
 use fish_wcstringutil::{
     StringFuzzyMatch, string_fuzzy_match_string, string_prefixes_string,
     string_prefixes_string_case_insensitive, string_suffixes_string_case_insensitive,

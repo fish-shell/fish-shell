@@ -1,5 +1,5 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::{EMPTY_STRING, bytes2wcstring, wcs2bytes};
+use crate::common::{bytes2wcstring, wcs2bytes};
 use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
     BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
@@ -667,7 +667,7 @@ impl OutputStream {
     pub fn contents(&self) -> &wstr {
         match self {
             OutputStream::String(stream) => stream.contents(),
-            OutputStream::Null | OutputStream::Fd(_) | OutputStream::Buffered(_) => &EMPTY_STRING,
+            OutputStream::Null | OutputStream::Fd(_) | OutputStream::Buffered(_) => L!(""),
         }
     }
 

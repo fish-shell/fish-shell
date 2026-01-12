@@ -14,7 +14,7 @@ use crate::operation_context::OperationContext;
 use crate::prelude::*;
 use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
 use crate::termsize::Termsize;
-use crate::wcstringutil::string_fuzzy_match_string;
+use fish_wcstringutil::string_fuzzy_match_string;
 
 /// Represents rendering from the pager.
 #[derive(Default)]
@@ -1287,7 +1287,7 @@ mod tests {
     use crate::prelude::*;
     use crate::termsize::Termsize;
     use crate::tests::prelude::*;
-    use crate::wcstringutil::StringFuzzyMatch;
+    use fish_wcstringutil::StringFuzzyMatch;
     use std::borrow::Cow;
     use std::num::NonZeroU16;
 

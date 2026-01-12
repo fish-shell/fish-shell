@@ -27,10 +27,9 @@ use crate::tokenizer::{
     TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
     is_token_delimiter, quote_end,
 };
-use crate::wcstringutil::count_newlines;
-use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use fish_common::help_section;
+use fish_wcstringutil::{count_newlines, truncate};
 use std::ops::Range;
 use std::{iter, ops};
 

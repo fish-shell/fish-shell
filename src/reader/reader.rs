@@ -149,16 +149,15 @@ use crate::tty_handoff::XTGETTCAP_QUERY_OS_NAME;
 use crate::tty_handoff::{
     TtyHandoff, get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
 };
-use crate::wcstringutil::CaseSensitivity;
-use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
-use crate::wcstringutil::{
-    StringFuzzyMatch, count_preceding_backslashes, join_strings, string_prefixes_string,
-    string_prefixes_string_case_insensitive,
-};
 use crate::wildcard::wildcard_has;
 use crate::wutil::{fstat, perror, write_to_fd, wstat};
 use crate::{abbrs, event, function};
 use fish_fallback::fish_wcwidth;
+use fish_wcstringutil::{
+    CaseSensitivity, StringFuzzyMatch, count_preceding_backslashes, join_strings,
+    string_prefixes_string, string_prefixes_string_case_insensitive,
+    string_prefixes_string_maybe_case_insensitive,
+};
 
 /// A description of where fish is in the process of exiting.
 #[repr(u8)]

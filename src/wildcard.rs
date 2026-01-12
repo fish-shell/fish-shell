@@ -16,13 +16,13 @@ use crate::expand::ExpandFlags;
 use crate::future_feature_flags::FeatureFlag;
 use crate::future_feature_flags::feature_test;
 use crate::prelude::*;
-use crate::wcstringutil::{
-    CaseSensitivity, string_fuzzy_match_string, string_suffixes_string_case_insensitive,
-    strip_executable_suffix,
-};
 use crate::wutil::dir_iter::DirEntryType;
 use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
 use fish_fallback::wcscasecmp;
+use fish_wcstringutil::{
+    CaseSensitivity, string_fuzzy_match_string, string_suffixes_string_case_insensitive,
+    strip_executable_suffix,
+};
 
 localizable_consts!(
     COMPLETE_EXEC_DESC "command"

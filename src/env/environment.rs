@@ -24,8 +24,8 @@ use crate::prelude::*;
 use crate::proc::is_interactive_session;
 use crate::termsize;
 use crate::universal_notifier::default_notifier;
-use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd};
+use fish_wcstringutil::join_strings;
 
 use libc::{c_int, uid_t};
 use std::collections::HashMap;

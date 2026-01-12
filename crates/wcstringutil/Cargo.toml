@@ -1,0 +1,21 @@
+[package]
+name = "fish-wcstringutil"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+fish-common.workspace = true
+fish-fallback.workspace = true
+fish-widestring.workspace = true
+
+# Only needed for cygwin detection.
+# TODO(MSRV>=1.86): remove
+[build-dependencies]
+fish-build-helper.workspace = true
+rsconf.workspace = true
+
+[lints]
+workspace = true

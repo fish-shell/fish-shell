@@ -22,8 +22,8 @@ use crate::{
         rewrite_via_temporary_file,
     },
     threads::ThreadPool,
-    wcstringutil::trim,
 };
+use fish_wcstringutil::{subsequence_in_string, trim};
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
@@ -62,7 +62,6 @@ use crate::{
     prelude::*,
     threads::assert_is_background_thread,
     util::find_subslice,
-    wcstringutil::subsequence_in_string,
     wildcard::{ANY_STRING, wildcard_match},
     wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
@@ -1787,8 +1786,8 @@ mod tests {
     use crate::path::path_get_data;
     use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
     use fish_build_helper::workspace_root;
+    use fish_wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
     use rand::Rng;
     use rand::rngs::ThreadRng;
     use std::collections::VecDeque;

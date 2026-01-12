@@ -568,7 +568,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 mod tests {
     use super::{ArgType, WGetopter, wopt};
     use crate::prelude::*;
-    use crate::wcstringutil::join_strings;
+    use fish_wcstringutil::join_strings;
 
     #[test]
     fn test_exchange() {

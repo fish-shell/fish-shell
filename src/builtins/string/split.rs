@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use super::*;
-use crate::wcstringutil::split_about;
+use fish_wcstringutil::split_about;
 
 pub struct Split<'args> {
     quiet: bool,

@@ -1497,7 +1497,7 @@ mod tests {
     use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
     use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
     use crate::tests::prelude::*;
-    use crate::wcstringutil::join_strings;
+    use fish_wcstringutil::join_strings;
     use libc::SIGINT;
     use std::time::Duration;
     #[test]

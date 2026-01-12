@@ -7,12 +7,12 @@ use super::prelude::*;
 use crate::nix::{getegid, geteuid};
 use crate::path::path_apply_working_directory;
 use crate::util::wcsfilecmp_glob;
-use crate::wcstringutil::split_string_tok;
 use crate::wutil::{
     INVALID_FILE_ID, file_id_for_path, lwstat, normalize_path, waccess, wbasename, wdirname,
     wrealpath, wstat,
 };
 use bitflags::bitflags;
+use fish_wcstringutil::split_string_tok;
 use libc::{F_OK, PATH_MAX, R_OK, S_ISGID, S_ISUID, W_OK, X_OK, mode_t};
 
 macro_rules! path_error {

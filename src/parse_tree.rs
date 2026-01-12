@@ -12,7 +12,7 @@ use crate::parse_constants::{
 };
 use crate::prelude::*;
 use crate::tokenizer::TokenizerError;
-use crate::wcstringutil::count_newlines;
+use fish_wcstringutil::count_newlines;
 
 /// A struct representing the token type that we use internally.
 #[derive(Clone, Copy)]

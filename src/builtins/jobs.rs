@@ -7,8 +7,8 @@ use crate::job_group::{JobId, MaybeJobId};
 use crate::localization::{wgettext, wgettext_fmt};
 use crate::parser::Parser;
 use crate::proc::{HAVE_PROC_STAT, Job, clock_ticks_to_seconds, proc_get_jiffies};
-use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
 use crate::wutil::fish_wcstoi;
+use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 use fish_widestring::{L, WExt, WString, wstr};
 use std::num::NonZeroU32;
 

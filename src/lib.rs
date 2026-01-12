@@ -74,7 +74,6 @@ pub mod trace;
 pub mod tty_handoff;
 pub mod universal_notifier;
 pub mod wait_handle;
-pub mod wgetopt;
 pub mod wildcard;
 
 #[cfg(feature = "gettext-extract")]

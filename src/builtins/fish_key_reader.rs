@@ -32,8 +32,8 @@ use crate::{
     threads,
     topic_monitor::topic_monitor_init,
     tty_handoff::TtyHandoff,
-    wgetopt::{ArgType, WGetopter, WOption, wopt},
 };
+use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 
 use super::prelude::*;
 

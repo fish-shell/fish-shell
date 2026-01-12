@@ -170,6 +170,7 @@ dependencies = [
  "fish-tempfile",
  "fish-util",
  "fish-wcstringutil",
+ "fish-wgetopt",
  "fish-widecharwidth",
  "fish-widestring",
  "libc",
@@ -303,6 +304,14 @@ dependencies = [
  "fish-fallback",
  "fish-widestring",
  "rsconf",
+]
+
+[[package]]
+name = "fish-wgetopt"
+version = "0.0.0"
+dependencies = [
+ "fish-wcstringutil",
+ "fish-widestring",
 ]
 
 [[package]]

@@ -1061,10 +1061,6 @@ pub fn has_working_tty_timestamps() -> bool {
     }
 }
 
-/// A global, empty string. This is useful for functions which wish to return a reference to an
-/// empty string.
-pub static EMPTY_STRING: WString = WString::new();
-
 /// A function type to check for cancellation.
 /// Return true if execution should cancel.
 /// todo!("Maybe remove the box? It is only needed for get_bg_context.")

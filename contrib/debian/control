@@ -10,7 +10,7 @@ Build-Depends: debhelper-compat (= 13),
  gettext,
  libpcre2-dev,
  rustc (>= 1.85) | rustc-web (>= 1.85) | rustc-1.85,
- sphinx-doc,
+ python3-sphinx,
 # Test dependencies
  locales-all,
  man-db,

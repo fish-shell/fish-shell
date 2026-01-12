@@ -160,6 +160,7 @@ dependencies = [
  "errno",
  "fish-build-helper",
  "fish-build-man-pages",
+ "fish-color",
  "fish-common",
  "fish-fallback",
  "fish-gettext",
@@ -200,6 +201,14 @@ version = "0.0.0"
 dependencies = [
  "fish-build-helper",
  "rsconf",
+]
+
+[[package]]
+name = "fish-color"
+version = "0.0.0"
+dependencies = [
+ "fish-common",
+ "fish-widestring",
 ]
 
 [[package]]

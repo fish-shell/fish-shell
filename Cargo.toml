@@ -17,6 +17,7 @@ cfg-if = "1.0.3"
 errno = "0.3.0"
 fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }
+fish-color = { path = "crates/color" }
 fish-common = { path = "crates/common" }
 fish-fallback = { path = "crates/fallback" }
 fish-gettext = { path = "crates/gettext" }
@@ -93,6 +94,7 @@ cfg-if.workspace = true
 errno.workspace = true
 fish-build-helper.workspace = true
 fish-build-man-pages = { workspace = true, optional = true }
+fish-color.workspace = true
 fish-common.workspace = true
 fish-fallback.workspace = true
 fish-gettext = { workspace = true, optional = true }

@@ -1,7 +1,7 @@
-use crate::color::Color;
 use crate::prelude::*;
 use crate::terminal::{self, get_color_support};
 use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
+use fish_color::Color;
 
 trait StyleSet {
     fn union_prefer_right(self, other: Self) -> Self;
@@ -324,12 +324,8 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        color::{Color, Color24},
-        text_face::SpecifiedTextFace,
-    };
-
-    use super::parse_text_face;
+    use super::{SpecifiedTextFace, parse_text_face};
+    use fish_color::{Color, Color24};
 
     #[test]
     fn test_parse_text_face() {

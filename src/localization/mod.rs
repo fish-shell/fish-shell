@@ -15,7 +15,7 @@ pub use settings::{
 /// available. Without this, early error messages cannot be localized.
 pub fn initialize_localization() {
     use crate::env::EnvStack;
-    use fish_wchar::L;
+    use fish_widestring::L;
 
     let env = EnvStack::new();
     env_stack_set_from_env!(env, "LANGUAGE");

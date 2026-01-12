@@ -1,6 +1,6 @@
 use super::{localizable_consts, localizable_string, wgettext, wgettext_fmt};
 use crate::env::{EnvStack, Environment};
-use fish_wchar::{L, WString, wstr};
+use fish_widestring::{L, WString, wstr};
 use std::collections::{HashMap, HashSet};
 use std::sync::{LazyLock, Mutex};
 

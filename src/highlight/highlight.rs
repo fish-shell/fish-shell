@@ -31,7 +31,7 @@ use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use crate::wcstringutil::string_prefixes_string;
 use fish_common::{ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
-use fish_wchar::{L, WExt, WString, wstr};
+use fish_widestring::{L, WExt, WString, wstr};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 

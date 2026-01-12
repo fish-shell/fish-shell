@@ -4,7 +4,7 @@ macro_rules! sprintf {
     // Allow a `&str` or `&Utf32Str` as a format, and return a `Utf32String`.
     ($fmt:expr $(, $arg:expr)* $(,)?) => {
         {
-            let mut target = fish_wchar::WString::new();
+            let mut target = fish_widestring::WString::new();
             $crate::sprintf!(=> &mut target, $fmt, $($arg),*);
             target
         }

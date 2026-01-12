@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use fish_wchar::{L, char_offset, wstr};
+use fish_widestring::{L, char_offset, wstr};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use std::cell::{Cell, RefCell};
 use std::io::Read;
@@ -541,7 +541,7 @@ pub const fn assert_sync<T: Sync>() {}
 /// # Examples
 ///
 /// ```
-/// use fish_wchar::{L, wstr};
+/// use fish_widestring::{L, wstr};
 /// use fish_common::assert_sorted_by_name;
 ///
 /// const COLORS: &[(&wstr, u32)] = &[
@@ -557,7 +557,7 @@ pub const fn assert_sync<T: Sync>() {}
 /// While this example would fail to compile:
 ///
 /// ```compile_fail
-/// use fish_wchar::{L, wstr};
+/// use fish_widestring::{L, wstr};
 /// use fish_common::assert_sorted_by_name;
 ///
 /// const COLORS: &[(&wstr, u32)] = &[

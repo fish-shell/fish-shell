@@ -182,7 +182,7 @@ impl UniversalNotifier for KqueueNotifier {
 mod tests {
     use super::KqueueNotifier;
     use crate::universal_notifier::{UniversalNotifier, test_helpers::test_notifiers};
-    use fish_wchar::WString;
+    use fish_widestring::WString;
 
     #[test]
     fn test_kqueue_notifiers() {

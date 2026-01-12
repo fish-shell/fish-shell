@@ -1,4 +1,4 @@
-use fish_wchar::L;
+use fish_widestring::L;
 use num_traits::pow;
 
 use super::prelude::*;

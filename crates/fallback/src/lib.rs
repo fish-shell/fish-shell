@@ -3,8 +3,8 @@
 //!
 //! Many of these functions are more or less broken and incomplete.
 
-use fish_wchar::prelude::*;
 use fish_widecharwidth::{WcLookupTable, WcWidth};
+use fish_widestring::prelude::*;
 use std::cmp;
 use std::sync::{
     LazyLock,
@@ -185,7 +185,7 @@ fn lowercase_impl<ToLowercase: Iterator<Item = char>>(
 #[cfg(test)]
 mod tests {
     use super::wcscasecmp;
-    use fish_wchar::prelude::*;
+    use fish_widestring::prelude::*;
     use std::cmp::Ordering;
 
     #[test]

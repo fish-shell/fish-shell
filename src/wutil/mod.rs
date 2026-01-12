@@ -14,7 +14,7 @@ use crate::fds::BorrowedFdFile;
 use crate::flog;
 use crate::wcstringutil::{join_strings, str2bytes_callback};
 use errno::errno;
-use fish_wchar::{IntoCharIter, L, WExt, WString, wstr};
+use fish_widestring::{IntoCharIter, L, WExt, WString, wstr};
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};
@@ -481,7 +481,7 @@ mod tests {
 
     mod test_path_normalize_for_cd {
         use super::super::path_normalize_for_cd;
-        use fish_wchar::L;
+        use fish_widestring::L;
 
         #[test]
         fn relative_path() {
@@ -692,7 +692,7 @@ mod tests {
 
     #[test]
     fn test_wstr_offset_in() {
-        use fish_wchar::L;
+        use fish_widestring::L;
         let base = L!("hello world");
         assert_eq!(wstr_offset_in(&base[6..], base), 6);
         assert_eq!(wstr_offset_in(&base[0..], base), 0);

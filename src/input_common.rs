@@ -18,7 +18,7 @@ use crate::tty_handoff::{
 };
 use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_is_pua, fish_wcstol};
-use fish_wchar::encode_byte_to_char;
+use fish_widestring::encode_byte_to_char;
 use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;
 use std::mem::MaybeUninit;

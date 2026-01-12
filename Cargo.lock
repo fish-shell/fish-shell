@@ -167,8 +167,8 @@ dependencies = [
  "fish-gettext-mo-file-parser",
  "fish-printf",
  "fish-tempfile",
- "fish-wchar",
  "fish-widecharwidth",
+ "fish-widestring",
  "libc",
  "lru",
  "macro_rules_attribute",
@@ -207,7 +207,7 @@ name = "fish-common"
 version = "0.0.0"
 dependencies = [
  "bitflags",
- "fish-wchar",
+ "fish-widestring",
  "libc",
  "nix",
 ]
@@ -218,8 +218,8 @@ version = "0.0.0"
 dependencies = [
  "fish-build-helper",
  "fish-common",
- "fish-wchar",
  "fish-widecharwidth",
+ "fish-widestring",
  "libc",
  "rsconf",
  "widestring",
@@ -276,15 +276,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "fish-wchar"
+name = "fish-widecharwidth"
+version = "0.0.0"
+
+[[package]]
+name = "fish-widestring"
 version = "0.0.0"
 dependencies = [
  "widestring",
 ]
-
-[[package]]
-name = "fish-widecharwidth"
-version = "0.0.0"
 
 [[package]]
 name = "fnv"

@@ -54,7 +54,7 @@ use crate::{
     wcstringutil::{string_suffixes_string_case_insensitive, strip_executable_suffix},
 };
 use bitflags::bitflags;
-use fish_wchar::WExt;
+use fish_widestring::WExt;
 
 // Completion description strings, mostly for different types of files, such as sockets, block
 // devices, etc.

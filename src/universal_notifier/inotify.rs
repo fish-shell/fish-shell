@@ -69,7 +69,7 @@ impl UniversalNotifier for InotifyNotifier {
 mod tests {
     use super::InotifyNotifier;
     use crate::universal_notifier::{UniversalNotifier, test_helpers::test_notifiers};
-    use fish_wchar::WString;
+    use fish_widestring::WString;
 
     #[test]
     fn test_inotify_notifiers() {

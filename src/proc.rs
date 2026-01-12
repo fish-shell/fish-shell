@@ -23,7 +23,7 @@ use crate::topic_monitor::{GenerationsList, Topic, topic_monitor_principal};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
 use crate::wutil::{wbasename, wperror};
 use cfg_if::cfg_if;
-use fish_wchar::ToWString;
+use fish_widestring::ToWString;
 use libc::{
     _SC_CLK_TCK, EXIT_SUCCESS, SIG_DFL, SIG_IGN, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
     SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED,

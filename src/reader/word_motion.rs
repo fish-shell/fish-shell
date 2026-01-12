@@ -3,7 +3,7 @@ use std::ops::ControlFlow;
 use crate::prelude::*;
 use crate::reader::is_backslashed;
 use crate::tokenizer::tok_is_string_character;
-use fish_wchar::word_char::{WordCharClass, is_blank};
+use fish_widestring::word_char::{WordCharClass, is_blank};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MoveWordStyle {

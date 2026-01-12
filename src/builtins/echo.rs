@@ -1,7 +1,7 @@
 //! Implementation of the echo builtin.
 
 use super::prelude::*;
-use fish_wchar::encode_byte_to_char;
+use fish_widestring::encode_byte_to_char;
 
 #[derive(Debug, Clone, Copy)]
 struct Options {

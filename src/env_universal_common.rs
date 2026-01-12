@@ -8,7 +8,7 @@ use crate::path::path_get_config;
 use crate::prelude::*;
 use crate::wcstringutil::{LineIterator, join_strings};
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
-use fish_wchar::decode_byte_from_char;
+use fish_widestring::decode_byte_from_char;
 use std::collections::HashSet;
 use std::collections::hash_map::Entry;
 use std::ffi::CString;
@@ -808,7 +808,7 @@ fn skip_spaces(mut s: &wstr) -> &wstr {
 #[cfg(test)]
 mod tests {
     use fish_tempfile::TempDir;
-    use fish_wchar::{ENCODE_DIRECT_BASE, char_offset};
+    use fish_widestring::{ENCODE_DIRECT_BASE, char_offset};
 
     use crate::common::bytes2wcstring;
     use crate::common::wcs2osstring;

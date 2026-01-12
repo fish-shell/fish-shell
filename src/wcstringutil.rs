@@ -1,9 +1,8 @@
 //! Helper functions for working with wcstring.
 
-use crate::common::{get_ellipsis_char, get_ellipsis_str};
-use crate::prelude::*;
+use fish_common::{get_ellipsis_char, get_ellipsis_str};
 use fish_fallback::{fish_wcwidth, lowercase, lowercase_rev, wcscasecmp, wcscasecmp_fuzzy};
-use fish_widestring::decode_byte_from_char;
+use fish_widestring::{decode_byte_from_char, prelude::*};
 
 /// Return the number of newlines in a string.
 pub fn count_newlines(s: &wstr) -> usize {
@@ -571,7 +570,7 @@ mod tests {
         split_string_tok, string_fuzzy_match_string, string_prefixes_string_case_insensitive,
         string_suffixes_string_case_insensitive,
     };
-    use crate::prelude::*;
+    use fish_widestring::prelude::*;
 
     #[test]
     fn test_string_prefixes_string_case_insensitive() {

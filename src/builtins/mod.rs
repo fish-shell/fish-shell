@@ -59,10 +59,10 @@ mod prelude {
         io::{IoStreams, SeparationType},
         parser::Parser,
         prelude::*,
-        wgetopt::{
-            ArgType::{self, *},
-            NON_OPTION_CHAR, WGetopter, WOption, wopt,
-        },
         wutil::{fish_wcstoi, fish_wcstol, fish_wcstoul},
+    };
+    pub(crate) use fish_wgetopt::{
+        ArgType::{self, *},
+        NON_OPTION_CHAR, WGetopter, WOption, wopt,
     };
 }

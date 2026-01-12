@@ -34,7 +34,7 @@ Copyright: 1990-2007 Free Software Foundation, Inc.
            2022 fish-shell contributors
 License: GPL-2+
 
-Files: src/wgetopt.rs
+Files: crates/wgetopt/src/wgetopt.rs
 Copyright: 1989-1994 Free Software Foundation, Inc.
 License: LGPL-2+
 

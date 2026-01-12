@@ -213,7 +213,7 @@ impl StringFuzzyMatch {
         // Helper to lazily compute if case insensitive matches should use icase or smartcase.
         // Use icase if the input contains any uppercase characters, smartcase otherwise.
         #[inline(always)]
-        fn get_case_fold(s: &widestring::Utf32Str) -> CaseSensitivity {
+        fn get_case_fold(s: &wstr) -> CaseSensitivity {
             if s.chars().any(|c| c.is_uppercase()) {
                 CaseSensitivity::Insensitive
             } else {

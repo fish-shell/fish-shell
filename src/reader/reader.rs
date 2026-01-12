@@ -3594,8 +3594,8 @@ impl<'a> Reader<'a> {
                     if is_kill {
                         self.delete_char(/*backward*/ false);
                     } else {
-                        let (_elt, el) = self.active_edit_line_mut();
-                        el.set_position(el.position() + 1);
+                        let pos = el.position();
+                        self.update_buff_pos(elt, Some(pos + 1));
                     }
                 } else {
                     self.data.move_word(
@@ -3607,10 +3607,8 @@ impl<'a> Reader<'a> {
                         true,
                     );
                     if !is_kill {
-                        let (_elt, el) = self.active_edit_line_mut();
-                        if el.position() < el.len() {
-                            el.set_position(el.position() + 1);
-                        }
+                        let pos = self.edit_line(elt).position();
+                        self.update_buff_pos(elt, Some(pos + 1));
                     }
                 }
             }

@@ -119,7 +119,7 @@ impl std::fmt::Display for LocalizableString {
 #[cfg(feature = "gettext-extract")]
 macro_rules! localizable_string {
     ($string:literal) => {
-        $crate::localization::LocalizableString::Static(widestring::utf32str!(
+        $crate::localization::LocalizableString::Static(fish_wchar::L!(
             fish_gettext_extraction::gettext_extract!($string)
         ))
     };
@@ -128,7 +128,7 @@ macro_rules! localizable_string {
 #[cfg(not(feature = "gettext-extract"))]
 macro_rules! localizable_string {
     ($string:literal) => {
-        $crate::localization::LocalizableString::Static(widestring::utf32str!($string))
+        $crate::localization::LocalizableString::Static(fish_wchar::L!($string))
     };
 }
 pub use localizable_string;

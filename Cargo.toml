@@ -111,7 +111,6 @@ pcre2.workspace = true
 rand.workspace = true
 terminfo.workspace = true
 xterm-color.workspace = true
-widestring.workspace = true
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
 portable-atomic.workspace = true
@@ -187,7 +186,7 @@ rustdoc.private_intra_doc_links = "allow"
 assigning_clones = "warn"
 implicit_clone = "warn"
 cloned_instead_of_copied = "warn"
-len_without_is_empty = "allow"     # we're not a library crate
+len_without_is_empty = "allow"    # we're not a library crate
 let_and_return = "allow"
 manual_range_contains = "allow"
 map_unwrap_or = "warn"

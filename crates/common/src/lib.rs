@@ -1,4 +1,5 @@
 use bitflags::bitflags;
+use fish_wchar::{L, char_offset, wstr};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use std::cell::{Cell, RefCell};
 use std::io::Read;
@@ -8,7 +9,6 @@ use std::os::unix::ffi::OsStrExt;
 use std::sync::OnceLock;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::{env, mem, time};
-use widestring::Utf32Str as wstr;
 
 pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -40,21 +40,6 @@ pub const WILDCARD_RESERVED_END: char = char_offset(WILDCARD_RESERVED_BASE, 16);
 // Unicode range for our needs.
 const _: () = assert!(WILDCARD_RESERVED_END <= RESERVED_CHAR_END);
 
-// These are in the Unicode private-use range. We really shouldn't use this
-// range but have little choice in the matter given how our lexer/parser works.
-// We can't use non-characters for these two ranges because there are only 66 of
-// them and we need at least 256 + 64.
-//
-// If sizeof(wchar_t))==4 we could avoid using private-use chars; however, that
-// would result in fish having different behavior on machines with 16 versus 32
-// bit wchar_t. It's better that fish behave the same on both types of systems.
-//
-// Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
-// of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
-// on Mac OS X. See http://www.unicode.org/faq/private_use.html.
-pub const ENCODE_DIRECT_BASE: char = '\u{F600}';
-pub const ENCODE_DIRECT_END: char = char_offset(ENCODE_DIRECT_BASE, 256);
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EscapeStringStyle {
     Script(EscapeFlags),
@@ -78,7 +63,7 @@ impl TryFrom<&wstr> for EscapeStringStyle {
             s if s == "var" => Ok(Var),
             s if s == "url" => Ok(Url),
             s if s == "regex" => Ok(Regex),
-            _ => Err(widestring::utf32str!("Invalid escape style")),
+            _ => Err(L!("Invalid escape style")),
         }
     }
 }
@@ -124,7 +109,7 @@ impl TryFrom<&wstr> for UnescapeStringStyle {
             s if s == "script" => Ok(Self::default()),
             s if s == "var" => Ok(Var),
             s if s == "url" => Ok(Url),
-            _ => Err(widestring::utf32str!("Invalid escape style")),
+            _ => Err(L!("Invalid escape style")),
         }
     }
 }
@@ -140,20 +125,6 @@ bitflags! {
         /// don't handle backslash escapes
         const NO_BACKSLASHES = 1 << 2;
     }
-}
-
-pub const fn char_offset(base: char, offset: u32) -> char {
-    match char::from_u32(base as u32 + offset) {
-        Some(c) => c,
-        None => panic!("not a valid char"),
-    }
-}
-
-pub fn subslice_position<T: Eq>(a: &[T], b: &[T]) -> Option<usize> {
-    if b.is_empty() {
-        return Some(0);
-    }
-    a.windows(b.len()).position(|aw| aw == b)
 }
 
 /// This function attempts to distinguish between a console session (at the actual login vty) and a
@@ -196,7 +167,7 @@ pub fn get_ellipsis_char() -> char {
 /// The character or string to use where text has been truncated (ellipsis if possible, otherwise
 /// ...)
 pub fn get_ellipsis_str() -> &'static wstr {
-    widestring::utf32str!("\u{2026}")
+    L!("\u{2026}")
 }
 
 // Only pub for `src/common.rs`
@@ -570,7 +541,7 @@ pub const fn assert_sync<T: Sync>() {}
 /// # Examples
 ///
 /// ```
-/// use widestring::{utf32str as L,Utf32Str as wstr};
+/// use fish_wchar::{L, wstr};
 /// use fish_common::assert_sorted_by_name;
 ///
 /// const COLORS: &[(&wstr, u32)] = &[
@@ -586,7 +557,7 @@ pub const fn assert_sync<T: Sync>() {}
 /// While this example would fail to compile:
 ///
 /// ```compile_fail
-/// use widestring::{utf32str as L,Utf32Str as wstr};
+/// use fish_wchar::{L, wstr};
 /// use fish_common::assert_sorted_by_name;
 ///
 /// const COLORS: &[(&wstr, u32)] = &[
@@ -728,7 +699,6 @@ mod tests {
 
     #[test]
     fn test_truncate_at_nul() {
-        use widestring::utf32str as L;
         assert_eq!(truncate_at_nul(L!("abc\0def")), L!("abc"));
         assert_eq!(truncate_at_nul(L!("abc")), L!("abc"));
         assert_eq!(truncate_at_nul(L!("\0abc")), L!(""));

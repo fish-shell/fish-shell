@@ -30,7 +30,8 @@ use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, WildcardResult
 use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
 use crate::wutil::{Options, normalize_path, wcstoi_partial};
 use bitflags::bitflags;
-use fish_common::{EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, char_offset};
+use fish_common::{EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
+use fish_wchar::char_offset;
 use std::mem::MaybeUninit;
 
 bitflags! {

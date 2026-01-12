@@ -184,7 +184,6 @@ dependencies = [
  "serial_test",
  "terminfo",
  "unix_path",
- "widestring",
  "xterm-color",
 ]
 
@@ -208,9 +207,9 @@ name = "fish-common"
 version = "0.0.0"
 dependencies = [
  "bitflags",
+ "fish-wchar",
  "libc",
  "nix",
- "widestring",
 ]
 
 [[package]]
@@ -280,7 +279,6 @@ dependencies = [
 name = "fish-wchar"
 version = "0.0.0"
 dependencies = [
- "fish-common",
  "widestring",
 ]
 

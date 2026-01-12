@@ -1,5 +1,5 @@
+use fish_wchar::L;
 use num_traits::pow;
-use widestring::utf32str;
 
 use super::prelude::*;
 use crate::tinyexpr::te_interp;
@@ -78,13 +78,13 @@ fn parse_cmd_opts(
             }
             'm' => {
                 let optarg = w.woptarg.unwrap();
-                if optarg.eq(utf32str!("truncate")) || optarg.eq(utf32str!("trunc")) {
+                if optarg.eq(L!("truncate")) || optarg.eq(L!("trunc")) {
                     opts.scale_mode = ScaleMode::Truncate;
-                } else if optarg.eq(utf32str!("round")) {
+                } else if optarg.eq(L!("round")) {
                     opts.scale_mode = ScaleMode::Round;
-                } else if optarg.eq(utf32str!("floor")) {
+                } else if optarg.eq(L!("floor")) {
                     opts.scale_mode = ScaleMode::Floor;
-                } else if optarg.eq(utf32str!("ceiling")) || optarg.eq(utf32str!("ceil")) {
+                } else if optarg.eq(L!("ceiling")) || optarg.eq(L!("ceil")) {
                     opts.scale_mode = ScaleMode::Ceiling;
                 } else {
                     streams

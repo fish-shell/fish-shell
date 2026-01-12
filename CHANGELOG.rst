@@ -9,14 +9,13 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
-- Improves vi-mode to make its word movements more vim-compatible.
-  - The behavior of ``{,d}{w,W}``, ``{,d}{,g}{e,E}`` bindings in vi-mode is now more compatible with vim, except that the underscore is not a keyword (which can be archived by setting ``set iskeyword-=_`` in vim).
-  - Add commands ``{forward,kill}-{word,bigword}-vi``, ``{forward,backward,kill,backward-kill}-{word,bigword}-end`` and ``kill-{a,inner}-{word,bigword}`` corresponding to above-mentioned bindings.
-- Vi mode key bindings now support counts for movement and deletion commands (e.g. `d3w` or `3l`), via a new operator mode (:issue:`2192`).
 - The ``bind`` builtin lists mappings from all modes if ``--mode`` is not provided (:issue:`12214`).
 
 New or improved bindings
 ------------------------
+- Vi mode word movements (``w``, ``W``, ``e``, and ``E``) are now largely in line with Vim. The only exception is that underscores are treated as word separators (:issue:`12269`).
+- New special input functions to support these movements: ``forward-word-vi``, ``kill-word-vi``, ``forward-bigword-vi``, ``kill-bigword-vi``, ``forward-word-end``, ``backward-word-end``, ``kill-word-end``, ``backward-kill-word-end``, ``forward-bigword-end``, ``backward-bigword-end``, ``kill-bigword-end``, ``backward-kill-bigword-end``, ``kill-a-word``, ``kill-inner-word``, ``kill-a-bigword``, and ``kill-inner-bigword``.
+- Vi mode key bindings now support counts for movement and deletion commands (e.g. `d3w` or `3l`), via a new operator mode (:issue:`2192`).
 
 Improved terminal support
 -------------------------
@@ -241,8 +240,6 @@ This release fixes the following regressions identified in 4.1.0:
 
 fish 4.1.0 (released September 27, 2025)
 ========================================
-
-.. ignore for 4.1: 10929 10940 10948 10955 10965 10975 10989 10990 10998 11028 11052 11055 11069 11071 11079 11092 11098 11104 11106 11110 11140 11146 11148 11150 11214 11218 11259 11288 11299 11328 11350 11373 11395 11417 11419
 
 Notable improvements and fixes
 ------------------------------

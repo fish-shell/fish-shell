@@ -24,7 +24,7 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-use crate::prelude::*;
+use fish_widestring::prelude::*;
 
 /// Special char used with [`Ordering::ReturnInOrder`].
 pub const NON_OPTION_CHAR: char = '\x01';
@@ -567,8 +567,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 #[cfg(test)]
 mod tests {
     use super::{ArgType, WGetopter, wopt};
-    use crate::prelude::*;
     use fish_wcstringutil::join_strings;
+    use fish_widestring::prelude::*;
 
     #[test]
     fn test_exchange() {

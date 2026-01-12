@@ -13,7 +13,6 @@ pub mod abbrs;
 pub mod ast;
 pub mod autoload;
 pub mod builtins;
-pub mod color;
 pub mod complete;
 pub mod editable_line;
 pub mod env;

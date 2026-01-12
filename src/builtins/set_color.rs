@@ -1,13 +1,13 @@
 // Implementation of the set_color builtin.
 
 use super::prelude::*;
-use crate::color::Color;
 use crate::common::bytes2wcstring;
 use crate::screen::{is_dumb, only_grayscale};
 use crate::terminal::{Outputter, use_terminfo};
 use crate::text_face::{
     self, PrintColorsArgs, SpecifiedTextFace, TextFace, TextStyling, parse_text_face_and_options,
 };
+use fish_color::Color;
 
 fn print_colors(
     streams: &mut IoStreams,

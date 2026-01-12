@@ -5,7 +5,6 @@ use crate::ast::{
     Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
-use crate::color::Color;
 use crate::common::{valid_var_name, valid_var_name_char};
 use crate::complete::complete_wrap_map;
 use crate::env::{EnvVar, Environment};
@@ -30,6 +29,7 @@ use crate::text_face::{SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_f
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use crate::wcstringutil::string_prefixes_string;
+use fish_color::Color;
 use fish_common::{ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
 use fish_widestring::{L, WExt, WString, wstr};
 use std::collections::HashMap;

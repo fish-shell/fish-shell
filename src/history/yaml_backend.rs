@@ -5,7 +5,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use fish_wchar::subslice_position;
+use fish_widestring::subslice_position;
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{common::bytes2wcstring, flog::flog};

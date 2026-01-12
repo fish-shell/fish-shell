@@ -1,7 +1,7 @@
 // Enumeration of all wildcard types.
 
 use fish_common::WILDCARD_RESERVED_BASE;
-use fish_wchar::char_offset;
+use fish_widestring::char_offset;
 use libc::X_OK;
 use std::cmp::Ordering;
 use std::collections::HashSet;

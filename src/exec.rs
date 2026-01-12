@@ -47,7 +47,7 @@ use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror};
 use errno::{errno, set_errno};
-use fish_wchar::ToWString;
+use fish_widestring::ToWString;
 use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO,

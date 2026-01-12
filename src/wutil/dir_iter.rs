@@ -2,7 +2,7 @@ use super::wopendir;
 use crate::common::{bytes2wcstring, wcs2zstring};
 use crate::wutil::DevInode;
 use cfg_if::cfg_if;
-use fish_wchar::{WString, wstr};
+use fish_widestring::{WString, wstr};
 use libc::{
     DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
     ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG,
@@ -329,7 +329,7 @@ impl Iterator for Iter {
 mod tests {
     use super::{DirEntryType, DirIter};
     use crate::prelude::*;
-    use fish_wchar::L;
+    use fish_widestring::L;
     use nix::sys::stat::Mode;
     use std::fs::File;
     use std::path::PathBuf;

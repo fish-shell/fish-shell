@@ -9,7 +9,7 @@ use crate::{
     wutil::fish_wcstoul,
 };
 use fish_fallback::fish_wcwidth;
-use fish_wchar::decode_byte_from_char;
+use fish_widestring::decode_byte_from_char;
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
 pub(crate) const Delete: char = '\u{F501}';

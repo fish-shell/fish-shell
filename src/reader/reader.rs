@@ -373,7 +373,7 @@ pub fn current_data() -> Option<&'static mut ReaderData> {
         .map(|data| unsafe { Pin::get_unchecked_mut(Pin::as_mut(data)) })
 }
 pub use current_data as reader_current_data;
-use fish_wchar::word_char::is_blank;
+use fish_widestring::word_char::is_blank;
 
 /// Add a new reader to the reader stack.
 /// If `history_name` is empty, then save history in-memory only; do not write it to disk.

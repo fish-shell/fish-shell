@@ -5,7 +5,7 @@ use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::proc::{Job, add_disowned_job};
 use crate::{builtins::shared::HelpOnlyCmdOpts, localization::wgettext_fmt};
-use fish_wchar::wstr;
+use fish_widestring::wstr;
 use libc::SIGCONT;
 
 /// Helper for builtin_disown.

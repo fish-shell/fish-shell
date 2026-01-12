@@ -7,7 +7,7 @@ use crate::flogf;
 use crate::io::IoChain;
 use crate::parser::Parser;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_path};
-use fish_wchar::{L, WExt, WString, wstr};
+use fish_widestring::{L, WExt, WString, wstr};
 use lru::LruCache;
 use rust_embed::RustEmbed;
 use std::collections::{HashMap, HashSet};

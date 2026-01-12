@@ -1,4 +1,4 @@
-use fish_wchar::{L, WString, wstr};
+use fish_widestring::{L, WString, wstr};
 use std::sync::{LazyLock, Mutex};
 
 /// Use this function to localize a message.
@@ -119,7 +119,7 @@ impl std::fmt::Display for LocalizableString {
 #[cfg(feature = "gettext-extract")]
 macro_rules! localizable_string {
     ($string:literal) => {
-        $crate::localization::LocalizableString::Static(fish_wchar::L!(
+        $crate::localization::LocalizableString::Static(fish_widestring::L!(
             fish_gettext_extraction::gettext_extract!($string)
         ))
     };
@@ -128,7 +128,7 @@ macro_rules! localizable_string {
 #[cfg(not(feature = "gettext-extract"))]
 macro_rules! localizable_string {
     ($string:literal) => {
-        $crate::localization::LocalizableString::Static(fish_wchar::L!($string))
+        $crate::localization::LocalizableString::Static(fish_widestring::L!($string))
     };
 }
 pub use localizable_string;

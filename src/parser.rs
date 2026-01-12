@@ -36,7 +36,7 @@ use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wutil::perror;
 use crate::{flog, flogf, function};
-use fish_wchar::WExt;
+use fish_widestring::WExt;
 use libc::c_int;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::OsStr;

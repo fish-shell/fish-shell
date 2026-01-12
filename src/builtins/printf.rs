@@ -57,7 +57,7 @@ use crate::wutil::{
     wstr_offset_in,
 };
 use fish_printf::{ToArg, sprintf_locale};
-use fish_wchar::{decode_byte_from_char, encode_byte_to_char};
+use fish_widestring::{decode_byte_from_char, encode_byte_to_char};
 
 /// Return true if `c` is an octal digit.
 fn is_octal_digit(c: char) -> bool {

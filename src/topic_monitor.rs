@@ -24,7 +24,7 @@ use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::{self, AutoClosePipes, make_fd_nonblocking};
 use crate::flog::{FloggableDebug, flog};
 use crate::wutil::perror;
-use fish_wchar::WString;
+use fish_widestring::WString;
 use nix::errno::Errno;
 use nix::unistd;
 use std::cell::Cell;

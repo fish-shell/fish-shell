@@ -16,7 +16,7 @@ use crate::wcstringutil::str2bytes_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use fish_fallback::fish_wcwidth;
-use fish_wchar::{
+use fish_widestring::{
     ENCODE_DIRECT_END, decode_byte_from_char, encode_byte_to_char, subslice_position,
 };
 use std::env;
@@ -1383,7 +1383,7 @@ mod tests {
         bytes2wcstring, escape_string, unescape_string, wcs2bytes,
     };
     use crate::util::get_seeded_rng;
-    use fish_wchar::{ENCODE_DIRECT_BASE, L, WString, wstr};
+    use fish_widestring::{ENCODE_DIRECT_BASE, L, WString, wstr};
     use rand::{Rng, RngCore};
 
     #[test]

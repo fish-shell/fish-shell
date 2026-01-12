@@ -3608,7 +3608,7 @@ impl<'a> Reader<'a> {
                     );
                     if !is_kill {
                         let (_elt, el) = self.active_edit_line_mut();
-                        if el.position() + 1 < el.len() {
+                        if el.position() < el.len() {
                             el.set_position(el.position() + 1);
                         }
                     }

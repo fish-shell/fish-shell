@@ -20,9 +20,9 @@
 use crate::portable_atomic::AtomicU64;
 use fish_common::{UTF8_BOM_WCHAR, help_section};
 use libc::{
-    _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
-    IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, SIGTTIN, STDERR_FILENO, STDIN_FILENO,
-    STDOUT_FILENO, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, c_char,
+    _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, FLUSHO, ICANON, ICRNL, IEXTEN,
+    INLCR, IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, SIGTTIN, STDERR_FILENO,
+    STDIN_FILENO, STDOUT_FILENO, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
@@ -1018,7 +1018,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     {
         let mut shell_modes = shell_modes();
         *shell_modes = *tty_modes_for_external_cmds;
-        term_fix_modes(&mut shell_modes);
+        term_fix_shell_modes(&mut shell_modes);
     }
 
     drop(tty_modes_for_external_cmds);
@@ -4683,7 +4683,7 @@ fn term_fix_oflag(modes: &mut libc::termios) {
 }
 
 /// Restore terminal settings we care about, to prevent a broken shell.
-fn term_fix_modes(modes: &mut libc::termios) {
+fn term_fix_shell_modes(modes: &mut libc::termios) {
     modes.c_iflag &= {
         // disable mapping CR (\cM) to NL (\cJ)
         !ICRNL
@@ -4691,12 +4691,10 @@ fn term_fix_modes(modes: &mut libc::termios) {
         & !INLCR
     };
     modes.c_lflag &= {
-        // turn off echo mode
         !ECHO
-        // turn off canonical mode
         & !ICANON
-        // turn off handling of discard and lnext characters
-        & !IEXTEN
+        & !IEXTEN // turn off handling of discard and lnext characters
+        & !FLUSHO
     };
     term_fix_oflag(modes);
 
@@ -4717,9 +4715,8 @@ fn term_fix_modes(modes: &mut libc::termios) {
 fn term_fix_external_modes(modes: &mut libc::termios) {
     term_fix_oflag(modes);
     // These cause other ridiculous behaviors like input not being shown.
-    modes.c_lflag |= ECHO | ICANON | IEXTEN;
-    modes.c_iflag |= ICRNL;
-    modes.c_iflag &= !INLCR;
+    modes.c_lflag = (modes.c_lflag | ECHO | ICANON | IEXTEN) & !FLUSHO;
+    modes.c_iflag = (modes.c_iflag | ICRNL) & !INLCR;
 }
 
 /// Give up control of terminal.

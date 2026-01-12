@@ -8,20 +8,10 @@ pub mod word_char;
 
 use fish_common::{ENCODE_DIRECT_BASE, ENCODE_DIRECT_END, subslice_position};
 use std::{iter, slice};
-pub use widestring::{Utf32Str as wstr, Utf32String as WString, utfstr::CharsUtf32};
+pub use widestring::{Utf32Str as wstr, Utf32String as WString, utf32str as L, utfstr::CharsUtf32};
 
 pub mod prelude {
     pub use crate::{IntoCharIter, L, ToWString, WExt, WString, wstr};
-}
-
-/// Creates a wstr string slice, like the "L" prefix of C++.
-/// The result is of type wstr.
-/// It is NOT nul-terminated.
-#[macro_export]
-macro_rules! L {
-    ($string:expr) => {
-        widestring::utf32str!($string)
-    };
 }
 
 /// Encode a literal byte in a UTF-32 character. This is required for e.g. the echo builtin, whose

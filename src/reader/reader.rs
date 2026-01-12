@@ -4671,25 +4671,38 @@ impl ReaderData {
     }
 }
 
+// Turning off OPOST or ONLCR breaks output (staircase effect), we don't allow it.
+// See #7133.
+fn term_fix_oflag(modes: &mut libc::termios) {
+    modes.c_oflag |= {
+        // turn on "implementation-defined post processing" - this often changes how line breaks work.
+        OPOST
+        // "translate newline to carriage return-newline" - without you see staircase output.
+        | ONLCR
+    };
+}
+
 /// Restore terminal settings we care about, to prevent a broken shell.
 fn term_fix_modes(modes: &mut libc::termios) {
-    // disable mapping CR (\cM) to NL (\cJ)
-    modes.c_iflag &= !ICRNL;
-    // disable mapping NL (\cJ) to CR (\cM)
-    modes.c_iflag &= !INLCR;
-    // turn off canonical mode
-    modes.c_lflag &= !ICANON;
-    // turn off echo mode
-    modes.c_lflag &= !ECHO;
-    // turn off handling of discard and lnext characters
-    modes.c_lflag &= !IEXTEN;
-    // turn on "implementation-defined post processing" - this often changes how line breaks work.
-    modes.c_oflag |= OPOST;
-    // "translate newline to carriage return-newline" - without you see staircase output.
-    modes.c_oflag |= ONLCR;
+    modes.c_iflag &= {
+        // disable mapping CR (\cM) to NL (\cJ)
+        !ICRNL
+        // disable mapping NL (\cJ) to CR (\cM)
+        & !INLCR
+    };
+    modes.c_lflag &= {
+        // turn off echo mode
+        !ECHO
+        // turn off canonical mode
+        & !ICANON
+        // turn off handling of discard and lnext characters
+        & !IEXTEN
+    };
+    term_fix_oflag(modes);
 
-    modes.c_cc[VMIN] = 1;
-    modes.c_cc[VTIME] = 0;
+    let c_cc = &mut modes.c_cc;
+    c_cc[VMIN] = 1;
+    c_cc[VTIME] = 0;
 
     // Prefer to use _POSIX_VDISABLE to disable control functions.
     // This permits separately binding nul (typically control-space).
@@ -4697,19 +4710,14 @@ fn term_fix_modes(modes: &mut libc::termios) {
     let disabling_char = _POSIX_VDISABLE;
 
     // We ignore these anyway, so there is no need to sacrifice a character.
-    modes.c_cc[VSUSP] = disabling_char;
-    modes.c_cc[VQUIT] = disabling_char;
+    c_cc[VSUSP] = disabling_char;
+    c_cc[VQUIT] = disabling_char;
 }
 
 fn term_fix_external_modes(modes: &mut libc::termios) {
-    // Turning off OPOST or ONLCR breaks output (staircase effect), we don't allow it.
-    // See #7133.
-    modes.c_oflag |= OPOST;
-    modes.c_oflag |= ONLCR;
+    term_fix_oflag(modes);
     // These cause other ridiculous behaviors like input not being shown.
-    modes.c_lflag |= ICANON;
-    modes.c_lflag |= IEXTEN;
-    modes.c_lflag |= ECHO;
+    modes.c_lflag |= ECHO | ICANON | IEXTEN;
     modes.c_iflag |= ICRNL;
     modes.c_iflag &= !INLCR;
 }
@@ -4748,16 +4756,17 @@ pub fn term_copy_modes() {
     // and 99% triggered by a crashed program.
     term_fix_external_modes(&mut tty_modes_for_external_cmds);
 
+    let mut shell_modes = shell_modes();
     // Copy flow control settings to shell modes.
     if (tty_modes_for_external_cmds.c_iflag & IXON) != 0 {
-        shell_modes().c_iflag |= IXON;
+        shell_modes.c_iflag |= IXON;
     } else {
-        shell_modes().c_iflag &= !IXON;
+        shell_modes.c_iflag &= !IXON;
     }
     if (tty_modes_for_external_cmds.c_iflag & IXOFF) != 0 {
-        shell_modes().c_iflag |= IXOFF;
+        shell_modes.c_iflag |= IXOFF;
     } else {
-        shell_modes().c_iflag &= !IXOFF;
+        shell_modes.c_iflag &= !IXOFF;
     }
 }
 

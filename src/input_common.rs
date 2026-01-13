@@ -19,10 +19,10 @@ use crate::tty_handoff::{
 use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_is_pua, fish_wcstol};
 use fish_widestring::encode_byte_to_char;
+use nix::sys::{select::FdSet, signal::SigSet, time::TimeSpec};
 use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;
-use std::mem::MaybeUninit;
-use std::os::fd::RawFd;
+use std::os::fd::{BorrowedFd, RawFd};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
@@ -555,52 +555,34 @@ fn next_input_event(in_fd: RawFd, ioport_fd: RawFd, timeout: Timeout) -> InputEv
     }
 }
 
-pub fn check_fd_readable(in_fd: RawFd, timeout: Duration) -> bool {
-    use std::ptr;
+pub fn check_fd_readable(in_fd: BorrowedFd, timeout: Duration) -> bool {
     // We are not prepared to handle a signal immediately; we only want to know if we get input on
     // our fd before the timeout. Use pselect to block all signals; we will handle signals
     // before the next call to readch().
-    let mut sigs = MaybeUninit::uninit();
-    let mut sigs = unsafe {
-        libc::sigfillset(sigs.as_mut_ptr());
-        sigs.assume_init()
-    };
-
-    // pselect expects timeouts in nanoseconds.
-    const NSEC_PER_MSEC: u64 = 1000 * 1000;
-    const NSEC_PER_SEC: u64 = NSEC_PER_MSEC * 1000;
-    let wait_nsec: u64 = (timeout.as_millis() as u64) * NSEC_PER_MSEC;
-    let timeout = libc::timespec {
-        tv_sec: (wait_nsec / NSEC_PER_SEC).try_into().unwrap(),
-        tv_nsec: (wait_nsec % NSEC_PER_SEC).try_into().unwrap(),
-    };
 
     // We have one fd of interest.
-    let mut fdset = MaybeUninit::uninit();
-    let mut fdset = unsafe {
-        libc::FD_ZERO(fdset.as_mut_ptr());
-        fdset.assume_init()
+    let mut readfds = {
+        let mut set = FdSet::new();
+        set.insert(in_fd);
+        set
     };
-    unsafe {
-        libc::FD_SET(in_fd, &mut fdset);
-    }
 
-    let res = unsafe {
-        libc::pselect(
-            in_fd + 1,
-            &mut fdset,
-            ptr::null_mut(),
-            ptr::null_mut(),
-            &timeout,
-            &sigs,
-        )
-    };
+    let res = nix::sys::select::pselect(
+        None,
+        &mut readfds,
+        None,
+        None,
+        &TimeSpec::from_duration(timeout),
+        &SigSet::all(),
+    )
+    .unwrap();
 
     // Prevent signal starvation on WSL causing the `torn_escapes.py` test to fail
     if is_windows_subsystem_for_linux(WSL::V1) {
         // Merely querying the current thread's sigmask is sufficient to deliver a pending signal
-        let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), &mut sigs) };
+        _ = SigSet::thread_get_mask().expect("Failed to get sigmask!");
     }
+
     res > 0
 }
 
@@ -935,7 +917,7 @@ pub trait InputEventQueuer {
             }
         };
         if !check_fd_readable(
-            fd,
+            unsafe { BorrowedFd::borrow_raw(fd) },
             if self.paste_is_buffering() || self.is_blocked_querying() {
                 historical_millis(300)
             } else if buffer == b"\x1b" {
@@ -1500,7 +1482,7 @@ pub trait InputEventQueuer {
         }
 
         check_fd_readable(
-            self.get_in_fd(),
+            unsafe { BorrowedFd::borrow_raw(self.get_in_fd()) },
             Duration::from_millis(u64::try_from(wait_time_ms).unwrap()),
         )
         .then(|| self.readch())

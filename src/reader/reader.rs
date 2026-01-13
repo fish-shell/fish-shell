@@ -1831,7 +1831,7 @@ impl<'a> Reader<'a> {
 
         // Highlight any history search.
         if let Some(range) = data.history_search_range {
-            // TODO(MSRV>=1.88): let chain
+            // TODO(MSRV>=1.88): feature(let_chains)
             if !self.conf.in_silent_mode {
                 let mut range = range.as_usize();
                 if range.end > colors.len() {
@@ -2620,7 +2620,6 @@ impl<'a> Reader<'a> {
         if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as _ {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
-            // TODO(MSRV>=1.88) if-let-chain
             if let Some(old_modes) = old_modes {
                 if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &old_modes) } == -1
                     && is_interactive_session()
@@ -6788,17 +6787,16 @@ pub fn completion_apply_to_command_line(
             let (tok, _) = get_token_extent(command_line, cursor_pos);
             maybe_add_slash(&mut trailer, &result[tok.start..new_cursor_pos]);
         }
-        // TODO(MSRV/edition 2024): use if let chain for quote instead of `is_some` followed
-        // by unwrap
-        if trailer != '/'
-            && quote.is_some()
-            && unescaped_quote(command_line, insertion_point) != quote
-        {
-            // This is a quoted parameter, first print a quote.
-            #[allow(clippy::unnecessary_unwrap)]
-            result.insert(new_cursor_pos, quote.unwrap());
-            new_cursor_pos += 1;
+        if trailer != '/' {
+            if let Some(quote) = quote {
+                if unescaped_quote(command_line, insertion_point) != Some(quote) {
+                    // This is a quoted parameter, first print a quote.
+                    result.insert(new_cursor_pos, quote);
+                    new_cursor_pos += 1;
+                }
+            }
         }
+
         if !have_trailer {
             result.insert(new_cursor_pos, trailer);
         }

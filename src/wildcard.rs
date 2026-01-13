@@ -391,7 +391,7 @@ fn wildcard_test_flags_then_complete(
             let stat_stripped = lwstat(filepath_stripped).map(|stat| (stat.dev(), stat.ino()));
             let stat = filepath_stat.as_ref().map(|stat| (stat.dev(), stat.ino()));
 
-            // TODO(MSRV>=1.88) use if-let-chain
+            // TODO(MSRV>=1.88): feature(let_chains)
             //   if let Ok(stat_stripped) = stat_stripped
             //       && let Ok(stat) = stat
             //       && stat_stripped == stat

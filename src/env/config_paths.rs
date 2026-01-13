@@ -106,7 +106,7 @@ impl ConfigPaths {
         };
 
         let workspace_root = workspace_root();
-        // TODO(MSRV>=1.88): if-let-chain
+        // TODO(MSRV>=1.88): feature(let_chains)
         if cfg!(using_cmake) && exec_path_parent.ends_with("bin") && {
             let prefix = exec_path_parent.parent().unwrap();
             let data = prefix.join("share/fish");
@@ -181,7 +181,6 @@ fn compute_fish_path() -> FishPath {
     // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
     // then linux adds a " (deleted)" suffix.
     // If that's not a valid path, let's remove that awkward suffix.
-    // TODO(MSRV>=1.88) use if-let-chain
     if !path.exists() {
         if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
             if let Some(corrected_filename) = filename

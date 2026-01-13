@@ -140,10 +140,10 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
         libc::sigdelset(new_set, libc::SIGSTOP); // unblockable
         libc::sigdelset(new_set, libc::SIGKILL); // unblockable
 
-        let mut saved_set: libc::sigset_t = std::mem::zeroed();
-        let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &raw mut saved_set);
+        let mut saved_set = MaybeUninit::uninit();
+        let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, saved_set.as_mut_ptr());
         assert_eq!(result, 0, "Failed to override thread signal mask!");
-        saved_set
+        saved_set.assume_init()
     };
 
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
@@ -423,19 +423,19 @@ mod tests {
             libc::sigemptyset(new_set);
             libc::sigaddset(new_set, libc::SIGILL); // mask bad jump
 
-            let mut saved_set: libc::sigset_t = std::mem::zeroed();
-            let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &raw mut saved_set);
+            let mut saved_set = MaybeUninit::uninit();
+            let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, saved_set.as_mut_ptr());
             assert_eq!(result, 0, "Failed to set thread mask!");
 
             // Now get the current set that includes the masked SIGILL
-            let mut t1_set: libc::sigset_t = std::mem::zeroed();
+            let mut t1_set = MaybeUninit::uninit();
             let mut empty_set = MaybeUninit::uninit();
             let empty_set = empty_set.as_mut_ptr();
             libc::sigemptyset(empty_set);
-            let result = libc::pthread_sigmask(libc::SIG_UNBLOCK, empty_set, &raw mut t1_set);
+            let result = libc::pthread_sigmask(libc::SIG_UNBLOCK, empty_set, t1_set.as_mut_ptr());
             assert_eq!(result, 0, "Failed to get own altered thread mask!");
 
-            (saved_set, t1_set)
+            (saved_set.assume_init(), t1_set.assume_init())
         };
 
         // Launch a new thread that can access existing variables
@@ -445,10 +445,11 @@ mod tests {
                 let mut new_set = MaybeUninit::uninit();
                 let new_set = new_set.as_mut_ptr();
                 libc::sigemptyset(new_set);
-                let mut saved_set2: libc::sigset_t = std::mem::zeroed();
-                let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &raw mut saved_set2);
+                let mut saved_set2 = MaybeUninit::uninit();
+                let result =
+                    libc::pthread_sigmask(libc::SIG_BLOCK, new_set, saved_set2.as_mut_ptr());
                 assert_eq!(result, 0, "Failed to get existing sigmask for new thread");
-                saved_set2
+                saved_set2.assume_init()
             }
         });
 

@@ -116,7 +116,7 @@ use crate::parser::ParserEnvSetMode;
 use crate::parser::{BlockType, EvalRes, Parser};
 use crate::prelude::*;
 use crate::proc::{
-    have_proc_stat, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
+    HAVE_PROC_STAT, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
     print_exit_warning_for_jobs, proc_update_jiffies,
 };
 use crate::screen::is_dumb;
@@ -6321,7 +6321,7 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     // Provide value for `status current-commandline`
     parser.libdata_mut().status_vars.commandline = L!("").to_owned();
 
-    if have_proc_stat() {
+    if *HAVE_PROC_STAT {
         proc_update_jiffies(parser);
     }
 

@@ -6,7 +6,7 @@ use crate::io::IoStreams;
 use crate::job_group::{JobId, MaybeJobId};
 use crate::localization::{wgettext, wgettext_fmt};
 use crate::parser::Parser;
-use crate::proc::{Job, clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies};
+use crate::proc::{HAVE_PROC_STAT, Job, clock_ticks_to_seconds, proc_get_jiffies};
 use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
 use crate::wutil::fish_wcstoi;
 use fish_widestring::{L, WExt, WString, wstr};
@@ -53,7 +53,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             if header {
                 // Print table header before first job.
                 out += wgettext!("Job\tGroup\t");
-                if have_proc_stat() {
+                if *HAVE_PROC_STAT {
                     out += wgettext!("CPU\t");
                 }
                 out += wgettext!("State\tCommand\n");
@@ -61,7 +61,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
 
             sprintf!(=> &mut out, "%d\t%s\t", j.job_id(), pgid);
 
-            if have_proc_stat() {
+            if *HAVE_PROC_STAT {
                 sprintf!(=> &mut out, "%.0f%%\t", 100.0 * cpu_use(j));
             }
 

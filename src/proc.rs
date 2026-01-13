@@ -1010,7 +1010,7 @@ pub fn print_exit_warning_for_jobs(jobs: &JobList) {
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by a given pid. This
 /// function is only available on systems with the procfs file entry 'stat', i.e. Linux.
 pub fn proc_get_jiffies(inpid: Pid) -> ClockTicks {
-    if !have_proc_stat() {
+    if !*HAVE_PROC_STAT {
         return 0;
     }
 
@@ -1609,12 +1609,9 @@ fn process_clean_after_marking(parser: &Parser, interactive: bool) -> bool {
     printed
 }
 
-pub fn have_proc_stat() -> bool {
-    // Check for /proc/self/stat to see if we are running with Linux-style procfs.
-    static HAVE_PROC_STAT_RESULT: LazyLock<bool> =
-        LazyLock::new(|| fs::metadata("/proc/self/stat").is_ok());
-    *HAVE_PROC_STAT_RESULT
-}
+/// Check for /proc/self/stat to see if we are running with Linux-style procfs.
+pub static HAVE_PROC_STAT: LazyLock<bool> =
+    LazyLock::new(|| fs::metadata("/proc/self/stat").is_ok());
 
 /// The signals that signify crashes to us.
 const CRASHSIGNALS: [libc::c_int; 6] = [SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS];

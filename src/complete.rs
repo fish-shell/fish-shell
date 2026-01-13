@@ -2305,7 +2305,7 @@ pub fn complete_add(
 
     // Lock the lock that allows us to edit the completion entry list.
     let mut completion_map = COMPLETION_MAP.lock().expect("mutex poisoned");
-    let c = &mut completion_map
+    let c = completion_map
         .entry(CompletionEntryIndex {
             name: cmd,
             is_path: cmd_is_path,

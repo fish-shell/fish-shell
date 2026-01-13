@@ -191,6 +191,7 @@ len_without_is_empty = "allow"     # we're not a library crate
 let_and_return = "allow"
 manual_range_contains = "allow"
 map_unwrap_or = "warn"
+mut_mut = "warn"
 needless_lifetimes = "allow"
 new_without_default = "allow"
 option_map_unit_fn = "allow"

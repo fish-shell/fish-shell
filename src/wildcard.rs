@@ -385,20 +385,25 @@ fn wildcard_test_flags_then_complete(
     // For executables on Cygwin, prefer the name without the .exe, to match
     // better with Unix names, but only if there isn't also a file without that
     // extension and the user hasn't started to type the extension
-    if let Some(filepath_stripped) = strip_executable_suffix(filepath) {
+    // TODO(MSRV>=1.88): feature(let_chains)
+    if (|| {
+        let Some(filepath_stripped) = strip_executable_suffix(filepath) else {
+            return false;
+        };
         let stripped_filename_len = filename.len() - (filepath.len() - filepath_stripped.len());
-        if wc.len() <= stripped_filename_len && *is_executable {
-            let stat_stripped = lwstat(filepath_stripped).map(|stat| (stat.dev(), stat.ino()));
-            let stat = filepath_stat.as_ref().map(|stat| (stat.dev(), stat.ino()));
-
-            // TODO(MSRV>=1.88) use if-let-chain
-            //   if let Ok(stat_stripped) = stat_stripped
-            //       && let Ok(stat) = stat
-            //       && stat_stripped == stat
-            if stat_stripped.is_ok() && stat.is_ok() && stat_stripped.unwrap() == stat.unwrap() {
-                filename = &filename[0..filename.len() - 4];
-            }
+        if wc.len() > stripped_filename_len || !*is_executable {
+            return false;
         }
+        let Ok(stat_stripped) = lwstat(filepath_stripped) else {
+            return false;
+        };
+        let Ok(stat) = filepath_stat.as_ref() else {
+            return false;
+        };
+        let dev_inode = |md: &std::fs::Metadata| (md.dev(), md.ino());
+        dev_inode(&stat_stripped) == dev_inode(stat)
+    })() {
+        filename = &filename[0..filename.len() - 4];
     }
 
     // Compute the description.

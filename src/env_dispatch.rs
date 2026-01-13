@@ -236,7 +236,6 @@ pub fn env_dispatch_var_change(milieu: VarChangeMilieu, key: &wstr, vars: &EnvSt
         dispatch_table.dispatch(key, vars, suppress_repaint);
     }
 
-    // TODO(MSRV>=1.88): if-let
     if !suppress_repaint {
         if let Some(data) = reader_current_data() {
             if string_prefixes_string(L!("fish_color_"), key) || {

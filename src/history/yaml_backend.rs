@@ -72,11 +72,7 @@ pub fn unescape_yaml_fish_2_0(s: &[u8]) -> Vec<u8> {
     // This function is in a very hot loop and the usage of boxed uninit memory benchmarks around 8%
     // faster on real-world escaped yaml samples from the fish history file.
 
-    // This is a very long way around of writing `Box::new_uninit_slice(s.len())`, which
-    // requires the unstablized nightly-only feature new_unit (#63291). It optimizes away.
-    let mut result: Box<[_]> = std::iter::repeat_with(std::mem::MaybeUninit::uninit)
-        .take(s.len())
-        .collect();
+    let mut result = Box::new_uninit_slice(s.len());
     let mut chars = s.iter().copied();
     let mut src_idx = 0;
     let mut dst_idx = 0;

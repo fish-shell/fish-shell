@@ -2,20 +2,24 @@ use super::prelude::*;
 use crate::path::{path_get_path, path_get_paths};
 
 #[derive(Default)]
-struct command_cmd_opts_t {
+struct Options {
     all: bool,
     quiet: bool,
     find_path: bool,
 }
 
-pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn r#command(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
-    let mut opts: command_cmd_opts_t = Default::default();
+    let mut opts: Options = Default::default();
 
-    const shortopts: &wstr = L!("hasqv");
-    const longopts: &[WOption] = &[
+    let shortopts: &wstr = L!("hasqv");
+    let longopts: &[WOption] = &[
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("all"), ArgType::NoArgument, 'a'),
         wopt(L!("query"), ArgType::NoArgument, 'q'),
@@ -36,7 +40,14 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 return Ok(SUCCESS);
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {

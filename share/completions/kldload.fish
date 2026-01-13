@@ -13,7 +13,7 @@ function __fish_list_kldload_options
         # print name and description
         for kld in $klds
             printf '%s\t%s\n' $kld (test -f /usr/share/man/man4/$kld.4.gz;
-				and __kld_whatis $kld; or echo "kernel module")[1]
+                and __kld_whatis $kld; or echo "kernel module")[1]
         end
     else if test $kld_count -gt 0
         # print name only

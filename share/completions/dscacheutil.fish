@@ -24,4 +24,4 @@ user\t'name or uid'
 "
 complete -c dscacheutil -o configuration -d 'print current config' -f -n '[ (commandline -xpc | count) -le 1 ]'
 complete -c dscacheutil -o statistics -d 'prints cache stats' -f -n '[ (commandline -xpc | count) -le 1 ]'
-complete -c dscacheutil -o flushcache -d 'reset cache (DNS	)' -f -k -n '[ (commandline -xpc | count) -le 1 ]'
+complete -c dscacheutil -o flushcache -d 'reset cache' -f -k -n '[ (commandline -xpc | count) -le 1 ]'

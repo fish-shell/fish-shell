@@ -6,7 +6,7 @@ function __fish_complete_fab_tasks
     end
 end
 
-# tasks 
+# tasks
 complete -x -c fab -a "(__fish_complete_fab_tasks)"
 
 # options

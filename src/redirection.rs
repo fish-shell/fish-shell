@@ -1,19 +1,19 @@
 //! This file supports specifying and applying redirections.
 
 use crate::io::IoChain;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wutil::fish_wcstoi;
 use nix::fcntl::OFlag;
 use std::os::fd::RawFd;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum RedirectionMode {
-    overwrite, // normal redirection: > file.txt
-    append,    // appending redirection: >> file.txt
-    input,     // input redirection: < file.txt
-    try_input, // try-input redirection: <? file.txt
-    fd,        // fd redirection: 2>&1
-    noclob,    // noclobber redirection: >? file.txt
+    Overwrite, // normal redirection: > file.txt
+    Append,    // appending redirection: >> file.txt
+    Input,     // input redirection: < file.txt
+    TryInput,  // try-input redirection: <? file.txt
+    Fd,        // fd redirection: 2>&1
+    NoClob,    // noclobber redirection: >? file.txt
 }
 
 /// A type that represents the action dup2(src, target).
@@ -36,10 +36,10 @@ impl RedirectionMode {
     /// The open flags for this redirection mode.
     pub fn oflags(self) -> Option<OFlag> {
         match self {
-            RedirectionMode::append => Some(OFlag::O_CREAT | OFlag::O_APPEND | OFlag::O_WRONLY),
-            RedirectionMode::overwrite => Some(OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC),
-            RedirectionMode::noclob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
-            RedirectionMode::input | RedirectionMode::try_input => Some(OFlag::O_RDONLY),
+            RedirectionMode::Append => Some(OFlag::O_CREAT | OFlag::O_APPEND | OFlag::O_WRONLY),
+            RedirectionMode::Overwrite => Some(OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC),
+            RedirectionMode::NoClob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
+            RedirectionMode::Input | RedirectionMode::TryInput => Some(OFlag::O_RDONLY),
             _ => None,
         }
     }
@@ -69,7 +69,7 @@ impl RedirectionSpec {
     }
     /// Return if this is a close-type redirection.
     pub fn is_close(&self) -> bool {
-        self.mode == RedirectionMode::fd && self.target == "-"
+        self.mode == RedirectionMode::Fd && self.target == "-"
     }
 
     /// Attempt to parse target as an fd.
@@ -95,9 +95,9 @@ pub fn dup2_list_resolve_chain(io_chain: &IoChain) -> Dup2List {
     let mut result = Dup2List { actions: vec![] };
     for io in &io_chain.0 {
         if io.source_fd() < 0 {
-            result.add_close(io.fd())
+            result.add_close(io.fd());
         } else {
-            result.add_dup2(io.source_fd(), io.fd())
+            result.add_dup2(io.source_fd(), io.fd());
         }
     }
     result
@@ -139,7 +139,7 @@ impl Dup2List {
     pub fn add_dup2(&mut self, src: RawFd, target: RawFd) {
         assert!(src >= 0 && target >= 0, "Invalid fd in add_dup2");
         // Note: record these even if src and target is the same.
-        // This is a note that we must clear the CLO_EXEC bit.
+        // This is a note that we must clear the CLOEXEC bit.
         self.actions.push(Dup2Action { src, target });
     }
 
@@ -149,7 +149,7 @@ impl Dup2List {
         self.actions.push(Dup2Action {
             src: fd,
             target: -1,
-        })
+        });
     }
 }
 

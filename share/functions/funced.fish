@@ -52,7 +52,7 @@ function funced --description 'Edit function definition'
             functions --no-details -- $funcname | fish_indent --only-unindent | fish_indent --no-indent | read -z init
         end
 
-        set -l prompt 'printf "%s%s%s> " (set_color green) $funcname (set_color normal)'
+        set -l prompt 'printf "%s%s%s> " (set_color green) $funcname (set_color --reset)'
         if read -p $prompt -c "$init" --shell cmd
             echo -n $cmd | fish_indent --only-unindent | read -lz cmd
             eval "$cmd"
@@ -91,9 +91,8 @@ function funced --description 'Edit function definition'
     # Repeatedly edit until it either parses successfully, or the user cancels
     # If the editor command itself fails, we assume the user cancelled or the file
     # could not be edited, and we do not try again
+    set -l checksum (__fish_md5 "$tmpname")
     while true
-        set -l checksum (__fish_md5 "$tmpname")
-
         if not $editor $tmpname
             echo (_ "Editing failed or was cancelled")
         else

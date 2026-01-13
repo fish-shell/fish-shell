@@ -4,7 +4,7 @@ use super::prelude::*;
 use super::r#return::parse_return_value;
 
 /// Function for handling the exit builtin.
-pub fn exit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn exit(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let retval = match parse_return_value(args, parser, streams) {
         ControlFlow::Continue(r) => r,
         ControlFlow::Break(result) => return result,

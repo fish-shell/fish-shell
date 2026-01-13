@@ -70,7 +70,7 @@ Sometimes you want to give a command an argument that contains characters specia
 
 to remove a file called ``my file.txt`` instead of trying to remove two files, ``my`` and ``file.txt``.
 
-Fish understands two kinds of quotes: Single (``'``) and double (``"``), and both work slightly differently.
+fish understands two kinds of quotes: Single (``'``) and double (``"``), and both work slightly differently.
 
 Between single quotes, fish performs no expansions. Between double quotes, fish only performs :ref:`variable expansion <expand-variable>` and :ref:`command substitution <expand-command-substitution>` in the ``$(command)``. No other kind of expansion (including :ref:`brace expansion <expand-brace>` or parameter expansion) is performed, and escape sequences (for example, ``\n``) are ignored. Within quotes, whitespace is not used to separate arguments, allowing quoted arguments to contain spaces.
 
@@ -235,7 +235,7 @@ It is possible to pipe a different output file descriptor by prepending its FD n
 
 will attempt to build ``fish``, and any errors will be shown using the ``less`` pager. [#]_
 
-As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. This is different from bash, which uses ``|&``.
+As a convenience, the pipe ``&|`` (as well as the ``|&`` alias which is also supported by Bash) both redirect stdout and stderr to the same process.
 
 .. [#] A "pager" here is a program that takes output and "paginates" it. ``less`` doesn't just do pages, it allows arbitrary scrolling (even back!).
 
@@ -315,7 +315,7 @@ Calling this as ``ll /tmp/`` will end up running ``ls -l /tmp/``, which will lis
 
 This is a kind of function known as an :ref:`alias <syntax-aliases>`.
 
-Fish's prompt is also defined in a function, called :doc:`fish_prompt <cmds/fish_prompt>`. It is run when the prompt is about to be displayed and its output forms the prompt::
+fish's prompt is also defined in a function, called :doc:`fish_prompt <cmds/fish_prompt>`. It is run when the prompt is about to be displayed and its output forms the prompt::
 
   function fish_prompt
       # A simple prompt. Displays the current directory
@@ -413,7 +413,7 @@ Comments can also appear after a line like so::
 Conditions
 ----------
 
-Fish has some builtins that let you execute commands only if a specific criterion is met: :doc:`if <cmds/if>`, :doc:`switch <cmds/switch>`, :doc:`and <cmds/and>` and :doc:`or <cmds/or>`, and also the familiar :ref:`&&/|| <syntax-combiners>` syntax.
+fish has some builtins that let you execute commands only if a specific criterion is met: :doc:`if <cmds/if>`, :doc:`switch <cmds/switch>`, :doc:`and <cmds/and>` and :doc:`or <cmds/or>`, and also the familiar :ref:`&&/|| <syntax-combiners>` syntax.
 
 .. _syntax-if:
 
@@ -422,7 +422,7 @@ The ``if`` statement
 
 The :doc:`if <cmds/if>` statement runs a block of commands if the condition was true.
 
-Like other shells, but unlike typical programming languages you might know, the condition here is a *command*. Fish runs it, and if it returns a true :ref:`exit status <variables-status>` (that's 0), the if-block is run. For example::
+Like other shells, but unlike typical programming languages you might know, the condition here is a *command*. fish runs it, and if it returns a true :ref:`exit status <variables-status>` (that's 0), the if-block is run. For example::
 
   if test -e /etc/os-release
       cat /etc/os-release
@@ -620,6 +620,8 @@ Wildcard matches are sorted case insensitively. When sorting matches containing 
 
 Hidden files (where the name begins with a dot) are not considered when wildcarding unless the wildcard string has a dot in that place.
 
+Wildcards never expand to ``.`` (current directory) or ``..`` (parent directory).
+
 Examples:
 
 - ``a*`` matches any files beginning with an 'a' in the current directory.
@@ -692,7 +694,7 @@ Quoting variables
 
 Variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (``:``) instead [#]_.
 
-Fish variables are all :ref:`lists <variables-lists>`, and they are split into elements when they are *set* - that means it is important to decide whether to use quotes or not with :doc:`set <cmds/set>`::
+fish variables are all :ref:`lists <variables-lists>`, and they are split into elements when they are *set* - that means it is important to decide whether to use quotes or not with :doc:`set <cmds/set>`::
 
   set foo 1 2 3 # a variable with three elements
   rm $foo # runs the equivalent of `rm 1 2 3` - trying to delete three files: 1, 2 and 3.
@@ -830,7 +832,7 @@ When using double quotes, the command output is not split up by lines, but trail
 
 If the output is piped to :doc:`string split or string split0 <cmds/string-split>` as the last step, those splits are used as they appear instead of splitting lines.
 
-Fish also allows spelling command substitutions without the dollar, like ``echo (pwd)``. This variant will not be expanded in double-quotes (``echo "(pwd)"`` will print ``(pwd)``).
+fish also allows spelling command substitutions without the dollar, like ``echo (pwd)``. This variant will not be expanded in double-quotes (``echo "(pwd)"`` will print ``(pwd)``).
 
 The exit status of the last run command substitution is available in the :ref:`status <variables-status>` variable if the substitution happens in the context of a :doc:`set <cmds/set>` command (so ``if set -l (something)`` checks if ``something`` returned true).
 
@@ -863,7 +865,7 @@ but if you need multiple or the command doesn't read from standard input, "proce
 
 This creates a temporary file, stores the output of the command in that file and prints the filename, so it is given to the outer command.
 
-Fish has a default limit of 1 GiB on the data it will read in a command substitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
+fish has a default limit of 1 GiB on the data it will read in a command substitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
 
 .. [#] One exception: Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :doc:`string split <cmds/string-split>` instead.
 
@@ -922,7 +924,7 @@ The very first character of a command token is never interpreted as expanding br
 Combining lists
 ^^^^^^^^^^^^^^^
 
-Fish expands lists like :ref:`brace expansions <expand-brace>`::
+fish expands lists like :ref:`brace expansions <expand-brace>`::
 
   >_ set -l foo x y z
   >_ echo 1$foo
@@ -1178,7 +1180,7 @@ All variables in fish have a scope. For example they can be global or local to a
 
   echo $name, I am $place and my instrument is $instrument
   # Will print:
-  # Patrick, I am at the Krusty Krab and my instrument is 
+  # Patrick, I am at the Krusty Krab and my instrument is
 
 There are four kinds of variable scopes in fish: universal, global, function and local variables.
 
@@ -1234,11 +1236,6 @@ If you want to set something in config.fish, or set something in a function and 
 
     # Set my language
     set -gx LANG de_DE.UTF-8
-
-If you want to set some personal customization, universal variables are nice::
-
-     # Typically you'd run this interactively, fish takes care of keeping it.
-     set -U fish_color_autosuggestion 555
 
 Here is an example of local vs function-scoped variables::
 
@@ -1317,9 +1314,8 @@ This syntax is supported since fish 3.1.
 Universal Variables
 ^^^^^^^^^^^^^^^^^^^
 
-Universal variables are variables that are shared between all the user's fish sessions on the computer. Fish stores many of its configuration options as universal variables. This means that in order to change fish settings, all you have to do is change the variable value once, and it will be automatically updated for all sessions, and preserved across computer reboots and login/logout.
-
-To see universal variables in action, start two fish sessions side by side, and issue the following command in one of them ``set fish_color_cwd blue``. Since ``fish_color_cwd`` is a universal variable, the color of the current working directory listing in the prompt will instantly change to blue on both terminals.
+Universal variables are variables that are shared between all the user's fish sessions on the computer.
+All changes to universal variables are persistent and instantly propagated across fish sessions.
 
 :ref:`Universal variables <variables-universal>` are stored in the file ``.config/fish/fish_variables``. Do not edit this file directly, as your edits may be overwritten. Edit the variables through fish scripts or by using fish interactively instead.
 
@@ -1354,7 +1350,7 @@ Note: Exporting is not a :ref:`scope <variables-scope>`, but an additional state
 Lists
 ^^^^^
 
-Fish can store a list (or an "array" if you wish) of multiple strings inside of a variable::
+fish can store a list (or an "array" if you wish) of multiple strings inside of a variable::
 
    > set mylist first second third
    > printf '%s\n' $mylist # prints each element on its own line
@@ -1421,7 +1417,7 @@ When a list is exported as an environment variable, it is either space or colon 
     smurf=blue small
     smurf_PATH=forest:mushroom
 
-Fish automatically creates lists from all environment variables whose name ends in ``PATH`` (like :envvar:`PATH`, :envvar:`CDPATH` or :envvar:`MANPATH`), by splitting them on colons. Other variables are not automatically split.
+fish automatically creates lists from all environment variables whose name ends in ``PATH`` (like :envvar:`PATH`, :envvar:`CDPATH` or :envvar:`MANPATH`), by splitting them on colons. Other variables are not automatically split.
 
 Lists can be inspected with the :doc:`count <cmds/count>` or the :doc:`contains <cmds/contains>` commands::
 
@@ -1555,7 +1551,8 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. describe:: Locale Variables
 
-   Locale variables such as :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_MESSAGES`, :envvar:`LC_NUMERIC` and :envvar:`LC_TIME`  set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
+   Locale variables such as :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_MESSAGES`, :envvar:`LC_NUMERIC` and :envvar:`LC_TIME` set the language option for the shell and subprograms.
+   See the section :ref:`Locale variables <variables-locale>` and :ref:`status language <status-language>` for more information.
 
 .. describe:: Color variables
 
@@ -1578,7 +1575,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: fish_emoji_width
 
-   controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
+   controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It defaults to 2.
 
 .. envvar:: fish_autosuggestion_enabled
 
@@ -1637,8 +1634,10 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: fish_trace
 
-   if set and not empty, will cause fish to print commands before they execute, similar to ``set -x``
-   in bash. The trace is printed to the path given by the `--debug-output` option to fish or the :envvar:`FISH_DEBUG_OUTPUT` variable. It goes to stderr by default.
+   if set and not empty, will cause fish to print commands before they execute, similar to ``set -x`` in bash.
+   The trace is printed to the path given by the `--debug-output` option to fish or the :envvar:`FISH_DEBUG_OUTPUT` variable.
+   It goes to stderr by default.
+   Set it to ``all`` to also trace execution of key bindings, event handlers as well as prompt and title functions.
 
 .. envvar:: FISH_DEBUG
 
@@ -1656,11 +1655,23 @@ You can change the settings of fish by changing the values of certain variables.
 
    the current file creation mask. The preferred way to change the umask variable is through the :doc:`umask <cmds/umask>` function. An attempt to set umask to an invalid value will always fail.
 
+.. envvar:: SHELL_PROMPT_PREFIX
+
+   if set, this string is automatically prepended to the left prompt. This is a standard environment variable that may be set by tools like systemd's ``run0`` to indicate special shell sessions.
+
+.. envvar:: SHELL_PROMPT_SUFFIX
+
+   if set, this string is automatically appended to the left prompt. This is a standard environment variable that may be set by tools like systemd's ``run0`` to indicate special shell sessions.
+
+.. envvar:: SHELL_WELCOME
+
+   if set, this string is displayed when an interactive shell starts, after the greeting. This is a standard environment variable that may be set by tools like systemd's ``run0`` to display session information.
+
 .. envvar:: BROWSER
 
    your preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
-Fish also provides additional information through the values of certain environment variables. Most of these variables are read-only and their value can't be changed with ``set``.
+fish also provides additional information through the values of certain environment variables. Most of these variables are read-only and their value can't be changed with ``set``.
 
 .. envvar:: _
 
@@ -1698,6 +1709,15 @@ Fish also provides additional information through the values of certain environm
 
    the process ID (PID) of the shell.
 
+.. envvar:: fish_terminal_color_theme
+
+   a read-only variable;
+   set to ``light`` or ``dark`` when the terminal uses a light or dark color theme respectively;
+   set to ``unknown`` if the terminal does not :ref:`report its colors <term-compat-query-background-color>`.
+   Like :ref:`status terminal <status-terminal>`, this is only populated once the first interactive prompt is shown.
+   This is used in an :ref:`--on-variable event handler <event>` to update :ref:`syntax highlighting <syntax-highlighting>` variables whenever the terminal's color theme changes.
+   See :ref:`here <fish-config-theme-files>` for how to specify ``light`` and ``dark`` variants in your theme.
+
 .. envvar:: history
 
    a list containing the last commands that were entered.
@@ -1728,7 +1748,7 @@ Fish also provides additional information through the values of certain environm
 
 .. ENVVAR:: SHLVL
 
-   the level of nesting of shells. Fish increments this in interactive shells, otherwise it only passes it along.
+   the level of nesting of shells. fish increments this in interactive shells, otherwise it only passes it along.
 
 .. envvar:: status
 
@@ -1752,7 +1772,7 @@ Fish also provides additional information through the values of certain environm
 
 As a convention, an uppercase name is usually used for exported variables, while lowercase variables are not exported. (``CMD_DURATION`` is an exception for historical reasons). This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables.
 
-Fish also uses some variables internally, their name usually starting with ``__fish``. These are internal and should not typically be modified directly.
+fish also uses some variables internally, their name usually starting with ``__fish``. These are internal and should not typically be modified directly.
 
 .. _variables-status:
 
@@ -1761,7 +1781,7 @@ The status variable
 
 Whenever a process exits, an exit status is returned to the program that started it (usually the shell). This exit status is an integer number, which tells the calling application how the execution of the command went. In general, a zero exit status means that the command executed without problem, but a non-zero exit status means there was some form of problem.
 
-Fish stores the exit status of the last process in the last job to exit in the ``status`` variable.
+fish stores the exit status of the last process in the last job to exit in the ``status`` variable.
 
 If fish encounters a problem while executing a command, the status variable may also be set to a specific value:
 
@@ -1871,7 +1891,7 @@ In UNIX, these are made up of several categories. The categories used by fish ar
 Builtin commands
 ----------------
 
-Fish includes a number of commands in the shell directly. We call these "builtins". These include:
+fish includes a number of commands in the shell directly. We call these "builtins". These include:
 
 - Builtins that manipulate the shell state - :doc:`cd <cmds/cd>` changes directory, :doc:`set <cmds/set>` sets variables
 - Builtins for dealing with data, like :doc:`string <cmds/string>` for strings and :doc:`math <cmds/math>` for numbers, :doc:`count <cmds/count>` for counting lines or arguments, :doc:`path <cmds/path>` for dealing with path
@@ -2041,11 +2061,11 @@ Here is what they mean:
 - ``stderr-nocaret`` was introduced in fish 3.0 and cannot be turned off since fish 3.5. It can still be tested for compatibility, but a ``no-stderr-nocaret`` value will be ignored. The flag made ``^`` an ordinary character instead of denoting an stderr redirection. Use ``2>`` instead.
 - ``qmark-noglob`` was also introduced in fish 3.0 (and made the default in 4.0). It makes ``?`` an ordinary character instead of a single-character glob. Use a ``*`` instead (which will match multiple characters) or find other ways to match files like ``find``.
 - ``regex-easyesc`` was introduced in 3.1 (and made the default in 3.5). It makes it so the replacement expression in ``string replace -r`` does one fewer round of escaping. Before, to escape a backslash you would have to use ``string replace -ra '([ab])' '\\\\\\\\$1'``. After, just ``'\\\\$1'`` is enough. Check your ``string replace`` calls if you use this anywhere.
-- ``ampersand-nobg-in-token`` was introduced in fish 3.4 (and made the default in 3.5). It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
+- ``ampersand-nobg-in-token`` was introduced in fish 3.4 (and made the default in 3.5). It makes it so a ``&`` is no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
 - ``remove-percent-self`` turns off the special ``%self`` expansion. It was introduced in 4.0. To get fish's pid, you can use the :envvar:`fish_pid` variable.
 - ``test-require-arg`` removes :doc:`builtin test <cmds/test>`'s one-argument form (``test "string"``. It was introduced in 4.0. To test if a string is non-empty, use ``test -n "string"``. If disabled, any call to ``test`` that would change sends a :ref:`debug message <debugging-fish>` of category "deprecated-test", so starting fish with ``fish --debug=deprecated-test`` can be used to find offending calls.
-- ``mark-prompt`` makes fish report to the terminal the beginning and and of both shell prompts and command output.
-- ``ignore-terminfo`` disables lookup of $TERM in the terminfo database. Use ``no-ignore-terminfo`` to turn it back on.
+- ``mark-prompt`` makes fish report to the terminal the beginning and end of both shell prompts and command output.
+- ``ignore-terminfo`` was introduced in fish 4.1 and cannot be turned off since fish 4.5. It can still be tested for compatibility, but a ``no-ignore-terminfo`` value will be ignored. The flag disabled lookup of $TERM in the terminfo database.
 - ``query-term`` allows fish to query the terminal by writing escape sequences and reading the terminal's response.
   This enables features such as :ref:`scrolling <term-compat-cursor-position-report>`.
   If you use an incompatible terminal, you can -- for the time being -- work around it by running (once) ``set -Ua fish_features no-query-term``.
@@ -2090,7 +2110,7 @@ To specify a signal handler for the WINCH signal, write::
         echo Got WINCH signal!
     end
 
-Fish already has the following named events for the ``--on-event`` switch:
+fish already has the following named events for the ``--on-event`` switch:
 
 - ``fish_prompt`` is emitted whenever a new fish prompt is about to be displayed.
 
@@ -2133,7 +2153,7 @@ For more information on how to define new event handlers, see the documentation 
 Debugging fish scripts
 ----------------------
 
-Fish includes basic built-in debugging facilities that allow you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt where you can execute any fish command to inspect or change state (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how the current breakpoint was reached. To resume normal execution of the script, type :doc:`exit <cmds/exit>` or :kbd:`ctrl-d`.
+fish includes basic built-in debugging facilities that allow you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt where you can execute any fish command to inspect or change state (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how the current breakpoint was reached. To resume normal execution of the script, type :doc:`exit <cmds/exit>` or :kbd:`ctrl-d`.
 
 To start a debug session insert the :doc:`builtin command <cmds/breakpoint>` ``breakpoint`` at the point in a function or script where you wish to gain control, then run the function or script. Also, the default action of the ``TRAP`` signal is to call this builtin, meaning a running script can be actively debugged by sending it the ``TRAP`` signal (``kill -s TRAP <PID>``). There is limited support for interactively setting or modifying breakpoints from this debug prompt: it is possible to insert new breakpoints in (or remove old ones from) other functions by using the ``funced`` function to edit the definition of a function, but it is not possible to add or remove a breakpoint from the function/script currently loaded and being executed.
 

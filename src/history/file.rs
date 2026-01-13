@@ -1,28 +1,28 @@
 //! Implementation of the YAML-like history file format.
 
-use std::{
-    fs::File,
-    io::{Read, Write},
-    ops::{Deref, DerefMut},
-    os::fd::AsRawFd,
-    time::{SystemTime, UNIX_EPOCH},
-};
-
-use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
-
 use super::HistoryItem;
 use super::yaml_backend::{
-    decode_item_fish_2_0, escape_yaml_fish_2_0, offset_of_next_item_fish_2_0,
+    FIRST_ADDED_TIMESTAMP_KEY, LAST_ADDED_TIMESTAMP_KEY, decode_item_fish_2_0,
+    escape_yaml_fish_2_0, offset_of_next_item_fish_2_0,
 };
 use crate::{
-    common::wcs2bytes,
-    flog::FLOG,
+    flog::flog,
     path::{DirRemoteness, path_get_data_remoteness},
     wutil::FileId,
+};
+use fish_widestring::wcs2bytes;
+use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
+use std::{
+    fs::File,
+    io::Read as _,
+    ops::{Deref, DerefMut},
+    os::fd::AsRawFd as _,
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 /// History file types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(non_camel_case_types)]
 pub enum HistoryFileType {
     Fish1_x, // old format with just timestamp and item
     Fish2_0, // YAML-style format
@@ -41,7 +41,7 @@ impl MmapRegion {
     ///
     /// `ptr` must be the result of a successful `mmap()` call with length `len`.
     unsafe fn new(ptr: *mut u8, len: usize) -> Self {
-        assert!(ptr.cast() != MAP_FAILED);
+        assert_ne!(ptr.cast(), MAP_FAILED);
         assert!(len > 0);
         Self { ptr, len }
     }
@@ -169,14 +169,6 @@ impl RawHistoryFile {
         decode_item_fish_2_0(contents)
     }
 
-    /// Support for iterating item offsets.
-    /// The cursor should initially be 0.
-    /// If cutoff is given, skip items whose timestamp is newer than cutoff.
-    /// Returns the offset of the next item, or [`None`] on end.
-    fn offset_of_next_item(&self, cursor: &mut usize, cutoff: Option<SystemTime>) -> Option<usize> {
-        offset_of_next_item_fish_2_0(self.contents(), cursor, cutoff)
-    }
-
     /// Returns an iterator over item offsets with an optional cutoff time.
     /// If cutoff is given, skip items whose timestamp is newer than cutoff.
     pub fn offsets(&self, cutoff: Option<SystemTime>) -> impl Iterator<Item = usize> + '_ {
@@ -250,8 +242,9 @@ impl<'a> Iterator for HistoryFileOffsetIter<'a> {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.contents
-            .offset_of_next_item(&mut self.cursor, self.cutoff)
+        let cursor: &mut usize = &mut self.cursor;
+        let cutoff = self.cutoff;
+        offset_of_next_item_fish_2_0(self.contents.contents(), cursor, cutoff)
     }
 }
 
@@ -273,7 +266,7 @@ impl TryFrom<MmapRegion> for RawHistoryFile {
         let type_ = infer_file_type(&region);
         if type_ == HistoryFileType::Fish1_x {
             let error_message = "unsupported history file format 1.x";
-            FLOG!(error, error_message);
+            flog!(error, error_message);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 error_message,
@@ -283,27 +276,45 @@ impl TryFrom<MmapRegion> for RawHistoryFile {
     }
 }
 
-/// Append a history item to a buffer, in preparation for outputting it to the history file.
-pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
-    assert!(item.should_write_to_disk(), "Item should not be persisted");
+impl HistoryItem {
+    /// Write this history item to some writer.
+    pub fn write_to(&self, writer: &mut impl std::io::Write) -> std::io::Result<()> {
+        assert!(self.should_write_to_disk(), "Item should not be persisted");
 
-    let mut cmd = wcs2bytes(item.str());
-    escape_yaml_fish_2_0(&mut cmd);
-    buffer.extend(b"- cmd: ");
-    buffer.extend(&cmd);
-    buffer.push(b'\n');
-    writeln!(buffer, "  when: {}", time_to_seconds(item.timestamp())).unwrap();
-
-    let paths = item.get_required_paths();
-    if !paths.is_empty() {
-        writeln!(buffer, "  paths:").unwrap();
-        for path in paths {
-            let mut path = wcs2bytes(path);
-            escape_yaml_fish_2_0(&mut path);
-            buffer.extend(b"    - ");
-            buffer.extend(&path);
-            buffer.push(b'\n');
+        let mut cmd = wcs2bytes(self.str());
+        escape_yaml_fish_2_0(&mut cmd);
+        writer.write_all(b"- cmd: ")?;
+        writer.write_all(&cmd)?;
+        writer.write_all(b"\n")?;
+        let last_added = self.last_added_timestamp();
+        let first_added = self.first_added_timestamp();
+        writeln!(
+            writer,
+            "  {}: {}",
+            LAST_ADDED_TIMESTAMP_KEY,
+            time_to_seconds(last_added)
+        )?;
+        if first_added != last_added {
+            writeln!(
+                writer,
+                "  {}: {}",
+                FIRST_ADDED_TIMESTAMP_KEY,
+                time_to_seconds(first_added)
+            )?;
         }
+
+        let paths = self.get_required_paths();
+        if !paths.is_empty() {
+            writeln!(writer, "  paths:")?;
+            for path in paths {
+                let mut path = wcs2bytes(path);
+                escape_yaml_fish_2_0(&mut path);
+                writer.write_all(b"    - ")?;
+                writer.write_all(&path)?;
+                writer.write_all(b"\n")?;
+            }
+        }
+        Ok(())
     }
 }
 
@@ -311,7 +322,7 @@ pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
 /// Don't try mmap() on non-local filesystems.
 fn should_mmap() -> bool {
     // mmap only if we are known not-remote.
-    path_get_data_remoteness() != DirRemoteness::remote
+    path_get_data_remoteness() != DirRemoteness::Remote
 }
 
 pub fn time_to_seconds(ts: SystemTime) -> i64 {

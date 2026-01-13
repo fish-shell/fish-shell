@@ -9,13 +9,13 @@ if test "$(command -s shortcuts)" = /usr/bin/shortcuts
     command shortcuts --generate-completion-script=fish | source
 end
 
-# output is like: 
+# output is like:
 
 # function __fish_shortcuts_using_command
 #     set cmd (commandline -xpc)
-#     if test  (count $cmd) -eq (count $argv) 
+#     if test  (count $cmd) -eq (count $argv)
 #         for i in (seq (count $argv))
-#             if test  $cmd[$i] != $argv[$i] 
+#             if test  $cmd[$i] != $argv[$i]
 #                 return 1
 #             end
 #         end

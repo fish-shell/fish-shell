@@ -6,14 +6,16 @@ Synopsis
 
 .. synopsis::
 
-    set
-    set (-f | --function) (-l | --local) (-g | --global) (-U | --universal) [--no-event]
-    set [-Uflg] NAME [VALUE ...]
-    set [-Uflg] NAME[[INDEX ...]] [VALUE ...]
-    set (-x | --export) (-u | --unexport) [-Uflg] NAME [VALUE ...]
-    set (-a | --append) (-p | --prepend) [-Uflg] NAME VALUE ...
-    set (-q | --query) (-e | --erase) [-Uflg] [NAME][[INDEX]] ...]
+    set [(-f | --function) (-l | --local) (-g | --global) (-U | --universal)]
+        [(-x | --export) (-u | --unexport)]
     set (-S | --show) (-L | --long) [NAME ...]
+
+    set [-Uflg] [-xu] [--no-event] NAME [VALUE ...]
+    set [-Uflg] [--no-event] NAME[[INDEX ...]] [VALUE ...]
+    set (-a | --append) (-p | --prepend) [-Uflg] [--no-event] NAME VALUE ...
+    set (-e | --erase) [-Uflg] [--no-event] NAME[[INDEX]] ...
+
+    set (-q | --query) [-Uflg] [-xu] NAME[[INDEX]] ...
 
 Description
 -----------
@@ -88,6 +90,7 @@ Further options:
 **-q** or **--query** *NAME*\[*INDEX*\]
     Test if the specified variable names are defined.
     If an *INDEX* is provided, check for items at that slot.
+    With a given scope (like **--global**) or attribute (like **--export** or **--path**) check only variables that match.
     Does not output anything, but the shell status is set to the number of variables specified that were not defined, up to a maximum of 255.
     If no variable was given, it also returns 255.
 
@@ -217,4 +220,4 @@ This runs fish with a temporary home directory::
 
 Notes
 -----
-- Fish versions prior to 3.0 supported the syntax ``set PATH[1] PATH[4] /bin /sbin``, which worked like ``set PATH[1 4] /bin /sbin``.
+- fish versions prior to 3.0 supported the syntax ``set PATH[1] PATH[4] /bin /sbin``, which worked like ``set PATH[1 4] /bin /sbin``.

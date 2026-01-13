@@ -9,40 +9,50 @@ pub(crate) static LOCALE_LOCK: Mutex<()> = Mutex::new(());
 /// Call this either before starting any locale-using thread, or while holding a lock on the
 /// above mutex.
 pub unsafe fn set_libc_locales(log_ok: bool) -> bool {
-    let mut ok = true;
-    let mut set = |category_name, category, value| {
+    let from_environment = c"";
+    let set = |category_name, category, value| {
         let locale_string = setlocale(category, Some(value));
         if log_ok {
-            crate::flog::FLOG!(
-                env_locale,
+            crate::flog::flog!(env_locale, {
+                let source = if value == from_environment {
+                    "from environment".to_owned()
+                } else {
+                    format!("to '{}'", value.to_str().unwrap())
+                };
                 match locale_string {
                     Some(locale_string) => {
-                        format!("Set {category_name} to {}", locale_string.to_string_lossy())
+                        format!(
+                            "Set {category_name} {source}: {}",
+                            locale_string.to_string_lossy()
+                        )
                     }
                     None => {
-                        format!("Failed to set {category_name}",)
+                        format!("Failed to set {category_name} {source}")
                     }
-                },
-            );
+                }
+            });
         }
-        ok &= locale_string.is_some();
+        locale_string.is_some()
     };
-    let from_environment = c"";
-    // For wcwidth(3p)
-    set("LC_CTYPE", libc::LC_CTYPE, c"C.UTF-8");
+    let mut ok = true;
     // For strerror(3p) and strsignal(3p)
-    set("LC_MESSAGES", libc::LC_MESSAGES, from_environment);
+    ok &= set("LC_CTYPE", libc::LC_CTYPE, c"C.UTF-8")
+        || set("LC_CTYPE", libc::LC_CTYPE, from_environment);
+    ok &= set("LC_MESSAGES", libc::LC_MESSAGES, from_environment);
     // For builtin printf
-    set("LC_NUMERIC", libc::LC_NUMERIC, from_environment);
+    ok &= set("LC_NUMERIC", libc::LC_NUMERIC, from_environment);
     // For "history --show-time"
-    set("LC_TIME", libc::LC_TIME, from_environment);
+    ok &= set("LC_TIME", libc::LC_TIME, from_environment);
     ok
 }
 
 fn setlocale(category: libc::c_int, locale: Option<&CStr>) -> Option<&'static CStr> {
     let loc_ptr = {
         let locale = locale.map_or(std::ptr::null(), |loc| loc.as_ptr());
-        unsafe { libc::setlocale(category, locale) }
+        #[allow(clippy::disallowed_methods)]
+        unsafe {
+            libc::setlocale(category, locale)
+        }
     };
     (!loc_ptr.is_null()).then(||
         // Safety: setlocale did not return a null-pointer, so it is a valid pointer
@@ -56,7 +66,7 @@ const CHAR_MAX: libc::c_char = libc::c_char::MAX;
 unsafe fn first_char(s: *const libc::c_char) -> Option<char> {
     unsafe {
         #[allow(unused_comparisons, clippy::absurd_extreme_comparisons)]
-        if !s.is_null() && *s > 0 && *s <= 127 && *s.offset(1) == 0 {
+        if !s.is_null() && *s > 0 && *s <= 127 && *s.add(1) == 0 {
             #[allow(clippy::unnecessary_cast)]
             Some((*s as u8) as char)
         } else {
@@ -73,7 +83,7 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
 
     // Up to 4 groups.
     // group_cursor is terminated by either a 0 or CHAR_MAX.
-    let mut group_cursor = lconv.grouping as *const libc::c_char;
+    let mut group_cursor = lconv.grouping.cast_const();
     if group_cursor.is_null() {
         group_cursor = empty.as_ptr();
     }
@@ -93,7 +103,7 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
         } else {
             // Record last group, advance cursor.
             last_group = gc as u8;
-            group_cursor = unsafe { group_cursor.offset(1) };
+            group_cursor = unsafe { group_cursor.add(1) };
         }
         *group = last_group;
     }

@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use super::*;
-use crate::wcstringutil::split_about;
+use fish_wcstringutil::split_about;
 
 pub struct Split<'args> {
     quiet: bool,
@@ -112,31 +112,33 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("qrm:nf:a");
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'q' => self.quiet = true,
             'r' => self.split_from = Direction::Right,
             'm' => {
-                self.max = fish_wcstol(arg.unwrap())?
+                let arg = arg.unwrap();
+                self.max = Self::parse_arg_number(arg)?
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid max value '%s'\n", name, arg))?
+                    .map_err(|_| err_fmt!(Error::INVALID_MAX_VALUE, arg))?;
             }
             'n' => self.no_empty = true,
             'f' => {
-                self.fields = arg.unwrap().try_into().map_err(|e| match e {
-                    FieldParseError::Number => StringError::NotANumber,
+                let arg = arg.unwrap();
+                self.fields = arg.try_into().map_err(|e| match e {
+                    FieldParseError::Number => err_fmt!(Error::NOT_NUMBER, arg),
                     FieldParseError::Range => {
-                        invalid_args!("%s: Invalid range value for field '%s'\n", name, arg)
+                        err_fmt!("Invalid range value for field '%s'", arg)
                     }
                     FieldParseError::Field => {
-                        invalid_args!("%s: Invalid fields value '%s'\n", name, arg)
+                        err_fmt!("Invalid fields value '%s'", arg)
                     }
                 })?;
             }
             'a' => self.allow_empty = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -148,28 +150,36 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         if self.is_split0 {
             return Ok(());
         }
+
+        let cmd = L!("string");
+        let subcmd = args[0];
         let Some(arg) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, args[0]);
+            err_str!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
         self.sep = arg;
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&'args wstr],
     ) -> Result<(), ErrorCode> {
+        let cmd = L!("string");
+        let subcmd = args[0];
         if self.fields.is_empty() && self.allow_empty {
-            streams.err.append(wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                args[0],
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 wgettext!("--allow-empty is only valid with --fields")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -182,7 +192,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
             false => SplitBehavior::Newline,
             true => SplitBehavior::Never,
         });
-        for (arg, _) in argiter {
+        for InputValue { arg, .. } in argiter {
             let splits: Vec<Cow<'args, wstr>> = match (self.split_from, arg) {
                 (Direction::Right, arg) => {
                     let mut rev = arg.into_owned();
@@ -258,30 +268,30 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
                     if let Some(val) = splits.get(*field) {
                         streams
                             .out
-                            .append_with_separation(val, SeparationType::explicitly, true);
+                            .append_with_separation(val, SeparationType::Explicitly, true);
                     }
                 }
             } else {
                 for split in splits {
                     streams
                         .out
-                        .append_with_separation(&split, SeparationType::explicitly, true);
+                        .append_with_separation(&split, SeparationType::Explicitly, true);
                 }
             }
         }
 
         // We split something if we have more split values than args.
-        return if split_count > arg_count {
+        if split_count > arg_count {
             Ok(())
         } else {
             Err(STATUS_CMD_ERROR)
-        };
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
     use crate::tests::prelude::*;
     use crate::validate;
 
@@ -289,7 +299,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "split"], STATUS_INVALID_ARGS, "");
         validate!(["string", "split", ":"], STATUS_CMD_ERROR, "");
         validate!(["string", "split", ".", "www.ch.ic.ac.uk"], STATUS_CMD_OK, "www\nch\nic\nac\nuk\n");

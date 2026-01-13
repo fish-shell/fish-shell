@@ -17,59 +17,57 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-use cfg_if::cfg_if;
 use fish::{
     ast,
     builtins::{
-        fish_indent, fish_key_reader,
-        shared::{
-            BUILTIN_ERR_MISSING, BUILTIN_ERR_UNEXP_ARG, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR,
-            STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
-        },
+        Error, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, fish_indent, fish_key_reader,
+        localized_version_string,
     },
-    common::{
-        PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, bytes2wcstring, escape,
-        save_term_foreground_process_group, wcs2bytes,
-    },
-    env::{
-        EnvMode, Statuses,
-        config_paths::ConfigPaths,
-        environment::{EnvStack, Environment, env_init},
-    },
-    eprintf,
+    common::{PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME},
+    env::{EnvMode, EnvStack, Environment as _, Statuses, config_paths::ConfigPaths, env_init},
+    eprintf, err_fmt,
     event::{self, Event},
-    flog::{self, FLOG, FLOGF, activate_flog_categories_by_pattern, set_flog_file_fd},
-    fprintf, function, future_feature_flags as features,
+    fds::heightenize_fd,
+    flog::{self, activate_flog_categories_by_pattern, flog, flogf, set_flog_file_fd},
+    fprintf, function,
     history::{self, start_private_mode},
-    io::IoChain,
+    io::{FdOutputStream, IoChain, OutputStream},
     locale::set_libc_locales,
-    nix::{RUsage, getpid, getrusage, isatty},
+    nix::isatty,
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
-    parse_util::parse_util_detect_errors_in_ast,
-    parser::{BlockType, CancelBehavior, Parser},
-    path::path_get_config,
+    parse_util::detect_parse_errors_in_ast,
+    parser::{BlockType, CancelBehavior, Parser, ParserEnvSetMode},
+    path::{ValidatedPath, path_get_config},
+    prelude::*,
     printf,
     proc::{
         Pid, get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
         set_interactive_session,
     },
-    reader::{reader_init, reader_read, term_copy_modes},
+    reader::{reader_exit_signal, reader_init, reader_read, term_copy_modes},
     signal::{signal_clear_cancel, signal_unblock_all},
     threads::{self},
     topic_monitor,
-    wchar::prelude::*,
     wutil::waccess,
 };
-use libc::STDIN_FILENO;
-use std::ffi::{OsStr, OsString};
-use std::fs::File;
-use std::os::unix::prelude::*;
-use std::path::Path;
-use std::sync::Arc;
-use std::sync::atomic::Ordering;
-use std::{env, ops::ControlFlow};
+use fish_common::{escape, save_term_foreground_process_group};
+use fish_widestring::{bytes2wcstring, osstr2wcstring, wcs2bytes};
+use libc::{STDERR_FILENO, STDIN_FILENO};
+use nix::{
+    sys::resource::{UsageWho, getrusage},
+    unistd::{AccessFlags, getpid},
+};
+use std::{
+    env,
+    ffi::{OsStr, OsString},
+    fs::File,
+    ops::ControlFlow,
+    os::unix::prelude::*,
+    path::Path,
+    sync::{Arc, atomic::Ordering},
+};
 
 /// container to hold the options specified within the command line
 #[derive(Default, Debug)]
@@ -101,40 +99,42 @@ struct FishCmdOpts {
 
 /// Return a timeval converted to milliseconds.
 #[allow(clippy::unnecessary_cast)]
-fn tv_to_msec(tv: &libc::timeval) -> i64 {
+fn nix_tv_to_ms(tv: nix::sys::time::TimeVal) -> i64 {
     // milliseconds per second
-    let mut msec = tv.tv_sec as i64 * 1000;
+    let mut ms = tv.tv_sec() as i64 * 1000;
     // microseconds per millisecond
-    msec += tv.tv_usec as i64 / 1000;
-    msec
+    ms += tv.tv_usec() as i64 / 1000;
+    ms
 }
 
 fn print_rusage_self() {
-    let rs = getrusage(RUsage::RSelf);
-    let rss_kb = if cfg!(apple) {
-        // mac use bytes.
-        rs.ru_maxrss / 1024
+    // `getrusage` should never fail with this usage.
+    // If it does, it suggests a non-POSIX-compliant OS.
+    let usage = getrusage(UsageWho::RUSAGE_SELF).unwrap();
+    #[allow(non_snake_case)]
+    let rss_KiB = if cfg!(apple) {
+        // Macs use bytes,
+        // even though docs at https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/getrusage.2.html say otherwise.
+        usage.max_rss() / 1024
     } else {
-        // Everyone else uses KB.
-        rs.ru_maxrss
+        usage.max_rss()
     };
-
-    let user_time = tv_to_msec(&rs.ru_utime);
-    let sys_time = tv_to_msec(&rs.ru_stime);
+    let user_time = nix_tv_to_ms(usage.user_time());
+    let sys_time = nix_tv_to_ms(usage.system_time());
     let total_time = user_time + sys_time;
-    let signals = rs.ru_nsignals;
+    let signals = usage.signals();
 
     eprintf!("  rusage self:\n");
-    eprintf!("      user time: %s ms\n", sys_time.to_string());
-    eprintf!("       sys time: %s ms\n", user_time.to_string());
+    eprintf!("      user time: %s ms\n", user_time.to_string());
+    eprintf!("       sys time: %s ms\n", sys_time.to_string());
     eprintf!("     total time: %s ms\n", total_time.to_string());
-    eprintf!("        max rss: %s kb\n", rss_kb.to_string());
+    eprintf!("        max rss: %s KiB\n", rss_KiB.to_string());
     eprintf!("        signals: %s\n", signals.to_string());
 }
 
 // Source the file config.fish in the given directory.
 // Returns true if successful, false if not.
-fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
+fn source_config_in_directory(parser: &mut Parser, dir: &wstr) -> bool {
     // If the config.fish file doesn't exist or isn't readable silently return. Fish versions up
     // thru 2.2.0 would instead try to source the file with stderr redirected to /dev/null to deal
     // with that possibility.
@@ -144,15 +144,15 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     // this context so we ignore it.
     let config_pathname = dir.to_owned() + L!("/config.fish");
     let escaped_pathname = escape(dir) + L!("/config.fish");
-    if waccess(&config_pathname, libc::R_OK) != 0 {
-        FLOGF!(
+    if waccess(&config_pathname, AccessFlags::R_OK).is_err() {
+        flogf!(
             config,
             "not sourcing %s (not readable or does not exist)",
             escaped_pathname
         );
         return false;
     }
-    FLOG!(config, "sourcing", escaped_pathname);
+    flog!(config, "sourcing", escaped_pathname);
 
     let cmd: WString = L!("builtin source ").to_owned() + escaped_pathname.as_utfstr();
 
@@ -163,66 +163,42 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
-fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    cfg_if!(
-        if #[cfg(feature = "embed-data")] {
-            use fish::autoload::Asset;
-            let emfile = Asset::get("config.fish").expect("Embedded file not found");
-            let src = bytes2wcstring(&emfile.data);
-            parser.libdata_mut().within_fish_init = true;
-            let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
-            let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
-            parser.libdata_mut().within_fish_init = false;
-            if let Err(msg) = ret {
-                eprintf!("%s", msg);
-            }
-        } else {
-            let datapath = bytes2wcstring(paths.data.as_ref().unwrap().as_os_str().as_bytes());
-            if !source_config_in_directory(parser, &datapath) {
-                // If we cannot read share/config.fish, our internal configuration,
-                // something is wrong.
-                // That also means that our functions won't be found,
-                // and so any config we get would almost certainly be broken.
-                let escaped_pathname = escape(&datapath);
-                FLOGF!(
-                    error,
-                    "Fish cannot find its asset files in '%s'.\n\
-                     Refusing to read configuration because of this.",
-                    escaped_pathname,
-                );
-                return;
-            }
-        }
-    );
+fn read_init(parser: &mut Parser, paths: &ConfigPaths) {
+    use fish::autoload::Asset;
+    let emfile = Asset::get("config.fish").expect("Embedded file not found");
+    let src = bytes2wcstring(&emfile.data);
+    parser.libdata_mut().within_fish_init = true;
+    let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
+    let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
+    parser.libdata_mut().within_fish_init = false;
+    if let Err(msg) = ret {
+        eprintf!("%s", msg);
+    }
 
-    source_config_in_directory(
-        parser,
-        &bytes2wcstring(paths.sysconf.as_os_str().as_bytes()),
-    );
+    source_config_in_directory(parser, &osstr2wcstring(&paths.sysconf));
 
     // We need to get the configuration directory before we can source the user configuration file.
-    // If path_get_config returns false then we have no configuration directory and no custom config
-    // to load.
-    if let Some(config_dir) = path_get_config() {
-        source_config_in_directory(parser, &config_dir);
+    let ValidatedPath { path, ok } = path_get_config();
+    if ok {
+        source_config_in_directory(parser, path);
     }
 }
 
-fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_int> {
+fn run_command_list(parser: &mut Parser, cmds: &[OsString]) -> Result<(), libc::c_int> {
     let mut retval = Ok(());
     for cmd in cmds {
-        let cmd_wcs = bytes2wcstring(cmd.as_bytes());
+        let cmd_wcs = osstr2wcstring(cmd);
 
         let mut errors = ParseErrorList::new();
-        let ast = ast::parse(&cmd_wcs, ParseTreeFlags::empty(), Some(&mut errors));
+        let ast = ast::parse(&cmd_wcs, ParseTreeFlags::default(), Some(&mut errors));
         let errored = ast.errored() || {
-            parse_util_detect_errors_in_ast(&ast, &cmd_wcs, Some(&mut errors)).is_err()
+            detect_parse_errors_in_ast(&ast, &cmd_wcs, Some(&mut errors)).is_err()
         };
 
         if !errored {
             // Construct a parsed source ref.
             let ps = Arc::new(ParsedSource::new(cmd_wcs, ast));
-            let _ = parser.eval_parsed_source(&ps, &IoChain::new(), None, BlockType::top, false);
+            let _ = parser.eval_parsed_source(&ps, &IoChain::new(), None, BlockType::Top);
             retval = Ok(());
         } else {
             let backtrace = parser.get_backtrace(&cmd_wcs, &errors);
@@ -236,7 +212,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_in
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
-    use fish::wgetopt::{ArgType::*, WGetopter, WOption, wopt};
+    use fish_wgetopt::{ArgType::*, WGetopter, WOption, wopt};
 
     const RUSAGE_ARG: char = 1 as char;
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;
@@ -324,35 +300,32 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             }
             'P' => opts.enable_private_mode = true,
             'v' => {
-                printf!(
-                    "%s",
-                    wgettext_fmt!("%s, version %s\n", PACKAGE_NAME, fish::BUILD_VERSION)
-                );
+                printf!("%s\n", localized_version_string(PACKAGE_NAME));
                 return ControlFlow::Break(0);
             }
             'D' => {
                 // TODO: Option is currently useless.
-                // Either remove it or make it work with FLOG.
+                // Either remove it or make it work with flog.
             }
             '?' => {
-                eprintf!(
-                    "%s\n",
-                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.wopt_index - 1])
-                );
+                err_fmt!(Error::UNKNOWN_OPT, args[w.wopt_index - 1])
+                    .cmd(L!("fish"))
+                    .append_to_msg('\n')
+                    .write_to(&mut OutputStream::Fd(FdOutputStream::new(STDERR_FILENO)));
                 return ControlFlow::Break(1);
             }
             ':' => {
-                eprintf!(
-                    "%s\n",
-                    wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
-                );
+                err_fmt!(Error::MISSING_OPT_ARG, args[w.wopt_index - 1])
+                    .cmd(L!("fish"))
+                    .append_to_msg('\n')
+                    .write_to(&mut OutputStream::Fd(FdOutputStream::new(STDERR_FILENO)));
                 return ControlFlow::Break(1);
             }
             ';' => {
-                eprintf!(
-                    "%s\n",
-                    wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, "fish", args[w.wopt_index - 1])
-                );
+                err_fmt!(Error::UNEXP_OPT_ARG, args[w.wopt_index - 1])
+                    .cmd(L!("fish"))
+                    .append_to_msg('\n')
+                    .write_to(&mut OutputStream::Fd(FdOutputStream::new(STDERR_FILENO)));
                 return ControlFlow::Break(1);
             }
             _ => panic!("unexpected retval from WGetopter"),
@@ -390,7 +363,7 @@ fn main() {
         // Create a new thread with a decent stack size to be our main thread
         std::thread::scope(|scope| {
             scope.spawn(|| panic_handler(throwing_main));
-        })
+        });
     }
 }
 
@@ -406,18 +379,17 @@ fn throwing_main() -> i32 {
         set_libc_locales(/*log_ok=*/ false)
     };
 
-    fish::wutil::gettext::initialize_gettext();
+    #[cfg(feature = "localize-messages")]
+    fish::localization::initialize_localization();
 
     // Enable debug categories set in FISH_DEBUG.
     // This is in *addition* to the ones given via --debug.
     if let Some(debug_categories) = env::var_os("FISH_DEBUG") {
-        let s = bytes2wcstring(debug_categories.as_bytes());
+        let s = osstr2wcstring(debug_categories);
         activate_flog_categories_by_pattern(&s);
     }
 
-    let mut args: Vec<WString> = env::args_os()
-        .map(|osstr| bytes2wcstring(osstr.as_bytes()))
-        .collect();
+    let mut args: Vec<WString> = env::args_os().map(osstr2wcstring).collect();
     let mut opts = FishCmdOpts::default();
     let mut my_optind = match fish_parse_opt(&mut args, &mut opts) {
         ControlFlow::Continue(optind) => optind,
@@ -450,12 +422,12 @@ fn throwing_main() -> i32 {
                 eprintf!("%s\n", e);
                 return 1;
             }
-        };
+        }
     }
 
     // No-exec is prohibited when in interactive mode.
     if opts.is_interactive_session && opts.no_exec {
-        FLOG!(
+        flog!(
             warning,
             wgettext!("Can not use the no-execute mode when running an interactive session")
         );
@@ -485,11 +457,7 @@ fn throwing_main() -> i32 {
     // If we're not executing, there's no need to find the config.
     let config_paths = if !opts.no_exec {
         let config_paths = ConfigPaths::new();
-        env_init(
-            Some(&config_paths),
-            /* do uvars */ !opts.no_config,
-            /* default paths */ opts.no_config,
-        );
+        env_init(Some(&config_paths), opts.no_config);
         Some(config_paths)
     } else {
         None
@@ -500,17 +468,16 @@ fn throwing_main() -> i32 {
     // command line takes precedence).
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            features::set_from_string(s.as_utfstr());
+            fish_feature_flags::set_from_string(s.as_utfstr());
         }
     }
-    features::set_from_string(opts.features.as_utfstr());
-    fish::env_dispatch::read_terminfo_database(EnvStack::globals());
+    fish_feature_flags::set_from_string(opts.features.as_utfstr());
     proc_init();
     reader_init(true);
 
     // Construct the root parser!
     let env = EnvStack::globals().create_child(true /* dispatches_var_changes */);
-    let parser = &Parser::new(env, CancelBehavior::Clear);
+    let parser = &mut Parser::new(env, CancelBehavior::Clear);
     parser.set_syncs_uvars(!opts.no_config);
 
     if !opts.no_exec && !opts.no_config {
@@ -519,9 +486,9 @@ fn throwing_main() -> i32 {
 
     if is_interactive_session() && opts.no_config && !opts.no_exec {
         // If we have no config, we default to the default key bindings.
-        parser.vars().set_one(
+        parser.set_one(
             L!("fish_key_bindings"),
-            EnvMode::UNEXPORT,
+            ParserEnvSetMode::new(EnvMode::UNEXPORT),
             L!("fish_default_key_bindings").to_owned(),
         );
         if function::exists(L!("fish_default_key_bindings"), parser) {
@@ -535,13 +502,11 @@ fn throwing_main() -> i32 {
     // Stomp the exit status of any initialization commands (issue #635).
     parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
 
-    // TODO: if-let-chains
-    if opts.profile_startup_output.is_some() && opts.profile_startup_output != opts.profile_output {
-        parser.emit_profiling(&opts.profile_startup_output.unwrap());
-
-        // If we are profiling both, ensure the startup data only
-        // ends up in the startup file.
-        parser.clear_profiling();
+    // TODO(MSRV>=1.88): feature(let_chains)
+    if let Some(path) = &opts.profile_startup_output {
+        if opts.profile_startup_output != opts.profile_output {
+            parser.flush_profiling(path);
+        }
     }
 
     PROFILING_ACTIVE.store(opts.profile_output.is_some());
@@ -564,9 +529,9 @@ fn throwing_main() -> i32 {
         // Pass additional args as $argv.
         // Note that we *don't* support setting argv[0]/$0, unlike e.g. bash.
         let list = &args[my_optind..];
-        parser.vars().set(
+        parser.set_var(
             L!("argv"),
-            EnvMode::default(),
+            ParserEnvSetMode::default(),
             list.iter().map(|s| s.to_owned()).collect(),
         );
         res = run_command_list(parser, &opts.batch_cmds);
@@ -574,7 +539,7 @@ fn throwing_main() -> i32 {
     } else if my_optind == args.len() {
         // Implicitly interactive mode.
         if opts.no_exec && isatty(libc::STDIN_FILENO) {
-            FLOG!(
+            flog!(
                 error,
                 "no-execute mode enabled and no script given. Exiting"
             );
@@ -583,14 +548,14 @@ fn throwing_main() -> i32 {
         }
         res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
     } else {
-        let n = wcs2bytes(&args[my_optind]);
+        let filename = &args[my_optind];
+        let n = wcs2bytes(filename);
         let path = OsStr::from_bytes(&n);
         my_optind += 1;
         // Rust sets cloexec by default, see above
-        // We don't need autoclose_fd_t when we use File, it will be closed on drop.
         match File::open(path) {
             Err(e) => {
-                FLOGF!(
+                flogf!(
                     error,
                     wgettext!("Error reading script file '%s':"),
                     path.to_string_lossy()
@@ -598,25 +563,23 @@ fn throwing_main() -> i32 {
                 eprintf!("%s\n", e);
             }
             Ok(f) => {
-                let list = &args[my_optind..];
-                parser.vars().set(
-                    L!("argv"),
-                    EnvMode::default(),
-                    list.iter().map(|s| s.to_owned()).collect(),
-                );
-                let rel_filename = &args[my_optind - 1];
-                let _filename_push = parser
-                    .library_data
-                    .scoped_set(Some(Arc::new(rel_filename.to_owned())), |s| {
-                        &mut s.current_filename
-                    });
-                res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
-                if res.is_err() {
-                    FLOGF!(
-                        warning,
-                        wgettext!("Error while reading file %s\n"),
-                        path.to_string_lossy()
+                if let Ok(f) = heightenize_fd(f.into(), true).map(File::from) {
+                    let list = &args[my_optind..];
+                    parser.set_var(
+                        L!("argv"),
+                        ParserEnvSetMode::default(),
+                        list.iter().map(|s| s.to_owned()).collect(),
                     );
+                    let _filename_push = parser
+                        .current_filename
+                        .scoped_replace(Some(Arc::new(filename.to_owned())));
+                    res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
+                    if res.is_err() {
+                        flog!(
+                            warning,
+                            wgettext_fmt!("Error while reading file %s", path.to_string_lossy())
+                        );
+                    }
                 }
             }
         }
@@ -625,10 +588,13 @@ fn throwing_main() -> i32 {
     let exit_status = if res.is_err() {
         STATUS_CMD_UNKNOWN
     } else {
-        parser.get_last_status()
+        parser.last_status()
     };
 
-    event::fire(parser, Event::process_exit(Pid::new(getpid()), exit_status));
+    event::fire(
+        parser,
+        Event::process_exit(Pid::from_nix_pid_unchecked(getpid()), exit_status),
+    );
 
     // Trigger any exit handlers.
     event::fire_generic(
@@ -638,10 +604,20 @@ fn throwing_main() -> i32 {
     );
 
     if let Some(profile_output) = opts.profile_output {
-        parser.emit_profiling(&profile_output);
+        parser.flush_profiling(&profile_output);
     }
 
     history::save_all();
+
+    // If we deferred a fatal signal, re-raise it now so the parent sees WIFSIGNALED.
+    let exit_sig = reader_exit_signal();
+    if exit_sig != 0 {
+        unsafe {
+            libc::signal(exit_sig, libc::SIG_DFL);
+            libc::raise(exit_sig);
+        }
+    }
+
     if opts.print_rusage_self {
         print_rusage_self();
     }
@@ -658,7 +634,7 @@ fn escape_single_quoted_hack_hack_hack_hack(s: &wstr) -> OsString {
         if matches!(c, '\\' | '\'') {
             result.push("\\");
         }
-        result.push(c.to_string())
+        result.push(c.to_string());
     }
     result.push("\'");
     result

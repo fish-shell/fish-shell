@@ -2,38 +2,39 @@
 // to support highlighting.
 // Because this may perform blocking I/O, we compute results in a separate thread,
 // and provide them optimistically.
-use crate::common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
-use crate::expand::{
-    BRACE_BEGIN, BRACE_END, BRACE_SEP, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
-    VARIABLE_EXPAND_SINGLE, expand_one,
+use crate::{
+    expand::{ExpandFlags, expand_one, expand_tilde},
+    operation_context::OperationContext,
+    path::path_apply_working_directory,
+    redirection::RedirectionMode,
+    threads::assert_is_background_thread,
+    wutil::{dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat},
 };
-use crate::expand::{ExpandFlags, HOME_DIRECTORY, expand_tilde};
-use crate::operation_context::OperationContext;
-use crate::path::path_apply_working_directory;
-use crate::redirection::RedirectionMode;
-use crate::threads::assert_is_background_thread;
-use crate::wchar::{L, WString, wstr};
-use crate::wchar_ext::WExt;
-use crate::wcstringutil::{
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
+use fish_wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
 };
-use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use crate::wutil::{
-    dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat,
+use fish_widestring::{
+    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP, HOME_DIRECTORY,
+    INTERNAL_SEPARATOR, L, PROCESS_EXPAND_SELF, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, WExt as _,
+    WString, wstr,
 };
 use libc::PATH_MAX;
-use std::collections::{HashMap, HashSet};
-use std::os::fd::RawFd;
+use nix::unistd::AccessFlags;
+use std::{
+    collections::{HashMap, hash_map},
+    os::fd::RawFd,
+};
 
 // This is used only internally to this file, and is exposed only for testing.
 #[derive(Clone, Copy, Default)]
-pub struct PathFlags {
+struct PathFlags {
     // The path must be to a directory.
-    pub require_dir: bool,
+    require_dir: bool,
     // Expand any leading tilde in the path.
-    pub expand_tilde: bool,
+    expand_tilde: bool,
     // Normalize directories before resolving, as "cd".
-    pub for_cd: bool,
+    for_cd: bool,
 }
 
 // When a file test is OK, we may also return whether this was a file.
@@ -47,15 +48,15 @@ pub struct IsErr;
 /// The result of a file test.
 pub type FileTestResult = Result<IsFile, IsErr>;
 
-pub struct FileTester<'s> {
+pub struct FileTester<'src, 'wd, 'opctx> {
     // The working directory, for resolving paths against.
-    working_directory: WString,
+    working_directory: &'wd wstr,
     // The operation context.
-    ctx: &'s OperationContext<'s>,
+    pub ctx: &'opctx mut OperationContext<'src>,
 }
 
-impl<'s> FileTester<'s> {
-    pub fn new(working_directory: WString, ctx: &'s OperationContext<'s>) -> Self {
+impl<'src, 'wd, 'opctx> FileTester<'src, 'wd, 'opctx> {
+    pub fn new(working_directory: &'wd wstr, ctx: &'opctx mut OperationContext<'src>) -> Self {
         Self {
             working_directory,
             ctx,
@@ -89,7 +90,7 @@ impl<'s> FileTester<'s> {
         is_potential_path(
             &token,
             prefix,
-            &[self.working_directory.to_owned()],
+            std::slice::from_ref(&self.working_directory),
             self.ctx,
             PathFlags {
                 expand_tilde: true,
@@ -98,24 +99,18 @@ impl<'s> FileTester<'s> {
         )
     }
 
-    // Test if the string is a prefix of a valid path we could cd into, or is some other token
-    // we recognize (primarily --help).
+    // Test if the string is a prefix of a valid path we could cd into
     // If is_prefix is true, we test if the string is a prefix of a valid path we could cd into.
-    pub fn test_cd_path(&self, token: &wstr, is_prefix: bool) -> FileTestResult {
+    pub fn test_cd_path(&mut self, token: &wstr, is_prefix: bool) -> FileTestResult {
         let mut param = token.to_owned();
         if !expand_one(&mut param, ExpandFlags::FAIL_ON_CMDSUBST, self.ctx, None) {
             // Failed expansion (e.g. may contain a command substitution). Ignore it.
             return FileTestResult::Ok(IsFile(false));
         }
-        // Maybe it's just --help.
-        if string_prefixes_string(&param, L!("--help")) || string_prefixes_string(&param, L!("-h"))
-        {
-            return FileTestResult::Ok(IsFile(false));
-        }
         let valid_path = is_potential_cd_path(
             &param,
             is_prefix,
-            &self.working_directory,
+            self.working_directory,
             self.ctx,
             PathFlags {
                 expand_tilde: true,
@@ -130,48 +125,56 @@ impl<'s> FileTester<'s> {
         }
     }
 
-    // Test if a the given string is a valid redirection target, given the mode.
-    // Note we return bool, because we never underline redirection targets.
-    pub fn test_redirection_target(&self, target: &wstr, mode: RedirectionMode) -> bool {
+    // Test if a the given string is a valid redirection target, and if so, whether
+    // it is a path to an existing file.
+    pub fn test_redirection_target(
+        &mut self,
+        target: &wstr,
+        mode: RedirectionMode,
+    ) -> FileTestResult {
         // Skip targets exceeding PATH_MAX. See #7837.
         if target.len() > (PATH_MAX as usize) {
-            return false;
+            return Err(IsErr);
         }
         let mut target = target.to_owned();
         if !expand_one(&mut target, ExpandFlags::FAIL_ON_CMDSUBST, self.ctx, None) {
             // Could not be expanded.
-            return false;
+            return Err(IsErr);
         }
         // Ok, we successfully expanded our target. Now verify that it works with this
         // redirection. We will probably need it as a path (but not in the case of fd
         // redirections). Note that the target is now unescaped.
-        let target_path = path_apply_working_directory(&target, &self.working_directory);
+        let target_path = path_apply_working_directory(&target, self.working_directory);
         match mode {
-            RedirectionMode::fd => {
+            RedirectionMode::Fd => {
                 if target == "-" {
-                    return true;
+                    return Ok(IsFile(false));
                 }
                 match fish_wcstoi(&target) {
-                    Ok(fd) => fd >= 0,
-                    Err(_) => false,
+                    Ok(fd) if fd >= 0 => Ok(IsFile(false)),
+                    _ => Err(IsErr),
                 }
             }
-            RedirectionMode::input | RedirectionMode::try_input => {
+            RedirectionMode::Input | RedirectionMode::TryInput => {
                 // Input redirections must have a readable non-directory.
                 // Note we color "try_input" files as errors if they are invalid,
                 // even though it's possible to execute these (replaced via /dev/null).
-                waccess(&target_path, libc::R_OK) == 0
+                if waccess(&target_path, AccessFlags::R_OK).is_ok()
                     && wstat(&target_path).is_ok_and(|md| !md.file_type().is_dir())
+                {
+                    Ok(IsFile(true))
+                } else {
+                    Err(IsErr)
+                }
             }
-            RedirectionMode::overwrite | RedirectionMode::append | RedirectionMode::noclob => {
+            RedirectionMode::Overwrite | RedirectionMode::Append | RedirectionMode::NoClob => {
                 if string_suffixes_string(L!("/"), &target) {
                     // Redirections to things that are directories is definitely not
                     // allowed.
-                    return false;
+                    return Err(IsErr);
                 }
                 // Test whether the file exists, and whether it's writable (possibly after
                 // creating it). access() returns failure if the file does not exist.
-                // TODO: we do not need to compute file_exists for an 'overwrite' redirection.
                 let file_exists;
                 let file_is_writable;
                 match wstat(&target_path) {
@@ -179,8 +182,8 @@ impl<'s> FileTester<'s> {
                         // No err. We can write to it if it's not a directory and we have
                         // permission.
                         file_exists = true;
-                        file_is_writable =
-                            !md.file_type().is_dir() && waccess(&target_path, libc::W_OK) == 0;
+                        file_is_writable = !md.file_type().is_dir()
+                            && waccess(&target_path, AccessFlags::W_OK).is_ok();
                     }
                     Err(err) => {
                         if err.raw_os_error() == Some(libc::ENOENT) {
@@ -197,7 +200,7 @@ impl<'s> FileTester<'s> {
                             // Now the file is considered writable if the parent directory is
                             // writable.
                             file_exists = false;
-                            file_is_writable = waccess(&parent, libc::W_OK) == 0;
+                            file_is_writable = waccess(&parent, AccessFlags::W_OK).is_ok();
                         } else {
                             // Other errors we treat as not writable. This includes things like
                             // ENOTDIR.
@@ -206,8 +209,11 @@ impl<'s> FileTester<'s> {
                         }
                     }
                 }
-                // NOCLOB means that we must not overwrite files that exist.
-                file_is_writable && !(file_exists && mode == RedirectionMode::noclob)
+                // NoClob means that we must not overwrite files that exist.
+                if !file_is_writable || (mode == RedirectionMode::NoClob && file_exists) {
+                    return Err(IsErr);
+                }
+                Ok(IsFile(file_exists))
             }
         }
     }
@@ -218,10 +224,10 @@ impl<'s> FileTester<'s> {
 /// cdpath). This does I/O!
 ///
 /// We expect the path to already be unescaped.
-pub fn is_potential_path(
+fn is_potential_path(
     potential_path_fragment: &wstr,
     at_cursor: bool,
-    directories: &[WString],
+    directories: &[&wstr],
     ctx: &OperationContext<'_>,
     flags: PathFlags,
 ) -> bool {
@@ -268,7 +274,8 @@ pub fn is_potential_path(
 
     // Don't test the same path multiple times, which can happen if the path is absolute and the
     // CDPATH contains multiple entries.
-    let mut checked_paths = HashSet::new();
+    // TODO This should be a HashSet https://github.com/rust-lang/rust/issues/60896.
+    let mut checked_paths = HashMap::new();
 
     // Keep a cache of which paths / filesystems are case sensitive.
     let mut case_sensitivity_cache = CaseSensitivityCache::new();
@@ -283,11 +290,17 @@ pub fn is_potential_path(
             abs_path = normalize_path(&abs_path, /*allow_leading_double_slashes=*/ true);
         }
 
-        // Skip this if it's empty or we've already checked it.
-        if abs_path.is_empty() || checked_paths.contains(&abs_path) {
+        if abs_path.is_empty() {
             continue;
         }
-        checked_paths.insert(abs_path.clone());
+        let abs_path = {
+            use hash_map::Entry::*;
+            match checked_paths.entry(abs_path) {
+                Occupied(_occupied_entry) => continue,
+                Vacant(vacant) => vacant.insert_entry(()),
+            }
+        };
+        let abs_path = abs_path.key();
 
         // If the user is still typing the argument, we want to highlight it if it's the prefix
         // of a valid path. This means we need to potentially walk all files in some directory.
@@ -296,15 +309,15 @@ pub fn is_potential_path(
         // 2. If the cursor is not at the argument, it means the user is definitely not typing it,
         //    so we can skip the prefix-match.
         if must_be_full_dir || !at_cursor {
-            if let Ok(md) = wstat(&abs_path) {
+            if let Ok(md) = wstat(abs_path) {
                 if !at_cursor || md.file_type().is_dir() {
                     return true;
                 }
             }
         } else {
             // We do not end with a slash; it does not have to be a directory.
-            let dir_name = wdirname(&abs_path);
-            let filename_fragment = wbasename(&abs_path);
+            let dir_name = wdirname(abs_path);
+            let filename_fragment = wbasename(abs_path);
             if dir_name == "/" && filename_fragment == "/" {
                 // cd ///.... No autosuggestion.
                 return true;
@@ -345,7 +358,7 @@ pub fn is_potential_path(
 
 // Given a string, return whether it prefixes a path that we could cd into. Return that path in
 // out_path. Expects path to be unescaped.
-pub fn is_potential_cd_path(
+fn is_potential_cd_path(
     path: &wstr,
     at_cursor: bool,
     working_directory: &wstr,
@@ -353,27 +366,36 @@ pub fn is_potential_cd_path(
     mut flags: PathFlags,
 ) -> bool {
     let mut directories = vec![];
+    let mut storage = vec![];
 
     if string_prefixes_string(L!("./"), path) {
         // Ignore the CDPATH in this case; just use the working directory.
-        directories.push(working_directory.to_owned());
+        directories.push(working_directory);
     } else {
-        // Get the CDPATH.
-        let cdpath = ctx.vars().get_unless_empty(L!("CDPATH"));
-        let mut pathsv = match cdpath {
-            None => vec![L!(".").to_owned()],
-            Some(cdpath) => cdpath.as_list().to_vec(),
-        };
-        // The current $PWD is always valid.
-        pathsv.push(L!(".").to_owned());
-
-        for mut next_path in pathsv {
-            if next_path.is_empty() {
-                next_path = L!(".").to_owned();
-            }
+        fn add_path(storage: &mut Vec<WString>, working_directory: &wstr, next_path: &wstr) {
             // Ensure that we use the working directory for relative cdpaths like ".".
-            directories.push(path_apply_working_directory(&next_path, working_directory));
+            storage.push(path_apply_working_directory(next_path, working_directory));
         }
+
+        // Get the CDPATH.
+        let mut have_curdir = false;
+        if let Some(cdpath) = ctx.vars().get_unless_empty(L!("CDPATH")) {
+            for next_path in cdpath.as_list() {
+                let mut next_path = next_path.as_utfstr();
+                if next_path.is_empty() {
+                    next_path = L!(".");
+                }
+                if next_path == L!(".") {
+                    have_curdir = true;
+                }
+                add_path(&mut storage, working_directory, next_path);
+            }
+        }
+        // The current $PWD is always valid.
+        if !have_curdir {
+            add_path(&mut storage, working_directory, L!("."));
+        }
+        directories = storage.iter().map(|s| s.as_utfstr()).collect();
     }
 
     // Call is_potential_path with all of these directories.
@@ -388,7 +410,7 @@ pub fn is_potential_cd_path(
 /// Returns:
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
-pub type CaseSensitivityCache = HashMap<WString, bool>;
+type CaseSensitivityCache = HashMap<WString, bool>;
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 fn fs_is_case_insensitive(
@@ -398,7 +420,7 @@ fn fs_is_case_insensitive(
 ) -> bool {
     if let Some(cached) = case_sensitivity_cache.get(path) {
         return *cached;
-    };
+    }
     // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
     // sensitive, and a 0 value means case insensitive.
     let ret = unsafe { libc::fpathconf(fd, libc::_PC_CASE_SENSITIVE) };
@@ -408,7 +430,7 @@ fn fs_is_case_insensitive(
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "ios")))]
-pub fn fs_is_case_insensitive(
+fn fs_is_case_insensitive(
     _path: &wstr,
     _fd: RawFd,
     _case_sensitivity_cache: &mut CaseSensitivityCache,
@@ -420,47 +442,40 @@ pub fn fs_is_case_insensitive(
 #[cfg(test)]
 mod tests {
     use super::{FileTester, IsErr, IsFile, PathFlags, is_potential_path};
-    use crate::env::EnvStack;
-    use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext};
-    use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
+    use crate::{
+        env::EnvStack,
+        operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext},
+        prelude::*,
+        redirection::RedirectionMode,
+        tests::prelude::*,
+    };
+    use fish_tempfile::TempDir;
+    use fish_widestring::osstr2wcstring;
+    use std::{
+        fs::{self, File, Permissions, create_dir_all},
+        os::unix::fs::PermissionsExt as _,
+        path::PathBuf,
+    };
 
-    use crate::redirection::RedirectionMode;
-    use std::fs::{self, File, Permissions, create_dir_all};
-    use std::os::unix::fs::PermissionsExt;
-    use std::path::PathBuf;
-
-    struct TempDirWithCtx {
-        tempdir: fish_tempfile::TempDir,
-        ctx: OperationContext<'static>,
+    fn temp_dir() -> TempDir {
+        fish_tempfile::new_dir().unwrap()
     }
 
-    impl TempDirWithCtx {
-        fn new() -> TempDirWithCtx {
-            TempDirWithCtx {
-                tempdir: fish_tempfile::new_dir().unwrap(),
-                ctx: OperationContext::empty(),
-            }
-        }
+    fn filepath(tempdir: &TempDir, name: &str) -> PathBuf {
+        tempdir.path().join(name)
+    }
 
-        fn filepath(&self, name: &str) -> PathBuf {
-            self.tempdir.path().join(name)
-        }
-
-        fn file_tester(&self) -> FileTester<'_> {
-            FileTester::new(
-                WString::from_str(self.tempdir.path().to_str().unwrap()),
-                &self.ctx,
-            )
-        }
+    fn op_context() -> OperationContext<'static> {
+        OperationContext::empty()
     }
 
     #[test]
     fn test_ispath() {
-        let temp = TempDirWithCtx::new();
-        let tester = temp.file_tester();
+        let (tempdir, ctx) = (temp_dir(), &mut op_context());
+        let wd = osstr2wcstring(tempdir.path());
+        let tester = FileTester::new(&wd, ctx);
 
-        let file_path = temp.filepath("file.txt");
+        let file_path = filepath(&tempdir, "file.txt");
         File::create(file_path).unwrap();
 
         let result = tester.test_path(L!("file.txt"), false);
@@ -488,7 +503,7 @@ mod tests {
         assert!(!result);
 
         // Directories are also files.
-        let dir_path = temp.filepath("somedir");
+        let dir_path = filepath(&tempdir, "somedir");
         create_dir_all(dir_path).unwrap();
 
         let result = tester.test_path(L!("somedir"), false);
@@ -506,13 +521,14 @@ mod tests {
 
     #[test]
     fn test_iscdpath() {
-        let temp = TempDirWithCtx::new();
-        let tester = temp.file_tester();
+        let (tempdir, ctx) = (temp_dir(), &mut op_context());
+        let wd = osstr2wcstring(tempdir.path());
+        let mut tester = FileTester::new(&wd, ctx);
 
         // Note cd (unlike file paths) should report IsErr for invalid cd paths,
         // rather than IsFile(false).
 
-        let dir_path = temp.filepath("somedir");
+        let dir_path = filepath(&tempdir, "somedir");
         create_dir_all(dir_path).unwrap();
 
         let result = tester.test_cd_path(L!("somedir"), false);
@@ -537,78 +553,80 @@ mod tests {
     #[test]
     fn test_redirections() {
         // Note we use is_ok and is_err since we don't care about the IsFile part.
-        let temp = TempDirWithCtx::new();
-        let tester = temp.file_tester();
-        let file_path = temp.filepath("file.txt");
+        let (tempdir, ctx) = (temp_dir(), &mut op_context());
+        let wd = osstr2wcstring(tempdir.path());
+        let mut tester = FileTester::new(&wd, ctx);
+        let file_path = filepath(&tempdir, "file.txt");
         File::create(&file_path).unwrap();
 
-        let dir_path = temp.filepath("somedir");
+        let dir_path = filepath(&tempdir, "somedir");
         create_dir_all(&dir_path).unwrap();
 
         // Normal redirection.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::input);
-        assert!(result);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::Input);
+        assert_eq!(result, Ok(IsFile(true)));
 
         // Can't redirect from a missing file
-        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::input);
-        assert!(!result);
+        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::Input);
+        assert_eq!(result, Err(IsErr));
         let result =
-            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::input);
-        assert!(!result);
+            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::Input);
+        assert_eq!(result, Err(IsErr));
 
         // Can't redirect from a directory.
-        let result = tester.test_redirection_target(L!("somedir"), RedirectionMode::input);
-        assert!(!result);
+        let result = tester.test_redirection_target(L!("somedir"), RedirectionMode::Input);
+        assert_eq!(result, Err(IsErr));
 
         // Can't redirect from an unreadable file.
         #[cfg(not(cygwin))] // Can't mark a file write-only on MSYS, this may work on true Cygwin
         {
             fs::set_permissions(&file_path, Permissions::from_mode(0o200)).unwrap();
-            let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::input);
-            assert!(!result);
+            let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::Input);
+            assert_eq!(result, Err(IsErr));
             fs::set_permissions(&file_path, Permissions::from_mode(0o600)).unwrap();
         }
 
         // try_input syntax highlighting reports an error even though the command will succeed.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::try_input);
-        assert!(result);
-        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::try_input);
-        assert!(!result);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::TryInput);
+        assert_eq!(result, Ok(IsFile(true)));
+        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::TryInput);
+        assert_eq!(result, Err(IsErr));
         let result =
-            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::try_input);
-        assert!(!result);
+            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::TryInput);
+        assert_eq!(result, Err(IsErr));
 
         // Test write redirections.
         // Overwrite an existing file.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::overwrite);
-        assert!(result);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::Overwrite);
+        assert_eq!(result, Ok(IsFile(true)));
 
         // Append to an existing file.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::append);
-        assert!(result);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::Append);
+        assert_eq!(result, Ok(IsFile(true)));
 
         // Write to a missing file.
-        let result = tester.test_redirection_target(L!("newfile.txt"), RedirectionMode::overwrite);
-        assert!(result);
+        let result = tester.test_redirection_target(L!("newfile.txt"), RedirectionMode::Overwrite);
+        assert_eq!(result, Ok(IsFile(false)));
 
         // No-clobber write to existing file should fail.
-        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::noclob);
-        assert!(!result);
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::NoClob);
+        assert_eq!(result, Err(IsErr));
 
         // No-clobber write to missing file should succeed.
-        let result = tester.test_redirection_target(L!("unique.txt"), RedirectionMode::noclob);
-        assert!(result);
+        let result = tester.test_redirection_target(L!("unique.txt"), RedirectionMode::NoClob);
+        assert_eq!(result, Ok(IsFile(false)));
 
         let write_modes = &[
-            RedirectionMode::overwrite,
-            RedirectionMode::append,
-            RedirectionMode::noclob,
+            RedirectionMode::Overwrite,
+            RedirectionMode::Append,
+            RedirectionMode::NoClob,
         ];
 
         // Can't write to a directory.
         for mode in write_modes {
-            assert!(
-                !tester.test_redirection_target(L!("somedir"), *mode),
+            assert_eq!(
+                tester.test_redirection_target(L!("somedir"), *mode),
+                Err(IsErr),
                 "Should not be able to write to a directory with mode {:?}",
                 mode
             );
@@ -617,8 +635,9 @@ mod tests {
         // Can't write without write permissions.
         fs::set_permissions(&file_path, Permissions::from_mode(0o400)).unwrap(); // Read-only.
         for mode in write_modes {
-            assert!(
-                !tester.test_redirection_target(L!("file.txt"), *mode),
+            assert_eq!(
+                tester.test_redirection_target(L!("file.txt"), *mode),
+                Err(IsErr),
                 "Should not be able to write to a read-only file with mode {:?}",
                 mode
             );
@@ -630,8 +649,9 @@ mod tests {
         {
             fs::set_permissions(&dir_path, Permissions::from_mode(0o500)).unwrap(); // Read and execute, no write.
             for mode in write_modes {
-                assert!(
-                    !tester.test_redirection_target(L!("somedir/newfile.txt"), *mode),
+                assert_eq!(
+                    tester.test_redirection_target(L!("somedir/newfile.txt"), *mode),
+                    Err(IsErr),
                     "Should not be able to create/write in a read-only directory with mode {:?}",
                     mode
                 );
@@ -640,34 +660,88 @@ mod tests {
         }
 
         // Test fd redirections.
-        assert!(tester.test_redirection_target(L!("-"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("0"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("1"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("2"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("3"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("500"), RedirectionMode::fd));
+        assert_eq!(
+            tester.test_redirection_target(L!("-"), RedirectionMode::Fd),
+            Ok(IsFile(false)),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("0"), RedirectionMode::Fd),
+            Ok(IsFile(false)),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("1"), RedirectionMode::Fd),
+            Ok(IsFile(false)),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("2"), RedirectionMode::Fd),
+            Ok(IsFile(false)),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("3"), RedirectionMode::Fd),
+            Ok(IsFile(false)),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("500"), RedirectionMode::Fd),
+            Ok(IsFile(false)),
+        );
 
         // We are base 10, despite the leading 0.
-        assert!(tester.test_redirection_target(L!("000"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("01"), RedirectionMode::fd));
-        assert!(tester.test_redirection_target(L!("07"), RedirectionMode::fd));
+        assert_eq!(
+            tester.test_redirection_target(L!("000"), RedirectionMode::Fd),
+            Ok(IsFile(false)),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("01"), RedirectionMode::Fd),
+            Ok(IsFile(false)),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("07"), RedirectionMode::Fd),
+            Ok(IsFile(false)),
+        );
 
         // Invalid fd redirections.
-        assert!(!tester.test_redirection_target(L!("0x2"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("0x3F"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("0F"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("-1"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("-0009"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("--"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("derp"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("123boo"), RedirectionMode::fd));
-        assert!(!tester.test_redirection_target(L!("18446744073709551616"), RedirectionMode::fd));
+        assert_eq!(
+            tester.test_redirection_target(L!("0x2"), RedirectionMode::Fd),
+            Err(IsErr),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("0x3F"), RedirectionMode::Fd),
+            Err(IsErr),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("0F"), RedirectionMode::Fd),
+            Err(IsErr),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("-1"), RedirectionMode::Fd),
+            Err(IsErr),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("-0009"), RedirectionMode::Fd),
+            Err(IsErr),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("--"), RedirectionMode::Fd),
+            Err(IsErr),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("derp"), RedirectionMode::Fd),
+            Err(IsErr),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("123boo"), RedirectionMode::Fd),
+            Err(IsErr),
+        );
+        assert_eq!(
+            tester.test_redirection_target(L!("18446744073709551616"), RedirectionMode::Fd),
+            Err(IsErr),
+        );
     }
 
     #[test]
     #[serial]
     fn test_is_potential_path() {
-        let _cleanup = test_init();
+        test_init();
         // Directories
         std::fs::create_dir_all("test/is_potential_path_test/alpha/").unwrap();
         std::fs::create_dir_all("test/is_potential_path_test/beta/").unwrap();
@@ -676,8 +750,8 @@ mod tests {
         std::fs::write("test/is_potential_path_test/aardvark", []).unwrap();
         std::fs::write("test/is_potential_path_test/gamma", []).unwrap();
 
-        let wd = L!("test/is_potential_path_test/").to_owned();
-        let wds = [L!(".").to_owned(), wd];
+        let wd = L!("test/is_potential_path_test/");
+        let wds = [L!("."), wd];
 
         let vars = EnvStack::new();
         let ctx = OperationContext::background(&vars, EXPANSION_LIMIT_DEFAULT);

@@ -28,7 +28,7 @@ function vared --description "Edit variable value"
                     # scoping or export rules. But if it does not exist, we make the variable
                     # global, so that it will not die when this function dies.
 
-                    read -p 'set_color green; echo '$argv'; set_color normal; echo "> "' \
+                    read -p 'set_color green; echo '$argv'; set_color --reset; echo "> "' \
                         (if not set -q $argv; echo -g; end) \
                         -c "$$argv" \
                         __fish_vared_temp_value
@@ -38,7 +38,7 @@ function vared --description "Edit variable value"
                         set -g $argv $__fish_vared_temp_value
                     end
                 else
-                    printf (_ '%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\n') vared $argv (set_color $fish_color_command; echo) (set_color $fish_color_normal; echo) $argv (set_color normal; echo) $argv >&2
+                    printf (_ '%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\n') vared $argv (set_color $fish_color_command; echo) (set_color $fish_color_normal; echo) $argv (set_color --reset; echo) $argv >&2
                 end
         end
     else

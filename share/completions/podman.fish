@@ -1,0 +1,1 @@
+podman completion fish | source

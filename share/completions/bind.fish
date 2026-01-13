@@ -25,6 +25,7 @@ complete -c bind -s L -l list-modes -d 'Display a list of defined bind modes'
 complete -c bind -s s -l silent -d 'Operate silently'
 complete -c bind -l preset -d 'Operate on preset bindings'
 complete -c bind -l user -d 'Operate on user bindings'
+complete -c bind -l color -d 'When to colorize output' -xa 'always never auto'
 
 complete -c bind -n '__fish_bind_has_keys (commandline -pcx)' -a '(bind --function-names)' -d 'Function name' -x
 

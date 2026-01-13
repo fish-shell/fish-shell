@@ -31,9 +31,10 @@ use std::{
 };
 
 use crate::{
-    wchar::prelude::*,
-    wutil::{Error as wcstodError, wcstod::wcstod_underscores, wgettext},
+    prelude::*,
+    wutil::{Error as wcstodError, wcstod::wcstod_underscores},
 };
+use fish_common::assert_sorted_by_name;
 
 #[derive(Clone, Copy)]
 enum Function {
@@ -241,8 +242,8 @@ fn ncr(n: f64, r: f64) -> f64 {
     let mut ur = r as u64;
 
     if ur > un / 2 {
-        ur = un - ur
-    };
+        ur = un - ur;
+    }
 
     let mut result = 1_u64;
     for i in 1..=ur {
@@ -346,7 +347,7 @@ impl<'s> State<'s> {
     }
 
     pub fn eval(&mut self) -> f64 {
-        return self.expr();
+        self.expr()
     }
 
     fn set_error(&mut self, kind: ErrorKind, pos_len: Option<(usize, usize)>) {
@@ -385,11 +386,11 @@ impl<'s> State<'s> {
                 Ok(num) => Some((consumed, Some(Token::Number(num)))),
                 Err(wcstodError::InvalidChar) => {
                     self.set_error(ErrorKind::Unknown, Some((self.pos + consumed, 1)));
-                    return Some((consumed, Some(Token::Error)));
+                    Some((consumed, Some(Token::Error)))
                 }
                 Err(wcstodError::Overflow) => {
                     self.set_error(ErrorKind::NumberTooLarge, Some((self.pos, consumed)));
-                    return Some((consumed, Some(Token::Error)));
+                    Some((consumed, Some(Token::Error)))
                 }
                 Err(wcstodError::Empty) => {
                     // We have a matches! above, this can't be?
@@ -562,7 +563,7 @@ impl<'s> State<'s> {
                     // a closing parenthesis should be more obvious.
                     //
                     // Vararg functions need at least one argument.
-                    let err = if f.arity().map(|arity| i < arity).unwrap_or(i == 0) {
+                    let err = if f.arity().map_or(i == 0, |arity| i < arity) {
                         ErrorKind::TooFewArgs
                     } else {
                         ErrorKind::TooManyArgs
@@ -597,9 +598,9 @@ impl<'s> State<'s> {
                 }
 
                 if !matches!(self.current, Token::Error | Token::End) && self.error.is_none() {
-                    self.set_error(ErrorKind::TooManyArgs, None)
+                    self.set_error(ErrorKind::TooManyArgs, None);
                 } else if self.no_specific_error() {
-                    self.set_error(ErrorKind::MissingClosingParen, None)
+                    self.set_error(ErrorKind::MissingClosingParen, None);
                 }
 
                 f64::NAN

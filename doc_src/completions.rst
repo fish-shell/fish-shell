@@ -1,7 +1,7 @@
 Writing your own completions
 ============================
 
-To specify a completion, use the ``complete`` command. ``complete`` takes as a parameter the name of the command to specify a completion for. For example, to add a completion for the program ``myprog``, start the completion command with ``complete -c myprog ...``
+To specify a completion, use the ``complete`` command. ``complete`` takes as a parameter the name of the command to specify a completion for. For example, to add a completion for the program ``myprog`` (or ``myprog.exe`` on :ref:`Cygwin/MSYS2 <completions-cygwin>`), start the completion command with ``complete -c myprog ...``
 
 For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the :doc:`complete <cmds/complete>` builtin, or write ``complete --help`` inside the ``fish`` shell.
 
@@ -38,7 +38,7 @@ which offers yes/no in these cases::
   > myprog -o <TAB>
   > myprog --output <TAB>
 
-Fish will also offer files by default, in addition to the arguments you specified. You would either inhibit file completion for a single option::
+fish will also offer files by default, in addition to the arguments you specified. You would either inhibit file completion for a single option::
 
   complete -c myprog -s o -l output --no-files -ra "yes no"
 
@@ -112,7 +112,7 @@ As a more comprehensive example, here's a commented excerpt of the completions f
   complete -c timedatectl -l version -d 'Print a short version string and exit'
   complete -c timedatectl -l no-pager -d 'Do not pipe output into a pager'
 
-For examples of how to write your own complex completions, study the completions in ``/usr/share/fish/completions``. (The exact path depends on your chosen installation prefix and may be slightly different)
+For examples of how to write your own completions, study ``share/completions`` in the fish-shell source tree.
 
 Useful functions for writing completions
 ----------------------------------------
@@ -142,15 +142,15 @@ Functions beginning with the string ``__fish_print_`` print a newline separated 
 Where to put completions
 ------------------------
 
-Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. Fish automatically searches through any directories in the list variable ``$fish_complete_path``, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix ``.fish``.
+Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. fish automatically searches through any directories in the list variable ``$fish_complete_path``, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix ``.fish``.
 
-By default, Fish searches the following for completions, using the first available file that it finds:
+By default, fish searches the following for completions, using the first available file that it finds:
 
 - A directory for end-users to keep their own completions, usually ``~/.config/fish/completions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable);
 - A directory for systems administrators to install completions for all users on the system, usually ``/etc/fish/completions``;
 - A user-specified directory for third-party vendor completions, usually ``~/.local/share/fish/vendor_completions.d`` (controlled by the ``XDG_DATA_HOME`` environment variable);
 - A directory for third-party software vendors to ship their own completions for their software, usually ``/usr/share/fish/vendor_completions.d``;
-- The completions shipped with fish, usually installed in ``/usr/share/fish/completions``; and
+- The completions shipped with fish, which are stored in the fish program and can be seen with ``status list-files``; and
 - Completions automatically generated from the operating system's manual, usually stored in ``~/.cache/fish/generated_completions`` (controlled by ``XDG_CACHE_HOME`` environment variable).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
@@ -160,4 +160,3 @@ This wide search may be confusing. If you are unsure, your completions probably 
 If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in :ref:`Further help and development <more-help>`.
 
 If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable completionsdir fish``.
-

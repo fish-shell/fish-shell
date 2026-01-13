@@ -1,12 +1,13 @@
-use crate::FLOGF;
-use crate::common::wcs2osstring;
 use crate::env_universal_common::default_vars_path;
+use crate::fds::heightenize_fd;
+use crate::flogf;
+use crate::prelude::*;
 use crate::universal_notifier::UniversalNotifier;
-use crate::wchar::prelude::*;
 use crate::wutil::wdirname;
+use fish_widestring::wcs2osstring;
 use nix::sys::event::{EvFlags, EventFilter, FilterFlag, KEvent, Kqueue};
 use std::fs::File;
-use std::os::fd::AsFd;
+use std::os::fd::{AsFd, OwnedFd};
 use std::os::unix::fs::MetadataExt;
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::path::PathBuf;
@@ -48,6 +49,7 @@ impl KqueueNotifier {
 
         // Open the directory to get a valid file descriptor or bail if it doesn't exist
         let dir_fd = File::open(dir.as_os_str()).ok()?;
+        let dir_fd = File::from(heightenize_fd(OwnedFd::from(dir_fd), true).ok()?);
 
         // Add a watch for EVFILT_VNODE events
         let change_event = KEvent::new(
@@ -67,13 +69,13 @@ impl KqueueNotifier {
         let kq = match nix::sys::event::Kqueue::new() {
             Ok(kq) => kq,
             Err(e) => {
-                FLOGF!(warning, "Failed to create kqueue: {}", e.desc());
+                flogf!(warning, "Failed to create kqueue: {}", e.desc());
                 return None;
             }
         };
         // Calling kevent with an empty event list causes it to add without watching for events.
         if let Err(e) = kq.kevent(&[change_event], &mut [], None) {
-            FLOGF!(
+            flogf!(
                 warning,
                 "Could not register fs watch event with kqueue: {}",
                 e.desc()
@@ -135,7 +137,7 @@ impl UniversalNotifier for KqueueNotifier {
                 for event in &events[..event_count] {
                     if event.flags().contains(EvFlags::EV_ERROR) {
                         // Error encountered processing this changelist item
-                        FLOGF!(
+                        flogf!(
                             warning,
                             "EV_ERROR in kqueue uvar monitor! Errno: {}",
                             event.data()
@@ -181,11 +183,8 @@ impl UniversalNotifier for KqueueNotifier {
 #[cfg(test)]
 mod tests {
     use super::KqueueNotifier;
-    use crate::common::wcs2osstring;
-    use crate::{
-        universal_notifier::{UniversalNotifier, test_helpers::test_notifiers},
-        wchar::WString,
-    };
+    use crate::universal_notifier::{UniversalNotifier, test_helpers::test_notifiers};
+    use fish_widestring::WString;
 
     #[test]
     fn test_kqueue_notifiers() {

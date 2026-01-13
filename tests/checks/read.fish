@@ -142,6 +142,15 @@ echo $bar
 echo test | read -n 1 foo
 echo $foo
 #CHECK: t
+echo test | read -n 2147483647 foo
+echo $foo
+#CHECK: test
+echo test | read -n 2147483648 foo
+#CHECKERR: read: Argument '2147483648' is out of range
+#CHECKERR: {{.*}}/checks/read.fish (line {{\d+}}):
+#CHECKERR: echo test | read -n 2147483648 foo
+#CHECKERR: ^
+#CHECKERR: (Type 'help read' for related documentation)
 
 # read -z tests
 echo -n testing | read -lz foo
@@ -455,6 +464,25 @@ set -S rawlist_null
 # CHECK: $rawlist_null[7]: |line|
 # CHECK: $rawlist_null[8]: |\n|
 
+echo 'foo "&" bar' | read -al --tokenize --tokenize tokens
+set -S tokens
+# CHECK: $tokens: set in local scope, unexported, with 3 elements
+# CHECK: $tokens[1]: |foo|
+# CHECK: $tokens[2]: |&|
+# CHECK: $tokens[3]: |bar|
+echo 'foo "&" bar' | read -al --tokenize-raw --tokenize-raw tokens
+set -S tokens
+# CHECK: $tokens: set in local scope, unexported, with 3 elements
+# CHECK: $tokens[1]: |foo|
+# CHECK: $tokens[2]: |"&"|
+# CHECK: $tokens[3]: |bar|
+echo 'foo "&" bar' | read -al --tokenize --tokenize-raw tokens
+# CHECKERR: read: invalid option combination, --tokenize and --tokenize-raw are mutually exclusive
+# CHECKERR: {{.*}}checks/read.fish (line {{\d+}}):
+# CHECKERR: echo 'foo "&" bar' | read -al --tokenize --tokenize-raw tokens
+# CHECKERR: ^
+# CHECKERR: (Type 'help read' for related documentation)
+
 echo '1  {} "{}"' | read -lat var
 echo $var
 # CHECK: 1 {} {}
@@ -467,3 +495,33 @@ set -S out_of_range_codepoint
 printf \xff | { read invalid_utf8; set -S invalid_utf8 }
 # CHECK: $invalid_utf8: set in global scope, unexported, with 1 elements
 # CHECK: $invalid_utf8[1]: |\Xff|
+
+echo foo | read -l -p "echo little-p" -P big-P var
+# CHECKERR: read: Options -p and -P cannot be used together
+# CHECKERR: {{.*}}checks/read.fish (line {{\d+}}):
+# CHECKERR: echo foo | read -l -p "echo little-p" -P big-P var
+# CHECKERR: ^
+# CHECKERR: (Type 'help read' for related documentation)
+
+echo foo | read -d ";" -L var
+# CHECKERR: read: Options --delimiter and --line cannot be used together
+echo foo | read --null -L var
+# CHECKERR: read: Options -z and --line cannot be used together
+echo foo | read -d "&" --tokenize
+# CHECKERR: read: --delimiter --tokenize: options cannot be used together
+echo foo | read -L --tokenize-raw
+# CHECKERR: read: --line --tokenize-raw: options cannot be used together
+
+echo foo | read -lxu var
+# CHECKERR: read: cannot both export and unexport
+# CHECKERR: {{.*}}checks/read.fish (line {{\d+}}):
+# CHECKERR: echo foo | read -lxu var
+# CHECKERR: ^
+# CHECKERR: (Type 'help read' for related documentation)
+
+echo foo | read -lf var
+# CHECKERR: read: scope can be only one of: universal function global local
+# CHECKERR: {{.*}}checks/read.fish (line {{\d+}}):
+# CHECKERR: echo foo | read -lf var
+# CHECKERR: ^
+# CHECKERR: (Type 'help read' for related documentation)

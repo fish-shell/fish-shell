@@ -31,7 +31,7 @@ The work will **proceed on master**: no long-lived branches. Tests and CI contin
 
 The Rust code will initially resemble the replaced C++. Fidelity to existing code is more important than Rust idiomaticity, to aid review and bisecting. But don't take this to extremes - use judgement.
 
-The port will proceed "outside in." We'll start with leaf components (e.g. builtins) and proceed towards the core. Some components will have both a Rust and C++ implementation (e.g. FLOG), in other cases we'll change the existing C++ to invoke the new Rust implementations (builtins).
+The port will proceed "outside in." We'll start with leaf components (e.g. builtins) and proceed towards the core. Some components will have both a Rust and C++ implementation (e.g. flog), in other cases we'll change the existing C++ to invoke the new Rust implementations (builtins).
 
 After porting the C++, we'll replace CMake.
 

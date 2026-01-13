@@ -21,7 +21,7 @@ function suspend --description 'Suspend the current shell.'
 
     if status is-interactive
         echo -ns 'Suspending ' $fish_pid ': run'
-        echo -n (set_color --bold) 'kill -CONT' $fish_pid (set_color normal)
+        echo -n (set_color --bold) 'kill -CONT' $fish_pid (set_color --reset)
         echo 'from another terminal to resume'
     end
 

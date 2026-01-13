@@ -408,6 +408,7 @@ function __fish_complete_ip
                             case address broadcast
                             case mtu txqueuelen
                             case netns
+                                __fish_ip_netns_list
                             case link-netnsid
                             case vf mac
                             case {{max,min}_tx_,}rate
@@ -615,13 +616,13 @@ complete -f -c ip -a '(__fish_complete_ip)'
 complete -f -c ip -n "not __fish_seen_subcommand_from $ip_all_commands" -a "$ip_commands"
 # Yes, ip only takes options before "objects"
 complete -c ip -s h -l human -d "Output statistics with human readable values" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -s b -l batch -d "Read commands from file or stdin" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -s b -l batch -d "Read commands from file or stdin" -rF -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -l force -d "Don't terminate on errors in batch mode" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -s V -l Version -d "Print the version" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s s -l stats -d "Output more information" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s d -l details -d "Output more detailed information" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s l -l loops -d "Specify maximum number of loops for 'ip addr flush'" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s f -l family -d "The protocol family to use" -a "inet inet6 bridge ipx dnet link any" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s l -l loops -d "Specify maximum number of loops for 'ip addr flush'" -x -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s f -l family -d "The protocol family to use" -xa "inet inet6 bridge ipx dnet mpls link any" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s 4 -d "Short for --family inet" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s 6 -d "Short for --family inet6" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s B -d "Short for --family bridge" -n "not __fish_seen_subcommand_from $ip_commands"
@@ -629,7 +630,7 @@ complete -c ip -f -s M -d "Short for --family mpls" -n "not __fish_seen_subcomma
 complete -c ip -f -s 0 -d "Short for --family link" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s o -l oneline -d "Output on one line" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s r -l resolve -d "Resolve names and print them instead of addresses" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s n -l netns -d "Use specified network namespace" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s n -l netns -d "Use specified network namespace" -xa "(__fish_ip_netns_list)" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s a -l all -d "Execute command for all objects" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s c -l color -d "Configure color output" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s t -l timestamp -d "Display current time when using monitor" -n "not __fish_seen_subcommand_from $ip_commands"

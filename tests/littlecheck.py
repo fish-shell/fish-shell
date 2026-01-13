@@ -617,8 +617,14 @@ class CheckCmd(object):
         pieces = bracket_re.split(line.text)
         even = True
         re_strings = []
-        for piece in pieces:
+        for i, piece in enumerate(pieces):
             if even:
+                if i != 0 and piece.startswith("}"):
+                    raise CheckerError(
+                        "Expression ('{{%s}}}') is ambiguous, consider using '{{%s}}{{[}]}}' if you really mean that"
+                        % (pieces[i - 1], pieces[i - 1]),
+                        line,
+                    )
                 # piece is a literal string.
                 re_strings.append(re.escape(piece))
             else:

@@ -9,19 +9,21 @@
  *
  * Most clients will be interested in visiting the nodes of an ast.
  */
-use crate::common::{UnescapeStringStyle, unescape_string};
-use crate::flog::{FLOG, FLOGF};
-use crate::parse_constants::{
-    ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode,
-    ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags, SOURCE_OFFSET_INVALID,
-    SourceRange, StatementDecoration, token_type_user_presentable_description,
+use crate::{
+    flog::{flog, flogf},
+    parse_constants::{
+        ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode,
+        ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags, SOURCE_OFFSET_INVALID,
+        SourceRange, StatementDecoration, token_type_user_presentable_description,
+    },
+    parse_tree::ParseToken,
+    prelude::*,
+    tokenizer::{
+        TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
+        TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
+    },
 };
-use crate::parse_tree::ParseToken;
-use crate::tokenizer::{
-    TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
-    TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
-};
-use crate::wchar::prelude::*;
+use fish_common::{UnescapeStringStyle, unescape_string};
 use macro_rules_attribute::derive;
 use std::borrow::Cow;
 use std::convert::AsMut;
@@ -51,7 +53,7 @@ pub trait Acceptor {
 impl<T: Acceptor> Acceptor for Option<T> {
     fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         if let Some(node) = self {
-            node.accept(visitor)
+            node.accept(visitor);
         }
     }
 }
@@ -114,7 +116,7 @@ trait AcceptorMut {
 impl<T: AcceptorMut> AcceptorMut for Option<T> {
     fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         if let Some(node) = self {
-            node.accept_mut(visitor)
+            node.accept_mut(visitor);
         }
     }
 }
@@ -202,7 +204,7 @@ pub trait Node: Acceptor + AsNode + std::fmt::Debug {
     /// The raw byte size of this node, excluding children.
     /// This also excludes the allocations stored in lists.
     fn self_memory_size(&self) -> usize {
-        std::mem::size_of_val(self)
+        size_of_val(self)
     }
 }
 
@@ -242,8 +244,8 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
     // Note this is performance-sensitive.
 
     // Different base pointers => not the same.
-    let lptr = lhs as *const dyn Node as *const ();
-    let rptr = rhs as *const dyn Node as *const ();
+    let lptr = std::ptr::from_ref(lhs).cast::<()>();
+    let rptr = std::ptr::from_ref(rhs).cast::<()>();
     if !std::ptr::eq(lptr, rptr) {
         return false;
     }
@@ -263,7 +265,7 @@ trait NodeMut: Node + AcceptorMut {}
 impl<T> NodeMut for T where T: Node + AcceptorMut {}
 
 /// The different kinds of nodes. Note that Token and Keyword have different subtypes.
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Kind<'a> {
     Redirection(&'a Redirection),
     Token(&'a dyn Token),
@@ -634,7 +636,7 @@ pub struct Redirection {
 
 impl CheckParse for Redirection {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_type(0) == ParseTokenType::redirection
+        pop.peek_type(0) == ParseTokenType::Redirection
     }
 }
 
@@ -657,7 +659,7 @@ impl Acceptor for ArgumentOrRedirection {
         match self {
             Self::Argument(child) => visitor.visit(child),
             Self::Redirection(child) => visitor.visit(&**child),
-        };
+        }
     }
 }
 impl AcceptorMut for ArgumentOrRedirection {
@@ -699,7 +701,7 @@ impl ArgumentOrRedirection {
 impl CheckParse for ArgumentOrRedirection {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let typ = pop.peek_type(0);
-        matches!(typ, ParseTokenType::string | ParseTokenType::redirection)
+        matches!(typ, ParseTokenType::String | ParseTokenType::Redirection)
     }
 }
 
@@ -793,8 +795,8 @@ impl CheckParse for JobConjunction {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let token = pop.peek_token(0);
         // These keywords end a job list.
-        token.typ == ParseTokenType::left_brace
-            || (token.typ == ParseTokenType::string
+        token.typ == ParseTokenType::LeftBrace
+            || (token.typ == ParseTokenType::String
                 && !matches!(
                     token.keyword,
                     ParseKeyword::Case | ParseKeyword::End | ParseKeyword::Else
@@ -976,7 +978,7 @@ pub struct JobContinuation {
 }
 impl CheckParse for JobContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_type(0) == ParseTokenType::pipe
+        pop.peek_type(0) == ParseTokenType::Pipe
     }
 }
 
@@ -993,7 +995,7 @@ pub struct JobConjunctionContinuation {
 impl CheckParse for JobConjunctionContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let typ = pop.peek_type(0);
-        matches!(typ, ParseTokenType::andand | ParseTokenType::oror)
+        matches!(typ, ParseTokenType::AndAnd | ParseTokenType::OrOr)
     }
 }
 
@@ -1015,7 +1017,7 @@ impl CheckParse for AndorJob {
         let next_token = pop.peek_token(1);
         matches!(
             next_token.typ,
-            ParseTokenType::string | ParseTokenType::left_brace
+            ParseTokenType::String | ParseTokenType::LeftBrace
         ) && !next_token.is_help_argument
     }
 }
@@ -1053,9 +1055,9 @@ impl CheckParse for VariableAssignment {
         // What is the token after it?
         match pop.peek_type(1) {
             // We have `a= cmd` and should treat it as a variable assignment.
-            ParseTokenType::string | ParseTokenType::left_brace => true,
+            ParseTokenType::String | ParseTokenType::LeftBrace => true,
             // We have `a=` which is OK if we are allowing incomplete, an error otherwise.
-            ParseTokenType::terminate => pop.allow_incomplete(),
+            ParseTokenType::Terminate => pop.allow_incomplete(),
             // We have e.g. `a= >` which is an error.
             // Note that we do not produce an error here. Instead we return false
             // so this the token will be seen by allocate_populate_statement.
@@ -1078,18 +1080,18 @@ pub struct Argument {
 }
 impl CheckParse for Argument {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_type(0) == ParseTokenType::string
+        pop.peek_type(0) == ParseTokenType::String
     }
 }
 
-define_token_node!(SemiNl, end);
-define_token_node!(String_, string);
-define_token_node!(TokenBackground, background);
-define_token_node!(TokenConjunction, andand, oror);
-define_token_node!(TokenPipe, pipe);
-define_token_node!(TokenLeftBrace, left_brace);
-define_token_node!(TokenRightBrace, right_brace);
-define_token_node!(TokenRedirection, redirection);
+define_token_node!(SemiNl, End);
+define_token_node!(String_, String);
+define_token_node!(TokenBackground, Background);
+define_token_node!(TokenConjunction, AndAnd, OrOr);
+define_token_node!(TokenPipe, Pipe);
+define_token_node!(TokenLeftBrace, LeftBrace);
+define_token_node!(TokenRightBrace, RightBrace);
+define_token_node!(TokenRedirection, Redirection);
 
 define_keyword_node!(DecoratedStatementDecorator, Command, Builtin, Exec);
 define_keyword_node!(JobConjunctionDecorator, And, Or);
@@ -1132,7 +1134,7 @@ impl CheckParse for DecoratedStatementDecorator {
             return false;
         }
         let next_token = pop.peek_token(1);
-        next_token.typ == ParseTokenType::string && !next_token.is_dash_prefix_string()
+        next_token.typ == ParseTokenType::String && !next_token.is_dash_prefix_string()
     }
 }
 
@@ -1151,13 +1153,13 @@ impl DecoratedStatement {
     /// Return the decoration for this statement.
     pub fn decoration(&self) -> StatementDecoration {
         let Some(decorator) = &self.opt_decoration else {
-            return StatementDecoration::none;
+            return StatementDecoration::None;
         };
         let decorator: &dyn Keyword = decorator;
         match decorator.keyword() {
-            ParseKeyword::Command => StatementDecoration::command,
-            ParseKeyword::Builtin => StatementDecoration::builtin,
-            ParseKeyword::Exec => StatementDecoration::exec,
+            ParseKeyword::Command => StatementDecoration::Command,
+            ParseKeyword::Builtin => StatementDecoration::Builtin,
+            ParseKeyword::Exec => StatementDecoration::Exec,
             _ => panic!("Unexpected keyword in statement decoration"),
         }
     }
@@ -1452,25 +1454,25 @@ impl<N: Node> Ast<N> {
                 sprintf!(=> &mut result, "keyword: %s", n.keyword().to_wstr());
             } else if let Some(n) = node.as_token() {
                 let desc = match n.token_type() {
-                    ParseTokenType::string => {
-                        let mut desc = WString::from_str("string");
+                    ParseTokenType::String => {
+                        let mut desc = L!("string").to_owned();
                         if let Some(strsource) = n.try_source(orig) {
                             sprintf!(=> &mut desc, ": '%s'", strsource);
                         }
                         desc
                     }
-                    ParseTokenType::redirection => {
-                        let mut desc = WString::from_str("redirection");
+                    ParseTokenType::Redirection => {
+                        let mut desc = L!("redirection").to_owned();
                         if let Some(strsource) = n.try_source(orig) {
                             sprintf!(=> &mut desc, ": '%s'", strsource);
                         }
                         desc
                     }
-                    ParseTokenType::end => WString::from_str("<;>"),
-                    ParseTokenType::invalid => {
+                    ParseTokenType::End => L!("<;>").to_owned(),
+                    ParseTokenType::Invalid => {
                         // This may occur with errors, e.g. we expected to see a string but saw a
                         // redirection.
-                        WString::from_str("<error>")
+                        L!("<error>").to_owned()
                     }
                     _ => {
                         token_type_user_presentable_description(n.token_type(), ParseKeyword::None)
@@ -1550,7 +1552,7 @@ impl<'a> TokenStream<'a> {
             flags |= TOK_ARGUMENT_LIST;
         }
         Self {
-            lookahead: [ParseToken::new(ParseTokenType::invalid); Self::MAX_LOOKAHEAD],
+            lookahead: [ParseToken::new(ParseTokenType::Invalid); Self::MAX_LOOKAHEAD],
             start: 0,
             count: 0,
             src,
@@ -1567,7 +1569,7 @@ impl<'a> TokenStream<'a> {
         assert!(idx < Self::MAX_LOOKAHEAD, "Trying to look too far ahead");
         while idx >= self.count {
             self.lookahead[Self::mask(self.start + self.count)] = self.next_from_tok();
-            self.count += 1
+            self.count += 1;
         }
         &self.lookahead[Self::mask(self.start + idx)]
     }
@@ -1593,7 +1595,7 @@ impl<'a> TokenStream<'a> {
     fn next_from_tok(&mut self) -> ParseToken {
         loop {
             let res = self.advance_1();
-            if res.typ == ParseTokenType::comment {
+            if res.typ == ParseTokenType::Comment {
                 self.comment_ranges.push(res.range());
                 continue;
             }
@@ -1605,7 +1607,7 @@ impl<'a> TokenStream<'a> {
     /// This returns comments.
     fn advance_1(&mut self) -> ParseToken {
         let Some(token) = self.tok.next() else {
-            return ParseToken::new(ParseTokenType::terminate);
+            return ParseToken::new(ParseTokenType::Terminate);
         };
         // Set the type, keyword, and whether there's a dash prefix. Note that this is quite
         // sketchy, because it ignores quotes. This is the historical behavior. For example,
@@ -1617,7 +1619,7 @@ impl<'a> TokenStream<'a> {
         result.keyword = keyword_for_token(token.type_, text);
         result.has_dash_prefix = text.starts_with('-');
         result.is_help_argument = [L!("-h"), L!("--help")].contains(&text);
-        result.is_newline = result.typ == ParseTokenType::end && text == "\n";
+        result.is_newline = result.typ == ParseTokenType::End && text == "\n";
         result.may_be_variable_assignment = variable_assignment_equals_pos(text).is_some();
         result.tok_error = token.error;
 
@@ -1625,7 +1627,7 @@ impl<'a> TokenStream<'a> {
         result.set_source_start(token.offset());
         result.set_source_length(token.length());
 
-        if token.error != TokenizerError::none {
+        if token.error != TokenizerError::None {
             let subtoken_offset = token.error_offset_within_token();
             // Skip invalid tokens that have a zero length, especially if they are at EOF.
             if subtoken_offset < result.source_length() {
@@ -1647,7 +1649,7 @@ macro_rules! internal_error {
         $(, $args:expr)*
         $(,)?
     ) => {
-        FLOG!(
+        flog!(
             debug,
             concat!(
                 "Internal parse error from {$func} - this indicates a bug in fish.",
@@ -1655,7 +1657,7 @@ macro_rules! internal_error {
             )
             $(, $args)*
         );
-        FLOGF!(debug, "Encountered while parsing:<<<<\n%s\n>>>", $self.tokens.src);
+        flogf!(debug, "Encountered while parsing:<<<<\n%s\n>>>", $self.tokens.src);
         panic!();
     };
 }
@@ -1697,7 +1699,7 @@ macro_rules! parse_error_range {
         if !$self.unwinding {
             $self.unwinding = true;
 
-            FLOGF!(ast_construction, "%*sparse error - begin unwinding", $self.spaces(), "");
+            flogf!(ast_construction, "%*sparse error - begin unwinding", $self.spaces(), "");
             // TODO: can store this conditionally dependent on flags.
             if $range.start() != SOURCE_OFFSET_INVALID {
                 $self.errors.push($range);
@@ -1801,14 +1803,14 @@ impl<'s> NodeVisitorMut for Populator<'s> {
     }
 
     fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N) {
-        FLOGF!(
+        flogf!(
             ast_construction,
             "%*swill_visit %s",
             self.spaces(),
             "",
             node.describe()
         );
-        self.depth += 1
+        self.depth += 1;
     }
 
     fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult) {
@@ -1823,15 +1825,15 @@ impl<'s> NodeVisitorMut for Populator<'s> {
 
         let token = &error.token;
         // To-do: maybe extend this to other tokenizer errors?
-        if token.typ == ParseTokenType::tokenizer_error
-            && token.tok_error == TokenizerError::closing_unopened_brace
+        if token.typ == ParseTokenType::TokenizerError
+            && token.tok_error == TokenizerError::ClosingUnopenedBrace
         {
             parse_error_range!(
                 self,
                 token.range(),
-                ParseErrorCode::unbalancing_brace,
+                ParseErrorCode::UnbalancingBrace,
                 "%s",
-                <TokenizerError as Into<&wstr>>::into(token.tok_error)
+                WString::from(token.tok_error)
             );
         }
 
@@ -1868,7 +1870,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
 
         if let Some((header_kw_range, enclosing_stmt)) = header {
             let next_token = self.peek_token(0);
-            if next_token.typ == ParseTokenType::string
+            if next_token.typ == ParseTokenType::String
                 && matches!(
                     next_token.keyword,
                     ParseKeyword::Case | ParseKeyword::Else | ParseKeyword::End
@@ -1879,7 +1881,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             parse_error_range!(
                 self,
                 header_kw_range,
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Missing end to balance this %s",
                 enclosing_stmt
             );
@@ -1887,7 +1889,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             parse_error!(
                 self,
                 token,
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected %s, but found %s",
                 keywords_user_presentable_description(error.allowed_keywords),
                 error.token.user_presentable_description(),
@@ -1955,7 +1957,7 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// Helper for FLOGF. This returns a number of spaces appropriate for a '%*c' format.
+    /// Helper for flogf. This returns a number of spaces appropriate for a '%*c' format.
     fn spaces(&self) -> usize {
         self.depth * 2
     }
@@ -1963,13 +1965,11 @@ impl<'s> Populator<'s> {
     /// Return the parser's status.
     fn status(&mut self) -> ParserStatus {
         if self.unwinding {
-            ParserStatus::unwinding
-        } else if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
-            && self.peek_type(0) == ParseTokenType::terminate
-        {
-            ParserStatus::unsourcing
+            ParserStatus::Unwinding
+        } else if self.flags.leave_unterminated && self.peek_type(0) == ParseTokenType::Terminate {
+            ParserStatus::Unsourcing
         } else {
-            ParserStatus::ok
+            ParserStatus::Ok
         }
     }
 
@@ -1977,13 +1977,13 @@ impl<'s> Populator<'s> {
     fn unsource_leaves(&mut self) -> bool {
         matches!(
             self.status(),
-            ParserStatus::unsourcing | ParserStatus::unwinding
+            ParserStatus::Unsourcing | ParserStatus::Unwinding
         )
     }
 
     /// Return whether we permit an incomplete parse tree.
     fn allow_incomplete(&self) -> bool {
-        self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
+        self.flags.leave_unterminated
     }
 
     /// Return whether a list kind allows arbitrary newlines in it.
@@ -2094,13 +2094,13 @@ impl<'s> Populator<'s> {
         let chomp_newlines = self.list_kind_chomps_newlines(kind);
         loop {
             let peek = self.tokens.peek(0);
-            if chomp_newlines && peek.typ == ParseTokenType::end && peek.is_newline {
+            if chomp_newlines && peek.typ == ParseTokenType::End && peek.is_newline {
                 // Just skip this newline, no need to save it.
                 self.tokens.pop();
-            } else if chomp_semis && peek.typ == ParseTokenType::end && !peek.is_newline {
+            } else if chomp_semis && peek.typ == ParseTokenType::End && !peek.is_newline {
                 let tok = self.tokens.pop();
                 // Perhaps save this extra semi.
-                if self.flags.contains(ParseTreeFlags::SHOW_EXTRA_SEMIS) {
+                if self.flags.show_extra_semis {
                     self.semis.push(tok.range());
                 }
             } else {
@@ -2112,8 +2112,7 @@ impl<'s> Populator<'s> {
     /// Return whether a list kind should recover from errors.
     /// That is, whether we should stop unwinding when we encounter this type.
     fn list_kind_stops_unwind(&self, kind: Kind) -> bool {
-        matches!(kind, Kind::JobList(_))
-            && self.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
+        matches!(kind, Kind::JobList(_)) && self.flags.continue_after_error
     }
 
     /// Return a reference to a non-comment token at index `idx`.
@@ -2131,12 +2130,10 @@ impl<'s> Populator<'s> {
     /// Return the token.
     fn consume_any_token(&mut self) -> ParseToken {
         let tok = self.tokens.pop();
-        assert!(
-            tok.typ != ParseTokenType::comment,
-            "Should not be a comment"
-        );
-        assert!(
-            tok.typ != ParseTokenType::terminate,
+        assert_ne!(tok.typ, ParseTokenType::Comment, "Should not be a comment");
+        assert_ne!(
+            tok.typ,
+            ParseTokenType::Terminate,
             "Cannot consume terminate token, caller should check status first"
         );
         tok
@@ -2144,8 +2141,9 @@ impl<'s> Populator<'s> {
 
     /// Consume the next token which is expected to be of the given type.
     fn consume_token_type(&mut self, typ: ParseTokenType) -> SourceRange {
-        assert!(
-            typ != ParseTokenType::terminate,
+        assert_ne!(
+            typ,
+            ParseTokenType::Terminate,
             "Should not attempt to consume terminate token"
         );
         let tok = self.consume_any_token();
@@ -2153,7 +2151,7 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 tok,
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected %s, but found %s",
                 token_type_user_presentable_description(typ, ParseKeyword::None),
                 tok.user_presentable_description()
@@ -2178,23 +2176,23 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 tok,
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected %s, but found %s",
-                token_type_user_presentable_description(ParseTokenType::string, ParseKeyword::None),
+                token_type_user_presentable_description(ParseTokenType::String, ParseKeyword::None),
                 tok.user_presentable_description()
             );
             return;
         }
 
         match tok.typ {
-            ParseTokenType::string => {
+            ParseTokenType::String => {
                 // There are three keywords which end a job list.
                 match tok.keyword {
                     ParseKeyword::Case => {
                         parse_error!(
                             self,
                             tok,
-                            ParseErrorCode::unbalancing_case,
+                            ParseErrorCode::UnbalancingCase,
                             "'case' builtin not inside of switch block"
                         );
                     }
@@ -2202,7 +2200,7 @@ impl<'s> Populator<'s> {
                         parse_error!(
                             self,
                             tok,
-                            ParseErrorCode::unbalancing_end,
+                            ParseErrorCode::UnbalancingEnd,
                             "'end' outside of a block"
                         );
                     }
@@ -2210,7 +2208,7 @@ impl<'s> Populator<'s> {
                         parse_error!(
                             self,
                             tok,
-                            ParseErrorCode::unbalancing_else,
+                            ParseErrorCode::UnbalancingElse,
                             "'else' builtin not inside of if block"
                         );
                     }
@@ -2224,30 +2222,30 @@ impl<'s> Populator<'s> {
                     }
                 }
             }
-            ParseTokenType::redirection if self.peek_type(0) == ParseTokenType::string => {
+            ParseTokenType::Redirection if self.peek_type(0) == ParseTokenType::String => {
                 let next = self.tokens.pop();
                 parse_error_range!(
                     self,
                     next.range().combine(tok.range()),
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected a string, but found a redirection"
                 );
             }
-            ParseTokenType::pipe
-            | ParseTokenType::redirection
-            | ParseTokenType::right_brace
-            | ParseTokenType::background
-            | ParseTokenType::andand
-            | ParseTokenType::oror => {
+            ParseTokenType::Pipe
+            | ParseTokenType::Redirection
+            | ParseTokenType::RightBrace
+            | ParseTokenType::Background
+            | ParseTokenType::AndAnd
+            | ParseTokenType::OrOr => {
                 parse_error!(
                     self,
                     tok,
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected a string, but found %s",
                     tok.user_presentable_description()
                 );
             }
-            ParseTokenType::tokenizer_error => {
+            ParseTokenType::TokenizerError => {
                 parse_error!(
                     self,
                     tok,
@@ -2256,14 +2254,14 @@ impl<'s> Populator<'s> {
                     tok.tok_error
                 );
             }
-            ParseTokenType::end => {
+            ParseTokenType::End => {
                 internal_error!(
                     self,
                     consume_excess_token_generating_error,
                     "End token should never be excess"
                 );
             }
-            ParseTokenType::terminate => {
+            ParseTokenType::Terminate => {
                 internal_error!(
                     self,
                     consume_excess_token_generating_error,
@@ -2298,7 +2296,7 @@ impl<'s> Populator<'s> {
                 "exhaust_stream should only be set at top level, and so we should not be unwinding"
             );
             // Mark in the list that it was unwound.
-            FLOGF!(
+            flogf!(
                 ast_construction,
                 "%*sunwinding %s",
                 self.spaces(),
@@ -2325,13 +2323,13 @@ impl<'s> Populator<'s> {
                     let typ = self.peek_type(0);
                     if matches!(
                         typ,
-                        ParseTokenType::string | ParseTokenType::terminate | ParseTokenType::end
+                        ParseTokenType::String | ParseTokenType::Terminate | ParseTokenType::End
                     ) {
                         break;
                     }
                     let tok = self.tokens.pop();
                     self.errors.push(tok.range());
-                    FLOGF!(
+                    flogf!(
                         ast_construction,
                         "%*schomping range %u-%u",
                         self.spaces(),
@@ -2340,7 +2338,7 @@ impl<'s> Populator<'s> {
                         tok.source_length()
                     );
                 }
-                FLOGF!(ast_construction, "%*sdone unwinding", self.spaces(), "");
+                flogf!(ast_construction, "%*sdone unwinding", self.spaces(), "");
                 self.unwinding = false;
             }
 
@@ -2356,9 +2354,9 @@ impl<'s> Populator<'s> {
                     contents.reserve(16);
                 }
                 contents.push(node);
-            } else if exhaust_stream && self.peek_type(0) != ParseTokenType::terminate {
+            } else if exhaust_stream && self.peek_type(0) != ParseTokenType::Terminate {
                 // We aren't allowed to stop. Produce an error and keep going.
-                self.consume_excess_token_generating_error()
+                self.consume_excess_token_generating_error();
             } else {
                 // We either stop once we can't parse any more of this contents node, or we
                 // exhausted the stream as requested.
@@ -2376,7 +2374,7 @@ impl<'s> Populator<'s> {
             *list.as_mut() = contents.into_boxed_slice();
         }
 
-        FLOGF!(
+        flogf!(
             ast_construction,
             "%*s%s size: %u",
             self.spaces(),
@@ -2397,14 +2395,14 @@ impl<'s> Populator<'s> {
 
         fn new_decorated_statement(slf: &mut Populator<'_>) -> Statement {
             let embedded = slf.allocate_visit::<DecoratedStatement>();
-            if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::left_brace {
+            if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::LeftBrace {
                 parse_error!(
                     slf,
                     slf.peek_token(0),
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected %s, but found %s",
                     token_type_user_presentable_description(
-                        ParseTokenType::end,
+                        ParseTokenType::End,
                         ParseKeyword::None
                     ),
                     slf.peek_token(0).user_presentable_description()
@@ -2413,20 +2411,20 @@ impl<'s> Populator<'s> {
             Statement::Decorated(embedded)
         }
 
-        if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
+        if self.peek_token(0).typ == ParseTokenType::Terminate && self.allow_incomplete() {
             // This may happen if we just have a 'time' prefix.
             // Construct a decorated statement, which will be unsourced.
             self.allocate_visit::<DecoratedStatement>();
-        } else if self.peek_token(0).typ == ParseTokenType::left_brace {
+        } else if self.peek_token(0).typ == ParseTokenType::LeftBrace {
             let embedded = self.allocate_boxed_visit::<BraceStatement>();
             return Statement::Brace(embedded);
-        } else if self.peek_token(0).typ != ParseTokenType::string {
+        } else if self.peek_token(0).typ != ParseTokenType::String {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
             parse_error!(
                 self,
                 self.peek_token(0),
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected a command, but found %s",
                 self.peek_token(0).user_presentable_description()
             );
@@ -2444,7 +2442,7 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 token,
-                ParseErrorCode::bare_variable_assignment,
+                ParseErrorCode::BareVariableAssignment,
                 ERROR_BAD_COMMAND_ASSIGN_ERR_MSG,
                 variable,
                 value
@@ -2459,7 +2457,7 @@ impl<'s> Populator<'s> {
         // If we are 'function' or another block starter, then we are a non-block if we are invoked with -h or --help
         // If we are anything else, we require an argument, so do the same thing if the subsequent
         // token is a statement terminator.
-        if self.peek_token(0).typ == ParseTokenType::string {
+        if self.peek_token(0).typ == ParseTokenType::String {
             // If we are one of these, then look for specifically help arguments. Otherwise, if the next token
             // looks like an option (starts with a dash), then parse it as a decorated statement.
             let help_only_kws = [
@@ -2481,7 +2479,7 @@ impl<'s> Populator<'s> {
             // e.g. a "naked if".
             let naked_invocation_invokes_help =
                 ![ParseKeyword::Begin, ParseKeyword::End].contains(&self.peek_token(0).keyword);
-            if naked_invocation_invokes_help && self.peek_token(1).typ == ParseTokenType::terminate
+            if naked_invocation_invokes_help && self.peek_token(1).typ == ParseTokenType::Terminate
             {
                 return new_decorated_statement(self);
             }
@@ -2515,11 +2513,11 @@ impl<'s> Populator<'s> {
                 parse_error!(
                     self,
                     self.peek_token(0),
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected a command, but found %s",
                     self.peek_token(0).user_presentable_description()
                 );
-                return got_error(self);
+                got_error(self)
             }
             _ => new_decorated_statement(self),
         }
@@ -2603,7 +2601,7 @@ impl<'s> Populator<'s> {
             arg.range = None;
             return;
         }
-        arg.range = Some(self.consume_token_type(ParseTokenType::string));
+        arg.range = Some(self.consume_token_type(ParseTokenType::String));
     }
 
     fn visit_variable_assignment(&mut self, varas: &mut VariableAssignment) {
@@ -2618,7 +2616,7 @@ impl<'s> Populator<'s> {
                 "Should not have created variable_assignment_t from this token"
             );
         }
-        varas.range = Some(self.consume_token_type(ParseTokenType::string));
+        varas.range = Some(self.consume_token_type(ParseTokenType::String));
     }
 
     fn visit_job_continuation(&mut self, node: &mut JobContinuation) {
@@ -2628,7 +2626,7 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 self.peek_token(1),
-                ParseErrorCode::andor_in_pipeline,
+                ParseErrorCode::AndOrInPipeline,
                 INVALID_PIPELINE_CMD_ERR_MSG,
                 kw
             );
@@ -2644,12 +2642,11 @@ impl<'s> Populator<'s> {
         }
 
         if !token.allows_token(self.peek_token(0).typ) {
-            if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
-                && [
-                    TokenizerError::unterminated_quote,
-                    TokenizerError::unterminated_subshell,
-                ]
-                .contains(&self.peek_token(0).tok_error)
+            if self.flags.leave_unterminated
+                && matches!(
+                    self.peek_token(0).tok_error,
+                    TokenizerError::UnterminatedQuote | TokenizerError::UnterminatedSubshell
+                )
             {
                 return;
             }
@@ -2657,7 +2654,7 @@ impl<'s> Populator<'s> {
             parse_error!(
                 self,
                 self.peek_token(0),
-                ParseErrorCode::generic,
+                ParseErrorCode::Generic,
                 "Expected %s, but found %s",
                 token_types_user_presentable_description(token.allowed_tokens()),
                 self.peek_token(0).user_presentable_description()
@@ -2680,12 +2677,11 @@ impl<'s> Populator<'s> {
         if !keyword.allows_keyword(self.peek_token(0).keyword) {
             *keyword.range_mut() = None;
 
-            if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
-                && [
-                    TokenizerError::unterminated_quote,
-                    TokenizerError::unterminated_subshell,
-                ]
-                .contains(&self.peek_token(0).tok_error)
+            if self.flags.leave_unterminated
+                && matches!(
+                    self.peek_token(0).tok_error,
+                    TokenizerError::UnterminatedQuote | TokenizerError::UnterminatedSubshell
+                )
             {
                 return VisitResult::Continue(());
             }
@@ -2701,7 +2697,7 @@ impl<'s> Populator<'s> {
                 parse_error!(
                     self,
                     self.peek_token(0),
-                    ParseErrorCode::generic,
+                    ParseErrorCode::Generic,
                     "Expected %s, but found %s",
                     keywords_user_presentable_description(allowed_keywords),
                     self.peek_token(0).user_presentable_description(),
@@ -2724,11 +2720,11 @@ impl<'s> Populator<'s> {
         // TODO: it would be nice to have the start offset be the current position in the token
         // stream, even if there are no newlines.
         while self.peek_token(0).is_newline {
-            let r = self.consume_token_type(ParseTokenType::end);
+            let r = self.consume_token_type(ParseTokenType::End);
             if range.length == 0 {
                 range = r;
             } else {
-                range.length = r.start + r.length - range.start
+                range.length = r.start + r.length - range.start;
             }
         }
         nls.range = Some(range);
@@ -2738,15 +2734,15 @@ impl<'s> Populator<'s> {
 /// The status of our parser.
 enum ParserStatus {
     /// Parsing is going just fine, thanks for asking.
-    ok,
+    Ok,
 
     /// We have exhausted the token stream, but the caller was OK with an incomplete parse tree.
     /// All further leaf nodes should have the unsourced flag set.
-    unsourcing,
+    Unsourcing,
 
     /// We encountered an parse error and are "unwinding."
     /// Do not consume any tokens until we get back to a list type which stops unwinding.
-    unwinding,
+    Unwinding,
 }
 
 /// Return tokenizer flags corresponding to parse tree flags.
@@ -2755,14 +2751,14 @@ impl From<ParseTreeFlags> for TokFlags {
         let mut tok_flags = TokFlags(0);
         // Note we do not need to respect parse_flag_show_blank_lines, no clients are interested
         // in them.
-        if flags.contains(ParseTreeFlags::INCLUDE_COMMENTS) {
+        if flags.include_comments {
             tok_flags |= TOK_SHOW_COMMENTS;
         }
-        if flags.contains(ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS) {
+        if flags.accept_incomplete_tokens {
             tok_flags |= TOK_ACCEPT_UNFINISHED;
         }
-        if flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR) {
-            tok_flags |= TOK_CONTINUE_AFTER_ERROR
+        if flags.continue_after_error {
+            tok_flags |= TOK_CONTINUE_AFTER_ERROR;
         }
         tok_flags
     }
@@ -2772,17 +2768,17 @@ impl From<ParseTreeFlags> for TokFlags {
 impl From<TokenType> for ParseTokenType {
     fn from(token_type: TokenType) -> Self {
         match token_type {
-            TokenType::string => ParseTokenType::string,
-            TokenType::pipe => ParseTokenType::pipe,
-            TokenType::andand => ParseTokenType::andand,
-            TokenType::oror => ParseTokenType::oror,
-            TokenType::end => ParseTokenType::end,
-            TokenType::background => ParseTokenType::background,
-            TokenType::left_brace => ParseTokenType::left_brace,
-            TokenType::right_brace => ParseTokenType::right_brace,
-            TokenType::redirect => ParseTokenType::redirection,
-            TokenType::error => ParseTokenType::tokenizer_error,
-            TokenType::comment => ParseTokenType::comment,
+            TokenType::String => ParseTokenType::String,
+            TokenType::Pipe => ParseTokenType::Pipe,
+            TokenType::AndAnd => ParseTokenType::AndAnd,
+            TokenType::OrOr => ParseTokenType::OrOr,
+            TokenType::End => ParseTokenType::End,
+            TokenType::Background => ParseTokenType::Background,
+            TokenType::LeftBrace => ParseTokenType::LeftBrace,
+            TokenType::RightBrace => ParseTokenType::RightBrace,
+            TokenType::Redirect => ParseTokenType::Redirection,
+            TokenType::Error => ParseTokenType::TokenizerError,
+            TokenType::Comment => ParseTokenType::Comment,
         }
     }
 }
@@ -2794,7 +2790,7 @@ fn is_keyword_char(c: char) -> bool {
 /// Given a token, returns unescaped keyword, or the empty string.
 pub(crate) fn unescape_keyword(tok: TokenType, token: &wstr) -> Cow<'_, wstr> {
     /* Only strings can be keywords */
-    if tok != TokenType::string {
+    if tok != TokenType::String {
         return Cow::Borrowed(L!(""));
     }
 
@@ -2809,7 +2805,7 @@ pub(crate) fn unescape_keyword(tok: TokenType, token: &wstr) -> Cow<'_, wstr> {
             return Cow::Borrowed(L!(""));
         }
         // If we encounter a quote, we need expansion.
-        needs_expand = needs_expand || c == '"' || c == '\'' || c == '\\'
+        needs_expand = needs_expand || c == '"' || c == '\'' || c == '\\';
     }
 
     // Expand if necessary.
@@ -2830,15 +2826,15 @@ mod tests {
     use super::{Node, is_same_node};
     use crate::ast;
     use crate::parse_constants::ParseTreeFlags;
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     #[test]
     #[serial]
     fn test_ast_parse() {
-        let _cleanup = test_init();
+        test_init();
         let src = L!("echo");
-        let ast = ast::parse(src, ParseTreeFlags::empty(), None);
+        let ast = ast::parse(src, ParseTreeFlags::default(), None);
         assert!(!ast.any_error);
     }
 
@@ -2875,7 +2871,7 @@ end
     #[test]
     fn test_is_same_node() {
         // is_same_node is pretty subtle! Let's check it.
-        let src = WString::from_str(FISH_FUNC);
+        let src = L!(FISH_FUNC).to_owned();
         let ast = ast::parse(&src, Default::default(), None);
         assert!(!ast.errored());
         let all_nodes: Vec<&dyn Node> = ast.walk().collect();
@@ -2893,12 +2889,12 @@ end
 }
 
 // Run with cargo +nightly bench --features=benchmark
-#[cfg(feature = "benchmark")]
+#[cfg(all(nightly, feature = "benchmark"))]
 #[cfg(test)]
 mod bench {
     extern crate test;
     use crate::ast;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
     use test::Bencher;
 
     // Return a long string suitable for benchmarking.

@@ -1,24 +1,22 @@
 use super::prelude::*;
-use crate::common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle, unescape_string};
-use crate::complete::{CompletionRequestOptions, complete_add_wrapper, complete_remove_wrapper};
-use crate::highlight::colorize;
-use crate::highlight::highlight_shell;
-use crate::nix::isatty;
-use crate::operation_context::OperationContext;
-use crate::parse_constants::ParseErrorList;
-use crate::parse_util::parse_util_detect_errors_in_argument_list;
-use crate::parse_util::{parse_util_detect_errors, parse_util_token_extent};
-use crate::proc::is_interactive_session;
-use crate::reader::{commandline_get_state, completion_apply_to_command_line};
-use crate::wcstringutil::string_suffixes_string;
 use crate::{
-    common::bytes2wcstring,
+    builtins::Error,
     complete::{
-        CompleteFlags, CompleteOptionType, CompletionMode, complete_add, complete_print,
-        complete_remove, complete_remove_all,
+        CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, complete_add,
+        complete_add_wrapper, complete_print, complete_remove, complete_remove_all,
+        complete_remove_wrapper,
     },
+    err_fmt, err_raw, err_str,
+    highlight::highlight_and_colorize,
+    operation_context::OperationContext,
+    parse_constants::ParseErrorList,
+    parse_util::{detect_errors_in_argument_list, detect_parse_errors, get_token_extent},
+    proc::is_interactive_session,
+    reader::{commandline_get_state, completion_apply_to_command_line},
 };
-use libc::STDOUT_FILENO;
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
+use fish_wcstringutil::string_suffixes_string;
+use fish_widestring::bytes2wcstring;
 
 // builtin_complete_* are a set of rather silly looping functions that make sure that all the proper
 // combinations of complete_add or complete_remove get called. This is needed since complete allows
@@ -146,6 +144,7 @@ fn builtin_complete_remove_cmd(
     short_opt: &wstr,
     gnu_opt: &[&wstr],
     old_opt: &[&wstr],
+    wrap_targets: &[WString],
 ) {
     let mut removed = false;
     for s in short_opt.chars() {
@@ -178,6 +177,11 @@ fn builtin_complete_remove_cmd(
         removed = true;
     }
 
+    for wrap_target in wrap_targets {
+        complete_remove_wrapper(cmd.to_owned(), wrap_target);
+        removed = true;
+    }
+
     if !removed {
         // This means that all loops were empty.
         complete_remove_all(cmd.to_owned(), cmd_is_path, /*explicit=*/ true);
@@ -190,28 +194,46 @@ fn builtin_complete_remove(
     short_opt: &wstr,
     gnu_opt: &[&wstr],
     old_opt: &[&wstr],
+    wrap_targets: &[WString],
 ) {
     for cmd in cmds {
-        builtin_complete_remove_cmd(cmd, false /* not path */, short_opt, gnu_opt, old_opt);
+        builtin_complete_remove_cmd(
+            cmd,
+            false, /* not path */
+            short_opt,
+            gnu_opt,
+            old_opt,
+            wrap_targets,
+        );
     }
 
     for path in paths {
-        builtin_complete_remove_cmd(path, true /* is path */, short_opt, gnu_opt, old_opt);
+        builtin_complete_remove_cmd(
+            path,
+            true, /* is path */
+            short_opt,
+            gnu_opt,
+            old_opt,
+            wrap_targets,
+        );
     }
 }
 
-fn builtin_complete_print(cmd: &wstr, streams: &mut IoStreams, parser: &Parser) {
+fn builtin_complete_print(
+    cmd: &wstr,
+    streams: &mut IoStreams,
+    parser: &mut Parser,
+    color: ColorEnabled,
+) {
     let repr = complete_print(cmd);
 
-    // colorize if interactive
-    if !streams.out_is_redirected && isatty(STDOUT_FILENO) {
-        let mut colors = vec![];
-        highlight_shell(&repr, &mut colors, &parser.context(), false, None);
-        streams
-            .out
-            .append(bytes2wcstring(&colorize(&repr, &colors, parser.vars())));
+    if color.enabled(streams) {
+        streams.out.append(&bytes2wcstring(&highlight_and_colorize(
+            &repr,
+            &mut parser.context(),
+        )));
     } else {
-        streams.out.append(repr);
+        streams.out.append(&repr);
     }
 }
 
@@ -220,7 +242,12 @@ const OPT_ESCAPE: char = '\x01';
 
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
 /// complete.rs for any heavy lifting.
-pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+    localizable_consts! {
+        OPTION_REQUIRES_NON_EMPTY_STRING
+        "%s requires a non-empty string"
+    }
+
     let cmd = argv[0];
     let argc = argv.len();
     let mut result_mode = CompletionMode::default();
@@ -238,9 +265,10 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let mut wrap_targets = vec![];
     let mut preserve_order = false;
     let mut unescape_output = true;
+    let mut color = ColorEnabled::default();
 
-    const short_options: &wstr = L!("a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
-    const long_options: &[WOption] = &[
+    let short_options: &wstr = L!("a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
+    let long_options: &[WOption] = &[
         wopt(L!("exclusive"), ArgType::NoArgument, 'x'),
         wopt(L!("no-files"), ArgType::NoArgument, 'f'),
         wopt(L!("force-files"), ArgType::NoArgument, 'F'),
@@ -261,6 +289,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("keep-order"), ArgType::NoArgument, 'k'),
         wopt(L!("escape"), ArgType::NoArgument, OPT_ESCAPE),
+        wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
     ];
 
     let mut have_x = false;
@@ -287,22 +316,11 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 preserve_order = true;
             }
             'p' | 'c' => {
-                if let Some(tmp) = unescape_string(
-                    w.woptarg.unwrap(),
-                    UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
-                ) {
-                    if opt == 'p' {
-                        path.push(tmp);
-                    } else {
-                        cmd_to_complete.push(tmp);
-                    }
+                let v = w.woptarg.unwrap().to_owned();
+                if opt == 'p' {
+                    path.push(v);
                 } else {
-                    streams.err.append(wgettext_fmt!(
-                        "%s: Invalid token '%s'\n",
-                        cmd,
-                        w.woptarg.unwrap()
-                    ));
-                    return Err(STATUS_INVALID_ARGS);
+                    cmd_to_complete.push(v);
                 }
             }
             'd' => {
@@ -318,9 +336,9 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let arg = w.woptarg.unwrap();
                 short_opt.extend(arg.chars());
                 if arg.is_empty() {
-                    streams
-                        .err
-                        .append(wgettext_fmt!("%s: -s requires a non-empty string\n", cmd,));
+                    err_fmt!(OPTION_REQUIRES_NON_EMPTY_STRING, "-s",)
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -328,9 +346,9 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let arg = w.woptarg.unwrap();
                 gnu_opt.push(arg);
                 if arg.is_empty() {
-                    streams
-                        .err
-                        .append(wgettext_fmt!("%s: -l requires a non-empty string\n", cmd,));
+                    err_fmt!(OPTION_REQUIRES_NON_EMPTY_STRING, "-l",)
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -338,9 +356,9 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let arg = w.woptarg.unwrap();
                 old_opt.push(arg);
                 if arg.is_empty() {
-                    streams
-                        .err
-                        .append(wgettext_fmt!("%s: -o requires a non-empty string\n", cmd,));
+                    err_fmt!(OPTION_REQUIRES_NON_EMPTY_STRING, "-o",)
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -369,7 +387,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 return Ok(SUCCESS);
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
+                builtin_missing_argument(parser, streams, cmd, None, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -380,25 +398,30 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
+            COLOR_OPTION_CHAR => {
+                color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
+            }
             _ => panic!("unexpected retval from WGetopter"),
         }
     }
 
     if result_mode.no_files && result_mode.force_files {
         if !have_x {
-            streams.err.append(wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                "complete",
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 "'--no-files' and '--force-files'"
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
         } else {
             // The reason for us not wanting files is `-x`,
             // which is short for `-rf`.
-            streams.err.append(wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                "complete",
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 "'--exclusive' and '--force-files'"
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
         }
         return Err(STATUS_INVALID_ARGS);
     }
@@ -412,44 +435,38 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             // Or use one left-over arg as the command to complete
             cmd_to_complete.push(argv[argc - 1].to_owned());
         } else {
-            streams
-                .err
-                .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!(Error::TOO_MANY_ARGUMENTS)
+                .cmd(cmd)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     }
 
     for condition_string in &condition {
         let mut errors = ParseErrorList::new();
-        if parse_util_detect_errors(condition_string, Some(&mut errors), false).is_err() {
+        if detect_parse_errors(condition_string, Some(&mut errors), false).is_err() {
+            let prefix = WString::from(L!("-n '")) + &condition_string[..] + L!("'");
             for error in errors {
-                let prefix = cmd.to_owned() + L!(": -n '") + &condition_string[..] + L!("': ");
-                streams.err.append(error.describe_with_prefix(
+                err_raw!(&error.describe_with_prefix(
                     condition_string,
                     &prefix,
                     parser.is_interactive(),
                     false,
-                ));
-                streams.err.push('\n');
+                ))
+                .cmd(cmd)
+                .finish(streams);
             }
             return Err(STATUS_CMD_ERROR);
         }
     }
 
     if !comp.is_empty() {
-        let mut prefix = WString::new();
-        prefix.push_utfstr(cmd);
-        prefix.push_str(": ");
-
-        if let Err(err_text) = parse_util_detect_errors_in_argument_list(&comp, &prefix) {
-            streams.err.append(wgettext_fmt!(
-                "%s: %s: contains a syntax error\n",
-                cmd,
-                comp
-            ));
-            streams.err.append(err_text);
-            streams.err.push('\n');
+        if let Err(err_text) = detect_errors_in_argument_list(&comp, cmd) {
+            let mut err = err_fmt!("%s: contains a syntax error", comp);
+            err.append_assign_to_msg('\n');
+            err.append_assign_to_msg(&err_text);
+            err.cmd(cmd).finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
     }
@@ -460,11 +477,10 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             None => {
                 // No argument given, try to use the current commandline.
                 let commandline_state = commandline_get_state(true);
-                if !parser.interactive_initialized.load() && !is_interactive_session() {
-                    streams.err.append(cmd);
-                    streams
-                        .err
-                        .append(L!(": Can not get commandline in non-interactive mode\n"));
+                if !parser.interactive_initialized && !is_interactive_session() {
+                    err_str!("Can not get commandline in non-interactive mode")
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_CMD_ERROR);
                 }
                 commandline_state.text
@@ -472,17 +488,14 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             Some(param) => param,
         };
 
-        let (token, _) = parse_util_token_extent(&do_complete_param, do_complete_param.len());
+        let (token, _) = get_token_extent(&do_complete_param, do_complete_param.len());
 
         // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.
-        let saved_transient = parser
-            .libdata_mut()
+        let _remove_transient = parser
+            .libdata()
             .transient_commandline
-            .replace(do_complete_param.clone());
-        let _remove_transient = ScopeGuard::new((), |()| {
-            parser.libdata_mut().transient_commandline = saved_transient;
-        });
+            .scoped_replace(Some(do_complete_param.clone()));
 
         // Prevent accidental recursion (see #6171).
         if !parser.libdata().builtin_complete_current_commandline {
@@ -493,7 +506,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             let (mut comp, _needs_load) = crate::complete::complete(
                 &do_complete_param,
                 CompletionRequestOptions::normal(),
-                &parser.context(),
+                &mut parser.context(),
             );
 
             // Apply the same sort and deduplication treatment as pager completions
@@ -504,7 +517,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let faux_cmdline = &do_complete_param[token.clone()];
                 let mut tmp_cursor = faux_cmdline.len();
                 let mut faux_cmdline_with_completion = completion_apply_to_command_line(
-                    &OperationContext::background_interruptible(parser.vars()),
+                    &mut OperationContext::background_interruptible(parser.vars()),
                     &next.completion,
                     next.flags,
                     faux_cmdline,
@@ -542,7 +555,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     faux_cmdline_with_completion.push_utfstr(&next.description);
                 }
                 faux_cmdline_with_completion.push('\n');
-                streams.out.append(faux_cmdline_with_completion);
+                streams.out.append(&faux_cmdline_with_completion);
             }
 
             parser.libdata_mut().builtin_complete_current_commandline = false;
@@ -563,10 +576,10 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         // No arguments that would add or remove anything specified, so we print the definitions of
         // all matching completions.
         if cmd_to_complete.is_empty() {
-            builtin_complete_print(L!(""), streams, parser);
+            builtin_complete_print(L!(""), streams, parser, color);
         } else {
             for cmd in cmd_to_complete {
-                builtin_complete_print(&cmd, streams, parser);
+                builtin_complete_print(&cmd, streams, parser, color);
             }
         }
     } else {
@@ -579,7 +592,14 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         }
 
         if remove {
-            builtin_complete_remove(&cmd_to_complete, &path, &short_opt, &gnu_opt, &old_opt);
+            builtin_complete_remove(
+                &cmd_to_complete,
+                &path,
+                &short_opt,
+                &gnu_opt,
+                &old_opt,
+                &wrap_targets,
+            );
         } else {
             builtin_complete_add(
                 &cmd_to_complete,
@@ -593,14 +613,9 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 &desc,
                 flags,
             );
-        }
-
-        // Handle wrap targets (probably empty). We only wrap commands, not paths.
-        for wrap_target in wrap_targets {
-            for i in &cmd_to_complete {
-                if remove {
-                    complete_remove_wrapper(i.clone(), &wrap_target);
-                } else {
+            // Handle wrap targets (probably empty). We only wrap commands, not paths.
+            for wrap_target in wrap_targets {
+                for i in &cmd_to_complete {
                     complete_add_wrapper(i.clone(), wrap_target.clone());
                 }
             }

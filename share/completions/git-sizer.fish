@@ -5,9 +5,9 @@ complete -f -c git-sizer -s v -l verbose -d "Report all statistics"
 complete -x -c git-sizer -l threshold -d "Minimum level of concern"
 complete -f -c git-sizer -l critical -d "Only report critical statistics"
 complete -x -c git-sizer -l names -d "How to display names of large objects" -a "
-	none\t'Omit footnotes entirely'
-	hash\t'Only show SHA-1s'
-	full\t'Show full names'
+    none\t'Omit footnotes entirely'
+    hash\t'Only show SHA-1s'
+    full\t'Show full names'
 "
 complete -f -c git-sizer -s j -l json -d "Output results in JSON format"
 complete -x -c git-sizer -l json-version -d "JSON format version to use" -a "1 2"

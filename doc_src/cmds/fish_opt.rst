@@ -72,7 +72,7 @@ Same as above but the value of the second flag cannot be the empty string:
 ::
 
     set -l options (fish_opt -s h -l help)
-    set options $options (fish_opt -s m -l max -rv test \$_flag_valu != "''")
+    set options $options (fish_opt -s m -l max -rv test \$_flag_value != "''")
     argparse $options -- $argv
 
 Same as above but with a third flag that can be given multiple times saving the value of each instance seen and only a long flag name (``--token``) is defined:
@@ -82,7 +82,7 @@ Same as above but with a third flag that can be given multiple times saving the 
 ::
 
     set -l options (fish_opt --short=h --long=help)
-    set options $options (fish_opt --short=m --long=max --required-val --validate test \$_flag_valu != "''")
+    set options $options (fish_opt --short=m --long=max --required-val --validate test \$_flag_value != "''")
     set options $options (fish_opt --long=token --multiple-vals)
     argparse $options -- $argv
 

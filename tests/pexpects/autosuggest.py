@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from pexpect_helper import SpawnedProc
-import os
+from pexpect_helper import SpawnedProc, control
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt = (
@@ -12,8 +11,6 @@ send, sendline, sleep, expect_prompt = (
 
 
 def use_suggestion(*, delay=0.1):
-    if "FISH_CI_SAN" in os.environ:
-        delay *= 5
     sleep(delay)
     send("\033[C")
     sendline("")
@@ -75,3 +72,19 @@ run("mkdir problems")
 send("cd pro")
 use_suggestion(delay=0.5)
 expect_prompt(">cd problems/\r\n")
+
+send(control("c"))
+run("touch configure && chmod +x configure")
+run("echo clean &&\n./configure")
+run("rm configure")
+send("./con")
+use_suggestion()
+expect_prompt(">./con\r\n")
+
+send(control("c"))
+run("touch somecommand")
+run("chmod +x somecommand")
+run('echo "multiline-token\n./somecommand arg1 arg2"')
+send("./some")
+use_suggestion()
+expect_prompt(">./somecommand \r\n")

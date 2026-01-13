@@ -1,18 +1,22 @@
 ### Command-not-found handlers
 # This can be overridden by defining a new fish_command_not_found function
 
+function fish_command_not_found
+    __fish_default_command_not_found_handler $argv
+end
+
+if not status is-interactive
+    exit
+end
+
 # Read the OS/Distro from /etc/os-release.
 # This has a "ID=" line that defines the exact distribution,
 # and an "ID_LIKE=" line that defines what it is derived from or otherwise like.
 # For our purposes, we use both.
 set -l os
 if test -r /etc/os-release
-    set os (string match -r '^ID(?:_LIKE)?\s*=.*' < /etc/os-release | \
-    string replace -r '^ID(?:_LIKE)?\s*=(.*)' '$1' | string trim -c '\'"' | string split " ")
-end
-
-function __fish_default_command_not_found_handler
-    printf (_ "fish: Unknown command: %s\n") (string escape -- $argv[1]) >&2
+    set os (string replace -rf '^ID(?:_LIKE)?\s*=(.*)' '$1' < /etc/os-release |
+        string trim -c '\'"' | string split " ")
 end
 
 # If an old handler already exists, defer to that.
@@ -73,9 +77,4 @@ else if type -q pkgfile
     #         __fish_default_command_not_found_handler $argv[1]
     #         pacman -F $paths
     #     end
-else
-    # Use standard fish command not found handler otherwise
-    function fish_command_not_found --on-event fish_command_not_found
-        __fish_default_command_not_found_handler $argv
-    end
 end

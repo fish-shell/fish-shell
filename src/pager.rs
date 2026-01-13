@@ -1,19 +1,21 @@
 //! Pager support.
 
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
-
-use crate::common::{
-    EscapeFlags, EscapeStringStyle, escape_string, get_ellipsis_char, get_ellipsis_str,
+use crate::{
+    complete::{CompleteFlags, Completion},
+    editable_line::EditableLine,
+    highlight::{HighlightRole, HighlightSpec, highlight_shell},
+    operation_context::OperationContext,
+    prelude::*,
+    screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered},
+    termsize::Termsize,
 };
-use crate::complete::Completion;
-use crate::editable_line::EditableLine;
-use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
-use crate::operation_context::OperationContext;
-use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
-use crate::termsize::Termsize;
-use crate::wchar::prelude::*;
-use crate::wcstringutil::string_fuzzy_match_string;
+use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
+use fish_wcstringutil::string_fuzzy_match_string;
+use fish_widestring::{ELLIPSIS_CHAR, decoded_width};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, hash_map::Entry},
+};
 
 /// Represents rendering from the pager.
 #[derive(Default)]
@@ -79,7 +81,7 @@ const PAGER_SEARCH_FIELD_WIDTH: usize = 12;
 localizable_consts!(
     /// Text we use for the search field.
     SEARCH_FIELD_PROMPT
-    "search: "
+    "search:"
 );
 
 const PAGER_SELECTION_NONE: usize = usize::MAX;
@@ -108,7 +110,7 @@ pub struct Pager {
     // then we definitely need to re-render.
     have_unrendered_completions: bool,
 
-    prefix: WString,
+    prefix: Cow<'static, wstr>,
     highlight_prefix: bool,
 
     // The text of the search field.
@@ -116,6 +118,12 @@ pub struct Pager {
 
     // Extra text to display at the bottom of the pager.
     pub extra_progress_text: WString,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct Column {
+    width: usize,
+    desc_align: usize,
 }
 
 impl Pager {
@@ -155,15 +163,13 @@ impl Pager {
     /// the specified number of columns. Always succeeds if cols is 1.
     fn completion_try_print(
         &self,
-        cols: usize,
+        col_count: usize,
         prefix: &wstr,
         lst: &[PagerComp],
         rendering: &mut PageRendering,
         suggested_start_row: usize,
     ) -> bool {
-        assert!(cols > 0);
-        // The calculated preferred width of each column.
-        let mut width_by_column = [0; PAGER_MAX_COLS];
+        assert!(col_count > 0);
 
         // Skip completions on tiny terminals.
         if self.available_term_width < PAGER_MIN_WIDTH
@@ -189,7 +195,7 @@ impl Pager {
             );
         }
 
-        let row_count = divide_round_up(lst.len(), cols);
+        let row_count = divide_round_up(lst.len(), col_count);
 
         // We have more to disclose if we are not fully disclosed and there's more rows than we have in
         // our term height.
@@ -207,28 +213,32 @@ impl Pager {
         }
 
         // Calculate how wide the list would be.
-        for (col, col_width) in width_by_column.iter_mut().enumerate() {
+        let mut cols = [Column::default(); PAGER_MAX_COLS];
+        for (col_idx, col) in cols.iter_mut().enumerate() {
+            let mut max_comp = 0;
+            let mut max_desc = 0;
             for row in 0..row_count {
-                let comp_idx = col * row_count + row;
+                let comp_idx = col_idx * row_count + row;
                 if comp_idx >= lst.len() {
                     continue;
                 }
                 let c = &lst[comp_idx];
-                *col_width = std::cmp::max(*col_width, c.preferred_width());
+                max_comp = max_comp.max(c.comp_width);
+                max_desc = max_desc.max(c.description_punctuated_width());
             }
+            *col = Column {
+                // Force-fit to term width, useful when one column.
+                width: (max_comp + max_desc).min(term_width),
+                desc_align: max_comp + 2,
+            };
         }
+        let cols = cols; // rm mut
 
-        let print = if cols == 1 {
-            // Force fit if one column.
-            width_by_column[0] = std::cmp::min(width_by_column[0], term_width);
-            true
-        } else {
-            // Compute total preferred width, plus spacing
-            let mut total_width_needed: usize = width_by_column.iter().sum();
-            total_width_needed += (cols - 1) * PAGER_SPACER_STRING.len();
-            total_width_needed <= term_width
-        };
-        if !print {
+        // Compute total preferred width, plus spacing
+        let total_width_needed = cols.iter().map(|c| c.width).sum::<usize>()
+            + (col_count - 1) * PAGER_SPACER_STRING.len();
+        if term_width < total_width_needed {
+            assert!(col_count > 1, "single col force-fit to termwidth above");
             return false; // no need to continue
         }
 
@@ -254,13 +264,7 @@ impl Pager {
         assert!(stop_row - start_row <= term_height);
         // This always printed at the end of the command line.
         self.completion_print(
-            cols,
-            &width_by_column,
-            start_row,
-            stop_row,
-            prefix,
-            lst,
-            rendering,
+            col_count, &cols, start_row, stop_row, prefix, lst, rendering,
         );
 
         // Add the progress line. It's a "more to disclose" line if necessary, or a row listing if
@@ -269,11 +273,7 @@ impl Pager {
         let mut progress_text = WString::new();
         assert_ne!(rendering.remaining_to_disclose, 1);
         if rendering.remaining_to_disclose > 1 {
-            progress_text = wgettext_fmt!(
-                "%sand %u more rows",
-                get_ellipsis_str(),
-                rendering.remaining_to_disclose
-            );
+            progress_text = wgettext_fmt!("…and %u more rows", rendering.remaining_to_disclose);
         } else if start_row > 0 || stop_row < row_count {
             // We have a scrollable interface. The +1 here is because we are zero indexed, but want
             // to present things as 1-indexed. We do not add 1 to stop_row or row_count because
@@ -293,10 +293,10 @@ impl Pager {
 
         if !progress_text.is_empty() {
             let line = rendering.screen_data.add_line();
-            let spec = HighlightSpec::with_both(HighlightRole::pager_progress);
+            let spec = HighlightSpec::with_both(HighlightRole::PagerProgress);
             print_max(
                 CharOffset::None,
-                &progress_text,
+                progress_text.chars(),
                 spec,
                 term_width,
                 /*has_more=*/ true,
@@ -326,7 +326,7 @@ impl Pager {
         let mut search_field_remaining = term_width - 1;
         search_field_remaining -= print_max(
             CharOffset::None,
-            wgettext!(SEARCH_FIELD_PROMPT),
+            wgettext!(SEARCH_FIELD_PROMPT).chars().chain(" ".chars()),
             HighlightSpec::new(),
             search_field_remaining,
             false,
@@ -334,7 +334,7 @@ impl Pager {
         );
         search_field_remaining -= print_max(
             CharOffset::None,
-            &search_field_text,
+            search_field_text.chars(),
             underline,
             search_field_remaining,
             false,
@@ -349,21 +349,25 @@ impl Pager {
         for comp in &mut self.unfiltered_completion_infos {
             let comp_strings = &mut comp.comp;
 
+            let show_prefix = !comp
+                .representative
+                .flags
+                .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX);
+
             for (j, comp_string) in comp_strings.iter().enumerate() {
                 // If there's more than one, append the length of ', '.
                 if j >= 1 {
                     comp.comp_width += 2;
                 }
 
-                // This can return -1 if it can't calculate the width. So be cautious.
-                let comp_width = wcswidth_rendered(comp_string);
-                comp.comp_width += usize::try_from(prefix_len).unwrap_or_default();
-                comp.comp_width += usize::try_from(comp_width).unwrap_or_default();
+                if show_prefix {
+                    comp.comp_width += prefix_len;
+                }
+                comp.comp_width += wcswidth_rendered(comp_string);
             }
 
             // This can return -1 if it can't calculate the width. So be cautious.
-            let desc_width = wcswidth_rendered(&comp.desc);
-            comp.desc_width = usize::try_from(desc_width).unwrap_or_default();
+            comp.desc_width = wcswidth_rendered(&comp.desc);
         }
     }
 
@@ -383,8 +387,12 @@ impl Pager {
 
         // Match against the completion strings.
         for candidate in &info.comp {
-            if string_fuzzy_match_string(needle, &(self.prefix.clone() + &candidate[..]), false)
-                .is_some()
+            if string_fuzzy_match_string(
+                needle,
+                &(self.prefix.clone().into_owned() + &candidate[..]),
+                false,
+            )
+            .is_some()
             {
                 return true;
             }
@@ -395,8 +403,8 @@ impl Pager {
     /// Print the specified part of the completion list, using the specified column offsets and quoting
     /// style.
     ///
-    /// \param cols number of columns to print in
-    /// \param width_by_column An array specifying the width of each column
+    /// \param col_count number of columns to print in
+    /// \param cols An array specifying properties of each column
     /// \param row_start The first row to print
     /// \param row_stop the row after the last row to print
     /// \param prefix The string to print before each completion
@@ -404,8 +412,8 @@ impl Pager {
     #[allow(clippy::too_many_arguments)]
     fn completion_print(
         &self,
-        cols: usize,
-        width_by_column: &[usize; PAGER_MAX_COLS],
+        col_count: usize,
+        cols: &[Column; PAGER_MAX_COLS],
         row_start: usize,
         row_stop: usize,
         prefix: &wstr,
@@ -417,13 +425,13 @@ impl Pager {
         rendering.row_start = row_start;
         rendering.row_end = row_stop;
 
-        let rows = divide_round_up(lst.len(), cols);
+        let rows = divide_round_up(lst.len(), col_count);
 
-        let effective_selected_idx = self.visual_selected_completion_index(rows, cols);
+        let effective_selected_idx = self.visual_selected_completion_index(rows, col_count);
 
         for row in row_start..row_stop {
-            for (col, col_width) in width_by_column.iter().cloned().enumerate() {
-                let idx = col * rows + row;
+            for (col_idx, col) in cols.iter().copied().enumerate() {
+                let idx = col_idx * rows + row;
                 if lst.len() <= idx {
                     continue;
                 }
@@ -432,17 +440,21 @@ impl Pager {
                 let is_selected = Some(idx) == effective_selected_idx;
 
                 // Print this completion on its own "line".
+                let show_prefix = !el
+                    .representative
+                    .flags
+                    .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX);
                 let mut line = self.completion_print_item(
                     CharOffset::Pager(idx),
-                    prefix,
+                    show_prefix.then_some(prefix),
                     el,
-                    col_width,
+                    col,
                     row % 2 != 0,
                     is_selected,
                 );
 
                 // If there's more to come, append two spaces.
-                if col + 1 < cols {
+                if col_idx + 1 < col_count {
                     line.append_str(PAGER_SPACER_STRING, HighlightSpec::new(), CharOffset::None);
                 }
 
@@ -459,63 +471,63 @@ impl Pager {
     fn completion_print_item(
         &self,
         offset_in_cmdline: CharOffset,
-        prefix: &wstr,
+        prefix: Option<&wstr>,
         c: &PagerComp,
-        width: usize,
+        col: Column,
         secondary: bool,
         selected: bool,
     ) -> Line {
         let mut comp_width;
         let mut line_data = Line::new();
 
-        if c.preferred_width() <= width {
+        if c.preferred_width() <= col.width {
             // The entry fits, we give it as much space as it wants.
             comp_width = c.comp_width;
         } else {
             // The completion and description won't fit on the allocated space. Give a maximum of 2/3 of
             // the space to the completion, and whatever is left to the description
-            // This expression is an overflow-safe way of calculating (width-4)*2/3
-            let width_minus_spacer = width.saturating_sub(4);
+            // This expression is an overflow-safe way of calculating (col.width-4)*2/3
+            let width_minus_spacer = col.width.saturating_sub(4);
             let two_thirds_width =
                 (width_minus_spacer / 3) * 2 + ((width_minus_spacer % 3) * 2) / 3;
             comp_width = std::cmp::min(c.comp_width, two_thirds_width);
 
             // If the description is short, give the completion the remaining space
             let desc_punct_width = c.description_punctuated_width();
-            if width > desc_punct_width {
-                comp_width = std::cmp::max(comp_width, width - desc_punct_width);
+            if col.width > desc_punct_width {
+                comp_width = std::cmp::max(comp_width, col.width - desc_punct_width);
             }
 
             // The description gets what's left
-            assert!(comp_width <= width);
+            assert!(comp_width <= col.width);
         }
 
         let modify_role = |role: HighlightRole| {
             let mut base = role as u8;
             if selected {
-                base += HighlightRole::pager_selected_background as u8
-                    - HighlightRole::pager_background as u8;
+                base += HighlightRole::PagerSelectedBackground as u8
+                    - HighlightRole::PagerBackground as u8;
             } else if secondary {
-                base += HighlightRole::pager_secondary_background as u8
-                    - HighlightRole::pager_background as u8;
+                base += HighlightRole::PagerSecondaryBackground as u8
+                    - HighlightRole::PagerBackground as u8;
             }
             unsafe { std::mem::transmute(base) }
         };
 
-        let bg_role = modify_role(HighlightRole::pager_background);
+        let bg_role = modify_role(HighlightRole::PagerBackground);
         let bg = HighlightSpec::with_bg(bg_role);
         let prefix_col = HighlightSpec::with_fg_bg(
             modify_role(if self.highlight_prefix {
-                HighlightRole::pager_prefix
+                HighlightRole::PagerPrefix
             } else {
-                HighlightRole::pager_completion
+                HighlightRole::PagerCompletion
             }),
             bg_role,
         );
         let comp_col =
-            HighlightSpec::with_fg_bg(modify_role(HighlightRole::pager_completion), bg_role);
+            HighlightSpec::with_fg_bg(modify_role(HighlightRole::PagerCompletion), bg_role);
         let desc_col =
-            HighlightSpec::with_fg_bg(modify_role(HighlightRole::pager_description), bg_role);
+            HighlightSpec::with_fg_bg(modify_role(HighlightRole::PagerDescription), bg_role);
 
         // Print the completion part
         let mut comp_remaining = comp_width;
@@ -523,7 +535,7 @@ impl Pager {
             if i > 0 {
                 comp_remaining -= print_max(
                     offset_in_cmdline,
-                    PAGER_SPACER_STRING,
+                    PAGER_SPACER_STRING.chars(),
                     bg,
                     comp_remaining,
                     /*has_more=*/ true,
@@ -531,17 +543,19 @@ impl Pager {
                 );
             }
 
-            comp_remaining -= print_max(
-                offset_in_cmdline,
-                prefix,
-                prefix_col,
-                comp_remaining,
-                !comp.is_empty(),
-                &mut line_data,
-            );
+            if let Some(prefix) = prefix {
+                comp_remaining -= print_max(
+                    offset_in_cmdline,
+                    prefix.chars(),
+                    prefix_col,
+                    comp_remaining,
+                    !comp.is_empty(),
+                    &mut line_data,
+                );
+            }
             comp_remaining -= print_max_impl(
                 offset_in_cmdline,
-                comp,
+                comp.chars(),
                 |i| {
                     if c.colors.is_empty() {
                         return comp_col; // Not a shell command.
@@ -558,30 +572,48 @@ impl Pager {
             );
         }
 
-        let mut desc_remaining = width - comp_width + comp_remaining;
+        let mut desc_remaining = col.width - comp_width + comp_remaining;
         if c.desc_width > 0 && desc_remaining > 4 {
             // always have at least two spaces to separate completion and description
-            desc_remaining -= print_max(offset_in_cmdline, L!("  "), bg, 2, false, &mut line_data);
+            desc_remaining -= print_max(
+                offset_in_cmdline,
+                "  ".chars(),
+                bg,
+                desc_remaining,
+                false,
+                &mut line_data,
+            );
 
-            // right-justify the description by adding spaces
-            // the 2 here refers to the parenthesis below
-            while desc_remaining > c.desc_width + 2 {
-                desc_remaining -=
-                    print_max(offset_in_cmdline, L!(" "), bg, 1, false, &mut line_data);
-            }
+            desc_remaining -= print_max(
+                offset_in_cmdline,
+                std::iter::repeat_n(
+                    ' ',
+                    desc_remaining.saturating_sub(std::cmp::max(
+                        // try to align descriptions by adding spaces.
+                        col.width.saturating_sub(col.desc_align),
+                        // if too wide: make sure it fits and ignore alignment.
+                        // the 2 here refers to the parenthesis below
+                        c.desc_width + 2,
+                    )),
+                ),
+                bg,
+                desc_remaining,
+                false,
+                &mut line_data,
+            );
 
             assert!(desc_remaining >= 2);
             let paren_col = HighlightSpec::with_fg_bg(
                 if selected {
-                    HighlightRole::pager_selected_completion
+                    HighlightRole::PagerSelectedCompletion
                 } else {
-                    HighlightRole::pager_completion
+                    HighlightRole::PagerCompletion
                 },
                 bg_role,
             );
             desc_remaining -= print_max(
                 offset_in_cmdline,
-                L!("("),
+                "(".chars(),
                 paren_col,
                 1,
                 false,
@@ -589,7 +621,7 @@ impl Pager {
             );
             desc_remaining -= print_max(
                 offset_in_cmdline,
-                &c.desc,
+                c.desc.chars(),
                 desc_col,
                 desc_remaining - 1,
                 false,
@@ -597,9 +629,18 @@ impl Pager {
             );
             desc_remaining -= print_max(
                 offset_in_cmdline,
-                L!(")"),
+                ")".chars(),
                 paren_col,
                 1,
+                false,
+                &mut line_data,
+            );
+            // make sure next column is aligned
+            print_max(
+                offset_in_cmdline,
+                std::iter::repeat_n(' ', desc_remaining),
+                bg,
+                desc_remaining,
                 false,
                 &mut line_data,
             );
@@ -608,7 +649,7 @@ impl Pager {
             // No description, or it won't fit. Just add spaces.
             print_max(
                 offset_in_cmdline,
-                &WString::from_iter(std::iter::repeat_n(' ', desc_remaining)),
+                std::iter::repeat_n(' ', desc_remaining),
                 bg,
                 desc_remaining,
                 false,
@@ -626,7 +667,7 @@ impl Pager {
         self.unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
         // Maybe join them.
-        if self.prefix == "-" {
+        if *self.prefix == "-" {
             join_completions(&mut self.unfiltered_completion_infos);
         }
 
@@ -643,8 +684,8 @@ impl Pager {
     }
 
     // Sets the prefix.
-    pub fn set_prefix(&mut self, pref: &wstr, highlight: bool /* = true */) {
-        self.prefix = pref.to_owned();
+    pub fn set_prefix(&mut self, prefix: Cow<'static, wstr>, highlight: bool /* = true */) {
+        self.prefix = prefix;
         self.highlight_prefix = highlight;
     }
 
@@ -671,10 +712,10 @@ impl Pager {
                 // Handle the case of nothing selected yet.
                 match direction {
                     SelectionMotion::South | SelectionMotion::PageSouth | SelectionMotion::Next => {
-                        self.selected_completion_idx = Some(0)
+                        self.selected_completion_idx = Some(0);
                     }
                     SelectionMotion::North | SelectionMotion::Prev => {
-                        self.selected_completion_idx = Some(self.completion_infos.len() - 1)
+                        self.selected_completion_idx = Some(self.completion_infos.len() - 1);
                     }
                     SelectionMotion::East
                     | SelectionMotion::West
@@ -893,7 +934,7 @@ impl Pager {
     pub fn get_selected_row_given_rows(&self, rows: usize) -> Option<usize> {
         if rows == 0 {
             return None;
-        };
+        }
 
         self.selected_completion_idx.map(|idx| idx % rows)
     }
@@ -955,14 +996,14 @@ impl Pager {
         }
 
         (self.is_empty() && !rendering.screen_data.is_empty()) ||    // Do update after clear().
-           rendering.term_width != Some(self.available_term_width) ||
-           rendering.term_height != Some(self.available_term_height) ||
-           rendering.selected_completion_idx !=
-               self.visual_selected_completion_index(rendering.rows, rendering.cols) ||
-           rendering.search_field_shown != self.search_field_shown ||
-           *rendering.search_field_line.text() != *self.search_field_line.text() ||
-           rendering.search_field_line.position() != self.search_field_line.position() ||
-           (rendering.remaining_to_disclose > 0 && self.fully_disclosed)
+            rendering.term_width != Some(self.available_term_width) ||
+            rendering.term_height != Some(self.available_term_height) ||
+            rendering.selected_completion_idx !=
+                self.visual_selected_completion_index(rendering.rows, rendering.cols) ||
+            rendering.search_field_shown != self.search_field_shown ||
+            *rendering.search_field_line.text() != *self.search_field_line.text() ||
+            rendering.search_field_line.position() != self.search_field_line.position() ||
+            (rendering.remaining_to_disclose > 0 && self.fully_disclosed)
     }
 
     // Updates the rendering.
@@ -982,7 +1023,7 @@ impl Pager {
     pub fn clear(&mut self) {
         self.unfiltered_completion_infos.clear();
         self.completion_infos.clear();
-        self.prefix.clear();
+        self.prefix = Cow::Borrowed(L!(""));
         self.highlight_prefix = false;
         self.selected_completion_idx = None;
         self.fully_disclosed = false;
@@ -1025,7 +1066,11 @@ impl Pager {
 
     // Position of the cursor.
     pub fn cursor_position(&self) -> usize {
-        let mut result = wgettext!(SEARCH_FIELD_PROMPT).len() + self.search_field_line.position();
+        let mut result = decoded_width(&sprintf!(
+            "%s %s",
+            wgettext!(SEARCH_FIELD_PROMPT),
+            self.search_field_line.text()
+        ));
         // Clamp it to the right edge.
         if self.available_term_width > 0 && result + 1 > self.available_term_width {
             result = self.available_term_width - 1;
@@ -1084,31 +1129,32 @@ fn divide_round_up(numer: usize, denom: usize) -> usize {
     if numer == 0 {
         return 0;
     }
-    assert!(denom != 0);
+    assert_ne!(denom, 0);
     let has_rem = (numer % denom) != 0;
     numer / denom + if has_rem { 1 } else { 0 }
 }
 
-/// Print the specified string, but use at most the specified amount of space. If the whole string
-/// can't be fitted, ellipsize it.
+/// Print the specified characters, but use at most the specified amount of space. If the whole
+/// string can't be fitted, ellipsize it.
 ///
-/// \param str the string to print
+/// \param chars characters to print
 /// \param color the color to apply to every printed character
 /// \param max the maximum space that may be used for printing
 /// \param has_more if this flag is true, this is not the entire string, and the string should be
 /// ellipsized even if the string fits but takes up the whole space.
 fn print_max_impl(
     offset_in_cmdline: CharOffset,
-    s: &wstr,
+    chars: impl IntoIterator<Item = char>,
     color: impl Fn(usize) -> HighlightSpec,
     max: usize,
     has_more: bool,
     line: &mut Line,
 ) -> usize {
+    let mut chars = chars.into_iter().peekable();
     let mut remaining = max;
-    for (i, c) in s.chars().enumerate() {
-        let iwidth_c = wcwidth_rendered(c);
-        let Ok(width_c) = usize::try_from(iwidth_c) else {
+    let mut i = 0;
+    while let Some(c) = chars.next() {
+        let Some(width_c) = wcwidth_rendered(c) else {
             // skip non-printable characters
             continue;
         };
@@ -1117,16 +1163,17 @@ fn print_max_impl(
             break;
         }
 
-        let ellipsis = get_ellipsis_char();
-        if (width_c == remaining) && (has_more || i + 1 < s.len()) {
+        let ellipsis = ELLIPSIS_CHAR;
+        if (width_c == remaining) && (has_more || chars.peek().is_some()) {
             line.append(ellipsis, color(i), offset_in_cmdline);
-            let ellipsis_width = wcwidth_rendered(ellipsis);
-            remaining = remaining.saturating_sub(usize::try_from(ellipsis_width).unwrap());
+            remaining = remaining.saturating_sub(wcwidth_rendered(ellipsis).unwrap());
             break;
         }
 
         line.append(c, color(i), offset_in_cmdline);
         remaining = remaining.checked_sub(width_c).unwrap();
+
+        i += 1;
     }
 
     // return how much we consumed
@@ -1135,13 +1182,13 @@ fn print_max_impl(
 
 fn print_max(
     offset_in_cmdline: CharOffset,
-    s: &wstr,
+    chars: impl IntoIterator<Item = char>,
     color: HighlightSpec,
     max: usize,
     has_more: bool,
     line: &mut Line,
 ) -> usize {
-    print_max_impl(offset_in_cmdline, s, |_| color, max, has_more, line)
+    print_max_impl(offset_in_cmdline, chars, |_| color, max, has_more, line)
 }
 
 /// Trim leading and trailing whitespace, and compress other whitespace runs into a single space.
@@ -1244,7 +1291,7 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
             highlight_shell(
                 &comp.completion,
                 &mut comp_info.colors,
-                &OperationContext::empty(),
+                &mut OperationContext::empty(),
                 false,
                 None,
             );
@@ -1264,18 +1311,18 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
 #[cfg(test)]
 mod tests {
     use super::{Pager, SelectionMotion};
-    use crate::common::get_ellipsis_char;
     use crate::complete::{CompleteFlags, Completion};
+    use crate::prelude::*;
     use crate::termsize::Termsize;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
-    use crate::wcstringutil::StringFuzzyMatch;
+    use fish_wcstringutil::StringFuzzyMatch;
+    use std::borrow::Cow;
     use std::num::NonZeroU16;
 
     #[test]
     #[serial]
     fn test_pager_navigation() {
-        let _cleanup = test_init();
+        test_init();
         // Generate 19 strings of width 10. There's 2 spaces between completions, and our term size is
         // 80; these can therefore fit into 6 columns (6 * 12 - 2 = 70) or 5 columns (58) but not 7
         // columns (7 * 12 - 2 = 82).
@@ -1365,52 +1412,50 @@ mod tests {
     #[test]
     #[serial]
     fn test_pager_layout() {
-        let _cleanup = test_init();
+        test_init();
         // These tests are woefully incomplete
-        // They only test the truncation logic for a single completion
 
-        let rendered_line = |pager: &mut Pager, width: u16| {
+        let rendered_lines = |pager: &mut Pager, width: u16| {
             pager.set_term_size(&Termsize::new(
                 NonZeroU16::new(width).unwrap(),
                 Termsize::DEFAULT_HEIGHT,
             ));
             let rendering = pager.render();
             let sd = &rendering.screen_data;
-            assert_eq!(sd.line_count(), 1);
-            let line = sd.line(0);
-            WString::from(Vec::from_iter((0..line.len()).map(|i| line.char_at(i))))
-        };
-        let compute_expected = |expected: &wstr| {
-            let ellipsis_char = get_ellipsis_char();
-            if ellipsis_char != '\u{2026}' {
-                // hack: handle the case where ellipsis is not L'\x2026'
-                expected.replace(L!("\u{2026}"), wstr::from_char_slice(&[ellipsis_char]))
-            } else {
-                expected.to_owned()
-            }
+            (0..sd.line_count())
+                .map(|i| sd.line(i))
+                .map(|line| WString::from(Vec::from_iter((0..line.len()).map(|i| line.char_at(i)))))
+                .collect::<Vec<_>>()
         };
 
         macro_rules! validate {
-            ($pager:expr, $width:expr, $expected:expr) => {
+            ($pager:expr, $width:expr, $($expected:expr),* $(,)?) => {
                 assert_eq!(
-                    rendered_line($pager, $width),
-                    compute_expected($expected),
+                    rendered_lines($pager, $width),
+                    &[$(WString::from($expected)),*],
                     "width {}",
                     $width
                 );
             };
         }
 
+        let completions = |cs: &[(&str, &str)]| {
+            cs.iter()
+                .map(|(c, d)| {
+                    Completion::new(
+                        WString::from(*c),
+                        WString::from(*d),
+                        StringFuzzyMatch::exact_match(),
+                        CompleteFlags::default(),
+                    )
+                })
+                .collect::<Vec<_>>()
+        };
+
         let mut pager = Pager::default();
 
         // These test cases have equal completions and descriptions
-        let c1s = vec![Completion::new(
-            L!("abcdefghij").to_owned(),
-            L!("1234567890").to_owned(),
-            StringFuzzyMatch::exact_match(),
-            CompleteFlags::default(),
-        )];
-        pager.set_completions(&c1s, true);
+        pager.set_completions(&completions(&[("abcdefghij", "1234567890")]), true);
 
         validate!(&mut pager, 26, L!("abcdefghij  (1234567890)"));
         validate!(&mut pager, 25, L!("abcdefghij  (1234567890)"));
@@ -1425,13 +1470,7 @@ mod tests {
         validate!(&mut pager, 16, L!("abcdefg…  (123…)"));
 
         // These test cases have heavyweight completions
-        let c2s = vec![Completion::new(
-            L!("abcdefghijklmnopqrs").to_owned(),
-            L!("1").to_owned(),
-            StringFuzzyMatch::exact_match(),
-            CompleteFlags::default(),
-        )];
-        pager.set_completions(&c2s, true);
+        pager.set_completions(&completions(&[("abcdefghijklmnopqrs", "1")]), true);
         validate!(&mut pager, 26, L!("abcdefghijklmnopqrs  (1)"));
         validate!(&mut pager, 25, L!("abcdefghijklmnopqrs  (1)"));
         validate!(&mut pager, 24, L!("abcdefghijklmnopqrs  (1)"));
@@ -1445,13 +1484,7 @@ mod tests {
         validate!(&mut pager, 16, L!("abcdefghij…  (1)"));
 
         // These test cases have no descriptions
-        let c3s = vec![Completion::new(
-            L!("abcdefghijklmnopqrst").to_owned(),
-            L!("").to_owned(),
-            StringFuzzyMatch::exact_match(),
-            CompleteFlags::default(),
-        )];
-        pager.set_completions(&c3s, true);
+        pager.set_completions(&completions(&[("abcdefghijklmnopqrst", "")]), true);
         validate!(&mut pager, 26, L!("abcdefghijklmnopqrst"));
         validate!(&mut pager, 25, L!("abcdefghijklmnopqrst"));
         validate!(&mut pager, 24, L!("abcdefghijklmnopqrst"));
@@ -1464,15 +1497,164 @@ mod tests {
         validate!(&mut pager, 17, L!("abcdefghijklmnop…"));
         validate!(&mut pager, 16, L!("abcdefghijklmno…"));
 
+        // Multiple completions, uneven comp, even desc
+        pager.set_completions(
+            &completions(&[
+                ("coverity_scan_master", "Local Branch"),
+                ("curly-underlines", "Local Branch"),
+                ("docker-builds", "Local Branch"),
+                ("fish-reenable-cirrus", "Local Branch"),
+                ("macos-apropos", "Local Branch"),
+                ("master", "Local Branch"),
+            ]),
+            true,
+        );
+        validate!(
+            &mut pager,
+            80,
+            "coverity_scan_master  (Local Branch)  fish-reenable-cirrus  (Local Branch)",
+            "curly-underlines      (Local Branch)  macos-apropos         (Local Branch)",
+            "docker-builds         (Local Branch)  master                (Local Branch)",
+        );
+        validate!(
+            &mut pager,
+            40,
+            "coverity_scan_master  (Local Branch)",
+            "curly-underlines      (Local Branch)",
+            "docker-builds         (Local Branch)",
+            "fish-reenable-cirrus  (Local Branch)",
+            "macos-apropos         (Local Branch)",
+            "master                (Local Branch)",
+        );
+        validate!(
+            &mut pager,
+            20,
+            "coverity_…  (Local…)",
+            "curly-und…  (Local…)",
+            "docker-bu…  (Local…)",
+            "fish-reen…  (Local…)",
+            "macos-apr…  (Local…)",
+            "master  (Local Bra…)",
+        );
+
+        // Multiple completions, even comp, uneven desc
+        pager.set_completions(
+            &completions(&[
+                ("e9340a", "CI: rebase MSYS2 dll"),
+                ("bf5fa4", "feat: implement `perror_nix`"),
+                ("fcdcae", "l10n: add spanish translation"),
+                ("c7aaf4", "wutil: use `std::fs::rename`"),
+                ("11dda6", "wutil: use `std::fs::read_link`"),
+                ("2ba031", "xtask: don't panic on failure"),
+                ("fa1a12", "nix: use `getpgrp` wrapper"),
+                ("04b799", "nix: use `access`"),
+                ("e41f2f", "nix: use `fchdir`"),
+                ("7992fd", "refactor: extract `perror`"),
+                ("73e3b4", "tarball: capture Git version"),
+            ]),
+            true,
+        );
+        validate!(
+            &mut pager,
+            100,
+            "e9340a  (CI: rebase MSYS2 dll)             fa1a12  (nix: use `getpgrp` wrapper)  ",
+            "bf5fa4  (feat: implement `perror_nix`)     04b799  (nix: use `access`)           ",
+            "fcdcae  (l10n: add spanish translation)    e41f2f  (nix: use `fchdir`)           ",
+            "c7aaf4  (wutil: use `std::fs::rename`)     7992fd  (refactor: extract `perror`)  ",
+            "11dda6  (wutil: use `std::fs::read_link`)  73e3b4  (tarball: capture Git version)",
+            "2ba031  (xtask: don't panic on failure)    "
+        );
+        validate!(
+            &mut pager,
+            60,
+            "e9340a  (CI: rebase MSYS2 dll)           ",
+            "bf5fa4  (feat: implement `perror_nix`)   ",
+            "fcdcae  (l10n: add spanish translation)  ",
+            "c7aaf4  (wutil: use `std::fs::rename`)   ",
+            "11dda6  (wutil: use `std::fs::read_link`)",
+            "2ba031  (xtask: don't panic on failure)  ",
+            "fa1a12  (nix: use `getpgrp` wrapper)     ",
+            "04b799  (nix: use `access`)              ",
+            "e41f2f  (nix: use `fchdir`)              ",
+            "7992fd  (refactor: extract `perror`)     ",
+            "73e3b4  (tarball: capture Git version)   ",
+        );
+        validate!(
+            &mut pager,
+            30,
+            "e9340a  (CI: rebase MSYS2 dll)",
+            "bf5fa4  (feat: implement `pe…)",
+            "fcdcae  (l10n: add spanish t…)",
+            "c7aaf4  (wutil: use `std::fs…)",
+            "11dda6  (wutil: use `std::fs…)",
+            "2ba031  (xtask: don't panic …)",
+            "fa1a12  (nix: use `getpgrp` …)",
+            "04b799  (nix: use `access`)   ",
+            "e41f2f  (nix: use `fchdir`)   ",
+            "7992fd  (refactor: extract `…)",
+            "73e3b4  (tarball: capture Gi…)",
+        );
+
+        // Multiple completions, uneven comp, uneven desc
+        pager.set_completions(
+            &completions(&[
+                ("ab", "12345678"),
+                ("abcdefghi", "1234"),
+                ("a", "12"),
+                ("a", "123456789123456789"),
+                ("abcdefghijklmnopqrs", "123456789"),
+                ("abcdefghijklmnopqrst", "1"),
+            ]),
+            true,
+        );
+        validate!(
+            &mut pager,
+            70,
+            "ab         (12345678)  a                     (123456789123456789)",
+            "abcdefghi  (1234)      abcdefghijklmnopqrs   (123456789)         ",
+            "a          (12)        abcdefghijklmnopqrst  (1)                 ",
+        );
+        validate!(
+            &mut pager,
+            50,
+            "ab                    (12345678)          ",
+            "abcdefghi             (1234)              ",
+            "a                     (12)                ",
+            "a                     (123456789123456789)",
+            "abcdefghijklmnopqrs   (123456789)         ",
+            "abcdefghijklmnopqrst  (1)                 ",
+        );
+        validate!(
+            &mut pager,
+            20,
+            "ab        (12345678)",
+            "abcdefghi     (1234)",
+            "a               (12)",
+            "a  (12345678912345…)",
+            "abcdefghi…  (12345…)",
+            "abcdefghijklmn…  (1)",
+        );
+
+        // Multiple completions, non-ascii completions/descriptions
+        pager.set_completions(
+            &completions(&[
+                ("фиш", "123456789"),
+                ("abc", "鱼殼層"),
+                ("鱼-", "१२३४५६७८९"),
+            ]),
+            true,
+        );
+        validate!(
+            &mut pager,
+            20,
+            "фиш  (123456789)",
+            "abc  (鱼殼層)   ",
+            "鱼-  (१२३४५६७८९)",
+        );
+
         // Newlines in prefix
-        let c4s = vec![Completion::new(
-            L!("Hello").to_owned(),
-            L!("").to_owned(),
-            StringFuzzyMatch::exact_match(),
-            CompleteFlags::default(),
-        )];
-        pager.set_prefix(L!("{\\\n"), false); // }
-        pager.set_completions(&c4s, true);
+        pager.set_prefix(Cow::Borrowed(L!("{\\\n")), false); // }
+        pager.set_completions(&completions(&[("Hello", "")]), true);
         validate!(&mut pager, 30, L!("{\\␊Hello")); // }
     }
 }

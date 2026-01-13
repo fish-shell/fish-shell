@@ -18,15 +18,18 @@ fi
 [ -n "$version" ]
 
 for tool in \
+    cmake \
     bundle \
     diff \
     gh \
     gpg \
     jq \
+    ninja \
     ruby \
     tar \
     timeout \
     uv \
+    xz \
 ; do
     if ! command -v "$tool" >/dev/null; then
         echo >&2 "$0: missing command: $1"
@@ -69,7 +72,7 @@ integration_branch=$(
         --format='%(refname:strip=2)'
 )
 [ -n "$integration_branch" ] ||
-    git merge-base --is-ancestor $remote/master HEAD
+    git merge-base --is-ancestor "$remote"/master HEAD
 
 sed -n 1p CHANGELOG.rst | grep -q '^fish .*(released .*)$'
 sed -n 2p CHANGELOG.rst | grep -q '^===*$'
@@ -80,21 +83,39 @@ sed -i \
     -e "2c$(printf %s "$changelog_title" | sed s/./=/g)" \
     CHANGELOG.rst
 
-CommitVersion() {
-    sed -i "s/^version = \".*\"/version = \"$1\"/g" Cargo.toml
-    cargo fetch --offline
-    git add CHANGELOG.rst Cargo.toml Cargo.lock
-    git commit -m "$2
+CreateCommit() {
+    git commit -m "$1
 
 Created by ./build_tools/release.sh $version"
 }
 
-CommitVersion "$version" "Release $version"
+sed -i "s/^version = \".*\"/version = \"$1\"/g" Cargo.toml
+cargo fetch --offline # bumps the version in Cargo.lock
+if [ "$1" = "$version" ]; then
+    # debchange is a Debian script to manage the Debian changelog, but
+    # it's too annoying to install everywhere. Just do it by hand.
+    cat - contrib/debian/changelog > contrib/debian/changelog.new <<EOF
+fish (${version}-1) stable; urgency=medium
 
+  * Release of new version $version.
+
+  See https://github.com/fish-shell/fish-shell/releases/tag/$version for details.
+
+ -- $committer  $(date -R)
+
+EOF
+    mv contrib/debian/changelog.new contrib/debian/changelog
+    git add contrib/debian/changelog
+fi
+git add CHANGELOG.rst Cargo.toml Cargo.lock
+CreateCommit "Release $version"
+
+# Tags must be full objects, not lightweight tags, for
+# git_version-gen.sh to work.
 git -c "user.signingKey=$committer" \
-    tag --sign --message="Release $version" $version
+    tag --sign --message="Release $version" "$version"
 
-git push $remote $version
+git push "$remote" "$version"
 
 TIMEOUT=
 gh() {
@@ -121,7 +142,7 @@ fish_tar_xz=fish-$version.tar.xz
 (
     local_tarball=$tmpdir/local-tarball
     mkdir "$local_tarball"
-    FISH_ARTEFACT_PATH=$local_tarball uv run ./build_tools/make_tarball.sh
+    FISH_ARTEFACT_PATH=$local_tarball ./build_tools/make_tarball.sh
     cd "$local_tarball"
     tar xf "$fish_tar_xz"
 )
@@ -149,17 +170,28 @@ actual_tag_oid=$(git ls-remote "$remote" |
     gh release upload "$version" "$fish_tar_xz.asc"
 )
 
+(
+    cd "$tmpdir/local-tarball/fish-$version"
+    uv --no-managed-python venv
+    # shellcheck disable=1091
+    . .venv/bin/activate
+    cmake -GNinja -DCMAKE_BUILD_TYPE=Debug .
+    ninja doc
+)
 CopyDocs() {
     rm -rf "$fish_site/site/docs/$1"
-    cp -r "$tmpdir/fish-$version/user_doc/html" "$fish_site/site/docs/$1"
-    git -C $fish_site add "site/docs/$1"
+    cp -r "$tmpdir/local-tarball/fish-$version/cargo/fish-docs/html" "$fish_site/site/docs/$1"
+    git -C "$fish_site" add "site/docs/$1"
 }
 minor_version=${version%.*}
 CopyDocs "$minor_version"
 latest_release=$(
     releases=$(git tag | grep '^[0-9]*\.[0-9]*\.[0-9]*.*' |
-        sed $(: "De-prioritize release candidates (1.2.3-rc0)") \
-        's/-/~/g' | LC_ALL=C sort --version-sort)
+        sed '
+            # De-prioritize release candidates (1.2.3-rc0)
+            s/-/~/g
+        ' | LC_ALL=C sort --version-sort
+    )
     printf %s\\n "$releases" | tail -1
 )
 if [ "$version" = "$latest_release" ]; then
@@ -223,6 +255,28 @@ do
     sleep 20
 done
 
+milestone_version="$(
+    if echo "$version" | grep -q '\.0$'; then
+        echo "$minor_version"
+    else
+        echo "$version"
+    fi
+)"
+milestone_number() {
+    gh_api_repo milestones?state=open |
+        jq --arg name "fish $1" '
+            .[] | select(.title == $name) | .number
+        '
+}
+gh_api_repo milestones/"$(milestone_number "$milestone_version")" \
+    --method PATCH --raw-field state=closed
+next_minor_version=$(echo "$minor_version" |
+    awk -F. '{ printf "%s.%s", $1, $2+1 }')
+if [ -z "$(milestone_number "$next_minor_version")" ]; then
+    gh_api_repo milestones --method POST \
+        --raw-field title="fish $next_minor_version"
+fi
+
 (
     cd "$fish_site"
     make new-release
@@ -244,7 +298,7 @@ done
 )
 
 if [ -n "$integration_branch" ]; then {
-    git push $remote "$version^{commit}":refs/heads/$integration_branch
+    git push "$remote" "$version^{commit}:refs/heads/$integration_branch"
 } else {
     changelog=$(cat - CHANGELOG.rst <<EOF
 fish ?.?.? (released ???)
@@ -253,30 +307,10 @@ fish ?.?.? (released ???)
 EOF
     )
     printf %s\\n "$changelog" >CHANGELOG.rst
-    CommitVersion ${version}-snapshot "start new cycle"
-    git push $remote HEAD:master
+    git add CHANGELOG.rst
+    CreateCommit "start new cycle"
+    git push "$remote" HEAD:master
 } fi
-
-milestone_version="$(
-    if echo "$version" | grep -q '\.0$'; then
-        echo "$minor_version"
-    else
-        echo "$version"
-    fi
-)"
-milestone_number() {
-    gh_api_repo milestones?state=open |
-        jq --arg name "fish $1" '
-            .[] | select(.title == $name) | .number
-        '
-}
-gh_api_repo milestones/"$(milestone_number "$milestone_version")" \
-    --method PATCH --raw-field state=closed
-
-if [ -z "$(milestone_number "$next_minor_version")" ]; then
-    gh_api_repo milestones --method POST \
-        --raw-field title="fish $next_minor_version"
-fi
 
 exit
 

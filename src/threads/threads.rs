@@ -1,15 +1,19 @@
 //! Support for thread pools and thread management.
-use crate::flog::{FLOG, FloggableDebug};
+use crate::flog::{FloggableDebug, flog};
+use nix::sys::signal::{SigSet, SigmaskHow, Signal};
 use std::marker::PhantomData;
-use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ThreadId(usize);
+
+impl FloggableDebug for ThreadId {}
 impl FloggableDebug for std::thread::ThreadId {}
 
 /// The thread id of the main thread, as set by [`init()`] at startup.
-static MAIN_THREAD_ID: OnceLock<usize> = OnceLock::new();
+static MAIN_THREAD_ID: OnceLock<ThreadId> = OnceLock::new();
 /// Used to bypass thread assertions when testing.
 const THREAD_ASSERTS_CFG_FOR_TESTING: bool = cfg!(test);
 /// This allows us to notice when we've forked.
@@ -26,6 +30,7 @@ type WorkItem = Box<dyn FnOnce() + 'static + Send>;
 pub fn init() {
     MAIN_THREAD_ID
         .set(thread_id())
+        .map_err(|_| ())
         .expect("threads::init() must only be called once (at startup)!");
 
     extern "C" fn child_post_fork() {
@@ -38,7 +43,7 @@ pub fn init() {
 }
 
 #[inline(always)]
-fn main_thread_id() -> usize {
+fn main_thread_id() -> ThreadId {
     #[cold]
     fn init_not_called() -> ! {
         panic!("threads::init() was not called at startup!");
@@ -59,19 +64,19 @@ fn main_thread_id() -> usize {
 /// We use our own implementation because Rust's own `Thread::id()` allocates via `Arc`, is fairly
 /// slow, and uses a `Mutex` on 32-bit platforms (or anywhere without an atomic 64-bit CAS).
 #[inline(always)]
-fn thread_id() -> usize {
+fn thread_id() -> ThreadId {
     static THREAD_COUNTER: AtomicUsize = AtomicUsize::new(1);
     // It would be faster and much nicer to use #[thread_local] here, but that's nightly only.
     // This is still faster than going through Thread::thread_id(); it's something like 15ns
     // for each `Thread::thread_id()` call vs 1-2 ns with `#[thread_local]` and 2-4ns with
     // `thread_local!`.
     thread_local! {
-        static THREAD_ID: usize = THREAD_COUNTER.fetch_add(1, Ordering::Relaxed);
+        static THREAD_ID: ThreadId = ThreadId(THREAD_COUNTER.fetch_add(1, Ordering::Relaxed));
     }
     let id = THREAD_ID.with(|id| *id);
     // This assertion is only here to reduce hair loss in case someone runs into a known linker bug;
     // as it's not here to catch logic errors in our own code, it can be elided in release mode.
-    debug_assert_ne!(id, 0, "TLS storage not initialized!");
+    debug_assert_ne!(id, ThreadId(0), "TLS storage not initialized!");
     id
 }
 
@@ -129,21 +134,21 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     // then restore it. But we must not block SIGBUS, SIGFPE, SIGILL, or SIGSEGV; that's undefined
     // (#7837). Conservatively don't try to mask SIGKILL or SIGSTOP either; that's ignored on Linux
     // but maybe has an effect elsewhere.
-    let saved_set = unsafe {
-        let mut new_set = MaybeUninit::uninit();
-        let new_set = new_set.as_mut_ptr();
-        libc::sigfillset(new_set);
-        libc::sigdelset(new_set, libc::SIGILL); // bad jump
-        libc::sigdelset(new_set, libc::SIGFPE); // divide-by-zero
-        libc::sigdelset(new_set, libc::SIGBUS); // unaligned memory access
-        libc::sigdelset(new_set, libc::SIGSEGV); // bad memory access
-        libc::sigdelset(new_set, libc::SIGSTOP); // unblockable
-        libc::sigdelset(new_set, libc::SIGKILL); // unblockable
+    let saved_set = {
+        let new_set = {
+            let mut set = SigSet::all();
+            set.remove(Signal::SIGILL); // bad jump
+            set.remove(Signal::SIGFPE); // divide-by-zero
+            set.remove(Signal::SIGBUS); // unaligned memory access
+            set.remove(Signal::SIGSEGV); // bad memory access
+            set.remove(Signal::SIGSTOP); // unblockable
+            set.remove(Signal::SIGKILL); // unblockable
+            set
+        };
 
-        let mut saved_set: libc::sigset_t = std::mem::zeroed();
-        let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set as *mut _);
-        assert_eq!(result, 0, "Failed to override thread signal mask!");
-        saved_set
+        new_set
+            .thread_swap_mask(SigmaskHow::SIG_BLOCK)
+            .expect("Failed to override thread signal mask!")
     };
 
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
@@ -154,7 +159,7 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     let result = match std::thread::Builder::new().spawn(callback) {
         Ok(handle) => {
             let thread_id = thread_id();
-            FLOG!(iothread, "rust thread", thread_id, "spawned");
+            flog!(iothread, "rust thread", thread_id, "spawned");
             // Drop the handle to detach the thread
             drop(handle);
             true
@@ -166,28 +171,11 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     };
 
     // Restore our sigmask
-    unsafe {
-        let result = libc::pthread_sigmask(
-            libc::SIG_SETMASK,
-            &saved_set as *const _,
-            std::ptr::null_mut(),
-        );
-        assert_eq!(result, 0, "Failed to restore thread signal mask!");
-    };
+    saved_set
+        .thread_set_mask()
+        .expect("Failed to restore thread signal mask!");
 
     result
-}
-
-/// Exits calling onexit handlers if running under ASAN, otherwise does nothing.
-///
-/// This function is always defined but is a no-op if not running under ASAN. This is to make it
-/// more ergonomic to call it in general and also makes it possible to call it via ffi at all.
-pub fn asan_maybe_exit(code: i32) {
-    if cfg!(feature = "asan") {
-        unsafe {
-            libc::exit(code);
-        }
-    }
 }
 
 /// Data shared between the thread pool [`ThreadPool`] and worker threads [`WorkerThread`].
@@ -252,7 +240,7 @@ impl ThreadPool {
             let mut data = self.shared.lock().expect("Mutex poisoned!");
             local_thread_count = data.total_threads;
             data.request_queue.push_back(work_item);
-            FLOG!(
+            flog!(
                 iothread,
                 "enqueuing work item (count is ",
                 data.request_queue.len(),
@@ -277,7 +265,7 @@ impl ThreadPool {
             ThreadAction::None => (),
             ThreadAction::Wake => {
                 // Wake a thread if we decided to do so.
-                FLOG!(iothread, "notifying thread ", std::thread::current().id());
+                flog!(iothread, "notifying thread ", std::thread::current().id());
                 self.cond_var.notify_one();
             }
             ThreadAction::Spawn => {
@@ -287,7 +275,7 @@ impl ThreadPool {
                 // some degree of confidence. (This is also not an error we expect to routinely run
                 // into under normal, non-resource-starved circumstances.)
                 if self.spawn_thread() {
-                    FLOG!(iothread, "pthread spawned");
+                    flog!(iothread, "pthread spawned");
                 } else {
                     // We failed to spawn a thread; decrement the thread count.
                     self.shared.lock().expect("Mutex poisoned!").total_threads -= 1;
@@ -339,7 +327,7 @@ impl ThreadPool {
     /// This is run in a background thread.
     fn run_worker(&self) {
         while let Some(work_item) = self.dequeue_work_or_commit_to_exit() {
-            FLOG!(
+            flog!(
                 iothread,
                 "pthread ",
                 std::thread::current().id(),
@@ -350,7 +338,7 @@ impl ThreadPool {
             work_item();
         }
 
-        FLOG!(
+        flog!(
             iothread,
             "pthread ",
             std::thread::current().id(),
@@ -395,9 +383,10 @@ impl ThreadPool {
 
 #[cfg(test)]
 mod tests {
+    use nix::sys::signal::{SigSet, SigmaskHow, Signal};
+
     use super::{spawn, thread_id};
 
-    use std::mem::MaybeUninit;
     use std::sync::{
         Arc, Condvar, Mutex,
         atomic::{AtomicI32, Ordering},
@@ -417,65 +406,41 @@ mod tests {
     /// sigmask to be inherited by the newly spawned thread.
     fn std_thread_inherits_sigmask() {
         // First change our own thread mask
-        let (saved_set, t1_set) = unsafe {
-            let mut new_set = MaybeUninit::uninit();
-            let new_set = new_set.as_mut_ptr();
-            libc::sigemptyset(new_set);
-            libc::sigaddset(new_set, libc::SIGILL); // mask bad jump
+        let (saved_set, t1_set) = {
+            let saved_set = {
+                let new_set = {
+                    let mut set = SigSet::empty();
+                    set.add(Signal::SIGILL); // mask bad jump
+                    set
+                };
 
-            let mut saved_set: libc::sigset_t = std::mem::zeroed();
-            let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set as *mut _);
-            assert_eq!(result, 0, "Failed to set thread mask!");
+                new_set
+                    .thread_swap_mask(SigmaskHow::SIG_BLOCK)
+                    .expect("Failed to set thread mask!")
+            };
 
             // Now get the current set that includes the masked SIGILL
-            let mut t1_set: libc::sigset_t = std::mem::zeroed();
-            let mut empty_set = MaybeUninit::uninit();
-            let empty_set = empty_set.as_mut_ptr();
-            libc::sigemptyset(empty_set);
-            let result = libc::pthread_sigmask(libc::SIG_UNBLOCK, empty_set, &mut t1_set as *mut _);
-            assert_eq!(result, 0, "Failed to get own altered thread mask!");
+            let t1_set = SigSet::empty()
+                .thread_swap_mask(SigmaskHow::SIG_UNBLOCK)
+                .expect("Failed to get own altered thread mask!");
 
             (saved_set, t1_set)
         };
 
         // Launch a new thread that can access existing variables
         let t2_set = std::thread::scope(|_| {
-            unsafe {
-                // Set a new thread sigmask and verify that the old one is what we expect it to be
-                let mut new_set = MaybeUninit::uninit();
-                let new_set = new_set.as_mut_ptr();
-                libc::sigemptyset(new_set);
-                let mut saved_set2: libc::sigset_t = std::mem::zeroed();
-                let result =
-                    libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set2 as *mut _);
-                assert_eq!(result, 0, "Failed to get existing sigmask for new thread");
-                saved_set2
-            }
+            // Set a new thread sigmask and verify that the old one is what we expect it to be
+            SigSet::empty()
+                .thread_swap_mask(SigmaskHow::SIG_BLOCK)
+                .expect("Failed to get existing sigmask for new thread")
         });
 
-        // Compare the sigset_t values
-        unsafe {
-            let t1_sigset_slice = std::slice::from_raw_parts(
-                &t1_set as *const _ as *const u8,
-                core::mem::size_of::<libc::sigset_t>(),
-            );
-            let t2_sigset_slice = std::slice::from_raw_parts(
-                &t2_set as *const _ as *const u8,
-                core::mem::size_of::<libc::sigset_t>(),
-            );
-
-            assert_eq!(t1_sigset_slice, t2_sigset_slice);
-        };
+        assert_eq!(t1_set, t2_set);
 
         // Restore the thread sigset so we don't affect `cargo test`'s multithreaded test harnesses
-        unsafe {
-            let result = libc::pthread_sigmask(
-                libc::SIG_SETMASK,
-                &saved_set as *const _,
-                core::ptr::null_mut(),
-            );
-            assert_eq!(result, 0, "Failed to restore sigmask!");
-        }
+        saved_set
+            .thread_set_mask()
+            .expect("Failed to restore sigmask!");
     }
 
     #[test]
@@ -493,7 +458,7 @@ mod tests {
         let made = spawn(move || {
             ctx2.val.fetch_add(2, Ordering::Release);
             ctx2.condvar.notify_one();
-            printf!("condvar signalled\n");
+            println!("condvar signalled");
         });
         assert!(made);
 
@@ -501,19 +466,20 @@ mod tests {
         let (_lock, timeout) = ctx
             .condvar
             .wait_timeout_while(lock, Duration::from_secs(5), |()| {
-                printf!("looping with lock held\n");
+                println!("looping with lock held");
                 if ctx.val.load(Ordering::Acquire) != 5 {
-                    printf!("test_pthread: value did not yet reach goal\n");
+                    println!("test_pthread: value did not yet reach goal");
                     return true;
                 }
                 false
             })
             .unwrap();
-        if timeout.timed_out() {
-            panic!(concat!(
+        assert!(
+            !timeout.timed_out(),
+            concat!(
                 "Timeout waiting for condition variable to be notified! ",
                 "Does the platform support signalling a condvar without the mutex held?"
-            ));
-        }
+            )
+        );
     }
 }

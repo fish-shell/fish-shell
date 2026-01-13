@@ -1,5 +1,14 @@
+function __fish_print_waydroid_container_package_name
+    set -l applist (waydroid app list 2>/dev/null | grep -E '^(Name: |packageName: )')
+    set -l name (string replace -f -r '^Name: ' '' $applist)
+    set -l packagename (string replace -f 'packageName: ' '' $applist)
+    for i in (seq (count $name))
+        echo $packagename[$i]\t$name[$i]
+    end
+end
+
 #all subcommands avaliable
-set -l commands status log init upgrade session container app prop show-full-ui first-launch shell logcat
+set -l commands status log init upgrade session container app prop show-full-ui first-launch shell logcat adb bugreport
 
 #help parameter can be used on any (sub)commands
 complete -f waydroid -s h -l help -d "show help message and exit"
@@ -28,6 +37,8 @@ complete -f waydroid -n "not __fish_seen_subcommand_from $commands" -a show-full
 complete -f waydroid -n "not __fish_seen_subcommand_from $commands" -a first-launch -d "initialize waydroid and start it"
 complete -f waydroid -n "not __fish_seen_subcommand_from $commands" -a shell -d "run remote shell command"
 complete -f waydroid -n "not __fish_seen_subcommand_from $commands" -a logcat -d "show android logcat"
+complete -f waydroid -n "not __fish_seen_subcommand_from $commands" -a adb -d "manage adb connection"
+complete -f waydroid -n "not __fish_seen_subcommand_from $commands" -a bugreport -d "create a bugreport archive interactively"
 
 #log
 complete -f waydroid -n "__fish_seen_subcommand_from log" -s n -l lines -d "count of initial output lines"
@@ -38,8 +49,9 @@ complete -F waydroid -n "__fish_seen_subcommand_from init" -s i -l images_path -
 complete -f waydroid -n "__fish_seen_subcommand_from init" -s f -l force -d "re-initialize configs and images"
 complete -f waydroid -n "__fish_seen_subcommand_from init" -s c -l system_channel -d "custom system channel"
 complete -f waydroid -n "__fish_seen_subcommand_from init" -s v -l vendor_channel -d "custom vendor channel"
-complete -f waydroid -n "__fish_seen_subcommand_from init" -s r -l rom_type -ra "lineage bliss" -d "rom type"
-complete -f waydroid -n "__fish_seen_subcommand_from init" -s s -l system_type -ra "VANILLA FOSS GAPPS" -d "system type"
+complete -x waydroid -n "__fish_seen_subcommand_from init" -s r -l rom_type -a "lineage bliss" -d "rom type"
+complete -x waydroid -n "__fish_seen_subcommand_from init" -s s -l system_type -a "VANILLA FOSS GAPPS" -d "system type"
+complete -f waydroid -n "__fish_seen_subcommand_from init" -l client -d "run as user mode, connecting to the remote initializer service"
 
 #upgrade
 complete -f waydroid -n "__fish_seen_subcommand_from upgrade" -s o -l offline -d "just for updating configs"
@@ -56,13 +68,16 @@ complete -f waydroid -n "__fish_seen_subcommand_from container; and not __fish_s
 complete -f waydroid -n "__fish_seen_subcommand_from container; and not __fish_seen_subcommand_from start stop restart freeze unfreeze" -a unfreeze -d "unfreeze container"
 
 #app
-complete -f waydroid -n "__fish_seen_subcommand_from app; and not __fish_seen_subcommand_from install remove launch intent list" -a install -r -d "push a single package to the container and install it"
+complete -x waydroid -n "__fish_seen_subcommand_from app; and not __fish_seen_subcommand_from install remove launch intent list" -a install -d "push a single package to the container and install it"
 complete -f waydroid -n "__fish_seen_subcommand_from app; and not __fish_seen_subcommand_from install remove launch intent list" -a remove -d "remove single app package from the container"
 complete -f waydroid -n "__fish_seen_subcommand_from app; and not __fish_seen_subcommand_from install remove launch intent list" -a launch -d "start single application"
 complete -f waydroid -n "__fish_seen_subcommand_from app; and not __fish_seen_subcommand_from install remove launch intent list" -a intent -d "start single application"
 complete -f waydroid -n "__fish_seen_subcommand_from app; and not __fish_seen_subcommand_from install remove launch intent list" -a list -d "list installed applications"
 #enable file completions on app install
 complete -F waydroid -n "__fish_seen_subcommand_from app; and __fish_seen_subcommand_from install"
+#package name completions for app launch and remove
+complete -x waydroid -n "__fish_seen_subcommand_from app; and __fish_seen_subcommand_from launch" -a "(__fish_print_waydroid_container_package_name)"
+complete -x waydroid -n "__fish_seen_subcommand_from app; and __fish_seen_subcommand_from remove" -a "(__fish_print_waydroid_container_package_name)"
 
 #prop
 complete -f waydroid -n "__fish_seen_subcommand_from prop; and not __fish_seen_subcommand_from get set" -a get -d "get value of property from container"
@@ -122,15 +137,20 @@ set -l prop_condition "__fish_seen_subcommand_from prop; and __fish_seen_subcomm
 complete -f waydroid -n "$prop_condition" -a "true false"
 
 #shell
-complete -f waydroid -n "__fish_seen_subcommand_from shell" -s u -l uid -r -d "the UID to run as"
-complete -f waydroid -n "__fish_seen_subcommand_from shell" -s g -l gid -r -d "the GID to run as"
-complete -f waydroid -n "__fish_seen_subcommand_from shell" -s s -l context -r -d "transition to the specified SELinux or AppArmor security context"
+complete -x waydroid -n "__fish_seen_subcommand_from shell" -s u -l uid -d "the UID to run as"
+complete -x waydroid -n "__fish_seen_subcommand_from shell" -s g -l gid -d "the GID to run as"
+complete -x waydroid -n "__fish_seen_subcommand_from shell" -s s -l context -d "transition to the specified SELinux or AppArmor security context"
 complete -f waydroid -n "__fish_seen_subcommand_from shell" -s L -l nolsm -d "Don't perform security domain transition related to mandatory access control"
 complete -f waydroid -n "__fish_seen_subcommand_from shell" -s C -l allcaps -d "Don't drop capabilities"
 complete -f waydroid -n "__fish_seen_subcommand_from shell" -s G -l nocgroup -d "Don't switch to the container cgroup"
+
+#adb
+complete -f waydroid -n "__fish_seen_subcommand_from adb" -a connect -d "connect adb to the Android container"
+complete -f waydroid -n "__fish_seen_subcommand_from adb" -a disconnect -d "disconnect adb from the Android container"
 
 #below subcommands don't have any parameter or subcommand avaliable
 #status
 #show-full-ui
 #first-launch
 #logcat
+#bugreport

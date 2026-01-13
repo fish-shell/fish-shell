@@ -4,27 +4,31 @@
 //! defined when these functions produce output or perform memory allocations, since such functions
 //! may not be safely called by signal handlers.
 
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex};
+use crate::{
+    flog::flog,
+    io::{IoChain, IoStreams},
+    job_group::MaybeJobId,
+    parser::{Block, Parser},
+    prelude::*,
+    proc::{InternalJobId, Pid},
+    reader::reader_update_termsize,
+    signal::{RawSignal, signal_check_cancel, signal_handle},
+};
+use fish_common::{ScopeGuard, escape};
+use fish_widestring::str2wcstring;
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, AtomicU32, Ordering},
+};
 
-use crate::common::{ScopeGuard, escape};
-use crate::flog::FLOG;
-use crate::io::{IoChain, IoStreams};
-use crate::job_group::MaybeJobId;
-use crate::parser::{Block, Parser};
-use crate::proc::Pid;
-use crate::reader::reader_update_termsize;
-use crate::signal::{Signal, signal_check_cancel, signal_handle};
-use crate::wchar::prelude::*;
-
-pub enum event_type_t {
-    any,
-    signal,
-    variable,
-    process_exit,
-    job_exit,
-    caller_exit,
-    generic,
+pub enum EventType {
+    Any,
+    Signal,
+    Variable,
+    ProcessExit,
+    JobExit,
+    CallerExit,
+    Generic,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -33,7 +37,7 @@ pub enum EventDescription {
     /// well).
     Any,
     /// An event triggered by a signal.
-    Signal { signal: Signal },
+    Signal { signal: RawSignal },
     /// An event triggered by a variable update.
     Variable { name: WString },
     /// An event triggered by a process exit.
@@ -47,12 +51,12 @@ pub enum EventDescription {
         pid: Option<Pid>,
         /// `internal_job_id` of the job to match.
         /// If this is 0, we match either all jobs (`pid == ANY_PID`) or no jobs (otherwise).
-        internal_job_id: u64,
+        internal_job_id: InternalJobId,
     },
     /// An event triggered by a job exit, triggering the 'caller'-style events only.
     CallerExit {
         /// Internal job ID.
-        caller_id: u64,
+        caller_id: InternalJobId,
     },
     /// A generic event.
     Generic {
@@ -105,16 +109,16 @@ impl EventDescription {
     }
 }
 
-impl From<&EventDescription> for event_type_t {
+impl From<&EventDescription> for EventType {
     fn from(desc: &EventDescription) -> Self {
         match desc {
-            EventDescription::Any => event_type_t::any,
-            EventDescription::Signal { .. } => event_type_t::signal,
-            EventDescription::Variable { .. } => event_type_t::variable,
-            EventDescription::ProcessExit { .. } => event_type_t::process_exit,
-            EventDescription::JobExit { .. } => event_type_t::job_exit,
-            EventDescription::CallerExit { .. } => event_type_t::caller_exit,
-            EventDescription::Generic { .. } => event_type_t::generic,
+            EventDescription::Any => EventType::Any,
+            EventDescription::Signal { .. } => EventType::Signal,
+            EventDescription::Variable { .. } => EventType::Variable,
+            EventDescription::ProcessExit { .. } => EventType::ProcessExit,
+            EventDescription::JobExit { .. } => EventType::JobExit,
+            EventDescription::CallerExit { .. } => EventType::CallerExit,
+            EventDescription::Generic { .. } => EventType::Generic,
         }
     }
 }
@@ -235,7 +239,7 @@ impl Event {
         }
     }
 
-    pub fn job_exit(pgid: Pid, jid: u64) -> Self {
+    pub fn job_exit(pgid: Pid, jid: InternalJobId) -> Self {
         Self {
             desc: EventDescription::JobExit {
                 pid: Some(pgid),
@@ -249,7 +253,7 @@ impl Event {
         }
     }
 
-    pub fn caller_exit(internal_job_id: u64, job_id: MaybeJobId) -> Self {
+    pub fn caller_exit(internal_job_id: InternalJobId, job_id: MaybeJobId) -> Self {
         Self {
             desc: EventDescription::CallerExit {
                 caller_id: internal_job_id,
@@ -270,7 +274,7 @@ impl Event {
             }
         }
 
-        parser.global_event_blocks.load(Ordering::Relaxed) != 0
+        parser.global_event_blocks != 0
     }
 }
 
@@ -353,13 +357,13 @@ static OBSERVED_SIGNALS: [AtomicU32; SIGNAL_COUNT] = [ATOMIC_U32_0; SIGNAL_COUNT
 /// temporarily moved here. There was no mutex around this in the cpp code. TODO: Move it back.
 static BLOCKED_EVENTS: Mutex<Vec<Event>> = Mutex::new(Vec::new());
 
-fn inc_signal_observed(sig: Signal) {
+fn inc_signal_observed(sig: RawSignal) {
     if let Some(sig) = OBSERVED_SIGNALS.get(usize::from(sig)) {
         sig.fetch_add(1, Ordering::Relaxed);
     }
 }
 
-fn dec_signal_observed(sig: Signal) {
+fn dec_signal_observed(sig: RawSignal) {
     if let Some(sig) = OBSERVED_SIGNALS.get(usize::from(sig)) {
         sig.fetch_sub(1, Ordering::Relaxed);
     }
@@ -380,7 +384,7 @@ pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
             format!("signal handler for {} ({})", signal.name(), signal.desc(),)
         }
         EventDescription::Variable { name } => format!("handler for variable '{name}'"),
-        EventDescription::ProcessExit { pid: None } => "exit handler for any process".to_string(),
+        EventDescription::ProcessExit { pid: None } => "exit handler for any process".to_owned(),
         EventDescription::ProcessExit { pid: Some(pid) } => {
             format!("exit handler for process {pid}")
         }
@@ -392,17 +396,17 @@ pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
                     format!("exit handler for job with pid {pid}")
                 }
             } else {
-                "exit handler for any job".to_string()
+                "exit handler for any job".to_owned()
             }
         }
         EventDescription::CallerExit { .. } => {
-            "exit handler for command substitution caller".to_string()
+            "exit handler for command substitution caller".to_owned()
         }
         EventDescription::Generic { param } => format!("handler for generic event '{param}'"),
         EventDescription::Any => unreachable!(),
     };
 
-    WString::from_str(&s)
+    str2wcstring(&s)
 }
 
 /// Add an event handler.
@@ -459,7 +463,7 @@ pub fn get_function_handlers(name: &wstr) -> EventHandlerList {
 /// Perform the specified event. Since almost all event firings will not be matched by even a single
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
-fn fire_internal(parser: &Parser, event: &Event) {
+fn fire_internal(parser: &mut Parser, event: &Event) {
     // Suppress fish_trace during events.
     let _saved = parser.push_scope(|s| {
         s.is_event = true;
@@ -481,7 +485,7 @@ fn fire_internal(parser: &Parser, event: &Event) {
         // A previous handler may have erased this one.
         if handler.removed.load(Ordering::Relaxed) {
             continue;
-        };
+        }
 
         // Construct a buffer to evaluate, starting with the function name and then all the
         // arguments.
@@ -494,12 +498,12 @@ fn fire_internal(parser: &Parser, event: &Event) {
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
         let _non_interactive = parser.push_scope(|s| s.is_interactive = false);
-        let saved_statuses = parser.get_last_statuses();
-        let _cleanup = ScopeGuard::new((), |()| {
+        let saved_statuses = parser.last_statuses();
+        let parser = &mut **ScopeGuard::new(&mut *parser, |parser| {
             parser.set_last_statuses(saved_statuses);
         });
 
-        FLOG!(
+        flog!(
             event,
             "Firing event '",
             event.desc.str_param1().unwrap_or(L!("")),
@@ -522,16 +526,16 @@ fn fire_internal(parser: &Parser, event: &Event) {
 }
 
 /// Fire all delayed events attached to the given parser.
-pub fn fire_delayed(parser: &Parser) {
+pub fn fire_delayed(parser: &mut Parser) {
     // Do not invoke new event handlers from within event handlers.
     if parser.scope().is_event {
         return;
-    };
+    }
 
     // Do not invoke new event handlers if we are unwinding (#6649).
     if signal_check_cancel() != 0 {
         return;
-    };
+    }
 
     // We unfortunately can't keep this locked until we're done with it because the SIGWINCH handler
     // code might call back into here and we would delay processing of the events, leading to a test
@@ -544,12 +548,12 @@ pub fn fire_delayed(parser: &Parser) {
     while signals != 0 {
         let sig = signals.trailing_zeros() as i32;
         signals &= !(1_u64 << sig);
-        let sig = Signal::new(sig);
+        let sig = RawSignal::new(sig);
 
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
         if sig == libc::SIGWINCH {
-            reader_update_termsize(parser)
+            reader_update_termsize(parser);
         }
         let event = Event {
             desc: EventDescription::Signal { signal: sig },
@@ -581,7 +585,7 @@ pub fn enqueue_signal(signal: libc::c_int) {
 }
 
 /// Fire the specified event event, executing it on `parser`.
-pub fn fire(parser: &Parser, event: Event) {
+pub fn fire(parser: &mut Parser, event: Event) {
     // Fire events triggered by signals.
     fire_delayed(parser);
 
@@ -630,7 +634,7 @@ pub fn print(streams: &mut IoStreams, type_filter: &wstr) {
             }
 
             last_type = std::mem::discriminant(&evt.desc);
-            streams.out.append(sprintf!("Event %s\n", evt.desc.name()));
+            streams.out.append(&sprintf!("Event %s\n", evt.desc.name()));
         }
 
         match &evt.desc {
@@ -638,18 +642,18 @@ pub fn print(streams: &mut IoStreams, type_filter: &wstr) {
                 let name: WString = signal.name().into();
                 streams
                     .out
-                    .append(sprintf!("%s %s\n", name, evt.function_name));
+                    .append(&sprintf!("%s %s\n", name, evt.function_name));
             }
             EventDescription::ProcessExit { .. } | EventDescription::JobExit { .. } => {}
             EventDescription::CallerExit { .. } => {
                 streams
                     .out
-                    .append(sprintf!("caller-exit %s\n", evt.function_name));
+                    .append(&sprintf!("caller-exit %s\n", evt.function_name));
             }
             EventDescription::Variable { name: param } | EventDescription::Generic { param } => {
                 streams
                     .out
-                    .append(sprintf!("%s %s\n", param, evt.function_name));
+                    .append(&sprintf!("%s %s\n", param, evt.function_name));
             }
             EventDescription::Any => unreachable!(),
         }
@@ -657,12 +661,12 @@ pub fn print(streams: &mut IoStreams, type_filter: &wstr) {
 }
 
 /// Fire a generic event with the specified name.
-pub fn fire_generic(parser: &Parser, name: WString, arguments: Vec<WString>) {
+pub fn fire_generic(parser: &mut Parser, name: WString, arguments: Vec<WString>) {
     fire(
         parser,
         Event {
             desc: EventDescription::Generic { param: name },
             arguments,
         },
-    )
+    );
 }

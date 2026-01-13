@@ -5,9 +5,9 @@ complete -c scons -l cache-force -l cache-populate -d 'Populate cache with alrea
 complete -c scons -l cache-show -d 'Show how a cached file would be built'
 
 complete -c scons -l config -d 'How the Configure call should run the config tests' -a '
-	auto\t"Use normal dependency mechanism"
-	force\t"Rerun all tests"
-	cache\t"Take all results from cache"' -x
+    auto\t"Use normal dependency mechanism"
+    force\t"Rerun all tests"
+    cache\t"Take all results from cache"' -x
 
 complete -c scons -s C -l directory -d 'Change to this directory before searching for the sconstruct file'
 complete -c scons -s D -d 'Like -u except for the way default targets are handled'

@@ -1,9 +1,5 @@
-.. |Cirrus CI| image:: https://api.cirrus-ci.com/github/fish-shell/fish-shell.svg?branch=master
-      :target: https://cirrus-ci.com/github/fish-shell/fish-shell
-      :alt: Cirrus CI Build Status
-
-`fish <https://fishshell.com/>`__ - the friendly interactive shell |Build Status| |Cirrus CI|
-=============================================================================================
+`fish <https://fishshell.com/>`__ - the friendly interactive shell |Build Status|
+=================================================================================
 
 fish is a smart and user-friendly command line shell for macOS, Linux,
 and the rest of the family. fish includes features like syntax
@@ -31,13 +27,13 @@ macOS
 
 fish can be installed:
 
--  using `Homebrew <http://brew.sh/>`__: ``brew install fish``
+-  using `Homebrew <https://brew.sh/>`__: ``brew install fish``
 -  using `MacPorts <https://www.macports.org/>`__:
    ``sudo port install fish``
 -  using the `installer from fishshell.com <https://fishshell.com/>`__
 -  as a `standalone app from fishshell.com <https://fishshell.com/>`__
 
-Note: The minimum supported macOS version is 10.10 "Yosemite".
+Note: The minimum supported macOS version is 10.12.
 
 Packages for Linux
 ~~~~~~~~~~~~~~~~~~
@@ -66,7 +62,7 @@ Windows
    for Linux with the instructions for the appropriate distribution
    listed above under “Packages for Linux”, or from source with the
    instructions below.
--  Fish can also be installed on all versions of Windows using
+-  fish can also be installed on all versions of Windows using
    `Cygwin <https://cygwin.com/>`__ or `MSYS2 <https://github.com/Berrysoft/fish-msys2>`__.
 
 Building from source
@@ -117,7 +113,7 @@ Dependencies
 
 Compiling fish requires:
 
--  Rust (version 1.85 or later)
+-  Rust (version 1.85 or later), including cargo
 -  CMake (version 3.15 or later)
 -  a C compiler (for system feature detection and the test helper binary)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
@@ -157,11 +153,14 @@ In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), f
 - Rust_COMPILER=path - the path to rustc. If not set, cmake will check $PATH and ~/.cargo/bin
 - Rust_CARGO=path - the path to cargo. If not set, cmake will check $PATH and ~/.cargo/bin
 - Rust_CARGO_TARGET=target - the target to pass to cargo. Set this for cross-compilation.
-- BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when Sphinx isn't installed.
-- INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).
+- WITH_DOCS=ON|OFF - whether to build the documentation. By default, this is ON when Sphinx is installed.
+- FISH_INDENT_FOR_BUILDING_DOCS - useful for cross-compilation.
+  Set this to the path to the ``fish_indent`` executable to use for building HTML docs.
+  By default, ``${CMAKE_BINARY_DIR}/fish_indent`` will be used.
+  If that's not runnable on the compile host,
+  you can build a native one with ``cargo build --bin fish_indent`` and set this to ``$PWD/target/debug/fish_indent``.
 - FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
-- MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
-- WITH_GETTEXT=ON|OFF - whether to include translations.
+- WITH_MESSAGE_LOCALIZATION=ON|OFF - whether to include translations.
 - extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
 
 Building fish with Cargo
@@ -185,13 +184,14 @@ You can also install Sphinx another way and drop the ``uv run --no-managed-pytho
 
 This will place standalone binaries in ``~/.cargo/bin/``, but you can move them wherever you want.
 
-To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features --features=embed-data`` to cargo.
+To disable translations, disable the ``localize-messages`` feature by passing ``--no-default-features --features=embed-manpages`` to cargo.
 
 You can also link this build statically (but not against glibc) and move it to other computers.
 
 Here are the remaining advantages of a full installation, as currently done by CMake:
 
 - Man pages like ``fish(1)`` installed in standard locations, easily accessible from outside fish.
+- Separate files for builtins (e.g. ``$PREFIX/share/fish/man/man1/abbr.1``).
 - A local copy of the HTML documentation, typically accessed via the ``help`` fish function.
   In Cargo builds, ``help`` will redirect to `<https://fishshell.com/docs/current/>`__
 - Ability to use our CMake options extra_functionsdir, extra_completionsdir and extra_confdir,
@@ -217,5 +217,5 @@ There is also a fish tag on Stackoverflow, but it is typically a poor fit.
 Found a bug? Have an awesome idea? Please `open an
 issue <https://github.com/fish-shell/fish-shell/issues/new>`__.
 
-.. |Build Status| image:: https://github.com/fish-shell/fish-shell/workflows/make%20test/badge.svg
-   :target: https://github.com/fish-shell/fish-shell/actions
+.. |Build Status| image:: https://github.com/fish-shell/fish-shell/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/fish-shell/fish-shell/actions/workflows/test.yml

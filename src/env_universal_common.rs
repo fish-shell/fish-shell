@@ -1,18 +1,19 @@
-use crate::common::{
-    UnescapeFlags, UnescapeStringStyle, unescape_string, valid_var_name, wcs2zstring,
-};
+use crate::common::valid_var_name;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
-use crate::flog::{FLOG, FLOGF};
+use crate::flog::{flog, flogf};
 use crate::fs::{PotentialUpdate, lock_and_load, rewrite_via_temporary_file};
-use crate::path::path_get_config;
-use crate::wchar::{decode_byte_from_char, prelude::*};
-use crate::wcstringutil::{LineIterator, join_strings};
+use crate::path::{ValidatedPath, path_get_config};
+use crate::prelude::*;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
+use fish_wcstringutil::{LineIterator, join_strings};
+use fish_widestring::{decode_byte_from_char, wcs2zstring};
+use itertools::Itertools as _;
 use std::collections::HashSet;
 use std::collections::hash_map::Entry;
 use std::ffi::CString;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read as _, Write as _};
 use std::mem::MaybeUninit;
 
 /// Callback data, reflecting a change in universal variables.
@@ -29,10 +30,11 @@ pub type CallbackDataList = Vec<CallbackData>;
 
 // List of fish universal variable formats.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[allow(non_camel_case_types)]
 enum UvarFormat {
-    fish_2_x,
-    fish_3_0,
-    future,
+    Fish_2_x,
+    Fish_3_0,
+    Future,
 }
 
 /// Class representing universal variables.
@@ -87,7 +89,7 @@ impl EnvUniversal {
     }
     // Return flags from the variable with the given name.
     pub fn get_flags(&self, name: &wstr) -> Option<EnvVarFlags> {
-        self.vars.get(name).map(|var| var.get_flags())
+        self.vars.get(name).map(|var| var.flags())
     }
     // Sets a variable.
     pub fn set(&mut self, key: &wstr, var: EnvVar) {
@@ -102,7 +104,7 @@ impl EnvUniversal {
             Entry::Vacant(entry) => {
                 entry.insert(var);
             }
-        };
+        }
         self.modified.insert(key.to_owned());
         if exports {
             self.export_generation += 1;
@@ -162,15 +164,15 @@ impl EnvUniversal {
             return (false, None);
         }
 
-        FLOG!(uvar_file, "universal log sync");
+        flog!(uvar_file, "universal log sync");
         // If we have no changes, just load.
         if self.modified.is_empty() {
             let callbacks = self.load_from_path_narrow();
-            FLOG!(uvar_file, "universal log no modifications");
+            flog!(uvar_file, "universal log no modifications");
             return (false, callbacks);
         }
 
-        FLOG!(uvar_file, "universal log performing full sync");
+        flog!(uvar_file, "universal log performing full sync");
 
         let rewrite = |old_file: &File,
                        tmp_file: &mut File|
@@ -199,7 +201,7 @@ impl EnvUniversal {
             }
         };
 
-        let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
+        let real_path = wrealpath(&self.vars_path).unwrap_or_else(|_| self.vars_path.clone());
         match rewrite_via_temporary_file(&real_path, rewrite) {
             Ok((file_id, potential_update)) => {
                 self.last_read_file_id = file_id;
@@ -221,7 +223,7 @@ impl EnvUniversal {
                 }
             }
             Err(e) => {
-                FLOG!(uvar_file, "universal log sync failed:", e);
+                flog!(uvar_file, "universal log sync failed:", e);
                 (false, None)
             }
         }
@@ -247,17 +249,18 @@ impl EnvUniversal {
             let Ok(line) = std::str::from_utf8(line) else {
                 continue;
             };
+            // TODO: investigate whether this should use str2wcstring
             wide_line = WString::from_str(line);
 
             match format {
-                UvarFormat::fish_2_x => {
+                UvarFormat::Fish_2_x => {
                     Self::parse_message_2x_internal(&wide_line, out_vars, &mut storage);
                 }
-                UvarFormat::fish_3_0 => {
+                UvarFormat::Fish_3_0 => {
                     Self::parse_message_30_internal(&wide_line, out_vars, &mut storage);
                 }
                 // For future formats, just try with the most recent one.
-                UvarFormat::future => {
+                UvarFormat::Future => {
                     Self::parse_message_30_internal(&wide_line, out_vars, &mut storage);
                 }
             }
@@ -298,13 +301,13 @@ impl EnvUniversal {
             return if versionbuf.starts_with(UVARS_VERSION_3_0)
                 && versionbuf[UVARS_VERSION_3_0.len()] == b'\0'
             {
-                UvarFormat::fish_3_0
+                UvarFormat::Fish_3_0
             } else {
-                UvarFormat::future
+                UvarFormat::Future
             };
         }
         // No version found, assume 2.x
-        return UvarFormat::fish_2_x;
+        UvarFormat::Fish_2_x
     }
 
     /// Serialize a variable list.
@@ -315,21 +318,15 @@ impl EnvUniversal {
         contents.extend_from_slice(UVARS_VERSION_3_0);
         contents.push(b'\n');
 
-        // Preserve legacy behavior by sorting the values first
-        let mut cloned: Vec<(&wstr, &EnvVar)> =
-            vars.iter().map(|(key, var)| (key.as_ref(), var)).collect();
-        cloned.sort_by(|(lkey, _), (rkey, _)| lkey.cmp(rkey));
+        vars.iter()
+            // Preserve legacy behavior by sorting the values first
+            .sorted_by_key(|(k, _)| *k)
+            .for_each(|(k, v)| {
+                // Append the entry. Note that append_file_entry may fail,
+                // but that only affects one variable; soldier on.
+                append_file_entry(v.flags(), k, &encode_serialized(v.as_list()), &mut contents);
+            });
 
-        for (key, var) in cloned {
-            // Append the entry. Note that append_file_entry may fail, but that only affects one
-            // variable; soldier on.
-            append_file_entry(
-                var.get_flags(),
-                key,
-                &encode_serialized(var.as_list()),
-                &mut contents,
-            );
-        }
         contents
     }
 
@@ -359,11 +356,11 @@ impl EnvUniversal {
         if self.last_read_file_id != INVALID_FILE_ID
             && file_id_for_path_narrow(&self.narrow_vars_path) == self.last_read_file_id
         {
-            FLOG!(uvar_file, "universal log sync elided based on fast stat()");
+            flog!(uvar_file, "universal log sync elided based on fast stat()");
             return None;
         }
 
-        FLOG!(uvar_file, "universal log reading from file");
+        flog!(uvar_file, "universal log reading from file");
         match lock_and_load(&self.vars_path, |f, file_id| {
             Ok(self.load_from_file(f, file_id).map(|update| update.data))
         }) {
@@ -388,7 +385,7 @@ impl EnvUniversal {
                 None
             }
             Err(e) => {
-                FLOG!(uvar_file, "Failed to load from universal variable file:", e);
+                flog!(uvar_file, "Failed to load from universal variable file:", e);
                 None
             }
         }
@@ -408,7 +405,7 @@ impl EnvUniversal {
         current_file_id: FileId,
     ) -> Option<PotentialUpdate<UniversalReadUpdate>> {
         if current_file_id == self.last_read_file_id {
-            FLOG!(uvar_file, "universal log sync elided based on fstat()");
+            flog!(uvar_file, "universal log sync elided based on fstat()");
             None
         } else {
             // Read a variables table from the file.
@@ -417,7 +414,7 @@ impl EnvUniversal {
 
             // Hacky: if the read format is in the future, avoid overwriting the file: never try to
             // save.
-            let do_save = format != UvarFormat::future;
+            let do_save = format != UvarFormat::Future;
 
             // Announce changes and update our exports generation.
             let (export_generation_increment, callbacks) =
@@ -546,7 +543,7 @@ impl EnvUniversal {
 
         let mut cursor = msg;
         if !r#match(&mut cursor, f3::SETUVAR) {
-            FLOGF!(warning, PARSE_ERR, msg);
+            flogf!(warning, PARSE_ERR, msg);
             return;
         }
         // Parse out flags.
@@ -570,7 +567,7 @@ impl EnvUniversal {
 
         // Populate the variable with these flags.
         if !Self::populate_1_variable(cursor, flags, vars, storage) {
-            FLOGF!(warning, PARSE_ERR, msg);
+            flogf!(warning, PARSE_ERR, msg);
         }
     }
 
@@ -587,12 +584,12 @@ impl EnvUniversal {
             flags |= EnvVarFlags::EXPORT;
         } else if r#match(&mut cursor, f2x::SET) {
         } else {
-            FLOGF!(warning, PARSE_ERR, msg);
+            flogf!(warning, PARSE_ERR, msg);
             return;
         }
 
         if !Self::populate_1_variable(cursor, flags, vars, storage) {
-            FLOGF!(warning, PARSE_ERR, msg);
+            flogf!(warning, PARSE_ERR, msg);
         }
     }
 
@@ -604,7 +601,7 @@ impl EnvUniversal {
             .take(u64::try_from(MAX_READ_SIZE).expect("MAX_READ_SIZE must fit into u64"))
             .read_to_end(&mut contents)
         {
-            FLOG!(warning, "Failed to read file:", e);
+            flog!(warning, "Failed to read file:", e);
         }
 
         // Handle overlong files.
@@ -621,11 +618,13 @@ impl EnvUniversal {
 
 /// Return the default variable path, or an empty string on failure.
 pub fn default_vars_path() -> WString {
-    if let Some(mut path) = default_vars_path_directory() {
-        path.push_str("/fish_variables");
-        return path;
+    let ValidatedPath { path, ok } = path_get_config();
+    if !ok {
+        return WString::new();
     }
-    WString::new()
+    let mut path = path.to_owned();
+    path.push_str("/fish_variables");
+    path
 }
 
 /// Error message.
@@ -651,11 +650,6 @@ mod fish3_uvars {
     pub const SETUVAR: &[u8] = b"SETUVAR";
     pub const EXPORT: &[u8] = b"--export";
     pub const PATH: &[u8] = b"--path";
-}
-
-/// Return the default variable path, or an empty string on failure.
-fn default_vars_path_directory() -> Option<WString> {
-    path_get_config()
 }
 
 /// Test if the message msg contains the command cmd.
@@ -743,7 +737,7 @@ fn append_file_entry(
 
     // Append variable name like "fish_color_cwd".
     if !valid_var_name(key_in) {
-        FLOGF!(error, "Illegal variable name: '%s'", key_in);
+        flogf!(error, "Illegal variable name: '%s'", key_in);
         success = false;
     }
     if success {
@@ -806,31 +800,30 @@ fn skip_spaces(mut s: &wstr) -> &wstr {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::ENCODE_DIRECT_BASE;
-    use crate::common::char_offset;
-    use crate::common::wcs2osstring;
-    use crate::env::{EnvVar, EnvVarFlags, VarTable};
-    use crate::env_universal_common::{EnvUniversal, UvarFormat};
-    use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
-    use crate::wutil::{INVALID_FILE_ID, file_id_for_path};
+    use crate::{
+        env::{EnvVar, EnvVarFlags, VarTable},
+        env_universal_common::{EnvUniversal, UvarFormat},
+        prelude::*,
+        tests::prelude::*,
+        wutil::{INVALID_FILE_ID, file_id_for_path},
+    };
+    use fish_tempfile::TempDir;
+    use fish_widestring::{ENCODE_DIRECT_BASE, char_offset, osstr2wcstring, wcs2osstring};
 
     const UVARS_PER_THREAD: usize = 8;
 
-    /// Creates a unique temporary directory and file path for universal variable tests.
-    /// Returns (directory_path, file_path).
-    fn make_test_uvar_path(test_name: &str) -> (std::path::PathBuf, WString) {
-        let test_dir = std::env::temp_dir().join(format!(
-            "fish_test_{}_{:?}",
-            test_name,
-            std::thread::current().id()
-        ));
-        let test_path = sprintf!("%s/varsfile.txt", test_dir.to_string_lossy());
-        (test_dir, test_path)
+    /// Creates a unique temporary directory and file path for universal variable tests inside the
+    /// new tempdir.
+    /// Returns (temp_dir, file_path).
+    fn make_test_uvar_path() -> std::io::Result<(TempDir, WString)> {
+        let temp_dir = fish_tempfile::new_dir()?;
+        let file_path = temp_dir.path().join("varsfile.txt");
+        let file_path = osstr2wcstring(file_path);
+        Ok((temp_dir, file_path))
     }
 
     fn test_universal_helper(x: usize, path: &wstr) {
-        let _cleanup = test_init();
+        test_init();
         let mut uvars = EnvUniversal::new();
         uvars.initialize_at_path(path.to_owned());
 
@@ -853,16 +846,14 @@ mod tests {
 
     #[test]
     fn test_universal() {
-        let _cleanup = test_init();
-        let (test_dir, test_path) = make_test_uvar_path("universal");
-        let _ = std::fs::remove_dir_all(&test_dir);
-        std::fs::create_dir_all(&test_dir).unwrap();
+        test_init();
+        let (_test_dir, test_path) = make_test_uvar_path().unwrap();
 
         let threads = 1;
         let mut handles = Vec::new();
 
         for i in 0..threads {
-            let path = test_path.to_owned();
+            let path = test_path.clone();
             handles.push(std::thread::spawn(move || {
                 test_universal_helper(i, &path);
             }));
@@ -873,7 +864,7 @@ mod tests {
         }
 
         let mut uvars = EnvUniversal::new();
-        uvars.initialize_at_path(test_path.to_owned());
+        uvars.initialize_at_path(test_path);
 
         for i in 0..threads {
             for j in 0..UVARS_PER_THREAD {
@@ -890,14 +881,12 @@ mod tests {
                 assert_eq!(var, expected_val);
             }
         }
-
-        std::fs::remove_dir_all(&test_dir).unwrap();
     }
 
     #[test]
     #[serial]
     fn test_universal_output() {
-        let _cleanup = test_init();
+        test_init();
         let flag_export = EnvVarFlags::EXPORT;
         let flag_pathvar = EnvVarFlags::PATHVAR;
 
@@ -954,7 +943,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_universal_parsing() {
-        let _cleanup = test_init();
+        test_init();
         let input = concat!(
             "# This file contains fish universal variable definitions.\n",
             "# VERSION: 3.0\n",
@@ -1006,7 +995,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_universal_parsing_legacy() {
-        let _cleanup = test_init();
+        test_init();
         let input = concat!(
             "# This file contains fish universal variable definitions.\n",
             "SET varA:ValA1\\x1eValA2\n",
@@ -1034,19 +1023,14 @@ mod tests {
 
     #[test]
     fn test_universal_callbacks() {
-        let _cleanup = test_init();
-        let (test_dir, test_path) = make_test_uvar_path("callbacks");
-        std::fs::create_dir_all(&test_dir).unwrap();
+        test_init();
+        let (_test_dir, test_path) = make_test_uvar_path().unwrap();
         let mut uvars1 = EnvUniversal::new();
         let mut uvars2 = EnvUniversal::new();
         let mut callbacks = uvars1
-            .initialize_at_path(test_path.to_owned())
+            .initialize_at_path(test_path.clone())
             .unwrap_or_default();
-        callbacks.append(
-            &mut uvars2
-                .initialize_at_path(test_path.to_owned())
-                .unwrap_or_default(),
-        );
+        callbacks.append(&mut uvars2.initialize_at_path(test_path).unwrap_or_default());
 
         macro_rules! sync {
             ($uvars:expr) => {
@@ -1100,13 +1084,12 @@ mod tests {
         assert_eq!(callbacks[1].val.as_ref().unwrap().as_string(), L!("1"));
         assert_eq!(callbacks[2].key, L!("delta"));
         assert_eq!(callbacks[2].val, None);
-        std::fs::remove_dir_all(&test_dir).unwrap();
     }
 
     #[test]
     #[serial]
     fn test_universal_formats() {
-        let _cleanup = test_init();
+        test_init();
         macro_rules! validate {
             ( $version_line:literal, $expected_format:expr ) => {
                 assert_eq!(
@@ -1115,22 +1098,21 @@ mod tests {
                 );
             };
         }
-        validate!(b"# VERSION: 3.0", UvarFormat::fish_3_0);
-        validate!(b"# version: 3.0", UvarFormat::fish_2_x);
-        validate!(b"# blah blahVERSION: 3.0", UvarFormat::fish_2_x);
-        validate!(b"stuff\n# blah blahVERSION: 3.0", UvarFormat::fish_2_x);
-        validate!(b"# blah\n# VERSION: 3.0", UvarFormat::fish_3_0);
-        validate!(b"# blah\n#VERSION: 3.0", UvarFormat::fish_3_0);
-        validate!(b"# blah\n#VERSION:3.0", UvarFormat::fish_3_0);
-        validate!(b"# blah\n#VERSION:3.1", UvarFormat::future);
+        validate!(b"# VERSION: 3.0", UvarFormat::Fish_3_0);
+        validate!(b"# version: 3.0", UvarFormat::Fish_2_x);
+        validate!(b"# blah blahVERSION: 3.0", UvarFormat::Fish_2_x);
+        validate!(b"stuff\n# blah blahVERSION: 3.0", UvarFormat::Fish_2_x);
+        validate!(b"# blah\n# VERSION: 3.0", UvarFormat::Fish_3_0);
+        validate!(b"# blah\n#VERSION: 3.0", UvarFormat::Fish_3_0);
+        validate!(b"# blah\n#VERSION:3.0", UvarFormat::Fish_3_0);
+        validate!(b"# blah\n#VERSION:3.1", UvarFormat::Future);
     }
 
     #[test]
     fn test_universal_ok_to_save() {
-        let _cleanup = test_init();
+        test_init();
         // Ensure we don't try to save after reading from a newer fish.
-        let (test_dir, test_path) = make_test_uvar_path("ok_to_save");
-        std::fs::create_dir_all(&test_dir).unwrap();
+        let (_test_dir, test_path) = make_test_uvar_path().unwrap();
         let contents = b"# VERSION: 99999.99\n";
         std::fs::write(wcs2osstring(&test_path), contents).unwrap();
 
@@ -1139,7 +1121,7 @@ mod tests {
 
         let mut uvars = EnvUniversal::new();
         uvars
-            .initialize_at_path(test_path.to_owned())
+            .initialize_at_path(test_path.clone())
             .unwrap_or_default();
         assert!(!uvars.is_ok_to_save(), "Should not be OK to save");
         uvars.sync();
@@ -1152,6 +1134,5 @@ mod tests {
         // Ensure file is same.
         let after_id = file_id_for_path(&test_path);
         assert_eq!(before_id, after_id, "test_path should not have changed",);
-        std::fs::remove_dir_all(&test_dir).unwrap();
     }
 }

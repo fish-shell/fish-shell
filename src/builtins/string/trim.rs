@@ -28,12 +28,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("c:lrq");
 
-    fn parse_opt(
-        &mut self,
-        _n: &wstr,
-        c: char,
-        arg: Option<&'args wstr>,
-    ) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&'args wstr>) -> Result<(), StringError<'_>> {
         match c {
             'c' => self.chars_to_trim = arg.unwrap(),
             'l' => self.left = true,
@@ -41,12 +36,12 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
@@ -72,7 +67,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
                 .count()
         };
 
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let trim_start = if self.left { to_trim_start(&arg) } else { 0 };
             // collision is only an issue if the whole string is getting trimmed
             let trim_end = if self.right && trim_start != arg.len() {
@@ -85,7 +80,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
             if !self.quiet {
                 streams.out.append(&arg[trim_start..arg.len() - trim_end]);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append('\n');
                 }
             } else if ntrim > 0 {
                 return Ok(());
@@ -102,7 +97,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
 
 #[cfg(test)]
 mod tests {
-    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK};
     use crate::tests::prelude::*;
     use crate::validate;
 
@@ -110,7 +105,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "trim"], STATUS_CMD_ERROR, "");
         validate!(["string", "trim", ""], STATUS_CMD_ERROR, "\n");
         validate!(["string", "trim", " "], STATUS_CMD_OK, "\n");

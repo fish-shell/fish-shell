@@ -31,7 +31,7 @@ data = json.load(json_data)
 json_data.close()
 packages = itertools.chain(data.get('require', {}).keys(), data.get('require-dev', {}).keys())
 print(\"\n\".join(packages))
-      " | $python -S
+    " | $python -S
 end
 
 function __fish_composer_installed_packages

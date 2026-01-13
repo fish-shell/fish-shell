@@ -2,21 +2,50 @@
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("colors", () => ({
         // TODO make null
-        selectedColorScheme: {},
-        terminalBackgroundColor: "black",
+        selectedColorScheme: {
+            by_color_theme: {
+                unknown: {
+                    colors: {
+                    },
+                    colordata: {
+                    },
+                },
+            },
+        },
+        terminalColorTheme: "dark",
+        actualTerminalBackgroundColor: "black",
+        overriddenTerminalBackgroundColor: undefined,
         showSaveButton: false,
         csUserVisibleTitle: "",
         selectedColorSetting: false,
 
         text_color_for_color: window.text_color_for_color,
 
-        changeSelectedColorScheme(newScheme) {
-            console.log(newScheme);
-            // TODO find out if angular.copy is deep copy
-            this.selectedColorScheme = { ...newScheme };
-            if (this.selectedColorScheme.preferred_background) {
-                this.terminalBackgroundColor = this.selectedColorScheme.preferred_background;
+        currentColorScheme() {
+            let scheme = this.selectedColorScheme.by_color_theme;
+            if (scheme[this.terminalColorTheme] !== undefined) {
+                return scheme[this.terminalColorTheme];
             }
+            return scheme['unknown'];
+        },
+
+        changedSelectedColorSchemeOrColorTheme() {
+            this.selectedColorScheme.name_with_color_theme =
+                color_scheme_respects_color_theme(this.selectedColorScheme)
+                ? `${this.selectedColorScheme.name} (${this.terminalColorTheme} color theme)`
+                : this.selectedColorScheme.name;
+        },
+
+        changeSelectedColorScheme(newScheme) {
+            this.terminalColorTheme = newScheme.terminal_color_theme ||
+                (newScheme.by_color_theme.light !== undefined ? "light" : "dark");
+            this.selectedColorScheme = newScheme;
+            let preferred_background = this.currentColorScheme().preferred_background;
+            if (preferred_background) {
+                this.actualTerminalBackgroundColor = preferred_background;
+            }
+            this.overriddenTerminalBackgroundColor = undefined;
+            this.changedSelectedColorSchemeOrColorTheme();
             this.selectedColorSetting = false;
             this.customizationActive = false;
             this.csEditingType = false;
@@ -34,8 +63,9 @@ document.addEventListener("alpine:init", () => {
 
         get colorArraysArray() {
             var result = null;
-            if (this.selectedColorScheme.colors && this.selectedColorScheme.colors.length > 0)
-                result = get_colors_as_nested_array(this.selectedColorScheme.colors, 32);
+            if (this.currentColorScheme().colors &&
+                this.currentColorScheme().colors.length > 0)
+                result = get_colors_as_nested_array(this.currentColorScheme().colors, 32);
             else result = get_colors_as_nested_array(term_256_colors, 32);
             return result;
         },
@@ -60,7 +90,7 @@ document.addEventListener("alpine:init", () => {
 
         toggleCustomizationActive() {
             if (!this.customizationActive) {
-                this.beginCustomizationWithSetting(this.selectedColorSetting || "command");
+                this.beginCustomizationWithSetting(this.selectedColorSetting || "fish_color_command");
             } else {
                 this.customizationActive = false;
                 this.selectedColorSetting = "";
@@ -69,8 +99,8 @@ document.addEventListener("alpine:init", () => {
         },
 
         changeSelectedTextColor(color) {
-            this.selectedColorScheme[this.selectedColorSetting] = color;
-            this.selectedColorScheme["colordata-" + this.selectedColorSetting].color = color;
+            this.currentColorScheme().colors[this.selectedColorSetting] = color;
+            this.currentColorScheme().colordata[this.selectedColorSetting].color = color;
             this.noteThemeChanged();
         },
 
@@ -87,12 +117,6 @@ document.addEventListener("alpine:init", () => {
 
         /* Array of FishColorSchemes */
         colorSchemes: [],
-        isValidColor(col) {
-            if (col == "normal") return true;
-            var s = new Option().style;
-            s.color = col;
-            return !!s.color;
-        },
 
         saveThemeButtonTitle: "Set Theme",
 
@@ -101,75 +125,14 @@ document.addEventListener("alpine:init", () => {
         },
 
         async setTheme() {
-            var settingNames = [
-                "normal",
-                "command",
-                "keyword",
-                "quote",
-                "redirection",
-                "end",
-                "error",
-                "param",
-                "comment",
-                "match",
-                "selection",
-                "search_match",
-                "history_current",
-                "operator",
-                "escape",
-                "cwd",
-                "cwd_root",
-                "option",
-                "valid_path",
-                "autosuggestion",
-                "user",
-                "host",
-                "host_remote",
-                "history_current",
-                "status",
-                "cancel",
-                // Cheesy hardcoded variable names ahoy!
-                // These are all the pager vars,
-                // we should really just save all these in a dictionary.
-                "fish_pager_color_background",
-                "fish_pager_color_prefix",
-                "fish_pager_color_progress",
-                "fish_pager_color_completion",
-                "fish_pager_color_description",
-                "fish_pager_color_selected_background",
-                "fish_pager_color_selected_prefix",
-                "fish_pager_color_selected_completion",
-                "fish_pager_color_selected_description",
-                // TODO: Setting these to empty currently makes them weird. Figure out why!
-                /*
-                                "fish_pager_color_secondary_background",
-                                "fish_pager_color_secondary_prefix",
-                                "fish_pager_color_secondary_completion",
-                                "fish_pager_color_secondary_description",
-                                */
-            ];
-            var remaining = settingNames.length;
             var postdata = {
                 theme: this.selectedColorScheme["name"],
                 colors: [],
             };
-            for (var name of settingNames) {
-                var selected;
-                var realname = "colordata-" + name;
-                // Skip colors undefined in the current theme
-                // js is dumb - the empty string is false,
-                // but we want that to mean unsetting a var.
-                if (
-                    !this.selectedColorScheme[realname] &&
-                    this.selectedColorScheme[realname] !== ""
-                ) {
-                    continue;
-                } else {
-                    selected = this.selectedColorScheme[realname];
-                }
+            for (let [name, value] of Object.entries(this.currentColorScheme().colordata)) {
                 postdata.colors.push({
                     what: name,
-                    color: selected,
+                    color: value,
                 });
             }
             let resp = await fetch("set_color/", {
@@ -188,30 +151,56 @@ document.addEventListener("alpine:init", () => {
             for (var scheme of schemes) {
                 var currentScheme = {
                     name: "Current",
-                    colors: [],
-                    preferred_background: "black",
+                    by_color_theme: {
+                        'unknown': {
+                            colors: {},
+                            colordata: {},
+                        }
+                    },
                 };
-                currentScheme["name"] = scheme["theme"];
-                if (scheme["name"]) currentScheme["name"] = scheme["name"];
-                var data = scheme["colors"];
-                if (scheme["preferred_background"]) {
-                    if (this.isValidColor(scheme["preferred_background"])) {
-                        currentScheme["preferred_background"] = scheme["preferred_background"];
-                    }
-                }
+                let name = scheme["theme"];
+                if (scheme["name"]) name = scheme["name"];
+                currentScheme["name"] = name;
+                currentScheme["name_with_color_theme"] = name;
+                currentScheme["name_with_color_themes"] = name +
+                    (color_scheme_respects_color_theme(scheme) ? " (light/dark)" : "");
                 if (scheme["url"]) currentScheme["url"] = scheme["url"];
-
-                for (var i in data) {
-                    currentScheme[data[i].name] = interpret_color(data[i].color).replace(/#/, "");
-                    // HACK: For some reason the colors array is cleared later
-                    // So we cheesily encode the actual objects as colordata-, so we can send them.
-                    // TODO: We should switch to keeping the objects, and also displaying them
-                    // with underlines and such.
-                    currentScheme["colordata-" + data[i].name] = data[i];
+                var by_theme = scheme["by_color_theme"];
+                for (const [color_theme, data] of Object.entries(by_theme)) {
+                    let outdata = currentScheme.by_color_theme[color_theme] = {
+                        colors: {},
+                        colordata: {},
+                        preferred_background: "black",
+                    };
+                    let preferredBackground = data["preferred_background"];
+                    if (preferredBackground) {
+                        outdata.preferred_background =
+                            preferredBackground.match(/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+                            ? "#"+preferredBackground : preferredBackground;
+                    }
+                    let colors = data.colors;
+                    for (var i in colors) {
+                        outdata.colors[colors[i].name] = interpret_color(colors[i].color).replace(/#/, "");
+                        // HACK: For some reason the colors array is cleared later
+                        // So we cheesily encode the actual objects in colordata, so we can send them.
+                        // TODO: We should switch to keeping the objects, and also displaying them
+                        // with underlines and such.
+                        outdata.colordata[colors[i].name] = colors[i];
+                    }
                 }
                 this.colorSchemes.push(currentScheme);
             }
-            this.changeSelectedColorScheme(this.colorSchemes[0]);
+            this.changeSelectedColorScheme(JSON.parse(JSON.stringify(this.colorSchemes[0])));
+
+            this.$watch('overriddenTerminalBackgroundColor', (newValue) => {
+                if (newValue === undefined)
+                    return;
+                // see sampleTerminalBackgroundColors
+                const isLight = newValue === 'white' || newValue === "#"+solarized.base3;
+                this.terminalColorTheme = isLight ? 'light' : 'dark';
+                this.actualTerminalBackgroundColor = newValue;
+                this.changedSelectedColorSchemeOrColorTheme();
+            });
         },
     }));
 
@@ -221,7 +210,8 @@ document.addEventListener("alpine:init", () => {
         samplePrompts: [],
         savePromptButtonTitle: "Set Prompt",
         // where is this initialized in the original code?
-        terminalBackgroundColor: "black",
+        actualTerminalBackgroundColor: "black",
+        overriddenTerminalBackgroundColor: undefined,
 
         async fetchSamplePrompts() {
             this.samplePrompts = await (await fetch("sample_prompts/")).json();
@@ -412,3 +402,16 @@ document.addEventListener("alpine:init", () => {
         },
     }));
 });
+
+function color_scheme_respects_color_theme(colorScheme) {
+    return colorScheme.by_color_theme.light !== undefined &&
+        colorScheme.by_color_theme.dark !== undefined;
+}
+
+function default_color_scheme(colorScheme) {
+    if (colorScheme.by_color_theme.light !== undefined)
+        return colorScheme.by_color_theme.light;
+    else if (colorScheme.by_color_theme.dark !== undefined)
+        return colorScheme.by_color_theme.dark;
+    return colorScheme.by_color_theme.unknown;
+}

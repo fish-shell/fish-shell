@@ -7,33 +7,35 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::{ops::ControlFlow, os::unix::prelude::OsStrExt};
+use std::ops::ControlFlow;
 
 use libc::{STDIN_FILENO, VEOF, VINTR};
 
 use crate::{
-    builtins::shared::BUILTIN_ERR_UNKNOWN,
-    common::{PROGRAM_NAME, bytes2wcstring, get_program_name, shell_modes},
-    env::{EnvStack, Environment, env_init},
-    future_feature_flags,
-    input_common::{
-        CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer, KeyEvent, QueryResultEvent,
-        match_key_event_to_key,
+    builtins::Error,
+    common::{PROGRAM_NAME, get_program_name, shell_modes},
+    env::{EnvStack, Environment as _, env_init},
+    err_fmt, err_str,
+    input::{
+        CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer as _, KeyEvent,
+        QueryResultEvent, match_key_event_to_key,
     },
     key::{Key, char_to_symbol},
     nix::isatty,
     panic::panic_handler,
+    prelude::*,
     print_help::print_help,
     proc::set_interactive_session,
     reader::{
-        check_exit_loop_maybe_warning, reader_init, reader_sighup, set_shell_modes, terminal_init,
+        check_exit_loop_maybe_warning, reader_init, set_shell_modes,
+        signal_safe_reader_set_exit_signal, terminal_init,
     },
     threads,
     topic_monitor::topic_monitor_init,
     tty_handoff::TtyHandoff,
-    wchar::prelude::*,
-    wgetopt::{ArgType, WGetopter, WOption, wopt},
 };
+use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
+use fish_widestring::osstr2wcstring;
 
 use super::prelude::*;
 
@@ -47,7 +49,7 @@ fn should_exit(
 
     for evt in [VINTR, VEOF] {
         let modes = shell_modes();
-        let cc = Key::from_single_byte(modes.c_cc[evt]);
+        let cc = Key::from_single_byte(modes.control_chars[evt]);
 
         if match_key_event_to_key(&key_evt, &cc).is_some() {
             if recent_keys
@@ -59,9 +61,9 @@ fn should_exit(
             {
                 return true;
             }
-            streams.err.append(wgettext_fmt!(
-                "Press ctrl-%c again to exit\n",
-                char::from(modes.c_cc[evt] + 0x60)
+            streams.err.appendln(&wgettext_fmt!(
+                "Press ctrl-%c again to exit",
+                char::from(modes.control_chars[evt] + 0x60)
             ));
             return false;
         }
@@ -96,7 +98,7 @@ fn process_input(
         use QueryResultEvent::*;
         let kevt = match input_queue.readch() {
             CharEvent::Implicit(ImplicitEvent::Eof) => {
-                reader_sighup();
+                signal_safe_reader_set_exit_signal(libc::SIGHUP);
                 continue;
             }
             CharEvent::Key(kevt) => kevt,
@@ -107,7 +109,7 @@ fn process_input(
         if verbose {
             streams.out.append(L!("# decoded from: "));
             for (i, byte) in kevt.seq.chars().enumerate() {
-                streams.out.append(char_to_symbol(byte, i == 0));
+                streams.out.append(&char_to_symbol(byte, i == 0));
             }
             streams.out.append(L!("\n"));
         }
@@ -119,13 +121,24 @@ fn process_input(
             shifted_key.codepoint = kevt.key.shifted_codepoint;
             keys.push((shifted_key, "shifted key"));
         }
+        if kevt.key.associated_text[0] != '\0' {
+            let associated_text = WString::from_iter(kevt.key.text_to_insert().unwrap());
+            if associated_text.char_count() > 1
+                || associated_text.as_char_slice().first() != kevt.key.codepoint_text().as_ref()
+            {
+                streams.out.append(&sprintf!(
+                    "# text for insertion (not used for bind matching): %s\n",
+                    associated_text
+                ));
+            }
+        }
         if kevt.key.base_layout_codepoint != '\0' {
             let mut base_layout_key = kevt.key.key;
             base_layout_key.codepoint = kevt.key.base_layout_codepoint;
             keys.push((base_layout_key, "physical key"));
         }
         for (key, explanation) in keys {
-            streams.out.append(sprintf!(
+            streams.out.append(&sprintf!(
                 "bind %s 'do something'%s%s\n",
                 key,
                 if explanation.is_empty() { "" } else { " # " },
@@ -160,10 +173,10 @@ fn setup_and_process_keys(
             .err
             .appendln("To terminate this program type \"exit\" or \"quit\" in this window,");
         let modes = shell_modes();
-        streams.err.appendln(wgettext_fmt!(
+        streams.err.appendln(&wgettext_fmt!(
             "or press ctrl-%c or ctrl-%c twice in a row.",
-            char::from(modes.c_cc[VINTR] + 0x60),
-            char::from(modes.c_cc[VEOF] + 0x60)
+            char::from(modes.control_chars[VINTR] + 0x60),
+            char::from(modes.control_chars[VEOF] + 0x60)
         ));
         streams.err.appendln(L!("\n"));
     }
@@ -172,6 +185,7 @@ fn setup_and_process_keys(
 }
 
 fn parse_flags(
+    parser: Option<&mut Parser>,
     streams: &mut IoStreams,
     args: Vec<WString>,
     continuous_mode: &mut bool,
@@ -184,7 +198,6 @@ fn parse_flags(
         wopt(L!("version"), ArgType::NoArgument, 'v'),
         wopt(L!("verbose"), ArgType::NoArgument, 'V'),
     ];
-
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
     let mut w = WGetopter::new(short_opts, long_opts, &mut shim_args);
     while let Some(opt) = w.next_opt() {
@@ -193,34 +206,32 @@ fn parse_flags(
                 *continuous_mode = true;
             }
             'h' => {
-                print_help("fish_key_reader");
+                if let Some(parser) = parser {
+                    builtin_print_help(parser, streams, L!("fish_key_reader"));
+                } else {
+                    print_help("fish_key_reader");
+                }
                 return ControlFlow::Break(Ok(SUCCESS));
             }
             'v' => {
-                streams.out.appendln(wgettext_fmt!(
-                    "%s, version %s",
-                    get_program_name(),
-                    crate::BUILD_VERSION
-                ));
+                streams
+                    .out
+                    .appendln(&localized_version_string(get_program_name()));
                 return ControlFlow::Break(Ok(SUCCESS));
             }
             'V' => {
                 *verbose = true;
             }
             ';' => {
-                streams.err.append(wgettext_fmt!(
-                    BUILTIN_ERR_UNEXP_ARG,
-                    "fish_key_reader",
-                    w.argv[w.wopt_index - 1]
-                ));
+                err_fmt!(Error::UNEXP_OPT_ARG, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_key_reader"))
+                    .finish(streams);
                 return ControlFlow::Break(Err(STATUS_CMD_ERROR));
             }
             '?' => {
-                streams.err.append(wgettext_fmt!(
-                    BUILTIN_ERR_UNKNOWN,
-                    "fish_key_reader",
-                    w.argv[w.wopt_index - 1]
-                ));
+                err_fmt!(Error::UNKNOWN_OPT, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_key_reader"))
+                    .finish(streams);
                 return ControlFlow::Break(Err(STATUS_CMD_ERROR));
             }
             _ => panic!(),
@@ -229,9 +240,7 @@ fn parse_flags(
 
     let argc = args.len() - w.wopt_index;
     if argc != 0 {
-        streams
-            .err
-            .appendln(wgettext_fmt!("Expected no arguments, got %d", argc));
+        err_fmt!("Expected no arguments, got %d", argc).finish(streams);
         return ControlFlow::Break(Err(STATUS_CMD_ERROR));
     }
 
@@ -239,7 +248,7 @@ fn parse_flags(
 }
 
 pub fn fish_key_reader(
-    _parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
     args: &mut [&wstr],
 ) -> BuiltinResult {
@@ -247,12 +256,18 @@ pub fn fish_key_reader(
     let mut verbose = false;
 
     let args = args.iter_mut().map(|x| x.to_owned()).collect();
-    if let ControlFlow::Break(s) = parse_flags(streams, args, &mut continuous_mode, &mut verbose) {
+    if let ControlFlow::Break(s) = parse_flags(
+        Some(parser),
+        streams,
+        args,
+        &mut continuous_mode,
+        &mut verbose,
+    ) {
         return s;
     }
 
-    if streams.stdin_fd < 0 || !isatty(streams.stdin_fd) {
-        streams.err.appendln("Stdin must be attached to a tty.");
+    if streams.stdin_fd() < 0 || !isatty(streams.stdin_fd()) {
+        err_str!("Stdin must be attached to a tty.").finish(streams);
         return Err(STATUS_CMD_ERROR);
     }
 
@@ -261,7 +276,7 @@ pub fn fish_key_reader(
         continuous_mode,
         verbose,
         // Won't be querying, so no timeout value needed.
-        InputEventQueue::new(streams.stdin_fd, None),
+        InputEventQueue::new(streams.stdin_fd(), None),
     )
 }
 
@@ -279,36 +294,33 @@ fn throwing_main() -> i32 {
     set_interactive_session(true);
     topic_monitor_init();
     threads::init();
-    crate::wutil::gettext::initialize_gettext();
-    env_init(None, true, false);
+    #[cfg(feature = "localize-messages")]
+    crate::localization::initialize_localization();
+    env_init(None, false);
     reader_init(false);
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            future_feature_flags::set_from_string(s.as_utfstr());
+            fish_feature_flags::set_from_string(s.as_utfstr());
         }
     }
 
     let mut out = Fd(FdOutputStream::new(STDOUT_FILENO));
     let mut err = Fd(FdOutputStream::new(STDERR_FILENO));
     let io_chain = IoChain::new();
-    let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
+    let streams = &mut IoStreams::new(&mut out, &mut err, &io_chain);
 
     let mut continuous_mode = false;
     let mut verbose = false;
 
-    let args: Vec<WString> = std::env::args_os()
-        .map(|osstr| bytes2wcstring(osstr.as_bytes()))
-        .collect();
+    let args: Vec<WString> = std::env::args_os().map(osstr2wcstring).collect();
     if let ControlFlow::Break(s) =
-        parse_flags(&mut streams, args, &mut continuous_mode, &mut verbose)
+        parse_flags(None, streams, args, &mut continuous_mode, &mut verbose)
     {
         return s.builtin_status_code();
     }
 
     if !isatty(STDIN_FILENO) {
-        streams
-            .err
-            .appendln(wgettext!("Stdin must be attached to a tty."));
+        err_str!("Stdin must be attached to a tty.").finish(streams);
         return 1;
     }
 
@@ -316,9 +328,8 @@ fn throwing_main() -> i32 {
         let vars = EnvStack::new();
         env_stack_set_from_env!(vars, "STY");
         env_stack_set_from_env!(vars, "TERM");
-        terminal_init(&vars, STDIN_FILENO)
+        terminal_init(&vars, STDIN_FILENO).input_queue
     };
 
-    setup_and_process_keys(&mut streams, continuous_mode, verbose, input_queue)
-        .builtin_status_code()
+    setup_and_process_keys(streams, continuous_mode, verbose, input_queue).builtin_status_code()
 }

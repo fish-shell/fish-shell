@@ -1,7 +1,8 @@
-use crate::signal::Signal;
-use crate::wchar::{L, WString, wstr};
-use crate::wcstringutil::join_strings;
+use crate::env::r#impl::is_read_only;
+use crate::signal::RawSignal;
 use bitflags::bitflags;
+use fish_wcstringutil::join_strings;
+use fish_widestring::{L, WString, wstr};
 use libc::c_int;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -31,17 +32,48 @@ bitflags! {
         const PATHVAR = 1 << 6;
         /// Flag to unmark a variable as a path variable.
         const UNPATHVAR = 1 << 7;
-        /// Flag for variable update request from the user. All variable changes that are made directly
-        /// by the user, such as those from the `read` and `set` builtin must have this flag set. It
-        /// serves one purpose: to indicate that an error should be returned if the user is attempting
-        /// to modify a var that should not be modified by direct user action; e.g., a read-only var.
-        const USER = 1 << 8;
     }
+}
+
+impl EnvMode {
+    pub const ANY_SCOPE: EnvMode = EnvMode::LOCAL
+        .union(EnvMode::FUNCTION)
+        .union(EnvMode::GLOBAL)
+        .union(EnvMode::UNIVERSAL);
 }
 
 impl From<EnvMode> for u16 {
     fn from(val: EnvMode) -> Self {
         val.bits()
+    }
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct EnvSetMode {
+    pub mode: EnvMode,
+
+    /// Flag for variable update request from the user. All variable changes that are made directly
+    /// by the user, such as those from the `read` and `set` builtin must have this flag set. It
+    /// serves to indicate that an error should be returned if the user is attempting to modify
+    /// a var that should not be modified by direct user action; e.g., a read-only var.
+    pub user: bool,
+
+    pub is_repainting: bool,
+}
+
+impl EnvSetMode {
+    pub fn new(mode: EnvMode, is_repainting: bool) -> Self {
+        Self::new_with(mode, false, is_repainting)
+    }
+    pub fn new_with(mode: EnvMode, user: bool, is_repainting: bool) -> Self {
+        Self {
+            mode,
+            user,
+            is_repainting,
+        }
+    }
+    pub fn new_at_early_startup(mode: EnvMode) -> Self {
+        Self::new_with(mode, false, false)
     }
 }
 
@@ -53,7 +85,7 @@ pub struct Statuses {
 
     /// Signal from the most recent process in the last job that was terminated by a signal.
     /// None if all processes exited normally.
-    pub kill_signal: Option<Signal>,
+    pub kill_signal: Option<RawSignal>,
 
     /// Pipestatus value.
     pub pipestatus: Vec<c_int>,
@@ -98,13 +130,12 @@ pub struct EnvVar {
 
 impl Default for EnvVar {
     fn default() -> Self {
-        use std::sync::OnceLock;
+        use std::sync::LazyLock;
         /// A shared read-only empty list.
-        static EMPTY_LIST: OnceLock<Arc<[WString]>> = OnceLock::new();
-        let empty_list = EMPTY_LIST.get_or_init(|| Arc::new([]));
+        static EMPTY_LIST: LazyLock<Arc<[WString]>> = LazyLock::new(|| Arc::new([]));
 
         EnvVar {
-            values: Arc::clone(empty_list),
+            values: Arc::clone(&*EMPTY_LIST),
             flags: EnvVarFlags::empty(),
         }
     }
@@ -155,22 +186,13 @@ impl EnvVar {
     }
 
     /// Returns the variable's flags.
-    pub fn get_flags(&self) -> EnvVarFlags {
+    pub fn flags(&self) -> EnvVarFlags {
         self.flags
     }
 
     /// Returns the variable's value as a string.
     pub fn as_string(&self) -> WString {
-        join_strings(&self.values, self.get_delimiter())
-    }
-
-    /// Copies the variable's values into an existing list, avoiding reallocation if possible.
-    pub fn to_list(&self, out: &mut Vec<WString>) {
-        // Try to avoid reallocation as much as possible.
-        out.resize(self.values.len(), WString::new());
-        for (i, val) in self.values.iter().enumerate() {
-            out[i].clone_from(val);
-        }
+        join_strings(&self.values, self.delimiter())
     }
 
     /// Returns the variable's values.
@@ -179,7 +201,7 @@ impl EnvVar {
     }
 
     /// Returns the delimiter character used when converting from a list to a string.
-    pub fn get_delimiter(&self) -> char {
+    pub fn delimiter(&self) -> char {
         if self.is_pathvar() {
             PATH_ARRAY_SEP
         } else {
@@ -227,75 +249,16 @@ impl EnvVar {
 
 pub type VarTable = HashMap<WString, EnvVar>;
 
-mod electric {
-    pub(super) const READONLY: u8 = 1 << 0; // May not be modified by the user.
-    pub(super) const COMPUTED: u8 = 1 << 1; // Value is dynamically computed.
-    pub(super) const EXPORTS: u8 = 1 << 2; // Exported to child processes.
-    pub(super) type ElectricVarFlags = u8;
-}
-
-pub struct ElectricVar {
-    pub name: &'static wstr,
-    flags: electric::ElectricVarFlags,
-}
-
-// Keep sorted alphabetically
-#[rustfmt::skip]
-pub const ELECTRIC_VARIABLES: &[ElectricVar] = &[
-    ElectricVar{name: L!("FISH_VERSION"), flags: electric::READONLY},
-    ElectricVar{name: L!("PWD"), flags: electric::READONLY | electric::COMPUTED | electric::EXPORTS},
-    ElectricVar{name: L!("SHLVL"), flags: electric::READONLY | electric::EXPORTS},
-    ElectricVar{name: L!("_"), flags: electric::READONLY},
-    ElectricVar{name: L!("fish_kill_signal"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("fish_killring"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("fish_pid"), flags:electric::READONLY},
-    ElectricVar{name: L!("history"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("hostname"), flags:electric::READONLY},
-    ElectricVar{name: L!("pipestatus"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("status"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("status_generation"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("umask"), flags:electric::COMPUTED},
-    ElectricVar{name: L!("version"), flags:electric::READONLY},
-];
-assert_sorted_by_name!(ELECTRIC_VARIABLES);
-
-impl ElectricVar {
-    /// Return the ElectricVar with the given name, if any
-    pub fn for_name(name: &wstr) -> Option<&'static ElectricVar> {
-        match ELECTRIC_VARIABLES.binary_search_by(|ev| ev.name.cmp(name)) {
-            Ok(idx) => Some(&ELECTRIC_VARIABLES[idx]),
-            Err(_) => None,
-        }
-    }
-
-    pub fn readonly(&self) -> bool {
-        self.flags & electric::READONLY != 0
-    }
-
-    pub fn computed(&self) -> bool {
-        self.flags & electric::COMPUTED != 0
-    }
-
-    pub fn exports(&self) -> bool {
-        self.flags & electric::EXPORTS != 0
-    }
-}
-
-/// Check if a variable may not be set using the set command.
-pub fn is_read_only(name: &wstr) -> bool {
-    if let Some(ev) = ElectricVar::for_name(name) {
-        ev.flags & electric::READONLY != 0
-    } else {
-        false
-    }
-}
+pub const FISH_TERMINAL_COLOR_THEME_VAR: &wstr = L!("fish_terminal_color_theme");
 
 #[cfg(test)]
 mod tests {
     use super::{EnvMode, EnvVar, EnvVarFlags};
-    use crate::env::environment::{EnvStack, Environment};
+    use crate::env::EnvSetMode;
+    use crate::env::environment::{EnvStack, Environment as _};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
+    use assert_matches::assert_matches;
     use std::{
         mem::MaybeUninit,
         time::{SystemTime, UNIX_EPOCH},
@@ -305,7 +268,11 @@ mod tests {
     fn return_timezone_hour(tstamp: SystemTime, timezone: &wstr) -> libc::c_int {
         let vars = EnvStack::globals().create_child(true /* dispatches_var_changes */);
 
-        vars.set_one(L!("TZ"), EnvMode::EXPORT, timezone.to_owned());
+        vars.set_one(
+            L!("TZ"),
+            EnvSetMode::new(EnvMode::EXPORT, false),
+            timezone.to_owned(),
+        );
 
         let _var = vars.get(L!("TZ"));
 
@@ -330,14 +297,14 @@ mod tests {
         let first_tstamp = return_timezone_hour(tstamp, L!("UTC-1"));
         let second_tstamp = return_timezone_hour(tstamp, L!("UTC-2"));
         let delta = second_tstamp - first_tstamp;
-        assert!(delta == 1 || delta == -23);
+        assert_matches!(delta, 1 | -23);
     }
 
     // Verify that setting special env vars have the expected effect on the current shell process.
     #[test]
     #[serial]
     fn test_env_vars() {
-        let _cleanup = test_init();
+        test_init();
         test_timezone_env_vars();
         // TODO: Add tests for the locale vars.
 

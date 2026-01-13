@@ -1,5 +1,5 @@
 # Sources:
-# stow --help 
+# stow --help
 # https://www.gnu.org/software/stow/manual/stow.html
 # https://git.savannah.gnu.org/cgit/stow.git/tree/NEWS
 

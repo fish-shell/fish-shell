@@ -1,27 +1,30 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, sync::LazyLock};
 
 use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
 use nix::sys::resource::Resource as ResourceEnum;
-use once_cell::sync::Lazy;
 
-use crate::fallback::{fish_wcswidth, wcscasecmp};
-use crate::wutil::perror;
+use crate::{builtins::Error, err_fmt, err_raw, err_str, wutil::perror_nix};
+use fish_fallback::{fish_wcswidth, wcscasecmp};
 
 use super::prelude::*;
+
+localizable_consts! {
+    BUILTIN_ULIMIT_UNLIMITED "unlimited"
+}
 
 pub mod limits {
     /// Constants that exist everywhere (except perhaps Cygwin).
     /// Note these are uints on Linux but ints everywhere else - we use -1 as a sentinel
     /// so cast to int.
-    pub mod common {
+    mod common {
         use cfg_if::cfg_if;
         use libc;
         pub const CORE: libc::c_int = libc::RLIMIT_CORE as _;
         pub const DATA: libc::c_int = libc::RLIMIT_DATA as _;
         pub const FSIZE: libc::c_int = libc::RLIMIT_FSIZE as _;
         cfg_if!(
-            if #[cfg(cygwin)] {
+            if #[cfg(any(cygwin, target_os = "illumos"))] {
                 pub const MEMLOCK: libc::c_int = -1;
             } else {
                 pub const MEMLOCK: libc::c_int = libc::RLIMIT_MEMLOCK as _;
@@ -31,7 +34,7 @@ pub mod limits {
         pub const STACK: libc::c_int = libc::RLIMIT_STACK as _;
         pub const CPU: libc::c_int = libc::RLIMIT_CPU as _;
         cfg_if!(
-            if #[cfg(cygwin)] {
+            if #[cfg(any(cygwin, target_os = "illumos"))] {
                 pub const NPROC: libc::c_int = -1;
             } else {
                 pub const NPROC: libc::c_int = libc::RLIMIT_NPROC as _;
@@ -88,16 +91,15 @@ pub mod limits {
 
 fn convert_resource(resource: c_uint) -> ResourceEnum {
     let resource: i32 = resource.try_into().unwrap();
-    use std::mem::{size_of, transmute};
-    // Resource is #[repr(i32)] so this is ok
-    const _: () = assert!(size_of::<c_uint>() == size_of::<ResourceEnum>());
-    unsafe { transmute(resource) }
+
+    // SAFETY: Resource is #[repr(i32)] so this is sound
+    unsafe { std::mem::transmute(resource) }
 }
 
 /// Calls getrlimit.
 fn getrlimit(resource: c_uint) -> Option<(rlim_t, rlim_t)> {
     nix::sys::resource::getrlimit(convert_resource(resource))
-        .map_err(|_| perror("getrlimit"))
+        .map_err(|e| perror_nix("getrlimit", e))
         .ok()
 }
 
@@ -108,16 +110,16 @@ fn setrlimit(resource: c_uint, rlim_cur: rlim_t, rlim_max: rlim_t) -> Result<(),
 /// Print the value of the specified resource limit.
 fn print(resource: c_uint, hard: bool, streams: &mut IoStreams) {
     let Some(l) = get(resource, hard) else {
-        streams.out.append(wgettext!("error\n"));
+        streams.out.appendln(wgettext!("error"));
         return;
     };
 
     if l == RLIM_INFINITY {
-        streams.out.append(wgettext!("unlimited\n"));
+        streams.out.appendln(wgettext!(BUILTIN_ULIMIT_UNLIMITED));
     } else {
         streams
             .out
-            .append(wgettext_fmt!("%u\n", l / get_multiplier(resource)));
+            .appendln(&sprintf!("%u", l / get_multiplier(resource)));
     }
 }
 
@@ -126,7 +128,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
     let mut w = 0;
 
     for resource in RESOURCE_ARR.iter() {
-        w = w.max(fish_wcswidth(resource.desc));
+        w = w.max(fish_wcswidth(resource.desc).unwrap_or_default());
     }
     for resource in RESOURCE_ARR.iter() {
         let Some((rlim_cur, rlim_max)) = getrlimit(resource.resource) else {
@@ -141,7 +143,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
         } else {
             "(kB, "
         };
-        streams.out.append(sprintf!(
+        streams.out.append(&sprintf!(
             "%-*s %10s-%c) ",
             w,
             resource.desc,
@@ -150,11 +152,11 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
         ));
 
         if l == RLIM_INFINITY {
-            streams.out.append(wgettext!("unlimited\n"));
+            streams.out.appendln(wgettext!(BUILTIN_ULIMIT_UNLIMITED));
         } else {
             streams
                 .out
-                .append(wgettext_fmt!("%u\n", l / get_multiplier(resource.resource)));
+                .appendln(&sprintf!("%u", l / get_multiplier(resource.resource)));
         }
     }
 }
@@ -178,6 +180,8 @@ fn set_limit(
     value: rlim_t,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
+    let cmd = L!("ulimit");
+
     let Some((mut rlim_cur, mut rlim_max)) = getrlimit(resource) else {
         return Err(STATUS_CMD_ERROR);
     };
@@ -195,12 +199,14 @@ fn set_limit(
 
     if let Err(errno) = setrlimit(resource, rlim_cur, rlim_max) {
         if errno == Errno::EPERM {
-            streams.err.append(wgettext_fmt!(
-                "ulimit: Permission denied when changing resource of type '%s'\n",
+            err_fmt!(
+                "Permission denied when changing resource of type '%s'",
                 get_desc(resource)
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
         } else {
-            builtin_wperror(L!("ulimit"), streams);
+            err_raw!(builtin_strerror()).cmd(cmd).finish(streams);
         }
 
         Err(STATUS_CMD_ERROR)
@@ -244,7 +250,7 @@ impl Default for Options {
     }
 }
 
-pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn ulimit(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!("HSabcdefilmnqrstuvwyKPTh");
@@ -310,7 +316,14 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Ok(SUCCESS);
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    w.argv[w.wopt_index - 1],
+                    true,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -332,12 +345,10 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     }
 
     if opts.what == -1 {
-        streams.err.append(wgettext_fmt!(
-            "%s: Resource limit not available on this operating system\n",
-            cmd
-        ));
-
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!("Resource limit not available on this operating system")
+            .cmd(cmd)
+            .full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -349,11 +360,10 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         print(what, opts.hard, streams);
         return Ok(SUCCESS);
     } else if arg_count != 1 {
-        streams
-            .err
-            .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
-
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!(Error::TOO_MANY_ARGUMENTS)
+            .cmd(cmd)
+            .full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -364,15 +374,12 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         hard = true;
         soft = true;
     }
+    localizable_consts! {
+        BUILTIN_ULIMIT_INVALID "Invalid limit '%s'"
+    }
 
-    let new_limit: rlim_t = if w.wopt_index == argc {
-        streams.err.append(wgettext_fmt!(
-            "%s: New limit cannot be an empty string\n",
-            cmd
-        ));
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return Err(STATUS_INVALID_ARGS);
-    } else if wcscasecmp(w.argv[w.wopt_index], L!("unlimited")) == Ordering::Equal {
+    let new_limit: rlim_t = if wcscasecmp(w.argv[w.wopt_index], L!("unlimited")) == Ordering::Equal
+    {
         RLIM_INFINITY
     } else if wcscasecmp(w.argv[w.wopt_index], L!("hard")) == Ordering::Equal {
         match get(what, true) {
@@ -386,22 +393,18 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
     } else if let Ok(limit) = fish_wcstol(w.argv[w.wopt_index]) {
         let Some(x) = get_multiplier(what).checked_mul(limit as rlim_t) else {
-            streams.err.append(wgettext_fmt!(
-                "%s: Invalid limit '%s'\n",
-                cmd,
-                w.argv[w.wopt_index]
-            ));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_fmt!(BUILTIN_ULIMIT_INVALID, w.argv[w.wopt_index])
+                .cmd(cmd)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         x
     } else {
-        streams.err.append(wgettext_fmt!(
-            "%s: Invalid limit '%s'\n",
-            cmd,
-            w.argv[w.wopt_index]
-        ));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_fmt!(BUILTIN_ULIMIT_INVALID, w.argv[w.wopt_index])
+            .cmd(cmd)
+            .full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     };
 
@@ -433,7 +436,7 @@ impl Resource {
 }
 
 /// Array of resource_t structs, describing all known resource types.
-static RESOURCE_ARR: Lazy<Box<[Resource]>> = Lazy::new(|| {
+static RESOURCE_ARR: LazyLock<Box<[Resource]>> = LazyLock::new(|| {
     let resources_info = [
         (
             limits::SBSIZE,

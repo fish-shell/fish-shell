@@ -8,32 +8,32 @@ pub struct Transform {
 impl StringSubCommand<'_> for Transform {
     const LONG_OPTIONS: &'static [WOption<'static>] = &[wopt(L!("quiet"), NoArgument, 'q')];
     const SHORT_OPTIONS: &'static wstr = L!("q");
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, _arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
         let mut n_transformed = 0usize;
 
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let transformed = (self.func)(&arg);
             if transformed != arg {
                 n_transformed += 1;
             }
             if !self.quiet {
-                streams.out.append(transformed);
+                streams.out.append(&transformed);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append('\n');
                 }
             } else if n_transformed > 0 {
                 return Ok(());

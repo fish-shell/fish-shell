@@ -1,6 +1,6 @@
-use super::errors::Error;
+use super::Error;
 use super::hex_float;
-use crate::wchar::IntoCharIter;
+use fish_widestring::IntoCharIter;
 
 // Parse a decimal float from a sequence of characters.
 // Return the parsed float, and (on success) the number of characters consumed.
@@ -16,11 +16,7 @@ where
     if let Some(sign) = chars.next_if(|c| ['-', '+'].contains(c)) {
         s.push(sign);
     }
-    if chars
-        .peek()
-        .map(|c| c.is_ascii_alphabetic())
-        .unwrap_or(false)
-    {
+    if chars.peek().is_some_and(|c| c.is_ascii_alphabetic()) {
         return parse_inf_nan(chars, s.as_bytes().first().copied(), consumed);
     }
 
@@ -98,7 +94,7 @@ pub fn parse_inf_nan(
         }
         return Some(f64::NEG_INFINITY);
     }
-    return None;
+    None
 }
 
 fn wcstod_inner<I>(mut chars: I, decimal_sep: char, consumed: &mut usize) -> Result<f64, Error>
@@ -188,11 +184,11 @@ pub fn is_hex_float<Chars: Iterator<Item = char>>(mut chars: Chars) -> bool {
         }
         Some('0') => (),
         _ => return false,
-    };
+    }
     match chars.next() {
         Some('x') | Some('X') => (),
         _ => return false,
-    };
+    }
     match chars.next() {
         Some(c) => c.is_ascii_hexdigit(),
         None => false,
@@ -652,7 +648,7 @@ mod tests {
     }
 
     fn test(input: &str, val: Result<f64, Error>) {
-        test_sep(input, val, '.')
+        test_sep(input, val, '.');
     }
 
     fn test_sep(input: &str, val: Result<f64, Error>, decimalsep: char) {

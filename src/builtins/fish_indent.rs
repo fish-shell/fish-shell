@@ -1,37 +1,38 @@
 //! The fish_indent program.
 
-use std::ffi::OsStr;
-use std::fs;
-use std::io::{Read, Write};
-use std::os::unix::ffi::OsStrExt;
-
-use crate::locale::set_libc_locales;
-use crate::panic::panic_handler;
-
 use super::prelude::*;
-use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
-use crate::common::{
-    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
-    unescape_string, wcs2bytes,
+use crate::{
+    ast::{self, AsNode as _, Ast, Kind, Leaf as _, Node, NodeVisitor, SourceRangeList, Traversal},
+    builtins::Error,
+    common::{PROGRAM_NAME, get_program_name},
+    env::{EnvStack, Environment as _, env_init},
+    err_fmt, err_str,
+    global_safety::RelaxedAtomicBool,
+    highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell},
+    locale::set_libc_locales,
+    operation_context::OperationContext,
+    panic::panic_handler,
+    parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange},
+    parse_util::{SPACES_PER_INDENT, apply_indents, compute_indents},
+    prelude::*,
+    print_help::print_help,
+    threads,
+    tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer},
+    topic_monitor::topic_monitor_init,
+    wutil::fish_iswalnum,
 };
-use crate::env::EnvStack;
-use crate::env::env_init;
-use crate::env::environment::Environment;
-use crate::expand::INTERNAL_SEPARATOR;
-use crate::future_feature_flags;
-use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
-use crate::parse_util::{SPACES_PER_INDENT, apply_indents, parse_util_compute_indents};
-use crate::print_help::print_help;
-use crate::threads;
-use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer};
-use crate::topic_monitor::topic_monitor_init;
-use crate::wchar::prelude::*;
-use crate::wcstringutil::count_preceding_backslashes;
-use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
-use crate::wutil::fish_iswalnum;
+use assert_matches::assert_matches;
+use fish_common::{ReadExt as _, UnescapeFlags, UnescapeStringStyle, unescape_string};
+use fish_wcstringutil::count_preceding_backslashes;
+use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
+use fish_widestring::{INTERNAL_SEPARATOR, bytes2wcstring, osstr2wcstring, wcs2bytes};
+use std::{
+    ffi::OsStr,
+    fmt::Write as _,
+    fs,
+    io::{Read, Write as _},
+    os::unix::ffi::OsStrExt as _,
+};
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex
@@ -161,7 +162,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
                 indents: if do_indent
                 /* Whether to indent, or just insert spaces. */
                 {
-                    parse_util_compute_indents(source)
+                    compute_indents(source)
                 } else {
                     vec![0; source.len()]
                 },
@@ -200,7 +201,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
         }
         self.state.emit_newline();
 
-        std::mem::replace(&mut self.state.output, WString::new())
+        std::mem::take(&mut self.state.output)
     }
 
     // Return the gap ranges from our ast.
@@ -377,15 +378,15 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         match node.kind() {
             // Allow escaped newlines before leaf nodes that can be part of a long command.
             Kind::Argument(_) | Kind::Redirection(_) | Kind::VariableAssignment(_) => {
-                result.allow_escaped_newlines = true
+                result.allow_escaped_newlines = true;
             }
             Kind::Token(token) => {
                 // Allow escaped newlines before && and ||, and also pipes.
                 match token.token_type() {
-                    ParseTokenType::andand | ParseTokenType::oror | ParseTokenType::pipe => {
+                    ParseTokenType::AndAnd | ParseTokenType::OrOr | ParseTokenType::Pipe => {
                         result.allow_escaped_newlines = true;
                     }
-                    ParseTokenType::string => {
+                    ParseTokenType::String => {
                         // Allow escaped newlines before commands that follow a variable assignment
                         // since both can be long (#7955).
                         let p = self.traversal.parent(node);
@@ -393,7 +394,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                             return result;
                         }
                         let p = self.traversal.parent(p);
-                        assert!(matches!(p.kind(), Kind::Statement(_)));
+                        assert_matches!(p.kind(), Kind::Statement(_));
                         let p = self.traversal.parent(p);
                         if let Kind::JobPipeline(job) = p.kind() {
                             if !job.variables.is_empty() {
@@ -531,17 +532,17 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                 }
             } else if self.gap_text_mask_newline {
                 // When told to mask newlines, we do it as long as we get semicolon or newline.
-                if tok.type_ == TokenType::end {
+                if tok.type_ == TokenType::End {
                     continue;
                 }
                 self.gap_text_mask_newline = false;
             }
 
-            if tok.type_ == TokenType::comment {
+            if tok.type_ == TokenType::Comment {
                 self.emit_space_or_indent(GapFlags::default());
                 self.output.push_utfstr(tok_text);
                 needs_nl = true;
-            } else if tok.type_ == TokenType::end {
+            } else if tok.type_ == TokenType::End {
                 // This may be either a newline or semicolon.
                 // Semicolons found here are not part of the ast and can simply be removed.
                 // Newlines are preserved unless mask_newline is set.
@@ -729,10 +730,48 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             .binary_search(&brace.source_range().start())
             .is_ok()
     }
+
+    fn brace_is_continuation(&self, node: &dyn ast::Token) -> bool {
+        let Kind::BraceStatement(brace) = self.traversal.parent(node.as_node()).kind() else {
+            return false;
+        };
+        let Kind::Statement(stmt) = self.traversal.parent(brace.as_node()).kind() else {
+            return false;
+        };
+        let parent = self.traversal.parent(stmt.as_node());
+
+        if matches!(parent.kind(), Kind::NotStatement(_)) {
+            return true;
+        }
+
+        let Kind::JobPipeline(pipeline) = parent.kind() else {
+            return false;
+        };
+
+        if pipeline.time.is_some() {
+            return true;
+        }
+
+        let Kind::JobConjunction(conj) = self.traversal.parent(pipeline.as_node()).kind() else {
+            return false;
+        };
+
+        conj.decorator.is_some()
+            || matches!(
+                self.traversal.parent(conj.as_node()).kind(),
+                Kind::IfClause(_) | Kind::WhileHeader(_)
+            )
+    }
+
     fn visit_left_brace(&mut self, node: &dyn ast::Token) {
         let range = node.source_range();
         let flags = self.gap_text_flags_before_node(node.as_node());
-        if self.is_multi_line_brace(node) && !self.at_line_start() {
+        self.emit_gap_text_before(range, flags);
+
+        if self.is_multi_line_brace(node)
+            && !self.at_line_start()
+            && !self.brace_is_continuation(node)
+        {
             self.emit_newline();
         }
         self.current_indent = self.indent(range.start());
@@ -819,9 +858,9 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             }
             if let Some(token) = node.as_token() {
                 match token.token_type() {
-                    ParseTokenType::end => self.visit_semi_nl(token),
-                    ParseTokenType::left_brace => self.visit_left_brace(token),
-                    ParseTokenType::right_brace => self.visit_right_brace(token),
+                    ParseTokenType::End => self.visit_semi_nl(token),
+                    ParseTokenType::LeftBrace => self.visit_left_brace(token),
+                    ParseTokenType::RightBrace => self.visit_right_brace(token),
                     _ => self.emit_node_text(node),
                 }
                 continue;
@@ -858,10 +897,13 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
 
 // The flags we use to parse.
 fn parse_flags() -> ParseTreeFlags {
-    ParseTreeFlags::CONTINUE_AFTER_ERROR
-        | ParseTreeFlags::INCLUDE_COMMENTS
-        | ParseTreeFlags::LEAVE_UNTERMINATED
-        | ParseTreeFlags::SHOW_BLANK_LINES
+    ParseTreeFlags {
+        continue_after_error: true,
+        include_comments: true,
+        leave_unterminated: true,
+        show_blank_lines: true,
+        ..Default::default()
+    }
 }
 
 /// Return whether a character at a given index is escaped.
@@ -877,10 +919,9 @@ pub fn main() {
 
 fn throwing_main() -> i32 {
     // TODO: Duplicated with fish_key_reader
-    use crate::io::FdOutputStream;
-    use crate::io::IoChain;
-    use crate::io::OutputStream::Fd;
-    use libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+    use crate::fds::BorrowedFdFile;
+    use crate::io::{FdOutputStream, IoChain, OutputStream::Fd};
+    use libc::{STDERR_FILENO, STDOUT_FILENO};
 
     topic_monitor_init();
     threads::init();
@@ -889,33 +930,40 @@ fn throwing_main() -> i32 {
     let mut err = Fd(FdOutputStream::new(STDERR_FILENO));
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
-    streams.stdin_fd = STDIN_FILENO;
+    streams.stdin_file = Some(BorrowedFdFile::stdin());
     // Safety: single-threaded.
     unsafe {
         set_libc_locales(/*log_ok=*/ false)
     };
-    crate::wutil::gettext::initialize_gettext();
-    env_init(None, true, false);
+    #[cfg(feature = "localize-messages")]
+    crate::localization::initialize_localization();
+    env_init(None, false);
 
     // Only set these here so you can't set them via the builtin.
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            future_feature_flags::set_from_string(s.as_utfstr());
+            fish_feature_flags::set_from_string(s.as_utfstr());
         }
     }
 
-    let args: Vec<WString> = std::env::args_os()
-        .map(|osstr| bytes2wcstring(osstr.as_bytes()))
-        .collect();
-    do_indent(&mut streams, args).builtin_status_code()
+    let args: Vec<WString> = std::env::args_os().map(osstr2wcstring).collect();
+    do_indent(None, &mut streams, args).builtin_status_code()
 }
 
-pub fn fish_indent(_parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn fish_indent(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> BuiltinResult {
     let args = args.iter_mut().map(|x| x.to_owned()).collect();
-    do_indent(streams, args)
+    do_indent(Some(parser), streams, args)
 }
 
-fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
+fn do_indent(
+    parser: Option<&mut Parser>,
+    streams: &mut IoStreams,
+    args: Vec<WString>,
+) -> BuiltinResult {
     // Types of output we support
     #[derive(Eq, PartialEq)]
     enum OutputType {
@@ -955,15 +1003,17 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
         match c {
             'P' => DUMP_PARSE_TREE.store(true),
             'h' => {
-                print_help("fish_indent");
+                if let Some(parser) = parser {
+                    builtin_print_help(parser, streams, L!("fish_indent"));
+                } else {
+                    print_help("fish_indent");
+                }
                 return Ok(SUCCESS);
             }
             'v' => {
-                streams.out.appendln(wgettext_fmt!(
-                    "%s, version %s",
-                    get_program_name(),
-                    crate::BUILD_VERSION
-                ));
+                streams
+                    .out
+                    .appendln(&localized_version_string(get_program_name()));
                 return Ok(SUCCESS);
             }
             'w' => output_type = OutputType::File,
@@ -974,7 +1024,19 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             '\x02' => output_type = OutputType::Ansi,
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
-            _ => return Err(STATUS_CMD_ERROR),
+            ';' => {
+                err_fmt!(Error::UNEXP_OPT_ARG, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_indent"))
+                    .finish(streams);
+                return Err(STATUS_CMD_ERROR);
+            }
+            '?' => {
+                err_fmt!(Error::UNKNOWN_OPT, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_indent"))
+                    .finish(streams);
+                return Err(STATUS_CMD_ERROR);
+            }
+            _ => panic!(),
         }
     }
 
@@ -987,24 +1049,27 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
     while i < args.len() || (args.is_empty() && i == 0) {
         if args.is_empty() && i == 0 {
             if output_type == OutputType::File {
-                streams.err.appendln(wgettext_fmt!(
-                    "Expected file path to read/write for -w:\n\n $ %s -w foo.fish",
-                    get_program_name()
-                ));
+                err_str!("Expected file path to read/write for -w:")
+                    .append_to_msg(&sprintf!("\n\n $ %s -w foo.fish\n", get_program_name()))
+                    .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
-            use std::os::fd::FromRawFd;
-            let mut fd = unsafe { std::fs::File::from_raw_fd(streams.stdin_fd) };
+            let Some(stdin_file) = streams.stdin_file.as_mut() else {
+                let cmd = L!("fish_indent");
+                err_str!(Error::STDIN_CLOSED).cmd(cmd).finish(streams);
+                return Err(STATUS_CMD_ERROR);
+            };
             let mut buf = vec![];
-            match fd.read_to_end(&mut buf) {
+            match stdin_file.read_to_end_interruptible(&mut buf) {
                 Ok(_) => {}
-                Err(_) => {
-                    // Don't close the fd
-                    std::mem::forget(fd);
-                    return Err(STATUS_CMD_ERROR);
+                Err(err) => {
+                    return if err.kind() == std::io::ErrorKind::Interrupted {
+                        Err(128 + libc::SIGINT)
+                    } else {
+                        Err(STATUS_CMD_ERROR)
+                    };
                 }
             }
-            std::mem::forget(fd);
             src = bytes2wcstring(&buf);
         } else {
             let arg = args[i];
@@ -1017,11 +1082,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
                     output_location = arg;
                 }
                 Err(err) => {
-                    streams.err.appendln(wgettext_fmt!(
-                        "Opening \"%s\" failed: %s",
-                        arg,
-                        err.to_string()
-                    ));
+                    err_fmt!("Opening \"%s\" failed: %s", arg, err.to_string()).finish(streams);
                     return Err(STATUS_CMD_ERROR);
                 }
             }
@@ -1029,13 +1090,13 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
 
         if output_type == OutputType::PygmentsCsv {
             let output = make_pygments_csv(&src);
-            streams.out.append(bytes2wcstring(&output));
+            streams.out.append(&bytes2wcstring(&output));
             i += 1;
             continue;
         }
 
         let output_wtext = if only_indent || only_unindent {
-            let indents = parse_util_compute_indents(&src);
+            let indents = compute_indents(&src);
             if only_indent {
                 apply_indents(&src, &indents)
             } else {
@@ -1080,7 +1141,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             highlight_shell(
                 &output_wtext,
                 &mut colors,
-                &OperationContext::globals(),
+                &mut OperationContext::globals(),
                 false,
                 None,
             );
@@ -1098,11 +1159,12 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
                             let _ = file.write_all(&wcs2bytes(&output_wtext));
                         }
                         Err(err) => {
-                            streams.err.appendln(wgettext_fmt!(
+                            err_fmt!(
                                 "Opening \"%s\" failed: %s",
                                 output_location,
                                 err.to_string()
-                            ));
+                            )
+                            .finish(streams);
                             return Err(STATUS_CMD_ERROR);
                         }
                     }
@@ -1127,7 +1189,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             }
         }
 
-        streams.out.append(bytes2wcstring(&colored_output));
+        streams.out.append(&bytes2wcstring(&colored_output));
         i += 1;
     }
     if retval == 0 {
@@ -1146,39 +1208,6 @@ fn read_file(mut f: impl Read) -> Result<WString, ()> {
     Ok(bytes2wcstring(&buf))
 }
 
-fn highlight_role_to_string(role: HighlightRole) -> &'static wstr {
-    match role {
-        HighlightRole::normal => L!("normal"),
-        HighlightRole::error => L!("error"),
-        HighlightRole::command => L!("command"),
-        HighlightRole::keyword => L!("keyword"),
-        HighlightRole::statement_terminator => L!("statement_terminator"),
-        HighlightRole::param => L!("param"),
-        HighlightRole::option => L!("option"),
-        HighlightRole::comment => L!("comment"),
-        HighlightRole::search_match => L!("search_match"),
-        HighlightRole::operat => L!("operat"),
-        HighlightRole::escape => L!("escape"),
-        HighlightRole::quote => L!("quote"),
-        HighlightRole::redirection => L!("redirection"),
-        HighlightRole::autosuggestion => L!("autosuggestion"),
-        HighlightRole::selection => L!("selection"),
-        HighlightRole::pager_progress => L!("pager_progress"),
-        HighlightRole::pager_background => L!("pager_background"),
-        HighlightRole::pager_prefix => L!("pager_prefix"),
-        HighlightRole::pager_completion => L!("pager_completion"),
-        HighlightRole::pager_description => L!("pager_description"),
-        HighlightRole::pager_secondary_background => L!("pager_secondary_background"),
-        HighlightRole::pager_secondary_prefix => L!("pager_secondary_prefix"),
-        HighlightRole::pager_secondary_completion => L!("pager_secondary_completion"),
-        HighlightRole::pager_secondary_description => L!("pager_secondary_description"),
-        HighlightRole::pager_selected_background => L!("pager_selected_background"),
-        HighlightRole::pager_selected_prefix => L!("pager_selected_prefix"),
-        HighlightRole::pager_selected_completion => L!("pager_selected_completion"),
-        HighlightRole::pager_selected_description => L!("pager_selected_description"),
-    }
-}
-
 // Entry point for Pygments CSV output.
 // Our output is a newline-separated string.
 // Each line is of the form `start,end,role`
@@ -1187,7 +1216,13 @@ fn highlight_role_to_string(role: HighlightRole) -> &'static wstr {
 // 3,7,command
 fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     let mut colors = vec![];
-    highlight_shell(src, &mut colors, &OperationContext::globals(), false, None);
+    highlight_shell(
+        src,
+        &mut colors,
+        &mut OperationContext::globals(),
+        false,
+        None,
+    );
     assert_eq!(
         colors.len(),
         src.len(),
@@ -1201,7 +1236,7 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     }
 
     let mut token_ranges: Vec<TokenRange> = vec![];
-    for (i, color) in colors.iter().cloned().enumerate() {
+    for (i, color) in colors.iter().copied().enumerate() {
         let role = color.foreground;
         // See if we can extend the last range.
         if let Some(last) = token_ranges.last_mut() {
@@ -1219,14 +1254,9 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     }
 
     // Now render these to a string.
-    let mut result = String::new();
+    let mut result = String::with_capacity(token_ranges.len() * 32);
     for range in token_ranges {
-        result += &format!(
-            "{},{},{}\n",
-            range.start,
-            range.end,
-            highlight_role_to_string(range.role)
-        );
+        writeln!(result, "{},{},{}", range.start, range.end, range.role).unwrap();
     }
     result.into_bytes()
 }
@@ -1234,20 +1264,20 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
 // Entry point for prettification.
 fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
     if DUMP_PARSE_TREE.load() {
-        let ast = ast::parse(
-            src,
-            ParseTreeFlags::LEAVE_UNTERMINATED
-                | ParseTreeFlags::INCLUDE_COMMENTS
-                | ParseTreeFlags::SHOW_EXTRA_SEMIS,
-            None,
-        );
+        let flags = ParseTreeFlags {
+            leave_unterminated: true,
+            include_comments: true,
+            show_extra_semis: true,
+            ..Default::default()
+        };
+        let ast = ast::parse(src, flags, None);
         let ast_dump = ast.dump(src);
-        streams.err.appendln(ast_dump);
+        streams.err.appendln(&ast_dump);
 
         // Output metrics too.
         let mut metrics = AstSizeMetrics::default();
         metrics.visit(ast.top());
-        streams.err.appendln(format!("{}", metrics));
+        streams.err.appendln(&format!("{}", metrics));
     }
     let ast = ast::parse(src, parse_flags(), None);
     let mut printer = PrettyPrinter::new(src, &ast, do_indent);
@@ -1258,20 +1288,22 @@ fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
 /// for the various colors.
 fn html_class_name_for_color(spec: HighlightSpec) -> &'static wstr {
     match spec.foreground {
-        HighlightRole::normal => L!("fish_color_normal"),
-        HighlightRole::error => L!("fish_color_error"),
-        HighlightRole::command => L!("fish_color_command"),
-        HighlightRole::statement_terminator => L!("fish_color_statement_terminator"),
-        HighlightRole::param => L!("fish_color_param"),
-        HighlightRole::option => L!("fish_color_option"),
-        HighlightRole::comment => L!("fish_color_comment"),
-        HighlightRole::search_match => L!("fish_color_search_match"),
-        HighlightRole::operat => L!("fish_color_operator"),
-        HighlightRole::escape => L!("fish_color_escape"),
-        HighlightRole::quote => L!("fish_color_quote"),
-        HighlightRole::redirection => L!("fish_color_redirection"),
-        HighlightRole::autosuggestion => L!("fish_color_autosuggestion"),
-        HighlightRole::selection => L!("fish_color_selection"),
+        HighlightRole::Normal => L!("fish_color_normal"),
+        HighlightRole::Error => L!("fish_color_error"),
+        HighlightRole::Command => L!("fish_color_command"),
+        HighlightRole::Builtin => L!("fish_color_builtin"),
+        HighlightRole::Function => L!("fish_color_function"),
+        HighlightRole::StatementTerminator => L!("fish_color_statement_terminator"),
+        HighlightRole::Param => L!("fish_color_param"),
+        HighlightRole::Option => L!("fish_color_option"),
+        HighlightRole::Comment => L!("fish_color_comment"),
+        HighlightRole::SearchMatch => L!("fish_color_search_match"),
+        HighlightRole::Operat => L!("fish_color_operator"),
+        HighlightRole::Escape => L!("fish_color_escape"),
+        HighlightRole::Quote => L!("fish_color_quote"),
+        HighlightRole::Redirection => L!("fish_color_redirection"),
+        HighlightRole::Autosuggestion => L!("fish_color_autosuggestion"),
+        HighlightRole::Selection => L!("fish_color_selection"),
         _ => L!("fish_color_other"),
     }
 }

@@ -9,12 +9,11 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 max_line_length = 100
 
-[{Makefile,*.in}]
+[{Makefile,{BSD,GNU}makefile}]
 indent_style = tab
 
 [*.{md,rst}]
 max_line_length = unset
-trim_trailing_whitespace = false
 
 [*.sh]
 indent_size = 4
@@ -22,7 +21,7 @@ indent_size = 4
 [build_tools/release.sh]
 max_line_length = 72
 
-[Dockerfile]
+[Vagrantfile]
 indent_size = 2
 
 [share/{completions,functions}/**.fish]
@@ -30,3 +29,6 @@ max_line_length = unset
 
 [{COMMIT_EDITMSG,git-revise-todo,*.jjdescription}]
 max_line_length = 72
+
+[*.{toml,yml}]
+indent_size = 2

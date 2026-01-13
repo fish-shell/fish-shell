@@ -154,6 +154,20 @@ expect_prompt()
 send("\x1b[A")
 expect_re("echo TERM")  # not ephemeral!
 
+# Verify that ctrl-l preserves an active up-arrow history search
+sendline("echo __ctrl_l_history_a")
+expect_prompt("__ctrl_l_history_a")
+sendline("echo __ctrl_l_history_b")
+expect_prompt("__ctrl_l_history_b")
+send("__ctrl_l_history")
+send("\x1b[A")
+expect_re("echo __ctrl_l_history_b")
+send("\f")
+send("\x1b[A")
+expect_re("echo __ctrl_l_history_a")
+sendline("")
+expect_prompt("__ctrl_l_history_a")
+
 # Verify that clear-session works as expected
 # Note: This test depends on that history merge resets the session from history clear-sessions point of view.
 sendline("builtin history clear")

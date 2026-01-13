@@ -22,6 +22,8 @@ complete -c history -n '__fish_seen_subcommand_from search; or not __fish_seen_s
     -s z -l null -d "Terminate entries with NUL character"
 complete -c history -n '__fish_seen_subcommand_from search; or not __fish_seen_subcommand_from $__fish_history_all_commands' \
     -s R -l reverse -d "Output the oldest results first" -x
+complete -c history -n '__fish_seen_subcommand_from search; or not __fish_seen_subcommand_from $__fish_history_all_commands' \
+    -l color -d "When to colorize output" -xa "always never auto"
 
 # We don't include a completion for the "save" subcommand because it should not be used
 # interactively.

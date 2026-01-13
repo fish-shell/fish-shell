@@ -1,5 +1,26 @@
-#RUN: %fish %s
+#RUN: fish=%fish %fish %s
 # Tests for string builtin. Mostly taken from man page examples.
+
+string
+# CHECKERR: string: missing subcommand
+# CHECKERR: {{.*}}checks/string.fish (line {{\d+}}):
+# CHECKERR: string
+# CHECKERR: ^
+# CHECKERR: (Type 'help string' for related documentation)
+
+string abc
+# CHECKERR: string abc: invalid subcommand
+# CHECKERR: {{.*}}checks/string.fish (line {{\d+}}):
+# CHECKERR: string abc
+# CHECKERR: ^
+# CHECKERR: (Type 'help string' for related documentation)
+
+string --abc
+# CHECKERR: string --abc: invalid subcommand
+# CHECKERR: {{.*}}checks/string.fish (line {{\d+}}):
+# CHECKERR: string --abc
+# CHECKERR: ^
+# CHECKERR: (Type 'help string' for related documentation)
 
 string match -r -v "c.*" dog can cat diz; and echo "exit 0"
 # CHECK: dog
@@ -36,6 +57,12 @@ string match -q -r -v x y; and echo "exit 0"
 string match -q -r -v x x; or echo "exit 1"
 # CHECK: exit 1
 
+string match -v -g foo foo
+# CHECKERR: string match: invalid option combination, --invert and --groups-only are mutually exclusive
+
+string match
+# CHECKERR: string match: missing argument
+
 string length "hello, world"
 # CHECK: 12
 
@@ -47,7 +74,7 @@ string pad foo
 string pad -C foo
 # CHECK: foo
 
-string pad -r -w 7 --chars - foo
+string pad -r -w 7 --char - foo
 # CHECK: foo----
 string pad -r -w 7 --chars - --center foo
 # CHECK: --foo--
@@ -55,6 +82,8 @@ string pad -r -w 7 --chars - --center foo
 # might overflow when converting sign
 string sub --start -9223372036854775808 abc
 # CHECK: abc
+string sub --start 0 abc
+# CHECKERR: string sub: Invalid start value '0'
 
 string pad --width 7 -c '=' foo
 # CHECK: ====foo
@@ -137,6 +166,9 @@ string pad -c ab -w4 .
 string pad -c \u07 .
 # CHECKERR: string pad: Invalid padding character of width zero {{'\a'}}
 
+string pad --width=-1 foo
+# CHECKERR: string pad: Invalid width value '-1'
+
 # Visible length. Let's start off simple, colors are ignored:
 string length --visible (set_color red)abc
 # CHECK: 3
@@ -153,7 +185,7 @@ begin
 end
 
 # Only the longest run between carriage returns is kept because the rest is overwritten.
-string length --visible (set_color normal)abcdef\rfooba(set_color red)raaa
+string length --visible (set_color --reset)abcdef\rfooba(set_color red)raaa
 # (foobaraaa)
 # CHECK: 9
 
@@ -185,6 +217,9 @@ string sub --length 2 abcde
 string sub -s 2 -l 2 abcde
 # CHECK: bc
 
+string sub --length=-1 abcde
+# CHECKERR: string sub: Invalid length value '-1'
+
 string sub --start=-2 abcde
 # CHECK: de
 
@@ -193,6 +228,9 @@ string sub --end=3 abcde
 
 string sub --end=-4 abcde
 # CHECK: a
+
+string sub --end=0 abcde
+# CHECKERR: string sub: Invalid end value '0'
 
 string sub --start=2 --end=-2 abcde
 # CHECK: bc
@@ -212,6 +250,9 @@ string sub -s -50 -e -100 abcde
 string sub -s 2 -e -5 abcde
 # CHECK:
 
+string sub -s 2 -e -5 -l 3 abcde
+# CHECKERR: string sub: invalid option combination, --end and --length are mutually exclusive
+
 string split . example.com
 # CHECK: example
 # CHECK: com
@@ -225,9 +266,15 @@ string split "" abc
 # CHECK: b
 # CHECK: c
 
-string split --max 1 --right 12 "AB12CD"
+string split
+# CHECKERR: string split: missing argument
+
+string split --max 1 --right 12 AB12CD
 # CHECK: AB
 # CHECK: CD
+
+string split --max=-1 --right 12 AB12CD
+# CHECKERR: string split: Invalid max value '-1'
 
 string split --fields=2 "" abc
 # CHECK: b
@@ -288,8 +335,14 @@ string split -f1 ' ' 'a b' 'c d'
 string split --allow-empty --fields=2,9 "" abc
 # CHECK: b
 
+string split --allow-empty "" abc
+# CHECKERR: string split: invalid option combination, --allow-empty is only valid with --fields
+
 seq 3 | string join ...
 # CHECK: 1...2...3
+
+string join
+# CHECKERR: string join: missing argument
 
 string trim " abc  "
 # CHECK: abc
@@ -361,6 +414,9 @@ world"
 # CHECK: \^this is a literal string
 # CHECK: hello\nworld
 
+string escape --style=unknown-style
+# CHECKERR: string escape: Invalid escape style 'unknown-style'
+
 ### Verify that we can correctly unescape the same strings
 #   we tested escaping above.
 set x (string unescape (echo \x07 | string escape))
@@ -395,6 +451,9 @@ string unescape --style=var (string escape --style=var '_a_b_c_')
 string unescape --style=var -- (string escape --style=var -- -)
 # CHECK: -
 
+string unescape --style=unknown-style
+# CHECKERR: string unescape: Invalid style value 'unknown-style'
+
 ### Verify that we can correctly match strings.
 string match "*" a
 # CHECK: a
@@ -427,6 +486,9 @@ string match -r -a -n at ratatat
 # CHECK: 2 2
 # CHECK: 4 2
 # CHECK: 6 2
+
+string match -r -i "0x[0-9a-f]{1,8}" "int magic = 0xBadC0de;"
+# CHECK: 0xBadC0de
 
 string match -r -i "0x[0-9a-f]{1,8}" "int magic = 0xBadC0de;"
 # CHECK: 0xBadC0de
@@ -530,6 +592,9 @@ echo foo | string repeat -n 2
 
 echo foo | string repeat 2
 # CHECK: foofoo
+
+string repeat
+# CHECKERR: string repeat: missing argument
 
 string repeat foo
 # CHECKERR: string repeat: Invalid count value 'foo'
@@ -717,6 +782,12 @@ or echo exit 1
 # CHECK: caabxyxz
 # CHECK: xyx
 
+string match --entire --index foo foo
+# CHECKERR: string match: invalid option combination, --entire and --index are mutually exclusive
+
+string match --entire --groups-only -r foo foo
+# CHECKERR: string match: invalid option combination, --entire and --groups-only are mutually exclusive
+
 # 'string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
 string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 or echo exit 1
@@ -898,16 +969,15 @@ echo $status
 # CHECK: 0
 
 # should not be able to enable UTF mode
-string match -r "(*UTF).*" "aaa"
+string match -r "(*UTF).*" aaa
 # CHECKERR: string match: Regular expression compile error: using UTF is disabled by the application
 # CHECKERR: string match: (*UTF).*
 # CHECKERR: string match:      ^
 
-string replace -r "(*UTF).*" "aaa"
+string replace -r "(*UTF).*" aaa
 # CHECKERR: string replace: Regular expression compile error: using UTF is disabled by the application
 # CHECKERR: string replace: (*UTF).*
 # CHECKERR: string replace:      ^
-
 
 string match -eq asd asd
 echo $status
@@ -936,7 +1006,7 @@ function string
 end
 # CHECKERR: {{.*}}checks/string.fish (line {{\d+}}): function: string: cannot use reserved keyword as function name
 # CHECKERR: function string
-# CHECKERR: ^
+# CHECKERR: ^~~~~~~~~~~~~~^
 
 string escape \x7F
 # CHECK: \x7f
@@ -994,6 +1064,14 @@ string shorten -m 2 foo
 string shorten -m 5 foobar
 # CHECK: foob…
 
+# Should produce no output and return false because there was nothing to shorten.
+string shorten -m 2 -q 12
+echo $status
+# CHECK: 1
+string shorten -lm 2 -q 12
+echo $status
+# CHECK: 1
+
 # Char is longer than width, we truncate instead.
 string shorten -m 5 --char ........ foobar
 # CHECK: fooba
@@ -1004,8 +1082,11 @@ string shorten --max 4 -c /// foobar
 string shorten --max 4 -c /// foobarnana
 # CHECK: f///
 
-string shorten --max 2 --chars "" foo
+string shorten --max 2 --char "" foo
 # CHECK: fo
+
+string shorten --max=-1 --char "" foo
+# CHECKERR: string shorten: Invalid max value '-1'
 
 string shorten foo foobar
 # CHECK: foo
@@ -1090,12 +1171,12 @@ end
 string shorten -m6 (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g(set_color yellow)-shorten | string escape
 # Renders like "strin…" in colors
 # Note that red sequence that we still pass on because it's width 0.
-# CHECK: \e\[34ms\e\[31mt\e\[97m\e\[1mrin\e\[31m…
+# CHECK: \e\[34ms\e\[31mt\e\[97\;1mrin\e\[31m…
 
 # See that colors aren't counted in ellipsis
 string shorten -c (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g -m 8 abcdefghijklmno | string escape
 # Renders like "abstring" in colors
-# CHECK: ab\e\[34ms\e\[31mt\e\[97m\e\[1mrin\e\[31mg
+# CHECK: ab\e\[34ms\e\[31mt\e\[97\;1mrin\e\[31mg
 
 set -l str (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g(set_color yellow)-shorten
 for i in (seq 1 (string length -V -- $str))
@@ -1201,12 +1282,46 @@ printf "dog\ncat\nbat\ngnat\n" | string match -m2 "*at"
 # CHECK: cat
 # CHECK: bat
 
+string match -m0 foo
+# CHECKERR: string match: Invalid max matches value '0'
+
+string match -m999999999999999999999999999999999999999 foo
+# CHECKERR: string match: Invalid max matches value '999999999999999999999999999999999999999'
+
 printf "dog\ncat\nbat\nhog\n" | string match -rvm1 'at$'
 # CHECK: dog
 
-printf "dog\ncat\nbat\n" | string replace -rf --max-matches 1 'at$' 'aught'
+printf "dog\ncat\nbat\n" | string replace -rf --max-matches 1 'at$' aught
 # CHECK: caught
 
-printf "dog\ncat\nbat\n" | string replace -r --max-matches 1 '^c' 'h'
+printf "dog\ncat\nbat\n" | string replace -r --max-matches 1 '^c' h
 # CHECK: dog
 # CHECK: hat
+
+$fish --features="no-regex-easyesc" -c "string replace -r o '\c' -- foo"
+# CHECKERR: string replace: Invalid escape sequence in pattern "\c"
+
+string replace --max-matches abc
+# CHECKERR: string replace: Invalid max matches value 'abc'
+string replace --max-matches -1
+# CHECKERR: string replace: Invalid max matches value '-1'
+string replace --max-matches 99999999999999999999
+# CHECKERR: string replace: Invalid max matches value '99999999999999999999'
+
+string replace
+# CHECKERR: string replace: missing argument
+string replace one
+# CHECKERR: string replace: expected 2 arguments; got 1
+
+string replace -r o '${bad_name}' foobar
+# CHECKERR: string replace: Regular expression substitute error: unknown substring
+
+string match --unknown-opt
+# CHECKERR: string match: --unknown-opt: unknown option
+# CHECKERR: {{.*}}checks/string.fish (line {{\d+}}):
+# CHECKERR: string match --unknown-opt
+# CHECKERR: ^
+# CHECKERR: (Type 'help string' for related documentation)
+
+string match --regex=abc
+# CHECKERR: string match: --regex=abc: option does not take an argument

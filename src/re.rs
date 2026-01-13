@@ -1,4 +1,4 @@
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 
 /// Adjust a pattern so that it is anchored at both beginning and end.
 /// This is a workaround for the fact that PCRE2_ENDANCHORED is unavailable on pre-2017 PCRE2
@@ -23,7 +23,7 @@ pub fn to_boxed_chars(s: &wstr) -> Box<[char]> {
 #[cfg(test)]
 mod tests {
     use super::{regex_make_anchored, to_boxed_chars};
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_regex_make_anchored() {

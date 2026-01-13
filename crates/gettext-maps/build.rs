@@ -5,23 +5,22 @@ use std::{
 };
 
 use fish_build_helper::env_var;
+use fish_localization::Language;
 
 fn main() {
     let cache_dir =
         PathBuf::from(fish_build_helper::fish_build_dir()).join("fish-localization-map-cache");
     embed_localizations(&cache_dir);
 
-    fish_build_helper::rebuild_if_path_changed(fish_build_helper::workspace_root().join("po"));
+    fish_build_helper::rebuild_if_path_changed(fish_build_helper::po_dir());
 }
 
 fn embed_localizations(cache_dir: &Path) {
     use fish_gettext_mo_file_parser::parse_mo_file;
     use std::{
         fs::File,
-        io::{BufWriter, Write},
+        io::{BufWriter, Write as _},
     };
-
-    let po_dir = fish_build_helper::workspace_root().join("po");
 
     // Ensure that the directory is created, because clippy cannot compile the code if the
     // directory does not exist.
@@ -41,7 +40,7 @@ fn embed_localizations(cache_dir: &Path) {
                 "Could not find msgfmt required to build message catalogs. \
                  Localization will not work. \
                  If you install gettext now, you need to trigger a rebuild to include localization support. \
-                 For example by running `touch po` followed by the build command."
+                 For example by running `touch localization/po` followed by the build command."
             );
         }
         Err(e) => {
@@ -50,22 +49,22 @@ fn embed_localizations(cache_dir: &Path) {
         Ok(output) => {
             let has_check_format =
                 String::from_utf8_lossy(&output.stdout).contains("--check-format");
-            for dir_entry_result in po_dir.read_dir().unwrap() {
+            for dir_entry_result in fish_build_helper::po_dir().read_dir().unwrap() {
                 let dir_entry = dir_entry_result.unwrap();
                 let po_file_path = dir_entry.path();
                 if po_file_path.extension() != Some(OsStr::new("po")) {
                     continue;
                 }
-                let lang = po_file_path
+                let language = po_file_path
                     .file_stem()
                     .expect("All entries in the po directory must be regular files.");
-                let language = lang.to_str().unwrap().to_owned();
+                let language = language.to_str().unwrap();
 
                 // Each language gets its own static map for the mapping from message in the source code to
                 // the localized version.
                 let map_name = format!("LANG_MAP_{language}");
 
-                let cached_map_path = cache_dir.join(lang);
+                let cached_map_path = cache_dir.join(language);
 
                 // Include the file containing the map for this language in the main generated file.
                 writeln!(
@@ -76,7 +75,10 @@ fn embed_localizations(cache_dir: &Path) {
                 .unwrap();
                 // Map from the language identifier to the map containing the localizations for this
                 // language.
-                catalogs.entry(language, format!("&{map_name}"));
+                catalogs.entry(
+                    Language(Box::leak(Box::new(language.to_owned()))),
+                    format!("&{map_name}"),
+                );
 
                 if let Ok(metadata) = std::fs::metadata(&cached_map_path) {
                     // Cached map file exists, but might be outdated.
@@ -85,7 +87,7 @@ fn embed_localizations(cache_dir: &Path) {
                     if cached_map_mtime > po_mtime {
                         // Cached map file is considered up-to-date.
                         continue;
-                    };
+                    }
                 }
 
                 // Generate the map file.
@@ -98,7 +100,7 @@ fn embed_localizations(cache_dir: &Path) {
                         cmd = cmd.arg("--check-format");
                     } else {
                         tmp_mo_file = Some(cache_dir.join("messages.mo"));
-                    };
+                    }
                     cmd.arg(format!(
                         "--output-file={}",
                         tmp_mo_file
@@ -109,12 +111,11 @@ fn embed_localizations(cache_dir: &Path) {
                     .output()
                     .unwrap()
                 };
-                if !output.status.success() {
-                    panic!(
-                        "msgfmt failed:\n{}",
-                        String::from_utf8(output.stderr).unwrap()
-                    );
-                }
+                assert!(
+                    output.status.success(),
+                    "msgfmt failed:\n{}",
+                    String::from_utf8(output.stderr).unwrap()
+                );
                 let mo_data =
                     tmp_mo_file.map_or(output.stdout, |path| std::fs::read(path).unwrap());
 
@@ -142,7 +143,7 @@ fn embed_localizations(cache_dir: &Path) {
                 write!(
                     &mut cached_map_file,
                     "static {}: phf::Map<&'static str, &'static str> = {}",
-                    &map_name,
+                    map_name,
                     single_language_localization_map.build()
                 )
                 .unwrap();
@@ -153,7 +154,8 @@ fn embed_localizations(cache_dir: &Path) {
 
     write!(
         &mut localization_map_file,
-        "pub static CATALOGS: phf::Map<&str, &phf::Map<&str, &str>> = {}",
+        "use fish_localization::Language;\n\
+         pub static CATALOGS: phf::Map<Language, &phf::Map<&str, &str>> = {}",
         catalogs.build()
     )
     .unwrap();

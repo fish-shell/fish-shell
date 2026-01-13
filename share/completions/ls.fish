@@ -59,24 +59,24 @@ if ls --version >/dev/null 2>/dev/null
     complete -c ls -l si -d "Human readable sizes, powers of 1000"
     complete -c ls -l show-control-chars -d "Non-graphic characters printed as-is"
     complete -c ls -l sort -x -d "Sort criteria" -a "
-			extension\t'Sort by file extension'
-			none\tDon\'t\ sort
-			size\t'Sort by size'
-			time\t'Sort by modification time'
-			version\t'Sort by version'
-			status\t'Sort by file status modification time'
-			atime\t'Sort by access time'
-			access\t'Sort by access time'
-			use\t'Sort by access time'
-		"
+            extension\t'Sort by file extension'
+            none\tDon\'t\ sort
+            size\t'Sort by size'
+            time\t'Sort by modification time'
+            version\t'Sort by version'
+            status\t'Sort by file status modification time'
+            atime\t'Sort by access time'
+            access\t'Sort by access time'
+            use\t'Sort by access time'
+        "
     complete -c ls -s T -l tabsize -x -a "1 2 3 4 5 6 7 8 9 10 11 12" -d "Assume tab stops at each COLS"
     complete -c ls -l time -x -d "Show time type" -a "
-			time\t'Sort by modification time'
-			access\t'Sort by access time'
-			use\t'Sort by use time'
-			ctime\t'Sort by file status modification time'
-			status\t'Sort by status time'
-		"
+            time\t'Sort by modification time'
+            access\t'Sort by access time'
+            use\t'Sort by use time'
+            ctime\t'Sort by file status modification time'
+            status\t'Sort by status time'
+        "
     complete -c ls -l time-style -x -a "full-iso long-iso iso locale" -d "Select time style"
     complete -c ls -s U -d "Do not sort"
     complete -c ls -s v -d "Sort by version"

@@ -131,7 +131,7 @@ $fish -c 'echo (set -l foo 1 2 3; for $foo in foo; end)'
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 
 $fish -c 'echo (echo *nosuchname*)'
-# CHECKERR: fish: No matches for wildcard '*nosuchname*'. See `help wildcards-globbing`.
+# CHECKERR: fish: No matches for wildcard '*nosuchname*'. See `help language#wildcards-globbing`.
 # CHECKERR: echo *nosuchname*
 # CHECKERR: ^~~~~~~~~~~^
 # CHECKERR: in command substitution

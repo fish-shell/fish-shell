@@ -6,7 +6,7 @@ Synopsis
 
 .. synopsis::
 
-    contains [OPTIONS] KEY [VALUES ...]
+    contains [OPTIONS] [--] KEY [VALUES ...]
 
 Description
 -----------
@@ -22,7 +22,9 @@ The following options are available:
 **-h** or **--help**
     Displays help about using this command.
 
-Note that ``contains`` interprets all arguments starting with a **-** as an option to ``contains``, until an **--** argument is reached.
+Options must be passed before *KEY*.
+All arguments after *KEY* will be considered a value, regardless if they start with a ``-`` or not, including ``--``.
+If *KEY* itself starts with a ``-``, use a ``--`` argument to separate it from the options.
 
 See the examples below.
 
@@ -62,3 +64,10 @@ While this will check if function ``hasargs`` is being ran with the **-q** optio
 
 The **--** here stops ``contains`` from treating **-q** to an option to itself.
 Instead it treats it as a normal string to check.
+
+::
+
+    contains -i foo -q -- foo
+
+
+This returns 3, since all arguments after the key are considered a value.

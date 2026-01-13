@@ -4,7 +4,7 @@
 # Ensure job control works in non-interactive environments.
 
 status job-control full
-/bin/echo hello
+command echo hello
 #CHECK: hello
 
 $fth print_pgrp | read first

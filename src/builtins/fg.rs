@@ -1,16 +1,21 @@
 //! Implementation of the fg builtin.
 
+use crate::builtins::Error;
 use crate::fds::make_fd_blocking;
+use crate::parser::ParserEnvSetMode;
 use crate::reader::{reader_save_screen_state, reader_write_title};
 use crate::tokenizer::tok_command;
-use crate::wutil::perror;
 use crate::{env::EnvMode, tty_handoff::TtyHandoff};
-use libc::{STDIN_FILENO, TCSADRAIN};
+use crate::{err_fmt, err_str};
+use fish_util::perror;
+use libc::STDIN_FILENO;
+use nix::sys::termios::{self, tcsetattr};
+use std::os::fd::BorrowedFd;
 
 use super::prelude::*;
 
 /// Builtin for putting a job in the foreground.
-pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn fg(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
 
     let Some(&cmd) = argv.first() else {
@@ -35,9 +40,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                 && ((job.is_stopped() || !job.is_foreground()) && job.wants_job_control())
         }) {
             None => {
-                streams
-                    .err
-                    .append(wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
+                err_str!(Error::NO_SUITABLE_JOBS).cmd(cmd).finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             Some((pos, j)) => {
@@ -52,19 +55,15 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         let mut found_job = false;
         if let Ok(pid) = parse_pid(streams, cmd, argv[optind]) {
             found_job = parser.job_get_from_pid(pid).is_some();
-        };
-
-        if found_job {
-            streams
-                .err
-                .append(wgettext_fmt!("%s: Ambiguous job\n", cmd));
-        } else {
-            streams
-                .err
-                .append(wgettext_fmt!("%s: '%s' is not a job\n", cmd, argv[optind]));
         }
 
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        let err = if found_job {
+            err_str!("Ambiguous job")
+        } else {
+            err_fmt!("'%s' is not a job", argv[optind])
+        };
+        err.cmd(cmd).full_trailer(parser).finish(streams);
+
         job_pos = None;
         job = None;
     } else {
@@ -74,21 +73,21 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                 if j.as_ref()
                     .is_none_or(|(_pos, j)| !j.is_constructed() || j.is_completed())
                 {
-                    streams
-                        .err
-                        .append(wgettext_fmt!("%s: No suitable job: %d\n", cmd, pid));
+                    err_fmt!("No suitable job: %d", pid)
+                        .cmd(cmd)
+                        .finish(streams);
                     job_pos = None;
-                    job = None
+                    job = None;
                 } else {
                     let (pos, j) = j.unwrap();
                     job_pos = Some(pos);
                     job = if !j.wants_job_control() {
-                        streams.err.append(wgettext_fmt!(
-                                        "%s: Can't put job %d, '%s' to foreground because it is not under job control\n",
-                                        cmd,
+                        err_fmt!("Can't put job %d, '%s' to foreground because it is not under job control",
                                         pid,
                                         j.command()
-                                    ));
+                                    )
+                    .cmd(cmd)
+                    .finish(streams);
                         None
                     } else {
                         Some(j)
@@ -100,8 +99,8 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                 job = None;
                 builtin_print_error_trailer(parser, streams.err, cmd);
             }
-        };
-    };
+        }
+    }
 
     let Some(job) = job else {
         return Err(STATUS_INVALID_ARGS);
@@ -111,11 +110,11 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
     if streams.err_is_redirected {
         streams
             .err
-            .append(wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
+            .appendln(&wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
     } else {
         // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
         // printed until the command finishes.
-        eprintf!("%s", wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
+        eprintf!("%s\n", wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
     }
 
     let ft = tok_command(job.command());
@@ -123,7 +122,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         // Provide value for `status current-command`
         parser.libdata_mut().status_vars.command = ft.clone();
         // Also provide a value for the deprecated fish 2.0 $_ variable
-        parser.set_var_and_fire(L!("_"), EnvMode::EXPORT, vec![ft]);
+        parser.set_var_and_fire(L!("_"), ParserEnvSetMode::new(EnvMode::EXPORT), vec![ft]);
         // Provide value for `status current-commandline`
         parser.libdata_mut().status_vars.commandline = job.command().to_owned();
     }
@@ -141,9 +140,14 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         }
         let tmodes = job_group.tmodes.borrow();
         if job_group.wants_terminal() && tmodes.is_some() {
-            let termios = tmodes.as_ref().unwrap();
-            let res = unsafe { libc::tcsetattr(STDIN_FILENO, TCSADRAIN, termios) };
-            if res < 0 {
+            let tmodes = tmodes.as_ref().unwrap();
+            if tcsetattr(
+                unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) },
+                termios::SetArg::TCSADRAIN,
+                tmodes,
+            )
+            .is_err()
+            {
                 perror("tcsetattr");
             }
         }
@@ -151,12 +155,11 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
     handoff.to_job_group(job.group.as_ref().unwrap());
     let resumed = job.resume();
     if resumed {
-        job.continue_job(parser);
+        job.continue_job(parser, /*block_io=*/ None);
     }
     if job.is_stopped() {
         handoff.save_tty_modes();
     }
-    handoff.reclaim();
     if resumed {
         Ok(SUCCESS)
     } else {

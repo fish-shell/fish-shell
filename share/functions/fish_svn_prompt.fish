@@ -82,7 +82,7 @@ function __fish_svn_prompt_parse_status --description "helper function that does
             set -l flag_var_display __fish_svn_prompt_char_{$flag_type}_display
             set -l flag_var_color __fish_svn_prompt_char_{$flag_type}_color
             # set the colour and print display character, then restore to default display colour
-            printf '%s%s%s' (set_color $$flag_var_color) $$flag_var_display (set_color normal)
+            printf '%s%s%s' (set_color $$flag_var_color) $$flag_var_display (set_color --reset)
         end
     end
 end
@@ -98,7 +98,7 @@ function fish_svn_prompt --description "Prompt function for svn"
     or return
 
     # get the current revision number
-    printf '(%s%s%s' (set_color $__fish_svn_prompt_color_revision) (__fish_print_svn_rev) (set_color normal)
+    printf '(%s%s%s' (set_color $__fish_svn_prompt_color_revision) (__fish_print_svn_rev) (set_color --reset)
 
     # resolve the status of the checkout
     # 1. perform `svn status`

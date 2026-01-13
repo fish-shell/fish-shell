@@ -3,13 +3,16 @@ name = "fish-shell"
 version = "0.0.0"
 # NOTE: versions for Python and Sphinx are specified for reproducibility.
 # Lower versions will work too.
-requires-python = ">=3.11" # updatecli.d/python.yml
+requires-python = ">=3.13" # updatecli.d/python.yml
 dependencies = []
 
 [dependency-groups]
 dev = [
-    "sphinx>=8.2", # updatecli.d/python.yml
-    "sphinx-markdown-builder",
+  "sphinx>=9.1", # updatecli.d/python.yml
+  "sphinx-markdown-builder",
+]
+test = [
+    "vermin>=1.8.0",
 ]
 
 [tool.uv.sources]

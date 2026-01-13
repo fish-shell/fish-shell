@@ -91,14 +91,15 @@ impl<R: Send + 'static> Debounce<R> {
 
         // Execute request after unlocking the mutex.
         (request)();
-        return true;
+        true
     }
 
     /// Enqueue `handler` to be performed on a background thread. If another function is already
     /// enqueued, this overwrites it and that function will not be executed.
     ///
     /// The result is a token which is only of interest to the test suite.
-    pub fn perform_void(&self, handler: impl FnOnce() + 'static + Send) -> NonZeroU64 {
+    #[cfg(test)]
+    fn perform_void(&self, handler: impl FnOnce() + 'static + Send) -> NonZeroU64 {
         self.perform_inner(Box::new(handler))
     }
 
@@ -168,7 +169,7 @@ impl<R: Send + 'static> Debounce<R> {
     /// Take the result, waiting up to `timeout` for a result to be available.
     pub fn take_result_with_timeout(&mut self, timeout: Duration) -> Option<R> {
         let timeout = fd_readable_set::Timeout::Duration(timeout);
-        if fd_readable_set::is_fd_readable(self.event_signaller.read_fd(), timeout) {
+        if fd_readable_set::is_fd_readable(self.event_signaller.read_fd_raw(), timeout) {
             self.take_result()
         } else {
             None
@@ -291,7 +292,7 @@ mod tests {
 
         // Wait 75 msec, then enqueue something else; this should spawn a new thread.
         std::thread::sleep(timeout + timeout / 2);
-        assert!(data.running.load(Ordering::Relaxed) == 1);
+        assert_eq!(data.running.load(Ordering::Relaxed), 1);
         let token3 = data.db.perform_void(handler);
         assert!(token3 > token2);
 

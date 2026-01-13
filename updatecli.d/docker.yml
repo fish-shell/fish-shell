@@ -22,21 +22,6 @@ sources:
           ' |
           sort --version-sort |
           tail -1
-  ubuntu_oldest_non_eol_version:
-    kind: shell
-    spec:
-      shell: bash
-      command: |
-        set -eo pipefail
-        today=$(date --iso-8601)
-        curl -fsS https://endoflife.date/api/ubuntu.json |
-          jq -r --arg today "$today" '
-            .[]
-            | select(.eol >= $today)
-            | "\(.cycle)"
-          ' |
-          sort --version-sort |
-          head -1
 
 targets:
   update_alpine_dockerfile:
@@ -55,11 +40,3 @@ targets:
       file: docker/ubuntu-latest-lts.Dockerfile
       matchpattern: "FROM ubuntu:.*"
       replacepattern: 'FROM ubuntu:{{ source "ubuntu_latest_lts_version" }}'
-  ubuntu_oldest_supported_dockerfile:
-    name: "Update oldest non-EOL Ubuntu Linux version"
-    sourceid: ubuntu_oldest_non_eol_version
-    kind: file
-    spec:
-      file: docker/ubuntu-oldest-supported.Dockerfile
-      matchpattern: "FROM ubuntu:.*"
-      replacepattern: 'FROM ubuntu:{{ source "ubuntu_oldest_non_eol_version" }}'

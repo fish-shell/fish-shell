@@ -1,1 +1,1 @@
-complete -c firefox-developer-edition -w firefox
+__fish_complete_firefox firefox-developer-edition

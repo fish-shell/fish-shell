@@ -10,10 +10,55 @@ permissions:
   contents: read
 
 jobs:
+  alpine:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - run:
+        sh -x docker/docker_run_tests.sh docker/alpine.Dockerfile
+
+  freebsd:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: vmactions/freebsd-vm@21de0c823079bc57bd8fcf25fb60193f36887e3d # v1, build_tools/update-dependencies.sh
+      with:
+        # # See https://github.com/vmactions/.github/wiki/debug%E2%80%90on%E2%80%90error
+        # debug-on-error: true
+        # vnc-password: fish
+        usesh: true
+        run: |
+          pkg update
+          # TODO This should be shared with .github/actions/install-dependencies/action.yml
+          pkg install -y \
+            cmake-core \
+            devel/ninja \
+            devel/pcre2 \
+            gettext \
+            git-lite \
+            lang/rust \
+            misc/py-pexpect \
+            python \
+            sudo \
+          ;
+          # BSDs have the following behavior: root may open or access files even if
+          # the mode bits would otherwise disallow it. For example root may open()
+          # a file with write privileges even if the file has mode 400. This breaks
+          # our tests for e.g. cd and path. So create a new unprivileged user to run tests.
+          pw user add -n fish-user -s /bin/csh -d /home/fish-user
+          mkdir -p /home/fish-user
+          chown -R fish-user /home/fish-user
+          mkdir build && cd build
+          chown -R fish-user ..
+          sudo -u fish-user -s whoami
+          sudo -u fish-user -s FISH_TEST_MAX_CONCURRENCY=1 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+          sudo -u fish-user -s ninja fish
+          sudo -u fish-user -s env CI=1 ninja fish_run_tests
+
   ubuntu:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported
     - name: Install deps
       uses: ./.github/actions/install-dependencies
@@ -32,30 +77,23 @@ jobs:
     - name: make fish_run_tests
       run: |
         make -C build VERBOSE=1 fish_run_tests
-    - name: translation updates
-      run: |
-        # Generate PO files. This should not result it a change in the repo if all translations are
-        # up to date.
-        # Ensure that fish is available as an executable.
-        PATH="$PWD/build:$PATH" build_tools/update_translations.fish
-        # Show diff output. Fail if there is any.
-        git --no-pager diff --exit-code || { echo 'There are uncommitted changes after regenerating the gettext PO files. Make sure to update them via `build_tools/update_translations.fish` after changing source files.'; exit 1; }
 
   ubuntu-32bit-static-pcre2:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported
       with:
         targets: "i586-unknown-linux-gnu"
+    - name: Update package database
+      run: sudo apt-get update
     - name: Install deps
       uses: ./.github/actions/install-dependencies
       with:
         include_pcre: false
         include_sphinx: false
     - name: Install g++-multilib
-      run: |
-        sudo apt install g++-multilib
+      run: sudo apt install g++-multilib
     - name: cmake
       env:
           CFLAGS: "-m32"
@@ -80,13 +118,15 @@ jobs:
         RUSTFLAGS: "-Zsanitizer=address"
         # RUSTFLAGS: "-Zsanitizer=memory -Zsanitizer-memory-track-origins"
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     # All -Z options require running nightly
     - uses: dtolnay/rust-toolchain@nightly
       with:
         # ASAN uses `cargo build -Zbuild-std` which requires the rust-src component
         # this is comma-separated
         components: rust-src
+    - name: Update package database
+      run: sudo apt-get update
     - name: Install deps
       uses: ./.github/actions/install-dependencies
       with:
@@ -128,7 +168,7 @@ jobs:
       # of crates.io, so give this a try. It's also sometimes significantly faster on all platforms.
       CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported
     - name: Install deps
       run: |
@@ -155,22 +195,24 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-    - uses: actions/checkout@v4
-    - uses: msys2/setup-msys2@v2
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: msys2/setup-msys2@e9898307ac31d1a803454791be09ab9973336e1c # v2.31.1, build_tools/update-dependencies.sh
       with:
         update: true
         msystem: MSYS
+      id: msys2
     - name: Install deps
       # Not using setup-msys2 `install` option to make it easier to copy/paste
       run: |
-        pacman --noconfirm -S --needed git rust
-    - name: cargo build
+        pacman --noconfirm -S --needed git rust python3 diffutils tmux
+    - name: rebase
+      env:
+        MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
+      shell: cmd
       run: |
-        cargo build
-    - name: smoketest
-      # We can't run `build_tools/check.sh` yet, there are just too many failures
-      # so this is just a quick check to make sure that fish can swim
+        "%MSYS2_LOCATION%\usr\bin\dash" /usr/bin/rebaseall -p -v
+    - name: check
+      env:
+        FISH_CHECK_LINT: false
       run: |
-        set -x
-        [ "$(target/debug/fish.exe -c 'echo (math 1 + 1)')" = 2 ]
-        cargo test
+        cargo xtask check

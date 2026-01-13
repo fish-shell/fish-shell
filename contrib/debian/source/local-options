@@ -1,0 +1,3 @@
+# The vendor tarball drops a new version of .cargo/config into place. Representing this as a patch
+# in automated workflows is tricky, so for our purposes auto-commit is fine.
+auto-commit

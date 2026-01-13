@@ -13,7 +13,7 @@ impl StringSubCommand<'_> for Collect {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("Na");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, _arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'a' => self.allow_empty = true,
             'N' => self.no_trim_newlines = true,
@@ -24,14 +24,14 @@ impl StringSubCommand<'_> for Collect {
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
         let mut appended = 0usize;
 
-        for (arg, want_newline) in
+        for InputValue { arg, want_newline } in
             arguments(args, optind, streams).with_split_behavior(SplitBehavior::Never)
         {
             let arg = if !self.no_trim_newlines {
@@ -43,7 +43,7 @@ impl StringSubCommand<'_> for Collect {
 
             streams
                 .out
-                .append_with_separation(arg, SeparationType::explicitly, want_newline);
+                .append_with_separation(arg, SeparationType::Explicitly, want_newline);
             appended += arg.len();
         }
 
@@ -54,7 +54,7 @@ impl StringSubCommand<'_> for Collect {
         if self.allow_empty && appended == 0 {
             streams.out.append_with_separation(
                 L!(""),
-                SeparationType::explicitly,
+                SeparationType::Explicitly,
                 true, /* historical behavior is to always print a newline */
             );
         }

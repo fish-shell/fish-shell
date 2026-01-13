@@ -4,14 +4,14 @@
 
 if test $# -eq 0
 then
-	echo "usage: $0 shellname [shellname ...]"
-	exit 1
+    echo "usage: $0 shellname [shellname ...]"
+    exit 1
 fi
 
 scriptname=$(basename "$0")
 if [ "$(id -u)" -ne 0 ]; then
-     echo "${scriptname} must be run as root"
-     exit 1
+    echo "${scriptname} must be run as root"
+    exit 1
 fi
 
 file=/etc/shells

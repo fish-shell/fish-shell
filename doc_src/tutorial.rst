@@ -6,7 +6,7 @@ Tutorial
 Why fish?
 ---------
 
-Fish is a fully-equipped command line shell (like bash or zsh) that is smart and user-friendly. Fish supports powerful features like syntax highlighting, autosuggestions, and tab completions that just work, with nothing to learn or configure.
+fish is a fully-equipped command line shell (like bash or zsh) that is smart and user-friendly. fish supports powerful features like syntax highlighting, autosuggestions, and tab completions that just work, with nothing to learn or configure.
 
 If you want to make your command line more productive, more useful, and more fun, without learning a bunch of arcane syntax and configuration options, then fish might be just what you're looking for!
 
@@ -46,7 +46,7 @@ For a comprehensive description of fish's scripting language, see :doc:`The Fish
 Running Commands
 ----------------
 
-Fish runs commands like other shells: you type a command, followed by its arguments. Spaces are separators::
+fish runs commands like other shells: you type a command, followed by its arguments. Spaces are separators::
 
     > echo hello world
     hello world
@@ -113,7 +113,7 @@ These colors, and many more, can be changed by running ``fish_config``, or by mo
 
 For example, if you want to disable (almost) all coloring::
 
-  fish_config theme choose None
+  fish_config theme choose none
 
 This picks the "none" theme. To see all themes::
 
@@ -323,7 +323,7 @@ This also means that, if the list is empty, there will be no argument::
 
     > set empty # no argument
     > echo $empty/this_is_gone # prints an empty line
-    
+
 If you quote the list, it will be used as one string and so you'll get one argument even if it is empty.
 
 For more, see :ref:`Lists <variables-lists>`.
@@ -332,7 +332,7 @@ For more on combining lists with strings (or even other lists), see :ref:`cartes
 Wildcards
 ---------
 
-Fish supports the familiar wildcard ``*``. To list all JPEG files::
+fish supports the familiar wildcard ``*``. To list all JPEG files::
 
     > ls *.jpg
     lena.jpg
@@ -431,7 +431,7 @@ Like other shells, fish allows multiple commands either on separate lines or the
 To write them on the same line, use the semicolon (";"). That means the following two examples are equivalent::
 
     echo fish; echo chips
-    
+
     # or
     echo fish
     echo chips
@@ -504,9 +504,9 @@ To compare strings or numbers or check file properties (whether a file exists or
     if test "$fish" = "flounder"
         echo FLOUNDER
     end
-    
+
     # or
-    
+
     if test "$number" -gt 5
         echo $number is greater than five
     else
@@ -633,7 +633,7 @@ Multiple lines are OK. Colors can be set via :doc:`set_color <cmds/set_color>` b
         set_color purple
         date "+%m/%d/%y"
         set_color FF0000
-        echo (pwd) '>' (set_color normal)
+        echo (pwd) '>' (set_color --reset)
     end
 
 
@@ -655,7 +655,7 @@ $PATH
 
 ``$PATH`` is an environment variable containing the directories that fish searches for commands. Unlike other shells, $PATH is a :ref:`list <tut-lists>`, not a colon-delimited string.
 
-Fish takes care to set ``$PATH`` to a default, but typically it is just inherited from fish's parent process and is set to a value that makes sense for the system - see :ref:`Exports <tut-exports>`.
+fish takes care to set ``$PATH`` to a default, but typically it is just inherited from fish's parent process and is set to a value that makes sense for the system - see :ref:`Exports <tut-exports>`.
 
 To prepend /usr/local/bin and /usr/sbin to ``$PATH``, you can write::
 
@@ -689,7 +689,7 @@ Or you can modify $fish_user_paths yourself, but you should be careful *not* to 
 Startup (Where's .bashrc?)
 --------------------------
 
-Fish starts by executing commands in ``~/.config/fish/config.fish``. You can create it if it does not exist.
+fish starts by executing commands in ``~/.config/fish/config.fish``. You can create it if it does not exist.
 
 It is possible to directly create functions and variables in ``config.fish`` file, using the commands shown above. For example:
 
@@ -698,9 +698,9 @@ It is possible to directly create functions and variables in ``config.fish`` fil
 ::
 
     > cat ~/.config/fish/config.fish
-    
+
     set -x PATH $PATH /sbin/
-    
+
     function ll
         ls -lh $argv
     end
@@ -738,7 +738,7 @@ See the documentation for :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/f
 Universal Variables
 -------------------
 
-A universal variable is a variable whose value is shared across all instances of fish, now and in the future – even after a reboot. You can make a variable universal with ``set -U``::
+A universal variable is a variable whose value is shared across all instances of fish, now and in the future - even after a reboot. You can make a variable universal with ``set -U``::
 
     > set -U EDITOR vim
 

@@ -25,13 +25,13 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("qn");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, _arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'q' => self.quiet = true,
             'n' => self.no_empty = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -44,8 +44,13 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
             return Ok(());
         }
 
+        let cmd = L!("string");
+        let subcmd = args[0];
+
         let Some(arg) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, args[0]);
+            err_str!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
@@ -56,15 +61,15 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let sep = &self.sep;
+        let sep = self.sep;
         let mut nargs = 0usize;
         let mut print_trailing_newline = true;
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             if !self.quiet {
                 if self.no_empty && arg.is_empty() {
                     continue;
@@ -74,7 +79,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
                     streams.out.append(sep);
                 }
 
-                streams.out.append(arg);
+                streams.out.append(&arg);
             } else if nargs > 1 {
                 return Ok(());
             }
@@ -84,9 +89,9 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
 
         if nargs > 0 && !self.quiet {
             if self.is_join0 {
-                streams.out.append_char('\0');
+                streams.out.append('\0');
             } else if print_trailing_newline {
-                streams.out.append_char('\n');
+                streams.out.append('\n');
             }
         }
 
@@ -100,7 +105,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
 
 #[cfg(test)]
 mod tests {
-    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
     use crate::tests::prelude::*;
     use crate::validate;
 
@@ -108,7 +113,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "join"], STATUS_INVALID_ARGS, "");
         validate!(["string", "join", ""], STATUS_CMD_ERROR, "");
         validate!(["string", "join", "", "", "", ""], STATUS_CMD_OK, "\n");

@@ -2,63 +2,99 @@
 members = ["crates/*"]
 
 [workspace.package]
+edition = "2024"
 # To build revisions that use Corrosion (those before 2024-01), use CMake 3.19, Rustc 1.78 and Rustup 1.27.
 rust-version = "1.85"
-edition = "2024"
 repository = "https://github.com/fish-shell/fish-shell"
+# see doc_src/license.rst for details
+# don't forget to update COPYING and debian/copyright too
+license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
 
 [workspace.dependencies]
+anstyle = "1.0.13"
+anyhow = "1.0.102"
+assert_matches = "1.5.0"
 bitflags = "2.5.0"
 cc = "1.0.94"
 cfg-if = "1.0.3"
+clap = { version = "4.5.54", features = ["derive"] }
+clap_complete = { version = "4.6.4", features = ["unstable-dynamic"] }
 errno = "0.3.0"
 fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }
+fish-color = { path = "crates/color" }
+fish-common = { path = "crates/common" }
+fish-fallback = { path = "crates/fallback" }
+fish-feature-flags = { path = "crates/feature-flags" }
+fish-fluent = { path = "crates/fluent" }
+fish-fluent-extraction = { path = "crates/fluent-extraction" }
+fish-gettext = { path = "crates/gettext" }
 fish-gettext-extraction = { path = "crates/gettext-extraction" }
 fish-gettext-maps = { path = "crates/gettext-maps" }
 fish-gettext-mo-file-parser = { path = "crates/gettext-mo-file-parser" }
+fish-localization = { path = "crates/localization" }
+fish-localization-extraction = { path = "crates/localization-extraction" }
 fish-printf = { path = "crates/printf", features = ["widestring"] }
 fish-tempfile = { path = "crates/tempfile" }
-libc = "0.2.177"
+fish-util = { path = "crates/util" }
+fish-wcstringutil = { path = "crates/wcstringutil" }
+fish-wgetopt = { path = "crates/wgetopt" }
+fish-widecharwidth = { path = "crates/widecharwidth" }
+fish-widestring = { path = "crates/widestring" }
+fluent = { git = "https://github.com/danielrainer/fluent-rs", rev = "cf712bced280b217b6307edabc2089b3e57204ab" }
+fluent-ftl-tools = { git = "https://codeberg.org/danielrainer/fluent-ftl-tools", rev = "5917664c8f2e4928ef1e480ff5c13bbe1e226066" }
+fluent-syntax = { git = "https://github.com/danielrainer/fluent-rs", rev = "cf712bced280b217b6307edabc2089b3e57204ab" }
+ignore = "0.4.25"
+itertools = "0.14.0"
+libc = "0.2.183"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
 # files as of 22 April 2024.
-lru = "0.13.0"
-nix = { version = "0.30.1", default-features = false, features = [
-    "event",
-    "inotify",
-    "resource",
-    "fs",
+lru = "0.18.0"
+nix = { version = "0.31.1", default-features = false, features = [
+  "event",
+  "fs",
+  "hostname",
+  "inotify",
+  "process",
+  "resource",
+  "signal",
+  "term",
+  "user",
 ] }
 num-traits = "0.2.19"
 once_cell = "1.19.0"
 pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", tag = "0.2.9-utf32", default-features = false, features = [
-    "utf32",
+  "utf32",
 ] }
-phf = { version = "0.12", default-features = false }
-phf_codegen = { version = "0.12" }
+phf = { version = "0.13", default-features = false }
+phf_shared = "0.13"
+phf_codegen = "0.13"
 portable-atomic = { version = "1", default-features = false, features = [
-    "fallback",
+  "fallback",
 ] }
 proc-macro2 = "1.0"
-# Don't use the "getrandom" feature as it requires "getentropy" which was not
-# available on macOS < 10.12. We can enable "getrandom" when we raise the
-# minimum supported version to 10.12.
-rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
-rsconf = "0.2.2"
-rust-embed = { version = "8.7.2", features = [
-    "deterministic-timestamps",
-    "include-exclude",
-    "interpolate-folder-path",
+rand = { version = "0.10.1", default-features = false, features = [
+  "thread_rng",
 ] }
-
+regex = "1.12.3"
+rsconf = "0.3.0"
+rust-embed = { version = "8.11.0", features = [
+  "deterministic-timestamps",
+  "include-exclude",
+  "interpolate-folder-path",
+] }
+rustc_version = "0.4.1"
 serial_test = { version = "3", default-features = false }
-# We need 0.9.0 specifically for some crash fixes.
-terminfo = "0.9.0"
-widestring = "1.2.0"
+strum_macros = "0.28.0"
+syn = { version = "2.0.117", default-features = false, features = ["parsing"] }
+unic-langid = "0.9.6"
 unicode-segmentation = "1.12.0"
 unicode-width = "0.2.0"
 unix_path = "1.0.1"
+walkdir = "2.5.0"
+widestring = "1.2.0"
+xterm-color = "1.0.1"
 
 [profile.release]
 overflow-checks = true
@@ -70,26 +106,39 @@ debug = true
 
 [package]
 name = "fish"
-version = "4.2.1-snapshot"
+version = "4.8.1"
 edition.workspace = true
 rust-version.workspace = true
 default-run = "fish"
-# see doc_src/license.rst for details
-# don't forget to update COPYING and debian/copyright too
-license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
+license.workspace = true
 homepage = "https://fishshell.com"
 readme = "README.rst"
 
 [dependencies]
+assert_matches.workspace = true
 bitflags.workspace = true
 cfg-if.workspace = true
 errno.workspace = true
 fish-build-helper.workspace = true
 fish-build-man-pages = { workspace = true, optional = true }
+fish-color.workspace = true
+fish-common.workspace = true
+fish-fallback.workspace = true
+fish-feature-flags.workspace = true
+fish-fluent.workspace = true
+fish-fluent-extraction = { workspace = true, optional = true }
+fish-gettext = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
-fish-gettext-maps = { workspace = true, optional = true }
+fish-localization = { workspace = true, optional = true }
 fish-printf.workspace = true
 fish-tempfile.workspace = true
+fish-util.workspace = true
+fish-wcstringutil.workspace = true
+fish-wgetopt.workspace = true
+fish-widecharwidth.workspace = true
+fish-widestring.workspace = true
+fluent.workspace = true
+itertools.workspace = true
 libc.workspace = true
 lru.workspace = true
 macro_rules_attribute = "0.2.2"
@@ -97,26 +146,25 @@ nix.workspace = true
 num-traits.workspace = true
 once_cell.workspace = true
 pcre2.workspace = true
-phf = { workspace = true, optional = true }
 rand.workspace = true
-terminfo.workspace = true
-widestring.workspace = true
+strum_macros.workspace = true
+xterm-color.workspace = true
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
 portable-atomic.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-rust-embed = { workspace = true, optional = true, features = [
-    "deterministic-timestamps",
-    "debug-embed",
-    "include-exclude",
-    "interpolate-folder-path",
+rust-embed = { workspace = true, features = [
+  "deterministic-timestamps",
+  "debug-embed",
+  "include-exclude",
+  "interpolate-folder-path",
 ] }
 [target.'cfg(not(windows))'.dependencies]
-rust-embed = { workspace = true, optional = true, features = [
-    "deterministic-timestamps",
-    "include-exclude",
-    "interpolate-folder-path",
+rust-embed = { workspace = true, features = [
+  "deterministic-timestamps",
+  "include-exclude",
+  "interpolate-folder-path",
 ] }
 
 [dev-dependencies]
@@ -128,6 +176,7 @@ fish-build-helper.workspace = true
 fish-gettext-mo-file-parser.workspace = true
 phf_codegen = { workspace = true, optional = true }
 rsconf.workspace = true
+rustc_version.workspace = true
 
 [target.'cfg(windows)'.build-dependencies]
 unix_path.workspace = true
@@ -149,41 +198,65 @@ name = "fish_key_reader"
 path = "src/bin/fish_key_reader.rs"
 
 [features]
-default = ["embed-data", "localize-messages"]
+default = ["embed-manpages", "localize-messages"]
 benchmark = []
-embed-data = ["dep:rust-embed", "dep:fish-build-man-pages"]
-# Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
-# build time.
-localize-messages = ["dep:phf", "dep:fish-gettext-maps"]
+embed-manpages = ["dep:fish-build-man-pages"]
+# This feature is used to enable extracting Fluent IDs from the source code for localization check.
+# For normal builds, it should be disabled.
+# It only needs to be enabled if checking Fluent Translation List (FTL) files is desired.
+fluent-extract = ["fish-fluent/fluent-extract", "dep:fish-fluent-extraction"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
-# desired. This happens when running tests via `build_tools/check.sh` and when calling
-# `build_tools/update_translations.fish`, so there should not be a need to enable it manually.
+# desired. This happens for the `gettext` xtask, which is also invoked via `cargo xtask check`.
+# There should not be a need to enable this feature manually.
 gettext-extract = ["dep:fish-gettext-extraction"]
+# Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
+# build time.
+localize-messages = [
+  "fish-fluent/localize-messages",
+  "dep:fish-gettext",
+  "dep:fish-localization",
+]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
-asan = []
 tsan = []
 
 [workspace.lints]
-rust.non_camel_case_types = "allow"
-rust.non_upper_case_globals = "allow"
-rust.unknown_lints = "allow"
+rust.unknown_lints = { level = "allow", priority = -1 }
 rust.unstable_name_collisions = "allow"
 rustdoc.private_intra_doc_links = "allow"
-clippy.len_without_is_empty = "allow"     # we're not a library crate
-clippy.let_and_return = "allow"
-clippy.manual_range_contains = "allow"
-clippy.needless_lifetimes = "allow"
-clippy.needless_return = "allow"
-clippy.new_without_default = "allow"
-clippy.option_map_unit_fn = "allow"
+
+[workspace.lints.clippy]
+assigning_clones = "warn"
+cloned_instead_of_copied = "warn"
+explicit_into_iter_loop = "warn"
+format_push_string = "warn"
+implicit_clone = "warn"
+len_without_is_empty = "allow"         # we're not a library crate
+let_and_return = "allow"
+manual_assert = "warn"
+manual_range_contains = "allow"
+map_unwrap_or = "warn"
+mut_mut = "warn"
+needless_lifetimes = "allow"
+new_without_default = "allow"
+option_map_unit_fn = "allow"
+ptr_offset_by_literal = "warn"
+redundant_clone = "warn"
+ref_option = "warn"
+semicolon_if_nothing_returned = "warn"
+stable_sort_primitive = "warn"
+str_to_string = "warn"
+unnecessary_semicolon = "warn"
+unused_trait_names = "warn"
 
 # We do not want to use the e?print(ln)?! macros.
 # These lints flag their use.
 # In the future, they might change to flag other methods of printing.
-clippy.print_stdout = "deny"
-clippy.print_stderr = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+# usage in tests is fine since it avoids interacting with TopicMonitor
+# and is configured in clippy.toml with `allow-print-in-tests`
 
 [lints]
 workspace = true

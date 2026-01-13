@@ -2,6 +2,20 @@
 # Test file for fish_indent
 # Note that littlecheck ignores leading whitespace, so we have to use {{    }} to explicitly match it.
 
+fish_indent --no-such-option
+#CHECKERR: fish_indent: --no-such-option: unknown option
+
+fish_indent --check=foo
+#CHECKERR: fish_indent: --check=foo: option does not take an argument
+
+fish_indent -w
+#CHECKERR: Expected file path to read/write for -w:
+#CHECKERR: 
+#CHECKERR: {{ }}$ fish -w foo.fish
+
+fish_indent -w nonexistent
+#CHECKERR: Opening "nonexistent" failed: No such file or directory (os error {{\d+}})
+
 echo 'echo foo \\
 | cat' | $fish_indent
 #CHECK: echo foo \
@@ -32,7 +46,6 @@ echo 'echo foo \\
 brot' | $fish_indent
 #CHECK: echo foo \
 #CHECK: brot
-
 
 echo 'echo rabarber \\
      banana' | $fish_indent
@@ -222,7 +235,6 @@ echo < stdin >>appended yes 2>&1 no > stdout maybe 2>&    4 | cat 2>| cat
 ' | $fish_indent
 #CHECK: echo <stdin >>appended yes 2>&1 no >stdout maybe 2>&4 | cat 2>| cat
 
-
 # issue 7252
 echo -n '
 begin
@@ -261,7 +273,6 @@ end
 #CHECK: {{^    }}cmd \
 #CHECK: {{^    }}{{    }}continuation
 #CHECK: {{^}}end
-
 
 echo -n '
 i\
@@ -445,6 +456,11 @@ echo 'begin
     echo '{ ; }'
     # CHECK: { }
 
+    echo '#foo
+{ }' | $fish_indent
+    # CHECK: #foo
+    # CHECK: { }
+
     echo '
 {
 echo \\
@@ -487,12 +503,68 @@ level 2 } }
     # CHECK: {{^\}$}}
 } | $fish_indent
 
+echo 'test 1 -eq 1; or {
+    echo a
+    echo b
+}' | $fish_indent
+# CHECK: test 1 -eq 1; or {
+# CHECK: {{^    }}echo a
+# CHECK: {{^    }}echo b
+# CHECK: {{^}}{{[}]}}
+
+echo 'not {
+    echo hi
+}' | $fish_indent
+# CHECK: not {
+# CHECK: {{^    }}echo hi
+# CHECK: {{^}}{{[}]}}
+
+echo 'time {
+    echo hi
+}' | $fish_indent
+# CHECK: time {
+# CHECK: {{^    }}echo hi
+# CHECK: {{^}}{{[}]}}
+
+echo 'if {
+    true
+}
+    echo ok
+end' | $fish_indent
+# CHECK: if {
+# CHECK: {{^        }}true
+# CHECK: {{^    }}{{[}]}}
+# CHECK: {{^    }}echo ok
+# CHECK: {{^}}end
+
+echo 'while {
+    true
+}
+    echo ok
+end' | $fish_indent
+# CHECK: while {
+# CHECK: {{^        }}true
+# CHECK: {{^    }}{{[}]}}
+# CHECK: {{^    }}echo ok
+# CHECK: {{^}}end
+
+echo 'echo x{a,
+  b}y' | $fish_indent
+# CHECK: echo x{a,
+# CHECK: {{^  }}b}y
+
 echo 'multiline-\\
 -word' | $fish_indent --check
 echo $status #CHECK: 0
 
 echo 'PATH={$PATH[echo " "' | $fish_indent --ansi
 # CHECK: PATH={$PATH[echo " "
+
+fish_config theme choose "ayu Dark"
+echo -n 'echo hello' | builtin fish_indent --ansi
+echo end
+# CHECK: {{\x1b\[38;2;57;186;230mecho\x1b\[38;2;179;177;173m hello\x1b\[38;2;242;150;104m\x1b\[39m}}
+# CHECK: end
 
 echo a\> | $fish_indent
 # CHECK: a >
@@ -560,7 +632,6 @@ end' | $fish_indent --only-unindent
 # CHECK: {{^}}  not indented properly
 # CHECK: {{^}}end
 
-
 echo 'echo (
 if true
 echo
@@ -607,11 +678,26 @@ end
 # CHECK: {{^}})
 
 set -l tmpdir (mktemp -d)
-echo 'echo "foo" "bar"' > $tmpdir/indent_test.fish
+echo 'echo "foo" "bar"' >$tmpdir/indent_test.fish
 $fish_indent --write $tmpdir/indent_test.fish
 cat $tmpdir/indent_test.fish
 # CHECK: echo foo bar
 
+echo 'echo "foo" "bar"' >$tmpdir/indent_test.fish
+chmod 400 $tmpdir/indent_test.fish
+$fish_indent --write $tmpdir/indent_test.fish
+# CHECKERR: Opening "{{.*}}/indent_test.fish" failed: {{.*}})
+
 # See that the builtin can be redirected
 printf %s\n a b c | builtin fish_indent | grep b
 # CHECK: b
+
+# Regression test that fish_indent doesn't panic with closed stdin.
+fish_indent <&-
+# CHECKERR: fish_indent: stdin is closed
+
+function __fish_print_help
+    echo Help using PATH[1]=$PATH[1]
+end
+PATH=hello fish_indent --help
+# CHECK: Help using PATH[1]=hello

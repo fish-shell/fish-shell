@@ -29,6 +29,11 @@ When in doubt, use parentheses.
 ``math`` ignores whitespace between arguments and takes its input as multiple arguments (internally joined with a space), so ``math 2 +2`` and ``math "2 +    2"`` work the same.
 ``math 2 2`` is an error.
 
+.. note::
+
+   math is a simple tool for simple uses, provided for convenience. It internally works with floats for simplicity of implementation and can't do a number of things real calculators can.
+   If you find yourself limited by that, use a more full-featured tool.
+
 The following options are available:
 
 **-s** *N* or **--scale** *N*
@@ -153,7 +158,7 @@ Functions
 ``ln``
     the base-e logarithm
 ``log`` or ``log10``
-    the base-10 logarithm
+    the base-10 logarithm. To compute the logarithm for an arbitrary base ``b``, use ``log(x) / log(b)``.
 ``log2``
     the base-2 logarithm
 ``max``
@@ -213,6 +218,6 @@ Examples
 Compatibility notes
 -------------------
 
-Fish 1.x and 2.x releases relied on the ``bc`` command for handling ``math`` expressions. Starting with fish 3.0.0 fish uses the tinyexpr library and evaluates the expression without the involvement of any external commands.
+fish 1.x and 2.x releases relied on the ``bc`` command for handling ``math`` expressions. Starting with fish 3.0.0 fish uses the tinyexpr library and evaluates the expression without the involvement of any external commands.
 
 You don't need to use ``--`` before the expression, even if it begins with a minus sign which might otherwise be interpreted as an invalid option. If you do insert ``--`` before the expression, it will cause option scanning to stop just like for every other command and it won't be part of the expression.

@@ -1,5 +1,5 @@
 use super::UniversalNotifier;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 
 // Helper to test a slice of notifiers.
 // fish_variables_path is the path to the (simulated) fish_variables file, if using the inotify notifier.
@@ -17,9 +17,9 @@ pub fn test_notifiers(notifiers: &[&dyn UniversalNotifier], fish_variables_path:
 
     // Helper to simulate modifying a file, using the atomic rename() approach.
     let modify_path = |path: &wstr| -> Result<(), std::io::Error> {
-        use crate::common::wcs2osstring;
+        use fish_widestring::wcs2osstring;
         use std::fs;
-        use std::io::Write;
+        use std::io::Write as _;
         let path = wcs2osstring(path);
         let mut new_path = std::path::PathBuf::from(path.clone());
         new_path.set_extension("new");
@@ -51,7 +51,7 @@ pub fn test_notifiers(notifiers: &[&dyn UniversalNotifier], fish_variables_path:
 
         // notifyd requires a round trip to the notifyd server, which means we have to wait a
         // little bit to receive it. In practice 40 ms seems to be enough.
-        unsafe { libc::usleep(40000) };
+        std::thread::sleep(std::time::Duration::from_millis(40));
 
         for (idx2, &n2) in notifiers.iter().enumerate() {
             let mut polled = poll_notifier(n2);

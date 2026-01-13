@@ -3,10 +3,10 @@
 use super::prelude::*;
 use crate::io::IoBufferfill;
 use crate::parser::BlockType;
-use crate::wcstringutil::join_strings;
+use fish_wcstringutil::join_strings;
 use libc::{STDERR_FILENO, STDOUT_FILENO};
 
-pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn eval(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let argc = args.len();
     if argc <= 1 {
         return Ok(SUCCESS);
@@ -52,13 +52,7 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
         }
     }
 
-    let res = parser.eval_with(
-        &new_cmd,
-        &ios,
-        streams.job_group.as_ref(),
-        BlockType::top,
-        false,
-    );
+    let res = parser.eval_with(&new_cmd, &ios, streams.job_group.as_ref(), BlockType::Top);
     let status = if res.was_empty {
         // Issue #5692, in particular, to catch `eval ""`, `eval "begin; end;"`, etc.
         // where we have an argument but nothing is executed.

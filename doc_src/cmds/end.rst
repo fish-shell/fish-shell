@@ -7,7 +7,7 @@ Synopsis
 .. synopsis::
 
     begin
-        [COMMANDS ...] 
+        [COMMANDS ...]
     end
 
 .. synopsis::

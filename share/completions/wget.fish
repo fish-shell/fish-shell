@@ -11,7 +11,7 @@ complete -c wget -s a -l append-output -d "Append all messages to logfile"
 complete -c wget -s d -l debug -d "Turn on debug output"
 complete -c wget -s q -l quiet -d "Quiet mode"
 complete -c wget -s v -l verbose -d "Verbose mode"
-complete -c wget -l non-verbose -d "Turn off verbose without being completely quiet"
+complete -c wget -l no-verbose -d "Turn off verbose without being completely quiet"
 complete -c wget -o nv -d "Turn off verbose without being completely quiet"
 complete -c wget -s i -l input-file -d "Read URLs from file" -r
 complete -c wget -s F -l force-html -d "Force input to be treated as HTML"
@@ -23,11 +23,11 @@ complete -c wget -l no-clobber -d "Never overwrite files with same name"
 complete -c wget -o nc -d "Never overwrite files with same name"
 complete -c wget -s c -l continue -d "Continue getting a partially-downloaded file"
 complete -c wget -l progress -d "Select progress meter type" -a "
-	dot\t'Print one dot for every kB of data, 50 dots per line'
-	dot:default\t'Print one dot for every kB of data, 50 dots per line'
-	dot:binary\t'Print one dot for every 8 kB of data, 48 dots per line'
-	dot:mega\t'Print one dot for every 64 kB of data, 48 dots per line'
-	bar\t'Print progress bar'
+    dot\t'Print one dot for every kB of data, 50 dots per line'
+    dot:default\t'Print one dot for every kB of data, 50 dots per line'
+    dot:binary\t'Print one dot for every 8 kB of data, 48 dots per line'
+    dot:mega\t'Print one dot for every 64 kB of data, 48 dots per line'
+    bar\t'Print progress bar'
 "
 complete -c wget -s N -l timestamping -d "Turn on time-stamping"
 complete -c wget -s S -l server-response -d "Print the headers/responses sent by servers"
@@ -44,8 +44,8 @@ complete -c wget -s Y -l proxy -d "Toggle proxy support" -xa "on off"
 complete -c wget -s Q -l quota -d "Specify download quota for automatic retrievals" -x
 complete -c wget -l dns-cache -d "Turn off caching of DNS lookups" -xa off
 complete -c wget -l restrict-file-names -d "Change which characters found in remote URLs may show up in local file names" -a "
-	unix\t'Escape slash and non-printing characters'
-	windows\t'Escape most non-alphabetical characters'
+    unix\t'Escape slash and non-printing characters'
+    windows\t'Escape most non-alphabetical characters'
 "
 
 # HTTP options

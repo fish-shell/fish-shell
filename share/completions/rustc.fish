@@ -34,6 +34,10 @@ function __fish_rustc_z_completions
         return
     end
 
+    if not command -q rustup; or not rustup toolchain list | string match -q 'nightly*'
+        return
+    end
+
     set -l rust_docs (rustc +nightly -Z help 2>/dev/null |
         string replace -r '^\s+' '' | string replace -ar ' +' ' ' | string replace -r '=val +-- +' '=\t')
 

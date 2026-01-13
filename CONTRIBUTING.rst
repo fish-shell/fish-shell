@@ -1,10 +1,10 @@
 ####################
-Contributing To Fish
+Contributing To fish
 ####################
 
 This document tells you how you can contribute to fish.
 
-Fish is free and open source software, distributed under the terms of the GPLv2.
+fish is free and open source software, distributed under the terms of the GPLv2.
 
 Contributions are welcome, and there are many ways to contribute!
 
@@ -21,7 +21,7 @@ Archives are available at https://lists.sr.ht/~krobelus/fish-shell/.
 GitHub
 ======
 
-Fish is available on GitHub, at https://github.com/fish-shell/fish-shell.
+fish is available on GitHub, at https://github.com/fish-shell/fish-shell.
 
 First, you'll need an account there, and you'll need a git clone of fish.
 Fork it on GitHub and then run::
@@ -50,7 +50,24 @@ Guidelines
 In short:
 
 - Be conservative in what you need (keep to the agreed minimum supported Rust version, limit new dependencies)
-- Use automated tools to help you (``build_tools/check.sh``)
+- Use automated tools to help you (``cargo xtask check``)
+
+Commit History
+==============
+
+We use a linear, `recipe-style <https://www.bitsnbites.eu/git-history-work-log-vs-recipe/>`__ history.
+Every commit should pass our checks.
+We do not want "fixup" commits in our history.
+If you notice an issue with a commit in a pull request, or get feedback suggesting changes,
+you should rewrite the commit history and fix the relevant commits directly,
+instead of adding new "fixup" commits.
+When a pull request is ready, we rebase it on top of the current master branch,
+so don't be shy about rewriting the history of commits which are not on master yet.
+Rebasing (not merging) your pull request on the latest version of master is also welcome, especially if it resolves conflicts.
+
+If you're using Git, consider using `jj <https://www.jj-vcs.dev/>`__ to make this easier.
+
+If a commit should close an issue, add a ``Fixes #<issue-number>`` line at the end of the commit description.
 
 Contributing completions
 ========================
@@ -88,14 +105,24 @@ Contributing documentation
 ==========================
 
 The documentation is stored in ``doc_src/``, and written in ReStructured Text and built with Sphinx.
+The builtins and various functions shipped with fish are documented in ``doc_src/cmds/``.
 
-To build it locally, run from the main fish-shell directory::
+To build an HTML version of the docs locally, run::
 
-    sphinx-build -j 8 -b html -n doc_src/ /tmp/fish-doc/
+    cargo xtask html-docs
 
-which will build the docs as html in /tmp/fish-doc. You can open it in a browser and see that it looks okay.
+will output to ``target/fish-docs/html`` or, if you use CMake::
 
-The builtins and various functions shipped with fish are documented in doc_src/cmds/.
+    cmake --build build -t sphinx-docs
+
+will output to ``build/cargo/fish-docs/html/``. You can also run ``sphinx-build`` directly, which allows choosing the output directory::
+
+    sphinx-build -j auto -b html doc_src/ /tmp/fish-doc/
+
+will output HTML docs to ``/tmp/fish-doc``.
+
+After building them, you can open the HTML docs in a browser and see that it looks okay.
+
 
 Code Style
 ==========
@@ -106,14 +133,14 @@ For formatting, we use:
 - ``fish_indent`` (shipped with fish) for fish script
 - ``ruff format`` for Python
 
-To reformat files, there is a script
+To reformat files, there is an xtask
 
 ::
 
-   build_tools/style.fish --all
-   build_tools/style.fish somefile.rs some.fish
+   cargo xtask format --all
+   cargo xtask format somefile.rs some.fish
 
-Fish Script Style Guide
+fish Script Style Guide
 -----------------------
 
 1. All fish scripts, such as those in the *share/functions* and *tests*
@@ -127,7 +154,7 @@ Fish Script Style Guide
    for public vars or ``_fish`` for private vars to minimize the
    possibility of name clashes with user defined vars.
 
-Configuring Your Editor for Fish Scripts
+Configuring Your Editor for fish Scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you use Vim: Install `vim-fish <https://github.com/dag/vim-fish>`__,
@@ -221,42 +248,72 @@ In this example we're in the root of the workspace and have run ``cargo build`` 
 
 To run all tests and linters, use::
 
-    build_tools/check.sh
+    cargo xtask check
+
+.. _localization:
 
 Contributing Translations
 =========================
 
-Fish uses GNU gettext to translate messages from English to other languages.
-We use custom tools for extracting messages from source files and to localize at runtime.
-This means that we do not have a runtime dependency on the gettext library.
-It also means that some features are not supported, such as message context and plurals.
-We also expect all files to be UTF-8-encoded.
-In practice, this should not matter much for contributing translations.
+fish can localize messages present in its Rust source code,
+as well as messages in the various fish scripts present in this repository.
+The latter include a large amount of automatically identified messages,
+originating for example from fish function descriptions.
+When translating, prioritize the messages from the Rust source code.
 
-Translation sources are
-stored in the ``po`` directory, named ``ll_CC.po``, where ``ll`` is the
-two (or possibly three) letter ISO 639-1 language code of the target language
-(e.g. ``pt`` for Portuguese). ``CC`` is an ISO 3166 country/territory code,
-(e.g. ``BR`` for Brazil).
-An example for a valid name is ``pt_BR.po``, indicating Brazilian Portuguese.
+fish uses two different localization systems:
+`GNU gettext <https://www.gnu.org/software/gettext/>`__ and `Fluent <https://projectfluent.org/>`__.
+The former is used for all messages from fish scripts.
+For messages from the Rust source code, we are in the process of replacing gettext with Fluent.
+At the moment, both are used side-by-side,
+with some messages localized with gettext and the others with Fluent.
+
+We use custom tools for extracting messages from source files and for gettext localization at runtime.
+This means that we do not have a runtime dependency on the gettext library.
+It also means that some of gettext's features are not supported, such as message context and plurals.
+We expect all files to be UTF-8-encoded.
+
+Translation sources for gettext are stored in the ``localization/po`` directory and named ``ll_CC.po``,
+whereas Fluent uses the ``localization/fluent`` directory and names of the shape ``ll_CC.ftl``,
+where ``ll`` is the two (or possibly three) letter ISO 639-1 language code of the target language
+(e.g. ``pt`` for Portuguese).
+``CC`` is an ISO 3166 country/territory code, (e.g. ``BR`` for Brazil).
+An example for a valid name is ``pt_BR.po`` for gettext and ``pt_BR.ftl`` for Fluent,
+indicating Brazilian Portuguese.
 These are the files you will interact with when adding translations.
+
+In some cases, we also use language identifiers without a county code, i.e. ``ll.po``/``ll.ftl``.
+Which variant is chosen involves various trade-offs for fallback behavior.
+If you want to add a new language or language variant, feel free to ask about this.
+Generally, if people who understand any variant of the language
+are expected to understand the version you add
+and there are no existing translations for another variant of the language,
+it probably makes sense to omit the country code,
+otherwise to use it for all variants of the language.
 
 Adding translations for a new language
 --------------------------------------
 
-Creating new translations requires the Gettext tools.
-More specifically, you will need ``msguniq`` and ``msgmerge`` for creating translations for a new
-language.
-To create a new translation, run::
+Creating new translations for gettext requires the gettext tools.
+More specifically, you will need ``msguniq``, ``msgmerge``, and ``msgmerge``
+for creating translations for a new language.
+To create a PO file for a new language ``ll_CC``, run::
 
-    build_tools/update_translations.fish po/ll_CC.po
+    cargo xtask gettext new ll_CC
 
-This will create a new PO file containing all messages available for translation.
+This will create a new PO file in ``localization/po/``
+containing all messages available for translation.
 If the file already exists, it will be updated.
 
-After modifying a PO file, you can recompile fish, and it will integrate the modifications you made.
+For Fluent, it is sufficient to create a new, empty file
+with the language-appropriate name in ``localization/fluent``.
+
+After modifying a translation file, you can recompile fish,
+and it will integrate the modifications you made.
 This requires that the ``msgfmt`` utility is installed (comes as part of ``gettext``).
-It is important that the ``localize-messages`` cargo feature is enabled, which it is by default.
+For messages localized with Fluent, recompiling fish is not necessary when you use a debug build.
+Then, restarting fish is sufficient for seeing updated translations.
+It is important that the ``localize-messages`` Cargo feature is enabled, which it is by default.
 You can explicitly enable it using::
 
     cargo build --features=localize-messages
@@ -269,7 +326,26 @@ or within the running fish shell::
 
     set LANG pt_BR.utf8
 
-For more options regarding how to choose languages, see
+Alternatively, you can also use the built-in ``status language`` command, e.g.::
+
+    status language set pt_BR
+
+Use
+
+::
+
+    status language list-available
+
+to see a list of the available language identifiers.
+This might also be helpful for checking that your new translations are recognized as expected.
+Note that using environment variables enables fallback behavior,
+e.g. if you specify ``LANG=de_DE.utf8`` and we do not have a ``de_DE`` catalog but a ``de`` catalog,
+you will see messages from the latter.
+With ``status language``, only exact matches are supported,
+giving you more control over the fallback order.
+If ``status language`` is used, it overrides the environment variable configuration.
+
+For more options regarding how to choose languages via environment variables, see
 `the corresponding gettext documentation
 <https://www.gnu.org/software/gettext/manual/html_node/Locale-Environment-Variables.html>`__.
 One neat thing you can do is set a list of languages to check for translations in the order defined
@@ -277,14 +353,19 @@ using the ``LANGUAGE`` variable, e.g.::
 
     set LANGUAGE pt_BR de_DE
 
+or using::
+
+    status language set pt_BR de
+
 to try to translate messages to Portuguese, if that fails try German, and if that fails too you will
-see the English version defined in the source code.
+see the default English version.
 
 Modifying existing translations
 -------------------------------
 
-If you want to work on translations for a language which already has a corresponding ``po`` file, it
-is sufficient to edit this file. No other changes are necessary.
+If you want to work on translations for a language which already has translations, it
+is sufficient to edit the existing files.
+No other changes are necessary.
 
 After recompiling fish, you should be able to see your translations in action. See the previous
 section for details.
@@ -295,7 +376,7 @@ Editing PO files
 Many tools are available for editing translation files, including
 command-line and graphical user interface programs. For simple use, you can use your text editor.
 
-Open up the PO file, for example ``po/sv.po``, and you'll see something like::
+Open up the PO file, for example ``localization/po/sv.po``, and you'll see something like::
 
     msgid "%s: No suitable job\n"
     msgstr ""
@@ -308,7 +389,7 @@ For example::
     msgid "%s: No suitable job\n"
     msgstr "%s: Inget passande jobb\n"
 
-Any ``%s`` or ``%d`` are placeholders that fish will use for formatting at runtime. It is important that they match - the translated string should have the same placeholders in the same order.
+Any ``%s`` or ``%d`` are placeholders that fish will use for formatting at runtime. It is important that they match - the translated string must have the same placeholders in the same order.
 
 Also any escaped characters, like that ``\n`` newline at the end, should be kept so the translation has the same behavior.
 
@@ -317,30 +398,166 @@ Our tests run ``msgfmt --check-format /path/to/file``, so they would catch misma
 Be cautious about blindly updating an existing translation file.
 ``msgid`` strings should never be updated manually, only by running the appropriate script.
 
-Modifications to strings in source files
-----------------------------------------
+Editing FTL files
+-----------------
+
+To get familiar with Fluent's FTL format,
+you can read `Fluent's guide <https://projectfluent.org/fluent/guide/>`__.
+
+The core principle is that each message has an ID.
+This ID is specified in the source code.
+At runtime, Fluent checks FTL files according to the user's language settings
+to try to map the ID to a localized message.
+All messages are localized into English because the source code only contains IDs, not proper messages.
+Check ``localization/fluent/en.ftl`` to see which IDs are in use and what the corresponding messages are.
+
+Some messages receive arguments, called variables in Fluent.
+In Fluent, each variable has a name, which allows reordering them,
+so they can appear in the order which makes most sense for the language.
+The general format of a variable in an FTL file is ``{ $variable_name }``.
+
+The Fluent ecosystem is not as mature as gettext, meaning there is less available tooling.
+Therefore, we provide some of our own tools.
+Running ``cargo xtask fluent`` provides an overview.
+
+For translators, the following can be useful::
+
+    cargo xtask fluent format
+
+to make FTL files conform to our expected format,
+
+::
+
+    cargo xtask fluent show-missing
+
+to show which message IDs do not have a translation yet, and
+
+::
+
+    cargo xtask fluent check
+
+to run checks on the FTL files, which can catch some mistakes.
+Each of these commands takes optional path arguments,
+so if you are working on a certain file like ``pt_BR.ftl``,
+you might want to use
+
+::
+
+    cargo xtask fluent check localization/fluent/pt_BR.ftl
+
+from the repository root directory,
+or, if you are in the ``localization/fluent`` directory,
+
+::
+
+    cargo xtask fluent check pt_BR.ftl
+
+If you want formatting in your editor,
+
+::
+
+    cargo --quiet xtask fluent format -
+
+might be useful, which reads FTL text from stdin and writes a formatted version to stdout,
+or a copy of stdin if formatting failed.
+Instead of invoking Cargo each time, you could also invoke the ``xtask`` binary if it exists.
+
+A simple format-on-write setup in Vim:
+
+.. code:: vim
+
+    function FormatFTL()
+        let cursor = getpos('.')
+        :%!cargo --quiet xtask fluent format -
+        call setpos('.', cursor)
+    endfunction
+
+    augroup ftl
+        autocmd!
+        autocmd! BufWritePre *.ftl :call FormatFTL()
+    augroup END
+
+or equivalently in Lua for NeoVim:
+
+.. code:: lua
+
+    local augroup_ftl = vim.api.nvim_create_augroup("ftl", { clear = true })
+    vim.api.nvim_create_autocmd("BufWritePre", {
+        group = augroup_ftl,
+        pattern = "*.ftl",
+        callback = function()
+            local cursor = vim.fn.getpos(".")
+            vim.cmd("%!cargo --quiet xtask fluent format -")
+            vim.fn.setpos(".", cursor)
+        end,
+    })
+
+There is also a `Vim plugin <https://github.com/projectfluent/fluent.vim>`__ for syntax highlighting.
+
+Modifications to strings in source files (gettext-only)
+-------------------------------------------------------
 
 If a string changes in the sources, the old translations will no longer work.
-They will be preserved in the PO files, but commented-out (starting with ``#~``).
 If you add/remove/change a translatable strings in a source file,
-run ``build_tools/update_translations.fish`` to propagate this to all translation files (``po/*.po``).
+run ``cargo xtask gettext update`` to propagate this to all translation files (``localization/po/*.po``).
 This is only relevant for developers modifying the source files of fish or fish scripts.
+Note translations for messages which are no longer present in the sources will be deleted from the PO files.
+If the source string changed in a way which should not affect translations,
+consider updating the ``msgid`` in the PO files such that translations are preserved.
 
 Setting Code Up For Translations
 --------------------------------
 
-All non-debug messages output for user consumption should be marked for
-translation. In Rust, this requires the use of the ``wgettext!`` or ``wgettext_fmt!``
-macros:
+All non-debug messages output for user consumption should be marked for translation.
+In Rust, this requires the use of the ``localize!`` macro for Fluent localization, e.g.:
+
+.. code:: rust
+
+    localize!(
+        "some-message-id" = "English version of the message. Must be a valid Fluent message definition. Example variables: { $var1 }, { $var2 }",
+        var1 = "some string",
+        var2 = 42,
+    );
+
+where the first key-value pair is the message's Fluent ID and the English version of the message.
+The remaining key-value pairs specify Fluent variables and their values.
+These must match the variables used in the message definition.
+
+For changing message IDs or associated variable names accross all FTL files, the
 
 ::
 
-    streams.out.append(wgettext_fmt!("%s: There are no jobs\n", argv[0]));
+    cargo xtask fluent rename
 
-All messages in fish script must be enclosed in single or double quote
-characters for our message extraction script to find them.
-They must also be translated via a command substitution. This means
-that the following are **not** valid:
+command can be helpful.
+The definitions in the Rust sources are the source of truth for the English version of the messages.
+Our tooling automatically generates a corresponding ``en.po`` file from these definitions,
+but that file is fully auto-generated and manual modifications to it are not supported.
+The `en.po` file exists to allow using Fluent tooling which expects such a file,
+and to be able to detect changes to the definitions in the Rust sources.
+Note that changes to the message definitions have consequences for translations.
+Our tooling automatically detects such changes.
+In some cases, they can be resolved automatically,
+e.g. when a message ID no longer exists, the translations will be deleted.
+If no automatic resolution is possible, annotations will be added to the affected translations,
+indicating that they need developer attention.
+As long as such annotations are present, our checks will not pass.
+To resolve them, use ``cargo xtask fluent resolve-outdated``,
+or, for languages into which you can translate,
+update the translation and remove the annotation manually.
+
+Legacy gettext localization uses the ``wgettext!`` or ``wgettext_fmt!`` macros.
+New code should use Fluent instead.
+
+.. code:: rust
+
+    streams.out.appendln(&wgettext_fmt!("%s: There are no jobs", argv[0]));
+
+For explicit localization in fish scripts,
+all messages must be enclosed in single or double quote characters
+for our message extraction script to find them.
+They must also be translated via a command substitution.
+This means that the following are **not** valid:
 
 ::
 

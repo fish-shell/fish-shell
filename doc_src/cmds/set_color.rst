@@ -6,12 +6,17 @@ Synopsis
 
 .. synopsis::
 
-    set_color [OPTIONS] VALUE
+    set_color [OPTIONS] [VALUE]
 
 Description
 -----------
 
-``set_color`` is used to control the color and styling of text in the terminal. *VALUE* describes that styling. *VALUE* can be a reserved color name like **red** or an RGB color value given as 3 or 6 hexadecimal digits ("F27" or "FF2277"). A special keyword **normal** resets text formatting to terminal defaults.
+``set_color`` controls the color and styling of text in the terminal.
+It writes non-printing color and text style escape sequences to standard output.
+
+*VALUE* describes the styling.
+*VALUE* can be a reserved color name like **red** or an RGB color value given as 3 or 6 hexadecimal digits ("F27" or "FF2277").
+A special keyword **normal** resets text formatting to terminal defaults, however it is not recommended and the **--reset** option is preferred as it is less confusing and more future-proof.
 
 Valid colors include:
 
@@ -26,12 +31,17 @@ Hexadecimal RGB values can be in lower or uppercase.
 
 If :envvar:`fish_term24bit` is set to 0, fish will translate RGB values to the nearest color on the 256-color palette.
 If :envvar:`fish_term256` is also set to 0, fish will translate them to the 16-color palette instead.
-Fish launched as ``fish -d term_support`` will include diagnostic messages that indicate the color support mode in use.
+fish launched as ``fish -d term_support`` will include diagnostic messages that indicate the color support mode in use.
 
 If multiple colors are specified, fish prefers the first RGB one.
 However if :envvar:`fish_term256` is set to 0, fish prefers the first named color specified.
 
 The following options are available:
+
+**-f** or **--foreground** *COLOR*
+    Sets the foreground color.
+    This is equivalent to calling ``set_color COLOR`` with the exception that the keyword **normal** will only reset the foreground color to its default, instead of all colors and modes.
+    It cannot be used with *VALUE* or **--print-colors**.
 
 **-b** or **--background** *COLOR*
     Sets the background color.
@@ -41,6 +51,7 @@ The following options are available:
 
 **-c** or **--print-colors**
     Prints the given colors or a colored list of the 16 named colors.
+    It cannot be used with **--foreground**.
 
 **-o** or **--bold**
     Sets bold mode.
@@ -48,14 +59,30 @@ The following options are available:
 **-d** or **--dim**
     Sets dim mode.
 
-**-i** or **--italics**
-    Sets italics mode.
+**-i** or **--italics**, or **-iSTATE** or **--italics=STATE**
+    Sets italics mode. The state can be **on** (default), or **off**.
 
-**-r** or **--reverse**
-    Sets reverse mode.
+**-r** or **--reverse**, or **-rSTATE** or **--reverse=STATE**
+    Sets reverse mode. The state can be **on** (default), or **off**.
+
+**-s** or **--strikethrough**, or **-sSTATE** or **--strikethrough=STATE**
+    Sets strikethrough mode. The state can be **on** (default), or **off**.
 
 **-u** or **--underline**, or **-uSTYLE** or **--underline=STYLE**
-    Set the underline mode; supported styles are **single** (default), **double**, **curly**, **dotted** and **dashed**.
+    Set the underline mode; supported styles are **single** (default), **double**, **curly**, **dotted**, **dashed** and **off**.
+
+**--reset**
+    Reset the text formatting to the terminal defaults before applying the new colors and modes.
+    This is equivalent to calling ``set_color normal`` except that it is possible to set the foreground color in the same call (e.g. ``set_color --reset green``)
+
+**--theme=THEME**
+    Ignored.
+    :ref:`Color variables <variables-color>` that contain only this option are treated like missing / empty color variables,
+    i.e. fish will use the fallback color instead.
+    :doc:`fish_config theme choose <fish_config>` erases all :ref:`color variable <fish_config-color-variables>`
+    whose value includes this option, and adds this option to all color variables it sets.
+    This allows identifying variables set by a theme,
+    and it allows fish to update color variables whenever :envvar:`fish_terminal_color_theme` changes.
 
 **-h** or **--help**
     Displays help about using this command.
@@ -63,10 +90,14 @@ The following options are available:
 Notes
 -----
 
-1. Using **set_color normal** will reset all colors and modes to the terminal's default.
-2. Setting the background color only affects subsequently written characters. Fish provides no way to set the background color for the entire terminal window. Configuring the window background color (and other attributes such as its opacity) has to be done using whatever mechanisms the terminal provides. Look for a config option.
-3. Some terminals use the ``--bold`` escape sequence to switch to a brighter color set rather than increasing the weight of text.
-4. ``set_color`` works by printing sequences of characters to standard output. If used in command substitution or a pipe, these characters will also be captured. This may or may not be desirable. Checking the exit status of ``isatty stdout`` before using ``set_color`` can be useful to decide not to colorize output in a script.
+1. Using ``set_color normal`` will reset all colors and modes to the terminal's default.
+2. In contrast, ``set_color --foreground normal`` will only reset the foreground color and leave all the other colors and modes unchanged.
+3. Because of the risk of confusion, ``set_color --reset`` is recommended over ``set_color normal``.
+4. Setting the background color only affects subsequently written characters. fish provides no way to set the background color for the entire terminal window. Configuring the window background color (and other attributes such as its opacity) has to be done using whatever mechanisms the terminal provides. Look for a config option.
+5. Some terminals use the ``--bold`` escape sequence to switch to a brighter color set rather than increasing the weight of text.
+6. If you use ``set_color`` in a command substitution or a pipe, these characters will also be captured.
+   This may or may not be desirable.
+   Checking the exit status of ``isatty stdout`` before using ``set_color`` can be useful to decide not to colorize output in a script.
 
 Examples
 --------

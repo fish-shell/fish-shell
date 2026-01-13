@@ -411,8 +411,8 @@ complete -c sfdx -n '__fish_sfdx_using_command force:limits:api:display' -l logl
 complete $sfdx_looking -xa force:mdapi -d 'retrieve and deploy metadata using Metadata'
 
 complete $sfdx_looking -xa force:mdapi:convert -d 'convert metadata from the Metadata API format into the source format'
-complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:convert' -s d -l outputdir -d 'the output directory to store the source–formatted files'
-complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:convert' -s r -l rootdir -d '(required) the root directory containing the Metadata API–formatted metadata'
+complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:convert' -s d -l outputdir -d 'the output directory to store the source-formatted files'
+complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:convert' -s r -l rootdir -d '(required) the root directory containing the Metadata API-formatted metadata'
 complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:convert' -l json -d 'format output as json'
 complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:convert' -l loglevel -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
 
@@ -820,7 +820,7 @@ complete -c sfdx -n '__fish_sfdx_using_command force:schema:sobject:list' -l log
 complete $sfdx_looking -xa force:source -d 'sync your project with your orgs'
 
 complete $sfdx_looking -xa force:source:convert -d 'convert source into Metadata API format'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:conevrt' -s d -l outputdir -d 'output directory to store the Metadata API–formatted files in'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:conevrt' -s d -l outputdir -d 'output directory to store the Metadata API-formatted files in'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:conevrt' -s n -l packagename -d 'name of the package to associate with the metadata-formatted files'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:conevrt' -s r -l rootdir -d 'a source directory other than the default package to convert'
 complete -c sfdx -n '__fish_sfdx_using_command force:schema:convert' -l json -d 'format output as json'

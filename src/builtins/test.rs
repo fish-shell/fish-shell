@@ -1,18 +1,22 @@
 use super::prelude::*;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
-use crate::should_flog;
+use crate::{err_str, should_flog};
+use fish_feature_flags::{FeatureFlag, feature_test};
 
 mod test_expressions {
+    use nix::unistd::{AccessFlags, Gid, Uid};
+
     use super::*;
 
+    use crate::builtins;
+    use crate::err_raw;
     use crate::nix::isatty;
     use crate::wutil::{
-        Error, Options, file_id_for_path, fish_wcswidth, lwstat, waccess, wcstod::wcstod,
-        wcstoi_opts, wstat,
+        self, file_id_for_path, lwstat, waccess, wcstod::wcstod, wcstoi, wcstoi_opts, wstat,
     };
-    use once_cell::sync::Lazy;
+    use fish_fallback::fish_wcswidth;
     use std::collections::HashMap;
     use std::os::unix::prelude::*;
+    use std::sync::LazyLock;
 
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub(super) enum Token {
@@ -64,6 +68,7 @@ mod test_expressions {
 
             $(
                 #[derive(Copy, Clone, PartialEq, Eq)]
+                #[allow(non_camel_case_types)]
                 pub(super) enum $sub_type { $($sub_variant,)+ }
 
                 impl From<$sub_type> for Token {
@@ -164,7 +169,7 @@ mod test_expressions {
             }
             let bint = self.base as i32;
             if bint == 0 {
-                match streams.stdin_fd {
+                match streams.stdin_fd() {
                     -1 => false,
                     fd => isatty(fd),
                 }
@@ -182,7 +187,7 @@ mod test_expressions {
         TOKEN_INFOS.get(str).copied().unwrap_or(Token::Unknown)
     }
 
-    static TOKEN_INFOS: Lazy<HashMap<&'static wstr, Token>> = Lazy::new(|| {
+    static TOKEN_INFOS: LazyLock<HashMap<&'static wstr, Token>> = LazyLock::new(|| {
         let pairs = [
             (L!(""), Token::Unknown),
             (L!("!"), Token::UnaryBoolean(UnaryBooleanToken::Bang)),
@@ -367,7 +372,7 @@ mod test_expressions {
         fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             let _res = self.subjects[0].evaluate(streams, errors);
             assert!(!self.subjects.is_empty());
-            assert!(self.combiners.len() + 1 == self.subjects.len());
+            assert_eq!(self.combiners.len() + 1, self.subjects.len());
 
             // One-element case.
             if self.subjects.len() == 1 {
@@ -404,7 +409,7 @@ mod test_expressions {
                 // OR it in.
                 or_result = or_result || and_result;
             }
-            return or_result;
+            or_result
         }
 
         fn range(&self) -> Range {
@@ -551,15 +556,15 @@ mod test_expressions {
                 );
             }
 
-            if feature_test(FeatureFlag::test_require_arg) {
+            if feature_test(FeatureFlag::TestRequireArg) {
                 return self.error(start, sprintf!("Unknown option at index %u", start));
             }
 
-            return JustAString {
+            JustAString {
                 arg: self.arg(start).to_owned(),
                 range: start..start + 1,
             }
-            .into_some_box();
+            .into_some_box()
         }
 
         fn parse_binary_primary(
@@ -651,7 +656,7 @@ mod test_expressions {
             start: usize,
             end: usize,
         ) -> Option<Box<dyn Expression>> {
-            assert!(end - start == 3);
+            assert_eq!(end - start, 3);
 
             let center_token = token_for_string(self.arg(start + 1));
 
@@ -677,7 +682,7 @@ mod test_expressions {
             start: usize,
             end: usize,
         ) -> Option<Box<dyn Expression>> {
-            assert!(end - start == 4);
+            assert_eq!(end - start, 4);
 
             let first_token = token_for_string(self.arg(start));
 
@@ -704,7 +709,7 @@ mod test_expressions {
             let argc = end - start;
             match argc {
                 0 => {
-                    panic!("argc should not be zero"); // should have been caught by the above test
+                    unreachable!("argc should not be zero"); // should have been caught by the above test
                 }
                 1 => self.error(
                     start + 1,
@@ -717,69 +722,64 @@ mod test_expressions {
             }
         }
 
-        pub fn parse_args(
-            args: &[WString],
-            err: &mut WString,
-            program_name: &wstr,
-        ) -> Option<Box<dyn Expression>> {
+        pub fn parse_args(args: &[WString]) -> Result<Box<dyn Expression>, builtins::Error<'_>> {
             let mut parser = TestParser {
                 strings: args,
                 errors: Vec::new(),
                 error_idx: 0,
             };
-            let mut result = parser.parse_expression(0, args.len());
+            let result_opt = parser.parse_expression(0, args.len());
 
             // Historic assumption from C++: if we have no errors then we must have a result.
-            assert!(!parser.errors.is_empty() || result.is_some());
+            assert!(!parser.errors.is_empty() || result_opt.is_some());
+
+            if let Some(result) = result_opt {
+                let range_end = result.range().end;
+                assert!(range_end <= args.len());
+
+                // The result is valid only if we consumed all the arguments.
+                // This is not detected by parse_expression(), so in that case
+                // we need to create our own error.
+                if range_end == args.len() {
+                    return Ok(result);
+                }
+                if parser.errors.is_empty() {
+                    parser.error_idx = range_end;
+                    parser.errors = vec![sprintf!(
+                        "unexpected argument at index %u: '%s'",
+                        range_end + 1,
+                        args[range_end],
+                    )];
+                }
+            }
 
             // Handle errors.
             // For now we only show the first error.
-            if !parser.errors.is_empty() || result.as_ref().unwrap().range().end < args.len() {
-                let mut narg = 0;
-                let mut len_to_err = 0;
-                if parser.errors.is_empty() {
-                    parser.error_idx = result.as_ref().unwrap().range().end;
+            let mut narg = 0;
+            let mut len_to_err = 0;
+            let mut commandline = WString::new();
+            for arg in args {
+                if narg > 0 {
+                    commandline.push(' ');
                 }
-                let mut commandline = WString::new();
-                for arg in args {
-                    if narg > 0 {
-                        commandline.push(' ');
-                    }
-                    commandline.push_utfstr(arg);
-                    narg += 1;
-                    if narg == parser.error_idx {
-                        len_to_err = fish_wcswidth(&commandline);
-                    }
-                }
-                err.push_utfstr(program_name);
-                err.push_str(": ");
-                if !parser.errors.is_empty() {
-                    err.push_utfstr(&parser.errors[0]);
-                } else {
-                    sprintf!(=> err, "unexpected argument at index %u: '%s'",
-                             result.as_ref().unwrap().range().end + 1,
-                             args[result.as_ref().unwrap().range().end]);
-                }
-                err.push('\n');
-                err.push_utfstr(&commandline);
-                err.push('\n');
-                err.push_utfstr(&sprintf!("%*s%s\n", len_to_err + 1, " ", "^"));
-            }
-
-            if result.is_some() {
-                // It's also an error if there are any unused arguments. This is not detected by
-                // parse_expression().
-                assert!(result.as_ref().unwrap().range().end <= args.len());
-                if result.as_ref().unwrap().range().end < args.len() {
-                    result = None;
+                commandline.push_utfstr(arg);
+                narg += 1;
+                if narg == parser.error_idx {
+                    len_to_err = fish_wcswidth(&commandline).unwrap_or_default();
                 }
             }
-            result
+            let mut err = WString::new();
+            err.push_utfstr(&parser.errors[0]);
+            err.push('\n');
+            err.push_utfstr(&commandline);
+            err.push('\n');
+            err.push_utfstr(&sprintf!("%*s%s\n", len_to_err + 1, " ", "^"));
+            Err(err_raw!(err))
         }
     }
 
     // Parse a double from arg.
-    fn parse_double(argstr: &wstr) -> Result<f64, Error> {
+    fn parse_double(argstr: &wstr) -> Result<f64, wutil::Error> {
         let mut arg = argstr;
 
         // Consume leading spaces.
@@ -787,7 +787,7 @@ mod test_expressions {
             arg = arg.slice_from(1);
         }
         if arg.is_empty() {
-            return Err(Error::Empty);
+            return Err(wutil::Error::Empty);
         }
         let mut consumed = 0;
         let res = wcstod(arg, '.', &mut consumed)?;
@@ -800,7 +800,7 @@ mod test_expressions {
         if end.len() < argstr.len() && end.is_empty() {
             Ok(res)
         } else {
-            Err(Error::InvalidChar)
+            Err(wutil::Error::InvalidChar)
         }
     }
 
@@ -810,14 +810,14 @@ mod test_expressions {
     // since we allow trailing whitespace, with other implementations such as bash.
     fn parse_number(arg: &wstr, number: &mut Number, errors: &mut Vec<WString>) -> bool {
         let floating = parse_double(arg);
-        let integral: Result<i64, Error> = fish_wcstol(arg);
+        let integral: Result<i64, wutil::Error> = fish_wcstol(arg);
         if let Ok(int) = integral {
             // Here the value is just an integer; ignore the floating point parse because it may be
             // invalid (e.g. not a representable integer).
             *number = Number::new(int, 0.0);
             true
         } else if floating.is_ok_and(|f| f.is_finite())
-            && integral.is_err_and(|i| i != Error::Overflow)
+            && integral.is_err_and(|i| i != wutil::Error::Overflow)
         {
             // Here we parsed an (in range) floating point value that could not be parsed as an integer.
             // Break the floating point value into base and delta. Ensure that base is <= the floating
@@ -835,10 +835,10 @@ mod test_expressions {
             // Check for special fish_wcsto* value or show standard EINVAL/ERANGE error.
             // TODO: the C++ here was pretty confusing. In particular we used an errno of -1 to mean
             // "invalid char" but the input string may be something like "inf".
-            if integral == Err(Error::InvalidChar) && floating.is_err() {
+            if integral == Err(wutil::Error::InvalidChar) && floating.is_err() {
                 // Historically fish has printed a special message if a prefix of the invalid string was an integer.
                 // Compute that now.
-                let options = Options {
+                let options = wcstoi::Options {
                     mradix: Some(10),
                     ..Default::default()
                 };
@@ -857,7 +857,7 @@ mod test_expressions {
                 errors.push(wgettext!("Not a number").to_owned());
             } else if floating.is_ok_and(|x| x.is_infinite()) {
                 errors.push(wgettext!("Number is infinite").to_owned());
-            } else if integral == Err(Error::Overflow) {
+            } else if integral == Err(wutil::Error::Overflow) {
                 errors.push(wgettext_fmt!("Result too large: %s", arg));
             } else {
                 errors.push(wgettext_fmt!("Invalid number: %s", arg));
@@ -931,13 +931,13 @@ mod test_expressions {
                     // "-f", for regular files
                     StatPredicate::f => md.file_type().is_file(),
                     // "-G", for check effective group ID
-                    StatPredicate::G => md.gid() == crate::nix::getegid(),
+                    StatPredicate::G => md.gid() == Gid::effective().as_raw(),
                     // "-g", for set-group-id
                     StatPredicate::g => md.permissions().mode() & S_ISGID != 0,
                     // "-k", for sticky bit
                     StatPredicate::k => md.permissions().mode() & S_ISVTX != 0,
                     // "-O", for check effective user id
-                    StatPredicate::O => md.uid() == crate::nix::geteuid(),
+                    StatPredicate::O => md.uid() == Uid::effective().as_raw(),
                     // "-p", for FIFO
                     StatPredicate::p => md.file_type().is_fifo(),
                     // "-S", socket
@@ -965,13 +965,13 @@ mod test_expressions {
             UnaryToken::FilePerm(permission) => {
                 let mode = match permission {
                     // "-r", read permission
-                    FilePermission::r => libc::R_OK,
+                    FilePermission::r => AccessFlags::R_OK,
                     // "-w", whether file write permission is allowed
-                    FilePermission::w => libc::W_OK,
+                    FilePermission::w => AccessFlags::W_OK,
                     // "-x", whether file execute/search is allowed
-                    FilePermission::x => libc::X_OK,
+                    FilePermission::x => AccessFlags::X_OK,
                 };
-                waccess(arg, mode) == 0
+                waccess(arg, mode).is_ok()
             }
             UnaryToken::String(predicate) => match predicate {
                 // "-n", non-empty string
@@ -985,7 +985,7 @@ mod test_expressions {
 /// Evaluate a conditional expression given the arguments. For POSIX conformance this
 /// supports a more limited range of functionality.
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
-pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn test(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     // The first argument should be the name of the command ('test').
     if argv.is_empty() {
         return Err(STATUS_INVALID_ARGS);
@@ -1004,28 +1004,24 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             // Ignore the closing bracket from now on.
             argc -= 1;
         } else {
-            streams
-                .err
-                .appendln(wgettext!("[: the last argument must be ']'"));
-            builtin_print_error_trailer(parser, streams.err, program_name);
+            err_str!("the last argument must be ']'")
+                .cmd(program_name)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     }
 
     // Collect the arguments into a list.
-    let args: Vec<WString> = argv[1..argc + 1]
-        .iter()
-        .map(|&arg| arg.to_owned())
-        .collect();
+    let args: Vec<WString> = argv[1..=argc].iter().map(|&arg| arg.to_owned()).collect();
     let args: &[WString] = &args;
 
-    if feature_test(FeatureFlag::test_require_arg) {
+    if feature_test(FeatureFlag::TestRequireArg) {
         if argc == 0 {
-            streams.err.appendln(wgettext_fmt!(
-                "%s: Expected at least one argument",
-                program_name
-            ));
-            builtin_print_error_trailer(parser, streams.err, program_name);
+            err_str!("Expected at least one argument")
+                .cmd(program_name)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         } else if argc == 1 {
             if args[0] == "-n" {
@@ -1036,20 +1032,18 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         }
     } else if argc == 0 {
         if should_flog!(deprecated_test) {
-            streams.err.appendln(wgettext_fmt!(
-                "%s: called with no arguments. This will be an error in future.",
-                program_name
-            ));
-            streams.err.append(parser.current_line());
+            err_str!("called with no arguments. This will be an error in future.")
+                .cmd(program_name)
+                .stacktrace(parser)
+                .finish(streams);
         }
         return Err(STATUS_INVALID_ARGS); // Per 1003.1, exit false.
     } else if argc == 1 {
         if should_flog!(deprecated_test) && args[0] != "-z" {
-            streams.err.appendln(wgettext_fmt!(
-                "%s: called with one argument. This will return false in future.",
-                program_name
-            ));
-            streams.err.append(parser.current_line());
+            err_str!("called with one argument. This will return false in future.")
+                .cmd(program_name)
+                .stacktrace(parser)
+                .finish(streams);
         }
         // Per 1003.1, exit true if the arg is non-empty.
         return if args[0].is_empty() {
@@ -1060,12 +1054,13 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     }
 
     // Try parsing
-    let mut err = WString::new();
-    let expr = test_expressions::TestParser::parse_args(args, &mut err, program_name);
-    let Some(expr) = expr else {
-        streams.err.append(err);
-        streams.err.append(parser.current_line());
-        return Err(STATUS_CMD_ERROR);
+    let expr = test_expressions::TestParser::parse_args(args);
+    let expr = match expr {
+        Ok(expr) => expr,
+        Err(err) => {
+            err.cmd(program_name).stacktrace(parser).finish(streams);
+            return Err(STATUS_CMD_ERROR);
+        }
     };
 
     let mut eval_errors = Vec::new();
@@ -1076,7 +1071,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         }
         // Add a backtrace but not the "see help" message
         // because this isn't about passing the wrong options.
-        streams.err.append(parser.current_line());
+        streams.err.append(&parser.current_line());
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -1090,12 +1085,15 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
 #[cfg(test)]
 mod tests {
     use super::test as builtin_test;
-    use crate::builtins::prelude::*;
-    use crate::io::{IoChain, OutputStream};
-    use crate::tests::prelude::*;
+    use crate::{
+        builtins::prelude::*,
+        io::{IoChain, OutputStream},
+        tests::prelude::*,
+    };
+    use fish_widestring::str2wcstring;
 
     fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> bool {
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
         let mut argv = Vec::new();
         if bracket {
             argv.push(L!("[").to_owned());
@@ -1103,11 +1101,11 @@ mod tests {
             argv.push(L!("test").to_owned());
         }
         for s in lst {
-            argv.push(WString::from_str(s));
+            argv.push(str2wcstring(s));
         }
         if bracket {
-            argv.push(L!("]").to_owned())
-        };
+            argv.push(L!("]").to_owned());
+        }
 
         // Convert to &[&wstr].
         let mut argv = argv.iter().map(|s| s.as_ref()).collect::<Vec<_>>();
@@ -1116,7 +1114,7 @@ mod tests {
         let io_chain = IoChain::new();
         let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
 
-        let result = builtin_test(&parser, &mut streams, &mut argv).builtin_status_code();
+        let result = builtin_test(parser, &mut streams, &mut argv).builtin_status_code();
 
         if result != expected {
             eprintf!(
@@ -1137,7 +1135,7 @@ mod tests {
 
     fn test_test_brackets() {
         // Ensure [ knows it needs a ].
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
 
         let mut out = OutputStream::Null;
         let mut err = OutputStream::Null;
@@ -1146,16 +1144,16 @@ mod tests {
 
         let args1 = &mut [L!("["), L!("foo")];
         assert_eq!(
-            builtin_test(&parser, &mut streams, args1),
+            builtin_test(parser, &mut streams, args1),
             Err(STATUS_INVALID_ARGS)
         );
 
         let args2 = &mut [L!("["), L!("foo"), L!("]")];
-        assert_eq!(builtin_test(&parser, &mut streams, args2), Ok(SUCCESS));
+        assert_eq!(builtin_test(parser, &mut streams, args2), Ok(SUCCESS));
 
         let args3 = &mut [L!("["), L!("foo"), L!("]"), L!("bar")];
         assert_eq!(
-            builtin_test(&parser, &mut streams, args3),
+            builtin_test(parser, &mut streams, args3),
             Err(STATUS_INVALID_ARGS)
         );
     }
@@ -1215,12 +1213,13 @@ mod tests {
         assert!(run_test_test(0, &["0", "=", "0", "-o", "(", "0", "=", "1", "-a", "0", "=", "2", ")"]));
 
         // A few lame tests for permissions; these need to be a lot more complete.
-        assert!(run_test_test(0, &["-e", "/bin/ls"]));
-        assert!(run_test_test(1, &["-e", "/bin/ls_not_a_path"]));
-        assert!(run_test_test(0, &["-x", "/bin/ls"]));
-        assert!(run_test_test(1, &["-x", "/bin/ls_not_a_path"]));
+        // NOTE: we assume /bin/sh exists and is executable here
+        assert!(run_test_test(0, &["-e", "/bin/sh"]));
+        assert!(run_test_test(1, &["-e", "/bin/sh_not_a_path"]));
+        assert!(run_test_test(0, &["-x", "/bin/sh"]));
+        assert!(run_test_test(1, &["-x", "/bin/sh_not_a_path"]));
         assert!(run_test_test(0, &["-d", "/bin/"]));
-        assert!(run_test_test(1, &["-d", "/bin/ls"]));
+        assert!(run_test_test(1, &["-d", "/bin/sh"]));
 
         // This failed at one point.
         assert!(run_test_test(1, &["-d", "/bin", "-a", "5", "-eq", "3"]));
@@ -1263,7 +1262,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_test_builtin() {
-        let _cleanup = test_init();
+        test_init();
         test_test_brackets();
         test_test();
     }

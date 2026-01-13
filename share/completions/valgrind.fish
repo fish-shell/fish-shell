@@ -10,11 +10,11 @@ if valgrind --version 2>/dev/null | string match -qr -- '-2\.[012]\.'
 end
 
 complete -xc valgrind -l $skin -d Skin -a "
-	memcheck\tHeavyweight\ memory\ checker
-	cachegrind\tCache-miss\ profiler
-	addrcheck\tLightweight\ memory\ checker
-	helgrind\tData-race\ detector
-	massif\tHeap\ profiler
+    memcheck\tHeavyweight\ memory\ checker
+    cachegrind\tCache-miss\ profiler
+    addrcheck\tLightweight\ memory\ checker
+    helgrind\tData-race\ detector
+    massif\tHeap\ profiler
 "
 
 function __fish_valgrind_skin --argument-names tool -V skin

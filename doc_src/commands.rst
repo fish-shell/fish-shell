@@ -95,5 +95,5 @@ And here is the full list:
 .. toctree::
    :glob:
    :maxdepth: 1
-   
+
    cmds/*

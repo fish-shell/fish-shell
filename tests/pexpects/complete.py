@@ -38,10 +38,10 @@ sendline(
     function my_is; :; end
     complete -c my_is -n 'test (count (commandline -xpc)) = 1' -xa arg
     complete -c my_is -n '__fish_seen_subcommand_from not' -xa '(
-	set -l cmd (commandline -xpc) (commandline -ct)
-	set cmd (string join " " my_is $cmd[3..-1])" "
-	commandline --replace --current-process $cmd
-	complete -C"$cmd"
+    set -l cmd (commandline -xpc) (commandline -ct)
+    set cmd (string join " " my_is $cmd[3..-1])" "
+    commandline --replace --current-process $cmd
+    complete -C"$cmd"
     )'
 """
 )

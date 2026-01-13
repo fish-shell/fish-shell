@@ -8,25 +8,11 @@
 # Exit on error
 set -e
 
-# We need GNU tar as that supports the --mtime and --transform options
-TAR=notfound
-for try in tar gtar gnutar; do
-    if $try -Pcf /dev/null --mtime now /dev/null >/dev/null 2>&1; then
-        TAR=$try
-        break
-    fi
-done
-
-if [ "$TAR" = "notfound" ]; then
-    echo 'No suitable tar (supporting --mtime) found as tar/gtar/gnutar in PATH'
-    exit 1
-fi
-
 # Get the current directory, which we'll use for telling Cargo where to find the sources
 wd="$PWD"
 
 # Get the version from git-describe
-VERSION=$(build_tools/git_version_gen.sh --stdout 2>/dev/null)
+VERSION=$(build_tools/git_version_gen.sh)
 
 # The name of the prefix, which is the directory that you get when you untar
 prefix="fish-$VERSION"
@@ -42,8 +28,14 @@ rm -f "$path" "$path".xz
 PREFIX_TMPDIR=$(mktemp -d)
 cd "$PREFIX_TMPDIR"
 
+# Add .cargo/config.toml. This means that the caller may need to remove that file from the tarball.
+# See e4674cd7b5f (.cargo/config.toml: exclude from tarball, 2025-01-12)
+
 mkdir .cargo
-cargo vendor --manifest-path "$wd/Cargo.toml" > .cargo/config.toml
+{
+    cat "$wd"/.cargo/config.toml
+    cargo vendor --manifest-path "$wd/Cargo.toml"
+} > .cargo/config.toml
 
 tar cfvJ "$path".xz vendor .cargo
 

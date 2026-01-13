@@ -9,12 +9,12 @@ complete -c rpm -l rcfile -d "List of rpm configuration files" -f
 complete -c rpm -l pipe -d "Pipe output through specified command" -r
 complete -c rpm -l dbpath -d "Specify directory for rpm database" -a "
 (
-	__fish_complete_directories (commandline -ct) 'Rpm database directory'
+    __fish_complete_directories (commandline -ct) 'Rpm database directory'
 )
 "
 complete -c rpm -l root -d "Specify root directory for rpm operations" -a "
 (
-	__fish_complete_directories (commandline -ct) 'Root directory for rpm operations'
+    __fish_complete_directories (commandline -ct) 'Root directory for rpm operations'
 )
 "
 

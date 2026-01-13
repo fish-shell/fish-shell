@@ -54,7 +54,7 @@ complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -e ':'" -
                 set -g __fish_scp_sftp false
             end
             if set -q tmp[1]
-                rm $tmp
+                command rm $tmp
             end
         end
         if $__fish_scp_sftp

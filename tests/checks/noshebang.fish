@@ -1,8 +1,7 @@
 # RUN: %fish %s
 
-# Do not run under sanitizers in CI, as they intercept a busted posix_spawn
-# which mishandles shebangless scripts.
-# REQUIRES: test -z "$FISH_CI_SAN"
+# Shebangless scripts cannot be marked executable without POSIX file permissions
+# REQUIRES: %fish -c 'not cygwin_noacl $TMPDIR'
 
 # Test for shebangless scripts - see 7802.
 
@@ -56,7 +55,6 @@ set -g fish_use_posix_spawn 1
 echo $status
 #CHECK: 126
 rm file.fish
-
 
 # On to NUL bytes.
 # The heuristic is that there must be a line containing a lowercase letter before the first NUL byte.

@@ -23,3 +23,7 @@ complete -c coredumpctl -s o -l output -r -d 'Write output to FILE'
 complete -c coredumpctl -l file -r -d 'Use journal FILE'
 complete -c coredumpctl -s D -l directory -r -d 'Use journal files from DIRECTORY'
 complete -c coredumpctl -s q -l quiet -d 'Do not show info messages and privilege warning'
+complete -c coredumpctl -l all -d "Look at all journal files instead of local ones"
+complete -c coredumpctl -l root -d "Operate on an alternate filesystem root" -xa "(__fish_complete_directories '' 'Root')"
+complete -c coredumpctl -l image -d "Operate on disk image as filesystem root" -x
+complete -c coredumpctl -l image-policy -d "Specify disk image dissection policy" -xa "verity signed encrypted unprotected unused absent"

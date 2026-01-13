@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, os::unix::ffi::OsStrExt, path::Path};
+use std::{borrow::Cow, env, os::unix::ffi::OsStrExt as _, path::Path};
 
 pub fn env_var(name: &str) -> Option<String> {
     let err = match env::var(name) {
@@ -34,6 +34,28 @@ pub fn fish_build_dir() -> Cow<'static, Path> {
         .unwrap_or(cargo_target_dir())
 }
 
+pub fn fish_doc_dir() -> Cow<'static, Path> {
+    cargo_target_dir().join("fish-docs").into()
+}
+
+fn l10n_dir() -> Cow<'static, Path> {
+    workspace_root().join("localization").into()
+}
+
+pub fn ftl_dir() -> Cow<'static, Path> {
+    l10n_dir().join("fluent").into()
+}
+
+pub static DEFAULT_LANGUAGE: &str = "en";
+
+pub fn default_ftl_file() -> Cow<'static, Path> {
+    ftl_dir().join(format!("{DEFAULT_LANGUAGE}.ftl")).into()
+}
+
+pub fn po_dir() -> Cow<'static, Path> {
+    l10n_dir().join("po").into()
+}
+
 // TODO Move this to rsconf
 pub fn rebuild_if_path_changed<P: AsRef<Path>>(path: P) {
     rsconf::rebuild_if_path_changed(path.as_ref().to_str().unwrap());
@@ -43,5 +65,58 @@ pub fn rebuild_if_path_changed<P: AsRef<Path>>(path: P) {
 pub fn rebuild_if_paths_changed<P: AsRef<Path>, I: IntoIterator<Item = P>>(paths: I) {
     for path in paths {
         rsconf::rebuild_if_path_changed(path.as_ref().to_str().unwrap());
+    }
+}
+
+pub fn rebuild_if_embedded_path_changed<P: AsRef<Path>>(path: P) {
+    // Not necessary in debug builds, where rust-embed reads from the filesystem.
+    if cfg!(any(not(debug_assertions), windows)) {
+        rebuild_if_path_changed(path);
+    }
+}
+
+// Target OS for compiling our crates, as opposed to the build script.
+pub fn target_os() -> String {
+    env_var("CARGO_CFG_TARGET_OS").unwrap()
+}
+
+pub fn target_os_is_apple() -> bool {
+    matches!(target_os().as_str(), "ios" | "macos")
+}
+
+/// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
+/// `#[cfg(bsd)]`.
+///
+/// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
+/// doesn't necessarily include less-popular forks nor does it group them into families more
+/// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
+pub fn target_os_is_bsd() -> bool {
+    let target_os = target_os();
+    let is_bsd = target_os.ends_with("bsd") || target_os == "dragonfly";
+    if matches!(
+        target_os.as_str(),
+        "dragonfly" | "freebsd" | "netbsd" | "openbsd"
+    ) {
+        assert!(is_bsd, "Target incorrectly detected as not BSD!");
+    }
+    is_bsd
+}
+
+pub fn target_os_is_cygwin() -> bool {
+    target_os() == "cygwin"
+}
+
+#[macro_export]
+macro_rules! as_os_strs {
+    [ $( $x:expr ),* $(,)? ] => {
+        {
+            use std::ffi::OsStr;
+            fn as_os_str<S: AsRef<OsStr> + ?Sized>(s: &S) -> &OsStr {
+                s.as_ref()
+            }
+            [
+                $( as_os_str($x) ),*
+            ]
+        }
     }
 }

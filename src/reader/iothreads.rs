@@ -3,8 +3,7 @@
 
 use super::{Reader, reader};
 use crate::fd_monitor::FdEventSignaller;
-use crate::threads::ThreadPool;
-use crate::threads::debounce::Debounce;
+use crate::threads::{Debounce, ThreadPool};
 use std::os::unix::io::RawFd;
 use std::sync::Arc;
 use std::time::Duration;
@@ -48,6 +47,6 @@ impl Debouncers {
     /// Return the read fd of the event signaller.
     /// This may be used with `poll()` or `select()` to multiplex iothread completions with other events.
     pub fn event_signaller_read_fd(&self) -> RawFd {
-        self.event_signaller.read_fd()
+        self.event_signaller.read_fd_raw()
     }
 }

@@ -11,6 +11,10 @@ set -lx LANG de_DE.utf8
 $fish --not-a-real-flag
 # CHECKERR: fish: --not-a-real-flag: unbekannte Option
 
+# check Fluent translations
+$fish --version
+# CHECK: fish, Version {{[0-9].*}}
+
 set --show custom_gettext_var
 # CHECK: $custom_gettext_var: Gesetzt in Geltungsbereich 'local', nicht exportiert, mit 1 Elementen
 # CHECK: $custom_gettext_var[1]: |asdf|
@@ -38,6 +42,10 @@ echo (_ file)
 # Test LANGUAGE fallback
 set -lx LANGUAGE pt de_DE
 
+# check Fluent translations
+$fish --version
+# CHECK: fish, versão {{[0-9].*}}
+
 # This is available in Portuguese. (echo is used to get add a newline)
 echo (_ file)
 # CHECK: arquivo
@@ -53,6 +61,12 @@ echo (_ untranslatable)
 # Check that C locale disables localization
 begin
     set -l LANG C
+    echo (_ file)
+    # CHECK: file
+    set -l LANG POSIX
+    echo (_ file)
+    # CHECK: file
+    set -l LANG C.UTF-8
     echo (_ file)
     # CHECK: file
 end
@@ -72,6 +86,13 @@ begin
 end
 echo (_ file)
 # CHECK: arquivo
+
+# Check that empty vars are ignored
+begin
+    set -l LC_ALL
+    echo (_ file)
+    # CHECK: arquivo
+end
 
 # Check that all relevant locale variables are respected.
 set --erase LANG
@@ -104,3 +125,88 @@ echo (_ file)
 set -l LC_ALL de_DE.utf8
 echo (_ file)
 # CHECK: Datei
+
+# Check `status language` builtin
+set --erase LANG
+set --erase LC_MESSAGES
+set --erase LC_ALL
+set --erase LANGUAGE
+status language
+# CHECK: Active languages (source: default):
+# CHECK:   Fluent: en
+# CHECK:   gettext:
+echo (_ file)
+# CHECK: file
+
+set -l LANGUAGE pt_BR de_DE
+status language
+# CHECK: Active languages (source: LANGUAGE variable):
+# CHECK:   Fluent: pt_BR de en
+# CHECK:   gettext: pt_BR de
+echo (_ file)
+# CHECK: arquivo
+
+# We have fr but not fr_FR. For the builtin command, only exact matches are allowed.
+status language set fr_FR de pt_BR
+# CHECKERR: No catalogs available for language specifiers: fr_FR
+status language
+# CHECK: Active languages (source: `status language set` command):
+# CHECK:   Fluent: de pt_BR en
+# CHECK:   gettext: de pt_BR
+echo (_ file)
+# CHECK: Datei
+
+set -l LANGUAGE zh_TW
+status language
+# CHECK: Active languages (source: `status language set` command):
+# CHECK:   Fluent: de pt_BR en
+# CHECK:   gettext: de pt_BR
+echo (_ file)
+# CHECK: Datei
+
+set -l LC_MESSAGES C
+status language
+# CHECK: Active languages (source: `status language set` command):
+# CHECK:   Fluent: de pt_BR en
+# CHECK:   gettext: de pt_BR
+echo (_ file)
+# CHECK: Datei
+
+status language unset
+status language
+# CHECK: Active languages (source: LC_MESSAGES variable):
+# CHECK:   Fluent: en
+# CHECK:   gettext:
+echo (_ file)
+# CHECK: file
+
+set --erase LC_MESSAGES
+status language
+# CHECK: 使用的語言（來源：LANGUAGE variable）：
+# CHECK:   Fluent: zh_TW en
+# CHECK:   gettext: zh_TW
+echo (_ file)
+# CHECK: 檔案
+
+set --erase LANGUAGE
+status language
+# CHECK: Active languages (source: default):
+# CHECK:   Fluent: en
+# CHECK:   gettext:
+echo (_ file)
+# CHECK: file
+
+# Check `status language set` warnings
+status language set asdf
+# CHECKERR: No catalogs available for language specifiers: asdf
+
+# This will have to be changed if we add catalogs for languages used here.
+status language set zh_HK it_IT zh_HK
+# CHECKERR: Language specifiers appear repeatedly: zh_HK
+# CHECKERR: No catalogs available for language specifiers: zh_HK it_IT
+
+status language set de de
+# CHECKERR: Language specifiers appear repeatedly: de
+
+status language set \xff quote\"
+# CHECKERR: No catalogs available for language specifiers: \Xff 'quote"'

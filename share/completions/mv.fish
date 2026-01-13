@@ -3,15 +3,16 @@ set -l uname (uname -s)
 ## GNU mv
 if mv --version >/dev/null 2>/dev/null
     # --backup requires an argument, -b does not accept an argument
-    complete -c mv -l backup -r -d "Backup each existing destination file" \
-        -x -ka "none\t'Never make backups'
-                     off\t'Never make backups'
-                     numbered\t'Make numbered backups'
-                     t\t'Make numbered backups'
-                     existing\t'Numbered backups if any exist, else simple'
-                     nil\t'Numbered backups if any exist, else simple'
-                     simple\t'Make simple backups'
-                     never\t'Make simple backups'"
+    complete -c mv -l backup -r -d "Backup each existing destination file" -x -ka "
+        none\t'Never make backups'
+        off\t'Never make backups'
+        numbered\t'Make numbered backups'
+        t\t'Make numbered backups'
+        existing\t'Numbered backups if any exist, else simple'
+        nil\t'Numbered backups if any exist, else simple'
+        simple\t'Make simple backups'
+        never\t'Make simple backups'
+    "
     complete -c mv -s b -d "Backup each existing destination file"
     complete -c mv -s f -l force -d "Don't prompt to overwrite"
     complete -c mv -s i -l interactive -d "Prompt to overwrite"

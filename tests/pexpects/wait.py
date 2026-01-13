@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
 
-import os
-import sys
-
-# Disable under SAN - keeps failing because the timing is too tight
-if "FISH_CI_SAN" in os.environ:
-    sys.exit(0)
-
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,
@@ -128,4 +121,13 @@ expect_prompt()
 sendline("wait %5")
 expect_prompt("jobs: No suitable job: %5")
 sendline("kill %1")
+expect_prompt()
+
+# Regression test for #12301
+sendline("function sleep_func; sleep 2s; end")
+expect_prompt()
+sendline("cat | cat | sleep_func > /dev/null")
+sleep(0.2)
+send("\x1a")
+sleep(0.2)
 expect_prompt()

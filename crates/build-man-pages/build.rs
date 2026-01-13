@@ -1,43 +1,24 @@
-use fish_build_helper::{env_var, workspace_root};
 use std::path::Path;
 
+use fish_build_helper::{as_os_strs, fish_doc_dir};
+
 fn main() {
-    let man_dir = fish_build_helper::fish_build_dir().join("fish-man");
-    let sec1_dir = man_dir.join("man1");
-    // Running `cargo clippy` on a clean build directory panics, because when rust-embed tries to
-    // embed a directory which does not exist it will panic.
+    let sec1_dir = fish_doc_dir().join("man").join("man1");
+    // Running `cargo clippy` on a clean build directory panics, because when rust-embed
+    // tries to embed a directory which does not exist it will panic.
     let _ = std::fs::create_dir_all(&sec1_dir);
-
-    let help_sections_path = Path::new(&env_var("OUT_DIR").unwrap()).join("help_sections.rs");
-
-    if env_var("FISH_USE_PREBUILT_DOCS").is_some_and(|v| v == "TRUE") {
-        std::fs::copy(
-            workspace_root().join("user_doc/src/help_sections.rs"),
-            help_sections_path,
-        )
-        .unwrap();
-        return;
+    if !cfg!(clippy) {
+        build_man(&sec1_dir);
     }
-
-    std::fs::write(
-        help_sections_path.clone(),
-        r#"pub static HELP_SECTIONS: &str = "";"#,
-    )
-    .unwrap();
-
-    #[cfg(not(clippy))]
-    build_man(&man_dir, &sec1_dir, &help_sections_path);
 }
 
-#[cfg(not(clippy))]
-fn build_man(man_dir: &Path, sec1_dir: &Path, help_sections_path: &Path) {
-    use std::{
-        ffi::OsStr,
-        process::{Command, Stdio},
-    };
+fn build_man(sec1_dir: &Path) {
+    use fish_build_helper::{env_var, workspace_root};
+    use std::process::{Command, Stdio};
 
     let workspace_root = workspace_root();
     let doc_src_dir = workspace_root.join("doc_src");
+    let doctrees_dir = fish_doc_dir().join(".doctrees-man");
 
     fish_build_helper::rebuild_if_paths_changed([
         &workspace_root.join("CHANGELOG.rst"),
@@ -45,39 +26,24 @@ fn build_man(man_dir: &Path, sec1_dir: &Path, help_sections_path: &Path) {
         &doc_src_dir,
     ]);
 
-    let help_sections_arg = format!("fish_help_sections_output={}", help_sections_path.display());
-    let args: &[&OsStr] = {
-        fn as_os_str<S: AsRef<OsStr> + ?Sized>(s: &S) -> &OsStr {
-            s.as_ref()
-        }
-        macro_rules! as_os_strs {
-            ( [ $( $x:expr, )* ] ) => {
-                &[
-                    $( as_os_str($x), )*
-                ]
-            }
-        }
-        as_os_strs!([
-            "-j",
-            "auto",
-            "-q",
-            "-b",
-            "man",
-            "-c",
-            &doc_src_dir,
-            // doctree path - put this *above* the man1 dir to exclude it.
-            // this is ~6M
-            "-d",
-            &man_dir,
-            &doc_src_dir,
-            &sec1_dir,
-            "-D",
-            &help_sections_arg,
-        ])
-    };
+    let args = as_os_strs![
+        "-j",
+        "auto",
+        "-q",
+        "-b",
+        "man",
+        "-c",
+        &doc_src_dir,
+        // doctree path - put this *above* the man1 dir to exclude it.
+        // this is ~6M
+        "-d",
+        &doctrees_dir,
+        &doc_src_dir,
+        &sec1_dir,
+    ];
 
     rsconf::rebuild_if_env_changed("FISH_BUILD_DOCS");
-    if env_var("FISH_BUILD_DOCS") == Some("0".to_string()) {
+    if env_var("FISH_BUILD_DOCS") == Some("0".to_owned()) {
         rsconf::warn!("Skipping man pages because $FISH_BUILD_DOCS is set to 0");
         return;
     }
@@ -94,12 +60,12 @@ fn build_man(man_dir: &Path, sec1_dir: &Path, help_sections_path: &Path) {
         .spawn()
     {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            if env_var("FISH_BUILD_DOCS") == Some("1".to_string()) {
-                panic!(
-                    "Could not find sphinx-build required to build man pages.\n\
-                     Install Sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0."
-                );
-            }
+            assert_ne!(
+                env_var("FISH_BUILD_DOCS"),
+                Some("1".to_owned()),
+                "Could not find sphinx-build required to build man pages.\n\
+                 Install Sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0."
+            );
             rsconf::warn!(
                 "Could not find sphinx-build required to build man pages. \
                  If you install Sphinx now, you need to trigger a rebuild to include man pages. \
@@ -126,9 +92,10 @@ fn build_man(man_dir: &Path, sec1_dir: &Path, help_sections_path: &Path) {
                 rsconf::warn!("sphinx-build: {}", String::from_utf8_lossy(&out.stderr));
             }
             assert_eq!(&String::from_utf8_lossy(&out.stdout), "");
-            if !out.status.success() {
-                panic!("sphinx-build failed to build the man pages.");
-            }
+            assert!(
+                out.status.success(),
+                "sphinx-build failed to build the man pages."
+            );
         }
     }
 }

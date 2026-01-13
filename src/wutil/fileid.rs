@@ -1,8 +1,10 @@
-use crate::common::wcs2zstring;
 use crate::wutil::wstr;
-use std::ffi::{CStr, OsStr};
-use std::fs::{self, File, Metadata};
-use std::os::unix::prelude::*;
+use fish_widestring::wcs2zstring;
+use std::{
+    ffi::{CStr, OsStr},
+    fs::{self, File, Metadata},
+    os::unix::prelude::*,
+};
 
 /// Struct for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things.
@@ -68,8 +70,7 @@ pub const INVALID_FILE_ID: FileId = FileId {
 pub fn file_id_for_file(file: &File) -> FileId {
     file.metadata()
         .as_ref()
-        .map(FileId::from_md)
-        .unwrap_or(INVALID_FILE_ID)
+        .map_or(INVALID_FILE_ID, FileId::from_md)
 }
 
 /// Get a FileId corresponding to a `path`, or `INVALID_FILE_ID` if it fails.
@@ -81,12 +82,5 @@ pub fn file_id_for_path_narrow(path: &CStr) -> FileId {
     let path = OsStr::from_bytes(path.to_bytes());
     fs::metadata(path)
         .as_ref()
-        .map(FileId::from_md)
-        .unwrap_or(INVALID_FILE_ID)
-}
-
-pub fn file_id_for_path_or_error(path: &wstr) -> std::io::Result<FileId> {
-    let path = wcs2zstring(path);
-    let path = OsStr::from_bytes(path.to_bytes());
-    fs::metadata(path).map(|md| FileId::from_md(&md))
+        .map_or(INVALID_FILE_ID, FileId::from_md)
 }

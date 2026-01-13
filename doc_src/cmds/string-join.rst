@@ -38,7 +38,7 @@ just always use ``--`` to avoid unwelcome surprises.
 ``string join0`` adds a trailing NUL. This is most useful in conjunction with tools that accept NUL-delimited input, such as ``sort -z``.
 
 Because Unix uses NUL as the string terminator, passing the output of ``string join0`` as an *argument* to a command (via a :ref:`command substitution <expand-command-substitution>`) won't actually work.
-Fish will pass the correct bytes along, but the command won't be able to tell where the argument ends.
+fish will pass the correct bytes along, but the command won't be able to tell where the argument ends.
 This is a limitation of Unix' argument passing.
 
 .. END DESCRIPTION

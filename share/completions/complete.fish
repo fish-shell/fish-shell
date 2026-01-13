@@ -19,6 +19,7 @@ complete -c complete -l escape -d "Make -C escape special characters"
 complete -c complete -s n -l condition -d "Completion only used if command has zero exit status" -x
 complete -c complete -s w -l wraps -d "Inherit completions from specified command" -xa '(__fish_complete_command)'
 complete -c complete -s k -l keep-order -d "Keep order of arguments instead of sorting alphabetically"
+complete -c complete -l color -d "When to colorize output" -xa "always never auto"
 
 # Deprecated options
 

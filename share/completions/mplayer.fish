@@ -7,21 +7,21 @@
 #
 
 set -l mplayer_lang "
-	de\tGerman
-	dk\tDanish
-	en\tEnglish
-	es\tSpanish
-	fi\tFinnish
-	fr\tFrench
-	gr\tGreek
-	hu\tHungarian
-	it\tItalian
-	jp\tJapanese
-	no\tNorwegian
-	hu\tHungarian
-	pl\tPolish
-	pt\tPortugese
-	se\tSwedish
+    de\tGerman
+    dk\tDanish
+    en\tEnglish
+    es\tSpanish
+    fi\tFinnish
+    fr\tFrench
+    gr\tGreek
+    hu\tHungarian
+    it\tItalian
+    jp\tJapanese
+    no\tNorwegian
+    hu\tHungarian
+    pl\tPolish
+    pt\tPortugese
+    se\tSwedish
 "
 
 complete -c mplayer -o autoq -d "Dynamically change postprocessing" -x
@@ -57,25 +57,25 @@ complete -c mplayer -o utf8 -d "Handle subtitlefile as utf8"
 
 complete -c mplayer -o vo -x -d "Video output" -a "
 (
-	mplayer -vo help | string match -ar '\t.*\t.*|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/'
+    mplayer -vo help | string match -ar '\t.*\t.*|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/'
 )
 "
 
 complete -c mplayer -o ao -x -d "Audio output" -a "
 (
-	mplayer -ao help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/'
+    mplayer -ao help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/'
 )
 "
 
 complete -c mplayer -o afm -x -d "Audio output" -a "
 (
-	__fish_append ',' (mplayer -afm help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
+    __fish_append ',' (mplayer -afm help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
 )
 "
 
 complete -c mplayer -o vfm -x -d "Video output" -a "
 (
-	__fish_append ',' (mplayer -vfm help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
+    __fish_append ',' (mplayer -vfm help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
 )
 "
 

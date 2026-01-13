@@ -41,14 +41,19 @@ function isolated-tmux-start --wraps fish
 
     set -l fish (status fish-path)
     set -l size -x 80 -y 10
+    set -l greeting_file
+    if not test -f $greeting_file
+        printf >$__fish_config_dir/functions/fish_greeting.fish %s \
+            'function fish_greeting; end' 2>/dev/null
+    end
     isolated-tmux new-session $size -d $fish -C '
         # This is similar to "tests/interactive.config".
-        function fish_greeting; end
         function fish_prompt; printf "prompt $status_generation> "; end
         # No autosuggestion from older history.
         set fish_history ""
         # No transient prompt.
         set fish_transient_prompt 0
+        set -g CDPATH
     ' $argv
     # Set the correct permissions for the newly created socket to allow future connections.
     # This is required at least under WSL or else each invocation will return a permissions error.

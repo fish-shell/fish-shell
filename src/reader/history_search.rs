@@ -2,9 +2,9 @@
 
 use crate::history::{self, History, HistorySearch, SearchDirection, SearchFlags, SearchType};
 use crate::parse_constants::SourceRange;
+use crate::prelude::*;
 use crate::tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer};
-use crate::wchar::prelude::*;
-use crate::wcstringutil::ifind;
+use fish_wcstringutil::ifind;
 use std::collections::HashSet;
 use std::ops::Range;
 use std::sync::Arc;
@@ -31,7 +31,7 @@ impl SearchMatch {
     }
 }
 
-#[derive(Clone, Copy, Eq, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum SearchMode {
     #[default]
     /// no search
@@ -162,8 +162,9 @@ impl ReaderHistorySearch {
         mode: SearchMode,
         token_offset: usize,
     ) {
-        assert!(
-            mode != SearchMode::Inactive,
+        assert_ne!(
+            mode,
+            SearchMode::Inactive,
             "mode cannot be inactive in this setter"
         );
         self.skips = HashSet::from([text.clone()]);
@@ -218,21 +219,14 @@ impl ReaderHistorySearch {
         let text = self.search().current_string();
         let needle = self.search_string();
         if matches!(self.mode, SearchMode::Line | SearchMode::Prefix) {
-            // FIXME: Previous versions asserted out if this wasn't true.
-            // This could be hit with a needle of "ö" and haystack of "echo Ö"
-            // I'm not sure why - this points to a bug in ifind (probably wrong locale?)
-            // However, because the user experience of having it crash is horrible,
-            // and the worst thing that can otherwise happen here is that a search is unsuccessful,
-            // we just check it instead.
-            if let Some(offset) = find(text, needle) {
-                self.add_if_new(SearchMatch::new(text.to_owned(), offset));
-            }
+            let offset = find(text, needle).unwrap();
+            self.add_if_new(SearchMatch::new(text.to_owned(), offset));
         } else if matches!(self.mode, SearchMode::Token | SearchMode::LastToken) {
             let mut tok = Tokenizer::new(text, TOK_ACCEPT_UNFINISHED);
 
             let mut local_tokens = vec![];
             while let Some(token) = tok.next() {
-                if token.type_ != TokenType::string {
+                if token.type_ != TokenType::String {
                     continue;
                 }
                 let text = tok.text_of(&token);

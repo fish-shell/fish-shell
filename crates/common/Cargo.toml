@@ -1,0 +1,21 @@
+[package]
+name = "fish-common"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+bitflags.workspace = true
+fish-feature-flags.workspace = true
+fish-widestring.workspace = true
+libc.workspace = true
+nix.workspace = true
+
+[build-dependencies]
+fish-build-helper.workspace = true
+rsconf.workspace = true
+
+[lints]
+workspace = true

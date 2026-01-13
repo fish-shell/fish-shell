@@ -18,7 +18,7 @@ function __fish_complete_sv_list_services
     set -q svdir[1]; or return
     set -l services (path basename -- $svdir[1]/*)
     set -l sv_status (sv status $services 2>/dev/null |
-                      string replace -ar ';.*$' '')
+        string replace -ar ';.*$' '')
     and string replace -r "^(\w+: )(.*?):" '$2\t$1' $sv_status
     or printf "%s\n" $services
 end

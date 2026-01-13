@@ -73,21 +73,25 @@ if not path mtime epoch | string match -qr -- '^[^-]'
 end
 
 for file in epoch old newest
-    test $file -nt nonexist && echo good nt || echo $file: bad nt;
+    test $file -nt nonexist && echo good nt || echo $file: bad nt
 end
 #CHECK: good nt
 #CHECK: good nt
 #CHECK: good nt
 
 for file in epoch old newest
-    test nonexist -ot $file && echo good ot || echo $file: bad ot;
+    test nonexist -ot $file && echo good ot || echo $file: bad ot
 end
 #CHECK: good ot
 #CHECK: good ot
 #CHECK: good ot
 
-ln -sf epoch epochlink
-test epoch -ef epochlink && echo good ef || echo bad ef
+if cygwin_nosymlinks
+    echo good ef
+else
+    ln -sf epoch epochlink
+    test epoch -ef epochlink && echo good ef || echo bad ef
+end
 #CHECK: good ef
 
 test epoch -ef old && echo bad ef || echo good ef
@@ -106,22 +110,22 @@ test -d
 #CHECKERR: test: Missing argument at index 2
 #CHECKERR: -d
 #CHECKERR: ^
-#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
+#CHECKERR: {{.*}}test.fish (line {{\d+}}):
 #CHECKERR: test -d
 #CHECKERR: ^
 
-test "foo"
+test foo
 #CHECKERR: test: Missing argument at index 2
 #CHECKERR: foo
 #CHECKERR: ^
-#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
-#CHECKERR: test "foo"
+#CHECKERR: {{.*}}test.fish (line {{\d+}}):
+#CHECKERR: test foo
 #CHECKERR: ^
 
 test ""
 #CHECKERR: test: Missing argument at index 2
 #CHECKERR: ^
-#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
+#CHECKERR: {{.*}}test.fish (line {{\d+}}):
 #CHECKERR: test ""
 #CHECKERR: ^
 
@@ -129,7 +133,7 @@ test -z "" -a foo
 #CHECKERR: test: Missing argument at index 5
 #CHECKERR: -z  -a foo
 #CHECKERR: ^
-#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
+#CHECKERR: {{.*}}test.fish (line {{\d+}}):
 #CHECKERR: test -z "" -a foo
 #CHECKERR: ^
 
@@ -138,7 +142,14 @@ echo $status
 
 test
 #CHECKERR: test: Expected at least one argument
-#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
+#CHECKERR: {{.*}}test.fish (line {{\d+}}):
 #CHECKERR: test
 #CHECKERR: ^
 #CHECKERR: (Type 'help test' for related documentation)
+
+[ -z
+#CHECKERR: [: the last argument must be ']'
+#CHECKERR: {{.*}}test.fish (line {{\d+}}):
+#CHECKERR: [ -z
+#CHECKERR: ^
+#CHECKERR: (Type 'help [' for related documentation)

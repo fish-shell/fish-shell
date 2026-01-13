@@ -1,4 +1,4 @@
-pub mod shared;
+mod shared;
 
 pub mod abbr;
 pub mod argparse;
@@ -55,14 +55,16 @@ mod prelude {
 
     #[allow(unused_imports)]
     pub(crate) use crate::{
-        flog::{FLOG, FLOGF},
+        flog::{flog, flogf},
         io::{IoStreams, SeparationType},
         parser::Parser,
-        wchar::prelude::*,
-        wgetopt::{
-            ArgType::{self, *},
-            NON_OPTION_CHAR, WGetopter, WOption, wopt,
-        },
+        prelude::*,
         wutil::{fish_wcstoi, fish_wcstol, fish_wcstoul},
     };
+    pub(crate) use fish_wgetopt::{
+        ArgType::{self, *},
+        NON_OPTION_CHAR, WGetopter, WOption, wopt,
+    };
 }
+
+pub use shared::*;

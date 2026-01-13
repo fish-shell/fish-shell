@@ -22,7 +22,7 @@ The *FORMAT* argument is re-used as many times as necessary to convert all of th
 
 Unlike :doc:`echo <echo>`, ``printf`` does not append a new line unless it is specified as part of the string.
 
-It doesn't support any options, so there is no need for a ``--`` separator, which makes it easier to use for arbitrary input than ``echo``. [#]_ 
+It doesn't support any options, so there is no need for a ``--`` separator, which makes it easier to use for arbitrary input than ``echo``. [#]_
 
 Format Specifiers
 -----------------

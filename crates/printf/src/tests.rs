@@ -1,7 +1,6 @@
 use crate::arg::ToArg;
 use crate::locale::{C_LOCALE, EN_US_LOCALE, Locale};
-use crate::{Error, FormatString, sprintf_locale};
-use libc::c_char;
+use crate::{Error, FormatString as _, sprintf_locale};
 use std::f64::consts::{E, PI, TAU};
 use std::ffi::CStr;
 use std::fmt;
@@ -14,7 +13,7 @@ macro_rules! sprintf_check {
         $(,)? // optional trailing comma
     ) => {
         {
-            use unicode_width::UnicodeWidthStr;
+            use unicode_width::UnicodeWidthStr as _;
             let mut target = String::new();
             let mut args = [$($arg.to_arg()),*];
             let len = $crate::printf_c_locale(
@@ -401,8 +400,10 @@ fn test_char() {
 
 #[test]
 fn test_ptr() {
-    assert_fmt!("%p", core::ptr::null::<u8>() => "0");
-    assert_fmt!("%p", 0xDEADBEEF_usize as *const u8 => "0xdeadbeef");
+    assert_fmt!("%p", core::ptr::null::<()>() => "0");
+
+    let tmp = core::ptr::without_provenance::<()>(0xDEADBEEF);
+    assert_fmt!("%p", tmp => "0xdeadbeef");
 }
 
 #[test]
@@ -862,8 +863,8 @@ fn test_float_hex_prec() {
     let mut libc_sprintf = libc_sprintf_one_float_with_precision(&mut c_storage, c"%.*a");
 
     let mut failed = false;
-    for sign in [1.0, -1.0].into_iter() {
-        for mut v in [0.0, 0.5, 1.0, 1.5, PI, TAU, E].into_iter() {
+    for sign in [1.0, -1.0] {
+        for mut v in [0.0, 0.5, 1.0, 1.5, PI, TAU, E] {
             v *= sign;
             for preci in 1..=200_usize {
                 rust_str.clear();
@@ -890,10 +891,16 @@ fn libc_sprintf_one_float_with_precision<'a>(
     fmt: &'a CStr,
 ) -> impl FnMut(usize, f64) -> &'a str {
     |preci, float_val| unsafe {
-        let storage_ptr = storage.as_mut_ptr() as *mut c_char;
-        let len = libc::snprintf(storage_ptr, storage.len(), fmt.as_ptr(), preci, float_val);
+        let storage_ptr = storage.as_mut_ptr();
+        let len = libc::snprintf(
+            storage_ptr.cast(),
+            storage.len(),
+            fmt.as_ptr(),
+            preci,
+            float_val,
+        );
         assert!(len >= 0);
-        let sl = std::slice::from_raw_parts(storage_ptr as *const u8, len as usize);
+        let sl = std::slice::from_raw_parts(storage_ptr, len as usize);
         std::str::from_utf8(sl).unwrap()
     }
 }

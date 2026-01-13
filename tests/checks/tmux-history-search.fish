@@ -71,3 +71,8 @@ tmux-sleep
 isolated-tmux capture-pane -p | grep "^foo\|prompt 7>"
 # CHECK: foo
 # CHECK: prompt 7>
+
+isolated-tmux send-keys C-c ": Ö" Enter C-l ö C-p
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt {{\d+}}> : Ö

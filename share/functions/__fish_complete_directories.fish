@@ -14,7 +14,7 @@ function __fish_complete_directories -d "Complete directory prefixes" --argument
         # If we have a --name=val option, we need to remove it,
         # or the complete -C below would keep it, and then whatever complete
         # called us would add it again (assuming it's in the current token)
-        set comp (commandline -ct | string replace -r -- '^-[^=]*=' '' $comp)
+        set comp (commandline -ct | string replace -r -- '^-[^=]*=' '')
     end
 
     # HACK: We call into the file completions by using an empty command

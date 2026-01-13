@@ -85,14 +85,14 @@ pub fn flog_impl_async_safe(fd: i32, s: impl FloggableDisplayAsyncSafe) {
     // Note we deliberately do not retry on signals, etc.
     // This is used to report error messages after fork() in the child process.
     unsafe {
-        let _ = libc::write(fd, bytes.as_ptr() as *const libc::c_void, bytes.len());
+        let _ = libc::write(fd, bytes.as_ptr().cast(), bytes.len());
     }
 }
 
-/// Variant of FLOG which is async-safe to use after fork().
+/// Variant of flog which is async-safe to use after fork().
 /// This does not allocate or take locks. Only str and nul-terminated C-strings are supported.
 /// The arguments are NOT space-separated. Embed real spaces in your literals.
-macro_rules! FLOG_SAFE {
+macro_rules! flog_safe {
     ($category:ident, $($elem:expr),+ $(,)*) => {
         if crate::flog::categories::$category
             .enabled
@@ -112,7 +112,7 @@ macro_rules! FLOG_SAFE {
     };
 }
 
-pub(crate) use FLOG_SAFE;
+pub(crate) use flog_safe;
 
 #[cfg(test)]
 mod tests {

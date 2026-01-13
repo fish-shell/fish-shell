@@ -1,4 +1,5 @@
 #RUN: fish=%fish %fish %s
+
 function complete_test_alpha1
     echo $argv
 end
@@ -135,7 +136,34 @@ complete -C'foo -y' | string match -- -y-single-long
 # CHECK: -zARGZ
 complete -C'foo -z'
 
-function foo2; end
+function conditional_short_options
+end
+complete -c conditional_short_options -f -n false -s x
+complete -c conditional_short_options -f -s h
+complete -c conditional_short_options -f -s v
+complete -C'conditional_short_options -x' | count
+# CHECK: 0
+complete -C'conditional_short_options -xv' | count
+# CHECK: 0
+complete -C'conditional_short_options -v'
+# CHECK: -vh
+
+function repeated_short_options
+end
+complete -c repeated_short_options -f -s h
+complete -c repeated_short_options -f -s v
+complete -c repeated_short_options -f -s x
+complete -C'repeated_short_options -xx'
+# CHECK: -xxh
+# CHECK: -xxv
+complete -C'repeated_short_options -xxh'
+# CHECK: -xxhv
+complete -C'repeated_short_options -x'
+# CHECK: -xh
+# CHECK: -xv
+
+function foo2
+end
 complete -c foo2 -s s -l long -xa "hello-world goodbye-friend"
 complete -C"foo2 -sfrie"
 # CHECK: -sgoodbye-friend
@@ -344,8 +372,8 @@ begin
             rm -rf $parened_path
             and mkdir $parened_path
             and mkdir $parened_subpath
-            and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
-            and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
+            and ln -s (command -v ls) $parened_path/'__test6_(paren)_command'
+            and ln -s (command -v ls) $parened_subpath/'__test6_subdir_(paren)_command'
         end
         echo "error: could not create command expansion temp environment" >&2
     end
@@ -419,8 +447,12 @@ rm -r $dir
 set -l dir (mktemp -d)
 cd $dir
 
-: >command-not-in-path
-chmod +x command-not-in-path
+if cygwin_noacl ./
+    echo "#!/bin/sh" >command-not-in-path
+else
+    : >command-not-in-path
+    chmod +x command-not-in-path
+end
 complete -p $PWD/command-not-in-path -xa relative-path
 complete -C './command-not-in-path '
 # CHECK: relative-path
@@ -433,8 +465,12 @@ HOME=$PWD complete -C '~/command-not-in-path '
 
 # Non-canonical command path
 mkdir -p subdir
-: >subdir/command-in-subdir
-chmod +x subdir/command-in-subdir
+if cygwin_noacl ./
+    echo "#!/bin/sh" >subdir/command-in-subdir
+else
+    : >subdir/command-in-subdir
+    chmod +x subdir/command-in-subdir
+end
 complete -p "$PWD/subdir/command-in-subdir" -xa custom-completions
 complete -C './subdir/../subdir/command-in-subdir '
 # CHECK: custom-completions
@@ -459,6 +495,7 @@ HOME=$path_to_cat/.. complete -C '~/cat '
 
 # Do not expand command substitutions.
 complete -C '(echo cat) ' | string match +pet
+complete -C '(echo $PWD)/'
 # Give up if we expand to multiple arguments (we'd need to handle the arguments).
 complete -C '{cat,arg1,arg2} ' | string match +pet
 # Don't expand wildcards though we could.
@@ -479,21 +516,31 @@ complete -C"a=1 b=2 cmd_with_fancy_completion 1 "
 complete -C"cmd_with_fancy_completion </dev/null >/dev/null 2>>/dev/null >?/dev/null &>/dev/null "
 # CHECK: 1
 
+complete -C 'get_file=get-file status $get_file ' |
+string match completions/..fish
+# CHECK: completions/..fish
+complete -C 'version=123 get_file=get-file status $get_file ' | string match 'is-block*'
+# CHECK: is-block	Test if a code block is currently evaluated
+complete -C 'get_file=get-file version=123 status $get_file ' | string match 'is-block*'
+# CHECK: is-block	Test if a code block is currently evaluated
+
 complete -c thing -x -F
 # CHECKERR: complete: invalid option combination, '--exclusive' and '--force-files'
+complete -c thing -F -f
+# CHECKERR: complete: invalid option combination, '--no-files' and '--force-files'
 # Multiple conditions
 complete -f -c shot
-complete -fc shot -n 'test (count (commandline -xpc) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a 'through'
+complete -fc shot -n 'test (count (commandline -xpc) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a through
 # CHECKERR: complete: -n 'test (count (commandline -xpc) -eq 1': Unexpected end of string, expecting ')'
 # CHECKERR: test (count (commandline -xpc) -eq 1
 # CHECKERR: ^
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a 'through'
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 2' -n 'test (commandline -xpc)[-1] = through' -a 'the'
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 3' -n 'test (commandline -xpc)[-1] = the' -a 'heart'
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 4' -n 'test (commandline -xpc)[-1] = heart' -a 'and'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a through
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 2' -n 'test (commandline -xpc)[-1] = through' -a the
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 3' -n 'test (commandline -xpc)[-1] = the' -a heart
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 4' -n 'test (commandline -xpc)[-1] = heart' -a and
 complete -fc shot -n 'test (count (commandline -xpc)) -eq 5' -n 'test (commandline -xpc)[-1] = and' -a "you\'re"
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 6' -n 'test (commandline -xpc)[-1] = "you\'re"' -a 'to'
-complete -fc shot -n 'test (count (commandline -xpc)) -eq 7' -n 'test (commandline -xpc)[-1] = to' -a 'blame'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 6' -n 'test (commandline -xpc)[-1] = "you\'re"' -a to
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 7' -n 'test (commandline -xpc)[-1] = to' -a blame
 
 complete -C"shot "
 # CHECK: through
@@ -503,17 +550,16 @@ complete -C"shot through "
 # See that conditions after a failing one aren't executed.
 set -g oops 0
 complete -fc oooops
-complete -fc oooops -n true -n true -n true -n 'false' -n 'set -g oops 1' -a oops
+complete -fc oooops -n true -n true -n true -n false -n 'set -g oops 1' -a oops
 complete -C'oooops '
 echo $oops
 # CHECK: 0
 
-complete -fc oooops -n 'true' -n 'set -g oops 1' -a oops
+complete -fc oooops -n true -n 'set -g oops 1' -a oops
 complete -C'oooops '
 # CHECK: oops
 echo $oops
 # CHECK: 1
-
 
 # See that we load completions only if the command exists in $PATH,
 # as a workaround for #3117.
@@ -541,7 +587,7 @@ begin
     # CHECK: Empty completions
 end
 
-rm -$f $tmpdir/*
+rm $tmpdir/*
 
 # Leading dots are not completed for default file completion,
 # but may be for custom command (e.g. git add).
@@ -557,8 +603,6 @@ echo "Should be nothing"
 complete -C'dotty '
 # CHECK: .abc
 
-rm -r $tmpdir
-
 complete -C'complete --command=mktemp' | string replace -rf '=mktemp\t.*' '=mktemp'
 # (one "--command=" is okay, we used to get "--command=--command="
 # CHECK: --command=mktemp
@@ -566,7 +610,7 @@ complete -C'complete --command=mktemp' | string replace -rf '=mktemp\t.*' '=mkte
 ## Test token expansion in commandline -x
 
 complete complete_make -f -a '(argparse C/directory= -- (commandline -xpc)[2..];
-                               echo Completing targets in directory $_flag_C)'
+    echo Completing targets in directory $_flag_C)'
 var=path/to complete -C'complete_make -C "$var/build-directory" '
 # CHECK: Completing targets in directory path/to/build-directory
 var1=path complete -C'var2=to complete_make -C "$var1/$var2/other-build-directory" '
@@ -622,7 +666,7 @@ function __fish_describe_command
     echo -e "whoami\twho am i"
     echo -e "which\which is it"
 end
-test (count (complete -C"wh" | string match -rv "\tcommand|^while")) -gt 0 && echo "found" || echo "fail"
+test (count (complete -C"wh" | string match -rv "\tcommand|^while")) -gt 0 && echo found || echo fail
 # CHECK: found
 
 set -l commands check search show
@@ -635,6 +679,11 @@ complete -C'testcommand '
 abbr cat cat
 complete -C ca | string match -r '^cat(?:\t.*)?$'
 # CHECK: cat{{\t}}Abbreviation: cat
+
+touch somefile
+abbr --position anywhere gr '| grep -i'
+complete -C'rm '
+# CHECK: somefile
 
 complete complete-list -xa '(__fish_complete_list , "seq 2")'
 complete -C "complete-list 1,"
@@ -662,3 +711,62 @@ complete -C "set -S fish_killri"
 # feature would be added to skip read-only variables here.
 complete -C "set fish_killri"
 # CHECK: fish_killring
+
+# Erasing completions for a command also erases wraps.
+complete somewrapper1 --wraps wrapped
+complete somewrapper1 -l long
+complete somewrapper1 -e
+complete somewrapper1
+
+# Erasing the wrapper erases nothing else.
+complete somewrapper2 --wraps wrapped
+complete somewrapper2 -l long
+complete somewrapper2 -e --wraps wrapped
+complete somewrapper2
+# CHECK: complete somewrapper2 -l long
+# CHECK: complete somewrapper2
+
+# Erasing one out of two wrappers leaves the other.
+complete somewrapper3 --wraps wrapped1
+complete somewrapper3 --wraps wrapped2
+complete somewrapper3 -l long2
+complete somewrapper3 -e --wraps wrapped2
+complete somewrapper3
+# CHECK: complete somewrapper3 -l long2
+# TODO: here's a stale entry.
+# CHECK: complete somewrapper3
+# CHECK: complete somewrapper3
+# CHECK: complete somewrapper3 --wraps wrapped1
+
+complete command-line-aware-completions -xa "(commandline --cursor; commandline --current-process)"
+complete -C"command-line-aware-completions "
+# CHECK: 31
+# CHECK: command-line-aware-completions
+
+begin
+    if cygwin_noacl ./
+        echo "#!/bin/sh" >"$TMPDIR/-command-starting-with-dash"
+    else
+        : >"$TMPDIR/-command-starting-with-dash"
+        chmod +x "$TMPDIR/-command-starting-with-dash"
+    end
+
+    set -l PATH "$TMPDIR" $PATH
+    complete -C-command-starting-with
+    # CHECK: -command-starting-with-dash{{\t}}command
+end
+
+complete -c foo -a "foo\\"
+# CHECKERR: complete: foo\: contains a syntax error
+# CHECKERR: complete: Expected a string, but found an incomplete token
+# CHECKERR: foo\
+# CHECKERR:    ^
+
+complete -C
+# CHECKERR: complete: Can not get commandline in non-interactive mode
+
+if string match -rq -- '^[a-z]+$' $USER
+    set -l first_letter_wrong_case (string sub -l 1 -- $USER | string upper)
+    string match -rq -- "$USER\t.*" (complete -C "echo ~$first_letter_wrong_case")
+    or echo "`complete -C'echo ~$first_letter_wrong_case'` did not yield $USER"
+end

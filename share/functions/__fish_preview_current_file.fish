@@ -28,7 +28,6 @@ function __fish_preview_current_file --description "Open the file at the cursor 
     $prefix -l files $file || return # Bail if $file does not tokenize.
 
     if set -q files[1] && test -f $files[1]
-        $pager $files
-        commandline -f repaint
+        __fish_echo $pager $files
     end
 end

@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 use pcre2::utf32::{Regex, RegexBuilder};
 
 use super::*;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
+use fish_feature_flags::{FeatureFlag, feature_test};
 
 #[derive(Default)]
 pub struct Replace<'args> {
@@ -28,7 +28,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("afiqrm:");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'a' => self.all = true,
             'f' => self.filter = true,
@@ -42,18 +42,14 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
                         .ok()
                         .and_then(|v| NonZeroUsize::new(v as usize))
                         .ok_or_else(|| {
-                            StringError::InvalidArgs(wgettext_fmt!(
-                                "%s: Invalid max matches value '%s'\n",
-                                _n,
-                                arg
-                            ))
+                            StringError::InvalidArgs(err_fmt!(Error::INVALID_MAX_MATCHES, arg))
                         })?;
                     Some(max)
                 }
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -62,14 +58,19 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
         args: &[&'args wstr],
         streams: &mut IoStreams,
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         let Some(pattern) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
+            err_str!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
         let Some(replacement) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT1, cmd, 1, 2);
+            err_fmt!(Error::UNEXP_ARG_COUNT, 2, 1)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
@@ -81,12 +82,13 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
 
         let replacer = match StringReplacer::new(self.pattern, self.replacement, self) {
             Ok(x) => x,
@@ -98,25 +100,22 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
 
         let mut replace_count = 0;
 
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let (replaced, result) = match replacer.replace(arg) {
                 Ok(x) => x,
                 Err(e) => {
-                    string_error!(
-                        streams,
-                        "%s: Regular expression substitute error: %s\n",
-                        cmd,
-                        e.error_message()
-                    );
+                    err_fmt!("Regular expression substitute error: %s", e.error_message())
+                        .subcmd(cmd, subcmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             };
             replace_count += replaced as usize;
 
             if !self.quiet && (!self.filter || replaced) {
-                streams.out.append(result);
+                streams.out.append(&result);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append('\n');
                 }
             }
 
@@ -155,24 +154,20 @@ enum StringReplacer<'args, 'opts> {
 
 impl<'args, 'opts> StringReplacer<'args, 'opts> {
     fn interpret_escape(arg: &'args wstr) -> Option<WString> {
-        use crate::common::read_unquoted_escape;
+        use fish_common::read_unquoted_escape;
 
         let mut result: WString = WString::with_capacity(arg.len());
         let mut cursor = arg;
         while !cursor.is_empty() {
             if cursor.char_at(0) == '\\' {
-                if let Some(escape_len) = read_unquoted_escape(cursor, &mut result, true, false) {
-                    cursor = cursor.slice_from(escape_len);
-                } else {
-                    // invalid escape
-                    return None;
-                }
+                let escape_len = read_unquoted_escape(cursor, &mut result, true, false)?;
+                cursor = cursor.slice_from(escape_len);
             } else {
                 result.push(cursor.char_at(0));
                 cursor = cursor.slice_from(1);
             }
         }
-        return Some(result);
+        Some(result)
     }
 
     fn new(
@@ -188,13 +183,19 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                     // allowed to be user-controlled here
                     .block_utf_pattern_directive(true)
                     .build(pattern.as_char_slice())
-                    .map_err(|e| RegexError::Compile(pattern.to_owned(), e))?;
+                    .map_err(|error| RegexError::Compile {
+                        pattern: pattern.to_owned(),
+                        error,
+                    })?;
 
-                let replacement = if feature_test(FeatureFlag::string_replace_backslash) {
+                let replacement = if feature_test(FeatureFlag::StringReplaceBackslash) {
                     replacement.to_owned()
                 } else {
-                    Self::interpret_escape(replacement)
-                        .ok_or_else(|| RegexError::InvalidEscape(pattern.to_owned()))?
+                    Self::interpret_escape(replacement).ok_or_else(|| {
+                        RegexError::InvalidEscape {
+                            replacement: replacement.to_owned(),
+                        }
+                    })?
                 };
                 Self::Regex {
                     replacement,
@@ -236,7 +237,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                     Cow::Borrowed(_slice_of_arg) => (false, arg),
                     Cow::Owned(s) => (true, Cow::Owned(WString::from_chars(s))),
                 };
-                return Ok(res);
+                Ok(res)
             }
             StringReplacer::Literal {
                 pattern,
@@ -278,7 +279,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
 
 #[cfg(test)]
 mod tests {
-    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
     use crate::tests::prelude::*;
     use crate::validate;
 
@@ -286,7 +287,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "replace", ""], STATUS_INVALID_ARGS, "");
         validate!(["string", "replace", "", ""], STATUS_CMD_ERROR, "");
         validate!(["string", "replace", "", "", ""], STATUS_CMD_ERROR, "\n");

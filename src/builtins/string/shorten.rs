@@ -1,5 +1,5 @@
 use super::*;
-use crate::common::get_ellipsis_str;
+use fish_widestring::{ELLIPSIS_CHAR, decoded_width};
 
 pub struct Shorten<'args> {
     ellipsis: &'args wstr,
@@ -9,12 +9,14 @@ pub struct Shorten<'args> {
     quiet: bool,
     shorten_from: Direction,
 }
+/// The character to use where the text has been truncated, in a [`wstr`].
+const ELLIPSIS_WSTR: &wstr = wstr::from_char_slice(&[ELLIPSIS_CHAR]);
 
 impl Default for Shorten<'_> {
     fn default() -> Self {
         Self {
-            ellipsis: get_ellipsis_str(),
-            ellipsis_width: width_without_escapes(get_ellipsis_str(), 0),
+            ellipsis: ELLIPSIS_WSTR,
+            ellipsis_width: decoded_width(ELLIPSIS_WSTR),
             max: None,
             no_newline: false,
             quiet: false,
@@ -25,7 +27,8 @@ impl Default for Shorten<'_> {
 
 impl<'args> StringSubCommand<'args> for Shorten<'args> {
     const LONG_OPTIONS: &'static [WOption<'static>] = &[
-        // FIXME: documentation says it's --char
+        // Support both spellings: docs use --char, older fish accepted --chars.
+        wopt(L!("char"), RequiredArgument, 'c'),
         wopt(L!("chars"), RequiredArgument, 'c'),
         wopt(L!("max"), RequiredArgument, 'm'),
         wopt(L!("no-newline"), NoArgument, 'N'),
@@ -34,35 +37,31 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("c:m:Nlq");
 
-    fn parse_opt(
-        &mut self,
-        name: &wstr,
-        c: char,
-        arg: Option<&'args wstr>,
-    ) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&'args wstr>) -> Result<(), StringError<'_>> {
         match c {
             'c' => {
                 self.ellipsis = arg.unwrap();
                 self.ellipsis_width = width_without_escapes(self.ellipsis, 0);
             }
             'm' => {
+                let arg = arg.unwrap();
                 self.max = Some(
-                    fish_wcstol(arg.unwrap())?
+                    Self::parse_arg_number(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid max value '%s'\n", name, arg))?,
-                )
+                        .map_err(|_| err_fmt!(Error::INVALID_MAX_VALUE, arg))?,
+                );
             }
             'N' => self.no_newline = true,
             'l' => self.shorten_from = Direction::Left,
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
@@ -81,13 +80,13 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             // else
             //     echo whatever
             // end
-            for (arg, _) in iter {
-                streams.out.appendln(arg);
+            for InputValue { arg, .. } in iter {
+                streams.out.appendln(&arg);
             }
             return Ok(());
         }
 
-        for (arg, _) in iter {
+        for InputValue { arg, .. } in iter {
             // Visible width only makes sense line-wise.
             // So either we have no-newlines (which means we shorten on the first newline),
             // or we handle the lines separately.
@@ -167,8 +166,11 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
 
                     pos += skip_escapes(&line, pos).max(1);
                 }
-                if self.quiet && pos != 0 {
-                    return Ok(());
+                if self.quiet {
+                    if pos != 0 {
+                        return Ok(());
+                    }
+                    continue;
                 }
 
                 let output = match pos {
@@ -182,7 +184,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                         res
                     }
                 };
-                streams.out.appendln(output);
+                streams.out.appendln(&output);
                 continue;
             } else {
                 /* shorten the right side */
@@ -216,12 +218,15 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                 }
             }
 
-            if self.quiet && pos != line.len() {
-                return Ok(());
+            if self.quiet {
+                if pos != line.len() {
+                    return Ok(());
+                }
+                continue;
             }
 
             if pos == line.len() {
-                streams.out.appendln(line);
+                streams.out.appendln(&line);
                 continue;
             }
 
@@ -230,7 +235,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             newl.truncate(pos);
             newl.push_utfstr(ell);
             newl.push('\n');
-            streams.out.append(newl);
+            streams.out.append(&newl);
         }
 
         // Return true if we have shortened something and false otherwise.

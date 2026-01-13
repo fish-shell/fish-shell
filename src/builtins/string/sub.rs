@@ -19,63 +19,68 @@ impl StringSubCommand<'_> for Sub {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("l:qs:e:");
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'l' => {
+                let arg = arg.unwrap();
                 self.length = Some(
-                    fish_wcstol(arg.unwrap())?
+                    Self::parse_arg_number(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid length value '%s'\n", name, arg))?,
-                )
+                        .map_err(|_| err_fmt!("Invalid length value '%s'", arg))?,
+                );
             }
             's' => {
+                let arg = arg.unwrap();
                 self.start = Some(
-                    fish_wcstol(arg.unwrap())?
+                    Self::parse_arg_number(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid start value '%s'\n", name, arg))?,
-                )
+                        .map_err(|_| err_fmt!("Invalid start value '%s'", arg))?,
+                );
             }
             'e' => {
+                let arg = arg.unwrap();
                 self.end = Some(
-                    fish_wcstol(arg.unwrap())?
+                    Self::parse_arg_number(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid end value '%s'\n", name, arg))?,
-                )
+                        .map_err(|_| err_fmt!("Invalid end value '%s'", arg))?,
+                );
             }
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         if self.length.is_some() && self.end.is_some() {
-            streams.err.append(wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 wgettext!("--end and --length are mutually exclusive")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         let mut nsub = 0;
-        for (s, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let start: usize = match self.start.map(i64::from).unwrap_or_default() {
                 n @ 1.. => n as usize - 1,
                 0 => 0,
                 n => {
                     let n = u64::min(n.unsigned_abs(), usize::MAX as u64) as usize;
-                    s.len().saturating_sub(n)
+                    arg.len().saturating_sub(n)
                 }
             }
-            .clamp(0, s.len());
+            .clamp(0, arg.len());
 
             let count = {
                 let n = self
@@ -85,20 +90,20 @@ impl StringSubCommand<'_> for Sub {
                         n @ 1.. => n as usize,
                         n => {
                             let n = u64::min(n.unsigned_abs(), usize::MAX as u64) as usize;
-                            s.len().saturating_sub(n)
+                            arg.len().saturating_sub(n)
                         }
                     })
                     .map(|n| n.saturating_sub(start));
 
-                self.length.or(n).unwrap_or(s.len())
+                self.length.or(n).unwrap_or(arg.len())
             };
 
             if !self.quiet {
                 streams
                     .out
-                    .append(&s[start..usize::min(start + count, s.len())]);
+                    .append(&arg[start..usize::min(start + count, arg.len())]);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append('\n');
                 }
             }
             nsub += 1;
@@ -117,7 +122,7 @@ impl StringSubCommand<'_> for Sub {
 
 #[cfg(test)]
 mod tests {
-    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
     use crate::tests::prelude::*;
     use crate::validate;
 
@@ -125,7 +130,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "sub"], STATUS_CMD_ERROR, "");
         validate!(["string", "sub", "abcde"], STATUS_CMD_OK, "abcde\n");
         validate!(["string", "sub", "-l", "x", "abcde"], STATUS_INVALID_ARGS, "");

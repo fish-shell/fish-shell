@@ -1,0 +1,15 @@
+[package]
+name = "fish-wgetopt"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+assert_matches.workspace = true
+fish-wcstringutil.workspace = true
+fish-widestring.workspace = true
+
+[lints]
+workspace = true

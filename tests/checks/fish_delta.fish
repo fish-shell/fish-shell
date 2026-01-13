@@ -2,8 +2,7 @@
 
 touch $__fish_config_dir/functions/delta-test-custom-function.fish
 for path in fish_greeting fish_job_summary
-    __fish_data_with_file functions/$path.fish \
-        cat >$__fish_config_dir/functions/$path.fish
+    status get-file functions/$path.fish >$__fish_config_dir/functions/$path.fish
 end
 set -l tmp (sed 's/$/ # Modified/' $__fish_config_dir/functions/fish_greeting.fish)
 string join -- \n $tmp >$__fish_config_dir/functions/fish_greeting.fish

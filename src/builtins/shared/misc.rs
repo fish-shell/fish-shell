@@ -1,0 +1,1034 @@
+use crate::{
+    builtins::{prelude::*, *},
+    err_fmt,
+    fds::BorrowedFdFile,
+    io::OutputStream,
+    parse_constants::UNKNOWN_BUILTIN_ERR_MSG,
+    parse_util::argument_is_help,
+    parser::{BlockType, LoopStatus},
+    proc::{Pid, ProcStatus, no_exec},
+    wutil,
+};
+use errno::errno;
+use fish_common::{Named, assert_sorted_by_name, escape, get_by_sorted_name};
+use fish_fluent::{LocalizedMessage, ToFluentValue};
+use fish_widestring::{L, bytes2wcstring, str2wcstring};
+use std::io::{BufRead as _, BufReader, Read as _};
+
+pub type BuiltinCmd = fn(&mut Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;
+
+/// The default prompt for the read command.
+pub const DEFAULT_READ_PROMPT: &wstr =
+    L!("set_color green; echo -n read; set_color --reset; echo -n \"> \"");
+
+localizable_consts!(
+    /// The send stuff to foreground message.
+    pub FG_MSG
+    "Send job %d (%s) to foreground"
+);
+
+pub fn localized_version_string<'a>(package_name: impl ToFluentValue<'a>) -> LocalizedMessage {
+    localize!(
+        "fish-version" = "{ $package_name }, version { $version }",
+        package_name = package_name,
+        version = crate::BUILD_VERSION,
+    )
+}
+
+// Return values (`$status` values for fish scripts) for various situations.
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Success {
+    pub preserve_failure_exit_status: bool,
+}
+
+pub const SUCCESS: Success = Success {
+    preserve_failure_exit_status: false,
+};
+
+// To-do: this should be a nonzero type.
+pub type ErrorCode = c_int;
+
+pub type BuiltinResult = Result<Success, ErrorCode>;
+
+pub trait BuiltinResultExt {
+    fn from_dynamic(code: c_int) -> Self;
+    fn builtin_status_code(&self) -> c_int;
+}
+
+impl BuiltinResultExt for BuiltinResult {
+    fn from_dynamic(code: c_int) -> Self {
+        if code == 0 { Ok(SUCCESS) } else { Err(code) }
+    }
+    fn builtin_status_code(&self) -> c_int {
+        match self {
+            Ok(success) => {
+                assert!(!success.preserve_failure_exit_status);
+                0
+            }
+            Err(err) => *err,
+        }
+    }
+}
+
+/// The status code used for normal exit in a command.
+pub const STATUS_CMD_OK: c_int = 0;
+
+/// The status code used for failure exit in a command (but not if the args were invalid).
+pub const STATUS_CMD_ERROR: c_int = 1;
+/// The status code used for invalid arguments given to a command. This is distinct from valid
+/// arguments that might result in a command failure. An invalid args condition is something
+/// like an unrecognized flag, missing or too many arguments, an invalid integer, etc.
+pub const STATUS_INVALID_ARGS: c_int = 2;
+
+/// The status code used when a command was not found.
+pub const STATUS_CMD_UNKNOWN: c_int = 127;
+
+/// The status code used when an external command can not be run.
+pub const STATUS_NOT_EXECUTABLE: c_int = 126;
+
+/// The status code used when a wildcard had no matches.
+pub const STATUS_UNMATCHED_WILDCARD: c_int = 124;
+/// The status code used when illegal command name is encountered.
+pub const STATUS_ILLEGAL_CMD: c_int = 123;
+/// The status code used when `read` is asked to consume too much data.
+pub const STATUS_READ_TOO_MUCH: c_int = 122;
+/// The status code when an expansion fails, for example, "$foo["
+pub const STATUS_EXPAND_ERROR: c_int = 121;
+
+pub const STATUS_NO_VARIABLES_GIVEN: c_int = 255;
+
+/// Data structure to describe a builtin.
+struct BuiltinData {
+    // Name of the builtin.
+    name: &'static wstr,
+    // Function pointer to the builtin implementation.
+    func: BuiltinCmd,
+}
+
+// Data about all the builtin commands in fish.
+// Functions that are bound to builtin_generic are handled directly by the parser.
+// NOTE: These must be kept in sorted order!
+const BUILTIN_DATAS: &[BuiltinData] = &[
+    BuiltinData {
+        name: L!("!"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("."),
+        func: source::source,
+    },
+    BuiltinData {
+        name: L!(":"),
+        func: r#true::r#true,
+    },
+    BuiltinData {
+        name: L!("["), // ]
+        func: test::test,
+    },
+    BuiltinData {
+        name: L!("_"),
+        func: gettext::gettext,
+    },
+    BuiltinData {
+        name: L!("abbr"),
+        func: abbr::abbr,
+    },
+    BuiltinData {
+        name: L!("and"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("argparse"),
+        func: argparse::argparse,
+    },
+    BuiltinData {
+        name: L!("begin"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("bg"),
+        func: bg::bg,
+    },
+    BuiltinData {
+        name: L!("bind"),
+        func: bind::bind,
+    },
+    BuiltinData {
+        name: L!("block"),
+        func: block::block,
+    },
+    BuiltinData {
+        name: L!("break"),
+        func: r#break::r#break,
+    },
+    BuiltinData {
+        name: L!("breakpoint"),
+        func: breakpoint::breakpoint,
+    },
+    BuiltinData {
+        name: L!("builtin"),
+        func: builtin::builtin,
+    },
+    BuiltinData {
+        name: L!("case"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("cd"),
+        func: cd::cd,
+    },
+    BuiltinData {
+        name: L!("command"),
+        func: command::command,
+    },
+    BuiltinData {
+        name: L!("commandline"),
+        func: commandline::commandline,
+    },
+    BuiltinData {
+        name: L!("complete"),
+        func: complete::complete,
+    },
+    BuiltinData {
+        name: L!("contains"),
+        func: contains::contains,
+    },
+    BuiltinData {
+        name: L!("continue"),
+        func: r#continue::r#continue,
+    },
+    BuiltinData {
+        name: L!("count"),
+        func: count::count,
+    },
+    BuiltinData {
+        name: L!("disown"),
+        func: disown::disown,
+    },
+    BuiltinData {
+        name: L!("echo"),
+        func: echo::echo,
+    },
+    BuiltinData {
+        name: L!("else"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("emit"),
+        func: emit::emit,
+    },
+    BuiltinData {
+        name: L!("end"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("eval"),
+        func: eval::eval,
+    },
+    BuiltinData {
+        name: L!("exec"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("exit"),
+        func: exit::exit,
+    },
+    BuiltinData {
+        name: L!("false"),
+        func: r#false::r#false,
+    },
+    BuiltinData {
+        name: L!("fg"),
+        func: fg::fg,
+    },
+    BuiltinData {
+        name: L!("fish_indent"),
+        func: fish_indent::fish_indent,
+    },
+    BuiltinData {
+        name: L!("fish_key_reader"),
+        func: fish_key_reader::fish_key_reader,
+    },
+    BuiltinData {
+        name: L!("for"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("function"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("functions"),
+        func: functions::functions,
+    },
+    BuiltinData {
+        name: L!("history"),
+        func: history::history,
+    },
+    BuiltinData {
+        name: L!("if"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("jobs"),
+        func: jobs::jobs,
+    },
+    BuiltinData {
+        name: L!("math"),
+        func: math::math,
+    },
+    BuiltinData {
+        name: L!("not"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("or"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("path"),
+        func: path::path,
+    },
+    BuiltinData {
+        name: L!("printf"),
+        func: printf::printf,
+    },
+    BuiltinData {
+        name: L!("pwd"),
+        func: pwd::pwd,
+    },
+    BuiltinData {
+        name: L!("random"),
+        func: random::random,
+    },
+    BuiltinData {
+        name: L!("read"),
+        func: read::read,
+    },
+    BuiltinData {
+        name: L!("realpath"),
+        func: realpath::realpath,
+    },
+    BuiltinData {
+        name: L!("return"),
+        func: r#return::r#return,
+    },
+    BuiltinData {
+        name: L!("set"),
+        func: set::set,
+    },
+    BuiltinData {
+        name: L!("set_color"),
+        func: set_color::set_color,
+    },
+    BuiltinData {
+        name: L!("source"),
+        func: source::source,
+    },
+    BuiltinData {
+        name: L!("status"),
+        func: status::status,
+    },
+    BuiltinData {
+        name: L!("string"),
+        func: string::string,
+    },
+    BuiltinData {
+        name: L!("switch"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("test"),
+        func: test::test,
+    },
+    BuiltinData {
+        name: L!("time"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("true"),
+        func: r#true::r#true,
+    },
+    BuiltinData {
+        name: L!("type"),
+        func: r#type::r#type,
+    },
+    BuiltinData {
+        name: L!("ulimit"),
+        func: ulimit::ulimit,
+    },
+    BuiltinData {
+        name: L!("wait"),
+        func: wait::wait,
+    },
+    BuiltinData {
+        name: L!("while"),
+        func: builtin_generic,
+    },
+];
+assert_sorted_by_name!(BUILTIN_DATAS);
+
+impl Named for BuiltinData {
+    fn name(&self) -> &'static wstr {
+        self.name
+    }
+}
+
+fn builtin_lookup(name: &wstr) -> Option<&'static BuiltinData> {
+    get_by_sorted_name(name, BUILTIN_DATAS)
+}
+
+/// Is there a builtin command with the given name?
+pub fn builtin_exists(name: &wstr) -> bool {
+    builtin_lookup(name).is_some()
+}
+
+/// Is the command a keyword we need to special-case the handling of `-h` and `--help`.
+fn cmd_needs_help(cmd: &wstr) -> bool {
+    [
+        L!("for"),
+        L!("while"),
+        L!("function"),
+        L!("if"),
+        L!("end"),
+        L!("switch"),
+        L!("case"),
+    ]
+    .contains(&cmd)
+}
+
+/// Execute a builtin command
+pub fn builtin_run(parser: &mut Parser, argv: &mut [&wstr], streams: &mut IoStreams) -> ProcStatus {
+    if argv.is_empty() {
+        return ProcStatus::from_exit_code(STATUS_INVALID_ARGS);
+    }
+
+    // We can be handed a keyword by the parser as if it was a command. This happens when the user
+    // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
+    // handle displaying help for it here.
+    if argv.len() == 2 && argument_is_help(argv[1]) && cmd_needs_help(argv[0]) {
+        builtin_print_help(parser, streams, argv[0]);
+        return ProcStatus::from_exit_code(STATUS_CMD_OK);
+    }
+
+    let Some(builtin) = builtin_lookup(argv[0]) else {
+        flogf!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, argv[0]));
+        return ProcStatus::from_exit_code(STATUS_CMD_ERROR);
+    };
+
+    let builtin_ret = (builtin.func)(parser, streams, argv);
+
+    // Flush our out and error streams, and check for their errors.
+    let out_ret = streams.out.flush_and_check_error();
+    let err_ret = streams.err.flush_and_check_error();
+
+    // Resolve our status code.
+    // If the builtin itself produced an error, use that error.
+    // Otherwise use any errors from writing to out and writing to err, in that order.
+    let mut code = match builtin_ret {
+        Ok(success) => {
+            if success.preserve_failure_exit_status {
+                return ProcStatus::empty();
+            } else {
+                0
+            }
+        }
+        Err(err) => err,
+    };
+
+    if code == 0 {
+        code = out_ret;
+    }
+    if code == 0 {
+        code = err_ret;
+    }
+
+    // The exit code is cast to an 8-bit unsigned integer, so saturate to 255. Otherwise,
+    // multiples of 256 are reported as 0.
+    if code > 255 {
+        code = 255;
+    }
+
+    if code < 0 {
+        // If the code is below 0, constructing a proc_status_t
+        // would assert() out, which is a terrible failure mode
+        // So instead, what we do is we get a positive code,
+        // and we avoid 0.
+        flogf!(
+            warning,
+            "builtin %s returned invalid exit code %d",
+            argv[0],
+            code
+        );
+        code = ((256 + code) % 256).abs();
+        if code == 0 {
+            code = 255;
+        }
+    }
+
+    ProcStatus::from_exit_code(code)
+}
+
+/// Returns a list of all builtin names.
+pub fn builtin_get_names() -> impl Iterator<Item = &'static wstr> {
+    BUILTIN_DATAS.iter().map(|builtin| builtin.name)
+}
+
+/// Return a one-line description of the specified builtin.
+pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
+    let desc = match name {
+        _ if name == "!" => wgettext!("Negate exit status of job"),
+        _ if name == "." => wgettext!("Evaluate contents of file"),
+        _ if name == ":" => wgettext!("Return a successful result"),
+        _ if name == "[" => wgettext!("Test a condition"), // ]
+        _ if name == "_" => wgettext!("Translate a string"),
+        _ if name == "abbr" => wgettext!("Manage abbreviations"),
+        _ if name == "and" => wgettext!("Run command if last command succeeded"),
+        _ if name == "argparse" => wgettext!("Parse options in fish script"),
+        _ if name == "begin" => wgettext!("Create a block of code"),
+        _ if name == "bg" => wgettext!("Send job to background"),
+        _ if name == "bind" => wgettext!("Handle fish key bindings"),
+        _ if name == "block" => wgettext!("Temporarily block delivery of events"),
+        _ if name == "break" => wgettext!("Stop the innermost loop"),
+        _ if name == "breakpoint" => wgettext!("Halt execution and start debug prompt"),
+        _ if name == "builtin" => wgettext!("Run a builtin specifically"),
+        _ if name == "case" => wgettext!("Block of code to run conditionally"),
+        _ if name == "cd" => wgettext!("Change working directory"),
+        _ if name == "command" => wgettext!("Run a command specifically"),
+        _ if name == "commandline" => wgettext!("Set or get the commandline"),
+        _ if name == "complete" => wgettext!("Edit command specific completions"),
+        _ if name == "contains" => wgettext!("Search for a specified string in a list"),
+        _ if name == "continue" => wgettext!("Skip over remaining innermost loop"),
+        _ if name == "count" => wgettext!("Count the number of arguments"),
+        _ if name == "disown" => wgettext!("Remove job from job list"),
+        _ if name == "echo" => wgettext!("Print arguments"),
+        _ if name == "else" => wgettext!("Evaluate block if condition is false"),
+        _ if name == "emit" => wgettext!("Emit an event"),
+        _ if name == "end" => wgettext!("End a block of commands"),
+        _ if name == "eval" => wgettext!("Evaluate a string as a statement"),
+        _ if name == "exec" => wgettext!("Run command in current process"),
+        _ if name == "exit" => wgettext!("Exit the shell"),
+        _ if name == "false" => wgettext!("Return an unsuccessful result"),
+        _ if name == "fg" => wgettext!("Send job to foreground"),
+        _ if name == "fish_key_reader" => wgettext!("explore what characters keyboard keys send"),
+        _ if name == "for" => wgettext!("Perform a set of commands multiple times"),
+        _ if name == "function" => wgettext!("Define a new function"),
+        _ if name == "functions" => wgettext!("List or remove functions"),
+        _ if name == "history" => wgettext!("History of commands executed by user"),
+        _ if name == "if" => wgettext!("Evaluate block if condition is true"),
+        _ if name == "jobs" => wgettext!("Print currently running jobs"),
+        _ if name == "math" => wgettext!("Evaluate math expressions"),
+        _ if name == "not" => wgettext!("Negate exit status of job"),
+        _ if name == "or" => wgettext!("Execute command if previous command failed"),
+        _ if name == "path" => wgettext!("Handle paths"),
+        _ if name == "printf" => wgettext!("Prints formatted text"),
+        _ if name == "pwd" => wgettext!("Print the working directory"),
+        _ if name == "random" => wgettext!("Generate random number"),
+        _ if name == "read" => wgettext!("Read a line of input into variables"),
+        _ if name == "realpath" => wgettext!("Show absolute path sans symlinks"),
+        _ if name == "return" => wgettext!("Stop the currently evaluated function"),
+        _ if name == "set" => wgettext!("Handle environment variables"),
+        _ if name == "set_color" => wgettext!("Set the terminal color"),
+        _ if name == "source" => wgettext!("Evaluate contents of file"),
+        _ if name == "status" => wgettext!("Return status information about fish"),
+        _ if name == "string" => wgettext!("Manipulate strings"),
+        _ if name == "switch" => wgettext!("Conditionally run blocks of code"),
+        _ if name == "test" => wgettext!("Test a condition"),
+        _ if name == "time" => wgettext!("Measure how long a command or block takes"),
+        _ if name == "true" => wgettext!("Return a successful result"),
+        _ if name == "type" => wgettext!("Check if a thing is a thing"),
+        _ if name == "ulimit" => wgettext!("Get/set resource usage limits"),
+        _ if name == "wait" => wgettext!("Await background process completion"),
+        _ if name == "while" => wgettext!("Perform a command multiple times"),
+        _ => return None,
+    };
+    Some(desc)
+}
+
+/// Display help/usage information for the specified builtin or function from manpage
+///
+/// @param  name
+///    builtin or function name to get up help for
+///
+/// Process and print help for the specified builtin or function.
+pub fn builtin_print_help(parser: &mut Parser, streams: &mut IoStreams, cmd: &wstr) {
+    // This won't ever work if no_exec is set.
+    if no_exec() {
+        return;
+    }
+    let name_esc = escape(cmd);
+    let cmd = sprintf!("__fish_print_help %s ", &name_esc);
+    let res = parser.eval_with(
+        &cmd,
+        streams.io_chain,
+        streams.job_group.as_ref(),
+        BlockType::Top,
+    );
+    if res.status.normal_exited() && res.status.exit_code() == 2 {
+        err_fmt!(Error::MISSING_HELP, name_esc)
+            .cmd(&name_esc)
+            .finish(streams);
+    }
+}
+
+/// Perform error reporting for encounter with unknown option.
+pub fn builtin_unknown_option(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    opt: &wstr,
+    print_hints: bool, /*=true*/
+) {
+    let mut err = err_fmt!(Error::UNKNOWN_OPT, opt).cmd(cmd);
+    if print_hints {
+        err = err.full_trailer(parser);
+    }
+    err.finish(streams);
+}
+
+/// Perform error reporting for encounter with missing argument for subcommands.
+pub fn builtin_missing_argument(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    subcmd: Option<&wstr>,
+    mut opt: &wstr,
+    print_hints: bool, /*=true*/
+) {
+    let mut err = if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
+        // if c in -qc '-qc' is missing the argument, now opt is just 'c'
+        opt = &opt[opt.len() - 1..];
+        err_fmt!(Error::MISSING_OPT_ARG, L!("-").to_owned() + opt)
+    } else {
+        err_fmt!(Error::MISSING_OPT_ARG, opt)
+    };
+    if let Some(subcmd) = subcmd {
+        err = err.subcmd(cmd, subcmd);
+    } else {
+        err = err.cmd(cmd);
+    }
+    if print_hints {
+        err = err.full_trailer(parser);
+    }
+    err.finish(streams);
+}
+
+/// Perform error reporting for encounter with an extra argument.
+pub fn builtin_unexpected_argument(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    opt: &wstr,
+    print_hints: bool, /*=true*/
+) {
+    let mut err = err_fmt!(Error::UNEXP_OPT_ARG, opt).cmd(cmd);
+    if print_hints {
+        err = err.full_trailer(parser);
+    }
+    err.finish(streams);
+}
+
+/// Print the backtrace and call for help that we use at the end of error messages.
+pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &wstr) {
+    b.append('\n');
+    let stacktrace = parser.current_line();
+    // Don't print two empty lines if we don't have a stacktrace.
+    if !stacktrace.is_empty() {
+        b.appendln(&stacktrace);
+    }
+    b.appendln(&wgettext_fmt!(
+        "(Type 'help %s' for related documentation)",
+        cmd
+    ));
+}
+
+pub fn builtin_strerror() -> WString {
+    str2wcstring(errno().to_string())
+}
+
+pub struct HelpOnlyCmdOpts {
+    pub print_help: bool,
+    pub optind: usize,
+}
+
+impl HelpOnlyCmdOpts {
+    pub fn parse(
+        args: &mut [&wstr],
+        parser: &mut Parser,
+        streams: &mut IoStreams,
+    ) -> Result<Self, ErrorCode> {
+        let cmd = args[0];
+        let print_hints = true;
+
+        let shortopts: &wstr = L!("+h");
+        let longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
+
+        let mut print_help = false;
+        let mut w = WGetopter::new(shortopts, longopts, args);
+        while let Some(c) = w.next_opt() {
+            match c {
+                'h' => {
+                    print_help = true;
+                }
+                ':' => {
+                    builtin_missing_argument(
+                        parser,
+                        streams,
+                        cmd,
+                        None,
+                        args[w.wopt_index - 1],
+                        print_hints,
+                    );
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                ';' => {
+                    builtin_unexpected_argument(
+                        parser,
+                        streams,
+                        cmd,
+                        args[w.wopt_index - 1],
+                        print_hints,
+                    );
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                '?' => {
+                    builtin_unknown_option(
+                        parser,
+                        streams,
+                        cmd,
+                        args[w.wopt_index - 1],
+                        print_hints,
+                    );
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                _ => {
+                    panic!("unexpected retval from WGetopter");
+                }
+            }
+        }
+
+        Ok(HelpOnlyCmdOpts {
+            print_help,
+            optind: w.wopt_index,
+        })
+    }
+}
+
+#[derive(PartialEq)]
+pub enum SplitBehavior {
+    Newline,
+    /// The default behavior of the -z or --null-in switch,
+    /// Automatically start splitting on NULL if one appears in the first PATH_MAX bytes.
+    /// Otherwise on newline
+    InferNull,
+    Null,
+    Never,
+}
+
+pub struct InputValue<'args> {
+    pub arg: Cow<'args, wstr>,
+    pub want_newline: bool,
+}
+
+impl<'args> InputValue<'args> {
+    pub fn new(arg: Cow<'args, wstr>, want_newline: bool) -> Self {
+        Self { arg, want_newline }
+    }
+}
+
+/// A helper type for extracting arguments from either argv or stdin.
+pub struct Arguments<'args, 'iter> {
+    split_behavior: SplitBehavior,
+    source: ArgvSource<'args, 'iter>,
+}
+
+/// Either the arguments from argv, or from stdin.
+enum ArgvSource<'args, 'iter> {
+    /// Read arguments from argv.
+    Args {
+        // The list of arguments passed to the builtin.
+        args: &'iter [&'args wstr],
+        // Index of the next argument to return.
+        argidx: &'iter mut usize,
+    },
+    /// Read arguments from stdin (possibly redirected).
+    Stdin {
+        /// Reused storage for reading.
+        buffer: Vec<u8>,
+        /// The reader to read from.
+        reader: BufReader<BorrowedFdFile>,
+    },
+}
+
+impl<'args, 'iter> Arguments<'args, 'iter> {
+    pub fn new(
+        args: &'iter [&'args wstr],
+        argidx: &'iter mut usize,
+        streams: &mut IoStreams,
+        chunk_size: usize,
+    ) -> Self {
+        let source: ArgvSource = if !streams.stdin_is_directly_redirected {
+            ArgvSource::Args { args, argidx }
+        } else {
+            let stdin_file = streams
+                .stdin_file
+                .clone()
+                .expect("should have stdin if redirected");
+            ArgvSource::Stdin {
+                buffer: Vec::new(),
+                reader: BufReader::with_capacity(chunk_size, stdin_file),
+            }
+        };
+        Arguments {
+            split_behavior: SplitBehavior::Newline,
+            source,
+        }
+    }
+
+    pub fn with_split_behavior(mut self, split_behavior: SplitBehavior) -> Self {
+        self.split_behavior = split_behavior;
+        self
+    }
+
+    /// Return the next argument by reading from argv ArgvSource.
+    fn get_arg_argv(&mut self) -> Option<InputValue<'args>> {
+        let ArgvSource::Args { args, argidx } = &mut self.source else {
+            panic!("Not reading from argv")
+        };
+        let arg = args.get(**argidx)?;
+        **argidx += 1;
+        let retval = InputValue::new(Cow::Borrowed(arg), /*want_newline=*/ true);
+        Some(retval)
+    }
+
+    /// Return the next argument by reading from stdin ArgvSource.
+    fn get_arg_stdin(&mut self) -> Option<InputValue<'args>> {
+        use SplitBehavior::*;
+        let ArgvSource::Stdin { reader, buffer } = &mut self.source else {
+            panic!("Not reading from stdin")
+        };
+
+        if self.split_behavior == InferNull {
+            // we must determine if the first `PATH_MAX` bytes contains a null.
+            // we intentionally do not consume the buffer here
+            // the contents will be returned again later
+            let b = reader.fill_buf().ok()?;
+            if b.contains(&b'\0') {
+                self.split_behavior = Null;
+            } else {
+                self.split_behavior = Newline;
+            }
+        }
+
+        // NOTE: C++ wrongly commented that read_blocked retries for EAGAIN
+        let num_bytes: usize = match self.split_behavior {
+            Newline => reader.read_until(b'\n', buffer),
+            Null => reader.read_until(b'\0', buffer),
+            Never => reader.read_to_end(buffer),
+            _ => unreachable!(),
+        }
+        .ok()?;
+
+        // to match behaviour of earlier versions
+        if num_bytes == 0 {
+            return None;
+        }
+
+        // assert_eq!(num_bytes, self.buffer.len());
+        let (end, want_newline) = match (&self.split_behavior, buffer.last()) {
+            // remove the newline — consumers do not expect it
+            (Newline, Some(b'\n')) => (num_bytes - 1, true),
+            // we are missing a trailing newline!
+            (Newline, _) => (num_bytes, false),
+            // consumers do not expect to deal with the null
+            // "want_newline" is not currently relevant for Null
+            (Null, Some(b'\0')) => (num_bytes - 1, false),
+            // we are missing a null!
+            (Null, _) => (num_bytes, false),
+            (Never, _) => (num_bytes, false),
+            _ => unreachable!(),
+        };
+
+        let parsed = bytes2wcstring(&buffer[..end]);
+        buffer.clear();
+
+        Some(InputValue::new(Cow::Owned(parsed), want_newline))
+    }
+}
+
+impl<'args> Iterator for Arguments<'args, '_> {
+    // second is want_newline
+    // If not set, we have consumed all of stdin and its last line is missing a newline character.
+    // This is an edge case -- we expect text input, which is conventionally terminated by a
+    // newline character. But if it isn't, we use this to avoid creating one out of thin air,
+    // to not corrupt input data.
+    type Item = InputValue<'args>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match &mut self.source {
+            ArgvSource::Args { .. } => self.get_arg_argv(),
+            ArgvSource::Stdin { .. } => self.get_arg_stdin(),
+        }
+    }
+}
+
+pub fn parse_pid(streams: &mut IoStreams, cmd: &wstr, arg: &wstr) -> Result<Pid, ErrorCode> {
+    parsed_pid(streams, cmd, arg, fish_wcstoi(arg))
+}
+
+pub fn parse_pid_may_be_zero(
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    arg: &wstr,
+) -> Result<Option<Pid>, ErrorCode> {
+    let parsed = fish_wcstoi(arg);
+    if parsed == Ok(0) {
+        return Ok(None);
+    }
+    parsed_pid(streams, cmd, arg, parsed).map(Some)
+}
+
+fn parsed_pid(
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    arg: &wstr,
+    pid: Result<i32, wutil::Error>,
+) -> Result<Pid, ErrorCode> {
+    match pid {
+        Ok(pid @ 1..) => Ok(Pid::new(pid)),
+        _ => {
+            err_fmt!("'%s' is not a valid process ID", arg)
+                .cmd(cmd)
+                .finish(streams);
+            Err(STATUS_INVALID_ARGS)
+        }
+    }
+}
+
+/// A generic builtin that only supports showing a help message. This is only a placeholder that
+/// prints the help message. Useful for commands that live in the parser.
+fn builtin_generic(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> BuiltinResult {
+    let argc = argv.len();
+    let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
+
+    if opts.print_help {
+        builtin_print_help(parser, streams, argv[0]);
+        return Ok(SUCCESS);
+    }
+
+    // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
+    // just print help.
+    if argc == 1 || argv[0] == "time" {
+        builtin_print_help(parser, streams, argv[0]);
+        return Err(STATUS_INVALID_ARGS);
+    }
+
+    Err(STATUS_CMD_ERROR)
+}
+
+/// This function handles both the 'continue' and the 'break' builtins that are used for loop
+/// control.
+pub fn builtin_break_continue(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> BuiltinResult {
+    let is_break = argv[0] == "break";
+    let argc = argv.len();
+
+    let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
+
+    if opts.print_help {
+        builtin_print_help(parser, streams, argv[0]);
+        return Ok(SUCCESS);
+    }
+
+    if argc != 1 {
+        err_fmt!(Error::UNKNOWN_OPT, argv[1])
+            .cmd(argv[0])
+            .finish(streams);
+        return Err(STATUS_INVALID_ARGS);
+    }
+
+    // Paranoia: ensure we have a real loop.
+    // This is checked in the AST but we may be invoked dynamically, e.g. just via "eval break".
+    let mut has_loop = false;
+    for b in parser.blocks_iter_rev() {
+        if [BlockType::WhileBlock, BlockType::ForBlock].contains(&b.typ()) {
+            has_loop = true;
+            break;
+        }
+        if b.is_function_call() {
+            break;
+        }
+    }
+    if !has_loop {
+        streams
+            .err
+            .appendln(&wgettext_fmt!("%s: Not inside of loop", argv[0]));
+        return Err(STATUS_CMD_ERROR);
+    }
+
+    // Mark the status in the libdata.
+    parser.libdata_mut().loop_status = if is_break {
+        LoopStatus::Breaks
+    } else {
+        LoopStatus::Continues
+    };
+    Ok(SUCCESS)
+}
+
+/// Option character for --color flag
+pub const COLOR_OPTION_CHAR: char = '\x10';
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ColorEnabled {
+    #[default]
+    Auto,
+    Always,
+    Never,
+}
+
+impl TryFrom<&wstr> for ColorEnabled {
+    type Error = ();
+    fn try_from(s: &wstr) -> Result<Self, Self::Error> {
+        match s {
+            s if s == "auto" => Ok(ColorEnabled::Auto),
+            s if s == "always" => Ok(ColorEnabled::Always),
+            s if s == "never" => Ok(ColorEnabled::Never),
+            _ => Err(()),
+        }
+    }
+}
+
+impl ColorEnabled {
+    pub fn enabled(&self, streams: &crate::io::IoStreams) -> bool {
+        match self {
+            ColorEnabled::Always => true,
+            ColorEnabled::Never => false,
+            ColorEnabled::Auto => streams.out_is_terminal(),
+        }
+    }
+
+    pub fn parse_from_opt(
+        streams: &mut IoStreams,
+        cmd: &wstr,
+        arg: &wstr,
+    ) -> Result<Self, ErrorCode> {
+        Self::try_from(arg).map_err(|()| {
+            err_fmt!(
+                "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'",
+                arg
+            )
+            .cmd(cmd)
+            .finish(streams);
+
+            STATUS_INVALID_ARGS
+        })
+    }
+}

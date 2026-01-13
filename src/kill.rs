@@ -3,19 +3,18 @@
 //! Works like the killring in emacs and readline. The killring is cut and paste with a memory of
 //! previous cuts.
 
-use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 
 struct KillRing(VecDeque<WString>);
 
-static KILL_RING: Lazy<Mutex<KillRing>> = Lazy::new(|| Mutex::new(KillRing::new()));
+static KILL_RING: Mutex<KillRing> = Mutex::new(KillRing::new());
 
 impl KillRing {
     /// Create a new killring.
-    fn new() -> Self {
+    const fn new() -> Self {
         Self(VecDeque::new())
     }
 
@@ -61,12 +60,12 @@ impl KillRing {
 
 /// Add a string to the top of the killring.
 pub fn kill_add(new_entry: WString) {
-    KILL_RING.lock().unwrap().add(new_entry)
+    KILL_RING.lock().unwrap().add(new_entry);
 }
 
 /// Replace the specified string in the killring.
 pub fn kill_replace(old_entry: &wstr, new_entry: WString) {
-    KILL_RING.lock().unwrap().replace(old_entry, new_entry)
+    KILL_RING.lock().unwrap().replace(old_entry, new_entry);
 }
 
 /// Rotate the killring.
@@ -86,7 +85,7 @@ pub fn kill_entries() -> Vec<WString> {
 #[cfg(test)]
 mod tests {
     use super::KillRing;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_killring() {
@@ -94,23 +93,23 @@ mod tests {
 
         assert!(kr.is_empty());
 
-        kr.add(WString::from_str("a"));
-        kr.add(WString::from_str("b"));
-        kr.add(WString::from_str("c"));
+        kr.add(L!("a").to_owned());
+        kr.add(L!("b").to_owned());
+        kr.add(L!("c").to_owned());
 
-        assert!(kr.entries() == [L!("c"), L!("b"), L!("a")]);
+        assert_eq!(kr.entries(), [L!("c"), L!("b"), L!("a")]);
 
-        assert!(kr.yank_rotate() == "b");
-        assert!(kr.entries() == [L!("b"), L!("a"), L!("c")]);
+        assert_eq!(kr.yank_rotate(), "b");
+        assert_eq!(kr.entries(), [L!("b"), L!("a"), L!("c")]);
 
-        assert!(kr.yank_rotate() == "a");
-        assert!(kr.entries() == [L!("a"), L!("c"), L!("b")]);
+        assert_eq!(kr.yank_rotate(), "a");
+        assert_eq!(kr.entries(), [L!("a"), L!("c"), L!("b")]);
 
-        kr.add(WString::from_str("d"));
+        kr.add(L!("d").to_owned());
 
-        assert!((kr.entries() == [L!("d"), L!("a"), L!("c"), L!("b")]));
+        assert_eq!(kr.entries(), [L!("d"), L!("a"), L!("c"), L!("b")]);
 
-        assert!(kr.yank_rotate() == "a");
-        assert!((kr.entries() == [L!("a"), L!("c"), L!("b"), L!("d")]));
+        assert_eq!(kr.yank_rotate(), "a");
+        assert_eq!(kr.entries(), [L!("a"), L!("c"), L!("b"), L!("d")]);
     }
 }

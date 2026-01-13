@@ -1,1 +1,1 @@
-complete sudo-rs --wraps sudo
+__fish_complete_sudo sudo-rs

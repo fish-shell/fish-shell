@@ -8,11 +8,7 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
 NC='\033[0m' # No Color
-
-# Default to "4.x.x" version if not set
-FISH_BUILD_VERSION="${FISH_BUILD_VERSION:-4.x.x}"
 
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <bsd_dir1> [bsd_dir2] ..."
@@ -44,7 +40,7 @@ for BSD_DIR in "$@"; do
     vagrant rsync
 
     echo "Building fish..."
-    if vagrant ssh -c "cd /home/vagrant/fish-shell && FISH_BUILD_VERSION=$FISH_BUILD_VERSION cargo build" 2>&1; then
+    if vagrant ssh -c "cd /home/vagrant/fish-shell && cargo build" 2>&1; then
         echo -e "${GREEN}✓ Build succeeded for $BSD_DIR${NC}"
         SUCCESS_VMS+=("$BSD_DIR")
 

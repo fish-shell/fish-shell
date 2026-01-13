@@ -1,13 +1,15 @@
 use super::prelude::*;
-use crate::common::bytes2wcstring;
-use crate::function;
-use crate::highlight::{colorize, highlight_shell};
-
-use crate::parse_util::{apply_indents, parse_util_compute_indents};
-use crate::path::{path_get_path, path_get_paths};
+use crate::{
+    builtins::Error,
+    err_fmt, err_str, function,
+    highlight::highlight_and_colorize,
+    parse_util::{apply_indents, compute_indents},
+    path::{path_get_path, path_get_paths},
+};
+use fish_widestring::bytes2wcstring;
 
 #[derive(Default)]
-struct type_cmd_opts_t {
+struct Options {
     all: bool,
     short_output: bool,
     no_functions: bool,
@@ -15,16 +17,17 @@ struct type_cmd_opts_t {
     path: bool,
     force_path: bool,
     query: bool,
+    color: ColorEnabled,
 }
 
-pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
-    let mut opts: type_cmd_opts_t = Default::default();
+    let mut opts: Options = Default::default();
 
-    const shortopts: &wstr = L!("hasftpPq");
-    const longopts: &[WOption] = &[
+    let shortopts: &wstr = L!("hasftpPq");
+    let longopts: &[WOption] = &[
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("all"), ArgType::NoArgument, 'a'),
         wopt(L!("short"), ArgType::NoArgument, 's'),
@@ -34,6 +37,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         wopt(L!("force-path"), ArgType::NoArgument, 'P'),
         wopt(L!("query"), ArgType::NoArgument, 'q'),
         wopt(L!("quiet"), ArgType::NoArgument, 'q'),
+        wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
     ];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);
@@ -51,7 +55,14 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 return Ok(SUCCESS);
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -68,14 +79,22 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return Err(STATUS_INVALID_ARGS);
             }
+            COLOR_OPTION_CHAR => {
+                opts.color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
+            }
             _ => {
                 panic!("unexpected retval from wgeopter.next()");
             }
         }
     }
 
-    if opts.query as i64 + opts.path as i64 + opts.get_type as i64 + opts.force_path as i64 > 1 {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+    if [opts.query, opts.path, opts.get_type, opts.force_path]
+        .into_iter()
+        .filter(|&b| b)
+        .count()
+        > 1
+    {
+        err_str!(Error::INVALID_OPT_COMBO).cmd(cmd).finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -131,8 +150,11 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                             streams.out.appendln(path);
                         }
                     } else if !opts.short_output {
-                        streams.out.append(wgettext_fmt!("%s is a function", arg));
-                        streams.out.appendln(wgettext!(" with definition"));
+                        streams.out.append(&sprintf!(
+                            "%s %s\n",
+                            wgettext_fmt!("%s is a function", arg),
+                            wgettext!("with definition")
+                        ));
                         let mut def = WString::new();
                         def.push_utfstr(&sprintf!(
                             "# %s\n%s",
@@ -140,26 +162,21 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                             props.annotated_definition(arg)
                         ));
                         if props.definition_file().is_none() {
-                            def = apply_indents(&def, &parse_util_compute_indents(&def));
+                            def = apply_indents(&def, &compute_indents(&def));
                         }
 
-                        if streams.out_is_terminal() {
-                            let mut color = vec![];
-                            highlight_shell(
+                        if opts.color.enabled(streams) {
+                            streams.out.append(&bytes2wcstring(&highlight_and_colorize(
                                 &def,
-                                &mut color,
-                                &parser.context(),
-                                /*io_ok=*/ false,
-                                /*cursor=*/ None,
-                            );
-                            let col = bytes2wcstring(&colorize(&def, &color, parser.vars()));
-                            streams.out.append(col);
+                                &mut parser.context(),
+                            )));
                         } else {
-                            streams.out.append(def);
+                            streams.out.append(&def);
                         }
                     } else {
-                        streams.out.append(wgettext_fmt!("%s is a function", arg));
-                        streams.out.append(wgettext_fmt!(" (%s)\n", comment));
+                        streams.out.append(&wgettext_fmt!("%s is a function", arg));
+                        streams.out.append(" ");
+                        streams.out.appendln(&wgettext_fmt!("(%s)", comment));
                     }
                 } else if opts.get_type {
                     streams.out.appendln(L!("function"));
@@ -177,7 +194,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 return Ok(SUCCESS);
             }
             if !opts.get_type {
-                streams.out.append(wgettext_fmt!("%s is a builtin\n", arg));
+                streams.out.appendln(&wgettext_fmt!("%s is a builtin", arg));
             } else if opts.get_type {
                 streams.out.append(L!("builtin\n"));
             }
@@ -205,7 +222,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 if opts.path || opts.force_path {
                     streams.out.appendln(path);
                 } else {
-                    streams.out.append(wgettext_fmt!("%s is %s\n", arg, path));
+                    streams.out.appendln(&wgettext_fmt!("%s is %s", arg, path));
                 }
             } else if opts.get_type {
                 streams.out.appendln(L!("file"));
@@ -221,9 +238,9 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         }
 
         if found == 0 && !opts.query && !opts.path {
-            streams
-                .err
-                .append(wgettext_fmt!("%s: Could not find '%s'\n", L!("type"), arg));
+            err_fmt!("Could not find '%s'", arg)
+                .cmd(cmd)
+                .finish(streams);
         }
     }
 

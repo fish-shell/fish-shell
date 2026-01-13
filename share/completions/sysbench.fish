@@ -3,13 +3,13 @@
 ### sub commands specification ###
 complete -c sysbench -f -a "run\t'Run the test'"
 complete -c sysbench -n "__fish_contains_opt test=fileio" -a "
-	prepare\t'Prepare and create test file'
-	cleanup\t'Cleanup test files'
-	"
+    prepare\t'Prepare and create test file'
+    cleanup\t'Cleanup test files'
+    "
 complete -c sysbench -n "__fish_contains_opt test=oltp" -a "
-	prepare\t'Prepare test table'
-	cleanup\t'Cleanup test table'
-	"
+    prepare\t'Prepare test table'
+    cleanup\t'Cleanup test table'
+    "
 
 ### generic long options specification ###
 complete -c sysbench -x -l num-threads -d 'The total number of worker threads to create (default: 1)'
@@ -18,12 +18,12 @@ complete -c sysbench -x -l max-time -d 'Limit for total execution time in second
 complete -c sysbench -x -l thread-stack-size -d 'Size of stack for each thread (default: 32K)'
 complete -c sysbench -f -l init-rng -d 'Specifies if random numbers generator should be initialized from timer (default: off)' -a 'on off'
 complete -c sysbench -x -l test -d 'Name of the test mode to run(required)' -a "
-	cpu\t'Benchmark cpu by calculating prime numbers'
-	threads\t'Benchmark scheduler performance'
-	mutex\t'Benchmark mutex implementation'
-	fileio\t'Benchmark various file I/O workloads'
-	oltp\t'Benchmark a real database performance'
-	"
+    cpu\t'Benchmark cpu by calculating prime numbers'
+    threads\t'Benchmark scheduler performance'
+    mutex\t'Benchmark mutex implementation'
+    fileio\t'Benchmark various file I/O workloads'
+    oltp\t'Benchmark a real database performance'
+    "
 complete -c sysbench -f -l debug -d 'Print more debug info (default: off)' -a 'on off'
 complete -c sysbench -f -l validate -d 'Perform validation of test results where possible (default: off)' -a 'on off'
 complete -c sysbench -l help -d 'Print help on general syntax'
@@ -42,9 +42,9 @@ complete -c sysbench -n "__fish_contains_opt test=threads" -x -l thread-locks -d
 ### options for test=`mutex` mode ###
 complete -c sysbench -n "__fish_contains_opt test=mutex" -x -l mutex-num -d 'Number of mutexes to create (default: 4096)'
 complete -c sysbench -n "__fish_contains_opt test=mutex" -x -l memory-scope -d 'Specifies whether each thread uses a global or local allocation (default:global)' -a "
-	local\t'Allocate memory locally'
-	global\t'Allocate memory globally'
-	"
+    local\t'Allocate memory locally'
+    global\t'Allocate memory globally'
+    "
 complete -c sysbench -n "__fish_contains_opt test=mutex" -x -l memory-total-size -d 'Total size of data to transfer (default: 100G)'
 complete -c sysbench -n "__fish_contains_opt test=mutex" -x -l memory-oper -d 'Type of memory operations' -a 'read write'
 
@@ -53,13 +53,13 @@ complete -c sysbench -n "__fish_contains_opt test=fileio" -x -l file-num -d 'Num
 complete -c sysbench -n "__fish_contains_opt test=fileio" -x -l file-block-size -d 'Block size to use in all I/O operations (default: 16K)'
 complete -c sysbench -n "__fish_contains_opt test=fileio" -x -l file-total-size -d 'Total size of files (default: 2G)'
 complete -c sysbench -n "__fish_contains_opt test=fileio" -x -l file-test-mode -d 'Type of workload to produce' -a "
-	seqwr\t'Sequential write'
-	seqrewr\t'Sequential rewrite'
-	seqrd\t'Sequential read'
-	rndrd\t'Random read'
-	rndwr\t'Random write'
-	rndrw\t'Random read/write'
-	"
+    seqwr\t'Sequential write'
+    seqrewr\t'Sequential rewrite'
+    seqrd\t'Sequential read'
+    rndrd\t'Random read'
+    rndwr\t'Random write'
+    rndrw\t'Random read/write'
+    "
 complete -c sysbench -n "__fish_contains_opt test=fileio" -x -l file-io-mode -d 'I/O mode (default: sync)' -a 'sync async fastmmap slowmmap'
 complete -c sysbench -n "__fish_contains_opt test=fileio" -x -l file-async-backlog -d 'Number of asynchronous operations to queue per thread (default: 128)'
 complete -c sysbench -n "__fish_contains_opt test=fileio" -x -l file-extra-flags -d 'Additional flags to use with open(2)'
@@ -72,10 +72,10 @@ complete -c sysbench -n "__fish_contains_opt test=fileio" -x -l file-rw-ratio -d
 
 ### options for test=`oltp` mode ###
 complete -c sysbench -n "__fish_contains_opt test=oltp" -x -l oltp-test-mode -d 'Execution mode: simple, complex and nontrx(non-transactional)(default: complex)' -a "
-	simple\t'Simple'
-	complex\t'Advanced transactional'
-	nontrx\t'Non-transactional'
-	"
+    simple\t'Simple'
+    complex\t'Advanced transactional'
+    nontrx\t'Non-transactional'
+    "
 complete -c sysbench -n "__fish_contains_opt test=oltp" -f -l oltp-read-only -d 'Read-only mode. No UPDATE, DELETE or INSERT queries will be performed. (default: off)' -a 'on off'
 complete -c sysbench -n "__fish_contains_opt test=oltp" -x -l oltp-range-size -d 'Range size for range queries (default: 100)'
 complete -c sysbench -n "__fish_contains_opt test=oltp" -x -l oltp-point-selects -d 'Number of point select queries in a single transaction (default: 10)'
@@ -92,10 +92,10 @@ complete -c sysbench -n "__fish_contains_opt test=oltp" -x -l oltp-user-delay-ma
 complete -c sysbench -n "__fish_contains_opt test=oltp" -x -l oltp-table-name -d 'Name of the test table (default: sbtest)'
 complete -c sysbench -n "__fish_contains_opt test=oltp" -x -l oltp-table-size -d 'Number of rows in the test table (default: 10000)'
 complete -c sysbench -n "__fish_contains_opt test=oltp" -x -l oltp-dist-type -d 'Distribution type of random numbers (default: special)' -a "
-	uniform\t'Uniform distribution'
-	gauss\t'Gaussian distribution'
-	special\t'Specified percent of numbers is generated in a specified percent of cases'
-	"
+    uniform\t'Uniform distribution'
+    gauss\t'Gaussian distribution'
+    special\t'Specified percent of numbers is generated in a specified percent of cases'
+    "
 complete -c sysbench -n "__fish_contains_opt oltp-dist-type=special" -x -l oltp-dist-pct -d 'Percentage of values to be treated as \'special\'(default: 1)'
 complete -c sysbench -n "__fish_contains_opt oltp-dist-type=special" -x -l oltp-dist-res -d 'Percentage of cases when \'special\' values are generated (default: 75)'
 complete -c sysbench -n "__fish_contains_opt test=oltp" -x -l db-ps-mode -d 'Use "Prepared Statements" API if supported, otherwise - use clientside statements: disable, auto (default: auto)' -a 'disable auto'

@@ -1,7 +1,7 @@
 //! Implementation of the echo builtin.
 
 use super::prelude::*;
-use crate::wchar::encode_byte_to_char;
+use fish_widestring::encode_byte_to_char;
 
 #[derive(Debug, Clone, Copy)]
 struct Options {
@@ -22,7 +22,7 @@ impl Default for Options {
 
 fn parse_options(
     args: &mut [&wstr],
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), ErrorCode> {
     let Some(&cmd) = args.first() else {
@@ -45,7 +45,7 @@ fn parse_options(
             's' => opts.print_spaces = false,
             'E' => opts.interpret_special_chars = false,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
+                builtin_missing_argument(parser, streams, cmd, None, args[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -107,7 +107,7 @@ where
 
         // Skip the x
         start = 1;
-    };
+    }
 
     if base == 0 {
         return None;
@@ -140,7 +140,7 @@ where
 ///
 /// Bash only respects `-n` if it's the first argument. We'll do the same. We also support a new,
 /// fish specific, option `-s` to mean "no spaces".
-pub fn echo(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn echo(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let (opts, optind) = parse_options(args, parser, streams)?;
 
     // The special character \c can be used to indicate no more output.
@@ -218,7 +218,7 @@ pub fn echo(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
     }
 
     if !out.is_empty() {
-        streams.out.append(out);
+        streams.out.append(&out);
     }
 
     Ok(SUCCESS)

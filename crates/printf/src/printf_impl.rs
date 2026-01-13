@@ -2,11 +2,12 @@
 use super::arg::Arg;
 use super::fmt_fp::format_float;
 use super::locale::Locale;
+use assert_matches::assert_matches;
 use std::fmt::{self, Write};
 use std::mem;
 use std::result::Result;
-use unicode_segmentation::UnicodeSegmentation;
-use unicode_width::UnicodeWidthStr;
+use unicode_segmentation::UnicodeSegmentation as _;
+use unicode_width::UnicodeWidthStr as _;
 
 #[cfg(feature = "widestring")]
 use widestring::Utf32Str as wstr;
@@ -57,7 +58,7 @@ impl ModifierFlags {
             '+' => self.mark_pos = true,
             '\'' => self.grouped = true,
             _ => return false,
-        };
+        }
         true
     }
 }
@@ -301,7 +302,7 @@ pub(super) fn pad(
     min_width: usize,
     current_width: usize,
 ) -> fmt::Result {
-    assert!(c == '0' || c == ' ');
+    assert_matches!(c, '0' | ' ');
     if current_width >= min_width {
         return Ok(());
     }
@@ -341,7 +342,7 @@ pub(super) fn pad(
 ///
 /// let result = sprintf_locale(&mut output, fmt, &locale::EN_US_LOCALE, &mut args);
 ///
-/// assert!(result == Ok(12));
+/// assert_eq!(result, Ok(12));
 /// assert_eq!(output, "1,234,567.89");
 /// ```
 pub fn sprintf_locale(
@@ -371,7 +372,7 @@ pub fn sprintf_locale(
         }
 
         // Consume the % at the start of the format specifier.
-        debug_assert!(s.at(0) == Some('%'));
+        debug_assert_eq!(s.at(0), Some('%'));
         s.advance_by(1);
 
         // Read modifier flags. '-' and '0' flags are mutually exclusive.
@@ -561,7 +562,7 @@ pub fn sprintf_locale(
         };
         // Numeric output should be empty iff the value is 0.
         if spec_is_numeric && body.is_empty() {
-            debug_assert!(arg.as_uint().unwrap() == 0);
+            debug_assert_eq!(arg.as_uint().unwrap(), 0);
         }
 
         // Decide if we want to apply thousands grouping to the body, and compute its size.

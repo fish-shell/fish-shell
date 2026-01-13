@@ -3,6 +3,8 @@
 fish_vi_key_bindings
 
 commandline '1'; commandline --cursor 0; fish_vi_dec
+# CHECK: {{\x1b\[6 q}}
+echo
 commandline --current-buffer
 # CHECK: 0
 
@@ -113,3 +115,5 @@ commandline --current-buffer
 commandline 'to 2022-04-09'; commandline --cursor 11; fish_vi_inc
 commandline --current-buffer
 # CHECK: to 2022-04-08
+
+# CHECK: {{\x1b\[2 q}}

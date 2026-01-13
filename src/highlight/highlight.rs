@@ -1,40 +1,38 @@
 //! Functions for syntax highlighting.
-use crate::abbrs::{self, with_abbrs};
-use crate::ast::{
-    self, Argument, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
-    Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
+use crate::{
+    abbrs::{self, with_abbrs},
+    ast::{
+        self, Argument, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
+        Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
+    },
+    builtins::builtin_exists,
+    common::{valid_var_name, valid_var_name_char},
+    complete::complete_wrap_map,
+    env::{EnvVar, Environment},
+    expand::{ExpandFlags, ExpandResultCode, expand_one, expand_to_command_and_args},
+    function,
+    highlight::file_tester::FileTester,
+    history::all_paths_are_valid,
+    operation_context::OperationContext,
+    parse_constants::{
+        ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
+    },
+    parse_util::{get_process_first_token_offset, locate_cmdsubst_range, slice_length},
+    path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file},
+    terminal::Outputter,
+    text_face::{ResettableStyle, SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face},
+    threads::assert_is_background_thread,
+    tokenizer::{PipeOrRedir, variable_assignment_equals_pos},
 };
-use crate::builtins::shared::builtin_exists;
-use crate::color::Color;
-use crate::common::{
-    ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, valid_var_name, valid_var_name_char,
+use fish_color::Color;
+use fish_feature_flags::{FeatureFlag, feature_test};
+use fish_wcstringutil::string_prefixes_string;
+use fish_widestring::{
+    ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, L, PROCESS_EXPAND_SELF_STR, WExt as _,
+    WString, wstr,
 };
-use crate::complete::complete_wrap_map;
-use crate::env::{EnvVar, Environment};
-use crate::expand::{
-    ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR, expand_one, expand_to_command_and_args,
-};
-use crate::function;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
-use crate::highlight::file_tester::FileTester;
-use crate::history::{HistoryItem, all_paths_are_valid};
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{
-    ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
-};
-use crate::parse_util::{
-    MaybeParentheses, parse_util_locate_cmdsubst_range, parse_util_slice_length,
-};
-use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
-use crate::terminal::Outputter;
-use crate::text_face::{TextFace, UnderlineStyle, parse_text_face};
-use crate::threads::assert_is_background_thread;
-use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
-use crate::wchar::{L, WString, wstr};
-use crate::wchar_ext::WExt;
-use crate::wcstringutil::string_prefixes_string;
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
+use std::collections::{HashMap, hash_map::Entry};
+use strum_macros::Display;
 
 use super::file_tester::IsFile;
 
@@ -50,10 +48,10 @@ impl HighlightSpec {
         }
     }
     pub fn with_fg(fg: HighlightRole) -> Self {
-        Self::with_fg_bg(fg, HighlightRole::normal)
+        Self::with_fg_bg(fg, HighlightRole::Normal)
     }
     pub fn with_bg(bg: HighlightRole) -> Self {
-        Self::with_fg_bg(HighlightRole::normal, bg)
+        Self::with_fg_bg(HighlightRole::Normal, bg)
     }
     pub fn with_both(role: HighlightRole) -> Self {
         Self::with_fg_bg(role, role)
@@ -63,11 +61,11 @@ impl HighlightSpec {
 /// Given a string and list of colors of the same size, return the string with ANSI escape sequences
 /// representing the colors.
 pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -> Vec<u8> {
-    assert!(colors.len() == text.len());
+    assert_eq!(colors.len(), text.len());
     let mut rv = HighlightColorResolver::new();
     let mut outp = Outputter::new_buffering();
 
-    let mut last_color = HighlightSpec::with_fg(HighlightRole::normal);
+    let mut last_color = HighlightSpec::with_fg(HighlightRole::Normal);
     for (i, c) in text.chars().enumerate() {
         let color = colors[i];
         if color != last_color {
@@ -76,9 +74,12 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
             outp.set_text_face(face);
             last_color = color;
         }
+        if i + 1 == text.char_count() && c == '\n' {
+            outp.set_text_face(TextFace::terminal_default());
+        }
         outp.writech(c);
     }
-    outp.set_text_face(TextFace::default());
+    outp.set_text_face(TextFace::terminal_default());
     outp.contents().to_owned()
 }
 
@@ -92,16 +93,32 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
 /// \param io_ok If set, allow IO which may block. This means that e.g. invalid commands may be
 /// detected.
 /// \param cursor The position of the cursor in the commandline.
-pub fn highlight_shell(
-    buff: &wstr,
+pub fn highlight_shell<'src, 'ctx>(
+    buff: &'src wstr,
     color: &mut Vec<HighlightSpec>,
-    ctx: &OperationContext<'_>,
+    ctx: &'ctx mut OperationContext<'src>,
     io_ok: bool, /* = false */
     cursor: Option<usize>,
 ) {
     let working_directory = ctx.vars().get_pwd_slash();
-    let mut highlighter = Highlighter::new(buff, cursor, ctx, working_directory, io_ok);
+    let mut highlighter = Highlighter::new(buff, cursor, ctx, &working_directory, io_ok);
     *color = highlighter.highlight();
+}
+
+pub fn highlight_and_colorize<'src, 'ctx>(
+    text: &'src wstr,
+    ctx: &'ctx mut OperationContext<'src>,
+) -> Vec<u8> {
+    let mut colors = Vec::new();
+    highlight_shell(
+        text,
+        &mut colors,
+        ctx,
+        /*io_ok=*/ false,
+        /*cursor=*/ None,
+    );
+    let vars = ctx.vars();
+    colorize(text, &colors, vars)
 }
 
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
@@ -134,17 +151,25 @@ impl HighlightColorResolver {
             }
         }
     }
-    pub(crate) fn resolve_spec_uncached(
-        highlight: &HighlightSpec,
-        vars: &dyn Environment,
-    ) -> TextFace {
+    fn resolve_spec_uncached(highlight: &HighlightSpec, vars: &dyn Environment) -> TextFace {
         let resolve_role = |role| {
-            vars.get_unless_empty(get_highlight_var_name(role))
-                .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
-                .or_else(|| vars.get_unless_empty(get_highlight_var_name(HighlightRole::normal)))
-                .as_ref()
-                .map(parse_text_face_for_highlight)
-                .unwrap_or_else(TextFace::default)
+            let mut roles: &[HighlightRole] = &[role, get_fallback(role), HighlightRole::Normal];
+            // TODO(MSRV>=?) partition_dedup
+            for i in [2, 1] {
+                if roles[i - 1] == roles[i] {
+                    roles = &roles[..i];
+                }
+            }
+            for &role in roles {
+                if let Some(face) = vars
+                    .get_unless_empty(get_highlight_var_name(role))
+                    .as_ref()
+                    .and_then(parse_text_face_for_highlight)
+                {
+                    return face;
+                }
+            }
+            TextFace::terminal_default()
         };
         let mut face = resolve_role(highlight.foreground);
 
@@ -154,25 +179,31 @@ impl HighlightColorResolver {
             face.bg = bg_face.bg;
             // In case the background role is different from the foreground one, we ignore its style
             // except for reverse mode.
-            face.style.reverse |= bg_face.style.is_reverse();
+            if face.style.reverse != ResettableStyle::On(()) {
+                face.style.reverse = bg_face.style.reverse;
+            }
         }
 
         // Handle modifiers.
         if highlight.valid_path {
             if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
-                // Historical behavior is to not apply background.
-                let valid_path_face = parse_text_face_for_highlight(&valid_path_var);
-                // Apply the foreground, except if it's normal. The intention here is likely
-                // to only override foreground if the valid path color has an explicit foreground.
-                if !valid_path_face.fg.is_normal() {
-                    face.fg = valid_path_face.fg;
+                let valid_path_face = parse_text_face(valid_path_var.as_list());
+                if let Some(fg) = valid_path_face.fg {
+                    face.fg = fg;
+                }
+                if let Some(bg) = valid_path_face.bg {
+                    face.bg = bg;
+                }
+                if let Some(underline_color) = valid_path_face.underline_color {
+                    face.underline_color = underline_color;
                 }
                 face.style = face.style.union_prefer_right(valid_path_face.style);
             }
         }
 
         if highlight.force_underline {
-            face.style.inject_underline(UnderlineStyle::Single);
+            face.style
+                .inject_underline(ResettableStyle::On(UnderlineStyle::Single));
         }
 
         face
@@ -180,27 +211,38 @@ impl HighlightColorResolver {
 }
 
 /// Return the internal color code representing the specified color.
-pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> TextFace {
+pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> Option<TextFace> {
     let face = parse_text_face(var.as_list());
-    let default = TextFace::default();
-    let fg = face.fg.unwrap_or(default.fg);
-    let bg = face.bg.unwrap_or(default.bg);
-    let underline_color = face.underline_color.unwrap_or(default.underline_color);
-    let style = face.style;
-    TextFace {
-        fg,
-        bg,
-        underline_color,
-        style,
-    }
+    (face != SpecifiedTextFace::default()).then(|| {
+        let default = TextFace::terminal_default();
+        let fg = face.fg.unwrap_or(default.fg);
+        let bg = face.bg.unwrap_or(default.bg);
+        let underline_color = face.underline_color.unwrap_or(default.underline_color);
+        let style = default.style.union_prefer_right(face.style);
+        TextFace {
+            fg,
+            bg,
+            underline_color,
+            style,
+        }
+    })
 }
 
-fn command_is_valid(
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CommandKind {
+    Builtin,
+    Function,
+    Plain,
+}
+
+fn command_kind(
     cmd: &wstr,
     decoration: StatementDecoration,
     working_directory: &wstr,
     vars: &dyn Environment,
-) -> bool {
+) -> Option<CommandKind> {
+    use CommandKind::*;
+
     // Determine which types we check, based on the decoration.
     let mut builtin_ok = true;
     let mut function_ok = true;
@@ -209,14 +251,14 @@ fn command_is_valid(
     let mut implicit_cd_ok = true;
     if matches!(
         decoration,
-        StatementDecoration::command | StatementDecoration::exec
+        StatementDecoration::Command | StatementDecoration::Exec
     ) {
         builtin_ok = false;
         function_ok = false;
         abbreviation_ok = false;
         command_ok = true;
         implicit_cd_ok = false;
-    } else if decoration == StatementDecoration::builtin {
+    } else if decoration == StatementDecoration::Builtin {
         builtin_ok = true;
         function_ok = false;
         abbreviation_ok = false;
@@ -224,36 +266,32 @@ fn command_is_valid(
         implicit_cd_ok = false;
     }
 
-    // Check them.
-    let mut is_valid = false;
-
     // Builtins
-    if !is_valid && builtin_ok {
-        is_valid = builtin_exists(cmd)
-    };
-
-    // Functions
-    if !is_valid && function_ok {
-        is_valid = function::exists_no_autoload(cmd)
-    };
-
-    // Abbreviations
-    if !is_valid && abbreviation_ok {
-        is_valid = with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command, L!("")))
-    };
-
-    // Regular commands
-    if !is_valid && command_ok {
-        is_valid = path_get_path(cmd, vars).is_some()
-    };
-
-    // Implicit cd
-    if !is_valid && implicit_cd_ok {
-        is_valid = path_as_implicit_cd(cmd, working_directory, vars).is_some();
+    if builtin_ok && builtin_exists(cmd) {
+        return Some(Builtin);
     }
 
-    // Return what we got.
-    return is_valid;
+    // Functions
+    if function_ok && function::exists_no_autoload(cmd) {
+        return Some(Function);
+    }
+
+    // Abbreviations
+    if abbreviation_ok && with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command, L!(""))) {
+        return Some(Plain);
+    }
+
+    // Regular commands
+    if command_ok && path_get_path(cmd, vars).is_some() {
+        return Some(Plain);
+    }
+
+    // Implicit cd
+    if implicit_cd_ok && path_as_implicit_cd(cmd, working_directory, vars).is_some() {
+        return Some(Plain);
+    }
+
+    None
 }
 
 fn has_expand_reserved(s: &wstr) -> bool {
@@ -269,13 +307,14 @@ fn has_expand_reserved(s: &wstr) -> bool {
 // command (as a string), if any. This is used to validate autosuggestions.
 fn autosuggest_parse_command(
     buff: &wstr,
-    ctx: &OperationContext<'_>,
+    ctx: &mut OperationContext<'_>,
 ) -> Option<(WString, WString)> {
-    let ast = ast::parse(
-        buff,
-        ParseTreeFlags::CONTINUE_AFTER_ERROR | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS,
-        None,
-    );
+    let flags = ParseTreeFlags {
+        continue_after_error: true,
+        accept_incomplete_tokens: true,
+        ..Default::default()
+    };
+    let ast = ast::parse(buff, flags, None);
 
     // Find the first statement.
     let job_list: &ast::JobList = ast.top();
@@ -301,18 +340,42 @@ pub fn is_veritable_cd(expanded_command: &wstr) -> bool {
     expanded_command == L!("cd") && complete_wrap_map().get(L!("cd")).is_none()
 }
 
+fn is_cd_option(candidate: &wstr) -> bool {
+    let args = vec![
+        L!("--help"),
+        L!("-h"),
+        L!("--logical"),
+        L!("-L"),
+        L!("--physical"),
+        L!("-P"),
+    ];
+    args.into_iter()
+        .any(|arg| string_prefixes_string(candidate, arg))
+}
+
 /// Given an item `item` from the history which is a proposed autosuggestion, return whether the
 /// autosuggestion is valid. It may not be valid if e.g. it is attempting to cd into a directory
 /// which does not exist.
 pub fn autosuggest_validate_from_history(
-    item: &HistoryItem,
+    item_commandline: &wstr,
+    suggested_range: std::ops::Range<usize>,
+    required_paths: &[WString],
     working_directory: &wstr,
-    ctx: &OperationContext<'_>,
+    ctx: &mut OperationContext<'_>,
 ) -> bool {
     assert_is_background_thread();
 
+    if suggested_range != (0..item_commandline.char_count())
+        && get_process_first_token_offset(item_commandline, suggested_range.start)
+            .is_some_and(|offset| offset != suggested_range.start)
+    {
+        return false;
+    }
+
     // Parse the string.
-    let Some((parsed_command, mut cd_dir)) = autosuggest_parse_command(item.str(), ctx) else {
+    let suggested_command = &item_commandline[suggested_range];
+    let Some((parsed_command, mut cd_dir)) = autosuggest_parse_command(suggested_command, ctx)
+    else {
         // This is for autosuggestions which are not decorated commands, e.g. function declarations.
         return true;
     };
@@ -322,18 +385,14 @@ pub fn autosuggest_validate_from_history(
         && !cd_dir.is_empty()
         && expand_one(&mut cd_dir, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None)
     {
-        if string_prefixes_string(&cd_dir, L!("--help"))
-            || string_prefixes_string(&cd_dir, L!("-h"))
-        {
-            // cd --help is always valid.
+        if is_cd_option(&cd_dir) {
+            // known arguments are always valid
             return true;
         } else {
             // Check the directory target, respecting CDPATH.
             // Permit the autosuggestion if the path is valid and not our directory.
             let path = path_get_cdpath(&cd_dir, working_directory, ctx.vars());
-            return path
-                .map(|p| !paths_are_same_file(working_directory, &p))
-                .unwrap_or(false);
+            return path.is_some_and(|p| !paths_are_same_file(working_directory, &p));
         }
     }
 
@@ -346,8 +405,7 @@ pub fn autosuggest_validate_from_history(
     }
 
     // Did the historical command have arguments that look like paths, which aren't paths now?
-    let paths = item.get_required_paths();
-    if !all_paths_are_valid(paths.iter().cloned(), ctx) {
+    if !all_paths_are_valid(required_paths, ctx) {
         return false;
     }
 
@@ -357,7 +415,7 @@ pub fn autosuggest_validate_from_history(
 // Highlights the variable starting with 'in', setting colors within the 'colors' array. Returns the
 // number of characters consumed.
 fn color_variable(inp: &wstr, colors: &mut [HighlightSpec]) -> usize {
-    assert!(inp.char_at(0) == '$');
+    assert_eq!(inp.char_at(0), '$');
 
     // Handle an initial run of $s.
     let mut idx = 0;
@@ -366,12 +424,12 @@ fn color_variable(inp: &wstr, colors: &mut [HighlightSpec]) -> usize {
         // Our color depends on the next char.
         let next = inp.char_at(idx + 1);
         if next == '$' || valid_var_name_char(next) {
-            colors[idx] = HighlightSpec::with_fg(HighlightRole::operat);
+            colors[idx] = HighlightSpec::with_fg(HighlightRole::Operat);
         } else if next == '(' {
-            colors[idx] = HighlightSpec::with_fg(HighlightRole::operat);
+            colors[idx] = HighlightSpec::with_fg(HighlightRole::Operat);
             return idx + 1;
         } else {
-            colors[idx] = HighlightSpec::with_fg(HighlightRole::error);
+            colors[idx] = HighlightSpec::with_fg(HighlightRole::Error);
         }
         idx += 1;
         dollar_count += 1;
@@ -381,12 +439,12 @@ fn color_variable(inp: &wstr, colors: &mut [HighlightSpec]) -> usize {
     // It may contain an escaped newline - see #8444.
     loop {
         if valid_var_name_char(inp.char_at(idx)) {
-            colors[idx] = HighlightSpec::with_fg(HighlightRole::operat);
+            colors[idx] = HighlightSpec::with_fg(HighlightRole::Operat);
             idx += 1;
         } else if inp.char_at(idx) == '\\' && inp.char_at(idx + 1) == '\n' {
-            colors[idx] = HighlightSpec::with_fg(HighlightRole::operat);
+            colors[idx] = HighlightSpec::with_fg(HighlightRole::Operat);
             idx += 1;
-            colors[idx] = HighlightSpec::with_fg(HighlightRole::operat);
+            colors[idx] = HighlightSpec::with_fg(HighlightRole::Operat);
             idx += 1;
         } else {
             break;
@@ -396,10 +454,10 @@ fn color_variable(inp: &wstr, colors: &mut [HighlightSpec]) -> usize {
     // Handle a slice, up to dollar_count of them. Note that we currently don't do any validation of
     // the slice's contents, e.g. $foo[blah] will not show an error even though it's invalid.
     for _slice_count in 0..dollar_count {
-        match parse_util_slice_length(&inp[idx..]) {
+        match slice_length(&inp[idx..]) {
             Some(slice_len) if slice_len > 0 => {
-                colors[idx] = HighlightSpec::with_fg(HighlightRole::operat);
-                colors[idx + slice_len - 1] = HighlightSpec::with_fg(HighlightRole::operat);
+                colors[idx] = HighlightSpec::with_fg(HighlightRole::Operat);
+                colors[idx + slice_len - 1] = HighlightSpec::with_fg(HighlightRole::Operat);
                 idx += slice_len;
             }
             Some(_slice_len) => {
@@ -411,7 +469,7 @@ fn color_variable(inp: &wstr, colors: &mut [HighlightSpec]) -> usize {
                 // double-quoted string that doesn't happen. As such, color the variable + the slice
                 // start red. Coloring any more than that looks bad, unless we're willing to try and
                 // detect where the double-quoted string ends, and I'd rather not do that.
-                colors[..idx + 1].fill(HighlightSpec::with_fg(HighlightRole::error));
+                colors[..=idx].fill(HighlightSpec::with_fg(HighlightRole::Error));
                 break;
             }
         }
@@ -425,9 +483,11 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
     // Clarify what we expect.
     assert!(
         [
-            HighlightSpec::with_fg(HighlightRole::param),
-            HighlightSpec::with_fg(HighlightRole::option),
-            HighlightSpec::with_fg(HighlightRole::command)
+            HighlightSpec::with_fg(HighlightRole::Param),
+            HighlightSpec::with_fg(HighlightRole::Option),
+            HighlightSpec::with_fg(HighlightRole::Command),
+            HighlightSpec::with_fg(HighlightRole::Builtin),
+            HighlightSpec::with_fg(HighlightRole::Function),
         ]
         .contains(&base_color),
         "Unexpected base color"
@@ -437,26 +497,26 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
 
     // Hacky support for %self which must be an unquoted literal argument.
     if buffstr == PROCESS_EXPAND_SELF_STR {
-        colors[..PROCESS_EXPAND_SELF_STR.len()].fill(HighlightSpec::with_fg(HighlightRole::operat));
+        colors[..PROCESS_EXPAND_SELF_STR.len()].fill(HighlightSpec::with_fg(HighlightRole::Operat));
         return;
     }
 
     #[derive(Eq, PartialEq)]
     enum Mode {
-        unquoted,
-        single_quoted,
-        double_quoted,
+        Unquoted,
+        SingleQuoted,
+        DoubleQuoted,
     }
-    let mut mode = Mode::unquoted;
+    let mut mode = Mode::Unquoted;
     let mut unclosed_quote_offset = None;
     let mut bracket_count = 0;
     let mut in_pos = 0;
     while in_pos < buff_len {
         let c = buffstr.as_char_slice()[in_pos];
         match mode {
-            Mode::unquoted => {
+            Mode::Unquoted => {
                 if c == '\\' {
-                    let mut fill_color = HighlightRole::escape; // may be set to highlight_error
+                    let mut fill_color = HighlightRole::Escape; // may be set to highlight_error
                     let backslash_pos = in_pos;
                     let mut fill_end = backslash_pos;
 
@@ -470,7 +530,7 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
 
                     if escaped_char == '\0' {
                         fill_end = in_pos;
-                        fill_color = HighlightRole::error;
+                        fill_color = HighlightRole::Error;
                     } else if matches!(escaped_char, '~' | '%') {
                         if in_pos == 1 {
                             fill_end = in_pos + 1;
@@ -531,7 +591,7 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
 
                         // It's an error if we exceeded the max value.
                         if res > u32::from(max_val) {
-                            fill_color = HighlightRole::error;
+                            fill_color = HighlightRole::Error;
                         }
 
                         // Subtract one from in_pos, so that the increment in the loop will move to
@@ -543,10 +603,8 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                 } else {
                     // Not a backslash.
                     match c {
-                        '~' => {
-                            if in_pos == 0 {
-                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
-                            }
+                        '~' if in_pos == 0 => {
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Operat);
                         }
                         '$' => {
                             assert!(in_pos < buff_len);
@@ -554,80 +612,75 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                             // Subtract one to account for the upcoming loop increment.
                             in_pos -= 1;
                         }
-                        '?' => {
-                            if !feature_test(FeatureFlag::qmark_noglob) {
-                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
-                            }
+                        '?' if !feature_test(FeatureFlag::QuestionMarkNoGlob) => {
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Operat);
                         }
                         '*' | '(' | ')' => {
-                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Operat);
                         }
                         '{' => {
-                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Operat);
                             bracket_count += 1;
                         }
                         '}' => {
-                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Operat);
                             bracket_count -= 1;
                         }
-                        ',' => {
-                            if bracket_count > 0 {
-                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
-                            }
+                        ',' if bracket_count > 0 => {
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Operat);
                         }
                         '\'' => {
-                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::quote);
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Quote);
                             unclosed_quote_offset = Some(in_pos);
-                            mode = Mode::single_quoted;
+                            mode = Mode::SingleQuoted;
                         }
                         '"' => {
-                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::quote);
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Quote);
                             unclosed_quote_offset = Some(in_pos);
-                            mode = Mode::double_quoted;
+                            mode = Mode::DoubleQuoted;
                         }
                         _ => (), // we ignore all other characters
                     }
                 }
             }
             // Mode 1 means single quoted string, i.e 'foo'.
-            Mode::single_quoted => {
-                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::quote);
+            Mode::SingleQuoted => {
+                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Quote);
                 if c == '\\' {
                     // backslash
                     if in_pos + 1 < buff_len {
                         let escaped_char = buffstr.as_char_slice()[in_pos + 1];
                         if matches!(escaped_char, '\\' | '\'') {
-                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::escape); // backslash
-                            colors[in_pos + 1] = HighlightSpec::with_fg(HighlightRole::escape); // escaped char
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Escape); // backslash
+                            colors[in_pos + 1] = HighlightSpec::with_fg(HighlightRole::Escape); // escaped char
                             in_pos += 1; // skip over backslash
                         }
                     }
                 } else if c == '\'' {
-                    mode = Mode::unquoted;
+                    mode = Mode::Unquoted;
                 }
             }
             // Mode 2 means double quoted string, i.e. "foo".
-            Mode::double_quoted => {
+            Mode::DoubleQuoted => {
                 // Slices are colored in advance, past `in_pos`, and we don't want to overwrite
                 // that.
                 if colors[in_pos] == base_color {
-                    colors[in_pos] = HighlightSpec::with_fg(HighlightRole::quote);
+                    colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Quote);
                 }
                 match c {
                     '"' => {
-                        mode = Mode::unquoted;
+                        mode = Mode::Unquoted;
                     }
-                    '\\' => {
+                    '\\'
                         // Backslash
-                        if in_pos + 1 < buff_len {
+                        if in_pos + 1 < buff_len => {
                             let escaped_char = buffstr.as_char_slice()[in_pos + 1];
                             if matches!(escaped_char, '\\' | '"' | '\n' | '$') {
-                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::escape); // backslash
-                                colors[in_pos + 1] = HighlightSpec::with_fg(HighlightRole::escape); // escaped char
+                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::Escape); // backslash
+                                colors[in_pos + 1] = HighlightSpec::with_fg(HighlightRole::Escape); // escaped char
                                 in_pos += 1; // skip over backslash
                             }
                         }
-                    }
                     '$' => {
                         in_pos += color_variable(&buffstr[in_pos..], &mut colors[in_pos..]);
                         // Subtract one to account for the upcoming increment in the loop.
@@ -641,48 +694,45 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
     }
 
     // Error on unclosed quotes.
-    if mode != Mode::unquoted {
-        colors[unclosed_quote_offset.unwrap()] = HighlightSpec::with_fg(HighlightRole::error);
+    if mode != Mode::Unquoted {
+        colors[unclosed_quote_offset.unwrap()] = HighlightSpec::with_fg(HighlightRole::Error);
     }
 }
 
 pub type ColorArray = Vec<HighlightSpec>;
 
 /// Syntax highlighter helper.
-struct Highlighter<'s> {
+struct Highlighter<'src, 'wd, 'ctx> {
     // The string we're highlighting. Note this is a reference member variable (to avoid copying)!
-    buff: &'s wstr,
+    buff: &'src wstr,
     // The position of the cursor within the string.
     cursor: Option<usize>,
-    // The operation context.
-    ctx: &'s OperationContext<'s>,
     // Whether it's OK to do I/O.
     io_ok: bool,
     // Working directory.
-    working_directory: WString,
+    working_directory: &'wd wstr,
     // Our component for testing strings for being potential file paths.
-    file_tester: FileTester<'s>,
+    file_tester: FileTester<'src, 'wd, 'ctx>,
     // The resulting colors.
     color_array: ColorArray,
     // A stack of variables that the current commandline probably defines.  We mark redirections
     // as valid if they use one of these variables, to avoid marking valid targets as error.
-    pending_variables: Vec<&'s wstr>,
+    pending_variables: Vec<&'src wstr>,
     done: bool,
 }
 
-impl<'s> Highlighter<'s> {
+impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
     pub fn new(
-        buff: &'s wstr,
+        buff: &'src wstr,
         cursor: Option<usize>,
-        ctx: &'s OperationContext<'s>,
-        working_directory: WString,
+        ctx: &'ctx mut OperationContext<'src>,
+        working_directory: &'wd wstr,
         can_do_io: bool,
     ) -> Self {
-        let file_tester = FileTester::new(working_directory.clone(), ctx);
+        let file_tester = FileTester::new(working_directory, ctx);
         Self {
             buff,
             cursor,
-            ctx,
             io_ok: can_do_io,
             working_directory,
             file_tester,
@@ -690,6 +740,10 @@ impl<'s> Highlighter<'s> {
             pending_variables: vec![],
             done: false,
         }
+    }
+
+    fn ctx(&self) -> &OperationContext<'src> {
+        self.file_tester.ctx
     }
 
     pub fn highlight(&mut self) -> ColorArray {
@@ -705,59 +759,68 @@ impl<'s> Highlighter<'s> {
             .resize(self.buff.len(), HighlightSpec::default());
 
         // Flags we use for AST parsing.
-        let ast_flags = ParseTreeFlags::CONTINUE_AFTER_ERROR
-            | ParseTreeFlags::INCLUDE_COMMENTS
-            | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS
-            | ParseTreeFlags::LEAVE_UNTERMINATED
-            | ParseTreeFlags::SHOW_EXTRA_SEMIS;
+        let ast_flags = ParseTreeFlags {
+            continue_after_error: true,
+            include_comments: true,
+            accept_incomplete_tokens: true,
+            leave_unterminated: true,
+            show_extra_semis: true,
+            ..Default::default()
+        };
         let ast = ast::parse(self.buff, ast_flags, None);
 
         self.visit_children(ast.top());
-        if self.ctx.check_cancel() {
+        if self.file_tester.ctx.check_cancel() {
             return std::mem::take(&mut self.color_array);
         }
 
         // Color every comment.
         let extras = &ast.extras;
         for range in &extras.comments {
-            self.color_range(*range, HighlightSpec::with_fg(HighlightRole::comment));
+            self.color_range(*range, HighlightSpec::with_fg(HighlightRole::Comment));
         }
 
         // Color every extra semi.
         for range in &extras.semis {
             self.color_range(
                 *range,
-                HighlightSpec::with_fg(HighlightRole::statement_terminator),
+                HighlightSpec::with_fg(HighlightRole::StatementTerminator),
             );
         }
 
         // Color every error range.
         for range in &extras.errors {
-            self.color_range(*range, HighlightSpec::with_fg(HighlightRole::error));
+            self.color_range(*range, HighlightSpec::with_fg(HighlightRole::Error));
         }
 
         std::mem::take(&mut self.color_array)
     }
 
     /// Return a substring of our buffer.
-    pub fn get_source(&self, r: SourceRange) -> &'s wstr {
+    pub fn get_source(&self, r: SourceRange) -> &'src wstr {
         assert!(r.end() >= r.start(), "Overflow");
         assert!(r.end() <= self.buff.len(), "Out of range");
         &self.buff[r.start()..r.end()]
     }
 
     fn io_still_ok(&self) -> bool {
-        self.io_ok && !self.ctx.check_cancel()
+        self.io_ok && !self.ctx().check_cancel()
     }
 
     // Color a command.
-    fn color_command(&mut self, node: &ast::String_) {
+    fn color_command(&mut self, node: &ast::String_, cmd_kind: CommandKind) {
         let source_range = node.source_range();
         let cmd_str = self.get_source(source_range);
 
+        let role = match cmd_kind {
+            CommandKind::Builtin => HighlightRole::Builtin,
+            CommandKind::Function => HighlightRole::Function,
+            CommandKind::Plain => HighlightRole::Command,
+        };
+
         color_string_internal(
             cmd_str,
-            HighlightSpec::with_fg(HighlightRole::command),
+            HighlightSpec::with_fg(role),
             &mut self.color_array[source_range.as_usize()],
         );
     }
@@ -773,13 +836,13 @@ impl<'s> Highlighter<'s> {
         if options_allowed && arg_str.char_at(0) == '-' {
             color_string_internal(
                 arg_str,
-                HighlightSpec::with_fg(HighlightRole::option),
+                HighlightSpec::with_fg(HighlightRole::Option),
                 &mut self.color_array[source_range.as_usize()],
             );
         } else {
             color_string_internal(
                 arg_str,
-                HighlightSpec::with_fg(HighlightRole::param),
+                HighlightSpec::with_fg(HighlightRole::Param),
                 &mut self.color_array[source_range.as_usize()],
             );
         }
@@ -787,7 +850,7 @@ impl<'s> Highlighter<'s> {
         // Now do command substitutions.
         let mut cmdsub_cursor = 0;
         let mut is_quoted = false;
-        while let MaybeParentheses::CommandSubstitution(parens) = parse_util_locate_cmdsubst_range(
+        while let Ok(Some(cmdsub)) = locate_cmdsubst_range(
             arg_str,
             &mut cmdsub_cursor,
             /*accept_incomplete=*/ true,
@@ -796,34 +859,34 @@ impl<'s> Highlighter<'s> {
         ) {
             // Highlight the parens. The open parens must exist; the closed paren may not if it was
             // incomplete.
-            assert!(parens.start() < arg_str.len());
-            self.color_array[arg_start..][parens.opening()]
-                .fill(HighlightSpec::with_fg(HighlightRole::operat));
-            self.color_array[arg_start..][parens.closing()]
-                .fill(HighlightSpec::with_fg(HighlightRole::operat));
+            assert!(cmdsub.opening_paren_offset() < arg_str.len());
+            self.color_array[arg_start..][cmdsub.opening_paren_range()]
+                .fill(HighlightSpec::with_fg(HighlightRole::Operat));
+            self.color_array[arg_start..][cmdsub.closing_paren_range()]
+                .fill(HighlightSpec::with_fg(HighlightRole::Operat));
 
             // Highlight it recursively.
             let arg_cursor = self
                 .cursor
-                .map(|c| c.wrapping_sub(arg_start + parens.start()));
-            let cmdsub_contents = &arg_str[parens.command()];
+                .map(|c| c.wrapping_sub(arg_start + cmdsub.opening_paren_offset()));
+            let cmdsub_contents = &arg_str[cmdsub.command_range()];
             let mut cmdsub_highlighter = Highlighter::new(
                 cmdsub_contents,
                 arg_cursor,
-                self.ctx,
-                self.working_directory.clone(),
+                self.file_tester.ctx,
+                self.working_directory,
                 self.io_still_ok(),
             );
             let subcolors = cmdsub_highlighter.highlight();
 
             // Copy out the subcolors back into our array.
-            assert!(subcolors.len() == cmdsub_contents.len());
-            self.color_array[arg_start..][parens.command()].copy_from_slice(&subcolors);
+            assert_eq!(subcolors.len(), cmdsub_contents.len());
+            self.color_array[arg_start..][cmdsub.command_range()].copy_from_slice(&subcolors);
         }
     }
     // Colors the source range of a node with a given color.
     fn color_node(&mut self, node: &dyn ast::Node, color: HighlightSpec) {
-        self.color_range(node.source_range(), color)
+        self.color_range(node.source_range(), color);
     }
     // Colors a range with a given color.
     fn color_range(&mut self, range: SourceRange, color: HighlightSpec) {
@@ -837,7 +900,7 @@ impl<'s> Highlighter<'s> {
     }
     // AST visitor implementations.
     fn visit_keyword(&mut self, node: &dyn Keyword) {
-        let mut role = HighlightRole::normal;
+        let mut role = HighlightRole::Normal;
         match node.keyword() {
             ParseKeyword::Begin
             | ParseKeyword::Builtin
@@ -851,31 +914,31 @@ impl<'s> Highlighter<'s> {
             | ParseKeyword::If
             | ParseKeyword::In
             | ParseKeyword::Switch
-            | ParseKeyword::While => role = HighlightRole::keyword,
+            | ParseKeyword::While => role = HighlightRole::Keyword,
             ParseKeyword::And
             | ParseKeyword::Or
             | ParseKeyword::Not
             | ParseKeyword::Exclam
-            | ParseKeyword::Time => role = HighlightRole::operat,
+            | ParseKeyword::Time => role = HighlightRole::Operat,
             ParseKeyword::None => (),
-        };
+        }
         self.color_node(node.as_node(), HighlightSpec::with_fg(role));
     }
     fn visit_token(&mut self, tok: &dyn Token) {
-        let mut role = HighlightRole::normal;
+        let mut role = HighlightRole::Normal;
         match tok.token_type() {
-            ParseTokenType::end | ParseTokenType::pipe | ParseTokenType::background => {
-                role = HighlightRole::statement_terminator
+            ParseTokenType::End | ParseTokenType::Pipe | ParseTokenType::Background => {
+                role = HighlightRole::StatementTerminator;
             }
-            ParseTokenType::left_brace | ParseTokenType::right_brace => {
-                role = HighlightRole::keyword;
+            ParseTokenType::LeftBrace | ParseTokenType::RightBrace => {
+                role = HighlightRole::Keyword;
             }
-            ParseTokenType::andand | ParseTokenType::oror => role = HighlightRole::operat,
-            ParseTokenType::string => {
+            ParseTokenType::AndAnd | ParseTokenType::OrOr => role = HighlightRole::Operat,
+            ParseTokenType::String => {
                 // Assume all strings are params. This handles e.g. the variables a for header or
                 // function header. Other strings (like arguments to commands) need more complex
                 // handling, which occurs in their respective overrides of visit().
-                role = HighlightRole::param;
+                role = HighlightRole::Param;
             }
             _ => (),
         }
@@ -895,7 +958,11 @@ impl<'s> Highlighter<'s> {
             .is_some_and(|c| source_range.contains_inclusive(c));
         let token = arg.source(self.buff).to_owned();
         let test_result = if cmd_is_cd {
-            self.file_tester.test_cd_path(&token, is_prefix)
+            if is_cd_option(&token) {
+                Ok(IsFile(false))
+            } else {
+                self.file_tester.test_cd_path(&token, is_prefix)
+            }
         } else {
             let is_path = self.file_tester.test_path(&token, is_prefix);
             Ok(IsFile(is_path))
@@ -907,7 +974,7 @@ impl<'s> Highlighter<'s> {
                     self.color_array[i].valid_path = true;
                 }
             }
-            Err(..) => self.color_node(arg, HighlightSpec::with_fg(HighlightRole::error)),
+            Err(..) => self.color_node(arg, HighlightSpec::with_fg(HighlightRole::Error)),
         }
     }
 
@@ -921,14 +988,14 @@ impl<'s> Highlighter<'s> {
         // It may have parsed successfully yet still be invalid (e.g. 9999999999999>&1)
         // If so, color the whole thing invalid and stop.
         if !oper.is_valid() {
-            self.color_node(redir, HighlightSpec::with_fg(HighlightRole::error));
+            self.color_node(redir, HighlightSpec::with_fg(HighlightRole::Error));
             return;
         }
 
         // Color the operator part like 2>.
         self.color_node(
             &redir.oper,
-            HighlightSpec::with_fg(HighlightRole::redirection),
+            HighlightSpec::with_fg(HighlightRole::Redirection),
         );
 
         // Color the target part.
@@ -940,24 +1007,29 @@ impl<'s> Highlighter<'s> {
         }
         // No command substitution, so we can highlight the target file or fd. For example,
         // disallow redirections into a non-existent directory.
-        let target_is_valid = if !self.io_still_ok() {
+        let (role, file_exists) = if !self.io_still_ok() {
             // I/O is disallowed, so we don't have much hope of catching anything but gross
             // errors. Assume it's valid.
-            true
+            (HighlightRole::Redirection, false)
         } else if contains_pending_variable(&self.pending_variables, &target) {
-            true
+            // Target uses a variable defined by the current commandline. Assume it's valid.
+            (HighlightRole::Redirection, false)
         } else {
             // Validate the redirection target..
-            self.file_tester.test_redirection_target(&target, oper.mode)
-        };
-        self.color_node(
-            &redir.target,
-            HighlightSpec::with_fg(if target_is_valid {
-                HighlightRole::redirection
+            if let Ok(IsFile(file_exists)) =
+                self.file_tester.test_redirection_target(&target, oper.mode)
+            {
+                (HighlightRole::Redirection, file_exists)
             } else {
-                HighlightRole::error
-            }),
-        );
+                (HighlightRole::Error, false)
+            }
+        };
+        self.color_node(&redir.target, HighlightSpec::with_fg(role));
+        if file_exists {
+            for i in redir.target.source_range().as_usize() {
+                self.color_array[i].valid_path = true;
+            }
+        }
     }
 
     fn visit_variable_assignment(&mut self, varas: &VariableAssignment) {
@@ -965,7 +1037,7 @@ impl<'s> Highlighter<'s> {
         // Highlight the '=' in variable assignments as an operator.
         if let Some(offset) = variable_assignment_equals_pos(varas.source(self.buff)) {
             let equals_loc = varas.source_range().start() + offset;
-            self.color_array[equals_loc] = HighlightSpec::with_fg(HighlightRole::operat);
+            self.color_array[equals_loc] = HighlightSpec::with_fg(HighlightRole::Operat);
             let var_name = &varas.source(self.buff)[..offset];
             self.pending_variables.push(var_name);
         }
@@ -973,8 +1045,8 @@ impl<'s> Highlighter<'s> {
     fn visit_semi_nl(&mut self, node: &dyn Node) {
         self.color_node(
             node,
-            HighlightSpec::with_fg(HighlightRole::statement_terminator),
-        )
+            HighlightSpec::with_fg(HighlightRole::StatementTerminator),
+        );
     }
     fn visit_decorated_statement(&mut self, stmt: &DecoratedStatement) {
         // Color any decoration.
@@ -990,33 +1062,35 @@ impl<'s> Highlighter<'s> {
         let cmd = stmt.command.source(self.buff);
 
         let mut expanded_cmd = WString::new();
-        let mut is_valid_cmd = false;
+        let mut cmd_kind = None;
         if !self.io_still_ok() {
             // We cannot check if the command is invalid, so just assume it's valid.
-            is_valid_cmd = true;
+            cmd_kind = Some(CommandKind::Plain);
         } else if variable_assignment_equals_pos(cmd).is_some() {
-            is_valid_cmd = true;
+            cmd_kind = Some(CommandKind::Plain);
         } else {
             // Check to see if the command is valid.
             // Try expanding it. If we cannot, it's an error.
-            if let Some(expanded) = statement_get_expanded_command(self.buff, stmt, self.ctx) {
+            if let Some(expanded) =
+                statement_get_expanded_command(self.buff, stmt, self.file_tester.ctx)
+            {
                 expanded_cmd = expanded;
                 if !has_expand_reserved(&expanded_cmd) {
-                    is_valid_cmd = command_is_valid(
+                    cmd_kind = command_kind(
                         &expanded_cmd,
                         stmt.decoration(),
-                        &self.working_directory,
-                        self.ctx.vars(),
+                        self.working_directory,
+                        self.file_tester.ctx.vars(),
                     );
                 }
             }
         }
 
         // Color our statement.
-        if is_valid_cmd {
-            self.color_command(&stmt.command);
+        if let Some(cmd_kind) = cmd_kind {
+            self.color_command(&stmt.command, cmd_kind);
         } else {
-            self.color_node(&stmt.command, HighlightSpec::with_fg(HighlightRole::error))
+            self.color_node(&stmt.command, HighlightSpec::with_fg(HighlightRole::Error));
         }
 
         // Color arguments and redirections.
@@ -1071,10 +1145,9 @@ impl<'s> Highlighter<'s> {
 /// Return whether a string contains a command substitution.
 fn has_cmdsub(src: &wstr) -> bool {
     let mut cursor = 0;
-    match parse_util_locate_cmdsubst_range(src, &mut cursor, true, None, None) {
-        MaybeParentheses::Error => return false,
-        MaybeParentheses::None => return false,
-        MaybeParentheses::CommandSubstitution(_) => return true,
+    match locate_cmdsubst_range(src, &mut cursor, true, None, None) {
+        Err(()) | Ok(None) => false,
+        Ok(Some(_)) => true,
     }
 }
 
@@ -1101,13 +1174,13 @@ fn contains_pending_variable(pending_variables: &[&wstr], haystack: &wstr) -> bo
     false
 }
 
-impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
+impl<'src, 'wd, 'ctx, 'a> NodeVisitor<'a> for Highlighter<'src, 'wd, 'ctx> {
     fn visit(&mut self, node: &'a dyn Node) {
         if let Some(keyword) = node.as_keyword() {
             return self.visit_keyword(keyword);
         }
         if let Some(token) = node.as_token() {
-            if token.token_type() == ParseTokenType::end {
+            if token.token_type() == ParseTokenType::End {
                 self.visit_semi_nl(node);
                 return;
             }
@@ -1132,45 +1205,47 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
 fn statement_get_expanded_command(
     src: &wstr,
     stmt: &ast::DecoratedStatement,
-    ctx: &OperationContext<'_>,
+    ctx: &mut OperationContext<'_>,
 ) -> Option<WString> {
     // Get the command. Try expanding it. If we cannot, it's an error.
     let cmd = stmt.command.try_source(src)?;
     let mut out_cmd = WString::new();
     let err = expand_to_command_and_args(cmd, ctx, &mut out_cmd, None, None, false);
-    (err == ExpandResultCode::ok).then_some(out_cmd)
+    (err == ExpandResultCode::Ok).then_some(out_cmd)
 }
 
 fn get_highlight_var_name(role: HighlightRole) -> &'static wstr {
     match role {
-        HighlightRole::normal => L!("fish_color_normal"),
-        HighlightRole::error => L!("fish_color_error"),
-        HighlightRole::command => L!("fish_color_command"),
-        HighlightRole::keyword => L!("fish_color_keyword"),
-        HighlightRole::statement_terminator => L!("fish_color_end"),
-        HighlightRole::param => L!("fish_color_param"),
-        HighlightRole::option => L!("fish_color_option"),
-        HighlightRole::comment => L!("fish_color_comment"),
-        HighlightRole::search_match => L!("fish_color_search_match"),
-        HighlightRole::operat => L!("fish_color_operator"),
-        HighlightRole::escape => L!("fish_color_escape"),
-        HighlightRole::quote => L!("fish_color_quote"),
-        HighlightRole::redirection => L!("fish_color_redirection"),
-        HighlightRole::autosuggestion => L!("fish_color_autosuggestion"),
-        HighlightRole::selection => L!("fish_color_selection"),
-        HighlightRole::pager_progress => L!("fish_pager_color_progress"),
-        HighlightRole::pager_background => L!("fish_pager_color_background"),
-        HighlightRole::pager_prefix => L!("fish_pager_color_prefix"),
-        HighlightRole::pager_completion => L!("fish_pager_color_completion"),
-        HighlightRole::pager_description => L!("fish_pager_color_description"),
-        HighlightRole::pager_secondary_background => L!("fish_pager_color_secondary_background"),
-        HighlightRole::pager_secondary_prefix => L!("fish_pager_color_secondary_prefix"),
-        HighlightRole::pager_secondary_completion => L!("fish_pager_color_secondary_completion"),
-        HighlightRole::pager_secondary_description => L!("fish_pager_color_secondary_description"),
-        HighlightRole::pager_selected_background => L!("fish_pager_color_selected_background"),
-        HighlightRole::pager_selected_prefix => L!("fish_pager_color_selected_prefix"),
-        HighlightRole::pager_selected_completion => L!("fish_pager_color_selected_completion"),
-        HighlightRole::pager_selected_description => L!("fish_pager_color_selected_description"),
+        HighlightRole::Normal => L!("fish_color_normal"),
+        HighlightRole::Error => L!("fish_color_error"),
+        HighlightRole::Command => L!("fish_color_command"),
+        HighlightRole::Builtin => L!("fish_color_builtin"),
+        HighlightRole::Function => L!("fish_color_function"),
+        HighlightRole::Keyword => L!("fish_color_keyword"),
+        HighlightRole::StatementTerminator => L!("fish_color_end"),
+        HighlightRole::Param => L!("fish_color_param"),
+        HighlightRole::Option => L!("fish_color_option"),
+        HighlightRole::Comment => L!("fish_color_comment"),
+        HighlightRole::SearchMatch => L!("fish_color_search_match"),
+        HighlightRole::Operat => L!("fish_color_operator"),
+        HighlightRole::Escape => L!("fish_color_escape"),
+        HighlightRole::Quote => L!("fish_color_quote"),
+        HighlightRole::Redirection => L!("fish_color_redirection"),
+        HighlightRole::Autosuggestion => L!("fish_color_autosuggestion"),
+        HighlightRole::Selection => L!("fish_color_selection"),
+        HighlightRole::PagerProgress => L!("fish_pager_color_progress"),
+        HighlightRole::PagerBackground => L!("fish_pager_color_background"),
+        HighlightRole::PagerPrefix => L!("fish_pager_color_prefix"),
+        HighlightRole::PagerCompletion => L!("fish_pager_color_completion"),
+        HighlightRole::PagerDescription => L!("fish_pager_color_description"),
+        HighlightRole::PagerSecondaryBackground => L!("fish_pager_color_secondary_background"),
+        HighlightRole::PagerSecondaryPrefix => L!("fish_pager_color_secondary_prefix"),
+        HighlightRole::PagerSecondaryCompletion => L!("fish_pager_color_secondary_completion"),
+        HighlightRole::PagerSecondaryDescription => L!("fish_pager_color_secondary_description"),
+        HighlightRole::PagerSelectedBackground => L!("fish_pager_color_selected_background"),
+        HighlightRole::PagerSelectedPrefix => L!("fish_pager_color_selected_prefix"),
+        HighlightRole::PagerSelectedCompletion => L!("fish_pager_color_selected_completion"),
+        HighlightRole::PagerSelectedDescription => L!("fish_pager_color_selected_description"),
     }
 }
 
@@ -1178,76 +1253,81 @@ fn get_highlight_var_name(role: HighlightRole) -> &'static wstr {
 // wasn't set.
 fn get_fallback(role: HighlightRole) -> HighlightRole {
     match role {
-        HighlightRole::normal
-        | HighlightRole::error
-        | HighlightRole::command
-        | HighlightRole::statement_terminator
-        | HighlightRole::param
-        | HighlightRole::search_match
-        | HighlightRole::comment
-        | HighlightRole::operat
-        | HighlightRole::escape
-        | HighlightRole::quote
-        | HighlightRole::redirection
-        | HighlightRole::autosuggestion
-        | HighlightRole::selection
-        | HighlightRole::pager_progress
-        | HighlightRole::pager_background
-        | HighlightRole::pager_prefix
-        | HighlightRole::pager_completion
-        | HighlightRole::pager_description => HighlightRole::normal,
-        HighlightRole::keyword => HighlightRole::command,
-        HighlightRole::option => HighlightRole::param,
-        HighlightRole::pager_secondary_background => HighlightRole::pager_background,
-        HighlightRole::pager_secondary_prefix | HighlightRole::pager_selected_prefix => {
-            HighlightRole::pager_prefix
+        HighlightRole::Normal
+        | HighlightRole::Error
+        | HighlightRole::Command
+        | HighlightRole::StatementTerminator
+        | HighlightRole::Param
+        | HighlightRole::SearchMatch
+        | HighlightRole::Comment
+        | HighlightRole::Operat
+        | HighlightRole::Escape
+        | HighlightRole::Quote
+        | HighlightRole::Redirection
+        | HighlightRole::Autosuggestion
+        | HighlightRole::Selection
+        | HighlightRole::PagerProgress
+        | HighlightRole::PagerBackground
+        | HighlightRole::PagerPrefix
+        | HighlightRole::PagerCompletion
+        | HighlightRole::PagerDescription => HighlightRole::Normal,
+        HighlightRole::Builtin | HighlightRole::Function | HighlightRole::Keyword => {
+            HighlightRole::Command
         }
-        HighlightRole::pager_secondary_completion | HighlightRole::pager_selected_completion => {
-            HighlightRole::pager_completion
+        HighlightRole::Option => HighlightRole::Param,
+        HighlightRole::PagerSecondaryBackground => HighlightRole::PagerBackground,
+        HighlightRole::PagerSecondaryPrefix | HighlightRole::PagerSelectedPrefix => {
+            HighlightRole::PagerPrefix
         }
-        HighlightRole::pager_secondary_description | HighlightRole::pager_selected_description => {
-            HighlightRole::pager_description
+        HighlightRole::PagerSecondaryCompletion | HighlightRole::PagerSelectedCompletion => {
+            HighlightRole::PagerCompletion
         }
-        HighlightRole::pager_selected_background => HighlightRole::search_match,
+        HighlightRole::PagerSecondaryDescription | HighlightRole::PagerSelectedDescription => {
+            HighlightRole::PagerDescription
+        }
+        HighlightRole::PagerSelectedBackground => HighlightRole::SearchMatch,
     }
 }
 
 /// Describes the role of a span of text.
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Display)]
+#[strum(serialize_all = "snake_case")]
 #[repr(u8)]
 pub enum HighlightRole {
     #[default]
-    normal, // normal text
-    error,   // error
-    command, // command
-    keyword,
-    statement_terminator, // process separator
-    param,                // command parameter (argument)
-    option,               // argument starting with "-", up to a "--"
-    comment,              // comment
-    search_match,         // search match
-    operat,               // operator
-    escape,               // escape sequences
-    quote,                // quoted string
-    redirection,          // redirection
-    autosuggestion,       // autosuggestion
-    selection,
+    Normal, // normal text
+    Error,    // error
+    Command,  // command
+    Builtin,  // builtin command
+    Function, // user-defined function
+    Keyword,
+    StatementTerminator, // process separator
+    Param,               // command parameter (argument)
+    Option,              // argument starting with "-", up to a "--"
+    Comment,             // comment
+    SearchMatch,         // search match
+    Operat,              // operator
+    Escape,              // escape sequences
+    Quote,               // quoted string
+    Redirection,         // redirection
+    Autosuggestion,      // autosuggestion
+    Selection,
 
     // Pager support.
     // NOTE: pager.rs relies on these being in this order.
-    pager_progress,
-    pager_background,
-    pager_prefix,
-    pager_completion,
-    pager_description,
-    pager_secondary_background,
-    pager_secondary_prefix,
-    pager_secondary_completion,
-    pager_secondary_description,
-    pager_selected_background,
-    pager_selected_prefix,
-    pager_selected_completion,
-    pager_selected_description,
+    PagerProgress,
+    PagerBackground,
+    PagerPrefix,
+    PagerCompletion,
+    PagerDescription,
+    PagerSecondaryBackground,
+    PagerSecondaryPrefix,
+    PagerSecondaryCompletion,
+    PagerSecondaryDescription,
+    PagerSelectedBackground,
+    PagerSelectedPrefix,
+    PagerSelectedCompletion,
+    PagerSelectedDescription,
 }
 
 /// Simple value type describing how a character should be highlighted.
@@ -1262,13 +1342,14 @@ pub struct HighlightSpec {
 #[cfg(test)]
 mod tests {
     use super::{HighlightColorResolver, HighlightRole, HighlightSpec, highlight_shell};
-    use crate::common::ScopeGuard;
-    use crate::env::EnvMode;
-    use crate::future_feature_flags::{self, FeatureFlag};
+    use crate::env::{EnvMode, EnvSetMode, EnvVar, EnvVarFlags, Environment as _};
+    use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::text_face::UnderlineStyle;
-    use crate::wchar::prelude::*;
+    use crate::text_face::{ResettableStyle, UnderlineStyle};
+    use fish_common::ScopeGuard;
+    use fish_feature_flags::{FeatureFlag, with_overridden_feature};
     use libc::PATH_MAX;
 
     // Helper to return a string whose length greatly exceeds PATH_MAX.
@@ -1284,15 +1365,19 @@ mod tests {
     #[test]
     #[serial]
     fn test_highlighting() {
-        let _cleanup = test_init();
-        let parser = TestParser::new();
+        test_init();
+        let TestParser {
+            ref mut parser,
+            ref mut pushed_dirs,
+        } = TestParser::new();
         // Testing syntax highlighting
-        parser.pushd("test/fish_highlight_test/");
-        let _popd = ScopeGuard::new((), |_| parser.popd());
+        parser.pushd(pushed_dirs, "test/fish_highlight_test/");
+        let parser = &mut **ScopeGuard::new(parser, |parser| parser.popd(pushed_dirs));
         std::fs::create_dir_all("dir").unwrap();
         std::fs::create_dir_all("cdpath-entry/dir-in-cdpath").unwrap();
         std::fs::write("foo", []).unwrap();
         std::fs::write("bar", []).unwrap();
+        std::fs::write("-filename-starting-with-dash", []).unwrap();
 
         // Here are the components of our source and the colors we expect those to be.
         #[derive(Debug)]
@@ -1344,7 +1429,7 @@ mod tests {
                 highlight_shell(
                     &text,
                     &mut colors,
-                    &OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND),
+                    &mut OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND),
                     true, /* io_ok */
                     Some(text.len()),
                 );
@@ -1361,416 +1446,420 @@ mod tests {
             };
         }
 
-        let mut param_valid_path = HighlightSpec::with_fg(HighlightRole::param);
+        let mut param_valid_path = HighlightSpec::with_fg(HighlightRole::Param);
         param_valid_path.valid_path = true;
 
-        let saved_flag = future_feature_flags::test(FeatureFlag::ampersand_nobg_in_token);
-        future_feature_flags::set(FeatureFlag::ampersand_nobg_in_token, true);
-        let _restore_saved_flag = ScopeGuard::new((), |_| {
-            future_feature_flags::set(FeatureFlag::ampersand_nobg_in_token, saved_flag);
+        let mut redirection_valid_path = HighlightSpec::with_fg(HighlightRole::Redirection);
+        redirection_valid_path.valid_path = true;
+
+        with_overridden_feature(FeatureFlag::AmpersandNoBgInToken, true, || {
+            let fg = HighlightSpec::with_fg;
+
+            // Verify variables and wildcards in commands using /bin/cat.
+            let vars = parser.vars();
+            let local_mode = EnvSetMode::new_at_early_startup(EnvMode::LOCAL);
+            vars.set_one(L!("CDPATH"), local_mode, L!("./cdpath-entry").to_owned());
+
+            // NOTE n, nv are suffix of /usr/bin/env
+            vars.set_one(L!("VARIABLE_IN_COMMAND"), local_mode, L!("n").to_owned());
+            vars.set_one(L!("VARIABLE_IN_COMMAND2"), local_mode, L!("nv").to_owned());
+
+            let _cleanup = ScopeGuard::new((), |_| {
+                vars.remove(L!("VARIABLE_IN_COMMAND"), EnvSetMode::default());
+                vars.remove(L!("VARIABLE_IN_COMMAND2"), EnvSetMode::default());
+            });
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("./foo", param_valid_path),
+                ("&", fg(HighlightRole::StatementTerminator)),
+            );
+
+            validate!(
+                ("command", fg(HighlightRole::Keyword)),
+                ("echo", fg(HighlightRole::Command)),
+                ("abc", fg(HighlightRole::Param)),
+                ("foo", param_valid_path),
+                ("&", fg(HighlightRole::StatementTerminator)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("foo&bar", fg(HighlightRole::Param)),
+                ("foo", fg(HighlightRole::Param), ns),
+                ("&", fg(HighlightRole::StatementTerminator)),
+                ("echo", fg(HighlightRole::Builtin)),
+                ("&>", fg(HighlightRole::Redirection)),
+            );
+
+            validate!(
+                ("if command", fg(HighlightRole::Keyword)),
+                ("ls", fg(HighlightRole::Command)),
+                ("; ", fg(HighlightRole::StatementTerminator)),
+                ("echo", fg(HighlightRole::Builtin)),
+                ("abc", fg(HighlightRole::Param)),
+                ("; ", fg(HighlightRole::StatementTerminator)),
+                ("/bin/definitely_not_a_command", fg(HighlightRole::Error)),
+                ("; ", fg(HighlightRole::StatementTerminator)),
+                ("end", fg(HighlightRole::Keyword)),
+            );
+
+            validate!(
+                ("if", fg(HighlightRole::Keyword)),
+                ("true", fg(HighlightRole::Builtin)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("else", fg(HighlightRole::Keyword)),
+                ("true", fg(HighlightRole::Builtin)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("end", fg(HighlightRole::Keyword)),
+            );
+
+            // Verify that cd shows errors for non-directories.
+            validate!(
+                ("cd", fg(HighlightRole::Builtin)),
+                ("dir", param_valid_path),
+            );
+
+            validate!(
+                ("cd", fg(HighlightRole::Builtin)),
+                ("foo", fg(HighlightRole::Error)),
+            );
+
+            validate!(
+                ("cd", fg(HighlightRole::Builtin)),
+                ("--help", fg(HighlightRole::Option)),
+                ("-h", fg(HighlightRole::Option)),
+                ("definitely_not_a_directory", fg(HighlightRole::Error)),
+            );
+
+            validate!(
+                ("cd", fg(HighlightRole::Builtin)),
+                ("--logical", fg(HighlightRole::Option)),
+                ("still_definitely_not_a_directory", fg(HighlightRole::Error)),
+            );
+
+            validate!(
+                ("cd", fg(HighlightRole::Builtin)),
+                ("dir-in-cdpath", param_valid_path),
+            );
+
+            // Command substitutions.
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("param1", fg(HighlightRole::Param)),
+                ("-l", fg(HighlightRole::Option)),
+                ("--", fg(HighlightRole::Option)),
+                ("-l", fg(HighlightRole::Param)),
+                ("(", fg(HighlightRole::Operat)),
+                ("ls", fg(HighlightRole::Function)),
+                ("-l", fg(HighlightRole::Option)),
+                ("--", fg(HighlightRole::Option)),
+                ("-l", fg(HighlightRole::Param)),
+                ("param2", fg(HighlightRole::Param)),
+                (")", fg(HighlightRole::Operat)),
+                ("|", fg(HighlightRole::StatementTerminator)),
+                ("cat", fg(HighlightRole::Command)),
+            );
+            validate!(
+                ("true", fg(HighlightRole::Builtin)),
+                ("$(", fg(HighlightRole::Operat)),
+                ("true", fg(HighlightRole::Builtin)),
+                (")", fg(HighlightRole::Operat)),
+            );
+            validate!(
+                ("true", fg(HighlightRole::Builtin)),
+                ("\"before", fg(HighlightRole::Quote)),
+                ("$(", fg(HighlightRole::Operat)),
+                ("true", fg(HighlightRole::Builtin)),
+                ("param1", fg(HighlightRole::Param)),
+                (")", fg(HighlightRole::Operat)),
+                ("after\"", fg(HighlightRole::Quote)),
+                ("param2", fg(HighlightRole::Param)),
+            );
+            validate!(
+                ("true", fg(HighlightRole::Builtin)),
+                ("\"", fg(HighlightRole::Error)),
+                ("unclosed quote", fg(HighlightRole::Quote)),
+                ("$(", fg(HighlightRole::Operat)),
+                ("true", fg(HighlightRole::Builtin)),
+                (")", fg(HighlightRole::Operat)),
+            );
+
+            // Redirections substitutions.
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("param1", fg(HighlightRole::Param)),
+                // Input redirection.
+                ("<", fg(HighlightRole::Redirection)),
+                ("/dev/null", redirection_valid_path),
+                // Output redirection to a valid fd.
+                ("1>&2", fg(HighlightRole::Redirection)),
+                // Output redirection to an invalid fd.
+                ("2>&", fg(HighlightRole::Redirection)),
+                ("LO", fg(HighlightRole::Error)),
+                // Just a param, not a redirection.
+                ("test/blah", fg(HighlightRole::Param)),
+                // Input redirection from directory.
+                ("<", fg(HighlightRole::Redirection)),
+                ("test/", fg(HighlightRole::Error)),
+                // Output redirection to an invalid path.
+                ("3>", fg(HighlightRole::Redirection)),
+                ("/not/a/valid/path/nope", fg(HighlightRole::Error)),
+                // Output redirection to directory.
+                ("3>", fg(HighlightRole::Redirection)),
+                ("test/nope/", fg(HighlightRole::Error)),
+                // Redirections to overflow fd.
+                ("99999999999999999999>&2", fg(HighlightRole::Error)),
+                ("2>&", fg(HighlightRole::Redirection)),
+                ("99999999999999999999", fg(HighlightRole::Error)),
+                // Output redirection containing a command substitution.
+                ("4>", fg(HighlightRole::Redirection)),
+                ("(", fg(HighlightRole::Operat)),
+                ("echo", fg(HighlightRole::Builtin)),
+                ("test/somewhere", fg(HighlightRole::Param)),
+                (")", fg(HighlightRole::Operat)),
+                // Just another param.
+                ("param2", fg(HighlightRole::Param)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                (">", fg(HighlightRole::Redirection)),
+                ("-no-such-file", fg(HighlightRole::Redirection)),
+                (">", fg(HighlightRole::Redirection)),
+                ("-filename-starting-with-dash", redirection_valid_path),
+            );
+
+            validate!(
+                ("for", fg(HighlightRole::Keyword)),
+                ("x", fg(HighlightRole::Param)),
+                ("in", fg(HighlightRole::Keyword)),
+                ("set-by-for-1", fg(HighlightRole::Param)),
+                ("set-by-for-2", fg(HighlightRole::Param)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("echo", fg(HighlightRole::Builtin)),
+                (">", fg(HighlightRole::Redirection)),
+                ("$x", fg(HighlightRole::Redirection)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("end", fg(HighlightRole::Keyword)),
+            );
+
+            validate!(
+                ("set", fg(HighlightRole::Builtin)),
+                ("x", fg(HighlightRole::Param)),
+                ("set-by-set", fg(HighlightRole::Param)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("echo", fg(HighlightRole::Builtin)),
+                (">", fg(HighlightRole::Redirection)),
+                ("$x", fg(HighlightRole::Redirection)),
+                ("2>", fg(HighlightRole::Redirection)),
+                ("$totally_not_x", fg(HighlightRole::Error)),
+                ("<", fg(HighlightRole::Redirection)),
+                ("$x_but_its_an_impostor", fg(HighlightRole::Error)),
+            );
+
+            validate!(
+                ("x", fg(HighlightRole::Param), ns),
+                ("=", fg(HighlightRole::Operat), ns),
+                ("set-by-variable-override", fg(HighlightRole::Param), ns),
+                ("echo", fg(HighlightRole::Builtin)),
+                (">", fg(HighlightRole::Redirection)),
+                ("$x", fg(HighlightRole::Redirection)),
+            );
+
+            validate!(
+                ("end", fg(HighlightRole::Error)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("if", fg(HighlightRole::Keyword)),
+                ("end", fg(HighlightRole::Error)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("'", fg(HighlightRole::Error)),
+                ("single_quote", fg(HighlightRole::Quote)),
+                ("$stuff", fg(HighlightRole::Quote)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("\"", fg(HighlightRole::Error)),
+                ("double_quote", fg(HighlightRole::Quote)),
+                ("$stuff", fg(HighlightRole::Operat)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("$foo", fg(HighlightRole::Operat)),
+                ("\"", fg(HighlightRole::Quote)),
+                ("$bar", fg(HighlightRole::Operat)),
+                ("\"", fg(HighlightRole::Quote)),
+                ("$baz[", fg(HighlightRole::Operat)),
+                ("1 2..3", fg(HighlightRole::Param)),
+                ("]", fg(HighlightRole::Operat)),
+            );
+
+            validate!(
+                ("for", fg(HighlightRole::Keyword)),
+                ("i", fg(HighlightRole::Param)),
+                ("in", fg(HighlightRole::Keyword)),
+                ("1 2 3", fg(HighlightRole::Param)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("end", fg(HighlightRole::Keyword)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("$$foo[", fg(HighlightRole::Operat)),
+                ("1", fg(HighlightRole::Param)),
+                ("][", fg(HighlightRole::Operat)),
+                ("2", fg(HighlightRole::Param)),
+                ("]", fg(HighlightRole::Operat)),
+                ("[3]", fg(HighlightRole::Param)), // two dollar signs, so last one is not an expansion
+            );
+
+            validate!(
+                ("cat", fg(HighlightRole::Command)),
+                ("/dev/null", param_valid_path),
+                ("|", fg(HighlightRole::StatementTerminator)),
+                // This is bogus, but we used to use "less" here and that doesn't have to be installed.
+                ("cat", fg(HighlightRole::Command)),
+                ("2>", fg(HighlightRole::Redirection)),
+            );
+
+            // Highlight path-prefixes only at the cursor.
+            validate!(
+                ("cat", fg(HighlightRole::Command)),
+                ("/dev/nu", fg(HighlightRole::Param)),
+                ("/dev/nu", param_valid_path),
+            );
+
+            validate!(
+                ("if", fg(HighlightRole::Keyword)),
+                ("true", fg(HighlightRole::Builtin)),
+                ("&&", fg(HighlightRole::Operat)),
+                ("false", fg(HighlightRole::Builtin)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("or", fg(HighlightRole::Operat)),
+                ("false", fg(HighlightRole::Builtin)),
+                ("||", fg(HighlightRole::Operat)),
+                ("true", fg(HighlightRole::Builtin)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("and", fg(HighlightRole::Operat)),
+                ("not", fg(HighlightRole::Operat)),
+                ("!", fg(HighlightRole::Operat)),
+                ("true", fg(HighlightRole::Builtin)),
+                (";", fg(HighlightRole::StatementTerminator)),
+                ("end", fg(HighlightRole::Keyword)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("%self", fg(HighlightRole::Operat)),
+                ("not%self", fg(HighlightRole::Param)),
+                ("self%not", fg(HighlightRole::Param)),
+            );
+
+            validate!(
+                ("false", fg(HighlightRole::Builtin)),
+                ("&|", fg(HighlightRole::StatementTerminator)),
+                ("true", fg(HighlightRole::Builtin)),
+            );
+
+            validate!(
+                ("HOME", fg(HighlightRole::Param)),
+                ("=", fg(HighlightRole::Operat), ns),
+                (".", fg(HighlightRole::Param), ns),
+                ("VAR1", fg(HighlightRole::Param)),
+                ("=", fg(HighlightRole::Operat), ns),
+                ("VAL1", fg(HighlightRole::Param), ns),
+                ("VAR", fg(HighlightRole::Param)),
+                ("=", fg(HighlightRole::Operat), ns),
+                ("false", fg(HighlightRole::Builtin)),
+                ("|&", fg(HighlightRole::StatementTerminator)),
+                ("true", fg(HighlightRole::Builtin)),
+                ("stuff", fg(HighlightRole::Param)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)), // (
+                (")", fg(HighlightRole::Error)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("stuff", fg(HighlightRole::Param)),
+                ("# comment", fg(HighlightRole::Comment)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("--", fg(HighlightRole::Option)),
+                ("-s", fg(HighlightRole::Param)),
+            );
+
+            // Overlong paths don't crash (#7837).
+            let overlong = get_overlong_path();
+            validate!(
+                ("touch", fg(HighlightRole::Command)),
+                (&overlong, fg(HighlightRole::Param)),
+            );
+
+            validate!(
+                ("a", fg(HighlightRole::Param)),
+                ("=", fg(HighlightRole::Operat), ns),
+            );
+
+            // Highlighting works across escaped line breaks (#8444).
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("$FISH_\\\n", fg(HighlightRole::Operat)),
+                ("VERSION", fg(HighlightRole::Operat), ns),
+            );
+
+            // NOTE: we assume /usr/bin/env exists on the system here
+            validate!(
+                ("/usr/bin/en", fg(HighlightRole::Command), ns),
+                ("*", fg(HighlightRole::Operat), ns)
+            );
+
+            validate!(
+                ("/usr/bin/e", fg(HighlightRole::Command), ns),
+                ("*", fg(HighlightRole::Operat), ns)
+            );
+
+            validate!(
+                ("/usr/bin/e", fg(HighlightRole::Command), ns),
+                ("{$VARIABLE_IN_COMMAND}", fg(HighlightRole::Operat), ns),
+                ("*", fg(HighlightRole::Operat), ns)
+            );
+
+            validate!(
+                ("/usr/bin/e", fg(HighlightRole::Command), ns),
+                ("$VARIABLE_IN_COMMAND2", fg(HighlightRole::Operat), ns)
+            );
+
+            validate!(("$EMPTY_VARIABLE", fg(HighlightRole::Error)));
+            validate!(("\"$EMPTY_VARIABLE\"", fg(HighlightRole::Error)));
+
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("\\UFDFD", fg(HighlightRole::Escape)),
+            );
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("\\U10FFFF", fg(HighlightRole::Escape)),
+            );
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("\\U110000", fg(HighlightRole::Error)),
+            );
+
+            validate!(
+                (">", fg(HighlightRole::Error)),
+                ("echo", fg(HighlightRole::Error)),
+            );
         });
-
-        let fg = HighlightSpec::with_fg;
-
-        // Verify variables and wildcards in commands using /bin/cat.
-        let vars = parser.vars();
-        vars.set_one(
-            L!("CDPATH"),
-            EnvMode::LOCAL,
-            L!("./cdpath-entry").to_owned(),
-        );
-
-        vars.set_one(
-            L!("VARIABLE_IN_COMMAND"),
-            EnvMode::LOCAL,
-            L!("a").to_owned(),
-        );
-        vars.set_one(
-            L!("VARIABLE_IN_COMMAND2"),
-            EnvMode::LOCAL,
-            L!("at").to_owned(),
-        );
-
-        let _cleanup = ScopeGuard::new((), |_| {
-            vars.remove(L!("VARIABLE_IN_COMMAND"), EnvMode::default());
-            vars.remove(L!("VARIABLE_IN_COMMAND2"), EnvMode::default());
-        });
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("./foo", param_valid_path),
-            ("&", fg(HighlightRole::statement_terminator)),
-        );
-
-        validate!(
-            ("command", fg(HighlightRole::keyword)),
-            ("echo", fg(HighlightRole::command)),
-            ("abc", fg(HighlightRole::param)),
-            ("foo", param_valid_path),
-            ("&", fg(HighlightRole::statement_terminator)),
-        );
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("foo&bar", fg(HighlightRole::param)),
-            ("foo", fg(HighlightRole::param), ns),
-            ("&", fg(HighlightRole::statement_terminator)),
-            ("echo", fg(HighlightRole::command)),
-            ("&>", fg(HighlightRole::redirection)),
-        );
-
-        validate!(
-            ("if command", fg(HighlightRole::keyword)),
-            ("ls", fg(HighlightRole::command)),
-            ("; ", fg(HighlightRole::statement_terminator)),
-            ("echo", fg(HighlightRole::command)),
-            ("abc", fg(HighlightRole::param)),
-            ("; ", fg(HighlightRole::statement_terminator)),
-            ("/bin/definitely_not_a_command", fg(HighlightRole::error)),
-            ("; ", fg(HighlightRole::statement_terminator)),
-            ("end", fg(HighlightRole::keyword)),
-        );
-
-        validate!(
-            ("if", fg(HighlightRole::keyword)),
-            ("true", fg(HighlightRole::command)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("else", fg(HighlightRole::keyword)),
-            ("true", fg(HighlightRole::command)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("end", fg(HighlightRole::keyword)),
-        );
-
-        // Verify that cd shows errors for non-directories.
-        validate!(
-            ("cd", fg(HighlightRole::command)),
-            ("dir", param_valid_path),
-        );
-
-        validate!(
-            ("cd", fg(HighlightRole::command)),
-            ("foo", fg(HighlightRole::error)),
-        );
-
-        validate!(
-            ("cd", fg(HighlightRole::command)),
-            ("--help", fg(HighlightRole::option)),
-            ("-h", fg(HighlightRole::option)),
-            ("definitely_not_a_directory", fg(HighlightRole::error)),
-        );
-
-        validate!(
-            ("cd", fg(HighlightRole::command)),
-            ("dir-in-cdpath", param_valid_path),
-        );
-
-        // Command substitutions.
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("param1", fg(HighlightRole::param)),
-            ("-l", fg(HighlightRole::option)),
-            ("--", fg(HighlightRole::option)),
-            ("-l", fg(HighlightRole::param)),
-            ("(", fg(HighlightRole::operat)),
-            ("ls", fg(HighlightRole::command)),
-            ("-l", fg(HighlightRole::option)),
-            ("--", fg(HighlightRole::option)),
-            ("-l", fg(HighlightRole::param)),
-            ("param2", fg(HighlightRole::param)),
-            (")", fg(HighlightRole::operat)),
-            ("|", fg(HighlightRole::statement_terminator)),
-            ("cat", fg(HighlightRole::command)),
-        );
-        validate!(
-            ("true", fg(HighlightRole::command)),
-            ("$(", fg(HighlightRole::operat)),
-            ("true", fg(HighlightRole::command)),
-            (")", fg(HighlightRole::operat)),
-        );
-        validate!(
-            ("true", fg(HighlightRole::command)),
-            ("\"before", fg(HighlightRole::quote)),
-            ("$(", fg(HighlightRole::operat)),
-            ("true", fg(HighlightRole::command)),
-            ("param1", fg(HighlightRole::param)),
-            (")", fg(HighlightRole::operat)),
-            ("after\"", fg(HighlightRole::quote)),
-            ("param2", fg(HighlightRole::param)),
-        );
-        validate!(
-            ("true", fg(HighlightRole::command)),
-            ("\"", fg(HighlightRole::error)),
-            ("unclosed quote", fg(HighlightRole::quote)),
-            ("$(", fg(HighlightRole::operat)),
-            ("true", fg(HighlightRole::command)),
-            (")", fg(HighlightRole::operat)),
-        );
-
-        // Redirections substitutions.
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("param1", fg(HighlightRole::param)),
-            // Input redirection.
-            ("<", fg(HighlightRole::redirection)),
-            ("/bin/echo", fg(HighlightRole::redirection)),
-            // Output redirection to a valid fd.
-            ("1>&2", fg(HighlightRole::redirection)),
-            // Output redirection to an invalid fd.
-            ("2>&", fg(HighlightRole::redirection)),
-            ("LO", fg(HighlightRole::error)),
-            // Just a param, not a redirection.
-            ("test/blah", fg(HighlightRole::param)),
-            // Input redirection from directory.
-            ("<", fg(HighlightRole::redirection)),
-            ("test/", fg(HighlightRole::error)),
-            // Output redirection to an invalid path.
-            ("3>", fg(HighlightRole::redirection)),
-            ("/not/a/valid/path/nope", fg(HighlightRole::error)),
-            // Output redirection to directory.
-            ("3>", fg(HighlightRole::redirection)),
-            ("test/nope/", fg(HighlightRole::error)),
-            // Redirections to overflow fd.
-            ("99999999999999999999>&2", fg(HighlightRole::error)),
-            ("2>&", fg(HighlightRole::redirection)),
-            ("99999999999999999999", fg(HighlightRole::error)),
-            // Output redirection containing a command substitution.
-            ("4>", fg(HighlightRole::redirection)),
-            ("(", fg(HighlightRole::operat)),
-            ("echo", fg(HighlightRole::command)),
-            ("test/somewhere", fg(HighlightRole::param)),
-            (")", fg(HighlightRole::operat)),
-            // Just another param.
-            ("param2", fg(HighlightRole::param)),
-        );
-
-        validate!(
-            ("for", fg(HighlightRole::keyword)),
-            ("x", fg(HighlightRole::param)),
-            ("in", fg(HighlightRole::keyword)),
-            ("set-by-for-1", fg(HighlightRole::param)),
-            ("set-by-for-2", fg(HighlightRole::param)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("echo", fg(HighlightRole::command)),
-            (">", fg(HighlightRole::redirection)),
-            ("$x", fg(HighlightRole::redirection)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("end", fg(HighlightRole::keyword)),
-        );
-
-        validate!(
-            ("set", fg(HighlightRole::command)),
-            ("x", fg(HighlightRole::param)),
-            ("set-by-set", fg(HighlightRole::param)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("echo", fg(HighlightRole::command)),
-            (">", fg(HighlightRole::redirection)),
-            ("$x", fg(HighlightRole::redirection)),
-            ("2>", fg(HighlightRole::redirection)),
-            ("$totally_not_x", fg(HighlightRole::error)),
-            ("<", fg(HighlightRole::redirection)),
-            ("$x_but_its_an_impostor", fg(HighlightRole::error)),
-        );
-
-        validate!(
-            ("x", fg(HighlightRole::param), ns),
-            ("=", fg(HighlightRole::operat), ns),
-            ("set-by-variable-override", fg(HighlightRole::param), ns),
-            ("echo", fg(HighlightRole::command)),
-            (">", fg(HighlightRole::redirection)),
-            ("$x", fg(HighlightRole::redirection)),
-        );
-
-        validate!(
-            ("end", fg(HighlightRole::error)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("if", fg(HighlightRole::keyword)),
-            ("end", fg(HighlightRole::error)),
-        );
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("'", fg(HighlightRole::error)),
-            ("single_quote", fg(HighlightRole::quote)),
-            ("$stuff", fg(HighlightRole::quote)),
-        );
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("\"", fg(HighlightRole::error)),
-            ("double_quote", fg(HighlightRole::quote)),
-            ("$stuff", fg(HighlightRole::operat)),
-        );
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("$foo", fg(HighlightRole::operat)),
-            ("\"", fg(HighlightRole::quote)),
-            ("$bar", fg(HighlightRole::operat)),
-            ("\"", fg(HighlightRole::quote)),
-            ("$baz[", fg(HighlightRole::operat)),
-            ("1 2..3", fg(HighlightRole::param)),
-            ("]", fg(HighlightRole::operat)),
-        );
-
-        validate!(
-            ("for", fg(HighlightRole::keyword)),
-            ("i", fg(HighlightRole::param)),
-            ("in", fg(HighlightRole::keyword)),
-            ("1 2 3", fg(HighlightRole::param)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("end", fg(HighlightRole::keyword)),
-        );
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("$$foo[", fg(HighlightRole::operat)),
-            ("1", fg(HighlightRole::param)),
-            ("][", fg(HighlightRole::operat)),
-            ("2", fg(HighlightRole::param)),
-            ("]", fg(HighlightRole::operat)),
-            ("[3]", fg(HighlightRole::param)), // two dollar signs, so last one is not an expansion
-        );
-
-        validate!(
-            ("cat", fg(HighlightRole::command)),
-            ("/dev/null", param_valid_path),
-            ("|", fg(HighlightRole::statement_terminator)),
-            // This is bogus, but we used to use "less" here and that doesn't have to be installed.
-            ("cat", fg(HighlightRole::command)),
-            ("2>", fg(HighlightRole::redirection)),
-        );
-
-        // Highlight path-prefixes only at the cursor.
-        validate!(
-            ("cat", fg(HighlightRole::command)),
-            ("/dev/nu", fg(HighlightRole::param)),
-            ("/dev/nu", param_valid_path),
-        );
-
-        validate!(
-            ("if", fg(HighlightRole::keyword)),
-            ("true", fg(HighlightRole::command)),
-            ("&&", fg(HighlightRole::operat)),
-            ("false", fg(HighlightRole::command)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("or", fg(HighlightRole::operat)),
-            ("false", fg(HighlightRole::command)),
-            ("||", fg(HighlightRole::operat)),
-            ("true", fg(HighlightRole::command)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("and", fg(HighlightRole::operat)),
-            ("not", fg(HighlightRole::operat)),
-            ("!", fg(HighlightRole::operat)),
-            ("true", fg(HighlightRole::command)),
-            (";", fg(HighlightRole::statement_terminator)),
-            ("end", fg(HighlightRole::keyword)),
-        );
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("%self", fg(HighlightRole::operat)),
-            ("not%self", fg(HighlightRole::param)),
-            ("self%not", fg(HighlightRole::param)),
-        );
-
-        validate!(
-            ("false", fg(HighlightRole::command)),
-            ("&|", fg(HighlightRole::statement_terminator)),
-            ("true", fg(HighlightRole::command)),
-        );
-
-        validate!(
-            ("HOME", fg(HighlightRole::param)),
-            ("=", fg(HighlightRole::operat), ns),
-            (".", fg(HighlightRole::param), ns),
-            ("VAR1", fg(HighlightRole::param)),
-            ("=", fg(HighlightRole::operat), ns),
-            ("VAL1", fg(HighlightRole::param), ns),
-            ("VAR", fg(HighlightRole::param)),
-            ("=", fg(HighlightRole::operat), ns),
-            ("false", fg(HighlightRole::command)),
-            ("|&", fg(HighlightRole::error)),
-            ("true", fg(HighlightRole::command)),
-            ("stuff", fg(HighlightRole::param)),
-        );
-
-        validate!(
-            ("echo", fg(HighlightRole::command)), // (
-            (")", fg(HighlightRole::error)),
-        );
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("stuff", fg(HighlightRole::param)),
-            ("# comment", fg(HighlightRole::comment)),
-        );
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("--", fg(HighlightRole::option)),
-            ("-s", fg(HighlightRole::param)),
-        );
-
-        // Overlong paths don't crash (#7837).
-        let overlong = get_overlong_path();
-        validate!(
-            ("touch", fg(HighlightRole::command)),
-            (&overlong, fg(HighlightRole::param)),
-        );
-
-        validate!(
-            ("a", fg(HighlightRole::param)),
-            ("=", fg(HighlightRole::operat), ns),
-        );
-
-        // Highlighting works across escaped line breaks (#8444).
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("$FISH_\\\n", fg(HighlightRole::operat)),
-            ("VERSION", fg(HighlightRole::operat), ns),
-        );
-
-        validate!(
-            ("/bin/ca", fg(HighlightRole::command), ns),
-            ("*", fg(HighlightRole::operat), ns)
-        );
-
-        validate!(
-            ("/bin/c", fg(HighlightRole::command), ns),
-            ("*", fg(HighlightRole::operat), ns)
-        );
-
-        validate!(
-            ("/bin/c", fg(HighlightRole::command), ns),
-            ("{$VARIABLE_IN_COMMAND}", fg(HighlightRole::operat), ns),
-            ("*", fg(HighlightRole::operat), ns)
-        );
-
-        validate!(
-            ("/bin/c", fg(HighlightRole::command), ns),
-            ("$VARIABLE_IN_COMMAND2", fg(HighlightRole::operat), ns)
-        );
-
-        validate!(("$EMPTY_VARIABLE", fg(HighlightRole::error)));
-        validate!(("\"$EMPTY_VARIABLE\"", fg(HighlightRole::error)));
-
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("\\UFDFD", fg(HighlightRole::escape)),
-        );
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("\\U10FFFF", fg(HighlightRole::escape)),
-        );
-        validate!(
-            ("echo", fg(HighlightRole::command)),
-            ("\\U110000", fg(HighlightRole::error)),
-        );
-
-        validate!(
-            (">", fg(HighlightRole::error)),
-            ("echo", fg(HighlightRole::error)),
-        );
     }
 
     /// Tests that trailing spaces after a command don't inherit the underline formatting of the
@@ -1779,14 +1868,14 @@ mod tests {
     #[serial]
     #[allow(clippy::needless_range_loop)]
     fn test_trailing_spaces_after_command() {
-        let _cleanup = test_init();
-        let parser = TestParser::new();
+        test_init();
+        let parser = &mut TestParser::new();
         let vars = parser.vars();
 
         // First, set up fish_color_command to include underline
         vars.set_one(
             L!("fish_color_command"),
-            EnvMode::LOCAL,
+            EnvSetMode::new_at_early_startup(EnvMode::LOCAL),
             L!("--underline").to_owned(),
         );
 
@@ -1796,7 +1885,7 @@ mod tests {
         highlight_shell(
             &text,
             &mut colors,
-            &OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND),
+            &mut OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND),
             true, /* io_ok */
             Some(text.len()),
         );
@@ -1812,7 +1901,7 @@ mod tests {
             let face = resolver.resolve_spec(&colors[i], vars);
             assert_eq!(
                 face.style.underline_style(),
-                Some(UnderlineStyle::Single),
+                ResettableStyle::On(UnderlineStyle::Single),
                 "Character at position {} of 'echo' should be underlined",
                 i
             );
@@ -1823,10 +1912,67 @@ mod tests {
             let face = resolver.resolve_spec(&colors[i], vars);
             assert_eq!(
                 face.style.underline_style(),
-                None,
+                ResettableStyle::Off,
                 "Trailing space at position {} should NOT be underlined",
                 i
             );
         }
+    }
+
+    #[test]
+    #[serial]
+    fn test_resolve_role() {
+        test_init();
+        let parser = &mut TestParser::new();
+        let vars = parser.vars();
+
+        let set = |var: &wstr, value: Vec<WString>| {
+            vars.set(var, EnvSetMode::new(EnvMode::LOCAL, false), value);
+        };
+        set(L!("fish_color_normal"), vec![L!("normal").into()]);
+        set(
+            L!("fish_color_command"),
+            vec![L!("red").into(), L!("--bold").into()],
+        );
+        set(L!("fish_color_keyword"), vec![L!("--theme=default").into()]);
+
+        let keyword_spec = HighlightSpec::with_both(HighlightRole::Keyword);
+        let face = HighlightColorResolver::resolve_spec_uncached(&keyword_spec, vars);
+
+        let command_face =
+            parse_text_face_for_highlight(&vars.get(L!("fish_color_command")).unwrap()).unwrap();
+        assert_eq!(face, command_face);
+    }
+
+    #[test]
+    fn test_parse_text_face_for_highlight_fully_specified() {
+        let assert_all_set = |values: Vec<WString>| {
+            let var = EnvVar::new_vec(values.clone(), EnvVarFlags::empty());
+            let face = parse_text_face_for_highlight(&var);
+            assert!(
+                face.is_some_and(|face| face.all_set()),
+                "Underspecified result for {:?}\n => {:?}",
+                values,
+                face
+            );
+        };
+
+        assert_all_set(vec![L!("--reset").into()]);
+        assert_all_set(vec![L!("normal").into()]);
+        assert_all_set(vec![L!("green").into()]);
+        assert_all_set(vec![L!("--foreground=normal").into()]);
+        assert_all_set(vec![L!("--foreground=green").into()]);
+        assert_all_set(vec![L!("--background=normal").into()]);
+        assert_all_set(vec![L!("--background=green").into()]);
+        assert_all_set(vec![L!("--underline-color=normal").into()]);
+        assert_all_set(vec![L!("--underline-color=green").into()]);
+        assert_all_set(vec![L!("--italics").into()]);
+        assert_all_set(vec![L!("--italics=off").into()]);
+        assert_all_set(vec![L!("--reverse").into()]);
+        assert_all_set(vec![L!("--reverse=off").into()]);
+        assert_all_set(vec![L!("--strikethrough").into()]);
+        assert_all_set(vec![L!("--strikethrough=off").into()]);
+        assert_all_set(vec![L!("--underline").into()]);
+        assert_all_set(vec![L!("--underline=off").into()]);
     }
 }

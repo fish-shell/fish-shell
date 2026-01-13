@@ -3,10 +3,14 @@ use std::collections::HashMap;
 use std::num::NonZeroUsize;
 
 use super::*;
-use crate::env::{EnvMode, EnvVar, EnvVarFlags};
-use crate::flog::FLOG;
-use crate::parse_util::parse_util_unescape_wildcards;
-use crate::wildcard::{ANY_STRING, wildcard_match};
+use crate::{
+    env::{EnvVar, EnvVarFlags},
+    flog::flog,
+    parse_util::unescape_wildcards,
+    parser::ParserEnvSetMode,
+    wildcard::wildcard_match,
+};
+use fish_widestring::{ANY_STRING, str2wcstring};
 
 #[derive(Default)]
 pub struct Match<'args> {
@@ -36,7 +40,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("aegivqrnm:");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'a' => self.all = true,
             'e' => self.entire = true,
@@ -53,18 +57,14 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
                         .ok()
                         .and_then(|v| NonZeroUsize::new(v as usize))
                         .ok_or_else(|| {
-                            StringError::InvalidArgs(wgettext_fmt!(
-                                "%s: Invalid max matches value '%s'\n",
-                                _n,
-                                arg
-                            ))
+                            StringError::InvalidArgs(err_fmt!(Error::INVALID_MAX_MATCHES, arg))
                         })?;
                     Some(max)
                 }
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -73,9 +73,12 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         args: &[&'args wstr],
         streams: &mut IoStreams,
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         let Some(arg) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
+            err_fmt!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
@@ -85,37 +88,41 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
 
     fn handle(
         &mut self,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
 
         if self.entire && self.index {
-            streams.err.append(wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 wgettext!("--entire and --index are mutually exclusive")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if self.invert_match && self.groups_only {
-            streams.err.append(wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 wgettext!("--invert and --groups-only are mutually exclusive")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if self.entire && self.groups_only {
-            streams.err.append(wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 wgettext!("--entire and --groups-only are mutually exclusive")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -127,9 +134,9 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
             }
         };
 
-        for (arg, _) in arguments(args, optind, streams) {
+        for InputValue { arg, .. } in arguments(args, optind, streams) {
             if let Err(e) = matcher.report_matches(arg.as_ref(), streams) {
-                FLOG!(error, "pcre2_match unexpected error:", e.error_message())
+                flog!(error, "pcre2_match unexpected error:", e.error_message());
             }
             let match_count = matcher.match_count();
             if self.quiet && match_count > 0
@@ -145,9 +152,8 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
             ..
         }) = matcher
         {
-            let vars = parser.vars();
-            for (name, vals) in first_match_captures.into_iter() {
-                vars.set(&WString::from(name), EnvMode::default(), vals);
+            for (name, vals) in first_match_captures {
+                parser.set_var(&WString::from(name), ParserEnvSetMode::default(), vals);
             }
         }
 
@@ -188,7 +194,7 @@ impl<'opts, 'args> StringMatcher<'opts, 'args> {
             Ok(Self::Regex(m))
         } else {
             let m = WildCardMatcher::new(pattern, opts);
-            return Ok(Self::WildCard(m));
+            Ok(Self::WildCard(m))
         }
     }
 
@@ -228,7 +234,10 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             // the capture group names are valid variable names
             .block_utf_pattern_directive(true)
             .build(pattern.as_char_slice())
-            .map_err(|e| RegexError::Compile(pattern.to_owned(), e))?;
+            .map_err(|error| RegexError::Compile {
+                pattern: pattern.to_owned(),
+                error,
+            })?;
 
         Self::validate_capture_group_names(regex.capture_names())?;
 
@@ -243,7 +252,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             first_match_captures,
             opts,
         };
-        return Ok(m);
+        Ok(m)
     }
 
     fn report_matches(&mut self, arg: &wstr, streams: &mut IoStreams) -> Result<(), pcre2::Error> {
@@ -260,7 +269,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
                 Self::populate_captures_from_match(
                     &mut self.first_match_captures,
                     self.opts,
-                    actual,
+                    actual.as_ref(),
                 );
             }
         }
@@ -274,7 +283,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
                     Self::populate_captures_from_match(
                         &mut self.first_match_captures,
                         self.opts,
-                        &cg,
+                        cg.as_ref(),
                     );
                 }
             }
@@ -285,7 +294,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
     fn populate_captures_from_match<'a>(
         first_match_captures: &mut HashMap<String, Vec<WString>>,
         opts: &Match<'args>,
-        cg: &Option<Captures<'a>>,
+        cg: Option<&Captures<'a>>,
     ) {
         for (name, captures) in first_match_captures.iter_mut() {
             // If there are multiple named groups and --all was used, we need to ensure that
@@ -295,7 +304,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             // empty/null members so we're going to have to use an empty string as the
             // sentinel value.
 
-            if let Some(m) = cg.as_ref().and_then(|cg| cg.name(&name.to_string())) {
+            if let Some(m) = cg.as_ref().and_then(|cg| cg.name(&name.clone())) {
                 captures.push(WString::from(m.as_bytes()));
             } else if opts.all {
                 captures.push(WString::new());
@@ -307,12 +316,12 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
         capture_group_names: &[Option<String>],
     ) -> Result<(), RegexError> {
         for name in capture_group_names.iter().filter_map(|n| n.as_ref()) {
-            let wname = WString::from_str(name);
+            let wname = str2wcstring(name);
             if EnvVar::flags_for(&wname).contains(EnvVarFlags::READ_ONLY) {
-                return Err(RegexError::InvalidCaptureGroupName(wname));
+                return Err(RegexError::InvalidCaptureGroupName { name: wname });
             }
         }
-        return Ok(());
+        Ok(())
     }
 
     fn report_match<'a>(
@@ -324,7 +333,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
         let Some(cg) = cg else {
             if self.opts.invert_match && !self.opts.quiet {
                 if self.opts.index {
-                    streams.out.append(sprintf!("1 %u\n", arg.len()));
+                    streams.out.append(&sprintf!("1 %u\n", arg.len()));
                 } else {
                     streams.out.appendln(arg);
                 }
@@ -353,19 +362,19 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             if self.opts.index {
                 streams
                     .out
-                    .append(sprintf!("%u %u\n", m.start() + 1, m.end() - m.start()));
+                    .append(&sprintf!("%u %u\n", m.start() + 1, m.end() - m.start()));
             } else {
                 streams.out.appendln(&arg[m.start()..m.end()]);
             }
         }
 
-        return MatchResult::Match(Some(cg));
+        MatchResult::Match(Some(cg))
     }
 }
 
 impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
     fn new(pattern: &'args wstr, opts: &'opts Match<'args>) -> Self {
-        let mut wcpattern = parse_util_unescape_wildcards(pattern);
+        let mut wcpattern = unescape_wildcards(pattern);
         if opts.ignore_case {
             wcpattern = wcpattern.to_lowercase();
         }
@@ -401,7 +410,7 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
             self.total_matched += 1;
             if !self.opts.quiet {
                 if self.opts.index {
-                    streams.out.append(sprintf!("1 %u\n", arg.len()));
+                    streams.out.append(&sprintf!("1 %u\n", arg.len()));
                 } else {
                     streams.out.appendln(arg);
                 }
@@ -412,16 +421,16 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
 
 #[cfg(test)]
 mod tests {
-    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
-    use crate::future_feature_flags::{FeatureFlag, scoped_test};
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
     use crate::tests::prelude::*;
     use crate::validate;
+    use fish_feature_flags::{FeatureFlag, with_overridden_feature};
 
     #[test]
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "match"], STATUS_INVALID_ARGS, "");
         validate!(["string", "match", ""], STATUS_CMD_ERROR, "");
         validate!(["string", "match", "", ""], STATUS_CMD_OK, "\n");
@@ -486,7 +495,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn test_qmark_noglob_true() {
-        scoped_test(FeatureFlag::qmark_noglob, true, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, true, || {
             validate!(["string", "match", "a*b?c", "axxb?c"], STATUS_CMD_OK, "axxb?c\n");
             validate!(["string", "match", "*?", "a"], STATUS_CMD_ERROR, "");
             validate!(["string", "match", "*?", "ab"], STATUS_CMD_ERROR, "");
@@ -514,7 +523,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn test_qmark_glob() {
-        scoped_test(FeatureFlag::qmark_noglob, false, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {
             validate!(["string", "match", "a*b?c", "axxbyc"], STATUS_CMD_OK, "axxbyc\n");
             validate!(["string", "match", "*?", "a"], STATUS_CMD_OK, "a\n");
             validate!(["string", "match", "*?", "ab"], STATUS_CMD_OK, "ab\n");

@@ -14,8 +14,9 @@ complete -c update-eix-remote -s o -d "Use the given PATH as $OVERLAYPARENT"
 # Subcommands
 set -l subcmds "
 "
-complete -c update-eix-remote -xa \
-    'update\t"Fetch the eix-caches of some layman overlays into a temporary file resp. into FILE and add them to the eix database"
-   fetch\t"Only fetch the overlays into FILE"
-   add\t"Only add the overlays from FILE to the eix database"
-   remove\t"Remove all temporarily added virtual overlays from the eix database"'
+complete -c update-eix-remote -xa '
+    update\t"Fetch the eix-caches of some layman overlays into a temporary file resp. into FILE and add them to the eix database"
+    fetch\t"Only fetch the overlays into FILE"
+    add\t"Only add the overlays from FILE to the eix database"
+    remove\t"Remove all temporarily added virtual overlays from the eix database"
+'

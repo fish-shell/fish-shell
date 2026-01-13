@@ -1,16 +1,19 @@
 // The stuff that happens after fork.
 // Everything in this module must be async-signal safe.
 // That means no locking, no allocating, no freeing memory, etc!
-use super::flog_safe::FLOG_SAFE;
-use crate::nix::getpid;
+use super::flog_safe::flog_safe;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
-use crate::{common::exit_without_destructors, wutil::fstat};
+use crate::wutil::fstat;
+use errno::Errno;
+use fish_common::exit_without_destructors;
 use libc::{O_RDONLY, pid_t};
+use nix::unistd::getpid;
 use std::ffi::CStr;
 use std::num::NonZeroU32;
-use std::os::unix::fs::MetadataExt;
+use std::os::fd::{AsRawFd as _, BorrowedFd};
+use std::os::unix::fs::MetadataExt as _;
 use std::time::Duration;
 
 /// The number of times to try to call fork() before giving up.
@@ -29,9 +32,9 @@ fn clear_cloexec(fd: i32) -> i32 {
     }
     let new_flags = flags & !libc::FD_CLOEXEC;
     if flags == new_flags {
-        return 0;
+        0
     } else {
-        return unsafe { libc::fcntl(fd, libc::F_SETFD, new_flags) };
+        unsafe { libc::fcntl(fd, libc::F_SETFD, new_flags) }
     }
 }
 
@@ -47,7 +50,7 @@ pub(crate) fn report_setpgid_error(
 ) {
     let cur_group = unsafe { libc::getpgid(pid) };
 
-    FLOG_SAFE!(
+    flog_safe!(
         warning,
         "Could not send ",
         if is_parent { "child" } else { "self" },
@@ -66,10 +69,10 @@ pub(crate) fn report_setpgid_error(
     );
 
     match err {
-        libc::EACCES => FLOG_SAFE!(error, "setpgid: Process ", pid, " has already exec'd"),
-        libc::EINVAL => FLOG_SAFE!(error, "setpgid: pgid ", cur_group, " unsupported"),
+        libc::EACCES => flog_safe!(error, "setpgid: Process ", pid, " has already exec'd"),
+        libc::EINVAL => flog_safe!(error, "setpgid: pgid ", cur_group, " unsupported"),
         libc::EPERM => {
-            FLOG_SAFE!(
+            flog_safe!(
                 error,
                 "setpgid: Process ",
                 pid,
@@ -78,8 +81,8 @@ pub(crate) fn report_setpgid_error(
                 " does not match"
             );
         }
-        libc::ESRCH => FLOG_SAFE!(error, "setpgid: Process ID ", pid, " does not match"),
-        _ => FLOG_SAFE!(error, "setpgid: Unknown error number ", err),
+        libc::ESRCH => flog_safe!(error, "setpgid: Process ID ", pid, " does not match"),
+        _ => flog_safe!(error, "setpgid: Unknown error number ", err),
     }
 }
 
@@ -94,13 +97,11 @@ pub fn execute_setpgid(pid: libc::pid_t, pgroup: libc::pid_t, is_parent: bool) -
             return 0;
         }
         let err = errno::errno().0;
+        assert_ne!(err, libc::EINTR);
         if err == libc::EACCES && is_parent {
             // We are the parent process and our child has called exec().
             // This is an unavoidable benign race.
             return 0;
-        } else if err == libc::EINTR {
-            // Paranoia.
-            continue;
         } else if err == libc::EPERM && eperm_count < 100 {
             eperm_count += 1;
             // The setpgid(2) man page says that EPERM is returned only if attempts are made
@@ -108,7 +109,7 @@ pub fn execute_setpgid(pid: libc::pid_t, pgroup: libc::pid_t, is_parent: bool) -
             // the case in fish, anywhere) or to change the process group ID of a session
             // leader (again, can never be the case). I'm pretty sure this is a WSL bug, as
             // we see the same with tcsetpgrp(2) in other places and it disappears on retry.
-            FLOG_SAFE!(proc_pgroup, "setpgid(2) returned EPERM. Retrying");
+            flog_safe!(proc_pgroup, "setpgid(2) returned EPERM. Retrying");
             continue;
         }
 
@@ -138,21 +139,20 @@ pub fn child_setup_process(
 ) -> i32 {
     // Note we are called in a forked child.
     for act in &dup2s.actions {
-        let err;
-        if act.target < 0 {
-            err = unsafe { libc::close(act.src) };
+        let err = if act.target < 0 {
+            unsafe { libc::close(act.src) }
         } else if act.target != act.src {
             // Normal redirection.
-            err = unsafe { libc::dup2(act.src, act.target) };
+            unsafe { libc::dup2(act.src, act.target) }
         } else {
             // This is a weird case like /bin/cmd 6< file.txt
-            // The opened file (which is CLO_EXEC) wants to be dup2'd to its own fd.
-            // We need to unset the CLO_EXEC flag.
-            err = clear_cloexec(act.src);
-        }
+            // The opened file (which is CLOEXEC) wants to be dup2'd to its own fd.
+            // We need to unset the CLOEXEC flag.
+            clear_cloexec(act.src)
+        };
         if err < 0 {
             if is_forked {
-                FLOG_SAFE!(
+                flog_safe!(
                     warning,
                     "failed to set up file descriptors in child_setup_process"
                 );
@@ -177,7 +177,7 @@ pub fn child_setup_process(
         unsafe {
             libc::signal(libc::SIGTTIN, libc::SIG_IGN);
             libc::signal(libc::SIGTTOU, libc::SIG_IGN);
-            let _ = libc::tcsetpgrp(libc::STDIN_FILENO, getpid());
+            let _ = libc::tcsetpgrp(libc::STDIN_FILENO, getpid().as_raw());
         }
     }
     if let Some(sigmask) = sigmask {
@@ -211,27 +211,28 @@ pub fn execute_fork() -> pid_t {
 
     match err {
         libc::EAGAIN => {
-            FLOG_SAFE!(
+            flog_safe!(
                 error,
                 "fork: Out of resources. Check RLIMIT_NPROC and pid_max."
             );
         }
         libc::ENOMEM => {
-            FLOG_SAFE!(error, "fork: Out of memory.");
+            flog_safe!(error, "fork: Out of memory.");
         }
         _ => {
-            FLOG_SAFE!(error, "fork: Unknown error number", err);
+            flog_safe!(error, "fork: Unknown error number", err);
         }
     }
     exit_without_destructors(1)
 }
 
-pub(crate) fn safe_report_exec_error(
-    err: i32,
+pub(crate) fn signal_safe_report_exec_error(
+    err: Errno,
     actual_cmd: &CStr,
     argvv: &OwningNullTerminatedArray,
     envv: &OwningNullTerminatedArray,
 ) {
+    let err = err.0;
     match err {
         libc::E2BIG => {
             let szenv = envv.iter().map(|s| s.to_bytes().len()).sum::<usize>();
@@ -241,7 +242,7 @@ pub(crate) fn safe_report_exec_error(
             if arg_max > 0 {
                 let arg_max = arg_max as usize;
                 if sz >= arg_max {
-                    FLOG_SAFE!(
+                    flog_safe!(
                         exec,
                         "Failed to execute process '",
                         actual_cmd,
@@ -255,7 +256,7 @@ pub(crate) fn safe_report_exec_error(
                     // MAX_ARG_STRLEN, a linux thing that limits the size of one argument. It's
                     // defined in binfmts.h, but we don't want to include that just to be able to
                     // print the real limit.
-                    FLOG_SAFE!(
+                    flog_safe!(
                         exec,
                         "Failed to execute process '",
                         actual_cmd,
@@ -264,14 +265,14 @@ pub(crate) fn safe_report_exec_error(
                 }
 
                 if szenv >= arg_max / 2 {
-                    FLOG_SAFE!(
+                    flog_safe!(
                         exec,
                         "Hint: Your exported variables take up over half the limit. Try \
-                         erasing or unexporting variables."
+                        erasing or unexporting variables."
                     );
                 }
             } else {
-                FLOG_SAFE!(
+                flog_safe!(
                     exec,
                     "Failed to execute process '",
                     actual_cmd,
@@ -283,7 +284,7 @@ pub(crate) fn safe_report_exec_error(
         }
 
         libc::ENOEXEC => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process: '",
                 actual_cmd,
@@ -293,15 +294,15 @@ pub(crate) fn safe_report_exec_error(
             if get_interpreter(actual_cmd, &mut interpreter_buf).is_none() {
                 // Paths ending in ".fish" need to start with a shebang
                 if actual_cmd.to_bytes().ends_with(b".fish") {
-                    FLOG_SAFE!(
+                    flog_safe!(
                         exec,
                         "fish scripts require an interpreter directive (must \
-                         start with '#!/path/to/fish')."
+                        start with '#!/path/to/fish')."
                     );
                 } else {
                     // If the shebang line exists, we would get an ENOENT or similar instead,
                     // so I don't know how to reach this.
-                    FLOG_SAFE!(exec, "Maybe the interpreter directive (#! line) is broken?");
+                    flog_safe!(exec, "Maybe the interpreter directive (#! line) is broken?");
                 }
             }
         }
@@ -323,14 +324,14 @@ pub(crate) fn safe_report_exec_error(
                     // Detect Windows line endings and complain specifically about them.
                     let interpreter = interpreter.to_bytes();
                     if interpreter.last() == Some(&b'\r') {
-                        FLOG_SAFE!(
+                        flog_safe!(
                             exec,
                             "Failed to execute process '",
                             actual_cmd,
                             "':  The file uses Windows line endings (\\r\\n). Run dos2unix or similar to fix it."
                         );
                     } else {
-                        FLOG_SAFE!(
+                        flog_safe!(
                             exec,
                             "Failed to execute process '",
                             actual_cmd,
@@ -347,7 +348,7 @@ pub(crate) fn safe_report_exec_error(
                         err_or_no_exec_handling(interpreter, actual_cmd);
                     } else if metadata.mode() & u32::from(libc::S_IFMT) == u32::from(libc::S_IFDIR)
                     {
-                        FLOG_SAFE!(
+                        flog_safe!(
                             exec,
                             "Failed to execute process '",
                             actual_cmd,
@@ -360,21 +361,21 @@ pub(crate) fn safe_report_exec_error(
                     err_or_no_exec_handling(interpreter, actual_cmd);
                 }
             } else if unsafe { libc::access(actual_cmd.as_ptr(), libc::X_OK) } == 0 {
-                FLOG_SAFE!(
+                flog_safe!(
                     exec,
                     "Failed to execute process '",
                     actual_cmd,
                     "': The file exists and is executable. Check the interpreter or linker?"
                 );
             } else if err == libc::ENOENT {
-                FLOG_SAFE!(
+                flog_safe!(
                     exec,
                     "Failed to execute process '",
                     actual_cmd,
                     "': The file does not exist or could not be executed."
                 );
             } else {
-                FLOG_SAFE!(
+                flog_safe!(
                     exec,
                     "Failed to execute process '",
                     actual_cmd,
@@ -384,11 +385,11 @@ pub(crate) fn safe_report_exec_error(
         }
 
         libc::ENOMEM => {
-            FLOG_SAFE!(exec, "Out of memory");
+            flog_safe!(exec, "Out of memory");
         }
 
         libc::ETXTBSY => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -397,7 +398,7 @@ pub(crate) fn safe_report_exec_error(
         }
 
         libc::ELOOP => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -406,7 +407,7 @@ pub(crate) fn safe_report_exec_error(
         }
 
         libc::EINVAL => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -414,7 +415,7 @@ pub(crate) fn safe_report_exec_error(
             );
         }
         libc::EISDIR => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -422,7 +423,7 @@ pub(crate) fn safe_report_exec_error(
             );
         }
         libc::ENOTDIR => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -431,7 +432,7 @@ pub(crate) fn safe_report_exec_error(
         }
 
         libc::EMFILE => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -439,7 +440,7 @@ pub(crate) fn safe_report_exec_error(
             );
         }
         libc::ENFILE => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -447,7 +448,7 @@ pub(crate) fn safe_report_exec_error(
             );
         }
         libc::ENAMETOOLONG => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -455,7 +456,7 @@ pub(crate) fn safe_report_exec_error(
             );
         }
         libc::EPERM => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -466,7 +467,7 @@ pub(crate) fn safe_report_exec_error(
 
         #[cfg(apple)]
         libc::EBADARCH => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -474,8 +475,18 @@ pub(crate) fn safe_report_exec_error(
             );
         }
 
+        #[cfg(apple)]
+        libc::EBADMACHO => {
+            flog_safe!(
+                exec,
+                "Failed to execute process '",
+                actual_cmd,
+                "': Malformed Mach-O file."
+            );
+        }
+
         err => {
-            FLOG_SAFE!(
+            flog_safe!(
                 exec,
                 "Failed to execute process '",
                 actual_cmd,
@@ -489,20 +500,17 @@ pub(crate) fn safe_report_exec_error(
 /// Returns the interpreter for the specified script. Returns None if file is not a script with a
 /// shebang.
 fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr> {
-    // OK to not use CLO_EXEC here because this is only called after fork.
+    // OK to not use CLOEXEC here because this is only called after fork.
     let fd = unsafe { libc::open(command.as_ptr(), libc::O_RDONLY) };
     let mut idx = 0;
     if fd >= 0 {
+        let fd = unsafe { BorrowedFd::borrow_raw(fd) };
         while idx + 1 < buffer.len() {
             let mut ch = b'\0';
-            let amt = unsafe {
-                libc::read(
-                    fd,
-                    std::ptr::addr_of_mut!(ch).cast(),
-                    std::mem::size_of_val(&ch),
-                )
-            };
-            if amt <= 0 || ch == b'\n' {
+            if match nix::unistd::read(fd, std::slice::from_mut(&mut ch)) {
+                Ok(n) => n == 0 || ch == b'\n',
+                Err(_) => true,
+            } {
                 break;
             }
             buffer[idx] = ch;
@@ -510,7 +518,7 @@ fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr>
         }
         buffer[idx] = b'\0';
         idx += 1;
-        unsafe { libc::close(fd) };
+        unsafe { libc::close(fd.as_raw_fd()) };
     }
 
     #[allow(clippy::if_same_then_else)]
@@ -524,5 +532,23 @@ fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr>
     } else {
         return None;
     };
-    Some(CStr::from_bytes_with_nul(&buffer[offset..idx.max(offset)]).unwrap())
+    CStr::from_bytes_with_nul(&buffer[offset..idx.max(offset)]).ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::get_interpreter;
+    use std::ffi::CString;
+    use std::os::unix::ffi::OsStrExt as _;
+
+    #[test]
+    fn test_get_interpreter_returns_none_on_embedded_nul() {
+        let script = fish_tempfile::new_file().unwrap();
+        std::fs::write(script.path(), b"#!/bin/\0sh\n").unwrap();
+
+        let command = CString::new(script.path().as_os_str().as_bytes()).unwrap();
+        let mut buffer = [0u8; 64];
+
+        assert!(get_interpreter(command.as_c_str(), &mut buffer).is_none());
+    }
 }

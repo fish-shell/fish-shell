@@ -1,5 +1,5 @@
 use super::*;
-use crate::common::{UnescapeStringStyle, unescape_string};
+use fish_common::{UnescapeStringStyle, unescape_string};
 
 #[derive(Default)]
 pub struct Unescape {
@@ -16,33 +16,33 @@ impl StringSubCommand<'_> for Unescape {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("n");
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'n' => self.no_quoted = true,
             NON_OPTION_CHAR => {
+                let arg = arg.unwrap();
                 self.style = arg
-                    .unwrap()
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid style value '%s'\n", name, arg))?
+                    .map_err(|_| err_fmt!("Invalid style value '%s'", arg))?;
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
         let mut nesc = 0;
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             if let Some(res) = unescape_string(&arg, self.style) {
-                streams.out.append(res);
+                streams.out.append(&res);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append('\n');
                 }
                 nesc += 1;
             }

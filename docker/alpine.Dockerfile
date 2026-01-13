@@ -1,13 +1,11 @@
 # Version set by updatecli.d/docker.yml
-FROM alpine:3.22
+FROM alpine:3.23
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
-ENV PIP_ROOT_USER_ACTION=ignore
 
 RUN apk add --no-cache \
-    cmake ninja \
     bash \
     cargo \
     g++ \
@@ -20,11 +18,8 @@ RUN apk add --no-cache \
     py3-pip \
     python3 \
     rust \
-    rustfmt \
     sudo \
     tmux
-
-RUN pip install --break-system-packages black
 
 RUN addgroup -g 1000 fishuser
 
@@ -37,8 +32,8 @@ RUN adduser \
     fishuser
 
 RUN mkdir -p /home/fishuser/fish-build \
-  && mkdir /fish-source \
-  && chown -R fishuser:fishuser /home/fishuser /fish-source
+    && mkdir /fish-source \
+    && chown -R fishuser:fishuser /home/fishuser /fish-source
 
 USER fishuser
 WORKDIR /home/fishuser

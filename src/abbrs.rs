@@ -1,15 +1,14 @@
 use std::{
     collections::HashSet,
-    sync::{Mutex, MutexGuard},
+    sync::{LazyLock, Mutex, MutexGuard},
 };
 
-use crate::wchar::prelude::*;
-use once_cell::sync::Lazy;
+use crate::prelude::*;
 
 use crate::parse_constants::SourceRange;
 use pcre2::utf32::Regex;
 
-static ABBRS: Lazy<Mutex<AbbreviationSet>> = Lazy::new(|| Mutex::new(Default::default()));
+static ABBRS: LazyLock<Mutex<AbbreviationSet>> = LazyLock::new(|| Mutex::new(Default::default()));
 
 pub fn with_abbrs<R>(cb: impl FnOnce(&AbbreviationSet) -> R) -> R {
     let abbrs_g = ABBRS.lock().unwrap();
@@ -114,7 +113,7 @@ impl Abbreviation {
 
     // Return if we expand in a given position.
     fn matches_position(&self, position: Position) -> bool {
-        return self.position == Position::Anywhere || self.position == position;
+        self.position == Position::Anywhere || self.position == position
     }
 }
 
@@ -157,7 +156,7 @@ impl Replacement {
 
             if let Some(start) = matched {
                 text.replace_range(start..(start + set_cursor_marker.len()), L!(""));
-                cursor = Some(start + range.start as usize)
+                cursor = Some(start + range.start as usize);
             }
         }
         Self {
@@ -194,7 +193,7 @@ impl AbbreviationSet {
                 });
             }
         }
-        return result;
+        result
     }
 
     /// Return whether we would have at least one replacer for a given token.
@@ -253,6 +252,11 @@ impl AbbreviationSet {
         true
     }
 
+    #[cfg(test)]
+    pub fn clear(&mut self) {
+        *self = Default::default();
+    }
+
     /// Return true if we have an abbreviation with the given name.
     pub fn has_name(&self, name: &wstr) -> bool {
         self.used_names.contains(name)
@@ -284,20 +288,19 @@ pub fn abbrs_match(token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer
 
 #[cfg(test)]
 mod tests {
-    use super::{Abbreviation, Position, abbrs_get_set, abbrs_match, with_abbrs_mut};
+    use super::{Abbreviation, Position, abbrs_match, with_abbrs_mut};
     use crate::editable_line::{Edit, apply_edit};
     use crate::highlight::HighlightSpec;
+    use crate::prelude::*;
     use crate::reader::reader_expand_abbreviation_at_cursor;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     #[test]
     #[serial]
     fn test_abbreviations() {
-        let _cleanup = test_init();
-        let parser = TestParser::new();
-        {
-            let mut abbrs = abbrs_get_set();
+        test_init();
+        let parser = &mut TestParser::new();
+        with_abbrs_mut(|abbrs| {
             abbrs.add(Abbreviation::new(
                 L!("gc").to_owned(),
                 L!("gc").to_owned(),
@@ -326,7 +329,7 @@ mod tests {
                 Position::Anywhere,
                 false,
             ));
-        }
+        });
 
         // Helper to expand an abbreviation, enforcing we have no more than one result.
         macro_rules! abbr_expand_1 {
@@ -353,12 +356,12 @@ mod tests {
         abbr_expand_1!("gc", cmd, "git checkout");
         abbr_expand_1!("foo", cmd, "bar");
 
-        let expand_abbreviation_in_command =
+        let mut expand_abbreviation_in_command =
             |cmdline: &wstr, cursor_pos: Option<usize>| -> Option<WString> {
                 let replacement = reader_expand_abbreviation_at_cursor(
                     cmdline,
                     cursor_pos.unwrap_or(cmdline.len()),
-                    &parser,
+                    parser,
                 )?;
                 let mut cmdline_expanded = cmdline.to_owned();
                 let mut colors = vec![HighlightSpec::new(); cmdline.len()];
@@ -420,12 +423,14 @@ mod tests {
 
         // yin/yang expands everywhere.
         validate!("command yin", None, "command yang");
+
+        with_abbrs_mut(|abbrset| abbrset.clear());
     }
 
     #[test]
     #[serial]
     fn rename_abbrs() {
-        let _cleanup = test_init();
+        test_init();
 
         with_abbrs_mut(|abbrs_g| {
             let mut add = |name: &wstr, repl: &wstr, position: Position| {
@@ -439,7 +444,7 @@ mod tests {
                     position,
                     set_cursor_marker: None,
                     from_universal: false,
-                })
+                });
             };
             add(L!("gc"), L!("git checkout"), Position::Command);
             add(L!("foo"), L!("bar"), Position::Command);
@@ -456,6 +461,7 @@ mod tests {
             assert!(!abbrs_g.erase(L!("gc"), &[]));
             assert!(abbrs_g.erase(L!("gcc"), &[]));
             assert!(!abbrs_g.erase(L!("gcc"), &[]));
-        })
+            abbrs_g.clear();
+        });
     }
 }

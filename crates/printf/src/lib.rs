@@ -51,7 +51,7 @@ macro_rules! sprintf {
         {
             // May be no args!
             #[allow(unused_imports)]
-            use $crate::ToArg;
+            use $crate::ToArg as _;
             $crate::printf_c_locale(
                 $target,
                 $fmt,
@@ -84,7 +84,7 @@ macro_rules! sprintf {
 ///
 /// let result = printf_c_locale(&mut output, fmt, &mut args);
 ///
-/// assert!(result == Ok(10));
+/// assert_eq!(result, Ok(10));
 /// assert_eq!(output, "1.2346e+05");
 /// ```
 pub fn printf_c_locale(

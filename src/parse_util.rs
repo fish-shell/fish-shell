@@ -1,44 +1,45 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{
-    self, Ast, Keyword, Kind, Leaf, Node, NodeVisitor, Token, Traversal, is_same_node,
+use crate::{
+    ast::{
+        self, Ast, Keyword as _, Kind, Leaf as _, Node, NodeVisitor, Token as _, Traversal,
+        is_same_node,
+    },
+    builtins::builtin_exists,
+    common::{valid_var_name, valid_var_name_char},
+    expand::{ExpandFlags, ExpandResultCode, expand_one, expand_to_command_and_args},
+    operation_context::OperationContext,
+    parse_constants::{
+        ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
+        ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
+        ERROR_NOT_PID, ERROR_NOT_STATUS, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
+        INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseIssue,
+        ParseKeyword, ParseTokenType, ParseTreeFlags, PipelinePosition, SourceRange,
+        StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
+    },
+    prelude::*,
+    tokenizer::{
+        TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
+        is_token_delimiter, quote_end,
+    },
 };
-use crate::builtins::shared::builtin_exists;
-use crate::common::{
-    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, escape_string,
-    unescape_string, valid_var_name, valid_var_name_char,
+use fish_common::{UnescapeFlags, UnescapeStringStyle, help_section, unescape_string};
+use fish_feature_flags::{FeatureFlag, feature_test};
+use fish_wcstringutil::{count_newlines, truncate};
+use fish_widestring::{
+    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP,
+    INTERNAL_SEPARATOR, VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE,
 };
-use crate::expand::{
-    BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, ExpandResultCode, INTERNAL_SEPARATOR,
-    VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, expand_one,
-    expand_to_command_and_args,
+use std::{
+    iter,
+    ops::{self, Range},
 };
-use crate::future_feature_flags::{FeatureFlag, feature_test};
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{
-    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
-    ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID,
-    ERROR_NOT_STATUS, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
-    INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition, SourceRange,
-    StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
-};
-use crate::tokenizer::{
-    TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
-    is_token_delimiter, quote_end,
-};
-use crate::wchar::prelude::*;
-use crate::wcstringutil::count_newlines;
-use crate::wcstringutil::truncate;
-use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use std::ops::Range;
-use std::{iter, ops};
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
 /// Return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
 /// This never accepts incomplete slices.
-pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
-    const openc: char = '[';
-    const closec: char = ']';
+pub fn slice_length(input: &wstr) -> Option<usize> {
+    let openc = '[';
+    let closec = ']';
     let mut escaped = false;
 
     // Check for initial opening [
@@ -85,34 +86,27 @@ pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
 }
 
 #[derive(Debug, Default, Eq, PartialEq)]
-pub struct Parentheses {
+pub struct CommandSubstitution {
     range: Range<usize>,
     num_closing: usize,
 }
 
-impl Parentheses {
-    pub fn start(&self) -> usize {
+impl CommandSubstitution {
+    pub fn opening_paren_offset(&self) -> usize {
         self.range.start
     }
     pub fn end(&self) -> usize {
         self.range.end
     }
-    pub fn opening(&self) -> Range<usize> {
+    pub fn opening_paren_range(&self) -> Range<usize> {
         self.range.start..self.range.start + 1
     }
-    pub fn closing(&self) -> Range<usize> {
+    pub fn closing_paren_range(&self) -> Range<usize> {
         self.range.end - self.num_closing..self.range.end
     }
-    pub fn command(&self) -> Range<usize> {
+    pub fn command_range(&self) -> Range<usize> {
         self.range.start + 1..self.range.end - self.num_closing
     }
-}
-
-#[derive(Eq, PartialEq, Debug)]
-pub enum MaybeParentheses {
-    Error,
-    None,
-    CommandSubstitution(Parentheses),
 }
 
 /// Alternative API. Iterate over command substitutions.
@@ -129,20 +123,21 @@ pub enum MaybeParentheses {
 /// \param out_has_dollar whether the command substitution has the optional leading $.
 /// Return -1 on syntax error, 0 if no subshells exist and 1 on success
 #[allow(clippy::too_many_arguments)]
-pub fn parse_util_locate_cmdsubst_range(
+#[allow(clippy::result_unit_err)]
+pub fn locate_cmdsubst_range(
     s: &wstr,
     inout_cursor_offset: &mut usize,
     accept_incomplete: bool,
     inout_is_quoted: Option<&mut bool>,
     out_has_dollar: Option<&mut bool>,
-) -> MaybeParentheses {
+) -> Result<Option<CommandSubstitution>, ()> {
     // Nothing to do if the offset is at or past the end of the string.
     if *inout_cursor_offset >= s.len() {
-        return MaybeParentheses::None;
+        return Ok(None);
     }
 
     // Defer to the wonky version.
-    let ret = parse_util_locate_cmdsub(
+    let ret = locate_cmdsub(
         s,
         *inout_cursor_offset,
         accept_incomplete,
@@ -150,9 +145,9 @@ pub fn parse_util_locate_cmdsubst_range(
         out_has_dollar,
     );
     match &ret {
-        MaybeParentheses::Error | MaybeParentheses::None => (),
-        MaybeParentheses::CommandSubstitution(parens) => {
-            *inout_cursor_offset = parens.end();
+        Err(()) | Ok(None) => (),
+        Ok(Some(cmdsub)) => {
+            *inout_cursor_offset = cmdsub.end();
         }
     }
     ret
@@ -167,18 +162,18 @@ pub fn parse_util_locate_cmdsubst_range(
 /// \param cursor_pos the position of the cursor
 /// \param a the start of the searched string
 /// \param b the end of the searched string
-pub fn parse_util_cmdsubst_extent(buff: &wstr, cursor: usize) -> ops::Range<usize> {
+pub fn get_cmdsubst_extent(buff: &wstr, cursor: usize) -> ops::Range<usize> {
     // The tightest command substitution found so far.
     let mut result = 0..buff.len();
     let mut pos = 0;
     loop {
-        let parens = match parse_util_locate_cmdsub(buff, pos, true, None, None) {
+        let cmdsub = match locate_cmdsub(buff, pos, true, None, None) {
             // No subshell found, all done.
-            MaybeParentheses::Error | MaybeParentheses::None => break,
-            MaybeParentheses::CommandSubstitution(parens) => parens,
+            Err(()) | Ok(None) => break,
+            Ok(Some(cmdsub)) => cmdsub,
         };
 
-        let command = parens.command();
+        let command = cmdsub.command_range();
         if command.start <= cursor && command.end >= cursor {
             // This command substitution surrounds the cursor, so it's a tighter fit.
             result = command;
@@ -195,32 +190,32 @@ pub fn parse_util_cmdsubst_extent(buff: &wstr, cursor: usize) -> ops::Range<usiz
         } else {
             // This command substitution ends before the cursor. Skip it.
             assert!(command.end < cursor);
-            pos = parens.end();
+            pos = cmdsub.end();
             assert!(pos <= buff.len());
         }
     }
     result
 }
 
-fn parse_util_locate_cmdsub(
+fn locate_cmdsub(
     input: &wstr,
     cursor: usize,
     allow_incomplete: bool,
     mut inout_is_quoted: Option<&mut bool>,
     mut out_has_dollar: Option<&mut bool>,
-) -> MaybeParentheses {
+) -> Result<Option<CommandSubstitution>, ()> {
     let input = input.as_char_slice();
 
     let mut escaped = false;
     let mut is_token_begin = true;
     let mut syntax_error = false;
-    let mut paran_count = 0;
+    let mut paren_count = 0;
     let mut quoted_cmdsubs = vec![];
 
     let mut pos = cursor;
     let mut last_dollar = None;
-    let mut paran_begin = None;
-    let mut paran_end = None;
+    let mut paren_begin = None;
+    let mut paren_end = None;
     enum Quote {
         Real(char),
         VirtualDouble,
@@ -228,7 +223,7 @@ fn parse_util_locate_cmdsub(
     fn process_opening_quote(
         input: &[char],
         inout_is_quoted: &mut Option<&mut bool>,
-        paran_count: i32,
+        paren_count: i32,
         quoted_cmdsubs: &mut Vec<i32>,
         mut pos: usize,
         last_dollar: &mut Option<usize>,
@@ -246,11 +241,11 @@ fn parse_util_locate_cmdsub(
         if input[q_end] == '$' {
             // The closing quote is another quoted command substitution.
             *last_dollar = Some(q_end);
-            quoted_cmdsubs.push(paran_count);
+            quoted_cmdsubs.push(paren_count);
         }
         // We want to report whether the outermost command substitution between
-        // paran_begin..paran_end is quoted.
-        if paran_count == 0 {
+        // paren_begin..paren_end is quoted.
+        if paren_count == 0 {
             inout_is_quoted
                 .as_mut()
                 .map(|is_quoted| **is_quoted = input[q_end] == '$');
@@ -266,7 +261,7 @@ fn parse_util_locate_cmdsub(
         pos = process_opening_quote(
             input,
             &mut inout_is_quoted,
-            paran_count,
+            paren_count,
             &mut quoted_cmdsubs,
             pos,
             &mut last_dollar,
@@ -282,7 +277,7 @@ fn parse_util_locate_cmdsub(
                 match process_opening_quote(
                     input,
                     &mut inout_is_quoted,
-                    paran_count,
+                    paren_count,
                     &mut quoted_cmdsubs,
                     pos,
                     &mut last_dollar,
@@ -298,37 +293,37 @@ fn parse_util_locate_cmdsub(
             } else if c == '$' {
                 last_dollar = Some(pos);
             } else if c == '(' {
-                if paran_count == 0 && paran_begin.is_none() {
-                    paran_begin = Some(pos);
+                if paren_count == 0 && paren_begin.is_none() {
+                    paren_begin = Some(pos);
                     out_has_dollar
                         .as_mut()
                         .map(|has_dollar| **has_dollar = last_dollar == Some(pos.wrapping_sub(1)));
                 }
 
-                paran_count += 1;
+                paren_count += 1;
             } else if c == ')' {
-                paran_count -= 1;
+                paren_count -= 1;
 
-                if paran_count == 0 {
-                    assert!(paran_end.is_none());
-                    paran_end = Some(pos);
+                if paren_count == 0 {
+                    assert!(paren_end.is_none());
+                    paren_end = Some(pos);
                     break;
                 }
 
-                if paran_count < 0 {
+                if paren_count < 0 {
                     syntax_error = true;
                     break;
                 }
 
                 // Check if the ) did complete a quoted command substitution.
-                if quoted_cmdsubs.last() == Some(&paran_count) {
+                if quoted_cmdsubs.last() == Some(&paren_count) {
                     quoted_cmdsubs.pop();
                     // Quoted command substitutions temporarily close double quotes.
                     // In "foo$(bar)baz$(qux)", after the ), we need to act as if there was a double quote.
                     match process_opening_quote(
                         input,
                         &mut inout_is_quoted,
-                        paran_count,
+                        paren_count,
                         &mut quoted_cmdsubs,
                         pos,
                         &mut last_dollar,
@@ -347,63 +342,65 @@ fn parse_util_locate_cmdsub(
         pos += 1;
     }
 
-    syntax_error |= paran_count < 0;
-    syntax_error |= paran_count > 0 && !allow_incomplete;
+    syntax_error |= paren_count < 0;
+    syntax_error |= paren_count > 0 && !allow_incomplete;
 
     if syntax_error {
-        return MaybeParentheses::Error;
+        return Err(());
     }
 
-    let Some(paran_begin) = paran_begin else {
-        return MaybeParentheses::None;
+    let Some(paren_begin) = paren_begin else {
+        return Ok(None);
     };
 
-    let end = if paran_count != 0 {
+    let end = if paren_count != 0 {
         input.len()
     } else {
-        paran_end.unwrap() + 1
+        paren_end.unwrap() + 1
     };
 
-    let parens = Parentheses {
-        range: paran_begin..end,
-        num_closing: if paran_count == 0 { 1 } else { 0 },
+    let cmdsub = CommandSubstitution {
+        range: paren_begin..end,
+        num_closing: if paren_count == 0 { 1 } else { 0 },
     };
 
-    MaybeParentheses::CommandSubstitution(parens)
+    Ok(Some(cmdsub))
 }
 
 /// Find the beginning and end of the process definition under the cursor
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-/// \param a the start of the process
-/// \param b the end of the process
 /// \param tokens the tokens in the process
-pub fn parse_util_process_extent(
+pub fn get_process_extent(
     buff: &wstr,
     cursor_pos: usize,
     out_tokens: Option<&mut Vec<Tok>>,
 ) -> ops::Range<usize> {
-    job_or_process_extent(true, buff, cursor_pos, out_tokens)
+    get_job_or_process_extent(true, buff, cursor_pos, out_tokens)
+}
+
+pub fn get_process_first_token_offset(buff: &wstr, cursor_pos: usize) -> Option<usize> {
+    let mut tokens = vec![];
+    get_process_extent(buff, cursor_pos, Some(&mut tokens));
+    tokens.first().map(|tok| tok.offset())
 }
 
 /// Find the beginning and end of the process definition under the cursor
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-/// \param a the start of the process
-/// \param b the end of the process
-/// \param tokens the tokens in the process
-pub fn parse_util_job_extent(
+/// \param out_tokens the tokens in the process
+pub fn get_job_extent(
     buff: &wstr,
     cursor_pos: usize,
     out_tokens: Option<&mut Vec<Tok>>,
 ) -> ops::Range<usize> {
-    job_or_process_extent(false, buff, cursor_pos, out_tokens)
+    get_job_or_process_extent(false, buff, cursor_pos, out_tokens)
 }
 
 /// Get the beginning and end of the job or process definition under the cursor.
-fn job_or_process_extent(
+fn get_job_or_process_extent(
     process: bool,
     buff: &wstr,
     cursor_pos: usize,
@@ -411,7 +408,7 @@ fn job_or_process_extent(
 ) -> ops::Range<usize> {
     let mut finished = false;
 
-    let cmdsub_range = parse_util_cmdsubst_extent(buff, cursor_pos);
+    let cmdsub_range = get_cmdsubst_extent(buff, cursor_pos);
     assert!(cursor_pos >= cmdsub_range.start);
     let pos = cursor_pos - cmdsub_range.start;
 
@@ -425,21 +422,25 @@ fn job_or_process_extent(
             break;
         }
         match token.type_ {
-            TokenType::pipe
-            | TokenType::end
-            | TokenType::background
-            | TokenType::andand
-            | TokenType::oror
-            | TokenType::left_brace
-            | TokenType::right_brace
-                if (token.type_ != TokenType::pipe || process) =>
+            TokenType::Pipe
+            | TokenType::End
+            | TokenType::Background
+            | TokenType::AndAnd
+            | TokenType::OrOr
+            | TokenType::LeftBrace
+            | TokenType::RightBrace
+                if (token.type_ != TokenType::Pipe || process) =>
             {
                 if tok_begin >= pos {
                     finished = true;
                     result.end = cmdsub_range.start + tok_begin;
-                } else {
+                } else if token.end() <= pos {
                     // Statement at cursor might start after this token.
                     result.start = cmdsub_range.start + tok_begin + token.length();
+                    out_tokens.as_mut().map(|tokens| tokens.clear());
+                } else {
+                    finished = true;
+                    result = cursor_pos..cursor_pos;
                     out_tokens.as_mut().map(|tokens| tokens.clear());
                 }
                 continue; // Do not add this to tokens
@@ -455,8 +456,8 @@ fn job_or_process_extent(
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>, Range<usize>) {
-    let cmdsubst_range = parse_util_cmdsubst_extent(buff, cursor_pos);
+pub fn get_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>, Range<usize>) {
+    let cmdsubst_range = get_cmdsubst_extent(buff, cursor_pos);
     let cmdsubst_begin = cmdsubst_range.start;
 
     // pos is equivalent to cursor_pos within the range of the command substitution {begin, end}.
@@ -475,7 +476,7 @@ pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>,
         let mut tok_end = tok_begin;
 
         // Calculate end of token.
-        if token.type_ == TokenType::string {
+        if token.type_ == TokenType::String {
             tok_end += token.length();
         }
 
@@ -489,14 +490,14 @@ pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>,
 
         // If cursor is inside the token, this is the token we are looking for. If so, set
         // cur_begin and cur_end and break.
-        if token.type_ == TokenType::string && tok_end >= offset_within_cmdsubst {
+        if token.type_ == TokenType::String && tok_end >= offset_within_cmdsubst {
             cur_begin = cmdsubst_begin + token.offset();
             cur_end = cur_begin + token.length();
             break;
         }
 
         // Remember previous string token.
-        if token.type_ == TokenType::string {
+        if token.type_ == TokenType::String {
             prev_begin = cmdsubst_begin + token.offset();
             prev_end = prev_begin + token.length();
         }
@@ -509,7 +510,7 @@ pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>,
 }
 
 /// Get the line number at the specified character offset.
-pub fn parse_util_lineno(s: &wstr, offset: usize) -> usize {
+pub fn lineno(s: &wstr, offset: usize) -> usize {
     // Return the line number of position offset, starting with 1.
     if s.is_empty() {
         return 1;
@@ -520,7 +521,7 @@ pub fn parse_util_lineno(s: &wstr, offset: usize) -> usize {
 }
 
 /// Calculate the line number of the specified cursor position.
-pub fn parse_util_get_line_from_offset(s: &wstr, pos: usize) -> isize {
+pub fn get_line_from_offset(s: &wstr, pos: usize) -> isize {
     // Return the line pos is on, or -1 if it's after the end.
     if pos > s.len() {
         return -1;
@@ -529,7 +530,7 @@ pub fn parse_util_get_line_from_offset(s: &wstr, pos: usize) -> isize {
 }
 
 /// Get the offset of the first character on the specified line.
-pub fn parse_util_get_offset_from_line(s: &wstr, line: i32) -> Option<usize> {
+pub fn get_offset_from_line(s: &wstr, line: i32) -> Option<usize> {
     // Return the first position on line X, counting from 0.
     if line < 0 {
         return None;
@@ -549,9 +550,9 @@ pub fn parse_util_get_offset_from_line(s: &wstr, line: i32) -> Option<usize> {
 }
 
 /// Return the total offset of the buffer for the cursor position nearest to the specified position.
-pub fn parse_util_get_offset(s: &wstr, line: i32, line_offset: isize) -> Option<usize> {
-    let off = parse_util_get_offset_from_line(s, line)?;
-    let off2 = parse_util_get_offset_from_line(s, line + 1).unwrap_or(s.len() + 1);
+pub fn get_offset(s: &wstr, line: i32, line_offset: isize) -> Option<usize> {
+    let off = get_offset_from_line(s, line)?;
+    let off2 = get_offset_from_line(s, line + 1).unwrap_or(s.len() + 1);
 
     let mut line_offset = line_offset as usize;
     if line_offset >= off2 - off - 1 {
@@ -563,9 +564,9 @@ pub fn parse_util_get_offset(s: &wstr, line: i32, line_offset: isize) -> Option<
 
 /// Return the given string, unescaping wildcard characters but not performing any other character
 /// transformation.
-pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
+pub fn unescape_wildcards(s: &wstr) -> WString {
     let mut result = WString::with_capacity(s.len());
-    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+    let unesc_qmark = !feature_test(FeatureFlag::QuestionMarkNoGlob);
 
     let mut i = 0;
     while i < s.len() {
@@ -592,8 +593,8 @@ pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
 }
 
 /// Return if the given string contains wildcard characters.
-pub fn parse_util_contains_wildcards(s: &wstr) -> bool {
-    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+pub fn contains_wildcards(s: &wstr) -> bool {
+    let unesc_qmark = !feature_test(FeatureFlag::QuestionMarkNoGlob);
 
     let mut i = 0;
     while i < s.len() {
@@ -620,9 +621,9 @@ pub fn parse_util_contains_wildcards(s: &wstr) -> bool {
 
 /// Escape any wildcard characters in the given string. e.g. convert
 /// "a*b" to "a\*b".
-pub fn parse_util_escape_wildcards(s: &wstr) -> WString {
+pub fn escape_wildcards(s: &wstr) -> WString {
     let mut result = WString::with_capacity(s.len());
-    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+    let unesc_qmark = !feature_test(FeatureFlag::QuestionMarkNoGlob);
 
     for c in s.chars() {
         if c == '*' {
@@ -639,7 +640,7 @@ pub fn parse_util_escape_wildcards(s: &wstr) -> WString {
 }
 
 /// Checks if the specified string is a help option.
-pub fn parse_util_argument_is_help(s: &wstr) -> bool {
+pub fn argument_is_help(s: &wstr) -> bool {
     [L!("-h"), L!("--help")].contains(&s)
 }
 
@@ -691,71 +692,14 @@ fn error_for_character(c: char) -> WString {
     }
 }
 
-/// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
-/// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
-/// thus escaping should be with backslashes). Optionally do not escape tildes.
-pub fn parse_util_escape_string_with_quote(
-    cmd: &wstr,
-    quote: Option<char>,
-    escape_flags: EscapeFlags,
-) -> WString {
-    let Some(quote) = quote else {
-        return escape_string(cmd, EscapeStringStyle::Script(escape_flags));
-    };
-    // Here we are going to escape a string with quotes.
-    // A few characters cannot be represented inside quotes, e.g. newlines. In that case,
-    // terminate the quote and then re-enter it.
-    let mut result = WString::new();
-    result.reserve(cmd.len());
-    for c in cmd.chars() {
-        match c {
-            '\n' => {
-                for c in [quote, '\\', 'n', quote] {
-                    result.push(c);
-                }
-            }
-            '\t' => {
-                for c in [quote, '\\', 't', quote] {
-                    result.push(c);
-                }
-            }
-            '\x08' => {
-                for c in [quote, '\\', 'b', quote] {
-                    result.push(c);
-                }
-            }
-            '\r' => {
-                for c in [quote, '\\', 'r', quote] {
-                    result.push(c);
-                }
-            }
-            '\\' => {
-                result.push_str("\\\\");
-            }
-            '$' => {
-                if quote == '"' {
-                    result.push('\\');
-                }
-                result.push('$');
-            }
-            _ => {
-                if c == quote {
-                    result.push('\\');
-                }
-                result.push(c);
-            }
-        }
-    }
-    result
-}
-
 /// Given a string, parse it as fish code and then return the indents. The return value has the same
 /// size as the string.
-pub fn parse_util_compute_indents(src: &wstr) -> Vec<i32> {
-    compute_indents(src, 0)
+pub fn compute_indents(src: &wstr) -> Vec<i32> {
+    compute_indents_from(src, 0)
 }
 
-fn compute_indents(src: &wstr, initial_indent: i32) -> Vec<i32> {
+/// Compute the indents for the given source, starting with the specified initial indent.
+fn compute_indents_from(src: &wstr, initial_indent: i32) -> Vec<i32> {
     // Make a vector the same size as the input string, which contains the indents. Initialize them
     // to 0.
     let mut indents = vec![0; src.len()];
@@ -769,14 +713,14 @@ fn compute_indents(src: &wstr, initial_indent: i32) -> Vec<i32> {
     // the last node we visited becomes the input indent of the next. I.e. in the case of 'switch
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
-    let ast = ast::parse(
-        src,
-        ParseTreeFlags::CONTINUE_AFTER_ERROR
-            | ParseTreeFlags::INCLUDE_COMMENTS
-            | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS
-            | ParseTreeFlags::LEAVE_UNTERMINATED,
-        None,
-    );
+    let flags = ParseTreeFlags {
+        continue_after_error: true,
+        include_comments: true,
+        accept_incomplete_tokens: true,
+        leave_unterminated: true,
+        ..Default::default()
+    };
+    let ast = ast::parse(src, flags, None);
     {
         let mut iv = IndentVisitor::new(src, &mut indents, initial_indent);
         iv.visit(ast.top());
@@ -923,29 +867,29 @@ impl<'a> IndentVisitor<'a> {
         let mut was_double_quoted;
         loop {
             was_double_quoted = is_double_quoted;
-            let parens = match parse_util_locate_cmdsubst_range(
+            let cmdsub = match locate_cmdsubst_range(
                 node_src,
                 &mut cursor,
                 /*accept_incomplete=*/ true,
                 Some(&mut is_double_quoted),
                 None,
             ) {
-                MaybeParentheses::Error => break,
-                MaybeParentheses::None => {
+                Err(()) => break,
+                Ok(None) => {
                     break;
                 }
-                MaybeParentheses::CommandSubstitution(parens) => parens,
+                Ok(Some(cmdsub)) => cmdsub,
             };
 
-            let command = parens.command();
+            let command = cmdsub.command_range();
             self.indent_string_part(done..range.start() + command.start, was_double_quoted);
             let cmdsub_contents = &node_src[command.clone()];
-            let indents = compute_indents(cmdsub_contents, self.indent + 1);
+            let indents = compute_indents_from(cmdsub_contents, self.indent + 1);
             self.indents[range.start() + command.start..range.start() + command.end]
                 .copy_from_slice(&indents);
 
             done = range.start() + command.end;
-            if parens.closing().is_empty() {
+            if cmdsub.closing_paren_range().is_empty() {
                 self.unclosed = true;
             }
         }
@@ -970,7 +914,7 @@ impl<'a> IndentVisitor<'a> {
             let mut callback = |offset| {
                 if !quoted {
                     // Quote open event. Indent unquoted part, including the opening quote.
-                    self.indents[done..start + offset + 1].fill(self.indent);
+                    self.indents[done..=(start + offset)].fill(self.indent);
                     done = start + offset + 1;
                 } else {
                     // Quote close. Don't indent, in case it's a multiline string.
@@ -1022,17 +966,13 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             //   ....cmd3
             //   end
             // See #7252.
-            Kind::JobContinuation(node) => {
-                if self.has_newline(&node.newlines) {
-                    inc_dec = (1, 1);
-                }
+            Kind::JobContinuation(node) if self.has_newline(&node.newlines) => {
+                inc_dec = (1, 1);
             }
 
             // Likewise for && and ||.
-            Kind::JobConjunctionContinuation(node) => {
-                if self.has_newline(&node.newlines) {
-                    inc_dec = (1, 1);
-                }
+            Kind::JobConjunctionContinuation(node) if self.has_newline(&node.newlines) => {
+                inc_dec = (1, 1);
             }
 
             Kind::CaseItemList(_) => {
@@ -1063,7 +1003,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             Kind::Token(node) => {
                 let token_type = node.token_type();
                 let parent_kind = self.parent.unwrap().kind();
-                if matches!(parent_kind, Kind::BeginHeader(_)) && token_type == ParseTokenType::end
+                if matches!(parent_kind, Kind::BeginHeader(_)) && token_type == ParseTokenType::End
                 {
                     // The newline after "begin" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
@@ -1115,22 +1055,21 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
 }
 
 /// Given a string, detect parse errors in it. If allow_incomplete is set, then if the string is
-/// incomplete (e.g. an unclosed quote), an error is not returned and the ParserTestErrorBits::INCOMPLETE bit
+/// incomplete (e.g. an unclosed quote), an error is not returned and `ParseIssue::incomplete`
 /// is set in the return value. If allow_incomplete is not set, then incomplete strings result in an
 /// error.
-pub fn parse_util_detect_errors(
+pub fn detect_parse_errors(
     buff_src: &wstr,
     mut out_errors: Option<&mut ParseErrorList>,
     allow_incomplete: bool, /*=false*/
-) -> Result<(), ParserTestErrorBits> {
+) -> Result<(), ParseIssue> {
     // Whether there's an unclosed quote or subshell, and therefore unfinished. This is only set if
     // allow_incomplete is set.
     let mut has_unclosed_quote_or_subshell = false;
 
-    let parse_flags = if allow_incomplete {
-        ParseTreeFlags::LEAVE_UNTERMINATED
-    } else {
-        ParseTreeFlags::empty()
+    let parse_flags = ParseTreeFlags {
+        leave_unterminated: allow_incomplete,
+        ..Default::default()
     };
 
     // Parse the input string into an ast. Some errors are detected here.
@@ -1141,8 +1080,8 @@ pub fn parse_util_detect_errors(
         // successfully.
         parse_errors.retain(|parse_error| {
             if [
-                ParseErrorCode::tokenizer_unterminated_quote,
-                ParseErrorCode::tokenizer_unterminated_subshell,
+                ParseErrorCode::TokenizerUnterminatedQuote,
+                ParseErrorCode::TokenizerUnterminatedSubshell,
             ]
             .contains(&parse_error.code)
             {
@@ -1159,7 +1098,7 @@ pub fn parse_util_detect_errors(
     assert!(!has_unclosed_quote_or_subshell || allow_incomplete);
     if has_unclosed_quote_or_subshell {
         // We do not bother to validate the rest of the tree in this case.
-        return Err(ParserTestErrorBits::INCOMPLETE);
+        return ParseIssue::INCOMPLETE;
     }
 
     // Early parse error, stop here.
@@ -1167,24 +1106,23 @@ pub fn parse_util_detect_errors(
         if let Some(errors) = out_errors.as_mut() {
             errors.extend(parse_errors);
         }
-        return Err(ParserTestErrorBits::ERROR);
+        return ParseIssue::ERROR;
     }
 
     // Defer to the tree-walking version.
-    parse_util_detect_errors_in_ast(&ast, buff_src, out_errors)
+    detect_parse_errors_in_ast(&ast, buff_src, out_errors)
 }
 
-/// Like parse_util_detect_errors but accepts an already-parsed ast.
+/// Like detect_parse_errors but accepts an already-parsed ast.
 /// The top of the ast is assumed to be a job list.
-pub fn parse_util_detect_errors_in_ast(
+pub fn detect_parse_errors_in_ast(
     ast: &Ast,
     buff_src: &wstr,
     mut out_errors: Option<&mut ParseErrorList>,
-) -> Result<(), ParserTestErrorBits> {
-    let mut res = ParserTestErrorBits::default();
-
-    // Whether we encountered a parse error.
-    let mut errored = false;
+) -> Result<(), ParseIssue> {
+    // The issue to return.
+    // We break out various reasons for incompleteness to be explicit.
+    let mut issue = ParseIssue::default();
 
     // Whether we encountered an unclosed block. We detect this via an 'end_command' block without
     // source.
@@ -1206,30 +1144,29 @@ pub fn parse_util_detect_errors_in_ast(
     let mut traversal = ast::Traversal::new(ast.top());
     while let Some(node) = traversal.next() {
         match node.kind() {
-            Kind::JobContinuation(jc) => {
+            Kind::JobContinuation(jc)
                 // Somewhat clumsy way of checking for a statement without source in a pipeline.
                 // See if our pipe has source but our statement does not.
-                if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
+                if jc.pipe.has_source() && jc.statement.try_source_range().is_none() => {
                     has_unclosed_pipe = true;
                 }
-            }
             Kind::JobConjunction(job_conjunction) => {
-                errored |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
+                issue.error |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
             }
-            Kind::JobConjunctionContinuation(jcc) => {
+            Kind::JobConjunctionContinuation(jcc)
                 // Somewhat clumsy way of checking for a job without source in a conjunction.
                 // See if our conjunction operator (&& or ||) has source but our job does not.
-                if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
+                if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() => {
                     has_unclosed_conjunction = true;
                 }
-            }
             Kind::Argument(arg) => {
                 let arg_src = arg.source(buff_src);
-                res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
-                    .err()
-                    .unwrap_or_default();
+                if let Err(e) = detect_errors_in_argument(arg, arg_src, &mut out_errors) {
+                    issue.error |= e.error;
+                    issue.incomplete |= e.incomplete;
+                }
             }
-            Kind::JobPipeline(job) => {
+            Kind::JobPipeline(job)
                 // Disallow background in the following cases:
                 //
                 // foo & ; and bar
@@ -1237,12 +1174,12 @@ pub fn parse_util_detect_errors_in_ast(
                 // if foo & ; end
                 // while foo & ; end
                 // If it's not a background job, nothing to do.
-                if job.bg.is_some() {
-                    errored |= detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
+                if job.bg.is_some() => {
+                    issue.error |=
+                        detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
                 }
-            }
             Kind::DecoratedStatement(stmt) => {
-                errored |= detect_errors_in_decorated_statement(
+                issue.error |= detect_errors_in_decorated_statement(
                     buff_src,
                     &traversal,
                     stmt,
@@ -1254,7 +1191,7 @@ pub fn parse_util_detect_errors_in_ast(
                 if !block.end.has_source() {
                     has_unclosed_block = true;
                 }
-                errored |= detect_errors_in_block_redirection_list(
+                issue.error |= detect_errors_in_block_redirection_list(
                     node,
                     &block.args_or_redirs,
                     &mut out_errors,
@@ -1265,7 +1202,7 @@ pub fn parse_util_detect_errors_in_ast(
                 if !brace_statement.right_brace.has_source() {
                     has_unclosed_block = true;
                 }
-                errored |= detect_errors_in_block_redirection_list(
+                issue.error |= detect_errors_in_block_redirection_list(
                     node,
                     &brace_statement.args_or_redirs,
                     &mut out_errors,
@@ -1276,7 +1213,7 @@ pub fn parse_util_detect_errors_in_ast(
                 if !ifs.end.has_source() {
                     has_unclosed_block = true;
                 }
-                errored |= detect_errors_in_block_redirection_list(
+                issue.error |= detect_errors_in_block_redirection_list(
                     node,
                     &ifs.args_or_redirs,
                     &mut out_errors,
@@ -1287,7 +1224,7 @@ pub fn parse_util_detect_errors_in_ast(
                 if !switchs.end.has_source() {
                     has_unclosed_block = true;
                 }
-                errored |= detect_errors_in_block_redirection_list(
+                issue.error |= detect_errors_in_block_redirection_list(
                     node,
                     &switchs.args_or_redirs,
                     &mut out_errors,
@@ -1297,26 +1234,17 @@ pub fn parse_util_detect_errors_in_ast(
         }
     }
 
-    if errored {
-        res |= ParserTestErrorBits::ERROR;
-    }
-
-    if has_unclosed_block || has_unclosed_pipe || has_unclosed_conjunction {
-        res |= ParserTestErrorBits::INCOMPLETE;
-    }
-    if res == ParserTestErrorBits::default() {
-        Ok(())
+    issue.incomplete |= has_unclosed_block || has_unclosed_pipe || has_unclosed_conjunction;
+    if issue.error || issue.incomplete {
+        Err(issue)
     } else {
-        Err(res)
+        Ok(())
     }
 }
 
 /// Detect errors in the specified string when parsed as an argument list. Returns the text of an
 /// error, or none if no error occurred.
-pub fn parse_util_detect_errors_in_argument_list(
-    arg_list_src: &wstr,
-    prefix: &wstr,
-) -> Result<(), WString> {
+pub fn detect_errors_in_argument_list(arg_list_src: &wstr, prefix: &wstr) -> Result<(), WString> {
     // Helper to return a description of the first error.
     let get_error_text = |errors: &ParseErrorList| {
         assert!(!errors.is_empty(), "Expected an error");
@@ -1330,7 +1258,7 @@ pub fn parse_util_detect_errors_in_argument_list(
 
     // Parse the string as a freestanding argument list.
     let mut errors = ParseErrorList::new();
-    let ast = ast::parse_argument_list(arg_list_src, ParseTreeFlags::empty(), Some(&mut errors));
+    let ast = ast::parse_argument_list(arg_list_src, ParseTreeFlags::default(), Some(&mut errors));
     if !errors.is_empty() {
         return get_error_text(&errors);
     }
@@ -1341,7 +1269,7 @@ pub fn parse_util_detect_errors_in_argument_list(
     let args = &arg_list.arguments;
     for arg in args.iter() {
         let arg_src = arg.source(arg_list_src);
-        if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {
+        if detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {
             return get_error_text(&errors);
         }
     }
@@ -1372,7 +1300,7 @@ macro_rules! append_syntax_error_formatted {
             let mut error = ParseError::default();
             error.source_start = $source_location;
             error.source_length = $source_length;
-            error.code = ParseErrorCode::syntax;
+            error.code = ParseErrorCode::Syntax;
             error.text = $text;
             errors.push(error);
         }
@@ -1383,20 +1311,21 @@ macro_rules! append_syntax_error_formatted {
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
 /// substitutions, improperly escaped characters and improper use of the variable expansion
 /// operator.
-pub fn parse_util_detect_errors_in_argument(
+pub fn detect_errors_in_argument(
     arg: &ast::Argument,
     arg_src: &wstr,
     out_errors: &mut Option<&mut ParseErrorList>,
-) -> Result<(), ParserTestErrorBits> {
+) -> Result<(), ParseIssue> {
     let Some(source_range) = arg.try_source_range() else {
         return Ok(());
     };
 
     let source_start = source_range.start();
-    let mut err = ParserTestErrorBits::default();
+    let mut issue = ParseIssue::default();
 
+    // Check if a subtoken contains errors. Returns true if there is an error, and appends to out_errors if provided.
     let check_subtoken =
-        |begin: usize, end: usize, out_errors: &mut Option<&mut ParseErrorList>| {
+        |begin: usize, end: usize, out_errors: &mut Option<&mut ParseErrorList>| -> bool {
             let Some(unesc) = unescape_string(
                 &arg_src[begin..end],
                 UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
@@ -1406,8 +1335,8 @@ pub fn parse_util_detect_errors_in_argument(
                     if src.len() == 2
                         && src[0] == '\\'
                         && (src[1] == 'c'
-                            || src[1].to_lowercase().eq(['u'])
-                            || src[1].to_lowercase().eq(['x']))
+                            || src[1].eq_ignore_ascii_case(&'u')
+                            || src[1].eq_ignore_ascii_case(&'x'))
                     {
                         append_syntax_error!(
                             out_errors,
@@ -1416,7 +1345,7 @@ pub fn parse_util_detect_errors_in_argument(
                             "Incomplete escape sequence '%s'",
                             arg_src
                         );
-                        return ParserTestErrorBits::ERROR;
+                        return true;
                     }
                     append_syntax_error!(
                         out_errors,
@@ -1426,10 +1355,10 @@ pub fn parse_util_detect_errors_in_argument(
                         arg_src
                     );
                 }
-                return ParserTestErrorBits::ERROR;
+                return true;
             };
 
-            let mut err = ParserTestErrorBits::default();
+            let mut errored = false;
             // Check for invalid variable expansions.
             let unesc = unesc.as_char_slice();
             for (idx, c) in unesc.iter().enumerate() {
@@ -1437,10 +1366,10 @@ pub fn parse_util_detect_errors_in_argument(
                     continue;
                 }
                 let next_char = unesc.get(idx + 1).copied().unwrap_or('\0');
-                if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '('].contains(&next_char)
+                if !matches!(next_char, VARIABLE_EXPAND | VARIABLE_EXPAND_SINGLE | '(')
                     && !valid_var_name_char(next_char)
                 {
-                    err = ParserTestErrorBits::ERROR;
+                    errored = true;
                     if let Some(out_errors) = out_errors {
                         let mut first_dollar = idx;
                         while first_dollar > 0
@@ -1449,17 +1378,12 @@ pub fn parse_util_detect_errors_in_argument(
                         {
                             first_dollar -= 1;
                         }
-                        parse_util_expand_variable_error(
-                            unesc.into(),
-                            source_start,
-                            first_dollar,
-                            out_errors,
-                        );
+                        expand_variable_error(unesc.into(), source_start, first_dollar, out_errors);
                     }
                 }
             }
 
-            err
+            errored
         };
 
     let mut cursor = 0;
@@ -1469,53 +1393,57 @@ pub fn parse_util_detect_errors_in_argument(
     let mut is_quoted = false;
     while do_loop {
         let mut has_dollar = false;
-        match parse_util_locate_cmdsubst_range(
+        match locate_cmdsubst_range(
             arg_src,
             &mut cursor,
             false,
             Some(&mut is_quoted),
             Some(&mut has_dollar),
         ) {
-            MaybeParentheses::Error => {
-                err |= ParserTestErrorBits::ERROR;
+            Err(()) => {
+                issue.error = true;
                 append_syntax_error!(out_errors, source_start, 1, "Mismatched parenthesis");
-                return Err(err);
+                return Err(issue);
             }
-            MaybeParentheses::None => {
+            Ok(None) => {
                 do_loop = false;
             }
-            MaybeParentheses::CommandSubstitution(parens) => {
-                err |= check_subtoken(
+            Ok(Some(cmdsub)) => {
+                issue.error |= check_subtoken(
                     checked,
-                    parens.start() - if has_dollar { 1 } else { 0 },
+                    cmdsub.opening_paren_offset() - if has_dollar { 1 } else { 0 },
                     out_errors,
                 );
                 let mut subst_errors = ParseErrorList::new();
-                if let Err(subst_err) = parse_util_detect_errors(
-                    &arg_src[parens.command()],
+                if let Err(e) = detect_parse_errors(
+                    &arg_src[cmdsub.command_range()],
                     Some(&mut subst_errors),
                     false,
                 ) {
-                    err |= subst_err;
+                    issue.error |= e.error;
+                    issue.incomplete |= e.incomplete;
                 }
 
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
                 // within the string, and the offset of the node.
-                let error_offset = parens.start() + 1 + source_start;
+                let error_offset = cmdsub.opening_paren_offset() + 1 + source_start;
                 parse_error_offset_source_start(&mut subst_errors, error_offset);
                 if let Some(out_errors) = out_errors {
                     out_errors.extend(subst_errors);
                 }
 
-                checked = parens.end();
+                checked = cmdsub.end();
             }
         }
     }
 
-    err |= check_subtoken(checked, arg_src.len(), out_errors);
-
-    if err.is_empty() { Ok(()) } else { Err(err) }
+    issue.error |= check_subtoken(checked, arg_src.len(), out_errors);
+    if issue.error || issue.incomplete {
+        Err(issue)
+    } else {
+        Ok(())
+    }
 }
 
 fn detect_errors_in_job_conjunction(
@@ -1536,7 +1464,7 @@ fn detect_errors_in_job_conjunction(
                 conjunction.source_range().start(),
                 conjunction.source_range().length(),
                 BOOL_AFTER_BACKGROUND_ERROR_MSG,
-                if conjunction.token_type() == ParseTokenType::andand {
+                if conjunction.token_type() == ParseTokenType::AndAnd {
                     L!("&&")
                 } else {
                     L!("||")
@@ -1629,7 +1557,7 @@ fn detect_errors_in_decorated_statement(
     let mut first_arg_is_help = false;
     if let Some(arg) = get_first_arg(&dst.args_or_redirs) {
         let arg_src = arg.source(buff_src);
-        first_arg_is_help = parse_util_argument_is_help(arg_src);
+        first_arg_is_help = argument_is_help(arg_src);
     }
 
     // Get the statement we are part of.
@@ -1648,16 +1576,16 @@ fn detect_errors_in_decorated_statement(
 
     // Check our pipeline position.
     let pipe_pos = if job.continuation.is_empty() {
-        PipelinePosition::none
+        PipelinePosition::None
     } else if is_same_node(&job.statement, st) {
-        PipelinePosition::first
+        PipelinePosition::First
     } else {
-        PipelinePosition::subsequent
+        PipelinePosition::Subsequent
     };
 
     // Check that we don't try to pipe through exec.
-    let is_in_pipeline = pipe_pos != PipelinePosition::none;
-    if is_in_pipeline && decoration == StatementDecoration::exec {
+    let is_in_pipeline = pipe_pos != PipelinePosition::None;
+    if is_in_pipeline && decoration == StatementDecoration::Exec {
         errored = append_syntax_error!(
             parse_errors,
             source_start,
@@ -1670,13 +1598,13 @@ fn detect_errors_in_decorated_statement(
     // This is a somewhat stale check that 'and' and 'or' are not in pipelines, except at the
     // beginning. We can't disallow them as commands entirely because we need to support 'and
     // --help', etc.
-    if pipe_pos == PipelinePosition::subsequent {
+    if pipe_pos == PipelinePosition::Subsequent {
         // We only reject it if we have no decoration.
         // `echo foo | command time something`
         // is entirely fair and valid.
         // Other current decorations like "exec"
         // are already forbidden.
-        if dst.decoration() == StatementDecoration::none {
+        if dst.decoration() == StatementDecoration::None {
             // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
             // commands.
             let command = dst.command.source(buff_src);
@@ -1711,7 +1639,8 @@ fn detect_errors_in_decorated_statement(
             parse_errors,
             source_start,
             source_length,
-            "$status is not valid as a command. See `help conditions`"
+            "$status is not valid as a command. See `help %s`",
+            help_section!("language#conditions")
         );
     }
 
@@ -1724,14 +1653,14 @@ fn detect_errors_in_decorated_statement(
         if matches!(
             expand_to_command_and_args(
                 unexp_command,
-                &OperationContext::empty(),
+                &mut OperationContext::empty(),
                 &mut command,
                 None,
                 Some(&mut new_errors),
                 true, /* skip wildcards */
             )
             .result,
-            ExpandResultCode::error | ExpandResultCode::overflow
+            ExpandResultCode::Error | ExpandResultCode::Overflow
         ) {
             errored = true;
         }
@@ -1795,12 +1724,12 @@ fn detect_errors_in_decorated_statement(
         }
 
         // Check that we don't do an invalid builtin (issue #1252).
-        if !errored && decoration == StatementDecoration::builtin {
+        if !errored && decoration == StatementDecoration::Builtin {
             let mut command = unexp_command.to_owned();
             if expand_one(
                 &mut command,
                 ExpandFlags::FAIL_ON_CMDSUBST,
-                &OperationContext::empty(),
+                &mut OperationContext::empty(),
                 match parse_errors {
                     Some(pe) => Some(pe),
                     None => None,
@@ -1850,7 +1779,7 @@ fn detect_errors_in_block_redirection_list(
 /// Given a string containing a variable expansion error, append an appropriate error to the errors
 /// list. The global_token_pos is the offset of the token in the larger source, and the dollar_pos
 /// is the offset of the offending dollar sign within the token.
-pub fn parse_util_expand_variable_error(
+pub fn expand_variable_error(
     token: &wstr,
     global_token_pos: usize,
     dollar_pos: usize,
@@ -1896,7 +1825,7 @@ pub fn parse_util_expand_variable_error(
                         global_after_dollar_pos,
                         1,
                         ERROR_BRACKETED_VARIABLE_QUOTED1,
-                        truncate(var_name, var_err_len, None)
+                        truncate(var_name, VAR_ERR_LEN)
                     );
                 } else {
                     append_syntax_error!(
@@ -1904,7 +1833,7 @@ pub fn parse_util_expand_variable_error(
                         global_after_dollar_pos,
                         1,
                         ERROR_BRACKETED_VARIABLE1,
-                        truncate(var_name, var_err_len, None),
+                        truncate(var_name, VAR_ERR_LEN),
                     );
                 }
             } else {
@@ -1941,7 +1870,7 @@ pub fn parse_util_expand_variable_error(
     }
 
     // We should have appended exactly one error.
-    assert!(errors.as_ref().unwrap().len() == start_error_count + 1);
+    assert_eq!(errors.as_ref().unwrap().len(), start_error_count + 1);
 }
 
 localizable_consts!(
@@ -1966,29 +1895,27 @@ localizable_consts!(
 );
 
 /// Maximum length of a variable name to show in error reports before truncation
-const var_err_len: usize = 16;
+const VAR_ERR_LEN: usize = 16;
 
 #[cfg(test)]
 mod tests {
     use super::{
-        BOOL_AFTER_BACKGROUND_ERROR_MSG, parse_util_cmdsubst_extent, parse_util_compute_indents,
-        parse_util_detect_errors, parse_util_escape_string_with_quote, parse_util_process_extent,
-        parse_util_slice_length,
+        BOOL_AFTER_BACKGROUND_ERROR_MSG, compute_indents, detect_parse_errors, get_cmdsubst_extent,
+        get_process_extent, slice_length,
     };
-    use crate::common::EscapeFlags;
     use crate::parse_constants::{
         ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
         ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
         ERROR_NOT_PID, ERROR_NOT_STATUS,
     };
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use pcre2::utf32::Regex;
 
     #[test]
     #[serial]
     fn test_error_messages() {
-        let _cleanup = test_init();
+        test_init();
         // Given a format string, returns a list of non-empty strings separated by format specifiers. The
         // format specifiers themselves are omitted.
         fn separate_by_format_specifiers(format: &wstr) -> Vec<&wstr> {
@@ -2029,7 +1956,7 @@ mod tests {
         macro_rules! validate {
             ($src:expr, $error_text_format:expr) => {
                 let mut errors = vec![];
-                let res = parse_util_detect_errors(L!($src), Some(&mut errors), false);
+                let res = detect_parse_errors(L!($src), Some(&mut errors), false);
                 let fmt = wgettext!($error_text_format);
                 assert!(res.is_err());
                 assert!(
@@ -2063,11 +1990,11 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_util_process_extent() {
+    fn test_get_process_extent() {
         macro_rules! validate {
             ($commandline:literal, $cursor:expr, $expected_range:expr) => {
                 assert_eq!(
-                    parse_util_process_extent(L!($commandline), $cursor, None),
+                    get_process_extent(L!($commandline), $cursor, None),
                     $expected_range
                 );
             };
@@ -2075,114 +2002,39 @@ mod tests {
         validate!("for file in (path base\necho", 22, 13..22);
         validate!("begin\n\n\nec", 10, 6..10);
         validate!("begin; echo; end", 12, 12..16);
+        validate!("echo hi &| less", 9, 9..9);
     }
 
     #[test]
     #[serial]
-    fn test_parse_util_cmdsubst_extent() {
-        let _cleanup = test_init();
-        const a: &wstr = L!("echo (echo (echo hi");
-        assert_eq!(parse_util_cmdsubst_extent(a, 0), 0..a.len());
-        assert_eq!(parse_util_cmdsubst_extent(a, 1), 0..a.len());
-        assert_eq!(parse_util_cmdsubst_extent(a, 2), 0..a.len());
-        assert_eq!(parse_util_cmdsubst_extent(a, 3), 0..a.len());
+    fn test_get_cmdsubst_extent() {
+        test_init();
+        let a = L!("echo (echo (echo hi");
+        assert_eq!(get_cmdsubst_extent(a, 0), 0..a.len());
+        assert_eq!(get_cmdsubst_extent(a, 1), 0..a.len());
+        assert_eq!(get_cmdsubst_extent(a, 2), 0..a.len());
+        assert_eq!(get_cmdsubst_extent(a, 3), 0..a.len());
+        assert_eq!(get_cmdsubst_extent(a, 8), "echo (".chars().count()..a.len());
         assert_eq!(
-            parse_util_cmdsubst_extent(a, 8),
-            "echo (".chars().count()..a.len()
-        );
-        assert_eq!(
-            parse_util_cmdsubst_extent(a, 17),
+            get_cmdsubst_extent(a, 17),
             "echo (echo (".chars().count()..a.len()
         );
     }
 
     #[test]
     #[serial]
-    fn test_parse_util_slice_length() {
-        let _cleanup = test_init();
-        assert_eq!(parse_util_slice_length(L!("[2]")), Some(3));
-        assert_eq!(parse_util_slice_length(L!("[12]")), Some(4));
-        assert_eq!(parse_util_slice_length(L!("[\"foo\"]")), Some(7));
-        assert_eq!(parse_util_slice_length(L!("[\"foo\"")), None);
-    }
-
-    #[test]
-    #[serial]
-    fn test_escape_quotes() {
-        let _cleanup = test_init();
-        macro_rules! validate {
-            ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
-                assert_eq!(
-                    parse_util_escape_string_with_quote(
-                        L!($cmd),
-                        $quote,
-                        if $no_tilde {
-                            EscapeFlags::NO_TILDE
-                        } else {
-                            EscapeFlags::empty()
-                        }
-                    ),
-                    L!($expected)
-                );
-            };
-        }
-        macro_rules! validate_no_quoted {
-            ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
-                assert_eq!(
-                    parse_util_escape_string_with_quote(
-                        L!($cmd),
-                        $quote,
-                        EscapeFlags::NO_QUOTED
-                            | if $no_tilde {
-                                EscapeFlags::NO_TILDE
-                            } else {
-                                EscapeFlags::empty()
-                            }
-                    ),
-                    L!($expected)
-                );
-            };
-        }
-
-        validate!("abc~def", None, false, "'abc~def'");
-        validate!("abc~def", None, true, "abc~def");
-        validate!("~abc", None, false, "'~abc'");
-        validate!("~abc", None, true, "~abc");
-
-        // These are "raw string literals"
-        validate_no_quoted!("abc", None, false, "abc");
-        validate_no_quoted!("abc~def", None, false, "abc\\~def");
-        validate_no_quoted!("abc~def", None, true, "abc~def");
-        validate_no_quoted!("abc\\~def", None, false, "abc\\\\\\~def");
-        validate_no_quoted!("abc\\~def", None, true, "abc\\\\~def");
-        validate_no_quoted!("~abc", None, false, "\\~abc");
-        validate_no_quoted!("~abc", None, true, "~abc");
-        validate_no_quoted!("~abc|def", None, false, "\\~abc\\|def");
-        validate_no_quoted!("|abc~def", None, false, "\\|abc\\~def");
-        validate_no_quoted!("|abc~def", None, true, "\\|abc~def");
-        validate_no_quoted!("foo\nbar", None, false, "foo\\nbar");
-
-        // Note tildes are not expanded inside quotes, so no_tilde is ignored with a quote.
-        validate_no_quoted!("abc", Some('\''), false, "abc");
-        validate_no_quoted!("abc\\def", Some('\''), false, "abc\\\\def");
-        validate_no_quoted!("abc'def", Some('\''), false, "abc\\'def");
-        validate_no_quoted!("~abc'def", Some('\''), false, "~abc\\'def");
-        validate_no_quoted!("~abc'def", Some('\''), true, "~abc\\'def");
-        validate_no_quoted!("foo\nba'r", Some('\''), false, "foo'\\n'ba\\'r");
-        validate_no_quoted!("foo\\\\bar", Some('\''), false, "foo\\\\\\\\bar");
-
-        validate_no_quoted!("abc", Some('"'), false, "abc");
-        validate_no_quoted!("abc\\def", Some('"'), false, "abc\\\\def");
-        validate_no_quoted!("~abc'def", Some('"'), false, "~abc'def");
-        validate_no_quoted!("~abc'def", Some('"'), true, "~abc'def");
-        validate_no_quoted!("foo\nba'r", Some('"'), false, "foo\"\\n\"ba'r");
-        validate_no_quoted!("foo\\\\bar", Some('"'), false, "foo\\\\\\\\bar");
+    fn test_slice_length() {
+        test_init();
+        assert_eq!(slice_length(L!("[2]")), Some(3));
+        assert_eq!(slice_length(L!("[12]")), Some(4));
+        assert_eq!(slice_length(L!("[\"foo\"]")), Some(7));
+        assert_eq!(slice_length(L!("[\"foo\"")), None);
     }
 
     #[test]
     #[serial]
     fn test_indents() {
-        let _cleanup = test_init();
+        test_init();
         // A struct which is either text or a new indent.
         struct Segment {
             // The indent to set
@@ -2199,7 +2051,7 @@ mod tests {
                     expected_indents.push(segment.indent);
                 }
             }
-            let indents = parse_util_compute_indents(&text);
+            let indents = compute_indents(&text);
             assert_eq!(indents, expected_indents);
         }
         macro_rules! validate {
@@ -2213,9 +2065,9 @@ mod tests {
             };
         }
 
-        #[rustfmt::skip]
-        #[allow(clippy::redundant_closure_call)]
-        (|| {
+        // TODO: feature(stmt_expr_attributes): use #[rustfmt::skip]
+        #[cfg_attr(any(), rustfmt::skip)]
+        {
             validate!(
                 0, "if", 1, " foo",
                 0, "\nend"
@@ -2417,6 +2269,6 @@ mod tests {
                 0, "\n",
                 0, r#"$()"$() ""#
             );
-        })();
+        }
     }
 }

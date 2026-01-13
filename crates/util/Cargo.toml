@@ -1,0 +1,17 @@
+[package]
+name = "fish-util"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+errno.workspace = true
+fish-widestring.workspace = true
+libc.workspace = true
+nix.workspace = true
+rand.workspace = true
+
+[lints]
+workspace = true

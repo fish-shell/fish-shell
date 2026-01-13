@@ -1,0 +1,10 @@
+[package]
+name = "fish-widecharwidth"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license = "CC0-1.0"
+
+[lints]
+workspace = true

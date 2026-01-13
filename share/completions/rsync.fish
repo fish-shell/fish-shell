@@ -165,8 +165,8 @@ complete -c rsync -d Hostname -a "
 (__fish_print_hostnames):
 
 (
-	# Prepend any username specified in the completion to the hostname.
-	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
+    # Prepend any username specified in the completion to the hostname.
+    commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
 )(__fish_print_hostnames):
 
 (__fish_print_users)@\tUsername
@@ -199,10 +199,10 @@ end
 
 complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -xa "
 (
-	# Prepend any user@host:/path information supplied before the remote completion.
+    # Prepend any user@host:/path information supplied before the remote completion.
         __rsync_remote_target
 )(
-	# Get the list of remote files from the specified rsync server.
+    # Get the list of remote files from the specified rsync server.
         rsync --list-only (__rsync_remote_target) 2>/dev/null | string replace -r '^d.*' '\$0/' |
         string replace -r '(\S+\s+){4}' '' |
         string match --invert './' $(set -q new_escaping[1]; or echo ' | string escape -n'; echo)

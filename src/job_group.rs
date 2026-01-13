@@ -1,7 +1,8 @@
 use crate::global_safety::RelaxedAtomicBool;
+use crate::prelude::*;
 use crate::proc::{JobGroupRef, Pid};
-use crate::signal::Signal;
-use crate::wchar::prelude::*;
+use crate::signal::RawSignal;
+use nix::sys::termios::Termios;
 use std::cell::RefCell;
 use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicI32, Ordering};
@@ -25,7 +26,7 @@ impl std::ops::Deref for MaybeJobId {
 
 impl MaybeJobId {
     pub fn as_num(&self) -> i64 {
-        self.0.map(|j| i64::from(u32::from(j.0))).unwrap_or(-1)
+        self.0.map_or(-1, |j| i64::from(u32::from(j.0)))
     }
 }
 
@@ -60,7 +61,7 @@ impl<'a> fish_printf::ToArg<'a> for MaybeJobId {
 pub struct JobGroup {
     /// If set, the saved terminal modes of this job. This needs to be saved so that we can restore
     /// the terminal to the same state when resuming a stopped job.
-    pub tmodes: RefCell<Option<libc::termios>>,
+    pub tmodes: RefCell<Option<Termios>>,
     /// Whether job control is enabled in this `JobGroup` or not.
     ///
     /// If this is set, then the first process in the root job must be external, as it will become
@@ -117,15 +118,15 @@ impl JobGroup {
     }
 
     /// Gets the cancellation signal, if any.
-    pub fn get_cancel_signal(&self) -> Option<Signal> {
+    pub fn get_cancel_signal(&self) -> Option<RawSignal> {
         match self.signal.load(Ordering::Relaxed) {
             0 => None,
-            s => Some(Signal::new(s)),
+            s => Some(RawSignal::new(s)),
         }
     }
 
     /// Mark that a process in this group got a signal and should cancel.
-    pub fn cancel_with_signal(&self, signal: Signal) {
+    pub fn cancel_with_signal(&self, signal: RawSignal) {
         // We only assign the signal if one hasn't yet been assigned. This means the first signal to
         // register wins over any that come later.
         self.signal
@@ -152,7 +153,7 @@ impl JobGroup {
     }
 
     /// Returns the value of [`JobGroup::pgid`]. This is never fish's own pgid!
-    pub fn get_pgid(&self) -> Option<Pid> {
+    pub fn pgid(&self) -> Option<Pid> {
         self.pgid.get().copied()
     }
 }
@@ -180,8 +181,7 @@ impl JobId {
         // in CONSUMED_JOB_IDS are sorted in ascending order, so we just have to check the last.
         let job_id = consumed_job_ids
             .last()
-            .map(JobId::next)
-            .unwrap_or(JobId(1.try_into().unwrap()));
+            .map_or(JobId(1.try_into().unwrap()), JobId::next);
         consumed_job_ids.push(job_id);
         job_id
     }

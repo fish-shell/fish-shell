@@ -11,7 +11,7 @@ send, sendline, expect_prompt, expect_str = (
 )
 
 expect_prompt()
-sendline("function echo_wrap ; /bin/echo $argv ; sleep 0.1; end")
+sendline("function echo_wrap ; command echo $argv ; sleep 0.1; end")
 expect_prompt()
 
 if not os.environ.get("fish_test_helper", ""):

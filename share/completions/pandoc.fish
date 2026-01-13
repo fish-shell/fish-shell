@@ -22,7 +22,9 @@ complete -c pandoc -s s -l standalone
 complete -c pandoc -l strip-comments
 complete -c pandoc -l toc -l table-of-contents
 complete -c pandoc -l no-highlight
-complete -c pandoc -l self-contained
+complete -c pandoc -l self-contained # deprecated: replaced by the following two options
+complete -c pandoc -l standalone
+complete -c pandoc -l embed-resources
 complete -c pandoc -l html-q-tags
 complete -c pandoc -l ascii
 complete -c pandoc -l reference-links

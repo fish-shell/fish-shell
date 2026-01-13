@@ -15,10 +15,72 @@ function __fish_fastboot_list_partition_or_file
 end
 
 function __fish_fastboot_list_partition
-    set -l partitions boot bootloader cache cust dtbo metadata misc modem odm odm_dlkm oem product pvmfw radio recovery system system_ext userdata vbmeta vendor vendor_dlkm vmbeta_system
-    for i in $partitions
-        echo $i
-    end
+    printf %s "\
+abl
+aop
+aop_config
+apdp
+bluetooth
+boot
+countrycode
+cpucp
+cpucp_dtb
+crclist
+dcp
+ddr
+devcfg
+dsp
+dtbo
+featenabler
+hyp
+hyp_ac_config
+idmanager
+imagefv
+init_boot
+keymaster
+logfs
+metadata
+misc
+modem
+modemfirmware
+multiimgoem
+multiimgqti
+pdp
+pdp_cdb
+pvmfw
+qtvm_dtbo
+qupfw
+recovery
+rescue
+secretkeeper
+shrm
+soccp
+soccp_dcd
+soccp_debug
+sparsecrclist
+spuservice
+storsec
+super
+tme_config
+tme_fw
+tme_seq_patch
+toolsfv
+tz
+tz_ac_config
+tz_qti_config
+uefi
+uefisecapp
+userdata
+vbmeta
+vbmeta_system
+vendor_boot
+vm-bootsys
+xbl
+xbl_ac_config
+xbl_config
+xbl_ramdump
+xbl_sc_test_mode
+"
 end
 
 complete -c fastboot -s h -l help -d 'Show this message'

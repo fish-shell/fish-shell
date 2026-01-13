@@ -8,7 +8,6 @@ while others enable optional features and may be ignored by the terminal.
 The terminal must be able to parse Control Sequence Introducer (CSI) commands, Operating System Commands (OSC) and :ref:`optionally <term-compat-dcs-gnu-screen>` Device Control Strings (DCS).
 These are defined by ECMA-48.
 If a valid CSI, OSC or DCS sequence does not represent a command implemented by the terminal, the terminal must ignore it.
-For historical reasons, OSC sequences may be terminated with ``\x07`` instead of ``\e\\``.
 
 Control sequences are denoted in a fish-like syntax.
 Special characters other than ``\`` are not escaped.
@@ -92,7 +91,7 @@ Optional Commands
 
    * - ``\e[m``
      - sgr0
-     - Turn off bold/dim/italic/underline/reverse attribute modes and select default colors.
+     - Turn off bold/dim/italic/underline/strikethrough/reverse attribute modes and select default colors.
    * - ``\e[1m``
      - bold
      - Enter bold mode.
@@ -120,12 +119,18 @@ Optional Commands
    * - ``\e[7m``
      - rev
      - Enter reverse video mode (swap foreground and background colors).
+   * - ``\e[9m``
+     - smxx
+     - Enter strikethrough mode
    * - ``\e[23m``
      - ritm
      - Exit italic mode.
    * - ``\e[24m``
      - rmul
      - Exit underline mode.
+   * - ``\e[29m``
+     - rmxx
+     - Exit strikethrough mode.
    * - ``\e[38;5; Ps m``
      - setaf
      - Select foreground color Ps from the 256-color-palette.
@@ -149,6 +154,9 @@ Optional Commands
    * - ``\e[48;2; Ps ; Ps ; Ps m``
      -
      - Select background color from 24-bit RGB colors.
+   * - ``\e[39m``
+     -
+     - Reset foreground color to the terminal's default.
    * - ``\e[49m``
      -
      - Reset background color to the terminal's default.
@@ -215,12 +223,20 @@ Optional Commands
    * - ``\e[?2004l``
      -
      - Disable bracketed paste.
+   * - ``\e[?2031h``
+     -
+     - Enable unsolicited `color theme reporting <https://contour-terminal.org/vt-extensions/color-palette-update-notifications/>`_.
+       When enabled, the terminal should send ``\e[?997;1n`` or ``\e[?997;2n`` whenever its color theme has changed.
+       This prompts fish to query for :ref:`background color <term-compat-query-background-color>`.
+   * - ``\e[?2031l``
+     -
+     - Disable unsolicited color theme reporting.
    * - .. _term-compat-osc-0:
 
        ``\e]0; Pt \e\\``
      - ts
      - Set terminal window title (OSC 0). Used in :doc:`fish_title <cmds/fish_title>`.
-   * - ``\e]2; Pt \e\\``
+   * - ``\e]1; Pt \e\\``
      - ts
      - Set terminal tab title (OSC 1). Used in :doc:`fish_tab_title <cmds/fish_tab_title>`.
    * - ``\e]7;file:// Pt / Pt \e\\``
@@ -234,6 +250,17 @@ Optional Commands
      -
      - Create a `hyperlink (OSC 8) <https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda>`_.
        This is used in fish's man pages.
+   * - .. _term-compat-query-background-color:
+
+       ``\e]11;?\e\\``
+     - n/a
+     - Query background color.
+
+       A valid response would be of the form ``\e]11;rgb: Pt / Pt / Pt \e\\`` or ``\e]11;rgba: Pt / Pt / Pt / Pt\e\\``
+       where the first three parameters consist of one to four hex digits each, representing red, blue and green components.
+
+       This is used to populate :envvar:`fish_terminal_color_theme`,
+       which is used to select a :ref:`theme variant <fish-config-theme-files>` optimized for the terminal's color theme.
    * - .. _term-compat-osc-52:
 
        ``\e]52;c; Pt \e\\``
@@ -257,7 +284,7 @@ Optional Commands
      - Mark command end (OSC 133);  Ps is the exit status.
    * - .. _term-compat-xtgettcap:
 
-        ``\eP+q Pt \e\\``
+       ``\eP+q Pt \e\\``
      -
      - Request terminfo capability (XTGETTCAP).
        The parameter is the capability's hex-encoded terminfo code.
@@ -273,14 +300,14 @@ Optional Commands
          The response's second parameter is ignored.
        * ``query-os-name`` (for :ref:`status terminal-os <status-terminal-os>`)
 
-         Terminals running on Unix should respond with the hex encoding of ``uname=$(uname)`` as second parameter.
+         Terminals running on Unix should respond with the hex encoding of ``$(uname -s)`` as second parameter.
 
 .. _term-compat-dcs-gnu-screen:
 
 DCS commands and GNU screen
 ---------------------------
 
-Fully-correct DCS parsing is optional because fish switches to the alternate screen before printing any DCS commands.
+DCS parsing is optional because fish temporarily switches to the alternate screen before printing any DCS commands.
 However, since GNU screen neither allows turning on the alternate screen buffer by default,
 nor treats DCS commands in a compatible way,
 fish's initial prompt may be garbled by a DCS payload like ``+q696e646e``.
@@ -305,7 +332,7 @@ Unicode Codepoints
 
 By default, fish outputs the following non-ASCII characters::
 
-    × ► ¶ ⏎ • ● … μ – ’ ‘ “ ” ← → ↑ ↓
+    × ► ¶ ⏎ • ● … μ ’ ‘ “ ”
 
 as well as control pictures (U+2400 through U+241F),
-and locale-specific ones in :ref:`translated strings <variables-locale>`.
+and locale-specific ones in :ref:`translated messages <variables-locale>`.

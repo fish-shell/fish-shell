@@ -1,6 +1,6 @@
 //! Functions having to do with parser keywords, like testing if a function is a block command.
 
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 
 struct ReservedWord {
     text: &'static wstr,

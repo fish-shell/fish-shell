@@ -1,18 +1,18 @@
 // Functions for executing the jobs builtin.
 
 use super::prelude::*;
-use crate::common::{EscapeFlags, EscapeStringStyle, escape_string, timef};
-use crate::io::IoStreams;
-use crate::job_group::{JobId, MaybeJobId};
-use crate::parser::Parser;
-use crate::proc::{Job, clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies};
-use crate::wchar_ext::WExt;
-use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
-use crate::wutil::wgettext;
 use crate::{
-    wchar::{L, WString, wstr},
-    wutil::{fish_wcstoi, wgettext_fmt},
+    err_fmt,
+    io::IoStreams,
+    job_group::{JobId, MaybeJobId},
+    localization::{wgettext, wgettext_fmt},
+    parser::Parser,
+    proc::{HAVE_PROC_STAT, Job, clock_ticks_to_seconds, proc_get_jiffies},
+    wutil::fish_wcstoi,
 };
+use fish_common::{EscapeFlags, EscapeStringStyle, escape_string, timef};
+use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
+use fish_widestring::{L, WExt as _, WString, wstr};
 use std::num::NonZeroU32;
 
 /// Print modes for the jobs builtin.
@@ -44,9 +44,9 @@ fn cpu_use(j: &Job) -> f64 {
 
 /// Print information about the specified job.
 fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut IoStreams) {
-    let pgid = match j.get_pgid() {
+    let pgid = match j.pgid() {
         Some(pgid) => pgid.to_string(),
-        None => "-".to_string(),
+        None => "-".to_owned(),
     };
 
     let mut out = WString::new();
@@ -55,16 +55,23 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
         JobsPrintMode::Default => {
             if header {
                 // Print table header before first job.
-                out += wgettext!("Job\tGroup\t");
-                if have_proc_stat() {
-                    out += wgettext!("CPU\t");
+                out += wgettext!("Job");
+                out.push('\t');
+                out += wgettext!("Group");
+                out.push('\t');
+                if *HAVE_PROC_STAT {
+                    out += wgettext!("CPU");
+                    out.push('\t');
                 }
-                out += wgettext!("State\tCommand\n");
+                out += wgettext!("State");
+                out.push('\t');
+                out += wgettext!("Command");
+                out.push('\n');
             }
 
             sprintf!(=> &mut out, "%d\t%s\t", j.job_id(), pgid);
 
-            if have_proc_stat() {
+            if *HAVE_PROC_STAT {
                 sprintf!(=> &mut out, "%.0f%%\t", 100.0 * cpu_use(j));
             }
 
@@ -82,39 +89,42 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             out += &cmd[..];
 
             out += "\n";
-            streams.out.append(out);
+            streams.out.append(&out);
         }
         JobsPrintMode::PrintGroup => {
             if header {
                 // Print table header before first job.
-                out += wgettext!("Group\n");
+                out += wgettext!("Group");
+                out.push('\n');
             }
             out += &sprintf!("%s\n", pgid)[..];
-            streams.out.append(out);
+            streams.out.append(&out);
         }
         JobsPrintMode::PrintPid => {
             if header {
                 // Print table header before first job.
-                out += wgettext!("Process\n");
+                out += wgettext!("Process");
+                out.push('\n');
             }
 
             for p in j.external_procs() {
                 out += &sprintf!("%d\n", *p.pid.get().unwrap())[..];
             }
-            streams.out.append(out);
+            streams.out.append(&out);
         }
         JobsPrintMode::PrintCommand => {
             if header {
                 // Print table header before first job.
-                out += wgettext!("Command\n");
+                out += wgettext!("Command");
+                out.push('\n');
             }
 
             for p in j.processes() {
                 out += &sprintf!("%s\n", p.argv0().unwrap())[..];
             }
-            streams.out.append(out);
+            streams.out.append(&out);
         }
-    };
+    }
 }
 
 const SHORT_OPTIONS: &wstr = L!("cghlpq");
@@ -129,7 +139,7 @@ const LONG_OPTIONS: &[WOption] = &[
 ];
 
 /// The jobs builtin. Used for printing running jobs. Defined in builtin_jobs.c.
-pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn jobs(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = match argv.first() {
         Some(cmd) => *cmd,
         None => return Err(STATUS_INVALID_ARGS),
@@ -163,7 +173,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 return Ok(SUCCESS);
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
+                builtin_missing_argument(parser, streams, cmd, None, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -195,11 +205,9 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             if arg.char_at(0) == '%' {
                 match fish_wcstoi(&arg[1..]).ok().filter(|&job_id| job_id >= 0) {
                     None => {
-                        streams.err.append(wgettext_fmt!(
-                            "%s: '%s' is not a valid job ID\n",
-                            cmd,
-                            arg
-                        ));
+                        err_fmt!("'%s' is not a valid job ID", arg)
+                            .cmd(cmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     Some(job_id) => {
@@ -215,7 +223,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 }
             } else {
                 let pid = parse_pid(streams, cmd, arg)?;
-                j = parser.job_get_from_pid(pid)
+                j = parser.job_get_from_pid(pid);
             }
 
             if let Some(j) = j.filter(|j| !j.is_completed() && j.is_constructed()) {
@@ -223,9 +231,9 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 found = true;
             } else {
                 if mode != JobsPrintMode::PrintNothing {
-                    streams
-                        .err
-                        .append(wgettext_fmt!("%s: No suitable job: %s\n", cmd, arg));
+                    err_fmt!("No suitable job: %s", arg)
+                        .cmd(cmd)
+                        .finish(streams);
                 }
                 return Err(STATUS_CMD_ERROR);
             }
@@ -245,7 +253,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         if !streams.out_is_redirected && mode != JobsPrintMode::PrintNothing {
             streams
                 .out
-                .append(wgettext_fmt!("%s: There are no jobs\n", argv[0]));
+                .appendln(&wgettext_fmt!("%s: There are no jobs", argv[0]));
         }
         return Err(STATUS_CMD_ERROR);
     }

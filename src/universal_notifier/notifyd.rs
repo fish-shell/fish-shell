@@ -1,8 +1,8 @@
 use crate::common::PROGRAM_NAME;
 use crate::fds::{make_fd_nonblocking, set_cloexec};
-use crate::flog::{FLOG, FLOGF};
+use crate::flog::{flog, flogf};
+use crate::prelude::*;
 use crate::universal_notifier::UniversalNotifier;
-use crate::wchar::prelude::*;
 use libc::{c_char, c_int};
 use std::ffi::CString;
 use std::os::fd::{BorrowedFd, RawFd};
@@ -50,25 +50,25 @@ impl NotifydNotifier {
             notify_register_file_descriptor(name.as_ptr(), &mut notify_fd, 0, &mut token)
         };
         if status != NOTIFY_STATUS_OK || notify_fd < 0 {
-            FLOGF!(
+            flogf!(
                 warning,
                 "notify_register_file_descriptor() failed with status %u.",
                 status
             );
-            FLOG!(
+            flog!(
                 warning,
                 "Universal variable notifications may not be received."
             );
             return None;
         }
-        // Mark us for non-blocking reads, and CLO_EXEC.
+        // Mark us for non-blocking reads, and CLOEXEC.
         let _ = make_fd_nonblocking(notify_fd);
         let _ = set_cloexec(notify_fd, true);
 
         // Serious hack: notify_fd is likely the read end of a pipe. The other end is owned by
-        // libnotify, which does not mark it as CLO_EXEC (it should!). The next fd is probably
+        // libnotify, which does not mark it as CLOEXEC (it should!). The next fd is probably
         // notify_fd + 1. Do it ourselves. If the implementation changes and some other FD gets
-        // marked as CLO_EXEC, that's probably a good thing.
+        // marked as CLOEXEC, that's probably a good thing.
         let _ = set_cloexec(notify_fd + 1, true);
 
         Some(Self {
@@ -92,10 +92,10 @@ impl Drop for NotifydNotifier {
 
 impl UniversalNotifier for NotifydNotifier {
     fn post_notification(&self) {
-        FLOG!(uvar_notifier, "posting notification");
+        flog!(uvar_notifier, "posting notification");
         let status = unsafe { notify_post(self.name.as_ptr()) };
         if status != NOTIFY_STATUS_OK {
-            FLOGF!(
+            flogf!(
                 warning,
                 "notify_post() failed with status %u. Uvar notifications may not be sent.",
                 status,
@@ -110,7 +110,7 @@ impl UniversalNotifier for NotifydNotifier {
     fn notification_fd_became_readable(&self, fd: RawFd) -> bool {
         // notifyd notifications come in as 32 bit values. We don't care about the value. We set
         // ourselves as non-blocking, so just read until we can't read any more.
-        assert!(fd == self.notify_fd);
+        assert_eq!(fd, self.notify_fd);
         let mut read_something = false;
         let mut buff: [u8; 64] = [0; 64];
         loop {
@@ -127,7 +127,7 @@ impl UniversalNotifier for NotifydNotifier {
                 _ => continue,
             }
         }
-        FLOGF!(
+        flogf!(
             uvar_notifier,
             "notify fd %s readable",
             if read_something { "was" } else { "was not" },

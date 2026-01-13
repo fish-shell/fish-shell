@@ -1,8 +1,8 @@
+use fish_widestring::L;
 use num_traits::pow;
-use widestring::utf32str;
 
 use super::prelude::*;
-use crate::tinyexpr::te_interp;
+use crate::{builtins::Error, err_fmt, tinyexpr::te_interp};
 
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;
@@ -30,10 +30,10 @@ struct Options {
 
 fn parse_cmd_opts(
     args: &mut [&wstr],
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), ErrorCode> {
-    const cmd: &wstr = L!("math");
+    let cmd = L!("math");
     let print_hints = true;
 
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
@@ -67,9 +67,9 @@ fn parse_cmd_opts(
                 } else {
                     let scale = fish_wcstoi(optarg).unwrap_or(-1);
                     if scale < 0 || scale > 15 {
-                        streams
-                            .err
-                            .append(wgettext_fmt!("%s: %s: invalid scale\n", cmd, optarg));
+                        err_fmt!("%s: invalid scale", optarg)
+                            .cmd(cmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]
@@ -78,18 +78,18 @@ fn parse_cmd_opts(
             }
             'm' => {
                 let optarg = w.woptarg.unwrap();
-                if optarg.eq(utf32str!("truncate")) || optarg.eq(utf32str!("trunc")) {
+                if optarg.eq(L!("truncate")) || optarg.eq(L!("trunc")) {
                     opts.scale_mode = ScaleMode::Truncate;
-                } else if optarg.eq(utf32str!("round")) {
+                } else if optarg.eq(L!("round")) {
                     opts.scale_mode = ScaleMode::Round;
-                } else if optarg.eq(utf32str!("floor")) {
+                } else if optarg.eq(L!("floor")) {
                     opts.scale_mode = ScaleMode::Floor;
-                } else if optarg.eq(utf32str!("ceiling")) || optarg.eq(utf32str!("ceil")) {
+                } else if optarg.eq(L!("ceiling")) || optarg.eq(L!("ceil")) {
                     opts.scale_mode = ScaleMode::Ceiling;
                 } else {
-                    streams
-                        .err
-                        .append(wgettext_fmt!("%s: %s: invalid mode\n", cmd, optarg));
+                    err_fmt!("%s: invalid mode", optarg)
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -102,11 +102,9 @@ fn parse_cmd_opts(
                 } else {
                     let base = fish_wcstoi(optarg).unwrap_or(-1);
                     if base != 8 && base != 16 {
-                        streams.err.append(wgettext_fmt!(
-                            "%s: %s: invalid base value\n",
-                            cmd,
-                            optarg
-                        ));
+                        err_fmt!("%s: invalid base value", optarg)
+                            .cmd(cmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is 8 or 16.
@@ -117,7 +115,14 @@ fn parse_cmd_opts(
                 opts.print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    args[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -142,12 +147,12 @@ fn parse_cmd_opts(
     }
 
     if have_scale && opts.scale != 0 && opts.base != 10 {
-        streams.err.append(wgettext_fmt!(
-            BUILTIN_ERR_COMBO2,
-            cmd,
-            "non-zero scale value only valid
-            for base 10"
-        ));
+        err_fmt!(
+            Error::INVALID_OPT_COMBO_WITH_CTX,
+            "non-zero scale value only valid for base 10"
+        )
+        .cmd(cmd)
+        .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -164,7 +169,7 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
         v = v.trunc();
         if v == 0.0 {
             // not 00
-            return WString::from_str("0");
+            return L!("0").to_owned();
         }
         let mneg = if v.is_sign_negative() { "-" } else { "" };
         return sprintf!("%s0%o", mneg, v.abs() as u64);
@@ -239,31 +244,27 @@ fn evaluate_expression(
                 let mut s = format_double(n, opts);
                 s.push('\n');
 
-                streams.out.append(s);
+                streams.out.append(&s);
                 return Ok(SUCCESS);
             };
 
-            streams
-                .err
-                .append(sprintf!("%s: Error: %s\n", cmd, error_message));
-            streams.err.append(sprintf!("'%s'\n", expression));
+            let mut err = err_fmt!("Error: %s", error_message);
+            err.append_assign_to_msg(&sprintf!("\n'%s'\n", expression));
+            err.cmd(cmd).finish(streams);
 
             Err(STATUS_CMD_ERROR)
         }
         Err(err) => {
-            streams.err.append(sprintf!(
-                L!("%s: Error: %s\n"),
-                cmd,
-                err.kind.describe_wstr()
-            ));
-            streams.err.append(sprintf!("'%s'\n", expression));
+            let mut error = err_fmt!("Error: %s", err.kind.describe_wstr());
+            error.append_assign_to_msg(&sprintf!("\n'%s'", expression));
             let padding = WString::from_chars(vec![' '; err.position + 1]);
             if err.len >= 2 {
                 let tildes = WString::from_chars(vec!['~'; err.len - 2]);
-                streams.err.append(sprintf!("%s^%s^\n", padding, tildes));
+                error.append_assign_to_msg(&sprintf!("\n%s^%s^", padding, tildes));
             } else {
-                streams.err.append(sprintf!("%s^\n", padding));
+                error.append_assign_to_msg(&sprintf!("\n%s^", padding));
             }
+            error.cmd(cmd).finish(streams);
 
             Err(STATUS_CMD_ERROR)
         }
@@ -274,7 +275,7 @@ fn evaluate_expression(
 const MATH_CHUNK_SIZE: usize = 1024;
 
 /// The math builtin evaluates math expressions.
-pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn math(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
 
     let (opts, mut optind) = parse_cmd_opts(argv, parser, streams)?;
@@ -285,17 +286,17 @@ pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     }
 
     let mut expression = WString::new();
-    for (arg, _) in Arguments::new(argv, &mut optind, streams, MATH_CHUNK_SIZE) {
+    for InputValue { arg, .. } in Arguments::new(argv, &mut optind, streams, MATH_CHUNK_SIZE) {
         if !expression.is_empty() {
-            expression.push(' ')
+            expression.push(' ');
         }
         expression.push_utfstr(&arg);
     }
 
     if expression.is_empty() {
-        streams
-            .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0));
+        err_fmt!(Error::MIN_ARG_COUNT, 1, 0)
+            .cmd(cmd)
+            .finish(streams);
         return Err(STATUS_CMD_ERROR);
     }
 

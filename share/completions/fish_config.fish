@@ -16,6 +16,7 @@ complete fish_config -n __fish_use_subcommand -a browse -d 'Open the web-based U
 
 complete fish_config -n __fish_use_subcommand -a theme -d 'View and pick from the sample themes'
 complete fish_config -n '__fish_seen_subcommand_from theme; and __fish_seen_subcommand_from choose save show' -a '(fish_config theme list)'
+complete fish_config -n '__fish_seen_subcommand_from theme; and __fish_seen_subcommand_from choose save' -l color-theme -xa 'dark light unknown' -d 'Use this variant, overriding $fish_terminal_color_theme'
 complete fish_config -n "__fish_seen_subcommand_from theme; and not __fish_seen_subcommand_from $theme_commands" \
     -a choose -d 'View and pick from the sample themes'
 complete fish_config -n "__fish_seen_subcommand_from theme; and not __fish_seen_subcommand_from $theme_commands" \

@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: fish=%fish %fish %s
 #REQUIRES: command -v tmux
 #REQUIRES: test -z "$CI"
 
@@ -25,3 +25,21 @@ isolated-tmux capture-pane -p
 # CHECK: prompt 4> : fooba
 # CHECK: prompt 5> : fooba
 # CHECK: foobar  foobaz
+
+isolated-tmux send-keys C-u C-l 'read' Enter
+tmux-sleep
+isolated-tmux send-keys read-input Enter
+tmux-sleep
+isolated-tmux send-keys 'set fish_history' Enter
+tmux-sleep
+isolated-tmux send-keys 'true some command; read' Enter
+tmux-sleep
+isolated-tmux send-keys C-p
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 5> read
+# CHECK: read> read-input
+# CHECK: read-input{{⏎|¶|\^J}}
+# CHECK: prompt 6> set fish_history
+# CHECK: prompt 6> true some command; read
+# CHECK: read> read-input

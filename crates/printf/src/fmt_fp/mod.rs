@@ -4,6 +4,7 @@ mod tests;
 
 use super::locale::Locale;
 use super::printf_impl::{ConversionSpec, Error, ModifierFlags, pad};
+use assert_matches::debug_assert_matches;
 use decimal::{DIGIT_WIDTH, Decimal, DigitLimit};
 use std::cmp::min;
 use std::fmt::Write;
@@ -129,10 +130,10 @@ pub(crate) fn format_float(
 ) -> Result<usize, Error> {
     // Only float conversions are expected.
     type CS = ConversionSpec;
-    debug_assert!(matches!(
+    debug_assert_matches!(
         conv_spec,
         CS::e | CS::E | CS::f | CS::F | CS::g | CS::G | CS::a | CS::A
-    ));
+    );
     let prefix = match (y.is_sign_negative(), flags.mark_pos, flags.pad_pos) {
         (true, _, _) => "-",
         (false, true, _) => "+",

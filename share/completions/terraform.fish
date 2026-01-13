@@ -1,13 +1,16 @@
 # Returns 0 if the command has not had a subcommand yet
-# Does not currently account for -chdir
 function __fish_terraform_needs_command
     set -l cmd (commandline -xpc)
-
-    if test (count $cmd) -eq 1
-        return 0
+    set -e cmd[1]
+    for arg in $cmd
+        switch $arg
+            case '-chdir=*'
+                continue
+            case '*'
+                return 1
+        end
     end
-
-    return 1
+    return 0
 end
 
 function __fish_terraform_workspaces
@@ -17,6 +20,7 @@ end
 # general options
 complete -f -c terraform -n "not __fish_terraform_needs_command" -o version -d "Print version information"
 complete -f -c terraform -o help -d "Show help"
+complete -x -c terraform -n __fish_terraform_needs_command -o chdir -a "(__fish_complete_directories)" -d "Switch to a different working directory before executing"
 
 ### apply/destroy
 set -l apply apply destroy
@@ -39,6 +43,10 @@ complete -f -c terraform -n __fish_terraform_needs_command -a console -d "Intera
 complete -r -c terraform -n "__fish_seen_subcommand_from console" -o state -d "Path to a Terraform state file"
 complete -f -c terraform -n "__fish_seen_subcommand_from console" -o var -d "Set a variable in the Terraform configuration"
 complete -r -c terraform -n "__fish_seen_subcommand_from console" -o var-file -d "Set variables from a file"
+
+### force-unlock
+complete -f -c terraform -n __fish_terraform_needs_command -a force-unlock -d "Release a stuck lock on the current workspace"
+complete -f -c terraform -n "__fish_seen_subcommand_from force-unlock" -o force -d "Don't ask for input for unlock confirmation"
 
 ### fmt
 complete -f -c terraform -n __fish_terraform_needs_command -a fmt -d "Rewrite config files to canonical format"
@@ -104,6 +112,18 @@ complete -f -c terraform -n "__fish_seen_subcommand_from login" -a "(__fish_prin
 complete -f -c terraform -n __fish_terraform_needs_command -a logout -d "Removes auth token for the given hostname"
 complete -f -c terraform -n "__fish_seen_subcommand_from logout" -a "(__fish_print_hostnames)"
 
+### metadata
+set -l metadata_commands functions
+complete -f -c terraform -n __fish_terraform_needs_command -a metadata -d "Metadata related commands"
+complete -f -c terraform -n "__fish_seen_subcommand_from metadata && not __fish_seen_subcommand_from $metadata_commands" -a functions -d "Show signatures and descriptions for the available functions"
+complete -f -c terraform -n "__fish_seen_subcommand_from metadata && __fish_seen_subcommand_from functions" -o json -d "Print function signatures in JSON format"
+
+### modules
+complete -f -c terraform -n __fish_terraform_needs_command -a modules -d "Show all declared modules in a working directory"
+complete -f -c terraform -n "__fish_seen_subcommand_from modules" -o json -d "Output declared modules in a machine-readable format"
+complete -f -c terraform -n "__fish_seen_subcommand_from modules" -o var -d "Set a variable in the Terraform configuration"
+complete -r -c terraform -n "__fish_seen_subcommand_from modules" -o var-file -d "Set variables from a file"
+
 ### output
 complete -f -c terraform -n __fish_terraform_needs_command -a output -d "Read an output from a state file"
 complete -r -c terraform -n "__fish_seen_subcommand_from output" -o state -d "Path to the state file to read"
@@ -138,9 +158,17 @@ complete -r -c terraform -n "__fish_seen_subcommand_from $plan" -o var-file -d "
 complete -f -c terraform -n __fish_terraform_needs_command -a providers -d "Print tree of modules with their provider requirements"
 complete -f -c terraform -n "__fish_seen_subcommand_from providers" -a "lock mirror schema"
 
+### query
+complete -f -c terraform -n __fish_terraform_needs_command -a query -d "Search and list remote infrastructure with Terraform"
+complete -f -c terraform -n "__fish_seen_subcommand_from query" -o var -d "Set a variable in the Terraform configuration"
+complete -r -c terraform -n "__fish_seen_subcommand_from query" -o var-file -d "Set variables from a file"
+complete -r -c terraform -n "__fish_seen_subcommand_from query" -o generate-config-out -d "Generate import and resource blocks for found results"
+complete -f -c terraform -n "__fish_seen_subcommand_from query" -o json -d "Produce machine readable output in JSON format"
+complete -f -c terraform -n "__fish_seen_subcommand_from query" -o no-color -d "If specified, output won't contain any color"
+
 ### refresh
 complete -f -c terraform -n __fish_terraform_needs_command -a refresh -d "Update local state file against real resources"
-complete -f -c terraform -n "__fish_seen_subcommand_from $apply" -o compact-warnings -d "Show only error summaries"
+complete -f -c terraform -n "__fish_seen_subcommand_from refresh" -o compact-warnings -d "Show only error summaries"
 complete -r -c terraform -n "__fish_seen_subcommand_from refresh" -o backup -d "Path to backup the existing state file"
 complete -f -c terraform -n "__fish_seen_subcommand_from refresh" -o input=true -d "Ask for input for variables if not directly set"
 complete -f -c terraform -n "__fish_seen_subcommand_from refresh" -o lock=false -d "Don't hold a state lock"
@@ -155,7 +183,21 @@ complete -r -c terraform -n "__fish_seen_subcommand_from refresh" -o var-file -d
 ### show
 complete -f -c terraform -n __fish_terraform_needs_command -a show -d "Inspect Terraform state or plan"
 complete -f -c terraform -n "__fish_seen_subcommand_from show" -o no-color -d "If specified, output won't contain any color"
-complete -f -c terraform -n "__fish_seen_subcommand_from validate" -o json -d "Produce output in JSON format"
+complete -f -c terraform -n "__fish_seen_subcommand_from show" -o json -d "Produce output in JSON format"
+
+### stacks
+set -l stacks_commands init providers-lock validate create list version fmt configuration deployment-group deployment-run
+complete -f -c terraform -n __fish_terraform_needs_command -a stacks -d "Manage HCP Terraform stack operations"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a init -d "Prepare the configuration directory for further commands"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a providers-lock -d "Write out dependency locks for the configured providers"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a validate -d "Check whether the configuration is valid"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a create -d "Create a stack"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a list -d "List stacks for a given organization and/or project"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a version -d "Show the current Stacks Plugin version"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a fmt -d "Reformat Terraform Stacks configuration"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a configuration -d "Manage stack configuration"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a deployment-group -d "Manage deployment groups"
+complete -f -c terraform -n "__fish_seen_subcommand_from stacks && not __fish_seen_subcommand_from $stacks_commands" -a deployment-run -d "Manage deployment runs"
 
 ### state
 complete -r -c terraform -n __fish_terraform_needs_command -a state -d "Advanced state management"

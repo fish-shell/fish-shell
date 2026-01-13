@@ -193,7 +193,7 @@ end
 if type -q man && type -q col
     function __fish_zfs_property_options
         set -l property (string escape --style=regex -- $argv[1])
-        set -l values (command man zfs | col -b | string replace -rf -- '^\s*'$property'=(.*\|.*)' '$1' | string split ' | ')
+        set -l values (man zfs | col -b | string replace -rf -- '^\s*'$property'=(.*\|.*)' '$1' | string split ' | ')
         printf '%s\n' $property=$values
     end
 else

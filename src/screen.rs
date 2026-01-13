@@ -7,40 +7,37 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
-use crate::FLOG;
+use crate::common::{get_omitted_newline_str, has_working_tty_timestamps, shell_modes};
 use crate::editable_line::line_at_cursor;
+use crate::env::Environment;
+use crate::flog::{flog, flogf};
+use crate::global_safety::RelaxedAtomicBool;
+use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
 use crate::key::ViewportPosition;
 use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
-use std::borrow::Cow;
+use crate::prelude::*;
+use crate::terminal::SgrTerminalCommand::EnterDimMode;
+use crate::terminal::TerminalCommand::{
+    self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
+    CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
+};
+use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
+use crate::termsize::Termsize;
+use crate::wutil::fstat;
+use fish_common::write_loop;
+use fish_fallback::{fish_wcswidth_canonicalizing, fish_wcwidth};
+use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
+use fish_widestring::{ELLIPSIS_CHAR, wcs2bytes};
+use libc::{STDERR_FILENO, STDOUT_FILENO};
+use nix::sys::termios;
 use std::cell::RefCell;
 use std::collections::LinkedList;
-use std::io::Write;
+use std::io::Write as _;
 use std::num::NonZeroU16;
 use std::ops::Range;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicU32;
 use std::time::SystemTime;
-
-use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
-
-use crate::common::{
-    get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
-    has_working_tty_timestamps, shell_modes, wcs2bytes, write_loop,
-};
-use crate::env::Environment;
-use crate::fallback::fish_wcwidth;
-use crate::flog::FLOGF;
-use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
-use crate::terminal::TerminalCommand::{
-    self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
-    CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
-};
-use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter, use_terminfo};
-use crate::termsize::Termsize;
-use crate::wchar::prelude::*;
-use crate::wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
-use crate::wutil::fstat;
 
 #[derive(Copy, Clone, Default)]
 pub enum CharOffset {
@@ -89,7 +86,7 @@ impl Line {
             highlight,
             character: rendered_character(character),
             offset_in_cmdline,
-        })
+        });
     }
 
     /// Append a nul-terminated string `txt` to the line, giving each character `color`.
@@ -171,16 +168,16 @@ impl ScreenData {
     }
 
     pub fn clear_lines(&mut self) {
-        self.line_datas.clear()
+        self.line_datas.clear();
     }
 
     pub fn resize(&mut self, size: usize) {
-        self.line_datas.resize(size, Default::default())
+        self.line_datas.resize(size, Default::default());
     }
 
     pub fn create_line(&mut self, idx: usize) -> &mut Line {
         if idx >= self.line_datas.len() {
-            self.line_datas.resize(idx + 1, Default::default())
+            self.line_datas.resize(idx + 1, Default::default());
         }
         self.line_mut(idx)
     }
@@ -302,7 +299,7 @@ impl Screen {
         let screen_width = curr_termsize.width();
         let screen_height = curr_termsize.height();
         static REPAINTS: AtomicU32 = AtomicU32::new(0);
-        FLOGF!(
+        flogf!(
             screen,
             "Repaint %u",
             1 + REPAINTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
@@ -341,7 +338,6 @@ impl Screen {
 
         // Compute a layout.
         let layout = compute_layout(
-            get_ellipsis_char(),
             screen_width,
             screen_height,
             self.viewport_y,
@@ -435,15 +431,13 @@ impl Screen {
                 if is_final_rendering {
                     usize::MAX
                 } else {
-                    scrolled_cursor
-                        .map(|sc| {
-                            if sc.scroll_amount != 0 {
-                                sc.cursor.y
-                            } else {
-                                screen_height - 1
-                            }
-                        })
-                        .unwrap_or(usize::MAX)
+                    scrolled_cursor.map_or(usize::MAX, |sc| {
+                        if sc.scroll_amount != 0 {
+                            sc.cursor.y
+                        } else {
+                            screen_height - 1
+                        }
+                    })
                 },
                 effective_commandline.as_char_slice()[i],
                 colors[i],
@@ -472,7 +466,7 @@ impl Screen {
                         && self.desired.line_datas[y]
                             .color_at(self.desired.line_datas[y].len() - 1)
                             .foreground
-                            == HighlightRole::autosuggestion
+                            == HighlightRole::Autosuggestion
                 })
             {
                 1
@@ -534,7 +528,7 @@ impl Screen {
                 });
 
         self.with_buffered_output(|zelf| {
-            zelf.update(vars, &layout.left_prompt, &layout.right_prompt)
+            zelf.update(vars, &layout.left_prompt, &layout.right_prompt);
         });
         self.save_status();
     }
@@ -564,27 +558,28 @@ impl Screen {
     }
 
     pub fn push_to_scrollback(&mut self) {
-        let Some(viewport_cursor_y) = self.viewport_y else {
+        let Some(lines_to_scroll) = self.viewport_y else {
             return;
         };
-        FLOG!(reader, "Pushing to scrollback");
-        let lines_to_scroll = self.command_line_y_given_cursor_y(viewport_cursor_y);
-        self.set_position_in_viewport("scrollback-push", Some(0));
+        flog!(reader, "Pushing to scrollback");
         if lines_to_scroll == 0 {
             return;
         }
         let mut out = BufferedOutputter::new(self.outp);
         // Move everything to scrollback.
-        out.write_command(ScrollContentUp(lines_to_scroll));
+        out.write_command(ScrollContentUp {
+            lines: lines_to_scroll,
+        });
         // Reposition cursor.
         out.write_command(CursorMove(CardinalDirection::Up, lines_to_scroll));
+        self.set_position_in_viewport("scrollback-push", Some(0));
     }
 
     pub fn set_position_in_viewport(&mut self, whence: &str, viewport_y: Option<usize>) {
-        FLOGF!(
+        flogf!(
             reader,
             "Setting screen y to %s due to %s",
-            viewport_y.map_or("<none>".to_string(), |y| format!("{y}")),
+            viewport_y.map_or("<none>".to_owned(), |y| format!("{y}")),
             whence,
         );
         self.viewport_y = viewport_y;
@@ -597,10 +592,10 @@ impl Screen {
         let actual_lines = self.actual.line_count();
         let remaining_vertical_space = screen_height.saturating_sub(actual_lines);
         if viewport_y > remaining_vertical_space {
-            FLOGF!(
+            flogf!(
                 reader,
                 "printing %u lines at y=%u would exceed window height (%u); \
-                     assuming the extra lines have been pushed to scrollback, setting screen y to %d",
+                    assuming the extra lines have been pushed to scrollback, setting screen y to %d",
                 actual_lines,
                 viewport_y,
                 screen_height,
@@ -613,7 +608,7 @@ impl Screen {
     pub fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
         let prompt_y = viewport_cursor_y.checked_sub(self.actual.cursor.y);
         prompt_y.unwrap_or_else(|| {
-            FLOG!(
+            flog!(
                 reader,
                 "Reported cursor line index",
                 viewport_cursor_y,
@@ -631,22 +626,21 @@ impl Screen {
         let Some(viewport_y) = self.viewport_y else {
             return CharOffset::None;
         };
-        let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_y);
         let y = viewport_position
             .y
-            .checked_sub(viewport_prompt_y)
+            .checked_sub(viewport_y)
             .unwrap_or_else(|| {
-                FLOG!(
+                flog!(
                     reader,
                     "Given y",
                     viewport_position.y,
                     "exceeds the prompt's y",
-                    viewport_prompt_y,
+                    viewport_y,
                     "inferred from reported cursor position",
                 );
                 0
             })
-            .max(self.actual.visible_prompt_lines - 1)
+            .max(self.actual.visible_prompt_lines.saturating_sub(1))
             .min(self.actual.line_count() - 1);
         let line = self.actual.line(y);
         let x = viewport_position.x.max(line.indentation);
@@ -659,8 +653,7 @@ impl Screen {
             } else {
                 None
             })
-            .map(|char| char.offset_in_cmdline)
-            .unwrap_or(CharOffset::Pointer(0));
+            .map_or(CharOffset::Pointer(0), |char| char.offset_in_cmdline);
         match offset {
             CharOffset::Cmd(value) if x >= line.len() => CharOffset::Cmd(value + 1),
             CharOffset::Pager(_) if x >= line.len() => CharOffset::None,
@@ -692,79 +685,43 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
         return vec![b'\r'];
     };
 
-    let mut abandon_line_string = Vec::with_capacity(screen_width + 32);
+    let mut abandon_line_string = Outputter::new_buffering_no_assume_normal();
+
+    let omitted_newline_str = get_omitted_newline_str();
 
     // Do the PROMPT_SP hack.
     // Don't need to check for fish_wcwidth errors; this is done when setting up
     // omitted_newline_char in common.rs.
-    let non_space_width = get_omitted_newline_width();
+    let non_space_width = omitted_newline_str.chars().count();
     // We do `>` rather than `>=` because the code below might require one extra space.
     if screen_width > non_space_width {
-        if use_terminfo() {
-            use crate::terminal::tparm1;
-            use std::ffi::CString;
-            let term = crate::terminal::term();
-            let mut justgrey = true;
-            let add = |abandon_line_string: &mut Vec<u8>, s: Option<CString>| {
-                let Some(s) = s else {
-                    return false;
-                };
-                abandon_line_string.extend(s.as_bytes());
-                true
-            };
-            if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
-                if add(&mut abandon_line_string, Some(enter_dim_mode.clone())) {
-                    // Use dim if they have it, so the color will be based on their actual normal
-                    // color and the background of the terminal.
-                    justgrey = false;
-                }
-            }
-            if let (true, Some(set_a_foreground)) = (justgrey, term.set_a_foreground.as_ref()) {
-                let max_colors = term.max_colors.unwrap_or_default();
-                if max_colors >= 238 {
-                    // draw the string in a particular grey
-                    add(&mut abandon_line_string, tparm1(set_a_foreground, 237));
-                } else if max_colors >= 9 {
-                    // bright black (the ninth color, looks grey)
-                    add(&mut abandon_line_string, tparm1(set_a_foreground, 8));
-                } else if max_colors >= 2 {
-                    if let Some(enter_bold_mode) = term.enter_bold_mode.as_ref() {
-                        // we might still get that color by setting black and going bold for bright
-                        add(&mut abandon_line_string, Some(enter_bold_mode.clone()));
-                        add(&mut abandon_line_string, tparm1(set_a_foreground, 0));
-                    }
-                }
-            }
-        } else {
-            abandon_line_string.write_command(EnterDimMode);
-        }
+        abandon_line_string
+            .style_writer()
+            .write_command(EnterDimMode);
 
-        abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
-        abandon_line_string.write_command(ExitAttributeMode);
-        abandon_line_string.extend(repeat_n(b' ', screen_width - non_space_width));
+        abandon_line_string.write_bytes(omitted_newline_str.as_bytes());
+        abandon_line_string.reset_text_face();
+        abandon_line_string
+            .contents_mut()
+            .extend(repeat_n(b' ', screen_width - non_space_width));
     }
 
     abandon_line_string.push(b'\r');
-    abandon_line_string.extend_from_slice(get_omitted_newline_str().as_bytes());
+    abandon_line_string.write_bytes(omitted_newline_str.as_bytes());
     // Now we are certainly on a new line. But we may have dropped the omitted newline char on
     // it. So append enough spaces to overwrite the omitted newline char, and then clear all the
     // spaces from the new line.
-    abandon_line_string.extend(repeat_n(b' ', non_space_width));
-    abandon_line_string.push(b'\r');
-    // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
-    // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
-    // line above your prompt. This doesn't make a difference in normal usage, but copying and
-    // pasting your terminal log becomes a pain. This commit clears that line, making it an
-    // actual empty line.
-    abandon_line_string.write_command(ClearToEndOfLine);
-    abandon_line_string.push(b'\r');
-    // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
-    // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
-    // line above your prompt. This doesn't make a difference in normal usage, but copying and
-    // pasting your terminal log becomes a pain. This commit clears that line, making it an
-    // actual empty line.
-    abandon_line_string.write_command(ClearToEndOfLine);
     abandon_line_string
+        .contents_mut()
+        .extend(repeat_n(b' ', non_space_width));
+    abandon_line_string.push(b'\r');
+    // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
+    // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
+    // line above your prompt. This doesn't make a difference in normal usage, but copying and
+    // pasting your terminal log becomes a pain. This commit clears that line, making it an
+    // actual empty line.
+    abandon_line_string.write_command(ClearToEndOfLine);
+    abandon_line_string.take_contents()
 }
 
 impl Screen {
@@ -928,16 +885,13 @@ impl Screen {
         let y_steps =
             isize::try_from(new_y).unwrap() - isize::try_from(self.actual.cursor.y).unwrap();
 
-        #[allow(clippy::comparison_chain)] // TODO(MSRV>=1.90) for old clippy
+        #[allow(clippy::comparison_chain)] // TODO(MSRV>=1.90) old clippy
         let s = if y_steps < 0 {
             Some(CursorUp)
         } else if y_steps > 0 {
-            if (shell_modes().c_oflag & ONLCR) != 0
-                && (!use_terminfo()
-                    || crate::terminal::term()
-                        .cursor_down
-                        .as_ref()
-                        .is_some_and(|cud| cud.as_bytes() == b"\n"))
+            if shell_modes()
+                .output_flags
+                .contains(termios::OutputFlags::ONLCR)
             {
                 // See GitHub issue #4505.
                 // Most consoles use a simple newline as the cursor down escape.
@@ -983,7 +937,7 @@ impl Screen {
                     x_steps.abs_diff(0),
                 ));
             }
-        };
+        }
 
         self.actual.cursor.x = new_x;
         self.actual.cursor.y = new_y;
@@ -1038,8 +992,7 @@ impl Screen {
     }
 
     fn should_wrap(&self, i: usize) -> bool {
-        allow_soft_wrap()
-            && self.desired.line(i).is_soft_wrapped
+        self.desired.line(i).is_soft_wrapped
             && i + 1 < self.desired.line_count()
             && (i + 1 >= self.actual.line_count()
                 || line_shared_prefix(self.actual.line(i + 1), self.desired.line(i + 1)) == 0)
@@ -1426,9 +1379,7 @@ pub struct LayoutCache {
 }
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
-// Note this is deliberately exported so that init_terminal can clear it.
-// TODO un-export this once we remove the terminfo option.
-pub static LAYOUT_CACHE_SHARED: Mutex<LayoutCache> = Mutex::new(LayoutCache::new());
+static LAYOUT_CACHE_SHARED: Mutex<LayoutCache> = Mutex::new(LayoutCache::new());
 
 impl LayoutCache {
     pub const fn new() -> Self {
@@ -1597,8 +1548,7 @@ pub fn escape_code_length(code: &wstr) -> Option<usize> {
         return None;
     }
 
-    is_terminfo_escape_seq(code)
-        .or_else(|| is_screen_name_escape_seq(code))
+    is_screen_name_escape_seq(code)
         .or_else(|| is_osc_escape_seq(code))
         .or_else(|| is_three_byte_escape_seq(code))
         .or_else(|| is_csi_style_escape_seq(code))
@@ -1611,42 +1561,17 @@ static MIDNIGHT_COMMANDER_HACK: RelaxedAtomicBool = RelaxedAtomicBool::new(false
 /// broken if you do '\r' after it like we normally do.
 /// See <https://midnight-commander.org/ticket/4258>.
 pub fn screen_set_midnight_commander_hack() {
-    MIDNIGHT_COMMANDER_HACK.store(true)
+    MIDNIGHT_COMMANDER_HACK.store(true);
 }
 
 /// The number of characters to indent new blocks.
 const INDENT_STEP: usize = 4;
 
-/// Tests if the specified narrow character sequence is present at the specified position of the
-/// specified wide character string. All of \c seq must match, but str may be longer than seq.
-fn try_sequence(seq: &[u8], s: &wstr) -> usize {
-    let mut i = 0;
-    loop {
-        if i == seq.len() {
-            return i;
-        }
-        if char::from(seq[i]) != s.char_at(i) {
-            return 0;
-        }
-        i += 1;
-    }
-}
-
 /// Returns the number of columns left until the next tab stop, given the current cursor position.
 fn next_tab_stop(current_line_width: usize) -> usize {
     // Assume tab stops every 8 characters.
-    let tab_width = if use_terminfo() {
-        crate::terminal::term().init_tabs.unwrap_or(8)
-    } else {
-        8
-    };
-    ((current_line_width / tab_width) + 1) * tab_width
-}
-
-/// Whether we permit soft wrapping. If so, in some cases we don't explicitly move to the second
-/// physical line on a wrapped logical line; instead we just output it.
-fn allow_soft_wrap() -> bool {
-    !use_terminfo() || crate::terminal::term().auto_right_margin
+    const TAB_WIDTH: usize = 8;
+    ((current_line_width / TAB_WIDTH) + 1) * TAB_WIDTH
 }
 
 /// Does this look like the escape sequence for setting a screen name?
@@ -1761,38 +1686,6 @@ fn is_csi_style_escape_seq(code: &wstr) -> Option<usize> {
     Some(cursor)
 }
 
-/// Detect whether the escape sequence sets one of the terminal attributes that affects how text is
-/// displayed other than the color.
-fn is_terminfo_escape_seq(code: &wstr) -> Option<usize> {
-    if !use_terminfo() {
-        return None;
-    }
-    let term = crate::terminal::term();
-    let esc2 = [
-        &term.enter_bold_mode,
-        &term.exit_attribute_mode,
-        &term.enter_underline_mode,
-        &term.exit_underline_mode,
-        &term.enter_standout_mode,
-        &term.enter_italics_mode,
-        &term.exit_italics_mode,
-        &term.enter_reverse_mode,
-        &term.enter_dim_mode,
-    ];
-
-    for p in &esc2 {
-        let Some(p) = p else { continue };
-        // Test both padded and unpadded version, just to be safe. Most versions of fish_tparm don't
-        // actually seem to do anything these days.
-        let esc_seq_len = try_sequence(p.as_bytes(), code);
-        if esc_seq_len != 0 {
-            return Some(esc_seq_len);
-        }
-    }
-
-    None
-}
-
 /// Return whether `c` ends a measuring run.
 fn is_run_terminator(c: char) -> bool {
     matches!(c, '\0' | '\n' | '\r' | '\x0C')
@@ -1850,8 +1743,7 @@ fn truncate_run(
 
     // Bravely prepend ellipsis char and skip it.
     // Ellipsis is always width 1.
-    let ellipsis = get_ellipsis_char();
-    run.insert(0, ellipsis);
+    run.insert(0, ELLIPSIS_CHAR);
     curr_width += 1;
 
     // Start removing characters after ellipsis.
@@ -1895,23 +1787,24 @@ fn line_shared_prefix(a: &Line, b: &Line) -> usize {
         // We're done if the text or colors are different.
         if ac != bc || a.color_at(idx) != b.color_at(idx) {
             if idx > 0 {
+                fn invisible(c: char) -> bool {
+                    matches!(fish_wcwidth(c), None | Some(0))
+                }
+
                 let mut c = None;
                 // Possible combining mark, go back until we hit _two_ printable characters or idx
                 // of 0.
-                if fish_wcwidth(a.char_at(idx)) < 1 {
+                if invisible(a.char_at(idx)) {
                     c = Some(&a);
-                } else if fish_wcwidth(b.char_at(idx)) < 1 {
+                } else if invisible(b.char_at(idx)) {
                     c = Some(&b);
                 }
 
                 if let Some(c) = c {
-                    while idx > 1
-                        && (fish_wcwidth(c.char_at(idx - 1)) < 1
-                            || fish_wcwidth(c.char_at(idx)) < 1)
-                    {
+                    while idx > 1 && (invisible(c.char_at(idx - 1)) || invisible(c.char_at(idx))) {
                         idx -= 1;
                     }
-                    if idx == 1 && fish_wcwidth(c.char_at(idx)) < 1 {
+                    if idx == 1 && invisible(c.char_at(idx)) {
                         idx = 0;
                     }
                 }
@@ -1928,13 +1821,6 @@ pub(crate) static ONLY_GRAYSCALE: RelaxedAtomicBool = RelaxedAtomicBool::new(fal
 
 /// Returns true if we are using a dumb terminal.
 pub(crate) fn is_dumb() -> bool {
-    if use_terminfo() {
-        let term = crate::terminal::term();
-        return term.cursor_up.is_none()
-            || term.cursor_down.is_none()
-            || term.cursor_left.is_none()
-            || term.cursor_right.is_none();
-    }
     IS_DUMB.load()
 }
 
@@ -1956,24 +1842,8 @@ struct ScreenLayout {
     pub(crate) autosuggestion: WString,
 }
 
-// Given a vector whose indexes are offsets and whose values are the widths of the string if
-// truncated at that offset, return the offset that fits in the given width. Returns
-// width_by_offset.size() - 1 if they all fit. The first value in width_by_offset is assumed to be
-// 0.
-fn truncation_offset_for_width(str: &wstr, max_width: usize) -> usize {
-    let mut i = 0;
-    let mut width = 0;
-    while i < str.len() && width <= max_width {
-        width += wcwidth_rendered_min_0(str.char_at(i));
-        i += 1;
-    }
-    // i is the first index that did not fit; i - 1 is therefore the last that did.
-    i - 1
-}
-
 #[allow(clippy::too_many_arguments)]
 fn compute_layout(
-    ellipsis_char: char,
     screen_width: usize,
     screen_height: usize,
     screen_viewport_y: Option<usize>,
@@ -2000,7 +1870,7 @@ fn compute_layout(
     );
 
     let left_prompt_width = left_prompt_layout.last_line_width;
-    let mut right_prompt_width = right_prompt_layout.last_line_width;
+    let right_prompt_width = right_prompt_layout.last_line_width;
 
     // Get the width of the first line, and if there is more than one line.
     let first_command_line_width: usize = line_at_cursor(commandline_before_suggestion, 0)
@@ -2036,29 +1906,15 @@ fn compute_layout(
         ..Default::default()
     };
 
-    // Hide the right prompt if it doesn't fit on the first line.
-    if left_prompt_width + first_command_line_width + right_prompt_width < screen_width {
-        result.right_prompt = right_prompt;
-    } else {
-        right_prompt_width = 0;
-    }
+    // Track each logical line from the autosuggestion so we can determine how much of it fits
+    // on screen. We allow the lines to soft wrap naturally and we only truncate vertically if
+    // we would exceed the screen height.
+    let commandline_before_suggestion_lines = commandline_before_suggestion
+        .chars()
+        .filter(|&c| c == '\n')
+        .count();
+    let cursor_y = left_prompt_layout.line_starts.len() - 1 + commandline_before_suggestion_lines;
 
-    // Now we should definitely fit.
-    assert!(left_prompt_width + right_prompt_width <= screen_width);
-
-    // Truncate each logical line from the autosuggestion to fit on a single screen line.
-    // In future, we should truncate only once, at the end (#12004).
-    let cursor_y = left_prompt_layout.line_starts.len() - 1
-        + commandline_before_suggestion
-            .chars()
-            .filter(|&c| c == '\n')
-            .count();
-
-    struct SuggestionLine<'a> {
-        available_autosuggest_space: usize,
-        autosuggestion_line: &'a wstr,
-        autosuggest_total_width: usize,
-    }
     let mut suggestion_lines = vec![];
 
     let mut available_vertical_space = screen_viewport_y.map_or(
@@ -2072,11 +1928,11 @@ fn compute_layout(
         .split(|&c| c == '\n')
         .enumerate()
     {
+        if available_vertical_space == 0 {
+            truncated_vertically = true;
+            break;
+        }
         let autosuggestion_line = wstr::from_char_slice(autosuggestion_line);
-        let autosuggest_total_width = autosuggestion_line
-            .chars()
-            .map(wcwidth_rendered_min_0)
-            .sum();
 
         // Calculate space available for autosuggestion.
         let indent_width = |pos| usize::try_from(indent[pos]).unwrap() * INDENT_STEP;
@@ -2086,84 +1942,105 @@ fn compute_layout(
                     + commandline_before_suggestion
                         .chars()
                         .rposition(|c| c == '\n')
-                        .map_or(right_prompt_width, indent_width)
+                        .map(indent_width)
+                        .unwrap_or_default()
             } else {
                 indent_width(suggestion_start - "\n".len())
             };
-        let available_horizontal_space = screen_width - (width % screen_width);
-
-        let suggestion_line_height =
-            if width >= screen_width || autosuggest_total_width >= available_horizontal_space {
-                // As per the comment above, we truncate and autosuggestion lines that would wrap.
-                // We truncate them at the very end of the screen, so they (barely) soft wrap,
-                // and take up two screen lines.
-                2
-            } else {
-                1
-            };
-        match available_vertical_space.checked_sub(suggestion_line_height) {
-            Some(lines) => available_vertical_space = lines,
-            None => {
-                truncated_vertically = true;
-                break;
+        available_vertical_space = available_vertical_space.saturating_sub(width / screen_width);
+        if available_vertical_space == 0 {
+            truncated_vertically = true;
+            break;
+        }
+        let column = width % screen_width;
+        fn consumed_lines_or_truncated_suggestion(
+            screen_width: usize,
+            available_vertical_space: usize,
+            mut column: usize,
+            autosuggestion_line: &wstr,
+        ) -> Result<usize, &wstr> {
+            let mut lines = 1;
+            for (i, ch) in autosuggestion_line.char_indices() {
+                let ch_width = wcwidth_rendered_min_0(ch);
+                let new_column = column + ch_width;
+                if new_column >= screen_width {
+                    column = 0;
+                    lines += 1;
+                }
+                let barely_softwrapped = new_column == screen_width;
+                if !barely_softwrapped {
+                    column += ch_width;
+                }
+                if lines > available_vertical_space {
+                    return Err(autosuggestion_line.slice_to(i));
+                }
             }
-        };
-
-        suggestion_lines.push(SuggestionLine {
-            available_autosuggest_space: available_horizontal_space,
-            autosuggestion_line,
-            autosuggest_total_width,
-        });
+            Ok(lines)
+        }
+        suggestion_lines.push(
+            match consumed_lines_or_truncated_suggestion(
+                screen_width,
+                available_vertical_space,
+                column,
+                autosuggestion_line,
+            ) {
+                Ok(lines) => {
+                    available_vertical_space -= lines;
+                    autosuggestion_line
+                }
+                Err(truncated) => {
+                    truncated_vertically = true;
+                    truncated
+                }
+            },
+        );
+        if truncated_vertically {
+            break;
+        }
 
         suggestion_start += autosuggestion_line.len() + "\n".len();
     }
 
     let mut autosuggestion = WString::new();
-    let mut erased = 0;
-    let mut suggestion_start = commandline_before_suggestion.len();
-    for (
-        line,
-        &SuggestionLine {
-            available_autosuggest_space,
-            autosuggestion_line,
-            autosuggest_total_width,
-        },
-    ) in suggestion_lines.iter().enumerate()
+    let mut displayed_len = 0;
     {
-        let truncated_suggestion_line;
-        let mut vertical_truncation_marker = None;
-        if autosuggest_total_width > 0 && autosuggest_total_width >= available_autosuggest_space {
-            // horizontal truncation
-            let truncation_offset =
-                truncation_offset_for_width(autosuggestion_line, available_autosuggest_space - 1);
-            truncated_suggestion_line = Cow::Owned(
-                autosuggestion_line[..truncation_offset].to_owned()
-                    + wstr::from_char_slice(&[ellipsis_char]),
-            );
-        } else if truncated_vertically && line == suggestion_lines.len() - 1 {
-            // vertical truncation
-            truncated_suggestion_line = Cow::Borrowed(autosuggestion_line);
-            vertical_truncation_marker = Some(ellipsis_char);
+        // Hide the right prompt if it doesn't fit on the first line.
+        let first_command_line_suggestion_width = if commandline_before_suggestion_lines == 0 {
+            suggestion_lines.first().map_or(0, |line| {
+                line.chars().map(wcwidth_rendered_min_0).sum::<usize>()
+            })
         } else {
-            // no truncation
-            assert!(available_autosuggest_space >= autosuggest_total_width);
-            truncated_suggestion_line = Cow::Borrowed(autosuggestion_line);
+            0
+        };
+        if left_prompt_width
+            + first_command_line_width
+            + first_command_line_suggestion_width
+            + right_prompt_width
+            <= screen_width
+        {
+            result.right_prompt = right_prompt;
         }
-
-        let truncation_range = suggestion_start - erased + truncated_suggestion_line.len()
-            ..suggestion_start - erased + autosuggestion_line.len();
-        colors.drain(truncation_range.clone());
-        indent.drain(truncation_range.clone());
-        erased += truncation_range.len();
-        suggestion_start += autosuggestion_line.len() + "\n".len();
-        if line != 0 {
+    }
+    for (line_idx, autosuggestion_line) in suggestion_lines.iter().enumerate() {
+        if line_idx != 0 {
             autosuggestion.push('\n');
+            displayed_len += "\n".len();
         }
-        autosuggestion.push_utfstr(&truncated_suggestion_line);
-        if let Some(extra) = vertical_truncation_marker {
-            autosuggestion.push(extra);
-            colors.insert(truncation_range.end, colors[truncation_range.end - 1]);
-            indent.insert(truncation_range.end, indent[truncation_range.end - 1]);
+        autosuggestion.push_utfstr(autosuggestion_line);
+        displayed_len += autosuggestion_line.len();
+    }
+
+    let total_autosuggestion_len = autosuggestion_str.len();
+    let truncated_chars = total_autosuggestion_len.saturating_sub(displayed_len);
+    if truncated_chars > 0 {
+        let suggestion_end = commandline_before_suggestion.len() + displayed_len;
+        colors.drain(suggestion_end..suggestion_end + truncated_chars);
+        indent.drain(suggestion_end..suggestion_end + truncated_chars);
+        if truncated_vertically && displayed_len > 0 {
+            let suggestion_last = suggestion_end - 1;
+            autosuggestion.push(ELLIPSIS_CHAR);
+            colors.insert(suggestion_end, colors[suggestion_last]);
+            indent.insert(suggestion_end, indent[suggestion_last]);
         }
     }
     result.autosuggestion = autosuggestion;
@@ -2185,31 +2062,31 @@ fn rendered_character(c: char) -> char {
 }
 
 fn wcwidth_rendered_min_0(c: char) -> usize {
-    usize::try_from(wcwidth_rendered(c)).unwrap_or_default()
+    wcwidth_rendered(c).unwrap_or_default()
 }
-pub fn wcwidth_rendered(c: char) -> isize {
+pub fn wcwidth_rendered(c: char) -> Option<usize> {
     fish_wcwidth(rendered_character(c))
 }
-pub fn wcswidth_rendered(s: &wstr) -> isize {
-    s.chars().map(wcwidth_rendered).sum()
+pub fn wcswidth_rendered(s: &wstr) -> usize {
+    fish_wcswidth_canonicalizing(s, rendered_character).unwrap_or_default()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::common::get_ellipsis_char;
     use crate::highlight::HighlightSpec;
-    use crate::parse_util::parse_util_compute_indents;
+    use crate::parse_util::compute_indents;
+    use crate::prelude::*;
     use crate::screen::{
         LayoutCache, PromptCacheEntry, PromptLayout, ScreenLayout, compute_layout,
     };
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
-    use crate::wcstringutil::join_strings;
+    use fish_wcstringutil::join_strings;
+    use fish_widestring::ELLIPSIS_CHAR;
 
     #[test]
     #[serial]
-    fn test_complete() {
-        let _cleanup = test_init();
+    fn test_escape_code_length() {
+        test_init();
         let mut lc = LayoutCache::new();
         assert_eq!(lc.escape_code_length(L!("")), 0);
         assert_eq!(lc.escape_code_length(L!("abcd")), 0);
@@ -2222,16 +2099,18 @@ mod tests {
 
         // iTerm2 escape sequences.
         assert_eq!(
-            lc.escape_code_length(L!("\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE")),
-            25
+            lc.escape_code_length(L!("\x1B]50;CurrentDir=test/foo\x1b\\NOT_PART_OF_SEQUENCE")),
+            26
         );
         assert_eq!(
-            lc.escape_code_length(L!("\x1B]50;SetMark\x07NOT_PART_OF_SEQUENCE")),
-            13
+            lc.escape_code_length(L!("\x1B]50;SetMark\x1b\\NOT_PART_OF_SEQUENCE")),
+            14
         );
         assert_eq!(
-            lc.escape_code_length(L!("\x1B]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE")),
-            28
+            lc.escape_code_length(L!(
+                "\x1B]6;1;bg;red;brightness;255\x1b\\NOT_PART_OF_SEQUENCE"
+            )),
+            29
         );
         assert_eq!(
             lc.escape_code_length(L!("\x1B]Pg4040ff\x1B\\NOT_PART_OF_SEQUENCE")),
@@ -2244,7 +2123,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_layout_cache() {
-        let _cleanup = test_init();
+        test_init();
         let mut seqs = LayoutCache::new();
 
         // Verify escape code cache.
@@ -2316,11 +2195,11 @@ mod tests {
     #[test]
     #[serial]
     fn test_prompt_truncation() {
-        let _cleanup = test_init();
+        test_init();
         let mut cache = LayoutCache::new();
         let mut trunc = WString::new();
 
-        let ellipsis = || WString::from_chars([get_ellipsis_char()]);
+        let ellipsis = || WString::from_chars([ELLIPSIS_CHAR]);
 
         // No truncation.
         let layout = cache.calc_prompt_layout(L!("abcd"), Some(&mut trunc), usize::MAX);
@@ -2396,22 +2275,7 @@ mod tests {
 
         // Escape sequences are not truncated.
         let layout = cache.calc_prompt_layout(
-            L!("\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE"),
-            Some(&mut trunc),
-            4,
-        );
-        assert_eq!(
-            layout,
-            PromptLayout {
-                line_starts: vec![0],
-                last_line_width: 4,
-            },
-        );
-        assert_eq!(trunc, ellipsis() + L!("\x1B]50;CurrentDir=test/foo\x07NCE"));
-
-        // Newlines in escape sequences are skipped.
-        let layout = cache.calc_prompt_layout(
-            L!("\x1B]50;CurrentDir=\ntest/foo\x07NOT_PART_OF_SEQUENCE"),
+            L!("\x1B]50;CurrentDir=test/foo\x1b\\NOT_PART_OF_SEQUENCE"),
             Some(&mut trunc),
             4,
         );
@@ -2424,7 +2288,25 @@ mod tests {
         );
         assert_eq!(
             trunc,
-            ellipsis() + L!("\x1B]50;CurrentDir=\ntest/foo\x07NCE")
+            ellipsis() + L!("\x1B]50;CurrentDir=test/foo\x1b\\NCE")
+        );
+
+        // Newlines in escape sequences are skipped.
+        let layout = cache.calc_prompt_layout(
+            L!("\x1B]50;CurrentDir=\ntest/foo\x1b\\NOT_PART_OF_SEQUENCE"),
+            Some(&mut trunc),
+            4,
+        );
+        assert_eq!(
+            layout,
+            PromptLayout {
+                line_starts: vec![0],
+                last_line_width: 4,
+            },
+        );
+        assert_eq!(
+            trunc,
+            ellipsis() + L!("\x1B]50;CurrentDir=\ntest/foo\x1b\\NCE")
         );
 
         // We will truncate down to one character if we have to.
@@ -2443,29 +2325,27 @@ mod tests {
     fn test_compute_layout() {
         macro_rules! validate {
             (
-            (
-                $screen_width:expr,
-                $left_untrunc_prompt:literal,
-                $right_untrunc_prompt:literal,
-                $commandline_before_suggestion:literal,
-                $autosuggestion_str:literal,
-                $commandline_after_suggestion:literal
-            )
-            -> (
-                $left_prompt:literal,
-                $left_prompt_space:expr,
-                $right_prompt:literal,
-                $autosuggestion:literal $(,)?
-            )
+                (
+                    $screen_width:expr,
+                    $left_untrunc_prompt:literal,
+                    $right_untrunc_prompt:literal,
+                    $commandline_before_suggestion:literal,
+                    $autosuggestion_str:literal,
+                    $commandline_after_suggestion:literal
+                ) -> (
+                    $left_prompt:literal,
+                    $left_prompt_space:expr,
+                    $right_prompt:literal,
+                    $autosuggestion:literal $(,)?
+                )
         ) => {{
                 let full_commandline = L!($commandline_before_suggestion).to_owned()
                     + L!($autosuggestion_str)
                     + L!($commandline_after_suggestion);
                 let mut colors = vec![HighlightSpec::default(); full_commandline.len()];
-                let mut indent = parse_util_compute_indents(&full_commandline);
+                let mut indent = compute_indents(&full_commandline);
                 assert_eq!(
                     compute_layout(
-                        '…',
                         $screen_width,
                         /*screen_height=*/ 24,
                         /*screen_viewport_y=*/ Some(0),
@@ -2504,8 +2384,8 @@ mod tests {
             ) -> (
                 "left>",
                 5,
-                "<right",
-                " autosugges…",
+                "",
+                " autosuggesTION",
             )
         );
         validate!(
@@ -2525,7 +2405,7 @@ mod tests {
                 "left>",
                 5,
                 "<right",
-                " autosuggestion t…",
+                " autosuggestion tRUNCATED",
             )
         );
         validate!(
@@ -2535,7 +2415,7 @@ mod tests {
                 "left>",
                 5,
                 "<right",
-                " autosuggesti…",
+                " autosuggestiON  TRUNCATED",
             )
         );
         let indent = validate!(
@@ -2545,10 +2425,10 @@ mod tests {
                 "left>",
                 5,
                 "<right",
-                " autosuggesti…",
+                " autosuggestiON  TRUNCATED",
             )
         );
-        assert_eq!(indent["if :\ncommand autosuggesti…\n".len()], 1);
+        assert_eq!(indent["if :\ncommand autosuggestiON  TRUNCATED\n".len()], 1);
 
         validate!(
             (
@@ -2557,7 +2437,7 @@ mod tests {
                 "left>",
                 5,
                 "",
-                " auto…",
+                " autoSUGGESTION",
             )
         );
         validate!(
@@ -2567,7 +2447,7 @@ mod tests {
                 "left>",
                 5,
                 "",
-                "…",
+                "s",
             )
         );
         validate!(
@@ -2577,7 +2457,7 @@ mod tests {
                 "left>",
                 5,
                 "",
-                "…",
+                "SUGGESTION",
             )
         );
         validate!(
@@ -2587,7 +2467,7 @@ mod tests {
                 "left>",
                 5,
                 "",
-                "uggestion long so…",
+                "uggestion long soFT WRAP",
             )
         );
         validate!(
@@ -2597,7 +2477,7 @@ mod tests {
                 "left>",
                 5,
                 "<right",
-                "and …",
+                "and AUTOSUGGESTION",
             )
         );
         validate!(
@@ -2607,7 +2487,7 @@ mod tests {
                 "left>",
                 5,
                 "<right",
-                "…",
+                "AUTOSUGGESTION",
             )
         );
         validate!( //
@@ -2617,7 +2497,7 @@ mod tests {
                 "left>",
                 5,
                 "<right",
-                "utosuggestion sof…",
+                "utosuggestion sofT WRAP",
             )
         );
         validate!(
@@ -2626,8 +2506,8 @@ mod tests {
             ) -> (
                 "left>",
                 5,
-                "",
-                "and …",
+                "<RIGHT",
+                "and AUTOSUGGESTION",
             )
         );
         validate!(
@@ -2636,8 +2516,8 @@ mod tests {
             ) -> (
                 "left>",
                 5,
-                "",
-                "…",
+                "<RIGHT",
+                "AUTOSUGGESTION",
             )
         );
         validate!(
@@ -2646,8 +2526,8 @@ mod tests {
             ) -> (
                 "left>",
                 5,
-                "",
-                "utosuggestion sof…",
+                "<RIGHT",
+                "utosuggestion sofT WRAP",
             )
         );
     }

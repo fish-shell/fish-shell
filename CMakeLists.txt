@@ -24,12 +24,12 @@ include(cmake/Rust.cmake)
 # Work around issue where archive-built libs go in the wrong place.
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-# Set up the machinery around FISH-BUILD-VERSION-FILE
-# This defines the FBVF variable.
-include(Version)
+find_program(SPHINX_EXECUTABLE NAMES sphinx-build
+    HINTS
+    $ENV{SPHINX_DIR}
+    PATH_SUFFIXES bin
+    DOC "Sphinx documentation generator")
 
-# Set up the docs.
-include(cmake/Docs.cmake)
 
 # Tell Cargo where our build directory is so it can find Cargo.toml.
 set(VARS_FOR_CARGO
@@ -42,9 +42,7 @@ set(VARS_FOR_CARGO
     "CARGO_TARGET_DIR=${FISH_RUST_BUILD_DIR}"
     "CARGO_BUILD_RUSTC=${Rust_COMPILER}"
     "${FISH_PCRE2_BUILDFLAG}"
-    "RUSTFLAGS=$ENV{RUSTFLAGS} ${rust_debugflags}"
     "FISH_SPHINX=${SPHINX_EXECUTABLE}"
-    "FISH_USE_PREBUILT_DOCS=${USE_PREBUILT_DOCS}"
 )
 
 # Let fish pick up when we're running out of the build directory without installing
@@ -55,36 +53,36 @@ add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
 set(build_types Release RelWithDebInfo Debug "")
 if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST build_types)
-  message(WARNING "Unsupported build type ${CMAKE_BUILD_TYPE}. If this doesn't build, try one of Release, RelWithDebInfo or Debug")
+    message(WARNING "Unsupported build type ${CMAKE_BUILD_TYPE}. If this doesn't build, try one of Release, RelWithDebInfo or Debug")
 endif()
 
 add_custom_target(
-  fish ALL
-  COMMAND
-    "${CMAKE_COMMAND}" -E
-      env ${VARS_FOR_CARGO}
-        ${Rust_CARGO}
-          build --bin fish
-          $<$<CONFIG:Release>:--release>
-          $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>
-          --target ${Rust_CARGO_TARGET}
-          --no-default-features
-          --features=${FISH_CARGO_FEATURES}
-          ${CARGO_FLAGS}
-    &&
-    "${CMAKE_COMMAND}" -E
-      copy "${rust_target_dir}/${rust_profile}/fish" "${CMAKE_CURRENT_BINARY_DIR}"
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-  USES_TERMINAL
+    fish ALL
+    COMMAND
+        "${CMAKE_COMMAND}" -E
+            env ${VARS_FOR_CARGO}
+                ${Rust_CARGO}
+                    build --bin fish
+                    $<$<CONFIG:Release>:--release>
+                    $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>
+                    --target ${Rust_CARGO_TARGET}
+                    --no-default-features
+                    --features=${FISH_CARGO_FEATURES}
+                    ${CARGO_FLAGS}
+        &&
+        "${CMAKE_COMMAND}" -E
+            copy "${rust_target_dir}/${rust_profile}/fish" "${CMAKE_CURRENT_BINARY_DIR}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    USES_TERMINAL
 )
 
 function(CREATE_LINK target)
-  add_custom_target(
-    ${target} ALL
-    DEPENDS fish
-    COMMAND ln -f fish ${target}
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-  )
+    add_custom_target(
+        ${target} ALL
+        DEPENDS fish
+        COMMAND ln -f fish ${target}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
 endfunction(CREATE_LINK)
 
 # Define fish_indent.
@@ -92,6 +90,9 @@ create_link(fish_indent)
 
 # Define fish_key_reader.
 create_link(fish_key_reader)
+
+# Set up the docs.
+include(cmake/Docs.cmake)
 
 # Set up tests.
 include(cmake/Tests.cmake)

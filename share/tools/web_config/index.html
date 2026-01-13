@@ -36,84 +36,84 @@
             <template x-if="currentTab === 'colors'" x-data="colors">
                 <div>
                     <!-- ko with: color_picker -->
-                    <div class="colorpicker_text_sample" :style="{'background-color': terminalBackgroundColor}">
+                    <div class="colorpicker_text_sample" :style="{'background-color': actualTerminalBackgroundColor}">
                         <span style="position: absolute; left: 10px; top: 3px"
-                            :style="{'color': `#${text_color_for_color(terminalBackgroundColor)}`}"
-                            x-text="selectedColorScheme.name"></span>
+                            :style="{'color': `#${text_color_for_color(actualTerminalBackgroundColor)}`}"
+                            x-text="selectedColorScheme.name_with_color_theme"></span>
                         <br />
                         <div class="color_picker_background_cells">
                             <span style="display: block; text-align: right; line-height: 110%"
-                                :style="{'color': `#${text_color_for_color(terminalBackgroundColor)}`}">
-                                Background Color:<br />(demo only)&nbsp;
+                                :style="{'color': `#${text_color_for_color(actualTerminalBackgroundColor)}`}">
+                                Simulate background color
                             </span>
                             <template x-for="color in sampleTerminalBackgroundColors">
                                 <label :style="{'background-color': color}">
-                                    <input type="radio" :value="color" x-model="terminalBackgroundColor" hidden
+                                    <input type="radio" :value="color" x-model="overriddenTerminalBackgroundColor" hidden
                                         :title="'Preview with this background color.\n\nfish cannot change the background color of your terminal. Refer to your terminal settings to set its background color.'">
                                     </input>
                                 </label>
                             </template>
                         </div>
                         <!-- This is the sample text -->
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
-                            @click="selectColorSetting('command')">/bright/vixens</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'param'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.param)}"
-                            @click="selectColorSetting('param')">jump</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'end'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.end)}"
-                            @click="selectColorSetting('end')">|</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
-                            @click="selectColorSetting('command')">dozy</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'quote'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.quote)}"
-                            @click="selectColorSetting('quote')"> "fowl"</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'redirection'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.redirection)}"
-                            @click="selectColorSetting('redirection')">&gt; quack</span>
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'end'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.end)}"
-                            @click="selectColorSetting('end')">&</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_command'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_command)}"
+                            @click="selectColorSetting('fish_color_command')">/bright/vixens</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_param'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_param)}"
+                            @click="selectColorSetting('fish_color_param')">jump</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_end'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_end)}"
+                            @click="selectColorSetting('fish_color_end')">|</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_command'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_command)}"
+                            @click="selectColorSetting('fish_color_command')">dozy</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_quote'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_quote)}"
+                            @click="selectColorSetting('fish_color_quote')"> "fowl"</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_redirection'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_redirection)}"
+                            @click="selectColorSetting('fish_color_redirection')">&gt; quack</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_end'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_end)}"
+                            @click="selectColorSetting('fish_color_end')">&</span>
                         <br>
 
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
-                            @click="selectColorSetting('command')">echo</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_command'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_command)}"
+                            @click="selectColorSetting('fish_color_command')">echo</span>
 
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'error'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.error)}"
-                            @click="selectColorSetting('error')">'</span><span
-                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'quote'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.quote)}"
-                            @click="selectColorSetting('quote')">Errors are the portals to discovery</span>
-
-                        <br>
-
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'comment'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.comment)}"
-                            @click="selectColorSetting('comment')"># This is a comment</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_error'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_error)}"
+                            @click="selectColorSetting('fish_color_error')">'</span><span
+                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_quote'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_quote)}"
+                            @click="selectColorSetting('fish_color_quote')">Errors are the portals to discovery</span>
 
                         <br>
 
-                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
-                            @click="selectColorSetting('command')">Th</span><span class="fake_cursor"><span
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_comment'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_comment)}"
+                            @click="selectColorSetting('fish_color_comment')"># This is a comment</span>
+
+                        <br>
+
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_command'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_command)}"
+                            @click="selectColorSetting('fish_color_command')">Th</span><span class="fake_cursor"><span
                                 style="visibility: hidden">i</span></span><span
-                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'autosuggestion'}"
-                            :style="{ 'color': interpret_color(selectedColorScheme.autosuggestion)}"
-                            @click="selectColorSetting('autosuggestion')">s is an autosuggestion</span>
+                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'fish_color_autosuggestion'}"
+                            :style="{ 'color': interpret_color(currentColorScheme().colors.fish_color_autosuggestion)}"
+                            @click="selectColorSetting('fish_color_autosuggestion')">s is an autosuggestion</span>
 
 
                         <div style="position: absolute; right: 5px; bottom: 5px;">
 
                             <button class="customize_theme_button" :class="{button_highlight: customizationActive}"
-                                :style="{'color': `#${text_color_for_color(terminalBackgroundColor)}`}"
+                                :style="{'color': `#${text_color_for_color(actualTerminalBackgroundColor)}`}"
                                 @click="toggleCustomizationActive">Customize</button>
 
                             <button class="save_button"
-                                :style="{'color': `#${text_color_for_color(terminalBackgroundColor)}`}"
+                                :style="{'color': `#${text_color_for_color(actualTerminalBackgroundColor)}`}"
                                 x-show="showSaveButton" @click="setTheme" x-text="saveThemeButtonTitle"></button>
                         </div>
 
@@ -132,7 +132,7 @@
                                                 :style="{'background-color': interpret_color(color)}"
                                                 @click="changeSelectedTextColor(color)">
                                                 <div class="colorpicker_term256_selection_indicator"
-                                                    x-show="selectedColorScheme[selectedColorSetting] == color"
+                                                    x-show="currentColorScheme().colors[selectedColorSetting] == color"
                                                     :style="{'border-color': interpret_color(border_color_for_color(color))}">
                                                 </div>
                                             </td>
@@ -153,33 +153,33 @@
                                     @click="changeSelectedColorScheme(colorScheme)">
                                     <div class="color_scheme_choice_label">
                                         <!-- This click/clickBubble nonsense is so that we can have a separate URL inside a parent with an onClick handler -->
-                                        <span x-text="colorScheme.name"></span>
+                                        <span x-text="colorScheme.name_with_color_themes"></span>
                                         <a x-show="colorScheme.url" style="text-decoration: none; color: inherit;"
                                             :href="colorScheme.url">&#10138;</a>
                                     </div>
                                     <div class="colorpicker_text_sample_tight"
-                                        :style="{'background-color': colorScheme.preferred_background}">
+                                        :style="{'background-color': default_color_scheme(colorScheme).preferred_background}">
                                         <span
-                                            :style="{'color': interpret_color(colorScheme.command)}">/bright/vixens</span>
-                                        <span :style="{'color': interpret_color(colorScheme.param)}">jump</span>
-                                        <span :style="{'color': interpret_color(colorScheme.end)}">|</span>
-                                        <span :style="{'color': interpret_color(colorScheme.command)}">dozy</span>
-                                        <span :style="{'color': interpret_color(colorScheme.quote)}"> "fowl" </span>
-                                        <span :style="{'color': interpret_color(colorScheme.redirection)}">&gt;
+                                            :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_command)}">/bright/vixens</span>
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_param)}">jump</span>
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_end)}">|</span>
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_command)}">dozy</span>
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_quote)}"> "fowl" </span>
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_redirection)}">&gt;
                                             quack</span>
-                                        <span :style="{'color': interpret_color(colorScheme.end)}">&</span>
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_end)}">&</span>
                                         <br>
-                                        <span :style="{'color': interpret_color(colorScheme.command)}">echo</span>
-                                        <span :style="{'color': interpret_color(colorScheme.error)}">'</span><span
-                                            :style="{'color': interpret_color(colorScheme.quote)}">Errors are the
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_command)}">echo</span>
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_error)}">'</span><span
+                                            :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_quote)}">Errors are the
                                             portals to discovery</span>
                                         <br>
-                                        <span :style="{'color': interpret_color(colorScheme.comment)}"># This is a
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_comment)}"># This is a
                                             comment</span>
                                         <br>
-                                        <span :style="{'color': interpret_color(colorScheme.command)}">Th</span><span
+                                        <span :style="{'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_command)}">Th</span><span
                                             class="fake_cursor"><span style="visibility: hidden">i</span></span><span
-                                            :style="{ 'color': interpret_color(colorScheme.autosuggestion)}">s is an
+                                            :style="{ 'color': interpret_color(default_color_scheme(colorScheme).colors.fish_color_autosuggestion)}">s is an
                                             autosuggestion</span>
                                     </div>
                                 </div>
@@ -195,7 +195,7 @@
                 <div class="height_limiter">
                     <!-- The first 'sample' prompt is the current one; the remainders are samples. This ought to be cleaned up. -->
                     <div class="current_prompt" style="min-height: 7.5em;"
-                        :style="{'background-color': terminalBackgroundColor}">
+                        :style="{'background-color': actualTerminalBackgroundColor}">
                         <div class="prompt_demo_choice_label" style="color: #FFF;" x-text="selectedPrompt.name"></div>
                         <div style='display: flex'>
                             <div x-html='selectedPrompt.demo' style='flex-grow: 1' class="prompt_demo unbordered"></div>

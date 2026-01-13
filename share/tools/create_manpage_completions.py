@@ -501,6 +501,19 @@ class Deroffer:
             return True
         return False
 
+    def device_control(self):
+        # groff \X'...' device control escape (and \Z'...' zero-width).
+        # help2man 1.50+ uses \X'tty: link URL' for hyperlinks.
+        # We just skip the entire escape.
+        if self.str_at(1) in "XZ" and self.str_at(2) == "'":
+            self.skip_char(3)
+            while self.str_at(0) and self.str_at(0) != "'":
+                self.skip_char()
+            if self.str_at(0) == "'":
+                self.skip_char()
+            return True
+        return False
+
     def var(self):
         reg = ""
         s0s1 = self.s[0:2]
@@ -650,6 +663,8 @@ class Deroffer:
             return self.size()
         elif c in "hvwud":
             return self.numreq()
+        elif c in "XZ":
+            return self.device_control()
         elif c in "n*":
             return self.var()
         elif c == "(":
@@ -1208,7 +1223,7 @@ def unquote_single_quotes(data):
 
 # Make a string of characters that are deemed safe in fish without needing to be escaped
 # Note that space is not included
-g_fish_safe_chars = frozenset(string.ascii_letters + string.digits + "_+-|/:=@~")
+g_fish_safe_chars = frozenset(string.ascii_letters + string.digits + "_+-/:=@")
 
 
 def fish_escape_single_quote(str):
@@ -1314,6 +1329,9 @@ def built_command(options, description):
 
 
 def remove_groff_formatting(data):
+    # Strip groff \X'...' device control escapes (help2man 1.50+ hyperlinks)
+    # and \Z'...' zero-width escapes.
+    data = re.sub(r"\\[XZ]'[^']*'", "", data)
     data = data.replace("\\fI", "")
     data = data.replace("\\fP", "")
     data = data.replace("\\f1", "")
@@ -2102,7 +2120,7 @@ def get_paths_from_man_locations():
         parent_paths = ["/usr/share/man", "/usr/local/man", "/usr/local/share/man"]
         print(
             "Unable to get the manpath, falling back to %s." % ":".join(parent_paths),
-            "Explictly set $MANPATH to fix this error.",
+            "Explicitly set $MANPATH to fix this error.",
             file=sys.stderr,
         )
 
@@ -2213,6 +2231,7 @@ if __name__ == "__main__":
         args.directory = os.path.expanduser(
             xdg_cache_home + "/fish/generated_completions/"
         )
+    if not args.stdout:
         try:
             os.makedirs(args.directory)
         except OSError as e:

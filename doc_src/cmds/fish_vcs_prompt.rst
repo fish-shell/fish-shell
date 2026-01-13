@@ -23,6 +23,7 @@ It calls out to VCS-specific functions. The currently supported systems are:
 
 - :doc:`fish_git_prompt <fish_git_prompt>`
 - :doc:`fish_hg_prompt <fish_hg_prompt>`
+- :doc:`fish_darcs_prompt <fish_darcs_prompt>`
 - :doc:`fish_svn_prompt <fish_svn_prompt>`
 
 If a VCS isn't installed, the respective function does nothing.

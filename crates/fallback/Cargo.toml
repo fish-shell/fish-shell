@@ -1,0 +1,21 @@
+[package]
+name = "fish-fallback"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+fish-common.workspace = true
+fish-widecharwidth.workspace = true
+fish-widestring.workspace = true
+libc.workspace = true
+widestring.workspace = true
+
+[build-dependencies]
+fish-build-helper.workspace = true
+rsconf.workspace = true
+
+[lints]
+workspace = true

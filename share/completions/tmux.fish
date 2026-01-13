@@ -166,7 +166,7 @@ complete -c tmux -n "__fish_seen_subcommand_from $new" -s A -d "attach to existi
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s D -d "if -A is specified, detach other clients attached to the session"
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s P -d "print information about the new session after creation"
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s E -d "don't apply update-environment option"
-complete -c tmux -n "__fish_seen_subcommand_from $new" -xs c -d start-directory
+complete -c tmux -n "__fish_seen_subcommand_from $new" -xs c -d start-directory -a "(__fish_complete_directories)"
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs F -d format
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs n -d window-name
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs s -d session-name

@@ -30,9 +30,10 @@ term_256_colors =
         'd0d0d0', 'd7d7d7', 'dadada', 'e4e4e4', 'eeeeee', 'ffffff',
     ]
 
-/* Given a color setting name like 'autosuggestion', return the user visible name we present */
+/* Given a color setting name like 'fish_color_autosuggestion', return the user visible name we present */
 function user_visible_title_for_setting_name(name) {
     if (!name) return '';
+    name = name.replace(/^(?:fish_color_|fish_pager_color_)/, "");
     switch (name) {
         case 'param':
             return 'parameters';

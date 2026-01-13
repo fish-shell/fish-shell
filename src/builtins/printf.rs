@@ -49,15 +49,17 @@
 // This file has been imported from source code of printf command in GNU Coreutils version 6.9.
 
 use super::prelude::*;
+use crate::builtins;
 use crate::locale::{Locale, get_numeric_locale};
-use crate::wchar::encode_byte_to_char;
 use crate::wutil::{
-    errors::Error,
+    self,
     wcstod::wcstod,
     wcstoi::{Options as WcstoiOpts, wcstoi_partial},
     wstr_offset_in,
 };
-use fish_printf::{ToArg, sprintf_locale};
+use crate::{err_fmt, err_str};
+use fish_printf::{ToArg as _, sprintf_locale};
+use fish_widestring::{decode_byte_from_char, encode_byte_to_char};
 
 /// Return true if `c` is an octal digit.
 fn is_octal_digit(c: char) -> bool {
@@ -74,7 +76,7 @@ fn iswxdigit(c: char) -> bool {
     c.is_ascii_hexdigit()
 }
 
-struct builtin_printf_state_t<'a, 'b> {
+struct State<'a, 'b> {
     // Out and err streams. Note this is a captured reference!
     streams: &'a mut IoStreams<'b>,
 
@@ -103,7 +105,7 @@ trait RawStringToScalarType: Copy + std::convert::From<u32> {
         s: &'a wstr,
         locale: &Locale,
         end: &mut &'a wstr,
-    ) -> Result<Self, Error>;
+    ) -> Result<Self, wutil::Error>;
 
     /// Convert from a Unicode code point to this type.
     /// This supports printf's ability to convert from char to scalar via a leading quote.
@@ -122,7 +124,7 @@ impl RawStringToScalarType for i64 {
         s: &'a wstr,
         _locale: &Locale,
         end: &mut &'a wstr,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, wutil::Error> {
         let mut consumed = 0;
         let res = wcstoi_partial(s, WcstoiOpts::default(), &mut consumed);
         *end = s.slice_from(consumed);
@@ -135,7 +137,7 @@ impl RawStringToScalarType for u64 {
         s: &'a wstr,
         _locale: &Locale,
         end: &mut &'a wstr,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, wutil::Error> {
         let mut consumed = 0;
         let res = wcstoi_partial(
             s,
@@ -155,7 +157,7 @@ impl RawStringToScalarType for f64 {
         s: &'a wstr,
         locale: &Locale,
         end: &mut &'a wstr,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, wutil::Error> {
         let mut consumed: usize = 0;
         let mut result = wcstod(s, locale.decimal_point, &mut consumed);
         if result.is_ok() && consumed == s.chars().count() {
@@ -171,16 +173,13 @@ impl RawStringToScalarType for f64 {
         if result.is_ok() {
             *end = s.slice_from(consumed);
         }
-        return result;
+        result
     }
 }
 
 /// Convert a string to a scalar type.
 /// Use state.verify_numeric to report any errors.
-fn string_to_scalar_type<T: RawStringToScalarType>(
-    s: &wstr,
-    state: &mut builtin_printf_state_t,
-) -> T {
+fn string_to_scalar_type<T: RawStringToScalarType>(s: &wstr, state: &mut State) -> T {
     if s.char_at(0) == '"' || s.char_at(0) == '\'' {
         // Note that if the string is really just a leading quote,
         // we really do want to convert the "trailing nul".
@@ -200,29 +199,27 @@ fn modify_allowed_format_specifiers(ok: &mut [bool; 256], str: &str, flag: bool)
     }
 }
 
-impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
+impl<'a, 'b> State<'a, 'b> {
     #[allow(clippy::partialeq_to_none)]
-    fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<Error>) {
+    fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<wutil::Error>) {
         // This check matches the historic `errcode != EINVAL` check from C++.
         // Note that empty or missing values will be silently treated as 0.
-        if errcode != None && errcode != Some(Error::InvalidChar) && errcode != Some(Error::Empty) {
+        if errcode.is_some_and(|err| err != wutil::Error::InvalidChar && err != wutil::Error::Empty)
+        {
             match errcode.unwrap() {
-                Error::Overflow => {
-                    self.fatal_error(sprintf!("%s: %s", s, wgettext!("Number out of range")));
+                wutil::Error::Overflow => {
+                    self.fatal_error(err_fmt!("%s: Number out of range", s));
                 }
-                Error::Empty => {
-                    self.fatal_error(sprintf!("%s: %s", s, wgettext!("Number was empty")));
-                }
-                Error::InvalidChar => {
-                    panic!("Unreachable");
+                wutil::Error::InvalidChar | wutil::Error::Empty => {
+                    unreachable!("Unreachable");
                 }
             }
         } else if !end.is_empty() {
             if s.as_ptr() == end.as_ptr() {
-                self.fatal_error(wgettext_fmt!("%s: expected a numeric value", s));
+                self.fatal_error(err_fmt!("%s: expected a numeric value", s));
             } else {
                 // This isn't entirely fatal - the value should still be printed.
-                self.nonfatal_error(wgettext_fmt!(
+                self.nonfatal_error(err_fmt!(
                     "%s: value not completely converted (can't convert '%s')",
                     s,
                     end
@@ -231,7 +228,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 // Do it if the unconverted digit is a valid hex digit,
                 // because it could also be an "0x" -> "0" typo.
                 if s.char_at(0) == '0' && iswxdigit(end.char_at(0)) {
-                    self.nonfatal_error(wgettext!(
+                    self.nonfatal_error(err_str!(
                         "Hint: a leading '0' without an 'x' indicates an octal number"
                     ));
                 }
@@ -241,7 +238,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
     fn handle_sprintf_error(&mut self, err: fish_printf::Error) {
         match err {
-            fish_printf::Error::Overflow => self.fatal_error(wgettext!("Number out of range")),
+            fish_printf::Error::Overflow => self.fatal_error(err_str!("Number out of range")),
             _ => panic!("unhandled error: {err:?}"),
         }
     }
@@ -472,7 +469,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                             if (c_int::MIN as i64) <= width && width <= (c_int::MAX as i64) {
                                 field_width = Some(width);
                             } else {
-                                self.fatal_error(wgettext_fmt!("invalid field width: %s", argv[0]));
+                                self.fatal_error(err_fmt!("invalid field width: %s", argv[0]));
                             }
                             argv = &argv[1..];
                             argc -= 1;
@@ -500,10 +497,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                                     // so -1 is safe here even if prec < INT_MIN.
                                     precision = Some(-1);
                                 } else if (c_int::MAX as i64) < prec {
-                                    self.fatal_error(wgettext_fmt!(
-                                        "invalid precision: %s",
-                                        argv[0]
-                                    ));
+                                    self.fatal_error(err_fmt!("invalid precision: %s", argv[0]));
                                 } else {
                                     precision = Some(prec);
                                 }
@@ -526,10 +520,12 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
                     let conversion = f.char_at(0);
                     if (conversion as usize) > 0xFF || !ok[conversion as usize] {
-                        self.fatal_error(wgettext_fmt!(
-                            "%.*s: invalid conversion specification",
-                            wstr_offset_in(f, directive_start) + 1,
-                            directive_start
+                        let directive = &directive_start[0..directive_start
+                            .len()
+                            .min(wstr_offset_in(f, directive_start) + 1)];
+                        self.fatal_error(err_fmt!(
+                            "%s: invalid conversion specification",
+                            directive
                         ));
                         return 0;
                     }
@@ -561,8 +557,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         save_argc - argc
     }
 
-    fn nonfatal_error<Str: AsRef<wstr>>(&mut self, errstr: Str) {
-        let errstr = errstr.as_ref();
+    fn nonfatal_error(&mut self, err: builtins::Error) {
         // Don't error twice.
         if self.early_exit {
             return;
@@ -574,9 +569,10 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
             self.buff.clear();
         }
 
-        self.streams.err.append(errstr);
+        let errstr = err.to_string();
+        self.streams.err.append(&errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.push('\n');
+            self.streams.err.append('\n');
         }
 
         // We set the exit code to error, because one occurred,
@@ -584,26 +580,8 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         self.exit_code = Err(STATUS_CMD_ERROR);
     }
 
-    fn fatal_error<Str: AsRef<wstr>>(&mut self, errstr: Str) {
-        let errstr = errstr.as_ref();
-
-        // Don't error twice.
-        if self.early_exit {
-            return;
-        }
-
-        // If we have output, write it so it appears first.
-        if !self.buff.is_empty() {
-            self.streams.out.append(&self.buff);
-            self.buff.clear();
-        }
-
-        self.streams.err.append(errstr);
-        if !errstr.ends_with('\n') {
-            self.streams.err.push('\n');
-        }
-
-        self.exit_code = Err(STATUS_CMD_ERROR);
+    fn fatal_error(&mut self, err: builtins::Error) {
+        self.nonfatal_error(err);
         self.early_exit = true;
     }
 
@@ -613,7 +591,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     /// If octal_0 is nonzero, octal escapes are of the form \0ooo, where o
     /// is an octal digit; otherwise they are of the form \ooo.
     fn print_esc(&mut self, escstart: &wstr, octal_0: bool) -> usize {
-        assert!(escstart.char_at(0) == '\\');
+        assert_eq!(escstart.char_at(0), '\\');
         let mut p = &escstart[1..];
         let mut esc_value = 0; /* Value of \nnn escape. */
         let mut esc_length; /* Length of \nnn escape. */
@@ -627,7 +605,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 p = &p[1..];
             }
             if esc_length == 0 {
-                self.fatal_error(wgettext!("missing hexadecimal number in escape"));
+                self.fatal_error(err_str!("missing hexadecimal number in escape"));
             }
             self.append_output(encode_byte_to_char((esc_value % 256) as u8));
         } else if is_octal_digit(p.char_at(0)) {
@@ -656,27 +634,33 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 if !iswxdigit(p.char_at(0)) {
                     // Escape sequence must be done. Complain if we didn't get anything.
                     if esc_length == 0 {
-                        self.fatal_error(wgettext!("Missing hexadecimal number in Unicode escape"));
+                        self.fatal_error(err_str!("Missing hexadecimal number in Unicode escape"));
                     }
                     break;
                 }
                 uni_value = uni_value * 16 + p.char_at(0).to_digit(16).unwrap();
                 p = &p[1..];
             }
-            // N.B. we assume __STDC_ISO_10646__.
-            if uni_value > 0x10FFFF {
-                self.fatal_error(wgettext_fmt!(
-                    "Unicode character out of range: \\%c%0*x",
-                    esc_char,
-                    exp_esc_length,
-                    uni_value
-                ));
-            } else {
-                // TODO-RUST: if uni_value is a surrogate, we need to encode it using our PUA scheme.
-                if let Some(c) = char::from_u32(uni_value) {
-                    self.append_output(c);
-                } else {
-                    self.fatal_error(wgettext!("Invalid code points not yet supported by printf"));
+            match char::from_u32(uni_value) {
+                Some(c) => {
+                    // Test if this character would be treated specially when decoding.
+                    // If so, PUA-encode it.
+                    if decode_byte_from_char(c).is_some() {
+                        // A `char` represents an Unicode scalar value, which takes up at most 4 bytes when encoded in UTF-8.
+                        let mut converted = [0_u8; 4];
+                        for byte in c.encode_utf8(&mut converted).as_bytes() {
+                            self.append_output(encode_byte_to_char(*byte));
+                        }
+                    } else {
+                        self.append_output(c);
+                    }
+                }
+                None => {
+                    let escaped_char_string = format!("\\{esc_char}{uni_value:0exp_esc_length$x}");
+                    self.fatal_error(err_fmt!(
+                        "Not a valid Unicode character: %s",
+                        escaped_char_string
+                    ));
                 }
             }
         } else {
@@ -686,7 +670,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 p = &p[1..];
             }
         }
-        return wstr_offset_in(p, escstart) - 1;
+        wstr_offset_in(p, escstart) - 1
     }
 
     /// Print string str, evaluating \ escapes.
@@ -760,7 +744,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 }
 
 /// The printf builtin.
-pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn printf(_parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let mut argc = argv.len();
 
     // Rebind argv as immutable slice (can't rearrange its elements), skipping the command name.
@@ -770,7 +754,7 @@ pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> 
         return Err(STATUS_INVALID_ARGS);
     }
 
-    let mut state = builtin_printf_state_t {
+    let mut state = State {
         streams,
         exit_code: Ok(SUCCESS),
         early_exit: false,
@@ -792,5 +776,5 @@ pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> 
             break;
         }
     }
-    return state.exit_code;
+    state.exit_code
 }

@@ -4,7 +4,7 @@ Frequently asked questions
 What is the equivalent to this thing from bash (or other shells)?
 -----------------------------------------------------------------
 
-See :doc:`Fish for bash users <fish_for_bash_users>`
+See :doc:`fish for bash users <fish_for_bash_users>`
 
 How do I set or clear an environment variable?
 ----------------------------------------------
@@ -91,7 +91,7 @@ The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/
     function fish_prompt
         set_color $fish_color_cwd
         echo -n (prompt_pwd)
-        set_color normal
+        set_color --reset
         echo -n ' > '
     end
 
@@ -129,16 +129,14 @@ If you want to change or disable this display, modify the ``fish_mode_prompt`` f
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
-Use the web configuration tool, :doc:`fish_config <cmds/fish_config>`, or alter the :ref:`fish_color family of environment variables <variables-color>`.
-
-You can also use ``fish_config`` on the commandline, like::
+Use the web configuration tool started by :doc:`fish_config <cmds/fish_config>`,
+or alter the :ref:`fish_color family of environment variables <variables-color>`,
+or use the :doc:`fish_config theme <cmds/fish_config>` subcommand, like::
 
   > fish_config theme show
   # to demonstrate all the colorschemes
   > fish_config theme choose coolbeans
   # to load the "coolbeans" theme
-  > fish_config theme save
-  # to make the change permanent
 
 How do I change the greeting message?
 -------------------------------------
@@ -329,9 +327,9 @@ This is more important to fish than other shells because features like syntax hi
 Sometimes, there is disagreement on the width. There are numerous causes and fixes for this:
 
 - It is possible the character is too new for your system to know - in this case you need to refrain from using it.
-- Fish or your terminal might not know about the character or handle it wrong - in this case fish or your terminal needs to be fixed, or you need to update to a fixed version.
+- fish or your terminal might not know about the character or handle it wrong - in this case fish or your terminal needs to be fixed, or you need to update to a fixed version.
 - The character has an "ambiguous" width and fish thinks that means a width of X while your terminal thinks it's Y. In this case you either need to change your terminal's configuration or set $fish_ambiguous_width to the correct value.
-- The character is an emoji and the host system only supports Unicode 8, while you are running the terminal on a system that uses Unicode >= 9. In this case set $fish_emoji_width to 2.
+- The character is an emoji and your system only supports Unicode 8. In this case set $fish_emoji_width to 1.
 
 This also means that a few things are unsupportable:
 

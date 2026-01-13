@@ -11,6 +11,7 @@ use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_pri
 use crate::tty_handoff::{safe_deactivate_tty_protocols, safe_mark_tty_invalid};
 use crate::wutil::{fish_wcstoi, perror};
 use errno::{errno, set_errno};
+use nix::sys::signal::{SaFlags, SigAction, SigHandler, SigSet, SigmaskHow, sigprocmask};
 use std::sync::{
     LazyLock,
     atomic::{AtomicI32, Ordering},
@@ -127,10 +128,7 @@ extern "C" fn fish_signal_handler(
 /// Set all signal handlers to SIG_DFL.
 /// This is called after fork - it should be async signal safe.
 pub fn signal_reset_handlers() {
-    let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
-    unsafe { libc::sigemptyset(&mut act.sa_mask) };
-    act.sa_flags = 0;
-    act.sa_sigaction = libc::SIG_DFL;
+    let act = SigAction::new(SigHandler::SigDfl, SaFlags::empty(), SigSet::empty()).into();
 
     for data in SIGNAL_TABLE.iter() {
         if data.signal == libc::SIGHUP {
@@ -302,11 +300,7 @@ pub static signals_to_default: LazyLock<libc::sigset_t> = LazyLock::new(|| {
 
 /// Ensure we did not inherit any blocked signals. See issue #3964.
 pub fn signal_unblock_all() {
-    unsafe {
-        let mut iset = MaybeUninit::uninit();
-        libc::sigemptyset(iset.as_mut_ptr());
-        libc::sigprocmask(libc::SIG_SETMASK, iset.as_ptr(), std::ptr::null_mut());
-    }
+    sigprocmask(SigmaskHow::SIG_SETMASK, Some(&SigSet::empty()), None).unwrap();
 }
 
 /// A Sigchecker can be used to check if a SIGINT (or SIGHUP) has been delivered.

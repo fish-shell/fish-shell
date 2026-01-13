@@ -25,10 +25,11 @@ use crate::wutil::{wbasename, wperror};
 use cfg_if::cfg_if;
 use fish_widestring::ToWString;
 use libc::{
-    _SC_CLK_TCK, EXIT_SUCCESS, SIG_DFL, SIG_IGN, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
-    SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED,
-    WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
+    _SC_CLK_TCK, EXIT_SUCCESS, SIG_IGN, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL, SIGINT,
+    SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED, WEXITSTATUS,
+    WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
 };
+use nix::sys::signal::{SaFlags, SigAction, SigHandler, SigSet};
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};
@@ -1085,10 +1086,9 @@ fn handle_child_status(job: &Job, proc: &Process, status: ProcStatus) {
                 job.group().cancel_with_signal(Signal::new(sig));
             } else if !event::is_signal_observed(sig) {
                 // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
-                let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
-                unsafe { libc::sigemptyset(&mut act.sa_mask) };
-                act.sa_flags = 0;
-                act.sa_sigaction = SIG_DFL;
+                let act =
+                    SigAction::new(SigHandler::SigDfl, SaFlags::empty(), SigSet::empty()).into();
+
                 unsafe {
                     libc::sigaction(sig, &act, std::ptr::null_mut());
                     libc::kill(libc::getpid(), sig);

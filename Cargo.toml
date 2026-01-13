@@ -41,9 +41,10 @@ libc = "0.2.177"
 lru = "0.16.2"
 nix = { version = "0.30.1", default-features = false, features = [
     "event",
+    "fs",
     "inotify",
     "resource",
-    "fs",
+    "signal",
     "term",
 ] }
 num-traits = "0.2.19"

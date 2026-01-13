@@ -42,8 +42,14 @@ rm -f "$path" "$path".xz
 PREFIX_TMPDIR=$(mktemp -d)
 cd "$PREFIX_TMPDIR"
 
+# Add .cargo/config.toml. This means that the caller may need to remove that file from the tarball.
+# See e4674cd7b5f (.cargo/config.toml: exclude from tarball, 2025-01-12)
+
 mkdir .cargo
-cargo vendor --manifest-path "$wd/Cargo.toml" >> .cargo/config.toml
+{
+    cat "$wd"/.cargo/config.toml
+    cargo vendor --manifest-path "$wd/Cargo.toml"
+} > .cargo/config.toml
 
 tar cfvJ "$path".xz vendor .cargo
 

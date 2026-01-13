@@ -18,9 +18,6 @@
 /.github/* export-ignore
 /.builds export-ignore
 /.builds/* export-ignore
-# to make cargo vendor work correctly
-/.cargo/ export-ignore
-/.cargo/config.toml export-ignore
 
 # for linguist, which drives GitHub's language statistics
 alpine.js linguist-vendored

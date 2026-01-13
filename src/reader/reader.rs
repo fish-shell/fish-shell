@@ -3566,8 +3566,8 @@ impl<'a> Reader<'a> {
             | rl::KillWordEmacs
             | rl::KillBigwordEmacs
             | rl::NextdOrForwardWordEmacs => {
-                if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
-                    self.eval_bind_cmd(L!("prevd"));
+                if c == rl::NextdOrForwardWordEmacs && self.command_line.is_empty() {
+                    self.eval_bind_cmd(L!("nextd"));
                     self.schedule_prompt_repaint();
                     return;
                 }
@@ -3752,6 +3752,11 @@ impl<'a> Reader<'a> {
             | rl::BackwardBigword
             | rl::BackwardBigwordEnd
             | rl::PrevdOrBackwardWord => {
+                if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
+                    self.eval_bind_cmd(L!("prevd"));
+                    self.schedule_prompt_repaint();
+                    return;
+                }
                 let to_word_end = matches!(c, rl::BackwardWordEnd | rl::BackwardBigwordEnd);
 
                 let style = match c {

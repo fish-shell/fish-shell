@@ -9,9 +9,9 @@ use crate::locale::set_libc_locales;
 use crate::panic::panic_handler;
 
 use super::prelude::*;
-use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
+use crate::ast::{self, AsNode, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
-    PROGRAM_NAME, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
+    PROGRAM_NAME, ReadExt, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
     unescape_string, wcs2bytes,
 };
 use crate::env::EnvStack;
@@ -24,11 +24,11 @@ use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
 use crate::parse_util::{SPACES_PER_INDENT, apply_indents, parse_util_compute_indents};
+use crate::prelude::*;
 use crate::print_help::print_help;
 use crate::threads;
 use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer};
 use crate::topic_monitor::topic_monitor_init;
-use crate::wchar::prelude::*;
 use crate::wcstringutil::count_preceding_backslashes;
 use crate::wgetopt::{ArgType, WGetopter, WOption, wopt};
 use crate::wutil::fish_iswalnum;
@@ -200,7 +200,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
         }
         self.state.emit_newline();
 
-        std::mem::replace(&mut self.state.output, WString::new())
+        std::mem::take(&mut self.state.output)
     }
 
     // Return the gap ranges from our ast.
@@ -382,10 +382,10 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             Kind::Token(token) => {
                 // Allow escaped newlines before && and ||, and also pipes.
                 match token.token_type() {
-                    ParseTokenType::andand | ParseTokenType::oror | ParseTokenType::pipe => {
+                    ParseTokenType::AndAnd | ParseTokenType::OrOr | ParseTokenType::Pipe => {
                         result.allow_escaped_newlines = true;
                     }
-                    ParseTokenType::string => {
+                    ParseTokenType::String => {
                         // Allow escaped newlines before commands that follow a variable assignment
                         // since both can be long (#7955).
                         let p = self.traversal.parent(node);
@@ -531,17 +531,17 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                 }
             } else if self.gap_text_mask_newline {
                 // When told to mask newlines, we do it as long as we get semicolon or newline.
-                if tok.type_ == TokenType::end {
+                if tok.type_ == TokenType::End {
                     continue;
                 }
                 self.gap_text_mask_newline = false;
             }
 
-            if tok.type_ == TokenType::comment {
+            if tok.type_ == TokenType::Comment {
                 self.emit_space_or_indent(GapFlags::default());
                 self.output.push_utfstr(tok_text);
                 needs_nl = true;
-            } else if tok.type_ == TokenType::end {
+            } else if tok.type_ == TokenType::End {
                 // This may be either a newline or semicolon.
                 // Semicolons found here are not part of the ast and can simply be removed.
                 // Newlines are preserved unless mask_newline is set.
@@ -729,10 +729,47 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             .binary_search(&brace.source_range().start())
             .is_ok()
     }
+
+    fn brace_is_continuation(&self, node: &dyn ast::Token) -> bool {
+        let Kind::BraceStatement(brace) = self.traversal.parent(node.as_node()).kind() else {
+            return false;
+        };
+        let Kind::Statement(stmt) = self.traversal.parent(brace.as_node()).kind() else {
+            return false;
+        };
+        let parent = self.traversal.parent(stmt.as_node());
+
+        if matches!(parent.kind(), Kind::NotStatement(_)) {
+            return true;
+        }
+
+        let Kind::JobPipeline(pipeline) = parent.kind() else {
+            return false;
+        };
+
+        if pipeline.time.is_some() {
+            return true;
+        }
+
+        let Kind::JobConjunction(conj) = self.traversal.parent(pipeline.as_node()).kind() else {
+            return false;
+        };
+
+        conj.decorator.is_some()
+            || matches!(
+                self.traversal.parent(conj.as_node()).kind(),
+                Kind::IfClause(_) | Kind::WhileHeader(_)
+            )
+    }
+
     fn visit_left_brace(&mut self, node: &dyn ast::Token) {
         let range = node.source_range();
         let flags = self.gap_text_flags_before_node(node.as_node());
-        if self.is_multi_line_brace(node) && !self.at_line_start() {
+
+        if self.is_multi_line_brace(node)
+            && !self.at_line_start()
+            && !self.brace_is_continuation(node)
+        {
             self.emit_newline();
         }
         self.current_indent = self.indent(range.start());
@@ -819,9 +856,9 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             }
             if let Some(token) = node.as_token() {
                 match token.token_type() {
-                    ParseTokenType::end => self.visit_semi_nl(token),
-                    ParseTokenType::left_brace => self.visit_left_brace(token),
-                    ParseTokenType::right_brace => self.visit_right_brace(token),
+                    ParseTokenType::End => self.visit_semi_nl(token),
+                    ParseTokenType::LeftBrace => self.visit_left_brace(token),
+                    ParseTokenType::RightBrace => self.visit_right_brace(token),
                     _ => self.emit_node_text(node),
                 }
                 continue;
@@ -877,10 +914,9 @@ pub fn main() {
 
 fn throwing_main() -> i32 {
     // TODO: Duplicated with fish_key_reader
-    use crate::io::FdOutputStream;
-    use crate::io::IoChain;
-    use crate::io::OutputStream::Fd;
-    use libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+    use crate::fds::BorrowedFdFile;
+    use crate::io::{FdOutputStream, IoChain, OutputStream::Fd};
+    use libc::{STDERR_FILENO, STDOUT_FILENO};
 
     topic_monitor_init();
     threads::init();
@@ -889,12 +925,13 @@ fn throwing_main() -> i32 {
     let mut err = Fd(FdOutputStream::new(STDERR_FILENO));
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
-    streams.stdin_fd = STDIN_FILENO;
+    streams.stdin_file = Some(BorrowedFdFile::stdin());
     // Safety: single-threaded.
     unsafe {
         set_libc_locales(/*log_ok=*/ false)
     };
-    crate::wutil::gettext::initialize_gettext();
+    #[cfg(feature = "localize-messages")]
+    crate::localization::initialize_localization();
     env_init(None, true, false);
 
     // Only set these here so you can't set them via the builtin.
@@ -907,15 +944,19 @@ fn throwing_main() -> i32 {
     let args: Vec<WString> = std::env::args_os()
         .map(|osstr| bytes2wcstring(osstr.as_bytes()))
         .collect();
-    do_indent(&mut streams, args).builtin_status_code()
+    do_indent(None, &mut streams, args).builtin_status_code()
 }
 
-pub fn fish_indent(_parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn fish_indent(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let args = args.iter_mut().map(|x| x.to_owned()).collect();
-    do_indent(streams, args)
+    do_indent(Some(parser), streams, args)
 }
 
-fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
+fn do_indent(
+    parser: Option<&Parser>,
+    streams: &mut IoStreams,
+    args: Vec<WString>,
+) -> BuiltinResult {
     // Types of output we support
     #[derive(Eq, PartialEq)]
     enum OutputType {
@@ -955,7 +996,11 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
         match c {
             'P' => DUMP_PARSE_TREE.store(true),
             'h' => {
-                print_help("fish_indent");
+                if let Some(parser) = parser {
+                    builtin_print_help(parser, streams, L!("fish_indent"));
+                } else {
+                    print_help("fish_indent");
+                }
                 return Ok(SUCCESS);
             }
             'v' => {
@@ -974,7 +1019,23 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             '\x02' => output_type = OutputType::Ansi,
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
-            _ => return Err(STATUS_CMD_ERROR),
+            ';' => {
+                streams.err.append(&wgettext_fmt!(
+                    BUILTIN_ERR_UNEXP_ARG,
+                    "fish_indent",
+                    w.argv[w.wopt_index - 1]
+                ));
+                return Err(STATUS_CMD_ERROR);
+            }
+            '?' => {
+                streams.err.append(&wgettext_fmt!(
+                    BUILTIN_ERR_UNKNOWN,
+                    "fish_indent",
+                    w.argv[w.wopt_index - 1]
+                ));
+                return Err(STATUS_CMD_ERROR);
+            }
+            _ => panic!(),
         }
     }
 
@@ -993,18 +1054,24 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
                 ));
                 return Err(STATUS_CMD_ERROR);
             }
-            use std::os::fd::FromRawFd;
-            let mut fd = unsafe { std::fs::File::from_raw_fd(streams.stdin_fd) };
+            let Some(stdin_file) = streams.stdin_file.as_mut() else {
+                let cmd = "fish_indent";
+                streams
+                    .err
+                    .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
+                return Err(STATUS_CMD_ERROR);
+            };
             let mut buf = vec![];
-            match fd.read_to_end(&mut buf) {
+            match stdin_file.read_to_end_interruptible(&mut buf) {
                 Ok(_) => {}
-                Err(_) => {
-                    // Don't close the fd
-                    std::mem::forget(fd);
-                    return Err(STATUS_CMD_ERROR);
+                Err(err) => {
+                    return if err.kind() == std::io::ErrorKind::Interrupted {
+                        Err(128 + libc::SIGINT)
+                    } else {
+                        Err(STATUS_CMD_ERROR)
+                    };
                 }
             }
-            std::mem::forget(fd);
             src = bytes2wcstring(&buf);
         } else {
             let arg = args[i];
@@ -1029,7 +1096,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
 
         if output_type == OutputType::PygmentsCsv {
             let output = make_pygments_csv(&src);
-            streams.out.append(bytes2wcstring(&output));
+            streams.out.append(&bytes2wcstring(&output));
             i += 1;
             continue;
         }
@@ -1127,7 +1194,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
             }
         }
 
-        streams.out.append(bytes2wcstring(&colored_output));
+        streams.out.append(&bytes2wcstring(&colored_output));
         i += 1;
     }
     if retval == 0 {
@@ -1201,7 +1268,7 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     }
 
     let mut token_ranges: Vec<TokenRange> = vec![];
-    for (i, color) in colors.iter().cloned().enumerate() {
+    for (i, color) in colors.iter().copied().enumerate() {
         let role = color.foreground;
         // See if we can extend the last range.
         if let Some(last) = token_ranges.last_mut() {

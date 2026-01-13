@@ -6,9 +6,7 @@ use crate::ast::{
 };
 use crate::builtins::shared::builtin_exists;
 use crate::color::Color;
-use crate::common::{
-    ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, valid_var_name, valid_var_name_char,
-};
+use crate::common::{valid_var_name, valid_var_name_char};
 use crate::complete::complete_wrap_map;
 use crate::env::{EnvVar, Environment};
 use crate::expand::{
@@ -17,22 +15,23 @@ use crate::expand::{
 use crate::function;
 use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::highlight::file_tester::FileTester;
-use crate::history::{HistoryItem, all_paths_are_valid};
+use crate::history::all_paths_are_valid;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
     ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
 };
 use crate::parse_util::{
-    MaybeParentheses, parse_util_locate_cmdsubst_range, parse_util_slice_length,
+    MaybeParentheses, parse_util_locate_cmdsubst_range, parse_util_process_first_token_offset,
+    parse_util_slice_length,
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{TextFace, UnderlineStyle, parse_text_face};
+use crate::text_face::{SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
-use crate::wchar::{L, WString, wstr};
-use crate::wchar_ext::WExt;
 use crate::wcstringutil::string_prefixes_string;
+use fish_common::{ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
+use fish_wchar::{L, WExt, WString, wstr};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
@@ -76,6 +75,9 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
             outp.set_text_face(face);
             last_color = color;
         }
+        if i + 1 == text.char_count() && c == '\n' {
+            outp.set_text_face(TextFace::default());
+        }
         outp.writech(c);
     }
     outp.set_text_face(TextFace::default());
@@ -102,6 +104,22 @@ pub fn highlight_shell(
     let working_directory = ctx.vars().get_pwd_slash();
     let mut highlighter = Highlighter::new(buff, cursor, ctx, working_directory, io_ok);
     *color = highlighter.highlight();
+}
+
+pub fn highlight_and_colorize(
+    text: &wstr,
+    ctx: &OperationContext<'_>,
+    vars: &dyn Environment,
+) -> Vec<u8> {
+    let mut colors = Vec::new();
+    highlight_shell(
+        text,
+        &mut colors,
+        ctx,
+        /*io_ok=*/ false,
+        /*cursor=*/ None,
+    );
+    colorize(text, &colors, vars)
 }
 
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
@@ -134,17 +152,25 @@ impl HighlightColorResolver {
             }
         }
     }
-    pub(crate) fn resolve_spec_uncached(
-        highlight: &HighlightSpec,
-        vars: &dyn Environment,
-    ) -> TextFace {
+    fn resolve_spec_uncached(highlight: &HighlightSpec, vars: &dyn Environment) -> TextFace {
         let resolve_role = |role| {
-            vars.get_unless_empty(get_highlight_var_name(role))
-                .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
-                .or_else(|| vars.get_unless_empty(get_highlight_var_name(HighlightRole::normal)))
-                .as_ref()
-                .map(parse_text_face_for_highlight)
-                .unwrap_or_else(TextFace::default)
+            let mut roles: &[HighlightRole] = &[role, get_fallback(role), HighlightRole::normal];
+            // TODO(MSRV>=?) partition_dedup
+            for i in [2, 1] {
+                if roles[i - 1] == roles[i] {
+                    roles = &roles[..i];
+                }
+            }
+            for &role in roles {
+                if let Some(face) = vars
+                    .get_unless_empty(get_highlight_var_name(role))
+                    .as_ref()
+                    .and_then(parse_text_face_for_highlight)
+                {
+                    return face;
+                }
+            }
+            TextFace::default()
         };
         let mut face = resolve_role(highlight.foreground);
 
@@ -161,7 +187,8 @@ impl HighlightColorResolver {
         if highlight.valid_path {
             if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
                 // Historical behavior is to not apply background.
-                let valid_path_face = parse_text_face_for_highlight(&valid_path_var);
+                let valid_path_face =
+                    parse_text_face_for_highlight(&valid_path_var).unwrap_or_default();
                 // Apply the foreground, except if it's normal. The intention here is likely
                 // to only override foreground if the valid path color has an explicit foreground.
                 if !valid_path_face.fg.is_normal() {
@@ -180,19 +207,21 @@ impl HighlightColorResolver {
 }
 
 /// Return the internal color code representing the specified color.
-pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> TextFace {
+pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> Option<TextFace> {
     let face = parse_text_face(var.as_list());
-    let default = TextFace::default();
-    let fg = face.fg.unwrap_or(default.fg);
-    let bg = face.bg.unwrap_or(default.bg);
-    let underline_color = face.underline_color.unwrap_or(default.underline_color);
-    let style = face.style;
-    TextFace {
-        fg,
-        bg,
-        underline_color,
-        style,
-    }
+    (face != SpecifiedTextFace::default()).then(|| {
+        let default = TextFace::default();
+        let fg = face.fg.unwrap_or(default.fg);
+        let bg = face.bg.unwrap_or(default.bg);
+        let underline_color = face.underline_color.unwrap_or(default.underline_color);
+        let style = face.style.unwrap_or_default();
+        TextFace {
+            fg,
+            bg,
+            underline_color,
+            style,
+        }
+    })
 }
 
 fn command_is_valid(
@@ -209,14 +238,14 @@ fn command_is_valid(
     let mut implicit_cd_ok = true;
     if matches!(
         decoration,
-        StatementDecoration::command | StatementDecoration::exec
+        StatementDecoration::Command | StatementDecoration::Exec
     ) {
         builtin_ok = false;
         function_ok = false;
         abbreviation_ok = false;
         command_ok = true;
         implicit_cd_ok = false;
-    } else if decoration == StatementDecoration::builtin {
+    } else if decoration == StatementDecoration::Builtin {
         builtin_ok = true;
         function_ok = false;
         abbreviation_ok = false;
@@ -253,7 +282,7 @@ fn command_is_valid(
     }
 
     // Return what we got.
-    return is_valid;
+    is_valid
 }
 
 fn has_expand_reserved(s: &wstr) -> bool {
@@ -305,14 +334,25 @@ pub fn is_veritable_cd(expanded_command: &wstr) -> bool {
 /// autosuggestion is valid. It may not be valid if e.g. it is attempting to cd into a directory
 /// which does not exist.
 pub fn autosuggest_validate_from_history(
-    item: &HistoryItem,
+    item_commandline: &wstr,
+    suggested_range: std::ops::Range<usize>,
+    required_paths: &[WString],
     working_directory: &wstr,
     ctx: &OperationContext<'_>,
 ) -> bool {
     assert_is_background_thread();
 
+    if suggested_range != (0..item_commandline.char_count())
+        && parse_util_process_first_token_offset(item_commandline, suggested_range.start)
+            .is_some_and(|offset| offset != suggested_range.start)
+    {
+        return false;
+    }
+
     // Parse the string.
-    let Some((parsed_command, mut cd_dir)) = autosuggest_parse_command(item.str(), ctx) else {
+    let suggested_command = &item_commandline[suggested_range];
+    let Some((parsed_command, mut cd_dir)) = autosuggest_parse_command(suggested_command, ctx)
+    else {
         // This is for autosuggestions which are not decorated commands, e.g. function declarations.
         return true;
     };
@@ -331,9 +371,7 @@ pub fn autosuggest_validate_from_history(
             // Check the directory target, respecting CDPATH.
             // Permit the autosuggestion if the path is valid and not our directory.
             let path = path_get_cdpath(&cd_dir, working_directory, ctx.vars());
-            return path
-                .map(|p| !paths_are_same_file(working_directory, &p))
-                .unwrap_or(false);
+            return path.is_some_and(|p| !paths_are_same_file(working_directory, &p));
         }
     }
 
@@ -346,8 +384,7 @@ pub fn autosuggest_validate_from_history(
     }
 
     // Did the historical command have arguments that look like paths, which aren't paths now?
-    let paths = item.get_required_paths();
-    if !all_paths_are_valid(paths.iter().cloned(), ctx) {
+    if !all_paths_are_valid(required_paths, ctx) {
         return false;
     }
 
@@ -555,7 +592,7 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                             in_pos -= 1;
                         }
                         '?' => {
-                            if !feature_test(FeatureFlag::qmark_noglob) {
+                            if !feature_test(FeatureFlag::QuestionMarkNoGlob) {
                                 colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
                             }
                         }
@@ -864,14 +901,14 @@ impl<'s> Highlighter<'s> {
     fn visit_token(&mut self, tok: &dyn Token) {
         let mut role = HighlightRole::normal;
         match tok.token_type() {
-            ParseTokenType::end | ParseTokenType::pipe | ParseTokenType::background => {
+            ParseTokenType::End | ParseTokenType::Pipe | ParseTokenType::Background => {
                 role = HighlightRole::statement_terminator
             }
-            ParseTokenType::left_brace | ParseTokenType::right_brace => {
+            ParseTokenType::LeftBrace | ParseTokenType::RightBrace => {
                 role = HighlightRole::keyword;
             }
-            ParseTokenType::andand | ParseTokenType::oror => role = HighlightRole::operat,
-            ParseTokenType::string => {
+            ParseTokenType::AndAnd | ParseTokenType::OrOr => role = HighlightRole::operat,
+            ParseTokenType::String => {
                 // Assume all strings are params. This handles e.g. the variables a for header or
                 // function header. Other strings (like arguments to commands) need more complex
                 // handling, which occurs in their respective overrides of visit().
@@ -940,24 +977,29 @@ impl<'s> Highlighter<'s> {
         }
         // No command substitution, so we can highlight the target file or fd. For example,
         // disallow redirections into a non-existent directory.
-        let target_is_valid = if !self.io_still_ok() {
+        let (role, file_exists) = if !self.io_still_ok() {
             // I/O is disallowed, so we don't have much hope of catching anything but gross
             // errors. Assume it's valid.
-            true
+            (HighlightRole::redirection, false)
         } else if contains_pending_variable(&self.pending_variables, &target) {
-            true
+            // Target uses a variable defined by the current commandline. Assume it's valid.
+            (HighlightRole::redirection, false)
         } else {
             // Validate the redirection target..
-            self.file_tester.test_redirection_target(&target, oper.mode)
-        };
-        self.color_node(
-            &redir.target,
-            HighlightSpec::with_fg(if target_is_valid {
-                HighlightRole::redirection
+            if let Ok(IsFile(file_exists)) =
+                self.file_tester.test_redirection_target(&target, oper.mode)
+            {
+                (HighlightRole::redirection, file_exists)
             } else {
-                HighlightRole::error
-            }),
-        );
+                (HighlightRole::error, false)
+            }
+        };
+        self.color_node(&redir.target, HighlightSpec::with_fg(role));
+        if file_exists {
+            for i in redir.target.source_range().as_usize() {
+                self.color_array[i].valid_path = true;
+            }
+        }
     }
 
     fn visit_variable_assignment(&mut self, varas: &VariableAssignment) {
@@ -1072,9 +1114,9 @@ impl<'s> Highlighter<'s> {
 fn has_cmdsub(src: &wstr) -> bool {
     let mut cursor = 0;
     match parse_util_locate_cmdsubst_range(src, &mut cursor, true, None, None) {
-        MaybeParentheses::Error => return false,
-        MaybeParentheses::None => return false,
-        MaybeParentheses::CommandSubstitution(_) => return true,
+        MaybeParentheses::Error => false,
+        MaybeParentheses::None => false,
+        MaybeParentheses::CommandSubstitution(_) => true,
     }
 }
 
@@ -1107,7 +1149,7 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
             return self.visit_keyword(keyword);
         }
         if let Some(token) = node.as_token() {
-            if token.token_type() == ParseTokenType::end {
+            if token.token_type() == ParseTokenType::End {
                 self.visit_semi_nl(node);
                 return;
             }
@@ -1263,12 +1305,13 @@ pub struct HighlightSpec {
 mod tests {
     use super::{HighlightColorResolver, HighlightRole, HighlightSpec, highlight_shell};
     use crate::common::ScopeGuard;
-    use crate::env::EnvMode;
+    use crate::env::{EnvMode, EnvSetMode, Environment};
     use crate::future_feature_flags::{self, FeatureFlag};
+    use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
     use crate::text_face::UnderlineStyle;
-    use crate::wchar::prelude::*;
     use libc::PATH_MAX;
 
     // Helper to return a string whose length greatly exceeds PATH_MAX.
@@ -1364,36 +1407,28 @@ mod tests {
         let mut param_valid_path = HighlightSpec::with_fg(HighlightRole::param);
         param_valid_path.valid_path = true;
 
-        let saved_flag = future_feature_flags::test(FeatureFlag::ampersand_nobg_in_token);
-        future_feature_flags::set(FeatureFlag::ampersand_nobg_in_token, true);
+        let mut redirection_valid_path = HighlightSpec::with_fg(HighlightRole::redirection);
+        redirection_valid_path.valid_path = true;
+
+        let saved_flag = future_feature_flags::test(FeatureFlag::AmpersandNoBgInToken);
+        future_feature_flags::set(FeatureFlag::AmpersandNoBgInToken, true);
         let _restore_saved_flag = ScopeGuard::new((), |_| {
-            future_feature_flags::set(FeatureFlag::ampersand_nobg_in_token, saved_flag);
+            future_feature_flags::set(FeatureFlag::AmpersandNoBgInToken, saved_flag);
         });
 
         let fg = HighlightSpec::with_fg;
 
         // Verify variables and wildcards in commands using /bin/cat.
         let vars = parser.vars();
-        vars.set_one(
-            L!("CDPATH"),
-            EnvMode::LOCAL,
-            L!("./cdpath-entry").to_owned(),
-        );
+        let local_mode = EnvSetMode::new_at_early_startup(EnvMode::LOCAL);
+        vars.set_one(L!("CDPATH"), local_mode, L!("./cdpath-entry").to_owned());
 
-        vars.set_one(
-            L!("VARIABLE_IN_COMMAND"),
-            EnvMode::LOCAL,
-            L!("a").to_owned(),
-        );
-        vars.set_one(
-            L!("VARIABLE_IN_COMMAND2"),
-            EnvMode::LOCAL,
-            L!("at").to_owned(),
-        );
+        vars.set_one(L!("VARIABLE_IN_COMMAND"), local_mode, L!("a").to_owned());
+        vars.set_one(L!("VARIABLE_IN_COMMAND2"), local_mode, L!("at").to_owned());
 
         let _cleanup = ScopeGuard::new((), |_| {
-            vars.remove(L!("VARIABLE_IN_COMMAND"), EnvMode::default());
-            vars.remove(L!("VARIABLE_IN_COMMAND2"), EnvMode::default());
+            vars.remove(L!("VARIABLE_IN_COMMAND"), EnvSetMode::default());
+            vars.remove(L!("VARIABLE_IN_COMMAND2"), EnvSetMode::default());
         });
 
         validate!(
@@ -1512,7 +1547,7 @@ mod tests {
             ("param1", fg(HighlightRole::param)),
             // Input redirection.
             ("<", fg(HighlightRole::redirection)),
-            ("/bin/echo", fg(HighlightRole::redirection)),
+            ("/dev/null", redirection_valid_path),
             // Output redirection to a valid fd.
             ("1>&2", fg(HighlightRole::redirection)),
             // Output redirection to an invalid fd.
@@ -1786,7 +1821,7 @@ mod tests {
         // First, set up fish_color_command to include underline
         vars.set_one(
             L!("fish_color_command"),
-            EnvMode::LOCAL,
+            EnvSetMode::new_at_early_startup(EnvMode::LOCAL),
             L!("--underline").to_owned(),
         );
 
@@ -1828,5 +1863,30 @@ mod tests {
                 i
             );
         }
+    }
+
+    #[test]
+    #[serial]
+    fn test_resolve_role() {
+        let _cleanup = test_init();
+        let parser = TestParser::new();
+        let vars = parser.vars();
+
+        let set = |var: &wstr, value: Vec<WString>| {
+            vars.set(var, EnvSetMode::new(EnvMode::LOCAL, false), value);
+        };
+        set(L!("fish_color_normal"), vec![L!("normal").into()]);
+        set(
+            L!("fish_color_command"),
+            vec![L!("red").into(), L!("--bold").into()],
+        );
+        set(L!("fish_color_keyword"), vec![L!("--theme=default").into()]);
+
+        let keyword_spec = HighlightSpec::with_both(HighlightRole::keyword);
+        let face = HighlightColorResolver::resolve_spec_uncached(&keyword_spec, vars);
+
+        let command_face =
+            parse_text_face_for_highlight(&vars.get(L!("fish_color_command")).unwrap()).unwrap();
+        assert_eq!(face, command_face);
     }
 }

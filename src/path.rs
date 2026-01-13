@@ -3,18 +3,18 @@
 //! path-related issues.
 
 use crate::common::{wcs2osstring, wcs2zstring};
-use crate::env::{EnvMode, EnvStack, Environment, FALLBACK_PATH};
+use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment, FALLBACK_PATH};
 use crate::expand::{HOME_DIRECTORY, expand_tilde};
-use crate::flog::{FLOG, FLOGF};
-use crate::wchar::prelude::*;
+use crate::flog::{flog, flogf};
+use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use errno::{Errno, errno, set_errno};
 use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
-use once_cell::sync::Lazy;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
 use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
+use std::sync::LazyLock;
 
 /// Returns the user configuration directory for fish. If the directory or one of its parents
 /// doesn't exist, they are first created.
@@ -24,7 +24,7 @@ use std::os::unix::prelude::*;
 pub fn path_get_config() -> Option<WString> {
     let dir = get_config_directory();
     if dir.success() {
-        Some(dir.path.to_owned())
+        Some(dir.path.clone())
     } else {
         None
     }
@@ -40,7 +40,7 @@ pub fn path_get_config() -> Option<WString> {
 pub fn path_get_data() -> Option<WString> {
     let dir = get_data_directory();
     if dir.success() {
-        Some(dir.path.to_owned())
+        Some(dir.path.clone())
     } else {
         None
     }
@@ -57,7 +57,7 @@ pub fn path_get_data() -> Option<WString> {
 pub fn path_get_cache() -> Option<WString> {
     let dir = get_cache_directory();
     if dir.success() {
-        Some(dir.path.to_owned())
+        Some(dir.path.clone())
     } else {
         None
     }
@@ -66,11 +66,11 @@ pub fn path_get_cache() -> Option<WString> {
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum DirRemoteness {
     /// directory status is unknown
-    unknown,
+    Unknown,
     /// directory is known local
-    local,
+    Local,
     /// directory is known remote
-    remote,
+    Remote,
 }
 
 /// Return the remoteness of the fish data directory.
@@ -99,8 +99,8 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
             vars,
         );
     }
-    if data.remoteness == DirRemoteness::remote {
-        FLOG!(path, "data path appears to be on a network volume");
+    if data.remoteness == DirRemoteness::Remote {
+        flog!(path, "data path appears to be on a network volume");
     }
 
     let config = get_config_directory();
@@ -115,8 +115,8 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
             vars,
         );
     }
-    if config.remoteness == DirRemoteness::remote {
-        FLOG!(path, "config path appears to be on a network volume");
+    if config.remoteness == DirRemoteness::Remote {
+        flog!(path, "config path appears to be on a network volume");
     }
 }
 
@@ -134,25 +134,23 @@ fn maybe_issue_path_warning(
     vars: &EnvStack,
 ) {
     let warning_var_name = L!("_FISH_WARNED_").to_owned() + which_dir;
-    if vars
-        .getf(&warning_var_name, EnvMode::GLOBAL | EnvMode::EXPORT)
-        .is_some()
-    {
+    let global_exported_mode = EnvMode::GLOBAL | EnvMode::EXPORT;
+    if vars.getf(&warning_var_name, global_exported_mode).is_some() {
         return;
     }
     vars.set_one(
         &warning_var_name,
-        EnvMode::GLOBAL | EnvMode::EXPORT,
+        EnvSetMode::new_at_early_startup(global_exported_mode),
         L!("1").to_owned(),
     );
 
-    FLOG!(error, custom_error_msg);
+    flog!(error, custom_error_msg);
     if path.is_empty() {
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!("Unable to locate the %s directory.", which_dir)
         );
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!(
                 "Please set the %s or HOME environment variable before starting fish.",
@@ -161,7 +159,7 @@ fn maybe_issue_path_warning(
         );
     } else {
         let env_var = if using_xdg { xdg_var } else { L!("HOME") };
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!(
                 "Unable to locate %s directory derived from $%s: '%s'.",
@@ -170,11 +168,11 @@ fn maybe_issue_path_warning(
                 path
             )
         );
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!("The error was '%s'.", Errno(saved_errno).to_string())
         );
-        FLOG!(
+        flog!(
             warning_path,
             wgettext_fmt!(
                 "Please set $%s to a directory where you have write access.",
@@ -236,7 +234,7 @@ fn path_check_executable(path: &wstr) -> Result<(), std::io::Error> {
 
 /// Return all the paths that match the given command.
 pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
-    FLOGF!(path, "path_get_paths('%s')", cmd);
+    flogf!(path, "path_get_paths('%s')", cmd);
     let mut paths = vec![];
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
@@ -600,7 +598,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 
         return BaseDirectory {
             path: bytes2wcstring(build_dir.as_os_str().as_bytes()),
-            remoteness: DirRemoteness::unknown,
+            remoteness: DirRemoteness::Unknown,
             used_xdg: false,
             err,
         };
@@ -625,7 +623,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 
     set_errno(Errno(0));
     let err;
-    let mut remoteness = DirRemoteness::unknown;
+    let mut remoteness = DirRemoteness::Unknown;
     if path.is_empty() {
         err = ENOENT;
     } else if let Err(io_error) = create_dir_all_with_mode(wcs2osstring(&path), 0o700) {
@@ -662,7 +660,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     {
         let mut buf = MaybeUninit::uninit();
         if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
-            return DirRemoteness::unknown;
+            return DirRemoteness::Unknown;
         }
         let buf = unsafe { buf.assume_init() };
         // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
@@ -686,9 +684,9 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
             0x013111A7 | 0x013111A8 | // IBRIX. Undocumented.
             0x65735546 | // FUSE_SUPER_MAGIC
             0xA501FCF5 // VXFS_SUPER_MAGIC
-                => DirRemoteness::remote,
+                => DirRemoteness::Remote,
             _ => {
-                DirRemoteness::unknown
+                DirRemoteness::Unknown
             }
         }
     }
@@ -698,16 +696,16 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     {
         let mut buf = MaybeUninit::uninit();
         if unsafe { libc::statvfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
-            return DirRemoteness::unknown;
+            return DirRemoteness::Unknown;
         }
         let buf = unsafe { buf.assume_init() };
         #[allow(clippy::useless_conversion)]
         let flags = buf.f_flag as u64;
         #[allow(clippy::unnecessary_cast)]
         if flags & (libc::MNT_LOCAL as u64) != 0 {
-            DirRemoteness::local
+            DirRemoteness::Local
         } else {
-            DirRemoteness::remote
+            DirRemoteness::Remote
         }
     }
 
@@ -715,7 +713,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     {
         let mut buf = MaybeUninit::uninit();
         if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
-            return DirRemoteness::unknown;
+            return DirRemoteness::Unknown;
         }
         let buf = unsafe { buf.assume_init() };
         // statfs::f_flags types differ.
@@ -723,28 +721,28 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
         let flags = buf.f_flags as u64;
         #[allow(clippy::unnecessary_cast)]
         if flags & (libc::MNT_LOCAL as u64) != 0 {
-            DirRemoteness::local
+            DirRemoteness::Local
         } else {
-            DirRemoteness::remote
+            DirRemoteness::Remote
         }
     }
 }
 
 fn get_data_directory() -> &'static BaseDirectory {
-    static DIR: Lazy<BaseDirectory> =
-        Lazy::new(|| make_base_directory(L!("XDG_DATA_HOME"), L!("/.local/share/fish")));
+    static DIR: LazyLock<BaseDirectory> =
+        LazyLock::new(|| make_base_directory(L!("XDG_DATA_HOME"), L!("/.local/share/fish")));
     &DIR
 }
 
 fn get_cache_directory() -> &'static BaseDirectory {
-    static DIR: Lazy<BaseDirectory> =
-        Lazy::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
+    static DIR: LazyLock<BaseDirectory> =
+        LazyLock::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
     &DIR
 }
 
 fn get_config_directory() -> &'static BaseDirectory {
-    static DIR: Lazy<BaseDirectory> =
-        Lazy::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
+    static DIR: LazyLock<BaseDirectory> =
+        LazyLock::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
     &DIR
 }
 
@@ -770,7 +768,7 @@ pub fn append_path_component(path: &mut WString, component: &wstr) {
 #[cfg(test)]
 mod tests {
     use super::{path_apply_working_directory, path_make_canonical, paths_are_equivalent};
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_path_make_canonical() {

@@ -57,7 +57,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
@@ -81,13 +81,13 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             // else
             //     echo whatever
             // end
-            for (arg, _) in iter {
+            for InputValue { arg, .. } in iter {
                 streams.out.appendln(arg);
             }
             return Ok(());
         }
 
-        for (arg, _) in iter {
+        for InputValue { arg, .. } in iter {
             // Visible width only makes sense line-wise.
             // So either we have no-newlines (which means we shorten on the first newline),
             // or we handle the lines separately.
@@ -230,7 +230,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             newl.truncate(pos);
             newl.push_utfstr(ell);
             newl.push('\n');
-            streams.out.append(newl);
+            streams.out.append(&newl);
         }
 
         // Return true if we have shortened something and false otherwise.

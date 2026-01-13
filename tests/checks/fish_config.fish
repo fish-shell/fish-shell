@@ -1,6 +1,7 @@
 # RUN: %fish %s
 # REQUIRES: command -v diff
-# REQUIRES: test -z "$CI"
+
+set -g fish (status fish-path)
 
 fish_config prompt list | string match -r '^(?:acidhub|disco|nim)$'
 # CHECK: acidhub
@@ -107,60 +108,70 @@ type fish_mode_prompt
 
 fish_config theme choose non-existent-theme1
 # CHECKERR: No such theme: non-existent-theme1
-# CHECKERR: Searched {{/\S* (/\S*|and `status list-files tools/web_config/themes`)}}
+# CHECKERR: Searched {{/\S* (/\S*|and `status list-files themes`)}}
 
 # This still demos the current theme.
 fish_config theme show non-existent-theme2
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}
-# CHECK: /bright/vixens{{\x1b\[m}} jump{{\x1b\[m}} |{{\x1b\[m}} "fowl"{{\x1b\[m}} > quack{{\x1b\[m}} &{{\x1b\[m}} # This is a comment
-# CHECK: {{\x1b\[m}}echo{{\x1b\[m}} 'Errors are the portal to discovery
-# CHECK: {{\x1b\[m}}Th{{\x1b\[m}}is an autosuggestion
+# CHECK: {{\x1b\[m/bright/vixens\x1b\[m \x1b\[36mjump\x1b\[m.*}}
+# CHECK: {{.*}}
+# CHECK: {{.*}}
 
 diff \
     (fish_config theme list | psub -s config-theme-list) \
     (fish_config theme | psub -s config-theme)
 
 fish_config theme list | string match -r \
-'^(?:ayu Dark|Base16 Default Light|coolbeans|fish default|None|'\
-'Tomorrow Night Bright|Tomorrow Night|Tomorrow)$'
-# CHECK: ayu Dark
-# CHECK: Base16 Default Light
+'^(?:ayu|base16-default|coolbeans|default|none|'\
+'tomorrow-night-bright|tomorrow)$'
+# CHECK: ayu
+# CHECK: base16-default
 # CHECK: coolbeans
-# CHECK: fish default
-# CHECK: None
-# CHECK: Tomorrow Night Bright
-# CHECK: Tomorrow Night
-# CHECK: Tomorrow
+# CHECK: default
+# CHECK: none
+# CHECK: tomorrow-night-bright
+# CHECK: tomorrow
 
-fish_config theme show "fish default"
+fish_config theme show default-rgb
 # CHECK: {{\x1b\[m}}{{\x1b\[4m}}Current{{\x1b\[m}}
-# CHECK: /bright/vixens{{\x1b\[m}} jump{{\x1b\[m}} |{{\x1b\[m}} "fowl"{{\x1b\[m}} > quack{{\x1b\[m}} &{{\x1b\[m}} # This is a comment
-# CHECK: {{\x1b\[m}}echo{{\x1b\[m}} 'Errors are the portal to discovery
-# CHECK: {{\x1b\[m}}Th{{\x1b\[m}}is an autosuggestion
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}fish default{{\x1b\[m}}
-# CHECK: {{\x1b\[m}}/bright/vixens{{\x1b\[m}} {{\x1b\[36m}}jump{{\x1b\[m}} {{\x1b\[36m}}{{\x1b\[1m}}|{{\x1b\[m}} {{\x1b\[33m}}"fowl"{{\x1b\[m}} {{\x1b\[36m}}{{\x1b\[1m}}> quack{{\x1b\[m}} {{\x1b\[32m}}&{{\x1b\[m}}{{\x1b\[31m}} # This is a comment
+# CHECK: {{\x1b\[m/bright/vixens\x1b\[m \x1b\[36mjump\x1b\[m.*}}
 # CHECK: {{\x1b\[m}}{{\x1b\[m}}echo{{\x1b\[m}} {{\x1b\[91m}}'{{\x1b\[33m}}Errors are the portal to discovery
 # CHECK: {{\x1b\[m}}{{\x1b\[m}}Th{{\x1b\[m}}{{\x1b\[90m}}is an autosuggestion
 
-fish_config theme show ayu\ Dark ayu\ Light | string match -r '^.*ayu.*'
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu Dark{{\x1b\[m}}
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu Light{{\x1b\[m}}
+# CHECK: {{\x1b\[m\x1b\[4mdefault-rgb \(light color theme\)\x1b\[m}}
+# CHECK: {{\x1b\[38;2;0;0;238m/bright/vixens\x1b\[m \x1b\[38;2;0;160;160mjump\x1b.*}}
+# CHECK: {{.*}}
+# CHECK: {{.*}}
+# CHECK: {{\x1b\[m\x1b\[4mdefault-rgb \(dark color theme\)\x1b\[m}}
+# CHECK: {{\x1b\[38;2;92;92;255m.*}}
+# CHECK: {{.*}}
+# CHECK: {{.*}}
+# CHECK: {{\x1b\[m\x1b\[4mdefault-rgb \(unknown color theme\)\x1b\[m}}
+# CHECK: {{\x1b\[m/bright/vixens\x1b\[m \x1b\[36mjump\x1b\[m.*}}
+# CHECK: {{.*}}
+# CHECK: {{.*}}
+
+fish_config theme show ayu | string match -r '^.*ayu.*'
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu (light color theme){{\x1b\[m}}
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu (dark color theme){{\x1b\[m}}
 
 mkdir $__fish_config_dir/themes
 touch $__fish_config_dir/themes/custom-from-userconf.theme
-fish_config theme show | grep -E 'fish default|Default Dark|custom-from-userconf'
-# CHECK: {{.*}}custom-from-userconf{{\x1b\[m}}
-# CHECK: {{.*}}Base16 Default Dark{{\x1b\[m}}
-# CHECK: {{.*}}fish default{{\x1b\[m}}
+fish_config theme show | grep -E 'default-rgb|base16-default|custom-from-userconf'
+# CHECK: {{.*}}default-rgb (light color theme){{\x1b\[m}}
+# CHECK: {{.*}}default-rgb (dark color theme){{\x1b\[m}}
+# CHECK: {{.*}}default-rgb (unknown color theme){{\x1b\[m}}
+# CHECK: {{.*}}custom-from-userconf (unknown color theme){{\x1b\[m}}
+# CHECK: {{.*}}base16-default (light color theme){{\x1b\[m}}
+# CHECK: {{.*}}base16-default (dark color theme){{\x1b\[m}}
 
-# Override a default theme with different colors.
-__fish_data_with_file tools/web_config/themes/None.theme \
-    cat >$__fish_config_dir/themes/"fish default.theme"
-fish_config theme show | grep -E 'fish default|Base16 Default Dark' -A1
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}fish default{{\x1b\[m}}
-# CHECK: {{\x1b\[m}}/bright/vixens{{\x1b\[m}} {{\x1b\[m}}jump{{\x1b\[m}}{{.*}}
+# Override the default theme with different colors.
+status get-file themes/none.theme >$__fish_config_dir/themes/default.theme
+fish_config theme show default ayu | grep -E 'default|ayu.*dark' -A1
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}default (unknown color theme){{\x1b\[m}}
+# CHECK: /bright/vixens{{.*}}
 # CHECK: --
-# CHECK: {{\x1b\[m}}{{\x1b\[4m}}Base16 Default Dark{{\x1b\[m}}
+# CHECK: {{\x1b\[m}}{{\x1b\[4m}}ayu (dark color theme){{\x1b\[m}}
 # CHECK: {{.*}}/bright/vixens{{.*}}
 
 function print-sample-colors
@@ -171,37 +182,69 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
 "fish_color_normal yellow"
 
 {
-    # Since we're noninteractive, we have not loaded a theme yet.
     print-sample-colors
-    # CHECK: normal=
-    # CHECK: autosuggestion=
+    # CHECK: normal=normal --theme=default
+    # CHECK: autosuggestion=brblack --theme=default
 
-    fish_config theme choose custom-from-userconf
+    fish_config theme choose custom-from-userconf --color-theme=unknown
     print-sample-colors
-    # CHECK: normal=yellow
+    # CHECK: normal=yellow --theme=custom-from-userconf
     # CHECK: autosuggestion=
     set -S fish_color_normal
-    # CHECK: $fish_color_normal: set in global scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal: set in global scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |yellow|
+    # CHECK: $fish_color_normal[2]: |--theme=custom-from-userconf|
 
     echo yes | fish_config theme save
     set -S fish_color_normal
-    # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal: set in universal scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |yellow|
+    # CHECK: $fish_color_normal[2]: |--theme=custom-from-userconf|
 
-    fish_config theme choose 'fish default'
+    fish_config theme choose default --color-theme=unknown
     print-sample-colors
-    # CHECK: normal=normal
-    # CHECK: autosuggestion=brblack
+    # CHECK: normal=normal --theme=default
+    # CHECK: autosuggestion=brblack --theme=default
 
     set -S fish_color_normal
-    # CHECK: $fish_color_normal: set in global scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal: set in global scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |normal|
-    # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
+    # CHECK: $fish_color_normal[2]: |--theme=default|
+    # CHECK: $fish_color_normal: set in universal scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |yellow|
+    # CHECK: $fish_color_normal[2]: |--theme=custom-from-userconf|
 
-    echo yes | fish_config theme save 'fish default'
+    echo yes | fish_config theme save default
     set -S fish_color_normal
     # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
     # CHECK: $fish_color_normal[1]: |normal|
 }
+
+{
+    echo >$__fish_config_dir/conf.d/fish_frozen_theme.fish "\
+set --global fish_color_command 0a0a0a
+set --global fish_color_option 0b0b0b"
+    echo >$__fish_config_dir/themes/from-cli.theme "\
+[light]
+fish_color_command black
+fish_color_param 0c0c0c
+[dark]
+fish_color_command white
+fish_color_param c0c0c0"
+    $fish -c '
+        fish_config theme choose from-cli
+        echo $fish_color_command
+        # CHECK: --theme=from-cli
+        echo $fish_color_option
+        # CHECK: 0b0b0b
+        echo $fish_color_param
+        # CHECK: --theme=from-cli
+        echo yes | fish_config theme save from-cli
+        # CHECKERR: fish_config theme save: error: $fish_terminal_color_theme not yet initialized
+        and echo assertion failure
+    '
+    rm -f $__fish_config_dir/conf.d/fish_frozen_theme.fish
+}
+
+fish_config theme dump badarg
+# CHECKERR: Too many arguments

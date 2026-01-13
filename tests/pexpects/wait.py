@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
 
-import os
-import sys
-
-# Disable under SAN - keeps failing because the timing is too tight
-if "FISH_CI_SAN" in os.environ:
-    sys.exit(0)
-
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,

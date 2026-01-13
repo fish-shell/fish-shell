@@ -74,9 +74,7 @@ def extract_sections(app, env):
             f"Unsupported characters in section path: {section}"
         )
     help_sections = "".join(f"{section}\n" for section in sections)
-    Path(output_file).write_text(
-        f"""pub static HELP_SECTIONS: &str = "{help_sections}";"""
-    )
+    Path(output_file).write_text(help_sections)
 
 
 def remove_fish_indent_lexer(app):
@@ -99,7 +97,7 @@ def setup(app):
     app.add_config_value("issue_url", default=None, rebuild="html")
     app.add_config_value(
         "fish_help_sections_output",
-        default=os.environ.get("FISH_SPHINX_HELP_SECTIONS_OUTPUT", ""),
+        default="",
         rebuild="man",
         types=str,
     )
@@ -119,21 +117,10 @@ copyright = "fish-shell developers"
 author = "fish-shell developers"
 issue_url = "https://github.com/fish-shell/fish-shell/issues"
 
-# Parsing FISH-BUILD-VERSION-FILE is possible but hard to ensure that it is in the right place
-# fish_indent is guaranteed to be on PATH for the Pygments highlighter anyway
-if "FISH_BUILD_VERSION_FILE" in os.environ:
-    f = open(os.environ["FISH_BUILD_VERSION_FILE"], "r")
-    ret = f.readline().strip()
-elif "FISH_BUILD_VERSION" in os.environ:
-    ret = os.environ["FISH_BUILD_VERSION"]
-else:
-    ret = subprocess.check_output(
-        ("../build_tools/git_version_gen.sh", "--stdout"), stderr=subprocess.STDOUT
-    ).decode("utf-8")
-
-predetermined_timestamp = os.environ.get("FISH_SPHINX_BUILD_DATE")
-if predetermined_timestamp:
-    today = predetermined_timestamp
+# From Cargo, or no build system.
+ret = subprocess.check_output(
+    ("../build_tools/git_version_gen.sh"), stderr=subprocess.STDOUT
+).decode("utf-8")
 
 # The full version, including alpha/beta/rc tags
 release = ret.strip().split(" ")[-1]
@@ -164,7 +151,8 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+fish_exclude_patterns = "cmds/*.inc.rst"
+exclude_patterns = [fish_exclude_patterns]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -267,7 +255,7 @@ man_pages = [
     ),
     ("faq", "fish-faq", "", [author], 1),
 ]
-for path in sorted(set(glob("cmds/*.rst")) - set(glob("cmds/*.inc.rst"))):
+for path in sorted(set(glob("cmds/*.rst")) - set(glob(fish_exclude_patterns))):
     docname = os.path.splitext(path)[0]
     cmd = os.path.basename(docname)
     man_pages.append((docname, cmd, get_command_description(path, cmd), "", 1))

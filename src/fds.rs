@@ -1,15 +1,18 @@
 use crate::common::wcs2zstring;
-use crate::flog::FLOG;
+use crate::flog::flog;
+use crate::prelude::*;
 use crate::signal::signal_check_cancel;
-use crate::wchar::prelude::*;
 use crate::wutil::perror;
 use cfg_if::cfg_if;
 use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
 use nix::fcntl::FcntlArg;
-use nix::{fcntl::OFlag, unistd};
+use nix::fcntl::OFlag;
 use std::ffi::CStr;
 use std::fs::File;
-use std::io::{self, Read, Write};
+use std::io;
+use std::mem::ManuallyDrop;
+use std::ops::{Deref, DerefMut};
+use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd};
 use std::os::unix::prelude::*;
 
 localizable_consts!(
@@ -23,105 +26,6 @@ pub const FIRST_HIGH_FD: RawFd = 10;
 
 /// A sentinel value indicating no timeout.
 pub const NO_TIMEOUT: u64 = u64::MAX;
-
-/// A helper type for managing and automatically closing a file descriptor.
-/// Importantly this supports an invalid state with an fd of -1.
-pub struct AutoCloseFd {
-    fd_: RawFd,
-}
-
-impl Read for AutoCloseFd {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        nix::unistd::read(self, buf).map_err(std::io::Error::from)
-    }
-}
-
-impl Write for AutoCloseFd {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        nix::unistd::write(self, buf).map_err(std::io::Error::from)
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        // We don't buffer anything so this is a no-op.
-        Ok(())
-    }
-}
-
-impl AutoCloseFd {
-    // Closes the fd if not already closed.
-    pub fn close(&mut self) {
-        if self.fd_ != -1 {
-            _ = unistd::close(self.fd_);
-            self.fd_ = -1;
-        }
-    }
-
-    // Returns the fd.
-    pub fn fd(&self) -> RawFd {
-        self.fd_
-    }
-
-    // Returns the fd, transferring ownership to the caller.
-    pub fn acquire(&mut self) -> RawFd {
-        let temp = self.fd_;
-        self.fd_ = -1;
-        temp
-    }
-
-    // Resets to a new fd, taking ownership.
-    pub fn reset(&mut self, fd: RawFd) {
-        if fd == self.fd_ {
-            return;
-        }
-        self.close();
-        self.fd_ = fd;
-    }
-
-    // Returns if this has a valid fd.
-    pub fn is_valid(&self) -> bool {
-        self.fd_ >= 0
-    }
-
-    // Create a new AutoCloseFd instance taking ownership of the passed fd
-    pub fn new(fd: RawFd) -> Self {
-        AutoCloseFd { fd_: fd }
-    }
-
-    // Create a new AutoCloseFd without an open fd
-    pub fn empty() -> Self {
-        AutoCloseFd { fd_: -1 }
-    }
-}
-
-impl FromRawFd for AutoCloseFd {
-    unsafe fn from_raw_fd(fd: RawFd) -> Self {
-        AutoCloseFd { fd_: fd }
-    }
-}
-
-impl AsRawFd for AutoCloseFd {
-    fn as_raw_fd(&self) -> RawFd {
-        self.fd()
-    }
-}
-
-impl AsFd for AutoCloseFd {
-    fn as_fd(&self) -> BorrowedFd<'_> {
-        unsafe { BorrowedFd::borrow_raw(self.fd()) }
-    }
-}
-
-impl Default for AutoCloseFd {
-    fn default() -> AutoCloseFd {
-        AutoCloseFd { fd_: -1 }
-    }
-}
-
-impl Drop for AutoCloseFd {
-    fn drop(&mut self) {
-        self.close()
-    }
-}
 
 /// Helper type returned from make_autoclose_pipes.
 pub struct AutoClosePipes {
@@ -145,7 +49,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
                     pipes
                 }
                 Err(err) => {
-                    FLOG!(warning, PIPE_ERROR.localize());
+                    flog!(warning, PIPE_ERROR.localize());
                     perror("pipe2");
                     return Err(err);
                 }
@@ -154,7 +58,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
             let pipes = match nix::unistd::pipe() {
                 Ok(pipes) => pipes,
                 Err(err) => {
-                    FLOG!(warning, PIPE_ERROR.localize());
+                    flog!(warning, PIPE_ERROR.localize());
                     perror("pipe");
                     return Err(err);
                 }
@@ -339,12 +243,84 @@ pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
     Ok(())
 }
 
+/// A helper type for a File that does not close on drop.
+/// Note the underlying file is never dropped; this is equivalent to mem::forget.
+pub struct BorrowedFdFile(ManuallyDrop<File>);
+
+impl Deref for BorrowedFdFile {
+    type Target = File;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for BorrowedFdFile {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl FromRawFd for BorrowedFdFile {
+    // Note this does NOT take ownership.
+    unsafe fn from_raw_fd(fd: RawFd) -> Self {
+        Self(ManuallyDrop::new(unsafe { File::from_raw_fd(fd) }))
+    }
+}
+
+impl AsRawFd for BorrowedFdFile {
+    #[inline]
+    fn as_raw_fd(&self) -> RawFd {
+        self.0.as_raw_fd()
+    }
+}
+
+impl IntoRawFd for BorrowedFdFile {
+    #[inline]
+    fn into_raw_fd(self) -> RawFd {
+        ManuallyDrop::into_inner(self.0).into_raw_fd()
+    }
+}
+
+impl BorrowedFdFile {
+    /// Return a BorrowedFdFile from stdin.
+    pub fn stdin() -> Self {
+        unsafe { Self::from_raw_fd(libc::STDIN_FILENO) }
+    }
+}
+
+impl Clone for BorrowedFdFile {
+    // BorrowedFdFile may be cloned: this just shares the borrowed fd.
+    // It does NOT duplicate the underlying fd.
+    fn clone(&self) -> Self {
+        // Safety: just re-borrow the same fd.
+        unsafe { Self::from_raw_fd(self.as_raw_fd()) }
+    }
+}
+
+impl std::io::Read for BorrowedFdFile {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.deref_mut().read(buf)
+    }
+    fn read_vectored(&mut self, bufs: &mut [io::IoSliceMut<'_>]) -> io::Result<usize> {
+        self.deref_mut().read_vectored(bufs)
+    }
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        self.deref_mut().read_to_end(buf)
+    }
+    fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
+        self.deref_mut().read_to_string(buf)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{FIRST_HIGH_FD, make_autoclose_pipes};
+    use super::{BorrowedFdFile, FIRST_HIGH_FD, make_autoclose_pipes};
     use crate::tests::prelude::*;
     use libc::{F_GETFD, FD_CLOEXEC};
-    use std::os::fd::AsRawFd;
+    use std::os::fd::{AsRawFd, FromRawFd};
 
     #[test]
     #[serial]
@@ -367,5 +343,19 @@ mod tests {
                 assert!(flags & FD_CLOEXEC != 0);
             }
         }
+    }
+
+    #[test]
+    fn test_borrowed_fd_file_does_not_close() {
+        let file = std::fs::File::open("/dev/null").unwrap();
+        let fd = file.as_raw_fd();
+        let borrowed = unsafe { BorrowedFdFile::from_raw_fd(fd) };
+        #[allow(clippy::drop_non_drop)]
+        drop(borrowed);
+        let flags = unsafe { libc::fcntl(fd, libc::F_GETFD, 0) };
+        assert!(flags >= 0);
+        drop(file);
+        let flags = unsafe { libc::fcntl(fd, libc::F_GETFD, 0) };
+        assert!(flags < 0);
     }
 }

@@ -36,23 +36,23 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     let optind = opts.optind;
 
     if argc == optind || args[optind] == "-" {
-        if streams.stdin_fd < 0 {
+        if streams.is_stdin_closed() {
             streams
                 .err
-                .append(wgettext_fmt!("%s: stdin is closed\n", cmd));
+                .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
             return Err(STATUS_CMD_ERROR);
         }
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
-        if argc == optind && isatty(streams.stdin_fd) {
+        if argc == optind && isatty(streams.stdin_fd()) {
             // Don't implicitly read from the terminal.
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: missing filename argument or input redirection\n",
                 cmd
             ));
             return Err(STATUS_CMD_ERROR);
         }
         func_filename = FilenameRef::new(L!("-").to_owned());
-        fd = streams.stdin_fd;
+        fd = streams.stdin_fd();
     } else {
         match wopen_cloexec(args[optind], OFlag::O_RDONLY, Mode::empty()) {
             Ok(file) => {
@@ -60,7 +60,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             Err(_) => {
                 let esc = escape(args[optind]);
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: Error encountered while sourcing file '%s':\n",
                     cmd,
                     &esc
@@ -87,7 +87,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     // points to the end of argv. Otherwise we want to skip the file name to get to the args if any.
     let remaining_args = &args[optind + if argc == optind { 0 } else { 1 }..];
     let argv_list = remaining_args.iter().map(|&arg| arg.to_owned()).collect();
-    parser.vars().set_argv(argv_list);
+    parser.vars().set_argv(argv_list, parser.is_repainting());
 
     let retval = reader_read(parser, fd, streams.io_chain);
 
@@ -97,7 +97,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         Ok(_) => BuiltinResult::from_dynamic(parser.get_last_status()),
         Err(err) => {
             let esc = escape(&func_filename);
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Error while reading file '%s'\n",
                 cmd,
                 if esc == "-" { L!("<stdin>") } else { &esc }

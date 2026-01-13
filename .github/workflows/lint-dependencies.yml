@@ -1,0 +1,24 @@
+name: Lint Dependencies
+on:
+  push:
+    paths:
+      - '.github/workflows/lint-dependencies.yml'
+      - 'Cargo.lock'
+      - '**/Cargo.toml'
+      - 'deny.toml'
+  pull_request:
+    paths:
+      - '.github/workflows/lint-dependencies.yml'
+      - 'Cargo.lock'
+      - '**/Cargo.toml'
+      - 'deny.toml'
+jobs:
+  cargo-deny:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: EmbarkStudios/cargo-deny-action@v2
+      with:
+        command: check licenses
+        arguments: --all-features --locked --exclude-dev
+        rust-version: 1.92 # updatecli.d/rust.yml

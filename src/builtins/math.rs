@@ -33,7 +33,7 @@ fn parse_cmd_opts(
     parser: &Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), ErrorCode> {
-    const cmd: &wstr = L!("math");
+    let cmd = L!("math");
     let print_hints = true;
 
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
@@ -69,7 +69,7 @@ fn parse_cmd_opts(
                     if scale < 0 || scale > 15 {
                         streams
                             .err
-                            .append(wgettext_fmt!("%s: %s: invalid scale\n", cmd, optarg));
+                            .append(&wgettext_fmt!("%s: %s: invalid scale\n", cmd, optarg));
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]
@@ -89,7 +89,7 @@ fn parse_cmd_opts(
                 } else {
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: %s: invalid mode\n", cmd, optarg));
+                        .append(&wgettext_fmt!("%s: %s: invalid mode\n", cmd, optarg));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -102,7 +102,7 @@ fn parse_cmd_opts(
                 } else {
                     let base = fish_wcstoi(optarg).unwrap_or(-1);
                     if base != 8 && base != 16 {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: %s: invalid base value\n",
                             cmd,
                             optarg
@@ -142,7 +142,7 @@ fn parse_cmd_opts(
     }
 
     if have_scale && opts.scale != 0 && opts.base != 10 {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
             "non-zero scale value only valid
@@ -239,30 +239,30 @@ fn evaluate_expression(
                 let mut s = format_double(n, opts);
                 s.push('\n');
 
-                streams.out.append(s);
+                streams.out.append(&s);
                 return Ok(SUCCESS);
             };
 
             streams
                 .err
-                .append(sprintf!("%s: Error: %s\n", cmd, error_message));
-            streams.err.append(sprintf!("'%s'\n", expression));
+                .append(&sprintf!("%s: Error: %s\n", cmd, error_message));
+            streams.err.append(&sprintf!("'%s'\n", expression));
 
             Err(STATUS_CMD_ERROR)
         }
         Err(err) => {
-            streams.err.append(sprintf!(
+            streams.err.append(&sprintf!(
                 L!("%s: Error: %s\n"),
                 cmd,
                 err.kind.describe_wstr()
             ));
-            streams.err.append(sprintf!("'%s'\n", expression));
+            streams.err.append(&sprintf!("'%s'\n", expression));
             let padding = WString::from_chars(vec![' '; err.position + 1]);
             if err.len >= 2 {
                 let tildes = WString::from_chars(vec!['~'; err.len - 2]);
-                streams.err.append(sprintf!("%s^%s^\n", padding, tildes));
+                streams.err.append(&sprintf!("%s^%s^\n", padding, tildes));
             } else {
-                streams.err.append(sprintf!("%s^\n", padding));
+                streams.err.append(&sprintf!("%s^\n", padding));
             }
 
             Err(STATUS_CMD_ERROR)
@@ -285,7 +285,7 @@ pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     }
 
     let mut expression = WString::new();
-    for (arg, _) in Arguments::new(argv, &mut optind, streams, MATH_CHUNK_SIZE) {
+    for InputValue { arg, .. } in Arguments::new(argv, &mut optind, streams, MATH_CHUNK_SIZE) {
         if !expression.is_empty() {
             expression.push(' ')
         }
@@ -295,7 +295,7 @@ pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     if expression.is_empty() {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0));
         return Err(STATUS_CMD_ERROR);
     }
 

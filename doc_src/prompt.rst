@@ -113,9 +113,9 @@ It's useful to display this in your prompt, but showing it when it's 0 seems kin
 First of all, since every command (except for :doc:`set <cmds/set>`) changes the status, you need to store it for later use as the first thing in your prompt. Use a :ref:`local variable <variables-scope>` so it will be confined to your prompt function::
 
   set -l last_status $status
-  
+
 And after that, you can set a string if it is not zero::
-  
+
   # Prompt status only if it's not 0
   set -l stat
   if test $last_status -ne 0
@@ -125,7 +125,7 @@ And after that, you can set a string if it is not zero::
 And to print it, we add it to our ``string join``::
 
   string join '' -- (set_color green) (prompt_pwd) (set_color normal) $stat '>'
-  
+
 If ``$last_status`` was 0, ``$stat`` is empty, and so it will simply disappear.
 
 So our entire prompt is now::

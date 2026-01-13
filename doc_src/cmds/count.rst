@@ -30,7 +30,7 @@ Example
 
     count $PATH
     # Returns the number of directories in the users PATH variable.
-    
+
     count *.txt
     # Returns the number of files in the current working directory
     # ending with the suffix '.txt'.

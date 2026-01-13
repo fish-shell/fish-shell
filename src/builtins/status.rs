@@ -12,24 +12,39 @@ use crate::tty_handoff::{TERMINAL_OS_NAME, get_scroll_content_up_capability, xtv
 use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use cfg_if::cfg_if;
 use libc::F_OK;
+use rust_embed::RustEmbed;
 
+/// Create an enum with name `$name`.
+/// Its variants are given as comma-separated tuples, with each tuple containing the variant name,
+/// as well as a string representations of the variant.
+/// Optionally, additional strings can be provided, which are considered aliases for the enum
+/// variant.
+/// The generated enum will implement a `from_str` function, mapping from `&str` to the associated
+/// enum variant if any, and `to_wstr`, which maps from a variant to the associated
+/// `$default_name`.
+/// It is the user's responsibility to ensure than none of the string arguments appears more than
+/// once.
 macro_rules! str_enum {
-    ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
+    ($name:ident, $(($val:ident, $default_name:expr $(, $alias:expr)* $(,)?)),* $(,)?) => {
+        #[derive(Clone, Copy)]
+        enum $name {
+            $($val),*,
+        }
+
         impl $name {
-            fn from_wstr(s: &str) -> Option<Self> {
+            fn from_str(s: &str) -> Option<Self> {
                 // matching on str's lets us avoid having to do binary search and friends ourselves,
-                // this is ascii only anyways
+                // this is ASCII only anyways
                 match s {
-                    $($str => Some(Self::$val)),*,
+                    $($default_name => Some(Self::$val)),*,
+                    $($($alias => Some(Self::$val),)*)*
                     _ => None,
                 }
             }
 
             fn to_wstr(self) -> &'static wstr {
-                // There can be multiple vals => str mappings, and that's okay
-                #[allow(unreachable_patterns)]
                 match self {
-                    $(Self::$val => L!($str)),*,
+                    $(Self::$val => L!($default_name)),*,
                 }
             }
         }
@@ -37,59 +52,18 @@ macro_rules! str_enum {
 }
 
 use StatusCmd::*;
-#[derive(Clone, Copy)]
-enum StatusCmd {
-    STATUS_CURRENT_CMD = 1,
-    STATUS_BASENAME,
-    STATUS_DIRNAME,
-    STATUS_FEATURES,
-    STATUS_FILENAME,
-    STATUS_FISH_PATH,
-    STATUS_FUNCTION,
-    STATUS_IS_BLOCK,
-    STATUS_IS_BREAKPOINT,
-    STATUS_IS_COMMAND_SUB,
-    STATUS_IS_FULL_JOB_CTRL,
-    STATUS_IS_INTERACTIVE,
-    STATUS_IS_INTERACTIVE_JOB_CTRL,
-    STATUS_IS_INTERACTIVE_READ,
-    STATUS_IS_LOGIN,
-    STATUS_IS_NO_JOB_CTRL,
-    STATUS_LINE_NUMBER,
-    STATUS_SET_JOB_CONTROL,
-    STATUS_STACK_TRACE,
-    STATUS_TEST_FEATURE,
-    STATUS_CURRENT_COMMANDLINE,
-    STATUS_BUILD_INFO,
-    STATUS_BUILDINFO,
-    STATUS_GET_FILE,
-    STATUS_LIST_FILES,
-    STATUS_HELP_SECTIONS,
-    STATUS_TERMINAL,
-    STATUS_TERMINAL_OS,
-    STATUS_TEST_TERMINAL_FEATURE,
-}
-
 str_enum!(
     StatusCmd,
-    (STATUS_BASENAME, "basename"),
-    (STATUS_BASENAME, "current-basename"),
-    (STATUS_BUILD_INFO, "build-info"),
-    (STATUS_BUILDINFO, "buildinfo"),
+    (STATUS_BASENAME, "basename", "current-basename"),
+    (STATUS_BUILD_INFO, "build-info", "buildinfo"),
     (STATUS_CURRENT_CMD, "current-command"),
     (STATUS_CURRENT_COMMANDLINE, "current-commandline"),
-    (STATUS_DIRNAME, "current-dirname"),
-    (STATUS_FILENAME, "current-filename"),
-    (STATUS_FUNCTION, "current-function"),
-    (STATUS_LINE_NUMBER, "current-line-number"),
-    (STATUS_DIRNAME, "dirname"),
+    (STATUS_DIRNAME, "dirname", "current-dirname"),
     (STATUS_FEATURES, "features"),
-    (STATUS_FILENAME, "filename"),
+    (STATUS_FILENAME, "filename", "current-filename"),
     (STATUS_FISH_PATH, "fish-path"),
-    (STATUS_FUNCTION, "function"),
+    (STATUS_FUNCTION, "function", "current-function"),
     (STATUS_GET_FILE, "get-file"),
-    (STATUS_LIST_FILES, "list-files"),
-    (STATUS_HELP_SECTIONS, "help-sections"),
     (STATUS_IS_BLOCK, "is-block"),
     (STATUS_IS_BREAKPOINT, "is-breakpoint"),
     (STATUS_IS_COMMAND_SUB, "is-command-substitution"),
@@ -99,10 +73,11 @@ str_enum!(
     (STATUS_IS_INTERACTIVE_READ, "is-interactive-read"),
     (STATUS_IS_LOGIN, "is-login"),
     (STATUS_IS_NO_JOB_CTRL, "is-no-job-control"),
+    (STATUS_LINE_NUMBER, "line-number", "current-line-number"),
+    (STATUS_LIST_FILES, "list-files"),
+    (STATUS_LANGUAGE, "language"),
     (STATUS_SET_JOB_CONTROL, "job-control"),
-    (STATUS_LINE_NUMBER, "line-number"),
-    (STATUS_STACK_TRACE, "print-stack-trace"),
-    (STATUS_STACK_TRACE, "stack-trace"),
+    (STATUS_STACK_TRACE, "stack-trace", "print-stack-trace"),
     (STATUS_TERMINAL, "terminal"),
     (STATUS_TERMINAL_OS, "terminal-os"),
     (STATUS_TEST_FEATURE, "test-feature"),
@@ -112,7 +87,7 @@ str_enum!(
 /// Values that may be returned from the test-feature option to status.
 #[repr(i32)]
 enum TestFeatureRetVal {
-    TEST_FEATURE_ON = 0,
+    TEST_FEATURE_ON,
     TEST_FEATURE_OFF,
     TEST_FEATURE_NOT_RECOGNIZED,
 }
@@ -130,7 +105,7 @@ impl StatusCmdOpts {
     fn try_set_status_cmd(&mut self, subcmd: StatusCmd, streams: &mut IoStreams) -> bool {
         match self.status_cmd.replace(subcmd) {
             Some(existing) => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_COMBO2_EXCLUSIVE,
                     "status",
                     existing.to_wstr(),
@@ -208,7 +183,7 @@ fn print_features(streams: &mut IoStreams) {
         } else {
             L!("off")
         };
-        streams.out.append(sprintf!(
+        streams.out.append(&sprintf!(
             "%-*s%-3s %s %s\n",
             max_len + 1,
             md.name,
@@ -227,10 +202,6 @@ fn parse_cmd_opts(
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     let cmd = args[0];
-
-    let mut args_read = Vec::with_capacity(args.len());
-    args_read.extend_from_slice(args);
-
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
     while let Some(c) = w.next_opt() {
         match c {
@@ -240,7 +211,7 @@ fn parse_cmd_opts(
                     match fish_wcstoi(arg) {
                         Ok(level) if level >= 0 => level,
                         Err(Error::Overflow) | Ok(_) => {
-                            streams.err.append(wgettext_fmt!(
+                            streams.err.append(&wgettext_fmt!(
                                 "%s: Invalid level value '%s'\n",
                                 cmd,
                                 arg
@@ -250,7 +221,7 @@ fn parse_cmd_opts(
                         _ => {
                             streams
                                 .err
-                                .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
+                                .append(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
                             return Err(STATUS_INVALID_ARGS);
                         }
                     }
@@ -276,7 +247,7 @@ fn parse_cmd_opts(
                     return Err(STATUS_CMD_ERROR);
                 }
                 let Ok(job_mode) = w.woptarg.unwrap().try_into() else {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         "%s: Invalid job control mode '%s'\n",
                         cmd,
                         w.woptarg.unwrap()
@@ -329,39 +300,50 @@ fn parse_cmd_opts(
 
     *optind = w.wopt_index;
 
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }
 
-#[cfg(feature = "embed-data")]
-use rust_embed::RustEmbed;
+struct EmptyEmbed;
+impl RustEmbed for EmptyEmbed {
+    fn get(_file_path: &str) -> Option<rust_embed::EmbeddedFile> {
+        None
+    }
+    fn iter() -> rust_embed::Filenames {
+        use rust_embed::Filenames::*;
+        cfg_if! {
+            // TODO This is a clone of rebuild_if_embedded_path_changed.
+            if #[cfg(any(not(debug_assertions), windows))] {
+                Embedded([].iter())
+            } else {
+                Dynamic(Box::new(None.into_iter()))
+            }
+        }
+    }
+}
 
-#[cfg(feature = "embed-data")]
 cfg_if!(
-    if #[cfg(use_prebuilt_docs)] {
-        #[derive(RustEmbed)]
-        #[folder = "user_doc/man/man1"]
-        #[prefix = "man/man1/"]
-        struct Docs;
-    } else {
+    if #[cfg(feature = "embed-manpages")] {
         #[derive(RustEmbed)]
         #[folder = "$FISH_RESOLVED_BUILD_DIR/fish-man/man1"]
         #[prefix = "man/man1/"]
         struct Docs;
+    } else {
+        type Docs = EmptyEmbed;
     }
 );
 
-#[cfg(all(using_cmake, feature = "embed-data"))]
-#[derive(RustEmbed)]
-#[folder = "$FISH_CMAKE_BINARY_DIR/share"]
-#[include = "__fish_build_paths.fish"]
-struct CMakeBinaryDir;
+cfg_if!(
+    if #[cfg(using_cmake)] {
+        #[derive(RustEmbed)]
+        #[folder = "$FISH_CMAKE_BINARY_DIR/share"]
+        #[include = "__fish_build_paths.fish"]
+        struct CMakeBinaryDir;
+    } else {
+        type CMakeBinaryDir = EmptyEmbed;
+    }
+);
 
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    localizable_consts!(
-        #[allow(dead_code)]
-        NO_EMBEDDED_FILES_MSG "%s: fish was not built with embedded files"
-    );
-
     let cmd = args[0];
     let argc = args.len();
 
@@ -377,7 +359,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     // If a status command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     if optind < argc {
-        match StatusCmd::from_wstr(args[optind].to_string().as_str()) {
+        match StatusCmd::from_str(args[optind].to_string().as_str()) {
             Some(s) => {
                 if !opts.try_set_status_cmd(s, streams) {
                     return Err(STATUS_CMD_ERROR);
@@ -387,7 +369,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             None => {
                 streams
                     .err
-                    .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[1]));
+                    .append(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[1]));
                 return Err(STATUS_INVALID_ARGS);
             }
         }
@@ -410,8 +392,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         };
         streams
             .out
-            .append(wgettext_fmt!("Job control: %s\n", job_control_mode));
-        streams.out.append(parser.stack_trace());
+            .append(&wgettext_fmt!("Job control: %s\n", job_control_mode));
+        streams.out.append(&parser.stack_trace());
 
         return Ok(SUCCESS);
     };
@@ -422,7 +404,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 Some(j) => {
                     // Flag form used
                     if !args.is_empty() {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             BUILTIN_ERR_ARG_COUNT2,
                             cmd,
                             c.to_wstr(),
@@ -435,7 +417,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 }
                 None => {
                     if args.len() != 1 {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             BUILTIN_ERR_ARG_COUNT2,
                             cmd,
                             c.to_wstr(),
@@ -445,7 +427,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         return Err(STATUS_INVALID_ARGS);
                     }
                     let Ok(new_mode) = args[0].try_into() else {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%s: Invalid job control mode '%s'\n",
                             cmd,
                             args[0]
@@ -460,7 +442,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         STATUS_FEATURES => print_features(streams),
         c @ STATUS_TEST_FEATURE => {
             if args.len() != 1 {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
                     c.to_wstr(),
@@ -482,7 +464,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
         c @ STATUS_GET_FILE => {
             if args.len() != 1 {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
                     c.to_wstr(),
@@ -491,80 +473,96 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
-            cfg_if!(
-                if #[cfg(not(feature = "embed-data"))] {
-                    streams
-                        .err
-                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
+            let arg = crate::common::wcs2bytes(args[0]);
+            let arg = std::str::from_utf8(&arg).unwrap();
+            let Some(emfile) = crate::autoload::Asset::get(arg)
+                .or_else(|| Docs::get(arg))
+                .or_else(|| CMakeBinaryDir::get(arg))
+            else {
+                return Err(STATUS_CMD_ERROR);
+            };
+            let src = bytes2wcstring(&emfile.data);
+            streams.out.append(&src);
+            return Ok(SUCCESS);
+        }
+        STATUS_LANGUAGE => {
+            cfg_if! {
+                if #[cfg(not(feature = "localize-messages"))] {
+                    streams.err.append(L!("fish was built with the `localize-messages` feature disabled. The `status language` command is unavailable.\n"));
                     return Err(STATUS_CMD_ERROR);
                 } else {
-                    let arg = crate::common::wcs2bytes(args[0]);
-                    let arg = std::str::from_utf8(&arg).unwrap();
-                    cfg_if!(
-                        if #[cfg(using_cmake)] {
-                            let emfile = CMakeBinaryDir::get(arg);
-                        } else {
-                            let emfile = None;
+                    if args.is_empty() {
+                        streams.out.append(&crate::localization::status_language());
+                        return Ok(SUCCESS);
+                    }
+                    match args[0].to_string().as_str() {
+                        "list-available" => {
+                            streams.out.append(&crate::localization::list_available_languages());
+                            return Ok(SUCCESS);
+                        },
+                        "set" => {
+                            let langs = args[1..]
+                                .iter()
+                                .map(|lang| lang.to_string())
+                                .collect::<Vec<_>>();
+                            let lints = crate::localization::update_from_status_language_builtin(&langs);
+                            let formatted_lints = lints.display_all();
+                            if !formatted_lints.is_empty() {
+                                streams.err.append(&formatted_lints);
+                            }
+                            return Ok(SUCCESS);
                         }
-                    );
-                    let Some(emfile) = emfile
-                        .or_else(|| crate::autoload::Asset::get(arg))
-                        .or_else(|| Docs::get(arg))
-                    else {
-                        return Err(STATUS_CMD_ERROR);
-                    };
-                    let src = bytes2wcstring(&emfile.data);
-                    streams.out.append(src);
-                    return Ok(SUCCESS);
+                        "unset" => {
+                            crate::localization::unset_from_status_language_builtin(parser.vars());
+                            return Ok(SUCCESS);
+                        }
+                        invalid => {
+                            streams
+                                .err
+                                .append(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBSUBCMD, cmd, subcmd.to_wstr(), invalid));
+                            return Err(STATUS_INVALID_ARGS);
+                        }
+                    }
                 }
-            );
+            }
         }
         STATUS_LIST_FILES => {
-            cfg_if!(
-                if #[cfg(not(feature = "embed-data"))] {
-                    streams
-                        .err
-                        .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
-                    return Err(STATUS_CMD_ERROR);
-                } else {
-                    use crate::util::wcsfilecmp_glob;
-                    let mut paths = vec![];
-                    let mut add = |arg| {
-                        let arg = crate::common::wcs2bytes(arg);
-                        let arg = std::str::from_utf8(&arg).unwrap();
-                        let embedded_files = crate::autoload::Asset::iter().chain(Docs::iter());
-                        #[cfg(using_cmake)]
-                        let embedded_files = embedded_files.chain(CMakeBinaryDir::iter());
-                        for path in embedded_files {
-                            if arg.is_empty() || path.starts_with(arg) {
-                                paths.push(bytes2wcstring(path.as_bytes()));
-                            }
-                        }
-                    };
-                    if args.is_empty() {
-                            add(L!(""));
-                    } else {
-                        for arg in args {
-                            add(arg);
-                        }
-                    }
-
-                    paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
-                    for path in &paths {
-                        streams.out.appendln(path);
-                    }
-
-                    if !paths.is_empty() {
-                        return Ok(SUCCESS);
-                    } else {
-                        return Err(STATUS_CMD_ERROR);
+            use crate::util::wcsfilecmp_glob;
+            let mut paths = vec![];
+            let mut add = |arg| {
+                let arg = crate::common::wcs2bytes(arg);
+                let arg = std::str::from_utf8(&arg).unwrap();
+                for path in crate::autoload::Asset::iter()
+                    .chain(Docs::iter())
+                    .chain(CMakeBinaryDir::iter())
+                {
+                    if arg.is_empty() || path.starts_with(arg) {
+                        paths.push(bytes2wcstring(path.as_bytes()));
                     }
                 }
-            );
+            };
+            if args.is_empty() {
+                add(L!(""));
+            } else {
+                for arg in args {
+                    add(arg);
+                }
+            }
+
+            paths.sort_by(|a, b| wcsfilecmp_glob(a, b));
+            for path in &paths {
+                streams.out.appendln(path);
+            }
+
+            if !paths.is_empty() {
+                return Ok(SUCCESS);
+            } else {
+                return Err(STATUS_CMD_ERROR);
+            }
         }
         c @ STATUS_TEST_TERMINAL_FEATURE => {
             if args.len() != 1 {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
                     c.to_wstr(),
@@ -591,7 +589,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
 
         ref s => {
             if !args.is_empty() {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
                     s.to_wstr(),
@@ -601,7 +599,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Err(STATUS_INVALID_ARGS);
             }
             match s {
-                STATUS_BUILD_INFO | STATUS_BUILDINFO => {
+                STATUS_BUILD_INFO => {
                     let version = bytes2wcstring(crate::BUILD_VERSION.as_bytes());
                     let target = bytes2wcstring(env!("BUILD_TARGET_TRIPLE").as_bytes());
                     let host = bytes2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
@@ -624,8 +622,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     streams.out.appendln(profile);
                     streams.out.append(L!("Features: "));
                     let features: &[&str] = &[
-                        #[cfg(feature = "embed-data")]
-                        "embed-data",
+                        #[cfg(feature = "embed-manpages")]
+                        "embed-manpages",
                         #[cfg(feature = "localize-messages")]
                         "localize-messages",
                         #[cfg(target_feature = "crt-static")]
@@ -726,7 +724,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     }
                 }
                 STATUS_STACK_TRACE => {
-                    streams.out.append(parser.stack_trace());
+                    streams.out.append(&parser.stack_trace());
                 }
                 STATUS_CURRENT_CMD => {
                     let command = &parser.libdata().status_vars.command;
@@ -757,13 +755,6 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     };
                     streams.out.appendln(result);
                 }
-                STATUS_HELP_SECTIONS => {
-                    #[cfg(feature = "embed-data")]
-                    streams
-                        .out
-                        .append_narrow(fish_build_man_pages::HELP_SECTIONS);
-                    return Ok(SUCCESS);
-                }
                 STATUS_TERMINAL => {
                     let xtversion = xtversion().unwrap_or_default();
                     streams.out.appendln(xtversion);
@@ -779,6 +770,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 | STATUS_TEST_FEATURE
                 | STATUS_GET_FILE
                 | STATUS_LIST_FILES
+                | STATUS_LANGUAGE
                 | STATUS_TEST_TERMINAL_FEATURE => {
                     unreachable!("")
                 }

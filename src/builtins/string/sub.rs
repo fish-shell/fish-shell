@@ -45,7 +45,7 @@ impl StringSubCommand<'_> for Sub {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
@@ -57,7 +57,7 @@ impl StringSubCommand<'_> for Sub {
     ) -> Result<(), ErrorCode> {
         let cmd = args[0];
         if self.length.is_some() && self.end.is_some() {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 cmd,
                 wgettext!("--end and --length are mutually exclusive")
@@ -66,16 +66,16 @@ impl StringSubCommand<'_> for Sub {
         }
 
         let mut nsub = 0;
-        for (s, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let start: usize = match self.start.map(i64::from).unwrap_or_default() {
                 n @ 1.. => n as usize - 1,
                 0 => 0,
                 n => {
                     let n = u64::min(n.unsigned_abs(), usize::MAX as u64) as usize;
-                    s.len().saturating_sub(n)
+                    arg.len().saturating_sub(n)
                 }
             }
-            .clamp(0, s.len());
+            .clamp(0, arg.len());
 
             let count = {
                 let n = self
@@ -85,20 +85,20 @@ impl StringSubCommand<'_> for Sub {
                         n @ 1.. => n as usize,
                         n => {
                             let n = u64::min(n.unsigned_abs(), usize::MAX as u64) as usize;
-                            s.len().saturating_sub(n)
+                            arg.len().saturating_sub(n)
                         }
                     })
                     .map(|n| n.saturating_sub(start));
 
-                self.length.or(n).unwrap_or(s.len())
+                self.length.or(n).unwrap_or(arg.len())
             };
 
             if !self.quiet {
                 streams
                     .out
-                    .append(&s[start..usize::min(start + count, s.len())]);
+                    .append(&arg[start..usize::min(start + count, arg.len())]);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append_char('\n');
                 }
             }
             nsub += 1;

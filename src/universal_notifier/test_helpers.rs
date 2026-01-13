@@ -1,5 +1,5 @@
 use super::UniversalNotifier;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 
 // Helper to test a slice of notifiers.
 // fish_variables_path is the path to the (simulated) fish_variables file, if using the inotify notifier.

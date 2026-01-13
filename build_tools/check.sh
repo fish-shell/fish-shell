@@ -33,13 +33,18 @@ fi
 cargo() {
     subcmd=$1
     shift
-    # shellcheck disable=2086
-    command cargo "$subcmd" $cargo_args "$@"
+    if [ -n "$FISH_CHECK_RUST_TOOLCHAIN" ]; then
+        # shellcheck disable=2086
+        command cargo "+$FISH_CHECK_RUST_TOOLCHAIN" "$subcmd" $cargo_args "$@"
+    else
+        # shellcheck disable=2086
+        command cargo "$subcmd" $cargo_args "$@"
+    fi
 }
 
 cleanup () {
-    if [ -n "$template_file" ] && [ -e "$template_file" ]; then
-        rm "$template_file"
+    if [ -n "$gettext_template_dir" ] && [ -e "$gettext_template_dir" ]; then
+        rm -r "$gettext_template_dir"
     fi
 }
 
@@ -64,12 +69,15 @@ if [ -n "$FISH_TEST_MAX_CONCURRENCY" ]; then
     export CARGO_BUILD_JOBS="$FISH_TEST_MAX_CONCURRENCY"
 fi
 
-template_file=$(mktemp)
+gettext_template_dir=$(mktemp -d)
 (
-    export FISH_GETTEXT_EXTRACTION_FILE="$template_file"
+    export FISH_GETTEXT_EXTRACTION_DIR="$gettext_template_dir"
     cargo build --workspace --all-targets --features=gettext-extract
 )
 if $lint; then
+    if command -v cargo-deny >/dev/null; then
+        cargo deny --all-features --locked --exclude-dev check licenses
+    fi
     PATH="$build_dir:$PATH" "$workspace_root/build_tools/style.fish" --all --check
     for features in "" --no-default-features; do
         cargo clippy --workspace --all-targets $features
@@ -78,9 +86,9 @@ fi
 cargo test --no-default-features --workspace --all-targets
 cargo test --doc --workspace
 if $lint; then
-    cargo doc --workspace
+    cargo doc --workspace --no-deps
 fi
-FISH_GETTEXT_EXTRACTION_FILE=$template_file "$workspace_root/tests/test_driver.py" "$build_dir"
+FISH_GETTEXT_EXTRACTION_DIR=$gettext_template_dir "$workspace_root/tests/test_driver.py" "$build_dir"
 
 exit
 }

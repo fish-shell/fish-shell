@@ -8,39 +8,35 @@ use crate::common::{
 };
 use crate::env::Statuses;
 use crate::event::{self, Event};
-use crate::flog::{FLOG, FLOGF};
+use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::io::IoChain;
 use crate::job_group::{JobGroup, MaybeJobId};
 use crate::parse_tree::NodeRef;
 use crate::parser::{Block, Parser};
+use crate::portable_atomic::AtomicU64;
+use crate::prelude::*;
 use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
 use crate::redirection::RedirectionSpecList;
 use crate::signal::{Signal, signal_set_handlers_once};
 use crate::topic_monitor::{GenerationsList, Topic, topic_monitor_principal};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
-use crate::wchar::prelude::*;
-use crate::wchar_ext::ToWString;
 use crate::wutil::{wbasename, wperror};
 use cfg_if::cfg_if;
+use fish_wchar::ToWString;
 use libc::{
     _SC_CLK_TCK, EXIT_SUCCESS, SIG_DFL, SIG_IGN, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
-    SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, WCONTINUED, WEXITSTATUS,
-    WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
+    SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED,
+    WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
 };
-use once_cell::sync::Lazy;
-#[cfg(not(target_has_atomic = "64"))]
-use portable_atomic::AtomicU64;
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};
 use std::num::NonZeroU32;
 use std::os::fd::RawFd;
 use std::rc::Rc;
-#[cfg(target_has_atomic = "64")]
-use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 
 /// Types of processes.
 #[derive(Default)]
@@ -126,17 +122,17 @@ impl ProcStatus {
 
     /// Encode a return value `ret` and signal `sig` into a status value like waitpid() does.
     const fn w_exitcode(ret: i32, sig: i32) -> i32 {
-        cfg_if!(
+        cfg_if! {
             if #[cfg(waitstatus_signal_ret)] {
                 // It's encoded signal and then status
                 // The return status is in the lower byte.
-                return (sig << 8) | ret;
+                (sig << 8) | ret
             } else {
                 // The status is encoded in the upper byte.
                 // This should be W_EXITCODE(ret, sig) but that's not available everywhere.
-                return (ret << 8) | sig;
+                (ret << 8) | sig
             }
-        );
+        }
     }
 
     /// Construct from a status returned from a waitpid call.
@@ -252,8 +248,8 @@ impl InternalProc {
     /// Mark this process as having exited with the given `status`.
     pub fn mark_exited(&self, status: ProcStatus) {
         self.status.set(status).expect("Status already set");
-        topic_monitor_principal().post(Topic::internal_exit);
-        FLOG!(
+        topic_monitor_principal().post(Topic::InternalExit);
+        flog!(
             proc_internal_proc,
             "Internal proc",
             self.internal_proc_id,
@@ -786,8 +782,8 @@ impl Job {
     }
 
     /// Run ourselves. Returning once we complete or stop.
-    pub fn continue_job(&self, parser: &Parser) {
-        FLOGF!(
+    pub fn continue_job(&self, parser: &Parser, block_io: Option<&IoChain>) {
+        flogf!(
             proc_job_run,
             "Run job %d (%s), %s, %s",
             self.job_id(),
@@ -806,7 +802,7 @@ impl Job {
 
         // Wait for the status of our own job to change.
         while !fish_is_unwinding_for_exit() && !self.is_stopped() && !self.is_completed() {
-            process_mark_finished_children(parser, true);
+            process_mark_finished_children(parser, /*block_ok=*/ true, block_io);
         }
         if self.is_completed() {
             // Set $status only if we are in the foreground and the last process in the job has
@@ -827,7 +823,7 @@ impl Job {
     pub fn resume(&self) -> bool {
         self.mut_flags().notified_of_stop = false;
         if !self.signal(SIGCONT) {
-            FLOGF!(
+            flogf!(
                 proc_pgroup,
                 "Failed to send SIGCONT to procs in job %s",
                 self.command()
@@ -963,13 +959,13 @@ static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::Interactive as u8)
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If `interactive` is set, allow removing interactive jobs; otherwise skip them.
 /// Return whether text was printed to stdout.
-pub fn job_reap(parser: &Parser, interactive: bool) -> bool {
+pub fn job_reap(parser: &Parser, interactive: bool, block_io: Option<&IoChain>) -> bool {
     // Early out for the common case that there are no jobs.
     if parser.jobs().is_empty() {
         return false;
     }
 
-    process_mark_finished_children(parser, false /* not block_ok */);
+    process_mark_finished_children(parser, /*block_ok=*/ false, block_io);
     process_clean_after_marking(parser, interactive)
 }
 
@@ -1103,7 +1099,7 @@ fn handle_child_status(job: &Job, proc: &Process, status: ProcStatus) {
 
 /// Wait for any process finishing, or receipt of a signal.
 pub fn proc_wait_any(parser: &Parser) {
-    process_mark_finished_children(parser, true /*block_ok*/);
+    process_mark_finished_children(parser, /*block_ok=*/ true, /*block_io=*/ None);
     let is_interactive = parser.scope().is_interactive;
     process_clean_after_marking(parser, is_interactive);
 }
@@ -1164,7 +1160,7 @@ fn reap_disowned_pids() {
         let mut status: libc::c_int = 0;
         let ret = unsafe { libc::waitpid(pid.as_pid_t(), &mut status, WNOHANG) };
         if ret > 0 {
-            FLOGF!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
+            flogf!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
         }
         ret == 0
     });
@@ -1177,7 +1173,7 @@ static DISOWNED_PIDS: Mutex<Vec<Pid>> = Mutex::new(Vec::new());
 /// See if any reapable processes have exited, and mark them accordingly.
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
 /// signal).
-fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
+fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Option<&IoChain>) {
     // Get the exit and signal generations of all reapable processes.
     // The exit generation tells us if we have an exit; the signal generation allows for detecting
     // SIGHUP and SIGINT.
@@ -1191,13 +1187,13 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
 
             if proc.has_pid() {
                 // Reaps with a pid.
-                reapgens.set_min_from(Topic::sigchld, &proc.gens);
-                reapgens.set_min_from(Topic::sighupint, &proc.gens);
+                reapgens.set_min_from(Topic::SigChld, &proc.gens);
+                reapgens.set_min_from(Topic::SigHupInt, &proc.gens);
             }
             if proc.internal_proc.borrow().is_some() {
                 // Reaps with an internal process.
-                reapgens.set_min_from(Topic::internal_exit, &proc.gens);
-                reapgens.set_min_from(Topic::sighupint, &proc.gens);
+                reapgens.set_min_from(Topic::InternalExit, &proc.gens);
+                reapgens.set_min_from(Topic::SigHupInt, &proc.gens);
             }
         }
     }
@@ -1253,16 +1249,18 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                 j.mut_flags().notified_of_stop = false;
             }
             if status.normal_exited() || status.signal_exited() {
-                FLOGF!(
+                flogf!(
                     proc_reap_external,
                     "Reaped external process '%s' (pid %d, status %d)",
                     proc.argv0().unwrap(),
                     pid,
                     proc.status().status_value()
                 );
+
+                block_io.map(bufferfill_read_finished_process_output);
             } else {
                 assert!(status.stopped() || status.continued());
-                FLOGF!(
+                flogf!(
                     proc_reap_external,
                     "External process '%s' (pid %d, %s)",
                     proc.argv0().unwrap(),
@@ -1307,7 +1305,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             // The process gets the status from its internal proc.
             let status = internal_proc.get_status();
             handle_child_status(j, proc, status);
-            FLOGF!(
+            flogf!(
                 proc_reap_internal,
                 "Reaped internal process '%s' (id %u, status %d)",
                 proc.argv0().unwrap(),
@@ -1319,6 +1317,16 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
 
     // Remove any zombies.
     reap_disowned_pids();
+}
+
+fn bufferfill_read_finished_process_output(block_io: &IoChain) {
+    let Some(stdout) = block_io.io_for_fd(STDOUT_FILENO) else {
+        return;
+    };
+    let Some(stdout) = stdout.as_bufferfill() else {
+        return;
+    };
+    stdout.read_all_available();
 }
 
 /// Generate process_exit events for any completed processes in `j`.
@@ -1452,7 +1460,7 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
             if j.external_procs().count() > 1 {
                 // I don't think it's safe to blindly unwrap here because even though we exited with
                 // a signal, the job could have contained a fish function?
-                let pid = p.pid().map(|p| p.to_string()).unwrap_or("-".to_string());
+                let pid = p.pid().map_or("-".to_string(), |p| p.to_string());
                 buffer += &sprintf!(" %s", pid)[..];
 
                 buffer.push(' ');
@@ -1603,8 +1611,8 @@ fn process_clean_after_marking(parser: &Parser, interactive: bool) -> bool {
 
 pub fn have_proc_stat() -> bool {
     // Check for /proc/self/stat to see if we are running with Linux-style procfs.
-    static HAVE_PROC_STAT_RESULT: Lazy<bool> =
-        Lazy::new(|| fs::metadata("/proc/self/stat").is_ok());
+    static HAVE_PROC_STAT_RESULT: LazyLock<bool> =
+        LazyLock::new(|| fs::metadata("/proc/self/stat").is_ok());
     *HAVE_PROC_STAT_RESULT
 }
 

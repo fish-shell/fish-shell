@@ -1,5 +1,5 @@
 use super::*;
-use crate::fallback::fish_wcwidth;
+use fish_fallback::fish_wcwidth;
 
 pub struct Pad {
     char_to_pad: char,
@@ -61,7 +61,7 @@ impl StringSubCommand<'_> for Pad {
             'C' => self.center = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle<'args>(
@@ -75,7 +75,7 @@ impl StringSubCommand<'_> for Pad {
         let mut inputs: Vec<(Cow<'args, wstr>, usize)> = Vec::new();
         let mut print_trailing_newline = true;
 
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let width = width_without_escapes(&arg, 0);
             max_width = max_width.max(width);
             inputs.push((arg, width));
@@ -105,7 +105,7 @@ impl StringSubCommand<'_> for Pad {
                 padded.push('\n');
             }
 
-            streams.out.append(padded);
+            streams.out.append(&padded);
         }
 
         Ok(())

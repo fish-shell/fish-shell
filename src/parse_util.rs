@@ -22,14 +22,15 @@ use crate::parse_constants::{
     ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition, SourceRange,
     StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
 };
+use crate::prelude::*;
 use crate::tokenizer::{
     TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
     is_token_delimiter, quote_end,
 };
-use crate::wchar::prelude::*;
 use crate::wcstringutil::count_newlines;
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
+use fish_common::help_section;
 use std::ops::Range;
 use std::{iter, ops};
 
@@ -37,8 +38,8 @@ use std::{iter, ops};
 /// Return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
 /// This never accepts incomplete slices.
 pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
-    const openc: char = '[';
-    const closec: char = ']';
+    let openc = '[';
+    let closec = ']';
     let mut escaped = false;
 
     // Check for initial opening [
@@ -387,6 +388,12 @@ pub fn parse_util_process_extent(
     job_or_process_extent(true, buff, cursor_pos, out_tokens)
 }
 
+pub fn parse_util_process_first_token_offset(buff: &wstr, cursor_pos: usize) -> Option<usize> {
+    let mut tokens = vec![];
+    parse_util_process_extent(buff, cursor_pos, Some(&mut tokens));
+    tokens.first().map(|tok| tok.offset())
+}
+
 /// Find the beginning and end of the process definition under the cursor
 ///
 /// \param buff the string to search for subshells
@@ -425,14 +432,14 @@ fn job_or_process_extent(
             break;
         }
         match token.type_ {
-            TokenType::pipe
-            | TokenType::end
-            | TokenType::background
-            | TokenType::andand
-            | TokenType::oror
-            | TokenType::left_brace
-            | TokenType::right_brace
-                if (token.type_ != TokenType::pipe || process) =>
+            TokenType::Pipe
+            | TokenType::End
+            | TokenType::Background
+            | TokenType::AndAnd
+            | TokenType::OrOr
+            | TokenType::LeftBrace
+            | TokenType::RightBrace
+                if (token.type_ != TokenType::Pipe || process) =>
             {
                 if tok_begin >= pos {
                     finished = true;
@@ -475,7 +482,7 @@ pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>,
         let mut tok_end = tok_begin;
 
         // Calculate end of token.
-        if token.type_ == TokenType::string {
+        if token.type_ == TokenType::String {
             tok_end += token.length();
         }
 
@@ -489,14 +496,14 @@ pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>,
 
         // If cursor is inside the token, this is the token we are looking for. If so, set
         // cur_begin and cur_end and break.
-        if token.type_ == TokenType::string && tok_end >= offset_within_cmdsubst {
+        if token.type_ == TokenType::String && tok_end >= offset_within_cmdsubst {
             cur_begin = cmdsubst_begin + token.offset();
             cur_end = cur_begin + token.length();
             break;
         }
 
         // Remember previous string token.
-        if token.type_ == TokenType::string {
+        if token.type_ == TokenType::String {
             prev_begin = cmdsubst_begin + token.offset();
             prev_end = prev_begin + token.length();
         }
@@ -565,7 +572,7 @@ pub fn parse_util_get_offset(s: &wstr, line: i32, line_offset: isize) -> Option<
 /// transformation.
 pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
     let mut result = WString::with_capacity(s.len());
-    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+    let unesc_qmark = !feature_test(FeatureFlag::QuestionMarkNoGlob);
 
     let mut i = 0;
     while i < s.len() {
@@ -593,7 +600,7 @@ pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
 
 /// Return if the given string contains wildcard characters.
 pub fn parse_util_contains_wildcards(s: &wstr) -> bool {
-    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+    let unesc_qmark = !feature_test(FeatureFlag::QuestionMarkNoGlob);
 
     let mut i = 0;
     while i < s.len() {
@@ -622,7 +629,7 @@ pub fn parse_util_contains_wildcards(s: &wstr) -> bool {
 /// "a*b" to "a\*b".
 pub fn parse_util_escape_wildcards(s: &wstr) -> WString {
     let mut result = WString::with_capacity(s.len());
-    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+    let unesc_qmark = !feature_test(FeatureFlag::QuestionMarkNoGlob);
 
     for c in s.chars() {
         if c == '*' {
@@ -1063,7 +1070,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             Kind::Token(node) => {
                 let token_type = node.token_type();
                 let parent_kind = self.parent.unwrap().kind();
-                if matches!(parent_kind, Kind::BeginHeader(_)) && token_type == ParseTokenType::end
+                if matches!(parent_kind, Kind::BeginHeader(_)) && token_type == ParseTokenType::End
                 {
                     // The newline after "begin" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
@@ -1141,8 +1148,8 @@ pub fn parse_util_detect_errors(
         // successfully.
         parse_errors.retain(|parse_error| {
             if [
-                ParseErrorCode::tokenizer_unterminated_quote,
-                ParseErrorCode::tokenizer_unterminated_subshell,
+                ParseErrorCode::TokenizerUnterminatedQuote,
+                ParseErrorCode::TokenizerUnterminatedSubshell,
             ]
             .contains(&parse_error.code)
             {
@@ -1372,7 +1379,7 @@ macro_rules! append_syntax_error_formatted {
             let mut error = ParseError::default();
             error.source_start = $source_location;
             error.source_length = $source_length;
-            error.code = ParseErrorCode::syntax;
+            error.code = ParseErrorCode::Syntax;
             error.text = $text;
             errors.push(error);
         }
@@ -1536,7 +1543,7 @@ fn detect_errors_in_job_conjunction(
                 conjunction.source_range().start(),
                 conjunction.source_range().length(),
                 BOOL_AFTER_BACKGROUND_ERROR_MSG,
-                if conjunction.token_type() == ParseTokenType::andand {
+                if conjunction.token_type() == ParseTokenType::AndAnd {
                     L!("&&")
                 } else {
                     L!("||")
@@ -1648,16 +1655,16 @@ fn detect_errors_in_decorated_statement(
 
     // Check our pipeline position.
     let pipe_pos = if job.continuation.is_empty() {
-        PipelinePosition::none
+        PipelinePosition::None
     } else if is_same_node(&job.statement, st) {
-        PipelinePosition::first
+        PipelinePosition::First
     } else {
-        PipelinePosition::subsequent
+        PipelinePosition::Subsequent
     };
 
     // Check that we don't try to pipe through exec.
-    let is_in_pipeline = pipe_pos != PipelinePosition::none;
-    if is_in_pipeline && decoration == StatementDecoration::exec {
+    let is_in_pipeline = pipe_pos != PipelinePosition::None;
+    if is_in_pipeline && decoration == StatementDecoration::Exec {
         errored = append_syntax_error!(
             parse_errors,
             source_start,
@@ -1670,13 +1677,13 @@ fn detect_errors_in_decorated_statement(
     // This is a somewhat stale check that 'and' and 'or' are not in pipelines, except at the
     // beginning. We can't disallow them as commands entirely because we need to support 'and
     // --help', etc.
-    if pipe_pos == PipelinePosition::subsequent {
+    if pipe_pos == PipelinePosition::Subsequent {
         // We only reject it if we have no decoration.
         // `echo foo | command time something`
         // is entirely fair and valid.
         // Other current decorations like "exec"
         // are already forbidden.
-        if dst.decoration() == StatementDecoration::none {
+        if dst.decoration() == StatementDecoration::None {
             // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
             // commands.
             let command = dst.command.source(buff_src);
@@ -1711,7 +1718,8 @@ fn detect_errors_in_decorated_statement(
             parse_errors,
             source_start,
             source_length,
-            "$status is not valid as a command. See `help conditions`"
+            "$status is not valid as a command. See `help %s`",
+            help_section!("language#conditions")
         );
     }
 
@@ -1795,7 +1803,7 @@ fn detect_errors_in_decorated_statement(
         }
 
         // Check that we don't do an invalid builtin (issue #1252).
-        if !errored && decoration == StatementDecoration::builtin {
+        if !errored && decoration == StatementDecoration::Builtin {
             let mut command = unexp_command.to_owned();
             if expand_one(
                 &mut command,
@@ -1981,8 +1989,8 @@ mod tests {
         ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
         ERROR_NOT_PID, ERROR_NOT_STATUS,
     };
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use pcre2::utf32::Regex;
 
     #[test]
@@ -2081,7 +2089,7 @@ mod tests {
     #[serial]
     fn test_parse_util_cmdsubst_extent() {
         let _cleanup = test_init();
-        const a: &wstr = L!("echo (echo (echo hi");
+        let a = L!("echo (echo (echo hi");
         assert_eq!(parse_util_cmdsubst_extent(a, 0), 0..a.len());
         assert_eq!(parse_util_cmdsubst_extent(a, 1), 0..a.len());
         assert_eq!(parse_util_cmdsubst_extent(a, 2), 0..a.len());

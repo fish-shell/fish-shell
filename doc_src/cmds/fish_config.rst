@@ -8,7 +8,12 @@ Synopsis
 
     fish_config [browse]
     fish_config prompt (choose | list | save | show)
-    fish_config theme (choose | demo | dump | list | save | show)
+    fish_config theme
+    fish_config theme choose THEME [ --color-theme=(dark | light) ]
+    fish_config theme demo
+    fish_config theme dump
+    fish_config theme list
+    fish_config theme show [THEME...]
 
 Description
 -----------
@@ -32,14 +37,19 @@ With the ``theme`` command ``fish_config`` can be used to view and choose a them
 
 Available subcommands for the ``theme`` command:
 
-- ``choose`` loads a sample theme in the current session.
+- ``choose`` loads a theme in the current session.
+  If the theme has light and dark variants (see below), the one matching :envvar:`fish_terminal_color_theme` will be applied (also whenever that variable changes).
+  To override :envvar:`fish_terminal_color_theme`, pass the ``--color-theme`` argument.
 - ``demo`` displays some sample text in the current theme.
 - ``dump`` prints the current theme in a loadable format.
-- ``list`` lists the names of the available sample themes.
-- ``save`` saves the given theme to :ref:`universal variables <variables-universal>`.
-- ``show`` shows what the given sample theme (or all) would look like.
+- ``list`` lists the names of the available themes.
+- ``show`` shows what the given themes (or all) would look like.
+- *(not recommended)* ``save`` saves the given theme to :ref:`universal variables <variables-universal>`.
+  A theme set this way will not update as :envvar:`fish_terminal_color_theme` changes.
 
 The **-h** or **--help** option displays help about using this command.
+
+.. _fish-config-theme-files:
 
 Theme Files
 -----------
@@ -60,24 +70,38 @@ The format looks like this:
 
 ::
 
-   # name: 'Cool Beans'
-   # preferred_background: black
+    # name: 'My Theme'
 
-   fish_color_autosuggestion 666
-   fish_color_cancel -r
-   fish_color_command normal
-   fish_color_comment '888'  '--italics'
-   fish_color_cwd 0A0
-   fish_color_cwd_root A00
-   fish_color_end 009900
+    [light]
+    # preferred_background: ffffff
+    fish_color_normal 000000
+    fish_color_autosuggestion 7f7f7f
+    fish_color_command 0000ee
 
-The two comments at the beginning are the name and background that the web config tool shows.
+    [dark]
+    # preferred_background: 000000
+    fish_color_normal ffffff
+    fish_color_autosuggestion 7f7f7f
+    fish_color_command 5c5cff
+
+    [unknown]
+    fish_color_normal normal
+    fish_color_autosuggestion brblack
+    fish_color_cancel -r
+    fish_color_command normal
+
+The comments provide name and background color to the web config tool.
+
+Themes can have three variants,
+one for light mode,
+one for dark mode,
+and one for terminals that don't :ref:`report colors <term-compat-query-background-color>` (where :envvar:`fish_terminal_color_theme` is set to ``unknown``).
 
 The other lines are just like ``set variable value``, except that no expansions are allowed. Quotes are, but aren't necessary.
 
-Any color variable fish knows about that the theme doesn't set will be set to empty when it is loaded, so the old theme is completely overwritten.
+.. _fish_config-color-variables:
 
-Other than that, .theme files can contain any variable with a name that matches the regular expression ``'^fish_(?:pager_)?color.*$'`` - starts with ``fish_``, an optional ``pager_``, then ``color`` and then anything.
+Other than that, .theme files can contain any variable with a name that matches the regular expression ``'^fish_(?:pager_)?color_.*$'`` - starts with ``fish_``, an optional ``pager_``, then ``color_`` and then anything.
 
 Example
 -------

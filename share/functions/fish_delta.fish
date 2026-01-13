@@ -21,15 +21,9 @@ function fish_delta
 
     # TODO: Do we want to keep the vendor dirs in here?
     set -l default_function_path
-    if not __fish_is_standalone
-        set default_function_path $__fish_data_dir/functions
-    end
     test "$vendormode" = default && set -a default_function_path $__fish_vendor_functionsdirs
 
     set -l default_complete_path
-    if not __fish_is_standalone
-        set default_complete_path $__fish_data_dir/completions
-    end
     test "$vendormode" = default && set -a default_complete_path $__fish_vendor_completionsdirs
 
     set -l default_conf_path
@@ -117,7 +111,7 @@ function fish_delta
             for file in $files
                 set -l bn (path basename -- $file)
                 set -l default_exists false
-                if set -q dir[1]; and contains $dir/$bn (__fish_data_list_files $dir)
+                if set -q dir[1]; and contains $dir/$bn (status list-files $dir)
                     set default_exists true
                 else if test $all_changed = 0
                     set -ql _flag_n
@@ -137,19 +131,15 @@ function fish_delta
                             printf (_ "%sUnmodified%s: %s\n") $colors[4] $colors[1] $file
                         end
                     end
-                    function __fish_delta_diff_maybe_file -a maybe_default_file
-                        set -l tmpfile (mktemp)
-                        cat $maybe_default_file >$tmpfile
+                    if $default_exists
+                        set -l tmpfile (__fish_mktemp_relative fish-delta)
+                        status get-file $dir/$bn >$tmpfile
                         __fish_delta_diff $tmpfile
                         command rm $tmpfile
-                    end
-                    if $default_exists
-                        __fish_data_with_file $dir/$bn __fish_delta_diff_maybe_file
                     else
                         __fish_delta_diff /dev/null
                     end
                     functions --erase __fish_delta_diff
-                    functions --erase __fish_delta_diff_maybe_file
                 else
                     # Without diff, we can't really tell if the contents are the same.
                     printf (_ "%sPossibly changed%s: %s\n") $colors[3] $colors[1] $file

@@ -53,7 +53,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -98,7 +98,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
 
         let mut replace_count = 0;
 
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let (replaced, result) = match replacer.replace(arg) {
                 Ok(x) => x,
                 Err(e) => {
@@ -114,9 +114,9 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             replace_count += replaced as usize;
 
             if !self.quiet && (!self.filter || replaced) {
-                streams.out.append(result);
+                streams.out.append(&result);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append_char('\n');
                 }
             }
 
@@ -172,7 +172,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                 cursor = cursor.slice_from(1);
             }
         }
-        return Some(result);
+        Some(result)
     }
 
     fn new(
@@ -190,7 +190,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                     .build(pattern.as_char_slice())
                     .map_err(|e| RegexError::Compile(pattern.to_owned(), e))?;
 
-                let replacement = if feature_test(FeatureFlag::string_replace_backslash) {
+                let replacement = if feature_test(FeatureFlag::StringReplaceBackslash) {
                     replacement.to_owned()
                 } else {
                     Self::interpret_escape(replacement)
@@ -236,7 +236,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                     Cow::Borrowed(_slice_of_arg) => (false, arg),
                     Cow::Owned(s) => (true, Cow::Owned(WString::from_chars(s))),
                 };
-                return Ok(res);
+                Ok(res)
             }
             StringReplacer::Literal {
                 pattern,

@@ -44,7 +44,7 @@ Example
 The following code will count down from a random even number between 10 and 20 to 1:
 
 ::
- 
+
     for i in (seq (random 10 2 20) -1 1)
         echo $i
     end
@@ -62,5 +62,5 @@ Or, to only get even numbers from 2 to 20::
     random 2 2 20
 
 Or odd numbers from 1 to 3::
-  
+
     random 1 2 3 # or 1 2 4

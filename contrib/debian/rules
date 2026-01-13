@@ -1,0 +1,30 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+ifeq (,$(filter terse,$(DEB_BUILD_OPTIONS)))
+  export DH_VERBOSE=1
+  # VERBOSE to satisfy Debian policy 4.9, introduced in version 4.2.0
+  export CARGO_TERM_VERBOSE=true
+endif
+# The LTO profile sets CFLAGS/CXXFLAGS which confuse the compilation process; disable it
+# LTO is still performed by rustc based on Cargo.toml
+export DEB_BUILD_MAINT_OPTIONS=optimize=-lto
+
+%:
+	dh $@ --buildsystem=cmake --builddirectory=build
+
+# Setting the build system is still required, because otherwise the GNUmakefile gets picked up
+override_dh_auto_configure:
+	ln -s cargo-vendor/vendor vendor
+	ln -s cargo-vendor/.cargo .cargo
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+	  -DRust_CARGO=$$(command -v cargo-1.85 || command -v cargo) \
+	  -DRust_COMPILER=$$(command -v rustc-1.85 || command -v rustc)
+
+override_dh_clean:
+	dh_clean --exclude=Cargo.toml.orig
+	-unlink .cargo
+	-unlink vendor
+
+override_dh_auto_test:
+	cd build && make fish_run_tests

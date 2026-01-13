@@ -13,7 +13,7 @@ impl StringSubCommand<'_> for Transform {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
@@ -25,15 +25,15 @@ impl StringSubCommand<'_> for Transform {
     ) -> Result<(), ErrorCode> {
         let mut n_transformed = 0usize;
 
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let transformed = (self.func)(&arg);
             if transformed != arg {
                 n_transformed += 1;
             }
             if !self.quiet {
-                streams.out.append(transformed);
+                streams.out.append(&transformed);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append_char('\n');
                 }
             } else if n_transformed > 0 {
                 return Ok(());

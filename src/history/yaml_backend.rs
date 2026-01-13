@@ -5,11 +5,10 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+use fish_common::subslice_position;
+
 use super::{HistoryItem, PersistenceMode};
-use crate::{
-    common::{bytes2wcstring, subslice_position},
-    flog::FLOG,
-};
+use crate::{common::bytes2wcstring, flog::flog};
 
 // Our history format is nearly-valid YAML (but isn't quite). Here it is:
 //
@@ -266,7 +265,7 @@ pub fn offset_of_next_item_fish_2_0(
         }
 
         if line.starts_with(b"\0") {
-            FLOG!(
+            flog!(
                 error,
                 "ignoring corrupted history entry around offset",
                 *cursor
@@ -275,7 +274,7 @@ pub fn offset_of_next_item_fish_2_0(
         }
 
         if !line.starts_with(b"- cmd") {
-            FLOG!(
+            flog!(
                 history,
                 "ignoring corrupted history entry around offset",
                 *cursor

@@ -6,17 +6,16 @@ if not command -qs man
 end
 
 function man
-    # If we have an embedded page, reuse a function that happens to do the
-    # right thing.
-    if not set -q argv[2] &&
-            status list-files "man/man1/$(__fish_canonicalize_builtin $argv).1" &>/dev/null
-        __fish_print_help $argv[1]
-        return
-    end
-
     set -l manpath
-    if not __fish_is_standalone
-        and set -l fish_manpath (path filter -d $__fish_data_dir/man)
+    if __fish_tried_to_embed_manpages
+        # If we have an embedded page, reuse a function that happens to do
+        # the right thing.
+        if not set -q argv[2] &&
+                status list-files "man/man1/$(__fish_canonicalize_builtin $argv).1" &>/dev/null
+            __fish_print_help $argv[1]
+            return
+        end
+    else if set -l fish_manpath (path filter -d $__fish_man_dir)
         # Prepend fish's man directory if available.
 
         # Work around the "builtin" manpage that everything symlinks to,

@@ -10,9 +10,9 @@ mod test_expressions {
         Error, Options, file_id_for_path, fish_wcswidth, lwstat, waccess, wcstod::wcstod,
         wcstoi_opts, wstat,
     };
-    use once_cell::sync::Lazy;
     use std::collections::HashMap;
     use std::os::unix::prelude::*;
+    use std::sync::LazyLock;
 
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub(super) enum Token {
@@ -164,7 +164,7 @@ mod test_expressions {
             }
             let bint = self.base as i32;
             if bint == 0 {
-                match streams.stdin_fd {
+                match streams.stdin_fd() {
                     -1 => false,
                     fd => isatty(fd),
                 }
@@ -182,7 +182,7 @@ mod test_expressions {
         TOKEN_INFOS.get(str).copied().unwrap_or(Token::Unknown)
     }
 
-    static TOKEN_INFOS: Lazy<HashMap<&'static wstr, Token>> = Lazy::new(|| {
+    static TOKEN_INFOS: LazyLock<HashMap<&'static wstr, Token>> = LazyLock::new(|| {
         let pairs = [
             (L!(""), Token::Unknown),
             (L!("!"), Token::UnaryBoolean(UnaryBooleanToken::Bang)),
@@ -404,7 +404,7 @@ mod test_expressions {
                 // OR it in.
                 or_result = or_result || and_result;
             }
-            return or_result;
+            or_result
         }
 
         fn range(&self) -> Range {
@@ -551,15 +551,15 @@ mod test_expressions {
                 );
             }
 
-            if feature_test(FeatureFlag::test_require_arg) {
+            if feature_test(FeatureFlag::TestRequireArg) {
                 return self.error(start, sprintf!("Unknown option at index %u", start));
             }
 
-            return JustAString {
+            JustAString {
                 arg: self.arg(start).to_owned(),
                 range: start..start + 1,
             }
-            .into_some_box();
+            .into_some_box()
         }
 
         fn parse_binary_primary(
@@ -1019,7 +1019,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         .collect();
     let args: &[WString] = &args;
 
-    if feature_test(FeatureFlag::test_require_arg) {
+    if feature_test(FeatureFlag::TestRequireArg) {
         if argc == 0 {
             streams.err.appendln(wgettext_fmt!(
                 "%s: Expected at least one argument",
@@ -1040,7 +1040,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 "%s: called with no arguments. This will be an error in future.",
                 program_name
             ));
-            streams.err.append(parser.current_line());
+            streams.err.append(&parser.current_line());
         }
         return Err(STATUS_INVALID_ARGS); // Per 1003.1, exit false.
     } else if argc == 1 {
@@ -1049,7 +1049,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 "%s: called with one argument. This will return false in future.",
                 program_name
             ));
-            streams.err.append(parser.current_line());
+            streams.err.append(&parser.current_line());
         }
         // Per 1003.1, exit true if the arg is non-empty.
         return if args[0].is_empty() {
@@ -1063,8 +1063,8 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     let mut err = WString::new();
     let expr = test_expressions::TestParser::parse_args(args, &mut err, program_name);
     let Some(expr) = expr else {
-        streams.err.append(err);
-        streams.err.append(parser.current_line());
+        streams.err.append(&err);
+        streams.err.append(&parser.current_line());
         return Err(STATUS_CMD_ERROR);
     };
 
@@ -1076,7 +1076,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         }
         // Add a backtrace but not the "see help" message
         // because this isn't about passing the wrong options.
-        streams.err.append(parser.current_line());
+        streams.err.append(&parser.current_line());
         return Err(STATUS_INVALID_ARGS);
     }
 

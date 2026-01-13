@@ -1,7 +1,6 @@
 pub mod dir_iter;
 pub mod errors;
 pub mod fileid;
-pub mod gettext;
 mod hex_float;
 #[macro_use]
 pub mod printf;
@@ -11,14 +10,11 @@ pub mod wcstoi;
 use crate::common::{
     bytes2wcstring, fish_reserved_codepoint, wcs2bytes, wcs2osstring, wcs2zstring,
 };
-use crate::wchar::{L, WString, wstr};
-use crate::wchar_ext::WExt;
-use crate::wcstringutil::{join_strings, wcs2bytes_callback};
-use crate::{FLOG, fallback};
+use crate::fds::BorrowedFdFile;
+use crate::flog;
+use crate::wcstringutil::{join_strings, str2bytes_callback};
 use errno::errno;
-pub use gettext::{
-    LocalizableString, localizable_consts, localizable_string, wgettext, wgettext_fmt,
-};
+use fish_wchar::{IntoCharIter, L, WExt, WString, wstr};
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};
@@ -52,12 +48,8 @@ pub fn lwstat(file_name: &wstr) -> io::Result<fs::Metadata> {
 
 /// Cover over fstat().
 pub fn fstat(fd: impl AsRawFd) -> io::Result<fs::Metadata> {
-    let fd = fd.as_raw_fd();
-    let file = unsafe { fs::File::from_raw_fd(fd) };
-    let res = file.metadata();
-    let fd2 = file.into_raw_fd();
-    assert_eq!(fd, fd2);
-    res
+    let file = unsafe { BorrowedFdFile::from_raw_fd(fd.as_raw_fd()) };
+    file.metadata()
 }
 
 /// Wide character version of access().
@@ -103,7 +95,7 @@ pub fn wgetcwd() -> WString {
     match std::env::current_dir() {
         Ok(cwd) => bytes2wcstring(cwd.into_os_string().as_bytes()),
         Err(e) => {
-            FLOG!(error, "std::env::current_dir() failed with error:", e);
+            flog!(error, "std::env::current_dir() failed with error:", e);
             WString::new()
         }
     }
@@ -115,13 +107,7 @@ pub fn wreadlink(file_name: &wstr) -> Option<WString> {
     let bufsize = usize::try_from(md.len()).unwrap() + 1;
     let mut target_buf = vec![b'\0'; bufsize];
     let tmp = wcs2zstring(file_name);
-    let nbytes = unsafe {
-        libc::readlink(
-            tmp.as_ptr(),
-            std::ptr::addr_of_mut!(target_buf[0]).cast(),
-            bufsize,
-        )
-    };
+    let nbytes = unsafe { libc::readlink(tmp.as_ptr(), target_buf.as_mut_ptr().cast(), bufsize) };
     if nbytes == -1 {
         perror("readlink");
         return None;
@@ -381,7 +367,7 @@ pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
 /// This does NOT retry on EINTR or EAGAIN, it simply returns.
 /// Return -1 on error in which case errno will have been set. In this event, the number of bytes
 /// actually written cannot be obtained.
-pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
+pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Option<usize> {
     // Accumulate data in a local buffer.
     let mut accum = [0u8; 512];
     let mut accumlen = 0;
@@ -412,7 +398,7 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
         true
     };
 
-    let mut success = wcs2bytes_callback(input, |buff: &[u8]| {
+    let mut success = str2bytes_callback(input, |buff: &[u8]| {
         if buff.len() + accumlen > accum_capacity {
             // We have to flush.
             if !flush_accum(&mut total_written, &accum, &mut accumlen) {
@@ -455,7 +441,7 @@ pub fn fish_iswalnum(c: char) -> bool {
 }
 
 pub fn fish_wcswidth(s: &wstr) -> isize {
-    fallback::fish_wcswidth(s)
+    fish_fallback::fish_wcswidth(s)
 }
 
 /// Given that `cursor` is a pointer into `base`, return the offset in characters.
@@ -479,19 +465,23 @@ pub fn wstr_offset_in(cursor: &wstr, base: &wstr) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_path, wbasename, wdirname, wstr_offset_in, wwrite_to_fd};
-    use crate::common::wcs2bytes;
-    use crate::fds::AutoCloseFd;
+    use super::{
+        normalize_path, unescape_bytes_and_write_to_fd, wbasename, wdirname, wstr_offset_in,
+    };
+    use crate::common::bytes2wcstring;
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::util::get_rng;
-    use crate::wchar::prelude::*;
-    use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET, c_void};
+    use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
     use rand::Rng;
-    use std::{ffi::CString, ptr};
+    use std::{
+        ffi::CString,
+        os::fd::{AsRawFd, FromRawFd, OwnedFd},
+        ptr,
+    };
 
     mod test_path_normalize_for_cd {
         use super::super::path_normalize_for_cd;
-        use crate::wchar::L;
+        use fish_wchar::L;
 
         #[test]
         fn relative_path() {
@@ -614,7 +604,7 @@ mod tests {
     fn test_wdirname_wbasename() {
         // path, dir, base
         struct Test(&'static wstr, &'static wstr, &'static wstr);
-        const testcases: &[Test] = &[
+        let testcases: &[Test] = &[
             Test(L!(""), L!("."), L!(".")),
             Test(L!("foo//"), L!("."), L!("foo")),
             Test(L!("foo//////"), L!("."), L!("foo")),
@@ -665,44 +655,44 @@ mod tests {
         let _cleanup = test_init();
         let temp_file = fish_tempfile::new_file().unwrap();
         let filename = CString::new(temp_file.path().to_str().unwrap()).unwrap();
-        let mut rng = get_rng();
+        let mut rng = rand::rng();
         let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];
         for &size in &sizes {
-            let fd = AutoCloseFd::new(unsafe {
-                libc::open(filename.as_ptr(), O_RDWR | O_TRUNC | O_CREAT, 0o666)
-            });
-            assert!(fd.is_valid());
-            let mut input = WString::new();
+            let fd = unsafe {
+                let res = libc::open(filename.as_ptr(), O_RDWR | O_TRUNC | O_CREAT, 0o666);
+                OwnedFd::from_raw_fd(res)
+            };
+            let mut input = Vec::new();
             for _i in 0..size {
-                input.push(rng.r#gen());
+                input.push(rng.random());
             }
 
-            let amt = wwrite_to_fd(&input, fd.fd()).unwrap();
-            let narrow = wcs2bytes(&input);
-            assert_eq!(amt, narrow.len());
+            let amt =
+                unescape_bytes_and_write_to_fd(&bytes2wcstring(&input), fd.as_raw_fd()).unwrap();
+            assert_eq!(amt, input.len());
 
-            assert!(unsafe { libc::lseek(fd.fd(), 0, SEEK_SET) } >= 0);
+            assert!(unsafe { libc::lseek(fd.as_raw_fd(), 0, SEEK_SET) } >= 0);
 
-            let mut contents = vec![0u8; narrow.len()];
+            let mut contents = vec![0u8; input.len()];
             let read_amt = unsafe {
                 libc::read(
-                    fd.fd(),
+                    fd.as_raw_fd(),
                     if size == 0 {
                         ptr::null_mut()
                     } else {
-                        (&mut contents[0]) as *mut u8 as *mut c_void
+                        contents.as_mut_ptr().cast()
                     },
-                    narrow.len(),
+                    input.len(),
                 )
             };
-            assert!(usize::try_from(read_amt).unwrap() == narrow.len());
-            assert_eq!(&contents, &narrow);
+            assert!(usize::try_from(read_amt).unwrap() == input.len());
+            assert_eq!(&contents, &input);
         }
     }
 
     #[test]
     fn test_wstr_offset_in() {
-        use crate::wchar::L;
+        use fish_wchar::L;
         let base = L!("hello world");
         assert_eq!(wstr_offset_in(&base[6..], base), 6);
         assert_eq!(wstr_offset_in(&base[0..], base), 0);

@@ -209,7 +209,7 @@ Examples
    # This is the same as above: "-f" is "--type=file", "-d" is "--type=dir",
    # "-x" is short for "--perm=exec" and "-w" short for "--perm=write"!
    /home/me
-   
+
    >_ path filter -fx $PATH/*
    # Prints all possible commands - the first entry of each name is what fish would execute!
 
@@ -306,7 +306,7 @@ Examples
     >_ path normalize /bin//bash
     # The "//" is squashed, but /bin isn't resolved even if your system links it to /usr/bin.
     /bin/bash
-    
+
     >_ path normalize ./my/subdirs/../sub2
     my/sub2
 
@@ -337,7 +337,7 @@ Examples
    # The "//" is squashed, and /bin is resolved if your system links it to /usr/bin.
    # sh here is bash (this is common on linux systems)
    /usr/bin/bash
-    
+
    >_ path resolve /bin/foo///bar/../baz
    # Assuming /bin exists and is a symlink to /usr/bin, but /bin/foo doesn't.
    # This resolves the /bin/ and normalizes the nonexistent rest:
@@ -381,7 +381,7 @@ Examples
 
    >_ path change-extension '' ~/.config.
    /home/alfa/.config
-   
+
 "sort" subcommand
 -----------------------------
 

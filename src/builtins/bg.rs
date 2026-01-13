@@ -1,6 +1,6 @@
 // Implementation of the bg builtin.
 
-use std::collections::HashSet;
+use std::{collections::HashSet, rc::Rc};
 
 use crate::proc::Pid;
 
@@ -17,7 +17,7 @@ fn send_to_bg(
         let jobs = parser.jobs();
         if !jobs[job_pos].wants_job_control() {
             let job = &jobs[job_pos];
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Can't put job %s, '%s' to background because it is not under job control\n",
                 cmd,
                 job.job_id().to_wstring(),
@@ -27,7 +27,7 @@ fn send_to_bg(
         }
 
         let job = &jobs[job_pos];
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "Send job %s '%s' to background\n",
             job.job_id().to_wstring(),
             job.command()
@@ -41,7 +41,7 @@ fn send_to_bg(
     }
     parser.job_promote_at(job_pos);
 
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }
 
 /// Builtin for putting a job in the background.
@@ -68,7 +68,7 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         let Some(job_pos) = job_pos else {
             streams
                 .err
-                .append(wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
+                .append(&wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
             return Err(STATUS_CMD_ERROR);
         };
 
@@ -97,15 +97,15 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
     let mut seen = HashSet::new();
     for pid in pids {
         if let Some((job_pos, job)) = parser.job_get_with_index_from_pid(pid) {
-            if seen.insert(&*job as *const _) {
+            if seen.insert(Rc::as_ptr(&job)) {
                 send_to_bg(parser, streams, cmd, job_pos)?;
             }
         } else {
             streams
                 .err
-                .append(wgettext_fmt!("%s: Could not find job '%d'\n", cmd, pid));
+                .append(&wgettext_fmt!("%s: Could not find job '%d'\n", cmd, pid));
         }
     }
 
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }

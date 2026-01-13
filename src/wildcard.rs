@@ -1,25 +1,27 @@
 // Enumeration of all wildcard types.
 
+use fish_common::{WILDCARD_RESERVED_BASE, char_offset};
 use libc::X_OK;
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::fs;
+use std::os::unix::fs::MetadataExt;
+use std::sync::LazyLock;
 
 use crate::common::{
-    UnescapeFlags, UnescapeStringStyle, WILDCARD_RESERVED_BASE, WSL, char_offset,
-    is_windows_subsystem_for_linux, unescape_string,
+    UnescapeFlags, UnescapeStringStyle, WSL, is_windows_subsystem_for_linux, unescape_string,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
 use crate::expand::ExpandFlags;
-use crate::fallback::wcscasecmp;
 use crate::future_feature_flags::FeatureFlag;
 use crate::future_feature_flags::feature_test;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wcstringutil::{
     CaseSensitivity, string_fuzzy_match_string, string_suffixes_string_case_insensitive,
+    strip_executable_suffix,
 };
 use crate::wutil::dir_iter::DirEntryType;
 use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
+use fish_fallback::wcscasecmp;
 
 localizable_consts!(
     COMPLETE_EXEC_DESC "command"
@@ -213,14 +215,7 @@ fn wildcard_complete_internal(
             if s.is_empty() {
                 return WildcardResult::NoMatch;
             }
-            return wildcard_complete_internal(
-                s.slice_from(1),
-                wc.slice_from(1),
-                params,
-                flags,
-                out,
-                false,
-            );
+            wildcard_complete_internal(s.slice_from(1), wc.slice_from(1), params, flags, out, false)
         }
         ANY_STRING => {
             // Hackish. If this is the last character of the wildcard, then just complete with
@@ -265,10 +260,10 @@ fn wildcard_complete_internal(
                 }
             }
 
-            return match has_match {
+            match has_match {
                 true => WildcardResult::Match,
                 false => WildcardResult::NoMatch,
-            };
+            }
         }
         // We don't even try with this one.
         ANY_STRING_RECURSIVE => WildcardResult::NoMatch,
@@ -290,7 +285,7 @@ pub fn wildcard_complete(
         expand_flags,
     };
 
-    return wildcard_complete_internal(s, wc, &params, flags, out, true);
+    wildcard_complete_internal(s, wc, &params, flags, out, true)
 }
 
 /// Obtain a description string for the file specified by the filename.
@@ -312,7 +307,7 @@ fn file_get_desc(
     let is_executable =
         |filename: &wstr| -> bool { definitely_executable || waccess(filename, X_OK) == 0 };
 
-    return if is_link {
+    if is_link {
         if is_dir {
             wgettext!(COMPLETE_DIRECTORY_SYMLINK_DESC)
         } else if is_executable(filename) {
@@ -326,7 +321,7 @@ fn file_get_desc(
         wgettext!(COMPLETE_EXEC_DESC)
     } else {
         wgettext!(COMPLETE_FILE_DESC)
-    };
+    }
 }
 
 /// Test if the given file is an executable (if executables_only) or directory (if
@@ -334,7 +329,7 @@ fn file_get_desc(
 /// up. Note that the filename came from a readdir() call, so we know it exists.
 fn wildcard_test_flags_then_complete(
     filepath: &wstr,
-    filename: &wstr,
+    mut filename: &wstr,
     wc: &wstr,
     expand_flags: ExpandFlags,
     out: &mut CompletionReceiver,
@@ -378,12 +373,31 @@ fn wildcard_test_flags_then_complete(
     }
 
     // regular file *excludes* broken links - we have no use for them as commands.
-    let is_regular_file = entry
-        .check_type()
-        .map(|x| x == DirEntryType::reg)
-        .unwrap_or(false);
-    if executables_only && (!is_regular_file || waccess(filepath, X_OK) != 0) {
+    let is_regular_file = entry.check_type().is_some_and(|x| x == DirEntryType::Reg);
+    let is_executable = LazyLock::new(|| is_regular_file && waccess(filepath, X_OK) == 0);
+    if executables_only && !*is_executable {
         return false;
+    }
+
+    let filepath_stat = LazyLock::new(|| lwstat(filepath));
+
+    // For executables on Cygwin, prefer the name without the .exe, to match
+    // better with Unix names, but only if there isn't also a file without that
+    // extension and the user hasn't started to type the extension
+    if let Some(filepath_stripped) = strip_executable_suffix(filepath) {
+        let stripped_filename_len = filename.len() - (filepath.len() - filepath_stripped.len());
+        if wc.len() <= stripped_filename_len && *is_executable {
+            let stat_stripped = lwstat(filepath_stripped).map(|stat| (stat.dev(), stat.ino()));
+            let stat = filepath_stat.as_ref().map(|stat| (stat.dev(), stat.ino()));
+
+            // TODO(MSRV>=1.88) use if-let-chain
+            //   if let Ok(stat_stripped) = stat_stripped
+            //       && let Ok(stat) = stat
+            //       && stat_stripped == stat
+            if stat_stripped.is_ok() && stat.is_ok() && stat_stripped.unwrap() == stat.unwrap() {
+                filename = &filename[0..filename.len() - 4];
+            }
+        }
     }
 
     // Compute the description.
@@ -395,8 +409,7 @@ fn wildcard_test_flags_then_complete(
             None => {
                 // We do not know it's a link from the d_type,
                 // so we will have to do an lstat().
-                let lstat: Option<fs::Metadata> = lwstat(filepath).ok();
-                if let Some(md) = &lstat {
+                if let Ok(md) = filepath_stat.as_ref() {
                     md.is_symlink()
                 } else {
                     // This file is no longer be usable, skip it.
@@ -486,7 +499,7 @@ mod expander {
                 working_directory,
                 completion_set: resolved_completions
                     .iter()
-                    .map(|c| c.completion.to_owned())
+                    .map(|c| c.completion.clone())
                     .collect(),
                 visited_files: HashSet::new(),
                 flags,
@@ -651,9 +664,9 @@ mod expander {
 
         pub fn status_code(&self) -> WildcardResult {
             if self.did_interrupt {
-                return WildcardResult::Cancel;
+                WildcardResult::Cancel
             } else if self.did_overflow {
-                return WildcardResult::Overflow;
+                WildcardResult::Overflow
             } else if self.did_add {
                 WildcardResult::Match
             } else {
@@ -795,7 +808,6 @@ mod expander {
                 let Some(m) = string_fuzzy_match_string(wc_segment, &entry.name, false) else {
                     continue;
                 };
-                // The first port had !n.is_samecase_exact
                 if m.is_samecase_exact() {
                     continue;
                 }
@@ -930,7 +942,7 @@ mod expander {
                         break;
                     } else if entry.is_dir() && unique_entry.is_empty() {
                         // first candidate
-                        unique_entry = entry.name.to_owned();
+                        unique_entry = entry.name.clone();
                     } else {
                         // We either have two or more candidates, or the child is not a directory. We're
                         // done.
@@ -951,7 +963,7 @@ mod expander {
                 abs_unique_hierarchy.push('/');
             }
 
-            return unique_hierarchy;
+            unique_hierarchy
         }
 
         fn try_add_completion_result(
@@ -988,8 +1000,7 @@ mod expander {
                 // Note that prepend_token_prefix is a no-op unless COMPLETE_REPLACES_TOKEN is set
                 let after = self.resolved_completions.len();
                 for c in self.resolved_completions[before..after].iter_mut() {
-                    if info.has_fuzzy_ancestor && !(c.flags.contains(CompleteFlags::REPLACES_TOKEN))
-                    {
+                    if info.has_fuzzy_ancestor && !c.replaces_token() {
                         c.flags |= CompleteFlags::REPLACES_TOKEN;
                         c.prepend_token_prefix(wildcard);
                     }
@@ -1027,10 +1038,10 @@ mod expander {
                 path = normalize_path(&path, true);
             }
 
-            return match dotdot {
+            match dotdot {
                 true => DirIter::new_with_dots(&path),
                 false => DirIter::new(&path),
-            };
+            }
         }
     }
 }
@@ -1103,13 +1114,13 @@ pub fn wildcard_expand_string<'closure>(
 
     let mut expander = WildCardExpander::new(prefix, flags, &mut cancel_checker, output);
     expander.expand(base_dir, effective_wc, base_dir, ParentInfo::default());
-    return expander.status_code();
+    expander.status_code()
 }
 
 /// Test whether the given wildcard matches the string. Does not perform any I/O.
 ///
 /// \param str The string to test
-/// \param wc The wildcard to test against
+/// \param pattern The wildcard to test against
 /// \param leading_dots_fail_to_match if set, strings with leading dots are assumed to be hidden
 /// files and are not matched (default was false)
 ///
@@ -1204,7 +1215,7 @@ pub fn wildcard_has_internal(s: impl AsRef<wstr>) -> bool {
 #[must_use]
 pub fn wildcard_has(s: impl AsRef<wstr>) -> bool {
     let s = s.as_ref();
-    let qmark_is_wild = !feature_test(FeatureFlag::qmark_noglob);
+    let qmark_is_wild = !feature_test(FeatureFlag::QuestionMarkNoGlob);
     // Fast check for * or ?; if none there is no wildcard.
     // Note some strings contain * but no wildcards, e.g. if they are quoted.
     if !s.contains('*') && (!qmark_is_wild || !s.contains('?')) {
@@ -1212,7 +1223,7 @@ pub fn wildcard_has(s: impl AsRef<wstr>) -> bool {
     }
     let unescaped =
         unescape_string(s, UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)).unwrap_or_default();
-    return wildcard_has_internal(unescaped);
+    wildcard_has_internal(unescaped)
 }
 
 #[cfg(test)]
@@ -1231,12 +1242,12 @@ mod tests {
         let wc = unescape_string(wc, UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)).unwrap();
         assert!(!wildcard_has(&wc) && wildcard_has_internal(&wc));
 
-        scoped_test(FeatureFlag::qmark_noglob, false, || {
+        scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {
             assert!(wildcard_has(L!("?")));
             assert!(!wildcard_has(L!("\\?")));
         });
 
-        scoped_test(FeatureFlag::qmark_noglob, true, || {
+        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
             assert!(!wildcard_has(L!("?")));
             assert!(!wildcard_has(L!("\\?")));
         });

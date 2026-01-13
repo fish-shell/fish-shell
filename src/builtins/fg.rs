@@ -1,6 +1,7 @@
 //! Implementation of the fg builtin.
 
 use crate::fds::make_fd_blocking;
+use crate::parser::ParserEnvSetMode;
 use crate::reader::{reader_save_screen_state, reader_write_title};
 use crate::tokenizer::tok_command;
 use crate::wutil::perror;
@@ -37,7 +38,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
             None => {
                 streams
                     .err
-                    .append(wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
+                    .append(&wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
                 return Err(STATUS_INVALID_ARGS);
             }
             Some((pos, j)) => {
@@ -57,11 +58,11 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         if found_job {
             streams
                 .err
-                .append(wgettext_fmt!("%s: Ambiguous job\n", cmd));
+                .append(&wgettext_fmt!("%s: Ambiguous job\n", cmd));
         } else {
             streams
                 .err
-                .append(wgettext_fmt!("%s: '%s' is not a job\n", cmd, argv[optind]));
+                .append(&wgettext_fmt!("%s: '%s' is not a job\n", cmd, argv[optind]));
         }
 
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -76,14 +77,14 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                 {
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: No suitable job: %d\n", cmd, pid));
+                        .append(&wgettext_fmt!("%s: No suitable job: %d\n", cmd, pid));
                     job_pos = None;
                     job = None
                 } else {
                     let (pos, j) = j.unwrap();
                     job_pos = Some(pos);
                     job = if !j.wants_job_control() {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                                         "%s: Can't put job %d, '%s' to foreground because it is not under job control\n",
                                         cmd,
                                         pid,
@@ -111,7 +112,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
     if streams.err_is_redirected {
         streams
             .err
-            .append(wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
+            .append(&wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
     } else {
         // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
         // printed until the command finishes.
@@ -123,7 +124,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         // Provide value for `status current-command`
         parser.libdata_mut().status_vars.command = ft.clone();
         // Also provide a value for the deprecated fish 2.0 $_ variable
-        parser.set_var_and_fire(L!("_"), EnvMode::EXPORT, vec![ft]);
+        parser.set_var_and_fire(L!("_"), ParserEnvSetMode::new(EnvMode::EXPORT), vec![ft]);
         // Provide value for `status current-commandline`
         parser.libdata_mut().status_vars.commandline = job.command().to_owned();
     }
@@ -151,12 +152,11 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
     handoff.to_job_group(job.group.as_ref().unwrap());
     let resumed = job.resume();
     if resumed {
-        job.continue_job(parser);
+        job.continue_job(parser, /*block_io=*/ None);
     }
     if job.is_stopped() {
         handoff.save_tty_modes();
     }
-    handoff.reclaim();
     if resumed {
         Ok(SUCCESS)
     } else {

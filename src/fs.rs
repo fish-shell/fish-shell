@@ -1,70 +1,51 @@
 use crate::{
-    FLOG, FLOGF,
-    common::{bytes2wcstring, wcs2osstring, wcs2zstring},
+    common::{bytes2wcstring, wcs2bytes, wcs2osstring},
     fds::wopen_cloexec,
+    flog, flogf,
     path::{DirRemoteness, path_remoteness},
-    wchar::prelude::*,
+    prelude::*,
     wutil::{
         FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, wdirname, wrename, wunlink,
     },
 };
-use errno::errno;
+use fish_tempfile::random_filename;
 use libc::{LOCK_EX, LOCK_SH, c_int};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{
-    ffi::CString,
+    ffi::OsString,
     fs::{File, OpenOptions},
     os::{
-        fd::{AsRawFd, FromRawFd},
-        unix::fs::MetadataExt,
+        fd::AsRawFd,
+        unix::{ffi::OsStringExt, fs::MetadataExt},
     },
+    path::PathBuf,
 };
 
-// Replacement for mkostemp(str, O_CLOEXEC)
-// This uses mkostemp if available,
-// otherwise it uses mkstemp followed by fcntl
-fn fish_mkstemp_cloexec(name_template: CString) -> std::io::Result<(File, CString)> {
-    let name = name_template.into_raw();
-    #[cfg(not(apple))]
-    let fd = {
-        use libc::O_CLOEXEC;
-        unsafe { libc::mkostemp(name, O_CLOEXEC) }
-    };
-    #[cfg(apple)]
-    let fd = {
-        use libc::{F_SETFD, FD_CLOEXEC};
-        let fd = unsafe { libc::mkstemp(name) };
-        if fd != -1 {
-            unsafe { libc::fcntl(fd, F_SETFD, FD_CLOEXEC) };
+/// Creates a temporary file in the same directory as as `original_path`, meaning `original_path`
+/// must be a valid file path. The filename will be created by appending random alphanumeric ASCII
+/// chars to the `original_filename`.
+fn create_temporary_file(original_path: &wstr) -> std::io::Result<(File, WString)> {
+    let original_path = PathBuf::from(OsString::from_vec(wcs2bytes(original_path)));
+    // original path must be a valid file path, so file_name should never return None.
+    let prefix = original_path.file_name().unwrap().to_owned();
+    let dir = original_path.parent().unwrap();
+    let (path, result) =
+        fish_tempfile::create_file_with_retry(|| dir.join(random_filename(prefix.clone())));
+    match result {
+        Ok(file) => Ok((file, bytes2wcstring(path.as_os_str().as_encoded_bytes()))),
+        Err(e) => {
+            flog!(
+                error,
+                wgettext_fmt!(
+                    "Unable to create temporary file '%s': %s",
+                    // TODO(MSRV>=1.87): use OsString::display()
+                    format!("{:?}", path),
+                    e
+                )
+            );
+            Err(e)
         }
-        fd
-    };
-    if fd == -1 {
-        Err(std::io::Error::from(errno()))
-    } else {
-        unsafe { Ok((File::from_raw_fd(fd), CString::from_raw(name))) }
     }
-}
-
-/// Creates a temporary file created according to the template and its name if successful.
-pub fn create_temporary_file(name_template: &wstr) -> std::io::Result<(File, WString)> {
-    let (fd, c_string_template) = loop {
-        match fish_mkstemp_cloexec(wcs2zstring(name_template)) {
-            Ok(tmp_file_data) => break tmp_file_data,
-            Err(e) => match e.kind() {
-                std::io::ErrorKind::Interrupted => {}
-                _ => {
-                    FLOG!(
-                        error,
-                        wgettext_fmt!("Unable to create temporary file '%s': %s", name_template, e)
-                    );
-
-                    return Err(e);
-                }
-            },
-        }
-    };
-    Ok((fd, bytes2wcstring(c_string_template.to_bytes())))
 }
 
 /// Use this struct for all accesses to file which need mutual exclusion.
@@ -133,7 +114,7 @@ impl LockedFile {
     pub fn new(locking_mode: LockingMode, file_path: &wstr) -> std::io::Result<Self> {
         let dir_path = wdirname(file_path);
 
-        if path_remoteness(dir_path) == DirRemoteness::remote {
+        if path_remoteness(dir_path) == DirRemoteness::Remote {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Unsupported,
                 "Directory considered remote. Locking is disabled on remote file systems.",
@@ -200,7 +181,7 @@ pub fn fsync(file: &File) -> std::io::Result<()> {
             -1 => {
                 let os_error = std::io::Error::last_os_error();
                 if os_error.kind() != std::io::ErrorKind::Interrupted {
-                    FLOGF!(synced_file_access, "fsync failed: %s", os_error);
+                    flogf!(synced_file_access, "fsync failed: %s", os_error);
                     return Err(os_error);
                 }
             }
@@ -226,7 +207,7 @@ where
             return Ok((file_id, user_data));
         }
         Err(e) => {
-            FLOGF!(
+            flogf!(
                 synced_file_access,
                 "Error acquiring shared lock on the directory of '%s': %s",
                 path,
@@ -241,7 +222,7 @@ where
         }
     }
 
-    FLOG!(
+    flog!(
         synced_file_access,
         "flock-based locking is disabled. Using fallback implementation."
     );
@@ -323,17 +304,17 @@ where
         // case right either).
         if let Ok(md) = old_file.metadata() {
             if let Err(e) = std::os::unix::fs::fchown(new_file, Some(md.uid()), Some(md.gid())) {
-                FLOG!(
+                flog!(
                     synced_file_access,
                     "Error when changing ownership of file:",
                     e
                 );
             }
             if let Err(e) = new_file.set_permissions(md.permissions()) {
-                FLOG!(synced_file_access, "Error when changing mode of file:", e);
+                flog!(synced_file_access, "Error when changing mode of file:", e);
             }
         } else {
-            FLOG!(synced_file_access, "Could not get metadata for file");
+            flog!(synced_file_access, "Could not get metadata for file");
         }
         // Linux by default stores the mtime with low precision, low enough that updates that occur
         // in quick succession may result in the same mtime (even the nanoseconds field). So
@@ -361,7 +342,7 @@ where
     fn rename(old_name: &wstr, new_name: &wstr) -> std::io::Result<()> {
         if wrename(old_name, new_name) == -1 {
             let error_number = errno::errno();
-            FLOG!(
+            flog!(
                 error,
                 wgettext_fmt!("Error when renaming file: %s", error_number.to_string())
             );
@@ -406,7 +387,7 @@ where
                 return Ok((file_id_for_path(path), potential_update));
             }
             Err(e) => {
-                FLOGF!(
+                flogf!(
                     synced_file_access,
                     "Error acquiring exclusive lock on the directory of '%s': %s",
                     path,
@@ -419,7 +400,7 @@ where
         // implementation which tries to avoid race conditions, but in the case of contention it is
         // possible that some writes are lost.
 
-        FLOG!(
+        flog!(
             synced_file_access,
             "flock-based locking is disabled. Using fallback implementation."
         );
@@ -484,9 +465,7 @@ where
         ))
     }
 
-    const TMP_FILE_SUFFIX: &wstr = L!(".XXXXXX");
-    let tmp_file_template = path.to_owned() + TMP_FILE_SUFFIX;
-    let (tmp_file, tmp_name) = create_temporary_file(&tmp_file_template)?;
+    let (tmp_file, tmp_name) = create_temporary_file(path)?;
     let result = try_rewriting(path, rewrite, &tmp_name, tmp_file);
     // Do not leave the tmpfile around.
     // Note that we do not unlink when renaming succeeded.

@@ -1,6 +1,8 @@
-use fish_build_helper::{env_var, fish_build_dir, workspace_root};
+use fish_build_helper::{
+    env_var, fish_build_dir, target_os, target_os_is_apple, target_os_is_bsd, target_os_is_cygwin,
+    workspace_root,
+};
 use rsconf::Target;
-use std::env;
 use std::path::{Path, PathBuf};
 
 fn canonicalize<P: AsRef<Path>>(path: P) -> PathBuf {
@@ -32,22 +34,11 @@ fn main() {
     rsconf::set_env_value("BUILD_HOST_TRIPLE", &env_var("HOST").unwrap());
     rsconf::set_env_value("BUILD_PROFILE", &env_var("PROFILE").unwrap());
 
-    let version = &get_version(&env::current_dir().unwrap());
     // Per https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script,
     // the source directory is the current working directory of the build script
-    rsconf::set_env_value("FISH_BUILD_VERSION", version);
+    rsconf::set_env_value("FISH_BUILD_VERSION", &get_version());
 
-    // safety: single-threaded code.
-    unsafe { std::env::set_var("FISH_BUILD_VERSION", version) };
-
-    // These are necessary if built with embedded functions,
-    // but only in release builds (because rust-embed in debug builds reads from the filesystem).
-    #[cfg(feature = "embed-data")]
-    #[cfg(any(windows, not(debug_assertions)))]
-    rsconf::rebuild_if_path_changed("share");
-
-    #[cfg(feature = "gettext-extract")]
-    rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
+    fish_build_helper::rebuild_if_embedded_path_changed("share");
 
     let build = cc::Build::new();
     let mut target = Target::new_from(build).unwrap();
@@ -77,9 +68,9 @@ fn detect_cfgs(target: &mut Target) {
     for (name, handler) in [
         // Ignore the first entry, it just sets up the type inference.
         ("", &(|_: &Target| false) as &dyn Fn(&Target) -> bool),
-        ("apple", &detect_apple),
-        ("bsd", &detect_bsd),
-        ("cygwin", &detect_cygwin),
+        ("apple", &(|_| target_os_is_apple())),
+        ("bsd", &(|_| target_os_is_bsd())),
+        ("cygwin", &(|_| target_os_is_cygwin())),
         ("have_eventfd", &|target| {
             // FIXME: NetBSD 10 has eventfd, but the libc crate does not expose it.
             if target_os() == "netbsd" {
@@ -104,9 +95,6 @@ fn detect_cfgs(target: &mut Target) {
             }
         }),
         ("small_main_stack", &has_small_stack),
-        ("use_prebuilt_docs", &|_| {
-            env_var("FISH_USE_PREBUILT_DOCS").is_some_and(|v| v == "TRUE")
-        }),
         ("using_cmake", &|_| {
             option_env!("FISH_CMAKE_BINARY_DIR").is_some()
         }),
@@ -116,37 +104,6 @@ fn detect_cfgs(target: &mut Target) {
     ] {
         rsconf::declare_cfg(name, handler(target))
     }
-}
-
-// Target OS for compiling our crates, as opposed to the build script.
-fn target_os() -> String {
-    env_var("CARGO_CFG_TARGET_OS").unwrap()
-}
-
-fn detect_apple(_: &Target) -> bool {
-    matches!(target_os().as_str(), "ios" | "macos")
-}
-
-fn detect_cygwin(_: &Target) -> bool {
-    target_os() == "cygwin"
-}
-
-/// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
-/// `#[cfg(bsd)]`.
-///
-/// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
-/// doesn't necessarily include less-popular forks nor does it group them into families more
-/// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
-fn detect_bsd(_: &Target) -> bool {
-    let target_os = target_os();
-    let is_bsd = target_os.ends_with("bsd") || target_os == "dragonfly";
-    if matches!(
-        target_os.as_str(),
-        "dragonfly" | "freebsd" | "netbsd" | "openbsd"
-    ) {
-        assert!(is_bsd, "Target incorrectly detected as not BSD!");
-    }
-    is_bsd
 }
 
 /// Rust sets the stack size of newly created threads to a sane value, but is at at the mercy of the
@@ -215,32 +172,18 @@ fn setup_paths() {
     overridable_path("SYSCONFDIR", |env_sysconfdir| {
         Some(join_if_relative(
             &prefix,
-            env_sysconfdir.unwrap_or(
-                // Embedded builds use "/etc," not "$PREFIX/etc".
-                if cfg!(feature = "embed-data") {
-                    "/etc/"
-                } else {
-                    "etc/"
-                }
-                .to_string(),
-            ),
+            env_sysconfdir.unwrap_or("/etc/".to_string()),
         ))
     });
 
-    let default_ok = !cfg!(feature = "embed-data");
     let datadir = overridable_path("DATADIR", |env_datadir| {
-        let default = default_ok.then_some("share/".to_string());
-        env_datadir
-            .or(default)
-            .map(|p| join_if_relative(&prefix, p))
+        env_datadir.map(|p| join_if_relative(&prefix, p))
     });
     overridable_path("BINDIR", |env_bindir| {
-        let default = default_ok.then_some("bin/".to_string());
-        env_bindir.or(default).map(|p| join_if_relative(&prefix, p))
+        env_bindir.map(|p| join_if_relative(&prefix, p))
     });
     overridable_path("DOCDIR", |env_docdir| {
-        let default = default_ok.then_some("doc/fish".to_string());
-        env_docdir.or(default).map(|p| {
+        env_docdir.map(|p| {
             join_if_relative(
                 &datadir
                     .expect("Setting DOCDIR without setting DATADIR is not currently supported"),
@@ -250,79 +193,15 @@ fn setup_paths() {
     });
 }
 
-fn get_version(src_dir: &Path) -> String {
-    use std::fs::read_to_string;
+fn get_version() -> String {
     use std::process::Command;
-
-    if let Some(var) = env_var("FISH_BUILD_VERSION") {
-        return var;
-    }
-
-    let path = src_dir.join("version");
-    if let Ok(strver) = read_to_string(path) {
-        return strver;
-    }
-
-    let args = &["describe", "--always", "--dirty=-dirty"];
-    if let Ok(output) = Command::new("git").args(args).output() {
-        let rev = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        if !rev.is_empty() {
-            // If it contains a ".", we have a proper version like "3.7",
-            // or "23.2.1-1234-gfab1234"
-            if rev.contains('.') {
-                return rev;
-            }
-            // If it doesn't, we probably got *just* the commit SHA,
-            // like "f1242abcdef".
-            // So we prepend the crate version so it at least looks like
-            // "3.8-gf1242abcdef"
-            // This lacks the commit *distance*, but that can't be helped without
-            // tags.
-            let version = env!("CARGO_PKG_VERSION").to_owned();
-            return version + "-g" + &rev;
-        }
-    }
-
-    // git did not tell us a SHA either because it isn't installed,
-    // or because it refused (safe.directory applies to `git describe`!)
-    // So we read the SHA ourselves.
-    fn get_git_hash() -> Result<String, Box<dyn std::error::Error>> {
-        let workspace_root = workspace_root();
-        let gitdir = workspace_root.join(".git");
-        let jjdir = workspace_root.join(".jj");
-        let commit_id = if gitdir.exists() {
-            // .git/HEAD contains ref: refs/heads/branch
-            let headpath = gitdir.join("HEAD");
-            let headstr = read_to_string(headpath)?;
-            let headref = headstr.split(' ').nth(1).unwrap().trim();
-
-            // .git/refs/heads/branch contains the SHA
-            let refpath = gitdir.join(headref);
-            // Shorten to 9 characters (what git describe does currently)
-            read_to_string(refpath)?
-        } else if jjdir.exists() {
-            let output = Command::new("jj")
-                .args([
-                    "log",
-                    "--revisions",
-                    "@",
-                    "--no-graph",
-                    "--ignore-working-copy",
-                    "--template",
-                    "commit_id",
-                ])
-                .output()
-                .unwrap();
-            String::from_utf8_lossy(&output.stdout).to_string()
-        } else {
-            return Err("did not find either of .git or .jj".into());
-        };
-        let refstr = &commit_id[0..9];
-        let refstr = refstr.trim();
-
-        let version = env!("CARGO_PKG_VERSION").to_owned();
-        Ok(version + "-g" + refstr)
-    }
-
-    get_git_hash().expect("Could not get a version. Either set $FISH_BUILD_VERSION or install git.")
+    String::from_utf8(
+        Command::new("build_tools/git_version_gen.sh")
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap()
+    .trim_ascii_end()
+    .to_string()
 }

@@ -2,13 +2,14 @@ use libc::VERASE;
 
 use crate::{
     common::{EscapeFlags, EscapeStringStyle, escape_string},
-    fallback::fish_wcwidth,
     flog::FloggableDebug,
     future_feature_flags::{FeatureFlag, test as feature_test},
+    prelude::*,
     reader::safe_get_terminal_mode_on_startup,
-    wchar::{decode_byte_from_char, prelude::*},
     wutil::fish_wcstoul,
 };
+use fish_fallback::fish_wcwidth;
+use fish_wchar::decode_byte_from_char;
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
 pub(crate) const Delete: char = '\u{F501}';
@@ -208,7 +209,7 @@ pub(crate) fn canonicalize_unkeyed_control_char(c: u8) -> char {
     // Represent Ctrl-symbol combinations in "upper-case", as they are
     // traditionally-rendered.
     assert!(c < 32);
-    return char::from(c - 1 + b'A');
+    char::from(c - 1 + b'A')
 }
 
 pub(crate) fn canonicalize_key(mut key: Key) -> Result<Key, WString> {
@@ -421,7 +422,7 @@ fn ctrl_to_symbol(buf: &mut WString, c: char) {
 fn must_escape(is_first_in_token: bool, c: char) -> bool {
     "[]()<>{}*\\$;&|'\"".contains(c)
         || (is_first_in_token && "~#".contains(c))
-        || (c == '?' && !feature_test(FeatureFlag::qmark_noglob))
+        || (c == '?' && !feature_test(FeatureFlag::QuestionMarkNoGlob))
 }
 
 fn ascii_printable_to_symbol(buf: &mut WString, is_first_in_token: bool, c: char) {
@@ -460,7 +461,7 @@ pub fn char_to_symbol(c: char, is_first_in_token: bool) -> WString {
 #[cfg(test)]
 mod tests {
     use crate::key::{self, Key, ctrl, function_key, parse_keys};
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_parse_key() {

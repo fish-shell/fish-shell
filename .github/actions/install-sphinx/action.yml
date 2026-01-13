@@ -16,7 +16,7 @@ runs:
         # TODO Use "uv" to install Python as well.
         : 'Note that --no-managed-python below would be implied but be explicit'
         uv='env UV_PYTHON=python uv --no-managed-python'
-        $uv lock --check
+        $uv lock --check --exclude-newer="$(awk -F'"' <uv.lock '/^exclude-newer[[:space:]]*=/ {print $2}')"
         # Install globally.
         sudo $uv pip install --group=dev --system --break-system-packages
         # Smoke test.

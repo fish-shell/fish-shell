@@ -2,22 +2,13 @@ use std::{
     cmp::Ordering,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     mem,
+    ops::{Deref, DerefMut},
     sync::{
-        Mutex, MutexGuard,
+        LazyLock, Mutex, MutexGuard,
         atomic::{self, AtomicUsize},
     },
     time::{Duration, Instant},
 };
-
-use crate::{
-    ast::unescape_keyword,
-    common::charptr2wcstring,
-    reader::{get_quote, is_backslashed},
-    util::wcsfilecmp,
-    wutil::{LocalizableString, localizable_string},
-};
-use bitflags::bitflags;
-use once_cell::sync::Lazy;
 
 use crate::{
     abbrs::with_abbrs,
@@ -33,7 +24,7 @@ use crate::{
         ExpandFlags, ExpandResultCode, expand_escape_string, expand_escape_variable, expand_one,
         expand_string, expand_to_receiver,
     },
-    flog::{FLOG, FLOGF},
+    flog::{flog, flogf},
     function,
     history::{History, history_session_id},
     operation_context::OperationContext,
@@ -41,12 +32,11 @@ use crate::{
     parse_util::{
         parse_util_cmdsubst_extent, parse_util_process_extent, parse_util_unescape_wildcards,
     },
-    parser::{Block, Parser},
+    parser::{Block, Parser, ParserEnvSetMode},
     parser_keywords::parser_keywords_is_subcommand,
     path::{path_get_path, path_try_get_path},
+    prelude::*,
     tokenizer::{Tok, TokFlags, TokenType, Tokenizer, variable_assignment_equals_pos},
-    wchar::prelude::*,
-    wchar_ext::WExt,
     wcstringutil::{
         StringFuzzyMatch, string_fuzzy_match_string, string_prefixes_string,
         string_prefixes_string_case_insensitive,
@@ -54,6 +44,17 @@ use crate::{
     wildcard::{wildcard_complete, wildcard_has, wildcard_match},
     wutil::wrealpath,
 };
+use crate::{
+    ast::unescape_keyword,
+    autoload::AutoloadResult,
+    common::charptr2wcstring,
+    localization::{LocalizableString, localizable_string},
+    reader::{get_quote, is_backslashed},
+    util::wcsfilecmp,
+    wcstringutil::{string_suffixes_string_case_insensitive, strip_executable_suffix},
+};
+use bitflags::bitflags;
+use fish_wchar::WExt;
 
 // Completion description strings, mostly for different types of files, such as sockets, block
 // devices, etc.
@@ -110,6 +111,8 @@ bitflags! {
         const KEEP_VARIABLE_OVERRIDE_PREFIX = 1 << 8;
         /// This is a variable name.
         const VARIABLE_NAME = 1 << 9;
+        /// Suppress showing the pager prefix for this completion.
+        const SUPPRESS_PAGER_PREFIX = 1 << 10;
     }
 }
 
@@ -203,7 +206,7 @@ impl Completion {
 
     /// If this completion replaces the entire token, prepend a prefix. Otherwise do nothing.
     pub fn prepend_token_prefix(&mut self, prefix: &wstr) {
-        if self.flags.contains(CompleteFlags::REPLACES_TOKEN) {
+        if self.replaces_token() {
             self.completion.insert_utfstr(0, prefix)
         }
     }
@@ -242,7 +245,7 @@ pub struct CompletionReceiver {
 
 // We are only wrapping a `Vec<Completion>`, any non-mutable methods can be safely deferred to the
 // Vec-impl
-impl std::ops::Deref for CompletionReceiver {
+impl Deref for CompletionReceiver {
     type Target = [Completion];
 
     fn deref(&self) -> &Self::Target {
@@ -250,7 +253,7 @@ impl std::ops::Deref for CompletionReceiver {
     }
 }
 
-impl std::ops::DerefMut for CompletionReceiver {
+impl DerefMut for CompletionReceiver {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.completions.as_mut_slice()
     }
@@ -278,7 +281,7 @@ impl CompletionReceiver {
             return false;
         }
         self.completions.push(comp.into());
-        return true;
+        true
     }
 
     /// Adds a completion with the given string, and default other properties. Returns `true` on
@@ -397,7 +400,7 @@ impl CompleteEntryOpt {
 }
 
 /// Last value used in the order field of [`CompletionEntry`].
-static complete_order: AtomicUsize = AtomicUsize::new(0);
+static COMPLETE_ORDER: AtomicUsize = AtomicUsize::new(0);
 
 struct CompletionEntry {
     /// List of all options.
@@ -411,7 +414,7 @@ impl CompletionEntry {
     pub fn new() -> Self {
         Self {
             options: vec![],
-            order: complete_order.fetch_add(1, atomic::Ordering::Relaxed),
+            order: COMPLETE_ORDER.fetch_add(1, atomic::Ordering::Relaxed),
         }
     }
 
@@ -447,7 +450,7 @@ static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::ne
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 type WrapperMap = HashMap<WString, Vec<WString>>;
-static wrapper_map: Lazy<Mutex<WrapperMap>> = Lazy::new(|| Mutex::new(HashMap::new()));
+static WRAPPER_MAP: LazyLock<Mutex<WrapperMap>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Clear the [`CompleteFlags::AUTO_SPACE`] flag, and set [`CompleteFlags::NO_SPACE`] appropriately
 /// depending on the suffix of the string.
@@ -602,8 +605,8 @@ struct Completer<'ctx> {
     condition_cache: HashMap<WString, bool>,
 }
 
-static completion_autoloader: Lazy<Mutex<Autoload>> =
-    Lazy::new(|| Mutex::new(Autoload::new(L!("fish_complete_path"))));
+static COMPLETION_AUTOLOADER: LazyLock<Mutex<Autoload>> =
+    LazyLock::new(|| Mutex::new(Autoload::new(L!("fish_complete_path"))));
 
 impl<'ctx> Completer<'ctx> {
     pub fn new(ctx: &'ctx OperationContext<'ctx>, flags: CompletionRequestOptions) -> Self {
@@ -623,7 +626,7 @@ impl<'ctx> Completer<'ctx> {
         if let Some(parser) = self.ctx.maybe_parser() {
             let level = &mut parser.libdata_mut().complete_recursion_level;
             if *level >= 24 {
-                FLOG!(
+                flog!(
                     error,
                     wgettext!("completion reached maximum recursion depth, possible cycle?"),
                 );
@@ -701,25 +704,25 @@ impl<'ctx> Completer<'ctx> {
             &cmdline[first_token.offset()..]
         };
 
-        if tokens.last().unwrap().type_ == TokenType::comment {
+        if tokens.last().unwrap().type_ == TokenType::Comment {
             return;
         }
-        tokens.retain(|tok| tok.type_ != TokenType::comment);
+        tokens.retain(|tok| tok.type_ != TokenType::Comment);
         assert!(!tokens.is_empty());
 
         let cmd_tok = tokens.first().unwrap();
         let cur_tok = tokens.last().unwrap();
 
         // Since fish does not currently support redirect in command position, we return here.
-        if cmd_tok.type_ != TokenType::string {
+        if cmd_tok.type_ != TokenType::String {
             return;
         }
-        if cur_tok.type_ == TokenType::error {
+        if cur_tok.type_ == TokenType::Error {
             return;
         }
         for tok in &tokens {
             // If there was an error, it was in the last token.
-            assert!(matches!(tok.type_, TokenType::string | TokenType::redirect));
+            assert!(matches!(tok.type_, TokenType::String | TokenType::Redirect));
         }
         // If we are completing a variable name or a tilde expansion user name, we do that and
         // return. No need for any other completions.
@@ -752,12 +755,12 @@ impl<'ctx> Completer<'ctx> {
             return;
         }
         // See whether we are in an argument, in a redirection or in the whitespace in between.
-        let mut in_redirection = cur_tok.type_ == TokenType::redirect;
+        let mut in_redirection = cur_tok.type_ == TokenType::Redirect;
 
         let mut had_ddash = false;
         let mut current_argument = L!("");
         let mut previous_argument = L!("");
-        if cur_tok.type_ == TokenType::string
+        if cur_tok.type_ == TokenType::String
             && cur_tok.location_in_or_at_end_of_source_range(position_in_statement)
         {
             // If the cursor is in whitespace, then the "current" argument is empty and the
@@ -771,10 +774,10 @@ impl<'ctx> Completer<'ctx> {
                 current_argument = current_token;
                 if tokens.len() >= 2 {
                     let prev_tok = &tokens[tokens.len() - 2];
-                    if prev_tok.type_ == TokenType::string {
+                    if prev_tok.type_ == TokenType::String {
                         previous_argument = prev_tok.get_source(&cmdline);
                     }
-                    in_redirection = prev_tok.type_ == TokenType::redirect;
+                    in_redirection = prev_tok.type_ == TokenType::Redirect;
                 }
             }
 
@@ -986,16 +989,26 @@ impl<'ctx> Completer<'ctx> {
             return;
         }
 
-        let lookup_cmd: WString = [
-            L!("functions -q __fish_describe_command && __fish_describe_command "),
-            &escape(cmd),
-        ]
-        .into_iter()
-        .collect();
+        // On Cygwin, if `cmd` contains part of the `.exe` extension (e.g. `lsmod.e`), we are unlikely
+        // to find a description since they are usually associated to the POSIX name (`lsmod`). So we also
+        // need to search for the stripped command (`lsmod`), and later associate the description to
+        // the missing part of the extension (`xe`)
+        let no_exe = strip_partial_executable_suffix(cmd);
 
         // First locate a list of possible descriptions using a single call to apropos or a direct
         // search if we know the location of the whatis database. This can take some time on slower
         // systems with a large set of manuals, but it should be ok since apropos is only called once.
+        // For Cygwin, also try to find the exact match for the non-exe name
+        let lookup_cmd = sprintf!(
+            "functions -q __fish_describe_command &&{ __fish_describe_command %s %s}",
+            &escape(cmd),
+            &no_exe
+                .map(|(cmd_sans_exe, _)| {
+                    sprintf!("; __fish_describe_command --exact %s", escape(cmd_sans_exe))
+                })
+                .unwrap_or_default()[..]
+        );
+
         let mut list = vec![];
         let _ = exec_subshell(
             &lookup_cmd,
@@ -1009,17 +1022,12 @@ impl<'ctx> Completer<'ctx> {
         let mut lookup = BTreeMap::new();
         // A typical entry is the command name, followed by a tab, followed by a description.
         for elstr in &mut list {
-            // Skip keys that are too short.
-            if elstr.len() < cmd.len() {
-                continue;
-            }
-
-            // Skip cases without a tab, or without a description, or bizarre cases where the tab is
-            // part of the command.
+            // Skip cases without a tab, or without a description
+            // Bizarre cases where the tab is part of the command will be filtered later.
             let Some(tab_idx) = elstr.find_char('\t') else {
                 continue;
             };
-            if tab_idx + 1 >= elstr.len() || tab_idx < cmd.len() {
+            if tab_idx + 1 >= elstr.len() {
                 continue;
             }
 
@@ -1031,8 +1039,16 @@ impl<'ctx> Completer<'ctx> {
             //  val = A description
             // Note an empty key is common and natural, if 'cmd' were already valid.
             let parts = elstr.as_mut_utfstr().split_at_mut(tab_idx);
-            let key = &parts.0[cmd.len()..tab_idx];
-            let (_, val) = parts.1.split_at_mut(1);
+            let key = if parts.0.len() >= cmd.len() {
+                &parts.0[cmd.len()..]
+            } else if let Some((_, comp)) = no_exe.filter(|(stripped, _)| stripped == parts.0) {
+                // On Cygwin, `cmd` might be `lsmod.e`, then key needs to be `xe`, while
+                // elstr is `lsmod\t...` (i.e. parts.0 is `lsmod`)
+                comp
+            } else {
+                continue;
+            };
+            let val = &mut parts.1[1..];
 
             // And once again I make sure the first character is uppercased because I like it that
             // way, and I get to decide these things.
@@ -1237,10 +1253,10 @@ impl<'ctx> Completer<'ctx> {
             // This prevents errors caused during the execution of completion providers for
             // tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
             // and automatic completions ("gi" autosuggestion provider -> git)
-            FLOG!(complete, "Skipping completions for non-existent command");
+            flog!(complete, "Skipping completions for non-existent command");
         } else if let Some(parser) = self.ctx.maybe_parser() {
             complete_load(&cmd, parser);
-        } else if !completion_autoloader
+        } else if !COMPLETION_AUTOLOADER
             .lock()
             .unwrap()
             .has_attempted_autoload(&cmd)
@@ -1255,7 +1271,15 @@ impl<'ctx> Completer<'ctx> {
             .iter()
             .filter_map(|(idx, completion)| {
                 let r#match = if idx.is_path { &path } else { &cmd };
-                if wildcard_match(r#match, &idx.name, false) {
+                let has_match = wildcard_match(r#match, &idx.name, false)
+                    || (
+                        // On cygwin, if we didn't have a completion for "foo.exe",
+                        // check if there is one for "foo"
+                        !idx.is_path
+                            && strip_executable_suffix(r#match)
+                                .is_some_and(|stripped| wildcard_match(stripped, &idx.name, false))
+                    );
+                if has_match {
                     // Copy all of their options into our list. Oof, this is a lot of copying.
                     let mut options = completion.get_options().to_vec();
                     // We have to copy them in reverse order to preserve legacy behavior (#9221).
@@ -1592,7 +1616,7 @@ impl<'ctx> Completer<'ctx> {
                     .result,
                 ExpandResultCode::error | ExpandResultCode::overflow,
             ) {
-                FLOGF!(complete, "Error while expanding string '%s'", s);
+                flogf!(complete, "Error while expanding string '%s'", s);
             }
             Self::escape_opening_brackets(&mut self.completions[first_from_start..], s);
         }
@@ -1601,18 +1625,6 @@ impl<'ctx> Completer<'ctx> {
             return;
         };
 
-        // We generally expand both, the whole token ("foo=bar") and also just the "bar"
-        // suffix. If the whole token is a valid path prefix, completions of just the suffix
-        // are probably false positives, and are confusing when I'm using completions to list
-        // directory contents. Apply a wonky heuristic to work around the most visible case --
-        // the empty suffix -- where all files in $PWD are completed/autosuggested.
-        if self.completions[first_from_start..]
-            .iter()
-            .any(|c| !c.replaces_token())
-            && sep_index + 1 == s.len()
-        {
-            return;
-        }
         let sep_string = s.slice_from(sep_index + 1);
         let mut local_completions = Vec::new();
         if matches!(
@@ -1626,7 +1638,7 @@ impl<'ctx> Completer<'ctx> {
             .result,
             ExpandResultCode::error | ExpandResultCode::overflow
         ) {
-            FLOGF!(complete, "Error while expanding string '%s'", sep_string);
+            flogf!(complete, "Error while expanding string '%s'", sep_string);
         }
 
         Self::escape_opening_brackets(&mut local_completions, s);
@@ -1635,10 +1647,9 @@ impl<'ctx> Completer<'ctx> {
         let prefix_with_sep = s.as_char_slice()[..sep_index + 1].into();
         for comp in &mut local_completions {
             comp.prepend_token_prefix(prefix_with_sep);
+            comp.r#match.from_separator = true;
         }
-        if !self.completions.extend(local_completions) {
-            return;
-        }
+        let _ = self.completions.extend(local_completions);
     }
 
     /// Complete the specified string as an environment variable.
@@ -1781,7 +1792,7 @@ impl<'ctx> Completer<'ctx> {
         }
         #[cfg(not(target_os = "android"))]
         {
-            static s_setpwent_lock: Mutex<()> = Mutex::new(());
+            static SETPWENT_LOCK: Mutex<()> = Mutex::new(());
 
             if s.char_at(0) != '~' || s.contains('/') {
                 return false;
@@ -1805,7 +1816,7 @@ impl<'ctx> Completer<'ctx> {
                 Some(charptr2wcstring(pw.pw_name))
             }
 
-            let _guard = s_setpwent_lock.lock().unwrap();
+            let _guard = SETPWENT_LOCK.lock().unwrap();
 
             unsafe { libc::setpwent() };
             while let Some(pw_name) = getpwent_name() {
@@ -1865,8 +1876,8 @@ impl<'ctx> Completer<'ctx> {
 
         let vars = parser.vars();
         assert_eq!(
-            self.ctx.vars() as *const _ as *const (),
-            vars as *const _ as *const (),
+            std::ptr::from_ref(self.ctx.vars()).cast::<()>(),
+            std::ptr::from_ref(vars).cast::<()>(),
             "Don't know how to tab complete with a parser but a different variable set"
         );
 
@@ -1902,9 +1913,11 @@ impl<'ctx> Completer<'ctx> {
             } else {
                 Vec::new()
             };
-            parser
-                .vars()
-                .set(variable_name, EnvMode::LOCAL | EnvMode::EXPORT, vals);
+            parser.set_var(
+                variable_name,
+                ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
+                vals,
+            );
             if self.ctx.check_cancel() {
                 break;
             }
@@ -2079,7 +2092,7 @@ impl<'ctx> Completer<'ctx> {
             return;
         };
         for comp in completions {
-            if comp.flags.contains(CompleteFlags::REPLACES_TOKEN) {
+            if comp.replaces_token() {
                 continue;
             }
             comp.flags |= CompleteFlags::REPLACES_TOKEN;
@@ -2090,7 +2103,7 @@ impl<'ctx> Completer<'ctx> {
             // for username completion and variable name completion. They shouldn't end up here
             // anyway because they won't contain '['.
             if comp.flags.contains(CompleteFlags::DONT_ESCAPE) {
-                FLOG!(warning, "unexpected completion flag");
+                flog!(warning, "unexpected completion flag");
             }
             comp.completion.insert_utfstr(0, &unescaped_argument);
         }
@@ -2114,7 +2127,7 @@ impl<'ctx> Completer<'ctx> {
         let mut comp_str;
         for comp in self.completions.get_list_mut() {
             comp_str = comp.completion.clone();
-            if !comp.flags.contains(CompleteFlags::REPLACES_TOKEN) {
+            if !comp.replaces_token() {
                 comp_str.insert_utfstr(0, prefix);
             }
             if arg_strs.binary_search(&comp_str).is_ok() {
@@ -2337,6 +2350,7 @@ pub fn complete_remove_all(cmd: WString, cmd_is_path: bool, explicit: bool) {
         is_path: cmd_is_path,
     };
     let removed = completion_map.remove(&idx).is_some();
+    WRAPPER_MAP.lock().unwrap().remove(&idx.name);
     if explicit && !removed && !idx.is_path {
         COMPLETION_TOMBSTONES.lock().unwrap().insert(idx.name);
     }
@@ -2426,6 +2440,26 @@ fn completion2string(index: &CompletionEntryIndex, o: &CompleteEntryOpt) -> WStr
     out
 }
 
+/// If the cmd contains a partial executable extension, return the stripped
+/// command and missing part of the full extension.
+/// E.g. `cmd.e` -> `Some(("cmd", "xe"))``
+fn strip_partial_executable_suffix(cmd: &wstr) -> Option<(&wstr, &wstr)> {
+    if !cfg!(cygwin) {
+        return None;
+    }
+
+    [
+        // (<cmd suffix>, <completion for full ".exe">)
+        (L!(".exe"), L!("")),
+        (L!(".ex"), L!("e")),
+        (L!(".e"), L!("xe")),
+        (L!("."), L!("exe")),
+    ]
+    .into_iter()
+    .find(|(ext, _)| string_suffixes_string_case_insensitive(ext, cmd))
+    .map(|(ext, comp)| (&cmd[0..cmd.len() - ext.len()], comp))
+}
+
 /// Load command-specific completions for the specified command.
 /// Returns `true` if something new was loaded, `false` if not.
 pub fn complete_load(cmd: &wstr, parser: &Parser) -> bool {
@@ -2446,17 +2480,26 @@ pub fn complete_load(cmd: &wstr, parser: &Parser) -> bool {
     // We need to take the lock to decide what to load, drop it to perform the load, then reacquire
     // it.
     // Note we only look at the global fish_function_path and fish_complete_path.
-    let path_to_load = completion_autoloader
+    let path_to_load = COMPLETION_AUTOLOADER
         .lock()
         .expect("mutex poisoned")
         .resolve_command(cmd, EnvStack::globals());
-    if let Some(path_to_load) = path_to_load {
-        Autoload::perform_autoload(&path_to_load, parser);
-        completion_autoloader
-            .lock()
-            .expect("mutex poisoned")
-            .mark_autoload_finished(cmd);
-        loaded_new = true;
+    match path_to_load {
+        AutoloadResult::Path(path_to_load) => {
+            Autoload::perform_autoload(&path_to_load, parser);
+            COMPLETION_AUTOLOADER
+                .lock()
+                .expect("mutex poisoned")
+                .mark_autoload_finished(cmd);
+            loaded_new = true;
+        }
+        AutoloadResult::None => {
+            // On Cygwin, if we failed to find a completion for "foo.exe", try "foo"
+            if let Some(stripped) = strip_executable_suffix(cmd) {
+                loaded_new = complete_load(stripped, parser);
+            }
+        }
+        AutoloadResult::Loaded | AutoloadResult::Pending => {}
     }
     loaded_new
 }
@@ -2483,7 +2526,7 @@ pub fn complete_print(cmd: &wstr) -> WString {
     }
 
     // Append wraps.
-    let wrappers = wrapper_map.lock().expect("poisoned mutex");
+    let wrappers = WRAPPER_MAP.lock().expect("poisoned mutex");
     for (src, targets) in wrappers.iter() {
         if !cmd.is_empty() && src != cmd {
             continue;
@@ -2505,7 +2548,7 @@ pub fn complete_invalidate_path() {
     // unload any completions that the user may specified on the command line. We should in
     // principle track those completions loaded by the autoloader alone.
 
-    let cmds = completion_autoloader
+    let cmds = COMPLETION_AUTOLOADER
         .lock()
         .expect("mutex poisoned")
         .get_autoloaded_commands();
@@ -2527,7 +2570,7 @@ pub fn complete_add_wrapper(command: WString, new_target: WString) -> bool {
         return false;
     }
 
-    let mut wrappers = wrapper_map.lock().expect("poisoned mutex");
+    let mut wrappers = WRAPPER_MAP.lock().expect("poisoned mutex");
     let targets = wrappers.entry(command).or_default();
     // If it's already present, we do nothing.
     if !targets.contains(&new_target) {
@@ -2543,7 +2586,7 @@ pub fn complete_remove_wrapper(command: WString, target_to_remove: &wstr) -> boo
         return false;
     }
 
-    let mut wrappers = wrapper_map.lock().expect("poisoned mutex");
+    let mut wrappers = WRAPPER_MAP.lock().expect("poisoned mutex");
     let mut result = false;
     for targets in wrappers.values_mut() {
         if let Some(pos) = targets.iter().position(|t| t == target_to_remove) {
@@ -2557,7 +2600,7 @@ pub fn complete_remove_wrapper(command: WString, target_to_remove: &wstr) -> boo
 
 /// Returns a list of wrap targets for a given command.
 pub fn complete_wrap_map() -> MutexGuard<'static, HashMap<WString, Vec<WString>>> {
-    wrapper_map.lock().unwrap()
+    WRAPPER_MAP.lock().unwrap()
 }
 
 /// Returns a list of wrap targets for a given command.
@@ -2566,7 +2609,7 @@ pub fn complete_get_wrap_targets(command: &wstr) -> Vec<WString> {
         return vec![];
     }
 
-    let wrappers = wrapper_map.lock().expect("poisoned mutex");
+    let wrappers = WRAPPER_MAP.lock().expect("poisoned mutex");
     wrappers.get(command).cloned().unwrap_or_default()
 }
 
@@ -2588,14 +2631,15 @@ mod tests {
         sort_and_prioritize,
     };
     use crate::abbrs::{self, Abbreviation, with_abbrs_mut};
-    use crate::env::{EnvMode, Environment};
+    use crate::env::{EnvMode, EnvSetMode, Environment};
     use crate::io::IoChain;
     use crate::operation_context::{
         EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT, OperationContext, no_cancel,
     };
+    use crate::parser::ParserEnvSetMode;
+    use crate::prelude::*;
     use crate::reader::completion_apply_to_command_line;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use crate::wcstringutil::join_strings;
     use std::collections::HashMap;
     use std::ffi::CString;
@@ -2680,6 +2724,7 @@ mod tests {
         assert_eq!(completions[1].completion, L!("$Foo1"));
         assert_eq!(completions[2].completion, L!("$gamma1"));
 
+        let _ = std::fs::remove_dir_all("test/complete_test");
         std::fs::create_dir_all("test/complete_test").unwrap();
         std::fs::write("test/complete_test/has space", []).unwrap();
         std::fs::write("test/complete_test/bracket[abc]", []).unwrap();
@@ -2687,7 +2732,7 @@ mod tests {
         // Backslashes and colons are not legal filename characters on WIN32/CYGWIN
         {
             std::fs::write(r"test/complete_test/gnarlybracket\[abc]", []).unwrap();
-            std::fs::write(r"test/complete_test/colon:abc", []).unwrap();
+            std::fs::write(r"test/complete_test/colon:TTestWithColon", []).unwrap();
         }
         std::fs::write(r"test/complete_test/equal=abc", []).unwrap();
         // On MSYS, the executable bit cannot be set manually, is set automatically
@@ -2731,12 +2776,59 @@ mod tests {
         #[cfg(not(cygwin))]
         // Backslashes and colons are not legal filename characters on WIN32/CYGWIN
         {
-            completions = do_complete(
-                L!(": test/complete_test/colon:"),
+            macro_rules! whole_token_completion_dominates {
+                (
+                    $cmd:literal,
+                    $options:expr,
+                    $completion_from_token_start:literal,
+                    $completion_from_separator:literal,
+                ) => {
+                    completions = do_complete(L!($cmd), $options);
+                    let actual: Vec<_> = completions
+                        .iter()
+                        .map(|c| (c.completion.as_utfstr(), c.r#match.from_separator))
+                        .collect();
+                    assert_eq!(
+                        actual,
+                        [
+                            (
+                                L!($completion_from_token_start),
+                                /*from_separator=*/ false,
+                            ),
+                            (
+                                L!($completion_from_separator),
+                                /*from_separator=*/ true,
+                            ),
+                        ]
+                    );
+                    let c0 = &completions[0];
+                    let c1 = &completions[1];
+                    // Might be replacing.
+                    // Completion pager will only show better (lower) rank.
+                    assert!(c0.r#match.rank() < c1.r#match.rank());
+                };
+            }
+
+            whole_token_completion_dominates!(
+                ": test/complete_test/colon:",
                 CompletionRequestOptions::default(),
+                "TTestWithColon",
+                "test/",
             );
-            assert_eq!(completions.len(), 1);
-            assert_eq!(completions[0].completion, L!("abc"));
+            // Even when it has a case mismatch.
+            whole_token_completion_dominates!(
+                ": test/complete_test/colon:t",
+                CompletionRequestOptions::default(),
+                "test/complete_test/colon:TTestWithColon",
+                "est/",
+            );
+            // Even when it is not a prefix.
+            whole_token_completion_dominates!(
+                ": test/complete_test/colon:Tes",
+                fuzzy_options,
+                "test/complete_test/colon:TTestWithColon",
+                "test/complete_test/colon:test/",
+            );
         }
 
         macro_rules! unique_completion_applies_as {
@@ -2800,18 +2892,14 @@ mod tests {
         {
             unique_completion_applies_as!(
                 r"touch test/complete_test/colon",
-                r":abc",
-                r"touch test/complete_test/colon:abc ",
+                r":TTestWithColon",
+                r"touch test/complete_test/colon:TTestWithColon ",
             );
-            unique_completion_applies_as!(
-                r"touch test/complete_test/colon:",
-                r"abc",
-                r"touch test/complete_test/colon:abc ",
-            );
+
             unique_completion_applies_as!(
                 r#"touch "test/complete_test/colon:"#,
-                r"abc",
-                r#"touch "test/complete_test/colon:abc" "#,
+                r"TTestWithColon",
+                r#"touch "test/complete_test/colon:TTestWithColon" "#,
             );
         }
 
@@ -2911,7 +2999,7 @@ mod tests {
         let completions = do_complete(L!("cat te"), CompletionRequestOptions::default());
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
-        assert!(!(completions[0].flags.contains(CompleteFlags::REPLACES_TOKEN)));
+        assert!(!completions[0].replaces_token());
         assert!(
             !(completions[0]
                 .flags
@@ -2928,7 +3016,7 @@ mod tests {
         let completions = do_complete(L!("cat testfile TE"), CompletionRequestOptions::default());
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("testfile"));
-        assert!(completions[0].flags.contains(CompleteFlags::REPLACES_TOKEN));
+        assert!(completions[0].replaces_token());
         assert!(
             completions[0]
                 .flags
@@ -3135,9 +3223,9 @@ mod tests {
         // This is to ensure tilde expansion is handled. See the `cd ~/test_autosuggest_suggest_specia`
         // test below.
         // Fake out the home directory
-        parser.vars().set_one(
+        parser.set_one(
             L!("HOME"),
-            EnvMode::LOCAL | EnvMode::EXPORT,
+            ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
             L!("test/test-home").to_owned(),
         );
         std::fs::create_dir_all("test/test-home/test_autosuggest_suggest_special/").unwrap();
@@ -3247,9 +3335,10 @@ mod tests {
         perform_one_completion_cd_test!("cd ~absolutelynosuchus", "er/");
         perform_one_completion_cd_test!("cd ~absolutelynosuchuser/", "path1/");
 
-        parser
-            .vars()
-            .remove(L!("HOME"), EnvMode::LOCAL | EnvMode::EXPORT);
+        parser.vars().remove(
+            L!("HOME"),
+            EnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT, false),
+        );
         parser.popd();
     }
 

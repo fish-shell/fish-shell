@@ -26,7 +26,7 @@ fi
 wd="$PWD"
 
 # Get the version from git-describe
-VERSION=$(build_tools/git_version_gen.sh --stdout 2>/dev/null)
+VERSION=$(build_tools/git_version_gen.sh)
 
 # The name of the prefix, which is the directory that you get when you untar
 prefix="fish-$VERSION"
@@ -43,7 +43,7 @@ PREFIX_TMPDIR=$(mktemp -d)
 cd "$PREFIX_TMPDIR"
 
 mkdir .cargo
-cargo vendor --manifest-path "$wd/Cargo.toml" > .cargo/config.toml
+cargo vendor --manifest-path "$wd/Cargo.toml" >> .cargo/config.toml
 
 tar cfvJ "$path".xz vendor .cargo
 

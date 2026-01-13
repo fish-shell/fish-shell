@@ -5,38 +5,11 @@
 # This function is called by the __fish_on_interactive function, which is defined in config.fish.
 #
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
-    # For one-off upgrades of the fish version
-    if not set -q __fish_initialized
-        set -U __fish_initialized 0
-    end
+    functions -e __fish_config_interactive
 
     set -g __fish_active_key_bindings
 
-    # usage: __init_uvar VARIABLE VALUES...
-    function __init_uvar -d "Sets a universal variable if it's not already set"
-        if not set --query $argv[1]
-            set --universal $argv
-        end
-    end
-
-    # If we are starting up for the first time, set various defaults.
-    if test $__fish_initialized -lt 3400
-        # Create empty configuration directores if they do not already exist
-        test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/ ||
-            mkdir -p $__fish_config_dir/{completions, conf.d, functions}
-
-        # Create config.fish with some boilerplate if it does not exist
-        test -e $__fish_config_dir/config.fish || echo "\
-if status is-interactive
-    # Commands to run in interactive sessions can go here
-end" >$__fish_config_dir/config.fish
-
-        echo yes | fish_config theme save "fish default"
-        set -Ue fish_color_keyword fish_color_option
-    end
-    if test $__fish_initialized -lt 3800 && test "$fish_color_search_match[1]" = bryellow
-        set --universal fish_color_search_match[1] white
-    end
+    functions -q __fish_webconfig_update_color_hook
 
     #
     # Generate man page completions if not present.
@@ -81,7 +54,10 @@ end" >$__fish_config_dir/config.fish
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
         # Make sure some key bindings are set
-        __init_uvar fish_key_bindings fish_default_key_bindings
+        if not set --query fish_key_bindings
+            set --global fish_key_bindings fish_default_key_bindings
+            return
+        end
 
         # Do nothing if the key bindings didn't actually change.
         # This could be because the variable was set to the existing value
@@ -117,11 +93,10 @@ end" >$__fish_config_dir/config.fish
         end
         set -g __fish_active_key_bindings "$fish_key_bindings"
         set -g fish_bind_mode default
-        # Redirect stderr per #1155
-        $fish_key_bindings 2>/dev/null
+        $fish_key_bindings
         # Load user key bindings if they are defined
         if functions --query fish_user_key_bindings >/dev/null
-            fish_user_key_bindings 2>/dev/null
+            fish_user_key_bindings
         end
     end
 
@@ -157,7 +132,8 @@ end" >$__fish_config_dir/config.fish
 
     # Notify terminals when $PWD changes via OSC 7 (issue #906).
     if not functions --query __fish_update_cwd_osc
-        function __fish_update_cwd_osc --on-variable PWD --description 'Notify terminals when $PWD changes'
+        function __fish_update_cwd_osc --description 'Notify terminals when $PWD might have changed' \
+            --on-variable=PWD --on-event=fish_prompt
             set -l host $hostname
             # if set -l konsole_version (string match -r -- '^Konsole (\d+)\..*' (status terminal))[2]
             #     # To-do: use a Konsole version where KF6_DEP_VERSION is >= 6.12
@@ -173,14 +149,8 @@ end" >$__fish_config_dir/config.fish
             if [ "$TERM" = dumb ]
                 return
             end
-            printf \e\]7\;file://%s%s\a $host (string escape --style=url -- $PWD)
+            printf \e\]7\;file://%s%s\a (string escape --style=url -- $host $PWD)
         end
     end
     __fish_update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
-
-    # Bump this whenever some code below needs to run once when upgrading to a new version.
-    # The universal variable __fish_initialized is initialized in share/config.fish.
-    set __fish_initialized 3800
-
-    functions -e __fish_config_interactive
 end

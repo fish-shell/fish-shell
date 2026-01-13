@@ -22,9 +22,9 @@ set. This is the real power of topics: you can wait for a sigchld signal OR a th
 
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::{self, AutoClosePipes, make_fd_nonblocking};
-use crate::flog::{FLOG, FloggableDebug};
-use crate::wchar::WString;
+use crate::flog::{FloggableDebug, flog};
 use crate::wutil::perror;
+use fish_wchar::WString;
 use nix::errno::Errno;
 use nix::unistd;
 use std::cell::Cell;
@@ -38,9 +38,9 @@ use std::{cell::UnsafeCell, pin::Pin};
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Topic {
-    sighupint = 0,     // Corresponds to both SIGHUP and SIGINT signals.
-    sigchld = 1,       // Corresponds to SIGCHLD signal.
-    internal_exit = 2, // Corresponds to an internal process exit.
+    SigHupInt = 0,    // Corresponds to both SIGHUP and SIGINT signals.
+    SigChld = 1,      // Corresponds to SIGCHLD signal.
+    InternalExit = 2, // Corresponds to an internal process exit.
 }
 
 // XXX: Is it correct to use the default or should the default be invalid_generation?
@@ -70,7 +70,7 @@ impl FloggableDebug for Topic {}
 pub const INVALID_GENERATION: Generation = u64::MAX;
 
 pub fn all_topics() -> [Topic; 3] {
-    [Topic::sighupint, Topic::sigchld, Topic::internal_exit]
+    [Topic::SigHupInt, Topic::SigChld, Topic::InternalExit]
 }
 
 impl GenerationsList {
@@ -100,24 +100,24 @@ impl GenerationsList {
                 result.push_str(&r#gen.to_string());
             }
         }
-        return result;
+        result
     }
 
     /// Sets the generation for `topic` to `value`.
     pub fn set(&self, topic: Topic, value: Generation) {
         match topic {
-            Topic::sighupint => self.sighupint.set(value),
-            Topic::sigchld => self.sigchld.set(value),
-            Topic::internal_exit => self.internal_exit.set(value),
+            Topic::SigHupInt => self.sighupint.set(value),
+            Topic::SigChld => self.sigchld.set(value),
+            Topic::InternalExit => self.internal_exit.set(value),
         }
     }
 
     /// Return the value for a topic.
     pub fn get(&self, topic: Topic) -> Generation {
         match topic {
-            Topic::sighupint => self.sighupint.get(),
-            Topic::sigchld => self.sigchld.get(),
-            Topic::internal_exit => self.internal_exit.get(),
+            Topic::SigHupInt => self.sighupint.get(),
+            Topic::SigChld => self.sigchld.get(),
+            Topic::InternalExit => self.internal_exit.get(),
         }
     }
 
@@ -343,18 +343,18 @@ unsafe impl Sync for TopicMonitor {}
 
 /// The principal topic monitor.
 /// Do not attempt to move this into a lazy_static, it must be accessed from a signal handler.
-static mut s_principal: *const TopicMonitor = std::ptr::null();
+static mut PRINCIPAL: *const TopicMonitor = std::ptr::null();
 
 impl TopicMonitor {
     /// Initialize the principal monitor, and return it.
     /// This should be called only on the main thread.
     pub fn initialize() -> &'static Self {
         unsafe {
-            if s_principal.is_null() {
+            if PRINCIPAL.is_null() {
                 // We simply leak.
-                s_principal = Box::into_raw(Box::default());
+                PRINCIPAL = Box::into_raw(Box::default());
             }
-            &*s_principal
+            &*PRINCIPAL
         }
     }
 
@@ -362,7 +362,7 @@ impl TopicMonitor {
         // Beware, we may be in a signal handler!
         // Atomically update the pending topics.
         let topicbit = topic_to_bit(topic);
-        const relaxed: Ordering = Ordering::Relaxed;
+        let relaxed = Ordering::Relaxed;
 
         // CAS in our bit, capturing the old status value.
         let mut oldstatus: StatusBits = 0;
@@ -405,7 +405,7 @@ impl TopicMonitor {
         // Atomically acquire the pending updates, swapping in 0.
         // If there are no pending updates (likely) or a thread is waiting, just return.
         // Otherwise CAS in 0 and update our topics.
-        const relaxed: Ordering = Ordering::Relaxed;
+        let relaxed = Ordering::Relaxed;
         let mut changed_topic_bits: TopicBitmask = 0;
         let mut cas_success = false;
         while !cas_success {
@@ -427,7 +427,7 @@ impl TopicMonitor {
         for topic in all_topics() {
             if changed_topic_bits & topic_to_bit(topic) != 0 {
                 data.current.set(topic, data.current.get(topic) + 1);
-                FLOG!(
+                flog!(
                     topic_monitor,
                     "Updating topic",
                     topic,
@@ -438,13 +438,13 @@ impl TopicMonitor {
         }
         // Report our change.
         self.data_notifier_.notify_all();
-        return data.current.clone();
+        data.current.clone()
     }
 
     /// Return the current generation list, opportunistically applying any pending updates.
     fn updated_gens(&self) -> GenerationsList {
         let mut data = self.data_.lock().unwrap();
-        return self.updated_gens_in_data(&mut data);
+        self.updated_gens_in_data(&mut data)
     }
 
     /// Access the current generations.
@@ -470,7 +470,7 @@ impl TopicMonitor {
         loop {
             // See if the updated gen list has changed. If so we don't need to become the reader.
             let current = self.updated_gens_in_data(&mut data);
-            // FLOG(topic_monitor, "TID", thread_id(), "local ", gens->describe(), ": current",
+            // flog!(topic_monitor, "TID", thread_id(), "local ", gens->describe(), ": current",
             //      current.describe());
             if *gens != current {
                 *gens = current;
@@ -509,13 +509,13 @@ impl TopicMonitor {
                 }
                 // We successfully did a CAS from 0 -> STATUS_NEEDS_WAKEUP.
                 // Now any successive topic post must signal us.
-                //FLOG(topic_monitor, "TID", thread_id(), "becoming reader");
+                //flog!(topic_monitor, "TID", thread_id(), "becoming reader");
                 become_reader = true;
                 data.has_reader = true;
                 break;
             }
         }
-        return become_reader;
+        become_reader
     }
 
     /// Wait for some entry in the list of generations to change.
@@ -539,14 +539,14 @@ impl TopicMonitor {
                 // variable to wake up any other threads waiting for us to finish reading.
                 let mut data = self.data_.lock().unwrap();
                 gens = data.current.clone();
-                // FLOG(topic_monitor, "TID", thread_id(), "local", input_gens.describe(),
+                // flog!(topic_monitor, "TID", thread_id(), "local", input_gens.describe(),
                 //      "read() complete, current is", gens.describe());
                 assert!(data.has_reader, "We should be the reader");
                 data.has_reader = false;
                 self.data_notifier_.notify_all();
             }
         }
-        return gens;
+        gens
     }
 
     /// For each valid topic in `gens`, check to see if the current topic is larger than
@@ -584,7 +584,7 @@ impl TopicMonitor {
             // Wait until our gens change.
             current = self.await_gens(&current);
         }
-        return changed;
+        changed
     }
 }
 
@@ -595,21 +595,18 @@ pub fn topic_monitor_init() {
 pub fn topic_monitor_principal() -> &'static TopicMonitor {
     unsafe {
         assert!(
-            !s_principal.is_null(),
+            !PRINCIPAL.is_null(),
             "Principal topic monitor not initialized"
         );
-        &*s_principal
+        &*PRINCIPAL
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{GenerationsList, Topic, TopicMonitor};
+    use crate::portable_atomic::AtomicU64;
     use crate::tests::prelude::*;
-    #[cfg(not(target_has_atomic = "64"))]
-    use portable_atomic::AtomicU64;
-    #[cfg(target_has_atomic = "64")]
-    use std::sync::atomic::AtomicU64;
     use std::sync::{
         Arc,
         atomic::{AtomicU32, Ordering},
@@ -621,7 +618,7 @@ mod tests {
         let _cleanup = test_init();
         let monitor = TopicMonitor::default();
         let gens = GenerationsList::new();
-        let t = Topic::sigchld;
+        let t = Topic::SigChld;
         gens.sigchld.set(0);
         assert_eq!(monitor.generation_for_topic(t), 0);
         let changed = monitor.check(&gens, false /* wait */);
@@ -647,8 +644,8 @@ mod tests {
         let _cleanup = test_init();
         let monitor = Arc::new(TopicMonitor::default());
         const THREAD_COUNT: usize = 64;
-        let t1 = Topic::sigchld;
-        let t2 = Topic::sighupint;
+        let t1 = Topic::SigChld;
+        let t2 = Topic::SigHupInt;
         let mut gens_list = vec![GenerationsList::invalid(); THREAD_COUNT];
         let post_count = Arc::new(AtomicU64::new(0));
         for r#gen in &mut gens_list {

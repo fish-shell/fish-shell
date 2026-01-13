@@ -17,16 +17,15 @@
 //! control-C from generating SIGINT, so failing to disable these would prevent cancellation of wildcard
 //! expansion, etc.
 
+use crate::portable_atomic::AtomicU64;
+use fish_common::{UTF8_BOM_WCHAR, help_section};
 use libc::{
-    _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
-    IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, SIGTTIN, STDERR_FILENO, STDIN_FILENO,
-    STDOUT_FILENO, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, c_char,
+    _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, FLUSHO, ICANON, ICRNL, IEXTEN,
+    INLCR, IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, SIGTTIN, STDERR_FILENO,
+    STDIN_FILENO, STDOUT_FILENO, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
-use once_cell::sync::Lazy;
-#[cfg(not(target_has_atomic = "64"))]
-use portable_atomic::AtomicU64;
 use std::borrow::Cow;
 use std::cell::UnsafeCell;
 use std::cmp;
@@ -36,18 +35,19 @@ use std::num::NonZeroUsize;
 use std::ops::ControlFlow;
 use std::ops::Range;
 use std::os::fd::BorrowedFd;
+use std::os::fd::FromRawFd;
+use std::os::fd::OwnedFd;
 use std::os::fd::{AsRawFd, RawFd};
 use std::pin::Pin;
-#[cfg(target_has_atomic = "64")]
-use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicI32, AtomicU8, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, LazyLock, Mutex, MutexGuard, OnceLock};
 use std::time::{Duration, Instant};
 
 use errno::{Errno, errno};
 
 use super::history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
 use super::iothreads::{self, Debouncers};
+use super::word_motion::{MoveWordDir, MoveWordStateMachine, MoveWordStyle};
 use crate::abbrs::abbrs_match;
 use crate::ast::{self, Kind, is_same_node};
 use crate::builtins::shared::ErrorCode;
@@ -55,9 +55,9 @@ use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, ScopeGuard, UTF8_BOM_WCHAR, bytes2wcstring, escape,
-    escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
-    get_program_name, restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
+    EscapeFlags, EscapeStringStyle, ScopeGuard, bytes2wcstring, escape, escape_string,
+    exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char, get_program_name,
+    restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
 };
 use crate::complete::{
     CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete, complete_load,
@@ -71,10 +71,9 @@ use crate::env_dispatch::guess_emoji_width;
 use crate::exec::exec_subshell;
 use crate::expand::expand_one;
 use crate::expand::{ExpandFlags, ExpandResultCode, expand_string, expand_tilde};
-use crate::fallback::fish_wcwidth;
 use crate::fd_readable_set::poll_fd_readable;
-use crate::fds::{AutoCloseFd, make_fd_blocking, wopen_cloexec};
-use crate::flog::{FLOG, FLOGF};
+use crate::fds::{make_fd_blocking, wopen_cloexec};
+use crate::flog::{flog, flogf};
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{
@@ -85,13 +84,14 @@ use crate::history::{
     History, HistorySearch, PersistenceMode, SearchDirection, SearchFlags, SearchType,
     history_session_id, in_private_mode,
 };
+use crate::input_common::BackgroundColorQuery;
 use crate::input_common::CursorPositionQueryReason;
 use crate::input_common::InputEventQueue;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::QueryResponse;
 use crate::input_common::{
     CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData, LONG_READ_TIMEOUT,
-    QueryResultEvent, ReadlineCmd, TerminalQuery, stop_query,
+    QueryResultEvent, ReadlineCmd, RecurrentQuery, TerminalQuery, stop_query,
 };
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
@@ -105,13 +105,16 @@ use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_util::MaybeParentheses;
 use crate::parse_util::SPACES_PER_INDENT;
 use crate::parse_util::parse_util_process_extent;
+use crate::parse_util::parse_util_process_first_token_offset;
 use crate::parse_util::{
     parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_contains_wildcards,
     parse_util_detect_errors, parse_util_escape_string_with_quote, parse_util_escape_wildcards,
     parse_util_get_line_from_offset, parse_util_get_offset, parse_util_get_offset_from_line,
     parse_util_lineno, parse_util_locate_cmdsubst_range, parse_util_token_extent,
 };
+use crate::parser::ParserEnvSetMode;
 use crate::parser::{BlockType, EvalRes, Parser};
+use crate::prelude::*;
 use crate::proc::{
     have_proc_stat, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
     print_exit_warning_for_jobs, proc_update_jiffies,
@@ -128,9 +131,9 @@ use crate::terminal::Output;
 use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
     self, ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
-    Osc0WindowTitle, Osc1TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryCursorPosition,
-    QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute, QueryXtgettcap,
-    QueryXtversion,
+    Osc0WindowTitle, Osc1TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryBackgroundColor,
+    QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
+    QueryXtgettcap, QueryXtversion,
 };
 use crate::termsize::{safe_termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::TextFace;
@@ -139,15 +142,13 @@ use crate::threads::{assert_is_background_thread, assert_is_main_thread};
 use crate::tokenizer::quote_end;
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::tokenizer::{
-    MoveWordStateMachine, MoveWordStyle, TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType,
-    Tokenizer, tok_command,
+    TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType, Tokenizer, tok_command,
 };
 use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
 use crate::tty_handoff::XTGETTCAP_QUERY_OS_NAME;
 use crate::tty_handoff::{
     TtyHandoff, get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
 };
-use crate::wchar::prelude::*;
 use crate::wcstringutil::CaseSensitivity;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
 use crate::wcstringutil::{
@@ -157,6 +158,7 @@ use crate::wcstringutil::{
 use crate::wildcard::wildcard_has;
 use crate::wutil::{fstat, perror, write_to_fd, wstat};
 use crate::{abbrs, event, function};
+use fish_fallback::fish_wcwidth;
 
 /// A description of where fish is in the process of exiting.
 #[repr(u8)]
@@ -171,17 +173,16 @@ enum ExitState {
 
 static EXIT_STATE: AtomicU8 = AtomicU8::new(ExitState::None as u8);
 
-pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
-    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+pub static SHELL_MODES: LazyLock<Mutex<libc::termios>> =
+    LazyLock::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// The valid terminal modes on startup.
 /// Warning: this is read from the SIGTERM handler! Hence the raw global.
-static TERMINAL_MODE_ON_STARTUP: once_cell::sync::OnceCell<libc::termios> =
-    once_cell::sync::OnceCell::new();
+static TERMINAL_MODE_ON_STARTUP: OnceLock<libc::termios> = OnceLock::new();
 
 /// Mode we use to execute programs.
-static TTY_MODES_FOR_EXTERNAL_CMDS: Lazy<Mutex<libc::termios>> =
-    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+static TTY_MODES_FOR_EXTERNAL_CMDS: LazyLock<Mutex<libc::termios>> =
+    LazyLock::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 static RUN_COUNT: AtomicU64 = AtomicU64::new(0);
 
@@ -238,7 +239,7 @@ fn redirect_tty_after_sighup() {
 }
 
 fn querying_allowed(vars: &dyn Environment) -> bool {
-    future_feature_flags::test(FeatureFlag::query_term)
+    future_feature_flags::test(FeatureFlag::QueryTerm)
         && !is_dumb()
         && {
             // TODO(term-workaround)
@@ -250,18 +251,27 @@ fn querying_allowed(vars: &dyn Environment) -> bool {
         }
 }
 
-pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue {
+pub struct TerminalInitResult {
+    pub input_queue: InputEventQueue,
+    pub background_color: Option<xterm_color::Color>,
+}
+
+pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResult {
     assert!(isatty(inputfd));
     reader_interactive_init();
 
     let mut input_queue = InputEventQueue::new(inputfd, Some(LONG_READ_TIMEOUT));
+    let mut background_color = None;
 
     let _init_tty_metadata = ScopeGuard::new((), |()| {
         initialize_tty_protocols(vars);
     });
 
     if !querying_allowed(vars) {
-        return input_queue;
+        return TerminalInitResult {
+            input_queue,
+            background_color,
+        };
     }
 
     set_shell_modes(inputfd, "initial query");
@@ -270,6 +280,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
         // Query for kitty keyboard protocol support.
         out.write_command(QueryKittyKeyboardProgressiveEnhancements);
         out.write_command(QueryXtversion);
+        out.write_command(QueryBackgroundColor);
         query_capabilities_via_dcs(out.by_ref(), vars);
         out.write_command(QueryPrimaryDeviceAttribute);
     }
@@ -285,19 +296,25 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
             CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute)) => {
                 break;
             }
-            CharEvent::QueryResult(Response(_)) => (),
+            CharEvent::QueryResult(Response(QueryResponse::BackgroundColor(bg))) => {
+                if background_color.is_none() {
+                    background_color = Some(bg);
+                }
+            }
+            CharEvent::QueryResult(Response(QueryResponse::CursorPosition(_))) => (),
             CharEvent::QueryResult(Timeout) => {
                 let program = get_program_name();
-                FLOG!(
+                flog!(
                     warning,
                     wgettext_fmt!(
                         "%s could not read response to Primary Device Attribute query after waiting for %d seconds. \
                          This is often due to a missing feature in your terminal. \
-                         See 'help terminal-compatibility' or 'man fish-terminal-compatibility'. \
+                         See 'help %s' or 'man fish-terminal-compatibility'. \
                          This %s process will no longer wait for outstanding queries, \
                          which disables some optional features.",
                         program,
                         LONG_READ_TIMEOUT.as_secs(),
+                        help_section!("terminal-compatibility"),
                         program
                     ),
                 );
@@ -318,13 +335,16 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> InputEventQueue 
     // We blocked execution of code and mappings so input function args must be empty.
     assert!(input_data.input_function_args.is_empty());
     assert!(input_data.event_storage.is_empty());
-    FLOGF!(
+    flogf!(
         reader,
         "Returning %u pending input events",
         input_data.queue.len()
     );
 
-    input_queue
+    TerminalInitResult {
+        input_queue,
+        background_color,
+    }
 }
 
 /// The stack of current interactive reading contexts.
@@ -353,6 +373,7 @@ pub fn current_data() -> Option<&'static mut ReaderData> {
         .map(|data| unsafe { Pin::get_unchecked_mut(Pin::as_mut(data)) })
 }
 pub use current_data as reader_current_data;
+use fish_wchar::word_char::is_blank;
 
 /// Add a new reader to the reader stack.
 /// If `history_name` is empty, then save history in-memory only; do not write it to disk.
@@ -360,20 +381,26 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
     assert_is_main_thread();
     let inputfd = conf.inputfd;
     let input_data = if !parser.interactive_initialized.swap(true) {
-        let mut input_queue = terminal_init(parser.vars(), inputfd);
+        let TerminalInitResult {
+            mut input_queue,
+            background_color,
+        } = terminal_init(parser.vars(), inputfd);
         let input_data = input_queue.get_input_data_mut();
         guess_emoji_width(parser.vars());
 
         // Provide value for `status current-command`
         parser.libdata_mut().status_vars.command = L!("fish").to_owned();
         // Also provide a value for the deprecated fish 2.0 $_ variable
-        parser
-            .vars()
-            .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
+        parser.set_one(
+            L!("_"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            L!("fish").to_owned(),
+        );
         let old = parser
             .blocking_query_timeout
             .replace(input_data.blocking_query_timeout);
         assert!(old.is_none());
+        parser.set_color_theme(background_color.as_ref());
         std::mem::take(input_data)
     } else {
         InputData::new(inputfd, *parser.blocking_query_timeout.borrow())
@@ -453,6 +480,8 @@ pub struct ReaderConfig {
 
     /// Whether to exit on interrupt (^C).
     pub exit_on_interrupt: bool,
+
+    pub read_prompt_str_is_empty: bool,
 
     /// If set, do not show what is typed.
     pub in_silent_mode: bool,
@@ -534,6 +563,12 @@ enum JumpPrecision {
     To,
 }
 
+#[derive(Copy, Clone, Eq, PartialEq)]
+enum CompletionAction {
+    ShownAmbiguous,
+    InsertedUnique,
+}
+
 /// readline_loop_state_t encapsulates the state used in a readline loop.
 struct ReadlineLoopState {
     /// The last command that was executed.
@@ -543,10 +578,7 @@ struct ReadlineLoopState {
     yank_len: usize,
 
     /// If the last "complete" readline command has inserted text into the command line.
-    complete_did_insert: bool,
-
-    /// List of completions.
-    comp: Vec<Completion>,
+    completion_action: Option<CompletionAction>,
 
     /// Whether the loop has finished, due to reaching the character limit or through executing a
     /// command.
@@ -561,8 +593,7 @@ impl ReadlineLoopState {
         Self {
             last_cmd: None,
             yank_len: 0,
-            complete_did_insert: true,
-            comp: vec![],
+            completion_action: None,
             finished: false,
             nchars: None,
         }
@@ -897,7 +928,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     let md = match fstat(fd) {
         Ok(md) => md,
         Err(err) => {
-            FLOG!(
+            flog!(
                 error,
                 wgettext_fmt!("Unable to read input file: %s", err.to_string())
             );
@@ -909,7 +940,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     // XXX: This can be triggered spuriously, so we'll not do that for stdin.
     // This can be seen e.g. with node's "spawn" api.
     if fd != STDIN_FILENO && md.is_dir() {
-        FLOG!(
+        flog!(
             error,
             wgettext_fmt!("Unable to read input file: %s", Errno(EISDIR).to_string())
         );
@@ -939,7 +970,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
                     continue;
                 } else {
                     // Fatal error.
-                    FLOG!(
+                    flog!(
                         error,
                         wgettext_fmt!("Unable to read input file: %s", err.to_string())
                     );
@@ -979,8 +1010,9 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
         TERMINAL_MODE_ON_STARTUP.get_or_init(|| terminal_mode_on_startup);
     }
 
-    #[cfg(not(test))]
-    assert!(AT_EXIT.get().is_none());
+    if !cfg!(test) {
+        assert!(AT_EXIT.get().is_none());
+    }
     AT_EXIT.get_or_init(|| Box::new(move || reader_deinit(will_restore_foreground_pgroup)));
 
     // Set the mode used for program execution, initialized to the current mode.
@@ -996,7 +1028,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     {
         let mut shell_modes = shell_modes();
         *shell_modes = *tty_modes_for_external_cmds;
-        term_fix_modes(&mut shell_modes);
+        term_fix_shell_modes(&mut shell_modes);
     }
 
     drop(tty_modes_for_external_cmds);
@@ -1072,8 +1104,7 @@ pub fn reader_change_cursor_end_mode(end_mode: CursorEndMode) {
 fn check_bool_var(vars: &dyn Environment, name: &wstr, default: bool) -> bool {
     vars.get(name)
         .map(|v| v.as_string())
-        .map(|v| v != L!("0"))
-        .unwrap_or(default)
+        .map_or(default, |v| v != L!("0"))
 }
 
 /// Enable or disable autosuggestions based on the associated variable.
@@ -1083,9 +1114,7 @@ pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
         let enable = check_bool_var(vars, L!("fish_autosuggestion_enabled"), true);
         if data.conf.autosuggest_ok != enable {
             data.conf.autosuggest_ok = enable;
-            data.force_exec_prompt_and_repaint = true;
-            data.input_data
-                .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+            data.schedule_prompt_repaint();
         }
     }
 }
@@ -1121,11 +1150,7 @@ pub fn reader_schedule_prompt_repaint() {
     let Some(data) = current_data() else {
         return;
     };
-    if !data.force_exec_prompt_and_repaint {
-        data.force_exec_prompt_and_repaint = true;
-        data.input_data
-            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
-    }
+    data.schedule_prompt_repaint();
 }
 
 pub fn reader_update_termsize(parser: &Parser) {
@@ -1138,7 +1163,7 @@ pub fn reader_update_termsize(parser: &Parser) {
         return;
     };
     let mut data = Reader { parser, data };
-    data.push_front(CharEvent::Implicit(ImplicitEvent::WindowHeight));
+    data.push_front(CharEvent::Implicit(ImplicitEvent::NewWindowHeight));
 }
 
 pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
@@ -1609,7 +1634,7 @@ impl ReaderData {
     }
 
     pub fn mouse_left_click(&mut self, click_position: ViewportPosition) {
-        FLOGF!(
+        flogf!(
             reader,
             "Received left mouse click at %u",
             format!("{:?}", click_position),
@@ -1625,6 +1650,15 @@ impl ReaderData {
             }
             CharOffset::Pager(_) | CharOffset::None => {}
         }
+    }
+
+    pub fn schedule_prompt_repaint(&mut self) {
+        if self.force_exec_prompt_and_repaint {
+            return;
+        }
+        self.force_exec_prompt_and_repaint = true;
+        self.input_data
+            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
     }
 }
 
@@ -1662,7 +1696,7 @@ fn combine_command_and_autosuggestion(
         if !last_token_contains_uppercase {
             // Use the autosuggestion's case.
             let start: usize = unsafe {
-                (line.as_char_slice().first().unwrap() as *const char)
+                std::ptr::from_ref(line.as_char_slice().first().unwrap())
                     .offset_from(&cmdline.as_char_slice()[0])
             }
             .try_into()
@@ -1679,10 +1713,11 @@ fn combine_command_and_autosuggestion(
 }
 
 impl<'a> Reader<'a> {
-    pub fn request_cursor_position(&mut self, reason: CursorPositionQueryReason) {
+    fn query(&mut self, query_state: RecurrentQuery) {
+        assert!(query_state != RecurrentQuery::default());
         if self
             .vars()
-            .get_unless_empty(L!("FISH_TEST_NO_CURSOR_POSITION_QUERY"))
+            .get_unless_empty(L!("FISH_TEST_NO_RECURRENT_QUERIES"))
             .is_some()
         {
             return;
@@ -1692,16 +1727,19 @@ impl<'a> Reader<'a> {
         }
         let mut query = self.blocking_query();
         assert!(query.is_none());
-        *query = Some(TerminalQuery::CursorPosition(CursorPositionQuery::new(
-            reason,
-        )));
         {
             let mut out = Outputter::stdoutput().borrow_mut();
             out.begin_buffering();
-            out.write_command(QueryCursorPosition);
+            if query_state.background_color.is_some() {
+                out.write_command(QueryBackgroundColor);
+            }
+            if query_state.cursor_position.is_some() {
+                out.write_command(QueryCursorPosition);
+            }
             out.write_command(QueryPrimaryDeviceAttribute);
             out.end_buffering();
         }
+        *query = Some(TerminalQuery::Recurrent(query_state));
         drop(query);
         self.save_screen_state();
     }
@@ -1714,7 +1752,7 @@ impl<'a> Reader<'a> {
         // The pager is the problem child, it has its own update logic.
         let check = |val: bool, reason: &str| {
             if val {
-                FLOG!(reader_render, "repaint needed because", reason, "change");
+                flog!(reader_render, "repaint needed because", reason, "change");
             }
             val
         };
@@ -1793,9 +1831,9 @@ impl<'a> Reader<'a> {
     }
 
     /// Paint the last rendered layout.
-    /// `reason` is used in FLOG to explain why.
+    /// `reason` is used in flog to explain why.
     fn paint_layout(&mut self, reason: &wstr, is_final_rendering: bool) {
-        FLOGF!(reader_render, "Repainting from %s", reason);
+        flogf!(reader_render, "Repainting from %s", reason);
         let cmd_line = &self.data.command_line;
 
         let (full_line, autosuggested_range) = if self.conf.in_silent_mode {
@@ -1829,23 +1867,26 @@ impl<'a> Reader<'a> {
         let mut colors = data.colors.clone();
 
         // Highlight any history search.
-        if !self.conf.in_silent_mode && data.history_search_range.is_some() {
-            let mut range = data.history_search_range.unwrap().as_usize();
-            if range.end > colors.len() {
-                range.start = range.start.min(colors.len());
-                range.end = colors.len();
-            }
-
-            let explicit_foreground = self
-                .vars()
-                .get_unless_empty(L!("fish_color_search_match"))
-                .is_some_and(|var| parse_text_face(var.as_list()).fg.is_some());
-
-            for color in &mut colors[range] {
-                if explicit_foreground {
-                    color.foreground = HighlightRole::search_match;
+        if let Some(range) = data.history_search_range {
+            // TODO(MSRV>=1.88): let chain
+            if !self.conf.in_silent_mode {
+                let mut range = range.as_usize();
+                if range.end > colors.len() {
+                    range.start = range.start.min(colors.len());
+                    range.end = colors.len();
                 }
-                color.background = HighlightRole::search_match;
+
+                let explicit_foreground = self
+                    .vars()
+                    .get_unless_empty(L!("fish_color_search_match"))
+                    .is_some_and(|var| parse_text_face(var.as_list()).fg.is_some());
+
+                for color in &mut colors[range] {
+                    if explicit_foreground {
+                        color.foreground = HighlightRole::search_match;
+                    }
+                    color.background = HighlightRole::search_match;
+                }
             }
         }
 
@@ -2160,12 +2201,6 @@ impl ReaderData {
     }
 }
 
-#[derive(Eq, PartialEq)]
-enum MoveWordDir {
-    Left,
-    Right,
-}
-
 impl ReaderData {
     /// Move buffer position one word or erase one word. This function updates both the internal buffer
     /// and the screen. It is used by M-left, M-right and ^W to do block movement or block erase.
@@ -2180,40 +2215,64 @@ impl ReaderData {
         erase: bool,
         style: MoveWordStyle,
         newv: bool,
+        to_word_end: bool,
     ) {
         let move_right = direction == MoveWordDir::Right;
-        // Return if we are already at the edge.
+        let state_machine_dir = if to_word_end {
+            match direction {
+                MoveWordDir::Left => MoveWordDir::Right,
+                MoveWordDir::Right => MoveWordDir::Left,
+            }
+        } else {
+            direction
+        };
         let el = self.edit_line(elt);
         let boundary = if move_right { el.len() } else { 0 };
+
+        // Return if we are already at the edge.
         if el.position() == boundary {
             return;
         }
 
         // When moving left, a value of 1 means the character at index 0.
-        let mut state = MoveWordStateMachine::new(style);
+        let mut state = MoveWordStateMachine::new(style, state_machine_dir);
         let start_buff_pos = el.position();
 
         let mut buff_pos = el.position();
-        while buff_pos != boundary {
-            let idx = if move_right { buff_pos } else { buff_pos - 1 };
-            let c = el.at(idx);
-            if !state.consume_char(c) {
+
+        let end = if move_right {
+            if to_word_end { el.len() - 1 } else { el.len() }
+        } else if to_word_end {
+            usize::MAX
+        } else {
+            0
+        };
+
+        while buff_pos != end {
+            if move_right && buff_pos >= el.len() {
                 break;
             }
-            buff_pos = if move_right {
-                buff_pos + 1
+            let char_pos = if move_right {
+                if to_word_end { buff_pos + 1 } else { buff_pos }
+            } else if to_word_end {
+                buff_pos
             } else {
-                buff_pos - 1
+                buff_pos.wrapping_sub(1)
             };
+            let consumed = state.consume_char(el.text(), char_pos);
+            if consumed {
+                buff_pos = if move_right {
+                    buff_pos + 1
+                } else {
+                    buff_pos.wrapping_sub(1)
+                };
+            } else {
+                break;
+            }
         }
 
-        // Always consume at least one character.
-        if buff_pos == start_buff_pos {
-            buff_pos = if move_right {
-                buff_pos + 1
-            } else {
-                buff_pos - 1
-            };
+        if buff_pos == usize::MAX {
+            buff_pos = 0;
         }
 
         // If we are moving left, buff_pos-1 is the index of the first character we do not delete
@@ -2225,12 +2284,147 @@ impl ReaderData {
             }
 
             if move_right {
-                self.kill(elt, start_buff_pos..buff_pos, Kill::Append, newv);
+                self.kill(
+                    elt,
+                    start_buff_pos..(buff_pos + if to_word_end { 1 } else { 0 }),
+                    Kill::Append,
+                    newv,
+                );
             } else {
-                self.kill(elt, buff_pos..start_buff_pos, Kill::Prepend, newv);
+                self.kill(
+                    elt,
+                    buff_pos..start_buff_pos + if to_word_end { 1 } else { 0 },
+                    Kill::Prepend,
+                    newv,
+                );
             }
         } else {
             self.update_buff_pos(elt, Some(buff_pos));
+        }
+    }
+
+    fn delete_a_word(&mut self, elt: EditableLineTag, style: MoveWordStyle, newv: bool) {
+        let el = self.edit_line(elt);
+        if el.is_empty() {
+            return;
+        }
+        let text_slice = el.text().as_char_slice();
+        let pos = el.position();
+        let on_blank = is_blank(text_slice[pos]);
+
+        if on_blank {
+            // first move backward until non-spaces
+            let mut begin_pos = 0;
+            for idx in (0..pos).rev() {
+                if !is_blank(text_slice[idx]) {
+                    begin_pos = idx + 1;
+                    break;
+                }
+            }
+            self.update_buff_pos(elt, Some(begin_pos));
+            // then delete to next word end
+            self.move_word(elt, MoveWordDir::Right, true, style, newv, true)
+        } else {
+            // first, move right by 1
+            if pos < el.len() - 1 {
+                self.update_buff_pos(elt, Some(el.position() + 1));
+            }
+            // then move to word start
+            self.move_word(
+                elt,
+                MoveWordDir::Left,
+                /*erase=*/ false,
+                style,
+                newv,
+                false,
+            );
+            let word_start = self.edit_line(elt).position();
+            self.move_word(
+                elt,
+                MoveWordDir::Right,
+                /*erase=*/ false,
+                style,
+                newv,
+                true,
+            );
+
+            let el = self.edit_line(elt);
+            let word_end = el.position() + 1;
+            let text_slice = el.text().as_char_slice();
+            let len = el.len();
+            let kill_range = if word_end < len && is_blank(text_slice[word_end]) {
+                let mut end_pos = len;
+                for (idx, &c) in text_slice.iter().enumerate().skip(word_end + 1) {
+                    if !is_blank(c) {
+                        end_pos = idx;
+                        break;
+                    }
+                }
+                word_start..end_pos
+            } else if word_start > 0 && is_blank(text_slice[word_start - 1]) {
+                let mut begin_pos = 0;
+                for idx in (0..word_start - 1).rev() {
+                    if !is_blank(text_slice[idx]) {
+                        begin_pos = idx + 1;
+                        break;
+                    }
+                }
+                begin_pos..word_end
+            } else {
+                word_start..word_end
+            };
+            self.update_buff_pos(elt, Some(word_start));
+            self.kill(elt, kill_range, Kill::Append, newv);
+        }
+    }
+
+    fn delete_inner_word(&mut self, elt: EditableLineTag, style: MoveWordStyle, newv: bool) {
+        let el = self.edit_line(elt);
+        let len = el.len();
+        if len == 0 {
+            return;
+        }
+        let pos = el.position();
+        let text_slice = el.text().as_char_slice();
+        if is_blank(text_slice[pos]) {
+            // Cursor is on whitespace: delete whitespace only
+            let mut begin_pos = 0;
+            for idx in (0..pos).rev() {
+                if !is_blank(text_slice[idx]) {
+                    begin_pos = idx + 1;
+                    break;
+                }
+            }
+            let mut end_pos = len;
+            for (idx, &c) in text_slice.iter().enumerate().skip(pos) {
+                if !is_blank(c) {
+                    end_pos = idx;
+                    break;
+                }
+            }
+            self.kill(elt, begin_pos..end_pos, Kill::Append, newv);
+        } else {
+            if el.position() != 0 {
+                // first, move right by 1
+                self.update_buff_pos(elt, Some(el.position() + 1));
+                // then move to word start
+                self.move_word(
+                    elt,
+                    MoveWordDir::Left,
+                    /*erase=*/ false,
+                    style,
+                    newv,
+                    false,
+                );
+            }
+            self.move_word(
+                elt,
+                MoveWordDir::Right,
+                /*erase=*/ true,
+                style,
+                newv,
+                true,
+            );
         }
     }
 
@@ -2267,7 +2461,7 @@ impl ReaderData {
             }
             tmp_r_pos += 1;
         }
-        return false;
+        false
     }
 
     fn jump_and_remember_last_jump(
@@ -2331,7 +2525,7 @@ impl ReaderData {
                     }
                     tmp_pos += 1;
                 }
-                return false;
+                false
             }
         }
     }
@@ -2363,16 +2557,17 @@ impl<'a> Reader<'a> {
 
         self.history_search.reset();
 
-        // HACK: Don't abandon line for the first prompt, because
-        // if we're started with the terminal it might not have settled,
-        // so the width is quite likely to be in flight.
+        // HACK: Use a simple \r for the first prompt, because if we're started with the terminal
+        // it might not have settled, so the width is quite likely to be in flight.
         //
         // This means that `printf %s foo; fish` will overwrite the `foo`,
         // but that's a smaller problem than having the omitted newline char
         // appear constantly.
-        let trusted_width = (!self.first_prompt).then_some(termsize_last().width());
+        if !self.first_prompt || !self.conf.read_prompt_str_is_empty {
+            let trusted_width = (!self.first_prompt).then_some(termsize_last().width());
+            self.screen.reset_abandoning_line(trusted_width);
+        }
         self.first_prompt = false;
-        self.screen.reset_abandoning_line(trusted_width);
 
         if !self.conf.event.is_empty() {
             event::fire_generic(self.parser, self.conf.event.to_owned(), vec![]);
@@ -2382,7 +2577,12 @@ impl<'a> Reader<'a> {
         // Start out as initially dirty.
         self.force_exec_prompt_and_repaint = true;
 
-        self.request_cursor_position(CursorPositionQueryReason::NewPrompt);
+        self.query(RecurrentQuery {
+            cursor_position: Some(CursorPositionQuery::new(
+                CursorPositionQueryReason::NewPrompt,
+            )),
+            background_color: Some(BackgroundColorQuery::default()),
+        });
 
         while !check_exit_loop_maybe_warning(Some(self)) {
             // Enable tty protocols while we read input.
@@ -2393,9 +2593,7 @@ impl<'a> Reader<'a> {
         }
 
         // Disable tty protocols now that we're going to execute a command.
-        if tty.disable_tty_protocols() {
-            self.save_screen_state();
-        }
+        tty.disable_tty_protocols();
 
         if self.conf.transient_prompt {
             self.exec_prompt(true, true);
@@ -2455,20 +2653,12 @@ impl<'a> Reader<'a> {
 
     fn eval_bind_cmd(&mut self, cmd: &wstr) {
         let last_statuses = self.parser.vars().get_last_statuses();
-        let prev_exec_external_count = self.parser.libdata().exec_external_count;
         // Disable TTY protocols while we run a bind command, because it may call out.
         let mut scoped_tty = TtyHandoff::new(reader_save_screen_state);
-        let mut modified_tty = scoped_tty.disable_tty_protocols();
+        scoped_tty.disable_tty_protocols();
 
         self.parser.eval(cmd, &IoChain::new());
         self.parser.set_last_statuses(last_statuses);
-        modified_tty |= scoped_tty.reclaim();
-        if modified_tty
-            || (self.parser.libdata().exec_external_count != prev_exec_external_count
-                && self.data.left_prompt_buff.contains('\n'))
-        {
-            self.save_screen_state();
-        }
     }
 
     /// Run a sequence of commands from an input binding.
@@ -2554,7 +2744,7 @@ impl<'a> Reader<'a> {
         if self.reset_loop_state {
             self.reset_loop_state = false;
             self.rls_mut().last_cmd = None;
-            self.rls_mut().complete_did_insert = false;
+            self.rls_mut().completion_action = None;
         }
         // Perhaps update the termsize. This is cheap if it has not changed.
         reader_update_termsize(self.parser);
@@ -2675,12 +2865,23 @@ impl<'a> Reader<'a> {
                         self.save_screen_state();
                     }
                     MouseLeft(position) => {
-                        FLOG!(reader, "Mouse left click", position);
+                        flog!(reader, "Mouse left click", position);
                         self.mouse_left_click(position);
                     }
-                    WindowHeight => {
-                        FLOG!(reader, "Handling window height change");
-                        self.request_cursor_position(CursorPositionQueryReason::WindowHeightChange);
+                    NewColorTheme => {
+                        self.query(RecurrentQuery {
+                            background_color: Some(BackgroundColorQuery::default()),
+                            ..Default::default()
+                        });
+                    }
+                    NewWindowHeight => {
+                        flog!(reader, "Handling window height change");
+                        self.query(RecurrentQuery {
+                            cursor_position: Some(CursorPositionQuery::new(
+                                CursorPositionQueryReason::WindowHeightChange,
+                            )),
+                            ..Default::default()
+                        });
                     }
                 }
             }
@@ -2692,32 +2893,54 @@ impl<'a> Reader<'a> {
                 let query = match (&mut **query, query_result) {
                     (Some(TerminalQuery::Initial), _) => panic!(),
                     (
-                        Some(TerminalQuery::CursorPosition(cursor_pos_query)),
+                        Some(TerminalQuery::Recurrent(RecurrentQuery {
+                            background_color: Some(color_query),
+                            ..
+                        })),
+                        Response(BackgroundColor(background_color)),
+                    ) => {
+                        color_query.result = Some(background_color);
+                        return ControlFlow::Continue(());
+                    }
+                    (
+                        Some(TerminalQuery::Recurrent(RecurrentQuery {
+                            cursor_position: Some(cursor_pos_query),
+                            ..
+                        })),
                         Response(CursorPosition(cursor_pos)),
                     ) => {
                         cursor_pos_query.result = Some(cursor_pos);
                         return ControlFlow::Continue(());
                     }
                     (
-                        Some(TerminalQuery::CursorPosition(cursor_pos_query)),
+                        Some(TerminalQuery::Recurrent(query_state)),
                         Response(PrimaryDeviceAttribute) | Timeout | Interrupted,
                     ) => {
-                        let cursor_pos_query = cursor_pos_query.clone();
+                        let query = query_state.clone();
                         drop(maybe_query);
-                        let cursor_pos = cursor_pos_query.result;
-                        use CursorPositionQueryReason::*;
-                        let reason = cursor_pos_query.reason;
-                        let whence = match reason {
-                            NewPrompt => "cursor position query on new prompt",
-                            WindowHeightChange => "cursor position query on window height change",
-                        };
-                        let y = cursor_pos.map(|cursor_pos| match reason {
-                            NewPrompt => cursor_pos.y,
-                            WindowHeightChange => {
-                                self.screen.command_line_y_given_cursor_y(cursor_pos.y)
+                        if let Some(cursor_pos_query) = query.cursor_position {
+                            let cursor_pos = cursor_pos_query.result;
+                            use CursorPositionQueryReason::*;
+                            let reason = cursor_pos_query.reason;
+                            let whence = match reason {
+                                NewPrompt => "cursor position query on new prompt",
+                                WindowHeightChange => {
+                                    "cursor position query on window height change"
+                                }
+                            };
+                            let y = cursor_pos.map(|cursor_pos| match reason {
+                                NewPrompt => cursor_pos.y,
+                                WindowHeightChange => {
+                                    self.screen.command_line_y_given_cursor_y(cursor_pos.y)
+                                }
+                            });
+                            self.screen.set_position_in_viewport(whence, y);
+                        }
+                        if let Some(background_color_query) = query.background_color {
+                            if let Some(background_color) = &background_color_query.result {
+                                self.parser.set_color_theme(Some(background_color));
                             }
-                        });
-                        self.screen.set_position_in_viewport(whence, y);
+                        }
                         self.blocking_query()
                     }
                     // Rogue reply
@@ -2735,7 +2958,7 @@ fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
     if should_flog!(reader) {
         let mut tmp = Vec::<u8>::new();
         tmp.write_command(QueryXtgettcap(cap));
-        FLOG!(
+        flog!(
             reader,
             format!("Sending XTGETTCAP request for {}: {:?}", cap, tmp)
         );
@@ -2823,8 +3046,14 @@ impl<'a> Reader<'a> {
                     .update_buff_pos(EditableLineTag::Commandline, Some(0));
             }
             rl::EndOfBuffer => {
-                self.data
-                    .update_buff_pos(EditableLineTag::Commandline, Some(self.command_line_len()));
+                if self.is_at_autosuggestion() {
+                    self.accept_autosuggestion(AutosuggestionPortion::Count(usize::MAX));
+                } else {
+                    self.data.update_buff_pos(
+                        EditableLineTag::Commandline,
+                        Some(self.command_line_len()),
+                    );
+                }
             }
             rl::CancelCommandline | rl::ClearCommandline => {
                 if self.conf.exit_on_interrupt {
@@ -2854,7 +3083,9 @@ impl<'a> Reader<'a> {
 
                     let mut outp = Outputter::stdoutput().borrow_mut();
                     if let Some(fish_color_cancel) = self.vars().get(L!("fish_color_cancel")) {
-                        outp.set_text_face(parse_text_face_for_highlight(&fish_color_cancel));
+                        outp.set_text_face(
+                            parse_text_face_for_highlight(&fish_color_cancel).unwrap_or_default(),
+                        );
                     }
                     outp.write_wstr(L!("^C"));
                     outp.reset_text_face();
@@ -2881,7 +3112,7 @@ impl<'a> Reader<'a> {
                 // but never complete{,_and_search})
                 //
                 // Also paging is already cancelled above.
-                if self.rls().complete_did_insert
+                if self.rls().completion_action == Some(CompletionAction::InsertedUnique)
                     && matches!(
                         self.rls().last_cmd,
                         Some(rl::Complete | rl::CompleteAndSearch)
@@ -2930,8 +3161,7 @@ impl<'a> Reader<'a> {
                     return;
                 }
                 if self.is_navigating_pager_contents()
-                    || (!self.rls().comp.is_empty()
-                        && !self.rls().complete_did_insert
+                    || (self.rls().completion_action == Some(CompletionAction::ShownAmbiguous)
                         && self.rls().last_cmd == Some(rl::Complete))
                 {
                     // The user typed complete more than once in a row. If we are not yet fully
@@ -2955,9 +3185,6 @@ impl<'a> Reader<'a> {
                     let mut tty = TtyHandoff::new(reader_save_screen_state);
                     tty.disable_tty_protocols();
                     self.compute_and_apply_completions(c);
-                    if tty.reclaim() {
-                        self.save_screen_state();
-                    }
                 }
             }
             rl::PagerToggleSearch => {
@@ -3258,7 +3485,7 @@ impl<'a> Reader<'a> {
                 self.history_pager = Some(0..1);
                 // Update the pager data.
                 self.pager.set_search_field_shown(true);
-                self.pager.set_prefix(L!("► "), false);
+                self.pager.set_prefix(Cow::Borrowed(L!("► ")), false);
                 // Update the search field, which triggers the actual history search.
                 let search_string = if !self.history_search.active()
                     || self.history_search.search_string().is_empty()
@@ -3364,21 +3591,75 @@ impl<'a> Reader<'a> {
                     }
                 }
             }
-            rl::BackwardKillWord | rl::BackwardKillPathComponent | rl::BackwardKillBigword => {
+            rl::ForwardWordEmacs
+            | rl::ForwardBigwordEmacs
+            | rl::KillWordEmacs
+            | rl::KillBigwordEmacs
+            | rl::NextdOrForwardWordEmacs => {
+                if c == rl::NextdOrForwardWordEmacs && self.command_line.is_empty() {
+                    self.eval_bind_cmd(L!("nextd"));
+                    self.schedule_prompt_repaint();
+                    return;
+                }
+                let (elt, el) = self.active_edit_line();
+                let is_kill = matches!(c, rl::KillWordEmacs | rl::KillBigwordEmacs);
                 let style = match c {
-                    rl::BackwardKillBigword => MoveWordStyle::Whitespace,
-                    rl::BackwardKillPathComponent => MoveWordStyle::PathComponents,
-                    rl::BackwardKillWord => MoveWordStyle::Punctuation,
+                    rl::ForwardWordEmacs | rl::NextdOrForwardWordEmacs | rl::KillWordEmacs => {
+                        MoveWordStyle::Punctuation
+                    }
+                    rl::ForwardBigwordEmacs | rl::KillBigwordEmacs => MoveWordStyle::Whitespace,
                     _ => unreachable!(),
                 };
+                let is_word_end = el.position() + 1 < el.len()
+                    && !is_blank(el.at(el.position()))
+                    && is_blank(el.at(el.position() + 1));
+
+                // if at word end, forward/kill char, otherwise forward/kill word end
+                if self.is_at_autosuggestion() {
+                    self.accept_autosuggestion(AutosuggestionPortion::PerMoveWordStyle {
+                        style,
+                        to_word_end: true,
+                    });
+                } else if is_word_end {
+                    if is_kill {
+                        self.delete_char(/*backward*/ false);
+                    } else {
+                        let pos = el.position();
+                        self.update_buff_pos(elt, Some(pos + 1));
+                    }
+                } else {
+                    self.data.move_word(
+                        elt,
+                        MoveWordDir::Right,
+                        is_kill,
+                        style,
+                        self.rls().last_cmd != Some(c),
+                        true,
+                    );
+                    if !is_kill {
+                        let pos = self.edit_line(elt).position();
+                        self.update_buff_pos(elt, Some(pos + 1));
+                    }
+                }
+            }
+            rl::BackwardKillWord
+            | rl::BackwardKillPathComponent
+            | rl::BackwardKillBigword
+            | rl::BackwardKillWordEnd
+            | rl::BackwardKillBigwordEnd => {
+                let style = match c {
+                    rl::BackwardKillWord | rl::BackwardKillWordEnd => MoveWordStyle::Punctuation,
+                    rl::BackwardKillBigword | rl::BackwardKillBigwordEnd => {
+                        MoveWordStyle::Whitespace
+                    }
+                    rl::BackwardKillPathComponent => MoveWordStyle::PathComponents,
+                    _ => unreachable!(),
+                };
+                let to_word_end = matches!(c, rl::BackwardKillWordEnd | rl::BackwardKillBigwordEnd);
                 // Is this the same killring item as the last kill?
                 let newv = !matches!(
                     self.rls().last_cmd,
-                    Some(
-                        rl::BackwardKillWord
-                            | rl::BackwardKillPathComponent
-                            | rl::BackwardKillBigword
-                    )
+                    Some(rl::BackwardKillWord | rl::BackwardKillBigword)
                 );
                 self.data.move_word(
                     self.active_edit_line_tag(),
@@ -3386,23 +3667,51 @@ impl<'a> Reader<'a> {
                     /*erase=*/ true,
                     style,
                     newv,
+                    to_word_end,
                 )
             }
-            rl::KillWord | rl::KillBigword => {
+            rl::KillWordVi
+            | rl::KillBigwordVi
+            | rl::KillPathComponent
+            | rl::KillWordEnd
+            | rl::KillBigwordEnd => {
                 // The "bigword" functions differ only in that they move to the next whitespace, not
                 // punctuation.
-                let style = if c == rl::KillWord {
-                    MoveWordStyle::Punctuation
-                } else {
-                    MoveWordStyle::Whitespace
+                let style = match c {
+                    rl::KillWordVi | rl::KillWordEnd => MoveWordStyle::Punctuation,
+                    rl::KillBigwordVi | rl::KillBigwordEnd => MoveWordStyle::Whitespace,
+                    rl::KillPathComponent => MoveWordStyle::PathComponents,
+                    _ => unreachable!(),
                 };
+                let to_word_end = matches!(c, rl::KillWordEnd | rl::KillBigwordEnd);
                 self.data.move_word(
                     self.active_edit_line_tag(),
                     MoveWordDir::Right,
                     /*erase=*/ true,
                     style,
                     self.rls().last_cmd != Some(c),
+                    to_word_end,
                 );
+            }
+            rl::KillInnerWord | rl::KillInnerBigWord => {
+                let style = match c {
+                    rl::KillInnerBigWord => MoveWordStyle::Whitespace,
+                    rl::KillInnerWord => MoveWordStyle::Punctuation,
+                    _ => unreachable!(),
+                };
+                let elt = self.active_edit_line_tag();
+                let newv = self.rls().last_cmd != Some(c);
+                self.data.delete_inner_word(elt, style, newv);
+            }
+            rl::KillAWord | rl::KillABigWord => {
+                let style = match c {
+                    rl::KillABigWord => MoveWordStyle::Whitespace,
+                    rl::KillAWord => MoveWordStyle::Punctuation,
+                    _ => unreachable!(),
+                };
+                let elt = self.active_edit_line_tag();
+                let newv = self.rls().last_cmd != Some(c);
+                self.data.delete_a_word(elt, style, newv);
             }
             rl::BackwardKillToken => {
                 let Some(new_position) = self.backward_token() else {
@@ -3465,47 +3774,65 @@ impl<'a> Reader<'a> {
                     self.update_buff_pos(elt, Some(new_position));
                 }
             }
-            rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
+            rl::BackwardWord
+            | rl::BackwardWordEnd
+            | rl::BackwardPathComponent
+            | rl::BackwardBigword
+            | rl::BackwardBigwordEnd
+            | rl::PrevdOrBackwardWord => {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("prevd"));
-                    self.force_exec_prompt_and_repaint = true;
-                    self.input_data
-                        .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+                    self.schedule_prompt_repaint();
                     return;
                 }
+                let to_word_end = matches!(c, rl::BackwardWordEnd | rl::BackwardBigwordEnd);
 
-                let style = if c != rl::BackwardBigword {
-                    MoveWordStyle::Punctuation
-                } else {
-                    MoveWordStyle::Whitespace
+                let style = match c {
+                    rl::BackwardWord | rl::BackwardWordEnd | rl::PrevdOrBackwardWord => {
+                        MoveWordStyle::Punctuation
+                    }
+                    rl::BackwardBigword | rl::BackwardBigwordEnd => MoveWordStyle::Whitespace,
+                    rl::BackwardPathComponent => MoveWordStyle::PathComponents,
+                    _ => unreachable!(),
                 };
+
                 self.data.move_word(
                     self.active_edit_line_tag(),
                     MoveWordDir::Left,
                     /*erase=*/ false,
                     style,
                     false,
+                    to_word_end,
                 );
             }
-            rl::ForwardWord | rl::ForwardBigword | rl::NextdOrForwardWord => {
-                if c == rl::NextdOrForwardWord && self.command_line.is_empty() {
-                    self.eval_bind_cmd(L!("nextd"));
-                    self.force_exec_prompt_and_repaint = true;
-                    self.input_data
-                        .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
-                    return;
-                }
-
-                let style = if c != rl::ForwardBigword {
-                    MoveWordStyle::Punctuation
-                } else {
-                    MoveWordStyle::Whitespace
+            rl::ForwardWordVi
+            | rl::ForwardBigwordVi
+            | rl::ForwardWordEnd
+            | rl::ForwardBigwordEnd
+            | rl::ForwardPathComponent => {
+                let style = match c {
+                    rl::ForwardWordVi | rl::ForwardWordEnd => MoveWordStyle::Punctuation,
+                    rl::ForwardBigwordVi | rl::ForwardBigwordEnd => MoveWordStyle::Whitespace,
+                    rl::ForwardPathComponent => MoveWordStyle::PathComponents,
+                    _ => unreachable!(),
                 };
+                let to_word_end = matches!(c, rl::ForwardWordEnd | rl::ForwardBigwordEnd);
+
                 if self.is_at_autosuggestion() {
-                    self.accept_autosuggestion(AutosuggestionPortion::PerMoveWordStyle(style));
+                    self.accept_autosuggestion(AutosuggestionPortion::PerMoveWordStyle {
+                        style,
+                        to_word_end,
+                    });
                 } else if !self.is_at_end() {
                     let (elt, _el) = self.active_edit_line();
-                    self.move_word(elt, MoveWordDir::Right, /*erase=*/ false, style, false);
+                    self.move_word(
+                        elt,
+                        MoveWordDir::Right,
+                        /*erase=*/ false,
+                        style,
+                        false,
+                        to_word_end,
+                    );
                 }
             }
             rl::BeginningOfHistory | rl::EndOfHistory => {
@@ -3764,6 +4091,7 @@ impl<'a> Reader<'a> {
                     MoveWordDir::Right,
                     false,
                     MoveWordStyle::Punctuation,
+                    false,
                     false,
                 );
                 let (elt, el) = self.active_edit_line();
@@ -4093,7 +4421,7 @@ impl<'a> Reader<'a> {
 
         let cmdsubst_range = parse_util_cmdsubst_extent(&buffer, pos);
         for token in Tokenizer::new(&buffer[cmdsubst_range.clone()], TOK_ACCEPT_UNFINISHED) {
-            if token.type_ != TokenType::string {
+            if token.type_ != TokenType::String {
                 continue;
             }
             let tok_end = cmdsubst_range.start + token.end();
@@ -4109,7 +4437,7 @@ impl<'a> Reader<'a> {
 fn text_ends_in_comment(text: &wstr) -> bool {
     Tokenizer::new(text, TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS)
         .last()
-        .is_some_and(|token| token.type_ == TokenType::comment)
+        .is_some_and(|token| token.type_ == TokenType::Comment)
 }
 
 impl<'a> Reader<'a> {
@@ -4387,25 +4715,36 @@ impl ReaderData {
     }
 }
 
-/// Restore terminal settings we care about, to prevent a broken shell.
-fn term_fix_modes(modes: &mut libc::termios) {
-    // disable mapping CR (\cM) to NL (\cJ)
-    modes.c_iflag &= !ICRNL;
-    // disable mapping NL (\cJ) to CR (\cM)
-    modes.c_iflag &= !INLCR;
-    // turn off canonical mode
-    modes.c_lflag &= !ICANON;
-    // turn off echo mode
-    modes.c_lflag &= !ECHO;
-    // turn off handling of discard and lnext characters
-    modes.c_lflag &= !IEXTEN;
-    // turn on "implementation-defined post processing" - this often changes how line breaks work.
-    modes.c_oflag |= OPOST;
-    // "translate newline to carriage return-newline" - without you see staircase output.
-    modes.c_oflag |= ONLCR;
+// Turning off OPOST or ONLCR breaks output (staircase effect), we don't allow it.
+// See #7133.
+fn term_fix_oflag(modes: &mut libc::termios) {
+    modes.c_oflag |= {
+        // turn on "implementation-defined post processing" - this often changes how line breaks work.
+        OPOST
+        // "translate newline to carriage return-newline" - without you see staircase output.
+        | ONLCR
+    };
+}
 
-    modes.c_cc[VMIN] = 1;
-    modes.c_cc[VTIME] = 0;
+/// Restore terminal settings we care about, to prevent a broken shell.
+fn term_fix_shell_modes(modes: &mut libc::termios) {
+    modes.c_iflag &= {
+        // disable mapping CR (\cM) to NL (\cJ)
+        !ICRNL
+        // disable mapping NL (\cJ) to CR (\cM)
+        & !INLCR
+    };
+    modes.c_lflag &= {
+        !ECHO
+        & !ICANON
+        & !IEXTEN // turn off handling of discard and lnext characters
+        & !FLUSHO
+    };
+    term_fix_oflag(modes);
+
+    let c_cc = &mut modes.c_cc;
+    c_cc[VMIN] = 1;
+    c_cc[VTIME] = 0;
 
     // Prefer to use _POSIX_VDISABLE to disable control functions.
     // This permits separately binding nul (typically control-space).
@@ -4413,21 +4752,15 @@ fn term_fix_modes(modes: &mut libc::termios) {
     let disabling_char = _POSIX_VDISABLE;
 
     // We ignore these anyway, so there is no need to sacrifice a character.
-    modes.c_cc[VSUSP] = disabling_char;
-    modes.c_cc[VQUIT] = disabling_char;
+    c_cc[VSUSP] = disabling_char;
+    c_cc[VQUIT] = disabling_char;
 }
 
 fn term_fix_external_modes(modes: &mut libc::termios) {
-    // Turning off OPOST or ONLCR breaks output (staircase effect), we don't allow it.
-    // See #7133.
-    modes.c_oflag |= OPOST;
-    modes.c_oflag |= ONLCR;
+    term_fix_oflag(modes);
     // These cause other ridiculous behaviors like input not being shown.
-    modes.c_lflag |= ICANON;
-    modes.c_lflag |= IEXTEN;
-    modes.c_lflag |= ECHO;
-    modes.c_iflag |= ICRNL;
-    modes.c_iflag &= !INLCR;
+    modes.c_lflag = (modes.c_lflag | ECHO | ICANON | IEXTEN) & !FLUSHO;
+    modes.c_iflag = (modes.c_iflag | ICRNL) & !INLCR;
 }
 
 /// Give up control of terminal.
@@ -4442,7 +4775,7 @@ fn term_donate(quiet: bool /* = false */) {
     {
         if errno().0 != EINTR {
             if !quiet {
-                FLOG!(
+                flog!(
                     warning,
                     wgettext!("Could not set terminal mode for new job")
                 );
@@ -4464,16 +4797,17 @@ pub fn term_copy_modes() {
     // and 99% triggered by a crashed program.
     term_fix_external_modes(&mut tty_modes_for_external_cmds);
 
+    let mut shell_modes = shell_modes();
     // Copy flow control settings to shell modes.
     if (tty_modes_for_external_cmds.c_iflag & IXON) != 0 {
-        shell_modes().c_iflag |= IXON;
+        shell_modes.c_iflag |= IXON;
     } else {
-        shell_modes().c_iflag &= !IXON;
+        shell_modes.c_iflag &= !IXON;
     }
     if (tty_modes_for_external_cmds.c_iflag & IXOFF) != 0 {
-        shell_modes().c_iflag |= IXOFF;
+        shell_modes.c_iflag |= IXOFF;
     } else {
-        shell_modes().c_iflag &= !IXOFF;
+        shell_modes.c_iflag &= !IXOFF;
     }
 }
 
@@ -4486,7 +4820,7 @@ pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
     };
     if !ok {
         perror("tcsetattr");
-        FLOG!(
+        flog!(
             warning,
             wgettext_fmt!("Failed to set terminal mode (%s)", whence)
         );
@@ -4581,7 +4915,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
                 break;
             }
             // No TTY, cannot be interactive?
-            FLOG!(
+            flog!(
                 warning,
                 wgettext!("No TTY for interactive shell (tcgetpgrp failed)")
             );
@@ -4594,7 +4928,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             if check_for_orphaned_process(loop_count, shell_pgid) {
                 // We're orphaned, so we just die. Another sad statistic.
                 let pid = getpid();
-                FLOG!(
+                flog!(
                     warning,
                     sprintf!(
                         "I appear to be an orphaned process, so I am quitting politely. My pid is %d.",
@@ -4637,7 +4971,7 @@ fn reader_interactive_init() {
             //
             // This should be harmless, so we ignore it.
             if errno().0 != EPERM {
-                FLOG!(
+                flog!(
                     error,
                     wgettext!("Failed to assign shell to its own process group")
                 );
@@ -4648,7 +4982,7 @@ fn reader_interactive_init() {
 
         // Take control of the terminal
         if unsafe { libc::tcsetpgrp(STDIN_FILENO, shell_pgid) } == -1 {
-            FLOG!(error, wgettext!("Failed to take control of the terminal"));
+            flog!(error, wgettext!("Failed to take control of the terminal"));
             perror("tcsetpgrp");
             exit_without_destructors(1);
         }
@@ -4837,7 +5171,7 @@ impl<'a> Reader<'a> {
         // Reap jobs but do NOT trigger a repaint.
         // This is to prevent infinite loops in case a job from the prompt triggers a repaint.
         // See #9796.
-        job_reap(self.parser, true);
+        job_reap(self.parser, true, None);
 
         // Some prompt may have requested an exit (#8033).
         let exit_current_script = self.parser.libdata().exit_current_script;
@@ -4962,7 +5296,8 @@ fn get_autosuggestion_performer(
                     parse_util_process_extent(&command_line, cursor_pos, Some(&mut tokens));
                     range_of_line_at_cursor(
                         &command_line,
-                        tokens.first().map(|tok| tok.offset()).unwrap_or(cursor_pos),
+                        parse_util_process_first_token_offset(&command_line, cursor_pos)
+                            .unwrap_or(cursor_pos),
                     ) == range
                 };
                 if !cursor_line_has_process_start {
@@ -4980,44 +5315,51 @@ fn get_autosuggestion_performer(
             while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
                 let item = searcher.current_item();
 
-                let (matched_part, icase) = if search_type == SearchType::Prefix {
-                    let mut matched_part =
-                        item.str().starts_with(search_string).then_some(item.str());
+                let full = item.str();
+                let (suggested_range, icase) = if search_type == SearchType::Prefix {
+                    let mut suggested_range =
+                        full.starts_with(search_string).then_some(0..full.len());
                     let mut icase = false;
                     // Only check for a case-insensitive match if we haven't already found one
-                    if matched_part.is_none() && icase_history_result.is_none() {
+                    if suggested_range.is_none() && icase_history_result.is_none() {
                         icase = true;
-                        matched_part =
-                            string_prefixes_string_case_insensitive(search_string, item.str())
-                                .then_some(item.str());
+                        suggested_range =
+                            string_prefixes_string_case_insensitive(search_string, full)
+                                .then_some(0..full.len());
                     }
 
-                    (matched_part, icase)
+                    (suggested_range, icase)
                 } else {
                     // The history items may have multiple lines of text.
                     // Only suggest the line that actually contains the search string.
-                    let lines = item
-                        .str()
-                        .as_char_slice()
-                        .split(|&c| c == '\n')
-                        .rev()
-                        .map(wstr::from_char_slice);
+                    let newlines = full
+                        .char_indices()
+                        .filter_map(|(i, c)| (c == '\n').then_some(i));
+                    let line_ranges = Some(0)
+                        .into_iter()
+                        .chain(newlines.clone().map(|i| i + 1))
+                        .zip(newlines.chain(Some(full.char_count()).into_iter()))
+                        .map(|(start, end)| start..end);
 
                     let mut icase = false;
-                    let mut matched_part =
-                        lines.clone().find(|line| line.starts_with(search_string));
+                    let mut suggested_range = line_ranges
+                        .clone()
+                        .find(|range| full[range.clone()].starts_with(search_string));
 
                     // Only check for a case-insensitive match if we haven't already found one
-                    if matched_part.is_none() && icase_history_result.is_none() {
+                    if suggested_range.is_none() && icase_history_result.is_none() {
                         icase = true;
-                        matched_part = lines.into_iter().find(|line| {
-                            string_prefixes_string_case_insensitive(search_string, line)
+                        suggested_range = line_ranges.into_iter().find(|range| {
+                            string_prefixes_string_case_insensitive(
+                                search_string,
+                                &full[range.clone()],
+                            )
                         });
                     }
 
-                    (matched_part, icase)
+                    (suggested_range, icase)
                 };
-                let Some(matched_part) = matched_part else {
+                let Some(suggested_range) = suggested_range else {
                     assert!(
                         icase_history_result.is_some(),
                         "couldn't find line matching search {search_string:?} in history item {item:?} (did history search yield a bogus result?)"
@@ -5025,13 +5367,19 @@ fn get_autosuggestion_performer(
                     continue;
                 };
 
-                if autosuggest_validate_from_history(item, &working_directory, &ctx) {
+                if autosuggest_validate_from_history(
+                    full,
+                    suggested_range.clone(),
+                    item.get_required_paths(),
+                    &working_directory,
+                    &ctx,
+                ) {
                     // The command autosuggestion was handled specially, so we're done.
-                    let is_whole = matched_part.len() == item.str().len();
+                    let is_whole = suggested_range.len() == item.str().len();
                     let result = AutosuggestionResult::new(
                         command_line.clone(),
                         range.clone(),
-                        matched_part.into(),
+                        full[suggested_range].into(),
                         icase,
                         is_whole,
                         CompletionList::new(),
@@ -5125,7 +5473,10 @@ fn get_autosuggestion_performer(
 enum AutosuggestionPortion {
     Count(usize),
     Line,
-    PerMoveWordStyle(MoveWordStyle),
+    PerMoveWordStyle {
+        style: MoveWordStyle,
+        to_word_end: bool,
+    },
 }
 
 impl<'a> Reader<'a> {
@@ -5163,7 +5514,7 @@ impl<'a> Reader<'a> {
         let mut loaded_new = false;
         for to_load in &result.needs_load {
             if complete_load(to_load, self.parser) {
-                FLOGF!(
+                flogf!(
                     complete,
                     "Autosuggest found new completions for %s, restarting",
                     to_load
@@ -5222,7 +5573,7 @@ impl<'a> Reader<'a> {
         self.data.in_flight_autosuggest_request = el.text().to_owned();
 
         // Clear the autosuggestion and kick it off in the background.
-        FLOG!(reader_render, "Autosuggesting");
+        flog!(reader_render, "Autosuggesting");
         self.data.autosuggestion.clear();
         let performer = get_autosuggestion_performer(
             self.parser,
@@ -5317,17 +5668,24 @@ impl<'a> Reader<'a> {
                     suggested[..line_end].to_owned(),
                 )
             }
-            AutosuggestionPortion::PerMoveWordStyle(style) => {
+            AutosuggestionPortion::PerMoveWordStyle { style, to_word_end } => {
                 // Accept characters according to the specified style.
-                let mut state = MoveWordStateMachine::new(style);
+
+                let state_machine_dir = if to_word_end {
+                    MoveWordDir::Left
+                } else {
+                    MoveWordDir::Right
+                };
+                let mut state = MoveWordStateMachine::new(style, state_machine_dir);
                 let have = search_string_range.len();
                 let mut want = have;
                 while want < autosuggestion_text.len() {
-                    let wc = autosuggestion_text.as_char_slice()[want];
-                    if !state.consume_char(wc) {
+                    let consumed = state.consume_char(autosuggestion_text, want);
+                    if consumed {
+                        want += 1;
+                    } else {
                         break;
                     }
-                    want += 1;
                 }
                 (
                     search_string_range.end..search_string_range.end,
@@ -5476,7 +5834,7 @@ impl<'a> Reader<'a> {
         }
         self.in_flight_highlight_request = self.command_line.text().to_owned();
 
-        FLOG!(reader_render, "Highlighting");
+        flog!(reader_render, "Highlighting");
         let highlight_performer =
             get_highlight_performer(self.parser, &self.command_line, /*io_ok=*/ true);
         self.debouncers.highlight.perform(highlight_performer);
@@ -5707,7 +6065,7 @@ fn expand_replacer(
 ) -> Option<abbrs::Replacement> {
     if !repl.is_function {
         // Literal replacement cannot fail.
-        FLOGF!(
+        flogf!(
             abbrs,
             "Expanded literal abbreviation <%s> -> <%s>",
             token,
@@ -5740,7 +6098,7 @@ fn expand_replacer(
         return None;
     }
     let result = join_strings(&outputs, '\n');
-    FLOGF!(
+    flogf!(
         abbrs,
         "Expanded function abbreviation <%s> -> <%s>",
         token,
@@ -5938,13 +6296,19 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         }
         rl::BeginningOfLine
         | rl::EndOfLine
-        | rl::ForwardWord
+        | rl::ForwardBigwordVi
+        | rl::ForwardWordVi
+        | rl::KillBigwordVi
+        | rl::KillWordVi
+        | rl::ForwardWordEmacs
+        | rl::ForwardBigwordEmacs
+        | rl::KillWordEmacs
+        | rl::KillBigwordEmacs
         | rl::BackwardWord
-        | rl::ForwardBigword
         | rl::BackwardBigword
         | rl::ForwardToken
         | rl::BackwardToken
-        | rl::NextdOrForwardWord
+        | rl::NextdOrForwardWordEmacs
         | rl::PrevdOrBackwardWord
         | rl::DeleteChar
         | rl::BackwardDeleteChar
@@ -5954,8 +6318,6 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::BackwardKillLine
         | rl::KillWholeLine
         | rl::KillInnerLine
-        | rl::KillWord
-        | rl::KillBigword
         | rl::KillToken
         | rl::BackwardKillWord
         | rl::BackwardKillPathComponent
@@ -6028,20 +6390,17 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
         }
 
         // Open the tty. Presumably this is stdin, but maybe not?
-        let tty_fd = AutoCloseFd::new(unsafe { libc::open(tty, O_RDONLY | O_NONBLOCK) });
-        if !tty_fd.is_valid() {
-            perror("open");
-            exit_without_destructors(1);
-        }
+        let tty_fd = {
+            let res = unsafe { libc::open(tty, O_RDONLY | O_NONBLOCK) };
+            if res < 0 {
+                perror("open");
+                exit_without_destructors(1);
+            }
+            unsafe { OwnedFd::from_raw_fd(res) }
+        };
 
         let mut tmp = 0 as libc::c_char;
-        if unsafe {
-            libc::read(
-                tty_fd.fd(),
-                &mut tmp as *mut libc::c_char as *mut libc::c_void,
-                1,
-            )
-        } < 0
+        if unsafe { libc::read(tty_fd.as_raw_fd(), (&raw mut tmp).cast(), 1) } < 0
             && errno().0 == EIO
         {
             we_think_we_are_orphaned = true;
@@ -6067,12 +6426,10 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
 
     // Provide values for `status current-command` and `status current-commandline`
     if !ft.is_empty() {
-        parser.libdata_mut().status_vars.command = ft.to_owned();
+        parser.libdata_mut().status_vars.command = ft.clone();
         parser.libdata_mut().status_vars.commandline = cmd.to_owned();
         // Also provide a value for the deprecated fish 2.0 $_ variable
-        parser
-            .vars()
-            .set_one(L!("_"), EnvMode::GLOBAL, ft.to_owned());
+        parser.set_one(L!("_"), ParserEnvSetMode::new(EnvMode::GLOBAL), ft.clone());
     }
 
     reader_write_title(cmd, parser, true);
@@ -6083,16 +6440,16 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
 
     let time_before = Instant::now();
     let eval_res = parser.eval(cmd, &IoChain::new());
-    job_reap(parser, true);
+    job_reap(parser, true, None);
 
     // Update the execution duration iff a command is requested for execution
     // issue - #4926
     if !ft.is_empty() {
         let time_after = Instant::now();
         let duration = time_after.duration_since(time_before);
-        parser.vars().set_one(
+        parser.set_one(
             ENV_CMD_DURATION,
-            EnvMode::UNEXPORT,
+            ParserEnvSetMode::new(EnvMode::UNEXPORT),
             duration.as_millis().to_wstring(),
         );
     }
@@ -6102,9 +6459,11 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     // Provide value for `status current-command`
     parser.libdata_mut().status_vars.command = get_program_name().to_owned();
     // Also provide a value for the deprecated fish 2.0 $_ variable
-    parser
-        .vars()
-        .set_one(L!("_"), EnvMode::GLOBAL, get_program_name().to_owned());
+    parser.set_one(
+        L!("_"),
+        ParserEnvSetMode::new(EnvMode::GLOBAL),
+        get_program_name().to_owned(),
+    );
     // Provide value for `status current-commandline`
     parser.libdata_mut().status_vars.commandline = L!("").to_owned();
 
@@ -6191,22 +6550,20 @@ impl<'a> Reader<'a> {
 
         // Remove ephemeral items - even if the text is empty.
         self.history.remove_ephemeral_items();
-
-        if !text.is_empty() {
-            // Mark this item as ephemeral if should_add_to_history says no (#615).
-            let mode = if !self.should_add_to_history(&text) {
-                PersistenceMode::Ephemeral
-            } else if in_private_mode(self.vars()) {
-                PersistenceMode::Memory
-            } else {
-                PersistenceMode::Disk
-            };
-            self.history.clone().add_pending_with_file_detection(
-                &text,
-                &self.parser.variables,
-                mode,
-            );
+        if text.is_empty() {
+            return;
         }
+
+        // Mark this item as ephemeral if should_add_to_history says no (#615).
+        let mode = if !self.should_add_to_history(&text) {
+            PersistenceMode::Ephemeral
+        } else if in_private_mode(self.vars()) {
+            PersistenceMode::Memory
+        } else {
+            PersistenceMode::Disk
+        };
+        self.history
+            .add_pending_with_file_detection(&text, &self.parser.variables, mode);
     }
 
     /// Check if we have background jobs that we have not warned about.
@@ -6369,14 +6726,12 @@ fn replace_line_at_cursor(
         .as_char_slice()
         .iter()
         .rposition(|&c| c == '\n')
-        .map(|newline| newline + 1)
-        .unwrap_or(0);
+        .map_or(0, |newline| newline + 1);
     let end = text[cursor..]
         .as_char_slice()
         .iter()
         .position(|&c| c == '\n')
-        .map(|pos| cursor + pos)
-        .unwrap_or(text.len());
+        .map_or(text.len(), |pos| cursor + pos);
     *inout_cursor_pos = start + replacement.len();
     text[..start].to_owned() + replacement + &text[end..]
 }
@@ -6599,15 +6954,6 @@ fn reader_can_replace(s: &wstr, flags: CompleteFlags) -> bool {
         .any(|c| matches!(c, '$' | '*' | '?' | '(' | '{' | '}' | ')'))
 }
 
-/// Determine the best (lowest) match rank for a set of completions.
-fn get_best_rank(comp: &[Completion]) -> u32 {
-    let mut best_rank = u32::MAX;
-    for c in comp {
-        best_rank = best_rank.min(c.rank());
-    }
-    best_rank
-}
-
 impl<'a> Reader<'a> {
     /// Compute completions and update the pager and/or commandline as needed.
     fn compute_and_apply_completions(&mut self, c: ReadlineCmd) {
@@ -6671,8 +7017,7 @@ impl<'a> Reader<'a> {
                 return;
             }
             ExpandResultCode::ok => {
-                self.rls_mut().comp.clear();
-                self.rls_mut().complete_did_insert = false;
+                self.rls_mut().completion_action = None;
                 self.push_edit(
                     EditableLineTag::Commandline,
                     Edit::new(token_range, wc_expanded),
@@ -6685,12 +7030,11 @@ impl<'a> Reader<'a> {
         // up to the end of the token we're completing.
         let cmdsub = &el.text()[cmdsub_range.start..token_range.end];
 
-        let (comp, _needs_load) = complete(
+        let (mut comp, _needs_load) = complete(
             cmdsub,
             CompletionRequestOptions::normal(),
             &self.parser.context(),
         );
-        self.rls_mut().comp = comp;
 
         let el = &self.command_line;
         // User-supplied completions may have changed the commandline - prevent buffer
@@ -6699,23 +7043,22 @@ impl<'a> Reader<'a> {
         token_range.end = std::cmp::min(token_range.end, el.text().len());
 
         // Munge our completions.
-        sort_and_prioritize(
-            &mut self.rls_mut().comp,
-            CompletionRequestOptions::default(),
-        );
+        sort_and_prioritize(&mut comp, CompletionRequestOptions::default());
 
         let el = &self.command_line;
         // Record our cycle_command_line.
         self.cycle_command_line = el.text().to_owned();
         self.cycle_cursor_pos = token_range.end;
 
-        self.rls_mut().complete_did_insert = self.handle_completions(token_range);
+        let inserted_unique = self.handle_completions(token_range, comp);
+        self.rls_mut().completion_action = if inserted_unique {
+            Some(CompletionAction::InsertedUnique)
+        } else {
+            (!self.pager.is_empty()).then_some(CompletionAction::ShownAmbiguous)
+        };
 
         // Show the search field if requested and if we printed a list of completions.
-        if c == ReadlineCmd::CompleteAndSearch
-            && !self.rls().complete_did_insert
-            && !self.pager.is_empty()
-        {
+        if c == ReadlineCmd::CompleteAndSearch && !inserted_unique && !self.pager.is_empty() {
             self.pager.set_search_field_shown(true);
             self.select_completion_in_direction(SelectionMotion::Next, false);
         }
@@ -6724,7 +7067,7 @@ impl<'a> Reader<'a> {
     fn try_insert(&mut self, c: Completion, tok: &wstr, token_range: Range<usize>) {
         // If this is a replacement completion, check that we know how to replace it, e.g. that
         // the token doesn't contain evil operators like {}.
-        if !c.flags.contains(CompleteFlags::REPLACES_TOKEN) || reader_can_replace(tok, c.flags) {
+        if !c.replaces_token() || reader_can_replace(tok, c.flags) {
             self.completion_insert(
                 &c.completion,
                 token_range.end,
@@ -6749,11 +7092,30 @@ impl<'a> Reader<'a> {
     /// \param token_end the position after the token to complete
     ///
     /// Return true if we inserted text into the command line, false if we did not.
-    fn handle_completions(&mut self, token_range: Range<usize>) -> bool {
+    fn handle_completions(&mut self, token_range: Range<usize>, mut comp: Vec<Completion>) -> bool {
         let tok = self.command_line.text()[token_range.clone()].to_owned();
 
-        let comp = &self.rls().comp;
-        // Check trivial cases.
+        comp.retain({
+            let best_rank = comp.iter().map(|c| c.rank()).min().unwrap_or(u32::MAX);
+            move |c| {
+                // Ignore completions with a less suitable match rank than the best.
+                assert!(c.rank() >= best_rank);
+                c.rank() == best_rank
+            }
+        });
+
+        // Determine whether we are going to replace the token or not. If any commands of the best
+        // rank do not require replacement, then ignore all those that want to use replacement.
+        let will_replace_token = comp.iter().all(|c| c.replaces_token());
+
+        comp.retain(|c| !c.replaces_token() || reader_can_replace(&tok, c.flags));
+
+        for c in &mut comp {
+            if !will_replace_token && c.replaces_token() {
+                c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
+            }
+        }
+
         let len = comp.len();
         if len == 0 {
             // No suitable completions found, flash screen and return.
@@ -6765,74 +7127,27 @@ impl<'a> Reader<'a> {
             return false;
         } else if len == 1 {
             // Exactly one suitable completion found - insert it.
-            let c = &comp[0];
-            self.try_insert(c.clone(), &tok, token_range);
-            return true;
-        }
-
-        let best_rank = get_best_rank(comp);
-
-        // Determine whether we are going to replace the token or not. If any commands of the best
-        // rank do not require replacement, then ignore all those that want to use replacement.
-        let mut will_replace_token = true;
-        for c in comp {
-            if c.rank() <= best_rank && !c.flags.contains(CompleteFlags::REPLACES_TOKEN) {
-                will_replace_token = false;
-                break;
-            }
-        }
-
-        // Decide which completions survived. There may be a lot of them; it would be nice if we could
-        // figure out how to avoid copying them here.
-        let mut surviving_completions = vec![];
-        let mut all_matches_exact_or_prefix = true;
-        for c in comp {
-            // Ignore completions with a less suitable match rank than the best.
-            if c.rank() > best_rank {
-                continue;
-            }
-
-            // Only use completions that match replace_token.
-            let completion_replaces_token = c.flags.contains(CompleteFlags::REPLACES_TOKEN);
-            if completion_replaces_token != will_replace_token {
-                continue;
-            }
-
-            // Don't use completions that want to replace, if we cannot replace them.
-            if completion_replaces_token && !reader_can_replace(&tok, c.flags) {
-                continue;
-            }
-
-            // This completion survived.
-            surviving_completions.push(c.clone());
-            all_matches_exact_or_prefix =
-                all_matches_exact_or_prefix && c.r#match.is_exact_or_prefix();
-        }
-
-        if surviving_completions.len() == 1 {
-            // After sorting and stuff only one completion is left, use it.
-            //
-            // TODO: This happens when smartcase kicks in, e.g.
-            // the token is "cma" and the options are "cmake/" and "CMakeLists.txt"
-            // it would be nice if we could figure
-            // out how to use it more.
-            let c = std::mem::take(&mut surviving_completions[0]);
-
+            let c = std::mem::take(&mut comp[0]);
             self.try_insert(c, &tok, token_range);
             return true;
         }
 
         let mut use_prefix = false;
-        let mut common_prefix = L!("").to_owned();
+        let mut common_prefix = L!("");
+        let all_matches_exact_or_prefix = comp.iter().all(|c| c.r#match.is_exact_or_prefix());
+        assert!(will_replace_token || all_matches_exact_or_prefix);
         if all_matches_exact_or_prefix {
             // Try to find a common prefix to insert among the surviving completions.
             let mut flags = CompleteFlags::empty();
             let mut prefix_is_partial_completion = false;
             let mut first = true;
-            for c in &surviving_completions {
+            for c in &comp {
+                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                    continue;
+                }
                 if first {
                     // First entry, use the whole string.
-                    common_prefix = c.completion.clone();
+                    common_prefix = &c.completion;
                     flags = c.flags;
                     first = false;
                 } else {
@@ -6847,7 +7162,7 @@ impl<'a> Reader<'a> {
                     }
 
                     // idx is now the length of the new common prefix.
-                    common_prefix.truncate(idx);
+                    common_prefix = common_prefix.slice_to(idx);
                     prefix_is_partial_completion = true;
 
                     // Early out if we decide there's no common prefix.
@@ -6871,7 +7186,7 @@ impl<'a> Reader<'a> {
                     flags |= CompleteFlags::NO_SPACE;
                 }
                 self.completion_insert(
-                    &common_prefix,
+                    common_prefix,
                     token_range.end,
                     flags,
                     /*is_unique=*/ false,
@@ -6881,43 +7196,53 @@ impl<'a> Reader<'a> {
             }
         }
 
-        if use_prefix {
-            for c in &mut surviving_completions {
-                c.flags &= !CompleteFlags::REPLACES_TOKEN;
-                c.completion.replace_range(0..common_prefix.len(), L!(""));
-            }
-        }
-
         // Print the completion list.
-        let mut prefix = WString::new();
-        if will_replace_token || !all_matches_exact_or_prefix {
-            if use_prefix {
-                prefix.push_utfstr(&common_prefix);
-            }
-        } else if tok.len() + common_prefix.len() <= PREFIX_MAX_LEN {
-            prefix.push_utfstr(&tok);
-            prefix.push_utfstr(&common_prefix);
+        let prefix = if will_replace_token && !use_prefix {
+            Cow::Borrowed(L!(""))
         } else {
-            // Collapse parent directories and append end of string
-            prefix.push(get_ellipsis_char());
-
-            let full = tok + &common_prefix[..];
-            let truncated = &full[full.len() - PREFIX_MAX_LEN..];
-            let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
-            if i == 0 {
-                // No path separators were found in the common prefix, so we can't collapse
-                // any further
-                prefix.push_utfstr(&truncated);
+            let mut prefix = WString::new();
+            let full = if will_replace_token {
+                common_prefix.to_owned()
             } else {
-                // Discard any parent directories and include whats left
-                prefix.push('/');
-                prefix.push_utfstr(last_component);
+                tok + common_prefix
             };
+            if full.len() <= PREFIX_MAX_LEN {
+                prefix = full;
+            } else {
+                // Collapse parent directories and append end of string
+                prefix.push(get_ellipsis_char());
+
+                let truncated = &full[full.len() - PREFIX_MAX_LEN..];
+                let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
+                if i == 0 {
+                    // No path separators were found in the common prefix, so we can't collapse
+                    // any further
+                    prefix.push_utfstr(&truncated);
+                } else {
+                    // Discard any parent directories and include whats left
+                    prefix.push('/');
+                    prefix.push_utfstr(last_component);
+                };
+            }
+            Cow::Owned(prefix)
+        };
+
+        if use_prefix {
+            let common_prefix_len = common_prefix.len();
+            for c in &mut comp {
+                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                    // Keep replacement semantics and the original prefix so these completions can
+                    // fix casing when selected.
+                    continue;
+                }
+                c.flags &= !CompleteFlags::REPLACES_TOKEN;
+                c.completion.replace_range(0..common_prefix_len, L!(""));
+            }
         }
 
         // Update the pager data.
-        self.pager.set_prefix(&prefix, true);
-        self.pager.set_completions(&surviving_completions, true);
+        self.pager.set_prefix(prefix, true);
+        self.pager.set_completions(&comp, true);
         // Modify the command line to reflect the new pager.
         self.pager_selection_changed();
         false
@@ -6964,8 +7289,8 @@ mod tests {
     use super::{combine_command_and_autosuggestion, completion_apply_to_command_line};
     use crate::complete::CompleteFlags;
     use crate::operation_context::{OperationContext, no_cancel};
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     #[test]
     fn test_autosuggestion_combining() {

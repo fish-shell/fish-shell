@@ -140,8 +140,8 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     let mut print_help = false;
     let print_hints = false;
 
-    const shortopts: &wstr = L!("nh");
-    const longopts: &[WOption] = &[
+    let shortopts: &wstr = L!("nh");
+    let longopts: &[WOption] = &[
         wopt(L!("any"), ArgType::NoArgument, 'n'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
@@ -199,7 +199,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 continue;
             };
             if !find_wait_handles(WaitHandleQuery::Pid(pid), parser, &mut wait_handles) {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: Could not find a job with process ID '%d'\n",
                     cmd,
                     pid,
@@ -208,7 +208,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         } else {
             // argument is process name
             if !find_wait_handles(WaitHandleQuery::ProcName(item), parser, &mut wait_handles) {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: Could not find child processes with the name '%s'\n",
                     cmd,
                     item,
@@ -219,5 +219,5 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     if wait_handles.is_empty() {
         return Err(STATUS_INVALID_ARGS);
     }
-    return wait_for_completion(parser, &wait_handles, any_flag);
+    wait_for_completion(parser, &wait_handles, any_flag)
 }

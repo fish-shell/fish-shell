@@ -1,19 +1,19 @@
 use crate::common::{Named, escape, get_by_sorted_name};
 use crate::env::Environment;
-use crate::flog::FLOG;
+use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
     CharEvent, CharInputStyle, ImplicitEvent, InputEventQueuer, KeyMatchQuality,
     R_END_INPUT_FUNCTIONS, ReadlineCmd, match_key_event_to_key,
 };
 use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
+use crate::prelude::*;
 use crate::reader::{Reader, reader_reset_interrupted};
 use crate::threads::assert_is_main_thread;
-use crate::wchar::prelude::*;
-use once_cell::sync::Lazy;
+use fish_common::assert_sorted_by_name;
 use std::mem;
 use std::sync::{
-    Mutex, MutexGuard,
+    LazyLock, Mutex, MutexGuard,
     atomic::{AtomicU32, Ordering},
 };
 
@@ -45,11 +45,11 @@ pub struct InputMapping {
     /// We wish to preserve the user-specified order. This is just an incrementing value.
     specification_order: u32,
     /// Mode in which this command should be evaluated.
-    mode: WString,
+    pub mode: WString,
     /// New mode that should be switched to after command evaluation, or None to leave the mode unchanged.
-    sets_mode: Option<WString>,
+    pub sets_mode: Option<WString>,
     /// Perhaps this binding was created using a raw escape sequence.
-    key_name_style: KeyNameStyle,
+    pub key_name_style: KeyNameStyle,
 }
 
 impl InputMapping {
@@ -108,18 +108,23 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("accept-autosuggestion"), ReadlineCmd::AcceptAutosuggestion),
     make_md(L!("and"), ReadlineCmd::FuncAnd),
     make_md(L!("backward-bigword"), ReadlineCmd::BackwardBigword),
+    make_md(L!("backward-bigword-end"), ReadlineCmd::BackwardBigwordEnd),
     make_md(L!("backward-char"), ReadlineCmd::BackwardChar),
     make_md(L!("backward-char-passive"), ReadlineCmd::BackwardCharPassive),
     make_md(L!("backward-delete-char"), ReadlineCmd::BackwardDeleteChar),
     make_md(L!("backward-jump"), ReadlineCmd::BackwardJump),
     make_md(L!("backward-jump-till"), ReadlineCmd::BackwardJumpTill),
     make_md(L!("backward-kill-bigword"), ReadlineCmd::BackwardKillBigword),
+    make_md(L!("backward-kill-bigword-end"), ReadlineCmd::BackwardKillBigwordEnd),
     make_md(L!("backward-kill-line"), ReadlineCmd::BackwardKillLine),
     make_md(L!("backward-kill-path-component"), ReadlineCmd::BackwardKillPathComponent),
     make_md(L!("backward-kill-token"), ReadlineCmd::BackwardKillToken),
     make_md(L!("backward-kill-word"), ReadlineCmd::BackwardKillWord),
+    make_md(L!("backward-kill-word-end"), ReadlineCmd::BackwardKillWordEnd),
+    make_md(L!("backward-path-component"), ReadlineCmd::BackwardPathComponent),
     make_md(L!("backward-token"), ReadlineCmd::BackwardToken),
     make_md(L!("backward-word"), ReadlineCmd::BackwardWord),
+    make_md(L!("backward-word-end"), ReadlineCmd::BackwardWordEnd),
     make_md(L!("begin-selection"), ReadlineCmd::BeginSelection),
     make_md(L!("begin-undo-group"), ReadlineCmd::BeginUndoGroup),
     make_md(L!("beginning-of-buffer"), ReadlineCmd::BeginningOfBuffer),
@@ -146,14 +151,19 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("exit"), ReadlineCmd::Exit),
     make_md(L!("expand-abbr"), ReadlineCmd::ExpandAbbr),
     make_md(L!("force-repaint"), ReadlineCmd::ForceRepaint),
-    make_md(L!("forward-bigword"), ReadlineCmd::ForwardBigword),
+    make_md(L!("forward-bigword"), ReadlineCmd::ForwardBigwordEmacs),
+    make_md(L!("forward-bigword-end"), ReadlineCmd::ForwardBigwordEnd),
+    make_md(L!("forward-bigword-vi"), ReadlineCmd::ForwardBigwordVi),
     make_md(L!("forward-char"), ReadlineCmd::ForwardChar),
     make_md(L!("forward-char-passive"), ReadlineCmd::ForwardCharPassive),
     make_md(L!("forward-jump"), ReadlineCmd::ForwardJump),
     make_md(L!("forward-jump-till"), ReadlineCmd::ForwardJumpTill),
+    make_md(L!("forward-path-component"), ReadlineCmd::ForwardPathComponent),
     make_md(L!("forward-single-char"), ReadlineCmd::ForwardSingleChar),
     make_md(L!("forward-token"), ReadlineCmd::ForwardToken),
-    make_md(L!("forward-word"), ReadlineCmd::ForwardWord),
+    make_md(L!("forward-word"), ReadlineCmd::ForwardWordEmacs),
+    make_md(L!("forward-word-end"), ReadlineCmd::ForwardWordEnd),
+    make_md(L!("forward-word-vi"), ReadlineCmd::ForwardWordVi),
     make_md(L!("history-delete"), ReadlineCmd::HistoryDelete),
     make_md(L!("history-last-token-search-backward"), ReadlineCmd::HistoryLastTokenSearchBackward),
     make_md(L!("history-last-token-search-forward"), ReadlineCmd::HistoryLastTokenSearchForward),
@@ -170,14 +180,23 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("insert-line-under"), ReadlineCmd::InsertLineUnder),
     make_md(L!("jump-till-matching-bracket"), ReadlineCmd::JumpTillMatchingBracket),
     make_md(L!("jump-to-matching-bracket"), ReadlineCmd::JumpToMatchingBracket),
-    make_md(L!("kill-bigword"), ReadlineCmd::KillBigword),
+    make_md(L!("kill-a-bigword"), ReadlineCmd::KillABigWord),
+    make_md(L!("kill-a-word"), ReadlineCmd::KillAWord),
+    make_md(L!("kill-bigword"), ReadlineCmd::KillBigwordEmacs),
+    make_md(L!("kill-bigword-end"), ReadlineCmd::KillBigwordEnd),
+    make_md(L!("kill-bigword-vi"), ReadlineCmd::KillBigwordVi),
+    make_md(L!("kill-inner-bigword"), ReadlineCmd::KillInnerBigWord),
     make_md(L!("kill-inner-line"), ReadlineCmd::KillInnerLine),
+    make_md(L!("kill-inner-word"), ReadlineCmd::KillInnerWord),
     make_md(L!("kill-line"), ReadlineCmd::KillLine),
+    make_md(L!("kill-path-component"), ReadlineCmd::KillPathComponent),
     make_md(L!("kill-selection"), ReadlineCmd::KillSelection),
     make_md(L!("kill-token"), ReadlineCmd::KillToken),
     make_md(L!("kill-whole-line"), ReadlineCmd::KillWholeLine),
-    make_md(L!("kill-word"), ReadlineCmd::KillWord),
-    make_md(L!("nextd-or-forward-word"), ReadlineCmd::NextdOrForwardWord),
+    make_md(L!("kill-word"), ReadlineCmd::KillWordEmacs),
+    make_md(L!("kill-word-end"), ReadlineCmd::KillWordEnd),
+    make_md(L!("kill-word-vi"), ReadlineCmd::KillWordVi),
+    make_md(L!("nextd-or-forward-word"), ReadlineCmd::NextdOrForwardWordEmacs),
     make_md(L!("or"), ReadlineCmd::FuncOr),
     make_md(L!("pager-toggle-search"), ReadlineCmd::PagerToggleSearch),
     make_md(L!("prevd-or-backward-word"), ReadlineCmd::PrevdOrBackwardWord),
@@ -225,8 +244,8 @@ pub struct InputMappingSet {
 
 /// Access the singleton input mapping set.
 pub fn input_mappings() -> MutexGuard<'static, InputMappingSet> {
-    static INPUT_MAPPINGS: Lazy<Mutex<InputMappingSet>> =
-        Lazy::new(|| Mutex::new(InputMappingSet::default()));
+    static INPUT_MAPPINGS: LazyLock<Mutex<InputMappingSet>> =
+        LazyLock::new(|| Mutex::new(InputMappingSet::default()));
     INPUT_MAPPINGS.lock().unwrap()
 }
 
@@ -438,7 +457,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         // Use either readch or readch_timed, per our param.
         if self.idx == self.peeked.len() {
             let newevt = if escaped {
-                FLOG!(reader, "reading timed escape");
+                flog!(reader, "reading timed escape");
                 match self.event_queue.readch_timed_esc() {
                     Some(evt) => evt,
                     None => {
@@ -447,7 +466,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     }
                 }
             } else {
-                FLOG!(reader, "readch timed sequence key");
+                flog!(reader, "readch timed sequence key");
                 match self.event_queue.readch_timed_sequence_key() {
                     Some(evt) => evt,
                     None => {
@@ -456,7 +475,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     }
                 }
             };
-            FLOG!(reader, format!("adding peeked {:?}", newevt));
+            flog!(reader, format!("adding peeked {:?}", newevt));
             self.peeked.push(newevt);
         }
         // Now we have peeked far enough; check the event.
@@ -466,7 +485,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         if kevt.seq == L!("\x1b") && key.modifiers == Modifiers::ALT {
             self.idx += 1;
             self.subidx = 0;
-            FLOG!(reader, "matched delayed escape prefix in alt sequence");
+            flog!(reader, "matched delayed escape prefix in alt sequence");
             return self.next_is_char(style, Key::from_raw(key.codepoint), true);
         }
         if *style == KeyNameStyle::Plain {
@@ -474,7 +493,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             if let Some(key_match) = &result {
                 assert!(self.subidx == 0);
                 self.idx += 1;
-                FLOG!(reader, "matched full key", key, "kind", key_match);
+                flog!(reader, "matched full key", key, "kind", key_match);
             }
             return result;
         }
@@ -487,7 +506,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     self.idx += 1;
                     self.subidx = 0;
                 }
-                FLOG!(
+                flog!(
                     reader,
                     format!(
                         "matched char {} with offset {} within raw sequence of length {}",
@@ -502,11 +521,11 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                 if self.subidx + 1 == actual_seq.len() {
                     self.idx += 1;
                     self.subidx = 0;
-                    FLOG!(reader, "matched escape prefix in raw escape sequence");
+                    flog!(reader, "matched escape prefix in raw escape sequence");
                     return self.next_is_char(style, Key::from_raw(key.codepoint), true);
                 } else if actual_seq
                     .get(self.subidx + 1)
-                    .cloned()
+                    .copied()
                     .map(|c| Key::from_single_char(c).codepoint)
                     == Some(key.codepoint)
                 {
@@ -515,7 +534,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                         self.idx += 1;
                         self.subidx = 0;
                     }
-                    FLOG!(reader, format!("matched {key} against raw escape sequence"));
+                    flog!(reader, format!("matched {key} against raw escape sequence"));
                     return Some(KeyMatchQuality::Exact);
                 }
             }
@@ -570,7 +589,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             prev = *key;
         }
         if self.subidx != 0 {
-            FLOG!(
+            flog!(
                 reader,
                 "legacy binding matched prefix of key encoding but did not consume all of it"
             );
@@ -619,7 +638,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                 continue;
             }
 
-            // FLOG!(reader, "trying mapping", format!("{:?}", m));
+            // flog!(reader, "trying mapping", format!("{:?}", m));
             if self.try_peek_sequence(&m.key_name_style, &m.seq, &mut quality) {
                 // // A binding for just escape should also be deferred
                 // // so escape sequences take precedence.
@@ -647,7 +666,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         }
         if self.char_sequence_interrupted() {
             // We might have matched a longer sequence, but we were interrupted, e.g. by a signal.
-            FLOG!(reader, "torn sequence, rearranging events");
+            flog!(reader, "torn sequence, rearranging events");
             return None;
         }
 
@@ -725,7 +744,7 @@ impl<'a> Reader<'a> {
                     return evt;
                 }
                 CharEvent::Key(ref kevt) => {
-                    FLOG!(
+                    flog!(
                         reader,
                         "Read char",
                         kevt.key,
@@ -751,7 +770,7 @@ impl<'a> Reader<'a> {
         // Check for ordinary mappings.
         let ip = input_mappings();
         if let Some(mapping) = peeker.find_mapping(vars, &ip) {
-            FLOG!(
+            flog!(
                 reader,
                 format!("Found mapping {:?} from {:?}", &mapping, &peeker.peeked)
             );
@@ -771,7 +790,7 @@ impl<'a> Reader<'a> {
             return;
         }
 
-        FLOG!(reader, "no generic found, ignoring char...");
+        flog!(reader, "no generic found, ignoring char...");
         let _ = peeker.next();
         peeker.consume();
     }
@@ -920,31 +939,31 @@ impl InputMappingSet {
         result
     }
 
-    /// Gets the command bound to the specified key sequence in the specified mode. Returns true if
-    /// it exists, false if not.
+    /// Returns the command bound to the specified bind mode.
+    ///
+    /// If bind_mode is None, then binds from all modes are returned.
     pub fn get<'a>(
         &'a self,
         sequence: &[Key],
-        mode: &wstr,
-        out_cmds: &mut &'a [WString],
+        bind_mode: Option<&wstr>,
         user: bool,
-        out_sets_mode: &mut Option<&'a wstr>,
-        out_key_name_style: &mut KeyNameStyle,
-    ) -> bool {
+    ) -> Vec<&'a InputMapping> {
         let ml = if user {
             &self.mapping_list
         } else {
             &self.preset_mapping_list
         };
-        for m in ml {
-            if m.seq == sequence && m.mode == mode {
-                *out_cmds = &m.commands;
-                *out_sets_mode = m.sets_mode.as_deref();
-                *out_key_name_style = m.key_name_style.clone();
-                return true;
-            }
+
+        let ml = ml.iter().filter(|mapping| mapping.seq == sequence);
+        let mut mappings: Vec<_>;
+        if let Some(mode) = bind_mode {
+            mappings = ml.filter(|mapping| mapping.mode == mode).collect();
+            assert!(mappings.len() <= 1);
+        } else {
+            mappings = ml.collect();
+            mappings.sort_unstable_by_key(|mapping| mapping.specification_order);
         }
-        false
+        mappings
     }
 }
 
@@ -970,7 +989,7 @@ mod tests {
     use crate::env::EnvStack;
     use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent};
     use crate::key::Key;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     struct TestInputEventQueuer {
         input_data: InputData,

@@ -2,15 +2,15 @@ use super::string;
 use crate::builtins::shared::BuiltinResultExt;
 use crate::io::IoChain;
 use crate::io::{IoStreams, OutputStream, StringOutputStream};
+use crate::prelude::*;
 use crate::tests::prelude::*;
-use crate::wchar::prelude::*;
 
 #[macro_export]
 macro_rules! validate {
     ( [$($argv:expr),*], $expected_rc:expr, $expected_out:expr ) => {
         {
             use $crate::common::escape;
-            use $crate::wchar::prelude::*;
+            use $crate::prelude::*;
             use $crate::builtins::string::test_helpers::string_test;
             let (actual_out, actual_rc) = string_test(vec![$(L!($argv)),*]);
             assert_eq!(escape(L!($expected_out)), escape(&actual_out));

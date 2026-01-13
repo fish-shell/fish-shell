@@ -4,6 +4,7 @@ edition.workspace = true
 rust-version.workspace = true
 version = "0.0.0"
 repository.workspace = true
+license.workspace = true
 
 [dependencies]
 rsconf.workspace = true

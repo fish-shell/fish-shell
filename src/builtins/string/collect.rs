@@ -31,7 +31,7 @@ impl StringSubCommand<'_> for Collect {
     ) -> Result<(), ErrorCode> {
         let mut appended = 0usize;
 
-        for (arg, want_newline) in
+        for InputValue { arg, want_newline } in
             arguments(args, optind, streams).with_split_behavior(SplitBehavior::Never)
         {
             let arg = if !self.no_trim_newlines {

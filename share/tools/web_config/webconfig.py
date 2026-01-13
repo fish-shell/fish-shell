@@ -1,5 +1,6 @@
 import binascii
 import errno
+import shlex
 import glob
 import http.server as SimpleHTTPServer
 import json
@@ -38,8 +39,10 @@ term = os.environ.pop("TERM", None)
 # which will block the whole process - see https://docs.python.org/3/library/webbrowser.html
 import webbrowser
 
-if term:
+if term is not None:
     os.environ["TERM"] = term
+
+TERMINAL_COLOR_THEME = os.environ["__fish_terminal_color_theme"]
 
 
 def find_executable(exe, paths=()):
@@ -97,7 +100,7 @@ def is_chromeos_garcon():
         return False
 
 
-def run_fish_cmd(text):
+def run_fish_cmd(text, strict=False):
     print("$ " + text)
     p = subprocess.Popen(
         [FISH_BIN_PATH],
@@ -108,7 +111,25 @@ def run_fish_cmd(text):
     out, err = p.communicate(text.encode("utf-8"))
     out = out.decode("utf-8", "replace")
     err = err.decode("utf-8", "replace")
+    if strict:
+        assert err == ""
+        # TODO use check_output()
+        return out
     return out, err
+
+
+def list_embedded_files(path, suffix):
+    return [
+        path
+        for path in run_fish_cmd(
+            "status list-files " + escape_fish_cmd(path), strict=True
+        ).splitlines()
+        if path.endswith(suffix)
+    ]
+
+
+def get_embedded_file(path):
+    return run_fish_cmd("status get-file " + escape_fish_cmd(path), strict=True)
 
 
 def escape_fish_cmd(text):
@@ -187,9 +208,25 @@ def better_color(c1, c2):
     return c1
 
 
-def parse_color(color_str):
-    """A basic function to parse a color string, for example, 'red' '--bold'."""
-    comps = color_str.split(" ")
+def parse_colors(colors_str):
+    for words in map(shlex.split, colors_str.splitlines()):
+        assert re.match(
+            r"^((?:fish_color_|fish_pager_color_)\w+)$",
+            words[0],
+        )
+    return {
+        "colors": sorted(
+            [
+                {"name": words[0]} | parse_color(words[1:])
+                for words in map(shlex.split, colors_str.splitlines())
+            ],
+            key=operator.itemgetter("name"),
+        ),
+    }
+
+
+def parse_color(comps):
+    """A basic function to parse a color string, for example, ['red', '--bold']."""
     color = ""
     background_color = ""
     underline_color = ""
@@ -201,8 +238,6 @@ def parse_color(color_str):
     i = 0
     while i < len(comps):
         comp = comps[i]
-        # Remove quotes
-        comp = comp.strip("'\" ")
         if comp == "--bold" or comp == "-o":
             bold = True
         elif comp == "--underline" or comp == "-u":
@@ -221,6 +256,8 @@ def parse_color(color_str):
             dim = True
         elif comp == "--reverse" or comp == "-r":
             reverse = True
+        elif comp.startswith("--theme="):
+            pass  # Not yet supported here.
         else:
 
             def parse_opt(
@@ -720,10 +757,9 @@ class FishVar:
 class FishBinding:
     """A class that represents keyboard binding"""
 
-    def __init__(self, command, raw_binding, readable_binding, description=None):
+    def __init__(self, command, raw_binding, readable_binding):
         self.command = command
         self.bindings = []
-        self.description = description
         self.add_binding(raw_binding, readable_binding)
 
     def add_binding(self, raw_binding, readable_binding):
@@ -740,7 +776,6 @@ class FishBinding:
         return {
             "command": self.command,
             "bindings": self.bindings,
-            "description": self.description,
         }
 
 
@@ -759,117 +794,68 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def write_to_wfile(self, txt):
         self.wfile.write(txt.encode("utf-8"))
 
-    def do_get_colors(self, path=None):
-        """Read the colors from a .theme file in path, or the current shell if no path has been given"""
-        # Looks for fish_color_*.
-        # Returns an array of lists [color_name, color_description, color_value]
-        result = []
-
-        # Make sure we return at least these
-        remaining = set(
-            [
-                "normal",
-                "error",
-                "command",
-                "end",
-                "param",
-                "comment",
-                "match",
-                "selection",
-                "search_match",
-                "operator",
-                "escape",
-                "quote",
-                "redirection",
-                "valid_path",
-                "autosuggestion",
-                "user",
-                "host",
-                "cancel",
-            ]
+    def do_get_colors(self):
+        out, err = run_fish_cmd(
+            ""
+            + "if set -q __fish_initialized && test $__fish_initialized -lt 4300\n"
+            + "    echo >&2 missing migration?\n"
+            + "    exit 1\n"
+            + "end\n"
+            + "__fish_color_theme={} __fish_apply_theme 2>/dev/null\n".format(
+                TERMINAL_COLOR_THEME
+            )
+            + "or __fish_color_theme=unknown __fish_apply_theme\n"
+            + "__fish_theme_export_for_webconfig"
         )
+        assert err == ""
 
-        # Here are our color descriptions
-        descriptions = {
-            "normal": "Default text",
-            "command": "Ordinary commands",
-            "quote": "Text within quotes",
-            "redirection": "Like | and >",
-            "end": "Like ; and &",
-            "error": "Potential errors",
-            "param": "Command parameters",
-            "comment": "Comments start with #",
-            "match": "Matching parenthesis",
-            "selection": "Selected text",
-            "search_match": "History searching",
-            "history_current": "Directory history",
-            "operator": "Like * and ~",
-            "escape": "Escapes like \\n",
-            "cwd": "Current directory",
-            "cwd_root": "cwd for root user",
-            "valid_path": "Valid paths",
-            "autosuggestion": "Suggested completion",
-            "user": "Username in the prompt",
-            "host": "Hostname in the prompt",
-            "cancel": "The ^C cancel indicator",
-        }
-
-        # If we don't have a path, we get the current theme.
-        if not path:
-            out, err = run_fish_cmd("set -L")
-        else:
-            with open(path) as f:
-                out = f.read()
-        extrainfo = {}
-        for line in out.split("\n"):
-            # Ignore empty lines
-            if not line:
-                continue
-            # Lines starting with "#" can contain metadata.
-            if line.startswith("#"):
-                if not ":" in line:
-                    continue
-                key, value = line.split(":", maxsplit=1)
-                key = key.strip("# '")
-                value = value.strip(" '\"")
-                # Only use keys we know
-                if not key in ("name", "preferred_background", "url"):
-                    continue
-                if key == "preferred_background":
-                    if value not in named_colors and not value.startswith("#"):
-                        value = "#" + value
-                extrainfo[key] = value
-
-            for match in re.finditer(r"^fish_(pager_)?color_(\S+) ?(.*)", line):
-                color_name, color_value = [x.strip() for x in match.group(2, 3)]
-                if match.group(1):
-                    color_name = "fish_pager_color_" + color_name
-                color_desc = descriptions.get(color_name, "")
-                data = {"name": color_name, "description": color_desc}
-                data.update(parse_color(color_value))
-                result.append(data)
-                remaining.discard(color_name)
-
-        # Sort our result (by their keys)
-        result.sort(key=operator.itemgetter("name"))
-
-        # Ensure that we have all the color names we know about, so that if the
-        # user deletes one he can still set it again via the web interface
-        for color_name in remaining:
-            color_desc = descriptions.get(color_name, "")
-            result.append([color_name, color_desc, parse_color("")])
-
-        return result, extrainfo
+        words = iter(shlex.split(out))
+        current = next(words)
+        themes = [
+            {
+                "theme": "Current",
+                "by_color_theme": {
+                    # Hack-ish: we don't know about the light/dark variants.
+                    "unknown": parse_colors(current)
+                    | {
+                        "preferred_background": "white"
+                        if TERMINAL_COLOR_THEME == "light"
+                        else "black",
+                    }
+                },
+                "terminal_color_theme": TERMINAL_COLOR_THEME,
+            }
+        ]
+        while True:
+            try:
+                theme_name = next(words)
+            except StopIteration:
+                break
+            theme = {
+                "theme": theme_name,
+            }
+            pretty_name = next(words)
+            if pretty_name:
+                theme["name"] = pretty_name
+            url = next(words)
+            if url:
+                theme["url"] = url
+            by_color_theme = {}
+            for _i in range(int(next(words))):
+                color_theme = next(words)
+                preferred_background = next(words)
+                data = next(words)
+                by_color_theme[color_theme] = parse_colors(data) | {
+                    "preferred_background": preferred_background
+                }
+            theme["by_color_theme"] = by_color_theme
+            themes += [theme]
+        return themes
 
     def do_get_functions(self):
         out, err = run_fish_cmd("functions")
         out = out.strip()
-
-        # Not sure why fish sometimes returns this with newlines
-        if "\n" in out:
-            return out.split("\n")
-        else:
-            return out.strip().split(", ")
+        return out.split("\n")
 
     def do_get_variable_names(self, cmd):
         "Given a command like 'set -U' return all the variable names"
@@ -966,39 +952,23 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             result.pop()  # trim off the trailing element
         return result
 
-    def do_get_color_for_variable(self, name):
-        "Return the color with the given name, or the empty string if there is none."
-        out, err = run_fish_cmd("echo -n $" + name)
-        return out
-
     def do_set_color_for_variable(self, name, color):
-        "Sets a color for a fish color name, like 'autosuggestion'"
+        "Sets a color for a fish color name, like 'fish_color_autosuggestion'"
         if not name:
             raise ValueError
         if not color and not color == "":
             color = "normal"
         else:
             color = unparse_color(color)
-        if not name.startswith("fish_pager_color_"):
-            varname = "fish_color_" + name
-        # If the name already starts with "fish_", use it as the varname
-        # This is needed for 'fish_pager_color' vars.
-        if name.startswith("fish_"):
-            varname = name
-        # Check if the varname is allowable.
-        varname = varname.strip()
-        if not re.match("^[a-zA-Z0-9_]+$", varname):
-            print("Refusing to use variable name: '", varname, "'")
+        name = name.strip()
+        if not re.match("^[a-zA-Z0-9_]+$", name):
+            print("Refusing to use variable name: '", name, "'")
             return
         color = color.strip()
         if not re.match("^[a-zA-Z0-9_= -]*$", color):
             print("Refusing to use color value: ", color)
             return
-        command = "set -U " + varname
-        command += " " + color
-
-        out, err = run_fish_cmd(command)
-        return out
+        return name + " " + color
 
     def do_get_function(self, func_name):
         out, err = run_fish_cmd("functions " + func_name + " | fish_indent --html")
@@ -1091,32 +1061,30 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def read_one_sample_prompt(self, path):
         try:
-            with open(path, "rb") as fd:
-                extras_dict = {}
-                # Read one sample prompt from fd
-                function_lines = []
-                parsing_hashes = True
-                unicode_lines = (line.decode("utf-8") for line in fd)
-                for line in unicode_lines:
-                    # Parse hashes until parse_one_sample_prompt_hash return
-                    # False.
-                    if parsing_hashes:
-                        parsing_hashes = self.parse_one_sample_prompt_hash(
-                            line, extras_dict
-                        )
-                    # Maybe not we're not parsing hashes, or maybe we already
-                    # were not.
-                    if not parsing_hashes:
-                        function_lines.append(line)
-                func = "".join(function_lines).strip()
-                result = self.do_get_sample_prompt(func, extras_dict)
-                return result
+            extras_dict = {}
+            # Read one sample prompt from out
+            function_lines = []
+            parsing_hashes = True
+            for line in get_embedded_file(path).splitlines(keepends=True):
+                # Parse hashes until parse_one_sample_prompt_hash return
+                # False.
+                if parsing_hashes:
+                    parsing_hashes = self.parse_one_sample_prompt_hash(
+                        line, extras_dict
+                    )
+                # Maybe not we're not parsing hashes, or maybe we already
+                # were not.
+                if not parsing_hashes:
+                    function_lines.append(line)
+            func = "".join(function_lines).strip()
+            result = self.do_get_sample_prompt(func, extras_dict)
+            return result
         except IOError:
             # Ignore unreadable files, etc.
             return None
 
     def do_get_sample_prompts_list(self):
-        paths = sorted(glob.iglob("sample_prompts/*.fish"))
+        paths = list_embedded_files("prompts", ".fish")
         result = []
         try:
             pool = multiprocessing.pool.ThreadPool(processes=8)
@@ -1178,31 +1146,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.path = p
 
         if p == "/colors/":
-            # Construct our colorschemes.
-            # Add the current scheme first, then the default.
-            # The rest in alphabetical order.
-            curcolors, curinfo = self.do_get_colors()
-            defcolors, definfo = self.do_get_colors("themes/fish default.theme")
-            curinfo.update({"theme": "Current", "colors": curcolors})
-            definfo.update({"theme": "fish default", "colors": defcolors})
-            output = [curinfo, definfo]
-
-            confighome = (
-                os.environ["XDG_CONFIG_HOME"]
-                if "XDG_CONFIG_HOME" in os.environ
-                else os.path.expanduser("~")
-            )
-            paths = list(glob.iglob(os.path.join(confighome, "fish", "themes/*.theme")))
-            paths.extend(list(glob.iglob("themes/*.theme")))
-            paths.sort(key=str.casefold)
-
-            for p in paths:
-                theme = os.path.splitext(os.path.basename(p))[0]
-                if any(theme == d["theme"] for d in output):
-                    continue
-                out, outinfo = self.do_get_colors(p)
-                outinfo.update({"theme": theme, "colors": out})
-                output.append(outinfo)
+            output = self.do_get_colors()
         elif p == "/functions/":
             output = self.do_get_functions()
         elif p == "/variables/":
@@ -1214,9 +1158,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # print "History: ", end - start
         elif p == "/sample_prompts/":
             output = self.do_get_sample_prompts_list()
-        elif re.match(r"/color/(\w+)/", p):
-            name = re.match(r"/color/(\w+)/", p).group(1)
-            output = self.do_get_color_for_variable(name)
         elif p == "/bindings/":
             output = self.do_get_bindings()
         else:
@@ -1270,62 +1211,31 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         if p == "/set_color/":
             print("# Colorscheme: " + postvars.get("theme"))
-            have_colors = set()
-            known_colors = set(
-                (
-                    "fish_color_normal",
-                    "fish_color_command",
-                    "fish_color_keyword",
-                    "fish_color_quote",
-                    "fish_color_redirection",
-                    "fish_color_end",
-                    "fish_color_error",
-                    "fish_color_param",
-                    "fish_color_option",
-                    "fish_color_comment",
-                    "fish_color_selection",
-                    "fish_color_operator",
-                    "fish_color_escape",
-                    "fish_color_autosuggestion",
-                    "fish_color_cwd",
-                    "fish_color_user",
-                    "fish_color_host",
-                    "fish_color_host_remote",
-                    "fish_color_cancel",
-                    "fish_color_search_match",
-                    "fish_pager_color_progress",
-                    "fish_pager_color_background",
-                    "fish_pager_color_prefix",
-                    "fish_pager_color_completion",
-                    "fish_pager_color_description",
-                    "fish_pager_color_selected_background",
-                    "fish_pager_color_selected_prefix",
-                    "fish_pager_color_selected_completion",
-                    "fish_pager_color_selected_description",
-                    "fish_pager_color_secondary_background",
-                    "fish_pager_color_secondary_prefix",
-                    "fish_pager_color_secondary_completion",
-                    "fish_pager_color_secondary_description",
-                )
-            )
             output = ""
+            theme_contents = []
             for item in postvars.get("colors"):
                 what = item.get("what")
                 color = item.get("color")
-
                 if what:
-                    if not what.startswith("fish_pager_color_") and not what.startswith(
-                        "fish_color_"
-                    ):
-                        have_colors.add("fish_color_" + what)
-                    else:
-                        have_colors.add(what)
-                    output = self.do_set_color_for_variable(what, color)
+                    theme_contents += [self.do_set_color_for_variable(what, color)]
 
-            # Set all known colors that weren't defined in this theme
-            # to empty, to avoid keeping around coloration from an earlier theme.
-            for what in known_colors - have_colors:
-                output += "\n" + self.do_set_color_for_variable(what, "")
+            varname = "__fish_webconfig_theme_notification"
+            out, err = run_fish_cmd(
+                "__fish_theme_freeze 'fish_config' {}\n".format(
+                    " ".join(escape_fish_cmd(x) for x in theme_contents)
+                )
+                + "begin\n"
+                + "    set -l i 0\n"
+                + "    if not set -q {}\n".format(varname)
+                + "        or string match -qr -- '^set-theme-v1-#(?<i>\\d+)$' ${}\n".format(
+                    varname
+                )
+                + "        set -U {} set-theme-v1-#(math $i + 1)\n".format(varname)
+                + "    end\n"
+                + "end\n"
+            )
+            assert out == ""
+            assert err == ""
 
         elif p == "/get_function/":
             what = postvars.get("what")

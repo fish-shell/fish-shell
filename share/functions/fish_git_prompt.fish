@@ -180,7 +180,8 @@ if string match -q Darwin -- (__fish_uname) && string match -q /usr/bin/git -- (
     else
         # git is installed, but on the first run it may be very slow as xcrun needs to populate the cache.
         # Kick it off in the background to populate the cache.
-        /bin/sh -c '( /usr/bin/git --version; touch /tmp/__fish_git_ready ) >/dev/null 2>&1 &'
+        set -l sh (__fish_posix_shell)
+        $sh -c '( /usr/bin/git --version; touch /tmp/__fish_git_ready ) >/dev/null 2>&1 &'
         function __fish_git_prompt_ready
             path is /tmp/__fish_git_ready || return 1
             # git is ready, erase the function.
@@ -595,7 +596,9 @@ end
 function __fish_git_prompt_set_color
     set -l user_variable_name "$argv[1]"
 
-    set -l default default_done
+    set -l default
+    set -l default_done
+
     switch (count $argv)
         case 1 # No defaults given, use prompt color
             set default $___fish_git_prompt_color

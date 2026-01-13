@@ -7,7 +7,10 @@ use crate::common::{
     ScopedCell, ScopedRefCell, escape_string, wcs2bytes,
 };
 use crate::complete::CompletionList;
-use crate::env::{EnvMode, EnvStack, EnvStackSetResult, Environment, Statuses};
+use crate::env::{
+    EnvMode, EnvSetMode, EnvStack, EnvStackSetResult, Environment, FISH_TERMINAL_COLOR_THEME_VAR,
+    Statuses,
+};
 use crate::event::{self, Event};
 use crate::expand::{
     ExpandFlags, ExpandResultCode, expand_string, replace_home_directory_with_tilde,
@@ -25,17 +28,16 @@ use crate::parse_constants::{
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
 use crate::parse_tree::NodeRef;
 use crate::parse_tree::{LineCounter, ParsedSourceRef, parse_source};
+use crate::portable_atomic::AtomicU64;
+use crate::prelude::*;
 use crate::proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap};
 use crate::signal::{Signal, signal_check_cancel, signal_clear_cancel};
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
-use crate::wchar::prelude::*;
-use crate::wchar_ext::WExt;
 use crate::wutil::perror;
-use crate::{FLOG, function};
+use crate::{flog, flogf, function};
+use fish_wchar::WExt;
 use libc::c_int;
-#[cfg(not(target_has_atomic = "64"))]
-use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::OsStr;
 use std::fs::File;
@@ -44,8 +46,6 @@ use std::num::NonZeroU32;
 use std::os::fd::OwnedFd;
 use std::rc::Rc;
 use std::sync::Arc;
-#[cfg(target_has_atomic = "64")]
-use std::sync::atomic::AtomicU64;
 use std::time::Duration;
 
 pub enum BlockData {
@@ -285,9 +285,6 @@ pub struct LibraryData {
     /// A counter incremented every time a command executes.
     pub exec_count: u64,
 
-    /// A counter incremented every time an external command executes.
-    pub exec_external_count: u64,
-
     /// A counter incremented every time a command produces a $status.
     pub status_count: u64,
 
@@ -436,6 +433,21 @@ pub struct Parser {
 
     // Timeout for blocking terminal queries.
     pub blocking_query_timeout: RefCell<Option<Duration>>,
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct ParserEnvSetMode {
+    pub mode: EnvMode,
+    pub user: bool,
+}
+
+impl ParserEnvSetMode {
+    pub fn new(mode: EnvMode) -> Self {
+        Self { mode, user: false }
+    }
+    pub fn user(mode: EnvMode) -> Self {
+        Self { mode, user: true }
+    }
 }
 
 impl Parser {
@@ -673,7 +685,7 @@ impl Parser {
             return EvalRes::new(ProcStatus::from_signal(sig));
         }
 
-        job_reap(self, false); // not sure why we reap jobs here
+        job_reap(self, false, Some(block_io)); // not sure why we reap jobs here
 
         // Start it up
         let mut op_ctx = self.context();
@@ -708,14 +720,14 @@ impl Parser {
         ScopeGuarding::commit(restore_line_counter);
         self.pop_block(scope_block);
 
-        job_reap(self, false); // reap again
+        job_reap(self, false, Some(block_io)); // reap again
 
         let sig = signal_check_cancel();
         if sig != 0 {
             EvalRes::new(ProcStatus::from_signal(Signal::new(sig)))
         } else {
             let status = ProcStatus::from_exit_code(self.get_last_status());
-            let break_expand = reason == EndExecutionReason::error;
+            let break_expand = reason == EndExecutionReason::Error;
             EvalRes {
                 status,
                 break_expand,
@@ -816,7 +828,7 @@ impl Parser {
 
     /// Returns the current line number, indexed from 1, or zero if not sourced.
     pub fn get_lineno_for_display(&self) -> u32 {
-        self.get_lineno().map(|val| val.get()).unwrap_or(0)
+        self.get_lineno().map_or(0, |val| val.get())
     }
 
     /// Return whether we are currently evaluating a "block" such as an if statement.
@@ -946,19 +958,51 @@ impl Parser {
     pub fn set_var_and_fire(
         &self,
         key: &wstr,
-        mode: EnvMode,
+        mode: ParserEnvSetMode,
         vals: Vec<WString>,
     ) -> EnvStackSetResult {
-        let res = self.vars().set(key, mode, vals);
+        let res = self.set_var(key, mode, vals);
         if res == EnvStackSetResult::Ok {
             event::fire(self, Event::variable_set(key.to_owned()));
         }
         res
     }
 
+    pub fn is_repainting(&self) -> bool {
+        self.libdata().is_repaint
+    }
+
+    pub fn convert_env_set_mode(&self, mode: ParserEnvSetMode) -> EnvSetMode {
+        EnvSetMode::new_with(mode.mode, mode.user, self.is_repainting())
+    }
+
     /// Cover of vars().set(), without firing events
-    pub fn set_var(&self, key: &wstr, mode: EnvMode, vals: Vec<WString>) -> EnvStackSetResult {
+    pub fn set_var(
+        &self,
+        key: &wstr,
+        mode: ParserEnvSetMode,
+        vals: Vec<WString>,
+    ) -> EnvStackSetResult {
+        let mode = self.convert_env_set_mode(mode);
         self.vars().set(key, mode, vals)
+    }
+
+    /// Cover of vars().set_one(), without firing events
+    pub fn set_one(&self, key: &wstr, mode: ParserEnvSetMode, val: WString) -> EnvStackSetResult {
+        let mode = self.convert_env_set_mode(mode);
+        self.vars().set_one(key, mode, val)
+    }
+
+    /// Cover of vars().set_empty(), without firing events
+    pub fn set_empty(&self, key: &wstr, mode: ParserEnvSetMode) -> EnvStackSetResult {
+        let mode = self.convert_env_set_mode(mode);
+        self.vars().set_empty(key, mode)
+    }
+
+    /// Cover of vars().remove(), without firing events
+    pub fn remove_var(&self, key: &wstr, mode: ParserEnvSetMode) -> EnvStackSetResult {
+        let mode = self.convert_env_set_mode(mode);
+        self.vars().remove(key, mode)
     }
 
     /// Update any universal variables and send event handlers.
@@ -966,7 +1010,7 @@ impl Parser {
     /// changes from other fish instances); otherwise only sync if this instance has changed uvars.
     pub fn sync_uvars_and_fire(&self, always: bool) {
         if self.syncs_uvars.load() {
-            let evts = self.vars().universal_sync(always);
+            let evts = self.vars().universal_sync(always, self.is_repainting());
             for evt in evts {
                 event::fire(self, evt);
             }
@@ -995,7 +1039,7 @@ impl Parser {
             block_list.pop().unwrap()
         };
         if block.wants_pop_env() {
-            self.vars().pop();
+            self.vars().pop(self.is_repainting());
         }
     }
 
@@ -1099,7 +1143,7 @@ impl Parser {
         let mut f = match std::fs::File::create(path) {
             Ok(f) => f,
             Err(err) => {
-                FLOG!(
+                flog!(
                     warning,
                     wgettext_fmt!(
                         "Could not write profiling information to file '%s': %s",
@@ -1225,6 +1269,32 @@ impl Parser {
     /// Checks if the max eval depth has been exceeded
     pub fn is_eval_depth_exceeded(&self) -> bool {
         self.scope().eval_level >= FISH_MAX_EVAL_DEPTH
+    }
+
+    pub fn set_color_theme(&self, background_color: Option<&xterm_color::Color>) {
+        let color_theme = match background_color.map(|c| c.perceived_lightness()) {
+            Some(x) if x < 0.5 => L!("dark"),
+            Some(_) => L!("light"),
+            None => L!("unknown"),
+        };
+        if self
+            .vars()
+            .get(FISH_TERMINAL_COLOR_THEME_VAR)
+            .is_some_and(|var| var.as_list() == [color_theme])
+        {
+            return;
+        };
+        flogf!(
+            reader,
+            "Setting %s to %s",
+            FISH_TERMINAL_COLOR_THEME_VAR,
+            color_theme
+        );
+        self.set_var_and_fire(
+            FISH_TERMINAL_COLOR_THEME_VAR,
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            vec![color_theme.to_owned()],
+        );
     }
 }
 
@@ -1358,7 +1428,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
         if let Some(file) = b.src_filename.as_ref() {
             trace.push_utfstr(&sprintf!(
                 "\tcalled on line %d of file %s\n",
-                b.src_lineno.map(|n| n.get()).unwrap_or(0),
+                b.src_lineno.map_or(0, |n| n.get()),
                 user_presentable_path(file, parser.vars())
             ));
         } else if parser.libdata().within_fish_init {
@@ -1423,10 +1493,10 @@ mod tests {
     };
     use crate::parse_tree::{LineCounter, parse_source};
     use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
+    use crate::prelude::*;
     use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
     use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use crate::wcstringutil::join_strings;
     use libc::SIGINT;
     use std::time::Duration;
@@ -1876,53 +1946,53 @@ mod tests {
             };
         }
 
-        validate!("echo hello", "echo", "hello", StatementDecoration::none);
+        validate!("echo hello", "echo", "hello", StatementDecoration::None);
         validate!(
             "command echo hello",
             "echo",
             "hello",
-            StatementDecoration::command
+            StatementDecoration::Command
         );
         validate!(
             "exec echo hello",
             "echo",
             "hello",
-            StatementDecoration::exec
+            StatementDecoration::Exec
         );
         validate!(
             "command command hello",
             "command",
             "hello",
-            StatementDecoration::command
+            StatementDecoration::Command
         );
         validate!(
             "builtin command hello",
             "command",
             "hello",
-            StatementDecoration::builtin
+            StatementDecoration::Builtin
         );
         validate!(
             "command --help",
             "command",
             "--help",
-            StatementDecoration::none
+            StatementDecoration::None
         );
-        validate!("command -h", "command", "-h", StatementDecoration::none);
-        validate!("command", "command", "", StatementDecoration::none);
-        validate!("command -", "command", "-", StatementDecoration::none);
-        validate!("command --", "command", "--", StatementDecoration::none);
+        validate!("command -h", "command", "-h", StatementDecoration::None);
+        validate!("command", "command", "", StatementDecoration::None);
+        validate!("command -", "command", "-", StatementDecoration::None);
+        validate!("command --", "command", "--", StatementDecoration::None);
         validate!(
             "builtin --names",
             "builtin",
             "--names",
-            StatementDecoration::none
+            StatementDecoration::None
         );
-        validate!("function", "function", "", StatementDecoration::none);
+        validate!("function", "function", "", StatementDecoration::None);
         validate!(
             "function --help",
             "function",
             "--help",
-            StatementDecoration::none
+            StatementDecoration::None
         );
 
         // Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
@@ -1985,7 +2055,7 @@ mod tests {
             Some(&mut errors),
         );
         assert!(errors.len() == 1);
-        assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_subshell);
+        assert!(errors[0].code == ParseErrorCode::TokenizerUnterminatedSubshell);
 
         errors.clear();
         ast::parse(
@@ -1994,7 +2064,7 @@ mod tests {
             Some(&mut errors),
         );
         assert!(errors.len() == 1);
-        assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_subshell);
+        assert!(errors[0].code == ParseErrorCode::TokenizerUnterminatedSubshell);
 
         errors.clear();
         ast::parse(
@@ -2003,7 +2073,7 @@ mod tests {
             Some(&mut errors),
         );
         assert!(errors.len() == 1);
-        assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_quote);
+        assert!(errors[0].code == ParseErrorCode::TokenizerUnterminatedQuote);
     }
 
     #[test]
@@ -2022,24 +2092,24 @@ mod tests {
             };
         }
 
-        validate!("echo 'abc", ParseErrorCode::tokenizer_unterminated_quote);
-        validate!("'", ParseErrorCode::tokenizer_unterminated_quote);
-        validate!("echo (abc", ParseErrorCode::tokenizer_unterminated_subshell);
+        validate!("echo 'abc", ParseErrorCode::TokenizerUnterminatedQuote);
+        validate!("'", ParseErrorCode::TokenizerUnterminatedQuote);
+        validate!("echo (abc", ParseErrorCode::TokenizerUnterminatedSubshell);
 
-        validate!("end", ParseErrorCode::unbalancing_end);
-        validate!("echo hi ; end", ParseErrorCode::unbalancing_end);
+        validate!("end", ParseErrorCode::UnbalancingEnd);
+        validate!("echo hi ; end", ParseErrorCode::UnbalancingEnd);
 
-        validate!("else", ParseErrorCode::unbalancing_else);
-        validate!("if true ; end ; else", ParseErrorCode::unbalancing_else);
+        validate!("else", ParseErrorCode::UnbalancingElse);
+        validate!("if true ; end ; else", ParseErrorCode::UnbalancingElse);
 
-        validate!("case", ParseErrorCode::unbalancing_case);
-        validate!("if true ; case ; end", ParseErrorCode::unbalancing_case);
+        validate!("case", ParseErrorCode::UnbalancingCase);
+        validate!("if true ; case ; end", ParseErrorCode::UnbalancingCase);
 
-        validate!("begin ; }", ParseErrorCode::unbalancing_brace);
+        validate!("begin ; }", ParseErrorCode::UnbalancingBrace);
 
-        validate!("true | and", ParseErrorCode::andor_in_pipeline);
+        validate!("true | and", ParseErrorCode::AndOrInPipeline);
 
-        validate!("a=", ParseErrorCode::bare_variable_assignment);
+        validate!("a=", ParseErrorCode::BareVariableAssignment);
     }
 
     #[test]
@@ -2208,7 +2278,7 @@ mod tests {
         assert_eq!(line_counter.line_offset_of_node(), None);
 
         for (idx, &node) in pipelines.iter().enumerate() {
-            line_counter.node = node as *const _;
+            line_counter.node = std::ptr::from_ref(node);
             assert_eq!(
                 line_counter.source_offset_of_node(),
                 Some(node.source_range().start())
@@ -2217,7 +2287,7 @@ mod tests {
         }
 
         for (idx, &node) in pipelines.iter().enumerate().rev() {
-            line_counter.node = node as *const _;
+            line_counter.node = std::ptr::from_ref(node);
             assert_eq!(
                 line_counter.source_offset_of_node(),
                 Some(node.source_range().start())
@@ -2391,7 +2461,7 @@ mod tests {
         while let Some(node) = traversal.next() {
             if let Kind::DecoratedStatement(_) = node.kind() {
                 decorated_statement = Some(node);
-            } else if node.as_token().map(|t| t.token_type()) == Some(ParseTokenType::end) {
+            } else if node.as_token().map(|t| t.token_type()) == Some(ParseTokenType::End) {
                 // should panic as the decorated_statement is not on the stack.
                 let _ = traversal.parent(decorated_statement.unwrap());
             }

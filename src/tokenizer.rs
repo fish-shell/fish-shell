@@ -6,8 +6,8 @@ use crate::common::valid_var_name_char;
 use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::parser_keywords::parser_keywords_is_subcommand;
+use crate::prelude::*;
 use crate::redirection::RedirectionMode;
-use crate::wchar::prelude::*;
 use libc::{STDIN_FILENO, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, Range};
@@ -17,45 +17,45 @@ use std::os::fd::RawFd;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum TokenType {
     /// Error reading token
-    error,
+    Error,
     /// String token
-    string,
+    String,
     /// Pipe token
-    pipe,
+    Pipe,
     /// && token
-    andand,
+    AndAnd,
     /// || token
-    oror,
+    OrOr,
     /// End token (semicolon or newline, not literal end)
-    end,
+    End,
     /// opening brace of a compound statement
-    left_brace,
+    LeftBrace,
     /// closing brace of a compound statement
-    right_brace,
+    RightBrace,
     /// redirection token
-    redirect,
+    Redirect,
     /// send job to bg token
-    background,
+    Background,
     /// comment token
-    comment,
+    Comment,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum TokenizerError {
-    none,
-    unterminated_quote,
-    unterminated_subshell,
-    unterminated_slice,
-    unterminated_escape,
-    invalid_redirect,
-    invalid_pipe,
-    invalid_pipe_ampersand,
-    closing_unopened_subshell,
-    illegal_slice,
-    closing_unopened_brace,
-    unterminated_brace,
-    expected_pclose_found_bclose,
-    expected_bclose_found_pclose,
+    None,
+    UnterminatedQuote,
+    UnterminatedSubshell,
+    UnterminatedSlice,
+    UnterminatedEscape,
+    InvalidRedirect,
+    InvalidPipe,
+    InvalidPipeAmpersand,
+    ClosingUnopenedSubshell,
+    IllegalSlice,
+    ClosingUnopenedBrace,
+    UnterminatedBrace,
+    ExpectedPcloseFoundBclose,
+    ExpectedBcloseFoundPclose,
 }
 
 #[derive(Debug)]
@@ -102,21 +102,6 @@ pub struct PipeOrRedir {
     pub consumed: usize,
 }
 
-pub enum MoveWordStyle {
-    /// stop at punctuation
-    Punctuation,
-    /// stops at path components
-    PathComponents,
-    /// stops at whitespace
-    Whitespace,
-}
-
-/// Our state machine that implements "one word" movement or erasure.
-pub struct MoveWordStateMachine {
-    state: u8,
-    style: MoveWordStyle,
-}
-
 #[derive(Clone, Copy)]
 pub struct TokFlags(pub u8);
 
@@ -159,44 +144,44 @@ pub const TOK_ARGUMENT_LIST: TokFlags = TokFlags(16);
 impl From<TokenizerError> for &'static wstr {
     fn from(err: TokenizerError) -> Self {
         match err {
-            TokenizerError::none => L!(""),
-            TokenizerError::unterminated_quote => {
+            TokenizerError::None => L!(""),
+            TokenizerError::UnterminatedQuote => {
                 wgettext!("Unexpected end of string, quotes are not balanced")
             }
-            TokenizerError::unterminated_subshell => {
+            TokenizerError::UnterminatedSubshell => {
                 wgettext!("Unexpected end of string, expecting ')'")
             }
-            TokenizerError::unterminated_slice => {
+            TokenizerError::UnterminatedSlice => {
                 wgettext!("Unexpected end of string, square brackets do not match")
             }
-            TokenizerError::unterminated_escape => {
+            TokenizerError::UnterminatedEscape => {
                 wgettext!("Unexpected end of string, incomplete escape sequence")
             }
-            TokenizerError::invalid_redirect => {
+            TokenizerError::InvalidRedirect => {
                 wgettext!("Invalid input/output redirection")
             }
-            TokenizerError::invalid_pipe => {
+            TokenizerError::InvalidPipe => {
                 wgettext!("Cannot use stdin (fd 0) as pipe output")
             }
-            TokenizerError::invalid_pipe_ampersand => {
+            TokenizerError::InvalidPipeAmpersand => {
                 wgettext!("|& is not valid. In fish, use &| to pipe both stdout and stderr.")
             }
-            TokenizerError::closing_unopened_subshell => {
+            TokenizerError::ClosingUnopenedSubshell => {
                 wgettext!("Unexpected ')' for unopened parenthesis")
             }
-            TokenizerError::illegal_slice => {
+            TokenizerError::IllegalSlice => {
                 wgettext!("Unexpected '[' at this location")
             }
-            TokenizerError::closing_unopened_brace => {
+            TokenizerError::ClosingUnopenedBrace => {
                 wgettext!("Unexpected '}' for unopened brace")
             }
-            TokenizerError::unterminated_brace => {
+            TokenizerError::UnterminatedBrace => {
                 wgettext!("Unexpected end of string, incomplete parameter expansion")
             }
-            TokenizerError::expected_pclose_found_bclose => {
+            TokenizerError::ExpectedPcloseFoundBclose => {
                 wgettext!("Unexpected '}' found, expecting ')'")
             }
-            TokenizerError::expected_bclose_found_pclose => {
+            TokenizerError::ExpectedBcloseFoundPclose => {
                 wgettext!("Unexpected ')' found, expecting '}'")
             }
         }
@@ -217,7 +202,7 @@ impl Tok {
             length: 0,
             error_offset_within_token: SOURCE_OFFSET_INVALID.try_into().unwrap(),
             error_length: 0,
-            error: TokenizerError::none,
+            error: TokenizerError::None,
             is_unterminated_brace: false,
             type_: r#type,
         }
@@ -370,7 +355,7 @@ impl<'c> Iterator for Tokenizer<'c> {
 
             // Maybe return the comment.
             if self.show_comments {
-                let mut result = Tok::new(TokenType::comment);
+                let mut result = Tok::new(TokenType::Comment);
                 result.offset = comment_start as u32;
                 result.length = comment_len as u32;
                 return Some(result);
@@ -403,7 +388,7 @@ impl<'c> Iterator for Tokenizer<'c> {
             '\r'|  // carriage-return
             '\n'|  // newline
             ';'=> {
-                let mut result = Tok::new(TokenType::end);
+                let mut result = Tok::new(TokenType::End);
                 result.offset = start_pos as u32;
                 result.length = 1;
                 self.token_cursor += 1;
@@ -425,7 +410,7 @@ impl<'c> Iterator for Tokenizer<'c> {
     				.is_some_and(|parser| parser.at_command_position) =>
 			{
                 self.brace_statement_parser.as_mut().unwrap().unclosed_brace_statements += 1;
-                let mut result = Tok::new(TokenType::left_brace);
+                let mut result = Tok::new(TokenType::LeftBrace);
                 result.offset = start_pos as u32;
                 result.length = 1;
                 self.token_cursor += 1;
@@ -437,7 +422,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                     .map(|parser| &mut parser.unclosed_brace_statements);
                 if brace_count.as_ref().is_none_or(|count| **count == 0) {
                     return Some(self.call_error(
-                        TokenizerError::closing_unopened_brace,
+                        TokenizerError::ClosingUnopenedBrace,
                         self.token_cursor,
                         self.token_cursor,
                         Some(1),
@@ -445,7 +430,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                     ));
                 }
                 brace_count.map(|count| *count -= 1);
-                let mut result = Tok::new(TokenType::right_brace);
+                let mut result = Tok::new(TokenType::RightBrace);
                 result.offset = start_pos as u32;
                 result.length = 1;
                 self.token_cursor += 1;
@@ -454,7 +439,7 @@ impl<'c> Iterator for Tokenizer<'c> {
             '&'=> {
                 if next_char == Some('&') {
                     // && is and.
-                    let mut result = Tok::new(TokenType::andand);
+                    let mut result = Tok::new(TokenType::AndAnd);
                     result.offset = start_pos as u32;
                     result.length = 2;
                     self.token_cursor += 2;
@@ -471,7 +456,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                     at_cmd_pos = next_char == Some('|');
                     Some(result)
                 } else {
-                    let mut result = Tok::new(TokenType::background);
+                    let mut result = Tok::new(TokenType::Background);
                     result.offset = start_pos as u32;
                     result.length = 1;
                     self.token_cursor += 1;
@@ -482,7 +467,7 @@ impl<'c> Iterator for Tokenizer<'c> {
             '|'=> {
                 if next_char == Some('|') {
                     // || is or.
-                        let mut result=Tok::new(TokenType::oror);
+                        let mut result=Tok::new(TokenType::OrOr);
                     result.offset = start_pos as u32;
                     result.length = 2;
                     self.token_cursor += 2;
@@ -490,7 +475,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                     Some(result)
                 } else if next_char == Some('&') {
                     // |& is a bashism; in fish it's &|.
-                    Some(self.call_error(TokenizerError::invalid_pipe_ampersand,
+                    Some(self.call_error(TokenizerError::InvalidPipeAmpersand,
                                             self.token_cursor, self.token_cursor, Some(2), 2))
                 } else {
                     let pipe = PipeOrRedir::try_from(buff).
@@ -510,7 +495,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                  match PipeOrRedir::try_from(buff) {
                     Ok(redir_or_pipe) => {
                         if redir_or_pipe.fd < 0 {
-                            Some(self.call_error(TokenizerError::invalid_redirect, self.token_cursor,
+                            Some(self.call_error(TokenizerError::InvalidRedirect, self.token_cursor,
                                             self.token_cursor,
                                             Some(redir_or_pipe.consumed),
                                             redir_or_pipe.consumed))
@@ -522,7 +507,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                             Some(result)
                         }
                     }
-                    Err(()) => Some(self.call_error(TokenizerError::invalid_redirect, self.token_cursor,
+                    Err(()) => Some(self.call_error(TokenizerError::InvalidRedirect, self.token_cursor,
                                             self.token_cursor,
                                             Some(0),
                                             0))
@@ -543,7 +528,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                             // tSome(hat fd 0 may be -1, indicating overflow; but we don't treat that as a
                             // tokenizer error.
                             if redir_or_pipe.is_pipe && redir_or_pipe.fd == 0 {
-                                Some(self.call_error(TokenizerError::invalid_pipe, error_location,
+                                Some(self.call_error(TokenizerError::InvalidPipe, error_location,
                                                         error_location, Some(redir_or_pipe.consumed),
                                                         redir_or_pipe.consumed))
                             }
@@ -563,7 +548,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                                 .is_some_and(|parser| parser.at_command_position) && {
                                 let text = self.text_of(&s);
                                 parser_keywords_is_subcommand(&unescape_keyword(
-                                    TokenType::string,
+                                    TokenType::String,
                                     text)
                                 ) ||
                                 variable_assignment_equals_pos(text).is_some()
@@ -606,7 +591,7 @@ impl<'c> Tokenizer<'c> {
         error_len: usize,
     ) -> Tok {
         assert!(
-            error_type != TokenizerError::none,
+            error_type != TokenizerError::None,
             "TokenizerError::none passed to call_error"
         );
         assert!(error_loc >= token_start, "Invalid error location");
@@ -632,7 +617,7 @@ impl<'c> Tokenizer<'c> {
             error_length: error_len as u32,
             error: error_type,
             is_unterminated_brace: false,
-            type_: TokenType::error,
+            type_: TokenType::Error,
         }
     }
 }
@@ -702,7 +687,7 @@ impl<'c> Tokenizer<'c> {
             } else if c == ')' {
                 if expecting.last() == Some(&'}') {
                     return self.call_error(
-                        TokenizerError::expected_bclose_found_pclose,
+                        TokenizerError::ExpectedBcloseFoundPclose,
                         self.token_cursor,
                         self.token_cursor,
                         Some(1),
@@ -711,7 +696,7 @@ impl<'c> Tokenizer<'c> {
                 }
                 if paran_offsets.pop().is_none() {
                     return self.call_error(
-                        TokenizerError::closing_unopened_subshell,
+                        TokenizerError::ClosingUnopenedSubshell,
                         self.token_cursor,
                         self.token_cursor,
                         Some(1),
@@ -732,7 +717,7 @@ impl<'c> Tokenizer<'c> {
                     {
                         if !self.accept_unfinished {
                             return self.call_error(
-                                TokenizerError::unterminated_quote,
+                                TokenizerError::UnterminatedQuote,
                                 buff_start,
                                 error_loc,
                                 None,
@@ -745,7 +730,7 @@ impl<'c> Tokenizer<'c> {
             } else if c == '}' {
                 if expecting.last() == Some(&')') {
                     return self.call_error(
-                        TokenizerError::expected_pclose_found_bclose,
+                        TokenizerError::ExpectedPcloseFoundBclose,
                         self.token_cursor,
                         self.token_cursor,
                         Some(1),
@@ -780,7 +765,7 @@ impl<'c> Tokenizer<'c> {
                 {
                     if !self.accept_unfinished {
                         return self.call_error(
-                            TokenizerError::unterminated_quote,
+                            TokenizerError::UnterminatedQuote,
                             buff_start,
                             error_loc,
                             None,
@@ -817,7 +802,7 @@ impl<'c> Tokenizer<'c> {
             // (except for TOK_MODE_CHAR_ESCAPE, which is one long by definition)
             if mode & TOK_MODE_CHAR_ESCAPE {
                 return self.call_error(
-                    TokenizerError::unterminated_escape,
+                    TokenizerError::UnterminatedEscape,
                     buff_start,
                     self.token_cursor - 1,
                     None,
@@ -825,7 +810,7 @@ impl<'c> Tokenizer<'c> {
                 );
             } else if mode & TOK_MODE_ARRAY_BRACKETS {
                 return self.call_error(
-                    TokenizerError::unterminated_slice,
+                    TokenizerError::UnterminatedSlice,
                     buff_start,
                     slice_offset,
                     None,
@@ -835,7 +820,7 @@ impl<'c> Tokenizer<'c> {
                 let offset_of_open_paran = *paran_offsets.last().expect("paran_offsets is empty");
 
                 return self.call_error(
-                    TokenizerError::unterminated_subshell,
+                    TokenizerError::UnterminatedSubshell,
                     buff_start,
                     offset_of_open_paran,
                     None,
@@ -845,7 +830,7 @@ impl<'c> Tokenizer<'c> {
                 let offset_of_open_brace = *brace_offsets.last().expect("brace_offsets is empty");
 
                 return self.call_error(
-                    TokenizerError::unterminated_brace,
+                    TokenizerError::UnterminatedBrace,
                     buff_start,
                     offset_of_open_brace,
                     None,
@@ -856,7 +841,7 @@ impl<'c> Tokenizer<'c> {
             }
         }
 
-        let mut result = Tok::new(TokenType::string);
+        let mut result = Tok::new(TokenType::String);
         result.set_offset(buff_start);
         result.set_length(self.token_cursor - buff_start);
         result.is_unterminated_brace = mode & TOK_MODE_CURLY_BRACES;
@@ -892,15 +877,14 @@ pub fn comment_end(s: &wstr, mut pos: usize) -> usize {
 
 /// Tests if this character can be a part of a string. Hash (#) starts a comment if it's the first
 /// character in a token; otherwise it is considered a string character. See issue #953.
-fn tok_is_string_character(c: char, next: Option<char>) -> bool {
+pub fn tok_is_string_character(c: char, next: Option<char>) -> bool {
     match c {
         // Unconditional separators.
         '\0' | ' ' | '\n' | '|' | '\t' | ';' | '\r' | '<' | '>' => false,
         '&' => {
-            if feature_test(FeatureFlag::ampersand_nobg_in_token) {
+            if feature_test(FeatureFlag::AmpersandNoBgInToken) {
                 // Unlike in other shells, '&' is not special if followed by a string character.
-                next.map(|nc| tok_is_string_character(nc, None))
-                    .unwrap_or(false)
+                next.is_some_and(|nc| tok_is_string_character(nc, None))
             } else {
                 false
             }
@@ -957,7 +941,7 @@ pub fn is_token_delimiter(c: char, next: Option<char>) -> bool {
 pub fn tok_command(str: &wstr) -> WString {
     let mut t = Tokenizer::new(str, TokFlags(0));
     while let Some(token) = t.next() {
-        if token.type_ != TokenType::string {
+        if token.type_ != TokenType::String {
             return WString::new();
         }
         let text = t.text_of(&token);
@@ -1021,7 +1005,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
         let mut result = PipeOrRedir {
             fd: -1,
             is_pipe: false,
-            mode: RedirectionMode::overwrite,
+            mode: RedirectionMode::Overwrite,
             stderr_merge: false,
             consumed: 0,
         };
@@ -1042,7 +1026,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
             '>' => {
                 consume(&mut cursor, '>');
                 if try_consume(&mut cursor, '>') {
-                    result.mode = RedirectionMode::append;
+                    result.mode = RedirectionMode::Append;
                 }
                 if try_consume(&mut cursor, '|') {
                     // Note we differ from bash here.
@@ -1061,7 +1045,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
                     // This is a redirection to an fd.
                     // Note that we allow ">>&", but it's still just writing to the fd - "appending" to
                     // it doesn't make sense.
-                    result.mode = RedirectionMode::fd;
+                    result.mode = RedirectionMode::Fd;
                     result.fd = if has_fd {
                         parse_fd(fd_buff) // like 1>&2
                     } else {
@@ -1074,26 +1058,26 @@ impl TryFrom<&wstr> for PipeOrRedir {
                     } else {
                         STDOUT_FILENO // like > file.txt
                     };
-                    if result.mode != RedirectionMode::append {
-                        result.mode = RedirectionMode::overwrite;
+                    if result.mode != RedirectionMode::Append {
+                        result.mode = RedirectionMode::Overwrite;
                     }
                     // Note 'echo abc >>? file' is valid: it means append and noclobber.
                     // But here "noclobber" means the file must not exist, so appending
                     // can be ignored.
                     if try_consume(&mut cursor, '?') {
-                        result.mode = RedirectionMode::noclob;
+                        result.mode = RedirectionMode::NoClob;
                     }
                 }
             }
             '<' => {
                 consume(&mut cursor, '<');
                 if try_consume(&mut cursor, '&') {
-                    result.mode = RedirectionMode::fd;
+                    result.mode = RedirectionMode::Fd;
                 } else if try_consume(&mut cursor, '?') {
                     // <? foo try-input redirection (uses /dev/null if file can't be used).
-                    result.mode = RedirectionMode::try_input;
+                    result.mode = RedirectionMode::TryInput;
                 } else {
-                    result.mode = RedirectionMode::input;
+                    result.mode = RedirectionMode::Input;
                 }
                 result.fd = if has_fd {
                     parse_fd(fd_buff) // like 1<&3 or 1< /tmp/file.txt
@@ -1111,12 +1095,12 @@ impl TryFrom<&wstr> for PipeOrRedir {
                 } else if try_consume(&mut cursor, '>') {
                     result.fd = STDOUT_FILENO;
                     result.stderr_merge = true;
-                    result.mode = RedirectionMode::overwrite;
+                    result.mode = RedirectionMode::Overwrite;
                     if try_consume(&mut cursor, '>') {
-                        result.mode = RedirectionMode::append; // like &>>
+                        result.mode = RedirectionMode::Append; // like &>>
                     }
                     if try_consume(&mut cursor, '?') {
-                        result.mode = RedirectionMode::noclob; // like &>? or &>>?
+                        result.mode = RedirectionMode::NoClob; // like &>? or &>>?
                     }
                 } else {
                     return Err(());
@@ -1152,9 +1136,9 @@ impl PipeOrRedir {
     // Return the token type for this redirection.
     pub fn token_type(&self) -> TokenType {
         if self.is_pipe {
-            TokenType::pipe
+            TokenType::Pipe
         } else {
-            TokenType::redirect
+            TokenType::Redirect
         }
     }
 }
@@ -1172,202 +1156,6 @@ fn parse_fd(s: &wstr) -> RawFd {
         .collect();
     let s = std::str::from_utf8(chars.as_slice()).unwrap();
     s.parse().unwrap_or(-1)
-}
-
-impl MoveWordStateMachine {
-    pub fn new(style: MoveWordStyle) -> Self {
-        MoveWordStateMachine { state: 0, style }
-    }
-
-    pub fn consume_char(&mut self, c: char) -> bool {
-        match self.style {
-            MoveWordStyle::Punctuation => self.consume_char_punctuation(c),
-            MoveWordStyle::PathComponents => self.consume_char_path_components(c),
-            MoveWordStyle::Whitespace => self.consume_char_whitespace(c),
-        }
-    }
-
-    pub fn reset(&mut self) {
-        self.state = 0;
-    }
-
-    fn consume_char_punctuation(&mut self, c: char) -> bool {
-        const S_ALWAYS_ONE: u8 = 0;
-        const S_REST: u8 = 1;
-        const S_WHITESPACE_REST: u8 = 2;
-        const S_WHITESPACE: u8 = 3;
-        const S_ALPHANUMERIC: u8 = 4;
-        const S_END: u8 = 5;
-
-        let mut consumed = false;
-        while self.state != S_END && !consumed {
-            match self.state {
-                S_ALWAYS_ONE => {
-                    // Always consume the first character.
-                    consumed = true;
-                    if c.is_whitespace() {
-                        self.state = S_WHITESPACE;
-                    } else if c.is_alphanumeric() {
-                        self.state = S_ALPHANUMERIC;
-                    } else {
-                        // Don't allow switching type (ws->nonws) after non-whitespace and
-                        // non-alphanumeric.
-                        self.state = S_REST;
-                    }
-                }
-                S_REST => {
-                    if c.is_whitespace() {
-                        // Consume only trailing whitespace.
-                        self.state = S_WHITESPACE_REST;
-                    } else if c.is_alphanumeric() {
-                        // Consume only alnums.
-                        self.state = S_ALPHANUMERIC;
-                    } else {
-                        consumed = false;
-                        self.state = S_END;
-                    }
-                }
-                S_WHITESPACE_REST | S_WHITESPACE => {
-                    // "whitespace" consumes whitespace and switches to alnums,
-                    // "whitespace_rest" only consumes whitespace.
-                    if c.is_whitespace() {
-                        // Consumed whitespace.
-                        consumed = true;
-                    } else {
-                        self.state = if self.state == S_WHITESPACE {
-                            S_ALPHANUMERIC
-                        } else {
-                            S_END
-                        };
-                    }
-                }
-                S_ALPHANUMERIC => {
-                    if c.is_alphanumeric() {
-                        consumed = true; // consumed alphanumeric
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                _ => {}
-            }
-        }
-        consumed
-    }
-
-    fn consume_char_path_components(&mut self, c: char) -> bool {
-        const S_INITIAL_PUNCTUATION: u8 = 0;
-        const S_WHITESPACE: u8 = 1;
-        const S_SEPARATOR: u8 = 2;
-        const S_SLASH: u8 = 3;
-        const S_PATH_COMPONENT_CHARACTERS: u8 = 4;
-        const S_INITIAL_SEPARATOR: u8 = 5;
-        const S_END: u8 = 6;
-
-        let mut consumed = false;
-        while self.state != S_END && !consumed {
-            match self.state {
-                S_INITIAL_PUNCTUATION => {
-                    if !is_path_component_character(c) && !c.is_whitespace() {
-                        self.state = S_INITIAL_SEPARATOR;
-                    } else {
-                        if !is_path_component_character(c) {
-                            consumed = true;
-                        }
-                        self.state = S_WHITESPACE;
-                    }
-                }
-                S_WHITESPACE => {
-                    if c.is_whitespace() {
-                        consumed = true; // consumed whitespace
-                    } else if c == '/' || is_path_component_character(c) {
-                        self.state = S_SLASH; // path component
-                    } else {
-                        self.state = S_SEPARATOR; // path separator
-                    }
-                }
-                S_SEPARATOR => {
-                    if !c.is_whitespace() && !is_path_component_character(c) {
-                        consumed = true; // consumed separator
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                S_SLASH => {
-                    if c == '/' {
-                        consumed = true; // consumed slash
-                    } else {
-                        self.state = S_PATH_COMPONENT_CHARACTERS;
-                    }
-                }
-                S_PATH_COMPONENT_CHARACTERS => {
-                    if is_path_component_character(c) {
-                        consumed = true; // consumed string character except slash
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                S_INITIAL_SEPARATOR => {
-                    if is_path_component_character(c) {
-                        consumed = true;
-                        self.state = S_PATH_COMPONENT_CHARACTERS;
-                    } else if c.is_whitespace() {
-                        self.state = S_END;
-                    } else {
-                        consumed = true;
-                    }
-                }
-                _ => {}
-            }
-        }
-        consumed
-    }
-
-    fn consume_char_whitespace(&mut self, c: char) -> bool {
-        // Consume a "word" of printable characters plus any leading whitespace.
-        const S_ALWAYS_ONE: u8 = 0;
-        const S_BLANK: u8 = 1;
-        const S_GRAPH: u8 = 2;
-        const S_END: u8 = 3;
-
-        let mut consumed = false;
-        while self.state != S_END && !consumed {
-            match self.state {
-                S_ALWAYS_ONE => {
-                    // always consume the first character
-                    // If it's not whitespace, only consume those from here.
-                    consumed = true;
-                    if !c.is_whitespace() {
-                        self.state = S_GRAPH;
-                    } else {
-                        // If it's whitespace, keep consuming whitespace until the graphs.
-                        self.state = S_BLANK;
-                    }
-                }
-                S_BLANK => {
-                    if c.is_whitespace() {
-                        // consumed whitespace
-                        consumed = true;
-                    } else {
-                        self.state = S_GRAPH;
-                    }
-                }
-                S_GRAPH => {
-                    if !c.is_whitespace() {
-                        // consumed printable non-space
-                        consumed = true;
-                    } else {
-                        self.state = S_END;
-                    }
-                }
-                _ => {}
-            }
-        }
-        consumed
-    }
-}
-
-fn is_path_component_character(c: char) -> bool {
-    tok_is_string_character(c, None) && !L!("/={,}'\":@#").as_char_slice().contains(&c)
 }
 
 /// The position of the equal sign in a variable assignment like foo=bar.
@@ -1400,14 +1188,10 @@ pub fn variable_assignment_equals_pos(txt: &wstr) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        MoveWordStateMachine, MoveWordStyle, PipeOrRedir, TokFlags, TokenType, Tokenizer,
-        TokenizerError,
-    };
+    use super::{PipeOrRedir, TokFlags, TokenType, Tokenizer, TokenizerError};
+    use crate::prelude::*;
     use crate::redirection::RedirectionMode;
-    use crate::wchar::prelude::*;
     use libc::{STDERR_FILENO, STDOUT_FILENO};
-    use std::collections::HashSet;
 
     #[test]
     fn test_tokenizer() {
@@ -1418,14 +1202,14 @@ mod tests {
             let token = t.next(); // alpha
             assert!(token.is_some());
             let token = token.unwrap();
-            assert_eq!(token.type_, TokenType::string);
+            assert_eq!(token.type_, TokenType::String);
             assert_eq!(token.length, 5);
             assert_eq!(t.text_of(&token), "alpha");
 
             let token = t.next(); // beta
             assert!(token.is_some());
             let token = token.unwrap();
-            assert_eq!(token.type_, TokenType::string);
+            assert_eq!(token.type_, TokenType::String);
             assert_eq!(token.offset, 6);
             assert_eq!(token.length, 4);
             assert_eq!(t.text_of(&token), "beta");
@@ -1440,14 +1224,14 @@ mod tests {
             let token = t.next(); // {
             assert!(token.is_some());
             let token = token.unwrap();
-            assert_eq!(token.type_, TokenType::left_brace);
+            assert_eq!(token.type_, TokenType::LeftBrace);
             assert_eq!(token.length, 1);
             assert_eq!(t.text_of(&token), "{");
 
             let token = t.next(); // echo
             assert!(token.is_some());
             let token = token.unwrap();
-            assert_eq!(token.type_, TokenType::string);
+            assert_eq!(token.type_, TokenType::String);
             assert_eq!(token.offset, 2);
             assert_eq!(token.length, 4);
             assert_eq!(t.text_of(&token), "echo");
@@ -1459,26 +1243,26 @@ mod tests {
             let s = L!("{echo, foo}");
             let mut t = Tokenizer::new(s, TokFlags(0));
             let token = t.next().unwrap();
-            assert_eq!(token.type_, TokenType::left_brace);
+            assert_eq!(token.type_, TokenType::LeftBrace);
             assert_eq!(token.length, 1);
         }
         {
             let s = L!("{ echo; foo}");
             let mut t = Tokenizer::new(s, TokFlags(0));
             let token = t.next().unwrap();
-            assert_eq!(token.type_, TokenType::left_brace);
+            assert_eq!(token.type_, TokenType::LeftBrace);
         }
 
         {
             let s = L!("{ | { name } '");
             let mut t = Tokenizer::new(s, TokFlags(0));
             let mut next_type = || t.next().unwrap().type_;
-            assert_eq!(next_type(), TokenType::left_brace);
-            assert_eq!(next_type(), TokenType::pipe);
-            assert_eq!(next_type(), TokenType::left_brace);
-            assert_eq!(next_type(), TokenType::string);
-            assert_eq!(next_type(), TokenType::right_brace);
-            assert_eq!(next_type(), TokenType::error);
+            assert_eq!(next_type(), TokenType::LeftBrace);
+            assert_eq!(next_type(), TokenType::Pipe);
+            assert_eq!(next_type(), TokenType::LeftBrace);
+            assert_eq!(next_type(), TokenType::String);
+            assert_eq!(next_type(), TokenType::RightBrace);
+            assert_eq!(next_type(), TokenType::Error);
             assert!(t.next().is_none());
         }
 
@@ -1493,10 +1277,10 @@ mod tests {
         type tt = TokenType;
         #[rustfmt::skip]
         let types = [
-            tt::string, tt::redirect, tt::string, tt::redirect, tt::string, tt::string, tt::string,
-            tt::string, tt::string, tt::pipe, tt::redirect, tt::andand, tt::background, tt::oror,
-            tt::pipe, tt::andand, tt::oror, tt::background, tt::pipe, tt::string, tt::end,
-            tt::string,
+            tt::String, tt::Redirect, tt::String, tt::Redirect, tt::String, tt::String, tt::String,
+            tt::String, tt::String, tt::Pipe, tt::Redirect, tt::AndAnd, tt::Background, tt::OrOr,
+            tt::Pipe, tt::AndAnd, tt::OrOr, tt::Background, tt::Pipe, tt::String, tt::End,
+            tt::String,
         ];
 
         {
@@ -1513,8 +1297,8 @@ mod tests {
         {
             let mut t = Tokenizer::new(L!("abc\\"), TokFlags(0));
             let token = t.next().unwrap();
-            assert_eq!(token.type_, TokenType::error);
-            assert_eq!(token.error, TokenizerError::unterminated_escape);
+            assert_eq!(token.type_, TokenType::Error);
+            assert_eq!(token.error, TokenizerError::UnterminatedEscape);
             assert_eq!(token.error_offset_within_token, 3);
         }
 
@@ -1522,8 +1306,8 @@ mod tests {
             let mut t = Tokenizer::new(L!("abc )defg(hij"), TokFlags(0));
             let _token = t.next().unwrap();
             let token = t.next().unwrap();
-            assert_eq!(token.type_, TokenType::error);
-            assert_eq!(token.error, TokenizerError::closing_unopened_subshell);
+            assert_eq!(token.type_, TokenType::Error);
+            assert_eq!(token.error, TokenizerError::ClosingUnopenedSubshell);
             assert_eq!(token.offset, 4);
             assert_eq!(token.error_offset_within_token, 0);
         }
@@ -1532,8 +1316,8 @@ mod tests {
             let mut t = Tokenizer::new(L!("abc defg(hij (klm)"), TokFlags(0));
             let _token = t.next().unwrap();
             let token = t.next().unwrap();
-            assert_eq!(token.type_, TokenType::error);
-            assert_eq!(token.error, TokenizerError::unterminated_subshell);
+            assert_eq!(token.type_, TokenType::Error);
+            assert_eq!(token.error, TokenizerError::UnterminatedSubshell);
             assert_eq!(token.error_offset_within_token, 4);
         }
 
@@ -1541,8 +1325,8 @@ mod tests {
             let mut t = Tokenizer::new(L!("abc defg[hij (klm)"), TokFlags(0));
             let _token = t.next().unwrap();
             let token = t.next().unwrap();
-            assert_eq!(token.type_, TokenType::error);
-            assert_eq!(token.error, TokenizerError::unterminated_slice);
+            assert_eq!(token.type_, TokenType::Error);
+            assert_eq!(token.error, TokenizerError::UnterminatedSlice);
             assert_eq!(token.error_offset_within_token, 4);
         }
 
@@ -1581,169 +1365,18 @@ mod tests {
             };
         }
 
-        assert_eq!(get_redir_mode!("<"), RedirectionMode::input);
-        assert_eq!(get_redir_mode!(">"), RedirectionMode::overwrite);
-        assert_eq!(get_redir_mode!("2>"), RedirectionMode::overwrite);
-        assert_eq!(get_redir_mode!(">>"), RedirectionMode::append);
-        assert_eq!(get_redir_mode!("2>>"), RedirectionMode::append);
-        assert_eq!(get_redir_mode!("2>?"), RedirectionMode::noclob);
+        assert_eq!(get_redir_mode!("<"), RedirectionMode::Input);
+        assert_eq!(get_redir_mode!(">"), RedirectionMode::Overwrite);
+        assert_eq!(get_redir_mode!("2>"), RedirectionMode::Overwrite);
+        assert_eq!(get_redir_mode!(">>"), RedirectionMode::Append);
+        assert_eq!(get_redir_mode!("2>>"), RedirectionMode::Append);
+        assert_eq!(get_redir_mode!("2>?"), RedirectionMode::NoClob);
         assert_eq!(
             get_redir_mode!("9999999999999999>?"),
-            RedirectionMode::noclob
+            RedirectionMode::NoClob
         );
-        assert_eq!(get_redir_mode!("2>&3"), RedirectionMode::fd);
-        assert_eq!(get_redir_mode!("3<&0"), RedirectionMode::fd);
-        assert_eq!(get_redir_mode!("3</tmp/filetxt"), RedirectionMode::input);
-    }
-
-    /// Test word motion (forward-word, etc.). Carets represent cursor stops.
-    #[test]
-    fn test_word_motion() {
-        #[derive(Eq, PartialEq)]
-        pub enum Direction {
-            Left,
-            Right,
-        }
-
-        macro_rules! validate {
-            ($direction:expr, $style:expr, $line:expr) => {
-                let mut command = WString::new();
-                let mut stops = HashSet::new();
-
-                // Carets represent stops and should be cut out of the command.
-                for c in $line.chars() {
-                    if c == '^' {
-                        stops.insert(command.len());
-                    } else {
-                        command.push(c);
-                    }
-                }
-
-                let (mut idx, end) = if $direction == Direction::Left {
-                    (stops.iter().max().unwrap().clone(), 0)
-                } else {
-                    (stops.iter().min().unwrap().clone(), command.len())
-                };
-                stops.remove(&idx);
-
-                let mut sm = MoveWordStateMachine::new($style);
-                while idx != end {
-                    let char_idx = if $direction == Direction::Left {
-                        idx - 1
-                    } else {
-                        idx
-                    };
-                    let c = command.as_char_slice()[char_idx];
-                    let will_stop = !sm.consume_char(c);
-                    let expected_stop = stops.contains(&idx);
-                    assert_eq!(will_stop, expected_stop);
-                    // We don't expect to stop here next time.
-                    if expected_stop {
-                        stops.remove(&idx);
-                        sm.reset();
-                    } else {
-                        if $direction == Direction::Left {
-                            idx -= 1;
-                        } else {
-                            idx += 1;
-                        }
-                    }
-                }
-            };
-        }
-
-        validate!(
-            Direction::Left,
-            MoveWordStyle::Punctuation,
-            "^echo ^hello_^world.^txt^"
-        );
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Punctuation,
-            "^echo^ hello^_world^.txt^"
-        );
-
-        validate!(
-            Direction::Left,
-            MoveWordStyle::Punctuation,
-            "echo ^foo_^foo_^foo/^/^/^/^/^    ^"
-        );
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Punctuation,
-            "^echo^ foo^_foo^_foo^/^/^/^/^/    ^"
-        );
-
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^/^foo/^bar/^baz/^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^echo ^--foo ^--bar^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^echo ^hi ^> ^/^dev/^null^"
-        );
-
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^echo ^/^foo/^bar{^aaa,^bbb,^ccc}^bak/^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^echo ^bak ^///^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^aaa ^@ ^@^aaa^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^aaa ^a ^@^aaa^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^aaa ^@@@ ^@@^aa^"
-        );
-        validate!(
-            Direction::Left,
-            MoveWordStyle::PathComponents,
-            "^aa^@@  ^aa@@^a^"
-        );
-
-        validate!(Direction::Right, MoveWordStyle::Punctuation, "^a^ bcd^");
-        validate!(Direction::Right, MoveWordStyle::Punctuation, "a^b^ cde^");
-        validate!(Direction::Right, MoveWordStyle::Punctuation, "^ab^ cde^");
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Punctuation,
-            "^ab^&cd^ ^& ^e^ f^&"
-        );
-
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Whitespace,
-            "^^a-b-c^ d-e-f"
-        );
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Whitespace,
-            "^a-b-c^\n d-e-f^ "
-        );
-        validate!(
-            Direction::Right,
-            MoveWordStyle::Whitespace,
-            "^a-b-c^\n\nd-e-f^ "
-        );
+        assert_eq!(get_redir_mode!("2>&3"), RedirectionMode::Fd);
+        assert_eq!(get_redir_mode!("3<&0"), RedirectionMode::Fd);
+        assert_eq!(get_redir_mode!("3</tmp/filetxt"), RedirectionMode::Input);
     }
 }

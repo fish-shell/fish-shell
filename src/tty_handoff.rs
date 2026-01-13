@@ -4,35 +4,37 @@
 use crate::common::{self, safe_write_loop};
 use crate::env::Environment;
 use crate::env_dispatch::MIDNIGHT_COMMANDER_SID;
-use crate::flog::{FLOG, FLOGF};
+use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
+use crate::prelude::*;
 use crate::proc::JobGroupRef;
 use crate::terminal::TerminalCommand::{
     self, ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
-    DecrstFocusReporting, DecsetBracketedPaste, DecsetFocusReporting,
-    KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
-    ModifyOtherKeysDisable, ModifyOtherKeysEnable,
+    DecrstColorThemeReporting, DecrstFocusReporting, DecsetBracketedPaste,
+    DecsetColorThemeReporting, DecsetFocusReporting, KittyKeyboardProgressiveEnhancementsDisable,
+    KittyKeyboardProgressiveEnhancementsEnable, ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
 use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
-use crate::wchar::prelude::*;
-use crate::wchar_ext::ToWString;
 use crate::wutil::{perror, wcstoi};
+use fish_wchar::ToWString;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
-use once_cell::sync::OnceCell;
 use std::mem::MaybeUninit;
-use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
+use std::sync::{
+    OnceLock,
+    atomic::{AtomicBool, AtomicPtr, Ordering},
+};
 
 /// Whether kitty keyboard protocol support is present in the TTY.
-static KITTY_KEYBOARD_SUPPORTED: OnceCell<bool> = OnceCell::new();
+static KITTY_KEYBOARD_SUPPORTED: OnceLock<bool> = OnceLock::new();
 
 /// Set that the TTY supports the kitty keyboard protocol.
 pub fn maybe_set_kitty_keyboard_capability() {
     KITTY_KEYBOARD_SUPPORTED.get_or_init(|| true);
 }
 
-pub(crate) static SCROLL_CONTENT_UP_SUPPORTED: OnceCell<bool> = OnceCell::new();
+pub(crate) static SCROLL_CONTENT_UP_SUPPORTED: OnceLock<bool> = OnceLock::new();
 pub(crate) const SCROLL_CONTENT_UP_TERMINFO_CODE: &str = "indn";
 
 // Get the support capability for kitty keyboard protocol.
@@ -42,15 +44,15 @@ pub fn get_scroll_content_up_capability() -> Option<bool> {
 
 pub fn maybe_set_scroll_content_up_capability() {
     SCROLL_CONTENT_UP_SUPPORTED.get_or_init(|| {
-        FLOG!(reader, "SCROLL UP is supported");
+        flog!(reader, "SCROLL UP is supported");
         true
     });
 }
 
-pub static TERMINAL_OS_NAME: OnceCell<Option<WString>> = OnceCell::new();
+pub static TERMINAL_OS_NAME: OnceLock<Option<WString>> = OnceLock::new();
 pub(crate) const XTGETTCAP_QUERY_OS_NAME: &str = "query-os-name";
 
-pub static XTVERSION: OnceCell<WString> = OnceCell::new();
+pub static XTVERSION: OnceLock<WString> = OnceLock::new();
 
 pub fn xtversion() -> Option<&'static wstr> {
     XTVERSION.get().as_ref().map(|s| s.as_utfstr())
@@ -65,7 +67,7 @@ pub enum TtyQuirks {
     // Running in iTerm2 before 3.5.12, which causes issues when using the kitty keyboard protocol.
     PreKittyIterm2,
     // Whether we are running under tmux.
-    Tmux,
+    Tmux((u32, u32)),
     // Whether we are running under WezTerm.
     Wezterm,
 }
@@ -80,8 +82,8 @@ impl TtyQuirks {
             PreCsiMidnightCommander
         } else if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12)) {
             PreKittyIterm2
-        } else if xtversion.starts_with(L!("tmux ")) {
-            Tmux
+        } else if let Some(version) = get_tmux_version(xtversion) {
+            Tmux(version)
         } else if xtversion.starts_with(L!("WezTerm ")) {
             Wezterm
         } else {
@@ -176,51 +178,48 @@ impl TtyQuirks {
 
     // Return the protocols set to enable or disable TTY protocols.
     fn get_protocols(self) -> TtyProtocolsSet {
+        let mut on_chain = vec![];
+        let mut off_chain = vec![];
+
         // Enable focus reporting under tmux
-        let (focus_reporting_on, focus_reporting_off) = {
-            let is_tmux = self == TtyQuirks::Tmux;
-            (
-                move || is_tmux.then_some(DecsetFocusReporting).into_iter(),
-                move || is_tmux.then_some(DecrstFocusReporting).into_iter(),
-            )
-        };
-        let maybe_enable_focus_reporting = |protocols: &'static [TerminalCommand<'static>]| {
-            protocols.iter().cloned().chain(focus_reporting_on())
-        };
-        let maybe_disable_focus_reporting = |protocols: &'static [TerminalCommand<'static>]| {
-            protocols.iter().cloned().chain(focus_reporting_off())
-        };
+        if matches!(self, TtyQuirks::Tmux(_)) {
+            on_chain.push(DecsetFocusReporting);
+            off_chain.push(DecrstFocusReporting);
+        }
+        on_chain.push(DecsetBracketedPaste);
+        off_chain.push(DecrstBracketedPaste);
+        if !matches!(
+            self, TtyQuirks::Tmux(version) if version < (3, 7)
+        ) {
+            on_chain.push(DecsetColorThemeReporting);
+            off_chain.push(DecrstColorThemeReporting);
+        }
+
+        let on_chain = || on_chain.clone().into_iter();
+        let off_chain = || off_chain.clone().into_iter();
+
         let enablers = ProtocolBytes {
-            kitty_keyboard: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,                       // Enable bracketed paste
-                KittyKeyboardProgressiveEnhancementsEnable, // Kitty keyboard progressive enhancements
-            ])),
-            other: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,
+            kitty_keyboard: serialize_commands(
+                on_chain().chain([KittyKeyboardProgressiveEnhancementsEnable]),
+            ),
+            other: serialize_commands(on_chain().chain([
                 ModifyOtherKeysEnable,       // XTerm's modifyOtherKeys
                 ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
             ])),
-            wezterm_workaround: serialize_commands(maybe_enable_focus_reporting(&[
-                DecsetBracketedPaste,
-                ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
-            ])),
-            none: serialize_commands(maybe_enable_focus_reporting(&[DecsetBracketedPaste])),
+            wezterm_workaround: serialize_commands(on_chain().chain([ApplicationKeypadModeEnable])),
+            none: serialize_commands(on_chain()),
         };
         let disablers = ProtocolBytes {
-            kitty_keyboard: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,                        // Disable bracketed paste
-                KittyKeyboardProgressiveEnhancementsDisable, // Kitty keyboard progressive enhancements
-            ])),
-            other: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,
-                ModifyOtherKeysDisable,
-                ApplicationKeypadModeDisable,
-            ])),
-            wezterm_workaround: serialize_commands(maybe_disable_focus_reporting(&[
-                DecrstBracketedPaste,
-                ApplicationKeypadModeDisable,
-            ])),
-            none: serialize_commands(maybe_disable_focus_reporting(&[DecrstBracketedPaste])),
+            kitty_keyboard: serialize_commands(
+                off_chain().chain([KittyKeyboardProgressiveEnhancementsDisable]),
+            ),
+            other: serialize_commands(
+                off_chain().chain([ModifyOtherKeysDisable, ApplicationKeypadModeDisable]),
+            ),
+            wezterm_workaround: serialize_commands(
+                off_chain().chain([ApplicationKeypadModeDisable]),
+            ),
+            none: serialize_commands(off_chain()),
         };
         TtyProtocolsSet {
             quirks: self,
@@ -271,17 +270,17 @@ static TTY_INVALID: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 // Enable or disable TTY protocols by writing the appropriate commands to the tty.
 // Return true if we emitted any bytes to the tty.
 // Note this does NOT intialize the TTY protocls if not already initialized.
-fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
+fn set_tty_protocols_active(on_write: fn(), enable: bool) {
     assert_is_main_thread();
     // Have protocols at all? We require someone else to have initialized them.
     let Some(protocols) = tty_protocols() else {
-        return false;
+        return;
     };
     // Already set?
     // Note we don't need atomic swaps as this is only called on the main thread.
     // Also note we (logically) set and clear this even if we got SIGHUP.
     if TTY_PROTOCOLS_ACTIVE.load(Ordering::Relaxed) == enable {
-        return false;
+        return;
     }
     if enable {
         TTY_PROTOCOLS_ACTIVE.store(true, Ordering::Release);
@@ -289,7 +288,7 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
 
     // Did we get SIGHUP?
     if TTY_INVALID.load() {
-        return false;
+        return;
     }
 
     // Write the commands to the tty, ignoring errors.
@@ -302,13 +301,12 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) -> bool {
     // Flog any terminal protocol changes of interest.
     let mode = if enable { "Enabling" } else { "Disabling" };
     match protocols.quirks.safe_get_supported_protocol() {
-        ProtocolKind::KittyKeyboard => FLOG!(reader, mode, "kitty keyboard protocol"),
-        ProtocolKind::Other => FLOG!(reader, mode, "other extended keys"),
-        ProtocolKind::WorkAroundWezTerm => FLOG!(reader, mode, "wezterm; no modifyOtherKeys"),
+        ProtocolKind::KittyKeyboard => flog!(reader, mode, "kitty keyboard protocol"),
+        ProtocolKind::Other => flog!(reader, mode, "other extended keys"),
+        ProtocolKind::WorkAroundWezTerm => flog!(reader, mode, "wezterm; no modifyOtherKeys"),
         ProtocolKind::None => (),
     };
     (on_write)();
-    true
 }
 
 // Helper to check if TTY protocols are active.
@@ -359,14 +357,12 @@ pub struct TtyHandoff {
     // The job group which owns the tty, or empty if none.
     owner: Option<JobGroupRef>,
     // Whether terminal protocols were initially enabled.
-    // reclaim() restores the state to this.
+    // Restored on drop.
     tty_protocols_initial: bool,
     // The state of terminal protocols that we set.
     // Note we track this separately from TTY_PROTOCOLS_ACTIVE. We undo the changes
     // we make.
     tty_protocols_applied: bool,
-    // Whether reclaim was called, restoring the tty to its pre-scoped value.
-    reclaimed: bool,
     // Called after writing to the TTY.
     on_write: fn(),
 }
@@ -378,29 +374,26 @@ impl TtyHandoff {
             owner: None,
             tty_protocols_initial: protocols_active,
             tty_protocols_applied: protocols_active,
-            reclaimed: false,
             on_write,
         }
     }
 
     /// Mark terminal modes as enabled.
-    /// Return true if something was written to the tty.
-    pub fn enable_tty_protocols(&mut self) -> bool {
+    pub fn enable_tty_protocols(&mut self) {
         if self.tty_protocols_applied {
-            return false; // Already enabled.
+            return; // Already enabled.
         }
         self.tty_protocols_applied = true;
-        set_tty_protocols_active(self.on_write, true)
+        set_tty_protocols_active(self.on_write, true);
     }
 
     /// Mark terminal modes as disabled.
-    /// Return true if something was written to the tty.
-    pub fn disable_tty_protocols(&mut self) -> bool {
+    pub fn disable_tty_protocols(&mut self) {
         if !self.tty_protocols_applied {
-            return false; // Already disabled.
+            return; // Already disabled.
         };
         self.tty_protocols_applied = false;
-        set_tty_protocols_active(self.on_write, false)
+        set_tty_protocols_active(self.on_write, false);
     }
 
     /// Transfer to the given job group, if it wants to own the terminal.
@@ -409,42 +402,6 @@ impl TtyHandoff {
         assert!(self.owner.is_none(), "Terminal already transferred");
         if Self::try_transfer(jg) {
             self.owner = Some(jg.clone());
-        }
-    }
-
-    /// Reclaim the tty if we transferred it.
-    /// Returns true if data was written to the tty, as part of
-    /// re-enabling terminal protocols.
-    pub fn reclaim(mut self) -> bool {
-        self.reclaim_impl()
-    }
-
-    /// Release the tty, meaning no longer restore anything in Drop - similar to `mem::forget`.
-    pub fn release(mut self) {
-        self.reclaimed = true;
-    }
-
-    /// Implementation of reclaim, factored out for use in Drop.
-    fn reclaim_impl(&mut self) -> bool {
-        assert!(!self.reclaimed, "Terminal already reclaimed");
-        self.reclaimed = true;
-        if self.owner.is_some() {
-            FLOG!(proc_pgroup, "fish reclaiming terminal");
-            if unsafe { libc::tcsetpgrp(STDIN_FILENO, libc::getpgrp()) } == -1 {
-                FLOG!(
-                    warning,
-                    "Could not return shell to foreground:",
-                    errno::errno()
-                );
-                perror("tcsetpgrp");
-            }
-            self.owner = None;
-        }
-        // Restore the terminal protocols. Note this does nothing if they were unchanged.
-        if self.tty_protocols_initial {
-            self.enable_tty_protocols()
-        } else {
-            self.disable_tty_protocols()
         }
     }
 
@@ -513,7 +470,7 @@ impl TtyHandoff {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while unsafe { libc::tcsetpgrp(STDIN_FILENO, pgid.as_pid_t()) } != 0 {
-            FLOGF!(proc_termowner, "tcsetpgrp failed: %d", errno::errno().0);
+            flogf!(proc_termowner, "tcsetpgrp failed: %d", errno::errno().0);
 
             // Before anything else, make sure that it's even necessary to call tcsetpgrp.
             // Since it usually _is_ necessary, we only check in case it fails so as to avoid the
@@ -534,7 +491,7 @@ impl TtyHandoff {
                 }
             }
             if getpgrp_res == pgid.get() {
-                FLOGF!(
+                flogf!(
                     proc_termowner,
                     "Process group %d already has control of terminal",
                     pgid
@@ -562,7 +519,7 @@ impl TtyHandoff {
                 } else {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
-                    FLOGF!(
+                    flogf!(
                         proc_termowner,
                         "terminal_give_to_job(): EPERM with pgid %d.",
                         pgid
@@ -574,7 +531,7 @@ impl TtyHandoff {
                 // call's EBADF handler above.
                 return false;
             } else {
-                FLOGF!(
+                flogf!(
                     warning,
                     "Could not send job %d ('%s') with pgid %d to foreground",
                     jg.job_id.to_wstring(),
@@ -591,7 +548,7 @@ impl TtyHandoff {
                 // job/group have been started, the only way this can happen is if the very last
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
-                FLOGF!(
+                flogf!(
                     proc_termowner,
                     "tcsetpgrp called but process group %d has terminated.\n",
                     pgid
@@ -605,11 +562,25 @@ impl TtyHandoff {
     }
 }
 
-/// The destructor will assert if reclaim() has not been called.
 impl Drop for TtyHandoff {
     fn drop(&mut self) {
-        if !self.reclaimed {
-            self.reclaim_impl();
+        if self.owner.is_some() {
+            flog!(proc_pgroup, "fish reclaiming terminal");
+            if unsafe { libc::tcsetpgrp(STDIN_FILENO, libc::getpgrp()) } == -1 {
+                flog!(
+                    warning,
+                    "Could not return shell to foreground:",
+                    errno::errno()
+                );
+                perror("tcsetpgrp");
+            }
+            self.owner = None;
+        }
+        // Restore the terminal protocols. Note this does nothing if they were unchanged.
+        if self.tty_protocols_initial {
+            self.enable_tty_protocols();
+        } else {
+            self.disable_tty_protocols();
         }
     }
 }
@@ -618,15 +589,24 @@ impl Drop for TtyHandoff {
 fn get_iterm2_version(xtversion: &wstr) -> Option<(u32, u32, u32)> {
     // TODO split_once
     let mut xtversion = xtversion.split(' ');
-    let name = xtversion.next().unwrap();
-    let version = xtversion.next()?;
-    if name != "iTerm2" {
+    if xtversion.next().unwrap() != "iTerm2" {
         return None;
     }
-    let mut parts = version.split('.');
+    let mut version = xtversion.next()?.split('.');
     Some((
-        wcstoi(parts.next()?).ok()?,
-        wcstoi(parts.next()?).ok()?,
-        wcstoi(parts.next()?).ok()?,
+        wcstoi(version.next()?).ok()?,
+        wcstoi(version.next()?).ok()?,
+        wcstoi(version.next()?).ok()?,
     ))
+}
+
+// If we are running under iTerm2, get the version as a tuple of (major, minor, patch).
+fn get_tmux_version(xtversion: &wstr) -> Option<(u32, u32)> {
+    // TODO split_once
+    let mut xtversion = xtversion.split(' ');
+    if xtversion.next().unwrap() != "tmux" {
+        return None;
+    }
+    let mut version = xtversion.next()?.split('.');
+    Some((wcstoi(version.next()?).ok()?, wcstoi(version.next()?).ok()?))
 }

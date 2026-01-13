@@ -1,5 +1,5 @@
+use crate::prelude::*;
 use crate::proc::Pid;
-use crate::wchar::prelude::*;
 use std::cell::Cell;
 use std::rc::Rc;
 
@@ -124,8 +124,8 @@ impl WaitHandleStore {
 #[cfg(test)]
 mod tests {
     use super::{WaitHandle, WaitHandleStore};
+    use crate::prelude::*;
     use crate::proc::Pid;
-    use crate::wchar::prelude::*;
 
     #[test]
     fn test_wait_handles() {

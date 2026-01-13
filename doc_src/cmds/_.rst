@@ -23,6 +23,8 @@ If other programs launched via fish should respect these locale variables they h
 
 For :envvar:`LANGUAGE` you can use a list, or use colons to separate multiple languages.
 
+If the :ref:`status language set <status-language>` command was used, its arguments specify the language precedence, and the environment variables are ignored.
+
 Options
 -------
 

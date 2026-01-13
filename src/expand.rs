@@ -8,9 +8,9 @@ use crate::builtins::shared::{
     STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD,
 };
 use crate::common::{
-    EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, EscapeFlags, EscapeStringStyle, UnescapeFlags,
-    UnescapeStringStyle, char_offset, charptr2wcstring, escape, escape_string,
-    escape_string_for_double_quotes, unescape_string, valid_var_name_char, wcs2zstring,
+    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, charptr2wcstring, escape,
+    escape_string, escape_string_for_double_quotes, unescape_string, valid_var_name_char,
+    wcs2zstring,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
@@ -23,13 +23,14 @@ use crate::parse_util::{
     MaybeParentheses, parse_util_expand_variable_error, parse_util_locate_cmdsubst_range,
 };
 use crate::path::path_apply_working_directory;
+use crate::prelude::*;
 use crate::util::wcsfilecmp_glob;
-use crate::wchar::prelude::*;
 use crate::wcstringutil::{join_strings, trim};
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, WildcardResult};
 use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
 use crate::wutil::{Options, normalize_path, wcstoi_partial};
 use bitflags::bitflags;
+use fish_common::{EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, char_offset};
 use std::mem::MaybeUninit;
 
 bitflags! {
@@ -153,8 +154,7 @@ pub fn expand_string(
     ctx: &OperationContext,
     errors: Option<&mut ParseErrorList>,
 ) -> ExpandResult {
-    let mut completions = vec![];
-    std::mem::swap(&mut completions, out_completions);
+    let completions = std::mem::take(out_completions);
     let mut recv = CompletionReceiver::from_list(completions, ctx.expansion_limit);
     let result = expand_to_receiver(input, &mut recv, flags, ctx, errors);
     *out_completions = recv.take();
@@ -187,18 +187,17 @@ pub fn expand_one(
     ctx: &OperationContext,
     errors: Option<&mut ParseErrorList>,
 ) -> bool {
-    let mut completions = CompletionList::new();
-
     if !flags.contains(ExpandFlags::FOR_COMPLETIONS) && expand_is_clean(s) {
         return true;
     }
 
-    let mut tmp = WString::new();
-    std::mem::swap(s, &mut tmp);
-    if expand_string(tmp, &mut completions, flags, ctx, errors) == ExpandResultCode::ok
-        && completions.len() == 1
-    {
-        std::mem::swap(s, &mut completions[0].completion);
+    let mut completions = CompletionList::new();
+    let input = std::mem::take(s);
+
+    let ok = expand_string(input, &mut completions, flags, ctx, errors) == ExpandResultCode::ok;
+
+    if ok && completions.len() == 1 {
+        *s = std::mem::take(&mut completions[0].completion);
         return true;
     }
 
@@ -257,7 +256,7 @@ pub fn expand_escape_variable(var: &EnvVar) -> WString {
     let lst = var.as_list();
     for el in lst {
         if !buff.is_empty() {
-            buff.push_str("  ");
+            buff.push_str(" ");
         }
 
         // We want to use quotes if we have more than one string, or the string contains a space.
@@ -298,9 +297,9 @@ pub fn expand_tilde(input: &mut WString, vars: &dyn Environment) {
     }
 }
 
-/// Perform the opposite of tilde expansion on the string, which is modified in place.
-pub fn replace_home_directory_with_tilde(s: &wstr, vars: &dyn Environment) -> WString {
-    let mut result = s.to_owned();
+/// Perform the opposite of tilde expansion on the string.
+pub fn replace_home_directory_with_tilde(s: impl Into<WString>, vars: &dyn Environment) -> WString {
+    let mut result = s.into();
     // Only absolute paths get this treatment.
     if result.starts_with(L!("/")) {
         let mut home_directory = L!("~").to_owned();
@@ -360,7 +359,7 @@ macro_rules! append_syntax_error {
             let mut error = ParseError::default();
             error.source_start = $source_start;
             error.source_length = 0;
-            error.code = ParseErrorCode::syntax;
+            error.code = ParseErrorCode::Syntax;
             error.text = wgettext_fmt!($fmt $(, $arg)*);
             errors.push(error);
         }
@@ -390,7 +389,7 @@ macro_rules! append_cmdsub_error_formatted {
             let mut error = ParseError::default();
             error.source_start = $source_start;
             error.source_length = $source_end - $source_start + 1;
-            error.code = ParseErrorCode::cmdsubst;
+            error.code = ParseErrorCode::CmdSubst;
             error.text = $text;
             if !errors.iter().any(|e| e.text == error.text) {
                 errors.push(error);
@@ -408,7 +407,7 @@ fn append_overflow_error(
         errors.push(ParseError {
             source_start: source_start.unwrap_or(SOURCE_LOCATION_UNKNOWN),
             source_length: 0,
-            code: ParseErrorCode::generic,
+            code: ParseErrorCode::Generic,
             text: wgettext!("Expansion produced too many results").to_owned(),
         });
     }
@@ -738,7 +737,7 @@ fn expand_variables(
                 // here, So tmp < 1 means it's definitely not in.
                 // Note we are 1-based.
                 if item_index >= 1 && item_index <= all_var_items.len() {
-                    var_item_list.push(all_var_items[item_index - 1].to_owned());
+                    var_item_list.push(all_var_items[item_index - 1].clone());
                 }
             }
         }
@@ -1039,7 +1038,7 @@ pub fn expand_cmdsubst(
                 continue;
             }
             // -1 to convert from 1-based slice index to 0-based vector index.
-            sub_res2.push(sub_res[idx as usize - 1].to_owned());
+            sub_res2.push(sub_res[idx as usize - 1].clone());
         }
         sub_res = sub_res2;
     }
@@ -1331,14 +1330,12 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         if self.flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) {
             let mut cursor = 0;
             match parse_util_locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
-                MaybeParentheses::Error => {
-                    return ExpandResult::make_error(STATUS_EXPAND_ERROR);
-                }
+                MaybeParentheses::Error => ExpandResult::make_error(STATUS_EXPAND_ERROR),
                 MaybeParentheses::None => {
                     if !out.add(input) {
                         return append_overflow_error(self.errors, None);
                     }
-                    return ExpandResult::ok();
+                    ExpandResult::ok()
                 }
                 MaybeParentheses::CommandSubstitution(parens) => {
                     append_cmdsub_error!(
@@ -1347,7 +1344,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                         parens.end() - 1,
                         "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
                     );
-                    return ExpandResult::make_error(STATUS_EXPAND_ERROR);
+                    ExpandResult::make_error(STATUS_EXPAND_ERROR)
                 }
             }
         } else {
@@ -1394,8 +1391,10 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         mut input: WString,
         out: &mut CompletionReceiver,
     ) -> ExpandResult {
+        remove_internal_separator(&mut input, self.flags.contains(ExpandFlags::SKIP_WILDCARDS));
+
         expand_home_directory(&mut input, self.ctx.vars());
-        if !feature_test(FeatureFlag::remove_percent_self) {
+        if !feature_test(FeatureFlag::RemovePercentSelf) {
             expand_percent_self(&mut input);
         }
         if !out.add(input) {
@@ -1406,15 +1405,11 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
 
     fn stage_wildcards(
         &mut self,
-        mut path_to_expand: WString,
+        path_to_expand: WString,
         out: &mut CompletionReceiver,
     ) -> ExpandResult {
         let mut result = ExpandResult::ok();
 
-        remove_internal_separator(
-            &mut path_to_expand,
-            self.flags.contains(ExpandFlags::SKIP_WILDCARDS),
-        );
         let has_wildcard = wildcard_has_internal(&path_to_expand); // e.g. ANY_STRING
         let for_completions = self.flags.contains(ExpandFlags::FOR_COMPLETIONS);
         let skip_wildcards = self.flags.contains(ExpandFlags::SKIP_WILDCARDS);
@@ -1602,12 +1597,13 @@ mod tests {
     use crate::expand::{ExpandResultCode, expand_to_receiver};
     use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, no_cancel};
     use crate::parse_constants::ParseErrorList;
+    use crate::parser::ParserEnvSetMode;
     use crate::tests::prelude::*;
     use crate::wildcard::ANY_STRING;
     use crate::{
         expand::{ExpandFlags, expand_string},
         operation_context::OperationContext,
-        wchar::prelude::*,
+        prelude::*,
     };
     use std::collections::HashSet;
     use std::collections::hash_map::RandomState;
@@ -1962,7 +1958,7 @@ mod tests {
 
         let parser = TestParser::new();
         parser.vars().push(true);
-        let set = parser.vars().set(L!("bigvar"), EnvMode::LOCAL, vals);
+        let set = parser.set_var(L!("bigvar"), ParserEnvSetMode::new(EnvMode::LOCAL), vals);
         assert_eq!(set, EnvStackSetResult::Ok);
 
         let mut errors = ParseErrorList::new();
@@ -1982,7 +1978,7 @@ mod tests {
         assert_ne!(errors, vec![]);
         assert_eq!(res, ExpandResultCode::error);
 
-        parser.vars().pop();
+        parser.vars().pop(false);
     }
 
     #[test]
@@ -2052,5 +2048,23 @@ mod tests {
         );
 
         assert_eq!(abbr_expand_1(L!("foo"), cmd), Some(L!("bar").into()));
+    }
+
+    #[test]
+    fn test_replace_home_directory_with_tilde() {
+        use super::replace_home_directory_with_tilde as rhdwt;
+        use crate::env::{EnvMode, EnvSetMode, EnvStack};
+        let vars = EnvStack::new();
+        vars.set_one(
+            L!("HOME"),
+            EnvSetMode::new(EnvMode::GLOBAL, false),
+            L!("/home/testuser").to_owned(),
+        );
+
+        assert_eq!(rhdwt("/home/testuser/", &vars), "~/");
+        assert_eq!(rhdwt("/home/testuser/Documents/", &vars), "~/Documents/");
+        assert_eq!(rhdwt("/home/testuser", &vars), "/home/testuser");
+        assert_eq!(rhdwt("/other/path/", &vars), "/other/path/");
+        assert_eq!(rhdwt("relative/path", &vars), "relative/path");
     }
 }

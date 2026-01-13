@@ -172,3 +172,13 @@ printf '|%.1s|\n' '𒈙a'
 #CHECK: |𒈙|
 printf '|%3.3s|\n' '👨‍👨‍👧‍👧'
 #CHECK: | 👨‍👨‍👧‍👧|
+
+# Check handling of chars we use in our internal PUA encoding.
+printf '\uf641' | display_bytes
+# CHECK: 0000000 357 231 201
+# CHECK: 0000003
+
+# UTF-8 representation of \uf641
+printf '%s' \xef\x99\x81 | display_bytes
+# CHECK: 0000000 357 231 201
+# CHECK: 0000003

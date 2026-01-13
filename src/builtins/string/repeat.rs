@@ -37,7 +37,7 @@ impl StringSubCommand<'_> for Repeat {
             'N' => self.no_newline = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -88,9 +88,9 @@ impl StringSubCommand<'_> for Repeat {
         let mut first = true;
         let mut print_trailing_newline = true;
 
-        for (w, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             print_trailing_newline = want_newline;
-            if w.is_empty() {
+            if arg.is_empty() {
                 continue;
             }
 
@@ -102,13 +102,13 @@ impl StringSubCommand<'_> for Repeat {
             }
 
             if !first {
-                streams.out.append1('\n');
+                streams.out.append_char('\n');
             }
             first = false;
 
             // The maximum size of the string is either the "max" characters,
             // or it's the "count" repetitions, whichever ends up lower.
-            let max_repeat_len = w.len().wrapping_mul(count);
+            let max_repeat_len = arg.len().wrapping_mul(count);
             let max = if max == 0 || (count > 0 && max_repeat_len < max) {
                 // TODO: we should disallow overflowing unless max <= w.len().checked_mul(self.count).unwrap_or(usize::MAX)
                 max_repeat_len
@@ -126,18 +126,18 @@ impl StringSubCommand<'_> for Repeat {
             // So let's not bother.
             //
             // Unless of course we don't even print the entire word, in which case we just need max.
-            let mut chunk = WString::with_capacity(max.min(chunk_size + w.len()));
+            let mut chunk = WString::with_capacity(max.min(chunk_size + arg.len()));
 
             let mut i = max;
             while i > 0 {
-                if i >= w.len() {
-                    chunk.push_utfstr(&w);
+                if i >= arg.len() {
+                    chunk.push_utfstr(&arg);
                 } else {
-                    chunk.push_utfstr(w.slice_to(i));
+                    chunk.push_utfstr(arg.slice_to(i));
                     break;
                 }
 
-                i -= w.len();
+                i -= arg.len();
 
                 if chunk.len() >= chunk_size {
                     // We hit the chunk size, write it repeatedly until we can't anymore.
@@ -165,7 +165,7 @@ impl StringSubCommand<'_> for Repeat {
 
         // Historical behavior is to never append a newline if all strings were empty.
         if !self.quiet && !self.no_newline && !all_empty && print_trailing_newline {
-            streams.out.append1('\n');
+            streams.out.append_char('\n');
         }
 
         if all_empty {

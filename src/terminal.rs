@@ -1,15 +1,14 @@
 // Generic output functions.
-use crate::FLOGF;
 use crate::color::{Color, Color24};
 use crate::common::ToCString;
 use crate::common::{self, EscapeStringStyle, escape_string, wcs2bytes, wcs2bytes_appending};
+use crate::flogf;
 use crate::future_feature_flags::{self, FeatureFlag};
+use crate::prelude::*;
 use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
-use crate::wchar::prelude::*;
 use bitflags::bitflags;
-use once_cell::sync::OnceCell;
 use std::cell::{RefCell, RefMut};
 use std::env;
 use std::ffi::{CStr, CString};
@@ -17,9 +16,8 @@ use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
-use std::sync::Arc;
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::{Arc, Mutex, OnceLock};
 
 bitflags! {
     #[derive(Copy, Clone, Default)]
@@ -111,6 +109,7 @@ pub(crate) enum TerminalCommand<'a> {
 
     // Other terminal features
     QueryCursorPosition,
+    QueryBackgroundColor,
     ScrollContentUp(usize),
 
     DecsetShowCursor,
@@ -118,6 +117,8 @@ pub(crate) enum TerminalCommand<'a> {
     DecrstFocusReporting,
     DecsetBracketedPaste,
     DecrstBracketedPaste,
+    DecsetColorThemeReporting,
+    DecrstColorThemeReporting,
 }
 
 pub(crate) trait Output {
@@ -185,12 +186,15 @@ pub(crate) trait Output {
             Osc133CommandStart(command) => osc_133_command_start(self, command),
             Osc133CommandFinished(s) => osc_133_command_finished(self, s),
             QueryCursorPosition => write(self, b"\x1b[6n"),
+            QueryBackgroundColor => write(self, b"\x1b]11;?\x1b\\"),
             ScrollContentUp(lines) => scroll_content_up(self, lines),
             DecsetShowCursor => write(self, b"\x1b[?25h"),
             DecsetFocusReporting => write(self, b"\x1b[?1004h"),
             DecrstFocusReporting => write(self, b"\x1b[?1004l"),
             DecsetBracketedPaste => write(self, b"\x1b[?2004h"),
             DecrstBracketedPaste => write(self, b"\x1b[?2004l"),
+            DecsetColorThemeReporting => write(self, b"\x1b[?2031h"),
+            DecrstColorThemeReporting => write(self, b"\x1b[?2031l"),
         }
     }
 }
@@ -219,7 +223,7 @@ fn maybe_terminfo(
 }
 
 pub(crate) fn use_terminfo() -> bool {
-    !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()
+    !future_feature_flags::test(FeatureFlag::IgnoreTerminfo) && TERM.lock().unwrap().is_some()
 }
 
 fn underline_mode(out: &mut impl Output, style: UnderlineStyle) -> bool {
@@ -388,10 +392,10 @@ fn osc_0_or_1_terminal_title(out: &mut impl Output, is_1: bool, title: &[WString
 }
 
 fn osc_133_prompt_start(out: &mut impl Output) -> bool {
-    if !future_feature_flags::test(FeatureFlag::mark_prompt) {
+    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
         return false;
     }
-    static TEST_BALLOON: OnceCell<()> = OnceCell::new();
+    static TEST_BALLOON: OnceLock<()> = OnceLock::new();
     if TEST_BALLOON.set(()).is_ok() {
         write_to_output!(out, "\x1b]133;A;click_events=1\x1b\\");
     } else {
@@ -401,7 +405,7 @@ fn osc_133_prompt_start(out: &mut impl Output) -> bool {
 }
 
 fn osc_133_prompt_end(out: &mut impl Output) -> bool {
-    if !future_feature_flags::test(FeatureFlag::mark_prompt) {
+    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
         return false;
     }
     write_to_output!(out, "\x1b]133;B\x07");
@@ -409,7 +413,7 @@ fn osc_133_prompt_end(out: &mut impl Output) -> bool {
 }
 
 fn osc_133_command_start(out: &mut impl Output, command: &wstr) -> bool {
-    if !future_feature_flags::test(FeatureFlag::mark_prompt) {
+    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
         return false;
     }
     write_to_output!(
@@ -421,7 +425,7 @@ fn osc_133_command_start(out: &mut impl Output, command: &wstr) -> bool {
 }
 
 fn osc_133_command_finished(out: &mut impl Output, exit_status: libc::c_int) -> bool {
-    if !future_feature_flags::test(FeatureFlag::mark_prompt) {
+    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
         return false;
     }
     write_to_output!(out, "\x1b]133;D;{}\x07", exit_status);
@@ -881,7 +885,7 @@ pub fn setup() {
             let mut path = PathBuf::from(dir);
             path.push(first_char.clone());
             path.push(t.clone());
-            FLOGF!(term_support, "Trying path '%s'", path.to_str().unwrap());
+            flogf!(term_support, "Trying path '%s'", path.to_str().unwrap());
             if let Ok(db) = terminfo::Database::from_path(path) {
                 return Ok(db);
             }
@@ -923,8 +927,7 @@ fn get_num_cap(db: &terminfo::Database, code: &str) -> Option<usize> {
 /// Panics if the given code string does not contain exactly two bytes.
 fn get_flag_cap(db: &terminfo::Database, code: &str) -> bool {
     db.raw(code)
-        .map(|cap| matches!(cap, terminfo::Value::True))
-        .unwrap_or(false)
+        .is_some_and(|cap| matches!(cap, terminfo::Value::True))
 }
 
 /// Covers over tparm() with one parameter.

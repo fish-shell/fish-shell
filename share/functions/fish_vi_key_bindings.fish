@@ -1,5 +1,145 @@
-alias fish_vi_dec 'fish_vi_inc_dec dec'
-alias fish_vi_inc 'fish_vi_inc_dec inc'
+function fish_vi_dec
+    fish_vi_inc_dec dec
+end
+
+function fish_vi_inc
+    fish_vi_inc_dec inc
+end
+
+function fish_vi_arg_digit --description 'Accumulate a digit for the next command'
+    set -g __fish_vi_count "$__fish_vi_count$argv[1]"
+end
+
+function fish_vi_run_count --description 'Run a command $__fish_vi_count times'
+    set -l count (__fish_vi_consume_count __fish_vi_count)
+
+    for i in (seq $count)
+        if functions -q -- $argv[1]
+            $argv
+        else
+            commandline -f $argv
+        end
+    end
+end
+
+function fish_vi_start_operator
+    set -g __fish_vi_operator $argv[1]
+    set -g __fish_vi_start_count (__fish_vi_consume_count __fish_vi_count)
+    set fish_bind_mode operator
+    commandline -f repaint-mode
+end
+
+function fish_vi_operator_cancel
+    set -g __fish_vi_operator
+    set -g __fish_vi_start_count
+    set -g __fish_vi_count
+    set fish_bind_mode default
+    commandline -f repaint-mode
+end
+
+function __fish_vi_consume_count -a varname
+    set -l effective_count $$varname
+    if test -z "$effective_count"
+        set effective_count 1
+    end
+    set -g $varname
+    echo $effective_count
+end
+
+function fish_vi_exec_motion
+    argparse linewise -- $argv
+    or return
+
+    set -l motion $argv
+    set -l total (math (__fish_vi_consume_count __fish_vi_start_count) \* (__fish_vi_consume_count __fish_vi_count))
+
+    set fish_bind_mode default
+
+    if set -ql _flag_linewise
+        switch $__fish_vi_operator
+            case delete
+                for i in (seq $total)
+                    commandline -f kill-whole-line
+                end
+            case change
+                for i in (seq $total)
+                    commandline -f kill-inner-line
+                end
+                set fish_bind_mode insert
+            case yank
+                for i in (seq $total)
+                    commandline -f kill-whole-line yank
+                end
+            case swap-case
+                # Not implemented yet
+                return
+        end
+    else
+        set -l use_selection true
+        set -l swap_case_hack
+        switch $motion
+            case forward-word-vi forward-bigword-vi
+                if test $__fish_vi_operator = swap-case
+                    set swap_case_hack (string replace -r -- '^forward-((?:big)?word)-vi$' '$1' $motion)
+                else
+                    set use_selection false
+                    set motion (string replace -- forward kill $motion)
+                end
+        end
+        if $use_selection
+            commandline -f begin-selection
+        else
+            commandline -f begin-undo-group
+        end
+        switch $__fish_vi_operator
+            case delete
+                for i in (seq $total)
+                    commandline -f $motion
+                end
+                if $use_selection
+                    commandline -f kill-selection
+                end
+            case change
+                for i in (seq $total)
+                    commandline -f $motion
+                end
+                if $use_selection
+                    commandline -f kill-selection
+                end
+                set fish_bind_mode insert
+            case yank
+                for i in (seq $total)
+                    commandline -f $motion
+                end
+                if $use_selection
+                    commandline -f kill-selection
+                end
+                commandline -f yank
+            case swap-case
+                for i in (seq $total)
+                    commandline -f $motion
+                end
+                if set -q swap_case_hack[1]
+                    set -l word $swap_case_hack
+                    commandline -f \
+                        backward-$word \
+                        forward-$word-end \
+                        togglecase-selection \
+                        backward-$word \
+                        forward-$word-vi
+                else
+                    commandline -f togglecase-selection
+                end
+        end
+        if $use_selection
+            commandline -f end-selection
+        else
+            commandline -f end-undo-group
+        end
+    end
+    commandline -f repaint-mode
+    set -g __fish_vi_operator
+end
 
 # TODO: Currently we do not support hexadecimal and octal values.
 function fish_vi_inc_dec --description 'increment or decrement the number below the cursor'
@@ -99,7 +239,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # and without this would then have subtly broken bindings.
     if test "$fish_key_bindings" != fish_vi_key_bindings
         and test "$rebind" = true
-        __fish_change_key_bindings fish_vi_key_bindings || return
+        __fish_change_key_bindings fish_vi_key_bindings
     end
 
     set -l init_mode insert
@@ -141,8 +281,37 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Default (command) mode
     bind -s --preset :,q exit
     bind -s --preset -m insert ctrl-c clear-commandline repaint-mode
-    bind -s --preset -M default h backward-char
-    bind -s --preset -M default l forward-char
+
+    bind -s --preset -M default escape 'set -g __fish_vi_count'
+    bind -s --preset -M default ctrl-\[ 'set -g __fish_vi_count'
+
+    for i in (seq 1 9)
+        bind -s --preset -M default $i "fish_vi_arg_digit $i"
+    end
+    # 0 is special: it is 'beginning-of-line' unless we are already counting (e.g. 10)
+    bind -s --preset -M default 0 "if test -n \"\$__fish_vi_count\"; fish_vi_arg_digit 0; else; commandline -f beginning-of-line; end"
+
+    # --- Movement with Count Support ---
+    bind -s --preset -M default h 'fish_vi_run_count backward-char'
+    bind -s --preset -M default l 'fish_vi_run_count forward-char'
+
+    bind -s --preset -M default k 'fish_vi_run_count up-or-search'
+    bind -s --preset -M default j 'fish_vi_run_count down-or-search'
+
+    bind -s --preset -M default b 'fish_vi_run_count backward-word'
+    bind -s --preset -M default B 'fish_vi_run_count backward-bigword'
+    bind -s --preset -M default g,e 'fish_vi_run_count backward-word-end'
+    bind -s --preset -M default g,E 'fish_vi_run_count backward-bigword-end'
+
+    bind -s --preset -M default w 'fish_vi_run_count forward-word-vi'
+    bind -s --preset -M default W 'fish_vi_run_count forward-bigword-vi'
+
+    bind -s --preset -M default e 'fish_vi_run_count forward-word-end'
+    bind -s --preset -M default E 'fish_vi_run_count forward-bigword-end'
+
+    bind -s --preset -M default x 'fish_vi_run_count delete-char'
+    bind -s --preset -M default X 'fish_vi_run_count backward-delete-char'
+
     bind -s --preset -m insert enter execute
     bind -s --preset -m insert ctrl-j execute
     bind -s --preset -m insert ctrl-m execute
@@ -160,7 +329,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     for key in $eol_keys
         bind -s --preset $key end-of-line
     end
-    for key in $bol_keys
+    # Note: 0 is handled in the numeric section above
+    for key in \^ g\^ _
         bind -s --preset $key beginning-of-line
     end
 
@@ -171,16 +341,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset ] history-token-search-forward
     bind -s --preset -m insert / history-pager repaint-mode
 
-    bind -s --preset k up-or-search
-    bind -s --preset j down-or-search
-    bind -s --preset b backward-word
-    bind -s --preset B backward-bigword
-    bind -s --preset g,e backward-word
-    bind -s --preset g,E backward-bigword
-    bind -s --preset w forward-word forward-single-char
-    bind -s --preset W forward-bigword forward-single-char
-    bind -s --preset e 'set fish_cursor_end_mode exclusive' forward-single-char forward-word backward-char 'set fish_cursor_end_mode inclusive'
-    bind -s --preset E 'set fish_cursor_end_mode exclusive' forward-single-char forward-bigword backward-char 'set fish_cursor_end_mode inclusive'
+    __fish_per_os_bind --preset $argv ctrl-right forward-token forward-word-vi
+    # ctrl-left is same as emacs mode
 
     bind -s --preset -M insert ctrl-n accept-autosuggestion
 
@@ -190,8 +352,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M insert end end-of-line
     bind -s --preset -M default end end-of-line
 
-    bind -s --preset -M default x delete-char
-    bind -s --preset -M default X backward-delete-char
     bind -s --preset -M insert delete delete-char
     bind -s --preset -M default delete delete-char
 
@@ -202,29 +362,58 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M insert ctrl-h backward-delete-char
     bind -s --preset -M default ctrl-h backward-char
 
-    bind -s --preset d,d kill-whole-line
+    # Operators & Operator Mode
+    bind -s --preset -M default d 'fish_vi_start_operator delete'
+    bind -s --preset -M default c 'fish_vi_start_operator change'
+    bind -s --preset -M default y 'fish_vi_start_operator yank'
+    bind -s --preset -M default g,\~ 'fish_vi_start_operator swap-case'
+
+    bind -s --preset -M operator escape fish_vi_operator_cancel
+    bind -s --preset -M operator ctrl-\[ fish_vi_operator_cancel
+
+    for i in (seq 1 9)
+        bind -s --preset -M operator $i "fish_vi_arg_digit $i"
+    end
+    bind -s --preset -M operator 0 "if test -n \"\$__fish_vi_count\"; fish_vi_arg_digit 0; else; fish_vi_exec_motion beginning-of-line; end"
+
+    bind -s --preset -M operator h 'fish_vi_exec_motion backward-char'
+    bind -s --preset -M operator l 'fish_vi_exec_motion forward-char'
+    bind -s --preset -M operator k 'fish_vi_exec_motion up-line'
+    bind -s --preset -M operator j 'fish_vi_exec_motion down-line'
+    bind -s --preset -M operator b 'fish_vi_exec_motion backward-word'
+    bind -s --preset -M operator B 'fish_vi_exec_motion backward-bigword'
+    bind -s --preset -M operator g,e 'fish_vi_exec_motion backward-word-end'
+    bind -s --preset -M operator g,E 'fish_vi_exec_motion backward-bigword-end'
+    bind -s --preset -M operator w 'fish_vi_exec_motion forward-word-vi'
+    bind -s --preset -M operator W 'fish_vi_exec_motion forward-bigword-vi'
+    bind -s --preset -M operator e 'fish_vi_exec_motion forward-word-end'
+    bind -s --preset -M operator E 'fish_vi_exec_motion forward-bigword-end'
+
+    bind -s --preset -M operator 0 'fish_vi_exec_motion beginning-of-line'
+    bind -s --preset -M operator \^ 'fish_vi_exec_motion beginning-of-line'
+    bind -s --preset -M operator \$ 'fish_vi_exec_motion end-of-line'
+
+    bind -s --preset -M operator f 'fish_vi_exec_motion forward-jump'
+    bind -s --preset -M operator F 'fish_vi_exec_motion backward-jump'
+    bind -s --preset -M operator t 'fish_vi_exec_motion forward-jump-till'
+    bind -s --preset -M operator T 'fish_vi_exec_motion backward-jump-till'
+    bind -s --preset -M operator ';' 'fish_vi_exec_motion repeat-jump'
+    bind -s --preset -M operator , 'fish_vi_exec_motion repeat-jump-reverse'
+
+    bind -s --preset -M operator d 'fish_vi_exec_motion --linewise'
+    bind -s --preset -M operator c 'fish_vi_exec_motion --linewise'
+    bind -s --preset -M operator y 'fish_vi_exec_motion --linewise'
+    bind -s --preset -M operator \~ 'fish_vi_exec_motion --linewise'
+
     bind -s --preset D kill-line
     bind -s --preset d,\$ kill-line
     bind -s --preset d,\^ backward-kill-line
     bind -s --preset d,0 backward-kill-line
-    bind -s --preset d,w kill-word
-    bind -s --preset d,W kill-bigword
-    bind -s --preset d,i,w forward-single-char forward-single-char backward-word kill-word
-    bind -s --preset d,i,W forward-single-char forward-single-char backward-bigword kill-bigword
-    bind -s --preset d,a,w forward-single-char forward-single-char backward-word kill-word
-    bind -s --preset d,a,W forward-single-char forward-single-char backward-bigword kill-bigword
-    bind -s --preset d,e kill-word
-    bind -s --preset d,E kill-bigword
-    bind -s --preset d,b backward-kill-word
-    bind -s --preset d,B backward-kill-bigword
-    bind -s --preset d,g,e backward-kill-word
-    bind -s --preset d,g,E backward-kill-bigword
-    bind -s --preset d,f begin-selection forward-jump kill-selection end-selection
-    bind -s --preset d,t begin-selection forward-jump backward-char kill-selection end-selection
-    bind -s --preset d,F begin-selection backward-jump kill-selection end-selection
-    bind -s --preset d,T begin-selection backward-jump forward-single-char kill-selection end-selection
-    bind -s --preset d,h backward-char delete-char
-    bind -s --preset d,l delete-char
+
+    bind -s --preset d,i,w kill-inner-word
+    bind -s --preset d,i,W kill-inner-bigword
+    bind -s --preset d,a,w kill-a-word
+    bind -s --preset d,a,W kill-a-bigword
     bind -s --preset d,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection end-selection
     bind -s --preset d,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection end-selection
     bind -s --preset d,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
@@ -234,42 +423,28 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind -s --preset -m insert s delete-char repaint-mode
     bind -s --preset -m insert S kill-inner-line repaint-mode
-    bind -s --preset -m insert c,c kill-inner-line repaint-mode
     bind -s --preset -m insert C kill-line repaint-mode
     bind -s --preset -m insert c,\$ kill-line repaint-mode
     bind -s --preset -m insert c,\^ backward-kill-line repaint-mode
     bind -s --preset -m insert c,0 backward-kill-line repaint-mode
-    bind -s --preset -m insert c,w kill-word repaint-mode
-    bind -s --preset -m insert c,W kill-bigword repaint-mode
-    bind -s --preset -m insert c,i,w forward-single-char forward-single-char backward-word kill-word repaint-mode
-    bind -s --preset -m insert c,i,W forward-single-char forward-single-char backward-bigword kill-bigword repaint-mode
-    bind -s --preset -m insert c,a,w forward-single-char forward-single-char backward-word kill-word repaint-mode
-    bind -s --preset -m insert c,a,W forward-single-char forward-single-char backward-bigword kill-bigword repaint-mode
-    bind -s --preset -m insert c,e kill-word repaint-mode
-    bind -s --preset -m insert c,E kill-bigword repaint-mode
-    bind -s --preset -m insert c,b backward-kill-word repaint-mode
-    bind -s --preset -m insert c,B backward-kill-bigword repaint-mode
-    bind -s --preset -m insert c,g,e backward-kill-word repaint-mode
-    bind -s --preset -m insert c,g,E backward-kill-bigword repaint-mode
-    bind -s --preset -m insert c,f begin-selection forward-jump kill-selection end-selection repaint-mode
-    bind -s --preset -m insert c,t begin-selection forward-jump backward-char kill-selection end-selection repaint-mode
-    bind -s --preset -m insert c,F begin-selection backward-jump kill-selection end-selection repaint-mode
-    bind -s --preset -m insert c,T begin-selection backward-jump forward-single-char kill-selection end-selection repaint-mode
-    bind -s --preset -m insert c,h backward-char begin-selection kill-selection end-selection repaint-mode
-    bind -s --preset -m insert c,l begin-selection kill-selection end-selection repaint-mode
+
+    bind -s --preset -m insert c,i,w kill-inner-word repaint-mode
+    bind -s --preset -m insert c,i,W kill-inner-bigword repaint-mode
+    bind -s --preset -m insert c,a,w kill-a-word repaint-mode
+    bind -s --preset -m insert c,a,W kill-a-bigword repaint-mode
     bind -s --preset -m insert c,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection end-selection
     bind -s --preset -m insert c,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection end-selection
     bind -s --preset -m insert c,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
     bind -s --preset -m insert c,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
 
-    bind -s --preset '~' togglecase-char forward-single-char
+    bind -s --preset \~ togglecase-char forward-single-char
     bind -s --preset g,u downcase-word
     bind -s --preset g,U upcase-word
 
     bind -s --preset J end-of-line delete-char
     bind -s --preset K 'man (commandline -t) 2>/dev/null; or echo -n \a'
 
-    bind -s --preset yy kill-whole-line yank
+    # yy handled by operator mode
     for seq in '",*,y,y' '",*,Y' '",+,y,y' '",+,Y'
         bind -s --preset $seq fish_clipboard_copy
     end
@@ -277,24 +452,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset y,\$ kill-line yank
     bind -s --preset y,\^ backward-kill-line yank
     bind -s --preset y,0 backward-kill-line yank
-    bind -s --preset y,w kill-word yank
-    bind -s --preset y,W kill-bigword yank
-    bind -s --preset y,i,w forward-single-char forward-single-char backward-word kill-word yank
-    bind -s --preset y,i,W forward-single-char forward-single-char backward-bigword kill-bigword yank
-    bind -s --preset y,a,w forward-single-char forward-single-char backward-word kill-word yank
-    bind -s --preset y,a,W forward-single-char forward-single-char backward-bigword kill-bigword yank
-    bind -s --preset y,e kill-word yank
-    bind -s --preset y,E kill-bigword yank
-    bind -s --preset y,b backward-kill-word yank
-    bind -s --preset y,B backward-kill-bigword yank
-    bind -s --preset y,g,e backward-kill-word yank
-    bind -s --preset y,g,E backward-kill-bigword yank
-    bind -s --preset y,f begin-selection forward-jump kill-selection yank end-selection
-    bind -s --preset y,t begin-selection forward-jump-till kill-selection yank end-selection
-    bind -s --preset y,F begin-selection backward-jump kill-selection yank end-selection
-    bind -s --preset y,T begin-selection backward-jump-till kill-selection yank end-selection
-    bind -s --preset y,h backward-char begin-selection kill-selection yank end-selection
-    bind -s --preset y,l begin-selection kill-selection yank end-selection
+    bind -s --preset y,i,w kill-inner-word yank
+    bind -s --preset y,i,W kill-inner-bigword yank
+    bind -s --preset y,a,w kill-a-word yank
+    bind -s --preset y,a,W kill-a-bigword yank
     bind -s --preset y,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection yank end-selection
     bind -s --preset y,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection yank end-selection
     bind -s --preset y,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
@@ -365,12 +526,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind -s --preset -M visual b backward-word
     bind -s --preset -M visual B backward-bigword
-    bind -s --preset -M visual g,e backward-word
-    bind -s --preset -M visual g,E backward-bigword
-    bind -s --preset -M visual w forward-word
-    bind -s --preset -M visual W forward-bigword
-    bind -s --preset -M visual e 'set fish_cursor_end_mode exclusive' forward-single-char forward-word backward-char 'set fish_cursor_end_mode inclusive'
-    bind -s --preset -M visual E 'set fish_cursor_end_mode exclusive' forward-single-char forward-bigword backward-char 'set fish_cursor_end_mode inclusive'
+    bind -s --preset -M visual g,e backward-word-end
+    bind -s --preset -M visual g,E backward-bigword-end
+    bind -s --preset -M visual w forward-word-vi
+    bind -s --preset -M visual W forward-bigword-vi
+    bind -s --preset -M visual e forward-word-end
+    bind -s --preset -M visual E forward-bigword-end
     bind -s --preset -M visual o swap-selection-start-stop repaint-mode
 
     bind -s --preset -M visual % jump-to-matching-bracket
@@ -399,7 +560,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual -m default y kill-selection yank end-selection repaint-mode
     bind -s --preset -M visual -m default '",*,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
     bind -s --preset -M visual -m default '",+,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
-    bind -s --preset -M visual -m default '~' togglecase-selection end-selection repaint-mode
+    bind -s --preset -M visual -m default \~ togglecase-selection end-selection repaint-mode
     bind -s --preset -M visual -m default g,u downcase-selection end-selection repaint-mode
     bind -s --preset -M visual -m default g,U upcase-selection end-selection repaint-mode
 

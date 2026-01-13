@@ -2,8 +2,8 @@
 
 use crate::history::{self, History, HistorySearch, SearchDirection, SearchFlags, SearchType};
 use crate::parse_constants::SourceRange;
+use crate::prelude::*;
 use crate::tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer};
-use crate::wchar::prelude::*;
 use crate::wcstringutil::ifind;
 use std::collections::HashSet;
 use std::ops::Range;
@@ -232,7 +232,7 @@ impl ReaderHistorySearch {
 
             let mut local_tokens = vec![];
             while let Some(token) = tok.next() {
-                if token.type_ != TokenType::string {
+                if token.type_ != TokenType::String {
                     continue;
                 }
                 let text = tok.text_of(&token);

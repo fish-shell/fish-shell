@@ -4,7 +4,7 @@
 set -U _fish_abbr_cuckoo somevalue
 set fish (status fish-path)
 $fish -c abbr
-# CHECK: abbr -a -- cuckoo somevalue # imported from a universal variable, see `help abbr`
+# CHECK: abbr -a -- cuckoo somevalue # imported from a universal variable, see `help cmds/abbr`
 
 # Test basic add and list of __abbr1
 abbr __abbr1 alpha beta gamma

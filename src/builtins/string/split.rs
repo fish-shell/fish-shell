@@ -136,7 +136,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
             'a' => self.allow_empty = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -154,7 +154,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         };
         *optind += 1;
         self.sep = arg;
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
@@ -165,7 +165,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         args: &[&'args wstr],
     ) -> Result<(), ErrorCode> {
         if self.fields.is_empty() && self.allow_empty {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 args[0],
                 wgettext!("--allow-empty is only valid with --fields")
@@ -182,7 +182,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
             false => SplitBehavior::Newline,
             true => SplitBehavior::Never,
         });
-        for (arg, _) in argiter {
+        for InputValue { arg, .. } in argiter {
             let splits: Vec<Cow<'args, wstr>> = match (self.split_from, arg) {
                 (Direction::Right, arg) => {
                     let mut rev = arg.into_owned();
@@ -271,11 +271,11 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         }
 
         // We split something if we have more split values than args.
-        return if split_count > arg_count {
+        if split_count > arg_count {
             Ok(())
         } else {
             Err(STATUS_CMD_ERROR)
-        };
+        }
     }
 }
 

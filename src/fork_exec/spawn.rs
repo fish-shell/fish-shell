@@ -172,12 +172,12 @@ impl PosixSpawner {
         let cmdcstr = unsafe { CStr::from_ptr(cmd) };
         if spawn_err.0 == libc::ENOEXEC && is_thompson_shell_script(cmdcstr) {
             // Create a new argv with /bin/sh prepended.
-            let mut argv2 = vec![PATH_BSHELL.as_ptr() as *mut c_char];
+            let mut argv2 = vec![PATH_BSHELL.as_ptr().cast_mut().cast()];
 
             // The command to call should use the full path,
             // not what we would pass as argv0.
             let cmd2: CString = CString::new(cmdcstr.to_bytes()).unwrap();
-            argv2.push(cmd2.as_ptr() as *mut c_char);
+            argv2.push(cmd2.as_ptr().cast_mut());
             for i in 1.. {
                 let ptr = unsafe { argv.offset(i).read() };
                 if ptr.is_null() {
@@ -189,7 +189,7 @@ impl PosixSpawner {
             check_fail(unsafe {
                 libc::posix_spawn(
                     &mut pid,
-                    PATH_BSHELL.as_ptr() as *const c_char,
+                    PATH_BSHELL.as_ptr().cast(),
                     &self.actions.0,
                     &self.attr.0,
                     argv2.as_ptr(),

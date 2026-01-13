@@ -41,7 +41,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
@@ -72,7 +72,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
                 .count()
         };
 
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let trim_start = if self.left { to_trim_start(&arg) } else { 0 };
             // collision is only an issue if the whole string is getting trimmed
             let trim_end = if self.right && trim_start != arg.len() {
@@ -85,7 +85,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
             if !self.quiet {
                 streams.out.append(&arg[trim_start..arg.len() - trim_end]);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append_char('\n');
                 }
             } else if ntrim > 0 {
                 return Ok(());

@@ -1,28 +1,27 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::{EMPTY_STRING, bytes2wcstring, wcs2bytes};
+use crate::common::{bytes2wcstring, wcs2bytes};
 use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
-    AutoCloseFd, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
+    BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
 };
-use crate::flog::{FLOG, FLOGF, should_flog};
+use crate::flog::{flog, flogf, should_flog};
 use crate::nix::isatty;
 use crate::path::path_apply_working_directory;
+use crate::prelude::*;
 use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
 use crate::terminal::Output;
 use crate::topic_monitor::Topic;
-use crate::wchar::prelude::*;
-use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
+use crate::wutil::{perror, perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat};
 use errno::Errno;
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
-use once_cell::sync::Lazy;
 use std::fs::File;
 use std::io;
-use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd, OwnedFd, RawFd};
+use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just
@@ -162,11 +161,11 @@ impl SeparatedBuffer {
 /// Describes what type of IO operation an io_data_t represents.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum IoMode {
-    file,
-    pipe,
-    fd,
-    close,
-    bufferfill,
+    File,
+    Pipe,
+    Fd,
+    Close,
+    BufferFill,
 }
 
 /// Represents a FD redirection.
@@ -196,7 +195,7 @@ impl IoClose {
 }
 impl IoData for IoClose {
     fn io_mode(&self) -> IoMode {
-        IoMode::close
+        IoMode::Close
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -222,7 +221,7 @@ impl IoFd {
 }
 impl IoData for IoFd {
     fn io_mode(&self) -> IoMode {
-        IoMode::fd
+        IoMode::Fd
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -251,7 +250,7 @@ impl IoFile {
 }
 impl IoData for IoFile {
     fn io_mode(&self) -> IoMode {
-        IoMode::file
+        IoMode::File
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -283,7 +282,7 @@ impl IoPipe {
 }
 impl IoData for IoPipe {
     fn io_mode(&self) -> IoMode {
-        IoMode::pipe
+        IoMode::Pipe
     }
     fn fd(&self) -> RawFd {
         self.fd
@@ -335,7 +334,7 @@ impl IoBufferfill {
         match make_fd_nonblocking(pipes.read.as_raw_fd()) {
             Ok(_) => (),
             Err(e) => {
-                FLOG!(warning, PIPE_ERROR);
+                flog!(warning, PIPE_ERROR);
                 perror_io("fcntl", &e);
                 return Err(e);
             }
@@ -355,9 +354,13 @@ impl IoBufferfill {
         &self.buffer
     }
 
+    pub fn read_all_available(&self) {
+        fd_monitor().with_fd(self.item_id, |fd| self.buffer.read_all_available(fd));
+    }
+
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
     /// of the buffer. Return the buffer.
-    pub fn finish(filler: Arc<IoBufferfill>) -> SeparatedBuffer {
+    pub fn finish(filler: Arc<Self>) -> SeparatedBuffer {
         // The io filler is passed in. This typically holds the only instance of the write side of the
         // pipe used by the buffer's fillthread (except for that side held by other processes).
         // Then allow the buffer to finish.
@@ -367,7 +370,7 @@ impl IoBufferfill {
 }
 impl IoData for IoBufferfill {
     fn io_mode(&self) -> IoMode {
-        IoMode::bufferfill
+        IoMode::BufferFill
     }
     fn fd(&self) -> RawFd {
         self.target
@@ -417,13 +420,8 @@ impl IoBuffer {
 
         // We want to swallow EINTR only; in particular EAGAIN needs to be returned back to the caller.
         let amt = loop {
-            let amt = unsafe {
-                libc::read(
-                    fd,
-                    std::ptr::addr_of_mut!(bytes).cast(),
-                    std::mem::size_of_val(&bytes),
-                )
-            };
+            let amt =
+                unsafe { libc::read(fd, bytes.as_mut_ptr().cast(), std::mem::size_of_val(&bytes)) };
             if amt < 0 && errno::errno().0 == EINTR {
                 continue;
             }
@@ -440,20 +438,35 @@ impl IoBuffer {
         amt
     }
 
+    pub fn read_all_available(&self, fd: BorrowedFd) {
+        let mut locked_buff = self.0.lock().unwrap();
+        self.do_read_all_available(fd, &mut locked_buff);
+    }
+
+    fn do_read_all_available(
+        &self,
+        fd: BorrowedFd,
+        locked_buff: &mut MutexGuard<'_, SeparatedBuffer>,
+    ) {
+        // Read any remaining data from the pipe.
+        while IoBuffer::read_once(fd.as_raw_fd(), &mut *locked_buff) > 0 {
+            // pass
+        }
+    }
+
     /// End the background fillthread operation, and return the buffer, transferring ownership.
     /// The read end of the pipe is provided.
-    pub fn complete_and_take_buffer(&self, fd: AutoCloseFd) -> SeparatedBuffer {
+    pub fn complete_and_take_buffer(&self, fd: Option<OwnedFd>) -> SeparatedBuffer {
         // Read any remaining data from the pipe.
         let mut locked_buff = self.0.lock().unwrap();
-        while fd.is_valid() && IoBuffer::read_once(fd.as_raw_fd(), &mut locked_buff) > 0 {
-            // pass
+
+        if let Some(fd) = fd {
+            self.do_read_all_available(fd.as_fd(), &mut locked_buff);
         }
 
         // Return our buffer, transferring ownership.
-        let mut result = SeparatedBuffer::new(locked_buff.limit());
-        std::mem::swap(&mut result, &mut locked_buff);
-        locked_buff.clear();
-        result
+        let limit = locked_buff.limit();
+        std::mem::replace(&mut locked_buff, SeparatedBuffer::new(limit))
     }
 }
 
@@ -474,17 +487,15 @@ fn begin_filling(iobuffer: IoBuffer, fd: OwnedFd) -> FdMonitorItemId {
     // In this case, when complete_background_fillthread() is called, we grab the file descriptor
     // and read until we get EAGAIN and then give up.
     // Run our function to read until the receiver is closed.
-    let item_callback: Callback = Box::new(move |fd: &mut AutoCloseFd| {
-        assert!(fd.as_raw_fd() >= 0, "Invalid fd");
+    let item_callback: Callback = Box::new(move |fd: &mut Option<OwnedFd>| {
         let mut buf = iobuffer.0.lock().unwrap();
-        let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
+        let ret = IoBuffer::read_once(fd.as_ref().unwrap().as_raw_fd(), &mut buf);
         if ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0)) {
             // Either it's finished or some other error - we're done.
-            fd.close();
+            drop(fd.take());
         }
     });
 
-    let fd = AutoCloseFd::new(fd.into_raw_fd());
     fd_monitor().add(fd, item_callback)
 }
 
@@ -499,11 +510,11 @@ impl IoChain {
     }
     pub fn remove(&mut self, element: &dyn IoData) {
         // Discard vtable pointers when comparing.
-        let e1 = element as *const dyn IoData as *const ();
+        let e1 = std::ptr::from_ref(element).cast::<()>();
         let idx = self
             .0
             .iter()
-            .position(|e2| Arc::as_ref(e2) as *const dyn IoData as *const () == e1)
+            .position(|e2| Arc::as_ptr(e2).cast::<()>() == e1)
             .expect("Element not found");
         self.0.remove(idx);
     }
@@ -535,15 +546,15 @@ impl IoChain {
             // or there's a non-directory component,
             // find the first problematic component for a better message.
             if [ENOENT, ENOTDIR].contains(&err) {
-                FLOGF!(warning, FILE_ERROR, target);
+                flogf!(warning, FILE_ERROR, target);
                 let mut dname: &wstr = target;
                 while !dname.is_empty() {
                     let next: &wstr = wdirname(dname);
                     if let Ok(md) = wstat(next) {
                         if !md.is_dir() {
-                            FLOGF!(warning, "Path '%s' is not a directory", next);
+                            flogf!(warning, "Path '%s' is not a directory", next);
                         } else {
-                            FLOGF!(warning, "Path '%s' does not exist", dname);
+                            flogf!(warning, "Path '%s' does not exist", dname);
                         }
                         break;
                     }
@@ -553,14 +564,14 @@ impl IoChain {
                 // If we get EINTR we had a cancel signal.
                 // That's expected (ctrl-c on the commandline),
                 // so no warning.
-                FLOGF!(warning, FILE_ERROR, target);
+                flogf!(warning, FILE_ERROR, target);
                 perror("open");
             }
         };
 
         for spec in specs {
             match spec.mode {
-                RedirectionMode::fd => {
+                RedirectionMode::Fd => {
                     if spec.is_close() {
                         self.push(Arc::new(IoClose::new(spec.fd)));
                     } else {
@@ -582,8 +593,8 @@ impl IoChain {
                         }
                         Err(err) => {
                             if oflags.contains(OFlag::O_EXCL) && err == nix::Error::EEXIST {
-                                FLOGF!(warning, NOCLOB_ERROR, spec.target);
-                            } else if spec.mode != RedirectionMode::try_input
+                                flogf!(warning, NOCLOB_ERROR, spec.target);
+                            } else if spec.mode != RedirectionMode::TryInput
                                 && should_flog!(warning)
                             {
                                 print_error(errno::errno().0, &spec.target);
@@ -591,7 +602,7 @@ impl IoChain {
                             // If opening a file fails, insert a closed FD instead of the file redirection
                             // and return false. This lets execution potentially recover and at least gives
                             // the shell a chance to gracefully regain control of the shell (see #7038).
-                            if spec.mode != RedirectionMode::try_input {
+                            if spec.mode != RedirectionMode::TryInput {
                                 self.push(Arc::new(IoClose::new(spec.fd)));
                                 have_error = true;
                                 continue;
@@ -623,16 +634,13 @@ impl IoChain {
     /// Output debugging information to stderr.
     pub fn print(&self) {
         if self.0.is_empty() {
-            eprintf!(
-                "Empty chain %s\n",
-                format!("{:p}", std::ptr::addr_of!(self))
-            );
+            eprintf!("Empty chain %s\n", format!("{:p}", &raw const self));
             return;
         }
 
         eprintf!(
             "Chain %s (%d items):\n",
-            format!("{:p}", std::ptr::addr_of!(self)),
+            format!("{:p}", &raw const self),
             self.0.len()
         );
         for (i, io) in self.0.iter().enumerate() {
@@ -659,7 +667,7 @@ impl OutputStream {
     pub fn contents(&self) -> &wstr {
         match self {
             OutputStream::String(stream) => stream.contents(),
-            OutputStream::Null | OutputStream::Fd(_) | OutputStream::Buffered(_) => &EMPTY_STRING,
+            OutputStream::Null | OutputStream::Fd(_) | OutputStream::Buffered(_) => L!(""),
         }
     }
 
@@ -673,9 +681,8 @@ impl OutputStream {
         }
     }
 
-    /// Append a &wstr or WString.
-    pub fn append<Str: AsRef<wstr>>(&mut self, s: Str) -> bool {
-        let s = &s.as_ref();
+    /// Append the given characters.
+    pub fn append(&mut self, s: impl IntoCharIter) -> bool {
         match self {
             OutputStream::Null => true,
             OutputStream::Fd(stream) => stream.append(s),
@@ -700,7 +707,7 @@ impl OutputStream {
                     // Try calling "append" less - it might write() to an fd
                     let mut buf = s.to_owned();
                     buf.push('\n');
-                    self.append(buf)
+                    self.append(&buf)
                 } else {
                     self.append(s)
                 }
@@ -711,24 +718,15 @@ impl OutputStream {
     /// Append a &wstr or WString with a newline
     pub fn appendln(&mut self, s: impl Into<WString>) -> bool {
         let s = s.into() + L!("\n");
-        self.append(s)
+        self.append(&s)
     }
 
     pub fn append_char(&mut self, c: char) -> bool {
         self.append(wstr::from_char_slice(&[c]))
     }
-    pub fn append1(&mut self, c: char) -> bool {
-        self.append_char(c)
-    }
-    pub fn push_back(&mut self, c: char) -> bool {
-        self.append_char(c)
-    }
-    pub fn push(&mut self, c: char) -> bool {
-        self.append(wstr::from_char_slice(&[c]))
-    }
 
     pub fn append_narrow(&mut self, s: &str) -> bool {
-        self.append(bytes2wcstring(s.as_bytes()))
+        self.append(&bytes2wcstring(s.as_bytes()))
     }
     // Append data from a narrow buffer, widening it.
     pub fn append_narrow_buffer(&mut self, buffer: &SeparatedBuffer) -> bool {
@@ -748,7 +746,7 @@ impl OutputStream {
 impl Output for OutputStream {
     fn write_bytes(&mut self, command_part: &[u8]) {
         // TODO Retry on interrupt.
-        self.append(bytes2wcstring(command_part));
+        self.append(&bytes2wcstring(command_part));
     }
 }
 
@@ -770,16 +768,16 @@ impl FdOutputStream {
         assert!(fd >= 0, "Invalid fd");
         FdOutputStream {
             fd,
-            sigcheck: SigChecker::new(Topic::sighupint),
+            sigcheck: SigChecker::new(Topic::SigHupInt),
             errored: false,
         }
     }
 
-    fn append(&mut self, s: &wstr) -> bool {
+    fn append(&mut self, s: impl IntoCharIter) -> bool {
         if self.errored {
             return false;
         }
-        if wwrite_to_fd(s, self.fd).is_none() {
+        if unescape_bytes_and_write_to_fd(s, self.fd).is_none() {
             // Some of our builtins emit multiple screens worth of data sent to a pager (the primary
             // example being the `history` builtin) and receiving SIGINT should be considered normal and
             // non-exceptional (user request to abort via Ctrl-C), meaning we shouldn't print an error.
@@ -817,8 +815,10 @@ impl StringOutputStream {
     pub fn new() -> Self {
         Default::default()
     }
-    fn append(&mut self, s: &wstr) -> bool {
-        self.contents.push_utfstr(s);
+    fn append(&mut self, s: impl IntoCharIter) -> bool {
+        if !s.extend_wstring(&mut self.contents) {
+            self.contents.extend(s.chars());
+        }
         true
     }
     /// Return the wcstring containing the output.
@@ -836,7 +836,7 @@ impl BufferedOutputStream {
     pub fn new(buffer: IoBuffer) -> Self {
         Self { buffer }
     }
-    fn append(&mut self, s: &wstr) -> bool {
+    fn append(&mut self, s: impl IntoCharIter) -> bool {
         self.buffer.append(&wcs2bytes(s), SeparationType::inferred)
     }
     fn append_with_separation(
@@ -860,9 +860,9 @@ pub struct IoStreams<'a> {
     pub out: &'a mut OutputStream,
     pub err: &'a mut OutputStream,
 
-    // fd representing stdin. This is not closed by the destructor.
-    // Note: if stdin is explicitly closed by `<&-` then this is -1!
-    pub stdin_fd: RawFd,
+    // File representing stdin.
+    // Note: if stdin is explicitly closed by `<&-` then this is None!
+    pub stdin_file: Option<BorrowedFdFile>,
 
     // Whether stdin is "directly redirected," meaning it is the recipient of a pipe (foo | cmd) or
     // direct redirection (cmd < foo.txt). An "indirect redirection" would be e.g.
@@ -897,7 +897,7 @@ impl<'a> IoStreams<'a> {
         IoStreams {
             out,
             err,
-            stdin_fd: -1,
+            stdin_file: None,
             stdin_is_directly_redirected: false,
             out_is_piped: false,
             err_is_piped: false,
@@ -907,8 +907,22 @@ impl<'a> IoStreams<'a> {
             job_group: None,
         }
     }
+
     pub fn out_is_terminal(&self) -> bool {
         !self.out_is_redirected && isatty(STDOUT_FILENO)
+    }
+
+    /// Return the fd for stdin, or -1 if stdin is closed.
+    pub fn stdin_fd(&self) -> RawFd {
+        self.stdin_file.as_ref().map_or(-1, |f| f.as_raw_fd())
+    }
+
+    /// Return whether stdin is closed.
+    /// This is "closed in the fish sense" - i.e. `<&-` has been used.
+    /// This does not handle the case where a closed stdin was inherited - in that case
+    /// we'll have an stdin_fd of 0 and we'll just get syscall errors when we try to use it.
+    pub fn is_stdin_closed(&self) -> bool {
+        self.stdin_file.is_none()
     }
 }
 
@@ -920,7 +934,7 @@ const NOCLOB_ERROR: &wstr = L!("The file '%s' already exists");
 const OPEN_MASK: Mode = Mode::from_bits_truncate(0o666);
 
 /// Provide the fd monitor used for background fillthread operations.
-static FD_MONITOR: Lazy<FdMonitor> = Lazy::new(FdMonitor::new);
+static FD_MONITOR: LazyLock<FdMonitor> = LazyLock::new(FdMonitor::new);
 
 pub fn fd_monitor() -> &'static FdMonitor {
     &FD_MONITOR

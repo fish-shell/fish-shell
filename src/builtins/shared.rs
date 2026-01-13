@@ -1,17 +1,16 @@
 use super::prelude::*;
 use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name};
+use crate::fds::BorrowedFdFile;
 use crate::io::OutputStream;
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
 use crate::parser::{BlockType, LoopStatus};
 use crate::proc::{Pid, ProcStatus, no_exec};
-use crate::wchar::L;
 use crate::{builtins::*, wutil};
 use errno::errno;
-
-use std::fs::File;
+use fish_common::assert_sorted_by_name;
+use fish_wchar::L;
 use std::io::{BufRead, BufReader, Read};
-use std::os::fd::FromRawFd;
 
 pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;
 
@@ -50,7 +49,7 @@ localizable_consts!(
 
     /// Error message for invalid bind mode name.
     pub BUILTIN_ERR_BIND_MODE
-    "%s: %s: invalid mode name. See `help identifiers`\n"
+    "%s: %s: invalid mode name. See `help %s`\n"
 
     /// Error message when too many arguments are supplied to a builtin.
     pub BUILTIN_ERR_TOO_MANY_ARGUMENTS
@@ -66,6 +65,9 @@ localizable_consts!(
 
     pub BUILTIN_ERR_INVALID_SUBCMD
     "%s: %s: invalid subcommand\n"
+
+    pub BUILTIN_ERR_INVALID_SUBSUBCMD
+    "%s %s: %s: invalid subcommand\n"
 
     /// Error messages for unexpected args.
     pub BUILTIN_ERR_ARG_COUNT0
@@ -85,7 +87,7 @@ localizable_consts!(
 
     /// Error message for invalid variable name.
     pub BUILTIN_ERR_VARNAME
-    "%s: %s: invalid variable name. See `help identifiers`\n"
+    "%s: %s: invalid variable name. See `help %s`\n"
 
     /// Error message on invalid combination of options.
     pub BUILTIN_ERR_COMBO
@@ -480,7 +482,7 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     }
 
     let Some(builtin) = builtin_lookup(argv[0]) else {
-        FLOGF!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, argv[0]));
+        flogf!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, argv[0]));
         return ProcStatus::from_exit_code(STATUS_CMD_ERROR);
     };
 
@@ -522,7 +524,7 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
         // would assert() out, which is a terrible failure mode
         // So instead, what we do is we get a positive code,
         // and we avoid 0.
-        FLOGF!(
+        flogf!(
             warning,
             "builtin %s returned invalid exit code %d",
             argv[0],
@@ -630,7 +632,7 @@ pub fn builtin_print_help(parser: &Parser, streams: &mut IoStreams, cmd: &wstr) 
     if res.status.normal_exited() && res.status.exit_code() == 2 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MISSING_HELP, name_esc, name_esc));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING_HELP, name_esc, name_esc));
     }
 }
 
@@ -644,7 +646,7 @@ pub fn builtin_unknown_option(
 ) {
     streams
         .err
-        .append(wgettext_fmt!(BUILTIN_ERR_UNKNOWN, cmd, opt));
+        .append(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, cmd, opt));
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
     }
@@ -661,7 +663,7 @@ pub fn builtin_missing_argument(
     if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
         // if c in -qc '-qc' is missing the argument, now opt is just 'c'
         opt = &opt[opt.len() - 1..];
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_MISSING,
             cmd,
             L!("-").to_owned() + opt
@@ -669,7 +671,7 @@ pub fn builtin_missing_argument(
     } else {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, opt));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, opt));
     }
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -686,7 +688,7 @@ pub fn builtin_unexpected_argument(
 ) {
     streams
         .err
-        .append(wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, cmd, opt));
+        .append(&wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, cmd, opt));
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
     }
@@ -694,14 +696,14 @@ pub fn builtin_unexpected_argument(
 
 /// Print the backtrace and call for help that we use at the end of error messages.
 pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &wstr) {
-    b.push('\n');
+    b.append_char('\n');
     let stacktrace = parser.current_line();
     // Don't print two empty lines if we don't have a stacktrace.
     if !stacktrace.is_empty() {
-        b.append(stacktrace);
-        b.push('\n');
+        b.append(&stacktrace);
+        b.append_char('\n');
     }
-    b.append(wgettext_fmt!(
+    b.append(&wgettext_fmt!(
         "(Type 'help %s' for related documentation)\n",
         cmd
     ));
@@ -715,8 +717,8 @@ pub fn builtin_wperror(program_name: &wstr, streams: &mut IoStreams) {
     streams.err.append(L!(": "));
     if err.0 != 0 {
         let werr = WString::from_str(&err.to_string());
-        streams.err.append(werr);
-        streams.err.push('\n');
+        streams.err.append(&werr);
+        streams.err.append_char('\n');
     }
 }
 
@@ -734,8 +736,8 @@ impl HelpOnlyCmdOpts {
         let cmd = args[0];
         let print_hints = true;
 
-        const shortopts: &wstr = L!("+h");
-        const longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
+        let shortopts: &wstr = L!("+h");
+        let longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
         let mut print_help = false;
         let mut w = WGetopter::new(shortopts, longopts, args);
@@ -798,27 +800,39 @@ pub enum SplitBehavior {
     Never,
 }
 
-/// A helper type for extracting arguments from either argv or stdin.
-pub struct Arguments<'args, 'iter> {
-    /// The list of arguments passed to the string builtin.
-    args: &'iter [&'args wstr],
-    /// If using argv, index of the next argument to return.
-    argidx: &'iter mut usize,
-    split_behavior: SplitBehavior,
-    /// Buffer to store what we read with the BufReader
-    /// Is only here to avoid allocating every time
-    buffer: Vec<u8>,
-    /// If not using argv, we read with a buffer
-    reader: Option<BufReader<File>>,
+pub struct InputValue<'args> {
+    pub arg: Cow<'args, wstr>,
+    pub want_newline: bool,
 }
 
-impl Drop for Arguments<'_, '_> {
-    fn drop(&mut self) {
-        if let Some(r) = self.reader.take() {
-            // we should not close stdin
-            std::mem::forget(r.into_inner());
-        }
+impl<'args> InputValue<'args> {
+    pub fn new(arg: Cow<'args, wstr>, want_newline: bool) -> Self {
+        Self { arg, want_newline }
     }
+}
+
+/// A helper type for extracting arguments from either argv or stdin.
+pub struct Arguments<'args, 'iter> {
+    split_behavior: SplitBehavior,
+    source: ArgvSource<'args, 'iter>,
+}
+
+/// Either the arguments from argv, or from stdin.
+enum ArgvSource<'args, 'iter> {
+    /// Read arguments from argv.
+    Args {
+        // The list of arguments passed to the builtin.
+        args: &'iter [&'args wstr],
+        // Index of the next argument to return.
+        argidx: &'iter mut usize,
+    },
+    /// Read arguments from stdin (possibly redirected).
+    Stdin {
+        /// Reused storage for reading.
+        buffer: Vec<u8>,
+        /// The reader to read from.
+        reader: BufReader<BorrowedFdFile>,
+    },
 }
 
 impl<'args, 'iter> Arguments<'args, 'iter> {
@@ -828,20 +842,21 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
         streams: &mut IoStreams,
         chunk_size: usize,
     ) -> Self {
-        let reader = streams.stdin_is_directly_redirected.then(|| {
-            let stdin_fd = streams.stdin_fd;
-            assert!(stdin_fd >= 0, "should have a valid fd");
-            // safety: this should be a valid fd, and already open
-            let fd = unsafe { File::from_raw_fd(stdin_fd) };
-            BufReader::with_capacity(chunk_size, fd)
-        });
-
+        let source: ArgvSource = if !streams.stdin_is_directly_redirected {
+            ArgvSource::Args { args, argidx }
+        } else {
+            let stdin_file = streams
+                .stdin_file
+                .clone()
+                .expect("should have stdin if redirected");
+            ArgvSource::Stdin {
+                buffer: Vec::new(),
+                reader: BufReader::with_capacity(chunk_size, stdin_file),
+            }
+        };
         Arguments {
-            args,
-            argidx,
             split_behavior: SplitBehavior::Newline,
-            buffer: Vec::new(),
-            reader,
+            source,
         }
     }
 
@@ -850,9 +865,23 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
         self
     }
 
-    fn get_arg_stdin(&mut self) -> Option<(Cow<'args, wstr>, bool)> {
+    /// Return the next argument by reading from argv ArgvSource.
+    fn get_arg_argv(&mut self) -> Option<InputValue<'args>> {
+        let ArgvSource::Args { args, argidx } = &mut self.source else {
+            panic!("Not reading from argv")
+        };
+        let arg = args.get(**argidx)?;
+        **argidx += 1;
+        let retval = InputValue::new(Cow::Borrowed(arg), /*want_newline=*/ true);
+        Some(retval)
+    }
+
+    /// Return the next argument by reading from stdin ArgvSource.
+    fn get_arg_stdin(&mut self) -> Option<InputValue<'args>> {
         use SplitBehavior::*;
-        let reader = self.reader.as_mut().unwrap();
+        let ArgvSource::Stdin { reader, buffer } = &mut self.source else {
+            panic!("Not reading from stdin")
+        };
 
         if self.split_behavior == InferNull {
             // we must determine if the first `PATH_MAX` bytes contains a null.
@@ -868,9 +897,9 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
 
         // NOTE: C++ wrongly commented that read_blocked retries for EAGAIN
         let num_bytes: usize = match self.split_behavior {
-            Newline => reader.read_until(b'\n', &mut self.buffer),
-            Null => reader.read_until(b'\0', &mut self.buffer),
-            Never => reader.read_to_end(&mut self.buffer),
+            Newline => reader.read_until(b'\n', buffer),
+            Null => reader.read_until(b'\0', buffer),
+            Never => reader.read_to_end(buffer),
             _ => unreachable!(),
         }
         .ok()?;
@@ -881,7 +910,7 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
         }
 
         // assert!(num_bytes == self.buffer.len());
-        let (end, want_newline) = match (&self.split_behavior, self.buffer.last()) {
+        let (end, want_newline) = match (&self.split_behavior, buffer.last()) {
             // remove the newline — consumers do not expect it
             (Newline, Some(b'\n')) => (num_bytes - 1, true),
             // we are missing a trailing newline!
@@ -895,11 +924,10 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
             _ => unreachable!(),
         };
 
-        let parsed = bytes2wcstring(&self.buffer[..end]);
+        let parsed = bytes2wcstring(&buffer[..end]);
+        buffer.clear();
 
-        let retval = Some((Cow::Owned(parsed), want_newline));
-        self.buffer.clear();
-        retval
+        Some(InputValue::new(Cow::Owned(parsed), want_newline))
     }
 }
 
@@ -909,19 +937,13 @@ impl<'args> Iterator for Arguments<'args, '_> {
     // This is an edge case -- we expect text input, which is conventionally terminated by a
     // newline character. But if it isn't, we use this to avoid creating one out of thin air,
     // to not corrupt input data.
-    type Item = (Cow<'args, wstr>, bool);
+    type Item = InputValue<'args>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.reader.is_some() {
-            return self.get_arg_stdin();
+        match &mut self.source {
+            ArgvSource::Args { .. } => self.get_arg_argv(),
+            ArgvSource::Stdin { .. } => self.get_arg_stdin(),
         }
-
-        if *self.argidx >= self.args.len() {
-            return None;
-        }
-        let retval = (Cow::Borrowed(self.args[*self.argidx]), true);
-        *self.argidx += 1;
-        return Some(retval);
     }
 }
 
@@ -950,7 +972,7 @@ fn parsed_pid(
     match pid {
         Ok(pid @ 1..) => Ok(Pid::new(pid)),
         _ => {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: '%s' is not a valid process ID\n",
                 cmd,
                 arg
@@ -1001,7 +1023,7 @@ pub fn builtin_break_continue(
     if argc != 1 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]));
+            .append(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]));
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -1020,7 +1042,7 @@ pub fn builtin_break_continue(
     if !has_loop {
         streams
             .err
-            .append(wgettext_fmt!("%s: Not inside of loop\n", argv[0]));
+            .append(&wgettext_fmt!("%s: Not inside of loop\n", argv[0]));
         return Err(STATUS_CMD_ERROR);
     }
 
@@ -1031,4 +1053,52 @@ pub fn builtin_break_continue(
         LoopStatus::continues
     };
     Ok(SUCCESS)
+}
+
+/// Option character for --color flag
+pub const COLOR_OPTION_CHAR: char = '\x10';
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ColorEnabled {
+    #[default]
+    Auto,
+    Always,
+    Never,
+}
+
+impl TryFrom<&wstr> for ColorEnabled {
+    type Error = ();
+    fn try_from(s: &wstr) -> Result<Self, Self::Error> {
+        match s {
+            s if s == "auto" => Ok(ColorEnabled::Auto),
+            s if s == "always" => Ok(ColorEnabled::Always),
+            s if s == "never" => Ok(ColorEnabled::Never),
+            _ => Err(()),
+        }
+    }
+}
+
+impl ColorEnabled {
+    pub fn enabled(&self, streams: &crate::io::IoStreams) -> bool {
+        match self {
+            ColorEnabled::Always => true,
+            ColorEnabled::Never => false,
+            ColorEnabled::Auto => streams.out_is_terminal(),
+        }
+    }
+
+    pub fn parse_from_opt(
+        streams: &mut IoStreams,
+        cmd: &wstr,
+        arg: &wstr,
+    ) -> Result<Self, ErrorCode> {
+        Self::try_from(arg).map_err(|()| {
+            streams.err.append(&wgettext_fmt!(
+                "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n",
+                cmd,
+                arg
+            ));
+            STATUS_INVALID_ARGS
+        })
+    }
 }

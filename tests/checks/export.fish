@@ -30,7 +30,7 @@ set -S MANPATH
 # CHECK: $MANPATH[2]: |/some/other/path|
 
 ## Test that it's exported properly.
-env | string match 'MANPATH*'
+env | string match 'MANPATH=*'
 # CHECK: MANPATH=/some/path:/some/other/path
 
 } | string match -v '*originally inherited*'

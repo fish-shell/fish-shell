@@ -91,7 +91,7 @@ impl<R: Send + 'static> Debounce<R> {
 
         // Execute request after unlocking the mutex.
         (request)();
-        return true;
+        true
     }
 
     /// Enqueue `handler` to be performed on a background thread. If another function is already

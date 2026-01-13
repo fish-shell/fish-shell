@@ -81,15 +81,31 @@ Detected errors include:
 
 To customize the syntax highlighting, you can set the environment variables listed in the :ref:`Variables for changing highlighting colors <variables-color>` section.
 
-Fish also provides pre-made color themes you can pick with :doc:`fish_config <cmds/fish_config>`. Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` in the terminal.
+Fish also provides pre-made color themes you can pick with :doc:`fish_config <cmds/fish_config>`.
+Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` from fish::
 
-For example, to disable nearly all coloring::
-
-  fish_config theme choose None
+  # disable nearly all coloring
+  fish_config theme choose none
+  # restore fish's default theme
+  fish_config theme choose default
 
 Or, to see all themes, right in your terminal::
 
   fish_config theme show
+
+.. _syntax-highlighting-instant-update:
+
+To update the theme of all shell sessions without restarting them,
+first have those sessions define an :ref:`event handler <event>` by adding the following to your :ref:`config.fish <configuration>` and restarting them::
+
+    function apply-my-theme --on-variable=my_theme
+        fish_config theme choose $my_theme
+    end
+
+Then, set the corresponding :ref:`universal variable <variables-universal>` from any session::
+
+    > set -U my_theme lava
+    > set -U my_theme snow-day
 
 .. _variables-color:
 
@@ -126,7 +142,7 @@ Variable                                          Meaning
 .. envvar:: fish_color_end                        process separators like ``;`` and ``&``
 .. envvar:: fish_color_error                      syntax errors
 .. envvar:: fish_color_param                      ordinary command parameters
-.. envvar:: fish_color_valid_path                 parameters that are filenames (if the file exists)
+.. envvar:: fish_color_valid_path                 parameters and redirection targets that are filenames (if the file exists)
 .. envvar:: fish_color_option                     options starting with "-", up to the first "--" parameter
 .. envvar:: fish_color_comment                    comments like '# important'
 .. envvar:: fish_color_selection                  selected text in vi visual mode
@@ -145,7 +161,8 @@ Variable                                          Meaning
 
 ==========================================        =====================================================================
 
-If a variable isn't set or is empty, fish usually tries ``$fish_color_normal``, except for:
+If a variable isn't set or is empty after subtracting any ``--theme=THEME`` options,
+fish usually tries ``$fish_color_normal``, except for:
 
 - ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
 - ``$fish_color_option``, where it tries ``$fish_color_param`` first.
@@ -455,7 +472,7 @@ The ``fish_vi_cursor`` function will be used to change the cursor's shape depend
    # Set the replace mode cursors to an underscore
    set fish_cursor_replace_one underscore
    set fish_cursor_replace underscore
-   # Set the external cursor to a line. The external cursor appears when a command is started. 
+   # Set the external cursor to a line. The external cursor appears when a command is started.
    # The cursor shape takes the value of fish_cursor_default when fish_cursor_external is not specified.
    set fish_cursor_external line
    # The following variable can be used to configure cursor shape in
@@ -601,7 +618,7 @@ To find out the name of a key, you can use :doc:`fish_key_reader <cmds/fish_key_
   > fish_key_reader # Press Alt + right-arrow
   Press a key:
   bind alt-right 'do something'
-  
+
 Note that the historical way the terminal encodes keys and sends them to the application (fish, in this case) makes a lot of combinations indistinguishable or unbindable. In the usual encoding, :kbd:`ctrl-i` *is the same* as the tab key, and shift cannot be detected when ctrl is also pressed.
 
 There are more powerful encoding schemes, and fish tries to tell the terminal to turn them on, but there are still many terminals that do not support them. When ``fish_key_reader`` prints the same sequence for two different keys, then that is because your terminal sends the same sequence for them, and there isn't anything fish can do about it. It is our hope that these schemes will become more widespread, making input more flexible.

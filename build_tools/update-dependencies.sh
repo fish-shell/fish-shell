@@ -10,12 +10,13 @@ command -v updatecli
 command -v uv
 sort --version-sort </dev/null
 
-uv lock --check
+# TODO This is copied from .github/actions/install-sphinx/action.yml
+uv lock --check --exclude-newer="$(awk -F'"' <uv.lock '/^exclude-newer[[:space:]]*=/ {print $2}')"
 
 updatecli "${@:-apply}"
 
 uv lock # Python version constraints may have changed.
-uv lock --upgrade
+uv lock --upgrade --exclude-newer="$(date --date='7 days ago' --iso-8601)"
 
 from_gh() {
     repo=$1
@@ -24,7 +25,7 @@ from_gh() {
     contents=$(curl -fsS https://raw.githubusercontent.com/"${repo}"/refs/heads/master/"${path}")
     printf '%s\n' >"$out_dir/$(basename "$path")" "$contents"
 }
-from_gh ridiculousfish/widecharwidth widechar_width.rs src/widecharwidth/
+from_gh ridiculousfish/widecharwidth widechar_width.rs crates/widecharwidth/src/
 from_gh ridiculousfish/littlecheck littlecheck/littlecheck.py tests/
 
 # Update Cargo.lock

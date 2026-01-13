@@ -12,7 +12,8 @@ Synopsis
     set [-Uflg] NAME[[INDEX ...]] [VALUE ...]
     set (-x | --export) (-u | --unexport) [-Uflg] NAME [VALUE ...]
     set (-a | --append) (-p | --prepend) [-Uflg] NAME VALUE ...
-    set (-q | --query) (-e | --erase) [-Uflg] [NAME][[INDEX]] ...]
+    set (-e | --erase) [-Uflg] [-xu] [NAME][[INDEX]] ...]
+    set (-q | --query) [-Uflg] [-xu] [NAME][[INDEX]] ...]
     set (-S | --show) (-L | --long) [NAME ...]
 
 Description
@@ -88,6 +89,7 @@ Further options:
 **-q** or **--query** *NAME*\[*INDEX*\]
     Test if the specified variable names are defined.
     If an *INDEX* is provided, check for items at that slot.
+    With a given scope (like **--global**) or attribute (like **--exported** or **--path**) check only variables that match.
     Does not output anything, but the shell status is set to the number of variables specified that were not defined, up to a maximum of 255.
     If no variable was given, it also returns 255.
 

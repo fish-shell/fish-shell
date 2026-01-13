@@ -12,6 +12,7 @@ use crate::parse_util::{
     parse_util_detect_errors, parse_util_get_offset_from_line, parse_util_job_extent,
     parse_util_lineno, parse_util_process_extent, parse_util_token_extent,
 };
+use crate::prelude::*;
 use crate::proc::is_interactive_session;
 use crate::reader::{
     commandline_get_state, commandline_set_buffer, commandline_set_search_field,
@@ -19,7 +20,6 @@ use crate::reader::{
 };
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::{TokenType, Tokenizer};
-use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use std::ops::Range;
 
@@ -130,7 +130,7 @@ fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) 
         }
     }
     stripped.push_utfstr(&source[have..]);
-    return Some(stripped);
+    Some(stripped)
 }
 
 /// Output the specified selection.
@@ -160,7 +160,7 @@ fn write_part(
         } else {
             streams.out.append(&buffer[range]);
         }
-        streams.out.push('\n');
+        streams.out.append_char('\n');
         return;
     };
 
@@ -189,11 +189,9 @@ fn write_part(
                         // Maybe hit expansion limit, forward the unexpanded string.
                         args.push(Completion::from_completion(token_text.to_owned()));
                     }
-                    ExpandResultCode::cancel => {
-                        return;
-                    }
+                    ExpandResultCode::cancel => {}
                     ExpandResultCode::ok => (),
-                };
+                }
             }
             TokenOutputMode::Raw => {
                 args.push(Completion::from_completion(token_text.to_owned()));
@@ -220,11 +218,11 @@ fn write_part(
                 break;
             }
             let is_redirection_target = in_redirection;
-            in_redirection = token.type_ == TokenType::redirect;
-            if is_redirection_target && token.type_ == TokenType::string {
+            in_redirection = token.type_ == TokenType::Redirect;
+            if is_redirection_target && token.type_ == TokenType::String {
                 continue;
             }
-            if token.type_ != TokenType::string {
+            if token.type_ != TokenType::String {
                 continue;
             }
 
@@ -265,7 +263,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     let mut override_buffer = None;
 
-    const short_options: &wstr = L!("abijpctfxorhI:CBELSsP");
+    let short_options = L!("abijpctfxorhI:CBELSsP");
     let long_options: &[WOption] = &[
         wopt(L!("append"), ArgType::NoArgument, 'a'),
         wopt(L!("insert"), ArgType::NoArgument, 'i'),
@@ -312,7 +310,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             'f' => function_mode = true,
             'x' | '\x02' | 'o' => {
                 if token_mode.is_some() {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         BUILTIN_ERR_COMBO2,
                         cmd,
                         wgettext!("--tokens options are mutually exclusive")
@@ -379,7 +377,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             || selection_start_mode
             || selection_end_mode
         {
-            streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+            streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }
@@ -394,14 +392,14 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             let Some(cmd) = input_function_get_code(arg) else {
                 streams
                     .err
-                    .append(wgettext_fmt!("%s: Unknown input function '%s'", cmd, arg));
+                    .append(&wgettext_fmt!("%s: Unknown input function '%s'", cmd, arg));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             };
             // Don't enqueue a repaint if we're currently in the middle of one,
             // because that's an infinite loop.
             if matches!(cmd, RL::RepaintMode | RL::ForceRepaint | RL::Repaint)
-                && parser.libdata().is_repaint
+                && parser.is_repainting()
             {
                 continue;
             }
@@ -424,7 +422,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     if (selection_start_mode || selection_end_mode) && positional_args != 0 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+            .append(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -434,7 +432,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+            .append(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -444,13 +442,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         // Special case - we allow to get/set cursor position relative to the process/job/token.
         && ((buffer_part.is_none() && !search_field_mode) || !cursor_mode)
     {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
 
     if (token_mode.is_some() || cut_at_cursor) && positional_args != 0 {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
             "--cut-at-cursor and token options can not be used when setting the commandline"
@@ -460,7 +458,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     }
 
     if search_field_mode && (buffer_part.is_some() || token_mode.is_some()) {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -477,7 +475,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     if append_mode == AppendMode::InsertSmart {
         if search_field_mode {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2_EXCLUSIVE,
                 cmd,
                 "--insert-smart",
@@ -490,7 +488,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             TextScope::String | TextScope::Job | TextScope::Process => (),
             TextScope::Token => {
                 // To-do: we can support it in command position.
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     BUILTIN_ERR_COMBO2_EXCLUSIVE,
                     cmd,
                     "--insert-smart",
@@ -509,7 +507,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 Err(_) => {
                     streams
                         .err
-                        .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
+                        .append(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
                     builtin_print_error_trailer(parser, streams.err, cmd);
                     0
                 }
@@ -518,7 +516,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             let Ok(new_coord) = usize::try_from(new_coord) else {
                 streams
                     .err
-                    .append(wgettext_fmt!("%s: line/column index starts at 1", cmd));
+                    .append(&wgettext_fmt!("%s: line/column index starts at 1", cmd));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             };
@@ -530,7 +528,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 ) else {
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: there is no line %s\n", cmd, arg));
+                        .append(&wgettext_fmt!("%s: there is no line %s\n", cmd, arg));
                     builtin_print_error_trailer(parser, streams.err, cmd);
                     return Err(STATUS_INVALID_ARGS);
                 };
@@ -544,7 +542,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     parse_util_get_offset_from_line(&rstate.text, line_index + 1)
                         .unwrap_or(rstate.text.len());
                 if line_offset + new_coord > next_line_offset {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         "%s: column %s exceeds line length\n",
                         cmd,
                         arg
@@ -556,7 +554,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             };
             commandline_set_buffer(parser, None, Some(new_pos));
         } else {
-            streams.out.append(sprintf!(
+            streams.out.append(&sprintf!(
                 "%d\n",
                 if line_mode {
                     parse_util_lineno(&rstate.text, rstate.cursor_pos)
@@ -602,7 +600,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         let Some(selection) = rstate.selection else {
             return Err(STATUS_CMD_ERROR);
         };
-        streams.out.append(sprintf!("%u\n", selection.start));
+        streams.out.append(&sprintf!("%u\n", selection.start));
         return Ok(SUCCESS);
     }
 
@@ -610,14 +608,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         let Some(selection) = rstate.selection else {
             return Err(STATUS_CMD_ERROR);
         };
-        streams.out.append(sprintf!("%u\n", selection.end));
+        streams.out.append(&sprintf!("%u\n", selection.end));
         return Ok(SUCCESS);
     }
 
     // At this point we have (nearly) exhausted the options which always operate on the true command
     // line. Now we respect the possibility of a transient command line due to evaluating a wrapped
-    // completion. Don't do this in cursor_mode: it makes no sense to move the cursor based on a
-    // transient commandline.
+    // completion.
     let current_buffer;
     let current_cursor_pos;
     let transient;
@@ -632,7 +629,15 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     } else if let Some(override_buffer) = &override_buffer {
         current_buffer = override_buffer;
         current_cursor_pos = current_buffer.len();
-    } else if parser.libdata().transient_commandline.is_some() && !cursor_mode {
+    } else if parser.libdata().transient_commandline.is_some() {
+        if cursor_mode && positional_args != 0 {
+            streams.err.append(&wgettext_fmt!(
+                "%s: setting cursor while evaluating 'complete --arguments' is not yet supported",
+                cmd
+            ));
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return Err(STATUS_CMD_ERROR);
+        }
         transient = parser.libdata().transient_commandline.clone().unwrap();
         current_buffer = &transient;
         current_cursor_pos = transient.len();
@@ -700,7 +705,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 Err(_) => {
                     streams
                         .err
-                        .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
+                        .append(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
                     builtin_print_error_trailer(parser, streams.err, cmd);
                     0
                 }
@@ -717,7 +722,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         } else {
             streams
                 .out
-                .append(sprintf!("%u\n", current_cursor_pos - range.start));
+                .append(&sprintf!("%u\n", current_cursor_pos - range.start));
         }
         return Ok(SUCCESS);
     }

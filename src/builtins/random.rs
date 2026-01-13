@@ -1,21 +1,21 @@
 use super::prelude::*;
 
-use crate::util::get_rng;
+use crate::util::get_seeded_rng;
 use crate::wutil;
-use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
-use std::sync::Mutex;
+use rand::{Rng, RngCore};
+use std::sync::{LazyLock, Mutex};
 
-static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(get_rng()));
+static RNG: LazyLock<Mutex<SmallRng>> =
+    LazyLock::new(|| Mutex::new(get_seeded_rng(rand::rng().next_u64())));
 
 pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
 
-    const shortopts: &wstr = L!("+h");
-    const longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
+    let shortopts: &wstr = L!("+h");
+    let longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);
     #[allow(clippy::never_loop)]
@@ -58,11 +58,11 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         if arg_count == 1 {
             streams
                 .err
-                .append(wgettext_fmt!("%s: nothing to choose from\n", cmd));
+                .append(&wgettext_fmt!("%s: nothing to choose from\n", cmd));
             return Err(STATUS_INVALID_ARGS);
         }
 
-        let rand = RNG.lock().unwrap().gen_range(0..arg_count - 1);
+        let rand = RNG.lock().unwrap().random_range(0..arg_count - 1);
         streams.out.appendln(argv[i + 1 + rand]);
         return Ok(SUCCESS);
     }
@@ -71,18 +71,18 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         if res.is_err() {
             streams
                 .err
-                .append(wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
+                .append(&wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
         }
-        return res;
+        res
     }
     fn parse_ull(streams: &mut IoStreams, cmd: &wstr, num: &wstr) -> Result<u64, wutil::Error> {
         let res = fish_wcstoul(num);
         if res.is_err() {
             streams
                 .err
-                .append(wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
+                .append(&wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
         }
-        return res;
+        res
     }
 
     match arg_count {
@@ -96,7 +96,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(x) => {
                     let mut engine = RNG.lock().unwrap();
-                    *engine = SmallRng::seed_from_u64(x as u64);
+                    *engine = get_seeded_rng(x as u64);
                 }
             }
             return Ok(SUCCESS);
@@ -126,7 +126,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 Ok(0) => {
                     streams
                         .err
-                        .append(wgettext_fmt!("%s: STEP must be a positive integer\n", cmd,));
+                        .append(&wgettext_fmt!("%s: STEP must be a positive integer\n", cmd,));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 Ok(x) => step = x,
@@ -140,7 +140,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         _ => {
             streams
                 .err
-                .append(wgettext_fmt!("%s: too many arguments\n", cmd,));
+                .append(&wgettext_fmt!("%s: too many arguments\n", cmd,));
             return Err(STATUS_CMD_ERROR);
         }
     }
@@ -156,12 +156,12 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
 
     let rand = {
         let mut engine = RNG.lock().unwrap();
-        engine.gen_range(0..=possibilities)
+        engine.random_range(0..=possibilities)
     };
 
     // Safe because end was a valid i64 and the result here is in the range start..=end.
     let result: i64 = start.checked_add_unsigned(rand * step).unwrap();
 
     streams.out.appendln(result.to_wstring());
-    return Ok(SUCCESS);
+    Ok(SUCCESS)
 }

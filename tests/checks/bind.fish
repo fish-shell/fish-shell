@@ -7,6 +7,7 @@ set -l tmpdir (mktemp -d)
 for bindings in true fish_default_key_bindings fish_vi_key_bindings
     $fish -c "
         $bindings
+        or echo >&2 error setting bindings: status=\$status
         bind > $tmpdir/old
         bind --erase --all --preset
         bind --erase --all
@@ -24,11 +25,11 @@ echo >&2 bind output evaluation works
 
 # Verify that an invalid bind mode is rejected.
 bind -m 'bad bind mode' \cX true
-# CHECKERR: bind: bad bind mode: invalid mode name. See `help identifiers`
+# CHECKERR: bind: bad bind mode: invalid mode name. See `help language#shell-variable-and-function-names`
 
 # Verify that an invalid bind mode target is rejected.
 bind -M bind-mode \cX true
-# CHECKERR: bind: bind-mode: invalid mode name. See `help identifiers`
+# CHECKERR: bind: bind-mode: invalid mode name. See `help language#shell-variable-and-function-names`
 
 # This should succeed and result in a success, zero, status.
 bind -M bind_mode \cX true
@@ -177,5 +178,18 @@ bind ctrl-shift-a
 
 bind ctrl-shift-ä
 # CHECKERR: bind: No binding found for key 'ctrl-shift-ä'
+
+# Verify binds from all modes are returned when querying a sequence
+fish_vi_key_bindings
+bind --preset ctrl-q 'echo preset'
+bind ctrl-q 'echo default'
+bind ctrl-q --mode insert 'echo insert'
+bind ctrl-q --mode replace 'echo replace'
+bind ctrl-q
+# CHECK: bind --preset ctrl-q 'echo preset'
+# CHECK: bind ctrl-q 'echo default'
+# CHECK: bind -M insert ctrl-q 'echo insert'
+# CHECK: bind -M replace ctrl-q 'echo replace'
+fish_default_key_bindings
 
 exit 0

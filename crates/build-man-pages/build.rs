@@ -1,36 +1,18 @@
-use fish_build_helper::{env_var, workspace_root};
 use std::path::Path;
 
 fn main() {
     let man_dir = fish_build_helper::fish_build_dir().join("fish-man");
     let sec1_dir = man_dir.join("man1");
-    // Running `cargo clippy` on a clean build directory panics, because when rust-embed tries to
-    // embed a directory which does not exist it will panic.
+    // Running `cargo clippy` on a clean build directory panics, because when rust-embed
+    // tries to embed a directory which does not exist it will panic.
     let _ = std::fs::create_dir_all(&sec1_dir);
-
-    let help_sections_path = Path::new(&env_var("OUT_DIR").unwrap()).join("help_sections.rs");
-
-    if env_var("FISH_USE_PREBUILT_DOCS").is_some_and(|v| v == "TRUE") {
-        std::fs::copy(
-            workspace_root().join("user_doc/src/help_sections.rs"),
-            help_sections_path,
-        )
-        .unwrap();
-        return;
+    if !cfg!(clippy) {
+        build_man(&man_dir, &sec1_dir);
     }
-
-    std::fs::write(
-        help_sections_path.clone(),
-        r#"pub static HELP_SECTIONS: &str = "";"#,
-    )
-    .unwrap();
-
-    #[cfg(not(clippy))]
-    build_man(&man_dir, &sec1_dir, &help_sections_path);
 }
 
-#[cfg(not(clippy))]
-fn build_man(man_dir: &Path, sec1_dir: &Path, help_sections_path: &Path) {
+fn build_man(man_dir: &Path, sec1_dir: &Path) {
+    use fish_build_helper::{env_var, workspace_root};
     use std::{
         ffi::OsStr,
         process::{Command, Stdio},
@@ -45,7 +27,6 @@ fn build_man(man_dir: &Path, sec1_dir: &Path, help_sections_path: &Path) {
         &doc_src_dir,
     ]);
 
-    let help_sections_arg = format!("fish_help_sections_output={}", help_sections_path.display());
     let args: &[&OsStr] = {
         fn as_os_str<S: AsRef<OsStr> + ?Sized>(s: &S) -> &OsStr {
             s.as_ref()
@@ -71,8 +52,6 @@ fn build_man(man_dir: &Path, sec1_dir: &Path, help_sections_path: &Path) {
             &man_dir,
             &doc_src_dir,
             &sec1_dir,
-            "-D",
-            &help_sections_arg,
         ])
     };
 

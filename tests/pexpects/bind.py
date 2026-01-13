@@ -270,12 +270,253 @@ sleep(0.200)
 send("0$i34\r")
 expect_prompt("echo 12345")
 
+# Test operator mode with count (d3w)
+send("echo one two three four five")
+send("\033")
+sleep(0.200)
+send("0w")
+send("d3w")
+sendline("")
+expect_prompt("echo four five")
+
+# Test count before operator (3dw)
+send("echo one two three four five")
+send("\033")
+sleep(0.200)
+send("0w")
+send("3dw")
+sendline("")
+expect_prompt("echo four five")
+
+# Test count on both (2d2w -> 4 words)
+send("echo one two three four five six")
+send("\033")
+sleep(0.200)
+send("0w")
+send("2d2w")
+sendline("")
+expect_prompt("echo five six")
+
+# Test change operator with count (c2w)
+send("echo one two three")
+send("\033")
+sleep(0.200)
+send("0w")
+send("c2wREPLACED")
+sendline("")
+expect_prompt("echo REPLACEDthree")
+
+# Test escape cancelling count
+send("echo one two three")
+send("\033")
+sleep(0.200)
+send("0w")
+send("3")
+send("\033")
+sleep(0.100)
+send("dw")
+sendline("")
+expect_prompt("echo two three")
+
 # Now test that exactly the expected bind modes are defined
 sendline("bind --list-modes")
 expect_prompt(
-    "default\r\ninsert\r\nreplace\r\nreplace_one\r\nvisual\r\n",
+    "default\r\ninsert\r\noperator\r\nreplace\r\nreplace_one\r\nvisual\r\n",
     unmatched="Unexpected vi bind modes",
 )
+
+# Test word movements
+# Test 'w' with underscore - should not jump over single punctuation
+send("echo abc_def")
+send("\033")
+sleep(0.200)
+send("0wwD\r")  # From start, 'w' twice should stop at underscore, delete from there
+expect_prompt(
+    "\r\n.*abc\r\n", unmatched="vi mode 'w' should stop at single punctuation"
+)
+
+# Test 'w' with multiple spaces - should skip spaces and land at start of next word
+send("echo abc  def")
+send("\033")
+sleep(0.200)
+send("0wwwD\r")  # Skip 'echo', 'abc', 'def', then delete last char
+expect_prompt("\r\n.*abc de\r\n", unmatched="vi mode 'w' with multiple spaces")
+
+# Test 'w' with multiple punctuations - should stop at punctuation group
+send("echo abc...def")
+send("\033")
+sleep(0.200)
+send("0wwD\r")  # Skip 'echo', then 'w' should stop at first '.', delete to end
+expect_prompt("\r\n.*abc\r\n", unmatched="vi mode 'w' with multiple punctuations")
+
+# Test 'diw' when cursor is on space - should delete only spaces
+send("echo abc  def")
+send("\033")
+sleep(0.200)
+send("0wwhdiw\r")  # Move to 'def', back to space, delete inner word (spaces only)
+expect_prompt(
+    "\r\n.*abcdef\r\n", unmatched="vi mode 'diw' on space should delete spaces"
+)
+
+# Test 'daw' - should delete word and trim trailing space
+send("echo abc def ghi")
+send("\033")
+sleep(0.200)
+send("0wwdaw\r")  # Skip 'echo', move to 'def', delete word with space
+expect_prompt("\r\n.*abc ghi\r\n", unmatched="vi mode 'daw' should trim trailing space")
+
+# Test 'b' backward movement with punctuation - should stop at punctuation
+send("echo abc_def")
+send("\033")
+sleep(0.200)
+send("bD\r")  # From end, 'b' should stop at 'd', delete to end
+expect_prompt("\r\n.*abc_\r\n", unmatched="vi mode 'b' should stop at punctuation")
+
+# Test 'e' end-of-word movement
+send("echo abc_def")
+send("\033")
+sleep(0.200)
+send("0weD\r")  # From start, 'w' to 'abc', 'e' to end of 'abc', delete to end
+expect_prompt("\r\n.*ab\r\n", unmatched="vi mode 'e' should move to word end")
+
+# Test 'W' WORD movement - should skip punctuation within WORD
+send("echo abc-def ghi")
+send("\033")
+sleep(0.200)
+send("0wWD\r")  # From start, 'w' to 'abc', 'W' should skip 'abc-def', delete 'ghi'
+expect_prompt(
+    "\r\n.*abc-def\r\n",
+    unmatched="vi mode 'W' should treat punctuation as part of WORD",
+)
+
+# Test 'E' end-of-WORD movement
+send("echo abc-def ghi")
+send("\033")
+sleep(0.200)
+send("0wED\r")  # From start, 'w' to 'abc', 'E' to end of 'abc-def', delete to end
+expect_prompt("\r\n.*abc-de\r\n", unmatched="vi mode 'E' should move to WORD end")
+
+# Test 'B' backward WORD movement
+send("echo abc-def ghi")
+send("\033")
+sleep(0.200)
+send("BD\r")  # From end, 'B' backward to 'ghi', delete to end
+expect_prompt("\r\n.*abc-def\r\n", unmatched="vi mode 'B' backward WORD movement")
+
+# Test 'ge' backward to end of previous word
+send("echo abc def")
+send("\033")
+sleep(0.200)
+send("0wwgex\r")  # Move to 'def', 'ge' to 'c' of 'abc', delete char with 'x'
+expect_prompt(
+    "\r\n.*ab def\r\n", unmatched="vi mode 'ge' should move to previous word end"
+)
+
+# Test 'gE' backward to end of previous WORD
+send("echo abc-def ghi")
+send("\033")
+sleep(0.200)
+send(
+    "0WWgEx\r"
+)  # Use 'W' to move by WORDs: to 'abc-def', then 'ghi', then 'gE' back to 'f' of 'abc-def', delete char
+expect_prompt(
+    "\r\n.*abc-de ghi\r\n", unmatched="vi mode 'gE' should move to previous WORD end"
+)
+
+# Test 'diW' (delete inner WORD) with punctuation
+send("echo abc-def ghi")
+send("\033")
+sleep(0.200)
+send("0wldiW\r")  # Move to 'bc-def', delete inner WORD
+expect_prompt("\r\n.*ghi\r\n", unmatched="vi mode 'diW' should delete entire WORD")
+
+# Test 'daW' (delete a WORD) with punctuation
+send("echo abc-def ghi")
+send("\033")
+sleep(0.200)
+send("0wldaW\r")  # Move to 'bc-def', delete a WORD with space
+expect_prompt("\r\n.*ghi\r\n", unmatched="vi mode 'daW' should delete WORD and space")
+
+# Test Unicode character category separation
+# In vim, different unicode categories are separated into words
+send("echo abcあいう")
+send("\033")
+sleep(0.200)
+send("0wwD\r")  # Skip 'echo', then from 'a' of 'abc', 'w' should stop at 'あ'
+expect_prompt(
+    "\r\n.*abc\r\n", unmatched="vi mode 'w' should stop at Unicode category boundary"
+)
+
+# Test Unicode with multiple categories
+send("echo abcあいう甲乙")
+send("\033")
+sleep(0.200)
+send("0wwwD\r")  # Skip 'echo', 'abc', hiragana, then at kanji, delete to end
+expect_prompt(
+    "\r\n.*abcあいう\r\n", unmatched="vi mode 'w' should separate hiragana and kanji"
+)
+
+# Test 'cw' - change word, deletes to start of next word (like vim's 'dw')
+send("echo abc def")
+send("\033")
+sleep(0.200)
+send("0wcwXXX\r")  # Move to 'abc', 'cw' deletes 'abc ' (including space), type 'XXX'
+expect_prompt(
+    "\r\n.*XXXdef\r\n", unmatched="vi mode 'cw' should delete to start of next word"
+)
+
+# Test 'ce' - change to end of word (like vim's 'de')
+send("echo abc def")
+send("\033")
+sleep(0.200)
+send("0wceXXX\r")  # Move to 'abc', 'ce' deletes 'abc' (not the space), type 'XXX'
+expect_prompt(
+    "\r\n.*XXX def\r\n", unmatched="vi mode 'ce' should change to end of word"
+)
+
+# Test 'cW' - change WORD, deletes to start of next WORD (like vim's 'dW')
+send("echo abc-def ghi")
+send("\033")
+sleep(0.200)
+send(
+    "0wcWXXX\r"
+)  # Move to 'abc-def', 'cW' deletes 'abc-def ' (including space), type 'XXX'
+expect_prompt(
+    "\r\n.*XXXghi\r\n", unmatched="vi mode 'cW' should delete to start of next WORD"
+)
+
+# Test 'cE' - change to end of WORD (like vim's 'dE')
+send("echo abc-def ghi")
+send("\033")
+sleep(0.200)
+send(
+    "0wcEXXX\r"
+)  # Move to 'abc-def', 'cE' deletes 'abc-def' (not the space), type 'XXX'
+expect_prompt(
+    "\r\n.*XXX ghi\r\n", unmatched="vi mode 'cE' should change to end of WORD"
+)
+
+# Test running commands on empty line (should not crash)
+send("\033")
+sleep(0.200)
+send("dawdiwdwdedgedgE\r")  # run many commands
+expect_prompt()
+
+# Test accepting autosuggestions with w/W
+sendline("echo test-suggestion   test-suggestion")
+expect_prompt()
+send("echo te")
+sleep(0.100)
+send("\033")  # Enter normal mode
+sleep(0.200)
+send("w")  # forward-word-vi should accept 'st' from autosuggestion
+expect_str("echo test")
+send("w")  # forward-word-vi should accept '-'
+expect_str("echo test-")
+send("w")  # forward-word-vi should accept 'suggestion  ' from autosuggestion
+expect_str("echo test-suggestion   ")
+send("W\r")  # forward-word-vi should accept 'test-suggestion' from autosuggestion
+expect_prompt("test-suggestion   test-suggestion")
 
 # Switch back to regular (emacs mode) key bindings.
 sendline("set -g fish_key_bindings fish_default_key_bindings")

@@ -1,18 +1,19 @@
 //! Pager support.
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
 use crate::common::{
     EscapeFlags, EscapeStringStyle, escape_string, get_ellipsis_char, get_ellipsis_str,
 };
-use crate::complete::Completion;
+use crate::complete::{CompleteFlags, Completion};
 use crate::editable_line::EditableLine;
 use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
 use crate::operation_context::OperationContext;
+use crate::prelude::*;
 use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
 use crate::termsize::Termsize;
-use crate::wchar::prelude::*;
 use crate::wcstringutil::string_fuzzy_match_string;
 
 /// Represents rendering from the pager.
@@ -108,7 +109,7 @@ pub struct Pager {
     // then we definitely need to re-render.
     have_unrendered_completions: bool,
 
-    prefix: WString,
+    prefix: Cow<'static, wstr>,
     highlight_prefix: bool,
 
     // The text of the search field.
@@ -349,6 +350,11 @@ impl Pager {
         for comp in &mut self.unfiltered_completion_infos {
             let comp_strings = &mut comp.comp;
 
+            let show_prefix = !comp
+                .representative
+                .flags
+                .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX);
+
             for (j, comp_string) in comp_strings.iter().enumerate() {
                 // If there's more than one, append the length of ', '.
                 if j >= 1 {
@@ -357,7 +363,9 @@ impl Pager {
 
                 // This can return -1 if it can't calculate the width. So be cautious.
                 let comp_width = wcswidth_rendered(comp_string);
-                comp.comp_width += usize::try_from(prefix_len).unwrap_or_default();
+                if show_prefix {
+                    comp.comp_width += usize::try_from(prefix_len).unwrap_or_default();
+                }
                 comp.comp_width += usize::try_from(comp_width).unwrap_or_default();
             }
 
@@ -383,8 +391,12 @@ impl Pager {
 
         // Match against the completion strings.
         for candidate in &info.comp {
-            if string_fuzzy_match_string(needle, &(self.prefix.clone() + &candidate[..]), false)
-                .is_some()
+            if string_fuzzy_match_string(
+                needle,
+                &(self.prefix.clone().into_owned() + &candidate[..]),
+                false,
+            )
+            .is_some()
             {
                 return true;
             }
@@ -422,7 +434,7 @@ impl Pager {
         let effective_selected_idx = self.visual_selected_completion_index(rows, cols);
 
         for row in row_start..row_stop {
-            for (col, col_width) in width_by_column.iter().cloned().enumerate() {
+            for (col, col_width) in width_by_column.iter().copied().enumerate() {
                 let idx = col * rows + row;
                 if lst.len() <= idx {
                     continue;
@@ -432,9 +444,13 @@ impl Pager {
                 let is_selected = Some(idx) == effective_selected_idx;
 
                 // Print this completion on its own "line".
+                let show_prefix = !el
+                    .representative
+                    .flags
+                    .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX);
                 let mut line = self.completion_print_item(
                     CharOffset::Pager(idx),
-                    prefix,
+                    show_prefix.then_some(prefix),
                     el,
                     col_width,
                     row % 2 != 0,
@@ -459,7 +475,7 @@ impl Pager {
     fn completion_print_item(
         &self,
         offset_in_cmdline: CharOffset,
-        prefix: &wstr,
+        prefix: Option<&wstr>,
         c: &PagerComp,
         width: usize,
         secondary: bool,
@@ -531,14 +547,16 @@ impl Pager {
                 );
             }
 
-            comp_remaining -= print_max(
-                offset_in_cmdline,
-                prefix,
-                prefix_col,
-                comp_remaining,
-                !comp.is_empty(),
-                &mut line_data,
-            );
+            if let Some(prefix) = prefix {
+                comp_remaining -= print_max(
+                    offset_in_cmdline,
+                    prefix,
+                    prefix_col,
+                    comp_remaining,
+                    !comp.is_empty(),
+                    &mut line_data,
+                );
+            }
             comp_remaining -= print_max_impl(
                 offset_in_cmdline,
                 comp,
@@ -626,7 +644,7 @@ impl Pager {
         self.unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
         // Maybe join them.
-        if self.prefix == "-" {
+        if *self.prefix == "-" {
             join_completions(&mut self.unfiltered_completion_infos);
         }
 
@@ -643,8 +661,8 @@ impl Pager {
     }
 
     // Sets the prefix.
-    pub fn set_prefix(&mut self, pref: &wstr, highlight: bool /* = true */) {
-        self.prefix = pref.to_owned();
+    pub fn set_prefix(&mut self, prefix: Cow<'static, wstr>, highlight: bool /* = true */) {
+        self.prefix = prefix;
         self.highlight_prefix = highlight;
     }
 
@@ -982,7 +1000,7 @@ impl Pager {
     pub fn clear(&mut self) {
         self.unfiltered_completion_infos.clear();
         self.completion_infos.clear();
-        self.prefix.clear();
+        self.prefix = Cow::Borrowed(L!(""));
         self.highlight_prefix = false;
         self.selected_completion_idx = None;
         self.fully_disclosed = false;
@@ -1266,10 +1284,11 @@ mod tests {
     use super::{Pager, SelectionMotion};
     use crate::common::get_ellipsis_char;
     use crate::complete::{CompleteFlags, Completion};
+    use crate::prelude::*;
     use crate::termsize::Termsize;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
     use crate::wcstringutil::StringFuzzyMatch;
+    use std::borrow::Cow;
     use std::num::NonZeroU16;
 
     #[test]
@@ -1471,7 +1490,7 @@ mod tests {
             StringFuzzyMatch::exact_match(),
             CompleteFlags::default(),
         )];
-        pager.set_prefix(L!("{\\\n"), false); // }
+        pager.set_prefix(Cow::Borrowed(L!("{\\\n")), false); // }
         pager.set_completions(&c4s, true);
         validate!(&mut pager, 30, L!("{\\␊Hello")); // }
     }

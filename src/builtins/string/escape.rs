@@ -25,7 +25,7 @@ impl StringSubCommand<'_> for Escape {
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
@@ -45,14 +45,14 @@ impl StringSubCommand<'_> for Escape {
         };
 
         let mut escaped_any = false;
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             let mut escaped = escape_string(&arg, style);
 
             if want_newline {
                 escaped.push('\n');
             }
 
-            streams.out.append(escaped);
+            streams.out.append(&escaped);
             escaped_any = true;
         }
 

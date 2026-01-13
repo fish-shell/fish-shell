@@ -1,8 +1,9 @@
 //! Helper functions for working with wcstring.
 
 use crate::common::{get_ellipsis_char, get_ellipsis_str};
-use crate::fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
-use crate::wchar::{decode_byte_from_char, prelude::*};
+use crate::prelude::*;
+use fish_fallback::{fish_wcwidth, lowercase, lowercase_rev, wcscasecmp, wcscasecmp_fuzzy};
+use fish_wchar::decode_byte_from_char;
 
 /// Return the number of newlines in a string.
 pub fn count_newlines(s: &wstr) -> usize {
@@ -18,10 +19,25 @@ pub fn count_newlines(s: &wstr) -> usize {
     count
 }
 
+fn is_prefix(mut lhs: impl Iterator<Item = char>, mut rhs: impl Iterator<Item = char>) -> bool {
+    loop {
+        match (lhs.next(), rhs.next()) {
+            (None, _) => return true,
+            (Some(_), None) => return false,
+            (Some(lhs), Some(rhs)) => {
+                if lhs != rhs {
+                    return false;
+                }
+            }
+        }
+    }
+}
+
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 pub fn string_prefixes_string_case_insensitive(proposed_prefix: &wstr, value: &wstr) -> bool {
-    let prefix_size = proposed_prefix.len();
-    prefix_size <= value.len() && wcscasecmp(&value[..prefix_size], proposed_prefix).is_eq()
+    let proposed_prefix = lowercase(proposed_prefix.chars());
+    let value = lowercase(value.chars());
+    is_prefix(proposed_prefix, value)
 }
 
 pub fn string_prefixes_string_maybe_case_insensitive(
@@ -36,11 +52,19 @@ pub fn string_prefixes_string_maybe_case_insensitive(
     })(proposed_prefix, value)
 }
 
+/// Remove the optional executable extension if there is one
+/// Always returns None on non-Cygwin platforms
+pub fn strip_executable_suffix(path: &wstr) -> Option<&wstr> {
+    const DOT_EXE: &wstr = L!(".exe");
+    (cfg!(cygwin) && { string_suffixes_string_case_insensitive(DOT_EXE, path) })
+        .then(|| &path[..path.len() - DOT_EXE.len()])
+}
+
 /// Test if a string is a suffix of another.
 pub fn string_suffixes_string_case_insensitive(proposed_suffix: &wstr, value: &wstr) -> bool {
-    let suffix_size = proposed_suffix.len();
-    suffix_size <= value.len()
-        && wcscasecmp(&value[value.len() - suffix_size..], proposed_suffix).is_eq()
+    let proposed_suffix = lowercase_rev(proposed_suffix.chars());
+    let value = lowercase_rev(value.chars());
+    is_prefix(proposed_suffix, value)
 }
 
 /// Test if a string prefixes another. Returns true if a is a prefix of b.
@@ -114,7 +138,7 @@ pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Optio
 // Note that the order of entries below affects the sort order of completions.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ContainType {
-    /// Exact match: `foobar` matches `foo`
+    /// Exact match
     Exact,
     /// Prefix match: `foo` matches `foobar`
     Prefix,
@@ -140,13 +164,18 @@ pub enum CaseSensitivity {
 /// A lightweight value-type describing how closely a string fuzzy-matches another string.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct StringFuzzyMatch {
+    pub from_separator: bool,
     pub typ: ContainType,
     pub case_fold: CaseSensitivity,
 }
 
 impl StringFuzzyMatch {
     pub fn new(typ: ContainType, case_fold: CaseSensitivity) -> Self {
-        Self { typ, case_fold }
+        Self {
+            from_separator: false,
+            typ,
+            case_fold,
+        }
     }
     // Helper to return an exact match.
     #[inline(always)]
@@ -282,8 +311,10 @@ impl StringFuzzyMatch {
             self.case_fold
         };
 
-        // Type dominates fold.
-        effective_type as u32 * 8 + effective_case as u32
+        // Separator dominates type dominates fold.
+        ((self.from_separator as u32) << 4)
+            + ((effective_type as u32) << 2)
+            + (effective_case as u32)
     }
 }
 
@@ -297,11 +328,12 @@ pub fn string_fuzzy_match_string(
 }
 
 /// Implementation of wcs2bytes that accepts a callback.
+/// The first argument can be either a `&str` or `&wstr`.
 /// This invokes `func` with byte slices containing the UTF-8 encoding of the characters in the
 /// input, doing one invocation per character.
 /// If `func` returns false, it stops; otherwise it continues.
 /// Return false if the callback returned false, otherwise true.
-pub fn wcs2bytes_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
+pub fn str2bytes_callback(input: impl IntoCharIter, mut func: impl FnMut(&[u8]) -> bool) -> bool {
     // A `char` represents an Unicode scalar value, which takes up at most 4 bytes when encoded in UTF-8.
     let mut converted = [0_u8; 4];
 
@@ -350,8 +382,7 @@ pub fn split_string_tok<'val>(
         let next_sep = val[pos..]
             .iter()
             .position(|c| seps.contains(*c))
-            .map(|p| pos + p)
-            .unwrap_or(end);
+            .map_or(end, |p| pos + p);
         out.push(wstr::from_char_slice(&val[pos..next_sep]));
         // Note we skip exactly one sep here. This is because on the last iteration we retain all
         // but the first leading separators. This is historical.
@@ -513,8 +544,7 @@ impl<'a> Iterator for LineIterator<'a> {
         let newline_or_end = self.coll[self.current..]
             .iter()
             .position(|b| *b == b'\n')
-            .map(|pos| self.current + pos)
-            .unwrap_or(self.coll.len());
+            .map_or(self.coll.len(), |pos| self.current + pos);
         let result = &self.coll[self.current..newline_or_end];
         self.current = newline_or_end;
 
@@ -538,9 +568,47 @@ pub fn fish_wcwidth_visible(c: char) -> isize {
 mod tests {
     use super::{
         CaseSensitivity, ContainType, LineIterator, count_newlines, ifind, join_strings,
-        split_string_tok, string_fuzzy_match_string,
+        split_string_tok, string_fuzzy_match_string, string_prefixes_string_case_insensitive,
+        string_suffixes_string_case_insensitive,
     };
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
+
+    #[test]
+    fn test_string_prefixes_string_case_insensitive() {
+        macro_rules! validate {
+            ($prefix:literal, $s:literal, $expected:expr) => {
+                assert_eq!(
+                    string_prefixes_string_case_insensitive(L!($prefix), L!($s)),
+                    $expected
+                );
+            };
+        }
+        validate!("i", "i_", true);
+        validate!("İ", "i\u{307}_", true);
+        validate!("i\u{307}", "İ", true); // prefix is longer
+        validate!("i", "İ", true);
+        validate!("gs", "gs_", true);
+        validate!("gs_", "gs", false);
+    }
+
+    #[test]
+    fn test_string_suffixes_string_case_insensitive() {
+        macro_rules! validate {
+            ($suffix:literal, $s:literal, $expected:expr) => {
+                assert_eq!(
+                    string_suffixes_string_case_insensitive(L!($suffix), L!($s)),
+                    $expected
+                );
+            };
+        }
+        validate!("i", "_i", true);
+        validate!("i\u{307}", "İ", true);
+        validate!("İ", "i\u{307}", true); // suffix is longer
+        validate!("İ", "_İ", true);
+        validate!("i", "_İ", false);
+        validate!("gs", "_gs", true);
+        validate!("_gs ", "gs", false);
+    }
 
     #[test]
     fn test_ifind() {

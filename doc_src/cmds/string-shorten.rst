@@ -89,7 +89,7 @@ See Also
 .. BEGIN SEEALSO
 
 - :doc:`string pad <string-pad>` does the inverse of this command, adding padding to a specific width instead.
-  
+
 - The :doc:`printf <printf>` command can do simple padding, for example ``printf %10s\n`` works like ``string pad -w10``.
 
 - :doc:`string length <string-length>` with the ``--visible`` option can be used to show what fish thinks the width is.

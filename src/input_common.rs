@@ -4,20 +4,21 @@ use crate::common::{
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
-use crate::flog::{FLOG, FloggableDebug, FloggableDisplay};
+use crate::flog::{FloggableDebug, FloggableDisplay, flog};
 use crate::future_feature_flags::{FeatureFlag, test as feature_test};
 use crate::key::{
     self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
     canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
 };
+use crate::prelude::*;
 use crate::reader::reader_test_and_clear_interrupted;
 use crate::tty_handoff::{
     SCROLL_CONTENT_UP_TERMINFO_CODE, TERMINAL_OS_NAME, XTGETTCAP_QUERY_OS_NAME, XTVERSION,
     maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
 };
 use crate::universal_notifier::default_notifier;
-use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::{fish_is_pua, fish_wcstol};
+use fish_wchar::encode_byte_to_char;
 use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;
 use std::mem::MaybeUninit;
@@ -49,13 +50,21 @@ pub enum ReadlineCmd {
     BackwardCharPassive,
     ForwardSingleChar,
     ForwardCharPassive,
-    ForwardWord,
     BackwardWord,
-    ForwardBigword,
+    ForwardWordEmacs,
+    ForwardBigwordEmacs,
     BackwardBigword,
+    ForwardWordEnd,
+    BackwardWordEnd,
+    ForwardBigwordEnd,
+    BackwardBigwordEnd,
+    ForwardWordVi,
+    ForwardBigwordVi,
+    ForwardPathComponent,
     ForwardToken,
+    BackwardPathComponent,
     BackwardToken,
-    NextdOrForwardWord,
+    NextdOrForwardWordEmacs,
     PrevdOrBackwardWord,
     HistoryDelete,
     HistorySearchBackward,
@@ -78,12 +87,23 @@ pub enum ReadlineCmd {
     BackwardKillLine,
     KillWholeLine,
     KillInnerLine,
-    KillWord,
-    KillBigword,
+    KillWordEmacs,
+    KillBigwordEmacs,
+    KillWordVi,
+    KillBigwordVi,
+    KillWordEnd,
+    KillBigwordEnd,
+    KillInnerWord,
+    KillInnerBigWord,
+    KillAWord,
+    KillABigWord,
+    KillPathComponent,
     KillToken,
     BackwardKillWord,
+    BackwardKillWordEnd,
     BackwardKillPathComponent,
     BackwardKillBigword,
+    BackwardKillBigwordEnd,
     BackwardKillToken,
     HistoryTokenSearchBackward,
     HistoryTokenSearchForward,
@@ -325,13 +345,16 @@ pub enum ImplicitEvent {
     FocusOut,
     /// Mouse left click.
     MouseLeft(ViewportPosition),
+    /// Terminal color theme change (light/dark mode).
+    NewColorTheme,
     /// Window height changed.
-    WindowHeight,
+    NewWindowHeight,
 }
 
 #[derive(Debug, Clone)]
 pub enum QueryResponse {
     PrimaryDeviceAttribute,
+    BackgroundColor(xterm_color::Color),
     CursorPosition(ViewportPosition),
 }
 
@@ -472,7 +495,7 @@ fn readb(in_fd: RawFd) -> Option<u8> {
         return None;
     }
     let c = arr[0];
-    FLOG!(reader, "Read byte", char_to_symbol(char::from(c), true));
+    flog!(reader, "Read byte", char_to_symbol(char::from(c), true));
     // The common path is to return a u8.
     Some(c)
 }
@@ -697,6 +720,11 @@ impl InputData {
     }
 }
 
+#[derive(Clone, Default, Eq, PartialEq)]
+pub struct BackgroundColorQuery {
+    pub result: Option<xterm_color::Color>,
+}
+
 #[derive(Clone, Eq, PartialEq)]
 pub enum CursorPositionQueryReason {
     NewPrompt,
@@ -718,10 +746,16 @@ impl CursorPositionQuery {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Default, Eq, PartialEq)]
+pub struct RecurrentQuery {
+    pub background_color: Option<BackgroundColorQuery>,
+    pub cursor_position: Option<CursorPositionQuery>,
+}
+
+#[derive(Clone, Eq, PartialEq)]
 pub enum TerminalQuery {
     Initial,
-    CursorPosition(CursorPositionQuery),
+    Recurrent(RecurrentQuery),
 }
 
 pub const LONG_READ_TIMEOUT: Duration = Duration::from_secs(2);
@@ -851,7 +885,7 @@ pub trait InputEventQueuer {
                         )
                     };
                     if self.is_blocked_querying() {
-                        FLOG!(
+                        flog!(
                             reader,
                             "Still blocked on response from terminal, deferring key event",
                             key_evt
@@ -869,7 +903,7 @@ pub trait InputEventQueuer {
                                     .is_some()
                             })
                         {
-                            FLOG!(
+                            flog!(
                                 reader,
                                 "Received interrupt key, giving up waiting for response from terminal"
                             );
@@ -892,7 +926,7 @@ pub trait InputEventQueuer {
 
     fn read_sequence_byte(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
         let fd = self.get_in_fd();
-        let strict = feature_test(FeatureFlag::omit_term_workarounds);
+        let strict = feature_test(FeatureFlag::OmitTermWorkarounds);
         let historical_millis = |ms| {
             if strict {
                 LONG_READ_TIMEOUT
@@ -910,12 +944,12 @@ pub trait InputEventQueuer {
                 historical_millis(30)
             },
         ) {
-            FLOG!(
+            flog!(
                 reader,
                 format!("Incomplete escape sequence: {}", DisplayBytes(buffer))
             );
-            if strict {
-                FLOG!(
+            if buffer != b"\x1b" && strict {
+                flog!(
                     error,
                     format!(
                         "Incomplete escape sequence seen (logging because omit-term-workarounds is on): {}",
@@ -963,9 +997,16 @@ pub trait InputEventQueuer {
             // potential SS3
             return Some(self.parse_ss3(buffer).unwrap_or(invalid));
         }
-        if !recursive_invocation && next == b'P' {
-            // potential DCS
-            return Some(self.parse_dcs(buffer).unwrap_or(invalid));
+        if !recursive_invocation {
+            if next == b']' {
+                // OSC
+                self.parse_osc(buffer);
+                return Some(invalid);
+            }
+            if next == b'P' {
+                // potential DCS
+                return Some(self.parse_dcs(buffer).unwrap_or(invalid));
+            }
         }
         match canonicalize_control_char(next) {
             Some(mut key) => {
@@ -1071,7 +1112,7 @@ pub trait InputEventQueuer {
             b'F' => masked_key(key::End),  // PC/xterm style
             b'H' => masked_key(key::Home), // PC/xterm style
             b'M' | b'm' => {
-                FLOG!(reader, "mouse event");
+                flog!(reader, "mouse event");
                 // Generic X10 or modified VT200 sequence, or extended (SGR/1006) mouse
                 // reporting mode, with semicolon-separated parameters for button code, Px,
                 // and Py, ending with 'M' for button press or 'm' for button release.
@@ -1111,14 +1152,14 @@ pub trait InputEventQueuer {
                 return None;
             }
             b't' => {
-                FLOG!(reader, "mouse event");
+                flog!(reader, "mouse event");
                 // VT200 button released in mouse highlighting mode at valid text location. 5 chars.
                 let _ = next_char(self);
                 let _ = next_char(self);
                 return None;
             }
             b'T' => {
-                FLOG!(reader, "mouse event");
+                flog!(reader, "mouse event");
                 // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
                 for _ in 0..6 {
                     let _ = next_char(self);
@@ -1140,11 +1181,9 @@ pub trait InputEventQueuer {
                 else {
                     return invalid_sequence(buffer);
                 };
-                FLOG!(reader, "Received cursor position report y:", y, "x:", x);
+                flog!(reader, "Received cursor position report y:", y, "x:", x);
                 let cursor_pos = ViewportPosition { x, y };
-                self.push_front(CharEvent::QueryResult(QueryResultEvent::Response(
-                    QueryResponse::CursorPosition(cursor_pos),
-                )));
+                self.push_query_response(QueryResponse::CursorPosition(cursor_pos));
                 return None;
             }
             b'S' => masked_key(function_key(4)),
@@ -1195,10 +1234,17 @@ pub trait InputEventQueuer {
                 _ => return None,
             },
             b'c' if private_mode == Some(b'?') => {
-                FLOG!(reader, "Received Primary Device Attribute response");
-                self.push_front(CharEvent::QueryResult(QueryResultEvent::Response(
-                    QueryResponse::PrimaryDeviceAttribute,
-                )));
+                flog!(reader, "Received Primary Device Attribute response");
+                self.push_query_response(QueryResponse::PrimaryDeviceAttribute);
+                return None;
+            }
+            b'n' if private_mode == Some(b'?') && params[0] == [997, 0, 0, 0] => {
+                match params[1] {
+                    [1, 0, 0, 0] | [2, 0, 0, 0] => (),
+                    _ => return None,
+                };
+                flog!(reader, "Received color theme change");
+                self.push_front(CharEvent::Implicit(ImplicitEvent::NewColorTheme));
                 return None;
             }
             b'u' => {
@@ -1318,29 +1364,36 @@ pub trait InputEventQueuer {
         Some(key)
     }
 
-    fn read_until_sequence_terminator(&mut self, buffer: &mut Vec<u8>) -> Option<()> {
+    fn read_until_sequence_terminator(
+        &mut self,
+        buffer: &mut Vec<u8>,
+        allow_bel: bool,
+    ) -> Option<()> {
         let mut escape = false;
         loop {
             let b = self.read_sequence_byte(buffer)?;
+            if allow_bel && b == b'\x07' {
+                buffer.pop();
+                return Some(());
+            }
             if escape && b == b'\\' {
-                break;
+                buffer.pop();
+                buffer.pop();
+                return Some(());
             }
             escape = b == b'\x1b';
         }
-        buffer.pop();
-        buffer.pop();
-        Some(())
     }
 
     fn parse_xtversion(&mut self, buffer: &mut Vec<u8>) -> Option<()> {
         assert_eq!(buffer, b"\x1bP>");
-        self.read_until_sequence_terminator(buffer)?;
+        self.read_until_sequence_terminator(buffer, false)?;
         if buffer.get(3)? != &b'|' {
             return None;
         }
         XTVERSION.get_or_init(|| {
             let xtversion = bytes2wcstring(&buffer[4..buffer.len()]);
-            FLOG!(
+            flog!(
                 reader,
                 format!("Received XTVERSION response: {}", xtversion)
             );
@@ -1349,8 +1402,20 @@ pub trait InputEventQueuer {
         None
     }
 
+    fn parse_osc(&mut self, buffer: &mut Vec<u8>) -> Option<()> {
+        let osc_prefix = b"\x1b]";
+        assert!(buffer == osc_prefix);
+        self.read_until_sequence_terminator(buffer, /*allow_bel=*/ true)?;
+        let buffer = &buffer[osc_prefix.len()..];
+        let buffer = buffer.strip_prefix(b"11;")?;
+        let c = xterm_color::Color::parse(buffer).ok()?;
+        flog!(reader, format!("Received background color {c:?}"));
+        self.push_query_response(QueryResponse::BackgroundColor(c));
+        None
+    }
+
     fn parse_dcs(&mut self, buffer: &mut Vec<u8>) -> Option<KeyEvent> {
-        assert!(buffer.len() == 2);
+        assert!(buffer == b"\x1bP");
         let Some(success) = self.read_sequence_byte(buffer) else {
             return Some(KeyEvent::from(alt('P')));
         };
@@ -1369,12 +1434,12 @@ pub trait InputEventQueuer {
         if self.read_sequence_byte(buffer)? != b'r' {
             return None;
         }
-        self.read_until_sequence_terminator(buffer)?;
+        self.read_until_sequence_terminator(buffer, false)?;
         // \e P 1 r + Pn ST
         // \e P 0 r + msg ST
         let buffer = &buffer[5..];
         if !success {
-            FLOG!(
+            flog!(
                 reader,
                 format!(
                     "Received XTGETTCAP failure response: {}",
@@ -1388,7 +1453,7 @@ pub trait InputEventQueuer {
         let key = parse_hex(key)?;
         let value = if let Some(value) = buffer.next() {
             let value = parse_hex(value)?;
-            FLOG!(
+            flog!(
                 reader,
                 format!(
                     "Received XTGETTCAP response: {}={:?}",
@@ -1398,7 +1463,7 @@ pub trait InputEventQueuer {
             );
             Some(value)
         } else {
-            FLOG!(
+            flog!(
                 reader,
                 format!("Received XTGETTCAP response: {}", bytes2wcstring(&key))
             );
@@ -1411,7 +1476,7 @@ pub trait InputEventQueuer {
                 TERMINAL_OS_NAME.get_or_init(|| Some(bytes2wcstring(&value)));
             }
         }
-        return None;
+        None
     }
 
     fn readch_timed_esc(&mut self) -> Option<CharEvent> {
@@ -1501,6 +1566,10 @@ pub trait InputEventQueuer {
         self.get_input_data_mut().queue.push_front(ch);
     }
 
+    fn push_query_response(&mut self, response: QueryResponse) {
+        self.push_front(CharEvent::QueryResult(QueryResultEvent::Response(response)));
+    }
+
     /// Find the first sequence of non-char events, and promote them to the front.
     fn promote_interruptions_to_front(&mut self) {
         // Find the first sequence of non-char events.
@@ -1572,7 +1641,7 @@ pub trait InputEventQueuer {
         if vintr != 0 {
             let interrupt_evt = CharEvent::from_key(KeyEvent::from_single_byte(vintr));
             if stop_query(self.blocking_query()) {
-                FLOG!(
+                flog!(
                     reader,
                     "Received interrupt, giving up on waiting for terminal response"
                 );
@@ -1633,7 +1702,7 @@ pub(crate) fn decode_one_codepoint_utf8(
         Err(e) => match e.error_len() {
             Some(_) => match invalid_policy {
                 InvalidPolicy::Error => {
-                    FLOG!(reader, "Illegal input encoding");
+                    flog!(reader, "Illegal input encoding");
                     Error
                 }
                 InvalidPolicy::Passthrough => {
@@ -1653,7 +1722,7 @@ pub(crate) fn stop_query(mut query: RefMut<'_, Option<TerminalQuery>>) -> bool {
 }
 
 fn invalid_sequence(buffer: &[u8]) -> Option<KeyEvent> {
-    FLOG!(
+    flog!(
         reader,
         "Error: invalid escape sequence: ",
         DisplayBytes(buffer)
@@ -1710,15 +1779,20 @@ fn parse_hex(hex: &[u8]) -> Option<Vec<u8>> {
         return None;
     }
     let mut result = vec![0; hex.len() / 2];
+    parse_hex_into(&mut result, hex)?;
+    Some(result)
+}
+fn parse_hex_into(out: &mut [u8], hex: &[u8]) -> Option<()> {
+    assert!(out.len() * 2 == hex.len());
     let mut i = 0;
     while i < hex.len() {
         let d1 = char::from(hex[i]).to_digit(16)?;
         let d2 = char::from(hex[i + 1]).to_digit(16)?;
         let decoded = u8::try_from(16 * d1 + d2).unwrap();
-        result[i / 2] = decoded;
+        out[i / 2] = decoded;
         i += 2;
     }
-    Some(result)
+    Some(())
 }
 
 #[cfg(test)]

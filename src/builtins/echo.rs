@@ -1,7 +1,7 @@
 //! Implementation of the echo builtin.
 
 use super::prelude::*;
-use crate::wchar::encode_byte_to_char;
+use fish_wchar::encode_byte_to_char;
 
 #[derive(Debug, Clone, Copy)]
 struct Options {
@@ -218,7 +218,7 @@ pub fn echo(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
     }
 
     if !out.is_empty() {
-        streams.out.append(out);
+        streams.out.append(&out);
     }
 
     Ok(SUCCESS)

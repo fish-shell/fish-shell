@@ -29,6 +29,14 @@ targets:
       file: .github/actions/rust-toolchain/action.yml
       matchpattern: '\(stable\) echo \d+\.\d+ ;;.*'
       replacepattern: '(stable) echo {{ source "rust_stable_version" }} ;; # updatecli.d/rust.yml'
+  update_rust_stable2:
+    name: "Update Rust stable #2"
+    sourceid: rust_stable_version
+    kind: file
+    spec:
+      file: .github/workflows/lint-dependencies.yml
+      matchpattern: 'rust-version: \d+\.\d+\b.*'
+      replacepattern: 'rust-version: {{ source "rust_stable_version" }} # updatecli.d/rust.yml'
   update_msrv:
     name: "Update MSRV"
     sourceid: rust_stable_version

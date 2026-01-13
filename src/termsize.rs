@@ -1,9 +1,9 @@
 // Support for exposing the terminal size.
 use crate::common::assert_sync;
 use crate::env::{EnvMode, EnvVar, Environment};
-use crate::flog::FLOG;
-use crate::parser::Parser;
-use crate::wchar::prelude::*;
+use crate::flog::flog;
+use crate::parser::{Parser, ParserEnvSetMode};
+use crate::prelude::*;
 use crate::wutil::fish_wcstoi;
 use std::mem::MaybeUninit;
 use std::num::NonZeroU16;
@@ -41,14 +41,14 @@ fn read_termsize_from_tty() -> Option<Termsize> {
         unsafe { winsize.assume_init() }
     };
     let width = NonZeroU16::new(winsize.ws_col).unwrap_or_else(|| {
-        FLOG!(
+        flog!(
             term_support,
             L!("Terminal has 0 columns, falling back to default width")
         );
         Termsize::DEFAULT_WIDTH
     });
     let height = NonZeroU16::new(winsize.ws_row).unwrap_or_else(|| {
-        FLOG!(
+        flog!(
             term_support,
             L!("Terminal has 0 rows, falling back to default height")
         );
@@ -200,12 +200,12 @@ impl TermsizeContainer {
         let saved = self.setting_env_vars.swap(true, Ordering::Relaxed);
         parser.set_var_and_fire(
             L!("COLUMNS"),
-            EnvMode::GLOBAL,
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
             vec![val.width().to_wstring()],
         );
         parser.set_var_and_fire(
             L!("LINES"),
-            EnvMode::GLOBAL,
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
             vec![val.height().to_wstring()],
         );
         self.setting_env_vars.store(saved, Ordering::Relaxed);
@@ -262,7 +262,7 @@ pub fn safe_termsize_invalidate_tty() {
 
 #[cfg(test)]
 mod tests {
-    use crate::env::{EnvMode, Environment};
+    use crate::env::{EnvMode, EnvSetMode, Environment};
     use crate::termsize::*;
     use crate::tests::prelude::*;
     use std::sync::Mutex;
@@ -272,7 +272,7 @@ mod tests {
     #[serial]
     fn test_termsize() {
         let _cleanup = test_init();
-        let env_global = EnvMode::GLOBAL;
+        let env_global = EnvSetMode::new(EnvMode::GLOBAL, false);
         let parser = TestParser::new();
         let vars = parser.vars();
 

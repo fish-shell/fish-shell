@@ -6,8 +6,8 @@ Synopsis
 .. synopsis::
 
     bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [-s | --silent] KEYS COMMAND ...
-    bind [(-M | --mode) MODE] [--preset] [--user] [KEYS]
-    bind [-a | --all] [--preset] [--user]
+    bind [(-M | --mode) MODE] [--preset] [--user] [--color WHEN] [KEYS]
+    bind [-a | --all] [--preset] [--user] [--color WHEN]
     bind (-f | --function-names)
     bind (-K | --key-names)
     bind (-L | --list-modes)
@@ -19,8 +19,8 @@ Description
 ``bind`` manages key bindings.
 
 If both ``KEYS`` and ``COMMAND`` are given, ``bind`` adds (or replaces) a binding in ``MODE``.
-If only ``KEYS`` is given, any existing binding for those keys in the given ``MODE`` will be printed.
-If no ``KEYS`` argument is provided, all bindings (in the given ``MODE``) are printed.
+If only ``KEYS`` is given, ``bind`` lists any existing bindings for those keys in ``MODE`` or in all modes.
+If no ``KEYS`` argument is provided, ``bind`` lists all bindings in ``MODE`` or in all modes.
 
 ``KEYS`` is a comma-separated list of key names.
 Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``, ``alt-``, ``shift-`` and ``super-`` (i.e. the "windows" or "command" key).
@@ -104,6 +104,10 @@ The following options are available:
 **-s** or **--silent**
     Silences some of the error messages, including for unknown key names and unbound sequences.
 
+**--color** *WHEN*
+    Controls when to use syntax highlighting colors when listing bindings.
+    *WHEN* can be ``auto`` (the default, colorize if the output :doc:`is a terminal <isatty>`), ``always``, or ``never``.
+
 **-h** or **--help**
     Displays help about using this command.
 
@@ -127,17 +131,11 @@ The following special input functions are available:
     move one character to the left, but do not trigger any non-movement-related operations. If the cursor is at the start of
     the commandline, does nothing. Does not change the selected item in the completion pager UI when shown.
 
-``backward-bigword``
-    move one whitespace-delimited word to the left
-
 ``backward-token``
     move one argument to the left
 
 ``backward-delete-char``
     deletes one character of input to the left of the cursor
-
-``backward-kill-bigword``
-    move the whitespace-delimited word to the left of the cursor to the killring
 
 ``backward-kill-token``
     move the argument to the left of the cursor to the killring
@@ -145,14 +143,37 @@ The following special input functions are available:
 ``backward-kill-line``
     move everything from the beginning of the line to the cursor to the killring
 
+.. _cmd-bind-backward-kill-path-component:
+
 ``backward-kill-path-component``
     move one path component to the left of the cursor to the killring. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
 
 ``backward-kill-word``
-    move the word to the left of the cursor to the killring. The "word" here is everything up to punctuation or whitespace.
+    move the word to the left of the cursor to the killring, until the start of the current word (like vim's ``db``)
+
+``backward-kill-bigword``
+    move the whitespace-delimited word to the left of the cursor to the killring, until the start of the current word (like vim's ``dB``)
+
+``backward-kill-word-end``
+    move from the cursor to the end of the previous word to the killring (like vim's ``dge``)
+
+``backward-kill-bigword-end``
+    move from the cursor to the end of the previous whitespace-delimited word to the killring (like vim's ``dgE``)
+
+``backward-path-component``
+    move one :ref:`path component <cmd-bind-backward-kill-path-component>` to the left
 
 ``backward-word``
-    move one word to the left
+    move one word to the left, stopping at the start of the previous word (like vim's ``b``, or Emacs' ``M-b`` but differs slightly in word division rules)
+
+``backward-bigword``
+    move one whitespace-delimited word to the left, stopping at the start of the previous word (like vim's ``B``)
+
+``backward-word-end``
+    move to the end of the previous word (like vim's ``ge``)
+
+``backward-bigword-end``
+    move to the end of the previous whitespace-delimited word (like vim's ``gE``)
 
 ``beginning-of-buffer``
     moves to the beginning of the buffer, i.e. the start of the first line
@@ -206,7 +227,8 @@ The following special input functions are available:
     make the current word lowercase
 
 ``end-of-buffer``
-    moves to the end of the buffer, i.e. the end of the first line
+    moves to the end of the buffer, i.e. the end of the last line;
+    or if already at the end of the commandline, accept the current autosuggestion.
 
 ``end-of-history``
     move to the end of the history
@@ -226,9 +248,6 @@ The following special input functions are available:
 ``exit``
     exit the shell
 
-``forward-bigword``
-    move one whitespace-delimited word to the right
-
 ``forward-token``
     move one argument to the right
 
@@ -241,12 +260,34 @@ The following special input functions are available:
     commandline, does not accept the current autosuggestion (if any). Does not change the selected item in the completion pager,
     if shown.
 
+``forward-path-component``
+    move one :ref:`path component <cmd-bind-backward-kill-path-component>` to the right; or if at the end of the commandline, accept a path component from the current autosuggestion.
+
 ``forward-single-char``
     move one character to the right; or if at the end of the commandline, accept a single char from the current autosuggestion.
 
+.. _cmd-bind-forward-word:
+
 ``forward-word``
-    move one word to the right; or if at the end of the commandline, accept one word
+    move one word to the right, stopping after the end of the current word; or if at the end of the commandline, accept one word
     from the current autosuggestion.
+
+``forward-word-vi``
+    like :ref:`forward-word <cmd-bind-forward-word>`, but stops at the start of the next word (like vim's ``w``)
+
+``forward-word-end``
+    like :ref:`forward-word <cmd-bind-forward-word>`, but stops at the end of the next word (like vim's ``e``)
+
+.. _cmd-bind-forward-bigword:
+
+``forward-bigword``
+    move one whitespace-delimited word to the right, stopping after the end of the current word; or if at the end of the commandline, accept one word from the current autosuggestion.
+
+``forward-bigword-vi``
+    like :ref:`forward-bigword <cmd-bind-forward-bigword>`, but stops at the start of the next word (like vim's ``W``)
+
+``forward-bigword-end``
+    like :ref:`forward-bigword <cmd-bind-forward-bigword>`, but stops at the end of the next word (like vim's ``E``)
 
 ``history-pager``
     invoke the searchable pager on history (incremental search); or if the history pager is already active, search further backwards in time.
@@ -299,14 +340,14 @@ The following special input functions are available:
     The input function is useful to emulate ``ib`` vi text object.
     The following brackets are considered: ``([{}])``
 
-``kill-bigword``
-    move the next whitespace-delimited word to the killring
-
 ``kill-token``
     move the next argument to the killring
 
 ``kill-line``
     move everything from the cursor to the end of the line to the killring
+
+``kill-path-component``
+    move one :ref:`path component <cmd-bind-backward-kill-path-component>` to the killring.
 
 ``kill-selection``
     move the selected text to the killring
@@ -318,7 +359,34 @@ The following special input functions are available:
     move the line (without the following newline) to the killring
 
 ``kill-word``
-    move the next word to the killring
+    move the next word to the killring, stopping after the end of the killed word
+
+``kill-word-vi``
+    move the next word to the killring, stopping at the start of the next word (like vim's ``dw``)
+
+``kill-bigword``
+    move the next whitespace-delimited word to the killring, stopping after the end of the current word
+
+``kill-bigword-vi``
+    move the next whitespace-delimited word to the killring, stopping at the start of the next word (like vim's ``dW``)
+
+``kill-bigword-end``
+    move from the cursor to the end of the current whitespace-delimited word to the killring (like vim's ``dE``)
+
+``kill-word-end``
+    move from the cursor to the end of the current word to the killring (like vim's ``de``)
+
+``kill-inner-word``
+    delete the word under the cursor (like vim's ``diw``)
+
+``kill-inner-bigword``
+    delete the whitespace-delimited word under the cursor (like vim's ``diW``)
+
+``kill-a-word``
+    delete the word under the cursor plus surrounding whitespace (like vim's ``daw``)
+
+``kill-a-bigword``
+    delete the whitespace-delimited word under the cursor plus surrounding whitespace (like vim's ``daW``)
 
 ``nextd-or-forward-word``
     if the commandline is empty, then move forward in the directory history, otherwise move one word to the right;

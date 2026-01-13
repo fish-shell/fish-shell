@@ -52,6 +52,23 @@ In short:
 - Be conservative in what you need (keep to the agreed minimum supported Rust version, limit new dependencies)
 - Use automated tools to help you (``build_tools/check.sh``)
 
+Commit History
+==============
+
+We use a linear, `recipe-style <https://www.bitsnbites.eu/git-history-work-log-vs-recipe/>`__ history.
+Every commit should pass our checks.
+We do not want "fixup" commits in our history.
+If you notice an issue with a commit in a pull request, or get feedback suggesting changes,
+you should rewrite the commit history and fix the relevant commits directly,
+instead of adding new "fixup" commits.
+When a pull request is ready, we rebase it on top of the current master branch,
+so don't be shy about rewriting the history of commits which are not on master yet.
+Rebasing (not merging) your pull request on the latest version of master is also welcome, especially if it resolves conflicts.
+
+If you're using Git, consider using `jj <https://www.jj-vcs.dev/>`__ to make this easier.
+
+If a commit should close an issue, add a ``Fixes #<issue-number>`` line at the end of the commit description.
+
 Contributing completions
 ========================
 
@@ -89,11 +106,18 @@ Contributing documentation
 
 The documentation is stored in ``doc_src/``, and written in ReStructured Text and built with Sphinx.
 
-To build it locally, run from the main fish-shell directory::
+To build it locally, run either::
 
-    sphinx-build -j 8 -b html -n doc_src/ /tmp/fish-doc/
+    sphinx-build -j auto -b html doc_src/ /tmp/fish-doc/
 
-which will build the docs as html in /tmp/fish-doc. You can open it in a browser and see that it looks okay.
+which will output HTML docs to /tmp/fish-doc.
+You can open it in a browser and see that it looks okay.
+
+Alternatively, you can use::
+
+    cmake --build build -t sphinx-docs
+
+which outputs to build/user_doc/html/.
 
 The builtins and various functions shipped with fish are documented in doc_src/cmds/.
 
@@ -233,9 +257,8 @@ It also means that some features are not supported, such as message context and 
 We also expect all files to be UTF-8-encoded.
 In practice, this should not matter much for contributing translations.
 
-Translation sources are
-stored in the ``po`` directory, named ``ll_CC.po``, where ``ll`` is the
-two (or possibly three) letter ISO 639-1 language code of the target language
+Translation sources are stored in the ``localization/po`` directory and named ``ll_CC.po``,
+where ``ll`` is the two (or possibly three) letter ISO 639-1 language code of the target language
 (e.g. ``pt`` for Portuguese). ``CC`` is an ISO 3166 country/territory code,
 (e.g. ``BR`` for Brazil).
 An example for a valid name is ``pt_BR.po``, indicating Brazilian Portuguese.
@@ -249,7 +272,7 @@ More specifically, you will need ``msguniq`` and ``msgmerge`` for creating trans
 language.
 To create a new translation, run::
 
-    build_tools/update_translations.fish po/ll_CC.po
+    build_tools/update_translations.fish localization/po/ll_CC.po
 
 This will create a new PO file containing all messages available for translation.
 If the file already exists, it will be updated.
@@ -295,7 +318,7 @@ Editing PO files
 Many tools are available for editing translation files, including
 command-line and graphical user interface programs. For simple use, you can use your text editor.
 
-Open up the PO file, for example ``po/sv.po``, and you'll see something like::
+Open up the PO file, for example ``localization/po/sv.po``, and you'll see something like::
 
     msgid "%s: No suitable job\n"
     msgstr ""
@@ -323,7 +346,7 @@ Modifications to strings in source files
 If a string changes in the sources, the old translations will no longer work.
 They will be preserved in the PO files, but commented-out (starting with ``#~``).
 If you add/remove/change a translatable strings in a source file,
-run ``build_tools/update_translations.fish`` to propagate this to all translation files (``po/*.po``).
+run ``build_tools/update_translations.fish`` to propagate this to all translation files (``localization/po/*.po``).
 This is only relevant for developers modifying the source files of fish or fish scripts.
 
 Setting Code Up For Translations

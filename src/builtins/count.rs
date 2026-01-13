@@ -16,8 +16,7 @@ pub fn count(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
     // Count the newlines coming in via stdin like `wc -l`.
     // This means excluding lines that don't end in a newline!
     numargs += Arguments::new(&[] as _, &mut zero, streams, COUNT_CHUNK_SIZE)
-        // second is "want_newline" - whether the line ended in a newline
-        .filter(|x| x.1)
+        .filter(|input_value| input_value.want_newline)
         .count();
 
     streams.out.appendln(numargs.to_wstring());

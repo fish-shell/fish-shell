@@ -4,15 +4,17 @@ use std::num::NonZeroI32;
 use crate::common::exit_without_destructors;
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::nix::getpid;
+use crate::prelude::*;
 use crate::reader::{reader_handle_sigint, reader_sighup, safe_restore_term_mode};
 use crate::termsize::safe_termsize_invalidate_tty;
 use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_principal};
 use crate::tty_handoff::{safe_deactivate_tty_protocols, safe_mark_tty_invalid};
-use crate::wchar::prelude::*;
 use crate::wutil::{fish_wcstoi, perror};
 use errno::{errno, set_errno};
-use once_cell::sync::Lazy;
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::{
+    LazyLock,
+    atomic::{AtomicI32, Ordering},
+};
 
 /// Store the "main" pid. This allows us to reliably determine if we are in a forked child.
 static MAIN_PID: AtomicI32 = AtomicI32::new(0);
@@ -86,7 +88,7 @@ extern "C" fn fish_signal_handler(
                 reader_sighup();
                 safe_mark_tty_invalid();
             }
-            topic_monitor_principal().post(Topic::sighupint);
+            topic_monitor_principal().post(Topic::SigHupInt);
         }
         libc::SIGTERM => {
             // Handle sigterm. The only thing we do is restore the front process ID and disable protocols, then die.
@@ -106,11 +108,11 @@ extern "C" fn fish_signal_handler(
                 CANCELLATION_SIGNAL.store(libc::SIGINT, Ordering::Relaxed);
             }
             reader_handle_sigint();
-            topic_monitor_principal().post(Topic::sighupint);
+            topic_monitor_principal().post(Topic::SigHupInt);
         }
         libc::SIGCHLD => {
             // A child process stopped or exited.
-            topic_monitor_principal().post(Topic::sigchld);
+            topic_monitor_principal().post(Topic::SigChld);
         }
         libc::SIGALRM => {
             // We have a sigalarm handler that does nothing. This is used in the signal torture
@@ -152,7 +154,7 @@ fn sigaction(sig: i32, act: &libc::sigaction, oact: *mut libc::sigaction) -> lib
 }
 
 fn set_interactive_handlers() {
-    let signal_handler: usize = fish_signal_handler as usize;
+    let signal_handler: usize = fish_signal_handler as *const () as usize;
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
     let mut oact: libc::sigaction = unsafe { std::mem::zeroed() };
     act.sa_flags = 0;
@@ -216,12 +218,12 @@ pub fn signal_set_handlers(interactive: bool) {
     sigaction(libc::SIGQUIT, &act, nullptr);
 
     // Apply our SIGINT handler.
-    act.sa_sigaction = fish_signal_handler as usize;
+    act.sa_sigaction = fish_signal_handler as *const () as usize;
     act.sa_flags = libc::SA_SIGINFO;
     sigaction(libc::SIGINT, &act, nullptr);
 
     // Whether or not we're interactive we want SIGCHLD to not interrupt restartable syscalls.
-    act.sa_sigaction = fish_signal_handler as usize;
+    act.sa_sigaction = fish_signal_handler as *const () as usize;
     act.sa_flags = libc::SA_SIGINFO | libc::SA_RESTART;
     if sigaction(libc::SIGCHLD, &act, nullptr) != 0 {
         perror("sigaction");
@@ -274,11 +276,11 @@ pub fn signal_handle(sig: Signal) {
     act.sa_flags = 0;
     unsafe { libc::sigemptyset(&mut act.sa_mask) };
     act.sa_flags = libc::SA_SIGINFO;
-    act.sa_sigaction = fish_signal_handler as usize;
+    act.sa_sigaction = fish_signal_handler as *const () as usize;
     sigaction(sig, &act, std::ptr::null_mut());
 }
 
-pub static signals_to_default: Lazy<libc::sigset_t> = Lazy::new(|| {
+pub static signals_to_default: LazyLock<libc::sigset_t> = LazyLock::new(|| {
     let mut set = MaybeUninit::uninit();
     unsafe { libc::sigemptyset(set.as_mut_ptr()) };
     for data in SIGNAL_TABLE.iter() {
@@ -324,7 +326,7 @@ impl SigChecker {
 
     /// Create a new checker for SIGHUP and SIGINT.
     pub fn new_sighupint() -> Self {
-        Self::new(Topic::sighupint)
+        Self::new(Topic::SigHupInt)
     }
 
     /// Check if a sigint has been delivered since the last call to check(), or since the detector
@@ -570,7 +572,7 @@ impl From<Signal> for NonZeroI32 {
 #[cfg(test)]
 mod tests {
     use super::Signal;
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_signal_name() {

@@ -24,10 +24,6 @@ include(cmake/Rust.cmake)
 # Work around issue where archive-built libs go in the wrong place.
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-# Set up the machinery around FISH-BUILD-VERSION-FILE
-# This defines the FBVF variable.
-include(Version)
-
 # Set up the docs.
 include(cmake/Docs.cmake)
 
@@ -42,9 +38,7 @@ set(VARS_FOR_CARGO
     "CARGO_TARGET_DIR=${FISH_RUST_BUILD_DIR}"
     "CARGO_BUILD_RUSTC=${Rust_COMPILER}"
     "${FISH_PCRE2_BUILDFLAG}"
-    "RUSTFLAGS=$ENV{RUSTFLAGS} ${rust_debugflags}"
     "FISH_SPHINX=${SPHINX_EXECUTABLE}"
-    "FISH_USE_PREBUILT_DOCS=${USE_PREBUILT_DOCS}"
 )
 
 # Let fish pick up when we're running out of the build directory without installing

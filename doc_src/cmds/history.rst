@@ -75,6 +75,10 @@ These flags can appear before or immediately after one of the sub-commands liste
 **-R** or **--reverse**
     Causes the history search results to be ordered oldest to newest. Which is the order used by most shells. The default is newest to oldest.
 
+**--color** *WHEN*
+    Controls when to use syntax highlighting colors for the history entries.
+    *WHEN* can be ``auto`` (the default, colorize if the output :doc:`is a terminal <isatty>`), ``always``, or ``never``.
+
 **-h** or **--help**
     Displays help for this command.
 

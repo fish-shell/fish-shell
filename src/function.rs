@@ -3,7 +3,7 @@
 // the parser and to some degree the builtin handling library.
 
 use crate::ast::{self, Node};
-use crate::autoload::Autoload;
+use crate::autoload::{Autoload, AutoloadResult};
 use crate::common::{FilenameRef, assert_sync, escape, valid_func_name};
 use crate::complete::complete_wrap_map;
 use crate::env::{EnvStack, Environment};
@@ -12,12 +12,11 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::parse_tree::NodeRef;
 use crate::parser::Parser;
 use crate::parser_keywords::parser_keywords_is_reserved;
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use crate::wutil::dir_iter::DirIter;
-use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
 use std::num::NonZeroU32;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 
 #[derive(Clone)]
 pub struct FunctionProperties {
@@ -100,7 +99,7 @@ impl FunctionSet {
 }
 
 /// The big set of all functions.
-static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
+static FUNCTION_SET: LazyLock<Mutex<FunctionSet>> = LazyLock::new(|| {
     Mutex::new(FunctionSet {
         funcs: HashMap::new(),
         autoload_tombstones: HashSet::new(),
@@ -117,7 +116,7 @@ pub fn load(name: &wstr, parser: &Parser) -> bool {
     {
         let mut funcset: std::sync::MutexGuard<FunctionSet> = FUNCTION_SET.lock().unwrap();
         if funcset.allow_autoload(name) {
-            if let Some(path) = funcset
+            if let AutoloadResult::Path(path) = funcset
                 .autoloader
                 .resolve_command(name, EnvStack::globals())
             {
@@ -318,7 +317,7 @@ pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
     funcset.funcs.entry(new_name).or_insert(Arc::new(new_props));
-    return true;
+    true
 }
 
 /// Returns all function names.
@@ -336,7 +335,6 @@ pub fn get_names(get_hidden: bool, vars: &dyn Environment) -> Vec<WString> {
         names.insert(name.clone());
     }
 
-    #[cfg(feature = "embed-data")]
     for name in crate::autoload::Asset::iter() {
         let Some(bname) = name.strip_prefix("functions/") else {
             continue;
@@ -405,9 +403,7 @@ impl FunctionProperties {
 
     /// If this function is a copy, return the original 1-based line number. Otherwise, return 0.
     pub fn copy_definition_lineno(&self) -> u32 {
-        self.copy_definition_lineno
-            .map(|val| val.get())
-            .unwrap_or(0)
+        self.copy_definition_lineno.map_or(0, |val| val.get())
     }
 
     /// Return a definition of the function, annotated with properties like event handlers and wrap

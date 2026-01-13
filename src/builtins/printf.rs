@@ -50,7 +50,6 @@
 
 use super::prelude::*;
 use crate::locale::{Locale, get_numeric_locale};
-use crate::wchar::encode_byte_to_char;
 use crate::wutil::{
     errors::Error,
     wcstod::wcstod,
@@ -58,6 +57,7 @@ use crate::wutil::{
     wstr_offset_in,
 };
 use fish_printf::{ToArg, sprintf_locale};
+use fish_wchar::{decode_byte_from_char, encode_byte_to_char};
 
 /// Return true if `c` is an octal digit.
 fn is_octal_digit(c: char) -> bool {
@@ -171,7 +171,7 @@ impl RawStringToScalarType for f64 {
         if result.is_ok() {
             *end = s.slice_from(consumed);
         }
-        return result;
+        result
     }
 }
 
@@ -208,10 +208,10 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         if errcode != None && errcode != Some(Error::InvalidChar) && errcode != Some(Error::Empty) {
             match errcode.unwrap() {
                 Error::Overflow => {
-                    self.fatal_error(sprintf!("%s: %s", s, wgettext!("Number out of range")));
+                    self.fatal_error(wgettext_fmt!("%s: Number out of range", s));
                 }
                 Error::Empty => {
-                    self.fatal_error(sprintf!("%s: %s", s, wgettext!("Number was empty")));
+                    self.fatal_error(wgettext_fmt!("%s: Number was empty", s));
                 }
                 Error::InvalidChar => {
                     panic!("Unreachable");
@@ -526,10 +526,12 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
                     let conversion = f.char_at(0);
                     if (conversion as usize) > 0xFF || !ok[conversion as usize] {
+                        let directive = &directive_start[0..directive_start
+                            .len()
+                            .min(wstr_offset_in(f, directive_start) + 1)];
                         self.fatal_error(wgettext_fmt!(
-                            "%.*s: invalid conversion specification",
-                            wstr_offset_in(f, directive_start) + 1,
-                            directive_start
+                            "%s: invalid conversion specification",
+                            directive
                         ));
                         return 0;
                     }
@@ -576,7 +578,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.push('\n');
+            self.streams.err.append_char('\n');
         }
 
         // We set the exit code to error, because one occurred,
@@ -600,7 +602,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.push('\n');
+            self.streams.err.append_char('\n');
         }
 
         self.exit_code = Err(STATUS_CMD_ERROR);
@@ -663,20 +665,26 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 uni_value = uni_value * 16 + p.char_at(0).to_digit(16).unwrap();
                 p = &p[1..];
             }
-            // N.B. we assume __STDC_ISO_10646__.
-            if uni_value > 0x10FFFF {
-                self.fatal_error(wgettext_fmt!(
-                    "Unicode character out of range: \\%c%0*x",
-                    esc_char,
-                    exp_esc_length,
-                    uni_value
-                ));
-            } else {
-                // TODO-RUST: if uni_value is a surrogate, we need to encode it using our PUA scheme.
-                if let Some(c) = char::from_u32(uni_value) {
-                    self.append_output(c);
-                } else {
-                    self.fatal_error(wgettext!("Invalid code points not yet supported by printf"));
+            match char::from_u32(uni_value) {
+                Some(c) => {
+                    // Test if this character would be treated specially when decoding.
+                    // If so, PUA-encode it.
+                    if decode_byte_from_char(c).is_some() {
+                        // A `char` represents an Unicode scalar value, which takes up at most 4 bytes when encoded in UTF-8.
+                        let mut converted = [0_u8; 4];
+                        for byte in c.encode_utf8(&mut converted).as_bytes() {
+                            self.append_output(encode_byte_to_char(*byte));
+                        }
+                    } else {
+                        self.append_output(c);
+                    }
+                }
+                None => {
+                    let escaped_char_string = format!("\\{esc_char}{uni_value:0exp_esc_length$x}");
+                    self.fatal_error(wgettext_fmt!(
+                        "Not a valid Unicode character: %s",
+                        escaped_char_string
+                    ));
                 }
             }
         } else {
@@ -686,7 +694,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 p = &p[1..];
             }
         }
-        return wstr_offset_in(p, escstart) - 1;
+        wstr_offset_in(p, escstart) - 1
     }
 
     /// Print string str, evaluating \ escapes.
@@ -792,5 +800,5 @@ pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> 
             break;
         }
     }
-    return state.exit_code;
+    state.exit_code
 }

@@ -12,7 +12,7 @@ use crate::text_face::{
 fn print_colors(
     streams: &mut IoStreams,
     args: &[&wstr],
-    style: TextStyling,
+    style: Option<TextStyling>,
     bg: Option<Color>,
     underline_color: Option<Color>,
 ) {
@@ -34,7 +34,7 @@ fn print_colors(
                 fg,
                 bg.unwrap_or(Color::None),
                 underline_color.unwrap_or(Color::None),
-                style,
+                style.unwrap_or_default(),
             ));
         }
         outp.write_wstr(color_name);
@@ -47,7 +47,7 @@ fn print_colors(
     } // conveniently, 'normal' is always the last color so we don't need to reset here
 
     let contents = outp.contents();
-    streams.out.append(bytes2wcstring(contents));
+    streams.out.append(&bytes2wcstring(contents));
 }
 
 /// set_color builtin.
@@ -99,11 +99,11 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             Err(UnknownColor(arg)) => {
                 streams
                     .err
-                    .append(wgettext_fmt!("%s: Unknown color '%s'\n", argv[0], arg));
+                    .append(&wgettext_fmt!("%s: Unknown color '%s'\n", argv[0], arg));
                 return Err(STATUS_INVALID_ARGS);
             }
             Err(UnknownUnderlineStyle(arg)) => {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: invalid underline style: %s\n",
                     argv[0],
                     arg
@@ -134,7 +134,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         specified_face.fg.unwrap_or(Color::None),
         specified_face.bg.unwrap_or(Color::None),
         specified_face.underline_color.unwrap_or(Color::None),
-        specified_face.style,
+        specified_face.style.unwrap_or_default(),
     ));
 
     if specified_face.fg.is_some() && outp.contents().is_empty() {
@@ -147,7 +147,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // Output the collected string.
     let contents = outp.contents();
-    streams.out.append(bytes2wcstring(contents));
+    streams.out.append(&bytes2wcstring(contents));
 
     Ok(SUCCESS)
 }

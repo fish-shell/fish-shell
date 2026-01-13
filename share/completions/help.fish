@@ -1,6 +1,7 @@
 complete -c help -n __fish_is_first_arg -x -a '(
     {
-        status help-sections | string replace -r "^index(#|\$)" introduction\$1
+        status get-file help_sections |
+            string replace -r "^index(#|\$)" introduction\$1
         printf cmds/%s\n ! . : \[ \{
     } |
         while read -l item
@@ -37,6 +38,8 @@ function __fish_help_describe -a help_item
         case contributing#adding-translations-for-a-new-language
             return
         case contributing#code-style
+            return
+        case contributing#commit-history
             return
         case contributing#configuring-your-editor-for-fish-scripts
             return

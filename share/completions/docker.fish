@@ -1,2 +1,1 @@
-# Completions for Docker are maintained upstream.
-# They should be installed with the Docker package.
+docker completion fish 2>/dev/null | source

@@ -2,6 +2,9 @@
 # Test file for fish_indent
 # Note that littlecheck ignores leading whitespace, so we have to use {{    }} to explicitly match it.
 
+fish_indent --no-such-option
+#CHECKERR: fish_indent: --no-such-option: unknown option
+
 echo 'echo foo \\
 | cat' | $fish_indent
 #CHECK: echo foo \
@@ -487,12 +490,68 @@ level 2 } }
     # CHECK: {{^\}$}}
 } | $fish_indent
 
+echo 'test 1 -eq 1; or {
+    echo a
+    echo b
+}' | $fish_indent
+# CHECK: test 1 -eq 1; or {
+# CHECK: {{^    }}echo a
+# CHECK: {{^    }}echo b
+# CHECK: {{^}}{{[}]}}
+
+echo 'not {
+    echo hi
+}' | $fish_indent
+# CHECK: not {
+# CHECK: {{^    }}echo hi
+# CHECK: {{^}}{{[}]}}
+
+echo 'time {
+    echo hi
+}' | $fish_indent
+# CHECK: time {
+# CHECK: {{^    }}echo hi
+# CHECK: {{^}}{{[}]}}
+
+echo 'if {
+    true
+}
+    echo ok
+end' | $fish_indent
+# CHECK: if {
+# CHECK: {{^        }}true
+# CHECK: {{^    }}{{[}]}}
+# CHECK: {{^    }}echo ok
+# CHECK: {{^}}end
+
+echo 'while {
+    true
+}
+    echo ok
+end' | $fish_indent
+# CHECK: while {
+# CHECK: {{^        }}true
+# CHECK: {{^    }}{{[}]}}
+# CHECK: {{^    }}echo ok
+# CHECK: {{^}}end
+
+echo 'echo x{a,
+  b}y' | $fish_indent
+# CHECK: echo x{a,
+# CHECK: {{^  }}b}y
+
 echo 'multiline-\\
 -word' | $fish_indent --check
 echo $status #CHECK: 0
 
 echo 'PATH={$PATH[echo " "' | $fish_indent --ansi
 # CHECK: PATH={$PATH[echo " "
+
+fish_config theme choose "ayu Dark"
+echo -n 'echo hello' | builtin fish_indent --ansi
+echo end
+# CHECK: {{\x1b\[38;2;57;186;230mecho\x1b\[38;2;179;177;173m hello\x1b\[38;2;242;150;104m\x1b\[m}}
+# CHECK: end
 
 echo a\> | $fish_indent
 # CHECK: a >
@@ -615,3 +674,13 @@ cat $tmpdir/indent_test.fish
 # See that the builtin can be redirected
 printf %s\n a b c | builtin fish_indent | grep b
 # CHECK: b
+
+# Regression test that fish_indent doesn't panic with closed stdin.
+fish_indent <&-
+# CHECKERR: fish_indent: stdin is closed
+
+function __fish_print_help
+    echo Help using PATH[1]=$PATH[1]
+end
+PATH=hello fish_indent --help
+# CHECK: Help using PATH[1]=hello

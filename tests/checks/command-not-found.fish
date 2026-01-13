@@ -1,4 +1,5 @@
 #RUN: fish=%fish %fish %s
+__fish_migrate # make sure the interactive fish doesn't need mkdir in PATH
 set -g PATH
 $fish -c "nonexistent-command-1234 banana rama"
 #CHECKERR: fish: Unknown command: nonexistent-command-1234
@@ -26,11 +27,10 @@ echo $status
 #CHECK: 127
 
 set -g PATH .
-echo banana > foobar
+echo banana >foobar
 foobar --banana
 # CHECKERR: {{.*}}checks/command-not-found.fish (line {{\d+}}): Unknown command. './foobar' exists but is not an executable file.
 # CHECKERR: foobar --banana
 # CHECKERR: ^~~~~^
-
 
 exit 0

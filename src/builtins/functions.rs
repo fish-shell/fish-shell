@@ -6,8 +6,7 @@ use crate::common::valid_func_name;
 use crate::common::{EscapeFlags, EscapeStringStyle};
 use crate::event::{self};
 use crate::function;
-use crate::highlight::colorize;
-use crate::highlight::highlight_shell;
+use crate::highlight::highlight_and_colorize;
 use crate::parse_util::apply_indents;
 use crate::parse_util::parse_util_compute_indents;
 use crate::parser_keywords::parser_keywords_is_reserved;
@@ -25,6 +24,7 @@ struct FunctionsCmdOpts<'args> {
     no_metadata: bool,
     verbose: bool,
     handlers: bool,
+    color: ColorEnabled,
     handlers_type: Option<&'args wstr>,
     description: Option<&'args wstr>,
 }
@@ -46,6 +46,7 @@ const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("verbose"), ArgType::NoArgument, 'v'),
     wopt(L!("handlers"), ArgType::NoArgument, 'H'),
     wopt(L!("handlers-type"), ArgType::RequiredArgument, 't'),
+    wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
 ];
 
 /// Parses options to builtin function, populating opts.
@@ -78,6 +79,9 @@ fn parse_cmd_opts<'args>(
             't' => {
                 opts.handlers = true;
                 opts.handlers_type = Some(w.woptarg.unwrap());
+            }
+            COLOR_OPTION_CHAR => {
+                opts.color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
@@ -132,13 +136,13 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         .count()
         > 1
     {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.report_metadata && opts.no_metadata {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -153,7 +157,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if let Some(desc) = opts.description {
         if args.len() != 1 {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Expected exactly one function name\n",
                 cmd
             ));
@@ -163,7 +167,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         let current_func = args[0];
 
         if !function::exists(current_func, parser) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Function '%s' does not exist\n",
                 cmd,
                 current_func
@@ -178,7 +182,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if opts.report_metadata {
         if args.len() != 1 {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_ARG_COUNT2,
                 cmd,
                 // This error is
@@ -261,7 +265,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         if !opts.handlers_type.unwrap_or(L!("")).is_empty()
             && !event::EVENT_FILTER_NAMES.contains(&opts.handlers_type.unwrap())
         {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Expected generic | variable | signal | exit | job-id for --handlers-type\n",
                 cmd
             ));
@@ -278,7 +282,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
     if opts.list || args.is_empty() {
         let mut names = function::get_names(opts.show_hidden, parser.vars());
         names.sort();
-        if streams.out_is_terminal() {
+        if opts.color.enabled(streams) {
             let mut buff = WString::new();
             let mut first: bool = true;
             for name in names {
@@ -290,7 +294,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             }
             streams
                 .out
-                .append(reformat_for_screen(&buff, &termsize_last()));
+                .append(&reformat_for_screen(&buff, &termsize_last()));
         } else {
             for name in names {
                 streams.out.appendln(name);
@@ -301,7 +305,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if opts.copy {
         if args.len() != 2 {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Expected exactly two names (current function name, and new function name)\n",
                 cmd
             ));
@@ -312,7 +316,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         let new_func = args[1];
 
         if !function::exists(current_func, parser) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Function '%s' does not exist\n",
                 cmd,
                 current_func
@@ -322,7 +326,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         }
 
         if !valid_func_name(new_func) || parser_keywords_is_reserved(new_func) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Illegal function name '%s'\n",
                 cmd,
                 new_func
@@ -332,7 +336,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         }
 
         if function::exists(new_func, parser) {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%s: Function '%s' already exists. Cannot create copy of '%s'\n",
                 cmd,
                 new_func,
@@ -414,14 +418,14 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             def = apply_indents(&def, &parse_util_compute_indents(&def));
         }
 
-        if streams.out_is_terminal() {
-            let mut colors = vec![];
-            highlight_shell(&def, &mut colors, &parser.context(), false, None);
-            streams
-                .out
-                .append(bytes2wcstring(&colorize(&def, &colors, parser.vars())));
+        if opts.color.enabled(streams) {
+            streams.out.append(&bytes2wcstring(&highlight_and_colorize(
+                &def,
+                &parser.context(),
+                parser.vars(),
+            )));
         } else {
-            streams.out.append(def);
+            streams.out.append(&def);
         }
         first = false;
     }

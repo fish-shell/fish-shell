@@ -16,7 +16,7 @@
 
 use crate::{
     common::cstr2wcstring,
-    env::EnvVar,
+    env::{EnvSetMode, EnvVar},
     fs::{
         LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, lock_and_load,
         rewrite_via_temporary_file,
@@ -29,7 +29,7 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
     ffi::CString,
     fs::File,
-    io::{BufRead, Read, Write},
+    io::{BufRead, BufWriter, Read, Write},
     mem::MaybeUninit,
     num::NonZeroUsize,
     ops::ControlFlow,
@@ -48,20 +48,23 @@ use crate::{
     env::{EnvMode, EnvStack, Environment},
     expand::{ExpandFlags, expand_one},
     fds::wopen_cloexec,
-    flog::{FLOG, FLOGF},
+    flog::{flog, flogf},
     fs::fsync,
-    history::file::{HistoryFile, RawHistoryFile, append_history_item_to_buffer},
+    highlight::highlight_and_colorize,
+    history::file::{HistoryFile, RawHistoryFile},
     io::IoStreams,
+    localization::wgettext_fmt,
     operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
     parse_constants::{ParseTreeFlags, StatementDecoration},
     parse_util::{parse_util_detect_errors, parse_util_unescape_wildcards},
+    parser::Parser,
     path::{path_get_config, path_get_data, path_is_valid},
+    prelude::*,
     threads::assert_is_background_thread,
-    util::{find_subslice, get_rng},
-    wchar::prelude::*,
+    util::find_subslice,
     wcstringutil::subsequence_in_string,
     wildcard::{ANY_STRING, wildcard_match},
-    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wgettext_fmt, wrealpath, wstat, wunlink},
+    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -108,16 +111,6 @@ const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
 
 pub const VACUUM_FREQUENCY: usize = 25;
 
-/// Output the contents `buffer` to `file` and clear the `buffer`.
-fn flush_to_file(buffer: &mut Vec<u8>, file: &mut File, min_size: usize) -> std::io::Result<()> {
-    if buffer.is_empty() || buffer.len() < min_size {
-        return Ok(());
-    }
-    file.write_all(buffer)?;
-    buffer.clear();
-    Ok(())
-}
-
 struct TimeProfiler {
     what: &'static str,
     start: SystemTime,
@@ -136,7 +129,7 @@ impl Drop for TimeProfiler {
             let ns_per_ms = 1_000_000;
             let ms = duration.as_millis();
             let ns = duration.as_nanos() - (ms * ns_per_ms);
-            FLOGF!(
+            flogf!(
                 profile_history,
                 "%s: %d.%06d ms",
                 self.what,
@@ -144,7 +137,7 @@ impl Drop for TimeProfiler {
                 ns as u32
             )
         } else {
-            FLOGF!(profile_history, "%s: ??? ms", self.what)
+            flogf!(profile_history, "%s: ??? ms", self.what)
         }
     }
 }
@@ -288,13 +281,20 @@ impl HistoryItem {
         // Ok, merge this item.
         self.creation_timestamp = self.creation_timestamp.max(item.creation_timestamp);
         if self.required_paths.len() < item.required_paths.len() {
-            self.required_paths = item.required_paths.clone();
+            self.required_paths.clone_from(&item.required_paths);
         }
         true
     }
 }
 
 static HISTORIES: Mutex<BTreeMap<WString, Arc<History>>> = Mutex::new(BTreeMap::new());
+
+/// When deleting, whether the deletion should be only for this session or for all sessions.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum DeletionScope {
+    SessionOnly,
+    AllSessions,
+}
 
 struct HistoryImpl {
     /// The name of this list. Used for picking a suitable filename and for switching modes.
@@ -310,10 +310,8 @@ struct HistoryImpl {
     has_pending_item: bool, // false
     /// Whether we should disable saving to the file for a time.
     disable_automatic_save_counter: u32, // 0
-    /// Deleted item contents.
-    /// Boolean describes if it should be deleted only in this session or in all
-    /// (used in deduplication).
-    deleted_items: HashMap<WString, bool>,
+    /// Deleted item contents, and the scope of the deletion.
+    deleted_items: HashMap<WString, DeletionScope>,
     /// The history file contents.
     file_contents: Option<HistoryFile>,
     /// The file ID of the history file.
@@ -415,9 +413,9 @@ impl HistoryImpl {
     /// Loads old items if necessary.
     /// Return a reference to the loaded history file.
     fn load_old_if_needed(&mut self) -> &HistoryFile {
-        if self.file_contents.is_some() {
-            return self.file_contents.as_ref().unwrap();
-        };
+        if let Some(ref file_contents) = self.file_contents {
+            return file_contents;
+        }
         let Ok(Some(history_path)) = self.history_file_path() else {
             return self.file_contents.insert(HistoryFile::create_empty());
         };
@@ -428,7 +426,7 @@ impl HistoryImpl {
                 self.history_file_id = file_id;
                 let _profiler = TimeProfiler::new("populate_from_file_contents");
                 let file_contents = history_file.decode(Some(self.boundary_timestamp));
-                FLOGF!(
+                flogf!(
                     history,
                     "Loaded %u old items",
                     file_contents.offsets().len()
@@ -436,7 +434,7 @@ impl HistoryImpl {
                 file_contents
             }
             Err(e) => {
-                FLOG!(history_file, "Error reading from history file:", e);
+                flog!(history_file, "Error reading from history file:", e);
                 HistoryFile::create_empty()
             }
         };
@@ -455,7 +453,7 @@ impl HistoryImpl {
                 continue;
             }
 
-            if !seen.insert(item.contents.to_owned()) {
+            if !seen.insert(item.contents.clone()) {
                 // This item was not inserted because it was already in the set, so delete the item at
                 // this index.
                 self.new_items.remove(idx);
@@ -510,23 +508,21 @@ impl HistoryImpl {
                 let Some(old_item) = local_file.decode_item(offset) else {
                     continue;
                 };
-
-                // If old item is newer than session always erase if in deleted.
-                if old_item.timestamp() > self.boundary_timestamp {
-                    if old_item.is_empty() || self.deleted_items.contains_key(old_item.str()) {
-                        continue;
-                    }
-                    lru.add_item(old_item);
-                } else {
-                    // If old item is older and in deleted items don't erase if added by
-                    // clear_session.
-                    if old_item.is_empty() || self.deleted_items.get(old_item.str()) == Some(&false)
-                    {
-                        continue;
-                    }
-                    // Add this old item.
-                    lru.add_item(old_item);
+                if old_item.is_empty() {
+                    continue;
                 }
+
+                // Check if this item should be deleted.
+                if let Some(&scope) = self.deleted_items.get(old_item.str()) {
+                    // If old item is newer than session always erase if in deleted.
+                    // If old item is older and in deleted items don't erase if added by clear_session.
+                    let delete = old_item.timestamp() > self.boundary_timestamp
+                        || scope == DeletionScope::AllSessions;
+                    if delete {
+                        continue;
+                    }
+                }
+                lru.add_item(old_item);
             }
         }
 
@@ -550,35 +546,17 @@ impl HistoryImpl {
         /// Default buffer size for flushing to the history file.
         const HISTORY_OUTPUT_BUFFER_SIZE: usize = 64 * 1024;
         // Write them out.
-        let mut err = None;
-        let mut buffer = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
+        let mut buffer = BufWriter::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128, dst);
         for item in items {
-            append_history_item_to_buffer(&item, &mut buffer);
-            if let Err(e) = flush_to_file(&mut buffer, dst, HISTORY_OUTPUT_BUFFER_SIZE) {
-                err = Some(e);
-                break;
-            }
+            item.write_to(&mut buffer)?;
         }
-        if err.is_none() {
-            if let Err(e) = flush_to_file(&mut buffer, dst, 0) {
-                err = Some(e);
-            }
-        }
-        if let Some(err) = err {
-            FLOG!(
-                history_file,
-                "Error writing to temporary history file:",
-                err
-            );
-            Err(err)
-        } else {
-            Ok(())
-        }
+        buffer.flush()?;
+        Ok(())
     }
 
     /// Saves history by rewriting the file.
     fn save_internal_via_rewrite(&mut self, history_path: &wstr) -> std::io::Result<()> {
-        FLOGF!(
+        flogf!(
             history,
             "Saving %u items via rewrite",
             self.new_items.len() - self.first_unwritten_new_item_index
@@ -586,7 +564,15 @@ impl HistoryImpl {
 
         let rewrite =
             |old_file: &File, tmp_file: &mut File| -> std::io::Result<PotentialUpdate<()>> {
-                self.rewrite_to_temporary_file(old_file, tmp_file)?;
+                let result = self.rewrite_to_temporary_file(old_file, tmp_file);
+                if let Err(err) = result {
+                    flog!(
+                        history_file,
+                        "Error writing to temporary history file:",
+                        err
+                    );
+                    return Err(err);
+                }
                 Ok(PotentialUpdate {
                     do_save: true,
                     data: (),
@@ -611,7 +597,7 @@ impl HistoryImpl {
 
     /// Saves history by appending to the file.
     fn save_internal_via_appending(&mut self, history_path: &wstr) -> std::io::Result<()> {
-        FLOGF!(
+        flogf!(
             history,
             "Saving %u items via appending",
             self.new_items.len() - self.first_unwritten_new_item_index
@@ -645,19 +631,20 @@ impl HistoryImpl {
         // So far so good. Write all items at or after first_unwritten_new_item_index. Note that we
         // write even a pending item - pending items are ignored by history within the command
         // itself, but should still be written to the file.
-        // Use a small buffer size for appending, we usually only have 1 item
+        // Use a small buffer size for appending, as we usually only have 1 item.
+        // Buffer everything and then write it all at once to avoid tearing writes (O_APPEND).
         let mut buffer = Vec::new();
         let mut new_first_index = self.first_unwritten_new_item_index;
         while new_first_index < self.new_items.len() {
             let item = &self.new_items[new_first_index];
             if item.should_write_to_disk() {
-                append_history_item_to_buffer(item, &mut buffer);
+                // Can't error writing to a buffer.
+                item.write_to(&mut buffer).unwrap();
             }
             // We wrote or skipped this item, hooray.
             new_first_index += 1;
         }
-
-        flush_to_file(&mut buffer, locked_history_file.get_mut(), 0)?;
+        locked_history_file.get_mut().write_all(&buffer)?;
         fsync(locked_history_file.get())?;
         self.first_unwritten_new_item_index = new_first_index;
 
@@ -694,7 +681,7 @@ impl HistoryImpl {
         let history_path = match self.history_file_path() {
             Ok(history_path) => history_path.unwrap(),
             Err(e) => {
-                FLOG!(history, "Saving history failed:", e);
+                flog!(history, "Saving history failed:", e);
                 return;
             }
         };
@@ -705,7 +692,7 @@ impl HistoryImpl {
         if !vacuum && self.deleted_items.is_empty() {
             // Try doing a fast append.
             if let Err(e) = self.save_internal_via_appending(&history_path) {
-                FLOG!(history, "Appending to history failed:", e);
+                flog!(history, "Appending to history failed:", e);
             } else {
                 ok = true;
             }
@@ -713,7 +700,7 @@ impl HistoryImpl {
         if !ok {
             // We did not or could not append; rewrite the file ("vacuum" it).
             if let Err(e) = self.save_internal_via_rewrite(&history_path) {
-                FLOG!(history, "Rewriting history failed:", e)
+                flog!(history, "Rewriting history failed:", e)
             }
         }
     }
@@ -731,7 +718,7 @@ impl HistoryImpl {
         // the counter.
         let countdown_to_vacuum = self
             .countdown_to_vacuum
-            .get_or_insert_with(|| get_rng().gen_range(0..VACUUM_FREQUENCY));
+            .get_or_insert_with(|| rand::rng().random_range(0..VACUUM_FREQUENCY));
 
         // Determine if we're going to vacuum.
         let mut vacuum = false;
@@ -807,7 +794,8 @@ impl HistoryImpl {
     /// Remove a history item.
     fn remove(&mut self, str_to_remove: &wstr) {
         // Add to our list of deleted items.
-        self.deleted_items.insert(str_to_remove.to_owned(), false);
+        self.deleted_items
+            .insert(str_to_remove.to_owned(), DeletionScope::AllSessions);
 
         for idx in (0..self.new_items.len()).rev() {
             let matched = self.new_items[idx].str() == str_to_remove;
@@ -855,7 +843,8 @@ impl HistoryImpl {
     /// Clears only session.
     fn clear_session(&mut self) {
         for item in &self.new_items {
-            self.deleted_items.insert(item.str().to_owned(), true);
+            self.deleted_items
+                .insert(item.str().to_owned(), DeletionScope::SessionOnly);
         }
 
         self.new_items.clear();
@@ -894,7 +883,7 @@ impl HistoryImpl {
         ) {
             Ok(file) => file,
             Err(err) => {
-                FLOG!(history_file, "Error when writing history file:", err);
+                flog!(history_file, "Error when writing history file:", err);
                 return;
             }
         };
@@ -906,7 +895,7 @@ impl HistoryImpl {
             }
 
             if let Err(err) = dst_file.write_all(&buf[..n]) {
-                FLOG!(history_file, "Error when writing history file:", err);
+                flog!(history_file, "Error when writing history file:", err);
                 break;
             }
         }
@@ -1086,7 +1075,7 @@ impl HistoryImpl {
 
 fn string_could_be_path(potential_path: &wstr) -> bool {
     // Assume that things with leading dashes aren't paths.
-    return !(potential_path.is_empty() || potential_path.starts_with('-'));
+    !(potential_path.is_empty() || potential_path.starts_with('-'))
 }
 
 /// Perform a search of `hist` for `search_string`. Invoke a function `func` for each match. If
@@ -1118,13 +1107,12 @@ fn do_1_history_search(
 }
 
 /// Formats a single history record, including a trailing newline.
-///
-/// Returns nothing. The only possible failure involves formatting the timestamp. If that happens we
-/// simply omit the timestamp from the output.
 fn format_history_record(
     item: &HistoryItem,
     show_time_format: Option<&str>,
     null_terminate: bool,
+    parser: &Parser,
+    color_enabled: bool,
 ) -> WString {
     let mut result = WString::new();
     let seconds = time_to_seconds(item.timestamp());
@@ -1138,7 +1126,7 @@ fn format_history_record(
             let mut timestamp_str = [0_u8; MAX_TIMESTAMP_LENGTH];
             if unsafe {
                 libc::strftime(
-                    &mut timestamp_str[0] as *mut u8 as *mut libc::c_char,
+                    timestamp_str.as_mut_ptr().cast(),
                     MAX_TIMESTAMP_LENGTH,
                     show_time_format.as_ptr(),
                     timestamp.as_ptr(),
@@ -1150,7 +1138,16 @@ fn format_history_record(
         }
     }
 
-    result.push_utfstr(item.str());
+    let mut command = item.str().to_owned();
+    if color_enabled {
+        command = bytes2wcstring(&highlight_and_colorize(
+            &command,
+            &parser.context(),
+            parser.vars(),
+        ));
+    }
+
+    result.push_utfstr(&command);
     result.push(if null_terminate { '\0' } else { '\n' });
     result
 }
@@ -1255,7 +1252,7 @@ impl History {
     /// determine which arguments are paths. Arguments may be expanded (e.g. with PWD and variables)
     /// using the given `vars`. The item has the given `persist_mode`.
     pub fn add_pending_with_file_detection(
-        self: Arc<Self>,
+        self: &Arc<Self>,
         s: &wstr,
         vars: &EnvStack,
         persist_mode: PersistenceMode, /*=disk*/
@@ -1284,7 +1281,7 @@ impl History {
                 // Also skip it for 'echo'. This is because echo doesn't take file paths, but also
                 // because the history file test wants to find the commands in the history file
                 // immediately after running them, so it can't tolerate the asynchronous file detection.
-                if stmt.decoration() == StatementDecoration::exec {
+                if stmt.decoration() == StatementDecoration::Exec {
                     needs_sync_write = true;
                 }
 
@@ -1317,10 +1314,11 @@ impl History {
             let thread_pool = Arc::clone(&imp.thread_pool);
             drop(imp);
             let vars_snapshot = vars.snapshot();
+            let self_clone = Arc::clone(self);
             thread_pool.perform(move || {
                 // Don't hold the lock while we perform this file detection.
                 let valid_file_paths = expand_and_detect_paths(potential_paths, &vars_snapshot);
-                let mut imp = self.imp();
+                let mut imp = self_clone.imp();
                 if !valid_file_paths.is_empty() {
                     imp.set_valid_file_paths(valid_file_paths, &snapshot_item);
                 }
@@ -1354,6 +1352,8 @@ impl History {
     #[allow(clippy::too_many_arguments)]
     pub fn search(
         self: &Arc<Self>,
+        parser: &Parser,
+        streams: &mut IoStreams,
         search_type: SearchType,
         search_args: &[&wstr],
         show_time_format: Option<&str>,
@@ -1362,7 +1362,7 @@ impl History {
         null_terminate: bool,
         reverse: bool,
         cancel_check: &CancelChecker,
-        streams: &mut IoStreams,
+        color_enabled: bool,
     ) -> bool {
         let mut remaining = max_items;
         let mut collected = Vec::new();
@@ -1374,13 +1374,20 @@ impl History {
                 return ControlFlow::Break(());
             }
             remaining -= 1;
-            let formatted_record = format_history_record(item, show_time_format, null_terminate);
+            let formatted_record = format_history_record(
+                item,
+                show_time_format,
+                null_terminate,
+                parser,
+                color_enabled,
+            );
+
             if reverse {
                 // We need to collect this for later.
                 collected.push(formatted_record);
             } else {
                 // We can output this immediately.
-                if !streams.out.append(formatted_record) {
+                if !streams.out.append(&formatted_record) {
                     // This can happen if the user hit Ctrl-C to abort (maybe after the first page?).
                     output_error = true;
                     return ControlFlow::Break(());
@@ -1425,7 +1432,7 @@ impl History {
                 break;
             }
 
-            if !streams.out.append(item) {
+            if !streams.out.append(&item) {
                 // Don't force an error if output was aborted (typically via Ctrl-C/SIGINT); just don't
                 // try writing any more.
                 output_error = true;
@@ -1679,7 +1686,7 @@ pub fn history_session_id_from_var(history_name_var: Option<EnvVar>) -> WString 
     if session_id.is_empty() || valid_var_name(&session_id) {
         session_id
     } else {
-        FLOG!(
+        flog!(
             error,
             wgettext_fmt!(
                 "History session ID '%s' is not a valid variable name. Falling back to `%s`.",
@@ -1731,13 +1738,12 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
 /// Given a list of proposed paths and a context, expand each one and see if it refers to a file.
 /// Wildcard expansions are suppressed.
 /// Returns `true` if `paths` is empty or every path is valid.
-pub fn all_paths_are_valid<P: IntoIterator<Item = WString>>(
-    paths: P,
-    ctx: &OperationContext<'_>,
-) -> bool {
+pub fn all_paths_are_valid(paths: &[WString], ctx: &OperationContext<'_>) -> bool {
     assert_is_background_thread();
     let working_directory = ctx.vars().get_pwd_slash();
-    for mut path in paths {
+    let mut path = WString::new();
+    for unexpanded_path in paths {
+        path.clone_from(unexpanded_path);
         if ctx.check_cancel() {
             return false;
         }
@@ -1758,8 +1764,9 @@ pub fn all_paths_are_valid<P: IntoIterator<Item = WString>>(
 
 /// Sets private mode on. Once in private mode, it cannot be turned off.
 pub fn start_private_mode(vars: &EnvStack) {
-    vars.set_one(L!("fish_history"), EnvMode::GLOBAL, L!("").to_owned());
-    vars.set_one(L!("fish_private_mode"), EnvMode::GLOBAL, L!("1").to_owned());
+    let global_mode = EnvSetMode::new_at_early_startup(EnvMode::GLOBAL);
+    vars.set_one(L!("fish_history"), global_mode, L!("").to_owned());
+    vars.set_one(L!("fish_private_mode"), global_mode, L!("1").to_owned());
 }
 
 /// Queries private mode status.
@@ -1775,16 +1782,15 @@ mod tests {
     };
     use crate::common::ESCAPE_TEST_CHAR;
     use crate::common::{ScopeGuard, bytes2wcstring, wcs2bytes, wcs2osstring};
-    use crate::env::{EnvMode, EnvStack};
+    use crate::env::{EnvMode, EnvSetMode, EnvStack};
     use crate::fs::{LockedFile, WriteMethod};
     use crate::path::path_get_data;
+    use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::util::get_rng;
-    use crate::wchar::prelude::*;
     use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
     use fish_build_helper::workspace_root;
     use rand::Rng;
-    use rand::rngs::SmallRng;
+    use rand::rngs::ThreadRng;
     use std::collections::VecDeque;
     use std::io::BufReader;
     use std::os::unix::ffi::OsStrExt;
@@ -1806,12 +1812,13 @@ mod tests {
         false
     }
 
-    fn random_string(rng: &mut SmallRng) -> WString {
+    fn random_string(rng: &mut ThreadRng) -> WString {
         let mut result = WString::new();
-        let max = rng.gen_range(1..=32);
+        let max = rng.random_range(1..=32);
         for _ in 0..max {
-            let c = char::from_u32(u32::try_from(1 + rng.gen_range(0..ESCAPE_TEST_CHAR)).unwrap())
-                .unwrap();
+            let c =
+                char::from_u32(u32::try_from(1 + rng.random_range(0..ESCAPE_TEST_CHAR)).unwrap())
+                    .unwrap();
             result.push(c);
         }
         result
@@ -1927,7 +1934,7 @@ mod tests {
         let mut after: VecDeque<HistoryItem> = VecDeque::new();
         history.clear();
         let max = 100;
-        let mut rng = get_rng();
+        let mut rng = rand::rng();
         for i in 1..=max {
             // Generate a value.
             let mut value = WString::from_str("test item ") + &i.to_wstring()[..];
@@ -1938,7 +1945,7 @@ mod tests {
             }
 
             // Generate some paths.
-            let paths: PathList = (0..rng.gen_range(0..6))
+            let paths: PathList = (0..rng.random_range(0..6))
                 .map(|_| random_string(&mut rng))
                 .collect();
 
@@ -2268,53 +2275,54 @@ mod tests {
         let wdir_path = WString::from(tmpdir.path().to_str().unwrap());
 
         let test_vars = EnvStack::new();
-        test_vars.set_one(L!("PWD"), EnvMode::GLOBAL, wdir_path.clone());
-        test_vars.set_one(L!("HOME"), EnvMode::GLOBAL, wdir_path.clone());
+        let global_mode = EnvSetMode::new(EnvMode::GLOBAL, false);
+        test_vars.set_one(L!("PWD"), global_mode, wdir_path.clone());
+        test_vars.set_one(L!("HOME"), global_mode, wdir_path.clone());
 
         let history = History::with_name(L!("path_detection"));
         history.clear();
         assert_eq!(history.size(), 0);
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd0 not/a/valid/path"),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             &(L!("cmd1 ").to_owned() + filename),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             &(L!("cmd2 ").to_owned() + &wfile_path[..]),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             &(L!("cmd3  $HOME/").to_owned() + filename),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd4  $HOME/notafile"),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             &(L!("cmd5  ~/").to_owned() + filename),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd6  ~/notafile"),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd7  ~/*f*"),
             &test_vars,
             PersistenceMode::Disk,
         );
-        history.clone().add_pending_with_file_detection(
+        history.add_pending_with_file_detection(
             L!("cmd8  ~/*zzz*"),
             &test_vars,
             PersistenceMode::Disk,

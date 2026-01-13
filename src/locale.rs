@@ -10,25 +10,33 @@ pub(crate) static LOCALE_LOCK: Mutex<()> = Mutex::new(());
 /// above mutex.
 pub unsafe fn set_libc_locales(log_ok: bool) -> bool {
     let mut ok = true;
+    let from_environment = c"";
     let mut set = |category_name, category, value| {
         let locale_string = setlocale(category, Some(value));
         if log_ok {
-            crate::flog::FLOG!(
-                env_locale,
+            crate::flog::flog!(env_locale, {
+                let source = if value == from_environment {
+                    "from environment".to_string()
+                } else {
+                    format!("to '{}'", value.to_str().unwrap())
+                };
                 match locale_string {
                     Some(locale_string) => {
-                        format!("Set {category_name} to {}", locale_string.to_string_lossy())
+                        format!(
+                            "Set {category_name} {source}: {}",
+                            locale_string.to_string_lossy()
+                        )
                     }
                     None => {
-                        format!("Failed to set {category_name}",)
+                        format!("Failed to set {category_name} {source}")
                     }
-                },
-            );
+                }
+            });
         }
         ok &= locale_string.is_some();
     };
-    let from_environment = c"";
     // For wcwidth(3p)
+    set("LC_CTYPE", libc::LC_CTYPE, from_environment);
     set("LC_CTYPE", libc::LC_CTYPE, c"C.UTF-8");
     // For strerror(3p) and strsignal(3p)
     set("LC_MESSAGES", libc::LC_MESSAGES, from_environment);
@@ -73,7 +81,7 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
 
     // Up to 4 groups.
     // group_cursor is terminated by either a 0 or CHAR_MAX.
-    let mut group_cursor = lconv.grouping as *const libc::c_char;
+    let mut group_cursor = lconv.grouping.cast_const();
     if group_cursor.is_null() {
         group_cursor = empty.as_ptr();
     }

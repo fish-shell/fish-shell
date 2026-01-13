@@ -17,7 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-use cfg_if::cfg_if;
 use fish::{
     ast,
     builtins::{
@@ -38,7 +37,7 @@ use fish::{
     },
     eprintf,
     event::{self, Event},
-    flog::{self, FLOG, FLOGF, activate_flog_categories_by_pattern, set_flog_file_fd},
+    flog::{self, activate_flog_categories_by_pattern, flog, flogf, set_flog_file_fd},
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
     io::IoChain,
@@ -48,8 +47,9 @@ use fish::{
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
     parse_util::parse_util_detect_errors_in_ast,
-    parser::{BlockType, CancelBehavior, Parser},
+    parser::{BlockType, CancelBehavior, Parser, ParserEnvSetMode},
     path::path_get_config,
+    prelude::*,
     printf,
     proc::{
         Pid, get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
@@ -59,7 +59,6 @@ use fish::{
     signal::{signal_clear_cancel, signal_unblock_all},
     threads::{self},
     topic_monitor,
-    wchar::prelude::*,
     wutil::waccess,
 };
 use libc::STDIN_FILENO;
@@ -145,14 +144,14 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     let config_pathname = dir.to_owned() + L!("/config.fish");
     let escaped_pathname = escape(dir) + L!("/config.fish");
     if waccess(&config_pathname, libc::R_OK) != 0 {
-        FLOGF!(
+        flogf!(
             config,
             "not sourcing %s (not readable or does not exist)",
             escaped_pathname
         );
         return false;
     }
-    FLOG!(config, "sourcing", escaped_pathname);
+    flog!(config, "sourcing", escaped_pathname);
 
     let cmd: WString = L!("builtin source ").to_owned() + escaped_pathname.as_utfstr();
 
@@ -164,36 +163,16 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    cfg_if!(
-        if #[cfg(feature = "embed-data")] {
-            use fish::autoload::Asset;
-            let emfile = Asset::get("config.fish").expect("Embedded file not found");
-            let src = bytes2wcstring(&emfile.data);
-            parser.libdata_mut().within_fish_init = true;
-            let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
-            let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
-            parser.libdata_mut().within_fish_init = false;
-            if let Err(msg) = ret {
-                eprintf!("%s", msg);
-            }
-        } else {
-            let datapath = bytes2wcstring(paths.data.as_ref().unwrap().as_os_str().as_bytes());
-            if !source_config_in_directory(parser, &datapath) {
-                // If we cannot read share/config.fish, our internal configuration,
-                // something is wrong.
-                // That also means that our functions won't be found,
-                // and so any config we get would almost certainly be broken.
-                let escaped_pathname = escape(&datapath);
-                FLOGF!(
-                    error,
-                    "Fish cannot find its asset files in '%s'.\n\
-                     Refusing to read configuration because of this.",
-                    escaped_pathname,
-                );
-                return;
-            }
-        }
-    );
+    use fish::autoload::Asset;
+    let emfile = Asset::get("config.fish").expect("Embedded file not found");
+    let src = bytes2wcstring(&emfile.data);
+    parser.libdata_mut().within_fish_init = true;
+    let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
+    let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
+    parser.libdata_mut().within_fish_init = false;
+    if let Err(msg) = ret {
+        eprintf!("%s", msg);
+    }
 
     source_config_in_directory(
         parser,
@@ -332,7 +311,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             }
             'D' => {
                 // TODO: Option is currently useless.
-                // Either remove it or make it work with FLOG.
+                // Either remove it or make it work with flog.
             }
             '?' => {
                 eprintf!(
@@ -406,7 +385,8 @@ fn throwing_main() -> i32 {
         set_libc_locales(/*log_ok=*/ false)
     };
 
-    fish::wutil::gettext::initialize_gettext();
+    #[cfg(feature = "localize-messages")]
+    fish::localization::initialize_localization();
 
     // Enable debug categories set in FISH_DEBUG.
     // This is in *addition* to the ones given via --debug.
@@ -455,7 +435,7 @@ fn throwing_main() -> i32 {
 
     // No-exec is prohibited when in interactive mode.
     if opts.is_interactive_session && opts.no_exec {
-        FLOG!(
+        flog!(
             warning,
             wgettext!("Can not use the no-execute mode when running an interactive session")
         );
@@ -519,9 +499,9 @@ fn throwing_main() -> i32 {
 
     if is_interactive_session() && opts.no_config && !opts.no_exec {
         // If we have no config, we default to the default key bindings.
-        parser.vars().set_one(
+        parser.set_one(
             L!("fish_key_bindings"),
-            EnvMode::UNEXPORT,
+            ParserEnvSetMode::new(EnvMode::UNEXPORT),
             L!("fish_default_key_bindings").to_owned(),
         );
         if function::exists(L!("fish_default_key_bindings"), parser) {
@@ -536,12 +516,14 @@ fn throwing_main() -> i32 {
     parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
 
     // TODO: if-let-chains
-    if opts.profile_startup_output.is_some() && opts.profile_startup_output != opts.profile_output {
-        parser.emit_profiling(&opts.profile_startup_output.unwrap());
+    if let Some(path) = &opts.profile_startup_output {
+        if opts.profile_startup_output != opts.profile_output {
+            parser.emit_profiling(path);
 
-        // If we are profiling both, ensure the startup data only
-        // ends up in the startup file.
-        parser.clear_profiling();
+            // If we are profiling both, ensure the startup data only
+            // ends up in the startup file.
+            parser.clear_profiling();
+        }
     }
 
     PROFILING_ACTIVE.store(opts.profile_output.is_some());
@@ -564,9 +546,9 @@ fn throwing_main() -> i32 {
         // Pass additional args as $argv.
         // Note that we *don't* support setting argv[0]/$0, unlike e.g. bash.
         let list = &args[my_optind..];
-        parser.vars().set(
+        parser.set_var(
             L!("argv"),
-            EnvMode::default(),
+            ParserEnvSetMode::default(),
             list.iter().map(|s| s.to_owned()).collect(),
         );
         res = run_command_list(parser, &opts.batch_cmds);
@@ -574,7 +556,7 @@ fn throwing_main() -> i32 {
     } else if my_optind == args.len() {
         // Implicitly interactive mode.
         if opts.no_exec && isatty(libc::STDIN_FILENO) {
-            FLOG!(
+            flog!(
                 error,
                 "no-execute mode enabled and no script given. Exiting"
             );
@@ -590,7 +572,7 @@ fn throwing_main() -> i32 {
         // We don't need autoclose_fd_t when we use File, it will be closed on drop.
         match File::open(path) {
             Err(e) => {
-                FLOGF!(
+                flogf!(
                     error,
                     wgettext!("Error reading script file '%s':"),
                     path.to_string_lossy()
@@ -599,9 +581,9 @@ fn throwing_main() -> i32 {
             }
             Ok(f) => {
                 let list = &args[my_optind..];
-                parser.vars().set(
+                parser.set_var(
                     L!("argv"),
-                    EnvMode::default(),
+                    ParserEnvSetMode::default(),
                     list.iter().map(|s| s.to_owned()).collect(),
                 );
                 let rel_filename = &args[my_optind - 1];
@@ -612,7 +594,7 @@ fn throwing_main() -> i32 {
                     });
                 res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
                 if res.is_err() {
-                    FLOGF!(
+                    flogf!(
                         warning,
                         wgettext!("Error while reading file %s\n"),
                         path.to_string_lossy()

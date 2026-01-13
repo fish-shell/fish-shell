@@ -91,12 +91,12 @@ fish_create_dirs(${sysconfdir}/fish/conf.d ${sysconfdir}/fish/completions
 install(FILES etc/config.fish DESTINATION ${sysconfdir}/fish/)
 
 fish_create_dirs(${rel_datadir}/fish ${rel_datadir}/fish/completions
-                 ${rel_datadir}/fish/functions ${rel_datadir}/fish/groff
+                 ${rel_datadir}/fish/functions
                  ${rel_datadir}/fish/man/man1 ${rel_datadir}/fish/tools
                  ${rel_datadir}/fish/tools/web_config
                  ${rel_datadir}/fish/tools/web_config/js
-                 ${rel_datadir}/fish/tools/web_config/sample_prompts
-                 ${rel_datadir}/fish/tools/web_config/themes
+                 ${rel_datadir}/fish/prompts
+                 ${rel_datadir}/fish/themes
                  )
 
 configure_file(share/__fish_build_paths.fish.in share/__fish_build_paths.fish)
@@ -114,9 +114,9 @@ configure_file(fish.pc.in fish.pc.noversion @ONLY)
 add_custom_command(OUTPUT fish.pc
     COMMAND sed '/Version/d' fish.pc.noversion > fish.pc
     COMMAND printf "Version: " >> fish.pc
-    COMMAND cat ${FBVF} >> fish.pc
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh >> fish.pc
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS CHECK-FISH-BUILD-VERSION-FILE ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 
 add_custom_target(build_fish_pc ALL DEPENDS fish.pc)
 
@@ -131,8 +131,13 @@ install(DIRECTORY share/functions/
         DESTINATION ${rel_datadir}/fish/functions
         FILES_MATCHING PATTERN "*.fish")
 
-install(DIRECTORY share/groff
-        DESTINATION ${rel_datadir}/fish)
+install(DIRECTORY share/prompts/
+        DESTINATION ${rel_datadir}/fish/prompts
+        FILES_MATCHING PATTERN "*.fish")
+
+install(DIRECTORY share/themes/
+        DESTINATION ${rel_datadir}/fish/themes
+        FILES_MATCHING PATTERN "*.theme")
 
 # CONDEMNED_PAGE is managed by the conditional above
 # Building the man pages is optional: if sphinx isn't installed, they're not built
@@ -152,9 +157,7 @@ install(DIRECTORY share/tools/web_config
         PATTERN "*.css"
         PATTERN "*.html"
         PATTERN "*.py"
-        PATTERN "*.js"
-        PATTERN "*.theme"
-        PATTERN "*.fish")
+        PATTERN "*.js")
 
 # Building the man pages is optional: if Sphinx isn't installed, they're not built
 install(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
@@ -163,7 +166,7 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/html/ # Trailing slash is
 install(FILES CHANGELOG.rst DESTINATION ${docdir})
 
 # Group install targets into a InstallTargets folder
-set_property(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
+set_property(TARGET build_fish_pc
              PROPERTY FOLDER cmake/InstallTargets)
 
 # Make a target build_root that installs into the buildroot directory, for testing.

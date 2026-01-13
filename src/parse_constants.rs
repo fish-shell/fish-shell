@@ -1,8 +1,8 @@
 //! Constants used in the programmatic representation of fish code.
 
-use crate::fallback::{fish_wcswidth, fish_wcwidth};
-use crate::wchar::prelude::*;
+use crate::prelude::*;
 use bitflags::bitflags;
+use fish_fallback::{fish_wcswidth, fish_wcwidth};
 
 pub type SourceOffset = u32;
 
@@ -53,24 +53,24 @@ impl SourceRange {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ParseTokenType {
     #[default]
-    invalid = 1,
+    Invalid = 1,
 
     // Terminal types.
-    string,
-    pipe,
-    left_brace,
-    right_brace,
-    redirection,
-    background,
-    andand,
-    oror,
-    end,
+    String,
+    Pipe,
+    LeftBrace,
+    RightBrace,
+    Redirection,
+    Background,
+    AndAnd,
+    OrOr,
+    End,
     // Special terminal type that means no more tokens forthcoming.
-    terminate,
+    Terminate,
     // Very special terminal types that don't appear in the production list.
-    error,
-    tokenizer_error,
-    comment,
+    Error,
+    TokenizerError,
+    Comment,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -102,45 +102,45 @@ pub enum ParseKeyword {
 // Statement decorations like 'command' or 'exec'.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StatementDecoration {
-    none,
-    command,
-    builtin,
-    exec,
+    None,
+    Command,
+    Builtin,
+    Exec,
 }
 
 // Parse error code list.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ParseErrorCode {
     #[default]
-    none,
+    None,
 
     // Matching values from enum parser_error.
-    syntax,
-    cmdsubst,
+    Syntax,
+    CmdSubst,
 
-    generic, // unclassified error types
+    Generic, // unclassified error types
 
     // Tokenizer errors.
-    tokenizer_unterminated_quote,
-    tokenizer_unterminated_subshell,
-    tokenizer_unterminated_slice,
-    tokenizer_unterminated_escape,
-    tokenizer_other,
+    TokenizerUnterminatedQuote,
+    TokenizerUnterminatedSubshell,
+    TokenizerUnterminatedSlice,
+    TokenizerUnterminatedEscape,
+    TokenizerOther,
 
-    unbalancing_end,          // end outside of block
-    unbalancing_else,         // else outside of if
-    unbalancing_case,         // case outside of switch
-    unbalancing_brace,        // } outside of {
-    bare_variable_assignment, // a=b without command
-    andor_in_pipeline,        // "and" or "or" after a pipe
+    UnbalancingEnd,         // end outside of block
+    UnbalancingElse,        // else outside of if
+    UnbalancingCase,        // case outside of switch
+    UnbalancingBrace,       // } outside of {
+    BareVariableAssignment, // a=b without command
+    AndOrInPipeline,        // "and" or "or" after a pipe
 }
 
 // The location of a pipeline.
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum PipelinePosition {
-    none,       // not part of a pipeline
-    first,      // first command in a pipeline
-    subsequent, // second or further command in a pipeline
+    None,       // not part of a pipeline
+    First,      // first command in a pipeline
+    Subsequent, // second or further command in a pipeline
 }
 
 impl SourceRange {
@@ -191,20 +191,20 @@ impl ParseTokenType {
     /// Return a string describing the token type.
     pub fn to_wstr(self) -> &'static wstr {
         match self {
-            ParseTokenType::comment => L!("ParseTokenType::comment"),
-            ParseTokenType::error => L!("ParseTokenType::error"),
-            ParseTokenType::tokenizer_error => L!("ParseTokenType::tokenizer_error"),
-            ParseTokenType::background => L!("ParseTokenType::background"),
-            ParseTokenType::end => L!("ParseTokenType::end"),
-            ParseTokenType::pipe => L!("ParseTokenType::pipe"),
-            ParseTokenType::left_brace => L!("ParseTokenType::lbrace"),
-            ParseTokenType::right_brace => L!("ParseTokenType::rbrace"),
-            ParseTokenType::redirection => L!("ParseTokenType::redirection"),
-            ParseTokenType::string => L!("ParseTokenType::string"),
-            ParseTokenType::andand => L!("ParseTokenType::andand"),
-            ParseTokenType::oror => L!("ParseTokenType::oror"),
-            ParseTokenType::terminate => L!("ParseTokenType::terminate"),
-            ParseTokenType::invalid => L!("ParseTokenType::invalid"),
+            ParseTokenType::Comment => L!("ParseTokenType::comment"),
+            ParseTokenType::Error => L!("ParseTokenType::error"),
+            ParseTokenType::TokenizerError => L!("ParseTokenType::tokenizer_error"),
+            ParseTokenType::Background => L!("ParseTokenType::background"),
+            ParseTokenType::End => L!("ParseTokenType::end"),
+            ParseTokenType::Pipe => L!("ParseTokenType::pipe"),
+            ParseTokenType::LeftBrace => L!("ParseTokenType::lbrace"),
+            ParseTokenType::RightBrace => L!("ParseTokenType::rbrace"),
+            ParseTokenType::Redirection => L!("ParseTokenType::redirection"),
+            ParseTokenType::String => L!("ParseTokenType::string"),
+            ParseTokenType::AndAnd => L!("ParseTokenType::andand"),
+            ParseTokenType::OrOr => L!("ParseTokenType::oror"),
+            ParseTokenType::Terminate => L!("ParseTokenType::terminate"),
+            ParseTokenType::Invalid => L!("ParseTokenType::invalid"),
         }
     }
 }
@@ -338,8 +338,11 @@ impl ParseError {
         let line_end = src.as_char_slice()[last_char_in_range..]
             .iter()
             .position(|c| *c == '\n')
-            .map(|pos| pos + last_char_in_range)
-            .unwrap_or(src.len());
+            .map_or(src.len(), |pos| pos + last_char_in_range);
+        // We can only report squiggles on one line
+        if start + len > line_end {
+            len = line_end - start;
+        }
 
         assert!(line_end >= line_start);
         assert!(start >= line_start);
@@ -404,19 +407,19 @@ pub fn token_type_user_presentable_description(
         return sprintf!("keyword: '%s'", keyword.to_wstr());
     }
     match type_ {
-        ParseTokenType::string => L!("a string").to_owned(),
-        ParseTokenType::pipe => L!("a pipe").to_owned(),
-        ParseTokenType::redirection => L!("a redirection").to_owned(),
-        ParseTokenType::background => L!("a '&'").to_owned(),
-        ParseTokenType::left_brace => L!("a '{'").to_owned(),
-        ParseTokenType::right_brace => L!("a '}'").to_owned(),
-        ParseTokenType::andand => L!("'&&'").to_owned(),
-        ParseTokenType::oror => L!("'||'").to_owned(),
-        ParseTokenType::end => L!("end of the statement").to_owned(),
-        ParseTokenType::terminate => L!("end of the input").to_owned(),
-        ParseTokenType::error => L!("a parse error").to_owned(),
-        ParseTokenType::tokenizer_error => L!("an incomplete token").to_owned(),
-        ParseTokenType::comment => L!("a comment").to_owned(),
+        ParseTokenType::String => L!("a string").to_owned(),
+        ParseTokenType::Pipe => L!("a pipe").to_owned(),
+        ParseTokenType::Redirection => L!("a redirection").to_owned(),
+        ParseTokenType::Background => L!("a '&'").to_owned(),
+        ParseTokenType::LeftBrace => L!("a '{'").to_owned(),
+        ParseTokenType::RightBrace => L!("a '}'").to_owned(),
+        ParseTokenType::AndAnd => L!("'&&'").to_owned(),
+        ParseTokenType::OrOr => L!("'||'").to_owned(),
+        ParseTokenType::End => L!("end of the statement").to_owned(),
+        ParseTokenType::Terminate => L!("end of the input").to_owned(),
+        ParseTokenType::Error => L!("a parse error").to_owned(),
+        ParseTokenType::TokenizerError => L!("an incomplete token").to_owned(),
+        ParseTokenType::Comment => L!("a comment").to_owned(),
         _ => sprintf!("a %s", type_.to_wstr()),
     }
 }
@@ -469,7 +472,7 @@ localizable_consts!(
 
     /// Error message for wildcards with no matches.
     pub WILDCARD_ERR_MSG
-    "No matches for wildcard '%s'. See `help wildcards-globbing`."
+    "No matches for wildcard '%s'. See `help %s`."
 
     /// Error when using break outside of loop.
     pub INVALID_BREAK_ERR_MSG

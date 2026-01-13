@@ -31,7 +31,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
             'n' => self.no_empty = true,
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn take_args(
@@ -61,10 +61,10 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let sep = &self.sep;
+        let sep = self.sep;
         let mut nargs = 0usize;
         let mut print_trailing_newline = true;
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             if !self.quiet {
                 if self.no_empty && arg.is_empty() {
                     continue;
@@ -74,7 +74,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
                     streams.out.append(sep);
                 }
 
-                streams.out.append(arg);
+                streams.out.append(&arg);
             } else if nargs > 1 {
                 return Ok(());
             }

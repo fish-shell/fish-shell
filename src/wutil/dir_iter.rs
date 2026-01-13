@@ -1,8 +1,8 @@
 use super::wopendir;
 use crate::common::{bytes2wcstring, wcs2zstring};
-use crate::wchar::{WString, wstr};
 use crate::wutil::DevInode;
 use cfg_if::cfg_if;
+use fish_wchar::{WString, wstr};
 use libc::{
     DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
     ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG,
@@ -12,20 +12,20 @@ use std::cell::Cell;
 use std::io;
 use std::mem::MaybeUninit;
 use std::os::fd::RawFd;
-use std::ptr::{NonNull, addr_of};
+use std::ptr::NonNull;
 use std::rc::Rc;
 
 /// Types of files that may be in a directory.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DirEntryType {
-    fifo = 1, // FIFO file
-    chr,      // character device
-    dir,      // directory
-    blk,      // block device
-    reg,      // regular file
-    lnk,      // symlink
-    sock,     // socket
-    whiteout, // whiteout (from BSD)
+    Fifo = 1, // FIFO file
+    Chr,      // character device
+    Dir,      // directory
+    Blk,      // block device
+    Reg,      // regular file
+    Lnk,      // symlink
+    Sock,     // socket
+    Whiteout, // whiteout (from BSD)
 }
 
 /// An entry returned by DirIter.
@@ -72,7 +72,7 @@ impl DirEntry {
 
     /// Return whether this is a directory. This may call stat().
     pub fn is_dir(&self) -> bool {
-        self.check_type() == Some(DirEntryType::dir)
+        self.check_type() == Some(DirEntryType::Dir)
     }
 
     /// Return false if we know this can't be a link via d_type, true if it could be.
@@ -119,7 +119,7 @@ impl DirEntry {
         } else {
             match errno::errno().0 {
                 ELOOP => {
-                    self.typ.set(Some(DirEntryType::lnk));
+                    self.typ.set(Some(DirEntryType::Lnk));
                 }
                 EACCES | EIO | ENOENT | ENOTDIR | ENAMETOOLONG | ENODEV => {
                     // These are "expected" errors.
@@ -140,13 +140,13 @@ impl DirEntry {
 
 fn dirent_type_to_entry_type(dt: u8) -> Option<DirEntryType> {
     match dt {
-        DT_FIFO => Some(DirEntryType::fifo),
-        DT_CHR => Some(DirEntryType::chr),
-        DT_DIR => Some(DirEntryType::dir),
-        DT_BLK => Some(DirEntryType::blk),
-        DT_REG => Some(DirEntryType::reg),
-        DT_LNK => Some(DirEntryType::lnk),
-        DT_SOCK => Some(DirEntryType::sock),
+        DT_FIFO => Some(DirEntryType::Fifo),
+        DT_CHR => Some(DirEntryType::Chr),
+        DT_DIR => Some(DirEntryType::Dir),
+        DT_BLK => Some(DirEntryType::Blk),
+        DT_REG => Some(DirEntryType::Reg),
+        DT_LNK => Some(DirEntryType::Lnk),
+        DT_SOCK => Some(DirEntryType::Sock),
         // todo!("whiteout")
         _ => None,
     }
@@ -154,13 +154,13 @@ fn dirent_type_to_entry_type(dt: u8) -> Option<DirEntryType> {
 
 fn stat_mode_to_entry_type(m: libc::mode_t) -> Option<DirEntryType> {
     match m & S_IFMT {
-        S_IFIFO => Some(DirEntryType::fifo),
-        S_IFCHR => Some(DirEntryType::chr),
-        S_IFDIR => Some(DirEntryType::dir),
-        S_IFBLK => Some(DirEntryType::blk),
-        S_IFREG => Some(DirEntryType::reg),
-        S_IFLNK => Some(DirEntryType::lnk),
-        S_IFSOCK => Some(DirEntryType::sock),
+        S_IFIFO => Some(DirEntryType::Fifo),
+        S_IFCHR => Some(DirEntryType::Chr),
+        S_IFDIR => Some(DirEntryType::Dir),
+        S_IFBLK => Some(DirEntryType::Blk),
+        S_IFREG => Some(DirEntryType::Reg),
+        S_IFLNK => Some(DirEntryType::Lnk),
+        S_IFSOCK => Some(DirEntryType::Sock),
         _ => {
             // todo!("whiteout")
             None
@@ -273,11 +273,9 @@ impl DirIter {
 
         // Do not rely on `libc::dirent::d_name.len()` as dirent names may exceed
         // the nominal buffer size; instead use the terminating nul byte.
-        // TODO: This should use &raw from Rust 1.82 on
         // https://github.com/rust-lang/libc/issues/2669
         // https://github.com/fish-shell/fish-shell/issues/11221
-        let d_name_ptr = addr_of!(dent.d_name);
-        let d_name = unsafe { std::ffi::CStr::from_ptr(d_name_ptr.cast()) }.to_bytes();
+        let d_name = unsafe { std::ffi::CStr::from_ptr(dent.d_name.as_ptr().cast()) }.to_bytes();
 
         // Skip . and ..,
         // unless we've been told not to.
@@ -296,11 +294,11 @@ impl DirIter {
         );
         let typ = dirent_type_to_entry_type(dent.d_type);
         // Do not store symlinks as we will need to resolve them.
-        if typ != Some(DirEntryType::lnk) {
+        if typ != Some(DirEntryType::Lnk) {
             self.entry.typ.set(typ);
         }
         // This entry could be a link if it is a link or unknown.
-        self.entry.possible_link = typ.map(|t| t == DirEntryType::lnk);
+        self.entry.possible_link = typ.map(|t| t == DirEntryType::Lnk);
 
         Some(Ok(&self.entry))
     }
@@ -330,7 +328,8 @@ impl Iterator for Iter {
 #[cfg(test)]
 mod tests {
     use super::{DirEntryType, DirIter};
-    use crate::wchar::prelude::*;
+    use crate::prelude::*;
+    use fish_wchar::L;
     use nix::sys::stat::Mode;
     use std::fs::File;
     use std::path::PathBuf;
@@ -338,14 +337,12 @@ mod tests {
     #[test]
     fn test_dir_iter_bad_path() {
         // Regression test: DirIter does not crash given a bad path.
-        use crate::wchar::L;
         let dir = DirIter::new(L!("/a/bogus/path/which/does/notexist"));
         assert!(dir.is_err());
     }
 
     #[test]
     fn test_no_dots() {
-        use crate::wchar::L;
         // DirIter does not return . or .. by default.
         let dir = DirIter::new(L!(".")).expect("Should be able to open CWD");
         for entry in dir {
@@ -357,7 +354,6 @@ mod tests {
 
     #[test]
     fn test_dots() {
-        use crate::wchar::L;
         // DirIter returns . or .. if you ask nicely.
         let dir = DirIter::new_with_dots(L!(".")).expect("Should be able to open CWD");
         let mut seen_dot = false;
@@ -377,7 +373,6 @@ mod tests {
     #[test]
     #[allow(clippy::if_same_then_else)]
     fn test_dir_iter() {
-        use crate::wchar::L;
         use libc::{EACCES, ENOENT};
 
         let baditer = DirIter::new(L!("/definitely/not/a/valid/directory/for/sure"));
@@ -443,19 +438,19 @@ mod tests {
             assert!(names.iter().any(|&n| entry.name == n));
 
             let expected = if entry.name == dirname {
-                Some(DirEntryType::dir)
+                Some(DirEntryType::Dir)
             } else if entry.name == regname {
-                Some(DirEntryType::reg)
+                Some(DirEntryType::Reg)
             } else if entry.name == reglinkname {
-                Some(DirEntryType::reg)
+                Some(DirEntryType::Reg)
             } else if entry.name == dirlinkname {
-                Some(DirEntryType::dir)
+                Some(DirEntryType::Dir)
             } else if entry.name == badlinkname {
                 None
             } else if entry.name == selflinkname {
-                Some(DirEntryType::lnk)
+                Some(DirEntryType::Lnk)
             } else if entry.name == fifoname {
-                Some(DirEntryType::fifo)
+                Some(DirEntryType::Fifo)
             } else {
                 panic!("Unexpected file type");
             };

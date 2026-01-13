@@ -1,6 +1,6 @@
 use super::errors::Error;
 use super::hex_float;
-use crate::wchar::IntoCharIter;
+use fish_wchar::IntoCharIter;
 
 // Parse a decimal float from a sequence of characters.
 // Return the parsed float, and (on success) the number of characters consumed.
@@ -16,11 +16,7 @@ where
     if let Some(sign) = chars.next_if(|c| ['-', '+'].contains(c)) {
         s.push(sign);
     }
-    if chars
-        .peek()
-        .map(|c| c.is_ascii_alphabetic())
-        .unwrap_or(false)
-    {
+    if chars.peek().is_some_and(|c| c.is_ascii_alphabetic()) {
         return parse_inf_nan(chars, s.as_bytes().first().copied(), consumed);
     }
 
@@ -98,7 +94,7 @@ pub fn parse_inf_nan(
         }
         return Some(f64::NEG_INFINITY);
     }
-    return None;
+    None
 }
 
 fn wcstod_inner<I>(mut chars: I, decimal_sep: char, consumed: &mut usize) -> Result<f64, Error>

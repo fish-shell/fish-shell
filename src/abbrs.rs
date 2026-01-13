@@ -1,15 +1,14 @@
 use std::{
     collections::HashSet,
-    sync::{Mutex, MutexGuard},
+    sync::{LazyLock, Mutex, MutexGuard},
 };
 
-use crate::wchar::prelude::*;
-use once_cell::sync::Lazy;
+use crate::prelude::*;
 
 use crate::parse_constants::SourceRange;
 use pcre2::utf32::Regex;
 
-static ABBRS: Lazy<Mutex<AbbreviationSet>> = Lazy::new(|| Mutex::new(Default::default()));
+static ABBRS: LazyLock<Mutex<AbbreviationSet>> = LazyLock::new(|| Mutex::new(Default::default()));
 
 pub fn with_abbrs<R>(cb: impl FnOnce(&AbbreviationSet) -> R) -> R {
     let abbrs_g = ABBRS.lock().unwrap();
@@ -114,7 +113,7 @@ impl Abbreviation {
 
     // Return if we expand in a given position.
     fn matches_position(&self, position: Position) -> bool {
-        return self.position == Position::Anywhere || self.position == position;
+        self.position == Position::Anywhere || self.position == position
     }
 }
 
@@ -194,7 +193,7 @@ impl AbbreviationSet {
                 });
             }
         }
-        return result;
+        result
     }
 
     /// Return whether we would have at least one replacer for a given token.
@@ -287,9 +286,9 @@ mod tests {
     use super::{Abbreviation, Position, abbrs_get_set, abbrs_match, with_abbrs_mut};
     use crate::editable_line::{Edit, apply_edit};
     use crate::highlight::HighlightSpec;
+    use crate::prelude::*;
     use crate::reader::reader_expand_abbreviation_at_cursor;
     use crate::tests::prelude::*;
-    use crate::wchar::prelude::*;
 
     #[test]
     #[serial]

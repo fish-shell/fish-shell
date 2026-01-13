@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
-from datetime import datetime
 import os
-from pathlib import Path
 import resource
 import shutil
 import subprocess
 import sys
 import tempfile
-from typing import Optional
+from datetime import datetime
+from pathlib import Path
 
 # TODO(python>3.8): use dict
-from typing import Dict
-
 # TODO(python>3.8): use |
-from typing import Union
+from typing import Dict, Optional, Union
 
 import littlecheck
 
@@ -28,8 +25,11 @@ except ImportError:
 
 RESET = "\033[0m"
 GREEN = "\033[32m"
+YELLOW = "\033[33m"
 BLUE = "\033[34m"
 RED = "\033[31m"
+
+IS_CYGWIN = os.uname().sysname.startswith(("CYGWIN_", "MSYS_"))
 
 
 def makeenv(script_path: Path, home: Path) -> Dict[str, str]:
@@ -104,6 +104,10 @@ def compile_test_helper(source_path: Path, binary_path: Path) -> None:
     )
 
 
+def is_tmux_test(path) -> bool:
+    return os.path.basename(path).startswith("tmux-")
+
+
 async def main():
     if len(sys.argv) < 2:
         print("Usage: test_driver.py FISH_DIRECTORY TESTS")
@@ -162,9 +166,24 @@ async def main():
             for path in sorted(script_path.glob("checks/*.fish"))
             + sorted(script_path.glob("pexpects/*.py"))
         ]
+    if os.environ.get("FISH_CI_SAN"):
+
+        def run_in_ci_san(path) -> bool:
+            if path.endswith(".py"):
+                return False
+            if is_tmux_test(path):
+                return False
+            return True
+
+        files = [path_pair for path_pair in files if run_in_ci_san(path_pair[0])]
 
     if not PEXPECT and any(x.endswith(".py") for (x, _) in files):
         print(f"{RED}Skipping pexpect tests because pexpect is not installed{RESET}")
+
+    if IS_CYGWIN and any(is_tmux_test(x) for (x, _) in files):
+        print(
+            f"{YELLOW}Skipping tmux tests because they are unreliable on Cygwin/MSYS{RESET}"
+        )
 
     longest_test_name_length = max([len(arg) for _, arg in files])
     max_expected_digits_duration = 5
@@ -177,7 +196,8 @@ async def main():
         )
         suffix_str = "" if suffix is None else f"\n{suffix}"
         print(
-            f"{arg.ljust(longest_test_name_length)}  {color}{result}{RESET}  {duration_str}{suffix_str}"
+            f"{arg.ljust(longest_test_name_length)}  {color}{result}{RESET}  {duration_str}{suffix_str}",
+            flush=True,
         )
 
     with tempfile.TemporaryDirectory(prefix="fishtest-root-") as tmp_root:
@@ -296,7 +316,9 @@ async def run_test(
     starttime = datetime.now()
     home = Path(tempfile.mkdtemp(prefix="fishtest-", dir=tmp_root))
     test_env = makeenv(script_path, home)
-    if test_file_path.endswith(".fish"):
+    if IS_CYGWIN and is_tmux_test(test_file_path):
+        return TestSkip(arg)
+    elif test_file_path.endswith(".fish"):
         subs = def_subs.copy()
         subs.update(
             {
@@ -306,11 +328,17 @@ async def run_test(
         )
 
         # littlecheck
+        error_message = ""
+
+        def append_error_message(x):
+            nonlocal error_message
+            error_message += x.message()
+
         ret = await littlecheck.check_path_async(
             test_file_path,
             subs,
             lconfig,
-            lambda x: print(x.message()),
+            append_error_message,
             env=test_env,
             cwd=home,
         )
@@ -321,7 +349,7 @@ async def run_test(
         elif ret:
             return TestPass(arg, duration_ms)
         else:
-            return TestFail(arg, duration_ms, f"Tmpdir is {home}")
+            return TestFail(arg, duration_ms, error_message)
     elif test_file_path.endswith(".py"):
         test_env.update(
             {
@@ -358,7 +386,6 @@ async def run_test(
                 error_message += stdout.decode("utf-8")
             if stderr:
                 error_message += stderr.decode("utf-8")
-            error_message += f"Tmpdir is {home}"
             return TestFail(arg, duration_ms, error_message)
     else:
         return TestFail(arg, None, "Error in test driver. This should be unreachable.")

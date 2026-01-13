@@ -630,6 +630,9 @@ $fish -c 'echo \ufdd2"fart"'
 echo (printf '\ufdd2foo') | string escape
 # CHECK: \Xef\Xb7\X92foo
 
+echo (printf '\ufdd8foo') | string escape
+# CHECK: \Xef\Xb7\X98foo
+
 printf '%s\n' "#!/bin/sh" 'echo $0' > $tmpdir/argv0.sh
 chmod +x $tmpdir/argv0.sh
 cd $tmpdir

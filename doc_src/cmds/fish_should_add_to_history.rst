@@ -50,6 +50,6 @@ This refuses to store any immediate "vault", "mysql" or "ls" calls. Commands sta
         and string match -qr "^/home/me/my-secret-project/" -- (pwd -P)
             return 1
         end
-   
+
         return 0
     end

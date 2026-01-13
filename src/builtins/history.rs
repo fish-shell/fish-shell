@@ -60,14 +60,15 @@ struct HistoryCmdOpts {
     case_sensitive: bool,
     null_terminate: bool,
     reverse: bool,
+    color: ColorEnabled,
 }
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
 /// the non-flag subcommand form. While many of these flags are deprecated they must be
 /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
 /// config.fish and other scripts.
-const short_options: &wstr = L!("CRcehmn:pt::z");
-const longopts: &[WOption] = &[
+const SHORT_OPTIONS: &wstr = L!("CRcehmn:pt::z");
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("prefix"), ArgType::NoArgument, 'p'),
     wopt(L!("contains"), ArgType::NoArgument, 'c'),
     wopt(L!("help"), ArgType::NoArgument, 'h'),
@@ -82,6 +83,7 @@ const longopts: &[WOption] = &[
     wopt(L!("clear"), ArgType::NoArgument, '\x04'),
     wopt(L!("merge"), ArgType::NoArgument, '\x05'),
     wopt(L!("reverse"), ArgType::NoArgument, 'R'),
+    wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
 ];
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.
@@ -92,7 +94,7 @@ fn set_hist_cmd(
     streams: &mut IoStreams,
 ) -> bool {
     if *hist_cmd != HistCmd::None {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2_EXCLUSIVE,
             cmd,
             hist_cmd.to_wstr(),
@@ -112,7 +114,7 @@ fn check_for_unexpected_hist_args(
 ) -> bool {
     if opts.search_type.is_some() || opts.show_time_format.is_some() || opts.null_terminate {
         let subcmd_str = opts.hist_cmd.to_wstr();
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%s: %s: subcommand takes no options\n",
             cmd,
             subcmd_str
@@ -121,7 +123,7 @@ fn check_for_unexpected_hist_args(
     }
     if !args.is_empty() {
         let subcmd_str = opts.hist_cmd.to_wstr();
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_ARG_COUNT2,
             cmd,
             subcmd_str,
@@ -144,7 +146,7 @@ fn parse_cmd_opts(
         return Err(STATUS_INVALID_ARGS);
     };
 
-    let mut w = WGetopter::new(short_options, longopts, argv);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(opt) = w.next_opt() {
         match opt {
             '\x01' => {
@@ -193,7 +195,7 @@ fn parse_cmd_opts(
             'n' => match fish_wcstol(w.woptarg.unwrap()) {
                 Ok(x) => opts.max_items = Some(x as _), // todo!("historical behavior is to cast")
                 Err(_) => {
-                    streams.err.append(wgettext_fmt!(
+                    streams.err.append(&wgettext_fmt!(
                         BUILTIN_ERR_NOT_NUMBER,
                         cmd,
                         w.woptarg.unwrap()
@@ -225,6 +227,9 @@ fn parse_cmd_opts(
                     }
                 }
                 w.remaining_text = L!("");
+            }
+            COLOR_OPTION_CHAR => {
+                opts.color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
             }
             _ => {
                 panic!("unexpected retval from WGetopter");
@@ -278,6 +283,8 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
     match opts.hist_cmd {
         HistCmd::None | HistCmd::Search => {
             if !history.search(
+                parser,
+                streams,
                 opts.search_type
                     .unwrap_or(history::SearchType::ContainsGlob),
                 args,
@@ -287,7 +294,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
                 opts.null_terminate,
                 opts.reverse,
                 &parser.context().cancel_checker,
-                streams,
+                opts.color.enabled(streams),
             ) {
                 status = Err(STATUS_CMD_ERROR);
             }
@@ -334,7 +341,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
             }
 
             if in_private_mode(parser.vars()) {
-                streams.err.append(wgettext_fmt!(
+                streams.err.append(&wgettext_fmt!(
                     "%s: can't merge history in private mode\n",
                     cmd
                 ));

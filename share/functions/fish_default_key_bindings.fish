@@ -8,7 +8,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
     if not set -q argv[1]
         bind --erase --all --preset # clear earlier bindings, if any
         if test "$fish_key_bindings" != fish_default_key_bindings
-            __fish_change_key_bindings fish_default_key_bindings || return
+            __fish_change_key_bindings fish_default_key_bindings
             set fish_bind_mode default
         end
     end

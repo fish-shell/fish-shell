@@ -27,7 +27,7 @@ impl StringSubCommand<'_> for Unescape {
             }
             _ => return Err(StringError::UnknownOption),
         }
-        return Ok(());
+        Ok(())
     }
 
     fn handle(
@@ -38,11 +38,11 @@ impl StringSubCommand<'_> for Unescape {
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
         let mut nesc = 0;
-        for (arg, want_newline) in arguments(args, optind, streams) {
+        for InputValue { arg, want_newline } in arguments(args, optind, streams) {
             if let Some(res) = unescape_string(&arg, self.style) {
-                streams.out.append(res);
+                streams.out.append(&res);
                 if want_newline {
-                    streams.out.append1('\n');
+                    streams.out.append_char('\n');
                 }
                 nesc += 1;
             }

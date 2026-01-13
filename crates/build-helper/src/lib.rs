@@ -34,6 +34,10 @@ pub fn fish_build_dir() -> Cow<'static, Path> {
         .unwrap_or(cargo_target_dir())
 }
 
+pub fn fish_doc_dir() -> Cow<'static, Path> {
+    fish_build_dir().join("fish-docs").into()
+}
+
 // TODO Move this to rsconf
 pub fn rebuild_if_path_changed<P: AsRef<Path>>(path: P) {
     rsconf::rebuild_if_path_changed(path.as_ref().to_str().unwrap());

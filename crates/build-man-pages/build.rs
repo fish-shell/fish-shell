@@ -1,17 +1,18 @@
 use std::path::Path;
 
+use fish_build_helper::fish_doc_dir;
+
 fn main() {
-    let man_dir = fish_build_helper::fish_build_dir().join("fish-man");
-    let sec1_dir = man_dir.join("man1");
+    let sec1_dir = fish_doc_dir().join("man").join("man1");
     // Running `cargo clippy` on a clean build directory panics, because when rust-embed
     // tries to embed a directory which does not exist it will panic.
     let _ = std::fs::create_dir_all(&sec1_dir);
     if !cfg!(clippy) {
-        build_man(&man_dir, &sec1_dir);
+        build_man(&sec1_dir);
     }
 }
 
-fn build_man(man_dir: &Path, sec1_dir: &Path) {
+fn build_man(sec1_dir: &Path) {
     use fish_build_helper::{env_var, workspace_root};
     use std::{
         ffi::OsStr,
@@ -20,6 +21,7 @@ fn build_man(man_dir: &Path, sec1_dir: &Path) {
 
     let workspace_root = workspace_root();
     let doc_src_dir = workspace_root.join("doc_src");
+    let doctrees_dir = fish_doc_dir().join(".doctrees-man");
 
     fish_build_helper::rebuild_if_paths_changed([
         &workspace_root.join("CHANGELOG.rst"),
@@ -49,7 +51,7 @@ fn build_man(man_dir: &Path, sec1_dir: &Path) {
             // doctree path - put this *above* the man1 dir to exclude it.
             // this is ~6M
             "-d",
-            &man_dir,
+            &doctrees_dir,
             &doc_src_dir,
             &sec1_dir,
         ])

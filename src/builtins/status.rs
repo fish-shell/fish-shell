@@ -324,7 +324,7 @@ impl RustEmbed for EmptyEmbed {
 cfg_if!(
     if #[cfg(feature = "embed-manpages")] {
         #[derive(RustEmbed)]
-        #[folder = "$FISH_RESOLVED_BUILD_DIR/fish-man/man1"]
+        #[folder = "$FISH_RESOLVED_BUILD_DIR/fish-docs/man/man1"]
         #[prefix = "man/man1/"]
         struct Docs;
     } else {

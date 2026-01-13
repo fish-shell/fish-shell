@@ -64,7 +64,7 @@ const CHAR_MAX: libc::c_char = libc::c_char::MAX;
 unsafe fn first_char(s: *const libc::c_char) -> Option<char> {
     unsafe {
         #[allow(unused_comparisons, clippy::absurd_extreme_comparisons)]
-        if !s.is_null() && *s > 0 && *s <= 127 && *s.offset(1) == 0 {
+        if !s.is_null() && *s > 0 && *s <= 127 && *s.add(1) == 0 {
             #[allow(clippy::unnecessary_cast)]
             Some((*s as u8) as char)
         } else {
@@ -101,7 +101,7 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
         } else {
             // Record last group, advance cursor.
             last_group = gc as u8;
-            group_cursor = unsafe { group_cursor.offset(1) };
+            group_cursor = unsafe { group_cursor.add(1) };
         }
         *group = last_group;
     }

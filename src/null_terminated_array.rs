@@ -98,8 +98,8 @@ mod tests {
         let ptr = arr.get();
         unsafe {
             assert_eq!(CStr::from_ptr(*ptr).to_str().unwrap(), "foo");
-            assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
-            assert_eq!(*ptr.offset(2), ptr::null());
+            assert_eq!(CStr::from_ptr(*ptr.add(1)).to_str().unwrap(), "bar");
+            assert_eq!(*ptr.add(2), ptr::null());
         }
     }
 
@@ -110,8 +110,8 @@ mod tests {
         let ptr = arr.get();
         unsafe {
             assert_eq!(CStr::from_ptr(*ptr).to_str().unwrap(), "foo");
-            assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
-            assert_eq!(*ptr.offset(2), ptr::null());
+            assert_eq!(CStr::from_ptr(*ptr.add(1)).to_str().unwrap(), "bar");
+            assert_eq!(*ptr.add(2), ptr::null());
         }
         assert_eq!(arr.len(), 2);
         let mut iter = arr.iter();

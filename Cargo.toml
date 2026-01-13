@@ -190,8 +190,8 @@ rustdoc.private_intra_doc_links = "allow"
 
 [workspace.lints.clippy]
 assigning_clones = "warn"
-implicit_clone = "warn"
 cloned_instead_of_copied = "warn"
+implicit_clone = "warn"
 len_without_is_empty = "allow"    # we're not a library crate
 let_and_return = "allow"
 manual_range_contains = "allow"
@@ -200,6 +200,7 @@ mut_mut = "warn"
 needless_lifetimes = "allow"
 new_without_default = "allow"
 option_map_unit_fn = "allow"
+ptr_offset_by_literal = "warn"
 
 # We do not want to use the e?print(ln)?! macros.
 # These lints flag their use.

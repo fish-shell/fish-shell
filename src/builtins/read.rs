@@ -250,7 +250,7 @@ fn read_interactive(
     prompt: &wstr,
     prompt_str_is_empty: bool,
     right_prompt: &wstr,
-    commandline: &Option<WString>,
+    commandline: Option<&WString>,
     inputfd: RawFd,
 ) -> BuiltinResult {
     let mut exit_res = Ok(SUCCESS);
@@ -648,7 +648,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 opts.prompt.as_ref().unwrap(),
                 opts.prompt_str.as_ref().is_some_and(|ps| ps.is_empty()),
                 &opts.right_prompt,
-                &opts.commandline,
+                opts.commandline.as_ref(),
                 streams.stdin_fd(),
             );
         } else if opts.nchars.is_none() && !stream_stdin_is_a_tty &&

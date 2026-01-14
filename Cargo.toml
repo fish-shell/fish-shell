@@ -201,5 +201,7 @@ option_map_unit_fn = "allow"
 print_stdout = "deny"
 print_stderr = "deny"
 
+ref_option = "warn"
+
 [lints]
 workspace = true

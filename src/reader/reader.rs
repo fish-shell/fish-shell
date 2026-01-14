@@ -3607,8 +3607,11 @@ impl<'a> Reader<'a> {
                         true,
                     );
                     if !is_kill {
-                        let pos = self.edit_line(elt).position();
-                        self.update_buff_pos(elt, Some(pos + 1));
+                        let el = self.edit_line(elt);
+                        let pos = el.position();
+                        if pos < el.len() {
+                            self.update_buff_pos(elt, Some(pos + 1));
+                        }
                     }
                 }
             }

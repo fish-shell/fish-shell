@@ -418,7 +418,7 @@ fn safe_launch_process(
             let mut argv2 = [std::ptr::null(); 1 + MAXARGS + 1];
             let bshell = PATH_BSHELL.as_ptr().cast();
             argv2[0] = bshell;
-            argv2[1..argv.len() + 1].copy_from_slice(argv);
+            argv2[1..=argv.len()].copy_from_slice(argv);
             // The command to call should use the full path,
             // not what we would pass as argv0.
             argv2[1] = actual_cmd.as_ptr();

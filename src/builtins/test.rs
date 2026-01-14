@@ -1013,7 +1013,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     }
 
     // Collect the arguments into a list.
-    let args: Vec<WString> = argv[1..argc + 1]
+    let args: Vec<WString> = argv[1..=argc]
         .iter()
         .map(|&arg| arg.to_owned())
         .collect();

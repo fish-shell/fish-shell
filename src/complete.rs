@@ -1644,7 +1644,7 @@ impl<'ctx> Completer<'ctx> {
         Self::escape_opening_brackets(&mut local_completions, s);
         // Any COMPLETE_REPLACES_TOKEN will also stomp the separator. We need to "repair" them by
         // inserting our separator and prefix.
-        let prefix_with_sep = s.as_char_slice()[..sep_index + 1].into();
+        let prefix_with_sep = s.as_char_slice()[..=sep_index].into();
         for comp in &mut local_completions {
             comp.prepend_token_prefix(prefix_with_sep);
             comp.r#match.from_separator = true;

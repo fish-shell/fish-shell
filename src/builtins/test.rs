@@ -1013,10 +1013,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     }
 
     // Collect the arguments into a list.
-    let args: Vec<WString> = argv[1..argc + 1]
-        .iter()
-        .map(|&arg| arg.to_owned())
-        .collect();
+    let args: Vec<WString> = argv[1..=argc].iter().map(|&arg| arg.to_owned()).collect();
     let args: &[WString] = &args;
 
     if feature_test(FeatureFlag::TestRequireArg) {

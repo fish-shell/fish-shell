@@ -448,7 +448,7 @@ fn color_variable(inp: &wstr, colors: &mut [HighlightSpec]) -> usize {
                 // double-quoted string that doesn't happen. As such, color the variable + the slice
                 // start red. Coloring any more than that looks bad, unless we're willing to try and
                 // detect where the double-quoted string ends, and I'd rather not do that.
-                colors[..idx + 1].fill(HighlightSpec::with_fg(HighlightRole::error));
+                colors[..=idx].fill(HighlightSpec::with_fg(HighlightRole::error));
                 break;
             }
         }

@@ -976,7 +976,7 @@ impl<'a> IndentVisitor<'a> {
             let mut callback = |offset| {
                 if !quoted {
                     // Quote open event. Indent unquoted part, including the opening quote.
-                    self.indents[done..start + offset + 1].fill(self.indent);
+                    self.indents[done..=(start + offset)].fill(self.indent);
                     done = start + offset + 1;
                 } else {
                     // Quote close. Don't indent, in case it's a multiline string.

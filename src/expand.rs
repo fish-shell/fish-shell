@@ -846,7 +846,7 @@ fn expand_braces(
             // that.
             let mut synth = WString::new();
             if let Some(last_sep) = last_sep {
-                synth.push_utfstr(&input[..brace_begin.unwrap() + 1]);
+                synth.push_utfstr(&input[..=brace_begin.unwrap()]);
                 synth.push_utfstr(&input[last_sep + 1..]);
                 synth.push(BRACE_END);
             } else {

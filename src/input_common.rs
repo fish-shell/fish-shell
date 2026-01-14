@@ -250,7 +250,7 @@ fn apply_shift(mut key: Key, do_ascii: bool, shifted_codepoint: char) -> Option<
         key.codepoint = key.codepoint.to_ascii_uppercase();
     } else {
         return None;
-    };
+    }
     key.modifiers.shift = false;
     Some(key)
 }
@@ -1046,7 +1046,7 @@ pub trait InputEventQueuer {
                 {
                     Some(c) => params[count][subcount] = c,
                     None => return invalid_sequence(buffer),
-                };
+                }
             } else if c == b':' && subcount < 3 {
                 subcount += 1;
             } else if c == b';' {
@@ -1242,7 +1242,7 @@ pub trait InputEventQueuer {
                 match params[1] {
                     [1, 0, 0, 0] | [2, 0, 0, 0] => (),
                     _ => return None,
-                };
+                }
                 flog!(reader, "Received color theme change");
                 self.push_front(CharEvent::Implicit(ImplicitEvent::NewColorTheme));
                 return None;

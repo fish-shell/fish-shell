@@ -112,7 +112,7 @@ impl Autoload {
                 );
             }
             AutoloadResult::Loaded | AutoloadResult::Pending | AutoloadResult::None => {}
-        };
+        }
         result
     }
 

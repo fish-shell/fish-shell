@@ -424,7 +424,7 @@ fn path_transform(
             // TODO: Is that correct?
             if opts.quiet {
                 return Ok(SUCCESS);
-            };
+            }
         }
         path_out(streams, &opts, transformed);
     }
@@ -921,7 +921,7 @@ fn path_filter_maybe_is(
         }
         if opts.quiet {
             return Ok(SUCCESS);
-        };
+        }
     }
 
     if opts.all && n_transformed != arguments_vec.len() {

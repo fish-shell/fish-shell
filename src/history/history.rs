@@ -1593,7 +1593,7 @@ impl HistorySearch {
             match direction {
                 SearchDirection::Backward => index += 1,
                 SearchDirection::Forward => index -= 1,
-            };
+            }
 
             if self.current_index == invalid_index {
                 return false;

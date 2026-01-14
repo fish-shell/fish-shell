@@ -911,7 +911,7 @@ impl Pager {
     pub fn get_selected_row_given_rows(&self, rows: usize) -> Option<usize> {
         if rows == 0 {
             return None;
-        };
+        }
 
         self.selected_completion_idx.map(|idx| idx % rows)
     }

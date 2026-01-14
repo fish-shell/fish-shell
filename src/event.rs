@@ -481,7 +481,7 @@ fn fire_internal(parser: &Parser, event: &Event) {
         // A previous handler may have erased this one.
         if handler.removed.load(Ordering::Relaxed) {
             continue;
-        };
+        }
 
         // Construct a buffer to evaluate, starting with the function name and then all the
         // arguments.
@@ -526,12 +526,12 @@ pub fn fire_delayed(parser: &Parser) {
     // Do not invoke new event handlers from within event handlers.
     if parser.scope().is_event {
         return;
-    };
+    }
 
     // Do not invoke new event handlers if we are unwinding (#6649).
     if signal_check_cancel() != 0 {
         return;
-    };
+    }
 
     // We unfortunately can't keep this locked until we're done with it because the SIGWINCH handler
     // code might call back into here and we would delay processing of the events, leading to a test

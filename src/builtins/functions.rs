@@ -365,7 +365,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         }
         if !first {
             streams.out.append(L!("\n"));
-        };
+        }
 
         let mut comment = WString::new();
         if !opts.no_metadata {

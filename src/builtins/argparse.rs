@@ -540,7 +540,7 @@ fn parse_cmd_opts<'args>(
                         "--move-unknown"
                     ));
                     return Err(STATUS_INVALID_ARGS);
-                };
+                }
                 opts.unknown_handling = if c == 'i' {
                     UnknownHandling::Ignore
                 } else {
@@ -674,7 +674,7 @@ fn populate_option_strings<'args>(
                 ArgType::OptionalArgument => short_options.push_str("::"),
                 ArgType::RequiredArgument => short_options.push_str(":"),
                 ArgType::NoArgument => {}
-            };
+            }
         }
 
         if !opt_spec.long_flag.is_empty() {

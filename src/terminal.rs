@@ -281,7 +281,7 @@ fn palette_color(out: &mut impl Output, paintable: Paintable, mut idx: u8) -> bo
         0..=7 => write_to_output!(out, "\x1b[{}m", 30 + bg + idx),
         8..=15 => write_to_output!(out, "\x1b[{}m", 90 + bg + (idx - 8)),
         _ => write_to_output!(out, "\x1b[{};5;{}m", 38 + bg, idx),
-    };
+    }
     true
 }
 

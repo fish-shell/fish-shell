@@ -1153,7 +1153,7 @@ fn expand_home_directory(input: &mut WString, vars: &dyn Environment) {
                 home = Some(home_var.as_string());
                 tail_idx = 1;
             }
-        };
+        }
     } else {
         // Some other user's home directory.
         let name_cstr = wcs2zstring(username);

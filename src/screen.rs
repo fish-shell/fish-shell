@@ -978,7 +978,7 @@ impl Screen {
                     x_steps.abs_diff(0),
                 ));
             }
-        };
+        }
 
         self.actual.cursor.x = new_x;
         self.actual.cursor.y = new_y;

@@ -243,7 +243,7 @@ fn ncr(n: f64, r: f64) -> f64 {
 
     if ur > un / 2 {
         ur = un - ur
-    };
+    }
 
     let mut result = 1_u64;
     for i in 1..=ur {

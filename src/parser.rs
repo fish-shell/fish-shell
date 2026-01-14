@@ -1283,7 +1283,7 @@ impl Parser {
             .is_some_and(|var| var.as_list() == [color_theme])
         {
             return;
-        };
+        }
         flogf!(
             reader,
             "Setting %s to %s",

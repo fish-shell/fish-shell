@@ -657,7 +657,7 @@ impl Acceptor for ArgumentOrRedirection {
         match self {
             Self::Argument(child) => visitor.visit(child),
             Self::Redirection(child) => visitor.visit(&**child),
-        };
+        }
     }
 }
 impl AcceptorMut for ArgumentOrRedirection {

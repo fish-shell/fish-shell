@@ -404,7 +404,7 @@ fn fs_is_case_insensitive(
 ) -> bool {
     if let Some(cached) = case_sensitivity_cache.get(path) {
         return *cached;
-    };
+    }
     // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
     // sensitive, and a 0 value means case insensitive.
     let ret = unsafe { libc::fpathconf(fd, libc::_PC_CASE_SENSITIVE) };

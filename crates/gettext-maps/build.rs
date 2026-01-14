@@ -91,7 +91,7 @@ fn embed_localizations(cache_dir: &Path) {
                     if cached_map_mtime > po_mtime {
                         // Cached map file is considered up-to-date.
                         continue;
-                    };
+                    }
                 }
 
                 // Generate the map file.
@@ -104,7 +104,7 @@ fn embed_localizations(cache_dir: &Path) {
                         cmd = cmd.arg("--check-format");
                     } else {
                         tmp_mo_file = Some(cache_dir.join("messages.mo"));
-                    };
+                    }
                     cmd.arg(format!(
                         "--output-file={}",
                         tmp_mo_file

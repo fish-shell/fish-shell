@@ -706,7 +706,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                             text = Cow::Owned(unescaped);
                         }
                     }
-                };
+                }
                 text.into_owned()
             };
             if opts.array {

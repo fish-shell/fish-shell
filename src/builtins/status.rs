@@ -579,7 +579,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     args[0]
                 ));
                 return Err(STATUS_INVALID_ARGS);
-            };
+            }
             return if get_scroll_content_up_capability() == Some(true) {
                 Ok(SUCCESS)
             } else {
@@ -776,7 +776,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 }
             }
         }
-    };
+    }
 
     Ok(SUCCESS)
 }

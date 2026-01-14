@@ -111,7 +111,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             }
             streams.out.append(&out);
         }
-    };
+    }
 }
 
 const SHORT_OPTIONS: &wstr = L!("cghlpq");

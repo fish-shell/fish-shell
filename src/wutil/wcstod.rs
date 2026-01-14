@@ -184,11 +184,11 @@ pub fn is_hex_float<Chars: Iterator<Item = char>>(mut chars: Chars) -> bool {
         }
         Some('0') => (),
         _ => return false,
-    };
+    }
     match chars.next() {
         Some('x') | Some('X') => (),
         _ => return false,
-    };
+    }
     match chars.next() {
         Some(c) => c.is_ascii_hexdigit(),
         None => false,

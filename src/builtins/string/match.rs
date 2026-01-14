@@ -260,7 +260,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
                 Self::populate_captures_from_match(
                     &mut self.first_match_captures,
                     self.opts,
-                    actual,
+                    actual.as_ref(),
                 );
             }
         }
@@ -274,7 +274,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
                     Self::populate_captures_from_match(
                         &mut self.first_match_captures,
                         self.opts,
-                        &cg,
+                        cg.as_ref(),
                     );
                 }
             }
@@ -285,7 +285,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
     fn populate_captures_from_match<'a>(
         first_match_captures: &mut HashMap<String, Vec<WString>>,
         opts: &Match<'args>,
-        cg: &Option<Captures<'a>>,
+        cg: Option<&Captures<'a>>,
     ) {
         for (name, captures) in first_match_captures.iter_mut() {
             // If there are multiple named groups and --all was used, we need to ensure that

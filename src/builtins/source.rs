@@ -68,7 +68,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 builtin_wperror(cmd, streams);
                 return Err(STATUS_CMD_ERROR);
             }
-        };
+        }
 
         fd = opened_file.as_raw_fd();
 

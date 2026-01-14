@@ -780,7 +780,7 @@ impl<'a> ExecutionContext<'a> {
                         std::io::Error::from_raw_os_error(external_cmd.err.unwrap().into()),
                     );
                 }
-            };
+            }
             path
         } else {
             WString::new()

@@ -344,7 +344,7 @@ fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
 fn is_thompson_shell_payload(p: &[u8]) -> bool {
     if !p.contains(&b'\0') {
         return true;
-    };
+    }
     let mut haslower = false;
     for c in p {
         if c.is_ascii_lowercase() || *c == b'$' || *c == b'`' {
@@ -970,7 +970,7 @@ fn function_prepare_environment(
     for (idx, named_arg) in props.named_arguments.iter().enumerate() {
         if named_arg == L!("argv") {
             overwrite_argv = true
-        };
+        }
         if idx < argv.len() {
             vars.set_one(named_arg, mode, argv[idx].clone());
         } else {
@@ -981,7 +981,7 @@ fn function_prepare_environment(
     for (key, value) in &*props.inherit_vars {
         if key == L!("argv") {
             overwrite_argv = true
-        };
+        }
         vars.set(key, mode, value.clone());
     }
 

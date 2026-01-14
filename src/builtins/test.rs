@@ -1104,7 +1104,7 @@ mod tests {
         }
         if bracket {
             argv.push(L!("]").to_owned())
-        };
+        }
 
         // Convert to &[&wstr].
         let mut argv = argv.iter().map(|s| s.as_ref()).collect::<Vec<_>>();

@@ -103,7 +103,7 @@ impl EnvUniversal {
             Entry::Vacant(entry) => {
                 entry.insert(var);
             }
-        };
+        }
         self.modified.insert(key.to_owned());
         if exports {
             self.export_generation += 1;

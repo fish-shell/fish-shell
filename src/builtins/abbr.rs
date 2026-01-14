@@ -33,22 +33,22 @@ impl Options {
         let mut cmds = vec![];
         if self.add {
             cmds.push(L!("add"))
-        };
+        }
         if self.rename {
             cmds.push(L!("rename"))
-        };
+        }
         if self.show {
             cmds.push(L!("show"))
-        };
+        }
         if self.list {
             cmds.push(L!("list"))
-        };
+        }
         if self.erase {
             cmds.push(L!("erase"))
-        };
+        }
         if self.query {
             cmds.push(L!("query"))
-        };
+        }
 
         if cmds.len() > 1 {
             streams.err.append(&wgettext_fmt!(
@@ -388,7 +388,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
         // The name plays double-duty as the token to replace.
         key = name;
         regex = None;
-    };
+    }
 
     if opts.function.is_some() && opts.args.len() > 1 {
         streams
@@ -413,7 +413,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
         for iter in opts.args.iter().skip(1) {
             if !replacement.is_empty() {
                 replacement.push(' ')
-            };
+            }
             replacement.push_utfstr(iter);
         }
         replacement
@@ -477,7 +477,7 @@ fn abbr_erase(opts: &Options, parser: &Parser) -> BuiltinResult {
 
                     if ret == EnvStackSetResult::Ok {
                         result = Ok(SUCCESS)
-                    };
+                    }
                 }
             }
         }
@@ -535,7 +535,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 // non-option, and --add is implied.
                 if let Some(arg) = w.woptarg {
                     opts.args.push(arg.to_owned())
-                };
+                }
                 if opts.args.len() >= 2
                     && !(opts.rename || opts.show || opts.list || opts.erase || opts.query)
                 {
@@ -645,22 +645,22 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
 
     if opts.add {
         return abbr_add(&opts, streams);
-    };
+    }
     if opts.show {
         return abbr_show(&opts, streams, parser);
-    };
+    }
     if opts.list {
         return abbr_list(&opts, streams);
-    };
+    }
     if opts.rename {
         return abbr_rename(&opts, streams);
-    };
+    }
     if opts.erase {
         return abbr_erase(&opts, parser);
-    };
+    }
     if opts.query {
         return abbr_query(&opts);
-    };
+    }
 
     // validate() should error or ensure at least one path is set.
     panic!("unreachable");

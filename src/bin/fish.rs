@@ -430,7 +430,7 @@ fn throwing_main() -> i32 {
                 eprintf!("%s\n", e);
                 return 1;
             }
-        };
+        }
     }
 
     // No-exec is prohibited when in interactive mode.

@@ -259,22 +259,22 @@ fn command_is_valid(
     // Builtins
     if !is_valid && builtin_ok {
         is_valid = builtin_exists(cmd)
-    };
+    }
 
     // Functions
     if !is_valid && function_ok {
         is_valid = function::exists_no_autoload(cmd)
-    };
+    }
 
     // Abbreviations
     if !is_valid && abbreviation_ok {
         is_valid = with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command, L!("")))
-    };
+    }
 
     // Regular commands
     if !is_valid && command_ok {
         is_valid = path_get_path(cmd, vars).is_some()
-    };
+    }
 
     // Implicit cd
     if !is_valid && implicit_cd_ok {
@@ -895,7 +895,7 @@ impl<'s> Highlighter<'s> {
             | ParseKeyword::Exclam
             | ParseKeyword::Time => role = HighlightRole::operat,
             ParseKeyword::None => (),
-        };
+        }
         self.color_node(node.as_node(), HighlightSpec::with_fg(role));
     }
     fn visit_token(&mut self, tok: &dyn Token) {

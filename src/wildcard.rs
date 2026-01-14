@@ -708,7 +708,7 @@ mod expander {
                 let known_dir = need_dir && entry.is_dir();
                 if need_dir && !known_dir {
                     continue;
-                };
+                }
                 if !entry.name.is_empty() && !entry.name.starts_with('.') {
                     self.try_add_completion_result(
                         &(base_dir.to_owned() + entry.name.as_utfstr()),

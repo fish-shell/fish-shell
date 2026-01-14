@@ -66,7 +66,7 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
     // Note in Rust, dividend % divisor has the same sign as the dividend.
     if retval < 0 {
         retval = 256 - (retval % 256).abs();
-    };
+    }
 
     let retval = BuiltinResult::from_dynamic(retval);
 

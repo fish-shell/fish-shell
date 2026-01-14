@@ -341,7 +341,7 @@ pub fn get_names(get_hidden: bool, vars: &dyn Environment) -> Vec<WString> {
         };
         if !get_hidden && (bname.is_empty() || bname.starts_with('_')) {
             continue;
-        };
+        }
         let Some(fname) = bname.strip_suffix(".fish") else {
             continue;
         };
@@ -466,7 +466,7 @@ impl FunctionProperties {
                 EventDescription::Any => {
                     panic!("Unexpected event handler type");
                 }
-            };
+            }
         }
 
         let named = &self.named_arguments;

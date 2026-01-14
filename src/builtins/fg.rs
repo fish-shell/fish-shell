@@ -53,7 +53,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         let mut found_job = false;
         if let Ok(pid) = parse_pid(streams, cmd, argv[optind]) {
             found_job = parser.job_get_from_pid(pid).is_some();
-        };
+        }
 
         if found_job {
             streams
@@ -101,8 +101,8 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                 job = None;
                 builtin_print_error_trailer(parser, streams.err, cmd);
             }
-        };
-    };
+        }
+    }
 
     let Some(job) = job else {
         return Err(STATUS_INVALID_ARGS);

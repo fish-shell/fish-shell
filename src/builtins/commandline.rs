@@ -229,7 +229,7 @@ fn write_part(
             let token_text = tok.text_of(&token);
             add_token(token_text);
         }
-    };
+    }
 
     for arg in args {
         streams.out.appendln(arg.completion);

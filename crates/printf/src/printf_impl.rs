@@ -57,7 +57,7 @@ impl ModifierFlags {
             '+' => self.mark_pos = true,
             '\'' => self.grouped = true,
             _ => return false,
-        };
+        }
         true
     }
 }

@@ -107,7 +107,7 @@ where
 
         // Skip the x
         start = 1;
-    };
+    }
 
     if base == 0 {
         return None;

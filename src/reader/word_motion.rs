@@ -236,7 +236,7 @@ fn path_component_state_transition(
     let escaped = is_backslashed(text, idx);
     if c == '\\' && !escaped {
         return ControlFlow::Break(());
-    };
+    }
 
     use PathComponentTransition as T;
     ControlFlow::Continue(if is_blank(c) && !escaped {

@@ -186,7 +186,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                     need_escape = true;
                     if escape_printables {
                         out.push('\\')
-                    };
+                    }
                 }
                 out.push(c);
             }
@@ -1245,7 +1245,7 @@ pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
             Ok(17763..) => return Some(WSL::V1),
             Ok(_) => (),      // return true, but first warn (see below)
             _ => return None, // if parsing fails, assume this isn't WSL
-        };
+        }
 
         // #5298, #5661: There are acknowledged, published, and (later) fixed issues with
         // job control under early WSL releases that prevent fish from running correctly,

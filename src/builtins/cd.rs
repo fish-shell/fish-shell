@@ -55,7 +55,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         ));
         if !parser.is_interactive() {
             streams.err.append(&parser.current_line());
-        };
+        }
         return Err(STATUS_CMD_ERROR);
     }
 

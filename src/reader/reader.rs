@@ -325,7 +325,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
             }
             CharEvent::QueryResult(Interrupted) => break,
             Key(_) | Readline(_) | Command(_) | Implicit(_) => panic!(),
-        };
+        }
     }
 
     stop_query(input_queue.blocking_query());
@@ -1329,7 +1329,7 @@ pub fn reader_test_and_clear_interrupted() -> i32 {
     let res = INTERRUPTED.load(Ordering::Relaxed);
     if res != 0 {
         INTERRUPTED.store(0, Ordering::Relaxed);
-    };
+    }
     res
 }
 
@@ -2678,7 +2678,7 @@ impl<'a> Reader<'a> {
                 accumulated_chars.push(c);
             } else {
                 continue;
-            };
+            }
         }
 
         if !accumulated_chars.is_empty() {
@@ -4092,7 +4092,7 @@ impl<'a> Reader<'a> {
                         replacement.extend(chr.to_uppercase());
                     } else {
                         replacement.extend(chr.to_lowercase());
-                    };
+                    }
                     capitalized_first = capitalized_first || make_uppercase;
                     pos += 1;
                 }
@@ -5985,7 +5985,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
         // We are only interested in leaf nodes with source.
         if node.as_leaf().is_none() {
             continue;
-        };
+        }
         let range = node.source_range();
         if range.length() == 0 {
             continue;
@@ -7075,7 +7075,7 @@ impl<'a> Reader<'a> {
                     // Discard any parent directories and include whats left
                     prefix.push('/');
                     prefix.push_utfstr(last_component);
-                };
+                }
             }
             Cow::Owned(prefix)
         };

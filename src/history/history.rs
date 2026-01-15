@@ -24,6 +24,7 @@ use crate::{
     threads::ThreadPool,
 };
 use fish_wcstringutil::{subsequence_in_string, trim};
+use fish_widestring::subslice_position;
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
@@ -64,7 +65,6 @@ use crate::{
     wildcard::{ANY_STRING, wildcard_match},
     wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
-use fish_util::find_subslice;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SearchType {
@@ -218,7 +218,7 @@ impl HistoryItem {
         match typ {
             SearchType::Exact => term == *content_to_match,
             SearchType::Contains => {
-                find_subslice(term.as_slice(), content_to_match.as_slice()).is_some()
+                subslice_position(content_to_match.as_slice(), term.as_slice()).is_some()
             }
             SearchType::Prefix => content_to_match.as_slice().starts_with(term.as_slice()),
             SearchType::LinePrefix => content_to_match
@@ -1174,7 +1174,7 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
     // Skip lines with [[...]] and ((...)) since we don't handle those constructs.
     // "<<" here is a proxy for heredocs (and herestrings).
     for seq in [L!("[["), L!("]]"), L!("(("), L!("))"), L!("<<")] {
-        if find_subslice(seq, line.as_char_slice()).is_some() {
+        if subslice_position(line.as_char_slice(), seq).is_some() {
             return false;
         }
     }

@@ -60,11 +60,27 @@ pub const fn char_offset(base: char, offset: u32) -> char {
     }
 }
 
-pub fn subslice_position<T: Eq>(a: &[T], b: &[T]) -> Option<usize> {
-    if b.is_empty() {
+/// Finds `needle` in a `haystack` and returns the index of the first matching element, if any.
+///
+/// # Examples
+///
+/// ```
+/// use fish_widestring::subslice_position;
+/// let haystack = b"ABC ABCDAB ABCDABCDABDE";
+///
+/// assert_eq!(subslice_position(haystack, b"ABCDABD"), Some(15));
+/// assert_eq!(subslice_position(haystack, b"ABCDE"), None);
+/// ```
+pub fn subslice_position<T: PartialEq>(
+    haystack: impl AsRef<[T]>,
+    needle: impl AsRef<[T]>,
+) -> Option<usize> {
+    let needle = needle.as_ref();
+    if needle.is_empty() {
         return Some(0);
     }
-    a.windows(b.len()).position(|aw| aw == b)
+    let haystack = haystack.as_ref();
+    haystack.windows(needle.len()).position(|w| w == needle)
 }
 
 /// Helpers to convert things to widestring.

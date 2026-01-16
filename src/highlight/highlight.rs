@@ -62,7 +62,7 @@ impl HighlightSpec {
 /// Given a string and list of colors of the same size, return the string with ANSI escape sequences
 /// representing the colors.
 pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -> Vec<u8> {
-    assert!(colors.len() == text.len());
+    assert_eq!(colors.len(), text.len());
     let mut rv = HighlightColorResolver::new();
     let mut outp = Outputter::new_buffering();
 
@@ -394,7 +394,7 @@ pub fn autosuggest_validate_from_history(
 // Highlights the variable starting with 'in', setting colors within the 'colors' array. Returns the
 // number of characters consumed.
 fn color_variable(inp: &wstr, colors: &mut [HighlightSpec]) -> usize {
-    assert!(inp.char_at(0) == '$');
+    assert_eq!(inp.char_at(0), '$');
 
     // Handle an initial run of $s.
     let mut idx = 0;
@@ -854,7 +854,7 @@ impl<'s> Highlighter<'s> {
             let subcolors = cmdsub_highlighter.highlight();
 
             // Copy out the subcolors back into our array.
-            assert!(subcolors.len() == cmdsub_contents.len());
+            assert_eq!(subcolors.len(), cmdsub_contents.len());
             self.color_array[arg_start..][parens.command()].copy_from_slice(&subcolors);
         }
     }

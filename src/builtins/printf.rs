@@ -615,7 +615,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     /// If octal_0 is nonzero, octal escapes are of the form \0ooo, where o
     /// is an octal digit; otherwise they are of the form \ooo.
     fn print_esc(&mut self, escstart: &wstr, octal_0: bool) -> usize {
-        assert!(escstart.char_at(0) == '\\');
+        assert_eq!(escstart.char_at(0), '\\');
         let mut p = &escstart[1..];
         let mut esc_value = 0; /* Value of \nnn escape. */
         let mut esc_length; /* Length of \nnn escape. */

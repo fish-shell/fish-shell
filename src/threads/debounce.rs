@@ -291,7 +291,7 @@ mod tests {
 
         // Wait 75 msec, then enqueue something else; this should spawn a new thread.
         std::thread::sleep(timeout + timeout / 2);
-        assert!(data.running.load(Ordering::Relaxed) == 1);
+        assert_eq!(data.running.load(Ordering::Relaxed), 1);
         let token3 = data.db.perform_void(handler);
         assert!(token3 > token2);
 

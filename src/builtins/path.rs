@@ -368,7 +368,7 @@ fn parse_opts<'args>(
     *optind = w.wopt_index;
 
     if n_req_args != 0 {
-        assert!(n_req_args == 1);
+        assert_eq!(n_req_args, 1);
         opts.arg1 = args.get(*optind).copied();
         if opts.arg1.is_some() {
             *optind += 1;

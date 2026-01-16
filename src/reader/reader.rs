@@ -640,7 +640,7 @@ struct LayoutData {
     right_prompt_buff: WString,
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum EditableLineTag {
     Commandline,
     SearchField,
@@ -1775,7 +1775,7 @@ impl<'a> Reader<'a> {
         let focused_on_pager = self.active_edit_line_tag() == EditableLineTag::SearchField;
         result.text = self.command_line.text().to_owned();
         result.colors = self.command_line.colors().to_vec();
-        assert!(result.text.len() == result.colors.len());
+        assert_eq!(result.text.len(), result.colors.len());
         result.position = self.command_line.position();
         result.pager_search_field_position = focused_on_pager.then(|| self.pager.cursor_position());
         result.selection = self.selection;
@@ -4376,7 +4376,7 @@ impl<'a> Reader<'a> {
         let (elt, el) = self.active_edit_line();
         let pos = el.position();
         let buffer = if autosuggest {
-            assert!(elt == EditableLineTag::Commandline);
+            assert_eq!(elt, EditableLineTag::Commandline);
             assert!(self.is_at_line_with_autosuggestion());
             let autosuggestion = &self.autosuggestion;
             Cow::Owned(combine_command_and_autosuggestion(

@@ -93,7 +93,7 @@ pub fn wcsfilecmp(a: &wstr, b: &wstr) -> Ordering {
             Ordering::Less // string a is a prefix of b and b is longer
         }
     } else {
-        assert!(bi == b.len());
+        assert_eq!(bi, b.len());
         Ordering::Greater // string b is a prefix of a and a is longer
     }
 }
@@ -158,7 +158,7 @@ pub fn wcsfilecmp_glob(a: &wstr, b: &wstr) -> Ordering {
             Ordering::Less // string a is a prefix of b and b is longer
         }
     } else {
-        assert!(bi == b.len());
+        assert_eq!(bi, b.len());
         Ordering::Greater // string b is a prefix of a and a is longer
     }
 }

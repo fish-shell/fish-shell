@@ -909,7 +909,7 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
             return None;
         }
 
-        // assert!(num_bytes == self.buffer.len());
+        // assert_eq!(num_bytes, self.buffer.len());
         let (end, want_newline) = match (&self.split_behavior, buffer.last()) {
             // remove the newline — consumers do not expect it
             (Newline, Some(b'\n')) => (num_bytes - 1, true),

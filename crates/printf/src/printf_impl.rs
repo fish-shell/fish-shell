@@ -341,7 +341,7 @@ pub(super) fn pad(
 ///
 /// let result = sprintf_locale(&mut output, fmt, &locale::EN_US_LOCALE, &mut args);
 ///
-/// assert!(result == Ok(12));
+/// assert_eq!(result, Ok(12));
 /// assert_eq!(output, "1,234,567.89");
 /// ```
 pub fn sprintf_locale(
@@ -371,7 +371,7 @@ pub fn sprintf_locale(
         }
 
         // Consume the % at the start of the format specifier.
-        debug_assert!(s.at(0) == Some('%'));
+        debug_assert_eq!(s.at(0), Some('%'));
         s.advance_by(1);
 
         // Read modifier flags. '-' and '0' flags are mutually exclusive.
@@ -561,7 +561,7 @@ pub fn sprintf_locale(
         };
         // Numeric output should be empty iff the value is 0.
         if spec_is_numeric && body.is_empty() {
-            debug_assert!(arg.as_uint().unwrap() == 0);
+            debug_assert_eq!(arg.as_uint().unwrap(), 0);
         }
 
         // Decide if we want to apply thousands grouping to the body, and compute its size.

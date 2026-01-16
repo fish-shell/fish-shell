@@ -388,7 +388,7 @@ pub fn split_string_tok<'val>(
         pos = next_sep + 1;
     }
     if pos < end && max_results > 0 {
-        assert!(out.len() + 1 == max_results, "Should have split the max");
+        assert_eq!(out.len() + 1, max_results, "Should have split the max");
         out.push(wstr::from_char_slice(&val[pos..]));
     }
     assert!(out.len() <= max_results, "Got too many results");

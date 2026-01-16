@@ -340,7 +340,7 @@ pub fn path_get_cdpath(dir: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<
     if dir.is_empty() {
         return None;
     }
-    assert!(wd.chars().next_back() == Some('/'));
+    assert_eq!(wd.chars().next_back(), Some('/'));
     let paths = path_apply_cdpath(dir, wd, vars);
 
     for a_dir in paths {

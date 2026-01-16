@@ -997,7 +997,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
 
         // Like try_consume, but asserts on failure.
         let consume = |cursor: &mut usize, c| {
-            assert!(buff.char_at(*cursor) == c, "Failed to consume char");
+            assert_eq!(buff.char_at(*cursor), c, "Failed to consume char");
             *cursor += 1;
         };
 

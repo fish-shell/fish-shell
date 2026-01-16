@@ -1948,7 +1948,7 @@ pub fn parse_util_expand_variable_error(
     }
 
     // We should have appended exactly one error.
-    assert!(errors.as_ref().unwrap().len() == start_error_count + 1);
+    assert_eq!(errors.as_ref().unwrap().len(), start_error_count + 1);
 }
 
 localizable_consts!(

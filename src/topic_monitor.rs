@@ -44,7 +44,7 @@ pub enum Topic {
 }
 
 // XXX: Is it correct to use the default or should the default be invalid_generation?
-#[derive(Clone, Default, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord)]
 pub struct GenerationsList {
     pub sighupint: Cell<u64>,
     pub sigchld: Cell<u64>,
@@ -379,8 +379,9 @@ impl TopicMonitor {
                 .is_ok();
         }
         // Note that if the STATUS_NEEDS_WAKEUP bit is set, no other bits must be set.
-        assert!(
-            (oldstatus == STATUS_NEEDS_WAKEUP) == ((oldstatus & STATUS_NEEDS_WAKEUP) != 0),
+        assert_eq!(
+            (oldstatus == STATUS_NEEDS_WAKEUP),
+            ((oldstatus & STATUS_NEEDS_WAKEUP) != 0),
             "If STATUS_NEEDS_WAKEUP is set no other bits should be set"
         );
 
@@ -418,8 +419,9 @@ impl TopicMonitor {
                 .compare_exchange_weak(changed_topic_bits, 0, relaxed, relaxed)
                 .is_ok();
         }
-        assert!(
-            (changed_topic_bits & STATUS_NEEDS_WAKEUP) == 0,
+        assert_eq!(
+            changed_topic_bits & STATUS_NEEDS_WAKEUP,
+            0,
             "Thread waiting bit should not be set"
         );
 
@@ -487,8 +489,9 @@ impl TopicMonitor {
             } else {
                 // We will try to become the reader.
                 // Reader bit should not be set in this case.
-                assert!(
-                    (self.status_.load(Ordering::Relaxed) & STATUS_NEEDS_WAKEUP) == 0,
+                assert_eq!(
+                    self.status_.load(Ordering::Relaxed) & STATUS_NEEDS_WAKEUP,
+                    0,
                     "No thread should be waiting"
                 );
                 // Try becoming the reader by marking the reader bit.
@@ -527,8 +530,8 @@ impl TopicMonitor {
             if become_reader {
                 // Now we are the reader. Read from the pipe, and then update with any changes.
                 // Note we no longer hold the lock.
-                assert!(
-                    gens == *input_gens,
+                assert_eq!(
+                    gens, *input_gens,
                     "Generations should not have changed if we are the reader."
                 );
 

@@ -154,7 +154,7 @@ impl EditableLine {
         let is_insertion = range.is_empty();
         // Coalescing insertion does not create a new undo entry but adds to the last insertion.
         if allow_coalesce && is_insertion && self.want_to_coalesce_insertion_of(&edit.replacement) {
-            assert!(range.start == self.position());
+            assert_eq!(range.start, self.position());
             let last_edit = self.undo_history.edits.last_mut().unwrap();
             last_edit.replacement.push_utfstr(&edit.replacement);
             apply_edit(&mut self.text, &mut self.colors, &edit);

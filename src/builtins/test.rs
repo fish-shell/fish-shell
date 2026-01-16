@@ -367,7 +367,7 @@ mod test_expressions {
         fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             let _res = self.subjects[0].evaluate(streams, errors);
             assert!(!self.subjects.is_empty());
-            assert!(self.combiners.len() + 1 == self.subjects.len());
+            assert_eq!(self.combiners.len() + 1, self.subjects.len());
 
             // One-element case.
             if self.subjects.len() == 1 {
@@ -651,7 +651,7 @@ mod test_expressions {
             start: usize,
             end: usize,
         ) -> Option<Box<dyn Expression>> {
-            assert!(end - start == 3);
+            assert_eq!(end - start, 3);
 
             let center_token = token_for_string(self.arg(start + 1));
 
@@ -677,7 +677,7 @@ mod test_expressions {
             start: usize,
             end: usize,
         ) -> Option<Box<dyn Expression>> {
-            assert!(end - start == 4);
+            assert_eq!(end - start, 4);
 
             let first_token = token_for_string(self.arg(start));
 

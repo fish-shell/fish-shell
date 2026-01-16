@@ -266,7 +266,7 @@ impl Decimal {
         if rounding_digit & 1 != 0 {
             round += 2.0;
             // round now has an odd lsb (though round itself is even).
-            debug_assert!(round.to_bits() & 1 != 0);
+            debug_assert_ne!(round.to_bits() & 1, 0);
         }
 
         // Set 'small' to a value which is less than halfway, exactly halfway, or more than halfway

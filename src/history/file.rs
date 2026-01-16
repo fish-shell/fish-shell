@@ -41,7 +41,7 @@ impl MmapRegion {
     ///
     /// `ptr` must be the result of a successful `mmap()` call with length `len`.
     unsafe fn new(ptr: *mut u8, len: usize) -> Self {
-        assert!(ptr.cast() != MAP_FAILED);
+        assert_ne!(ptr.cast(), MAP_FAILED);
         assert!(len > 0);
         Self { ptr, len }
     }

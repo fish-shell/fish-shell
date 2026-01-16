@@ -720,18 +720,18 @@ impl InputData {
     }
 }
 
-#[derive(Clone, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BackgroundColorQuery {
     pub result: Option<xterm_color::Color>,
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CursorPositionQueryReason {
     NewPrompt,
     WindowHeightChange,
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CursorPositionQuery {
     pub reason: CursorPositionQueryReason,
     pub result: Option<ViewportPosition>,
@@ -746,7 +746,7 @@ impl CursorPositionQuery {
     }
 }
 
-#[derive(Clone, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct RecurrentQuery {
     pub background_color: Option<BackgroundColorQuery>,
     pub cursor_position: Option<CursorPositionQuery>,

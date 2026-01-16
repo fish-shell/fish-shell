@@ -1683,7 +1683,7 @@ fn combine_command_and_autosuggestion(
 
 impl<'a> Reader<'a> {
     fn query(&mut self, query_state: RecurrentQuery) {
-        assert!(query_state != RecurrentQuery::default());
+        assert_ne!(query_state, RecurrentQuery::default());
         if self
             .vars()
             .get_unless_empty(L!("FISH_TEST_NO_RECURRENT_QUERIES"))

@@ -110,7 +110,7 @@ impl UniversalNotifier for NotifydNotifier {
     fn notification_fd_became_readable(&self, fd: RawFd) -> bool {
         // notifyd notifications come in as 32 bit values. We don't care about the value. We set
         // ourselves as non-blocking, so just read until we can't read any more.
-        assert!(fd == self.notify_fd);
+        assert_eq!(fd, self.notify_fd);
         let mut read_something = false;
         let mut buff: [u8; 64] = [0; 64];
         loop {

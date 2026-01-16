@@ -422,7 +422,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
 
     /// Return the next event.
     fn next(&mut self) -> CharEvent {
-        assert!(self.subidx == 0);
+        assert_eq!(self.subidx, 0);
         assert!(
             self.idx <= self.peeked.len(),
             "Index must not be larger than dequeued event count"
@@ -491,7 +491,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         if *style == KeyNameStyle::Plain {
             let result = match_key_event_to_key(&kevt.key, &key);
             if let Some(key_match) = &result {
-                assert!(self.subidx == 0);
+                assert_eq!(self.subidx, 0);
                 self.idx += 1;
                 flog!(reader, "matched full key", key, "kind", key_match);
             }
@@ -1047,7 +1047,7 @@ mod tests {
         let mut peeker = EventQueuePeeker::new(&mut input);
         let mapping = peeker.find_mapping(&vars, &input_mappings);
         assert!(mapping.is_some());
-        assert!(mapping.unwrap().commands == ["down-line"]);
+        assert_eq!(mapping.unwrap().commands, ["down-line"]);
         peeker.restart();
     }
 }

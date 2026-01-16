@@ -2301,7 +2301,10 @@ pub fn complete_add(
     flags: CompleteFlags,
 ) {
     // option should be empty iff the option type is arguments only.
-    assert!(option.is_empty() == (option_type == CompleteOptionType::ArgsOnly));
+    assert_eq!(
+        option.is_empty(),
+        (option_type == CompleteOptionType::ArgsOnly)
+    );
 
     // Lock the lock that allows us to edit the completion entry list.
     let mut completion_map = COMPLETION_MAP.lock().expect("mutex poisoned");

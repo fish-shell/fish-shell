@@ -343,9 +343,18 @@ mod tests {
     #[test]
     fn parse_rgb() {
         assert!(Color::from_wstr(L!("##FF00A0")).is_none());
-        assert!(Color::from_wstr(L!("#FF00A0")) == Some(Color::from_rgb(0xff, 0x00, 0xa0)));
-        assert!(Color::from_wstr(L!("FF00A0")) == Some(Color::from_rgb(0xff, 0x00, 0xa0)));
-        assert!(Color::from_wstr(L!("FAF")) == Some(Color::from_rgb(0xff, 0xaa, 0xff)));
+        assert_eq!(
+            Color::from_wstr(L!("#FF00A0")),
+            Some(Color::from_rgb(0xff, 0x00, 0xa0))
+        );
+        assert_eq!(
+            Color::from_wstr(L!("FF00A0")),
+            Some(Color::from_rgb(0xff, 0x00, 0xa0))
+        );
+        assert_eq!(
+            Color::from_wstr(L!("FAF")),
+            Some(Color::from_rgb(0xff, 0xaa, 0xff))
+        );
     }
 
     // Regression test for multiplicative overflow in convert_color.

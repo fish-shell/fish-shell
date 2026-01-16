@@ -62,7 +62,7 @@ use std::sync::Arc;
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
 /// errors, or other expansion errors. It also tracks when evaluation was skipped due to signal
 /// cancellation. Note it does not track the exit status of commands.
-#[derive(Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum EndExecutionReason {
     /// Evaluation was successful.
     Ok,
@@ -937,7 +937,7 @@ impl<'a> ExecutionContext<'a> {
             ParserEnvSetMode::user(EnvMode::LOCAL),
             var.map_or(vec![], |var| var.as_list().to_owned()),
         );
-        assert!(retval == EnvStackSetResult::Ok);
+        assert_eq!(retval, EnvStackSetResult::Ok);
 
         trace_if_enabled_with_args(ctx.parser(), L!("for"), &arguments);
 
@@ -957,8 +957,9 @@ impl<'a> ExecutionContext<'a> {
                 ParserEnvSetMode::user(EnvMode::empty()),
                 vec![val],
             );
-            assert!(
-                retval == EnvStackSetResult::Ok,
+            assert_eq!(
+                retval,
+                EnvStackSetResult::Ok,
                 "for loop variable should have been successfully set"
             );
             event::fire(ctx.parser(), evt.clone());
@@ -1171,7 +1172,7 @@ impl<'a> ExecutionContext<'a> {
 
         if let Some(case_item) = matching_case_item {
             // Success, evaluate the job list.
-            assert!(result == EndExecutionReason::Ok, "Expected success");
+            assert_eq!(result, EndExecutionReason::Ok, "Expected success");
             result = self.run_job_list(ctx, &case_item.body, Some(sb));
         }
 

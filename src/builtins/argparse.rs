@@ -39,7 +39,7 @@ impl OptionSpec<'_> {
     }
 }
 
-#[derive(Default, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 enum UnknownHandling {
     #[default]
     Error,
@@ -1051,7 +1051,7 @@ fn argparse_parse_flags<'args>(
                             opts.args.push(Cow::Borrowed(value));
                         }
                     } else {
-                        assert!(opts.unknown_handling == UnknownHandling::Move);
+                        assert_eq!(opts.unknown_handling, UnknownHandling::Move);
                         // w.argv_opts will already contain the option and its value, unless the
                         // value was given as a seperate argument
                         if let Some(value) = separate_value {

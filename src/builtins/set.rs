@@ -907,8 +907,9 @@ fn new_var_values(
 
 /// This handles the more difficult case of setting individual slices of a var.
 fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
-    assert!(
-        argv.len() == split.indexes.len(),
+    assert_eq!(
+        argv.len(),
+        split.indexes.len(),
         "Must have the same number of indexes as arguments"
     );
 

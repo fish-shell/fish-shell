@@ -468,7 +468,7 @@ mod tests {
             ( $fmt:expr $(, $arg:expr )* $(,)? ) => {
                  let cmd = wcs2zstring(&sprintf!($fmt $(, $arg)*));
                  let status = unsafe { libc::system(cmd.as_ptr()) };
-                 assert!(status == 0);
+                 assert_eq!(status, 0);
             };
         }
 
@@ -514,10 +514,10 @@ mod tests {
             AutoloadResult::Pending
         ));
         assert!(autoload.autoload_in_progress(L!("file1")));
-        assert!(autoload.get_autoloaded_commands() == vec![L!("file1")]);
+        assert_eq!(autoload.get_autoloaded_commands(), vec![L!("file1")]);
         autoload.mark_autoload_finished(L!("file1"));
         assert!(!autoload.autoload_in_progress(L!("file1")));
-        assert!(autoload.get_autoloaded_commands() == vec![L!("file1")]);
+        assert_eq!(autoload.get_autoloaded_commands(), vec![L!("file1")]);
 
         assert!(matches!(
             autoload.resolve_command_impl(L!("file1"), paths),
@@ -538,7 +538,10 @@ mod tests {
             autoload.resolve_command_impl(L!("file2"), paths),
             AutoloadResult::Loaded
         ));
-        assert!((autoload.get_autoloaded_commands() == vec![L!("file1"), L!("file2")]));
+        assert_eq!(
+            autoload.get_autoloaded_commands(),
+            vec![L!("file1"), L!("file2")]
+        );
 
         autoload.clear();
         assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());

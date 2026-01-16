@@ -269,7 +269,10 @@ impl DirIter {
         };
 
         // dent.d_name is c_char; pretend it's u8.
-        assert!(std::mem::size_of::<libc::c_char>() == std::mem::size_of::<u8>());
+        assert_eq!(
+            std::mem::size_of::<libc::c_char>(),
+            std::mem::size_of::<u8>()
+        );
 
         // Do not rely on `libc::dirent::d_name.len()` as dirent names may exceed
         // the nominal buffer size; instead use the terminating nul byte.
@@ -463,8 +466,9 @@ mod tests {
             }
             // If we have a fast type, it should be correct.
             assert!(entry.fast_type().is_none() || entry.fast_type() == expected);
-            assert!(
-                entry.check_type() == expected,
+            assert_eq!(
+                entry.check_type(),
+                expected,
                 "Wrong type for {}. Expected {:?}, got {:?}",
                 entry.name,
                 expected,

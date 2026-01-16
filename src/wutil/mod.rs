@@ -685,7 +685,7 @@ mod tests {
                     input.len(),
                 )
             };
-            assert!(usize::try_from(read_amt).unwrap() == input.len());
+            assert_eq!(usize::try_from(read_amt).unwrap(), input.len());
             assert_eq!(&contents, &input);
         }
     }

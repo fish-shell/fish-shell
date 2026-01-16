@@ -1237,7 +1237,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
                 continue;
             }
             let pid = Pid::new(pid);
-            assert!(pid == proc.pid().unwrap(), "Unexpected waitpid() return");
+            assert_eq!(pid, proc.pid().unwrap(), "Unexpected waitpid() return");
 
             // The process has stopped or exited! Update its status.
             let status = ProcStatus::from_waitpid(statusv);

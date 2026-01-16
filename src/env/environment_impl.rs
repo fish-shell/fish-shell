@@ -975,7 +975,7 @@ impl EnvStackImpl {
         if key == "umask" {
             return Some(set_umask(val));
         } else if key == "PWD" {
-            assert!(val.len() == 1, "Should have exactly one element in PWD");
+            assert_eq!(val.len(), 1, "Should have exactly one element in PWD");
             let pwd = val.pop().unwrap();
             if pwd != self.base.perproc_data.pwd {
                 self.base.perproc_data.pwd = pwd;

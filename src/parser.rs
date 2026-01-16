@@ -1035,7 +1035,7 @@ impl Parser {
     pub fn pop_block(&self, expected: BlockId) {
         let block = {
             let mut block_list = self.block_list.borrow_mut();
-            assert!(expected.0 == block_list.len() - 1);
+            assert_eq!(expected.0, block_list.len() - 1);
             block_list.pop().unwrap()
         };
         if block.wants_pop_env() {
@@ -1628,28 +1628,33 @@ mod tests {
             "redirection after 'end' wrongly reported as error"
         );
 
-        assert!(
-            detect_errors!("true | ") == Err(ParserTestErrorBits::INCOMPLETE),
+        assert_eq!(
+            detect_errors!("true | "),
+            Err(ParserTestErrorBits::INCOMPLETE),
             "unterminated pipe not reported properly"
         );
 
-        assert!(
-            detect_errors!("echo (\nfoo\n  bar") == Err(ParserTestErrorBits::INCOMPLETE),
+        assert_eq!(
+            detect_errors!("echo (\nfoo\n  bar"),
+            Err(ParserTestErrorBits::INCOMPLETE),
             "unterminated multiline subshell not reported properly"
         );
 
-        assert!(
-            detect_errors!("begin ; true ; end | ") == Err(ParserTestErrorBits::INCOMPLETE),
+        assert_eq!(
+            detect_errors!("begin ; true ; end | "),
+            Err(ParserTestErrorBits::INCOMPLETE),
             "unterminated pipe not reported properly"
         );
 
-        assert!(
-            detect_errors!(" | true ") == Err(ParserTestErrorBits::ERROR),
+        assert_eq!(
+            detect_errors!(" | true "),
+            Err(ParserTestErrorBits::ERROR),
             "leading pipe not reported properly"
         );
 
-        assert!(
-            detect_errors!("true | # comment") == Err(ParserTestErrorBits::INCOMPLETE),
+        assert_eq!(
+            detect_errors!("true | # comment"),
+            Err(ParserTestErrorBits::INCOMPLETE),
             "comment after pipe not reported as incomplete"
         );
 
@@ -1658,8 +1663,9 @@ mod tests {
             "comment and newline after pipe wrongly reported as error"
         );
 
-        assert!(
-            detect_errors!("true | ; false ") == Err(ParserTestErrorBits::ERROR),
+        assert_eq!(
+            detect_errors!("true | ; false "),
+            Err(ParserTestErrorBits::ERROR),
             "semicolon after pipe not detected as error"
         );
 
@@ -1766,8 +1772,9 @@ mod tests {
             "bogus boolean statement error not detected"
         );
 
-        assert!(
-            detect_errors!("true && ") == Err(ParserTestErrorBits::INCOMPLETE),
+        assert_eq!(
+            detect_errors!("true && "),
+            Err(ParserTestErrorBits::INCOMPLETE),
             "unterminated conjunction not reported properly"
         );
 
@@ -1776,13 +1783,15 @@ mod tests {
             "newline after && reported as error"
         );
 
-        assert!(
-            detect_errors!("true || \n") == Err(ParserTestErrorBits::INCOMPLETE),
+        assert_eq!(
+            detect_errors!("true || \n"),
+            Err(ParserTestErrorBits::INCOMPLETE),
             "unterminated conjunction not reported properly"
         );
 
-        assert!(
-            detect_errors!("begin ; echo hi; }") == Err(ParserTestErrorBits::ERROR),
+        assert_eq!(
+            detect_errors!("begin ; echo hi; }"),
+            Err(ParserTestErrorBits::ERROR),
             "closing of unopened brace statement not reported properly"
         );
 
@@ -2054,8 +2063,11 @@ mod tests {
             ParseTreeFlags::LEAVE_UNTERMINATED,
             Some(&mut errors),
         );
-        assert!(errors.len() == 1);
-        assert!(errors[0].code == ParseErrorCode::TokenizerUnterminatedSubshell);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(
+            errors[0].code,
+            ParseErrorCode::TokenizerUnterminatedSubshell
+        );
 
         errors.clear();
         ast::parse(
@@ -2063,8 +2075,11 @@ mod tests {
             ParseTreeFlags::LEAVE_UNTERMINATED,
             Some(&mut errors),
         );
-        assert!(errors.len() == 1);
-        assert!(errors[0].code == ParseErrorCode::TokenizerUnterminatedSubshell);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(
+            errors[0].code,
+            ParseErrorCode::TokenizerUnterminatedSubshell
+        );
 
         errors.clear();
         ast::parse(
@@ -2072,8 +2087,8 @@ mod tests {
             ParseTreeFlags::LEAVE_UNTERMINATED,
             Some(&mut errors),
         );
-        assert!(errors.len() == 1);
-        assert!(errors[0].code == ParseErrorCode::TokenizerUnterminatedQuote);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].code, ParseErrorCode::TokenizerUnterminatedQuote);
     }
 
     #[test]

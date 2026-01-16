@@ -710,7 +710,7 @@ pub fn read_unquoted_escape(
     allow_incomplete: bool,
     unescape_special: bool,
 ) -> Option<usize> {
-    assert!(input.char_at(0) == '\\', "not an escape");
+    assert_eq!(input.char_at(0), '\\', "not an escape");
 
     // Here's the character we'll ultimately append, or none. Note that '\0' is a
     // valid thing to append.

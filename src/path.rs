@@ -19,7 +19,7 @@ use std::sync::LazyLock;
 /// Returns the user configuration directory for fish. If the directory or one of its parents
 /// doesn't exist, they are first created.
 pub fn path_get_config() -> Option<WString> {
-    get_config_directory().path()
+    CONFIG_DIRECTORY.path()
 }
 
 /// Returns the user data directory for fish. If the directory or one of its parents doesn't exist,
@@ -27,7 +27,7 @@ pub fn path_get_config() -> Option<WString> {
 ///
 /// Volatile files presumed to be local to the machine, such as the fish_history will be stored in this directory.
 pub fn path_get_data() -> Option<WString> {
-    get_data_directory().path()
+    DATA_DIRECTORY.path()
 }
 
 /// Returns the user cache directory for fish. If the directory or one of its parents doesn't exist,
@@ -36,7 +36,7 @@ pub fn path_get_data() -> Option<WString> {
 /// Volatile files presumed to be local to the machine such as all the
 /// generated_completions, will be stored in this directory.
 pub fn path_get_cache() -> Option<WString> {
-    get_cache_directory().path()
+    CACHE_DIRECTORY.path()
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -52,18 +52,18 @@ pub enum DirRemoteness {
 /// Return the remoteness of the fish data directory.
 /// This will be remote for filesystems like NFS, SMB, etc.
 pub fn path_get_data_remoteness() -> DirRemoteness {
-    get_data_directory().remoteness
+    DATA_DIRECTORY.remoteness
 }
 
 /// Like path_get_data_remoteness but for the config directory.
 pub fn path_get_config_remoteness() -> DirRemoteness {
-    get_config_directory().remoteness
+    CONFIG_DIRECTORY.remoteness
 }
 
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
 pub fn path_emit_config_directory_messages(vars: &EnvStack) {
-    let data = get_data_directory();
+    let data = &*DATA_DIRECTORY;
     if let Some(error) = &data.err {
         maybe_issue_path_warning(
             L!("data"),
@@ -79,7 +79,7 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
         flog!(path, "data path appears to be on a network volume");
     }
 
-    let config = get_config_directory();
+    let config = &*CONFIG_DIRECTORY;
     if let Some(error) = &data.err {
         maybe_issue_path_warning(
             L!("config"),
@@ -700,23 +700,14 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     }
 }
 
-fn get_data_directory() -> &'static BaseDirectory {
-    static DIR: LazyLock<BaseDirectory> =
-        LazyLock::new(|| make_base_directory(L!("XDG_DATA_HOME"), L!("/.local/share/fish")));
-    &DIR
-}
+static DATA_DIRECTORY: LazyLock<BaseDirectory> =
+    LazyLock::new(|| make_base_directory(L!("XDG_DATA_HOME"), L!("/.local/share/fish")));
 
-fn get_cache_directory() -> &'static BaseDirectory {
-    static DIR: LazyLock<BaseDirectory> =
-        LazyLock::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
-    &DIR
-}
+static CACHE_DIRECTORY: LazyLock<BaseDirectory> =
+    LazyLock::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
 
-fn get_config_directory() -> &'static BaseDirectory {
-    static DIR: LazyLock<BaseDirectory> =
-        LazyLock::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
-    &DIR
-}
+static CONFIG_DIRECTORY: LazyLock<BaseDirectory> =
+    LazyLock::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
 
 /// Appends a path component, with a / if necessary.
 pub fn append_path_component(path: &mut WString, component: &wstr) {

@@ -2131,12 +2131,10 @@ impl<'s> Populator<'s> {
     /// Return the token.
     fn consume_any_token(&mut self) -> ParseToken {
         let tok = self.tokens.pop();
-        assert!(
-            tok.typ != ParseTokenType::Comment,
-            "Should not be a comment"
-        );
-        assert!(
-            tok.typ != ParseTokenType::Terminate,
+        assert_ne!(tok.typ, ParseTokenType::Comment, "Should not be a comment");
+        assert_ne!(
+            tok.typ,
+            ParseTokenType::Terminate,
             "Cannot consume terminate token, caller should check status first"
         );
         tok
@@ -2144,8 +2142,9 @@ impl<'s> Populator<'s> {
 
     /// Consume the next token which is expected to be of the given type.
     fn consume_token_type(&mut self, typ: ParseTokenType) -> SourceRange {
-        assert!(
-            typ != ParseTokenType::Terminate,
+        assert_ne!(
+            typ,
+            ParseTokenType::Terminate,
             "Should not attempt to consume terminate token"
         );
         let tok = self.consume_any_token();

@@ -31,7 +31,7 @@ impl SearchMatch {
     }
 }
 
-#[derive(Clone, Copy, Eq, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum SearchMode {
     #[default]
     /// no search
@@ -162,8 +162,9 @@ impl ReaderHistorySearch {
         mode: SearchMode,
         token_offset: usize,
     ) {
-        assert!(
-            mode != SearchMode::Inactive,
+        assert_ne!(
+            mode,
+            SearchMode::Inactive,
             "mode cannot be inactive in this setter"
         );
         self.skips = HashSet::from([text.clone()]);

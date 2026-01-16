@@ -428,8 +428,9 @@ impl TtyHandoff {
 
         // It should never be fish's pgroup.
         let fish_pgrp = crate::nix::getpgrp();
-        assert!(
-            pgid.as_pid_t() != fish_pgrp,
+        assert_ne!(
+            pgid.as_pid_t(),
+            fish_pgrp,
             "Job should not have fish's pgroup"
         );
 

@@ -340,7 +340,7 @@ mod tests {
                 assert!(fd >= FIRST_HIGH_FD);
                 let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };
                 assert!(flags >= 0);
-                assert!(flags & FD_CLOEXEC != 0);
+                assert_ne!(flags & FD_CLOEXEC, 0);
             }
         }
     }

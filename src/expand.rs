@@ -116,7 +116,7 @@ impl ExpandResult {
     }
     /// Make an error value with the given status.
     pub fn make_error(status: libc::c_int) -> Self {
-        assert!(status != 0, "status cannot be 0 for an error result");
+        assert_ne!(status, 0, "status cannot be 0 for an error result");
         Self {
             result: ExpandResultCode::error,
             status,

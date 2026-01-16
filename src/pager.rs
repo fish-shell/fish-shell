@@ -1102,7 +1102,7 @@ fn divide_round_up(numer: usize, denom: usize) -> usize {
     if numer == 0 {
         return 0;
     }
-    assert!(denom != 0);
+    assert_ne!(denom, 0);
     let has_rem = (numer % denom) != 0;
     numer / denom + if has_rem { 1 } else { 0 }
 }

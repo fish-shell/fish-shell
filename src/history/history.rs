@@ -819,7 +819,7 @@ impl HistoryImpl {
     /// Enable / disable automatic saving. Main thread only!
     fn disable_automatic_saving(&mut self) {
         self.disable_automatic_save_counter += 1;
-        assert!(self.disable_automatic_save_counter != 0); // overflow!
+        assert_ne!(self.disable_automatic_save_counter, 0); // overflow!
     }
 
     fn enable_automatic_saving(&mut self) {
@@ -1570,7 +1570,7 @@ impl HistorySearch {
     }
 
     pub fn prepare_to_search_after_deletion(&mut self) {
-        assert!(self.current_index != 0);
+        assert_ne!(self.current_index, 0);
         self.current_index -= 1;
         self.current_item = None;
     }

@@ -30,10 +30,13 @@ jobs:
         include:
           - rust_version: "stable"
             features: ""
+            clippy_options: ""
           - rust_version: "stable"
             features: "--no-default-features"
+            clippy_options: ""
           - rust_version: "msrv"
             features: ""
+            clippy_options: "--allow=unknown_lints"
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/rust-toolchain
@@ -44,7 +47,7 @@ jobs:
       run: |
         sudo apt install gettext
     - name: cargo clippy
-      run: cargo clippy --workspace --all-targets ${{ matrix.features }} -- --deny=warnings
+      run: cargo clippy --workspace --all-targets ${{ matrix.features }} -- ${{ matrix.clippy_options }} --deny=warnings
 
   rustdoc:
     runs-on: ubuntu-latest

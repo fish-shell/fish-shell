@@ -1385,6 +1385,7 @@ mod tests {
     use fish_util::get_seeded_rng;
     use fish_widestring::{ENCODE_DIRECT_BASE, L, WString, wstr};
     use rand::{Rng, RngCore};
+    use std::fmt::Write as _;
 
     #[test]
     fn test_escape_string() {
@@ -1525,9 +1526,9 @@ mod tests {
 
     /// Helper to convert a narrow string to a sequence of hex digits.
     fn bytes2hex(input: &[u8]) -> String {
-        let mut output = "".to_string();
+        let mut output = String::with_capacity(input.len() * 5);
         for byte in input {
-            output += &format!("0x{:2X} ", *byte);
+            write!(output, "0x{:2X} ", *byte).unwrap();
         }
         output
     }

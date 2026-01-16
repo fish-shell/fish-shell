@@ -308,16 +308,8 @@ impl RustEmbed for EmptyEmbed {
     fn get(_file_path: &str) -> Option<rust_embed::EmbeddedFile> {
         None
     }
-    fn iter() -> rust_embed::Filenames {
-        use rust_embed::Filenames::*;
-        cfg_if! {
-            // TODO This is a clone of rebuild_if_embedded_path_changed.
-            if #[cfg(any(not(debug_assertions), windows))] {
-                Embedded([].iter())
-            } else {
-                Dynamic(Box::new(None.into_iter()))
-            }
-        }
+    fn iter() -> impl Iterator<Item = std::borrow::Cow<'static, str>> {
+        std::iter::empty()
     }
 }
 

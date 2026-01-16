@@ -32,6 +32,7 @@ use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::fish_iswalnum;
 use fish_wcstringutil::count_preceding_backslashes;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
+use std::fmt::Write as _;
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex
@@ -1286,14 +1287,16 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     }
 
     // Now render these to a string.
-    let mut result = String::new();
+    let mut result = String::with_capacity(token_ranges.len() * 32);
     for range in token_ranges {
-        result += &format!(
-            "{},{},{}\n",
+        writeln!(
+            result,
+            "{},{},{}",
             range.start,
             range.end,
             highlight_role_to_string(range.role)
-        );
+        )
+        .unwrap();
     }
     result.into_bytes()
 }

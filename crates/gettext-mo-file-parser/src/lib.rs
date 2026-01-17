@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-const U32_SIZE: usize = std::mem::size_of::<u32>();
+const U32_SIZE: usize = size_of::<u32>();
 
 fn read_le_u32(bytes: &[u8]) -> u32 {
     u32::from_le_bytes(bytes[..U32_SIZE].try_into().unwrap())
@@ -47,9 +47,12 @@ fn check_if_revision_is_supported(revision: u32) -> std::io::Result<()> {
 }
 
 fn as_usize(value: u32) -> usize {
-    use std::mem::size_of;
-    const _: () = assert!(size_of::<u32>() <= size_of::<usize>());
-    usize::try_from(value).unwrap()
+    const {
+        assert!(size_of::<u32>() <= size_of::<usize>());
+    }
+
+    // SAFETY: `usize` is guaranteed to be at least as wide as `u32` by the const assert above.
+    unsafe { usize::try_from(value).unwrap_unchecked() }
 }
 
 fn parse_strings(

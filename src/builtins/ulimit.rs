@@ -87,10 +87,9 @@ pub mod limits {
 
 fn convert_resource(resource: c_uint) -> ResourceEnum {
     let resource: i32 = resource.try_into().unwrap();
-    use std::mem::{size_of, transmute};
-    // Resource is #[repr(i32)] so this is ok
-    const _: () = assert!(size_of::<c_uint>() == size_of::<ResourceEnum>());
-    unsafe { transmute(resource) }
+
+    // SAFETY: Resource is #[repr(i32)] so this is sound
+    unsafe { std::mem::transmute(resource) }
 }
 
 /// Calls getrlimit.

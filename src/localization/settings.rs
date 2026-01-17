@@ -403,7 +403,7 @@ pub fn list_available_languages() -> WString {
     }
     add_languages(&mut language_set, fish_gettext::get_available_languages);
     let mut language_list = Vec::from_iter(language_set);
-    language_list.sort();
+    language_list.sort_unstable();
     let mut languages = WString::new();
     for lang in language_list {
         languages.push_str(lang);

@@ -198,6 +198,7 @@ format_push_string = "warn"
 implicit_clone = "warn"
 len_without_is_empty = "allow"    # we're not a library crate
 let_and_return = "allow"
+manual_assert = "warn"
 manual_range_contains = "allow"
 map_unwrap_or = "warn"
 mut_mut = "warn"

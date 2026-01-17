@@ -115,12 +115,11 @@ fn embed_localizations(cache_dir: &Path) {
                     .output()
                     .unwrap()
                 };
-                if !output.status.success() {
-                    panic!(
-                        "msgfmt failed:\n{}",
-                        String::from_utf8(output.stderr).unwrap()
-                    );
-                }
+                assert!(
+                    output.status.success(),
+                    "msgfmt failed:\n{}",
+                    String::from_utf8(output.stderr).unwrap()
+                );
                 let mo_data =
                     tmp_mo_file.map_or(output.stdout, |path| std::fs::read(path).unwrap());
 

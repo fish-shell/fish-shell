@@ -261,7 +261,10 @@ pub const fn help_section_exists(section: &str) -> bool {
 #[macro_export]
 macro_rules! help_section {
     ($section:expr) => {{
-        const _: () = assert!($crate::help_section_exists($section));
+        const {
+            assert!($crate::help_section_exists($section));
+        }
+
         $section
     }};
 }

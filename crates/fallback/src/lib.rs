@@ -36,7 +36,10 @@ pub fn wcwidth(c: char) -> isize {
         pub unsafe fn wcwidth(c: libc::wchar_t) -> libc::c_int;
     }
 
-    const _: () = assert!(std::mem::size_of::<libc::wchar_t>() >= std::mem::size_of::<char>());
+    const {
+        assert!(size_of::<libc::wchar_t>() >= size_of::<char>());
+    }
+
     let width = unsafe { wcwidth(c as libc::wchar_t) };
     isize::try_from(width).unwrap()
 }

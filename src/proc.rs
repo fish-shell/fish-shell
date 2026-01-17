@@ -148,12 +148,13 @@ impl ProcStatus {
                or invalid builtin exit code!"
         );
 
-        // Some paranoia.
-        const _zerocode: i32 = ProcStatus::w_exitcode(0, 0);
-        const _: () = assert!(
-            WIFEXITED(_zerocode),
-            "Synthetic exit status not reported as exited"
-        );
+        const {
+            let _zerocode = ProcStatus::w_exitcode(0, 0);
+            assert!(
+                WIFEXITED(_zerocode),
+                "Synthetic exit status not reported as exited"
+            );
+        }
 
         assert!(ret < 256);
         ProcStatus::new(Some(Self::w_exitcode(ret, 0 /* sig */)))

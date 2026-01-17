@@ -1,6 +1,7 @@
 use super::{localizable_consts, localizable_string, wgettext, wgettext_fmt};
 use crate::env::{EnvStack, Environment};
 use fish_widestring::{L, WString, wstr};
+use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 use std::sync::{LazyLock, Mutex};
 
@@ -392,22 +393,9 @@ pub fn status_language() -> WString {
 }
 
 pub fn list_available_languages() -> WString {
-    let mut language_set = HashSet::new();
-    fn add_languages<'a, 'b: 'a, LocalizationLanguage: 'a>(
-        language_set: &mut HashSet<&'b str>,
-        get_available_languages: fn() -> &'a HashMap<&'b str, LocalizationLanguage>,
-    ) {
-        for &lang in get_available_languages().keys() {
-            language_set.insert(lang);
-        }
-    }
-    add_languages(&mut language_set, fish_gettext::get_available_languages);
-    let mut language_list = Vec::from_iter(language_set);
-    language_list.sort_unstable();
-    let mut languages = WString::new();
-    for lang in language_list {
-        languages.push_str(lang);
-        languages.push('\n');
-    }
-    languages
+    fish_gettext::get_available_languages()
+        .keys()
+        .sorted_unstable()
+        .flat_map(|lang| [lang, "\n"])
+        .collect()
 }

@@ -31,6 +31,7 @@ fish-wcstringutil = { path = "crates/wcstringutil" }
 fish-widecharwidth = { path = "crates/widecharwidth" }
 fish-widestring = { path = "crates/widestring" }
 fish-wgetopt = { path = "crates/wgetopt" }
+itertools = "0.14.0"
 libc = "0.2.177"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
@@ -106,9 +107,10 @@ fish-printf.workspace = true
 fish-tempfile.workspace = true
 fish-util.workspace = true
 fish-wcstringutil.workspace = true
+fish-wgetopt.workspace = true
 fish-widecharwidth.workspace = true
 fish-widestring.workspace = true
-fish-wgetopt.workspace = true
+itertools.workspace = true
 libc.workspace = true
 lru.workspace = true
 macro_rules_attribute = "0.2.2"

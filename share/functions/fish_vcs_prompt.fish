@@ -4,9 +4,9 @@ function fish_vcs_prompt --description "Print all vcs prompts"
     fish_jj_prompt $argv
     or fish_git_prompt $argv
     or fish_hg_prompt $argv
-    or fish_fossil_prompt $argv
-    # The svn prompt is disabled by default because it's quite slow on common svn repositories.
-    # To enable it uncomment it.
-    # You can also only use it in specific directories by checking $PWD.
+    # The svn and fossil prompts are disabled by default because they can be quite slow.
+    # To enable them uncomment them.
+    # You can also only use them in specific directories by checking $PWD.
+    # or fish_fossil_prompt $argv
     # or fish_svn_prompt
 end

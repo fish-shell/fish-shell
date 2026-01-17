@@ -420,8 +420,7 @@ impl IoBuffer {
 
         // We want to swallow EINTR only; in particular EAGAIN needs to be returned back to the caller.
         let amt = loop {
-            let amt =
-                unsafe { libc::read(fd, bytes.as_mut_ptr().cast(), std::mem::size_of_val(&bytes)) };
+            let amt = unsafe { libc::read(fd, bytes.as_mut_ptr().cast(), size_of_val(&bytes)) };
             if amt < 0 && errno::errno().0 == EINTR {
                 continue;
             }

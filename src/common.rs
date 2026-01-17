@@ -256,7 +256,7 @@ fn byte_to_hex(byte: u8) -> (char, char) {
 fn escape_string_url(input: &wstr) -> WString {
     let narrow = wcs2bytes(input);
     let mut out = WString::new();
-    for byte in narrow.into_iter() {
+    for byte in narrow {
         if (byte & 0x80) == 0 {
             let c = char::from_u32(u32::from(byte)).unwrap();
             if c.is_alphanumeric() || [b'/', b'.', b'~', b'-', b'_'].contains(&byte) {
@@ -279,7 +279,7 @@ fn escape_string_var(input: &wstr) -> WString {
     let mut prev_was_hex_encoded = false;
     let narrow = wcs2bytes(input);
     let mut out = WString::new();
-    for c in narrow.into_iter() {
+    for c in narrow {
         let ch: char = c.into();
         if ((c & 0x80) == 0 && ch.is_alphanumeric())
             && (!prev_was_hex_encoded || !is_upper_hex_digit(ch))

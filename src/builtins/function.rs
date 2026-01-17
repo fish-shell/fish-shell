@@ -355,7 +355,7 @@ pub fn function(
     function::add(function_name.clone(), Arc::new(props));
 
     // Handle wrap targets by creating the appropriate completions.
-    for wt in opts.wrap_targets.into_iter() {
+    for wt in opts.wrap_targets {
         complete_add_wrapper(function_name.clone(), wt.clone());
     }
 

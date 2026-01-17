@@ -75,12 +75,12 @@ fn build_man(sec1_dir: &Path) {
         .spawn()
     {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            if env_var("FISH_BUILD_DOCS") == Some("1".to_string()) {
-                panic!(
-                    "Could not find sphinx-build required to build man pages.\n\
-                     Install Sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0."
-                );
-            }
+            assert_ne!(
+                env_var("FISH_BUILD_DOCS"),
+                Some("1".to_string()),
+                "Could not find sphinx-build required to build man pages.\n\
+                 Install Sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0."
+            );
             rsconf::warn!(
                 "Could not find sphinx-build required to build man pages. \
                  If you install Sphinx now, you need to trigger a rebuild to include man pages. \
@@ -107,9 +107,10 @@ fn build_man(sec1_dir: &Path) {
                 rsconf::warn!("sphinx-build: {}", String::from_utf8_lossy(&out.stderr));
             }
             assert_eq!(&String::from_utf8_lossy(&out.stdout), "");
-            if !out.status.success() {
-                panic!("sphinx-build failed to build the man pages.");
-            }
+            assert!(
+                out.status.success(),
+                "sphinx-build failed to build the man pages."
+            )
         }
     }
 }

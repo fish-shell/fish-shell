@@ -508,11 +508,12 @@ mod tests {
                 false
             })
             .unwrap();
-        if timeout.timed_out() {
-            panic!(concat!(
+        assert!(
+            !timeout.timed_out(),
+            concat!(
                 "Timeout waiting for condition variable to be notified! ",
                 "Does the platform support signalling a condvar without the mutex held?"
-            ));
-        }
+            )
+        )
     }
 }

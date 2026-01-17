@@ -88,13 +88,8 @@ impl FdEventSignaller {
         );
         let mut ret;
         loop {
-            ret = unsafe {
-                libc::read(
-                    self.read_fd(),
-                    buff.as_mut_ptr().cast(),
-                    std::mem::size_of_val(&buff),
-                )
-            };
+            ret =
+                unsafe { libc::read(self.read_fd(), buff.as_mut_ptr().cast(), size_of_val(&buff)) };
             if ret >= 0 || errno().0 != EINTR {
                 break;
             }

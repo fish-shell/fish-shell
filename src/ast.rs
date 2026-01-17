@@ -202,7 +202,7 @@ pub trait Node: Acceptor + AsNode + std::fmt::Debug {
     /// The raw byte size of this node, excluding children.
     /// This also excludes the allocations stored in lists.
     fn self_memory_size(&self) -> usize {
-        std::mem::size_of_val(self)
+        size_of_val(self)
     }
 }
 

@@ -193,6 +193,7 @@ rustdoc.private_intra_doc_links = "allow"
 [workspace.lints.clippy]
 assigning_clones = "warn"
 cloned_instead_of_copied = "warn"
+explicit_into_iter_loop = "warn"
 implicit_clone = "warn"
 len_without_is_empty = "allow"    # we're not a library crate
 let_and_return = "allow"

@@ -84,7 +84,7 @@ fn append_space_separated_list<S: AsRef<str>>(
     string: &mut WString,
     list: impl IntoIterator<Item = S>,
 ) {
-    for lang in list.into_iter() {
+    for lang in list {
         string.push(' ');
         string.push_utfstr(&crate::common::escape(
             WString::from_str(lang.as_ref()).as_utfstr(),

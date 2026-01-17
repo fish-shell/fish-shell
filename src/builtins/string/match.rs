@@ -146,7 +146,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
             ..
         }) = matcher
         {
-            for (name, vals) in first_match_captures.into_iter() {
+            for (name, vals) in first_match_captures {
                 parser.set_var(&WString::from(name), ParserEnvSetMode::default(), vals);
             }
         }

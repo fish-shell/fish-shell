@@ -861,8 +861,8 @@ fn test_float_hex_prec() {
     let mut libc_sprintf = libc_sprintf_one_float_with_precision(&mut c_storage, c"%.*a");
 
     let mut failed = false;
-    for sign in [1.0, -1.0].into_iter() {
-        for mut v in [0.0, 0.5, 1.0, 1.5, PI, TAU, E].into_iter() {
+    for sign in [1.0, -1.0] {
+        for mut v in [0.0, 0.5, 1.0, 1.5, PI, TAU, E] {
             v *= sign;
             for preci in 1..=200_usize {
                 rust_str.clear();

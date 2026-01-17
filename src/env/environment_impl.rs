@@ -646,7 +646,7 @@ impl EnvScopedImpl {
 
         // Construct the export list: a list of strings of the form key=value.
         let mut export_list: Vec<CString> = Vec::with_capacity(vals.len());
-        for (key, val) in vals.into_iter() {
+        for (key, val) in vals {
             let mut str = key;
             str.push('=');
             str.push_utfstr(&val.as_string());

@@ -130,4 +130,8 @@ else
     echo "fish-symlink/symlink_file not handled correctly: $real_path != expected_real_path" >&2
 end
 
+builtin realpath / /
+# CHECK: /
+# CHECK: /
+
 exit 0

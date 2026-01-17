@@ -67,65 +67,59 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
         return Ok(SUCCESS);
     }
 
-    // TODO: allow arbitrary args. `realpath *` should print many paths
-    if optind + 1 != args.len() {
-        streams.err.append(&wgettext_fmt!(
-            BUILTIN_ERR_ARG_COUNT1,
-            cmd,
-            0,
-            args.len() - 1
-        ));
+    if optind == args.len() {
         builtin_print_help(parser, streams, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
 
-    let arg = args[optind];
+    let mut had_error = false;
 
-    if !opts.no_symlinks {
-        if let Some(real_path) = wrealpath(arg) {
-            streams.out.append(&real_path);
-        } else {
-            let errno = errno();
-            if errno.0 != 0 {
-                // realpath() just couldn't do it. Report the error and make it clear
-                // this is an error from our builtin, not the system's realpath.
-                streams.err.append(&wgettext_fmt!(
-                    "builtin %s: %s: %s\n",
-                    cmd,
-                    arg,
-                    errno.to_string()
-                ));
+    for &arg in &args[optind..] {
+        if !opts.no_symlinks {
+            if let Some(real_path) = wrealpath(arg) {
+                streams.out.append(&real_path);
+                streams.out.append(L!("\n"));
             } else {
-                // Who knows. Probably a bug in our wrealpath() implementation.
-                streams
-                    .err
-                    .append(&wgettext_fmt!("builtin %s: Invalid arg: %s\n", cmd, arg));
+                let errno = errno();
+                if errno.0 != 0 {
+                    streams.err.append(&wgettext_fmt!(
+                        "builtin %s: %s: %s\n",
+                        cmd,
+                        arg,
+                        errno.to_string()
+                    ));
+                } else {
+                    streams
+                        .err
+                        .append(&wgettext_fmt!("builtin %s: Invalid arg: %s\n", cmd, arg));
+                }
+                had_error = true;
             }
-
-            return Err(STATUS_CMD_ERROR);
-        }
-    } else {
-        // We need to get the *physical* pwd here.
-        let realpwd = wrealpath(&parser.vars().get_pwd_slash());
-
-        if let Some(realpwd) = realpwd {
-            let absolute_arg = if arg.starts_with(L!("/")) {
-                arg.to_owned()
-            } else {
-                path_apply_working_directory(arg, &realpwd)
-            };
-            streams.out.append(&normalize_path(&absolute_arg, false));
         } else {
-            streams.err.append(&wgettext_fmt!(
-                "builtin %s: realpath failed: %s\n",
-                cmd,
-                errno().to_string()
-            ));
-            return Err(STATUS_CMD_ERROR);
+            let realpwd = wrealpath(&parser.vars().get_pwd_slash());
+
+            if let Some(realpwd) = realpwd {
+                let absolute_arg = if arg.starts_with(L!("/")) {
+                    arg.to_owned()
+                } else {
+                    path_apply_working_directory(arg, &realpwd)
+                };
+                streams.out.append(&normalize_path(&absolute_arg, false));
+                streams.out.append(L!("\n"));
+            } else {
+                streams.err.append(&wgettext_fmt!(
+                    "builtin %s: realpath failed: %s\n",
+                    cmd,
+                    errno().to_string()
+                ));
+                had_error = true;
+            }
         }
     }
 
-    streams.out.append(L!("\n"));
-
-    Ok(SUCCESS)
+    if had_error {
+        Err(STATUS_CMD_ERROR)
+    } else {
+        Ok(SUCCESS)
+    }
 }

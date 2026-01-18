@@ -35,6 +35,7 @@ use crate::signal::{Signal, signal_check_cancel, signal_clear_cancel};
 use crate::wait_handle::WaitHandleStore;
 use crate::wutil::perror;
 use crate::{flog, flogf, function};
+use assert_matches::assert_matches;
 use fish_util::get_time;
 use fish_widestring::WExt;
 use libc::c_int;
@@ -568,7 +569,7 @@ impl Parser {
         block_type: BlockType,
         test_only_suppress_stderr: bool,
     ) -> EvalRes {
-        assert!(matches!(block_type, BlockType::top | BlockType::subst));
+        assert_matches!(block_type, BlockType::top | BlockType::subst);
         let job_list = ps.top_job_list();
         if !job_list.is_empty() {
             // Execute the top job list.
@@ -647,8 +648,9 @@ impl Parser {
         test_only_suppress_stderr: bool,
     ) -> EvalRes {
         // Only certain blocks are allowed.
-        assert!(
-            matches!(block_type, BlockType::top | BlockType::subst),
+        assert_matches!(
+            block_type,
+            BlockType::top | BlockType::subst,
             "Invalid block type"
         );
 

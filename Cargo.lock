@@ -68,6 +68,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "assert_matches"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b34d609dfbaf33d6889b2b7106d3ca345eacad44200913df5ba02bfd31d2ba9"
+
+[[package]]
 name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -256,6 +262,7 @@ checksum = "645cbb3a84e60b7531617d5ae4e57f7e27308f6445f5abf653209ea76dec8dff"
 name = "fish"
 version = "4.3.3"
 dependencies = [
+ "assert_matches",
  "bitflags",
  "cc",
  "cfg-if",
@@ -376,6 +383,7 @@ version = "0.0.0"
 name = "fish-printf"
 version = "0.2.1"
 dependencies = [
+ "assert_matches",
  "libc",
  "unicode-segmentation",
  "unicode-width",
@@ -413,6 +421,7 @@ dependencies = [
 name = "fish-wgetopt"
 version = "0.0.0"
 dependencies = [
+ "assert_matches",
  "fish-wcstringutil",
  "fish-widestring",
 ]

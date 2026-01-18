@@ -11,6 +11,7 @@ repository = "https://github.com/fish-shell/fish-shell"
 license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
 
 [workspace.dependencies]
+assert_matches = "1.5.0"
 bitflags = "2.5.0"
 cc = "1.0.94"
 cfg-if = "1.0.3"
@@ -94,6 +95,7 @@ homepage = "https://fishshell.com"
 readme = "README.rst"
 
 [dependencies]
+assert_matches.workspace = true
 bitflags.workspace = true
 cfg-if.workspace = true
 errno.workspace = true

@@ -30,6 +30,7 @@ use crate::threads;
 use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer};
 use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::fish_iswalnum;
+use assert_matches::assert_matches;
 use fish_wcstringutil::count_preceding_backslashes;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 use std::fmt::Write as _;
@@ -394,7 +395,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                             return result;
                         }
                         let p = self.traversal.parent(p);
-                        assert!(matches!(p.kind(), Kind::Statement(_)));
+                        assert_matches!(p.kind(), Kind::Statement(_));
                         let p = self.traversal.parent(p);
                         if let Kind::JobPipeline(job) = p.kind() {
                             if !job.variables.is_empty() {

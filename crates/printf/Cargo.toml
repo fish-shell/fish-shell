@@ -8,10 +8,11 @@ description = "printf implementation, based on musl"
 license = "MIT"
 
 [dependencies]
+assert_matches.workspace = true
 libc.workspace = true
-widestring = { workspace = true, optional = true }
 unicode-segmentation.workspace = true
 unicode-width.workspace = true
+widestring = { workspace = true, optional = true }
 
 [lints]
 workspace = true

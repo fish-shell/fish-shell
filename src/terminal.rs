@@ -39,14 +39,14 @@ pub fn set_color_support(val: ColorSupport) {
     COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum Paintable {
     Foreground,
     Background,
     Underline,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) enum TerminalCommand<'a> {
     // Text attributes
     ExitAttributeMode,
@@ -311,7 +311,7 @@ fn rgb_color(out: &mut impl Output, paintable: Paintable, rgb: Color24) -> bool 
     true
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) enum CardinalDirection {
     Up,
     Left,

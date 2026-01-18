@@ -263,7 +263,7 @@ trait NodeMut: Node + AcceptorMut {}
 impl<T> NodeMut for T where T: Node + AcceptorMut {}
 
 /// The different kinds of nodes. Note that Token and Keyword have different subtypes.
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Kind<'a> {
     Redirection(&'a Redirection),
     Token(&'a dyn Token),

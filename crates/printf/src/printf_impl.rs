@@ -2,6 +2,7 @@
 use super::arg::Arg;
 use super::fmt_fp::format_float;
 use super::locale::Locale;
+use assert_matches::assert_matches;
 use std::fmt::{self, Write};
 use std::mem;
 use std::result::Result;
@@ -301,7 +302,7 @@ pub(super) fn pad(
     min_width: usize,
     current_width: usize,
 ) -> fmt::Result {
-    assert!(c == '0' || c == ' ');
+    assert_matches!(c, '0' | ' ');
     if current_width >= min_width {
         return Ok(());
     }

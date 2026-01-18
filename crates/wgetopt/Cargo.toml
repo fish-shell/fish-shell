@@ -7,6 +7,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+assert_matches.workspace = true
 fish-wcstringutil.workspace = true
 fish-widestring.workspace = true
 

@@ -24,6 +24,7 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
+use assert_matches::assert_matches;
 use fish_widestring::prelude::*;
 
 /// Special char used with [`Ordering::ReturnInOrder`].
@@ -397,7 +398,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         option_index: usize,
     ) -> char {
         self.wopt_index += 1;
-        assert!(matches!(self.remaining_text.char_at(name_end), '\0' | '='));
+        assert_matches!(self.remaining_text.char_at(name_end), '\0' | '=');
 
         if self.remaining_text.char_at(name_end) == '=' {
             if opt_found.arg_type == ArgType::NoArgument {

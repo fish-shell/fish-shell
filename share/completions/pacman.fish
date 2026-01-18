@@ -26,6 +26,17 @@ function __fish_pacman_print_package_groups
     printf '%s\n' $groups\t'Package Group'
 end
 
+# Used for pacman -F, which only handles basenames and absolute paths.
+function __fish_pacman_complete_absolute_paths
+    set -l target (commandline -ct)
+
+    if string match -q '/*' -- $target
+        __fish_complete_path $target
+    else if test -z $target
+        printf '%s\n' ''\t'Filename' /\t'Absolute Path'
+    end
+end
+
 # Do a normal __fish_print_pacman_packages, unless the command line has "$repo/...".
 # In that case, no package would matched, so it searches for packages in that repo
 # instead.
@@ -182,7 +193,7 @@ complete -c $progname -n '__fish_pacman_has_operation F' -s x -l regex -d 'Inter
 complete -c $progname -n '__fish_pacman_has_operation F' -s q -l quiet -d 'Show less information' -f
 complete -c $progname -n '__fish_pacman_has_operation F' -l machinereadable -d 'Print each match in a machine readable output format' -f
 complete -c $progname -n '__fish_pacman_has_operation F' -n '__fish_contains_opt -s l list' -d Package -xa '(__fish_print_pacman_packages)'
-complete -c $progname -n '__fish_pacman_has_operation F' -n 'not __fish_contains_opt -s l list' -d File -rF
+complete -c $progname -n '__fish_pacman_has_operation F' -n 'not __fish_contains_opt -s l list' -d File -xa '(__fish_pacman_complete_absolute_paths)'
 
 # No extra options (-U)
 complete -c $progname -n '__fish_pacman_has_operation U' -d 'Package File' -xka "(__fish_complete_suffix $pkgexts)"

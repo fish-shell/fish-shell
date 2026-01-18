@@ -51,11 +51,13 @@ enum AssetDir {
     Completions,
 }
 
+#[derive(Debug)]
 pub enum AutoloadPath {
     Embedded(String),
     Path(WString),
 }
 
+#[derive(Debug)]
 pub enum AutoloadResult {
     Path(AutoloadPath),
     Loaded,
@@ -455,6 +457,7 @@ mod tests {
     use super::{Autoload, AutoloadResult};
     use crate::prelude::*;
     use crate::tests::prelude::*;
+    use assert_matches::assert_matches;
 
     #[test]
     #[serial]
@@ -505,39 +508,39 @@ mod tests {
         autoload.invalidate_cache();
 
         assert!(!autoload.autoload_in_progress(L!("file1")));
-        assert!(matches!(
+        assert_matches!(
             autoload.resolve_command_impl(L!("file1"), paths),
             AutoloadResult::Path(_)
-        ));
-        assert!(matches!(
+        );
+        assert_matches!(
             autoload.resolve_command_impl(L!("file1"), paths),
             AutoloadResult::Pending
-        ));
+        );
         assert!(autoload.autoload_in_progress(L!("file1")));
         assert_eq!(autoload.get_autoloaded_commands(), vec![L!("file1")]);
         autoload.mark_autoload_finished(L!("file1"));
         assert!(!autoload.autoload_in_progress(L!("file1")));
         assert_eq!(autoload.get_autoloaded_commands(), vec![L!("file1")]);
 
-        assert!(matches!(
+        assert_matches!(
             autoload.resolve_command_impl(L!("file1"), paths),
             AutoloadResult::Loaded
-        ));
+        );
         assert!(
             autoload
                 .resolve_command_impl(L!("nothing"), paths)
                 .is_none()
         );
         assert!(autoload.resolve_command_impl(L!("file2"), paths).is_some());
-        assert!(matches!(
+        assert_matches!(
             autoload.resolve_command_impl(L!("file2"), paths),
             AutoloadResult::Pending
-        ));
+        );
         autoload.mark_autoload_finished(L!("file2"));
-        assert!(matches!(
+        assert_matches!(
             autoload.resolve_command_impl(L!("file2"), paths),
             AutoloadResult::Loaded
-        ));
+        );
         assert_eq!(
             autoload.get_autoloaded_commands(),
             vec![L!("file1"), L!("file2")]
@@ -546,26 +549,26 @@ mod tests {
         autoload.clear();
         assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());
         autoload.mark_autoload_finished(L!("file1"));
-        assert!(matches!(
+        assert_matches!(
             autoload.resolve_command_impl(L!("file1"), paths),
             AutoloadResult::Loaded
-        ));
+        );
         assert!(
             autoload
                 .resolve_command_impl(L!("nothing"), paths)
                 .is_none()
         );
         assert!(autoload.resolve_command_impl(L!("file2"), paths).is_some());
-        assert!(matches!(
+        assert_matches!(
             autoload.resolve_command_impl(L!("file2"), paths),
             AutoloadResult::Pending
-        ));
+        );
         autoload.mark_autoload_finished(L!("file2"));
 
-        assert!(matches!(
+        assert_matches!(
             autoload.resolve_command_impl(L!("file1"), paths),
             AutoloadResult::Loaded
-        ));
+        );
         touch_file(&sprintf!("%s/file1.fish", p1));
         autoload.invalidate_cache();
         assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());

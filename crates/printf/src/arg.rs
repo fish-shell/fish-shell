@@ -199,27 +199,28 @@ impl_to_arg_u!(u8, u16, u32, u64, usize);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert_matches::assert_matches;
     #[cfg(feature = "widestring")]
     use widestring::utf32str;
 
     #[test]
     fn test_to_arg() {
-        assert!(matches!("test".to_arg(), Arg::Str("test")));
-        assert!(matches!(String::from("test").to_arg(), Arg::Str(_)));
+        assert_matches!("test".to_arg(), Arg::Str("test"));
+        assert_matches!(String::from("test").to_arg(), Arg::Str(_));
         #[cfg(feature = "widestring")]
-        assert!(matches!(utf32str!("test").to_arg(), Arg::WStr(_)));
+        assert_matches!(utf32str!("test").to_arg(), Arg::WStr(_));
         #[cfg(feature = "widestring")]
-        assert!(matches!(WString::from("test").to_arg(), Arg::WStr(_)));
-        assert!(matches!(42f32.to_arg(), Arg::Float(_)));
-        assert!(matches!(42f64.to_arg(), Arg::Float(_)));
-        assert!(matches!('x'.to_arg(), Arg::UInt(120)));
+        assert_matches!(WString::from("test").to_arg(), Arg::WStr(_));
+        assert_matches!(42f32.to_arg(), Arg::Float(_));
+        assert_matches!(42f64.to_arg(), Arg::Float(_));
+        assert_matches!('x'.to_arg(), Arg::UInt(120));
         let mut usize_val: usize = 0;
-        assert!(matches!((&mut usize_val).to_arg(), Arg::USizeRef(_)));
-        assert!(matches!(42i8.to_arg(), Arg::SInt(42)));
-        assert!(matches!(42i16.to_arg(), Arg::SInt(42)));
-        assert!(matches!(42i32.to_arg(), Arg::SInt(42)));
-        assert!(matches!(42i64.to_arg(), Arg::SInt(42)));
-        assert!(matches!(42isize.to_arg(), Arg::SInt(42)));
+        assert_matches!((&mut usize_val).to_arg(), Arg::USizeRef(_));
+        assert_matches!(42i8.to_arg(), Arg::SInt(42));
+        assert_matches!(42i16.to_arg(), Arg::SInt(42));
+        assert_matches!(42i32.to_arg(), Arg::SInt(42));
+        assert_matches!(42i64.to_arg(), Arg::SInt(42));
+        assert_matches!(42isize.to_arg(), Arg::SInt(42));
 
         assert_eq!((-42i8).to_arg(), Arg::SInt(-42));
         assert_eq!((-42i16).to_arg(), Arg::SInt(-42));
@@ -227,14 +228,14 @@ mod tests {
         assert_eq!((-42i64).to_arg(), Arg::SInt(-42));
         assert_eq!((-42isize).to_arg(), Arg::SInt(-42));
 
-        assert!(matches!(42u8.to_arg(), Arg::UInt(42)));
-        assert!(matches!(42u16.to_arg(), Arg::UInt(42)));
-        assert!(matches!(42u32.to_arg(), Arg::UInt(42)));
-        assert!(matches!(42u64.to_arg(), Arg::UInt(42)));
-        assert!(matches!(42usize.to_arg(), Arg::UInt(42)));
+        assert_matches!(42u8.to_arg(), Arg::UInt(42));
+        assert_matches!(42u16.to_arg(), Arg::UInt(42));
+        assert_matches!(42u32.to_arg(), Arg::UInt(42));
+        assert_matches!(42u64.to_arg(), Arg::UInt(42));
+        assert_matches!(42usize.to_arg(), Arg::UInt(42));
 
         let ptr = std::ptr::from_ref(&42f32);
-        assert!(matches!(ptr.to_arg(), Arg::UInt(_)));
+        assert_matches!(ptr.to_arg(), Arg::UInt(_));
     }
 
     #[test]

@@ -331,6 +331,7 @@ impl Iterator for Iter {
 mod tests {
     use super::{DirEntryType, DirIter};
     use crate::prelude::*;
+    use assert_matches::assert_matches;
     use fish_widestring::L;
     use nix::sys::stat::Mode;
     use std::fs::File;
@@ -383,7 +384,7 @@ mod tests {
             panic!("Expected error");
         };
         let err = err.raw_os_error().expect("Should have an errno value");
-        assert!(err == ENOENT || err == EACCES);
+        assert_matches!(err, ENOENT | EACCES);
 
         let temp_dir = fish_tempfile::new_dir().unwrap();
         let basepath = WString::from(temp_dir.path().to_str().unwrap());

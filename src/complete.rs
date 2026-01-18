@@ -45,6 +45,7 @@ use crate::{
     localization::{LocalizableString, localizable_string},
     reader::{get_quote, is_backslashed},
 };
+use assert_matches::assert_matches;
 use bitflags::bitflags;
 use fish_util::wcsfilecmp;
 use fish_wcstringutil::{
@@ -720,7 +721,7 @@ impl<'ctx> Completer<'ctx> {
         }
         for tok in &tokens {
             // If there was an error, it was in the last token.
-            assert!(matches!(tok.type_, TokenType::String | TokenType::Redirect));
+            assert_matches!(tok.type_, TokenType::String | TokenType::Redirect);
         }
         // If we are completing a variable name or a tilde expansion user name, we do that and
         // return. No need for any other completions.

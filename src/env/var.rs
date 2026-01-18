@@ -323,6 +323,7 @@ mod tests {
     use crate::env::environment::{EnvStack, Environment};
     use crate::prelude::*;
     use crate::tests::prelude::*;
+    use assert_matches::assert_matches;
     use std::{
         mem::MaybeUninit,
         time::{SystemTime, UNIX_EPOCH},
@@ -361,7 +362,7 @@ mod tests {
         let first_tstamp = return_timezone_hour(tstamp, L!("UTC-1"));
         let second_tstamp = return_timezone_hour(tstamp, L!("UTC-2"));
         let delta = second_tstamp - first_tstamp;
-        assert!(delta == 1 || delta == -23);
+        assert_matches!(delta, 1 | -23);
     }
 
     // Verify that setting special env vars have the expected effect on the current shell process.

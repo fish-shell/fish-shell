@@ -142,6 +142,7 @@ use crate::tty_handoff::{
 use crate::wildcard::wildcard_has;
 use crate::wutil::{fstat, perror, write_to_fd, wstat};
 use crate::{abbrs, event, function};
+use assert_matches::assert_matches;
 use fish_fallback::fish_wcwidth;
 use fish_wcstringutil::{
     CaseSensitivity, StringFuzzyMatch, count_preceding_backslashes, join_strings,
@@ -6782,10 +6783,7 @@ fn reader_can_replace(s: &wstr, flags: CompleteFlags) -> bool {
 impl<'a> Reader<'a> {
     /// Compute completions and update the pager and/or commandline as needed.
     fn compute_and_apply_completions(&mut self, c: ReadlineCmd) {
-        assert!(matches!(
-            c,
-            ReadlineCmd::Complete | ReadlineCmd::CompleteAndSearch
-        ));
+        assert_matches!(c, ReadlineCmd::Complete | ReadlineCmd::CompleteAndSearch);
         assert!(
             !get_tty_protocols_active(),
             "should not be called with TTY protocols active"

@@ -473,6 +473,7 @@ mod tests {
     use std::thread;
     use std::time::Duration;
 
+    use assert_matches::assert_matches;
     use errno::errno;
 
     use crate::fd_monitor::{FdEventSignaller, FdMonitor};
@@ -694,8 +695,9 @@ mod tests {
             Some(read_fd)
         };
         let result = do_something_bad_during_select(dup2_it);
-        assert!(
-            matches!(result, Err(libc::EBADF) | Ok(0 | 1)),
+        assert_matches!(
+            result,
+            Err(libc::EBADF) | Ok(0 | 1),
             "select/poll should have failed with EBADF or timed out or the fd should be ready"
         );
         // Ensure these stay alive until after thread is joined.

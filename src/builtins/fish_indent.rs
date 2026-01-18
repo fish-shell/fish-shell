@@ -1213,39 +1213,6 @@ fn read_file(mut f: impl Read) -> Result<WString, ()> {
     Ok(bytes2wcstring(&buf))
 }
 
-fn highlight_role_to_string(role: HighlightRole) -> &'static str {
-    match role {
-        HighlightRole::normal => "normal",
-        HighlightRole::error => "error",
-        HighlightRole::command => "command",
-        HighlightRole::keyword => "keyword",
-        HighlightRole::statement_terminator => "statement_terminator",
-        HighlightRole::param => "param",
-        HighlightRole::option => "option",
-        HighlightRole::comment => "comment",
-        HighlightRole::search_match => "search_match",
-        HighlightRole::operat => "operat",
-        HighlightRole::escape => "escape",
-        HighlightRole::quote => "quote",
-        HighlightRole::redirection => "redirection",
-        HighlightRole::autosuggestion => "autosuggestion",
-        HighlightRole::selection => "selection",
-        HighlightRole::pager_progress => "pager_progress",
-        HighlightRole::pager_background => "pager_background",
-        HighlightRole::pager_prefix => "pager_prefix",
-        HighlightRole::pager_completion => "pager_completion",
-        HighlightRole::pager_description => "pager_description",
-        HighlightRole::pager_secondary_background => "pager_secondary_background",
-        HighlightRole::pager_secondary_prefix => "pager_secondary_prefix",
-        HighlightRole::pager_secondary_completion => "pager_secondary_completion",
-        HighlightRole::pager_secondary_description => "pager_secondary_description",
-        HighlightRole::pager_selected_background => "pager_selected_background",
-        HighlightRole::pager_selected_prefix => "pager_selected_prefix",
-        HighlightRole::pager_selected_completion => "pager_selected_completion",
-        HighlightRole::pager_selected_description => "pager_selected_description",
-    }
-}
-
 // Entry point for Pygments CSV output.
 // Our output is a newline-separated string.
 // Each line is of the form `start,end,role`
@@ -1294,7 +1261,7 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
                 ",",
                 &range.end.to_string(),
                 ",",
-                highlight_role_to_string(range.role),
+                range.role.into(),
                 "\n",
             ]);
             out

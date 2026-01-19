@@ -2,7 +2,7 @@ include(FeatureSummary)
 include(FindRust)
 find_package(Rust REQUIRED)
 
-set(FISH_RUST_BUILD_DIR "${CMAKE_BINARY_DIR}/cargo/build")
+set(FISH_RUST_BUILD_DIR "${CMAKE_BINARY_DIR}/cargo")
 
 if(DEFINED ASAN)
     list(APPEND CARGO_FLAGS "-Z" "build-std")

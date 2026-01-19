@@ -24,7 +24,7 @@ if set -l -q _flag_all
     end
 end
 
-set -l workspace_root (status dirname)/..
+set -l workspace_root (realpath (status dirname)/..)
 
 if test $all = yes
     if not set -l -q _flag_force; and not set -l -q _flag_check

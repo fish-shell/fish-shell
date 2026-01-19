@@ -7,9 +7,9 @@ find_program(SPHINX_EXECUTABLE NAMES sphinx-build
 include(FeatureSummary)
 
 set(SPHINX_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/doc_src")
-set(SPHINX_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}/user_doc")
-set(SPHINX_HTML_DIR "${SPHINX_ROOT_DIR}/html")
-set(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
+set(SPHINX_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/user_doc")
+set(SPHINX_HTML_DIR "${SPHINX_OUTPUT_DIR}/html")
+set(SPHINX_MANPAGE_DIR "${SPHINX_OUTPUT_DIR}/man")
 
 set(FISH_INDENT_FOR_BUILDING_DOCS "" CACHE FILEPATH "Path to fish_indent executable for building HTML docs")
 
@@ -29,7 +29,7 @@ add_custom_target(sphinx-docs
         -j auto
         -q -b html
         -c "${SPHINX_SRC_DIR}"
-        -d "${SPHINX_ROOT_DIR}/.doctrees-html"
+        -d "${SPHINX_OUTPUT_DIR}/.doctrees-html"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_HTML_DIR}"
     DEPENDS
@@ -42,7 +42,7 @@ add_custom_target(sphinx-manpages
         -j auto
         -q -b man
         -c "${SPHINX_SRC_DIR}"
-        -d "${SPHINX_ROOT_DIR}/.doctrees-man"
+        -d "${SPHINX_OUTPUT_DIR}/.doctrees-man"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_MANPAGE_DIR}/man1"
     COMMENT "Building man pages with Sphinx")

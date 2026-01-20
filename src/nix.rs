@@ -26,12 +26,6 @@ impl TimevalExt for libc::timeval {
     }
 }
 
-pub fn geteuid() -> u32 {
-    unsafe { libc::geteuid() }
-}
-pub fn getegid() -> u32 {
-    unsafe { libc::getegid() }
-}
 pub fn getpgrp() -> i32 {
     unsafe { libc::getpgrp() }
 }

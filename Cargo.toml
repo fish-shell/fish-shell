@@ -46,6 +46,7 @@ nix = { version = "0.30.1", default-features = false, features = [
     "resource",
     "signal",
     "term",
+    "user",
 ] }
 num-traits = "0.2.19"
 once_cell = "1.19.0"

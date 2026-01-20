@@ -3,6 +3,8 @@ use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::should_flog;
 
 mod test_expressions {
+    use nix::unistd::{Gid, Uid};
+
     use super::*;
 
     use crate::nix::isatty;
@@ -931,13 +933,13 @@ mod test_expressions {
                     // "-f", for regular files
                     StatPredicate::f => md.file_type().is_file(),
                     // "-G", for check effective group ID
-                    StatPredicate::G => md.gid() == crate::nix::getegid(),
+                    StatPredicate::G => md.gid() == Gid::effective().as_raw(),
                     // "-g", for set-group-id
                     StatPredicate::g => md.permissions().mode() & S_ISGID != 0,
                     // "-k", for sticky bit
                     StatPredicate::k => md.permissions().mode() & S_ISVTX != 0,
                     // "-O", for check effective user id
-                    StatPredicate::O => md.uid() == crate::nix::geteuid(),
+                    StatPredicate::O => md.uid() == Uid::effective().as_raw(),
                     // "-p", for FIFO
                     StatPredicate::p => md.file_type().is_fifo(),
                     // "-S", socket

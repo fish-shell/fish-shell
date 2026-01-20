@@ -14,7 +14,7 @@ use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input::{FISH_BIND_MODE_VAR, init_input};
 use crate::localization::wgettext;
-use crate::nix::{geteuid, getpid};
+use crate::nix::getpid;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
     path_emit_config_directory_messages, path_get_cache, path_get_config, path_get_data,
@@ -27,7 +27,8 @@ use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_wcstol, wgetcwd};
 use fish_wcstringutil::join_strings;
 
-use libc::{c_int, uid_t};
+use libc::c_int;
+use nix::unistd::Uid;
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
@@ -479,7 +480,7 @@ fn get_hostname_identifier() -> Option<WString> {
 /// Get values for $HOME via getpwuid,
 /// without trusting $USER or $HOME.
 pub fn get_home() -> Option<String> {
-    let uid: uid_t = geteuid();
+    let uid = Uid::effective();
 
     let mut userinfo: MaybeUninit<libc::passwd> = MaybeUninit::uninit();
     let mut result: *mut libc::passwd = std::ptr::null_mut();
@@ -488,7 +489,7 @@ pub fn get_home() -> Option<String> {
     // We need to get the data via the uid and don't trust $USER.
     let retval = unsafe {
         libc::getpwuid_r(
-            uid,
+            uid.as_raw(),
             userinfo.as_mut_ptr(),
             buf.as_mut_ptr(),
             buf.len(),
@@ -511,7 +512,7 @@ pub fn get_home() -> Option<String> {
 
 /// Set up the USER and HOME variable.
 fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
-    let uid: uid_t = geteuid();
+    let uid = Uid::effective();
     let user_var = vars.get_unless_empty(L!("USER"));
 
     let mut userinfo: MaybeUninit<libc::passwd> = MaybeUninit::uninit();
@@ -533,7 +534,7 @@ fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
         };
         if retval == 0 && !result.is_null() {
             let userinfo = unsafe { userinfo.assume_init() };
-            if unsafe { *result }.pw_uid == uid {
+            if unsafe { *result }.pw_uid == uid.as_raw() {
                 // The uid matches but we still might need to set $HOME.
                 if vars.get_unless_empty(L!("HOME")).is_none() {
                     if !userinfo.pw_dir.is_null() {
@@ -556,7 +557,7 @@ fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
     // We need to get the data *again* via the uid.
     let retval = unsafe {
         libc::getpwuid_r(
-            uid,
+            uid.as_raw(),
             userinfo.as_mut_ptr(),
             buf.as_mut_ptr(),
             buf.len(),
@@ -662,7 +663,11 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
     // Set $USER, $HOME and $EUID
     // This involves going to passwd and stuff.
-    vars.set_one(L!("EUID"), global_mode, geteuid().to_wstring());
+    vars.set_one(
+        L!("EUID"),
+        global_mode,
+        Uid::effective().as_raw().to_wstring(),
+    );
     setup_user(global_exported_mode, vars);
 
     if let Some(paths) = paths {

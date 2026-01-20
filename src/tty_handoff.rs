@@ -20,6 +20,7 @@ use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror, wcstoi};
 use fish_widestring::ToWString;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
+use nix::unistd::getpgrp;
 use std::mem::MaybeUninit;
 use std::sync::{
     OnceLock,
@@ -427,10 +428,10 @@ impl TtyHandoff {
         let pgid = jg.get_pgid().unwrap();
 
         // It should never be fish's pgroup.
-        let fish_pgrp = crate::nix::getpgrp();
+        let fish_pgrp = getpgrp();
         assert_ne!(
             pgid.as_pid_t(),
-            fish_pgrp,
+            fish_pgrp.as_raw(),
             "Job should not have fish's pgroup"
         );
 
@@ -455,7 +456,7 @@ impl TtyHandoff {
         } else if current_owner == pgid.get() {
             // Case 2.
             return true;
-        } else if current_owner != pgid.get() && current_owner != fish_pgrp {
+        } else if current_owner != pgid.get() && current_owner != fish_pgrp.as_raw() {
             // Case 3.
             return false;
         }

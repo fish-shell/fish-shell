@@ -54,6 +54,7 @@ use libc::{
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat;
+use nix::unistd::getpgrp;
 use std::ffi::CStr;
 use std::io::{Read, Write};
 use std::mem::MaybeUninit;
@@ -702,7 +703,7 @@ fn fork_child_for_process(
     // Claim the tty from fish, if the job wants it and we are the pgroup leader.
     let claim_tty_from = if p.leads_pgrp && job.group().wants_terminal() {
         // getpgrp(2) cannot fail and always returns the (positive) caller's pgid
-        Some(NonZeroU32::new(crate::nix::getpgrp() as u32).unwrap())
+        Some(NonZeroU32::new(getpgrp().as_raw() as u32).unwrap())
     } else {
         None
     };

@@ -29,7 +29,10 @@ use libc::{
     SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED, WEXITSTATUS,
     WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
 };
-use nix::sys::signal::{SaFlags, SigAction, SigHandler, SigSet};
+use nix::{
+    sys::signal::{SaFlags, SigAction, SigHandler, SigSet},
+    unistd::getpgrp,
+};
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};
@@ -1107,11 +1110,11 @@ pub fn proc_wait_any(parser: &Parser) {
 
 /// Send SIGHUP to the list `jobs`, excepting those which are in fish's pgroup.
 pub fn hup_jobs(jobs: &JobList) {
-    let fish_pgrp = crate::nix::getpgrp();
+    let fish_pgrp = getpgrp();
     let mut kill_list = Vec::new();
     for j in jobs {
         let Some(pgid) = j.get_pgid() else { continue };
-        if pgid.as_pid_t() != fish_pgrp && !j.is_completed() {
+        if pgid.as_pid_t() != fish_pgrp.as_raw() && !j.is_completed() {
             j.signal(SIGHUP);
             if j.is_stopped() {
                 j.signal(SIGCONT);

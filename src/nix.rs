@@ -26,9 +26,6 @@ impl TimevalExt for libc::timeval {
     }
 }
 
-pub fn getpgrp() -> i32 {
-    unsafe { libc::getpgrp() }
-}
 pub fn getpid() -> i32 {
     unsafe { libc::getpid() }
 }

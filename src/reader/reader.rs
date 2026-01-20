@@ -28,6 +28,7 @@ use libc::{
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
+use nix::unistd::getpgrp;
 use std::borrow::Cow;
 use std::cell::UnsafeCell;
 use std::cmp;
@@ -98,7 +99,7 @@ use crate::input_common::{
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
-use crate::nix::{getpgrp, getpid, isatty};
+use crate::nix::{getpid, isatty};
 use crate::operation_context::{OperationContext, get_bg_context};
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
@@ -1018,7 +1019,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
 
     // Set up our fixed terminal modes once,
     // so we don't get flow control just because we inherited it.
-    if is_interactive_session() && getpgrp() == unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
+    if is_interactive_session() && getpgrp().as_raw() == unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
         term_donate(/*quiet=*/ true);
     }
 }
@@ -1036,7 +1037,7 @@ pub fn reader_deinit(restore_foreground_pgroup: bool) {
 /// otherwise we won't think we own the terminal.
 /// THIS FUNCTION IS CALLED FROM A SIGNAL HANDLER. IT MUST BE ASYNC-SIGNAL-SAFE.
 pub fn safe_restore_term_mode() {
-    if !is_interactive_session() || getpgrp() != unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
+    if !is_interactive_session() || getpgrp().as_raw() != unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
         return;
     }
     if let Some(modes) = safe_get_terminal_mode_on_startup() {
@@ -4933,7 +4934,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
 fn reader_interactive_init() {
     assert_is_main_thread();
 
-    let mut shell_pgid = getpgrp();
+    let mut shell_pgid = getpgrp().as_raw();
     let shell_pid = getpid();
 
     // Ensure interactive signal handling is enabled.

@@ -34,8 +34,7 @@ end
 # have an easy way to do that in the `complete` machinery at this time.
 function __fish_cargo_targets
     if command -q rustup
-        functions -q __rustup_installed_targets || complete -C"rustup " &>/dev/null
-        __rustup_installed_targets
+        rustup target list | string replace -rf "^(\S+) \(installed\)" '$1'
     else
         rustc --print target-list
     end

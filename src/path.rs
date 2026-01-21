@@ -18,32 +18,16 @@ use std::sync::LazyLock;
 
 /// Returns the user configuration directory for fish. If the directory or one of its parents
 /// doesn't exist, they are first created.
-///
-/// \param path The directory as an out param
-/// Return whether the directory was returned successfully
 pub fn path_get_config() -> Option<WString> {
-    let dir = get_config_directory();
-    if dir.success() {
-        Some(dir.path.clone())
-    } else {
-        None
-    }
+    get_config_directory().get_path()
 }
 
 /// Returns the user data directory for fish. If the directory or one of its parents doesn't exist,
 /// they are first created.
 ///
 /// Volatile files presumed to be local to the machine, such as the fish_history will be stored in this directory.
-///
-/// \param path The directory as an out param
-/// Return whether the directory was returned successfully
 pub fn path_get_data() -> Option<WString> {
-    let dir = get_data_directory();
-    if dir.success() {
-        Some(dir.path.clone())
-    } else {
-        None
-    }
+    get_data_directory().get_path()
 }
 
 /// Returns the user cache directory for fish. If the directory or one of its parents doesn't exist,
@@ -51,16 +35,8 @@ pub fn path_get_data() -> Option<WString> {
 ///
 /// Volatile files presumed to be local to the machine such as all the
 /// generated_completions, will be stored in this directory.
-///
-/// \param path The directory as an out param
-/// Return whether the directory was returned successfully
 pub fn path_get_cache() -> Option<WString> {
-    let dir = get_cache_directory();
-    if dir.success() {
-        Some(dir.path.clone())
-    } else {
-        None
-    }
+    get_cache_directory().get_path()
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -568,8 +544,12 @@ struct BaseDirectory {
 }
 
 impl BaseDirectory {
-    fn success(&self) -> bool {
-        self.err.is_none()
+    fn get_path(&self) -> Option<WString> {
+        if self.err.is_none() {
+            Some(self.path.clone())
+        } else {
+            None
+        }
     }
 }
 

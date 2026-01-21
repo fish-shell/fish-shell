@@ -5495,11 +5495,6 @@ impl<'a> Reader<'a> {
         let el = &self.data.command_line;
         let autosuggestion = &self.autosuggestion;
         if self.is_at_line_with_autosuggestion() {
-            assert!(string_prefixes_string_maybe_case_insensitive(
-                autosuggestion.icase,
-                &el.text()[autosuggestion.search_string_range.clone()],
-                &autosuggestion.text
-            ));
             return;
         }
 

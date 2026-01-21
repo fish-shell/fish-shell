@@ -1,3 +1,0 @@
-# LSAN can detect leaks tracing back to __asan::AsanThread::ThreadStart (probably caused by our
-# threads not exiting before their TLS dtors are called). Just ignore it.
-leak:AsanThread

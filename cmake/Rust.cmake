@@ -6,7 +6,6 @@ set(FISH_RUST_BUILD_DIR "${CMAKE_BINARY_DIR}/cargo")
 
 if(DEFINED ASAN)
     list(APPEND CARGO_FLAGS "-Z" "build-std")
-    list(APPEND FISH_CARGO_FEATURES_LIST "asan")
 endif()
 if(DEFINED TSAN)
     list(APPEND CARGO_FLAGS "-Z" "build-std")

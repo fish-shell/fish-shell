@@ -1,5 +1,3 @@
-add_executable(fish_test_helper tests/fish_test_helper.c)
-
 FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.fish)
 foreach(CHECK ${FISH_CHECKS})
   get_filename_component(CHECK_NAME ${CHECK} NAME)
@@ -8,7 +6,7 @@ foreach(CHECK ${FISH_CHECKS})
     COMMAND ${CMAKE_SOURCE_DIR}/tests/test_driver.py ${CMAKE_CURRENT_BINARY_DIR}
                 checks/${CHECK_NAME}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
-    DEPENDS fish fish_indent fish_key_reader fish_test_helper
+    DEPENDS fish fish_indent fish_key_reader
     USES_TERMINAL
   )
 endforeach(CHECK)
@@ -21,7 +19,7 @@ foreach(PEXPECT ${PEXPECTS})
     COMMAND ${CMAKE_SOURCE_DIR}/tests/test_driver.py ${CMAKE_CURRENT_BINARY_DIR}
                 pexpects/${PEXPECT}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
-    DEPENDS fish fish_indent fish_key_reader fish_test_helper
+    DEPENDS fish fish_indent fish_key_reader
     USES_TERMINAL
   )
 endforeach(PEXPECT)
@@ -67,6 +65,6 @@ add_custom_target(fish_run_tests
             --target-dir ${rust_target_dir}
             ${cargo_test_flags}
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  DEPENDS fish fish_indent fish_key_reader fish_test_helper
+  DEPENDS fish fish_indent fish_key_reader
   USES_TERMINAL
 )

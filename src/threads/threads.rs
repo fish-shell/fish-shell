@@ -178,18 +178,6 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     result
 }
 
-/// Exits calling onexit handlers if running under ASAN, otherwise does nothing.
-///
-/// This function is always defined but is a no-op if not running under ASAN. This is to make it
-/// more ergonomic to call it in general and also makes it possible to call it via ffi at all.
-pub fn asan_maybe_exit(code: i32) {
-    if cfg!(feature = "asan") {
-        unsafe {
-            libc::exit(code);
-        }
-    }
-}
-
 /// Data shared between the thread pool [`ThreadPool`] and worker threads [`WorkerThread`].
 #[derive(Default)]
 struct ThreadPoolProtected {

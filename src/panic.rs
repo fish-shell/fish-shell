@@ -12,7 +12,7 @@ use libc::STDIN_FILENO;
 use crate::{
     common::{get_program_name, read_blocked},
     nix::isatty,
-    threads::{asan_maybe_exit, is_main_thread},
+    threads::is_main_thread,
 };
 
 pub static AT_EXIT: OnceLock<Box<dyn Fn() + Send + Sync>> = OnceLock::new();
@@ -59,6 +59,5 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
     if let Some(at_exit) = AT_EXIT.get() {
         (at_exit)();
     }
-    asan_maybe_exit(exit_status);
     std::process::exit(exit_status)
 }

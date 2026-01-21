@@ -185,7 +185,6 @@ localize-messages = ["dep:fish-gettext"]
 gettext-extract = ["dep:fish-gettext-extraction"]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
-asan = []
 tsan = []
 
 [workspace.lints]

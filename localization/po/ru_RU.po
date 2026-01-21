@@ -61,7 +61,7 @@ msgstr "$@ не поддерживается. В fish используется $
 
 #, c-format
 msgid "$status is not valid as a command. See `help %s`"
-msgstr "$status является недействительной командой"
+msgstr "$status является недействительной командой. См. `help %s`"
 
 #, c-format
 msgid "%s"

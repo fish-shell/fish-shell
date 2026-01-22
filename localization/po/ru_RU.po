@@ -39,7 +39,7 @@ msgstr "$$ не является pid. В fish используется $fish_pid
 
 #, c-format
 msgid "$%c is not a valid variable in fish."
-msgstr "$%c является недействительной переменной в fish."
+msgstr "$%c не является действительной переменной в fish."
 
 #, c-format
 msgid "$%s: originally inherited as |%s|\n"
@@ -89,7 +89,7 @@ msgstr "%s %s: Имя не может быть пустым\n"
 
 #, c-format
 msgid "%s %s: No abbreviation named %s with the specified command restrictions\n"
-msgstr "%s %s: Нет сокращения, названного %s, с "
+msgstr "%s %s: Нет сокращения, названного %s, с указанными ограничениями команд\n"
 
 #, c-format
 msgid "%s %s: Requires at least two arguments\n"
@@ -131,12 +131,12 @@ msgstr ""
 
 #, c-format
 msgid "%s is %s\n"
-msgstr "%s в %s\n"
+msgstr "%s это %s\n"
 
 #, c-format
 # REVIEW: `builtin`
 msgid "%s is a builtin\n"
-msgstr "%s является встроенным"
+msgstr "%s является встроенным\n"
 
 #, c-format
 msgid "%s is a function"
@@ -189,7 +189,7 @@ msgstr "%s: %s: недопустимое название функции"
 
 #, c-format
 msgid "%s: %s: invalid integer\n"
-msgstr "%s: %s: недопустимое целое число"
+msgstr "%s: %s: недопустимое целое число\n"
 
 #, c-format
 msgid "%s: %s: invalid mode\n"
@@ -238,7 +238,7 @@ msgstr "%s: '%s' является сломанной символьной ссы
 
 #, c-format
 msgid "%s: '%s' is not a directory\n"
-msgstr "%s: '%s' не является директорией"
+msgstr "%s: '%s' не является директорией\n"
 
 #, c-format
 msgid "%s: '%s' is not a job\n"
@@ -263,7 +263,7 @@ msgstr "%s: опция --function требует --add\n"
 
 #, c-format
 msgid "%s: --position option requires --add\n"
-msgstr "%s: опция --position требует --add"
+msgstr "%s: опция --position требует --add\n"
 
 #, c-format
 msgid "%s: --regex option requires --add\n"
@@ -359,7 +359,7 @@ msgstr "%s: Не найдена домашняя директория\n"
 
 #, c-format
 msgid "%s: Could not find job '%d'\n"
-msgstr "%s: Не найдена работа '%d'\n"
+msgstr "%s: Не найдена задача '%d'\n"
 
 #, c-format
 msgid "%s: Did you mean `set %s %s`?"
@@ -372,7 +372,7 @@ msgstr "%s: Пустая директория '%s' не существует\n"
 #, c-format
 # REVIEW: как перевести sourcing? 
 msgid "%s: Error encountered while sourcing file '%s':\n"
-msgstr "%s: Произошла ошибка пытаясь source файл '%s':\n"
+msgstr "%s: Произошла ошибка пытаясь применить source файл '%s':\n"
 
 #, c-format
 msgid "%s: Error while reading file '%s'\n"
@@ -391,9 +391,9 @@ msgid "%s: Expected exactly two names (current function name, and new function n
 msgstr "%s: Ожидается строго два названия (название текущий функции и название новой функции)\n"
 
 #, c-format
-# REVIEW: стоит ли переводить типы?
+# REVIEW: стоит ли переводить типы? Думаю, нет
 msgid "%s: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
-msgstr "%s: Ожидается generic | variable | signal | exit | job-id для --handlers-type"
+msgstr "%s: Ожидается generic | variable | signal | exit | job-id для --handlers-type\n"
 
 #, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'\n"
@@ -484,43 +484,43 @@ msgstr "%s: Неверная спецификация опции '%s' на си�
 
 #, c-format
 msgid "%s: Invalid padding character of width zero '%s'\n"
-msgstr ""
+msgstr "%s: Неверный символ выравнивания ширины ноль: '%s\n"
 
 #, c-format
 msgid "%s: Invalid permission '%s'\n"
-msgstr ""
+msgstr "%s: Неверное разрещение: '%s'\n"
 
 #, c-format
 msgid "%s: Invalid position '%s'\n"
-msgstr ""
+msgstr "%s: Неверная позиция: '%s'\n"
 
 #, c-format
 msgid "%s: Invalid range value for field '%s'\n"
-msgstr ""
+msgstr "%s: Неверное значение диапазона для поля '%s'\n"
 
 #, c-format
 msgid "%s: Invalid sort key '%s'\n"
-msgstr ""
+msgstr "%s: Неверный ключ сортировки: '%s'\n"
 
 #, c-format
 msgid "%s: Invalid start value '%s'\n"
-msgstr ""
+msgstr "%s: Неверное начальное значение '%s'\n"
 
 #, c-format
 msgid "%s: Invalid state\n"
-msgstr ""
+msgstr "%s: Неверное состояния\n"
 
 #, c-format
 msgid "%s: Invalid style value '%s'\n"
-msgstr ""
+msgstr "%s: Неверный стиль значения: '%s'\n"
 
 #, c-format
 msgid "%s: Invalid token '%s'\n"
-msgstr ""
+msgstr "%s: Неверный токен '%s'\n"
 
 #, c-format
 msgid "%s: Invalid type '%s'\n"
-msgstr ""
+msgstr "%s: Неверный тип: '%s'\n"
 
 #, c-format
 msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n"

@@ -219,15 +219,8 @@ impl ReaderHistorySearch {
         let text = self.search().current_string();
         let needle = self.search_string();
         if matches!(self.mode, SearchMode::Line | SearchMode::Prefix) {
-            // FIXME: Previous versions asserted out if this wasn't true.
-            // This could be hit with a needle of "ö" and haystack of "echo Ö"
-            // I'm not sure why - this points to a bug in ifind (probably wrong locale?)
-            // However, because the user experience of having it crash is horrible,
-            // and the worst thing that can otherwise happen here is that a search is unsuccessful,
-            // we just check it instead.
-            if let Some(offset) = find(text, needle) {
-                self.add_if_new(SearchMatch::new(text.to_owned(), offset));
-            }
+            let offset = find(text, needle).unwrap();
+            self.add_if_new(SearchMatch::new(text.to_owned(), offset));
         } else if matches!(self.mode, SearchMode::Token | SearchMode::LastToken) {
             let mut tok = Tokenizer::new(text, TOK_ACCEPT_UNFINISHED);
 

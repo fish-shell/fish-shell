@@ -110,6 +110,7 @@ Options accepted by ``set_color`` like
 ``--dim``,
 ``--italics``,
 ``--reverse``,
+``--strikethrough``,
 ``--underline`` and
 ``--underline-color=``
 are also accepted.

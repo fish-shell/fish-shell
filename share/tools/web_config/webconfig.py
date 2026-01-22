@@ -233,6 +233,7 @@ def parse_color(comps):
     bold = False
     underline = None
     italics = False
+    strikethrough = False
     dim = False
     reverse = False
     i = 0
@@ -256,6 +257,8 @@ def parse_color(comps):
             dim = True
         elif comp == "--reverse" or comp == "-r":
             reverse = True
+        elif comp == "--strikethrough" or comp == "-s":
+            strikethrough = True
         elif comp.startswith("--theme="):
             pass  # Not yet supported here.
         else:
@@ -310,6 +313,7 @@ def parse_color(comps):
         "italics": italics,
         "dim": dim,
         "reverse": reverse,
+        "strikethrough": strikethrough,
     }
 
 
@@ -330,6 +334,8 @@ def unparse_color(col):
         ret += " --dim"
     if col["reverse"]:
         ret += " --reverse"
+    if col["strikethrough"]:
+        ret += " --strikethrough"
     if col["background"]:
         ret += " --background=" + col["background"]
     if col["underline-color"]:
@@ -659,7 +665,7 @@ def append_html_for_ansi_escape(full_val, result, span_open):
         close_span()
         return False
 
-    # TODO We don't handle bold, underline, italics, dim, or reverse yet
+    # TODO We don't handle bold, underline, italics, dim, strikethrough, or reverse yet
 
     # Do nothing on failure
     return span_open

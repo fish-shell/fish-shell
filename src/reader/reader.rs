@@ -5740,23 +5740,20 @@ fn history_pager_search(
     // (subtract 2 for the search line and the prompt)
     let page_size = cmp::max(termsize_last().height() / 2 - 2, 12);
     let mut completions = Vec::with_capacity(page_size);
-    let mut search = HistorySearch::new_with(
-        history.clone(),
-        search_string.to_owned(),
-        SearchType::ContainsGlob,
-        smartcase_flags(search_string),
-        history_index,
-    );
+    let new_search = |search_type| {
+        HistorySearch::new_with(
+            history.clone(),
+            search_string.to_owned(),
+            search_type,
+            smartcase_flags(search_string),
+            history_index,
+        )
+    };
+    let mut search = new_search(SearchType::ContainsGlob);
     if !search.go_to_next_match(direction) && !contains_wildcards(search_string) {
         // If there were no matches, and the user is not intending for
         // wildcard search, try again with subsequence search.
-        search = HistorySearch::new_with(
-            history.clone(),
-            search_string.to_owned(),
-            SearchType::ContainsSubsequence,
-            smartcase_flags(search_string),
-            history_index,
-        );
+        search = new_search(SearchType::ContainsSubsequence);
         search.go_to_next_match(direction);
     }
     // When searching, first we need to find the element before first shown.

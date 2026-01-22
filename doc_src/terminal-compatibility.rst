@@ -92,7 +92,7 @@ Optional Commands
 
    * - ``\e[m``
      - sgr0
-     - Turn off bold/dim/italic/underline/reverse attribute modes and select default colors.
+     - Turn off bold/dim/italic/underline/strikethrough/reverse attribute modes and select default colors.
    * - ``\e[1m``
      - bold
      - Enter bold mode.
@@ -120,12 +120,18 @@ Optional Commands
    * - ``\e[7m``
      - rev
      - Enter reverse video mode (swap foreground and background colors).
+   * - ``\e[9m``
+     - smxx
+     - Enter strikethrough mode
    * - ``\e[23m``
      - ritm
      - Exit italic mode.
    * - ``\e[24m``
      - rmul
      - Exit underline mode.
+   * - ``\e[29m``
+     - rmxx
+     - Exit strikethrough mode.
    * - ``\e[38;5; Ps m``
      - setaf
      - Select foreground color Ps from the 256-color-palette.

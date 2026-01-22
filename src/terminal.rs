@@ -55,9 +55,11 @@ pub(crate) enum TerminalCommand<'a> {
     EnterItalicsMode,
     EnterUnderlineMode(UnderlineStyle),
     EnterReverseMode,
+    EnterStrikethroughMode,
     EnterStandoutMode,
     ExitItalicsMode,
     ExitUnderlineMode,
+    ExitStrikethroughMode,
 
     // Screen clearing
     ClearScreen,
@@ -153,6 +155,8 @@ pub(crate) trait Output {
             EnterUnderlineMode(style) => underline_mode(self, style),
             EnterReverseMode => ti(self, b"\x1b[7m", |t| &t.enter_reverse_mode),
             EnterStandoutMode => ti(self, b"\x1b[7m", |t| &t.enter_standout_mode),
+            EnterStrikethroughMode => write(self, b"\x1b[9m"),
+            ExitStrikethroughMode => write(self, b"\x1b[29m"),
             ExitItalicsMode => ti(self, b"\x1b[23m", |t| &t.exit_italics_mode),
             ExitUnderlineMode => ti(self, b"\x1b[24m", |t| &t.exit_underline_mode),
             ClearScreen => ti(self, b"\x1b[H\x1b[2J", |term| &term.clear_screen),
@@ -549,8 +553,9 @@ impl Outputter {
 
         use TerminalCommand::{
             DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterDimMode,
-            EnterItalicsMode, EnterReverseMode, EnterStandoutMode, EnterUnderlineMode,
-            ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
+            EnterItalicsMode, EnterReverseMode, EnterStandoutMode, EnterStrikethroughMode,
+            EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitStrikethroughMode,
+            ExitUnderlineMode,
         };
 
         // Removes all styles that are individually resettable.
@@ -606,7 +611,7 @@ impl Outputter {
             self.last.underline_color = underline_color;
         }
 
-        // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
+        // Lastly, we set bold, underline, italics, dim, reverse, and strikethrough modes correctly.
         if style.is_bold() && !self.last.style.is_bold() && self.write_command(EnterBoldMode) {
             self.last.style.bold = true;
         }
@@ -635,6 +640,19 @@ impl Outputter {
 
         if style.is_dim() && !self.last.style.is_dim() && self.write_command(EnterDimMode) {
             self.last.style.dim = true;
+        }
+
+        let was_strikethrough = self.last.style.is_strikethrough();
+        if !style.is_strikethrough()
+            && was_strikethrough
+            && self.write_command(ExitStrikethroughMode)
+        {
+            self.last.style.strikethrough = false;
+        } else if style.is_strikethrough()
+            && !was_strikethrough
+            && self.write_command(EnterStrikethroughMode)
+        {
+            self.last.style.strikethrough = true;
         }
 
         if style.is_reverse()

@@ -54,6 +54,9 @@ The following options are available:
 **-r** or **--reverse**
     Sets reverse mode.
 
+**-s** or **--strikethrough**
+    Sets strikethrough mode.
+
 **-u** or **--underline**, or **-uSTYLE** or **--underline=STYLE**
     Set the underline mode; supported styles are **single** (default), **double**, **curly**, **dotted** and **dashed**.
 

@@ -139,6 +139,7 @@ complete -c set -n '__fish_set_is_color false true' -a '--underline-color=(set_c
 complete -c set -n '__fish_set_is_color true false' -a --bold -x
 complete -c set -n '__fish_set_is_color true false' -a --dim -x
 complete -c set -n '__fish_set_is_color true false' -a --italics -x
+complete -c set -n '__fish_set_is_color true false' -a --strikethrough -x
 complete -c set -n '__fish_set_is_color true true' -a --reverse -x
 complete -c set -n '__fish_set_is_color true false' -a --underline -x
 complete -c set -n '__fish_set_is_color true false' -a--underline={double,curly,dotted,dashed} -x

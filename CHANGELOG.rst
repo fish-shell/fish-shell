@@ -19,6 +19,10 @@ New or improved bindings
 - Vi mode key bindings now support counts for movement and deletion commands (e.g. `d3w` or `3l`), via a new operator mode (:issue:`2192`).
 - New ``catpuccin-*`` color themes.
 
+Improved terminal support
+-------------------------
+- ``set_color`` learned the strikethrough (``--strikethrough`` or ``-s``) modifier.
+
 For distributors and developers
 -------------------------------
 - The CMake option ``WITH_GETTEXT`` has been renamed to ``WITH_MESSAGE_LOCALIZATION``, to reflect that it toggles localization independently of the backend used in the implementation.

@@ -37,6 +37,7 @@ pub(crate) struct TextStyling {
     pub(crate) italics: bool,
     pub(crate) dim: bool,
     pub(crate) reverse: bool,
+    pub(crate) strikethrough: bool,
 }
 
 impl TextStyling {
@@ -47,6 +48,7 @@ impl TextStyling {
             italics: false,
             dim: false,
             reverse: false,
+            strikethrough: false,
         }
     }
     pub(crate) fn is_empty(&self) -> bool {
@@ -61,6 +63,7 @@ impl TextStyling {
             italics: self.is_italics() || other.is_italics(),
             dim: self.is_dim() || other.is_dim(),
             reverse: self.is_reverse() || other.is_reverse(),
+            strikethrough: self.is_strikethrough() || other.is_strikethrough(),
         }
     }
     pub(crate) fn difference_prefer_empty(self, other: Self) -> Self {
@@ -72,6 +75,7 @@ impl TextStyling {
             italics: self.is_italics() && !other.is_italics(),
             dim: self.is_dim() && !other.is_dim(),
             reverse: self.is_reverse() && !other.is_reverse(),
+            strikethrough: self.is_strikethrough() && !other.is_strikethrough(),
         }
     }
 
@@ -103,6 +107,11 @@ impl TextStyling {
     /// Returns whether the text face has reverse foreground/background colors.
     pub const fn is_reverse(self) -> bool {
         self.reverse
+    }
+
+    /// Returns whether the text face is strikethrough.
+    pub const fn is_strikethrough(self) -> bool {
+        self.strikethrough
     }
 }
 
@@ -197,6 +206,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         wopt(L!("underline"), ArgType::OptionalArgument, 'u'),
         wopt(L!("italics"), ArgType::NoArgument, 'i'),
         wopt(L!("dim"), ArgType::NoArgument, 'd'),
+        wopt(L!("strikethrough"), ArgType::NoArgument, 's'),
         wopt(L!("reverse"), ArgType::NoArgument, 'r'),
         wopt(L!("theme"), ArgType::RequiredArgument, '\x01'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
@@ -248,6 +258,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
             'i' => init_style(&mut style).italics = true,
             'd' => init_style(&mut style).dim = true,
             'r' => init_style(&mut style).reverse = true,
+            's' => init_style(&mut style).strikethrough = true,
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
                 init_style(&mut style).underline_style = Some(if arg == "single" {

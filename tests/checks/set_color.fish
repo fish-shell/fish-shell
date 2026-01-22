@@ -22,6 +22,11 @@ string escape (set_color --bold=red)
 #CHECKERR: called on line {{\d+}} of file {{.*}}checks/set_color.fish
 #CHECKERR: (Type 'help set_color' for related documentation)
 
+string escape (set_color --strikethrough red --background=normal)
+# CHECK: \e\[31m\e\[49m\e\[9m
+string escape (set_color --strikethrough red --background=blue)
+# CHECK: \e\[31m\e\[44m\e\[9m
+
 string escape (set_color --bold red --background=normal)
 # CHECK: \e\[31m\e\[49m\e\[1m
 string escape (set_color --bold red --background=blue)

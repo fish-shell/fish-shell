@@ -1529,13 +1529,16 @@ pub struct HistorySearch {
 }
 
 impl HistorySearch {
-    pub fn new(hist: Arc<History>, s: WString) -> Self {
+    #[cfg(test)]
+    fn new(hist: Arc<History>, s: WString) -> Self {
         Self::new_with(hist, s, SearchType::Contains, SearchFlags::default(), 0)
     }
-    pub fn new_with_type(hist: Arc<History>, s: WString, search_type: SearchType) -> Self {
+    #[cfg(test)]
+    fn new_with_type(hist: Arc<History>, s: WString, search_type: SearchType) -> Self {
         Self::new_with(hist, s, search_type, SearchFlags::default(), 0)
     }
-    pub fn new_with_flags(hist: Arc<History>, s: WString, flags: SearchFlags) -> Self {
+    #[cfg(test)]
+    fn new_with_flags(hist: Arc<History>, s: WString, flags: SearchFlags) -> Self {
         Self::new_with(hist, s, SearchType::Contains, flags, 0)
     }
     /// Constructs a new history search.

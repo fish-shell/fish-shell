@@ -5119,16 +5119,17 @@ impl<'a> Reader<'a> {
 
 #[derive(Default)]
 pub(super) struct Autosuggestion {
-    // The text to use, as an extension/replacement of the current line.
+    /// The text to use, as an extension/replacement of the current line.
     text: WString,
 
-    // The range within the commandline that was searched. Always a whole line.
+    /// The range within the commandline that was searched.
+    /// Always at least whole line.
     search_string_range: Range<usize>,
 
-    // Whether the autosuggestion should be case insensitive.
+    /// Whether the autosuggestion should be case insensitive.
     icase: bool,
 
-    // Whether the autosuggestion is a whole match from history.
+    /// Whether the autosuggestion is a whole match from history.
     is_whole_item_from_history: bool,
 }
 

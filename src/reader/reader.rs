@@ -19,6 +19,8 @@
 
 use crate::portable_atomic::AtomicU64;
 use fish_common::{UTF8_BOM_WCHAR, help_section};
+use fish_fallback::lowercase;
+use fish_wcstringutil::{IsPrefix, is_prefix};
 use libc::{
     _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, FLUSHO, ICANON, ICRNL, IEXTEN,
     INLCR, IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, SIGTTIN, STDERR_FILENO,
@@ -2012,26 +2014,40 @@ fn try_apply_edit_to_autosuggestion(
     // This is also the main mechanism by which readline commands that don't change the command line
     // text avoid recomputing the autosuggestion.
     assert!(string_prefixes_string_maybe_case_insensitive(
-        autosuggestion.icase,
+        autosuggestion.icase_matched_codepoints.is_some(),
         &command_line_text[autosuggestion.search_string_range.clone()],
         &autosuggestion.text
     ));
     let search_string_range = autosuggestion.search_string_range.clone();
 
     // This is a heuristic with false negatives but that seems fine.
-    let Some(offset) = edit.range.start.checked_sub(search_string_range.start) else {
-        return false;
-    };
-    let Some(remaining) = autosuggestion.text.get(offset..) else {
-        return false;
-    };
-    if edit.range.end != search_string_range.end
-        || !string_prefixes_string_maybe_case_insensitive(
-            autosuggestion.icase,
-            &edit.replacement,
-            remaining,
-        )
-        || edit.replacement.len() == remaining.len()
+    if edit.range.start < search_string_range.start
+        || edit.range.end != search_string_range.end
+        || {
+            let suggestion = autosuggestion.text.chars();
+            let replacement = edit.replacement.chars();
+            let unchanged_prefix = autosuggestion.icase_matched_codepoints.map_or(
+                search_string_range
+                    .len()
+                    .checked_sub(edit.range.len())
+                    .unwrap(),
+                |matched_codepoints| {
+                    matched_codepoints
+                        .checked_sub(
+                            lowercase(command_line_text[edit.range.clone()].chars()).count(),
+                        )
+                        .unwrap()
+                },
+            );
+            if autosuggestion.icase_matched_codepoints.is_some() {
+                is_prefix(
+                    lowercase(replacement),
+                    lowercase(suggestion).skip(unchanged_prefix),
+                )
+            } else {
+                is_prefix(replacement, suggestion.skip(unchanged_prefix))
+            }
+        } != Some(IsPrefix::Prefix)
     {
         return false;
     }
@@ -2050,6 +2066,7 @@ impl ReaderData {
                 self.command_line.text(),
                 &edit,
             );
+
             if preserves_autosuggestion {
                 autosuggestion_update = AutosuggestionUpdate::Preserve
             } else if !self.autosuggestion.is_empty()
@@ -5146,8 +5163,9 @@ pub(super) struct Autosuggestion {
     /// Always at least whole line.
     search_string_range: Range<usize>,
 
-    /// Whether the autosuggestion should be case insensitive.
-    icase: bool,
+    /// If the autosuggestion is a case insensitive (prefix) match, this indicates the number
+    /// of code points we matched in the lowercase mapping of the suggestion..
+    icase_matched_codepoints: Option<usize>,
 
     /// Whether the autosuggestion is a whole match from history.
     is_whole_item_from_history: bool,
@@ -5190,14 +5208,14 @@ impl AutosuggestionResult {
         command_line: WString,
         search_string_range: Range<usize>,
         text: WString,
-        icase: bool,
+        icase_matched_codepoints: Option<usize>,
         is_whole_item_from_history: bool,
     ) -> Self {
         Self {
             autosuggestion: Autosuggestion {
                 text,
                 search_string_range,
-                icase,
+                icase_matched_codepoints,
                 is_whole_item_from_history,
             },
             command_line,
@@ -5333,7 +5351,7 @@ fn get_autosuggestion_performer(
                         command_line.clone(),
                         range.clone(),
                         full[suggested_range].into(),
-                        icase,
+                        icase.then(|| searcher.canon_term().char_count()),
                         is_whole,
                     );
                     if icase {
@@ -5403,11 +5421,12 @@ fn get_autosuggestion_performer(
             );
             line_at_cursor(&full_line, would_be_cursor).to_owned()
         };
+        let lowercase_char_count = lowercase(command_line[line_range.clone()].chars()).count();
         let mut result = AutosuggestionResult::new(
             command_line,
             line_range,
             suggestion,
-            true, // normal completions are case-insensitive
+            Some(lowercase_char_count), // normal completions are case-insensitive
             /*is_whole_item_from_history=*/ false,
         );
         result.needs_load = needs_load;
@@ -5468,7 +5487,7 @@ impl<'a> Reader<'a> {
         } else if !result.is_empty()
             && self.can_autosuggest()
             && string_prefixes_string_maybe_case_insensitive(
-                result.icase,
+                result.icase_matched_codepoints.is_some(),
                 result.search_string(),
                 &result.text,
             )
@@ -5491,6 +5510,12 @@ impl<'a> Reader<'a> {
 
         let el = &self.data.command_line;
         if self.is_at_line_with_autosuggestion() {
+            let autosuggestion = &self.autosuggestion;
+            assert!(string_prefixes_string_maybe_case_insensitive(
+                autosuggestion.icase_matched_codepoints.is_some(),
+                &el.text()[autosuggestion.search_string_range.clone()],
+                &autosuggestion.text
+            ));
             return;
         }
 
@@ -7369,7 +7394,7 @@ mod tests {
             Autosuggestion {
                 text: L!("echo hest").to_owned(),
                 search_string_range: 0..4,
-                icase: false,
+                icase_matched_codepoints: None,
                 is_whole_item_from_history: true,
             },
             "echo",
@@ -7377,7 +7402,7 @@ mod tests {
             Some(Autosuggestion {
                 text: L!("echo hest").to_owned(),
                 search_string_range: 0..5,
-                icase: false,
+                icase_matched_codepoints: None,
                 is_whole_item_from_history: true,
             })
         );
@@ -7387,7 +7412,7 @@ mod tests {
             Autosuggestion {
                 text: L!("echo hest").to_owned(),
                 search_string_range: 0..4,
-                icase: false,
+                icase_matched_codepoints: None,
                 is_whole_item_from_history: true,
             },
             "echo",
@@ -7400,7 +7425,7 @@ mod tests {
             Autosuggestion {
                 text: L!("echo hest").to_owned(),
                 search_string_range: 0..4,
-                icase: true,
+                icase_matched_codepoints: Some(4),
                 is_whole_item_from_history: true,
             },
             "echo",
@@ -7408,9 +7433,22 @@ mod tests {
             Some(Autosuggestion {
                 text: L!("echo hest").to_owned(),
                 search_string_range: 0..6,
-                icase: true,
+                icase_matched_codepoints: Some(4),
                 is_whole_item_from_history: true,
             })
+        );
+
+        validate!(
+            "Lowercase mapping is only partially matched",
+            Autosuggestion {
+                text: L!("echo İnstall").to_owned(),
+                search_string_range: 0..6,
+                icase_matched_codepoints: Some(6),
+                is_whole_item_from_history: true,
+            },
+            "echo i",
+            Edit::new(6..6, L!("n").to_owned()),
+            None,
         );
     }
 }

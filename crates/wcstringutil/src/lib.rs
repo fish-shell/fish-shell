@@ -18,14 +18,24 @@ pub fn count_newlines(s: &wstr) -> usize {
     count
 }
 
-fn is_prefix(mut lhs: impl Iterator<Item = char>, mut rhs: impl Iterator<Item = char>) -> bool {
+#[derive(Eq, PartialEq)]
+pub enum IsPrefix {
+    Prefix,
+    Equal,
+}
+pub fn is_prefix(
+    mut lhs: impl Iterator<Item = char>,
+    mut rhs: impl Iterator<Item = char>,
+) -> Option<IsPrefix> {
+    use IsPrefix::*;
     loop {
         match (lhs.next(), rhs.next()) {
-            (None, _) => return true,
-            (Some(_), None) => return false,
+            (None, None) => return Some(Equal),
+            (None, Some(_)) => return Some(Prefix),
+            (Some(_), None) => return None,
             (Some(lhs), Some(rhs)) => {
                 if lhs != rhs {
-                    return false;
+                    return None;
                 }
             }
         }
@@ -36,7 +46,7 @@ fn is_prefix(mut lhs: impl Iterator<Item = char>, mut rhs: impl Iterator<Item = 
 pub fn string_prefixes_string_case_insensitive(proposed_prefix: &wstr, value: &wstr) -> bool {
     let proposed_prefix = lowercase(proposed_prefix.chars());
     let value = lowercase(value.chars());
-    is_prefix(proposed_prefix, value)
+    is_prefix(proposed_prefix, value).is_some()
 }
 
 pub fn string_prefixes_string_maybe_case_insensitive(
@@ -63,7 +73,7 @@ pub fn strip_executable_suffix(path: &wstr) -> Option<&wstr> {
 pub fn string_suffixes_string_case_insensitive(proposed_suffix: &wstr, value: &wstr) -> bool {
     let proposed_suffix = lowercase_rev(proposed_suffix.chars());
     let value = lowercase_rev(value.chars());
-    is_prefix(proposed_suffix, value)
+    is_prefix(proposed_suffix, value).is_some()
 }
 
 /// Test if a string prefixes another. Returns true if a is a prefix of b.
@@ -588,6 +598,8 @@ mod tests {
         validate!("i", "İ", true);
         validate!("gs", "gs_", true);
         validate!("gs_", "gs", false);
+        assert_eq!("İn".to_lowercase().as_str(), "i\u{307}n");
+        validate!("echo in", "echo İnstall", false);
     }
 
     #[test]

@@ -50,3 +50,12 @@ isolated-tmux send-keys C-u 'echo İ___' Enter C-l 'echo i'
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt {{\d+}}> echo İ___
+
+isolated-tmux send-keys C-u 'echo İnstall' Enter C-l 'echo i'
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt {{\d+}}> echo İnstall
+isolated-tmux send-keys n
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt {{\d+}}> echo in

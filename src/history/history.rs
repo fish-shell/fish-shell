@@ -1640,6 +1640,10 @@ impl HistorySearch {
         self.current_item.as_ref().expect("No current item")
     }
 
+    pub fn canon_term(&self) -> &wstr {
+        &self.canon_term
+    }
+
     /// Returns the current search result item contents.
     ///
     /// # Panics

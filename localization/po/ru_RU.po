@@ -39,7 +39,7 @@ msgstr "$$ не является pid. В fish используется $fish_pid
 
 #, c-format
 msgid "$%c is not a valid variable in fish."
-msgstr "$%c не является действительной переменной в fish."
+msgstr "$%c не является допустимой переменной в fish."
 
 #, c-format
 msgid "$%s: originally inherited as |%s|\n"
@@ -61,7 +61,7 @@ msgstr "$@ не поддерживается. В fish используется $
 
 #, c-format
 msgid "$status is not valid as a command. See `help %s`"
-msgstr "$status является недействительной командой. См. `help %s`"
+msgstr "$status не является допустимым как команда. См. `help %s`"
 
 #, c-format
 msgid "%s"
@@ -69,7 +69,7 @@ msgstr ""
 
 #, c-format
 msgid "%s %s: %s: invalid subcommand\n"
-msgstr "%s: %s: %s: неверная подкоманда\n"
+msgstr "%s: %s: %s: недопустимая подкоманда\n"
 
 #, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
@@ -93,7 +93,7 @@ msgstr "%s %s: Нет сокращения, названного %s, с указ
 
 #, c-format
 msgid "%s %s: Requires at least two arguments\n"
-msgstr "%s %s: Требует ка как минимум два аргумента\n"
+msgstr "%s %s: Требует как минимум два аргумента\n"
 
 #, c-format
 msgid "%s %s: Requires exactly two arguments\n"
@@ -125,16 +125,16 @@ msgid "%s command"
 msgstr "%s команда"
 
 #, c-format
-# TODO
+# REVIEW!
 msgid "%s could not read response to Primary Device Attribute query after waiting for %d seconds. This is often due to a missing feature in your terminal. See 'help %s' or 'man fish-terminal-compatibility'. This %s process will no longer wait for outstanding queries, which disables some optional features."
-msgstr ""
+msgstr "%s не может прочитать Primary Device Attribute query после %d секунд ожидания. Зачастую это происходит из-за отсутсвующей функции в вашем терминале. См. `help %s` или `man fish-terminal-compatibility. Данный процесс %s больше не будет ждать обработки незавершенных запросов, что отключает некоторые опциональные функции."
 
 #, c-format
 msgid "%s is %s\n"
 msgstr "%s это %s\n"
 
 #, c-format
-# REVIEW: `builtin`
+# REVIEW: `builtin` -> `встроенный`
 msgid "%s is a builtin\n"
 msgstr "%s является встроенным\n"
 
@@ -253,7 +253,6 @@ msgid "%s: '%s' is not a valid process ID\n"
 msgstr "%s: '%s' не является действительным ID процесса\n"
 
 #, c-format
-# REVIEW: род -- женский или мужской? Я использую женский, т.к. --command -- это "опция", что женский род.
 msgid "%s: --command cannot be combined with --position=command"
 msgstr "%s: --command не может быть использована с --position=command"
 
@@ -304,7 +303,7 @@ msgstr "%s: Аргумент '%s' вне диапазона\n"
 
 #, c-format
 msgid "%s: Can not specify scope when removing block\n"
-msgstr "%s: Нельзя указать scope, удаляя блок\n"
+msgstr "%s: Нельзя указать область определения, удаляя блок\n"
 
 #, c-format
 msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control\n"
@@ -376,7 +375,7 @@ msgstr "%s: Произошла ошибка во время применения
 
 #, c-format
 msgid "%s: Error while reading file '%s'\n"
-msgstr "%s: Ошибка чтения файла '%s'\n"
+msgstr "%s: Ошибка во время чтения файла '%s'\n"
 
 #, c-format
 msgid "%s: Expected at least one argument"
@@ -388,10 +387,9 @@ msgstr "%s: Ожидается строго одно название функц
 
 #, c-format
 msgid "%s: Expected exactly two names (current function name, and new function name)\n"
-msgstr "%s: Ожидается строго два названия (название текущий функции и название новой функции)\n"
+msgstr "%s: Ожидается строго два названия (название текущей функции и название новой функции)\n"
 
 #, c-format
-# REVIEW: стоит ли переводить типы? Думаю, нет
 msgid "%s: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
 msgstr "%s: Ожидается generic | variable | signal | exit | job-id для --handlers-type\n"
 
@@ -412,139 +410,140 @@ msgid "%s: Implicit int flag '%c' already defined\n"
 msgstr "%s: Неявный флаг целочисленного '%c' уже определен\n"
 
 #, c-format
+# REVIEW: like -> вроде
 msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'\n"
 msgstr "%s: Неявный короткий флаг целочисленного '%c' не разрешает модификаторы вроде '%c'\n"
 
 #, c-format
 msgid "%s: Invalid --max-args value '%s'\n"
-msgstr "%s: Неверное значение '%s' --max-args\n"
+msgstr "%s: Недопустимое значение '%s' --max-args\n"
 
 #, c-format
 msgid "%s: Invalid --min-args value '%s'\n"
-msgstr "%s: Неверное значение '%s' --min-args\n"
+msgstr "%s: Недопустимое значение '%s' --min-args\n"
 
 #, c-format
 msgid "%s: Invalid --unknown-arguments value '%s'\n"
-msgstr "%s: Неверное значение '%s' --unknown-arguments\n"
+msgstr "%s: Недопустимое значение '%s' --unknown-arguments\n"
 
 #, c-format
 # REVIEW: count -> счёт 
 msgid "%s: Invalid count value '%s'\n"
-msgstr "%s: Неверное значение счёта '%s'\n"
+msgstr "%s: Недопустимое значение счёта '%s'\n"
 
 #, c-format
 # REVIEW: end -> конечное
 msgid "%s: Invalid end value '%s'\n"
-msgstr "%s: Неверное конечное значение '%s'\n"
+msgstr "%s: Недопустимое конечное значение '%s'\n"
 
 #, c-format
 # REVIEW: escape unchanged
 msgid "%s: Invalid escape style '%s'\n"
-msgstr "%s: Неверный стиль escape: '%s'\n"
+msgstr "%s: Недопустимый стиль escape '%s'\n"
 
 #, c-format
 msgid "%s: Invalid fields value '%s'\n"
-msgstr "%s: Неверное значение полей: '%s'\n"
+msgstr "%s: Недопустимое значение полей '%s'\n"
 
 #, c-format
 msgid "%s: Invalid function name: %s\n"
-msgstr "%s: Неверное имя функции: %s\n"
+msgstr "%s: Недопустимое имя функции: %s\n"
 
 #, c-format
 msgid "%s: Invalid index starting at '%s'\n"
-msgstr "%s: Неверное начало индекса на '%s'\n"
+msgstr "%s: Недопустимое начало индекса на '%s'\n"
 
 #, c-format
 msgid "%s: Invalid job control mode '%s'\n"
-msgstr "%s: Неверный режим контроля задачи: '%s'\n"
+msgstr "%s: Недопустимый режим контроля задачи '%s'\n"
 
 #, c-format
 msgid "%s: Invalid length value '%s'\n"
-msgstr "%s: Неверное значение длины: '%s'\n"
+msgstr "%s: Недопустимое значение длины '%s'\n"
 
 #, c-format
 msgid "%s: Invalid level value '%s'\n"
-msgstr "%s: Неверное значение уровня: '%s'\n"
+msgstr "%s: Недопустимое значение уровня '%s'\n"
 
 #, c-format
 msgid "%s: Invalid limit '%s'\n"
-msgstr "%s: Неверный лимит: '%s'\n"
+msgstr "%s: Недопустимый лимит '%s'\n"
 
 #, c-format
 msgid "%s: Invalid max matches value '%s'\n"
-msgstr "%s: Неверное значение максимальных совпадений: '%s'\n"
+msgstr "%s: Недопустимое значение максимальных совпадений '%s'\n"
 
 #, c-format
 msgid "%s: Invalid max value '%s'\n"
-msgstr "%s: Неверное максимальное значение: '%s'\n"
+msgstr "%s: Недопустимое максимальное значение '%s'\n"
 
 #, c-format
 msgid "%s: Invalid option spec '%s' at char '%c'\n"
-msgstr "%s: Неверная спецификация опции '%s' на символе '%c'\n"
+msgstr "%s: Недопустимая спецификация опции '%s' на символе '%c'\n"
 
 #, c-format
 msgid "%s: Invalid padding character of width zero '%s'\n"
-msgstr "%s: Неверный символ выравнивания ширины ноль: '%s\n"
+msgstr "%s: Недопустимый символ выравнивания нулевой ширины '%s\n"
 
 #, c-format
 msgid "%s: Invalid permission '%s'\n"
-msgstr "%s: Неверное разрешение: '%s'\n"
+msgstr "%s: Недопустимое разрешение '%s'\n"
 
 #, c-format
 msgid "%s: Invalid position '%s'\n"
-msgstr "%s: Неверная позиция: '%s'\n"
+msgstr "%s: Недопустимая позиция '%s'\n"
 
 #, c-format
 msgid "%s: Invalid range value for field '%s'\n"
-msgstr "%s: Неверное значение диапазона для поля '%s'\n"
+msgstr "%s: Недопустимое значение диапазона для поля '%s'\n"
 
 #, c-format
 msgid "%s: Invalid sort key '%s'\n"
-msgstr "%s: Неверный ключ сортировки: '%s'\n"
+msgstr "%s: Недопустимый ключ сортировки: '%s'\n"
 
 #, c-format
 msgid "%s: Invalid start value '%s'\n"
-msgstr "%s: Неверное начальное значение '%s'\n"
+msgstr "%s: Недопустимое начальное значение '%s'\n"
 
 #, c-format
 msgid "%s: Invalid state\n"
-msgstr "%s: Неверное состояния\n"
+msgstr "%s: Недопустимое состояние\n"
 
 #, c-format
 msgid "%s: Invalid style value '%s'\n"
-msgstr "%s: Неверный стиль значения: '%s'\n"
+msgstr "%s: Недопустимое значение стиля '%s'\n"
 
 #, c-format
 msgid "%s: Invalid token '%s'\n"
-msgstr "%s: Неверный токен '%s'\n"
+msgstr "%s: Недопустимый токен '%s'\n"
 
 #, c-format
 msgid "%s: Invalid type '%s'\n"
-msgstr "%s: Неверный тип: '%s'\n"
+msgstr "%s: Недопустимый тип '%s'\n"
 
 #, c-format
 msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n"
-msgstr ""
+msgstr "%s: Недопустимое значение опции '--color': %s. Ожидалось 'always', 'never' или 'auto'\n"
 
 #, c-format
 msgid "%s: Invalid width value '%s'\n"
-msgstr ""
+msgstr "%s: Недопустимое значение ширины: '%s'\n"
 
 #, c-format
 msgid "%s: Key not specified\n"
-msgstr ""
+msgstr "%s: Ключ не указан\n"
 
 #, c-format
 msgid "%s: Long flag '%s' already defined\n"
-msgstr ""
+msgstr "%s: Длинный флаг '%s' уже определён\n"
 
 #, c-format
 msgid "%s: Missing -- separator\n"
-msgstr ""
+msgstr "%s: Пропущен разделитель --\n"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string\n"
-msgstr ""
+msgstr "%s: Новый лимит не может быть пустой строкой\n"
 
 #, c-format
 msgid "%s: No binding found for key '%s'\n"
@@ -555,44 +554,45 @@ msgid "%s: No binding found for key sequence '%s'\n"
 msgstr ""
 
 #, c-format
+# ???: "There is no blocks defined" or "No blocks has been defined" ?
 msgid "%s: No blocks defined\n"
 msgstr ""
 
 #, c-format
 msgid "%s: No suitable job: %d\n"
-msgstr ""
+msgstr "%s: Нет подходящей задачи: %d\n"
 
 #, c-format
 msgid "%s: No suitable job: %s\n"
-msgstr ""
+msgstr "%s: Нет подходящей задачи: %s\n"
 
 #, c-format
 msgid "%s: Not inside of loop\n"
-msgstr ""
+msgstr "%s: Не находится внутри цикла\n"
 
 #, c-format
 msgid "%s: Number out of range"
-msgstr ""
+msgstr "%s: Число за допустимым пределом"
 
 #, c-format
 msgid "%s: Number was empty"
-msgstr ""
+msgstr "%s: Число было пустым"
 
 #, c-format
 msgid "%s: Options %s and %s cannot be used together\n"
-msgstr ""
+msgstr "%s: Опции %s и %s не могут быть использованы вместе\n"
 
 #, c-format
 msgid "%s: Padding should be a character '%s'\n"
-msgstr ""
+msgstr "%s: Выравнивание должно быть символом '%s'\n"
 
 #, c-format
 msgid "%s: Permission denied: '%s'\n"
-msgstr ""
+msgstr "%s: В доступе отказано: '%s'\n"
 
 #, c-format
 msgid "%s: Regular expression compile error: %s\n"
-msgstr ""
+msgstr "%s: Ошибка компиляции регулярного выражения: %s\n"
 
 #, c-format
 msgid "%s: Regular expression substitute error: %s\n"
@@ -600,63 +600,63 @@ msgstr ""
 
 #, c-format
 msgid "%s: Resource limit not available on this operating system\n"
-msgstr ""
+msgstr "%s: Ограничение ресурсов недоступно на этой операционной системе\n"
 
 #, c-format
 msgid "%s: STEP must be a positive integer\n"
-msgstr ""
+msgstr "%s: STEP должно быть положительным целым числом\n"
 
 #, c-format
 msgid "%s: Short flag '%c' already defined\n"
-msgstr ""
+msgstr "%s: Короткий флаг '%c' уже определен\n"
 
 #, c-format
 msgid "%s: Short flag '%c' invalid, must be alphanum or '#'\n"
-msgstr ""
+msgstr "%s: Короткий флаг '%c' недопустим, должен быть alphanumeric или '#'\n"
 
 #, c-format
 msgid "%s: The directory '%s' does not exist\n"
-msgstr ""
+msgstr "%s: Директория '%s' не существует\n"
 
 #, c-format
 msgid "%s: The variable '%s' does not exist\n"
-msgstr ""
+msgstr "%s: Переменная '%s' не существует\n"
 
 #, c-format
 msgid "%s: There are no jobs\n"
-msgstr ""
+msgstr "%s: Нет задач\n"
 
 #, c-format
 msgid "%s: There are no suitable jobs\n"
-msgstr ""
+msgstr "%s: Нет подходящих задач\n"
 
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'\n"
-msgstr ""
+msgstr "%s: Слишком много уровней символических ссылок: '%s'\n"
 
 #, c-format
 msgid "%s: Too many long-only options\n"
-msgstr ""
+msgstr "%s: Слишком много исключительно длинных опций\n"
 
 #, c-format
 msgid "%s: Tried to change the read-only variable '%s'\n"
-msgstr ""
+msgstr "%s: Попытка измнения переменной только для чтения '%s'\n"
 
 #, c-format
 msgid "%s: Tried to modify the special variable '%s' to an invalid value\n"
-msgstr ""
+msgstr "%s: Попытка изменить специальную переменную '%s' в недопустимое значение\n"
 
 #, c-format
 msgid "%s: Tried to modify the special variable '%s' with the wrong scope\n"
-msgstr ""
+msgstr "%s: Попытка изменить специальную переменную '%s' в неправильной области видимости\n"
 
 #, c-format
 msgid "%s: Unknown color '%s'\n"
-msgstr ""
+msgstr "%s: Неизвестный цвет '%s'\n"
 
 #, c-format
 msgid "%s: Unknown error trying to locate directory '%s'\n"
-msgstr ""
+msgstr "%s: Неизвестная ошибка во время попытки найти директорию '%s'\n"
 
 #, c-format
 msgid "%s: Unknown input function '%s'"
@@ -664,11 +664,11 @@ msgstr ""
 
 #, c-format
 msgid "%s: Unknown signal '%s'"
-msgstr ""
+msgstr "%s: Неизвестный сигнал '%s"
 
 #, c-format
 msgid "%s: Warning: Option '%s' was removed and is now ignored"
-msgstr ""
+msgstr "%s: Предупреждение: Опция '%s' была удалена и теперь игнорируется"
 
 #, c-format
 msgid "%s: `set --show` does not allow slices with the var names\n"
@@ -692,23 +692,23 @@ msgstr ""
 
 #, c-format
 msgid "%s: can't merge history in private mode\n"
-msgstr ""
+msgstr "%s: нельзя выполнить слияние истории в приватном режиме\n"
 
 #, c-format
 msgid "%s: cannot both export and unexport\n"
-msgstr ""
+msgstr "%s: нельзя одновременно export и unexport\n"
 
 #, c-format
 msgid "%s: cannot both path and unpath\n"
-msgstr ""
+msgstr "%s: нельзя одновременно path и unpath\n"
 
 #, c-format
 msgid "%s: column %s exceeds line length\n"
-msgstr ""
+msgstr "%s: column %s превышает длину строки\n"
 
 #, c-format
 msgid "%s: exclusive flag '%s' is not valid\n"
-msgstr ""
+msgstr "%s: исключающий флаг '%s' некорректен\n"
 
 #, c-format
 msgid "%s: exclusive flag string '%s' is not valid\n"
@@ -716,23 +716,24 @@ msgstr ""
 
 #, c-format
 msgid "%s: expected %d arguments; got %d\n"
-msgstr ""
+msgstr "%s: ожидалось %d аргументов; получено %d\n"
 
 #, c-format
 msgid "%s: expected <= %d arguments; got %d\n"
-msgstr ""
+msgstr "%s: ожидалось <= %d аргументов; получено %d\n"
 
 #, c-format
 msgid "%s: expected >= %d arguments; got %d\n"
-msgstr ""
+msgstr "%s: ожидалось >= %d аргументов; получено %d\n"
 
 #, c-format
+# REVIEW
 msgid "%s: expected a numeric value"
-msgstr ""
+msgstr "%s: ожидалось число"
 
 #, c-format
 msgid "%s: function name required"
-msgstr ""
+msgstr "%s: требуется имя функции"
 
 #, c-format
 msgid "%s: given %d indexes but %d values\n"
@@ -744,11 +745,11 @@ msgstr ""
 
 #, c-format
 msgid "%s: invalid option combination\n"
-msgstr ""
+msgstr "%s: недопустимая комбинация опций\n"
 
 #, c-format
 msgid "%s: invalid option combination, %s\n"
-msgstr ""
+msgstr "%s: недопустимая комбинация опций, %s\n"
 
 #, c-format
 msgid "%s: invalid underline style: %s\n"
@@ -756,7 +757,7 @@ msgstr ""
 
 #, c-format
 msgid "%s: job %d ('%s') was stopped and has been signalled to continue.\n"
-msgstr ""
+msgstr "%s: задача %d ('%s') была остановлена и получила сигнал продолжить.\n"
 
 #, c-format
 msgid "%s: line/column index starts at 1"
@@ -764,19 +765,19 @@ msgstr ""
 
 #, c-format
 msgid "%s: missing argument\n"
-msgstr ""
+msgstr "%s: пропущен аргумент\n"
 
 #, c-format
 msgid "%s: missing filename argument or input redirection\n"
-msgstr ""
+msgstr "%s: пропущен аргумент имени файла или перенаправление ввода\n"
 
 #, c-format
 msgid "%s: missing subcommand\n"
-msgstr ""
+msgstr "%s: пропущена подкоманда\n"
 
 #, c-format
 msgid "%s: nothing to choose from\n"
-msgstr ""
+msgstr "%s: не из чего выбирать\n"
 
 #, c-format
 msgid "%s: realpath failed: %s\n"
@@ -784,7 +785,7 @@ msgstr ""
 
 #, c-format
 msgid "%s: scope can be only one of: universal function global local\n"
-msgstr ""
+msgstr "%s: scope (область видимости) может быть только одним из: universal function global local\n"
 
 #, c-format
 msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet supported"
@@ -795,8 +796,9 @@ msgid "%s: stdin is closed\n"
 msgstr ""
 
 #, c-format
+# REVIEW: вольный перевод, но я не знаю, как передать именно "(to) shadow"
 msgid "%s: successfully set universal '%s'; but a global by that name shadows it\n"
-msgstr ""
+msgstr "%s: успешно установлена universal '%s'; но глобальная с таким именем в приоритете\n"
 
 #, c-format
 msgid "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`\n"
@@ -808,11 +810,11 @@ msgstr ""
 
 #, c-format
 msgid "%s: too many arguments\n"
-msgstr ""
+msgstr "%s: слишком много аргументов\n"
 
 #, c-format
 msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"
-msgstr ""
+msgstr "%s: использование -i как --silent устарело. Пожалуйста, используйте -s или --silent вместо этого.\n"
 
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
@@ -820,7 +822,7 @@ msgstr ""
 
 #, c-format
 msgid "%s: variable '%s' is read-only\n"
-msgstr ""
+msgstr "%s: переменная '%s' доступна только для чтения\n"
 
 #, c-format
 msgid "%sand %u more rows"
@@ -856,10 +858,10 @@ msgstr ""
 
 #, c-format
 msgid "(Type 'help %s' for related documentation)\n"
-msgstr ""
+msgstr "(Введите `help %s` для получения соответствующей документации)\n"
 
 msgid "(no matches)"
-msgstr ""
+msgstr "(нет совпадений)"
 
 #, c-format
 msgid ", copied in %s @ line %d"
@@ -893,7 +895,7 @@ msgid "--tokens options are mutually exclusive"
 msgstr ""
 
 msgid "A second attempt to exit will terminate them.\n"
-msgstr ""
+msgstr "Повторная попытка выйти убьет их.\n"
 
 msgid "Abbreviation expansion"
 msgstr ""
@@ -916,14 +918,14 @@ msgid "Address boundary error"
 msgstr ""
 
 msgid "Always"
-msgstr ""
+msgstr "Всегда"
 
 msgid "An error occurred while setting up pipe"
-msgstr ""
+msgstr "Произошла ошибка во время при настройке pipe"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
-msgstr ""
+msgstr "Аргумент не является числом: '%s'"
 
 msgid "Await background process completion"
 msgstr ""
@@ -937,8 +939,9 @@ msgstr ""
 msgid "Bad system call"
 msgstr ""
 
+# REVIEW
 msgid "Block of code to run conditionally"
-msgstr ""
+msgstr "Блок кода для запуска интерактивно"
 
 msgid "Broken pipe"
 msgstr ""
@@ -947,7 +950,7 @@ msgid "CPU\t"
 msgstr ""
 
 msgid "CPU time limit exceeded"
-msgstr ""
+msgstr "Превышен лимит времени CPU"
 
 msgid "Calls to fork()"
 msgstr ""
@@ -960,10 +963,10 @@ msgid "Cannot add control modifier to control character '%s'"
 msgstr ""
 
 msgid "Cannot use stdin (fd 0) as pipe output"
-msgstr ""
+msgstr "Нельзя использовать stdin (fd 0) как вывод pipe"
 
 msgid "Change working directory"
-msgstr ""
+msgstr "Сменить рабочую директория"
 
 msgid "Changes to exported variables"
 msgstr ""
@@ -981,13 +984,13 @@ msgid "Child process status changed"
 msgstr ""
 
 msgid "Command\n"
-msgstr ""
+msgstr "Команда\n"
 
 msgid "Command history events"
 msgstr ""
 
 msgid "Command not executable"
-msgstr ""
+msgstr "Команда не является исполнямой"
 
 msgid "Commandname was invalid"
 msgstr ""
@@ -999,42 +1002,42 @@ msgid "Continue previously stopped process"
 msgstr ""
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
-msgstr ""
+msgstr "Не удалось определить текущю рабочую директорию. Установлена ли верно ваша локаль?"
 
 msgid "Could not set terminal mode for new job"
 msgstr ""
 
 msgid "Could not show help message"
-msgstr ""
+msgstr "Не удалось отобразить справку"
 
 #, c-format
 msgid "Could not write profiling information to file '%s': %s"
 msgstr ""
 
 msgid "Count the number of arguments"
-msgstr ""
+msgstr "Посчитать количество аргументов"
 
 msgid "Create a block of code"
-msgstr ""
+msgstr "Создать блок кода"
 
 msgid "Debugging aid (on by default)"
 msgstr ""
 
 msgid "Define a new function"
-msgstr ""
+msgstr "Определить новую функцию"
 
 #, c-format
 msgid "Defined in %s @ line %d"
-msgstr ""
+msgstr "Определено в %s в строке %d"
 
 msgid "Defined interactively"
-msgstr ""
+msgstr "Определено интерактивно"
 
 msgid "Defined via `source`"
-msgstr ""
+msgstr "Определено при помощи `source`"
 
 msgid "Division by zero"
-msgstr ""
+msgstr "Деление на ноль"
 
 msgid "Edit command specific completions"
 msgstr ""
@@ -1043,19 +1046,19 @@ msgid "Emit an event"
 msgstr ""
 
 msgid "End a block of commands"
-msgstr ""
+msgstr "Конец блока команд"
 
 #, c-format
 msgid "Error reading script file '%s':"
-msgstr ""
+msgstr "Ошибка чтения скрипт-файла '%s':"
 
 #, c-format
 msgid "Error when renaming file: %s"
-msgstr ""
+msgstr "Ошибка во время переименовывания файла: %s"
 
 #, c-format
 msgid "Error while reading file %s\n"
-msgstr ""
+msgstr "Ошибка во время чтения файла%s\n"
 
 msgid "Errors reported by exec (on by default)"
 msgstr ""
@@ -1064,22 +1067,22 @@ msgid "Evaluate a string as a statement"
 msgstr ""
 
 msgid "Evaluate block if condition is false"
-msgstr ""
+msgstr "Выполнить блок, если выражение является ложью"
 
 msgid "Evaluate block if condition is true"
-msgstr ""
+msgstr "Выполнить блок, если выражение является истиной"
 
 msgid "Evaluate contents of file"
 msgstr ""
 
 msgid "Evaluate math expressions"
-msgstr ""
+msgstr "Вычислить математические выражения"
 
 msgid "Execute command if previous command failed"
 msgstr ""
 
 msgid "Exit the shell"
-msgstr ""
+msgstr "Выйти из оболочки"
 
 msgid "Expansion error"
 msgstr ""
@@ -1089,18 +1092,18 @@ msgstr ""
 
 #, c-format
 msgid "Expected %s, but found %s"
-msgstr ""
+msgstr "Ожидался %s, но найден %s"
 
 #, c-format
 msgid "Expected a command, but found %s"
-msgstr ""
+msgstr "Ожидалась команда, но найден %s"
 
 #, c-format
 msgid "Expected a string, but found %s"
-msgstr ""
+msgstr "Ожидалась строка, но найден %s"
 
 msgid "Expected a string, but found a redirection"
-msgstr ""
+msgstr "Ожидалась строка, но найдено перенаправление"
 
 msgid "Expected a variable name after this $."
 msgstr ""
@@ -1114,7 +1117,7 @@ msgstr ""
 
 #, c-format
 msgid "Expected no arguments, got %d"
-msgstr ""
+msgstr "Не ожидалось ни одного аргумента, получено %d"
 
 msgid "Expression is bogus"
 msgstr ""
@@ -1127,16 +1130,16 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set terminal mode (%s)"
-msgstr ""
+msgstr "Не удалось установить режим терминала (%s)"
 
 msgid "Failed to take control of the terminal"
-msgstr ""
+msgstr "Не удалось установить контроль терминала"
 
 msgid "File size limit exceeded"
-msgstr ""
+msgstr "Превышен лимит файла"
 
 msgid "Finding and reading configuration"
-msgstr ""
+msgstr "Поиск и чтение конфигурации"
 
 msgid "Firing events"
 msgstr ""
@@ -1151,13 +1154,13 @@ msgid "Forced stop"
 msgstr ""
 
 msgid "Generate random number"
-msgstr ""
+msgstr "Сгенерировать случайное число"
 
 msgid "Get/set resource usage limits"
-msgstr ""
+msgstr "Получить/установить лимиты использования ресурсов"
 
 msgid "Group\n"
-msgstr ""
+msgstr "Группа\n"
 
 msgid "Halt execution and start debug prompt"
 msgstr ""
@@ -1193,17 +1196,17 @@ msgstr ""
 
 #, c-format
 msgid "Illegal file descriptor in redirection '%s'"
-msgstr ""
+msgstr "Недопустимый файловый дискриптор в перенаправлении '%s'"
 
 msgid "Illegal instruction"
-msgstr ""
+msgstr "Недопустимая инструкция"
 
 #, c-format
 msgid "Incomplete escape sequence '%s'"
-msgstr ""
+msgstr "Неполная escape последовательность '%s'"
 
 msgid "Information request"
-msgstr ""
+msgstr "Запрос информации"
 
 #, c-format
 msgid "Integer %d in '%s' followed by non-digit"
@@ -1216,58 +1219,58 @@ msgid "Internal details of the topic monitor"
 msgstr ""
 
 msgid "Invalid arguments"
-msgstr ""
+msgstr "Недопустимые аргументы"
 
 msgid "Invalid index value"
-msgstr ""
+msgstr "Недопустимое значение индекса"
 
 msgid "Invalid input/output redirection"
-msgstr ""
+msgstr "Недопустимое перенаправление ввода/вывода"
 
 #, c-format
 msgid "Invalid number: %s"
-msgstr ""
+msgstr "Недопустимое число: %s"
 
 #, c-format
 msgid "Invalid redirection target: %s"
-msgstr ""
+msgstr "Недопустимая цель перенаправления: %s"
 
 #, c-format
 msgid "Invalid redirection: %s"
-msgstr ""
+msgstr "Недопустимое перенаправление: %s"
 
 #, c-format
 msgid "Invalid token '%s'"
-msgstr ""
+msgstr "Недопустимый токен '%s'"
 
 #, c-format
 msgid "Items %u to %u of %u"
 msgstr ""
 
 msgid "Job\tGroup\t"
-msgstr ""
+msgstr "Задача\tГруппа\t"
 
 #, c-format
 msgid "Job control: %s\n"
-msgstr ""
+msgstr "Контроль задач: %s\n"
 
 msgid "Jobs being executed"
-msgstr ""
+msgstr "Исполняемые задачи"
 
 msgid "Jobs changing status"
-msgstr ""
+msgstr "Задачи, меняющие статус"
 
 msgid "Jobs getting started or continued"
-msgstr ""
+msgstr "Задачи, которые начались или продолжаются"
 
 msgid "Language specifiers appear repeatedly:"
 msgstr ""
 
 msgid "List or remove functions"
-msgstr ""
+msgstr "Перечислить или удалить функции"
 
 msgid "Logical operations are not supported, use `test` instead"
-msgstr ""
+msgstr "Логические операции не поддерживаются, используйте `test` вместо этого"
 
 msgid "Manage abbreviations"
 msgstr ""
@@ -1295,59 +1298,59 @@ msgid "Missing end to balance this %s"
 msgstr ""
 
 msgid "Missing hexadecimal number in Unicode escape"
-msgstr ""
+msgstr "Пропущено шестнадцатиричное число в Unicode escape"
 
 msgid "Missing operator"
-msgstr ""
+msgstr "Пропущен оператор"
 
 #, c-format
 msgid "Modification of read-only variable \"%s\" is not allowed\n"
-msgstr ""
+msgstr "Модификация переменной только для чтения \"%s\" не разрешена\n"
 
 msgid "Negate exit status of job"
-msgstr ""
+msgstr "Логич. отрицание статуса задачи"
 
 msgid "Never"
-msgstr ""
+msgstr "Никогда"
 
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
-msgstr ""
+msgstr "Нет TTY для интерактивного шелла (tcpgetpgrp не удался)"
 
 msgid "No catalogs available for language specifiers:"
 msgstr ""
 
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
-msgstr ""
+msgstr "Нет совпадений для wildcard '%s'. См. `help %s`."
 
 msgid "Not a function"
-msgstr ""
+msgstr "Не является функцией"
 
 msgid "Not a number"
-msgstr ""
+msgstr "Не является числом"
 
 #, c-format
 msgid "Not a valid Unicode character: %s"
-msgstr ""
+msgstr "Не является допустимым символом Unicode: %s"
 
 msgid "Notifications about universal variable changes"
 msgstr ""
 
 msgid "Number is infinite"
-msgstr ""
+msgstr "Число является бесконечностью"
 
 msgid "Number is too large"
-msgstr ""
+msgstr "Число слишком большое"
 
 msgid "Number out of range"
-msgstr ""
+msgstr "Число за допустимым пределом"
 
 msgid "Only on interactive jobs"
-msgstr ""
+msgstr "Только на интерективных задачах"
 
 #, c-format
 msgid "Opening \"%s\" failed: %s"
-msgstr ""
+msgstr "Открытие \"%s\" не удалось: %s"
 
 msgid "Parse options in fish script"
 msgstr ""
@@ -1377,10 +1380,10 @@ msgstr ""
 
 #, c-format
 msgid "Press ctrl-%c again to exit\n"
-msgstr ""
+msgstr "Чтобы выйти снова нажмите ctrl-%c\n"
 
 msgid "Print arguments"
-msgstr ""
+msgstr "Вывести аргументы"
 
 msgid "Print currently running jobs"
 msgstr ""
@@ -1392,10 +1395,10 @@ msgid "Prints formatted text"
 msgstr ""
 
 msgid "Process\n"
-msgstr ""
+msgstr "Процесс\n"
 
 msgid "Process groups"
-msgstr ""
+msgstr "Группы процесса"
 
 msgid "Profiling timer expired"
 msgstr ""
@@ -1432,17 +1435,19 @@ msgstr ""
 
 #, c-format
 msgid "Requested redirection to '%s', which is not a valid file descriptor"
-msgstr ""
+msgstr "Зарошено перенаправление в '%s', который не является корректным файловым дискриптором"
 
 #, c-format
 msgid "Result too large: %s"
 msgstr ""
 
+#REVIEW
 msgid "Return a successful result"
-msgstr ""
+msgstr "Вернуть успех"
 
+#REVIEW
 msgid "Return an unsuccessful result"
-msgstr ""
+msgstr "Вернуть неуспех"
 
 msgid "Return status information about fish"
 msgstr ""
@@ -1470,17 +1475,17 @@ msgstr ""
 
 #, c-format
 msgid "Send job %d (%s) to foreground\n"
-msgstr ""
+msgstr "Отправить задачу %d (%s) на передний план\n"
 
 #, c-format
 msgid "Send job %s '%s' to background\n"
-msgstr ""
+msgstr "Отправить задачу %s '%s' в фон\n"
 
 msgid "Send job to background"
-msgstr ""
+msgstr "Отправить задачу в фон"
 
 msgid "Send job to foreground"
-msgstr ""
+msgstr "Отправить задачу на передний план"
 
 msgid "Serious unexpected errors (on by default)"
 msgstr ""
@@ -1579,13 +1584,13 @@ msgstr ""
 
 #, c-format
 msgid "The function '%s' calls itself immediately, which would result in an infinite loop."
-msgstr ""
+msgstr "Функция '%s' вызывает сама себя сразу же, что приведёт к бесконечному циклу."
 
 msgid "The interactive reader/input system"
 msgstr ""
 
 msgid "There are still jobs active:\n"
-msgstr ""
+msgstr "Всё ещё активны задачи:\n"
 
 msgid "This is a login shell\n"
 msgstr ""
@@ -1597,13 +1602,13 @@ msgid "Timer expired"
 msgstr ""
 
 msgid "Too few arguments"
-msgstr ""
+msgstr "Слишком мало аргументов"
 
 msgid "Too many active file descriptors"
-msgstr ""
+msgstr "Слишком много активных файловых дискрипторов"
 
 msgid "Too many arguments"
-msgstr ""
+msgstr "Слишком много аргументов"
 
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr ""
@@ -1619,7 +1624,7 @@ msgstr ""
 
 #, c-format
 msgid "Unable to create temporary file '%s': %s"
-msgstr ""
+msgstr "Невозможно создать временный файл '%s': %s"
 
 msgid "Unable to evaluate string substitution"
 msgstr ""
@@ -1634,11 +1639,11 @@ msgstr ""
 
 #, c-format
 msgid "Unable to locate the %s directory."
-msgstr ""
+msgstr "Невозможно найти директорию %s."
 
 #, c-format
 msgid "Unable to read input file: %s"
-msgstr ""
+msgstr "Невозможно прочитать файл ввода: %s"
 
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr ""
@@ -1671,21 +1676,21 @@ msgid "Unexpected end of string, square brackets do not match"
 msgstr ""
 
 msgid "Unexpected token"
-msgstr ""
+msgstr "Неожиданный токен"
 
 msgid "Unknown"
-msgstr ""
+msgstr "Неизвестно"
 
 #, c-format
 msgid "Unknown builtin '%s'"
 msgstr ""
 
 msgid "Unknown command"
-msgstr ""
+msgstr "Неизвестная команда"
 
 #, c-format
 msgid "Unknown command. '%s' exists but is not an executable file."
-msgstr ""
+msgstr "Неизвестная команда. '%s' существует, но не является исполняемым файлом."
 
 #, c-format
 msgid "Unknown command. A component of '%s' is not a directory."
@@ -1696,13 +1701,13 @@ msgid "Unknown command. A component of '%s' is not a directory. Check your $PATH
 msgstr ""
 
 msgid "Unknown command:"
-msgstr ""
+msgstr "Неизвестная команда:"
 
 msgid "Unknown error while evaluating command substitution"
 msgstr ""
 
 msgid "Unknown function"
-msgstr ""
+msgstr "Неизвестная функция"
 
 #, c-format
 msgid "Unknown function '%s'"
@@ -1732,7 +1737,7 @@ msgstr ""
 
 #, c-format
 msgid "Variable: %s"
-msgstr ""
+msgstr "Переменная: %s"
 
 #, c-format
 msgid "Variables cannot be bracketed. In fish, please use \"$%s\"."
@@ -1798,44 +1803,49 @@ msgid "cannot parse key '%s'"
 msgstr ""
 
 msgid "command"
-msgstr ""
+msgstr "команда"
 
 msgid "command link"
-msgstr ""
+msgstr "ссылка на команду"
 
 msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
 msgstr ""
 
+# чуть-чуть вольно
 msgid "completion reached maximum recursion depth, possible cycle?"
-msgstr ""
+msgstr "автодополнение достигло максимальной глубины рекурсии. Возможно, цикл?"
 
 msgid "default"
-msgstr ""
+msgstr "по умолчанию"
 
 msgid "dir symlink"
-msgstr ""
+msgstr "сим.ссылка на дир."
 
 msgid "directory"
-msgstr ""
+msgstr "директория"
 
 msgid "error\n"
-msgstr ""
+msgstr "ошибка\n"
 
 msgid "explore what characters keyboard keys send"
 msgstr ""
 
 msgid "exported"
-msgstr ""
+msgstr "экспортировано"
 
 msgid "file"
-msgstr ""
+msgstr "файл"
 
 #, c-format
 msgid ""
 "fish: %s: missing man page\n"
 "Documentation may not be installed.\n"
 "`help %s` will show an online version\n"
+
 msgstr ""
+"fish: %s: отсутствует страница man\n"
+"Документация может быть не установлена.\n"
+"`help %s` покажет онлайн версию\n"
 
 #, c-format
 msgid "from sourcing file %s\n"
@@ -1846,22 +1856,22 @@ msgstr ""
 
 #, c-format
 msgid "in event handler: %s\n"
-msgstr ""
+msgstr "в обработчике событий: %s\n"
 
 #, c-format
 msgid "in function '%s'"
-msgstr ""
+msgstr "в функции '%s'"
 
 #, c-format
 msgid "invalid field width: %s"
-msgstr ""
+msgstr "неверная ширина поля: %s"
 
 #, c-format
 msgid "invalid precision: %s"
-msgstr ""
+msgstr "недопустимая точность: %s"
 
 msgid "missing hexadecimal number in escape"
-msgstr ""
+msgstr "пропущено шестнадцатиричное число в экранировании"
 
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"
@@ -1869,27 +1879,27 @@ msgstr ""
 
 #, c-format
 msgid "or press ctrl-%c or ctrl-%c twice in a row."
-msgstr ""
+msgstr "или нажмите ctrl-%c or ctrl-%c дважды подряд."
 
 #, c-format
 msgid "rows %u to %u of %u"
 msgstr ""
 
 msgid "running"
-msgstr ""
+msgstr "запущено"
 
 msgid "search: "
-msgstr ""
+msgstr "поиск: "
 
 msgid "stopped"
-msgstr ""
+msgstr "остановлено"
 
 #, c-format
 msgid "switch: Expected at most one argument, got %u\n"
-msgstr ""
+msgstr "switch: Ожидался максимум один аргумент, получено %u\n"
 
 msgid "symlink"
-msgstr ""
+msgstr "символьная ссылка"
 
 #, c-format
 msgid "ulimit: Permission denied when changing resource of type '%s'\n"
@@ -1903,7 +1913,7 @@ msgid "unknown modifier '%s' in '%s'"
 msgstr ""
 
 msgid "unlimited\n"
-msgstr ""
+msgstr "неограниченный\n"
 
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr ""
@@ -1912,13 +1922,13 @@ msgid "fish-section-tier1-from-script-explicitly-added"
 msgstr ""
 
 msgid "# comments"
-msgstr ""
+msgstr "# комментарии"
 
 msgid "$PATH"
 msgstr ""
 
 msgid "$status, the return code"
-msgstr ""
+msgstr "$status, код выхода"
 
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 msgstr ""
@@ -1939,13 +1949,13 @@ msgid "%s: Directory stack is empty…\\n"
 msgstr ""
 
 msgid "%s: Expected at least %d args, got only %d\\n"
-msgstr ""
+msgstr "%s: Ожидалось как минимум %d аргументов, получено только %d\\n"
 
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 msgstr ""
 
 msgid "%s: Invalid mask '%s'\\n"
-msgstr ""
+msgstr "%s: Недопустимая маска '%s'\\n"
 
 msgid "%s: Not inside of command substitution"
 msgstr ""
@@ -1954,16 +1964,16 @@ msgid "%s: The number of positions to skip must be a non-negative integer\\n"
 msgstr ""
 
 msgid "%s: Too many arguments"
-msgstr ""
+msgstr "%s: Слишком много аргументов"
 
 msgid "%s: Too many arguments\\n"
-msgstr ""
+msgstr "%s: Слишком много аргументов\\n"
 
 msgid "%s: Unknown function '%s'\\n"
-msgstr ""
+msgstr "%s: Неизвестная функция '%s'\\n"
 
 msgid "%s: Unknown option %s\\n"
-msgstr ""
+msgstr "%s: Неизвестная опция %s\\n"
 
 msgid "%s: Value '%s' for flag '%s' greater than max allowed of '%s'\\n"
 msgstr ""
@@ -1978,10 +1988,10 @@ msgid "%s: body cannot be empty\\n"
 msgstr ""
 
 msgid "%s: name cannot be empty\\n"
-msgstr ""
+msgstr "%s: название не может быть пустым\\n"
 
 msgid "%s: no fish help topic '%s', try 'man %s'\\n"
-msgstr ""
+msgstr "%s: нет fish справочной страницы '%s', попробуйте 'man %s'\\n"
 
 msgid "%s: removed %s\\n"
 msgstr ""
@@ -2074,7 +2084,7 @@ msgid "Event handlers"
 msgstr ""
 
 msgid "Exit Status"
-msgstr ""
+msgstr "Код выхода"
 
 msgid "Exporting variables"
 msgstr ""
@@ -2101,7 +2111,7 @@ msgid "Getting Help"
 msgstr ""
 
 msgid "Help for this command"
-msgstr ""
+msgstr "Справка для этой команды"
 
 msgid "Home directory expansion ~USER"
 msgstr ""
@@ -2146,7 +2156,7 @@ msgid "If the editor is still running, check if it waits for completion, maybe a
 msgstr ""
 
 msgid "If you enter 'yes' your entire interactive command history will be erased\\n"
-msgstr ""
+msgstr "Если вы введёте 'yes', вся ваша история интерактивных команд будет стёрта\\n"
 
 msgid "Ignoring invalid history entry ID \"%s\"\\n"
 msgstr ""
@@ -2275,13 +2285,13 @@ msgid "There are %s unique dirs in your history but I can only handle %s"
 msgstr ""
 
 msgid "This should not happen. Have you changed the cd function?"
-msgstr ""
+msgstr "Это не должно было случиться. Вы изменили функцию cd?"
 
 msgid "Too many args for cd command"
-msgstr ""
+msgstr "Слишком много аргументов для команды cd"
 
 msgid "Type %shelp%s for instructions on how to use fish"
-msgstr ""
+msgstr "Введите %shelp%s чтобы получить инструкции по использованию fish"
 
 msgid "Universal Variables"
 msgstr ""
@@ -2293,7 +2303,7 @@ msgid "Variable expansion $VARNAME"
 msgstr ""
 
 msgid "Variable scope"
-msgstr ""
+msgstr "Область определения переменной"
 
 msgid "Variables for changing highlighting colors"
 msgstr ""
@@ -2326,13 +2336,13 @@ msgid "Wildcard expansion *.*"
 msgstr ""
 
 msgid "You did not say 'yes' so I will not clear your command history\\n"
-msgstr ""
+msgstr "Вы не сказали 'yes', так что я не очистил историю команд\\n"
 
 msgid "cdh: Expected zero or one arguments"
 msgstr ""
 
 msgid "fish is running in private mode, history will not be persisted."
-msgstr ""
+msgstr "fish запущен в приватном режиме, история не будет записана."
 
 msgid "fish: Job %s, '%s' has ended\\n"
 msgstr "fish: Задача %s, '%s завершена\\n"
@@ -2356,19 +2366,19 @@ msgid "funced: The value for $%s '%s' could not be used because the command '%s'
 msgstr ""
 
 msgid "help: %s is not a valid command: %s\\n"
-msgstr ""
+msgstr "help: %s не является корректной командой: %s\\n"
 
 msgid "help: Help is being displayed in %s.\\n"
 msgstr "help: Справка отображается в %s.\\n"
 
 msgid "help: If no help could be displayed, go to %s to view the documentation online.\\n"
-msgstr ""
+msgstr "help: Если справка не отобразилась, посетите %s чтобы смотреть документацию онлайн.\\n"
 
 msgid "or the file was empty"
-msgstr ""
+msgstr "или файл был пуст"
 
 msgid "python executable not found"
-msgstr ""
+msgstr "не найден исполняемый файл python"
 
 msgid "while, for and begin"
 msgstr ""
@@ -2440,7 +2450,7 @@ msgid "Change current mode after bind is executed"
 msgstr ""
 
 msgid "Change directory"
-msgstr ""
+msgstr "Сменить директорию"
 
 msgid "Change extension for given paths"
 msgstr ""

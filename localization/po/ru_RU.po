@@ -372,7 +372,7 @@ msgstr "%s: Пустая директория '%s' не существует\n"
 #, c-format
 # REVIEW: как перевести sourcing? 
 msgid "%s: Error encountered while sourcing file '%s':\n"
-msgstr "%s: Произошла ошибка пытаясь применить source файл '%s':\n"
+msgstr "%s: Произошла ошибка во время применения source файла '%s':\n"
 
 #, c-format
 msgid "%s: Error while reading file '%s'\n"
@@ -488,7 +488,7 @@ msgstr "%s: Неверный символ выравнивания ширины 
 
 #, c-format
 msgid "%s: Invalid permission '%s'\n"
-msgstr "%s: Неверное разрещение: '%s'\n"
+msgstr "%s: Неверное разрешение: '%s'\n"
 
 #, c-format
 msgid "%s: Invalid position '%s'\n"
@@ -2308,7 +2308,7 @@ msgid "Warning: the file containing this function has not been saved. Changes ma
 msgstr ""
 
 msgid "Welcome to fish, the friendly interactive shell"
-msgstr ""
+msgstr "Добро пожаловать в fish — дружелюбную интерактивную оболочку"
 
 msgid "What characters are allowed in names"
 msgstr ""
@@ -2320,7 +2320,7 @@ msgid "Why $PATH is special"
 msgstr ""
 
 msgid "Why fish?"
-msgstr ""
+msgstr "Почему fish?"
 
 msgid "Wildcard expansion *.*"
 msgstr ""
@@ -2335,19 +2335,19 @@ msgid "fish is running in private mode, history will not be persisted."
 msgstr ""
 
 msgid "fish: Job %s, '%s' has ended\\n"
-msgstr ""
+msgstr "fish: Задача %s, '%s завершена\\n"
 
 msgid "fish: Job %s, '%s' has stopped\\n"
-msgstr ""
+msgstr "fish: Задача %s, '%s' остановлена\\n"
 
 msgid "fish: Job %s, '%s' terminated by signal %s (%s)\\n"
-msgstr ""
+msgstr "fish: Задача %s, '%s завершена сигналом %s (%s)\\n"
 
 msgid "fish: Process %s, '%s' from job %s, '%s' terminated by signal %s (%s)\\n"
-msgstr ""
+msgstr "fish: Процесс %s, '%s' задачи %s, '%s' был завершен сигналом %s (%s)\\n"
 
 msgid "fish: Unknown command: %s\\n"
-msgstr ""
+msgstr "fish: Неизвестная команда: %s\\n"
 
 msgid "foo=bar variable overrides"
 msgstr ""
@@ -2359,7 +2359,7 @@ msgid "help: %s is not a valid command: %s\\n"
 msgstr ""
 
 msgid "help: Help is being displayed in %s.\\n"
-msgstr ""
+msgstr "help: Справка отображается в %s.\\n"
 
 msgid "help: If no help could be displayed, go to %s to view the documentation online.\\n"
 msgstr ""

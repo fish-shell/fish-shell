@@ -82,8 +82,6 @@ pub enum SearchType {
     PrefixGlob,
     /// Search for commands containing the given string as a subsequence
     ContainsSubsequence,
-    /// Matches everything.
-    MatchEverything,
 }
 
 /// Ways that a history item may be written to disk (or omitted).
@@ -243,7 +241,6 @@ impl HistoryItem {
                 wildcard_match(content_to_match.as_ref(), &pat, false)
             }
             SearchType::ContainsSubsequence => subsequence_in_string(term, &content_to_match),
-            SearchType::MatchEverything => true,
         }
     }
 
@@ -1399,9 +1396,9 @@ impl History {
             // The user had no search terms; just append everything.
             do_1_history_search(
                 Arc::clone(self),
-                SearchType::MatchEverything,
+                SearchType::Contains,
                 WString::new(),
-                false,
+                true,
                 &mut func,
                 cancel_check,
             );

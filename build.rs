@@ -5,10 +5,6 @@ use fish_build_helper::{
 use rsconf::Target;
 use std::path::{Path, PathBuf};
 
-fn canonicalize<P: AsRef<Path>>(path: P) -> PathBuf {
-    std::fs::canonicalize(path).unwrap()
-}
-
 fn main() {
     setup_paths();
 
@@ -19,14 +15,14 @@ fn main() {
         "FISH_RESOLVED_BUILD_DIR",
         // If set by CMake, this might include symlinks. Since we want to compare this to the
         // dir fish is executed in we need to canonicalize it.
-        canonicalize(fish_build_dir()).to_str().unwrap(),
+        fish_build_dir().canonicalize().unwrap().to_str().unwrap(),
     );
 
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
     // compare it directly as a string at runtime.
     rsconf::set_env_value(
         "CARGO_MANIFEST_DIR",
-        canonicalize(workspace_root()).to_str().unwrap(),
+        workspace_root().canonicalize().unwrap().to_str().unwrap(),
     );
 
     // Some build info

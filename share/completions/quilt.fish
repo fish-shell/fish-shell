@@ -68,6 +68,15 @@ function __fish_quilt_complete_grep
     complete -C "grep $(string escape -- $arguments)"
 end
 
+# List options for 'quilt setup --spec-filter ...'.
+function __fish_quilt_complete_spec_filters
+    # the current $QUILTRC can be safely ignored, since $QUILT_DIR is read before that
+    set -l quilt_dir (quilt --quiltrc (echo 'printf "%s\n" "${QUILT_DIR}"' | psub) top -h 2>/dev/null | head -n 1)
+
+    printf '%s\n' (path basename $quilt_dir/spec-filters/*)\t'Predefined Filter'
+    printf '%s\n' (__fish_complete_path (commandline -ct))\t'Custom Filter'
+end
+
 complete -c quilt -f
 
 # quilt [command] -h
@@ -319,7 +328,7 @@ complete -c quilt -n '__fish_seen_subcommand_from setup' -s d -d 'Path prefix fo
 complete -c quilt -n '__fish_seen_subcommand_from setup' -s v -d 'Verbose debug output' -f
 complete -c quilt -n '__fish_seen_subcommand_from setup' -l sourcedir -d 'Directory for package sources' -xa '(__fish_complete_directories)'
 complete -c quilt -n '__fish_seen_subcommand_from setup' -l fuzz -d 'Maximum fuzz factor (in lines)' -xa '(__fish_quilt_complete_integer)'
-complete -c quilt -n '__fish_seen_subcommand_from setup' -l spec-filter -d 'Apply a filter before passing the spec file to rpmbuild' -rF
+complete -c quilt -n '__fish_seen_subcommand_from setup' -l spec-filter -d 'Apply a filter before passing the spec file to rpmbuild' -xa '(__fish_quilt_complete_spec_filters)'
 complete -c quilt -n '__fish_seen_subcommand_from setup' -n 'not __fish_seen_argument -l slow -l fast' -l slow -d 'Use original method to process the spec file' -f
 complete -c quilt -n '__fish_seen_subcommand_from setup' -n 'not __fish_seen_argument -l slow -l fast' -l fast -d 'Use new method to process the spec file' -f
 complete -c quilt -n '__fish_seen_subcommand_from setup' -xa '(__fish_complete_suffix .spec series)'

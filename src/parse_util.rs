@@ -1903,7 +1903,7 @@ pub fn parse_util_expand_variable_error(
                         global_after_dollar_pos,
                         1,
                         ERROR_BRACKETED_VARIABLE_QUOTED1,
-                        truncate(var_name, var_err_len, None)
+                        truncate(var_name, VAR_ERR_LEN, None)
                     );
                 } else {
                     append_syntax_error!(
@@ -1911,7 +1911,7 @@ pub fn parse_util_expand_variable_error(
                         global_after_dollar_pos,
                         1,
                         ERROR_BRACKETED_VARIABLE1,
-                        truncate(var_name, var_err_len, None),
+                        truncate(var_name, VAR_ERR_LEN, None),
                     );
                 }
             } else {
@@ -1973,7 +1973,7 @@ localizable_consts!(
 );
 
 /// Maximum length of a variable name to show in error reports before truncation
-const var_err_len: usize = 16;
+const VAR_ERR_LEN: usize = 16;
 
 #[cfg(test)]
 mod tests {

@@ -321,6 +321,8 @@ pub enum CompletionRequestOptions {
     /// Ordinary completion
     #[default]
     Completion,
+    /// Ordinary completion, but prefix-only (no fuzzy/subsequence matching)
+    PrefixOnly,
     /// Requesting autosuggestion
     Autosuggestion,
 }
@@ -335,7 +337,7 @@ impl CompletionRequestOptions {
     }
     /// If true, we do not require a prefix match
     fn fuzzy_match(&self) -> bool {
-        !self.autosuggestion()
+        matches!(*self, CompletionRequestOptions::Completion)
     }
 }
 

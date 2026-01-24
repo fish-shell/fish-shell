@@ -211,6 +211,7 @@ define_readline_cmds! {
     ("clear-screen", ClearScreenAndRepaint),
     ("complete", Complete),
     ("complete-and-search", CompleteAndSearch),
+    ("complete-prefix", CompletePrefix),
     ("delete-char", DeleteChar),
     ("delete-or-exit", DeleteOrExit),
     ("down-line", DownLine),

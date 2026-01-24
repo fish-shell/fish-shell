@@ -137,6 +137,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("clear-screen"), ReadlineCmd::ClearScreenAndRepaint),
     make_md(L!("complete"), ReadlineCmd::Complete),
     make_md(L!("complete-and-search"), ReadlineCmd::CompleteAndSearch),
+    make_md(L!("complete-prefix"), ReadlineCmd::CompletePrefix),
     make_md(L!("delete-char"), ReadlineCmd::DeleteChar),
     make_md(L!("delete-or-exit"), ReadlineCmd::DeleteOrExit),
     make_md(L!("down-line"), ReadlineCmd::DownLine),

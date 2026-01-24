@@ -279,7 +279,7 @@ fn parse_opts<'args>(
                 continue;
             }
             't' if opts.types_valid => {
-                let types = opts.types.get_or_insert_with(TypeFlags::default);
+                let types = opts.types.get_or_insert_default();
                 let types_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for t in types_args {
                     let Ok(r#type) = t.try_into() else {
@@ -291,7 +291,7 @@ fn parse_opts<'args>(
                 continue;
             }
             'p' if opts.perms_valid => {
-                let perms = opts.perms.get_or_insert_with(PermFlags::default);
+                let perms = opts.perms.get_or_insert_default();
                 let perms_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for p in perms_args {
                     let Ok(perm) = p.try_into() else {
@@ -307,32 +307,32 @@ fn parse_opts<'args>(
                 continue;
             }
             'r' if opts.perms_valid => {
-                let perms = opts.perms.get_or_insert_with(PermFlags::default);
+                let perms = opts.perms.get_or_insert_default();
                 *perms |= PermFlags::READ;
                 continue;
             }
             'w' if opts.perms_valid => {
-                let perms = opts.perms.get_or_insert_with(PermFlags::default);
+                let perms = opts.perms.get_or_insert_default();
                 *perms |= PermFlags::WRITE;
                 continue;
             }
             'x' if opts.perms_valid => {
-                let perms = opts.perms.get_or_insert_with(PermFlags::default);
+                let perms = opts.perms.get_or_insert_default();
                 *perms |= PermFlags::EXEC;
                 continue;
             }
             'f' if opts.types_valid => {
-                let types = opts.types.get_or_insert_with(TypeFlags::default);
+                let types = opts.types.get_or_insert_default();
                 *types |= TypeFlags::FILE;
                 continue;
             }
             'l' if opts.types_valid => {
-                let types = opts.types.get_or_insert_with(TypeFlags::default);
+                let types = opts.types.get_or_insert_default();
                 *types |= TypeFlags::LINK;
                 continue;
             }
             'd' if opts.types_valid => {
-                let types = opts.types.get_or_insert_with(TypeFlags::default);
+                let types = opts.types.get_or_insert_default();
                 *types |= TypeFlags::DIR;
                 continue;
             }

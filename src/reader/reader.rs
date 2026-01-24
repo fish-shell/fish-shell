@@ -1995,52 +1995,61 @@ impl ReaderData {
         self.edit_line_mut(elt).set_position(pos);
         self.update_buff_pos(elt, Some(pos));
     }
+}
 
-    fn try_apply_edit_to_autosuggestion(&mut self, edit: &Edit) -> bool {
-        let autosuggestion = &self.autosuggestion;
-        if autosuggestion.is_empty() {
-            return false;
-        }
-
-        // Check to see if our autosuggestion still applies; if so, don't recompute it.
-        // Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into
-        // the autosuggestion.
-        // This is also the main mechanism by which readline commands that don't change the command line
-        // text avoid recomputing the autosuggestion.
-        assert!(string_prefixes_string_maybe_case_insensitive(
-            autosuggestion.icase,
-            &self.command_line.text()[autosuggestion.search_string_range.clone()],
-            &autosuggestion.text
-        ));
-        let search_string_range = autosuggestion.search_string_range.clone();
-
-        // This is a heuristic with false negatives but that seems fine.
-        let Some(offset) = edit.range.start.checked_sub(search_string_range.start) else {
-            return false;
-        };
-        let Some(remaining) = autosuggestion.text.get(offset..) else {
-            return false;
-        };
-        if edit.range.end != search_string_range.end
-            || !string_prefixes_string_maybe_case_insensitive(
-                autosuggestion.icase,
-                &edit.replacement,
-                remaining,
-            )
-            || edit.replacement.len() == remaining.len()
-        {
-            return false;
-        }
-        self.autosuggestion.search_string_range.end = search_string_range.end
-            - edit.range.len().min(search_string_range.end)
-            + edit.replacement.len();
-        true
+fn try_apply_edit_to_autosuggestion(
+    autosuggestion: &mut Autosuggestion,
+    command_line_text: &wstr,
+    edit: &Edit,
+) -> bool {
+    if autosuggestion.is_empty() {
+        return false;
     }
 
+    // Check to see if our autosuggestion still applies; if so, don't recompute it.
+    // Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into
+    // the autosuggestion.
+    // This is also the main mechanism by which readline commands that don't change the command line
+    // text avoid recomputing the autosuggestion.
+    assert!(string_prefixes_string_maybe_case_insensitive(
+        autosuggestion.icase,
+        &command_line_text[autosuggestion.search_string_range.clone()],
+        &autosuggestion.text
+    ));
+    let search_string_range = autosuggestion.search_string_range.clone();
+
+    // This is a heuristic with false negatives but that seems fine.
+    let Some(offset) = edit.range.start.checked_sub(search_string_range.start) else {
+        return false;
+    };
+    let Some(remaining) = autosuggestion.text.get(offset..) else {
+        return false;
+    };
+    if edit.range.end != search_string_range.end
+        || !string_prefixes_string_maybe_case_insensitive(
+            autosuggestion.icase,
+            &edit.replacement,
+            remaining,
+        )
+        || edit.replacement.len() == remaining.len()
+    {
+        return false;
+    }
+    autosuggestion.search_string_range.end = search_string_range.end
+        - edit.range.len().min(search_string_range.end)
+        + edit.replacement.len();
+    true
+}
+
+impl ReaderData {
     fn push_edit_internal(&mut self, elt: EditableLineTag, edit: Edit, allow_coalesce: bool) {
         let mut autosuggestion_update = AutosuggestionUpdate::Remove;
         if elt == EditableLineTag::Commandline {
-            let preserves_autosuggestion = self.try_apply_edit_to_autosuggestion(&edit);
+            let preserves_autosuggestion = try_apply_edit_to_autosuggestion(
+                &mut self.autosuggestion,
+                self.command_line.text(),
+                &edit,
+            );
             if preserves_autosuggestion {
                 autosuggestion_update = AutosuggestionUpdate::Preserve
             } else if !self.autosuggestion.is_empty()
@@ -5128,7 +5137,7 @@ impl<'a> Reader<'a> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, PartialEq, Debug)]
 pub(super) struct Autosuggestion {
     /// The text to use, as an extension/replacement of the current line.
     text: WString,
@@ -7308,5 +7317,100 @@ mod tests {
 
         // See #6130
         validate!(": (:^ ''", "", CompleteFlags::default(), false, ": (: ^''");
+    }
+
+    #[test]
+    fn test_try_apply_edit_to_autosuggestion() {
+        use super::Autosuggestion;
+        use super::try_apply_edit_to_autosuggestion;
+        use crate::editable_line::Edit;
+
+        macro_rules! validate {
+            (
+                $name:expr,
+                $autosuggestion:expr,
+                $command_line:expr,
+                $edit:expr,
+                $expected_autosuggestion:expr $(,)?
+            ) => {
+                let mut autosuggestion = $autosuggestion;
+                let command_line = L!($command_line);
+                let edit = $edit;
+                let expected = $expected_autosuggestion;
+
+                let expect_success = expected.is_some();
+                assert_eq!(
+                    try_apply_edit_to_autosuggestion(&mut autosuggestion, command_line, &edit),
+                    expect_success,
+                    "Test case '{}' failed: incorrect result",
+                    $name
+                );
+                if expect_success {
+                    assert_eq!(
+                        autosuggestion,
+                        expected.unwrap(),
+                        "Test case '{}' failed: incorrect autosuggestion state",
+                        $name
+                    );
+                }
+            };
+        }
+
+        validate!(
+            "No autosuggestion",
+            Autosuggestion::default(),
+            "echo",
+            Edit::new(4..4, L!(" ").to_owned()),
+            None,
+        );
+
+        validate!(
+            "Matching edit",
+            Autosuggestion {
+                text: L!("echo hest").to_owned(),
+                search_string_range: 0..4,
+                icase: false,
+                is_whole_item_from_history: true,
+            },
+            "echo",
+            Edit::new(4..4, L!(" ").to_owned()),
+            Some(Autosuggestion {
+                text: L!("echo hest").to_owned(),
+                search_string_range: 0..5,
+                icase: false,
+                is_whole_item_from_history: true,
+            })
+        );
+
+        validate!(
+            "Non-matching edit",
+            Autosuggestion {
+                text: L!("echo hest").to_owned(),
+                search_string_range: 0..4,
+                icase: false,
+                is_whole_item_from_history: true,
+            },
+            "echo",
+            Edit::new(4..4, L!("f").to_owned()),
+            None,
+        );
+
+        validate!(
+            "Case-insensitive matching edit",
+            Autosuggestion {
+                text: L!("echo hest").to_owned(),
+                search_string_range: 0..4,
+                icase: true,
+                is_whole_item_from_history: true,
+            },
+            "echo",
+            Edit::new(4..4, L!(" H").to_owned()),
+            Some(Autosuggestion {
+                text: L!("echo hest").to_owned(),
+                search_string_range: 0..6,
+                icase: true,
+                is_whole_item_from_history: true,
+            })
+        );
     }
 }

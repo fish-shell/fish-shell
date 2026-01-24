@@ -19,12 +19,14 @@ set(VARS_FOR_CARGO_SPHINX_WRAPPER
 add_custom_target(sphinx-docs
     COMMAND env ${VARS_FOR_CARGO_SPHINX_WRAPPER}
         cargo xtask html-docs --fish-indent=${FISH_INDENT_FOR_BUILDING_DOCS}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     DEPENDS ${SPHINX_HTML_FISH_INDENT_DEP}
     COMMENT "Building HTML documentation with Sphinx")
 
 add_custom_target(sphinx-manpages
     COMMAND env ${VARS_FOR_CARGO_SPHINX_WRAPPER}
         cargo xtask man-pages
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Building man pages with Sphinx")
 
 if(NOT DEFINED WITH_DOCS) # Don't check for legacy options if the new one is defined, to help bisecting.

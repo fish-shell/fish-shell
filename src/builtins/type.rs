@@ -2,7 +2,7 @@ use super::prelude::*;
 use crate::common::bytes2wcstring;
 use crate::function;
 use crate::highlight::highlight_and_colorize;
-use crate::parse_util::{apply_indents, parse_util_compute_indents};
+use crate::parse_util::{apply_indents, compute_indents};
 use crate::path::{path_get_path, path_get_paths};
 
 #[derive(Default)]
@@ -144,7 +144,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                             props.annotated_definition(arg)
                         ));
                         if props.definition_file().is_none() {
-                            def = apply_indents(&def, &parse_util_compute_indents(&def));
+                            def = apply_indents(&def, &compute_indents(&def));
                         }
 
                         if opts.color.enabled(streams) {

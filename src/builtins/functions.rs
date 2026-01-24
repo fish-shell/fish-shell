@@ -8,7 +8,7 @@ use crate::event::{self};
 use crate::function;
 use crate::highlight::highlight_and_colorize;
 use crate::parse_util::apply_indents;
-use crate::parse_util::parse_util_compute_indents;
+use crate::parse_util::compute_indents;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::termsize::termsize_last;
 
@@ -415,7 +415,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         }
 
         if props.definition_file().is_none() {
-            def = apply_indents(&def, &parse_util_compute_indents(&def));
+            def = apply_indents(&def, &compute_indents(&def));
         }
 
         if opts.color.enabled(streams) {

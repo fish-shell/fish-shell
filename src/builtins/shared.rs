@@ -3,7 +3,7 @@ use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name};
 use crate::fds::BorrowedFdFile;
 use crate::io::OutputStream;
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
-use crate::parse_util::parse_util_argument_is_help;
+use crate::parse_util::argument_is_help;
 use crate::parser::{BlockType, LoopStatus};
 use crate::proc::{Pid, ProcStatus, no_exec};
 use crate::{builtins::*, wutil};
@@ -476,7 +476,7 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     // We can be handed a keyword by the parser as if it was a command. This happens when the user
     // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
     // handle displaying help for it here.
-    if argv.len() == 2 && parse_util_argument_is_help(argv[1]) && cmd_needs_help(argv[0]) {
+    if argv.len() == 2 && argument_is_help(argv[1]) && cmd_needs_help(argv[0]) {
         builtin_print_help(parser, streams, argv[0]);
         return ProcStatus::from_exit_code(STATUS_CMD_OK);
     }

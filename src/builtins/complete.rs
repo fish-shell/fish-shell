@@ -4,8 +4,8 @@ use crate::complete::{CompletionRequestOptions, complete_add_wrapper, complete_r
 use crate::highlight::highlight_and_colorize;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::ParseErrorList;
-use crate::parse_util::parse_util_detect_errors_in_argument_list;
-use crate::parse_util::{parse_util_detect_errors, parse_util_token_extent};
+use crate::parse_util::detect_errors_in_argument_list;
+use crate::parse_util::{detect_parse_errors, get_token_extent};
 use crate::proc::is_interactive_session;
 use crate::reader::{commandline_get_state, completion_apply_to_command_line};
 use crate::{
@@ -449,7 +449,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
 
     for condition_string in &condition {
         let mut errors = ParseErrorList::new();
-        if parse_util_detect_errors(condition_string, Some(&mut errors), false).is_err() {
+        if detect_parse_errors(condition_string, Some(&mut errors), false).is_err() {
             for error in errors {
                 let prefix = cmd.to_owned() + L!(": -n '") + &condition_string[..] + L!("': ");
                 streams.err.append(&error.describe_with_prefix(
@@ -469,7 +469,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         prefix.push_utfstr(cmd);
         prefix.push_str(": ");
 
-        if let Err(err_text) = parse_util_detect_errors_in_argument_list(&comp, &prefix) {
+        if let Err(err_text) = detect_errors_in_argument_list(&comp, &prefix) {
             streams.err.append(&wgettext_fmt!(
                 "%s: %s: contains a syntax error\n",
                 cmd,
@@ -499,7 +499,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             Some(param) => param,
         };
 
-        let (token, _) = parse_util_token_extent(&do_complete_param, do_complete_param.len());
+        let (token, _) = get_token_extent(&do_complete_param, do_complete_param.len());
 
         // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.

@@ -598,12 +598,12 @@ impl Parser {
         block_type: BlockType,
     ) -> Result<EvalRes, WString> {
         use crate::parse_tree::ParsedSource;
-        use crate::parse_util::parse_util_detect_errors_in_ast;
+        use crate::parse_util::detect_parse_errors_in_ast;
         let mut errors = vec![];
         let ast = ast::parse(&src, ParseTreeFlags::default(), Some(&mut errors));
         let mut errored = ast.errored();
         if !errored {
-            errored = parse_util_detect_errors_in_ast(&ast, &src, Some(&mut errors)).is_err();
+            errored = detect_parse_errors_in_ast(&ast, &src, Some(&mut errors)).is_err();
         }
         if errored {
             let sb = self.get_backtrace(&src, &errors);
@@ -1492,7 +1492,7 @@ mod tests {
         ParseErrorCode, ParseTokenType, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
     };
     use crate::parse_tree::{LineCounter, parse_source};
-    use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
+    use crate::parse_util::{detect_errors_in_argument, detect_parse_errors};
     use crate::prelude::*;
     use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
     use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
@@ -1506,7 +1506,7 @@ mod tests {
         let _cleanup = test_init();
         macro_rules! detect_errors {
             ($src:literal) => {
-                parse_util_detect_errors(L!($src), None, true /* accept incomplete */)
+                detect_parse_errors(L!($src), None, true /* accept incomplete */)
             };
         }
 
@@ -1519,7 +1519,7 @@ mod tests {
             let args = &ast.top().arguments;
             let first_arg = args.first().expect("Failed to parse an argument");
             let mut errors = None;
-            parse_util_detect_errors_in_argument(first_arg, first_arg.source(&src), &mut errors)
+            detect_errors_in_argument(first_arg, first_arg.source(&src), &mut errors)
         }
 
         // Testing block nesting
@@ -1694,7 +1694,7 @@ mod tests {
         );
 
         // Within command substitutions, we should be able to detect everything that
-        // parse_util_detect_errors! can detect.
+        // detect_errors! can detect.
         assert!(
             detect_argument_errors("foo(cat | or cat)")
                 .unwrap_err()

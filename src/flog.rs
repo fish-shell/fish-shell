@@ -2,7 +2,7 @@ use crate::common::wcs2bytes;
 use crate::prelude::*;
 use crate::wildcard::wildcard_match;
 use crate::wutil::write_to_fd;
-use crate::{parse_util::parse_util_unescape_wildcards, wutil::unescape_bytes_and_write_to_fd};
+use crate::{parse_util::unescape_wildcards, wutil::unescape_bytes_and_write_to_fd};
 use libc::c_int;
 use std::sync::atomic::{AtomicI32, Ordering};
 
@@ -259,7 +259,7 @@ pub use {flog, flogf, should_flog};
 
 /// For each category, if its name matches the wildcard, set its enabled to the given sense.
 fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {
-    let wc = parse_util_unescape_wildcards(wc_esc);
+    let wc = unescape_wildcards(wc_esc);
     let mut match_found = false;
     for cat in categories::all_categories() {
         if wildcard_match(cat.name, &wc, false) {

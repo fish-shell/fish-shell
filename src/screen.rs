@@ -2185,7 +2185,7 @@ pub fn wcswidth_rendered(s: &wstr) -> isize {
 mod tests {
     use crate::common::get_ellipsis_char;
     use crate::highlight::HighlightSpec;
-    use crate::parse_util::parse_util_compute_indents;
+    use crate::parse_util::compute_indents;
     use crate::prelude::*;
     use crate::screen::{
         LayoutCache, PromptCacheEntry, PromptLayout, ScreenLayout, compute_layout,
@@ -2448,7 +2448,7 @@ mod tests {
                     + L!($autosuggestion_str)
                     + L!($commandline_after_suggestion);
                 let mut colors = vec![HighlightSpec::default(); full_commandline.len()];
-                let mut indent = parse_util_compute_indents(&full_commandline);
+                let mut indent = compute_indents(&full_commandline);
                 assert_eq!(
                     compute_layout(
                         '…',

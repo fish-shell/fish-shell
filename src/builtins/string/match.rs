@@ -5,7 +5,7 @@ use std::num::NonZeroUsize;
 use super::*;
 use crate::env::{EnvVar, EnvVarFlags};
 use crate::flog::flog;
-use crate::parse_util::parse_util_unescape_wildcards;
+use crate::parse_util::unescape_wildcards;
 use crate::parser::ParserEnvSetMode;
 use crate::wildcard::{ANY_STRING, wildcard_match};
 
@@ -365,7 +365,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
 
 impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
     fn new(pattern: &'args wstr, opts: &'opts Match<'args>) -> Self {
-        let mut wcpattern = parse_util_unescape_wildcards(pattern);
+        let mut wcpattern = unescape_wildcards(pattern);
         if opts.ignore_case {
             wcpattern = wcpattern.to_lowercase();
         }

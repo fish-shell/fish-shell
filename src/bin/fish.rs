@@ -46,7 +46,7 @@ use fish::{
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
-    parse_util::parse_util_detect_errors_in_ast,
+    parse_util::detect_parse_errors_in_ast,
     parser::{BlockType, CancelBehavior, Parser, ParserEnvSetMode},
     path::path_get_config,
     prelude::*,
@@ -195,7 +195,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_in
         let mut errors = ParseErrorList::new();
         let ast = ast::parse(&cmd_wcs, ParseTreeFlags::default(), Some(&mut errors));
         let errored = ast.errored() || {
-            parse_util_detect_errors_in_ast(&ast, &cmd_wcs, Some(&mut errors)).is_err()
+            detect_parse_errors_in_ast(&ast, &cmd_wcs, Some(&mut errors)).is_err()
         };
 
         if !errored {

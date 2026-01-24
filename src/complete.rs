@@ -29,9 +29,7 @@ use crate::{
     history::{History, history_session_id},
     operation_context::OperationContext,
     parse_constants::SourceRange,
-    parse_util::{
-        parse_util_cmdsubst_extent, parse_util_process_extent, parse_util_unescape_wildcards,
-    },
+    parse_util::{get_cmdsubst_extent, get_process_extent, unescape_wildcards},
     parser::{Block, Parser, ParserEnvSetMode},
     parser_keywords::parser_keywords_is_subcommand,
     path::{path_get_path, path_try_get_path},
@@ -654,7 +652,7 @@ impl<'ctx> Completer<'ctx> {
 
         // Get all the arguments.
         let mut tokens = Vec::new();
-        parse_util_process_extent(&cmdline, position_in_statement, Some(&mut tokens));
+        get_process_extent(&cmdline, position_in_statement, Some(&mut tokens));
         let actual_token_count = tokens.len();
 
         // Hack: fix autosuggestion by removing prefixing "and"s #6249.
@@ -930,7 +928,7 @@ impl<'ctx> Completer<'ctx> {
             return;
         }
 
-        let wc = parse_util_unescape_wildcards(&tmp);
+        let wc = unescape_wildcards(&tmp);
         for comp in possible_comp {
             let comp_str = &comp.completion;
             if !comp_str.is_empty() {
@@ -2368,7 +2366,7 @@ pub fn complete(
     ctx: &OperationContext,
 ) -> (Vec<Completion>, Vec<WString>) {
     // Determine the innermost subcommand.
-    let cmdsubst = parse_util_cmdsubst_extent(cmd_with_subcmds, cmd_with_subcmds.len());
+    let cmdsubst = get_cmdsubst_extent(cmd_with_subcmds, cmd_with_subcmds.len());
     let cmd = cmd_with_subcmds[cmdsubst].to_owned();
     let mut completer = Completer::new(ctx, flags);
     completer.perform_for_commandline(cmd);

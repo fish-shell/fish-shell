@@ -32,8 +32,7 @@ use crate::parse_constants::{
 };
 use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef};
 use crate::parse_util::{
-    MaybeParentheses::CommandSubstitution, parse_util_locate_cmdsubst_range,
-    parse_util_unescape_wildcards,
+    MaybeParentheses::CommandSubstitution, locate_cmdsubst_range, unescape_wildcards,
 };
 use crate::parser::{
     Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ParserEnvSetMode, ProfileItem,
@@ -1157,7 +1156,7 @@ impl<'a> ExecutionContext<'a> {
             if case_result == EndExecutionReason::Ok {
                 for arg in case_args {
                     // Unescape wildcards so they can be expanded again.
-                    let unescaped_arg = parse_util_unescape_wildcards(&arg);
+                    let unescaped_arg = unescape_wildcards(&arg);
                     if wildcard_match(&switch_value_expanded, &unescaped_arg, false) {
                         // If this matched, we're done.
                         matching_case_item = Some(case_item);
@@ -1464,7 +1463,7 @@ impl<'a> ExecutionContext<'a> {
                 if oper.mode == RedirectionMode::Input && {
                     let redir_unexpanded = self.node_source(redir_node);
                     redir_unexpanded.starts_with(L!("<("))
-                        && match parse_util_locate_cmdsubst_range(
+                        && match locate_cmdsubst_range(
                             &redir_unexpanded[1..],
                             &mut 0,
                             false,

@@ -102,47 +102,37 @@ use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
 use crate::parse_constants::SourceRange;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
-use crate::parse_util::MaybeParentheses;
-use crate::parse_util::SPACES_PER_INDENT;
-use crate::parse_util::parse_util_process_extent;
-use crate::parse_util::parse_util_process_first_token_offset;
 use crate::parse_util::{
-    parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_contains_wildcards,
-    parse_util_detect_errors, parse_util_escape_string_with_quote, parse_util_escape_wildcards,
-    parse_util_get_line_from_offset, parse_util_get_offset, parse_util_get_offset_from_line,
-    parse_util_lineno, parse_util_locate_cmdsubst_range, parse_util_token_extent,
+    MaybeParentheses, SPACES_PER_INDENT, compute_indents, contains_wildcards, detect_parse_errors,
+    escape_string_with_quote, escape_wildcards, get_cmdsubst_extent, get_line_from_offset,
+    get_offset, get_offset_from_line, get_process_extent, get_process_first_token_offset,
+    get_token_extent, lineno, locate_cmdsubst_range,
 };
-use crate::parser::ParserEnvSetMode;
-use crate::parser::{BlockType, EvalRes, Parser};
+use crate::parser::{BlockType, EvalRes, Parser, ParserEnvSetMode};
 use crate::prelude::*;
 use crate::proc::{
     HAVE_PROC_STAT, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
     print_exit_warning_for_jobs, proc_update_jiffies,
 };
-use crate::screen::is_dumb;
-use crate::screen::{CharOffset, Screen, screen_force_clear_to_end};
+use crate::screen::{CharOffset, Screen, is_dumb, screen_force_clear_to_end};
 use crate::should_flog;
 use crate::signal::{
     signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
     signal_set_handlers_once,
 };
-use crate::terminal::BufferedOutputter;
-use crate::terminal::Output;
-use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
     self, ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
     Osc0WindowTitle, Osc1TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryBackgroundColor,
     QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
     QueryXtgettcap, QueryXtversion,
 };
+use crate::terminal::{BufferedOutputter, Output, Outputter};
 use crate::termsize::{safe_termsize_invalidate_tty, termsize_last, termsize_update};
-use crate::text_face::TextFace;
-use crate::text_face::parse_text_face;
+use crate::text_face::{TextFace, parse_text_face};
 use crate::threads::{assert_is_background_thread, assert_is_main_thread};
-use crate::tokenizer::quote_end;
-use crate::tokenizer::variable_assignment_equals_pos;
 use crate::tokenizer::{
-    TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType, Tokenizer, tok_command,
+    TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType, Tokenizer, quote_end, tok_command,
+    variable_assignment_equals_pos,
 };
 use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
 use crate::tty_handoff::XTGETTCAP_QUERY_OS_NAME;
@@ -1656,7 +1646,7 @@ fn combine_command_and_autosuggestion(
         // Here we do something funny: if the last token of the command line contains any uppercase
         // characters, we use its case. Otherwise we use the case of the autosuggestion. This
         // is an idea from issue #335.
-        let (tok, _) = parse_util_token_extent(cmdline, cmdline.len() - 1);
+        let (tok, _) = get_token_extent(cmdline, cmdline.len() - 1);
         let last_token_contains_uppercase = cmdline[tok].chars().any(|c| c.is_uppercase());
         if !last_token_contains_uppercase {
             // Use the autosuggestion's case.
@@ -1879,7 +1869,7 @@ impl<'a> Reader<'a> {
         );
 
         // Compute the indentation.
-        let indents = parse_util_compute_indents(&full_line);
+        let indents = compute_indents(&full_line);
 
         let screen = &mut self.data.screen;
         let pager = &mut self.data.pager;
@@ -2095,7 +2085,7 @@ impl ReaderData {
     fn replace_current_token(&mut self, new_token: WString) {
         // Find current token.
         let (elt, el) = self.active_edit_line();
-        let (token_range, _) = parse_util_token_extent(el.text(), el.position());
+        let (token_range, _) = get_token_extent(el.text(), el.position());
 
         self.replace_substring(elt, token_range, new_token);
     }
@@ -3368,7 +3358,7 @@ impl<'a> Reader<'a> {
                     let el = &self.data.command_line;
                     if matches!(mode, SearchMode::Token | SearchMode::LastToken) {
                         // Searching by token.
-                        let (token_range, _) = parse_util_token_extent(el.text(), el.position());
+                        let (token_range, _) = get_token_extent(el.text(), el.position());
                         self.data.history_search.reset_to_mode(
                             el.text()[token_range.clone()].to_owned(),
                             self.history.clone(),
@@ -3450,17 +3440,15 @@ impl<'a> Reader<'a> {
                 let search_string = if !self.history_search.active()
                     || self.history_search.search_string().is_empty()
                 {
-                    let cmdsub = parse_util_cmdsubst_extent(
-                        self.command_line.text(),
-                        self.command_line.position(),
-                    );
+                    let cmdsub =
+                        get_cmdsubst_extent(self.command_line.text(), self.command_line.position());
                     let cmdsub = &self.command_line.text()[cmdsub];
                     let needle = if !cmdsub.contains('\n') {
                         cmdsub
                     } else {
                         line_at_cursor(self.command_line.text(), self.command_line.position())
                     };
-                    parse_util_escape_wildcards(needle)
+                    escape_wildcards(needle)
                 } else {
                     // If we have an actual history search already going, reuse that term
                     // - this is if the user looks around a bit and decides to switch to the pager.
@@ -3848,8 +3836,7 @@ impl<'a> Reader<'a> {
                     // Not navigating the pager contents.
                     let (elt, el) = self.active_edit_line();
                     let line_old =
-                        i32::try_from(parse_util_get_line_from_offset(el.text(), el.position()))
-                            .unwrap();
+                        i32::try_from(get_line_from_offset(el.text(), el.position())).unwrap();
 
                     let line_new = if c == rl::UpLine {
                         line_old - 1
@@ -3857,14 +3844,12 @@ impl<'a> Reader<'a> {
                         line_old + 1
                     };
 
-                    let line_count = parse_util_lineno(el.text(), el.len()) - 1;
+                    let line_count = lineno(el.text(), el.len()) - 1;
 
                     if (0..=i32::try_from(line_count).unwrap()).contains(&line_new) {
-                        let indents = parse_util_compute_indents(el.text());
-                        let base_pos_new =
-                            parse_util_get_offset_from_line(el.text(), line_new).unwrap();
-                        let base_pos_old =
-                            parse_util_get_offset_from_line(el.text(), line_old).unwrap();
+                        let indents = compute_indents(el.text());
+                        let base_pos_new = get_offset_from_line(el.text(), line_new).unwrap();
+                        let base_pos_old = get_offset_from_line(el.text(), line_old).unwrap();
 
                         let indent_old = indents[std::cmp::min(indents.len() - 1, base_pos_old)];
                         let indent_new = indents[std::cmp::min(indents.len() - 1, base_pos_new)];
@@ -3873,7 +3858,7 @@ impl<'a> Reader<'a> {
 
                         let line_offset_old =
                             isize::try_from(el.position() - base_pos_old).unwrap();
-                        let total_offset_new = parse_util_get_offset(
+                        let total_offset_new = get_offset(
                             el.text(),
                             line_new,
                             line_offset_old
@@ -3935,13 +3920,13 @@ impl<'a> Reader<'a> {
                 let (elt, el) = self.active_edit_line();
                 let text = el.text();
 
-                let (mut tok, mut prev_tok) = parse_util_token_extent(text, el.position());
+                let (mut tok, mut prev_tok) = get_token_extent(text, el.position());
 
                 // In case we didn't find a token at or after the cursor...
                 if tok.start == el.len() {
                     // ...retry beginning from the previous token.
                     let pos = prev_tok.end;
-                    (tok, prev_tok) = parse_util_token_extent(text, pos);
+                    (tok, prev_tok) = get_token_extent(text, pos);
                 }
 
                 // Make sure we have two tokens.
@@ -4346,12 +4331,12 @@ impl<'a> Reader<'a> {
             return None;
         }
 
-        let (tok, prev_tok) = parse_util_token_extent(el.text(), el.position());
+        let (tok, prev_tok) = get_token_extent(el.text(), el.position());
 
         // if we are at the start of a token, go back one
         let new_position = if tok.start == pos {
             if prev_tok.start == pos {
-                let cmdsub = parse_util_cmdsubst_extent(el.text(), prev_tok.start);
+                let cmdsub = get_cmdsubst_extent(el.text(), prev_tok.start);
                 cmdsub.start.saturating_sub(1)
             } else {
                 prev_tok.start
@@ -4382,7 +4367,7 @@ impl<'a> Reader<'a> {
             return None;
         }
 
-        let cmdsubst_range = parse_util_cmdsubst_extent(&buffer, pos);
+        let cmdsubst_range = get_cmdsubst_extent(&buffer, pos);
         for token in Tokenizer::new(&buffer[cmdsubst_range.clone()], TOK_ACCEPT_UNFINISHED) {
             if token.type_ != TokenType::String {
                 continue;
@@ -5240,10 +5225,10 @@ fn get_autosuggestion_performer(
             if search_type == SearchType::LinePrefix {
                 let cursor_line_has_process_start = {
                     let mut tokens = vec![];
-                    parse_util_process_extent(&command_line, cursor_pos, Some(&mut tokens));
+                    get_process_extent(&command_line, cursor_pos, Some(&mut tokens));
                     range_of_line_at_cursor(
                         &command_line,
-                        parse_util_process_first_token_offset(&command_line, cursor_pos)
+                        get_process_first_token_offset(&command_line, cursor_pos)
                             .unwrap_or(cursor_pos),
                     ) == range
                 };
@@ -5761,7 +5746,7 @@ fn history_pager_search(
         smartcase_flags(search_string),
         history_index,
     );
-    if !search.go_to_next_match(direction) && !parse_util_contains_wildcards(search_string) {
+    if !search.go_to_next_match(direction) && !contains_wildcards(search_string) {
         // If there were no matches, and the user is not intending for
         // wildcard search, try again with subsequence search.
         search = HistorySearch::new_with(
@@ -5983,7 +5968,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
         let mut has_cmd_subs = false;
         let mut cmdsub_cursor = range.start();
         loop {
-            match parse_util_locate_cmdsubst_range(
+            match locate_cmdsubst_range(
                 s,
                 &mut cmdsub_cursor,
                 /*accept_incomplete=*/ true,
@@ -6318,7 +6303,7 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
 
 fn reader_shell_test(parser: &Parser, bstr: &wstr) -> Result<(), ParserTestErrorBits> {
     let mut errors = vec![];
-    let res = parse_util_detect_errors(bstr, Some(&mut errors), /*accept_incomplete=*/ true);
+    let res = detect_parse_errors(bstr, Some(&mut errors), /*accept_incomplete=*/ true);
 
     if res.is_err_and(|err| err.contains(ParserTestErrorBits::ERROR)) {
         let mut error_desc = parser.get_backtrace(bstr, &errors);
@@ -6644,7 +6629,7 @@ pub fn completion_apply_to_command_line(
 
     if do_replace_line {
         assert!(!do_escape, "unsupported completion flag");
-        let cmdsub = parse_util_cmdsubst_extent(command_line, cursor_pos);
+        let cmdsub = get_cmdsubst_extent(command_line, cursor_pos);
         return if !command_line[cmdsub.clone()].contains('\n') {
             *inout_cursor_pos = cmdsub.start + val_str.len();
             command_line[..cmdsub.start].to_owned() + val_str + &command_line[cmdsub.end..]
@@ -6678,7 +6663,7 @@ pub fn completion_apply_to_command_line(
             }
         }
         let mut move_cursor = 0;
-        let (range, _) = parse_util_token_extent(command_line, cursor_pos);
+        let (range, _) = get_token_extent(command_line, cursor_pos);
 
         let mut sb = command_line[..range.start].to_owned();
 
@@ -6714,7 +6699,7 @@ pub fn completion_apply_to_command_line(
 
     let mut quote = None;
     let replaced = if do_escape {
-        let (tok, _) = parse_util_token_extent(command_line, cursor_pos);
+        let (tok, _) = get_token_extent(command_line, cursor_pos);
         // Find the last quote in the token to complete.
         let mut have_token = false;
         if tok.contains(&cursor_pos) || cursor_pos == tok.end {
@@ -6739,7 +6724,7 @@ pub fn completion_apply_to_command_line(
             escape_flags.insert(EscapeFlags::NO_QUOTED);
         }
 
-        parse_util_escape_string_with_quote(val_str, quote, escape_flags)
+        escape_string_with_quote(val_str, quote, escape_flags)
     } else {
         val_str.to_owned()
     };
@@ -6757,7 +6742,7 @@ pub fn completion_apply_to_command_line(
         insertion_point + replaced.len() + if back_into_trailing_quote { 1 } else { 0 };
     if let Some(mut trailer) = trailer {
         if is_variable_name {
-            let (tok, _) = parse_util_token_extent(command_line, cursor_pos);
+            let (tok, _) = get_token_extent(command_line, cursor_pos);
             maybe_add_slash(&mut trailer, &result[tok.start..new_cursor_pos]);
         }
         // TODO(MSRV/edition 2024): use if let chain for quote instead of `is_some` followed
@@ -6819,13 +6804,13 @@ impl<'a> Reader<'a> {
         // This is because we only look at the current command substitution to form
         // completions - stuff happening outside of it is not interesting.
         let el = &self.command_line;
-        let cmdsub_range = parse_util_cmdsubst_extent(el.text(), el.position());
+        let cmdsub_range = get_cmdsubst_extent(el.text(), el.position());
         let position_in_cmdsub = el.position() - cmdsub_range.start;
 
         // Figure out the extent of the token within the command substitution. Note we
         // pass cmdsub_begin here, not buff.
         let (mut token_range, _) =
-            parse_util_token_extent(&el.text()[cmdsub_range.clone()], position_in_cmdsub);
+            get_token_extent(&el.text()[cmdsub_range.clone()], position_in_cmdsub);
         let position_in_token = position_in_cmdsub - token_range.start;
 
         // Hack: the token may extend past the end of the command substitution, e.g. in

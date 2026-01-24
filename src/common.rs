@@ -8,7 +8,7 @@ use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
-use crate::parse_util::parse_util_escape_string_with_quote;
+use crate::parse_util::escape_string_with_quote;
 use crate::prelude::*;
 use crate::terminal::Output;
 use crate::termsize::Termsize;
@@ -227,7 +227,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
         out.clear();
         out.reserve(2 + input.len());
         out.push(quote);
-        out.push_utfstr(&parse_util_escape_string_with_quote(
+        out.push_utfstr(&escape_string_with_quote(
             input,
             Some(quote),
             EscapeFlags::empty(),

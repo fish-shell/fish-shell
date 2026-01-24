@@ -23,7 +23,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
-use crate::parse_util::{SPACES_PER_INDENT, apply_indents, parse_util_compute_indents};
+use crate::parse_util::{SPACES_PER_INDENT, apply_indents, compute_indents};
 use crate::prelude::*;
 use crate::print_help::print_help;
 use crate::threads;
@@ -162,7 +162,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
                 indents: if do_indent
                 /* Whether to indent, or just insert spaces. */
                 {
-                    parse_util_compute_indents(source)
+                    compute_indents(source)
                 } else {
                     vec![0; source.len()]
                 },
@@ -1106,7 +1106,7 @@ fn do_indent(
         }
 
         let output_wtext = if only_indent || only_unindent {
-            let indents = parse_util_compute_indents(&src);
+            let indents = compute_indents(&src);
             if only_indent {
                 apply_indents(&src, &indents)
             } else {

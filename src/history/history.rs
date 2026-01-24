@@ -57,7 +57,7 @@ use crate::{
     localization::wgettext_fmt,
     operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
     parse_constants::{ParseTreeFlags, StatementDecoration},
-    parse_util::{parse_util_detect_errors, parse_util_unescape_wildcards},
+    parse_util::{detect_parse_errors, unescape_wildcards},
     parser::Parser,
     path::{path_get_config, path_get_data, path_is_valid},
     prelude::*,
@@ -226,7 +226,7 @@ impl HistoryItem {
                 .split(|&c| c == '\n')
                 .any(|line| line.starts_with(term.as_char_slice())),
             SearchType::ContainsGlob => {
-                let mut pat = parse_util_unescape_wildcards(term);
+                let mut pat = unescape_wildcards(term);
                 if !pat.starts_with(ANY_STRING) {
                     pat.insert(0, ANY_STRING);
                 }
@@ -236,7 +236,7 @@ impl HistoryItem {
                 wildcard_match(content_to_match.as_ref(), &pat, false)
             }
             SearchType::PrefixGlob => {
-                let mut pat = parse_util_unescape_wildcards(term);
+                let mut pat = unescape_wildcards(term);
                 if !pat.ends_with(ANY_STRING) {
                     pat.push(ANY_STRING);
                 }
@@ -1185,7 +1185,7 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
     let mut errors = Vec::new();
-    let _ = parse_util_detect_errors(line, Some(&mut errors), false);
+    let _ = detect_parse_errors(line, Some(&mut errors), false);
     errors.is_empty()
 }
 

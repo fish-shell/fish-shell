@@ -19,9 +19,7 @@ use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::history::{History, history_session_id};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseError, ParseErrorCode, ParseErrorList, SOURCE_LOCATION_UNKNOWN};
-use crate::parse_util::{
-    MaybeParentheses, parse_util_expand_variable_error, parse_util_locate_cmdsubst_range,
-};
+use crate::parse_util::{MaybeParentheses, expand_variable_error, locate_cmdsubst_range};
 use crate::path::path_apply_working_directory;
 use crate::prelude::*;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, WildcardResult};
@@ -624,7 +622,7 @@ fn expand_variables(
     // It's an error if the name is empty.
     if var_name.is_empty() {
         if let Some(errors) = errors {
-            parse_util_expand_variable_error(
+            expand_variable_error(
                 &instr,
                 0, /* global_token_pos */
                 varexp_char_idx,
@@ -930,7 +928,7 @@ pub fn expand_cmdsubst(
     let mut cursor = 0;
     let mut is_quoted = false;
     let mut has_dollar = false;
-    let parens = match parse_util_locate_cmdsubst_range(
+    let parens = match locate_cmdsubst_range(
         &input,
         &mut cursor,
         false,
@@ -1330,7 +1328,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         }
         if self.flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) {
             let mut cursor = 0;
-            match parse_util_locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
+            match locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
                 MaybeParentheses::Error => ExpandResult::make_error(STATUS_EXPAND_ERROR),
                 MaybeParentheses::None => {
                     if !out.add(input) {

@@ -36,7 +36,7 @@ use std::{iter, ops};
 /// Handles slices: the square brackets in an expression like $foo[5..4]
 /// Return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
 /// This never accepts incomplete slices.
-pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
+pub fn slice_length(input: &wstr) -> Option<usize> {
     let openc = '[';
     let closec = ']';
     let mut escaped = false;
@@ -129,7 +129,7 @@ pub enum MaybeParentheses {
 /// \param out_has_dollar whether the command substitution has the optional leading $.
 /// Return -1 on syntax error, 0 if no subshells exist and 1 on success
 #[allow(clippy::too_many_arguments)]
-pub fn parse_util_locate_cmdsubst_range(
+pub fn locate_cmdsubst_range(
     s: &wstr,
     inout_cursor_offset: &mut usize,
     accept_incomplete: bool,
@@ -142,7 +142,7 @@ pub fn parse_util_locate_cmdsubst_range(
     }
 
     // Defer to the wonky version.
-    let ret = parse_util_locate_cmdsub(
+    let ret = locate_cmdsub(
         s,
         *inout_cursor_offset,
         accept_incomplete,
@@ -167,12 +167,12 @@ pub fn parse_util_locate_cmdsubst_range(
 /// \param cursor_pos the position of the cursor
 /// \param a the start of the searched string
 /// \param b the end of the searched string
-pub fn parse_util_cmdsubst_extent(buff: &wstr, cursor: usize) -> ops::Range<usize> {
+pub fn get_cmdsubst_extent(buff: &wstr, cursor: usize) -> ops::Range<usize> {
     // The tightest command substitution found so far.
     let mut result = 0..buff.len();
     let mut pos = 0;
     loop {
-        let parens = match parse_util_locate_cmdsub(buff, pos, true, None, None) {
+        let parens = match locate_cmdsub(buff, pos, true, None, None) {
             // No subshell found, all done.
             MaybeParentheses::Error | MaybeParentheses::None => break,
             MaybeParentheses::CommandSubstitution(parens) => parens,
@@ -202,7 +202,7 @@ pub fn parse_util_cmdsubst_extent(buff: &wstr, cursor: usize) -> ops::Range<usiz
     result
 }
 
-fn parse_util_locate_cmdsub(
+fn locate_cmdsub(
     input: &wstr,
     cursor: usize,
     allow_incomplete: bool,
@@ -376,20 +376,18 @@ fn parse_util_locate_cmdsub(
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-/// \param a the start of the process
-/// \param b the end of the process
 /// \param tokens the tokens in the process
-pub fn parse_util_process_extent(
+pub fn get_process_extent(
     buff: &wstr,
     cursor_pos: usize,
     out_tokens: Option<&mut Vec<Tok>>,
 ) -> ops::Range<usize> {
-    job_or_process_extent(true, buff, cursor_pos, out_tokens)
+    get_job_or_process_extent(true, buff, cursor_pos, out_tokens)
 }
 
-pub fn parse_util_process_first_token_offset(buff: &wstr, cursor_pos: usize) -> Option<usize> {
+pub fn get_process_first_token_offset(buff: &wstr, cursor_pos: usize) -> Option<usize> {
     let mut tokens = vec![];
-    parse_util_process_extent(buff, cursor_pos, Some(&mut tokens));
+    get_process_extent(buff, cursor_pos, Some(&mut tokens));
     tokens.first().map(|tok| tok.offset())
 }
 
@@ -397,19 +395,17 @@ pub fn parse_util_process_first_token_offset(buff: &wstr, cursor_pos: usize) -> 
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-/// \param a the start of the process
-/// \param b the end of the process
-/// \param tokens the tokens in the process
-pub fn parse_util_job_extent(
+/// \param out_tokens the tokens in the process
+pub fn get_job_extent(
     buff: &wstr,
     cursor_pos: usize,
     out_tokens: Option<&mut Vec<Tok>>,
 ) -> ops::Range<usize> {
-    job_or_process_extent(false, buff, cursor_pos, out_tokens)
+    get_job_or_process_extent(false, buff, cursor_pos, out_tokens)
 }
 
 /// Get the beginning and end of the job or process definition under the cursor.
-fn job_or_process_extent(
+fn get_job_or_process_extent(
     process: bool,
     buff: &wstr,
     cursor_pos: usize,
@@ -417,7 +413,7 @@ fn job_or_process_extent(
 ) -> ops::Range<usize> {
     let mut finished = false;
 
-    let cmdsub_range = parse_util_cmdsubst_extent(buff, cursor_pos);
+    let cmdsub_range = get_cmdsubst_extent(buff, cursor_pos);
     assert!(cursor_pos >= cmdsub_range.start);
     let pos = cursor_pos - cmdsub_range.start;
 
@@ -461,8 +457,8 @@ fn job_or_process_extent(
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>, Range<usize>) {
-    let cmdsubst_range = parse_util_cmdsubst_extent(buff, cursor_pos);
+pub fn get_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>, Range<usize>) {
+    let cmdsubst_range = get_cmdsubst_extent(buff, cursor_pos);
     let cmdsubst_begin = cmdsubst_range.start;
 
     // pos is equivalent to cursor_pos within the range of the command substitution {begin, end}.
@@ -515,7 +511,7 @@ pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>,
 }
 
 /// Get the line number at the specified character offset.
-pub fn parse_util_lineno(s: &wstr, offset: usize) -> usize {
+pub fn lineno(s: &wstr, offset: usize) -> usize {
     // Return the line number of position offset, starting with 1.
     if s.is_empty() {
         return 1;
@@ -526,7 +522,7 @@ pub fn parse_util_lineno(s: &wstr, offset: usize) -> usize {
 }
 
 /// Calculate the line number of the specified cursor position.
-pub fn parse_util_get_line_from_offset(s: &wstr, pos: usize) -> isize {
+pub fn get_line_from_offset(s: &wstr, pos: usize) -> isize {
     // Return the line pos is on, or -1 if it's after the end.
     if pos > s.len() {
         return -1;
@@ -535,7 +531,7 @@ pub fn parse_util_get_line_from_offset(s: &wstr, pos: usize) -> isize {
 }
 
 /// Get the offset of the first character on the specified line.
-pub fn parse_util_get_offset_from_line(s: &wstr, line: i32) -> Option<usize> {
+pub fn get_offset_from_line(s: &wstr, line: i32) -> Option<usize> {
     // Return the first position on line X, counting from 0.
     if line < 0 {
         return None;
@@ -555,9 +551,9 @@ pub fn parse_util_get_offset_from_line(s: &wstr, line: i32) -> Option<usize> {
 }
 
 /// Return the total offset of the buffer for the cursor position nearest to the specified position.
-pub fn parse_util_get_offset(s: &wstr, line: i32, line_offset: isize) -> Option<usize> {
-    let off = parse_util_get_offset_from_line(s, line)?;
-    let off2 = parse_util_get_offset_from_line(s, line + 1).unwrap_or(s.len() + 1);
+pub fn get_offset(s: &wstr, line: i32, line_offset: isize) -> Option<usize> {
+    let off = get_offset_from_line(s, line)?;
+    let off2 = get_offset_from_line(s, line + 1).unwrap_or(s.len() + 1);
 
     let mut line_offset = line_offset as usize;
     if line_offset >= off2 - off - 1 {
@@ -569,7 +565,7 @@ pub fn parse_util_get_offset(s: &wstr, line: i32, line_offset: isize) -> Option<
 
 /// Return the given string, unescaping wildcard characters but not performing any other character
 /// transformation.
-pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
+pub fn unescape_wildcards(s: &wstr) -> WString {
     let mut result = WString::with_capacity(s.len());
     let unesc_qmark = !feature_test(FeatureFlag::QuestionMarkNoGlob);
 
@@ -598,7 +594,7 @@ pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
 }
 
 /// Return if the given string contains wildcard characters.
-pub fn parse_util_contains_wildcards(s: &wstr) -> bool {
+pub fn contains_wildcards(s: &wstr) -> bool {
     let unesc_qmark = !feature_test(FeatureFlag::QuestionMarkNoGlob);
 
     let mut i = 0;
@@ -626,7 +622,7 @@ pub fn parse_util_contains_wildcards(s: &wstr) -> bool {
 
 /// Escape any wildcard characters in the given string. e.g. convert
 /// "a*b" to "a\*b".
-pub fn parse_util_escape_wildcards(s: &wstr) -> WString {
+pub fn escape_wildcards(s: &wstr) -> WString {
     let mut result = WString::with_capacity(s.len());
     let unesc_qmark = !feature_test(FeatureFlag::QuestionMarkNoGlob);
 
@@ -645,7 +641,7 @@ pub fn parse_util_escape_wildcards(s: &wstr) -> WString {
 }
 
 /// Checks if the specified string is a help option.
-pub fn parse_util_argument_is_help(s: &wstr) -> bool {
+pub fn argument_is_help(s: &wstr) -> bool {
     [L!("-h"), L!("--help")].contains(&s)
 }
 
@@ -700,7 +696,7 @@ fn error_for_character(c: char) -> WString {
 /// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
 /// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
 /// thus escaping should be with backslashes). Optionally do not escape tildes.
-pub fn parse_util_escape_string_with_quote(
+pub fn escape_string_with_quote(
     cmd: &wstr,
     quote: Option<char>,
     escape_flags: EscapeFlags,
@@ -757,11 +753,12 @@ pub fn parse_util_escape_string_with_quote(
 
 /// Given a string, parse it as fish code and then return the indents. The return value has the same
 /// size as the string.
-pub fn parse_util_compute_indents(src: &wstr) -> Vec<i32> {
-    compute_indents(src, 0)
+pub fn compute_indents(src: &wstr) -> Vec<i32> {
+    compute_indents_from(src, 0)
 }
 
-fn compute_indents(src: &wstr, initial_indent: i32) -> Vec<i32> {
+/// Compute the indents for the given source, starting with the specified initial indent.
+fn compute_indents_from(src: &wstr, initial_indent: i32) -> Vec<i32> {
     // Make a vector the same size as the input string, which contains the indents. Initialize them
     // to 0.
     let mut indents = vec![0; src.len()];
@@ -929,7 +926,7 @@ impl<'a> IndentVisitor<'a> {
         let mut was_double_quoted;
         loop {
             was_double_quoted = is_double_quoted;
-            let parens = match parse_util_locate_cmdsubst_range(
+            let parens = match locate_cmdsubst_range(
                 node_src,
                 &mut cursor,
                 /*accept_incomplete=*/ true,
@@ -946,7 +943,7 @@ impl<'a> IndentVisitor<'a> {
             let command = parens.command();
             self.indent_string_part(done..range.start() + command.start, was_double_quoted);
             let cmdsub_contents = &node_src[command.clone()];
-            let indents = compute_indents(cmdsub_contents, self.indent + 1);
+            let indents = compute_indents_from(cmdsub_contents, self.indent + 1);
             self.indents[range.start() + command.start..range.start() + command.end]
                 .copy_from_slice(&indents);
 
@@ -1124,7 +1121,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
 /// incomplete (e.g. an unclosed quote), an error is not returned and the ParserTestErrorBits::INCOMPLETE bit
 /// is set in the return value. If allow_incomplete is not set, then incomplete strings result in an
 /// error.
-pub fn parse_util_detect_errors(
+pub fn detect_parse_errors(
     buff_src: &wstr,
     mut out_errors: Option<&mut ParseErrorList>,
     allow_incomplete: bool, /*=false*/
@@ -1176,12 +1173,12 @@ pub fn parse_util_detect_errors(
     }
 
     // Defer to the tree-walking version.
-    parse_util_detect_errors_in_ast(&ast, buff_src, out_errors)
+    detect_parse_errors_in_ast(&ast, buff_src, out_errors)
 }
 
-/// Like parse_util_detect_errors but accepts an already-parsed ast.
+/// Like detect_parse_errors but accepts an already-parsed ast.
 /// The top of the ast is assumed to be a job list.
-pub fn parse_util_detect_errors_in_ast(
+pub fn detect_parse_errors_in_ast(
     ast: &Ast,
     buff_src: &wstr,
     mut out_errors: Option<&mut ParseErrorList>,
@@ -1230,7 +1227,7 @@ pub fn parse_util_detect_errors_in_ast(
             }
             Kind::Argument(arg) => {
                 let arg_src = arg.source(buff_src);
-                res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
+                res |= detect_errors_in_argument(arg, arg_src, &mut out_errors)
                     .err()
                     .unwrap_or_default();
             }
@@ -1318,10 +1315,7 @@ pub fn parse_util_detect_errors_in_ast(
 
 /// Detect errors in the specified string when parsed as an argument list. Returns the text of an
 /// error, or none if no error occurred.
-pub fn parse_util_detect_errors_in_argument_list(
-    arg_list_src: &wstr,
-    prefix: &wstr,
-) -> Result<(), WString> {
+pub fn detect_errors_in_argument_list(arg_list_src: &wstr, prefix: &wstr) -> Result<(), WString> {
     // Helper to return a description of the first error.
     let get_error_text = |errors: &ParseErrorList| {
         assert!(!errors.is_empty(), "Expected an error");
@@ -1346,7 +1340,7 @@ pub fn parse_util_detect_errors_in_argument_list(
     let args = &arg_list.arguments;
     for arg in args.iter() {
         let arg_src = arg.source(arg_list_src);
-        if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {
+        if detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {
             return get_error_text(&errors);
         }
     }
@@ -1388,7 +1382,7 @@ macro_rules! append_syntax_error_formatted {
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
 /// substitutions, improperly escaped characters and improper use of the variable expansion
 /// operator.
-pub fn parse_util_detect_errors_in_argument(
+pub fn detect_errors_in_argument(
     arg: &ast::Argument,
     arg_src: &wstr,
     out_errors: &mut Option<&mut ParseErrorList>,
@@ -1454,12 +1448,7 @@ pub fn parse_util_detect_errors_in_argument(
                         {
                             first_dollar -= 1;
                         }
-                        parse_util_expand_variable_error(
-                            unesc.into(),
-                            source_start,
-                            first_dollar,
-                            out_errors,
-                        );
+                        expand_variable_error(unesc.into(), source_start, first_dollar, out_errors);
                     }
                 }
             }
@@ -1474,7 +1463,7 @@ pub fn parse_util_detect_errors_in_argument(
     let mut is_quoted = false;
     while do_loop {
         let mut has_dollar = false;
-        match parse_util_locate_cmdsubst_range(
+        match locate_cmdsubst_range(
             arg_src,
             &mut cursor,
             false,
@@ -1496,11 +1485,9 @@ pub fn parse_util_detect_errors_in_argument(
                     out_errors,
                 );
                 let mut subst_errors = ParseErrorList::new();
-                if let Err(subst_err) = parse_util_detect_errors(
-                    &arg_src[parens.command()],
-                    Some(&mut subst_errors),
-                    false,
-                ) {
+                if let Err(subst_err) =
+                    detect_parse_errors(&arg_src[parens.command()], Some(&mut subst_errors), false)
+                {
                     err |= subst_err;
                 }
 
@@ -1634,7 +1621,7 @@ fn detect_errors_in_decorated_statement(
     let mut first_arg_is_help = false;
     if let Some(arg) = get_first_arg(&dst.args_or_redirs) {
         let arg_src = arg.source(buff_src);
-        first_arg_is_help = parse_util_argument_is_help(arg_src);
+        first_arg_is_help = argument_is_help(arg_src);
     }
 
     // Get the statement we are part of.
@@ -1856,7 +1843,7 @@ fn detect_errors_in_block_redirection_list(
 /// Given a string containing a variable expansion error, append an appropriate error to the errors
 /// list. The global_token_pos is the offset of the token in the larger source, and the dollar_pos
 /// is the offset of the offending dollar sign within the token.
-pub fn parse_util_expand_variable_error(
+pub fn expand_variable_error(
     token: &wstr,
     global_token_pos: usize,
     dollar_pos: usize,
@@ -1977,9 +1964,8 @@ const VAR_ERR_LEN: usize = 16;
 #[cfg(test)]
 mod tests {
     use super::{
-        BOOL_AFTER_BACKGROUND_ERROR_MSG, parse_util_cmdsubst_extent, parse_util_compute_indents,
-        parse_util_detect_errors, parse_util_escape_string_with_quote, parse_util_process_extent,
-        parse_util_slice_length,
+        BOOL_AFTER_BACKGROUND_ERROR_MSG, compute_indents, detect_parse_errors,
+        escape_string_with_quote, get_cmdsubst_extent, get_process_extent, slice_length,
     };
     use crate::common::EscapeFlags;
     use crate::parse_constants::{
@@ -2035,7 +2021,7 @@ mod tests {
         macro_rules! validate {
             ($src:expr, $error_text_format:expr) => {
                 let mut errors = vec![];
-                let res = parse_util_detect_errors(L!($src), Some(&mut errors), false);
+                let res = detect_parse_errors(L!($src), Some(&mut errors), false);
                 let fmt = wgettext!($error_text_format);
                 assert!(res.is_err());
                 assert!(
@@ -2069,11 +2055,11 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_util_process_extent() {
+    fn test_get_process_extent() {
         macro_rules! validate {
             ($commandline:literal, $cursor:expr, $expected_range:expr) => {
                 assert_eq!(
-                    parse_util_process_extent(L!($commandline), $cursor, None),
+                    get_process_extent(L!($commandline), $cursor, None),
                     $expected_range
                 );
             };
@@ -2085,31 +2071,28 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_parse_util_cmdsubst_extent() {
+    fn test_get_cmdsubst_extent() {
         let _cleanup = test_init();
         let a = L!("echo (echo (echo hi");
-        assert_eq!(parse_util_cmdsubst_extent(a, 0), 0..a.len());
-        assert_eq!(parse_util_cmdsubst_extent(a, 1), 0..a.len());
-        assert_eq!(parse_util_cmdsubst_extent(a, 2), 0..a.len());
-        assert_eq!(parse_util_cmdsubst_extent(a, 3), 0..a.len());
+        assert_eq!(get_cmdsubst_extent(a, 0), 0..a.len());
+        assert_eq!(get_cmdsubst_extent(a, 1), 0..a.len());
+        assert_eq!(get_cmdsubst_extent(a, 2), 0..a.len());
+        assert_eq!(get_cmdsubst_extent(a, 3), 0..a.len());
+        assert_eq!(get_cmdsubst_extent(a, 8), "echo (".chars().count()..a.len());
         assert_eq!(
-            parse_util_cmdsubst_extent(a, 8),
-            "echo (".chars().count()..a.len()
-        );
-        assert_eq!(
-            parse_util_cmdsubst_extent(a, 17),
+            get_cmdsubst_extent(a, 17),
             "echo (echo (".chars().count()..a.len()
         );
     }
 
     #[test]
     #[serial]
-    fn test_parse_util_slice_length() {
+    fn test_slice_length() {
         let _cleanup = test_init();
-        assert_eq!(parse_util_slice_length(L!("[2]")), Some(3));
-        assert_eq!(parse_util_slice_length(L!("[12]")), Some(4));
-        assert_eq!(parse_util_slice_length(L!("[\"foo\"]")), Some(7));
-        assert_eq!(parse_util_slice_length(L!("[\"foo\"")), None);
+        assert_eq!(slice_length(L!("[2]")), Some(3));
+        assert_eq!(slice_length(L!("[12]")), Some(4));
+        assert_eq!(slice_length(L!("[\"foo\"]")), Some(7));
+        assert_eq!(slice_length(L!("[\"foo\"")), None);
     }
 
     #[test]
@@ -2119,7 +2102,7 @@ mod tests {
         macro_rules! validate {
             ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
                 assert_eq!(
-                    parse_util_escape_string_with_quote(
+                    escape_string_with_quote(
                         L!($cmd),
                         $quote,
                         if $no_tilde {
@@ -2135,7 +2118,7 @@ mod tests {
         macro_rules! validate_no_quoted {
             ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
                 assert_eq!(
-                    parse_util_escape_string_with_quote(
+                    escape_string_with_quote(
                         L!($cmd),
                         $quote,
                         EscapeFlags::NO_QUOTED
@@ -2205,7 +2188,7 @@ mod tests {
                     expected_indents.push(segment.indent);
                 }
             }
-            let indents = parse_util_compute_indents(&text);
+            let indents = compute_indents(&text);
             assert_eq!(indents, expected_indents);
         }
         macro_rules! validate {

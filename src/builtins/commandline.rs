@@ -9,8 +9,8 @@ use crate::input_common::{CharEvent, ReadlineCmd};
 use crate::operation_context::{OperationContext, no_cancel};
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_util::{
-    parse_util_detect_errors, parse_util_get_offset_from_line, parse_util_job_extent,
-    parse_util_lineno, parse_util_process_extent, parse_util_token_extent,
+    detect_parse_errors, get_job_extent, get_offset_from_line, get_process_extent,
+    get_token_extent, lineno,
 };
 use crate::prelude::*;
 use crate::proc::is_interactive_session;
@@ -18,8 +18,7 @@ use crate::reader::{
     commandline_get_state, commandline_set_buffer, commandline_set_search_field,
     reader_execute_readline_cmd, reader_showing_suggestion,
 };
-use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
-use crate::tokenizer::{TokenType, Tokenizer};
+use crate::tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer};
 use fish_wcstringutil::join_strings;
 use std::ops::Range;
 
@@ -523,10 +522,9 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             };
 
             let new_pos = if line_mode {
-                let Some(offset) = parse_util_get_offset_from_line(
-                    &rstate.text,
-                    i32::try_from(new_coord).unwrap(),
-                ) else {
+                let Some(offset) =
+                    get_offset_from_line(&rstate.text, i32::try_from(new_coord).unwrap())
+                else {
                     streams
                         .err
                         .append(&wgettext_fmt!("%s: there is no line %s\n", cmd, arg));
@@ -536,12 +534,11 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 offset
             } else {
                 let line_index =
-                    i32::try_from(parse_util_lineno(&rstate.text, rstate.cursor_pos)).unwrap() - 1;
+                    i32::try_from(lineno(&rstate.text, rstate.cursor_pos)).unwrap() - 1;
                 let line_offset =
-                    parse_util_get_offset_from_line(&rstate.text, line_index).unwrap_or_default();
+                    get_offset_from_line(&rstate.text, line_index).unwrap_or_default();
                 let next_line_offset =
-                    parse_util_get_offset_from_line(&rstate.text, line_index + 1)
-                        .unwrap_or(rstate.text.len());
+                    get_offset_from_line(&rstate.text, line_index + 1).unwrap_or(rstate.text.len());
                 if line_offset + new_coord > next_line_offset {
                     streams.err.append(&wgettext_fmt!(
                         "%s: column %s exceeds line length\n",
@@ -558,13 +555,12 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             streams.out.append(&sprintf!(
                 "%d\n",
                 if line_mode {
-                    parse_util_lineno(&rstate.text, rstate.cursor_pos)
+                    lineno(&rstate.text, rstate.cursor_pos)
                 } else {
                     rstate.cursor_pos + 1
-                        - parse_util_get_offset_from_line(
+                        - get_offset_from_line(
                             &rstate.text,
-                            i32::try_from(parse_util_lineno(&rstate.text, rstate.cursor_pos) - 1)
-                                .unwrap(),
+                            i32::try_from(lineno(&rstate.text, rstate.cursor_pos) - 1).unwrap(),
                         )
                         .unwrap_or_default()
                 }
@@ -659,7 +655,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         if current_buffer.is_empty() {
             return Err(STATUS_CMD_ERROR);
         }
-        let res = parse_util_detect_errors(current_buffer, None, /*accept_incomplete=*/ true);
+        let res = detect_parse_errors(current_buffer, None, /*accept_incomplete=*/ true);
         return match res {
             Ok(()) => Ok(SUCCESS),
             Err(err) => {
@@ -688,13 +684,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 range = 0..current_buffer.len();
             }
             TextScope::Job => {
-                range = parse_util_job_extent(current_buffer, current_cursor_pos, None);
+                range = get_job_extent(current_buffer, current_cursor_pos, None);
             }
             TextScope::Process => {
-                range = parse_util_process_extent(current_buffer, current_cursor_pos, None);
+                range = get_process_extent(current_buffer, current_cursor_pos, None);
             }
             TextScope::Token => {
-                (range, _) = parse_util_token_extent(current_buffer, current_cursor_pos);
+                (range, _) = get_token_extent(current_buffer, current_cursor_pos);
             }
         }
     }

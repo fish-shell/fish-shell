@@ -863,8 +863,9 @@ fn read_i(parser: &Parser) {
         data.exit_loop_requested |= parser.libdata().exit_current_script;
         parser.libdata_mut().exit_current_script = false;
 
-        BufferedOutputter::new(Outputter::stdoutput())
-            .write_command(Osc133CommandFinished(parser.get_last_status()));
+        BufferedOutputter::new(Outputter::stdoutput()).write_command(Osc133CommandFinished {
+            exit_status: parser.get_last_status(),
+        });
         event::fire_generic(parser, L!("fish_postexec").to_owned(), vec![command]);
         // Allow any pending history items to be returned in the history array.
         data.history.resolve_pending();

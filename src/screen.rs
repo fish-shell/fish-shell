@@ -569,7 +569,9 @@ impl Screen {
         }
         let mut out = BufferedOutputter::new(self.outp);
         // Move everything to scrollback.
-        out.write_command(ScrollContentUp(lines_to_scroll));
+        out.write_command(ScrollContentUp {
+            lines: lines_to_scroll,
+        });
         // Reposition cursor.
         out.write_command(CursorMove(CardinalDirection::Up, lines_to_scroll));
         self.set_position_in_viewport("scrollback-push", Some(0));

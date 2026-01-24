@@ -775,14 +775,14 @@ fn compute_indents(src: &wstr, initial_indent: i32) -> Vec<i32> {
     // the last node we visited becomes the input indent of the next. I.e. in the case of 'switch
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
-    let ast = ast::parse(
-        src,
-        ParseTreeFlags::CONTINUE_AFTER_ERROR
-            | ParseTreeFlags::INCLUDE_COMMENTS
-            | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS
-            | ParseTreeFlags::LEAVE_UNTERMINATED,
-        None,
-    );
+    let flags = ParseTreeFlags {
+        continue_after_error: true,
+        include_comments: true,
+        accept_incomplete_tokens: true,
+        leave_unterminated: true,
+        ..Default::default()
+    };
+    let ast = ast::parse(src, flags, None);
     {
         let mut iv = IndentVisitor::new(src, &mut indents, initial_indent);
         iv.visit(ast.top());
@@ -1133,10 +1133,9 @@ pub fn parse_util_detect_errors(
     // allow_incomplete is set.
     let mut has_unclosed_quote_or_subshell = false;
 
-    let parse_flags = if allow_incomplete {
-        ParseTreeFlags::LEAVE_UNTERMINATED
-    } else {
-        ParseTreeFlags::empty()
+    let parse_flags = ParseTreeFlags {
+        leave_unterminated: allow_incomplete,
+        ..Default::default()
     };
 
     // Parse the input string into an ast. Some errors are detected here.
@@ -1336,7 +1335,7 @@ pub fn parse_util_detect_errors_in_argument_list(
 
     // Parse the string as a freestanding argument list.
     let mut errors = ParseErrorList::new();
-    let ast = ast::parse_argument_list(arg_list_src, ParseTreeFlags::empty(), Some(&mut errors));
+    let ast = ast::parse_argument_list(arg_list_src, ParseTreeFlags::default(), Some(&mut errors));
     if !errors.is_empty() {
         return get_error_text(&errors);
     }

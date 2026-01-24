@@ -5959,9 +5959,12 @@ struct PositionedToken {
 }
 
 fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
-    let ast_flags = ParseTreeFlags::CONTINUE_AFTER_ERROR
-        | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS
-        | ParseTreeFlags::LEAVE_UNTERMINATED;
+    let ast_flags = ParseTreeFlags {
+        continue_after_error: true,
+        accept_incomplete_tokens: true,
+        leave_unterminated: true,
+        ..ParseTreeFlags::default()
+    };
     let ast = ast::parse(s, ast_flags, None);
 
     let mut result = vec![];

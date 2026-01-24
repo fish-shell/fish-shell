@@ -103,11 +103,12 @@ fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) 
     }
     insert.find(L!("$ "))?; // Early return.
     let source = prefix.to_owned() + insert;
-    let ast = ast::parse(
-        &source,
-        ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS | ParseTreeFlags::LEAVE_UNTERMINATED,
-        None,
-    );
+    let flags = ParseTreeFlags {
+        accept_incomplete_tokens: true,
+        leave_unterminated: true,
+        ..Default::default()
+    };
+    let ast = ast::parse(&source, flags, None);
     let mut stripped = WString::new();
     let mut have = prefix.len();
     for node in ast.walk() {

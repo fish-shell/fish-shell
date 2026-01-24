@@ -300,11 +300,12 @@ fn autosuggest_parse_command(
     buff: &wstr,
     ctx: &OperationContext<'_>,
 ) -> Option<(WString, WString)> {
-    let ast = ast::parse(
-        buff,
-        ParseTreeFlags::CONTINUE_AFTER_ERROR | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS,
-        None,
-    );
+    let flags = ParseTreeFlags {
+        continue_after_error: true,
+        accept_incomplete_tokens: true,
+        ..Default::default()
+    };
+    let ast = ast::parse(buff, flags, None);
 
     // Find the first statement.
     let job_list: &ast::JobList = ast.top();
@@ -742,11 +743,14 @@ impl<'s> Highlighter<'s> {
             .resize(self.buff.len(), HighlightSpec::default());
 
         // Flags we use for AST parsing.
-        let ast_flags = ParseTreeFlags::CONTINUE_AFTER_ERROR
-            | ParseTreeFlags::INCLUDE_COMMENTS
-            | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS
-            | ParseTreeFlags::LEAVE_UNTERMINATED
-            | ParseTreeFlags::SHOW_EXTRA_SEMIS;
+        let ast_flags = ParseTreeFlags {
+            continue_after_error: true,
+            include_comments: true,
+            accept_incomplete_tokens: true,
+            leave_unterminated: true,
+            show_extra_semis: true,
+            ..Default::default()
+        };
         let ast = ast::parse(self.buff, ast_flags, None);
 
         self.visit_children(ast.top());

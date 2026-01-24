@@ -1964,9 +1964,7 @@ impl<'s> Populator<'s> {
     fn status(&mut self) -> ParserStatus {
         if self.unwinding {
             ParserStatus::unwinding
-        } else if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
-            && self.peek_type(0) == ParseTokenType::Terminate
-        {
+        } else if self.flags.leave_unterminated && self.peek_type(0) == ParseTokenType::Terminate {
             ParserStatus::unsourcing
         } else {
             ParserStatus::ok
@@ -1983,7 +1981,7 @@ impl<'s> Populator<'s> {
 
     /// Return whether we permit an incomplete parse tree.
     fn allow_incomplete(&self) -> bool {
-        self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
+        self.flags.leave_unterminated
     }
 
     /// Return whether a list kind allows arbitrary newlines in it.
@@ -2100,7 +2098,7 @@ impl<'s> Populator<'s> {
             } else if chomp_semis && peek.typ == ParseTokenType::End && !peek.is_newline {
                 let tok = self.tokens.pop();
                 // Perhaps save this extra semi.
-                if self.flags.contains(ParseTreeFlags::SHOW_EXTRA_SEMIS) {
+                if self.flags.show_extra_semis {
                     self.semis.push(tok.range());
                 }
             } else {
@@ -2112,8 +2110,7 @@ impl<'s> Populator<'s> {
     /// Return whether a list kind should recover from errors.
     /// That is, whether we should stop unwinding when we encounter this type.
     fn list_kind_stops_unwind(&self, kind: Kind) -> bool {
-        matches!(kind, Kind::JobList(_))
-            && self.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
+        matches!(kind, Kind::JobList(_)) && self.flags.continue_after_error
     }
 
     /// Return a reference to a non-comment token at index `idx`.
@@ -2643,12 +2640,11 @@ impl<'s> Populator<'s> {
         }
 
         if !token.allows_token(self.peek_token(0).typ) {
-            if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
-                && [
-                    TokenizerError::UnterminatedQuote,
-                    TokenizerError::UnterminatedSubshell,
-                ]
-                .contains(&self.peek_token(0).tok_error)
+            if self.flags.leave_unterminated
+                && matches!(
+                    self.peek_token(0).tok_error,
+                    TokenizerError::UnterminatedQuote | TokenizerError::UnterminatedSubshell
+                )
             {
                 return;
             }
@@ -2679,12 +2675,11 @@ impl<'s> Populator<'s> {
         if !keyword.allows_keyword(self.peek_token(0).keyword) {
             *keyword.range_mut() = None;
 
-            if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
-                && [
-                    TokenizerError::UnterminatedQuote,
-                    TokenizerError::UnterminatedSubshell,
-                ]
-                .contains(&self.peek_token(0).tok_error)
+            if self.flags.leave_unterminated
+                && matches!(
+                    self.peek_token(0).tok_error,
+                    TokenizerError::UnterminatedQuote | TokenizerError::UnterminatedSubshell
+                )
             {
                 return VisitResult::Continue(());
             }
@@ -2754,13 +2749,13 @@ impl From<ParseTreeFlags> for TokFlags {
         let mut tok_flags = TokFlags(0);
         // Note we do not need to respect parse_flag_show_blank_lines, no clients are interested
         // in them.
-        if flags.contains(ParseTreeFlags::INCLUDE_COMMENTS) {
+        if flags.include_comments {
             tok_flags |= TOK_SHOW_COMMENTS;
         }
-        if flags.contains(ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS) {
+        if flags.accept_incomplete_tokens {
             tok_flags |= TOK_ACCEPT_UNFINISHED;
         }
-        if flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR) {
+        if flags.continue_after_error {
             tok_flags |= TOK_CONTINUE_AFTER_ERROR
         }
         tok_flags
@@ -2837,7 +2832,7 @@ mod tests {
     fn test_ast_parse() {
         let _cleanup = test_init();
         let src = L!("echo");
-        let ast = ast::parse(src, ParseTreeFlags::empty(), None);
+        let ast = ast::parse(src, ParseTreeFlags::default(), None);
         assert!(!ast.any_error);
     }
 

@@ -896,10 +896,13 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
 
 // The flags we use to parse.
 fn parse_flags() -> ParseTreeFlags {
-    ParseTreeFlags::CONTINUE_AFTER_ERROR
-        | ParseTreeFlags::INCLUDE_COMMENTS
-        | ParseTreeFlags::LEAVE_UNTERMINATED
-        | ParseTreeFlags::SHOW_BLANK_LINES
+    ParseTreeFlags {
+        continue_after_error: true,
+        include_comments: true,
+        leave_unterminated: true,
+        show_blank_lines: true,
+        ..Default::default()
+    }
 }
 
 /// Return whether a character at a given index is escaped.
@@ -1304,13 +1307,13 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
 // Entry point for prettification.
 fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
     if DUMP_PARSE_TREE.load() {
-        let ast = ast::parse(
-            src,
-            ParseTreeFlags::LEAVE_UNTERMINATED
-                | ParseTreeFlags::INCLUDE_COMMENTS
-                | ParseTreeFlags::SHOW_EXTRA_SEMIS,
-            None,
-        );
+        let flags = ParseTreeFlags {
+            leave_unterminated: true,
+            include_comments: true,
+            show_extra_semis: true,
+            ..Default::default()
+        };
+        let ast = ast::parse(src, flags, None);
         let ast_dump = ast.dump(src);
         streams.err.appendln(ast_dump);
 

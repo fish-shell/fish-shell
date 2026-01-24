@@ -1179,7 +1179,7 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
         }
     }
 
-    if ast::parse(line, ParseTreeFlags::empty(), None).errored() {
+    if ast::parse(line, ParseTreeFlags::default(), None).errored() {
         return false;
     }
 
@@ -1264,7 +1264,7 @@ impl History {
 
         // Find all arguments that look like they could be file paths.
         let mut needs_sync_write = false;
-        let ast = ast::parse(s, ParseTreeFlags::empty(), None);
+        let ast = ast::parse(s, ParseTreeFlags::default(), None);
 
         let mut potential_paths = Vec::new();
         for node in ast.walk() {

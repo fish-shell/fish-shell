@@ -9,24 +9,22 @@ pub type SourceOffset = u32;
 pub const SOURCE_OFFSET_INVALID: usize = SourceOffset::MAX as _;
 pub const SOURCE_LOCATION_UNKNOWN: usize = usize::MAX;
 
-bitflags! {
-    #[derive(Copy, Clone, Default)]
-    pub struct ParseTreeFlags: u8 {
-        /// attempt to build a "parse tree" no matter what. this may result in a 'forest' of
-        /// disconnected trees. this is intended to be used by syntax highlighting.
-        const CONTINUE_AFTER_ERROR = 1 << 0;
-        /// include comment tokens.
-        const INCLUDE_COMMENTS = 1 << 1;
-        /// indicate that the tokenizer should accept incomplete tokens
-        const ACCEPT_INCOMPLETE_TOKENS = 1 << 2;
-        /// indicate that the parser should not generate the terminate token, allowing an 'unfinished'
-        /// tree where some nodes may have no productions.
-        const LEAVE_UNTERMINATED = 1 << 3;
-        /// indicate that the parser should generate job_list entries for blank lines.
-        const SHOW_BLANK_LINES = 1 << 4;
-        /// indicate that extra semis should be generated.
-        const SHOW_EXTRA_SEMIS = 1 << 5;
-    }
+#[derive(Copy, Clone, Default)]
+pub struct ParseTreeFlags {
+    /// attempt to build a "parse tree" no matter what. this may result in a 'forest' of
+    /// disconnected trees. this is intended to be used by syntax highlighting.
+    pub continue_after_error: bool,
+    /// include comment tokens.
+    pub include_comments: bool,
+    /// indicate that the tokenizer should accept incomplete tokens
+    pub accept_incomplete_tokens: bool,
+    /// indicate that the parser should not generate the terminate token, allowing an 'unfinished'
+    /// tree where some nodes may have no productions.
+    pub leave_unterminated: bool,
+    /// indicate that the parser should generate job_list entries for blank lines.
+    pub show_blank_lines: bool,
+    /// indicate that extra semis should be generated.
+    pub show_extra_semis: bool,
 }
 
 bitflags! {

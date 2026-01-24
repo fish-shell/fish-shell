@@ -204,7 +204,7 @@ pub fn parse_source(
     errors: Option<&mut ParseErrorList>,
 ) -> Option<ParsedSourceRef> {
     let ast = ast::parse(&src, flags, errors);
-    if ast.errored() && !flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR) {
+    if ast.errored() && !flags.continue_after_error {
         None
     } else {
         Some(Arc::new(ParsedSource::new(src, ast)))

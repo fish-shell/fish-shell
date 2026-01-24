@@ -1653,10 +1653,6 @@ fn combine_command_and_autosuggestion(
     if !string_prefixes_string(line, autosuggestion) && line.len() < autosuggestion.len() {
         // We have an autosuggestion which is not a prefix of the command line, i.e. a case
         // disagreement. Decide whose case we want to use.
-        assert!(string_prefixes_string_case_insensitive(
-            line,
-            autosuggestion
-        ));
         // Here we do something funny: if the last token of the command line contains any uppercase
         // characters, we use its case. Otherwise we use the case of the autosuggestion. This
         // is an idea from issue #335.
@@ -2015,11 +2011,6 @@ impl ReaderData {
         // the autosuggestion.
         // This is also the main mechanism by which readline commands that don't change the command line
         // text avoid recomputing the autosuggestion.
-        assert!(string_prefixes_string_maybe_case_insensitive(
-            autosuggestion.icase,
-            &self.command_line.text()[autosuggestion.search_string_range.clone()],
-            &autosuggestion.text
-        ));
         let search_string_range = autosuggestion.search_string_range.clone();
 
         // This is a heuristic with false negatives but that seems fine.

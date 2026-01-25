@@ -31,6 +31,15 @@ If you don't like autosuggestions, you can disable them by setting ``$fish_autos
 
   set -g fish_autosuggestion_enabled 0
 
+You can also surface the completion pager automatically as you type by setting
+``$fish_autocomplete_autoshow`` to 1::
+
+  set -g fish_autocomplete_autoshow 1
+
+This shows the same "cheap" (history- and context-based) completions that autosuggestions rely on,
+without having to press :kbd:`tab`. It updates asynchronously, so it stays responsive even when
+more expensive completions might take longer to gather.
+
 .. _tab-completion:
 
 Tab Completion

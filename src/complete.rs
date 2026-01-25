@@ -810,6 +810,7 @@ impl<'ctx> Completer<'ctx> {
                     UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE),
                 );
             }
+            let mut cd_like = exp_command == "cd";
             if let (Some(prev), Some(cur)) = (prev, cur) {
                 arg_data.previous_argument = prev;
                 arg_data.current_argument = cur;
@@ -823,15 +824,17 @@ impl<'ctx> Completer<'ctx> {
                 );
                 do_file = arg_data.do_file;
 
-                // If we're autosuggesting, and the token is empty, don't do file suggestions.
-                if is_autosuggest && arg_data.current_argument.is_empty() {
+                cd_like =
+                    exp_command == "cd" || arg_data.visited_wrapped_commands.contains(L!("cd"));
+                // If we're autosuggesting, and the token is empty, don't do file suggestions,
+                // except for cd (and wrappers) where directory listings are the only signal.
+                if is_autosuggest && arg_data.current_argument.is_empty() && !cd_like {
                     do_file = false;
                 }
             }
 
             // Hack. If we're cd, handle it specially (issue #1059, others).
-            handle_as_special_cd =
-                exp_command == "cd" || arg_data.visited_wrapped_commands.contains(L!("cd"));
+            handle_as_special_cd = cd_like;
         }
 
         // Maybe apply variable assignments.
@@ -3299,6 +3302,17 @@ mod tests {
         );
 
         parser.pushd(wd);
+        {
+            let mut empty_cd = complete(
+                L!("cd "),
+                CompletionRequestOptions::autosuggest(),
+                &OperationContext::background(&vars, EXPANSION_LIMIT_BACKGROUND),
+            )
+            .0;
+            assert!(!empty_cd.is_empty());
+            sort_and_prioritize(&mut empty_cd, CompletionRequestOptions::autosuggest());
+            assert_eq!(empty_cd[0].completion, L!("0foobar/"));
+        }
         perform_one_autosuggestion_cd_test!("cd 0", "foobar/", &vars);
         perform_one_autosuggestion_cd_test!("cd \"0", "foobar/", &vars);
         perform_one_autosuggestion_cd_test!("cd '0", "foobar/", &vars);

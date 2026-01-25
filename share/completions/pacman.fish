@@ -4,10 +4,6 @@
 
 set -l progname pacman
 
-# Theoretically, pacman reads packages in all formats that libarchive supports
-# In practice, it's going to be tar.xz, tar.gz, tar.zst, or just pkg.tar (uncompressed pkg)
-set -l listfiles '(__fish_complete_suffix pkg.tar.zst pkg.tar.xz pkg.tar.gz pkg.tar)'
-
 # Checks if the given or any command is in the command line.
 function __fish_pacman_has_operation
     set -l operations '-s D database' '-s Q query' '-s R remove' '-s S sync' '-s T deptest' '-s U upgrade' '-s F files'
@@ -29,6 +25,35 @@ function __fish_pacman_print_package_groups
     end
     printf '%s\n' $groups\t'Package Group'
 end
+
+# See PKGEXT on https://man.archlinux.org/man/makepkg.conf.5
+set -l pkgexts (string match --all --regex '\S+' '
+    .pkg.tar.gz
+    .pkg.tar.bz2
+    .pkg.tar.xz
+    .pkg.tar.zst
+    .pkg.tar.lzo
+    .pkg.tar.lrz
+    .pkg.tar.lz4
+    .pkg.tar.lz
+    .pkg.tar.Z
+    .pkg.tar
+')
+
+# From https://rfc.archlinux.page/0032-arch-linux-ports/
+set -l linux_architectures '
+    x86_64
+    x86_64_v2
+    x86_64_v3
+    x86_64_v4
+    i486
+    i686
+    pentium4
+    aarch64
+    armv7h
+    riscv64
+    loong64
+'
 
 complete -c $progname -e
 complete -c $progname -f
@@ -52,10 +77,10 @@ complete -c $progname -s h -l help -d 'Display help' -f
 complete -c $progname -n __fish_pacman_has_operation -s b -l dbpath -d 'Alternate database location' -xa '(__fish_complete_directories)'
 complete -c $progname -n __fish_pacman_has_operation -s r -l root -d 'Alternate installation root' -xa '(__fish_complete_directories)'
 complete -c $progname -n __fish_pacman_has_operation -s v -l verbose -d 'Output paths of config files' -f
-complete -c $progname -n __fish_pacman_has_operation -l arch -d 'Alternate architecture' -f
+complete -c $progname -n __fish_pacman_has_operation -l arch -d 'Alternate architecture' -xa $linux_architectures
 complete -c $progname -n __fish_pacman_has_operation -l cachedir -d 'Alternate package cache location' -xa '(__fish_complete_directories)'
-complete -c $progname -n __fish_pacman_has_operation -l color -d 'Colorize the output' -fa '{auto,always,never}'
-complete -c $progname -n __fish_pacman_has_operation -l config -d 'Alternate config file' -rF
+complete -c $progname -n __fish_pacman_has_operation -l color -d 'Colorize the output' -fa 'auto always never'
+complete -c $progname -n __fish_pacman_has_operation -l config -d 'Alternate config file' -xka '(__fish_complete_suffix .conf)'
 complete -c $progname -n __fish_pacman_has_operation -l debug -d 'Display debug messages' -f
 complete -c $progname -n __fish_pacman_has_operation -l gpgdir -d 'Alternate home directory for GnuPG' -xa '(__fish_complete_directories)'
 complete -c $progname -n __fish_pacman_has_operation -l hookdir -d 'Alternate hook location' -xa '(__fish_complete_directories)'
@@ -104,7 +129,7 @@ complete -c $progname -n '__fish_pacman_has_operation Q' -s s -l search -d 'Sear
 complete -c $progname -n '__fish_pacman_has_operation Q' -s t -l unrequired -d 'List only unrequired packages [and optdepends]' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s u -l upgrades -d 'List only out-of-date packages' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -n "not $queryfile" -d Package -xa '(__fish_print_pacman_packages --installed)'
-complete -c $progname -n '__fish_pacman_has_operation Q' -n "$queryfile" -d 'Package File' -xka "$listfiles"
+complete -c $progname -n '__fish_pacman_has_operation Q' -n "$queryfile" -d 'Package File' -xka "(__fish_complete_suffix $pkgexts)"
 
 ## REMOVE OPTIONS (APPLY TO -R)
 complete -c $progname -n '__fish_pacman_has_operation R' -s c -l cascade -d 'Also remove packages depending on PACKAGE' -f
@@ -142,4 +167,4 @@ complete -c $progname -n '__fish_pacman_has_operation F' -l machinereadable -d '
 complete -c $progname -n '__fish_pacman_has_operation F' -d Package -xa '(__fish_print_pacman_packages)'
 
 # No extra options (-U)
-complete -c $progname -n '__fish_pacman_has_operation U' -d 'Package File' -xka "$listfiles"
+complete -c $progname -n '__fish_pacman_has_operation U' -d 'Package File' -xka "(__fish_complete_suffix $pkgexts)"

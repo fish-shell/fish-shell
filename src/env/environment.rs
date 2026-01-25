@@ -28,9 +28,8 @@ use crate::termsize;
 use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_wcstol, wgetcwd};
 use fish_wcstringutil::join_strings;
-
 use libc::c_int;
-use nix::unistd::Uid;
+use nix::unistd::{Uid, gethostname};
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
@@ -459,25 +458,6 @@ const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
 const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
 const FISH_CACHE_DIR: &wstr = L!("__fish_cache_dir");
 
-/// Maximum length of hostname. Longer hostnames are truncated.
-const HOSTNAME_LEN: usize = 255;
-
-/// Function to get an identifier based on the hostname.
-fn get_hostname_identifier() -> Option<WString> {
-    // The behavior of gethostname if the buffer size is insufficient differs by implementation and
-    // libc version Work around this by using a "guaranteed" sufficient buffer size then truncating
-    // the result.
-    let mut b = [0 as libc::c_char; HOSTNAME_LEN + 1];
-    if unsafe { libc::gethostname(b.as_mut_ptr(), b.len()) } == 0 {
-        let cstr = unsafe { CStr::from_ptr(b.as_ptr()) };
-        let res = cstr2wcstring(cstr);
-
-        if res.is_empty() { None } else { Some(res) }
-    } else {
-        None
-    }
-}
-
 /// Get values for $HOME via getpwuid,
 /// without trusting $USER or $HOME.
 pub fn get_home() -> Option<String> {
@@ -726,7 +706,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     vars.set_one(L!("fish_pid"), global_mode, getpid().to_wstring());
 
     // Set the $hostname variable
-    let hostname: WString = get_hostname_identifier().unwrap_or("fish".into());
+    let hostname: WString = gethostname().map(osstr2wcstring).unwrap_or("fish".into());
     vars.set_one(L!("hostname"), global_mode, hostname);
 
     // Set up SHLVL variable. Not we can't use vars.get() because SHLVL is read-only, and therefore

@@ -3,7 +3,7 @@ use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::should_flog;
 
 mod test_expressions {
-    use nix::unistd::{Gid, Uid};
+    use nix::unistd::{AccessFlags, Gid, Uid};
 
     use super::*;
 
@@ -967,13 +967,13 @@ mod test_expressions {
             UnaryToken::FilePerm(permission) => {
                 let mode = match permission {
                     // "-r", read permission
-                    FilePermission::r => libc::R_OK,
+                    FilePermission::r => AccessFlags::R_OK,
                     // "-w", whether file write permission is allowed
-                    FilePermission::w => libc::W_OK,
+                    FilePermission::w => AccessFlags::W_OK,
                     // "-x", whether file execute/search is allowed
-                    FilePermission::x => libc::X_OK,
+                    FilePermission::x => AccessFlags::X_OK,
                 };
-                waccess(arg, mode) == 0
+                waccess(arg, mode).is_ok()
             }
             UnaryToken::String(predicate) => match predicate {
                 // "-n", non-empty string

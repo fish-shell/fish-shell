@@ -12,8 +12,8 @@ use crate::wutil::{
 use bitflags::bitflags;
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::split_string_tok;
-use libc::{F_OK, PATH_MAX, R_OK, S_ISGID, S_ISUID, W_OK, X_OK, mode_t};
-use nix::unistd::{Gid, Uid};
+use libc::{PATH_MAX, S_ISGID, S_ISUID, mode_t};
+use nix::unistd::{AccessFlags, Gid, Uid};
 
 macro_rules! path_error {
     (
@@ -784,7 +784,7 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<Uid>, gid: Option<Gid>) 
     }
 
     if let Some(perm) = opts.perms {
-        let mut amode = 0;
+        let mut amode = AccessFlags::empty();
         // TODO: Update bitflags so this works
         /*
         for f in perm {
@@ -797,21 +797,19 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<Uid>, gid: Option<Gid>) 
         }
         */
         if perm.contains(PermFlags::READ) {
-            amode |= R_OK;
+            amode.insert(AccessFlags::R_OK);
         }
         if perm.contains(PermFlags::WRITE) {
-            amode |= W_OK;
+            amode.insert(AccessFlags::W_OK);
         }
         if perm.contains(PermFlags::EXEC) {
-            amode |= X_OK;
+            amode.insert(AccessFlags::X_OK);
         }
-        // access returns 0 on success,
-        // -1 on failure. Yes, C can't even keep its bools straight.
         // Skip this if we don't have a mode to check - the stat can do existence too.
         // It's tempting to check metadata here if we have it,
         // e.g. see if any read-bit is set for READ.
         // That won't work for root.
-        if amode != 0 && waccess(path, amode) != 0 {
+        if !amode.is_empty() && waccess(path, amode).is_err() {
             return false;
         }
 
@@ -893,7 +891,7 @@ fn path_filter_maybe_is(
     }) {
         // If we don't have filters, check if it exists.
         if opts.perms.is_none() && opts.types.is_none() {
-            let ok = waccess(arg, F_OK) == 0;
+            let ok = waccess(arg, AccessFlags::F_OK).is_ok();
             if ok == opts.invert {
                 // For --all, fail early if any path does not match the filter.
                 if opts.all {

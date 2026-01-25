@@ -62,6 +62,7 @@ use fish::{
     wutil::waccess,
 };
 use libc::STDIN_FILENO;
+use nix::unistd::AccessFlags;
 use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
@@ -143,7 +144,7 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     // this context so we ignore it.
     let config_pathname = dir.to_owned() + L!("/config.fish");
     let escaped_pathname = escape(dir) + L!("/config.fish");
-    if waccess(&config_pathname, libc::R_OK) != 0 {
+    if waccess(&config_pathname, AccessFlags::R_OK).is_err() {
         flogf!(
             config,
             "not sourcing %s (not readable or does not exist)",

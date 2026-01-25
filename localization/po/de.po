@@ -5809,9 +5809,6 @@ msgstr ""
 msgid "Add file contents to the staging area"
 msgstr ""
 
-msgid "Add file(s) to the topmost/named patch"
-msgstr ""
-
 msgid "Add files and directories to an archive"
 msgstr ""
 
@@ -5819,6 +5816,9 @@ msgid "Add files and directories to an archive interactively"
 msgstr ""
 
 msgid "Add files to checkout"
+msgstr ""
+
+msgid "Add files to patch"
 msgstr ""
 
 msgid "Add files to template."
@@ -7846,10 +7846,10 @@ msgstr ""
 msgid "Apply patch to index and working tree"
 msgstr ""
 
-msgid "Apply patch(es) from the series file"
+msgid "Apply patches from a mailbox"
 msgstr ""
 
-msgid "Apply patches from a mailbox"
+msgid "Apply patches from the series"
 msgstr ""
 
 msgid "Apply patches suggested by lint"
@@ -13789,9 +13789,6 @@ msgstr ""
 msgid "Create links"
 msgstr ""
 
-msgid "Create mail messages from patches in the series file, stores/sends them"
-msgstr ""
-
 msgid "Create makefile"
 msgstr ""
 
@@ -13832,6 +13829,9 @@ msgid "Create or access encrypted archive with password X"
 msgstr ""
 
 msgid "Create or dump unbound (no assigned data segment) LUKS2 keyslot"
+msgstr ""
+
+msgid "Create or send mail messages from patches"
 msgstr ""
 
 msgid "Create or update BOSH environment"
@@ -14054,9 +14054,6 @@ msgid "Creates an html-based, cross referenced version of Java source code for a
 msgstr ""
 
 msgid "Creates an html-based, cross referenced version of Java source code for a project's test sources"
-msgstr ""
-
-msgid "Creates new patch with the given name, inserts it after topmost patch"
 msgstr ""
 
 msgid "Creates the HTML report for a test run based on XSLT"
@@ -15713,6 +15710,9 @@ msgid "Diff against deployments' base"
 msgstr ""
 
 msgid "Diff command invoked when using -d"
+msgstr ""
+
+msgid "Diff files in patch"
 msgstr ""
 
 msgid "Diff rev1/date1 against date2."
@@ -23179,6 +23179,9 @@ msgstr "Verschlüsselte Datei bearbeiten"
 msgid "Edit file contents"
 msgstr ""
 
+msgid "Edit files in $EDITOR"
+msgstr ""
+
 msgid "Edit files in-place"
 msgstr "Original-Dateien editieren"
 
@@ -23228,9 +23231,6 @@ msgid "Edit the file containing a tag"
 msgstr ""
 
 msgid "Edit the flag on an object"
-msgstr ""
-
-msgid "Edit the given file(s) in $EDITOR"
 msgstr ""
 
 msgid "Edit the hosts file"
@@ -29134,9 +29134,6 @@ msgstr ""
 msgid "Generates a diff between the specified database and the reference database"
 msgstr ""
 
-msgid "Generates a dot directed graph of patch dependencies"
-msgstr ""
-
 msgid "Generates a full dependency graph of the target package."
 msgstr ""
 
@@ -29851,9 +29848,6 @@ msgstr ""
 msgid "Give string constants type \"char *\" without const"
 msgstr ""
 
-msgid "Give the config file to use"
-msgstr ""
-
 msgid "Give the output in a stable, easy-to-parse format"
 msgstr ""
 
@@ -29999,9 +29993,6 @@ msgid "Greedy cow"
 msgstr ""
 
 msgid "Grep through a set of files to find text strings and fail build if matches are found"
-msgstr ""
-
-msgid "Grep through source files recursively"
 msgstr ""
 
 msgid "Group commits by author (default)"
@@ -32197,7 +32188,7 @@ msgstr ""
 msgid "Initializes a TypeScript project and creates a tsconfig.json file"
 msgstr ""
 
-msgid "Initializes a source tree from an rpm spec or a quilt series file"
+msgid "Initializes a source tree from an rpm spec or a quilt series"
 msgstr ""
 
 msgid "Initially turn on alternate macro syntax"
@@ -32800,7 +32791,7 @@ msgstr ""
 msgid "Integrate all simple functions into their callers"
 msgstr ""
 
-msgid "Integrate the patch read from standard input into the topmost patch"
+msgid "Integrate patch from stdin into the topmost patch"
 msgstr ""
 
 msgid "Integrate with system-installed Darling"
@@ -34318,6 +34309,9 @@ msgstr ""
 msgid "List all packages with newer versions, even uninstalled"
 msgstr ""
 
+msgid "List all patches in the series"
+msgstr ""
+
 msgid "List all patches, not only the needed ones"
 msgstr ""
 
@@ -34436,6 +34430,9 @@ msgid "List all xsv commands"
 msgstr ""
 
 msgid "List applications"
+msgstr ""
+
+msgid "List applied patches in the stack"
 msgstr ""
 
 msgid "List archive"
@@ -35497,7 +35494,7 @@ msgstr ""
 msgid "List patches in the repository"
 msgstr ""
 
-msgid "List patches not applied or patches that follow the patch in the series file"
+msgid "List patches that modify the file(s)"
 msgstr ""
 
 msgid "List persistent domains"
@@ -35968,6 +35965,9 @@ msgstr ""
 msgid "List trusted keys"
 msgstr "Vertraute Schlüssel auflisten"
 
+msgid "List unapplied patches in the series"
+msgstr ""
+
 msgid "List units in failed state"
 msgstr ""
 
@@ -36196,7 +36196,7 @@ msgstr ""
 msgid "Lists environment variables that can be consumed by perforce"
 msgstr ""
 
-msgid "Lists files that the topmost/given patch changes"
+msgid "Lists files changed by patch"
 msgstr ""
 
 msgid "Lists files that will be pushed by 'push' subcommand"
@@ -38629,6 +38629,12 @@ msgstr ""
 msgid "Name of patch"
 msgstr "Name des Patch"
 
+msgid "Name of patch after the topmost/given patch"
+msgstr ""
+
+msgid "Name of patch before the topmost/given patch"
+msgstr ""
+
 msgid "Name of profile to use"
 msgstr ""
 
@@ -38681,6 +38687,9 @@ msgid "Name of the test mode to run(required)"
 msgstr ""
 
 msgid "Name of the test table (default: sbtest)"
+msgstr ""
+
+msgid "Name of topmost patch in the stack"
 msgstr ""
 
 msgid "Name of version"
@@ -43804,9 +43813,6 @@ msgstr ""
 msgid "Print a help message for this build"
 msgstr ""
 
-msgid "Print a list of applied patches"
-msgstr ""
-
 msgid "Print a list of attached screen sessions"
 msgstr ""
 
@@ -44009,9 +44015,6 @@ msgid "Print all versions present in the score file"
 msgstr ""
 
 msgid "Print alsactl version number"
-msgstr ""
-
-msgid "Print an annotated listing of the given file"
 msgstr ""
 
 msgid "Print an empty line between matches from different files"
@@ -45592,9 +45595,6 @@ msgstr ""
 msgid "Print the list of installed importers and exit"
 msgstr ""
 
-msgid "Print the list of patches that modify the given file"
-msgstr ""
-
 msgid "Print the list of ports the argument expands to"
 msgstr ""
 
@@ -45629,9 +45629,6 @@ msgid "Print the name of the zone the source is bound to"
 msgstr ""
 
 msgid "Print the names of all configured repositories"
-msgstr ""
-
-msgid "Print the names of all patches in the series file"
 msgstr ""
 
 msgid "Print the number of backward hops"
@@ -46021,7 +46018,7 @@ msgstr ""
 msgid "Print your jest config and then exits"
 msgstr ""
 
-msgid "Print/change the header of the topmost/given patch"
+msgid "Print/change the header of patch"
 msgstr ""
 
 msgid "Print/set UTC time"
@@ -46133,15 +46130,6 @@ msgid "Prints information about the service cache"
 msgstr ""
 
 msgid "Prints memory stats of the node"
-msgstr ""
-
-msgid "Prints name of patch after the topmost/given patch in the series file"
-msgstr ""
-
-msgid "Prints name of patch before the topmost/given patch in the series file"
-msgstr ""
-
-msgid "Prints name of the topmost patch in the current stack of applied patches"
 msgstr ""
 
 msgid "Prints only filenames"
@@ -46655,9 +46643,6 @@ msgid "Produce terse output (pids only, no header)"
 msgstr ""
 
 msgid "Produce the stub file, do not compile the resulting stub"
-msgstr ""
-
-msgid "Produces a diff of the given file(s) in the topmost/given patch"
 msgstr ""
 
 msgid "Produces debugging information"
@@ -48526,9 +48511,6 @@ msgstr ""
 msgid "Refresh the files database"
 msgstr ""
 
-msgid "Refresh the given patch, or the topmost patch by default"
-msgstr ""
-
 msgid "Refresh working copy from history"
 msgstr ""
 
@@ -49303,6 +49285,9 @@ msgstr ""
 msgid "Remove files from destination not found in static directories"
 msgstr ""
 
+msgid "Remove files from the patch"
+msgstr ""
+
 msgid "Remove files from the working tree and from the index"
 msgstr ""
 
@@ -49429,9 +49414,6 @@ msgstr ""
 msgid "Remove old site_dir before building (the default)"
 msgstr ""
 
-msgid "Remove one or more files from the topmost/named patch"
-msgstr ""
-
 msgid "Remove one or more packages"
 msgstr "Ein oder mehrere Paket(e) entfernen"
 
@@ -49504,7 +49486,7 @@ msgstr ""
 msgid "Remove password"
 msgstr ""
 
-msgid "Remove patch(es) from the stack of applied patches"
+msgid "Remove patch from the series"
 msgstr ""
 
 msgid "Remove pending deployment"
@@ -49689,9 +49671,6 @@ msgstr ""
 
 msgid "Remove the test directory"
 msgstr "Das test-Verzeichnis entfernen"
-
-msgid "Remove the topmost/given patch from the series file"
-msgstr ""
 
 msgid "Remove the user from the whitelist"
 msgstr ""
@@ -49912,7 +49891,7 @@ msgstr ""
 msgid "Rename tag/branch"
 msgstr ""
 
-msgid "Rename the topmost/named patch"
+msgid "Rename the topmost/given patch"
 msgstr ""
 
 msgid "Rename the user specified chain to the user supplied name"
@@ -52585,9 +52564,6 @@ msgstr ""
 msgid "Runs the JWSC compiler task for web service enabled code"
 msgstr ""
 
-msgid "Runs the command in bash trace mode (-x). For internal debugging"
-msgstr ""
-
 msgid "Runs the datanucleus enhancer"
 msgstr ""
 
@@ -53579,6 +53555,9 @@ msgid "Search the zlib library when linking"
 msgstr ""
 
 msgid "Search this repo for input and target files not in the local directory tree"
+msgstr ""
+
+msgid "Search through source files"
 msgstr ""
 
 msgid "Search trackers with anime content only"
@@ -60148,6 +60127,9 @@ msgstr ""
 msgid "Show which option controls a diagnostic"
 msgstr ""
 
+msgid "Show which patches modify which lines in file"
+msgstr ""
+
 msgid "Show which refs can't be reached from any other"
 msgstr ""
 
@@ -63715,6 +63697,9 @@ msgstr ""
 msgid "Start a new scrub. If a scrub is already running, the new one fails."
 msgstr ""
 
+msgid "Start a new topmost patch"
+msgstr ""
+
 msgid "Start a package"
 msgstr ""
 
@@ -65383,7 +65368,7 @@ msgstr ""
 msgid "Take a screenshot of a current domain console and store it into a file"
 msgstr ""
 
-msgid "Take a snapshot of the current working state"
+msgid "Take a snapshot of the working state"
 msgstr ""
 
 msgid "Take addr from filename, default /etc/ethers"
@@ -66904,6 +66889,9 @@ msgstr ""
 msgid "Trace delegation down from root"
 msgstr ""
 
+msgid "Trace internal shell commands (bash -x)"
+msgstr ""
+
 msgid "Trace only system calls accessing path"
 msgstr ""
 
@@ -67708,6 +67696,9 @@ msgstr ""
 msgid "Unaligned table output mode"
 msgstr ""
 
+msgid "Unapply patches from the stack"
+msgstr ""
+
 msgid "Unassign a quota from a space"
 msgstr ""
 
@@ -68338,6 +68329,9 @@ msgstr ""
 msgid "Update parts of an existing network's configuration"
 msgstr ""
 
+msgid "Update patch with changes from source"
+msgstr ""
+
 msgid "Update permissions"
 msgstr ""
 
@@ -68584,7 +68578,7 @@ msgstr ""
 msgid "Upgrade library to v2"
 msgstr ""
 
-msgid "Upgrade meta-data in a working tree to the current version of quilt"
+msgid "Upgrade meta-data from older version of quilt"
 msgstr ""
 
 msgid "Upgrade or add a local package"
@@ -71585,6 +71579,9 @@ msgid "Virtualization type (/domain/@type)"
 msgstr ""
 
 msgid "Visible overlay"
+msgstr ""
+
+msgid "Visualize patch dependencies using dot"
 msgstr ""
 
 msgid "Visually show diff of changes in the index"

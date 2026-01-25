@@ -4612,6 +4612,9 @@ msgstr ""
 msgid ", & -w have little effect in conjunction with -b, -h, -R, and"
 msgstr "et -w n’ont que peu d’effet, combinées avec -b, -h, -R et"
 
+msgid "--disable-sandbox-filesystem and --disable-sandbox-syscalls"
+msgstr ""
+
 msgid "--ed  Output an ed script."
 msgstr ""
 
@@ -5708,6 +5711,9 @@ msgid "Add a noise pattern to the image with specific amplitudes  [NxN]"
 msgstr ""
 
 msgid "Add a noise pattern to the image with specific amplitudes [NxN]"
+msgstr ""
+
+msgid "Add a package from a file or URL"
 msgstr ""
 
 msgid "Add a package lock"
@@ -9959,6 +9965,9 @@ msgid "Cancel the operation and return to pre-sequence state"
 msgstr ""
 
 msgid "Cancels a job or build"
+msgstr ""
+
+msgid "Cancels a previous --noconfirm"
 msgstr ""
 
 msgid "Cancels all jobs on the named destination"
@@ -16930,6 +16939,9 @@ msgstr ""
 msgid "Disable the eval extension"
 msgstr ""
 
+msgid "Disable the filesystem restrictions"
+msgstr ""
+
 msgid "Disable the generation of ISEL instructions"
 msgstr ""
 
@@ -16970,6 +16982,9 @@ msgid "Disable the spinner"
 msgstr "Désactiver l’indicateur d’activité"
 
 msgid "Disable the string normalize extension"
+msgstr ""
+
+msgid "Disable the syscall filtering"
 msgstr ""
 
 msgid "Disable the systemd unit for a profile"
@@ -35191,6 +35206,9 @@ msgstr ""
 msgid "List installed packages only (enabled by default, only present for BC)"
 msgstr ""
 
+msgid "List installed packages only found in sync database"
+msgstr ""
+
 msgid "List installed packages that do not meet the DFSG"
 msgstr "Lister les paquets installés qui ne remplissent pas les critères de la DFSG"
 
@@ -35430,6 +35448,9 @@ msgstr "Lister seulement les paquets non-explicitement installés (dépendances)
 
 msgid "List only out-of-date packages"
 msgstr "Lister seulement les paquets obsolètes"
+
+msgid "List only packages that are part of a group"
+msgstr ""
 
 msgid "List only patches from the specified repository"
 msgstr "Lister seulement les patchs du dépôt spécifié"
@@ -41200,6 +41221,9 @@ msgstr "Afficher le patch dans le bête format diff"
 msgid "Output patched files to FILE"
 msgstr ""
 
+msgid "Output paths of config files"
+msgstr ""
+
 msgid "Output percentages as files are unpacked from the package archive"
 msgstr ""
 
@@ -41823,6 +41847,12 @@ msgstr ""
 
 msgid "Package .gem files into the vendor/cache directory"
 msgstr "Empaqueter les gemmes dans le dossier vendor/cache"
+
+msgid "Package File"
+msgstr ""
+
+msgid "Package Group"
+msgstr ""
 
 msgid "Package a running vagrant environment into a box"
 msgstr ""
@@ -47404,6 +47434,9 @@ msgstr ""
 msgid "Query font from this X server [server]"
 msgstr ""
 
+msgid "Query for packages that own FILE"
+msgstr ""
+
 msgid "Query gem information in local or remote repositories"
 msgstr "Obtenir les informations sur les gemmes des dépôts courant ou distant"
 
@@ -47472,9 +47505,6 @@ msgstr "Interroger la base de données des paquets"
 
 msgid "Query the package names only"
 msgstr "Obtenir seulement les noms de paquet"
-
-msgid "Query the package that owns FILE"
-msgstr ""
 
 msgid "Query the specified service"
 msgstr ""
@@ -49738,6 +49768,9 @@ msgstr "Supprimer l’étiquette des soumissions"
 msgid "Remove target from local repository"
 msgstr "Supprimer la cible du dépôt local"
 
+msgid "Remove targets not required by any package"
+msgstr ""
+
 msgid "Remove temporary data from running the Canoo WebTests"
 msgstr ""
 
@@ -51354,6 +51387,9 @@ msgstr ""
 
 msgid "Retrieve multi session info in a form suitable for mkisofs-1.10 or later"
 msgstr "Récupérer les informations de multi-session dans un format utilisable par mkisofs-1.10 ou ultérieur"
+
+msgid "Retrieve packages but do not install"
+msgstr ""
 
 msgid "Retrieve packages required to build listed packages"
 msgstr "Récupérer les paquets requis pour construire ceux listés"
@@ -71659,6 +71695,9 @@ msgstr ""
 msgid "View text, image and string resources"
 msgstr ""
 
+msgid "View the ChangeLog of PACKAGE"
+msgstr ""
+
 msgid "View the Makepkg conf"
 msgstr ""
 
@@ -76409,9 +76448,6 @@ msgid "list installed applications"
 msgstr ""
 
 msgid "list installed packages"
-msgstr ""
-
-msgid "list installed packages only found in sync database"
 msgstr ""
 
 msgid "list local changes and/or changes in a scratch org"

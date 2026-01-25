@@ -55,11 +55,15 @@ set -l linux_architectures '
     loong64
 '
 
-complete -c $progname -e
+# Exactly one main operation needed
 complete -c $progname -f
-# HACK: We only need these two to coerce fish to stop file completion and complete options
-complete -c $progname -n 'not __fish_pacman_has_operation' -a -D -d 'Modify the package database'
-complete -c $progname -n 'not __fish_pacman_has_operation' -a -Q -d 'Query the package database'
+complete -c $progname -n 'not __fish_pacman_has_operation' -a -D -d 'Modify the package database' -f
+complete -c $progname -n 'not __fish_pacman_has_operation' -a -Q -d 'Query the package database' -f
+complete -c $progname -n 'not __fish_pacman_has_operation' -a -R -d 'Remove packages from the system' -f
+complete -c $progname -n 'not __fish_pacman_has_operation' -a -S -d 'Synchronize packages' -f
+complete -c $progname -n 'not __fish_pacman_has_operation' -a -T -d 'Check dependencies' -f
+complete -c $progname -n 'not __fish_pacman_has_operation' -a -U -d 'Add a package from a file or URL' -f
+complete -c $progname -n 'not __fish_pacman_has_operation' -a -F -d 'Query the files database' -f
 
 ## OPERATIONS
 complete -c $progname -n 'not __fish_pacman_has_operation' -s D -l database -d 'Modify the package database' -f
@@ -67,7 +71,7 @@ complete -c $progname -n 'not __fish_pacman_has_operation' -s Q -l query -d 'Que
 complete -c $progname -n 'not __fish_pacman_has_operation' -s R -l remove -d 'Remove packages from the system' -f
 complete -c $progname -n 'not __fish_pacman_has_operation' -s S -l sync -d 'Synchronize packages' -f
 complete -c $progname -n 'not __fish_pacman_has_operation' -s T -l deptest -d 'Check dependencies' -f
-complete -c $progname -n 'not __fish_pacman_has_operation' -s U -l upgrade -d 'Add a package from a file or URL'
+complete -c $progname -n 'not __fish_pacman_has_operation' -s U -l upgrade -d 'Add a package from a file or URL' -f
 complete -c $progname -n 'not __fish_pacman_has_operation' -s F -l files -d 'Query the files database' -f
 complete -c $progname -s V -l version -d 'Display version and exit' -f
 complete -c $progname -s h -l help -d 'Display help' -f
@@ -84,7 +88,7 @@ complete -c $progname -n __fish_pacman_has_operation -l config -d 'Alternate con
 complete -c $progname -n __fish_pacman_has_operation -l debug -d 'Display debug messages' -f
 complete -c $progname -n __fish_pacman_has_operation -l gpgdir -d 'Alternate home directory for GnuPG' -xa '(__fish_complete_directories)'
 complete -c $progname -n __fish_pacman_has_operation -l hookdir -d 'Alternate hook location' -xa '(__fish_complete_directories)'
-complete -c $progname -n __fish_pacman_has_operation -l logfile -d 'Alternate log file'
+complete -c $progname -n __fish_pacman_has_operation -l logfile -d 'Alternate log file' -rF
 complete -c $progname -n __fish_pacman_has_operation -l noconfirm -d 'Bypass any confirmation' -f
 complete -c $progname -n __fish_pacman_has_operation -l confirm -d 'Cancels a previous --noconfirm' -f
 complete -c $progname -n __fish_pacman_has_operation -l disable-download-timeout -d 'Use relaxed timeouts for download' -f
@@ -95,7 +99,7 @@ complete -c $progname -n __fish_pacman_has_operation -l disable-sandbox-syscalls
 
 ## TRANSACTION OPTIONS (APPLY TO -S, -R AND -U)
 complete -c $progname -n '__fish_pacman_has_operation S R U' -s d -l nodeps -d 'Skip [all] dependency checks' -f
-complete -c $progname -n '__fish_pacman_has_operation S R U' -l assume-installed -d 'Add a virtual package to satisfy dependencies' -f
+complete -c $progname -n '__fish_pacman_has_operation S R U' -l assume-installed -d 'Add a virtual package to satisfy dependencies' -xa '(__fish_print_pacman_packages)'
 complete -c $progname -n '__fish_pacman_has_operation S R U' -l dbonly -d 'Modify database entry only' -f
 complete -c $progname -n '__fish_pacman_has_operation S R U' -l noprogressbar -d 'Do not display progress bar' -f
 complete -c $progname -n '__fish_pacman_has_operation S R U' -l noscriptlet -d 'Do not execute install script' -f
@@ -103,7 +107,7 @@ complete -c $progname -n '__fish_pacman_has_operation S R U' -s p -l print -d 'D
 complete -c $progname -n '__fish_pacman_has_operation S R U' -l print-format -d 'Specify printf-like format' -x
 
 ## UPGRADE OPTIONS (APPLY TO -S AND -U)
-complete -c $progname -n '__fish_pacman_has_operation S U' -s w -l downloadonly -d 'Retrieve packages but do not install'
+complete -c $progname -n '__fish_pacman_has_operation S U' -s w -l downloadonly -d 'Retrieve packages but do not install' -f
 complete -c $progname -n '__fish_pacman_has_operation S U' -l asdeps -d 'Install packages as non-explicitly installed' -f
 complete -c $progname -n '__fish_pacman_has_operation S U' -l asexplicit -d 'Install packages as explicitly installed' -f
 complete -c $progname -n '__fish_pacman_has_operation S U' -l ignore -d 'Ignore a package upgrade (can be used more than once)' -xa '(__fish_print_pacman_packages)'
@@ -112,24 +116,25 @@ complete -c $progname -n '__fish_pacman_has_operation S U' -l needed -d 'Do not 
 complete -c $progname -n '__fish_pacman_has_operation S U' -l overwrite -d 'Overwrite conflicting files (can be used more than once)' -rF
 
 ## QUERY OPTIONS (APPLY TO -Q)
-set -l queryfile '__fish_contains_opt -s p file'
 complete -c $progname -n '__fish_pacman_has_operation Q' -s c -l changelog -d 'View the ChangeLog of PACKAGE' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s d -l deps -d 'List only non-explicit packages (dependencies)' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s e -l explicit -d 'List only explicitly installed packages' -f
-complete -c $progname -n '__fish_pacman_has_operation Q' -s g -l groups -d 'List only packages that are part of a group' -xa '(__fish_pacman_print_package_groups --installed)'
+complete -c $progname -n '__fish_pacman_has_operation Q' -s g -l groups -d 'List only packages that are part of a group' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s i -l info -d 'View PACKAGE [backup files] information' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s k -l check -d 'Check that PACKAGE files exist' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s l -l list -d 'List the files owned by PACKAGE' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s m -l foreign -d 'List installed packages not found in sync database' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s n -l native -d 'List installed packages only found in sync database' -f
-complete -c $progname -n '__fish_pacman_has_operation Q' -s o -l owns -d 'Query for packages that own FILE' -rF
-complete -c $progname -n '__fish_pacman_has_operation Q' -s p -l file -d 'Query a package file instead of the database' -rF
+complete -c $progname -n '__fish_pacman_has_operation Q' -s o -l owns -d 'Query for packages that own FILE' -f
+complete -c $progname -n '__fish_pacman_has_operation Q' -s p -l file -d 'Query a package file instead of the database' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s q -l quiet -d 'Show less information' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s s -l search -d 'Search locally-installed packages for regexp' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s t -l unrequired -d 'List only unrequired packages [and optdepends]' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s u -l upgrades -d 'List only out-of-date packages' -f
-complete -c $progname -n '__fish_pacman_has_operation Q' -n "not $queryfile" -d Package -xa '(__fish_print_pacman_packages --installed)'
-complete -c $progname -n '__fish_pacman_has_operation Q' -n "$queryfile" -d 'Package File' -xka "(__fish_complete_suffix $pkgexts)"
+complete -c $progname -n '__fish_pacman_has_operation Q' -n 'not __fish_contains_opt -s g groups -s o owns -s p file' -d Package -xa '(__fish_print_pacman_packages --installed)'
+complete -c $progname -n '__fish_pacman_has_operation Q' -n '__fish_contains_opt -s g groups' -d 'Package Group' -xa '(__fish_pacman_print_package_groups --installed)'
+complete -c $progname -n '__fish_pacman_has_operation Q' -n '__fish_contains_opt -s o owns' -d File -rF
+complete -c $progname -n '__fish_pacman_has_operation Q' -n '__fish_contains_opt -s p file' -d 'Package File' -xka "(__fish_complete_suffix $pkgexts)"
 
 ## REMOVE OPTIONS (APPLY TO -R)
 complete -c $progname -n '__fish_pacman_has_operation R' -s c -l cascade -d 'Also remove packages depending on PACKAGE' -f
@@ -137,26 +142,27 @@ complete -c $progname -n '__fish_pacman_has_operation R' -s n -l nosave -d 'Igno
 complete -c $progname -n '__fish_pacman_has_operation R' -s s -l recursive -d 'Also remove dependencies of PACKAGE' -f
 complete -c $progname -n '__fish_pacman_has_operation R' -s u -l unneeded -d 'Remove targets not required by any package' -f
 complete -c $progname -n '__fish_pacman_has_operation R' -d Package -xa '(__fish_print_pacman_packages --installed)'
+complete -c $progname -n '__fish_pacman_has_operation R' -d 'Package Group' -xa '(__fish_pacman_print_package_groups --installed)'
 
 ## SYNC OPTIONS (APPLY TO -S)
 complete -c $progname -n '__fish_pacman_has_operation S' -s c -l clean -d 'Remove [all] packages from cache' -f
-complete -c $progname -n '__fish_pacman_has_operation S' -s g -l groups -d 'Display members of [all] package GROUP' -xa '(__fish_pacman_print_package_groups)'
+complete -c $progname -n '__fish_pacman_has_operation S' -s g -l groups -d 'Display members of [all] package GROUP' -f
 complete -c $progname -n '__fish_pacman_has_operation S' -s i -l info -d 'View PACKAGE [extended] information' -f
-complete -c $progname -n '__fish_pacman_has_operation S' -s l -l list -d 'List all packages in REPOSITORY' -xa '(__fish_print_pacman_repos)'
+complete -c $progname -n '__fish_pacman_has_operation S' -s l -l list -d 'List all packages in REPOSITORY' -f
 complete -c $progname -n '__fish_pacman_has_operation S' -s q -l quiet -d 'Show less information' -f
 complete -c $progname -n '__fish_pacman_has_operation S' -s s -l search -d 'Search remote repositories for regexp' -f
-complete -c $progname -n '__fish_pacman_has_operation S' -s u -l sysupgrade -d 'Upgrade all packages that are out of date'
+complete -c $progname -n '__fish_pacman_has_operation S' -s u -l sysupgrade -d 'Upgrade all packages that are out of date' -f
 complete -c $progname -n '__fish_pacman_has_operation S' -s y -l refresh -d 'Download fresh package databases [force]' -f
-complete -c $progname -n '__fish_pacman_has_operation S' -d Package -xa '(__fish_print_pacman_packages)'
-complete -c $progname -n '__fish_pacman_has_operation S' -d 'Package Group' -xa '(__fish_pacman_print_package_groups)'
+complete -c $progname -n '__fish_pacman_has_operation S' -n 'not __fish_contains_opt -s g groups -s l list' -d Package -xa '(__fish_print_pacman_packages)'
+complete -c $progname -n '__fish_pacman_has_operation S' -n '__fish_contains_opt -s g groups' -d 'Package Group' -xa '(__fish_pacman_print_package_groups)'
+complete -c $progname -n '__fish_pacman_has_operation S' -n '__fish_contains_opt -s l list' -d Repository -xa '(__fish_print_pacman_repos)'
 
 ## DATABASE OPTIONS (APPLY TO -D)
-set -l has_db_opt '__fish_contains_opt asdeps asexplicit check -s k'
-complete -c $progname -n '__fish_pacman_has_operation D' -n "not $has_db_opt" -l asdeps -d 'Mark PACKAGE as dependency' -x
-complete -c $progname -n '__fish_pacman_has_operation D' -n "not $has_db_opt" -l asexplicit -d 'Mark PACKAGE as explicitly installed' -x
-complete -c $progname -n '__fish_pacman_has_operation D' -n "not $has_db_opt" -s k -l check -d 'Check database validity'
+complete -c $progname -n '__fish_pacman_has_operation D' -l asdeps -d 'Mark PACKAGE as dependency' -f
+complete -c $progname -n '__fish_pacman_has_operation D' -l asexplicit -d 'Mark PACKAGE as explicitly installed' -f
+complete -c $progname -n '__fish_pacman_has_operation D' -s k -l check -d 'Check database validity' -f
 complete -c $progname -n '__fish_pacman_has_operation D' -s q -l quiet -d 'Suppress output of success messages' -f
-complete -c $progname -n '__fish_pacman_has_operation D' -n "$has_db_opt" -xa '(__fish_print_pacman_packages --installed)'
+complete -c $progname -n '__fish_pacman_has_operation D' -n '__fish_contains_opt asdeps asexplicit' -d Package -xa '(__fish_print_pacman_packages --installed)'
 
 ## FILE OPTIONS (APPLY TO -F)
 complete -c $progname -n '__fish_pacman_has_operation F' -s y -l refresh -d 'Download fresh package databases [force]' -f
@@ -164,7 +170,8 @@ complete -c $progname -n '__fish_pacman_has_operation F' -s l -l list -d 'List t
 complete -c $progname -n '__fish_pacman_has_operation F' -s x -l regex -d 'Interpret each query as a regular expression' -f
 complete -c $progname -n '__fish_pacman_has_operation F' -s q -l quiet -d 'Show less information' -f
 complete -c $progname -n '__fish_pacman_has_operation F' -l machinereadable -d 'Print each match in a machine readable output format' -f
-complete -c $progname -n '__fish_pacman_has_operation F' -d Package -xa '(__fish_print_pacman_packages)'
+complete -c $progname -n '__fish_pacman_has_operation F' -n '__fish_contains_opt -s l list' -d Package -xa '(__fish_print_pacman_packages)'
+complete -c $progname -n '__fish_pacman_has_operation F' -n 'not __fish_contains_opt -s l list' -d File -rF
 
 # No extra options (-U)
 complete -c $progname -n '__fish_pacman_has_operation U' -d 'Package File' -xka "(__fish_complete_suffix $pkgexts)"

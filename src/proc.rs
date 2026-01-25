@@ -30,7 +30,10 @@ use libc::{
     WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
 };
 use nix::{
-    sys::signal::{SaFlags, SigAction, SigHandler, SigSet},
+    sys::{
+        signal::{SaFlags, SigAction, SigHandler, SigSet},
+        wait::{WaitPidFlag, WaitStatus, waitpid},
+    },
     unistd::getpgrp,
 };
 use std::cell::{Cell, Ref, RefCell, RefMut};
@@ -1158,15 +1161,21 @@ pub fn add_disowned_job(j: &Job) {
 // Reap any pids in our disowned list that have exited. This is used to avoid zombies.
 fn reap_disowned_pids() {
     let mut disowned_pids = DISOWNED_PIDS.lock().unwrap();
-    // waitpid returns 0 iff the PID/PGID in question has not changed state; remove the pid/pgid
-    // if it has changed or an error occurs (presumably ECHILD because the child does not exist)
+    // Remove the pid/pgid if it has exited or an error occurs (presumably ECHILD because the child does not exist).
     disowned_pids.retain(|pid| {
-        let mut status: libc::c_int = 0;
-        let ret = unsafe { libc::waitpid(pid.as_pid_t(), &mut status, WNOHANG) };
-        if ret > 0 {
-            flogf!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
+        match waitpid(
+            nix::unistd::Pid::from_raw(pid.as_pid_t()),
+            Some(WaitPidFlag::WNOHANG),
+        ) {
+            Ok(wait_status) => match wait_status {
+                WaitStatus::Exited(_, _) | WaitStatus::Signaled(_, _, _) => {
+                    flogf!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
+                    false
+                }
+                _ => true,
+            },
+            Err(_) => false,
         }
-        ret == 0
     });
 }
 

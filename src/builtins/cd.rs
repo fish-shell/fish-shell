@@ -10,7 +10,8 @@ use crate::{
 };
 use errno::Errno;
 use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
-use std::{os::fd::AsRawFd, sync::Arc};
+use nix::unistd::fchdir;
+use std::sync::Arc;
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
@@ -88,10 +89,11 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         let res = wopen_dir(&norm_dir, BEST_O_SEARCH).map_err(|err| err as i32);
 
         let res = res.and_then(|fd| {
-            if unsafe { libc::fchdir(fd.as_raw_fd()) } == 0 {
-                Ok(fd)
-            } else {
-                Err(errno::errno().0)
+            match fchdir(&fd) {
+                Ok(()) => Ok(fd),
+                // nix::Result::Err contains nix::errno::Errno, which does not offer an API for
+                // converting to a raw int.
+                Err(_) => Err(errno::errno().0),
             }
         });
 

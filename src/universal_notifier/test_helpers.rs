@@ -51,7 +51,7 @@ pub fn test_notifiers(notifiers: &[&dyn UniversalNotifier], fish_variables_path:
 
         // notifyd requires a round trip to the notifyd server, which means we have to wait a
         // little bit to receive it. In practice 40 ms seems to be enough.
-        unsafe { libc::usleep(40000) };
+        std::thread::sleep(std::time::Duration::from_millis(40));
 
         for (idx2, &n2) in notifiers.iter().enumerate() {
             let mut polled = poll_notifier(n2);

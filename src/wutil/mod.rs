@@ -59,9 +59,9 @@ pub fn waccess(file_name: &wstr, mode: libc::c_int) -> libc::c_int {
 }
 
 /// Wide character version of unlink().
-pub fn wunlink(file_name: &wstr) -> libc::c_int {
-    let tmp = wcs2zstring(file_name);
-    unsafe { libc::unlink(tmp.as_ptr()) }
+pub fn wunlink(file_name: &wstr) -> io::Result<()> {
+    let tmp = wcs2osstring(file_name);
+    fs::remove_file(tmp)
 }
 
 pub fn wperror(s: &wstr) {

@@ -51499,6 +51499,9 @@ msgstr ""
 msgid "Revert back to given revision"
 msgstr ""
 
+msgid "Revert file changes in patch"
+msgstr ""
+
 msgid "Revert to an older installation of composer"
 msgstr ""
 

@@ -26,6 +26,17 @@ function __fish_pacman_print_package_groups
     printf '%s\n' $groups\t'Package Group'
 end
 
+# Do a normal __fish_print_pacman_packages, unless the command line has "$repo/...".
+# In that case, no package would matched, so it searches for packages in that repo
+# instead.
+function __fish_pacman_complete_packages_from_repo
+    set -l repo (commandline -ct | string replace -fr '^([^/]+)/.*$' '$1')
+    __fish_print_pacman_packages --repo=$repo 2>/dev/null
+    if test -z "$repo"
+        printf '%s\n' (__fish_print_pacman_repos)/\t'Repository'
+    end
+end
+
 # See PKGEXT on https://man.archlinux.org/man/makepkg.conf.5
 set -l pkgexts (string match --all --regex '\S+' '
     .pkg.tar.gz
@@ -153,7 +164,7 @@ complete -c $progname -n '__fish_pacman_has_operation S' -s q -l quiet -d 'Show 
 complete -c $progname -n '__fish_pacman_has_operation S' -s s -l search -d 'Search remote repositories for regexp' -f
 complete -c $progname -n '__fish_pacman_has_operation S' -s u -l sysupgrade -d 'Upgrade all packages that are out of date' -f
 complete -c $progname -n '__fish_pacman_has_operation S' -s y -l refresh -d 'Download fresh package databases [force]' -f
-complete -c $progname -n '__fish_pacman_has_operation S' -n 'not __fish_contains_opt -s g groups -s l list' -d Package -xa '(__fish_print_pacman_packages)'
+complete -c $progname -n '__fish_pacman_has_operation S' -n 'not __fish_contains_opt -s g groups -s l list' -d Package -xa '(__fish_pacman_complete_packages_from_repo)'
 complete -c $progname -n '__fish_pacman_has_operation S' -n '__fish_contains_opt -s g groups' -d 'Package Group' -xa '(__fish_pacman_print_package_groups)'
 complete -c $progname -n '__fish_pacman_has_operation S' -n '__fish_contains_opt -s l list' -d Repository -xa '(__fish_print_pacman_repos)'
 

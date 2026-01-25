@@ -46,6 +46,28 @@ function __fish_quilt_complete_integer
     end
 end
 
+# Forward completions of 'quilt grep ...' to grep itself.
+function __fish_quilt_complete_grep
+    set -l command (commandline -px)
+    while test (count $command) -gt 0 -a $command[1] != grep
+        set -e command[1]
+    end
+
+    set -l arguments $command[2..]
+    # quilt captures the initial -h arguments
+    set -l quilt_help -h
+    while test "$arguments[1]" = $quilt_help
+        set -e arguments[1]
+    end
+    # and the first -- to stop capturing -h
+    set -l quilt_sentinel --
+    if test "$arguments[1]" = $quilt_sentinel
+        set -e arguments[1]
+    end
+
+    complete -C "grep $(string escape -- $arguments)"
+end
+
 complete -c quilt -f
 
 # quilt [command] -h
@@ -164,7 +186,7 @@ complete -c quilt -n '__fish_seen_subcommand_from graph' -n 'not __fish_seen_arg
 
 # quilt grep [-h|options] {pattern}
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a grep -d 'Search through source files' -f
-complete -c quilt -n '__fish_seen_subcommand_from grep' -f
+complete -c quilt -n '__fish_seen_subcommand_from grep' -fa '(__fish_quilt_complete_grep)'
 
 # quilt header [-a|-r|-e] [--backup] [--strip-diffstat] [--strip-trailing-whitespace] [patch]
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a header -d 'Print/change the header of patch' -f

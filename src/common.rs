@@ -20,7 +20,7 @@ use fish_widestring::{
     ENCODE_DIRECT_END, decode_byte_from_char, encode_byte_to_char, subslice_position,
 };
 use std::env;
-use std::ffi::{CStr, CString, OsString};
+use std::ffi::{CStr, CString, OsStr, OsString};
 use std::os::unix::prelude::*;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, MutexGuard, OnceLock};
@@ -978,9 +978,19 @@ pub fn bytes2wcstring(mut input: &[u8]) -> WString {
     result
 }
 
-pub fn cstr2wcstring(input: &[u8]) -> WString {
-    let input = CStr::from_bytes_until_nul(input).unwrap().to_bytes();
-    bytes2wcstring(input)
+/// Use this rather than [`WString::from_str`] when the input could contain PUA bytes we use to
+/// encode non-UTF-8 bytes. Otherwise, when decoding the resulting [`WString`], the PUA bytes in
+/// the input would be converted to non-UTF-8 bytes.
+pub fn str2wcstring<S: AsRef<str>>(input: S) -> WString {
+    bytes2wcstring(input.as_ref().as_bytes())
+}
+
+pub fn cstr2wcstring<C: AsRef<CStr>>(input: C) -> WString {
+    bytes2wcstring(input.as_ref().to_bytes())
+}
+
+pub fn osstr2wcstring<O: AsRef<OsStr>>(input: O) -> WString {
+    bytes2wcstring(input.as_ref().as_bytes())
 }
 
 pub(crate) fn charptr2wcstring(input: *const libc::c_char) -> WString {
@@ -1360,12 +1370,11 @@ impl ToCString for &[u8] {
 #[macro_export]
 macro_rules! env_stack_set_from_env {
     ($vars:ident, $var_name:literal) => {{
-        use std::os::unix::ffi::OsStrExt;
         if let Some(var) = std::env::var_os($var_name) {
             $vars.set_one(
                 L!($var_name),
                 $crate::env::EnvSetMode::new_at_early_startup($crate::env::EnvMode::GLOBAL),
-                $crate::common::bytes2wcstring(var.as_bytes()),
+                $crate::common::osstr2wcstring(var),
             );
         }
     }};

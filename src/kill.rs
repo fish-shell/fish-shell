@@ -93,9 +93,9 @@ mod tests {
 
         assert!(kr.is_empty());
 
-        kr.add(WString::from_str("a"));
-        kr.add(WString::from_str("b"));
-        kr.add(WString::from_str("c"));
+        kr.add(L!("a").to_owned());
+        kr.add(L!("b").to_owned());
+        kr.add(L!("c").to_owned());
 
         assert_eq!(kr.entries(), [L!("c"), L!("b"), L!("a")]);
 
@@ -105,7 +105,7 @@ mod tests {
         assert_eq!(kr.yank_rotate(), "a");
         assert_eq!(kr.entries(), [L!("a"), L!("c"), L!("b")]);
 
-        kr.add(WString::from_str("d"));
+        kr.add(L!("d").to_owned());
 
         assert_eq!(kr.entries(), [L!("d"), L!("a"), L!("c"), L!("b")]);
 

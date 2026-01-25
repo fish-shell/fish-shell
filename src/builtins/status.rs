@@ -1,7 +1,5 @@
-use std::os::unix::prelude::*;
-
 use super::prelude::*;
-use crate::common::{bytes2wcstring, get_program_name};
+use crate::common::{bytes2wcstring, get_program_name, osstr2wcstring, str2wcstring};
 use crate::env::config_paths::get_fish_path;
 use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
@@ -529,7 +527,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     .chain(CMakeBinaryDir::iter())
                 {
                     if arg.is_empty() || path.starts_with(arg) {
-                        paths.push(bytes2wcstring(path.as_bytes()));
+                        paths.push(str2wcstring(&path));
                     }
                 }
             };
@@ -592,13 +590,17 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             match s {
                 STATUS_BUILD_INFO => {
-                    let version = bytes2wcstring(crate::BUILD_VERSION.as_bytes());
-                    let target = bytes2wcstring(env!("BUILD_TARGET_TRIPLE").as_bytes());
-                    let host = bytes2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
-                    let profile = bytes2wcstring(env!("BUILD_PROFILE").as_bytes());
+                    let version = str2wcstring(crate::BUILD_VERSION);
+                    let target = str2wcstring(env!("BUILD_TARGET_TRIPLE"));
+                    let host = str2wcstring(env!("BUILD_HOST_TRIPLE"));
+                    let profile = str2wcstring(env!("BUILD_PROFILE"));
                     streams.out.append(L!("Build system: "));
-                    let buildsystem = if cfg!(using_cmake) { "CMake" } else { "Cargo" };
-                    streams.out.appendln(bytes2wcstring(buildsystem.as_bytes()));
+                    let buildsystem = if cfg!(using_cmake) {
+                        L!("CMake")
+                    } else {
+                        L!("Cargo")
+                    };
+                    streams.out.appendln(buildsystem);
                     streams.out.append(L!("Version: "));
                     streams.out.appendln(version);
                     if target == host {
@@ -621,9 +623,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         #[cfg(target_feature = "crt-static")]
                         "crt-static",
                     ];
-                    streams
-                        .out
-                        .appendln(bytes2wcstring(features.join(" ").as_bytes()));
+                    streams.out.appendln(str2wcstring(features.join(" ")));
                     streams.out.appendln("");
                     return Ok(SUCCESS);
                 }
@@ -735,7 +735,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     use crate::env::config_paths::FishPath::*;
                     let result = match get_fish_path() {
                         Absolute(path) => {
-                            let path = bytes2wcstring(path.as_os_str().as_bytes());
+                            let path = osstr2wcstring(path);
                             Cow::Owned(match wrealpath(&path) {
                                 Some(p) if waccess(&p, F_OK) == 0 => p,
                                 // realpath did not work, just append the path

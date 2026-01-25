@@ -5,7 +5,9 @@ use super::environment_impl::{
 };
 use crate::abbrs::{Abbreviation, Position, abbrs_get_set};
 use crate::builtins::shared::{BuiltinResult, SUCCESS};
-use crate::common::{UnescapeStringStyle, bytes2wcstring, unescape_string, wcs2zstring};
+use crate::common::{
+    UnescapeStringStyle, cstr2wcstring, osstr2wcstring, str2wcstring, unescape_string, wcs2zstring,
+};
 use crate::env::config_paths::ConfigPaths;
 use crate::env::{EnvMode, EnvSetMode, EnvVar, Statuses};
 use crate::env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change};
@@ -31,7 +33,6 @@ use libc::{c_int, uid_t};
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
-use std::os::unix::prelude::*;
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, OnceLock};
 
@@ -468,7 +469,7 @@ fn get_hostname_identifier() -> Option<WString> {
     let mut b = [0 as libc::c_char; HOSTNAME_LEN + 1];
     if unsafe { libc::gethostname(b.as_mut_ptr(), b.len()) } == 0 {
         let cstr = unsafe { CStr::from_ptr(b.as_ptr()) };
-        let res = bytes2wcstring(cstr.to_bytes());
+        let res = cstr2wcstring(cstr);
 
         if res.is_empty() { None } else { Some(res) }
     } else {
@@ -538,11 +539,7 @@ fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
                 if vars.get_unless_empty(L!("HOME")).is_none() {
                     if !userinfo.pw_dir.is_null() {
                         let s = unsafe { CStr::from_ptr(userinfo.pw_dir) };
-                        vars.set_one(
-                            L!("HOME"),
-                            global_exported_mode,
-                            bytes2wcstring(s.to_bytes()),
-                        );
+                        vars.set_one(L!("HOME"), global_exported_mode, cstr2wcstring(s));
                     } else {
                         vars.set_empty(L!("HOME"), global_exported_mode);
                     }
@@ -566,18 +563,14 @@ fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
     if retval == 0 && !result.is_null() {
         let userinfo = unsafe { userinfo.assume_init() };
         let s = unsafe { CStr::from_ptr(userinfo.pw_name) };
-        let uname = bytes2wcstring(s.to_bytes());
+        let uname = cstr2wcstring(s);
         vars.set_one(L!("USER"), global_exported_mode, uname);
         // Only change $HOME if it's empty, so we allow e.g. `HOME=(mktemp -d)`.
         // This is okay with common `su` and `sudo` because they set $HOME.
         if vars.get_unless_empty(L!("HOME")).is_none() {
             if !userinfo.pw_dir.is_null() {
                 let s = unsafe { CStr::from_ptr(userinfo.pw_dir) };
-                vars.set_one(
-                    L!("HOME"),
-                    global_exported_mode,
-                    bytes2wcstring(s.to_bytes()),
-                );
+                vars.set_one(L!("HOME"), global_exported_mode, cstr2wcstring(s));
             } else {
                 // We cannot get $HOME. This triggers warnings for history and config.fish already,
                 // so it isn't necessary to warn here as well.
@@ -601,12 +594,12 @@ pub(crate) static FALLBACK_PATH: LazyLock<&[WString]> = LazyLock::new(|| {
         let buf = buf;
         // safety: buf should contain a null-byte, and is not mutable unless we move ownership
         let cstr = unsafe { CStr::from_ptr(buf.as_ptr()) };
-        colon_split(&[bytes2wcstring(cstr.to_bytes())])
+        colon_split(&[cstr2wcstring(cstr)])
     } else {
         vec![
-            WString::from_str(env!("PREFIX")) + L!("/bin"),
-            WString::from_str("/usr/bin"),
-            WString::from_str("/bin"),
+            str2wcstring(env!("PREFIX")) + L!("/bin"),
+            L!("/usr/bin").to_owned(),
+            L!("/bin").to_owned(),
         ]
     };
     Box::leak(paths.into_boxed_slice())
@@ -632,7 +625,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     let global_exported_mode = EnvSetMode::new_at_early_startup(EnvMode::GLOBAL | EnvMode::EXPORT);
 
     let env_iter: Vec<_> = std::env::vars_os()
-        .map(|(k, v)| (bytes2wcstring(k.as_bytes()), bytes2wcstring(v.as_bytes())))
+        .map(|(k, v)| (osstr2wcstring(k), osstr2wcstring(v)))
         .collect();
 
     let mut inherited_vars = HashMap::new();
@@ -671,7 +664,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
                 key,
                 global_mode,
                 maybe_path
-                    .map(|path| vec![bytes2wcstring(path.as_os_str().as_bytes())])
+                    .map(|path| vec![osstr2wcstring(path)])
                     .unwrap_or_default(),
             );
         };
@@ -720,7 +713,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     );
 
     // Set up the version variable.
-    let version = bytes2wcstring(crate::BUILD_VERSION.as_bytes());
+    let version = str2wcstring(crate::BUILD_VERSION);
     vars.set_one(L!("version"), global_mode, version.clone());
     vars.set_one(L!("FISH_VERSION"), global_mode, version);
 
@@ -737,7 +730,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         let nshlvl_str = if let Some(shlvl_var) = std::env::var_os("SHLVL") {
             // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a
             // diagnostic?
-            match fish_wcstol(&bytes2wcstring(shlvl_var.as_os_str().as_bytes())) {
+            match fish_wcstol(&osstr2wcstring(shlvl_var)) {
                 Ok(shlvl_i) if shlvl_i >= 0 => (shlvl_i + 1).to_wstring(),
                 _ => L!("1").to_owned(),
             }
@@ -748,11 +741,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     } else {
         // If we're not interactive, simply pass the value along.
         if let Some(shlvl_var) = std::env::var_os("SHLVL") {
-            vars.set_one(
-                L!("SHLVL"),
-                global_exported_mode,
-                bytes2wcstring(shlvl_var.as_os_str().as_bytes()),
-            );
+            vars.set_one(L!("SHLVL"), global_exported_mode, osstr2wcstring(shlvl_var));
         }
     }
 
@@ -764,9 +753,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     // Also reject all paths that don't start with "/", this includes windows paths like "F:\foo".
     // (see #7636)
     let incoming_pwd_cstr = std::env::var_os("PWD");
-    let incoming_pwd = incoming_pwd_cstr
-        .map(|s| bytes2wcstring(s.as_os_str().as_bytes()))
-        .unwrap_or_default();
+    let incoming_pwd = incoming_pwd_cstr.map(osstr2wcstring).unwrap_or_default();
     if !incoming_pwd.is_empty()
         && incoming_pwd.char_at(0) == '/'
         && paths_are_same_file(&incoming_pwd, L!("."))

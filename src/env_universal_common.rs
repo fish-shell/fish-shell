@@ -810,8 +810,7 @@ mod tests {
     use fish_tempfile::TempDir;
     use fish_widestring::{ENCODE_DIRECT_BASE, char_offset};
 
-    use crate::common::bytes2wcstring;
-    use crate::common::wcs2osstring;
+    use crate::common::{osstr2wcstring, wcs2osstring};
     use crate::env::{EnvVar, EnvVarFlags, VarTable};
     use crate::env_universal_common::{EnvUniversal, UvarFormat};
     use crate::prelude::*;
@@ -826,7 +825,7 @@ mod tests {
     fn make_test_uvar_path() -> std::io::Result<(TempDir, WString)> {
         let temp_dir = fish_tempfile::new_dir()?;
         let file_path = temp_dir.path().join("varsfile.txt");
-        let file_path = bytes2wcstring(file_path.as_os_str().as_encoded_bytes());
+        let file_path = osstr2wcstring(file_path);
         Ok((temp_dir, file_path))
     }
 

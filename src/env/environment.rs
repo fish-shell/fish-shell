@@ -6,7 +6,7 @@ use super::environment_impl::{
 use crate::abbrs::{Abbreviation, Position, abbrs_get_set};
 use crate::builtins::shared::{BuiltinResult, SUCCESS};
 use crate::common::{
-    UnescapeStringStyle, cstr2wcstring, osstr2wcstring, str2wcstring, unescape_string, wcs2zstring,
+    UnescapeStringStyle, cstr2wcstring, osstr2wcstring, str2wcstring, unescape_string,
 };
 use crate::env::config_paths::ConfigPaths;
 use crate::env::{EnvMode, EnvSetMode, EnvVar, Statuses};
@@ -29,10 +29,12 @@ use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_wcstol, wgetcwd};
 use fish_wcstringutil::join_strings;
 use libc::c_int;
-use nix::unistd::{Uid, gethostname};
+use nix::{
+    NixPath,
+    unistd::{Uid, User, gethostname},
+};
 use std::collections::HashMap;
 use std::ffi::CStr;
-use std::mem::MaybeUninit;
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, OnceLock};
 
@@ -458,69 +460,28 @@ const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
 const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
 const FISH_CACHE_DIR: &wstr = L!("__fish_cache_dir");
 
-/// Get values for $HOME via getpwuid,
-/// without trusting $USER or $HOME.
-pub fn get_home() -> Option<String> {
-    let uid = Uid::effective();
-
-    let mut userinfo: MaybeUninit<libc::passwd> = MaybeUninit::uninit();
-    let mut result: *mut libc::passwd = std::ptr::null_mut();
-    let mut buf = [0 as libc::c_char; 8192];
-
-    // We need to get the data via the uid and don't trust $USER.
-    let retval = unsafe {
-        libc::getpwuid_r(
-            uid.as_raw(),
-            userinfo.as_mut_ptr(),
-            buf.as_mut_ptr(),
-            buf.len(),
-            &mut result,
-        )
-    };
-    if retval != 0 || result.is_null() {
-        return None;
-    }
-
-    let userinfo = unsafe { userinfo.assume_init() };
-    if !userinfo.pw_dir.is_null() {
-        let home = unsafe { CStr::from_ptr(userinfo.pw_dir) };
-        let home = home.to_str().ok().map(|x| x.to_owned());
-        home
-    } else {
-        None
-    }
-}
-
 /// Set up the USER and HOME variable.
 fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
     let uid = Uid::effective();
     let user_var = vars.get_unless_empty(L!("USER"));
 
-    let mut userinfo: MaybeUninit<libc::passwd> = MaybeUninit::uninit();
-    let mut result: *mut libc::passwd = std::ptr::null_mut();
-    let mut buf = [0 as libc::c_char; 8192];
-
     // If we have a $USER, we try to get the passwd entry for the name.
     // If that has the same UID that we use, we assume the data is correct.
     if let Some(user_var) = user_var {
-        let unam_narrow = wcs2zstring(&user_var.as_string());
-        let retval = unsafe {
-            libc::getpwnam_r(
-                unam_narrow.as_ptr(),
-                userinfo.as_mut_ptr(),
-                buf.as_mut_ptr(),
-                buf.len(),
-                &mut result,
-            )
-        };
-        if retval == 0 && !result.is_null() {
-            let userinfo = unsafe { userinfo.assume_init() };
-            if unsafe { *result }.pw_uid == uid.as_raw() {
+        // POSIX.1-2017 requires that user names are a subset of ASCII, so converting to String here
+        // is ok.
+        // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_437
+        // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_282
+        if let Ok(Some(userinfo)) = User::from_name(&user_var.as_string().to_string()) {
+            if userinfo.uid == uid {
                 // The uid matches but we still might need to set $HOME.
                 if vars.get_unless_empty(L!("HOME")).is_none() {
-                    if !userinfo.pw_dir.is_null() {
-                        let s = unsafe { CStr::from_ptr(userinfo.pw_dir) };
-                        vars.set_one(L!("HOME"), global_exported_mode, cstr2wcstring(s));
+                    if !userinfo.dir.is_empty() {
+                        vars.set_one(
+                            L!("HOME"),
+                            global_exported_mode,
+                            osstr2wcstring(userinfo.dir),
+                        );
                     } else {
                         vars.set_empty(L!("HOME"), global_exported_mode);
                     }
@@ -530,28 +491,18 @@ fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
         }
     }
 
-    // Either we didn't have a $USER or it had a different uid.
-    // We need to get the data *again* via the uid.
-    let retval = unsafe {
-        libc::getpwuid_r(
-            uid.as_raw(),
-            userinfo.as_mut_ptr(),
-            buf.as_mut_ptr(),
-            buf.len(),
-            &mut result,
-        )
-    };
-    if retval == 0 && !result.is_null() {
-        let userinfo = unsafe { userinfo.assume_init() };
-        let s = unsafe { CStr::from_ptr(userinfo.pw_name) };
-        let uname = cstr2wcstring(s);
+    if let Ok(Some(userinfo)) = User::from_uid(uid) {
+        let uname = str2wcstring(userinfo.name);
         vars.set_one(L!("USER"), global_exported_mode, uname);
         // Only change $HOME if it's empty, so we allow e.g. `HOME=(mktemp -d)`.
         // This is okay with common `su` and `sudo` because they set $HOME.
         if vars.get_unless_empty(L!("HOME")).is_none() {
-            if !userinfo.pw_dir.is_null() {
-                let s = unsafe { CStr::from_ptr(userinfo.pw_dir) };
-                vars.set_one(L!("HOME"), global_exported_mode, cstr2wcstring(s));
+            if !userinfo.dir.is_empty() {
+                vars.set_one(
+                    L!("HOME"),
+                    global_exported_mode,
+                    osstr2wcstring(userinfo.dir),
+                );
             } else {
                 // We cannot get $HOME. This triggers warnings for history and config.fish already,
                 // so it isn't necessary to warn here as well.

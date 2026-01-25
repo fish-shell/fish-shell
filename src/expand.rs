@@ -8,9 +8,8 @@ use crate::builtins::shared::{
     STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD,
 };
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, charptr2wcstring, escape,
-    escape_string, escape_string_for_double_quotes, unescape_string, valid_var_name_char,
-    wcs2zstring,
+    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, escape, escape_string,
+    escape_string_for_double_quotes, osstr2wcstring, unescape_string, valid_var_name_char,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
@@ -30,7 +29,7 @@ use fish_common::{EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::{join_strings, trim};
 use fish_widestring::char_offset;
-use std::mem::MaybeUninit;
+use nix::unistd::User;
 
 bitflags! {
     /// Set of flags controlling expansions.
@@ -1154,23 +1153,9 @@ fn expand_home_directory(input: &mut WString, vars: &dyn Environment) {
             }
         }
     } else {
-        // Some other user's home directory.
-        let name_cstr = wcs2zstring(username);
-        let mut userinfo = MaybeUninit::uninit();
-        let mut result: *mut libc::passwd = std::ptr::null_mut();
-        let mut buf = [0 as libc::c_char; 8192];
-        let retval = unsafe {
-            libc::getpwnam_r(
-                name_cstr.as_ptr(),
-                userinfo.as_mut_ptr(),
-                &mut buf[0],
-                size_of_val(&buf),
-                &mut result,
-            )
-        };
-        if retval == 0 && !result.is_null() {
-            let userinfo = unsafe { userinfo.assume_init() };
-            home = Some(charptr2wcstring(userinfo.pw_dir));
+        // POSIX-conforming usernames are ASCII-only
+        if let Ok(Some(userinfo)) = User::from_name(&username.to_string()) {
+            home = Some(osstr2wcstring(userinfo.dir));
         }
     }
 

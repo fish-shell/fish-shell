@@ -12,7 +12,7 @@ use super::prelude::*;
 use crate::ast::{self, AsNode, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
     PROGRAM_NAME, ReadExt, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
-    unescape_string, wcs2bytes,
+    osstr2wcstring, unescape_string, wcs2bytes,
 };
 use crate::env::EnvStack;
 use crate::env::env_init;
@@ -946,9 +946,7 @@ fn throwing_main() -> i32 {
         }
     }
 
-    let args: Vec<WString> = std::env::args_os()
-        .map(|osstr| bytes2wcstring(osstr.as_bytes()))
-        .collect();
+    let args: Vec<WString> = std::env::args_os().map(osstr2wcstring).collect();
     do_indent(None, &mut streams, args).builtin_status_code()
 }
 

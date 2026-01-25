@@ -164,7 +164,7 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
         v = v.trunc();
         if v == 0.0 {
             // not 00
-            return WString::from_str("0");
+            return L!("0").to_owned();
         }
         let mneg = if v.is_sign_negative() { "-" } else { "" };
         return sprintf!("%s0%o", mneg, v.abs() as u64);

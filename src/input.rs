@@ -1023,7 +1023,7 @@ mod tests {
         input_mappings.add1(
             prefix_binding,
             KeyNameStyle::Plain,
-            WString::from_str("up-line"),
+            L!("up-line").to_owned(),
             default_mode(),
             None,
             true,
@@ -1031,7 +1031,7 @@ mod tests {
         input_mappings.add1(
             desired_binding.clone(),
             KeyNameStyle::Plain,
-            WString::from_str("down-line"),
+            L!("down-line").to_owned(),
             default_mode(),
             None,
             true,

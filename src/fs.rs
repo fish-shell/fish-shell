@@ -1,5 +1,5 @@
 use crate::{
-    common::{bytes2wcstring, wcs2bytes, wcs2osstring},
+    common::{osstr2wcstring, wcs2bytes, wcs2osstring},
     fds::wopen_cloexec,
     flog, flogf,
     path::{DirRemoteness, path_remoteness},
@@ -32,7 +32,7 @@ fn create_temporary_file(original_path: &wstr) -> std::io::Result<(File, WString
     let (path, result) =
         fish_tempfile::create_file_with_retry(|| dir.join(random_filename(prefix.clone())));
     match result {
-        Ok(file) => Ok((file, bytes2wcstring(path.as_os_str().as_encoded_bytes()))),
+        Ok(file) => Ok((file, osstr2wcstring(path))),
         Err(e) => {
             flog!(
                 error,

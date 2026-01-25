@@ -8,7 +8,7 @@ pub mod wcstod;
 pub mod wcstoi;
 
 use crate::common::{
-    bytes2wcstring, fish_reserved_codepoint, wcs2bytes, wcs2osstring, wcs2zstring,
+    bytes2wcstring, fish_reserved_codepoint, osstr2wcstring, wcs2bytes, wcs2osstring, wcs2zstring,
 };
 use crate::fds::BorrowedFdFile;
 use crate::flog;
@@ -94,7 +94,7 @@ pub fn perror_io(s: &str, e: &io::Error) {
 /// Wide character version of getcwd().
 pub fn wgetcwd() -> WString {
     match std::env::current_dir() {
-        Ok(cwd) => bytes2wcstring(cwd.into_os_string().as_bytes()),
+        Ok(cwd) => osstr2wcstring(cwd),
         Err(e) => {
             flog!(error, "std::env::current_dir() failed with error:", e);
             WString::new()
@@ -104,23 +104,14 @@ pub fn wgetcwd() -> WString {
 
 /// Wide character version of readlink().
 pub fn wreadlink(file_name: &wstr) -> Option<WString> {
-    let md = lwstat(file_name).ok()?;
-    let bufsize = usize::try_from(md.len()).unwrap() + 1;
-    let mut target_buf = vec![b'\0'; bufsize];
-    let tmp = wcs2zstring(file_name);
-    let nbytes = unsafe { libc::readlink(tmp.as_ptr(), target_buf.as_mut_ptr().cast(), bufsize) };
-    if nbytes == -1 {
-        perror("readlink");
-        return None;
+    let _ = lwstat(file_name).ok()?;
+    match fs::read_link(wcs2osstring(file_name)) {
+        Ok(target) => Some(osstr2wcstring(target)),
+        Err(e) => {
+            perror_io("readlink", &e);
+            None
+        }
     }
-    // The link might have been modified after our call to lstat.  If the link now points to a path
-    // that's longer than the original one, we can't read everything in our buffer.  Simply give
-    // up. We don't need to report an error since our only caller will already fall back to ENOENT.
-    let nbytes = usize::try_from(nbytes).unwrap();
-    if nbytes == bufsize {
-        return None;
-    }
-    Some(bytes2wcstring(&target_buf[0..nbytes]))
 }
 
 /// Wide character realpath. The last path component does not need to be valid. If an error occurs,

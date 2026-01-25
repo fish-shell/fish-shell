@@ -7,13 +7,13 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::{ops::ControlFlow, os::unix::prelude::OsStrExt};
+use std::ops::ControlFlow;
 
 use libc::{STDIN_FILENO, VEOF, VINTR};
 
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
-    common::{PROGRAM_NAME, bytes2wcstring, get_program_name, shell_modes},
+    common::{PROGRAM_NAME, get_program_name, osstr2wcstring, shell_modes},
     env::{EnvStack, Environment, env_init},
     future_feature_flags,
     input_common::{
@@ -307,9 +307,7 @@ fn throwing_main() -> i32 {
     let mut continuous_mode = false;
     let mut verbose = false;
 
-    let args: Vec<WString> = std::env::args_os()
-        .map(|osstr| bytes2wcstring(osstr.as_bytes()))
-        .collect();
+    let args: Vec<WString> = std::env::args_os().map(osstr2wcstring).collect();
     if let ControlFlow::Break(s) =
         parse_flags(None, &mut streams, args, &mut continuous_mode, &mut verbose)
     {

@@ -453,7 +453,7 @@ mod tests {
         assert!(L!("abc").starts_with('a'));
         assert!(L!("abc").starts_with("ab"));
         assert!(L!("abc").starts_with(L!("ab")));
-        assert!(L!("abc").starts_with(&WString::from_str("abc")));
+        assert!(L!("abc").starts_with(L!("abc")));
     }
 
     #[test]
@@ -463,7 +463,7 @@ mod tests {
         assert!(L!("abc").ends_with('c'));
         assert!(L!("abc").ends_with("bc"));
         assert!(L!("abc").ends_with(L!("bc")));
-        assert!(L!("abc").ends_with(&WString::from_str("abc")));
+        assert!(L!("abc").ends_with(L!("abc")));
     }
 
     #[test]

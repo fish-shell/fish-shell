@@ -1453,24 +1453,24 @@ impl<N: Node> Ast<N> {
             } else if let Some(n) = node.as_token() {
                 let desc = match n.token_type() {
                     ParseTokenType::String => {
-                        let mut desc = WString::from_str("string");
+                        let mut desc = L!("string").to_owned();
                         if let Some(strsource) = n.try_source(orig) {
                             sprintf!(=> &mut desc, ": '%s'", strsource);
                         }
                         desc
                     }
                     ParseTokenType::Redirection => {
-                        let mut desc = WString::from_str("redirection");
+                        let mut desc = L!("redirection").to_owned();
                         if let Some(strsource) = n.try_source(orig) {
                             sprintf!(=> &mut desc, ": '%s'", strsource);
                         }
                         desc
                     }
-                    ParseTokenType::End => WString::from_str("<;>"),
+                    ParseTokenType::End => L!("<;>").to_owned(),
                     ParseTokenType::Invalid => {
                         // This may occur with errors, e.g. we expected to see a string but saw a
                         // redirection.
-                        WString::from_str("<error>")
+                        L!("<error>").to_owned()
                     }
                     _ => {
                         token_type_user_presentable_description(n.token_type(), ParseKeyword::None)
@@ -2869,7 +2869,7 @@ end
     #[test]
     fn test_is_same_node() {
         // is_same_node is pretty subtle! Let's check it.
-        let src = WString::from_str(FISH_FUNC);
+        let src = L!(FISH_FUNC).to_owned();
         let ast = ast::parse(&src, Default::default(), None);
         assert!(!ast.errored());
         let all_nodes: Vec<&dyn Node> = ast.walk().collect();

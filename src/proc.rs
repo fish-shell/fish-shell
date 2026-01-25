@@ -3,9 +3,7 @@
 //! the exec library will call proc to create representations of the running jobs as needed.
 
 use crate::ast;
-use crate::common::{
-    Timepoint, WSL, charptr2wcstring, escape, is_windows_subsystem_for_linux, timef,
-};
+use crate::common::{Timepoint, WSL, escape, is_windows_subsystem_for_linux, timef};
 use crate::env::Statuses;
 use crate::event::{self, Event};
 use crate::flog::{flog, flogf};
@@ -25,13 +23,13 @@ use crate::wutil::{wbasename, wperror};
 use cfg_if::cfg_if;
 use fish_widestring::ToWString;
 use libc::{
-    _SC_CLK_TCK, EXIT_SUCCESS, SIG_IGN, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL, SIGINT,
-    SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED, WEXITSTATUS,
-    WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
+    _SC_CLK_TCK, EXIT_SUCCESS, SIG_IGN, SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGINT, SIGPIPE, SIGQUIT,
+    SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED, WEXITSTATUS, WIFCONTINUED, WIFEXITED,
+    WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
 };
 use nix::{
     sys::{
-        signal::{SaFlags, SigAction, SigHandler, SigSet},
+        signal::{SaFlags, SigAction, SigHandler, SigSet, Signal as NixSignal, kill, killpg},
         wait::{WaitPidFlag, WaitStatus, waitpid},
     },
     unistd::getpgrp,
@@ -835,7 +833,7 @@ impl Job {
     /// Return true on success, false if we failed to send the signal.
     pub fn resume(&self) -> bool {
         self.mut_flags().notified_of_stop = false;
-        if !self.signal(SIGCONT) {
+        if !self.signal(NixSignal::SIGCONT) {
             flogf!(
                 proc_pgroup,
                 "Failed to send SIGCONT to procs in job %s",
@@ -853,24 +851,17 @@ impl Job {
 
     /// Send the specified signal to all processes in this job.
     /// Return true on success, false on failure.
-    pub fn signal(&self, signal: i32) -> bool {
+    pub fn signal(&self, signal: NixSignal) -> bool {
         if let Some(pgid) = self.group().get_pgid() {
-            if unsafe { libc::killpg(pgid.as_pid_t(), signal) } == -1 {
-                let strsignal = unsafe { libc::strsignal(signal) };
-                let strsignal = if strsignal.is_null() {
-                    L!("(nil)").to_owned()
-                } else {
-                    charptr2wcstring(strsignal)
-                };
+            if killpg(pgid.as_nix_pid(), signal).is_err() {
+                let strsignal = signal.as_str();
                 wperror(&sprintf!("killpg(%d, %s)", pgid, strsignal));
                 return false;
             }
         } else {
             // This job lives in fish's pgroup and we need to signal procs individually.
             for p in self.external_procs() {
-                if !p.is_completed()
-                    && unsafe { libc::kill(p.pid().unwrap().as_pid_t(), signal) } == -1
-                {
+                if !p.is_completed() && kill(p.pid().unwrap().as_nix_pid(), signal).is_err() {
                     return false;
                 }
             }
@@ -1123,9 +1114,9 @@ pub fn hup_jobs(jobs: &JobList) {
     for j in jobs {
         let Some(pgid) = j.get_pgid() else { continue };
         if pgid.as_nix_pid() != fish_pgrp && !j.is_completed() {
-            j.signal(SIGHUP);
+            j.signal(NixSignal::SIGHUP);
             if j.is_stopped() {
-                j.signal(SIGCONT);
+                j.signal(NixSignal::SIGCONT);
             }
 
             // For most applications, the above alone is sufficient for the suspended process to
@@ -1149,7 +1140,7 @@ pub fn hup_jobs(jobs: &JobList) {
         // handle SIGHUP+SIGCONT without running into SIGTTOU.
         std::thread::sleep(std::time::Duration::from_millis(50));
         for j in kill_list.drain(..) {
-            j.signal(SIGKILL);
+            j.signal(NixSignal::SIGKILL);
         }
     }
 }

@@ -13,6 +13,7 @@ use crate::parse_tree::NodeRef;
 use crate::parser::Parser;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::prelude::*;
+use crate::proc::Pid;
 use crate::wutil::dir_iter::DirIter;
 use std::collections::{HashMap, HashSet};
 use std::num::NonZeroU32;
@@ -450,11 +451,11 @@ impl FunctionProperties {
                     sprintf!(=> &mut out, " --on-variable %s", name);
                 }
                 EventDescription::ProcessExit { pid } => {
-                    let pid = pid.map(|p| p.get()).unwrap_or(0);
+                    let pid = pid.as_ref().map_or(0, Pid::get);
                     sprintf!(=> &mut out, " --on-process-exit %d", pid)
                 }
                 EventDescription::JobExit { pid, .. } => {
-                    let pid = pid.map(|p| p.get()).unwrap_or(0);
+                    let pid = pid.as_ref().map_or(0, Pid::get);
                     sprintf!(=> &mut out, " --on-job-exit %d", pid);
                 }
                 EventDescription::CallerExit { .. } => {

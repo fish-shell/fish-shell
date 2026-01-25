@@ -144,9 +144,7 @@ pub(crate) const fn shift(codepoint: char) -> Key {
 
 impl Key {
     pub fn from_single_char(c: char) -> Self {
-        u8::try_from(c)
-            .map(Key::from_single_byte)
-            .unwrap_or(Key::from_raw(c))
+        u8::try_from(c).map_or(Key::from_raw(c), Key::from_single_byte)
     }
     pub fn from_single_byte(c: u8) -> Self {
         canonicalize_control_char(c).unwrap_or(Key::from_raw(char::from(c)))

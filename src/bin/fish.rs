@@ -27,7 +27,7 @@ use fish::{
         },
     },
     common::{
-        PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, bytes2wcstring, escape,
+        PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, bytes2wcstring, escape, osstr2wcstring,
         save_term_foreground_process_group, wcs2bytes,
     },
     env::{
@@ -174,10 +174,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
         eprintf!("%s", msg);
     }
 
-    source_config_in_directory(
-        parser,
-        &bytes2wcstring(paths.sysconf.as_os_str().as_bytes()),
-    );
+    source_config_in_directory(parser, &osstr2wcstring(&paths.sysconf));
 
     // We need to get the configuration directory before we can source the user configuration file.
     // If path_get_config returns false then we have no configuration directory and no custom config
@@ -190,7 +187,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
 fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_int> {
     let mut retval = Ok(());
     for cmd in cmds {
-        let cmd_wcs = bytes2wcstring(cmd.as_bytes());
+        let cmd_wcs = osstr2wcstring(cmd);
 
         let mut errors = ParseErrorList::new();
         let ast = ast::parse(&cmd_wcs, ParseTreeFlags::default(), Some(&mut errors));
@@ -391,13 +388,11 @@ fn throwing_main() -> i32 {
     // Enable debug categories set in FISH_DEBUG.
     // This is in *addition* to the ones given via --debug.
     if let Some(debug_categories) = env::var_os("FISH_DEBUG") {
-        let s = bytes2wcstring(debug_categories.as_bytes());
+        let s = osstr2wcstring(debug_categories);
         activate_flog_categories_by_pattern(&s);
     }
 
-    let mut args: Vec<WString> = env::args_os()
-        .map(|osstr| bytes2wcstring(osstr.as_bytes()))
-        .collect();
+    let mut args: Vec<WString> = env::args_os().map(osstr2wcstring).collect();
     let mut opts = FishCmdOpts::default();
     let mut my_optind = match fish_parse_opt(&mut args, &mut opts) {
         ControlFlow::Continue(optind) => optind,

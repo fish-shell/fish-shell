@@ -559,7 +559,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
     // the actual $HOME or $XDG_XXX directories. This prevents the tests from failing and/or stops
     // the tests polluting the user's actual $HOME if a sandbox environment has not been set up.
     {
-        use crate::common::{BUILD_DIR, bytes2wcstring};
+        use crate::common::{BUILD_DIR, osstr2wcstring};
         use std::path::PathBuf;
 
         let mut build_dir = PathBuf::from(BUILD_DIR);
@@ -568,7 +568,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
         let err = std::fs::create_dir_all(&build_dir).err();
 
         return BaseDirectory {
-            path: bytes2wcstring(build_dir.as_os_str().as_bytes()),
+            path: osstr2wcstring(build_dir),
             remoteness: DirRemoteness::Unknown,
             used_xdg: false,
             err,

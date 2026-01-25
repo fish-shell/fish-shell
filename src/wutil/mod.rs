@@ -8,7 +8,7 @@ pub mod wcstod;
 pub mod wcstoi;
 
 use crate::common::{
-    bytes2wcstring, fish_reserved_codepoint, wcs2bytes, wcs2osstring, wcs2zstring,
+    bytes2wcstring, fish_reserved_codepoint, osstr2wcstring, wcs2bytes, wcs2osstring, wcs2zstring,
 };
 use crate::fds::BorrowedFdFile;
 use crate::flog;
@@ -93,7 +93,7 @@ pub fn perror_io(s: &str, e: &io::Error) {
 /// Wide character version of getcwd().
 pub fn wgetcwd() -> WString {
     match std::env::current_dir() {
-        Ok(cwd) => bytes2wcstring(cwd.into_os_string().as_bytes()),
+        Ok(cwd) => osstr2wcstring(cwd),
         Err(e) => {
             flog!(error, "std::env::current_dir() failed with error:", e);
             WString::new()

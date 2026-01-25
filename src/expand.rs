@@ -1542,7 +1542,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         // Get the username_with_tilde (like ~bert) and expand it into a home directory.
         let mut tail_idx = usize::MAX;
         let username_with_tilde =
-            WString::from_str("~") + get_home_directory_name(input, &mut tail_idx);
+            L!("~").to_owned() + get_home_directory_name(input, &mut tail_idx);
         let mut home = username_with_tilde.clone();
         expand_tilde(&mut home, self.ctx.vars());
 

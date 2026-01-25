@@ -471,7 +471,7 @@ fn abbr_erase(opts: &Options, parser: &Parser) -> BuiltinResult {
             if opts.commands.is_empty() {
                 let esc_src = escape(arg);
                 if !esc_src.is_empty() {
-                    let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
+                    let var_name = L!("_fish_abbr_").to_owned() + esc_src.as_utfstr();
                     let ret =
                         parser.remove_var(&var_name, ParserEnvSetMode::new(EnvMode::UNIVERSAL));
 

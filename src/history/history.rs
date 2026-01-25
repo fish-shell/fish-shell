@@ -28,7 +28,7 @@ use fish_widestring::subslice_position;
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
-    ffi::CString,
+    ffi::{CStr, CString},
     fs::File,
     io::{BufRead, BufWriter, Read, Write},
     mem::MaybeUninit,
@@ -1129,7 +1129,10 @@ fn format_history_record(
                 )
             } != 0
             {
-                result.push_utfstr(&cstr2wcstring(&timestamp_str[..]));
+                // SAFETY: strftime terminates the string with a null byte. If there is insufficient
+                // space, strftime returns 0.
+                let timestamp_cstr = CStr::from_bytes_until_nul(&timestamp_str).unwrap();
+                result.push_utfstr(&cstr2wcstring(timestamp_cstr));
             }
         }
     }
@@ -1783,8 +1786,7 @@ mod tests {
         History, HistoryItem, HistorySearch, PathList, PersistenceMode, SearchDirection,
         SearchFlags, SearchType, VACUUM_FREQUENCY,
     };
-    use crate::common::ESCAPE_TEST_CHAR;
-    use crate::common::{ScopeGuard, bytes2wcstring, wcs2bytes, wcs2osstring};
+    use crate::common::{ESCAPE_TEST_CHAR, ScopeGuard, osstr2wcstring, wcs2bytes, wcs2osstring};
     use crate::env::{EnvMode, EnvSetMode, EnvStack};
     use crate::fs::{LockedFile, WriteMethod};
     use crate::path::path_get_data;
@@ -1796,7 +1798,6 @@ mod tests {
     use rand::rngs::ThreadRng;
     use std::collections::VecDeque;
     use std::io::BufReader;
-    use std::os::unix::ffi::OsStrExt;
     use std::sync::Arc;
     use std::time::UNIX_EPOCH;
     use std::time::{Duration, SystemTime};
@@ -1940,7 +1941,7 @@ mod tests {
         let mut rng = rand::rng();
         for i in 1..=max {
             // Generate a value.
-            let mut value = WString::from_str("test item ") + &i.to_wstring()[..];
+            let mut value = L!("test item ").to_owned() + &i.to_wstring()[..];
 
             // Maybe add some backslashes.
             if i % 3 == 0 {
@@ -2034,7 +2035,7 @@ mod tests {
         });
         if LockedFile::new(
             crate::fs::LockingMode::Exclusive(WriteMethod::RenameIntoPlace),
-            &bytes2wcstring(tmp_path.as_os_str().as_bytes()),
+            &osstr2wcstring(&tmp_path),
         )
         .is_err()
         {

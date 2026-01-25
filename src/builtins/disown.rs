@@ -6,7 +6,7 @@ use crate::parser::Parser;
 use crate::proc::{Job, add_disowned_job};
 use crate::{builtins::shared::HelpOnlyCmdOpts, localization::wgettext_fmt};
 use fish_widestring::wstr;
-use libc::SIGCONT;
+use nix::sys::signal::{Signal, killpg};
 
 /// Helper for builtin_disown.
 fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
@@ -19,9 +19,7 @@ fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
     let pgid = j.get_pgid();
     if j.is_stopped() {
         if let Some(pgid) = pgid {
-            unsafe {
-                libc::killpg(pgid.as_pid_t(), SIGCONT);
-            }
+            let _ = killpg(pgid.as_nix_pid(), Some(Signal::SIGCONT));
         }
         streams.err.append(&wgettext_fmt!(
             "%s: job %d ('%s') was stopped and has been signalled to continue.\n",

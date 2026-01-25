@@ -9,7 +9,8 @@ use crate::flog::{flog, flogf};
 use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use errno::{Errno, errno, set_errno};
-use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
+use libc::{EACCES, ENOENT, ENOTDIR, X_OK};
+use nix::unistd::AccessFlags;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
 use std::mem::MaybeUninit;
@@ -195,7 +196,7 @@ pub fn path_try_get_path(cmd: &wstr, vars: &dyn Environment) -> GetPathResult {
 }
 
 fn path_check_executable(path: &wstr) -> Result<(), std::io::Error> {
-    if waccess(path, X_OK) != 0 {
+    if waccess(path, AccessFlags::X_OK).is_err() {
         return Err(std::io::Error::last_os_error());
     }
 
@@ -290,7 +291,7 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
                     // Keep the first *interesting* error and path around.
                     // ENOENT isn't interesting because not having a file is the normal case.
                     // Ignore if the parent directory is already inaccessible.
-                    if waccess(wdirname(&proposed_path), X_OK) == 0 {
+                    if waccess(wdirname(&proposed_path), AccessFlags::X_OK).is_ok() {
                         best = GetPathResult::new(Some(err), proposed_path);
                     }
                 }
@@ -478,10 +479,10 @@ pub fn path_is_valid(path: &wstr, working_directory: &wstr) -> bool {
         // Prepend the working directory. Note that we know path is not empty here.
         let mut tmp = working_directory.to_owned();
         tmp.push_utfstr(path);
-        waccess(&tmp, F_OK) == 0
+        waccess(&tmp, AccessFlags::F_OK).is_ok()
     } else {
         // Simple check.
-        waccess(path, F_OK) == 0
+        waccess(path, AccessFlags::F_OK).is_ok()
     }
 }
 

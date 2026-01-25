@@ -9,7 +9,7 @@ use crate::reader::reader_in_interactive_read;
 use crate::tty_handoff::{TERMINAL_OS_NAME, get_scroll_content_up_capability, xtversion};
 use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use cfg_if::cfg_if;
-use libc::F_OK;
+use nix::unistd::AccessFlags;
 use rust_embed::RustEmbed;
 
 /// Create an enum with name `$name`.
@@ -737,7 +737,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         Absolute(path) => {
                             let path = osstr2wcstring(path);
                             Cow::Owned(match wrealpath(&path) {
-                                Some(p) if waccess(&p, F_OK) == 0 => p,
+                                Some(p) if waccess(&p, AccessFlags::F_OK).is_ok() => p,
                                 // realpath did not work, just append the path
                                 // - maybe this was obtained via $PATH?
                                 _ => path,

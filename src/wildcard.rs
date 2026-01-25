@@ -2,7 +2,7 @@
 
 use fish_common::WILDCARD_RESERVED_BASE;
 use fish_widestring::char_offset;
-use libc::X_OK;
+use nix::unistd::AccessFlags;
 use std::cell::LazyCell;
 use std::cmp::Ordering;
 use std::collections::HashSet;
@@ -305,8 +305,9 @@ fn file_get_desc(
     is_link: bool,
     definitely_executable: bool,
 ) -> &'static wstr {
-    let is_executable =
-        |filename: &wstr| -> bool { definitely_executable || waccess(filename, X_OK) == 0 };
+    let is_executable = |filename: &wstr| -> bool {
+        definitely_executable || waccess(filename, AccessFlags::X_OK).is_ok()
+    };
 
     if is_link {
         if is_dir {
@@ -375,7 +376,8 @@ fn wildcard_test_flags_then_complete(
 
     // regular file *excludes* broken links - we have no use for them as commands.
     let is_regular_file = entry.check_type().is_some_and(|x| x == DirEntryType::Reg);
-    let is_executable = LazyCell::new(|| is_regular_file && waccess(filepath, X_OK) == 0);
+    let is_executable =
+        LazyCell::new(|| is_regular_file && waccess(filepath, AccessFlags::X_OK).is_ok());
     if executables_only && !*is_executable {
         return false;
     }
@@ -448,7 +450,6 @@ fn wildcard_test_flags_then_complete(
 }
 
 mod expander {
-    use libc::F_OK;
 
     use crate::{
         path::append_path_component,
@@ -577,7 +578,7 @@ mod expander {
 
                 if allow_fuzzy
                     && self.resolved_completions.len() == before
-                    && waccess(&intermediate_dirpath, F_OK) != 0
+                    && waccess(&intermediate_dirpath, AccessFlags::F_OK).is_err()
                 {
                     assert!(self.flags.contains(ExpandFlags::FOR_COMPLETIONS));
                     if let Ok(mut base_dir_iter) = self.open_dir(base_dir, false) {
@@ -685,7 +686,7 @@ mod expander {
 
             if !self.flags.contains(ExpandFlags::FOR_COMPLETIONS) {
                 // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file after checking it exists.
-                if waccess(base_dir, F_OK) == 0 {
+                if waccess(base_dir, AccessFlags::F_OK).is_ok() {
                     self.add_expansion_result(base_dir.to_owned());
                 }
                 return;

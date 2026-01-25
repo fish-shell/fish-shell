@@ -15,6 +15,7 @@ use crate::flog;
 use errno::errno;
 use fish_wcstringutil::{join_strings, str2bytes_callback};
 use fish_widestring::{IntoCharIter, L, WExt, WString, wstr};
+use nix::unistd::AccessFlags;
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};
@@ -53,9 +54,9 @@ pub fn fstat(fd: impl AsRawFd) -> io::Result<fs::Metadata> {
 }
 
 /// Wide character version of access().
-pub fn waccess(file_name: &wstr, mode: libc::c_int) -> libc::c_int {
-    let tmp = wcs2zstring(file_name);
-    unsafe { libc::access(tmp.as_ptr(), mode) }
+pub fn waccess(file_name: &wstr, amode: AccessFlags) -> nix::Result<()> {
+    let tmp = wcs2osstring(file_name);
+    nix::unistd::access(tmp.as_os_str(), amode)
 }
 
 /// Wide character version of unlink().

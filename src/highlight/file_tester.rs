@@ -21,6 +21,7 @@ use fish_wcstringutil::{
 };
 use fish_widestring::{L, WExt, WString, wstr};
 use libc::PATH_MAX;
+use nix::unistd::AccessFlags;
 use std::collections::{HashMap, HashSet};
 use std::os::fd::RawFd;
 
@@ -159,7 +160,7 @@ impl<'s> FileTester<'s> {
                 // Input redirections must have a readable non-directory.
                 // Note we color "try_input" files as errors if they are invalid,
                 // even though it's possible to execute these (replaced via /dev/null).
-                if waccess(&target_path, libc::R_OK) == 0
+                if waccess(&target_path, AccessFlags::R_OK).is_ok()
                     && wstat(&target_path).is_ok_and(|md| !md.file_type().is_dir())
                 {
                     Ok(IsFile(true))
@@ -182,8 +183,8 @@ impl<'s> FileTester<'s> {
                         // No err. We can write to it if it's not a directory and we have
                         // permission.
                         file_exists = true;
-                        file_is_writable =
-                            !md.file_type().is_dir() && waccess(&target_path, libc::W_OK) == 0;
+                        file_is_writable = !md.file_type().is_dir()
+                            && waccess(&target_path, AccessFlags::W_OK).is_ok();
                     }
                     Err(err) => {
                         if err.raw_os_error() == Some(libc::ENOENT) {
@@ -200,7 +201,7 @@ impl<'s> FileTester<'s> {
                             // Now the file is considered writable if the parent directory is
                             // writable.
                             file_exists = false;
-                            file_is_writable = waccess(&parent, libc::W_OK) == 0;
+                            file_is_writable = waccess(&parent, AccessFlags::W_OK).is_ok();
                         } else {
                             // Other errors we treat as not writable. This includes things like
                             // ENOTDIR.

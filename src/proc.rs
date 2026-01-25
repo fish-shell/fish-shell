@@ -299,6 +299,11 @@ impl Pid {
         #[allow(clippy::useless_conversion)]
         self.get().into()
     }
+
+    #[inline(always)]
+    pub fn as_nix_pid(&self) -> nix::unistd::Pid {
+        nix::unistd::Pid::from_raw(self.as_pid_t())
+    }
 }
 
 impl std::fmt::Display for Pid {
@@ -1117,7 +1122,7 @@ pub fn hup_jobs(jobs: &JobList) {
     let mut kill_list = Vec::new();
     for j in jobs {
         let Some(pgid) = j.get_pgid() else { continue };
-        if pgid.as_pid_t() != fish_pgrp.as_raw() && !j.is_completed() {
+        if pgid.as_nix_pid() != fish_pgrp && !j.is_completed() {
             j.signal(SIGHUP);
             if j.is_stopped() {
                 j.signal(SIGCONT);
@@ -1162,11 +1167,8 @@ pub fn add_disowned_job(j: &Job) {
 fn reap_disowned_pids() {
     let mut disowned_pids = DISOWNED_PIDS.lock().unwrap();
     // Remove the pid/pgid if it has exited or an error occurs (presumably ECHILD because the child does not exist).
-    disowned_pids.retain(|pid| {
-        match waitpid(
-            nix::unistd::Pid::from_raw(pid.as_pid_t()),
-            Some(WaitPidFlag::WNOHANG),
-        ) {
+    disowned_pids.retain(
+        |pid| match waitpid(pid.as_nix_pid(), Some(WaitPidFlag::WNOHANG)) {
             Ok(wait_status) => match wait_status {
                 WaitStatus::Exited(_, _) | WaitStatus::Signaled(_, _, _) => {
                     flogf!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
@@ -1175,8 +1177,8 @@ fn reap_disowned_pids() {
                 _ => true,
             },
             Err(_) => false,
-        }
-    });
+        },
+    );
 }
 
 /// A list of pids that have been disowned. They are kept around until either they exit or

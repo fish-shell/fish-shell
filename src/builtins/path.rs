@@ -758,7 +758,7 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<Uid>, gid: Option<Gid>) 
         let mut type_ok = false;
         if t.contains(TypeFlags::LINK) {
             let md = lwstat(path);
-            type_ok = md.map(|x| x.is_symlink()).unwrap_or(false);
+            type_ok = md.as_ref().is_ok_and(Metadata::is_symlink);
         }
         let Ok(md) = wstat(path) else {
             // Does not exist

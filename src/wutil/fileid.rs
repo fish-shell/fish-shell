@@ -68,8 +68,7 @@ pub const INVALID_FILE_ID: FileId = FileId {
 pub fn file_id_for_file(file: &File) -> FileId {
     file.metadata()
         .as_ref()
-        .map(FileId::from_md)
-        .unwrap_or(INVALID_FILE_ID)
+        .map_or(INVALID_FILE_ID, FileId::from_md)
 }
 
 /// Get a FileId corresponding to a `path`, or `INVALID_FILE_ID` if it fails.
@@ -81,8 +80,7 @@ pub fn file_id_for_path_narrow(path: &CStr) -> FileId {
     let path = OsStr::from_bytes(path.to_bytes());
     fs::metadata(path)
         .as_ref()
-        .map(FileId::from_md)
-        .unwrap_or(INVALID_FILE_ID)
+        .map_or(INVALID_FILE_ID, FileId::from_md)
 }
 
 pub fn file_id_for_path_or_error(path: &wstr) -> std::io::Result<FileId> {

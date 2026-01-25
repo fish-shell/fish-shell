@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
+import multiprocessing
 import os
 import resource
 import shutil
@@ -122,8 +123,10 @@ async def main():
     argparser.add_argument(
         "--max-concurrency",
         type=int,
-        help="Maximum number of tests to run concurrently. The default is to run all tests concurrently.",
-        default=os.environ.get("FISH_TEST_MAX_CONCURRENCY"),
+        help="Maximum number of tests to run concurrently. The default is the number of logical CPUs.",
+        default=os.environ.get(
+            "FISH_TEST_MAX_CONCURRENCY", multiprocessing.cpu_count()
+        ),
     )
     argparser.add_argument(
         "fish",
@@ -134,7 +137,7 @@ async def main():
     args = argparser.parse_args()
 
     max_concurrency = args.max_concurrency
-    if max_concurrency is not None and max_concurrency < 1:
+    if max_concurrency < 1:
         print("--max-concurrency must be at least 1")
         sys.exit(1)
 
@@ -208,7 +211,7 @@ async def main():
             tmp_root / "fish_test_helper",
         )
 
-        semaphore = asyncio.Semaphore(max_concurrency) if max_concurrency else None
+        semaphore = asyncio.Semaphore(max_concurrency)
 
         async def run(f, arg) -> TestResult:
             # TODO(python>3.8): use "async with"

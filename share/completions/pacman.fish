@@ -4,7 +4,6 @@
 
 set -l progname pacman
 
-set -l listgroups "(pacman -Sg)\t'Package Group'"
 # Theoretically, pacman reads packages in all formats that libarchive supports
 # In practice, it's going to be tar.xz, tar.gz, tar.zst, or just pkg.tar (uncompressed pkg)
 set -l listfiles '(__fish_complete_suffix pkg.tar.zst pkg.tar.xz pkg.tar.gz pkg.tar)'
@@ -16,6 +15,19 @@ function __fish_pacman_has_operation
         set operations (string match -er (string join '|' -- $argv) -- $operations)
     end
     __fish_contains_opt (string split ' ' -- $operations)
+end
+
+function __fish_pacman_print_package_groups
+    argparse i/installed -- $argv
+    or return 1
+
+    set -l groups
+    if not set -q _flag_installed
+        set -a groups (pacman -Sg)
+    else
+        set -a groups (pacman -Qg | string split -f 1 ' ' | uniq)
+    end
+    printf '%s\n' $groups\t'Package Group'
 end
 
 complete -c $progname -e
@@ -70,7 +82,7 @@ complete -c $progname -n '__fish_pacman_has_operation S U' -s w -l downloadonly 
 complete -c $progname -n '__fish_pacman_has_operation S U' -l asdeps -d 'Install packages as non-explicitly installed' -f
 complete -c $progname -n '__fish_pacman_has_operation S U' -l asexplicit -d 'Install packages as explicitly installed' -f
 complete -c $progname -n '__fish_pacman_has_operation S U' -l ignore -d 'Ignore a package upgrade (can be used more than once)' -xa '(__fish_print_pacman_packages)'
-complete -c $progname -n '__fish_pacman_has_operation S U' -l ignoregroup -d 'Ignore a group upgrade (can be used more than once)' -xa "$listgroups"
+complete -c $progname -n '__fish_pacman_has_operation S U' -l ignoregroup -d 'Ignore a group upgrade (can be used more than once)' -xa '(__fish_pacman_print_package_groups)'
 complete -c $progname -n '__fish_pacman_has_operation S U' -l needed -d 'Do not reinstall up to date packages' -f
 complete -c $progname -n '__fish_pacman_has_operation S U' -l overwrite -d 'Overwrite conflicting files (can be used more than once)' -rF
 
@@ -79,7 +91,7 @@ set -l queryfile '__fish_contains_opt -s p file'
 complete -c $progname -n '__fish_pacman_has_operation Q' -s c -l changelog -d 'View the ChangeLog of PACKAGE' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s d -l deps -d 'List only non-explicit packages (dependencies)' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s e -l explicit -d 'List only explicitly installed packages' -f
-complete -c $progname -n '__fish_pacman_has_operation Q' -s g -l groups -d 'List only packages that are part of a group' -xa "$listgroups"
+complete -c $progname -n '__fish_pacman_has_operation Q' -s g -l groups -d 'List only packages that are part of a group' -xa '(__fish_pacman_print_package_groups --installed)'
 complete -c $progname -n '__fish_pacman_has_operation Q' -s i -l info -d 'View PACKAGE [backup files] information' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s k -l check -d 'Check that PACKAGE files exist' -f
 complete -c $progname -n '__fish_pacman_has_operation Q' -s l -l list -d 'List the files owned by PACKAGE' -f
@@ -103,7 +115,7 @@ complete -c $progname -n '__fish_pacman_has_operation R' -d Package -xa '(__fish
 
 ## SYNC OPTIONS (APPLY TO -S)
 complete -c $progname -n '__fish_pacman_has_operation S' -s c -l clean -d 'Remove [all] packages from cache' -f
-complete -c $progname -n '__fish_pacman_has_operation S' -s g -l groups -d 'Display members of [all] package GROUP' -xa "$listgroups"
+complete -c $progname -n '__fish_pacman_has_operation S' -s g -l groups -d 'Display members of [all] package GROUP' -xa '(__fish_pacman_print_package_groups)'
 complete -c $progname -n '__fish_pacman_has_operation S' -s i -l info -d 'View PACKAGE [extended] information' -f
 complete -c $progname -n '__fish_pacman_has_operation S' -s l -l list -d 'List all packages in REPOSITORY' -xa '(__fish_print_pacman_repos)'
 complete -c $progname -n '__fish_pacman_has_operation S' -s q -l quiet -d 'Show less information' -f
@@ -111,7 +123,7 @@ complete -c $progname -n '__fish_pacman_has_operation S' -s s -l search -d 'Sear
 complete -c $progname -n '__fish_pacman_has_operation S' -s u -l sysupgrade -d 'Upgrade all packages that are out of date'
 complete -c $progname -n '__fish_pacman_has_operation S' -s y -l refresh -d 'Download fresh package databases [force]' -f
 complete -c $progname -n '__fish_pacman_has_operation S' -d Package -xa '(__fish_print_pacman_packages)'
-complete -c $progname -n '__fish_pacman_has_operation S' -d 'Package Group' -xa "$listgroups"
+complete -c $progname -n '__fish_pacman_has_operation S' -d 'Package Group' -xa '(__fish_pacman_print_package_groups)'
 
 ## DATABASE OPTIONS (APPLY TO -D)
 set -l has_db_opt '__fish_contains_opt asdeps asexplicit check -s k'

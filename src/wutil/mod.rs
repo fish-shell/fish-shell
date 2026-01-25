@@ -345,10 +345,10 @@ pub fn wbasename(mut path: &wstr) -> &wstr {
 }
 
 /// Wide character version of rename.
-pub fn wrename(old_name: &wstr, new_name: &wstr) -> libc::c_int {
-    let old_narrow = wcs2zstring(old_name);
-    let new_narrow = wcs2zstring(new_name);
-    unsafe { libc::rename(old_narrow.as_ptr(), new_narrow.as_ptr()) }
+pub fn wrename(old_name: &wstr, new_name: &wstr) -> io::Result<()> {
+    let old_narrow = wcs2osstring(old_name);
+    let new_narrow = wcs2osstring(new_name);
+    fs::rename(old_narrow, new_narrow)
 }
 
 pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {

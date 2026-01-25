@@ -7437,6 +7437,24 @@ mod tests {
         );
 
         validate!(
+            "Case-insensitive matching deletion",
+            Autosuggestion {
+                text: L!("Echo hest").to_owned(),
+                search_string_range: 0..4,
+                icase_matched_codepoints: Some(4),
+                is_whole_item_from_history: true,
+            },
+            "echo",
+            Edit::new(3..4, L!("").to_owned()),
+            Some(Autosuggestion {
+                text: L!("Echo hest").to_owned(),
+                search_string_range: 0..3,
+                icase_matched_codepoints: Some(4),
+                is_whole_item_from_history: true,
+            })
+        );
+
+        validate!(
             "Lowercase mapping is only partially matched",
             Autosuggestion {
                 text: L!("echo İnstall").to_owned(),

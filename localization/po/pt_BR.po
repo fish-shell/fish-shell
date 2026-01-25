@@ -38799,6 +38799,9 @@ msgstr ""
 msgid "Name of the launch profile to use"
 msgstr ""
 
+msgid "Name of the new patch"
+msgstr ""
+
 msgid "Name of the new user's login shell"
 msgstr ""
 

@@ -6,6 +6,12 @@ function __fish_quilt_print_series
     printf '%s\n' $series[-1..1]
 end
 
+# For `quilt refresh -z[new_name]`, which looks like a short option
+# but needs an argument connected to the switch.
+function __fish_quilt_is_zarg
+    string match --quiet --regex '^-\w*z' -- (commandline -ct)
+end
+
 complete -c quilt -f
 
 # quilt [command] -h
@@ -213,13 +219,15 @@ complete -c quilt -n '__fish_seen_subcommand_from push' -n 'not __fish_seen_argu
 
 # quilt refresh [-p n|-p ab] [-u|-U num|-c|-C num] [-z[new_name]] [-f] [--no-timestamps] [--no-index] [--diffstat] [--sort] [--backup] [--strip-trailing-whitespace] [patch]
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a refresh -d 'Update patch with changes from source' -f
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -s p -d 'File name style in patch' -xa "0\t'-p0 patch' 1\t'-p1 patch' ab\t'-p1 patch with a/file b/file'"
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -s u -d 'Unified diff (3 lines of context)' -f
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -s U -d 'Unified diff (N lines of context)' -x
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -s c -d 'Context diff (3 lines of context)' -f
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -s C -d 'Context diff (N lines of context)' -x
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -s z -d 'Create a new patch with the changes' -x
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -s f -d 'Refresh a patch that is not on top' -f
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s p -d 'File name style in patch' -xa "0\t'-p0 patch' 1\t'-p1 patch' ab\t'-p1 patch with a/file b/file'"
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s u -d 'Unified diff (3 lines of context)' -f
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s U -d 'Unified diff (N lines of context)' -x
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s c -d 'Context diff (3 lines of context)' -f
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s C -d 'Context diff (N lines of context)' -x
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s z -d 'Create a new patch with the changes' -x
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n __fish_quilt_is_zarg -d 'Name of the new patch' -x
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n __fish_quilt_is_zarg -s h -e
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s f -d 'Refresh a patch that is not on top' -f
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -l no-timestamps -d 'Do not include timestamps in header' -f
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -l no-index -d "Do not include 'Index: lines' in header" -f
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -l diffstat -d 'Add or replace diffstat section to header' -f

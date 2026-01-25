@@ -4477,6 +4477,9 @@ msgstr ""
 msgid ", & -w have little effect in conjunction with -b, -h, -R, and"
 msgstr ""
 
+msgid "--disable-sandbox-filesystem and --disable-sandbox-syscalls"
+msgstr ""
+
 msgid "--ed  Output an ed script."
 msgstr ""
 
@@ -5573,6 +5576,9 @@ msgid "Add a noise pattern to the image with specific amplitudes  [NxN]"
 msgstr ""
 
 msgid "Add a noise pattern to the image with specific amplitudes [NxN]"
+msgstr ""
+
+msgid "Add a package from a file or URL"
 msgstr ""
 
 msgid "Add a package lock"
@@ -9824,6 +9830,9 @@ msgid "Cancel the operation and return to pre-sequence state"
 msgstr ""
 
 msgid "Cancels a job or build"
+msgstr ""
+
+msgid "Cancels a previous --noconfirm"
 msgstr ""
 
 msgid "Cancels all jobs on the named destination"
@@ -16795,6 +16804,9 @@ msgstr ""
 msgid "Disable the eval extension"
 msgstr ""
 
+msgid "Disable the filesystem restrictions"
+msgstr ""
+
 msgid "Disable the generation of ISEL instructions"
 msgstr ""
 
@@ -16835,6 +16847,9 @@ msgid "Disable the spinner"
 msgstr ""
 
 msgid "Disable the string normalize extension"
+msgstr ""
+
+msgid "Disable the syscall filtering"
 msgstr ""
 
 msgid "Disable the systemd unit for a profile"
@@ -35056,6 +35071,9 @@ msgstr ""
 msgid "List installed packages only (enabled by default, only present for BC)"
 msgstr ""
 
+msgid "List installed packages only found in sync database"
+msgstr ""
+
 msgid "List installed packages that do not meet the DFSG"
 msgstr ""
 
@@ -35294,6 +35312,9 @@ msgid "List only non-explicit packages (dependencies)"
 msgstr ""
 
 msgid "List only out-of-date packages"
+msgstr ""
+
+msgid "List only packages that are part of a group"
 msgstr ""
 
 msgid "List only patches from the specified repository"
@@ -41065,6 +41086,9 @@ msgstr ""
 msgid "Output patched files to FILE"
 msgstr ""
 
+msgid "Output paths of config files"
+msgstr ""
+
 msgid "Output percentages as files are unpacked from the package archive"
 msgstr ""
 
@@ -41687,6 +41711,12 @@ msgid "Pack tail ends into fragments"
 msgstr ""
 
 msgid "Package .gem files into the vendor/cache directory"
+msgstr ""
+
+msgid "Package File"
+msgstr ""
+
+msgid "Package Group"
 msgstr ""
 
 msgid "Package a running vagrant environment into a box"
@@ -47269,6 +47299,9 @@ msgstr ""
 msgid "Query font from this X server [server]"
 msgstr ""
 
+msgid "Query for packages that own FILE"
+msgstr ""
+
 msgid "Query gem information in local or remote repositories"
 msgstr ""
 
@@ -47336,9 +47369,6 @@ msgid "Query the package database"
 msgstr ""
 
 msgid "Query the package names only"
-msgstr ""
-
-msgid "Query the package that owns FILE"
 msgstr ""
 
 msgid "Query the specified service"
@@ -49603,6 +49633,9 @@ msgstr ""
 msgid "Remove target from local repository"
 msgstr ""
 
+msgid "Remove targets not required by any package"
+msgstr ""
+
 msgid "Remove temporary data from running the Canoo WebTests"
 msgstr ""
 
@@ -51218,6 +51251,9 @@ msgid "Retrieve list of feature flags with status"
 msgstr ""
 
 msgid "Retrieve multi session info in a form suitable for mkisofs-1.10 or later"
+msgstr ""
+
+msgid "Retrieve packages but do not install"
 msgstr ""
 
 msgid "Retrieve packages required to build listed packages"
@@ -71524,6 +71560,9 @@ msgstr ""
 msgid "View text, image and string resources"
 msgstr ""
 
+msgid "View the ChangeLog of PACKAGE"
+msgstr ""
+
 msgid "View the Makepkg conf"
 msgstr ""
 
@@ -76274,9 +76313,6 @@ msgid "list installed applications"
 msgstr ""
 
 msgid "list installed packages"
-msgstr ""
-
-msgid "list installed packages only found in sync database"
 msgstr ""
 
 msgid "list local changes and/or changes in a scratch org"

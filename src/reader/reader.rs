@@ -2020,40 +2020,48 @@ fn try_apply_edit_to_autosuggestion(
     ));
     let search_string_range = autosuggestion.search_string_range.clone();
 
+    let replacement = &edit.replacement;
+    let mut matched_codepoints_delta = 0_isize;
     // This is a heuristic with false negatives but that seems fine.
     if edit.range.start < search_string_range.start
         || edit.range.end != search_string_range.end
         || {
             let suggestion = autosuggestion.text.chars();
-            let replacement = edit.replacement.chars();
             let unchanged_prefix = autosuggestion.icase_matched_codepoints.map_or(
                 search_string_range
                     .len()
                     .checked_sub(edit.range.len())
                     .unwrap(),
                 |matched_codepoints| {
+                    let unmatched_codepoints =
+                        lowercase(command_line_text[edit.range.clone()].chars()).count();
+                    matched_codepoints_delta -= isize::try_from(unmatched_codepoints).unwrap();
                     matched_codepoints
-                        .checked_sub(
-                            lowercase(command_line_text[edit.range.clone()].chars()).count(),
-                        )
+                        .checked_sub(unmatched_codepoints)
                         .unwrap()
                 },
             );
             if autosuggestion.icase_matched_codepoints.is_some() {
+                let replacement_lower = || lowercase(replacement.chars());
+                matched_codepoints_delta += isize::try_from(replacement_lower().count()).unwrap();
                 is_prefix(
-                    lowercase(replacement),
+                    replacement_lower(),
                     lowercase(suggestion).skip(unchanged_prefix),
                 )
             } else {
-                is_prefix(replacement, suggestion.skip(unchanged_prefix))
+                is_prefix(replacement.chars(), suggestion.skip(unchanged_prefix))
             }
         } != Some(IsPrefix::Prefix)
     {
         return false;
     }
-    autosuggestion.search_string_range.end = search_string_range.end
-        - edit.range.len().min(search_string_range.end)
-        + edit.replacement.len();
+    autosuggestion.search_string_range.end =
+        search_string_range.end - edit.range.len().min(search_string_range.end) + replacement.len();
+    if let Some(matched_codepoints) = &mut autosuggestion.icase_matched_codepoints {
+        *matched_codepoints = matched_codepoints
+            .checked_add_signed(matched_codepoints_delta)
+            .unwrap();
+    }
     true
 }
 
@@ -7431,7 +7439,7 @@ mod tests {
             Some(Autosuggestion {
                 text: L!("echo hest").to_owned(),
                 search_string_range: 0..6,
-                icase_matched_codepoints: Some(4),
+                icase_matched_codepoints: Some(6),
                 is_whole_item_from_history: true,
             })
         );
@@ -7449,7 +7457,7 @@ mod tests {
             Some(Autosuggestion {
                 text: L!("Echo hest").to_owned(),
                 search_string_range: 0..3,
-                icase_matched_codepoints: Some(4),
+                icase_matched_codepoints: Some(3),
                 is_whole_item_from_history: true,
             })
         );

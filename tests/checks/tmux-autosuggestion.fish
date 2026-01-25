@@ -59,3 +59,11 @@ isolated-tmux send-keys n
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt {{\d+}}> echo in
+
+touch some-file
+isolated-tmux send-keys C-u C-l ': some-'
+tmux-sleep
+isolated-tmux send-keys f Tab
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt {{\d+}}> : some-file

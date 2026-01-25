@@ -831,7 +831,7 @@ impl HistoryImpl {
         self.first_unwritten_new_item_index = 0;
         self.file_contents = None;
         if let Ok(Some(filename)) = self.history_file_path() {
-            wunlink(&filename);
+            let _ = wunlink(&filename);
         }
         self.clear_file_state();
     }

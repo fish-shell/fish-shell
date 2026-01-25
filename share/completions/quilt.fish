@@ -6,10 +6,35 @@ function __fish_quilt_print_series
     printf '%s\n' $series[-1..1]
 end
 
+# Suggest '$token.patch' and '$token.diff' as names for new patches.
+# An optional prefix can be passed to be removed from the patch name,
+# e.g `__fish_quilt_complete_patch_name -p '-z'` for `quilt refresh -z[new_name]`.
+function __fish_quilt_complete_patch_name -a prefix
+    argparse --move-unknown 'p/prefix=&' -- $argv
+    or return 1
+
+    set -l name (commandline -ct)
+    if test -z $name -o $name = "$_flag_prefix"
+        return 1
+    end
+
+    printf '%s\n' $name
+    set -l suggestions
+    # output successful replace before other suggestions, requires '-k' to work
+    if not string replace --filter --regex '\.(d(i(f(f)?)?)?)?$' '.diff' -- $name
+        set -a suggestions $name.diff
+    end
+    if not string replace --filter --regex '\.(p(a(t(c(h)?)?)?)?)?$' '.patch' -- $name
+        set -a suggestions $name.patch
+    end
+    printf '%s\n' $suggestions
+    return 0
+end
+
 # For `quilt refresh -z[new_name]`, which looks like a short option
 # but needs an argument connected to the switch.
-function __fish_quilt_is_zarg
-    string match --quiet --regex '^-\w*z' -- (commandline -ct)
+function __fish_quilt_current_zarg -a quiet
+    string match $quiet --regex '^-\w*z' -- (commandline -ct)
 end
 
 complete -c quilt -f
@@ -117,7 +142,7 @@ complete -c quilt -n '__fish_seen_subcommand_from fold' -s p -d 'Number of compo
 
 # quilt fork [new_name]
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a fork -d 'Fork the topmost patch' -f
-complete -c quilt -n '__fish_seen_subcommand_from fork' -f
+complete -c quilt -n '__fish_seen_subcommand_from fork' -fka '(__fish_quilt_complete_patch_name)'
 
 # quilt graph [--all] [--reduce] [--lines[=num]] [--edge-labels=files] [-T ps] [patch]
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a graph -d 'Visualize patch dependencies using dot' -f
@@ -146,7 +171,7 @@ complete -c quilt -n '__fish_seen_subcommand_from header' -d 'Print/change heade
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a import -d 'Import external patches' -f
 complete -c quilt -n '__fish_seen_subcommand_from import' -s p -d 'Number of directories to strip' -x
 complete -c quilt -n '__fish_seen_subcommand_from import' -s R -d 'Apply patch in reverse' -f
-complete -c quilt -n '__fish_seen_subcommand_from import' -s P -d 'Patch filename to use inside quilt' -x
+complete -c quilt -n '__fish_seen_subcommand_from import' -s P -d 'Patch filename to use inside quilt' -xka '(__fish_quilt_complete_patch_name)'
 complete -c quilt -n '__fish_seen_subcommand_from import' -s f -d 'Overwrite/update existing patches' -f
 complete -c quilt -n '__fish_seen_subcommand_from import' -s d -d 'Which header to keep on overwrite' -xa "o\t'Keep old header' a\t'Keep all headers' n\t'Keep new header'"
 complete -c quilt -n '__fish_seen_subcommand_from import' -d 'Patch to import' -fa '(__fish_complete_suffix .patch .diff)'
@@ -175,7 +200,7 @@ complete -c quilt -n '__fish_seen_subcommand_from mail' -n 'test (__fish_number_
 # quilt new [-p n] {patchname}
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a new -d 'Start a new topmost patch' -f
 complete -c quilt -n '__fish_seen_subcommand_from new' -s p -d 'File name style in patch' -xa "0\t'-p0 patch' 1\t'-p1 patch'"
-complete -c quilt -n '__fish_seen_subcommand_from new' -x
+complete -c quilt -n '__fish_seen_subcommand_from new' -xka '(__fish_quilt_complete_patch_name)'
 
 # quilt next [patch]
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a next -d 'Name of patch after the topmost/given patch' -f
@@ -219,15 +244,15 @@ complete -c quilt -n '__fish_seen_subcommand_from push' -n 'not __fish_seen_argu
 
 # quilt refresh [-p n|-p ab] [-u|-U num|-c|-C num] [-z[new_name]] [-f] [--no-timestamps] [--no-index] [--diffstat] [--sort] [--backup] [--strip-trailing-whitespace] [patch]
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a refresh -d 'Update patch with changes from source' -f
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s p -d 'File name style in patch' -xa "0\t'-p0 patch' 1\t'-p1 patch' ab\t'-p1 patch with a/file b/file'"
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s u -d 'Unified diff (3 lines of context)' -f
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s U -d 'Unified diff (N lines of context)' -x
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s c -d 'Context diff (3 lines of context)' -f
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s C -d 'Context diff (N lines of context)' -x
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s z -d 'Create a new patch with the changes' -x
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n __fish_quilt_is_zarg -d 'Name of the new patch' -x
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n __fish_quilt_is_zarg -s h -e
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_is_zarg' -s f -d 'Refresh a patch that is not on top' -f
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s p -d 'File name style in patch' -xa "0\t'-p0 patch' 1\t'-p1 patch' ab\t'-p1 patch with a/file b/file'"
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s u -d 'Unified diff (3 lines of context)' -f
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s U -d 'Unified diff (N lines of context)' -x
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s c -d 'Context diff (3 lines of context)' -f
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s C -d 'Context diff (N lines of context)' -x
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s z -d 'Create a new patch with the changes' -x
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n '__fish_quilt_current_zarg -q' -d 'Name of the new patch' -xka "(__fish_quilt_complete_patch_name -p (__fish_quilt_current_zarg))"
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n '__fish_quilt_current_zarg -q' -s h -e
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s f -d 'Refresh a patch that is not on top' -f
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -l no-timestamps -d 'Do not include timestamps in header' -f
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -l no-index -d "Do not include 'Index: lines' in header" -f
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -l diffstat -d 'Add or replace diffstat section to header' -f
@@ -244,7 +269,8 @@ complete -c quilt -n '__fish_seen_subcommand_from remove' -rF
 # quilt rename [-P patch] new_name
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a rename -d 'Rename the topmost/given patch' -f
 complete -c quilt -n '__fish_seen_subcommand_from rename' -s P -d 'Patch to rename' -xka '(__fish_quilt_print_series)'
-complete -c quilt -n '__fish_seen_subcommand_from rename' -x
+complete -c quilt -n '__fish_seen_subcommand_from rename' -xka "(__fish_quilt_complete_patch_name)\t'Suggestion'"
+complete -c quilt -n '__fish_seen_subcommand_from rename' -xka "(__fish_quilt_print_series)\t'Old names'"
 
 # quilt revert [-P patch] {file} ...
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a revert -d 'Revert file changes in patch' -f

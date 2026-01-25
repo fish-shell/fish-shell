@@ -37,6 +37,15 @@ function __fish_quilt_current_zarg -a quiet
     string match $quiet --regex '^-\w*z' -- (commandline -ct)
 end
 
+# Suggest more digits in number. Most useful for diff context and
+# other options with a low number of digits.
+function __fish_quilt_complete_integer
+    set token (commandline -ct)
+    if string match --quiet --regex '^\d*$' -- $token
+        printf '%s\n' $token $token(seq 0 9)
+    end
+end
+
 complete -c quilt -f
 
 # quilt [command] -h
@@ -106,9 +115,9 @@ complete -c quilt -n '__fish_seen_subcommand_from delete' -n 'not __fish_seen_ar
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a diff -d 'Diff files in patch' -f
 complete -c quilt -n '__fish_seen_subcommand_from diff' -s p -d 'File name style in patch' -xa '0\t"-p0 patch" 1\t"-p1 patch" ab\t"-p1 patch with a/file b/file"'
 complete -c quilt -n '__fish_seen_subcommand_from diff' -s u -d 'Unified diff (3 lines of context)' -f
-complete -c quilt -n '__fish_seen_subcommand_from diff' -s U -d 'Unified diff (N lines of context)' -x
+complete -c quilt -n '__fish_seen_subcommand_from diff' -s U -d 'Unified diff (N lines of context)' -xa '(__fish_quilt_complete_integer)'
 complete -c quilt -n '__fish_seen_subcommand_from diff' -s c -d 'Context diff (3 lines of context)' -f
-complete -c quilt -n '__fish_seen_subcommand_from diff' -s C -d 'Context diff (N lines of context)' -x
+complete -c quilt -n '__fish_seen_subcommand_from diff' -s C -d 'Context diff (N lines of context)' -xa '(__fish_quilt_complete_integer)'
 complete -c quilt -n '__fish_seen_subcommand_from diff' -l combine -d 'Combined diff between this patch and -P' -xka "(__fish_quilt_print_series)\t'First patch to combine'"
 complete -c quilt -n '__fish_seen_subcommand_from diff' -s z -d 'Write to stdout' -f
 complete -c quilt -n '__fish_seen_subcommand_from diff' -s R -d 'Reverse diff' -f
@@ -138,7 +147,7 @@ complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a fold -d 'Int
 complete -c quilt -n '__fish_seen_subcommand_from fold' -s R -d 'Apply patch in reverse' -f
 complete -c quilt -n '__fish_seen_subcommand_from fold' -s q -d 'Quiet operation' -f
 complete -c quilt -n '__fish_seen_subcommand_from fold' -s f -d 'Force apply, even if the patch has rejects' -f
-complete -c quilt -n '__fish_seen_subcommand_from fold' -s p -d 'Number of components to strip from paths' -x
+complete -c quilt -n '__fish_seen_subcommand_from fold' -s p -d 'Number of components to strip from paths' -xa '(__fish_quilt_complete_integer)'
 
 # quilt fork [new_name]
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a fork -d 'Fork the topmost patch' -f
@@ -148,7 +157,7 @@ complete -c quilt -n '__fish_seen_subcommand_from fork' -fka '(__fish_quilt_comp
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a graph -d 'Visualize patch dependencies using dot' -f
 complete -c quilt -n '__fish_seen_subcommand_from graph' -l all -d 'Include all applied patches and their dependencies' -f
 complete -c quilt -n '__fish_seen_subcommand_from graph' -l reduce -d 'Eliminate transitive edges from the graph' -f
-complete -c quilt -n '__fish_seen_subcommand_from graph' -l lines -d 'Compute dependencies by the lines the patches modify' -f
+complete -c quilt -n '__fish_seen_subcommand_from graph' -l lines -d 'Compute dependencies by the lines the patches modify' -fa '(__fish_quilt_complete_integer)'
 complete -c quilt -n '__fish_seen_subcommand_from graph' -l edge-labels -d 'Label graph edges with the file names' -xa files
 complete -c quilt -n '__fish_seen_subcommand_from graph' -s T -d 'Directly produce a PostScript output file' -xa ps
 complete -c quilt -n '__fish_seen_subcommand_from graph' -n 'not __fish_seen_argument -l all' -d 'Patch to graph dependencies' -fka '(__fish_quilt_print_series)'
@@ -169,7 +178,7 @@ complete -c quilt -n '__fish_seen_subcommand_from header' -d 'Print/change heade
 
 # quilt import [-p num] [-R] [-P patch] [-f] [-d {o|a|n}] patchfile ...
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a import -d 'Import external patches' -f
-complete -c quilt -n '__fish_seen_subcommand_from import' -s p -d 'Number of directories to strip' -x
+complete -c quilt -n '__fish_seen_subcommand_from import' -s p -d 'Number of directories to strip' -xa '(__fish_quilt_complete_integer)'
 complete -c quilt -n '__fish_seen_subcommand_from import' -s R -d 'Apply patch in reverse' -f
 complete -c quilt -n '__fish_seen_subcommand_from import' -s P -d 'Patch filename to use inside quilt' -xka '(__fish_quilt_complete_patch_name)'
 complete -c quilt -n '__fish_seen_subcommand_from import' -s f -d 'Overwrite/update existing patches' -f
@@ -235,7 +244,7 @@ complete -c quilt -n '__fish_seen_subcommand_from push' -s q -d 'Quiet operation
 complete -c quilt -n '__fish_seen_subcommand_from push' -s v -d 'Verbose operation' -f
 complete -c quilt -n '__fish_seen_subcommand_from push' -s m -d 'Merge the patch file into the original files' -f
 complete -c quilt -n '__fish_seen_subcommand_from push' -l merge -d 'Merge the patch file into the original files' -fa 'merge diff3'
-complete -c quilt -n '__fish_seen_subcommand_from push' -l fuzz -d 'Maximum fuzz factor (in lines)' -x
+complete -c quilt -n '__fish_seen_subcommand_from push' -l fuzz -d 'Maximum fuzz factor (in lines)' -xa '(__fish_quilt_complete_integer)'
 complete -c quilt -n '__fish_seen_subcommand_from push' -l leave-rejects -d 'Leave around the reject files patch produced' -f
 complete -c quilt -n '__fish_seen_subcommand_from push' -l color -d 'Use syntax coloring' -fa 'always auto never'
 complete -c quilt -n '__fish_seen_subcommand_from push' -l refresh -d 'Automatically refresh every patch after it gets applied' -f
@@ -246,9 +255,9 @@ complete -c quilt -n '__fish_seen_subcommand_from push' -n 'not __fish_seen_argu
 complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a refresh -d 'Update patch with changes from source' -f
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s p -d 'File name style in patch' -xa "0\t'-p0 patch' 1\t'-p1 patch' ab\t'-p1 patch with a/file b/file'"
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s u -d 'Unified diff (3 lines of context)' -f
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s U -d 'Unified diff (N lines of context)' -x
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s U -d 'Unified diff (N lines of context)' -xa '(__fish_quilt_complete_integer)'
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s c -d 'Context diff (3 lines of context)' -f
-complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s C -d 'Context diff (N lines of context)' -x
+complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s C -d 'Context diff (N lines of context)' -xa '(__fish_quilt_complete_integer)'
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -n 'not __fish_quilt_current_zarg -q' -s z -d 'Create a new patch with the changes' -x
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -n '__fish_quilt_current_zarg -q' -d 'Name of the new patch' -xka "(__fish_quilt_complete_patch_name -p (__fish_quilt_current_zarg))"
 complete -c quilt -n '__fish_seen_subcommand_from refresh' -n '__fish_quilt_current_zarg -q' -s h -e
@@ -287,7 +296,7 @@ complete -c quilt -n "not __fish_seen_subcommand_from $commands" -a setup -d 'In
 complete -c quilt -n '__fish_seen_subcommand_from setup' -s d -d 'Path prefix for the resulting source tree' -x
 complete -c quilt -n '__fish_seen_subcommand_from setup' -s v -d 'Verbose debug output' -f
 complete -c quilt -n '__fish_seen_subcommand_from setup' -l sourcedir -d 'Directory for package sources' -xa '(__fish_complete_directories)'
-complete -c quilt -n '__fish_seen_subcommand_from setup' -l fuzz -d 'Maximum fuzz factor (in lines)' -x
+complete -c quilt -n '__fish_seen_subcommand_from setup' -l fuzz -d 'Maximum fuzz factor (in lines)' -xa '(__fish_quilt_complete_integer)'
 complete -c quilt -n '__fish_seen_subcommand_from setup' -l spec-filter -d 'Apply a filter before passing the spec file to rpmbuild' -rF
 complete -c quilt -n '__fish_seen_subcommand_from setup' -n 'not __fish_seen_argument -l slow -l fast' -l slow -d 'Use original method to process the spec file' -f
 complete -c quilt -n '__fish_seen_subcommand_from setup' -n 'not __fish_seen_argument -l slow -l fast' -l fast -d 'Use new method to process the spec file' -f

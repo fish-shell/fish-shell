@@ -463,12 +463,11 @@ mod tests {
     use crate::common::bytes2wcstring;
     use crate::prelude::*;
     use crate::tests::prelude::*;
-    use libc::{O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
     use rand::Rng;
     use std::{
-        ffi::CString,
-        os::fd::{AsRawFd, FromRawFd, OwnedFd},
-        ptr,
+        fs::OpenOptions,
+        io::{Read, Seek},
+        os::{fd::AsRawFd, unix::fs::OpenOptionsExt},
     };
 
     mod test_path_normalize_for_cd {
@@ -646,38 +645,30 @@ mod tests {
     fn test_wwrite_to_fd() {
         let _cleanup = test_init();
         let temp_file = fish_tempfile::new_file().unwrap();
-        let filename = CString::new(temp_file.path().to_str().unwrap()).unwrap();
         let mut rng = rand::rng();
         let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];
         for &size in &sizes {
-            let fd = unsafe {
-                let res = libc::open(filename.as_ptr(), O_RDWR | O_TRUNC | O_CREAT, 0o666);
-                OwnedFd::from_raw_fd(res)
-            };
+            let mut file = OpenOptions::new()
+                .read(true)
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .mode(0o666)
+                .open(temp_file.path())
+                .unwrap();
             let mut input = Vec::new();
             for _i in 0..size {
                 input.push(rng.random());
             }
 
             let amt =
-                unescape_bytes_and_write_to_fd(&bytes2wcstring(&input), fd.as_raw_fd()).unwrap();
+                unescape_bytes_and_write_to_fd(&bytes2wcstring(&input), file.as_raw_fd()).unwrap();
             assert_eq!(amt, input.len());
 
-            assert!(unsafe { libc::lseek(fd.as_raw_fd(), 0, SEEK_SET) } >= 0);
+            file.seek(std::io::SeekFrom::Start(0)).unwrap();
 
-            let mut contents = vec![0u8; input.len()];
-            let read_amt = unsafe {
-                libc::read(
-                    fd.as_raw_fd(),
-                    if size == 0 {
-                        ptr::null_mut()
-                    } else {
-                        contents.as_mut_ptr().cast()
-                    },
-                    input.len(),
-                )
-            };
-            assert_eq!(usize::try_from(read_amt).unwrap(), input.len());
+            let mut contents = vec![];
+            file.read_to_end(&mut contents).unwrap();
             assert_eq!(&contents, &input);
         }
     }

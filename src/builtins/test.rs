@@ -1088,6 +1088,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
 mod tests {
     use super::test as builtin_test;
     use crate::builtins::prelude::*;
+    use crate::common::str2wcstring;
     use crate::io::{IoChain, OutputStream};
     use crate::tests::prelude::*;
 
@@ -1100,7 +1101,7 @@ mod tests {
             argv.push(L!("test").to_owned());
         }
         for s in lst {
-            argv.push(WString::from_str(s));
+            argv.push(str2wcstring(s));
         }
         if bracket {
             argv.push(L!("]").to_owned())

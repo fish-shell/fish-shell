@@ -7,7 +7,7 @@
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
-use crate::common::{ScopeGuard, escape};
+use crate::common::{ScopeGuard, escape, str2wcstring};
 use crate::flog::flog;
 use crate::io::{IoChain, IoStreams};
 use crate::job_group::MaybeJobId;
@@ -402,7 +402,7 @@ pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
         EventDescription::Any => unreachable!(),
     };
 
-    WString::from_str(&s)
+    str2wcstring(&s)
 }
 
 /// Add an event handler.

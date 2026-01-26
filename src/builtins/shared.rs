@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name};
+use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name, str2wcstring};
 use crate::fds::BorrowedFdFile;
 use crate::io::OutputStream;
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
@@ -716,7 +716,7 @@ pub fn builtin_wperror(program_name: &wstr, streams: &mut IoStreams) {
     streams.err.append(program_name);
     streams.err.append(L!(": "));
     if err.0 != 0 {
-        let werr = WString::from_str(&err.to_string());
+        let werr = str2wcstring(err.to_string());
         streams.err.append(&werr);
         streams.err.append_char('\n');
     }

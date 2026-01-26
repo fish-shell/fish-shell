@@ -2197,7 +2197,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_complete() {
+    fn test_escape_code_length() {
         let _cleanup = test_init();
         let mut lc = LayoutCache::new();
         assert_eq!(lc.escape_code_length(L!("")), 0);

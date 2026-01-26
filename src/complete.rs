@@ -2736,6 +2736,8 @@ mod tests {
         {
             std::fs::write(r"test/complete_test/gnarlybracket\[abc]", []).unwrap();
             std::fs::write(r"test/complete_test/colon:TTestWithColon", []).unwrap();
+            std::fs::create_dir_all("test/complete_test/cwd-for-colon").unwrap();
+            std::fs::write(r"test/complete_test/cwd-for-colon/test-file-in-cwd", []).unwrap();
         }
         std::fs::write(r"test/complete_test/equal=abc", []).unwrap();
         // On MSYS, the executable bit cannot be set manually, is set automatically
@@ -2812,26 +2814,28 @@ mod tests {
                 };
             }
 
+            parser.pushd("test/complete_test/cwd-for-colon");
             whole_token_completion_dominates!(
-                ": test/complete_test/colon:",
+                ": ../colon:",
                 CompletionRequestOptions::default(),
                 "TTestWithColon",
-                "test/",
+                "test-file-in-cwd",
             );
             // Even when it has a case mismatch.
             whole_token_completion_dominates!(
-                ": test/complete_test/colon:t",
+                ": ../colon:t",
                 CompletionRequestOptions::default(),
-                "test/complete_test/colon:TTestWithColon",
-                "est/",
+                "../colon:TTestWithColon",
+                "est-file-in-cwd",
             );
             // Even when it is not a prefix.
             whole_token_completion_dominates!(
-                ": test/complete_test/colon:Tes",
+                ": ../colon:Tes",
                 fuzzy_options,
-                "test/complete_test/colon:TTestWithColon",
-                "test/complete_test/colon:test/",
+                "../colon:TTestWithColon",
+                "../colon:test-file-in-cwd",
             );
+            parser.popd();
         }
 
         macro_rules! unique_completion_applies_as {
@@ -2893,17 +2897,19 @@ mod tests {
         #[cfg(not(cygwin))]
         // Colons are not legal filename characters on WIN32/CYGWIN
         {
+            parser.pushd("test/complete_test/cwd-for-colon");
             unique_completion_applies_as!(
-                r"touch test/complete_test/colon",
+                r"touch ../colon",
                 r":TTestWithColon",
-                r"touch test/complete_test/colon:TTestWithColon ",
+                r"touch ../colon:TTestWithColon ",
             );
 
             unique_completion_applies_as!(
-                r#"touch "test/complete_test/colon:"#,
+                r#"touch "../colon:"#,
                 r"TTestWithColon",
-                r#"touch "test/complete_test/colon:TTestWithColon" "#,
+                r#"touch "../colon:TTestWithColon" "#,
             );
+            parser.popd();
         }
 
         unique_completion_applies_as!("echo $SOMEV", r"AR", "echo $SOMEVAR ");

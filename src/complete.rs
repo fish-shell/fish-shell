@@ -2633,6 +2633,7 @@ mod tests {
         sort_and_prioritize,
     };
     use crate::abbrs::{self, Abbreviation, with_abbrs_mut};
+    use crate::common::str2wcstring;
     use crate::env::{EnvMode, EnvSetMode, Environment};
     use crate::io::IoChain;
     use crate::operation_context::{
@@ -3281,7 +3282,7 @@ mod tests {
 
         vars.parent
             .vars
-            .insert(L!("AUTOSUGGEST_TEST_LOC").to_owned(), WString::from_str(wd));
+            .insert(L!("AUTOSUGGEST_TEST_LOC").to_owned(), str2wcstring(wd));
         perform_one_autosuggestion_cd_test!("cd $AUTOSUGGEST_TEST_LOC/0", "foobar/", &vars);
         perform_one_autosuggestion_cd_test!("cd ~/test_autosuggest_suggest_specia", "l/", &vars);
 

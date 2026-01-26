@@ -248,6 +248,7 @@ impl EnvUniversal {
             let Ok(line) = std::str::from_utf8(line) else {
                 continue;
             };
+            // TODO: investigate whether this should use str2wcstring
             wide_line = WString::from_str(line);
 
             match format {

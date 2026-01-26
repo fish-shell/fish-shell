@@ -426,6 +426,7 @@ pub fn fs_is_case_insensitive(
 #[cfg(test)]
 mod tests {
     use super::{FileTester, IsErr, IsFile, PathFlags, is_potential_path};
+    use crate::common::osstr2wcstring;
     use crate::env::EnvStack;
     use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext};
     use crate::prelude::*;
@@ -454,10 +455,7 @@ mod tests {
         }
 
         fn file_tester(&self) -> FileTester<'_> {
-            FileTester::new(
-                WString::from_str(self.tempdir.path().to_str().unwrap()),
-                &self.ctx,
-            )
+            FileTester::new(osstr2wcstring(self.tempdir.path()), &self.ctx)
         }
     }
 

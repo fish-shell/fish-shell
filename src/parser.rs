@@ -1487,6 +1487,7 @@ mod tests {
     use crate::ast::{
         self, Ast, Castable, JobList, JobPipeline, Kind, Node, Traversal, is_same_node,
     };
+    use crate::common::str2wcstring;
     use crate::env::EnvStack;
     use crate::expand::ExpandFlags;
     use crate::io::{IoBufferfill, IoChain};
@@ -1513,7 +1514,7 @@ mod tests {
         }
 
         fn detect_argument_errors(src: &str) -> Result<(), ParserTestErrorBits> {
-            let src = WString::from_str(src);
+            let src = str2wcstring(src);
             let ast = ast::parse_argument_list(&src, ParseTreeFlags::default(), None);
             if ast.errored() {
                 return Err(ParserTestErrorBits::ERROR);

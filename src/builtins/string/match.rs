@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::num::NonZeroUsize;
 
 use super::*;
+use crate::common::str2wcstring;
 use crate::env::{EnvVar, EnvVarFlags};
 use crate::flog::flog;
 use crate::parse_util::unescape_wildcards;
@@ -307,7 +308,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
         capture_group_names: &[Option<String>],
     ) -> Result<(), RegexError> {
         for name in capture_group_names.iter().filter_map(|n| n.as_ref()) {
-            let wname = WString::from_str(name);
+            let wname = str2wcstring(name);
             if EnvVar::flags_for(&wname).contains(EnvVarFlags::READ_ONLY) {
                 return Err(RegexError::InvalidCaptureGroupName(wname));
             }

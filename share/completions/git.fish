@@ -2246,6 +2246,8 @@ complete -f -c git -n __fish_git_needs_command -a rev-list -d 'List commits in c
 complete -f -c git -n __fish_git_needs_command -a rev-parse -d 'Parse revision names or give repo information'
 __fish_git_add_revision_completion -n '__fish_git_using_command rev-parse'
 complete -c git -n '__fish_git_using_command rev-parse' -l abbrev-ref -d 'Output non-ambiguous short object names'
+complete -c git -n '__fish_git_using_command rev-parse' -l is-inside-git-dir -d 'Print whether the current working directory is in the .git directory'
+complete -c git -n '__fish_git_using_command rev-parse' -l is-inside-work-tree -d 'Print whether the current working directory is in the work tree of the repository'
 
 ### revert
 complete -f -c git -n __fish_git_needs_command -a revert -d 'Revert an existing commit'

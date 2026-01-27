@@ -45995,6 +45995,12 @@ msgstr ""
 msgid "Print what would be done"
 msgstr ""
 
+msgid "Print whether the current working directory is in the .git directory"
+msgstr ""
+
+msgid "Print whether the current working directory is in the work tree of the repository"
+msgstr ""
+
 msgid "Print who owns the file"
 msgstr ""
 

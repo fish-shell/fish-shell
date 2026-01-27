@@ -54,14 +54,16 @@ The **-h** or **--help** option displays help about using this command.
 Prompt Files
 ------------
 
-``fish_config prompt`` and the theme selector in the web config tool load their themes from fish files. These are stored in the fish configuration directory, typically ``~/.config/fish/prompts``, with a .fish ending.
+``fish_config prompt`` and the prompt selector in the web config tool load prompts from fish files.
+These are stored in the fish configuration directory, typically ``~/.config/fish/prompts``, with a .fish ending.
 
-You can add your own theme by adding a file in that directory.
+You can add your own prompt by adding a file in that directory.
 
 Theme Files
 -----------
 
-``fish_config theme`` and the theme selector in the web config tool load their themes from theme files. These are stored in the fish configuration directory, typically ``~/.config/fish/themes``, with a .theme ending.
+``fish_config theme`` and the theme selector in the web config tool load their themes from theme files.
+These are stored in the fish configuration directory, typically ``~/.config/fish/themes``, with a .theme ending.
 
 You can add your own theme by adding a file in that directory.
 

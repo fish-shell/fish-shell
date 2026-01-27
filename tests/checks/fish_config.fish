@@ -12,13 +12,23 @@ diff \
 
 fish_config prompt show non-existent-prompt
 
+mkdir $__fish_config_dir/prompts
+echo 'function fish_prompt; echo acidhub-overrridden; end' >$__fish_config_dir/prompts/acidhub.fish
+fish_config prompt choose acidhub
+type fish_prompt
+# CHECK: fish_prompt is a function with definition
+# CHECK: # Defined in {{.*}}/xdg_config_home/fish/prompts/acidhub.fish @ line 1
+# CHECK: function fish_prompt
+# CHECK:  echo acidhub-overrridden;
+# CHECK: end
+
 fish_config prompt show default
 # CHECK: {{\x1b\[4m}}default{{\x1b\[m}}
 # CHECK: {{.*}}@{{.*}}>{{.*}}
 
 type fish_mode_prompt
 # CHECK: fish_mode_prompt is a function with definition
-# CHECK: # Defined in {{.*}}functions/fish_mode_prompt.fish @ line 2
+# CHECK: # Defined via `source`
 # CHECK: function fish_mode_prompt --description 'Displays the current mode'
 # CHECK:     # {{.*}}
 # CHECK:     fish_default_mode_prompt

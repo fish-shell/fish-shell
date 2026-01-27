@@ -8,8 +8,8 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-    "sphinx>=9.0", # updatecli.d/python.yml
-    "sphinx-markdown-builder",
+  "sphinx>=9.0",             # updatecli.d/python.yml
+  "sphinx-markdown-builder",
 ]
 
 [tool.uv.sources]

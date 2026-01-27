@@ -13,6 +13,12 @@ jobs:
     - uses: ./.github/actions/rust-toolchain@stable
       with:
         components: rustfmt
+    - name: install taplo-cli
+      uses: taiki-e/install-action@v2
+      with:
+        tool: taplo-cli
+    - name: check toml
+      run: taplo fmt --check --diff
     - name: install dependencies
       run: pip install ruff
     - name: build fish

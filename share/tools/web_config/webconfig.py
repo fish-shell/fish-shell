@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from glob import iglob
 from html import escape as escape_html
 from itertools import chain
 from typing import Optional
@@ -127,14 +128,13 @@ def list_embedded_files(path, suffix):
     ]
 
 
-def list_local_files(path=None, suffix=None):
+def list_local_files(path, suffix):
     """List files from user's $__fish_config_dir directory with given path and suffix."""
 
-    config_dir = os.environ.get("__fish_config_dir")
+    config_dir = os.environ["__fish_config_dir"]
     if not config_dir:
         return []
 
-    # Handle None or empty string for path
     if path:
         search_path = os.path.join(config_dir, path)
     else:
@@ -143,18 +143,10 @@ def list_local_files(path=None, suffix=None):
     if not os.path.isdir(search_path):
         return []
 
-    result = []
     try:
-        for root, dirs, files in os.walk(search_path):
-            for file in files:
-                # If suffix is None or empty string, include all files
-                if not suffix or file.endswith(suffix):
-                    result.append(os.path.join(root, file))
+        return list(iglob(os.path.join(search_path, "*{}".format(suffix))))
     except (OSError, IOError):
-        # Return empty list if there are permission errors or other issues
-        pass
-
-    return result
+        return []
 
 
 def get_embedded_file(path):
@@ -1091,8 +1083,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def read_local_prompt(self, path):
         try:
             with open(path, "r") as file:
-                return self.read_one_sample_prompt(file)
-        except (IOError, ValueError):
+                return self.read_one_prompt(file)
+        except IOError:
             # Ignore unreadable files, etc.
             return None
 
@@ -1126,7 +1118,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         embedded_paths = list_embedded_files("prompts", ".fish")
         local_paths = list_local_files("prompts", ".fish")
 
-        # remove shadowed themes from embedded_paths list
+        # remove shadowed prompts from embedded_paths list
         local_paths_names = {Path(p).name for p in local_paths}
         embedded_paths = [
             e for e in embedded_paths if Path(e).name not in local_paths_names

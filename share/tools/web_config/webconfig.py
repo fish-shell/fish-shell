@@ -1014,7 +1014,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         out, err = run_fish_cmd(cmd)
         return len(err) == 0
 
-    def do_get_prompt(self, prompt_function_text, extras_dict):
+    def do_get_prompt_code(self, prompt_function_text, extras_dict):
         # Return the prompt output by the given command
         cmd = (
             prompt_function_text
@@ -1051,19 +1051,19 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         prompt_func, err = run_fish_cmd(
             "functions fish_prompt; functions fish_right_prompt"
         )
-        result = self.do_get_prompt(
+        result = self.do_get_prompt_code(
             prompt_func.strip(),
             {"name": "Current"},
         )
         return result
 
-    def do_get_sample_prompt(self, text, extras_dict):
+    def do_get_prompt(self, text, extras_dict):
         # Return the prompt you get from the given text. Extras_dict is a
         # dictionary whose values get merged in. We run 'false' to demonstrate
         # how the prompt shows the command status (#1624)
-        return self.do_get_prompt(text.strip(), extras_dict)
+        return self.do_get_prompt_code(text.strip(), extras_dict)
 
-    def parse_one_sample_prompt_hash(self, line, result_dict):
+    def parse_one_prompt_hash(self, line, result_dict):
         # Allow us to skip whitespace, etc.
         if not line:
             return True
@@ -1091,12 +1091,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def read_embedded_prompt(self, path):
         try:
             lines = get_embedded_file(path).splitlines(keepends=True)
-            return self.read_one_sample_prompt(lines)
+            return self.read_one_prompt(lines)
         except IOError:
             # Ignore unreadable files, etc.
             return None
 
-    def read_one_sample_prompt(self, lines):
+    def read_one_prompt(self, lines):
         extras_dict = {}
         # Read one sample prompt from out
         function_lines = []
@@ -1105,16 +1105,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # Parse hashes until parse_one_sample_prompt_hash return
             # False.
             if parsing_hashes:
-                parsing_hashes = self.parse_one_sample_prompt_hash(line, extras_dict)
+                parsing_hashes = self.parse_one_prompt_hash(line, extras_dict)
             # Maybe not we're not parsing hashes, or maybe we already
             # were not.
             if not parsing_hashes:
                 function_lines.append(line)
         func = "".join(function_lines).strip()
-        result = self.do_get_sample_prompt(func, extras_dict)
+        result = self.do_get_prompt(func, extras_dict)
         return result
 
-    def do_get_sample_prompts_list(self):
+    def do_get_prompts_list(self):
         embedded_paths = list_embedded_files("prompts", ".fish")
         local_paths = list_local_files("prompts", ".fish")
 
@@ -1133,12 +1133,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # Kick off the "Current" meta-sample
             current_metasample_async = pool.apply_async(self.do_get_current_prompt)
 
-            # Read all of the prompts in sample_prompts
-            sample_results = pool.map(self.read_embedded_prompt, embedded_paths, 1)
-            sample_results_local = pool.map(self.read_local_prompt, local_paths, 1)
+            # Read all of the prompts in prompts
+            results = pool.map(self.read_embedded_prompt, embedded_paths, 1)
+            results_local = pool.map(self.read_local_prompt, local_paths, 1)
             result.append(current_metasample_async.get())
-            result.extend([r for r in sample_results if r])
-            result.extend([r for r in sample_results_local if r])
+            result.extend([r for r in results if r])
+            result.extend([r for r in results_local if r])
         except ImportError:
             # If the platform doesn't support multiprocessing, we just do it one at a time.
             # This happens e.g. on Termux.
@@ -1200,8 +1200,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             output = self.do_get_history()
             # end = time.time()
             # print "History: ", end - start
-        elif p == "/sample_prompts/":
-            output = self.do_get_sample_prompts_list()
+        elif p == "/prompts/":
+            output = self.do_get_prompts_list()
         elif p == "/bindings/":
             output = self.do_get_bindings()
         else:

@@ -201,3 +201,57 @@ sendline("true")
 expect_prompt()
 sendline("echo a; history search '*spaced*' | cat; echo b")
 expect_prompt("a\r\n.* echo spaced\r\nb\r\n")
+
+# ==========
+# Test that history merge from a key binding affects up-arrow search immediately.
+# This is a regression test for https://github.com/fish-shell/fish-shell/issues/11696
+#
+# The scenario: user has an active history search, then triggers `history merge`
+# via a keybinding. The search should detect the staleness and continue working
+# correctly on the next up-arrow press.
+#
+# Note: We use a search term "dme" that is NOT a prefix of any history command.
+# This avoids the autosuggestion-skip behavior where the autosuggestion (which
+# is based on prefix matching) would be added to the skip list and cause the
+# most recent match to be skipped in line-mode search (which uses contains matching).
+sendline("builtin history clear")
+expect_prompt()
+
+# Add commands to history with a delay to ensure distinct timestamps
+# The full second delay ensures timestamps are in different seconds,
+# which is required because history file timestamps have second precision.
+sendline("echo findme_alpha")
+expect_prompt()
+sleep(1.1)  # Wait > 1 second to ensure different second in timestamp
+sendline("echo findme_beta")
+expect_prompt()
+
+# Set up a key binding that runs history merge
+sendline("bind ctrl-g 'history merge'")
+expect_prompt()
+
+# Start an active history search with a non-prefix search term
+send("dme")  # Type search term (not a prefix, so no autosuggestion)
+send(
+    "\x1b[A"
+)  # up-arrow to start search - should find findme_beta (most recent containing "dme")
+expect_re("echo findme_beta")
+
+# Navigate to an older match
+send("\x1b[A")  # up-arrow again - should find findme_alpha
+expect_re("echo findme_alpha")
+
+# While search is active and NOT at the most recent match,
+# trigger history merge via keybinding. This causes staleness but should
+# NOT reset search because we're not at present position (per krobelus's review).
+send("\x07")  # ctrl-g to trigger history merge binding
+sleep(0.5)  # Wait for history merge to complete before next input
+
+# Press up-arrow again - since we're not at present, staleness is ignored.
+# No older matches exist, so we stay at findme_alpha.
+send("\x1b[A")
+expect_re("echo findme_alpha")
+
+# Clean up - accept the current line
+sendline("")
+expect_prompt()

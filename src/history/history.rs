@@ -38,6 +38,9 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+use crate::global_safety::AtomicU64;
+use std::sync::atomic::Ordering;
+
 use bitflags::bitflags;
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
@@ -1189,29 +1192,46 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
     errors.is_empty()
 }
 
-pub struct History(Mutex<HistoryImpl>);
+pub struct History {
+    imp: Mutex<HistoryImpl>,
+    generation: AtomicU64,
+}
 
 impl History {
     fn imp(&self) -> MutexGuard<'_, HistoryImpl> {
-        self.0.lock().unwrap()
+        self.imp.lock().unwrap()
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.generation.load(Ordering::Acquire)
+    }
+
+    fn bump_generation(&self) {
+        self.generation.fetch_add(1, Ordering::Release);
     }
 
     /// Privately add an item. If pending, the item will not be returned by history searches until a
     /// call to resolve_pending. Any trailing ephemeral items are dropped.
     /// Exposed for testing.
     pub fn add(&self, item: HistoryItem, pending: bool) {
-        self.imp().add(item, pending, true)
+        self.imp().add(item, pending, true);
+        self.bump_generation();
     }
 
     pub fn add_commandline(&self, s: WString) {
         let mut imp = self.imp();
         let when = imp.timestamp_now();
         let item = HistoryItem::new(s, when, PersistenceMode::Disk);
-        imp.add(item, false, true)
+        imp.add(item, false, true);
+        drop(imp);
+        self.bump_generation();
     }
 
     pub fn new(name: &wstr) -> Arc<Self> {
-        Arc::new(Self(Mutex::new(HistoryImpl::new(name.to_owned()))))
+        Arc::new(Self {
+            imp: Mutex::new(HistoryImpl::new(name.to_owned())),
+            generation: AtomicU64::new(0),
+        })
     }
 
     /// Returns history with the given name, creating it if necessary.
@@ -1239,12 +1259,14 @@ impl History {
 
     /// Remove a history item.
     pub fn remove(&self, s: &wstr) {
-        self.imp().remove(s)
+        self.imp().remove(s);
+        self.bump_generation();
     }
 
     /// Remove any trailing ephemeral items.
     pub fn remove_ephemeral_items(&self) {
-        self.imp().remove_ephemeral_items()
+        self.imp().remove_ephemeral_items();
+        self.bump_generation();
     }
 
     /// Add a new pending history item to the end, and then begin file detection on the items to
@@ -1339,7 +1361,8 @@ impl History {
 
     /// Resolves any pending history items, so that they may be returned in history searches.
     pub fn resolve_pending(&self) {
-        self.imp().resolve_pending()
+        self.imp().resolve_pending();
+        self.bump_generation();
     }
 
     /// Saves history.
@@ -1445,12 +1468,14 @@ impl History {
 
     /// Irreversibly clears history.
     pub fn clear(&self) {
-        self.imp().clear()
+        self.imp().clear();
+        self.bump_generation();
     }
 
     /// Irreversibly clears history for the current session.
     pub fn clear_session(&self) {
-        self.imp().clear_session()
+        self.imp().clear_session();
+        self.bump_generation();
     }
 
     /// Populates from older location (in config path, rather than data path).
@@ -1465,7 +1490,8 @@ impl History {
 
     /// Incorporates the history of other shells into this history.
     pub fn incorporate_external_changes(&self) {
-        self.imp().incorporate_external_changes()
+        self.imp().incorporate_external_changes();
+        self.bump_generation();
     }
 
     /// Gets all the history into a list. This is intended for the $history environment variable.
@@ -1526,6 +1552,9 @@ pub struct HistorySearch {
     current_index: usize, // 0
     /// If deduping, the items we've seen.
     deduper: HashSet<WString>,
+    /// The history generation at the time this search was created.
+    /// Used for staleness detection.
+    captured_generation: u64,
 }
 
 impl HistorySearch {
@@ -1549,6 +1578,7 @@ impl HistorySearch {
         flags: SearchFlags,
         starting_index: usize,
     ) -> Self {
+        let captured_generation = hist.generation();
         let mut search = Self {
             history: hist,
             orig_term: s.clone(),
@@ -1558,6 +1588,7 @@ impl HistorySearch {
             current_item: None,
             current_index: starting_index,
             deduper: HashSet::new(),
+            captured_generation,
         };
 
         if search.ignores_case() {
@@ -1570,6 +1601,12 @@ impl HistorySearch {
     /// Returns the original search term.
     pub fn original_term(&self) -> &wstr {
         &self.orig_term
+    }
+
+    /// Returns whether the underlying history has been modified since this search was created.
+    /// If true, the search results may be stale and the search should be reset.
+    pub fn is_stale(&self) -> bool {
+        self.history.generation() != self.captured_generation
     }
 
     pub fn prepare_to_search_after_deletion(&mut self) {
@@ -2428,5 +2465,104 @@ mod tests {
         ];
         assert_eq!(test_history_imported_from_corrupted.get_history(), expected);
         test_history_imported_from_corrupted.clear();
+    }
+
+    /// Helper to verify that a history operation bumps the generation counter by exactly 1
+    /// and that an existing HistorySearch becomes stale after the operation.
+    fn assert_bumps_generation<F>(history: &Arc<History>, operation_name: &str, operation: F)
+    where
+        F: FnOnce(),
+    {
+        let search = HistorySearch::new(Arc::clone(history), L!("test").to_owned());
+        assert!(
+            !search.is_stale(),
+            "fresh search should not be stale before {}",
+            operation_name
+        );
+
+        let gen_before = history.generation();
+        operation();
+        let gen_after = history.generation();
+
+        assert_eq!(
+            gen_after,
+            gen_before + 1,
+            "{} should bump generation by exactly 1",
+            operation_name
+        );
+        assert!(
+            search.is_stale(),
+            "search should be stale after {}",
+            operation_name
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn test_history_generation_counter() {
+        // Test that the generation counter increments on history modifications
+        // and that HistorySearch correctly detects staleness.
+        // This is a regression test for https://github.com/fish-shell/fish-shell/issues/11696
+        //
+        // Tests all 8 methods that call bump_generation():
+        // add(), add_commandline(), remove(), remove_ephemeral_items(),
+        // resolve_pending(), clear(), clear_session(), incorporate_external_changes()
+        let _cleanup = test_init();
+        let history = History::with_name(L!("test_generation"));
+        history.clear();
+
+        // Test add() bumps generation
+        let item = HistoryItem::new(
+            L!("test command 1").to_owned(),
+            UNIX_EPOCH,
+            PersistenceMode::Memory,
+        );
+        assert_bumps_generation(&history, "add", || {
+            history.add(item, false);
+        });
+
+        // Test incorporate_external_changes() bumps generation
+        assert_bumps_generation(&history, "incorporate_external_changes", || {
+            history.incorporate_external_changes();
+        });
+
+        // Test remove() bumps generation
+        assert_bumps_generation(&history, "remove", || {
+            history.remove(L!("test command 1"));
+        });
+
+        // Test clear_session() bumps generation
+        assert_bumps_generation(&history, "clear_session", || {
+            history.clear_session();
+        });
+
+        // Test resolve_pending() bumps generation (Critical - issue #11696)
+        assert_bumps_generation(&history, "resolve_pending", || {
+            history.resolve_pending();
+        });
+
+        // Test add_commandline() bumps generation
+        assert_bumps_generation(&history, "add_commandline", || {
+            history.add_commandline(L!("test commandline").to_owned());
+        });
+
+        // Test clear() bumps generation
+        assert_bumps_generation(&history, "clear", || {
+            history.clear();
+        });
+
+        // Test remove_ephemeral_items() bumps generation
+        // First add an ephemeral item so there's something to remove
+        let ephemeral_item = HistoryItem::new(
+            L!("ephemeral command").to_owned(),
+            UNIX_EPOCH,
+            PersistenceMode::Ephemeral,
+        );
+        history.add(ephemeral_item, false);
+        assert_bumps_generation(&history, "remove_ephemeral_items", || {
+            history.remove_ephemeral_items();
+        });
+
+        history.clear();
     }
 }

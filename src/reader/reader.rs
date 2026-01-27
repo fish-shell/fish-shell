@@ -3402,6 +3402,11 @@ impl<'a> Reader<'a> {
 
                 let was_active_before = self.history_search.active();
 
+                // Reset search if history was modified while at present position.
+                if self.history_search.is_stale() && self.history_search.is_at_present() {
+                    self.history_search.reset();
+                }
+
                 if self.history_search.is_at_present() && mode != self.history_search.mode() {
                     let el = &self.data.command_line;
                     if matches!(mode, SearchMode::Token | SearchMode::LastToken) {

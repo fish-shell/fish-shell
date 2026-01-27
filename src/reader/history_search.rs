@@ -140,6 +140,12 @@ impl ReaderHistorySearch {
         self.match_index == 0
     }
 
+    /// Return whether the underlying history has been modified since the search was created.
+    /// If true, the search results may be stale and should be reset.
+    pub fn is_stale(&self) -> bool {
+        self.search.as_ref().is_some_and(|s| s.is_stale())
+    }
+
     // Add an item to skip.
     // Return true if it was added, false if already present.
     pub fn add_skip(&mut self, s: WString) -> bool {

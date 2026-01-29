@@ -26,8 +26,7 @@ use crate::parse_constants::{
     SOURCE_LOCATION_UNKNOWN,
 };
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
-use crate::parse_tree::NodeRef;
-use crate::parse_tree::{LineCounter, ParsedSourceRef, parse_source};
+use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef, SourceLineCache, parse_source};
 use crate::portable_atomic::AtomicU64;
 use crate::prelude::*;
 use crate::proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap};
@@ -81,8 +80,8 @@ pub struct Block {
     /// Name of the file that created this block
     pub src_filename: Option<Arc<WString>>,
 
-    /// Line number where this block was created, starting from 1.
-    pub src_lineno: Option<NonZeroU32>,
+    /// The node containing this block, for lazy line number computation.
+    src_node: Option<NodeRef<ast::JobPipeline>>,
 }
 
 impl Block {
@@ -94,6 +93,11 @@ impl Block {
     #[inline(always)]
     pub fn wants_pop_env(&self) -> bool {
         self.typ() != BlockType::top
+    }
+
+    /// Return the 1-based line number of this block, using a cache.
+    pub fn src_lineno(&self, cache: &mut SourceLineCache) -> Option<NonZeroU32> {
+        self.src_node.as_ref()?.lineno_with_cache(cache)
     }
 }
 
@@ -124,7 +128,7 @@ impl Block {
         }
         .to_owned();
 
-        if let Some(src_lineno) = self.src_lineno {
+        if let Some(src_lineno) = self.src_lineno(&mut SourceLineCache::default()) {
             result.push_utfstr(&sprintf!(" (line %d)", src_lineno.get()));
         }
         if let Some(src_filename) = &self.src_filename {
@@ -821,16 +825,21 @@ impl Parser {
 
     /// Returns the current line number, indexed from 1.
     pub fn get_lineno(&self) -> Option<NonZeroU32> {
-        // The offset is 0 based; the number is 1 based.
         self.line_counter
-            .borrow_mut()
-            .line_offset_of_node()
-            .map(|offset| NonZeroU32::new(offset.saturating_add(1)).unwrap())
+            .borrow()
+            .node_ref()
+            .and_then(|n| n.lineno())
     }
 
     /// Returns the current line number, indexed from 1, or zero if not sourced.
     pub fn get_lineno_for_display(&self) -> u32 {
-        self.get_lineno().map_or(0, |val| val.get())
+        self.get_lineno().map_or(0, |n| n.get())
+    }
+
+    /// Returns a NodeRef to the current node being executed, if any.
+    /// This can be used for lazy line number computation.
+    pub fn current_node_ref(&self) -> Option<NodeRef<ast::JobPipeline>> {
+        self.line_counter.borrow().node_ref()
     }
 
     /// Return whether we are currently evaluating a "block" such as an if statement.
@@ -1021,8 +1030,8 @@ impl Parser {
 
     /// Pushes a new block. Returns an id (index) of the block, which is stored in the parser.
     pub fn push_block(&self, mut block: Block) -> BlockId {
-        block.src_lineno = self.get_lineno();
         block.src_filename = self.current_filename();
+        block.src_node = self.line_counter.borrow().node_ref();
         if block.typ() != BlockType::top {
             let new_scope = block.typ() == BlockType::function_call { shadows: true };
             self.vars().push(new_scope);
@@ -1212,7 +1221,7 @@ impl Parser {
                 Some(BlockData::Function { name, .. }) => {
                     function::get_props(name).and_then(|props| props.definition_file.clone())
                 }
-                Some(BlockData::Source { file }) => Some(file.clone()),
+                Some(BlockData::Source { file, .. }) => Some(file.clone()),
                 _ => None,
             })
             .or_else(|| self.libdata().current_filename.clone())
@@ -1226,6 +1235,7 @@ impl Parser {
 
     /// Return a string representing the current stack trace.
     pub fn stack_trace(&self) -> WString {
+        let mut line_cache = SourceLineCache::default();
         self.blocks_iter_rev()
             // Stop at event handler. No reason to believe that any other code is relevant.
             // It might make sense in the future to continue printing the stack trace of the code
@@ -1233,7 +1243,7 @@ impl Parser {
             // detect that.
             .take_while(|b| b.typ() != BlockType::event)
             .fold(WString::new(), |mut trace, b| {
-                append_block_description_to_stack_trace(self, &b, &mut trace);
+                append_block_description_to_stack_trace(self, &b, &mut trace, &mut line_cache);
                 trace
             })
     }
@@ -1360,8 +1370,13 @@ fn print_profile(items: &[ProfileItem], out: &mut File) {
 }
 
 /// Append stack trace info for the block `b` to `trace`.
-fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &mut WString) {
-    let mut print_call_site = false;
+fn append_block_description_to_stack_trace(
+    parser: &Parser,
+    b: &Block,
+    trace: &mut WString,
+    line_cache: &mut SourceLineCache,
+) {
+    let mut print_source_location = false;
     match b.typ() {
         BlockType::function_call { .. } => {
             let Some(BlockData::Function { name, args, .. }) = b.data() else {
@@ -1390,11 +1405,11 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
                 trace.push_utfstr(&wgettext_fmt!(" with arguments '%s'", args_str));
             }
             trace.push('\n');
-            print_call_site = true;
+            print_source_location = true;
         }
         BlockType::subst => {
             trace.push_utfstr(&wgettext!("in command substitution\n"));
-            print_call_site = true;
+            print_source_location = true;
         }
         BlockType::source => {
             let Some(BlockData::Source { file, .. }) = b.data() else {
@@ -1405,7 +1420,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
                 "from sourcing file %s\n",
                 &user_presentable_path(source_dest, parser.vars())
             ));
-            print_call_site = true;
+            print_source_location = true;
         }
         BlockType::event => {
             let Some(BlockData::Event(event)) = b.data() else {
@@ -1413,7 +1428,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
             };
             let description = event::get_desc(parser, event);
             trace.push_utfstr(&wgettext_fmt!("in event handler: %s\n", &description));
-            print_call_site = true;
+            print_source_location = true;
         }
         BlockType::top
         | BlockType::begin
@@ -1425,12 +1440,11 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
         | BlockType::variable_assignment => {}
     }
 
-    if print_call_site {
-        // Print where the function is called.
+    if print_source_location {
         if let Some(file) = b.src_filename.as_ref() {
             trace.push_utfstr(&sprintf!(
                 "\tcalled on line %d of file %s\n",
-                b.src_lineno.map_or(0, |n| n.get()),
+                b.src_lineno(line_cache).map_or(0, |n| n.get()),
                 user_presentable_path(file, parser.vars())
             ));
         } else if parser.libdata().within_fish_init {
@@ -1484,9 +1498,7 @@ pub enum LoopStatus {
 #[cfg(test)]
 mod tests {
     use super::{CancelBehavior, Parser};
-    use crate::ast::{
-        self, Ast, Castable, JobList, JobPipeline, Kind, Node, Traversal, is_same_node,
-    };
+    use crate::ast::{self, Ast, JobList, Kind, Node, Traversal, is_same_node};
     use crate::common::str2wcstring;
     use crate::env::EnvStack;
     use crate::expand::ExpandFlags;
@@ -1494,7 +1506,6 @@ mod tests {
     use crate::parse_constants::{
         ParseErrorCode, ParseTokenType, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
     };
-    use crate::parse_tree::{LineCounter, parse_source};
     use crate::parse_util::{detect_errors_in_argument, detect_parse_errors};
     use crate::prelude::*;
     use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
@@ -2255,64 +2266,6 @@ mod tests {
         // Ensure that we don't think we should cancel.
         reader_reset_interrupted();
         signal_clear_cancel();
-    }
-
-    #[test]
-    fn test_line_counter() {
-        let src = L!("echo line1; echo still_line_1;\n\necho line3");
-        let ps = parse_source(src.to_owned(), ParseTreeFlags::default(), None)
-            .expect("Failed to parse source");
-        assert!(!ps.ast.errored());
-        let mut line_counter = ps.line_counter();
-
-        // Test line_offset_of_character_at_offset, both forwards and backwards to exercise the cache.
-        let mut expected = 0;
-        for (idx, c) in src.chars().enumerate() {
-            let line_offset = line_counter.line_offset_of_character_at_offset(idx);
-            assert_eq!(line_offset, expected);
-            if c == '\n' {
-                expected += 1;
-            }
-        }
-        for (idx, c) in src.chars().enumerate().rev() {
-            if c == '\n' {
-                expected -= 1;
-            }
-            let line_offset = line_counter.line_offset_of_character_at_offset(idx);
-            assert_eq!(line_offset, expected);
-        }
-
-        let pipelines: Vec<_> = ps.ast.walk().filter_map(ast::JobPipeline::cast).collect();
-        assert_eq!(pipelines.len(), 3);
-        let src_offsets = [0, 0, 2];
-        assert_eq!(line_counter.source_offset_of_node(), None);
-        assert_eq!(line_counter.line_offset_of_node(), None);
-
-        for (idx, &node) in pipelines.iter().enumerate() {
-            line_counter.node = std::ptr::from_ref(node);
-            assert_eq!(
-                line_counter.source_offset_of_node(),
-                Some(node.source_range().start())
-            );
-            assert_eq!(line_counter.line_offset_of_node(), Some(src_offsets[idx]));
-        }
-
-        for (idx, &node) in pipelines.iter().enumerate().rev() {
-            line_counter.node = std::ptr::from_ref(node);
-            assert_eq!(
-                line_counter.source_offset_of_node(),
-                Some(node.source_range().start())
-            );
-            assert_eq!(line_counter.line_offset_of_node(), Some(src_offsets[idx]));
-        }
-    }
-
-    #[test]
-    fn test_line_counter_empty() {
-        let mut line_counter = LineCounter::<JobPipeline>::empty();
-        assert_eq!(line_counter.line_offset_of_character_at_offset(0), 0);
-        assert_eq!(line_counter.line_offset_of_node(), None);
-        assert_eq!(line_counter.source_offset_of_node(), None);
     }
 
     // Helper for testing a simple ast traversal.

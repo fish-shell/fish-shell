@@ -385,7 +385,6 @@ impl FunctionProperties {
     pub fn definition_lineno(&self) -> i32 {
         // Return one plus the number of newlines at offsets less than the start of our function's
         // statement (which includes the header).
-        // TODO: merge with line_offset_of_character_at_offset?
         let Some(source_range) = self.func_node.try_source_range() else {
             panic!("Function has no source range");
         };

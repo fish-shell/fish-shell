@@ -70,7 +70,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
         return L!("''").to_owned();
     }
 
-    let mut out = WString::new();
+    let mut out = WString::with_capacity(input.len());
 
     for (i, c) in input.chars().enumerate() {
         if let Some(val) = decode_byte_from_char(c) {
@@ -933,7 +933,7 @@ pub fn bytes2wcstring(mut input: &[u8]) -> WString {
         return WString::new();
     }
 
-    let mut result = WString::new();
+    let mut result = WString::with_capacity(input.len());
 
     fn append_escaped_str(output: &mut WString, input: &str) {
         for (i, c) in input.char_indices() {

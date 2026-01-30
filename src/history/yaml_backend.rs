@@ -290,12 +290,7 @@ pub fn offset_of_next_item_fish_2_0(
             // Walk over lines that we think are interior. These lines are not null terminated, but
             // are guaranteed to contain a newline.
             let mut timestamp = None;
-            loop {
-                let Some(interior_line) = lines.next_if(|l| l.starts_with(b" ")) else {
-                    // If the first character is not a space, it's not an interior line, so we're done.
-                    break;
-                };
-
+            while let Some(interior_line) = lines.next_if(|l| l.starts_with(b" ")) {
                 // Try parsing a timestamp from this line. If we succeed, the loop will break.
                 timestamp = parse_timestamp(interior_line);
                 if timestamp.is_some() {

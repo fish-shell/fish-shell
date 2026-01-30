@@ -162,6 +162,6 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
     // Safe because end was a valid i64 and the result here is in the range start..=end.
     let result: i64 = start.checked_add_unsigned(rand * step).unwrap();
 
-    streams.out.appendln(result.to_wstring());
+    streams.out.appendln(&result.to_wstring());
     Ok(SUCCESS)
 }

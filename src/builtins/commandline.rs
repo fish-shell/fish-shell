@@ -232,7 +232,7 @@ fn write_part(
     }
 
     for arg in args {
-        streams.out.appendln(arg.completion);
+        streams.out.appendln(&arg.completion);
     }
 }
 

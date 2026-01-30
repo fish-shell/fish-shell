@@ -562,7 +562,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Err(STATUS_INVALID_ARGS);
             }
             if args[0] != "scroll-content-up" {
-                streams.err.appendln(wgettext_fmt!(
+                streams.err.appendln(&wgettext_fmt!(
                     "%s %s: unrecognized feature '%s'",
                     cmd,
                     c.to_wstr(),
@@ -602,18 +602,18 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     };
                     streams.out.appendln(buildsystem);
                     streams.out.append(L!("Version: "));
-                    streams.out.appendln(version);
+                    streams.out.appendln(&version);
                     if target == host {
                         streams.out.append(L!("Target (and host): "));
-                        streams.out.appendln(target);
+                        streams.out.appendln(&target);
                     } else {
                         streams.out.append(L!("Target: "));
-                        streams.out.appendln(target);
+                        streams.out.appendln(&target);
                         streams.out.append(L!("Host: "));
-                        streams.out.appendln(host);
+                        streams.out.appendln(&host);
                     }
                     streams.out.append(L!("Profile: "));
-                    streams.out.appendln(profile);
+                    streams.out.appendln(&profile);
                     streams.out.append(L!("Features: "));
                     let features: &[&str] = &[
                         #[cfg(feature = "embed-manpages")]
@@ -623,7 +623,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         #[cfg(target_feature = "crt-static")]
                         "crt-static",
                     ];
-                    streams.out.appendln(str2wcstring(features.join(" ")));
+                    streams.out.appendln(&str2wcstring(features.join(" ")));
                     streams.out.appendln("");
                     return Ok(SUCCESS);
                 }
@@ -643,7 +643,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         Some(f) => f,
                         None => wgettext!("Not a function").to_owned(),
                     };
-                    streams.out.appendln(f);
+                    streams.out.appendln(&f);
                 }
                 STATUS_LINE_NUMBER => {
                     // TBD is how to interpret the level argument when fetching the line number.
@@ -651,7 +651,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     // streams.out.append_format(L"%d\n", parser.get_lineno(opts.level));
                     streams
                         .out
-                        .appendln(parser.get_lineno_for_display().to_wstring());
+                        .appendln(&parser.get_lineno_for_display().to_wstring());
                 }
                 STATUS_IS_INTERACTIVE => {
                     if is_interactive_session() {
@@ -745,7 +745,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         }
                         LookUpInPath => Cow::Borrowed(get_program_name()),
                     };
-                    streams.out.appendln(result);
+                    streams.out.appendln(&result);
                 }
                 STATUS_TERMINAL => {
                     let xtversion = xtversion().unwrap_or_default();

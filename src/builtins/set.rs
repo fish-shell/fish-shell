@@ -186,7 +186,7 @@ impl Options {
                     // implicit drop(w); here
                     if args[optind - 1].starts_with("-o") {
                         // TODO: translate this
-                        streams.err.appendln(sprintf!(
+                        streams.err.appendln(&sprintf!(
                             "Fish does not have shell options. See `help %s`.",
                             help_section!("fish_for_bash_users")
                         ));

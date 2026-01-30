@@ -65,7 +65,7 @@ pub fn contains(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
         for (i, arg) in args[optind..].iter().enumerate().skip(1) {
             if needle == arg {
                 if opts.print_index {
-                    streams.out.appendln(i.to_wstring());
+                    streams.out.appendln(&i.to_wstring());
                 }
                 return Ok(SUCCESS);
             }

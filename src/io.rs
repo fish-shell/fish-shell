@@ -1,5 +1,5 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::{bytes2wcstring, str2wcstring, wcs2bytes};
+use crate::common::{bytes2wcstring, wcs2bytes};
 use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
     BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
@@ -717,9 +717,6 @@ impl OutputStream {
         }
     }
 
-    pub fn append_narrow(&mut self, s: &str) -> bool {
-        self.append(&str2wcstring(s))
-    }
     // Append data from a narrow buffer, widening it.
     pub fn append_narrow_buffer(&mut self, buffer: &SeparatedBuffer) -> bool {
         for rhs_elem in buffer.elements() {

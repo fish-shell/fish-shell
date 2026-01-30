@@ -102,7 +102,7 @@ impl StringSubCommand<'_> for Repeat {
             }
 
             if !first {
-                streams.out.append_char('\n');
+                streams.out.append('\n');
             }
             first = false;
 
@@ -165,7 +165,7 @@ impl StringSubCommand<'_> for Repeat {
 
         // Historical behavior is to never append a newline if all strings were empty.
         if !self.quiet && !self.no_newline && !all_empty && print_trailing_newline {
-            streams.out.append_char('\n');
+            streams.out.append('\n');
         }
 
         if all_empty {

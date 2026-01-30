@@ -97,7 +97,7 @@ impl StringSubCommand<'_> for Sub {
                     .out
                     .append(&arg[start..usize::min(start + count, arg.len())]);
                 if want_newline {
-                    streams.out.append_char('\n');
+                    streams.out.append('\n');
                 }
             }
             nsub += 1;

@@ -452,13 +452,12 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         if detect_parse_errors(condition_string, Some(&mut errors), false).is_err() {
             for error in errors {
                 let prefix = cmd.to_owned() + L!(": -n '") + &condition_string[..] + L!("': ");
-                streams.err.append(&error.describe_with_prefix(
+                streams.err.appendln(&error.describe_with_prefix(
                     condition_string,
                     &prefix,
                     parser.is_interactive(),
                     false,
                 ));
-                streams.err.append_char('\n');
             }
             return Err(STATUS_CMD_ERROR);
         }
@@ -475,8 +474,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 cmd,
                 comp
             ));
-            streams.err.append(&err_text);
-            streams.err.append_char('\n');
+            streams.err.appendln(&err_text);
             return Err(STATUS_CMD_ERROR);
         }
     }

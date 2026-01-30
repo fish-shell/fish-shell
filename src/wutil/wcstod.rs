@@ -648,7 +648,7 @@ mod tests {
     }
 
     fn test(input: &str, val: Result<f64, Error>) {
-        test_sep(input, val, '.')
+        test_sep(input, val, '.');
     }
 
     fn test_sep(input: &str, val: Result<f64, Error>, decimalsep: char) {

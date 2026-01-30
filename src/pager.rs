@@ -689,10 +689,10 @@ impl Pager {
                 // Handle the case of nothing selected yet.
                 match direction {
                     SelectionMotion::South | SelectionMotion::PageSouth | SelectionMotion::Next => {
-                        self.selected_completion_idx = Some(0)
+                        self.selected_completion_idx = Some(0);
                     }
                     SelectionMotion::North | SelectionMotion::Prev => {
-                        self.selected_completion_idx = Some(self.completion_infos.len() - 1)
+                        self.selected_completion_idx = Some(self.completion_infos.len() - 1);
                     }
                     SelectionMotion::East
                     | SelectionMotion::West

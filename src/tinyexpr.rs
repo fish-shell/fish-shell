@@ -242,7 +242,7 @@ fn ncr(n: f64, r: f64) -> f64 {
     let mut ur = r as u64;
 
     if ur > un / 2 {
-        ur = un - ur
+        ur = un - ur;
     }
 
     let mut result = 1_u64;
@@ -598,9 +598,9 @@ impl<'s> State<'s> {
                 }
 
                 if !matches!(self.current, Token::Error | Token::End) && self.error.is_none() {
-                    self.set_error(ErrorKind::TooManyArgs, None)
+                    self.set_error(ErrorKind::TooManyArgs, None);
                 } else if self.no_specific_error() {
-                    self.set_error(ErrorKind::MissingClosingParen, None)
+                    self.set_error(ErrorKind::MissingClosingParen, None);
                 }
 
                 f64::NAN

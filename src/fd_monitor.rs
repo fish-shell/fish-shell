@@ -192,7 +192,7 @@ impl FdMonitorItem {
     /// Invoke this item's callback because the fd is readable.
     /// If the given fd is closed, it will be removed from the [`FdMonitor`] set.
     fn service(&mut self) {
-        (self.callback)(&mut self.fd)
+        (self.callback)(&mut self.fd);
     }
 }
 

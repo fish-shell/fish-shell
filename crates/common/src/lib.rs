@@ -486,7 +486,7 @@ impl<T, F: FnOnce(T)> ScopeGuard<T, F> {
 
     /// Invokes the callback, consuming the ScopeGuard.
     pub fn commit(guard: Self) {
-        std::mem::drop(guard)
+        std::mem::drop(guard);
     }
 
     /// Cancels the invocation of the callback, returning the original wrapped value.

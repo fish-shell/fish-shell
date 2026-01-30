@@ -87,7 +87,7 @@ impl Line {
             highlight,
             character: rendered_character(character),
             offset_in_cmdline,
-        })
+        });
     }
 
     /// Append a nul-terminated string `txt` to the line, giving each character `color`.
@@ -169,16 +169,16 @@ impl ScreenData {
     }
 
     pub fn clear_lines(&mut self) {
-        self.line_datas.clear()
+        self.line_datas.clear();
     }
 
     pub fn resize(&mut self, size: usize) {
-        self.line_datas.resize(size, Default::default())
+        self.line_datas.resize(size, Default::default());
     }
 
     pub fn create_line(&mut self, idx: usize) -> &mut Line {
         if idx >= self.line_datas.len() {
-            self.line_datas.resize(idx + 1, Default::default())
+            self.line_datas.resize(idx + 1, Default::default());
         }
         self.line_mut(idx)
     }
@@ -530,7 +530,7 @@ impl Screen {
                 });
 
         self.with_buffered_output(|zelf| {
-            zelf.update(vars, &layout.left_prompt, &layout.right_prompt)
+            zelf.update(vars, &layout.left_prompt, &layout.right_prompt);
         });
         self.save_status();
     }
@@ -1608,7 +1608,7 @@ static MIDNIGHT_COMMANDER_HACK: RelaxedAtomicBool = RelaxedAtomicBool::new(false
 /// broken if you do '\r' after it like we normally do.
 /// See <https://midnight-commander.org/ticket/4258>.
 pub fn screen_set_midnight_commander_hack() {
-    MIDNIGHT_COMMANDER_HACK.store(true)
+    MIDNIGHT_COMMANDER_HACK.store(true);
 }
 
 /// The number of characters to indent new blocks.

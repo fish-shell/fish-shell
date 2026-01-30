@@ -56,7 +56,7 @@ impl StringSubCommand<'_> for Pad {
             'w' => {
                 self.width = fish_wcstol(arg.unwrap())?
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid width value '%s'\n", name, arg))?
+                    .map_err(|_| invalid_args!("%s: Invalid width value '%s'\n", name, arg))?;
             }
             'C' => self.center = true,
             _ => return Err(StringError::UnknownOption),

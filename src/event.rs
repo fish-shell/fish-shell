@@ -549,7 +549,7 @@ pub fn fire_delayed(parser: &Parser) {
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
         if sig == libc::SIGWINCH {
-            reader_update_termsize(parser)
+            reader_update_termsize(parser);
         }
         let event = Event {
             desc: EventDescription::Signal { signal: sig },
@@ -664,5 +664,5 @@ pub fn fire_generic(parser: &Parser, name: WString, arguments: Vec<WString>) {
             desc: EventDescription::Generic { param: name },
             arguments,
         },
-    )
+    );
 }

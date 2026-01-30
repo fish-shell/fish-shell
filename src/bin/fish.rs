@@ -367,7 +367,7 @@ fn main() {
         // Create a new thread with a decent stack size to be our main thread
         std::thread::scope(|scope| {
             scope.spawn(|| panic_handler(throwing_main));
-        })
+        });
     }
 }
 
@@ -636,7 +636,7 @@ fn escape_single_quoted_hack_hack_hack_hack(s: &wstr) -> OsString {
         if matches!(c, '\\' | '\'') {
             result.push("\\");
         }
-        result.push(c.to_string())
+        result.push(c.to_string());
     }
     result.push("\'");
     result

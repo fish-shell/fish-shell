@@ -95,7 +95,7 @@ fn build_man(sec1_dir: &Path) {
             assert!(
                 out.status.success(),
                 "sphinx-build failed to build the man pages."
-            )
+            );
         }
     }
 }

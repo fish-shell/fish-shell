@@ -212,7 +212,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 }
             } else {
                 let pid = parse_pid(streams, cmd, arg)?;
-                j = parser.job_get_from_pid(pid)
+                j = parser.job_get_from_pid(pid);
             }
 
             if let Some(j) = j.filter(|j| !j.is_completed() && j.is_constructed()) {

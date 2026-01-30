@@ -132,9 +132,9 @@ impl Drop for TimeProfiler {
                 self.what,
                 ms as u64, // todo!("remove cast")
                 ns as u32
-            )
+            );
         } else {
-            flogf!(profile_history, "%s: ??? ms", self.what)
+            flogf!(profile_history, "%s: ??? ms", self.what);
         }
     }
 }
@@ -696,7 +696,7 @@ impl HistoryImpl {
         if !ok {
             // We did not or could not append; rewrite the file ("vacuum" it).
             if let Err(e) = self.save_internal_via_rewrite(&history_path) {
-                flog!(history, "Rewriting history failed:", e)
+                flog!(history, "Rewriting history failed:", e);
             }
         }
     }
@@ -965,7 +965,7 @@ impl HistoryImpl {
             }
 
             if seen.insert(item.str().to_owned()) {
-                result.push(item.str().to_owned())
+                result.push(item.str().to_owned());
             }
         }
 
@@ -1200,14 +1200,14 @@ impl History {
     /// call to resolve_pending. Any trailing ephemeral items are dropped.
     /// Exposed for testing.
     pub fn add(&self, item: HistoryItem, pending: bool) {
-        self.imp().add(item, pending, true)
+        self.imp().add(item, pending, true);
     }
 
     pub fn add_commandline(&self, s: WString) {
         let mut imp = self.imp();
         let when = imp.timestamp_now();
         let item = HistoryItem::new(s, when, PersistenceMode::Disk);
-        imp.add(item, false, true)
+        imp.add(item, false, true);
     }
 
     pub fn new(name: &wstr) -> Arc<Self> {
@@ -1239,12 +1239,12 @@ impl History {
 
     /// Remove a history item.
     pub fn remove(&self, s: &wstr) {
-        self.imp().remove(s)
+        self.imp().remove(s);
     }
 
     /// Remove any trailing ephemeral items.
     pub fn remove_ephemeral_items(&self) {
-        self.imp().remove_ephemeral_items()
+        self.imp().remove_ephemeral_items();
     }
 
     /// Add a new pending history item to the end, and then begin file detection on the items to
@@ -1339,12 +1339,12 @@ impl History {
 
     /// Resolves any pending history items, so that they may be returned in history searches.
     pub fn resolve_pending(&self) {
-        self.imp().resolve_pending()
+        self.imp().resolve_pending();
     }
 
     /// Saves history.
     pub fn save(&self) {
-        self.imp().save(false)
+        self.imp().save(false);
     }
 
     /// Searches history.
@@ -1445,27 +1445,27 @@ impl History {
 
     /// Irreversibly clears history.
     pub fn clear(&self) {
-        self.imp().clear()
+        self.imp().clear();
     }
 
     /// Irreversibly clears history for the current session.
     pub fn clear_session(&self) {
-        self.imp().clear_session()
+        self.imp().clear_session();
     }
 
     /// Populates from older location (in config path, rather than data path).
     pub fn populate_from_config_path(&self) {
-        self.imp().populate_from_config_path()
+        self.imp().populate_from_config_path();
     }
 
     /// Populates from a bash history file.
     pub fn populate_from_bash<R: BufRead>(&self, contents: R) {
-        self.imp().populate_from_bash(contents)
+        self.imp().populate_from_bash(contents);
     }
 
     /// Incorporates the history of other shells into this history.
     pub fn incorporate_external_changes(&self) {
-        self.imp().incorporate_external_changes()
+        self.imp().incorporate_external_changes();
     }
 
     /// Gets all the history into a list. This is intended for the $history environment variable.
@@ -2111,7 +2111,7 @@ mod tests {
                 );
                 for list in &expected_lines {
                     if !list.is_empty() {
-                        printf!("\tRemaining: %s\n", list.last().unwrap())
+                        printf!("\tRemaining: %s\n", list.last().unwrap());
                     }
                 }
             }
@@ -2188,7 +2188,7 @@ mod tests {
 
         // Save them.
         for hist in &hists {
-            hist.save()
+            hist.save();
         }
 
         // Make sure each history contains what it ought to, but they have not leaked into each other.

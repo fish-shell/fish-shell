@@ -119,7 +119,7 @@ impl BitOr for TokFlags {
 }
 impl BitOrAssign for TokFlags {
     fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0
+        self.0 |= rhs.0;
     }
 }
 
@@ -918,12 +918,12 @@ impl BitAnd for TokModes {
 }
 impl BitAndAssign for TokModes {
     fn bitand_assign(&mut self, rhs: Self) {
-        self.0 &= rhs.0
+        self.0 &= rhs.0;
     }
 }
 impl BitOrAssign for TokModes {
     fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0
+        self.0 |= rhs.0;
     }
 }
 impl Not for TokModes {

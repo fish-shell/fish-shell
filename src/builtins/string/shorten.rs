@@ -50,7 +50,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                     fish_wcstol(arg.unwrap())?
                         .try_into()
                         .map_err(|_| invalid_args!("%s: Invalid max value '%s'\n", name, arg))?,
-                )
+                );
             }
             'N' => self.no_newline = true,
             'l' => self.shorten_from = Direction::Left,

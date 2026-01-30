@@ -185,7 +185,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 if !char_is_normal {
                     need_escape = true;
                     if escape_printables {
-                        out.push('\\')
+                        out.push('\\');
                     }
                 }
                 out.push(c);
@@ -655,7 +655,7 @@ fn unescape_string_url(input: &wstr) -> Option<WString> {
         } else {
             result.push(c as u8);
         }
-        i += 1
+        i += 1;
     }
 
     Some(bytes2wcstring(&result))
@@ -1108,7 +1108,7 @@ impl<'a, T: Output> std::io::Write for OutputWriteAdapter<'a, T> {
 
 pub(crate) fn do_write_to_output(writer: &mut impl Output, args: std::fmt::Arguments<'_>) {
     let mut adapter = OutputWriteAdapter(writer);
-    std::fmt::write(&mut adapter, args).unwrap()
+    std::fmt::write(&mut adapter, args).unwrap();
 }
 
 #[macro_export]

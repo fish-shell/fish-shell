@@ -323,7 +323,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     '\x02' => TokenOutputMode::Raw,
                     'o' => TokenOutputMode::Unescaped,
                     _ => unreachable!(),
-                })
+                });
             }
             'I' => {
                 // A historical, undocumented feature. TODO: consider removing this.

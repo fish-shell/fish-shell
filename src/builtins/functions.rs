@@ -373,7 +373,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             // Extract this into a helper.
             match props.definition_file() {
                 Some(path) if path == "-" => {
-                    comment.push_utfstr(&wgettext!("Defined via `source`"))
+                    comment.push_utfstr(&wgettext!("Defined via `source`"));
                 }
                 Some(path) => {
                     comment.push_utfstr(&wgettext_fmt!(
@@ -388,7 +388,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             if props.is_copy() {
                 match props.copy_definition_file() {
                     Some(path) if path == "-" => {
-                        comment.push_utfstr(&wgettext!(", copied via `source`"))
+                        comment.push_utfstr(&wgettext!(", copied via `source`"));
                     }
                     Some(path) => {
                         comment.push_utfstr(&wgettext_fmt!(

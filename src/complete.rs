@@ -206,7 +206,7 @@ impl Completion {
     /// If this completion replaces the entire token, prepend a prefix. Otherwise do nothing.
     pub fn prepend_token_prefix(&mut self, prefix: &wstr) {
         if self.replaces_token() {
-            self.completion.insert_utfstr(0, prefix)
+            self.completion.insert_utfstr(0, prefix);
         }
     }
 }
@@ -424,7 +424,7 @@ impl CompletionEntry {
 
     /// Adds an option.
     pub fn add_option(&mut self, opt: CompleteEntryOpt) {
-        self.options.push(opt)
+        self.options.push(opt);
     }
 
     /// Remove all completion options in the specified entry that match the specified short / long
@@ -548,7 +548,7 @@ pub fn sort_and_prioritize(comps: &mut Vec<Completion>, flags: CompletionRequest
                 .cmp(&b.r#match.case_fold)
                 .then_with(|| compare_completions_by_duplicate_arguments(a, b))
                 .then_with(|| compare_completions_by_tilde(a, b))
-        })
+        });
     }
 }
 
@@ -3077,7 +3077,7 @@ mod tests {
                 L!("expansion").into(),
                 abbrs::Position::Command,
                 false,
-            ))
+            ));
         });
 
         let completions = complete(

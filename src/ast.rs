@@ -51,7 +51,7 @@ pub trait Acceptor {
 impl<T: Acceptor> Acceptor for Option<T> {
     fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         if let Some(node) = self {
-            node.accept(visitor)
+            node.accept(visitor);
         }
     }
 }
@@ -114,7 +114,7 @@ trait AcceptorMut {
 impl<T: AcceptorMut> AcceptorMut for Option<T> {
     fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         if let Some(node) = self {
-            node.accept_mut(visitor)
+            node.accept_mut(visitor);
         }
     }
 }
@@ -1567,7 +1567,7 @@ impl<'a> TokenStream<'a> {
         assert!(idx < Self::MAX_LOOKAHEAD, "Trying to look too far ahead");
         while idx >= self.count {
             self.lookahead[Self::mask(self.start + self.count)] = self.next_from_tok();
-            self.count += 1
+            self.count += 1;
         }
         &self.lookahead[Self::mask(self.start + idx)]
     }
@@ -1808,7 +1808,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             "",
             node.describe()
         );
-        self.depth += 1
+        self.depth += 1;
     }
 
     fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult) {
@@ -2354,7 +2354,7 @@ impl<'s> Populator<'s> {
                 contents.push(node);
             } else if exhaust_stream && self.peek_type(0) != ParseTokenType::Terminate {
                 // We aren't allowed to stop. Produce an error and keep going.
-                self.consume_excess_token_generating_error()
+                self.consume_excess_token_generating_error();
             } else {
                 // We either stop once we can't parse any more of this contents node, or we
                 // exhausted the stream as requested.
@@ -2722,7 +2722,7 @@ impl<'s> Populator<'s> {
             if range.length == 0 {
                 range = r;
             } else {
-                range.length = r.start + r.length - range.start
+                range.length = r.start + r.length - range.start;
             }
         }
         nls.range = Some(range);
@@ -2756,7 +2756,7 @@ impl From<ParseTreeFlags> for TokFlags {
             tok_flags |= TOK_ACCEPT_UNFINISHED;
         }
         if flags.continue_after_error {
-            tok_flags |= TOK_CONTINUE_AFTER_ERROR
+            tok_flags |= TOK_CONTINUE_AFTER_ERROR;
         }
         tok_flags
     }
@@ -2803,7 +2803,7 @@ pub(crate) fn unescape_keyword(tok: TokenType, token: &wstr) -> Cow<'_, wstr> {
             return Cow::Borrowed(L!(""));
         }
         // If we encounter a quote, we need expansion.
-        needs_expand = needs_expand || c == '"' || c == '\'' || c == '\\'
+        needs_expand = needs_expand || c == '"' || c == '\'' || c == '\\';
     }
 
     // Expand if necessary.

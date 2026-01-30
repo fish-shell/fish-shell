@@ -26,7 +26,7 @@ fn unescape_multiline_rust_string(s: String) -> String {
             Escaped => match c {
                 '\\' => {
                     unescaped.push('\\');
-                    state = Ground
+                    state = Ground;
                 }
                 '\n' => state = ContinuationLineLeadingWhitespace,
                 _ => panic!("Unsupported escape sequence '\\{c}' in message string '{s}'"),
@@ -35,7 +35,7 @@ fn unescape_multiline_rust_string(s: String) -> String {
                 ' ' | '\t' => (),
                 _ => {
                     unescaped.push(c);
-                    state = Ground
+                    state = Ground;
                 }
             },
         }

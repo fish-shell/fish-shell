@@ -75,7 +75,7 @@ impl ParseToken {
     pub fn describe(&self) -> WString {
         let mut result = self.typ.to_wstr().to_owned();
         if self.keyword != ParseKeyword::None {
-            sprintf!(=> &mut result, " <%s>", self.keyword.to_wstr())
+            sprintf!(=> &mut result, " <%s>", self.keyword.to_wstr());
         }
         result
     }

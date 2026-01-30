@@ -475,6 +475,6 @@ mod tests {
                 "Timeout waiting for condition variable to be notified! ",
                 "Does the platform support signalling a condvar without the mutex held?"
             )
-        )
+        );
     }
 }

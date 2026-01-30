@@ -95,9 +95,9 @@ pub fn dup2_list_resolve_chain(io_chain: &IoChain) -> Dup2List {
     let mut result = Dup2List { actions: vec![] };
     for io in &io_chain.0 {
         if io.source_fd() < 0 {
-            result.add_close(io.fd())
+            result.add_close(io.fd());
         } else {
-            result.add_dup2(io.source_fd(), io.fd())
+            result.add_dup2(io.source_fd(), io.fd());
         }
     }
     result
@@ -149,7 +149,7 @@ impl Dup2List {
         self.actions.push(Dup2Action {
             src: fd,
             target: -1,
-        })
+        });
     }
 }
 

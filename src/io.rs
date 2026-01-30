@@ -204,7 +204,7 @@ impl IoData for IoClose {
         -1
     }
     fn print(&self) {
-        eprintf!("close %d\n", self.fd)
+        eprintf!("close %d\n", self.fd);
     }
 }
 
@@ -230,7 +230,7 @@ impl IoData for IoFd {
         self.source_fd
     }
     fn print(&self) {
-        eprintf!("FD map %d -> %d\n", self.source_fd, self.fd)
+        eprintf!("FD map %d -> %d\n", self.source_fd, self.fd);
     }
 }
 
@@ -259,7 +259,7 @@ impl IoData for IoFile {
         self.file.as_raw_fd()
     }
     fn print(&self) {
-        eprintf!("file %d -> %d\n", self.file.as_raw_fd(), self.fd)
+        eprintf!("file %d -> %d\n", self.file.as_raw_fd(), self.fd);
     }
 }
 
@@ -296,7 +296,7 @@ impl IoData for IoPipe {
             self.source_fd(),
             if self.is_input { "yes" } else { "no" },
             self.fd
-        )
+        );
     }
 }
 
@@ -383,7 +383,7 @@ impl IoData for IoBufferfill {
             "bufferfill %d -> %d\n",
             self.write_fd.as_raw_fd(),
             self.fd()
-        )
+        );
     }
     fn as_bufferfill(&self) -> Option<&IoBufferfill> {
         Some(self)
@@ -518,7 +518,7 @@ impl IoChain {
         self.0.remove(idx);
     }
     pub fn clear(&mut self) {
-        self.0.clear()
+        self.0.clear();
     }
     pub fn push(&mut self, element: IoDataRef) {
         self.0.push(element);

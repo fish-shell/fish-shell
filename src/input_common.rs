@@ -606,7 +606,7 @@ pub fn update_wait_on_escape_ms(vars: &EnvStack) {
                     "is not an integer or is < 10 or >= 5000 ms\n"
                 ),
                 fish_escape_delay_ms
-            )
+            );
         }
     }
 }
@@ -631,7 +631,7 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
                     "is not an integer or is < 10 or >= 5000 ms\n"
                 ),
                 sequence_key_time_ms
-            )
+            );
         }
     }
 }
@@ -1529,7 +1529,7 @@ pub trait InputEventQueuer {
             .paste_buffer
             .as_mut()
             .unwrap()
-            .push(b)
+            .push(b);
     }
 
     fn paste_commit(&mut self) {

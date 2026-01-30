@@ -193,12 +193,12 @@ pub fn set_from_string<'a>(str: impl Into<&'a wstr>) {
             fc.borrow()
                 .as_ref()
                 .unwrap_or(&FEATURES)
-                .set_from_string(wstr)
+                .set_from_string(wstr);
         });
     }
     #[cfg(not(test))]
     {
-        FEATURES.set_from_string(wstr)
+        FEATURES.set_from_string(wstr);
     }
 }
 
@@ -225,7 +225,7 @@ impl Features {
     }
 
     fn set(&self, flag: FeatureFlag, value: bool) {
-        self.values[flag as usize].store(value, Ordering::SeqCst)
+        self.values[flag as usize].store(value, Ordering::SeqCst);
     }
 
     fn set_from_string(&self, str: &wstr) {

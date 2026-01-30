@@ -257,22 +257,22 @@ fn command_is_valid(
 
     // Builtins
     if !is_valid && builtin_ok {
-        is_valid = builtin_exists(cmd)
+        is_valid = builtin_exists(cmd);
     }
 
     // Functions
     if !is_valid && function_ok {
-        is_valid = function::exists_no_autoload(cmd)
+        is_valid = function::exists_no_autoload(cmd);
     }
 
     // Abbreviations
     if !is_valid && abbreviation_ok {
-        is_valid = with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command, L!("")))
+        is_valid = with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command, L!("")));
     }
 
     // Regular commands
     if !is_valid && command_ok {
-        is_valid = path_get_path(cmd, vars).is_some()
+        is_valid = path_get_path(cmd, vars).is_some();
     }
 
     // Implicit cd
@@ -863,7 +863,7 @@ impl<'s> Highlighter<'s> {
     }
     // Colors the source range of a node with a given color.
     fn color_node(&mut self, node: &dyn ast::Node, color: HighlightSpec) {
-        self.color_range(node.source_range(), color)
+        self.color_range(node.source_range(), color);
     }
     // Colors a range with a given color.
     fn color_range(&mut self, range: SourceRange, color: HighlightSpec) {
@@ -905,7 +905,7 @@ impl<'s> Highlighter<'s> {
         let mut role = HighlightRole::normal;
         match tok.token_type() {
             ParseTokenType::End | ParseTokenType::Pipe | ParseTokenType::Background => {
-                role = HighlightRole::statement_terminator
+                role = HighlightRole::statement_terminator;
             }
             ParseTokenType::LeftBrace | ParseTokenType::RightBrace => {
                 role = HighlightRole::keyword;
@@ -1019,7 +1019,7 @@ impl<'s> Highlighter<'s> {
         self.color_node(
             node,
             HighlightSpec::with_fg(HighlightRole::statement_terminator),
-        )
+        );
     }
     fn visit_decorated_statement(&mut self, stmt: &DecoratedStatement) {
         // Color any decoration.
@@ -1061,7 +1061,7 @@ impl<'s> Highlighter<'s> {
         if is_valid_cmd {
             self.color_command(&stmt.command);
         } else {
-            self.color_node(&stmt.command, HighlightSpec::with_fg(HighlightRole::error))
+            self.color_node(&stmt.command, HighlightSpec::with_fg(HighlightRole::error));
         }
 
         // Color arguments and redirections.

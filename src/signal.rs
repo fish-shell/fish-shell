@@ -470,7 +470,7 @@ fn equals_ascii_icase(left: &wstr, right: &wstr) -> bool {
 fn match_signal_name(canonical: &wstr, mut name: &wstr) -> bool {
     // Skip the "SIG" prefix if it exists.
     if name.char_count() >= 3 && equals_ascii_icase(name.slice_to(3), L!("sig")) {
-        name = name.slice_from(3)
+        name = name.slice_from(3);
     }
     equals_ascii_icase(canonical.slice_from(3), name)
 }

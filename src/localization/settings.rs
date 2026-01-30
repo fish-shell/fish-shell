@@ -262,7 +262,7 @@ impl LocalizationState {
             if seen_in_input.insert(lang) {
                 unique_lang_strs.push(lang);
             } else {
-                duplicates.push(lang)
+                duplicates.push(lang);
             }
         }
         let mut all_available_langs = HashSet::new();

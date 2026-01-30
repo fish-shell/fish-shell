@@ -65,7 +65,7 @@ impl DirEntry {
     pub fn check_type(&self) -> Option<DirEntryType> {
         // Call stat if needed to populate our type, swallowing errors.
         if self.typ.get().is_none() {
-            self.do_stat()
+            self.do_stat();
         }
         self.typ.get()
     }

@@ -1464,7 +1464,7 @@ impl ReaderData {
                     Preserve => (),
                     Remove => self.autosuggestion.clear(),
                     RemoveAndSave => {
-                        self.saved_autosuggestion = Some(std::mem::take(&mut self.autosuggestion))
+                        self.saved_autosuggestion = Some(std::mem::take(&mut self.autosuggestion));
                     }
                     Restore => {
                         self.autosuggestion = saved_autosuggestion.unwrap();
@@ -1903,7 +1903,7 @@ impl<'a> Reader<'a> {
             current_page_rendering,
             is_final_rendering,
         );
-        screen.autoscroll(curr_termsize.height())
+        screen.autoscroll(curr_termsize.height());
     }
 }
 
@@ -2080,7 +2080,7 @@ impl ReaderData {
             );
 
             if preserves_autosuggestion {
-                autosuggestion_update = AutosuggestionUpdate::Preserve
+                autosuggestion_update = AutosuggestionUpdate::Preserve;
             } else if !self.autosuggestion.is_empty()
                 && edit.range.start == self.autosuggestion.search_string_range.end
                 && edit.range.is_empty()
@@ -2322,7 +2322,7 @@ impl ReaderData {
             }
             self.update_buff_pos(elt, Some(begin_pos));
             // then delete to next word end
-            self.move_word(elt, MoveWordDir::Right, true, style, newv, true)
+            self.move_word(elt, MoveWordDir::Right, true, style, newv, true);
         } else {
             // first, move right by 1
             if pos < el.len() - 1 {
@@ -3453,7 +3453,7 @@ impl<'a> Reader<'a> {
                         result_range
                     } else {
                         0..self.command_line.len()
-                    })
+                    });
                 }
 
                 if found {
@@ -3667,7 +3667,7 @@ impl<'a> Reader<'a> {
                     style,
                     newv,
                     to_word_end,
-                )
+                );
             }
             rl::KillWordVi
             | rl::KillBigwordVi
@@ -5885,7 +5885,7 @@ impl ReaderData {
         let performer = move || -> iothreads::Callback {
             let result = history_pager_search(&history, direction, motion, index, &search_term);
             Box::new(move |r: &mut Reader| {
-                r.fill_history_pager_complete(result, why, old_pager_index)
+                r.fill_history_pager_complete(result, why, old_pager_index);
             })
         };
         self.debouncers.history_pager.perform(performer);
@@ -6049,7 +6049,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
             if let Kind::DecoratedStatement(stmt) = traversal.parent(node).kind() {
                 is_cmd = is_same_node(node, &stmt.command);
             }
-            result.push(PositionedToken { range, is_cmd })
+            result.push(PositionedToken { range, is_cmd });
         }
     }
 

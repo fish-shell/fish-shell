@@ -432,10 +432,10 @@ pub fn paths_are_equivalent(p1: &wstr, p2: &wstr) -> bool {
     let mut len1 = p1.len();
     let mut len2 = p2.len();
     while len1 > 1 && p1[len1 - 1] == '/' {
-        len1 -= 1
+        len1 -= 1;
     }
     while len2 > 1 && p2[len2 - 1] == '/' {
-        len2 -= 1
+        len2 -= 1;
     }
 
     // Start walking

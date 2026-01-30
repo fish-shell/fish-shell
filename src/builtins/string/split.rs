@@ -119,7 +119,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
             'm' => {
                 self.max = fish_wcstol(arg.unwrap())?
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid max value '%s'\n", name, arg))?
+                    .map_err(|_| invalid_args!("%s: Invalid max value '%s'\n", name, arg))?;
             }
             'n' => self.no_empty = true,
             'f' => {

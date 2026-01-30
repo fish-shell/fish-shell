@@ -574,7 +574,7 @@ fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> BuiltinResu
                     if i > 1 {
                         val.push(' ');
                     }
-                    val += &expand_escape_string(history.item_at_index(i).unwrap().str())[..]
+                    val += &expand_escape_string(history.item_at_index(i).unwrap().str())[..];
                 }
             } else if let Some(var) = parser.vars().getf_unless_empty(&key, opts.env_mode()) {
                 val = expand_escape_variable(&var);

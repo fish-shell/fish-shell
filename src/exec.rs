@@ -754,7 +754,7 @@ fn fork_child_for_process(
                 job_id,
                 &narrow_cmd,
                 &narrow_argv0,
-            )
+            );
         }
     }
 
@@ -970,7 +970,7 @@ fn function_prepare_environment(
     let mut overwrite_argv = false;
     for (idx, named_arg) in props.named_arguments.iter().enumerate() {
         if named_arg == L!("argv") {
-            overwrite_argv = true
+            overwrite_argv = true;
         }
         if idx < argv.len() {
             vars.set_one(named_arg, mode, argv[idx].clone());
@@ -981,7 +981,7 @@ fn function_prepare_environment(
 
     for (key, value) in &*props.inherit_vars {
         if key == L!("argv") {
-            overwrite_argv = true
+            overwrite_argv = true;
         }
         vars.set(key, mode, value.clone());
     }

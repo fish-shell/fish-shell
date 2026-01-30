@@ -14,7 +14,7 @@ impl RelaxedAtomicBool {
         self.0.load(Ordering::Relaxed)
     }
     pub fn store(&self, value: bool) {
-        self.0.store(value, Ordering::Relaxed)
+        self.0.store(value, Ordering::Relaxed);
     }
     pub fn swap(&self, value: bool) -> bool {
         self.0.swap(value, Ordering::Relaxed)
@@ -44,7 +44,7 @@ impl<T: ?Sized> AtomicRef<T> {
 
     pub fn store(&self, value: &'static &'static T) {
         self.0
-            .store(std::ptr::from_ref(value).cast_mut(), Ordering::Relaxed)
+            .store(std::ptr::from_ref(value).cast_mut(), Ordering::Relaxed);
     }
 }
 

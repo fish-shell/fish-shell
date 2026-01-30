@@ -377,7 +377,7 @@ fn parse_option_spec_sep<'args>(
             // Since getopt needs a wchar, we have a counter that we count up.
             opt_spec.short_flag_valid = false;
             if s.char_at(i - 1) != '/' {
-                i -= 1
+                i -= 1;
             }
             opt_spec.short_flag = char::from_u32(*counter).unwrap();
             *counter += 1;

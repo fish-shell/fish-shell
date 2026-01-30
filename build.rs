@@ -98,7 +98,7 @@ fn detect_cfgs(target: &mut Target) {
             target.r#if("WEXITSTATUS(0x007f) == 0x7f", &["sys/wait.h"])
         }),
     ] {
-        rsconf::declare_cfg(name, handler(target))
+        rsconf::declare_cfg(name, handler(target));
     }
 }
 

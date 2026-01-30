@@ -323,7 +323,7 @@ fn handle_function_path_change(_: &EnvStack) {
 }
 
 fn handle_complete_path_change(_: &EnvStack) {
-    complete_invalidate_path()
+    complete_invalidate_path();
 }
 
 fn handle_tz_change(var_name: &wstr, vars: &EnvStack) {

@@ -489,7 +489,7 @@ impl Process {
         // Only stomp a successful status.
         if self.status().is_success() {
             self.status
-                .set(ProcStatus::from_exit_code(libc::EXIT_FAILURE))
+                .set(ProcStatus::from_exit_code(libc::EXIT_FAILURE));
         }
     }
 
@@ -910,7 +910,7 @@ pub fn is_interactive_session() -> bool {
     IS_INTERACTIVE_SESSION.load()
 }
 pub fn set_interactive_session(flag: bool) {
-    IS_INTERACTIVE_SESSION.store(flag)
+    IS_INTERACTIVE_SESSION.store(flag);
 }
 static IS_INTERACTIVE_SESSION: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
@@ -919,7 +919,7 @@ pub fn get_login() -> bool {
     IS_LOGIN.load()
 }
 pub fn mark_login() {
-    IS_LOGIN.store(true)
+    IS_LOGIN.store(true);
 }
 static IS_LOGIN: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
@@ -930,7 +930,7 @@ pub fn no_exec() -> bool {
     IS_NO_EXEC.load()
 }
 pub fn mark_no_exec() {
-    IS_NO_EXEC.store(true)
+    IS_NO_EXEC.store(true);
 }
 static IS_NO_EXEC: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 

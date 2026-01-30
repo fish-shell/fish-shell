@@ -69,7 +69,7 @@ pub fn wperror(s: &wstr) {
     let bytes = wcs2bytes(s);
     // We can't guarantee the string is 100% Unicode (why?), so we don't use std::str::from_utf8()
     let s = OsStr::from_bytes(&bytes).to_string_lossy();
-    perror(&s)
+    perror(&s);
 }
 
 /// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.

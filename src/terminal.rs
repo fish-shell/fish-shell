@@ -536,10 +536,10 @@ impl Outputter {
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
     ///   color pair to what it should be.
     pub(crate) fn set_text_face(&mut self, face: TextFace) {
-        self.set_text_face_internal(face, true)
+        self.set_text_face_internal(face, true);
     }
     pub(crate) fn set_text_face_no_magic(&mut self, face: TextFace) {
-        self.set_text_face_internal(face, false)
+        self.set_text_face_internal(face, false);
     }
     fn set_text_face_internal(&mut self, face: TextFace, salvage_unreadable: bool) {
         let mut fg = face.fg;

@@ -379,7 +379,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         match node.kind() {
             // Allow escaped newlines before leaf nodes that can be part of a long command.
             Kind::Argument(_) | Kind::Redirection(_) | Kind::VariableAssignment(_) => {
-                result.allow_escaped_newlines = true
+                result.allow_escaped_newlines = true;
             }
             Kind::Token(token) => {
                 // Allow escaped newlines before && and ||, and also pipes.

@@ -156,7 +156,7 @@ impl Replacement {
 
             if let Some(start) = matched {
                 text.replace_range(start..(start + set_cursor_marker.len()), L!(""));
-                cursor = Some(start + range.start as usize)
+                cursor = Some(start + range.start as usize);
             }
         }
         Self {
@@ -438,7 +438,7 @@ mod tests {
                     position,
                     set_cursor_marker: None,
                     from_universal: false,
-                })
+                });
             };
             add(L!("gc"), L!("git checkout"), Position::Command);
             add(L!("foo"), L!("bar"), Position::Command);
@@ -455,6 +455,6 @@ mod tests {
             assert!(!abbrs_g.erase(L!("gc"), &[]));
             assert!(abbrs_g.erase(L!("gcc"), &[]));
             assert!(!abbrs_g.erase(L!("gcc"), &[]));
-        })
+        });
     }
 }

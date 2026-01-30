@@ -215,6 +215,7 @@ new_without_default = "allow"
 option_map_unit_fn = "allow"
 ptr_offset_by_literal = "warn"
 ref_option = "warn"
+semicolon_if_nothing_returned = "warn"
 stable_sort_primitive = "warn"
 unnecessary_semicolon = "warn"
 

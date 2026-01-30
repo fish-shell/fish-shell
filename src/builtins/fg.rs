@@ -79,7 +79,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                         .err
                         .append(&wgettext_fmt!("%s: No suitable job: %d\n", cmd, pid));
                     job_pos = None;
-                    job = None
+                    job = None;
                 } else {
                     let (pos, j) = j.unwrap();
                     job_pos = Some(pos);

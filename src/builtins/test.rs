@@ -1106,7 +1106,7 @@ mod tests {
             argv.push(str2wcstring(s));
         }
         if bracket {
-            argv.push(L!("]").to_owned())
+            argv.push(L!("]").to_owned());
         }
 
         // Convert to &[&wstr].

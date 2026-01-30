@@ -60,12 +60,12 @@ impl KillRing {
 
 /// Add a string to the top of the killring.
 pub fn kill_add(new_entry: WString) {
-    KILL_RING.lock().unwrap().add(new_entry)
+    KILL_RING.lock().unwrap().add(new_entry);
 }
 
 /// Replace the specified string in the killring.
 pub fn kill_replace(old_entry: &wstr, new_entry: WString) {
-    KILL_RING.lock().unwrap().replace(old_entry, new_entry)
+    KILL_RING.lock().unwrap().replace(old_entry, new_entry);
 }
 
 /// Rotate the killring.

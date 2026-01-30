@@ -960,7 +960,7 @@ impl Parser {
         self.vars().get_last_statuses()
     }
     pub fn set_last_statuses(&self, s: Statuses) {
-        self.vars().set_last_statuses(s)
+        self.vars().set_last_statuses(s);
     }
 
     /// Cover of vars().set(), which also fires any returned event handlers.
@@ -1393,7 +1393,7 @@ fn append_block_description_to_stack_trace(
                     args_str.push_utfstr(&escape_string(
                         arg,
                         EscapeStringStyle::Script(EscapeFlags::NO_QUOTED),
-                    ))
+                    ));
                 } else {
                     args_str.push_str("\"\"");
                 }

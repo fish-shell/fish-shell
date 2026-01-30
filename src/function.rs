@@ -451,7 +451,7 @@ impl FunctionProperties {
                 }
                 EventDescription::ProcessExit { pid } => {
                     let pid = pid.as_ref().map_or(0, Pid::get);
-                    sprintf!(=> &mut out, " --on-process-exit %d", pid)
+                    sprintf!(=> &mut out, " --on-process-exit %d", pid);
                 }
                 EventDescription::JobExit { pid, .. } => {
                     let pid = pid.as_ref().map_or(0, Pid::get);

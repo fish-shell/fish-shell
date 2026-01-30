@@ -2,7 +2,7 @@
 
 # REQUIRES: command -v sphinx-build
 # REQUIRES: command -v man
-# REQUIRES: test "$FISH_BUILD_DOCS" != "0"
+# REQUIRES: %fish -c '__fish_data_with_directory man/man1 ".*" ls' | grep -q .
 
 # Override the test-override again.
 status get-file functions/__fish_print_help.fish | source

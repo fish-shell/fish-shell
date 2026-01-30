@@ -137,7 +137,6 @@ complete -c dnf -n __fish_use_subcommand -xa "$__dnf_info_cmds" -d "Describes th
 complete -c dnf -n "__fish_seen_subcommand_from $__dnf_info_cmds; and not __fish_seen_subcommand_from history" \
     -k -xa "(__dnf_list_available_packages)"
 
-
 # Install
 complete -c dnf -n __fish_use_subcommand -xa "$__dnf_install_cmds" -d "Install package"
 complete -c dnf -n "__fish_seen_subcommand_from $__dnf_install_cmds" \

@@ -26,7 +26,7 @@ use crate::parse_constants::{
     SOURCE_LOCATION_UNKNOWN,
 };
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
-use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef, SourceLineCache, parse_source};
+use crate::parse_tree::{NodeRef, ParsedSourceRef, SourceLineCache, parse_source};
 use crate::portable_atomic::AtomicU64;
 use crate::prelude::*;
 use crate::proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap};
@@ -396,9 +396,8 @@ pub enum CancelBehavior {
 pub struct Parser {
     pub interactive_initialized: RelaxedAtomicBool,
 
-    /// A shared line counter. This is handed out to each execution context
-    /// so they can communicate the line number back to this Parser.
-    line_counter: ScopedRefCell<LineCounter<ast::JobPipeline>>,
+    /// The currently executing Node.
+    current_node: ScopedRefCell<Option<NodeRef<ast::JobPipeline>>>,
 
     /// The jobs associated with this parser.
     job_list: RefCell<JobList>,
@@ -460,7 +459,7 @@ impl Parser {
     pub fn new(variables: EnvStack, cancel_behavior: CancelBehavior) -> Parser {
         let result = Self {
             interactive_initialized: RelaxedAtomicBool::new(false),
-            line_counter: ScopedRefCell::new(LineCounter::empty()),
+            current_node: ScopedRefCell::new(None),
             job_list: RefCell::default(),
             wait_handles: RefCell::default(),
             block_list: RefCell::default(),
@@ -704,15 +703,14 @@ impl Parser {
         let cancel_checker: CancelChecker = Box::new(move || check_cancel_signal().is_some());
         op_ctx.cancel_checker = cancel_checker;
 
-        // Restore the line counter.
-        let ps = node.parsed_source_ref();
-        let restore_line_counter = self.line_counter.scoped_replace(ps.line_counter());
+        // Restore the current pipeline node.
+        let restore_current_node = self.current_node.scoped_replace(None);
 
         // Create a new execution context.
         let mut execution_context = ExecutionContext::new(
-            ps,
+            node.parsed_source_ref(),
             block_io.clone(),
-            &self.line_counter,
+            &self.current_node,
             test_only_suppress_stderr,
         );
 
@@ -723,7 +721,7 @@ impl Parser {
         let new_exec_count = self.libdata().exec_count;
         let new_status_count = self.libdata().status_count;
 
-        ScopeGuarding::commit(restore_line_counter);
+        ScopeGuarding::commit(restore_current_node);
         self.pop_block(scope_block);
 
         job_reap(self, false, Some(block_io)); // reap again
@@ -777,7 +775,10 @@ impl Parser {
     ///
     /// init.fish (line 127): ls|grep pancake
     pub fn current_line(&self) -> WString {
-        let Some(source_offset) = self.line_counter.borrow_mut().source_offset_of_node() else {
+        let Some(node_ref) = self.current_node.borrow().clone() else {
+            return WString::new();
+        };
+        let Some(source_offset) = node_ref.source_offset() else {
             return WString::new();
         };
 
@@ -810,7 +811,7 @@ impl Parser {
         };
 
         let mut line_info = empty_error.describe_with_prefix(
-            self.line_counter.borrow().get_source(),
+            node_ref.source_str(),
             &prefix,
             self.is_interactive(),
             skip_caret,
@@ -825,10 +826,7 @@ impl Parser {
 
     /// Returns the current line number, indexed from 1.
     pub fn get_lineno(&self) -> Option<NonZeroU32> {
-        self.line_counter
-            .borrow()
-            .node_ref()
-            .and_then(|n| n.lineno())
+        self.current_node.borrow().as_ref().and_then(|n| n.lineno())
     }
 
     /// Returns the current line number, indexed from 1, or zero if not sourced.
@@ -839,7 +837,7 @@ impl Parser {
     /// Returns a NodeRef to the current node being executed, if any.
     /// This can be used for lazy line number computation.
     pub fn current_node_ref(&self) -> Option<NodeRef<ast::JobPipeline>> {
-        self.line_counter.borrow().node_ref()
+        self.current_node.borrow().clone()
     }
 
     /// Return whether we are currently evaluating a "block" such as an if statement.
@@ -1031,7 +1029,7 @@ impl Parser {
     /// Pushes a new block. Returns an id (index) of the block, which is stored in the parser.
     pub fn push_block(&self, mut block: Block) -> BlockId {
         block.src_filename = self.current_filename();
-        block.src_node = self.line_counter.borrow().node_ref();
+        block.src_node.clone_from(&self.current_node.borrow());
         if block.typ() != BlockType::top {
             let new_scope = block.typ() == BlockType::function_call { shadows: true };
             self.vars().push(new_scope);

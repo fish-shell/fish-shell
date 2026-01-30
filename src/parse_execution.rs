@@ -30,7 +30,7 @@ use crate::parse_constants::{
     ParseError, ParseErrorCode, ParseErrorList, ParseKeyword, ParseTokenType, StatementDecoration,
     parse_error_offset_source_start,
 };
-use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef};
+use crate::parse_tree::{NodeRef, ParsedSourceRef};
 use crate::parse_util::{
     MaybeParentheses::CommandSubstitution, locate_cmdsubst_range, unescape_wildcards,
 };
@@ -84,9 +84,9 @@ pub struct ExecutionContext<'a> {
     // unwinding.
     cancel_signal: Option<Signal>,
 
-    // Helper to count lines.
+    // The currently executing pipeline node.
     // This is shared with the Parser so that the Parser can access the current line.
-    line_counter: &'a ScopedRefCell<LineCounter<ast::JobPipeline>>,
+    pipeline_node: &'a ScopedRefCell<Option<NodeRef<ast::JobPipeline>>>,
 
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
@@ -131,13 +131,13 @@ impl<'a> ExecutionContext<'a> {
     pub fn new(
         pstree: ParsedSourceRef,
         block_io: IoChain,
-        line_counter: &'a ScopedRefCell<LineCounter<ast::JobPipeline>>,
+        pipeline_node: &'a ScopedRefCell<Option<NodeRef<ast::JobPipeline>>>,
         test_only_suppress_stderr: bool,
     ) -> Self {
         Self {
             pstree,
             cancel_signal: None,
-            line_counter,
+            pipeline_node,
             block_io,
             test_only_suppress_stderr,
         }
@@ -1530,9 +1530,8 @@ impl<'a> ExecutionContext<'a> {
         let _saved_eval_level = ctx.parser().push_scope(|s| s.eval_level += 1);
 
         // Save the executing node.
-        let _saved_node = self
-            .line_counter
-            .scoped_set(std::ptr::from_ref(job_node), |s| &mut s.node);
+        let executing_node = NodeRef::new(Arc::clone(self.pstree()), job_node);
+        let _saved_node = self.pipeline_node.scoped_replace(Some(executing_node));
 
         // Profiling support.
         let profile_item_id = ctx.parser().create_profile_item();

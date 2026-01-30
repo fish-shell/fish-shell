@@ -147,14 +147,6 @@ impl ParsedSource {
         ParsedSource { src, ast }
     }
 
-    // Return a line counter over this source.
-    pub fn line_counter<NodeType: Node>(self: &Arc<Self>) -> LineCounter<NodeType> {
-        LineCounter {
-            parsed_source: Pin::new(Arc::clone(self)),
-            node: std::ptr::null(),
-        }
-    }
-
     // Return the top NodeRef for the parse tree, which is of type JobList.
     pub fn top_job_list(self: &Arc<Self>) -> NodeRef<JobList> {
         NodeRef::new(Arc::clone(self), self.ast.top())
@@ -192,6 +184,16 @@ impl<NodeType: Node> NodeRef<NodeType> {
             parsed_source: self.parsed_source.clone(),
             node: func(self),
         }
+    }
+
+    // Return the source offset of this node, if any.
+    pub fn source_offset(&self) -> Option<usize> {
+        self.try_source_range().map(|r| r.start())
+    }
+
+    // Return the source, as a string.
+    pub fn source_str(&self) -> &wstr {
+        &self.parsed_source.src
     }
 }
 
@@ -253,50 +255,23 @@ pub fn parse_source(
     }
 }
 
-/// A type which assists in returning line numbers.
-/// This is a somewhat strange type which both counts line numbers and also holds
-/// a reference to a "current" node; this matches the expected usage from parse_execution.
-pub struct LineCounter<NodeType: Node> {
-    /// The parse tree containing the node.
-    /// This is pinned because we hold a pointer into it.
-    parsed_source: Pin<Arc<ParsedSource>>,
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    /// The node itself. This points into the parsed source, or it may be null.
-    pub node: *const NodeType,
-}
+    #[test]
+    fn test_lineno_for_offset() {
+        let src = L!("a\nb\nc\nd").to_owned();
+        let ps = ParsedSource::new(src, ast::parse(L!(""), ParseTreeFlags::default(), None));
+        let mut cache = SourceLineCache::default();
 
-impl<NodeType: Node> LineCounter<NodeType> {
-    // Return a line counter for empty source.
-    pub fn empty() -> Self {
-        let parsed_source =
-            Pin::new(parse_source(WString::new(), ParseTreeFlags::default(), None).unwrap());
-        LineCounter {
-            parsed_source,
-            node: std::ptr::null(),
-        }
-    }
+        // Forward progression
+        assert_eq!(ps.lineno_for_offset(0, &mut cache), 1);
+        assert_eq!(ps.lineno_for_offset(4, &mut cache), 3);
+        assert_eq!(ps.lineno_for_offset(6, &mut cache), 4);
 
-    // Return the 0 based character offset of the node.
-    pub fn source_offset_of_node(&mut self) -> Option<usize> {
-        // Safety: any node is valid for the lifetime of the source.
-        let node = unsafe { self.node.as_ref()? };
-        let range = node.try_source_range()?;
-        Some(range.start())
-    }
-
-    // Return the source.
-    pub fn get_source(&self) -> &wstr {
-        &self.parsed_source.src
-    }
-
-    /// Return a NodeRef for the current node, if any.
-    pub fn node_ref(&self) -> Option<NodeRef<NodeType>> {
-        if self.node.is_null() {
-            return None;
-        }
-        Some(NodeRef::new(
-            Pin::into_inner(self.parsed_source.clone()),
-            self.node,
-        ))
+        // Backward progression
+        assert_eq!(ps.lineno_for_offset(2, &mut cache), 2);
+        assert_eq!(ps.lineno_for_offset(0, &mut cache), 1);
     }
 }

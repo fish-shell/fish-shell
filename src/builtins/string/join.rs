@@ -84,9 +84,9 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
 
         if nargs > 0 && !self.quiet {
             if self.is_join0 {
-                streams.out.append_char('\0');
+                streams.out.append('\0');
             } else if print_trailing_newline {
-                streams.out.append_char('\n');
+                streams.out.append('\n');
             }
         }
 

@@ -738,8 +738,7 @@ fn validate_arg<'opts>(
     );
 
     for output in cmd_output {
-        streams.err.append(&output);
-        streams.err.append_char('\n');
+        streams.err.appendln(&output);
     }
     parser.vars().pop(parser.is_repainting());
     retval.map(|()| SUCCESS)

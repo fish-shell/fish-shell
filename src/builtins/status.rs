@@ -728,8 +728,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 }
                 STATUS_CURRENT_COMMANDLINE => {
                     let commandline = &parser.libdata().status_vars.commandline;
-                    streams.out.append(commandline);
-                    streams.out.append_char('\n');
+                    streams.out.appendln(commandline);
                 }
                 STATUS_FISH_PATH => {
                     use crate::env::config_paths::FishPath::*;

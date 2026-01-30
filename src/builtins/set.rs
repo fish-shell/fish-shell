@@ -677,19 +677,20 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
     if EnvVar::flags_for(var_name).contains(EnvVarFlags::READ_ONLY) {
         streams.out.append(wgettext!(" (read-only)\n"));
     } else {
-        streams.out.append_char('\n');
+        streams.out.append('\n');
     }
 
     for i in 0..vals.len() {
         if vals.len() > 100 {
             if i == 50 {
                 // try to print a mid-line ellipsis because we are eliding lines not words
-                streams.out.append(if u32::from(get_ellipsis_char()) > 256 {
-                    L!("\u{22EF}")
-                } else {
-                    get_ellipsis_str()
-                });
-                streams.out.append_char('\n');
+                streams
+                    .out
+                    .appendln(if u32::from(get_ellipsis_char()) > 256 {
+                        L!("\u{22EF}")
+                    } else {
+                        get_ellipsis_str()
+                    });
             }
             if i >= 50 && i < vals.len() - 50 {
                 continue;

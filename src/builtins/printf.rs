@@ -578,7 +578,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append_char('\n');
+            self.streams.err.append('\n');
         }
 
         // We set the exit code to error, because one occurred,
@@ -602,7 +602,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append_char('\n');
+            self.streams.err.append('\n');
         }
 
         self.exit_code = Err(STATUS_CMD_ERROR);

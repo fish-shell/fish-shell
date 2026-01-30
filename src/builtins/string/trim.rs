@@ -85,7 +85,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
             if !self.quiet {
                 streams.out.append(&arg[trim_start..arg.len() - trim_end]);
                 if want_newline {
-                    streams.out.append_char('\n');
+                    streams.out.append('\n');
                 }
             } else if ntrim > 0 {
                 return Ok(());

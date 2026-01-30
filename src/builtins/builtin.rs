@@ -53,7 +53,7 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     }
 
     if opts.query && opts.list_names {
-        streams.err.append(&wgettext_fmt!(
+        streams.err.appendln(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
             wgettext!("--query and --names are mutually exclusive")

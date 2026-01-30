@@ -1406,7 +1406,8 @@ fn append_block_description_to_stack_trace(
             print_source_location = true;
         }
         BlockType::subst => {
-            trace.push_utfstr(&wgettext!("in command substitution\n"));
+            trace.push_utfstr(&wgettext!("in command substitution"));
+            trace.push('\n');
             print_source_location = true;
         }
         BlockType::source => {
@@ -1415,9 +1416,10 @@ fn append_block_description_to_stack_trace(
             };
             let source_dest = file;
             trace.push_utfstr(&wgettext_fmt!(
-                "from sourcing file %s\n",
+                "from sourcing file %s",
                 &user_presentable_path(source_dest, parser.vars())
             ));
+            trace.push('\n');
             print_source_location = true;
         }
         BlockType::event => {
@@ -1425,7 +1427,8 @@ fn append_block_description_to_stack_trace(
                 unreachable!()
             };
             let description = event::get_desc(parser, event);
-            trace.push_utfstr(&wgettext_fmt!("in event handler: %s\n", &description));
+            trace.push_utfstr(&wgettext_fmt!("in event handler: %s", &description));
+            trace.push('\n');
             print_source_location = true;
         }
         BlockType::top

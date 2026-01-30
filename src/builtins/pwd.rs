@@ -40,7 +40,7 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Buil
     if w.wopt_index != argc {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 0, argc - 1));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 0, argc - 1));
         return Err(STATUS_INVALID_ARGS);
     }
 

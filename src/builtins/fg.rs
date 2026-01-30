@@ -38,7 +38,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
             None => {
                 streams
                     .err
-                    .append(&wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
+                    .appendln(&wgettext_fmt!(BUILTIN_ERR_NO_SUITABLE_JOBS, cmd));
                 return Err(STATUS_INVALID_ARGS);
             }
             Some((pos, j)) => {
@@ -112,11 +112,11 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
     if streams.err_is_redirected {
         streams
             .err
-            .append(&wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
+            .appendln(&wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
     } else {
         // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
         // printed until the command finishes.
-        eprintf!("%s", wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
+        eprintf!("%s\n", wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
     }
 
     let ft = tok_command(job.command());

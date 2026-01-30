@@ -99,7 +99,7 @@ pub fn parse_return_value(
     if optind + 1 < args.len() {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return ControlFlow::Break(Err(STATUS_INVALID_ARGS));
     }
@@ -111,7 +111,7 @@ pub fn parse_return_value(
             Err(_e) => {
                 streams
                     .err
-                    .append(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
+                    .appendln(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 ControlFlow::Break(Err(STATUS_INVALID_ARGS))
             }

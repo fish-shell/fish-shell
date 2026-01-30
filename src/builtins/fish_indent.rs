@@ -1023,7 +1023,7 @@ fn do_indent(
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
             ';' => {
-                streams.err.append(&wgettext_fmt!(
+                streams.err.appendln(&wgettext_fmt!(
                     BUILTIN_ERR_UNEXP_ARG,
                     "fish_indent",
                     w.argv[w.wopt_index - 1]
@@ -1031,7 +1031,7 @@ fn do_indent(
                 return Err(STATUS_CMD_ERROR);
             }
             '?' => {
-                streams.err.append(&wgettext_fmt!(
+                streams.err.appendln(&wgettext_fmt!(
                     BUILTIN_ERR_UNKNOWN,
                     "fish_indent",
                     w.argv[w.wopt_index - 1]

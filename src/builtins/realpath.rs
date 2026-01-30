@@ -82,8 +82,8 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
             } else {
                 let errno = errno();
                 if errno.0 != 0 {
-                    streams.err.append(&wgettext_fmt!(
-                        "builtin %s: %s: %s\n",
+                    streams.err.appendln(&wgettext_fmt!(
+                        "builtin %s: %s: %s",
                         cmd,
                         arg,
                         errno.to_string()
@@ -91,7 +91,7 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
                 } else {
                     streams
                         .err
-                        .append(&wgettext_fmt!("builtin %s: Invalid arg: %s\n", cmd, arg));
+                        .appendln(&wgettext_fmt!("builtin %s: Invalid arg: %s", cmd, arg));
                 }
                 had_error = true;
             }
@@ -107,8 +107,8 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
                 streams.out.append(&normalize_path(&absolute_arg, false));
                 streams.out.append(L!("\n"));
             } else {
-                streams.err.append(&wgettext_fmt!(
-                    "builtin %s: realpath failed: %s\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "builtin %s: realpath failed: %s",
                     cmd,
                     errno().to_string()
                 ));

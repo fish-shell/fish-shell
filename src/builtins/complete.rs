@@ -413,7 +413,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
 
     if result_mode.no_files && result_mode.force_files {
         if !have_x {
-            streams.err.append(&wgettext_fmt!(
+            streams.err.appendln(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 "complete",
                 "'--no-files' and '--force-files'"
@@ -421,7 +421,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         } else {
             // The reason for us not wanting files is `-x`,
             // which is short for `-rf`.
-            streams.err.append(&wgettext_fmt!(
+            streams.err.appendln(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 "complete",
                 "'--exclusive' and '--force-files'"
@@ -441,7 +441,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         } else {
             streams
                 .err
-                .append(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+                .appendln(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }

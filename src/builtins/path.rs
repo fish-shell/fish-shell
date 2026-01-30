@@ -23,7 +23,7 @@ macro_rules! path_error {
     $(,)?
     ) => {
         $streams.err.append(L!("path "));
-        $streams.err.append(&wgettext_fmt!($string, $($args),*));
+        $streams.err.appendln(&wgettext_fmt!($string, $($args),*));
     };
 }
 
@@ -283,7 +283,7 @@ fn parse_opts<'args>(
                 let types_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for t in types_args {
                     let Ok(r#type) = t.try_into() else {
-                        path_error!(streams, "%s: Invalid type '%s'\n", "path", t);
+                        path_error!(streams, "%s: Invalid type '%s'", "path", t);
                         return Err(STATUS_INVALID_ARGS);
                     };
                     *types |= r#type;
@@ -295,7 +295,7 @@ fn parse_opts<'args>(
                 let perms_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for p in perms_args {
                     let Ok(perm) = p.try_into() else {
-                        path_error!(streams, "%s: Invalid permission '%s'\n", "path", p);
+                        path_error!(streams, "%s: Invalid permission '%s'", "path", p);
                         return Err(STATUS_INVALID_ARGS);
                     };
                     *perms |= perm;
@@ -698,7 +698,7 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
         }
         None => wbasename,
         Some(k) => {
-            path_error!(streams, "%s: Invalid sort key '%s'\n", args[0], k);
+            path_error!(streams, "%s: Invalid sort key '%s'", args[0], k);
             return Err(STATUS_INVALID_ARGS);
         }
     };
@@ -951,7 +951,7 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
     if argc <= 1 {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -977,7 +977,7 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
         _ => {
             streams
                 .err
-                .append(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
+                .appendln(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }

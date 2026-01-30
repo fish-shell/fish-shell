@@ -45,12 +45,8 @@ msgstr ""
 msgid "fish-section-tier1-from-rust"
 msgstr ""
 
-msgid ""
-"\n"
-"   PID  Command\n"
-msgstr ""
-"\n"
-"   PID  命令\n"
+msgid "   PID  Command"
+msgstr "   PID  命令"
 
 #, c-format
 msgid " (%s)\n"
@@ -105,8 +101,8 @@ msgid "%s"
 msgstr "%s"
 
 #, c-format
-msgid "%s %s: %s: invalid subcommand\n"
-msgstr "%s %s: %s: 无效的子命令\n"
+msgid "%s %s: %s: invalid subcommand"
+msgstr "%s %s: %s: 无效的子命令"
 
 #, c-format
 msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
@@ -189,12 +185,12 @@ msgid "%s, version %s\n"
 msgstr "%s，版本 %s\n"
 
 #, c-format
-msgid "%s: %s\n"
-msgstr "%s: %s\n"
+msgid "%s: %s"
+msgstr "%s: %s"
 
 #, c-format
-msgid "%s: %s %s: options cannot be used together\n"
-msgstr "%s: %s %s: 选项无法一起使用\n"
+msgid "%s: %s %s: options cannot be used together"
+msgstr "%s: %s %s: 选项无法一起使用"
 
 #, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
@@ -209,8 +205,8 @@ msgid "%s: %s: contains a syntax error\n"
 msgstr "%s: %s: 包含语法错误\n"
 
 #, c-format
-msgid "%s: %s: expected %d arguments; got %d\n"
-msgstr "%s: %s: 预期收到 %d 个参数；实际收到 %d 个\n"
+msgid "%s: %s: expected %d arguments; got %d"
+msgstr "%s: %s: 预期收到 %d 个参数；实际收到 %d 个"
 
 #, c-format
 msgid "%s: %s: invalid base value\n"
@@ -221,48 +217,48 @@ msgid "%s: %s: invalid function name"
 msgstr "%s: %s: 无效的函数名"
 
 #, c-format
-msgid "%s: %s: invalid integer\n"
-msgstr "%s: %s: 无效整数\n"
+msgid "%s: %s: invalid integer"
+msgstr "%s: %s: 无效整数"
 
 #, c-format
 msgid "%s: %s: invalid mode\n"
 msgstr "%s: %s: 无效舍入模式\n"
 
 #, c-format
-msgid "%s: %s: invalid mode name. See `help %s`\n"
-msgstr "%s: %s: 无效模式名。参见 `help %s`\n"
+msgid "%s: %s: invalid mode name. See `help %s`"
+msgstr "%s: %s: 无效模式名。参见 `help %s`"
 
 #, c-format
 msgid "%s: %s: invalid scale\n"
 msgstr "%s: %s: 无效位数\n"
 
 #, c-format
-msgid "%s: %s: invalid subcommand\n"
-msgstr "%s: %s: 无效的子命令\n"
+msgid "%s: %s: invalid subcommand"
+msgstr "%s: %s: 无效的子命令"
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help %s`\n"
-msgstr "%s: %s: 无效的变量名。参见 `help %s`\n"
+msgid "%s: %s: invalid variable name. See `help %s`"
+msgstr "%s: %s: 无效的变量名。参见 `help %s`"
 
 #, c-format
-msgid "%s: %s: option does not take an argument\n"
-msgstr "%s: %s: 选项不接受参数\n"
+msgid "%s: %s: option does not take an argument"
+msgstr "%s: %s: 选项不接受参数"
 
 #, c-format
-msgid "%s: %s: option requires an argument\n"
-msgstr "%s: %s: 选项需要参数\n"
+msgid "%s: %s: option requires an argument"
+msgstr "%s: %s: 选项需要参数"
 
 #, c-format
-msgid "%s: %s: subcommand takes no options\n"
-msgstr "%s: %s: 子命令不接受选项\n"
+msgid "%s: %s: subcommand takes no options"
+msgstr "%s: %s: 子命令不接受选项"
 
 #, c-format
 msgid "%s: %s: unexpected positional argument"
 msgstr "%s: %s: 意外的位置参数"
 
 #, c-format
-msgid "%s: %s: unknown option\n"
-msgstr "%s: %s: 未知选项\n"
+msgid "%s: %s: unknown option"
+msgstr "%s: %s: 未知选项"
 
 #, c-format
 msgid "%s: '%s' is a broken symbolic link to '%s'\n"
@@ -277,8 +273,8 @@ msgid "%s: '%s' is not a job\n"
 msgstr "%s: '%s' 不是一个作业\n"
 
 #, c-format
-msgid "%s: '%s' is not a valid job ID\n"
-msgstr "%s: '%s' 不是一个有效的作业 ID\n"
+msgid "%s: '%s' is not a valid job ID"
+msgstr "%s: '%s' 不是一个有效的作业 ID"
 
 #, c-format
 msgid "%s: '%s' is not a valid process ID\n"
@@ -341,8 +337,8 @@ msgid "%s: Can't put job %d, '%s' to foreground because it is not under job cont
 msgstr "%s: 不能将作业 %d，'%s' 带到前台，因为它不受作业控制管理\n"
 
 #, c-format
-msgid "%s: Can't put job %s, '%s' to background because it is not under job control\n"
-msgstr "%s: 无法将作业 %s，'%s' 放到后台，因为它不受作业控制管理\n"
+msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
+msgstr "%s: 无法将作业 %s，'%s' 放到后台，因为它不受作业控制管理"
 
 #, c-format
 msgid "%s: Cannot combine options %s\n"
@@ -385,8 +381,8 @@ msgid "%s: Could not find home directory\n"
 msgstr "%s: 找不到主目录\n"
 
 #, c-format
-msgid "%s: Could not find job '%d'\n"
-msgstr "%s: 找不到作业 '%d'\n"
+msgid "%s: Could not find job '%d'"
+msgstr "%s: 找不到作业 '%d'"
 
 #, c-format
 msgid "%s: Did you mean `set %s %s`?"
@@ -453,6 +449,10 @@ msgid "%s: Invalid --unknown-arguments value '%s'\n"
 msgstr "%s: 无效的 --unknown-arguments 值 '%s'\n"
 
 #, c-format
+msgid "%s: Invalid count value '%s'"
+msgstr "%s: 无效的计数值 '%s'"
+
+#, c-format
 msgid "%s: Invalid count value '%s'\n"
 msgstr "%s: 无效的计数值 '%s'\n"
 
@@ -477,20 +477,20 @@ msgid "%s: Invalid index starting at '%s'\n"
 msgstr "%s: 无效的起始索引值 '%s'\n"
 
 #, c-format
-msgid "%s: Invalid job control mode '%s'\n"
-msgstr "%s: 无效的作业控制模式 '%s'\n"
+msgid "%s: Invalid job control mode '%s'"
+msgstr "%s: 无效的作业控制模式 '%s'"
 
 #, c-format
 msgid "%s: Invalid length value '%s'\n"
 msgstr "%s: 无效的长度值 '%s'\n"
 
 #, c-format
-msgid "%s: Invalid level value '%s'\n"
-msgstr "%s: 无效的级别值 '%s'\n"
+msgid "%s: Invalid level value '%s'"
+msgstr "%s: 无效的级别值 '%s'"
 
 #, c-format
-msgid "%s: Invalid limit '%s'\n"
-msgstr "%s: 无效的限制 '%s'\n"
+msgid "%s: Invalid limit '%s'"
+msgstr "%s: 无效的限制 '%s'"
 
 #, c-format
 msgid "%s: Invalid max matches value '%s'\n"
@@ -509,8 +509,8 @@ msgid "%s: Invalid padding character of width zero '%s'\n"
 msgstr "%s: 宽度为零的无效的填充字符 '%s'\n"
 
 #, c-format
-msgid "%s: Invalid permission '%s'\n"
-msgstr "%s: 无效的权限 '%s'\n"
+msgid "%s: Invalid permission '%s'"
+msgstr "%s: 无效的权限 '%s'"
 
 #, c-format
 msgid "%s: Invalid position '%s'\n"
@@ -521,8 +521,8 @@ msgid "%s: Invalid range value for field '%s'\n"
 msgstr "%s: 字段 '%s' 的范围值无效\n"
 
 #, c-format
-msgid "%s: Invalid sort key '%s'\n"
-msgstr "%s: 无效的排序键 '%s'\n"
+msgid "%s: Invalid sort key '%s'"
+msgstr "%s: 无效的排序键 '%s'"
 
 #, c-format
 msgid "%s: Invalid start value '%s'\n"
@@ -541,8 +541,8 @@ msgid "%s: Invalid token '%s'\n"
 msgstr "%s: 无效记号 '%s'\n"
 
 #, c-format
-msgid "%s: Invalid type '%s'\n"
-msgstr "%s: 无效类型 '%s'\n"
+msgid "%s: Invalid type '%s'"
+msgstr "%s: 无效类型 '%s'"
 
 #, c-format
 msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n"
@@ -565,8 +565,8 @@ msgid "%s: Missing -- separator\n"
 msgstr "%s: 缺少 -- 分隔符\n"
 
 #, c-format
-msgid "%s: New limit cannot be an empty string\n"
-msgstr "%s: 新限制不能为空字符串\n"
+msgid "%s: New limit cannot be an empty string"
+msgstr "%s: 新限制不能为空字符串"
 
 #, c-format
 msgid "%s: No binding found for key '%s'\n"
@@ -585,8 +585,8 @@ msgid "%s: No suitable job: %d\n"
 msgstr "%s: 没有合适的作业：%d\n"
 
 #, c-format
-msgid "%s: No suitable job: %s\n"
-msgstr "%s: 没有合适的作业：%s\n"
+msgid "%s: No suitable job: %s"
+msgstr "%s: 没有合适的作业：%s"
 
 #, c-format
 msgid "%s: Not inside of loop\n"
@@ -613,16 +613,16 @@ msgid "%s: Permission denied: '%s'\n"
 msgstr "%s: 拒绝访问: '%s'\n"
 
 #, c-format
-msgid "%s: Regular expression compile error: %s\n"
-msgstr "%s: 正则表达式编译错误：%s\n"
+msgid "%s: Regular expression compile error: %s"
+msgstr "%s: 正则表达式编译错误：%s"
 
 #, c-format
-msgid "%s: Regular expression substitute error: %s\n"
-msgstr "%s: 正则表达式替换错误：%s\n"
+msgid "%s: Regular expression substitute error: %s"
+msgstr "%s: 正则表达式替换错误：%s"
 
 #, c-format
-msgid "%s: Resource limit not available on this operating system\n"
-msgstr "%s: 该操作系统不支持资源限制\n"
+msgid "%s: Resource limit not available on this operating system"
+msgstr "%s: 该操作系统不支持资源限制"
 
 #, c-format
 msgid "%s: STEP must be a positive integer\n"
@@ -645,12 +645,12 @@ msgid "%s: The variable '%s' does not exist\n"
 msgstr "%s: 变量 '%s' 不存在\n"
 
 #, c-format
-msgid "%s: There are no jobs\n"
-msgstr "%s: 没有作业\n"
+msgid "%s: There are no jobs"
+msgstr "%s: 没有作业"
 
 #, c-format
-msgid "%s: There are no suitable jobs\n"
-msgstr "%s: 没有匹配的作业\n"
+msgid "%s: There are no suitable jobs"
+msgstr "%s: 没有匹配的作业"
 
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'\n"
@@ -713,16 +713,16 @@ msgid "%s: calling job for event handler not found"
 msgstr "%s: 未找到事件处理程序的调用作业"
 
 #, c-format
-msgid "%s: can't merge history in private mode\n"
-msgstr "%s: 无法在私密模式中合并历史\n"
+msgid "%s: can't merge history in private mode"
+msgstr "%s: 无法在私密模式中合并历史"
 
 #, c-format
-msgid "%s: cannot both export and unexport\n"
-msgstr "%s: 无法同时导出和取消导出\n"
+msgid "%s: cannot both export and unexport"
+msgstr "%s: 无法同时导出和取消导出"
 
 #, c-format
-msgid "%s: cannot both path and unpath\n"
-msgstr "%s: 无法同时是路径变量和非路径变量\n"
+msgid "%s: cannot both path and unpath"
+msgstr "%s: 无法同时是路径变量和非路径变量"
 
 #, c-format
 msgid "%s: column %s exceeds line length\n"
@@ -737,16 +737,16 @@ msgid "%s: exclusive flag string '%s' is not valid\n"
 msgstr "%s: 排他标识字符串 '%s' 无效\n"
 
 #, c-format
-msgid "%s: expected %d arguments; got %d\n"
-msgstr "%s: 预期收到 %d 个参数；实际收到 %d 个\n"
+msgid "%s: expected %d arguments; got %d"
+msgstr "%s: 预期收到 %d 个参数；实际收到 %d 个"
 
 #, c-format
-msgid "%s: expected <= %d arguments; got %d\n"
-msgstr "%s: 预期收到 <= %d 个参数；实际收到 %d 个\n"
+msgid "%s: expected <= %d arguments; got %d"
+msgstr "%s: 预期收到 <= %d 个参数；实际收到 %d 个"
 
 #, c-format
-msgid "%s: expected >= %d arguments; got %d\n"
-msgstr "%s: 预期收到 >= %d 个参数；实际收到 %d 个\n"
+msgid "%s: expected >= %d arguments; got %d"
+msgstr "%s: 预期收到 >= %d 个参数；实际收到 %d 个"
 
 #, c-format
 msgid "%s: expected a numeric value"
@@ -765,36 +765,36 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: 无效的转换规范"
 
 #, c-format
-msgid "%s: invalid option combination\n"
-msgstr "%s: 无效的选项组合\n"
+msgid "%s: invalid option combination"
+msgstr "%s: 无效的选项组合"
 
 #, c-format
-msgid "%s: invalid option combination, %s\n"
-msgstr "%s: 无效的选项组合，%s\n"
+msgid "%s: invalid option combination, %s"
+msgstr "%s: 无效的选项组合，%s"
 
 #, c-format
 msgid "%s: invalid underline style: %s\n"
 msgstr "%s: 无效的下划线样式：%s\n"
 
 #, c-format
-msgid "%s: job %d ('%s') was stopped and has been signalled to continue.\n"
-msgstr "%s: 作业 %d ('%s') 已停止并收到继续信号。\n"
+msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
+msgstr "%s: 作业 %d ('%s') 已停止并收到继续信号。"
 
 #, c-format
 msgid "%s: line/column index starts at 1"
 msgstr "%s: 行/列索引从1开始"
 
 #, c-format
-msgid "%s: missing argument\n"
-msgstr "%s: 缺少参数\n"
+msgid "%s: missing argument"
+msgstr "%s: 缺少参数"
 
 #, c-format
 msgid "%s: missing filename argument or input redirection\n"
 msgstr "%s: 缺少文件名参数或输入重定向\n"
 
 #, c-format
-msgid "%s: missing subcommand\n"
-msgstr "%s: 缺少子命令\n"
+msgid "%s: missing subcommand"
+msgstr "%s: 缺少子命令"
 
 #, c-format
 msgid "%s: nothing to choose from\n"
@@ -805,8 +805,8 @@ msgid "%s: realpath failed: %s\n"
 msgstr "%s: realpath 失败：%s\n"
 
 #, c-format
-msgid "%s: scope can be only one of: universal function global local\n"
-msgstr "%s: 范围只能是：universal（通用）function（函数）global（全局）local（局域）\n"
+msgid "%s: scope can be only one of: universal function global local"
+msgstr "%s: 范围只能是：universal（通用）function（函数）global（全局）local（局域）"
 
 #, c-format
 msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet supported"
@@ -829,8 +829,8 @@ msgid "%s: there is no line %s\n"
 msgstr "%s: 不存在行 %s\n"
 
 #, c-format
-msgid "%s: too many arguments\n"
-msgstr "%s: 参数太多\n"
+msgid "%s: too many arguments"
+msgstr "%s: 参数太多"
 
 #, c-format
 msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"
@@ -847,10 +847,6 @@ msgstr "%s: 变量 '%s' 只读\n"
 #, c-format
 msgid "%sand %u more rows"
 msgstr "%s还有 %u 行"
-
-#, c-format
-msgid "%u\n"
-msgstr "%u\n"
 
 msgid "'break' while not inside of loop"
 msgstr "'break' 不在循环内"
@@ -914,8 +910,8 @@ msgstr "--query 和 --names 互斥"
 msgid "--tokens options are mutually exclusive"
 msgstr "--tokens 各选项互斥"
 
-msgid "A second attempt to exit will terminate them.\n"
-msgstr "第二次尝试退出将终止它们。\n"
+msgid "A second attempt to exit will terminate them."
+msgstr "第二次尝试退出将终止它们。"
 
 msgid "Abbreviation expansion"
 msgstr "缩写展开"
@@ -1002,8 +998,8 @@ msgstr "检查某物是否是其自身"
 msgid "Child process status changed"
 msgstr "子进程状况已改变"
 
-msgid "Command\n"
-msgstr "命令\n"
+msgid "Command"
+msgstr "命令"
 
 msgid "Command history events"
 msgstr "命令历史事件"
@@ -1181,8 +1177,8 @@ msgstr "生成随机数"
 msgid "Get/set resource usage limits"
 msgstr "获取/设定资源使用限制"
 
-msgid "Group\n"
-msgstr "组\n"
+msgid "Group"
+msgstr "组"
 
 msgid "Halt execution and start debug prompt"
 msgstr "停止执行并启动调试提示符"
@@ -1273,8 +1269,8 @@ msgid "Job\tGroup\t"
 msgstr "作业\t组\t"
 
 #, c-format
-msgid "Job control: %s\n"
-msgstr "作业控制:%s\n"
+msgid "Job control: %s"
+msgstr "作业控制:%s"
 
 msgid "Jobs being executed"
 msgstr "正在执行的作业"
@@ -1416,8 +1412,8 @@ msgstr "打印工作目录"
 msgid "Prints formatted text"
 msgstr "打印格式化文本"
 
-msgid "Process\n"
-msgstr "进程\n"
+msgid "Process"
+msgstr "进程"
 
 msgid "Process groups"
 msgstr "进程组"
@@ -1494,12 +1490,12 @@ msgid "Searching/using paths"
 msgstr "搜索/使用路径"
 
 #, c-format
-msgid "Send job %d (%s) to foreground\n"
-msgstr "将作业 %d (%s) 发送到前台\n"
+msgid "Send job %d (%s) to foreground"
+msgstr "将作业 %d (%s) 发送到前台"
 
 #, c-format
-msgid "Send job %s '%s' to background\n"
-msgstr "将作业 %s '%s' 发送到后台\n"
+msgid "Send job %s '%s' to background"
+msgstr "将作业 %s '%s' 发送到后台"
 
 msgid "Send job to background"
 msgstr "将作业发送到后台"
@@ -1536,8 +1532,8 @@ msgstr "标准输入 (行 %d)："
 msgid "Startup (line %d): "
 msgstr "启动 (行 %d)："
 
-msgid "State\tCommand\n"
-msgstr "状态\t命令\n"
+msgid "State\tCommand"
+msgstr "状态\t命令"
 
 msgid "Stdin must be attached to a tty."
 msgstr "Stdin 必须连接到 TTY。"
@@ -1609,14 +1605,14 @@ msgstr "函数 '%s' 立即调用自身，会导致无限循环。"
 msgid "The interactive reader/input system"
 msgstr "交互式阅读器/输入系统"
 
-msgid "There are still jobs active:\n"
-msgstr "仍然活动的作业：\n"
+msgid "There are still jobs active:"
+msgstr "仍然活动的作业："
 
-msgid "This is a login shell\n"
-msgstr "这是登录 shell\n"
+msgid "This is a login shell"
+msgstr "这是登录 shell"
 
-msgid "This is not a login shell\n"
-msgstr "这不是登录 shell\n"
+msgid "This is not a login shell"
+msgstr "这不是登录 shell"
 
 msgid "Timer expired"
 msgstr "计时器到期"
@@ -1746,8 +1742,8 @@ msgstr "未使用的信号"
 msgid "Urgent socket condition"
 msgstr "紧急套接字情况"
 
-msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
-msgstr "使用 'disown PID' 从列表中删除作业而不终止它们。\n"
+msgid "Use 'disown PID' to remove jobs from the list without terminating them."
+msgstr "使用 'disown PID' 从列表中删除作业而不终止它们。"
 
 msgid "User defined signal 1"
 msgstr "用户定义的信号1"
@@ -1795,22 +1791,22 @@ msgid "autoloading"
 msgstr "自动加载"
 
 #, c-format
-msgid "builtin %s: %s: %s\n"
-msgstr "内建 %s: %s: %s\n"
+msgid "builtin %s: %s: %s"
+msgstr "内建 %s: %s: %s"
 
 #, c-format
-msgid "builtin %s: Invalid arg: %s\n"
-msgstr "内建 %s: 无效的参数：%s\n"
+msgid "builtin %s: Invalid arg: %s"
+msgstr "内建 %s: 无效的参数：%s"
 
 #, c-format
-msgid "builtin %s: realpath failed: %s\n"
-msgstr "内建 %s: realpath 失败：%s\n"
+msgid "builtin %s: realpath failed: %s"
+msgstr "内建 %s: realpath 失败：%s"
 
-msgid "builtin history delete --exact requires --case-sensitive\n"
-msgstr "内建历史删除 --exact 需要 --case-sensitive\n"
+msgid "builtin history delete --exact requires --case-sensitive"
+msgstr "内建历史删除 --exact 需要 --case-sensitive"
 
-msgid "builtin history delete only supports --exact\n"
-msgstr "内建历史删除只支持 --exact\n"
+msgid "builtin history delete only supports --exact"
+msgstr "内建历史删除只支持 --exact"
 
 msgid "can not save history"
 msgstr "无法保存历史"
@@ -1843,8 +1839,8 @@ msgstr "目录符号链接"
 msgid "directory"
 msgstr "目录"
 
-msgid "error\n"
-msgstr "错误\n"
+msgid "error"
+msgstr "错误"
 
 msgid "explore what characters keyboard keys send"
 msgstr "探索键盘按键发送的字符"
@@ -1859,22 +1855,22 @@ msgstr "文件"
 msgid ""
 "fish: %s: missing man page\n"
 "Documentation may not be installed.\n"
-"`help %s` will show an online version\n"
+"`help %s` will show an online version"
 msgstr ""
 "fish: %s: 缺少 man page\n"
 "文档可能未安装。\n"
-"`help %s` 将显示在线版本\n"
+"`help %s` 将显示在线版本"
 
 #, c-format
-msgid "from sourcing file %s\n"
-msgstr "从源文件 %s\n"
+msgid "from sourcing file %s"
+msgstr "从源文件 %s"
 
-msgid "in command substitution\n"
-msgstr "在命令替换中\n"
+msgid "in command substitution"
+msgstr "在命令替换中"
 
 #, c-format
-msgid "in event handler: %s\n"
-msgstr "在事件处理程序：%s\n"
+msgid "in event handler: %s"
+msgstr "在事件处理程序：%s"
 
 #, c-format
 msgid "in function '%s'"
@@ -1920,8 +1916,8 @@ msgid "symlink"
 msgstr "符号链接"
 
 #, c-format
-msgid "ulimit: Permission denied when changing resource of type '%s'\n"
-msgstr "ulimit: 更改类型 '%s' 的资源时权限被拒绝\n"
+msgid "ulimit: Permission denied when changing resource of type '%s'"
+msgstr "ulimit: 更改类型 '%s' 的资源时权限被拒绝"
 
 msgid "unexported"
 msgstr "未导出"
@@ -1930,8 +1926,8 @@ msgstr "未导出"
 msgid "unknown modifier '%s' in '%s'"
 msgstr "未知修饰符 '%s' 于 '%s'"
 
-msgid "unlimited\n"
-msgstr "无限制\n"
+msgid "unlimited"
+msgstr "无限制"
 
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr "|& 无效。在 fish 中，用 &| 来同时管道链接 stdout 和 stderr。"

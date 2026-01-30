@@ -117,12 +117,14 @@ macro_rules! report_error_formatted {
 }
 
 pub fn varname_error(command: &wstr, bad_name: &wstr) -> WString {
-    wgettext_fmt!(
+    let mut e = wgettext_fmt!(
         BUILTIN_ERR_VARNAME,
         command,
         bad_name,
         help_section!("language#shell-variable-and-function-names")
-    )
+    );
+    e.push('\n');
+    e
 }
 
 impl<'a> ExecutionContext<'a> {

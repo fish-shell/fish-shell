@@ -95,7 +95,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         let cmd = args[0];
 
         if self.entire && self.index {
-            streams.err.append(&wgettext_fmt!(
+            streams.err.appendln(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 cmd,
                 wgettext!("--entire and --index are mutually exclusive")
@@ -104,7 +104,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         }
 
         if self.invert_match && self.groups_only {
-            streams.err.append(&wgettext_fmt!(
+            streams.err.appendln(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 cmd,
                 wgettext!("--invert and --groups-only are mutually exclusive")
@@ -113,7 +113,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         }
 
         if self.entire && self.groups_only {
-            streams.err.append(&wgettext_fmt!(
+            streams.err.appendln(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 cmd,
                 wgettext!("--entire and --groups-only are mutually exclusive")

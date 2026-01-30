@@ -21,87 +21,97 @@ pub const DEFAULT_READ_PROMPT: &wstr =
 localizable_consts!(
     /// Error message on missing argument.
     pub BUILTIN_ERR_MISSING
-    "%s: %s: option requires an argument\n"
+    "%s: %s: option requires an argument"
 
     /// Error message on unexpected argument.
     pub BUILTIN_ERR_UNEXP_ARG
-    "%s: %s: option does not take an argument\n"
+    "%s: %s: option does not take an argument"
 
     /// Error message on missing man page.
     pub BUILTIN_ERR_MISSING_HELP
-    "fish: %s: missing man page\nDocumentation may not be installed.\n`help %s` will show an online version\n"
+    "fish: %s: missing man page\nDocumentation may not be installed.\n`help %s` will show an online version"
 
     /// Error message on multiple scope levels for variables.
     pub BUILTIN_ERR_GLOCAL
-    "%s: scope can be only one of: universal function global local\n"
+    "%s: scope can be only one of: universal function global local"
 
     /// Error message for specifying both export and unexport to set/read.
     pub BUILTIN_ERR_EXPUNEXP
-    "%s: cannot both export and unexport\n"
+    "%s: cannot both export and unexport"
 
     /// Error message for specifying both path and unpath to set/read.
     pub BUILTIN_ERR_PATHUNPATH
-    "%s: cannot both path and unpath\n"
+    "%s: cannot both path and unpath"
 
     /// Error message for unknown switch.
     pub BUILTIN_ERR_UNKNOWN
-    "%s: %s: unknown option\n"
+    "%s: %s: unknown option"
 
     /// Error message for invalid bind mode name.
     pub BUILTIN_ERR_BIND_MODE
-    "%s: %s: invalid mode name. See `help %s`\n"
+    "%s: %s: invalid mode name. See `help %s`"
 
     /// Error message when too many arguments are supplied to a builtin.
     pub BUILTIN_ERR_TOO_MANY_ARGUMENTS
-    "%s: too many arguments\n"
+    "%s: too many arguments"
 
     /// Error message when integer expected
     pub BUILTIN_ERR_NOT_NUMBER
-    "%s: %s: invalid integer\n"
+    "%s: %s: invalid integer"
 
     /// Command that requires a subcommand was invoked without a recognized subcommand.
     pub BUILTIN_ERR_MISSING_SUBCMD
-    "%s: missing subcommand\n"
+    "%s: missing subcommand"
 
     pub BUILTIN_ERR_INVALID_SUBCMD
-    "%s: %s: invalid subcommand\n"
+    "%s: %s: invalid subcommand"
 
     pub BUILTIN_ERR_INVALID_SUBSUBCMD
-    "%s %s: %s: invalid subcommand\n"
+    "%s %s: %s: invalid subcommand"
 
     /// Error messages for unexpected args.
     pub BUILTIN_ERR_ARG_COUNT0
-    "%s: missing argument\n"
+    "%s: missing argument"
 
     pub BUILTIN_ERR_ARG_COUNT1
-    "%s: expected %d arguments; got %d\n"
+    "%s: expected %d arguments; got %d"
 
     pub BUILTIN_ERR_ARG_COUNT2
-    "%s: %s: expected %d arguments; got %d\n"
+    "%s: %s: expected %d arguments; got %d"
 
     pub BUILTIN_ERR_MIN_ARG_COUNT1
-    "%s: expected >= %d arguments; got %d\n"
+    "%s: expected >= %d arguments; got %d"
 
     pub BUILTIN_ERR_MAX_ARG_COUNT1
-    "%s: expected <= %d arguments; got %d\n"
+    "%s: expected <= %d arguments; got %d"
 
     /// Error message for invalid variable name.
     pub BUILTIN_ERR_VARNAME
-    "%s: %s: invalid variable name. See `help %s`\n"
+    "%s: %s: invalid variable name. See `help %s`"
 
     /// Error message on invalid combination of options.
     pub BUILTIN_ERR_COMBO
-    "%s: invalid option combination\n"
+    "%s: invalid option combination"
 
     pub BUILTIN_ERR_COMBO2
-    "%s: invalid option combination, %s\n"
+    "%s: invalid option combination, %s"
 
     pub BUILTIN_ERR_COMBO2_EXCLUSIVE
-    "%s: %s %s: options cannot be used together\n"
+    "%s: %s %s: options cannot be used together"
+
+    pub BUILTIN_ERR_REGEX_COMPILE
+    "%s: Regular expression compile error: %s"
+
+    pub BUILTIN_ERR_NO_SUITABLE_JOBS
+    "%s: There are no suitable jobs"
+
+    pub BUILTIN_ERR_COULD_NOT_FIND_JOB
+    "%s: Could not find job '%d'"
 
     /// The send stuff to foreground message.
     pub FG_MSG
-    "Send job %d (%s) to foreground\n"
+    "Send job %d (%s) to foreground"
+
 );
 
 // Return values (`$status` values for fish scripts) for various situations.
@@ -632,7 +642,7 @@ pub fn builtin_print_help(parser: &Parser, streams: &mut IoStreams, cmd: &wstr) 
     if res.status.normal_exited() && res.status.exit_code() == 2 {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING_HELP, name_esc, name_esc));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING_HELP, name_esc, name_esc));
     }
 }
 
@@ -646,7 +656,7 @@ pub fn builtin_unknown_option(
 ) {
     streams
         .err
-        .append(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, cmd, opt));
+        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, cmd, opt));
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
     }
@@ -663,7 +673,7 @@ pub fn builtin_missing_argument(
     if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
         // if c in -qc '-qc' is missing the argument, now opt is just 'c'
         opt = &opt[opt.len() - 1..];
-        streams.err.append(&wgettext_fmt!(
+        streams.err.appendln(&wgettext_fmt!(
             BUILTIN_ERR_MISSING,
             cmd,
             L!("-").to_owned() + opt
@@ -671,7 +681,7 @@ pub fn builtin_missing_argument(
     } else {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, opt));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, opt));
     }
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -688,7 +698,7 @@ pub fn builtin_unexpected_argument(
 ) {
     streams
         .err
-        .append(&wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, cmd, opt));
+        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, cmd, opt));
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
     }
@@ -1021,7 +1031,7 @@ pub fn builtin_break_continue(
     if argc != 1 {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]));
         return Err(STATUS_INVALID_ARGS);
     }
 

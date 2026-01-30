@@ -52,7 +52,7 @@ impl StringSubCommand<'_> for Length {
                         nnonempty += 1;
                     }
                     if !self.quiet {
-                        streams.out.appendln(max.to_wstring());
+                        streams.out.appendln(&max.to_wstring());
                     } else if nnonempty > 0 {
                         return Ok(());
                     }
@@ -63,7 +63,7 @@ impl StringSubCommand<'_> for Length {
                     nnonempty += 1;
                 }
                 if !self.quiet {
-                    streams.out.appendln(n.to_wstring());
+                    streams.out.appendln(&n.to_wstring());
                 } else if nnonempty > 0 {
                     return Ok(());
                 }

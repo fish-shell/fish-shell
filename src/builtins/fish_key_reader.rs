@@ -160,7 +160,7 @@ fn setup_and_process_keys(
             .err
             .appendln("To terminate this program type \"exit\" or \"quit\" in this window,");
         let modes = shell_modes();
-        streams.err.appendln(wgettext_fmt!(
+        streams.err.appendln(&wgettext_fmt!(
             "or press ctrl-%c or ctrl-%c twice in a row.",
             char::from(modes.c_cc[VINTR] + 0x60),
             char::from(modes.c_cc[VEOF] + 0x60)
@@ -201,7 +201,7 @@ fn parse_flags(
                 return ControlFlow::Break(Ok(SUCCESS));
             }
             'v' => {
-                streams.out.appendln(wgettext_fmt!(
+                streams.out.appendln(&wgettext_fmt!(
                     "%s, version %s",
                     get_program_name(),
                     crate::BUILD_VERSION
@@ -235,7 +235,7 @@ fn parse_flags(
     if argc != 0 {
         streams
             .err
-            .appendln(wgettext_fmt!("Expected no arguments, got %d", argc));
+            .appendln(&wgettext_fmt!("Expected no arguments, got %d", argc));
         return ControlFlow::Break(Err(STATUS_CMD_ERROR));
     }
 

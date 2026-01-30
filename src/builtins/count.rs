@@ -19,7 +19,7 @@ pub fn count(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         .filter(|input_value| input_value.want_newline)
         .count();
 
-    streams.out.appendln(numargs.to_wstring());
+    streams.out.appendln(&numargs.to_wstring());
 
     if numargs == 0 {
         return Err(STATUS_CMD_ERROR);

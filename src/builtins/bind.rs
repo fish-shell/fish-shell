@@ -401,7 +401,7 @@ impl BuiltinBind {
         modes.dedup();
 
         for mode in modes {
-            streams.out.appendln(mode);
+            streams.out.appendln(&mode);
         }
     }
 }

@@ -1007,7 +1007,7 @@ fn do_indent(
                 return Ok(SUCCESS);
             }
             'v' => {
-                streams.out.appendln(wgettext_fmt!(
+                streams.out.appendln(&wgettext_fmt!(
                     "%s, version %s",
                     get_program_name(),
                     crate::BUILD_VERSION
@@ -1051,7 +1051,7 @@ fn do_indent(
     while i < args.len() || (args.is_empty() && i == 0) {
         if args.is_empty() && i == 0 {
             if output_type == OutputType::File {
-                streams.err.appendln(wgettext_fmt!(
+                streams.err.appendln(&wgettext_fmt!(
                     "Expected file path to read/write for -w:\n\n $ %s -w foo.fish",
                     get_program_name()
                 ));
@@ -1087,7 +1087,7 @@ fn do_indent(
                     output_location = arg;
                 }
                 Err(err) => {
-                    streams.err.appendln(wgettext_fmt!(
+                    streams.err.appendln(&wgettext_fmt!(
                         "Opening \"%s\" failed: %s",
                         arg,
                         err.to_string()
@@ -1168,7 +1168,7 @@ fn do_indent(
                             let _ = file.write_all(&wcs2bytes(&output_wtext));
                         }
                         Err(err) => {
-                            streams.err.appendln(wgettext_fmt!(
+                            streams.err.appendln(&wgettext_fmt!(
                                 "Opening \"%s\" failed: %s",
                                 output_location,
                                 err.to_string()
@@ -1314,12 +1314,12 @@ fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
         };
         let ast = ast::parse(src, flags, None);
         let ast_dump = ast.dump(src);
-        streams.err.appendln(ast_dump);
+        streams.err.appendln(&ast_dump);
 
         // Output metrics too.
         let mut metrics = AstSizeMetrics::default();
         metrics.visit(ast.top());
-        streams.err.appendln(format!("{}", metrics));
+        streams.err.appendln(&format!("{}", metrics));
     }
     let ast = ast::parse(src, parse_flags(), None);
     let mut printer = PrettyPrinter::new(src, &ast, do_indent);

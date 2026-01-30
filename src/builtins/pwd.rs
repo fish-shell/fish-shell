@@ -63,6 +63,6 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Buil
     if pwd.is_empty() {
         return Err(STATUS_CMD_ERROR);
     }
-    streams.out.appendln(pwd);
+    streams.out.appendln(&pwd);
     Ok(SUCCESS)
 }

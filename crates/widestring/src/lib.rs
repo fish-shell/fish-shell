@@ -240,6 +240,15 @@ impl<'a: 'b, 'b> IntoCharIter for &'b std::borrow::Cow<'a, wstr> {
     }
 }
 
+impl<A: DoubleEndedIterator<Item = char> + Clone, B: DoubleEndedIterator<Item = char> + Clone>
+    IntoCharIter for std::iter::Chain<A, B>
+{
+    type Iter = std::iter::Chain<A, B>;
+    fn chars(self) -> Self::Iter {
+        self
+    }
+}
+
 /// Return true if `prefix` is a prefix of `contents`.
 fn iter_prefixes_iter<Prefix, Contents>(prefix: Prefix, mut contents: Contents) -> bool
 where

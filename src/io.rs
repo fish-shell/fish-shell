@@ -690,12 +690,18 @@ impl OutputStream {
         }
     }
 
+    /// Append the given characters and a trailing newline.
+    pub fn appendln(&mut self, s: impl IntoCharIter) -> bool {
+        // Try calling "append" less - it might write() to an fd
+        self.append(s.chars().chain(std::iter::once('\n')))
+    }
+
     /// An optional override point. This is for explicit separation.
     /// \param want_newline this is true if the output item should be ended with a newline. This
     /// is only relevant if we are printing the output to a stream,
     pub fn append_with_separation(
         &mut self,
-        s: &wstr,
+        s: impl IntoCharIter,
         typ: SeparationType,
         want_newline: bool,
     ) -> bool {
@@ -703,21 +709,12 @@ impl OutputStream {
             OutputStream::Buffered(stream) => stream.append_with_separation(s, typ, want_newline),
             OutputStream::Fd(_) | OutputStream::Null | OutputStream::String(_) => {
                 if typ == SeparationType::explicitly && want_newline {
-                    // Try calling "append" less - it might write() to an fd
-                    let mut buf = s.to_owned();
-                    buf.push('\n');
-                    self.append(&buf)
+                    self.appendln(s)
                 } else {
                     self.append(s)
                 }
             }
         }
-    }
-
-    /// Append a &wstr or WString with a newline
-    pub fn appendln(&mut self, s: impl Into<WString>) -> bool {
-        let s = s.into() + L!("\n");
-        self.append(&s)
     }
 
     pub fn append_char(&mut self, c: char) -> bool {
@@ -840,7 +837,7 @@ impl BufferedOutputStream {
     }
     fn append_with_separation(
         &mut self,
-        s: &wstr,
+        s: impl IntoCharIter,
         typ: SeparationType,
         _want_newline: bool,
     ) -> bool {

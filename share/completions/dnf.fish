@@ -51,6 +51,12 @@ function __dnf_list_transactions
     end
 end
 
+# DNF subcommand aliases
+set -l dnf_install_cmds install in
+set -l dnf_remove_cmds remove rm
+set -l dnf_reinstall_cmds reinstall rei
+set -l dnf_info_cmds info if
+
 # Alias
 complete -c dnf -n __fish_use_subcommand -xa alias -d "Manage aliases"
 complete -c dnf -n "__fish_seen_subcommand_from alias" -xa add -d "Add a new alias"
@@ -127,12 +133,14 @@ for i in info redo rollback undo
 end
 
 # Info
-complete -c dnf -n __fish_use_subcommand -xa info -d "Describes the given package"
-complete -c dnf -n "__fish_seen_subcommand_from info; and not __fish_seen_subcommand_from history" -k -xa "(__dnf_list_available_packages)"
+complete -c dnf -n __fish_use_subcommand -xa "$dnf_info_cmds" -d "Describes the given package"
+complete -c dnf -n "__fish_seen_subcommand_from $dnf_info_cmds; and not __fish_seen_subcommand_from history" \
+    -k -xa "(__dnf_list_available_packages)"
 
 # Install
-complete -c dnf -n __fish_use_subcommand -xa install -d "Install package"
-complete -c dnf -n "__fish_seen_subcommand_from install" -k -xa "(__dnf_list_available_packages)"
+complete -c dnf -n __fish_use_subcommand -xa "$dnf_install_cmds" -d "Install package"
+complete -c dnf -n "__fish_seen_subcommand_from $dnf_install_cmds" \
+    -k -xa "(__dnf_list_available_packages)"
 
 # List
 complete -c dnf -n __fish_use_subcommand -xa list -d "Lists all packages"
@@ -190,12 +198,14 @@ complete -c dnf -n "__fish_seen_subcommand_from offline-upgrade" -xa log -d "Sho
 complete -c dnf -n __fish_use_subcommand -xa provides -d "Finds packages providing the given command"
 
 # Reinstall
-complete -c dnf -n __fish_use_subcommand -xa reinstall -d "Reinstalls a package"
-complete -c dnf -n "__fish_seen_subcommand_from reinstall" -xa "(__dnf_list_installed_packages)"
+complete -c dnf -n __fish_use_subcommand -xa "$dnf_reinstall_cmds" -d "Reinstalls a package"
+complete -c dnf -n "__fish_seen_subcommand_from $dnf_reinstall_cmds" \
+    -xa "(__dnf_list_installed_packages)"
 
 # Remove
-complete -c dnf -n __fish_use_subcommand -xa remove -d "Remove packages"
-complete -c dnf -n "__fish_seen_subcommand_from remove" -xa "(__dnf_list_installed_packages)" -d "Removes the specified packages"
+complete -c dnf -n __fish_use_subcommand -xa "$dnf_remove_cmds" -d "Remove packages"
+complete -c dnf -n "__fish_seen_subcommand_from $dnf_remove_cmds" \
+    -xa "(__dnf_list_installed_packages)"
 complete -c dnf -n "__fish_seen_subcommand_from remove" -l duplicates -d "Removes older version of duplicated packages"
 complete -c dnf -n "__fish_seen_subcommand_from remove" -l oldinstallonly -d "Removes old installonly packages"
 

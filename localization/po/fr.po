@@ -50173,9 +50173,6 @@ msgstr ""
 msgid "Removes the specified option for the named destination"
 msgstr ""
 
-msgid "Removes the specified packages"
-msgstr ""
-
 msgid "Removes the specified service name from the service cache"
 msgstr ""
 

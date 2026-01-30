@@ -26,6 +26,7 @@ For distributors and developers
 
 Regression fixes:
 -----------------
+- (from 4.1.0) Crash when autosuggesting Unicode characters with nontrivial lowercase mapping (:issue:`12326`, 78f4541116e).
 
 fish 4.3.3 (released January 07, 2026)
 ======================================

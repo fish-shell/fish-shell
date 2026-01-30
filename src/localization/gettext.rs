@@ -140,6 +140,19 @@ macro_rules! localizable_consts {
     (
         $(
             $(#[$attr:meta])*
+            $name:ident
+            $string:literal
+        )*
+    ) => {
+        $(
+            $(#[$attr])*
+            const $name: $crate::localization::LocalizableString =
+                localizable_string!($string);
+        )*
+    };
+    (
+        $(
+            $(#[$attr:meta])*
             $vis:vis
             $name:ident
             $string:literal

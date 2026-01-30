@@ -79,7 +79,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
     }
 
     if opts.query as i64 + opts.path as i64 + opts.get_type as i64 + opts.force_path as i64 > 1 {
-        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        streams.err.appendln(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         return Err(STATUS_INVALID_ARGS);
     }
 

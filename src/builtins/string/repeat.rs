@@ -59,7 +59,7 @@ impl StringSubCommand<'_> for Repeat {
         *optind += 1;
 
         let Ok(Ok(count)) = fish_wcstol(arg).map(|count| count.try_into()) else {
-            string_error!(streams, "%s: Invalid count value '%s'\n", name, arg);
+            string_error!(streams, "%s: Invalid count value '%s'", name, arg);
             return Err(STATUS_INVALID_ARGS);
         };
 

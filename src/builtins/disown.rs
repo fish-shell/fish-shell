@@ -21,8 +21,8 @@ fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
         if let Some(pgid) = pgid {
             let _ = killpg(pgid.as_nix_pid(), Some(Signal::SIGCONT));
         }
-        streams.err.append(&wgettext_fmt!(
-            "%s: job %d ('%s') was stopped and has been signalled to continue.\n",
+        streams.err.appendln(&wgettext_fmt!(
+            "%s: job %d ('%s') was stopped and has been signalled to continue.",
             cmd,
             j.job_id(),
             j.command()
@@ -66,7 +66,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         } else {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: There are no suitable jobs\n", cmd));
+                .appendln(&wgettext_fmt!(BUILTIN_ERR_NO_SUITABLE_JOBS, cmd));
             retval = Err(STATUS_CMD_ERROR);
         }
     } else {
@@ -89,7 +89,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     // Valid identifier but no such job
                     streams
                         .err
-                        .append(&wgettext_fmt!("%s: Could not find job '%d'\n", cmd, pid));
+                        .appendln(&wgettext_fmt!(BUILTIN_ERR_COULD_NOT_FIND_JOB, cmd, pid));
                     None
                 })
             })

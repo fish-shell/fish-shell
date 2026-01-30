@@ -358,8 +358,8 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
         let result = builder.build(to_boxed_chars(regex_pattern));
 
         if let Err(error) = result {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Regular expression compile error: %s\n",
+            streams.err.appendln(&wgettext_fmt!(
+                BUILTIN_ERR_REGEX_COMPILE,
                 CMD,
                 error.error_message(),
             ));
@@ -393,7 +393,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     if opts.function.is_some() && opts.args.len() > 1 {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, L!("abbr")));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, L!("abbr")));
         return Err(STATUS_INVALID_ARGS);
     }
     let replacement = if let Some(ref function) = opts.function {

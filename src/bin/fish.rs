@@ -313,21 +313,21 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             }
             '?' => {
                 eprintf!(
-                    "%s\n",
+                    "%s\n\n",
                     wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             ':' => {
                 eprintf!(
-                    "%s\n",
+                    "%s\n\n",
                     wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             ';' => {
                 eprintf!(
-                    "%s\n",
+                    "%s\n\n",
                     wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);

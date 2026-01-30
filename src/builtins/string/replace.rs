@@ -104,7 +104,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
                 Err(e) => {
                     string_error!(
                         streams,
-                        "%s: Regular expression substitute error: %s\n",
+                        "%s: Regular expression substitute error: %s",
                         cmd,
                         e.error_message()
                     );

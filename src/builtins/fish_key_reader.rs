@@ -212,7 +212,7 @@ fn parse_flags(
                 *verbose = true;
             }
             ';' => {
-                streams.err.append(&wgettext_fmt!(
+                streams.err.appendln(&wgettext_fmt!(
                     BUILTIN_ERR_UNEXP_ARG,
                     "fish_key_reader",
                     w.argv[w.wopt_index - 1]

@@ -71,7 +71,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         if res.is_err() {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
+                .appendln(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, num));
         }
         res
     }
@@ -80,7 +80,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         if res.is_err() {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: %s: invalid integer\n", cmd, num));
+                .appendln(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, num));
         }
         res
     }
@@ -140,7 +140,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         _ => {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: too many arguments\n", cmd,));
+                .appendln(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
             return Err(STATUS_CMD_ERROR);
         }
     }

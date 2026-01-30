@@ -312,7 +312,7 @@ impl BuiltinBind {
         } else {
             // Inserting both on the other hand makes no sense.
             if self.opts.have_preset && self.opts.have_user {
-                streams.err.append(&wgettext_fmt!(
+                streams.err.appendln(&wgettext_fmt!(
                     BUILTIN_ERR_COMBO2_EXCLUSIVE,
                     cmd,
                     "--preset",
@@ -433,7 +433,7 @@ fn parse_cmd_opts(
 
     let check_mode_name = |streams: &mut IoStreams, mode_name: &wstr| -> Result<(), ErrorCode> {
         if !valid_var_name(mode_name) {
-            streams.err.append(&wgettext_fmt!(
+            streams.err.appendln(&wgettext_fmt!(
                 BUILTIN_ERR_BIND_MODE,
                 cmd,
                 mode_name,

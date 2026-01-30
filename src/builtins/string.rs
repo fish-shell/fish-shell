@@ -29,7 +29,7 @@ macro_rules! string_error {
     $(,)?
     ) => {
         $streams.err.append(L!("string "));
-        $streams.err.append(&wgettext_fmt!($string, $($args),*));
+        $streams.err.appendln(&wgettext_fmt!($string, $($args),*));
     };
 }
 use string_error;
@@ -183,16 +183,16 @@ impl RegexError {
             Compile(pattern, e) => {
                 string_error!(
                     streams,
-                    "%s: Regular expression compile error: %s\n",
+                    BUILTIN_ERR_REGEX_COMPILE,
                     cmd,
                     &WString::from(e.error_message())
                 );
-                string_error!(streams, "%s: %s\n", cmd, pattern);
+                string_error!(streams, "%s: %s", cmd, pattern);
                 // TODO: This is misaligned if `pattern` contains characters which are not exactly 1
                 // terminal cell wide.
                 let mut marker = " ".repeat(e.offset().unwrap_or(0).saturating_sub(1));
                 marker.push('^');
-                string_error!(streams, "%s: %s\n", cmd, marker);
+                string_error!(streams, "%s: %s", cmd, marker);
             }
             InvalidCaptureGroupName(name) => {
                 streams.err.append(&wgettext_fmt!(
@@ -205,7 +205,7 @@ impl RegexError {
                     streams,
                     "%s",
                     sprintf!(
-                        "%s: Invalid escape sequence in pattern \"%s\"\n",
+                        "%s: Invalid escape sequence in pattern \"%s\"",
                         cmd,
                         pattern
                     )
@@ -320,7 +320,7 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     if argc <= 1 {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -369,7 +369,7 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         _ => {
             streams
                 .err
-                .append(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
+                .appendln(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
             builtin_print_error_trailer(parser, streams.err, cmd);
             Err(STATUS_INVALID_ARGS)
         }

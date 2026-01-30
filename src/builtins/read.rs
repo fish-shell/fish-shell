@@ -156,7 +156,7 @@ fn parse_cmd_opts(
                         return Err(STATUS_INVALID_ARGS);
                     }
                     _ => {
-                        streams.err.append(&wgettext_fmt!(
+                        streams.err.appendln(&wgettext_fmt!(
                             BUILTIN_ERR_NOT_NUMBER,
                             cmd,
                             w.woptarg.unwrap()
@@ -189,7 +189,7 @@ fn parse_cmd_opts(
                 };
                 if let Some(old_mode) = opts.token_mode {
                     if old_mode != new_mode {
-                        streams.err.append(&wgettext_fmt!(
+                        streams.err.appendln(&wgettext_fmt!(
                             BUILTIN_ERR_COMBO2,
                             cmd,
                             wgettext_fmt!(
@@ -488,7 +488,7 @@ fn validate_read_args(
     if opts.place.mode.contains(EnvMode::UNEXPORT) && opts.place.mode.contains(EnvMode::EXPORT) {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -501,7 +501,9 @@ fn validate_read_args(
         .count()
         > 1
     {
-        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
+        streams
+            .err
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -510,21 +512,21 @@ fn validate_read_args(
     if !opts.array && argc < 1 && !opts.to_stdout {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc));
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.array && argc != 1 {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc));
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.to_stdout && argc > 0 {
         streams
             .err
-            .append(&wgettext_fmt!(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc));
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -538,7 +540,7 @@ fn validate_read_args(
 
     if let Some(token_mode) = opts.token_mode {
         if opts.delimiter.is_some() {
-            streams.err.append(&wgettext_fmt!(
+            streams.err.appendln(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2_EXCLUSIVE,
                 cmd,
                 "--delimiter",
@@ -548,7 +550,7 @@ fn validate_read_args(
         }
 
         if opts.one_line {
-            streams.err.append(&wgettext_fmt!(
+            streams.err.appendln(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2_EXCLUSIVE,
                 cmd,
                 "--line",

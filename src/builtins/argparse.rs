@@ -146,8 +146,8 @@ fn check_for_mutually_exclusive_flags(
                         if flag1 > flag2 {
                             std::mem::swap(&mut flag1, &mut flag2);
                         }
-                        streams.err.append(&wgettext_fmt!(
-                            "%s: %s %s: options cannot be used together\n",
+                        streams.err.appendln(&wgettext_fmt!(
+                            BUILTIN_ERR_COMBO2_EXCLUSIVE,
                             opts.name,
                             flag1,
                             flag2
@@ -533,7 +533,7 @@ fn parse_cmd_opts<'args>(
             's' => opts.stop_nonopt = true,
             'i' | 'u' => {
                 if opts.unknown_handling != UnknownHandling::Error {
-                    streams.err.append(&wgettext_fmt!(
+                    streams.err.appendln(&wgettext_fmt!(
                         BUILTIN_ERR_COMBO2_EXCLUSIVE,
                         cmd,
                         "--ignore-unknown",
@@ -954,7 +954,7 @@ fn argparse_parse_flags<'args>(
                         streams,
                     )?;
                 } else if opts.unknown_handling == UnknownHandling::Error {
-                    streams.err.append(&wgettext_fmt!(
+                    streams.err.appendln(&wgettext_fmt!(
                         BUILTIN_ERR_UNKNOWN,
                         opts.name,
                         args_read[w.wopt_index - 1]
@@ -1009,7 +1009,7 @@ fn argparse_parse_flags<'args>(
                             Some(w.argv[w.wopt_index - 1])
                         } else {
                             // the option is at the end of argv, so it has no argument
-                            streams.err.append(&wgettext_fmt!(
+                            streams.err.appendln(&wgettext_fmt!(
                                 BUILTIN_ERR_MISSING,
                                 opts.name,
                                 args_read[w.wopt_index - 1]
@@ -1025,7 +1025,7 @@ fn argparse_parse_flags<'args>(
                         && is_long_flag
                         && arg_contents.contains('=')
                     {
-                        streams.err.append(&wgettext_fmt!(
+                        streams.err.appendln(&wgettext_fmt!(
                             BUILTIN_ERR_UNEXP_ARG,
                             opts.name,
                             args_read[w.wopt_index - 1]
@@ -1122,7 +1122,7 @@ fn check_min_max_args_constraints(
     let cmd = &opts.name;
 
     if opts.args.len() < opts.min_args {
-        streams.err.append(&wgettext_fmt!(
+        streams.err.appendln(&wgettext_fmt!(
             BUILTIN_ERR_MIN_ARG_COUNT1,
             cmd,
             opts.min_args,
@@ -1132,7 +1132,7 @@ fn check_min_max_args_constraints(
     }
 
     if opts.max_args != usize::MAX && opts.args.len() > opts.max_args {
-        streams.err.append(&wgettext_fmt!(
+        streams.err.appendln(&wgettext_fmt!(
             BUILTIN_ERR_MAX_ARG_COUNT1,
             cmd,
             opts.max_args,

@@ -11,7 +11,8 @@
 # is preserved.
 function __fish_complete_suffix -d "Complete using files"
     set -l _flag_prefix ""
-    set -l _flag_complete (commandline -ct)
+    # We need to remove '--name=' from the completion. See __fish_complete_directories
+    set -l _flag_complete (commandline -ct | string replace -r -- '^-[^=]*=' '')
 
     argparse 'prefix=' 'description=' 'complete=' -- $argv
 

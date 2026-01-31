@@ -155,13 +155,12 @@ fn write_part(
     let pos = cursor_pos - range.start;
 
     let Some(token_mode) = token_mode else {
-        if cut_at_cursor {
-            streams
-                .out
-                .appendln(&buffer[range.start..range.start + pos]);
+        let range = if cut_at_cursor {
+            range.start..range.start + pos
         } else {
-            streams.out.appendln(&buffer[range]);
-        }
+            range
+        };
+        streams.out.appendln(&buffer[range]);
         return;
     };
 

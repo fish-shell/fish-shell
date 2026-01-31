@@ -527,7 +527,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 else {
                     streams
                         .err
-                        .append(&wgettext_fmt!("%s: there is no line %s\n", cmd, arg));
+                        .appendln(&wgettext_fmt!("%s: there is no line %s", cmd, arg));
                     builtin_print_error_trailer(parser, streams.err, cmd);
                     return Err(STATUS_INVALID_ARGS);
                 };
@@ -540,8 +540,8 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 let next_line_offset =
                     get_offset_from_line(&rstate.text, line_index + 1).unwrap_or(rstate.text.len());
                 if line_offset + new_coord > next_line_offset {
-                    streams.err.append(&wgettext_fmt!(
-                        "%s: column %s exceeds line length\n",
+                    streams.err.appendln(&wgettext_fmt!(
+                        "%s: column %s exceeds line length",
                         cmd,
                         arg
                     ));

@@ -39,14 +39,14 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         if streams.is_stdin_closed() {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
+                .appendln(&wgettext_fmt!(BUILTIN_ERR_STDIN_CLOSED, cmd));
             return Err(STATUS_CMD_ERROR);
         }
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
         if argc == optind && isatty(streams.stdin_fd()) {
             // Don't implicitly read from the terminal.
-            streams.err.append(&wgettext_fmt!(
-                "%s: missing filename argument or input redirection\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: missing filename argument or input redirection",
                 cmd
             ));
             return Err(STATUS_CMD_ERROR);
@@ -60,8 +60,8 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             Err(_) => {
                 let esc = escape(args[optind]);
-                streams.err.append(&wgettext_fmt!(
-                    "%s: Error encountered while sourcing file '%s':\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "%s: Error encountered while sourcing file '%s':",
                     cmd,
                     &esc
                 ));
@@ -97,8 +97,8 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         Ok(_) => BuiltinResult::from_dynamic(parser.get_last_status()),
         Err(err) => {
             let esc = escape(&func_filename);
-            streams.err.append(&wgettext_fmt!(
-                "%s: Error while reading file '%s'\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Error while reading file '%s'",
                 cmd,
                 if esc == "-" { L!("<stdin>") } else { &esc }
             ));

@@ -104,12 +104,12 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
                 } else {
                     path_apply_working_directory(arg, &realpwd)
                 };
-                streams.out.append(&normalize_path(&absolute_arg, false));
-                streams.out.append(L!("\n"));
+                streams.out.appendln(&normalize_path(&absolute_arg, false));
             } else {
                 streams.err.appendln(&wgettext_fmt!(
-                    "builtin %s: realpath failed: %s",
+                    "builtin %s: %s failed: %s",
                     cmd,
+                    "realpath",
                     errno().to_string()
                 ));
                 had_error = true;

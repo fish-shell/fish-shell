@@ -60,11 +60,11 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         if found_job {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: Ambiguous job\n", cmd));
+                .appendln(&wgettext_fmt!("%s: Ambiguous job", cmd));
         } else {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: '%s' is not a job\n", cmd, argv[optind]));
+                .appendln(&wgettext_fmt!("%s: '%s' is not a job", cmd, argv[optind]));
         }
 
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -79,15 +79,15 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                 {
                     streams
                         .err
-                        .append(&wgettext_fmt!("%s: No suitable job: %d\n", cmd, pid));
+                        .appendln(&wgettext_fmt!("%s: No suitable job: %d", cmd, pid));
                     job_pos = None;
                     job = None;
                 } else {
                     let (pos, j) = j.unwrap();
                     job_pos = Some(pos);
                     job = if !j.wants_job_control() {
-                        streams.err.append(&wgettext_fmt!(
-                                        "%s: Can't put job %d, '%s' to foreground because it is not under job control\n",
+                        streams.err.appendln(&wgettext_fmt!(
+                                        "%s: Can't put job %d, '%s' to foreground because it is not under job control",
                                         cmd,
                                         pid,
                                         j.command()

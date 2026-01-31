@@ -36,7 +36,7 @@ impl StringSubCommand<'_> for Pad {
             'c' => {
                 let [pad_char] = arg.unwrap().as_char_slice() else {
                     return Err(invalid_args!(
-                        "%s: Padding should be a character '%s'\n",
+                        "%s: Padding should be a character '%s'",
                         name,
                         arg
                     ));
@@ -44,7 +44,7 @@ impl StringSubCommand<'_> for Pad {
                 let pad_char_width = fish_wcwidth(*pad_char);
                 if pad_char_width <= 0 {
                     return Err(invalid_args!(
-                        "%s: Invalid padding character of width zero '%s'\n",
+                        "%s: Invalid padding character of width zero '%s'",
                         name,
                         arg
                     ));
@@ -56,7 +56,7 @@ impl StringSubCommand<'_> for Pad {
             'w' => {
                 self.width = fish_wcstol(arg.unwrap())?
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid width value '%s'\n", name, arg))?;
+                    .map_err(|_| invalid_args!("%s: Invalid width value '%s'", name, arg))?;
             }
             'C' => self.center = true,
             _ => return Err(StringError::UnknownOption),

@@ -27,13 +27,6 @@ msgstr ""
 msgid "   PID  Command"
 msgstr "   PID  Befehl"
 
-#, c-format
-msgid " (%s)\n"
-msgstr " (%s)\n"
-
-msgid " (read-only)\n"
-msgstr " (screibgeschützt)\n"
-
 msgid " a path variable"
 msgstr " eine Pfadvariable"
 
@@ -55,8 +48,8 @@ msgid "$%c is not a valid variable in fish."
 msgstr ""
 
 #, c-format
-msgid "$%s: originally inherited as |%s|\n"
-msgstr "$%s: Ursprünglich geerbt als |%s|\n"
+msgid "$%s: originally inherited as |%s|"
+msgstr "$%s: Ursprünglich geerbt als |%s|"
 
 #, c-format
 msgid "$%s: set in %s scope, %s,%s with %d elements"
@@ -84,36 +77,36 @@ msgid "%s %s: %s: invalid subcommand"
 msgstr "%s %s: %s: ungültiger Unterbefehl"
 
 #, c-format
-msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s\n"
+msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s"
 msgstr ""
 
 #, c-format
-msgid "%s %s: Abbreviation %s already exists, cannot rename %s\n"
+msgid "%s %s: Abbreviation %s already exists, cannot rename %s"
 msgstr ""
 
 #, c-format
-msgid "%s %s: Abbreviation '%s' cannot have spaces in the word\n"
+msgid "%s %s: Abbreviation '%s' cannot have spaces in the word"
 msgstr ""
 
 #, c-format
-msgid "%s %s: Name cannot be empty\n"
-msgstr "%s %s: Name darf nicht leer sein\n"
-
-#, fuzzy, c-format
-msgid "%s %s: No abbreviation named %s with the specified command restrictions\n"
-msgstr "%s %s: Keine Abkürzung namens %s\n"
+msgid "%s %s: Name cannot be empty"
+msgstr "%s %s: Name darf nicht leer sein"
 
 #, c-format
-msgid "%s %s: Requires at least two arguments\n"
-msgstr "%s %s: Erfordert mindestens zwei Argumente\n"
+msgid "%s %s: No abbreviation named %s with the specified command restrictions"
+msgstr "%s %s: Keine Abkürzung namens %s mit den spezifizierten Befehlseinschränkungen"
 
 #, c-format
-msgid "%s %s: Requires exactly two arguments\n"
-msgstr "%s %s: Erfordert genau zwei Argumente\n"
+msgid "%s %s: Requires at least two arguments"
+msgstr "%s %s: Erfordert mindestens zwei Argumente"
 
 #, c-format
-msgid "%s %s: Unexpected argument -- '%s'\n"
-msgstr "%s %s: Unerwartetes Argument - '%s'\n"
+msgid "%s %s: Requires exactly two arguments"
+msgstr "%s %s: Erfordert genau zwei Argumente"
+
+#, c-format
+msgid "%s %s: Unexpected argument -- '%s'"
+msgstr "%s %s: Unerwartetes Argument - '%s'"
 
 #, c-format
 msgid "%s %s: unrecognized feature '%s'"
@@ -140,11 +133,11 @@ msgid "%s could not read response to Primary Device Attribute query after waitin
 msgstr ""
 
 #, c-format
-msgid "%s is %s\n"
+msgid "%s is %s"
 msgstr ""
 
 #, c-format
-msgid "%s is a builtin\n"
+msgid "%s is a builtin"
 msgstr ""
 
 #, c-format
@@ -160,16 +153,28 @@ msgid "%s, version %s"
 msgstr ""
 
 #, c-format
-msgid "%s, version %s\n"
-msgstr "%s, version %s\n"
-
-#, c-format
 msgid "%s: %s"
 msgstr ""
 
 #, c-format
 msgid "%s: %s %s: options cannot be used together"
 msgstr ""
+
+#, c-format
+msgid "%s: %s failed: %s"
+msgstr "%s: %s fehlgeschlagen: %s"
+
+#, c-format
+msgid "%s: %s must be a positive integer"
+msgstr "%s: %s muss eine positive Ganzzahl sein"
+
+#, c-format
+msgid "%s: %s option requires %s"
+msgstr "%s: Option %s braucht %s"
+
+#, c-format
+msgid "%s: %s requires a non-empty string"
+msgstr "%s: %s erfordert eine nicht-leere Zeichenkette"
 
 #, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
@@ -180,16 +185,16 @@ msgid "%s: %s: cannot use reserved keyword as function name"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: contains a syntax error\n"
-msgstr "%s: %s: enthält einen Syntaxfehler\n"
+msgid "%s: %s: contains a syntax error"
+msgstr "%s: %s: enthält einen Syntaxfehler"
 
 #, c-format
 msgid "%s: %s: expected %d arguments; got %d"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid base value\n"
-msgstr "%s: %s: ungültiger Basiswert\n"
+msgid "%s: %s: invalid base value"
+msgstr "%s: %s: ungültiger Basiswert"
 
 #, c-format
 msgid "%s: %s: invalid function name"
@@ -200,7 +205,7 @@ msgid "%s: %s: invalid integer"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid mode\n"
+msgid "%s: %s: invalid mode"
 msgstr ""
 
 #, c-format
@@ -208,7 +213,7 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid scale\n"
+msgid "%s: %s: invalid scale"
 msgstr ""
 
 #, c-format
@@ -240,23 +245,23 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: unbekannte Option"
 
 #, c-format
-msgid "%s: '%s' is a broken symbolic link to '%s'\n"
+msgid "%s: '%s' is a broken symbolic link to '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: '%s' is not a directory\n"
-msgstr "%s: '%s' ist kein Verzeichnis\n"
+msgid "%s: '%s' is not a directory"
+msgstr "%s: '%s' ist kein Verzeichnis"
 
 #, c-format
-msgid "%s: '%s' is not a job\n"
-msgstr "%s: '%s' ist kein Job\n"
+msgid "%s: '%s' is not a job"
+msgstr "%s: '%s' ist kein Job"
 
 #, c-format
 msgid "%s: '%s' is not a valid job ID"
 msgstr ""
 
 #, c-format
-msgid "%s: '%s' is not a valid process ID\n"
+msgid "%s: '%s' is not a valid process ID"
 msgstr ""
 
 #, c-format
@@ -264,100 +269,72 @@ msgid "%s: --command cannot be combined with --position=command"
 msgstr ""
 
 #, c-format
-msgid "%s: --function option requires --add\n"
-msgstr "%s: Option --function braucht --add\n"
-
-#, c-format
-msgid "%s: --position option requires --add\n"
-msgstr "%s: Option --position erfordert --add\n"
-
-#, c-format
-msgid "%s: --regex option requires --add\n"
-msgstr "%s: Option --regex erfordert --add\n"
-
-#, c-format
-msgid "%s: --set-cursor argument cannot be empty\n"
+msgid "%s: --set-cursor argument cannot be empty"
 msgstr ""
 
 #, c-format
-msgid "%s: --set-cursor option requires --add\n"
+msgid "%s: Ambiguous job"
+msgstr "%s: Mehrdeutiger Job"
+
+#, c-format
+msgid "%s: An option spec must have at least a short or a long flag"
 msgstr ""
 
 #, c-format
-msgid "%s: -l requires a non-empty string\n"
-msgstr ""
+msgid "%s: Argument '%s' is out of range"
+msgstr "%s: Argument '%s' ist außerhalb des Definitionsbereichs"
 
 #, c-format
-msgid "%s: -o requires a non-empty string\n"
-msgstr ""
+msgid "%s: Can not specify scope when removing block"
+msgstr "%s: Bei Blocklöschung kann kein Geltungsbereich angegeben werden"
 
 #, c-format
-msgid "%s: -s requires a non-empty string\n"
-msgstr "%s: -s erfordert eine nicht-leere Zeichenkette\n"
-
-#, c-format
-msgid "%s: Ambiguous job\n"
-msgstr "%s: Mehrdeutiger Job\n"
-
-#, c-format
-msgid "%s: An option spec must have at least a short or a long flag\n"
-msgstr ""
-
-#, c-format
-msgid "%s: Argument '%s' is out of range\n"
-msgstr "%s: Argument '%s' ist außerhalb des Definitionsbereichs\n"
-
-#, c-format
-msgid "%s: Can not specify scope when removing block\n"
-msgstr "%s: Bei Blocklöschung kann kein Geltungsbereich angegeben werden\n"
-
-#, c-format
-msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control\n"
-msgstr "%s: Kann job %d, '%s' nicht in den Vordergrund schicken weil er nicht der Jobsteuerung unterliegt\n"
+msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
+msgstr "%s: Kann job %d, '%s' nicht in den Vordergrund schicken weil er nicht der Jobsteuerung unterliegt"
 
 #, c-format
 msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
 msgstr "%s: Kann job %s, '%s' nicht in den Hintergrund schicken weil er nicht der Jobsteuerung unterliegt"
 
 #, c-format
-msgid "%s: Cannot combine options %s\n"
-msgstr "%s: Kann Optionen %s nicht kombinieren\n"
+msgid "%s: Cannot combine options %s"
+msgstr "%s: Kann Optionen %s nicht kombinieren"
 
 #, c-format
-msgid "%s: Cannot specify multiple positions\n"
-msgstr "%s: Mehrere Positionen können nicht gleichzeitig angegeben werden\n"
+msgid "%s: Cannot specify multiple positions"
+msgstr "%s: Mehrere Positionen können nicht gleichzeitig angegeben werden"
 
 #, c-format
-msgid "%s: Cannot specify multiple regex patterns\n"
-msgstr "%s: Maximal ein regulärer Ausdruck erlaubt\n"
+msgid "%s: Cannot specify multiple regex patterns"
+msgstr "%s: Maximal ein regulärer Ausdruck erlaubt"
 
 #, c-format
-msgid "%s: Cannot specify multiple set-cursor options\n"
-msgstr "%s: Maximal eine set-cursor-Option erlaubt\n"
+msgid "%s: Cannot specify multiple set-cursor options"
+msgstr "%s: Maximal eine set-cursor-Option erlaubt"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr ""
 
 #, c-format
-msgid "%s: Command not valid at an interactive prompt\n"
-msgstr "%s: Kann nicht am Prompt verwendet werden\n"
+msgid "%s: Command not valid at an interactive prompt"
+msgstr "%s: Kann nicht am Prompt verwendet werden"
 
 #, c-format
-msgid "%s: Could not find '%s'\n"
-msgstr "%s: Konnte '%s' nicht finden\n"
+msgid "%s: Could not find '%s'"
+msgstr "%s: Konnte '%s' nicht finden"
 
 #, c-format
-msgid "%s: Could not find a job with process ID '%d'\n"
-msgstr "%s: Konnte keinen Job mit Prozess-ID '%d' finden\n"
+msgid "%s: Could not find a job with process ID '%d'"
+msgstr "%s: Konnte keinen Job mit Prozess-ID '%d' finden"
 
 #, c-format
-msgid "%s: Could not find child processes with the name '%s'\n"
-msgstr "%s: Kein Kindprozess namens '%s' gefunden\n"
+msgid "%s: Could not find child processes with the name '%s'"
+msgstr "%s: Kein Kindprozess namens '%s' gefunden"
 
 #, c-format
-msgid "%s: Could not find home directory\n"
-msgstr "%s: Konnte Heimordner nicht finden\n"
+msgid "%s: Could not find home directory"
+msgstr "%s: Konnte Heimordner nicht finden"
 
 #, c-format
 msgid "%s: Could not find job '%d'"
@@ -368,63 +345,63 @@ msgid "%s: Did you mean `set %s %s`?"
 msgstr "%s: Meintest du `set %s %s`?"
 
 #, c-format
-msgid "%s: Empty directory '%s' does not exist\n"
-msgstr "%s: Leerer Ordnerpfad '%s' existiert nicht\n"
+msgid "%s: Empty directory '%s' does not exist"
+msgstr "%s: Leerer Ordnerpfad '%s' existiert nicht"
 
 #, c-format
-msgid "%s: Error encountered while sourcing file '%s':\n"
-msgstr "%s: Fehler beim Einladen von '%s':\n"
+msgid "%s: Error encountered while sourcing file '%s':"
+msgstr "%s: Fehler beim Einladen von '%s':"
 
 #, c-format
-msgid "%s: Error while reading file '%s'\n"
-msgstr "%s: Fehler beim Lesen der Datei '%s'\n"
+msgid "%s: Error while reading file '%s'"
+msgstr "%s: Fehler beim Lesen der Datei '%s'"
+
+#, c-format
+msgid "%s: Expected %s for %s"
+msgstr "%s: Erwartete %s für %s"
 
 #, c-format
 msgid "%s: Expected at least one argument"
 msgstr ""
 
 #, c-format
-msgid "%s: Expected exactly one function name\n"
-msgstr "%s: Erwartete genau einen Funktionsnamen\n"
+msgid "%s: Expected exactly one function name"
+msgstr "%s: Erwartete genau einen Funktionsnamen"
 
 #, c-format
-msgid "%s: Expected exactly two names (current function name, and new function name)\n"
-msgstr "%s: Erwartete exakt zwei Namen (aktuellen und neuen Funktionsnamen)\n"
+msgid "%s: Expected exactly two names (current function name, and new function name)"
+msgstr "%s: Erwartete exakt zwei Namen (aktuellen und neuen Funktionsnamen)"
 
 #, c-format
-msgid "%s: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
-msgstr "%s: Erwartete generic | variable | signal | exit | job-id für --handlers-type\n"
+msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
+msgstr "%s: Funktion '%s' existiert schon. Konnte '%s' nicht kopieren"
 
 #, c-format
-msgid "%s: Function '%s' already exists. Cannot create copy of '%s'\n"
-msgstr "%s: Funktion '%s' existiert schon. Konnte '%s' nicht kopieren\n"
+msgid "%s: Function '%s' does not exist"
+msgstr "%s: Funktion '%s' existiert nicht"
 
 #, c-format
-msgid "%s: Function '%s' does not exist\n"
-msgstr "%s: Funktion '%s' existiert nicht\n"
+msgid "%s: Illegal function name '%s'"
+msgstr "%s: Ungültiger Funktionsname '%s'"
 
 #, c-format
-msgid "%s: Illegal function name '%s'\n"
-msgstr "%s: Ungültiger Funktionsname '%s'\n"
+msgid "%s: Implicit int flag '%c' already defined"
+msgstr "%s: Implizite Zahloption '%c' ist schon definiert"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined\n"
-msgstr "%s: Implizite Zahloption '%c' ist schon definiert\n"
+msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
+msgstr "%s: Implizite Zahloption '%c' darf keine Modifikatoren wie '%c' haben"
 
 #, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'\n"
-msgstr "%s: Implizite Zahloption '%c' darf keine Modifikatoren wie '%c' haben\n"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'\n"
+msgid "%s: Invalid --max-args value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid --min-args value '%s'\n"
+msgid "%s: Invalid --min-args value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'\n"
+msgid "%s: Invalid --unknown-arguments value '%s'"
 msgstr ""
 
 #, c-format
@@ -432,36 +409,32 @@ msgid "%s: Invalid count value '%s'"
 msgstr "%s: Ungültiger 'count'-Wert '%s'"
 
 #, c-format
-msgid "%s: Invalid count value '%s'\n"
-msgstr "%s: Ungültiger 'count'-Wert '%s'\n"
+msgid "%s: Invalid end value '%s'"
+msgstr "%s: Ungültiger 'end'-Wert '%s'"
 
 #, c-format
-msgid "%s: Invalid end value '%s'\n"
-msgstr "%s: Ungültiger 'end'-Wert '%s'\n"
+msgid "%s: Invalid escape style '%s'"
+msgstr "%s: Ungültiger Escape-Stil '%s'"
 
 #, c-format
-msgid "%s: Invalid escape style '%s'\n"
-msgstr "%s: Ungültiger Escape-Stil '%s'\n"
+msgid "%s: Invalid fields value '%s'"
+msgstr "%s: Ungültiger 'fields'-Wert '%s'"
 
 #, c-format
-msgid "%s: Invalid fields value '%s'\n"
-msgstr "%s: Ungültiger 'fields'-Wert '%s'\n"
+msgid "%s: Invalid function name: %s"
+msgstr "%s: Ungültiger Funktionsname: %s"
 
 #, c-format
-msgid "%s: Invalid function name: %s\n"
-msgstr "%s: Ungültiger Funktionsname: %s\n"
-
-#, c-format
-msgid "%s: Invalid index starting at '%s'\n"
-msgstr "%s: Ungültiger Index ab '%s'\n"
+msgid "%s: Invalid index starting at '%s'"
+msgstr "%s: Ungültiger Index ab '%s'"
 
 #, c-format
 msgid "%s: Invalid job control mode '%s'"
 msgstr "%s: Ungültiger Jobkontrollmodus '%s'"
 
 #, c-format
-msgid "%s: Invalid length value '%s'\n"
-msgstr "%s: Ungültiger Längenwert '%s'\n"
+msgid "%s: Invalid length value '%s'"
+msgstr "%s: Ungültiger Längenwert '%s'"
 
 #, c-format
 msgid "%s: Invalid level value '%s'"
@@ -472,19 +445,19 @@ msgid "%s: Invalid limit '%s'"
 msgstr "%s: Ungültiges Limit '%s'"
 
 #, c-format
-msgid "%s: Invalid max matches value '%s'\n"
+msgid "%s: Invalid max matches value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid max value '%s'\n"
-msgstr "%s: Ungültiger Maximalwert '%s'\n"
+msgid "%s: Invalid max value '%s'"
+msgstr "%s: Ungültiger Maximalwert '%s'"
 
 #, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'\n"
-msgstr "%s: Ungültige Options-Spezifikation '%s' bei Zeichen '%c'\n"
+msgid "%s: Invalid option spec '%s' at char '%c'"
+msgstr "%s: Ungültige Options-Spezifikation '%s' bei Zeichen '%c'"
 
 #, c-format
-msgid "%s: Invalid padding character of width zero '%s'\n"
+msgid "%s: Invalid padding character of width zero '%s'"
 msgstr ""
 
 #, c-format
@@ -492,11 +465,11 @@ msgid "%s: Invalid permission '%s'"
 msgstr "%s: Ungültiger Rechtewert '%s'"
 
 #, c-format
-msgid "%s: Invalid position '%s'\n"
-msgstr "%s: Ungültige Position '%s'\n"
+msgid "%s: Invalid position '%s'"
+msgstr "%s: Ungültige Position '%s'"
 
 #, c-format
-msgid "%s: Invalid range value for field '%s'\n"
+msgid "%s: Invalid range value for field '%s'"
 msgstr ""
 
 #, c-format
@@ -504,19 +477,19 @@ msgid "%s: Invalid sort key '%s'"
 msgstr "%s: Ungültiger Sortierschlüssel '%s'"
 
 #, c-format
-msgid "%s: Invalid start value '%s'\n"
-msgstr "%s: Ungültiger Startwert '%s'\n"
+msgid "%s: Invalid start value '%s'"
+msgstr "%s: Ungültiger Startwert '%s'"
 
 #, c-format
-msgid "%s: Invalid state\n"
+msgid "%s: Invalid state"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid style value '%s'\n"
+msgid "%s: Invalid style value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid token '%s'\n"
+msgid "%s: Invalid token '%s'"
 msgstr ""
 
 #, c-format
@@ -524,52 +497,52 @@ msgid "%s: Invalid type '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n"
-msgstr "%s: Ungültiger Wert für '--color'-Option: '%s'. Erwartet wird 'always', 'never' oder 'auto'\n"
+msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
+msgstr "%s: Ungültiger Wert für '--color'-Option: '%s'. Erwartet wird 'always', 'never' oder 'auto'"
 
 #, c-format
-msgid "%s: Invalid width value '%s'\n"
+msgid "%s: Invalid width value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Key not specified\n"
+msgid "%s: Key not specified"
 msgstr ""
 
 #, c-format
-msgid "%s: Long flag '%s' already defined\n"
+msgid "%s: Long flag '%s' already defined"
 msgstr ""
 
 #, c-format
-msgid "%s: Missing -- separator\n"
-msgstr "%s: Fehlendes '--'-Trennzeichen\n"
+msgid "%s: Missing -- separator"
+msgstr "%s: Fehlendes '--'-Trennzeichen"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: Neues Limit darf keine leere Zeichenkette sein"
 
 #, c-format
-msgid "%s: No binding found for key '%s'\n"
+msgid "%s: No binding found for key '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: No binding found for key sequence '%s'\n"
+msgid "%s: No binding found for key sequence '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: No blocks defined\n"
-msgstr "%s: Keine Blöcke definiert\n"
+msgid "%s: No blocks defined"
+msgstr "%s: Keine Blöcke definiert"
 
 #, c-format
-msgid "%s: No suitable job: %d\n"
-msgstr "%s: Kein passender Job: %d\n"
+msgid "%s: No suitable job: %d"
+msgstr "%s: Kein passender Job: %d"
 
 #, c-format
 msgid "%s: No suitable job: %s"
 msgstr ""
 
 #, c-format
-msgid "%s: Not inside of loop\n"
-msgstr "%s: Nicht innerhalb einer Schleife\n"
+msgid "%s: Not inside of loop"
+msgstr "%s: Nicht innerhalb einer Schleife"
 
 #, c-format
 msgid "%s: Number out of range"
@@ -580,16 +553,16 @@ msgid "%s: Number was empty"
 msgstr "%s: Zahl war leer"
 
 #, c-format
-msgid "%s: Options %s and %s cannot be used together\n"
+msgid "%s: Options %s and %s cannot be used together"
 msgstr ""
 
 #, c-format
-msgid "%s: Padding should be a character '%s'\n"
+msgid "%s: Padding should be a character '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Permission denied: '%s'\n"
-msgstr "%s: Berechtigung verweigert: '%s'\n"
+msgid "%s: Permission denied: '%s'"
+msgstr "%s: Berechtigung verweigert: '%s'"
 
 #, c-format
 msgid "%s: Regular expression compile error: %s"
@@ -604,23 +577,19 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: Ressourcenlimit ist auf diesem Betriebssystem nicht verfügbar"
 
 #, c-format
-msgid "%s: STEP must be a positive integer\n"
-msgstr "%s: STEP muss eine positive Ganzzahl sein\n"
-
-#, c-format
-msgid "%s: Short flag '%c' already defined\n"
+msgid "%s: Short flag '%c' already defined"
 msgstr ""
 
 #, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'\n"
+msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
 msgstr ""
 
 #, c-format
-msgid "%s: The directory '%s' does not exist\n"
-msgstr "%s: Das Verzeichnis '%s' existiert nicht\n"
+msgid "%s: The directory '%s' does not exist"
+msgstr "%s: Das Verzeichnis '%s' existiert nicht"
 
 #, c-format
-msgid "%s: The variable '%s' does not exist\n"
+msgid "%s: The variable '%s' does not exist"
 msgstr ""
 
 #, c-format
@@ -632,31 +601,31 @@ msgid "%s: There are no suitable jobs"
 msgstr ""
 
 #, c-format
-msgid "%s: Too many levels of symbolic links: '%s'\n"
-msgstr "%s: Zu viele Ebenen von symbolischen Links: '%s'\n"
+msgid "%s: Too many levels of symbolic links: '%s'"
+msgstr "%s: Zu viele Ebenen von symbolischen Links: '%s'"
 
 #, c-format
-msgid "%s: Too many long-only options\n"
+msgid "%s: Too many long-only options"
 msgstr ""
 
 #, c-format
-msgid "%s: Tried to change the read-only variable '%s'\n"
+msgid "%s: Tried to change the read-only variable '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Tried to modify the special variable '%s' to an invalid value\n"
+msgid "%s: Tried to modify the special variable '%s' to an invalid value"
 msgstr ""
 
 #, c-format
-msgid "%s: Tried to modify the special variable '%s' with the wrong scope\n"
+msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr ""
 
 #, c-format
-msgid "%s: Unknown color '%s'\n"
-msgstr "%s: Unbekannte Farbe '%s'\n"
+msgid "%s: Unknown color '%s'"
+msgstr "%s: Unbekannte Farbe '%s'"
 
 #, c-format
-msgid "%s: Unknown error trying to locate directory '%s'\n"
+msgid "%s: Unknown error trying to locate directory '%s'"
 msgstr ""
 
 #, c-format
@@ -672,11 +641,11 @@ msgid "%s: Warning: Option '%s' was removed and is now ignored"
 msgstr "%s: Warnung: Option '%s' wurde entfernt und wird nun ignoriert"
 
 #, c-format
-msgid "%s: `set --show` does not allow slices with the var names\n"
+msgid "%s: `set --show` does not allow slices with the var names"
 msgstr ""
 
 #, c-format
-msgid "%s: array index out of bounds\n"
+msgid "%s: array index out of bounds"
 msgstr ""
 
 #, c-format
@@ -704,16 +673,16 @@ msgid "%s: cannot both path and unpath"
 msgstr ""
 
 #, c-format
-msgid "%s: column %s exceeds line length\n"
+msgid "%s: column %s exceeds line length"
 msgstr ""
 
 #, c-format
-msgid "%s: exclusive flag '%s' is not valid\n"
-msgstr "%s: Exklusive Option '%s' ist ungültig\n"
+msgid "%s: exclusive flag '%s' is not valid"
+msgstr "%s: Exklusive Option '%s' ist ungültig"
 
 #, c-format
-msgid "%s: exclusive flag string '%s' is not valid\n"
-msgstr "%s: Exklusive Option '%s' ist ungültig\n"
+msgid "%s: exclusive flag string '%s' is not valid"
+msgstr "%s: Exklusive Option '%s' ist ungültig"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -736,7 +705,7 @@ msgid "%s: function name required"
 msgstr "%s: Brauche Funktionsnamen"
 
 #, c-format
-msgid "%s: given %d indexes but %d values\n"
+msgid "%s: given %d indexes but %d values"
 msgstr ""
 
 #, c-format
@@ -752,7 +721,7 @@ msgid "%s: invalid option combination, %s"
 msgstr ""
 
 #, c-format
-msgid "%s: invalid underline style: %s\n"
+msgid "%s: invalid underline style: %s"
 msgstr ""
 
 #, c-format
@@ -768,7 +737,7 @@ msgid "%s: missing argument"
 msgstr ""
 
 #, c-format
-msgid "%s: missing filename argument or input redirection\n"
+msgid "%s: missing filename argument or input redirection"
 msgstr ""
 
 #, c-format
@@ -776,12 +745,8 @@ msgid "%s: missing subcommand"
 msgstr "%s: fehlender Unterbefehl"
 
 #, c-format
-msgid "%s: nothing to choose from\n"
+msgid "%s: nothing to choose from"
 msgstr ""
-
-#, c-format
-msgid "%s: realpath failed: %s\n"
-msgstr "%s: realpath fehlgeschlagen: %s\n"
 
 #, c-format
 msgid "%s: scope can be only one of: universal function global local"
@@ -792,19 +757,19 @@ msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet sup
 msgstr ""
 
 #, c-format
-msgid "%s: stdin is closed\n"
-msgstr "%s: stdin ist geschlossen\n"
+msgid "%s: stdin is closed"
+msgstr "%s: stdin ist geschlossen"
 
 #, c-format
-msgid "%s: successfully set universal '%s'; but a global by that name shadows it\n"
+msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
 msgstr ""
 
 #, c-format
-msgid "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`\n"
+msgid "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
 msgstr ""
 
 #, c-format
-msgid "%s: there is no line %s\n"
+msgid "%s: there is no line %s"
 msgstr ""
 
 #, c-format
@@ -812,7 +777,7 @@ msgid "%s: too many arguments"
 msgstr "%s: zu viele Argumente"
 
 #, c-format
-msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"
+msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr ""
 
 #, c-format
@@ -820,7 +785,7 @@ msgid "%s: value not completely converted (can't convert '%s')"
 msgstr "%s: Wert nicht vollständig konvertiert (kann '%s' nicht konvertieren)"
 
 #, c-format
-msgid "%s: variable '%s' is read-only\n"
+msgid "%s: variable '%s' is read-only"
 msgstr ""
 
 #, c-format
@@ -852,11 +817,18 @@ msgid "'}' does not take arguments. Did you forget a ';'?"
 msgstr ""
 
 #, c-format
-msgid "(Type 'help %s' for related documentation)\n"
-msgstr "(Nutze 'help %s' für entsprechende Dokumentation)\n"
+msgid "(%s)"
+msgstr "(%s)"
+
+#, c-format
+msgid "(Type 'help %s' for related documentation)"
+msgstr "(Nutze 'help %s' für entsprechende Dokumentation)"
 
 msgid "(no matches)"
 msgstr "(keine Treffer)"
+
+msgid "(read-only)"
+msgstr "(screibgeschützt)"
 
 #, c-format
 msgid ", copied in %s @ line %d"
@@ -1051,8 +1023,8 @@ msgid "Error when renaming file: %s"
 msgstr ""
 
 #, c-format
-msgid "Error while reading file %s\n"
-msgstr "Fehler beim Lesen der Datei %s\n"
+msgid "Error while reading file %s"
+msgstr "Fehler beim Lesen der Datei %s"
 
 msgid "Errors reported by exec (on by default)"
 msgstr ""
@@ -1298,7 +1270,7 @@ msgid "Missing operator"
 msgstr ""
 
 #, c-format
-msgid "Modification of read-only variable \"%s\" is not allowed\n"
+msgid "Modification of read-only variable \"%s\" is not allowed"
 msgstr ""
 
 msgid "Negate exit status of job"
@@ -1369,11 +1341,15 @@ msgstr "Bitte setzen sie %s oder die HOME Umgebungsvariable bevor sie fish start
 msgid "Polite quit request"
 msgstr "Höfliche Beendigungsanforderung"
 
+#, c-format
+msgid "Position must be one of: %s"
+msgstr ""
+
 msgid "Power failure"
 msgstr "Stromausfall"
 
 #, c-format
-msgid "Press ctrl-%c again to exit\n"
+msgid "Press ctrl-%c again to exit"
 msgstr ""
 
 msgid "Print arguments"
@@ -1767,16 +1743,16 @@ msgid "autoloading"
 msgstr ""
 
 #, c-format
+msgid "builtin %s: %s failed: %s"
+msgstr ""
+
+#, c-format
 msgid "builtin %s: %s: %s"
 msgstr "builtin %s: %s: %s"
 
 #, c-format
 msgid "builtin %s: Invalid arg: %s"
 msgstr "builtin %s: Ungültiges argument: %s"
-
-#, c-format
-msgid "builtin %s: realpath failed: %s"
-msgstr ""
 
 msgid "builtin history delete --exact requires --case-sensitive"
 msgstr "builtin history delete --exact benötigt --case-sensitive"
@@ -1882,8 +1858,8 @@ msgid "stopped"
 msgstr "gestoppt"
 
 #, c-format
-msgid "switch: Expected at most one argument, got %u\n"
-msgstr "switch: Erwartet höchstens einen Parameter, aber %u angegeben\n"
+msgid "switch: Expected at most one argument, got %u"
+msgstr "switch: Erwartet höchstens einen Parameter, aber %u angegeben"
 
 msgid "symlink"
 msgstr ""

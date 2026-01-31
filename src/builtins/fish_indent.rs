@@ -1008,7 +1008,7 @@ fn do_indent(
             }
             'v' => {
                 streams.out.appendln(&wgettext_fmt!(
-                    "%s, version %s",
+                    VERSION_STRING_TEMPLATE,
                     get_program_name(),
                     crate::BUILD_VERSION
                 ));
@@ -1061,7 +1061,7 @@ fn do_indent(
                 let cmd = "fish_indent";
                 streams
                     .err
-                    .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
+                    .appendln(&wgettext_fmt!(BUILTIN_ERR_STDIN_CLOSED, cmd));
                 return Err(STATUS_CMD_ERROR);
             };
             let mut buf = vec![];

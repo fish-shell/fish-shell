@@ -122,8 +122,8 @@ fn parse_cmd_opts(
                 opts.delimiter = Some(w.woptarg.unwrap().to_owned());
             }
             'i' => {
-                streams.err.append(&wgettext_fmt!(
-                    "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead.",
                     cmd
                 ));
                 return Err(STATUS_INVALID_ARGS);
@@ -147,8 +147,8 @@ fn parse_cmd_opts(
                 opts.nchars = match fish_wcstoi(w.woptarg.unwrap()) {
                     Ok(n) if n >= 0 => NonZeroUsize::new(n.try_into().unwrap()),
                     Err(wutil::Error::Overflow) => {
-                        streams.err.append(&wgettext_fmt!(
-                            "%s: Argument '%s' is out of range\n",
+                        streams.err.appendln(&wgettext_fmt!(
+                            "%s: Argument '%s' is out of range",
                             cmd,
                             w.woptarg.unwrap()
                         ));
@@ -449,20 +449,21 @@ fn validate_read_args(
     parser: &Parser,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
+    localizable_consts! {
+        OPTIONS_CANNOT_BE_COMBINED
+        "%s: Options %s and %s cannot be used together"
+    }
     if opts.prompt.is_some() && opts.prompt_str.is_some() {
-        streams.err.append(&wgettext_fmt!(
-            "%s: Options %s and %s cannot be used together\n",
-            cmd,
-            "-p",
-            "-P",
-        ));
+        streams
+            .err
+            .appendln(&wgettext_fmt!(OPTIONS_CANNOT_BE_COMBINED, cmd, "-p", "-P",));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.delimiter.is_some() && opts.one_line {
-        streams.err.append(&wgettext_fmt!(
-            "%s: Options %s and %s cannot be used together\n",
+        streams.err.appendln(&wgettext_fmt!(
+            OPTIONS_CANNOT_BE_COMBINED,
             cmd,
             "--delimiter",
             "--line"
@@ -470,8 +471,8 @@ fn validate_read_args(
         return Err(STATUS_INVALID_ARGS);
     }
     if opts.one_line && opts.split_null {
-        streams.err.append(&wgettext_fmt!(
-            "%s: Options %s and %s cannot be used together\n",
+        streams.err.appendln(&wgettext_fmt!(
+            OPTIONS_CANNOT_BE_COMBINED,
             cmd,
             "-z",
             "--line"
@@ -610,7 +611,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     if streams.is_stdin_closed() {
         streams
             .err
-            .append(&wgettext_fmt!("%s: stdin is closed\n", cmd));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_STDIN_CLOSED, cmd));
         return Err(STATUS_CMD_ERROR);
     }
 

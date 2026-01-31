@@ -108,10 +108,21 @@ localizable_consts!(
     pub BUILTIN_ERR_COULD_NOT_FIND_JOB
     "%s: Could not find job '%d'"
 
+    pub BUILTIN_ERR_STDIN_CLOSED
+    "%s: stdin is closed"
+
+    pub BUILTIN_ERR_INVALID_MAX_MATCHES
+    "%s: Invalid max matches value '%s'"
+
+    pub BUILTIN_ERR_INVALID_MAX_VALUE
+    "%s: Invalid max value '%s'"
+
     /// The send stuff to foreground message.
     pub FG_MSG
     "Send job %d (%s) to foreground"
 
+    pub VERSION_STRING_TEMPLATE
+    "%s, version %s"
 );
 
 // Return values (`$status` values for fish scripts) for various situations.
@@ -712,8 +723,8 @@ pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &
     if !stacktrace.is_empty() {
         b.appendln(&stacktrace);
     }
-    b.append(&wgettext_fmt!(
-        "(Type 'help %s' for related documentation)\n",
+    b.appendln(&wgettext_fmt!(
+        "(Type 'help %s' for related documentation)",
         cmd
     ));
 }
@@ -980,8 +991,8 @@ fn parsed_pid(
     match pid {
         Ok(pid @ 1..) => Ok(Pid::new(pid)),
         _ => {
-            streams.err.append(&wgettext_fmt!(
-                "%s: '%s' is not a valid process ID\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: '%s' is not a valid process ID",
                 cmd,
                 arg
             ));
@@ -1050,7 +1061,7 @@ pub fn builtin_break_continue(
     if !has_loop {
         streams
             .err
-            .append(&wgettext_fmt!("%s: Not inside of loop\n", argv[0]));
+            .appendln(&wgettext_fmt!("%s: Not inside of loop", argv[0]));
         return Err(STATUS_CMD_ERROR);
     }
 
@@ -1101,8 +1112,8 @@ impl ColorEnabled {
         arg: &wstr,
     ) -> Result<Self, ErrorCode> {
         Self::try_from(arg).map_err(|()| {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'",
                 cmd,
                 arg
             ));

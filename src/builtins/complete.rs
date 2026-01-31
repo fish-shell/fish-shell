@@ -243,6 +243,11 @@ const OPT_ESCAPE: char = '\x01';
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
 /// complete.rs for any heavy lifting.
 pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+    localizable_consts! {
+        OPTION_REQUIRES_NON_EMPTY_STRING
+        "%s: %s requires a non-empty string"
+    }
+
     let cmd = argv[0];
     let argc = argv.len();
     let mut result_mode = CompletionMode::default();
@@ -321,8 +326,8 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                         cmd_to_complete.push(tmp);
                     }
                 } else {
-                    streams.err.append(&wgettext_fmt!(
-                        "%s: Invalid token '%s'\n",
+                    streams.err.appendln(&wgettext_fmt!(
+                        "%s: Invalid token '%s'",
                         cmd,
                         w.woptarg.unwrap()
                     ));
@@ -342,9 +347,11 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let arg = w.woptarg.unwrap();
                 short_opt.extend(arg.chars());
                 if arg.is_empty() {
-                    streams
-                        .err
-                        .append(&wgettext_fmt!("%s: -s requires a non-empty string\n", cmd,));
+                    streams.err.appendln(&wgettext_fmt!(
+                        OPTION_REQUIRES_NON_EMPTY_STRING,
+                        cmd,
+                        "-s",
+                    ));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -352,9 +359,11 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let arg = w.woptarg.unwrap();
                 gnu_opt.push(arg);
                 if arg.is_empty() {
-                    streams
-                        .err
-                        .append(&wgettext_fmt!("%s: -l requires a non-empty string\n", cmd,));
+                    streams.err.appendln(&wgettext_fmt!(
+                        OPTION_REQUIRES_NON_EMPTY_STRING,
+                        cmd,
+                        "-l",
+                    ));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -362,9 +371,11 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let arg = w.woptarg.unwrap();
                 old_opt.push(arg);
                 if arg.is_empty() {
-                    streams
-                        .err
-                        .append(&wgettext_fmt!("%s: -o requires a non-empty string\n", cmd,));
+                    streams.err.appendln(&wgettext_fmt!(
+                        OPTION_REQUIRES_NON_EMPTY_STRING,
+                        cmd,
+                        "-o",
+                    ));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -469,11 +480,9 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         prefix.push_str(": ");
 
         if let Err(err_text) = detect_errors_in_argument_list(&comp, &prefix) {
-            streams.err.append(&wgettext_fmt!(
-                "%s: %s: contains a syntax error\n",
-                cmd,
-                comp
-            ));
+            streams
+                .err
+                .appendln(&wgettext_fmt!("%s: %s: contains a syntax error", cmd, comp));
             streams.err.appendln(&err_text);
             return Err(STATUS_CMD_ERROR);
         }

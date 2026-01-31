@@ -195,8 +195,8 @@ impl RegexError {
                 string_error!(streams, "%s: %s", cmd, marker);
             }
             InvalidCaptureGroupName(name) => {
-                streams.err.append(&wgettext_fmt!(
-                    "Modification of read-only variable \"%s\" is not allowed\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "Modification of read-only variable \"%s\" is not allowed",
                     name
                 ));
             }
@@ -245,8 +245,7 @@ impl StringError {
         use StringError::*;
         match self {
             InvalidArgs(msg) => {
-                streams.err.append(L!("string "));
-                streams.err.append(msg);
+                streams.err.appendln("string ".chars().chain(msg.chars()));
             }
             NotANumber => {
                 string_error!(streams, BUILTIN_ERR_NOT_NUMBER, cmd, optarg.unwrap());

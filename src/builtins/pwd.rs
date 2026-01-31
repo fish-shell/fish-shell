@@ -52,9 +52,10 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Buil
         if let Some(real_pwd) = wrealpath(&pwd) {
             pwd = real_pwd;
         } else {
-            streams.err.append(&wgettext_fmt!(
-                "%s: realpath failed: %s\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: %s failed: %s",
                 cmd,
+                "realpath",
                 errno().to_string()
             ));
             return Err(STATUS_CMD_ERROR);

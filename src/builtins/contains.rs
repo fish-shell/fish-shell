@@ -73,7 +73,7 @@ pub fn contains(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
     } else {
         streams
             .err
-            .append(&wgettext_fmt!("%s: Key not specified\n", cmd));
+            .appendln(&wgettext_fmt!("%s: Key not specified", cmd));
     }
 
     Err(STATUS_CMD_ERROR)

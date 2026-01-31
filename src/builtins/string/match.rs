@@ -56,7 +56,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
                         .and_then(|v| NonZeroUsize::new(v as usize))
                         .ok_or_else(|| {
                             StringError::InvalidArgs(wgettext_fmt!(
-                                "%s: Invalid max matches value '%s'\n",
+                                BUILTIN_ERR_INVALID_MAX_MATCHES,
                                 _n,
                                 arg
                             ))

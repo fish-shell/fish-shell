@@ -69,7 +69,7 @@ fn parse_cmd_opts(
                     if scale < 0 || scale > 15 {
                         streams
                             .err
-                            .append(&wgettext_fmt!("%s: %s: invalid scale\n", cmd, optarg));
+                            .appendln(&wgettext_fmt!("%s: %s: invalid scale", cmd, optarg));
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]
@@ -89,7 +89,7 @@ fn parse_cmd_opts(
                 } else {
                     streams
                         .err
-                        .append(&wgettext_fmt!("%s: %s: invalid mode\n", cmd, optarg));
+                        .appendln(&wgettext_fmt!("%s: %s: invalid mode", cmd, optarg));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -102,8 +102,8 @@ fn parse_cmd_opts(
                 } else {
                     let base = fish_wcstoi(optarg).unwrap_or(-1);
                     if base != 8 && base != 16 {
-                        streams.err.append(&wgettext_fmt!(
-                            "%s: %s: invalid base value\n",
+                        streams.err.appendln(&wgettext_fmt!(
+                            "%s: %s: invalid base value",
                             cmd,
                             optarg
                         ));

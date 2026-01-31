@@ -117,7 +117,7 @@ echo $status
 abbr --add grape --position nowhere juice
 echo $status
 # CHECKERR: abbr: Invalid position 'nowhere'
-# CHECKERR: Position must be one of: command, anywhere.
+# CHECKERR: Position must be one of: command, anywhere
 # CHECK: 2
 
 abbr --add grape --position anywhere juice
@@ -190,7 +190,7 @@ abbr --list
 
 abbr --add bogus --position never stuff
 # CHECKERR: abbr: Invalid position 'never'
-# CHECKERR: Position must be one of: command, anywhere.
+# CHECKERR: Position must be one of: command, anywhere
 
 abbr --add bogus --position anywhere --position command stuff
 # CHECKERR: abbr: Cannot specify multiple positions

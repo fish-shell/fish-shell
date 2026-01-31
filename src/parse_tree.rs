@@ -2,6 +2,7 @@
 
 use std::ops::Deref;
 use std::pin::Pin;
+use std::ptr::NonNull;
 use std::sync::Arc;
 
 use crate::ast::{self, Ast, JobList, Node};
@@ -114,19 +115,23 @@ const _: () = assert_sync::<ParsedSource>();
 /// Caches the last source's offset and newline count.
 #[derive(Default)]
 pub struct SourceLineCache {
-    last_source: *const ParsedSource, // Pointer to last source used
-    offset: usize,                    // Exclusive offset of the number of newlines counted
-    count: usize,                     // Count of newlines up to offset
+    /// Pointer to last source used
+    last_source: Option<NonNull<ParsedSource>>,
+    /// Exclusive offset of the number of newlines counted
+    offset: usize,
+    /// Count of newlines up to offset
+    count: usize,
 }
 
 impl ParsedSource {
     /// Compute the 1-based line number for a given offset, using and updating the cache.
     pub fn lineno_for_offset(&self, offset: usize, cache: &mut SourceLineCache) -> u32 {
-        let self_ptr = std::ptr::from_ref(self);
+        // TODO(MSRV>=1.89): feature(non_null_from_ref)
+        let self_ptr = unsafe { NonNull::new_unchecked(std::ptr::from_ref(self).cast_mut()) };
 
         // If source changed, reset cache.
-        if cache.last_source != self_ptr {
-            cache.last_source = self_ptr;
+        if cache.last_source != Some(self_ptr) {
+            cache.last_source = Some(self_ptr);
             cache.offset = 0;
             cache.count = 0;
         }

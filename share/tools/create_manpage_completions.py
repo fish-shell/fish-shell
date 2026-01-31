@@ -1208,7 +1208,7 @@ def unquote_single_quotes(data):
 
 # Make a string of characters that are deemed safe in fish without needing to be escaped
 # Note that space is not included
-g_fish_safe_chars = frozenset(string.ascii_letters + string.digits + "_+-|/:=@~")
+g_fish_safe_chars = frozenset(string.ascii_letters + string.digits + "_+-/:=@")
 
 
 def fish_escape_single_quote(str):

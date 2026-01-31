@@ -23,7 +23,7 @@ impl StringSubCommand<'_> for Unescape {
                 self.style = arg
                     .unwrap()
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid style value '%s'\n", name, arg))?;
+                    .map_err(|_| invalid_args!("%s: Invalid style value '%s'", name, arg))?;
             }
             _ => return Err(StringError::UnknownOption),
         }

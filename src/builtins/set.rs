@@ -23,14 +23,6 @@ use crate::{
 };
 use fish_common::help_section;
 
-localizable_consts!(
-    MISMATCHED_ARGS
-    "%s: given %d indexes but %d values\n"
-
-    UVAR_ERR
-    "%s: successfully set universal '%s'; but a global by that name shadows it\n"
-);
-
 #[derive(Debug, Clone)]
 struct Options {
     print_help: bool,
@@ -327,7 +319,11 @@ fn warn_if_uvar_shadows_global(
         && parser.is_interactive()
         && parser.vars().getf(dest, EnvMode::GLOBAL).is_some()
     {
-        streams.err.append(&wgettext_fmt!(UVAR_ERR, cmd, dest));
+        streams.err.appendln(&wgettext_fmt!(
+            "%s: successfully set universal '%s'; but a global by that name shadows it",
+            cmd,
+            dest
+        ));
     }
 }
 
@@ -335,29 +331,29 @@ fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams:
     match retval {
         EnvStackSetResult::Ok => (),
         EnvStackSetResult::Perm => {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Tried to change the read-only variable '%s'\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Tried to change the read-only variable '%s'",
                 cmd,
                 key
             ));
         }
         EnvStackSetResult::Scope => {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Tried to modify the special variable '%s' with the wrong scope\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Tried to modify the special variable '%s' with the wrong scope",
                 cmd,
                 key
             ));
         }
         EnvStackSetResult::Invalid => {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Tried to modify the special variable '%s' to an invalid value\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Tried to modify the special variable '%s' to an invalid value",
                 cmd,
                 key
             ));
         }
         EnvStackSetResult::NotFound => {
-            streams.err.append(&wgettext_fmt!(
-                "%s: The variable '%s' does not exist\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: The variable '%s' does not exist",
                 cmd,
                 key
             ));
@@ -396,11 +392,10 @@ impl std::fmt::Display for EnvArrayParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-            "{}",
+            "{}\n",
             match self {
                 EnvArrayParseError::InvalidIndex(varname) =>
-                    wgettext_fmt!("%s: Invalid index starting at '%s'\n", "set", varname)
-                        .to_string(),
+                    wgettext_fmt!("%s: Invalid index starting at '%s'", "set", varname).to_string(),
             }
         )
     }
@@ -436,12 +431,8 @@ fn split_var_and_indexes<'a>(
 ) -> Option<SplitVar<'a>> {
     match split_var_and_indexes_internal(arg, mode, vars) {
         Ok(split) => Some(split),
-        Err(EnvArrayParseError::InvalidIndex(varname)) => {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Invalid index starting at '%s'\n",
-                "set",
-                &varname,
-            ));
+        Err(env_array_parse_error) => {
+            streams.err.append(&format!("{env_array_parse_error}"));
             None
         }
     }
@@ -677,7 +668,9 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
     // HACK: PWD can be set, depending on how you ask.
     // For our purposes it's read-only.
     if EnvVar::flags_for(var_name).contains(EnvVarFlags::READ_ONLY) {
-        streams.out.append(wgettext!(" (read-only)\n"));
+        streams
+            .out
+            .appendln(" ".chars().chain(wgettext!("(read-only)").chars()));
     } else {
         streams.out.append('\n');
     }
@@ -711,6 +704,10 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
 
 /// Show mode. Show information about the named variable(s).
 fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) -> BuiltinResult {
+    localizable_consts! {
+        ORIGINALLY_INHERITED_AS
+        "$%s: originally inherited as |%s|"
+    }
     let vars = parser.vars();
     if args.is_empty() {
         // show all vars
@@ -730,11 +727,9 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     inherited,
                     EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
                 );
-                streams.out.append(&wgettext_fmt!(
-                    "$%s: originally inherited as |%s|\n",
-                    name,
-                    escaped_val
-                ));
+                streams
+                    .out
+                    .appendln(&wgettext_fmt!(ORIGINALLY_INHERITED_AS, name, escaped_val));
             }
         }
     } else {
@@ -746,8 +741,8 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
             }
 
             if arg.contains('[') {
-                streams.err.append(&wgettext_fmt!(
-                    "%s: `set --show` does not allow slices with the var names\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "%s: `set --show` does not allow slices with the var names",
                     cmd
                 ));
                 builtin_print_error_trailer(parser, streams.err, cmd);
@@ -762,11 +757,9 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     inherited,
                     EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
                 );
-                streams.out.append(&wgettext_fmt!(
-                    "$%s: originally inherited as |%s|\n",
-                    arg,
-                    escaped_val
-                ));
+                streams
+                    .out
+                    .appendln(&wgettext_fmt!(ORIGINALLY_INHERITED_AS, arg, escaped_val));
             }
         }
     }
@@ -989,7 +982,7 @@ fn set_internal(
             if *ind <= 0 {
                 streams
                     .err
-                    .append(&wgettext_fmt!("%s: array index out of bounds\n", cmd));
+                    .appendln(&wgettext_fmt!("%s: array index out of bounds", cmd));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
@@ -1006,8 +999,8 @@ fn set_internal(
 
         // Argument count and index count must agree.
         if split.indexes.len() != argv.len() {
-            streams.err.append(&wgettext_fmt!(
-                MISMATCHED_ARGS,
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: given %d indexes but %d values",
                 cmd,
                 split.indexes.len(),
                 argv.len()

@@ -59,8 +59,8 @@ fn should_exit(
             {
                 return true;
             }
-            streams.err.append(&wgettext_fmt!(
-                "Press ctrl-%c again to exit\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "Press ctrl-%c again to exit",
                 char::from(modes.control_chars[evt] + 0x60)
             ));
             return false;
@@ -202,7 +202,7 @@ fn parse_flags(
             }
             'v' => {
                 streams.out.appendln(&wgettext_fmt!(
-                    "%s, version %s",
+                    VERSION_STRING_TEMPLATE,
                     get_program_name(),
                     crate::BUILD_VERSION
                 ));

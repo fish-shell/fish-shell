@@ -199,8 +199,8 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 continue;
             };
             if !find_wait_handles(WaitHandleQuery::Pid(pid), parser, &mut wait_handles) {
-                streams.err.append(&wgettext_fmt!(
-                    "%s: Could not find a job with process ID '%d'\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "%s: Could not find a job with process ID '%d'",
                     cmd,
                     pid,
                 ));
@@ -208,8 +208,8 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         } else {
             // argument is process name
             if !find_wait_handles(WaitHandleQuery::ProcName(item), parser, &mut wait_handles) {
-                streams.err.append(&wgettext_fmt!(
-                    "%s: Could not find child processes with the name '%s'\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "%s: Could not find child processes with the name '%s'",
                     cmd,
                     item,
                 ));

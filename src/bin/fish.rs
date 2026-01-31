@@ -23,7 +23,7 @@ use fish::{
         fish_indent, fish_key_reader,
         shared::{
             BUILTIN_ERR_MISSING, BUILTIN_ERR_UNEXP_ARG, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR,
-            STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
+            STATUS_CMD_OK, STATUS_CMD_UNKNOWN, VERSION_STRING_TEMPLATE,
         },
     },
     common::{
@@ -302,8 +302,8 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'P' => opts.enable_private_mode = true,
             'v' => {
                 printf!(
-                    "%s",
-                    wgettext_fmt!("%s, version %s\n", PACKAGE_NAME, fish::BUILD_VERSION)
+                    "%s\n",
+                    wgettext_fmt!(VERSION_STRING_TEMPLATE, PACKAGE_NAME, fish::BUILD_VERSION)
                 );
                 return ControlFlow::Break(0);
             }
@@ -590,10 +590,12 @@ fn throwing_main() -> i32 {
                     });
                 res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
                 if res.is_err() {
-                    flogf!(
+                    flog!(
                         warning,
-                        wgettext!("Error while reading file %s\n"),
-                        path.to_string_lossy()
+                        sprintf!(
+                            "%s\n",
+                            wgettext_fmt!("Error while reading file %s", path.to_string_lossy())
+                        )
                     );
                 }
             }

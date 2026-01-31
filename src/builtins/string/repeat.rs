@@ -23,14 +23,14 @@ impl StringSubCommand<'_> for Repeat {
                 self.count = Some(
                     fish_wcstol(arg.unwrap())?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid count value '%s'\n", name, arg))?,
+                        .map_err(|_| invalid_args!("%s: Invalid count value '%s'", name, arg))?,
                 );
             }
             'm' => {
                 self.max = Some(
                     fish_wcstol(arg.unwrap())?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid max value '%s'\n", name, arg))?,
+                        .map_err(|_| invalid_args!(BUILTIN_ERR_INVALID_MAX_VALUE, name, arg))?,
                 );
             }
             'q' => self.quiet = true,

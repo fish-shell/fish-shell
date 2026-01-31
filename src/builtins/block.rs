@@ -84,8 +84,8 @@ pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
 
     if opts.erase {
         if opts.scope != Scope::Unset {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Can not specify scope when removing block\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Can not specify scope when removing block",
                 cmd
             ));
             return Err(STATUS_INVALID_ARGS);
@@ -94,7 +94,7 @@ pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
         if parser.global_event_blocks.load(Ordering::Relaxed) == 0 {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: No blocks defined\n", cmd));
+                .appendln(&wgettext_fmt!("%s: No blocks defined", cmd));
             return Err(STATUS_CMD_ERROR);
         }
         parser.global_event_blocks.fetch_sub(1, Ordering::Relaxed);

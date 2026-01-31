@@ -1108,13 +1108,17 @@ impl<'a> ExecutionContext<'a> {
             }
             ExpandResultCode::ok => {
                 if switch_values_expanded.len() > 1 {
-                    return report_error!(
+                    let mut error = wgettext_fmt!(
+                        "switch: Expected at most one argument, got %u",
+                        switch_values_expanded.len()
+                    );
+                    error.push('\n');
+                    return report_error_formatted!(
                         self,
                         ctx,
                         STATUS_INVALID_ARGS,
                         &statement.argument,
-                        "switch: Expected at most one argument, got %u\n",
-                        switch_values_expanded.len()
+                        error
                     );
                 }
             }

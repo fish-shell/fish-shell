@@ -116,6 +116,11 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         return Err(STATUS_INVALID_ARGS);
     };
 
+    localizable_consts! {
+        FUNCTION_DOES_NOT_EXIST
+        "%s: Function '%s' does not exist"
+    }
+
     let mut opts = FunctionsCmdOpts::default();
     let mut optind = 0;
 
@@ -157,8 +162,8 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if let Some(desc) = opts.description {
         if args.len() != 1 {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Expected exactly one function name\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Expected exactly one function name",
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
@@ -167,11 +172,9 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         let current_func = args[0];
 
         if !function::exists(current_func, parser) {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Function '%s' does not exist\n",
-                cmd,
-                current_func
-            ));
+            streams
+                .err
+                .appendln(&wgettext_fmt!(FUNCTION_DOES_NOT_EXIST, cmd, current_func));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_CMD_ERROR);
         }
@@ -265,9 +268,11 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         if !opts.handlers_type.unwrap_or(L!("")).is_empty()
             && !event::EVENT_FILTER_NAMES.contains(&opts.handlers_type.unwrap())
         {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Expected generic | variable | signal | exit | job-id for --handlers-type\n",
-                cmd
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Expected %s for %s",
+                cmd,
+                "generic | variable | signal | exit | job-id",
+                "--handlers-type",
             ));
             return Err(STATUS_INVALID_ARGS);
         }
@@ -305,8 +310,8 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if opts.copy {
         if args.len() != 2 {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Expected exactly two names (current function name, and new function name)\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Expected exactly two names (current function name, and new function name)",
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
@@ -316,18 +321,16 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         let new_func = args[1];
 
         if !function::exists(current_func, parser) {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Function '%s' does not exist\n",
-                cmd,
-                current_func
-            ));
+            streams
+                .err
+                .appendln(&wgettext_fmt!(FUNCTION_DOES_NOT_EXIST, cmd, current_func));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_CMD_ERROR);
         }
 
         if !valid_func_name(new_func) || parser_keywords_is_reserved(new_func) {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Illegal function name '%s'\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Illegal function name '%s'",
                 cmd,
                 new_func
             ));
@@ -336,8 +339,8 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         }
 
         if function::exists(new_func, parser) {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Function '%s' already exists. Cannot create copy of '%s'\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Function '%s' already exists. Cannot create copy of '%s'",
                 cmd,
                 new_func,
                 current_func

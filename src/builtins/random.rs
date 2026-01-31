@@ -58,7 +58,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         if arg_count == 1 {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: nothing to choose from\n", cmd));
+                .appendln(&wgettext_fmt!("%s: nothing to choose from", cmd));
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -124,9 +124,11 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
             match parse_ull(streams, cmd, argv[i + 1]) {
                 Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(0) => {
-                    streams
-                        .err
-                        .append(&wgettext_fmt!("%s: STEP must be a positive integer\n", cmd,));
+                    streams.err.appendln(&wgettext_fmt!(
+                        "%s: %s must be a positive integer",
+                        cmd,
+                        "STEP"
+                    ));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 Ok(x) => step = x,

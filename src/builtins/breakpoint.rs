@@ -28,8 +28,8 @@ pub fn breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
             .block_at_index(1)
             .is_none_or(|b| b.typ() == BlockType::breakpoint)
         {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Command not valid at an interactive prompt\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: Command not valid at an interactive prompt",
                 cmd,
             ));
             return Err(STATUS_ILLEGAL_CMD);

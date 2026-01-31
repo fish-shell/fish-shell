@@ -11,7 +11,10 @@ const VAR_NAME_PREFIX: &wstr = L!("_flag_");
 
 localizable_consts!(
     BUILTIN_ERR_INVALID_OPT_SPEC
-    "%s: Invalid option spec '%s' at char '%c'\n"
+    "%s: Invalid option spec '%s' at char '%c'"
+
+    MISSING_DOUBLE_HYPHEN_SEPARATOR
+    "%s: Missing -- separator"
 );
 
 #[derive(Default)]
@@ -168,8 +171,8 @@ fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> 
     for raw_xflags in &opts.raw_exclusive_flags {
         let xflags: Vec<_> = raw_xflags.split(',').collect();
         if xflags.len() < 2 {
-            streams.err.append(&wgettext_fmt!(
-                "%s: exclusive flag string '%s' is not valid\n",
+            streams.err.appendln(&wgettext_fmt!(
+                "%s: exclusive flag string '%s' is not valid",
                 opts.name,
                 raw_xflags
             ));
@@ -186,8 +189,8 @@ fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> 
                 // It's a long flag we store as its short flag equivalent.
                 exclusive_set.push(*short_equiv);
             } else {
-                streams.err.append(&wgettext_fmt!(
-                    "%s: exclusive flag '%s' is not valid\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "%s: exclusive flag '%s' is not valid",
                     opts.name,
                     flag
                 ));
@@ -215,8 +218,8 @@ fn parse_flag_modifiers<'args>(
         && s.char_at(0) != '!'
         && s.char_at(0) != '&'
     {
-        streams.err.append(&wgettext_fmt!(
-            "%s: Implicit int short flag '%c' does not allow modifiers like '%c'\n",
+        streams.err.appendln(&wgettext_fmt!(
+            "%s: Implicit int short flag '%c' does not allow modifiers like '%c'",
             opts.name,
             opt_spec.short_flag,
             s.char_at(0)
@@ -250,7 +253,7 @@ fn parse_flag_modifiers<'args>(
 
     if s.char_at(0) == '!' {
         if opt_spec.arg_type == ArgType::NoArgument {
-            streams.err.append(&wgettext_fmt!(
+            streams.err.appendln(&wgettext_fmt!(
                 BUILTIN_ERR_INVALID_OPT_SPEC,
                 opts.name,
                 option_spec,
@@ -262,7 +265,7 @@ fn parse_flag_modifiers<'args>(
         // Move cursor to the end so we don't expect a long flag.
         s = s.slice_from(s.char_count());
     } else if !s.is_empty() {
-        streams.err.append(&wgettext_fmt!(
+        streams.err.appendln(&wgettext_fmt!(
             BUILTIN_ERR_INVALID_OPT_SPEC,
             opts.name,
             option_spec,
@@ -277,8 +280,8 @@ fn parse_flag_modifiers<'args>(
     }
 
     if opts.options.contains_key(&opt_spec.short_flag) {
-        streams.err.append(&wgettext_fmt!(
-            "%s: Short flag '%c' already defined\n",
+        streams.err.appendln(&wgettext_fmt!(
+            "%s: Short flag '%c' already defined",
             opts.name,
             opt_spec.short_flag
         ));
@@ -298,6 +301,10 @@ fn parse_option_spec_sep<'args>(
     counter: &mut u32,
     streams: &mut IoStreams,
 ) -> bool {
+    localizable_consts! {
+        IMPLICIT_INT_FLAG_ALREADY_DEFINED
+        "%s: Implicit int flag '%c' already defined"
+    }
     let mut s = *opt_spec_str;
     let mut i = 1usize;
     // C++ used -1 to check for # here, we instead adjust opt_spec_str to start one earlier
@@ -309,8 +316,8 @@ fn parse_option_spec_sep<'args>(
             *counter += 1;
         }
         if opts.implicit_int_flag != '\0' {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Implicit int flag '%c' already defined\n",
+            streams.err.appendln(&wgettext_fmt!(
+                IMPLICIT_INT_FLAG_ALREADY_DEFINED,
                 opts.name,
                 opts.implicit_int_flag
             ));
@@ -328,7 +335,7 @@ fn parse_option_spec_sep<'args>(
             opt_spec.short_flag_valid = false;
             i += 1;
             if i == s.char_count() {
-                streams.err.append(&wgettext_fmt!(
+                streams.err.appendln(&wgettext_fmt!(
                     BUILTIN_ERR_INVALID_OPT_SPEC,
                     opts.name,
                     option_spec,
@@ -340,7 +347,7 @@ fn parse_option_spec_sep<'args>(
         '/' => {
             i += 1; // the struct is initialized assuming short_flag_valid should be true
             if i == s.char_count() {
-                streams.err.append(&wgettext_fmt!(
+                streams.err.appendln(&wgettext_fmt!(
                     BUILTIN_ERR_INVALID_OPT_SPEC,
                     opts.name,
                     option_spec,
@@ -351,8 +358,8 @@ fn parse_option_spec_sep<'args>(
         }
         '#' => {
             if opts.implicit_int_flag != '\0' {
-                streams.err.append(&wgettext_fmt!(
-                    "%s: Implicit int flag '%c' already defined\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    IMPLICIT_INT_FLAG_ALREADY_DEFINED,
                     opts.name,
                     opts.implicit_int_flag
                 ));
@@ -395,8 +402,8 @@ fn parse_option_spec<'args>(
     streams: &mut IoStreams,
 ) -> bool {
     if option_spec.is_empty() {
-        streams.err.append(&wgettext_fmt!(
-            "%s: An option spec must have at least a short or a long flag\n",
+        streams.err.appendln(&wgettext_fmt!(
+            "%s: An option spec must have at least a short or a long flag",
             opts.name
         ));
         return false;
@@ -405,8 +412,8 @@ fn parse_option_spec<'args>(
     let mut s = option_spec;
     if !fish_iswalnum(s.char_at(0)) && s.char_at(0) != '#' && !(s.char_at(0) == '/' && s.len() > 1)
     {
-        streams.err.append(&wgettext_fmt!(
-            "%s: Short flag '%c' invalid, must be alphanum or '#'\n",
+        streams.err.appendln(&wgettext_fmt!(
+            "%s: Short flag '%c' invalid, must be alphanum or '#'",
             opts.name,
             s.char_at(0)
         ));
@@ -432,8 +439,8 @@ fn parse_option_spec<'args>(
         if long_flag_char_count > 0 {
             opt_spec.long_flag = s.slice_to(long_flag_char_count);
             if opts.long_to_short_flag.contains_key(opt_spec.long_flag) {
-                streams.err.append(&wgettext_fmt!(
-                    "%s: Long flag '%s' already defined\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "%s: Long flag '%s' already defined",
                     opts.name,
                     opt_spec.long_flag
                 ));
@@ -481,7 +488,7 @@ fn collect_option_specs<'args>(
         if *optind == argc {
             streams
                 .err
-                .append(&wgettext_fmt!("%s: Missing -- separator\n", cmd));
+                .appendln(&wgettext_fmt!(MISSING_DOUBLE_HYPHEN_SEPARATOR, cmd));
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -503,7 +510,7 @@ fn collect_option_specs<'args>(
     if counter > counter_max {
         streams
             .err
-            .append(&wgettext_fmt!("%s: Too many long-only options\n", cmd));
+            .appendln(&wgettext_fmt!("%s: Too many long-only options", cmd));
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -557,8 +564,8 @@ fn parse_cmd_opts<'args>(
                 } else if kind == L!("none") {
                     ArgType::NoArgument
                 } else {
-                    streams.err.append(&wgettext_fmt!(
-                        "%s: Invalid --unknown-arguments value '%s'\n",
+                    streams.err.appendln(&wgettext_fmt!(
+                        "%s: Invalid --unknown-arguments value '%s'",
                         cmd,
                         kind
                     ));
@@ -574,8 +581,8 @@ fn parse_cmd_opts<'args>(
                 opts.min_args = {
                     let x = fish_wcstol(w.woptarg.unwrap()).unwrap_or(-1);
                     if x < 0 {
-                        streams.err.append(&wgettext_fmt!(
-                            "%s: Invalid --min-args value '%s'\n",
+                        streams.err.appendln(&wgettext_fmt!(
+                            "%s: Invalid --min-args value '%s'",
                             cmd,
                             w.woptarg.unwrap()
                         ));
@@ -588,8 +595,8 @@ fn parse_cmd_opts<'args>(
                 opts.max_args = {
                     let x = fish_wcstol(w.woptarg.unwrap()).unwrap_or(-1);
                     if x < 0 {
-                        streams.err.append(&wgettext_fmt!(
-                            "%s: Invalid --max-args value '%s'\n",
+                        streams.err.appendln(&wgettext_fmt!(
+                            "%s: Invalid --max-args value '%s'",
                             cmd,
                             w.woptarg.unwrap()
                         ));
@@ -643,7 +650,7 @@ fn parse_cmd_opts<'args>(
         // The user didn't specify any option specs.
         streams
             .err
-            .append(&wgettext_fmt!("%s: Missing -- separator\n", cmd));
+            .appendln(&wgettext_fmt!(MISSING_DOUBLE_HYPHEN_SEPARATOR, cmd));
         return Err(STATUS_INVALID_ARGS);
     }
 

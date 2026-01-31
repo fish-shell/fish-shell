@@ -90,8 +90,8 @@ fn parse_cmd_opts(
                 return Err(STATUS_INVALID_ARGS);
             }
             if !read_only_ok && is_read_only(varname) {
-                streams.err.append(&wgettext_fmt!(
-                    "%s: variable '%s' is read-only\n",
+                streams.err.appendln(&wgettext_fmt!(
+                    "%s: variable '%s' is read-only",
                     cmd,
                     varname
                 ));

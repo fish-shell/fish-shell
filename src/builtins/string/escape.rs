@@ -21,7 +21,7 @@ impl StringSubCommand<'_> for Escape {
                 self.style = arg
                     .unwrap()
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid escape style '%s'\n", name, arg))?;
+                    .map_err(|_| invalid_args!("%s: Invalid escape style '%s'", name, arg))?;
             }
             _ => return Err(StringError::UnknownOption),
         }

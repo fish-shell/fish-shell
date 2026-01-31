@@ -5316,10 +5316,9 @@ fn get_autosuggestion_performer(
                     let newlines = full
                         .char_indices()
                         .filter_map(|(i, c)| (c == '\n').then_some(i));
-                    let line_ranges = Some(0)
-                        .into_iter()
+                    let line_ranges = std::iter::once(0)
                         .chain(newlines.clone().map(|i| i + 1))
-                        .zip(newlines.chain(Some(full.char_count()).into_iter()))
+                        .zip(newlines.chain(std::iter::once(full.char_count())))
                         .map(|(start, end)| start..end);
 
                     let mut icase = false;

@@ -110,38 +110,6 @@ unsafe impl Sync for ParsedSource {}
 const _: () = assert_send::<ParsedSource>();
 const _: () = assert_sync::<ParsedSource>();
 
-/// Cache for efficient line number computation when processing multiple nodes.
-/// Caches the last source's offset and newline count.
-#[derive(Default)]
-pub struct SourceLineCache {
-    last_source: *const ParsedSource, // Pointer to last source used
-    offset: usize,                    // Exclusive offset of the number of newlines counted
-    count: usize,                     // Count of newlines up to offset
-}
-
-impl ParsedSource {
-    /// Compute the 1-based line number for a given offset, using and updating the cache.
-    pub fn lineno_for_offset(&self, offset: usize, cache: &mut SourceLineCache) -> u32 {
-        let self_ptr = std::ptr::from_ref(self);
-
-        // If source changed, reset cache.
-        if cache.last_source != self_ptr {
-            cache.last_source = self_ptr;
-            cache.offset = 0;
-            cache.count = 0;
-        }
-
-        if offset > cache.offset {
-            cache.count += count_newlines(&self.src[cache.offset..offset]);
-        } else if offset < cache.offset {
-            cache.count -= count_newlines(&self.src[offset..cache.offset]);
-        }
-        cache.offset = offset;
-
-        cache.count as u32 + 1
-    }
-}
-
 impl ParsedSource {
     pub fn new(src: WString, ast: Ast) -> Self {
         ParsedSource { src, ast }
@@ -152,6 +120,8 @@ impl ParsedSource {
         LineCounter {
             parsed_source: Pin::new(Arc::clone(self)),
             node: std::ptr::null(),
+            cached_offset: 0,
+            cached_count: 0,
         }
     }
 
@@ -220,18 +190,6 @@ impl<NodeType: Node> NodeRef<NodeType> {
     pub fn parsed_source_ref(&self) -> ParsedSourceRef {
         Pin::into_inner(self.parsed_source.clone())
     }
-
-    /// Return the 1-based line number of this node, or None if unsourced.
-    pub fn lineno(&self) -> Option<std::num::NonZeroU32> {
-        self.lineno_with_cache(&mut SourceLineCache::default())
-    }
-
-    /// Return the 1-based line number of this node using a cache, or None if unsourced.
-    pub fn lineno_with_cache(&self, cache: &mut SourceLineCache) -> Option<std::num::NonZeroU32> {
-        let range = self.try_source_range()?;
-        let lineno = self.parsed_source.lineno_for_offset(range.start(), cache);
-        Some(std::num::NonZeroU32::new(lineno).unwrap())
-    }
 }
 
 // Safety: NodeRef is Send and Sync because it's just a pointer into a parse tree, which is pinned.
@@ -263,6 +221,10 @@ pub struct LineCounter<NodeType: Node> {
 
     /// The node itself. This points into the parsed source, or it may be null.
     pub node: *const NodeType,
+
+    // Cached line number information: the line number of the start of the node, and the number of newlines.
+    cached_offset: usize,
+    cached_count: usize,
 }
 
 impl<NodeType: Node> LineCounter<NodeType> {
@@ -273,7 +235,40 @@ impl<NodeType: Node> LineCounter<NodeType> {
         LineCounter {
             parsed_source,
             node: std::ptr::null(),
+            cached_offset: 0,
+            cached_count: 0,
         }
+    }
+
+    // Count the number of newlines, leveraging our cache.
+    pub fn line_offset_of_character_at_offset(&mut self, offset: usize) -> usize {
+        let src = &self.parsed_source.src;
+        assert!(offset <= src.len());
+
+        // Easy hack to handle 0.
+        if offset == 0 {
+            return 0;
+        }
+
+        // We want to return the number of newlines at offsets less than the given offset.
+        #[allow(clippy::comparison_chain)] // TODO(MSRV>=1.90) for old clippy
+        if offset > self.cached_offset {
+            // Add one for every newline we find in the range [cached_offset, offset).
+            // The codegen is substantially better when using a char slice than the char iterator.
+            self.cached_count += count_newlines(&src[self.cached_offset..offset]);
+        } else if offset < self.cached_offset {
+            // Subtract one for every newline we find in the range [offset, cached_range.start).
+            self.cached_count -= count_newlines(&src[offset..self.cached_offset]);
+        }
+        self.cached_offset = offset;
+        self.cached_count
+    }
+
+    // Returns the 0-based line number of the node.
+    pub fn line_offset_of_node(&mut self) -> Option<u32> {
+        let src_offset = self.source_offset_of_node()?;
+        // Safe to cast/truncate to u32 since SourceRange stores it as a u32 internally
+        Some(self.line_offset_of_character_at_offset(src_offset) as u32)
     }
 
     // Return the 0 based character offset of the node.
@@ -287,16 +282,5 @@ impl<NodeType: Node> LineCounter<NodeType> {
     // Return the source.
     pub fn get_source(&self) -> &wstr {
         &self.parsed_source.src
-    }
-
-    /// Return a NodeRef for the current node, if any.
-    pub fn node_ref(&self) -> Option<NodeRef<NodeType>> {
-        if self.node.is_null() {
-            return None;
-        }
-        Some(NodeRef::new(
-            Pin::into_inner(self.parsed_source.clone()),
-            self.node,
-        ))
     }
 }

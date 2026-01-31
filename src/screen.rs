@@ -925,7 +925,7 @@ impl Screen {
         let y_steps =
             isize::try_from(new_y).unwrap() - isize::try_from(self.actual.cursor.y).unwrap();
 
-        #[allow(clippy::comparison_chain)] // TODO(MSRV>=1.90) for old clippy
+        #[allow(clippy::comparison_chain)] // TODO(MSRV>=1.90) old clippy
         let s = if y_steps < 0 {
             Some(CursorUp)
         } else if y_steps > 0 {

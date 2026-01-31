@@ -131,6 +131,7 @@ impl ParsedSource {
             cache.count = 0;
         }
 
+        #[allow(clippy::comparison_chain)] // TODO(MSRV>=1.90) old clippy
         if offset > cache.offset {
             cache.count += count_newlines(&self.src[cache.offset..offset]);
         } else if offset < cache.offset {

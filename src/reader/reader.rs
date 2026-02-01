@@ -1005,21 +1005,20 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     AT_EXIT.get_or_init(|| Box::new(move || reader_deinit(will_restore_foreground_pgroup)));
 
     // Set the mode used for program execution, initialized to the current mode.
-    let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
-    *tty_modes_for_external_cmds = terminal_mode_on_startup;
-    term_fix_external_modes(&mut tty_modes_for_external_cmds);
+    let mut external_modes = terminal_mode_on_startup;
+    term_fix_external_modes(&mut external_modes);
 
     // Disable flow control by default.
-    tty_modes_for_external_cmds.c_iflag &= !FLOW_CONTROL_FLAGS;
+    external_modes.c_iflag &= !FLOW_CONTROL_FLAGS;
 
     // Set the mode used for the terminal, initialized to the current mode.
     {
         let mut shell_modes = shell_modes();
-        *shell_modes = *tty_modes_for_external_cmds;
+        *shell_modes = external_modes;
         term_fix_shell_modes(&mut shell_modes);
     }
 
-    drop(tty_modes_for_external_cmds);
+    *TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap() = external_modes;
 
     // Set up our fixed terminal modes once,
     // so we don't get flow control just because we inherited it.
@@ -4776,16 +4775,16 @@ fn term_donate(quiet: bool /* = false */) {
 pub fn term_copy_modes() {
     let mut modes = MaybeUninit::uninit();
     unsafe { libc::tcgetattr(STDIN_FILENO, modes.as_mut_ptr()) };
-    let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
-    *tty_modes_for_external_cmds = unsafe { modes.assume_init() };
+    let mut external_modes = unsafe { modes.assume_init() };
     // We still want to fix most egregious breakage.
     // E.g. OPOST is *not* something that should be set globally,
     // and 99% triggered by a crashed program.
-    term_fix_external_modes(&mut tty_modes_for_external_cmds);
+    term_fix_external_modes(&mut external_modes);
+    *TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap() = external_modes;
 
     let mut shell_modes = shell_modes();
-    shell_modes.c_iflag = (shell_modes.c_iflag & !FLOW_CONTROL_FLAGS)
-        | (tty_modes_for_external_cmds.c_iflag & FLOW_CONTROL_FLAGS);
+    shell_modes.c_iflag =
+        (shell_modes.c_iflag & !FLOW_CONTROL_FLAGS) | (external_modes.c_iflag & FLOW_CONTROL_FLAGS);
 }
 
 pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {

@@ -39,17 +39,7 @@ libc = "0.2.177"
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
 # files as of 22 April 2024.
 lru = "0.16.2"
-nix = { version = "0.30.1", default-features = false, features = [
-    "event",
-    "fs",
-    "inotify",
-    "hostname",
-    "resource",
-    "process",
-    "signal",
-    "term",
-    "user",
-] }
+nix = { version = "0.31.1", default-features = false, features = ["event", "fs", "inotify", "hostname", "resource", "process", "signal", "term", "user"] }
 num-traits = "0.2.19"
 once_cell = "1.19.0"
 pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", tag = "0.2.9-utf32", default-features = false, features = [

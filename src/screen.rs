@@ -19,7 +19,8 @@ use std::sync::Mutex;
 use std::sync::atomic::AtomicU32;
 use std::time::SystemTime;
 
-use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
+use libc::{STDERR_FILENO, STDOUT_FILENO};
+use nix::sys::termios;
 
 use crate::common::{
     get_ellipsis_char, get_omitted_newline_str, has_working_tty_timestamps, shell_modes, wcs2bytes,
@@ -929,7 +930,9 @@ impl Screen {
         let s = if y_steps < 0 {
             Some(CursorUp)
         } else if y_steps > 0 {
-            if (shell_modes().c_oflag & ONLCR) != 0
+            if shell_modes()
+                .output_flags
+                .contains(termios::OutputFlags::ONLCR)
                 && (!use_terminfo()
                     || crate::terminal::term()
                         .cursor_down

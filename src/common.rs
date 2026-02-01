@@ -19,6 +19,7 @@ use fish_wcstringutil::str2bytes_callback;
 use fish_widestring::{
     ENCODE_DIRECT_END, decode_byte_from_char, encode_byte_to_char, subslice_position,
 };
+use nix::sys::termios::Termios;
 use std::env;
 use std::ffi::{CStr, CString, OsStr, OsString};
 use std::os::unix::prelude::*;
@@ -884,7 +885,7 @@ pub fn read_unquoted_escape(
     Some(in_pos)
 }
 
-pub fn shell_modes() -> MutexGuard<'static, libc::termios> {
+pub fn shell_modes() -> MutexGuard<'static, Termios> {
     crate::reader::SHELL_MODES.lock().unwrap()
 }
 

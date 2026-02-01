@@ -878,7 +878,7 @@ pub trait InputEventQueuer {
                                 self.push_back(evt);
                             }
                         });
-                        let vintr = shell_modes().c_cc[libc::VINTR];
+                        let vintr = shell_modes().control_chars[libc::VINTR];
                         if vintr != 0
                             && key.is_some_and(|key| {
                                 match_key_event_to_key(&key, &Key::from_single_byte(vintr))
@@ -1619,7 +1619,7 @@ pub trait InputEventQueuer {
     fn select_interrupted(&mut self) {}
 
     fn enqueue_interrupt_key(&mut self) {
-        let vintr = shell_modes().c_cc[libc::VINTR];
+        let vintr = shell_modes().control_chars[libc::VINTR];
         if vintr != 0 {
             let interrupt_evt = CharEvent::from_key(KeyEvent::from_single_byte(vintr));
             if stop_query(self.blocking_query()) {

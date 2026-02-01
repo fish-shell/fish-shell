@@ -20,8 +20,9 @@ use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror, wcstoi};
 use fish_widestring::ToWString;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
+use nix::sys::termios::tcgetattr;
 use nix::unistd::getpgrp;
-use std::mem::MaybeUninit;
+use std::os::fd::BorrowedFd;
 use std::sync::{
     OnceLock,
     atomic::{AtomicBool, AtomicPtr, Ordering},
@@ -408,12 +409,17 @@ impl TtyHandoff {
 
     /// Save the current tty modes into the owning job group, if we are transferred.
     pub fn save_tty_modes(&mut self) {
-        if let Some(ref mut owner) = self.owner {
-            let mut tmodes = MaybeUninit::uninit();
-            if unsafe { libc::tcgetattr(STDIN_FILENO, tmodes.as_mut_ptr()) } == 0 {
-                owner.tmodes.replace(Some(unsafe { tmodes.assume_init() }));
-            } else if errno::errno().0 != ENOTTY {
-                perror("tcgetattr");
+        let Some(ref mut owner) = self.owner else {
+            return;
+        };
+        match tcgetattr(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) }) {
+            Ok(modes) => {
+                owner.tmodes.replace(Some(modes));
+            }
+            Err(err) => {
+                if err != nix::Error::ENOTTY {
+                    perror("tcgetattr");
+                }
             }
         }
     }

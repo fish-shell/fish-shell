@@ -2,6 +2,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::prelude::*;
 use crate::proc::{JobGroupRef, Pid};
 use crate::signal::Signal;
+use nix::sys::termios::Termios;
 use std::cell::RefCell;
 use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicI32, Ordering};
@@ -60,7 +61,7 @@ impl<'a> fish_printf::ToArg<'a> for MaybeJobId {
 pub struct JobGroup {
     /// If set, the saved terminal modes of this job. This needs to be saved so that we can restore
     /// the terminal to the same state when resuming a stopped job.
-    pub tmodes: RefCell<Option<libc::termios>>,
+    pub tmodes: RefCell<Option<Termios>>,
     /// Whether job control is enabled in this `JobGroup` or not.
     ///
     /// If this is set, then the first process in the root job must be external, as it will become

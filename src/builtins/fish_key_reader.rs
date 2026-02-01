@@ -47,7 +47,7 @@ fn should_exit(
 
     for evt in [VINTR, VEOF] {
         let modes = shell_modes();
-        let cc = Key::from_single_byte(modes.c_cc[evt]);
+        let cc = Key::from_single_byte(modes.control_chars[evt]);
 
         if match_key_event_to_key(&key_evt, &cc).is_some() {
             if recent_keys
@@ -61,7 +61,7 @@ fn should_exit(
             }
             streams.err.append(&wgettext_fmt!(
                 "Press ctrl-%c again to exit\n",
-                char::from(modes.c_cc[evt] + 0x60)
+                char::from(modes.control_chars[evt] + 0x60)
             ));
             return false;
         }
@@ -162,8 +162,8 @@ fn setup_and_process_keys(
         let modes = shell_modes();
         streams.err.appendln(&wgettext_fmt!(
             "or press ctrl-%c or ctrl-%c twice in a row.",
-            char::from(modes.c_cc[VINTR] + 0x60),
-            char::from(modes.c_cc[VEOF] + 0x60)
+            char::from(modes.control_chars[VINTR] + 0x60),
+            char::from(modes.control_chars[VEOF] + 0x60)
         ));
         streams.err.appendln(L!("\n"));
     }

@@ -127,10 +127,10 @@ use fish_wcstringutil::{
 };
 use fish_wcstringutil::{IsPrefix, is_prefix};
 use libc::{
-    _POSIX_VDISABLE, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, FLUSHO, ICANON, ICRNL, IEXTEN,
-    INLCR, IXOFF, IXON, O_NONBLOCK, O_RDONLY, ONLCR, OPOST, SIGINT, STDERR_FILENO, STDIN_FILENO,
-    STDOUT_FILENO, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, c_char,
+    _POSIX_VDISABLE, EIO, EISDIR, ENOTTY, EPERM, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT,
+    STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
+use nix::sys::termios::{self, SetArg, Termios, tcgetattr};
 use nix::{
     fcntl::OFlag,
     sys::{
@@ -144,7 +144,6 @@ use std::{
     cell::UnsafeCell,
     cmp,
     io::BufReader,
-    mem::MaybeUninit,
     num::NonZeroUsize,
     ops::{ControlFlow, Range},
     os::fd::{AsRawFd, BorrowedFd, FromRawFd, OwnedFd, RawFd},
@@ -169,16 +168,20 @@ enum ExitState {
 
 static EXIT_STATE: AtomicU8 = AtomicU8::new(ExitState::None as u8);
 
-pub static SHELL_MODES: LazyLock<Mutex<libc::termios>> =
-    LazyLock::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+fn zeroed_termios() -> Termios {
+    let termios: libc::termios = unsafe { std::mem::zeroed() };
+    termios.into()
+}
+
+pub static SHELL_MODES: LazyLock<Mutex<Termios>> = LazyLock::new(|| Mutex::new(zeroed_termios()));
 
 /// The valid terminal modes on startup.
 /// Warning: this is read from the SIGTERM handler! Hence the raw global.
 static TERMINAL_MODE_ON_STARTUP: OnceLock<libc::termios> = OnceLock::new();
 
 /// Mode we use to execute programs.
-static TTY_MODES_FOR_EXTERNAL_CMDS: LazyLock<Mutex<libc::termios>> =
-    LazyLock::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+static TTY_MODES_FOR_EXTERNAL_CMDS: LazyLock<Mutex<Termios>> =
+    LazyLock::new(|| Mutex::new(zeroed_termios()));
 
 static RUN_COUNT: AtomicU64 = AtomicU64::new(0);
 
@@ -223,13 +226,11 @@ fn redirect_tty_after_sighup() {
     };
     let fd = devnull.as_raw_fd();
     for stdfd in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
-        let mut t = std::mem::MaybeUninit::uninit();
-        unsafe {
-            if libc::tcgetattr(stdfd, t.as_mut_ptr()) != 0
-                && matches!(errno::errno().0, EIO | ENOTTY)
-            {
-                libc::dup2(fd, stdfd);
-            }
+        if matches!(
+            tcgetattr(unsafe { BorrowedFd::borrow_raw(stdfd) }),
+            Err(e) if matches!(e, nix::Error::EIO | nix::Error::ENOTTY)
+        ) {
+            unsafe { libc::dup2(fd, stdfd) };
         }
     }
 }
@@ -986,18 +987,24 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     }
 }
 
-const FLOW_CONTROL_FLAGS: libc::tcflag_t = IXON | IXOFF;
+const FLOW_CONTROL_FLAGS: termios::InputFlags = {
+    use termios::InputFlags;
+    InputFlags::IXON.union(InputFlags::IXOFF)
+};
 
 /// Initialize the reader.
 pub fn reader_init(will_restore_foreground_pgroup: bool) {
-    // Save the initial terminal mode.
-    // Note this field is read by a signal handler, so do it atomically, with a leaked mode.
-    let mut terminal_mode_on_startup = unsafe { std::mem::zeroed::<libc::termios>() };
-    let ret = unsafe { libc::tcgetattr(libc::STDIN_FILENO, &mut terminal_mode_on_startup) };
-    // TODO: rationalize behavior if initial tcgetattr() fails.
-    if ret == 0 {
-        TERMINAL_MODE_ON_STARTUP.get_or_init(|| terminal_mode_on_startup);
-    }
+    let terminal_mode_on_startup = match tcgetattr(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) })
+    {
+        Ok(modes) => {
+            // Save the initial terminal mode.
+            // Note this field is read by a signal handler, so do it atomically, with a leaked mode.
+            // TODO: rationalize behavior if initial tcgetattr() fails.
+            TERMINAL_MODE_ON_STARTUP.get_or_init(|| libc::termios::from(modes.clone()));
+            modes
+        }
+        Err(_) => zeroed_termios(),
+    };
 
     if !cfg!(test) {
         assert!(AT_EXIT.get().is_none());
@@ -1009,12 +1016,12 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     term_fix_external_modes(&mut external_modes);
 
     // Disable flow control by default.
-    external_modes.c_iflag &= !FLOW_CONTROL_FLAGS;
+    external_modes.input_flags &= !FLOW_CONTROL_FLAGS;
 
     // Set the mode used for the terminal, initialized to the current mode.
     {
         let mut shell_modes = shell_modes();
-        *shell_modes = external_modes;
+        *shell_modes = external_modes.clone();
         term_fix_shell_modes(&mut shell_modes);
     }
 
@@ -1044,7 +1051,7 @@ pub fn safe_restore_term_mode() {
         return;
     }
     if let Some(modes) = safe_get_terminal_mode_on_startup() {
-        unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, modes) };
+        unsafe { libc::tcsetattr(STDIN_FILENO, libc::TCSANOW, modes) };
     }
 }
 
@@ -1206,7 +1213,7 @@ pub fn reader_reading_interrupted(data: &mut ReaderData) -> i32 {
 /// commandline.
 pub fn reader_readline(
     parser: &Parser,
-    old_modes: Option<libc::termios>,
+    old_modes: Option<Termios>,
     nchars: Option<NonZeroUsize>,
 ) -> Option<WString> {
     let data = current_data().unwrap();
@@ -2535,7 +2542,7 @@ impl<'a> Reader<'a> {
     /// Return the command, or none if we were asked to cancel (e.g. SIGHUP).
     fn readline(
         &mut self,
-        old_modes: Option<libc::termios>,
+        old_modes: Option<Termios>,
         nchars: Option<NonZeroUsize>,
     ) -> Option<WString> {
         let mut tty = TtyHandoff::new(reader_save_screen_state);
@@ -2633,7 +2640,12 @@ impl<'a> Reader<'a> {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
             if let Some(old_modes) = old_modes {
-                if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &old_modes) } == -1
+                if termios::tcsetattr(
+                    unsafe { BorrowedFd::borrow_raw(self.conf.inputfd) },
+                    SetArg::TCSANOW,
+                    &old_modes,
+                )
+                .is_err()
                     && is_interactive_session()
                 {
                     perror("tcsetattr");
@@ -4702,32 +4714,39 @@ impl ReaderData {
 
 // Turning off OPOST or ONLCR breaks output (staircase effect), we don't allow it.
 // See #7133.
-fn term_fix_oflag(modes: &mut libc::termios) {
-    modes.c_oflag |= {
+fn term_fix_oflag(modes: &mut Termios) {
+    modes.output_flags |= {
+        use termios::OutputFlags;
         // turn on "implementation-defined post processing" - this often changes how line breaks work.
-        OPOST
+        OutputFlags::OPOST
         // "translate newline to carriage return-newline" - without you see staircase output.
-        | ONLCR
+        | OutputFlags::ONLCR
     };
 }
 
 /// Restore terminal settings we care about, to prevent a broken shell.
-fn term_fix_shell_modes(modes: &mut libc::termios) {
-    modes.c_iflag &= {
+fn term_fix_shell_modes(modes: &mut Termios) {
+    modes.input_flags &= {
+        use termios::InputFlags;
         // disable mapping CR (\cM) to NL (\cJ)
-        !ICRNL
+        !InputFlags::ICRNL
         // disable mapping NL (\cJ) to CR (\cM)
-        & !INLCR
+        & !InputFlags::INLCR
     };
-    modes.c_lflag &= {
-        !ECHO
-        & !ICANON
-        & !IEXTEN // turn off handling of discard and lnext characters
-        & !FLUSHO
+    modes.local_flags &= {
+        use termios::LocalFlags;
+        let echo = LocalFlags::ECHO;
+        let flusho = LocalFlags::FLUSHO;
+        let icanon = LocalFlags::ICANON;
+        let iexten = LocalFlags::IEXTEN;
+        !echo
+        & !icanon
+        & !iexten // turn off handling of discard and lnext characters
+        & !flusho
     };
     term_fix_oflag(modes);
 
-    let c_cc = &mut modes.c_cc;
+    let c_cc = &mut modes.control_chars;
     c_cc[VMIN] = 1;
     c_cc[VTIME] = 0;
 
@@ -4741,57 +4760,76 @@ fn term_fix_shell_modes(modes: &mut libc::termios) {
     c_cc[VQUIT] = disabling_char;
 }
 
-fn term_fix_external_modes(modes: &mut libc::termios) {
+fn term_fix_external_modes(modes: &mut Termios) {
     term_fix_oflag(modes);
     // These cause other ridiculous behaviors like input not being shown.
-    modes.c_lflag = (modes.c_lflag | ECHO | ICANON | IEXTEN) & !FLUSHO;
-    modes.c_iflag = (modes.c_iflag | ICRNL) & !INLCR;
+    modes.local_flags = {
+        use termios::LocalFlags;
+        let echo = LocalFlags::ECHO;
+        let flusho = LocalFlags::FLUSHO;
+        let icanon = LocalFlags::ICANON;
+        let iexten = LocalFlags::IEXTEN;
+        (modes.local_flags | echo | icanon | iexten) & !flusho
+    };
+    modes.input_flags = {
+        use termios::InputFlags;
+        let icrnl = InputFlags::ICRNL;
+        let inlcr = InputFlags::INLCR;
+        (modes.input_flags | icrnl) & !inlcr
+    };
 }
 
 /// Give up control of terminal.
 fn term_donate(quiet: bool /* = false */) {
-    while unsafe {
-        libc::tcsetattr(
-            STDIN_FILENO,
-            TCSANOW,
-            &*TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap(),
-        )
-    } == -1
-    {
-        if errno().0 != EINTR {
-            if !quiet {
-                flog!(
-                    warning,
-                    wgettext!("Could not set terminal mode for new job")
-                );
-                perror("tcsetattr");
+    loop {
+        match termios::tcsetattr(
+            unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) },
+            SetArg::TCSANOW,
+            &TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap(),
+        ) {
+            Ok(_) => (),
+            Err(nix::Error::EINTR) => continue,
+            Err(_) => {
+                if !quiet {
+                    flog!(
+                        warning,
+                        wgettext!("Could not set terminal mode for new job")
+                    );
+                    perror("tcsetattr");
+                }
+                break;
             }
-            break;
         }
+        break;
     }
 }
 
 /// Copy the (potentially changed) terminal modes and use them from now on.
 pub fn term_copy_modes() {
-    let mut modes = MaybeUninit::uninit();
-    unsafe { libc::tcgetattr(STDIN_FILENO, modes.as_mut_ptr()) };
-    let mut external_modes = unsafe { modes.assume_init() };
+    let mut external_modes = tcgetattr(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) })
+        .unwrap_or_else(|_| zeroed_termios());
     // We still want to fix most egregious breakage.
     // E.g. OPOST is *not* something that should be set globally,
     // and 99% triggered by a crashed program.
     term_fix_external_modes(&mut external_modes);
+    let external_flow_control = external_modes.input_flags & FLOW_CONTROL_FLAGS;
     *TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap() = external_modes;
 
     let mut shell_modes = shell_modes();
-    shell_modes.c_iflag =
-        (shell_modes.c_iflag & !FLOW_CONTROL_FLAGS) | (external_modes.c_iflag & FLOW_CONTROL_FLAGS);
+    shell_modes.input_flags =
+        (shell_modes.input_flags & !FLOW_CONTROL_FLAGS) | external_flow_control;
 }
 
 pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
     let ok = loop {
-        let ok = unsafe { libc::tcsetattr(fd, TCSANOW, &*shell_modes()) } != -1;
-        if ok || errno().0 != EINTR {
-            break ok;
+        match termios::tcsetattr(
+            unsafe { BorrowedFd::borrow_raw(fd) },
+            SetArg::TCSANOW,
+            &shell_modes(),
+        ) {
+            Ok(_) => break true,
+            Err(nix::Error::EINTR) => continue,
+            Err(_) => break false,
         }
     };
     if !ok {
@@ -4804,18 +4842,14 @@ pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
     ok
 }
 
-pub fn set_shell_modes_temporarily(inputfd: RawFd) -> Option<libc::termios> {
+pub fn set_shell_modes_temporarily(inputfd: RawFd) -> Option<Termios> {
     // It may happen that a command we ran when job control was disabled nevertheless stole the tty
     // from us. In that case when we read from our fd, it will trigger SIGTTIN. So just
     // unconditionally reclaim the tty. See #9181.
     unsafe { libc::tcsetpgrp(inputfd, libc::getpgrp()) };
 
     // Get the current terminal modes. These will be restored when the function returns.
-    let old_modes = {
-        let mut old_modes = MaybeUninit::uninit();
-        let ok = unsafe { libc::tcgetattr(inputfd, old_modes.as_mut_ptr()) } == 0;
-        ok.then(|| unsafe { old_modes.assume_init() })
-    };
+    let old_modes = tcgetattr(unsafe { BorrowedFd::borrow_raw(inputfd) }).ok();
 
     // Set the new modes.
     set_shell_modes(inputfd, "readline");

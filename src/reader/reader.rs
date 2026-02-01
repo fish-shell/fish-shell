@@ -986,6 +986,8 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     }
 }
 
+const FLOW_CONTROL_FLAGS: libc::tcflag_t = IXON | IXOFF;
+
 /// Initialize the reader.
 pub fn reader_init(will_restore_foreground_pgroup: bool) {
     // Save the initial terminal mode.
@@ -1008,8 +1010,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     term_fix_external_modes(&mut tty_modes_for_external_cmds);
 
     // Disable flow control by default.
-    tty_modes_for_external_cmds.c_iflag &= !IXON;
-    tty_modes_for_external_cmds.c_iflag &= !IXOFF;
+    tty_modes_for_external_cmds.c_iflag &= !FLOW_CONTROL_FLAGS;
 
     // Set the mode used for the terminal, initialized to the current mode.
     {
@@ -4783,17 +4784,8 @@ pub fn term_copy_modes() {
     term_fix_external_modes(&mut tty_modes_for_external_cmds);
 
     let mut shell_modes = shell_modes();
-    // Copy flow control settings to shell modes.
-    if (tty_modes_for_external_cmds.c_iflag & IXON) != 0 {
-        shell_modes.c_iflag |= IXON;
-    } else {
-        shell_modes.c_iflag &= !IXON;
-    }
-    if (tty_modes_for_external_cmds.c_iflag & IXOFF) != 0 {
-        shell_modes.c_iflag |= IXOFF;
-    } else {
-        shell_modes.c_iflag &= !IXOFF;
-    }
+    shell_modes.c_iflag = (shell_modes.c_iflag & !FLOW_CONTROL_FLAGS)
+        | (tty_modes_for_external_cmds.c_iflag & FLOW_CONTROL_FLAGS);
 }
 
 pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {

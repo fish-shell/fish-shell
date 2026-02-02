@@ -4155,6 +4155,9 @@ impl<'a> Reader<'a> {
                 if let Some(selection) = self.get_selection() {
                     self.kill(EditableLineTag::Commandline, selection, Kill::Append, newv);
                 }
+                if self.is_at_end() {
+                    self.update_buff_pos(self.active_edit_line_tag(), None);
+                }
             }
             rl::InsertLineOver => {
                 let elt = loop {

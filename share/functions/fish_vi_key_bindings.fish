@@ -46,6 +46,12 @@ function __fish_vi_consume_count -a varname
     echo $effective_count
 end
 
+function fish_vi_yank_selection
+    set -g fish_cursor_end_mode exclusive
+    commandline -f kill-selection -f yank
+    set -g fish_cursor_end_mode inclusive
+end
+
 function fish_vi_exec_motion
     argparse linewise -- $argv
     or return
@@ -113,9 +119,10 @@ function fish_vi_exec_motion
                     commandline -f $motion
                 end
                 if $use_selection
-                    commandline -f kill-selection
+                    fish_vi_yank_selection
+                else
+                    commandline -f yank
                 end
-                commandline -f yank
             case swap-case
                 for i in (seq $total)
                     commandline -f $motion
@@ -457,10 +464,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset y,i,W kill-inner-bigword yank
     bind -s --preset y,a,w kill-a-word yank
     bind -s --preset y,a,W kill-a-bigword yank
-    bind -s --preset y,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection yank end-selection
-    bind -s --preset y,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection yank end-selection
-    bind -s --preset y,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
-    bind -s --preset y,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
+    bind -s --preset y,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket fish_vi_yank_selection end-selection
+    bind -s --preset y,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket fish_vi_yank_selection end-selection
+    bind -s --preset y,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump fish_vi_yank_selection end-selection
+    bind -s --preset y,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump fish_vi_yank_selection end-selection
 
     bind -s --preset % jump-to-matching-bracket
     bind -s --preset f forward-jump
@@ -558,7 +565,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual -m default d kill-selection end-selection backward-char repaint-mode
     bind -s --preset -M visual -m default x kill-selection end-selection repaint-mode
     bind -s --preset -M visual -m default X kill-whole-line end-selection repaint-mode
-    bind -s --preset -M visual -m default y kill-selection yank end-selection repaint-mode
+    bind -s --preset -M visual -m default y fish_vi_yank_selection end-selection repaint-mode
     bind -s --preset -M visual -m default '",*,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
     bind -s --preset -M visual -m default '",+,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
     bind -s --preset -M visual -m default \~ togglecase-selection end-selection repaint-mode

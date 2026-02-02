@@ -102,7 +102,7 @@ complete -f -c bzr -n '__fish_seen_subcommand_from check' -l tree -d 'Check the 
 complete -f -c bzr -n '__fish_seen_subcommand_from check' -l repo -d 'Check the repository related to the current directory'
 complete -f -c bzr -n '__fish_seen_subcommand_from check' -l branch -d 'Check the branch related to the current directory'
 
-# Common long/short options 
+# Common long/short options
 set -l $cmds init branch add ignore mv status diff merge commit send log check
 complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -l usage -d 'Show usage message and options'
 complete -f -c bzr -n '__fish_seen_subcommand_from $cmds' -s h -l help -d 'Show help message'

@@ -8,7 +8,7 @@ ulimit --core-size
 
 ulimit 4352353252352352334
 #CHECKERR: ulimit: Invalid limit '4352353252352352334'
-#CHECKERR: 
+#CHECKERR:
 #CHECKERR: {{.*}}checks/ulimit.fish (line {{\d+}}):
 #CHECKERR: ulimit 4352353252352352334
 #CHECKERR: ^

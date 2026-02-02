@@ -29,7 +29,7 @@ complete -n '__fish_seen_subcommand_from apk; and __fish_seen_subcommand_from co
 
 complete -n "__fish_seen_subcommand_from apk; and __fish_seen_subcommand_from $apk_subcommands" -c apkanalyzer -ka '(__fish_complete_suffix .apk)'
 
-# files 
+# files
 complete -f -n "__fish_seen_subcommand_from files; and not __fish_seen_subcommand_from $apk_subcommands" -c apkanalyzer -a list -d 'Lists all files in the APK'
 complete -f -n "__fish_seen_subcommand_from files; and not __fish_seen_subcommand_from $apk_subcommands" -c apkanalyzer -a cat -d 'Prints out the file contents'
 # files options
@@ -69,7 +69,7 @@ complete -n '__fish_seen_subcommand_from dex; and __fish_seen_subcommand_from co
 complete -n "__fish_seen_subcommand_from dex; and __fish_seen_subcommand_from $dex_subcommands" -c apkanalyzer -ka '(__fish_complete_suffix .apk)'
 complete -n '__fish_seen_subcommand_from dex; and __fish_seen_subcommand_from code' -c apkanalyzer -ka '(__fish_complete_suffix .class)'
 
-# resources 
+# resources
 complete -f -n "__fish_seen_subcommand_from resources; and not __fish_seen_subcommand_from $resources_subcommands" -c apkanalyzer -a packages -d 'Prints a list of the packages that are defined in the resources table'
 complete -f -n "__fish_seen_subcommand_from resources; and not __fish_seen_subcommand_from $resources_subcommands" -c apkanalyzer -a configs -d 'Prints a list of configurations for the specified type'
 complete -f -n "__fish_seen_subcommand_from resources; and not __fish_seen_subcommand_from $resources_subcommands" -c apkanalyzer -a value -d 'Prints the value of the resource specified by config, name, and type'

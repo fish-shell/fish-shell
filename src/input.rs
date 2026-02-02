@@ -115,12 +115,10 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("backward-jump"), ReadlineCmd::BackwardJump),
     make_md(L!("backward-jump-till"), ReadlineCmd::BackwardJumpTill),
     make_md(L!("backward-kill-bigword"), ReadlineCmd::BackwardKillBigword),
-    make_md(L!("backward-kill-bigword-end"), ReadlineCmd::BackwardKillBigwordEnd),
     make_md(L!("backward-kill-line"), ReadlineCmd::BackwardKillLine),
     make_md(L!("backward-kill-path-component"), ReadlineCmd::BackwardKillPathComponent),
     make_md(L!("backward-kill-token"), ReadlineCmd::BackwardKillToken),
     make_md(L!("backward-kill-word"), ReadlineCmd::BackwardKillWord),
-    make_md(L!("backward-kill-word-end"), ReadlineCmd::BackwardKillWordEnd),
     make_md(L!("backward-path-component"), ReadlineCmd::BackwardPathComponent),
     make_md(L!("backward-token"), ReadlineCmd::BackwardToken),
     make_md(L!("backward-word"), ReadlineCmd::BackwardWord),
@@ -183,7 +181,6 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("kill-a-bigword"), ReadlineCmd::KillABigWord),
     make_md(L!("kill-a-word"), ReadlineCmd::KillAWord),
     make_md(L!("kill-bigword"), ReadlineCmd::KillBigwordEmacs),
-    make_md(L!("kill-bigword-end"), ReadlineCmd::KillBigwordEnd),
     make_md(L!("kill-bigword-vi"), ReadlineCmd::KillBigwordVi),
     make_md(L!("kill-inner-bigword"), ReadlineCmd::KillInnerBigWord),
     make_md(L!("kill-inner-line"), ReadlineCmd::KillInnerLine),
@@ -194,7 +191,6 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("kill-token"), ReadlineCmd::KillToken),
     make_md(L!("kill-whole-line"), ReadlineCmd::KillWholeLine),
     make_md(L!("kill-word"), ReadlineCmd::KillWordEmacs),
-    make_md(L!("kill-word-end"), ReadlineCmd::KillWordEnd),
     make_md(L!("kill-word-vi"), ReadlineCmd::KillWordVi),
     make_md(L!("nextd-or-forward-word"), ReadlineCmd::NextdOrForwardWordEmacs),
     make_md(L!("or"), ReadlineCmd::FuncOr),
@@ -229,7 +225,7 @@ const fn _assert_sizes_match() {
         INPUT_FUNCTION_METADATA.len() == input_function_count,
         concat!(
             "input_function_metadata size mismatch with input_common. ",
-            "Did you forget to update input_function_metadata?"
+            "Did you forget to update INPUT_FUNCTION_METADATA?"
         )
     );
 }

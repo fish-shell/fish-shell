@@ -3653,55 +3653,44 @@ impl<'a> Reader<'a> {
                     }
                 }
             }
-            rl::BackwardKillWord
-            | rl::BackwardKillPathComponent
-            | rl::BackwardKillBigword
-            | rl::BackwardKillWordEnd
-            | rl::BackwardKillBigwordEnd => {
+            rl::BackwardKillWord | rl::BackwardKillPathComponent | rl::BackwardKillBigword => {
                 let style = match c {
-                    rl::BackwardKillWord | rl::BackwardKillWordEnd => MoveWordStyle::Punctuation,
-                    rl::BackwardKillBigword | rl::BackwardKillBigwordEnd => {
-                        MoveWordStyle::Whitespace
-                    }
+                    rl::BackwardKillWord => MoveWordStyle::Punctuation,
+                    rl::BackwardKillBigword => MoveWordStyle::Whitespace,
                     rl::BackwardKillPathComponent => MoveWordStyle::PathComponents,
                     _ => unreachable!(),
                 };
-                let to_word_end = matches!(c, rl::BackwardKillWordEnd | rl::BackwardKillBigwordEnd);
                 // Is this the same killring item as the last kill?
                 let newv = !matches!(
                     self.rls().last_cmd,
                     Some(rl::BackwardKillWord | rl::BackwardKillBigword)
                 );
+                let elt = self.active_edit_line_tag();
                 self.data.move_word(
-                    self.active_edit_line_tag(),
+                    elt,
                     MoveWordDir::Left,
                     /*erase=*/ true,
                     style,
                     newv,
-                    to_word_end,
+                    /*to_word_end=*/ false,
                 );
             }
-            rl::KillWordVi
-            | rl::KillBigwordVi
-            | rl::KillPathComponent
-            | rl::KillWordEnd
-            | rl::KillBigwordEnd => {
+            rl::KillWordVi | rl::KillBigwordVi | rl::KillPathComponent => {
                 // The "bigword" functions differ only in that they move to the next whitespace, not
                 // punctuation.
                 let style = match c {
-                    rl::KillWordVi | rl::KillWordEnd => MoveWordStyle::Punctuation,
-                    rl::KillBigwordVi | rl::KillBigwordEnd => MoveWordStyle::Whitespace,
+                    rl::KillWordVi => MoveWordStyle::Punctuation,
+                    rl::KillBigwordVi => MoveWordStyle::Whitespace,
                     rl::KillPathComponent => MoveWordStyle::PathComponents,
                     _ => unreachable!(),
                 };
-                let to_word_end = matches!(c, rl::KillWordEnd | rl::KillBigwordEnd);
                 self.data.move_word(
                     self.active_edit_line_tag(),
                     MoveWordDir::Right,
                     /*erase=*/ true,
                     style,
                     self.rls().last_cmd != Some(c),
-                    to_word_end,
+                    /*to_word_end=*/ false,
                 );
             }
             rl::KillInnerWord | rl::KillInnerBigWord => {

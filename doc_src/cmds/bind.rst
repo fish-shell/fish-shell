@@ -154,12 +154,6 @@ The following special input functions are available:
 ``backward-kill-bigword``
     move the whitespace-delimited word to the left of the cursor to the killring, until the start of the current word (like vim's ``dB``)
 
-``backward-kill-word-end``
-    move from the cursor to the end of the previous word to the killring (like vim's ``dge``)
-
-``backward-kill-bigword-end``
-    move from the cursor to the end of the previous whitespace-delimited word to the killring (like vim's ``dgE``)
-
 ``backward-path-component``
     move one :ref:`path component <cmd-bind-backward-kill-path-component>` to the left
 
@@ -369,12 +363,6 @@ The following special input functions are available:
 
 ``kill-bigword-vi``
     move the next whitespace-delimited word to the killring, stopping at the start of the next word (like vim's ``dW``)
-
-``kill-bigword-end``
-    move from the cursor to the end of the current whitespace-delimited word to the killring (like vim's ``dE``)
-
-``kill-word-end``
-    move from the cursor to the end of the current word to the killring (like vim's ``de``)
 
 ``kill-inner-word``
     delete the word under the cursor (like vim's ``diw``)

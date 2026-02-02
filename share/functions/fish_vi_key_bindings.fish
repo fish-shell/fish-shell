@@ -83,6 +83,7 @@ function fish_vi_exec_motion
                     set swap_case_hack (string replace -r -- '^forward-((?:big)?word)-vi$' '$1' $motion)
                 else
                     set use_selection false
+                    # kill-word-vi kill-bigword-vi
                     set motion (string replace -- forward kill $motion)
                 end
         end

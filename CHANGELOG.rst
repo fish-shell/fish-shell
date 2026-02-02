@@ -10,12 +10,12 @@ Interactive improvements
 - The ``bind`` builtin lists mappings from all modes if ``--mode`` is not provided (:issue:`12214`).
 - Line-wise autosuggestions that don't start a command are no longer shown (739b82c34db, 58e7a50de8a).
 - Builtin ``history`` now assumes that :envvar:`PAGER` supports ANSI color sequences.
-- fish now clears the terminal's ``FLUSHO`` flag at startup, to fix an issue caused by pressing :kbd:`ctrl-o` on macOS (:issue:`12304`).
+- fish now clears the terminal's ``FLUSHO`` flag when acquiring control of the terminal, to fix an issue caused by pressing :kbd:`ctrl-o` on macOS (:issue:`12304`).
 
 New or improved bindings
 ------------------------
 - Vi mode word movements (``w``, ``W``, ``e``, and ``E``) are now largely in line with Vim. The only exception is that underscores are treated as word separators (:issue:`12269`).
-- New special input functions to support these movements: ``forward-word-vi``, ``kill-word-vi``, ``forward-bigword-vi``, ``kill-bigword-vi``, ``forward-word-end``, ``backward-word-end``, ``kill-word-end``, ``backward-kill-word-end``, ``forward-bigword-end``, ``backward-bigword-end``, ``kill-bigword-end``, ``backward-kill-bigword-end``, ``kill-a-word``, ``kill-inner-word``, ``kill-a-bigword``, and ``kill-inner-bigword``.
+- New special input functions to support these movements: ``forward-word-vi``, ``kill-word-vi``, ``forward-bigword-vi``, ``kill-bigword-vi``, ````forward-word-end``, ``backward-word-end``, ``forward-bigword-end``, ``backward-bigword-end``, ````kill-a-word``, ``kill-inner-word``, ``kill-a-bigword``, and ``kill-inner-bigword``.
 - Vi mode key bindings now support counts for movement and deletion commands (e.g. `d3w` or `3l`), via a new operator mode (:issue:`2192`).
 - New ``catpuccin-*`` color themes.
 

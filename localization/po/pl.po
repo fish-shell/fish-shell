@@ -1057,11 +1057,7 @@ msgstr ""
 msgid "Expected a variable name after this $."
 msgstr "Oczekiwano nazwy zmiennej po znaku $."
 
-#, c-format
-msgid ""
-"Expected file path to read/write for -w:\n"
-"\n"
-" $ %s -w foo.fish"
+msgid "Expected file path to read/write for -w:"
 msgstr ""
 
 #, c-format

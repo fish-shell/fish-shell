@@ -989,7 +989,7 @@ pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> JobList {
 /// jobs_requiring_warning_on_exit().
 pub fn print_exit_warning_for_jobs(jobs: &JobList) {
     printf!("%s\n", wgettext!("There are still jobs active:"));
-    printf!("\n%s\n", wgettext!("   PID  Command"));
+    printf!("\n   PID  %s\n", wgettext!("Command"));
     for j in jobs {
         // Unwrap safety: we can't have a background job that doesn't have an external process and
         // external processes always have a pid set.

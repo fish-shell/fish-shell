@@ -45,9 +45,6 @@ msgstr ""
 msgid "fish-section-tier1-from-rust"
 msgstr ""
 
-msgid "   PID  Command"
-msgstr "   PID  命令"
-
 msgid " a path variable"
 msgstr "路径变量"
 

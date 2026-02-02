@@ -3,11 +3,6 @@
 # Script to generate a tarball
 # Outputs to $FISH_ARTEFACT_PATH or ~/fish_built by default
 
-# Example usage:
-#
-#   build_tools/make_tarball.sh :/!.cargo/config.toml
-
-# Exit on error
 set -e
 
 # Get the version
@@ -43,7 +38,7 @@ git archive \
     --prefix="$prefix/" \
     --add-virtual-file="$prefix/Cargo.toml:$(cat "$manifest")" \
     --add-virtual-file="$prefix/Cargo.lock:$(cat "$lockfile")" \
-    HEAD "$@" |
+    HEAD |
     xz >"$path"
 
 rm "$manifest"

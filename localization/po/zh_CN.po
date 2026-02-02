@@ -45,16 +45,6 @@ msgstr ""
 msgid "fish-section-tier1-from-rust"
 msgstr ""
 
-msgid " a path variable"
-msgstr "路径变量"
-
-#, c-format
-msgid " with arguments '%s'"
-msgstr "，参数为 '%s'"
-
-msgid " with definition"
-msgstr "，定义为"
-
 msgid "$# is not supported. In fish, please use 'count $argv'."
 msgstr "不支持 $#。在 fish 中，请使用 'count $argv'。"
 
@@ -1757,6 +1747,9 @@ msgstr "写/读通用变量存储"
 msgid "[: the last argument must be ']'"
 msgstr "[：最后的参数必须是 ']'"
 
+msgid "a path variable"
+msgstr "路径变量"
+
 msgid "array indices start at 1, not 0."
 msgstr "数组索引起始为 1，而不是 0。"
 
@@ -1901,6 +1894,13 @@ msgstr "未知修饰符 '%s' 于 '%s'"
 
 msgid "unlimited"
 msgstr "无限制"
+
+#, c-format
+msgid "with arguments '%s'"
+msgstr "，参数为 '%s'"
+
+msgid "with definition"
+msgstr "，定义为"
 
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr "|& 无效。在 fish 中，用 &| 来同时管道链接 stdout 和 stderr。"

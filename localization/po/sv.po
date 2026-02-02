@@ -21,16 +21,6 @@ msgstr ""
 msgid "fish-section-tier1-from-rust"
 msgstr ""
 
-msgid " a path variable"
-msgstr ""
-
-#, c-format
-msgid " with arguments '%s'"
-msgstr ""
-
-msgid " with definition"
-msgstr ""
-
 msgid "$# is not supported. In fish, please use 'count $argv'."
 msgstr ""
 
@@ -1730,6 +1720,9 @@ msgstr ""
 msgid "[: the last argument must be ']'"
 msgstr ""
 
+msgid "a path variable"
+msgstr ""
+
 msgid "array indices start at 1, not 0."
 msgstr ""
 
@@ -1870,6 +1863,13 @@ msgid "unknown modifier '%s' in '%s'"
 msgstr ""
 
 msgid "unlimited"
+msgstr ""
+
+#, c-format
+msgid "with arguments '%s'"
+msgstr ""
+
+msgid "with definition"
 msgstr ""
 
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."

@@ -652,9 +652,11 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
         wgettext!("unexported")
     };
     let pathvarv = if var.is_pathvar() {
-        wgettext!(" a path variable")
+        let mut pathvarv = L!(" ").to_owned();
+        pathvarv.push_utfstr(wgettext!("a path variable"));
+        pathvarv
     } else {
-        L!("")
+        L!("").to_owned()
     };
     let vals = var.as_list();
     streams.out.append(&wgettext_fmt!(

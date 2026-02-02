@@ -1402,8 +1402,9 @@ fn append_block_description_to_stack_trace(
                 }
             }
             if !args_str.is_empty() {
+                trace.push(' ');
                 // TODO: Escape these.
-                trace.push_utfstr(&wgettext_fmt!(" with arguments '%s'", args_str));
+                trace.push_utfstr(&wgettext_fmt!("with arguments '%s'", args_str));
             }
             trace.push('\n');
             print_source_location = true;

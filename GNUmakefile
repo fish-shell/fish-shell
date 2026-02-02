@@ -7,7 +7,7 @@
 CMAKE ?= cmake
 
 GENERATOR ?= $(shell (which ninja > /dev/null 2> /dev/null && echo Ninja) || \
-			 echo 'Unix Makefiles')
+	echo 'Unix Makefiles')
 prefix ?= /usr/local
 PREFIX ?= $(prefix)
 
@@ -34,7 +34,7 @@ all: .begin build/fish
 .PHONY: .begin
 .begin:
 	@which $(CMAKE) > /dev/null 2> /dev/null || \
-		 (echo 'Please install CMake and then re-run the `make` command!' 1>&2 && false)
+		(echo 'Please install CMake and then re-run the `make` command!' 1>&2 && false)
 
 .PHONY: build/fish
 build/fish: build/$(BUILDFILE)

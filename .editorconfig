@@ -9,7 +9,7 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 max_line_length = 100
 
-[{Makefile,*.in}]
+[{Makefile,{BSD,GNU}makefile,*.in}]
 indent_style = tab
 
 [*.{md,rst}]

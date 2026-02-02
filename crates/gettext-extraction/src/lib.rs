@@ -51,6 +51,14 @@ fn write_po_entry_to_file(message: &TokenStream, dir: &OsString) {
         !message_string.contains('\n'),
         "Gettext strings may not contain unescaped newlines. Unescaped newline found in '{message_string}'"
     );
+    let msgid_without_quotes = &message_string[1..(message_string.len() - 1)];
+    // We don't want leading or trailing whitespace in our messages.
+    let trimmed_msgid = msgid_without_quotes.trim();
+    assert_eq!(msgid_without_quotes, trimmed_msgid);
+    assert!(!trimmed_msgid.starts_with("\\n"));
+    assert!(!trimmed_msgid.ends_with("\\n"));
+    assert!(!trimmed_msgid.starts_with("\\t"));
+    assert!(!trimmed_msgid.ends_with("\\t"));
     // Crude check for format strings. This might result in false positives.
     let format_string_annotation = if message_string.contains('%') {
         "#, c-format\n"

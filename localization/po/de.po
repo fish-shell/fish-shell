@@ -1061,11 +1061,7 @@ msgstr "Erwartete einen String, fand aber eine Umlenkung"
 msgid "Expected a variable name after this $."
 msgstr ""
 
-#, c-format
-msgid ""
-"Expected file path to read/write for -w:\n"
-"\n"
-" $ %s -w foo.fish"
+msgid "Expected file path to read/write for -w:"
 msgstr ""
 
 #, c-format

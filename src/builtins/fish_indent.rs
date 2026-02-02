@@ -1051,8 +1051,9 @@ fn do_indent(
     while i < args.len() || (args.is_empty() && i == 0) {
         if args.is_empty() && i == 0 {
             if output_type == OutputType::File {
-                streams.err.appendln(&wgettext_fmt!(
-                    "Expected file path to read/write for -w:\n\n $ %s -w foo.fish",
+                streams.err.append(&sprintf!(
+                    "%s\n\n $ %s -w foo.fish\n",
+                    wgettext!("Expected file path to read/write for -w:"),
                     get_program_name()
                 ));
                 return Err(STATUS_CMD_ERROR);

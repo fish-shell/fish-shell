@@ -1082,15 +1082,8 @@ msgstr "预期是字符串，但找到重定向"
 msgid "Expected a variable name after this $."
 msgstr "在此 $ 之后应有变量名称。"
 
-#, c-format
-msgid ""
-"Expected file path to read/write for -w:\n"
-"\n"
-" $ %s -w foo.fish"
-msgstr ""
-"预期 -w 后有用于读或写的文件路径：\n"
-"\n"
-" $ %s -w foo.fish"
+msgid "Expected file path to read/write for -w:"
+msgstr "预期 -w 后有用于读或写的文件路径："
 
 #, c-format
 msgid "Expected no arguments, got %d"

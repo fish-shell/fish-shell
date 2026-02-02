@@ -265,7 +265,7 @@ pub(crate) fn safe_report_exec_error(
                     flog_safe!(
                         exec,
                         "Hint: Your exported variables take up over half the limit. Try \
-                         erasing or unexporting variables."
+                        erasing or unexporting variables."
                     );
                 }
             } else {
@@ -294,7 +294,7 @@ pub(crate) fn safe_report_exec_error(
                     flog_safe!(
                         exec,
                         "fish scripts require an interpreter directive (must \
-                         start with '#!/path/to/fish')."
+                        start with '#!/path/to/fish')."
                     );
                 } else {
                     // If the shebang line exists, we would get an ENOENT or similar instead,

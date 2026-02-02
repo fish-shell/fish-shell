@@ -407,7 +407,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                 Some(result)
             }
             '{' if self.brace_statement_parser.as_ref()
-                    .is_some_and(|parser| parser.at_command_position) =>
+                .is_some_and(|parser| parser.at_command_position) =>
             {
                 self.brace_statement_parser.as_mut().unwrap().unclosed_brace_statements += 1;
                 let mut result = Tok::new(TokenType::LeftBrace);
@@ -492,7 +492,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                 // There's some duplication with the code in the default case below. The key
                 // difference here is that we must never parse these as a string; a failed
                 // redirection is an error!
-                 match PipeOrRedir::try_from(buff) {
+                match PipeOrRedir::try_from(buff) {
                     Ok(redir_or_pipe) => {
                         if redir_or_pipe.fd < 0 {
                             Some(self.call_error(TokenizerError::InvalidRedirect, self.token_cursor,

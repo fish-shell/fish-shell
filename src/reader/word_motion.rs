@@ -401,7 +401,7 @@ mod tests {
         }
 
         macro_rules! validate {
-             ($direction:expr, $style:expr, $line:expr) => {
+            ($direction:expr, $style:expr, $line:expr) => {
                 let direction = $direction;
                 let (command, mut stops, mut idx, end) = setup(direction, $line);
                 assert!(!command.is_empty());
@@ -438,7 +438,7 @@ mod tests {
                     stops.is_empty(),
                     "expected to stop at {stops:?} but not. String: {command:?}"
                 );
-             }
+            }
         }
 
         use MoveWordDir::*;

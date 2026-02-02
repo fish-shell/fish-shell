@@ -53,36 +53,36 @@ add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
 set(build_types Release RelWithDebInfo Debug "")
 if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST build_types)
-  message(WARNING "Unsupported build type ${CMAKE_BUILD_TYPE}. If this doesn't build, try one of Release, RelWithDebInfo or Debug")
+    message(WARNING "Unsupported build type ${CMAKE_BUILD_TYPE}. If this doesn't build, try one of Release, RelWithDebInfo or Debug")
 endif()
 
 add_custom_target(
-  fish ALL
-  COMMAND
-    "${CMAKE_COMMAND}" -E
-      env ${VARS_FOR_CARGO}
-        ${Rust_CARGO}
-          build --bin fish
-          $<$<CONFIG:Release>:--release>
-          $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>
-          --target ${Rust_CARGO_TARGET}
-          --no-default-features
-          --features=${FISH_CARGO_FEATURES}
-          ${CARGO_FLAGS}
-    &&
-    "${CMAKE_COMMAND}" -E
-      copy "${rust_target_dir}/${rust_profile}/fish" "${CMAKE_CURRENT_BINARY_DIR}"
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-  USES_TERMINAL
+    fish ALL
+    COMMAND
+        "${CMAKE_COMMAND}" -E
+            env ${VARS_FOR_CARGO}
+                ${Rust_CARGO}
+                    build --bin fish
+                    $<$<CONFIG:Release>:--release>
+                    $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>
+                    --target ${Rust_CARGO_TARGET}
+                    --no-default-features
+                    --features=${FISH_CARGO_FEATURES}
+                    ${CARGO_FLAGS}
+        &&
+        "${CMAKE_COMMAND}" -E
+            copy "${rust_target_dir}/${rust_profile}/fish" "${CMAKE_CURRENT_BINARY_DIR}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    USES_TERMINAL
 )
 
 function(CREATE_LINK target)
-  add_custom_target(
-    ${target} ALL
-    DEPENDS fish
-    COMMAND ln -f fish ${target}
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-  )
+    add_custom_target(
+        ${target} ALL
+        DEPENDS fish
+        COMMAND ln -f fish ${target}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
 endfunction(CREATE_LINK)
 
 # Define fish_indent.

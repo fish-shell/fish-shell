@@ -7,7 +7,7 @@ use crate::tokenizer::tok_command;
 use crate::wutil::perror;
 use crate::{env::EnvMode, tty_handoff::TtyHandoff};
 use libc::STDIN_FILENO;
-use nix::sys::termios;
+use nix::sys::termios::{self, tcsetattr};
 use std::os::fd::BorrowedFd;
 
 use super::prelude::*;
@@ -145,7 +145,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         let tmodes = job_group.tmodes.borrow();
         if job_group.wants_terminal() && tmodes.is_some() {
             let tmodes = tmodes.as_ref().unwrap();
-            if termios::tcsetattr(
+            if tcsetattr(
                 unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) },
                 termios::SetArg::TCSADRAIN,
                 tmodes,

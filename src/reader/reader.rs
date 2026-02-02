@@ -130,7 +130,7 @@ use libc::{
     _POSIX_VDISABLE, EIO, EISDIR, ENOTTY, EPERM, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT,
     STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
-use nix::sys::termios::{self, SetArg, Termios, tcgetattr};
+use nix::sys::termios::{self, SetArg, Termios, tcgetattr, tcsetattr};
 use nix::{
     fcntl::OFlag,
     sys::{
@@ -228,7 +228,7 @@ fn redirect_tty_after_sighup() {
     for stdfd in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
         if matches!(
             tcgetattr(unsafe { BorrowedFd::borrow_raw(stdfd) }),
-            Err(e) if matches!(e, nix::Error::EIO | nix::Error::ENOTTY)
+            Err(nix::Error::EIO | nix::Error::ENOTTY)
         ) {
             unsafe { libc::dup2(fd, stdfd) };
         }
@@ -2640,7 +2640,7 @@ impl<'a> Reader<'a> {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
             if let Some(old_modes) = old_modes {
-                if termios::tcsetattr(
+                if tcsetattr(
                     unsafe { BorrowedFd::borrow_raw(self.conf.inputfd) },
                     SetArg::TCSANOW,
                     &old_modes,
@@ -4782,7 +4782,7 @@ fn term_fix_external_modes(modes: &mut Termios) {
 /// Give up control of terminal.
 fn term_donate(quiet: bool /* = false */) {
     loop {
-        match termios::tcsetattr(
+        match tcsetattr(
             unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) },
             SetArg::TCSANOW,
             &TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap(),
@@ -4822,7 +4822,7 @@ pub fn term_copy_modes() {
 
 pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
     let ok = loop {
-        match termios::tcsetattr(
+        match tcsetattr(
             unsafe { BorrowedFd::borrow_raw(fd) },
             SetArg::TCSANOW,
             &shell_modes(),

@@ -894,8 +894,8 @@ msgstr "條件執行的程式碼區塊"
 msgid "Broken pipe"
 msgstr "損壞的管道"
 
-msgid "CPU\t"
-msgstr "CPU\t"
+msgid "CPU"
+msgstr "CPU"
 
 msgid "CPU time limit exceeded"
 msgstr "CPU 時間超過限制"
@@ -1191,8 +1191,8 @@ msgstr "無效的詞元「%s」"
 msgid "Items %u to %u of %u"
 msgstr "第 %u 至 %u 個項目，共 %u 個"
 
-msgid "Job\tGroup\t"
-msgstr "作業\t群組\t"
+msgid "Job"
+msgstr "作業"
 
 #, c-format
 msgid "Job control: %s"
@@ -1463,8 +1463,8 @@ msgstr "標準輸入流（第 %d 行）："
 msgid "Startup (line %d):"
 msgstr "啟動命令稿（第 %d 行）："
 
-msgid "State\tCommand"
-msgstr "狀態\t命令"
+msgid "State"
+msgstr "狀態"
 
 msgid "Stdin must be attached to a tty."
 msgstr "stdin 必須貼附於 TTY。"

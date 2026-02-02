@@ -1,16 +1,16 @@
 complete -c gcc -o std -d "Standard mode" -x -a '
-	c89\t"ISO C90"
-	iso9899:1990\t"ISO C90"
-	iso9899:199409\t"ISO C90 as modified in amendment 1"
-	c99\t"ISO C99"
-	c9x \t"ISO C99"
-	iso9899:1999\t"ISO C99"
-	iso9899:199x\t"ISO C99"
-	gnu89\t"ISO C90 plus GNU extensions"
-	gnu99\t"ISO C99 plus GNU extensions"
-	gnu9x\t"ISO C99 plus GNU extensions"
-	c++98\t"ISO C++98"
-	gnu++98\t"ISO C++98 plus GNU extensions"
+    c89\t"ISO C90"
+    iso9899:1990\t"ISO C90"
+    iso9899:199409\t"ISO C90 as modified in amendment 1"
+    c99\t"ISO C99"
+    c9x \t"ISO C99"
+    iso9899:1999\t"ISO C99"
+    iso9899:199x\t"ISO C99"
+    gnu89\t"ISO C90 plus GNU extensions"
+    gnu99\t"ISO C99 plus GNU extensions"
+    gnu9x\t"ISO C99 plus GNU extensions"
+    c++98\t"ISO C++98"
+    gnu++98\t"ISO C++98 plus GNU extensions"
 '
 
 complete -c gcc -o ftemplate-depth -d "Set maximum template depth" -a '(seq 1 17)'

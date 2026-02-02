@@ -16,7 +16,7 @@ complete -c htop -l version -s V -d 'Show version and exit'
 complete -c htop -l tree -s t -d 'Show processes in tree view'
 complete -c htop -l highlight-changes -s H -d 'Highlight new and old processes' -x
 complete -c htop -l drop-capabilities -d 'Drop unneeded Linux capabilities (Requires libpcap support)' -xka "
-		off
-		basic
-		strict
-	"
+    off
+    basic
+    strict
+"

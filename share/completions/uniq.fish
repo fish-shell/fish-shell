@@ -2,10 +2,10 @@ if uniq --version >/dev/null 2>/dev/null
     complete -c uniq -s c -l count -d "Print number of occurrences"
     complete -c uniq -s d -l repeated -d "Only print duplicates"
     complete -c uniq -s D -l all-repeated -d "Remove non-duplicate lines" -f -x -a "
-		none\t'Remove none-duplicate lines'
-		prepend\t'Remove non-duplicate lines and print an empty line before each non-duplicate'
-		separate\t'Remove non-duplicate lines and print an empty line between each non-duplicate'
-	"
+        none\t'Remove none-duplicate lines'
+        prepend\t'Remove non-duplicate lines and print an empty line before each non-duplicate'
+        separate\t'Remove non-duplicate lines and print an empty line between each non-duplicate'
+    "
     complete -c uniq -s f -l skip-fields -d "Avoid comparing first N fields" -r
     complete -c uniq -s i -l ignore-case -d "Case insensitive"
     complete -c uniq -s s -l skip-chars -d "Avoid comparing first N characters" -r

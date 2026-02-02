@@ -24,7 +24,7 @@ awk -v version=$VERSION '
         $0 = "version = \"" version "\"";
     }
     {print}
-	' \
+    ' \
     Cargo.lock >"$lockfile"
 
 for ext in toml lock; do

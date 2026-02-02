@@ -4,8 +4,8 @@
 
 if test $# -eq 0
 then
-	echo "usage: $0 shellname [shellname ...]"
-	exit 1
+    echo "usage: $0 shellname [shellname ...]"
+    exit 1
 fi
 
 scriptname=$(basename "$0")

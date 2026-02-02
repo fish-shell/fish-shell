@@ -2010,12 +2010,12 @@ complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcomman
 complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge remove prune" -s v -l verbose -d 'Be more verbose'
 complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge remove prune" -s q -l quiet -d 'Operate quietly'
 complete -x -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge" -s s -l strategy -d 'Merge strategy to use to resolve conflicts' -a "
-	manual\t'Instruct the user to resolve merge conflicts'
-	ours\t'Resolve conflicts in favour of local version'
-	theirs\t'Resolve conflicts in favour of remote version'
-	union\t'Resolve conflicts by concatenating local and remote versions'
-	cat_sort_uniq\t'Concatenate, sort and remove duplicate lines'
-	"
+    manual\t'Instruct the user to resolve merge conflicts'
+    ours\t'Resolve conflicts in favour of local version'
+    theirs\t'Resolve conflicts in favour of remote version'
+    union\t'Resolve conflicts by concatenating local and remote versions'
+    cat_sort_uniq\t'Concatenate, sort and remove duplicate lines'
+"
 complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge" -l commit -d 'Finalize git notes merge'
 complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge" -l abort -d 'Abort git notes merge'
 complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from remove" -l ignore-missing -d 'Do not throw error on deleting non-existing object note'

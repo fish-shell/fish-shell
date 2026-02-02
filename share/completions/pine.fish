@@ -14,13 +14,13 @@ complete -c pine -s z -d "Enable suspension support"
 complete -c pine -o conf -d "Produce a sample global configuration file"
 complete -c pine -o pinerc -d "Produce sample configuration file" -r
 complete -c pine -o sort -d "Set mail sort order" -a "
-	arrival
-	subject
-	from
-	date
-	size
-	orderedsubj
-	reverse
+    arrival
+    subject
+    from
+    date
+    size
+    orderedsubj
+    reverse
 "
 
 complete -c pine -o option -d "Config option" -x

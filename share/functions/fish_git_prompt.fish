@@ -515,15 +515,15 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
         if not set branch (command git symbolic-ref HEAD 2>/dev/null)
             set detached yes
             set branch (switch "$__fish_git_prompt_describe_style"
-						case contains
-							command git describe --contains HEAD
-						case branch
-							command git describe --contains --all HEAD
-						case describe
-							command git describe HEAD
-						case default '*'
-							command git describe --tags --exact-match HEAD
-						end 2>/dev/null)
+                        case contains
+                            command git describe --contains HEAD
+                        case branch
+                            command git describe --contains --all HEAD
+                        case describe
+                            command git describe HEAD
+                        case default '*'
+                            command git describe --tags --exact-match HEAD
+                        end 2>/dev/null)
             if test $status -ne 0
                 # Shorten the sha ourselves to 8 characters - this should be good for most repositories,
                 # and even for large ones it should be good for most commits

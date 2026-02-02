@@ -407,8 +407,8 @@ impl<'c> Iterator for Tokenizer<'c> {
                 Some(result)
             }
             '{' if self.brace_statement_parser.as_ref()
-    				.is_some_and(|parser| parser.at_command_position) =>
-			{
+                    .is_some_and(|parser| parser.at_command_position) =>
+            {
                 self.brace_statement_parser.as_mut().unwrap().unclosed_brace_statements += 1;
                 let mut result = Tok::new(TokenType::LeftBrace);
                 result.offset = start_pos as u32;

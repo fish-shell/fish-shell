@@ -41,11 +41,11 @@ complete -c ssh-keygen -s u -d 'update a KRL'
 complete -c ssh-keygen -s V -x -d 'specify a validity interval when signing a certificate'
 complete -c ssh-keygen -s w -r -d 'path to a needed library when creating FIDO authenticator-hosted keys'
 complete -c ssh-keygen -s Y -x -a "\
-	find-principals\t'find the principal(s) associated with the public key of a signature'
-	match-principals\t'find principal matching the principal name provided using the -I flag'
-	check-novalidate\t'check that a signature generated using -Y sign has a valid structure'
-	sign\t'Cryptographically sign a file or some data using an SSH key'
-	verify\t'Request to verify a signature generated using -Y sign'
+    find-principals\t'find the principal(s) associated with the public key of a signature'
+    match-principals\t'find principal matching the principal name provided using the -I flag'
+    check-novalidate\t'check that a signature generated using -Y sign has a valid structure'
+    sign\t'Cryptographically sign a file or some data using an SSH key'
+    verify\t'Request to verify a signature generated using -Y sign'
 "
 complete -c ssh-keygen -s y -d 'print an OpenSSH public key from a private OpenSSH format file'
 # Note: `ssh -Q` is not available on old versions

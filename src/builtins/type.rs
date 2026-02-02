@@ -135,8 +135,11 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                             streams.out.appendln(path);
                         }
                     } else if !opts.short_output {
-                        streams.out.append(&wgettext_fmt!("%s is a function", arg));
-                        streams.out.appendln(wgettext!(" with definition"));
+                        streams.out.append(&sprintf!(
+                            "%s %s\n",
+                            wgettext_fmt!("%s is a function", arg),
+                            wgettext!("with definition")
+                        ));
                         let mut def = WString::new();
                         def.push_utfstr(&sprintf!(
                             "# %s\n%s",

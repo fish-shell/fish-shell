@@ -52,11 +52,17 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
         JobsPrintMode::Default => {
             if header {
                 // Print table header before first job.
-                out += wgettext!("Job\tGroup\t");
+                out += wgettext!("Job");
+                out.push('\t');
+                out += wgettext!("Group");
+                out.push('\t');
                 if *HAVE_PROC_STAT {
-                    out += wgettext!("CPU\t");
+                    out += wgettext!("CPU");
+                    out.push('\t');
                 }
-                out += wgettext!("State\tCommand");
+                out += wgettext!("State");
+                out.push('\t');
+                out += wgettext!("Command");
                 out.push('\n');
             }
 

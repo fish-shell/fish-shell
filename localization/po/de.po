@@ -899,8 +899,8 @@ msgstr "Einen Block Befehle zur bedingten Ausführung"
 msgid "Broken pipe"
 msgstr "zerstörte Pipe"
 
-msgid "CPU\t"
-msgstr "CPU\t"
+msgid "CPU"
+msgstr "CPU"
 
 msgid "CPU time limit exceeded"
 msgstr "CPU-Zeitbegrenzung überschritten"
@@ -1196,8 +1196,8 @@ msgstr "Ungültiger Token '%s'"
 msgid "Items %u to %u of %u"
 msgstr ""
 
-msgid "Job\tGroup\t"
-msgstr "Job\tGruppe\t"
+msgid "Job"
+msgstr "Job"
 
 #, c-format
 msgid "Job control: %s"
@@ -1467,8 +1467,8 @@ msgstr ""
 msgid "Startup (line %d):"
 msgstr "Start (Zeile %d):"
 
-msgid "State\tCommand"
-msgstr "Status\tBefehl"
+msgid "State"
+msgstr "Status"
 
 msgid "Stdin must be attached to a tty."
 msgstr ""

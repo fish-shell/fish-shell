@@ -896,8 +896,8 @@ msgstr ""
 msgid "Broken pipe"
 msgstr "Avbrutet rör"
 
-msgid "CPU\t"
-msgstr "CPU\t"
+msgid "CPU"
+msgstr "CPU"
 
 msgid "CPU time limit exceeded"
 msgstr "Slut på processortid"
@@ -1193,8 +1193,8 @@ msgstr ""
 msgid "Items %u to %u of %u"
 msgstr ""
 
-msgid "Job\tGroup\t"
-msgstr "Jobb\tGrupp\t"
+msgid "Job"
+msgstr "Jobb"
 
 #, c-format
 msgid "Job control: %s"
@@ -1464,8 +1464,8 @@ msgstr ""
 msgid "Startup (line %d):"
 msgstr ""
 
-msgid "State\tCommand"
-msgstr "Status\tKommando"
+msgid "State"
+msgstr "Status"
 
 msgid "Stdin must be attached to a tty."
 msgstr ""

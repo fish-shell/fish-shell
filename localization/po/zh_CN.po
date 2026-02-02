@@ -920,8 +920,8 @@ msgstr "有条件运行的代码块"
 msgid "Broken pipe"
 msgstr "断开的管道"
 
-msgid "CPU\t"
-msgstr "CPU\t"
+msgid "CPU"
+msgstr "CPU"
 
 msgid "CPU time limit exceeded"
 msgstr "CPU 超时"
@@ -1217,8 +1217,8 @@ msgstr "无效记号 '%s'"
 msgid "Items %u to %u of %u"
 msgstr "第 %u 个至第 %u 个项目，共 %u 个"
 
-msgid "Job\tGroup\t"
-msgstr "作业\t组\t"
+msgid "Job"
+msgstr "作业"
 
 #, c-format
 msgid "Job control: %s"
@@ -1488,8 +1488,8 @@ msgstr "标准输入 (行 %d)："
 msgid "Startup (line %d):"
 msgstr "启动 (行 %d)："
 
-msgid "State\tCommand"
-msgstr "状态\t命令"
+msgid "State"
+msgstr "状态"
 
 msgid "Stdin must be attached to a tty."
 msgstr "Stdin 必须连接到 TTY。"

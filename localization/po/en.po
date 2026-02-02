@@ -899,8 +899,8 @@ msgstr ""
 msgid "Broken pipe"
 msgstr "Broken pipe"
 
-msgid "CPU\t"
-msgstr "CPU\t"
+msgid "CPU"
+msgstr "CPU"
 
 msgid "CPU time limit exceeded"
 msgstr "CPU time limit exceeded"
@@ -1196,8 +1196,8 @@ msgstr ""
 msgid "Items %u to %u of %u"
 msgstr ""
 
-msgid "Job\tGroup\t"
-msgstr "Job\tGroup\t"
+msgid "Job"
+msgstr "Job"
 
 #, c-format
 msgid "Job control: %s"
@@ -1467,8 +1467,8 @@ msgstr ""
 msgid "Startup (line %d):"
 msgstr ""
 
-msgid "State\tCommand"
-msgstr "State\tCommand"
+msgid "State"
+msgstr "State"
 
 msgid "Stdin must be attached to a tty."
 msgstr ""

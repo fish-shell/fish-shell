@@ -110,12 +110,12 @@ msgid "%s %s: unrecognized feature '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s (line %d): "
-msgstr "%s (line %d): "
+msgid "%s (line %d):"
+msgstr "%s (line %d):"
 
 #, c-format
-msgid "%s (line %u): "
-msgstr "%s (line %u): "
+msgid "%s (line %u):"
+msgstr "%s (line %u):"
 
 #, c-format
 msgid "%s and %s are mutually exclusive"
@@ -1474,11 +1474,11 @@ msgid "Standard input"
 msgstr "Standard input"
 
 #, c-format
-msgid "Standard input (line %d): "
+msgid "Standard input (line %d):"
 msgstr ""
 
 #, c-format
-msgid "Startup (line %d): "
+msgid "Startup (line %d):"
 msgstr ""
 
 msgid "State\tCommand"
@@ -1848,8 +1848,8 @@ msgstr "rows %u to %u of %u"
 msgid "running"
 msgstr "running"
 
-msgid "search: "
-msgstr "search: "
+msgid "search:"
+msgstr "search:"
 
 msgid "stopped"
 msgstr "stopped"

@@ -104,11 +104,11 @@ msgid "%s %s: unrecognized feature '%s'"
 msgstr "%s %s：不認識的功能「%s」"
 
 #, c-format
-msgid "%s (line %d): "
+msgid "%s (line %d):"
 msgstr "%s（第 %d 行）："
 
 #, c-format
-msgid "%s (line %u): "
+msgid "%s (line %u):"
 msgstr "%s（第 %u 行）："
 
 #, c-format
@@ -1473,11 +1473,11 @@ msgid "Standard input"
 msgstr "標準輸入流"
 
 #, c-format
-msgid "Standard input (line %d): "
+msgid "Standard input (line %d):"
 msgstr "標準輸入流（第 %d 行）："
 
 #, c-format
-msgid "Startup (line %d): "
+msgid "Startup (line %d):"
 msgstr "啟動命令稿（第 %d 行）："
 
 msgid "State\tCommand"
@@ -1850,7 +1850,7 @@ msgstr "第 %u 至 %u 列，共 %u 列"
 msgid "running"
 msgstr "執行中"
 
-msgid "search: "
+msgid "search:"
 msgstr "搜尋："
 
 msgid "stopped"

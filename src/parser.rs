@@ -791,15 +791,16 @@ impl Parser {
         if !self.is_interactive() || self.is_function() {
             if let Some(file) = file {
                 prefix.push_utfstr(&wgettext_fmt!(
-                    "%s (line %d): ",
+                    "%s (line %d):",
                     &user_presentable_path(&file, self.vars()),
                     lineno
                 ));
             } else if self.libdata().within_fish_init {
-                prefix.push_utfstr(&wgettext_fmt!("Startup (line %d): ", lineno));
+                prefix.push_utfstr(&wgettext_fmt!("Startup (line %d):", lineno));
             } else {
-                prefix.push_utfstr(&wgettext_fmt!("Standard input (line %d): ", lineno));
+                prefix.push_utfstr(&wgettext_fmt!("Standard input (line %d):", lineno));
             }
+            prefix.push(' ');
         }
 
         let skip_caret = self.is_interactive() && !self.is_function();
@@ -1190,11 +1191,13 @@ impl Parser {
 
         let prefix = if let Some(filename) = self.current_filename() {
             if which_line > 0 {
-                wgettext_fmt!(
-                    "%s (line %u): ",
+                let mut prefix = wgettext_fmt!(
+                    "%s (line %u):",
                     user_presentable_path(&filename, self.vars()),
                     which_line
-                )
+                );
+                prefix.push(' ');
+                prefix
             } else {
                 sprintf!("%s: ", user_presentable_path(&filename, self.vars()))
             }

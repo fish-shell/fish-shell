@@ -758,9 +758,12 @@ mod test_expressions {
                 if !parser.errors.is_empty() {
                     err.push_utfstr(&parser.errors[0]);
                 } else {
-                    sprintf!(=> err, "unexpected argument at index %u: '%s'",
-                             result.as_ref().unwrap().range().end + 1,
-                             args[result.as_ref().unwrap().range().end]);
+                    sprintf!(
+                        => err,
+                        "unexpected argument at index %u: '%s'",
+                        result.as_ref().unwrap().range().end + 1,
+                        args[result.as_ref().unwrap().range().end],
+                    );
                 }
                 err.push('\n');
                 err.push_utfstr(&commandline);

@@ -37,8 +37,8 @@ RUN adduser \
     fishuser
 
 RUN mkdir -p /home/fishuser/fish-build \
-  && mkdir /fish-source \
-  && chown -R fishuser:fishuser /home/fishuser /fish-source
+    && mkdir /fish-source \
+    && chown -R fishuser:fishuser /home/fishuser /fish-source
 
 USER fishuser
 WORKDIR /home/fishuser

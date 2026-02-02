@@ -305,10 +305,10 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
                     warning,
                     wgettext_fmt!(
                         "%s could not read response to Primary Device Attribute query after waiting for %d seconds. \
-                         This is often due to a missing feature in your terminal. \
-                         See 'help %s' or 'man fish-terminal-compatibility'. \
-                         This %s process will no longer wait for outstanding queries, \
-                         which disables some optional features.",
+                        This is often due to a missing feature in your terminal. \
+                        See 'help %s' or 'man fish-terminal-compatibility'. \
+                        This %s process will no longer wait for outstanding queries, \
+                        which disables some optional features.",
                         program,
                         LONG_READ_TIMEOUT.as_secs(),
                         help_section!("terminal-compatibility"),

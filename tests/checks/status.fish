@@ -91,14 +91,14 @@ if test -e /dev/full
         echo "Wrong status when writing to /dev/full"
     end
 
-   # Here the builtin should fail with status 2,
-   # and also the write should fail with status 1.
-   # The builtin has precedence.
-   builtin string --not-a-valid-option 2> /dev/full
-   if test $status -ne 2
-       echo "Wrong status for failing builtin"
-   end
-   echo "Failed write tests finished"
+    # Here the builtin should fail with status 2,
+    # and also the write should fail with status 1.
+    # The builtin has precedence.
+    builtin string --not-a-valid-option 2> /dev/full
+    if test $status -ne 2
+        echo "Wrong status for failing builtin"
+    end
+    echo "Failed write tests finished"
 else
     echo "Failed write tests skipped"
     echo "write: skipped" 1>&2

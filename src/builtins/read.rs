@@ -654,13 +654,12 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 streams.stdin_fd(),
             );
         } else if opts.nchars.is_none() && !stream_stdin_is_a_tty &&
-                   // "one_line" is implemented as reading n-times to a new line,
-                   // if we're chunking we could get multiple lines so we would have to advance
-                   // more than 1 per run through the loop. Let's skip that for now.
-                   !opts.one_line &&
-                       (
-                           streams.stdin_is_directly_redirected ||
-                               unsafe {libc::lseek(streams.stdin_fd(), 0, SEEK_CUR)} != -1)
+            // "one_line" is implemented as reading n-times to a new line,
+            // if we're chunking we could get multiple lines so we would have to advance
+            // more than 1 per run through the loop. Let's skip that for now.
+            !opts.one_line &&
+            ( streams.stdin_is_directly_redirected ||
+                    unsafe {libc::lseek(streams.stdin_fd(), 0, SEEK_CUR)} != -1)
         {
             // We read in chunks when we either can seek (so we put the bytes back),
             // or we have the bytes to ourselves (because it's directly redirected).

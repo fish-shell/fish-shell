@@ -973,14 +973,14 @@ impl Pager {
         }
 
         (self.is_empty() && !rendering.screen_data.is_empty()) ||    // Do update after clear().
-           rendering.term_width != Some(self.available_term_width) ||
-           rendering.term_height != Some(self.available_term_height) ||
-           rendering.selected_completion_idx !=
-               self.visual_selected_completion_index(rendering.rows, rendering.cols) ||
-           rendering.search_field_shown != self.search_field_shown ||
-           *rendering.search_field_line.text() != *self.search_field_line.text() ||
-           rendering.search_field_line.position() != self.search_field_line.position() ||
-           (rendering.remaining_to_disclose > 0 && self.fully_disclosed)
+            rendering.term_width != Some(self.available_term_width) ||
+            rendering.term_height != Some(self.available_term_height) ||
+            rendering.selected_completion_idx !=
+                self.visual_selected_completion_index(rendering.rows, rendering.cols) ||
+            rendering.search_field_shown != self.search_field_shown ||
+            *rendering.search_field_line.text() != *self.search_field_line.text() ||
+            rendering.search_field_line.position() != self.search_field_line.position() ||
+            (rendering.remaining_to_disclose > 0 && self.fully_disclosed)
     }
 
     // Updates the rendering.

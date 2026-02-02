@@ -1462,11 +1462,13 @@ complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commi
 complete -f -c git -n '__fish_git_using_command commit' -l squash -d 'Squash commit to be used with rebase --autosquash'
 complete -c git -n '__fish_git_using_command commit' -l reset-author -d 'When amending, reset author of commit to the committer'
 complete -x -c git -n '__fish_git_using_command commit' -l author -d 'Override the commit author'
-complete -x -c git -n '__fish_git_using_command commit' -l cleanup -a "strip\t'Leading/trailing whitespace/empty lines, #commentary'
- whitespace\t'Like strip but keep #commentary'
- verbatim\t'Do not change the message'
- scissors\t'Like whitespace but also remove after scissor lines'
- default\t'Like strip if the message is to be edited, whitespace otherwise'" -d 'How to clean up the commit message'
+complete -x -c git -n '__fish_git_using_command commit' -l cleanup -a "
+    strip\t'Leading/trailing whitespace/empty lines, #commentary'
+    whitespace\t'Like strip but keep #commentary'
+    verbatim\t'Do not change the message'
+    scissors\t'Like whitespace but also remove after scissor lines'
+    default\t'Like strip if the message is to be edited, whitespace otherwise'
+" -d 'How to clean up the commit message'
 complete -x -c git -n '__fish_git_using_command commit' -l date -d 'Override the author date'
 complete -x -c git -n '__fish_git_using_command commit' -s m -l message -d 'Use the given message as the commit message'
 complete -f -c git -n '__fish_git_using_command commit' -l no-edit -d 'Use the selected commit message without launching an editor'
@@ -1786,26 +1788,26 @@ complete -c git -n '__fish_git_using_command log' -l no-standard-notes
 complete -c git -n '__fish_git_using_command log' -l show-signature
 complete -c git -n '__fish_git_using_command log' -l relative-date
 complete -x -c git -n '__fish_git_using_command log shortlog' -l date -a '
-  relative
-  local
-  iso
-  iso-local
-  iso8601
-  iso8601-local
-  iso-strict
-  iso-strict-local
-  iso8601-strict
-  iso8601-strict-local
-  rfc-local
-  rfc2822-local
-  short
-  short-local
-  raw
-  human
-  unix
-  format:
-  default
-  default-local
+    relative
+    local
+    iso
+    iso-local
+    iso8601
+    iso8601-local
+    iso-strict
+    iso-strict-local
+    iso8601-strict
+    iso8601-strict-local
+    rfc-local
+    rfc2822-local
+    short
+    short-local
+    raw
+    human
+    unix
+    format:
+    default
+    default-local
 '
 complete -c git -n '__fish_git_using_command log' -l parents
 complete -c git -n '__fish_git_using_command log' -l children
@@ -1841,10 +1843,10 @@ complete -c git -n '__fish_git_using_command log' -l name-status
 complete -f -c git -n '__fish_git_using_command log' -l color -a 'always never auto'
 complete -c git -n '__fish_git_using_command log' -l no-color
 complete -f -c git -n '__fish_git_using_command log' -l word-diff -a '
-  color
-  plain
-  porcelain
-  none
+    color
+    plain
+    porcelain
+    none
 '
 complete -f -c git -n '__fish_git_using_command log' -l color-words
 complete -c git -n '__fish_git_using_command log' -l no-renames

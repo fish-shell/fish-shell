@@ -24,9 +24,6 @@ msgstr ""
 msgid "fish-section-tier1-from-rust"
 msgstr ""
 
-msgid "   PID  Command"
-msgstr "   PID  Befehl"
-
 msgid " a path variable"
 msgstr " eine Pfadvariable"
 

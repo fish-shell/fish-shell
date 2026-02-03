@@ -592,10 +592,7 @@ fn throwing_main() -> i32 {
                 if res.is_err() {
                     flog!(
                         warning,
-                        sprintf!(
-                            "%s\n",
-                            wgettext_fmt!("Error while reading file %s", path.to_string_lossy())
-                        )
+                        wgettext_fmt!("Error while reading file %s", path.to_string_lossy())
                     );
                 }
             }

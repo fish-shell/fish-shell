@@ -1,5 +1,5 @@
-fish ?.?.? (released ???)
-=========================
+fish 4.4.0 (released February 03, 2026)
+=======================================
 
 Deprecations and removed features
 ---------------------------------

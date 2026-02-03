@@ -1,3 +1,11 @@
+fish (4.4.0-1) stable; urgency=medium
+
+  * Release of new version 4.4.0.
+
+  See https://github.com/fish-shell/fish-shell/releases/tag/4.4.0 for details.
+
+ -- Johannes Altmanninger <aclopte@gmail.com>  Tue, 03 Feb 2026 12:11:51 +1100
+
 fish (4.3.3-1) stable; urgency=medium
 
   * Release of new version 4.3.3.

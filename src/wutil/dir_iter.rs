@@ -4,9 +4,8 @@ use crate::wutil::DevInode;
 use cfg_if::cfg_if;
 use fish_widestring::{WString, wstr};
 use libc::{
-    DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
-    ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG,
-    S_IFSOCK,
+    EACCES, EIO, ELOOP, ENAMETOOLONG, ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO,
+    S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK,
 };
 use std::cell::Cell;
 use std::io;
@@ -138,15 +137,16 @@ impl DirEntry {
     }
 }
 
+#[cfg(not(target_os = "illumos"))]
 fn dirent_type_to_entry_type(dt: u8) -> Option<DirEntryType> {
     match dt {
-        DT_FIFO => Some(DirEntryType::Fifo),
-        DT_CHR => Some(DirEntryType::Chr),
-        DT_DIR => Some(DirEntryType::Dir),
-        DT_BLK => Some(DirEntryType::Blk),
-        DT_REG => Some(DirEntryType::Reg),
-        DT_LNK => Some(DirEntryType::Lnk),
-        DT_SOCK => Some(DirEntryType::Sock),
+        libc::DT_FIFO => Some(DirEntryType::Fifo),
+        libc::DT_CHR => Some(DirEntryType::Chr),
+        libc::DT_DIR => Some(DirEntryType::Dir),
+        libc::DT_BLK => Some(DirEntryType::Blk),
+        libc::DT_REG => Some(DirEntryType::Reg),
+        libc::DT_LNK => Some(DirEntryType::Lnk),
+        libc::DT_SOCK => Some(DirEntryType::Sock),
         // todo!("whiteout")
         _ => None,
     }
@@ -294,7 +294,17 @@ impl DirIter {
                 self.entry.inode = dent.d_ino;
             }
         );
-        let typ = dirent_type_to_entry_type(dent.d_type);
+
+        cfg_if!(
+            if #[cfg(target_os = "illumos")] {
+                // illumos doesn't have .d_type
+                // https://github.com/illumos/illumos-gate/blob/af641d205ecf080be0d900f89c4f3d2adb84f33f/usr/src/uts/common/sys/dirent.h#L44
+                let typ = None;
+            } else {
+                let typ = dirent_type_to_entry_type(dent.d_type);
+            }
+        );
+
         // Do not store symlinks as we will need to resolve them.
         if typ != Some(DirEntryType::Lnk) {
             self.entry.typ.set(typ);

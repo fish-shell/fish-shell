@@ -6,6 +6,7 @@ Regression fixes:
 - (from 4.4.0) Vi mode ``d,f`` key binding (:issue:`12417`).
 - (from 4.4.0) Vi mode crash on ``c,i,w`` after accepting autosuggestion (:issue:`12430`).
 - (from 4.4.0) ``fish_vi_key_bindings`` called with mode argument (:issue:`12413`).
+- (from 4.0.0) Build on Illumos (:issue:`12410`).
 
 fish 4.4.0 (released February 03, 2026)
 =======================================

@@ -815,7 +815,7 @@ msgid "(no matches)"
 msgstr "(keine Treffer)"
 
 msgid "(read-only)"
-msgstr "(screibgeschützt)"
+msgstr "(schreibgeschützt)"
 
 #, c-format
 msgid ", copied in %s @ line %d"

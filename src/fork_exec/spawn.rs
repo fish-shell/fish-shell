@@ -116,7 +116,7 @@ impl PosixSpawner {
         };
 
         // Set our flags.
-        let mut flags: i32 = 0;
+        let mut flags = 0;
         flags |= libc::POSIX_SPAWN_SETSIGDEF;
         flags |= libc::POSIX_SPAWN_SETSIGMASK;
         if desired_pgid.is_some() {

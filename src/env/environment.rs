@@ -517,7 +517,15 @@ fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
 
 pub(crate) static FALLBACK_PATH: LazyLock<&[WString]> = LazyLock::new(|| {
     // _CS_PATH: colon-separated paths to find POSIX utilities. Same as USER_CS_PATH.
-    let cs_path = libc::_CS_PATH;
+    // Fix until rust-lang/libc#4956 is merged
+    cfg_if::cfg_if!(
+        if #[cfg(target_os = "illumos")] {
+            // See https://github.com/illumos/illumos-gate/blob/af641d205ecf080be0d900f89c4f3d2adb84f33f/usr/src/uts/common/sys/unistd.h#L50
+            let cs_path: c_int = 65;
+        } else {
+            let cs_path = libc::_CS_PATH;
+        }
+    );
 
     let buf_size = unsafe { libc::confstr(cs_path, std::ptr::null_mut(), 0) };
     let paths: Vec<WString> = if buf_size > 0 {

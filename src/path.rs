@@ -13,7 +13,6 @@ use libc::{EACCES, ENOENT, ENOTDIR, X_OK};
 use nix::unistd::AccessFlags;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
-use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::sync::LazyLock;
 
@@ -628,10 +627,12 @@ fn create_dir_all_with_mode<P: AsRef<std::path::Path>>(path: P, mode: u32) -> st
 
 /// Return whether the given path is on a remote filesystem.
 pub fn path_remoteness(path: &wstr) -> DirRemoteness {
+    #[cfg(not(target_os = "illumos"))]
     let narrow = wcs2zstring(path);
+
     #[cfg(any(target_os = "linux", cygwin))]
     {
-        let mut buf = MaybeUninit::uninit();
+        let mut buf = std::mem::MaybeUninit::uninit();
         if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
             return DirRemoteness::Unknown;
         }
@@ -667,7 +668,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     // NetBSD doesn't have statfs, but MNT_LOCAL works for statvfs.
     #[cfg(target_os = "netbsd")]
     {
-        let mut buf = MaybeUninit::uninit();
+        let mut buf = std::mem::MaybeUninit::uninit();
         if unsafe { libc::statvfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
             return DirRemoteness::Unknown;
         }
@@ -682,9 +683,21 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
         }
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "netbsd", cygwin)))]
+    // illumos doesn't have statfs and MNT_LOCAL doesn't work for statvfs
+    // we _could_ use statvfs to match against known filesystems but that is fragile
+    #[cfg(target_os = "illumos")]
     {
-        let mut buf = MaybeUninit::uninit();
+        DirRemoteness::Unknown
+    }
+
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "netbsd",
+        target_os = "illumos",
+        cygwin
+    )))]
+    {
+        let mut buf = std::mem::MaybeUninit::uninit();
         if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
             return DirRemoteness::Unknown;
         }

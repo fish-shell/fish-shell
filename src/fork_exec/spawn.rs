@@ -117,10 +117,10 @@ impl PosixSpawner {
 
         // Set our flags.
         let mut flags: i32 = 0;
-        flags |= libc::POSIX_SPAWN_SETSIGDEF;
-        flags |= libc::POSIX_SPAWN_SETSIGMASK;
+        flags |= libc::POSIX_SPAWN_SETSIGDEF as i32;
+        flags |= libc::POSIX_SPAWN_SETSIGMASK as i32;
         if desired_pgid.is_some() {
-            flags |= libc::POSIX_SPAWN_SETPGROUP;
+            flags |= libc::POSIX_SPAWN_SETPGROUP as i32;
         }
         attr.set_flags(flags.try_into().expect("Flags should fit in c_short"))?;
 

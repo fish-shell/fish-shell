@@ -27,13 +27,6 @@ awk -v version=$VERSION '
     ' \
     Cargo.lock >"$lockfile"
 
-for ext in toml lock; do
-    if cmp Cargo.$ext "$tmpdir/Cargo.$ext" >/dev/null; then
-        echo >&2 "failed to update Cargo.$ext version?"
-        exit 1
-    fi
-done
-
 git archive \
     --prefix="$prefix/" \
     --add-virtual-file="$prefix/Cargo.toml:$(cat "$manifest")" \

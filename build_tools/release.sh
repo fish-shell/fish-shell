@@ -84,7 +84,7 @@ sed -i \
     CHANGELOG.rst
 
 CreateCommit() {
-    git commit -m "$2
+    git commit -m "$1
 
 Created by ./build_tools/release.sh $version"
 }

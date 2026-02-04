@@ -349,7 +349,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset ] history-token-search-forward
     bind -s --preset -m insert / history-pager repaint-mode
 
-    __fish_per_os_bind --preset $argv ctrl-right forward-token forward-word-vi
+    __fish_per_os_bind --preset -M insert ctrl-right forward-token forward-word-vi
     # ctrl-left is same as emacs mode
 
     bind -s --preset -M insert ctrl-n accept-autosuggestion

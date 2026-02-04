@@ -121,12 +121,12 @@ msgid "%s %s: unrecognized feature '%s'"
 msgstr "%s %s: 未识别的特性 '%s'"
 
 #, c-format
-msgid "%s (line %d):"
-msgstr "%s (行 %d):"
+msgid "%s (line %d)"
+msgstr "%s (行 %d)"
 
 #, c-format
-msgid "%s (line %u):"
-msgstr "%s (行 %u):"
+msgid "%s (line %u)"
+msgstr "%s (行 %u)"
 
 #, c-format
 msgid "%s and %s are mutually exclusive"
@@ -1481,12 +1481,12 @@ msgid "Standard input"
 msgstr "标准输入"
 
 #, c-format
-msgid "Standard input (line %d):"
-msgstr "标准输入 (行 %d)："
+msgid "Standard input (line %d)"
+msgstr "标准输入 (行 %d)"
 
 #, c-format
-msgid "Startup (line %d):"
-msgstr "启动 (行 %d)："
+msgid "Startup (line %d)"
+msgstr "启动 (行 %d)"
 
 msgid "State"
 msgstr "状态"

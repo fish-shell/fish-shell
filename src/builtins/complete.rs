@@ -462,7 +462,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         let mut errors = ParseErrorList::new();
         if detect_parse_errors(condition_string, Some(&mut errors), false).is_err() {
             for error in errors {
-                let prefix = cmd.to_owned() + L!(": -n '") + &condition_string[..] + L!("': ");
+                let prefix = cmd.to_owned() + L!(": -n '") + &condition_string[..] + L!("'");
                 streams.err.appendln(&error.describe_with_prefix(
                     condition_string,
                     &prefix,
@@ -475,11 +475,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     }
 
     if !comp.is_empty() {
-        let mut prefix = WString::new();
-        prefix.push_utfstr(cmd);
-        prefix.push_str(": ");
-
-        if let Err(err_text) = detect_errors_in_argument_list(&comp, &prefix) {
+        if let Err(err_text) = detect_errors_in_argument_list(&comp, cmd) {
             streams
                 .err
                 .appendln(&wgettext_fmt!("%s: %s: contains a syntax error", cmd, comp));

@@ -267,6 +267,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Do this first so vi-bindings win over default.
     for mode in insert default visual
         __fish_shared_key_bindings -s -M $mode
+        __fish_per_os_bind --preset -M $mode ctrl-right forward-token forward-word-vi
+        # ctrl-left is same as emacs mode
     end
 
     # Add a way to switch from insert to normal (command) mode.
@@ -348,9 +350,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset [ history-token-search-backward
     bind -s --preset ] history-token-search-forward
     bind -s --preset -m insert / history-pager repaint-mode
-
-    __fish_per_os_bind --preset $argv ctrl-right forward-token forward-word-vi
-    # ctrl-left is same as emacs mode
 
     bind -s --preset -M insert ctrl-n accept-autosuggestion
 

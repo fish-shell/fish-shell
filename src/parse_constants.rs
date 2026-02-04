@@ -299,7 +299,7 @@ impl ParseError {
         if skip_caret && self.text.is_empty() {
             return L!("").to_owned();
         }
-        result += wstr::from_char_slice(self.text.as_char_slice());
+        result.push_utfstr(&self.text);
 
         let mut start = self.source_start;
         let mut len = self.source_length;
@@ -378,7 +378,7 @@ impl ParseError {
             }
         }
         result += "\n";
-        result += wstr::from_char_slice(caret_space_line.as_char_slice());
+        result.push_utfstr(&caret_space_line);
         result += "^";
         if len > 1 {
             // Add a squiggle under the error location.

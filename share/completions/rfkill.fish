@@ -1,5 +1,5 @@
 complete -c rfkill -xa 'block unblock list event help' -n 'not __fish_seen_subcommand_from block unblock list event help'
-complete -c rfkill -n '__fish_seen_subcommand_from block unblock list' -d 'device group' -xa "all wifi wlan bluetooth uwb ultrawideband wimax wwan gps fm (rfkill list | string replace : \t)"
+complete -c rfkill -n '__fish_seen_subcommand_from block unblock toggle list' -d 'device group' -xa "all wifi wlan bluetooth uwb ultrawideband wimax wwan gps fm (rfkill list | string replace : \t)"
 complete -c rfkill -s V -l version -d 'Print version'
 complete -c rfkill -s h -l help -d 'Print help'
 complete -c rfkill -s J -l json -d 'JSON output'

@@ -97,11 +97,11 @@ msgid "%s %s: unrecognized feature '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s (line %d):"
-msgstr "%s (rad %d):"
+msgid "%s (line %d)"
+msgstr "%s (rad %d)"
 
 #, c-format
-msgid "%s (line %u):"
+msgid "%s (line %u)"
 msgstr ""
 
 #, c-format
@@ -1457,11 +1457,11 @@ msgid "Standard input"
 msgstr "Standard in"
 
 #, c-format
-msgid "Standard input (line %d):"
+msgid "Standard input (line %d)"
 msgstr ""
 
 #, c-format
-msgid "Startup (line %d):"
+msgid "Startup (line %d)"
 msgstr ""
 
 msgid "State"

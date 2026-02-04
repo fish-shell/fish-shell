@@ -94,12 +94,12 @@ msgid "%s %s: unrecognized feature '%s'"
 msgstr "%s %s：不認識的功能「%s」"
 
 #, c-format
-msgid "%s (line %d):"
-msgstr "%s（第 %d 行）："
+msgid "%s (line %d)"
+msgstr "%s（第 %d 行）"
 
 #, c-format
-msgid "%s (line %u):"
-msgstr "%s（第 %u 行）："
+msgid "%s (line %u)"
+msgstr "%s（第 %u 行）"
 
 #, c-format
 msgid "%s and %s are mutually exclusive"
@@ -1456,12 +1456,12 @@ msgid "Standard input"
 msgstr "標準輸入流"
 
 #, c-format
-msgid "Standard input (line %d):"
-msgstr "標準輸入流（第 %d 行）："
+msgid "Standard input (line %d)"
+msgstr "標準輸入流（第 %d 行）"
 
 #, c-format
-msgid "Startup (line %d):"
-msgstr "啟動命令稿（第 %d 行）："
+msgid "Startup (line %d)"
+msgstr "啟動命令稿（第 %d 行）"
 
 msgid "State"
 msgstr "狀態"

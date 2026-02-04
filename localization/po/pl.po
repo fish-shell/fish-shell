@@ -96,12 +96,12 @@ msgid "%s %s: unrecognized feature '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s (line %d):"
-msgstr "%s (linia %d):"
+msgid "%s (line %d)"
+msgstr "%s (linia %d)"
 
 #, c-format
-msgid "%s (line %u):"
-msgstr "%s (linia %u):"
+msgid "%s (line %u)"
+msgstr "%s (linia %u)"
 
 #, c-format
 msgid "%s and %s are mutually exclusive"
@@ -1456,11 +1456,11 @@ msgid "Standard input"
 msgstr "Standardowe wejście"
 
 #, c-format
-msgid "Standard input (line %d):"
+msgid "Standard input (line %d)"
 msgstr ""
 
 #, c-format
-msgid "Startup (line %d):"
+msgid "Startup (line %d)"
 msgstr ""
 
 msgid "State"

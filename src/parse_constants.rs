@@ -295,11 +295,19 @@ impl ParseError {
         is_interactive: bool,
         skip_caret: bool,
     ) -> WString {
-        let mut result = prefix.to_owned();
         if skip_caret && self.text.is_empty() {
             return L!("").to_owned();
         }
-        result.push_utfstr(&self.text);
+
+        let mut result = if prefix.is_empty() {
+            self.text.clone()
+        } else {
+            wgettext_fmt!("%s: %s", prefix, &self.text)
+        };
+
+        if skip_caret {
+            return result;
+        }
 
         let mut start = self.source_start;
         let mut len = self.source_length;
@@ -311,10 +319,6 @@ impl ParseError {
 
         if start + len > src.len() {
             len = src.len() - self.source_start;
-        }
-
-        if skip_caret {
-            return result;
         }
 
         // Locate the beginning of this line of source.

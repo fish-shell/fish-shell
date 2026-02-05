@@ -55,6 +55,12 @@ jobs:
         include_sphinx: false
     - name: Install g++-multilib
       run: |
+        # GitHub does not consistently provide images with up-to-date package lists, causing
+        # `apt install` failures.
+        # Work around this by updating the package list.
+        # https://github.com/actions/runner-images/issues/13636
+        # https://github.com/actions/runner-images/issues/12599
+        sudo apt-get update
         sudo apt install g++-multilib
     - name: cmake
       env:

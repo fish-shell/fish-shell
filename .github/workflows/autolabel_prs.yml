@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: Set label and milestone
       id: set-label-milestone
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         script: |
           const completionsLabel = 'completions';

@@ -61,7 +61,7 @@ jobs:
           sed -n 2p "$relnotes" | grep -q '^$'
           sed -i 1,2d "$relnotes"
       - name: Upload tarball artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: source-tarball
           path: |
@@ -100,7 +100,7 @@ jobs:
             tar -cazf fish-$(git describe)-linux-$arch.tar.xz \
               -C target/$arch-unknown-linux-musl/release fish
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: Static builds for Linux
           path: fish-${{ inputs.version }}-linux-*.tar.xz
@@ -119,7 +119,7 @@ jobs:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           merge-multiple: true
           path: /tmp/artifacts

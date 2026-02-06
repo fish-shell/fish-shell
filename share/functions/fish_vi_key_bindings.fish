@@ -266,7 +266,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Inherit shared key bindings.
     # Do this first so vi-bindings win over default.
     for mode in insert default visual
-        __fish_shared_key_bindings -s -M $mode
+        __fish_shared_key_bindings -M $mode
         __fish_per_os_bind --preset -M $mode ctrl-right forward-token forward-word-vi
         # ctrl-left is same as emacs mode
     end
@@ -285,301 +285,301 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
             commandline -f repaint-mode
         end
     '
-    bind -s --preset -M insert escape $on_escape
-    bind -s --preset -M insert ctrl-\[ $on_escape
+    bind --preset -M insert escape $on_escape
+    bind --preset -M insert ctrl-\[ $on_escape
 
     # Default (command) mode
-    bind -s --preset :,q exit
-    bind -s --preset -m insert ctrl-c clear-commandline repaint-mode
+    bind --preset :,q exit
+    bind --preset -m insert ctrl-c clear-commandline repaint-mode
 
-    bind -s --preset -M default escape 'set -g __fish_vi_count'
-    bind -s --preset -M default ctrl-\[ 'set -g __fish_vi_count'
+    bind --preset -M default escape 'set -g __fish_vi_count'
+    bind --preset -M default ctrl-\[ 'set -g __fish_vi_count'
 
     for i in (seq 1 9)
-        bind -s --preset -M default $i "fish_vi_arg_digit $i"
+        bind --preset -M default $i "fish_vi_arg_digit $i"
     end
     # 0 is special: it is 'beginning-of-line' unless we are already counting (e.g. 10)
-    bind -s --preset -M default 0 "if test -n \"\$__fish_vi_count\"; fish_vi_arg_digit 0; else; commandline -f beginning-of-line; end"
+    bind --preset -M default 0 "if test -n \"\$__fish_vi_count\"; fish_vi_arg_digit 0; else; commandline -f beginning-of-line; end"
 
     # --- Movement with Count Support ---
-    bind -s --preset -M default h 'fish_vi_run_count backward-char'
-    bind -s --preset -M default l 'fish_vi_run_count forward-char'
+    bind --preset -M default h 'fish_vi_run_count backward-char'
+    bind --preset -M default l 'fish_vi_run_count forward-char'
 
-    bind -s --preset -M default k 'fish_vi_run_count up-or-search'
-    bind -s --preset -M default j 'fish_vi_run_count down-or-search'
+    bind --preset -M default k 'fish_vi_run_count up-or-search'
+    bind --preset -M default j 'fish_vi_run_count down-or-search'
 
-    bind -s --preset -M default b 'fish_vi_run_count backward-word'
-    bind -s --preset -M default B 'fish_vi_run_count backward-bigword'
-    bind -s --preset -M default g,e 'fish_vi_run_count backward-word-end'
-    bind -s --preset -M default g,E 'fish_vi_run_count backward-bigword-end'
+    bind --preset -M default b 'fish_vi_run_count backward-word'
+    bind --preset -M default B 'fish_vi_run_count backward-bigword'
+    bind --preset -M default g,e 'fish_vi_run_count backward-word-end'
+    bind --preset -M default g,E 'fish_vi_run_count backward-bigword-end'
 
-    bind -s --preset -M default w 'fish_vi_run_count forward-word-vi'
-    bind -s --preset -M default W 'fish_vi_run_count forward-bigword-vi'
+    bind --preset -M default w 'fish_vi_run_count forward-word-vi'
+    bind --preset -M default W 'fish_vi_run_count forward-bigword-vi'
 
-    bind -s --preset -M default e 'fish_vi_run_count forward-word-end'
-    bind -s --preset -M default E 'fish_vi_run_count forward-bigword-end'
+    bind --preset -M default e 'fish_vi_run_count forward-word-end'
+    bind --preset -M default E 'fish_vi_run_count forward-bigword-end'
 
-    bind -s --preset -M default x 'fish_vi_run_count delete-char'
-    bind -s --preset -M default X 'fish_vi_run_count backward-delete-char'
+    bind --preset -M default x 'fish_vi_run_count delete-char'
+    bind --preset -M default X 'fish_vi_run_count backward-delete-char'
 
-    bind -s --preset -m insert enter execute
-    bind -s --preset -m insert ctrl-j execute
-    bind -s --preset -m insert ctrl-m execute
-    bind -s --preset -m insert o 'set fish_cursor_end_mode exclusive' insert-line-under repaint-mode
-    bind -s --preset -m insert O 'set fish_cursor_end_mode exclusive' insert-line-over repaint-mode
-    bind -s --preset -m insert i repaint-mode
-    bind -s --preset -m insert I beginning-of-line repaint-mode
-    bind -s --preset -m insert a 'set fish_cursor_end_mode exclusive' forward-single-char repaint-mode
-    bind -s --preset -m insert A 'set fish_cursor_end_mode exclusive' end-of-line repaint-mode
-    bind -s --preset -m visual v begin-selection repaint-mode
+    bind --preset -m insert enter execute
+    bind --preset -m insert ctrl-j execute
+    bind --preset -m insert ctrl-m execute
+    bind --preset -m insert o 'set fish_cursor_end_mode exclusive' insert-line-under repaint-mode
+    bind --preset -m insert O 'set fish_cursor_end_mode exclusive' insert-line-over repaint-mode
+    bind --preset -m insert i repaint-mode
+    bind --preset -m insert I beginning-of-line repaint-mode
+    bind --preset -m insert a 'set fish_cursor_end_mode exclusive' forward-single-char repaint-mode
+    bind --preset -m insert A 'set fish_cursor_end_mode exclusive' end-of-line repaint-mode
+    bind --preset -m visual v begin-selection repaint-mode
 
-    bind -s --preset g,g beginning-of-buffer
-    bind -s --preset G end-of-buffer
+    bind --preset g,g beginning-of-buffer
+    bind --preset G end-of-buffer
 
     for key in $eol_keys
-        bind -s --preset $key end-of-line
+        bind --preset $key end-of-line
     end
     # Note: 0 is handled in the numeric section above
     for key in \^ g\^ _
-        bind -s --preset $key beginning-of-line
+        bind --preset $key beginning-of-line
     end
 
-    bind -s --preset u undo
-    bind -s --preset ctrl-r redo
+    bind --preset u undo
+    bind --preset ctrl-r redo
 
-    bind -s --preset [ history-token-search-backward
-    bind -s --preset ] history-token-search-forward
-    bind -s --preset -m insert / history-pager repaint-mode
+    bind --preset [ history-token-search-backward
+    bind --preset ] history-token-search-forward
+    bind --preset -m insert / history-pager repaint-mode
 
-    bind -s --preset -M insert ctrl-n accept-autosuggestion
+    bind --preset -M insert ctrl-n accept-autosuggestion
 
     # Vi/Vim doesn't support these keys in insert mode but that seems silly so we do so anyway.
-    bind -s --preset -M insert home beginning-of-line
-    bind -s --preset -M default home beginning-of-line
-    bind -s --preset -M insert end end-of-line
-    bind -s --preset -M default end end-of-line
+    bind --preset -M insert home beginning-of-line
+    bind --preset -M default home beginning-of-line
+    bind --preset -M insert end end-of-line
+    bind --preset -M default end end-of-line
 
-    bind -s --preset -M insert delete delete-char
-    bind -s --preset -M default delete delete-char
+    bind --preset -M insert delete delete-char
+    bind --preset -M default delete delete-char
 
     # Backspace deletes a char in insert mode, but not in normal/default mode.
-    bind -s --preset -M insert backspace backward-delete-char
-    bind -s --preset -M insert shift-backspace backward-delete-char
-    bind -s --preset -M default backspace backward-char
-    bind -s --preset -M insert ctrl-h backward-delete-char
-    bind -s --preset -M default ctrl-h backward-char
+    bind --preset -M insert backspace backward-delete-char
+    bind --preset -M insert shift-backspace backward-delete-char
+    bind --preset -M default backspace backward-char
+    bind --preset -M insert ctrl-h backward-delete-char
+    bind --preset -M default ctrl-h backward-char
 
     # Operators & Operator Mode
-    bind -s --preset -M default d 'fish_vi_start_operator delete'
-    bind -s --preset -M default c 'fish_vi_start_operator change'
-    bind -s --preset -M default y 'fish_vi_start_operator yank'
-    bind -s --preset -M default g,\~ 'fish_vi_start_operator swap-case'
+    bind --preset -M default d 'fish_vi_start_operator delete'
+    bind --preset -M default c 'fish_vi_start_operator change'
+    bind --preset -M default y 'fish_vi_start_operator yank'
+    bind --preset -M default g,\~ 'fish_vi_start_operator swap-case'
 
-    bind -s --preset -M operator escape fish_vi_operator_cancel
-    bind -s --preset -M operator ctrl-\[ fish_vi_operator_cancel
+    bind --preset -M operator escape fish_vi_operator_cancel
+    bind --preset -M operator ctrl-\[ fish_vi_operator_cancel
 
     for i in (seq 1 9)
-        bind -s --preset -M operator $i "fish_vi_arg_digit $i"
+        bind --preset -M operator $i "fish_vi_arg_digit $i"
     end
-    bind -s --preset -M operator 0 "if test -n \"\$__fish_vi_count\"; fish_vi_arg_digit 0; else; fish_vi_exec_motion beginning-of-line; end"
+    bind --preset -M operator 0 "if test -n \"\$__fish_vi_count\"; fish_vi_arg_digit 0; else; fish_vi_exec_motion beginning-of-line; end"
 
-    bind -s --preset -M operator h 'fish_vi_exec_motion backward-char'
-    bind -s --preset -M operator l 'fish_vi_exec_motion forward-char'
-    bind -s --preset -M operator k 'fish_vi_exec_motion up-line'
-    bind -s --preset -M operator j 'fish_vi_exec_motion down-line'
-    bind -s --preset -M operator b 'fish_vi_exec_motion backward-word'
-    bind -s --preset -M operator B 'fish_vi_exec_motion backward-bigword'
-    bind -s --preset -M operator g,e 'fish_vi_exec_motion backward-word-end'
-    bind -s --preset -M operator g,E 'fish_vi_exec_motion backward-bigword-end'
-    bind -s --preset -M operator w 'fish_vi_exec_motion forward-word-vi'
-    bind -s --preset -M operator W 'fish_vi_exec_motion forward-bigword-vi'
-    bind -s --preset -M operator e 'fish_vi_exec_motion forward-word-end'
-    bind -s --preset -M operator E 'fish_vi_exec_motion forward-bigword-end'
+    bind --preset -M operator h 'fish_vi_exec_motion backward-char'
+    bind --preset -M operator l 'fish_vi_exec_motion forward-char'
+    bind --preset -M operator k 'fish_vi_exec_motion up-line'
+    bind --preset -M operator j 'fish_vi_exec_motion down-line'
+    bind --preset -M operator b 'fish_vi_exec_motion backward-word'
+    bind --preset -M operator B 'fish_vi_exec_motion backward-bigword'
+    bind --preset -M operator g,e 'fish_vi_exec_motion backward-word-end'
+    bind --preset -M operator g,E 'fish_vi_exec_motion backward-bigword-end'
+    bind --preset -M operator w 'fish_vi_exec_motion forward-word-vi'
+    bind --preset -M operator W 'fish_vi_exec_motion forward-bigword-vi'
+    bind --preset -M operator e 'fish_vi_exec_motion forward-word-end'
+    bind --preset -M operator E 'fish_vi_exec_motion forward-bigword-end'
 
-    bind -s --preset -M operator 0 'fish_vi_exec_motion beginning-of-line'
-    bind -s --preset -M operator \^ 'fish_vi_exec_motion beginning-of-line'
-    bind -s --preset -M operator \$ 'fish_vi_exec_motion end-of-line'
+    bind --preset -M operator 0 'fish_vi_exec_motion beginning-of-line'
+    bind --preset -M operator \^ 'fish_vi_exec_motion beginning-of-line'
+    bind --preset -M operator \$ 'fish_vi_exec_motion end-of-line'
 
-    bind -s --preset -M operator f 'fish_vi_exec_motion forward-jump'
-    bind -s --preset -M operator F 'fish_vi_exec_motion backward-jump'
-    bind -s --preset -M operator t 'fish_vi_exec_motion forward-jump-till'
-    bind -s --preset -M operator T 'fish_vi_exec_motion backward-jump-till'
-    bind -s --preset -M operator ';' 'fish_vi_exec_motion repeat-jump'
-    bind -s --preset -M operator , 'fish_vi_exec_motion repeat-jump-reverse'
+    bind --preset -M operator f 'fish_vi_exec_motion forward-jump'
+    bind --preset -M operator F 'fish_vi_exec_motion backward-jump'
+    bind --preset -M operator t 'fish_vi_exec_motion forward-jump-till'
+    bind --preset -M operator T 'fish_vi_exec_motion backward-jump-till'
+    bind --preset -M operator ';' 'fish_vi_exec_motion repeat-jump'
+    bind --preset -M operator , 'fish_vi_exec_motion repeat-jump-reverse'
 
-    bind -s --preset -M operator d 'fish_vi_exec_motion --linewise'
-    bind -s --preset -M operator c 'fish_vi_exec_motion --linewise'
-    bind -s --preset -M operator y 'fish_vi_exec_motion --linewise'
-    bind -s --preset -M operator \~ 'fish_vi_exec_motion --linewise'
+    bind --preset -M operator d 'fish_vi_exec_motion --linewise'
+    bind --preset -M operator c 'fish_vi_exec_motion --linewise'
+    bind --preset -M operator y 'fish_vi_exec_motion --linewise'
+    bind --preset -M operator \~ 'fish_vi_exec_motion --linewise'
 
-    bind -s --preset D kill-line
-    bind -s --preset d,\$ kill-line
-    bind -s --preset d,\^ backward-kill-line
-    bind -s --preset d,0 backward-kill-line
+    bind --preset D kill-line
+    bind --preset d,\$ kill-line
+    bind --preset d,\^ backward-kill-line
+    bind --preset d,0 backward-kill-line
 
-    bind -s --preset d,i,w kill-inner-word
-    bind -s --preset d,i,W kill-inner-bigword
-    bind -s --preset d,a,w kill-a-word
-    bind -s --preset d,a,W kill-a-bigword
-    bind -s --preset d,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection end-selection
-    bind -s --preset d,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection end-selection
-    bind -s --preset d,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
-    bind -s --preset d,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
-    bind -s --preset 'd,;' begin-selection repeat-jump kill-selection end-selection
-    bind -s --preset 'd,comma' begin-selection repeat-jump-reverse kill-selection end-selection
+    bind --preset d,i,w kill-inner-word
+    bind --preset d,i,W kill-inner-bigword
+    bind --preset d,a,w kill-a-word
+    bind --preset d,a,W kill-a-bigword
+    bind --preset d,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection end-selection
+    bind --preset d,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection end-selection
+    bind --preset d,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
+    bind --preset d,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
+    bind --preset 'd,;' begin-selection repeat-jump kill-selection end-selection
+    bind --preset 'd,comma' begin-selection repeat-jump-reverse kill-selection end-selection
 
-    bind -s --preset -m insert s delete-char repaint-mode
-    bind -s --preset -m insert S kill-inner-line repaint-mode
-    bind -s --preset -m insert C kill-line repaint-mode
-    bind -s --preset -m insert c,\$ kill-line repaint-mode
-    bind -s --preset -m insert c,\^ backward-kill-line repaint-mode
-    bind -s --preset -m insert c,0 backward-kill-line repaint-mode
+    bind --preset -m insert s delete-char repaint-mode
+    bind --preset -m insert S kill-inner-line repaint-mode
+    bind --preset -m insert C kill-line repaint-mode
+    bind --preset -m insert c,\$ kill-line repaint-mode
+    bind --preset -m insert c,\^ backward-kill-line repaint-mode
+    bind --preset -m insert c,0 backward-kill-line repaint-mode
 
-    bind -s --preset -m insert c,i,w kill-inner-word repaint-mode
-    bind -s --preset -m insert c,i,W kill-inner-bigword repaint-mode
-    bind -s --preset -m insert c,a,w kill-a-word repaint-mode
-    bind -s --preset -m insert c,a,W kill-a-bigword repaint-mode
-    bind -s --preset -m insert c,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection end-selection
-    bind -s --preset -m insert c,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection end-selection
-    bind -s --preset -m insert c,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
-    bind -s --preset -m insert c,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
+    bind --preset -m insert c,i,w kill-inner-word repaint-mode
+    bind --preset -m insert c,i,W kill-inner-bigword repaint-mode
+    bind --preset -m insert c,a,w kill-a-word repaint-mode
+    bind --preset -m insert c,a,W kill-a-bigword repaint-mode
+    bind --preset -m insert c,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection end-selection
+    bind --preset -m insert c,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection end-selection
+    bind --preset -m insert c,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
+    bind --preset -m insert c,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
 
-    bind -s --preset \~ togglecase-char forward-single-char
-    bind -s --preset g,u downcase-word
-    bind -s --preset g,U upcase-word
+    bind --preset \~ togglecase-char forward-single-char
+    bind --preset g,u downcase-word
+    bind --preset g,U upcase-word
 
-    bind -s --preset J end-of-line delete-char
-    bind -s --preset K 'man (commandline -t) 2>/dev/null; or echo -n \a'
+    bind --preset J end-of-line delete-char
+    bind --preset K 'man (commandline -t) 2>/dev/null; or echo -n \a'
 
     # yy handled by operator mode
     for seq in '",*,y,y' '",*,Y' '",+,y,y' '",+,Y'
-        bind -s --preset $seq fish_clipboard_copy
+        bind --preset $seq fish_clipboard_copy
     end
-    bind -s --preset Y kill-whole-line yank
-    bind -s --preset y,\$ kill-line yank
-    bind -s --preset y,\^ backward-kill-line yank
-    bind -s --preset y,0 backward-kill-line yank
-    bind -s --preset y,i,w kill-inner-word yank
-    bind -s --preset y,i,W kill-inner-bigword yank
-    bind -s --preset y,a,w kill-a-word yank
-    bind -s --preset y,a,W kill-a-bigword yank
-    bind -s --preset y,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket fish_vi_yank_selection end-selection
-    bind -s --preset y,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket fish_vi_yank_selection end-selection
-    bind -s --preset y,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump fish_vi_yank_selection end-selection
-    bind -s --preset y,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump fish_vi_yank_selection end-selection
+    bind --preset Y kill-whole-line yank
+    bind --preset y,\$ kill-line yank
+    bind --preset y,\^ backward-kill-line yank
+    bind --preset y,0 backward-kill-line yank
+    bind --preset y,i,w kill-inner-word yank
+    bind --preset y,i,W kill-inner-bigword yank
+    bind --preset y,a,w kill-a-word yank
+    bind --preset y,a,W kill-a-bigword yank
+    bind --preset y,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket fish_vi_yank_selection end-selection
+    bind --preset y,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket fish_vi_yank_selection end-selection
+    bind --preset y,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump fish_vi_yank_selection end-selection
+    bind --preset y,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump fish_vi_yank_selection end-selection
 
-    bind -s --preset % jump-to-matching-bracket
-    bind -s --preset f forward-jump
-    bind -s --preset F backward-jump
-    bind -s --preset t forward-jump-till
-    bind -s --preset T backward-jump-till
-    bind -s --preset ';' repeat-jump
-    bind -s --preset , repeat-jump-reverse
+    bind --preset % jump-to-matching-bracket
+    bind --preset f forward-jump
+    bind --preset F backward-jump
+    bind --preset t forward-jump-till
+    bind --preset T backward-jump-till
+    bind --preset ';' repeat-jump
+    bind --preset , repeat-jump-reverse
 
     # in emacs yank means paste
     # in vim p means paste *after* current character, so go forward a char before pasting
     # also in vim, P means paste *at* current position (like at '|' with cursor = line),
     # \ so there's no need to go back a char, just paste it without moving
-    bind -s --preset p 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' yank
-    bind -s --preset P yank
-    bind -s --preset g,p yank-pop
+    bind --preset p 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' yank
+    bind --preset P yank
+    bind --preset g,p yank-pop
 
     # same vim 'pasting' note as upper
-    bind -s --preset '",*,p' 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' fish_clipboard_paste
-    bind -s --preset '",*,P' fish_clipboard_paste
-    bind -s --preset '",+,p' 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' fish_clipboard_paste
-    bind -s --preset '",+,P' fish_clipboard_paste
+    bind --preset '",*,p' 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' fish_clipboard_paste
+    bind --preset '",*,P' fish_clipboard_paste
+    bind --preset '",+,p' 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' fish_clipboard_paste
+    bind --preset '",+,P' fish_clipboard_paste
 
     #
     # Lowercase r, enters replace_one mode
     #
-    bind -s --preset -m replace_one r repaint-mode
-    bind -s --preset -M replace_one -m default '' 'set -g fish_cursor_end_mode exclusive' delete-char self-insert backward-char repaint-mode 'set -g fish_cursor_end_mode inclusive'
-    bind -s --preset -M replace_one -m default enter 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
-    bind -s --preset -M replace_one -m default ctrl-j 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
-    bind -s --preset -M replace_one -m default ctrl-m 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
-    bind -s --preset -M replace_one -m default escape cancel repaint-mode
-    bind -s --preset -M replace_one -m default ctrl-\[ cancel repaint-mode
+    bind --preset -m replace_one r repaint-mode
+    bind --preset -M replace_one -m default '' 'set -g fish_cursor_end_mode exclusive' delete-char self-insert backward-char repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind --preset -M replace_one -m default enter 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind --preset -M replace_one -m default ctrl-j 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind --preset -M replace_one -m default ctrl-m 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind --preset -M replace_one -m default escape cancel repaint-mode
+    bind --preset -M replace_one -m default ctrl-\[ cancel repaint-mode
 
     #
     # Uppercase R, enters replace mode
     #
-    bind -s --preset -m replace R repaint-mode
-    bind -s --preset -M replace '' delete-char self-insert
-    bind -s --preset -M replace -m insert enter execute repaint-mode
-    bind -s --preset -M replace -m insert ctrl-j execute repaint-mode
-    bind -s --preset -M replace -m insert ctrl-m execute repaint-mode
-    bind -s --preset -M replace -m default escape cancel repaint-mode
-    bind -s --preset -M replace -m default ctrl-\[ cancel repaint-mode
+    bind --preset -m replace R repaint-mode
+    bind --preset -M replace '' delete-char self-insert
+    bind --preset -M replace -m insert enter execute repaint-mode
+    bind --preset -M replace -m insert ctrl-j execute repaint-mode
+    bind --preset -M replace -m insert ctrl-m execute repaint-mode
+    bind --preset -M replace -m default escape cancel repaint-mode
+    bind --preset -M replace -m default ctrl-\[ cancel repaint-mode
     # in vim (and maybe in vi), <BS> deletes the changes
     # but this binding just move cursor backward, not delete the changes
-    bind -s --preset -M replace backspace backward-char
-    bind -s --preset -M replace shift-backspace backward-char
+    bind --preset -M replace backspace backward-char
+    bind --preset -M replace shift-backspace backward-char
 
     #
     # Increment or decrement number under the cursor with ctrl+x ctrl+a
     #
-    bind -s --preset -M default ctrl-a fish_vi_inc
-    bind -s --preset -M default ctrl-x fish_vi_dec
+    bind --preset -M default ctrl-a fish_vi_inc
+    bind --preset -M default ctrl-x fish_vi_dec
 
     #
     # visual mode
     #
-    bind -s --preset -M visual h backward-char
-    bind -s --preset -M visual l forward-char
+    bind --preset -M visual h backward-char
+    bind --preset -M visual l forward-char
 
-    bind -s --preset -M visual k up-line
-    bind -s --preset -M visual j down-line
+    bind --preset -M visual k up-line
+    bind --preset -M visual j down-line
 
-    bind -s --preset -M visual b backward-word
-    bind -s --preset -M visual B backward-bigword
-    bind -s --preset -M visual g,e backward-word-end
-    bind -s --preset -M visual g,E backward-bigword-end
-    bind -s --preset -M visual w forward-word-vi
-    bind -s --preset -M visual W forward-bigword-vi
-    bind -s --preset -M visual e forward-word-end
-    bind -s --preset -M visual E forward-bigword-end
-    bind -s --preset -M visual o swap-selection-start-stop repaint-mode
+    bind --preset -M visual b backward-word
+    bind --preset -M visual B backward-bigword
+    bind --preset -M visual g,e backward-word-end
+    bind --preset -M visual g,E backward-bigword-end
+    bind --preset -M visual w forward-word-vi
+    bind --preset -M visual W forward-bigword-vi
+    bind --preset -M visual e forward-word-end
+    bind --preset -M visual E forward-bigword-end
+    bind --preset -M visual o swap-selection-start-stop repaint-mode
 
-    bind -s --preset -M visual % jump-to-matching-bracket
-    bind -s --preset -M visual f forward-jump
-    bind -s --preset -M visual t forward-jump-till
-    bind -s --preset -M visual F backward-jump
-    bind -s --preset -M visual T backward-jump-till
-    bind -s --preset -M visual ';' repeat-jump
-    bind -s --preset -M visual , repeat-jump-reverse
+    bind --preset -M visual % jump-to-matching-bracket
+    bind --preset -M visual f forward-jump
+    bind --preset -M visual t forward-jump-till
+    bind --preset -M visual F backward-jump
+    bind --preset -M visual T backward-jump-till
+    bind --preset -M visual ';' repeat-jump
+    bind --preset -M visual , repeat-jump-reverse
 
     for key in $eol_keys
-        bind -s --preset -M visual $key end-of-line
+        bind --preset -M visual $key end-of-line
     end
     for key in $bol_keys
-        bind -s --preset -M visual $key beginning-of-line
+        bind --preset -M visual $key beginning-of-line
     end
 
-    bind -s --preset -M visual -m default v end-selection repaint-mode
-    bind -s --preset -M visual -m insert i end-selection repaint-mode
-    bind -s --preset -M visual -m insert I end-selection beginning-of-line repaint-mode
-    bind -s --preset -M visual -m insert c kill-selection end-selection repaint-mode
-    bind -s --preset -M visual -m insert s kill-selection end-selection repaint-mode
-    bind -s --preset -M visual -m default d kill-selection end-selection backward-char repaint-mode
-    bind -s --preset -M visual -m default x kill-selection end-selection repaint-mode
-    bind -s --preset -M visual -m default X kill-whole-line end-selection repaint-mode
-    bind -s --preset -M visual -m default y fish_vi_yank_selection end-selection repaint-mode
-    bind -s --preset -M visual -m default '",*,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
-    bind -s --preset -M visual -m default '",+,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
-    bind -s --preset -M visual -m default \~ togglecase-selection end-selection repaint-mode
-    bind -s --preset -M visual -m default g,u downcase-selection end-selection repaint-mode
-    bind -s --preset -M visual -m default g,U upcase-selection end-selection repaint-mode
+    bind --preset -M visual -m default v end-selection repaint-mode
+    bind --preset -M visual -m insert i end-selection repaint-mode
+    bind --preset -M visual -m insert I end-selection beginning-of-line repaint-mode
+    bind --preset -M visual -m insert c kill-selection end-selection repaint-mode
+    bind --preset -M visual -m insert s kill-selection end-selection repaint-mode
+    bind --preset -M visual -m default d kill-selection end-selection backward-char repaint-mode
+    bind --preset -M visual -m default x kill-selection end-selection repaint-mode
+    bind --preset -M visual -m default X kill-whole-line end-selection repaint-mode
+    bind --preset -M visual -m default y fish_vi_yank_selection end-selection repaint-mode
+    bind --preset -M visual -m default '",*,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
+    bind --preset -M visual -m default '",+,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
+    bind --preset -M visual -m default \~ togglecase-selection end-selection repaint-mode
+    bind --preset -M visual -m default g,u downcase-selection end-selection repaint-mode
+    bind --preset -M visual -m default g,U upcase-selection end-selection repaint-mode
 
-    bind -s --preset -M visual -m default ctrl-c end-selection repaint-mode
-    bind -s --preset -M visual -m default escape end-selection repaint-mode
-    bind -s --preset -M visual -m default ctrl-\[ end-selection repaint-mode
+    bind --preset -M visual -m default ctrl-c end-selection repaint-mode
+    bind --preset -M visual -m default escape end-selection repaint-mode
+    bind --preset -M visual -m default ctrl-\[ end-selection repaint-mode
 
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also, remove
     # the commenting chars so the command can be further edited then executed.
-    bind -s --preset -M default \# __fish_toggle_comment_commandline
-    bind -s --preset -M visual \# __fish_toggle_comment_commandline
-    bind -s --preset -M replace \# __fish_toggle_comment_commandline
+    bind --preset -M default \# __fish_toggle_comment_commandline
+    bind --preset -M visual \# __fish_toggle_comment_commandline
+    bind --preset -M replace \# __fish_toggle_comment_commandline
 
     # Set the cursor shape
     # After executing once, this will have defined functions listening for the variable.

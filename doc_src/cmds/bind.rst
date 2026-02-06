@@ -102,7 +102,7 @@ The following options are available:
     **--preset** should only be used in full binding sets (like when working on ``fish_vi_key_bindings``).
 
 **-s** or **--silent**
-    Silences some of the error messages, including for unknown key names and unbound sequences.
+    Silences error message for unbound sequences.
 
 **--color** *WHEN*
     Controls when to use syntax highlighting colors when listing bindings.

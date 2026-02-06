@@ -53,7 +53,7 @@ function fish_vi_yank_selection
 end
 
 function fish_vi_exec_motion
-    argparse linewise -- $argv
+    argparse --stop-nonopt linewise -- $argv
     or return
 
     set -l motion $argv
@@ -83,7 +83,7 @@ function fish_vi_exec_motion
     else
         set -l use_selection true
         set -l swap_case_hack
-        switch $motion
+        switch $motion[1]
             case forward-word-vi forward-bigword-vi
                 if test $__fish_vi_operator = swap-case
                     set swap_case_hack (string replace -r -- '^forward-((?:big)?word)-vi$' '$1' $motion)
@@ -93,50 +93,62 @@ function fish_vi_exec_motion
                     set motion (string replace -- forward kill $motion)
                 end
         end
+        switch $motion[1]
+            case commandline
+            case '*'
+                set motion commandline -f $motion
+        end
         if $use_selection
             commandline -f begin-selection
         else
             commandline -f begin-undo-group
         end
+        set -l ok true
         switch $__fish_vi_operator
             case delete
                 for i in (seq $total)
-                    commandline -f $motion
+                    $motion || { set ok false; break }
                 end
-                if $use_selection
+                if $ok && $use_selection
                     commandline -f kill-selection
                 end
             case change
                 for i in (seq $total)
-                    commandline -f $motion
+                    $motion || { set ok false; break }
                 end
-                if $use_selection
-                    commandline -f kill-selection
+                if $ok
+                    if $use_selection
+                        commandline -f kill-selection
+                    end
+                    set fish_bind_mode insert
                 end
-                set fish_bind_mode insert
             case yank
                 for i in (seq $total)
-                    commandline -f $motion
+                    $motion || { set ok false; break }
                 end
-                if $use_selection
-                    fish_vi_yank_selection
-                else
-                    commandline -f yank
+                if $ok
+                    if $use_selection
+                        fish_vi_yank_selection
+                    else
+                        commandline -f yank
+                    end
                 end
             case swap-case
                 for i in (seq $total)
-                    commandline -f $motion
+                    $motion || { set ok false; break }
                 end
-                if set -q swap_case_hack[1]
-                    set -l word $swap_case_hack
-                    commandline -f \
-                        backward-$word \
-                        forward-$word-end \
-                        togglecase-selection \
-                        backward-$word \
-                        forward-$word-vi
-                else
-                    commandline -f togglecase-selection
+                if $ok
+                    if set -q swap_case_hack[1]
+                        set -l word $swap_case_hack
+                        commandline -f \
+                            backward-$word \
+                            forward-$word-end \
+                            togglecase-selection \
+                            backward-$word \
+                            forward-$word-vi
+                    else
+                        commandline -f togglecase-selection
+                    end
                 end
         end
         if $use_selection
@@ -400,10 +412,16 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind --preset -M operator \^ 'fish_vi_exec_motion beginning-of-line'
     bind --preset -M operator \$ 'fish_vi_exec_motion end-of-line'
 
-    bind --preset -M operator f 'fish_vi_exec_motion forward-jump'
-    bind --preset -M operator F 'fish_vi_exec_motion backward-jump'
-    bind --preset -M operator t 'fish_vi_exec_motion forward-jump-till'
-    bind --preset -M operator T 'fish_vi_exec_motion backward-jump-till'
+    bind --preset -M operator f --sets-mode f ''
+    bind --preset -M operator F --sets-mode F ''
+    bind --preset -M operator t --sets-mode t ''
+    bind --preset -M operator T --sets-mode T ''
+
+    bind --preset -M f '' get-key 'fish_vi_exec_motion commandline --forward-jump=$fish_key' 'set -eg fish_key'
+    bind --preset -M F '' get-key 'fish_vi_exec_motion commandline --backward-jump=$fish_key' 'set -eg fish_key'
+    bind --preset -M t '' get-key 'fish_vi_exec_motion commandline --forward-jump-till=$fish_key' 'set -eg fish_key'
+    bind --preset -M T '' get-key 'fish_vi_exec_motion commandline --backward-jump-till=$fish_key' 'set -eg fish_key'
+
     bind --preset -M operator ';' 'fish_vi_exec_motion repeat-jump'
     bind --preset -M operator , 'fish_vi_exec_motion repeat-jump-reverse'
 

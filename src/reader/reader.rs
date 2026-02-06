@@ -546,13 +546,13 @@ enum Kill {
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
-enum JumpDirection {
+pub enum JumpDirection {
     Forward,
     Backward,
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
-enum JumpPrecision {
+pub enum JumpPrecision {
     Till,
     To,
 }
@@ -1173,6 +1173,15 @@ pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
     }
     data.save_screen_state();
     let _ = data.handle_char_event(Some(ch));
+}
+
+pub fn reader_jump(direction: JumpDirection, precision: JumpPrecision, target: char) -> bool {
+    let Some(data) = current_data() else {
+        return false;
+    };
+    data.save_screen_state();
+    let elt = data.active_edit_line_tag();
+    data.jump_and_remember_last_jump(direction, precision, elt, target, false)
 }
 
 pub fn reader_showing_suggestion(parser: &Parser) -> bool {
@@ -4346,7 +4355,7 @@ impl<'a> Reader<'a> {
             rl::ScrollbackPush => {
                 self.screen.push_to_scrollback();
             }
-            rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
+            rl::SelfInsert | rl::SelfInsertNotFirst | rl::GetKey | rl::FuncAnd | rl::FuncOr => {
                 // This can be reached via `commandline -f and` etc
                 // panic!("should have been handled by inputter_t::readch");
             }
@@ -6220,6 +6229,7 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::BackwardKillBigword
         | rl::BackwardKillToken
         | rl::SelfInsert
+        | rl::GetKey
         | rl::SelfInsertNotFirst
         | rl::TransposeChars
         | rl::TransposeWords

@@ -107,6 +107,7 @@ pub enum ReadlineCmd {
     HistoryLastTokenSearchForward,
     SelfInsert,
     SelfInsertNotFirst,
+    GetKey,
     TransposeChars,
     TransposeWords,
     UpcaseWord,

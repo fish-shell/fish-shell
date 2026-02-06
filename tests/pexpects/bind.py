@@ -321,7 +321,7 @@ expect_prompt("echo two three")
 # Now test that exactly the expected bind modes are defined
 sendline("bind --list-modes")
 expect_prompt(
-    "default\r\ninsert\r\noperator\r\nreplace\r\nreplace_one\r\nvisual\r\n",
+    "F\r\nT\r\ndefault\r\nf\r\ninsert\r\noperator\r\nreplace\r\nreplace_one\r\nt\r\nvisual\r\n",
     unmatched="Unexpected vi bind modes",
 )
 

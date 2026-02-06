@@ -55,7 +55,7 @@ Example
         case visual
           set_color --bold brmagenta
           echo 'V'
-        case operator
+        case operator f F t T
           set_color --bold cyan
           echo 'N'
         case '*'

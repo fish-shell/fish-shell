@@ -15,8 +15,9 @@ use crate::parse_util::{
 use crate::prelude::*;
 use crate::proc::is_interactive_session;
 use crate::reader::{
-    commandline_get_state, commandline_set_buffer, commandline_set_search_field,
-    reader_execute_readline_cmd, reader_showing_suggestion,
+    JumpDirection, JumpPrecision, commandline_get_state, commandline_set_buffer,
+    commandline_set_search_field, reader_execute_readline_cmd, reader_jump,
+    reader_showing_suggestion,
 };
 use crate::tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer};
 use fish_wcstringutil::join_strings;
@@ -262,6 +263,11 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut showing_suggestion = false;
 
     let mut override_buffer = None;
+    let mut forward_jump = false;
+    let mut backward_jump = false;
+    let mut forward_jump_till = false;
+    let mut backward_jump_till = false;
+    let mut jump_target = None;
 
     let short_options = L!("abijpctfxorhI:CBELSsP");
     let long_options: &[WOption] = &[
@@ -292,6 +298,10 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         wopt(L!("search-field"), ArgType::NoArgument, '\x03'),
         wopt(L!("is-valid"), ArgType::NoArgument, '\x01'),
         wopt(L!("showing-suggestion"), ArgType::NoArgument, '\x04'),
+        wopt(L!("forward-jump"), ArgType::RequiredArgument, '\x07'),
+        wopt(L!("backward-jump"), ArgType::RequiredArgument, '\x08'),
+        wopt(L!("forward-jump-till"), ArgType::RequiredArgument, '\x09'),
+        wopt(L!("backward-jump-till"), ArgType::RequiredArgument, '\x0a'),
     ];
 
     let mut w = WGetopter::new(short_options, long_options, args);
@@ -341,6 +351,22 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             '\x03' => search_field_mode = true,
             '\x01' => is_valid = true,
             '\x04' => showing_suggestion = true,
+            '\x07' => {
+                forward_jump = true;
+                jump_target = Some(w.woptarg.unwrap().to_owned());
+            }
+            '\x08' => {
+                backward_jump = true;
+                jump_target = Some(w.woptarg.unwrap().to_owned());
+            }
+            '\x09' => {
+                forward_jump_till = true;
+                jump_target = Some(w.woptarg.unwrap().to_owned());
+            }
+            '\x0a' => {
+                backward_jump_till = true;
+                jump_target = Some(w.woptarg.unwrap().to_owned());
+            }
             'h' => {
                 builtin_print_help(parser, streams, cmd);
                 return Ok(SUCCESS);
@@ -359,6 +385,27 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             }
             _ => panic!(),
         }
+    }
+    if forward_jump || forward_jump_till || backward_jump || backward_jump_till {
+        let direction = if forward_jump || forward_jump_till {
+            JumpDirection::Forward
+        } else {
+            JumpDirection::Backward
+        };
+        let precision = if forward_jump || backward_jump {
+            JumpPrecision::To
+        } else {
+            JumpPrecision::Till
+        };
+        let target = jump_target.unwrap();
+        let Some(target) = target.chars().next() else {
+            return Err(STATUS_INVALID_ARGS);
+        };
+        return if reader_jump(direction, precision, target) {
+            Ok(SUCCESS)
+        } else {
+            Err(STATUS_CMD_ERROR)
+        };
     }
 
     let positional_args = w.argv.len() - w.wopt_index;

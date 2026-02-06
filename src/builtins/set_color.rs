@@ -63,7 +63,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     use text_face::ParseError::*;
     use text_face::ParsedArgs::*;
-    let (specified_face, is_reset) =
+    let (specified_face, with_reset) =
         match parse_text_face_and_options(argv, /*is_builtin=*/ true) {
             Ok(SetFace(face)) => (face, false),
             Ok(ResetFace) => (SpecifiedTextFace::default(), true),
@@ -126,16 +126,15 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // Note that for historical reasons "set_color normal" reset all colors/attributes. So does
     // "set_color reset" (undocumented).
-    if is_reset {
-        outp.reset_text_face();
-    }
-
-    outp.set_text_face_no_magic(TextFace::new(
-        specified_face.fg.unwrap_or(Color::None),
-        specified_face.bg.unwrap_or(Color::None),
-        specified_face.underline_color.unwrap_or(Color::None),
-        specified_face.style.unwrap_or_default(),
-    ));
+    outp.set_text_face_no_magic(
+        TextFace::new(
+            specified_face.fg.unwrap_or(Color::None),
+            specified_face.bg.unwrap_or(Color::None),
+            specified_face.underline_color.unwrap_or(Color::None),
+            specified_face.style.unwrap_or_default(),
+        ),
+        with_reset,
+    );
 
     if specified_face.fg.is_some() && outp.contents().is_empty() {
         assert!(is_dumb() || only_grayscale() || use_terminfo());

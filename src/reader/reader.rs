@@ -2975,12 +2975,7 @@ impl<'a> Reader<'a> {
 
 fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
     if should_flog!(reader) {
-        let mut tmp = Vec::<u8>::new();
-        tmp.write_command(QueryXtgettcap(cap));
-        flog!(
-            reader,
-            format!("Sending XTGETTCAP request for {}: {:?}", cap, tmp)
-        );
+        flog!(reader, format!("Sending XTGETTCAP request for {}:", cap));
     }
     out.write_command(QueryXtgettcap(cap));
 }

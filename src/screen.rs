@@ -31,9 +31,10 @@ use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
 use crate::prelude::*;
+use crate::terminal::SgrTerminalCommand::EnterDimMode;
 use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
-    CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
+    CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
 };
 use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter, use_terminfo};
 use crate::termsize::Termsize;
@@ -688,7 +689,7 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
         return vec![b'\r'];
     };
 
-    let mut abandon_line_string = Vec::with_capacity(screen_width + 32);
+    let mut abandon_line_string = Outputter::new_buffering_no_assume_normal();
 
     let omitted_newline_str = get_omitted_newline_str();
 
@@ -703,11 +704,11 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
             use std::ffi::CString;
             let term = crate::terminal::term();
             let mut justgrey = true;
-            let add = |abandon_line_string: &mut Vec<u8>, s: Option<CString>| {
+            let add = |abandon_line_string: &mut Outputter, s: Option<CString>| {
                 let Some(s) = s else {
                     return false;
                 };
-                abandon_line_string.extend(s.as_bytes());
+                abandon_line_string.write_bytes(s.as_bytes());
                 true
             };
             if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
@@ -734,28 +735,33 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
                 }
             }
         } else {
-            abandon_line_string.write_command(EnterDimMode);
+            abandon_line_string
+                .style_writer()
+                .write_command(EnterDimMode);
         }
 
-        abandon_line_string.extend_from_slice(omitted_newline_str.as_bytes());
-        abandon_line_string.write_command(ExitAttributeMode);
-        abandon_line_string.extend(repeat_n(b' ', screen_width - non_space_width));
+        abandon_line_string.write_bytes(omitted_newline_str.as_bytes());
+        abandon_line_string.reset_text_face();
+        abandon_line_string
+            .contents_mut()
+            .extend(repeat_n(b' ', screen_width - non_space_width));
     }
 
     abandon_line_string.push(b'\r');
-    abandon_line_string.extend_from_slice(omitted_newline_str.as_bytes());
+    abandon_line_string.write_bytes(omitted_newline_str.as_bytes());
     // Now we are certainly on a new line. But we may have dropped the omitted newline char on
     // it. So append enough spaces to overwrite the omitted newline char, and then clear all the
     // spaces from the new line.
-    abandon_line_string.extend(repeat_n(b' ', non_space_width));
+    abandon_line_string
+        .contents_mut()
+        .extend(repeat_n(b' ', non_space_width));
     abandon_line_string.push(b'\r');
     // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
     // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
     // line above your prompt. This doesn't make a difference in normal usage, but copying and
     // pasting your terminal log becomes a pain. This commit clears that line, making it an
     // actual empty line.
-    abandon_line_string.write_command(ClearToEndOfLine);
-    abandon_line_string
+    abandon_line_string.contents_move()
 }
 
 impl Screen {

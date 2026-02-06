@@ -23,14 +23,14 @@ string escape (set_color --bold=red)
 #CHECKERR: (Type 'help set_color' for related documentation)
 
 string escape (set_color --strikethrough red --background=normal)
-# CHECK: \e\[31m\e\[49m\e\[9m
+# CHECK: \e\[31\;49\;9m
 string escape (set_color --strikethrough red --background=blue)
-# CHECK: \e\[31m\e\[44m\e\[9m
+# CHECK: \e\[31\;44\;9m
 
 string escape (set_color --bold red --background=normal)
-# CHECK: \e\[31m\e\[49m\e\[1m
+# CHECK: \e\[31\;49\;1m
 string escape (set_color --bold red --background=blue)
-# CHECK: \e\[31m\e\[44m\e\[1m
+# CHECK: \e\[31\;44\;1m
 
 string escape (set_color --background=f00 --background=green --background=00f)
 # CHECK: \e\[48\;2\;255\;0\;0m
@@ -61,3 +61,6 @@ string escape (set_color --underline=dotted)
 # CHECK: \e\[4:4m
 string escape (set_color --underline=dashed)
 # CHECK: \e\[4:5m
+
+string escape (set_color f00 --background=00f --underline-color=0f0 --bold --dim --italics --reverse --strikethrough --underline=curly)
+# CHECK: \e\[38\;2\;255\;0\;0\;48\;2\;0\;0\;255\;58:2::0:255:0\;1\;4:3\;3\;2\;9m\e\[7m

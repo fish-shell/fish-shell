@@ -779,8 +779,15 @@ function __fish_git_stash_not_using_subcommand
     or return 2
     set cmd $cmd[(contains -i -- "stash" $cmd)..-1]
     set -q cmd[2]
+    or return 0
+    contains -- $cmd[2] list show pop apply clear drop create save branch push
     and return 1
     return 0
+end
+
+function __fish_git_stash_is_push
+    __fish_git_stash_not_using_subcommand
+    or __fish_git_stash_using_command push
 end
 
 function __fish_git_complete_worktrees
@@ -2425,16 +2432,16 @@ complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_u
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a branch -d 'Create a new branch from a stash'
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a push -d 'Create a new stash with given files'
 
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command apply branch drop pop show' -ka '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -a '(__fish_git_files modified deleted modified-staged-deleted)'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -s a -l all -d 'Stash ignored and untracked files'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -s k -l keep-index -d 'Keep changes in index intact'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -s p -l patch -d 'Interactively select hunks'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -s m -l message -d 'Add a description'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -l no-keep-index -d 'Don\'t keep changes in index intact'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -s S -l staged -d 'Stash only staged changes'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -s u -l include-untracked -d 'Stash untracked files'
 
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -a '(__fish_git_files modified deleted modified-staged-deleted)'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s a -l all -d 'Stash ignored and untracked files'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s k -l keep-index -d 'Keep changes in index intact'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s p -l patch -d 'Interactively select hunks'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s m -l message -d 'Add a description'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -l no-keep-index -d 'Don\'t keep changes in index intact'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s S -l staged -d 'Stash only staged changes'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s u -l include-untracked -d 'Stash untracked files'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command apply branch drop pop show' -ka '(__fish_git_complete_stashes)'
 
 ### config
 complete -f -c git -n __fish_git_needs_command -a config -d 'Set and read git configuration variables'

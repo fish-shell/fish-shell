@@ -755,13 +755,6 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
     // pasting your terminal log becomes a pain. This commit clears that line, making it an
     // actual empty line.
     abandon_line_string.write_command(ClearToEndOfLine);
-    abandon_line_string.push(b'\r');
-    // Clear entire line. Zsh doesn't do this. Fish added this with commit 4417a6ee: If you have
-    // a prompt preceded by a new line, you'll get a line full of spaces instead of an empty
-    // line above your prompt. This doesn't make a difference in normal usage, but copying and
-    // pasting your terminal log becomes a pain. This commit clears that line, making it an
-    // actual empty line.
-    abandon_line_string.write_command(ClearToEndOfLine);
     abandon_line_string
 }
 

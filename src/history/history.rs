@@ -1806,10 +1806,9 @@ mod tests {
         History, HistoryItem, HistorySearch, PathList, PersistenceMode, SearchDirection,
         SearchFlags, SearchType, VACUUM_FREQUENCY,
     };
-    use crate::common::{ESCAPE_TEST_CHAR, osstr2wcstring, wcs2bytes, wcs2osstring};
+    use crate::common::{ESCAPE_TEST_CHAR, osstr2wcstring, wcs2bytes};
     use crate::env::{EnvMode, EnvSetMode, EnvStack};
     use crate::fs::{LockedFile, WriteMethod};
-    use crate::path::path_get_data;
     use crate::prelude::*;
     use crate::tests::prelude::*;
     use fish_build_helper::workspace_root;
@@ -1817,6 +1816,7 @@ mod tests {
     use rand::Rng;
     use rand::rngs::ThreadRng;
     use std::collections::VecDeque;
+    use std::ffi::OsString;
     use std::io::BufReader;
     use std::sync::Arc;
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -2389,30 +2389,31 @@ mod tests {
         history.clear();
     }
 
-    fn install_sample_history(name: &wstr) {
-        let path = path_get_data().expect("Failed to get data directory");
+    fn install_sample_history(name: &wstr, hist_dir: &wstr) {
+        let dst_hist_path: OsString = format!("{}/{}_history", hist_dir, name).into();
         std::fs::copy(
             workspace_root()
                 .join("tests")
                 .join(std::str::from_utf8(&wcs2bytes(name)).unwrap()),
-            wcs2osstring(&(path + L!("/") + name + L!("_history"))),
+            dst_hist_path,
         )
         .unwrap();
     }
 
     #[test]
-    #[serial]
     fn test_history_formats() {
-        let _cleanup = test_init();
+        let tmpdir = fish_tempfile::new_dir().unwrap();
+        let hist_dir = Some(osstr2wcstring(tmpdir.path()));
+
         // Test inferring and reading legacy and bash history formats.
         let name = L!("history_sample_fish_2_0");
-        install_sample_history(name);
+        install_sample_history(name, hist_dir.as_ref().unwrap());
         let expected: Vec<WString> = vec![
             "echo this has\\\nbackslashes".into(),
             "function foo\necho bar\nend".into(),
             "echo alpha".into(),
         ];
-        let test_history_imported = History::with_name(name);
+        let test_history_imported = History::new(name, hist_dir.clone());
         assert_eq!(test_history_imported.get_history(), expected);
         test_history_imported.clear();
 
@@ -2431,16 +2432,16 @@ mod tests {
             "history --help".into(),
             "echo foo".into(),
         ];
-        let test_history_imported_from_bash = History::with_name(L!("bash_import"));
+        let test_history_imported_from_bash = History::new(L!("bash_import"), hist_dir.clone());
         let file = std::fs::File::open(workspace_root().join("tests/history_sample_bash")).unwrap();
         test_history_imported_from_bash.populate_from_bash(BufReader::new(file));
         assert_eq!(test_history_imported_from_bash.get_history(), expected);
         test_history_imported_from_bash.clear();
 
         let name = L!("history_sample_corrupt1");
-        install_sample_history(name);
+        install_sample_history(name, hist_dir.as_ref().unwrap());
         // We simply invoke get_string_representation. If we don't die, the test is a success.
-        let test_history_imported_from_corrupted = History::with_name(name);
+        let test_history_imported_from_corrupted = History::new(name, hist_dir.clone());
         let expected: Vec<WString> = vec![
             "no_newline_at_end_of_file".into(),
             "corrupt_prefix".into(),

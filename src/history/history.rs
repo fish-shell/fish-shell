@@ -1810,7 +1810,6 @@ mod tests {
     use crate::env::{EnvMode, EnvSetMode, EnvStack};
     use crate::fs::{LockedFile, WriteMethod};
     use crate::prelude::*;
-    use crate::tests::prelude::*;
     use fish_build_helper::workspace_root;
     use fish_wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
     use rand::Rng;
@@ -2286,10 +2285,13 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn test_history_path_detection() {
-        let _cleanup = test_init();
         // Regression test for #7582.
+        // Temporary directory for the history files.
+        let hist_tmpdir = fish_tempfile::new_dir().unwrap();
+        let hist_dir = Some(osstr2wcstring(hist_tmpdir.path()));
+
+        // Temporary directory for the files we will detect.
         let tmpdir = fish_tempfile::new_dir().unwrap();
 
         // Place one valid file in the directory.
@@ -2304,7 +2306,7 @@ mod tests {
         test_vars.set_one(L!("PWD"), global_mode, wdir_path.clone());
         test_vars.set_one(L!("HOME"), global_mode, wdir_path.clone());
 
-        let history = History::with_name(L!("path_detection"));
+        let history = History::new(L!("path_detection"), hist_dir);
         history.clear();
         assert_eq!(history.size(), 0);
         history.add_pending_with_file_detection(

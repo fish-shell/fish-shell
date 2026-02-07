@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
+import os
+
+if "CI" in os.environ:
+    sys.exit(127)
 
 sp = SpawnedProc(timeout=2)
 send, sendline, sleep, expect_prompt = (

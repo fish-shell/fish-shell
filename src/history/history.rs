@@ -1848,9 +1848,10 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn test_history() {
-        let _cleanup = test_init();
+        let tmpdir = fish_tempfile::new_dir().unwrap();
+        let hist_dir = Some(osstr2wcstring(tmpdir.path()));
+
         macro_rules! test_history_matches {
             ($search:expr, $expected:expr) => {
                 let expected: Vec<&wstr> = $expected;
@@ -1877,7 +1878,7 @@ mod tests {
         let nocase = SearchFlags::IGNORE_CASE;
 
         // Populate a history.
-        let history = History::with_name(L!("test_history"));
+        let history = History::new(L!("test_history"), hist_dir);
         history.clear();
         for s in items {
             history.add_commandline(s.to_owned());

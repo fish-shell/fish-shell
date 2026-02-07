@@ -13,7 +13,7 @@ jobs:
   ubuntu:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported
     - name: Install deps
       uses: ./.github/actions/install-dependencies
@@ -44,7 +44,7 @@ jobs:
   ubuntu-32bit-static-pcre2:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported
       with:
         targets: "i586-unknown-linux-gnu"
@@ -86,7 +86,7 @@ jobs:
         RUSTFLAGS: "-Zsanitizer=address"
         # RUSTFLAGS: "-Zsanitizer=memory -Zsanitizer-memory-track-origins"
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     # All -Z options require running nightly
     - uses: dtolnay/rust-toolchain@nightly
       with:
@@ -134,7 +134,7 @@ jobs:
       # of crates.io, so give this a try. It's also sometimes significantly faster on all platforms.
       CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported
     - name: Install deps
       run: |
@@ -161,8 +161,8 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-    - uses: actions/checkout@v6
-    - uses: msys2/setup-msys2@v2
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: msys2/setup-msys2@4f806de0a5a7294ffabaff804b38a9b435a73bda # v2.30.0, build_tools/update-dependencies.sh
       with:
         update: true
         msystem: MSYS

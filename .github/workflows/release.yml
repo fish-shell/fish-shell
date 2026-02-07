@@ -16,7 +16,7 @@ jobs:
     name: Pre-release checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
@@ -36,7 +36,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tarball-name: ${{ steps.version.outputs.tarball-name }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
@@ -61,7 +61,7 @@ jobs:
           sed -n 2p "$relnotes" | grep -q '^$'
           sed -i 1,2d "$relnotes"
       - name: Upload tarball artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0, build_tools/update-dependencies.sh
         with:
           name: source-tarball
           path: |
@@ -74,7 +74,7 @@ jobs:
     name: Build single-file fish for Linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
@@ -100,7 +100,7 @@ jobs:
             tar -cazf fish-$(git describe)-linux-$arch.tar.xz \
               -C target/$arch-unknown-linux-musl/release fish
           done
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0, build_tools/update-dependencies.sh
         with:
           name: Static builds for Linux
           path: fish-${{ inputs.version }}-linux-*.tar.xz
@@ -114,19 +114,19 @@ jobs:
     name: Create release draft
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
       - name: Download all artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0, build_tools/update-dependencies.sh
         with:
           merge-multiple: true
           path: /tmp/artifacts
       - name: List artifacts
         run: find /tmp/artifacts -type f
       - name: Create draft release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0, build_tools/update-dependencies.sh
         with:
           tag_name: ${{ inputs.version }}
           name: fish ${{ inputs.version }}
@@ -142,7 +142,7 @@ jobs:
     runs-on: macos-latest
     environment: macos-codesign
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}

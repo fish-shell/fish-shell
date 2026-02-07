@@ -18,7 +18,7 @@ jobs:
       pull-requests: write  # for dessant/lock-threads to lock PRs
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/lock-threads@v6
+      - uses: dessant/lock-threads@f5f995c727ac99a91dec92781a8e34e7c839a65e # v6.0.0, build_tools/update-dependencies.sh
         with:
           github-token: ${{ github.token }}
           issue-inactive-days: '365'

@@ -13,6 +13,28 @@ sort --version-sort </dev/null
 # TODO This is copied from .github/actions/install-sphinx/action.yml
 uv lock --check --exclude-newer="$(awk -F'"' <uv.lock '/^exclude-newer[[:space:]]*=/ {print $2}')"
 
+update_gh_action() {
+    repo=$1
+    version=$(curl -fsS "https://api.github.com/repos/$repo/releases/latest" | jq -r .tag_name)
+    [ -n "$version" ]
+    tag_oid=$(git ls-remote "https://github.com/$repo.git" "refs/tags/$version" | cut -f1)
+    [ -n "$tag_oid" ]
+    find .github/workflows -name '*.yml' -type f -exec \
+        sed -i "s|uses: $repo@\S\+\( \+#.*\)\?|\
+uses: $repo@$tag_oid # $version, build_tools/update-dependencies.sh|g" {} +
+}
+update_gh_action actions/checkout
+update_gh_action actions/github-script
+update_gh_action actions/upload-artifact
+update_gh_action actions/download-artifact
+update_gh_action docker/login-action
+update_gh_action docker/build-push-action
+update_gh_action docker/metadata-action
+update_gh_action EmbarkStudios/cargo-deny-action
+update_gh_action dessant/lock-threads
+update_gh_action softprops/action-gh-release
+update_gh_action msys2/setup-msys2
+
 updatecli "${@:-apply}"
 
 uv lock # Python version constraints may have changed.

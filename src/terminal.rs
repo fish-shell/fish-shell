@@ -209,21 +209,26 @@ impl Output for Vec<u8> {
     }
 }
 
+fn write_terminfo(out: &mut impl Output, terminfo: fn(&Term) -> &Option<CString>) -> bool {
+    let term = crate::terminal::term();
+    let Some(sequence) = (terminfo)(&term) else {
+        return false;
+    };
+    out.write_bytes(sequence.to_bytes());
+    true
+}
+
 fn maybe_terminfo(
     out: &mut impl Output,
     sequence: &'static [u8],
     terminfo: fn(&Term) -> &Option<CString>,
 ) -> bool {
     if use_terminfo() {
-        let term = crate::terminal::term();
-        let Some(sequence) = (terminfo)(&term) else {
-            return false;
-        };
-        out.write_bytes(sequence.to_bytes());
+        write_terminfo(out, terminfo)
     } else {
         out.write_bytes(sequence);
+        true
     }
-    true
 }
 
 pub(crate) fn use_terminfo() -> bool {
@@ -495,27 +500,6 @@ impl Outputter {
         }
     }
 
-    /// Unconditionally write the color string to the output.
-    /// Exported for builtin_set_color's usage only.
-    pub(crate) fn write_color(&mut self, paintable: Paintable, color: Color) -> bool {
-        let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
-        if !supports_term24bit || !color.is_rgb() {
-            // Indexed or non-24 bit color.
-            let idx = index_for_color(color);
-            return self.write_command(TerminalCommand::SelectPaletteColor(paintable, idx));
-        }
-
-        if only_grayscale() && color.is_grayscale() {
-            return false;
-        }
-
-        // 24 bit!
-        self.write_command(TerminalCommand::SelectRgbColor(
-            paintable,
-            color.to_color24(),
-        ))
-    }
-
     /// Unconditionally resets colors and text style.
     pub(crate) fn reset_text_face(&mut self) {
         use TerminalCommand::ExitAttributeMode;
@@ -558,17 +542,20 @@ impl Outputter {
             ExitUnderlineMode,
         };
 
+        let mut style_writer = OutputterStyleWriter::new(self);
+
         // Removes all styles that are individually resettable.
         let non_resettable = |mut style: TextStyling| {
             style.italics = false;
             style.underline_style = None;
             style
         };
-        let non_resettable_attributes_to_unset =
-            non_resettable(self.last.style).difference_prefer_empty(non_resettable(style));
+        let non_resettable_attributes_to_unset = non_resettable(style_writer.last().style)
+            .difference_prefer_empty(non_resettable(style));
         if !non_resettable_attributes_to_unset.is_empty() {
             // Only way to exit non-resettable ones is a reset of all attributes.
-            self.reset_text_face();
+            style_writer.write_command(ExitAttributeMode);
+            *style_writer.last() = TextFace::default();
         }
         if salvage_unreadable && !bg.is_special() && fg == bg {
             fg = if bg == Color::WHITE {
@@ -578,88 +565,96 @@ impl Outputter {
             };
         }
 
-        if !fg.is_none() && fg != self.last.fg {
+        if !fg.is_none() && fg != style_writer.last().fg {
             if fg.is_normal() {
-                self.write_command(ExitAttributeMode);
+                style_writer.write_command(ExitAttributeMode);
 
-                self.last.bg = Color::Normal;
-                self.last.underline_color = Color::Normal;
-                self.last.style = TextStyling::default();
+                style_writer.last().bg = Color::Normal;
+                style_writer.last().underline_color = Color::Normal;
+                style_writer.last().style = TextStyling::default();
             } else {
                 assert!(!fg.is_special());
-                self.write_color(Paintable::Foreground, fg);
+                style_writer.write_color(Paintable::Foreground, fg);
             }
-            self.last.fg = fg;
+            style_writer.last().fg = fg;
         }
 
-        if !bg.is_none() && bg != self.last.bg {
+        if !bg.is_none() && bg != style_writer.last().bg {
             if bg.is_normal() {
-                self.write_command(DefaultBackgroundColor);
+                style_writer.write_command(DefaultBackgroundColor);
             } else {
                 assert!(!bg.is_special());
-                self.write_color(Paintable::Background, bg);
+                style_writer.write_color(Paintable::Background, bg);
             }
-            self.last.bg = bg;
+            style_writer.last().bg = bg;
         }
 
-        if !underline_color.is_none() && underline_color != self.last.underline_color {
+        if !underline_color.is_none() && underline_color != style_writer.last().underline_color {
             if underline_color.is_normal() {
-                self.write_command(DefaultUnderlineColor);
+                style_writer.write_command(DefaultUnderlineColor);
             } else {
-                self.write_color(Paintable::Underline, underline_color);
+                style_writer.write_color(Paintable::Underline, underline_color);
             }
-            self.last.underline_color = underline_color;
+            style_writer.last().underline_color = underline_color;
         }
 
         // Lastly, we set bold, underline, italics, dim, reverse, and strikethrough modes correctly.
-        if style.is_bold() && !self.last.style.is_bold() && self.write_command(EnterBoldMode) {
-            self.last.style.bold = true;
+        if style.is_bold()
+            && !style_writer.last().style.is_bold()
+            && style_writer.write_command(EnterBoldMode)
+        {
+            style_writer.last().style.bold = true;
         }
 
-        if style.underline_style != self.last.style.underline_style {
+        if style.underline_style != style_writer.last().style.underline_style {
             match style.underline_style {
                 None => {
-                    if self.write_command(ExitUnderlineMode) {
-                        self.last.style.underline_style = None;
+                    if style_writer.write_command(ExitUnderlineMode) {
+                        style_writer.last().style.underline_style = None;
                     }
                 }
                 Some(underline_style) => {
-                    if self.write_command(EnterUnderlineMode(underline_style)) {
-                        self.last.style.underline_style = Some(underline_style);
+                    if style_writer.write_command(EnterUnderlineMode(underline_style)) {
+                        style_writer.last().style.underline_style = Some(underline_style);
                     }
                 }
             }
         }
 
-        let was_italics = self.last.style.is_italics();
-        if !style.is_italics() && was_italics && self.write_command(ExitItalicsMode) {
-            self.last.style.italics = false;
-        } else if style.is_italics() && !was_italics && self.write_command(EnterItalicsMode) {
-            self.last.style.italics = true;
+        let was_italics = style_writer.last().style.is_italics();
+        if !style.is_italics() && was_italics && style_writer.write_command(ExitItalicsMode) {
+            style_writer.last().style.italics = false;
+        } else if style.is_italics() && !was_italics && style_writer.write_command(EnterItalicsMode)
+        {
+            style_writer.last().style.italics = true;
         }
 
-        if style.is_dim() && !self.last.style.is_dim() && self.write_command(EnterDimMode) {
-            self.last.style.dim = true;
+        if style.is_dim()
+            && !style_writer.last().style.is_dim()
+            && style_writer.write_command(EnterDimMode)
+        {
+            style_writer.last().style.dim = true;
         }
 
-        let was_strikethrough = self.last.style.is_strikethrough();
+        let was_strikethrough = style_writer.last().style.is_strikethrough();
         if !style.is_strikethrough()
             && was_strikethrough
-            && self.write_command(ExitStrikethroughMode)
+            && style_writer.write_command(ExitStrikethroughMode)
         {
-            self.last.style.strikethrough = false;
+            style_writer.last().style.strikethrough = false;
         } else if style.is_strikethrough()
             && !was_strikethrough
-            && self.write_command(EnterStrikethroughMode)
+            && style_writer.write_command(EnterStrikethroughMode)
         {
-            self.last.style.strikethrough = true;
+            style_writer.last().style.strikethrough = true;
         }
 
         if style.is_reverse()
-            && !self.last.style.is_reverse()
-            && (self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode))
+            && !style_writer.last().style.is_reverse()
+            && (style_writer.write_command(EnterReverseMode)
+                || style_writer.write_command(EnterStandoutMode))
         {
-            self.last.style.reverse = true;
+            style_writer.last().style.reverse = true;
         }
     }
 
@@ -953,4 +948,224 @@ pub fn tparm1(cap: &CStr, param1: i32) -> Option<CString> {
     assert!(!cap.to_bytes().is_empty());
     let cap = cap.to_bytes();
     terminfo::expand!(cap; param1).ok().map(|x| x.to_cstring())
+}
+
+struct OutputterStyleWriter<'a> {
+    out: &'a mut Outputter,
+    param_count: u32,
+
+    // Cache the value of `use_terminfo()` to avoid writing terminfo full sequences
+    // into a partial/opened escape sequence.
+    // (Added bonus: `use_terminfo()` is expensive compared to checking a bool)
+    use_terminfo: bool,
+}
+
+impl<'a> OutputterStyleWriter<'a> {
+    const MAX_PARAMS: u32 = 16;
+
+    fn new(out: &'a mut Outputter) -> Self {
+        Self {
+            out,
+            param_count: 0,
+            use_terminfo: use_terminfo(),
+        }
+    }
+
+    fn last(&mut self) -> &mut TextFace {
+        &mut self.out.last
+    }
+
+    fn write_command(&mut self, cmd: TerminalCommand<'_>) -> bool {
+        use TerminalCommand::*;
+        if is_dumb() {
+            assert!(!matches!(cmd, CursorDown));
+            return false;
+        }
+
+        if self.use_terminfo {
+            // If we don't have a terminfo name for the attribute, we
+            // fallthrough to use a hardcoded escape sequence instead.
+            // If we have a name but no value, assume the attribute is not
+            // supported, so no need to try a hardcoded sequence either
+            let result = match cmd {
+                ExitAttributeMode => self.write_terminfo(|t| &t.exit_attribute_mode),
+                EnterBoldMode => self.write_terminfo(|t| &t.enter_bold_mode),
+                EnterDimMode => self.write_terminfo(|t| &t.enter_dim_mode),
+                EnterItalicsMode => self.write_terminfo(|t| &t.enter_italics_mode),
+                EnterUnderlineMode(u) if u == UnderlineStyle::Single => {
+                    self.write_terminfo(|t| &t.enter_underline_mode)
+                }
+                EnterUnderlineMode(u) if u != UnderlineStyle::Single => None,
+                EnterReverseMode => self.write_terminfo(|t| &t.enter_reverse_mode),
+                EnterStandoutMode => self.write_terminfo(|t| &t.enter_standout_mode),
+                EnterStrikethroughMode => None,
+                ExitStrikethroughMode => None,
+                ExitItalicsMode => self.write_terminfo(|t| &t.exit_italics_mode),
+                ExitUnderlineMode => self.write_terminfo(|t| &t.exit_underline_mode),
+                SelectPaletteColor(paintable, idx) => self.write_ti_palette_color(paintable, idx),
+                SelectRgbColor(_, _) => None,
+                DefaultBackgroundColor => None,
+                DefaultUnderlineColor => None,
+                _ => panic!("Invalid style command: {:?}", cmd),
+            };
+            if let Some(result) = result {
+                return result;
+            }
+        }
+
+        match cmd {
+            ExitAttributeMode => self.write_param_str(1, b""),
+            EnterBoldMode => self.write_param_str(1, b"1"),
+            EnterDimMode => self.write_param_str(1, b"2"),
+            EnterItalicsMode => self.write_param_str(1, b"3"),
+            EnterUnderlineMode(style) => self.write_underline_mode(style),
+            EnterReverseMode => self.write_param_str(1, b"7"),
+            EnterStandoutMode => self.write_param_str(1, b"7"),
+            EnterStrikethroughMode => self.write_param_str(1, b"9"),
+            ExitStrikethroughMode => self.write_param_str(1, b"29"),
+            ExitItalicsMode => self.write_param_str(1, b"23"),
+            ExitUnderlineMode => self.write_param_str(1, b"24"),
+            SelectPaletteColor(paintable, idx) => self.write_palette_color(paintable, idx),
+            SelectRgbColor(paintable, rgb) => self.write_rgb_color(paintable, rgb),
+            DefaultBackgroundColor => self.write_param_str(1, b"49"),
+            DefaultUnderlineColor => self.write_param_str(1, b"59"),
+            _ => panic!("Invalid style command: {:?}", cmd),
+        }
+    }
+
+    fn prepare_for_params(&mut self, count: u32) {
+        if self.param_count + count > Self::MAX_PARAMS {
+            self.out.write_bytes(b"m");
+            self.param_count = 0;
+        }
+        if self.param_count == 0 {
+            self.out.write_bytes(b"\x1b[");
+        } else {
+            self.out.write_bytes(b";");
+        }
+        self.param_count += count;
+    }
+
+    fn write_param_str(&mut self, count: u32, str: &[u8]) -> bool {
+        self.prepare_for_params(count);
+        self.out.write_bytes(str);
+        true
+    }
+
+    fn write_param_fmt(&mut self, count: u32, args: std::fmt::Arguments<'_>) -> bool {
+        self.prepare_for_params(count);
+        crate::common::do_write_to_output(self.out, args);
+        true
+    }
+
+    fn is_valid_color_idx(idx: u8) -> bool {
+        !only_grayscale() || (Color::Named { idx }).is_grayscale()
+    }
+
+    fn write_palette_color(&mut self, paintable: Paintable, idx: u8) -> bool {
+        if !Self::is_valid_color_idx(idx) {
+            return false;
+        }
+        let bg = match paintable {
+            Paintable::Foreground => 0,
+            Paintable::Background => 10,
+            Paintable::Underline => {
+                return self.write_param_fmt(1, format_args!("58:5:{}", idx));
+            }
+        };
+        match idx {
+            0..=7 => self.write_param_fmt(1, format_args!("{}", 30 + bg + idx)),
+            8..=15 => self.write_param_fmt(1, format_args!("{}", 90 + bg + (idx - 8))),
+            _ => self.write_param_fmt(3, format_args!("{};5;{}", 38 + bg, idx)),
+        }
+    }
+
+    fn write_color(&mut self, paintable: Paintable, color: Color) -> bool {
+        let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
+        if !supports_term24bit || !color.is_rgb() {
+            // Indexed or non-24 bit color.
+            let idx = index_for_color(color);
+            return self.write_command(TerminalCommand::SelectPaletteColor(paintable, idx));
+        }
+
+        if only_grayscale() && color.is_grayscale() {
+            return false;
+        }
+
+        // 24 bit!
+        self.write_command(TerminalCommand::SelectRgbColor(
+            paintable,
+            color.to_color24(),
+        ))
+    }
+
+    fn write_rgb_color(&mut self, paintable: Paintable, rgb: Color24) -> bool {
+        // Foreground: ^[38;2;<r>;<g>;<b>m
+        // Background: ^[48;2;<r>;<g>;<b>m
+        // Underline: ^[58:2::<r>:<g>:<b>m
+        let code = match paintable {
+            Paintable::Foreground => 38,
+            Paintable::Background => 48,
+            Paintable::Underline => {
+                return self
+                    .write_param_fmt(1, format_args!("58:2::{}:{}:{}", rgb.r, rgb.g, rgb.b));
+            }
+        };
+        self.write_param_fmt(5, format_args!("{};2;{};{};{}", code, rgb.r, rgb.g, rgb.b))
+    }
+
+    fn write_underline_mode(&mut self, style: UnderlineStyle) -> bool {
+        use UnderlineStyle as UL;
+        let style = match style {
+            UL::Single => return self.write_param_str(1, b"4"),
+            UL::Double => 2,
+            UL::Curly => 3,
+            UL::Dotted => 4,
+            UL::Dashed => 5,
+        };
+        self.write_param_fmt(1, format_args!("4:{}", style))
+    }
+
+    fn write_terminfo(&mut self, terminfo: fn(&Term) -> &Option<CString>) -> Option<bool> {
+        Some(write_terminfo(self.out, terminfo))
+    }
+
+    fn write_ti_palette_color(&mut self, paintable: Paintable, mut idx: u8) -> Option<bool> {
+        if !Self::is_valid_color_idx(idx) {
+            return Some(false);
+        }
+        let term = crate::terminal::term();
+        let Some(command) = (match paintable {
+            Paintable::Foreground => term
+                .set_a_foreground
+                .as_ref()
+                .or(term.set_foreground.as_ref()),
+            Paintable::Background => term
+                .set_a_background
+                .as_ref()
+                .or(term.set_background.as_ref()),
+            Paintable::Underline => None,
+        }) else {
+            return Some(false);
+        };
+        if term_supports_color_natively(&term, idx) {
+            let Some(sequence) = tparm1(command, idx.into()) else {
+                return Some(false);
+            };
+            self.out.write_bytes(sequence.as_bytes());
+            return Some(true);
+        }
+        if term.max_colors == Some(8) && idx > 8 {
+            idx -= 8;
+        }
+        Some(self.write_palette_color(paintable, idx))
+    }
+}
+
+impl<'a> Drop for OutputterStyleWriter<'a> {
+    fn drop(&mut self) {
+        if self.param_count > 0 {
+            self.out.write_bytes(b"m");
+        }
+    }
 }

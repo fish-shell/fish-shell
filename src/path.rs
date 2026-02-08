@@ -8,6 +8,7 @@ use crate::expand::{HOME_DIRECTORY, expand_tilde};
 use crate::flog::{flog, flogf};
 use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
+use cfg_if::cfg_if;
 use errno::{Errno, errno, set_errno};
 use libc::{EACCES, ENOENT, ENOTDIR, X_OK};
 use nix::unistd::AccessFlags;
@@ -629,74 +630,69 @@ fn create_dir_all_with_mode<P: AsRef<std::path::Path>>(path: P, mode: u32) -> st
 /// Return whether the given path is on a remote filesystem.
 pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     let narrow = wcs2zstring(path);
-    #[cfg(any(target_os = "linux", cygwin))]
-    {
-        let mut buf = MaybeUninit::uninit();
-        if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
-            return DirRemoteness::Unknown;
-        }
-        let buf = unsafe { buf.assume_init() };
-        // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
-        // these are in varying headers. Simply hard code them.
-        // Note that we treat FUSE filesystems as remote, which means we lock less on such filesystems.
-        // NOTE: The cast is necessary for 32-bit systems because of the 4-byte CIFS_MAGIC_NUMBER
-        match buf.f_type as usize  {
-            0x5346414F | // AFS_SUPER_MAGIC - Andrew File System
-            0x6B414653 | // AFS_FS_MAGIC - Kernel AFS and AuriStorFS
-            0x73757245 | // CODA_SUPER_MAGIC - Coda File System
-            0x47504653 | // GPFS - General Parallel File System
-            0x564c |     // NCP_SUPER_MAGIC - Novell NetWare
-            0x6969 |     // NFS_SUPER_MAGIC
-            0x7461636f | // OCFS2_SUPER_MAGIC - Oracle Cluster File System
-            0x61636673 | // ACFS - Oracle ACFS. Undocumented magic number.
-            0x517B |     // SMB_SUPER_MAGIC
-            0xFE534D42 | // SMB2_MAGIC_NUMBER
-            0xFF534D42 |  // CIFS_MAGIC_NUMBER
-            0x01021997 | // V9FS_MAGIC
-            0x19830326 | // fhgfs / BeeGFS. Undocumented magic number.
-            0x013111A7 | 0x013111A8 | // IBRIX. Undocumented.
-            0x65735546 | // FUSE_SUPER_MAGIC
-            0xA501FCF5 // VXFS_SUPER_MAGIC
-                => DirRemoteness::Remote,
-            _ => {
-                DirRemoteness::Unknown
+    cfg_if! {
+        if #[cfg(any(target_os = "linux", cygwin))] {
+            let mut buf = MaybeUninit::uninit();
+            if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
+                return DirRemoteness::Unknown;
             }
-        }
-    }
-
-    // NetBSD doesn't have statfs, but MNT_LOCAL works for statvfs.
-    #[cfg(target_os = "netbsd")]
-    {
-        let mut buf = MaybeUninit::uninit();
-        if unsafe { libc::statvfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
-            return DirRemoteness::Unknown;
-        }
-        let buf = unsafe { buf.assume_init() };
-        #[allow(clippy::useless_conversion)]
-        let flags = buf.f_flag as u64;
-        #[allow(clippy::unnecessary_cast)]
-        if flags & (libc::MNT_LOCAL as u64) != 0 {
-            DirRemoteness::Local
+            let buf = unsafe { buf.assume_init() };
+            // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
+            // these are in varying headers. Simply hard code them.
+            // Note that we treat FUSE filesystems as remote, which means we lock less on such filesystems.
+            // NOTE: The cast is necessary for 32-bit systems because of the 4-byte CIFS_MAGIC_NUMBER
+            match buf.f_type as usize  {
+                0x5346414F | // AFS_SUPER_MAGIC - Andrew File System
+                0x6B414653 | // AFS_FS_MAGIC - Kernel AFS and AuriStorFS
+                0x73757245 | // CODA_SUPER_MAGIC - Coda File System
+                0x47504653 | // GPFS - General Parallel File System
+                0x564c |     // NCP_SUPER_MAGIC - Novell NetWare
+                0x6969 |     // NFS_SUPER_MAGIC
+                0x7461636f | // OCFS2_SUPER_MAGIC - Oracle Cluster File System
+                0x61636673 | // ACFS - Oracle ACFS. Undocumented magic number.
+                0x517B |     // SMB_SUPER_MAGIC
+                0xFE534D42 | // SMB2_MAGIC_NUMBER
+                0xFF534D42 |  // CIFS_MAGIC_NUMBER
+                0x01021997 | // V9FS_MAGIC
+                0x19830326 | // fhgfs / BeeGFS. Undocumented magic number.
+                0x013111A7 | 0x013111A8 | // IBRIX. Undocumented.
+                0x65735546 | // FUSE_SUPER_MAGIC
+                0xA501FCF5 // VXFS_SUPER_MAGIC
+                    => DirRemoteness::Remote,
+                _ => {
+                    DirRemoteness::Unknown
+                }
+            }
+        } else if #[cfg(target_os = "netbsd")] {
+            // NetBSD doesn't have statfs, but MNT_LOCAL works for statvfs.
+            let mut buf = MaybeUninit::uninit();
+            if unsafe { libc::statvfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
+                return DirRemoteness::Unknown;
+            }
+            let buf = unsafe { buf.assume_init() };
+            #[allow(clippy::useless_conversion)]
+            let flags = buf.f_flag as u64;
+            #[allow(clippy::unnecessary_cast)]
+            if flags & (libc::MNT_LOCAL as u64) != 0 {
+                DirRemoteness::Local
+            } else {
+                DirRemoteness::Remote
+            }
         } else {
-            DirRemoteness::Remote
-        }
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "netbsd", cygwin)))]
-    {
-        let mut buf = MaybeUninit::uninit();
-        if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
-            return DirRemoteness::Unknown;
-        }
-        let buf = unsafe { buf.assume_init() };
-        // statfs::f_flags types differ.
-        #[allow(clippy::useless_conversion)]
-        let flags = buf.f_flags as u64;
-        #[allow(clippy::unnecessary_cast)]
-        if flags & (libc::MNT_LOCAL as u64) != 0 {
-            DirRemoteness::Local
-        } else {
-            DirRemoteness::Remote
+            let mut buf = MaybeUninit::uninit();
+            if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
+                return DirRemoteness::Unknown;
+            }
+            let buf = unsafe { buf.assume_init() };
+            // statfs::f_flags types differ.
+            #[allow(clippy::useless_conversion)]
+            let flags = buf.f_flags as u64;
+            #[allow(clippy::unnecessary_cast)]
+            if flags & (libc::MNT_LOCAL as u64) != 0 {
+                DirRemoteness::Local
+            } else {
+                DirRemoteness::Remote
+            }
         }
     }
 }

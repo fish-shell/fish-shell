@@ -48,20 +48,15 @@ jobs:
     - uses: ./.github/actions/rust-toolchain@oldest-supported
       with:
         targets: "i586-unknown-linux-gnu"
+    - name: Update package database
+      run: sudo apt-get update
     - name: Install deps
       uses: ./.github/actions/install-dependencies
       with:
         include_pcre: false
         include_sphinx: false
     - name: Install g++-multilib
-      run: |
-        # GitHub does not consistently provide images with up-to-date package lists, causing
-        # `apt install` failures.
-        # Work around this by updating the package list.
-        # https://github.com/actions/runner-images/issues/13636
-        # https://github.com/actions/runner-images/issues/12599
-        sudo apt-get update
-        sudo apt install g++-multilib
+      run: sudo apt install g++-multilib
     - name: cmake
       env:
           CFLAGS: "-m32"
@@ -93,6 +88,8 @@ jobs:
         # ASAN uses `cargo build -Zbuild-std` which requires the rust-src component
         # this is comma-separated
         components: rust-src
+    - name: Update package database
+      run: sudo apt-get update
     - name: Install deps
       uses: ./.github/actions/install-dependencies
       with:

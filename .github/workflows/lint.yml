@@ -40,6 +40,8 @@ jobs:
       with:
         toolchain_channel: ${{ matrix.rust_version }}
         components: clippy
+    - name: Update package database
+      run: sudo apt-get update
     - name: Install deps
       run: |
         sudo apt install gettext
@@ -51,6 +53,8 @@ jobs:
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@stable
+    - name: Update package database
+      run: sudo apt-get update
     - name: Install deps
       run: |
         sudo apt install gettext

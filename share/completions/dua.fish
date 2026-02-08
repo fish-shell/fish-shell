@@ -3,13 +3,13 @@
 set -l _sub_commands "aggregate a interactive i"
 complete -c dua -n 'not __fish_seen_subcommand_from help' -s A -l apparent-size -d 'Display apparent size instead of disk usage'
 complete -c dua -n 'not __fish_seen_subcommand_from help' -s f -l format -f -r -d "The format with which to print byte counts" -a "
- metric\t'uses 1000 as base'
- binary\t'use 1024 as base'
- bytes\t'plain bytes without any formatting'
- GB\t'only gigabytes'
- GiB\t'only gibibytes'
- MB\t'only megabytes'
- MiB\t'only mebibytes'
+    metric\t'uses 1000 as base'
+    binary\t'use 1024 as base'
+    bytes\t'plain bytes without any formatting'
+    GB\t'only gigabytes'
+    GiB\t'only gibibytes'
+    MB\t'only megabytes'
+    MiB\t'only mebibytes'
 "
 
 complete -c dua -n 'not __fish_seen_subcommand_from help' -s h -l help -d 'Print help information'

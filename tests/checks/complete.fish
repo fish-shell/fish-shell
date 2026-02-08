@@ -564,7 +564,7 @@ complete -C'complete --command=mktemp' | string replace -rf '=mktemp\t.*' '=mkte
 ## Test token expansion in commandline -x
 
 complete complete_make -f -a '(argparse C/directory= -- (commandline -xpc)[2..];
-                               echo Completing targets in directory $_flag_C)'
+    echo Completing targets in directory $_flag_C)'
 var=path/to complete -C'complete_make -C "$var/build-directory" '
 # CHECK: Completing targets in directory path/to/build-directory
 var1=path complete -C'var2=to complete_make -C "$var1/$var2/other-build-directory" '

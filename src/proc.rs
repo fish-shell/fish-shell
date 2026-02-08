@@ -150,7 +150,7 @@ impl ProcStatus {
         assert!(
             ret >= 0,
             "trying to create proc_status_t from failed waitid()/waitpid() call \
-               or invalid builtin exit code!"
+            or invalid builtin exit code!"
         );
 
         const {

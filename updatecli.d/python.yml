@@ -5,6 +5,7 @@ sources:
     kind: shell
     spec:
       command: |
+        # TODO github actions might not have this
         build_tools/version-available-in-debian.sh stable python3-defaults
   sphinx_version:
     kind: shell

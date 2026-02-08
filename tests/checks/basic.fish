@@ -54,9 +54,9 @@ foo hello
 cat $tmpdir/fish_foo.txt |read foo
 
 if test $foo = hello;
-  echo Test 2 pass
+    echo Test 2 pass
 else
-  echo Test 2 fail
+    echo Test 2 fail
 end
 #CHECK: Test 2 pass
 
@@ -168,8 +168,8 @@ echo \UDE01
 
 # Comments allowed in between lines (#1987)
 echo before comment \
-  # comment
-  after comment
+    # comment
+    after comment
 #CHECK: before comment after comment
 
 # Backslashes are part of comments and do not join lines (#1255)
@@ -548,13 +548,13 @@ echo (echo hello\\)
 
 # This used to be a parse error - #7866.
 echo (echo foo;#)
-     )
+    )
 # CHECK: foo
 echo (echo bar #'
-     )
+    )
 # CHECK: bar
 echo (#"
-      echo baz)
+    echo baz)
 # CHECK: baz
 
 # Make sure we don't match up brackets within comments (#8022).

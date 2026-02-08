@@ -598,7 +598,7 @@ impl Screen {
             flogf!(
                 reader,
                 "printing %u lines at y=%u would exceed window height (%u); \
-                     assuming the extra lines have been pushed to scrollback, setting screen y to %d",
+                    assuming the extra lines have been pushed to scrollback, setting screen y to %d",
                 actual_lines,
                 viewport_y,
                 screen_height,

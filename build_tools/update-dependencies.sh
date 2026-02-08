@@ -37,7 +37,7 @@ update_gh_action msys2/setup-msys2
 
 updatecli "${@:-apply}"
 
-uv lock # Python version constraints may have changed.
+# Python version constraints may have changed.
 uv lock --upgrade --exclude-newer="$(date --date='7 days ago' --iso-8601)"
 
 from_gh() {

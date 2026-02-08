@@ -5,7 +5,7 @@ sources:
     kind: shell
     spec:
       command: |
-        build_tools/version-available-in-debian.sh oldstable python3-defaults
+        build_tools/version-available-in-debian.sh stable python3-defaults
   sphinx_version:
     kind: shell
     spec:

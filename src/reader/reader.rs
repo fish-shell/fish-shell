@@ -5683,6 +5683,7 @@ impl<'a> Reader<'a> {
         };
         self.data
             .replace_substring(EditableLineTag::Commandline, range, replacement);
+        self.update_buff_pos(self.active_edit_line_tag(), None);
     }
 }
 

@@ -2320,11 +2320,11 @@ impl ReaderData {
 
     fn delete_a_word(&mut self, elt: EditableLineTag, style: MoveWordStyle, newv: bool) {
         let el = self.edit_line(elt);
-        if el.is_empty() {
+        let pos = el.position();
+        if pos == el.len() {
             return;
         }
         let text_slice = el.text().as_char_slice();
-        let pos = el.position();
         let on_blank = is_blank(text_slice[pos]);
 
         if on_blank {
@@ -2396,10 +2396,10 @@ impl ReaderData {
     fn delete_inner_word(&mut self, elt: EditableLineTag, style: MoveWordStyle, newv: bool) {
         let el = self.edit_line(elt);
         let len = el.len();
-        if len == 0 {
+        let pos = el.position();
+        if pos == len {
             return;
         }
-        let pos = el.position();
         let text_slice = el.text().as_char_slice();
         if is_blank(text_slice[pos]) {
             // Cursor is on whitespace: delete whitespace only

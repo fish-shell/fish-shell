@@ -666,6 +666,22 @@ expect_prompt()
 send("\x07")  # ctrl-g
 send("\x1b[27u")  # escape, to close pager
 
+sendline("bind ctrl-g kill-inner-word")
+expect_prompt()
+send("echo foo-bar")
+send("\x07")  # ctrl-g
+sendline("baz")
+expect_str("foo-barbaz")
+expect_prompt()
+
+sendline("bind ctrl-g kill-a-word")
+expect_prompt()
+send("echo foo-bar")
+send("\x07")  # ctrl-g
+sendline("qux")
+expect_str("foo-barqux")
+expect_prompt()
+
 # Check that the builtin version of `exit` works
 # (for obvious reasons this MUST BE LAST)
 sendline("function myexit; echo exit; exit; end; bind ctrl-z myexit")

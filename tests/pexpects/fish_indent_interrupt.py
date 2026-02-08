@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
-import os
+import os, sys
 
 if "CI" in os.environ:
     sys.exit(127)

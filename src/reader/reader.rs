@@ -6268,6 +6268,8 @@ fn command_ends_history_search(c: ReadlineCmd) -> bool {
             | rl::HistoryPagerDelete
             | rl::BeginningOfHistory
             | rl::EndOfHistory
+            | rl::ScrollbackPush
+            | rl::ClearScreenAndRepaint
             | rl::Repaint
             | rl::ForceRepaint
     )

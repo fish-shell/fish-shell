@@ -351,6 +351,11 @@ pub fn wrename(old_name: &wstr, new_name: &wstr) -> io::Result<()> {
     fs::rename(old_narrow, new_narrow)
 }
 
+/// Writes a newline to the provided file descriptor, ignoring errors.
+pub fn write_newline_to_fd(fd: RawFd) {
+    let _ = crate::wutil::write_to_fd(b"\n", fd);
+}
+
 pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
     nix::unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, input)
 }

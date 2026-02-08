@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Interactive improvements
+------------------------
+- :kbd:`ctrl-l` no longer cancels history search (:issue:`12436`).
+
 Regression fixes:
 -----------------
 - (from 4.4.0) Vi mode ``d,f`` key binding (:issue:`12417`).

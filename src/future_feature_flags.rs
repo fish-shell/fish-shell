@@ -204,20 +204,26 @@ pub fn set_from_string<'a>(str: impl Into<&'a wstr>) {
 
 impl Features {
     const fn new() -> Self {
-        Features {
-            values: [
-                AtomicBool::new(METADATA[0].default_value),
-                AtomicBool::new(METADATA[1].default_value),
-                AtomicBool::new(METADATA[2].default_value),
-                AtomicBool::new(METADATA[3].default_value),
-                AtomicBool::new(METADATA[4].default_value),
-                AtomicBool::new(METADATA[5].default_value),
-                AtomicBool::new(METADATA[6].default_value),
-                AtomicBool::new(METADATA[7].default_value),
-                AtomicBool::new(METADATA[8].default_value),
-                AtomicBool::new(METADATA[9].default_value),
-            ],
-        }
+        // TODO: feature(const_array): use std::array::from_fn()
+        use std::mem::{MaybeUninit, transmute};
+        let values = {
+            let mut data: [MaybeUninit<AtomicBool>; METADATA.len()] =
+                [const { MaybeUninit::uninit() }; METADATA.len()];
+
+            let mut i = 0;
+            while i < METADATA.len() {
+                data[i].write(AtomicBool::new(METADATA[i].default_value));
+                i += 1;
+            }
+
+            // SAFETY: `data` is guaranteed initialized by the loop
+            unsafe {
+                transmute::<[MaybeUninit<AtomicBool>; METADATA.len()], [AtomicBool; METADATA.len()]>(
+                    data,
+                )
+            }
+        };
+        Features { values }
     }
 
     fn test(&self, flag: FeatureFlag) -> bool {

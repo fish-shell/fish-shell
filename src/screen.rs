@@ -36,7 +36,7 @@ use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
     CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
 };
-use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter, use_terminfo};
+use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter};
 use crate::termsize::Termsize;
 use crate::wutil::fstat;
 use fish_fallback::fish_wcwidth;
@@ -699,46 +699,9 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
     let non_space_width = omitted_newline_str.chars().count();
     // We do `>` rather than `>=` because the code below might require one extra space.
     if screen_width > non_space_width {
-        if use_terminfo() {
-            use crate::terminal::tparm1;
-            use std::ffi::CString;
-            let term = crate::terminal::term();
-            let mut justgrey = true;
-            let add = |abandon_line_string: &mut Outputter, s: Option<CString>| {
-                let Some(s) = s else {
-                    return false;
-                };
-                abandon_line_string.write_bytes(s.as_bytes());
-                true
-            };
-            if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
-                if add(&mut abandon_line_string, Some(enter_dim_mode.clone())) {
-                    // Use dim if they have it, so the color will be based on their actual normal
-                    // color and the background of the terminal.
-                    justgrey = false;
-                }
-            }
-            if let (true, Some(set_a_foreground)) = (justgrey, term.set_a_foreground.as_ref()) {
-                let max_colors = term.max_colors.unwrap_or_default();
-                if max_colors >= 238 {
-                    // draw the string in a particular grey
-                    add(&mut abandon_line_string, tparm1(set_a_foreground, 237));
-                } else if max_colors >= 9 {
-                    // bright black (the ninth color, looks grey)
-                    add(&mut abandon_line_string, tparm1(set_a_foreground, 8));
-                } else if max_colors >= 2 {
-                    if let Some(enter_bold_mode) = term.enter_bold_mode.as_ref() {
-                        // we might still get that color by setting black and going bold for bright
-                        add(&mut abandon_line_string, Some(enter_bold_mode.clone()));
-                        add(&mut abandon_line_string, tparm1(set_a_foreground, 0));
-                    }
-                }
-            }
-        } else {
-            abandon_line_string
-                .style_writer()
-                .write_command(EnterDimMode);
-        }
+        abandon_line_string
+            .style_writer()
+            .write_command(EnterDimMode);
 
         abandon_line_string.write_bytes(omitted_newline_str.as_bytes());
         abandon_line_string.reset_text_face();
@@ -932,11 +895,6 @@ impl Screen {
             if shell_modes()
                 .output_flags
                 .contains(termios::OutputFlags::ONLCR)
-                && (!use_terminfo()
-                    || crate::terminal::term()
-                        .cursor_down
-                        .as_ref()
-                        .is_some_and(|cud| cud.as_bytes() == b"\n"))
             {
                 // See GitHub issue #4505.
                 // Most consoles use a simple newline as the cursor down escape.
@@ -1037,8 +995,7 @@ impl Screen {
     }
 
     fn should_wrap(&self, i: usize) -> bool {
-        allow_soft_wrap()
-            && self.desired.line(i).is_soft_wrapped
+        self.desired.line(i).is_soft_wrapped
             && i + 1 < self.desired.line_count()
             && (i + 1 >= self.actual.line_count()
                 || line_shared_prefix(self.actual.line(i + 1), self.desired.line(i + 1)) == 0)
@@ -1425,9 +1382,7 @@ pub struct LayoutCache {
 }
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
-// Note this is deliberately exported so that init_terminal can clear it.
-// TODO un-export this once we remove the terminfo option.
-pub static LAYOUT_CACHE_SHARED: Mutex<LayoutCache> = Mutex::new(LayoutCache::new());
+static LAYOUT_CACHE_SHARED: Mutex<LayoutCache> = Mutex::new(LayoutCache::new());
 
 impl LayoutCache {
     pub const fn new() -> Self {
@@ -1596,8 +1551,7 @@ pub fn escape_code_length(code: &wstr) -> Option<usize> {
         return None;
     }
 
-    is_terminfo_escape_seq(code)
-        .or_else(|| is_screen_name_escape_seq(code))
+    is_screen_name_escape_seq(code)
         .or_else(|| is_osc_escape_seq(code))
         .or_else(|| is_three_byte_escape_seq(code))
         .or_else(|| is_csi_style_escape_seq(code))
@@ -1616,36 +1570,11 @@ pub fn screen_set_midnight_commander_hack() {
 /// The number of characters to indent new blocks.
 const INDENT_STEP: usize = 4;
 
-/// Tests if the specified narrow character sequence is present at the specified position of the
-/// specified wide character string. All of \c seq must match, but str may be longer than seq.
-fn try_sequence(seq: &[u8], s: &wstr) -> usize {
-    let mut i = 0;
-    loop {
-        if i == seq.len() {
-            return i;
-        }
-        if char::from(seq[i]) != s.char_at(i) {
-            return 0;
-        }
-        i += 1;
-    }
-}
-
 /// Returns the number of columns left until the next tab stop, given the current cursor position.
 fn next_tab_stop(current_line_width: usize) -> usize {
     // Assume tab stops every 8 characters.
-    let tab_width = if use_terminfo() {
-        crate::terminal::term().init_tabs.unwrap_or(8)
-    } else {
-        8
-    };
-    ((current_line_width / tab_width) + 1) * tab_width
-}
-
-/// Whether we permit soft wrapping. If so, in some cases we don't explicitly move to the second
-/// physical line on a wrapped logical line; instead we just output it.
-fn allow_soft_wrap() -> bool {
-    !use_terminfo() || crate::terminal::term().auto_right_margin
+    const TAB_WIDTH: usize = 8;
+    ((current_line_width / TAB_WIDTH) + 1) * TAB_WIDTH
 }
 
 /// Does this look like the escape sequence for setting a screen name?
@@ -1758,38 +1687,6 @@ fn is_csi_style_escape_seq(code: &wstr) -> Option<usize> {
     }
     // cursor now indexes just beyond the end of the sequence (or at the terminating zero).
     Some(cursor)
-}
-
-/// Detect whether the escape sequence sets one of the terminal attributes that affects how text is
-/// displayed other than the color.
-fn is_terminfo_escape_seq(code: &wstr) -> Option<usize> {
-    if !use_terminfo() {
-        return None;
-    }
-    let term = crate::terminal::term();
-    let esc2 = [
-        &term.enter_bold_mode,
-        &term.exit_attribute_mode,
-        &term.enter_underline_mode,
-        &term.exit_underline_mode,
-        &term.enter_standout_mode,
-        &term.enter_italics_mode,
-        &term.exit_italics_mode,
-        &term.enter_reverse_mode,
-        &term.enter_dim_mode,
-    ];
-
-    for p in &esc2 {
-        let Some(p) = p else { continue };
-        // Test both padded and unpadded version, just to be safe. Most versions of fish_tparm don't
-        // actually seem to do anything these days.
-        let esc_seq_len = try_sequence(p.as_bytes(), code);
-        if esc_seq_len != 0 {
-            return Some(esc_seq_len);
-        }
-    }
-
-    None
 }
 
 /// Return whether `c` ends a measuring run.
@@ -1927,13 +1824,6 @@ pub(crate) static ONLY_GRAYSCALE: RelaxedAtomicBool = RelaxedAtomicBool::new(fal
 
 /// Returns true if we are using a dumb terminal.
 pub(crate) fn is_dumb() -> bool {
-    if use_terminfo() {
-        let term = crate::terminal::term();
-        return term.cursor_up.is_none()
-            || term.cursor_down.is_none()
-            || term.cursor_left.is_none()
-            || term.cursor_right.is_none();
-    }
     IS_DUMB.load()
 }
 

@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::common::bytes2wcstring;
 use crate::screen::{is_dumb, only_grayscale};
-use crate::terminal::{Outputter, use_terminfo};
+use crate::terminal::Outputter;
 use crate::text_face::{
     self, PrintColorsArgs, SpecifiedTextFace, TextFace, TextStyling, parse_text_face_and_options,
 };
@@ -137,7 +137,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     );
 
     if specified_face.fg.is_some() && outp.contents().is_empty() {
-        assert!(is_dumb() || only_grayscale() || use_terminfo());
+        assert!(is_dumb() || only_grayscale());
         // We need to do *something* or the lack of any output messes up
         // when the cartesian product here would make "foo" disappear:
         //  $ echo (set_color foo)bar

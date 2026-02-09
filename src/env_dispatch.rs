@@ -3,6 +3,7 @@ use crate::complete::complete_invalidate_path;
 use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
 use crate::env::{EnvMode, EnvStack, Environment, setenv_lock, unsetenv_lock};
 use crate::flog::flog;
+use crate::function;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
 use crate::locale::{invalidate_numeric_locale, set_libc_locales};
 use crate::prelude::*;
@@ -11,14 +12,10 @@ use crate::reader::{
     reader_current_data, reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled,
     reader_set_transient_prompt,
 };
-use crate::screen::{
-    IS_DUMB, LAYOUT_CACHE_SHARED, ONLY_GRAYSCALE, screen_set_midnight_commander_hack,
-};
+use crate::screen::{IS_DUMB, ONLY_GRAYSCALE, screen_set_midnight_commander_hack};
 use crate::terminal::ColorSupport;
-use crate::terminal::use_terminfo;
 use crate::tty_handoff::xtversion;
 use crate::wutil::fish_wcstoi;
-use crate::{function, terminal};
 use fish_wcstringutil::{bool_from_string, string_prefixes_string};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -33,11 +30,6 @@ const LOCALE_VARIABLES: [&wstr; 7] = [
     L!("LC_NUMERIC"),
     L!("LC_TIME"),
     L!("LOCPATH"),
-];
-
-#[rustfmt::skip]
-const CURSES_VARIABLES: [&wstr; 3] = [
-    L!("TERM"), L!("TERMINFO"), L!("TERMINFO_DIRS")
 ];
 
 /// Whether to use `posix_spawn()` when possible.
@@ -58,9 +50,7 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
             table.add_anon(name, vars!(handle_locale_change));
         }
 
-        for name in CURSES_VARIABLES {
-            table.add_anon(name, handle_term_change);
-        }
+        table.add_anon(L!("TERM"), handle_term_change);
 
         table.add(L!("TZ"), handle_tz_change);
         table.add_anon(L!("COLORTERM"), handle_fish_term_change);
@@ -337,7 +327,6 @@ fn handle_locale_change(vars: &EnvStack) {
 fn handle_term_change(vars: &EnvStack, suppress_repaint: bool) {
     guess_emoji_width(vars);
     init_terminal(vars);
-    read_terminfo_database(vars);
     if !suppress_repaint {
         reader_schedule_prompt_repaint();
     }
@@ -415,7 +404,7 @@ fn run_inits(vars: &EnvStack) {
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).
 fn update_fish_color_support(vars: &EnvStack) {
     // Detect or infer term256 support. If fish_term256 is set, we respect it. Otherwise, infer it
-    // from $TERM or use terminfo.
+    // from $TERM.
 
     let term = vars.get_unless_empty(L!("TERM"));
     let term = term.as_ref().map_or(L!(""), |term| &term.as_list()[0]);
@@ -512,32 +501,6 @@ fn init_terminal(vars: &EnvStack) {
     }
 
     update_fish_color_support(vars);
-}
-
-pub fn read_terminfo_database(vars: &EnvStack) {
-    if !use_terminfo() {
-        return;
-    }
-
-    // The current process' environment needs to be modified because the terminfo crate will
-    // read these variables
-    for var_name in CURSES_VARIABLES {
-        if let Some(value) = vars
-            .getf_unless_empty(var_name, EnvMode::EXPORT)
-            .map(|v| v.as_string())
-        {
-            flog!(term_support, "curses var", var_name, "=", value);
-            setenv_lock(var_name, &value, true);
-        } else {
-            flog!(term_support, "curses var", var_name, "is missing or empty");
-            unsetenv_lock(var_name);
-        }
-    }
-
-    terminal::setup();
-
-    // Invalidate the cached escape sequences since they may no longer be valid.
-    LAYOUT_CACHE_SHARED.lock().unwrap().clear();
 }
 
 /// Initialize the locale subsystem

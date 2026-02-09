@@ -131,9 +131,11 @@ pub const METADATA: &[FeatureMetadata] = &[
         flag: FeatureFlag::IgnoreTerminfo,
         name: L!("ignore-terminfo"),
         groups: L!("4.1"),
-        description: L!("do not look up $TERM in terminfo database"),
+        description: L!(
+            "do not look up $TERM in terminfo database (historical, can no longer be changed)"
+        ),
         default_value: true,
-        read_only: false,
+        read_only: true,
     },
     FeatureMetadata {
         flag: FeatureFlag::QueryTerm,

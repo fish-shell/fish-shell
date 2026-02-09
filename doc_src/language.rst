@@ -2044,7 +2044,7 @@ Here is what they mean:
 - ``remove-percent-self`` turns off the special ``%self`` expansion. It was introduced in 4.0. To get fish's pid, you can use the :envvar:`fish_pid` variable.
 - ``test-require-arg`` removes :doc:`builtin test <cmds/test>`'s one-argument form (``test "string"``. It was introduced in 4.0. To test if a string is non-empty, use ``test -n "string"``. If disabled, any call to ``test`` that would change sends a :ref:`debug message <debugging-fish>` of category "deprecated-test", so starting fish with ``fish --debug=deprecated-test`` can be used to find offending calls.
 - ``mark-prompt`` makes fish report to the terminal the beginning and and of both shell prompts and command output.
-- ``ignore-terminfo`` disables lookup of $TERM in the terminfo database. Use ``no-ignore-terminfo`` to turn it back on.
+- ``ignore-terminfo`` was introduced in fish 4.1 and cannot be turned off since fish 4.5. It can still be tested for compatibility, but a ``no-ignore-terminfo`` value will be ignored. The flag disabled lookup of $TERM in the terminfo database.
 - ``query-term`` allows fish to query the terminal by writing escape sequences and reading the terminal's response.
   This enables features such as :ref:`scrolling <term-compat-cursor-position-report>`.
   If you use an incompatible terminal, you can -- for the time being -- work around it by running (once) ``set -Ua fish_features no-query-term``.

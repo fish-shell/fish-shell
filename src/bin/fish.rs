@@ -480,7 +480,6 @@ fn throwing_main() -> i32 {
         }
     }
     features::set_from_string(opts.features.as_utfstr());
-    fish::env_dispatch::read_terminfo_database(EnvStack::globals());
     proc_init();
     reader_init(true);
 

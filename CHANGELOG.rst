@@ -5,6 +5,10 @@ Interactive improvements
 ------------------------
 - :kbd:`ctrl-l` no longer cancels history search (:issue:`12436`).
 
+Deprecations and removed features
+---------------------------------
+- Support for the terminfo database has been removed entirely, and its associated ``ignore-terminfo`` feature flag, introduced and enabled by default in fish 4.1, has been made read-only. This means fish no longer depends on the "ncurses" or "terminfo" package.
+
 Regression fixes:
 -----------------
 - (from 4.4.0) Vi mode ``d,f`` key binding (:issue:`12417`).

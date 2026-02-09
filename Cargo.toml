@@ -39,7 +39,17 @@ libc = "0.2.177"
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
 # files as of 22 April 2024.
 lru = "0.16.2"
-nix = { version = "0.31.1", default-features = false, features = ["event", "fs", "inotify", "hostname", "resource", "process", "signal", "term", "user"] }
+nix = { version = "0.31.1", default-features = false, features = [
+    "event",
+    "fs",
+    "inotify",
+    "hostname",
+    "resource",
+    "process",
+    "signal",
+    "term",
+    "user",
+] }
 num-traits = "0.2.19"
 once_cell = "1.19.0"
 pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", tag = "0.2.9-utf32", default-features = false, features = [
@@ -62,8 +72,6 @@ rust-embed = { version = "8.11.0", features = [
     "interpolate-folder-path",
 ] }
 serial_test = { version = "3", default-features = false }
-# We need 0.9.0 specifically for some crash fixes.
-terminfo = "0.9.0"
 widestring = "1.2.0"
 unicode-segmentation = "1.12.0"
 unicode-width = "0.2.0"
@@ -116,7 +124,6 @@ num-traits.workspace = true
 once_cell.workspace = true
 pcre2.workspace = true
 rand.workspace = true
-terminfo.workspace = true
 xterm-color.workspace = true
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
@@ -194,7 +201,7 @@ cloned_instead_of_copied = "warn"
 explicit_into_iter_loop = "warn"
 format_push_string = "warn"
 implicit_clone = "warn"
-len_without_is_empty = "allow"    # we're not a library crate
+len_without_is_empty = "allow"         # we're not a library crate
 let_and_return = "allow"
 manual_assert = "warn"
 manual_range_contains = "allow"

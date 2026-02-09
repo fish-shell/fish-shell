@@ -1,7 +1,5 @@
 // Generic output functions.
-use crate::common::ToCString;
 use crate::common::{self, EscapeStringStyle, escape_string, wcs2bytes, wcs2bytes_appending};
-use crate::flogf;
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::prelude::*;
 use crate::screen::{is_dumb, only_grayscale};
@@ -10,14 +8,11 @@ use crate::threads::MainThread;
 use bitflags::bitflags;
 use fish_color::{Color, Color24};
 use std::cell::{RefCell, RefMut};
-use std::env;
-use std::ffi::{CStr, CString};
 use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
-use std::path::PathBuf;
+use std::sync::OnceLock;
 use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
 
 bitflags! {
     #[derive(Copy, Clone, Default)]
@@ -145,19 +140,18 @@ pub(crate) trait Output {
             assert!(!matches!(cmd, CursorDown));
             return false;
         }
-        let ti = maybe_terminfo;
         fn write(out: &mut impl Output, sequence: &'static [u8]) -> bool {
             out.write_bytes(sequence);
             true
         }
         match cmd {
-            ClearScreen => ti(self, b"\x1b[H\x1b[2J", |term| &term.clear_screen),
-            ClearToEndOfLine => ti(self, b"\x1b[K", |term| &term.clr_eol),
-            ClearToEndOfScreen => ti(self, b"\x1b[J", |term| &term.clr_eos),
-            CursorUp => ti(self, b"\x1b[A", |term| &term.cursor_up),
-            CursorDown => ti(self, b"\n", |term| &term.cursor_down),
-            CursorLeft => ti(self, b"\x08", |term| &term.cursor_left),
-            CursorRight => ti(self, b"\x1b[C", |term| &term.cursor_right),
+            ClearScreen => write(self, b"\x1b[H\x1b[2J"),
+            ClearToEndOfLine => write(self, b"\x1b[K"),
+            ClearToEndOfScreen => write(self, b"\x1b[J"),
+            CursorUp => write(self, b"\x1b[A"),
+            CursorDown => write(self, b"\n"),
+            CursorLeft => write(self, b"\x08"),
+            CursorRight => write(self, b"\x1b[C"),
             CursorMove(direction, steps) => cursor_move(self, direction, steps),
             QueryPrimaryDeviceAttribute => write(self, b"\x1b[0c"),
             QueryXtversion => write(self, b"\x1b[>0q"),
@@ -191,45 +185,6 @@ pub(crate) trait Output {
     }
 }
 
-fn write_terminfo_sequence(
-    out: &mut impl Output,
-    get_terminfo_capability: fn(&Term) -> &Option<CString>,
-) -> bool {
-    let term = crate::terminal::term();
-    let Some(sequence) = (get_terminfo_capability)(&term) else {
-        return false;
-    };
-    out.write_bytes(sequence.to_bytes());
-    true
-}
-
-fn maybe_terminfo(
-    out: &mut impl Output,
-    sequence: &'static [u8],
-    terminfo: fn(&Term) -> &Option<CString>,
-) -> bool {
-    if use_terminfo() {
-        write_terminfo_sequence(out, terminfo)
-    } else {
-        out.write_bytes(sequence);
-        true
-    }
-}
-
-pub(crate) fn use_terminfo() -> bool {
-    !future_feature_flags::test(FeatureFlag::IgnoreTerminfo) && TERM.lock().unwrap().is_some()
-}
-
-/// Returns true if we think tparm can handle outputting a color index.
-fn term_supports_color_natively(term: &Term, c: u8) -> bool {
-    #[allow(clippy::int_plus_one)]
-    if let Some(max_colors) = term.max_colors {
-        max_colors >= usize::from(c) + 1
-    } else {
-        false
-    }
-}
-
 #[derive(Debug, Clone)]
 pub(crate) enum CardinalDirection {
     Up,
@@ -238,29 +193,6 @@ pub(crate) enum CardinalDirection {
 }
 
 fn cursor_move(out: &mut impl Output, direction: CardinalDirection, steps: usize) -> bool {
-    if use_terminfo() {
-        let term = crate::terminal::term();
-        if let Some(command) = match direction {
-            CardinalDirection::Up => None, // Historical
-            CardinalDirection::Left => term.parm_left_cursor.as_ref(),
-            CardinalDirection::Right => term.parm_right_cursor.as_ref(),
-        } {
-            if let Some(sequence) = tparm1(command, i32::try_from(steps).unwrap()) {
-                out.write_bytes(sequence.as_bytes());
-                return true;
-            }
-        } else if let Some(command) = match direction {
-            CardinalDirection::Up => term.cursor_up.as_ref(),
-            CardinalDirection::Left => term.cursor_left.as_ref(),
-            CardinalDirection::Right => term.cursor_right.as_ref(),
-        } {
-            for _i in 0..steps {
-                out.write_bytes(command.as_bytes());
-            }
-            return true;
-        }
-        return false;
-    }
     write_to_output!(
         out,
         "\x1b[{steps}{}",
@@ -714,180 +646,9 @@ pub fn best_color(candidates: impl Iterator<Item = Color>, support: ColorSupport
     .or(first)
 }
 
-/// The [`Term`] singleton. Initialized via a call to [`setup()`] and surfaced to the outside world via [`term()`].
-///
-/// We can't just use an [`AtomicPtr<Arc<Term>>`](std::sync::atomic::AtomicPtr) here because there's a race condition when the old Arc
-/// gets dropped - we would obtain the current (non-null) value of `TERM` in [`term()`] but there's
-/// no guarantee that a simultaneous call to [`setup()`] won't result in this refcount being
-/// decremented to zero and the memory being reclaimed before we can clone it, since we can only
-/// atomically *read* the value of the pointer, not clone the `Arc` it points to.
-pub static TERM: Mutex<Option<Arc<Term>>> = Mutex::new(None);
-
-/// Returns a reference to the global [`Term`] singleton or `None` if not preceded by a successful
-/// call to [`terminal::setup()`](setup).
-pub fn term() -> Arc<Term> {
-    Arc::clone(TERM.lock().expect("Mutex poisoned!").as_ref().unwrap())
-}
-
-/// The safe wrapper around terminfo functionality, initialized by a successful call to [`setup()`]
-/// and obtained thereafter by calls to [`term()`].
-#[derive(Default)]
-pub struct Term {
-    // String capabilities. Any Some value is confirmed non-empty.
-    pub enter_bold_mode: Option<CString>,
-    pub enter_italics_mode: Option<CString>,
-    pub exit_italics_mode: Option<CString>,
-    pub enter_dim_mode: Option<CString>,
-    pub enter_underline_mode: Option<CString>,
-    pub exit_underline_mode: Option<CString>,
-    pub enter_reverse_mode: Option<CString>,
-    pub enter_standout_mode: Option<CString>,
-    pub set_a_foreground: Option<CString>,
-    pub set_foreground: Option<CString>,
-    pub set_a_background: Option<CString>,
-    pub set_background: Option<CString>,
-    pub exit_attribute_mode: Option<CString>,
-    pub clear_screen: Option<CString>,
-    pub cursor_up: Option<CString>,
-    pub cursor_down: Option<CString>,
-    pub cursor_left: Option<CString>,
-    pub cursor_right: Option<CString>,
-    pub parm_left_cursor: Option<CString>,
-    pub parm_right_cursor: Option<CString>,
-    pub clr_eol: Option<CString>,
-    pub clr_eos: Option<CString>,
-
-    // Number capabilities
-    pub max_colors: Option<usize>,
-    pub init_tabs: Option<usize>,
-
-    // Flag/boolean capabilities
-    pub eat_newline_glitch: bool,
-    pub auto_right_margin: bool,
-}
-
-impl Term {
-    /// Initialize a new `Term` instance, prepopulating the values of all the terminfo string
-    /// capabilities we care about in the process.
-    fn new(db: terminfo::Database) -> Self {
-        Term {
-            // String capabilities
-            enter_bold_mode: get_str_cap(&db, "md"),
-            enter_italics_mode: get_str_cap(&db, "ZH"),
-            exit_italics_mode: get_str_cap(&db, "ZR"),
-            enter_dim_mode: get_str_cap(&db, "mh"),
-            enter_underline_mode: get_str_cap(&db, "us"),
-            exit_underline_mode: get_str_cap(&db, "ue"),
-            enter_reverse_mode: get_str_cap(&db, "mr"),
-            enter_standout_mode: get_str_cap(&db, "so"),
-            set_a_foreground: get_str_cap(&db, "AF"),
-            set_foreground: get_str_cap(&db, "Sf"),
-            set_a_background: get_str_cap(&db, "AB"),
-            set_background: get_str_cap(&db, "Sb"),
-            exit_attribute_mode: get_str_cap(&db, "me"),
-            clear_screen: get_str_cap(&db, "cl"),
-            cursor_up: get_str_cap(&db, "up"),
-            cursor_down: get_str_cap(&db, "do"),
-            cursor_left: get_str_cap(&db, "le"),
-            cursor_right: get_str_cap(&db, "nd"),
-            parm_left_cursor: get_str_cap(&db, "LE"),
-            parm_right_cursor: get_str_cap(&db, "RI"),
-            clr_eol: get_str_cap(&db, "ce"),
-            clr_eos: get_str_cap(&db, "cd"),
-
-            // Number capabilities
-            max_colors: get_num_cap(&db, "Co"),
-            init_tabs: get_num_cap(&db, "it"),
-
-            // Flag/boolean capabilities
-            eat_newline_glitch: get_flag_cap(&db, "xn"),
-            auto_right_margin: get_flag_cap(&db, "am"),
-        }
-    }
-}
-
-/// Initializes our database from $TERM.
-/// Returns a reference to the newly initialized [`Term`] singleton on success or `None` if this failed.
-///
-/// Any existing references from `terminal::term()` will be invalidated by this call!
-pub fn setup() {
-    let mut global_term = TERM.lock().expect("Mutex poisoned!");
-
-    let res = terminfo::Database::from_env().or_else(|x| {
-        // Try some more paths
-        let t = if let Ok(name) = env::var("TERM") {
-            name
-        } else {
-            return Err(x);
-        };
-        let first_char = t.chars().next().unwrap().to_string();
-        for dir in [
-            "/run/current-system/sw/share/terminfo", // Nix
-            "/usr/pkg/share/terminfo",               // NetBSD
-        ] {
-            let mut path = PathBuf::from(dir);
-            path.push(first_char.clone());
-            path.push(t.clone());
-            flogf!(term_support, "Trying path '%s'", path.to_str().unwrap());
-            if let Ok(db) = terminfo::Database::from_path(path) {
-                return Ok(db);
-            }
-        }
-        Err(x)
-    });
-
-    // Safely store the new Term instance or replace the old one. We have the lock so it's safe to
-    // drop the old TERM value and have its refcount decremented - no one will be cloning it.
-    if let Ok(result) = res {
-        // Create a new `Term` instance, prepopulate the capabilities we care about.
-        let term = Arc::new(Term::new(result));
-        *global_term = Some(term);
-    } else {
-        *global_term = None;
-    }
-}
-
-/// Return a nonempty String capability from termcap, or None if missing or empty.
-/// Panics if the given code string does not contain exactly two bytes.
-fn get_str_cap(db: &terminfo::Database, code: &str) -> Option<CString> {
-    db.raw(code).map(|cap| match cap {
-        terminfo::Value::True => "1".to_string().as_bytes().to_cstring(),
-        terminfo::Value::Number(n) => n.to_string().as_bytes().to_cstring(),
-        terminfo::Value::String(s) => s.clone().to_cstring(),
-    })
-}
-
-/// Return a number capability from termcap, or None if missing.
-/// Panics if the given code string does not contain exactly two bytes.
-fn get_num_cap(db: &terminfo::Database, code: &str) -> Option<usize> {
-    match db.raw(code) {
-        Some(terminfo::Value::Number(n)) if *n >= 0 => Some(*n as usize),
-        _ => None,
-    }
-}
-
-/// Return a flag capability from termcap, or false if missing.
-/// Panics if the given code string does not contain exactly two bytes.
-fn get_flag_cap(db: &terminfo::Database, code: &str) -> bool {
-    db.raw(code)
-        .is_some_and(|cap| matches!(cap, terminfo::Value::True))
-}
-
-/// Covers over tparm() with one parameter.
-pub fn tparm1(cap: &CStr, param1: i32) -> Option<CString> {
-    assert!(!cap.to_bytes().is_empty());
-    let cap = cap.to_bytes();
-    terminfo::expand!(cap; param1).ok().map(|x| x.to_cstring())
-}
-
 pub struct OutputterStyleWriter<'a> {
     out: &'a mut Outputter,
     param_count: u32,
-
-    // Cache the value of `use_terminfo()` to avoid writing terminfo full sequences
-    // into a partial/opened escape sequence.
-    // (Added bonus: `use_terminfo()` is expensive compared to checking a bool)
-    use_terminfo: bool,
 }
 
 impl<'a> OutputterStyleWriter<'a> {
@@ -897,7 +658,6 @@ impl<'a> OutputterStyleWriter<'a> {
         Self {
             out,
             param_count: 0,
-            use_terminfo: use_terminfo(),
         }
     }
 
@@ -916,36 +676,6 @@ impl<'a> OutputterStyleWriter<'a> {
         use SgrTerminalCommand::*;
         if is_dumb() {
             return false;
-        }
-
-        if self.use_terminfo {
-            // If we don't have a terminfo name for the attribute, we
-            // fallthrough to use a hardcoded escape sequence instead.
-            // If we have a name but no value, assume the attribute is not
-            // supported, so no need to try a hardcoded sequence either.
-            let wti = Self::write_terminfo_sequence;
-            match cmd {
-                ExitAttributeMode => return wti(self, |t| &t.exit_attribute_mode),
-                EnterBoldMode => return wti(self, |t| &t.enter_bold_mode),
-                EnterDimMode => return wti(self, |t| &t.enter_dim_mode),
-                EnterItalicsMode => return wti(self, |t| &t.enter_italics_mode),
-                EnterUnderlineMode(UnderlineStyle::Single) => {
-                    return wti(self, |t| &t.enter_underline_mode);
-                }
-                EnterUnderlineMode(_) => {}
-                EnterReverseMode => return wti(self, |t| &t.enter_reverse_mode),
-                EnterStandoutMode => return wti(self, |t| &t.enter_standout_mode),
-                EnterStrikethroughMode => {}
-                ExitStrikethroughMode => {}
-                ExitItalicsMode => return wti(self, |t| &t.exit_italics_mode),
-                ExitUnderlineMode => return wti(self, |t| &t.exit_underline_mode),
-                SelectPaletteColor(paintable, idx) => {
-                    return self.write_terminfo_color(paintable, idx);
-                }
-                SelectRgbColor(_, _) => {}
-                DefaultBackgroundColor => {}
-                DefaultUnderlineColor => {}
-            }
         }
 
         match cmd {
@@ -1059,41 +789,6 @@ impl<'a> OutputterStyleWriter<'a> {
             UL::Dashed => 5,
         };
         self.write_param_fmt(1, format_args!("4:{}", style))
-    }
-
-    fn write_terminfo_sequence(&mut self, terminfo: fn(&Term) -> &Option<CString>) -> bool {
-        write_terminfo_sequence(self.out, terminfo)
-    }
-
-    fn write_terminfo_color(&mut self, paintable: Paintable, mut idx: u8) -> bool {
-        if !Self::is_valid_color_idx(idx) {
-            return false;
-        }
-        let term = crate::terminal::term();
-        let Some(command) = (match paintable {
-            Paintable::Foreground => term
-                .set_a_foreground
-                .as_ref()
-                .or(term.set_foreground.as_ref()),
-            Paintable::Background => term
-                .set_a_background
-                .as_ref()
-                .or(term.set_background.as_ref()),
-            Paintable::Underline => None,
-        }) else {
-            return false;
-        };
-        if term_supports_color_natively(&term, idx) {
-            let Some(sequence) = tparm1(command, idx.into()) else {
-                return false;
-            };
-            self.out.write_bytes(sequence.as_bytes());
-            return true;
-        }
-        if term.max_colors == Some(8) && idx > 8 {
-            idx -= 8;
-        }
-        self.write_palette_color(paintable, idx)
     }
 }
 

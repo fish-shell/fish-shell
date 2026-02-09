@@ -8,8 +8,6 @@ isolated-tmux-start -C '
         set -g fish_pager_color_background --background=white
         echo "$counter> "
         set -ga TERM .
-        set -ga TERMINFO .
-        set -ga TERMINFO_DIRS .
         set -ga COLORTERM .
         set -ga fish_term256 .
         set -ga fish_term24bit .

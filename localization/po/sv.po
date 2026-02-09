@@ -6341,9 +6341,6 @@ msgstr ""
 msgid "Aggregate sources for all modules in an aggregator project"
 msgstr ""
 
-msgid "Aggregate the consumed space of one or more directories or files"
-msgstr ""
-
 msgid "Aggressive scan options"
 msgstr ""
 
@@ -13172,9 +13169,6 @@ msgstr ""
 msgid "Count hard links multiple times"
 msgstr "Räkna hårda länkar alla gånger de förekommer"
 
-msgid "Count hard-linked files each time they are seen"
-msgstr ""
-
 msgid "Count hidden files, too"
 msgstr ""
 
@@ -17429,9 +17423,6 @@ msgstr ""
 msgid "Display answers as exclamation points and missing packets as dots"
 msgstr ""
 
-msgid "Display apparent size instead of disk usage"
-msgstr ""
-
 msgid "Display architecture specific information"
 msgstr ""
 
@@ -19310,9 +19301,6 @@ msgstr ""
 msgid "Do not compress the uid/gid table"
 msgstr ""
 
-msgid "Do not compute total column for multiple inputs"
-msgstr ""
-
 msgid "Do not configure any interfaces"
 msgstr ""
 
@@ -20481,9 +20469,6 @@ msgid "Do not sort directories before files"
 msgstr ""
 
 msgid "Do not sort file arguments"
-msgstr ""
-
-msgid "Do not sort paths by their size in bytes"
 msgstr ""
 
 msgid "Do not sort the result"
@@ -30863,9 +30848,6 @@ msgstr ""
 msgid "If project list is specified, also build projects that depend on projects on the list"
 msgstr ""
 
-msgid "If set, we will not cross filesystems or traverse mount points"
-msgstr ""
-
 msgid "If source path is a directory, publish all its content recursively"
 msgstr ""
 
@@ -33498,9 +33480,6 @@ msgid "Launch python shell"
 msgstr ""
 
 msgid "Launch the Protontricks GUI"
-msgstr ""
-
-msgid "Launch the terminal user interface"
 msgstr ""
 
 msgid "Launch utility at startup and reload on file change"
@@ -39740,9 +39719,6 @@ msgstr ""
 msgid "One or more Kitchen Driver gems to be installed or added to a Gemfile "
 msgstr ""
 
-msgid "One or more absolute directories to ignore"
-msgstr ""
-
 msgid "Only  match  processes  whose  effective  user ID is listed"
 msgstr ""
 
@@ -44126,9 +44102,6 @@ msgstr ""
 msgid "Print additional fields"
 msgstr ""
 
-msgid "Print additional statistics about the file traversal to stderr"
-msgstr ""
-
 msgid "Print all active monitors"
 msgstr ""
 
@@ -44706,9 +44679,6 @@ msgid "Print help message"
 msgstr ""
 
 msgid "Print help message and exit"
-msgstr ""
-
-msgid "Print help message or the help of the given subcommand(s)"
 msgstr ""
 
 msgid "Print help of uncommon options"
@@ -66266,9 +66236,6 @@ msgstr ""
 msgid "The age recipient the new group should contain. Can be specified more than once"
 msgstr ""
 
-msgid "The amount of threads to use"
-msgstr ""
-
 msgid "The architecture reported by uname in the container"
 msgstr ""
 
@@ -66378,9 +66345,6 @@ msgid "The format to convert from"
 msgstr ""
 
 msgid "The format to convert to"
-msgstr ""
-
-msgid "The format with which to print byte counts"
 msgstr ""
 
 msgid "The full cost-based query optimiser is enabled."

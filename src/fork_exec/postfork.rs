@@ -526,5 +526,23 @@ fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr>
     } else {
         return None;
     };
-    Some(CStr::from_bytes_with_nul(&buffer[offset..idx.max(offset)]).unwrap())
+    CStr::from_bytes_with_nul(&buffer[offset..idx.max(offset)]).ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::get_interpreter;
+    use std::ffi::CString;
+    use std::os::unix::ffi::OsStrExt;
+
+    #[test]
+    fn test_get_interpreter_returns_none_on_embedded_nul() {
+        let script = fish_tempfile::new_file().unwrap();
+        std::fs::write(script.path(), b"#!/bin/\0sh\n").unwrap();
+
+        let command = CString::new(script.path().as_os_str().as_bytes()).unwrap();
+        let mut buffer = [0u8; 64];
+
+        assert!(get_interpreter(command.as_c_str(), &mut buffer).is_none());
+    }
 }

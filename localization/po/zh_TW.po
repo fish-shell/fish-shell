@@ -16302,6 +16302,9 @@ msgstr ""
 msgid "Disable chat search background indexer"
 msgstr ""
 
+msgid "Disable check for unique upload"
+msgstr ""
+
 msgid "Disable color"
 msgstr ""
 
@@ -17580,6 +17583,9 @@ msgstr ""
 msgid "Display debugging information"
 msgstr ""
 
+msgid "Display debugging messages"
+msgstr ""
+
 msgid "Display deduplication histogram"
 msgstr ""
 
@@ -17713,9 +17719,6 @@ msgid "Display help about darcs and darcs commands"
 msgstr ""
 
 msgid "Display help and debug options"
-msgstr ""
-
-msgid "Display help and exit\t"
 msgstr ""
 
 msgid "Display help for Git Sizer"
@@ -18064,6 +18067,9 @@ msgid "Display histogram of bucket list lengths"
 msgstr ""
 
 msgid "Display hook variables"
+msgstr ""
+
+msgid "Display hosts listed in configuration"
 msgstr ""
 
 msgid "Display image centered on a backdrop"
@@ -20637,6 +20643,9 @@ msgstr ""
 msgid "Do not upload binaries"
 msgstr ""
 
+msgid "Do not upload the files"
+msgstr ""
+
 msgid "Do not use \"abshi2\" pattern"
 msgstr ""
 
@@ -20860,6 +20869,9 @@ msgid "Do not write #: filename:line lines"
 msgstr ""
 
 msgid "Do not write FETCH_HEAD file"
+msgstr ""
+
+msgid "Do not write a log file for uploads"
 msgstr ""
 
 msgid "Do not write a ~/.fehbg file"
@@ -21229,6 +21241,9 @@ msgid "Don't check if commit belongs on the same branch"
 msgstr ""
 
 msgid "Don't check if travis client is up to date"
+msgstr ""
+
+msgid "Don't check the signatures or upload the files"
 msgstr ""
 
 msgid "Don't clear the playlist"
@@ -24426,6 +24441,9 @@ msgstr ""
 msgid "Enable the JIT compiler"
 msgstr ""
 
+msgid "Enable the Lintian verification check"
+msgstr ""
+
 msgid "Enable the bitrate management engine"
 msgstr ""
 
@@ -24457,6 +24475,9 @@ msgid "Enable the live reloading in the development server (this is the default)
 msgstr ""
 
 msgid "Enable the live reloading in the development server, but only re-build files that have changed"
+msgstr ""
+
+msgid "Enable the local install check"
 msgstr ""
 
 msgid "Enable the necessary sparse-checkout config settings"
@@ -45690,6 +45711,9 @@ msgstr ""
 msgid "Print the domain's hostname"
 msgstr ""
 
+msgid "Print the dput configuration"
+msgstr ""
+
 msgid "Print the drive capabilities for SCSI-3/mmc compliant drives"
 msgstr ""
 
@@ -50623,6 +50647,9 @@ msgid "Request debug info and also use level to specify how much information"
 msgstr ""
 
 msgid "Request distinct server name"
+msgstr ""
+
+msgid "Request dry-run of dinstall after upload"
 msgstr ""
 
 msgid "Request given address in DHCP DISCOVER message"
@@ -68949,6 +68976,9 @@ msgstr ""
 msgid "Upload finished packages"
 msgstr ""
 
+msgid "Upload host"
+msgstr ""
+
 msgid "Upload locally saved terminal session to asciinema.org"
 msgstr ""
 
@@ -68962,6 +68992,9 @@ msgid "Upload release"
 msgstr ""
 
 msgid "Upload stemcell"
+msgstr ""
+
+msgid "Upload to a delayed queue"
 msgstr ""
 
 msgid "Upload to server"
@@ -70471,6 +70504,9 @@ msgid "Use packages from REPO"
 msgstr ""
 
 msgid "Use paired-single floating-point instructions"
+msgstr ""
+
+msgid "Use passive mode for FTP"
 msgstr ""
 
 msgid "Use passive mode for data transfers"
@@ -78558,7 +78594,7 @@ msgstr ""
 msgid "reset branch name to parent branch name"
 msgstr ""
 
-msgid "reset cache (DNS\t)"
+msgid "reset cache"
 msgstr ""
 
 msgid "reset terminal state"

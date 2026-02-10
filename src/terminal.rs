@@ -755,12 +755,6 @@ impl DerefMut for BufferedOutputter<'_> {
     }
 }
 
-impl<'a> Output for BufferedOutputter<'a> {
-    fn write_bytes(&mut self, buf: &[u8]) {
-        self.0.write_bytes(buf);
-    }
-}
-
 /// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
 /// RgbColor::NONE if empty.
 pub fn best_color(candidates: impl Iterator<Item = Color>, support: ColorSupport) -> Option<Color> {

@@ -11,7 +11,6 @@ use crate::prelude::*;
 use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
-use crate::terminal::Output;
 use crate::topic_monitor::Topic;
 use crate::wutil::{perror, perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat};
 use errno::Errno;
@@ -729,13 +728,6 @@ impl OutputStream {
             }
         }
         true
-    }
-}
-
-impl Output for OutputStream {
-    fn write_bytes(&mut self, command_part: &[u8]) {
-        // TODO Retry on interrupt.
-        self.append(&bytes2wcstring(command_part));
     }
 }
 

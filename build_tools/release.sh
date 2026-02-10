@@ -90,7 +90,7 @@ Created by ./build_tools/release.sh $version"
 }
 
 sed -i "s/^version = \".*\"/version = \"$1\"/g" Cargo.toml
-cargo fetch --offline
+cargo fetch --offline # bumps the version in Cargo.lock
 if [ "$1" = "$version" ]; then
     # debchange is a Debian script to manage the Debian changelog, but
     # it's too annoying to install everywhere. Just do it by hand.
@@ -110,6 +110,8 @@ fi
 git add CHANGELOG.rst Cargo.toml Cargo.lock
 CreateCommit "Release $version"
 
+# Tags must be full objects, not lightweight tags, for
+# git_version-gen.sh to work.
 git -c "user.signingKey=$committer" \
     tag --sign --message="Release $version" $version
 

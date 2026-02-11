@@ -418,9 +418,7 @@ impl Outputter {
     /// If you're going to immediately change other TextFace attributes
     /// prefer using `StyleWriter::reset_text_face()`
     pub(crate) fn reset_text_face(&mut self) {
-        use SgrTerminalCommand::ExitAttributeMode;
-        self.style_writer().write_command(ExitAttributeMode);
-        self.last = TextFace::default();
+        self.style_writer().reset_text_face();
     }
 
     /// Sets the fg and bg color. May be called as often as you like, since if the new color is the same

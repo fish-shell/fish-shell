@@ -606,7 +606,7 @@ impl Outputter {
     pub fn contents_mut(&mut self) -> &mut Vec<u8> {
         &mut self.contents
     }
-    pub fn contents_move(self) -> Vec<u8> {
+    pub fn take_contents(self) -> Vec<u8> {
         self.contents
     }
 

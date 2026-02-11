@@ -99,7 +99,7 @@ use crate::terminal::TerminalCommand::{
     QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
     QueryXtgettcap, QueryXtversion,
 };
-use crate::terminal::{BufferedOutputter, Output, Outputter};
+use crate::terminal::{BufferedOutputter, Outputter};
 use crate::termsize::{safe_termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::{TextFace, parse_text_face};
 use crate::threads::{assert_is_background_thread, assert_is_main_thread};
@@ -278,7 +278,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
         out.write_command(QueryKittyKeyboardProgressiveEnhancements);
         out.write_command(QueryXtversion);
         out.write_command(QueryBackgroundColor);
-        query_capabilities_via_dcs(out.by_ref(), vars);
+        query_capabilities_via_dcs(&mut out, vars);
         out.write_command(QueryPrimaryDeviceAttribute);
     }
     input_queue.blocking_query().replace(TerminalQuery::Initial);
@@ -2973,14 +2973,14 @@ impl<'a> Reader<'a> {
     }
 }
 
-fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
+fn send_xtgettcap_query(out: &mut Outputter, cap: &'static str) {
     if should_flog!(reader) {
         flog!(reader, format!("Sending XTGETTCAP request for {}:", cap));
     }
     out.write_command(QueryXtgettcap(cap));
 }
 
-fn query_capabilities_via_dcs(out: &mut impl Output, vars: &dyn Environment) {
+fn query_capabilities_via_dcs(out: &mut Outputter, vars: &dyn Environment) {
     // TODO(term-workaround)
     if vars.get_unless_empty(L!("STY")).is_some()
         || vars.get_unless_empty(L!("TERM")).is_some_and(|term| {

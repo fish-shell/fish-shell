@@ -9,13 +9,13 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
 use crate::prelude::*;
 use crate::proc::JobGroupRef;
+use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
     self, ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
     DecrstColorThemeReporting, DecrstFocusReporting, DecsetBracketedPaste,
     DecsetColorThemeReporting, DecsetFocusReporting, KittyKeyboardProgressiveEnhancementsDisable,
     KittyKeyboardProgressiveEnhancementsEnable, ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
-use crate::terminal::{Output, Outputter};
 use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror, wcstoi};
 use fish_widestring::ToWString;

@@ -121,70 +121,6 @@ pub(crate) enum TerminalCommand<'a> {
     DecrstColorThemeReporting,
 }
 
-pub(crate) trait Output {
-    fn write_bytes(&mut self, buf: &[u8]);
-
-    fn by_ref(&mut self) -> &mut Self
-    where
-        Self: Sized,
-    {
-        self
-    }
-
-    fn write_command(&mut self, cmd: TerminalCommand<'_>) -> bool
-    where
-        Self: Sized,
-    {
-        use TerminalCommand::*;
-        if is_dumb() {
-            assert!(!matches!(cmd, CursorDown));
-            return false;
-        }
-        fn write(out: &mut impl Output, sequence: &'static [u8]) -> bool {
-            out.write_bytes(sequence);
-            true
-        }
-        match cmd {
-            ClearScreen => write(self, b"\x1b[H\x1b[2J"),
-            ClearToEndOfLine => write(self, b"\x1b[K"),
-            ClearToEndOfScreen => write(self, b"\x1b[J"),
-            CursorUp => write(self, b"\x1b[A"),
-            CursorDown => write(self, b"\n"),
-            CursorLeft => write(self, b"\x08"),
-            CursorRight => write(self, b"\x1b[C"),
-            CursorMove(direction, steps) => cursor_move(self, direction, steps),
-            QueryPrimaryDeviceAttribute => write(self, b"\x1b[0c"),
-            QueryXtversion => write(self, b"\x1b[>0q"),
-            QueryXtgettcap(cap) => query_xtgettcap(self, cap),
-            DecsetAlternateScreenBuffer => write(self, b"\x1b[?1049h"),
-            DecrstAlternateScreenBuffer => write(self, b"\x1b[?1049l"),
-            KittyKeyboardProgressiveEnhancementsEnable => write(self, b"\x1b[=5u"),
-            KittyKeyboardProgressiveEnhancementsDisable => write(self, b"\x1b[=0u"),
-            QueryKittyKeyboardProgressiveEnhancements => query_kitty_progressive_enhancements(self),
-            ModifyOtherKeysEnable => write(self, b"\x1b[>4;1m"),
-            ModifyOtherKeysDisable => write(self, b"\x1b[>4;0m"),
-            ApplicationKeypadModeEnable => write(self, b"\x1b="),
-            ApplicationKeypadModeDisable => write(self, b"\x1b>"),
-            Osc0WindowTitle(title) => osc_0_or_1_terminal_title(self, false, title),
-            Osc1TabTitle(title) => osc_0_or_1_terminal_title(self, true, title),
-            Osc133PromptStart => osc_133_prompt_start(self),
-            Osc133PromptEnd => osc_133_prompt_end(self),
-            Osc133CommandStart(command) => osc_133_command_start(self, command),
-            Osc133CommandFinished { exit_status } => osc_133_command_finished(self, exit_status),
-            QueryCursorPosition => write(self, b"\x1b[6n"),
-            QueryBackgroundColor => write(self, b"\x1b]11;?\x1b\\"),
-            ScrollContentUp { lines } => scroll_content_up(self, lines),
-            DecsetShowCursor => write(self, b"\x1b[?25h"),
-            DecsetFocusReporting => write(self, b"\x1b[?1004h"),
-            DecrstFocusReporting => write(self, b"\x1b[?1004l"),
-            DecsetBracketedPaste => write(self, b"\x1b[?2004h"),
-            DecrstBracketedPaste => write(self, b"\x1b[?2004l"),
-            DecsetColorThemeReporting => write(self, b"\x1b[?2031h"),
-            DecrstColorThemeReporting => write(self, b"\x1b[?2031l"),
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub(crate) enum CardinalDirection {
     Up,
@@ -192,7 +128,7 @@ pub(crate) enum CardinalDirection {
     Right,
 }
 
-fn cursor_move(out: &mut impl Output, direction: CardinalDirection, steps: usize) -> bool {
+fn cursor_move(out: &mut Outputter, direction: CardinalDirection, steps: usize) -> bool {
     write_to_output!(
         out,
         "\x1b[{steps}{}",
@@ -205,7 +141,7 @@ fn cursor_move(out: &mut impl Output, direction: CardinalDirection, steps: usize
     true
 }
 
-fn query_xtgettcap(out: &mut impl Output, cap: &str) -> bool {
+fn query_xtgettcap(out: &mut Outputter, cap: &str) -> bool {
     write_to_output!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
     true
 }
@@ -221,7 +157,7 @@ impl<'a> std::fmt::Display for DisplayAsHex<'a> {
     }
 }
 
-fn query_kitty_progressive_enhancements(out: &mut impl Output) -> bool {
+fn query_kitty_progressive_enhancements(out: &mut Outputter) -> bool {
     #[allow(unused_parens)]
     if (
         // TODO(term-workaround)
@@ -233,7 +169,7 @@ fn query_kitty_progressive_enhancements(out: &mut impl Output) -> bool {
     true
 }
 
-fn osc_0_or_1_terminal_title(out: &mut impl Output, is_1: bool, title: &[WString]) -> bool {
+fn osc_0_or_1_terminal_title(out: &mut Outputter, is_1: bool, title: &[WString]) -> bool {
     out.write_bytes(if is_1 { b"\x1b]1;" } else { b"\x1b]0;" });
     for title_line in title {
         out.write_bytes(&wcs2bytes(title_line));
@@ -242,7 +178,7 @@ fn osc_0_or_1_terminal_title(out: &mut impl Output, is_1: bool, title: &[WString
     true
 }
 
-fn osc_133_prompt_start(out: &mut impl Output) -> bool {
+fn osc_133_prompt_start(out: &mut Outputter) -> bool {
     if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
         return false;
     }
@@ -255,7 +191,7 @@ fn osc_133_prompt_start(out: &mut impl Output) -> bool {
     true
 }
 
-fn osc_133_prompt_end(out: &mut impl Output) -> bool {
+fn osc_133_prompt_end(out: &mut Outputter) -> bool {
     if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
         return false;
     }
@@ -263,7 +199,7 @@ fn osc_133_prompt_end(out: &mut impl Output) -> bool {
     true
 }
 
-fn osc_133_command_start(out: &mut impl Output, command: &wstr) -> bool {
+fn osc_133_command_start(out: &mut Outputter, command: &wstr) -> bool {
     if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
         return false;
     }
@@ -275,7 +211,7 @@ fn osc_133_command_start(out: &mut impl Output, command: &wstr) -> bool {
     true
 }
 
-fn osc_133_command_finished(out: &mut impl Output, exit_status: libc::c_int) -> bool {
+fn osc_133_command_finished(out: &mut Outputter, exit_status: libc::c_int) -> bool {
     if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
         return false;
     }
@@ -283,7 +219,7 @@ fn osc_133_command_finished(out: &mut impl Output, exit_status: libc::c_int) -> 
     true
 }
 
-fn scroll_content_up(out: &mut impl Output, lines: usize) -> bool {
+fn scroll_content_up(out: &mut Outputter, lines: usize) -> bool {
     write_to_output!(out, "\x1b[{}S", lines);
     true
 }
@@ -336,14 +272,67 @@ impl Outputter {
         zelf
     }
 
-    pub fn style_writer(&mut self) -> OutputterStyleWriter<'_> {
-        OutputterStyleWriter::new(self)
+    pub(crate) fn write_command(&mut self, cmd: TerminalCommand<'_>) -> bool
+    where
+        Self: Sized,
+    {
+        use TerminalCommand::*;
+        if is_dumb() {
+            assert!(!matches!(cmd, CursorDown));
+            return false;
+        }
+        fn write(out: &mut Outputter, sequence: &'static [u8]) -> bool {
+            out.write_bytes(sequence);
+            true
+        }
+        match cmd {
+            ClearScreen => write(self, b"\x1b[H\x1b[2J"),
+            ClearToEndOfLine => write(self, b"\x1b[K"),
+            ClearToEndOfScreen => write(self, b"\x1b[J"),
+            CursorUp => write(self, b"\x1b[A"),
+            CursorDown => write(self, b"\n"),
+            CursorLeft => write(self, b"\x08"),
+            CursorRight => write(self, b"\x1b[C"),
+            CursorMove(direction, steps) => cursor_move(self, direction, steps),
+            QueryPrimaryDeviceAttribute => write(self, b"\x1b[0c"),
+            QueryXtversion => write(self, b"\x1b[>0q"),
+            QueryXtgettcap(cap) => query_xtgettcap(self, cap),
+            DecsetAlternateScreenBuffer => write(self, b"\x1b[?1049h"),
+            DecrstAlternateScreenBuffer => write(self, b"\x1b[?1049l"),
+            KittyKeyboardProgressiveEnhancementsEnable => write(self, b"\x1b[=5u"),
+            KittyKeyboardProgressiveEnhancementsDisable => write(self, b"\x1b[=0u"),
+            QueryKittyKeyboardProgressiveEnhancements => query_kitty_progressive_enhancements(self),
+            ModifyOtherKeysEnable => write(self, b"\x1b[>4;1m"),
+            ModifyOtherKeysDisable => write(self, b"\x1b[>4;0m"),
+            ApplicationKeypadModeEnable => write(self, b"\x1b="),
+            ApplicationKeypadModeDisable => write(self, b"\x1b>"),
+            Osc0WindowTitle(title) => osc_0_or_1_terminal_title(self, false, title),
+            Osc1TabTitle(title) => osc_0_or_1_terminal_title(self, true, title),
+            Osc133PromptStart => osc_133_prompt_start(self),
+            Osc133PromptEnd => osc_133_prompt_end(self),
+            Osc133CommandStart(command) => osc_133_command_start(self, command),
+            Osc133CommandFinished { exit_status } => osc_133_command_finished(self, exit_status),
+            QueryCursorPosition => write(self, b"\x1b[6n"),
+            QueryBackgroundColor => write(self, b"\x1b]11;?\x1b\\"),
+            ScrollContentUp { lines } => scroll_content_up(self, lines),
+            DecsetShowCursor => write(self, b"\x1b[?25h"),
+            DecsetFocusReporting => write(self, b"\x1b[?1004h"),
+            DecrstFocusReporting => write(self, b"\x1b[?1004l"),
+            DecsetBracketedPaste => write(self, b"\x1b[?2004h"),
+            DecrstBracketedPaste => write(self, b"\x1b[?2004l"),
+            DecsetColorThemeReporting => write(self, b"\x1b[?2031h"),
+            DecrstColorThemeReporting => write(self, b"\x1b[?2031l"),
+        }
     }
 
     fn maybe_flush(&mut self) {
         if self.fd >= 0 && self.buffer_count == 0 {
             self.flush_to(self.fd);
         }
+    }
+
+    pub fn style_writer(&mut self) -> OutputterStyleWriter<'_> {
+        OutputterStyleWriter::new(self)
     }
 
     /// Unconditionally resets colors and text style.
@@ -561,16 +550,12 @@ impl Outputter {
         self.buffer_count -= 1;
         self.maybe_flush();
     }
-}
 
-impl Output for Outputter {
-    fn write_bytes(&mut self, buf: &[u8]) {
+    pub fn write_bytes(&mut self, buf: &[u8]) {
         self.contents.extend_from_slice(buf);
         self.maybe_flush();
     }
-}
 
-impl Outputter {
     /// Access the outputter for stdout.
     /// This should only be used from the main thread.
     pub fn stdoutput() -> &'static RefCell<Outputter> {

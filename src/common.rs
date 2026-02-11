@@ -10,7 +10,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
 use crate::parse_util::escape_string_with_quote;
 use crate::prelude::*;
-use crate::terminal::Output;
+use crate::terminal::Outputter;
 use crate::termsize::Termsize;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
@@ -1088,16 +1088,16 @@ pub fn valid_func_name(name: &wstr) -> bool {
 }
 
 // Output writes always succeed; this adapter allows us to use it in a write-like macro.
-struct OutputWriteAdapter<'a, T: Output>(&'a mut T);
+struct OutputterWriteAdapter<'a>(&'a mut Outputter);
 
-impl<'a, T: Output> std::fmt::Write for OutputWriteAdapter<'a, T> {
+impl<'a> std::fmt::Write for OutputterWriteAdapter<'a> {
     fn write_str(&mut self, s: &str) -> std::fmt::Result {
         self.0.write_bytes(s.as_bytes());
         Ok(())
     }
 }
 
-impl<'a, T: Output> std::io::Write for OutputWriteAdapter<'a, T> {
+impl<'a> std::io::Write for OutputterWriteAdapter<'a> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.0.write_bytes(buf);
         Ok(buf.len())
@@ -1107,8 +1107,8 @@ impl<'a, T: Output> std::io::Write for OutputWriteAdapter<'a, T> {
     }
 }
 
-pub(crate) fn do_write_to_output(writer: &mut impl Output, args: std::fmt::Arguments<'_>) {
-    let mut adapter = OutputWriteAdapter(writer);
+pub(crate) fn do_write_to_output(writer: &mut Outputter, args: std::fmt::Arguments<'_>) {
+    let mut adapter = OutputterWriteAdapter(writer);
     std::fmt::write(&mut adapter, args).unwrap();
 }
 

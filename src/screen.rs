@@ -36,7 +36,7 @@ use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
     CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
 };
-use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter};
+use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
 use crate::termsize::Termsize;
 use crate::wutil::fstat;
 use fish_fallback::fish_wcwidth;

@@ -7,13 +7,13 @@ Interactive improvements
 
 Deprecations and removed features
 ---------------------------------
-- Support for the terminfo database has been removed entirely, and its associated ``ignore-terminfo`` feature flag, introduced and enabled by default in fish 4.1, has been made read-only. This means fish no longer depends on the "ncurses" or "terminfo" package.
+- fish no longer reads the terminfo database to alter behaviour based on the :envvar:`TERM` environment variable, and does not depend on ncurses or terminfo. The ``ignore-terminfo`` feature flag, introduced and enabled by default in fish 4.1, is now permanently enabled. fish may no longer work correctly on Data General Dasher D220 and Wyse WY-350 terminals, but should continue to work on all known terminal emulators released in the 21st century.
 
 Regression fixes:
 -----------------
-- (from 4.4.0) Vi mode ``d,f`` key binding (:issue:`12417`).
+- (from 4.4.0) Vi mode ``d,f`` key binding did not work (:issue:`12417`).
 - (from 4.4.0) Vi mode crash on ``c,i,w`` after accepting autosuggestion (:issue:`12430`).
-- (from 4.4.0) ``fish_vi_key_bindings`` called with mode argument (:issue:`12413`).
+- (from 4.4.0) ``fish_vi_key_bindings`` called with a mode argument produced an error (:issue:`12413`).
 - (from 4.0.0) Build on Illumos (:issue:`12410`).
 
 fish 4.4.0 (released February 03, 2026)

@@ -93,10 +93,12 @@ function fish_vi_exec_motion
                     set motion (string replace -- forward kill $motion)
                 end
         end
+        set -l motion_cmd
         switch $motion[1]
             case commandline
+                set motion_cmd $motion
             case '*'
-                set motion commandline -f $motion
+                set motion_cmd commandline -f $motion
         end
         if $use_selection
             commandline -f begin-selection
@@ -107,14 +109,22 @@ function fish_vi_exec_motion
         switch $__fish_vi_operator
             case delete
                 for i in (seq $total)
-                    $motion || { set ok false; break }
+                    $motion_cmd || { set ok false; break }
                 end
                 if $ok && $use_selection
                     commandline -f kill-selection
                 end
             case change
-                for i in (seq $total)
-                    $motion || { set ok false; break }
+                switch $motion[1]
+                    case kill-word-vi
+                        for i in (seq (math $total - 1))
+                            $motion_cmd
+                        end
+                        commandline -f kill-word
+                    case '*'
+                        for i in (seq $total)
+                            $motion_cmd || { set ok false; break }
+                        end
                 end
                 if $ok
                     if $use_selection
@@ -124,7 +134,7 @@ function fish_vi_exec_motion
                 end
             case yank
                 for i in (seq $total)
-                    $motion || { set ok false; break }
+                    $motion_cmd || { set ok false; break }
                 end
                 if $ok
                     if $use_selection
@@ -135,7 +145,7 @@ function fish_vi_exec_motion
                 end
             case swap-case
                 for i in (seq $total)
-                    $motion || { set ok false; break }
+                    $motion_cmd || { set ok false; break }
                 end
                 if $ok
                     if set -q swap_case_hack[1]

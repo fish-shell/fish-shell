@@ -304,7 +304,7 @@ sleep(0.200)
 send("0w")
 send("c2wREPLACED")
 sendline("")
-expect_prompt("echo REPLACEDthree")
+expect_prompt("echo REPLACED three")
 
 # Test escape cancelling count
 send("echo one two three")
@@ -460,9 +460,9 @@ expect_prompt(
 send("echo abc def")
 send("\033")
 sleep(0.200)
-send("0wcwXXX\r")  # Move to 'abc', 'cw' deletes 'abc ' (including space), type 'XXX'
+send("0wcwXXX\r")  # Move to 'abc', 'cw' deletes 'abc', type 'XXX'
 expect_prompt(
-    "\r\n.*XXXdef\r\n", unmatched="vi mode 'cw' should delete to start of next word"
+    "\r\n.*XXX def\r\n", unmatched="vi mode 'cw' should delete to start of next word"
 )
 
 # Test 'ce' - change to end of word (like vim's 'de')

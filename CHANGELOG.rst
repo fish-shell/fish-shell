@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Interactive improvements
 ------------------------
 - :kbd:`ctrl-l` no longer cancels history search (:issue:`12436`).
+- History search cursor positioning now works correctly with characters of arbitrary width.
 
 Deprecations and removed features
 ---------------------------------

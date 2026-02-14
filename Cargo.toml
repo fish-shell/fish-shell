@@ -124,6 +124,7 @@ num-traits.workspace = true
 once_cell.workspace = true
 pcre2.workspace = true
 rand.workspace = true
+unicode-width.workspace = true
 xterm-color.workspace = true
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]

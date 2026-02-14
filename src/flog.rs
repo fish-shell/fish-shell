@@ -222,7 +222,7 @@ macro_rules! flog {
     ($category:ident, $($elem:expr),+ $(,)*) => {
         if $crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
             #[allow(unused_imports)]
-            use $crate::{flog::{FloggableDisplay, FloggableDebug}};
+            use $crate::{flog::{FloggableDisplay as _, FloggableDebug as _}};
             let mut output: Vec<u8> = Vec::new();
             output.extend($crate::flog::categories::$category.name.to_flog_str());
             output.push(b':');

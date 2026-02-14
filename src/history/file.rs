@@ -2,9 +2,9 @@
 
 use std::{
     fs::File,
-    io::Read,
+    io::Read as _,
     ops::{Deref, DerefMut},
-    os::fd::AsRawFd,
+    os::fd::AsRawFd as _,
     time::{SystemTime, UNIX_EPOCH},
 };
 

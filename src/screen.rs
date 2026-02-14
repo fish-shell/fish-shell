@@ -12,7 +12,7 @@ use crate::key::ViewportPosition;
 use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
 use std::cell::RefCell;
 use std::collections::LinkedList;
-use std::io::Write;
+use std::io::Write as _;
 use std::num::NonZeroU16;
 use std::ops::Range;
 use std::sync::Mutex;

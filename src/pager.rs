@@ -15,7 +15,7 @@ use crate::prelude::*;
 use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
 use crate::termsize::Termsize;
 use fish_wcstringutil::string_fuzzy_match_string;
-use unicode_width::UnicodeWidthStr;
+use unicode_width::UnicodeWidthStr as _;
 
 /// Represents rendering from the pager.
 #[derive(Default)]

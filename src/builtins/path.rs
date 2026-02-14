@@ -1,6 +1,6 @@
-use crate::env::environment::Environment;
+use crate::env::environment::Environment as _;
 use std::fs::Metadata;
-use std::os::unix::prelude::{FileTypeExt, MetadataExt};
+use std::os::unix::prelude::{FileTypeExt as _, MetadataExt as _};
 use std::time::SystemTime;
 
 use super::prelude::*;

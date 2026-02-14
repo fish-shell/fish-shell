@@ -1,7 +1,7 @@
 extern crate proc_macro;
 use fish_tempfile::random_filename;
 use proc_macro::TokenStream;
-use std::{ffi::OsString, io::Write, path::PathBuf};
+use std::{ffi::OsString, io::Write as _, path::PathBuf};
 
 fn unescape_multiline_rust_string(s: String) -> String {
     if !s.contains('\n') {

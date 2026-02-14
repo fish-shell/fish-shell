@@ -1,7 +1,7 @@
 //! Generic utilities library.
 
 use fish_widestring::prelude::*;
-use rand::{SeedableRng, rngs::SmallRng};
+use rand::{SeedableRng as _, rngs::SmallRng};
 use std::cmp::Ordering;
 use std::time;
 

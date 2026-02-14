@@ -1,7 +1,7 @@
 use crate::common::init_special_chars_once;
 use crate::complete::complete_invalidate_path;
 use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
-use crate::env::{EnvMode, EnvStack, Environment, setenv_lock, unsetenv_lock};
+use crate::env::{EnvMode, EnvStack, Environment as _, setenv_lock, unsetenv_lock};
 use crate::flog::flog;
 use crate::function;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};

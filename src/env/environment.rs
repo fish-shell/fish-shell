@@ -30,7 +30,7 @@ use crate::wutil::{fish_wcstol, wgetcwd};
 use fish_wcstringutil::join_strings;
 use libc::c_int;
 use nix::{
-    NixPath,
+    NixPath as _,
     unistd::{Uid, User, gethostname},
 };
 use std::collections::HashMap;
@@ -798,7 +798,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
 #[cfg(test)]
 mod tests {
-    use super::{EnvMode, EnvStack, Environment};
+    use super::{EnvMode, EnvStack, Environment as _};
     use crate::env::EnvSetMode;
     use crate::prelude::*;
     use crate::tests::prelude::*;

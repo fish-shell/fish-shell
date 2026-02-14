@@ -36,7 +36,7 @@ use nix::{
 };
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
-use std::io::{Read, Write};
+use std::io::{Read as _, Write as _};
 use std::num::NonZeroU32;
 use std::os::fd::RawFd;
 use std::rc::Rc;

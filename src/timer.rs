@@ -14,8 +14,8 @@
 //! but it's still the best we can do because we don't know how long of a time might elapse between
 //! `TimerSnapshot` instances and need to avoid rollover.
 
-use std::fmt::Write as FmtWrite;
-use std::io::Write;
+use std::fmt::Write as _;
+use std::io::Write as _;
 use std::time::{Duration, Instant};
 
 use crate::nix::{RUsage, getrusage};

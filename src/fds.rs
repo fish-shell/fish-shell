@@ -320,7 +320,7 @@ mod tests {
     use super::{BorrowedFdFile, FIRST_HIGH_FD, make_autoclose_pipes};
     use crate::tests::prelude::*;
     use libc::{F_GETFD, FD_CLOEXEC};
-    use std::os::fd::{AsRawFd, FromRawFd};
+    use std::os::fd::{AsRawFd as _, FromRawFd as _};
 
     #[test]
     #[serial]

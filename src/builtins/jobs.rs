@@ -9,7 +9,7 @@ use crate::parser::Parser;
 use crate::proc::{HAVE_PROC_STAT, Job, clock_ticks_to_seconds, proc_get_jiffies};
 use crate::wutil::fish_wcstoi;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
-use fish_widestring::{L, WExt, WString, wstr};
+use fish_widestring::{L, WExt as _, WString, wstr};
 use std::num::NonZeroU32;
 
 /// Print modes for the jobs builtin.

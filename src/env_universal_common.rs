@@ -13,7 +13,7 @@ use std::collections::HashSet;
 use std::collections::hash_map::Entry;
 use std::ffi::CString;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read as _, Write as _};
 use std::mem::MaybeUninit;
 
 /// Callback data, reflecting a change in universal variables.

@@ -10,7 +10,7 @@ use fish_color::{Color, Color24};
 use std::cell::{RefCell, RefMut};
 use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;
-use std::os::unix::ffi::OsStrExt;
+use std::os::unix::ffi::OsStrExt as _;
 use std::sync::OnceLock;
 use std::sync::atomic::{AtomicU8, Ordering};
 

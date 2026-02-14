@@ -1,5 +1,5 @@
 use super::string;
-use crate::builtins::shared::BuiltinResultExt;
+use crate::builtins::shared::BuiltinResultExt as _;
 use crate::io::IoChain;
 use crate::io::{IoStreams, OutputStream, StringOutputStream};
 use crate::prelude::*;

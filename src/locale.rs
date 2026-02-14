@@ -16,7 +16,7 @@ pub unsafe fn set_libc_locales(log_ok: bool) -> bool {
         if log_ok {
             crate::flog::flog!(env_locale, {
                 let source = if value == from_environment {
-                    "from environment".to_string()
+                    "from environment".to_owned()
                 } else {
                     format!("to '{}'", value.to_str().unwrap())
                 };

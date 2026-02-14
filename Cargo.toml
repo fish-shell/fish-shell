@@ -214,6 +214,7 @@ ptr_offset_by_literal = "warn"
 ref_option = "warn"
 semicolon_if_nothing_returned = "warn"
 stable_sort_primitive = "warn"
+str_to_string = "warn"
 unnecessary_semicolon = "warn"
 
 # We do not want to use the e?print(ln)?! macros.

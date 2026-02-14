@@ -43,7 +43,7 @@ fn cpu_use(j: &Job) -> f64 {
 fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut IoStreams) {
     let pgid = match j.get_pgid() {
         Some(pgid) => pgid.to_string(),
-        None => "-".to_string(),
+        None => "-".to_owned(),
     };
 
     let mut out = WString::new();

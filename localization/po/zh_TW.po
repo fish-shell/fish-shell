@@ -34152,9 +34152,6 @@ msgstr ""
 msgid "List all analyzed versions"
 msgstr ""
 
-msgid "List all apps"
-msgstr ""
-
 msgid "List all apps in the target space"
 msgstr ""
 
@@ -34312,6 +34309,9 @@ msgid "List all files/folders in directory"
 msgstr ""
 
 msgid "List all forward socket connections"
+msgstr ""
+
+msgid "List all games for all Steam installations"
 msgstr ""
 
 msgid "List all help topics"
@@ -35050,6 +35050,9 @@ msgid "List format"
 msgstr ""
 
 msgid "List full dependencies for a given identity"
+msgstr ""
+
+msgid "List games for a single Steam installation"
 msgstr ""
 
 msgid "List generation ids for client"
@@ -53556,7 +53559,10 @@ msgstr ""
 msgid "Search for fonts in directory"
 msgstr ""
 
-msgid "Search for game(s) with the given name"
+msgid "Search for game(s) with the given name among all Steam installations"
+msgstr ""
+
+msgid "Search for game(s) with the given name for a single Steam installation"
 msgstr ""
 
 msgid "Search for gems under specific paths"

@@ -3,7 +3,7 @@ function __fish_protontricks_complete_winetricks_command
 end
 
 function __fish_protontricks_is_search
-    __fish_contains_opt -s s search
+    __fish_contains_opt -s s -s S search search-all
 end
 
 complete -c protontricks -f
@@ -12,8 +12,10 @@ complete -c protontricks -n 'not __fish_protontricks_is_search' -n 'not __fish_i
 complete -c protontricks -s h -l help -d 'Show help message and exit'
 complete -c protontricks -s v -l verbose -d 'Increase log verbosity, can be supplied twice'
 complete -c protontricks -l no-term -d 'Specify that no terminal is available to Protontricks'
-complete -c protontricks -s s -l search -d 'Search for game(s) with the given name'
-complete -c protontricks -s l -l list -d 'List all apps'
+complete -c protontricks -s s -l search -d 'Search for game(s) with the given name for a single Steam installation'
+complete -c protontricks -s S -l search-all -d 'Search for game(s) with the given name among all Steam installations'
+complete -c protontricks -s l -l list -d 'List games for a single Steam installation'
+complete -c protontricks -s L -l list-all -d 'List all games for all Steam installations'
 complete -c protontricks -s c -l command -xa '(__fish_complete_subcommand)' -d 'Run a command with Wine-related environment variables set'
 complete -c protontricks -l gui -d 'Launch the Protontricks GUI'
 complete -c protontricks -l no-runtime -d 'Disable Steam Runtime'

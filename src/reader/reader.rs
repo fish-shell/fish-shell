@@ -3129,7 +3129,7 @@ impl<'a> Reader<'a> {
                 if self.rls().completion_action == Some(CompletionAction::InsertedUnique)
                     && matches!(
                         self.rls().last_cmd,
-                        Some(rl::Complete | rl::CompleteAndSearch)
+                        Some(rl::Complete | rl::CompleteAndSearch | rl::CompletePrefix)
                     )
                 {
                     let (elt, _el) = self.active_edit_line();
@@ -3170,13 +3170,13 @@ impl<'a> Reader<'a> {
                 self.force_exec_prompt_and_repaint = false;
                 self.parser.libdata_mut().is_repaint = false;
             }
-            rl::Complete | rl::CompleteAndSearch => {
+            rl::Complete | rl::CompleteAndSearch | rl::CompletePrefix => {
                 if !self.conf.complete_ok {
                     return;
                 }
                 if self.is_navigating_pager_contents()
                     || (self.rls().completion_action == Some(CompletionAction::ShownAmbiguous)
-                        && self.rls().last_cmd == Some(rl::Complete))
+                        && matches!(self.rls().last_cmd, Some(rl::Complete | rl::CompletePrefix)))
                 {
                     // The user typed complete more than once in a row. If we are not yet fully
                     // disclosed, then become so; otherwise cycle through our available completions.
@@ -3184,7 +3184,7 @@ impl<'a> Reader<'a> {
                         self.pager.set_fully_disclosed();
                     } else {
                         self.select_completion_in_direction(
-                            if c == rl::Complete {
+                            if c == rl::Complete || c == rl::CompletePrefix {
                                 SelectionMotion::Next
                             } else {
                                 SelectionMotion::Prev
@@ -6173,6 +6173,7 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         }
         rl::Complete
         | rl::CompleteAndSearch
+        | rl::CompletePrefix
         | rl::HistoryPager
         | rl::BackwardChar
         | rl::BackwardCharPassive
@@ -6860,7 +6861,7 @@ fn reader_can_replace(s: &wstr, flags: CompleteFlags) -> bool {
 impl<'a> Reader<'a> {
     /// Compute completions and update the pager and/or commandline as needed.
     fn compute_and_apply_completions(&mut self, c: ReadlineCmd) {
-        assert_matches!(c, ReadlineCmd::Complete | ReadlineCmd::CompleteAndSearch);
+        assert_matches!(c, ReadlineCmd::Complete | ReadlineCmd::CompleteAndSearch | ReadlineCmd::CompletePrefix);
         assert!(
             !get_tty_protocols_active(),
             "should not be called with TTY protocols active"
@@ -6929,11 +6930,12 @@ impl<'a> Reader<'a> {
         // up to the end of the token we're completing.
         let cmdsub = &el.text()[cmdsub_range.start..token_range.end];
 
-        let (mut comp, _needs_load) = complete(
-            cmdsub,
-            CompletionRequestOptions::normal(),
-            &self.parser.context(),
-        );
+        let options = if c == ReadlineCmd::CompletePrefix {
+            CompletionRequestOptions::prefix_only()
+        } else {
+            CompletionRequestOptions::normal()
+        };
+        let (mut comp, _needs_load) = complete(cmdsub, options, &self.parser.context());
 
         let el = &self.command_line;
         // User-supplied completions may have changed the commandline - prevent buffer

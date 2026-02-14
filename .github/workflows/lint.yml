@@ -33,7 +33,7 @@ jobs:
           - rust_version: "stable"
             features: "--no-default-features"
           - rust_version: "msrv"
-            features: ""
+            features: "--allow=unknown_lints"
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain

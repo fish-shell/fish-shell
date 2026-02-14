@@ -117,10 +117,13 @@ function fish_vi_exec_motion
             case change
                 switch $motion[1]
                     case kill-word-vi
-                        for i in (seq (math $total - 1))
-                            $motion_cmd
+                        for i in (seq $total)
+                            if test $i -eq $total
+                                commandline -f kill-word
+                            else
+                                $motion_cmd
+                            end
                         end
-                        commandline -f kill-word
                     case '*'
                         for i in (seq $total)
                             $motion_cmd || { set ok false; break }

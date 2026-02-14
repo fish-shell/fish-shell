@@ -43,7 +43,7 @@ fn build_man(sec1_dir: &Path) {
     ];
 
     rsconf::rebuild_if_env_changed("FISH_BUILD_DOCS");
-    if env_var("FISH_BUILD_DOCS") == Some("0".to_string()) {
+    if env_var("FISH_BUILD_DOCS") == Some("0".to_owned()) {
         rsconf::warn!("Skipping man pages because $FISH_BUILD_DOCS is set to 0");
         return;
     }
@@ -62,7 +62,7 @@ fn build_man(sec1_dir: &Path) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             assert_ne!(
                 env_var("FISH_BUILD_DOCS"),
-                Some("1".to_string()),
+                Some("1".to_owned()),
                 "Could not find sphinx-build required to build man pages.\n\
                  Install Sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0."
             );

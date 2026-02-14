@@ -583,7 +583,7 @@ impl Screen {
         flogf!(
             reader,
             "Setting screen y to %s due to %s",
-            viewport_y.map_or("<none>".to_string(), |y| format!("{y}")),
+            viewport_y.map_or("<none>".to_owned(), |y| format!("{y}")),
             whence,
         );
         self.viewport_y = viewport_y;

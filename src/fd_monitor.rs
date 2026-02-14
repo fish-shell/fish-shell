@@ -466,8 +466,8 @@ impl Drop for FdMonitor {
 mod tests {
     use crate::portable_atomic::AtomicU64;
     use std::fs::File;
-    use std::io::Write;
-    use std::os::fd::{AsRawFd, OwnedFd};
+    use std::io::Write as _;
+    use std::os::fd::{AsRawFd as _, OwnedFd};
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::{Arc, Barrier, Mutex};
     use std::thread;

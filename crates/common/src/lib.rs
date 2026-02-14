@@ -5,7 +5,7 @@ use std::cell::{Cell, RefCell};
 use std::io::Read;
 use std::ops::{Deref, DerefMut};
 use std::os::fd::{AsRawFd, BorrowedFd, RawFd};
-use std::os::unix::ffi::OsStrExt;
+use std::os::unix::ffi::OsStrExt as _;
 use std::sync::OnceLock;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::{env, mem, time};

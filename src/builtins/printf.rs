@@ -56,7 +56,7 @@ use crate::wutil::{
     wcstoi::{Options as WcstoiOpts, wcstoi_partial},
     wstr_offset_in,
 };
-use fish_printf::{ToArg, sprintf_locale};
+use fish_printf::{ToArg as _, sprintf_locale};
 use fish_widestring::{decode_byte_from_char, encode_byte_to_char};
 
 /// Return true if `c` is an octal digit.

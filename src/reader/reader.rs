@@ -59,7 +59,7 @@ use crate::history::{
 use crate::input_common::BackgroundColorQuery;
 use crate::input_common::CursorPositionQueryReason;
 use crate::input_common::InputEventQueue;
-use crate::input_common::InputEventQueuer;
+use crate::input_common::InputEventQueuer as _;
 use crate::input_common::QueryResponse;
 use crate::input_common::{
     CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData, LONG_READ_TIMEOUT,
@@ -146,7 +146,7 @@ use std::{
     io::BufReader,
     num::NonZeroUsize,
     ops::{ControlFlow, Range},
-    os::fd::{AsRawFd, BorrowedFd, FromRawFd, OwnedFd, RawFd},
+    os::fd::{AsRawFd as _, BorrowedFd, FromRawFd as _, OwnedFd, RawFd},
     pin::Pin,
     sync::{
         Arc, LazyLock, Mutex, MutexGuard, OnceLock,

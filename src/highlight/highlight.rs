@@ -30,7 +30,7 @@ use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use fish_color::Color;
 use fish_common::{ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
 use fish_wcstringutil::string_prefixes_string;
-use fish_widestring::{L, WExt, WString, wstr};
+use fish_widestring::{L, WExt as _, WString, wstr};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
@@ -1308,7 +1308,7 @@ pub struct HighlightSpec {
 mod tests {
     use super::{HighlightColorResolver, HighlightRole, HighlightSpec, highlight_shell};
     use crate::common::ScopeGuard;
-    use crate::env::{EnvMode, EnvSetMode, Environment};
+    use crate::env::{EnvMode, EnvSetMode, Environment as _};
     use crate::future_feature_flags::{self, FeatureFlag};
     use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};

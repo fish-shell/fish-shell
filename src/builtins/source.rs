@@ -1,4 +1,4 @@
-use std::os::fd::AsRawFd;
+use std::os::fd::AsRawFd as _;
 
 use crate::{
     common::{FilenameRef, escape},

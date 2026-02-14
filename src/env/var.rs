@@ -320,7 +320,7 @@ pub fn is_read_only(name: &wstr) -> bool {
 mod tests {
     use super::{EnvMode, EnvVar, EnvVarFlags};
     use crate::env::EnvSetMode;
-    use crate::env::environment::{EnvStack, Environment};
+    use crate::env::environment::{EnvStack, Environment as _};
     use crate::prelude::*;
     use crate::tests::prelude::*;
     use assert_matches::assert_matches;

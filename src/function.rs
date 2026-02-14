@@ -2,7 +2,7 @@
 // autoloading functions in the $fish_function_path. Actual function evaluation is taken care of by
 // the parser and to some degree the builtin handling library.
 
-use crate::ast::{self, Node};
+use crate::ast::{self, Node as _};
 use crate::autoload::{Autoload, AutoloadResult};
 use crate::common::{FilenameRef, assert_sync, escape, valid_func_name};
 use crate::complete::complete_wrap_map;

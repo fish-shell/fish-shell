@@ -5,7 +5,7 @@ use crate::universal_notifier::UniversalNotifier;
 use crate::wutil::{wbasename, wdirname};
 use nix::sys::inotify::{AddWatchFlags, InitFlags, Inotify};
 use std::ffi::OsString;
-use std::os::fd::{AsFd, AsRawFd, RawFd};
+use std::os::fd::{AsFd as _, AsRawFd as _, RawFd};
 
 /// A notifier based on inotify.
 pub struct InotifyNotifier {

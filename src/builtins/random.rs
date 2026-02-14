@@ -3,7 +3,7 @@ use super::prelude::*;
 use crate::wutil;
 use fish_util::get_seeded_rng;
 use rand::rngs::SmallRng;
-use rand::{Rng, RngCore};
+use rand::{Rng as _, RngCore as _};
 use std::sync::{LazyLock, Mutex};
 
 static RNG: LazyLock<Mutex<SmallRng>> =

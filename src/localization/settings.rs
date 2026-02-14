@@ -1,7 +1,7 @@
 use super::{localizable_consts, localizable_string, wgettext, wgettext_fmt};
-use crate::env::{EnvStack, Environment};
+use crate::env::{EnvStack, Environment as _};
 use fish_widestring::{L, WString, wstr};
-use itertools::Itertools;
+use itertools::Itertools as _;
 use std::collections::{HashMap, HashSet};
 use std::sync::{LazyLock, Mutex};
 

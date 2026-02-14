@@ -1,6 +1,6 @@
 use super::prelude::*;
 use super::read::TokenOutputMode;
-use crate::ast::{self, Kind, Leaf};
+use crate::ast::{self, Kind, Leaf as _};
 use crate::common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use crate::complete::Completion;
 use crate::expand::{ExpandFlags, ExpandResultCode, expand_string};

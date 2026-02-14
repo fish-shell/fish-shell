@@ -30,7 +30,7 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
     ffi::{CStr, CString},
     fs::File,
-    io::{BufRead, BufWriter, Read, Write},
+    io::{BufRead, BufWriter, Read as _, Write as _},
     mem::MaybeUninit,
     num::NonZeroUsize,
     ops::ControlFlow,
@@ -41,10 +41,10 @@ use std::{
 use bitflags::bitflags;
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
-use rand::Rng;
+use rand::Rng as _;
 
 use crate::{
-    ast::{self, Kind, Node},
+    ast::{self, Kind, Node as _},
     common::{CancelChecker, UnescapeStringStyle, bytes2wcstring, unescape_string, valid_var_name},
     env::{EnvMode, EnvStack, Environment},
     expand::{ExpandFlags, expand_one},
@@ -1812,7 +1812,7 @@ mod tests {
     use crate::prelude::*;
     use fish_build_helper::workspace_root;
     use fish_wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
-    use rand::Rng;
+    use rand::Rng as _;
     use rand::rngs::ThreadRng;
     use std::collections::VecDeque;
     use std::ffi::OsString;

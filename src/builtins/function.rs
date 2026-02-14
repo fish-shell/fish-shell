@@ -2,7 +2,7 @@ use super::prelude::*;
 use crate::ast::BlockStatement;
 use crate::common::{valid_func_name, valid_var_name};
 use crate::complete::complete_add_wrapper;
-use crate::env::environment::Environment;
+use crate::env::environment::Environment as _;
 use crate::env::is_read_only;
 use crate::event::{self, EventDescription, EventHandler};
 use crate::function;

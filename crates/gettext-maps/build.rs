@@ -22,7 +22,7 @@ fn embed_localizations(cache_dir: &Path) {
     use fish_gettext_mo_file_parser::parse_mo_file;
     use std::{
         fs::File,
-        io::{BufWriter, Write},
+        io::{BufWriter, Write as _},
     };
 
     let po_dir = fish_build_helper::workspace_root()

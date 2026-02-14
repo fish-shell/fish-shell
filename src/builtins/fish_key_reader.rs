@@ -14,11 +14,11 @@ use libc::{STDIN_FILENO, VEOF, VINTR};
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{PROGRAM_NAME, get_program_name, osstr2wcstring, shell_modes},
-    env::{EnvStack, Environment, env_init},
+    env::{EnvStack, Environment as _, env_init},
     future_feature_flags,
     input_common::{
-        CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer, KeyEvent, QueryResultEvent,
-        match_key_event_to_key,
+        CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer as _, KeyEvent,
+        QueryResultEvent, match_key_event_to_key,
     },
     key::{Key, char_to_symbol},
     nix::isatty,

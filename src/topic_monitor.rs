@@ -28,7 +28,7 @@ use fish_widestring::WString;
 use nix::errno::Errno;
 use nix::unistd;
 use std::cell::Cell;
-use std::os::fd::AsRawFd;
+use std::os::fd::AsRawFd as _;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
 #[cfg(target_os = "linux")]

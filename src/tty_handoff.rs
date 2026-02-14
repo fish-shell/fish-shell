@@ -18,7 +18,6 @@ use crate::terminal::TerminalCommand::{
 };
 use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror, wcstoi};
-use fish_widestring::ToWString;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use nix::sys::termios::tcgetattr;
 use nix::unistd::getpgrp;

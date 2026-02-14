@@ -8,7 +8,7 @@ use crate::common::read_blocked;
 use crate::common::unescape_string;
 use crate::common::valid_var_name;
 use crate::env::EnvMode;
-use crate::env::Environment;
+use crate::env::Environment as _;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
 use crate::input_common::DecodeState;

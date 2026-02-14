@@ -19,7 +19,7 @@ pub fn test_notifiers(notifiers: &[&dyn UniversalNotifier], fish_variables_path:
     let modify_path = |path: &wstr| -> Result<(), std::io::Error> {
         use crate::common::wcs2osstring;
         use std::fs;
-        use std::io::Write;
+        use std::io::Write as _;
         let path = wcs2osstring(path);
         let mut new_path = std::path::PathBuf::from(path.clone());
         new_path.set_extension("new");

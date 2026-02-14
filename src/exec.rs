@@ -11,7 +11,7 @@ use crate::common::{
     ScopeGuard, bytes2wcstring, exit_without_destructors, truncate_at_nul, wcs2bytes, wcs2zstring,
     write_loop,
 };
-use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment, READ_BYTE_LIMIT, Statuses};
+use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment as _, READ_BYTE_LIMIT, Statuses};
 #[cfg(have_posix_spawn)]
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::{
@@ -47,7 +47,7 @@ use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror};
 use errno::{errno, set_errno};
-use fish_widestring::ToWString;
+use fish_widestring::ToWString as _;
 use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO,
@@ -56,10 +56,10 @@ use nix::fcntl::OFlag;
 use nix::sys::stat;
 use nix::unistd::getpgrp;
 use std::ffi::CStr;
-use std::io::{Read, Write};
+use std::io::{Read as _, Write as _};
 use std::mem::MaybeUninit;
 use std::num::NonZeroU32;
-use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsRawFd as _, FromRawFd as _, OwnedFd, RawFd};
 use std::slice;
 use std::sync::{
     Arc, OnceLock,

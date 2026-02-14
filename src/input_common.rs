@@ -2,7 +2,7 @@ use crate::common::{
     WSL, bytes2wcstring, fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked,
     shell_modes,
 };
-use crate::env::{EnvStack, Environment};
+use crate::env::{EnvStack, Environment as _};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::flog::{FloggableDebug, FloggableDisplay, flog};
 use crate::future_feature_flags::{FeatureFlag, test as feature_test};
@@ -1777,7 +1777,7 @@ fn parse_hex_into(out: &mut [u8], hex: &[u8]) -> Option<()> {
 #[cfg(test)]
 mod tests {
     use super::{
-        CharEvent, InputEventQueue, InputEventQueuer, KeyEvent, KeyMatchQuality, ReadlineCmd,
+        CharEvent, InputEventQueue, InputEventQueuer as _, KeyEvent, KeyMatchQuality, ReadlineCmd,
         match_key_event_to_key, parse_hex,
     };
     use crate::key::{Key, Modifiers};

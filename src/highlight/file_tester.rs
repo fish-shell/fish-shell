@@ -19,7 +19,7 @@ use crate::wutil::{
 use fish_wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
 };
-use fish_widestring::{L, WExt, WString, wstr};
+use fish_widestring::{L, WExt as _, WString, wstr};
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
 use std::collections::{HashMap, HashSet};
@@ -435,7 +435,7 @@ mod tests {
 
     use crate::redirection::RedirectionMode;
     use std::fs::{self, File, Permissions, create_dir_all};
-    use std::os::unix::fs::PermissionsExt;
+    use std::os::unix::fs::PermissionsExt as _;
     use std::path::PathBuf;
 
     struct TempDirWithCtx {

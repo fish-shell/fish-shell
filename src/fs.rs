@@ -15,8 +15,8 @@ use std::{
     ffi::OsString,
     fs::{File, OpenOptions},
     os::{
-        fd::AsRawFd,
-        unix::{ffi::OsStringExt, fs::MetadataExt},
+        fd::AsRawFd as _,
+        unix::{ffi::OsStringExt as _, fs::MetadataExt as _},
     },
     path::PathBuf,
 };

@@ -6,8 +6,8 @@ use assert_matches::assert_matches;
 use std::fmt::{self, Write};
 use std::mem;
 use std::result::Result;
-use unicode_segmentation::UnicodeSegmentation;
-use unicode_width::UnicodeWidthStr;
+use unicode_segmentation::UnicodeSegmentation as _;
+use unicode_width::UnicodeWidthStr as _;
 
 #[cfg(feature = "widestring")]
 use widestring::Utf32Str as wstr;

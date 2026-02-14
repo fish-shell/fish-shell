@@ -14,11 +14,11 @@ use crate::fds::BorrowedFdFile;
 use crate::flog;
 use errno::errno;
 use fish_wcstringutil::{join_strings, str2bytes_callback};
-use fish_widestring::{IntoCharIter, L, WExt, WString, wstr};
+use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
 use nix::unistd::AccessFlags;
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
-use std::io::{self, Write};
+use std::io::{self, Write as _};
 use std::os::unix::prelude::*;
 
 pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
@@ -463,11 +463,11 @@ mod tests {
     use crate::common::bytes2wcstring;
     use crate::prelude::*;
     use crate::tests::prelude::*;
-    use rand::Rng;
+    use rand::Rng as _;
     use std::{
         fs::OpenOptions,
-        io::{Read, Seek},
-        os::{fd::AsRawFd, unix::fs::OpenOptionsExt},
+        io::{Read as _, Seek as _},
+        os::{fd::AsRawFd as _, unix::fs::OpenOptionsExt as _},
     };
 
     mod test_path_normalize_for_cd {

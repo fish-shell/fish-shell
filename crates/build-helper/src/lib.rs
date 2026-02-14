@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, os::unix::ffi::OsStrExt, path::Path};
+use std::{borrow::Cow, env, os::unix::ffi::OsStrExt as _, path::Path};
 
 pub fn env_var(name: &str) -> Option<String> {
     let err = match env::var(name) {

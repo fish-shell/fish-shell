@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use fish_build_helper::as_os_strs;
 use std::{path::PathBuf, process::Command};
-use xtask::{CommandExt, cargo};
+use xtask::{CommandExt as _, cargo};
 
 #[derive(Parser)]
 #[command(

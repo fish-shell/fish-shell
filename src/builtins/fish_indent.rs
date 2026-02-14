@@ -2,21 +2,23 @@
 
 use std::ffi::OsStr;
 use std::fs;
-use std::io::{Read, Write};
-use std::os::unix::ffi::OsStrExt;
+use std::io::{Read, Write as _};
+use std::os::unix::ffi::OsStrExt as _;
 
 use crate::locale::set_libc_locales;
 use crate::panic::panic_handler;
 
 use super::prelude::*;
-use crate::ast::{self, AsNode, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
+use crate::ast::{
+    self, AsNode as _, Ast, Kind, Leaf as _, Node, NodeVisitor, SourceRangeList, Traversal,
+};
 use crate::common::{
-    PROGRAM_NAME, ReadExt, UnescapeFlags, UnescapeStringStyle, bytes2wcstring, get_program_name,
-    osstr2wcstring, unescape_string, wcs2bytes,
+    PROGRAM_NAME, ReadExt as _, UnescapeFlags, UnescapeStringStyle, bytes2wcstring,
+    get_program_name, osstr2wcstring, unescape_string, wcs2bytes,
 };
 use crate::env::EnvStack;
 use crate::env::env_init;
-use crate::env::environment::Environment;
+use crate::env::environment::Environment as _;
 use crate::expand::INTERNAL_SEPARATOR;
 use crate::future_feature_flags;
 use crate::global_safety::RelaxedAtomicBool;

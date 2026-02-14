@@ -2,7 +2,7 @@
 use errno::errno;
 
 use super::prelude::*;
-use crate::{env::Environment, wutil::wrealpath};
+use crate::{env::Environment as _, wutil::wrealpath};
 
 // The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 const short_options: &wstr = L!("LPh");

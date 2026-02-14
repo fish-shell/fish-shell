@@ -7,7 +7,7 @@ use crate::flogf;
 use crate::io::IoChain;
 use crate::parser::Parser;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_path};
-use fish_widestring::{L, WExt, WString, wstr};
+use fish_widestring::{L, WExt as _, WString, wstr};
 use lru::LruCache;
 use rust_embed::RustEmbed;
 use std::collections::{HashMap, HashSet};
@@ -477,7 +477,7 @@ mod tests {
 
         fn touch_file(path: &wstr) {
             use nix::sys::stat::Mode;
-            use std::io::Write;
+            use std::io::Write as _;
 
             let mut file = wopen_cloexec(
                 path,

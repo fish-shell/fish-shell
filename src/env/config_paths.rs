@@ -2,7 +2,7 @@ use crate::common::{BUILD_DIR, get_program_name};
 use crate::{flog, flogf};
 use fish_build_helper::workspace_root;
 use std::ffi::OsStr;
-use std::os::unix::ffi::OsStrExt;
+use std::os::unix::ffi::OsStrExt as _;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 

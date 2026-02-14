@@ -10,7 +10,7 @@ use crate::{builtins::*, wutil};
 use errno::errno;
 use fish_common::assert_sorted_by_name;
 use fish_widestring::L;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead as _, BufReader, Read as _};
 
 pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;
 

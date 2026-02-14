@@ -51,7 +51,7 @@ macro_rules! sprintf {
         {
             // May be no args!
             #[allow(unused_imports)]
-            use $crate::ToArg;
+            use $crate::ToArg as _;
             $crate::printf_c_locale(
                 $target,
                 $fmt,

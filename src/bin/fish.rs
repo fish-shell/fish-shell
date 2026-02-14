@@ -33,7 +33,7 @@ use fish::{
     env::{
         EnvMode, Statuses,
         config_paths::ConfigPaths,
-        environment::{EnvStack, Environment, env_init},
+        environment::{EnvStack, Environment as _, env_init},
     },
     eprintf,
     event::{self, Event},

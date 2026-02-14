@@ -10,7 +10,7 @@ use crate::{common::exit_without_destructors, wutil::fstat};
 use libc::{O_RDONLY, pid_t};
 use std::ffi::CStr;
 use std::num::NonZeroU32;
-use std::os::unix::fs::MetadataExt;
+use std::os::unix::fs::MetadataExt as _;
 use std::time::Duration;
 
 /// The number of times to try to call fork() before giving up.
@@ -533,7 +533,7 @@ fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr>
 mod tests {
     use super::get_interpreter;
     use std::ffi::CString;
-    use std::os::unix::ffi::OsStrExt;
+    use std::os::unix::ffi::OsStrExt as _;
 
     #[test]
     fn test_get_interpreter_returns_none_on_embedded_nul() {

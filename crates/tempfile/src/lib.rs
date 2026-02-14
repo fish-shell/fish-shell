@@ -5,7 +5,7 @@ use std::{
     path::PathBuf,
 };
 
-use rand::distr::{Alphanumeric, Distribution};
+use rand::distr::{Alphanumeric, Distribution as _};
 
 pub struct TempFile {
     file: File,
@@ -114,7 +114,7 @@ pub fn new_dir() -> std::io::Result<TempDir> {
 mod tests {
     use std::{
         fs::File,
-        io::{Read, Seek, Write},
+        io::{Read as _, Seek as _, Write as _},
     };
 
     #[test]

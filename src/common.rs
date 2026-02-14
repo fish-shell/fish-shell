@@ -1394,7 +1394,7 @@ mod tests {
     };
     use fish_util::get_seeded_rng;
     use fish_widestring::{ENCODE_DIRECT_BASE, L, WString, wstr};
-    use rand::{Rng, RngCore};
+    use rand::{Rng as _, RngCore as _};
     use std::fmt::Write as _;
 
     #[test]

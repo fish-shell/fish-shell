@@ -53,7 +53,7 @@ use fish_wcstringutil::{
     string_prefixes_string_case_insensitive, string_suffixes_string_case_insensitive,
     strip_executable_suffix,
 };
-use fish_widestring::WExt;
+use fish_widestring::WExt as _;
 
 // Completion description strings, mostly for different types of files, such as sockets, block
 // devices, etc.
@@ -2634,7 +2634,7 @@ mod tests {
     };
     use crate::abbrs::{self, Abbreviation, with_abbrs_mut};
     use crate::common::str2wcstring;
-    use crate::env::{EnvMode, EnvSetMode, Environment};
+    use crate::env::{EnvMode, EnvSetMode, Environment as _};
     use crate::io::IoChain;
     use crate::operation_context::{
         EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT, OperationContext, no_cancel,

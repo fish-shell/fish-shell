@@ -6,7 +6,7 @@ use nix::unistd::AccessFlags;
 use std::cell::LazyCell;
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::os::unix::fs::MetadataExt;
+use std::os::unix::fs::MetadataExt as _;
 
 use crate::common::{
     UnescapeFlags, UnescapeStringStyle, WSL, is_windows_subsystem_for_linux, unescape_string,

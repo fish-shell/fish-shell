@@ -2,7 +2,7 @@
 
 use super::prelude::*;
 use crate::{
-    env::{EnvMode, Environment},
+    env::{EnvMode, Environment as _},
     fds::{BEST_O_SEARCH, wopen_dir},
     parser::ParserEnvSetMode,
     path::path_apply_cdpath,

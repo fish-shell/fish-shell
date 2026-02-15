@@ -320,7 +320,7 @@ impl EnvUniversal {
         // Preserve legacy behavior by sorting the values first
         let mut cloned: Vec<(&wstr, &EnvVar)> =
             vars.iter().map(|(key, var)| (key.as_ref(), var)).collect();
-        cloned.sort_by(|(lkey, _), (rkey, _)| lkey.cmp(rkey));
+        cloned.sort_by_key(|(key, _)| *key);
 
         for (key, var) in cloned {
             // Append the entry. Note that append_file_entry may fail, but that only affects one

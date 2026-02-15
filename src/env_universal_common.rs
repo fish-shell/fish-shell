@@ -9,6 +9,7 @@ use crate::prelude::*;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
 use fish_wcstringutil::{LineIterator, join_strings};
 use fish_widestring::decode_byte_from_char;
+use itertools::Itertools as _;
 use std::collections::HashSet;
 use std::collections::hash_map::Entry;
 use std::ffi::CString;
@@ -317,21 +318,20 @@ impl EnvUniversal {
         contents.extend_from_slice(UVARS_VERSION_3_0);
         contents.push(b'\n');
 
-        // Preserve legacy behavior by sorting the values first
-        let mut cloned: Vec<(&wstr, &EnvVar)> =
-            vars.iter().map(|(key, var)| (key.as_ref(), var)).collect();
-        cloned.sort_by_key(|(key, _)| *key);
+        vars.iter()
+            // Preserve legacy behavior by sorting the values first
+            .sorted_by_key(|(k, _)| *k)
+            .for_each(|(k, v)| {
+                // Append the entry. Note that append_file_entry may fail,
+                // but that only affects one variable; soldier on.
+                append_file_entry(
+                    v.get_flags(),
+                    k,
+                    &encode_serialized(v.as_list()),
+                    &mut contents,
+                );
+            });
 
-        for (key, var) in cloned {
-            // Append the entry. Note that append_file_entry may fail, but that only affects one
-            // variable; soldier on.
-            append_file_entry(
-                var.get_flags(),
-                key,
-                &encode_serialized(var.as_list()),
-                &mut contents,
-            );
-        }
         contents
     }
 

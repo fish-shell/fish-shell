@@ -6,8 +6,7 @@ use std::{
 
 type Catalog = &'static phf::Map<&'static str, &'static str>;
 
-static LANGUAGE_PRECEDENCE: LazyLock<Mutex<Vec<(&'static str, Catalog)>>> =
-    LazyLock::new(|| Mutex::new(vec![]));
+static LANGUAGE_PRECEDENCE: Mutex<Vec<(&'static str, Catalog)>> = Mutex::new(Vec::new());
 
 pub fn gettext(message_str: &'static str) -> Option<&'static str> {
     let language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();

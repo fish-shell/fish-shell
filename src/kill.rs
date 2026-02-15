@@ -4,17 +4,17 @@
 //! previous cuts.
 
 use std::collections::VecDeque;
-use std::sync::{LazyLock, Mutex};
+use std::sync::Mutex;
 
 use crate::prelude::*;
 
 struct KillRing(VecDeque<WString>);
 
-static KILL_RING: LazyLock<Mutex<KillRing>> = LazyLock::new(|| Mutex::new(KillRing::new()));
+static KILL_RING: Mutex<KillRing> = Mutex::new(KillRing::new());
 
 impl KillRing {
     /// Create a new killring.
-    fn new() -> Self {
+    const fn new() -> Self {
         Self(VecDeque::new())
     }
 

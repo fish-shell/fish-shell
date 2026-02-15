@@ -13,7 +13,7 @@ use crate::threads::assert_is_main_thread;
 use fish_common::assert_sorted_by_name;
 use std::mem;
 use std::sync::{
-    LazyLock, Mutex, MutexGuard,
+    Mutex, MutexGuard,
     atomic::{AtomicU32, Ordering},
 };
 
@@ -239,10 +239,18 @@ pub struct InputMappingSet {
     preset_mapping_list: Vec<InputMapping>,
 }
 
+impl InputMappingSet {
+    const fn new() -> Self {
+        Self {
+            mapping_list: Vec::new(),
+            preset_mapping_list: Vec::new(),
+        }
+    }
+}
+
 /// Access the singleton input mapping set.
 pub fn input_mappings() -> MutexGuard<'static, InputMappingSet> {
-    static INPUT_MAPPINGS: LazyLock<Mutex<InputMappingSet>> =
-        LazyLock::new(|| Mutex::new(InputMappingSet::default()));
+    static INPUT_MAPPINGS: Mutex<InputMappingSet> = Mutex::new(InputMappingSet::new());
     INPUT_MAPPINGS.lock().unwrap()
 }
 

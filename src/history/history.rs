@@ -1834,6 +1834,11 @@ mod tests {
         false
     }
 
+    // Helper to create a history with a custom directory, for testing.
+    fn create_test_history(name: &wstr, custom_dir: &wstr) -> Arc<History> {
+        History::new(name, Some(custom_dir.to_owned()))
+    }
+
     fn random_string(rng: &mut ThreadRng) -> WString {
         let mut result = WString::new();
         let max = rng.random_range(1..=32);
@@ -1849,7 +1854,7 @@ mod tests {
     #[test]
     fn test_history() {
         let tmpdir = fish_tempfile::new_dir().unwrap();
-        let hist_dir = Some(osstr2wcstring(tmpdir.path()));
+        let hist_dir = osstr2wcstring(tmpdir.path());
 
         macro_rules! test_history_matches {
             ($search:expr, $expected:expr) => {
@@ -1877,7 +1882,7 @@ mod tests {
         let nocase = SearchFlags::IGNORE_CASE;
 
         // Populate a history.
-        let history = History::new(L!("test_history"), hist_dir);
+        let history = create_test_history(L!("test_history"), &hist_dir);
         history.clear();
         for s in items {
             history.add_commandline(s.to_owned());
@@ -2029,10 +2034,9 @@ mod tests {
         result
     }
 
-    #[allow(clippy::ref_option)]
-    fn write_history_entries(dir: &Option<WString>, item_count: usize, idx: usize) -> Arc<History> {
+    fn write_history_entries(dir: &wstr, item_count: usize, idx: usize) -> Arc<History> {
         // Called in child thread to modify history.
-        let hist = History::new(L!("race_test"), dir.clone());
+        let hist = create_test_history(L!("race_test"), dir);
         let hist_lines = generate_history_lines(item_count, idx);
         for line in hist_lines {
             hist.add_commandline(line);
@@ -2045,7 +2049,7 @@ mod tests {
     fn test_history_races() {
         // Place history in a temp directory.
         let tmpdir = fish_tempfile::new_dir().unwrap();
-        let hist_dir = Some(osstr2wcstring(tmpdir.path()));
+        let hist_dir = osstr2wcstring(tmpdir.path());
 
         // Skip tests if we can't get an exclusive lock on a file in that directory.
         let tmp_balloon = tmpdir.path().join("history-races-test-balloon");
@@ -2065,7 +2069,7 @@ mod tests {
         const ITEM_COUNT: usize = 256;
 
         // Ensure history is clear.
-        History::new(L!("race_test"), hist_dir.clone()).clear();
+        create_test_history(L!("race_test"), &hist_dir).clear();
 
         let mut children = Vec::with_capacity(RACE_COUNT);
         for i in 0..RACE_COUNT {
@@ -2088,7 +2092,7 @@ mod tests {
         time_barrier();
 
         // Ensure that we got sane, sorted results.
-        let hist = History::new(L!("race_test"), hist_dir.clone());
+        let hist = create_test_history(L!("race_test"), &hist_dir);
 
         // History is enumerated from most recent to least
         // Every item should be the last item in some array
@@ -2145,7 +2149,7 @@ mod tests {
     fn test_history_external_rewrites() {
         // Place history in a temp directory.
         let tmpdir = fish_tempfile::new_dir().unwrap();
-        let hist_dir = Some(osstr2wcstring(tmpdir.path()));
+        let hist_dir = osstr2wcstring(tmpdir.path());
 
         // Write some history to disk.
         {
@@ -2156,7 +2160,7 @@ mod tests {
         std::thread::sleep(Duration::from_secs(1));
 
         // Read history from disk.
-        let hist = History::new(L!("race_test"), hist_dir.clone());
+        let hist = create_test_history(L!("race_test"), &hist_dir);
         assert_eq!(hist.item_at_index(1).unwrap().str(), "needle");
 
         // Add items until we rewrite the file.
@@ -2173,7 +2177,7 @@ mod tests {
     #[test]
     fn test_history_merge() {
         let tmpdir = fish_tempfile::new_dir().unwrap();
-        let hist_dir = Some(osstr2wcstring(tmpdir.path()));
+        let hist_dir = osstr2wcstring(tmpdir.path());
 
         // In a single fish process, only one history is allowed to exist with the given name But it's
         // common to have multiple history instances with the same name active in different processes,
@@ -2182,9 +2186,9 @@ mod tests {
         const COUNT: usize = 3;
         let name = L!("merge_test");
         let hists = [
-            History::new(name, hist_dir.clone()),
-            History::new(name, hist_dir.clone()),
-            History::new(name, hist_dir.clone()),
+            create_test_history(name, &hist_dir),
+            create_test_history(name, &hist_dir),
+            create_test_history(name, &hist_dir),
         ];
         let texts = [L!("History 1"), L!("History 2"), L!("History 3")];
         let alt_texts = [
@@ -2224,7 +2228,7 @@ mod tests {
         // Make a new history. It should contain everything. The time_barrier() is so that the timestamp
         // is newer, since we only pick up items whose timestamp is before the birth stamp.
         time_barrier();
-        let everything = History::new(name, hist_dir.clone());
+        let everything = create_test_history(name, &hist_dir);
         for text in texts {
             assert!(history_contains(&everything, text));
         }
@@ -2406,17 +2410,17 @@ mod tests {
     #[test]
     fn test_history_formats() {
         let tmpdir = fish_tempfile::new_dir().unwrap();
-        let hist_dir = Some(osstr2wcstring(tmpdir.path()));
+        let hist_dir = osstr2wcstring(tmpdir.path());
 
         // Test inferring and reading legacy and bash history formats.
         let name = L!("history_sample_fish_2_0");
-        install_sample_history(name, hist_dir.as_ref().unwrap());
+        install_sample_history(name, &hist_dir);
         let expected: Vec<WString> = vec![
             "echo this has\\\nbackslashes".into(),
             "function foo\necho bar\nend".into(),
             "echo alpha".into(),
         ];
-        let test_history_imported = History::new(name, hist_dir.clone());
+        let test_history_imported = create_test_history(name, &hist_dir);
         assert_eq!(test_history_imported.get_history(), expected);
         test_history_imported.clear();
 
@@ -2435,16 +2439,16 @@ mod tests {
             "history --help".into(),
             "echo foo".into(),
         ];
-        let test_history_imported_from_bash = History::new(L!("bash_import"), hist_dir.clone());
+        let test_history_imported_from_bash = create_test_history(L!("bash_import"), &hist_dir);
         let file = std::fs::File::open(workspace_root().join("tests/history_sample_bash")).unwrap();
         test_history_imported_from_bash.populate_from_bash(BufReader::new(file));
         assert_eq!(test_history_imported_from_bash.get_history(), expected);
         test_history_imported_from_bash.clear();
 
         let name = L!("history_sample_corrupt1");
-        install_sample_history(name, hist_dir.as_ref().unwrap());
+        install_sample_history(name, &hist_dir);
         // We simply invoke get_string_representation. If we don't die, the test is a success.
-        let test_history_imported_from_corrupted = History::new(name, hist_dir.clone());
+        let test_history_imported_from_corrupted = create_test_history(name, &hist_dir);
         let expected: Vec<WString> = vec![
             "no_newline_at_end_of_file".into(),
             "corrupt_prefix".into(),

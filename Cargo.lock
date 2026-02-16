@@ -434,6 +434,7 @@ version = "0.0.0"
 name = "fish-widestring"
 version = "0.0.0"
 dependencies = [
+ "unicode-width",
  "widestring",
 ]
 

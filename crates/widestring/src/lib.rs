@@ -53,6 +53,219 @@ pub fn decode_byte_from_char(c: char) -> Option<u8> {
     }
 }
 
+mod decoder {
+    use crate::{ENCODE_DIRECT_BASE, ENCODE_DIRECT_END, char_offset, wstr};
+    use buffer::Buffer;
+    use std::{char::REPLACEMENT_CHARACTER, ops::Range};
+    use widestring::utfstr::CharsUtf32;
+
+    mod buffer {
+        // The size required for a PUA-encoded character from our special PUA range - 1,
+        // since that is the maximum number characters our look-ahead needs to check.
+        const MAX_SIZE: usize = 2;
+        pub(super) struct Buffer {
+            buffer: [char; MAX_SIZE],
+            length: usize,
+        }
+
+        impl Buffer {
+            pub(super) fn empty() -> Self {
+                Self {
+                    buffer: ['\0'; MAX_SIZE],
+                    length: 0,
+                }
+            }
+
+            pub(super) fn push(&mut self, c: char) {
+                self.buffer[self.length] = c;
+                self.length += 1;
+            }
+
+            pub(super) fn pop(&mut self) -> Option<char> {
+                if self.length == 0 {
+                    return None;
+                }
+                self.length -= 1;
+                Some(self.buffer[self.length])
+            }
+
+            pub(super) fn pop_front(&mut self) -> Option<char> {
+                if self.length == 0 {
+                    return None;
+                }
+                self.buffer.rotate_left(1);
+                self.length -= 1;
+                Some(self.buffer[MAX_SIZE - 1])
+            }
+        }
+    }
+
+    const PUA_ENCODE_RANGE: Range<char> = ENCODE_DIRECT_BASE..ENCODE_DIRECT_END;
+    const ENCODED_PUA_CHAR_FIRST_CHAR: char = char_offset(ENCODE_DIRECT_BASE, 0xef);
+    // The second UTF-8 byte of a character in our special PUA range is in the range
+    // 0x98..0x9c.
+    const ENCODED_PUA_CHAR_SECOND_CHAR_RANGE: Range<char> =
+        char_offset(ENCODE_DIRECT_BASE, 0x98)..char_offset(ENCODE_DIRECT_BASE, 0x9c);
+
+    /// This serves as the data container for building a double-ended iterator which decodes our
+    /// PUA-encoded chars into a char iterator where each encoded non-UTF-8 byte is replaced by the
+    /// replacement character, and each encoded PUA codepoint is turned back into a single char
+    /// whose value is the original PUA codepoint.
+    ///
+    /// The latter part makes the decoding logic somewhat complicated, because encoded PUA chars
+    /// take up 3 chars in our encoding. Therefore, in some cases, we need to take more than 1 char
+    /// from the `encoded_chars` iterator before we know whether to decode 3 chars together into a
+    /// single char, or whether the chars should be replaced by the replacement char individually.
+    /// In cases where we took more than 1 char and then notice that individual replacement is
+    /// warranted, we return a replacement char for the first char we took from the iterator, and
+    /// cache the 1 or 2 other chars we read in `buffer_front` or `buffer_back`, depending on the
+    /// reading direction. Buffers store elements in such an order that getting the next character
+    /// requires `pop` when using the buffer associated with the current reading direction, and
+    /// `pop_front` when using the other buffer. This is done to optimize the common case of
+    /// iterating in a single direction.
+    ///
+    /// The buffers have to be considered before taking more chars from `encoded_chars`.
+    /// If the iterator is only read in one direction, the buffer for the other direction will not
+    /// be used. But because it's possible that the iterator is read from both ends, it can happen
+    /// that when `encoded_chars` runs out, the buffer for the opposite reading direction is
+    /// non-empty. In the [`Self::next`] and [`Self::next_back`] implementations, this logic is
+    /// encapsulated into closures for getting the next char from the appropriate source.
+    /// At most 2 chars will ever be stored in a buffer, so they are implemented using a fixed-size
+    /// array, requiring no heap allocations.
+    ///
+    /// Note that in most cases, we can avoid using the buffers, and simply forward the char
+    /// obtained from `encoded_chars`. Only chars in [`PUA_ENCODE_RANGE`] can possibly encode PUA
+    /// chars, so if we read any other char, we know that it's not part of such an encoding and can
+    /// return it directly. If we read in the forward direction, we can also exploit knowledge about
+    /// the possible values of our PUA encoding. Specifically, the first char in such an encoding
+    /// will always be [`ENCODED_PUA_CHAR_FIRST_CHAR`], and the second char will be in the range
+    /// [`ENCODED_PUA_CHAR_SECOND_CHAR_RANGE`].
+    pub(super) struct Decoder<'a> {
+        encoded_chars: CharsUtf32<'a>,
+        buffer_front: Buffer,
+        buffer_back: Buffer,
+    }
+
+    impl<'a> Decoder<'a> {
+        pub(super) fn new(encoded_str: &'a wstr) -> Self {
+            Self {
+                encoded_chars: encoded_str.chars(),
+                buffer_front: Buffer::empty(),
+                buffer_back: Buffer::empty(),
+            }
+        }
+    }
+
+    fn try_pua_decoding(encoding: &[char; 3]) -> Option<char> {
+        let mut bytes = [0u8; 3];
+        for (index, &c) in encoding.iter().enumerate() {
+            bytes[index] = super::decode_byte_from_char(c)?;
+        }
+        let first_decoded_char =
+            std::str::from_utf8(&bytes).ok()?.chars().next().expect(
+                "Non-empty byte slice which is valid UTF-8 must result in at least one char.",
+            );
+        // For strings whose width we compute, we only expect invalid UTF-8 and codepoints from the
+        // PUA encoding range to be PUA encoded.
+        // If we reach this point, the encoded bytes are valid UTF-8, so the only remaining
+        // expected case are codepoints from the PUA encoding range.
+        // These all take 3 bytes to represent in UTF-8, so if we check that the first parsed
+        // codepoint is in the expected range, we know that exactly 3 bytes were consumed for
+        // parsing this codepoint.
+        assert!(PUA_ENCODE_RANGE.contains(&first_decoded_char));
+        Some(first_decoded_char)
+    }
+
+    fn replace_if_pua_encoded(c: char) -> char {
+        if PUA_ENCODE_RANGE.contains(&c) {
+            REPLACEMENT_CHARACTER
+        } else {
+            c
+        }
+    }
+
+    impl<'a> Iterator for Decoder<'a> {
+        type Item = char;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            let mut get_next_char = || {
+                self.buffer_front
+                    .pop()
+                    .or_else(|| self.encoded_chars.next())
+                    .or_else(|| self.buffer_back.pop_front())
+            };
+            let c_0 = get_next_char()?;
+            if c_0 != ENCODED_PUA_CHAR_FIRST_CHAR {
+                return Some(replace_if_pua_encoded(c_0));
+            }
+            if let Some(c_1) = get_next_char() {
+                if ENCODED_PUA_CHAR_SECOND_CHAR_RANGE.contains(&c_1) {
+                    if let Some(c_2) = get_next_char() {
+                        if let Some(decoded_pua_char) = try_pua_decoding(&[c_0, c_1, c_2]) {
+                            return Some(decoded_pua_char);
+                        }
+                        self.buffer_front.push(c_2);
+                    }
+                }
+                self.buffer_front.push(c_1);
+            }
+            // If decoding 3 consecutive PUA chars into the encoded PUA char fails, `c_0` should be
+            // returned. `c_0` is `ENCODED_PUA_CHAR_FIRST_CHAR` if we reach this point, so return
+            // the `REPLACEMENT_CHARACTER` in these cases.
+            Some(REPLACEMENT_CHARACTER)
+        }
+    }
+
+    impl<'a> DoubleEndedIterator for Decoder<'a> {
+        fn next_back(&mut self) -> Option<Self::Item> {
+            let mut get_next_char = || {
+                self.buffer_back
+                    .pop()
+                    .or_else(|| self.encoded_chars.next_back())
+                    .or_else(|| self.buffer_front.pop_front())
+            };
+            let c_2 = get_next_char()?;
+            if !PUA_ENCODE_RANGE.contains(&c_2) {
+                return Some(c_2);
+            }
+            if let Some(c_1) = get_next_char() {
+                if PUA_ENCODE_RANGE.contains(&c_1) {
+                    if let Some(c_0) = get_next_char() {
+                        if let Some(decoded_pua_char) = try_pua_decoding(&[c_0, c_1, c_2]) {
+                            return Some(decoded_pua_char);
+                        }
+                        self.buffer_back.push(c_0);
+                    }
+                    self.buffer_back.push(c_1);
+                }
+            }
+            // If decoding 3 consecutive PUA chars into the encoded PUA char fails, `c_2` should be
+            // returned. `c_2` is in `PUA_ENCODE_RANGE` if we reach this point, so return the
+            // `REPLACEMENT_CHARACTER` in these cases.
+            Some(REPLACEMENT_CHARACTER)
+        }
+    }
+}
+
+/// Only exists for tests. Exported because the encoding functionality is not available in this
+/// crate. Do not use for non-testing purposes.
+pub fn decode_with_replacement(encoded_str: &wstr) -> impl DoubleEndedIterator<Item = char> {
+    decoder::Decoder::new(encoded_str)
+}
+
+/// Takes a PUA-encoded string, decodes it by restoring encoded PUA codepoints and replacing encoded
+/// non-UTF-8 bytes by the replacement character U+FFFD.
+/// The result is passed to the [`unicode_width`] crate, which will compute its width, which will be
+/// the return value of this function.
+pub fn decoded_width(encoded_str: &wstr) -> usize {
+    // TODO: Avoid constructing String by using `unicode_width::char_iter_width` once that is
+    // available in a released version of the crate (it's already on the crate's master branch).
+    use unicode_width::UnicodeWidthStr as _;
+    decoder::Decoder::new(encoded_str)
+        .collect::<String>()
+        .width()
+}
+
 pub const fn char_offset(base: char, offset: u32) -> char {
     match char::from_u32(base as u32 + offset) {
         Some(c) => c,

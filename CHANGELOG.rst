@@ -1,5 +1,5 @@
-fish ?.?.? (released ???)
-=========================
+fish 4.5.0 (released February 17, 2026)
+=======================================
 
 This is mostly a patch release for Vi mode regressions in 4.4.0 but other minor behavior changes are included as well.
 

@@ -15,7 +15,7 @@ use crate::prelude::*;
 use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
 use crate::termsize::Termsize;
 use fish_wcstringutil::string_fuzzy_match_string;
-use unicode_width::UnicodeWidthStr as _;
+use fish_widestring::decoded_width;
 
 /// Represents rendering from the pager.
 #[derive(Default)]
@@ -1044,13 +1044,11 @@ impl Pager {
 
     // Position of the cursor.
     pub fn cursor_position(&self) -> usize {
-        let mut result = sprintf!(
+        let mut result = decoded_width(&sprintf!(
             "%s %s",
             wgettext!(SEARCH_FIELD_PROMPT),
             self.search_field_line.text()
-        )
-        .to_string()
-        .width();
+        ));
         // Clamp it to the right edge.
         if self.available_term_width > 0 && result + 1 > self.available_term_width {
             result = self.available_term_width - 1;

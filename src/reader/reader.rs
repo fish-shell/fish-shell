@@ -73,7 +73,7 @@ use crate::operation_context::{OperationContext, get_bg_context};
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
 use crate::parse_constants::SourceRange;
-use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
+use crate::parse_constants::{ParseIssue, ParseTreeFlags};
 use crate::parse_util::{
     MaybeParentheses, SPACES_PER_INDENT, compute_indents, contains_wildcards, detect_parse_errors,
     escape_string_with_quote, escape_wildcards, get_cmdsubst_extent, get_line_from_offset,
@@ -4514,10 +4514,10 @@ impl<'a> Reader<'a> {
         // Expand the command line in preparation for execution.
         // to_exec is the command to execute; the command line itself has the command for history.
         let test_res = self.expand_for_execute();
-        if let Err(err) = test_res {
-            if err.contains(ParserTestErrorBits::ERROR) {
+        if let Err(p) = test_res {
+            if p.error {
                 return false;
-            } else if err.contains(ParserTestErrorBits::INCOMPLETE) {
+            } else if p.incomplete {
                 self.insert_char(elt, '\n');
                 return true;
             }
@@ -4537,7 +4537,7 @@ impl<'a> Reader<'a> {
     // Expand abbreviations before execution.
     // Replace the command line with any abbreviations as needed.
     // Return the test result, which may be incomplete to insert a newline, or an error.
-    fn expand_for_execute(&mut self) -> Result<(), ParserTestErrorBits> {
+    fn expand_for_execute(&mut self) -> Result<(), ParseIssue> {
         // Expand abbreviations at the cursor.
         // The first expansion is "user visible" and enters into history.
         let el = &self.command_line;
@@ -4548,7 +4548,7 @@ impl<'a> Reader<'a> {
         // syntactically invalid but become valid after expanding abbreviations.
         if self.conf.syntax_check_ok {
             test_res = reader_shell_test(self.parser, el.text());
-            if test_res.is_err_and(|err| err.contains(ParserTestErrorBits::ERROR)) {
+            if test_res.is_err_and(|p| p.error) {
                 return test_res;
             }
         }
@@ -6378,11 +6378,11 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     eval_res
 }
 
-fn reader_shell_test(parser: &Parser, bstr: &wstr) -> Result<(), ParserTestErrorBits> {
+fn reader_shell_test(parser: &Parser, bstr: &wstr) -> Result<(), ParseIssue> {
     let mut errors = vec![];
     let res = detect_parse_errors(bstr, Some(&mut errors), /*accept_incomplete=*/ true);
 
-    if res.is_err_and(|err| err.contains(ParserTestErrorBits::ERROR)) {
+    if res.is_err_and(|p| p.error) {
         let mut error_desc = parser.get_backtrace(bstr, &errors);
 
         // Ensure we end with a newline. Also add an initial newline, because it's likely the user

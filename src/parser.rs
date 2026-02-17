@@ -1506,7 +1506,7 @@ mod tests {
     use crate::expand::ExpandFlags;
     use crate::io::{IoBufferfill, IoChain};
     use crate::parse_constants::{
-        ParseErrorCode, ParseTokenType, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
+        ParseErrorCode, ParseIssue, ParseTokenType, ParseTreeFlags, StatementDecoration,
     };
     use crate::parse_util::{detect_errors_in_argument, detect_parse_errors};
     use crate::prelude::*;
@@ -1526,11 +1526,11 @@ mod tests {
             };
         }
 
-        fn detect_argument_errors(src: &str) -> Result<(), ParserTestErrorBits> {
+        fn detect_argument_errors(src: &str) -> Result<(), ParseIssue> {
             let src = str2wcstring(src);
             let ast = ast::parse_argument_list(&src, ParseTreeFlags::default(), None);
             if ast.errored() {
-                return Err(ParserTestErrorBits::ERROR);
+                return ParseIssue::ERROR;
             }
             let args = &ast.top().arguments;
             let first_arg = args.first().expect("Failed to parse an argument");
@@ -1646,31 +1646,31 @@ mod tests {
 
         assert_eq!(
             detect_errors!("true | "),
-            Err(ParserTestErrorBits::INCOMPLETE),
+            ParseIssue::INCOMPLETE,
             "unterminated pipe not reported properly"
         );
 
         assert_eq!(
             detect_errors!("echo (\nfoo\n  bar"),
-            Err(ParserTestErrorBits::INCOMPLETE),
+            ParseIssue::INCOMPLETE,
             "unterminated multiline subshell not reported properly"
         );
 
         assert_eq!(
             detect_errors!("begin ; true ; end | "),
-            Err(ParserTestErrorBits::INCOMPLETE),
+            ParseIssue::INCOMPLETE,
             "unterminated pipe not reported properly"
         );
 
         assert_eq!(
             detect_errors!(" | true "),
-            Err(ParserTestErrorBits::ERROR),
+            ParseIssue::ERROR,
             "leading pipe not reported properly"
         );
 
         assert_eq!(
             detect_errors!("true | # comment"),
-            Err(ParserTestErrorBits::INCOMPLETE),
+            ParseIssue::INCOMPLETE,
             "comment after pipe not reported as incomplete"
         );
 
@@ -1681,7 +1681,7 @@ mod tests {
 
         assert_eq!(
             detect_errors!("true | ; false "),
-            Err(ParserTestErrorBits::ERROR),
+            ParseIssue::ERROR,
             "semicolon after pipe not detected as error"
         );
 
@@ -1696,16 +1696,12 @@ mod tests {
         );
 
         assert!(
-            detect_argument_errors("foo$$")
-                .unwrap_err()
-                .contains(ParserTestErrorBits::ERROR),
+            detect_argument_errors("foo$$").unwrap_err().error,
             "Bad variable expansion not reported as error"
         );
 
         assert!(
-            detect_argument_errors("foo$@")
-                .unwrap_err()
-                .contains(ParserTestErrorBits::ERROR),
+            detect_argument_errors("foo$@").unwrap_err().error,
             "Bad variable expansion not reported as error"
         );
 
@@ -1714,7 +1710,7 @@ mod tests {
         assert!(
             detect_argument_errors("foo(cat | or cat)")
                 .unwrap_err()
-                .contains(ParserTestErrorBits::ERROR),
+                .error,
             "Bad command substitution not reported as error"
         );
 
@@ -1790,7 +1786,7 @@ mod tests {
 
         assert_eq!(
             detect_errors!("true && "),
-            Err(ParserTestErrorBits::INCOMPLETE),
+            ParseIssue::INCOMPLETE,
             "unterminated conjunction not reported properly"
         );
 
@@ -1801,24 +1797,24 @@ mod tests {
 
         assert_eq!(
             detect_errors!("true || \n"),
-            Err(ParserTestErrorBits::INCOMPLETE),
+            ParseIssue::INCOMPLETE,
             "unterminated conjunction not reported properly"
         );
 
         assert_eq!(
             detect_errors!("begin ; echo hi; }"),
-            Err(ParserTestErrorBits::ERROR),
+            ParseIssue::ERROR,
             "closing of unopened brace statement not reported properly"
         );
 
         assert_eq!(
             detect_errors!("begin {"), // }
-            Err(ParserTestErrorBits::INCOMPLETE),
+            ParseIssue::INCOMPLETE,
             "brace after begin not reported properly"
         );
         assert_eq!(
             detect_errors!("a=b {"), // }
-            Err(ParserTestErrorBits::INCOMPLETE),
+            ParseIssue::INCOMPLETE,
             "brace after variable override not reported properly"
         );
     }

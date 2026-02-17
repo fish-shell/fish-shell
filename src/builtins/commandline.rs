@@ -7,7 +7,7 @@ use crate::expand::{ExpandFlags, ExpandResultCode, expand_string};
 use crate::input::input_function_get_code;
 use crate::input_common::{CharEvent, ReadlineCmd};
 use crate::operation_context::{OperationContext, no_cancel};
-use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
+use crate::parse_constants::ParseTreeFlags;
 use crate::parse_util::{
     detect_parse_errors, get_job_extent, get_offset_from_line, get_process_extent,
     get_token_extent, lineno,
@@ -705,13 +705,8 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         let res = detect_parse_errors(current_buffer, None, /*accept_incomplete=*/ true);
         return match res {
             Ok(()) => Ok(SUCCESS),
-            Err(err) => {
-                if err.contains(ParserTestErrorBits::INCOMPLETE) {
-                    Err(STATUS_INVALID_ARGS)
-                } else {
-                    Err(STATUS_CMD_ERROR)
-                }
-            }
+            Err(p) if p.incomplete => Err(STATUS_INVALID_ARGS),
+            Err(_) => Err(STATUS_CMD_ERROR),
         };
     }
 

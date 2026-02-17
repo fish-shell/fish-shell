@@ -19,8 +19,8 @@ use crate::parse_constants::{
     ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
     ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID,
     ERROR_NOT_STATUS, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
-    INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition, SourceRange,
+    INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseIssue,
+    ParseKeyword, ParseTokenType, ParseTreeFlags, PipelinePosition, SourceRange,
     StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
 };
 use crate::prelude::*;
@@ -1119,14 +1119,14 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
 }
 
 /// Given a string, detect parse errors in it. If allow_incomplete is set, then if the string is
-/// incomplete (e.g. an unclosed quote), an error is not returned and the ParserTestErrorBits::INCOMPLETE bit
+/// incomplete (e.g. an unclosed quote), an error is not returned and `ParseIssue::incomplete`
 /// is set in the return value. If allow_incomplete is not set, then incomplete strings result in an
 /// error.
 pub fn detect_parse_errors(
     buff_src: &wstr,
     mut out_errors: Option<&mut ParseErrorList>,
     allow_incomplete: bool, /*=false*/
-) -> Result<(), ParserTestErrorBits> {
+) -> Result<(), ParseIssue> {
     // Whether there's an unclosed quote or subshell, and therefore unfinished. This is only set if
     // allow_incomplete is set.
     let mut has_unclosed_quote_or_subshell = false;
@@ -1162,7 +1162,7 @@ pub fn detect_parse_errors(
     assert!(!has_unclosed_quote_or_subshell || allow_incomplete);
     if has_unclosed_quote_or_subshell {
         // We do not bother to validate the rest of the tree in this case.
-        return Err(ParserTestErrorBits::INCOMPLETE);
+        return ParseIssue::INCOMPLETE;
     }
 
     // Early parse error, stop here.
@@ -1170,7 +1170,7 @@ pub fn detect_parse_errors(
         if let Some(errors) = out_errors.as_mut() {
             errors.extend(parse_errors);
         }
-        return Err(ParserTestErrorBits::ERROR);
+        return ParseIssue::ERROR;
     }
 
     // Defer to the tree-walking version.
@@ -1183,11 +1183,10 @@ pub fn detect_parse_errors_in_ast(
     ast: &Ast,
     buff_src: &wstr,
     mut out_errors: Option<&mut ParseErrorList>,
-) -> Result<(), ParserTestErrorBits> {
-    let mut res = ParserTestErrorBits::default();
-
-    // Whether we encountered a parse error.
-    let mut errored = false;
+) -> Result<(), ParseIssue> {
+    // The issue to return.
+    // We break out various reasons for incompleteness to be explicit.
+    let mut issue = ParseIssue::default();
 
     // Whether we encountered an unclosed block. We detect this via an 'end_command' block without
     // source.
@@ -1217,7 +1216,7 @@ pub fn detect_parse_errors_in_ast(
                 }
             }
             Kind::JobConjunction(job_conjunction) => {
-                errored |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
+                issue.error |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
             }
             Kind::JobConjunctionContinuation(jcc) => {
                 // Somewhat clumsy way of checking for a job without source in a conjunction.
@@ -1228,9 +1227,9 @@ pub fn detect_parse_errors_in_ast(
             }
             Kind::Argument(arg) => {
                 let arg_src = arg.source(buff_src);
-                res |= detect_errors_in_argument(arg, arg_src, &mut out_errors)
-                    .err()
-                    .unwrap_or_default();
+                if let Err(e) = detect_errors_in_argument(arg, arg_src, &mut out_errors) {
+                    issue |= e;
+                }
             }
             Kind::JobPipeline(job) => {
                 // Disallow background in the following cases:
@@ -1241,11 +1240,12 @@ pub fn detect_parse_errors_in_ast(
                 // while foo & ; end
                 // If it's not a background job, nothing to do.
                 if job.bg.is_some() {
-                    errored |= detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
+                    issue.error |=
+                        detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
                 }
             }
             Kind::DecoratedStatement(stmt) => {
-                errored |= detect_errors_in_decorated_statement(
+                issue.error |= detect_errors_in_decorated_statement(
                     buff_src,
                     &traversal,
                     stmt,
@@ -1257,7 +1257,7 @@ pub fn detect_parse_errors_in_ast(
                 if !block.end.has_source() {
                     has_unclosed_block = true;
                 }
-                errored |= detect_errors_in_block_redirection_list(
+                issue.error |= detect_errors_in_block_redirection_list(
                     node,
                     &block.args_or_redirs,
                     &mut out_errors,
@@ -1268,7 +1268,7 @@ pub fn detect_parse_errors_in_ast(
                 if !brace_statement.right_brace.has_source() {
                     has_unclosed_block = true;
                 }
-                errored |= detect_errors_in_block_redirection_list(
+                issue.error |= detect_errors_in_block_redirection_list(
                     node,
                     &brace_statement.args_or_redirs,
                     &mut out_errors,
@@ -1279,7 +1279,7 @@ pub fn detect_parse_errors_in_ast(
                 if !ifs.end.has_source() {
                     has_unclosed_block = true;
                 }
-                errored |= detect_errors_in_block_redirection_list(
+                issue.error |= detect_errors_in_block_redirection_list(
                     node,
                     &ifs.args_or_redirs,
                     &mut out_errors,
@@ -1290,7 +1290,7 @@ pub fn detect_parse_errors_in_ast(
                 if !switchs.end.has_source() {
                     has_unclosed_block = true;
                 }
-                errored |= detect_errors_in_block_redirection_list(
+                issue.error |= detect_errors_in_block_redirection_list(
                     node,
                     &switchs.args_or_redirs,
                     &mut out_errors,
@@ -1300,17 +1300,11 @@ pub fn detect_parse_errors_in_ast(
         }
     }
 
-    if errored {
-        res |= ParserTestErrorBits::ERROR;
-    }
-
-    if has_unclosed_block || has_unclosed_pipe || has_unclosed_conjunction {
-        res |= ParserTestErrorBits::INCOMPLETE;
-    }
-    if res == ParserTestErrorBits::default() {
-        Ok(())
+    issue.incomplete |= has_unclosed_block || has_unclosed_pipe || has_unclosed_conjunction;
+    if issue.error || issue.incomplete {
+        Err(issue)
     } else {
-        Err(res)
+        Ok(())
     }
 }
 
@@ -1387,16 +1381,17 @@ pub fn detect_errors_in_argument(
     arg: &ast::Argument,
     arg_src: &wstr,
     out_errors: &mut Option<&mut ParseErrorList>,
-) -> Result<(), ParserTestErrorBits> {
+) -> Result<(), ParseIssue> {
     let Some(source_range) = arg.try_source_range() else {
         return Ok(());
     };
 
     let source_start = source_range.start();
-    let mut err = ParserTestErrorBits::default();
+    let mut issue = ParseIssue::default();
 
+    // Check if a subtoken contains errors. Returns true if there is an error, and appends to out_errors if provided.
     let check_subtoken =
-        |begin: usize, end: usize, out_errors: &mut Option<&mut ParseErrorList>| {
+        |begin: usize, end: usize, out_errors: &mut Option<&mut ParseErrorList>| -> bool {
             let Some(unesc) = unescape_string(
                 &arg_src[begin..end],
                 UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
@@ -1416,7 +1411,7 @@ pub fn detect_errors_in_argument(
                             "Incomplete escape sequence '%s'",
                             arg_src
                         );
-                        return ParserTestErrorBits::ERROR;
+                        return true;
                     }
                     append_syntax_error!(
                         out_errors,
@@ -1426,10 +1421,10 @@ pub fn detect_errors_in_argument(
                         arg_src
                     );
                 }
-                return ParserTestErrorBits::ERROR;
+                return true;
             };
 
-            let mut err = ParserTestErrorBits::default();
+            let mut errored = false;
             // Check for invalid variable expansions.
             let unesc = unesc.as_char_slice();
             for (idx, c) in unesc.iter().enumerate() {
@@ -1437,10 +1432,10 @@ pub fn detect_errors_in_argument(
                     continue;
                 }
                 let next_char = unesc.get(idx + 1).copied().unwrap_or('\0');
-                if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '('].contains(&next_char)
+                if !matches!(next_char, VARIABLE_EXPAND | VARIABLE_EXPAND_SINGLE | '(')
                     && !valid_var_name_char(next_char)
                 {
-                    err = ParserTestErrorBits::ERROR;
+                    errored = true;
                     if let Some(out_errors) = out_errors {
                         let mut first_dollar = idx;
                         while first_dollar > 0
@@ -1454,7 +1449,7 @@ pub fn detect_errors_in_argument(
                 }
             }
 
-            err
+            errored
         };
 
     let mut cursor = 0;
@@ -1472,25 +1467,24 @@ pub fn detect_errors_in_argument(
             Some(&mut has_dollar),
         ) {
             MaybeParentheses::Error => {
-                err |= ParserTestErrorBits::ERROR;
+                issue.error = true;
                 append_syntax_error!(out_errors, source_start, 1, "Mismatched parenthesis");
-                return Err(err);
+                return Err(issue);
             }
             MaybeParentheses::None => {
                 do_loop = false;
             }
             MaybeParentheses::CommandSubstitution(parens) => {
-                err |= check_subtoken(
+                issue.error |= check_subtoken(
                     checked,
                     parens.start() - if has_dollar { 1 } else { 0 },
                     out_errors,
                 );
                 let mut subst_errors = ParseErrorList::new();
-                if let Err(subst_err) =
+                issue |=
                     detect_parse_errors(&arg_src[parens.command()], Some(&mut subst_errors), false)
-                {
-                    err |= subst_err;
-                }
+                        .err()
+                        .unwrap_or_default();
 
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
@@ -1506,9 +1500,12 @@ pub fn detect_errors_in_argument(
         }
     }
 
-    err |= check_subtoken(checked, arg_src.len(), out_errors);
-
-    if err.is_empty() { Ok(()) } else { Err(err) }
+    issue.error |= check_subtoken(checked, arg_src.len(), out_errors);
+    if issue.error || issue.incomplete {
+        Err(issue)
+    } else {
+        Ok(())
+    }
 }
 
 fn detect_errors_in_job_conjunction(

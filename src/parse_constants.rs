@@ -1,8 +1,8 @@
 //! Constants used in the programmatic representation of fish code.
 
 use crate::prelude::*;
-use bitflags::bitflags;
 use fish_fallback::{fish_wcswidth, fish_wcwidth};
+use std::ops::{BitOr, BitOrAssign};
 
 pub type SourceOffset = u32;
 
@@ -27,11 +27,40 @@ pub struct ParseTreeFlags {
     pub show_extra_semis: bool,
 }
 
-bitflags! {
-    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-    pub struct ParserTestErrorBits: u8 {
-        const ERROR = 1;
-        const INCOMPLETE = 2;
+/// Represents parse issues found during validation.
+/// If this is returned as the error of a Result, then either `error` or `incomplete` (or both) is set.
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+pub struct ParseIssue {
+    pub error: bool,      // An error was found.
+    pub incomplete: bool, // Incomplete input, such as unclosed block or pipe.
+}
+
+impl ParseIssue {
+    pub const ERROR: Result<(), Self> = Err(Self {
+        error: true,
+        incomplete: false,
+    });
+
+    pub const INCOMPLETE: Result<(), Self> = Err(Self {
+        error: false,
+        incomplete: true,
+    });
+}
+
+// Allow | and |= to combine ParseIssues.
+impl BitOr for ParseIssue {
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self {
+        Self {
+            error: self.error | rhs.error,
+            incomplete: self.incomplete | rhs.incomplete,
+        }
+    }
+}
+
+impl BitOrAssign for ParseIssue {
+    fn bitor_assign(&mut self, rhs: Self) {
+        *self = *self | rhs;
     }
 }
 

@@ -25,7 +25,8 @@ impl Default for Shorten<'_> {
 
 impl<'args> StringSubCommand<'args> for Shorten<'args> {
     const LONG_OPTIONS: &'static [WOption<'static>] = &[
-        // FIXME: documentation says it's --char
+        // Support both spellings: docs use --char, older fish accepted --chars.
+        wopt(L!("char"), RequiredArgument, 'c'),
         wopt(L!("chars"), RequiredArgument, 'c'),
         wopt(L!("max"), RequiredArgument, 'm'),
         wopt(L!("no-newline"), NoArgument, 'N'),

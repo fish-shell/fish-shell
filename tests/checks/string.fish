@@ -47,7 +47,7 @@ string pad foo
 string pad -C foo
 # CHECK: foo
 
-string pad -r -w 7 --chars - foo
+string pad -r -w 7 --char - foo
 # CHECK: foo----
 string pad -r -w 7 --chars - --center foo
 # CHECK: --foo--
@@ -1003,7 +1003,7 @@ string shorten --max 4 -c /// foobar
 string shorten --max 4 -c /// foobarnana
 # CHECK: f///
 
-string shorten --max 2 --chars "" foo
+string shorten --max 2 --char "" foo
 # CHECK: fo
 
 string shorten foo foobar

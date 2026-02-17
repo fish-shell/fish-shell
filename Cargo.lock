@@ -296,7 +296,6 @@ dependencies = [
  "rsconf",
  "rust-embed",
  "serial_test",
- "unicode-width",
  "unix_path",
  "xterm-color",
 ]

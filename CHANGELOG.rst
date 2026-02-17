@@ -1,6 +1,8 @@
 fish ?.?.? (released ???)
 =========================
 
+This is mostly a patch release for Vi mode regressions in 4.4.0 but other minor behavior changes are included as well.
+
 Interactive improvements
 ------------------------
 - :kbd:`ctrl-l` no longer cancels history search (:issue:`12436`).

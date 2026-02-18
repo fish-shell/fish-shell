@@ -1228,7 +1228,8 @@ pub fn detect_parse_errors_in_ast(
             Kind::Argument(arg) => {
                 let arg_src = arg.source(buff_src);
                 if let Err(e) = detect_errors_in_argument(arg, arg_src, &mut out_errors) {
-                    issue |= e;
+                    issue.error |= e.error;
+                    issue.incomplete |= e.incomplete;
                 }
             }
             Kind::JobPipeline(job) => {
@@ -1481,10 +1482,12 @@ pub fn detect_errors_in_argument(
                     out_errors,
                 );
                 let mut subst_errors = ParseErrorList::new();
-                issue |=
+                if let Err(e) =
                     detect_parse_errors(&arg_src[parens.command()], Some(&mut subst_errors), false)
-                        .err()
-                        .unwrap_or_default();
+                {
+                    issue.error |= e.error;
+                    issue.incomplete |= e.incomplete;
+                }
 
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset

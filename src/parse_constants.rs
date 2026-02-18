@@ -2,7 +2,6 @@
 
 use crate::prelude::*;
 use fish_fallback::{fish_wcswidth, fish_wcwidth};
-use std::ops::{BitOr, BitOrAssign};
 
 pub type SourceOffset = u32;
 
@@ -45,23 +44,6 @@ impl ParseIssue {
         error: false,
         incomplete: true,
     });
-}
-
-// Allow | and |= to combine ParseIssues.
-impl BitOr for ParseIssue {
-    type Output = Self;
-    fn bitor(self, rhs: Self) -> Self {
-        Self {
-            error: self.error | rhs.error,
-            incomplete: self.incomplete | rhs.incomplete,
-        }
-    }
-}
-
-impl BitOrAssign for ParseIssue {
-    fn bitor_assign(&mut self, rhs: Self) {
-        *self = *self | rhs;
-    }
 }
 
 /// A range of source code.

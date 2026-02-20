@@ -1151,6 +1151,7 @@ dependencies = [
  "clap",
  "fish-build-helper",
  "fish-tempfile",
+ "walkdir",
 ]
 
 [[package]]

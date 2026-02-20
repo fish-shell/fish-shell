@@ -76,6 +76,7 @@ widestring = "1.2.0"
 unicode-segmentation = "1.12.0"
 unicode-width = "0.2.0"
 unix_path = "1.0.1"
+walkdir = "2.5.0"
 xterm-color = "1.0.1"
 
 [profile.release]

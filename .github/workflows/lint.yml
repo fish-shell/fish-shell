@@ -16,9 +16,9 @@ jobs:
     - name: install dependencies
       run: pip install ruff
     - name: build fish
-      run: cargo build
+      run: cargo build --bin fish_indent
     - name: check format
-      run: PATH="target/debug:$PATH" build_tools/style.fish --all --check
+      run: PATH="target/debug:$PATH" cargo xtask format --all --check
     - name: check rustfmt
       run: find build.rs crates src -type f -name '*.rs' | xargs rustfmt --check
 

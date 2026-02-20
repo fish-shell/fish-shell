@@ -133,12 +133,12 @@ For formatting, we use:
 - ``fish_indent`` (shipped with fish) for fish script
 - ``ruff format`` for Python
 
-To reformat files, there is a script
+To reformat files, there is an xtask
 
 ::
 
-   build_tools/style.fish --all
-   build_tools/style.fish somefile.rs some.fish
+   cargo xtask format --all
+   cargo xtask format somefile.rs some.fish
 
 Fish Script Style Guide
 -----------------------

@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use fish_build_helper::as_os_strs;
 use std::{path::PathBuf, process::Command};
-use xtask::{CommandExt as _, cargo};
+use xtask::{CommandExt as _, cargo, format::FormatArgs};
 
 #[derive(Parser)]
 #[command(
@@ -18,6 +18,8 @@ struct Cli {
 enum Task {
     /// Run various checks on the repo.
     Check,
+    /// Format files or check if they are correctly formatted.
+    Format(FormatArgs),
     /// Build HTML docs
     HtmlDocs {
         /// Path to a fish_indent executable. If none is specified, fish_indent will be built.
@@ -32,6 +34,7 @@ fn main() {
     let cli = Cli::parse();
     match cli.task {
         Task::Check => run_checks(),
+        Task::Format(format_args) => xtask::format::format(format_args),
         Task::HtmlDocs { fish_indent } => build_html_docs(fish_indent),
         Task::ManPages => cargo(["build", "--package", "fish-build-man-pages"]),
     }

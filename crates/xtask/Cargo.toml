@@ -6,6 +6,8 @@ edition.workspace = true
 repository.workspace = true
 
 [dependencies]
+anstyle.workspace = true
 clap.workspace = true
 fish-build-helper.workspace = true
 fish-tempfile.workspace = true
+walkdir.workspace = true

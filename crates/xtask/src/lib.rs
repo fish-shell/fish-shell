@@ -1,5 +1,7 @@
 use std::{ffi::OsStr, process::Command};
 
+pub mod format;
+
 pub trait CommandExt {
     fn run_or_panic(&mut self);
 }

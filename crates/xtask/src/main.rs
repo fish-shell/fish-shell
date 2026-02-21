@@ -17,7 +17,10 @@ struct Cli {
 #[derive(Subcommand)]
 enum Task {
     /// Run various checks on the repo.
-    Check,
+    Check {
+        #[arg(long)]
+        sanitize: bool,
+    },
     /// Build HTML docs
     HtmlDocs {
         /// Path to a fish_indent executable. If none is specified, fish_indent will be built.
@@ -31,16 +34,17 @@ enum Task {
 fn main() {
     let cli = Cli::parse();
     match cli.task {
-        Task::Check => run_checks(),
+        Task::Check { sanitize } => run_checks(sanitize),
         Task::HtmlDocs { fish_indent } => build_html_docs(fish_indent),
         Task::ManPages => cargo(["build", "--package", "fish-build-man-pages"]),
     }
 }
 
-fn run_checks() {
+fn run_checks(sanitize: bool) {
     let repo_root_dir = fish_build_helper::workspace_root();
     let check_script = repo_root_dir.join("build_tools").join("check.sh");
-    Command::new(check_script).run_or_panic();
+    let args = if sanitize { vec!["--sanitize"] } else { vec![] };
+    Command::new(check_script).args(args).run_or_panic();
 }
 
 fn build_html_docs(fish_indent: Option<PathBuf>) {

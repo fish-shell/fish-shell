@@ -3,6 +3,46 @@
 {
 set -ex
 
+workspace_root="$(dirname "$0")/.."
+
+fish_check_sanitize=false
+while [ $# -gt 0 ]; do
+    case $1 in
+        --sanitize)
+            fish_check_sanitize=true
+            shift
+            ;;
+        *)
+            echo "Unexpected argument: $1"
+            exit 1
+            ;;
+    esac
+done
+
+if [ "$fish_check_sanitize" = true ]; then
+    . "$workspace_root/build_tools/set_asan_vars.sh"
+
+    # Variables used at build time
+
+    export FISH_CHECK_RUST_TOOLCHAIN="${FISH_CHECK_RUST_TOOLCHAIN:-nightly}"
+    export FISH_CHECK_CARGO_ARGS="-Zbuild-std $FISH_CHECK_CARGO_ARGS"
+    # Build fails if this is not set.
+    if [ -z "$FISH_CHECK_TARGET_TRIPLE" ]; then
+        FISH_CHECK_TARGET_TRIPLE="$(rustc --print host-tuple)"
+    fi
+    export FISH_CHECK_TARGET_TRIPLE
+
+
+    # Variables used at runtime
+
+    if [ -n "$FISH_CHECK_LINT" ] && [ "$FISH_CHECK_LINT" != false ]; then
+        echo "Linting is not supported when sanitizing." >&2
+        exit 1
+    fi
+    export FISH_CHECK_LINT=false
+    export FISH_TEST_MAX_CONCURRENCY="${FISH_TEST_MAX_CONCURRENCY:-4}"
+fi
+
 lint=true
 if [ "$FISH_CHECK_LINT" = false ]; then
     lint=false
@@ -55,7 +95,6 @@ if $lint; then
     export RUSTDOCFLAGS="--deny=warnings ${RUSTDOCFLAGS}"
 fi
 
-workspace_root="$(dirname "$0")/.."
 target_dir=${CARGO_TARGET_DIR:-$workspace_root/target}
 if [ -n "$target_triple" ]; then
     target_dir="$target_dir/$target_triple"

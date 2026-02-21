@@ -1393,7 +1393,7 @@ mod tests {
         bytes2wcstring, escape_string, unescape_string, wcs2bytes,
     };
     use fish_util::get_seeded_rng;
-    use fish_widestring::{ENCODE_DIRECT_BASE, L, WString, wstr};
+    use fish_widestring::{ENCODE_DIRECT_BASE, L, WString, decode_with_replacement, wstr};
     use rand::{Rng as _, RngCore as _};
     use std::fmt::Write as _;
 
@@ -1640,6 +1640,62 @@ mod tests {
             assert_eq!(ws.len(), s.len());
             assert_eq!(wcs2bytes(&ws), s);
         }
+    }
+
+    #[test]
+    fn test_decode() {
+        macro_rules! check_decode {
+            ($input:expr, $expected:expr) => {{
+                let encoded_input = bytes2wcstring($input);
+                assert_eq!(
+                    &decode_with_replacement(&encoded_input).collect::<Vec<_>>(),
+                    $expected
+                );
+                assert_eq!(
+                    decode_with_replacement(&encoded_input)
+                        .rev()
+                        .collect::<Vec<char>>(),
+                    $expected.iter().copied().rev().collect::<Vec<char>>()
+                );
+                // Alternate reading direction
+                let mut chars_from_front = vec![];
+                let mut chars_from_back = vec![];
+                let mut decoder_chars = decode_with_replacement(&encoded_input);
+                loop {
+                    match decoder_chars.next() {
+                        Some(c) => {
+                            chars_from_front.push(c);
+                        }
+                        None => {
+                            assert_eq!(decoder_chars.next_back(), None);
+                            assert_eq!(decoder_chars.next(), None);
+                            break;
+                        }
+                    }
+                    match decoder_chars.next_back() {
+                        Some(c) => {
+                            chars_from_back.push(c);
+                        }
+                        None => {
+                            assert_eq!(decoder_chars.next(), None);
+                            assert_eq!(decoder_chars.next_back(), None);
+                            break;
+                        }
+                    }
+                }
+                chars_from_front.extend(chars_from_back.iter().copied().rev());
+                assert_eq!(&chars_from_front, $expected);
+            }};
+        }
+
+        check_decode!("asdf".as_bytes(), &['a', 's', 'd', 'f']);
+        check_decode!("".as_bytes(), &['']);
+        check_decode!("\u{f630}".as_bytes(), &['\u{f630}']);
+        check_decode!(&[0xff], &['�']);
+        check_decode!(&[0xef, 0x98, 0x80], &['\u{f600}']);
+        check_decode!(&[0xef, 0xef, 0x98, 0x80, 0x61], &['�', '\u{f600}', 'a']);
+        check_decode!(&[0x98, 0xef, 0xef, 0x80], &['�', '�', '�', '�']);
+        check_decode!(&[0xff, 0xef, 0x98, 0x80], &['�', '\u{f600}']);
     }
 }
 

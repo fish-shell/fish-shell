@@ -7,6 +7,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+unicode-width.workspace = true
 widestring.workspace = true
 
 [lints]

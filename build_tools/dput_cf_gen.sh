@@ -3,7 +3,7 @@
 # Script to generate the dput.cf for a set of Ubuntu series, prints the filename
 # Arguments are the PPA followed by the series names
 
-set -ex
+set -e
 
 outfile=$(mktemp --tmpdir dput.XXXXX.cf)
 

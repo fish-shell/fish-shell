@@ -73,14 +73,6 @@ jobs:
   ubuntu-asan:
     if: false
     runs-on: ubuntu-latest
-    env:
-        # Rust has two different memory sanitizers of interest; they can't be used at the same time:
-        # * AddressSanitizer detects out-of-bound access, use-after-free, use-after-return,
-        #   use-after-scope, double-free, invalid-free, and memory leaks.
-        # * MemorySanitizer detects uninitialized reads.
-        #
-        RUSTFLAGS: "-Zsanitizer=address"
-        # RUSTFLAGS: "-Zsanitizer=memory -Zsanitizer-memory-track-origins"
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     # All -Z options require running nightly
@@ -108,21 +100,13 @@ jobs:
         cmake .. -DASAN=1 -DRust_CARGO_TARGET=x86_64-unknown-linux-gnu -DCMAKE_BUILD_TYPE=Debug
     - name: make
       run: |
+        . "$PWD/build_tools/set_asan_vars.sh"
         make -C build VERBOSE=1
     - name: make fish_run_tests
-      env:
-          FISH_CI_SAN: 1
-          ASAN_OPTIONS: check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1:fast_unwind_on_malloc=0
-          # use_tls=0 is a workaround for LSAN crashing with "Tracer caught signal 11" (SIGSEGV),
-          # which seems to be an issue with TLS support in newer glibc versions under virtualized
-          # environments. Follow https://github.com/google/sanitizers/issues/1342 and
-          # https://github.com/google/sanitizers/issues/1409 to track this issue.
-          # UPDATE: this can cause spurious leak reports for __cxa_thread_atexit_impl() under glibc.
-          LSAN_OPTIONS: verbosity=0:log_threads=0:use_tls=1:print_suppressions=0
       run: |
         set -x
+        . "$PWD/build_tools/set_asan_vars.sh"
         export ASAN_SYMBOLIZER_PATH=$(command -v /usr/bin/llvm-symbolizer* | sort -n | head -1)
-        export LSAN_OPTIONS="$LSAN_OPTIONS:suppressions=$PWD/build_tools/lsan_suppressions.txt"
         make -C build VERBOSE=1 fish_run_tests
 
   macos:

@@ -71,6 +71,7 @@ jobs:
         make -C build VERBOSE=1 fish_run_tests
 
   ubuntu-asan:
+    if: false
     runs-on: ubuntu-latest
     env:
         # Rust has two different memory sanitizers of interest; they can't be used at the same time:

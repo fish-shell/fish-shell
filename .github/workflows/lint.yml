@@ -45,6 +45,11 @@ jobs:
     - name: Install deps
       run: |
         sudo apt install gettext
+    - name: Patch Cargo.toml to deny unknown lints
+      run: |
+        if [ "${{ matrix.rust_version }}" = stable ]; then
+          sed -i /^rust.unknown_lints/d Cargo.toml
+        fi
     - name: cargo clippy
       run: cargo clippy --workspace --all-targets ${{ matrix.features }} -- --deny=warnings
 

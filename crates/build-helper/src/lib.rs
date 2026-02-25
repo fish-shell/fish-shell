@@ -38,6 +38,14 @@ pub fn fish_doc_dir() -> Cow<'static, Path> {
     cargo_target_dir().join("fish-docs").into()
 }
 
+fn l10n_dir() -> Cow<'static, Path> {
+    workspace_root().join("localization").into()
+}
+
+pub fn po_dir() -> Cow<'static, Path> {
+    l10n_dir().join("po").into()
+}
+
 // TODO Move this to rsconf
 pub fn rebuild_if_path_changed<P: AsRef<Path>>(path: P) {
     rsconf::rebuild_if_path_changed(path.as_ref().to_str().unwrap());

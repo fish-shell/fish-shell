@@ -61,19 +61,20 @@ function fish_vi_exec_motion
 
     set fish_bind_mode default
 
+    set -l seq_total (seq $total)
     if set -ql _flag_linewise
         switch $__fish_vi_operator
             case delete
-                for i in (seq $total)
+                for i in $seq_total
                     commandline -f kill-whole-line
                 end
             case change
-                for i in (seq $total)
+                for i in $seq_total
                     commandline -f kill-inner-line
                 end
                 set fish_bind_mode insert
             case yank
-                for i in (seq $total)
+                for i in $seq_total
                     commandline -f kill-whole-line yank
                 end
             case swap-case
@@ -100,6 +101,11 @@ function fish_vi_exec_motion
             case '*'
                 set motion_cmd commandline -f $motion
         end
+        switch $motion[1]
+            case forward-char backward-char
+                $motion_cmd
+                set -e seq_total[1]
+        end
         if $use_selection
             commandline -f begin-selection
         else
@@ -108,7 +114,7 @@ function fish_vi_exec_motion
         set -l ok true
         switch $__fish_vi_operator
             case delete
-                for i in (seq $total)
+                for i in $seq_total
                     $motion_cmd || { set ok false; break }
                 end
                 if $ok && $use_selection
@@ -117,7 +123,7 @@ function fish_vi_exec_motion
             case change
                 switch $motion[1]
                     case kill-word-vi
-                        for i in (seq $total)
+                        for i in $seq_total
                             if test $i -eq $total
                                 commandline -f kill-word
                             else
@@ -125,7 +131,7 @@ function fish_vi_exec_motion
                             end
                         end
                     case '*'
-                        for i in (seq $total)
+                        for i in $seq_total
                             $motion_cmd || { set ok false; break }
                         end
                 end
@@ -136,7 +142,7 @@ function fish_vi_exec_motion
                     set fish_bind_mode insert
                 end
             case yank
-                for i in (seq $total)
+                for i in $seq_total
                     $motion_cmd || { set ok false; break }
                 end
                 if $ok
@@ -147,7 +153,7 @@ function fish_vi_exec_motion
                     end
                 end
             case swap-case
-                for i in (seq $total)
+                for i in $seq_total
                     $motion_cmd || { set ok false; break }
                 end
                 if $ok

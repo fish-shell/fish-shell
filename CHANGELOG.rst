@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+For distributors and developers
+-------------------------------
+- xtasks no longer panic for expected failures
+
 Regression fixes:
 -----------------
 - (from 4.5.0) Intermediate ``⏎`` artifact when redrawing prompt (:issue:`12476`).

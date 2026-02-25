@@ -43,7 +43,7 @@ fn main() {
 fn run_checks() {
     let repo_root_dir = fish_build_helper::workspace_root();
     let check_script = repo_root_dir.join("build_tools").join("check.sh");
-    Command::new(check_script).run_or_panic();
+    Command::new(check_script).run_or_fail();
 }
 
 fn build_html_docs(fish_indent: Option<PathBuf>) {
@@ -94,5 +94,5 @@ fn build_html_docs(fish_indent: Option<PathBuf>) {
     Command::new(option_env!("FISH_SPHINX").unwrap_or("sphinx-build"))
         .env("PATH", new_path)
         .args(args)
-        .run_or_panic();
+        .run_or_fail();
 }

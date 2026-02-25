@@ -11,11 +11,7 @@ fn main() {
         PathBuf::from(fish_build_helper::fish_build_dir()).join("fish-localization-map-cache");
     embed_localizations(&cache_dir);
 
-    fish_build_helper::rebuild_if_path_changed(
-        fish_build_helper::workspace_root()
-            .join("localization")
-            .join("po"),
-    );
+    fish_build_helper::rebuild_if_path_changed(fish_build_helper::po_dir());
 }
 
 fn embed_localizations(cache_dir: &Path) {
@@ -24,10 +20,6 @@ fn embed_localizations(cache_dir: &Path) {
         fs::File,
         io::{BufWriter, Write as _},
     };
-
-    let po_dir = fish_build_helper::workspace_root()
-        .join("localization")
-        .join("po");
 
     // Ensure that the directory is created, because clippy cannot compile the code if the
     // directory does not exist.
@@ -56,7 +48,7 @@ fn embed_localizations(cache_dir: &Path) {
         Ok(output) => {
             let has_check_format =
                 String::from_utf8_lossy(&output.stdout).contains("--check-format");
-            for dir_entry_result in po_dir.read_dir().unwrap() {
+            for dir_entry_result in fish_build_helper::po_dir().read_dir().unwrap() {
                 let dir_entry = dir_entry_result.unwrap();
                 let po_file_path = dir_entry.path();
                 if po_file_path.extension() != Some(OsStr::new("po")) {

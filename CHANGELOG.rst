@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Regression fixes:
+-----------------
+- (from 4.5.0) Intermediate ``⏎`` artifact when redrawing prompt (:issue:`12476`).
+
 fish 4.5.0 (released February 17, 2026)
 =======================================
 

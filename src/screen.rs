@@ -724,6 +724,7 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
     // line above your prompt. This doesn't make a difference in normal usage, but copying and
     // pasting your terminal log becomes a pain. This commit clears that line, making it an
     // actual empty line.
+    abandon_line_string.write_command(ClearToEndOfLine);
     abandon_line_string.take_contents()
 }
 

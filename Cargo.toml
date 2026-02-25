@@ -193,7 +193,7 @@ tsan = []
 [workspace.lints]
 rust.non_camel_case_types = "allow"
 rust.non_upper_case_globals = "allow"
-rust.unknown_lints = "allow"
+rust.unknown_lints = { level = "allow", priority = -1 }
 rust.unstable_name_collisions = "allow"
 rustdoc.private_intra_doc_links = "allow"
 

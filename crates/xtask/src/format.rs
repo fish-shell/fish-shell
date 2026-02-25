@@ -7,6 +7,13 @@ use std::{
 };
 use walkdir::WalkDir;
 
+macro_rules! fail {
+    ($($arg:tt)+) => {{
+        eprintln!($($arg)+);
+        std::process::exit(1);
+    }}
+}
+
 const GREEN: Style = AnsiColor::Green.on_default();
 const YELLOW: Style = AnsiColor::Yellow.on_default();
 
@@ -57,7 +64,7 @@ pub fn format(args: FormatArgs) {
                         "{YELLOW}warning: Did not find git, will proceed without checking for unstaged changes.{YELLOW:#}"
                     )
                 } else {
-                    panic!("Failed to run git status:\n{e}")
+                    fail!("Failed to run git status:\n{e}")
                 }
             }
         }
@@ -98,7 +105,7 @@ fn run_formatter(formatter: &mut Command, name: &str) {
     match formatter.status() {
         Ok(exit_status) => {
             if !exit_status.success() {
-                panic!("{name:?}: Files are not formatted correctly.");
+                fail!("{name:?}: Files are not formatted correctly.");
             }
         }
         Err(e) => {
@@ -107,7 +114,7 @@ fn run_formatter(formatter: &mut Command, name: &str) {
                     "{YELLOW}Formatter not found: {name:?}. Skipping associated files.{YELLOW:#}"
                 );
             } else {
-                panic!("Error occurred while running {name:?}:\n{e}")
+                fail!("Error occurred while running {name:?}:\n{e}")
             }
         }
     }

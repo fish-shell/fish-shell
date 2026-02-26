@@ -229,6 +229,15 @@ impl CompletionRequestOptions {
             fuzzy_match: true,
         }
     }
+
+    /// Options for prefix-only completion (no fuzzy/subsequence matching).
+    pub fn prefix_only() -> Self {
+        Self {
+            autosuggestion: false,
+            descriptions: true,
+            fuzzy_match: false,
+        }
+    }
 }
 
 /// A completion receiver accepts completions. It is essentially a wrapper around `Vec` with

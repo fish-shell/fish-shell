@@ -1536,11 +1536,12 @@ mod tests {
 
     /// Helper to convert a narrow string to a sequence of hex digits.
     fn bytes2hex(input: &[u8]) -> String {
-        let mut output = String::with_capacity(input.len() * 5);
-        for byte in input {
-            write!(output, "0x{:2X} ", *byte).unwrap();
-        }
-        output
+        input
+            .iter()
+            .fold(String::with_capacity(input.len() * 5), |mut out, b| {
+                write!(out, "0x{:2X} ", b).ok();
+                out
+            })
     }
 
     /// Test wide/narrow conversion by creating random strings and verifying that the original

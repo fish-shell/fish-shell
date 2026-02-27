@@ -85,10 +85,10 @@ impl TimerSnapshot {
         let mut output = String::new();
         #[rustfmt::skip]
         if !verbose {
-            write!(output, "\n_______________________________").unwrap();
-            write!(output, "\nExecuted in  {:6.2} {}", wall_time, wall_unit.long_name()).unwrap();
-            write!(output, "\n   usr time  {:6.2} {}", usr_time, cpu_unit.long_name()).unwrap();
-            write!(output, "\n   sys time  {:6.2} {}", sys_time, cpu_unit.long_name()).unwrap();
+            write!(output, "\n_______________________________").ok();
+            write!(output, "\nExecuted in  {:6.2} {}", wall_time, wall_unit.long_name()).ok();
+            write!(output, "\n   usr time  {:6.2} {}", usr_time, cpu_unit.long_name()).ok();
+            write!(output, "\n   sys time  {:6.2} {}", sys_time, cpu_unit.long_name()).ok();
         } else {
             let fish_unit = Unit::for_micros(fish_sys.max(fish_usr).as_micros() as i64);
             let child_unit = Unit::for_micros(child_sys.max(child_usr).as_micros() as i64);
@@ -114,9 +114,9 @@ impl TimerSnapshot {
                 fish = "fish",
                 width2 = fish_unit.len() + 7
             )
-            .unwrap();
-            write!(output, "\n   usr time  {usr_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_usr_time:6.2} {fish_unit}  {child_usr_time:6.2} {child_unit}").unwrap();
-            write!(output, "\n   sys time  {sys_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_sys_time:6.2} {fish_unit}  {child_sys_time:6.2} {child_unit}").unwrap();
+            .ok();
+            write!(output, "\n   usr time  {usr_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_usr_time:6.2} {fish_unit}  {child_usr_time:6.2} {child_unit}").ok();
+            write!(output, "\n   sys time  {sys_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_sys_time:6.2} {fish_unit}  {child_sys_time:6.2} {child_unit}").ok();
         };
         output += "\n";
 

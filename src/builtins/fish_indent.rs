@@ -35,7 +35,6 @@ use crate::wutil::fish_iswalnum;
 use assert_matches::assert_matches;
 use fish_wcstringutil::count_preceding_backslashes;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
-use std::fmt::Write as _;
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex
@@ -1219,39 +1218,6 @@ fn read_file(mut f: impl Read) -> Result<WString, ()> {
     Ok(bytes2wcstring(&buf))
 }
 
-fn highlight_role_to_string(role: HighlightRole) -> &'static wstr {
-    match role {
-        HighlightRole::normal => L!("normal"),
-        HighlightRole::error => L!("error"),
-        HighlightRole::command => L!("command"),
-        HighlightRole::keyword => L!("keyword"),
-        HighlightRole::statement_terminator => L!("statement_terminator"),
-        HighlightRole::param => L!("param"),
-        HighlightRole::option => L!("option"),
-        HighlightRole::comment => L!("comment"),
-        HighlightRole::search_match => L!("search_match"),
-        HighlightRole::operat => L!("operat"),
-        HighlightRole::escape => L!("escape"),
-        HighlightRole::quote => L!("quote"),
-        HighlightRole::redirection => L!("redirection"),
-        HighlightRole::autosuggestion => L!("autosuggestion"),
-        HighlightRole::selection => L!("selection"),
-        HighlightRole::pager_progress => L!("pager_progress"),
-        HighlightRole::pager_background => L!("pager_background"),
-        HighlightRole::pager_prefix => L!("pager_prefix"),
-        HighlightRole::pager_completion => L!("pager_completion"),
-        HighlightRole::pager_description => L!("pager_description"),
-        HighlightRole::pager_secondary_background => L!("pager_secondary_background"),
-        HighlightRole::pager_secondary_prefix => L!("pager_secondary_prefix"),
-        HighlightRole::pager_secondary_completion => L!("pager_secondary_completion"),
-        HighlightRole::pager_secondary_description => L!("pager_secondary_description"),
-        HighlightRole::pager_selected_background => L!("pager_selected_background"),
-        HighlightRole::pager_selected_prefix => L!("pager_selected_prefix"),
-        HighlightRole::pager_selected_completion => L!("pager_selected_completion"),
-        HighlightRole::pager_selected_description => L!("pager_selected_description"),
-    }
-}
-
 // Entry point for Pygments CSV output.
 // Our output is a newline-separated string.
 // Each line is of the form `start,end,role`
@@ -1292,17 +1258,21 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     }
 
     // Now render these to a string.
-    let mut result = String::with_capacity(token_ranges.len() * 32);
-    for range in token_ranges {
-        writeln!(
-            result,
-            "{},{},{}",
-            range.start,
-            range.end,
-            highlight_role_to_string(range.role)
-        )
-        .unwrap();
-    }
+    let result = token_ranges.iter().fold(
+        String::with_capacity(token_ranges.len() * 32),
+        |mut out, range| {
+            out.extend([
+                &range.start.to_string(),
+                ",",
+                &range.end.to_string(),
+                ",",
+                range.role.into(),
+                "\n",
+            ]);
+            out
+        },
+    );
+
     result.into_bytes()
 }
 

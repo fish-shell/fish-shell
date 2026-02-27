@@ -264,10 +264,6 @@ msgid "%s: Ambiguous job"
 msgstr "%s: Tarea ambigua"
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr "%s: Una especificación de opción debe tener al menos un flag corto o largo"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: El argumento '%s' está fuera de rango"
 
@@ -372,26 +368,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s: Nombre de función no permitido '%s'"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr "%s: La opción entera implícita '%c' ya está definida"
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr "%s: La opción corta entera implícita '%c' no permite modificadores como '%c'"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr "%s: Valor no válido para --max-args '%s'"
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr "%s: Valor no válido para --min-args '%s'"
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr "%s: Valor no válido para --unknown-arguments '%s'"
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr "%s: Valor de recuento no válido '%s'"
 
@@ -492,14 +468,6 @@ msgid "%s: Key not specified"
 msgstr "%s: Clave no especificada"
 
 #, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr "%s: La opción larga '%s' ya está definida"
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr "%s: Falta el separador --"
-
-#, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: El nuevo límite no puede ser un string vacío"
 
@@ -560,14 +528,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: El límite de recursos no está disponible en este sistema operativo"
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr "%s: La opción corta '%c' ya está definida"
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr "%s: La opción corta '%c' no es válida, debe ser alfanumérica o '#'"
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s: El directorio '%s' no existe"
 
@@ -586,10 +546,6 @@ msgstr "%s: No hay trabajos adecuados"
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
 msgstr "%s: Demasiados niveles de enlaces simbólicos: '%s'"
-
-#, c-format
-msgid "%s: Too many long-only options"
-msgstr "%s: Hay demasiadas opciones solo en formato largo"
 
 #, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
@@ -658,14 +614,6 @@ msgstr "%s: no se puede establecer y desestablecer la ruta a la vez"
 #, c-format
 msgid "%s: column %s exceeds line length"
 msgstr "%s: la columna %s excede la longitud de la línea"
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr "%s: la opción exclusiva '%s' no es válida"
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
-msgstr "%s: el string de opciones exclusivas '%s' no es válido"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"

@@ -260,10 +260,6 @@ msgid "%s: Ambiguous job"
 msgstr ""
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr ""
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: Argument '%s' jest poza zasięgiem"
 
@@ -368,26 +364,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s: Niedozwolona nazwa funkcji '%s'"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr ""
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr ""
 
@@ -488,14 +464,6 @@ msgid "%s: Key not specified"
 msgstr "%s: Nie określono klawisza"
 
 #, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr ""
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr ""
-
-#, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr ""
 
@@ -556,14 +524,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr ""
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr ""
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr ""
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s: Ścieżka '%s' nie istnieje"
 
@@ -581,10 +541,6 @@ msgstr "%s: Brak pasujących zadań"
 
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Too many long-only options"
 msgstr ""
 
 #, c-format
@@ -653,14 +609,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: column %s exceeds line length"
-msgstr ""
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr ""
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
 msgstr ""
 
 #, c-format

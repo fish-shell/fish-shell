@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Notable improvements and fixes
+------------------------------
+- New Spanish translations (:issue:`12489`).
+
 For distributors and developers
 -------------------------------
 - xtasks no longer panic for expected failures

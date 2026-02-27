@@ -1,4 +1,15 @@
+argparse-exclusive-flag-invalid = { $command_name }: exclusive flag '{ $flag }' is not valid
+argparse-exclusive-flag-string-invalid = { $command_name }: exclusive flag string '{ $flag_string }' is not valid
+argparse-implicit-int-flag-already-defined = { $command_name }: Implicit int flag '{ $flag }' already defined
+argparse-int-short-invalid-modifier = { $command_name }: Implicit int short flag '{ $flag }' does not allow modifiers like '{ $modifier }'
+argparse-invalid-argument-value = { $command_name }: Invalid { $argument } value '{ $value }'
 argparse-invalid-option-spec = { $command_name }: Invalid option spec '{ $option_spec }' at char '{ $bad_char }'
+argparse-long-flag-already-defined = { $command_name }: Long flag '{ $flag }' already defined
+argparse-missing-double-hyphen-separator = { $command_name }: Missing -- separator
+argparse-must-have-flag = { $command_name }: An option spec must have at least a short or a long flag
+argparse-short-flag-already-defined = { $command_name }: Short flag '{ $flag }' already defined
+argparse-short-flag-invalid = { $command_name }: Short flag '{ $flag }' invalid, must be alphanum or '#'
+argparse-too-many-long-only-options = { $command_name }: Too many long-only options
 fish-version = { $package_name }, version { $version }
 test = This is a test
 test-with-args = Two arguments: { $first }, { $second }

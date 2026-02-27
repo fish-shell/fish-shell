@@ -285,10 +285,6 @@ msgid "%s: Ambiguous job"
 msgstr "%s: 有歧义的作业"
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr "%s: 选项规范必须至少包含一个短标识或长标识"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: 参数 '%s' 超出取值范围"
 
@@ -393,26 +389,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s: 非法函数名 '%s'"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr "%s: 隐式整形标识 '%c' 已被定义"
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr "%s: 隐式整形短标识 '%c' 不能带有形如 '%c' 的修饰符"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr "%s: 无效的 --max-args 值 '%s'"
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr "%s: 无效的 --min-args 值 '%s'"
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr "%s: 无效的 --unknown-arguments 值 '%s'"
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr "%s: 无效的计数值 '%s'"
 
@@ -513,14 +489,6 @@ msgid "%s: Key not specified"
 msgstr "%s: 没有指定键"
 
 #, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr "%s: 长标识 '%s' 已定义"
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr "%s: 缺少 -- 分隔符"
-
-#, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新限制不能为空字符串"
 
@@ -581,14 +549,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: 该操作系统不支持资源限制"
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr "%s: 已经定义了短标识 '%c'"
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr "%s: 短标识 '%c' 无效，必须是字母、数字或 '#'"
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s: 目录 '%s' 不存在"
 
@@ -607,10 +567,6 @@ msgstr "%s: 没有匹配的作业"
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
 msgstr "%s: 符号链接的级别过多：'%s'"
-
-#, c-format
-msgid "%s: Too many long-only options"
-msgstr "%s: 过多的仅长选项"
 
 #, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
@@ -679,14 +635,6 @@ msgstr "%s: 无法同时是路径变量和非路径变量"
 #, c-format
 msgid "%s: column %s exceeds line length"
 msgstr "%s: 列 %s 超出行长度"
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr "%s: 排他标识 '%s' 无效"
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
-msgstr "%s: 排他标识字符串 '%s' 无效"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"

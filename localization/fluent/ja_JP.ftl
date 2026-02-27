@@ -1,2 +1,13 @@
+argparse-exclusive-flag-invalid = { $command_name }: 排他的なフラグ '{ $flag }' は有効ではありません
+argparse-exclusive-flag-string-invalid = { $command_name }: 排他的なフラグ文字列 '{ $flag_string }' は有効ではありません
+argparse-implicit-int-flag-already-defined = { $command_name }: 暗黙的な整数フラグ '{ $flag }' はすでに定義されています
+argparse-int-short-invalid-modifier = { $command_name }: 暗黙的な整数の短縮フラグ '{ $flag }' では '{ $modifier }' のような修飾子は使用できません
+argparse-invalid-argument-value = { $command_name }: { $argument } の値 '{ $value }' は無効です
 argparse-invalid-option-spec = { $command_name }: オプション仕様 '{ $option_spec }' の文字 '{ $bad_char }' が無効です
+argparse-long-flag-already-defined = { $command_name }: ロングフラグ '{ $flag }' はすでに定義されています
+argparse-missing-double-hyphen-separator = { $command_name }: -- セパレータがありません
+argparse-must-have-flag = { $command_name }: オプション仕様には、少なくとも短縮フラグまたはロングフラグが必要です
+argparse-short-flag-already-defined = { $command_name }: 短縮フラグ '{ $flag }' はすでに定義されています
+argparse-short-flag-invalid = { $command_name }: 短縮フラグ '{ $flag }' は無効です。英数字または '#' である必要があります
+argparse-too-many-long-only-options = { $command_name }: ロングフラグのみのオプションが多すぎます
 fish-version = { $package_name }, バージョン { $version }

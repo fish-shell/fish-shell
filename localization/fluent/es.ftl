@@ -1,2 +1,13 @@
+argparse-exclusive-flag-invalid = { $command_name }: la opción exclusiva '{ $flag }' no es válida
+argparse-exclusive-flag-string-invalid = { $command_name }: el string de opciones exclusivas '{ $flag_string }' no es válido
+argparse-implicit-int-flag-already-defined = { $command_name }: La opción entera implícita '{ $flag }' ya está definida
+argparse-int-short-invalid-modifier = { $command_name }: La opción corta entera implícita '{ $flag }' no permite modificadores como '{ $modifier }'
+argparse-invalid-argument-value = { $command_name }: Valor no válido para { $argument } '{ $value }'
 argparse-invalid-option-spec = { $command_name }: Especificación de opción no válida '{ $option_spec }' en el carácter '{ $bad_char }'
+argparse-long-flag-already-defined = { $command_name }: La opción larga '{ $flag }' ya está definida
+argparse-missing-double-hyphen-separator = { $command_name }: Falta el separador --
+argparse-must-have-flag = { $command_name }: Una especificación de opción debe tener al menos un flag corto o largo
+argparse-short-flag-already-defined = { $command_name }: La opción corta '{ $flag }' ya está definida
+argparse-short-flag-invalid = { $command_name }: La opción corta '{ $flag }' no es válida, debe ser alfanumérica o '#'
+argparse-too-many-long-only-options = { $command_name }: Hay demasiadas opciones solo en formato largo
 fish-version = { $package_name }, versión { $version }

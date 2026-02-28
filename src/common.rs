@@ -24,7 +24,7 @@ use std::env;
 use std::ffi::{CStr, OsStr};
 use std::os::unix::prelude::*;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, MutexGuard, OnceLock};
+use std::sync::{MutexGuard, OnceLock};
 
 pub use fish_common::*;
 
@@ -998,9 +998,6 @@ pub(crate) fn charptr2wcstring(input: *const libc::c_char) -> WString {
     let input: &[u8] = unsafe { CStr::from_ptr(input).to_bytes() };
     bytes2wcstring(input)
 }
-
-/// Stored in blocks to reference the file which created the block.
-pub type FilenameRef = Arc<WString>;
 
 pub fn init_special_chars_once() {
     if is_windows_subsystem_for_linux(WSL::Any) {

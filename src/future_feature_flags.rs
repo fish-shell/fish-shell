@@ -1,11 +1,9 @@
 //! Flags to enable upcoming features
 
-use crate::prelude::*;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
-
+use fish_widestring::{L, wstr};
 #[cfg(test)]
 use std::cell::RefCell;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// The list of flags.
 #[repr(u8)]
@@ -296,7 +294,7 @@ pub fn scoped_test(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
 #[cfg(test)]
 mod tests {
     use super::{FeatureFlag, Features, METADATA, scoped_test, set, test};
-    use crate::prelude::*;
+    use fish_widestring::L;
 
     #[test]
     fn test_feature_flags() {

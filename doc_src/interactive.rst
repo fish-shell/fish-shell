@@ -21,7 +21,7 @@ The main page can be viewed via ``help index`` (or just ``help``) or ``man fish-
 Autosuggestions
 ---------------
 
-fish suggests commands as you type, based on :ref:`command history <history-search>`, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
+fish suggests commands as you type, based on :ref:`command history <history-search>`, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable). If the suggestion is derived from completions, the "guaranteed" part (the longest common prefix of all possible completions) is underlined.
 
 To accept the autosuggestion (replacing the command line contents), press :kbd:`right` (``→``) or :kbd:`ctrl-f`. To accept the first suggested word, press :kbd:`alt-right` (``→``) or :kbd:`alt-f`. If the autosuggestion is not what you want, ignore it: it won't execute unless you accept it.
 

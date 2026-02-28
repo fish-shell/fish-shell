@@ -393,10 +393,6 @@ msgid "%s: Ambiguous job"
 msgstr "%s : Tâche ambiguë"
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr "%s : Une spécification d’option doit avoir au moins un nom court ou long"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s : L’argument « %s » est hors limites"
 
@@ -501,26 +497,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s : « %s » est un nom de fonction incorrect"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr "%s : Le sémaphore implicitement entier « %c » est déjà défini"
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr "%s : Le sémaphore court implicitement entier « %c » n’autorise pas de modificateurs comme « %c »"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr "%s : La valeur « %s » de --max-args est invalide"
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr "%s : La valeur « %s » de --min-args est invalide"
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr "%s : La valeur « %s » de --unknown-arguments est invalide"
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr "%s : La valeur « %s » de « count » est invalide"
 
@@ -567,10 +543,6 @@ msgstr ""
 #, c-format
 msgid "%s: Invalid max value '%s'"
 msgstr "%s : Valeur maximale « %s » invalide"
-
-#, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
-msgstr "%s : Option invalide « %s » au caractère « %c »"
 
 #, c-format
 msgid "%s: Invalid padding character of width zero '%s'"
@@ -623,14 +595,6 @@ msgstr ""
 #, c-format
 msgid "%s: Key not specified"
 msgstr "%s : Clé non spécifiée"
-
-#, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr ""
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr "%s : Séparateur -- manquant"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -693,14 +657,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr ""
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr ""
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr "%s : Le sémaphore « %c » est invalide : il doit être alphanumérique ou valoir « # »"
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s : Le dossier « %s » n’existe pas"
 
@@ -718,10 +674,6 @@ msgstr "%s : Aucune tâche appropriée"
 
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Too many long-only options"
 msgstr ""
 
 #, c-format
@@ -791,14 +743,6 @@ msgstr ""
 #, c-format
 msgid "%s: column %s exceeds line length"
 msgstr ""
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr "%s : le sémaphore exclusif « %s » est invalide"
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
-msgstr "%s : le sémaphore texte exclusif « %s » est invalide"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"

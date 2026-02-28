@@ -1,3 +1,4 @@
+mod fluent;
 mod gettext;
 pub use gettext::{
     LocalizableString, localizable_consts, localizable_string, wgettext, wgettext_fmt,

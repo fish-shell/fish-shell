@@ -1,0 +1,17 @@
+[package]
+name = "fish-fluent-check"
+edition.workspace = true
+rust-version.workspace = true
+version = "0.0.0"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+fish-build-helper.workspace = true
+fish-fluent.workspace = true
+fish-tempfile.workspace = true
+fluent.workspace = true
+fluent-syntax.workspace = true
+
+[lints]
+workspace = true

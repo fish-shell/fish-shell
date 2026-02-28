@@ -1,0 +1,10 @@
+argparse-exclusive-flag-invalid = { $command_name } : le sémaphore exclusif « { $flag } » est invalide
+argparse-exclusive-flag-string-invalid = { $command_name } : le sémaphore texte exclusif « { $flag_string } » est invalide
+argparse-implicit-int-flag-already-defined = { $command_name } : Le sémaphore implicitement entier « { $flag } » est déjà défini
+argparse-int-short-invalid-modifier = { $command_name } : Le sémaphore court implicitement entier « { $flag } » n’autorise pas de modificateurs comme « { $modifier } »
+argparse-invalid-argument-value = { $command_name } : La valeur « { $value } » de { $argument } est invalide
+argparse-invalid-option-spec = { $command_name } : Option invalide « { $option_spec } » au caractère « { $bad_char } »
+argparse-missing-double-hyphen-separator = { $command_name } : Séparateur -- manquant
+argparse-must-have-flag = { $command_name } : Une spécification d’option doit avoir au moins un nom court ou long
+argparse-short-flag-invalid = { $command_name } : Le sémaphore « { $flag } » est invalide : il doit être alphanumérique ou valoir « # »
+fish-version = { $package_name }, version { $version }

@@ -1,7 +1,7 @@
 use super::{localizable_consts, localizable_string, wgettext, wgettext_fmt};
 use crate::env::{EnvStack, Environment as _};
 use fish_widestring::{L, WString, wstr};
-use itertools::Itertools as _;
+use itertools::{Itertools as _, chain};
 use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
 
@@ -206,6 +206,7 @@ impl LocalizationState {
             if is_c_locale(locale) {
                 self.precedence_origin =
                     LanguagePrecedenceOrigin::LocaleVariable(*precedence_origin);
+                fish_fluent::set_language_precedence(&[]);
                 fish_gettext::set_language_precedence(&[]);
                 return;
             }
@@ -242,6 +243,11 @@ impl LocalizationState {
                 .collect();
             set_language_precedence(&language_precedence);
         }
+        update_precedence(
+            &language_list,
+            fish_fluent::get_available_languages,
+            fish_fluent::set_language_precedence,
+        );
         update_precedence(
             &language_list,
             fish_gettext::get_available_languages,
@@ -291,6 +297,12 @@ impl LocalizationState {
                 .collect();
             set_language_precedence(&unique_langs);
         }
+        update_precedence(
+            &unique_lang_strs,
+            fish_fluent::get_available_languages,
+            fish_fluent::set_language_precedence,
+            &mut all_available_langs,
+        );
         update_precedence(
             &unique_lang_strs,
             fish_gettext::get_available_languages,
@@ -388,17 +400,22 @@ pub fn status_language() -> WString {
         "Active languages (source: %s):",
         origin_string
     ));
-    let gettext_language_precedence = fish_gettext::get_language_precedence();
-    append_space_separated_list(&mut result, &gettext_language_precedence);
+    result.push_str("\n  Fluent:");
+    append_space_separated_list(&mut result, fish_fluent::get_language_precedence());
+    result.push_str("\n  gettext:");
+    append_space_separated_list(&mut result, fish_gettext::get_language_precedence());
     result.push('\n');
 
     result
 }
 
 pub fn list_available_languages() -> WString {
-    fish_gettext::get_available_languages()
-        .keys()
-        .sorted_unstable()
-        .flat_map(|lang| [lang, "\n"])
-        .collect()
+    chain!(
+        fish_fluent::get_available_languages().keys(),
+        fish_gettext::get_available_languages().keys(),
+    )
+    .sorted_unstable()
+    .dedup()
+    .flat_map(|s| [s, "\n"])
+    .collect()
 }

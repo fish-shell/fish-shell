@@ -1,5 +1,5 @@
 use super::*;
-use crate::common::get_ellipsis_str;
+use fish_widestring::{ELLIPSIS_CHAR, decoded_width};
 
 pub struct Shorten<'args> {
     ellipsis: &'args wstr,
@@ -9,12 +9,14 @@ pub struct Shorten<'args> {
     quiet: bool,
     shorten_from: Direction,
 }
+/// The character to use where the text has been truncated, in a [`wstr`].
+const ELLIPSIS_WSTR: &wstr = wstr::from_char_slice(&[ELLIPSIS_CHAR]);
 
 impl Default for Shorten<'_> {
     fn default() -> Self {
         Self {
-            ellipsis: get_ellipsis_str(),
-            ellipsis_width: width_without_escapes(get_ellipsis_str(), 0),
+            ellipsis: ELLIPSIS_WSTR,
+            ellipsis_width: decoded_width(ELLIPSIS_WSTR),
             max: None,
             no_newline: false,
             quiet: false,

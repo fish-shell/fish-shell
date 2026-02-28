@@ -15,6 +15,7 @@ use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::prelude::*;
 use crate::proc::Pid;
 use crate::wutil::dir_iter::DirIter;
+use fish_wcstringutil::wcs2bytes;
 use std::collections::{HashMap, HashSet};
 use std::num::NonZeroU32;
 use std::sync::{Arc, LazyLock, Mutex};
@@ -240,7 +241,7 @@ pub fn exists_no_autoload(cmd: &wstr) -> bool {
         return true;
     }
 
-    let narrow = crate::common::wcs2bytes(cmd);
+    let narrow = wcs2bytes(cmd);
     if let Ok(cmdstr) = std::str::from_utf8(&narrow) {
         let cmd = "functions/".to_owned() + cmdstr + ".fish";
         crate::autoload::has_asset(&cmd)

@@ -1806,12 +1806,14 @@ mod tests {
         History, HistoryItem, HistorySearch, PathList, PersistenceMode, SearchDirection,
         SearchFlags, SearchType, VACUUM_FREQUENCY,
     };
-    use crate::common::{ESCAPE_TEST_CHAR, osstr2wcstring, wcs2bytes};
+    use crate::common::{ESCAPE_TEST_CHAR, osstr2wcstring};
     use crate::env::{EnvMode, EnvSetMode, EnvStack};
     use crate::fs::{LockedFile, WriteMethod};
     use crate::prelude::*;
     use fish_build_helper::workspace_root;
-    use fish_wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
+    use fish_wcstringutil::{
+        string_prefixes_string, string_prefixes_string_case_insensitive, wcs2bytes,
+    };
     use rand::Rng as _;
     use rand::rngs::ThreadRng;
     use std::collections::VecDeque;

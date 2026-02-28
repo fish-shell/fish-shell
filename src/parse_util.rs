@@ -1890,7 +1890,7 @@ pub fn expand_variable_error(
                         global_after_dollar_pos,
                         1,
                         ERROR_BRACKETED_VARIABLE_QUOTED1,
-                        truncate(var_name, VAR_ERR_LEN, None)
+                        truncate(var_name, VAR_ERR_LEN)
                     );
                 } else {
                     append_syntax_error!(
@@ -1898,7 +1898,7 @@ pub fn expand_variable_error(
                         global_after_dollar_pos,
                         1,
                         ERROR_BRACKETED_VARIABLE1,
-                        truncate(var_name, VAR_ERR_LEN, None),
+                        truncate(var_name, VAR_ERR_LEN),
                     );
                 }
             } else {

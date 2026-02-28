@@ -1,12 +1,12 @@
 //! The classes responsible for autoloading functions and completions.
 
-use crate::common::wcs2bytes;
 use crate::common::{ScopeGuard, escape};
 use crate::env::Environment;
 use crate::flogf;
 use crate::io::IoChain;
 use crate::parser::Parser;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_path};
+use fish_wcstringutil::wcs2bytes;
 use fish_widestring::{L, WExt as _, WString, wstr};
 use lru::LruCache;
 use rust_embed::RustEmbed;
@@ -463,8 +463,8 @@ mod tests {
     #[serial]
     fn test_autoload() {
         let _cleanup = test_init();
-        use crate::common::wcs2zstring;
         use crate::fds::wopen_cloexec;
+        use fish_wcstringutil::wcs2zstring;
         use nix::fcntl::OFlag;
 
         macro_rules! run {

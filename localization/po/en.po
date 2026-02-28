@@ -775,10 +775,6 @@ msgstr ""
 msgid "%s: variable '%s' is read-only"
 msgstr ""
 
-#, c-format
-msgid "%sand %u more rows"
-msgstr "%sand %u more rows"
-
 msgid "'break' while not inside of loop"
 msgstr ""
 
@@ -1873,6 +1869,10 @@ msgstr ""
 
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr ""
+
+#, c-format
+msgid "…and %u more rows"
+msgstr "…and %u more rows"
 
 msgid "fish-section-tier1-from-script-explicitly-added"
 msgstr ""

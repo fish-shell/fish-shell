@@ -769,11 +769,6 @@ msgstr "%s：值未完全轉換（無法轉換「%s」）"
 msgid "%s: variable '%s' is read-only"
 msgstr "%s：變數「%s」是唯讀的"
 
-#  第一個 %s 是刪節號。此字串出現在按下 <Tab> 的清單太長的情況。
-#, c-format
-msgid "%sand %u more rows"
-msgstr "%s還有 %u 列"
-
 msgid "'break' while not inside of loop"
 msgstr "「break」不在迴圈裡面"
 
@@ -1872,6 +1867,11 @@ msgstr "，定義為"
 
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr "|& 無效。在 fish 中請使用 &| 來同時管道傳輸 stdout 和 stderr。"
+
+#  第一個 %s 是刪節號。此字串出現在按下 <Tab> 的清單太長的情況。
+#, fuzzy, c-format
+msgid "…and %u more rows"
+msgstr "…還有 %u 列"
 
 msgid "fish-section-tier1-from-script-explicitly-added"
 msgstr ""

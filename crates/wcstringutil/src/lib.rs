@@ -5,9 +5,8 @@ use std::{
     os::unix::ffi::OsStringExt as _,
 };
 
-use fish_common::{get_ellipsis_char, get_ellipsis_str};
 use fish_fallback::{fish_wcwidth, lowercase, lowercase_rev, wcscasecmp, wcscasecmp_fuzzy};
-use fish_widestring::{decode_byte_from_char, prelude::*};
+use fish_widestring::{ELLIPSIS_CHAR, decode_byte_from_char, prelude::*};
 
 /// Return the number of newlines in a string.
 pub fn count_newlines(s: &wstr) -> usize {
@@ -593,32 +592,13 @@ pub fn split_about<'haystack>(
     output
 }
 
-#[derive(Eq, PartialEq)]
-pub enum EllipsisType {
-    None,
-    // Prefer niceness over minimalness
-    Prettiest,
-    // Make every character count ($ instead of ...)
-    Shortest,
-}
-
-pub fn truncate(input: &wstr, max_len: usize, etype: Option<EllipsisType>) -> WString {
-    let etype = etype.unwrap_or(EllipsisType::Prettiest);
+// TODO: This should work on render width rather than the number of codepoints.
+pub fn truncate(input: &wstr, max_len: usize) -> WString {
     if input.len() <= max_len {
         return input.to_owned();
     }
-
-    if etype == EllipsisType::None {
-        return input[..max_len].to_owned();
-    }
-    if etype == EllipsisType::Prettiest {
-        let ellipsis_str = get_ellipsis_str();
-        let mut output = input[..max_len - ellipsis_str.len()].to_owned();
-        output += ellipsis_str;
-        return output;
-    }
     let mut output = input[..max_len - 1].to_owned();
-    output.push(get_ellipsis_char());
+    output.push(ELLIPSIS_CHAR);
     output
 }
 

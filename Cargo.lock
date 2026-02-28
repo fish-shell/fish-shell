@@ -410,7 +410,6 @@ name = "fish-wcstringutil"
 version = "0.0.0"
 dependencies = [
  "fish-build-helper",
- "fish-common",
  "fish-fallback",
  "fish-widestring",
  "rsconf",

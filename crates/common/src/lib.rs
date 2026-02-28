@@ -159,17 +159,6 @@ pub fn exit_without_destructors(code: libc::c_int) -> ! {
     unsafe { libc::_exit(code) };
 }
 
-/// The character to use where the text has been truncated.
-pub fn get_ellipsis_char() -> char {
-    '\u{2026}' // ('…')
-}
-
-/// The character or string to use where text has been truncated (ellipsis if possible, otherwise
-/// ...)
-pub fn get_ellipsis_str() -> &'static wstr {
-    L!("\u{2026}")
-}
-
 // Only pub for `src/common.rs`
 pub static OBFUSCATION_READ_CHAR: AtomicU32 = AtomicU32::new(0);
 

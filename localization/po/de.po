@@ -775,10 +775,6 @@ msgstr "%s: Wert nicht vollständig konvertiert (kann '%s' nicht konvertieren)"
 msgid "%s: variable '%s' is read-only"
 msgstr ""
 
-#, c-format
-msgid "%sand %u more rows"
-msgstr "%sund %u weitere Zeilen"
-
 msgid "'break' while not inside of loop"
 msgstr ""
 
@@ -1873,6 +1869,10 @@ msgstr "mit Definition"
 
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr "|& ist ungültig. In fish, nutze &| um stdout und stderr gleichzeitig zu pipen"
+
+#, c-format
+msgid "…and %u more rows"
+msgstr "…und %u weitere Zeilen"
 
 msgid "fish-section-tier1-from-script-explicitly-added"
 msgstr ""

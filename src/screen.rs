@@ -7,9 +7,7 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
-use crate::common::{
-    get_ellipsis_char, get_omitted_newline_str, has_working_tty_timestamps, shell_modes, write_loop,
-};
+use crate::common::{get_omitted_newline_str, has_working_tty_timestamps, shell_modes, write_loop};
 use crate::editable_line::line_at_cursor;
 use crate::env::Environment;
 use crate::flog::{flog, flogf};
@@ -28,6 +26,7 @@ use crate::termsize::Termsize;
 use crate::wutil::fstat;
 use fish_fallback::fish_wcwidth;
 use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string, wcs2bytes};
+use fish_widestring::ELLIPSIS_CHAR;
 use libc::{STDERR_FILENO, STDOUT_FILENO};
 use nix::sys::termios;
 use std::cell::RefCell;
@@ -338,7 +337,6 @@ impl Screen {
 
         // Compute a layout.
         let layout = compute_layout(
-            get_ellipsis_char(),
             screen_width,
             screen_height,
             self.viewport_y,
@@ -1744,8 +1742,7 @@ fn truncate_run(
 
     // Bravely prepend ellipsis char and skip it.
     // Ellipsis is always width 1.
-    let ellipsis = get_ellipsis_char();
-    run.insert(0, ellipsis);
+    run.insert(0, ELLIPSIS_CHAR);
     curr_width += 1;
 
     // Start removing characters after ellipsis.
@@ -1845,7 +1842,6 @@ struct ScreenLayout {
 
 #[allow(clippy::too_many_arguments)]
 fn compute_layout(
-    ellipsis_char: char,
     screen_width: usize,
     screen_height: usize,
     screen_viewport_y: Option<usize>,
@@ -2040,7 +2036,7 @@ fn compute_layout(
         indent.drain(suggestion_end..suggestion_end + truncated_chars);
         if truncated_vertically && displayed_len > 0 {
             let suggestion_last = suggestion_end - 1;
-            autosuggestion.push(ellipsis_char);
+            autosuggestion.push(ELLIPSIS_CHAR);
             colors.insert(suggestion_end, colors[suggestion_last]);
             indent.insert(suggestion_end, indent[suggestion_last]);
         }
@@ -2075,7 +2071,6 @@ pub fn wcswidth_rendered(s: &wstr) -> isize {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::get_ellipsis_char;
     use crate::highlight::HighlightSpec;
     use crate::parse_util::compute_indents;
     use crate::prelude::*;
@@ -2084,6 +2079,7 @@ mod tests {
     };
     use crate::tests::prelude::*;
     use fish_wcstringutil::join_strings;
+    use fish_widestring::ELLIPSIS_CHAR;
 
     #[test]
     #[serial]
@@ -2199,7 +2195,7 @@ mod tests {
         let mut cache = LayoutCache::new();
         let mut trunc = WString::new();
 
-        let ellipsis = || WString::from_chars([get_ellipsis_char()]);
+        let ellipsis = || WString::from_chars([ELLIPSIS_CHAR]);
 
         // No truncation.
         let layout = cache.calc_prompt_layout(L!("abcd"), Some(&mut trunc), usize::MAX);
@@ -2343,7 +2339,6 @@ mod tests {
                 let mut indent = compute_indents(&full_commandline);
                 assert_eq!(
                     compute_layout(
-                        '…',
                         $screen_width,
                         /*screen_height=*/ 24,
                         /*screen_viewport_y=*/ Some(0),

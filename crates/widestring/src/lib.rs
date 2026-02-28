@@ -13,6 +13,9 @@ pub mod prelude {
     pub use crate::{IntoCharIter, L, ToWString, WExt, WString, wstr};
 }
 
+/// The character to use where the text has been truncated.
+pub const ELLIPSIS_CHAR: char = '\u{2026}'; // ('…')
+
 // These are in the Unicode private-use range. We really shouldn't use this
 // range but have little choice in the matter given how our lexer/parser works.
 // We can't use non-characters for these two ranges because there are only 66 of

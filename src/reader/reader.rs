@@ -1884,17 +1884,33 @@ impl<'a> Reader<'a> {
 
         // Extend our colors with the autosuggestion.
         let pos = autosuggested_range.start;
-        colors.splice(
-            pos..pos,
-            vec![
+        let suggestion_len = autosuggested_range.len();
+        if suggestion_len > 0 {
+            let mut suggestion_colors = vec![
                 if self.flash_autosuggestion {
                     HighlightSpec::with_both(HighlightRole::search_match)
                 } else {
                     HighlightSpec::with_fg(HighlightRole::autosuggestion)
                 };
-                autosuggested_range.len()
-            ],
-        );
+                suggestion_len
+            ];
+
+            // Apply underlining to the common prefix part if it's longer than what's already typed.
+            let autosuggestion = &self.autosuggestion;
+            let guaranteed_end = autosuggestion
+                .search_string_range
+                .start
+                .saturating_add(autosuggestion.common_prefix_len);
+
+            if guaranteed_end > pos {
+                let guaranteed_len = std::cmp::min(guaranteed_end - pos, suggestion_len);
+                for spec in &mut suggestion_colors[..guaranteed_len] {
+                    spec.force_underline = true;
+                }
+            }
+
+            colors.splice(pos..pos, suggestion_colors);
+        }
 
         // Compute the indentation.
         let indents = compute_indents(&full_line);
@@ -5200,12 +5216,16 @@ pub(super) struct Autosuggestion {
 
     /// Whether the autosuggestion is a whole match from history.
     is_whole_item_from_history: bool,
+
+    /// The length of the common prefix of all completions, if any.
+    common_prefix_len: usize,
 }
 
 impl Autosuggestion {
     // Clear our contents.
     fn clear(&mut self) {
         self.text.clear();
+        self.common_prefix_len = 0;
     }
 
     // Return whether we have empty text.
@@ -5241,6 +5261,7 @@ impl AutosuggestionResult {
         text: WString,
         icase_matched_codepoints: Option<usize>,
         is_whole_item_from_history: bool,
+        common_prefix_len: usize,
     ) -> Self {
         Self {
             autosuggestion: Autosuggestion {
@@ -5248,6 +5269,7 @@ impl AutosuggestionResult {
                 search_string_range,
                 icase_matched_codepoints,
                 is_whole_item_from_history,
+                common_prefix_len,
             },
             command_line,
             needs_load: vec![],
@@ -5383,6 +5405,7 @@ fn get_autosuggestion_performer(
                         full[suggested_range].into(),
                         icase.then(|| searcher.canon_term().char_count()),
                         is_whole,
+                        0, // history matches don't have multiple completions to LCP
                     );
                     if icase {
                         icase_history_result = Some(result);
@@ -5423,6 +5446,7 @@ fn get_autosuggestion_performer(
         let (mut completions, needs_load) =
             complete(&command_line[..would_be_cursor], complete_flags, &ctx);
 
+        let mut common_prefix_len = 0;
         let suggestion = if completions.is_empty() {
             // If there are no completions to suggest, fall back to icase history.
             if let Some(result) = icase_history_result {
@@ -5431,6 +5455,33 @@ fn get_autosuggestion_performer(
             WString::new()
         } else {
             sort_and_prioritize(&mut completions, complete_flags);
+
+            // Calculate common prefix of all completions.
+            // We only care about completions with the same (best) rank.
+            let best_rank = completions[0].rank();
+            let mut first = true;
+            let mut common_prefix = L!("");
+            for c in completions.iter().take_while(|c| c.rank() == best_rank) {
+                if first {
+                    common_prefix = &c.completion;
+                    first = false;
+                } else {
+                    let max = std::cmp::min(common_prefix.len(), c.completion.len());
+                    let mut idx = 0;
+                    while idx < max {
+                        if common_prefix.as_char_slice()[idx] != c.completion.as_char_slice()[idx] {
+                            break;
+                        }
+                        idx += 1;
+                    }
+                    common_prefix = common_prefix.slice_to(idx);
+                    if idx == 0 {
+                        break;
+                    }
+                }
+            }
+            common_prefix_len = common_prefix.len();
+
             let comp = &completions[0];
 
             // Prefer icase history over smartcase/icase completions.
@@ -5458,6 +5509,7 @@ fn get_autosuggestion_performer(
             suggestion,
             Some(lowercase_char_count), // normal completions are case-insensitive
             /*is_whole_item_from_history=*/ false,
+            common_prefix_len,
         );
         result.needs_load = needs_load;
         result
@@ -7429,6 +7481,7 @@ mod tests {
                 search_string_range: 0..4,
                 icase_matched_codepoints: None,
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
             "echo",
             Edit::new(4..4, L!(" ").to_owned()),
@@ -7437,6 +7490,7 @@ mod tests {
                 search_string_range: 0..5,
                 icase_matched_codepoints: None,
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             })
         );
 
@@ -7447,6 +7501,7 @@ mod tests {
                 search_string_range: 0..4,
                 icase_matched_codepoints: None,
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
             "echo",
             Edit::new(4..4, L!("f").to_owned()),
@@ -7460,6 +7515,7 @@ mod tests {
                 search_string_range: 0..4,
                 icase_matched_codepoints: Some(4),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
             "echo",
             Edit::new(4..4, L!(" H").to_owned()),
@@ -7468,24 +7524,27 @@ mod tests {
                 search_string_range: 0..6,
                 icase_matched_codepoints: Some(6),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             })
         );
 
         validate!(
             "Case-insensitive matching deletion",
             Autosuggestion {
-                text: L!("Echo hest").to_owned(),
-                search_string_range: 0..4,
-                icase_matched_codepoints: Some(4),
+                text: L!("echo hest").to_owned(),
+                search_string_range: 0..6,
+                icase_matched_codepoints: Some(6),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
-            "echo",
-            Edit::new(3..4, L!("").to_owned()),
+            "echo h",
+            Edit::new(5..6, L!("").to_owned()),
             Some(Autosuggestion {
-                text: L!("Echo hest").to_owned(),
-                search_string_range: 0..3,
-                icase_matched_codepoints: Some(3),
+                text: L!("echo hest").to_owned(),
+                search_string_range: 0..5,
+                icase_matched_codepoints: Some(5),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             })
         );
 
@@ -7496,10 +7555,36 @@ mod tests {
                 search_string_range: 0..6,
                 icase_matched_codepoints: Some(6),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
             "echo i",
             Edit::new(6..6, L!("n").to_owned()),
             None,
         );
+    }
+
+    #[test]
+    fn test_autosuggestion_common_prefix() {
+        use super::Autosuggestion;
+        let mut autosuggestion = Autosuggestion {
+            text: L!("document").to_owned(),
+            search_string_range: 0..1,
+            icase_matched_codepoints: None,
+            is_whole_item_from_history: false,
+            common_prefix_len: 8,
+        };
+
+        let cmd_line = L!("d");
+        let edit = crate::editable_line::Edit::new(1..1, L!("o").to_owned());
+
+        // Typing 'o' after 'd' should preserve the autosuggestion and its common_prefix_len.
+        assert!(super::try_apply_edit_to_autosuggestion(
+            &mut autosuggestion,
+            cmd_line,
+            &edit
+        ));
+        assert_eq!(autosuggestion.search_string_range, 0..2);
+        assert_eq!(autosuggestion.common_prefix_len, 8);
+        assert_eq!(autosuggestion.text, L!("document"));
     }
 }

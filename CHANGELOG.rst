@@ -5,6 +5,10 @@ For distributors and developers
 -------------------------------
 - xtasks no longer panic for expected failures
 
+Interactive improvements
+------------------------
+- Tab completion now provides a visual preview of the longest common prefix (the "guaranteed" part) before pressing Tab, by underlining that portion of the autosuggestion.
+
 Regression fixes:
 -----------------
 - (from 4.5.0) Intermediate ``⏎`` artifact when redrawing prompt (:issue:`12476`).

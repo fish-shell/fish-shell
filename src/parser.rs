@@ -4,7 +4,7 @@ use crate::ast::{self, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
     CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef, PROFILING_ACTIVE, ScopeGuarding,
-    ScopedCell, ScopedRefCell, escape_string, wcs2bytes,
+    ScopedCell, ScopedRefCell, escape_string,
 };
 use crate::complete::CompletionList;
 use crate::env::{
@@ -36,6 +36,7 @@ use crate::wutil::perror;
 use crate::{flog, flogf, function};
 use assert_matches::assert_matches;
 use fish_util::get_time;
+use fish_wcstringutil::wcs2bytes;
 use fish_widestring::WExt as _;
 use libc::c_int;
 use std::cell::{Ref, RefCell, RefMut};

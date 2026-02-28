@@ -1,24 +1,22 @@
 //! Implementation of the YAML-like history file format.
 
+use super::HistoryItem;
+use super::yaml_backend::{
+    decode_item_fish_2_0, escape_yaml_fish_2_0, offset_of_next_item_fish_2_0,
+};
+use crate::{
+    flog::flog,
+    path::{DirRemoteness, path_get_data_remoteness},
+    wutil::FileId,
+};
+use fish_wcstringutil::wcs2bytes;
+use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
 use std::{
     fs::File,
     io::Read as _,
     ops::{Deref, DerefMut},
     os::fd::AsRawFd as _,
     time::{SystemTime, UNIX_EPOCH},
-};
-
-use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
-
-use super::HistoryItem;
-use super::yaml_backend::{
-    decode_item_fish_2_0, escape_yaml_fish_2_0, offset_of_next_item_fish_2_0,
-};
-use crate::{
-    common::wcs2bytes,
-    flog::flog,
-    path::{DirRemoteness, path_get_data_remoteness},
-    wutil::FileId,
 };
 
 /// History file types.

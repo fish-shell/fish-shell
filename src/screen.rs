@@ -7,29 +7,16 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
-use crate::editable_line::line_at_cursor;
-use crate::key::ViewportPosition;
-use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
-use std::cell::RefCell;
-use std::collections::LinkedList;
-use std::io::Write as _;
-use std::num::NonZeroU16;
-use std::ops::Range;
-use std::sync::Mutex;
-use std::sync::atomic::AtomicU32;
-use std::time::SystemTime;
-
-use libc::{STDERR_FILENO, STDOUT_FILENO};
-use nix::sys::termios;
-
 use crate::common::{
-    get_ellipsis_char, get_omitted_newline_str, has_working_tty_timestamps, shell_modes, wcs2bytes,
-    write_loop,
+    get_ellipsis_char, get_omitted_newline_str, has_working_tty_timestamps, shell_modes, write_loop,
 };
+use crate::editable_line::line_at_cursor;
 use crate::env::Environment;
 use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
+use crate::key::ViewportPosition;
+use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
 use crate::prelude::*;
 use crate::terminal::SgrTerminalCommand::EnterDimMode;
 use crate::terminal::TerminalCommand::{
@@ -40,7 +27,17 @@ use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
 use crate::termsize::Termsize;
 use crate::wutil::fstat;
 use fish_fallback::fish_wcwidth;
-use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
+use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string, wcs2bytes};
+use libc::{STDERR_FILENO, STDOUT_FILENO};
+use nix::sys::termios;
+use std::cell::RefCell;
+use std::collections::LinkedList;
+use std::io::Write as _;
+use std::num::NonZeroU16;
+use std::ops::Range;
+use std::sync::Mutex;
+use std::sync::atomic::AtomicU32;
+use std::time::SystemTime;
 
 #[derive(Copy, Clone, Default)]
 pub enum CharOffset {

@@ -1,5 +1,5 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::{bytes2wcstring, wcs2bytes};
+use crate::common::bytes2wcstring;
 use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
     BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
@@ -14,6 +14,7 @@ use crate::signal::SigChecker;
 use crate::topic_monitor::Topic;
 use crate::wutil::{perror, perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat};
 use errno::Errno;
+use fish_wcstringutil::wcs2bytes;
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;

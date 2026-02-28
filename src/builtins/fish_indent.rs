@@ -14,7 +14,7 @@ use crate::ast::{
 };
 use crate::common::{
     PROGRAM_NAME, ReadExt as _, UnescapeFlags, UnescapeStringStyle, bytes2wcstring,
-    get_program_name, osstr2wcstring, unescape_string, wcs2bytes,
+    get_program_name, osstr2wcstring, unescape_string,
 };
 use crate::env::EnvStack;
 use crate::env::env_init;
@@ -33,7 +33,7 @@ use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Token
 use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::fish_iswalnum;
 use assert_matches::assert_matches;
-use fish_wcstringutil::count_preceding_backslashes;
+use fish_wcstringutil::{count_preceding_backslashes, wcs2bytes};
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 use std::fmt::Write as _;
 

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use crate::wildcard::wildcard_match;
-use crate::wutil::write_to_fd;
 use crate::{parse_util::unescape_wildcards, wutil::unescape_bytes_and_write_to_fd};
+use fish_util::write_to_fd;
 use fish_wcstringutil::wcs2bytes;
 use libc::c_int;
 use std::sync::atomic::{AtomicI32, Ordering};

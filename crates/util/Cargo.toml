@@ -8,6 +8,7 @@ license.workspace = true
 
 [dependencies]
 fish-widestring.workspace = true
+nix.workspace = true
 rand.workspace = true
 
 [lints]

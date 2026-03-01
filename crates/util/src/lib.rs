@@ -3,6 +3,7 @@
 use fish_widestring::prelude::*;
 use rand::{SeedableRng as _, rngs::SmallRng};
 use std::cmp::Ordering;
+use std::os::fd::{BorrowedFd, RawFd};
 use std::time;
 
 /// Compares two wide character strings with an (arguably) intuitive ordering. This function tries
@@ -232,6 +233,10 @@ fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (Ordering, usize, usize) {
         .take_while(|c| c.is_whitespace())
         .count();
     (ret, ai, bi)
+}
+
+pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
+    nix::unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, input)
 }
 
 #[cfg(test)]

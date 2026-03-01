@@ -200,6 +200,10 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: nombre de modo no válido. Consulte `help %s`"
 
 #, c-format
+msgid "%s: %s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: invalid scale"
 msgstr "%s: %s: escala no válida"
 

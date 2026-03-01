@@ -24,7 +24,9 @@ use crate::parse_util::{
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{SpecifiedTextFace, TextFace, TextStyling, UnderlineStyle, parse_text_face};
+use crate::text_face::{
+    ResettableStyle, SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face,
+};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use fish_color::Color;
@@ -179,7 +181,9 @@ impl HighlightColorResolver {
             face.bg = bg_face.bg;
             // In case the background role is different from the foreground one, we ignore its style
             // except for reverse mode.
-            face.style.reverse |= bg_face.style.is_reverse();
+            if face.style.reverse != ResettableStyle::On {
+                face.style.reverse = bg_face.style.reverse;
+            }
         }
 
         // Handle modifiers.
@@ -213,7 +217,9 @@ pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> Option<TextFace> {
         let fg = face.fg.unwrap_or(default.fg);
         let bg = face.bg.unwrap_or(default.bg);
         let underline_color = face.underline_color.unwrap_or(default.underline_color);
-        let style = face.style.unwrap_or(TextStyling::terminal_default_style());
+        let style = face.style.map_or(default.style, |face_style| {
+            default.style.union_prefer_right(face_style)
+        });
         TextFace {
             fg,
             bg,
@@ -1308,7 +1314,7 @@ pub struct HighlightSpec {
 mod tests {
     use super::{HighlightColorResolver, HighlightRole, HighlightSpec, highlight_shell};
     use crate::common::ScopeGuard;
-    use crate::env::{EnvMode, EnvSetMode, Environment as _};
+    use crate::env::{EnvMode, EnvSetMode, EnvVar, EnvVarFlags, Environment as _};
     use crate::future_feature_flags::{self, FeatureFlag};
     use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
@@ -1891,5 +1897,32 @@ mod tests {
         let command_face =
             parse_text_face_for_highlight(&vars.get(L!("fish_color_command")).unwrap()).unwrap();
         assert_eq!(face, command_face);
+    }
+
+    #[test]
+    fn test_parse_text_face_for_highlight_fully_specified() {
+        let assert_all_set = |values: Vec<WString>| {
+            let var = EnvVar::new_vec(values.clone(), EnvVarFlags::empty());
+            let face = parse_text_face_for_highlight(&var);
+            assert!(
+                face.is_some_and(|face| face.all_set()),
+                "Underspecified result for {:?}\n => {:?}",
+                values,
+                face
+            );
+        };
+
+        assert_all_set(vec![L!("normal").into()]);
+        assert_all_set(vec![L!("green").into()]);
+        assert_all_set(vec![L!("--background=normal").into()]);
+        assert_all_set(vec![L!("--background=green").into()]);
+        assert_all_set(vec![L!("--underline-color=normal").into()]);
+        assert_all_set(vec![L!("--underline-color=green").into()]);
+        assert_all_set(vec![L!("--italics").into()]);
+        assert_all_set(vec![L!("--italics=off").into()]);
+        assert_all_set(vec![L!("--reverse").into()]);
+        assert_all_set(vec![L!("--reverse=off").into()]);
+        assert_all_set(vec![L!("--strikethrough").into()]);
+        assert_all_set(vec![L!("--strikethrough=off").into()]);
     }
 }

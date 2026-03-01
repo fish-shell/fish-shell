@@ -3,7 +3,7 @@ use crate::common::{self, EscapeStringStyle, escape_string};
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::prelude::*;
 use crate::screen::{is_dumb, only_grayscale};
-use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
+use crate::text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use bitflags::bitflags;
 use fish_color::{Color, Color24};
@@ -54,6 +54,7 @@ pub(crate) enum SgrTerminalCommand {
     EnterStrikethroughMode,
     ExitItalicsMode,
     ExitUnderlineMode,
+    ExitReverseMode,
     ExitStrikethroughMode,
 
     // Colors
@@ -377,7 +378,7 @@ impl Outputter {
         use SgrTerminalCommand::{
             DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterDimMode,
             EnterItalicsMode, EnterReverseMode, EnterStrikethroughMode, EnterUnderlineMode,
-            ExitItalicsMode, ExitStrikethroughMode, ExitUnderlineMode,
+            ExitItalicsMode, ExitReverseMode, ExitStrikethroughMode, ExitUnderlineMode,
         };
 
         let mut style_writer = self.style_writer();
@@ -388,8 +389,10 @@ impl Outputter {
 
         // Removes all styles that are individually resettable.
         let non_resettable = |mut style: TextStyling| {
-            style.italics = false;
+            style.italics = ResettableStyle::Unchanged;
             style.underline_style = None;
+            style.reverse = ResettableStyle::Unchanged;
+            style.strikethrough = ResettableStyle::Unchanged;
             style
         };
         let non_resettable_attributes_to_unset = non_resettable(style_writer.last().style)
@@ -458,14 +461,6 @@ impl Outputter {
             }
         }
 
-        let was_italics = style_writer.last().style.is_italics();
-        if !style.is_italics() && was_italics && style_writer.write_command(ExitItalicsMode) {
-            style_writer.last().style.italics = false;
-        } else if style.is_italics() && !was_italics && style_writer.write_command(EnterItalicsMode)
-        {
-            style_writer.last().style.italics = true;
-        }
-
         if style.is_dim()
             && !style_writer.last().style.is_dim()
             && style_writer.write_command(EnterDimMode)
@@ -473,25 +468,45 @@ impl Outputter {
             style_writer.last().style.dim = true;
         }
 
-        let was_strikethrough = style_writer.last().style.is_strikethrough();
-        if !style.is_strikethrough()
-            && was_strikethrough
-            && style_writer.write_command(ExitStrikethroughMode)
-        {
-            style_writer.last().style.strikethrough = false;
-        } else if style.is_strikethrough()
-            && !was_strikethrough
-            && style_writer.write_command(EnterStrikethroughMode)
-        {
-            style_writer.last().style.strikethrough = true;
-        }
+        let mut current_style = style_writer.last().style;
+        let mut process_resettable_style =
+            |new_style: ResettableStyle,
+             current_style: &mut ResettableStyle,
+             enter_cmd: SgrTerminalCommand,
+             exit_cmd: SgrTerminalCommand| {
+                if new_style != *current_style {
+                    let cmd = match new_style {
+                        ResettableStyle::Unchanged => {
+                            return;
+                        }
+                        ResettableStyle::On => enter_cmd,
+                        ResettableStyle::Off => exit_cmd,
+                    };
+                    if style_writer.write_command(cmd) {
+                        *current_style = new_style;
+                    }
+                }
+            };
 
-        if style.is_reverse()
-            && !style_writer.last().style.is_reverse()
-            && style_writer.write_command(EnterReverseMode)
-        {
-            style_writer.last().style.reverse = true;
-        }
+        process_resettable_style(
+            style.italics,
+            &mut current_style.italics,
+            EnterItalicsMode,
+            ExitItalicsMode,
+        );
+        process_resettable_style(
+            style.reverse,
+            &mut current_style.reverse,
+            EnterReverseMode,
+            ExitReverseMode,
+        );
+        process_resettable_style(
+            style.strikethrough,
+            &mut current_style.strikethrough,
+            EnterStrikethroughMode,
+            ExitStrikethroughMode,
+        );
+        style_writer.last().style = current_style;
     }
 
     /// Write a wide character to the receiver.
@@ -655,6 +670,7 @@ impl<'a> OutputterStyleWriter<'a> {
             EnterItalicsMode => self.write_param_str(1, b"3"),
             EnterUnderlineMode(style) => self.write_underline_mode(style),
             EnterReverseMode => self.write_param_str(1, b"7"),
+            ExitReverseMode => self.write_param_str(1, b"27"),
             EnterStrikethroughMode => self.write_param_str(1, b"9"),
             ExitStrikethroughMode => self.write_param_str(1, b"29"),
             ExitItalicsMode => self.write_param_str(1, b"23"),
@@ -771,7 +787,9 @@ impl<'a> Drop for OutputterStyleWriter<'a> {
 
 #[cfg(test)]
 mod tests {
-    use fish_color::Color24;
+    use fish_color::{Color, Color24};
+
+    use crate::text_face::{ResettableStyle, TextFace, TextStyling};
 
     use super::{
         Outputter,
@@ -864,6 +882,51 @@ mod tests {
             concat!(
                 "\u{1b}[30;31;32;33;34;35;36;37;30;31;32;33;34;",
                 "58:2::0:0:0m",
+            )
+        );
+    }
+
+    #[test]
+    fn resettable_style_attribute() {
+        use ResettableStyle::{Off, On, Unchanged};
+
+        let mut outp = Outputter::new_buffering_no_assume_normal();
+
+        let mut set_attr =
+            |italics: ResettableStyle, reverse: ResettableStyle, strikethrough: ResettableStyle| {
+                let mut style = TextStyling::unknown_style();
+                style.italics = italics;
+                style.reverse = reverse;
+                style.strikethrough = strikethrough;
+
+                let face = TextFace::new(Color::None, Color::None, Color::None, style);
+                outp.set_text_face(face);
+            };
+
+        // `#[cfg_attr(...)]` because `#[rustfmt::skip]` triggers `error[E0658]: attributes on expressions are experimental`
+        #[cfg_attr(any(), rustfmt::skip)]
+        {
+            set_attr(On,        Unchanged, Off);
+            set_attr(On,        On,        Unchanged);
+            set_attr(Unchanged, On,        Unchanged);
+            set_attr(Unchanged, Unchanged, On);
+            set_attr(Off,       Unchanged, On);
+            set_attr(Off,       Off,       Unchanged);
+            set_attr(Unchanged, Off,       Unchanged);
+            set_attr(Unchanged, Unchanged, Off);
+        }
+
+        assert_eq!(
+            String::from_utf8_lossy(outp.contents()),
+            concat!(
+                "\u{1b}[3;29m",
+                "\u{1b}[7m",
+                "",
+                "\u{1b}[9m",
+                "\u{1b}[23m",
+                "\u{1b}[27m",
+                "",
+                "\u{1b}[29m",
             )
         );
     }

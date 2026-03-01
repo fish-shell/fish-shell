@@ -28,7 +28,7 @@ use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
     EscapeFlags, EscapeStringStyle, ScopeGuard, bytes2wcstring, escape, escape_string,
-    exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char, get_program_name,
+    exit_without_destructors, get_obfuscation_read_char, get_program_name,
     restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
 };
 use crate::complete::{
@@ -46,7 +46,6 @@ use crate::expand::{ExpandFlags, ExpandResultCode, expand_string, expand_tilde};
 use crate::fd_readable_set::poll_fd_readable;
 use crate::fds::{make_fd_blocking, wopen_cloexec};
 use crate::flog::{flog, flogf};
-use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{
     HighlightRole, HighlightSpec, autosuggest_validate_from_history, highlight_shell,
@@ -120,12 +119,13 @@ use errno::{Errno, errno};
 use fish_common::{UTF8_BOM_WCHAR, help_section};
 use fish_fallback::fish_wcwidth;
 use fish_fallback::lowercase;
+use fish_future_feature_flags::FeatureFlag;
 use fish_wcstringutil::{
-    CaseSensitivity, StringFuzzyMatch, count_preceding_backslashes, join_strings,
-    string_prefixes_string, string_prefixes_string_case_insensitive,
+    CaseSensitivity, IsPrefix, StringFuzzyMatch, count_preceding_backslashes, is_prefix,
+    join_strings, string_prefixes_string, string_prefixes_string_case_insensitive,
     string_prefixes_string_maybe_case_insensitive,
 };
-use fish_wcstringutil::{IsPrefix, is_prefix};
+use fish_widestring::ELLIPSIS_CHAR;
 use libc::{
     _POSIX_VDISABLE, EIO, EISDIR, ENOTTY, EPERM, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT,
     STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
@@ -236,7 +236,7 @@ fn redirect_tty_after_sighup() {
 }
 
 fn querying_allowed(vars: &dyn Environment) -> bool {
-    future_feature_flags::test(FeatureFlag::QueryTerm)
+    fish_future_feature_flags::test(FeatureFlag::QueryTerm)
         && !is_dumb()
         && {
             // TODO(term-workaround)
@@ -7109,7 +7109,7 @@ impl<'a> Reader<'a> {
                 prefix = full;
             } else {
                 // Collapse parent directories and append end of string
-                prefix.push(get_ellipsis_char());
+                prefix.push(ELLIPSIS_CHAR);
 
                 let truncated = &full[full.len() - PREFIX_MAX_LEN..];
                 let (i, last_component) = truncated.split('/').enumerate().last().unwrap();

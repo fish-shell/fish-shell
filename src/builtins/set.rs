@@ -3,8 +3,6 @@ use crate::common::EscapeFlags;
 use crate::common::EscapeStringStyle;
 use crate::common::escape;
 use crate::common::escape_string;
-use crate::common::get_ellipsis_char;
-use crate::common::get_ellipsis_str;
 use crate::common::valid_var_name;
 use crate::env::EnvStackSetResult;
 use crate::env::EnvVarFlags;
@@ -22,6 +20,7 @@ use crate::{
     wutil::wcstoi::wcstoi_partial,
 };
 use fish_common::help_section;
+use fish_widestring::ELLIPSIS_CHAR;
 
 #[derive(Debug, Clone)]
 struct Options {
@@ -582,7 +581,7 @@ fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> BuiltinResu
                 out.push_utfstr(&val);
 
                 if shorten {
-                    out.push(get_ellipsis_char());
+                    out.push(ELLIPSIS_CHAR);
                 }
             }
         }
@@ -680,14 +679,8 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
     for i in 0..vals.len() {
         if vals.len() > 100 {
             if i == 50 {
-                // try to print a mid-line ellipsis because we are eliding lines not words
-                streams
-                    .out
-                    .appendln(if u32::from(get_ellipsis_char()) > 256 {
-                        L!("\u{22EF}")
-                    } else {
-                        get_ellipsis_str()
-                    });
+                // print a mid-line ellipsis because we are eliding lines not words
+                streams.out.appendln(L!("\u{22EF}")); // ⋯
             }
             if i >= 50 && i < vals.len() - 50 {
                 continue;

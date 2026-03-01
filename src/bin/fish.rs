@@ -28,7 +28,7 @@ use fish::{
     },
     common::{
         PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, bytes2wcstring, escape, osstr2wcstring,
-        save_term_foreground_process_group, wcs2bytes,
+        save_term_foreground_process_group,
     },
     env::{
         EnvMode, Statuses,
@@ -38,7 +38,7 @@ use fish::{
     eprintf,
     event::{self, Event},
     flog::{self, activate_flog_categories_by_pattern, flog, flogf, set_flog_file_fd},
-    fprintf, function, future_feature_flags as features,
+    fprintf, function,
     history::{self, start_private_mode},
     io::IoChain,
     locale::set_libc_locales,
@@ -61,6 +61,8 @@ use fish::{
     topic_monitor,
     wutil::waccess,
 };
+use fish_future_feature_flags as features;
+use fish_wcstringutil::wcs2bytes;
 use libc::STDIN_FILENO;
 use nix::unistd::AccessFlags;
 use std::ffi::{OsStr, OsString};

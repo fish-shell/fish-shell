@@ -7,13 +7,11 @@ pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
 
-use crate::common::{
-    bytes2wcstring, fish_reserved_codepoint, osstr2wcstring, wcs2bytes, wcs2osstring, wcs2zstring,
-};
+use crate::common::{bytes2wcstring, fish_reserved_codepoint, osstr2wcstring};
 use crate::fds::BorrowedFdFile;
 use crate::flog;
 use errno::errno;
-use fish_wcstringutil::{join_strings, str2bytes_callback};
+use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2bytes, wcs2osstring, wcs2zstring};
 use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
 use nix::unistd::AccessFlags;
 use std::ffi::{CStr, OsStr};

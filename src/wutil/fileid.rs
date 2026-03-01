@@ -1,5 +1,5 @@
-use crate::common::wcs2zstring;
 use crate::wutil::wstr;
+use fish_wcstringutil::wcs2zstring;
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, File, Metadata};
 use std::os::unix::prelude::*;

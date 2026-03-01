@@ -1,11 +1,10 @@
 //! Flags to enable upcoming features
 
-use crate::prelude::*;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
-
-#[cfg(test)]
-use std::cell::RefCell;
+use fish_widestring::{L, wstr};
+use std::{
+    cell::RefCell,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 /// The list of flags.
 #[repr(u8)]
@@ -156,7 +155,8 @@ pub const METADATA: &[FeatureMetadata] = &[
 ];
 
 thread_local!(
-    #[cfg(test)]
+    /// Only for tests.
+    /// Should use `#[cfg(test)]`, but that does not work across crate boundaries.
     static LOCAL_FEATURES: RefCell<Option<Features>> = const { RefCell::new(None) };
 );
 
@@ -178,7 +178,8 @@ pub fn test(flag: FeatureFlag) -> bool {
 pub use test as feature_test;
 
 /// Set a flag.
-#[cfg(test)]
+/// Only for tests.
+/// Should use `#[cfg(test)]`, but that does not work across crate boundaries.
 pub fn set(flag: FeatureFlag, value: bool) {
     LOCAL_FEATURES.with(|fc| fc.borrow().as_ref().unwrap_or(&FEATURES).set(flag, value));
 }
@@ -275,7 +276,8 @@ impl Features {
     }
 }
 
-#[cfg(test)]
+/// Only for tests.
+/// Should use `#[cfg(test)]`, but that does not work across crate boundaries.
 pub fn scoped_test(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
     LOCAL_FEATURES.with(|fc| {
         assert!(
@@ -296,7 +298,7 @@ pub fn scoped_test(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
 #[cfg(test)]
 mod tests {
     use super::{FeatureFlag, Features, METADATA, scoped_test, set, test};
-    use crate::prelude::*;
+    use fish_widestring::L;
 
     #[test]
     fn test_feature_flags() {

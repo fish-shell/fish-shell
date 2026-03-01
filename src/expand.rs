@@ -14,7 +14,6 @@ use crate::common::{
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
 use crate::exec::exec_subshell_for_expand;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::history::{History, history_session_id};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseError, ParseErrorCode, ParseErrorList, SOURCE_LOCATION_UNKNOWN};
@@ -26,6 +25,7 @@ use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
 use crate::wutil::{Options, normalize_path, wcstoi_partial};
 use bitflags::bitflags;
 use fish_common::{EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
+use fish_future_feature_flags::{FeatureFlag, feature_test};
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::{join_strings, trim};
 use fish_widestring::char_offset;

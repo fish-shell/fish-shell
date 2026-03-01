@@ -5,7 +5,6 @@ use crate::common::{
 use crate::env::{EnvStack, Environment as _};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::flog::{FloggableDebug, FloggableDisplay, flog};
-use crate::future_feature_flags::{FeatureFlag, test as feature_test};
 use crate::key::{
     self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
     canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
@@ -18,6 +17,7 @@ use crate::tty_handoff::{
 };
 use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_is_pua, fish_wcstol};
+use fish_future_feature_flags::{FeatureFlag, test as feature_test};
 use fish_widestring::encode_byte_to_char;
 use nix::sys::{select::FdSet, signal::SigSet, time::TimeSpec};
 use std::cell::{RefCell, RefMut};

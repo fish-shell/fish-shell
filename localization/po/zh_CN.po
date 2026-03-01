@@ -796,10 +796,6 @@ msgstr "%s: 数值未完全转换 (无法转换 '%s')"
 msgid "%s: variable '%s' is read-only"
 msgstr "%s: 变量 '%s' 只读"
 
-#, c-format
-msgid "%sand %u more rows"
-msgstr "%s还有 %u 行"
-
 msgid "'break' while not inside of loop"
 msgstr "'break' 不在循环内"
 
@@ -1897,6 +1893,10 @@ msgstr "，定义为"
 
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
 msgstr "|& 无效。在 fish 中，用 &| 来同时管道链接 stdout 和 stderr。"
+
+#, fuzzy, c-format
+msgid "…and %u more rows"
+msgstr "…还有 %u 行"
 
 msgid "fish-section-tier1-from-script-explicitly-added"
 msgstr ""

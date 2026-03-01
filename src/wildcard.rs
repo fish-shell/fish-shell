@@ -13,12 +13,11 @@ use crate::common::{
 };
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
 use crate::expand::ExpandFlags;
-use crate::future_feature_flags::FeatureFlag;
-use crate::future_feature_flags::feature_test;
 use crate::prelude::*;
 use crate::wutil::dir_iter::DirEntryType;
 use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
 use fish_fallback::wcscasecmp;
+use fish_future_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{
     CaseSensitivity, string_fuzzy_match_string, string_suffixes_string_case_insensitive,
     strip_executable_suffix,
@@ -1231,7 +1230,7 @@ pub fn wildcard_has(s: impl AsRef<wstr>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::future_feature_flags::scoped_test;
+    use fish_future_feature_flags::scoped_test;
 
     #[test]
     fn test_wildcards() {

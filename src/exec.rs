@@ -8,8 +8,7 @@ use crate::builtins::shared::{
     builtin_run,
 };
 use crate::common::{
-    ScopeGuard, bytes2wcstring, exit_without_destructors, truncate_at_nul, wcs2bytes, wcs2zstring,
-    write_loop,
+    ScopeGuard, bytes2wcstring, exit_without_destructors, truncate_at_nul, write_loop,
 };
 use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment as _, READ_BYTE_LIMIT, Statuses};
 #[cfg(have_posix_spawn)]
@@ -47,6 +46,7 @@ use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror};
 use errno::{errno, set_errno};
+use fish_wcstringutil::{wcs2bytes, wcs2zstring};
 use fish_widestring::ToWString as _;
 use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,

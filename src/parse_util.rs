@@ -13,7 +13,6 @@ use crate::expand::{
     VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, expand_one,
     expand_to_command_and_args,
 };
-use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
     ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
@@ -30,6 +29,7 @@ use crate::tokenizer::{
 };
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use fish_common::help_section;
+use fish_future_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{count_newlines, truncate};
 use std::ops::Range;
 use std::{iter, ops};
@@ -1890,7 +1890,7 @@ pub fn expand_variable_error(
                         global_after_dollar_pos,
                         1,
                         ERROR_BRACKETED_VARIABLE_QUOTED1,
-                        truncate(var_name, VAR_ERR_LEN, None)
+                        truncate(var_name, VAR_ERR_LEN)
                     );
                 } else {
                     append_syntax_error!(
@@ -1898,7 +1898,7 @@ pub fn expand_variable_error(
                         global_after_dollar_pos,
                         1,
                         ERROR_BRACKETED_VARIABLE1,
-                        truncate(var_name, VAR_ERR_LEN, None),
+                        truncate(var_name, VAR_ERR_LEN),
                     );
                 }
             } else {

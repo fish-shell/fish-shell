@@ -7,15 +7,11 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::ops::ControlFlow;
-
-use libc::{STDIN_FILENO, VEOF, VINTR};
-
+use super::prelude::*;
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{PROGRAM_NAME, get_program_name, osstr2wcstring, shell_modes},
     env::{EnvStack, Environment as _, env_init},
-    future_feature_flags,
     input_common::{
         CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer as _, KeyEvent,
         QueryResultEvent, match_key_event_to_key,
@@ -33,9 +29,10 @@ use crate::{
     topic_monitor::topic_monitor_init,
     tty_handoff::TtyHandoff,
 };
+use fish_future_feature_flags::set_from_string;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
-
-use super::prelude::*;
+use libc::{STDIN_FILENO, VEOF, VINTR};
+use std::ops::ControlFlow;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
 fn should_exit(
@@ -295,7 +292,7 @@ fn throwing_main() -> i32 {
     reader_init(false);
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            future_feature_flags::set_from_string(s.as_utfstr());
+            set_from_string(s.as_utfstr());
         }
     }
 

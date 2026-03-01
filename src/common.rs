@@ -4,7 +4,6 @@ use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
-use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
@@ -15,16 +14,17 @@ use crate::termsize::Termsize;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use fish_fallback::fish_wcwidth;
-use fish_wcstringutil::str2bytes_callback;
+use fish_future_feature_flags::{FeatureFlag, feature_test};
+use fish_wcstringutil::wcs2bytes;
 use fish_widestring::{
     ENCODE_DIRECT_END, decode_byte_from_char, encode_byte_to_char, subslice_position,
 };
 use nix::sys::termios::Termios;
 use std::env;
-use std::ffi::{CStr, CString, OsStr, OsString};
+use std::ffi::{CStr, OsStr};
 use std::os::unix::prelude::*;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, MutexGuard, OnceLock};
+use std::sync::{MutexGuard, OnceLock};
 
 pub use fish_common::*;
 
@@ -999,65 +999,6 @@ pub(crate) fn charptr2wcstring(input: *const libc::c_char) -> WString {
     bytes2wcstring(input)
 }
 
-/// Returns a newly allocated multibyte character string equivalent of the specified wide character
-/// string.
-///
-/// This function decodes illegal character sequences in a reversible way using the private use
-/// area.
-pub fn wcs2bytes(input: impl IntoCharIter) -> Vec<u8> {
-    let mut result = vec![];
-    wcs2bytes_appending(&mut result, input);
-    result
-}
-
-pub fn wcs2osstring(input: &wstr) -> OsString {
-    if input.is_empty() {
-        return OsString::new();
-    }
-
-    let mut result = vec![];
-    wcs2bytes_appending(&mut result, input);
-    OsString::from_vec(result)
-}
-
-/// Same as [`wcs2bytes`]. Meant to be used when we need a zero-terminated string to feed legacy APIs.
-/// Note: if `input` contains any interior NUL bytes, the result will be truncated at the first!
-pub fn wcs2zstring(input: &wstr) -> CString {
-    if input.is_empty() {
-        return CString::default();
-    }
-
-    let mut vec = Vec::with_capacity(input.len() + 1);
-    str2bytes_callback(input, |buff| {
-        vec.extend_from_slice(buff);
-        true
-    });
-    vec.push(b'\0');
-
-    match CString::from_vec_with_nul(vec) {
-        Ok(cstr) => cstr,
-        Err(err) => {
-            // `input` contained a NUL in the middle; we can retrieve `vec`, though
-            let mut vec = err.into_bytes();
-            let pos = vec.iter().position(|c| *c == b'\0').unwrap();
-            vec.truncate(pos + 1);
-            // Safety: We truncated after the first NUL
-            unsafe { CString::from_vec_with_nul_unchecked(vec) }
-        }
-    }
-}
-
-/// Like [`wcs2bytes`], but appends to `output` instead of returning a new string.
-pub fn wcs2bytes_appending(output: &mut Vec<u8>, input: impl IntoCharIter) {
-    str2bytes_callback(input, |buff| {
-        output.extend_from_slice(buff);
-        true
-    });
-}
-
-/// Stored in blocks to reference the file which created the block.
-pub type FilenameRef = Arc<WString>;
-
 pub fn init_special_chars_once() {
     if is_windows_subsystem_for_linux(WSL::Any) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
@@ -1307,65 +1248,6 @@ pub fn valid_var_name_char(chr: char) -> bool {
 pub fn valid_var_name(s: &wstr) -> bool {
     // Note do not use c_str(), we want to fail on embedded nul bytes.
     !s.is_empty() && s.chars().all(valid_var_name_char)
-}
-
-/// A trait to make it more convenient to pass ascii/Unicode strings to functions that can take
-/// non-Unicode values. The result is nul-terminated and can be passed to OS functions.
-///
-/// This is only implemented for owned types where an owned instance will skip allocations (e.g.
-/// `CString` can return `self`) but not implemented for owned instances where a new allocation is
-/// always required (e.g. implemented for `&wstr` but not `WideString`) because you might as well be
-/// left with the original item if we're going to allocate from scratch in all cases.
-pub trait ToCString {
-    /// Correctly convert to a nul-terminated [`CString`] that can be passed to OS functions.
-    fn to_cstring(self) -> CString;
-}
-
-impl ToCString for CString {
-    fn to_cstring(self) -> CString {
-        self
-    }
-}
-
-impl ToCString for &CStr {
-    fn to_cstring(self) -> CString {
-        self.to_owned()
-    }
-}
-
-/// Safely converts from `&wstr` to a `CString` to a nul-terminated `CString` that can be passed to
-/// OS functions, taking into account non-Unicode values that have been shifted into the private-use
-/// range by using [`wcs2zstring()`].
-impl ToCString for &wstr {
-    /// The wide string may contain non-Unicode bytes mapped to the private-use Unicode range, so we
-    /// have to use [`wcs2zstring()`](self::wcs2zstring) to convert it correctly.
-    fn to_cstring(self) -> CString {
-        self::wcs2zstring(self)
-    }
-}
-
-/// Safely converts from `&WString` to a nul-terminated `CString` that can be passed to OS
-/// functions, taking into account non-Unicode values that have been shifted into the private-use
-/// range by using [`wcs2zstring()`].
-impl ToCString for &WString {
-    fn to_cstring(self) -> CString {
-        self.as_utfstr().to_cstring()
-    }
-}
-
-/// Convert a (probably ascii) string to CString that can be passed to OS functions.
-impl ToCString for Vec<u8> {
-    fn to_cstring(mut self) -> CString {
-        self.push(b'\0');
-        CString::from_vec_with_nul(self).unwrap()
-    }
-}
-
-/// Convert a (probably ascii) string to nul-terminated CString that can be passed to OS functions.
-impl ToCString for &[u8] {
-    fn to_cstring(self) -> CString {
-        CString::new(self).unwrap()
-    }
 }
 
 #[macro_export]

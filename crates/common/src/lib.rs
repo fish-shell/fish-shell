@@ -1,13 +1,13 @@
 use bitflags::bitflags;
-use fish_widestring::{L, char_offset, wstr};
+use fish_widestring::{L, WString, char_offset, wstr};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use std::cell::{Cell, RefCell};
 use std::io::Read;
 use std::ops::{Deref, DerefMut};
 use std::os::fd::{AsRawFd, BorrowedFd, RawFd};
 use std::os::unix::ffi::OsStrExt as _;
-use std::sync::OnceLock;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
+use std::sync::{Arc, OnceLock};
 use std::{env, mem, time};
 
 pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
@@ -159,17 +159,6 @@ pub fn exit_without_destructors(code: libc::c_int) -> ! {
     unsafe { libc::_exit(code) };
 }
 
-/// The character to use where the text has been truncated.
-pub fn get_ellipsis_char() -> char {
-    '\u{2026}' // ('…')
-}
-
-/// The character or string to use where text has been truncated (ellipsis if possible, otherwise
-/// ...)
-pub fn get_ellipsis_str() -> &'static wstr {
-    L!("\u{2026}")
-}
-
 // Only pub for `src/common.rs`
 pub static OBFUSCATION_READ_CHAR: AtomicU32 = AtomicU32::new(0);
 
@@ -268,6 +257,9 @@ macro_rules! help_section {
         $section
     }};
 }
+
+/// Stored in blocks to reference the file which created the block.
+pub type FilenameRef = Arc<WString>;
 
 pub type Timepoint = f64;
 

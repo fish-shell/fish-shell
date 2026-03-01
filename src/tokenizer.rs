@@ -3,11 +3,11 @@
 
 use crate::ast::unescape_keyword;
 use crate::common::valid_var_name_char;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::prelude::*;
 use crate::redirection::RedirectionMode;
+use fish_future_feature_flags::{FeatureFlag, feature_test};
 use libc::{STDIN_FILENO, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, Range};

@@ -1,5 +1,5 @@
 use crate::{
-    common::{osstr2wcstring, wcs2bytes, wcs2osstring},
+    common::osstr2wcstring,
     fds::wopen_cloexec,
     flog, flogf,
     path::{DirRemoteness, path_remoteness},
@@ -9,6 +9,7 @@ use crate::{
     },
 };
 use fish_tempfile::random_filename;
+use fish_wcstringutil::{wcs2bytes, wcs2osstring};
 use libc::{LOCK_EX, LOCK_SH, c_int};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{

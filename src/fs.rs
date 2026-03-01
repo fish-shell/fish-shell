@@ -4,9 +4,7 @@ use crate::{
     flog, flogf,
     path::{DirRemoteness, path_remoteness},
     prelude::*,
-    wutil::{
-        FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, wdirname, wrename, wunlink,
-    },
+    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, wdirname, wunlink},
 };
 use fish_tempfile::random_filename;
 use fish_wcstringutil::{wcs2bytes, wcs2osstring};
@@ -341,7 +339,7 @@ where
 
     /// Renames a file from `old_name` to `new_name`.
     fn rename(old_name: &wstr, new_name: &wstr) -> std::io::Result<()> {
-        if let Err(e) = wrename(old_name, new_name) {
+        if let Err(e) = std::fs::rename(wcs2osstring(old_name), wcs2osstring(new_name)) {
             flog!(
                 error,
                 wgettext_fmt!("Error when renaming file: %s", e.to_string())

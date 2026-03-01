@@ -345,13 +345,6 @@ pub fn wbasename(mut path: &wstr) -> &wstr {
     path
 }
 
-/// Wide character version of rename.
-pub fn wrename(old_name: &wstr, new_name: &wstr) -> io::Result<()> {
-    let old_narrow = wcs2osstring(old_name);
-    let new_narrow = wcs2osstring(new_name);
-    fs::rename(old_narrow, new_narrow)
-}
-
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.
 /// Returns nothing when interrupted by ctrl-c or HUP.
 pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Option<usize> {

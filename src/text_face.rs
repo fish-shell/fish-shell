@@ -3,9 +3,35 @@ use crate::terminal::{self, get_color_support};
 use fish_color::Color;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 
-trait StyleSet {
+pub(crate) trait StyleSet {
     fn union_prefer_right(self, other: Self) -> Self;
     fn difference_prefer_empty(self, other: Self) -> Self;
+}
+
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
+pub(crate) enum ResettableStyle {
+    #[default]
+    Unchanged,
+    Off,
+    On,
+}
+
+impl StyleSet for ResettableStyle {
+    fn union_prefer_right(self, other: Self) -> Self {
+        if other == Self::Unchanged {
+            self
+        } else {
+            other
+        }
+    }
+
+    fn difference_prefer_empty(self, other: Self) -> Self {
+        if other != Self::Unchanged {
+            Self::Unchanged
+        } else {
+            self
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -34,10 +60,10 @@ impl StyleSet for Option<UnderlineStyle> {
 pub(crate) struct TextStyling {
     pub(crate) bold: bool,
     pub(crate) underline_style: Option<UnderlineStyle>,
-    pub(crate) italics: bool,
+    pub(crate) italics: ResettableStyle,
     pub(crate) dim: bool,
-    pub(crate) reverse: bool,
-    pub(crate) strikethrough: bool,
+    pub(crate) reverse: ResettableStyle,
+    pub(crate) strikethrough: ResettableStyle,
 }
 
 impl TextStyling {
@@ -45,36 +71,44 @@ impl TextStyling {
         Self {
             bold: false,
             underline_style: None,
-            italics: false,
+            italics: ResettableStyle::Off,
             dim: false,
-            reverse: false,
-            strikethrough: false,
+            reverse: ResettableStyle::Off,
+            strikethrough: ResettableStyle::Off,
         }
     }
     pub(crate) const fn unknown() -> Self {
         Self {
             bold: false,
             underline_style: None,
-            italics: false,
+            italics: ResettableStyle::Unchanged,
             dim: false,
-            reverse: false,
-            strikethrough: false,
+            reverse: ResettableStyle::Unchanged,
+            strikethrough: ResettableStyle::Unchanged,
         }
     }
 
     pub(crate) fn is_empty(&self) -> bool {
         *self == Self::unknown()
     }
+
+    #[cfg(test)]
+    pub(crate) fn all_set(&self) -> bool {
+        (self.italics != ResettableStyle::Unchanged)
+            && (self.reverse != ResettableStyle::Unchanged)
+            && (self.strikethrough != ResettableStyle::Unchanged)
+    }
+
     pub(crate) fn union_prefer_right(self, other: Self) -> Self {
         Self {
             bold: self.is_bold() || other.is_bold(),
             underline_style: self
                 .underline_style
                 .union_prefer_right(other.underline_style),
-            italics: self.is_italics() || other.is_italics(),
+            italics: self.italics.union_prefer_right(other.italics),
             dim: self.is_dim() || other.is_dim(),
-            reverse: self.is_reverse() || other.is_reverse(),
-            strikethrough: self.is_strikethrough() || other.is_strikethrough(),
+            reverse: self.reverse.union_prefer_right(other.reverse),
+            strikethrough: self.strikethrough.union_prefer_right(other.strikethrough),
         }
     }
     pub(crate) fn difference_prefer_empty(self, other: Self) -> Self {
@@ -83,10 +117,12 @@ impl TextStyling {
             underline_style: self
                 .underline_style
                 .difference_prefer_empty(other.underline_style),
-            italics: self.is_italics() && !other.is_italics(),
+            italics: self.italics.difference_prefer_empty(other.italics),
             dim: self.is_dim() && !other.is_dim(),
-            reverse: self.is_reverse() && !other.is_reverse(),
-            strikethrough: self.is_strikethrough() && !other.is_strikethrough(),
+            reverse: self.reverse.difference_prefer_empty(other.reverse),
+            strikethrough: self
+                .strikethrough
+                .difference_prefer_empty(other.strikethrough),
         }
     }
 
@@ -105,24 +141,9 @@ impl TextStyling {
         self.underline_style = Some(underline);
     }
 
-    /// Returns whether the text face is italics.
-    pub const fn is_italics(self) -> bool {
-        self.italics
-    }
-
     /// Returns whether the text face is dim.
     pub const fn is_dim(self) -> bool {
         self.dim
-    }
-
-    /// Returns whether the text face has reverse foreground/background colors.
-    pub const fn is_reverse(self) -> bool {
-        self.reverse
-    }
-
-    /// Returns whether the text face is strikethrough.
-    pub const fn is_strikethrough(self) -> bool {
-        self.strikethrough
     }
 }
 
@@ -159,6 +180,14 @@ impl TextFace {
             underline_color,
             style,
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn all_set(&self) -> bool {
+        !self.fg.is_none()
+            && !self.bg.is_none()
+            && !self.underline_color.is_none()
+            && self.style.all_set()
     }
 }
 
@@ -211,9 +240,23 @@ pub(crate) enum ParsedArgs<'argarray, 'args> {
 pub(crate) enum ParseError<'args> {
     MissingOptArg,
     UnexpectedOptArg(usize),
+    InvalidOptArg(&'static wstr, &'args wstr),
     UnknownColor(&'args wstr),
     UnknownUnderlineStyle(&'args wstr),
     UnknownOption(usize),
+}
+
+fn parse_resettable_style<'a>(w: &WGetopter<'_, 'a, '_>) -> Result<ResettableStyle, &'a wstr> {
+    let Some(arg) = w.woptarg else {
+        return Ok(ResettableStyle::On);
+    };
+    if (arg == "off") || (arg == "false") {
+        Ok(ResettableStyle::Off)
+    } else if (arg == "on") || (arg == "true") {
+        Ok(ResettableStyle::On)
+    } else {
+        Err(arg)
+    }
 }
 
 pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
@@ -221,17 +264,17 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     is_builtin: bool,
 ) -> Result<ParsedArgs<'argarray, 'args>, ParseError<'args>> {
     let builtin_extra_args = if is_builtin { 0 } else { "hc".len() };
-    let short_options = L!("b:oidru::ch");
+    let short_options = L!("b:oi::dr::s::u::ch");
     let short_options = &short_options[..short_options.len() - builtin_extra_args];
     let long_options: &[WOption] = &[
         wopt(L!("background"), ArgType::RequiredArgument, 'b'),
         wopt(L!("underline-color"), ArgType::RequiredArgument, '\x02'),
         wopt(L!("bold"), ArgType::NoArgument, 'o'),
         wopt(L!("underline"), ArgType::OptionalArgument, 'u'),
-        wopt(L!("italics"), ArgType::NoArgument, 'i'),
+        wopt(L!("italics"), ArgType::OptionalArgument, 'i'),
         wopt(L!("dim"), ArgType::NoArgument, 'd'),
-        wopt(L!("strikethrough"), ArgType::NoArgument, 's'),
-        wopt(L!("reverse"), ArgType::NoArgument, 'r'),
+        wopt(L!("reverse"), ArgType::OptionalArgument, 'r'),
+        wopt(L!("strikethrough"), ArgType::OptionalArgument, 's'),
         wopt(L!("theme"), ArgType::RequiredArgument, '\x01'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("print-colors"), ArgType::NoArgument, 'c'),
@@ -276,10 +319,19 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
                 return Ok(PrintHelp);
             }
             'o' => style.bold = true,
-            'i' => style.italics = true,
+            'i' => {
+                style.italics =
+                    parse_resettable_style(&w).map_err(|v| InvalidOptArg(L!("--italics"), v))?;
+            }
             'd' => style.dim = true,
-            'r' => style.reverse = true,
-            's' => style.strikethrough = true,
+            'r' => {
+                style.reverse =
+                    parse_resettable_style(&w).map_err(|v| InvalidOptArg(L!("--reverse"), v))?;
+            }
+            's' => {
+                style.strikethrough = parse_resettable_style(&w)
+                    .map_err(|v| InvalidOptArg(L!("--strikethrough"), v))?;
+            }
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
                 style.underline_style = Some(if arg == "single" {

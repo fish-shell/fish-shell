@@ -14,7 +14,7 @@ use crate::signal::SigChecker;
 use crate::topic_monitor::Topic;
 use errno::errno;
 use fish_util::write_to_fd;
-use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2bytes, wcs2osstring, wcs2zstring};
+use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2osstring, wcs2zstring};
 use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
 use nix::unistd::AccessFlags;
 use std::ffi::{CStr, OsStr};
@@ -64,13 +64,6 @@ pub fn waccess(file_name: &wstr, amode: AccessFlags) -> nix::Result<()> {
 pub fn wunlink(file_name: &wstr) -> io::Result<()> {
     let tmp = wcs2osstring(file_name);
     fs::remove_file(tmp)
-}
-
-pub fn wperror(s: &wstr) {
-    let bytes = wcs2bytes(s);
-    // We can't guarantee the string is 100% Unicode (why?), so we don't use std::str::from_utf8()
-    let s = OsStr::from_bytes(&bytes).to_string_lossy();
-    perror(&s);
 }
 
 /// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.

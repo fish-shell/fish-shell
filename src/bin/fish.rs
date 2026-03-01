@@ -28,7 +28,7 @@ use fish::{
     },
     common::{
         PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, bytes2wcstring, escape, osstr2wcstring,
-        save_term_foreground_process_group, wcs2bytes,
+        save_term_foreground_process_group,
     },
     env::{
         EnvMode, Statuses,
@@ -61,6 +61,7 @@ use fish::{
     topic_monitor,
     wutil::waccess,
 };
+use fish_wcstringutil::wcs2bytes;
 use libc::STDIN_FILENO;
 use nix::unistd::AccessFlags;
 use std::ffi::{OsStr, OsString};

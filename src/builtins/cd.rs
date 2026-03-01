@@ -6,7 +6,7 @@ use crate::{
     fds::{BEST_O_SEARCH, wopen_dir},
     parser::ParserEnvSetMode,
     path::path_apply_cdpath,
-    wutil::{normalize_path, wperror, wreadlink},
+    wutil::{normalize_path, perror, wreadlink},
 };
 use errno::Errno;
 use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
@@ -168,7 +168,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
             .appendln(&wgettext_fmt!("%s: Permission denied: '%s'", cmd, dir_in));
     } else {
         errno::set_errno(Errno(best_errno));
-        wperror(L!("cd"));
+        perror("cd");
         streams.err.appendln(&wgettext_fmt!(
             "%s: Unknown error trying to locate directory '%s'",
             cmd,

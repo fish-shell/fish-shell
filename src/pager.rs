@@ -4,9 +4,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
-use crate::common::{
-    EscapeFlags, EscapeStringStyle, escape_string, get_ellipsis_char, get_ellipsis_str,
-};
+use crate::common::{EscapeFlags, EscapeStringStyle, escape_string};
 use crate::complete::{CompleteFlags, Completion};
 use crate::editable_line::EditableLine;
 use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
@@ -15,7 +13,7 @@ use crate::prelude::*;
 use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
 use crate::termsize::Termsize;
 use fish_wcstringutil::string_fuzzy_match_string;
-use fish_widestring::decoded_width;
+use fish_widestring::{ELLIPSIS_CHAR, decoded_width};
 
 /// Represents rendering from the pager.
 #[derive(Default)]
@@ -271,11 +269,7 @@ impl Pager {
         let mut progress_text = WString::new();
         assert_ne!(rendering.remaining_to_disclose, 1);
         if rendering.remaining_to_disclose > 1 {
-            progress_text = wgettext_fmt!(
-                "%sand %u more rows",
-                get_ellipsis_str(),
-                rendering.remaining_to_disclose
-            );
+            progress_text = wgettext_fmt!("…and %u more rows", rendering.remaining_to_disclose);
         } else if start_row > 0 || stop_row < row_count {
             // We have a scrollable interface. The +1 here is because we are zero indexed, but want
             // to present things as 1-indexed. We do not add 1 to stop_row or row_count because
@@ -1140,7 +1134,7 @@ fn print_max_impl(
             break;
         }
 
-        let ellipsis = get_ellipsis_char();
+        let ellipsis = ELLIPSIS_CHAR;
         if (width_c == remaining) && (has_more || i + 1 < s.len()) {
             line.append(ellipsis, color(i), offset_in_cmdline);
             let ellipsis_width = wcwidth_rendered(ellipsis);
@@ -1287,7 +1281,6 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
 #[cfg(test)]
 mod tests {
     use super::{Pager, SelectionMotion};
-    use crate::common::get_ellipsis_char;
     use crate::complete::{CompleteFlags, Completion};
     use crate::prelude::*;
     use crate::termsize::Termsize;
@@ -1404,21 +1397,12 @@ mod tests {
             let line = sd.line(0);
             WString::from(Vec::from_iter((0..line.len()).map(|i| line.char_at(i))))
         };
-        let compute_expected = |expected: &wstr| {
-            let ellipsis_char = get_ellipsis_char();
-            if ellipsis_char != '\u{2026}' {
-                // hack: handle the case where ellipsis is not L'\x2026'
-                expected.replace(L!("\u{2026}"), wstr::from_char_slice(&[ellipsis_char]))
-            } else {
-                expected.to_owned()
-            }
-        };
 
         macro_rules! validate {
             ($pager:expr, $width:expr, $expected:expr) => {
                 assert_eq!(
                     rendered_line($pager, $width),
-                    compute_expected($expected),
+                    $expected.to_owned(),
                     "width {}",
                     $width
                 );

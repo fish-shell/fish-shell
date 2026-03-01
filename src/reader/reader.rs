@@ -28,7 +28,7 @@ use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::ScopeGuarding;
 use crate::common::{
     EscapeFlags, EscapeStringStyle, ScopeGuard, bytes2wcstring, escape, escape_string,
-    exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char, get_program_name,
+    exit_without_destructors, get_obfuscation_read_char, get_program_name,
     restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
 };
 use crate::complete::{
@@ -121,11 +121,11 @@ use fish_common::{UTF8_BOM_WCHAR, help_section};
 use fish_fallback::fish_wcwidth;
 use fish_fallback::lowercase;
 use fish_wcstringutil::{
-    CaseSensitivity, StringFuzzyMatch, count_preceding_backslashes, join_strings,
-    string_prefixes_string, string_prefixes_string_case_insensitive,
+    CaseSensitivity, IsPrefix, StringFuzzyMatch, count_preceding_backslashes, is_prefix,
+    join_strings, string_prefixes_string, string_prefixes_string_case_insensitive,
     string_prefixes_string_maybe_case_insensitive,
 };
-use fish_wcstringutil::{IsPrefix, is_prefix};
+use fish_widestring::ELLIPSIS_CHAR;
 use libc::{
     _POSIX_VDISABLE, EIO, EISDIR, ENOTTY, EPERM, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT,
     STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
@@ -7109,7 +7109,7 @@ impl<'a> Reader<'a> {
                 prefix = full;
             } else {
                 // Collapse parent directories and append end of string
-                prefix.push(get_ellipsis_char());
+                prefix.push(ELLIPSIS_CHAR);
 
                 let truncated = &full[full.len() - PREFIX_MAX_LEN..];
                 let (i, last_component) = truncated.split('/').enumerate().last().unwrap();

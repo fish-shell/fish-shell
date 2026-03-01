@@ -96,6 +96,15 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 );
                 return Err(STATUS_INVALID_ARGS);
             }
+            Err(InvalidOptArg(name, value)) => {
+                streams.err.appendln(&wgettext_fmt!(
+                    "%s: %s: invalid option argument: %s",
+                    argv[0],
+                    name,
+                    value
+                ));
+                return Err(STATUS_INVALID_ARGS);
+            }
             Err(UnknownColor(arg)) => {
                 streams
                     .err

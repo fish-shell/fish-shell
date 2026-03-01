@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Notable improvements and fixes
 ------------------------------
 - New Spanish translations (:issue:`12489`).
+- ``set_color`` is able to turn off italics, reverse mode and strikethrough individually (e.g. ``--italics=off``).
 
 For distributors and developers
 -------------------------------

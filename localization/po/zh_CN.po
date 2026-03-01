@@ -221,6 +221,10 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: 无效模式名。参见 `help %s`"
 
 #, c-format
+msgid "%s: %s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: invalid scale"
 msgstr "%s: %s: 无效位数"
 

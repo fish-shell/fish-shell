@@ -24,7 +24,9 @@ use crate::parse_util::{
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face};
+use crate::text_face::{
+    ResettableStyle, SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face,
+};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use fish_color::Color;
@@ -179,7 +181,9 @@ impl HighlightColorResolver {
             face.bg = bg_face.bg;
             // In case the background role is different from the foreground one, we ignore its style
             // except for reverse mode.
-            face.style.reverse |= bg_face.style.is_reverse();
+            if face.style.reverse != ResettableStyle::On {
+                face.style.reverse = bg_face.style.reverse;
+            }
         }
 
         // Handle modifiers.

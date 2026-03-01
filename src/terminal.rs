@@ -52,7 +52,6 @@ pub(crate) enum SgrTerminalCommand {
     EnterUnderlineMode(UnderlineStyle),
     EnterReverseMode,
     EnterStrikethroughMode,
-    EnterStandoutMode,
     ExitItalicsMode,
     ExitUnderlineMode,
     ExitStrikethroughMode,
@@ -378,9 +377,8 @@ impl Outputter {
 
         use SgrTerminalCommand::{
             DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterDimMode,
-            EnterItalicsMode, EnterReverseMode, EnterStandoutMode, EnterStrikethroughMode,
-            EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitStrikethroughMode,
-            ExitUnderlineMode,
+            EnterItalicsMode, EnterReverseMode, EnterStrikethroughMode, EnterUnderlineMode,
+            ExitAttributeMode, ExitItalicsMode, ExitStrikethroughMode, ExitUnderlineMode,
         };
 
         let mut style_writer = self.style_writer();
@@ -495,8 +493,7 @@ impl Outputter {
 
         if style.is_reverse()
             && !style_writer.last().style.is_reverse()
-            && (style_writer.write_command(EnterReverseMode)
-                || style_writer.write_command(EnterStandoutMode))
+            && style_writer.write_command(EnterReverseMode)
         {
             style_writer.last().style.reverse = true;
         }
@@ -663,7 +660,6 @@ impl<'a> OutputterStyleWriter<'a> {
             EnterItalicsMode => self.write_param_str(1, b"3"),
             EnterUnderlineMode(style) => self.write_underline_mode(style),
             EnterReverseMode => self.write_param_str(1, b"7"),
-            EnterStandoutMode => self.write_param_str(1, b"7"),
             EnterStrikethroughMode => self.write_param_str(1, b"9"),
             ExitStrikethroughMode => self.write_param_str(1, b"29"),
             ExitItalicsMode => self.write_param_str(1, b"23"),

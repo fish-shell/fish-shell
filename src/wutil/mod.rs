@@ -13,6 +13,7 @@ use crate::flog;
 use crate::signal::SigChecker;
 use crate::topic_monitor::Topic;
 use errno::errno;
+use fish_util::write_to_fd;
 use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2bytes, wcs2osstring, wcs2zstring};
 use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
 use nix::unistd::AccessFlags;
@@ -349,10 +350,6 @@ pub fn wrename(old_name: &wstr, new_name: &wstr) -> io::Result<()> {
     let old_narrow = wcs2osstring(old_name);
     let new_narrow = wcs2osstring(new_name);
     fs::rename(old_narrow, new_narrow)
-}
-
-pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
-    nix::unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, input)
 }
 
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.

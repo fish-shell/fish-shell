@@ -402,6 +402,7 @@ name = "fish-util"
 version = "0.0.0"
 dependencies = [
  "fish-widestring",
+ "nix",
  "rand",
 ]
 

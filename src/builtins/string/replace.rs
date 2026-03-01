@@ -1,9 +1,7 @@
-use std::num::NonZeroUsize;
-
-use pcre2::utf32::{Regex, RegexBuilder};
-
 use super::*;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
+use fish_future_feature_flags::{FeatureFlag, feature_test};
+use pcre2::utf32::{Regex, RegexBuilder};
+use std::num::NonZeroUsize;
 
 #[derive(Default)]
 pub struct Replace<'args> {

@@ -4,7 +4,6 @@ use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
-use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
@@ -15,6 +14,7 @@ use crate::termsize::Termsize;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use fish_fallback::fish_wcwidth;
+use fish_future_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::wcs2bytes;
 use fish_widestring::{
     ENCODE_DIRECT_END, decode_byte_from_char, encode_byte_to_char, subslice_position,

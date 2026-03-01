@@ -1,6 +1,6 @@
 use super::prelude::*;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::should_flog;
+use fish_future_feature_flags::{FeatureFlag, feature_test};
 
 mod test_expressions {
     use nix::unistd::{AccessFlags, Gid, Uid};

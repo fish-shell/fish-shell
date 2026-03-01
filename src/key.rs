@@ -3,12 +3,12 @@ use libc::VERASE;
 use crate::{
     common::{EscapeFlags, EscapeStringStyle, escape_string},
     flog::FloggableDebug,
-    future_feature_flags::{FeatureFlag, test as feature_test},
     prelude::*,
     reader::safe_get_terminal_mode_on_startup,
     wutil::fish_wcstoul,
 };
 use fish_fallback::fish_wcwidth;
+use fish_future_feature_flags::{FeatureFlag, test as feature_test};
 use fish_widestring::decode_byte_from_char;
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE

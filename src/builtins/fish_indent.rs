@@ -20,7 +20,6 @@ use crate::env::EnvStack;
 use crate::env::env_init;
 use crate::env::environment::Environment as _;
 use crate::expand::INTERNAL_SEPARATOR;
-use crate::future_feature_flags;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
 use crate::operation_context::OperationContext;
@@ -33,6 +32,7 @@ use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Token
 use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::fish_iswalnum;
 use assert_matches::assert_matches;
+use fish_future_feature_flags::set_from_string;
 use fish_wcstringutil::{count_preceding_backslashes, wcs2bytes};
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 use std::fmt::Write as _;
@@ -944,7 +944,7 @@ fn throwing_main() -> i32 {
     // Only set these here so you can't set them via the builtin.
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            future_feature_flags::set_from_string(s.as_utfstr());
+            set_from_string(s.as_utfstr());
         }
     }
 

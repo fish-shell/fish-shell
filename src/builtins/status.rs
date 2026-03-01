@@ -1,7 +1,6 @@
 use super::prelude::*;
 use crate::common::{bytes2wcstring, get_program_name, osstr2wcstring, str2wcstring};
 use crate::env::config_paths::get_fish_path;
-use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
     JobControl, get_job_control_mode, get_login, is_interactive_session, set_job_control_mode,
 };
@@ -9,6 +8,7 @@ use crate::reader::reader_in_interactive_read;
 use crate::tty_handoff::{TERMINAL_OS_NAME, get_scroll_content_up_capability, xtversion};
 use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use cfg_if::cfg_if;
+use fish_future_feature_flags::{self as features, feature_test};
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::wcs2bytes;
 use nix::unistd::AccessFlags;

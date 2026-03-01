@@ -1,4 +1,5 @@
 //! Functions for syntax highlighting.
+use super::file_tester::IsFile;
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
     self, Argument, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
@@ -12,7 +13,6 @@ use crate::expand::{
     ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR, expand_one, expand_to_command_and_args,
 };
 use crate::function;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::highlight::file_tester::FileTester;
 use crate::history::all_paths_are_valid;
 use crate::operation_context::OperationContext;
@@ -29,12 +29,11 @@ use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use fish_color::Color;
 use fish_common::{ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
+use fish_future_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::string_prefixes_string;
 use fish_widestring::{L, WExt as _, WString, wstr};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-
-use super::file_tester::IsFile;
 
 impl HighlightSpec {
     pub fn new() -> Self {
@@ -1309,12 +1308,12 @@ mod tests {
     use super::{HighlightColorResolver, HighlightRole, HighlightSpec, highlight_shell};
     use crate::common::ScopeGuard;
     use crate::env::{EnvMode, EnvSetMode, Environment as _};
-    use crate::future_feature_flags::{self, FeatureFlag};
     use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
     use crate::prelude::*;
     use crate::tests::prelude::*;
     use crate::text_face::UnderlineStyle;
+    use fish_future_feature_flags::FeatureFlag;
     use libc::PATH_MAX;
 
     // Helper to return a string whose length greatly exceeds PATH_MAX.
@@ -1413,10 +1412,10 @@ mod tests {
         let mut redirection_valid_path = HighlightSpec::with_fg(HighlightRole::redirection);
         redirection_valid_path.valid_path = true;
 
-        let saved_flag = future_feature_flags::test(FeatureFlag::AmpersandNoBgInToken);
-        future_feature_flags::set(FeatureFlag::AmpersandNoBgInToken, true);
+        let saved_flag = fish_future_feature_flags::test(FeatureFlag::AmpersandNoBgInToken);
+        fish_future_feature_flags::set(FeatureFlag::AmpersandNoBgInToken, true);
         let _restore_saved_flag = ScopeGuard::new((), |_| {
-            future_feature_flags::set(FeatureFlag::AmpersandNoBgInToken, saved_flag);
+            fish_future_feature_flags::set(FeatureFlag::AmpersandNoBgInToken, saved_flag);
         });
 
         let fg = HighlightSpec::with_fg;

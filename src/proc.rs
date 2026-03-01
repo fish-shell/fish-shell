@@ -19,7 +19,7 @@ use crate::redirection::RedirectionSpecList;
 use crate::signal::{Signal, signal_set_handlers_once};
 use crate::topic_monitor::{GenerationsList, Topic, topic_monitor_principal};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
-use crate::wutil::{wbasename, wperror};
+use crate::wutil::{perror, wbasename};
 use cfg_if::cfg_if;
 use fish_widestring::ToWString;
 use libc::{
@@ -854,8 +854,7 @@ impl Job {
     pub fn signal(&self, signal: NixSignal) -> bool {
         if let Some(pgid) = self.group().get_pgid() {
             if killpg(pgid.as_nix_pid(), signal).is_err() {
-                let strsignal = signal.as_str();
-                wperror(&sprintf!("killpg(%d, %s)", pgid, strsignal));
+                perror(&format!("killpg({pgid}, {})", signal.as_str()));
                 return false;
             }
         } else {

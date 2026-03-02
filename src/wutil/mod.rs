@@ -81,6 +81,10 @@ pub fn perror(s: &str) {
     let _ = stderr.write_all(b"\n");
 }
 
+pub fn perror_nix(s: &str, e: nix::errno::Errno) {
+    eprintf!("%s: %s\n", s, e.desc());
+}
+
 pub fn perror_io(s: &str, e: &io::Error) {
     eprintf!("%s: %s\n", s, e);
 }

@@ -44,7 +44,7 @@ use crate::redirection::{Dup2List, dup2_list_resolve_chain};
 use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
-use crate::wutil::{fish_wcstol, perror};
+use crate::wutil::{fish_wcstol, perror_io};
 use errno::{errno, set_errno};
 use fish_wcstringutil::{wcs2bytes, wcs2zstring};
 use fish_widestring::ToWString as _;
@@ -625,7 +625,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
         if !f.skip_out() {
             if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
                 if err.raw_os_error() != Some(EPIPE) {
-                    perror("write");
+                    perror_io("write", &err);
                 }
                 if status.is_success() {
                     status = ProcStatus::from_exit_code(1);
@@ -635,7 +635,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
         if !f.skip_err() {
             if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
                 if err.raw_os_error() != Some(EPIPE) {
-                    perror("write");
+                    perror_io("write", &err);
                 }
                 if status.is_success() {
                     status = ProcStatus::from_exit_code(1);

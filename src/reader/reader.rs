@@ -113,7 +113,7 @@ use crate::tty_handoff::{
     TtyHandoff, get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
 };
 use crate::wildcard::wildcard_has;
-use crate::wutil::{fstat, perror, wstat};
+use crate::wutil::{fstat, perror, perror_nix, wstat};
 use crate::{abbrs, event, function};
 use assert_matches::assert_matches;
 use errno::{Errno, errno};
@@ -2650,15 +2650,14 @@ impl<'a> Reader<'a> {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
             if let Some(old_modes) = old_modes {
-                if tcsetattr(
+                if let Err(err) = tcsetattr(
                     unsafe { BorrowedFd::borrow_raw(self.conf.inputfd) },
                     SetArg::TCSANOW,
                     &old_modes,
-                )
-                .is_err()
-                    && is_interactive_session()
-                {
-                    perror("tcsetattr");
+                ) {
+                    if is_interactive_session() {
+                        perror_nix("tcsetattr", err);
+                    }
                 }
             }
             Outputter::stdoutput().borrow_mut().reset_text_face();
@@ -4786,13 +4785,13 @@ fn term_donate(quiet: bool /* = false */) {
         ) {
             Ok(_) => (),
             Err(nix::Error::EINTR) => continue,
-            Err(_) => {
+            Err(err) => {
                 if !quiet {
                     flog!(
                         warning,
                         wgettext!("Could not set terminal mode for new job")
                     );
-                    perror("tcsetattr");
+                    perror_nix("tcsetattr", err);
                 }
                 break;
             }
@@ -4818,25 +4817,24 @@ pub fn term_copy_modes() {
 }
 
 pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
-    let ok = loop {
+    loop {
         match tcsetattr(
             unsafe { BorrowedFd::borrow_raw(fd) },
             SetArg::TCSANOW,
             &shell_modes(),
         ) {
-            Ok(_) => break true,
+            Ok(_) => return true,
             Err(nix::Error::EINTR) => continue,
-            Err(_) => break false,
+            Err(err) => {
+                perror_nix("tcsetattr", err);
+                flog!(
+                    warning,
+                    wgettext_fmt!("Failed to set terminal mode (%s)", whence)
+                );
+                return false;
+            }
         }
-    };
-    if !ok {
-        perror("tcsetattr");
-        flog!(
-            warning,
-            wgettext_fmt!("Failed to set terminal mode (%s)", whence)
-        );
     }
-    ok
 }
 
 pub fn set_shell_modes_temporarily(inputfd: RawFd) -> Option<Termios> {
@@ -4946,8 +4944,8 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             }
 
             // Try stopping us.
-            if killpg(nix::unistd::Pid::from_raw(shell_pgid), Signal::SIGTTIN).is_err() {
-                perror("killpg(shell_pgid, SIGTTIN)");
+            if let Err(err) = killpg(nix::unistd::Pid::from_raw(shell_pgid), Signal::SIGTTIN) {
+                perror_nix("killpg(shell_pgid, SIGTTIN)", err);
                 exit_without_destructors(1);
             }
         }

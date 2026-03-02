@@ -4,7 +4,7 @@ use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
 use nix::sys::resource::Resource as ResourceEnum;
 
-use crate::wutil::perror;
+use crate::wutil::perror_nix;
 use fish_fallback::{fish_wcswidth, wcscasecmp};
 
 use super::prelude::*;
@@ -99,7 +99,7 @@ fn convert_resource(resource: c_uint) -> ResourceEnum {
 /// Calls getrlimit.
 fn getrlimit(resource: c_uint) -> Option<(rlim_t, rlim_t)> {
     nix::sys::resource::getrlimit(convert_resource(resource))
-        .map_err(|_| perror("getrlimit"))
+        .map_err(|e| perror_nix("getrlimit", e))
         .ok()
 }
 

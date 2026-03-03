@@ -50,7 +50,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv alt-u upcase-word
 
     bind --preset $argv alt-c capitalize-word
-    __fish_per_os_bind --preset $argv alt-backspace backward-kill-word backward-kill-token
+    bind --preset $argv alt-backspace backward-kill-word
     __fish_per_os_bind --preset $argv ctrl-alt-h backward-kill-word backward-kill-token
     __fish_per_os_bind --preset $argv ctrl-backspace backward-kill-token backward-kill-word
     __fish_per_os_bind --preset $argv alt-delete kill-word kill-token

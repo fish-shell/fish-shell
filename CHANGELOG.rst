@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+New or improved bindings
+------------------------
+- On non-macOS systems, :kbd:`alt-backspace` operates again on punctuation-delimited words. (:issue:`12122`).
+
 Notable improvements and fixes
 ------------------------------
 - New Spanish translations (:issue:`12489`).

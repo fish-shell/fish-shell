@@ -1,9 +1,8 @@
 //! Safe wrappers around various libc functions that we might want to reuse across modules.
 
-use std::time::Duration;
-
-use crate::wutil::perror;
+use fish_util::perror;
 use libc::mode_t;
+use std::time::Duration;
 
 #[allow(clippy::unnecessary_cast)]
 pub const fn timeval_to_duration(val: &libc::timeval) -> Duration {

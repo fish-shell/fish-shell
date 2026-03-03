@@ -6,9 +6,10 @@ use crate::{
     fds::{BEST_O_SEARCH, wopen_dir},
     parser::ParserEnvSetMode,
     path::path_apply_cdpath,
-    wutil::{normalize_path, perror, wreadlink},
+    wutil::{normalize_path, wreadlink},
 };
 use errno::Errno;
+use fish_util::perror;
 use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
 use nix::unistd::fchdir;
 use std::sync::Arc;

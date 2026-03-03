@@ -12,14 +12,13 @@ use crate::fds::BorrowedFdFile;
 use crate::flog;
 use crate::signal::SigChecker;
 use crate::topic_monitor::Topic;
-use errno::errno;
-use fish_util::write_to_fd;
+use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2osstring, wcs2zstring};
 use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
 use nix::unistd::AccessFlags;
-use std::ffi::{CStr, OsStr};
+use std::ffi::OsStr;
 use std::fs::{self, canonicalize};
-use std::io::{self, Write as _};
+use std::io;
 use std::os::unix::prelude::*;
 
 pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
@@ -64,21 +63,6 @@ pub fn waccess(file_name: &wstr, amode: AccessFlags) -> nix::Result<()> {
 pub fn wunlink(file_name: &wstr) -> io::Result<()> {
     let tmp = wcs2osstring(file_name);
     fs::remove_file(tmp)
-}
-
-/// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.
-pub fn perror(s: &str) {
-    let e = errno().0;
-    let mut stderr = std::io::stderr().lock();
-    if !s.is_empty() {
-        let _ = write!(stderr, "{s}: ");
-    }
-    let slice = unsafe {
-        let msg = libc::strerror(e);
-        CStr::from_ptr(msg).to_bytes()
-    };
-    let _ = stderr.write_all(slice);
-    let _ = stderr.write_all(b"\n");
 }
 
 pub fn perror_nix(s: &str, e: nix::errno::Errno) {

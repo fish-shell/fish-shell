@@ -113,14 +113,14 @@ use crate::tty_handoff::{
     TtyHandoff, get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
 };
 use crate::wildcard::wildcard_has;
-use crate::wutil::{fstat, perror, perror_nix, wstat};
+use crate::wutil::{fstat, perror_nix, wstat};
 use crate::{abbrs, event, function};
 use assert_matches::assert_matches;
 use errno::{Errno, errno};
 use fish_common::{UTF8_BOM_WCHAR, help_section};
 use fish_fallback::fish_wcwidth;
 use fish_fallback::lowercase;
-use fish_util::write_to_fd;
+use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{
     CaseSensitivity, IsPrefix, StringFuzzyMatch, count_preceding_backslashes, is_prefix,
     join_strings, string_prefixes_string, string_prefixes_string_case_insensitive,

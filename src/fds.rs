@@ -1,9 +1,9 @@
 use crate::flog::flog;
 use crate::prelude::*;
 use crate::signal::signal_check_cancel;
-use crate::wutil::perror;
 use crate::wutil::perror_nix;
 use cfg_if::cfg_if;
+use fish_util::perror;
 use fish_wcstringutil::wcs2zstring;
 use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
 use nix::fcntl::FcntlArg;

@@ -17,7 +17,8 @@ use crate::terminal::TerminalCommand::{
     KittyKeyboardProgressiveEnhancementsEnable, ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
 use crate::threads::assert_is_main_thread;
-use crate::wutil::{perror, perror_nix, wcstoi};
+use crate::wutil::{perror_nix, wcstoi};
+use fish_util::perror;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use nix::sys::termios::tcgetattr;
 use nix::unistd::getpgrp;

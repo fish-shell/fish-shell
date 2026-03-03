@@ -136,6 +136,8 @@ string escape (set_color --underline=dotted)
 # CHECK: \e\[4:4m
 string escape (set_color --underline=dashed)
 # CHECK: \e\[4:5m
+string escape (set_color --underline=off)
+# CHECK: \e\[24m
 
 string escape (set_color f00 --background=00f --underline-color=0f0 --bold --dim --italics --reverse --strikethrough --underline=curly)
 # CHECK: \e\[38\;2\;255\;0\;0\;48\;2\;0\;0\;255\;58:2::0:255:0\;1\;4:3\;2\;3\;7m\e\[9m

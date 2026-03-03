@@ -390,7 +390,7 @@ impl Outputter {
         // Removes all styles that are individually resettable.
         let non_resettable = |mut style: TextStyling| {
             style.italics = ResettableStyle::Unchanged;
-            style.underline_style = None;
+            style.underline_style = ResettableStyle::Unchanged;
             style.reverse = ResettableStyle::Unchanged;
             style.strikethrough = ResettableStyle::Unchanged;
             style
@@ -448,14 +448,16 @@ impl Outputter {
 
         if style.underline_style != style_writer.last().style.underline_style {
             match style.underline_style {
-                None => {
+                ResettableStyle::Unchanged => {}
+                ResettableStyle::Off => {
                     if style_writer.write_command(ExitUnderlineMode) {
-                        style_writer.last().style.underline_style = None;
+                        style_writer.last().style.underline_style = ResettableStyle::Off;
                     }
                 }
-                Some(underline_style) => {
+                ResettableStyle::On(underline_style) => {
                     if style_writer.write_command(EnterUnderlineMode(underline_style)) {
-                        style_writer.last().style.underline_style = Some(underline_style);
+                        style_writer.last().style.underline_style =
+                            ResettableStyle::On(underline_style);
                     }
                 }
             }
@@ -481,7 +483,7 @@ impl Outputter {
                     ResettableStyle::Unchanged => {
                         return;
                     }
-                    ResettableStyle::On => enter_cmd,
+                    ResettableStyle::On(()) => enter_cmd,
                     ResettableStyle::Off => exit_cmd,
                 };
                 if style_writer.write_command(cmd) {
@@ -790,7 +792,7 @@ impl<'a> Drop for OutputterStyleWriter<'a> {
 mod tests {
     use fish_color::{Color, Color24};
 
-    use crate::text_face::{ResettableStyle, TextFace, TextStyling};
+    use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 
     use super::{
         Outputter,
@@ -889,45 +891,54 @@ mod tests {
 
     #[test]
     fn resettable_style_attribute() {
-        use ResettableStyle::{Off, On, Unchanged};
+        type RS = crate::text_face::ResettableStyle<()>;
+        type RU = crate::text_face::ResettableStyle<UnderlineStyle>;
 
         let mut outp = Outputter::new_buffering_no_assume_normal();
 
-        let mut set_attr =
-            |italics: ResettableStyle, reverse: ResettableStyle, strikethrough: ResettableStyle| {
-                let mut style = TextStyling::unknown_style();
-                style.italics = italics;
-                style.reverse = reverse;
-                style.strikethrough = strikethrough;
+        let mut set_attr = |italics: RS, reverse: RS, strikethrough: RS, underline: RU| {
+            let mut style = TextStyling::unknown();
+            style.italics = italics;
+            style.reverse = reverse;
+            style.strikethrough = strikethrough;
+            style.underline_style = underline;
 
-                let face = TextFace::new(Color::None, Color::None, Color::None, style);
-                outp.set_text_face(face);
-            };
+            let face = TextFace::new(Color::None, Color::None, Color::None, style);
+            outp.set_text_face(face);
+        };
 
-        // `#[cfg_attr(...)]` because `#[rustfmt::skip]` triggers `error[E0658]: attributes on expressions are experimental`
+        // TODO: feature(stmt_expr_attributes): use #[rustfmt::skip]
         #[cfg_attr(any(), rustfmt::skip)]
         {
-            set_attr(On,        Unchanged, Off);
-            set_attr(On,        On,        Unchanged);
-            set_attr(Unchanged, On,        Unchanged);
-            set_attr(Unchanged, Unchanged, On);
-            set_attr(Off,       Unchanged, On);
-            set_attr(Off,       Off,       Unchanged);
-            set_attr(Unchanged, Off,       Unchanged);
-            set_attr(Unchanged, Unchanged, Off);
+            // There is no particular order between the different attributes.
+            // The main test is that for a given attribute, setting the same
+            // value twice (e.g. On->On) shouldn't create a new escape sequence,
+            // except for Unchanged which should never create a new sequence
+            // (which also means testing Unchanged->Unchanged is not required)
+            // Cherry on top: by changing what value is used first for each
+            // attribute, we also further exercise SGR combining, including
+            // an empty result.
+            set_attr(RS::On(()),    RS::Unchanged, RS::Off,       RU::On(UnderlineStyle::Curly));
+            set_attr(RS::On(()),    RS::On(()),    RS::Unchanged, RU::On(UnderlineStyle::Curly));
+            set_attr(RS::Unchanged, RS::On(()),    RS::Unchanged, RU::Unchanged);
+            set_attr(RS::Unchanged, RS::Unchanged, RS::On(()),    RU::Off);
+            set_attr(RS::Off,       RS::Unchanged, RS::On(()),    RU::Off);
+            set_attr(RS::Off,       RS::Off,       RS::Unchanged, RU::Unchanged);
+            set_attr(RS::Unchanged, RS::Off,       RS::Unchanged, RU::On(UnderlineStyle::Dashed));
+            set_attr(RS::Unchanged, RS::Unchanged, RS::Off,       RU::On(UnderlineStyle::Dotted));
         }
 
         assert_eq!(
             String::from_utf8_lossy(outp.contents()),
             concat!(
-                "\u{1b}[3;29m",
+                "\u{1b}[4:3;3;29m",
                 "\u{1b}[7m",
                 "",
-                "\u{1b}[9m",
+                "\u{1b}[24;9m",
                 "\u{1b}[23m",
                 "\u{1b}[27m",
-                "",
-                "\u{1b}[29m",
+                "\u{1b}[4:5m",
+                "\u{1b}[4:4;29m",
             )
         );
     }

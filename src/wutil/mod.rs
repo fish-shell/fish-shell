@@ -10,6 +10,8 @@ pub mod wcstoi;
 use crate::common::{bytes2wcstring, fish_reserved_codepoint, osstr2wcstring};
 use crate::fds::BorrowedFdFile;
 use crate::flog;
+use crate::signal::SigChecker;
+use crate::topic_monitor::Topic;
 use errno::errno;
 use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2bytes, wcs2osstring, wcs2zstring};
 use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
@@ -354,9 +356,7 @@ pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
 }
 
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.
-/// This does NOT retry on EINTR or EAGAIN, it simply returns.
-/// Return -1 on error in which case errno will have been set. In this event, the number of bytes
-/// actually written cannot be obtained.
+/// Returns nothing when interrupted by ctrl-c or HUP.
 pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Option<usize> {
     // Accumulate data in a local buffer.
     let mut accum = [0u8; 512];
@@ -367,10 +367,37 @@ pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Op
     // Return true on success, false on error.
     let mut total_written = 0;
 
-    fn do_write(fd: RawFd, total_written: &mut usize, mut buf: &[u8]) -> bool {
+    fn do_write(
+        sigcheck: &mut SigChecker,
+        fd: RawFd,
+        total_written: &mut usize,
+        mut buf: &[u8],
+    ) -> bool {
         while !buf.is_empty() {
-            let Ok(amt) = write_to_fd(buf, fd) else {
-                return false;
+            let amt = match write_to_fd(buf, fd) {
+                Ok(amt) => amt,
+                Err(err) => {
+                    // Some of our builtins emit multiple screens worth of data sent to a pager (the primary
+                    // example being the `history` builtin) and receiving SIGINT should be considered normal and
+                    // non-exceptional (user request to abort via Ctrl-C), meaning we shouldn't print an error.
+                    //
+                    // We have two options here: we can either return false without setting errored_ to
+                    // true (*this* write will be silently aborted but the onus is on the caller to check
+                    // the return value and skip future calls to `append()`) or we can flag the entire
+                    // output stream as errored, causing us to both return false and skip any future writes.
+                    // We're currently going with the latter, especially seeing as no callers currently
+                    // check the result of `append()` (since it was always a void function before).
+                    match err {
+                        nix::errno::Errno::EINTR => {
+                            if !sigcheck.check() {
+                                continue;
+                            }
+                        }
+                        nix::errno::Errno::EPIPE => (),
+                        _ => perror("write"),
+                    }
+                    return false;
+                }
             };
             *total_written += amt;
             assert!(amt <= buf.len(), "Wrote more than requested");
@@ -380,18 +407,22 @@ pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Op
     }
 
     // Helper to flush the accumulation buffer.
-    let flush_accum = |total_written: &mut usize, accum: &[u8], accumlen: &mut usize| {
-        if !do_write(fd, total_written, &accum[..*accumlen]) {
+    let flush_accum = |sigcheck: &mut SigChecker,
+                       total_written: &mut usize,
+                       accum: &[u8],
+                       accumlen: &mut usize| {
+        if !do_write(sigcheck, fd, total_written, &accum[..*accumlen]) {
             return false;
         }
         *accumlen = 0;
         true
     };
 
+    let mut sigcheck = SigChecker::new(Topic::SigHupInt);
     let mut success = str2bytes_callback(input, |buff: &[u8]| {
         if buff.len() + accumlen > accum_capacity {
             // We have to flush.
-            if !flush_accum(&mut total_written, &accum, &mut accumlen) {
+            if !flush_accum(&mut sigcheck, &mut total_written, &accum, &mut accumlen) {
                 return false;
             }
         }
@@ -402,12 +433,12 @@ pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Op
             true
         } else {
             // Too much data to even fit, just write it immediately.
-            do_write(fd, &mut total_written, buff)
+            do_write(&mut sigcheck, fd, &mut total_written, buff)
         }
     });
     // Flush any remaining.
     if success {
-        success = flush_accum(&mut total_written, &accum, &mut accumlen);
+        success = flush_accum(&mut sigcheck, &mut total_written, &accum, &mut accumlen);
     }
     if success { Some(total_written) } else { None }
 }

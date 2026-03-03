@@ -9,14 +9,20 @@ pub(crate) trait StyleSet {
 }
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
-pub(crate) enum ResettableStyle {
+pub(crate) enum ResettableStyle<T = ()>
+where
+    T: Copy + std::fmt::Debug + Eq,
+{
     #[default]
     Unchanged,
     Off,
-    On,
+    On(T),
 }
 
-impl StyleSet for ResettableStyle {
+impl<T> StyleSet for ResettableStyle<T>
+where
+    T: Copy + std::fmt::Debug + Eq,
+{
     fn union_prefer_right(self, other: Self) -> Self {
         if other == Self::Unchanged {
             self
@@ -43,23 +49,10 @@ pub(crate) enum UnderlineStyle {
     Dashed,
 }
 
-impl StyleSet for Option<UnderlineStyle> {
-    fn union_prefer_right(self, other: Self) -> Self {
-        other.or(self)
-    }
-
-    fn difference_prefer_empty(self, other: Self) -> Self {
-        if other.is_some() {
-            return None;
-        }
-        self
-    }
-}
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) struct TextStyling {
     pub(crate) bold: bool,
-    pub(crate) underline_style: Option<UnderlineStyle>,
+    pub(crate) underline_style: ResettableStyle<UnderlineStyle>,
     pub(crate) italics: ResettableStyle,
     pub(crate) dim: bool,
     pub(crate) reverse: ResettableStyle,
@@ -70,7 +63,7 @@ impl TextStyling {
     pub(crate) const fn terminal_default_style() -> Self {
         Self {
             bold: false,
-            underline_style: None,
+            underline_style: ResettableStyle::Off,
             italics: ResettableStyle::Off,
             dim: false,
             reverse: ResettableStyle::Off,
@@ -80,7 +73,7 @@ impl TextStyling {
     pub(crate) const fn unknown_style() -> Self {
         Self {
             bold: false,
-            underline_style: None,
+            underline_style: ResettableStyle::Unchanged,
             italics: ResettableStyle::Unchanged,
             dim: false,
             reverse: ResettableStyle::Unchanged,
@@ -94,7 +87,8 @@ impl TextStyling {
 
     #[cfg(test)]
     pub(crate) fn all_set(&self) -> bool {
-        (self.italics != ResettableStyle::Unchanged)
+        (self.underline_style != ResettableStyle::Unchanged)
+            && (self.italics != ResettableStyle::Unchanged)
             && (self.reverse != ResettableStyle::Unchanged)
             && (self.strikethrough != ResettableStyle::Unchanged)
     }
@@ -132,13 +126,13 @@ impl TextStyling {
     }
 
     #[cfg(test)]
-    pub const fn underline_style(self) -> Option<UnderlineStyle> {
+    pub const fn underline_style(self) -> ResettableStyle<UnderlineStyle> {
         self.underline_style
     }
 
     /// Set the given underline style.
-    pub fn inject_underline(&mut self, underline: UnderlineStyle) {
-        self.underline_style = Some(underline);
+    pub fn inject_underline(&mut self, underline: ResettableStyle<UnderlineStyle>) {
+        self.underline_style = underline;
     }
 
     /// Returns whether the text face is dim.
@@ -240,7 +234,7 @@ fn parse_resettable_style<'a>(w: &WGetopter<'_, 'a, '_>) -> Result<ResettableSty
     if (arg == "off") || (arg == "false") {
         Ok(ResettableStyle::Off)
     } else if (arg == "on") || (arg == "true") {
-        Ok(ResettableStyle::On)
+        Ok(ResettableStyle::On(()))
     } else {
         Err(arg)
     }
@@ -324,19 +318,21 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
             }
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
-                init_style(&mut style).underline_style = Some(if arg == "single" {
-                    UnderlineStyle::Single
+                init_style(&mut style).underline_style = if arg == "single" {
+                    ResettableStyle::On(UnderlineStyle::Single)
                 } else if arg == "double" {
-                    UnderlineStyle::Double
+                    ResettableStyle::On(UnderlineStyle::Double)
                 } else if arg == "curly" {
-                    UnderlineStyle::Curly
+                    ResettableStyle::On(UnderlineStyle::Curly)
                 } else if arg == "dotted" {
-                    UnderlineStyle::Dotted
+                    ResettableStyle::On(UnderlineStyle::Dotted)
                 } else if arg == "dashed" {
-                    UnderlineStyle::Dashed
+                    ResettableStyle::On(UnderlineStyle::Dashed)
+                } else if arg == "off" {
+                    ResettableStyle::Off
                 } else {
                     return Err(UnknownUnderlineStyle(arg));
-                });
+                };
             }
             'c' => {
                 assert!(is_builtin);

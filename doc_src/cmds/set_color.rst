@@ -58,7 +58,7 @@ The following options are available:
     Sets strikethrough mode. The state can be **on** / **true** (default), or **off** / **false**
 
 **-u** or **--underline**, or **-uSTYLE** or **--underline=STYLE**
-    Set the underline mode; supported styles are **single** (default), **double**, **curly**, **dotted** and **dashed**.
+    Set the underline mode; supported styles are **single** (default), **double**, **curly**, **dotted**, **dashed** and **off**.
 
 **--theme=THEME**
     Ignored.

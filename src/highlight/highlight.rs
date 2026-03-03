@@ -181,7 +181,7 @@ impl HighlightColorResolver {
             face.bg = bg_face.bg;
             // In case the background role is different from the foreground one, we ignore its style
             // except for reverse mode.
-            if face.style.reverse != ResettableStyle::On {
+            if face.style.reverse != ResettableStyle::On(()) {
                 face.style.reverse = bg_face.style.reverse;
             }
         }
@@ -202,7 +202,8 @@ impl HighlightColorResolver {
         }
 
         if highlight.force_underline {
-            face.style.inject_underline(UnderlineStyle::Single);
+            face.style
+                .inject_underline(ResettableStyle::On(UnderlineStyle::Single));
         }
 
         face
@@ -1320,7 +1321,7 @@ mod tests {
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
     use crate::prelude::*;
     use crate::tests::prelude::*;
-    use crate::text_face::UnderlineStyle;
+    use crate::text_face::{ResettableStyle, UnderlineStyle};
     use libc::PATH_MAX;
 
     // Helper to return a string whose length greatly exceeds PATH_MAX.
@@ -1856,7 +1857,7 @@ mod tests {
             let face = resolver.resolve_spec(&colors[i], vars);
             assert_eq!(
                 face.style.underline_style(),
-                Some(UnderlineStyle::Single),
+                ResettableStyle::On(UnderlineStyle::Single),
                 "Character at position {} of 'echo' should be underlined",
                 i
             );
@@ -1867,7 +1868,7 @@ mod tests {
             let face = resolver.resolve_spec(&colors[i], vars);
             assert_eq!(
                 face.style.underline_style(),
-                None,
+                ResettableStyle::Off,
                 "Trailing space at position {} should NOT be underlined",
                 i
             );
@@ -1924,5 +1925,7 @@ mod tests {
         assert_all_set(vec![L!("--reverse=off").into()]);
         assert_all_set(vec![L!("--strikethrough").into()]);
         assert_all_set(vec![L!("--strikethrough=off").into()]);
+        assert_all_set(vec![L!("--underline").into()]);
+        assert_all_set(vec![L!("--underline=off").into()]);
     }
 }

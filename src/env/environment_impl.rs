@@ -7,7 +7,6 @@ use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::history::{History, history_session_id_from_var};
 use crate::kill::kill_entries;
-use crate::nix::umask;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::portable_atomic::AtomicU64;
 use crate::prelude::*;
@@ -15,6 +14,7 @@ use crate::reader::{commandline_get_state, reader_status_count};
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wutil::fish_wcstol_radix;
 use fish_wcstringutil::wcs2zstring;
+use nix::sys::stat::{Mode, umask};
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashSet;
 use std::ffi::CString;
@@ -80,7 +80,9 @@ fn set_umask(list_val: &[WString]) -> EnvStackSetResult {
         return EnvStackSetResult::Invalid;
     }
     // Do not actually create a umask variable. On env_stack_t::get() it will be calculated.
-    umask(mask as libc::mode_t);
+    // We already checked that `mask` is in range 0..=0o777, so it does not really matter which
+    // variant of `Mode::from_bits` we use.
+    umask(Mode::from_bits_truncate(mask as libc::mode_t));
     EnvStackSetResult::Ok
 }
 
@@ -411,12 +413,15 @@ impl EnvScopedImpl {
             // note umask() is an absurd API: you call it to set the value and it returns the old
             // value. Thus we have to call it twice, to reset the value. The env_lock protects
             // against races. Guess what the umask is; if we guess right we don't need to reset it.
-            let guess: libc::mode_t = 0o022;
-            let res: libc::mode_t = umask(guess);
+            let guess = Mode::S_IWGRP | Mode::S_IWOTH;
+            let res = umask(guess);
             if res != guess {
                 umask(res);
             }
-            Some(EnvVar::new_from_name(L!("umask"), sprintf!("0%0.3o", res)))
+            Some(EnvVar::new_from_name(
+                L!("umask"),
+                sprintf!("0%0.3o", res.bits()),
+            ))
         } else {
             // We should never get here unless the electric var list is out of sync with the above code.
             panic!("Unrecognized computed var name {}", key);

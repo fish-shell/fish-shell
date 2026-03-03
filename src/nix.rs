@@ -1,7 +1,6 @@
 //! Safe wrappers around various libc functions that we might want to reuse across modules.
 
 use fish_util::perror;
-use libc::mode_t;
 use std::time::Duration;
 
 #[allow(clippy::unnecessary_cast)]
@@ -65,8 +64,4 @@ pub fn getrusage(resource: RUsage) -> libc::rusage {
             unsafe { std::mem::zeroed() }
         }
     }
-}
-
-pub fn umask(mask: mode_t) -> mode_t {
-    unsafe { libc::umask(mask) }
 }

@@ -2203,9 +2203,9 @@ mod tests {
             };
         }
 
-        #[rustfmt::skip]
-        #[allow(clippy::redundant_closure_call)]
-        (|| {
+        // TODO: feature(stmt_expr_attributes): use #[rustfmt::skip]
+        #[cfg_attr(any(), rustfmt::skip)]
+        {
             validate!(
                 0, "if", 1, " foo",
                 0, "\nend"
@@ -2407,6 +2407,6 @@ mod tests {
                 0, "\n",
                 0, r#"$()"$() ""#
             );
-        })();
+        }
     }
 }

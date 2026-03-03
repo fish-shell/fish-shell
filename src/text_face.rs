@@ -56,10 +56,36 @@ impl StyleSet for Option<UnderlineStyle> {
     }
 }
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
+pub(crate) enum ResettableUnderline {
+    #[default]
+    Unchanged,
+    Off,
+    On(UnderlineStyle),
+}
+
+impl StyleSet for ResettableUnderline {
+    fn union_prefer_right(self, other: Self) -> Self {
+        if other == Self::Unchanged {
+            self
+        } else {
+            other
+        }
+    }
+
+    fn difference_prefer_empty(self, other: Self) -> Self {
+        if other != Self::Unchanged {
+            Self::Unchanged
+        } else {
+            self
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) struct TextStyling {
     pub(crate) bold: bool,
-    pub(crate) underline_style: Option<UnderlineStyle>,
+    pub(crate) underline_style: ResettableUnderline,
     pub(crate) italics: ResettableStyle,
     pub(crate) dim: bool,
     pub(crate) reverse: ResettableStyle,
@@ -67,10 +93,20 @@ pub(crate) struct TextStyling {
 }
 
 impl TextStyling {
-    pub(crate) const fn default() -> Self {
+    pub(crate) const fn terminal_default_style() -> Self {
         Self {
             bold: false,
-            underline_style: None,
+            underline_style: ResettableUnderline::Off,
+            italics: ResettableStyle::Off,
+            dim: false,
+            reverse: ResettableStyle::Off,
+            strikethrough: ResettableStyle::Off,
+        }
+    }
+    pub(crate) const fn unknown_style() -> Self {
+        Self {
+            bold: false,
+            underline_style: ResettableUnderline::Unchanged,
             italics: ResettableStyle::Unchanged,
             dim: false,
             reverse: ResettableStyle::Unchanged,
@@ -78,7 +114,7 @@ impl TextStyling {
         }
     }
     pub(crate) fn is_empty(&self) -> bool {
-        *self == Self::default()
+        *self == Self::unknown_style()
     }
     pub(crate) fn union_prefer_right(self, other: Self) -> Self {
         Self {
@@ -113,13 +149,13 @@ impl TextStyling {
     }
 
     #[cfg(test)]
-    pub const fn underline_style(self) -> Option<UnderlineStyle> {
+    pub const fn underline_style(self) -> ResettableUnderline {
         self.underline_style
     }
 
     /// Set the given underline style.
-    pub fn inject_underline(&mut self, underline: UnderlineStyle) {
-        self.underline_style = Some(underline);
+    pub fn inject_underline(&mut self, underline: ResettableUnderline) {
+        self.underline_style = underline;
     }
 
     /// Returns whether the text face is dim.
@@ -136,19 +172,21 @@ pub(crate) struct TextFace {
     pub(crate) style: TextStyling,
 }
 
-impl Default for TextFace {
-    fn default() -> Self {
-        Self::default()
-    }
-}
-
 impl TextFace {
-    pub const fn default() -> Self {
+    pub const fn terminal_default_style() -> Self {
         Self {
             fg: Color::Normal,
             bg: Color::Normal,
+            underline_color: Color::Normal,
+            style: TextStyling::terminal_default_style(),
+        }
+    }
+    pub const fn unknown_style() -> Self {
+        Self {
+            fg: Color::None,
+            bg: Color::None,
             underline_color: Color::None,
-            style: TextStyling::default(),
+            style: TextStyling::unknown_style(),
         }
     }
 
@@ -257,7 +295,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     let mut underline_colors = vec![];
     let mut style: Option<TextStyling> = None;
     fn init_style(style: &mut Option<TextStyling>) -> &mut TextStyling {
-        style.get_or_insert_default()
+        style.get_or_insert(TextStyling::unknown_style())
     }
     let mut print_color_mode = false;
 
@@ -295,19 +333,21 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
             }
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
-                init_style(&mut style).underline_style = Some(if arg == "single" {
-                    UnderlineStyle::Single
+                init_style(&mut style).underline_style = if arg == "single" {
+                    ResettableUnderline::On(UnderlineStyle::Single)
                 } else if arg == "double" {
-                    UnderlineStyle::Double
+                    ResettableUnderline::On(UnderlineStyle::Double)
                 } else if arg == "curly" {
-                    UnderlineStyle::Curly
+                    ResettableUnderline::On(UnderlineStyle::Curly)
                 } else if arg == "dotted" {
-                    UnderlineStyle::Dotted
+                    ResettableUnderline::On(UnderlineStyle::Dotted)
                 } else if arg == "dashed" {
-                    UnderlineStyle::Dashed
+                    ResettableUnderline::On(UnderlineStyle::Dashed)
+                } else if arg == "off" {
+                    ResettableUnderline::Off
                 } else {
                     return Err(UnknownUnderlineStyle(arg));
-                });
+                };
             }
             'c' => {
                 assert!(is_builtin);

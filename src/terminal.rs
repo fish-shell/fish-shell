@@ -3,7 +3,9 @@ use crate::common::{self, EscapeStringStyle, escape_string};
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::prelude::*;
 use crate::screen::{is_dumb, only_grayscale};
-use crate::text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle};
+use crate::text_face::{
+    ResettableStyle, ResettableUnderline, TextFace, TextStyling, UnderlineStyle,
+};
 use crate::threads::MainThread;
 use bitflags::bitflags;
 use fish_color::{Color, Color24};
@@ -256,7 +258,7 @@ impl Outputter {
             contents: Vec::new(),
             buffer_count: 0,
             fd,
-            last: TextFace::default(),
+            last: TextFace::terminal_default_style(),
         }
     }
 
@@ -267,8 +269,7 @@ impl Outputter {
 
     pub fn new_buffering_no_assume_normal() -> Self {
         let mut zelf = Self::new_buffering();
-        zelf.last.fg = Color::None;
-        zelf.last.bg = Color::None;
+        zelf.last = TextFace::unknown_style();
         assert_eq!(zelf.last.underline_color, Color::None);
         zelf
     }
@@ -379,8 +380,7 @@ impl Outputter {
         use SgrTerminalCommand::{
             DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterDimMode,
             EnterItalicsMode, EnterReverseMode, EnterStrikethroughMode, EnterUnderlineMode,
-            ExitAttributeMode, ExitItalicsMode, ExitReverseMode, ExitStrikethroughMode,
-            ExitUnderlineMode,
+            ExitItalicsMode, ExitReverseMode, ExitStrikethroughMode, ExitUnderlineMode,
         };
 
         let mut style_writer = self.style_writer();
@@ -392,7 +392,7 @@ impl Outputter {
         // Removes all styles that are individually resettable.
         let non_resettable = |mut style: TextStyling| {
             style.italics = ResettableStyle::Unchanged;
-            style.underline_style = None;
+            style.underline_style = ResettableUnderline::Unchanged;
             style.reverse = ResettableStyle::Unchanged;
             style.strikethrough = ResettableStyle::Unchanged;
             style
@@ -413,16 +413,12 @@ impl Outputter {
 
         if !fg.is_none() && fg != style_writer.last().fg {
             if fg.is_normal() {
-                style_writer.write_command(ExitAttributeMode);
-
-                style_writer.last().bg = Color::Normal;
-                style_writer.last().underline_color = Color::Normal;
-                style_writer.last().style = TextStyling::default();
+                style_writer.reset_text_face();
             } else {
                 assert!(!fg.is_special());
                 style_writer.write_color(Paintable::Foreground, fg);
+                style_writer.last().fg = fg;
             }
-            style_writer.last().fg = fg;
         }
 
         if !bg.is_none() && bg != style_writer.last().bg {
@@ -454,14 +450,16 @@ impl Outputter {
 
         if style.underline_style != style_writer.last().style.underline_style {
             match style.underline_style {
-                None => {
+                ResettableUnderline::Unchanged => {}
+                ResettableUnderline::Off => {
                     if style_writer.write_command(ExitUnderlineMode) {
-                        style_writer.last().style.underline_style = None;
+                        style_writer.last().style.underline_style = ResettableUnderline::Off;
                     }
                 }
-                Some(underline_style) => {
+                ResettableUnderline::On(underline_style) => {
                     if style_writer.write_command(EnterUnderlineMode(underline_style)) {
-                        style_writer.last().style.underline_style = Some(underline_style);
+                        style_writer.last().style.underline_style =
+                            ResettableUnderline::On(underline_style);
                     }
                 }
             }
@@ -660,7 +658,7 @@ impl<'a> OutputterStyleWriter<'a> {
     pub(crate) fn reset_text_face(&mut self) {
         use SgrTerminalCommand::ExitAttributeMode;
         self.write_command(ExitAttributeMode);
-        self.out.last = TextFace::default();
+        self.out.last = TextFace::terminal_default_style();
     }
 
     pub(crate) fn write_command(&mut self, cmd: SgrTerminalCommand) -> bool {
@@ -795,7 +793,7 @@ impl<'a> Drop for OutputterStyleWriter<'a> {
 mod tests {
     use fish_color::{Color, Color24};
 
-    use crate::text_face::{ResettableStyle, TextFace, TextStyling};
+    use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 
     use super::{
         Outputter,
@@ -894,45 +892,54 @@ mod tests {
 
     #[test]
     fn resettable_style_attribute() {
-        use ResettableStyle::{Off, On, Unchanged};
+        use crate::text_face::ResettableStyle as RS;
+        use crate::text_face::ResettableUnderline as RU;
 
         let mut outp = Outputter::new_buffering_no_assume_normal();
 
-        let mut set_attr =
-            |italics: ResettableStyle, reverse: ResettableStyle, strikethrough: ResettableStyle| {
-                let mut style = TextStyling::default();
-                style.italics = italics;
-                style.reverse = reverse;
-                style.strikethrough = strikethrough;
+        let mut set_attr = |italics: RS, reverse: RS, strikethrough: RS, underline: RU| {
+            let mut style = TextStyling::unknown_style();
+            style.italics = italics;
+            style.reverse = reverse;
+            style.strikethrough = strikethrough;
+            style.underline_style = underline;
 
-                let face = TextFace::new(Color::None, Color::None, Color::None, style);
-                outp.set_text_face(face);
-            };
+            let face = TextFace::new(Color::None, Color::None, Color::None, style);
+            outp.set_text_face(face);
+        };
 
-        // `#[cfg_attr(...)]` because `#[rustfmt::skip]` triggers `error[E0658]: attributes on expressions are experimental`
+        // TODO: feature(stmt_expr_attributes): use #[rustfmt::skip]
         #[cfg_attr(any(), rustfmt::skip)]
         {
-            set_attr(On,        Unchanged, Off);
-            set_attr(On,        On,        Unchanged);
-            set_attr(Unchanged, On,        Unchanged);
-            set_attr(Unchanged, Unchanged, On);
-            set_attr(Off,       Unchanged, On);
-            set_attr(Off,       Off,       Unchanged);
-            set_attr(Unchanged, Off,       Unchanged);
-            set_attr(Unchanged, Unchanged, Off);
+            // There is no particular order between the different attributes.
+            // The main test is that for a given attribute, setting the same
+            // value twice (e.g. On->On) shouldn't create a new escape sequence,
+            // except for Unchanged which should never create a new sequence
+            // (which also means testing Unchanged->Unchanged is not required)
+            // Cherry on top: by changing what value is used first for each
+            // attribute, we also further exercise SGR combining, including
+            // an empty result.
+            set_attr(RS::On,        RS::Unchanged, RS::Off,       RU::On(UnderlineStyle::Curly));
+            set_attr(RS::On,        RS::On,        RS::Unchanged, RU::On(UnderlineStyle::Curly));
+            set_attr(RS::Unchanged, RS::On,        RS::Unchanged, RU::Unchanged);
+            set_attr(RS::Unchanged, RS::Unchanged, RS::On,        RU::Off);
+            set_attr(RS::Off,       RS::Unchanged, RS::On,        RU::Off);
+            set_attr(RS::Off,       RS::Off,       RS::Unchanged, RU::Unchanged);
+            set_attr(RS::Unchanged, RS::Off,       RS::Unchanged, RU::On(UnderlineStyle::Dashed));
+            set_attr(RS::Unchanged, RS::Unchanged, RS::Off,       RU::On(UnderlineStyle::Dotted));
         }
 
         assert_eq!(
             String::from_utf8_lossy(outp.contents()),
             concat!(
-                "\u{1b}[3;29m",
+                "\u{1b}[4:3;3;29m",
                 "\u{1b}[7m",
                 "",
-                "\u{1b}[9m",
+                "\u{1b}[24;9m",
                 "\u{1b}[23m",
                 "\u{1b}[27m",
-                "",
-                "\u{1b}[29m",
+                "\u{1b}[4:5m",
+                "\u{1b}[4:4;29m",
             )
         );
     }

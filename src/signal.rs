@@ -1,6 +1,3 @@
-use std::mem::MaybeUninit;
-use std::num::NonZeroI32;
-
 use crate::common::exit_without_destructors;
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::nix::getpid;
@@ -9,12 +6,17 @@ use crate::reader::{reader_handle_sigint, reader_sighup, safe_restore_term_mode}
 use crate::termsize::safe_termsize_invalidate_tty;
 use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_principal};
 use crate::tty_handoff::{safe_deactivate_tty_protocols, safe_mark_tty_invalid};
-use crate::wutil::{fish_wcstoi, perror};
+use crate::wutil::fish_wcstoi;
 use errno::{errno, set_errno};
+use fish_util::perror;
 use nix::sys::signal::{SaFlags, SigAction, SigHandler, SigSet, SigmaskHow, sigprocmask};
-use std::sync::{
-    LazyLock,
-    atomic::{AtomicI32, Ordering},
+use std::{
+    mem::MaybeUninit,
+    num::NonZeroI32,
+    sync::{
+        LazyLock,
+        atomic::{AtomicI32, Ordering},
+    },
 };
 
 /// Store the "main" pid. This allows us to reliably determine if we are in a forked child.

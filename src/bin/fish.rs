@@ -42,7 +42,7 @@ use fish::{
     history::{self, start_private_mode},
     io::IoChain,
     locale::set_libc_locales,
-    nix::{RUsage, getrusage, isatty},
+    nix::isatty,
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
@@ -63,7 +63,10 @@ use fish::{
 };
 use fish_wcstringutil::wcs2bytes;
 use libc::STDIN_FILENO;
-use nix::unistd::{AccessFlags, getpid};
+use nix::{
+    sys::resource::{UsageWho, getrusage},
+    unistd::{AccessFlags, getpid},
+};
 use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
@@ -102,28 +105,30 @@ struct FishCmdOpts {
 
 /// Return a timeval converted to milliseconds.
 #[allow(clippy::unnecessary_cast)]
-fn tv_to_msec(tv: &libc::timeval) -> i64 {
+fn nix_tv_to_ms(tv: nix::sys::time::TimeVal) -> i64 {
     // milliseconds per second
-    let mut msec = tv.tv_sec as i64 * 1000;
+    let mut ms = tv.tv_sec() as i64 * 1000;
     // microseconds per millisecond
-    msec += tv.tv_usec as i64 / 1000;
-    msec
+    ms += tv.tv_usec() as i64 / 1000;
+    ms
 }
 
 fn print_rusage_self() {
-    let rs = getrusage(RUsage::RSelf);
+    // `getrusage` should never fail with this usage.
+    // If it does, it suggests a non-POSIX-compliant OS.
+    let usage = getrusage(UsageWho::RUSAGE_SELF).unwrap();
     let rss_kb = if cfg!(apple) {
-        // mac use bytes.
-        rs.ru_maxrss / 1024
+        // Macs use bytes,
+        // Source: commit b6555a0dc462f669e1b5a370c3efae0f5948a1ef
+        // The docs at https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/getrusage.2.html say otherwise.
+        usage.max_rss() / 1024
     } else {
-        // Everyone else uses KB.
-        rs.ru_maxrss
+        usage.max_rss()
     };
-
-    let user_time = tv_to_msec(&rs.ru_utime);
-    let sys_time = tv_to_msec(&rs.ru_stime);
+    let user_time = nix_tv_to_ms(usage.user_time());
+    let sys_time = nix_tv_to_ms(usage.system_time());
     let total_time = user_time + sys_time;
-    let signals = rs.ru_nsignals;
+    let signals = usage.signals();
 
     eprintf!("  rusage self:\n");
     eprintf!("      user time: %s ms\n", sys_time.to_string());

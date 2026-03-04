@@ -6,11 +6,11 @@ end
 
 # ==========
 # Verify that `functions --details` works as expected when given too many args.
-functions    --details f1 f2
+functions --details f1 f2
 #CHECKERR: functions: --details: expected 1 arguments; got 2
 
 # Verify that it still mentions "--details" even if it isn't the last option.
-functions    --details --verbose f1 f2
+functions --details --verbose f1 f2
 #CHECKERR: functions: --details: expected 1 arguments; got 2
 
 # ==========
@@ -210,7 +210,8 @@ functions --description ""
 # CHECKERR: ^
 # CHECKERR: (Type 'help functions' for related documentation)
 
-function foo --on-variable foo; end
+function foo --on-variable foo
+end
 # This should print *everything*
 functions --handlers-type "" | string match 'Event *'
 # CHECK: Event signal
@@ -250,5 +251,5 @@ functions --no-details --color=never test_color_option
 
 string escape (functions --no-details --color=always test_color_option)
 # CHECK: function\ \e\[36mtest_color_option\e\[32m
-# CHECK: \e\[m\ \ \ \ echo\ \e\[36mhello\e\[32m
-# CHECK: \e\[mend\e\[32m\e\[m
+# CHECK: \e\[39m\ \ \ \ echo\ \e\[36mhello\e\[32m
+# CHECK: \e\[39mend\e\[32m\e\[39m

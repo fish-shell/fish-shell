@@ -1913,8 +1913,11 @@ mod tests {
             );
         };
 
+        assert_all_set(vec![L!("--reset").into()]);
         assert_all_set(vec![L!("normal").into()]);
         assert_all_set(vec![L!("green").into()]);
+        assert_all_set(vec![L!("--foreground=normal").into()]);
+        assert_all_set(vec![L!("--foreground=green").into()]);
         assert_all_set(vec![L!("--background=normal").into()]);
         assert_all_set(vec![L!("--background=green").into()]);
         assert_all_set(vec![L!("--underline-color=normal").into()]);

@@ -1,18 +1,18 @@
+use crate::common::exit_without_destructors;
+use crate::fd_readable_set::{FdReadableSet, Timeout};
+use crate::flog::flog;
 use crate::portable_atomic::AtomicU64;
+use crate::threads::assert_is_background_thread;
+use crate::wutil::perror_nix;
 use cfg_if::cfg_if;
+use errno::errno;
+use fish_util::perror;
+use libc::{EAGAIN, EINTR, EWOULDBLOCK};
 use std::collections::HashMap;
 use std::os::unix::prelude::*;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-
-use crate::common::exit_without_destructors;
-use crate::fd_readable_set::{FdReadableSet, Timeout};
-use crate::flog::flog;
-use crate::threads::assert_is_background_thread;
-use crate::wutil::perror;
-use errno::errno;
-use libc::{EAGAIN, EINTR, EWOULDBLOCK};
 
 cfg_if!(
     if #[cfg(have_eventfd)] {
@@ -126,7 +126,7 @@ impl FdEventSignaller {
         if let Err(err) = ret {
             // EAGAIN occurs if either the pipe buffer is full or the eventfd overflows (very unlikely).
             if ![nix::Error::EAGAIN, nix::Error::EWOULDBLOCK].contains(&err) {
-                perror("write");
+                perror_nix("write", err);
             }
         }
     }

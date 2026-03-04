@@ -1,8 +1,9 @@
 use crate::flog::flog;
 use crate::prelude::*;
 use crate::signal::signal_check_cancel;
-use crate::wutil::perror;
+use crate::wutil::perror_nix;
 use cfg_if::cfg_if;
+use fish_util::perror;
 use fish_wcstringutil::wcs2zstring;
 use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
 use nix::fcntl::FcntlArg;
@@ -96,13 +97,10 @@ fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> 
     }
 
     // Here we are asking the kernel to give us a cloexec fd.
-    let newfd = match nix::fcntl::fcntl(&fd, FcntlArg::F_DUPFD_CLOEXEC(FIRST_HIGH_FD)) {
-        Ok(newfd) => newfd,
-        Err(err) => {
-            perror("fcntl");
-            return Err(err);
-        }
-    };
+    let newfd =
+        nix::fcntl::fcntl(&fd, FcntlArg::F_DUPFD_CLOEXEC(FIRST_HIGH_FD)).inspect_err(|&err| {
+            perror_nix("fcntl", err);
+        })?;
 
     Ok(unsafe { OwnedFd::from_raw_fd(newfd) })
 }
@@ -218,7 +216,7 @@ pub fn exec_close(fd: RawFd) {
 }
 
 /// Mark an fd as nonblocking
-pub fn make_fd_nonblocking(fd: RawFd) -> Result<(), io::Error> {
+pub fn make_fd_nonblocking(fd: RawFd) -> std::io::Result<()> {
     let flags = unsafe { libc::fcntl(fd, F_GETFL, 0) };
     let nonblocking = (flags & O_NONBLOCK) == O_NONBLOCK;
     if !nonblocking {

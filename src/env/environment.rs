@@ -16,7 +16,6 @@ use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input::{FISH_BIND_MODE_VAR, init_input};
 use crate::localization::wgettext;
-use crate::nix::getpid;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
     path_emit_config_directory_messages, path_get_cache, path_get_config, path_get_data,
@@ -31,7 +30,7 @@ use fish_wcstringutil::join_strings;
 use libc::c_int;
 use nix::{
     NixPath as _,
-    unistd::{Uid, User, gethostname},
+    unistd::{Uid, User, gethostname, getpid},
 };
 use std::collections::HashMap;
 use std::ffi::CStr;
@@ -662,7 +661,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     vars.set_one(L!("FISH_VERSION"), global_mode, version);
 
     // Set the $fish_pid variable.
-    vars.set_one(L!("fish_pid"), global_mode, getpid().to_wstring());
+    vars.set_one(L!("fish_pid"), global_mode, getpid().as_raw().to_wstring());
 
     // Set the $hostname variable
     let hostname: WString = gethostname().map_or("fish".into(), osstr2wcstring);

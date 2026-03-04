@@ -32,7 +32,7 @@ use crate::prelude::*;
 use crate::proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap};
 use crate::signal::{Signal, signal_check_cancel, signal_clear_cancel};
 use crate::wait_handle::WaitHandleStore;
-use crate::wutil::perror;
+use crate::wutil::perror_nix;
 use crate::{flog, flogf, function};
 use assert_matches::assert_matches;
 use fish_util::get_time;
@@ -479,8 +479,8 @@ impl Parser {
             Ok(fd) => {
                 result.libdata_mut().cwd_fd = Some(Arc::new(fd));
             }
-            Err(_) => {
-                perror("Unable to open the current working directory");
+            Err(err) => {
+                perror_nix("Unable to open the current working directory", err);
             }
         }
 

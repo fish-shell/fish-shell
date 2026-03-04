@@ -25,7 +25,7 @@ use crate::tokenizer::TOK_ARGUMENT_LIST;
 use crate::tokenizer::Tok;
 use crate::tokenizer::Tokenizer;
 use crate::wutil;
-use crate::wutil::perror;
+use fish_util::perror;
 use fish_wcstringutil::{split_about, split_string_tok};
 use libc::SEEK_CUR;
 use std::num::NonZeroUsize;

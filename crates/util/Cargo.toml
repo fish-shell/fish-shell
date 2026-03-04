@@ -7,7 +7,10 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+errno.workspace = true
 fish-widestring.workspace = true
+libc.workspace = true
+nix.workspace = true
 rand.workspace = true
 
 [lints]

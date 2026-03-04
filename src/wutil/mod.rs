@@ -12,13 +12,13 @@ use crate::fds::BorrowedFdFile;
 use crate::flog;
 use crate::signal::SigChecker;
 use crate::topic_monitor::Topic;
-use errno::errno;
-use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2bytes, wcs2osstring, wcs2zstring};
+use fish_util::{perror, write_to_fd};
+use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2osstring, wcs2zstring};
 use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
 use nix::unistd::AccessFlags;
-use std::ffi::{CStr, OsStr};
+use std::ffi::OsStr;
 use std::fs::{self, canonicalize};
-use std::io::{self, Write as _};
+use std::io;
 use std::os::unix::prelude::*;
 
 pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
@@ -65,26 +65,8 @@ pub fn wunlink(file_name: &wstr) -> io::Result<()> {
     fs::remove_file(tmp)
 }
 
-pub fn wperror(s: &wstr) {
-    let bytes = wcs2bytes(s);
-    // We can't guarantee the string is 100% Unicode (why?), so we don't use std::str::from_utf8()
-    let s = OsStr::from_bytes(&bytes).to_string_lossy();
-    perror(&s);
-}
-
-/// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.
-pub fn perror(s: &str) {
-    let e = errno().0;
-    let mut stderr = std::io::stderr().lock();
-    if !s.is_empty() {
-        let _ = write!(stderr, "{s}: ");
-    }
-    let slice = unsafe {
-        let msg = libc::strerror(e);
-        CStr::from_ptr(msg).to_bytes()
-    };
-    let _ = stderr.write_all(slice);
-    let _ = stderr.write_all(b"\n");
+pub fn perror_nix(s: &str, e: nix::errno::Errno) {
+    eprintf!("%s: %s\n", s, e.desc());
 }
 
 pub fn perror_io(s: &str, e: &io::Error) {
@@ -342,17 +324,6 @@ pub fn wbasename(mut path: &wstr) -> &wstr {
         path = path.slice_from(last_slash + 1);
     }
     path
-}
-
-/// Wide character version of rename.
-pub fn wrename(old_name: &wstr, new_name: &wstr) -> io::Result<()> {
-    let old_narrow = wcs2osstring(old_name);
-    let new_narrow = wcs2osstring(new_name);
-    fs::rename(old_narrow, new_narrow)
-}
-
-pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
-    nix::unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, input)
 }
 
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.

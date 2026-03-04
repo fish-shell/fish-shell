@@ -19,7 +19,7 @@ use crate::redirection::RedirectionSpecList;
 use crate::signal::{Signal, signal_set_handlers_once};
 use crate::topic_monitor::{GenerationsList, Topic, topic_monitor_principal};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
-use crate::wutil::{wbasename, wperror};
+use crate::wutil::{perror_nix, wbasename};
 use cfg_if::cfg_if;
 use fish_widestring::ToWString;
 use libc::{
@@ -301,6 +301,14 @@ impl Pid {
     #[inline(always)]
     pub fn as_nix_pid(&self) -> nix::unistd::Pid {
         nix::unistd::Pid::from_raw(self.as_pid_t())
+    }
+
+    #[inline(always)]
+    // The nix Pid type does not guarantee non-zero values.
+    // It is safe to use this on the result of nix's getpid, since getpid does not fail, and the ID
+    // of the calling process is never 0.
+    pub fn from_nix_pid_unchecked(pid: nix::unistd::Pid) -> Self {
+        Self::new(pid.as_raw())
     }
 }
 
@@ -853,9 +861,8 @@ impl Job {
     /// Return true on success, false on failure.
     pub fn signal(&self, signal: NixSignal) -> bool {
         if let Some(pgid) = self.group().get_pgid() {
-            if killpg(pgid.as_nix_pid(), signal).is_err() {
-                let strsignal = signal.as_str();
-                wperror(&sprintf!("killpg(%d, %s)", pgid, strsignal));
+            if let Err(err) = killpg(pgid.as_nix_pid(), signal) {
+                perror_nix(&format!("killpg({pgid}, {})", signal.as_str()), err);
                 return false;
             }
         } else {

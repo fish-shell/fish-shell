@@ -24,9 +24,6 @@ impl TimevalExt for libc::timeval {
     }
 }
 
-pub fn getpid() -> i32 {
-    unsafe { libc::getpid() }
-}
 pub fn isatty(fd: i32) -> bool {
     // This returns false if the fd is valid but not a tty, or is invalid.
     // No place we currently call it really cares about the difference.

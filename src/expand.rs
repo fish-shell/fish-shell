@@ -29,7 +29,7 @@ use fish_common::{EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::{join_strings, trim};
 use fish_widestring::char_offset;
-use nix::unistd::User;
+use nix::unistd::{User, getpid};
 
 bitflags! {
     /// Set of flags controlling expansions.
@@ -1167,7 +1167,7 @@ fn expand_home_directory(input: &mut WString, vars: &dyn Environment) {
 /// Expand the %self escape. Note this can only come at the beginning of the string.
 fn expand_percent_self(input: &mut WString) {
     if input.as_char_slice().first() == Some(&PROCESS_EXPAND_SELF) {
-        input.replace_range(0..1, &crate::nix::getpid().to_wstring());
+        input.replace_range(0..1, &getpid().as_raw().to_wstring());
     }
 }
 

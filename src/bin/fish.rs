@@ -42,7 +42,7 @@ use fish::{
     history::{self, start_private_mode},
     io::IoChain,
     locale::set_libc_locales,
-    nix::{RUsage, getpid, getrusage, isatty},
+    nix::{RUsage, getrusage, isatty},
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
@@ -63,7 +63,7 @@ use fish::{
 };
 use fish_wcstringutil::wcs2bytes;
 use libc::STDIN_FILENO;
-use nix::unistd::AccessFlags;
+use nix::unistd::{AccessFlags, getpid};
 use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
@@ -605,7 +605,10 @@ fn throwing_main() -> i32 {
         parser.get_last_status()
     };
 
-    event::fire(parser, Event::process_exit(Pid::new(getpid()), exit_status));
+    event::fire(
+        parser,
+        Event::process_exit(Pid::from_nix_pid_unchecked(getpid()), exit_status),
+    );
 
     // Trigger any exit handlers.
     event::fire_generic(

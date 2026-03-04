@@ -302,6 +302,14 @@ impl Pid {
     pub fn as_nix_pid(&self) -> nix::unistd::Pid {
         nix::unistd::Pid::from_raw(self.as_pid_t())
     }
+
+    #[inline(always)]
+    // The nix Pid type does not guarantee non-zero values.
+    // It is safe to use this on the result of nix's getpid, since getpid does not fail, and the ID
+    // of the calling process is never 0.
+    pub fn from_nix_pid_unchecked(pid: nix::unistd::Pid) -> Self {
+        Self::new(pid.as_raw())
+    }
 }
 
 impl std::fmt::Display for Pid {

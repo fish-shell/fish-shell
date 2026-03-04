@@ -237,6 +237,10 @@ msgid "%s: %s: invalid variable name. See `help %s`"
 msgstr "%s: %s: 无效的变量名。参见 `help %s`"
 
 #, c-format
+msgid "%s: %s: option cannot be used with a non-option argument"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: option does not take an argument"
 msgstr "%s: %s: 选项不接受参数"
 

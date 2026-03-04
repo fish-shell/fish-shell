@@ -191,6 +191,7 @@ pub(crate) struct SpecifiedTextFace {
     pub(crate) bg: Option<Color>,
     pub(crate) underline_color: Option<Color>,
     pub(crate) style: TextStyling,
+    pub(crate) reset: bool,
 }
 
 impl Default for SpecifiedTextFace {
@@ -200,6 +201,7 @@ impl Default for SpecifiedTextFace {
             bg: Default::default(),
             underline_color: Default::default(),
             style: TextStyling::unknown(),
+            reset: false,
         }
     }
 }
@@ -213,7 +215,7 @@ pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
     match parse_text_face_and_options(&mut argv, /*is_builtin=*/ false) {
         Ok(SetFace(specified_face)) => specified_face,
         Err(_) => Default::default(),
-        Ok(ResetFace) | Ok(PrintColors(_)) | Ok(PrintHelp) => unreachable!(),
+        Ok(PrintColors(_)) | Ok(PrintHelp) => unreachable!(),
     }
 }
 
@@ -226,7 +228,6 @@ pub(crate) struct PrintColorsArgs<'argarray, 'args> {
 
 pub(crate) enum ParsedArgs<'argarray, 'args> {
     SetFace(SpecifiedTextFace),
-    ResetFace,
     PrintHelp,
     PrintColors(PrintColorsArgs<'argarray, 'args>),
 }
@@ -238,6 +239,8 @@ pub(crate) enum ParseError<'args> {
     UnknownColor(&'args wstr),
     UnknownUnderlineStyle(&'args wstr),
     UnknownOption(usize),
+    InvalidFgArgCombination,
+    InvalidFgPrintColorCombination,
 }
 
 fn parse_resettable_style<'a>(w: &WGetopter<'_, 'a, '_>) -> Result<ResettableStyle, &'a wstr> {
@@ -258,9 +261,10 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     is_builtin: bool,
 ) -> Result<ParsedArgs<'argarray, 'args>, ParseError<'args>> {
     let builtin_extra_args = if is_builtin { 0 } else { "hc".len() };
-    let short_options = L!("b:oi::dr::s::u::ch");
+    let short_options = L!("f:b:oi::dr::s::u::ch");
     let short_options = &short_options[..short_options.len() - builtin_extra_args];
     let long_options: &[WOption] = &[
+        wopt(L!("foreground"), ArgType::RequiredArgument, 'f'),
         wopt(L!("background"), ArgType::RequiredArgument, 'b'),
         wopt(L!("underline-color"), ArgType::RequiredArgument, '\x02'),
         wopt(L!("bold"), ArgType::NoArgument, 'o'),
@@ -270,6 +274,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         wopt(L!("reverse"), ArgType::OptionalArgument, 'r'),
         wopt(L!("strikethrough"), ArgType::OptionalArgument, 's'),
         wopt(L!("theme"), ArgType::RequiredArgument, '\x01'),
+        wopt(L!("reset"), ArgType::NoArgument, '\x03'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("print-colors"), ArgType::NoArgument, 'c'),
     ];
@@ -289,14 +294,21 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         }
     };
 
+    let mut fg_colors = vec![];
     let mut bg_colors = vec![];
     let mut underline_colors = vec![];
     let mut style = TextStyling::unknown();
     let mut print_color_mode = false;
+    let mut reset = false;
 
     let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(c) = w.next_opt() {
         match c {
+            'f' => {
+                if let Some(fg) = parse_color(w.woptarg.unwrap())? {
+                    fg_colors.push(fg);
+                }
+            }
             'b' => {
                 if let Some(bg) = parse_color(w.woptarg.unwrap())? {
                     bg_colors.push(bg);
@@ -307,6 +319,9 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
                 if let Some(underline_color) = parse_color(w.woptarg.unwrap())? {
                     underline_colors.push(underline_color);
                 }
+            }
+            '\x03' => {
+                reset = true;
             }
             'h' => {
                 assert!(is_builtin);
@@ -362,6 +377,9 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     }
 
     let fg_args = &w.argv[w.wopt_index..];
+    if !fg_args.is_empty() && !fg_colors.is_empty() {
+        return Err(InvalidFgArgCombination);
+    }
 
     let best_color =
         |colors: Vec<Color>| terminal::best_color(colors.into_iter(), get_color_support());
@@ -370,6 +388,9 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     let underline_color = best_color(underline_colors);
 
     if print_color_mode {
+        if !fg_colors.is_empty() {
+            return Err(InvalidFgPrintColorCombination);
+        }
         return Ok(PrintColors(PrintColorsArgs {
             fg_args,
             bg,
@@ -380,15 +401,21 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
 
     // Historical behavior: reset only applies if it's the first argument.
     if is_builtin && fg_args.first().is_some_and(|fg| fg == "reset") {
-        return Ok(ResetFace);
+        return Ok(SetFace(SpecifiedTextFace {
+            reset: true,
+            ..Default::default()
+        }));
     }
 
-    let mut fg_colors = Vec::with_capacity(fg_args.len());
+    fg_colors.reserve(fg_args.len());
     for fg in fg_args {
         if is_builtin && fg == "reset" {
             continue;
         }
         if let Some(fg) = parse_color(fg)? {
+            if fg == Color::Normal {
+                reset = true;
+            }
             fg_colors.push(fg);
         }
     }
@@ -399,6 +426,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         bg,
         underline_color,
         style,
+        reset,
     }))
 }
 
@@ -420,6 +448,7 @@ mod tests {
                 bg: None,
                 underline_color: None,
                 style: TextStyling::unknown(),
+                reset: false
             }
         );
     }

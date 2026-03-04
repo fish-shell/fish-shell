@@ -155,6 +155,9 @@ Optional Commands
    * - ``\e[48;2; Ps ; Ps ; Ps m``
      -
      - Select background color from 24-bit RGB colors.
+   * - ``\e[39m``
+     -
+     - Reset foreground color to the terminal's default.
    * - ``\e[49m``
      -
      - Reset background color to the terminal's default.

@@ -60,6 +60,7 @@ pub(crate) enum SgrTerminalCommand {
     // Colors
     SelectPaletteColor(Paintable, u8),
     SelectRgbColor(Paintable, Color24),
+    DefaultForegroundColor,
     DefaultBackgroundColor,
     DefaultUnderlineColor,
 }
@@ -376,9 +377,10 @@ impl Outputter {
         let style = face.style;
 
         use SgrTerminalCommand::{
-            DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterDimMode,
-            EnterItalicsMode, EnterReverseMode, EnterStrikethroughMode, EnterUnderlineMode,
-            ExitItalicsMode, ExitReverseMode, ExitStrikethroughMode, ExitUnderlineMode,
+            DefaultBackgroundColor, DefaultForegroundColor, DefaultUnderlineColor, EnterBoldMode,
+            EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStrikethroughMode,
+            EnterUnderlineMode, ExitItalicsMode, ExitReverseMode, ExitStrikethroughMode,
+            ExitUnderlineMode,
         };
 
         let mut style_writer = self.style_writer();
@@ -411,12 +413,12 @@ impl Outputter {
 
         if !fg.is_none() && fg != style_writer.last().fg {
             if fg.is_normal() {
-                style_writer.reset_text_face();
+                style_writer.write_command(DefaultForegroundColor);
             } else {
                 assert!(!fg.is_special());
                 style_writer.write_color(Paintable::Foreground, fg);
-                style_writer.last().fg = fg;
             }
+            style_writer.last().fg = fg;
         }
 
         if !bg.is_none() && bg != style_writer.last().bg {
@@ -680,6 +682,7 @@ impl<'a> OutputterStyleWriter<'a> {
             ExitUnderlineMode => self.write_param_str(1, b"24"),
             SelectPaletteColor(paintable, idx) => self.write_palette_color(paintable, idx),
             SelectRgbColor(paintable, rgb) => self.write_rgb_color(paintable, rgb),
+            DefaultForegroundColor => self.write_param_str(1, b"39"),
             DefaultBackgroundColor => self.write_param_str(1, b"49"),
             DefaultUnderlineColor => self.write_param_str(1, b"59"),
         }

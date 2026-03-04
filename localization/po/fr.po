@@ -329,6 +329,10 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s : %s : nom de mode invalide. Voir « help %s »"
 
 #, c-format
+msgid "%s: %s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: invalid scale"
 msgstr "%s : %s : échelle invalide"
 
@@ -339,6 +343,10 @@ msgstr "%s : %s : sous-commande invalide"
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
 msgstr "%s : %s : nom de variable invalide. Voir « help %s »"
+
+#, c-format
+msgid "%s: %s: option cannot be used with a non-option argument"
+msgstr ""
 
 #, c-format
 msgid "%s: %s: option does not take an argument"

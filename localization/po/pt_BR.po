@@ -201,6 +201,10 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr ""
 
 #, c-format
+msgid "%s: %s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: invalid scale"
 msgstr ""
 
@@ -210,6 +214,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
+msgstr ""
+
+#, c-format
+msgid "%s: %s: option cannot be used with a non-option argument"
 msgstr ""
 
 #, c-format

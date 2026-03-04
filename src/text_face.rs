@@ -3,9 +3,35 @@ use crate::terminal::{self, get_color_support};
 use fish_color::Color;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 
-trait StyleSet {
+pub(crate) trait StyleSet {
     fn union_prefer_right(self, other: Self) -> Self;
     fn difference_prefer_empty(self, other: Self) -> Self;
+}
+
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
+pub(crate) enum ResettableStyle {
+    #[default]
+    Unchanged,
+    Off,
+    On,
+}
+
+impl StyleSet for ResettableStyle {
+    fn union_prefer_right(self, other: Self) -> Self {
+        if other == Self::Unchanged {
+            self
+        } else {
+            other
+        }
+    }
+
+    fn difference_prefer_empty(self, other: Self) -> Self {
+        if other != Self::Unchanged {
+            Self::Unchanged
+        } else {
+            self
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -30,29 +56,65 @@ impl StyleSet for Option<UnderlineStyle> {
     }
 }
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
+pub(crate) enum ResettableUnderline {
+    #[default]
+    Unchanged,
+    Off,
+    On(UnderlineStyle),
+}
+
+impl StyleSet for ResettableUnderline {
+    fn union_prefer_right(self, other: Self) -> Self {
+        if other == Self::Unchanged {
+            self
+        } else {
+            other
+        }
+    }
+
+    fn difference_prefer_empty(self, other: Self) -> Self {
+        if other != Self::Unchanged {
+            Self::Unchanged
+        } else {
+            self
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) struct TextStyling {
     pub(crate) bold: bool,
-    pub(crate) underline_style: Option<UnderlineStyle>,
-    pub(crate) italics: bool,
+    pub(crate) underline_style: ResettableUnderline,
+    pub(crate) italics: ResettableStyle,
     pub(crate) dim: bool,
-    pub(crate) reverse: bool,
-    pub(crate) strikethrough: bool,
+    pub(crate) reverse: ResettableStyle,
+    pub(crate) strikethrough: ResettableStyle,
 }
 
 impl TextStyling {
-    pub(crate) const fn default() -> Self {
+    pub(crate) const fn terminal_default_style() -> Self {
         Self {
             bold: false,
-            underline_style: None,
-            italics: false,
+            underline_style: ResettableUnderline::Off,
+            italics: ResettableStyle::Off,
             dim: false,
-            reverse: false,
-            strikethrough: false,
+            reverse: ResettableStyle::Off,
+            strikethrough: ResettableStyle::Off,
+        }
+    }
+    pub(crate) const fn unknown_style() -> Self {
+        Self {
+            bold: false,
+            underline_style: ResettableUnderline::Unchanged,
+            italics: ResettableStyle::Unchanged,
+            dim: false,
+            reverse: ResettableStyle::Unchanged,
+            strikethrough: ResettableStyle::Unchanged,
         }
     }
     pub(crate) fn is_empty(&self) -> bool {
-        *self == Self::default()
+        *self == Self::unknown_style()
     }
     pub(crate) fn union_prefer_right(self, other: Self) -> Self {
         Self {
@@ -60,10 +122,10 @@ impl TextStyling {
             underline_style: self
                 .underline_style
                 .union_prefer_right(other.underline_style),
-            italics: self.is_italics() || other.is_italics(),
+            italics: self.italics.union_prefer_right(other.italics),
             dim: self.is_dim() || other.is_dim(),
-            reverse: self.is_reverse() || other.is_reverse(),
-            strikethrough: self.is_strikethrough() || other.is_strikethrough(),
+            reverse: self.reverse.union_prefer_right(other.reverse),
+            strikethrough: self.strikethrough.union_prefer_right(other.strikethrough),
         }
     }
     pub(crate) fn difference_prefer_empty(self, other: Self) -> Self {
@@ -72,10 +134,12 @@ impl TextStyling {
             underline_style: self
                 .underline_style
                 .difference_prefer_empty(other.underline_style),
-            italics: self.is_italics() && !other.is_italics(),
+            italics: self.italics.difference_prefer_empty(other.italics),
             dim: self.is_dim() && !other.is_dim(),
-            reverse: self.is_reverse() && !other.is_reverse(),
-            strikethrough: self.is_strikethrough() && !other.is_strikethrough(),
+            reverse: self.reverse.difference_prefer_empty(other.reverse),
+            strikethrough: self
+                .strikethrough
+                .difference_prefer_empty(other.strikethrough),
         }
     }
 
@@ -85,33 +149,18 @@ impl TextStyling {
     }
 
     #[cfg(test)]
-    pub const fn underline_style(self) -> Option<UnderlineStyle> {
+    pub const fn underline_style(self) -> ResettableUnderline {
         self.underline_style
     }
 
     /// Set the given underline style.
-    pub fn inject_underline(&mut self, underline: UnderlineStyle) {
-        self.underline_style = Some(underline);
-    }
-
-    /// Returns whether the text face is italics.
-    pub const fn is_italics(self) -> bool {
-        self.italics
+    pub fn inject_underline(&mut self, underline: ResettableUnderline) {
+        self.underline_style = underline;
     }
 
     /// Returns whether the text face is dim.
     pub const fn is_dim(self) -> bool {
         self.dim
-    }
-
-    /// Returns whether the text face has reverse foreground/background colors.
-    pub const fn is_reverse(self) -> bool {
-        self.reverse
-    }
-
-    /// Returns whether the text face is strikethrough.
-    pub const fn is_strikethrough(self) -> bool {
-        self.strikethrough
     }
 }
 
@@ -123,19 +172,21 @@ pub(crate) struct TextFace {
     pub(crate) style: TextStyling,
 }
 
-impl Default for TextFace {
-    fn default() -> Self {
-        Self::default()
-    }
-}
-
 impl TextFace {
-    pub const fn default() -> Self {
+    pub const fn terminal_default_style() -> Self {
         Self {
             fg: Color::Normal,
             bg: Color::Normal,
+            underline_color: Color::Normal,
+            style: TextStyling::terminal_default_style(),
+        }
+    }
+    pub const fn unknown_style() -> Self {
+        Self {
+            fg: Color::None,
+            bg: Color::None,
             underline_color: Color::None,
-            style: TextStyling::default(),
+            style: TextStyling::unknown_style(),
         }
     }
 
@@ -155,6 +206,7 @@ pub(crate) struct SpecifiedTextFace {
     pub(crate) bg: Option<Color>,
     pub(crate) underline_color: Option<Color>,
     pub(crate) style: Option<TextStyling>,
+    pub(crate) reset: bool,
 }
 
 pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
@@ -166,7 +218,7 @@ pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
     match parse_text_face_and_options(&mut argv, /*is_builtin=*/ false) {
         Ok(SetFace(specified_face)) => specified_face,
         Err(_) => Default::default(),
-        Ok(ResetFace) | Ok(PrintColors(_)) | Ok(PrintHelp) => unreachable!(),
+        Ok(PrintColors(_)) | Ok(PrintHelp) => unreachable!(),
     }
 }
 
@@ -179,7 +231,6 @@ pub(crate) struct PrintColorsArgs<'argarray, 'args> {
 
 pub(crate) enum ParsedArgs<'argarray, 'args> {
     SetFace(SpecifiedTextFace),
-    ResetFace,
     PrintHelp,
     PrintColors(PrintColorsArgs<'argarray, 'args>),
 }
@@ -187,9 +238,23 @@ pub(crate) enum ParsedArgs<'argarray, 'args> {
 pub(crate) enum ParseError<'args> {
     MissingOptArg,
     UnexpectedOptArg(usize),
+    InvalidOptArg(&'static wstr, &'args wstr),
     UnknownColor(&'args wstr),
     UnknownUnderlineStyle(&'args wstr),
     UnknownOption(usize),
+    InvalidFgArgCombination,
+    InvalidFgPrintColorCombination,
+}
+
+fn parse_resettable_style<'a>(w: &WGetopter<'_, 'a, '_>) -> Result<ResettableStyle, &'a wstr> {
+    let arg = w.woptarg.unwrap_or(L!("on"));
+    if (arg == "off") || (arg == "false") {
+        Ok(ResettableStyle::Off)
+    } else if (arg == "on") || (arg == "true") {
+        Ok(ResettableStyle::On)
+    } else {
+        Err(arg)
+    }
 }
 
 pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
@@ -197,20 +262,22 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     is_builtin: bool,
 ) -> Result<ParsedArgs<'argarray, 'args>, ParseError<'args>> {
     let builtin_extra_args = if is_builtin { 0 } else { "hc".len() };
-    let short_options = L!("b:oidru::ch");
+    let short_options = L!("f:b:oi::dr::s::u::ch");
     let short_options = &short_options[..short_options.len() - builtin_extra_args];
     let long_options: &[WOption] = &[
+        wopt(L!("foreground"), ArgType::RequiredArgument, 'f'),
         wopt(L!("background"), ArgType::RequiredArgument, 'b'),
         wopt(L!("underline-color"), ArgType::RequiredArgument, '\x02'),
         wopt(L!("bold"), ArgType::NoArgument, 'o'),
         wopt(L!("underline"), ArgType::OptionalArgument, 'u'),
-        wopt(L!("italics"), ArgType::NoArgument, 'i'),
+        wopt(L!("italics"), ArgType::OptionalArgument, 'i'),
         wopt(L!("dim"), ArgType::NoArgument, 'd'),
-        wopt(L!("strikethrough"), ArgType::NoArgument, 's'),
-        wopt(L!("reverse"), ArgType::NoArgument, 'r'),
+        wopt(L!("reverse"), ArgType::OptionalArgument, 'r'),
+        wopt(L!("strikethrough"), ArgType::OptionalArgument, 's'),
         wopt(L!("theme"), ArgType::RequiredArgument, '\x01'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("print-colors"), ArgType::NoArgument, 'c'),
+        wopt(L!("reset"), ArgType::NoArgument, '\x03'),
     ];
     let long_options = &long_options[..long_options.len() - builtin_extra_args];
 
@@ -228,17 +295,24 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         }
     };
 
+    let mut fg_colors = vec![];
     let mut bg_colors = vec![];
     let mut underline_colors = vec![];
     let mut style: Option<TextStyling> = None;
     fn init_style(style: &mut Option<TextStyling>) -> &mut TextStyling {
-        style.get_or_insert_default()
+        style.get_or_insert(TextStyling::unknown_style())
     }
     let mut print_color_mode = false;
+    let mut reset = false;
 
     let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(c) = w.next_opt() {
         match c {
+            'f' => {
+                if let Some(fg) = parse_color(w.woptarg.unwrap())? {
+                    fg_colors.push(fg);
+                }
+            }
             'b' => {
                 if let Some(bg) = parse_color(w.woptarg.unwrap())? {
                     bg_colors.push(bg);
@@ -250,30 +324,44 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
                     underline_colors.push(underline_color);
                 }
             }
+            '\x03' => {
+                reset = true;
+            }
             'h' => {
                 assert!(is_builtin);
                 return Ok(PrintHelp);
             }
             'o' => init_style(&mut style).bold = true,
-            'i' => init_style(&mut style).italics = true,
+            'i' => {
+                init_style(&mut style).italics =
+                    parse_resettable_style(&w).map_err(|v| InvalidOptArg(L!("--italics"), v))?;
+            }
             'd' => init_style(&mut style).dim = true,
-            'r' => init_style(&mut style).reverse = true,
-            's' => init_style(&mut style).strikethrough = true,
+            'r' => {
+                init_style(&mut style).reverse =
+                    parse_resettable_style(&w).map_err(|v| InvalidOptArg(L!("--reverse"), v))?;
+            }
+            's' => {
+                init_style(&mut style).strikethrough = parse_resettable_style(&w)
+                    .map_err(|v| InvalidOptArg(L!("--strikethrough"), v))?;
+            }
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
-                init_style(&mut style).underline_style = Some(if arg == "single" {
-                    UnderlineStyle::Single
+                init_style(&mut style).underline_style = if arg == "single" {
+                    ResettableUnderline::On(UnderlineStyle::Single)
                 } else if arg == "double" {
-                    UnderlineStyle::Double
+                    ResettableUnderline::On(UnderlineStyle::Double)
                 } else if arg == "curly" {
-                    UnderlineStyle::Curly
+                    ResettableUnderline::On(UnderlineStyle::Curly)
                 } else if arg == "dotted" {
-                    UnderlineStyle::Dotted
+                    ResettableUnderline::On(UnderlineStyle::Dotted)
                 } else if arg == "dashed" {
-                    UnderlineStyle::Dashed
+                    ResettableUnderline::On(UnderlineStyle::Dashed)
+                } else if arg == "off" {
+                    ResettableUnderline::Off
                 } else {
                     return Err(UnknownUnderlineStyle(arg));
-                });
+                };
             }
             'c' => {
                 assert!(is_builtin);
@@ -293,6 +381,9 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     }
 
     let fg_args = &w.argv[w.wopt_index..];
+    if !fg_args.is_empty() && !fg_colors.is_empty() {
+        return Err(InvalidFgArgCombination);
+    }
 
     let best_color =
         |colors: Vec<Color>| terminal::best_color(colors.into_iter(), get_color_support());
@@ -301,6 +392,9 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     let underline_color = best_color(underline_colors);
 
     if print_color_mode {
+        if !fg_colors.is_empty() {
+            return Err(InvalidFgPrintColorCombination);
+        }
         return Ok(PrintColors(PrintColorsArgs {
             fg_args,
             bg,
@@ -311,15 +405,21 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
 
     // Historical behavior: reset only applies if it's the first argument.
     if is_builtin && fg_args.first().is_some_and(|fg| fg == "reset") {
-        return Ok(ResetFace);
+        return Ok(SetFace(SpecifiedTextFace {
+            reset: true,
+            ..Default::default()
+        }));
     }
 
-    let mut fg_colors = Vec::with_capacity(fg_args.len());
+    fg_colors.reserve(fg_args.len());
     for fg in fg_args {
         if is_builtin && fg == "reset" {
             continue;
         }
         if let Some(fg) = parse_color(fg)? {
+            if fg == Color::Normal {
+                reset = true;
+            }
             fg_colors.push(fg);
         }
     }
@@ -330,6 +430,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         bg,
         underline_color,
         style,
+        reset,
     }))
 }
 
@@ -350,7 +451,8 @@ mod tests {
                 })),
                 bg: None,
                 underline_color: None,
-                style: None
+                style: None,
+                reset: false
             }
         );
     }

@@ -194,6 +194,10 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s：%s：無效的模式名稱。參見「help %s」"
 
 #, c-format
+msgid "%s: %s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: invalid scale"
 msgstr "%s：%s：無效的小數位數"
 
@@ -204,6 +208,10 @@ msgstr "%s：%s：無效的子命令"
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
 msgstr "%s：%s：無效的變數名稱。參見「help %s」"
+
+#, c-format
+msgid "%s: %s: option cannot be used with a non-option argument"
+msgstr ""
 
 #, c-format
 msgid "%s: %s: option does not take an argument"

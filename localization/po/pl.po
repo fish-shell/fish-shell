@@ -212,6 +212,10 @@ msgid "%s: %s: invalid variable name. See `help %s`"
 msgstr ""
 
 #, c-format
+msgid "%s: %s: option cannot be used with a non-option argument"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: option does not take an argument"
 msgstr ""
 

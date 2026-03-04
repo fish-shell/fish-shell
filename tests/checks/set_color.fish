@@ -4,11 +4,32 @@ string escape (set_color normal)
 # CHECK: \e\[m
 string escape (set_color reset)
 # CHECK: \e\[m
+string escape (set_color --reset)
+# CHECK: \e\[m
 
 string escape (set_color red yellow)
 # CHECK: \e\[31m
 string escape (set_color red reset yellow)
 # CHECK: \e\[31m
+
+string escape (set_color -fred)
+# CHECK: \e\[31m
+string escape (set_color --foreground red)
+# CHECK: \e\[31m
+string escape (set_color --foreground normal)
+# CHECK: \e\[39m
+string escape (set_color --foreground reset)
+# CHECKERR: set_color: Unknown color 'reset'
+
+string escape (set_color --foreground=f00 --foreground=green --foreground=00f)
+# CHECK: \e\[38\;2\;255\;0\;0m
+fish_term256=0 string escape (set_color --foreground=f00 --foreground=green --foreground=00f)
+# CHECK: \e\[32m
+
+string escape (set_color --foreground red red)
+# CHECKERR: set_color: --foreground: option cannot be used with a non-option argument
+string escape (set_color --foreground red --print-colors)
+# CHECKERR: set_color: --foreground --print-colors: options cannot be used together
 
 string escape (set_color --background=reset)
 # CHECKERR: set_color: Unknown color 'reset'
@@ -139,5 +160,5 @@ string escape (set_color --underline=dashed)
 string escape (set_color --underline=off)
 # CHECK: \e\[24m
 
-string escape (set_color f00 --background=00f --underline-color=0f0 --bold --dim --italics --reverse --strikethrough --underline=curly)
-# CHECK: \e\[38\;2\;255\;0\;0\;48\;2\;0\;0\;255\;58:2::0:255:0\;1\;4:3\;2\;3\;7m\e\[9m
+string escape (set_color --reset f00 --background=00f --underline-color=0f0 --bold --dim --italics --reverse --strikethrough --underline=curly)
+# CHECK: \e\[\;38\;2\;255\;0\;0\;48\;2\;0\;0\;255\;58:2::0:255:0\;1\;4:3\;2\;3m\e\[7\;9m

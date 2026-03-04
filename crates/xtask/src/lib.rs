@@ -13,6 +13,7 @@ macro_rules! fail {
     }}
 }
 
+pub mod fluent;
 pub mod format;
 
 pub trait CommandExt {

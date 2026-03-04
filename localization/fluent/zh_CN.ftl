@@ -1,0 +1,13 @@
+argparse-exclusive-flag-invalid = { $command_name }: 排他标识 '{ $flag }' 无效
+argparse-exclusive-flag-string-invalid = { $command_name }: 排他标识字符串 '{ $flag_string }' 无效
+argparse-implicit-int-flag-already-defined = { $command_name }: 隐式整形标识 '{ $flag }' 已被定义
+argparse-int-short-invalid-modifier = { $command_name }: 隐式整形短标识 '{ $flag }' 不能带有形如 '{ $modifier }' 的修饰符
+argparse-invalid-argument-value = { $command_name }: 无效的 { $argument } 值 '{ $value }'
+argparse-invalid-option-spec = { $command_name }: 在字符 '{ $bad_char }' 处发现无效选项规范 '{ $option_spec }'
+argparse-long-flag-already-defined = { $command_name }: 长标识 '{ $flag }' 已定义
+argparse-missing-double-hyphen-separator = { $command_name }: 缺少 -- 分隔符
+argparse-must-have-flag = { $command_name }: 选项规范必须至少包含一个短标识或长标识
+argparse-short-flag-already-defined = { $command_name }: 已经定义了短标识 '{ $flag }'
+argparse-short-flag-invalid = { $command_name }: 短标识 '{ $flag }' 无效，必须是字母、数字或 '#'
+argparse-too-many-long-only-options = { $command_name }: 过多的仅长选项
+fish-version = { $package_name }, 版本 { $version }

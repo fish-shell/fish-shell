@@ -258,10 +258,6 @@ msgid "%s: Ambiguous job"
 msgstr "%s：無法確定所指的作業"
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr "%s：選項規格必須至少有一個短旗標或長旗標"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s：引數「%s」超出範圍"
 
@@ -366,26 +362,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s：非法的函式名稱「%s」"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr "%s：定義過隱式整數旗標「%c」了"
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr "%s：隱式整數短旗標「%c」不允許加上「%c」等修飾"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr "%s：無效的 --max-args 值「%s」"
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr "%s：無效的 --min-args 值「%s」"
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr "%s：無效的 --unknown-arguments 值「%s」"
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr "%s：無效的次數「%s」"
 
@@ -432,10 +408,6 @@ msgstr "%s：無效的最大匹配數「%s」"
 #, c-format
 msgid "%s: Invalid max value '%s'"
 msgstr "%s：無效的最大值「%s」"
-
-#, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
-msgstr "%s：無效的選項規格「%s」，在「%c」處"
 
 #, c-format
 msgid "%s: Invalid padding character of width zero '%s'"
@@ -488,14 +460,6 @@ msgstr "%s：無效的寬度「%s」"
 #, c-format
 msgid "%s: Key not specified"
 msgstr "%s：未指定鍵"
-
-#, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr "%s：定義過長旗標「%s」了"
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr "%s：缺少 -- 分隔"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -558,14 +522,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s：資源用量限制無法在此作業系統上使用"
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr "%s：定義過短旗標「%c」了"
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr "%s：短旗標「%c」無效，必須是字母、數字、或「#」"
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s：目錄「%s」不存在"
 
@@ -584,10 +540,6 @@ msgstr "%s：沒有合式的作業"
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
 msgstr "%s：太多層象徵式連結：「%s」"
-
-#, c-format
-msgid "%s: Too many long-only options"
-msgstr "%s：太多僅有長旗標的選項"
 
 #, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
@@ -656,14 +608,6 @@ msgstr "%s：不能同時標為路徑和取消標為路徑"
 #, c-format
 msgid "%s: column %s exceeds line length"
 msgstr "%s：第 %s 欄超過了行的長度"
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr "%s：互斥旗標「%s」無效"
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
-msgstr "%s：互斥旗標字串「%s」無效"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"

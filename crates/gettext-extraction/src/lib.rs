@@ -1,7 +1,7 @@
 extern crate proc_macro;
-use fish_tempfile::random_filename;
+use fish_localization_extraction::localization_extract;
 use proc_macro::TokenStream;
-use std::{ffi::OsString, io::Write as _, path::PathBuf};
+use std::{fs::File, io::Write as _};
 
 fn unescape_multiline_rust_string(s: String) -> String {
     if !s.contains('\n') {
@@ -45,8 +45,8 @@ fn unescape_multiline_rust_string(s: String) -> String {
 
 // Each entry is written to a fresh file to avoid race conditions arising when there are multiple
 // unsynchronized writers to the same file.
-fn write_po_entry_to_file(message: &TokenStream, dir: &OsString) {
-    let message_string = unescape_multiline_rust_string(message.to_string());
+fn write_po_entry_to_file(message: String, mut file: File) {
+    let message_string = unescape_multiline_rust_string(message);
     assert!(
         !message_string.contains('\n'),
         "Gettext strings may not contain unescaped newlines. Unescaped newline found in '{message_string}'"
@@ -66,13 +66,6 @@ fn write_po_entry_to_file(message: &TokenStream, dir: &OsString) {
         ""
     };
     let po_entry = format!("{format_string_annotation}msgid {message_string}\nmsgstr \"\"\n\n");
-
-    let dir = PathBuf::from(dir);
-    let (path, result) =
-        fish_tempfile::create_file_with_retry(|| dir.join(random_filename(OsString::new())));
-    let mut file = result.unwrap_or_else(|e| {
-        panic!("Failed to create temporary file {path:?}:\n{e}");
-    });
     file.write_all(po_entry.as_bytes()).unwrap();
 }
 
@@ -91,32 +84,9 @@ fn write_po_entry_to_file(message: &TokenStream, dir: &OsString) {
 /// string literal.
 #[proc_macro]
 pub fn gettext_extract(message: TokenStream) -> TokenStream {
-    if let Some(dir_path) = std::env::var_os("FISH_GETTEXT_EXTRACTION_DIR") {
-        let pm2_message = proc_macro2::TokenStream::from(message.clone());
-        let mut token_trees = pm2_message.into_iter();
-        let first_token = token_trees
-            .next()
-            .expect("gettext_extract got empty token stream. Expected one token.");
-        assert!(
-            token_trees.next().is_none(),
-            "Invalid number of tokens passed to gettext_extract. Expected one token, but got more."
-        );
-        let proc_macro2::TokenTree::Group(group) = first_token else {
-            panic!("Expected group in gettext_extract, but got: {first_token:?}");
-        };
-        let mut group_tokens = group.stream().into_iter();
-        let first_group_token = group_tokens
-            .next()
-            .expect("gettext_extract expected one group token but got none.");
-        assert!(
-            group_tokens.next().is_none(),
-            "Invalid number of tokens in group passed to gettext_extract. Expected one token, but got more."
-        );
-        if let proc_macro2::TokenTree::Literal(_) = first_group_token {
-            write_po_entry_to_file(&message, &dir_path);
-        } else {
-            panic!("Expected literal in gettext_extract, but got: {first_group_token:?}");
-        }
-    }
-    message
+    localization_extract(
+        message,
+        "FISH_GETTEXT_EXTRACTION_DIR",
+        write_po_entry_to_file,
+    )
 }

@@ -90,7 +90,7 @@ function history --description "display or manipulate interactive command histor
                 not set -qx LV # ask the pager lv not to strip colors
                 and set -fx LV -c
 
-                if not set -q color_opt[1]
+                if contains -- "$color_opt" '' '--color=auto'
                     set color_opt --color=always
                 end
 

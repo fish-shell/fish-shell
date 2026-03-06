@@ -1,9 +1,9 @@
-use crate::common::wcs2osstring;
 use crate::env_universal_common::default_vars_path;
 use crate::flogf;
 use crate::prelude::*;
 use crate::universal_notifier::UniversalNotifier;
 use crate::wutil::wdirname;
+use fish_wcstringutil::wcs2osstring;
 use nix::sys::event::{EvFlags, EventFilter, FilterFlag, KEvent, Kqueue};
 use std::fs::File;
 use std::os::fd::AsFd;

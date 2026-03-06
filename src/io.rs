@@ -1,5 +1,5 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::{bytes2wcstring, wcs2bytes};
+use crate::common::bytes2wcstring;
 use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
     BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
@@ -10,11 +10,10 @@ use crate::path::path_apply_working_directory;
 use crate::prelude::*;
 use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
-use crate::signal::SigChecker;
-use crate::topic_monitor::Topic;
 use crate::wutil::{perror, perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat};
 use errno::Errno;
-use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
+use fish_wcstringutil::wcs2bytes;
+use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use std::fs::File;
@@ -737,9 +736,6 @@ pub struct FdOutputStream {
     /// The file descriptor to write to.
     fd: RawFd,
 
-    /// Used to check if a SIGINT has been received when EINTR is encountered
-    sigcheck: SigChecker,
-
     /// Whether we have received an error.
     errored: bool,
 }
@@ -747,11 +743,7 @@ impl FdOutputStream {
     /// Construct from a file descriptor, which must be nonegative.
     pub fn new(fd: RawFd) -> Self {
         assert!(fd >= 0, "Invalid fd");
-        FdOutputStream {
-            fd,
-            sigcheck: SigChecker::new(Topic::SigHupInt),
-            errored: false,
-        }
+        FdOutputStream { fd, errored: false }
     }
 
     fn append(&mut self, s: impl IntoCharIter) -> bool {
@@ -759,19 +751,6 @@ impl FdOutputStream {
             return false;
         }
         if unescape_bytes_and_write_to_fd(s, self.fd).is_none() {
-            // Some of our builtins emit multiple screens worth of data sent to a pager (the primary
-            // example being the `history` builtin) and receiving SIGINT should be considered normal and
-            // non-exceptional (user request to abort via Ctrl-C), meaning we shouldn't print an error.
-            if errno::errno().0 == EINTR && self.sigcheck.check() {
-                // We have two options here: we can either return false without setting errored_ to
-                // true (*this* write will be silently aborted but the onus is on the caller to check
-                // the return value and skip future calls to `append()`) or we can flag the entire
-                // output stream as errored, causing us to both return false and skip any future writes.
-                // We're currently going with the latter, especially seeing as no callers currently
-                // check the result of `append()` (since it was always a void function before).
-            } else if errno::errno().0 != EPIPE {
-                perror("write");
-            }
             self.errored = true;
         }
         !self.errored

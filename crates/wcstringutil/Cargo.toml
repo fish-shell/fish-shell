@@ -7,7 +7,6 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-fish-common.workspace = true
 fish-fallback.workspace = true
 fish-widestring.workspace = true
 

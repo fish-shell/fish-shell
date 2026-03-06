@@ -12,12 +12,8 @@ begin
     # Note that this results in the file being overwritten.
     # This is desired behavior, to get rid of the results of prior invocations
     # of this script.
-    begin
-        echo 'msgid ""'
-        echo 'msgstr ""'
-        echo '"Content-Type: text/plain; charset=UTF-8\n"'
-        echo ""
-    end
+    set -l header 'msgid ""\nmsgstr "Content-Type: text/plain; charset=UTF-8\\\\n"\n\n'
+    printf $header
 
     set -g workspace_root (path resolve (status dirname)/..)
 
@@ -41,8 +37,15 @@ begin
     mark_section tier1-from-rust
 
     # Get rid of duplicates and sort.
-    find $rust_extraction_dir -type f -exec cat {} + | msguniq --no-wrap --sort-output
-    or exit 1
+    begin
+        # Without providing this header, msguniq complains when a msgid is non-ASCII.
+        printf $header
+        find $rust_extraction_dir -type f -exec cat {} +
+    end |
+        msguniq --no-wrap --sort-output |
+        # Remove the header again. Otherwise it would appear twice, breaking the msguniq at the end
+        # of this file.
+        sed '/^msgid ""$/ {N; /\nmsgstr "Content-Type: text\/plain; charset=UTF-8\\\\n"$/ {N; d}}'
 
     if not set -l --query _flag_use_existing_template
         rm -r $rust_extraction_dir

@@ -17,7 +17,7 @@ pub fn test_notifiers(notifiers: &[&dyn UniversalNotifier], fish_variables_path:
 
     // Helper to simulate modifying a file, using the atomic rename() approach.
     let modify_path = |path: &wstr| -> Result<(), std::io::Error> {
-        use crate::common::wcs2osstring;
+        use fish_wcstringutil::wcs2osstring;
         use std::fs;
         use std::io::Write as _;
         let path = wcs2osstring(path);

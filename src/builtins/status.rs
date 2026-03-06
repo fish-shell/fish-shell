@@ -9,6 +9,8 @@ use crate::reader::reader_in_interactive_read;
 use crate::tty_handoff::{TERMINAL_OS_NAME, get_scroll_content_up_capability, xtversion};
 use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use cfg_if::cfg_if;
+use fish_util::wcsfilecmp_glob;
+use fish_wcstringutil::wcs2bytes;
 use nix::unistd::AccessFlags;
 use rust_embed::RustEmbed;
 
@@ -467,7 +469,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
-            let arg = crate::common::wcs2bytes(args[0]);
+            let arg = wcs2bytes(args[0]);
             let arg = std::str::from_utf8(&arg).unwrap();
             let Some(emfile) = crate::autoload::Asset::get(arg)
                 .or_else(|| Docs::get(arg))
@@ -521,10 +523,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
         }
         STATUS_LIST_FILES => {
-            use fish_util::wcsfilecmp_glob;
             let mut paths = vec![];
             let mut add = |arg| {
-                let arg = crate::common::wcs2bytes(arg);
+                let arg = wcs2bytes(arg);
                 let arg = std::str::from_utf8(&arg).unwrap();
                 for path in crate::autoload::Asset::iter()
                     .chain(Docs::iter())

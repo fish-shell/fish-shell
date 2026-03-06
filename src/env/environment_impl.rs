@@ -1,4 +1,3 @@
-use crate::common::wcs2zstring;
 use crate::env::{
     ELECTRIC_VARIABLES, ElectricVar, EnvMode, EnvSetMode, EnvStackSetResult, EnvVar, EnvVarFlags,
     PATH_ARRAY_SEP, Statuses, VarTable, is_read_only,
@@ -10,11 +9,12 @@ use crate::history::{History, history_session_id_from_var};
 use crate::kill::kill_entries;
 use crate::nix::umask;
 use crate::null_terminated_array::OwningNullTerminatedArray;
+use crate::portable_atomic::AtomicU64;
 use crate::prelude::*;
 use crate::reader::{commandline_get_state, reader_status_count};
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wutil::fish_wcstol_radix;
-
+use fish_wcstringutil::wcs2zstring;
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashSet;
 use std::ffi::CString;
@@ -22,8 +22,6 @@ use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::sync::LazyLock;
-
-use crate::portable_atomic::AtomicU64;
 use std::sync::{Arc, Mutex, MutexGuard, atomic::Ordering};
 
 /// Getter for universal variables.

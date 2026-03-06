@@ -1,13 +1,11 @@
-use crate::common::{
-    UnescapeFlags, UnescapeStringStyle, unescape_string, valid_var_name, wcs2zstring,
-};
+use crate::common::{UnescapeFlags, UnescapeStringStyle, unescape_string, valid_var_name};
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::flog::{flog, flogf};
 use crate::fs::{PotentialUpdate, lock_and_load, rewrite_via_temporary_file};
 use crate::path::path_get_config;
 use crate::prelude::*;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
-use fish_wcstringutil::{LineIterator, join_strings};
+use fish_wcstringutil::{LineIterator, join_strings, wcs2zstring};
 use fish_widestring::decode_byte_from_char;
 use itertools::Itertools as _;
 use std::collections::HashSet;
@@ -808,15 +806,15 @@ fn skip_spaces(mut s: &wstr) -> &wstr {
 
 #[cfg(test)]
 mod tests {
-    use fish_tempfile::TempDir;
-    use fish_widestring::{ENCODE_DIRECT_BASE, char_offset};
-
-    use crate::common::{osstr2wcstring, wcs2osstring};
+    use crate::common::osstr2wcstring;
     use crate::env::{EnvVar, EnvVarFlags, VarTable};
     use crate::env_universal_common::{EnvUniversal, UvarFormat};
     use crate::prelude::*;
     use crate::tests::prelude::*;
     use crate::wutil::{INVALID_FILE_ID, file_id_for_path};
+    use fish_tempfile::TempDir;
+    use fish_wcstringutil::wcs2osstring;
+    use fish_widestring::{ENCODE_DIRECT_BASE, char_offset};
 
     const UVARS_PER_THREAD: usize = 8;
 

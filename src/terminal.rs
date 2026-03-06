@@ -1,5 +1,5 @@
 // Generic output functions.
-use crate::common::{self, EscapeStringStyle, escape_string, wcs2bytes, wcs2bytes_appending};
+use crate::common::{self, EscapeStringStyle, escape_string};
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::prelude::*;
 use crate::screen::{is_dumb, only_grayscale};
@@ -7,6 +7,7 @@ use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use bitflags::bitflags;
 use fish_color::{Color, Color24};
+use fish_wcstringutil::{wcs2bytes, wcs2bytes_appending};
 use std::cell::{RefCell, RefMut};
 use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;

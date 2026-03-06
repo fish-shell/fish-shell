@@ -1896,12 +1896,11 @@ impl<'a> Reader<'a> {
             ],
         );
 
-        // Apply force_underline for the guaranteed prefix.
+        // Apply force_underline for the guaranteed prefix of the suggestion.
         if self.is_at_line_with_autosuggestion() {
-            let guaranteed_end = self.autosuggestion.search_string_range.start
-                + self.autosuggestion.common_prefix_len;
-            let end = colors.len().min(guaranteed_end);
-            for color in &mut colors[..end] {
+            let start = autosuggested_range.start;
+            let end = (start + self.autosuggestion.common_prefix_len).min(colors.len());
+            for color in &mut colors[start..end] {
                 color.force_underline = true;
             }
         }
@@ -5474,13 +5473,15 @@ fn get_autosuggestion_performer(
                         break;
                     }
                 }
-                common_prefix_len = lcp.len();
+                let cursor_pos_in_token = line_range.end - token_range.start;
+                common_prefix_len = lcp.len().saturating_sub(cursor_pos_in_token);
             }
 
             let comp = &completions[0];
 
-            // Use the token range for the coordinate fix.
-            search_string_range.start = token_range.start;
+            // Do NOT use the token range for the start of search_string_range yet,
+            // as it breaks the suggestion positioning in paint_layout.
+            search_string_range.start = line_range.start;
 
             // Prefer icase history over smartcase/icase completions.
             if let (Some(result), CaseSensitivity::Smart | CaseSensitivity::Insensitive) =
@@ -7585,30 +7586,27 @@ mod tests {
     fn test_autosuggestion_common_prefix() {
         use super::AutosuggestionResult;
 
-        let parser = TestParser::new();
-        let _vars = parser.vars();
-
         // Test with a multi-token command: "echo d"
-        // Completions for "d" could be "documents" and "downloads"
-        // LCP is 2 ("do")
-        // Token range is 5..6 ("d")
-        
+        // Token "d" starts at 5. Cursor is at 6.
+        // Completions could be "documents" and "downloads" (LCP "do")
+        // Shared prefix *after* the cursor is "o" (len 1).
+
         let command_line = L!("echo d");
-        let suggestion = L!("echo documents");
-        let common_prefix_len = 2; // "do"
-        let token_start = 5;
+        let suggestion = L!("ocuments"); // Suffix starting from index 6
+        let common_prefix_len = 1; // "o" is guaranteed after "d"
+        let cursor_pos = 6;
 
         let result = AutosuggestionResult::new(
             command_line.to_owned(),
-            token_start..6,
+            cursor_pos..cursor_pos,
             suggestion.to_owned(),
             None,
             false,
             common_prefix_len,
         );
 
-        assert_eq!(result.search_string_range, 5..6);
-        assert_eq!(result.common_prefix_len, 2);
-        assert_eq!(result.autosuggestion.text, L!("echo documents"));
+        assert_eq!(result.search_string_range, 6..6);
+        assert_eq!(result.common_prefix_len, 1);
+        assert_eq!(result.autosuggestion.text, L!("ocuments"));
     }
 }

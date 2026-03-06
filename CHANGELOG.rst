@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Notable improvements and fixes
 ------------------------------
 - New Spanish translations (:issue:`12489`).
+- New Japanese translations
 
 For distributors and developers
 -------------------------------

@@ -121,7 +121,7 @@ use fish_common::{UTF8_BOM_WCHAR, help_section};
 use fish_fallback::fish_wcwidth;
 use fish_fallback::lowercase;
 use fish_wcstringutil::{
-    CaseSensitivity, StringFuzzyMatch, count_preceding_backslashes, join_strings,
+    StringFuzzyMatch, count_preceding_backslashes, join_strings,
     string_prefixes_string, string_prefixes_string_case_insensitive,
     string_prefixes_string_maybe_case_insensitive,
 };
@@ -5442,72 +5442,63 @@ fn get_autosuggestion_performer(
 
         // Try normal completions.
         let complete_flags = CompletionRequestOptions::autosuggest();
-        let mut would_be_cursor = line_range.end;
         let (mut completions, needs_load) =
-            complete(&command_line[..would_be_cursor], complete_flags, &ctx);
+            complete(&command_line[..line_range.end], complete_flags, &ctx);
 
-        let mut common_prefix_len = 0;
-        let suggestion = if completions.is_empty() {
+        if completions.is_empty() {
             // If there are no completions to suggest, fall back to icase history.
             if let Some(result) = icase_history_result {
                 return result;
             }
-            WString::new()
-        } else {
-            sort_and_prioritize(&mut completions, complete_flags);
+            return nothing;
+        }
+        sort_and_prioritize(&mut completions, complete_flags);
 
-            // Calculate common prefix of all completions.
-            // We only care about completions with the same (best) rank.
-            let best_rank = completions[0].rank();
-            let mut first = true;
-            let mut common_prefix = L!("");
-            for c in completions.iter().take_while(|c| c.rank() == best_rank) {
-                if first {
-                    common_prefix = &c.completion;
-                    first = false;
-                } else {
-                    let max = std::cmp::min(common_prefix.len(), c.completion.len());
-                    let mut idx = 0;
-                    while idx < max {
-                        if common_prefix.as_char_slice()[idx] != c.completion.as_char_slice()[idx] {
-                            break;
-                        }
-                        idx += 1;
-                    }
-                    common_prefix = common_prefix.slice_to(idx);
-                    if idx == 0 {
+        // Calculate common prefix of all completions.
+        // We only care about completions with the same (best) rank.
+        // This logic should mirror Reader::handle_completions.
+        let best_rank = completions[0].rank();
+        let mut first = true;
+        let mut common_prefix = L!("");
+        for c in completions.iter().take_while(|c| c.rank() == best_rank) {
+            if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                continue;
+            }
+            if first {
+                common_prefix = &c.completion;
+                first = false;
+            } else {
+                let max = std::cmp::min(common_prefix.len(), c.completion.len());
+                let mut idx = 0;
+                while idx < max {
+                    if common_prefix.as_char_slice()[idx] != c.completion.as_char_slice()[idx] {
                         break;
                     }
+                    idx += 1;
+                }
+                common_prefix = common_prefix.slice_to(idx);
+                if idx == 0 {
+                    break;
                 }
             }
-            common_prefix_len = common_prefix.len();
+        }
+        let common_prefix_len = common_prefix.len();
 
-            let comp = &completions[0];
+        let c = &completions[0];
+        let mut suggestion = c.completion.to_owned();
+        if !c.flags.contains(CompleteFlags::NO_SPACE) {
+            suggestion.push(' ');
+        }
 
-            // Prefer icase history over smartcase/icase completions.
-            if let (Some(result), CaseSensitivity::Smart | CaseSensitivity::Insensitive) =
-                (icase_history_result, comp.r#match.case_fold)
-            {
-                return result;
-            }
+        // Determine the range of the token we are completing.
+        let (token_range, _) = get_token_extent(&command_line, line_range.end);
+        let prefix_offset = line_range.end - token_range.start;
 
-            let full_line = completion_apply_to_command_line(
-                &OperationContext::background_interruptible(&vars),
-                &comp.completion,
-                comp.flags,
-                &command_line,
-                &mut would_be_cursor,
-                /*append_only=*/ true,
-                /*is_unique=*/ false,
-            );
-            line_at_cursor(&full_line, would_be_cursor).to_owned()
-        };
-        let lowercase_char_count = lowercase(command_line[line_range.clone()].chars()).count();
         let mut result = AutosuggestionResult::new(
             command_line,
-            line_range,
+            token_range,
             suggestion,
-            Some(lowercase_char_count), // normal completions are case-insensitive
+            Some(prefix_offset),
             /*is_whole_item_from_history=*/ false,
             common_prefix_len,
         );
@@ -7586,5 +7577,23 @@ mod tests {
         assert_eq!(autosuggestion.search_string_range, 0..2);
         assert_eq!(autosuggestion.common_prefix_len, 8);
         assert_eq!(autosuggestion.text, L!("document"));
+
+        // Test with a offset (e.g. "echo d")
+        let mut autosuggestion_offset = Autosuggestion {
+            text: L!("document").to_owned(),
+            search_string_range: 5..6,
+            icase_matched_codepoints: None,
+            is_whole_item_from_history: false,
+            common_prefix_len: 8,
+        };
+        let cmd_line_offset = L!("echo d");
+        let edit_offset = crate::editable_line::Edit::new(6..6, L!("o").to_owned());
+        assert!(super::try_apply_edit_to_autosuggestion(
+            &mut autosuggestion_offset,
+            cmd_line_offset,
+            &edit_offset
+        ));
+        assert_eq!(autosuggestion_offset.search_string_range, 5..7);
+        assert_eq!(autosuggestion_offset.common_prefix_len, 8);
     }
 }

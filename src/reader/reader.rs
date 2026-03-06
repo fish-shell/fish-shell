@@ -1896,6 +1896,16 @@ impl<'a> Reader<'a> {
             ],
         );
 
+        // Apply force_underline for the guaranteed prefix.
+        if self.is_at_line_with_autosuggestion() {
+            let guaranteed_end = self.autosuggestion.search_string_range.start
+                + self.autosuggestion.common_prefix_len;
+            let end = colors.len().min(guaranteed_end);
+            for color in &mut colors[..end] {
+                color.force_underline = true;
+            }
+        }
+
         // Compute the indentation.
         let indents = compute_indents(&full_line);
 
@@ -5200,12 +5210,16 @@ pub(super) struct Autosuggestion {
 
     /// Whether the autosuggestion is a whole match from history.
     is_whole_item_from_history: bool,
+
+    /// The length of the longest common prefix across all completions of the same rank.
+    common_prefix_len: usize,
 }
 
 impl Autosuggestion {
     // Clear our contents.
     fn clear(&mut self) {
         self.text.clear();
+        self.common_prefix_len = 0;
     }
 
     // Return whether we have empty text.
@@ -5241,6 +5255,7 @@ impl AutosuggestionResult {
         text: WString,
         icase_matched_codepoints: Option<usize>,
         is_whole_item_from_history: bool,
+        common_prefix_len: usize,
     ) -> Self {
         Self {
             autosuggestion: Autosuggestion {
@@ -5248,6 +5263,7 @@ impl AutosuggestionResult {
                 search_string_range,
                 icase_matched_codepoints,
                 is_whole_item_from_history,
+                common_prefix_len,
             },
             command_line,
             needs_load: vec![],
@@ -5383,6 +5399,7 @@ fn get_autosuggestion_performer(
                         full[suggested_range].into(),
                         icase.then(|| searcher.canon_term().char_count()),
                         is_whole,
+                        0, // common_prefix_len: history matches don't calculate LCP yet
                     );
                     if icase {
                         icase_history_result = Some(result);
@@ -5423,6 +5440,10 @@ fn get_autosuggestion_performer(
         let (mut completions, needs_load) =
             complete(&command_line[..would_be_cursor], complete_flags, &ctx);
 
+        let mut common_prefix_len = 0;
+        let (token_range, _) = get_token_extent(&command_line, line_range.end);
+        let mut search_string_range = line_range.clone();
+
         let suggestion = if completions.is_empty() {
             // If there are no completions to suggest, fall back to icase history.
             if let Some(result) = icase_history_result {
@@ -5431,7 +5452,35 @@ fn get_autosuggestion_performer(
             WString::new()
         } else {
             sort_and_prioritize(&mut completions, complete_flags);
+
+            // Calculate LCP across completions of the same rank, skipping suppressed ones.
+            let mut completions_iter = completions
+                .iter()
+                .filter(|c| !c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX));
+            if let Some(first) = completions_iter.next() {
+                let mut lcp: Vec<char> = first.completion.chars().collect();
+                for next in completions_iter {
+                    let next_chars: Vec<char> = next.completion.chars().collect();
+                    let mut new_len = 0;
+                    for (c1, c2) in lcp.iter().zip(next_chars.iter()) {
+                        if c1 == c2 {
+                            new_len += 1;
+                        } else {
+                            break;
+                        }
+                    }
+                    lcp.truncate(new_len);
+                    if lcp.is_empty() {
+                        break;
+                    }
+                }
+                common_prefix_len = lcp.len();
+            }
+
             let comp = &completions[0];
+
+            // Use the token range for the coordinate fix.
+            search_string_range.start = token_range.start;
 
             // Prefer icase history over smartcase/icase completions.
             if let (Some(result), CaseSensitivity::Smart | CaseSensitivity::Insensitive) =
@@ -5454,10 +5503,11 @@ fn get_autosuggestion_performer(
         let lowercase_char_count = lowercase(command_line[line_range.clone()].chars()).count();
         let mut result = AutosuggestionResult::new(
             command_line,
-            line_range,
+            search_string_range,
             suggestion,
             Some(lowercase_char_count), // normal completions are case-insensitive
             /*is_whole_item_from_history=*/ false,
+            common_prefix_len,
         );
         result.needs_load = needs_load;
         result
@@ -7429,6 +7479,7 @@ mod tests {
                 search_string_range: 0..4,
                 icase_matched_codepoints: None,
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
             "echo",
             Edit::new(4..4, L!(" ").to_owned()),
@@ -7437,6 +7488,7 @@ mod tests {
                 search_string_range: 0..5,
                 icase_matched_codepoints: None,
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             })
         );
 
@@ -7447,10 +7499,31 @@ mod tests {
                 search_string_range: 0..4,
                 icase_matched_codepoints: None,
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
             "echo",
             Edit::new(4..4, L!("f").to_owned()),
             None,
+        );
+
+        validate!(
+            "Matching edit prefix",
+            Autosuggestion {
+                text: L!("echo hest").to_owned(),
+                search_string_range: 0..4,
+                icase_matched_codepoints: None,
+                is_whole_item_from_history: true,
+                common_prefix_len: 7,
+            },
+            "echo",
+            Edit::new(4..4, L!(" ").to_owned()),
+            Some(Autosuggestion {
+                text: L!("echo hest").to_owned(),
+                search_string_range: 0..5,
+                icase_matched_codepoints: None,
+                is_whole_item_from_history: true,
+                common_prefix_len: 7,
+            })
         );
 
         validate!(
@@ -7460,6 +7533,7 @@ mod tests {
                 search_string_range: 0..4,
                 icase_matched_codepoints: Some(4),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
             "echo",
             Edit::new(4..4, L!(" H").to_owned()),
@@ -7468,6 +7542,7 @@ mod tests {
                 search_string_range: 0..6,
                 icase_matched_codepoints: Some(6),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             })
         );
 
@@ -7478,6 +7553,7 @@ mod tests {
                 search_string_range: 0..4,
                 icase_matched_codepoints: Some(4),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
             "echo",
             Edit::new(3..4, L!("").to_owned()),
@@ -7486,6 +7562,7 @@ mod tests {
                 search_string_range: 0..3,
                 icase_matched_codepoints: Some(3),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             })
         );
 
@@ -7496,10 +7573,42 @@ mod tests {
                 search_string_range: 0..6,
                 icase_matched_codepoints: Some(6),
                 is_whole_item_from_history: true,
+                common_prefix_len: 0,
             },
             "echo i",
             Edit::new(6..6, L!("n").to_owned()),
             None,
         );
+    }
+
+    #[test]
+    fn test_autosuggestion_common_prefix() {
+        use super::AutosuggestionResult;
+
+        let parser = TestParser::new();
+        let _vars = parser.vars();
+
+        // Test with a multi-token command: "echo d"
+        // Completions for "d" could be "documents" and "downloads"
+        // LCP is 2 ("do")
+        // Token range is 5..6 ("d")
+        
+        let command_line = L!("echo d");
+        let suggestion = L!("echo documents");
+        let common_prefix_len = 2; // "do"
+        let token_start = 5;
+
+        let result = AutosuggestionResult::new(
+            command_line.to_owned(),
+            token_start..6,
+            suggestion.to_owned(),
+            None,
+            false,
+            common_prefix_len,
+        );
+
+        assert_eq!(result.search_string_range, 5..6);
+        assert_eq!(result.common_prefix_len, 2);
+        assert_eq!(result.autosuggestion.text, L!("echo documents"));
     }
 }

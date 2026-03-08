@@ -691,3 +691,12 @@ complete command-line-aware-completions -xa "(commandline --cursor; commandline 
 complete -C"command-line-aware-completions "
 # CHECK: 31
 # CHECK: command-line-aware-completions
+
+begin
+    : >"$TMPDIR/-command-starting-with-dash"  
+    chmod +x "$TMPDIR/-command-starting-with-dash"
+
+    set -l PATH "$TMPDIR" $PATH
+    complete -C"-command-starting-with"
+    # CHECK: -command-starting-with-dash{{\t}}command
+end

@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Notable improvements and fixes
 ------------------------------
 - New Spanish translations (:issue:`12489`).
+- New Japanese translations.
 - ``set_color`` is able to turn off italics, reverse mode, strikethrough and underline individually (e.g. ``--italics=off``).
 - ``set_color`` learned the foreground (``--foreground`` or ``-f``) and reset (``--reset``) modifiers.
 - ``fish_indent`` now preserves comments and newlines immediately preceding a brace block (``{ }``) (:issue:`12505`).

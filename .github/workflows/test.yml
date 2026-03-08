@@ -164,10 +164,17 @@ jobs:
       with:
         update: true
         msystem: MSYS
+      id: msys2
     - name: Install deps
       # Not using setup-msys2 `install` option to make it easier to copy/paste
       run: |
         pacman --noconfirm -S --needed git rust
+    - name: rebase
+      env:
+        MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
+      shell: cmd
+      run: |
+        "%MSYS2_LOCATION%\usr\bin\dash" /usr/bin/rebaseall -p -v
     - name: cargo build
       run: |
         cargo build

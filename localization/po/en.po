@@ -12260,6 +12260,9 @@ msgstr ""
 msgid "Config file (default: $HOME/.s3cfg)"
 msgstr ""
 
+msgid "Config file name"
+msgstr ""
+
 msgid "Config file name or directory with 'tox.ini' file"
 msgstr ""
 
@@ -16331,6 +16334,9 @@ msgstr ""
 msgid "Disable colorization in output"
 msgstr ""
 
+msgid "Disable colorized output"
+msgstr ""
+
 msgid "Disable colors"
 msgstr ""
 
@@ -16637,6 +16643,9 @@ msgstr ""
 msgid "Disable peer exchange (PEX)"
 msgstr ""
 
+msgid "Disable per-runner parallelism"
+msgstr ""
+
 msgid "Disable portmapping"
 msgstr ""
 
@@ -16701,6 +16710,9 @@ msgid "Disable reverse-wraparound"
 msgstr ""
 
 msgid "Disable rewriting of the DISPLAY var"
+msgstr ""
+
+msgid "Disable rules from the command line"
 msgstr ""
 
 msgid "Disable script 'build.cj'"
@@ -24185,6 +24197,9 @@ msgstr ""
 msgid "Enable one or more units"
 msgstr ""
 
+msgid "Enable only this rule, disabling all other defaults. Can be specified multiple times"
+msgstr ""
+
 msgid "Enable optimization of \"&&\" and \"││\" in conditional execution (default)"
 msgstr ""
 
@@ -24252,6 +24267,9 @@ msgid "Enable peer exchange (PEX)"
 msgstr ""
 
 msgid "Enable playground in web interface"
+msgstr ""
+
+msgid "Enable plugins from the command line"
 msgstr ""
 
 msgid "Enable portmapping via NAT-PMP or UPnP"
@@ -24339,6 +24357,9 @@ msgid "Enable row security"
 msgstr ""
 
 msgid "Enable row security (dump only content user has access to)"
+msgstr ""
+
+msgid "Enable rules from the command line"
 msgstr ""
 
 msgid "Enable search index"
@@ -26690,6 +26711,9 @@ msgstr ""
 msgid "Filter for rewriting the tree and its contents"
 msgstr ""
 
+msgid "Filter issues by file names or globs"
+msgstr ""
+
 msgid "Filter mode. Do not start interactive finder"
 msgstr ""
 
@@ -27009,6 +27033,9 @@ msgid "Fix in preparation for the next edition"
 msgstr ""
 
 msgid "Fix invalid file names in a bucket"
+msgstr ""
+
+msgid "Fix issues automatically"
 msgstr ""
 
 msgid "Fix only the specified bench target"
@@ -31184,6 +31211,9 @@ msgstr ""
 msgid "Ignore module interface version"
 msgstr "Ignore module interface version"
 
+msgid "Ignore module sources"
+msgstr ""
+
 msgid "Ignore newer bugs than upgrade packages"
 msgstr "Ignore newer bugs than upgrade packages"
 
@@ -32742,6 +32772,9 @@ msgid "Install packages with untrusted signature or no signature"
 msgstr ""
 
 msgid "Install pkg(8) from remote repository"
+msgstr ""
+
+msgid "Install plugins"
 msgstr ""
 
 msgid "Install plugins resolved from the Maven repository system into an Eclipse instance"
@@ -43934,6 +43967,9 @@ msgstr ""
 msgid "Print SRCINFO to stdout"
 msgstr ""
 
+msgid "Print TFLint version"
+msgstr ""
+
 msgid "Print TYPE form"
 msgstr ""
 
@@ -51683,6 +51719,9 @@ msgstr ""
 msgid "Return whether zone has been added"
 msgstr ""
 
+msgid "Return zero exit status even if issues found"
+msgstr ""
+
 msgid "Returns 0 if panic mode is enabled, 1 otherwise"
 msgstr ""
 
@@ -52152,6 +52191,9 @@ msgid "Run command as group"
 msgstr ""
 
 msgid "Run command as user"
+msgstr ""
+
+msgid "Run command in each directory recursively"
 msgstr ""
 
 msgid "Run command in the background"
@@ -54920,6 +54962,9 @@ msgstr ""
 msgid "Set `verbose` shell variable"
 msgstr ""
 
+msgid "Set a Terraform variable"
+msgstr ""
+
 msgid "Set a backup destination"
 msgstr ""
 
@@ -55722,6 +55767,9 @@ msgid "Set maximum number of per-user tasks"
 msgstr ""
 
 msgid "Set maximum number of redirects"
+msgstr ""
+
+msgid "Set maximum number of workers in recursive inspection"
 msgstr ""
 
 msgid "Set maximum size of a single allocated block"
@@ -57333,6 +57381,9 @@ msgid "Sets maximum bits allowed for bitmaps"
 msgstr ""
 
 msgid "Sets minimum bits allowed for bitmaps"
+msgstr ""
+
+msgid "Sets minimum severity level for exiting with a non-zero error code"
 msgstr ""
 
 msgid "Sets number of rotated logs to keep, default 4"
@@ -64205,6 +64256,9 @@ msgstr ""
 msgid "Start interface"
 msgstr "Start interface"
 
+msgid "Start language server"
+msgstr ""
+
 msgid "Start machine"
 msgstr ""
 
@@ -65381,6 +65435,9 @@ msgstr ""
 msgid "Switch to a different tree"
 msgstr ""
 
+msgid "Switch to a different working directory before executing the command"
+msgstr ""
+
 msgid "Switch to a profile"
 msgstr ""
 
@@ -65973,6 +66030,9 @@ msgid "Terminate, then restart an app instance"
 msgstr ""
 
 msgid "Terminates the logkeys daemon"
+msgstr ""
+
+msgid "Terraform variable file name"
 msgstr ""
 
 msgid "Terse output for machine consumption. Implies --no-abbrev and --no-color"
@@ -67938,6 +67998,9 @@ msgid "Type of timestamp to use for incoming packets"
 msgstr ""
 
 msgid "Type of workload to produce"
+msgstr ""
+
+msgid "Types of module to call"
 msgstr ""
 
 msgid "Typeset abstract as topic"

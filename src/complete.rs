@@ -999,11 +999,14 @@ impl<'ctx> Completer<'ctx> {
         // systems with a large set of manuals, but it should be ok since apropos is only called once.
         // For Cygwin, also try to find the exact match for the non-exe name
         let lookup_cmd = sprintf!(
-            "functions -q __fish_describe_command &&{ __fish_describe_command %s %s}",
+            "functions -q __fish_describe_command &&{ __fish_describe_command -- %s %s}",
             &escape(cmd),
             &no_exe
                 .map(|(cmd_sans_exe, _)| {
-                    sprintf!("; __fish_describe_command --exact %s", escape(cmd_sans_exe))
+                    sprintf!(
+                        "; __fish_describe_command --exact -- %s",
+                        escape(cmd_sans_exe)
+                    )
                 })
                 .unwrap_or_default()[..]
         );

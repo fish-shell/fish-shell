@@ -1694,6 +1694,23 @@ complete -x -c git -n '__fish_git_using_command init' -l object-format -a 'sha1 
 complete -x -c git -n '__fish_git_using_command init' -s b -l initial-branch -d 'Use specified name for initial branch'
 complete -x -c git -n '__fish_git_using_command init' -l shared -a 'false true umask group all world everybody' -d 'Specify that the repository is shared'
 
+### interpret-trailers
+complete -c git -n __fish_git_needs_command -a interpret-trailers -d 'Add or parse structured information in commit messages'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l in-place -d 'Edit the files in place'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l trim-empty -d 'Remove trailers with whitespace values'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l trailer -r -d 'Key-value pair to apply as a trailer'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l where -ra 'after before end start' -d 'Where new trailers will be added'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l no-where -d 'Clear the effect of previous use of --where'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l if-exists -ra 'addIfDifferent addIfDifferentNeighbor add replace doNothing' -d 'What to do when there is already a trailer with the same key'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l no-if-exists -d 'Clear the effect of previous use of --if-exists'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l if-missing -ra 'doNothing add' -d 'What to do when there is no other trailer with the same key'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l no-if-missing -d 'Clear the effect of previous use of --if-missing'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l only-trailers -d 'Output only trailers'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l only-input -d 'Output only trailers from the input'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l unfold -d 'Unfold multiline trailer values'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l parse -d 'Alias for --only-trailers --only-input --unfold'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l no-divider -d 'Do not treat --- as the end of the commit message'
+
 ### shortlog
 complete -c git -n __fish_git_needs_command -a shortlog -d 'Show commit shortlog'
 complete -c git -n '__fish_git_using_command shortlog' -a '(__fish_git ls-files)'

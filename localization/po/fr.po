@@ -6068,6 +6068,9 @@ msgstr ""
 msgid "Add or inspect object notes"
 msgstr ""
 
+msgid "Add or parse structured information in commit messages"
+msgstr ""
+
 msgid "Add or reduce noise in an image [geometry]"
 msgstr ""
 
@@ -6517,6 +6520,9 @@ msgstr "Alias pour « --coverage »"
 
 msgid "Alias for --env"
 msgstr "Alias pour « --env »"
+
+msgid "Alias for --only-trailers --only-input --unfold"
+msgstr ""
 
 msgid "Alias for -a"
 msgstr "Alias pour -a"
@@ -11400,6 +11406,15 @@ msgid "Clear the UUID tree"
 msgstr ""
 
 msgid "Clear the build directory after a package is built"
+msgstr ""
+
+msgid "Clear the effect of previous use of --if-exists"
+msgstr ""
+
+msgid "Clear the effect of previous use of --if-missing"
+msgstr ""
+
+msgid "Clear the effect of previous use of --where"
 msgstr ""
 
 msgid "Clear the fact cache"
@@ -20690,6 +20705,9 @@ msgstr ""
 msgid "Do not trap on integer division by zero"
 msgstr ""
 
+msgid "Do not treat --- as the end of the commit message"
+msgstr ""
+
 msgid "Do not treat and/bitand/bitor/compl/not/or/xor as keywords"
 msgstr ""
 
@@ -23434,6 +23452,9 @@ msgstr ""
 
 msgid "Edit the file containing a tag"
 msgstr "Éditer le fichier contenant une étiquette"
+
+msgid "Edit the files in place"
+msgstr ""
 
 msgid "Edit the flag on an object"
 msgstr ""
@@ -33470,6 +33491,9 @@ msgstr ""
 msgid "Key to be used as a namespace identifier"
 msgstr ""
 
+msgid "Key-value pair to apply as a trailer"
+msgstr ""
+
 msgid "Keyboard layout mapping table for special hash-modes"
 msgstr ""
 
@@ -41322,6 +41346,12 @@ msgid "Output only names of config variables"
 msgstr ""
 
 msgid "Output only the last line of the --stat format containing the total"
+msgstr ""
+
+msgid "Output only trailers"
+msgstr ""
+
+msgid "Output only trailers from the input"
 msgstr ""
 
 msgid "Output only whether the files differ"
@@ -50029,6 +50059,9 @@ msgstr ""
 
 msgid "Remove this from lock"
 msgstr "Supprimer ceci du verrou"
+
+msgid "Remove trailers with whitespace values"
+msgstr ""
 
 msgid "Remove trailing '/' from source args"
 msgstr ""
@@ -68222,6 +68255,9 @@ msgstr ""
 msgid "Unfavourite a status"
 msgstr ""
 
+msgid "Unfold multiline trailer values"
+msgstr ""
+
 msgid "Unfollow an account"
 msgstr ""
 
@@ -72503,6 +72539,12 @@ msgstr ""
 msgid "What to do when receiving events while the command is running"
 msgstr ""
 
+msgid "What to do when there is already a trailer with the same key"
+msgstr ""
+
+msgid "What to do when there is no other trailer with the same key"
+msgstr ""
+
 msgid "Whatever to reset the module registry for every test"
 msgstr ""
 
@@ -72642,6 +72684,9 @@ msgid "When used with -f, causes Mutt not to start if there are no messages"
 msgstr ""
 
 msgid "When used with -s, --silent, it makes curl show an error message if it fails"
+msgstr ""
+
+msgid "Where new trailers will be added"
 msgstr ""
 
 msgid "Where to install C header files"

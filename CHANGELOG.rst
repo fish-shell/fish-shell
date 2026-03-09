@@ -12,6 +12,8 @@ For distributors and developers
 Regression fixes:
 -----------------
 - (from 4.5.0) Intermediate ``⏎`` artifact when redrawing prompt (:issue:`12476`).
+- (from 4.4.0) ``history`` honors explicitly specified ``--color=`` again (:issue:`12512`).
+- (from 4.3.0) Completion of commands starting with ``-`` (:issue:`12522`).
 
 fish 4.5.0 (released February 17, 2026)
 =======================================

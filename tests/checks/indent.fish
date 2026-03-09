@@ -448,6 +448,11 @@ echo 'begin
     echo '{ ; }'
     # CHECK: { }
 
+    echo '#foo
+{ }' | $fish_indent
+    # CHECK: #foo
+    # CHECK: { }
+
     echo '
 {
 echo \\

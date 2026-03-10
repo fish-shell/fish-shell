@@ -30,7 +30,7 @@ impl StyleSet for Option<UnderlineStyle> {
     }
 }
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) struct TextStyling {
     pub(crate) bold: bool,
     pub(crate) underline_style: Option<UnderlineStyle>,
@@ -41,7 +41,7 @@ pub(crate) struct TextStyling {
 }
 
 impl TextStyling {
-    pub(crate) const fn default() -> Self {
+    pub(crate) const fn terminal_default() -> Self {
         Self {
             bold: false,
             underline_style: None,
@@ -51,8 +51,19 @@ impl TextStyling {
             strikethrough: false,
         }
     }
+    pub(crate) const fn unknown() -> Self {
+        Self {
+            bold: false,
+            underline_style: None,
+            italics: false,
+            dim: false,
+            reverse: false,
+            strikethrough: false,
+        }
+    }
+
     pub(crate) fn is_empty(&self) -> bool {
-        *self == Self::default()
+        *self == Self::unknown()
     }
     pub(crate) fn union_prefer_right(self, other: Self) -> Self {
         Self {
@@ -123,19 +134,21 @@ pub(crate) struct TextFace {
     pub(crate) style: TextStyling,
 }
 
-impl Default for TextFace {
-    fn default() -> Self {
-        Self::default()
-    }
-}
-
 impl TextFace {
-    pub const fn default() -> Self {
+    pub const fn terminal_default() -> Self {
         Self {
             fg: Color::Normal,
             bg: Color::Normal,
+            underline_color: Color::Normal,
+            style: TextStyling::terminal_default(),
+        }
+    }
+    pub const fn unknown() -> Self {
+        Self {
+            fg: Color::None,
+            bg: Color::None,
             underline_color: Color::None,
-            style: TextStyling::default(),
+            style: TextStyling::unknown(),
         }
     }
 
@@ -232,7 +245,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     let mut underline_colors = vec![];
     let mut style: Option<TextStyling> = None;
     fn init_style(style: &mut Option<TextStyling>) -> &mut TextStyling {
-        style.get_or_insert_default()
+        style.get_or_insert(TextStyling::unknown())
     }
     let mut print_color_mode = false;
 

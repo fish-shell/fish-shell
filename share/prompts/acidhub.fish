@@ -45,8 +45,8 @@ function fish_prompt -d "Write out the prompt"
     set_color -b black
     printf '%s%s%s%s%s%s%s%s%s%s%s%s%s' (set_color -o white) '❰' (set_color green) $USER (set_color white) '❙' (set_color yellow) (prompt_pwd) (set_color white) $git_info (set_color white) '❱' (set_color white)
     if test $laststatus -eq 0
-        printf "%s✔%s≻%s " (set_color -o green) (set_color white) (set_color normal)
+        printf "%s✔%s≻%s " (set_color -o green) (set_color white) (set_color --reset)
     else
-        printf "%s✘%s≻%s " (set_color -o red) (set_color white) (set_color normal)
+        printf "%s✘%s≻%s " (set_color -o red) (set_color white) (set_color --reset)
     end
 end

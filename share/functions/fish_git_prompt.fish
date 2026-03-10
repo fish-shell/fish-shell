@@ -603,9 +603,9 @@ function __fish_git_prompt_set_color
         case 1 # No defaults given, use prompt color
             set default $___fish_git_prompt_color
             set default_done $___fish_git_prompt_color_done
-        case 2 # One default given, use normal for done
+        case 2 # One default given, use "--reset" for done
             set default "$argv[2]"
-            set default_done (set_color normal)
+            set default_done (set_color --reset)
         case 3 # Both defaults given
             set default "$argv[2]"
             set default_done "$argv[3]"
@@ -617,7 +617,7 @@ function __fish_git_prompt_set_color
     if not set -q $variable
         if test -n "$$user_variable_name"
             set -g $variable (set_color $$user_variable_name)
-            set -g $variable_done (set_color normal)
+            set -g $variable_done (set_color --reset)
         else
             set -g $variable $default
             set -g $variable_done $default_done

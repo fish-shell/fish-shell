@@ -19,7 +19,7 @@ function dirh --description "Print the current directory history (the prev and n
         end
     end
 
-    echo (set_color $fish_color_history_current)'   ' $PWD(set_color normal)
+    echo (set_color $fish_color_history_current)'   ' $PWD(set_color --reset)
 
     set -l dirc (count $dirnext)
     if test $dirc -gt 0

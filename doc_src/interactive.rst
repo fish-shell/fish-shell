@@ -105,6 +105,7 @@ Syntax highlighting variables
 
 The colors used by fish for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :doc:`set_color <cmds/set_color>` command.
 Options accepted by ``set_color`` like
+``--foreground=``,
 ``--background=``,
 ``--bold``,
 ``--dim``,

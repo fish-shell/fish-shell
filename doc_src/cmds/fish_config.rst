@@ -85,10 +85,10 @@ The format looks like this:
     fish_color_command 5c5cff
 
     [unknown]
-    fish_color_normal normal
+    fish_color_normal --reset
     fish_color_autosuggestion brblack
     fish_color_cancel -r
-    fish_color_command normal
+    fish_color_command --reset
 
 The comments provide name and background color to the web config tool.
 

@@ -62,7 +62,7 @@ Example
           set_color --bold red
           echo '?'
       end
-      set_color normal
+      set_color --reset
     end
 
 

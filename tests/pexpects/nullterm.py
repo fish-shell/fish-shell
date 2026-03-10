@@ -13,5 +13,5 @@ sendline, expect_prompt = sp.sendline, sp.expect_prompt
 expect_prompt()
 sendline("set_color --italics")
 expect_prompt()
-sendline("set_color normal")
+sendline("set_color --reset")
 expect_prompt()

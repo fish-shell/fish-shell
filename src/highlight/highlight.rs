@@ -24,7 +24,7 @@ use crate::parse_util::{
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face};
+use crate::text_face::{SpecifiedTextFace, TextFace, TextStyling, UnderlineStyle, parse_text_face};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use fish_color::Color;
@@ -75,11 +75,11 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
             last_color = color;
         }
         if i + 1 == text.char_count() && c == '\n' {
-            outp.set_text_face(TextFace::default());
+            outp.set_text_face(TextFace::terminal_default_style());
         }
         outp.writech(c);
     }
-    outp.set_text_face(TextFace::default());
+    outp.set_text_face(TextFace::terminal_default_style());
     outp.contents().to_owned()
 }
 
@@ -169,7 +169,7 @@ impl HighlightColorResolver {
                     return face;
                 }
             }
-            TextFace::default()
+            TextFace::terminal_default_style()
         };
         let mut face = resolve_role(highlight.foreground);
 
@@ -186,8 +186,8 @@ impl HighlightColorResolver {
         if highlight.valid_path {
             if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
                 // Historical behavior is to not apply background.
-                let valid_path_face =
-                    parse_text_face_for_highlight(&valid_path_var).unwrap_or_default();
+                let valid_path_face = parse_text_face_for_highlight(&valid_path_var)
+                    .unwrap_or(TextFace::terminal_default_style());
                 // Apply the foreground, except if it's normal. The intention here is likely
                 // to only override foreground if the valid path color has an explicit foreground.
                 if !valid_path_face.fg.is_normal() {
@@ -209,11 +209,11 @@ impl HighlightColorResolver {
 pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> Option<TextFace> {
     let face = parse_text_face(var.as_list());
     (face != SpecifiedTextFace::default()).then(|| {
-        let default = TextFace::default();
+        let default = TextFace::terminal_default_style();
         let fg = face.fg.unwrap_or(default.fg);
         let bg = face.bg.unwrap_or(default.bg);
         let underline_color = face.underline_color.unwrap_or(default.underline_color);
-        let style = face.style.unwrap_or_default();
+        let style = face.style.unwrap_or(TextStyling::terminal_default_style());
         TextFace {
             fg,
             bg,

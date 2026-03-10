@@ -255,7 +255,7 @@ impl Outputter {
             contents: Vec::new(),
             buffer_count: 0,
             fd,
-            last: TextFace::default(),
+            last: TextFace::terminal_default_style(),
         }
     }
 
@@ -266,8 +266,7 @@ impl Outputter {
 
     pub fn new_buffering_no_assume_normal() -> Self {
         let mut zelf = Self::new_buffering();
-        zelf.last.fg = Color::None;
-        zelf.last.bg = Color::None;
+        zelf.last = TextFace::unknown_style();
         assert_eq!(zelf.last.underline_color, Color::None);
         zelf
     }
@@ -378,7 +377,7 @@ impl Outputter {
         use SgrTerminalCommand::{
             DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterDimMode,
             EnterItalicsMode, EnterReverseMode, EnterStrikethroughMode, EnterUnderlineMode,
-            ExitAttributeMode, ExitItalicsMode, ExitStrikethroughMode, ExitUnderlineMode,
+            ExitItalicsMode, ExitStrikethroughMode, ExitUnderlineMode,
         };
 
         let mut style_writer = self.style_writer();
@@ -409,11 +408,7 @@ impl Outputter {
 
         if !fg.is_none() && fg != style_writer.last().fg {
             if fg.is_normal() {
-                style_writer.write_command(ExitAttributeMode);
-
-                style_writer.last().bg = Color::Normal;
-                style_writer.last().underline_color = Color::Normal;
-                style_writer.last().style = TextStyling::default();
+                style_writer.reset_text_face();
             } else {
                 assert!(!fg.is_special());
                 style_writer.write_color(Paintable::Foreground, fg);
@@ -644,7 +639,7 @@ impl<'a> OutputterStyleWriter<'a> {
     pub(crate) fn reset_text_face(&mut self) {
         use SgrTerminalCommand::ExitAttributeMode;
         self.write_command(ExitAttributeMode);
-        self.out.last = TextFace::default();
+        self.out.last = TextFace::terminal_default_style();
     }
 
     pub(crate) fn write_command(&mut self, cmd: SgrTerminalCommand) -> bool {

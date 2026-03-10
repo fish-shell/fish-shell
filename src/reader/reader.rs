@@ -3099,7 +3099,8 @@ impl<'a> Reader<'a> {
                     let mut outp = Outputter::stdoutput().borrow_mut();
                     if let Some(fish_color_cancel) = self.vars().get(L!("fish_color_cancel")) {
                         outp.set_text_face(
-                            parse_text_face_for_highlight(&fish_color_cancel).unwrap_or_default(),
+                            parse_text_face_for_highlight(&fish_color_cancel)
+                                .unwrap_or(TextFace::terminal_default_style()),
                         );
                     }
                     outp.write_wstr(L!("^C"));
@@ -6339,7 +6340,7 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     reader_write_title(cmd, parser, true);
     Outputter::stdoutput()
         .borrow_mut()
-        .set_text_face(TextFace::default());
+        .set_text_face(TextFace::terminal_default_style());
     term_donate(false);
 
     let time_before = Instant::now();

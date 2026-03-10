@@ -117,7 +117,8 @@ fn print_rusage_self() {
     // `getrusage` should never fail with this usage.
     // If it does, it suggests a non-POSIX-compliant OS.
     let usage = getrusage(UsageWho::RUSAGE_SELF).unwrap();
-    let rss_kb = if cfg!(apple) {
+    #[allow(non_snake_case)]
+    let rss_KiB = if cfg!(apple) {
         // Macs use bytes,
         // even though docs at https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/getrusage.2.html say otherwise.
         usage.max_rss() / 1024
@@ -133,7 +134,7 @@ fn print_rusage_self() {
     eprintf!("      user time: %s ms\n", sys_time.to_string());
     eprintf!("       sys time: %s ms\n", user_time.to_string());
     eprintf!("     total time: %s ms\n", total_time.to_string());
-    eprintf!("        max rss: %s kb\n", rss_kb.to_string());
+    eprintf!("        max rss: %s KiB\n", rss_KiB.to_string());
     eprintf!("        signals: %s\n", signals.to_string());
 }
 

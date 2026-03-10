@@ -4,7 +4,7 @@
 fish_color_normal B2B2B2
 fish_color_autosuggestion 666
 fish_color_cancel -r
-fish_color_command normal
+fish_color_command --reset
 fish_color_comment '888'  '--italics'
 fish_color_cwd 0A0
 fish_color_cwd_root A00
@@ -12,7 +12,7 @@ fish_color_end 009900
 fish_color_error F22
 fish_color_escape 0AA
 fish_color_history_current 0AA
-fish_color_host normal
+fish_color_host --reset
 fish_color_host_remote yellow
 fish_color_keyword 00Afb8
 fish_color_operator 0AA

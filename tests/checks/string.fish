@@ -153,7 +153,7 @@ begin
 end
 
 # Only the longest run between carriage returns is kept because the rest is overwritten.
-string length --visible (set_color normal)abcdef\rfooba(set_color red)raaa
+string length --visible (set_color --reset)abcdef\rfooba(set_color red)raaa
 # (foobaraaa)
 # CHECK: 9
 

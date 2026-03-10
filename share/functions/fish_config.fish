@@ -55,14 +55,14 @@ function fish_config --description "Launch fish's web based configuration"
             end
 
         else
-            echo (set_color $fish_color_error)Cannot launch the web configuration tool:(set_color normal)
-            echo (set_color -o)"fish_config browse"(set_color normal) requires Python.
+            echo (set_color $fish_color_error)Cannot launch the web configuration tool:(set_color --reset)
+            echo (set_color -o)"fish_config browse"(set_color --reset) requires Python.
             echo Installing python will fix this, and also enable completions to be
             echo automatically generated from man pages.\n
-            echo To change your prompt, use (set_color -o)"fish_config prompt"(set_color normal) or create a (set_color -o)"fish_prompt"(set_color normal) function.
-            echo To list the samples use (set_color -o)"fish_config prompt show"(set_color normal).\n
+            echo To change your prompt, use (set_color -o)"fish_config prompt"(set_color --reset) or create a (set_color -o)"fish_prompt"(set_color --reset) function.
+            echo To list the samples use (set_color -o)"fish_config prompt show"(set_color --reset).\n
 
-            echo You can tweak your colors by setting the (set_color $fish_color_search_match)\$fish_color_\*(set_color normal) variables.
+            echo You can tweak your colors by setting the (set_color $fish_color_search_match)\$fish_color_\*(set_color --reset) variables.
         end
         return 0
     end
@@ -88,13 +88,13 @@ function fish_config --description "Launch fish's web based configuration"
                     set -l fish (status fish-path)
                     for p in (__fish_config_list_prompts $argv)
                         set -l promptname (string replace -r '.*/([^/]*).fish$' '$1' $p)
-                        echo -s (set_color --underline) $promptname (set_color normal)
+                        echo -s (set_color --underline) $promptname (set_color --reset)
                         $fish -c '
                             functions -e fish_right_prompt
                             __fish_config_with_file $argv[1] source
                             false
                             fish_prompt
-                            echo (set_color normal)
+                            echo (set_color --reset)
                             if functions -q fish_right_prompt
                                 echo right prompt: (false; fish_right_prompt)
                             end' $p
@@ -178,30 +178,30 @@ function fish_config --description "Launch fish's web based configuration"
                     return
                 case demo
                     echo -ns (set_color $fish_color_command || set_color $fish_color_normal) /bright/vixens
-                    echo -ns (set_color normal) ' '
+                    echo -ns (set_color --reset) ' '
                     echo -ns (set_color $fish_color_param || set_color $fish_color_normal) jump
-                    echo -ns (set_color normal) ' '
+                    echo -ns (set_color --reset) ' '
                     echo -ns (set_color $fish_color_redirection || set_color $fish_color_normal) '|'
-                    echo -ns (set_color normal) ' '
+                    echo -ns (set_color --reset) ' '
                     echo -ns (set_color $fish_color_quote || set_color $fish_color_normal) '"fowl"'
-                    echo -ns (set_color normal) ' '
+                    echo -ns (set_color --reset) ' '
                     echo -ns (set_color $fish_color_redirection || set_color $fish_color_normal) '> quack'
-                    echo -ns (set_color normal) ' '
+                    echo -ns (set_color --reset) ' '
                     echo -ns (set_color $fish_color_end || set_color $fish_color_normal) '&'
-                    set_color normal
+                    set_color --reset
                     echo -s (set_color $fish_color_comment || set_color $fish_color_normal) ' # This is a comment'
-                    set_color normal
+                    set_color --reset
                     echo -ns (set_color $fish_color_command || set_color $fish_color_normal) echo
-                    echo -ns (set_color normal) ' '
+                    echo -ns (set_color --reset) ' '
                     echo -s (set_color $fish_color_error || set_color $fish_color_normal) "'" (set_color $fish_color_quote || set_color $fish_color_normal) "Errors are the portal to discovery"
-                    set_color normal
+                    set_color --reset
                     echo -ns (set_color $fish_color_command || set_color $fish_color_normal) Th
-                    set_color normal
+                    set_color --reset
                     set_color $fish_color_autosuggestion || set_color $fish_color_normal
                     echo is an autosuggestion
                     echo
                 case show
-                    echo -s (set_color normal; set_color --underline) Current (set_color normal)
+                    echo -s (set_color --reset; set_color --underline) Current (set_color --reset)
                     fish_config theme demo
                     __fish_theme_for_each __fish_config_theme_demo $argv
                 case choose save
@@ -436,8 +436,8 @@ function __fish_config_theme_demo
     $fish --no-config -c '
         set -l name $argv[1]
         for color_theme in $argv[2..]
-            echo -s (set_color normal; set_color --underline) "$name" \
-                " ($color_theme color theme)" (set_color normal)
+            echo -s (set_color --reset; set_color --underline) "$name" \
+                " ($color_theme color theme)" (set_color --reset)
             fish_config theme choose $name --color-theme=$color_theme
             fish_config theme demo
         end

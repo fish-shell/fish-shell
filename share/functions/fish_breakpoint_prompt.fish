@@ -19,5 +19,5 @@ function fish_breakpoint_prompt --description "A right prompt to be used when `b
         set prompt ...(string sub -s -(math $max_len - 3) -- $prompt)
     end
 
-    echo -ns (set_color $fish_color_status) "BP $prompt" (set_color normal) ' '
+    echo -ns (set_color $fish_color_status) "BP $prompt" (set_color --reset) ' '
 end

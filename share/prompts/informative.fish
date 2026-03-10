@@ -10,7 +10,7 @@ function fish_prompt --description 'Informative prompt'
         printf '%s@%s %s%s%s# ' $USER (prompt_hostname) (set -q fish_color_cwd_root
                                                          and set_color $fish_color_cwd_root
                                                          or set_color $fish_color_cwd) \
-            (prompt_pwd) (set_color normal)
+            (prompt_pwd) (set_color --reset)
     else
         set -l status_color (set_color $fish_color_status)
         set -l statusb_color (set_color --bold $fish_color_status)
@@ -18,6 +18,6 @@ function fish_prompt --description 'Informative prompt'
 
         printf '[%s] %s%s@%s %s%s %s%s%s \n> ' (date "+%H:%M:%S") (set_color brblue) \
             $USER (prompt_hostname) (set_color $fish_color_cwd) $PWD $pipestatus_string \
-            (set_color normal)
+            (set_color --reset)
     end
 end

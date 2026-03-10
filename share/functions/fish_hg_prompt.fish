@@ -37,7 +37,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
     end
 
     if not set -q fish_prompt_hg_show_informative_status
-        set_color normal
+        set_color --reset
         echo -n " ($branch)"
         return
     end
@@ -51,7 +51,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
     if test -z "$repo_status"
         set_color $fish_color_hg_clean
         echo -n "($branch)"'✓'
-        set_color normal
+        set_color --reset
 
         # Handle modified or dirty (unknown state)
     else
@@ -98,7 +98,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
             end
         end
 
-        set_color normal
+        set_color --reset
     end
 
 end

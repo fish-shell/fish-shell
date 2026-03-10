@@ -318,7 +318,7 @@ and a rough fish equivalent::
 
       echo -s (prompt_hostname) \
       (set_color blue) (prompt_pwd) \
-      (set_color yellow) $prompt_symbol (set_color normal)
+      (set_color yellow) $prompt_symbol (set_color --reset)
   end
 
 This shows a few differences:

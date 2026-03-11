@@ -46,7 +46,7 @@ The following ``argparse`` options are available. They must appear before all *O
     In contrast, if the known option comes first (and does not take any arguments), the known option will be recognised (e.g. ``argparse --move-unknown h -- -ho`` *will* set ``$_flag_h`` to ``-h``)
 
 **-i** or **--ignore-unknown**
-    Deprecated. This is like **--move-unknown**, except that unknown options and their arguments are kept in ``$argv`` and not moved to ``$argv_opts``. Unlike **--move-unknown**, this option makes it impossible to distinguish between an unknown option and non-option argument that starts with a ``-`` (since any ``--`` seperator in ``$argv`` will be removed).
+    Deprecated. This is like **--move-unknown**, except that unknown options and their arguments are kept in ``$argv`` and not moved to ``$argv_opts``. Unlike **--move-unknown**, this option makes it impossible to distinguish between an unknown option and non-option argument that starts with a ``-`` (since any ``--`` separator in ``$argv`` will be removed).
 
 **-S** or **--strict-longopts**
     This makes the parsing of long options more strict. In particular, *without* this flag, if ``long`` is a known long option flag, ``--long`` and ``--long=<value>`` can be abbreviated as:

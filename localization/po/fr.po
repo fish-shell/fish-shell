@@ -6238,6 +6238,9 @@ msgstr ""
 msgid "Add the specified package to the local cache"
 msgstr ""
 
+msgid "Add the specified user/group mapping to an X-mount.idmap map"
+msgstr ""
+
 msgid "Add the standard Git exclusions"
 msgstr ""
 
@@ -7037,6 +7040,9 @@ msgid "Allow the rerere mechanism to update the index automatically"
 msgstr ""
 
 msgid "Allow the resize to shrink the volume"
+msgstr ""
+
+msgid "Allow to make a target directory (mountpoint) if it does not exist yet"
 msgstr ""
 
 msgid "Allow to perform \"insecure\" SSL connections"
@@ -10644,6 +10650,9 @@ msgstr "Vérifier si un port est installé"
 
 msgid "Check if all files owned by PACKAGE are present"
 msgstr "Vérifier si tous les fichiers fournis par PAQUET sont présents"
+
+msgid "Check if already mounted"
+msgstr ""
 
 msgid "Check if any of the given files would be ignored"
 msgstr "Vérifier si l’un des fichiers spécifiés serait ignoré"
@@ -19375,6 +19384,9 @@ msgstr "Ne pas mettre en cache l’état de la validation des signatures de clé
 msgid "Do not call gensync (and the !commands in /etc/eix-sync.conf)"
 msgstr "Ne pas appeler gensync (ni les !commandes de /etc/eix-sync.conf)"
 
+msgid "Do not canonicalize any paths or tags during the mount process"
+msgstr ""
+
 msgid "Do not cc the From: address"
 msgstr ""
 
@@ -22718,6 +22730,9 @@ msgid "Don’t allow speculative motion of non-load instructions"
 msgstr "Ne pas autoriser le déplacement spéculatif d’instructions non destinées à un chargement"
 
 msgid "Don’t assume ID based shared libraries are being used"
+msgstr ""
+
+msgid "Don’t call the /sbin/mount.filesystem helper even if it exists"
 msgstr ""
 
 msgid "Don’t cross filesystem boundaries"
@@ -43123,6 +43138,9 @@ msgstr "Effectuer la duplication de récursion terminale pour augmenter la taill
 msgid "Perform temporary expression replacement during the SSA->normal phase"
 msgstr ""
 
+msgid "Perform the mount operation in the mount namespace specified by ns"
+msgstr ""
+
 msgid "Perform the necessary tests to observe the performance"
 msgstr ""
 
@@ -43704,6 +43722,9 @@ msgstr "Utiliser la chaîne spécifiée comme base pour les liens relatifs"
 
 msgid "Prepend the name of the cpu to all public symbol names"
 msgstr "Préfixer le nom du processeur à tous les noms de symboles publics"
+
+msgid "Prepend the specified directory to all mount targets"
+msgstr ""
 
 msgid "Prepends a time stamp to each trace or verbose line that curl displays"
 msgstr ""
@@ -49232,6 +49253,9 @@ msgid "Remote path"
 msgstr "Chemin sur la destination"
 
 msgid "Remote url used by `git push`"
+msgstr ""
+
+msgid "Remount a subtree and all possible submounts somewhere else"
 msgstr ""
 
 msgid "Remount a subtree to a second position"
@@ -61741,6 +61765,9 @@ msgstr ""
 msgid "Source name for underlying storage"
 msgstr ""
 
+msgid "Source of default options"
+msgstr ""
+
 msgid "Source of the commit message"
 msgstr ""
 
@@ -61863,6 +61890,9 @@ msgstr "Spécifier un serveur alternatif"
 
 msgid "Specifies an alternate username"
 msgstr "Spécifier un nom d’utilisateur alternatif"
+
+msgid "Specifies an alternative fstab file"
+msgstr ""
 
 msgid "Specifies an alternative installroot"
 msgstr ""
@@ -70693,6 +70723,9 @@ msgstr "Utiliser seulement les 4 premiers accumulateurs de média"
 msgid "Use openssh if available"
 msgstr ""
 
+msgid "Use options from fstab/mtab even if both device and dir are specified"
+msgstr ""
+
 msgid "Use original SCP protocol instead of SFTP"
 msgstr ""
 
@@ -75688,6 +75721,12 @@ msgstr "Expliquer ce qu’atool fait"
 msgid "explain why packages or modules are needed"
 msgstr ""
 
+msgid "explicitly define the argument as the mount source"
+msgstr ""
+
+msgid "explicitly define the argument as the mount target"
+msgstr ""
+
 msgid "explicitly set BootOrder XXXX,YYYY,ZZZZ (hex)"
 msgstr ""
 
@@ -76277,6 +76316,9 @@ msgid "host tunnel on a custom subdomain"
 msgstr ""
 
 msgid "host tunnel on custom hostname (requires DNS CNAME)"
+msgstr ""
+
+msgid "how to combine with options from fstab/mtab"
 msgstr ""
 
 msgid "http-server serving the current directory"

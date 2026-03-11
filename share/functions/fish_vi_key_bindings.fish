@@ -46,6 +46,33 @@ function __fish_vi_consume_count -a varname
     echo $effective_count
 end
 
+function __fish_vi_delete_char --description "vi mode: x"
+    set -l count (__fish_vi_consume_count __fish_vi_count)
+    commandline -f begin-selection
+    if test $count -gt 1
+        for i in (seq 1 (math $count - 1))
+            commandline -f forward-char
+        end
+    end
+    commandline -f kill-selection end-selection
+end
+
+function __fish_vi_backward_delete_char --description "vi mode: X"
+    set -l count (__fish_vi_consume_count __fish_vi_count)
+    set -l start_cursor (commandline -C)
+    if test $start_cursor -eq 0
+        return
+    end
+    commandline -f backward-char
+    commandline -f begin-selection
+    if test $count -gt 1
+        for i in (seq 1 (math $count - 1))
+            commandline -f backward-char
+        end
+    end
+    commandline -f kill-selection end-selection
+end
+
 function fish_vi_yank_selection
     set -g fish_cursor_end_mode exclusive
     commandline -f kill-selection -f yank
@@ -350,8 +377,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind --preset -M default e 'fish_vi_run_count forward-word-end'
     bind --preset -M default E 'fish_vi_run_count forward-bigword-end'
 
-    bind --preset -M default x 'fish_vi_run_count delete-char'
-    bind --preset -M default X 'fish_vi_run_count backward-delete-char'
+    bind --preset -M default x __fish_vi_delete_char
+    bind --preset -M default X __fish_vi_backward_delete_char
 
     bind --preset -m insert enter execute
     bind --preset -m insert ctrl-j execute

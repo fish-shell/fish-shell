@@ -25,7 +25,7 @@ pub static FISH_AMBIGUOUS_WIDTH: AtomicIsize = AtomicIsize::new(1);
 /// Valid values are 1, and 2. 1 is the typical emoji width used in Unicode 8 while some newer
 /// terminals use a width of 2 since Unicode 9.
 // For some reason, this is declared here and exposed here, but is set in `env_dispatch`.
-pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(1);
+pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(2);
 
 static WC_LOOKUP_TABLE: LazyLock<WcLookupTable> = LazyLock::new(WcLookupTable::new);
 

@@ -14,7 +14,6 @@ use crate::reader::{
 };
 use crate::screen::{IS_DUMB, ONLY_GRAYSCALE, screen_set_midnight_commander_hack};
 use crate::terminal::ColorSupport;
-use crate::tty_handoff::xtversion;
 use crate::wutil::fish_wcstoi;
 use fish_wcstringutil::{bool_from_string, string_prefixes_string};
 use std::collections::HashMap;
@@ -61,7 +60,7 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
             L!("fish_sequence_key_delay_ms"),
             vars!(update_wait_on_sequence_key_ms),
         );
-        table.add_anon(L!("fish_emoji_width"), vars!(guess_emoji_width));
+        table.add_anon(L!("fish_emoji_width"), vars!(handle_emoji_width));
         table.add_anon(
             L!("fish_ambiguous_width"),
             vars!(handle_change_ambiguous_width),
@@ -159,7 +158,7 @@ fn handle_timezone(var_name: &wstr, vars: &EnvStack) {
 }
 
 /// Update the value of [`FISH_EMOJI_WIDTH`](fish_fallback::FISH_EMOJI_WIDTH).
-pub fn guess_emoji_width(vars: &EnvStack) {
+pub fn handle_emoji_width(vars: &EnvStack) {
     use fish_fallback::FISH_EMOJI_WIDTH;
 
     if let Some(width_str) = vars.get(L!("fish_emoji_width")) {
@@ -171,38 +170,7 @@ pub fn guess_emoji_width(vars: &EnvStack) {
             "Overriding default fish_emoji_width w/",
             new_width
         );
-        return;
-    }
-
-    let term_program = vars
-        .get(L!("TERM_PROGRAM"))
-        .map_or_else(WString::new, |v| v.as_string());
-
-    // TODO(term-workaround)
-    if xtversion().unwrap_or(L!("")).starts_with(L!("iTerm2 ")) {
-        // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
-        FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
-        flog!(term_support, "default emoji width 2 for iTerm2");
-    } else if term_program == "Apple_Terminal" && {
-        let version = vars
-            .get(L!("TERM_PROGRAM_VERSION"))
-            .map(|v| v.as_string())
-            .and_then(|v| {
-                let mut consumed = 0;
-                crate::wutil::wcstod::wcstod(&v, '.', &mut consumed).ok()
-            })
-            .unwrap_or(0.0);
-        version as i32 >= 400
-    } {
-        // Apple Terminal on High Sierra
-        FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
-        flog!(term_support, "default emoji width: 2 for", term_program);
     } else {
-        // Default to whatever the system's wcwidth gives for U+1F603, but only if it's at least
-        // 1 and at most 2.
-        #[cfg(not(cygwin))]
-        let width = fish_fallback::wcwidth('😃').clamp(1, 2);
-        #[cfg(cygwin)]
         let width = 2_isize;
         FISH_EMOJI_WIDTH.store(width, Ordering::Relaxed);
         flog!(term_support, "default emoji width:", width);
@@ -325,7 +293,6 @@ fn handle_locale_change(vars: &EnvStack) {
 }
 
 fn handle_term_change(vars: &EnvStack, suppress_repaint: bool) {
-    guess_emoji_width(vars);
     init_terminal(vars);
     if !suppress_repaint {
         reader_schedule_prompt_repaint();
@@ -393,7 +360,7 @@ fn run_inits(vars: &EnvStack) {
     init_locale(vars);
     init_special_chars_once();
     init_terminal(vars);
-    guess_emoji_width(vars);
+    handle_emoji_width(vars);
     update_wait_on_escape_ms(vars);
     update_wait_on_sequence_key_ms(vars);
     handle_read_limit_change(vars);

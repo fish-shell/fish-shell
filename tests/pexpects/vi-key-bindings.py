@@ -59,8 +59,8 @@ expect_re(r"\bhel\b")
 send("echo 123456")
 send("\033")
 sleep(1)
-send("hhh") # cursor on 3
-send("3x") # deletes 3, 4, 5
-send("p") # pastes after 2 -> 123456
+send("hhh")  # cursor on 3
+send("3x")  # deletes 3, 4, 5
+send("p")  # pastes after 2 -> 123456
 sendline("")
 expect_re(r"\b123456\b")

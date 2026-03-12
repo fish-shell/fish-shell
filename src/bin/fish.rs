@@ -119,8 +119,7 @@ fn print_rusage_self() {
     let usage = getrusage(UsageWho::RUSAGE_SELF).unwrap();
     let rss_kb = if cfg!(apple) {
         // Macs use bytes,
-        // Source: commit b6555a0dc462f669e1b5a370c3efae0f5948a1ef
-        // The docs at https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/getrusage.2.html say otherwise.
+        // even though docs at https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/getrusage.2.html say otherwise.
         usage.max_rss() / 1024
     } else {
         usage.max_rss()

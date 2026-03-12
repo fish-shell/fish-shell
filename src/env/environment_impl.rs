@@ -80,9 +80,8 @@ fn set_umask(list_val: &[WString]) -> EnvStackSetResult {
         return EnvStackSetResult::Invalid;
     }
     // Do not actually create a umask variable. On env_stack_t::get() it will be calculated.
-    // We already checked that `mask` is in range 0..=0o777, so it does not really matter which
-    // variant of `Mode::from_bits` we use.
-    umask(Mode::from_bits_truncate(mask as libc::mode_t));
+    // We already checked that `mask` is in range 0..=0o777.
+    umask(Mode::from_bits(mask as libc::mode_t).unwrap());
     EnvStackSetResult::Ok
 }
 

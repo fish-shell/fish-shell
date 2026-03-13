@@ -55,13 +55,13 @@ The following options are available:
     Sets dim mode.
 
 **-i** or **--italics**, or **-iSTATE** or **--italics=STATE**
-    Sets italics mode. The state can be **on** / **true** (default), or **off** / **false**
+    Sets italics mode. The state can be **on** (default), or **off**.
 
 **-r** or **--reverse**, or **-iSTATE** or **--reverse=STATE**
-    Sets reverse mode. The state can be **on** / **true** (default), or **off** / **false**
+    Sets reverse mode. The state can be **on** (default), or **off**.
 
 **-s** or **--strikethrough**, or **-sSTATE** or **--strikethrough=STATE**
-    Sets strikethrough mode. The state can be **on** / **true** (default), or **off** / **false**
+    Sets strikethrough mode. The state can be **on** (default), or **off**.
 
 **-u** or **--underline**, or **-uSTYLE** or **--underline=STYLE**
     Set the underline mode; supported styles are **single** (default), **double**, **curly**, **dotted**, **dashed** and **off**.

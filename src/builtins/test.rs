@@ -1218,12 +1218,13 @@ mod tests {
         assert!(run_test_test(0, &["0", "=", "0", "-o", "(", "0", "=", "1", "-a", "0", "=", "2", ")"]));
 
         // A few lame tests for permissions; these need to be a lot more complete.
-        assert!(run_test_test(0, &["-e", "/bin/ls"]));
-        assert!(run_test_test(1, &["-e", "/bin/ls_not_a_path"]));
-        assert!(run_test_test(0, &["-x", "/bin/ls"]));
-        assert!(run_test_test(1, &["-x", "/bin/ls_not_a_path"]));
+        // NOTE: we assume /bin/sh exists and is executable here
+        assert!(run_test_test(0, &["-e", "/bin/sh"]));
+        assert!(run_test_test(1, &["-e", "/bin/sh_not_a_path"]));
+        assert!(run_test_test(0, &["-x", "/bin/sh"]));
+        assert!(run_test_test(1, &["-x", "/bin/sh_not_a_path"]));
         assert!(run_test_test(0, &["-d", "/bin/"]));
-        assert!(run_test_test(1, &["-d", "/bin/ls"]));
+        assert!(run_test_test(1, &["-d", "/bin/sh"]));
 
         // This failed at one point.
         assert!(run_test_test(1, &["-d", "/bin", "-a", "5", "-eq", "3"]));

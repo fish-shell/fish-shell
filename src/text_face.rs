@@ -247,9 +247,9 @@ fn parse_resettable_style<'a>(w: &WGetopter<'_, 'a, '_>) -> Result<ResettableSty
     let Some(arg) = w.woptarg else {
         return Ok(ResettableStyle::On(()));
     };
-    if (arg == "off") || (arg == "false") {
+    if arg == "off" {
         Ok(ResettableStyle::Off)
-    } else if (arg == "on") || (arg == "true") {
+    } else if arg == "on" {
         Ok(ResettableStyle::On(()))
     } else {
         Err(arg)

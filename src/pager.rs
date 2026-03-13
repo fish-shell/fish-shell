@@ -121,6 +121,7 @@ pub struct Pager {
 #[derive(Debug, Clone, Copy, Default)]
 struct Column {
     width: usize,
+    desc_align: usize,
 }
 
 impl Pager {
@@ -212,14 +213,21 @@ impl Pager {
         // Calculate how wide the list would be.
         let mut cols = [Column::default(); PAGER_MAX_COLS];
         for (col_idx, col) in cols.iter_mut().enumerate() {
+            let mut max_comp = 0;
+            let mut max_desc = 0;
             for row in 0..row_count {
                 let comp_idx = col_idx * row_count + row;
                 if comp_idx >= lst.len() {
                     continue;
                 }
                 let c = &lst[comp_idx];
-                col.width = std::cmp::max(col.width, c.preferred_width());
+                max_comp = max_comp.max(c.comp_width);
+                max_desc = max_desc.max(c.description_punctuated_width());
             }
+            *col = Column {
+                width: max_comp + max_desc,
+                desc_align: max_comp + 2,
+            };
         }
 
         let print = if col_count == 1 {
@@ -581,11 +589,18 @@ impl Pager {
                 &mut line_data,
             );
 
-            // right-justify the description by adding spaces
-            // the 2 here refers to the parenthesis below
             desc_remaining -= print_max(
                 offset_in_cmdline,
-                std::iter::repeat_n(' ', desc_remaining.saturating_sub(c.desc_width + 2)),
+                std::iter::repeat_n(
+                    ' ',
+                    desc_remaining.saturating_sub(std::cmp::max(
+                        // try to align descriptions by adding spaces.
+                        col.width.saturating_sub(col.desc_align),
+                        // if too wide: make sure it fits and ignore alignment.
+                        // the 2 here refers to the parenthesis below
+                        c.desc_width + 2,
+                    )),
+                ),
                 bg,
                 desc_remaining,
                 false,
@@ -622,6 +637,15 @@ impl Pager {
                 ")".chars(),
                 paren_col,
                 1,
+                false,
+                &mut line_data,
+            );
+            // make sure next column is aligned
+            print_max(
+                offset_in_cmdline,
+                std::iter::repeat_n(' ', desc_remaining),
+                bg,
+                desc_remaining,
                 false,
                 &mut line_data,
             );
@@ -1540,27 +1564,27 @@ mod tests {
         validate!(
             &mut pager,
             100,
-            "e9340a             (CI: rebase MSYS2 dll)  fa1a12    (nix: use `getpgrp` wrapper)",
-            "bf5fa4     (feat: implement `perror_nix`)  04b799             (nix: use `access`)",
-            "fcdcae    (l10n: add spanish translation)  e41f2f             (nix: use `fchdir`)",
-            "c7aaf4     (wutil: use `std::fs::rename`)  7992fd    (refactor: extract `perror`)",
+            "e9340a  (CI: rebase MSYS2 dll)             fa1a12  (nix: use `getpgrp` wrapper)  ",
+            "bf5fa4  (feat: implement `perror_nix`)     04b799  (nix: use `access`)           ",
+            "fcdcae  (l10n: add spanish translation)    e41f2f  (nix: use `fchdir`)           ",
+            "c7aaf4  (wutil: use `std::fs::rename`)     7992fd  (refactor: extract `perror`)  ",
             "11dda6  (wutil: use `std::fs::read_link`)  73e3b4  (tarball: capture Git version)",
-            "2ba031    (xtask: don't panic on failure)  ",
+            "2ba031  (xtask: don't panic on failure)    "
         );
         validate!(
             &mut pager,
             60,
-            "e9340a             (CI: rebase MSYS2 dll)",
-            "bf5fa4     (feat: implement `perror_nix`)",
-            "fcdcae    (l10n: add spanish translation)",
-            "c7aaf4     (wutil: use `std::fs::rename`)",
+            "e9340a  (CI: rebase MSYS2 dll)           ",
+            "bf5fa4  (feat: implement `perror_nix`)   ",
+            "fcdcae  (l10n: add spanish translation)  ",
+            "c7aaf4  (wutil: use `std::fs::rename`)   ",
             "11dda6  (wutil: use `std::fs::read_link`)",
-            "2ba031    (xtask: don't panic on failure)",
-            "fa1a12       (nix: use `getpgrp` wrapper)",
-            "04b799                (nix: use `access`)",
-            "e41f2f                (nix: use `fchdir`)",
-            "7992fd       (refactor: extract `perror`)",
-            "73e3b4     (tarball: capture Git version)",
+            "2ba031  (xtask: don't panic on failure)  ",
+            "fa1a12  (nix: use `getpgrp` wrapper)     ",
+            "04b799  (nix: use `access`)              ",
+            "e41f2f  (nix: use `fchdir`)              ",
+            "7992fd  (refactor: extract `perror`)     ",
+            "73e3b4  (tarball: capture Git version)   ",
         );
         validate!(
             &mut pager,
@@ -1572,8 +1596,8 @@ mod tests {
             "11dda6  (wutil: use `std::fs…)",
             "2ba031  (xtask: don't panic …)",
             "fa1a12  (nix: use `getpgrp` …)",
-            "04b799     (nix: use `access`)",
-            "e41f2f     (nix: use `fchdir`)",
+            "04b799  (nix: use `access`)   ",
+            "e41f2f  (nix: use `fchdir`)   ",
             "7992fd  (refactor: extract `…)",
             "73e3b4  (tarball: capture Gi…)",
         );
@@ -1593,19 +1617,19 @@ mod tests {
         validate!(
             &mut pager,
             70,
-            "ab     (12345678)  a           (123456789123456789)",
-            "abcdefghi  (1234)  abcdefghijklmnopqrs  (123456789)",
-            "a            (12)  abcdefghijklmnopqrst         (1)",
+            "ab         (12345678)  a                     (123456789123456789)",
+            "abcdefghi  (1234)      abcdefghijklmnopqrs   (123456789)         ",
+            "a          (12)        abcdefghijklmnopqrst  (1)                 ",
         );
         validate!(
             &mut pager,
             50,
-            "ab                    (12345678)",
-            "abcdefghi                 (1234)",
-            "a                           (12)",
-            "a           (123456789123456789)",
-            "abcdefghijklmnopqrs  (123456789)",
-            "abcdefghijklmnopqrst         (1)",
+            "ab                    (12345678)          ",
+            "abcdefghi             (1234)              ",
+            "a                     (12)                ",
+            "a                     (123456789123456789)",
+            "abcdefghijklmnopqrs   (123456789)         ",
+            "abcdefghijklmnopqrst  (1)                 ",
         );
         validate!(
             &mut pager,
@@ -1631,7 +1655,7 @@ mod tests {
             &mut pager,
             20,
             "фиш  (123456789)",
-            "abc     (鱼殼層)",
+            "abc  (鱼殼層)   ",
             "鱼-  (१२३४५६७८९)",
         );
 

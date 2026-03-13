@@ -12,7 +12,7 @@ use fish_color::Color;
 fn print_colors(
     streams: &mut IoStreams,
     args: &[&wstr],
-    style: Option<TextStyling>,
+    style: TextStyling,
     bg: Option<Color>,
     underline_color: Option<Color>,
 ) {
@@ -34,7 +34,7 @@ fn print_colors(
                 fg,
                 bg.unwrap_or(Color::None),
                 underline_color.unwrap_or(Color::None),
-                style.unwrap_or(TextStyling::unknown()),
+                style,
             ));
         }
         outp.write_wstr(color_name);
@@ -131,7 +131,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             specified_face.fg.unwrap_or(Color::None),
             specified_face.bg.unwrap_or(Color::None),
             specified_face.underline_color.unwrap_or(Color::None),
-            specified_face.style.unwrap_or(TextStyling::unknown()),
+            specified_face.style,
         ),
         with_reset,
     );

@@ -162,12 +162,23 @@ impl TextFace {
     }
 }
 
-#[derive(Debug, Default, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub(crate) struct SpecifiedTextFace {
     pub(crate) fg: Option<Color>,
     pub(crate) bg: Option<Color>,
     pub(crate) underline_color: Option<Color>,
-    pub(crate) style: Option<TextStyling>,
+    pub(crate) style: TextStyling,
+}
+
+impl Default for SpecifiedTextFace {
+    fn default() -> Self {
+        SpecifiedTextFace {
+            fg: Default::default(),
+            bg: Default::default(),
+            underline_color: Default::default(),
+            style: TextStyling::unknown(),
+        }
+    }
 }
 
 pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
@@ -187,7 +198,7 @@ pub(crate) struct PrintColorsArgs<'argarray, 'args> {
     pub(crate) fg_args: &'argarray [&'args wstr],
     pub(crate) bg: Option<Color>,
     pub(crate) underline_color: Option<Color>,
-    pub(crate) style: Option<TextStyling>,
+    pub(crate) style: TextStyling,
 }
 
 pub(crate) enum ParsedArgs<'argarray, 'args> {
@@ -243,10 +254,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
 
     let mut bg_colors = vec![];
     let mut underline_colors = vec![];
-    let mut style: Option<TextStyling> = None;
-    fn init_style(style: &mut Option<TextStyling>) -> &mut TextStyling {
-        style.get_or_insert(TextStyling::unknown())
-    }
+    let mut style = TextStyling::unknown();
     let mut print_color_mode = false;
 
     let mut w = WGetopter::new(short_options, long_options, argv);
@@ -267,14 +275,14 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
                 assert!(is_builtin);
                 return Ok(PrintHelp);
             }
-            'o' => init_style(&mut style).bold = true,
-            'i' => init_style(&mut style).italics = true,
-            'd' => init_style(&mut style).dim = true,
-            'r' => init_style(&mut style).reverse = true,
-            's' => init_style(&mut style).strikethrough = true,
+            'o' => style.bold = true,
+            'i' => style.italics = true,
+            'd' => style.dim = true,
+            'r' => style.reverse = true,
+            's' => style.strikethrough = true,
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
-                init_style(&mut style).underline_style = Some(if arg == "single" {
+                style.underline_style = Some(if arg == "single" {
                     UnderlineStyle::Single
                 } else if arg == "double" {
                     UnderlineStyle::Double
@@ -348,7 +356,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
 
 #[cfg(test)]
 mod tests {
-    use super::{SpecifiedTextFace, parse_text_face};
+    use super::{SpecifiedTextFace, TextStyling, parse_text_face};
     use fish_color::{Color, Color24};
 
     #[test]
@@ -363,7 +371,7 @@ mod tests {
                 })),
                 bg: None,
                 underline_color: None,
-                style: None
+                style: TextStyling::unknown(),
             }
         );
     }

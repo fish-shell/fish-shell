@@ -213,7 +213,11 @@ pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> Option<TextFace> {
         let fg = face.fg.unwrap_or(default.fg);
         let bg = face.bg.unwrap_or(default.bg);
         let underline_color = face.underline_color.unwrap_or(default.underline_color);
-        let style = face.style.unwrap_or(TextStyling::terminal_default());
+        let style = if face.style != TextStyling::unknown() {
+            face.style
+        } else {
+            TextStyling::terminal_default()
+        };
         TextFace {
             fg,
             bg,

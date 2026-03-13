@@ -7,6 +7,7 @@ Notable improvements and fixes
 - ``set_color`` is able to turn off italics, reverse mode, strikethrough and underline individually (e.g. ``--italics=off``).
 - ``set_color`` learned the foreground (``--foreground`` or ``-f``) and reset (``--reset``) modifiers.
 - ``fish_indent`` now preserves comments and newlines immediately preceding a brace block (``{ }``) (:issue:`12505`).
+- On non-macOS platforms, :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of tokens (:issue:`12122`) eliminating cross-platform differences in input handling.
 
 For distributors and developers
 -------------------------------

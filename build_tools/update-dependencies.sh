@@ -50,18 +50,9 @@ from_gh() {
 
 from_gh ridiculousfish/widecharwidth widechar_width.rs crates/widecharwidth/src/widechar_width.rs
 from_gh ridiculousfish/littlecheck littlecheck/littlecheck.py tests/littlecheck.py
-
-from_gh_ctp() {
-    ctp_flavor=$1
-    ctp_file_destination=$2
-    ctp_commit="bc201afe737fa0c8884ffcef206217f8aac88866"
-    ctp_contents=$(curl -fsS https://raw.githubusercontent.com/catppuccin/fish/"${ctp_commit}"/themes/"${ctp_flavor}".theme)
-    printf '%s\n' "$ctp_contents" >"$ctp_file_destination"
-}
-
-from_gh_ctp 'Catppuccin%20Frappe' share/themes/catppuccin-frappe.theme
-from_gh_ctp 'Catppuccin%20Macchiato' share/themes/catppuccin-macchiato.theme
-from_gh_ctp 'Catppuccin%20Mocha' share/themes/catppuccin-mocha.theme
+from_gh catppuccin/fish themes/catppuccin-frappe.theme share/themes/catppuccin-frappe.theme
+from_gh catppuccin/fish themes/catppuccin-macchiato.theme share/themes/catppuccin-macchiato.theme
+from_gh catppuccin/fish themes/catppuccin-mocha.theme share/themes/catppuccin-mocha.theme
 
 # Update Cargo.lock
 cargo update

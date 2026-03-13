@@ -1,6 +1,11 @@
 fish ?.?.? (released ???)
 =========================
 
+Interactive improvements
+------------------------
+- The tab completion pager now left-justifies the description of each column
+  (:issue:`12546`).
+
 Notable improvements and fixes
 ------------------------------
 - New Spanish translations (:issue:`12489`).

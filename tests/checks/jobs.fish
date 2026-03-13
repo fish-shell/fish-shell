@@ -83,7 +83,7 @@ foo
 sleep 1 &
 set sleep_job $last_pid
 function sleep_done_$sleep_job --on-job-exit $sleep_job
-    /bin/echo "sleep is done"
+    command echo "sleep is done"
     functions --erase sleep_done_$sleep_job
 end
 sleep 2

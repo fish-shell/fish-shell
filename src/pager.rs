@@ -1384,25 +1384,25 @@ mod tests {
     fn test_pager_layout() {
         let _cleanup = test_init();
         // These tests are woefully incomplete
-        // They only test the truncation logic for a single completion
 
-        let rendered_line = |pager: &mut Pager, width: u16| {
+        let rendered_lines = |pager: &mut Pager, width: u16| {
             pager.set_term_size(&Termsize::new(
                 NonZeroU16::new(width).unwrap(),
                 Termsize::DEFAULT_HEIGHT,
             ));
             let rendering = pager.render();
             let sd = &rendering.screen_data;
-            assert_eq!(sd.line_count(), 1);
-            let line = sd.line(0);
-            WString::from(Vec::from_iter((0..line.len()).map(|i| line.char_at(i))))
+            (0..sd.line_count())
+                .map(|i| sd.line(i))
+                .map(|line| WString::from(Vec::from_iter((0..line.len()).map(|i| line.char_at(i)))))
+                .collect::<Vec<_>>()
         };
 
         macro_rules! validate {
-            ($pager:expr, $width:expr, $expected:expr) => {
+            ($pager:expr, $width:expr, $($expected:expr),* $(,)?) => {
                 assert_eq!(
-                    rendered_line($pager, $width),
-                    $expected.to_owned(),
+                    rendered_lines($pager, $width),
+                    &[$(WString::from($expected)),*],
                     "width {}",
                     $width
                 );
@@ -1466,6 +1466,161 @@ mod tests {
         validate!(&mut pager, 18, L!("abcdefghijklmnopq…"));
         validate!(&mut pager, 17, L!("abcdefghijklmnop…"));
         validate!(&mut pager, 16, L!("abcdefghijklmno…"));
+
+        // Multiple completions, uneven comp, even desc
+        pager.set_completions(
+            &completions(&[
+                ("coverity_scan_master", "Local Branch"),
+                ("curly-underlines", "Local Branch"),
+                ("docker-builds", "Local Branch"),
+                ("fish-reenable-cirrus", "Local Branch"),
+                ("macos-apropos", "Local Branch"),
+                ("master", "Local Branch"),
+            ]),
+            true,
+        );
+        validate!(
+            &mut pager,
+            80,
+            "coverity_scan_master  (Local Branch)  fish-reenable-cirrus  (Local Branch)",
+            "curly-underlines      (Local Branch)  macos-apropos         (Local Branch)",
+            "docker-builds         (Local Branch)  master                (Local Branch)",
+        );
+        validate!(
+            &mut pager,
+            40,
+            "coverity_scan_master  (Local Branch)",
+            "curly-underlines      (Local Branch)",
+            "docker-builds         (Local Branch)",
+            "fish-reenable-cirrus  (Local Branch)",
+            "macos-apropos         (Local Branch)",
+            "master                (Local Branch)",
+        );
+        validate!(
+            &mut pager,
+            20,
+            "coverity_…  (Local…)",
+            "curly-und…  (Local…)",
+            "docker-bu…  (Local…)",
+            "fish-reen…  (Local…)",
+            "macos-apr…  (Local…)",
+            "master  (Local Bra…)",
+        );
+
+        // Multiple completions, even comp, uneven desc
+        pager.set_completions(
+            &completions(&[
+                ("e9340a", "CI: rebase MSYS2 dll"),
+                ("bf5fa4", "feat: implement `perror_nix`"),
+                ("fcdcae", "l10n: add spanish translation"),
+                ("c7aaf4", "wutil: use `std::fs::rename`"),
+                ("11dda6", "wutil: use `std::fs::read_link`"),
+                ("2ba031", "xtask: don't panic on failure"),
+                ("fa1a12", "nix: use `getpgrp` wrapper"),
+                ("04b799", "nix: use `access`"),
+                ("e41f2f", "nix: use `fchdir`"),
+                ("7992fd", "refactor: extract `perror`"),
+                ("73e3b4", "tarball: capture Git version"),
+            ]),
+            true,
+        );
+        validate!(
+            &mut pager,
+            100,
+            "e9340a             (CI: rebase MSYS2 dll)  fa1a12    (nix: use `getpgrp` wrapper)",
+            "bf5fa4     (feat: implement `perror_nix`)  04b799             (nix: use `access`)",
+            "fcdcae    (l10n: add spanish translation)  e41f2f             (nix: use `fchdir`)",
+            "c7aaf4     (wutil: use `std::fs::rename`)  7992fd    (refactor: extract `perror`)",
+            "11dda6  (wutil: use `std::fs::read_link`)  73e3b4  (tarball: capture Git version)",
+            "2ba031    (xtask: don't panic on failure)  ",
+        );
+        validate!(
+            &mut pager,
+            60,
+            "e9340a             (CI: rebase MSYS2 dll)",
+            "bf5fa4     (feat: implement `perror_nix`)",
+            "fcdcae    (l10n: add spanish translation)",
+            "c7aaf4     (wutil: use `std::fs::rename`)",
+            "11dda6  (wutil: use `std::fs::read_link`)",
+            "2ba031    (xtask: don't panic on failure)",
+            "fa1a12       (nix: use `getpgrp` wrapper)",
+            "04b799                (nix: use `access`)",
+            "e41f2f                (nix: use `fchdir`)",
+            "7992fd       (refactor: extract `perror`)",
+            "73e3b4     (tarball: capture Git version)",
+        );
+        validate!(
+            &mut pager,
+            30,
+            "e9340a  (CI: rebase MSYS2 dll)",
+            "bf5fa4  (feat: implement `pe…)",
+            "fcdcae  (l10n: add spanish t…)",
+            "c7aaf4  (wutil: use `std::fs…)",
+            "11dda6  (wutil: use `std::fs…)",
+            "2ba031  (xtask: don't panic …)",
+            "fa1a12  (nix: use `getpgrp` …)",
+            "04b799     (nix: use `access`)",
+            "e41f2f     (nix: use `fchdir`)",
+            "7992fd  (refactor: extract `…)",
+            "73e3b4  (tarball: capture Gi…)",
+        );
+
+        // Multiple completions, uneven comp, uneven desc
+        pager.set_completions(
+            &completions(&[
+                ("ab", "12345678"),
+                ("abcdefghi", "1234"),
+                ("a", "12"),
+                ("a", "123456789123456789"),
+                ("abcdefghijklmnopqrs", "123456789"),
+                ("abcdefghijklmnopqrst", "1"),
+            ]),
+            true,
+        );
+        validate!(
+            &mut pager,
+            70,
+            "ab     (12345678)  a           (123456789123456789)",
+            "abcdefghi  (1234)  abcdefghijklmnopqrs  (123456789)",
+            "a            (12)  abcdefghijklmnopqrst         (1)",
+        );
+        validate!(
+            &mut pager,
+            50,
+            "ab                    (12345678)",
+            "abcdefghi                 (1234)",
+            "a                           (12)",
+            "a           (123456789123456789)",
+            "abcdefghijklmnopqrs  (123456789)",
+            "abcdefghijklmnopqrst         (1)",
+        );
+        validate!(
+            &mut pager,
+            20,
+            "ab        (12345678)",
+            "abcdefghi     (1234)",
+            "a               (12)",
+            "a  (12345678912345…)",
+            "abcdefghi…  (12345…)",
+            "abcdefghijklmn…  (1)",
+        );
+
+        // Multiple completions, non-ascii completions/descriptions
+        pager.set_completions(
+            &completions(&[
+                ("фиш", "123456789"),
+                ("abc", "鱼殼層"),
+                ("鱼-", "१२३४५६७८९"),
+            ]),
+            true,
+        );
+        validate!(
+            &mut pager,
+            20,
+            "фиш  (123456789)",
+            "abc     (鱼殼層)",
+            "鱼-  (१२३४५६७८९)",
+        );
 
         // Newlines in prefix
         pager.set_prefix(Cow::Borrowed(L!("{\\\n")), false); // }

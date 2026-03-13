@@ -1431,8 +1431,9 @@ mod tests {
         let local_mode = EnvSetMode::new_at_early_startup(EnvMode::LOCAL);
         vars.set_one(L!("CDPATH"), local_mode, L!("./cdpath-entry").to_owned());
 
-        vars.set_one(L!("VARIABLE_IN_COMMAND"), local_mode, L!("a").to_owned());
-        vars.set_one(L!("VARIABLE_IN_COMMAND2"), local_mode, L!("at").to_owned());
+        // NOTE n, nv are suffix of /usr/bin/env
+        vars.set_one(L!("VARIABLE_IN_COMMAND"), local_mode, L!("n").to_owned());
+        vars.set_one(L!("VARIABLE_IN_COMMAND2"), local_mode, L!("nv").to_owned());
 
         let _cleanup = ScopeGuard::new((), |_| {
             vars.remove(L!("VARIABLE_IN_COMMAND"), EnvSetMode::default());
@@ -1773,24 +1774,25 @@ mod tests {
             ("VERSION", fg(HighlightRole::operat), ns),
         );
 
+        // NOTE: we assume /usr/bin/env exists on the system here
         validate!(
-            ("/bin/ca", fg(HighlightRole::command), ns),
+            ("/usr/bin/en", fg(HighlightRole::command), ns),
             ("*", fg(HighlightRole::operat), ns)
         );
 
         validate!(
-            ("/bin/c", fg(HighlightRole::command), ns),
+            ("/usr/bin/e", fg(HighlightRole::command), ns),
             ("*", fg(HighlightRole::operat), ns)
         );
 
         validate!(
-            ("/bin/c", fg(HighlightRole::command), ns),
+            ("/usr/bin/e", fg(HighlightRole::command), ns),
             ("{$VARIABLE_IN_COMMAND}", fg(HighlightRole::operat), ns),
             ("*", fg(HighlightRole::operat), ns)
         );
 
         validate!(
-            ("/bin/c", fg(HighlightRole::command), ns),
+            ("/usr/bin/e", fg(HighlightRole::command), ns),
             ("$VARIABLE_IN_COMMAND2", fg(HighlightRole::operat), ns)
         );
 

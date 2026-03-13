@@ -139,9 +139,9 @@ echo "command echo pipe 12 <&12 12<&-" | source 12<&0
 #CHECK: pipe 11
 #CHECK: pipe 12
 
-echo foo >/bin/echo/file
-#CHECKERR: warning: An error occurred while redirecting file '/bin/echo/file'
-#CHECKERR: warning: Path '/bin/echo' is not a directory
+echo foo >/bin/sh/file
+#CHECKERR: warning: An error occurred while redirecting file '/bin/sh/file'
+#CHECKERR: warning: Path '/bin/sh' is not a directory
 
 echo foo <?nonexistent
 #CHECK: foo

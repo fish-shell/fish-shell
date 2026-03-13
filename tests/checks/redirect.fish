@@ -118,16 +118,16 @@ echo hooray2 >&2
 # This code is very similar to eval. We go over a bunch of fads
 # to make it likely that we will nominally conflict with a pipe
 # fish is supposed to detect this case and dup the pipe to something else
-echo "/bin/echo pipe 3 <&3 3<&-" | source 3<&0
-echo "/bin/echo pipe 4 <&4 4<&-" | source 4<&0
-echo "/bin/echo pipe 5 <&5 5<&-" | source 5<&0
-echo "/bin/echo pipe 6 <&6 6<&-" | source 6<&0
-echo "/bin/echo pipe 7 <&7 7<&-" | source 7<&0
-echo "/bin/echo pipe 8 <&8 8<&-" | source 8<&0
-echo "/bin/echo pipe 9 <&9 9<&-" | source 9<&0
-echo "/bin/echo pipe 10 <&10 10<&-" | source 10<&0
-echo "/bin/echo pipe 11 <&11 11<&-" | source 11<&0
-echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
+echo "command echo pipe 3 <&3 3<&-" | source 3<&0
+echo "command echo pipe 4 <&4 4<&-" | source 4<&0
+echo "command echo pipe 5 <&5 5<&-" | source 5<&0
+echo "command echo pipe 6 <&6 6<&-" | source 6<&0
+echo "command echo pipe 7 <&7 7<&-" | source 7<&0
+echo "command echo pipe 8 <&8 8<&-" | source 8<&0
+echo "command echo pipe 9 <&9 9<&-" | source 9<&0
+echo "command echo pipe 10 <&10 10<&-" | source 10<&0
+echo "command echo pipe 11 <&11 11<&-" | source 11<&0
+echo "command echo pipe 12 <&12 12<&-" | source 12<&0
 #CHECK: pipe 3
 #CHECK: pipe 4
 #CHECK: pipe 5

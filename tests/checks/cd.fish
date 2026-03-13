@@ -216,7 +216,7 @@ function __fish_test_thrash_cd
     set -l dir (mktemp -d)
     cd $dir
     for i in (seq 50)
-        test (/bin/pwd) = $dir
+        test (command pwd) = $dir
         and test $PWD = $dir
         or echo "cd test failed" 1>&2
         sleep .002

@@ -345,8 +345,8 @@ begin
             rm -rf $parened_path
             and mkdir $parened_path
             and mkdir $parened_subpath
-            and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
-            and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
+            and ln -s (command -v ls) $parened_path/'__test6_(paren)_command'
+            and ln -s (command -v ls) $parened_subpath/'__test6_subdir_(paren)_command'
         end
         echo "error: could not create command expansion temp environment" >&2
     end

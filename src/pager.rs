@@ -1409,16 +1409,23 @@ mod tests {
             };
         }
 
+        let completions = |cs: &[(&str, &str)]| {
+            cs.iter()
+                .map(|(c, d)| {
+                    Completion::new(
+                        WString::from(*c),
+                        WString::from(*d),
+                        StringFuzzyMatch::exact_match(),
+                        CompleteFlags::default(),
+                    )
+                })
+                .collect::<Vec<_>>()
+        };
+
         let mut pager = Pager::default();
 
         // These test cases have equal completions and descriptions
-        let c1s = vec![Completion::new(
-            L!("abcdefghij").to_owned(),
-            L!("1234567890").to_owned(),
-            StringFuzzyMatch::exact_match(),
-            CompleteFlags::default(),
-        )];
-        pager.set_completions(&c1s, true);
+        pager.set_completions(&completions(&[("abcdefghij", "1234567890")]), true);
 
         validate!(&mut pager, 26, L!("abcdefghij  (1234567890)"));
         validate!(&mut pager, 25, L!("abcdefghij  (1234567890)"));
@@ -1433,13 +1440,7 @@ mod tests {
         validate!(&mut pager, 16, L!("abcdefg…  (123…)"));
 
         // These test cases have heavyweight completions
-        let c2s = vec![Completion::new(
-            L!("abcdefghijklmnopqrs").to_owned(),
-            L!("1").to_owned(),
-            StringFuzzyMatch::exact_match(),
-            CompleteFlags::default(),
-        )];
-        pager.set_completions(&c2s, true);
+        pager.set_completions(&completions(&[("abcdefghijklmnopqrs", "1")]), true);
         validate!(&mut pager, 26, L!("abcdefghijklmnopqrs  (1)"));
         validate!(&mut pager, 25, L!("abcdefghijklmnopqrs  (1)"));
         validate!(&mut pager, 24, L!("abcdefghijklmnopqrs  (1)"));
@@ -1453,13 +1454,7 @@ mod tests {
         validate!(&mut pager, 16, L!("abcdefghij…  (1)"));
 
         // These test cases have no descriptions
-        let c3s = vec![Completion::new(
-            L!("abcdefghijklmnopqrst").to_owned(),
-            L!("").to_owned(),
-            StringFuzzyMatch::exact_match(),
-            CompleteFlags::default(),
-        )];
-        pager.set_completions(&c3s, true);
+        pager.set_completions(&completions(&[("abcdefghijklmnopqrst", "")]), true);
         validate!(&mut pager, 26, L!("abcdefghijklmnopqrst"));
         validate!(&mut pager, 25, L!("abcdefghijklmnopqrst"));
         validate!(&mut pager, 24, L!("abcdefghijklmnopqrst"));
@@ -1473,14 +1468,8 @@ mod tests {
         validate!(&mut pager, 16, L!("abcdefghijklmno…"));
 
         // Newlines in prefix
-        let c4s = vec![Completion::new(
-            L!("Hello").to_owned(),
-            L!("").to_owned(),
-            StringFuzzyMatch::exact_match(),
-            CompleteFlags::default(),
-        )];
         pager.set_prefix(Cow::Borrowed(L!("{\\\n")), false); // }
-        pager.set_completions(&c4s, true);
+        pager.set_completions(&completions(&[("Hello", "")]), true);
         validate!(&mut pager, 30, L!("{\\␊Hello")); // }
     }
 }

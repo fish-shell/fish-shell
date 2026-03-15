@@ -118,6 +118,11 @@ pub struct Pager {
     pub extra_progress_text: WString,
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+struct Column {
+    width: usize,
+}
+
 impl Pager {
     // Returns the index of the completion that should draw selected, using the given number of
     // columns.
@@ -155,15 +160,13 @@ impl Pager {
     /// the specified number of columns. Always succeeds if cols is 1.
     fn completion_try_print(
         &self,
-        cols: usize,
+        col_count: usize,
         prefix: &wstr,
         lst: &[PagerComp],
         rendering: &mut PageRendering,
         suggested_start_row: usize,
     ) -> bool {
-        assert!(cols > 0);
-        // The calculated preferred width of each column.
-        let mut width_by_column = [0; PAGER_MAX_COLS];
+        assert!(col_count > 0);
 
         // Skip completions on tiny terminals.
         if self.available_term_width < PAGER_MIN_WIDTH
@@ -189,7 +192,7 @@ impl Pager {
             );
         }
 
-        let row_count = divide_round_up(lst.len(), cols);
+        let row_count = divide_round_up(lst.len(), col_count);
 
         // We have more to disclose if we are not fully disclosed and there's more rows than we have in
         // our term height.
@@ -207,25 +210,26 @@ impl Pager {
         }
 
         // Calculate how wide the list would be.
-        for (col, col_width) in width_by_column.iter_mut().enumerate() {
+        let mut cols = [Column::default(); PAGER_MAX_COLS];
+        for (col_idx, col) in cols.iter_mut().enumerate() {
             for row in 0..row_count {
-                let comp_idx = col * row_count + row;
+                let comp_idx = col_idx * row_count + row;
                 if comp_idx >= lst.len() {
                     continue;
                 }
                 let c = &lst[comp_idx];
-                *col_width = std::cmp::max(*col_width, c.preferred_width());
+                col.width = std::cmp::max(col.width, c.preferred_width());
             }
         }
 
-        let print = if cols == 1 {
+        let print = if col_count == 1 {
             // Force fit if one column.
-            width_by_column[0] = std::cmp::min(width_by_column[0], term_width);
+            cols[0].width = std::cmp::min(cols[0].width, term_width);
             true
         } else {
             // Compute total preferred width, plus spacing
-            let mut total_width_needed: usize = width_by_column.iter().sum();
-            total_width_needed += (cols - 1) * PAGER_SPACER_STRING.len();
+            let mut total_width_needed: usize = cols.iter().map(|c| c.width).sum();
+            total_width_needed += (col_count - 1) * PAGER_SPACER_STRING.len();
             total_width_needed <= term_width
         };
         if !print {
@@ -254,13 +258,7 @@ impl Pager {
         assert!(stop_row - start_row <= term_height);
         // This always printed at the end of the command line.
         self.completion_print(
-            cols,
-            &width_by_column,
-            start_row,
-            stop_row,
-            prefix,
-            lst,
-            rendering,
+            col_count, &cols, start_row, stop_row, prefix, lst, rendering,
         );
 
         // Add the progress line. It's a "more to disclose" line if necessary, or a row listing if
@@ -402,8 +400,8 @@ impl Pager {
     /// Print the specified part of the completion list, using the specified column offsets and quoting
     /// style.
     ///
-    /// \param cols number of columns to print in
-    /// \param width_by_column An array specifying the width of each column
+    /// \param col_count number of columns to print in
+    /// \param cols An array specifying properties of each column
     /// \param row_start The first row to print
     /// \param row_stop the row after the last row to print
     /// \param prefix The string to print before each completion
@@ -411,8 +409,8 @@ impl Pager {
     #[allow(clippy::too_many_arguments)]
     fn completion_print(
         &self,
-        cols: usize,
-        width_by_column: &[usize; PAGER_MAX_COLS],
+        col_count: usize,
+        cols: &[Column; PAGER_MAX_COLS],
         row_start: usize,
         row_stop: usize,
         prefix: &wstr,
@@ -424,13 +422,13 @@ impl Pager {
         rendering.row_start = row_start;
         rendering.row_end = row_stop;
 
-        let rows = divide_round_up(lst.len(), cols);
+        let rows = divide_round_up(lst.len(), col_count);
 
-        let effective_selected_idx = self.visual_selected_completion_index(rows, cols);
+        let effective_selected_idx = self.visual_selected_completion_index(rows, col_count);
 
         for row in row_start..row_stop {
-            for (col, col_width) in width_by_column.iter().copied().enumerate() {
-                let idx = col * rows + row;
+            for (col_idx, col) in cols.iter().copied().enumerate() {
+                let idx = col_idx * rows + row;
                 if lst.len() <= idx {
                     continue;
                 }
@@ -447,13 +445,13 @@ impl Pager {
                     CharOffset::Pager(idx),
                     show_prefix.then_some(prefix),
                     el,
-                    col_width,
+                    col,
                     row % 2 != 0,
                     is_selected,
                 );
 
                 // If there's more to come, append two spaces.
-                if col + 1 < cols {
+                if col_idx + 1 < col_count {
                     line.append_str(PAGER_SPACER_STRING, HighlightSpec::new(), CharOffset::None);
                 }
 
@@ -472,33 +470,33 @@ impl Pager {
         offset_in_cmdline: CharOffset,
         prefix: Option<&wstr>,
         c: &PagerComp,
-        width: usize,
+        col: Column,
         secondary: bool,
         selected: bool,
     ) -> Line {
         let mut comp_width;
         let mut line_data = Line::new();
 
-        if c.preferred_width() <= width {
+        if c.preferred_width() <= col.width {
             // The entry fits, we give it as much space as it wants.
             comp_width = c.comp_width;
         } else {
             // The completion and description won't fit on the allocated space. Give a maximum of 2/3 of
             // the space to the completion, and whatever is left to the description
-            // This expression is an overflow-safe way of calculating (width-4)*2/3
-            let width_minus_spacer = width.saturating_sub(4);
+            // This expression is an overflow-safe way of calculating (col.width-4)*2/3
+            let width_minus_spacer = col.width.saturating_sub(4);
             let two_thirds_width =
                 (width_minus_spacer / 3) * 2 + ((width_minus_spacer % 3) * 2) / 3;
             comp_width = std::cmp::min(c.comp_width, two_thirds_width);
 
             // If the description is short, give the completion the remaining space
             let desc_punct_width = c.description_punctuated_width();
-            if width > desc_punct_width {
-                comp_width = std::cmp::max(comp_width, width - desc_punct_width);
+            if col.width > desc_punct_width {
+                comp_width = std::cmp::max(comp_width, col.width - desc_punct_width);
             }
 
             // The description gets what's left
-            assert!(comp_width <= width);
+            assert!(comp_width <= col.width);
         }
 
         let modify_role = |role: HighlightRole| {
@@ -571,7 +569,7 @@ impl Pager {
             );
         }
 
-        let mut desc_remaining = width - comp_width + comp_remaining;
+        let mut desc_remaining = col.width - comp_width + comp_remaining;
         if c.desc_width > 0 && desc_remaining > 4 {
             // always have at least two spaces to separate completion and description
             desc_remaining -= print_max(

@@ -1,6 +1,4 @@
-<<<<<<< HEAD
 use crate::{
-    common::{FilenameRef, Named, escape, get_by_sorted_name},
     env::Environment,
     flog::flog,
     global_safety::RelaxedAtomicBool,
@@ -13,7 +11,7 @@ use crate::{
     reader::{Reader, reader_reset_interrupted},
     threads::assert_is_main_thread,
 };
-use fish_common::{Named, assert_sorted_by_name, escape, get_by_sorted_name};
+use fish_common::{FilenameRef, Named, assert_sorted_by_name, escape, get_by_sorted_name};
 use std::{
     mem,
     sync::{

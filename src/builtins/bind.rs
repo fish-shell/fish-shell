@@ -3,9 +3,9 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{EscapeFlags, EscapeStringStyle, FilenameRef, bytes2wcstring, escape, escape_string, valid_var_name},
+    common::valid_var_name,
     err_fmt, err_raw, err_str,
-    highlight::highlight_and_colorize,
+    highlight::{colorize, highlight_and_colorize, highlight_shell},
     input::{
         InputMapping, InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings,
     },
@@ -205,11 +205,30 @@ impl BuiltinBind {
     /// List all current key bindings.
     fn list(&self, bind_mode: Option<&wstr>, user: bool, parser: &Parser, streams: &mut IoStreams) {
         let lst = self.input_mappings.get_names(user);
-        for binding in lst {
-            if bind_mode.is_some_and(|m| m != binding.mode) {
-                continue;
-            }
+        let mut cur_file = &Default::default();
 
+        for binding in lst {
+            let mut out = WString::new();
+            let definition_file =
+                &self.input_mappings.get(&binding.seq, bind_mode, user)[0].definition_file;
+
+            if let Some(def_file) = definition_file {
+                if def_file != cur_file {
+                    out.push_utfstr(&L!("# Defined in "));
+                    out.push_utfstr(&**def_file);
+                    out.push_utfstr(&L!(":\n"));
+                    let mut colors = Vec::new();
+                    highlight_shell(&out, &mut colors, &parser.context(), false, None);
+                    let colored = colorize(&out, &colors, parser.vars());
+                    streams.out.append(&bytes2wcstring(&colored));
+
+                    cur_file = def_file;
+                }
+
+                if bind_mode.is_some_and(|m| m != binding.mode) {
+                    continue;
+                }
+            }
             self.list_one(&binding.seq, Some(&binding.mode), user, parser, streams);
         }
     }
@@ -417,11 +436,11 @@ impl BuiltinBind {
 }
 
 fn parse_cmd_opts(
+    parser: &Parser,
+    streams: &mut IoStreams,
     opts: &mut Options,
     optind: &mut usize,
     argv: &mut [&wstr],
-    parser: &Parser,
-    streams: &mut IoStreams,
 ) -> BuiltinResult {
     let cmd = argv[0];
     let short_options = L!("aehkKfM:Lm:s");
@@ -528,7 +547,7 @@ impl BuiltinBind {
     ) -> BuiltinResult {
         let cmd = argv[0];
         let mut optind = 0;
-        parse_cmd_opts(&mut self.opts, &mut optind, argv, parser, streams)?;
+        parse_cmd_opts(parser, streams, &mut self.opts, &mut optind, argv)?;
 
         if self.opts.list_modes {
             self.list_modes(streams);

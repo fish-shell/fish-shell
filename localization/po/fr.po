@@ -12970,6 +12970,9 @@ msgstr "(Ne pas) faire utiliser de comparaisons de virgules flottantes IEEE par 
 msgid "Control whether to include glibc NSS data"
 msgstr ""
 
+msgid "Control whether to register a session with service manager or without"
+msgstr ""
+
 msgid "Controller information"
 msgstr ""
 
@@ -30136,6 +30139,9 @@ msgstr ""
 msgid "Give patch name and comment in file"
 msgstr "Placer le nom et commentaire de patch dans le fichier"
 
+msgid "Give privileges to selected or current user"
+msgstr ""
+
 msgid "Give some file-transfer stats"
 msgstr "Donner des statistiques sur les transferts individuels"
 
@@ -30698,6 +30704,9 @@ msgid "Holds remaining jobs on the named printer"
 msgstr "Suspendre les travaux restants sur l’imprimante spécifiée"
 
 msgid "Home URL prefix for PEPs"
+msgstr ""
+
+msgid "Home area to log into"
 msgstr ""
 
 msgid "Home directory"
@@ -33274,6 +33283,9 @@ msgstr ""
 msgid "Invoke a method on a remote object"
 msgstr ""
 
+msgid "Invoke command via target user's login shell"
+msgstr ""
+
 msgid "Invoke fstrim on domain's mounted filesystems"
 msgstr ""
 
@@ -33401,6 +33413,9 @@ msgid "Just check, don't make any changes"
 msgstr ""
 
 msgid "Just exit with status 0 when there is a match and with non-zero status when there isn't"
+msgstr ""
+
+msgid "Just like --pty, but leave TTY access to agents until unit is started up"
 msgstr ""
 
 msgid "Just report what it would remove"
@@ -37144,6 +37159,9 @@ msgstr ""
 msgid "Long listing format"
 msgstr ""
 
+msgid "Look at all journal files instead of local ones"
+msgstr ""
+
 msgid "Look for (non-boring) files that could be added"
 msgstr ""
 
@@ -40762,7 +40780,13 @@ msgstr ""
 msgid "Operate on a range"
 msgstr ""
 
+msgid "Operate on an alternate filesystem root"
+msgstr ""
+
 msgid "Operate on cached data, no network repo access"
+msgstr ""
+
+msgid "Operate on disk image as filesystem root"
 msgstr ""
 
 msgid "Operate on local CONTAINER"
@@ -52915,6 +52939,9 @@ msgstr ""
 msgid "Run tracer process as tracee's grandchild in a separate session"
 msgstr ""
 
+msgid "Run under the specified unit name"
+msgstr ""
+
 msgid "Run unit tests"
 msgstr ""
 
@@ -57882,6 +57909,9 @@ msgstr "Raccourci pour « --style=gv_spartan.dat »"
 
 msgid "Shortcut for --style=gv_widgetless.dat"
 msgstr "Raccourci pour « --style=gv_widgetless.dat »"
+
+msgid "Shortcut for --via-shell --chdir='~'"
+msgstr ""
 
 msgid "Shorten some address references at link time, when possible; uses the linker option -relax"
 msgstr "Raccourcir certaines références d’adresse lors de l’édition des liens, si possible ; utilise l’option « -relax » de l’éditeur de liens"
@@ -62895,6 +62925,9 @@ msgstr "Spécifier le dossier de la base de données de rpm"
 
 msgid "Specify directory with configuration files"
 msgstr "Spécifier le dossier des fichiers de configuration"
+
+msgid "Specify disk image dissection policy"
+msgstr ""
 
 msgid "Specify display"
 msgstr ""

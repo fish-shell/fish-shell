@@ -9,11 +9,11 @@ for bindings in true fish_default_key_bindings fish_vi_key_bindings
         $bindings
         or echo >&2 error setting bindings: status=\$status
         bind > $tmpdir/old
-        bind | string replace -r ' # defined in .*' '' > $tmpdir/old
+        bind | string match -r -v '# Defined in *' > $tmpdir/old
         bind --erase --all --preset
         bind --erase --all
         source $tmpdir/old
-        bind | string replace -r ' # defined in .*' '' >$tmpdir/new
+        bind | string match -r -v '# Defined in *' >$tmpdir/new
         diff -u $tmpdir/{old,new}
     "
 end
@@ -36,8 +36,8 @@ bind -M bind-mode \cX true
 bind -M bind_mode \cX true
 
 # Listing bindings
-bind | string match -v '*\e\\[*' | string replace -r ' # defined in .*' '' # Hide raw bindings.
-bind --user --preset | string match -v '*\e\\[*' | string replace -r ' # defined in .*' ''
+bind | string match -v '*\e\\[*' | string match -r -v '# Defined in *' # Hide raw bindings.
+bind --user --preset | string match -v '*\e\\[*' | string match -r -v '# Defined in *'
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset enter execute
 # CHECK: bind --preset tab complete
@@ -76,7 +76,7 @@ bind --user --preset | string match -v '*\e\\[*' | string replace -r ' # defined
 # CHECK: bind -M bind_mode ctrl-x true
 
 # Preset only
-bind --preset | string match -v '*\e\\[*' | string replace -r ' # defined in .*' ''
+bind --preset | string match -v '*\e\\[*' | string match -r -v '# Defined in *'
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset enter execute
 # CHECK: bind --preset tab complete
@@ -96,12 +96,12 @@ bind --preset | string match -v '*\e\\[*' | string replace -r ' # defined in .*'
 # CHECK: bind --preset ctrl-f forward-char
 
 # User only
-bind --user | string match -v '*\e\\[*' | string replace -r ' # defined in .*' ''
+bind --user | string match -v '*\e\\[*' | string match -r -v '# Defined in *'
 # CHECK: bind -M bind_mode ctrl-x true
 
 # Adding bindings
 bind tab 'echo banana'
-bind | string match -v '*\e\\[*' | string replace -r ' # defined in .*' ''
+bind | string match -v '*\e\\[*' | string match -r -v '# Defined in *'
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset enter execute
 # CHECK: bind --preset tab complete
@@ -133,15 +133,15 @@ bind super-alt-\~
 
 # Legacy
 bind \cx\cax 'echo foo'
-bind \cx\cax | string replace -r ' # defined in .*' ''
+bind \cx\cax | string match -r -v '# Defined in *'
 # CHECK: bind ctrl-x,ctrl-a,x 'echo foo'
 bind \ef forward-word
-bind \ef | string replace -r ' # defined in .*' ''
+bind \ef | string match -r -v '# Defined in *'
 # CHECK: bind alt-f forward-word
 
 # Erasing bindings
 bind --erase tab
-bind tab | string replace -r ' # defined in .*' ''
+bind tab | string match -r -v '# Defined in *'
 bind tab 'echo wurst'
 # CHECK: bind --preset tab complete
 bind --erase --user --preset tab
@@ -155,7 +155,7 @@ bind -k nul 'echo foo'
 # CHECKERR: bind: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`
 
 # Either Return or ctrl-m.
-bind \r | string replace -r ' # defined in .*' ''
+bind \r | string match -r -v '# Defined in *'
 # CHECK: bind --preset enter execute
 # Never Return, probably always ctrl-j.
 bind \n 2>&1
@@ -196,6 +196,7 @@ bind ctrl-q
 
 bind --user --preset ctrl-q 'echo preset'
 # CHECKERR: bind: --preset --user: options cannot be used together
+
 
 fish_default_key_bindings
 

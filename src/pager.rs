@@ -292,7 +292,7 @@ impl Pager {
             let spec = HighlightSpec::with_both(HighlightRole::pager_progress);
             print_max(
                 CharOffset::None,
-                &progress_text,
+                progress_text.chars(),
                 spec,
                 term_width,
                 /*has_more=*/ true,
@@ -322,7 +322,7 @@ impl Pager {
         let mut search_field_remaining = term_width - 1;
         search_field_remaining -= print_max(
             CharOffset::None,
-            &sprintf!("%s ", wgettext!(SEARCH_FIELD_PROMPT)),
+            wgettext!(SEARCH_FIELD_PROMPT).chars().chain(" ".chars()),
             HighlightSpec::new(),
             search_field_remaining,
             false,
@@ -330,7 +330,7 @@ impl Pager {
         );
         search_field_remaining -= print_max(
             CharOffset::None,
-            &search_field_text,
+            search_field_text.chars(),
             underline,
             search_field_remaining,
             false,
@@ -534,7 +534,7 @@ impl Pager {
             if i > 0 {
                 comp_remaining -= print_max(
                     offset_in_cmdline,
-                    PAGER_SPACER_STRING,
+                    PAGER_SPACER_STRING.chars(),
                     bg,
                     comp_remaining,
                     /*has_more=*/ true,
@@ -545,7 +545,7 @@ impl Pager {
             if let Some(prefix) = prefix {
                 comp_remaining -= print_max(
                     offset_in_cmdline,
-                    prefix,
+                    prefix.chars(),
                     prefix_col,
                     comp_remaining,
                     !comp.is_empty(),
@@ -554,7 +554,7 @@ impl Pager {
             }
             comp_remaining -= print_max_impl(
                 offset_in_cmdline,
-                comp,
+                comp.chars(),
                 |i| {
                     if c.colors.is_empty() {
                         return comp_col; // Not a shell command.
@@ -574,14 +574,25 @@ impl Pager {
         let mut desc_remaining = width - comp_width + comp_remaining;
         if c.desc_width > 0 && desc_remaining > 4 {
             // always have at least two spaces to separate completion and description
-            desc_remaining -= print_max(offset_in_cmdline, L!("  "), bg, 2, false, &mut line_data);
+            desc_remaining -= print_max(
+                offset_in_cmdline,
+                "  ".chars(),
+                bg,
+                desc_remaining,
+                false,
+                &mut line_data,
+            );
 
             // right-justify the description by adding spaces
             // the 2 here refers to the parenthesis below
-            while desc_remaining > c.desc_width + 2 {
-                desc_remaining -=
-                    print_max(offset_in_cmdline, L!(" "), bg, 1, false, &mut line_data);
-            }
+            desc_remaining -= print_max(
+                offset_in_cmdline,
+                std::iter::repeat_n(' ', desc_remaining.saturating_sub(c.desc_width + 2)),
+                bg,
+                desc_remaining,
+                false,
+                &mut line_data,
+            );
 
             assert!(desc_remaining >= 2);
             let paren_col = HighlightSpec::with_fg_bg(
@@ -594,7 +605,7 @@ impl Pager {
             );
             desc_remaining -= print_max(
                 offset_in_cmdline,
-                L!("("),
+                "(".chars(),
                 paren_col,
                 1,
                 false,
@@ -602,7 +613,7 @@ impl Pager {
             );
             desc_remaining -= print_max(
                 offset_in_cmdline,
-                &c.desc,
+                c.desc.chars(),
                 desc_col,
                 desc_remaining - 1,
                 false,
@@ -610,7 +621,7 @@ impl Pager {
             );
             desc_remaining -= print_max(
                 offset_in_cmdline,
-                L!(")"),
+                ")".chars(),
                 paren_col,
                 1,
                 false,
@@ -621,7 +632,7 @@ impl Pager {
             // No description, or it won't fit. Just add spaces.
             print_max(
                 offset_in_cmdline,
-                &WString::from_iter(std::iter::repeat_n(' ', desc_remaining)),
+                std::iter::repeat_n(' ', desc_remaining),
                 bg,
                 desc_remaining,
                 false,
@@ -1106,24 +1117,26 @@ fn divide_round_up(numer: usize, denom: usize) -> usize {
     numer / denom + if has_rem { 1 } else { 0 }
 }
 
-/// Print the specified string, but use at most the specified amount of space. If the whole string
-/// can't be fitted, ellipsize it.
+/// Print the specified characters, but use at most the specified amount of space. If the whole
+/// string can't be fitted, ellipsize it.
 ///
-/// \param str the string to print
+/// \param chars characters to print
 /// \param color the color to apply to every printed character
 /// \param max the maximum space that may be used for printing
 /// \param has_more if this flag is true, this is not the entire string, and the string should be
 /// ellipsized even if the string fits but takes up the whole space.
 fn print_max_impl(
     offset_in_cmdline: CharOffset,
-    s: &wstr,
+    chars: impl IntoIterator<Item = char>,
     color: impl Fn(usize) -> HighlightSpec,
     max: usize,
     has_more: bool,
     line: &mut Line,
 ) -> usize {
+    let mut chars = chars.into_iter().peekable();
     let mut remaining = max;
-    for (i, c) in s.chars().enumerate() {
+    let mut i = 0;
+    while let Some(c) = chars.next() {
         let iwidth_c = wcwidth_rendered(c);
         let Ok(width_c) = usize::try_from(iwidth_c) else {
             // skip non-printable characters
@@ -1135,7 +1148,7 @@ fn print_max_impl(
         }
 
         let ellipsis = ELLIPSIS_CHAR;
-        if (width_c == remaining) && (has_more || i + 1 < s.len()) {
+        if (width_c == remaining) && (has_more || chars.peek().is_some()) {
             line.append(ellipsis, color(i), offset_in_cmdline);
             let ellipsis_width = wcwidth_rendered(ellipsis);
             remaining = remaining.saturating_sub(usize::try_from(ellipsis_width).unwrap());
@@ -1144,6 +1157,8 @@ fn print_max_impl(
 
         line.append(c, color(i), offset_in_cmdline);
         remaining = remaining.checked_sub(width_c).unwrap();
+
+        i += 1;
     }
 
     // return how much we consumed
@@ -1152,13 +1167,13 @@ fn print_max_impl(
 
 fn print_max(
     offset_in_cmdline: CharOffset,
-    s: &wstr,
+    chars: impl IntoIterator<Item = char>,
     color: HighlightSpec,
     max: usize,
     has_more: bool,
     line: &mut Line,
 ) -> usize {
-    print_max_impl(offset_in_cmdline, s, |_| color, max, has_more, line)
+    print_max_impl(offset_in_cmdline, chars, |_| color, max, has_more, line)
 }
 
 /// Trim leading and trailing whitespace, and compress other whitespace runs into a single space.

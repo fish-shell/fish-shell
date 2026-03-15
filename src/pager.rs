@@ -225,22 +225,18 @@ impl Pager {
                 max_desc = max_desc.max(c.description_punctuated_width());
             }
             *col = Column {
-                width: max_comp + max_desc,
+                // Force-fit to term width, useful when one column.
+                width: (max_comp + max_desc).min(term_width),
                 desc_align: max_comp + 2,
             };
         }
+        let cols = cols; // rm mut
 
-        let print = if col_count == 1 {
-            // Force fit if one column.
-            cols[0].width = std::cmp::min(cols[0].width, term_width);
-            true
-        } else {
-            // Compute total preferred width, plus spacing
-            let mut total_width_needed: usize = cols.iter().map(|c| c.width).sum();
-            total_width_needed += (col_count - 1) * PAGER_SPACER_STRING.len();
-            total_width_needed <= term_width
-        };
-        if !print {
+        // Compute total preferred width, plus spacing
+        let total_width_needed = cols.iter().map(|c| c.width).sum::<usize>()
+            + (col_count - 1) * PAGER_SPACER_STRING.len();
+        if term_width < total_width_needed {
+            assert!(col_count > 1, "single col force-fit to termwidth above");
             return false; // no need to continue
         }
 

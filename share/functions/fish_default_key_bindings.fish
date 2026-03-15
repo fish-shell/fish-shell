@@ -13,13 +13,12 @@ function fish_default_key_bindings -d "emacs-like key binds"
         end
     end
 
-    # Silence warnings about unavailable keys. See #4431, 4188
-    if not contains -- -s $argv
-        set argv -s $argv
+    function per_os_bind
+        eval "$(__fish_per_os_bind)"
     end
 
     # These are shell-specific bindings that we share with vi mode.
-    __fish_shared_key_bindings $argv
+    eval "$(__fish_shared_key_bindings)" $argv
     or return # protect against invalid $argv
 
     bind --preset $argv right forward-char
@@ -50,11 +49,12 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv alt-u upcase-word
 
     bind --preset $argv alt-c capitalize-word
-    __fish_per_os_bind --preset $argv alt-backspace backward-kill-word backward-kill-token
-    __fish_per_os_bind --preset $argv ctrl-alt-h backward-kill-word backward-kill-token
-    __fish_per_os_bind --preset $argv ctrl-backspace backward-kill-token backward-kill-word
-    __fish_per_os_bind --preset $argv alt-delete kill-word kill-token
-    __fish_per_os_bind --preset $argv ctrl-delete kill-token kill-word
+
+    per_os_bind --preset $argv alt-backspace backward-kill-word backward-kill-token
+    per_os_bind --preset $argv ctrl-alt-h backward-kill-word backward-kill-token
+    per_os_bind --preset $argv ctrl-backspace backward-kill-token backward-kill-word
+    per_os_bind --preset $argv alt-delete kill-word kill-token
+    per_os_bind --preset $argv ctrl-delete kill-token kill-word
 
     bind --preset $argv alt-\< beginning-of-buffer
     bind --preset $argv alt-\> end-of-buffer

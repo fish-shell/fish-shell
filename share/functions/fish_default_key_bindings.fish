@@ -13,13 +13,8 @@ function fish_default_key_bindings -d "emacs-like key binds"
         end
     end
 
-    # Silence warnings about unavailable keys. See #4431, 4188
-    if not contains -- -s $argv
-        set argv -s $argv
-    end
-
     # These are shell-specific bindings that we share with vi mode.
-    __fish_shared_key_bindings $argv
+    eval "$(__fish_shared_key_bindings)" $argv
     or return # protect against invalid $argv
 
     bind --preset $argv right forward-char

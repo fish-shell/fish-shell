@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::should_flog;
+use crate::{err_str, should_flog};
 use fish_feature_flags::{FeatureFlag, feature_test};
 
 mod test_expressions {
@@ -7,6 +7,8 @@ mod test_expressions {
 
     use super::*;
 
+    use crate::builtins::error;
+    use crate::err_raw;
     use crate::nix::isatty;
     use crate::wutil::{
         Error, Options, file_id_for_path, lwstat, waccess, wcstod::wcstod, wcstoi_opts, wstat,
@@ -706,7 +708,7 @@ mod test_expressions {
             let argc = end - start;
             match argc {
                 0 => {
-                    panic!("argc should not be zero"); // should have been caught by the above test
+                    unreachable!("argc should not be zero"); // should have been caught by the above test
                 }
                 1 => self.error(
                     start + 1,
@@ -719,67 +721,59 @@ mod test_expressions {
             }
         }
 
-        pub fn parse_args(
-            args: &[WString],
-            err: &mut WString,
-            program_name: &wstr,
-        ) -> Option<Box<dyn Expression>> {
+        pub fn parse_args(args: &[WString]) -> Result<Box<dyn Expression>, error::Error<'_>> {
             let mut parser = TestParser {
                 strings: args,
                 errors: Vec::new(),
                 error_idx: 0,
             };
-            let mut result = parser.parse_expression(0, args.len());
+            let result_opt = parser.parse_expression(0, args.len());
 
             // Historic assumption from C++: if we have no errors then we must have a result.
-            assert!(!parser.errors.is_empty() || result.is_some());
+            assert!(!parser.errors.is_empty() || result_opt.is_some());
+
+            if let Some(result) = result_opt {
+                let range_end = result.range().end;
+                assert!(range_end <= args.len());
+
+                // The result is valid only if we consumed all the arguments.
+                // This is not detected by parse_expression(), so in that case
+                // we need to create our own error.
+                if range_end == args.len() {
+                    return Ok(result);
+                }
+                if parser.errors.is_empty() {
+                    parser.error_idx = range_end;
+                    parser.errors = vec![sprintf!(
+                        "unexpected argument at index %u: '%s'",
+                        range_end + 1,
+                        args[range_end],
+                    )];
+                }
+            }
 
             // Handle errors.
             // For now we only show the first error.
-            if !parser.errors.is_empty() || result.as_ref().unwrap().range().end < args.len() {
-                let mut narg = 0;
-                let mut len_to_err = 0;
-                if parser.errors.is_empty() {
-                    parser.error_idx = result.as_ref().unwrap().range().end;
+            let mut narg = 0;
+            let mut len_to_err = 0;
+            let mut commandline = WString::new();
+            for arg in args {
+                if narg > 0 {
+                    commandline.push(' ');
                 }
-                let mut commandline = WString::new();
-                for arg in args {
-                    if narg > 0 {
-                        commandline.push(' ');
-                    }
-                    commandline.push_utfstr(arg);
-                    narg += 1;
-                    if narg == parser.error_idx {
-                        len_to_err = fish_wcswidth(&commandline).unwrap_or_default();
-                    }
-                }
-                err.push_utfstr(program_name);
-                err.push_str(": ");
-                if !parser.errors.is_empty() {
-                    err.push_utfstr(&parser.errors[0]);
-                } else {
-                    sprintf!(
-                        => err,
-                        "unexpected argument at index %u: '%s'",
-                        result.as_ref().unwrap().range().end + 1,
-                        args[result.as_ref().unwrap().range().end],
-                    );
-                }
-                err.push('\n');
-                err.push_utfstr(&commandline);
-                err.push('\n');
-                err.push_utfstr(&sprintf!("%*s%s\n", len_to_err + 1, " ", "^"));
-            }
-
-            if result.is_some() {
-                // It's also an error if there are any unused arguments. This is not detected by
-                // parse_expression().
-                assert!(result.as_ref().unwrap().range().end <= args.len());
-                if result.as_ref().unwrap().range().end < args.len() {
-                    result = None;
+                commandline.push_utfstr(arg);
+                narg += 1;
+                if narg == parser.error_idx {
+                    len_to_err = fish_wcswidth(&commandline).unwrap_or_default();
                 }
             }
-            result
+            let mut err = WString::new();
+            err.push_utfstr(&parser.errors[0]);
+            err.push('\n');
+            err.push_utfstr(&commandline);
+            err.push('\n');
+            err.push_utfstr(&sprintf!("%*s%s\n", len_to_err + 1, " ", "^"));
+            Err(err_raw!(err))
         }
     }
 
@@ -1009,10 +1003,10 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             // Ignore the closing bracket from now on.
             argc -= 1;
         } else {
-            streams
-                .err
-                .appendln(wgettext!("[: the last argument must be ']'"));
-            builtin_print_error_trailer(parser, streams.err, program_name);
+            err_str!("the last argument must be ']'")
+                .cmd(program_name)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     }
@@ -1023,11 +1017,10 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
 
     if feature_test(FeatureFlag::TestRequireArg) {
         if argc == 0 {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Expected at least one argument",
-                program_name
-            ));
-            builtin_print_error_trailer(parser, streams.err, program_name);
+            err_str!("Expected at least one argument")
+                .cmd(program_name)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         } else if argc == 1 {
             if args[0] == "-n" {
@@ -1038,20 +1031,18 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         }
     } else if argc == 0 {
         if should_flog!(deprecated_test) {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: called with no arguments. This will be an error in future.",
-                program_name
-            ));
-            streams.err.append(&parser.current_line());
+            err_str!("called with no arguments. This will be an error in future.")
+                .cmd(program_name)
+                .stacktrace(parser)
+                .finish(streams);
         }
         return Err(STATUS_INVALID_ARGS); // Per 1003.1, exit false.
     } else if argc == 1 {
         if should_flog!(deprecated_test) && args[0] != "-z" {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: called with one argument. This will return false in future.",
-                program_name
-            ));
-            streams.err.append(&parser.current_line());
+            err_str!("called with one argument. This will return false in future.")
+                .cmd(program_name)
+                .stacktrace(parser)
+                .finish(streams);
         }
         // Per 1003.1, exit true if the arg is non-empty.
         return if args[0].is_empty() {
@@ -1062,12 +1053,13 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     }
 
     // Try parsing
-    let mut err = WString::new();
-    let expr = test_expressions::TestParser::parse_args(args, &mut err, program_name);
-    let Some(expr) = expr else {
-        streams.err.append(&err);
-        streams.err.append(&parser.current_line());
-        return Err(STATUS_CMD_ERROR);
+    let expr = test_expressions::TestParser::parse_args(args);
+    let expr = match expr {
+        Ok(expr) => expr,
+        Err(err) => {
+            err.cmd(program_name).stacktrace(parser).finish(streams);
+            return Err(STATUS_CMD_ERROR);
+        }
     };
 
     let mut eval_errors = Vec::new();

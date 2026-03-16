@@ -1,10 +1,12 @@
 //! Implementation of the fg builtin.
 
+use crate::builtins::error::Error;
 use crate::fds::make_fd_blocking;
 use crate::parser::ParserEnvSetMode;
 use crate::reader::{reader_save_screen_state, reader_write_title};
 use crate::tokenizer::tok_command;
 use crate::{env::EnvMode, tty_handoff::TtyHandoff};
+use crate::{err_fmt, err_str};
 use fish_util::perror;
 use libc::STDIN_FILENO;
 use nix::sys::termios::{self, tcsetattr};
@@ -38,9 +40,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                 && ((job.is_stopped() || !job.is_foreground()) && job.wants_job_control())
         }) {
             None => {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!(BUILTIN_ERR_NO_SUITABLE_JOBS, cmd));
+                err_str!(Error::NO_SUITABLE_JOBS).cmd(cmd).finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             Some((pos, j)) => {
@@ -57,17 +57,13 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
             found_job = parser.job_get_from_pid(pid).is_some();
         }
 
-        if found_job {
-            streams
-                .err
-                .appendln(&wgettext_fmt!("%s: Ambiguous job", cmd));
+        let err = if found_job {
+            err_str!("Ambiguous job")
         } else {
-            streams
-                .err
-                .appendln(&wgettext_fmt!("%s: '%s' is not a job", cmd, argv[optind]));
-        }
+            err_fmt!("'%s' is not a job", argv[optind])
+        };
+        err.cmd(cmd).full_trailer(parser).finish(streams);
 
-        builtin_print_error_trailer(parser, streams.err, cmd);
         job_pos = None;
         job = None;
     } else {
@@ -77,21 +73,21 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                 if j.as_ref()
                     .is_none_or(|(_pos, j)| !j.is_constructed() || j.is_completed())
                 {
-                    streams
-                        .err
-                        .appendln(&wgettext_fmt!("%s: No suitable job: %d", cmd, pid));
+                    err_fmt!("No suitable job: %d", pid)
+                        .cmd(cmd)
+                        .finish(streams);
                     job_pos = None;
                     job = None;
                 } else {
                     let (pos, j) = j.unwrap();
                     job_pos = Some(pos);
                     job = if !j.wants_job_control() {
-                        streams.err.appendln(&wgettext_fmt!(
-                                        "%s: Can't put job %d, '%s' to foreground because it is not under job control",
-                                        cmd,
+                        err_fmt!("Can't put job %d, '%s' to foreground because it is not under job control",
                                         pid,
                                         j.command()
-                                    ));
+                                    )
+                    .cmd(cmd)
+                    .finish(streams);
                         None
                     } else {
                         Some(j)

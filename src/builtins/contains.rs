@@ -1,3 +1,5 @@
+use crate::err_str;
+
 // Implementation of the contains builtin.
 use super::prelude::*;
 
@@ -28,7 +30,7 @@ fn parse_options(
             'h' => opts.print_help = true,
             'i' => opts.print_index = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
+                builtin_missing_argument(parser, streams, cmd, None, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -71,9 +73,7 @@ pub fn contains(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
             }
         }
     } else {
-        streams
-            .err
-            .appendln(&wgettext_fmt!("%s: Key not specified", cmd));
+        err_str!("Key not specified").cmd(cmd).finish(streams);
     }
 
     Err(STATUS_CMD_ERROR)

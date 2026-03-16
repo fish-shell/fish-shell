@@ -8,7 +8,7 @@ pub struct Transform {
 impl StringSubCommand<'_> for Transform {
     const LONG_OPTIONS: &'static [WOption<'static>] = &[wopt(L!("quiet"), NoArgument, 'q')];
     const SHORT_OPTIONS: &'static wstr = L!("q");
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, _arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),

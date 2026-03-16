@@ -17,20 +17,22 @@ impl StringSubCommand<'_> for Repeat {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("n:m:qN");
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'n' => {
+                let arg = arg.unwrap();
                 self.count = Some(
-                    fish_wcstol(arg.unwrap())?
+                    fish_wcstol(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid count value '%s'", name, arg))?,
+                        .map_err(|_| err_fmt!("Invalid count value '%s'", arg))?,
                 );
             }
             'm' => {
+                let arg = arg.unwrap();
                 self.max = Some(
-                    fish_wcstol(arg.unwrap())?
+                    fish_wcstol(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!(BUILTIN_ERR_INVALID_MAX_VALUE, name, arg))?,
+                        .map_err(|_| err_fmt!(Error::INVALID_MAX_VALUE, arg))?,
                 );
             }
             'q' => self.quiet = true,
@@ -50,16 +52,21 @@ impl StringSubCommand<'_> for Repeat {
             return Ok(());
         }
 
-        let name = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
 
         let Some(arg) = args.get(*optind) else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, name);
+            err_fmt!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
 
         let Ok(Ok(count)) = fish_wcstol(arg).map(|count| count.try_into()) else {
-            string_error!(streams, "%s: Invalid count value '%s'", name, arg);
+            err_fmt!("Invalid count value '%s'", arg)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
 

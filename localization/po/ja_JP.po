@@ -163,6 +163,10 @@ msgid "%s: %s requires a non-empty string"
 msgstr "%s: %s には空でない文字列が必要です"
 
 #, c-format
+msgid "%s: %s: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s: %s: 読み取り専用変数を上書きすることはできません"
 

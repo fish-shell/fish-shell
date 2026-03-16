@@ -158,6 +158,10 @@ msgid "%s: %s requires a non-empty string"
 msgstr "%s：%s 需要一個非空字串"
 
 #, c-format
+msgid "%s: %s: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s：%s：不能覆寫唯讀變數"
 

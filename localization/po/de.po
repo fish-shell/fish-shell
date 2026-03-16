@@ -164,6 +164,10 @@ msgid "%s: %s requires a non-empty string"
 msgstr "%s: %s erfordert eine nicht-leere Zeichenkette"
 
 #, c-format
+msgid "%s: %s: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
 msgstr ""
 

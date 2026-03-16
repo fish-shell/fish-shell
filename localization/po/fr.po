@@ -293,6 +293,10 @@ msgid "%s: %s requires a non-empty string"
 msgstr "%s : %s doit être utilisée avec une chaîne non-vide"
 
 #, c-format
+msgid "%s: %s: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s : %s : impossible de surcharger une variable en lecture seule"
 

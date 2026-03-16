@@ -117,6 +117,10 @@ msgid "%s %s: Unexpected argument -- '%s'"
 msgstr "%s %s: 意外参数 -- '%s'"
 
 #, c-format
+msgid "%s %s: options cannot be used together"
+msgstr ""
+
+#, c-format
 msgid "%s %s: unrecognized feature '%s'"
 msgstr "%s %s: 未识别的特性 '%s'"
 
@@ -225,10 +229,6 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: 无效模式名。参见 `help %s`"
 
 #, c-format
-msgid "%s: %s: invalid option argument: %s"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: invalid scale"
 msgstr "%s: %s: 无效位数"
 
@@ -239,10 +239,6 @@ msgstr "%s: %s: 无效的子命令"
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
 msgstr "%s: %s: 无效的变量名。参见 `help %s`"
-
-#, c-format
-msgid "%s: %s: option cannot be used with a non-option argument"
-msgstr ""
 
 #, c-format
 msgid "%s: %s: option does not take an argument"
@@ -633,10 +629,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s: 尝试用错误的范围修改特殊变量 '%s'"
 
 #, c-format
-msgid "%s: Unknown color '%s'"
-msgstr "%s: 未知颜色 '%s'"
-
-#, c-format
 msgid "%s: Unknown error trying to locate directory '%s'"
 msgstr "%s: 定位目录 '%s' 时发生未知错误"
 
@@ -725,16 +717,16 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: 无效的转换规范"
 
 #, c-format
+msgid "%s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid option combination"
 msgstr "%s: 无效的选项组合"
 
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s: 无效的选项组合，%s"
-
-#, c-format
-msgid "%s: invalid underline style: %s"
-msgstr "%s: 无效的下划线样式：%s"
 
 #, c-format
 msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
@@ -759,6 +751,10 @@ msgstr "%s: 缺少子命令"
 #, c-format
 msgid "%s: nothing to choose from"
 msgstr "%s: 没有可选项"
+
+#, c-format
+msgid "%s: option cannot be used with a non-option argument"
+msgstr ""
 
 #, c-format
 msgid "%s: option does not take an argument"
@@ -1677,6 +1673,10 @@ msgstr "未知"
 msgid "Unknown builtin '%s'"
 msgstr "未知的内建命令 '%s'"
 
+#, c-format
+msgid "Unknown color '%s'"
+msgstr "未知颜色 '%s'"
+
 msgid "Unknown command"
 msgstr "未知的命令"
 
@@ -1862,6 +1862,10 @@ msgstr "无效的字段宽度：%s"
 #, c-format
 msgid "invalid precision: %s"
 msgstr "无效的精度：%s"
+
+#, c-format
+msgid "invalid underline style: %s"
+msgstr "无效的下划线样式：%s"
 
 msgid "missing hexadecimal number in escape"
 msgstr "在转义中缺少十六进制数字"

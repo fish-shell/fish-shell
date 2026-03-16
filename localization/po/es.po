@@ -96,6 +96,10 @@ msgid "%s %s: Unexpected argument -- '%s'"
 msgstr "%s %s: Argumento inesperado -- '%s'"
 
 #, c-format
+msgid "%s %s: options cannot be used together"
+msgstr ""
+
+#, c-format
 msgid "%s %s: unrecognized feature '%s'"
 msgstr "%s %s: característica no reconocida '%s'"
 
@@ -204,10 +208,6 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: nombre de modo no válido. Consulte `help %s`"
 
 #, c-format
-msgid "%s: %s: invalid option argument: %s"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: invalid scale"
 msgstr "%s: %s: escala no válida"
 
@@ -218,10 +218,6 @@ msgstr "%s: %s: subcomando no válido"
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
 msgstr "%s: %s: nombre de variable no válido. Consulte `help %s`"
-
-#, c-format
-msgid "%s: %s: option cannot be used with a non-option argument"
-msgstr ""
 
 #, c-format
 msgid "%s: %s: option does not take an argument"
@@ -612,10 +608,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s: Se intentó modificar la variable especial '%s' con un ámbito incorrecto"
 
 #, c-format
-msgid "%s: Unknown color '%s'"
-msgstr "%s: Color desconocido '%s'"
-
-#, c-format
 msgid "%s: Unknown error trying to locate directory '%s'"
 msgstr "%s: Error desconocido al intentar localizar el directorio '%s'"
 
@@ -704,16 +696,16 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: especificación de conversión no válida"
 
 #, c-format
+msgid "%s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid option combination"
 msgstr "%s: combinación de opciones no válida"
 
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s: combinación de opciones no válida, %s"
-
-#, c-format
-msgid "%s: invalid underline style: %s"
-msgstr "%s: estilo de subrayado no válido: %s"
 
 #, c-format
 msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
@@ -738,6 +730,10 @@ msgstr "%s: falta un subcomando"
 #, c-format
 msgid "%s: nothing to choose from"
 msgstr "%s: no hay nada para elegir"
+
+#, c-format
+msgid "%s: option cannot be used with a non-option argument"
+msgstr ""
 
 #, c-format
 msgid "%s: option does not take an argument"
@@ -1656,6 +1652,10 @@ msgstr "Desconocido"
 msgid "Unknown builtin '%s'"
 msgstr "Builtin desconocido “%s”"
 
+#, c-format
+msgid "Unknown color '%s'"
+msgstr "Color desconocido '%s'"
+
 msgid "Unknown command"
 msgstr "Comando desconocido"
 
@@ -1841,6 +1841,10 @@ msgstr "ancho de campo inválido: %s"
 #, c-format
 msgid "invalid precision: %s"
 msgstr "precisión inválida: %s"
+
+#, c-format
+msgid "invalid underline style: %s"
+msgstr "estilo de subrayado no válido: %s"
 
 msgid "missing hexadecimal number in escape"
 msgstr "falta un número hexadecimal en la secuencia de escape"

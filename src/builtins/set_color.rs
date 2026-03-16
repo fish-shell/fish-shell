@@ -2,6 +2,8 @@
 
 use super::prelude::*;
 use crate::common::bytes2wcstring;
+use crate::err_fmt;
+use crate::error::Error;
 use crate::screen::{is_dumb, only_grayscale};
 use crate::terminal::Outputter;
 use crate::text_face::{self, PrintColorsArgs, TextFace, TextStyling, parse_text_face_and_options};
@@ -76,70 +78,41 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             builtin_print_help(parser, streams, argv[0]);
             return Ok(SUCCESS);
         }
-        Err(MissingOptArg) => {
-            // Either "--background" or "--underline-color" are missing an argument.
-            // Don't print an error, for consistency with "set_color".
-            // In future we change both to actually print an error.
-            return Err(STATUS_INVALID_ARGS);
-        }
-        Err(UnexpectedOptArg(option_index)) => {
-            builtin_unexpected_argument(
-                parser,
-                streams,
-                L!("set_color"),
-                argv[option_index],
-                true, /* print_hints */
-            );
-            return Err(STATUS_INVALID_ARGS);
-        }
-        Err(InvalidOptArg(name, value)) => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: %s: invalid option argument: %s",
-                argv[0],
-                name,
-                value
-            ));
-            return Err(STATUS_INVALID_ARGS);
-        }
-        Err(UnknownColor(arg)) => {
-            streams
-                .err
-                .appendln(&wgettext_fmt!("%s: Unknown color '%s'", argv[0], arg));
-            return Err(STATUS_INVALID_ARGS);
-        }
-        Err(UnknownUnderlineStyle(arg)) => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: invalid underline style: %s",
-                argv[0],
-                arg
-            ));
-            return Err(STATUS_INVALID_ARGS);
-        }
-        Err(UnknownOption(unknown_option_index)) => {
-            builtin_unknown_option(
-                parser,
-                streams,
-                L!("set_color"),
-                argv[unknown_option_index],
-                true, /* print_hints */
-            );
-            return Err(STATUS_INVALID_ARGS);
-        }
-        Err(InvalidFgArgCombination) => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: %s: option cannot be used with a non-option argument",
-                argv[0],
-                "--foreground",
-            ));
-            return Err(STATUS_INVALID_ARGS);
-        }
-        Err(InvalidFgPrintColorCombination) => {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                argv[0],
-                "--foreground",
-                "--print-colors",
-            ));
+        Err(err) => {
+            let error = match err {
+                MissingOptArg => {
+                    // Either "--background" or "--underline-color" are missing an argument.
+                    // Don't print an error, for consistency with "set_color".
+                    // In future we change both to actually print an error.
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                UnexpectedOptArg(option_index) => {
+                    err_fmt!(Error::UNEXP_OPT_ARG, argv[option_index]).with_full_trailer(parser)
+                }
+                InvalidOptArg(name, value) => {
+                    err_fmt!("%s: invalid option argument: %s", name, value)
+                }
+                UnknownColor(arg) => {
+                    err_fmt!("Unknown color '%s'", arg)
+                }
+                UnknownUnderlineStyle(arg) => {
+                    err_fmt!("invalid underline style: %s", arg)
+                }
+                UnknownOption(unknown_option_index) => {
+                    err_fmt!(Error::UNKNOWN_OPT, argv[unknown_option_index])
+                        .with_full_trailer(parser)
+                }
+                InvalidFgArgCombination => {
+                    err_fmt!(
+                        "%s: option cannot be used with a non-option argument",
+                        "--foreground"
+                    )
+                }
+                InvalidFgPrintColorCombination => {
+                    err_fmt!(Error::COMBO2_EXCLUSIVE, "--foreground", "--print-colors",)
+                }
+            };
+            error.with_cmd(argv[0]).finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     };

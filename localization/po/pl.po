@@ -92,6 +92,10 @@ msgid "%s %s: Unexpected argument -- '%s'"
 msgstr ""
 
 #, c-format
+msgid "%s %s: options cannot be used together"
+msgstr ""
+
+#, c-format
 msgid "%s %s: unrecognized feature '%s'"
 msgstr ""
 
@@ -200,10 +204,6 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid option argument: %s"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: invalid scale"
 msgstr ""
 
@@ -213,10 +213,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: option cannot be used with a non-option argument"
 msgstr ""
 
 #, c-format
@@ -608,10 +604,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr ""
 
 #, c-format
-msgid "%s: Unknown color '%s'"
-msgstr "%s: Nieznany kolor '%s'"
-
-#, c-format
 msgid "%s: Unknown error trying to locate directory '%s'"
 msgstr "%s: Nieokreślony błąd podczas wyszukiwania lokalizacji '%s'"
 
@@ -700,15 +692,15 @@ msgid "%s: invalid conversion specification"
 msgstr ""
 
 #, c-format
+msgid "%s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid option combination"
 msgstr ""
 
 #, c-format
 msgid "%s: invalid option combination, %s"
-msgstr ""
-
-#, c-format
-msgid "%s: invalid underline style: %s"
 msgstr ""
 
 #, c-format
@@ -733,6 +725,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: nothing to choose from"
+msgstr ""
+
+#, c-format
+msgid "%s: option cannot be used with a non-option argument"
 msgstr ""
 
 #, c-format
@@ -1652,6 +1648,10 @@ msgstr "Nieznany"
 msgid "Unknown builtin '%s'"
 msgstr ""
 
+#, c-format
+msgid "Unknown color '%s'"
+msgstr "Nieznany kolor '%s'"
+
 msgid "Unknown command"
 msgstr ""
 
@@ -1833,6 +1833,10 @@ msgstr ""
 
 #, c-format
 msgid "invalid precision: %s"
+msgstr ""
+
+#, c-format
+msgid "invalid underline style: %s"
 msgstr ""
 
 msgid "missing hexadecimal number in escape"

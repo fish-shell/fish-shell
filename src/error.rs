@@ -79,6 +79,9 @@ impl<'a> Error<'a> {
         /// Error message for unknown switch.
         pub UNKNOWN_OPT
         "%s: unknown option"
+
+        pub COMBO2_EXCLUSIVE
+        "%s %s: options cannot be used together"
     );
 
     pub fn new(msg: Cow<'a, wstr>) -> Self {

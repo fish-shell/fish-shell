@@ -95,6 +95,10 @@ msgid "%s %s: Unexpected argument -- '%s'"
 msgstr "%s %s: 予期しない引数です -- '%s'"
 
 #, c-format
+msgid "%s %s: options cannot be used together"
+msgstr ""
+
+#, c-format
 msgid "%s %s: unrecognized feature '%s'"
 msgstr "%s %s: 認識できない機能です '%s'"
 
@@ -203,10 +207,6 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: モード名が無効です。 `help %s` を参照してください"
 
 #, c-format
-msgid "%s: %s: invalid option argument: %s"
-msgstr "%s: %s: オプションの引数が無効です: %s"
-
-#, c-format
 msgid "%s: %s: invalid scale"
 msgstr "%s: %s: スケールが無効です"
 
@@ -217,10 +217,6 @@ msgstr "%s: %s: サブコマンドが無効です"
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
 msgstr "%s: %s: 変数名が無効です。 `help %s` を参照してください"
-
-#, c-format
-msgid "%s: %s: option cannot be used with a non-option argument"
-msgstr "%s: %s: オプションをオプション以外の引数と併用することはできません"
 
 #, c-format
 msgid "%s: %s: option does not take an argument"
@@ -611,10 +607,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s: 特別な変数 '%s' を誤ったスコープで変更しようとしました"
 
 #, c-format
-msgid "%s: Unknown color '%s'"
-msgstr "%s: 未知の色です '%s'"
-
-#, c-format
 msgid "%s: Unknown error trying to locate directory '%s'"
 msgstr "%s: ディレクトリ '%s' の場所を特定しようとして不明なエラーが発生しました"
 
@@ -703,16 +695,16 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: 無効な変換仕様です"
 
 #, c-format
+msgid "%s: invalid option argument: %s"
+msgstr "%s: オプションの引数が無効です: %s"
+
+#, c-format
 msgid "%s: invalid option combination"
 msgstr "%s: 無効なオプションの組み合わせです"
 
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s: 無効なオプションの組み合わせです: %s"
-
-#, c-format
-msgid "%s: invalid underline style: %s"
-msgstr "%s: 無効な下線スタイルです: %s"
 
 #, c-format
 msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
@@ -737,6 +729,10 @@ msgstr "%s: サブコマンドが不足しています"
 #, c-format
 msgid "%s: nothing to choose from"
 msgstr "%s: 選択肢がありません"
+
+#, c-format
+msgid "%s: option cannot be used with a non-option argument"
+msgstr "%s: オプションをオプション以外の引数と併用することはできません"
 
 #, c-format
 msgid "%s: option does not take an argument"
@@ -1655,6 +1651,10 @@ msgstr "不明です"
 msgid "Unknown builtin '%s'"
 msgstr "不明な組み込みコマンド(ビルトイン): '%s'"
 
+#, c-format
+msgid "Unknown color '%s'"
+msgstr "未知の色です '%s'"
+
 msgid "Unknown command"
 msgstr "不明なコマンド"
 
@@ -1840,6 +1840,10 @@ msgstr "無効なフィールド幅: %s"
 #, c-format
 msgid "invalid precision: %s"
 msgstr "無効な精度: %s"
+
+#, c-format
+msgid "invalid underline style: %s"
+msgstr "無効な下線スタイルです: %s"
 
 msgid "missing hexadecimal number in escape"
 msgstr "エスケープ内に16進数がありません"

@@ -93,6 +93,10 @@ msgid "%s %s: Unexpected argument -- '%s'"
 msgstr ""
 
 #, c-format
+msgid "%s %s: options cannot be used together"
+msgstr ""
+
+#, c-format
 msgid "%s %s: unrecognized feature '%s'"
 msgstr ""
 
@@ -201,10 +205,6 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid option argument: %s"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: invalid scale"
 msgstr ""
 
@@ -214,10 +214,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: option cannot be used with a non-option argument"
 msgstr ""
 
 #, c-format
@@ -609,10 +605,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr ""
 
 #, c-format
-msgid "%s: Unknown color '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Unknown error trying to locate directory '%s'"
 msgstr "%s: Okänd fel inträffade under lokalisering av katalogen '%s'"
 
@@ -701,15 +693,15 @@ msgid "%s: invalid conversion specification"
 msgstr ""
 
 #, c-format
+msgid "%s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid option combination"
 msgstr ""
 
 #, c-format
 msgid "%s: invalid option combination, %s"
-msgstr ""
-
-#, c-format
-msgid "%s: invalid underline style: %s"
 msgstr ""
 
 #, c-format
@@ -734,6 +726,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: nothing to choose from"
+msgstr ""
+
+#, c-format
+msgid "%s: option cannot be used with a non-option argument"
 msgstr ""
 
 #, c-format
@@ -1653,6 +1649,10 @@ msgstr "Okänd"
 msgid "Unknown builtin '%s'"
 msgstr "Okänt inbyggt kommando '%s'"
 
+#, c-format
+msgid "Unknown color '%s'"
+msgstr ""
+
 msgid "Unknown command"
 msgstr ""
 
@@ -1834,6 +1834,10 @@ msgstr "oglitig fältvidd: %s"
 
 #, c-format
 msgid "invalid precision: %s"
+msgstr ""
+
+#, c-format
+msgid "invalid underline style: %s"
 msgstr ""
 
 msgid "missing hexadecimal number in escape"

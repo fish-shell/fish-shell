@@ -155,7 +155,7 @@ fn check_for_mutually_exclusive_flags(
                             flag1,
                             flag2
                         ));
-                        return Err(STATUS_CMD_ERROR);
+                        return Err(STATUS_INVALID_ARGS);
                     }
                 }
             }

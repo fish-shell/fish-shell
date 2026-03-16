@@ -1,6 +1,10 @@
 use super::prelude::*;
+use crate::builtins::error;
 use crate::common::{bytes2wcstring, get_program_name, osstr2wcstring, str2wcstring};
 use crate::env::config_paths::get_fish_path;
+use crate::err_fmt;
+#[cfg(not(feature = "localize-messages"))]
+use crate::err_raw;
 use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
     JobControl, get_job_control_mode, get_login, is_interactive_session, set_job_control_mode,
@@ -105,12 +109,13 @@ impl StatusCmdOpts {
     fn try_set_status_cmd(&mut self, subcmd: StatusCmd, streams: &mut IoStreams) -> bool {
         match self.status_cmd.replace(subcmd) {
             Some(existing) => {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                    "status",
+                err_fmt!(
+                    error::Error::COMBO2_EXCLUSIVE,
                     existing.to_wstr(),
                     subcmd.to_wstr(),
-                ));
+                )
+                .cmd(L!("status"))
+                .finish(streams);
                 false
             }
             None => true,
@@ -171,7 +176,7 @@ const LONG_OPTIONS: &[WOption] = &[
 ];
 
 localizable_consts! {
-    BUILTIN_INVALID_JOB_CONTROL_MODE "%s: Invalid job control mode '%s'"
+    BUILTIN_INVALID_JOB_CONTROL_MODE "Invalid job control mode '%s'"
 }
 
 /// Print the features and their values.
@@ -215,17 +220,15 @@ fn parse_cmd_opts(
                     match fish_wcstoi(arg) {
                         Ok(level) if level >= 0 => level,
                         Err(Error::Overflow) | Ok(_) => {
-                            streams.err.appendln(&wgettext_fmt!(
-                                "%s: Invalid level value '%s'",
-                                cmd,
-                                arg
-                            ));
+                            err_fmt!("Invalid level value '%s'", arg)
+                                .cmd(cmd)
+                                .finish(streams);
                             return Err(STATUS_INVALID_ARGS);
                         }
                         _ => {
-                            streams
-                                .err
-                                .appendln(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
+                            err_fmt!(error::Error::NOT_NUMBER, arg)
+                                .cmd(cmd)
+                                .finish(streams);
                             return Err(STATUS_INVALID_ARGS);
                         }
                     }
@@ -251,11 +254,9 @@ fn parse_cmd_opts(
                     return Err(STATUS_CMD_ERROR);
                 }
                 let Ok(job_mode) = w.woptarg.unwrap().try_into() else {
-                    streams.err.appendln(&wgettext_fmt!(
-                        BUILTIN_INVALID_JOB_CONTROL_MODE,
-                        cmd,
-                        w.woptarg.unwrap()
-                    ));
+                    err_fmt!(BUILTIN_INVALID_JOB_CONTROL_MODE, w.woptarg.unwrap())
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_CMD_ERROR);
                 };
                 opts.new_job_control_mode = Some(job_mode);
@@ -287,7 +288,7 @@ fn parse_cmd_opts(
             }
             'h' => opts.print_help = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
+                builtin_missing_argument(parser, streams, cmd, None, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -363,9 +364,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 optind += 1;
             }
             None => {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[1]));
+                err_fmt!(error::Error::INVALID_SUBCMD)
+                    .subcmd(cmd, args[1])
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
         }
@@ -406,21 +407,15 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 }
                 None => {
                     if args.len() != 1 {
-                        streams.err.appendln(&wgettext_fmt!(
-                            BUILTIN_ERR_ARG_COUNT2,
-                            cmd,
-                            c.to_wstr(),
-                            1,
-                            args.len()
-                        ));
+                        err_fmt!(error::Error::ARG_COUNT1, 1, args.len())
+                            .subcmd(cmd, c.to_wstr())
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     let Ok(new_mode) = args[0].try_into() else {
-                        streams.err.appendln(&wgettext_fmt!(
-                            BUILTIN_INVALID_JOB_CONTROL_MODE,
-                            cmd,
-                            args[0]
-                        ));
+                        err_fmt!(BUILTIN_INVALID_JOB_CONTROL_MODE, args[0])
+                            .subcmd(cmd, c.to_wstr())
+                            .finish(streams);
                         return Err(STATUS_CMD_ERROR);
                     };
                     new_mode
@@ -431,13 +426,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         STATUS_FEATURES => print_features(streams),
         c @ STATUS_TEST_FEATURE => {
             if args.len() != 1 {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_ARG_COUNT2,
-                    cmd,
-                    c.to_wstr(),
-                    1,
-                    args.len()
-                ));
+                err_fmt!(error::Error::ARG_COUNT1, 1, args.len())
+                    .subcmd(cmd, c.to_wstr())
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             let mut retval = TestFeatureRetVal::TEST_FEATURE_NOT_RECOGNIZED;
@@ -453,13 +444,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
         c @ STATUS_GET_FILE => {
             if args.len() != 1 {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_ARG_COUNT2,
-                    cmd,
-                    c.to_wstr(),
-                    1,
-                    args.len()
-                ));
+                err_fmt!(error::Error::ARG_COUNT1, 1, args.len())
+                    .subcmd(cmd, c.to_wstr())
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             let arg = wcs2bytes(args[0]);
@@ -477,7 +464,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         STATUS_LANGUAGE => {
             cfg_if! {
                 if #[cfg(not(feature = "localize-messages"))] {
-                    streams.err.append(L!("fish was built with the `localize-messages` feature disabled. The `status language` command is unavailable.\n"));
+                    err_raw!(L!("fish was built with the `localize-messages` feature disabled. The `status language` command is unavailable.").to_owned())
+                                .finish(streams);
                     return Err(STATUS_CMD_ERROR);
                 } else {
                     if args.is_empty() {
@@ -506,9 +494,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                             return Ok(SUCCESS);
                         }
                         invalid => {
-                            streams
-                                .err
-                                .appendln(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBSUBCMD, cmd, subcmd.to_wstr(), invalid));
+                            err_fmt!(error::Error::INVALID_SUBSUBCMD,  invalid)
+                                .subcmd(cmd, subcmd.to_wstr())
+                                .finish(streams);
                             return Err(STATUS_INVALID_ARGS);
                         }
                     }
@@ -550,22 +538,15 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
         c @ STATUS_TEST_TERMINAL_FEATURE => {
             if args.len() != 1 {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_ARG_COUNT2,
-                    cmd,
-                    c.to_wstr(),
-                    1,
-                    args.len()
-                ));
+                err_fmt!(error::Error::ARG_COUNT1, 1, args.len())
+                    .subcmd(cmd, c.to_wstr())
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             if args[0] != "scroll-content-up" {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s %s: unrecognized feature '%s'",
-                    cmd,
-                    c.to_wstr(),
-                    args[0]
-                ));
+                err_fmt!("unrecognized feature '%s'", args[0])
+                    .subcmd(cmd, c.to_wstr())
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             return if get_scroll_content_up_capability() == Some(true) {
@@ -577,13 +558,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
 
         ref s => {
             if !args.is_empty() {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_ARG_COUNT2,
-                    cmd,
-                    s.to_wstr(),
-                    0,
-                    args.len()
-                ));
+                err_fmt!(error::Error::ARG_COUNT1, 0, args.len())
+                    .subcmd(cmd, s.to_wstr())
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             match s {

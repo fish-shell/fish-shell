@@ -18,6 +18,7 @@ pub mod count;
 pub mod disown;
 pub mod echo;
 pub mod emit;
+pub mod error;
 pub mod eval;
 pub mod exit;
 pub mod r#false;

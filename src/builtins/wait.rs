@@ -1,4 +1,5 @@
 use super::prelude::*;
+use crate::err_fmt;
 use crate::proc::{Job, Pid, proc_wait_any};
 use crate::signal::SigChecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
@@ -156,7 +157,14 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -199,20 +207,16 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 continue;
             };
             if !find_wait_handles(WaitHandleQuery::Pid(pid), parser, &mut wait_handles) {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: Could not find a job with process ID '%d'",
-                    cmd,
-                    pid,
-                ));
+                err_fmt!("Could not find a job with process ID '%d'", pid,)
+                    .cmd(cmd)
+                    .finish(streams);
             }
         } else {
             // argument is process name
             if !find_wait_handles(WaitHandleQuery::ProcName(item), parser, &mut wait_handles) {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: Could not find child processes with the name '%s'",
-                    cmd,
-                    item,
-                ));
+                err_fmt!("Could not find child processes with the name '%s'", item,)
+                    .cmd(cmd)
+                    .finish(streams);
             }
         }
     }

@@ -1,10 +1,12 @@
 // Implementation of the disown builtin.
 
 use super::prelude::*;
+use crate::builtins::error::Error;
+use crate::builtins::shared::HelpOnlyCmdOpts;
 use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::proc::{Job, add_disowned_job};
-use crate::{builtins::shared::HelpOnlyCmdOpts, localization::wgettext_fmt};
+use crate::{err_fmt, err_str};
 use fish_widestring::wstr;
 use nix::sys::signal::{Signal, killpg};
 
@@ -21,12 +23,13 @@ fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
         if let Some(pgid) = pgid {
             let _ = killpg(pgid.as_nix_pid(), Some(Signal::SIGCONT));
         }
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: job %d ('%s') was stopped and has been signalled to continue.",
-            cmd,
+        err_fmt!(
+            "job %d ('%s') was stopped and has been signalled to continue.",
             j.job_id(),
             j.command()
-        ));
+        )
+        .cmd(cmd)
+        .finish(streams);
     }
 
     // We cannot directly remove the job from the jobs() list as `disown` might be called
@@ -64,9 +67,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             disown_job(cmd, streams, &job);
             retval = Ok(SUCCESS);
         } else {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_NO_SUITABLE_JOBS, cmd));
+            err_str!(Error::NO_SUITABLE_JOBS).cmd(cmd).finish(streams);
             retval = Err(STATUS_CMD_ERROR);
         }
     } else {
@@ -87,9 +88,9 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 };
                 parser.job_get_from_pid(pid).or_else(|| {
                     // Valid identifier but no such job
-                    streams
-                        .err
-                        .appendln(&wgettext_fmt!(BUILTIN_ERR_COULD_NOT_FIND_JOB, cmd, pid));
+                    err_fmt!(Error::COULD_NOT_FIND_JOB, pid)
+                        .cmd(cmd)
+                        .finish(streams);
                     None
                 })
             })

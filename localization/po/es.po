@@ -260,10 +260,6 @@ msgid "%s: '%s' is not a valid job ID"
 msgstr "%s: '%s' no es un ID de tarea válido"
 
 #, c-format
-msgid "%s: '%s' is not a valid process ID"
-msgstr "%s: '%s' no es un ID de proceso válido"
-
-#, c-format
 msgid "%s: --command cannot be combined with --position=command"
 msgstr "%s: --command no puede combinarse con --position=command"
 
@@ -494,10 +490,6 @@ msgstr "%s: Token no válido '%s'"
 #, c-format
 msgid "%s: Invalid type '%s'"
 msgstr "%s: Tipo no válido '%s'"
-
-#, c-format
-msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
-msgstr "%s: valor inválido para la opción '--color': '%s'. Se esperaba 'always', 'never' o 'auto'"
 
 #, c-format
 msgid "%s: Invalid width value '%s'"
@@ -748,6 +740,14 @@ msgid "%s: nothing to choose from"
 msgstr "%s: no hay nada para elegir"
 
 #, c-format
+msgid "%s: option does not take an argument"
+msgstr "%s: la opción no acepta un argumento"
+
+#, c-format
+msgid "%s: option requires an argument"
+msgstr "%s: la opción requiere un argumento"
+
+#, c-format
 msgid "%s: scope can be only one of: universal function global local"
 msgstr "%s: el alcance solo puede ser uno de: universal, function, global, local"
 
@@ -776,6 +776,10 @@ msgid "%s: too many arguments"
 msgstr "%s: demasiados argumentos"
 
 #, c-format
+msgid "%s: unknown option"
+msgstr "%s: opción desconocida"
+
+#, c-format
 msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr "%s: el uso de -i para --silent es obsoleto. Usa -s o --silent en su lugar."
 
@@ -786,6 +790,10 @@ msgstr "%s: el valor no se convirtió completamente (no es posible convertir '%s
 #, c-format
 msgid "%s: variable '%s' is read-only"
 msgstr "%s: la variable '%s' es de solo lectura"
+
+#, c-format
+msgid "'%s' is not a valid process ID"
+msgstr "'%s' no es un ID de proceso válido"
 
 msgid "'break' while not inside of loop"
 msgstr "'break' usado fuera de un bucle"
@@ -1199,6 +1207,10 @@ msgstr "Redirección inválida: %s"
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "Token inválido '%s'"
+
+#, c-format
+msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
+msgstr "valor inválido para la opción '--color': '%s'. Se esperaba 'always', 'never' o 'auto'"
 
 #, c-format
 msgid "Items %u to %u of %u"

@@ -254,10 +254,6 @@ msgid "%s: '%s' is not a valid job ID"
 msgstr "%s：「%s」不是有效的作業 ID"
 
 #, c-format
-msgid "%s: '%s' is not a valid process ID"
-msgstr "%s：「%s」不是有效的行程 ID"
-
-#, c-format
 msgid "%s: --command cannot be combined with --position=command"
 msgstr "%s：--command 和 --position=command 不能同時使用"
 
@@ -488,10 +484,6 @@ msgstr "%s：無效的詞元「%s」"
 #, c-format
 msgid "%s: Invalid type '%s'"
 msgstr "%s：無效的類型「%s」"
-
-#, c-format
-msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
-msgstr "%s：「--color」選項的值「%s」無效。應為「always」、「never」、或「auto」"
 
 #, c-format
 msgid "%s: Invalid width value '%s'"
@@ -742,6 +734,14 @@ msgid "%s: nothing to choose from"
 msgstr "%s：沒得選擇"
 
 #, c-format
+msgid "%s: option does not take an argument"
+msgstr ""
+
+#, c-format
+msgid "%s: option requires an argument"
+msgstr ""
+
+#, c-format
 msgid "%s: scope can be only one of: universal function global local"
 msgstr "%s：作用域只能是以下之一：universal、function、global、local"
 
@@ -770,6 +770,10 @@ msgid "%s: too many arguments"
 msgstr "%s：太多引數"
 
 #, c-format
+msgid "%s: unknown option"
+msgstr ""
+
+#, c-format
 msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr "%s：以 -i 表示 --silent 的作法已棄用。請改用 -s 或 --silent。"
 
@@ -780,6 +784,10 @@ msgstr "%s：值未完全轉換（無法轉換「%s」）"
 #, c-format
 msgid "%s: variable '%s' is read-only"
 msgstr "%s：變數「%s」是唯讀的"
+
+#, c-format
+msgid "'%s' is not a valid process ID"
+msgstr ""
 
 msgid "'break' while not inside of loop"
 msgstr "「break」不在迴圈裡面"
@@ -1193,6 +1201,10 @@ msgstr "無效的重新導向：%s"
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "無效的詞元「%s」"
+
+#, c-format
+msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
+msgstr ""
 
 #, c-format
 msgid "Items %u to %u of %u"

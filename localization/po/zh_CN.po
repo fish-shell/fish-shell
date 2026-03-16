@@ -281,10 +281,6 @@ msgid "%s: '%s' is not a valid job ID"
 msgstr "%s: '%s' 不是一个有效的作业 ID"
 
 #, c-format
-msgid "%s: '%s' is not a valid process ID"
-msgstr "%s: '%s' 不是一个有效的进程 ID"
-
-#, c-format
 msgid "%s: --command cannot be combined with --position=command"
 msgstr "%s: --command 选项不能与 --position=command 组合使用"
 
@@ -515,10 +511,6 @@ msgstr "%s: 无效记号 '%s'"
 #, c-format
 msgid "%s: Invalid type '%s'"
 msgstr "%s: 无效类型 '%s'"
-
-#, c-format
-msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
-msgstr "%s: 无效的 '--color' 选项值 '%s'。应为 'always'、'never' 或 'auto'"
 
 #, c-format
 msgid "%s: Invalid width value '%s'"
@@ -769,6 +761,14 @@ msgid "%s: nothing to choose from"
 msgstr "%s: 没有可选项"
 
 #, c-format
+msgid "%s: option does not take an argument"
+msgstr "%s: 选项不接受参数"
+
+#, c-format
+msgid "%s: option requires an argument"
+msgstr "%s: 选项需要参数"
+
+#, c-format
 msgid "%s: scope can be only one of: universal function global local"
 msgstr "%s: 范围只能是：universal（通用）function（函数）global（全局）local（局域）"
 
@@ -797,6 +797,10 @@ msgid "%s: too many arguments"
 msgstr "%s: 参数太多"
 
 #, c-format
+msgid "%s: unknown option"
+msgstr "%s: 未知选项"
+
+#, c-format
 msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr "%s: 参数 -i 用于表示 --silent 已弃用。请改用 -s 或 --silent 代替。"
 
@@ -807,6 +811,10 @@ msgstr "%s: 数值未完全转换 (无法转换 '%s')"
 #, c-format
 msgid "%s: variable '%s' is read-only"
 msgstr "%s: 变量 '%s' 只读"
+
+#, c-format
+msgid "'%s' is not a valid process ID"
+msgstr "'%s' 不是一个有效的进程 ID"
 
 msgid "'break' while not inside of loop"
 msgstr "'break' 不在循环内"
@@ -1220,6 +1228,10 @@ msgstr "无效的重定向：%s"
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "无效记号 '%s'"
+
+#, c-format
+msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
+msgstr "无效的 '--color' 选项值 '%s'。应为 'always'、'never' 或 'auto'"
 
 #, c-format
 msgid "Items %u to %u of %u"

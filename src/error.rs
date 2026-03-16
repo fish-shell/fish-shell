@@ -68,7 +68,17 @@ pub struct Error<'a> {
 
 impl<'a> Error<'a> {
     localizable_consts!(
-        // Will feel as need later
+        /// Error message on missing argument.
+        pub MISSING_OPT_ARG
+        "%s: option requires an argument"
+
+        /// Error message on unexpected argument.
+        pub UNEXP_OPT_ARG
+        "%s: option does not take an argument"
+
+        /// Error message for unknown switch.
+        pub UNKNOWN_OPT
+        "%s: unknown option"
     );
 
     pub fn new(msg: Cow<'a, wstr>) -> Self {

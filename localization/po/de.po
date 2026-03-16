@@ -260,10 +260,6 @@ msgid "%s: '%s' is not a valid job ID"
 msgstr ""
 
 #, c-format
-msgid "%s: '%s' is not a valid process ID"
-msgstr ""
-
-#, c-format
 msgid "%s: --command cannot be combined with --position=command"
 msgstr ""
 
@@ -494,10 +490,6 @@ msgstr ""
 #, c-format
 msgid "%s: Invalid type '%s'"
 msgstr ""
-
-#, c-format
-msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
-msgstr "%s: Ungültiger Wert für '--color'-Option: '%s'. Erwartet wird 'always', 'never' oder 'auto'"
 
 #, c-format
 msgid "%s: Invalid width value '%s'"
@@ -748,6 +740,14 @@ msgid "%s: nothing to choose from"
 msgstr ""
 
 #, c-format
+msgid "%s: option does not take an argument"
+msgstr ""
+
+#, c-format
+msgid "%s: option requires an argument"
+msgstr ""
+
+#, c-format
 msgid "%s: scope can be only one of: universal function global local"
 msgstr ""
 
@@ -776,6 +776,10 @@ msgid "%s: too many arguments"
 msgstr "%s: zu viele Argumente"
 
 #, c-format
+msgid "%s: unknown option"
+msgstr "%s: unbekannte Option"
+
+#, c-format
 msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr ""
 
@@ -785,6 +789,10 @@ msgstr "%s: Wert nicht vollständig konvertiert (kann '%s' nicht konvertieren)"
 
 #, c-format
 msgid "%s: variable '%s' is read-only"
+msgstr ""
+
+#, c-format
+msgid "'%s' is not a valid process ID"
 msgstr ""
 
 msgid "'break' while not inside of loop"
@@ -1199,6 +1207,10 @@ msgstr "Ungültige Umleitung: %s"
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "Ungültiger Token '%s'"
+
+#, c-format
+msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
+msgstr "Ungültiger Wert für '--color'-Option: '%s'. Erwartet wird 'always', 'never' oder 'auto'"
 
 #, c-format
 msgid "Items %u to %u of %u"

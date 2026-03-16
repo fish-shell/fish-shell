@@ -584,25 +584,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     }
 
     fn fatal_error<Str: AsRef<wstr>>(&mut self, errstr: Str) {
-        let errstr = errstr.as_ref();
-
-        // Don't error twice.
-        if self.early_exit {
-            return;
-        }
-
-        // If we have output, write it so it appears first.
-        if !self.buff.is_empty() {
-            self.streams.out.append(&self.buff);
-            self.buff.clear();
-        }
-
-        self.streams.err.append(errstr);
-        if !errstr.ends_with('\n') {
-            self.streams.err.append('\n');
-        }
-
-        self.exit_code = Err(STATUS_CMD_ERROR);
+        self.nonfatal_error(errstr);
         self.early_exit = true;
     }
 

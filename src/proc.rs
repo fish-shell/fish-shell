@@ -219,7 +219,7 @@ impl ProcStatus {
         } else if self.normal_exited() {
             i32::from(self.exit_code())
         } else {
-            panic!("Process is not exited")
+            self.status()
         }
     }
 }

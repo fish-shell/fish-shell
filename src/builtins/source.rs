@@ -1,7 +1,9 @@
 use std::os::fd::AsRawFd as _;
 
 use crate::{
+    builtins::error::Error,
     common::{FilenameRef, escape},
+    err_fmt, err_raw, err_str,
     fds::wopen_cloexec,
     nix::isatty,
     parser::Block,
@@ -37,18 +39,15 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
 
     if argc == optind || args[optind] == "-" {
         if streams.is_stdin_closed() {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_STDIN_CLOSED, cmd));
+            err_str!(Error::STDIN_CLOSED).cmd(cmd).finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
         if argc == optind && isatty(streams.stdin_fd()) {
             // Don't implicitly read from the terminal.
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: missing filename argument or input redirection",
-                cmd
-            ));
+            err_str!("missing filename argument or input redirection")
+                .cmd(cmd)
+                .finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
         func_filename = FilenameRef::new(L!("-").to_owned());
@@ -60,12 +59,12 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             Err(_) => {
                 let esc = escape(args[optind]);
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: Error encountered while sourcing file '%s':",
-                    cmd,
-                    &esc
-                ));
-                builtin_wperror(cmd, streams);
+                err_fmt!("Error encountered while sourcing file '%s':", &esc)
+                    .append_to_msg('\n')
+                    .append_to_msg(&err_raw!(&builtin_strerror()).cmd(cmd).to_string())
+                    .cmd(cmd)
+                    .finish(streams);
+
                 return Err(STATUS_CMD_ERROR);
             }
         }
@@ -97,11 +96,12 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         Ok(_) => BuiltinResult::from_dynamic(parser.get_last_status()),
         Err(err) => {
             let esc = escape(&func_filename);
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Error while reading file '%s'",
-                cmd,
+            err_fmt!(
+                "Error while reading file '%s'",
                 if esc == "-" { L!("<stdin>") } else { &esc }
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
             Err(err)
         }
     }

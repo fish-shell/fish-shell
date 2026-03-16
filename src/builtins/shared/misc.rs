@@ -1,4 +1,3 @@
-use super::prelude::*;
 use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name, str2wcstring};
 use crate::fds::BorrowedFdFile;
 use crate::io::OutputStream;
@@ -6,7 +5,7 @@ use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::argument_is_help;
 use crate::parser::{BlockType, LoopStatus};
 use crate::proc::{Pid, ProcStatus, no_exec};
-use crate::{builtins::*, wutil};
+use crate::{builtins::prelude::*, builtins::*, err_fmt, wutil};
 use errno::errno;
 use fish_common::assert_sorted_by_name;
 use fish_widestring::L;
@@ -19,104 +18,6 @@ pub const DEFAULT_READ_PROMPT: &wstr =
     L!("set_color green; echo -n read; set_color --reset; echo -n \"> \"");
 
 localizable_consts!(
-    /// Error message on missing argument.
-    pub BUILTIN_ERR_MISSING_OPT_ARG
-    "%s: %s: option requires an argument"
-
-    /// Error message on unexpected argument.
-    pub BUILTIN_ERR_UNEXP_OPT_ARG
-    "%s: %s: option does not take an argument"
-
-    /// Error message on missing man page.
-    pub BUILTIN_ERR_MISSING_HELP
-    "fish: %s: missing man page\nDocumentation may not be installed.\n`help %s` will show an online version"
-
-    /// Error message on multiple scope levels for variables.
-    pub BUILTIN_ERR_GLOCAL
-    "%s: scope can be only one of: universal function global local"
-
-    /// Error message for specifying both export and unexport to set/read.
-    pub BUILTIN_ERR_EXPUNEXP
-    "%s: cannot both export and unexport"
-
-    /// Error message for specifying both path and unpath to set/read.
-    pub BUILTIN_ERR_PATHUNPATH
-    "%s: cannot both path and unpath"
-
-    /// Error message for unknown switch.
-    pub BUILTIN_ERR_UNKNOWN_OPT
-    "%s: %s: unknown option"
-
-    /// Error message for invalid bind mode name.
-    pub BUILTIN_ERR_BIND_MODE
-    "%s: %s: invalid mode name. See `help %s`"
-
-    /// Error message when too many arguments are supplied to a builtin.
-    pub BUILTIN_ERR_TOO_MANY_ARGUMENTS
-    "%s: too many arguments"
-
-    /// Error message when integer expected
-    pub BUILTIN_ERR_NOT_NUMBER
-    "%s: %s: invalid integer"
-
-    /// Command that requires a subcommand was invoked without a recognized subcommand.
-    pub BUILTIN_ERR_MISSING_SUBCMD
-    "%s: missing subcommand"
-
-    pub BUILTIN_ERR_INVALID_SUBCMD
-    "%s: %s: invalid subcommand"
-
-    pub BUILTIN_ERR_INVALID_SUBSUBCMD
-    "%s %s: %s: invalid subcommand"
-
-    /// Error messages for unexpected args.
-    pub BUILTIN_ERR_ARG_COUNT0
-    "%s: missing argument"
-
-    pub BUILTIN_ERR_ARG_COUNT1
-    "%s: expected %d arguments; got %d"
-
-    pub BUILTIN_ERR_ARG_COUNT2
-    "%s: %s: expected %d arguments; got %d"
-
-    pub BUILTIN_ERR_MIN_ARG_COUNT1
-    "%s: expected >= %d arguments; got %d"
-
-    pub BUILTIN_ERR_MAX_ARG_COUNT1
-    "%s: expected <= %d arguments; got %d"
-
-    /// Error message for invalid variable name.
-    pub BUILTIN_ERR_VARNAME
-    "%s: %s: invalid variable name. See `help %s`"
-
-    /// Error message on invalid combination of options.
-    pub BUILTIN_ERR_COMBO
-    "%s: invalid option combination"
-
-    pub BUILTIN_ERR_COMBO2
-    "%s: invalid option combination, %s"
-
-    pub BUILTIN_ERR_COMBO2_EXCLUSIVE
-    "%s: %s %s: options cannot be used together"
-
-    pub BUILTIN_ERR_REGEX_COMPILE
-    "%s: Regular expression compile error: %s"
-
-    pub BUILTIN_ERR_NO_SUITABLE_JOBS
-    "%s: There are no suitable jobs"
-
-    pub BUILTIN_ERR_COULD_NOT_FIND_JOB
-    "%s: Could not find job '%d'"
-
-    pub BUILTIN_ERR_STDIN_CLOSED
-    "%s: stdin is closed"
-
-    pub BUILTIN_ERR_INVALID_MAX_MATCHES
-    "%s: Invalid max matches value '%s'"
-
-    pub BUILTIN_ERR_INVALID_MAX_VALUE
-    "%s: Invalid max value '%s'"
-
     /// The send stuff to foreground message.
     pub FG_MSG
     "Send job %d (%s) to foreground"
@@ -657,9 +558,9 @@ pub fn builtin_print_help(parser: &Parser, streams: &mut IoStreams, cmd: &wstr) 
         false,
     );
     if res.status.normal_exited() && res.status.exit_code() == 2 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING_HELP, name_esc, name_esc));
+        err_fmt!(Error::MISSING_HELP, name_esc)
+            .cmd(&name_esc)
+            .finish(streams);
     }
 }
 
@@ -671,38 +572,38 @@ pub fn builtin_unknown_option(
     opt: &wstr,
     print_hints: bool, /*=true*/
 ) {
-    streams
-        .err
-        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN_OPT, cmd, opt));
+    let mut err = err_fmt!(Error::UNKNOWN_OPT, opt).cmd(cmd);
     if print_hints {
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err = err.full_trailer(parser);
     }
+    err.finish(streams);
 }
 
-/// Perform error reporting for encounter with missing argument.
+/// Perform error reporting for encounter with missing argument for subcommands.
 pub fn builtin_missing_argument(
     parser: &Parser,
     streams: &mut IoStreams,
     cmd: &wstr,
+    subcmd: Option<&wstr>,
     mut opt: &wstr,
     print_hints: bool, /*=true*/
 ) {
-    if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
+    let mut err = if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
         // if c in -qc '-qc' is missing the argument, now opt is just 'c'
         opt = &opt[opt.len() - 1..];
-        streams.err.appendln(&wgettext_fmt!(
-            BUILTIN_ERR_MISSING_OPT_ARG,
-            cmd,
-            L!("-").to_owned() + opt
-        ));
+        err_fmt!(Error::MISSING_OPT_ARG, L!("-").to_owned() + opt)
     } else {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING_OPT_ARG, cmd, opt));
+        err_fmt!(Error::MISSING_OPT_ARG, opt)
+    };
+    if let Some(subcmd) = subcmd {
+        err = err.subcmd(cmd, subcmd);
+    } else {
+        err = err.cmd(cmd);
     }
     if print_hints {
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err = err.full_trailer(parser);
     }
+    err.finish(streams);
 }
 
 /// Perform error reporting for encounter with an extra argument.
@@ -713,12 +614,11 @@ pub fn builtin_unexpected_argument(
     opt: &wstr,
     print_hints: bool, /*=true*/
 ) {
-    streams
-        .err
-        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNEXP_OPT_ARG, cmd, opt));
+    let mut err = err_fmt!(Error::UNEXP_OPT_ARG, opt).cmd(cmd);
     if print_hints {
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err = err.full_trailer(parser);
     }
+    err.finish(streams);
 }
 
 /// Print the backtrace and call for help that we use at the end of error messages.
@@ -735,16 +635,8 @@ pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &
     ));
 }
 
-/// This function works like perror, but it prints its result into the streams.err string instead
-/// to stderr. Used by the builtin commands.
-pub fn builtin_wperror(program_name: &wstr, streams: &mut IoStreams) {
-    let err = errno();
-    streams.err.append(program_name);
-    streams.err.append(L!(": "));
-    if err.0 != 0 {
-        let werr = str2wcstring(err.to_string());
-        streams.err.appendln(&werr);
-    }
+pub fn builtin_strerror() -> WString {
+    str2wcstring(errno().to_string())
 }
 
 pub struct HelpOnlyCmdOpts {
@@ -776,6 +668,7 @@ impl HelpOnlyCmdOpts {
                         parser,
                         streams,
                         cmd,
+                        None,
                         args[w.wopt_index - 1],
                         print_hints,
                     );
@@ -997,11 +890,9 @@ fn parsed_pid(
     match pid {
         Ok(pid @ 1..) => Ok(Pid::new(pid)),
         _ => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: '%s' is not a valid process ID",
-                cmd,
-                arg
-            ));
+            err_fmt!("'%s' is not a valid process ID", arg)
+                .cmd(cmd)
+                .finish(streams);
             Err(STATUS_INVALID_ARGS)
         }
     }
@@ -1046,9 +937,9 @@ pub fn builtin_break_continue(
     }
 
     if argc != 1 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN_OPT, argv[0], argv[1]));
+        err_fmt!(Error::UNKNOWN_OPT, argv[1])
+            .cmd(argv[0])
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -1118,11 +1009,13 @@ impl ColorEnabled {
         arg: &wstr,
     ) -> Result<Self, ErrorCode> {
         Self::try_from(arg).map_err(|()| {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'",
-                cmd,
+            err_fmt!(
+                "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'",
                 arg
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
+
             STATUS_INVALID_ARGS
         })
     }

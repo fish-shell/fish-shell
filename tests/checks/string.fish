@@ -9,14 +9,14 @@ string
 # CHECKERR: (Type 'help string' for related documentation)
 
 string abc
-# CHECKERR: string: abc: invalid subcommand
+# CHECKERR: string abc: invalid subcommand
 # CHECKERR: {{.*}}checks/string.fish (line {{\d+}}):
 # CHECKERR: string abc
 # CHECKERR: ^
 # CHECKERR: (Type 'help string' for related documentation)
 
 string --abc
-# CHECKERR: string: --abc: invalid subcommand
+# CHECKERR: string --abc: invalid subcommand
 # CHECKERR: {{.*}}checks/string.fish (line {{\d+}}):
 # CHECKERR: string --abc
 # CHECKERR: ^
@@ -58,7 +58,7 @@ string match -q -r -v x x; or echo "exit 1"
 # CHECK: exit 1
 
 string match -v -g foo foo
-# CHECKERR: match: invalid option combination, --invert and --groups-only are mutually exclusive
+# CHECKERR: string match: invalid option combination, --invert and --groups-only are mutually exclusive
 
 string match
 # CHECKERR: string match: missing argument
@@ -251,7 +251,7 @@ string sub -s 2 -e -5 abcde
 # CHECK:
 
 string sub -s 2 -e -5 -l 3 abcde
-# CHECKERR: sub: invalid option combination, --end and --length are mutually exclusive
+# CHECKERR: string sub: invalid option combination, --end and --length are mutually exclusive
 
 string split . example.com
 # CHECK: example
@@ -336,7 +336,7 @@ string split --allow-empty --fields=2,9 "" abc
 # CHECK: b
 
 string split --allow-empty "" abc
-# CHECKERR: split: invalid option combination, --allow-empty is only valid with --fields
+# CHECKERR: string split: invalid option combination, --allow-empty is only valid with --fields
 
 seq 3 | string join ...
 # CHECK: 1...2...3
@@ -783,10 +783,10 @@ or echo exit 1
 # CHECK: xyx
 
 string match --entire --index foo foo
-# CHECKERR: match: invalid option combination, --entire and --index are mutually exclusive
+# CHECKERR: string match: invalid option combination, --entire and --index are mutually exclusive
 
 string match --entire --groups-only -r foo foo
-# CHECKERR: match: invalid option combination, --entire and --groups-only are mutually exclusive
+# CHECKERR: string match: invalid option combination, --entire and --groups-only are mutually exclusive
 
 # 'string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
 string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz

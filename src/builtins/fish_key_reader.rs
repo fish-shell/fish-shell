@@ -12,9 +12,10 @@ use std::ops::ControlFlow;
 use libc::{STDIN_FILENO, VEOF, VINTR};
 
 use crate::{
-    builtins::shared::BUILTIN_ERR_UNKNOWN_OPT,
+    builtins::error::Error,
     common::{PROGRAM_NAME, get_program_name, osstr2wcstring, shell_modes},
     env::{EnvStack, Environment as _, env_init},
+    err_fmt, err_str,
     input_common::{
         CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer as _, KeyEvent,
         QueryResultEvent, match_key_event_to_key,
@@ -211,19 +212,15 @@ fn parse_flags(
                 *verbose = true;
             }
             ';' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNEXP_OPT_ARG,
-                    "fish_key_reader",
-                    w.argv[w.wopt_index - 1]
-                ));
+                err_fmt!(Error::UNEXP_OPT_ARG, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_key_reader"))
+                    .finish(streams);
                 return ControlFlow::Break(Err(STATUS_CMD_ERROR));
             }
             '?' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNKNOWN_OPT,
-                    "fish_key_reader",
-                    w.argv[w.wopt_index - 1]
-                ));
+                err_fmt!(Error::UNKNOWN_OPT, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_key_reader"))
+                    .finish(streams);
                 return ControlFlow::Break(Err(STATUS_CMD_ERROR));
             }
             _ => panic!(),
@@ -232,9 +229,7 @@ fn parse_flags(
 
     let argc = args.len() - w.wopt_index;
     if argc != 0 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!("Expected no arguments, got %d", argc));
+        err_fmt!("Expected no arguments, got %d", argc).finish(streams);
         return ControlFlow::Break(Err(STATUS_CMD_ERROR));
     }
 
@@ -261,7 +256,7 @@ pub fn fish_key_reader(
     }
 
     if streams.stdin_fd() < 0 || !isatty(streams.stdin_fd()) {
-        streams.err.appendln("Stdin must be attached to a tty.");
+        err_str!("Stdin must be attached to a tty.").finish(streams);
         return Err(STATUS_CMD_ERROR);
     }
 
@@ -301,22 +296,20 @@ fn throwing_main() -> i32 {
     let mut out = Fd(FdOutputStream::new(STDOUT_FILENO));
     let mut err = Fd(FdOutputStream::new(STDERR_FILENO));
     let io_chain = IoChain::new();
-    let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
+    let streams = &mut IoStreams::new(&mut out, &mut err, &io_chain);
 
     let mut continuous_mode = false;
     let mut verbose = false;
 
     let args: Vec<WString> = std::env::args_os().map(osstr2wcstring).collect();
     if let ControlFlow::Break(s) =
-        parse_flags(None, &mut streams, args, &mut continuous_mode, &mut verbose)
+        parse_flags(None, streams, args, &mut continuous_mode, &mut verbose)
     {
         return s.builtin_status_code();
     }
 
     if !isatty(STDIN_FILENO) {
-        streams
-            .err
-            .appendln(wgettext!("Stdin must be attached to a tty."));
+        err_str!("Stdin must be attached to a tty.").finish(streams);
         return 1;
     }
 
@@ -327,6 +320,5 @@ fn throwing_main() -> i32 {
         terminal_init(&vars, STDIN_FILENO).input_queue
     };
 
-    setup_and_process_keys(&mut streams, continuous_mode, verbose, input_queue)
-        .builtin_status_code()
+    setup_and_process_keys(streams, continuous_mode, verbose, input_queue).builtin_status_code()
 }

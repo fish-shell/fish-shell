@@ -5,6 +5,7 @@ use std::fs;
 use std::io::{Read, Write as _};
 use std::os::unix::ffi::OsStrExt as _;
 
+use crate::builtins::error::Error;
 use crate::locale::set_libc_locales;
 use crate::panic::panic_handler;
 
@@ -19,18 +20,19 @@ use crate::common::{
 use crate::env::EnvStack;
 use crate::env::env_init;
 use crate::env::environment::Environment as _;
+use crate::err_fmt;
 use crate::expand::INTERNAL_SEPARATOR;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
 use crate::parse_util::{SPACES_PER_INDENT, apply_indents, compute_indents};
-use crate::prelude::*;
 use crate::print_help::print_help;
 use crate::threads;
 use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer};
 use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::fish_iswalnum;
+use crate::{err_str, prelude::*};
 use assert_matches::assert_matches;
 use fish_wcstringutil::{count_preceding_backslashes, wcs2bytes};
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
@@ -1025,19 +1027,15 @@ fn do_indent(
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
             ';' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNEXP_OPT_ARG,
-                    "fish_indent",
-                    w.argv[w.wopt_index - 1]
-                ));
+                err_fmt!(Error::UNEXP_OPT_ARG, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_indent"))
+                    .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
             '?' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNKNOWN_OPT,
-                    "fish_indent",
-                    w.argv[w.wopt_index - 1]
-                ));
+                err_fmt!(Error::UNKNOWN_OPT, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_indent"))
+                    .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
             _ => panic!(),
@@ -1053,18 +1051,14 @@ fn do_indent(
     while i < args.len() || (args.is_empty() && i == 0) {
         if args.is_empty() && i == 0 {
             if output_type == OutputType::File {
-                streams.err.append(&sprintf!(
-                    "%s\n\n $ %s -w foo.fish\n",
-                    wgettext!("Expected file path to read/write for -w:"),
-                    get_program_name()
-                ));
+                err_str!("Expected file path to read/write for -w:")
+                    .append_to_msg(&sprintf!("\n\n $ %s -w foo.fish\n", get_program_name()))
+                    .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
             let Some(stdin_file) = streams.stdin_file.as_mut() else {
-                let cmd = "fish_indent";
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!(BUILTIN_ERR_STDIN_CLOSED, cmd));
+                let cmd = L!("fish_indent");
+                err_str!(Error::STDIN_CLOSED).cmd(cmd).finish(streams);
                 return Err(STATUS_CMD_ERROR);
             };
             let mut buf = vec![];
@@ -1090,11 +1084,7 @@ fn do_indent(
                     output_location = arg;
                 }
                 Err(err) => {
-                    streams.err.appendln(&wgettext_fmt!(
-                        "Opening \"%s\" failed: %s",
-                        arg,
-                        err.to_string()
-                    ));
+                    err_fmt!("Opening \"%s\" failed: %s", arg, err.to_string()).finish(streams);
                     return Err(STATUS_CMD_ERROR);
                 }
             }
@@ -1171,11 +1161,12 @@ fn do_indent(
                             let _ = file.write_all(&wcs2bytes(&output_wtext));
                         }
                         Err(err) => {
-                            streams.err.appendln(&wgettext_fmt!(
+                            err_fmt!(
                                 "Opening \"%s\" failed: %s",
                                 output_location,
                                 err.to_string()
-                            ));
+                            )
+                            .finish(streams);
                             return Err(STATUS_CMD_ERROR);
                         }
                     }

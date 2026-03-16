@@ -28,7 +28,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("afiqrm:");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'a' => self.all = true,
             'f' => self.filter = true,
@@ -42,11 +42,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
                         .ok()
                         .and_then(|v| NonZeroUsize::new(v as usize))
                         .ok_or_else(|| {
-                            StringError::InvalidArgs(wgettext_fmt!(
-                                BUILTIN_ERR_INVALID_MAX_MATCHES,
-                                _n,
-                                arg
-                            ))
+                            StringError::InvalidArgs(err_fmt!(Error::INVALID_MAX_MATCHES, arg))
                         })?;
                     Some(max)
                 }
@@ -62,14 +58,19 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
         args: &[&'args wstr],
         streams: &mut IoStreams,
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         let Some(pattern) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
+            err_str!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
         let Some(replacement) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT1, cmd, 1, 2);
+            err_fmt!(Error::UNEXP_ARG_COUNT, 1, 2)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
@@ -86,7 +87,8 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
 
         let replacer = match StringReplacer::new(self.pattern, self.replacement, self) {
             Ok(x) => x,
@@ -102,12 +104,9 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             let (replaced, result) = match replacer.replace(arg) {
                 Ok(x) => x,
                 Err(e) => {
-                    string_error!(
-                        streams,
-                        "%s: Regular expression substitute error: %s",
-                        cmd,
-                        e.error_message()
-                    );
+                    err_fmt!("Regular expression substitute error: %s", e.error_message())
+                        .subcmd(cmd, subcmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             };

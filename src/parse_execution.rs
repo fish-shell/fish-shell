@@ -4,11 +4,10 @@ use crate::ast::{
     self, BlockStatementHeader, Keyword as _, Leaf as _, Node, Statement, Token as _,
     unescape_keyword,
 };
-use crate::builtins;
+use crate::builtins::error::Error;
 use crate::builtins::shared::{
-    BUILTIN_ERR_VARNAME, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR,
-    STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_UNMATCHED_WILDCARD,
-    builtin_exists,
+    STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD,
+    STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_UNMATCHED_WILDCARD, builtin_exists,
 };
 use crate::common::{
     ScopeGuard, ScopeGuarding, ScopedRefCell, escape, truncate_at_nul, valid_var_name,
@@ -52,6 +51,7 @@ use crate::timer::push_timer;
 use crate::tokenizer::{PipeOrRedir, TokenType, variable_assignment_equals_pos};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wildcard::wildcard_match;
+use crate::{builtins, err_fmt};
 use fish_common::help_section;
 use fish_widestring::WExt as _;
 use libc::{ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
@@ -117,15 +117,13 @@ macro_rules! report_error_formatted {
     }};
 }
 
-pub fn varname_error(command: &wstr, bad_name: &wstr) -> WString {
-    let mut e = wgettext_fmt!(
-        BUILTIN_ERR_VARNAME,
-        command,
+pub fn varname_error<'a>(command: &'a wstr, bad_name: &'a wstr) -> Error<'a> {
+    err_fmt!(
+        Error::INVALID_VARNAME,
         bad_name,
         help_section!("language#shell-variable-and-function-names")
-    );
-    e.push('\n');
-    e
+    )
+    .cmd(command)
 }
 
 impl<'a> ExecutionContext<'a> {
@@ -909,7 +907,7 @@ impl<'a> ExecutionContext<'a> {
                 STATUS_INVALID_ARGS,
                 header.var_name,
                 "%s",
-                varname_error(L!("for"), &for_var_name)
+                &varname_error(L!("for"), &for_var_name).to_string()
             );
         }
 

@@ -378,7 +378,7 @@ path
 # CHECKERR: (Type 'help path' for related documentation)
 
 path invalid-subcmd
-# CHECKERR: path: invalid-subcmd: invalid subcommand
+# CHECKERR: path invalid-subcmd: invalid subcommand
 # CHECKERR: {{.*}}/checks/path.fish (line {{\d+}}):
 # CHECKERR: path invalid-subcmd
 # CHECKERR: ^

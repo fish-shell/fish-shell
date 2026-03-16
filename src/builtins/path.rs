@@ -1,4 +1,6 @@
+use crate::builtins::error::Error;
 use crate::env::environment::Environment as _;
+use crate::{err_fmt, err_str};
 use std::fs::Metadata;
 use std::os::unix::prelude::{FileTypeExt as _, MetadataExt as _};
 use std::time::SystemTime;
@@ -14,23 +16,6 @@ use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::split_string_tok;
 use libc::{PATH_MAX, S_ISGID, S_ISUID, mode_t};
 use nix::unistd::{AccessFlags, Gid, Uid};
-
-macro_rules! path_error {
-    (
-    $streams:expr,
-    $string:expr
-    $(, $args:expr)+
-    $(,)?
-    ) => {
-        $streams.err.append(L!("path "));
-        $streams.err.appendln(&wgettext_fmt!($string, $($args),*));
-    };
-}
-
-fn path_unknown_option(parser: &Parser, streams: &mut IoStreams, subcmd: &wstr, opt: &wstr) {
-    path_error!(streams, BUILTIN_ERR_UNKNOWN_OPT, subcmd, opt);
-    builtin_print_error_trailer(parser, streams.err, L!("path"));
-}
 
 // How many bytes we read() at once.
 // We use PATH_MAX here so we always get at least one path,
@@ -233,7 +218,8 @@ fn parse_opts<'args>(
     parser: &Parser,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
-    let cmd = args[0];
+    let cmd = L!("path");
+    let subcmd = args[0];
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
 
@@ -243,23 +229,27 @@ fn parse_opts<'args>(
     while let Some(c) = w.next_opt() {
         match c {
             ':' => {
-                streams.err.append(L!("path ")); // clone of string_error
-                builtin_missing_argument(parser, streams, cmd, args_read[w.wopt_index - 1], false);
-                return Err(STATUS_INVALID_ARGS);
-            }
-            ';' => {
-                streams.err.append(L!("path ")); // clone of string_error
-                builtin_unexpected_argument(
+                builtin_missing_argument(
                     parser,
                     streams,
                     cmd,
+                    Some(subcmd),
                     args_read[w.wopt_index - 1],
                     false,
                 );
                 return Err(STATUS_INVALID_ARGS);
             }
+            ';' => {
+                err_fmt!(Error::UNEXP_OPT_ARG, args_read[w.wopt_index - 1])
+                    .subcmd(cmd, subcmd)
+                    .finish(streams);
+                return Err(STATUS_INVALID_ARGS);
+            }
             '?' => {
-                path_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
+                err_fmt!(Error::UNKNOWN_OPT, args_read[w.wopt_index - 1])
+                    .subcmd(cmd, subcmd)
+                    .full_trailer(parser)
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             'q' => {
@@ -283,7 +273,9 @@ fn parse_opts<'args>(
                 let types_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for t in types_args {
                     let Ok(r#type) = t.try_into() else {
-                        path_error!(streams, "%s: Invalid type '%s'", cmd, t);
+                        err_fmt!("Invalid type '%s'", t)
+                            .subcmd(cmd, subcmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     };
                     *types |= r#type;
@@ -295,7 +287,9 @@ fn parse_opts<'args>(
                 let perms_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for p in perms_args {
                     let Ok(perm) = p.try_into() else {
-                        path_error!(streams, "%s: Invalid permission '%s'", cmd, p);
+                        err_fmt!("Invalid permission '%s'", p)
+                            .subcmd(cmd, subcmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     };
                     *perms |= perm;
@@ -359,7 +353,10 @@ fn parse_opts<'args>(
                 continue;
             }
             _ => {
-                path_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
+                err_fmt!(Error::UNKNOWN_OPT, args_read[w.wopt_index - 1])
+                    .subcmd(cmd, subcmd)
+                    .full_trailer(parser)
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
         }
@@ -375,14 +372,18 @@ fn parse_opts<'args>(
         }
 
         if opts.arg1.is_none() && n_req_args == 1 {
-            path_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
+            err_str!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     }
 
     // At this point we should not have optional args and be reading args from stdin.
     if streams.stdin_is_directly_redirected && args.len() > *optind {
-        path_error!(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
+        err_str!(Error::TOO_MANY_ARGUMENTS)
+            .subcmd(cmd, subcmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -698,7 +699,9 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
         }
         None => wbasename,
         Some(k) => {
-            path_error!(streams, "%s: Invalid sort key '%s'", args[0], k);
+            err_fmt!("Invalid sort key '%s'", k)
+                .subcmd(L!("path"), args[0])
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     };
@@ -949,10 +952,10 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
     };
     let argc = args.len();
     if argc <= 1 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!(Error::MISSING_SUBCMD)
+            .cmd(cmd)
+            .full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -975,10 +978,10 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
         "resolve" => path_resolve,
         "sort" => path_sort,
         _ => {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!(Error::INVALID_SUBCMD)
+                .subcmd(cmd, subcmd_name)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     };

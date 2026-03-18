@@ -401,7 +401,10 @@ dependencies = [
 name = "fish-util"
 version = "0.0.0"
 dependencies = [
+ "errno",
  "fish-widestring",
+ "libc",
+ "nix",
  "rand",
 ]
 

@@ -51,9 +51,10 @@ endif()
 add_feature_info(Documentation WITH_DOCS "user manual and documentation")
 
 if(WITH_DOCS)
-    add_custom_target(doc ALL
-                      DEPENDS sphinx-docs sphinx-manpages)
+    add_custom_target(doc ALL DEPENDS sphinx-docs sphinx-manpages)
     # Group docs targets into a DocsTargets folder
-    set_property(TARGET doc sphinx-docs sphinx-manpages
-                 PROPERTY FOLDER cmake/DocTargets)
+    set_property(
+        TARGET doc sphinx-docs sphinx-manpages
+        PROPERTY FOLDER cmake/DocTargets
+    )
 endif()

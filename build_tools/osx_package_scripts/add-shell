@@ -10,8 +10,8 @@ fi
 
 scriptname=$(basename "$0")
 if [ "$(id -u)" -ne 0 ]; then
-     echo "${scriptname} must be run as root"
-     exit 1
+    echo "${scriptname} must be run as root"
+    exit 1
 fi
 
 file=/etc/shells

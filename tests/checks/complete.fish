@@ -345,8 +345,8 @@ begin
             rm -rf $parened_path
             and mkdir $parened_path
             and mkdir $parened_subpath
-            and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
-            and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
+            and ln -s (command -v ls) $parened_path/'__test6_(paren)_command'
+            and ln -s (command -v ls) $parened_subpath/'__test6_subdir_(paren)_command'
         end
         echo "error: could not create command expansion temp environment" >&2
     end
@@ -564,7 +564,7 @@ complete -C'complete --command=mktemp' | string replace -rf '=mktemp\t.*' '=mkte
 ## Test token expansion in commandline -x
 
 complete complete_make -f -a '(argparse C/directory= -- (commandline -xpc)[2..];
-                               echo Completing targets in directory $_flag_C)'
+    echo Completing targets in directory $_flag_C)'
 var=path/to complete -C'complete_make -C "$var/build-directory" '
 # CHECK: Completing targets in directory path/to/build-directory
 var1=path complete -C'var2=to complete_make -C "$var1/$var2/other-build-directory" '
@@ -691,3 +691,12 @@ complete command-line-aware-completions -xa "(commandline --cursor; commandline 
 complete -C"command-line-aware-completions "
 # CHECK: 31
 # CHECK: command-line-aware-completions
+
+begin
+    : >"$TMPDIR/-command-starting-with-dash"
+    chmod +x "$TMPDIR/-command-starting-with-dash"
+
+    set -l PATH "$TMPDIR" $PATH
+    complete -C"-command-starting-with"
+    # CHECK: -command-starting-with-dash{{\t}}command
+end

@@ -400,8 +400,10 @@ fn test_char() {
 
 #[test]
 fn test_ptr() {
-    assert_fmt!("%p", core::ptr::null::<u8>() => "0");
-    assert_fmt!("%p", 0xDEADBEEF_usize as *const u8 => "0xdeadbeef");
+    assert_fmt!("%p", core::ptr::null::<()>() => "0");
+
+    let tmp = core::ptr::without_provenance::<()>(0xDEADBEEF);
+    assert_fmt!("%p", tmp => "0xdeadbeef");
 }
 
 #[test]

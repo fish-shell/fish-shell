@@ -5,6 +5,26 @@ Notable improvements and fixes
 ------------------------------
 - New Spanish translations (:issue:`12489`).
 - A new "Tab Completion Preview" feature visually underlines the "guaranteed" portion of an autosuggestion (the longest common prefix across all completions) (:issue:`11250`).
+- New Japanese translations.
+
+Deprecations and removed features
+---------------------------------
+
+Interactive improvements
+------------------------
+- The tab completion pager now left-justifies the description of each column (:issue:`12546`).
+
+New or improved bindings
+------------------------
+
+Improved terminal support
+-------------------------
+- ``set_color`` is able to turn off italics, reverse mode, strikethrough and underline individually (e.g. ``--italics=off``).
+- ``set_color`` learned the foreground (``--foreground`` or ``-f``) and reset (``--reset``) modifiers.
+
+Other improvements
+------------------
+- ``fish_indent`` now preserves comments and newlines immediately preceding a brace block (``{ }``) (:issue:`12505`).
 
 For distributors and developers
 -------------------------------
@@ -13,6 +33,8 @@ For distributors and developers
 Regression fixes:
 -----------------
 - (from 4.5.0) Intermediate ``⏎`` artifact when redrawing prompt (:issue:`12476`).
+- (from 4.4.0) ``history`` honors explicitly specified ``--color=`` again (:issue:`12512`).
+- (from 4.3.0) Completion of commands starting with ``-`` (:issue:`12522`).
 
 fish 4.5.0 (released February 17, 2026)
 =======================================
@@ -55,7 +77,7 @@ New or improved bindings
 - Vi mode word movements (``w``, ``W``, ``e``, and ``E``) are now largely in line with Vim. The only exception is that underscores are treated as word separators (:issue:`12269`).
 - New special input functions to support these movements: ``forward-word-vi``, ``kill-word-vi``, ``forward-bigword-vi``, ``kill-bigword-vi``, ``forward-word-end``, ``backward-word-end``, ``forward-bigword-end``, ``backward-bigword-end``, ``kill-a-word``, ``kill-inner-word``, ``kill-a-bigword``, and ``kill-inner-bigword``.
 - Vi mode key bindings now support counts for movement and deletion commands (e.g. `d3w` or `3l`), via a new operator mode (:issue:`2192`).
-- New ``catpuccin-*`` color themes.
+- New ``catppuccin-*`` color themes.
 
 Improved terminal support
 -------------------------

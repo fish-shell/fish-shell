@@ -3,7 +3,7 @@ use crate::common::{self, EscapeStringStyle, escape_string};
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::prelude::*;
 use crate::screen::{is_dumb, only_grayscale};
-use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
+use crate::text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use bitflags::bitflags;
 use fish_color::{Color, Color24};
@@ -52,14 +52,15 @@ pub(crate) enum SgrTerminalCommand {
     EnterUnderlineMode(UnderlineStyle),
     EnterReverseMode,
     EnterStrikethroughMode,
-    EnterStandoutMode,
     ExitItalicsMode,
     ExitUnderlineMode,
+    ExitReverseMode,
     ExitStrikethroughMode,
 
     // Colors
     SelectPaletteColor(Paintable, u8),
     SelectRgbColor(Paintable, Color24),
+    DefaultForegroundColor,
     DefaultBackgroundColor,
     DefaultUnderlineColor,
 }
@@ -256,7 +257,7 @@ impl Outputter {
             contents: Vec::new(),
             buffer_count: 0,
             fd,
-            last: TextFace::default(),
+            last: TextFace::terminal_default(),
         }
     }
 
@@ -267,8 +268,7 @@ impl Outputter {
 
     pub fn new_buffering_no_assume_normal() -> Self {
         let mut zelf = Self::new_buffering();
-        zelf.last.fg = Color::None;
-        zelf.last.bg = Color::None;
+        zelf.last = TextFace::unknown();
         assert_eq!(zelf.last.underline_color, Color::None);
         zelf
     }
@@ -377,9 +377,9 @@ impl Outputter {
         let style = face.style;
 
         use SgrTerminalCommand::{
-            DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterDimMode,
-            EnterItalicsMode, EnterReverseMode, EnterStandoutMode, EnterStrikethroughMode,
-            EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitStrikethroughMode,
+            DefaultBackgroundColor, DefaultForegroundColor, DefaultUnderlineColor, EnterBoldMode,
+            EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStrikethroughMode,
+            EnterUnderlineMode, ExitItalicsMode, ExitReverseMode, ExitStrikethroughMode,
             ExitUnderlineMode,
         };
 
@@ -391,8 +391,10 @@ impl Outputter {
 
         // Removes all styles that are individually resettable.
         let non_resettable = |mut style: TextStyling| {
-            style.italics = false;
-            style.underline_style = None;
+            style.italics = ResettableStyle::Unchanged;
+            style.underline_style = ResettableStyle::Unchanged;
+            style.reverse = ResettableStyle::Unchanged;
+            style.strikethrough = ResettableStyle::Unchanged;
             style
         };
         let non_resettable_attributes_to_unset = non_resettable(style_writer.last().style)
@@ -411,11 +413,7 @@ impl Outputter {
 
         if !fg.is_none() && fg != style_writer.last().fg {
             if fg.is_normal() {
-                style_writer.write_command(ExitAttributeMode);
-
-                style_writer.last().bg = Color::Normal;
-                style_writer.last().underline_color = Color::Normal;
-                style_writer.last().style = TextStyling::default();
+                style_writer.write_command(DefaultForegroundColor);
             } else {
                 assert!(!fg.is_special());
                 style_writer.write_color(Paintable::Foreground, fg);
@@ -452,25 +450,19 @@ impl Outputter {
 
         if style.underline_style != style_writer.last().style.underline_style {
             match style.underline_style {
-                None => {
+                ResettableStyle::Unchanged => {}
+                ResettableStyle::Off => {
                     if style_writer.write_command(ExitUnderlineMode) {
-                        style_writer.last().style.underline_style = None;
+                        style_writer.last().style.underline_style = ResettableStyle::Off;
                     }
                 }
-                Some(underline_style) => {
+                ResettableStyle::On(underline_style) => {
                     if style_writer.write_command(EnterUnderlineMode(underline_style)) {
-                        style_writer.last().style.underline_style = Some(underline_style);
+                        style_writer.last().style.underline_style =
+                            ResettableStyle::On(underline_style);
                     }
                 }
             }
-        }
-
-        let was_italics = style_writer.last().style.is_italics();
-        if !style.is_italics() && was_italics && style_writer.write_command(ExitItalicsMode) {
-            style_writer.last().style.italics = false;
-        } else if style.is_italics() && !was_italics && style_writer.write_command(EnterItalicsMode)
-        {
-            style_writer.last().style.italics = true;
         }
 
         if style.is_dim()
@@ -480,26 +472,46 @@ impl Outputter {
             style_writer.last().style.dim = true;
         }
 
-        let was_strikethrough = style_writer.last().style.is_strikethrough();
-        if !style.is_strikethrough()
-            && was_strikethrough
-            && style_writer.write_command(ExitStrikethroughMode)
-        {
-            style_writer.last().style.strikethrough = false;
-        } else if style.is_strikethrough()
-            && !was_strikethrough
-            && style_writer.write_command(EnterStrikethroughMode)
-        {
-            style_writer.last().style.strikethrough = true;
-        }
+        let mut current_style = style_writer.last().style;
+        let mut apply_resettable_style =
+            |new_style: ResettableStyle,
+             current_style: &mut ResettableStyle,
+             enter_cmd: SgrTerminalCommand,
+             exit_cmd: SgrTerminalCommand| {
+                if new_style == *current_style {
+                    return;
+                }
+                let cmd = match new_style {
+                    ResettableStyle::Unchanged => {
+                        return;
+                    }
+                    ResettableStyle::On(()) => enter_cmd,
+                    ResettableStyle::Off => exit_cmd,
+                };
+                if style_writer.write_command(cmd) {
+                    *current_style = new_style;
+                }
+            };
 
-        if style.is_reverse()
-            && !style_writer.last().style.is_reverse()
-            && (style_writer.write_command(EnterReverseMode)
-                || style_writer.write_command(EnterStandoutMode))
-        {
-            style_writer.last().style.reverse = true;
-        }
+        apply_resettable_style(
+            style.italics,
+            &mut current_style.italics,
+            EnterItalicsMode,
+            ExitItalicsMode,
+        );
+        apply_resettable_style(
+            style.reverse,
+            &mut current_style.reverse,
+            EnterReverseMode,
+            ExitReverseMode,
+        );
+        apply_resettable_style(
+            style.strikethrough,
+            &mut current_style.strikethrough,
+            EnterStrikethroughMode,
+            ExitStrikethroughMode,
+        );
+        style_writer.last().style = current_style;
     }
 
     /// Write a wide character to the receiver.
@@ -647,7 +659,7 @@ impl<'a> OutputterStyleWriter<'a> {
     pub(crate) fn reset_text_face(&mut self) {
         use SgrTerminalCommand::ExitAttributeMode;
         self.write_command(ExitAttributeMode);
-        self.out.last = TextFace::default();
+        self.out.last = TextFace::terminal_default();
     }
 
     pub(crate) fn write_command(&mut self, cmd: SgrTerminalCommand) -> bool {
@@ -663,13 +675,14 @@ impl<'a> OutputterStyleWriter<'a> {
             EnterItalicsMode => self.write_param_str(1, b"3"),
             EnterUnderlineMode(style) => self.write_underline_mode(style),
             EnterReverseMode => self.write_param_str(1, b"7"),
-            EnterStandoutMode => self.write_param_str(1, b"7"),
+            ExitReverseMode => self.write_param_str(1, b"27"),
             EnterStrikethroughMode => self.write_param_str(1, b"9"),
             ExitStrikethroughMode => self.write_param_str(1, b"29"),
             ExitItalicsMode => self.write_param_str(1, b"23"),
             ExitUnderlineMode => self.write_param_str(1, b"24"),
             SelectPaletteColor(paintable, idx) => self.write_palette_color(paintable, idx),
             SelectRgbColor(paintable, rgb) => self.write_rgb_color(paintable, rgb),
+            DefaultForegroundColor => self.write_param_str(1, b"39"),
             DefaultBackgroundColor => self.write_param_str(1, b"49"),
             DefaultUnderlineColor => self.write_param_str(1, b"59"),
         }
@@ -780,7 +793,9 @@ impl<'a> Drop for OutputterStyleWriter<'a> {
 
 #[cfg(test)]
 mod tests {
-    use fish_color::Color24;
+    use fish_color::{Color, Color24};
+
+    use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 
     use super::{
         Outputter,
@@ -873,6 +888,60 @@ mod tests {
             concat!(
                 "\u{1b}[30;31;32;33;34;35;36;37;30;31;32;33;34;",
                 "58:2::0:0:0m",
+            )
+        );
+    }
+
+    #[test]
+    fn resettable_style_attribute() {
+        type RS = crate::text_face::ResettableStyle<()>;
+        type RU = crate::text_face::ResettableStyle<UnderlineStyle>;
+
+        let mut outp = Outputter::new_buffering_no_assume_normal();
+
+        let mut set_attr = |italics: RS, reverse: RS, strikethrough: RS, underline: RU| {
+            let mut style = TextStyling::unknown();
+            style.italics = italics;
+            style.reverse = reverse;
+            style.strikethrough = strikethrough;
+            style.underline_style = underline;
+
+            let face = TextFace::new(Color::None, Color::None, Color::None, style);
+            outp.set_text_face(face);
+        };
+
+        // TODO: feature(stmt_expr_attributes): use #[rustfmt::skip]
+        #[cfg_attr(any(), rustfmt::skip)]
+        {
+            // There is no particular order between the different attributes.
+            // The main test is that for a given attribute, setting the same
+            // value twice (e.g. On->On) shouldn't create a new escape sequence,
+            // except for Unchanged which should never create a new sequence
+            // (which also means testing Unchanged->Unchanged is not required)
+            // Cherry on top: by changing what value is used first for each
+            // attribute, we also further exercise SGR combining, including
+            // an empty result.
+            set_attr(RS::On(()),    RS::Unchanged, RS::Off,       RU::On(UnderlineStyle::Curly));
+            set_attr(RS::On(()),    RS::On(()),    RS::Unchanged, RU::On(UnderlineStyle::Curly));
+            set_attr(RS::Unchanged, RS::On(()),    RS::Unchanged, RU::Unchanged);
+            set_attr(RS::Unchanged, RS::Unchanged, RS::On(()),    RU::Off);
+            set_attr(RS::Off,       RS::Unchanged, RS::On(()),    RU::Off);
+            set_attr(RS::Off,       RS::Off,       RS::Unchanged, RU::Unchanged);
+            set_attr(RS::Unchanged, RS::Off,       RS::Unchanged, RU::On(UnderlineStyle::Dashed));
+            set_attr(RS::Unchanged, RS::Unchanged, RS::Off,       RU::On(UnderlineStyle::Dotted));
+        }
+
+        assert_eq!(
+            String::from_utf8_lossy(outp.contents()),
+            concat!(
+                "\u{1b}[4:3;3;29m",
+                "\u{1b}[7m",
+                "",
+                "\u{1b}[24;9m",
+                "\u{1b}[23m",
+                "\u{1b}[27m",
+                "\u{1b}[4:5m",
+                "\u{1b}[4:4;29m",
             )
         );
     }

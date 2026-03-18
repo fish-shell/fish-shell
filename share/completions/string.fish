@@ -33,9 +33,10 @@ complete -f -c string -n "test (count (commandline -xpc)) -lt 2" -a unescape
 complete -f -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains -- (commandline -xpc)[2] escape; or contains -- (commandline -xpc)[2] unescape" -s n -l no-quoted -d "Escape with \\ instead of quotes"
 complete -x -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains -- (commandline -xpc)[2] escape; or contains -- (commandline -xpc)[2] unescape" -l style -d "Specify escaping style" -xa "
 (printf '%s\t%s\n' script 'For use in scripts' \
- var 'For use as a variable name' \
- regex 'For string match -r, string replace -r' \
- url 'For use as a URL')"
+    var 'For use as a variable name' \
+    regex 'For string match -r, string replace -r' \
+    url 'For use as a URL')
+"
 complete -f -c string -n "test (count (commandline -xpc)) -lt 2" -a match
 complete -f -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains -- (commandline -xpc)[2] match" -s n -l index -d "Report index, length of match"
 complete -f -c string -n "test (count (commandline -xpc)) -ge 2" -n "contains -- (commandline -xpc)[2] match" -s v -l invert -d "Report only non-matches"

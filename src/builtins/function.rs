@@ -7,12 +7,12 @@ use crate::env::is_read_only;
 use crate::event::{self, EventDescription, EventHandler};
 use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::nix::getpid;
 use crate::parse_execution::varname_error;
 use crate::parse_tree::NodeRef;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::proc::Pid;
 use crate::signal::Signal;
+use nix::unistd::getpid;
 use std::sync::Arc;
 
 struct FunctionCmdOpts {
@@ -171,7 +171,7 @@ fn parse_cmd_opts(
                     }
                     e = EventDescription::CallerExit { caller_id };
                 } else if opt == 'p' && woptarg == "%self" {
-                    let pid = Pid::new(getpid());
+                    let pid = Pid::from_nix_pid_unchecked(getpid());
                     e = EventDescription::ProcessExit { pid: Some(pid) };
                 } else {
                     let pid = parse_pid_may_be_zero(streams, cmd, woptarg)?;

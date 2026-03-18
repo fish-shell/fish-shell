@@ -68,7 +68,7 @@ use crate::input_common::{
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
-use crate::nix::{getpid, isatty};
+use crate::nix::isatty;
 use crate::operation_context::{OperationContext, get_bg_context};
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
@@ -113,13 +113,14 @@ use crate::tty_handoff::{
     TtyHandoff, get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
 };
 use crate::wildcard::wildcard_has;
-use crate::wutil::{fstat, perror, write_to_fd, wstat};
+use crate::wutil::{fstat, perror_nix, wstat};
 use crate::{abbrs, event, function};
 use assert_matches::assert_matches;
 use errno::{Errno, errno};
 use fish_common::{UTF8_BOM_WCHAR, help_section};
 use fish_fallback::fish_wcwidth;
 use fish_fallback::lowercase;
+use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{
     CaseSensitivity, IsPrefix, StringFuzzyMatch, count_preceding_backslashes, is_prefix,
     join_strings, string_prefixes_string, string_prefixes_string_case_insensitive,
@@ -127,17 +128,18 @@ use fish_wcstringutil::{
 };
 use fish_widestring::ELLIPSIS_CHAR;
 use libc::{
-    _POSIX_VDISABLE, EIO, EISDIR, ENOTTY, EPERM, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT,
-    STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
+    _POSIX_VDISABLE, EIO, EISDIR, ENOTTY, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT, STDERR_FILENO,
+    STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
-use nix::sys::termios::{self, SetArg, Termios, tcgetattr, tcsetattr};
+use nix::unistd::setpgid;
 use nix::{
     fcntl::OFlag,
     sys::{
         signal::{Signal, killpg},
         stat::Mode,
+        termios::{self, SetArg, Termios, tcgetattr, tcsetattr},
     },
-    unistd::getpgrp,
+    unistd::{getpgrp, getpid},
 };
 use std::{
     borrow::Cow,
@@ -305,10 +307,10 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
                     warning,
                     wgettext_fmt!(
                         "%s could not read response to Primary Device Attribute query after waiting for %d seconds. \
-                         This is often due to a missing feature in your terminal. \
-                         See 'help %s' or 'man fish-terminal-compatibility'. \
-                         This %s process will no longer wait for outstanding queries, \
-                         which disables some optional features.",
+                        This is often due to a missing feature in your terminal. \
+                        See 'help %s' or 'man fish-terminal-compatibility'. \
+                        This %s process will no longer wait for outstanding queries, \
+                        which disables some optional features.",
                         program,
                         LONG_READ_TIMEOUT.as_secs(),
                         help_section!("terminal-compatibility"),
@@ -2658,15 +2660,14 @@ impl<'a> Reader<'a> {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
             if let Some(old_modes) = old_modes {
-                if tcsetattr(
+                if let Err(err) = tcsetattr(
                     unsafe { BorrowedFd::borrow_raw(self.conf.inputfd) },
                     SetArg::TCSANOW,
                     &old_modes,
-                )
-                .is_err()
-                    && is_interactive_session()
-                {
-                    perror("tcsetattr");
+                ) {
+                    if is_interactive_session() {
+                        perror_nix("tcsetattr", err);
+                    }
                 }
             }
             Outputter::stdoutput().borrow_mut().reset_text_face();
@@ -3107,7 +3108,8 @@ impl<'a> Reader<'a> {
                     let mut outp = Outputter::stdoutput().borrow_mut();
                     if let Some(fish_color_cancel) = self.vars().get(L!("fish_color_cancel")) {
                         outp.set_text_face(
-                            parse_text_face_for_highlight(&fish_color_cancel).unwrap_or_default(),
+                            parse_text_face_for_highlight(&fish_color_cancel)
+                                .unwrap_or(TextFace::terminal_default()),
                         );
                     }
                     outp.write_wstr(L!("^C"));
@@ -4794,13 +4796,13 @@ fn term_donate(quiet: bool /* = false */) {
         ) {
             Ok(_) => (),
             Err(nix::Error::EINTR) => continue,
-            Err(_) => {
+            Err(err) => {
                 if !quiet {
                     flog!(
                         warning,
                         wgettext!("Could not set terminal mode for new job")
                     );
-                    perror("tcsetattr");
+                    perror_nix("tcsetattr", err);
                 }
                 break;
             }
@@ -4826,25 +4828,24 @@ pub fn term_copy_modes() {
 }
 
 pub fn set_shell_modes(fd: RawFd, whence: &str) -> bool {
-    let ok = loop {
+    loop {
         match tcsetattr(
             unsafe { BorrowedFd::borrow_raw(fd) },
             SetArg::TCSANOW,
             &shell_modes(),
         ) {
-            Ok(_) => break true,
+            Ok(_) => return true,
             Err(nix::Error::EINTR) => continue,
-            Err(_) => break false,
+            Err(err) => {
+                perror_nix("tcsetattr", err);
+                flog!(
+                    warning,
+                    wgettext_fmt!("Failed to set terminal mode (%s)", whence)
+                );
+                return false;
+            }
         }
-    };
-    if !ok {
-        perror("tcsetattr");
-        flog!(
-            warning,
-            wgettext_fmt!("Failed to set terminal mode (%s)", whence)
-        );
     }
-    ok
 }
 
 pub fn set_shell_modes_temporarily(inputfd: RawFd) -> Option<Termios> {
@@ -4887,7 +4888,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
     // In some strange cases the tty may be come preassigned to fish's pid, but not its pgroup.
     // In that case we simply attempt to claim our own pgroup.
     // See #7388.
-    if owner == getpid() {
+    if owner == getpid().as_raw() {
         unsafe { libc::setpgid(owner, owner) };
         return;
     }
@@ -4947,15 +4948,15 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
                     warning,
                     sprintf!(
                         "I appear to be an orphaned process, so I am quitting politely. My pid is %d.",
-                        pid
+                        pid.as_raw()
                     )
                 );
                 exit_without_destructors(1);
             }
 
             // Try stopping us.
-            if killpg(nix::unistd::Pid::from_raw(shell_pgid), Signal::SIGTTIN).is_err() {
-                perror("killpg(shell_pgid, SIGTTIN)");
+            if let Err(err) = killpg(nix::unistd::Pid::from_raw(shell_pgid), Signal::SIGTTIN) {
+                perror_nix("killpg(shell_pgid, SIGTTIN)", err);
                 exit_without_destructors(1);
             }
         }
@@ -4966,36 +4967,36 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
 fn reader_interactive_init() {
     assert_is_main_thread();
 
-    let mut shell_pgid = getpgrp().as_raw();
+    let mut shell_pgid = getpgrp();
     let shell_pid = getpid();
 
     // Ensure interactive signal handling is enabled.
     signal_set_handlers_once(true);
 
     // Wait until we own the terminal.
-    acquire_tty_or_exit(shell_pgid);
+    acquire_tty_or_exit(shell_pgid.as_raw());
 
     // If fish has no valid pgroup (possible with firejail, see #5295) or is interactive,
     // ensure it owns the terminal. Also see #5909, #7060.
-    if shell_pgid == 0 || (is_interactive_session() && shell_pgid != shell_pid) {
+    if shell_pgid.as_raw() == 0 || (is_interactive_session() && shell_pgid != shell_pid) {
         shell_pgid = shell_pid;
-        if unsafe { libc::setpgid(shell_pgid, shell_pgid) } < 0 {
+        if let Err(e) = setpgid(shell_pgid, shell_pgid) {
             // If we're session leader setpgid returns EPERM. The other cases where we'd get EPERM
             // don't apply as we passed our own pid.
             //
             // This should be harmless, so we ignore it.
-            if errno().0 != EPERM {
+            if e != nix::errno::Errno::EPERM {
                 flog!(
                     error,
                     wgettext!("Failed to assign shell to its own process group")
                 );
-                perror("setpgid");
+                perror_nix("setpgid", e);
                 exit_without_destructors(1);
             }
         }
 
         // Take control of the terminal
-        if unsafe { libc::tcsetpgrp(STDIN_FILENO, shell_pgid) } == -1 {
+        if unsafe { libc::tcsetpgrp(STDIN_FILENO, shell_pgid.as_raw()) } == -1 {
             flog!(error, wgettext!("Failed to take control of the terminal"));
             perror("tcsetpgrp");
             exit_without_destructors(1);
@@ -6390,7 +6391,7 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     reader_write_title(cmd, parser, true);
     Outputter::stdoutput()
         .borrow_mut()
-        .set_text_face(TextFace::default());
+        .set_text_face(TextFace::terminal_default());
     term_donate(false);
 
     let time_before = Instant::now();

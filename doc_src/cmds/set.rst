@@ -89,7 +89,7 @@ Further options:
 **-q** or **--query** *NAME*\[*INDEX*\]
     Test if the specified variable names are defined.
     If an *INDEX* is provided, check for items at that slot.
-    With a given scope (like **--global**) or attribute (like **--exported** or **--path**) check only variables that match.
+    With a given scope (like **--global**) or attribute (like **--export** or **--path**) check only variables that match.
     Does not output anything, but the shell status is set to the number of variables specified that were not defined, up to a maximum of 255.
     If no variable was given, it also returns 255.
 

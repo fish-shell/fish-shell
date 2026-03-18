@@ -200,6 +200,10 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: nombre de modo no válido. Consulte `help %s`"
 
 #, c-format
+msgid "%s: %s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: invalid scale"
 msgstr "%s: %s: escala no válida"
 
@@ -210,6 +214,10 @@ msgstr "%s: %s: subcomando no válido"
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
 msgstr "%s: %s: nombre de variable no válido. Consulte `help %s`"
+
+#, c-format
+msgid "%s: %s: option cannot be used with a non-option argument"
+msgstr ""
 
 #, c-format
 msgid "%s: %s: option does not take an argument"
@@ -5942,6 +5950,9 @@ msgstr ""
 msgid "Add or inspect object notes"
 msgstr ""
 
+msgid "Add or parse structured information in commit messages"
+msgstr ""
+
 msgid "Add or reduce noise in an image [geometry]"
 msgstr ""
 
@@ -6099,6 +6110,9 @@ msgid "Add the source port to zone|policy|service"
 msgstr ""
 
 msgid "Add the specified package to the local cache"
+msgstr ""
+
+msgid "Add the specified user/group mapping to an X-mount.idmap map"
 msgstr ""
 
 msgid "Add the standard Git exclusions"
@@ -6390,6 +6404,9 @@ msgid "Alias for --coverage"
 msgstr ""
 
 msgid "Alias for --env"
+msgstr ""
+
+msgid "Alias for --only-trailers --only-input --unfold"
 msgstr ""
 
 msgid "Alias for -a"
@@ -6897,6 +6914,9 @@ msgid "Allow the rerere mechanism to update the index automatically"
 msgstr ""
 
 msgid "Allow the resize to shrink the volume"
+msgstr ""
+
+msgid "Allow to make a target directory (mountpoint) if it does not exist yet"
 msgstr ""
 
 msgid "Allow to perform \"insecure\" SSL connections"
@@ -10505,6 +10525,9 @@ msgstr ""
 msgid "Check if all files owned by PACKAGE are present"
 msgstr ""
 
+msgid "Check if already mounted"
+msgstr ""
+
 msgid "Check if any of the given files would be ignored"
 msgstr ""
 
@@ -11274,6 +11297,15 @@ msgid "Clear the UUID tree"
 msgstr ""
 
 msgid "Clear the build directory after a package is built"
+msgstr ""
+
+msgid "Clear the effect of previous use of --if-exists"
+msgstr ""
+
+msgid "Clear the effect of previous use of --if-missing"
+msgstr ""
+
+msgid "Clear the effect of previous use of --where"
 msgstr ""
 
 msgid "Clear the fact cache"
@@ -12248,6 +12280,9 @@ msgstr ""
 msgid "Config file (default: $HOME/.s3cfg)"
 msgstr ""
 
+msgid "Config file name"
+msgstr ""
+
 msgid "Config file name or directory with 'tox.ini' file"
 msgstr ""
 
@@ -12807,6 +12842,9 @@ msgid "Control whether or not the compiler uses IEEE floating point comparisons"
 msgstr ""
 
 msgid "Control whether to include glibc NSS data"
+msgstr ""
+
+msgid "Control whether to register a session with service manager or without"
 msgstr ""
 
 msgid "Controller information"
@@ -16319,6 +16357,9 @@ msgstr ""
 msgid "Disable colorization in output"
 msgstr ""
 
+msgid "Disable colorized output"
+msgstr ""
+
 msgid "Disable colors"
 msgstr ""
 
@@ -16625,6 +16666,9 @@ msgstr ""
 msgid "Disable peer exchange (PEX)"
 msgstr ""
 
+msgid "Disable per-runner parallelism"
+msgstr ""
+
 msgid "Disable portmapping"
 msgstr ""
 
@@ -16689,6 +16733,9 @@ msgid "Disable reverse-wraparound"
 msgstr ""
 
 msgid "Disable rewriting of the DISPLAY var"
+msgstr ""
+
+msgid "Disable rules from the command line"
 msgstr ""
 
 msgid "Disable script 'build.cj'"
@@ -19214,6 +19261,9 @@ msgstr ""
 msgid "Do not call gensync (and the !commands in /etc/eix-sync.conf)"
 msgstr ""
 
+msgid "Do not canonicalize any paths or tags during the mount process"
+msgstr ""
+
 msgid "Do not cc the From: address"
 msgstr ""
 
@@ -20562,6 +20612,9 @@ msgid "Do not trap SIGQUIT or SIGTERM"
 msgstr ""
 
 msgid "Do not trap on integer division by zero"
+msgstr ""
+
+msgid "Do not treat --- as the end of the commit message"
 msgstr ""
 
 msgid "Do not treat and/bitand/bitor/compl/not/or/xor as keywords"
@@ -22556,6 +22609,9 @@ msgstr ""
 msgid "Don’t assume ID based shared libraries are being used"
 msgstr ""
 
+msgid "Don’t call the /sbin/mount.filesystem helper even if it exists"
+msgstr ""
+
 msgid "Don’t cross filesystem boundaries"
 msgstr ""
 
@@ -23307,6 +23363,9 @@ msgid "Edit the configuration file"
 msgstr ""
 
 msgid "Edit the file containing a tag"
+msgstr ""
+
+msgid "Edit the files in place"
 msgstr ""
 
 msgid "Edit the flag on an object"
@@ -24167,6 +24226,9 @@ msgstr ""
 msgid "Enable one or more units"
 msgstr ""
 
+msgid "Enable only this rule, disabling all other defaults. Can be specified multiple times"
+msgstr ""
+
 msgid "Enable optimization of \"&&\" and \"││\" in conditional execution (default)"
 msgstr ""
 
@@ -24234,6 +24296,9 @@ msgid "Enable peer exchange (PEX)"
 msgstr ""
 
 msgid "Enable playground in web interface"
+msgstr ""
+
+msgid "Enable plugins from the command line"
 msgstr ""
 
 msgid "Enable portmapping via NAT-PMP or UPnP"
@@ -24321,6 +24386,9 @@ msgid "Enable row security"
 msgstr ""
 
 msgid "Enable row security (dump only content user has access to)"
+msgstr ""
+
+msgid "Enable rules from the command line"
 msgstr ""
 
 msgid "Enable search index"
@@ -26672,6 +26740,9 @@ msgstr ""
 msgid "Filter for rewriting the tree and its contents"
 msgstr ""
 
+msgid "Filter issues by file names or globs"
+msgstr ""
+
 msgid "Filter mode. Do not start interactive finder"
 msgstr ""
 
@@ -26991,6 +27062,9 @@ msgid "Fix in preparation for the next edition"
 msgstr ""
 
 msgid "Fix invalid file names in a bucket"
+msgstr ""
+
+msgid "Fix issues automatically"
 msgstr ""
 
 msgid "Fix only the specified bench target"
@@ -29939,6 +30013,9 @@ msgstr ""
 msgid "Give patch name and comment in file"
 msgstr ""
 
+msgid "Give privileges to selected or current user"
+msgstr ""
+
 msgid "Give some file-transfer stats"
 msgstr ""
 
@@ -30501,6 +30578,9 @@ msgid "Holds remaining jobs on the named printer"
 msgstr ""
 
 msgid "Home URL prefix for PEPs"
+msgstr ""
+
+msgid "Home area to log into"
 msgstr ""
 
 msgid "Home directory"
@@ -31164,6 +31244,9 @@ msgid "Ignore missing source args without error"
 msgstr ""
 
 msgid "Ignore module interface version"
+msgstr ""
+
+msgid "Ignore module sources"
 msgstr ""
 
 msgid "Ignore newer bugs than upgrade packages"
@@ -32726,6 +32809,9 @@ msgstr ""
 msgid "Install pkg(8) from remote repository"
 msgstr ""
 
+msgid "Install plugins"
+msgstr ""
+
 msgid "Install plugins resolved from the Maven repository system into an Eclipse instance"
 msgstr ""
 
@@ -33071,6 +33157,9 @@ msgstr ""
 msgid "Invoke a method on a remote object"
 msgstr ""
 
+msgid "Invoke command via target user's login shell"
+msgstr ""
+
 msgid "Invoke fstrim on domain's mounted filesystems"
 msgstr ""
 
@@ -33198,6 +33287,9 @@ msgid "Just check, don't make any changes"
 msgstr ""
 
 msgid "Just exit with status 0 when there is a match and with non-zero status when there isn't"
+msgstr ""
+
+msgid "Just like --pty, but leave TTY access to agents until unit is started up"
 msgstr ""
 
 msgid "Just report what it would remove"
@@ -33342,6 +33434,9 @@ msgid "Key location"
 msgstr ""
 
 msgid "Key to be used as a namespace identifier"
+msgstr ""
+
+msgid "Key-value pair to apply as a trailer"
 msgstr ""
 
 msgid "Keyboard layout mapping table for special hash-modes"
@@ -36936,6 +37031,9 @@ msgid "Long fortunes only"
 msgstr ""
 
 msgid "Long listing format"
+msgstr ""
+
+msgid "Look at all journal files instead of local ones"
 msgstr ""
 
 msgid "Look for (non-boring) files that could be added"
@@ -40556,7 +40654,13 @@ msgstr ""
 msgid "Operate on a range"
 msgstr ""
 
+msgid "Operate on an alternate filesystem root"
+msgstr ""
+
 msgid "Operate on cached data, no network repo access"
+msgstr ""
+
+msgid "Operate on disk image as filesystem root"
 msgstr ""
 
 msgid "Operate on local CONTAINER"
@@ -41196,6 +41300,12 @@ msgid "Output only names of config variables"
 msgstr ""
 
 msgid "Output only the last line of the --stat format containing the total"
+msgstr ""
+
+msgid "Output only trailers"
+msgstr ""
+
+msgid "Output only trailers from the input"
 msgstr ""
 
 msgid "Output only whether the files differ"
@@ -42926,6 +43036,9 @@ msgstr ""
 msgid "Perform temporary expression replacement during the SSA->normal phase"
 msgstr ""
 
+msgid "Perform the mount operation in the mount namespace specified by ns"
+msgstr ""
+
 msgid "Perform the necessary tests to observe the performance"
 msgstr ""
 
@@ -43508,6 +43621,9 @@ msgstr ""
 msgid "Prepend the name of the cpu to all public symbol names"
 msgstr ""
 
+msgid "Prepend the specified directory to all mount targets"
+msgstr ""
+
 msgid "Prepends a time stamp to each trace or verbose line that curl displays"
 msgstr ""
 
@@ -43905,6 +44021,9 @@ msgid "Print PPID"
 msgstr ""
 
 msgid "Print SRCINFO to stdout"
+msgstr ""
+
+msgid "Print TFLint version"
 msgstr ""
 
 msgid "Print TYPE form"
@@ -49034,6 +49153,9 @@ msgstr ""
 msgid "Remote url used by `git push`"
 msgstr ""
 
+msgid "Remount a subtree and all possible submounts somewhere else"
+msgstr ""
+
 msgid "Remount a subtree to a second position"
 msgstr ""
 
@@ -49902,6 +50024,9 @@ msgid "Remove the whole link group name"
 msgstr ""
 
 msgid "Remove this from lock"
+msgstr ""
+
+msgid "Remove trailers with whitespace values"
 msgstr ""
 
 msgid "Remove trailing '/' from source args"
@@ -51653,6 +51778,9 @@ msgstr ""
 msgid "Return whether zone has been added"
 msgstr ""
 
+msgid "Return zero exit status even if issues found"
+msgstr ""
+
 msgid "Returns 0 if panic mode is enabled, 1 otherwise"
 msgstr ""
 
@@ -52122,6 +52250,9 @@ msgid "Run command as group"
 msgstr ""
 
 msgid "Run command as user"
+msgstr ""
+
+msgid "Run command in each directory recursively"
 msgstr ""
 
 msgid "Run command in the background"
@@ -52680,6 +52811,9 @@ msgid "Run tracer process as tracee's grandchild in a separate process group."
 msgstr ""
 
 msgid "Run tracer process as tracee's grandchild in a separate session"
+msgstr ""
+
+msgid "Run under the specified unit name"
 msgstr ""
 
 msgid "Run unit tests"
@@ -54890,6 +55024,9 @@ msgstr ""
 msgid "Set `verbose` shell variable"
 msgstr ""
 
+msgid "Set a Terraform variable"
+msgstr ""
+
 msgid "Set a backup destination"
 msgstr ""
 
@@ -55692,6 +55829,9 @@ msgid "Set maximum number of per-user tasks"
 msgstr ""
 
 msgid "Set maximum number of redirects"
+msgstr ""
+
+msgid "Set maximum number of workers in recursive inspection"
 msgstr ""
 
 msgid "Set maximum size of a single allocated block"
@@ -57305,6 +57445,9 @@ msgstr ""
 msgid "Sets minimum bits allowed for bitmaps"
 msgstr ""
 
+msgid "Sets minimum severity level for exiting with a non-zero error code"
+msgstr ""
+
 msgid "Sets number of rotated logs to keep, default 4"
 msgstr ""
 
@@ -57639,6 +57782,9 @@ msgid "Shortcut for --style=gv_spartan.dat"
 msgstr ""
 
 msgid "Shortcut for --style=gv_widgetless.dat"
+msgstr ""
+
+msgid "Shortcut for --via-shell --chdir='~'"
 msgstr ""
 
 msgid "Shorten some address references at link time, when possible; uses the linker option -relax"
@@ -61523,6 +61669,9 @@ msgstr ""
 msgid "Source name for underlying storage"
 msgstr ""
 
+msgid "Source of default options"
+msgstr ""
+
 msgid "Source of the commit message"
 msgstr ""
 
@@ -61644,6 +61793,9 @@ msgid "Specifies an alternate server"
 msgstr ""
 
 msgid "Specifies an alternate username"
+msgstr ""
+
+msgid "Specifies an alternative fstab file"
 msgstr ""
 
 msgid "Specifies an alternative installroot"
@@ -62646,6 +62798,9 @@ msgid "Specify directory for rpm database"
 msgstr ""
 
 msgid "Specify directory with configuration files"
+msgstr ""
+
+msgid "Specify disk image dissection policy"
 msgstr ""
 
 msgid "Specify display"
@@ -64175,6 +64330,9 @@ msgstr ""
 msgid "Start interface"
 msgstr ""
 
+msgid "Start language server"
+msgstr ""
+
 msgid "Start machine"
 msgstr ""
 
@@ -65351,6 +65509,9 @@ msgstr ""
 msgid "Switch to a different tree"
 msgstr ""
 
+msgid "Switch to a different working directory before executing the command"
+msgstr ""
+
 msgid "Switch to a profile"
 msgstr ""
 
@@ -65943,6 +66104,9 @@ msgid "Terminate, then restart an app instance"
 msgstr ""
 
 msgid "Terminates the logkeys daemon"
+msgstr ""
+
+msgid "Terraform variable file name"
 msgstr ""
 
 msgid "Terse output for machine consumption. Implies --no-abbrev and --no-color"
@@ -67910,6 +68074,9 @@ msgstr ""
 msgid "Type of workload to produce"
 msgstr ""
 
+msgid "Types of module to call"
+msgstr ""
+
 msgid "Typeset abstract as topic"
 msgstr ""
 
@@ -68094,6 +68261,9 @@ msgid "Unedit/unlock a set of files"
 msgstr ""
 
 msgid "Unfavourite a status"
+msgstr ""
+
+msgid "Unfold multiline trailer values"
 msgstr ""
 
 msgid "Unfollow an account"
@@ -70460,6 +70630,9 @@ msgstr ""
 msgid "Use openssh if available"
 msgstr ""
 
+msgid "Use options from fstab/mtab even if both device and dir are specified"
+msgstr ""
+
 msgid "Use original SCP protocol instead of SFTP"
 msgstr ""
 
@@ -72377,6 +72550,12 @@ msgstr ""
 msgid "What to do when receiving events while the command is running"
 msgstr ""
 
+msgid "What to do when there is already a trailer with the same key"
+msgstr ""
+
+msgid "What to do when there is no other trailer with the same key"
+msgstr ""
+
 msgid "Whatever to reset the module registry for every test"
 msgstr ""
 
@@ -72516,6 +72695,9 @@ msgid "When used with -f, causes Mutt not to start if there are no messages"
 msgstr ""
 
 msgid "When used with -s, --silent, it makes curl show an error message if it fails"
+msgstr ""
+
+msgid "Where new trailers will be added"
 msgstr ""
 
 msgid "Where to install C header files"
@@ -75446,6 +75628,12 @@ msgstr ""
 msgid "explain why packages or modules are needed"
 msgstr ""
 
+msgid "explicitly define the argument as the mount source"
+msgstr ""
+
+msgid "explicitly define the argument as the mount target"
+msgstr ""
+
 msgid "explicitly set BootOrder XXXX,YYYY,ZZZZ (hex)"
 msgstr ""
 
@@ -76035,6 +76223,9 @@ msgid "host tunnel on a custom subdomain"
 msgstr ""
 
 msgid "host tunnel on custom hostname (requires DNS CNAME)"
+msgstr ""
+
+msgid "how to combine with options from fstab/mtab"
 msgstr ""
 
 msgid "http-server serving the current directory"

@@ -19,9 +19,13 @@ complete -c mtr -s p -l split -d 'Split output'
 complete -c mtr -s n -l no-dns -d 'Do not resolve host names'
 complete -c mtr -s b -l show-ips -d 'Show IP numbers and host names'
 complete -c mtr -s o -l order -d 'Select output fields' -x
-complete -c mtr -s y -l ipinfo -d 'Select IP information in output' -x -a \
-    '0\t"AS number" 1\t"IP prefix" 2\t"Country code" 3\t"RIR organization"\
-     4\t"Allocation date of the IP prefix"'
+complete -c mtr -s y -l ipinfo -d 'Select IP information in output' -x -a '
+    0\t"AS number"
+    1\t"IP prefix"
+    2\t"Country code"
+    3\t"RIR organization"
+    4\t"Allocation date of the IP prefix"
+'
 complete -c mtr -s z -l aslookup -d 'Display AS number'
 complete -c mtr -s i -l interval -d 'ICMP echo request interval (sec)' -x
 complete -c mtr -s c -l report-cycles -d 'Set the number of pings sent' -x

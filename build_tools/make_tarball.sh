@@ -15,8 +15,7 @@ tmpdir=$(mktemp -d)
 manifest=$tmpdir/Cargo.toml
 lockfile=$tmpdir/Cargo.lock
 
-sed "s/^version = \".*\"\$/version = \"$VERSION\"/g" Cargo.toml \
- >"$manifest"
+sed "s/^version = \".*\"\$/version = \"$VERSION\"/g" Cargo.toml >"$manifest"
 awk -v version=$VERSION '
     /^name = "fish"$/ { ok=1 }
     ok == 1 && /^version = ".*"$/ {

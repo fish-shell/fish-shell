@@ -16,7 +16,7 @@ end
 
 run-concurrently '
     set t "$(
-        /bin/echo -n A
+        command echo -n A
         echo -n B
     )"
     test $t = AB
@@ -25,7 +25,7 @@ run-concurrently '
 
 run-concurrently '
     eval "
-        /bin/echo -n C
+        command echo -n C
         echo -n D
     " | read -l t
     test $t = CD
@@ -35,7 +35,7 @@ run-concurrently '
 run-concurrently '
     # block/function node output is buffered also
     begin
-        /bin/echo -n E
+        command echo -n E
         echo -n F
     end |
         read -l t

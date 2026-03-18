@@ -2,12 +2,12 @@
 // Everything in this module must be async-signal safe.
 // That means no locking, no allocating, no freeing memory, etc!
 use super::flog_safe::flog_safe;
-use crate::nix::getpid;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
 use crate::{common::exit_without_destructors, wutil::fstat};
 use libc::{O_RDONLY, pid_t};
+use nix::unistd::getpid;
 use std::ffi::CStr;
 use std::num::NonZeroU32;
 use std::os::unix::fs::MetadataExt as _;
@@ -175,7 +175,7 @@ pub fn child_setup_process(
         unsafe {
             libc::signal(libc::SIGTTIN, libc::SIG_IGN);
             libc::signal(libc::SIGTTOU, libc::SIG_IGN);
-            let _ = libc::tcsetpgrp(libc::STDIN_FILENO, getpid());
+            let _ = libc::tcsetpgrp(libc::STDIN_FILENO, getpid().as_raw());
         }
     }
     if let Some(sigmask) = sigmask {
@@ -265,7 +265,7 @@ pub(crate) fn safe_report_exec_error(
                     flog_safe!(
                         exec,
                         "Hint: Your exported variables take up over half the limit. Try \
-                         erasing or unexporting variables."
+                        erasing or unexporting variables."
                     );
                 }
             } else {
@@ -294,7 +294,7 @@ pub(crate) fn safe_report_exec_error(
                     flog_safe!(
                         exec,
                         "fish scripts require an interpreter directive (must \
-                         start with '#!/path/to/fish')."
+                        start with '#!/path/to/fish')."
                     );
                 } else {
                     // If the shebang line exists, we would get an ENOENT or similar instead,

@@ -1,20 +1,25 @@
-use std::mem::MaybeUninit;
-use std::num::NonZeroI32;
-
 use crate::common::exit_without_destructors;
 use crate::event::{enqueue_signal, is_signal_observed};
-use crate::nix::getpid;
 use crate::prelude::*;
 use crate::reader::{reader_handle_sigint, reader_sighup, safe_restore_term_mode};
 use crate::termsize::safe_termsize_invalidate_tty;
 use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_principal};
 use crate::tty_handoff::{safe_deactivate_tty_protocols, safe_mark_tty_invalid};
-use crate::wutil::{fish_wcstoi, perror};
+use crate::wutil::fish_wcstoi;
 use errno::{errno, set_errno};
-use nix::sys::signal::{SaFlags, SigAction, SigHandler, SigSet, SigmaskHow, sigprocmask};
-use std::sync::{
-    LazyLock,
-    atomic::{AtomicI32, Ordering},
+use fish_util::perror;
+use nix::sys::signal::kill;
+use nix::{
+    sys::signal::{SaFlags, SigAction, SigHandler, SigSet, SigmaskHow, sigprocmask},
+    unistd::getpid,
+};
+use std::{
+    mem::MaybeUninit,
+    num::NonZeroI32,
+    sync::{
+        LazyLock,
+        atomic::{AtomicI32, Ordering},
+    },
 };
 
 /// Store the "main" pid. This allows us to reliably determine if we are in a forked child.
@@ -26,7 +31,7 @@ static MAIN_PID: AtomicI32 = AtomicI32::new(0);
 /// and re-raise the signal. Return whether we re-raised the signal.
 fn reraise_if_forked_child(sig: i32) -> bool {
     // Don't use is_forked_child: it relies on atfork handlers which may have not yet run.
-    if getpid() == MAIN_PID.load(Ordering::Relaxed) {
+    if getpid().as_raw() == MAIN_PID.load(Ordering::Relaxed) {
         return false;
     }
 
@@ -152,7 +157,7 @@ fn sigaction(sig: i32, act: &libc::sigaction, oact: *mut libc::sigaction) -> lib
 }
 
 fn set_interactive_handlers() {
-    let signal_handler: usize = fish_signal_handler as *const () as usize;
+    let signal_handler: usize = fish_signal_handler as *const () as libc::sighandler_t;
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
     let mut oact: libc::sigaction = unsafe { std::mem::zeroed() };
     act.sa_flags = 0;
@@ -197,7 +202,7 @@ fn set_interactive_handlers() {
 /// Set signal handlers to fish default handlers.
 pub fn signal_set_handlers(interactive: bool) {
     // Mark our main pid.
-    MAIN_PID.store(getpid(), Ordering::Relaxed);
+    MAIN_PID.store(getpid().as_raw(), Ordering::Relaxed);
 
     use libc::SIG_IGN;
     let nullptr = std::ptr::null_mut();
@@ -216,12 +221,12 @@ pub fn signal_set_handlers(interactive: bool) {
     sigaction(libc::SIGQUIT, &act, nullptr);
 
     // Apply our SIGINT handler.
-    act.sa_sigaction = fish_signal_handler as *const () as usize;
+    act.sa_sigaction = fish_signal_handler as *const () as libc::sighandler_t;
     act.sa_flags = libc::SA_SIGINFO;
     sigaction(libc::SIGINT, &act, nullptr);
 
     // Whether or not we're interactive we want SIGCHLD to not interrupt restartable syscalls.
-    act.sa_sigaction = fish_signal_handler as *const () as usize;
+    act.sa_sigaction = fish_signal_handler as *const () as libc::sighandler_t;
     act.sa_flags = libc::SA_SIGINFO | libc::SA_RESTART;
     if sigaction(libc::SIGCHLD, &act, nullptr) != 0 {
         perror("sigaction");
@@ -241,7 +246,7 @@ pub fn signal_set_handlers(interactive: bool) {
         // The workaround is to send ourselves a SIGCHLD signal now, to force the allocation to happen.
         // As no child is associated with this signal, it is OK if it is dropped, so long as the
         // allocation happens.
-        unsafe { libc::kill(getpid(), libc::SIGCHLD) };
+        let _ = kill(getpid(), nix::sys::signal::Signal::SIGCHLD);
     }
 }
 
@@ -274,7 +279,7 @@ pub fn signal_handle(sig: Signal) {
     act.sa_flags = 0;
     unsafe { libc::sigemptyset(&mut act.sa_mask) };
     act.sa_flags = libc::SA_SIGINFO;
-    act.sa_sigaction = fish_signal_handler as *const () as usize;
+    act.sa_sigaction = fish_signal_handler as *const () as libc::sighandler_t;
     sigaction(sig, &act, std::ptr::null_mut());
 }
 

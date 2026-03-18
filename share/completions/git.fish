@@ -1469,11 +1469,13 @@ complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commi
 complete -f -c git -n '__fish_git_using_command commit' -l squash -d 'Squash commit to be used with rebase --autosquash'
 complete -c git -n '__fish_git_using_command commit' -l reset-author -d 'When amending, reset author of commit to the committer'
 complete -x -c git -n '__fish_git_using_command commit' -l author -d 'Override the commit author'
-complete -x -c git -n '__fish_git_using_command commit' -l cleanup -a "strip\t'Leading/trailing whitespace/empty lines, #commentary'
- whitespace\t'Like strip but keep #commentary'
- verbatim\t'Do not change the message'
- scissors\t'Like whitespace but also remove after scissor lines'
- default\t'Like strip if the message is to be edited, whitespace otherwise'" -d 'How to clean up the commit message'
+complete -x -c git -n '__fish_git_using_command commit' -l cleanup -a "
+    strip\t'Leading/trailing whitespace/empty lines, #commentary'
+    whitespace\t'Like strip but keep #commentary'
+    verbatim\t'Do not change the message'
+    scissors\t'Like whitespace but also remove after scissor lines'
+    default\t'Like strip if the message is to be edited, whitespace otherwise'
+" -d 'How to clean up the commit message'
 complete -x -c git -n '__fish_git_using_command commit' -l date -d 'Override the author date'
 complete -x -c git -n '__fish_git_using_command commit' -s m -l message -d 'Use the given message as the commit message'
 complete -f -c git -n '__fish_git_using_command commit' -l no-edit -d 'Use the selected commit message without launching an editor'
@@ -1692,6 +1694,23 @@ complete -x -c git -n '__fish_git_using_command init' -l object-format -a 'sha1 
 complete -x -c git -n '__fish_git_using_command init' -s b -l initial-branch -d 'Use specified name for initial branch'
 complete -x -c git -n '__fish_git_using_command init' -l shared -a 'false true umask group all world everybody' -d 'Specify that the repository is shared'
 
+### interpret-trailers
+complete -c git -n __fish_git_needs_command -a interpret-trailers -d 'Add or parse structured information in commit messages'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l in-place -d 'Edit the files in place'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l trim-empty -d 'Remove trailers with whitespace values'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l trailer -r -d 'Key-value pair to apply as a trailer'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l where -ra 'after before end start' -d 'Where new trailers will be added'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l no-where -d 'Clear the effect of previous use of --where'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l if-exists -ra 'addIfDifferent addIfDifferentNeighbor add replace doNothing' -d 'What to do when there is already a trailer with the same key'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l no-if-exists -d 'Clear the effect of previous use of --if-exists'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l if-missing -ra 'doNothing add' -d 'What to do when there is no other trailer with the same key'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l no-if-missing -d 'Clear the effect of previous use of --if-missing'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l only-trailers -d 'Output only trailers'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l only-input -d 'Output only trailers from the input'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l unfold -d 'Unfold multiline trailer values'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l parse -d 'Alias for --only-trailers --only-input --unfold'
+complete -f -c git -n '__fish_git_using_command interpret-trailers' -l no-divider -d 'Do not treat --- as the end of the commit message'
+
 ### shortlog
 complete -c git -n __fish_git_needs_command -a shortlog -d 'Show commit shortlog'
 complete -c git -n '__fish_git_using_command shortlog' -a '(__fish_git ls-files)'
@@ -1793,26 +1812,26 @@ complete -c git -n '__fish_git_using_command log' -l no-standard-notes
 complete -c git -n '__fish_git_using_command log' -l show-signature
 complete -c git -n '__fish_git_using_command log' -l relative-date
 complete -x -c git -n '__fish_git_using_command log shortlog' -l date -a '
-  relative
-  local
-  iso
-  iso-local
-  iso8601
-  iso8601-local
-  iso-strict
-  iso-strict-local
-  iso8601-strict
-  iso8601-strict-local
-  rfc-local
-  rfc2822-local
-  short
-  short-local
-  raw
-  human
-  unix
-  format:
-  default
-  default-local
+    relative
+    local
+    iso
+    iso-local
+    iso8601
+    iso8601-local
+    iso-strict
+    iso-strict-local
+    iso8601-strict
+    iso8601-strict-local
+    rfc-local
+    rfc2822-local
+    short
+    short-local
+    raw
+    human
+    unix
+    format:
+    default
+    default-local
 '
 complete -c git -n '__fish_git_using_command log' -l parents
 complete -c git -n '__fish_git_using_command log' -l children
@@ -1848,10 +1867,10 @@ complete -c git -n '__fish_git_using_command log' -l name-status
 complete -f -c git -n '__fish_git_using_command log' -l color -a 'always never auto'
 complete -c git -n '__fish_git_using_command log' -l no-color
 complete -f -c git -n '__fish_git_using_command log' -l word-diff -a '
-  color
-  plain
-  porcelain
-  none
+    color
+    plain
+    porcelain
+    none
 '
 complete -f -c git -n '__fish_git_using_command log' -l color-words
 complete -c git -n '__fish_git_using_command log' -l no-renames

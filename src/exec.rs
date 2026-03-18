@@ -17,26 +17,26 @@ use crate::fds::{
     BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_blocking, open_cloexec,
 };
 use crate::flog::{flog, flogf};
-use crate::fork_exec::PATH_BSHELL;
-use crate::fork_exec::blocked_signals_for_job;
-use crate::fork_exec::postfork::{
-    child_setup_process, execute_fork, execute_setpgid, report_setpgid_error,
-    safe_report_exec_error,
-};
 #[cfg(have_posix_spawn)]
 use crate::fork_exec::spawn::PosixSpawner;
+use crate::fork_exec::{
+    PATH_BSHELL, blocked_signals_for_job,
+    postfork::{
+        child_setup_process, execute_fork, execute_setpgid, report_setpgid_error,
+        safe_report_exec_error,
+    },
+};
 use crate::function::{self, FunctionProperties};
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
 };
-use crate::nix::{getpid, isatty};
+use crate::nix::isatty;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser, ParserEnvSetMode};
 use crate::prelude::*;
-use crate::proc::Pid;
 use crate::proc::{
-    InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType, hup_jobs,
+    InternalProc, Job, JobGroupRef, Pid, ProcStatus, Process, ProcessType, hup_jobs,
     is_interactive_session, jobs_requiring_warning_on_exit, no_exec, print_exit_warning_for_jobs,
 };
 use crate::reader::{reader_run_count, safe_restore_term_mode};
@@ -44,7 +44,7 @@ use crate::redirection::{Dup2List, dup2_list_resolve_chain};
 use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
-use crate::wutil::{fish_wcstol, perror};
+use crate::wutil::{fish_wcstol, perror_io};
 use errno::{errno, set_errno};
 use fish_wcstringutil::{wcs2bytes, wcs2zstring};
 use fish_widestring::ToWString as _;
@@ -52,18 +52,22 @@ use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO,
 };
-use nix::fcntl::OFlag;
-use nix::sys::stat;
-use nix::unistd::getpgrp;
-use std::ffi::CStr;
-use std::io::{Read as _, Write as _};
-use std::mem::MaybeUninit;
-use std::num::NonZeroU32;
-use std::os::fd::{AsRawFd as _, FromRawFd as _, OwnedFd, RawFd};
-use std::slice;
-use std::sync::{
-    Arc, OnceLock,
-    atomic::{AtomicUsize, Ordering},
+use nix::{
+    fcntl::OFlag,
+    sys::stat,
+    unistd::{getpgrp, getpid},
+};
+use std::{
+    ffi::CStr,
+    io::{Read as _, Write as _},
+    mem::MaybeUninit,
+    num::NonZeroU32,
+    os::fd::{AsRawFd as _, FromRawFd as _, OwnedFd, RawFd},
+    slice,
+    sync::{
+        Arc, OnceLock,
+        atomic::{AtomicUsize, Ordering},
+    },
 };
 
 /// The singleton shared exec thread pool.
@@ -625,7 +629,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
         if !f.skip_out() {
             if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
                 if err.raw_os_error() != Some(EPIPE) {
-                    perror("write");
+                    perror_io("write", &err);
                 }
                 if status.is_success() {
                     status = ProcStatus::from_exit_code(1);
@@ -635,7 +639,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
         if !f.skip_err() {
             if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
                 if err.raw_os_error() != Some(EPIPE) {
-                    perror("write");
+                    perror_io("write", &err);
                 }
                 if status.is_success() {
                     status = ProcStatus::from_exit_code(1);
@@ -734,7 +738,11 @@ fn fork_child_for_process(
 
     // Determine the child pid.
     let is_parent = fork_res > 0;
-    let pid: libc::pid_t = if is_parent { fork_res } else { getpid() };
+    let pid: libc::pid_t = if is_parent {
+        fork_res
+    } else {
+        getpid().as_raw()
+    };
 
     // Send the process to a new pgroup if requested.
     // Do this in BOTH the parent and child, to resolve the well-known race.

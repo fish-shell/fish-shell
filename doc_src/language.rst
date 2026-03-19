@@ -2043,7 +2043,7 @@ Here is what they mean:
 - ``ampersand-nobg-in-token`` was introduced in fish 3.4 (and made the default in 3.5). It makes it so a ``&`` is no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
 - ``remove-percent-self`` turns off the special ``%self`` expansion. It was introduced in 4.0. To get fish's pid, you can use the :envvar:`fish_pid` variable.
 - ``test-require-arg`` removes :doc:`builtin test <cmds/test>`'s one-argument form (``test "string"``. It was introduced in 4.0. To test if a string is non-empty, use ``test -n "string"``. If disabled, any call to ``test`` that would change sends a :ref:`debug message <debugging-fish>` of category "deprecated-test", so starting fish with ``fish --debug=deprecated-test`` can be used to find offending calls.
-- ``mark-prompt`` makes fish report to the terminal the beginning and and of both shell prompts and command output.
+- ``mark-prompt`` makes fish report to the terminal the beginning and end of both shell prompts and command output.
 - ``ignore-terminfo`` was introduced in fish 4.1 and cannot be turned off since fish 4.5. It can still be tested for compatibility, but a ``no-ignore-terminfo`` value will be ignored. The flag disabled lookup of $TERM in the terminfo database.
 - ``query-term`` allows fish to query the terminal by writing escape sequences and reading the terminal's response.
   This enables features such as :ref:`scrolling <term-compat-cursor-position-report>`.

@@ -22,7 +22,7 @@ function fish_default_mode_prompt --description "Display vi prompt mode"
                 set_color --bold cyan
                 echo '[N]'
         end
-        set_color normal
+        set_color --reset
         echo -n ' '
     end
 end

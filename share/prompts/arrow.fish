@@ -64,7 +64,7 @@ function fish_prompt
     set -l red (set_color -o red)
     set -l green (set_color -o green)
     set -l blue (set_color -o blue)
-    set -l normal (set_color normal)
+    set -l normal (set_color --reset)
 
     set -l arrow_color "$green"
     if test $__last_command_exit_status != 0

@@ -4,7 +4,7 @@
 function fish_prompt
     set -l last_status $status
 
-    set -l normal (set_color normal)
+    set -l normal (set_color --reset)
     set -l usercolor (set_color $fish_color_user)
 
     set -l delim \U25BA
@@ -68,7 +68,7 @@ function fish_right_prompt
     # We don't want the leading space.
     set -l vcs (fish_vcs_prompt '(%s)' 2>/dev/null)
 
-    set -l d (set_color brgrey)(date "+%R")(set_color normal)
+    set -l d (set_color brgrey)(date "+%R")(set_color --reset)
 
     set -l duration "$cmd_duration$CMD_DURATION"
     if test $duration -gt 100
@@ -82,6 +82,6 @@ function fish_right_prompt
     set -q VIRTUAL_ENV
     and set -l venv (string replace -r '.*/' '' -- "$VIRTUAL_ENV")
 
-    set_color normal
+    set_color --reset
     string join " " -- $venv $duration $vcs $d
 end

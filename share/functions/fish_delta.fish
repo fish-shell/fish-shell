@@ -69,7 +69,7 @@ function fish_delta
     set -l have_diff 0
 
     if isatty stdout
-        set -f colors "$(set_color normal)" "$(set_color brblue)" "$(set_color bryellow)" "$(set_color green)" "$(set_color red)"
+        set -f colors "$(set_color --reset)" "$(set_color brblue)" "$(set_color bryellow)" "$(set_color green)" "$(set_color red)"
         set -f pager (__fish_anypager)
         or set pager cat
 

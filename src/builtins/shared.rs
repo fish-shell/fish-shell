@@ -16,7 +16,7 @@ pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult
 
 /// The default prompt for the read command.
 pub const DEFAULT_READ_PROMPT: &wstr =
-    L!("set_color green; echo -n read; set_color normal; echo -n \"> \"");
+    L!("set_color green; echo -n read; set_color --reset; echo -n \"> \"");
 
 localizable_consts!(
     /// Error message on missing argument.

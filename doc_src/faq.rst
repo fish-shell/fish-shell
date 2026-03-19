@@ -91,7 +91,7 @@ The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/
     function fish_prompt
         set_color $fish_color_cwd
         echo -n (prompt_pwd)
-        set_color normal
+        set_color --reset
         echo -n ' > '
     end
 

@@ -41,7 +41,7 @@ A simple prompt:
         # $USER and $hostname are set by fish, so you can just use them
         # instead of using `whoami` and `hostname`
         printf '%s@%s %s%s%s > ' $USER $hostname \
-            (set_color $fish_color_cwd) (prompt_pwd) (set_color normal)
+            (set_color $fish_color_cwd) (prompt_pwd) (set_color --reset)
     end
 
 

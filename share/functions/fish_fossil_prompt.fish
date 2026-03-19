@@ -49,7 +49,7 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
     echo -n ' ('
     set_color magenta
     echo -n "$branch"
-    set_color normal
+    set_color --reset
     echo -n '|'
     #set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | sort -u)
     set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | path sort -u)
@@ -92,7 +92,7 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
         end
 
         echo -n '⚡'
-        set_color normal
+        set_color --reset
 
         # Sort status symbols
         for i in $fish_prompt_fossil_status_order
@@ -106,6 +106,6 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
         end
     end
 
-    set_color normal
+    set_color --reset
     echo -n ')'
 end

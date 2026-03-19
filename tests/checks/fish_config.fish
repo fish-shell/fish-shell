@@ -183,7 +183,7 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
 
 {
     print-sample-colors
-    # CHECK: normal=normal --theme=default
+    # CHECK: normal=--reset --theme=default
     # CHECK: autosuggestion=brblack --theme=default
 
     fish_config theme choose custom-from-userconf --color-theme=unknown
@@ -203,12 +203,12 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
 
     fish_config theme choose default --color-theme=unknown
     print-sample-colors
-    # CHECK: normal=normal --theme=default
+    # CHECK: normal=--reset --theme=default
     # CHECK: autosuggestion=brblack --theme=default
 
     set -S fish_color_normal
     # CHECK: $fish_color_normal: set in global scope, unexported, with 2 elements
-    # CHECK: $fish_color_normal[1]: |normal|
+    # CHECK: $fish_color_normal[1]: |--reset|
     # CHECK: $fish_color_normal[2]: |--theme=default|
     # CHECK: $fish_color_normal: set in universal scope, unexported, with 2 elements
     # CHECK: $fish_color_normal[1]: |yellow|
@@ -217,7 +217,7 @@ echo >$__fish_config_dir/themes/custom-from-userconf.theme \
     echo yes | fish_config theme save default
     set -S fish_color_normal
     # CHECK: $fish_color_normal: set in universal scope, unexported, with 1 elements
-    # CHECK: $fish_color_normal[1]: |normal|
+    # CHECK: $fish_color_normal[1]: |--reset|
 }
 
 {

@@ -43,7 +43,7 @@ end" >$__fish_config_dir/config.fish
             __fish_theme_freeze __fish_migrate $theme_data
             set msg_suffix " by default."\n"  Migrated them to global variables set in $(set_color --underline)$(
                     __fish_unexpand_tilde $__fish_config_dir/conf.d/fish_frozen_theme.fish
-                )$(set_color normal)"
+                )$(set_color --reset)"
         end
         set -a msg "* Color variables are no longer set in universal scope$msg_suffix"
         set -a msg '  To restore syntax highlighting in other fish sessions, please restart them.'
@@ -78,12 +78,12 @@ set --erase --universal fish_key_bindings"
         set -a msg '* The fish_key_bindings variable is no longer set in universal scope by default.'
         set -a msg (echo -s "  Migrated it to a global variable set in  " \
             "$(set_color --underline)$(__fish_unexpand_tilde $filename)" \
-            (set_color normal))
+            (set_color --reset))
         source $__fish_config_dir/$relative_filename
     end
     $mark_migration_done
     if $removing_uvars
-        echo -s (set_color --bold) 'fish:' (set_color normal) " upgraded to version 4.3:"
+        echo -s (set_color --bold) 'fish:' (set_color --reset) " upgraded to version 4.3:"
         string join \n -- $msg
         echo 'See also the release notes (type `help relnotes`).'
         set -Ue fish_key_bindings $theme_uvars
@@ -96,7 +96,7 @@ function __fish_config_theme_matches --no-scope-shadowing
     set -l varname $argv[1]
     set -l possible_values $argv[2..]
     if not set -q possible_values[1]
-        set possible_values normal ""
+        set possible_values normal "" --reset
     end
     set -a checked_varnames $varname
     not set -q $varname
@@ -109,7 +109,7 @@ function __fish_config_theme_uvars_subset_of_historical_default
     and $matches fish_color_option "$fish_color_param"
     and $matches fish_color_autosuggestion brblack
     and $matches fish_color_cancel -r
-    and $matches fish_color_command normal blue
+    and $matches fish_color_command normal blue --reset
     and $matches fish_color_comment red
     and $matches fish_color_cwd green
     and $matches fish_color_cwd_root red
@@ -137,7 +137,7 @@ function __fish_config_theme_uvars_subset_of_historical_default
     and $matches fish_pager_color_background
     and $matches fish_pager_color_completion
     and $matches fish_pager_color_description "yellow -i" "yellow --italics"
-    and $matches fish_pager_color_prefix "normal --bold --underline"
+    and $matches fish_pager_color_prefix "normal --bold --underline" "--bold --underline"
     and $matches fish_pager_color_progress \
         "brwhite --background=cyan" \
         "brwhite --background=cyan --bold"

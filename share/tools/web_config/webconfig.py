@@ -1,10 +1,8 @@
 import binascii
 import errno
 import shlex
-import glob
 import http.server as SimpleHTTPServer
 import json
-import multiprocessing.pool
 import operator
 import os
 import platform
@@ -16,10 +14,12 @@ import subprocess
 import sys
 import tempfile
 import threading
+from glob import iglob
 from html import escape as escape_html
 from itertools import chain
 from typing import Optional
 from urllib.parse import parse_qs
+from pathlib import Path
 
 COMMON_WSL_CMD_PATHS = (
     "/mnt/c/Windows/System32",
@@ -126,6 +126,27 @@ def list_embedded_files(path, suffix):
         ).splitlines()
         if path.endswith(suffix)
     ]
+
+
+def list_local_files(path, suffix):
+    """List files from user's $__fish_config_dir directory with given path and suffix."""
+
+    config_dir = os.environ["__fish_config_dir"]
+    if not config_dir:
+        return []
+
+    if path:
+        search_path = os.path.join(config_dir, path)
+    else:
+        search_path = config_dir
+
+    if not os.path.isdir(search_path):
+        return []
+
+    try:
+        return list(iglob(os.path.join(search_path, "*{}".format(suffix))))
+    except (OSError, IOError):
+        return []
 
 
 def get_embedded_file(path):
@@ -999,7 +1020,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         out, err = run_fish_cmd(cmd)
         return len(err) == 0
 
-    def do_get_prompt(self, prompt_function_text, extras_dict):
+    def do_get_prompt_code(self, prompt_function_text, extras_dict):
         # Return the prompt output by the given command
         cmd = (
             prompt_function_text
@@ -1036,19 +1057,19 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         prompt_func, err = run_fish_cmd(
             "functions fish_prompt; functions fish_right_prompt"
         )
-        result = self.do_get_prompt(
+        result = self.do_get_prompt_code(
             prompt_func.strip(),
             {"name": "Current"},
         )
         return result
 
-    def do_get_sample_prompt(self, text, extras_dict):
+    def do_get_prompt(self, text, extras_dict):
         # Return the prompt you get from the given text. Extras_dict is a
         # dictionary whose values get merged in. We run 'false' to demonstrate
         # how the prompt shows the command status (#1624)
-        return self.do_get_prompt(text.strip(), extras_dict)
+        return self.do_get_prompt_code(text.strip(), extras_dict)
 
-    def parse_one_sample_prompt_hash(self, line, result_dict):
+    def parse_one_prompt_hash(self, line, result_dict):
         # Allow us to skip whitespace, etc.
         if not line:
             return True
@@ -1065,43 +1086,65 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Skip other hash comments
         return line.startswith("#")
 
-    def read_one_sample_prompt(self, path):
+    def read_local_prompt(self, path):
         try:
-            extras_dict = {}
-            # Read one sample prompt from out
-            function_lines = []
-            parsing_hashes = True
-            for line in get_embedded_file(path).splitlines(keepends=True):
-                # Parse hashes until parse_one_sample_prompt_hash return
-                # False.
-                if parsing_hashes:
-                    parsing_hashes = self.parse_one_sample_prompt_hash(
-                        line, extras_dict
-                    )
-                # Maybe not we're not parsing hashes, or maybe we already
-                # were not.
-                if not parsing_hashes:
-                    function_lines.append(line)
-            func = "".join(function_lines).strip()
-            result = self.do_get_sample_prompt(func, extras_dict)
-            return result
+            with open(path, "r") as file:
+                return self.read_one_prompt(file)
         except IOError:
             # Ignore unreadable files, etc.
             return None
 
-    def do_get_sample_prompts_list(self):
-        paths = list_embedded_files("prompts", ".fish")
+    def read_embedded_prompt(self, path):
+        try:
+            lines = get_embedded_file(path).splitlines(keepends=True)
+            return self.read_one_prompt(lines)
+        except IOError:
+            # Ignore unreadable files, etc.
+            return None
+
+    def read_one_prompt(self, lines):
+        extras_dict = {}
+        # Read one sample prompt from out
+        function_lines = []
+        parsing_hashes = True
+        for line in lines:
+            # Parse hashes until parse_one_sample_prompt_hash return
+            # False.
+            if parsing_hashes:
+                parsing_hashes = self.parse_one_prompt_hash(line, extras_dict)
+            # Maybe not we're not parsing hashes, or maybe we already
+            # were not.
+            if not parsing_hashes:
+                function_lines.append(line)
+        func = "".join(function_lines).strip()
+        result = self.do_get_prompt(func, extras_dict)
+        return result
+
+    def do_get_prompts_list(self):
+        embedded_paths = list_embedded_files("prompts", ".fish")
+        local_paths = list_local_files("prompts", ".fish")
+
+        # remove shadowed prompts from embedded_paths list
+        local_paths_names = {Path(p).name for p in local_paths}
+        embedded_paths = [
+            e for e in embedded_paths if Path(e).name not in local_paths_names
+        ]
+
         result = []
         try:
+            import multiprocessing.pool
+
             pool = multiprocessing.pool.ThreadPool(processes=8)
 
             # Kick off the "Current" meta-sample
             current_metasample_async = pool.apply_async(self.do_get_current_prompt)
 
-            # Read all of the prompts in sample_prompts
-            sample_results = pool.map(self.read_one_sample_prompt, paths, 1)
+            # Read all of the prompts in prompts
+            results = pool.map(self.read_embedded_prompt, embedded_paths, 1)
+            results_local = pool.map(self.read_local_prompt, local_paths, 1)
             result.append(current_metasample_async.get())
-            result.extend([r for r in sample_results if r])
+            result.extend([r for r in results if r])
+            result.extend([r for r in results_local if r])
         except ImportError:
             # If the platform doesn't support multiprocessing, we just do it one at a time.
             # This happens e.g. on Termux.
@@ -1109,7 +1152,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 "Platform doesn't support multiprocessing, running one at a time. This may take a while."
             )
             result.append(self.do_get_current_prompt())
-            result.extend([self.read_one_sample_prompt(path) for path in paths])
+            result.extend([self.read_embedded_prompt(path) for path in embedded_paths])
+            result.extend([self.read_local_prompt(path) for path in local_paths])
         return result
 
     def secure_startswith(self, haystack, needle):
@@ -1162,8 +1206,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             output = self.do_get_history()
             # end = time.time()
             # print "History: ", end - start
-        elif p == "/sample_prompts/":
-            output = self.do_get_sample_prompts_list()
+        elif p == "/prompts/":
+            output = self.do_get_prompts_list()
         elif p == "/bindings/":
             output = self.do_get_bindings()
         else:

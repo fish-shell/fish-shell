@@ -2276,6 +2276,14 @@ impl ReaderData {
             } else {
                 buff_pos.wrapping_sub(1)
             };
+            if char_pos >= el.text().len() {
+                buff_pos = if move_right {
+                    buff_pos + 1
+                } else {
+                    buff_pos.wrapping_sub(1)
+                };
+                continue;
+            }
             let consumed = state.consume_char(el.text(), char_pos);
             if consumed {
                 buff_pos = if move_right {

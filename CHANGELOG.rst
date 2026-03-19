@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Notable improvements and fixes
 ------------------------------
 - New Spanish translations (:issue:`12489`).
+- A new "Tab Completion Preview" feature visually underlines the "guaranteed" portion of an autosuggestion (the longest common prefix across all completions) (:issue:`11250`).
 - New Japanese translations.
 
 Deprecations and removed features

@@ -24,6 +24,7 @@ Improved terminal support
 Other improvements
 ------------------
 - ``fish_indent`` now preserves comments and newlines immediately preceding a brace block (``{ }``) (:issue:`12505`).
+- On non-macOS platforms, :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of tokens (:issue:`12122`) eliminating cross-platform differences in input handling.
 
 For distributors and developers
 -------------------------------

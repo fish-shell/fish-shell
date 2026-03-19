@@ -10,4 +10,5 @@ anstyle.workspace = true
 clap.workspace = true
 fish-build-helper.workspace = true
 fish-tempfile.workspace = true
+fluent-ftl-tools.workspace = true
 walkdir.workspace = true

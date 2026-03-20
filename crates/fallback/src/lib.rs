@@ -25,36 +25,13 @@ pub static FISH_AMBIGUOUS_WIDTH: AtomicIsize = AtomicIsize::new(1);
 /// Valid values are 1, and 2. 1 is the typical emoji width used in Unicode 8 while some newer
 /// terminals use a width of 2 since Unicode 9.
 // For some reason, this is declared here and exposed here, but is set in `env_dispatch`.
-pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(1);
+pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(2);
 
 static WC_LOOKUP_TABLE: LazyLock<WcLookupTable> = LazyLock::new(WcLookupTable::new);
-
-/// A safe wrapper around the system `wcwidth()` function
-#[cfg(not(cygwin))]
-pub fn wcwidth(c: char) -> isize {
-    unsafe extern "C" {
-        pub unsafe fn wcwidth(c: libc::wchar_t) -> libc::c_int;
-    }
-
-    const {
-        assert!(size_of::<libc::wchar_t>() >= size_of::<char>());
-    }
-
-    let width = unsafe { wcwidth(c as libc::wchar_t) };
-    isize::try_from(width).unwrap()
-}
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is
 // EVERYWHERE (https://github.com/fish-shell/fish-shell/issues/2199)
 pub fn fish_wcwidth(c: char) -> isize {
-    // The system version of wcwidth should accurately reflect the ability to represent characters
-    // in the console session, but knows nothing about the capabilities of other terminal emulators
-    // or ttys. Use it from the start only if we are logged in to the physical console.
-    #[cfg(not(cygwin))]
-    if fish_common::is_console_session() {
-        return wcwidth(c);
-    }
-
     // Check for VS16 which selects emoji presentation. This "promotes" a character like U+2764
     // (width 1) to an emoji (probably width 2). So treat it as width 1 so the sums work. See #2652.
     // VS15 selects text presentation.
@@ -75,18 +52,7 @@ pub fn fish_wcwidth(c: char) -> isize {
 
     let width = WC_LOOKUP_TABLE.classify(c);
     match width {
-        WcWidth::NonCharacter | WcWidth::NonPrint | WcWidth::Combining | WcWidth::Unassigned => {
-            #[cfg(not(cygwin))]
-            {
-                // Fall back to system wcwidth in this case.
-                wcwidth(c)
-            }
-            #[cfg(cygwin)]
-            {
-                // No system wcwidth for UTF-32 on cygwin.
-                0
-            }
-        }
+        WcWidth::NonCharacter | WcWidth::NonPrint | WcWidth::Combining | WcWidth::Unassigned => 0,
         WcWidth::Ambiguous | WcWidth::PrivateUse => {
             // TR11: "All private-use characters are by default classified as Ambiguous".
             FISH_AMBIGUOUS_WIDTH.load(Ordering::Relaxed)
@@ -97,8 +63,7 @@ pub fn fish_wcwidth(c: char) -> isize {
     }
 }
 
-/// fish's internal versions of wcwidth and wcswidth, which can use an internal implementation if
-/// the system one is busted.
+/// fish's internal versions of wcwidth and wcswidth
 pub fn fish_wcswidth(s: &wstr) -> isize {
     // ascii fast path; empty iterator returns true for .all()
     if s.chars().all(|c| c.is_ascii() && !c.is_ascii_control()) {

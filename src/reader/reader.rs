@@ -39,7 +39,7 @@ use crate::editable_line::{Edit, EditableLine, line_at_cursor, range_of_line_at_
 use crate::env::EnvStack;
 use crate::env::{EnvMode, Environment, Statuses};
 use crate::env_dispatch::MIDNIGHT_COMMANDER_SID;
-use crate::env_dispatch::guess_emoji_width;
+use crate::env_dispatch::handle_emoji_width;
 use crate::exec::exec_subshell;
 use crate::expand::expand_one;
 use crate::expand::{ExpandFlags, ExpandResultCode, expand_string, expand_tilde};
@@ -385,7 +385,7 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
             background_color,
         } = terminal_init(parser.vars(), inputfd);
         let input_data = input_queue.get_input_data_mut();
-        guess_emoji_width(parser.vars());
+        handle_emoji_width(parser.vars());
 
         // Provide value for `status current-command`
         parser.libdata_mut().status_vars.command = L!("fish").to_owned();

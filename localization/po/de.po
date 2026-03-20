@@ -64,38 +64,6 @@ msgid "%s %s: %s: invalid subcommand"
 msgstr "%s %s: %s: ungültiger Unterbefehl"
 
 #, c-format
-msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s"
-msgstr ""
-
-#, c-format
-msgid "%s %s: Abbreviation %s already exists, cannot rename %s"
-msgstr ""
-
-#, c-format
-msgid "%s %s: Abbreviation '%s' cannot have spaces in the word"
-msgstr ""
-
-#, c-format
-msgid "%s %s: Name cannot be empty"
-msgstr "%s %s: Name darf nicht leer sein"
-
-#, c-format
-msgid "%s %s: No abbreviation named %s with the specified command restrictions"
-msgstr "%s %s: Keine Abkürzung namens %s mit den spezifizierten Befehlseinschränkungen"
-
-#, c-format
-msgid "%s %s: Requires at least two arguments"
-msgstr "%s %s: Erfordert mindestens zwei Argumente"
-
-#, c-format
-msgid "%s %s: Requires exactly two arguments"
-msgstr "%s %s: Erfordert genau zwei Argumente"
-
-#, c-format
-msgid "%s %s: Unexpected argument -- '%s'"
-msgstr "%s %s: Unerwartetes Argument - '%s'"
-
-#, c-format
 msgid "%s %s: options cannot be used together"
 msgstr ""
 
@@ -136,6 +104,10 @@ msgid "%s is a function"
 msgstr "%s ist eine Funktion"
 
 #, c-format
+msgid "%s option requires %s"
+msgstr "Option %s braucht %s"
+
+#, c-format
 msgid "%s variable"
 msgstr ""
 
@@ -158,10 +130,6 @@ msgstr "%s: %s fehlgeschlagen: %s"
 #, c-format
 msgid "%s: %s must be a positive integer"
 msgstr "%s: %s muss eine positive Ganzzahl sein"
-
-#, c-format
-msgid "%s: %s option requires %s"
-msgstr "%s: Option %s braucht %s"
 
 #, c-format
 msgid "%s: %s requires a non-empty string"
@@ -256,14 +224,6 @@ msgid "%s: '%s' is not a valid job ID"
 msgstr ""
 
 #, c-format
-msgid "%s: --command cannot be combined with --position=command"
-msgstr ""
-
-#, c-format
-msgid "%s: --set-cursor argument cannot be empty"
-msgstr ""
-
-#, c-format
 msgid "%s: Ambiguous job"
 msgstr "%s: Mehrdeutiger Job"
 
@@ -286,22 +246,6 @@ msgstr "%s: Kann job %d, '%s' nicht in den Vordergrund schicken weil er nicht de
 #, c-format
 msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
 msgstr "%s: Kann job %s, '%s' nicht in den Hintergrund schicken weil er nicht der Jobsteuerung unterliegt"
-
-#, c-format
-msgid "%s: Cannot combine options %s"
-msgstr "%s: Kann Optionen %s nicht kombinieren"
-
-#, c-format
-msgid "%s: Cannot specify multiple positions"
-msgstr "%s: Mehrere Positionen können nicht gleichzeitig angegeben werden"
-
-#, c-format
-msgid "%s: Cannot specify multiple regex patterns"
-msgstr "%s: Maximal ein regulärer Ausdruck erlaubt"
-
-#, c-format
-msgid "%s: Cannot specify multiple set-cursor options"
-msgstr "%s: Maximal eine set-cursor-Option erlaubt"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
@@ -412,10 +356,6 @@ msgid "%s: Invalid fields value '%s'"
 msgstr "%s: Ungültiger 'fields'-Wert '%s'"
 
 #, c-format
-msgid "%s: Invalid function name: %s"
-msgstr "%s: Ungültiger Funktionsname: %s"
-
-#, c-format
 msgid "%s: Invalid index starting at '%s'"
 msgstr "%s: Ungültiger Index ab '%s'"
 
@@ -454,10 +394,6 @@ msgstr ""
 #, c-format
 msgid "%s: Invalid permission '%s'"
 msgstr "%s: Ungültiger Rechtewert '%s'"
-
-#, c-format
-msgid "%s: Invalid position '%s'"
-msgstr "%s: Ungültige Position '%s'"
 
 #, c-format
 msgid "%s: Invalid range value for field '%s'"
@@ -618,10 +554,6 @@ msgstr ""
 #, c-format
 msgid "%s: Unknown signal '%s'"
 msgstr "%s: Unbekanntes Signal '%s'"
-
-#, c-format
-msgid "%s: Warning: Option '%s' was removed and is now ignored"
-msgstr "%s: Warnung: Option '%s' wurde entfernt und wird nun ignoriert"
 
 #, c-format
 msgid "%s: `set --show` does not allow slices with the var names"
@@ -842,6 +774,9 @@ msgstr ", kopiert via `source`"
 msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty ist nur gültig mit --fields"
 
+msgid "--command cannot be combined with --position=command"
+msgstr ""
+
 msgid "--end and --length are mutually exclusive"
 msgstr "--end und --length können nicht gleichzeitig verwendet werden"
 
@@ -857,11 +792,26 @@ msgstr "--invert und --groups-only können nicht gleichzeitig verwendet werden"
 msgid "--query and --names are mutually exclusive"
 msgstr ""
 
+msgid "--set-cursor argument cannot be empty"
+msgstr ""
+
 msgid "--tokens options are mutually exclusive"
 msgstr ""
 
 msgid "A second attempt to exit will terminate them."
 msgstr "Ein zweites 'exit' wird sie beenden."
+
+#, c-format
+msgid "Abbreviation %s already exists for commands %s, cannot rename %s"
+msgstr ""
+
+#, c-format
+msgid "Abbreviation %s already exists, cannot rename %s"
+msgstr ""
+
+#, c-format
+msgid "Abbreviation '%s' cannot have spaces in the word"
+msgstr ""
 
 msgid "Abbreviation expansion"
 msgstr ""
@@ -926,6 +876,19 @@ msgstr "Kann den no-execute Modus nicht in einer interaktiven Sitzung nutzen"
 #, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr ""
+
+#, c-format
+msgid "Cannot combine options %s"
+msgstr "Kann Optionen %s nicht kombinieren"
+
+msgid "Cannot specify multiple positions"
+msgstr "Mehrere Positionen können nicht gleichzeitig angegeben werden"
+
+msgid "Cannot specify multiple regex patterns"
+msgstr "Maximal ein regulärer Ausdruck erlaubt"
+
+msgid "Cannot specify multiple set-cursor options"
+msgstr "Maximal eine set-cursor-Option erlaubt"
 
 msgid "Cannot use stdin (fd 0) as pipe output"
 msgstr "Kann stdin (fd 0) nicht zur Ausgabe einer Pipe verwenden"
@@ -1182,6 +1145,10 @@ msgstr ""
 msgid "Invalid arguments"
 msgstr "Ungültige Argumente"
 
+#, c-format
+msgid "Invalid function name: %s"
+msgstr "Ungültiger Funktionsname: %s"
+
 msgid "Invalid index value"
 msgstr "Ungültiger Indexwert"
 
@@ -1191,6 +1158,10 @@ msgstr "Ungültige Eingabe-/Ausgabe-Umlenkung"
 #, c-format
 msgid "Invalid number: %s"
 msgstr "Ungültige Zahl: %s"
+
+#, c-format
+msgid "Invalid position '%s'"
+msgstr "Ungültige Position '%s'"
 
 #, c-format
 msgid "Invalid redirection target: %s"
@@ -1272,6 +1243,9 @@ msgstr ""
 msgid "Modification of read-only variable \"%s\" is not allowed"
 msgstr ""
 
+msgid "Name cannot be empty"
+msgstr "Name darf nicht leer sein"
+
 msgid "Negate exit status of job"
 msgstr "Exit-Status des Jobs negieren"
 
@@ -1280,6 +1254,10 @@ msgstr "Nie"
 
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Kein TTY für interaktive Shell (tcgetpgrp schlug fehl)"
+
+#, c-format
+msgid "No abbreviation named %s with the specified command restrictions"
+msgstr "Keine Abkürzung namens %s mit den spezifizierten Befehlseinschränkungen"
 
 msgid "No catalogs available for language specifiers:"
 msgstr ""
@@ -1396,6 +1374,10 @@ msgstr ""
 msgid "Refcell dynamic borrowing"
 msgstr ""
 
+#, c-format
+msgid "Regular expression compile error: %s"
+msgstr "Fehler beim Kompilieren von regulärem Ausdruck: %s"
+
 msgid "Remove job from job list"
 msgstr "Job aus der Jobliste entfernen"
 
@@ -1405,6 +1387,12 @@ msgstr ""
 #, c-format
 msgid "Requested redirection to '%s', which is not a valid file descriptor"
 msgstr "Umleitung zu '%s' angefordert, dies ist aber kein gültiger Dateideskriptor"
+
+msgid "Requires at least two arguments"
+msgstr "Erfordert mindestens zwei Argumente"
+
+msgid "Requires exactly two arguments"
+msgstr "Erfordert genau zwei Argumente"
 
 #, c-format
 msgid "Result too large: %s"
@@ -1627,6 +1615,10 @@ msgstr ""
 msgid "Unexpected '}' found, expecting ')'"
 msgstr ""
 
+#, c-format
+msgid "Unexpected argument -- '%s'"
+msgstr "Unerwartetes Argument - '%s'"
+
 msgid "Unexpected end of string, expecting ')'"
 msgstr ""
 
@@ -1723,6 +1715,10 @@ msgstr ""
 
 msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
 msgstr ""
+
+#, c-format
+msgid "Warning: Option '%s' was removed and is now ignored"
+msgstr "Warnung: Option '%s' wurde entfernt und wird nun ignoriert"
 
 msgid "Warnings (on by default)"
 msgstr ""
@@ -1873,6 +1869,9 @@ msgstr "switch: Erwartet höchstens einen Parameter, aber %u angegeben"
 
 msgid "symlink"
 msgstr ""
+
+msgid "too many arguments"
+msgstr "zu viele Argumente"
 
 #, c-format
 msgid "ulimit: Permission denied when changing resource of type '%s'"

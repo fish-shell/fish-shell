@@ -80,8 +80,15 @@ impl<'a> Error<'a> {
         pub UNKNOWN_OPT
         "%s: unknown option"
 
+        /// Error message when too many arguments are supplied to a builtin.
+        pub TOO_MANY_ARGUMENTS
+        "too many arguments"
+
         pub COMBO2_EXCLUSIVE
         "%s %s: options cannot be used together"
+
+        pub REGEX_COMPILE
+        "Regular expression compile error: %s"
     );
 
     pub fn new(msg: Cow<'a, wstr>) -> Self {

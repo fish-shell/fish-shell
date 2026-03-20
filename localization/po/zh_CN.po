@@ -85,38 +85,6 @@ msgid "%s %s: %s: invalid subcommand"
 msgstr "%s %s: %s: 无效的子命令"
 
 #, c-format
-msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s"
-msgstr "%s %s: 名为 %s 且适用于命令 %s 的缩写已存在，无法重命名 %s"
-
-#, c-format
-msgid "%s %s: Abbreviation %s already exists, cannot rename %s"
-msgstr "%s %s: 缩写 %s 已经存在，无法重命名 %s"
-
-#, c-format
-msgid "%s %s: Abbreviation '%s' cannot have spaces in the word"
-msgstr "%s %s: 缩写词 '%s' 不能包含空格"
-
-#, c-format
-msgid "%s %s: Name cannot be empty"
-msgstr "%s %s: 名称不能为空"
-
-#, c-format
-msgid "%s %s: No abbreviation named %s with the specified command restrictions"
-msgstr "%s %s: 没有命名为 %s 且符合指定命令限制的缩写"
-
-#, c-format
-msgid "%s %s: Requires at least two arguments"
-msgstr "%s %s: 需要至少两个参数"
-
-#, c-format
-msgid "%s %s: Requires exactly two arguments"
-msgstr "%s %s: 需要两个参数"
-
-#, c-format
-msgid "%s %s: Unexpected argument -- '%s'"
-msgstr "%s %s: 意外参数 -- '%s'"
-
-#, c-format
 msgid "%s %s: options cannot be used together"
 msgstr ""
 
@@ -157,6 +125,10 @@ msgid "%s is a function"
 msgstr "%s 是一个函数"
 
 #, c-format
+msgid "%s option requires %s"
+msgstr "%s 选项需要 %s"
+
+#, c-format
 msgid "%s variable"
 msgstr ""
 
@@ -179,10 +151,6 @@ msgstr "%s: %s 失败：%s"
 #, c-format
 msgid "%s: %s must be a positive integer"
 msgstr "%s: %s 必须是正整数"
-
-#, c-format
-msgid "%s: %s option requires %s"
-msgstr "%s: %s 选项需要 %s"
 
 #, c-format
 msgid "%s: %s requires a non-empty string"
@@ -277,14 +245,6 @@ msgid "%s: '%s' is not a valid job ID"
 msgstr "%s: '%s' 不是一个有效的作业 ID"
 
 #, c-format
-msgid "%s: --command cannot be combined with --position=command"
-msgstr "%s: --command 选项不能与 --position=command 组合使用"
-
-#, c-format
-msgid "%s: --set-cursor argument cannot be empty"
-msgstr "%s: --set-cursor 参数不能为空"
-
-#, c-format
 msgid "%s: Ambiguous job"
 msgstr "%s: 有歧义的作业"
 
@@ -307,22 +267,6 @@ msgstr "%s: 不能将作业 %d，'%s' 带到前台，因为它不受作业控制
 #, c-format
 msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
 msgstr "%s: 无法将作业 %s，'%s' 放到后台，因为它不受作业控制管理"
-
-#, c-format
-msgid "%s: Cannot combine options %s"
-msgstr "%s: 无法合并选项 %s"
-
-#, c-format
-msgid "%s: Cannot specify multiple positions"
-msgstr "%s: 无法指定多个位置"
-
-#, c-format
-msgid "%s: Cannot specify multiple regex patterns"
-msgstr "%s: 无法指定多种正则匹配规则"
-
-#, c-format
-msgid "%s: Cannot specify multiple set-cursor options"
-msgstr "%s: 无法指定多个 set-cursor 选项"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
@@ -433,10 +377,6 @@ msgid "%s: Invalid fields value '%s'"
 msgstr "%s: 无效的字段值 '%s'"
 
 #, c-format
-msgid "%s: Invalid function name: %s"
-msgstr "%s: 无效的函数名：%s"
-
-#, c-format
 msgid "%s: Invalid index starting at '%s'"
 msgstr "%s: 无效的起始索引值 '%s'"
 
@@ -475,10 +415,6 @@ msgstr "%s: 宽度为零的无效的填充字符 '%s'"
 #, c-format
 msgid "%s: Invalid permission '%s'"
 msgstr "%s: 无效的权限 '%s'"
-
-#, c-format
-msgid "%s: Invalid position '%s'"
-msgstr "%s: 无效的位置 '%s'"
 
 #, c-format
 msgid "%s: Invalid range value for field '%s'"
@@ -639,10 +575,6 @@ msgstr "%s: 未知的输入函数 '%s'"
 #, c-format
 msgid "%s: Unknown signal '%s'"
 msgstr "%s: 未知信号 '%s'"
-
-#, c-format
-msgid "%s: Warning: Option '%s' was removed and is now ignored"
-msgstr "%s: 警告：忽略已被删除的选项 '%s'"
 
 #, c-format
 msgid "%s: `set --show` does not allow slices with the var names"
@@ -863,6 +795,9 @@ msgstr "，通过 `source` 复制"
 msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty 只对 --fields 有效"
 
+msgid "--command cannot be combined with --position=command"
+msgstr "--command 选项不能与 --position=command 组合使用"
+
 msgid "--end and --length are mutually exclusive"
 msgstr "--end 和 --length 互斥"
 
@@ -878,11 +813,26 @@ msgstr "--invert 和 --groups-only 互斥"
 msgid "--query and --names are mutually exclusive"
 msgstr "--query 和 --names 互斥"
 
+msgid "--set-cursor argument cannot be empty"
+msgstr "--set-cursor 参数不能为空"
+
 msgid "--tokens options are mutually exclusive"
 msgstr "--tokens 各选项互斥"
 
 msgid "A second attempt to exit will terminate them."
 msgstr "第二次尝试退出将终止它们。"
+
+#, c-format
+msgid "Abbreviation %s already exists for commands %s, cannot rename %s"
+msgstr "名为 %s 且适用于命令 %s 的缩写已存在，无法重命名 %s"
+
+#, c-format
+msgid "Abbreviation %s already exists, cannot rename %s"
+msgstr "缩写 %s 已经存在，无法重命名 %s"
+
+#, c-format
+msgid "Abbreviation '%s' cannot have spaces in the word"
+msgstr "缩写词 '%s' 不能包含空格"
 
 msgid "Abbreviation expansion"
 msgstr "缩写展开"
@@ -947,6 +897,19 @@ msgstr "交互式会话时不能使用 no-execute 模式"
 #, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr "无法向控制字符 '%s' 添加控制修饰符"
+
+#, c-format
+msgid "Cannot combine options %s"
+msgstr "无法合并选项 %s"
+
+msgid "Cannot specify multiple positions"
+msgstr "无法指定多个位置"
+
+msgid "Cannot specify multiple regex patterns"
+msgstr "无法指定多种正则匹配规则"
+
+msgid "Cannot specify multiple set-cursor options"
+msgstr "无法指定多个 set-cursor 选项"
 
 msgid "Cannot use stdin (fd 0) as pipe output"
 msgstr "无法使用 stdin (fd 0) 作为管道输出"
@@ -1203,6 +1166,10 @@ msgstr "主题监视器的内部细节"
 msgid "Invalid arguments"
 msgstr "无效参数"
 
+#, c-format
+msgid "Invalid function name: %s"
+msgstr "无效的函数名：%s"
+
 msgid "Invalid index value"
 msgstr "无效索引值"
 
@@ -1212,6 +1179,10 @@ msgstr "无效的输入/输出重定向"
 #, c-format
 msgid "Invalid number: %s"
 msgstr "无效的数字：%s"
+
+#, c-format
+msgid "Invalid position '%s'"
+msgstr "无效的位置 '%s'"
 
 #, c-format
 msgid "Invalid redirection target: %s"
@@ -1293,6 +1264,9 @@ msgstr "缺少运算符"
 msgid "Modification of read-only variable \"%s\" is not allowed"
 msgstr "不允许修改只读变量 \"%s\""
 
+msgid "Name cannot be empty"
+msgstr "名称不能为空"
+
 msgid "Negate exit status of job"
 msgstr "对作业退出代码取反"
 
@@ -1301,6 +1275,10 @@ msgstr "从不"
 
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "交互 shell 没有 TTY (tcgetpgrp 失败)"
+
+#, c-format
+msgid "No abbreviation named %s with the specified command restrictions"
+msgstr "没有命名为 %s 且符合指定命令限制的缩写"
 
 msgid "No catalogs available for language specifiers:"
 msgstr ""
@@ -1417,6 +1395,10 @@ msgstr "回收内部 (非 fork) 进程"
 msgid "Refcell dynamic borrowing"
 msgstr "RefCell 动态借用"
 
+#, c-format
+msgid "Regular expression compile error: %s"
+msgstr "正则表达式编译错误：%s"
+
 msgid "Remove job from job list"
 msgstr "从作业列表中删除作业"
 
@@ -1426,6 +1408,12 @@ msgstr "渲染命令行"
 #, c-format
 msgid "Requested redirection to '%s', which is not a valid file descriptor"
 msgstr "请求重定向到 '%s'，这不是一个有效的文件描述符"
+
+msgid "Requires at least two arguments"
+msgstr "需要至少两个参数"
+
+msgid "Requires exactly two arguments"
+msgstr "需要两个参数"
 
 #, c-format
 msgid "Result too large: %s"
@@ -1648,6 +1636,10 @@ msgstr "未闭合的大括号前出现意外的 '}'"
 msgid "Unexpected '}' found, expecting ')'"
 msgstr "意外找到 '}'，期待 ')'"
 
+#, c-format
+msgid "Unexpected argument -- '%s'"
+msgstr "意外参数 -- '%s'"
+
 msgid "Unexpected end of string, expecting ')'"
 msgstr "字符串意外结束，期待 ')'"
 
@@ -1744,6 +1736,10 @@ msgstr "虚拟计时器到期"
 
 msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
 msgstr "警告使用 test 命令的零参数或单参数模式（`test -d $foo`），未来会被更改。"
+
+#, c-format
+msgid "Warning: Option '%s' was removed and is now ignored"
+msgstr "警告：忽略已被删除的选项 '%s'"
 
 msgid "Warnings (on by default)"
 msgstr "警告 (默认开启)"
@@ -1897,6 +1893,9 @@ msgstr "switch: 最多需要一个参数，但收到 %u 个"
 
 msgid "symlink"
 msgstr "符号链接"
+
+msgid "too many arguments"
+msgstr "参数太多"
 
 #, c-format
 msgid "ulimit: Permission denied when changing resource of type '%s'"

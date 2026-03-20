@@ -65,38 +65,6 @@ msgid "%s %s: %s: invalid subcommand"
 msgstr ""
 
 #, c-format
-msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s"
-msgstr ""
-
-#, c-format
-msgid "%s %s: Abbreviation %s already exists, cannot rename %s"
-msgstr ""
-
-#, c-format
-msgid "%s %s: Abbreviation '%s' cannot have spaces in the word"
-msgstr ""
-
-#, c-format
-msgid "%s %s: Name cannot be empty"
-msgstr ""
-
-#, c-format
-msgid "%s %s: No abbreviation named %s with the specified command restrictions"
-msgstr ""
-
-#, c-format
-msgid "%s %s: Requires at least two arguments"
-msgstr ""
-
-#, c-format
-msgid "%s %s: Requires exactly two arguments"
-msgstr ""
-
-#, c-format
-msgid "%s %s: Unexpected argument -- '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s %s: options cannot be used together"
 msgstr ""
 
@@ -137,6 +105,10 @@ msgid "%s is a function"
 msgstr "%s é uma função"
 
 #, c-format
+msgid "%s option requires %s"
+msgstr ""
+
+#, c-format
 msgid "%s variable"
 msgstr ""
 
@@ -158,10 +130,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: %s must be a positive integer"
-msgstr ""
-
-#, c-format
-msgid "%s: %s option requires %s"
 msgstr ""
 
 #, c-format
@@ -257,14 +225,6 @@ msgid "%s: '%s' is not a valid job ID"
 msgstr ""
 
 #, c-format
-msgid "%s: --command cannot be combined with --position=command"
-msgstr ""
-
-#, c-format
-msgid "%s: --set-cursor argument cannot be empty"
-msgstr ""
-
-#, c-format
 msgid "%s: Ambiguous job"
 msgstr "%s: Tarefa ambígua"
 
@@ -286,22 +246,6 @@ msgstr "%s: Não é possível colocar tarefa %d, “%s” em primeiro plano porq
 
 #, c-format
 msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
-msgstr ""
-
-#, c-format
-msgid "%s: Cannot combine options %s"
-msgstr ""
-
-#, c-format
-msgid "%s: Cannot specify multiple positions"
-msgstr ""
-
-#, c-format
-msgid "%s: Cannot specify multiple regex patterns"
-msgstr ""
-
-#, c-format
-msgid "%s: Cannot specify multiple set-cursor options"
 msgstr ""
 
 #, c-format
@@ -413,10 +357,6 @@ msgid "%s: Invalid fields value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid function name: %s"
-msgstr ""
-
-#, c-format
 msgid "%s: Invalid index starting at '%s'"
 msgstr ""
 
@@ -454,10 +394,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: Invalid permission '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid position '%s'"
 msgstr ""
 
 #, c-format
@@ -618,10 +554,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: Unknown signal '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Warning: Option '%s' was removed and is now ignored"
 msgstr ""
 
 #, c-format
@@ -843,6 +775,9 @@ msgstr ""
 msgid "--allow-empty is only valid with --fields"
 msgstr ""
 
+msgid "--command cannot be combined with --position=command"
+msgstr ""
+
 msgid "--end and --length are mutually exclusive"
 msgstr ""
 
@@ -858,10 +793,25 @@ msgstr ""
 msgid "--query and --names are mutually exclusive"
 msgstr ""
 
+msgid "--set-cursor argument cannot be empty"
+msgstr ""
+
 msgid "--tokens options are mutually exclusive"
 msgstr ""
 
 msgid "A second attempt to exit will terminate them."
+msgstr ""
+
+#, c-format
+msgid "Abbreviation %s already exists for commands %s, cannot rename %s"
+msgstr ""
+
+#, c-format
+msgid "Abbreviation %s already exists, cannot rename %s"
+msgstr ""
+
+#, c-format
+msgid "Abbreviation '%s' cannot have spaces in the word"
 msgstr ""
 
 msgid "Abbreviation expansion"
@@ -926,6 +876,19 @@ msgstr "Não pode usar o modo não-executar durante uma sessão interativa"
 
 #, c-format
 msgid "Cannot add control modifier to control character '%s'"
+msgstr ""
+
+#, c-format
+msgid "Cannot combine options %s"
+msgstr ""
+
+msgid "Cannot specify multiple positions"
+msgstr ""
+
+msgid "Cannot specify multiple regex patterns"
+msgstr ""
+
+msgid "Cannot specify multiple set-cursor options"
 msgstr ""
 
 msgid "Cannot use stdin (fd 0) as pipe output"
@@ -1183,6 +1146,10 @@ msgstr ""
 msgid "Invalid arguments"
 msgstr ""
 
+#, c-format
+msgid "Invalid function name: %s"
+msgstr ""
+
 msgid "Invalid index value"
 msgstr ""
 
@@ -1191,6 +1158,10 @@ msgstr "Redireção inválida de entrada/saída"
 
 #, c-format
 msgid "Invalid number: %s"
+msgstr ""
+
+#, c-format
+msgid "Invalid position '%s'"
 msgstr ""
 
 #, c-format
@@ -1273,6 +1244,9 @@ msgstr ""
 msgid "Modification of read-only variable \"%s\" is not allowed"
 msgstr ""
 
+msgid "Name cannot be empty"
+msgstr ""
+
 msgid "Negate exit status of job"
 msgstr "Nega estado de saída da tarefa"
 
@@ -1281,6 +1255,10 @@ msgstr "Nunca"
 
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Não há TTY para shell interativo (falha em tcgetpgrp)"
+
+#, c-format
+msgid "No abbreviation named %s with the specified command restrictions"
+msgstr ""
 
 msgid "No catalogs available for language specifiers:"
 msgstr ""
@@ -1397,6 +1375,10 @@ msgstr ""
 msgid "Refcell dynamic borrowing"
 msgstr ""
 
+#, c-format
+msgid "Regular expression compile error: %s"
+msgstr ""
+
 msgid "Remove job from job list"
 msgstr "Remove a tarefa da lista de tarefas"
 
@@ -1406,6 +1388,12 @@ msgstr ""
 #, c-format
 msgid "Requested redirection to '%s', which is not a valid file descriptor"
 msgstr "Requeriu redireção para “%s”, que não é um descritor de arquivo válido"
+
+msgid "Requires at least two arguments"
+msgstr ""
+
+msgid "Requires exactly two arguments"
+msgstr ""
 
 #, c-format
 msgid "Result too large: %s"
@@ -1628,6 +1616,10 @@ msgstr ""
 msgid "Unexpected '}' found, expecting ')'"
 msgstr ""
 
+#, c-format
+msgid "Unexpected argument -- '%s'"
+msgstr ""
+
 msgid "Unexpected end of string, expecting ')'"
 msgstr "Final inesperado de string, esperava ')'"
 
@@ -1723,6 +1715,10 @@ msgid "Virtual timer expired"
 msgstr ""
 
 msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
+msgstr ""
+
+#, c-format
+msgid "Warning: Option '%s' was removed and is now ignored"
 msgstr ""
 
 msgid "Warnings (on by default)"
@@ -1873,6 +1869,9 @@ msgid "switch: Expected at most one argument, got %u"
 msgstr "switch: Esperava no máximo um argumento, recebeu %u"
 
 msgid "symlink"
+msgstr ""
+
+msgid "too many arguments"
 msgstr ""
 
 #, c-format

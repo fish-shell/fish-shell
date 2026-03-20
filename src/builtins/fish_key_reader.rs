@@ -12,7 +12,7 @@ use std::ops::ControlFlow;
 use libc::{STDIN_FILENO, VEOF, VINTR};
 
 use crate::{
-    builtins::shared::BUILTIN_ERR_UNKNOWN,
+    builtins::shared::BUILTIN_ERR_UNKNOWN_OPT,
     common::{PROGRAM_NAME, get_program_name, osstr2wcstring, shell_modes},
     env::{EnvStack, Environment as _, env_init},
     future_feature_flags,
@@ -213,7 +213,7 @@ fn parse_flags(
             }
             ';' => {
                 streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNEXP_ARG,
+                    BUILTIN_ERR_UNEXP_OPT_ARG,
                     "fish_key_reader",
                     w.argv[w.wopt_index - 1]
                 ));
@@ -221,7 +221,7 @@ fn parse_flags(
             }
             '?' => {
                 streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNKNOWN,
+                    BUILTIN_ERR_UNKNOWN_OPT,
                     "fish_key_reader",
                     w.argv[w.wopt_index - 1]
                 ));

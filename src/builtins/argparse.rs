@@ -962,7 +962,7 @@ fn argparse_parse_flags<'args>(
                     )?;
                 } else if opts.unknown_handling == UnknownHandling::Error {
                     streams.err.appendln(&wgettext_fmt!(
-                        BUILTIN_ERR_UNKNOWN,
+                        BUILTIN_ERR_UNKNOWN_OPT,
                         opts.name,
                         args_read[w.wopt_index - 1]
                     ));
@@ -1017,7 +1017,7 @@ fn argparse_parse_flags<'args>(
                         } else {
                             // the option is at the end of argv, so it has no argument
                             streams.err.appendln(&wgettext_fmt!(
-                                BUILTIN_ERR_MISSING,
+                                BUILTIN_ERR_MISSING_OPT_ARG,
                                 opts.name,
                                 args_read[w.wopt_index - 1]
                             ));
@@ -1033,7 +1033,7 @@ fn argparse_parse_flags<'args>(
                         && arg_contents.contains('=')
                     {
                         streams.err.appendln(&wgettext_fmt!(
-                            BUILTIN_ERR_UNEXP_ARG,
+                            BUILTIN_ERR_UNEXP_OPT_ARG,
                             opts.name,
                             args_read[w.wopt_index - 1]
                         ));

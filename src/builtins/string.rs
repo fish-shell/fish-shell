@@ -84,7 +84,7 @@ trait StringSubCommand<'args> {
                 '?' => {
                     string_error!(
                         streams,
-                        BUILTIN_ERR_UNKNOWN,
+                        BUILTIN_ERR_UNKNOWN_OPT,
                         cmd,
                         args_read[w.wopt_index - 1]
                     );

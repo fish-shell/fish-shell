@@ -22,8 +22,8 @@ use fish::{
     builtins::{
         fish_indent, fish_key_reader,
         shared::{
-            BUILTIN_ERR_MISSING, BUILTIN_ERR_UNEXP_ARG, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR,
-            STATUS_CMD_OK, STATUS_CMD_UNKNOWN, VERSION_STRING_TEMPLATE,
+            BUILTIN_ERR_MISSING_OPT_ARG, BUILTIN_ERR_UNEXP_OPT_ARG, BUILTIN_ERR_UNKNOWN_OPT,
+            STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, VERSION_STRING_TEMPLATE,
         },
     },
     common::{
@@ -320,21 +320,21 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             '?' => {
                 eprintf!(
                     "%s\n\n",
-                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.wopt_index - 1])
+                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN_OPT, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             ':' => {
                 eprintf!(
                     "%s\n\n",
-                    wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
+                    wgettext_fmt!(BUILTIN_ERR_MISSING_OPT_ARG, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             ';' => {
                 eprintf!(
                     "%s\n\n",
-                    wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, "fish", args[w.wopt_index - 1])
+                    wgettext_fmt!(BUILTIN_ERR_UNEXP_OPT_ARG, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }

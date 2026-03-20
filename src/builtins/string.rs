@@ -35,7 +35,7 @@ macro_rules! string_error {
 use string_error;
 
 fn string_unknown_option(parser: &Parser, streams: &mut IoStreams, subcmd: &wstr, opt: &wstr) {
-    string_error!(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
+    string_error!(streams, BUILTIN_ERR_UNKNOWN_OPT, subcmd, opt);
     builtin_print_error_trailer(parser, streams.err, L!("string"));
 }
 

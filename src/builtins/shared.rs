@@ -20,11 +20,11 @@ pub const DEFAULT_READ_PROMPT: &wstr =
 
 localizable_consts!(
     /// Error message on missing argument.
-    pub BUILTIN_ERR_MISSING
+    pub BUILTIN_ERR_MISSING_OPT_ARG
     "%s: %s: option requires an argument"
 
     /// Error message on unexpected argument.
-    pub BUILTIN_ERR_UNEXP_ARG
+    pub BUILTIN_ERR_UNEXP_OPT_ARG
     "%s: %s: option does not take an argument"
 
     /// Error message on missing man page.
@@ -44,7 +44,7 @@ localizable_consts!(
     "%s: cannot both path and unpath"
 
     /// Error message for unknown switch.
-    pub BUILTIN_ERR_UNKNOWN
+    pub BUILTIN_ERR_UNKNOWN_OPT
     "%s: %s: unknown option"
 
     /// Error message for invalid bind mode name.
@@ -667,7 +667,7 @@ pub fn builtin_unknown_option(
 ) {
     streams
         .err
-        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, cmd, opt));
+        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN_OPT, cmd, opt));
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
     }
@@ -685,14 +685,14 @@ pub fn builtin_missing_argument(
         // if c in -qc '-qc' is missing the argument, now opt is just 'c'
         opt = &opt[opt.len() - 1..];
         streams.err.appendln(&wgettext_fmt!(
-            BUILTIN_ERR_MISSING,
+            BUILTIN_ERR_MISSING_OPT_ARG,
             cmd,
             L!("-").to_owned() + opt
         ));
     } else {
         streams
             .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, opt));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING_OPT_ARG, cmd, opt));
     }
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -709,7 +709,7 @@ pub fn builtin_unexpected_argument(
 ) {
     streams
         .err
-        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, cmd, opt));
+        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNEXP_OPT_ARG, cmd, opt));
     if print_hints {
         builtin_print_error_trailer(parser, streams.err, cmd);
     }
@@ -1042,7 +1042,7 @@ pub fn builtin_break_continue(
     if argc != 1 {
         streams
             .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN_OPT, argv[0], argv[1]));
         return Err(STATUS_INVALID_ARGS);
     }
 

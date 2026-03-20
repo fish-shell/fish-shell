@@ -1027,7 +1027,7 @@ fn do_indent(
             'c' => output_type = OutputType::Check,
             ';' => {
                 streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNEXP_ARG,
+                    BUILTIN_ERR_UNEXP_OPT_ARG,
                     "fish_indent",
                     w.argv[w.wopt_index - 1]
                 ));
@@ -1035,7 +1035,7 @@ fn do_indent(
             }
             '?' => {
                 streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNKNOWN,
+                    BUILTIN_ERR_UNKNOWN_OPT,
                     "fish_indent",
                     w.argv[w.wopt_index - 1]
                 ));

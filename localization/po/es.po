@@ -228,10 +228,6 @@ msgid "%s: Ambiguous job"
 msgstr "%s: Tarea ambigua"
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr "%s: Una especificación de opción debe tener al menos un flag corto o largo"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: El argumento '%s' está fuera de rango"
 
@@ -320,26 +316,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s: Nombre de función no permitido '%s'"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr "%s: La opción entera implícita '%c' ya está definida"
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr "%s: La opción corta entera implícita '%c' no permite modificadores como '%c'"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr "%s: Valor no válido para --max-args '%s'"
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr "%s: Valor no válido para --min-args '%s'"
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr "%s: Valor no válido para --unknown-arguments '%s'"
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr "%s: Valor de recuento no válido '%s'"
 
@@ -384,10 +360,6 @@ msgid "%s: Invalid max value '%s'"
 msgstr "%s: Valor máximo no válido '%s'"
 
 #, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
-msgstr "%s: Especificación de opción no válida '%s' en el carácter '%c'"
-
-#, c-format
 msgid "%s: Invalid padding character of width zero '%s'"
 msgstr "%s: Carácter de relleno no válido de ancho cero '%s'"
 
@@ -430,14 +402,6 @@ msgstr "%s: Valor de ancho no válido '%s'"
 #, c-format
 msgid "%s: Key not specified"
 msgstr "%s: Clave no especificada"
-
-#, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr "%s: La opción larga '%s' ya está definida"
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr "%s: Falta el separador --"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -500,14 +464,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: El límite de recursos no está disponible en este sistema operativo"
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr "%s: La opción corta '%c' ya está definida"
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr "%s: La opción corta '%c' no es válida, debe ser alfanumérica o '#'"
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s: El directorio '%s' no existe"
 
@@ -526,10 +482,6 @@ msgstr "%s: No hay trabajos adecuados"
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
 msgstr "%s: Demasiados niveles de enlaces simbólicos: '%s'"
-
-#, c-format
-msgid "%s: Too many long-only options"
-msgstr "%s: Hay demasiadas opciones solo en formato largo"
 
 #, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
@@ -590,14 +542,6 @@ msgstr "%s: no se puede establecer y desestablecer la ruta a la vez"
 #, c-format
 msgid "%s: column %s exceeds line length"
 msgstr "%s: la columna %s excede la longitud de la línea"
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr "%s: la opción exclusiva '%s' no es válida"
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
-msgstr "%s: el string de opciones exclusivas '%s' no es válido"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -838,6 +782,9 @@ msgstr "Siempre"
 
 msgid "An error occurred while setting up pipe"
 msgstr "Ocurrió un error al configurar la tubería (pipe)"
+
+msgid "An option spec must have at least a short or a long flag"
+msgstr "Una especificación de opción debe tener al menos un flag corto o largo"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1126,6 +1073,14 @@ msgid "Illegal instruction"
 msgstr "Instrucción ilegal"
 
 #, c-format
+msgid "Implicit int flag '%c' already defined"
+msgstr "La opción entera implícita '%c' ya está definida"
+
+#, c-format
+msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
+msgstr "La opción corta entera implícita '%c' no permite modificadores como '%c'"
+
+#, c-format
 msgid "Incomplete escape sequence '%s'"
 msgstr "Secuencia de escape incompleta '%s'"
 
@@ -1141,6 +1096,18 @@ msgstr "Eventos de procesos internos (sin fork)"
 
 msgid "Internal details of the topic monitor"
 msgstr "Detalles internos del monitor de temas"
+
+#, c-format
+msgid "Invalid --max-args value '%s'"
+msgstr "Valor no válido para --max-args '%s'"
+
+#, c-format
+msgid "Invalid --min-args value '%s'"
+msgstr "Valor no válido para --min-args '%s'"
+
+#, c-format
+msgid "Invalid --unknown-arguments value '%s'"
+msgstr "Valor no válido para --unknown-arguments '%s'"
 
 msgid "Invalid arguments"
 msgstr "Argumentos inválidos"
@@ -1158,6 +1125,10 @@ msgstr "Redirección de entrada/salida inválida"
 #, c-format
 msgid "Invalid number: %s"
 msgstr "Número inválido: %s"
+
+#, c-format
+msgid "Invalid option spec '%s' at char '%c'"
+msgstr "Especificación de opción no válida '%s' en el carácter '%c'"
 
 #, c-format
 msgid "Invalid position '%s'"
@@ -1208,6 +1179,10 @@ msgstr "Listar o eliminar funciones"
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "Las operaciones lógicas no están soportadas; usa `test` en su lugar"
 
+#, c-format
+msgid "Long flag '%s' already defined"
+msgstr "La opción larga '%s' ya está definida"
+
 msgid "Manage abbreviations"
 msgstr "Gestionar abreviaturas"
 
@@ -1225,6 +1200,9 @@ msgstr "Llaves desbalanceadas"
 
 msgid "Mismatched parenthesis"
 msgstr "Paréntesis desbalanceado"
+
+msgid "Missing -- separator"
+msgstr "Falta el separador --"
 
 msgid "Missing closing parenthesis"
 msgstr "Falta un paréntesis de cierre"
@@ -1451,6 +1429,14 @@ msgstr "Establecer u obtener la línea de comandos"
 msgid "Set the terminal color"
 msgstr "Establecer el color del terminal"
 
+#, c-format
+msgid "Short flag '%c' already defined"
+msgstr "La opción corta '%c' ya está definida"
+
+#, c-format
+msgid "Short flag '%c' invalid, must be alphanum or '#'"
+msgstr "La opción corta '%c' no es válida, debe ser alfanumérica o '#'"
+
 msgid "Show absolute path sans symlinks"
 msgstr "Mostrar la ruta absoluta sin enlaces simbólicos"
 
@@ -1564,6 +1550,9 @@ msgstr "Demasiados descriptores de archivo activos"
 
 msgid "Too many arguments"
 msgstr "Demasiados argumentos"
+
+msgid "Too many long-only options"
+msgstr "Hay demasiadas opciones solo en formato largo"
 
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr "La sustitución de comando emitió demasiados datos, por lo que fueron descartados"
@@ -1795,6 +1784,22 @@ msgstr "directorio"
 
 msgid "error"
 msgstr "error"
+
+#, c-format
+msgid "exclusive flag '%s' is not valid"
+msgstr "la opción exclusiva '%s' no es válida"
+
+#, c-format
+msgid "exclusive flag string '%s' is not valid"
+msgstr "el string de opciones exclusivas '%s' no es válido"
+
+#, c-format
+msgid "expected <= %d arguments; got %d"
+msgstr "se esperaban <= %d argumentos; se obtuvieron %d"
+
+#, c-format
+msgid "expected >= %d arguments; got %d"
+msgstr "se esperaban >= %d argumentos; se obtuvieron %d"
 
 msgid "explore what characters keyboard keys send"
 msgstr "explora qué caracteres envían las teclas del teclado"

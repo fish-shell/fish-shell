@@ -249,10 +249,6 @@ msgid "%s: Ambiguous job"
 msgstr "%s: 有歧义的作业"
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr "%s: 选项规范必须至少包含一个短标识或长标识"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: 参数 '%s' 超出取值范围"
 
@@ -341,26 +337,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s: 非法函数名 '%s'"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr "%s: 隐式整形标识 '%c' 已被定义"
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr "%s: 隐式整形短标识 '%c' 不能带有形如 '%c' 的修饰符"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr "%s: 无效的 --max-args 值 '%s'"
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr "%s: 无效的 --min-args 值 '%s'"
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr "%s: 无效的 --unknown-arguments 值 '%s'"
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr "%s: 无效的计数值 '%s'"
 
@@ -405,10 +381,6 @@ msgid "%s: Invalid max value '%s'"
 msgstr "%s: 无效的最大值 '%s'"
 
 #, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
-msgstr "%s: 无效的选项规范 '%s' 于字符 '%c'"
-
-#, c-format
 msgid "%s: Invalid padding character of width zero '%s'"
 msgstr "%s: 宽度为零的无效的填充字符 '%s'"
 
@@ -451,14 +423,6 @@ msgstr "%s: 无效的宽度值 '%s'"
 #, c-format
 msgid "%s: Key not specified"
 msgstr "%s: 没有指定键"
-
-#, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr "%s: 长标识 '%s' 已定义"
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr "%s: 缺少 -- 分隔符"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -521,14 +485,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: 该操作系统不支持资源限制"
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr "%s: 已经定义了短标识 '%c'"
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr "%s: 短标识 '%c' 无效，必须是字母、数字或 '#'"
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s: 目录 '%s' 不存在"
 
@@ -547,10 +503,6 @@ msgstr "%s: 没有匹配的作业"
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
 msgstr "%s: 符号链接的级别过多：'%s'"
-
-#, c-format
-msgid "%s: Too many long-only options"
-msgstr "%s: 过多的仅长选项"
 
 #, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
@@ -611,14 +563,6 @@ msgstr "%s: 无法同时是路径变量和非路径变量"
 #, c-format
 msgid "%s: column %s exceeds line length"
 msgstr "%s: 列 %s 超出行长度"
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr "%s: 排他标识 '%s' 无效"
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
-msgstr "%s: 排他标识字符串 '%s' 无效"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -859,6 +803,9 @@ msgstr "总是"
 
 msgid "An error occurred while setting up pipe"
 msgstr "设置管道时出错"
+
+msgid "An option spec must have at least a short or a long flag"
+msgstr "选项规范必须至少包含一个短标识或长标识"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1147,6 +1094,14 @@ msgid "Illegal instruction"
 msgstr "非法指令"
 
 #, c-format
+msgid "Implicit int flag '%c' already defined"
+msgstr "隐式整形标识 '%c' 已被定义"
+
+#, c-format
+msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
+msgstr "隐式整形短标识 '%c' 不能带有形如 '%c' 的修饰符"
+
+#, c-format
 msgid "Incomplete escape sequence '%s'"
 msgstr "不完整的转义序列 '%s'"
 
@@ -1162,6 +1117,18 @@ msgstr "内部 (非 fork) 进程事件"
 
 msgid "Internal details of the topic monitor"
 msgstr "主题监视器的内部细节"
+
+#, c-format
+msgid "Invalid --max-args value '%s'"
+msgstr "无效的 --max-args 值 '%s'"
+
+#, c-format
+msgid "Invalid --min-args value '%s'"
+msgstr "无效的 --min-args 值 '%s'"
+
+#, c-format
+msgid "Invalid --unknown-arguments value '%s'"
+msgstr "无效的 --unknown-arguments 值 '%s'"
 
 msgid "Invalid arguments"
 msgstr "无效参数"
@@ -1179,6 +1146,10 @@ msgstr "无效的输入/输出重定向"
 #, c-format
 msgid "Invalid number: %s"
 msgstr "无效的数字：%s"
+
+#, c-format
+msgid "Invalid option spec '%s' at char '%c'"
+msgstr "无效的选项规范 '%s' 于字符 '%c'"
 
 #, c-format
 msgid "Invalid position '%s'"
@@ -1229,6 +1200,10 @@ msgstr "列出或移除函数"
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "不支持逻辑运算，使用 `test` 替代"
 
+#, c-format
+msgid "Long flag '%s' already defined"
+msgstr "长标识 '%s' 已定义"
+
 msgid "Manage abbreviations"
 msgstr "管理缩写"
 
@@ -1246,6 +1221,9 @@ msgstr "大括号不匹配"
 
 msgid "Mismatched parenthesis"
 msgstr "括号不匹配"
+
+msgid "Missing -- separator"
+msgstr "缺少 -- 分隔符"
 
 msgid "Missing closing parenthesis"
 msgstr "缺少收尾括号"
@@ -1472,6 +1450,14 @@ msgstr "设置或获取命令行"
 msgid "Set the terminal color"
 msgstr "设置终端颜色"
 
+#, c-format
+msgid "Short flag '%c' already defined"
+msgstr "已经定义了短标识 '%c'"
+
+#, c-format
+msgid "Short flag '%c' invalid, must be alphanum or '#'"
+msgstr "短标识 '%c' 无效，必须是字母、数字或 '#'"
+
 msgid "Show absolute path sans symlinks"
 msgstr "显示绝对路径，不含符号链接"
 
@@ -1585,6 +1571,9 @@ msgstr "活动文件描述符太多"
 
 msgid "Too many arguments"
 msgstr "参数太多"
+
+msgid "Too many long-only options"
+msgstr "过多的仅长选项"
 
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr "命令替换生成的数据过多，因此被丢弃"
@@ -1816,6 +1805,22 @@ msgstr "目录"
 
 msgid "error"
 msgstr "错误"
+
+#, c-format
+msgid "exclusive flag '%s' is not valid"
+msgstr "排他标识 '%s' 无效"
+
+#, c-format
+msgid "exclusive flag string '%s' is not valid"
+msgstr "排他标识字符串 '%s' 无效"
+
+#, c-format
+msgid "expected <= %d arguments; got %d"
+msgstr "预期收到 <= %d 个参数；实际收到 %d 个"
+
+#, c-format
+msgid "expected >= %d arguments; got %d"
+msgstr "预期收到 >= %d 个参数；实际收到 %d 个"
 
 msgid "explore what characters keyboard keys send"
 msgstr "探索键盘按键发送的字符"

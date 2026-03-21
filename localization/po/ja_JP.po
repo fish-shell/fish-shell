@@ -227,10 +227,6 @@ msgid "%s: Ambiguous job"
 msgstr "%s: ジョブを特定できません"
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr "%s: オプション仕様には、少なくとも短縮フラグまたはロングフラグが必要です"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: 引数 '%s' は範囲外です"
 
@@ -319,26 +315,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s: 不正な関数名 '%s' です"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr "%s: 暗黙的な整数フラグ '%c' はすでに定義されています"
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr "%s: 暗黙的な整数の短縮フラグ '%c' では '%c' のような修飾子は使用できません"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr "%s: --max-args の値 '%s' は無効です"
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr "%s: --min-args の値 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr "%s: --unknown-arguments の値 '%s' が無効です"
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr "%s: カウント値 '%s' が無効です"
 
@@ -383,10 +359,6 @@ msgid "%s: Invalid max value '%s'"
 msgstr "%s: 最大値 '%s' が無効です"
 
 #, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
-msgstr "%s: オプション仕様 '%s' の文字 '%c' が無効です"
-
-#, c-format
 msgid "%s: Invalid padding character of width zero '%s'"
 msgstr "%s: 幅がゼロのパディング文字 '%s' は無効です"
 
@@ -429,14 +401,6 @@ msgstr "%s: 幅の値 '%s' が無効です"
 #, c-format
 msgid "%s: Key not specified"
 msgstr "%s: キーが指定されていません"
-
-#, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr "%s: ロングフラグ '%s' はすでに定義されています"
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr "%s: -- セパレータがありません"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -499,14 +463,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: このオペレーティングシステムではリソース制限を利用できません"
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr "%s: 短縮フラグ '%c' はすでに定義されています"
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr "%s: 短縮フラグ '%c' は無効です。英数字または '#' である必要があります"
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s: ディレクトリ '%s' は存在しません"
 
@@ -525,10 +481,6 @@ msgstr "%s: 適切なジョブはありません"
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
 msgstr "%s: シンボリックリンクの階層が深すぎます: '%s'"
-
-#, c-format
-msgid "%s: Too many long-only options"
-msgstr "%s: ロングフラグのみのオプションが多すぎます"
 
 #, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
@@ -589,14 +541,6 @@ msgstr "%s: path と unpath を同時に行うことはできません"
 #, c-format
 msgid "%s: column %s exceeds line length"
 msgstr "%s: 列 %s が行の長さを超えています"
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr "%s: 排他的なフラグ '%s' は有効ではありません"
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
-msgstr "%s: 排他的なフラグ文字列 '%s' は有効ではありません"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -837,6 +781,9 @@ msgstr "常に(Always)"
 
 msgid "An error occurred while setting up pipe"
 msgstr "パイプの設定中にエラーが発生しました"
+
+msgid "An option spec must have at least a short or a long flag"
+msgstr "オプション仕様には、少なくとも短縮フラグまたはロングフラグが必要です"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1125,6 +1072,14 @@ msgid "Illegal instruction"
 msgstr "不正な命令(Illegal instruction)"
 
 #, c-format
+msgid "Implicit int flag '%c' already defined"
+msgstr "暗黙的な整数フラグ '%c' はすでに定義されています"
+
+#, c-format
+msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
+msgstr "暗黙的な整数の短縮フラグ '%c' では '%c' のような修飾子は使用できません"
+
+#, c-format
 msgid "Incomplete escape sequence '%s'"
 msgstr "不完全なエスケープシーケンス '%s' です"
 
@@ -1140,6 +1095,18 @@ msgstr "内部(フォークされていない)プロセスイベント"
 
 msgid "Internal details of the topic monitor"
 msgstr "トピックモニターの内部詳細"
+
+#, c-format
+msgid "Invalid --max-args value '%s'"
+msgstr "--max-args の値 '%s' は無効です"
+
+#, c-format
+msgid "Invalid --min-args value '%s'"
+msgstr "--min-args の値 '%s' が無効です"
+
+#, c-format
+msgid "Invalid --unknown-arguments value '%s'"
+msgstr "--unknown-arguments の値 '%s' が無効です"
 
 msgid "Invalid arguments"
 msgstr "引数が無効です"
@@ -1157,6 +1124,10 @@ msgstr "入出力リダイレクトが無効です"
 #, c-format
 msgid "Invalid number: %s"
 msgstr "数値が無効です: %s"
+
+#, c-format
+msgid "Invalid option spec '%s' at char '%c'"
+msgstr "オプション仕様 '%s' の文字 '%c' が無効です"
 
 #, c-format
 msgid "Invalid position '%s'"
@@ -1207,6 +1178,10 @@ msgstr "関数の一覧表示、削除"
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "論理演算はサポートされていません。代わりに `test` を使用してください"
 
+#, c-format
+msgid "Long flag '%s' already defined"
+msgstr "ロングフラグ '%s' はすでに定義されています"
+
 msgid "Manage abbreviations"
 msgstr "略語(abbreviation)を管理します"
 
@@ -1224,6 +1199,9 @@ msgstr "中括弧 { } の対応が取れていません"
 
 msgid "Mismatched parenthesis"
 msgstr "括弧() の対応が取れていません"
+
+msgid "Missing -- separator"
+msgstr "-- セパレータがありません"
 
 msgid "Missing closing parenthesis"
 msgstr "閉じ括弧)が足りません"
@@ -1450,6 +1428,14 @@ msgstr "コマンドラインの設定、取得"
 msgid "Set the terminal color"
 msgstr "ターミナルの色を設定"
 
+#, c-format
+msgid "Short flag '%c' already defined"
+msgstr "短縮フラグ '%c' はすでに定義されています"
+
+#, c-format
+msgid "Short flag '%c' invalid, must be alphanum or '#'"
+msgstr "短縮フラグ '%c' は無効です。英数字または '#' である必要があります"
+
 msgid "Show absolute path sans symlinks"
 msgstr "シンボリックリンクを含まない絶対パスを表示します"
 
@@ -1563,6 +1549,9 @@ msgstr "アクティブなファイル記述子が多すぎます"
 
 msgid "Too many arguments"
 msgstr "引数が多すぎます"
+
+msgid "Too many long-only options"
+msgstr "ロングフラグのみのオプションが多すぎます"
 
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr "コマンド置換によって出力されたデータが多すぎるため、破棄されました"
@@ -1794,6 +1783,22 @@ msgstr "ディレクトリ"
 
 msgid "error"
 msgstr "エラー"
+
+#, c-format
+msgid "exclusive flag '%s' is not valid"
+msgstr "排他的なフラグ '%s' は有効ではありません"
+
+#, c-format
+msgid "exclusive flag string '%s' is not valid"
+msgstr "排他的なフラグ文字列 '%s' は有効ではありません"
+
+#, c-format
+msgid "expected <= %d arguments; got %d"
+msgstr "引数は %d 個以下である必要がありますが、 %d 個指定されました"
+
+#, c-format
+msgid "expected >= %d arguments; got %d"
+msgstr "引数は %d 個以上である必要がありますが、 %d 個指定されました"
 
 msgid "explore what characters keyboard keys send"
 msgstr "キーボードのキーが送信する文字を調査"

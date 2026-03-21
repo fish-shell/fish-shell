@@ -225,10 +225,6 @@ msgid "%s: Ambiguous job"
 msgstr "%s: Mer än ett jobb matchar"
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr ""
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr ""
 
@@ -317,26 +313,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s: Ogiltigt funktionsnamn '%s'"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr ""
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr ""
 
@@ -378,10 +354,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: Invalid max value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
 msgstr ""
 
 #, c-format
@@ -427,14 +399,6 @@ msgstr ""
 #, c-format
 msgid "%s: Key not specified"
 msgstr "%s: Ingen nyckel angiven"
-
-#, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr ""
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr ""
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -497,14 +461,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr ""
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr ""
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr ""
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s: Katalogen '%s' existerar inte"
 
@@ -522,10 +478,6 @@ msgstr "%s: Det finns inga lämpliga jobb"
 
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Too many long-only options"
 msgstr ""
 
 #, c-format
@@ -586,14 +538,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: column %s exceeds line length"
-msgstr ""
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr ""
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
 msgstr ""
 
 #, c-format
@@ -835,6 +779,9 @@ msgstr "Alltid"
 
 msgid "An error occurred while setting up pipe"
 msgstr "Ett fel inträffade under skapandet av ett rör"
+
+msgid "An option spec must have at least a short or a long flag"
+msgstr ""
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1123,6 +1070,14 @@ msgid "Illegal instruction"
 msgstr "Ogiltig instruktion"
 
 #, c-format
+msgid "Implicit int flag '%c' already defined"
+msgstr ""
+
+#, c-format
+msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
+msgstr ""
+
+#, c-format
 msgid "Incomplete escape sequence '%s'"
 msgstr ""
 
@@ -1137,6 +1092,18 @@ msgid "Internal (non-forked) process events"
 msgstr ""
 
 msgid "Internal details of the topic monitor"
+msgstr ""
+
+#, c-format
+msgid "Invalid --max-args value '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid --min-args value '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid --unknown-arguments value '%s'"
 msgstr ""
 
 msgid "Invalid arguments"
@@ -1154,6 +1121,10 @@ msgstr "Ogiltig IO dirigering"
 
 #, c-format
 msgid "Invalid number: %s"
+msgstr ""
+
+#, c-format
+msgid "Invalid option spec '%s' at char '%c'"
 msgstr ""
 
 #, c-format
@@ -1205,6 +1176,10 @@ msgstr "Visa eller ta bort funktioner"
 msgid "Logical operations are not supported, use `test` instead"
 msgstr ""
 
+#, c-format
+msgid "Long flag '%s' already defined"
+msgstr ""
+
 msgid "Manage abbreviations"
 msgstr ""
 
@@ -1221,6 +1196,9 @@ msgid "Mismatched braces"
 msgstr ""
 
 msgid "Mismatched parenthesis"
+msgstr ""
+
+msgid "Missing -- separator"
 msgstr ""
 
 msgid "Missing closing parenthesis"
@@ -1448,6 +1426,14 @@ msgstr "Ändra eller visa kommandoraden"
 msgid "Set the terminal color"
 msgstr ""
 
+#, c-format
+msgid "Short flag '%c' already defined"
+msgstr ""
+
+#, c-format
+msgid "Short flag '%c' invalid, must be alphanum or '#'"
+msgstr ""
+
 msgid "Show absolute path sans symlinks"
 msgstr ""
 
@@ -1560,6 +1546,9 @@ msgid "Too many active file descriptors"
 msgstr ""
 
 msgid "Too many arguments"
+msgstr ""
+
+msgid "Too many long-only options"
 msgstr ""
 
 msgid "Too much data emitted by command substitution so it was discarded"
@@ -1791,6 +1780,22 @@ msgid "directory"
 msgstr ""
 
 msgid "error"
+msgstr ""
+
+#, c-format
+msgid "exclusive flag '%s' is not valid"
+msgstr ""
+
+#, c-format
+msgid "exclusive flag string '%s' is not valid"
+msgstr ""
+
+#, c-format
+msgid "expected <= %d arguments; got %d"
+msgstr ""
+
+#, c-format
+msgid "expected >= %d arguments; got %d"
 msgstr ""
 
 msgid "explore what characters keyboard keys send"

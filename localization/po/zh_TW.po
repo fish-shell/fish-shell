@@ -222,10 +222,6 @@ msgid "%s: Ambiguous job"
 msgstr "%s：無法確定所指的作業"
 
 #, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr "%s：選項規格必須至少有一個短旗標或長旗標"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s：引數「%s」超出範圍"
 
@@ -314,26 +310,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s：非法的函式名稱「%s」"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr "%s：定義過隱式整數旗標「%c」了"
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr "%s：隱式整數短旗標「%c」不允許加上「%c」等修飾"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr "%s：無效的 --max-args 值「%s」"
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr "%s：無效的 --min-args 值「%s」"
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr "%s：無效的 --unknown-arguments 值「%s」"
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr "%s：無效的次數「%s」"
 
@@ -378,10 +354,6 @@ msgid "%s: Invalid max value '%s'"
 msgstr "%s：無效的最大值「%s」"
 
 #, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
-msgstr "%s：無效的選項規格「%s」，在「%c」處"
-
-#, c-format
 msgid "%s: Invalid padding character of width zero '%s'"
 msgstr "%s：沒有寬度的填充字元「%s」無效"
 
@@ -424,14 +396,6 @@ msgstr "%s：無效的寬度「%s」"
 #, c-format
 msgid "%s: Key not specified"
 msgstr "%s：未指定鍵"
-
-#, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr "%s：定義過長旗標「%s」了"
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr "%s：缺少 -- 分隔"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -494,14 +458,6 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s：資源用量限制無法在此作業系統上使用"
 
 #, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr "%s：定義過短旗標「%c」了"
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr "%s：短旗標「%c」無效，必須是字母、數字、或「#」"
-
-#, c-format
 msgid "%s: The directory '%s' does not exist"
 msgstr "%s：目錄「%s」不存在"
 
@@ -520,10 +476,6 @@ msgstr "%s：沒有合式的作業"
 #, c-format
 msgid "%s: Too many levels of symbolic links: '%s'"
 msgstr "%s：太多層象徵式連結：「%s」"
-
-#, c-format
-msgid "%s: Too many long-only options"
-msgstr "%s：太多僅有長旗標的選項"
 
 #, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
@@ -584,14 +536,6 @@ msgstr "%s：不能同時標為路徑和取消標為路徑"
 #, c-format
 msgid "%s: column %s exceeds line length"
 msgstr "%s：第 %s 欄超過了行的長度"
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr "%s：互斥旗標「%s」無效"
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
-msgstr "%s：互斥旗標字串「%s」無效"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -832,6 +776,9 @@ msgstr "總是"
 
 msgid "An error occurred while setting up pipe"
 msgstr "設置管道時發生錯誤"
+
+msgid "An option spec must have at least a short or a long flag"
+msgstr ""
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1120,6 +1067,14 @@ msgid "Illegal instruction"
 msgstr "非法的指令"
 
 #, c-format
+msgid "Implicit int flag '%c' already defined"
+msgstr ""
+
+#, c-format
+msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
+msgstr ""
+
+#, c-format
 msgid "Incomplete escape sequence '%s'"
 msgstr "未完成的轉義序列「%s」"
 
@@ -1135,6 +1090,18 @@ msgstr "內部（非分叉的）行程事件"
 
 msgid "Internal details of the topic monitor"
 msgstr "主題監聽的內部資訊"
+
+#, c-format
+msgid "Invalid --max-args value '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid --min-args value '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid --unknown-arguments value '%s'"
+msgstr ""
 
 msgid "Invalid arguments"
 msgstr "引數無效"
@@ -1152,6 +1119,10 @@ msgstr "無效的輸入／輸出重新導向"
 #, c-format
 msgid "Invalid number: %s"
 msgstr "無效的數字：%s"
+
+#, c-format
+msgid "Invalid option spec '%s' at char '%c'"
+msgstr ""
 
 #, c-format
 msgid "Invalid position '%s'"
@@ -1202,6 +1173,10 @@ msgstr "列出或移除函式"
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "不支援邏輯運算，請改用「test」"
 
+#, c-format
+msgid "Long flag '%s' already defined"
+msgstr ""
+
 msgid "Manage abbreviations"
 msgstr "管理縮寫"
 
@@ -1219,6 +1194,9 @@ msgstr "不對稱的大括弧"
 
 msgid "Mismatched parenthesis"
 msgstr "不對稱的小括弧"
+
+msgid "Missing -- separator"
+msgstr ""
 
 msgid "Missing closing parenthesis"
 msgstr "缺少右小括弧"
@@ -1446,6 +1424,14 @@ msgstr "設定或取得命令行"
 msgid "Set the terminal color"
 msgstr "設定終端機顏色"
 
+#, c-format
+msgid "Short flag '%c' already defined"
+msgstr ""
+
+#, c-format
+msgid "Short flag '%c' invalid, must be alphanum or '#'"
+msgstr ""
+
 msgid "Show absolute path sans symlinks"
 msgstr "顯示不包含象徵式連結的絕對路徑"
 
@@ -1559,6 +1545,9 @@ msgstr "使用中的檔案描述子太多"
 
 msgid "Too many arguments"
 msgstr "引數太多"
+
+msgid "Too many long-only options"
+msgstr ""
 
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr "命令替換發出的資料太多，丟棄之"
@@ -1790,6 +1779,22 @@ msgstr "目錄"
 
 msgid "error"
 msgstr "錯誤"
+
+#, c-format
+msgid "exclusive flag '%s' is not valid"
+msgstr ""
+
+#, c-format
+msgid "exclusive flag string '%s' is not valid"
+msgstr ""
+
+#, c-format
+msgid "expected <= %d arguments; got %d"
+msgstr ""
+
+#, c-format
+msgid "expected >= %d arguments; got %d"
+msgstr ""
 
 msgid "explore what characters keyboard keys send"
 msgstr "探索鍵盤按鍵發送的是什麼字元"

@@ -440,10 +440,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s: Se intentó modificar la variable especial '%s' con un ámbito incorrecto"
 
 #, c-format
-msgid "%s: Unknown input function '%s'"
-msgstr "%s: Función de entrada desconocida '%s'"
-
-#, c-format
 msgid "%s: Unknown signal '%s'"
 msgstr "%s: Señal desconocida '%s'"
 
@@ -480,10 +476,6 @@ msgid "%s: cannot both path and unpath"
 msgstr "%s: no se puede establecer y desestablecer la ruta a la vez"
 
 #, c-format
-msgid "%s: column %s exceeds line length"
-msgstr "%s: la columna %s excede la longitud de la línea"
-
-#, c-format
 msgid "%s: expected %d arguments; got %d"
 msgstr "%s: se esperaban %d argumentos; se obtuvieron %d"
 
@@ -512,6 +504,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: especificación de conversión no válida"
 
 #, c-format
+msgid "%s: invalid integer"
+msgstr "%s: entero no válido"
+
+#, c-format
 msgid "%s: invalid mode name. See `help %s`"
 msgstr "%s: nombre de modo no válido. Consulte `help %s`"
 
@@ -530,10 +526,6 @@ msgstr "%s: combinación de opciones no válida, %s"
 #, c-format
 msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
 msgstr "%s: el trabajo %d ('%s') fue detenido y se le ha enviado una señal para continuar."
-
-#, c-format
-msgid "%s: line/column index starts at 1"
-msgstr "%s: el índice de línea/columna comienza en 1"
 
 #, c-format
 msgid "%s: missing argument"
@@ -568,20 +560,12 @@ msgid "%s: scope can be only one of: universal function global local"
 msgstr "%s: el alcance solo puede ser uno de: universal, function, global, local"
 
 #, c-format
-msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet supported"
-msgstr "%s: cambiar la posición del cursor durante la evaluación de 'complete --arguments' todavía no está soportado"
-
-#, c-format
 msgid "%s: stdin is closed"
 msgstr "%s: la entrada estándar (stdin) está cerrada"
 
 #, c-format
 msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
 msgstr "%s: se configuró correctamente el universal '%s'; pero una variable global con ese nombre lo oculta"
-
-#, c-format
-msgid "%s: there is no line %s"
-msgstr "%s: no existe la línea %s"
 
 #, c-format
 msgid "%s: too many arguments"
@@ -764,6 +748,9 @@ msgstr "Límite de tiempo de CPU excedido"
 
 msgid "Calls to fork()"
 msgstr "Llamadas a fork()"
+
+msgid "Can not set commandline in non-interactive mode"
+msgstr ""
 
 msgid "Can not specify scope when removing block"
 msgstr "No se puede especificar el ámbito al eliminar el bloque"
@@ -1667,6 +1654,10 @@ msgstr "Función desconocida"
 msgid "Unknown function '%s'"
 msgstr "Función desconocida “%s”"
 
+#, c-format
+msgid "Unknown input function '%s'"
+msgstr "Función de entrada desconocida '%s'"
+
 msgid "Unmatched wildcard"
 msgstr "Comodín sin coincidencias"
 
@@ -1763,6 +1754,10 @@ msgstr "no se pueden guardar variables o funciones universales"
 msgid "cannot parse key '%s'"
 msgstr "no se puede analizar la clave ‘%s’"
 
+#, c-format
+msgid "column %s exceeds line length"
+msgstr "la columna %s excede la longitud de la línea"
+
 msgid "command"
 msgstr "comando"
 
@@ -1845,6 +1840,9 @@ msgstr "en la función ‘%s’"
 msgid "invalid field width: %s"
 msgstr "ancho de campo inválido: %s"
 
+msgid "invalid option combination"
+msgstr "combinación de opciones no válida"
+
 #, c-format
 msgid "invalid option combination, %s"
 msgstr "combinación de opciones no válida, %s"
@@ -1856,6 +1854,9 @@ msgstr "precisión inválida: %s"
 #, c-format
 msgid "invalid underline style: %s"
 msgstr "estilo de subrayado no válido: %s"
+
+msgid "line/column index starts at 1"
+msgstr "el índice de línea/columna comienza en 1"
 
 msgid "missing hexadecimal number in escape"
 msgstr "falta un número hexadecimal en la secuencia de escape"
@@ -1878,6 +1879,9 @@ msgstr "en ejecución"
 msgid "search:"
 msgstr "buscar:"
 
+msgid "setting cursor while evaluating 'complete --arguments' is not yet supported"
+msgstr "cambiar la posición del cursor durante la evaluación de 'complete --arguments' todavía no está soportado"
+
 msgid "stopped"
 msgstr "detenido"
 
@@ -1890,6 +1894,10 @@ msgstr "enlace simbólico"
 
 msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
 msgstr "la sintaxis -k/--key ya no es compatible. Consulta `bind --help` y `bind --key-names`"
+
+#, c-format
+msgid "there is no line %s"
+msgstr "no existe la línea %s"
 
 msgid "too many arguments"
 msgstr "demasiados argumentos"

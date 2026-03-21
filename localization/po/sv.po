@@ -437,10 +437,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr ""
 
 #, c-format
-msgid "%s: Unknown input function '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Unknown signal '%s'"
 msgstr ""
 
@@ -477,10 +473,6 @@ msgid "%s: cannot both path and unpath"
 msgstr ""
 
 #, c-format
-msgid "%s: column %s exceeds line length"
-msgstr ""
-
-#, c-format
 msgid "%s: expected %d arguments; got %d"
 msgstr ""
 
@@ -509,6 +501,10 @@ msgid "%s: invalid conversion specification"
 msgstr ""
 
 #, c-format
+msgid "%s: invalid integer"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid mode name. See `help %s`"
 msgstr ""
 
@@ -526,10 +522,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
-msgstr ""
-
-#, c-format
-msgid "%s: line/column index starts at 1"
 msgstr ""
 
 #, c-format
@@ -565,19 +557,11 @@ msgid "%s: scope can be only one of: universal function global local"
 msgstr ""
 
 #, c-format
-msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet supported"
-msgstr ""
-
-#, c-format
 msgid "%s: stdin is closed"
 msgstr ""
 
 #, c-format
 msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
-msgstr ""
-
-#, c-format
-msgid "%s: there is no line %s"
 msgstr ""
 
 #, c-format
@@ -760,6 +744,9 @@ msgid "CPU time limit exceeded"
 msgstr "Slut på processortid"
 
 msgid "Calls to fork()"
+msgstr ""
+
+msgid "Can not set commandline in non-interactive mode"
 msgstr ""
 
 msgid "Can not specify scope when removing block"
@@ -1664,6 +1651,10 @@ msgstr ""
 msgid "Unknown function '%s'"
 msgstr "Okänd funktion '%s'"
 
+#, c-format
+msgid "Unknown input function '%s'"
+msgstr ""
+
 msgid "Unmatched wildcard"
 msgstr ""
 
@@ -1760,6 +1751,10 @@ msgstr ""
 msgid "cannot parse key '%s'"
 msgstr ""
 
+#, c-format
+msgid "column %s exceeds line length"
+msgstr ""
+
 msgid "command"
 msgstr ""
 
@@ -1839,6 +1834,9 @@ msgstr ""
 msgid "invalid field width: %s"
 msgstr "oglitig fältvidd: %s"
 
+msgid "invalid option combination"
+msgstr ""
+
 #, c-format
 msgid "invalid option combination, %s"
 msgstr ""
@@ -1849,6 +1847,9 @@ msgstr ""
 
 #, c-format
 msgid "invalid underline style: %s"
+msgstr ""
+
+msgid "line/column index starts at 1"
 msgstr ""
 
 msgid "missing hexadecimal number in escape"
@@ -1872,6 +1873,9 @@ msgstr "körande"
 msgid "search:"
 msgstr ""
 
+msgid "setting cursor while evaluating 'complete --arguments' is not yet supported"
+msgstr ""
+
 msgid "stopped"
 msgstr "stannat"
 
@@ -1883,6 +1887,10 @@ msgid "symlink"
 msgstr ""
 
 msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+msgstr ""
+
+#, c-format
+msgid "there is no line %s"
 msgstr ""
 
 msgid "too many arguments"

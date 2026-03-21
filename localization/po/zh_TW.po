@@ -434,10 +434,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s：試圖以錯的作用域修改特殊變數「%s」"
 
 #, c-format
-msgid "%s: Unknown input function '%s'"
-msgstr "%s：未知的輸入函式「%s」"
-
-#, c-format
 msgid "%s: Unknown signal '%s'"
 msgstr "%s：未知的訊號「%s」"
 
@@ -474,10 +470,6 @@ msgid "%s: cannot both path and unpath"
 msgstr "%s：不能同時標為路徑和取消標為路徑"
 
 #, c-format
-msgid "%s: column %s exceeds line length"
-msgstr "%s：第 %s 欄超過了行的長度"
-
-#, c-format
 msgid "%s: expected %d arguments; got %d"
 msgstr "%s：預期有 %d 個引數，卻收到了 %d 個"
 
@@ -506,6 +498,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s：轉換規格無效"
 
 #, c-format
+msgid "%s: invalid integer"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid mode name. See `help %s`"
 msgstr ""
 
@@ -524,10 +520,6 @@ msgstr "%s：無效的選項組合，%s"
 #, c-format
 msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
 msgstr "%s：作業 %d（%s）停止過並收到了訊號要求繼續。"
-
-#, c-format
-msgid "%s: line/column index starts at 1"
-msgstr "%s：行/欄索引從 1 開始"
 
 #, c-format
 msgid "%s: missing argument"
@@ -562,20 +554,12 @@ msgid "%s: scope can be only one of: universal function global local"
 msgstr "%s：作用域只能是以下之一：universal、function、global、local"
 
 #, c-format
-msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet supported"
-msgstr "%s：尚不支援於執行「complete --arguments」時設定游標"
-
-#, c-format
 msgid "%s: stdin is closed"
 msgstr "%s：stdin 已關閉"
 
 #, c-format
 msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
 msgstr "%s：成功設定了通域變數「%s」，但有同名的全域變數遮蔽了它"
-
-#, c-format
-msgid "%s: there is no line %s"
-msgstr "%s：沒有第 %s 行"
 
 #, c-format
 msgid "%s: too many arguments"
@@ -758,6 +742,9 @@ msgstr "CPU 時間超過限制"
 
 msgid "Calls to fork()"
 msgstr "fork() 呼叫"
+
+msgid "Can not set commandline in non-interactive mode"
+msgstr ""
 
 msgid "Can not specify scope when removing block"
 msgstr ""
@@ -1662,6 +1649,10 @@ msgstr "未知函式"
 msgid "Unknown function '%s'"
 msgstr "未知函式「%s」"
 
+#, c-format
+msgid "Unknown input function '%s'"
+msgstr ""
+
 msgid "Unmatched wildcard"
 msgstr "未匹配的 wildcard"
 
@@ -1758,6 +1749,10 @@ msgstr "無法儲存通域變數或函式"
 msgid "cannot parse key '%s'"
 msgstr "無法解析按鍵「%s」"
 
+#, c-format
+msgid "column %s exceeds line length"
+msgstr ""
+
 msgid "command"
 msgstr "命令"
 
@@ -1840,6 +1835,9 @@ msgstr "在函式「%s」"
 msgid "invalid field width: %s"
 msgstr "無效的欄位寬度：%s"
 
+msgid "invalid option combination"
+msgstr ""
+
 #, c-format
 msgid "invalid option combination, %s"
 msgstr ""
@@ -1850,6 +1848,9 @@ msgstr "無效的精度：%s"
 
 #, c-format
 msgid "invalid underline style: %s"
+msgstr ""
+
+msgid "line/column index starts at 1"
 msgstr ""
 
 msgid "missing hexadecimal number in escape"
@@ -1873,6 +1874,9 @@ msgstr "執行中"
 msgid "search:"
 msgstr "搜尋："
 
+msgid "setting cursor while evaluating 'complete --arguments' is not yet supported"
+msgstr ""
+
 msgid "stopped"
 msgstr "已停止"
 
@@ -1884,6 +1888,10 @@ msgid "symlink"
 msgstr "象徵式連結"
 
 msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+msgstr ""
+
+#, c-format
+msgid "there is no line %s"
 msgstr ""
 
 msgid "too many arguments"

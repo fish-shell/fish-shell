@@ -439,10 +439,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s: 特別な変数 '%s' を誤ったスコープで変更しようとしました"
 
 #, c-format
-msgid "%s: Unknown input function '%s'"
-msgstr "%s: 不明な入力関数 '%s' です"
-
-#, c-format
 msgid "%s: Unknown signal '%s'"
 msgstr "%s: 不明なシグナル '%s' です"
 
@@ -479,10 +475,6 @@ msgid "%s: cannot both path and unpath"
 msgstr "%s: path と unpath を同時に行うことはできません"
 
 #, c-format
-msgid "%s: column %s exceeds line length"
-msgstr "%s: 列 %s が行の長さを超えています"
-
-#, c-format
 msgid "%s: expected %d arguments; got %d"
 msgstr "%s: %d 個の引数が必要ですが、 %d 個指定されました"
 
@@ -511,6 +503,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: 無効な変換仕様です"
 
 #, c-format
+msgid "%s: invalid integer"
+msgstr "%s: 整数が無効です"
+
+#, c-format
 msgid "%s: invalid mode name. See `help %s`"
 msgstr "%s: モード名が無効です。 `help %s` を参照してください"
 
@@ -529,10 +525,6 @@ msgstr "%s: 無効なオプションの組み合わせです: %s"
 #, c-format
 msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
 msgstr "%s: ジョブ %d ('%s') は停止していましたが、再開のためのシグナルが送られました"
-
-#, c-format
-msgid "%s: line/column index starts at 1"
-msgstr "%s: 行/列のインデックスは 1 から始まります"
 
 #, c-format
 msgid "%s: missing argument"
@@ -567,20 +559,12 @@ msgid "%s: scope can be only one of: universal function global local"
 msgstr "%s: スコープは次のいずれかである必要があります: universal, function, global, local"
 
 #, c-format
-msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet supported"
-msgstr "%s: 'complete --arguments' の評価中にカーソルを設定することはまだサポートされていません"
-
-#, c-format
 msgid "%s: stdin is closed"
 msgstr "%s: 標準入力(stdin)が閉じられています"
 
 #, c-format
 msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
 msgstr "%s: ユニバーサル変数 '%s' の設定に成功しましたが、同名のグローバル変数がそれを覆い隠しています(シャドウイング)"
-
-#, c-format
-msgid "%s: there is no line %s"
-msgstr "%s: %s 行目は存在しません"
 
 #, c-format
 msgid "%s: too many arguments"
@@ -763,6 +747,9 @@ msgstr "CPU時間制限を超過しました"
 
 msgid "Calls to fork()"
 msgstr "fork() の呼び出し"
+
+msgid "Can not set commandline in non-interactive mode"
+msgstr ""
 
 msgid "Can not specify scope when removing block"
 msgstr "ブロックを削除する際にスコープを指定することはできません"
@@ -1666,6 +1653,10 @@ msgstr "不明な関数"
 msgid "Unknown function '%s'"
 msgstr "不明な関数 '%s'"
 
+#, c-format
+msgid "Unknown input function '%s'"
+msgstr "不明な入力関数 '%s' です"
+
 msgid "Unmatched wildcard"
 msgstr "一致するワイルドカードが見つかりません"
 
@@ -1762,6 +1753,10 @@ msgstr "ユニバーサル変数または関数を保存できません"
 msgid "cannot parse key '%s'"
 msgstr "キー '%s' を解析できません"
 
+#, c-format
+msgid "column %s exceeds line length"
+msgstr "列 %s が行の長さを超えています"
+
 msgid "command"
 msgstr "コマンド"
 
@@ -1844,6 +1839,9 @@ msgstr "関数 '%s' 内"
 msgid "invalid field width: %s"
 msgstr "無効なフィールド幅: %s"
 
+msgid "invalid option combination"
+msgstr "無効なオプションの組み合わせです"
+
 #, c-format
 msgid "invalid option combination, %s"
 msgstr "無効なオプションの組み合わせです: %s"
@@ -1855,6 +1853,9 @@ msgstr "無効な精度: %s"
 #, c-format
 msgid "invalid underline style: %s"
 msgstr "無効な下線スタイルです: %s"
+
+msgid "line/column index starts at 1"
+msgstr "行/列のインデックスは 1 から始まります"
 
 msgid "missing hexadecimal number in escape"
 msgstr "エスケープ内に16進数がありません"
@@ -1877,6 +1878,9 @@ msgstr "実行中"
 msgid "search:"
 msgstr "検索:"
 
+msgid "setting cursor while evaluating 'complete --arguments' is not yet supported"
+msgstr "'complete --arguments' の評価中にカーソルを設定することはまだサポートされていません"
+
 msgid "stopped"
 msgstr "停止中"
 
@@ -1889,6 +1893,10 @@ msgstr "シンボリックリンク"
 
 msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
 msgstr "-k/--key 構文はサポートされなくなりました。 `bind --help` および `bind --key-names` を参照してください"
+
+#, c-format
+msgid "there is no line %s"
+msgstr "%s 行目は存在しません"
 
 msgid "too many arguments"
 msgstr "引数が多すぎます"

@@ -88,6 +88,10 @@ impl<'a> Error<'a> {
         pub TOO_MANY_ARGUMENTS
         "too many arguments"
 
+        /// Error message when integer expected
+        pub NOT_NUMBER
+        "%s: invalid integer"
+
         pub ARG_COUNT1
         "expected %d arguments; got %d"
 
@@ -96,6 +100,10 @@ impl<'a> Error<'a> {
 
         pub MAX_ARG_COUNT1
         "expected <= %d arguments; got %d"
+
+        /// Error message on invalid combination of options.
+        pub COMBO
+        "invalid option combination"
 
         pub COMBO2
         "invalid option combination, %s"

@@ -537,10 +537,6 @@ msgid "%s: invalid option combination, %s"
 msgstr "%s: 无效的选项组合，%s"
 
 #, c-format
-msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
-msgstr "%s: 作业 %d ('%s') 已停止并收到继续信号。"
-
-#, c-format
 msgid "%s: missing argument"
 msgstr "%s: 缺少参数"
 
@@ -1873,6 +1869,10 @@ msgstr "无效的精度：%s"
 #, c-format
 msgid "invalid underline style: %s"
 msgstr "无效的下划线样式：%s"
+
+#, c-format
+msgid "job %d ('%s') was stopped and has been signalled to continue."
+msgstr "作业 %d ('%s') 已停止并收到继续信号。"
 
 msgid "line/column index starts at 1"
 msgstr "行/列索引从1开始"

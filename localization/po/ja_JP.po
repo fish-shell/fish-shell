@@ -515,10 +515,6 @@ msgid "%s: invalid option combination, %s"
 msgstr "%s: 無効なオプションの組み合わせです: %s"
 
 #, c-format
-msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
-msgstr "%s: ジョブ %d ('%s') は停止していましたが、再開のためのシグナルが送られました"
-
-#, c-format
 msgid "%s: missing argument"
 msgstr "%s: 引数が不足しています"
 
@@ -1851,6 +1847,10 @@ msgstr "無効な精度: %s"
 #, c-format
 msgid "invalid underline style: %s"
 msgstr "無効な下線スタイルです: %s"
+
+#, c-format
+msgid "job %d ('%s') was stopped and has been signalled to continue."
+msgstr "ジョブ %d ('%s') は停止していましたが、再開のためのシグナルが送られました"
 
 msgid "line/column index starts at 1"
 msgstr "行/列のインデックスは 1 から始まります"

@@ -513,10 +513,6 @@ msgid "%s: invalid option combination, %s"
 msgstr ""
 
 #, c-format
-msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
-msgstr ""
-
-#, c-format
 msgid "%s: missing argument"
 msgstr ""
 
@@ -1845,6 +1841,10 @@ msgstr ""
 
 #, c-format
 msgid "invalid underline style: %s"
+msgstr ""
+
+#, c-format
+msgid "job %d ('%s') was stopped and has been signalled to continue."
 msgstr ""
 
 msgid "line/column index starts at 1"

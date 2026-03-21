@@ -516,10 +516,6 @@ msgid "%s: invalid option combination, %s"
 msgstr "%s: combinación de opciones no válida, %s"
 
 #, c-format
-msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
-msgstr "%s: el trabajo %d ('%s') fue detenido y se le ha enviado una señal para continuar."
-
-#, c-format
 msgid "%s: missing argument"
 msgstr "%s: falta un argumento"
 
@@ -1852,6 +1848,10 @@ msgstr "precisión inválida: %s"
 #, c-format
 msgid "invalid underline style: %s"
 msgstr "estilo de subrayado no válido: %s"
+
+#, c-format
+msgid "job %d ('%s') was stopped and has been signalled to continue."
+msgstr "el trabajo %d ('%s') fue detenido y se le ha enviado una señal para continuar."
 
 msgid "line/column index starts at 1"
 msgstr "el índice de línea/columna comienza en 1"

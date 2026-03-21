@@ -108,6 +108,10 @@ msgid "%s option requires %s"
 msgstr "la opción %s requiere %s"
 
 #, c-format
+msgid "%s requires a non-empty string"
+msgstr "%s requiere una cadena no vacía"
+
+#, c-format
 msgid "%s variable"
 msgstr "variable %s"
 
@@ -132,10 +136,6 @@ msgid "%s: %s must be a positive integer"
 msgstr "%s: %s debe ser un entero positivo"
 
 #, c-format
-msgid "%s: %s requires a non-empty string"
-msgstr "%s: %s requiere una cadena no vacía"
-
-#, c-format
 msgid "%s: %s: %s"
 msgstr ""
 
@@ -146,10 +146,6 @@ msgstr "%s: %s: no se puede sobrescribir la variable de solo lectura"
 #, c-format
 msgid "%s: %s: cannot use reserved keyword as function name"
 msgstr "%s: %s: no se puede usar una palabra clave reservada como nombre de función"
-
-#, c-format
-msgid "%s: %s: contains a syntax error"
-msgstr "%s: %s: contiene un error de sintaxis"
 
 #, c-format
 msgid "%s: %s: expected %d arguments; got %d"
@@ -356,10 +352,6 @@ msgid "%s: Invalid style value '%s'"
 msgstr "%s: Valor de estilo no válido '%s'"
 
 #, c-format
-msgid "%s: Invalid token '%s'"
-msgstr "%s: Token no válido '%s'"
-
-#, c-format
 msgid "%s: Invalid type '%s'"
 msgstr "%s: Tipo no válido '%s'"
 
@@ -474,6 +466,10 @@ msgstr "%s: no se puede exportar y desexportar a la vez"
 #, c-format
 msgid "%s: cannot both path and unpath"
 msgstr "%s: no se puede establecer y desestablecer la ruta a la vez"
+
+#, c-format
+msgid "%s: contains a syntax error"
+msgstr "%s: contiene un error de sintaxis"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -748,6 +744,9 @@ msgstr "Límite de tiempo de CPU excedido"
 
 msgid "Calls to fork()"
 msgstr "Llamadas a fork()"
+
+msgid "Can not get commandline in non-interactive mode"
+msgstr ""
 
 msgid "Can not set commandline in non-interactive mode"
 msgstr ""

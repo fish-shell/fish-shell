@@ -102,6 +102,10 @@ msgid "%s option requires %s"
 msgstr ""
 
 #, c-format
+msgid "%s requires a non-empty string"
+msgstr ""
+
+#, c-format
 msgid "%s variable"
 msgstr ""
 
@@ -126,10 +130,6 @@ msgid "%s: %s must be a positive integer"
 msgstr "%s：%s 必須是正整數"
 
 #, c-format
-msgid "%s: %s requires a non-empty string"
-msgstr "%s：%s 需要一個非空字串"
-
-#, c-format
 msgid "%s: %s: %s"
 msgstr ""
 
@@ -140,10 +140,6 @@ msgstr "%s：%s：不能覆寫唯讀變數"
 #, c-format
 msgid "%s: %s: cannot use reserved keyword as function name"
 msgstr "%s：%s：不能使用保留字作為函式名稱"
-
-#, c-format
-msgid "%s: %s: contains a syntax error"
-msgstr "%s：%s：含有語法錯誤"
 
 #, c-format
 msgid "%s: %s: expected %d arguments; got %d"
@@ -350,10 +346,6 @@ msgid "%s: Invalid style value '%s'"
 msgstr "%s：無效的樣式「%s」"
 
 #, c-format
-msgid "%s: Invalid token '%s'"
-msgstr "%s：無效的詞元「%s」"
-
-#, c-format
 msgid "%s: Invalid type '%s'"
 msgstr "%s：無效的類型「%s」"
 
@@ -468,6 +460,10 @@ msgstr "%s：不能同時匯出和取消匯出"
 #, c-format
 msgid "%s: cannot both path and unpath"
 msgstr "%s：不能同時標為路徑和取消標為路徑"
+
+#, c-format
+msgid "%s: contains a syntax error"
+msgstr ""
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -742,6 +738,9 @@ msgstr "CPU 時間超過限制"
 
 msgid "Calls to fork()"
 msgstr "fork() 呼叫"
+
+msgid "Can not get commandline in non-interactive mode"
+msgstr ""
 
 msgid "Can not set commandline in non-interactive mode"
 msgstr ""

@@ -109,6 +109,10 @@ msgid "%s option requires %s"
 msgstr ""
 
 #, c-format
+msgid "%s requires a non-empty string"
+msgstr ""
+
+#, c-format
 msgid "%s variable"
 msgstr ""
 
@@ -133,10 +137,6 @@ msgid "%s: %s must be a positive integer"
 msgstr ""
 
 #, c-format
-msgid "%s: %s requires a non-empty string"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: %s"
 msgstr ""
 
@@ -146,10 +146,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: %s: cannot use reserved keyword as function name"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: contains a syntax error"
 msgstr ""
 
 #, c-format
@@ -357,10 +353,6 @@ msgid "%s: Invalid style value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid token '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Invalid type '%s'"
 msgstr ""
 
@@ -474,6 +466,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: cannot both path and unpath"
+msgstr ""
+
+#, c-format
+msgid "%s: contains a syntax error"
 msgstr ""
 
 #, c-format
@@ -748,6 +744,9 @@ msgid "CPU time limit exceeded"
 msgstr "Limite de tempo da CPU excedido"
 
 msgid "Calls to fork()"
+msgstr ""
+
+msgid "Can not get commandline in non-interactive mode"
 msgstr ""
 
 msgid "Can not set commandline in non-interactive mode"

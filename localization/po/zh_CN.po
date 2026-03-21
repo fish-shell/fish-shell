@@ -129,6 +129,10 @@ msgid "%s option requires %s"
 msgstr "%s 选项需要 %s"
 
 #, c-format
+msgid "%s requires a non-empty string"
+msgstr "%s 需要一个非空字符串"
+
+#, c-format
 msgid "%s variable"
 msgstr ""
 
@@ -153,10 +157,6 @@ msgid "%s: %s must be a positive integer"
 msgstr "%s: %s 必须是正整数"
 
 #, c-format
-msgid "%s: %s requires a non-empty string"
-msgstr "%s: %s 需要一个非空字符串"
-
-#, c-format
 msgid "%s: %s: %s"
 msgstr ""
 
@@ -167,10 +167,6 @@ msgstr "%s: %s: 无法覆写只读变量"
 #, c-format
 msgid "%s: %s: cannot use reserved keyword as function name"
 msgstr "%s: %s: 无法将保留关键字作为函数名"
-
-#, c-format
-msgid "%s: %s: contains a syntax error"
-msgstr "%s: %s: 包含语法错误"
 
 #, c-format
 msgid "%s: %s: expected %d arguments; got %d"
@@ -377,10 +373,6 @@ msgid "%s: Invalid style value '%s'"
 msgstr "%s: 无效的样式值 '%s'"
 
 #, c-format
-msgid "%s: Invalid token '%s'"
-msgstr "%s: 无效记号 '%s'"
-
-#, c-format
 msgid "%s: Invalid type '%s'"
 msgstr "%s: 无效类型 '%s'"
 
@@ -495,6 +487,10 @@ msgstr "%s: 无法同时导出和取消导出"
 #, c-format
 msgid "%s: cannot both path and unpath"
 msgstr "%s: 无法同时是路径变量和非路径变量"
+
+#, c-format
+msgid "%s: contains a syntax error"
+msgstr "%s: 包含语法错误"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -769,6 +765,9 @@ msgstr "CPU 超时"
 
 msgid "Calls to fork()"
 msgstr "调用 fork()"
+
+msgid "Can not get commandline in non-interactive mode"
+msgstr ""
 
 msgid "Can not set commandline in non-interactive mode"
 msgstr ""

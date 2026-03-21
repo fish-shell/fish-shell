@@ -505,10 +505,6 @@ msgid "%s: Invalid start value '%s'"
 msgstr "%s : Indice de départ « %s » invalide"
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s : État invalide"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr ""
 
@@ -531,14 +527,6 @@ msgstr "%s : Clé non spécifiée"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s : La nouvelle limite ne peut être une chaîne vide"
-
-#, c-format
-msgid "%s: No binding found for key '%s'"
-msgstr "%s : Aucun lien trouvé pour la combinaison %s"
-
-#, c-format
-msgid "%s: No binding found for key sequence '%s'"
-msgstr ""
 
 #, c-format
 msgid "%s: No blocks defined"
@@ -697,6 +685,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s : spécification de conversion invalide"
 
 #, c-format
+msgid "%s: invalid mode name. See `help %s`"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid option argument: %s"
 msgstr ""
 
@@ -758,10 +750,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
-msgstr ""
-
-#, c-format
-msgid "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
 msgstr ""
 
 #, c-format
@@ -1275,6 +1263,9 @@ msgstr "Cible de redirection invalide: %s"
 msgid "Invalid redirection: %s"
 msgstr ""
 
+msgid "Invalid state"
+msgstr ""
+
 #, c-format
 msgid "Invalid token '%s'"
 msgstr ""
@@ -1368,6 +1359,14 @@ msgstr "Pas de TTY pour shell interactif (tcgetpgrp a échoué)"
 
 #, c-format
 msgid "No abbreviation named %s with the specified command restrictions"
+msgstr ""
+
+#, c-format
+msgid "No binding found for key '%s'"
+msgstr ""
+
+#, c-format
+msgid "No binding found for key sequence '%s'"
 msgstr ""
 
 msgid "No catalogs available for language specifiers:"
@@ -2009,6 +2008,9 @@ msgid "switch: Expected at most one argument, got %u"
 msgstr ""
 
 msgid "symlink"
+msgstr ""
+
+msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
 msgstr ""
 
 msgid "too many arguments"

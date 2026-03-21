@@ -397,10 +397,6 @@ msgid "%s: Invalid start value '%s'"
 msgstr "%s: 无效的起始值 '%s'"
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s: 无效状态"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr "%s: 无效的样式值 '%s'"
 
@@ -423,14 +419,6 @@ msgstr "%s: 没有指定键"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新限制不能为空字符串"
-
-#, c-format
-msgid "%s: No binding found for key '%s'"
-msgstr "%s: 未找到键 '%s' 的绑定"
-
-#, c-format
-msgid "%s: No binding found for key sequence '%s'"
-msgstr "%s: 未找到键序列 '%s' 的绑定"
 
 #, c-format
 msgid "%s: No blocks defined"
@@ -589,6 +577,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: 无效的转换规范"
 
 #, c-format
+msgid "%s: invalid mode name. See `help %s`"
+msgstr "%s: 无效模式名。参见 `help %s`"
+
+#, c-format
 msgid "%s: invalid option argument: %s"
 msgstr ""
 
@@ -651,10 +643,6 @@ msgstr "%s: stdin 已关闭"
 #, c-format
 msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
 msgstr "%s: 成功设置通用变量 '%s' ；但是同名全局变量遮蔽它"
-
-#, c-format
-msgid "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
-msgstr "%s：-k/--key 语法不再受支持。参见 `bind --help` 和 `bind --key-names`"
 
 #, c-format
 msgid "%s: there is no line %s"
@@ -1167,6 +1155,9 @@ msgstr "无效的重定向目标：%s"
 msgid "Invalid redirection: %s"
 msgstr "无效的重定向：%s"
 
+msgid "Invalid state"
+msgstr "无效状态"
+
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "无效记号 '%s'"
@@ -1261,6 +1252,14 @@ msgstr "交互 shell 没有 TTY (tcgetpgrp 失败)"
 #, c-format
 msgid "No abbreviation named %s with the specified command restrictions"
 msgstr "没有命名为 %s 且符合指定命令限制的缩写"
+
+#, c-format
+msgid "No binding found for key '%s'"
+msgstr "未找到键 '%s' 的绑定"
+
+#, c-format
+msgid "No binding found for key sequence '%s'"
+msgstr "未找到键序列 '%s' 的绑定"
 
 msgid "No catalogs available for language specifiers:"
 msgstr ""
@@ -1905,6 +1904,9 @@ msgstr "switch: 最多需要一个参数，但收到 %u 个"
 
 msgid "symlink"
 msgstr "符号链接"
+
+msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+msgstr ""
 
 msgid "too many arguments"
 msgstr "参数太多"

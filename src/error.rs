@@ -80,6 +80,10 @@ impl<'a> Error<'a> {
         pub UNKNOWN_OPT
         "%s: unknown option"
 
+        /// Error message for invalid bind mode name.
+        pub BIND_MODE
+        "%s: invalid mode name. See `help %s`"
+
         /// Error message when too many arguments are supplied to a builtin.
         pub TOO_MANY_ARGUMENTS
         "too many arguments"

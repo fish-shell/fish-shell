@@ -376,10 +376,6 @@ msgid "%s: Invalid start value '%s'"
 msgstr "%s: Valor inicial no válido '%s'"
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s: Estado no válido"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr "%s: Valor de estilo no válido '%s'"
 
@@ -402,14 +398,6 @@ msgstr "%s: Clave no especificada"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: El nuevo límite no puede ser un string vacío"
-
-#, c-format
-msgid "%s: No binding found for key '%s'"
-msgstr "%s: No se encontró una asignación para la tecla '%s'"
-
-#, c-format
-msgid "%s: No binding found for key sequence '%s'"
-msgstr "%s: No se encontró una asignación para la secuencia de teclas '%s'"
 
 #, c-format
 msgid "%s: No blocks defined"
@@ -568,6 +556,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: especificación de conversión no válida"
 
 #, c-format
+msgid "%s: invalid mode name. See `help %s`"
+msgstr "%s: nombre de modo no válido. Consulte `help %s`"
+
+#, c-format
 msgid "%s: invalid option argument: %s"
 msgstr ""
 
@@ -630,10 +622,6 @@ msgstr "%s: la entrada estándar (stdin) está cerrada"
 #, c-format
 msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
 msgstr "%s: se configuró correctamente el universal '%s'; pero una variable global con ese nombre lo oculta"
-
-#, c-format
-msgid "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
-msgstr "%s: la sintaxis -k/--key ya no es compatible. Consulta `bind --help` y `bind --key-names`"
 
 #, c-format
 msgid "%s: there is no line %s"
@@ -1146,6 +1134,9 @@ msgstr "Destino de redirección inválido: %s"
 msgid "Invalid redirection: %s"
 msgstr "Redirección inválida: %s"
 
+msgid "Invalid state"
+msgstr "Estado no válido"
+
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "Token inválido '%s'"
@@ -1240,6 +1231,14 @@ msgstr "No hay TTY para el shell interactivo (tcgetpgrp falló)"
 #, c-format
 msgid "No abbreviation named %s with the specified command restrictions"
 msgstr "No hay ninguna abreviatura llamada %s con las restricciones de comandos indicadas"
+
+#, c-format
+msgid "No binding found for key '%s'"
+msgstr "No se encontró una asignación para la tecla '%s'"
+
+#, c-format
+msgid "No binding found for key sequence '%s'"
+msgstr "No se encontró una asignación para la secuencia de teclas '%s'"
 
 msgid "No catalogs available for language specifiers:"
 msgstr "No hay catálogos disponibles para los especificadores de idioma:"
@@ -1884,6 +1883,9 @@ msgstr "switch: Se esperaba como máximo un argumento, se recibió %u"
 
 msgid "symlink"
 msgstr "enlace simbólico"
+
+msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+msgstr "la sintaxis -k/--key ya no es compatible. Consulta `bind --help` y `bind --key-names`"
 
 msgid "too many arguments"
 msgstr "demasiados argumentos"

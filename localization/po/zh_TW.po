@@ -370,10 +370,6 @@ msgid "%s: Invalid start value '%s'"
 msgstr "%s：無效的起點索引值「%s」"
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s：無效的狀態"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr "%s：無效的樣式「%s」"
 
@@ -396,14 +392,6 @@ msgstr "%s：未指定鍵"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s：新的限制不能是空字串"
-
-#, c-format
-msgid "%s: No binding found for key '%s'"
-msgstr "%s：找不到按鍵「%s」的綁定"
-
-#, c-format
-msgid "%s: No binding found for key sequence '%s'"
-msgstr "%s：找不到按鍵序列「%s」的綁定"
 
 #, c-format
 msgid "%s: No blocks defined"
@@ -562,6 +550,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s：轉換規格無效"
 
 #, c-format
+msgid "%s: invalid mode name. See `help %s`"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid option argument: %s"
 msgstr ""
 
@@ -624,10 +616,6 @@ msgstr "%s：stdin 已關閉"
 #, c-format
 msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
 msgstr "%s：成功設定了通域變數「%s」，但有同名的全域變數遮蔽了它"
-
-#, c-format
-msgid "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
-msgstr "%s：-k/--key 語法不再支援。參見「bind --help」和「bind --key-names」"
 
 #, c-format
 msgid "%s: there is no line %s"
@@ -1140,6 +1128,9 @@ msgstr "無效的重新導向目標：%s"
 msgid "Invalid redirection: %s"
 msgstr "無效的重新導向：%s"
 
+msgid "Invalid state"
+msgstr ""
+
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "無效的詞元「%s」"
@@ -1233,6 +1224,14 @@ msgstr "沒有互動式 shell 所需的 TTY（tcgetpgrp 失敗了）"
 
 #, c-format
 msgid "No abbreviation named %s with the specified command restrictions"
+msgstr ""
+
+#, c-format
+msgid "No binding found for key '%s'"
+msgstr ""
+
+#, c-format
+msgid "No binding found for key sequence '%s'"
 msgstr ""
 
 msgid "No catalogs available for language specifiers:"
@@ -1879,6 +1878,9 @@ msgstr "switch：預期至多有一個引數，卻收到 %u 個"
 
 msgid "symlink"
 msgstr "象徵式連結"
+
+msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+msgstr ""
 
 msgid "too many arguments"
 msgstr ""

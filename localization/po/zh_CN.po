@@ -225,24 +225,12 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知选项"
 
 #, c-format
-msgid "%s: '%s' is not a job"
-msgstr "%s: '%s' 不是一个作业"
-
-#, c-format
 msgid "%s: '%s' is not a valid job ID"
 msgstr "%s: '%s' 不是一个有效的作业 ID"
 
 #, c-format
-msgid "%s: Ambiguous job"
-msgstr "%s: 有歧义的作业"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: 参数 '%s' 超出取值范围"
-
-#, c-format
-msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
-msgstr "%s: 不能将作业 %d，'%s' 带到前台，因为它不受作业控制管理"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
@@ -383,10 +371,6 @@ msgstr "%s: 无效的宽度值 '%s'"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新限制不能为空字符串"
-
-#, c-format
-msgid "%s: No suitable job: %d"
-msgstr "%s: 没有合适的作业：%d"
 
 #, c-format
 msgid "%s: No suitable job: %s"
@@ -605,6 +589,10 @@ msgid "'%s' is not a directory"
 msgstr "'%s' 不是一个目录"
 
 #, c-format
+msgid "'%s' is not a job"
+msgstr "'%s' 不是一个作业"
+
+#, c-format
 msgid "'%s' is not a valid process ID"
 msgstr "'%s' 不是一个有效的进程 ID"
 
@@ -721,6 +709,9 @@ msgstr "地址边界错误"
 msgid "Always"
 msgstr "总是"
 
+msgid "Ambiguous job"
+msgstr "有歧义的作业"
+
 msgid "An error occurred while setting up pipe"
 msgstr "设置管道时出错"
 
@@ -769,6 +760,10 @@ msgstr "移除范围时不能指定作用域"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "交互式会话时不能使用 no-execute 模式"
+
+#, c-format
+msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgstr "不能将作业 %d，'%s' 带到前台，因为它不受作业控制管理"
 
 #, c-format
 msgid "Can't put job %s, '%s' to background because it is not under job control"
@@ -1228,6 +1223,10 @@ msgstr ""
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr "未找到通配符 '%s' 的匹配项。参见 `help %s`。"
+
+#, c-format
+msgid "No suitable job: %d"
+msgstr "没有合适的作业：%d"
 
 msgid "Not a function"
 msgstr "不是一个函数"

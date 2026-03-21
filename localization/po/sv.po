@@ -201,24 +201,12 @@ msgid "%s: %s: unknown option"
 msgstr ""
 
 #, c-format
-msgid "%s: '%s' is not a job"
-msgstr "%s: '%s' är inte ett jobb"
-
-#, c-format
 msgid "%s: '%s' is not a valid job ID"
 msgstr ""
 
 #, c-format
-msgid "%s: Ambiguous job"
-msgstr "%s: Mer än ett jobb matchar"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr ""
-
-#, c-format
-msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
-msgstr "%s: Kan inte skicka jobb %d, '%s' till förgrunden eftersom det inte använder jobbkontroll"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
@@ -359,10 +347,6 @@ msgstr ""
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr ""
-
-#, c-format
-msgid "%s: No suitable job: %d"
-msgstr "%s: Inget passande jobb: %d"
 
 #, c-format
 msgid "%s: No suitable job: %s"
@@ -581,6 +565,10 @@ msgid "'%s' is not a directory"
 msgstr "'%s' är inte en katalog"
 
 #, c-format
+msgid "'%s' is not a job"
+msgstr "'%s' är inte ett jobb"
+
+#, c-format
 msgid "'%s' is not a valid process ID"
 msgstr ""
 
@@ -697,6 +685,9 @@ msgstr "Minnesadress korsar segmentgräns"
 msgid "Always"
 msgstr "Alltid"
 
+msgid "Ambiguous job"
+msgstr "Mer än ett jobb matchar"
+
 msgid "An error occurred while setting up pipe"
 msgstr "Ett fel inträffade under skapandet av ett rör"
 
@@ -745,6 +736,10 @@ msgstr "Kan inte ange definitionsområde vid blockradering"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "no-execute läget kan inte användas i en interaktiv session"
+
+#, c-format
+msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgstr "Kan inte skicka jobb %d, '%s' till förgrunden eftersom det inte använder jobbkontroll"
 
 #, c-format
 msgid "Can't put job %s, '%s' to background because it is not under job control"
@@ -1204,6 +1199,10 @@ msgstr ""
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr ""
+
+#, c-format
+msgid "No suitable job: %d"
+msgstr "Inget passande jobb: %d"
 
 msgid "Not a function"
 msgstr ""

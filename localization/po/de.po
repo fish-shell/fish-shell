@@ -204,24 +204,12 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: unbekannte Option"
 
 #, c-format
-msgid "%s: '%s' is not a job"
-msgstr "%s: '%s' ist kein Job"
-
-#, c-format
 msgid "%s: '%s' is not a valid job ID"
 msgstr ""
 
 #, c-format
-msgid "%s: Ambiguous job"
-msgstr "%s: Mehrdeutiger Job"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: Argument '%s' ist außerhalb des Definitionsbereichs"
-
-#, c-format
-msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
-msgstr "%s: Kann job %d, '%s' nicht in den Vordergrund schicken weil er nicht der Jobsteuerung unterliegt"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
@@ -362,10 +350,6 @@ msgstr ""
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: Neues Limit darf keine leere Zeichenkette sein"
-
-#, c-format
-msgid "%s: No suitable job: %d"
-msgstr "%s: Kein passender Job: %d"
 
 #, c-format
 msgid "%s: No suitable job: %s"
@@ -584,6 +568,10 @@ msgid "'%s' is not a directory"
 msgstr "'%s' ist kein Verzeichnis"
 
 #, c-format
+msgid "'%s' is not a job"
+msgstr "'%s' ist kein Job"
+
+#, c-format
 msgid "'%s' is not a valid process ID"
 msgstr ""
 
@@ -700,6 +688,9 @@ msgstr "Adressbereichsfehler"
 msgid "Always"
 msgstr "Immer"
 
+msgid "Ambiguous job"
+msgstr "Mehrdeutiger Job"
+
 msgid "An error occurred while setting up pipe"
 msgstr "Fehler beim Einrichten der Pipe aufgetreten"
 
@@ -748,6 +739,10 @@ msgstr "Bei Blocklöschung kann kein Geltungsbereich angegeben werden"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Kann den no-execute Modus nicht in einer interaktiven Sitzung nutzen"
+
+#, c-format
+msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgstr "Kann job %d, '%s' nicht in den Vordergrund schicken weil er nicht der Jobsteuerung unterliegt"
 
 #, c-format
 msgid "Can't put job %s, '%s' to background because it is not under job control"
@@ -1207,6 +1202,10 @@ msgstr ""
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr ""
+
+#, c-format
+msgid "No suitable job: %d"
+msgstr "Kein passender Job: %d"
 
 msgid "Not a function"
 msgstr "Keine Funktion"

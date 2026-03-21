@@ -198,24 +198,12 @@ msgid "%s: %s: unknown option"
 msgstr "%s：%s：未知的選項"
 
 #, c-format
-msgid "%s: '%s' is not a job"
-msgstr "%s：「%s」不是作業"
-
-#, c-format
 msgid "%s: '%s' is not a valid job ID"
 msgstr "%s：「%s」不是有效的作業 ID"
 
 #, c-format
-msgid "%s: Ambiguous job"
-msgstr "%s：無法確定所指的作業"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s：引數「%s」超出範圍"
-
-#, c-format
-msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
-msgstr "%s：不能將作業 %d「%s」置於前景，其並不受作業控制管理"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
@@ -356,10 +344,6 @@ msgstr "%s：無效的寬度「%s」"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s：新的限制不能是空字串"
-
-#, c-format
-msgid "%s: No suitable job: %d"
-msgstr "%s：沒有合式的作業：%d"
 
 #, c-format
 msgid "%s: No suitable job: %s"
@@ -578,6 +562,10 @@ msgid "'%s' is not a directory"
 msgstr ""
 
 #, c-format
+msgid "'%s' is not a job"
+msgstr ""
+
+#, c-format
 msgid "'%s' is not a valid process ID"
 msgstr ""
 
@@ -694,6 +682,9 @@ msgstr "位址邊界錯誤"
 msgid "Always"
 msgstr "總是"
 
+msgid "Ambiguous job"
+msgstr ""
+
 msgid "An error occurred while setting up pipe"
 msgstr "設置管道時發生錯誤"
 
@@ -742,6 +733,10 @@ msgstr ""
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "互動時不能使用不執行模式"
+
+#, c-format
+msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgstr ""
 
 #, c-format
 msgid "Can't put job %s, '%s' to background because it is not under job control"
@@ -1201,6 +1196,10 @@ msgstr "語言指定子查無對應條目："
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr "wildcard「%s」無匹配項目。參見「help %s」。"
+
+#, c-format
+msgid "No suitable job: %d"
+msgstr ""
 
 msgid "Not a function"
 msgstr "不是函式"

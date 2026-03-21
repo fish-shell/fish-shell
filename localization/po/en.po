@@ -204,24 +204,12 @@ msgid "%s: %s: unknown option"
 msgstr ""
 
 #, c-format
-msgid "%s: '%s' is not a job"
-msgstr "%s: “%s” is not a job"
-
-#, c-format
 msgid "%s: '%s' is not a valid job ID"
 msgstr ""
 
 #, c-format
-msgid "%s: Ambiguous job"
-msgstr "%s: Ambiguous job"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: Argument “%s” is out of range"
-
-#, c-format
-msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
-msgstr "%s: Can't put job %d, “%s” to foreground because it is not under job control"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
@@ -362,10 +350,6 @@ msgstr ""
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr ""
-
-#, c-format
-msgid "%s: No suitable job: %d"
-msgstr "%s: No suitable job: %d"
 
 #, c-format
 msgid "%s: No suitable job: %s"
@@ -584,6 +568,10 @@ msgid "'%s' is not a directory"
 msgstr "“%s” is not a directory"
 
 #, c-format
+msgid "'%s' is not a job"
+msgstr "“%s” is not a job"
+
+#, c-format
 msgid "'%s' is not a valid process ID"
 msgstr ""
 
@@ -700,6 +688,9 @@ msgstr "Address boundary error"
 msgid "Always"
 msgstr "Always"
 
+msgid "Ambiguous job"
+msgstr "Ambiguous job"
+
 msgid "An error occurred while setting up pipe"
 msgstr "An error occurred while setting up pipe"
 
@@ -748,6 +739,10 @@ msgstr "Can not specify scope when removing block"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Can not use the no-execute mode when running an interactive session"
+
+#, c-format
+msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgstr "Can't put job %d, “%s” to foreground because it is not under job control"
 
 #, c-format
 msgid "Can't put job %s, '%s' to background because it is not under job control"
@@ -1207,6 +1202,10 @@ msgstr ""
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr ""
+
+#, c-format
+msgid "No suitable job: %d"
+msgstr "No suitable job: %d"
 
 msgid "Not a function"
 msgstr ""

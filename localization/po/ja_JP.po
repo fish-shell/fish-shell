@@ -203,24 +203,12 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知のオプションです"
 
 #, c-format
-msgid "%s: '%s' is not a job"
-msgstr "%s: '%s' はジョブではありません"
-
-#, c-format
 msgid "%s: '%s' is not a valid job ID"
 msgstr "%s: '%s' は有効なジョブIDではありません"
 
 #, c-format
-msgid "%s: Ambiguous job"
-msgstr "%s: ジョブを特定できません"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: 引数 '%s' は範囲外です"
-
-#, c-format
-msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
-msgstr "%s: ジョブ %d ('%s') はジョブ制御下にないため、フォアグラウンドに移行できません"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
@@ -361,10 +349,6 @@ msgstr "%s: 幅の値 '%s' が無効です"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新しい制限値を空文字列にすることはできません"
-
-#, c-format
-msgid "%s: No suitable job: %d"
-msgstr "%s: 適切なジョブがありません: %d"
 
 #, c-format
 msgid "%s: No suitable job: %s"
@@ -583,6 +567,10 @@ msgid "'%s' is not a directory"
 msgstr "'%s' はディレクトリではありません"
 
 #, c-format
+msgid "'%s' is not a job"
+msgstr "'%s' はジョブではありません"
+
+#, c-format
 msgid "'%s' is not a valid process ID"
 msgstr "'%s' は有効なプロセスIDではありません"
 
@@ -699,6 +687,9 @@ msgstr "アドレス境界エラー(セグメンテーション違反)"
 msgid "Always"
 msgstr "常に(Always)"
 
+msgid "Ambiguous job"
+msgstr "ジョブを特定できません"
+
 msgid "An error occurred while setting up pipe"
 msgstr "パイプの設定中にエラーが発生しました"
 
@@ -747,6 +738,10 @@ msgstr "ブロックを削除する際にスコープを指定することはで
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "対話セッションの実行中に実行禁止(no-execute)モードを使用することはできません"
+
+#, c-format
+msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgstr "ジョブ %d ('%s') はジョブ制御下にないため、フォアグラウンドに移行できません"
 
 #, c-format
 msgid "Can't put job %s, '%s' to background because it is not under job control"
@@ -1206,6 +1201,10 @@ msgstr "以下の言語指定子に対応するカタログがありません:"
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr "ワイルドカード '%s' に一致するものがありません。 `help %s` を参照してください"
+
+#, c-format
+msgid "No suitable job: %d"
+msgstr "適切なジョブがありません: %d"
 
 msgid "Not a function"
 msgstr "関数ではありません"

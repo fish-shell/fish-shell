@@ -333,24 +333,12 @@ msgid "%s: %s: unknown option"
 msgstr "%s : %s : option inconnue"
 
 #, c-format
-msgid "%s: '%s' is not a job"
-msgstr "%s : « %s » n’est pas une tâche"
-
-#, c-format
 msgid "%s: '%s' is not a valid job ID"
 msgstr "%s : « %s » n’est pas un ID de tâche valide"
 
 #, c-format
-msgid "%s: Ambiguous job"
-msgstr "%s : Tâche ambiguë"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s : L’argument « %s » est hors limites"
-
-#, c-format
-msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
-msgstr "%s : Impossible de mettre la tâche %d, « %s » au premier plan, car elle n’est pas gérée par le contrôleur de tâches"
 
 #, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
@@ -491,10 +479,6 @@ msgstr ""
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s : La nouvelle limite ne peut être une chaîne vide"
-
-#, c-format
-msgid "%s: No suitable job: %d"
-msgstr "%s : Aucune tâche appropriée : %d"
 
 #, c-format
 msgid "%s: No suitable job: %s"
@@ -713,6 +697,10 @@ msgid "'%s' is not a directory"
 msgstr ""
 
 #, c-format
+msgid "'%s' is not a job"
+msgstr ""
+
+#, c-format
 msgid "'%s' is not a valid process ID"
 msgstr ""
 
@@ -829,6 +817,9 @@ msgstr "Erreur de frontière d’adresse"
 msgid "Always"
 msgstr "Toujours"
 
+msgid "Ambiguous job"
+msgstr ""
+
 msgid "An error occurred while setting up pipe"
 msgstr "Une erreur est survenue lors du paramétrage du tube"
 
@@ -877,6 +868,10 @@ msgstr ""
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Le mode no-execute ne peut pas être utilisé dans une session interactive"
+
+#, c-format
+msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgstr ""
 
 #, c-format
 msgid "Can't put job %s, '%s' to background because it is not under job control"
@@ -1335,6 +1330,10 @@ msgstr ""
 
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
+msgstr ""
+
+#, c-format
+msgid "No suitable job: %d"
 msgstr ""
 
 msgid "Not a function"

@@ -1797,6 +1797,9 @@ msgstr ""
 msgid "expected >= %d arguments; got %d"
 msgstr ""
 
+msgid "expected event name"
+msgstr ""
+
 msgid "explore what characters keyboard keys send"
 msgstr ""
 

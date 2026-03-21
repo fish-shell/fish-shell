@@ -1847,6 +1847,10 @@ msgid "invalid field width: %s"
 msgstr "ancho de campo inválido: %s"
 
 #, c-format
+msgid "invalid option combination, %s"
+msgstr "combinación de opciones no válida, %s"
+
+#, c-format
 msgid "invalid precision: %s"
 msgstr "precisión inválida: %s"
 

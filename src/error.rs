@@ -97,6 +97,9 @@ impl<'a> Error<'a> {
         pub MAX_ARG_COUNT1
         "expected <= %d arguments; got %d"
 
+        pub COMBO2
+        "invalid option combination, %s"
+
         pub COMBO2_EXCLUSIVE
         "%s %s: options cannot be used together"
 

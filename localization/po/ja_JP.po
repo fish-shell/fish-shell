@@ -1846,6 +1846,10 @@ msgid "invalid field width: %s"
 msgstr "無効なフィールド幅: %s"
 
 #, c-format
+msgid "invalid option combination, %s"
+msgstr "無効なオプションの組み合わせです: %s"
+
+#, c-format
 msgid "invalid precision: %s"
 msgstr "無効な精度: %s"
 

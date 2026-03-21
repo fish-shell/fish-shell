@@ -1842,6 +1842,10 @@ msgid "invalid field width: %s"
 msgstr "無效的欄位寬度：%s"
 
 #, c-format
+msgid "invalid option combination, %s"
+msgstr ""
+
+#, c-format
 msgid "invalid precision: %s"
 msgstr "無效的精度：%s"
 

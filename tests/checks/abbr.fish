@@ -51,7 +51,7 @@ abbr -e -- --__abbr3
 # Test that an abbr word containing spaces is rejected
 abbr "a b c" "d e f"
 abbr | grep 'a b c'
-# CHECKERR: abbr --add: Abbreviation 'a b c' cannot have spaces in the word
+# CHECKERR: abbr: --add: Abbreviation 'a b c' cannot have spaces in the word
 
 # Test renaming
 abbr __abbr4 omega
@@ -64,23 +64,23 @@ abbr | grep __abbr4
 
 # Test renaming a nonexistent abbreviation
 abbr --rename __abbr6 __abbr
-# CHECKERR: abbr --rename: No abbreviation named __abbr6 with the specified command restrictions
+# CHECKERR: abbr: --rename: No abbreviation named __abbr6 with the specified command restrictions
 
 # Test renaming to a abbreviation with spaces
 abbr __abbr4 omega
 abbr --rename __abbr4 "g h i"
-# CHECKERR: abbr --rename: Abbreviation 'g h i' cannot have spaces in the word
+# CHECKERR: abbr: --rename: Abbreviation 'g h i' cannot have spaces in the word
 abbr -e __abbr4
 
 # Test renaming without arguments
 abbr __abbr7 omega
 abbr --rename __abbr7
-# CHECKERR: abbr --rename: Requires exactly two arguments
+# CHECKERR: abbr: --rename: Requires exactly two arguments
 
 # Test renaming with too many arguments
 abbr __abbr8 omega
 abbr --rename __abbr8 __abbr9 __abbr10
-# CHECKERR: abbr --rename: Requires exactly two arguments
+# CHECKERR: abbr: --rename: Requires exactly two arguments
 abbr | grep __abbr8
 abbr | grep __abbr9
 abbr | grep __abbr10
@@ -90,7 +90,7 @@ abbr | grep __abbr10
 abbr __abbr11 omega11
 abbr __abbr12 omega12
 abbr --rename __abbr11 __abbr12
-# CHECKERR: abbr --rename: Abbreviation __abbr12 already exists, cannot rename __abbr11
+# CHECKERR: abbr: --rename: Abbreviation __abbr12 already exists, cannot rename __abbr11
 
 abbr __abbr-with-dashes omega
 complete -C__abbr-with
@@ -196,7 +196,7 @@ abbr --add bogus --position anywhere --position command stuff
 # CHECKERR: abbr: Cannot specify multiple positions
 
 abbr --add --regex foo --function foo
-# CHECKERR: abbr --add: Name cannot be empty
+# CHECKERR: abbr: --add: Name cannot be empty
 echo foo
 # CHECK: foo
 

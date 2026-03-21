@@ -294,9 +294,11 @@ impl Options {
         }
 
         if args.len() == optind && opts.erase {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, L!("--erase")));
+            streams.err.appendln(&wgettext_fmt!(
+                BUILTIN_ERR_MISSING_OPT_ARG,
+                cmd,
+                L!("--erase")
+            ));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }

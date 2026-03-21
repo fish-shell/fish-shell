@@ -28,7 +28,7 @@ macro_rules! path_error {
 }
 
 fn path_unknown_option(parser: &Parser, streams: &mut IoStreams, subcmd: &wstr, opt: &wstr) {
-    path_error!(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
+    path_error!(streams, BUILTIN_ERR_UNKNOWN_OPT, subcmd, opt);
     builtin_print_error_trailer(parser, streams.err, L!("path"));
 }
 

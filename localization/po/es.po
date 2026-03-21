@@ -64,36 +64,8 @@ msgid "%s %s: %s: invalid subcommand"
 msgstr "%s %s: %s: subcomando no válido"
 
 #, c-format
-msgid "%s %s: Abbreviation %s already exists for commands %s, cannot rename %s"
-msgstr "%s %s: La abreviatura %s ya existe para los comandos %s, no se puede cambiar el nombre de %s"
-
-#, c-format
-msgid "%s %s: Abbreviation %s already exists, cannot rename %s"
-msgstr "%s %s: La abreviatura %s ya existe, no se puede renombrar %s"
-
-#, c-format
-msgid "%s %s: Abbreviation '%s' cannot have spaces in the word"
-msgstr "%s %s: La abreviatura '%s' no puede contener espacios en la palabra"
-
-#, c-format
-msgid "%s %s: Name cannot be empty"
-msgstr "%s %s: El nombre no puede estar vacío"
-
-#, c-format
-msgid "%s %s: No abbreviation named %s with the specified command restrictions"
-msgstr "%s %s: No hay ninguna abreviatura llamada %s con las restricciones de comandos indicadas"
-
-#, c-format
-msgid "%s %s: Requires at least two arguments"
-msgstr "%s %s: Requiere al menos dos argumentos"
-
-#, c-format
-msgid "%s %s: Requires exactly two arguments"
-msgstr "%s %s: Requiere exactamente dos argumentos"
-
-#, c-format
-msgid "%s %s: Unexpected argument -- '%s'"
-msgstr "%s %s: Argumento inesperado -- '%s'"
+msgid "%s %s: options cannot be used together"
+msgstr ""
 
 #, c-format
 msgid "%s %s: unrecognized feature '%s'"
@@ -132,6 +104,14 @@ msgid "%s is a function"
 msgstr "%s es una función"
 
 #, c-format
+msgid "%s option requires %s"
+msgstr "la opción %s requiere %s"
+
+#, c-format
+msgid "%s requires a non-empty string"
+msgstr "%s requiere una cadena no vacía"
+
+#, c-format
 msgid "%s variable"
 msgstr "variable %s"
 
@@ -156,12 +136,8 @@ msgid "%s: %s must be a positive integer"
 msgstr "%s: %s debe ser un entero positivo"
 
 #, c-format
-msgid "%s: %s option requires %s"
-msgstr "%s: la opción %s requiere %s"
-
-#, c-format
-msgid "%s: %s requires a non-empty string"
-msgstr "%s: %s requiere una cadena no vacía"
+msgid "%s: %s: %s"
+msgstr ""
 
 #, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
@@ -170,10 +146,6 @@ msgstr "%s: %s: no se puede sobrescribir la variable de solo lectura"
 #, c-format
 msgid "%s: %s: cannot use reserved keyword as function name"
 msgstr "%s: %s: no se puede usar una palabra clave reservada como nombre de función"
-
-#, c-format
-msgid "%s: %s: contains a syntax error"
-msgstr "%s: %s: contiene un error de sintaxis"
 
 #, c-format
 msgid "%s: %s: expected %d arguments; got %d"
@@ -200,10 +172,6 @@ msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: nombre de modo no válido. Consulte `help %s`"
 
 #, c-format
-msgid "%s: %s: invalid option argument: %s"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: invalid scale"
 msgstr "%s: %s: escala no válida"
 
@@ -214,10 +182,6 @@ msgstr "%s: %s: subcomando no válido"
 #, c-format
 msgid "%s: %s: invalid variable name. See `help %s`"
 msgstr "%s: %s: nombre de variable no válido. Consulte `help %s`"
-
-#, c-format
-msgid "%s: %s: option cannot be used with a non-option argument"
-msgstr ""
 
 #, c-format
 msgid "%s: %s: option does not take an argument"
@@ -240,80 +204,16 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: opción desconocida"
 
 #, c-format
-msgid "%s: '%s' is a broken symbolic link to '%s'"
-msgstr "%s: '%s' es un enlace simbólico roto a '%s'"
-
-#, c-format
-msgid "%s: '%s' is not a directory"
-msgstr "%s: '%s' no es un directorio"
-
-#, c-format
-msgid "%s: '%s' is not a job"
-msgstr "%s: '%s' no es una tarea"
-
-#, c-format
 msgid "%s: '%s' is not a valid job ID"
 msgstr "%s: '%s' no es un ID de tarea válido"
-
-#, c-format
-msgid "%s: '%s' is not a valid process ID"
-msgstr "%s: '%s' no es un ID de proceso válido"
-
-#, c-format
-msgid "%s: --command cannot be combined with --position=command"
-msgstr "%s: --command no puede combinarse con --position=command"
-
-#, c-format
-msgid "%s: --set-cursor argument cannot be empty"
-msgstr "%s: el argumento --set-cursor no puede estar vacío"
-
-#, c-format
-msgid "%s: Ambiguous job"
-msgstr "%s: Tarea ambigua"
-
-#, c-format
-msgid "%s: An option spec must have at least a short or a long flag"
-msgstr "%s: Una especificación de opción debe tener al menos un flag corto o largo"
 
 #, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: El argumento '%s' está fuera de rango"
 
 #, c-format
-msgid "%s: Can not specify scope when removing block"
-msgstr "%s: No se puede especificar el ámbito al eliminar el bloque"
-
-#, c-format
-msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
-msgstr "%s: No se puede enviar la tarea %d, '%s' a primer plano porque no está bajo control de tareas"
-
-#, c-format
-msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
-msgstr "%s: No se puede enviar la tarea %s, '%s' a segundo plano porque no está bajo control de tareas"
-
-#, c-format
-msgid "%s: Cannot combine options %s"
-msgstr "%s: No se pueden combinar las opciones %s"
-
-#, c-format
-msgid "%s: Cannot specify multiple positions"
-msgstr "%s: No se pueden especificar múltiples posiciones"
-
-#, c-format
-msgid "%s: Cannot specify multiple regex patterns"
-msgstr "%s: No se pueden especificar múltiples patrones de regex"
-
-#, c-format
-msgid "%s: Cannot specify multiple set-cursor options"
-msgstr "%s: No se pueden especificar múltiples opciones de set-cursor"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr "%s: No se puede usar --append o --prepend al asignar a una porción (*slice*)"
-
-#, c-format
-msgid "%s: Command not valid at an interactive prompt"
-msgstr "%s: comando no válido en un prompt interactivo"
 
 #, c-format
 msgid "%s: Could not find '%s'"
@@ -328,20 +228,12 @@ msgid "%s: Could not find child processes with the name '%s'"
 msgstr "%s: No se pudieron encontrar procesos hijos con el nombre '%s'"
 
 #, c-format
-msgid "%s: Could not find home directory"
-msgstr "%s: No se pudo encontrar el directorio personal"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: No se pudo encontrar la tarea '%d'"
 
 #, c-format
 msgid "%s: Did you mean `set %s %s`?"
 msgstr "%s: ¿Quiso decir `set %s %s`?"
-
-#, c-format
-msgid "%s: Empty directory '%s' does not exist"
-msgstr "%s: El directorio vacío '%s' no existe"
 
 #, c-format
 msgid "%s: Error encountered while sourcing file '%s':"
@@ -380,26 +272,6 @@ msgid "%s: Illegal function name '%s'"
 msgstr "%s: Nombre de función no permitido '%s'"
 
 #, c-format
-msgid "%s: Implicit int flag '%c' already defined"
-msgstr "%s: La opción entera implícita '%c' ya está definida"
-
-#, c-format
-msgid "%s: Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr "%s: La opción corta entera implícita '%c' no permite modificadores como '%c'"
-
-#, c-format
-msgid "%s: Invalid --max-args value '%s'"
-msgstr "%s: Valor no válido para --max-args '%s'"
-
-#, c-format
-msgid "%s: Invalid --min-args value '%s'"
-msgstr "%s: Valor no válido para --min-args '%s'"
-
-#, c-format
-msgid "%s: Invalid --unknown-arguments value '%s'"
-msgstr "%s: Valor no válido para --unknown-arguments '%s'"
-
-#, c-format
 msgid "%s: Invalid count value '%s'"
 msgstr "%s: Valor de recuento no válido '%s'"
 
@@ -414,10 +286,6 @@ msgstr "%s: Estilo de escape no válido '%s'"
 #, c-format
 msgid "%s: Invalid fields value '%s'"
 msgstr "%s: Valor no válido para los campos '%s'"
-
-#, c-format
-msgid "%s: Invalid function name: %s"
-msgstr "%s: Nombre de función no válido %s"
 
 #, c-format
 msgid "%s: Invalid index starting at '%s'"
@@ -448,20 +316,12 @@ msgid "%s: Invalid max value '%s'"
 msgstr "%s: Valor máximo no válido '%s'"
 
 #, c-format
-msgid "%s: Invalid option spec '%s' at char '%c'"
-msgstr "%s: Especificación de opción no válida '%s' en el carácter '%c'"
-
-#, c-format
 msgid "%s: Invalid padding character of width zero '%s'"
 msgstr "%s: Carácter de relleno no válido de ancho cero '%s'"
 
 #, c-format
 msgid "%s: Invalid permission '%s'"
 msgstr "%s: Permiso no válido '%s'"
-
-#, c-format
-msgid "%s: Invalid position '%s'"
-msgstr "%s: Posición no válida '%s'"
 
 #, c-format
 msgid "%s: Invalid range value for field '%s'"
@@ -476,60 +336,20 @@ msgid "%s: Invalid start value '%s'"
 msgstr "%s: Valor inicial no válido '%s'"
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s: Estado no válido"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr "%s: Valor de estilo no válido '%s'"
-
-#, c-format
-msgid "%s: Invalid token '%s'"
-msgstr "%s: Token no válido '%s'"
 
 #, c-format
 msgid "%s: Invalid type '%s'"
 msgstr "%s: Tipo no válido '%s'"
 
 #, c-format
-msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
-msgstr "%s: valor inválido para la opción '--color': '%s'. Se esperaba 'always', 'never' o 'auto'"
-
-#, c-format
 msgid "%s: Invalid width value '%s'"
 msgstr "%s: Valor de ancho no válido '%s'"
 
 #, c-format
-msgid "%s: Key not specified"
-msgstr "%s: Clave no especificada"
-
-#, c-format
-msgid "%s: Long flag '%s' already defined"
-msgstr "%s: La opción larga '%s' ya está definida"
-
-#, c-format
-msgid "%s: Missing -- separator"
-msgstr "%s: Falta el separador --"
-
-#, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: El nuevo límite no puede ser un string vacío"
-
-#, c-format
-msgid "%s: No binding found for key '%s'"
-msgstr "%s: No se encontró una asignación para la tecla '%s'"
-
-#, c-format
-msgid "%s: No binding found for key sequence '%s'"
-msgstr "%s: No se encontró una asignación para la secuencia de teclas '%s'"
-
-#, c-format
-msgid "%s: No blocks defined"
-msgstr "%s: No hay bloques definidos"
-
-#, c-format
-msgid "%s: No suitable job: %d"
-msgstr "%s: No hay un trabajo adecuado: %d"
 
 #, c-format
 msgid "%s: No suitable job: %s"
@@ -556,10 +376,6 @@ msgid "%s: Padding should be a character '%s'"
 msgstr "%s: El padding debe ser un carácter '%s'"
 
 #, c-format
-msgid "%s: Permission denied: '%s'"
-msgstr "%s: Permiso denegado: '%s'"
-
-#, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: Error al compilar la expresión regular: %s"
 
@@ -570,18 +386,6 @@ msgstr "%s: Error al sustituir en la expresión regular: %s"
 #, c-format
 msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: El límite de recursos no está disponible en este sistema operativo"
-
-#, c-format
-msgid "%s: Short flag '%c' already defined"
-msgstr "%s: La opción corta '%c' ya está definida"
-
-#, c-format
-msgid "%s: Short flag '%c' invalid, must be alphanum or '#'"
-msgstr "%s: La opción corta '%c' no es válida, debe ser alfanumérica o '#'"
-
-#, c-format
-msgid "%s: The directory '%s' does not exist"
-msgstr "%s: El directorio '%s' no existe"
 
 #, c-format
 msgid "%s: The variable '%s' does not exist"
@@ -596,14 +400,6 @@ msgid "%s: There are no suitable jobs"
 msgstr "%s: No hay trabajos adecuados"
 
 #, c-format
-msgid "%s: Too many levels of symbolic links: '%s'"
-msgstr "%s: Demasiados niveles de enlaces simbólicos: '%s'"
-
-#, c-format
-msgid "%s: Too many long-only options"
-msgstr "%s: Hay demasiadas opciones solo en formato largo"
-
-#, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
 msgstr "%s: Se intentó cambiar la variable de solo lectura '%s'"
 
@@ -616,24 +412,8 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s: Se intentó modificar la variable especial '%s' con un ámbito incorrecto"
 
 #, c-format
-msgid "%s: Unknown color '%s'"
-msgstr "%s: Color desconocido '%s'"
-
-#, c-format
-msgid "%s: Unknown error trying to locate directory '%s'"
-msgstr "%s: Error desconocido al intentar localizar el directorio '%s'"
-
-#, c-format
-msgid "%s: Unknown input function '%s'"
-msgstr "%s: Función de entrada desconocida '%s'"
-
-#, c-format
 msgid "%s: Unknown signal '%s'"
 msgstr "%s: Señal desconocida '%s'"
-
-#, c-format
-msgid "%s: Warning: Option '%s' was removed and is now ignored"
-msgstr "%s: Advertencia: La opción '%s' fue eliminada y ahora se ignora"
 
 #, c-format
 msgid "%s: `set --show` does not allow slices with the var names"
@@ -668,16 +448,8 @@ msgid "%s: cannot both path and unpath"
 msgstr "%s: no se puede establecer y desestablecer la ruta a la vez"
 
 #, c-format
-msgid "%s: column %s exceeds line length"
-msgstr "%s: la columna %s excede la longitud de la línea"
-
-#, c-format
-msgid "%s: exclusive flag '%s' is not valid"
-msgstr "%s: la opción exclusiva '%s' no es válida"
-
-#, c-format
-msgid "%s: exclusive flag string '%s' is not valid"
-msgstr "%s: el string de opciones exclusivas '%s' no es válido"
+msgid "%s: contains a syntax error"
+msgstr "%s: contiene un error de sintaxis"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -708,24 +480,24 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: especificación de conversión no válida"
 
 #, c-format
+msgid "%s: invalid integer"
+msgstr "%s: entero no válido"
+
+#, c-format
+msgid "%s: invalid mode name. See `help %s`"
+msgstr "%s: nombre de modo no válido. Consulte `help %s`"
+
+#, c-format
+msgid "%s: invalid option argument: %s"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid option combination"
 msgstr "%s: combinación de opciones no válida"
 
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s: combinación de opciones no válida, %s"
-
-#, c-format
-msgid "%s: invalid underline style: %s"
-msgstr "%s: estilo de subrayado no válido: %s"
-
-#, c-format
-msgid "%s: job %d ('%s') was stopped and has been signalled to continue."
-msgstr "%s: el trabajo %d ('%s') fue detenido y se le ha enviado una señal para continuar."
-
-#, c-format
-msgid "%s: line/column index starts at 1"
-msgstr "%s: el índice de línea/columna comienza en 1"
 
 #, c-format
 msgid "%s: missing argument"
@@ -744,12 +516,20 @@ msgid "%s: nothing to choose from"
 msgstr "%s: no hay nada para elegir"
 
 #, c-format
-msgid "%s: scope can be only one of: universal function global local"
-msgstr "%s: el alcance solo puede ser uno de: universal, function, global, local"
+msgid "%s: option cannot be used with a non-option argument"
+msgstr ""
 
 #, c-format
-msgid "%s: setting cursor while evaluating 'complete --arguments' is not yet supported"
-msgstr "%s: cambiar la posición del cursor durante la evaluación de 'complete --arguments' todavía no está soportado"
+msgid "%s: option does not take an argument"
+msgstr "%s: la opción no acepta un argumento"
+
+#, c-format
+msgid "%s: option requires an argument"
+msgstr "%s: la opción requiere un argumento"
+
+#, c-format
+msgid "%s: scope can be only one of: universal function global local"
+msgstr "%s: el alcance solo puede ser uno de: universal, function, global, local"
 
 #, c-format
 msgid "%s: stdin is closed"
@@ -760,16 +540,12 @@ msgid "%s: successfully set universal '%s'; but a global by that name shadows it
 msgstr "%s: se configuró correctamente el universal '%s'; pero una variable global con ese nombre lo oculta"
 
 #, c-format
-msgid "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
-msgstr "%s: la sintaxis -k/--key ya no es compatible. Consulta `bind --help` y `bind --key-names`"
-
-#, c-format
-msgid "%s: there is no line %s"
-msgstr "%s: no existe la línea %s"
-
-#, c-format
 msgid "%s: too many arguments"
 msgstr "%s: demasiados argumentos"
+
+#, c-format
+msgid "%s: unknown option"
+msgstr "%s: opción desconocida"
 
 #, c-format
 msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
@@ -782,6 +558,22 @@ msgstr "%s: el valor no se convirtió completamente (no es posible convertir '%s
 #, c-format
 msgid "%s: variable '%s' is read-only"
 msgstr "%s: la variable '%s' es de solo lectura"
+
+#, c-format
+msgid "'%s' is a broken symbolic link to '%s'"
+msgstr "'%s' es un enlace simbólico roto a '%s'"
+
+#, c-format
+msgid "'%s' is not a directory"
+msgstr "'%s' no es un directorio"
+
+#, c-format
+msgid "'%s' is not a job"
+msgstr "'%s' no es una tarea"
+
+#, c-format
+msgid "'%s' is not a valid process ID"
+msgstr "'%s' no es un ID de proceso válido"
 
 msgid "'break' while not inside of loop"
 msgstr "'break' usado fuera de un bucle"
@@ -834,6 +626,9 @@ msgstr ", copiado mediante `source`"
 msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty solo es válido con --fields"
 
+msgid "--command cannot be combined with --position=command"
+msgstr "--command no puede combinarse con --position=command"
+
 msgid "--end and --length are mutually exclusive"
 msgstr "--end y --length son mutuamente excluyentes"
 
@@ -849,11 +644,26 @@ msgstr "--invert y --groups-only son mutuamente excluyentes"
 msgid "--query and --names are mutually exclusive"
 msgstr "--query y --names son mutuamente excluyentes"
 
+msgid "--set-cursor argument cannot be empty"
+msgstr "el argumento --set-cursor no puede estar vacío"
+
 msgid "--tokens options are mutually exclusive"
 msgstr "las opciones --tokens son mutuamente excluyentes"
 
 msgid "A second attempt to exit will terminate them."
 msgstr "Un segundo intento de salir los terminará."
+
+#, c-format
+msgid "Abbreviation %s already exists for commands %s, cannot rename %s"
+msgstr "La abreviatura %s ya existe para los comandos %s, no se puede cambiar el nombre de %s"
+
+#, c-format
+msgid "Abbreviation %s already exists, cannot rename %s"
+msgstr "La abreviatura %s ya existe, no se puede renombrar %s"
+
+#, c-format
+msgid "Abbreviation '%s' cannot have spaces in the word"
+msgstr "La abreviatura '%s' no puede contener espacios en la palabra"
 
 msgid "Abbreviation expansion"
 msgstr "Expansión de abreviaturas"
@@ -878,8 +688,14 @@ msgstr "Error de límite de dirección"
 msgid "Always"
 msgstr "Siempre"
 
+msgid "Ambiguous job"
+msgstr "Tarea ambigua"
+
 msgid "An error occurred while setting up pipe"
 msgstr "Ocurrió un error al configurar la tubería (pipe)"
+
+msgid "An option spec must have at least a short or a long flag"
+msgstr "Una especificación de opción debe tener al menos un flag corto o largo"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -912,12 +728,42 @@ msgstr "Límite de tiempo de CPU excedido"
 msgid "Calls to fork()"
 msgstr "Llamadas a fork()"
 
+msgid "Can not get commandline in non-interactive mode"
+msgstr ""
+
+msgid "Can not set commandline in non-interactive mode"
+msgstr ""
+
+msgid "Can not specify scope when removing block"
+msgstr "No se puede especificar el ámbito al eliminar el bloque"
+
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "No se puede usar el modo no-execute en una sesión interactiva"
 
 #, c-format
+msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgstr "No se puede enviar la tarea %d, '%s' a primer plano porque no está bajo control de tareas"
+
+#, c-format
+msgid "Can't put job %s, '%s' to background because it is not under job control"
+msgstr "No se puede enviar la tarea %s, '%s' a segundo plano porque no está bajo control de tareas"
+
+#, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr "No se puede añadir un modificador de control al carácter de control '%s'"
+
+#, c-format
+msgid "Cannot combine options %s"
+msgstr "No se pueden combinar las opciones %s"
+
+msgid "Cannot specify multiple positions"
+msgstr "No se pueden especificar múltiples posiciones"
+
+msgid "Cannot specify multiple regex patterns"
+msgstr "No se pueden especificar múltiples patrones de regex"
+
+msgid "Cannot specify multiple set-cursor options"
+msgstr "No se pueden especificar múltiples opciones de set-cursor"
 
 msgid "Cannot use stdin (fd 0) as pipe output"
 msgstr "No se puede usar stdin (fd 0) como salida de una tubería"
@@ -949,6 +795,9 @@ msgstr "Eventos del historial de comandos"
 msgid "Command not executable"
 msgstr "Comando no ejecutable"
 
+msgid "Command not valid at an interactive prompt"
+msgstr "comando no válido en un prompt interactivo"
+
 msgid "Commandname was invalid"
 msgstr "El nombre del comando era inválido"
 
@@ -960,6 +809,13 @@ msgstr "Continuar el proceso detenido previamente"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "No se pudo determinar el directorio de trabajo actual. ¿Está configurado correctamente el locale?"
+
+msgid "Could not find home directory"
+msgstr "No se pudo encontrar el directorio personal"
+
+#, c-format
+msgid "Could not find job '%d'"
+msgstr "No se pudo encontrar la tarea '%d'"
 
 msgid "Could not set terminal mode for new job"
 msgstr "No se pudo establecer el modo de terminal para el nuevo trabajo"
@@ -1001,6 +857,10 @@ msgstr "Editar autocompletados específicos del comando"
 
 msgid "Emit an event"
 msgstr "Emitir un evento"
+
+#, c-format
+msgid "Empty directory '%s' does not exist"
+msgstr "El directorio vacío '%s' no existe"
 
 msgid "End a block of commands"
 msgstr "Finalizar un bloque de comandos"
@@ -1155,6 +1015,14 @@ msgid "Illegal instruction"
 msgstr "Instrucción ilegal"
 
 #, c-format
+msgid "Implicit int flag '%c' already defined"
+msgstr "La opción entera implícita '%c' ya está definida"
+
+#, c-format
+msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
+msgstr "La opción corta entera implícita '%c' no permite modificadores como '%c'"
+
+#, c-format
 msgid "Incomplete escape sequence '%s'"
 msgstr "Secuencia de escape incompleta '%s'"
 
@@ -1171,8 +1039,24 @@ msgstr "Eventos de procesos internos (sin fork)"
 msgid "Internal details of the topic monitor"
 msgstr "Detalles internos del monitor de temas"
 
+#, c-format
+msgid "Invalid --max-args value '%s'"
+msgstr "Valor no válido para --max-args '%s'"
+
+#, c-format
+msgid "Invalid --min-args value '%s'"
+msgstr "Valor no válido para --min-args '%s'"
+
+#, c-format
+msgid "Invalid --unknown-arguments value '%s'"
+msgstr "Valor no válido para --unknown-arguments '%s'"
+
 msgid "Invalid arguments"
 msgstr "Argumentos inválidos"
+
+#, c-format
+msgid "Invalid function name: %s"
+msgstr "Nombre de función no válido %s"
 
 msgid "Invalid index value"
 msgstr "Valor de índice inválido"
@@ -1185,6 +1069,14 @@ msgid "Invalid number: %s"
 msgstr "Número inválido: %s"
 
 #, c-format
+msgid "Invalid option spec '%s' at char '%c'"
+msgstr "Especificación de opción no válida '%s' en el carácter '%c'"
+
+#, c-format
+msgid "Invalid position '%s'"
+msgstr "Posición no válida '%s'"
+
+#, c-format
 msgid "Invalid redirection target: %s"
 msgstr "Destino de redirección inválido: %s"
 
@@ -1192,9 +1084,16 @@ msgstr "Destino de redirección inválido: %s"
 msgid "Invalid redirection: %s"
 msgstr "Redirección inválida: %s"
 
+msgid "Invalid state"
+msgstr "Estado no válido"
+
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "Token inválido '%s'"
+
+#, c-format
+msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
+msgstr "valor inválido para la opción '--color': '%s'. Se esperaba 'always', 'never' o 'auto'"
 
 #, c-format
 msgid "Items %u to %u of %u"
@@ -1216,6 +1115,9 @@ msgstr "Trabajos cambiando de estado"
 msgid "Jobs getting started or continued"
 msgstr "Trabajos iniciando o reanudándose"
 
+msgid "Key not specified"
+msgstr "Clave no especificada"
+
 msgid "Language specifiers appear repeatedly:"
 msgstr "Los especificadores de idioma se repiten:"
 
@@ -1224,6 +1126,10 @@ msgstr "Listar o eliminar funciones"
 
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "Las operaciones lógicas no están soportadas; usa `test` en su lugar"
+
+#, c-format
+msgid "Long flag '%s' already defined"
+msgstr "La opción larga '%s' ya está definida"
 
 msgid "Manage abbreviations"
 msgstr "Gestionar abreviaturas"
@@ -1243,6 +1149,9 @@ msgstr "Llaves desbalanceadas"
 msgid "Mismatched parenthesis"
 msgstr "Paréntesis desbalanceado"
 
+msgid "Missing -- separator"
+msgstr "Falta el separador --"
+
 msgid "Missing closing parenthesis"
 msgstr "Falta un paréntesis de cierre"
 
@@ -1260,6 +1169,9 @@ msgstr "Falta un operador"
 msgid "Modification of read-only variable \"%s\" is not allowed"
 msgstr "No se permite modificar la variable de solo lectura \"%s\""
 
+msgid "Name cannot be empty"
+msgstr "El nombre no puede estar vacío"
+
 msgid "Negate exit status of job"
 msgstr "Negar el estado de salida del trabajo"
 
@@ -1269,12 +1181,31 @@ msgstr "Nunca"
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "No hay TTY para el shell interactivo (tcgetpgrp falló)"
 
+#, c-format
+msgid "No abbreviation named %s with the specified command restrictions"
+msgstr "No hay ninguna abreviatura llamada %s con las restricciones de comandos indicadas"
+
+#, c-format
+msgid "No binding found for key '%s'"
+msgstr "No se encontró una asignación para la tecla '%s'"
+
+#, c-format
+msgid "No binding found for key sequence '%s'"
+msgstr "No se encontró una asignación para la secuencia de teclas '%s'"
+
+msgid "No blocks defined"
+msgstr "No hay bloques definidos"
+
 msgid "No catalogs available for language specifiers:"
 msgstr "No hay catálogos disponibles para los especificadores de idioma:"
 
 #, c-format
 msgid "No matches for wildcard '%s'. See `help %s`."
 msgstr "No hay coincidencias para el comodín '%s'. Consulte `help %s`."
+
+#, c-format
+msgid "No suitable job: %d"
+msgstr "No hay un trabajo adecuado: %d"
 
 msgid "Not a function"
 msgstr "No es una función"
@@ -1316,6 +1247,10 @@ msgstr "Ejecutar un comando múltiples veces"
 
 msgid "Perform a set of commands multiple times"
 msgstr "Ejecutar un conjunto de comandos múltiples veces"
+
+#, c-format
+msgid "Permission denied: '%s'"
+msgstr "Permiso denegado: '%s'"
 
 #, c-format
 msgid "Please set $%s to a directory where you have write access."
@@ -1384,6 +1319,10 @@ msgstr "Recolectando procesos internos (sin fork)"
 msgid "Refcell dynamic borrowing"
 msgstr "Préstamo dinámico de refcell"
 
+#, c-format
+msgid "Regular expression compile error: %s"
+msgstr "Error al compilar la expresión regular: %s"
+
 msgid "Remove job from job list"
 msgstr "Eliminar un trabajo de la lista de trabajos"
 
@@ -1393,6 +1332,12 @@ msgstr "Renderizando la línea de comandos"
 #, c-format
 msgid "Requested redirection to '%s', which is not a valid file descriptor"
 msgstr "Se solicitó una redirección a '%s', que no es un descriptor de archivo válido"
+
+msgid "Requires at least two arguments"
+msgstr "Requiere al menos dos argumentos"
+
+msgid "Requires exactly two arguments"
+msgstr "Requiere exactamente dos argumentos"
 
 #, c-format
 msgid "Result too large: %s"
@@ -1450,6 +1395,14 @@ msgstr "Establecer u obtener la línea de comandos"
 
 msgid "Set the terminal color"
 msgstr "Establecer el color del terminal"
+
+#, c-format
+msgid "Short flag '%c' already defined"
+msgstr "La opción corta '%c' ya está definida"
+
+#, c-format
+msgid "Short flag '%c' invalid, must be alphanum or '#'"
+msgstr "La opción corta '%c' no es válida, debe ser alfanumérica o '#'"
 
 msgid "Show absolute path sans symlinks"
 msgstr "Mostrar la ruta absoluta sin enlaces simbólicos"
@@ -1528,6 +1481,10 @@ msgid "The completion system"
 msgstr "El sistema de autocompletado"
 
 #, c-format
+msgid "The directory '%s' does not exist"
+msgstr "El directorio '%s' no existe"
+
+#, c-format
 msgid "The error was '%s'."
 msgstr "El error fue “%s”."
 
@@ -1543,6 +1500,9 @@ msgstr "La función “%s” se llama a sí misma inmediatamente, lo que produci
 
 msgid "The interactive reader/input system"
 msgstr "El sistema interactivo de lectura/entrada"
+
+msgid "There are no suitable jobs"
+msgstr "No hay trabajos adecuados"
 
 msgid "There are still jobs active:"
 msgstr "Aún hay jobs activos:"
@@ -1564,6 +1524,13 @@ msgstr "Demasiados descriptores de archivo activos"
 
 msgid "Too many arguments"
 msgstr "Demasiados argumentos"
+
+#, c-format
+msgid "Too many levels of symbolic links: '%s'"
+msgstr "Demasiados niveles de enlaces simbólicos: '%s'"
+
+msgid "Too many long-only options"
+msgstr "Hay demasiadas opciones solo en formato largo"
 
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr "La sustitución de comando emitió demasiados datos, por lo que fueron descartados"
@@ -1615,6 +1582,10 @@ msgstr "‘}’ inesperado sin una llave de apertura"
 msgid "Unexpected '}' found, expecting ')'"
 msgstr "Se encontró ‘}’, pero se esperaba ‘)’"
 
+#, c-format
+msgid "Unexpected argument -- '%s'"
+msgstr "Argumento inesperado -- '%s'"
+
 msgid "Unexpected end of string, expecting ')'"
 msgstr "Final inesperado del *string*, se esperaba ‘)’"
 
@@ -1640,6 +1611,10 @@ msgstr "Desconocido"
 msgid "Unknown builtin '%s'"
 msgstr "Builtin desconocido “%s”"
 
+#, c-format
+msgid "Unknown color '%s'"
+msgstr "Color desconocido '%s'"
+
 msgid "Unknown command"
 msgstr "Comando desconocido"
 
@@ -1658,6 +1633,10 @@ msgstr "Comando desconocido. Un componente de ‘%s’ no es un directorio. Veri
 msgid "Unknown command:"
 msgstr "Comando desconocido:"
 
+#, c-format
+msgid "Unknown error trying to locate directory '%s'"
+msgstr "Error desconocido al intentar localizar el directorio '%s'"
+
 msgid "Unknown error while evaluating command substitution"
 msgstr "Error desconocido al evaluar la sustitución de comando"
 
@@ -1667,6 +1646,10 @@ msgstr "Función desconocida"
 #, c-format
 msgid "Unknown function '%s'"
 msgstr "Función desconocida “%s”"
+
+#, c-format
+msgid "Unknown input function '%s'"
+msgstr "Función de entrada desconocida '%s'"
 
 msgid "Unmatched wildcard"
 msgstr "Comodín sin coincidencias"
@@ -1707,6 +1690,10 @@ msgstr "Temporizador virtual expirado"
 
 msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
 msgstr "Advertencia sobre usar los modos de ‘test’ con cero o un argumento (`test -d $foo`), los cuales cambiarán en el futuro."
+
+#, c-format
+msgid "Warning: Option '%s' was removed and is now ignored"
+msgstr "Advertencia: La opción '%s' fue eliminada y ahora se ignora"
 
 msgid "Warnings (on by default)"
 msgstr "Advertencias (activadas por defecto)"
@@ -1760,6 +1747,10 @@ msgstr "no se pueden guardar variables o funciones universales"
 msgid "cannot parse key '%s'"
 msgstr "no se puede analizar la clave ‘%s’"
 
+#, c-format
+msgid "column %s exceeds line length"
+msgstr "la columna %s excede la longitud de la línea"
+
 msgid "command"
 msgstr "comando"
 
@@ -1783,6 +1774,29 @@ msgstr "directorio"
 
 msgid "error"
 msgstr "error"
+
+#, c-format
+msgid "exclusive flag '%s' is not valid"
+msgstr "la opción exclusiva '%s' no es válida"
+
+#, c-format
+msgid "exclusive flag string '%s' is not valid"
+msgstr "el string de opciones exclusivas '%s' no es válido"
+
+#, c-format
+msgid "expected %d arguments; got %d"
+msgstr "se esperaban %d argumentos; se obtuvieron %d"
+
+#, c-format
+msgid "expected <= %d arguments; got %d"
+msgstr "se esperaban <= %d argumentos; se obtuvieron %d"
+
+#, c-format
+msgid "expected >= %d arguments; got %d"
+msgstr "se esperaban >= %d argumentos; se obtuvieron %d"
+
+msgid "expected event name"
+msgstr ""
 
 msgid "explore what characters keyboard keys send"
 msgstr "explora qué caracteres envían las teclas del teclado"
@@ -1822,9 +1836,27 @@ msgstr "en la función ‘%s’"
 msgid "invalid field width: %s"
 msgstr "ancho de campo inválido: %s"
 
+msgid "invalid option combination"
+msgstr "combinación de opciones no válida"
+
+#, c-format
+msgid "invalid option combination, %s"
+msgstr "combinación de opciones no válida, %s"
+
 #, c-format
 msgid "invalid precision: %s"
 msgstr "precisión inválida: %s"
+
+#, c-format
+msgid "invalid underline style: %s"
+msgstr "estilo de subrayado no válido: %s"
+
+#, c-format
+msgid "job %d ('%s') was stopped and has been signalled to continue."
+msgstr "el trabajo %d ('%s') fue detenido y se le ha enviado una señal para continuar."
+
+msgid "line/column index starts at 1"
+msgstr "el índice de línea/columna comienza en 1"
 
 msgid "missing hexadecimal number in escape"
 msgstr "falta un número hexadecimal en la secuencia de escape"
@@ -1847,6 +1879,9 @@ msgstr "en ejecución"
 msgid "search:"
 msgstr "buscar:"
 
+msgid "setting cursor while evaluating 'complete --arguments' is not yet supported"
+msgstr "cambiar la posición del cursor durante la evaluación de 'complete --arguments' todavía no está soportado"
+
 msgid "stopped"
 msgstr "detenido"
 
@@ -1856,6 +1891,16 @@ msgstr "switch: Se esperaba como máximo un argumento, se recibió %u"
 
 msgid "symlink"
 msgstr "enlace simbólico"
+
+msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+msgstr "la sintaxis -k/--key ya no es compatible. Consulta `bind --help` y `bind --key-names`"
+
+#, c-format
+msgid "there is no line %s"
+msgstr "no existe la línea %s"
+
+msgid "too many arguments"
+msgstr "demasiados argumentos"
 
 #, c-format
 msgid "ulimit: Permission denied when changing resource of type '%s'"

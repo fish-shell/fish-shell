@@ -1,5 +1,7 @@
 use std::sync::atomic::Ordering;
 
+use crate::err_str;
+
 // Implementation of the block builtin.
 use super::prelude::*;
 
@@ -84,17 +86,14 @@ pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
 
     if opts.erase {
         if opts.scope != Scope::Unset {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Can not specify scope when removing block",
-                cmd
-            ));
+            err_str!("Can not specify scope when removing block")
+                .with_cmd(cmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if parser.global_event_blocks.load(Ordering::Relaxed) == 0 {
-            streams
-                .err
-                .appendln(&wgettext_fmt!("%s: No blocks defined", cmd));
+            err_str!("No blocks defined").with_cmd(cmd).finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
         parser.global_event_blocks.fetch_sub(1, Ordering::Relaxed);

@@ -359,10 +359,6 @@ msgid "%s: Invalid width value '%s'"
 msgstr "%s: 幅の値 '%s' が無効です"
 
 #, c-format
-msgid "%s: Key not specified"
-msgstr "%s: キーが指定されていません"
-
-#, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新しい制限値を空文字列にすることはできません"
 
@@ -1126,6 +1122,9 @@ msgstr "ステータスが変化したジョブ"
 
 msgid "Jobs getting started or continued"
 msgstr "開始または再開されたジョブ"
+
+msgid "Key not specified"
+msgstr "キーが指定されていません"
 
 msgid "Language specifiers appear repeatedly:"
 msgstr "言語指定子が繰り返し現れています:"

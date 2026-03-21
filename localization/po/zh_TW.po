@@ -354,10 +354,6 @@ msgid "%s: Invalid width value '%s'"
 msgstr "%s：無效的寬度「%s」"
 
 #, c-format
-msgid "%s: Key not specified"
-msgstr "%s：未指定鍵"
-
-#, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s：新的限制不能是空字串"
 
@@ -1121,6 +1117,9 @@ msgstr "作業變更狀態"
 
 msgid "Jobs getting started or continued"
 msgstr "作業開始或繼續"
+
+msgid "Key not specified"
+msgstr ""
 
 msgid "Language specifiers appear repeatedly:"
 msgstr "語言指定子重複："

@@ -381,10 +381,6 @@ msgid "%s: Invalid width value '%s'"
 msgstr "%s: 无效的宽度值 '%s'"
 
 #, c-format
-msgid "%s: Key not specified"
-msgstr "%s: 没有指定键"
-
-#, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新限制不能为空字符串"
 
@@ -1148,6 +1144,9 @@ msgstr "正在改变状况的作业"
 
 msgid "Jobs getting started or continued"
 msgstr "正在启动或继续的作业"
+
+msgid "Key not specified"
+msgstr "没有指定键"
 
 msgid "Language specifiers appear repeatedly:"
 msgstr ""

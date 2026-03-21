@@ -361,10 +361,6 @@ msgid "%s: Invalid width value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Key not specified"
-msgstr "%s: Chave não especificada"
-
-#, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr ""
 
@@ -1128,6 +1124,9 @@ msgstr ""
 
 msgid "Jobs getting started or continued"
 msgstr ""
+
+msgid "Key not specified"
+msgstr "Chave não especificada"
 
 msgid "Language specifiers appear repeatedly:"
 msgstr ""

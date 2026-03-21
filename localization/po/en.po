@@ -232,10 +232,6 @@ msgid "%s: Argument '%s' is out of range"
 msgstr "%s: Argument “%s” is out of range"
 
 #, c-format
-msgid "%s: Can not specify scope when removing block"
-msgstr "%s: Can not specify scope when removing block"
-
-#, c-format
 msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
 msgstr "%s: Can't put job %d, “%s” to foreground because it is not under job control"
 
@@ -398,10 +394,6 @@ msgstr "%s: Key not specified"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr ""
-
-#, c-format
-msgid "%s: No blocks defined"
-msgstr "%s: No blocks defined"
 
 #, c-format
 msgid "%s: No suitable job: %d"
@@ -800,6 +792,9 @@ msgstr "CPU time limit exceeded"
 
 msgid "Calls to fork()"
 msgstr ""
+
+msgid "Can not specify scope when removing block"
+msgstr "Can not specify scope when removing block"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Can not use the no-execute mode when running an interactive session"
@@ -1239,6 +1234,9 @@ msgstr "No binding found for key “%s”"
 #, c-format
 msgid "No binding found for key sequence '%s'"
 msgstr ""
+
+msgid "No blocks defined"
+msgstr "No blocks defined"
 
 msgid "No catalogs available for language specifiers:"
 msgstr ""

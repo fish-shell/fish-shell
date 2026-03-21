@@ -253,10 +253,6 @@ msgid "%s: Argument '%s' is out of range"
 msgstr "%s: 参数 '%s' 超出取值范围"
 
 #, c-format
-msgid "%s: Can not specify scope when removing block"
-msgstr "%s: 移除范围时不能指定作用域"
-
-#, c-format
 msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
 msgstr "%s: 不能将作业 %d，'%s' 带到前台，因为它不受作业控制管理"
 
@@ -419,10 +415,6 @@ msgstr "%s: 没有指定键"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新限制不能为空字符串"
-
-#, c-format
-msgid "%s: No blocks defined"
-msgstr "%s: 没有定义作用域"
 
 #, c-format
 msgid "%s: No suitable job: %d"
@@ -821,6 +813,9 @@ msgstr "CPU 超时"
 
 msgid "Calls to fork()"
 msgstr "调用 fork()"
+
+msgid "Can not specify scope when removing block"
+msgstr "移除范围时不能指定作用域"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "交互式会话时不能使用 no-execute 模式"
@@ -1260,6 +1255,9 @@ msgstr "未找到键 '%s' 的绑定"
 #, c-format
 msgid "No binding found for key sequence '%s'"
 msgstr "未找到键序列 '%s' 的绑定"
+
+msgid "No blocks defined"
+msgstr "没有定义作用域"
 
 msgid "No catalogs available for language specifiers:"
 msgstr ""

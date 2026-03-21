@@ -229,10 +229,6 @@ msgid "%s: Argument '%s' is out of range"
 msgstr ""
 
 #, c-format
-msgid "%s: Can not specify scope when removing block"
-msgstr "%s: Kan inte ange definitionsområde vid blockradering"
-
-#, c-format
 msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
 msgstr "%s: Kan inte skicka jobb %d, '%s' till förgrunden eftersom det inte använder jobbkontroll"
 
@@ -395,10 +391,6 @@ msgstr "%s: Ingen nyckel angiven"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr ""
-
-#, c-format
-msgid "%s: No blocks defined"
-msgstr "%s: Inga block definerade"
 
 #, c-format
 msgid "%s: No suitable job: %d"
@@ -797,6 +789,9 @@ msgstr "Slut på processortid"
 
 msgid "Calls to fork()"
 msgstr ""
+
+msgid "Can not specify scope when removing block"
+msgstr "Kan inte ange definitionsområde vid blockradering"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "no-execute läget kan inte användas i en interaktiv session"
@@ -1236,6 +1231,9 @@ msgstr ""
 #, c-format
 msgid "No binding found for key sequence '%s'"
 msgstr ""
+
+msgid "No blocks defined"
+msgstr "Inga block definerade"
 
 msgid "No catalogs available for language specifiers:"
 msgstr ""

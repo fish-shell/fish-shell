@@ -232,10 +232,6 @@ msgid "%s: Argument '%s' is out of range"
 msgstr "%s: El argumento '%s' está fuera de rango"
 
 #, c-format
-msgid "%s: Can not specify scope when removing block"
-msgstr "%s: No se puede especificar el ámbito al eliminar el bloque"
-
-#, c-format
 msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
 msgstr "%s: No se puede enviar la tarea %d, '%s' a primer plano porque no está bajo control de tareas"
 
@@ -398,10 +394,6 @@ msgstr "%s: Clave no especificada"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: El nuevo límite no puede ser un string vacío"
-
-#, c-format
-msgid "%s: No blocks defined"
-msgstr "%s: No hay bloques definidos"
 
 #, c-format
 msgid "%s: No suitable job: %d"
@@ -800,6 +792,9 @@ msgstr "Límite de tiempo de CPU excedido"
 
 msgid "Calls to fork()"
 msgstr "Llamadas a fork()"
+
+msgid "Can not specify scope when removing block"
+msgstr "No se puede especificar el ámbito al eliminar el bloque"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "No se puede usar el modo no-execute en una sesión interactiva"
@@ -1239,6 +1234,9 @@ msgstr "No se encontró una asignación para la tecla '%s'"
 #, c-format
 msgid "No binding found for key sequence '%s'"
 msgstr "No se encontró una asignación para la secuencia de teclas '%s'"
+
+msgid "No blocks defined"
+msgstr "No hay bloques definidos"
 
 msgid "No catalogs available for language specifiers:"
 msgstr "No hay catálogos disponibles para los especificadores de idioma:"

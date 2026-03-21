@@ -231,10 +231,6 @@ msgid "%s: Argument '%s' is out of range"
 msgstr "%s: 引数 '%s' は範囲外です"
 
 #, c-format
-msgid "%s: Can not specify scope when removing block"
-msgstr "%s: ブロックを削除する際にスコープを指定することはできません"
-
-#, c-format
 msgid "%s: Can't put job %d, '%s' to foreground because it is not under job control"
 msgstr "%s: ジョブ %d ('%s') はジョブ制御下にないため、フォアグラウンドに移行できません"
 
@@ -397,10 +393,6 @@ msgstr "%s: キーが指定されていません"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新しい制限値を空文字列にすることはできません"
-
-#, c-format
-msgid "%s: No blocks defined"
-msgstr "%s: ブロックが定義されていません"
 
 #, c-format
 msgid "%s: No suitable job: %d"
@@ -799,6 +791,9 @@ msgstr "CPU時間制限を超過しました"
 
 msgid "Calls to fork()"
 msgstr "fork() の呼び出し"
+
+msgid "Can not specify scope when removing block"
+msgstr "ブロックを削除する際にスコープを指定することはできません"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "対話セッションの実行中に実行禁止(no-execute)モードを使用することはできません"
@@ -1238,6 +1233,9 @@ msgstr "キー '%s' のバインドが見つかりません"
 #, c-format
 msgid "No binding found for key sequence '%s'"
 msgstr "キーシーケンス '%s' のバインドが見つかりません"
+
+msgid "No blocks defined"
+msgstr "ブロックが定義されていません"
 
 msgid "No catalogs available for language specifiers:"
 msgstr "以下の言語指定子に対応するカタログがありません:"

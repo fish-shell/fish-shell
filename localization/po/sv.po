@@ -205,14 +205,6 @@ msgid "%s: %s: unknown option"
 msgstr ""
 
 #, c-format
-msgid "%s: '%s' is a broken symbolic link to '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: '%s' is not a directory"
-msgstr "%s: '%s' är inte en katalog"
-
-#, c-format
 msgid "%s: '%s' is not a job"
 msgstr "%s: '%s' är inte ett jobb"
 
@@ -249,19 +241,11 @@ msgid "%s: Could not find child processes with the name '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Could not find home directory"
-msgstr "%s: Kunde inte hitta hemkatalogen"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr ""
 
 #, c-format
 msgid "%s: Did you mean `set %s %s`?"
-msgstr ""
-
-#, c-format
-msgid "%s: Empty directory '%s' does not exist"
 msgstr ""
 
 #, c-format
@@ -417,10 +401,6 @@ msgid "%s: Padding should be a character '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Permission denied: '%s'"
-msgstr "%s: Åtkomst nekad till katalogen '%s'"
-
-#, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr ""
 
@@ -431,10 +411,6 @@ msgstr ""
 #, c-format
 msgid "%s: Resource limit not available on this operating system"
 msgstr ""
-
-#, c-format
-msgid "%s: The directory '%s' does not exist"
-msgstr "%s: Katalogen '%s' existerar inte"
 
 #, c-format
 msgid "%s: The variable '%s' does not exist"
@@ -449,10 +425,6 @@ msgid "%s: There are no suitable jobs"
 msgstr "%s: Det finns inga lämpliga jobb"
 
 #, c-format
-msgid "%s: Too many levels of symbolic links: '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
 msgstr "%s: Försökte ändra den skrivskyddade variablen '%s'"
 
@@ -463,10 +435,6 @@ msgstr ""
 #, c-format
 msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr ""
-
-#, c-format
-msgid "%s: Unknown error trying to locate directory '%s'"
-msgstr "%s: Okänd fel inträffade under lokalisering av katalogen '%s'"
 
 #, c-format
 msgid "%s: Unknown input function '%s'"
@@ -631,6 +599,14 @@ msgstr ""
 #, c-format
 msgid "%s: variable '%s' is read-only"
 msgstr ""
+
+#, c-format
+msgid "'%s' is a broken symbolic link to '%s'"
+msgstr ""
+
+#, c-format
+msgid "'%s' is not a directory"
+msgstr "'%s' är inte en katalog"
 
 #, c-format
 msgid "'%s' is not a valid process ID"
@@ -858,6 +834,9 @@ msgstr "Fortsätt tidigare stannad process"
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr ""
 
+msgid "Could not find home directory"
+msgstr "Kunde inte hitta hemkatalogen"
+
 #, c-format
 msgid "Could not find job '%d'"
 msgstr ""
@@ -902,6 +881,10 @@ msgstr "Redigera kommando-specifika kompletteringar"
 
 msgid "Emit an event"
 msgstr "Sänd en händelse"
+
+#, c-format
+msgid "Empty directory '%s' does not exist"
+msgstr ""
 
 msgid "End a block of commands"
 msgstr "Avsluta ett block av kommandon"
@@ -1283,6 +1266,10 @@ msgid "Perform a set of commands multiple times"
 msgstr "Kör ett block flera gånger"
 
 #, c-format
+msgid "Permission denied: '%s'"
+msgstr "Åtkomst nekad till katalogen '%s'"
+
+#, c-format
 msgid "Please set $%s to a directory where you have write access."
 msgstr ""
 
@@ -1511,6 +1498,10 @@ msgid "The completion system"
 msgstr ""
 
 #, c-format
+msgid "The directory '%s' does not exist"
+msgstr "Katalogen '%s' existerar inte"
+
+#, c-format
 msgid "The error was '%s'."
 msgstr ""
 
@@ -1549,6 +1540,10 @@ msgid "Too many active file descriptors"
 msgstr ""
 
 msgid "Too many arguments"
+msgstr ""
+
+#, c-format
+msgid "Too many levels of symbolic links: '%s'"
 msgstr ""
 
 msgid "Too many long-only options"
@@ -1654,6 +1649,10 @@ msgstr ""
 
 msgid "Unknown command:"
 msgstr ""
+
+#, c-format
+msgid "Unknown error trying to locate directory '%s'"
+msgstr "Okänd fel inträffade under lokalisering av katalogen '%s'"
 
 msgid "Unknown error while evaluating command substitution"
 msgstr ""

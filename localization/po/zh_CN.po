@@ -229,14 +229,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知选项"
 
 #, c-format
-msgid "%s: '%s' is a broken symbolic link to '%s'"
-msgstr "%s: '%s' 是损坏的到 '%s' 的符号链接"
-
-#, c-format
-msgid "%s: '%s' is not a directory"
-msgstr "%s: '%s' 不是一个目录"
-
-#, c-format
 msgid "%s: '%s' is not a job"
 msgstr "%s: '%s' 不是一个作业"
 
@@ -273,20 +265,12 @@ msgid "%s: Could not find child processes with the name '%s'"
 msgstr "%s: 无法找到名为 '%s' 的子进程"
 
 #, c-format
-msgid "%s: Could not find home directory"
-msgstr "%s: 找不到主目录"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: 找不到作业 '%d'"
 
 #, c-format
 msgid "%s: Did you mean `set %s %s`?"
 msgstr "%s: 您是否想输入 `set %s %s`？"
-
-#, c-format
-msgid "%s: Empty directory '%s' does not exist"
-msgstr "%s: 空目录 '%s' 不存在"
 
 #, c-format
 msgid "%s: Error encountered while sourcing file '%s':"
@@ -441,10 +425,6 @@ msgid "%s: Padding should be a character '%s'"
 msgstr "%s: 填充应为字符 '%s'"
 
 #, c-format
-msgid "%s: Permission denied: '%s'"
-msgstr "%s: 拒绝访问: '%s'"
-
-#, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: 正则表达式编译错误：%s"
 
@@ -455,10 +435,6 @@ msgstr "%s: 正则表达式替换错误：%s"
 #, c-format
 msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: 该操作系统不支持资源限制"
-
-#, c-format
-msgid "%s: The directory '%s' does not exist"
-msgstr "%s: 目录 '%s' 不存在"
 
 #, c-format
 msgid "%s: The variable '%s' does not exist"
@@ -473,10 +449,6 @@ msgid "%s: There are no suitable jobs"
 msgstr "%s: 没有匹配的作业"
 
 #, c-format
-msgid "%s: Too many levels of symbolic links: '%s'"
-msgstr "%s: 符号链接的级别过多：'%s'"
-
-#, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
 msgstr "%s: 试图改变只读变量 '%s' 的值"
 
@@ -487,10 +459,6 @@ msgstr "%s: 尝试将特殊变量 '%s' 修改为无效值"
 #, c-format
 msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s: 尝试用错误的范围修改特殊变量 '%s'"
-
-#, c-format
-msgid "%s: Unknown error trying to locate directory '%s'"
-msgstr "%s: 定位目录 '%s' 时发生未知错误"
 
 #, c-format
 msgid "%s: Unknown input function '%s'"
@@ -655,6 +623,14 @@ msgstr "%s: 数值未完全转换 (无法转换 '%s')"
 #, c-format
 msgid "%s: variable '%s' is read-only"
 msgstr "%s: 变量 '%s' 只读"
+
+#, c-format
+msgid "'%s' is a broken symbolic link to '%s'"
+msgstr "'%s' 是损坏的到 '%s' 的符号链接"
+
+#, c-format
+msgid "'%s' is not a directory"
+msgstr "'%s' 不是一个目录"
 
 #, c-format
 msgid "'%s' is not a valid process ID"
@@ -882,6 +858,9 @@ msgstr "继续先前停止的进程"
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "无法确定当前工作目录。你的区域设置正确吗？"
 
+msgid "Could not find home directory"
+msgstr "找不到主目录"
+
 #, c-format
 msgid "Could not find job '%d'"
 msgstr "找不到作业 '%d'"
@@ -926,6 +905,10 @@ msgstr "编辑命令相关的补全"
 
 msgid "Emit an event"
 msgstr "触发一个事件️"
+
+#, c-format
+msgid "Empty directory '%s' does not exist"
+msgstr "空目录 '%s' 不存在"
 
 msgid "End a block of commands"
 msgstr "结束一个命令块"
@@ -1307,6 +1290,10 @@ msgid "Perform a set of commands multiple times"
 msgstr "多次执行一组指令"
 
 #, c-format
+msgid "Permission denied: '%s'"
+msgstr "拒绝访问: '%s'"
+
+#, c-format
 msgid "Please set $%s to a directory where you have write access."
 msgstr "请将 $%s 设置为您有写入权限的目录。"
 
@@ -1535,6 +1522,10 @@ msgid "The completion system"
 msgstr "补全系统"
 
 #, c-format
+msgid "The directory '%s' does not exist"
+msgstr "目录 '%s' 不存在"
+
+#, c-format
 msgid "The error was '%s'."
 msgstr "错误为 '%s'。"
 
@@ -1574,6 +1565,10 @@ msgstr "活动文件描述符太多"
 
 msgid "Too many arguments"
 msgstr "参数太多"
+
+#, c-format
+msgid "Too many levels of symbolic links: '%s'"
+msgstr "符号链接的级别过多：'%s'"
 
 msgid "Too many long-only options"
 msgstr "过多的仅长选项"
@@ -1678,6 +1673,10 @@ msgstr "未知的命令。%s 的一个组件不是目录。检查你的 $PATH."
 
 msgid "Unknown command:"
 msgstr "未知的命令："
+
+#, c-format
+msgid "Unknown error trying to locate directory '%s'"
+msgstr "定位目录 '%s' 时发生未知错误"
 
 msgid "Unknown error while evaluating command substitution"
 msgstr "求值命令替换时出现未知错误"

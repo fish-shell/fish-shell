@@ -208,14 +208,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: opción desconocida"
 
 #, c-format
-msgid "%s: '%s' is a broken symbolic link to '%s'"
-msgstr "%s: '%s' es un enlace simbólico roto a '%s'"
-
-#, c-format
-msgid "%s: '%s' is not a directory"
-msgstr "%s: '%s' no es un directorio"
-
-#, c-format
 msgid "%s: '%s' is not a job"
 msgstr "%s: '%s' no es una tarea"
 
@@ -252,20 +244,12 @@ msgid "%s: Could not find child processes with the name '%s'"
 msgstr "%s: No se pudieron encontrar procesos hijos con el nombre '%s'"
 
 #, c-format
-msgid "%s: Could not find home directory"
-msgstr "%s: No se pudo encontrar el directorio personal"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: No se pudo encontrar la tarea '%d'"
 
 #, c-format
 msgid "%s: Did you mean `set %s %s`?"
 msgstr "%s: ¿Quiso decir `set %s %s`?"
-
-#, c-format
-msgid "%s: Empty directory '%s' does not exist"
-msgstr "%s: El directorio vacío '%s' no existe"
 
 #, c-format
 msgid "%s: Error encountered while sourcing file '%s':"
@@ -420,10 +404,6 @@ msgid "%s: Padding should be a character '%s'"
 msgstr "%s: El padding debe ser un carácter '%s'"
 
 #, c-format
-msgid "%s: Permission denied: '%s'"
-msgstr "%s: Permiso denegado: '%s'"
-
-#, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: Error al compilar la expresión regular: %s"
 
@@ -434,10 +414,6 @@ msgstr "%s: Error al sustituir en la expresión regular: %s"
 #, c-format
 msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: El límite de recursos no está disponible en este sistema operativo"
-
-#, c-format
-msgid "%s: The directory '%s' does not exist"
-msgstr "%s: El directorio '%s' no existe"
 
 #, c-format
 msgid "%s: The variable '%s' does not exist"
@@ -452,10 +428,6 @@ msgid "%s: There are no suitable jobs"
 msgstr "%s: No hay trabajos adecuados"
 
 #, c-format
-msgid "%s: Too many levels of symbolic links: '%s'"
-msgstr "%s: Demasiados niveles de enlaces simbólicos: '%s'"
-
-#, c-format
 msgid "%s: Tried to change the read-only variable '%s'"
 msgstr "%s: Se intentó cambiar la variable de solo lectura '%s'"
 
@@ -466,10 +438,6 @@ msgstr "%s: Se intentó modificar la variable especial '%s' a un valor no válid
 #, c-format
 msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s: Se intentó modificar la variable especial '%s' con un ámbito incorrecto"
-
-#, c-format
-msgid "%s: Unknown error trying to locate directory '%s'"
-msgstr "%s: Error desconocido al intentar localizar el directorio '%s'"
 
 #, c-format
 msgid "%s: Unknown input function '%s'"
@@ -634,6 +602,14 @@ msgstr "%s: el valor no se convirtió completamente (no es posible convertir '%s
 #, c-format
 msgid "%s: variable '%s' is read-only"
 msgstr "%s: la variable '%s' es de solo lectura"
+
+#, c-format
+msgid "'%s' is a broken symbolic link to '%s'"
+msgstr "'%s' es un enlace simbólico roto a '%s'"
+
+#, c-format
+msgid "'%s' is not a directory"
+msgstr "'%s' no es un directorio"
 
 #, c-format
 msgid "'%s' is not a valid process ID"
@@ -861,6 +837,9 @@ msgstr "Continuar el proceso detenido previamente"
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "No se pudo determinar el directorio de trabajo actual. ¿Está configurado correctamente el locale?"
 
+msgid "Could not find home directory"
+msgstr "No se pudo encontrar el directorio personal"
+
 #, c-format
 msgid "Could not find job '%d'"
 msgstr "No se pudo encontrar la tarea '%d'"
@@ -905,6 +884,10 @@ msgstr "Editar autocompletados específicos del comando"
 
 msgid "Emit an event"
 msgstr "Emitir un evento"
+
+#, c-format
+msgid "Empty directory '%s' does not exist"
+msgstr "El directorio vacío '%s' no existe"
 
 msgid "End a block of commands"
 msgstr "Finalizar un bloque de comandos"
@@ -1286,6 +1269,10 @@ msgid "Perform a set of commands multiple times"
 msgstr "Ejecutar un conjunto de comandos múltiples veces"
 
 #, c-format
+msgid "Permission denied: '%s'"
+msgstr "Permiso denegado: '%s'"
+
+#, c-format
 msgid "Please set $%s to a directory where you have write access."
 msgstr "Configura $%s a un directorio donde tengas acceso de escritura."
 
@@ -1514,6 +1501,10 @@ msgid "The completion system"
 msgstr "El sistema de autocompletado"
 
 #, c-format
+msgid "The directory '%s' does not exist"
+msgstr "El directorio '%s' no existe"
+
+#, c-format
 msgid "The error was '%s'."
 msgstr "El error fue “%s”."
 
@@ -1553,6 +1544,10 @@ msgstr "Demasiados descriptores de archivo activos"
 
 msgid "Too many arguments"
 msgstr "Demasiados argumentos"
+
+#, c-format
+msgid "Too many levels of symbolic links: '%s'"
+msgstr "Demasiados niveles de enlaces simbólicos: '%s'"
 
 msgid "Too many long-only options"
 msgstr "Hay demasiadas opciones solo en formato largo"
@@ -1657,6 +1652,10 @@ msgstr "Comando desconocido. Un componente de ‘%s’ no es un directorio. Veri
 
 msgid "Unknown command:"
 msgstr "Comando desconocido:"
+
+#, c-format
+msgid "Unknown error trying to locate directory '%s'"
+msgstr "Error desconocido al intentar localizar el directorio '%s'"
 
 msgid "Unknown error while evaluating command substitution"
 msgstr "Error desconocido al evaluar la sustitución de comando"

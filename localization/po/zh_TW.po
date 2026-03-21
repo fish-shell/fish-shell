@@ -234,10 +234,6 @@ msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr "%s：指派給切片時不能使用 --append 或 --prepend"
 
 #, c-format
-msgid "%s: Command not valid at an interactive prompt"
-msgstr "%s：命令在互動式提示中無效"
-
-#, c-format
 msgid "%s: Could not find '%s'"
 msgstr "%s：找不到「%s」"
 
@@ -843,6 +839,9 @@ msgstr "命令歷史紀錄的事件"
 
 msgid "Command not executable"
 msgstr "命令不可執行"
+
+msgid "Command not valid at an interactive prompt"
+msgstr ""
 
 msgid "Commandname was invalid"
 msgstr "命令名稱無效"
@@ -1790,6 +1789,10 @@ msgstr ""
 
 #, c-format
 msgid "exclusive flag string '%s' is not valid"
+msgstr ""
+
+#, c-format
+msgid "expected %d arguments; got %d"
 msgstr ""
 
 #, c-format

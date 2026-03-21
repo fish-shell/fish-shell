@@ -240,10 +240,6 @@ msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr ""
 
 #, c-format
-msgid "%s: Command not valid at an interactive prompt"
-msgstr "%s: Kann nicht am Prompt verwendet werden"
-
-#, c-format
 msgid "%s: Could not find '%s'"
 msgstr "%s: Konnte '%s' nicht finden"
 
@@ -849,6 +845,9 @@ msgstr ""
 
 msgid "Command not executable"
 msgstr "Befehl nicht ausführbar"
+
+msgid "Command not valid at an interactive prompt"
+msgstr "Kann nicht am Prompt verwendet werden"
 
 msgid "Commandname was invalid"
 msgstr "Befehlsname war ungültig"
@@ -1796,6 +1795,10 @@ msgstr "Exklusive Option '%s' ist ungültig"
 #, c-format
 msgid "exclusive flag string '%s' is not valid"
 msgstr "Exklusive Option '%s' ist ungültig"
+
+#, c-format
+msgid "expected %d arguments; got %d"
+msgstr ""
 
 #, c-format
 msgid "expected <= %d arguments; got %d"

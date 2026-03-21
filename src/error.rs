@@ -88,6 +88,9 @@ impl<'a> Error<'a> {
         pub TOO_MANY_ARGUMENTS
         "too many arguments"
 
+        pub ARG_COUNT1
+        "expected %d arguments; got %d"
+
         pub MIN_ARG_COUNT1
         "expected >= %d arguments; got %d"
 

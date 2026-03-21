@@ -241,10 +241,6 @@ msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr ""
 
 #, c-format
-msgid "%s: Command not valid at an interactive prompt"
-msgstr "%s: Comando inválido em um prompt interativo"
-
-#, c-format
 msgid "%s: Could not find '%s'"
 msgstr "%s: Não foi possível encontrar '%s'"
 
@@ -850,6 +846,9 @@ msgstr ""
 
 msgid "Command not executable"
 msgstr ""
+
+msgid "Command not valid at an interactive prompt"
+msgstr "Comando inválido em um prompt interativo"
 
 msgid "Commandname was invalid"
 msgstr ""
@@ -1796,6 +1795,10 @@ msgstr ""
 
 #, c-format
 msgid "exclusive flag string '%s' is not valid"
+msgstr ""
+
+#, c-format
+msgid "expected %d arguments; got %d"
 msgstr ""
 
 #, c-format

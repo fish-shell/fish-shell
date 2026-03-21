@@ -240,10 +240,6 @@ msgid "%s: Can't put job %d, '%s' to foreground because it is not under job cont
 msgstr "%s: No se puede enviar la tarea %d, '%s' a primer plano porque no está bajo control de tareas"
 
 #, c-format
-msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
-msgstr "%s: No se puede enviar la tarea %s, '%s' a segundo plano porque no está bajo control de tareas"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr "%s: No se puede usar --append o --prepend al asignar a una porción (*slice*)"
 
@@ -821,6 +817,10 @@ msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "No se puede usar el modo no-execute en una sesión interactiva"
 
 #, c-format
+msgid "Can't put job %s, '%s' to background because it is not under job control"
+msgstr "No se puede enviar la tarea %s, '%s' a segundo plano porque no está bajo control de tareas"
+
+#, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr "No se puede añadir un modificador de control al carácter de control '%s'"
 
@@ -878,6 +878,10 @@ msgstr "Continuar el proceso detenido previamente"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "No se pudo determinar el directorio de trabajo actual. ¿Está configurado correctamente el locale?"
+
+#, c-format
+msgid "Could not find job '%d'"
+msgstr "No se pudo encontrar la tarea '%d'"
 
 msgid "Could not set terminal mode for new job"
 msgstr "No se pudo establecer el modo de terminal para el nuevo trabajo"
@@ -1529,6 +1533,9 @@ msgstr "La función “%s” se llama a sí misma inmediatamente, lo que produci
 
 msgid "The interactive reader/input system"
 msgstr "El sistema interactivo de lectura/entrada"
+
+msgid "There are no suitable jobs"
+msgstr "No hay trabajos adecuados"
 
 msgid "There are still jobs active:"
 msgstr "Aún hay jobs activos:"

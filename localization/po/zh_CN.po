@@ -261,10 +261,6 @@ msgid "%s: Can't put job %d, '%s' to foreground because it is not under job cont
 msgstr "%s: 不能将作业 %d，'%s' 带到前台，因为它不受作业控制管理"
 
 #, c-format
-msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
-msgstr "%s: 无法将作业 %s，'%s' 放到后台，因为它不受作业控制管理"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr "%s: 分配切片时无法使用 --append 或 --prepend"
 
@@ -842,6 +838,10 @@ msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "交互式会话时不能使用 no-execute 模式"
 
 #, c-format
+msgid "Can't put job %s, '%s' to background because it is not under job control"
+msgstr "无法将作业 %s，'%s' 放到后台，因为它不受作业控制管理"
+
+#, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr "无法向控制字符 '%s' 添加控制修饰符"
 
@@ -899,6 +899,10 @@ msgstr "继续先前停止的进程"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "无法确定当前工作目录。你的区域设置正确吗？"
+
+#, c-format
+msgid "Could not find job '%d'"
+msgstr "找不到作业 '%d'"
 
 msgid "Could not set terminal mode for new job"
 msgstr "无法为新作业设置终端模式"
@@ -1550,6 +1554,9 @@ msgstr "函数 '%s' 立即调用自身，会导致无限循环。"
 
 msgid "The interactive reader/input system"
 msgstr "交互式阅读器/输入系统"
+
+msgid "There are no suitable jobs"
+msgstr "没有匹配的作业"
 
 msgid "There are still jobs active:"
 msgstr "仍然活动的作业："

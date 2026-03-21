@@ -240,10 +240,6 @@ msgid "%s: Can't put job %d, '%s' to foreground because it is not under job cont
 msgstr "%s: Kann job %d, '%s' nicht in den Vordergrund schicken weil er nicht der Jobsteuerung unterliegt"
 
 #, c-format
-msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
-msgstr "%s: Kann job %s, '%s' nicht in den Hintergrund schicken weil er nicht der Jobsteuerung unterliegt"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr ""
 
@@ -821,6 +817,10 @@ msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Kann den no-execute Modus nicht in einer interaktiven Sitzung nutzen"
 
 #, c-format
+msgid "Can't put job %s, '%s' to background because it is not under job control"
+msgstr "Kann job %s, '%s' nicht in den Hintergrund schicken weil er nicht der Jobsteuerung unterliegt"
+
+#, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr ""
 
@@ -878,6 +878,10 @@ msgstr "Vorher gestoppten Prozess fortsetzen"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "Das aktuelle Arbeitsverzeichnis konnte nicht bestimmt werden. Ist die locale korrekt eingestellt?"
+
+#, c-format
+msgid "Could not find job '%d'"
+msgstr "Job '%d' nicht gefunden"
 
 msgid "Could not set terminal mode for new job"
 msgstr "Konnte Terminalmodus für neuen Job nicht festlegen"
@@ -1528,6 +1532,9 @@ msgid "The function '%s' calls itself immediately, which would result in an infi
 msgstr "Die Funktion '%s' ruft sich sofort selbst auf. Dies wäre eine Endlosschleife."
 
 msgid "The interactive reader/input system"
+msgstr ""
+
+msgid "There are no suitable jobs"
 msgstr ""
 
 msgid "There are still jobs active:"

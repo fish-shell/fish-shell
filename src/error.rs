@@ -95,6 +95,12 @@ impl<'a> Error<'a> {
 
         pub REGEX_COMPILE
         "Regular expression compile error: %s"
+
+        pub NO_SUITABLE_JOBS
+        "There are no suitable jobs"
+
+        pub COULD_NOT_FIND_JOB
+        "Could not find job '%d'"
     );
 
     pub fn new(msg: Cow<'a, wstr>) -> Self {

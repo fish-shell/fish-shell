@@ -241,10 +241,6 @@ msgid "%s: Can't put job %d, '%s' to foreground because it is not under job cont
 msgstr "%s: Não é possível colocar tarefa %d, “%s” em primeiro plano porque não está sob controle de tarefas"
 
 #, c-format
-msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
-msgstr ""
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr ""
 
@@ -822,6 +818,10 @@ msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Não pode usar o modo não-executar durante uma sessão interativa"
 
 #, c-format
+msgid "Can't put job %s, '%s' to background because it is not under job control"
+msgstr ""
+
+#, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr ""
 
@@ -879,6 +879,10 @@ msgstr "Continuar processo previamente parado"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr ""
+
+#, c-format
+msgid "Could not find job '%d'"
+msgstr "Não foi possível encontrar a tarefa '%d'"
 
 msgid "Could not set terminal mode for new job"
 msgstr "Não foi possível definir modo do terminal para a nova tarefa"
@@ -1530,6 +1534,9 @@ msgstr "A função “%s” se chama imediatamente, o que causaria um loop infin
 
 msgid "The interactive reader/input system"
 msgstr ""
+
+msgid "There are no suitable jobs"
+msgstr "Não há tarefas adequadas"
 
 msgid "There are still jobs active:"
 msgstr ""

@@ -237,10 +237,6 @@ msgid "%s: Can't put job %d, '%s' to foreground because it is not under job cont
 msgstr "%s: Kan inte skicka jobb %d, '%s' till förgrunden eftersom det inte använder jobbkontroll"
 
 #, c-format
-msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
-msgstr ""
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr ""
 
@@ -818,6 +814,10 @@ msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "no-execute läget kan inte användas i en interaktiv session"
 
 #, c-format
+msgid "Can't put job %s, '%s' to background because it is not under job control"
+msgstr ""
+
+#, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr ""
 
@@ -874,6 +874,10 @@ msgid "Continue previously stopped process"
 msgstr "Fortsätt tidigare stannad process"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
+msgstr ""
+
+#, c-format
+msgid "Could not find job '%d'"
 msgstr ""
 
 msgid "Could not set terminal mode for new job"
@@ -1526,6 +1530,9 @@ msgstr ""
 
 msgid "The interactive reader/input system"
 msgstr ""
+
+msgid "There are no suitable jobs"
+msgstr "Det finns inga lämpliga jobb"
 
 msgid "There are still jobs active:"
 msgstr ""

@@ -239,10 +239,6 @@ msgid "%s: Can't put job %d, '%s' to foreground because it is not under job cont
 msgstr "%s: ジョブ %d ('%s') はジョブ制御下にないため、フォアグラウンドに移行できません"
 
 #, c-format
-msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
-msgstr "%s: ジョブ %s ('%s') はジョブ制御下にないため、バックグラウンドに移行できません"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr "%s: スライスへの代入時に --append または --prepend を使用することはできません"
 
@@ -820,6 +816,10 @@ msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "対話セッションの実行中に実行禁止(no-execute)モードを使用することはできません"
 
 #, c-format
+msgid "Can't put job %s, '%s' to background because it is not under job control"
+msgstr "ジョブ %s ('%s') はジョブ制御下にないため、バックグラウンドに移行できません"
+
+#, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr "制御文字 '%s' にコントロール修飾子を追加することはできません"
 
@@ -877,6 +877,10 @@ msgstr "以前に停止されたプロセスを再開します"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "現在の作業ディレクトリを特定できませんでした。ロケールは正しく設定されていますか？"
+
+#, c-format
+msgid "Could not find job '%d'"
+msgstr "ジョブ '%d' が見つかりませんでした"
 
 msgid "Could not set terminal mode for new job"
 msgstr "新しいジョブにターミナルモードを設定できませんでした"
@@ -1528,6 +1532,9 @@ msgstr "関数 '%s' が自分自身を即座に呼び出しています。これ
 
 msgid "The interactive reader/input system"
 msgstr "対話型リーダー / 入力システム"
+
+msgid "There are no suitable jobs"
+msgstr "適切なジョブはありません"
 
 msgid "There are still jobs active:"
 msgstr "まだアクティブなジョブがあります:"

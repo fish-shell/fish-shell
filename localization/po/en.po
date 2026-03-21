@@ -240,10 +240,6 @@ msgid "%s: Can't put job %d, '%s' to foreground because it is not under job cont
 msgstr "%s: Can't put job %d, “%s” to foreground because it is not under job control"
 
 #, c-format
-msgid "%s: Can't put job %s, '%s' to background because it is not under job control"
-msgstr ""
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr ""
 
@@ -821,6 +817,10 @@ msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Can not use the no-execute mode when running an interactive session"
 
 #, c-format
+msgid "Can't put job %s, '%s' to background because it is not under job control"
+msgstr ""
+
+#, c-format
 msgid "Cannot add control modifier to control character '%s'"
 msgstr ""
 
@@ -877,6 +877,10 @@ msgid "Continue previously stopped process"
 msgstr "Continue previously stopped process"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
+msgstr ""
+
+#, c-format
+msgid "Could not find job '%d'"
 msgstr ""
 
 msgid "Could not set terminal mode for new job"
@@ -1529,6 +1533,9 @@ msgstr "The function “%s” calls itself immediately, which would result in an
 
 msgid "The interactive reader/input system"
 msgstr ""
+
+msgid "There are no suitable jobs"
+msgstr "There are no suitable jobs"
 
 msgid "There are still jobs active:"
 msgstr ""

@@ -182,14 +182,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s：找不到作業 %d"
 
 #, c-format
-msgid "%s: Error encountered while sourcing file '%s':"
-msgstr "%s：載入檔案「%s」時遇到錯誤："
-
-#, c-format
-msgid "%s: Error while reading file '%s'"
-msgstr "%s：讀取檔案「%s」時遇到錯誤"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr "%s：預期至少有一個引數"
 
@@ -392,10 +384,6 @@ msgstr ""
 #, c-format
 msgid "%s: missing argument"
 msgstr "%s：缺少引數"
-
-#, c-format
-msgid "%s: missing filename argument or input redirection"
-msgstr "%s：缺少檔案名稱引數或輸入重新導向"
 
 #, c-format
 msgid "%s: missing subcommand"
@@ -759,6 +747,10 @@ msgid "End a block of commands"
 msgstr "結束一個程式碼區塊"
 
 #, c-format
+msgid "Error encountered while sourcing file '%s':"
+msgstr ""
+
+#, c-format
 msgid "Error reading script file '%s':"
 msgstr "讀取命令稿檔「%s」時發生錯誤："
 
@@ -769,6 +761,10 @@ msgstr "重新命名檔案時發生錯誤：%s"
 #, c-format
 msgid "Error while reading file %s"
 msgstr "讀取檔案 %s 時發生錯誤"
+
+#, c-format
+msgid "Error while reading file '%s'"
+msgstr ""
 
 #, c-format
 msgid "Error: %s"
@@ -1843,6 +1839,9 @@ msgid "line/column index starts at 1"
 msgstr ""
 
 msgid "missing argument"
+msgstr ""
+
+msgid "missing filename argument or input redirection"
 msgstr ""
 
 msgid "missing hexadecimal number in escape"

@@ -188,14 +188,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s: No se pudo encontrar la tarea '%d'"
 
 #, c-format
-msgid "%s: Error encountered while sourcing file '%s':"
-msgstr "%s: Error encontrado al importar el archivo '%s':"
-
-#, c-format
-msgid "%s: Error while reading file '%s'"
-msgstr "%s: Error al leer el archivo '%s'"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr "%s: Se esperaba al menos un argumento"
 
@@ -398,10 +390,6 @@ msgstr "%s: nombre de variable no válido. Consulte `help %s`"
 #, c-format
 msgid "%s: missing argument"
 msgstr "%s: falta un argumento"
-
-#, c-format
-msgid "%s: missing filename argument or input redirection"
-msgstr "%s: falta un argumento de nombre de archivo o una redirección de entrada"
 
 #, c-format
 msgid "%s: missing subcommand"
@@ -765,6 +753,10 @@ msgid "End a block of commands"
 msgstr "Finalizar un bloque de comandos"
 
 #, c-format
+msgid "Error encountered while sourcing file '%s':"
+msgstr "Error encontrado al importar el archivo '%s':"
+
+#, c-format
 msgid "Error reading script file '%s':"
 msgstr "Error al leer el archivo de script '%s':"
 
@@ -775,6 +767,10 @@ msgstr "Error al renombrar el archivo: %s"
 #, c-format
 msgid "Error while reading file %s"
 msgstr "Error al leer el archivo %s"
+
+#, c-format
+msgid "Error while reading file '%s'"
+msgstr "Error al leer el archivo '%s'"
 
 #, c-format
 msgid "Error: %s"
@@ -1849,6 +1845,9 @@ msgstr "el índice de línea/columna comienza en 1"
 
 msgid "missing argument"
 msgstr "falta un argumento"
+
+msgid "missing filename argument or input redirection"
+msgstr "falta un argumento de nombre de archivo o una redirección de entrada"
 
 msgid "missing hexadecimal number in escape"
 msgstr "falta un número hexadecimal en la secuencia de escape"

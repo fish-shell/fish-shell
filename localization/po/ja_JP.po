@@ -187,14 +187,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s: ジョブ '%d' が見つかりませんでした"
 
 #, c-format
-msgid "%s: Error encountered while sourcing file '%s':"
-msgstr "%s: ファイル '%s' の読み込み中にエラーが発生しました:"
-
-#, c-format
-msgid "%s: Error while reading file '%s'"
-msgstr "%s: ファイル '%s' の読み取り中にエラーが発生しました"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr "%s: 少なくとも 1 つの引数が必要です"
 
@@ -397,10 +389,6 @@ msgstr "%s: 変数名が無効です。 `help %s` を参照してください"
 #, c-format
 msgid "%s: missing argument"
 msgstr "%s: 引数が不足しています"
-
-#, c-format
-msgid "%s: missing filename argument or input redirection"
-msgstr "%s: ファイル名の引数、または入力リダイレクトがありません"
 
 #, c-format
 msgid "%s: missing subcommand"
@@ -764,6 +752,10 @@ msgid "End a block of commands"
 msgstr "コマンドブロックを終了"
 
 #, c-format
+msgid "Error encountered while sourcing file '%s':"
+msgstr "ファイル '%s' の読み込み中にエラーが発生しました:"
+
+#, c-format
 msgid "Error reading script file '%s':"
 msgstr "スクリプトファイル '%s' の読み込み中にエラーが発生しました:"
 
@@ -774,6 +766,10 @@ msgstr "ファイル名の変更中にエラーが発生しました: %s"
 #, c-format
 msgid "Error while reading file %s"
 msgstr "ファイル %s の読み取り中にエラーが発生しました"
+
+#, c-format
+msgid "Error while reading file '%s'"
+msgstr "ファイル '%s' の読み取り中にエラーが発生しました"
 
 #, c-format
 msgid "Error: %s"
@@ -1848,6 +1844,9 @@ msgstr "行/列のインデックスは 1 から始まります"
 
 msgid "missing argument"
 msgstr "引数が不足しています"
+
+msgid "missing filename argument or input redirection"
+msgstr "ファイル名の引数、または入力リダイレクトがありません"
 
 msgid "missing hexadecimal number in escape"
 msgstr "エスケープ内に16進数がありません"

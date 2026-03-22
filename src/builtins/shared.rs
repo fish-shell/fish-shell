@@ -751,6 +751,10 @@ pub fn builtin_wperror(program_name: &wstr, streams: &mut IoStreams) {
     err_raw!(werr).with_cmd(program_name).finish(streams);
 }
 
+pub fn builtin_strerror() -> WString {
+    str2wcstring(errno().to_string())
+}
+
 pub struct HelpOnlyCmdOpts {
     pub print_help: bool,
     pub optind: usize,

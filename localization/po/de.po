@@ -188,14 +188,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s: Job '%d' nicht gefunden"
 
 #, c-format
-msgid "%s: Error encountered while sourcing file '%s':"
-msgstr "%s: Fehler beim Einladen von '%s':"
-
-#, c-format
-msgid "%s: Error while reading file '%s'"
-msgstr "%s: Fehler beim Lesen der Datei '%s'"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr ""
 
@@ -397,10 +389,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: missing argument"
-msgstr ""
-
-#, c-format
-msgid "%s: missing filename argument or input redirection"
 msgstr ""
 
 #, c-format
@@ -765,6 +753,10 @@ msgid "End a block of commands"
 msgstr "Befehlsblock beenden"
 
 #, c-format
+msgid "Error encountered while sourcing file '%s':"
+msgstr "Fehler beim Einladen von '%s':"
+
+#, c-format
 msgid "Error reading script file '%s':"
 msgstr "Die Script-Datei '%s' kann nicht gelesen werden:"
 
@@ -775,6 +767,10 @@ msgstr ""
 #, c-format
 msgid "Error while reading file %s"
 msgstr "Fehler beim Lesen der Datei %s"
+
+#, c-format
+msgid "Error while reading file '%s'"
+msgstr "Fehler beim Lesen der Datei '%s'"
 
 #, c-format
 msgid "Error: %s"
@@ -1845,6 +1841,9 @@ msgid "line/column index starts at 1"
 msgstr ""
 
 msgid "missing argument"
+msgstr ""
+
+msgid "missing filename argument or input redirection"
 msgstr ""
 
 msgid "missing hexadecimal number in escape"

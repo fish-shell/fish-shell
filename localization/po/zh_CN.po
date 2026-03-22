@@ -209,14 +209,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s: 找不到作业 '%d'"
 
 #, c-format
-msgid "%s: Error encountered while sourcing file '%s':"
-msgstr "%s: 加载源文件 '%s' 时遇到错误："
-
-#, c-format
-msgid "%s: Error while reading file '%s'"
-msgstr "%s: 读取文件 '%s' 时发生错误"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr "%s: 至少需要一个参数"
 
@@ -419,10 +411,6 @@ msgstr "%s: 无效的变量名。参见 `help %s`"
 #, c-format
 msgid "%s: missing argument"
 msgstr "%s: 缺少参数"
-
-#, c-format
-msgid "%s: missing filename argument or input redirection"
-msgstr "%s: 缺少文件名参数或输入重定向"
 
 #, c-format
 msgid "%s: missing subcommand"
@@ -786,6 +774,10 @@ msgid "End a block of commands"
 msgstr "结束一个命令块"
 
 #, c-format
+msgid "Error encountered while sourcing file '%s':"
+msgstr "加载源文件 '%s' 时遇到错误："
+
+#, c-format
 msgid "Error reading script file '%s':"
 msgstr "读取脚本文件 '%s' 时出错："
 
@@ -796,6 +788,10 @@ msgstr "重命名文件时出错：%s"
 #, c-format
 msgid "Error while reading file %s"
 msgstr "读取文件 %s 时出错"
+
+#, c-format
+msgid "Error while reading file '%s'"
+msgstr "读取文件 '%s' 时发生错误"
 
 #, c-format
 msgid "Error: %s"
@@ -1870,6 +1866,9 @@ msgstr "行/列索引从1开始"
 
 msgid "missing argument"
 msgstr "缺少参数"
+
+msgid "missing filename argument or input redirection"
+msgstr "缺少文件名参数或输入重定向"
 
 msgid "missing hexadecimal number in escape"
 msgstr "在转义中缺少十六进制数字"

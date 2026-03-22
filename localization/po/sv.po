@@ -185,14 +185,6 @@ msgid "%s: Could not find job '%d'"
 msgstr ""
 
 #, c-format
-msgid "%s: Error encountered while sourcing file '%s':"
-msgstr "%s: Ett fel uppstod medan filen '%s' lästes in"
-
-#, c-format
-msgid "%s: Error while reading file '%s'"
-msgstr "%s: Ett fel uppstod medan filen '%s' lästes"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr ""
 
@@ -394,10 +386,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: missing argument"
-msgstr ""
-
-#, c-format
-msgid "%s: missing filename argument or input redirection"
 msgstr ""
 
 #, c-format
@@ -762,6 +750,10 @@ msgid "End a block of commands"
 msgstr "Avsluta ett block av kommandon"
 
 #, c-format
+msgid "Error encountered while sourcing file '%s':"
+msgstr "Ett fel uppstod medan filen '%s' lästes in"
+
+#, c-format
 msgid "Error reading script file '%s':"
 msgstr ""
 
@@ -771,6 +763,10 @@ msgstr ""
 
 #, c-format
 msgid "Error while reading file %s"
+msgstr "Ett fel uppstod medan filen '%s' lästes"
+
+#, c-format
+msgid "Error while reading file '%s'"
 msgstr "Ett fel uppstod medan filen '%s' lästes"
 
 #, c-format
@@ -1842,6 +1838,9 @@ msgid "line/column index starts at 1"
 msgstr ""
 
 msgid "missing argument"
+msgstr ""
+
+msgid "missing filename argument or input redirection"
 msgstr ""
 
 msgid "missing hexadecimal number in escape"

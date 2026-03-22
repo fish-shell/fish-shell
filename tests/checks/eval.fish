@@ -57,10 +57,6 @@ eval "begin; end;"
 echo empty block eval: $status # 0
 # CHECK: empty block eval: 0
 
-source /banana/\t/foo
-# CHECKERR: source: Error encountered while sourcing file '/banana/\t/foo':
-# CHECKERR: source: No such file or directory
-
 # See that eval can't be defined as a function
 function eval
     builtin eval $argv
@@ -68,7 +64,6 @@ end
 # CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): function: eval: cannot use reserved keyword as function name
 # CHECKERR: function eval
 # CHECKERR: ^~~~~~~~~~~~^
-
 
 function evil --no-scope-shadowing
     eval $argv

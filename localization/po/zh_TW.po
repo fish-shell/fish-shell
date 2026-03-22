@@ -218,32 +218,12 @@ msgid "%s: Error while reading file '%s'"
 msgstr "%s：讀取檔案「%s」時遇到錯誤"
 
 #, c-format
-msgid "%s: Expected %s for %s"
-msgstr "%s：預期 %s 作 %s 的引數"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr "%s：預期至少有一個引數"
 
 #, c-format
-msgid "%s: Expected exactly one function name"
-msgstr "%s：預期正好有一個函式名稱"
-
-#, c-format
-msgid "%s: Expected exactly two names (current function name, and new function name)"
-msgstr "%s：預期正好有兩個名稱（目前的函式名稱和新的函式名稱）"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s：函式「%s」已存在。無法建立「%s」的複本"
-
-#, c-format
-msgid "%s: Function '%s' does not exist"
-msgstr "%s：函式「%s」不存在"
-
-#, c-format
-msgid "%s: Illegal function name '%s'"
-msgstr "%s：非法的函式名稱「%s」"
 
 #, c-format
 msgid "%s: Invalid count value '%s'"
@@ -890,6 +870,10 @@ msgid "Expansion produced too many results"
 msgstr "展開出了太多結果"
 
 #, c-format
+msgid "Expected %s for %s"
+msgstr ""
+
+#, c-format
 msgid "Expected %s, but found %s"
 msgstr "預期 %s，卻找到 %s"
 
@@ -906,6 +890,12 @@ msgstr "預期是字串，卻找到重新導向"
 
 msgid "Expected a variable name after this $."
 msgstr "預期 $ 之後是變數名稱。"
+
+msgid "Expected exactly one function name"
+msgstr ""
+
+msgid "Expected exactly two names (current function name, and new function name)"
+msgstr ""
 
 msgid "Expected file path to read/write for -w:"
 msgstr "-w 預期有檔案路徑以供讀寫："
@@ -947,6 +937,10 @@ msgstr "強制退出"
 
 msgid "Forced stop"
 msgstr "強制停止"
+
+#, c-format
+msgid "Function '%s' does not exist"
+msgstr ""
 
 msgid "Generate random number"
 msgstr "產生隨機數"
@@ -992,6 +986,10 @@ msgstr "非同步檔案描述子的 I/O 是可行的"
 #, c-format
 msgid "Illegal file descriptor in redirection '%s'"
 msgstr "重新導向「%s」中有非法的檔案描述子"
+
+#, c-format
+msgid "Illegal function name '%s'"
+msgstr ""
 
 msgid "Illegal instruction"
 msgstr "非法的指令"

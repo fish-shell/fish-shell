@@ -99,6 +99,9 @@ impl<'a> Error<'a> {
         pub ARG_COUNT1
         "expected %d arguments; got %d"
 
+        pub ARG_COUNT2
+        "%s: expected %d arguments; got %d"
+
         pub MIN_ARG_COUNT1
         "expected >= %d arguments; got %d"
 

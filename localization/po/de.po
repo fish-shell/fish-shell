@@ -224,32 +224,12 @@ msgid "%s: Error while reading file '%s'"
 msgstr "%s: Fehler beim Lesen der Datei '%s'"
 
 #, c-format
-msgid "%s: Expected %s for %s"
-msgstr "%s: Erwartete %s für %s"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr ""
 
 #, c-format
-msgid "%s: Expected exactly one function name"
-msgstr "%s: Erwartete genau einen Funktionsnamen"
-
-#, c-format
-msgid "%s: Expected exactly two names (current function name, and new function name)"
-msgstr "%s: Erwartete exakt zwei Namen (aktuellen und neuen Funktionsnamen)"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: Funktion '%s' existiert schon. Konnte '%s' nicht kopieren"
-
-#, c-format
-msgid "%s: Function '%s' does not exist"
-msgstr "%s: Funktion '%s' existiert nicht"
-
-#, c-format
-msgid "%s: Illegal function name '%s'"
-msgstr "%s: Ungültiger Funktionsname '%s'"
 
 #, c-format
 msgid "%s: Invalid count value '%s'"
@@ -896,6 +876,10 @@ msgid "Expansion produced too many results"
 msgstr "Erweiterung produzierte zu viele Ergebnisse"
 
 #, c-format
+msgid "Expected %s for %s"
+msgstr "Erwartete %s für %s"
+
+#, c-format
 msgid "Expected %s, but found %s"
 msgstr "Erwartete %s, aber fand %s"
 
@@ -912,6 +896,12 @@ msgstr "Erwartete einen String, fand aber eine Umlenkung"
 
 msgid "Expected a variable name after this $."
 msgstr ""
+
+msgid "Expected exactly one function name"
+msgstr "Erwartete genau einen Funktionsnamen"
+
+msgid "Expected exactly two names (current function name, and new function name)"
+msgstr "Erwartete exakt zwei Namen (aktuellen und neuen Funktionsnamen)"
 
 msgid "Expected file path to read/write for -w:"
 msgstr ""
@@ -953,6 +943,10 @@ msgstr "Erzwungene Beendigung"
 
 msgid "Forced stop"
 msgstr "Erzwungener Stopp"
+
+#, c-format
+msgid "Function '%s' does not exist"
+msgstr "Funktion '%s' existiert nicht"
 
 msgid "Generate random number"
 msgstr "Zufallszahl generieren"
@@ -998,6 +992,10 @@ msgstr "E/A auf asynchronem Dateideskriptor ist möglich"
 #, c-format
 msgid "Illegal file descriptor in redirection '%s'"
 msgstr ""
+
+#, c-format
+msgid "Illegal function name '%s'"
+msgstr "Ungültiger Funktionsname '%s'"
 
 msgid "Illegal instruction"
 msgstr "Illegale Instruktion"

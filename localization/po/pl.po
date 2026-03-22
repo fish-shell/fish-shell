@@ -220,32 +220,12 @@ msgid "%s: Error while reading file '%s'"
 msgstr "%s: Nie udało się odczytać '%s'"
 
 #, c-format
-msgid "%s: Expected %s for %s"
-msgstr ""
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr ""
 
 #, c-format
-msgid "%s: Expected exactly one function name"
-msgstr "%s: Oczekiwano dokładnie jednej nazwy funkcji"
-
-#, c-format
-msgid "%s: Expected exactly two names (current function name, and new function name)"
-msgstr "%s: Oczekiwano dokładnie dwóch nazw (nazwa obecnej funkcji i nazwa nowej)"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr ""
-
-#, c-format
-msgid "%s: Function '%s' does not exist"
-msgstr "%s: Funkcja '%s' nie istnieje"
-
-#, c-format
-msgid "%s: Illegal function name '%s'"
-msgstr "%s: Niedozwolona nazwa funkcji '%s'"
 
 #, c-format
 msgid "%s: Invalid count value '%s'"
@@ -892,6 +872,10 @@ msgid "Expansion produced too many results"
 msgstr ""
 
 #, c-format
+msgid "Expected %s for %s"
+msgstr ""
+
+#, c-format
 msgid "Expected %s, but found %s"
 msgstr ""
 
@@ -908,6 +892,12 @@ msgstr ""
 
 msgid "Expected a variable name after this $."
 msgstr "Oczekiwano nazwy zmiennej po znaku $."
+
+msgid "Expected exactly one function name"
+msgstr "Oczekiwano dokładnie jednej nazwy funkcji"
+
+msgid "Expected exactly two names (current function name, and new function name)"
+msgstr "Oczekiwano dokładnie dwóch nazw (nazwa obecnej funkcji i nazwa nowej)"
 
 msgid "Expected file path to read/write for -w:"
 msgstr ""
@@ -949,6 +939,10 @@ msgstr "Przymusowe wyjście"
 
 msgid "Forced stop"
 msgstr "Wymuszono zatrzymanie"
+
+#, c-format
+msgid "Function '%s' does not exist"
+msgstr "Funkcja '%s' nie istnieje"
 
 msgid "Generate random number"
 msgstr "Zwróć losową liczbę"
@@ -994,6 +988,10 @@ msgstr ""
 #, c-format
 msgid "Illegal file descriptor in redirection '%s'"
 msgstr ""
+
+#, c-format
+msgid "Illegal function name '%s'"
+msgstr "Niedozwolona nazwa funkcji '%s'"
 
 msgid "Illegal instruction"
 msgstr "Niedozwolona instrukcja"

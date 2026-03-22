@@ -223,32 +223,12 @@ msgid "%s: Error while reading file '%s'"
 msgstr "%s: ファイル '%s' の読み取り中にエラーが発生しました"
 
 #, c-format
-msgid "%s: Expected %s for %s"
-msgstr "%s: %s (%s 用) が必要です"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr "%s: 少なくとも 1 つの引数が必要です"
 
 #, c-format
-msgid "%s: Expected exactly one function name"
-msgstr "%s: 関数名はちょうど 1 つ指定する必要があります"
-
-#, c-format
-msgid "%s: Expected exactly two names (current function name, and new function name)"
-msgstr "%s: 名前はちょうど 2 つ必要です (現在の関数名と新しい関数名)"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: 関数 '%s' はすでに存在します。 '%s' のコピーを作成できません"
-
-#, c-format
-msgid "%s: Function '%s' does not exist"
-msgstr "%s: 関数 '%s' は存在しません"
-
-#, c-format
-msgid "%s: Illegal function name '%s'"
-msgstr "%s: 不正な関数名 '%s' です"
 
 #, c-format
 msgid "%s: Invalid count value '%s'"
@@ -895,6 +875,10 @@ msgid "Expansion produced too many results"
 msgstr "展開の結果が多すぎます"
 
 #, c-format
+msgid "Expected %s for %s"
+msgstr "%s (%s 用) が必要です"
+
+#, c-format
 msgid "Expected %s, but found %s"
 msgstr "%s が必要ですが、 %s が見つかりました"
 
@@ -911,6 +895,12 @@ msgstr "文字列が必要ですが、リダイレクトが見つかりました
 
 msgid "Expected a variable name after this $."
 msgstr "この $ の後には変数名が必要です"
+
+msgid "Expected exactly one function name"
+msgstr "関数名はちょうど 1 つ指定する必要があります"
+
+msgid "Expected exactly two names (current function name, and new function name)"
+msgstr "名前はちょうど 2 つ必要です (現在の関数名と新しい関数名)"
 
 msgid "Expected file path to read/write for -w:"
 msgstr "-w で読み書きするためのファイルパスが必要です:"
@@ -952,6 +942,10 @@ msgstr "強制終了(終了)"
 
 msgid "Forced stop"
 msgstr "強制停止"
+
+#, c-format
+msgid "Function '%s' does not exist"
+msgstr "関数 '%s' は存在しません"
 
 msgid "Generate random number"
 msgstr "乱数を生成"
@@ -997,6 +991,10 @@ msgstr "非同期ファイル記述子での I/O が可能です"
 #, c-format
 msgid "Illegal file descriptor in redirection '%s'"
 msgstr "リダイレクト '%s' 内のファイル記述子が不正です"
+
+#, c-format
+msgid "Illegal function name '%s'"
+msgstr "不正な関数名 '%s' です"
 
 msgid "Illegal instruction"
 msgstr "不正な命令(Illegal instruction)"

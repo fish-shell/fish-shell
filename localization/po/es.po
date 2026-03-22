@@ -224,32 +224,12 @@ msgid "%s: Error while reading file '%s'"
 msgstr "%s: Error al leer el archivo '%s'"
 
 #, c-format
-msgid "%s: Expected %s for %s"
-msgstr "%s: se esperaba %s en %s"
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr "%s: Se esperaba al menos un argumento"
 
 #, c-format
-msgid "%s: Expected exactly one function name"
-msgstr "%s: Se esperaba exactamente un nombre de función"
-
-#, c-format
-msgid "%s: Expected exactly two names (current function name, and new function name)"
-msgstr "%s: Se esperaban exactamente dos nombres (nombre actual de la función y nuevo nombre de la función)"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: La función '%s' ya existe. No se puede crear una copia de '%s'"
-
-#, c-format
-msgid "%s: Function '%s' does not exist"
-msgstr "%s: La función '%s' no existe"
-
-#, c-format
-msgid "%s: Illegal function name '%s'"
-msgstr "%s: Nombre de función no permitido '%s'"
 
 #, c-format
 msgid "%s: Invalid count value '%s'"
@@ -896,6 +876,10 @@ msgid "Expansion produced too many results"
 msgstr "La expansión produjo demasiados resultados"
 
 #, c-format
+msgid "Expected %s for %s"
+msgstr "se esperaba %s en %s"
+
+#, c-format
 msgid "Expected %s, but found %s"
 msgstr "Se esperaba %s, pero se encontró %s"
 
@@ -912,6 +896,12 @@ msgstr "Se esperaba un string, pero se encontró una redirección"
 
 msgid "Expected a variable name after this $."
 msgstr "Se esperaba un nombre de variable después de este $."
+
+msgid "Expected exactly one function name"
+msgstr "Se esperaba exactamente un nombre de función"
+
+msgid "Expected exactly two names (current function name, and new function name)"
+msgstr "Se esperaban exactamente dos nombres (nombre actual de la función y nuevo nombre de la función)"
 
 msgid "Expected file path to read/write for -w:"
 msgstr "Se esperaba una ruta de archivo para lectura/escritura con -w:"
@@ -953,6 +943,10 @@ msgstr "Salida forzada"
 
 msgid "Forced stop"
 msgstr "Detención forzada"
+
+#, c-format
+msgid "Function '%s' does not exist"
+msgstr "La función '%s' no existe"
 
 msgid "Generate random number"
 msgstr "Generar un número aleatorio"
@@ -998,6 +992,10 @@ msgstr "Es posible realizar I/O en un descriptor de archivo asíncrono"
 #, c-format
 msgid "Illegal file descriptor in redirection '%s'"
 msgstr "Descriptor de archivo ilegal en la redirección '%s'"
+
+#, c-format
+msgid "Illegal function name '%s'"
+msgstr "Nombre de función no permitido '%s'"
 
 msgid "Illegal instruction"
 msgstr "Instrucción ilegal"

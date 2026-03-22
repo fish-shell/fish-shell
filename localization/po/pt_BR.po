@@ -225,32 +225,12 @@ msgid "%s: Error while reading file '%s'"
 msgstr "%s: Erro ao ler o arquivo “%s”"
 
 #, c-format
-msgid "%s: Expected %s for %s"
-msgstr ""
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr ""
 
 #, c-format
-msgid "%s: Expected exactly one function name"
-msgstr "%s: Esperava exatamente um nome de função"
-
-#, c-format
-msgid "%s: Expected exactly two names (current function name, and new function name)"
-msgstr "%s: Esperava exatamente dois nomes (nome atual da função, e novo nome da função)"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr ""
-
-#, c-format
-msgid "%s: Function '%s' does not exist"
-msgstr "%s: Função “%s” não existe"
-
-#, c-format
-msgid "%s: Illegal function name '%s'"
-msgstr "%s: Nome de função ilegal “%s”"
 
 #, c-format
 msgid "%s: Invalid count value '%s'"
@@ -897,6 +877,10 @@ msgid "Expansion produced too many results"
 msgstr ""
 
 #, c-format
+msgid "Expected %s for %s"
+msgstr ""
+
+#, c-format
 msgid "Expected %s, but found %s"
 msgstr "Esperava %s, mas achou %s"
 
@@ -913,6 +897,12 @@ msgstr ""
 
 msgid "Expected a variable name after this $."
 msgstr ""
+
+msgid "Expected exactly one function name"
+msgstr "Esperava exatamente um nome de função"
+
+msgid "Expected exactly two names (current function name, and new function name)"
+msgstr "Esperava exatamente dois nomes (nome atual da função, e novo nome da função)"
 
 msgid "Expected file path to read/write for -w:"
 msgstr ""
@@ -954,6 +944,10 @@ msgstr "Saída forçada"
 
 msgid "Forced stop"
 msgstr "Parada forçada"
+
+#, c-format
+msgid "Function '%s' does not exist"
+msgstr "Função “%s” não existe"
 
 msgid "Generate random number"
 msgstr "Gera um número aleatório"
@@ -999,6 +993,10 @@ msgstr "E/S em descritor de arquivo assíncrono possível"
 #, c-format
 msgid "Illegal file descriptor in redirection '%s'"
 msgstr "Descritor de arquivo ilegal na redireção “%s”"
+
+#, c-format
+msgid "Illegal function name '%s'"
+msgstr "Nome de função ilegal “%s”"
 
 msgid "Illegal instruction"
 msgstr "Instrução ilegal"

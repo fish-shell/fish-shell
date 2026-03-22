@@ -221,32 +221,12 @@ msgid "%s: Error while reading file '%s'"
 msgstr "%s: Ett fel uppstod medan filen '%s' lästes"
 
 #, c-format
-msgid "%s: Expected %s for %s"
-msgstr ""
-
-#, c-format
 msgid "%s: Expected at least one argument"
-msgstr ""
-
-#, c-format
-msgid "%s: Expected exactly one function name"
-msgstr "%s: Förväntade exakt ett funktionsnamn"
-
-#, c-format
-msgid "%s: Expected exactly two names (current function name, and new function name)"
 msgstr ""
 
 #, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr ""
-
-#, c-format
-msgid "%s: Function '%s' does not exist"
-msgstr "%s: Funktionen '%s' existerar inte"
-
-#, c-format
-msgid "%s: Illegal function name '%s'"
-msgstr "%s: Ogiltigt funktionsnamn '%s'"
 
 #, c-format
 msgid "%s: Invalid count value '%s'"
@@ -893,6 +873,10 @@ msgid "Expansion produced too many results"
 msgstr ""
 
 #, c-format
+msgid "Expected %s for %s"
+msgstr ""
+
+#, c-format
 msgid "Expected %s, but found %s"
 msgstr ""
 
@@ -908,6 +892,12 @@ msgid "Expected a string, but found a redirection"
 msgstr ""
 
 msgid "Expected a variable name after this $."
+msgstr ""
+
+msgid "Expected exactly one function name"
+msgstr "Förväntade exakt ett funktionsnamn"
+
+msgid "Expected exactly two names (current function name, and new function name)"
 msgstr ""
 
 msgid "Expected file path to read/write for -w:"
@@ -950,6 +940,10 @@ msgstr "Tvingad avslutning"
 
 msgid "Forced stop"
 msgstr "Tvingad att stoppa"
+
+#, c-format
+msgid "Function '%s' does not exist"
+msgstr "Funktionen '%s' existerar inte"
 
 msgid "Generate random number"
 msgstr "Generera ett slumptal"
@@ -995,6 +989,10 @@ msgstr "Läsning/skrivning på asynkron filidentifierare möjligt"
 #, c-format
 msgid "Illegal file descriptor in redirection '%s'"
 msgstr ""
+
+#, c-format
+msgid "Illegal function name '%s'"
+msgstr "Ogiltigt funktionsnamn '%s'"
 
 msgid "Illegal instruction"
 msgstr "Ogiltig instruktion"

@@ -224,32 +224,12 @@ msgid "%s: Error while reading file '%s'"
 msgstr "%s: Error while reading file “%s”"
 
 #, c-format
-msgid "%s: Expected %s for %s"
-msgstr ""
-
-#, c-format
 msgid "%s: Expected at least one argument"
 msgstr ""
 
 #, c-format
-msgid "%s: Expected exactly one function name"
-msgstr "%s: Expected exactly one function name"
-
-#, c-format
-msgid "%s: Expected exactly two names (current function name, and new function name)"
-msgstr "%s: Expected exactly two names (current function name, and new function name)"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr ""
-
-#, c-format
-msgid "%s: Function '%s' does not exist"
-msgstr "%s: Function “%s” does not exist"
-
-#, c-format
-msgid "%s: Illegal function name '%s'"
-msgstr "%s: Illegal function name “%s”"
 
 #, c-format
 msgid "%s: Invalid count value '%s'"
@@ -896,6 +876,10 @@ msgid "Expansion produced too many results"
 msgstr ""
 
 #, c-format
+msgid "Expected %s for %s"
+msgstr ""
+
+#, c-format
 msgid "Expected %s, but found %s"
 msgstr ""
 
@@ -912,6 +896,12 @@ msgstr ""
 
 msgid "Expected a variable name after this $."
 msgstr ""
+
+msgid "Expected exactly one function name"
+msgstr "Expected exactly one function name"
+
+msgid "Expected exactly two names (current function name, and new function name)"
+msgstr "Expected exactly two names (current function name, and new function name)"
 
 msgid "Expected file path to read/write for -w:"
 msgstr ""
@@ -953,6 +943,10 @@ msgstr "Forced quit"
 
 msgid "Forced stop"
 msgstr "Forced stop"
+
+#, c-format
+msgid "Function '%s' does not exist"
+msgstr "Function “%s” does not exist"
 
 msgid "Generate random number"
 msgstr "Generate random number"
@@ -998,6 +992,10 @@ msgstr "I/O on asynchronous file descriptor is possible"
 #, c-format
 msgid "Illegal file descriptor in redirection '%s'"
 msgstr "Illegal file descriptor in redirection “%s”"
+
+#, c-format
+msgid "Illegal function name '%s'"
+msgstr "Illegal function name “%s”"
 
 msgid "Illegal instruction"
 msgstr "Illegal instruction"

@@ -183,10 +183,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s: ジョブ '%d' が見つかりませんでした"
 
 #, c-format
-msgid "%s: Expected at least one argument"
-msgstr "%s: 少なくとも 1 つの引数が必要です"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: 関数 '%s' はすでに存在します。 '%s' のコピーを作成できません"
 
@@ -233,14 +229,6 @@ msgstr "%s: ジョブはありません"
 #, c-format
 msgid "%s: There are no suitable jobs"
 msgstr "%s: 適切なジョブはありません"
-
-#, c-format
-msgid "%s: called with no arguments. This will be an error in future."
-msgstr "%s: 引数なしで呼び出されました。これは将来的にエラーになります"
-
-#, c-format
-msgid "%s: called with one argument. This will return false in future."
-msgstr "%s: 1つの引数で呼び出されました。これは将来的に偽(false)を返すようになります"
 
 #, c-format
 msgid "%s: cannot both export and unexport"
@@ -770,6 +758,9 @@ msgstr "文字列が必要ですが、リダイレクトが見つかりました
 
 msgid "Expected a variable name after this $."
 msgstr "この $ の後には変数名が必要です"
+
+msgid "Expected at least one argument"
+msgstr "少なくとも 1 つの引数が必要です"
 
 msgid "Expected exactly one function name"
 msgstr "関数名はちょうど 1 つ指定する必要があります"
@@ -1690,9 +1681,6 @@ msgstr "ウィンドウサイズの変更"
 msgid "Writing/reading the universal variable store"
 msgstr "ユニバーサル変数ストアの読み書き"
 
-msgid "[: the last argument must be ']'"
-msgstr "[: 最後の引数は ']' である必要があります"
-
 msgid "`set --show` does not allow slices with the var names"
 msgstr "`set --show` では変数名にスライスを使用することはできません"
 
@@ -1713,6 +1701,12 @@ msgstr "組み込みコマンド history delete --exact には --case-sensitive 
 
 msgid "builtin history delete only supports --exact"
 msgstr "組み込みコマンド history delete は --exact のみをサポートしています"
+
+msgid "called with no arguments. This will be an error in future."
+msgstr "引数なしで呼び出されました。これは将来的にエラーになります"
+
+msgid "called with one argument. This will return false in future."
+msgstr "1つの引数で呼び出されました。これは将来的に偽(false)を返すようになります"
 
 msgid "calling job for event handler not found"
 msgstr "イベントハンドラの呼び出し元ジョブが見つかりませんでした"
@@ -1915,6 +1909,9 @@ msgstr "シンボリックリンク"
 
 msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
 msgstr "-k/--key 構文はサポートされなくなりました。 `bind --help` および `bind --key-names` を参照してください"
+
+msgid "the last argument must be ']'"
+msgstr ""
 
 #, c-format
 msgid "there is no line %s"

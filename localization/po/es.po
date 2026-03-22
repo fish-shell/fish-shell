@@ -184,10 +184,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s: No se pudo encontrar la tarea '%d'"
 
 #, c-format
-msgid "%s: Expected at least one argument"
-msgstr "%s: Se esperaba al menos un argumento"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: La función '%s' ya existe. No se puede crear una copia de '%s'"
 
@@ -234,14 +230,6 @@ msgstr "%s: No hay trabajos"
 #, c-format
 msgid "%s: There are no suitable jobs"
 msgstr "%s: No hay trabajos adecuados"
-
-#, c-format
-msgid "%s: called with no arguments. This will be an error in future."
-msgstr "%s: llamado sin argumentos. Esto será un error en el futuro."
-
-#, c-format
-msgid "%s: called with one argument. This will return false in future."
-msgstr "%s: llamado con un argumento. Esto devolverá falso en el futuro."
 
 #, c-format
 msgid "%s: cannot both export and unexport"
@@ -771,6 +759,9 @@ msgstr "Se esperaba un string, pero se encontró una redirección"
 
 msgid "Expected a variable name after this $."
 msgstr "Se esperaba un nombre de variable después de este $."
+
+msgid "Expected at least one argument"
+msgstr "Se esperaba al menos un argumento"
 
 msgid "Expected exactly one function name"
 msgstr "Se esperaba exactamente un nombre de función"
@@ -1691,9 +1682,6 @@ msgstr "Cambio de tamaño de ventana"
 msgid "Writing/reading the universal variable store"
 msgstr "Lectura/escritura del almacén de variables universales"
 
-msgid "[: the last argument must be ']'"
-msgstr "[: el último argumento debe ser ‘]’"
-
 msgid "`set --show` does not allow slices with the var names"
 msgstr "`set --show` no permite segmentos aplicados a nombres de variables"
 
@@ -1714,6 +1702,12 @@ msgstr ""
 
 msgid "builtin history delete only supports --exact"
 msgstr "builtin history delete solo soporta --exact"
+
+msgid "called with no arguments. This will be an error in future."
+msgstr "llamado sin argumentos. Esto será un error en el futuro."
+
+msgid "called with one argument. This will return false in future."
+msgstr "llamado con un argumento. Esto devolverá falso en el futuro."
 
 msgid "calling job for event handler not found"
 msgstr "no se encontró el trabajo asociado al manejador de eventos"
@@ -1916,6 +1910,9 @@ msgstr "enlace simbólico"
 
 msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
 msgstr "la sintaxis -k/--key ya no es compatible. Consulta `bind --help` y `bind --key-names`"
+
+msgid "the last argument must be ']'"
+msgstr ""
 
 #, c-format
 msgid "there is no line %s"

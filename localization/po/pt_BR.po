@@ -185,10 +185,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s: Não foi possível encontrar a tarefa '%d'"
 
 #, c-format
-msgid "%s: Expected at least one argument"
-msgstr ""
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr ""
 
@@ -235,14 +231,6 @@ msgstr "%s: Não há tarefas"
 #, c-format
 msgid "%s: There are no suitable jobs"
 msgstr "%s: Não há tarefas adequadas"
-
-#, c-format
-msgid "%s: called with no arguments. This will be an error in future."
-msgstr ""
-
-#, c-format
-msgid "%s: called with one argument. This will return false in future."
-msgstr ""
 
 #, c-format
 msgid "%s: cannot both export and unexport"
@@ -771,6 +759,9 @@ msgid "Expected a string, but found a redirection"
 msgstr ""
 
 msgid "Expected a variable name after this $."
+msgstr ""
+
+msgid "Expected at least one argument"
 msgstr ""
 
 msgid "Expected exactly one function name"
@@ -1692,9 +1683,6 @@ msgstr "Mudança de tamanho de janela"
 msgid "Writing/reading the universal variable store"
 msgstr ""
 
-msgid "[: the last argument must be ']'"
-msgstr ""
-
 msgid "`set --show` does not allow slices with the var names"
 msgstr ""
 
@@ -1714,6 +1702,12 @@ msgid "builtin history delete --exact requires --case-sensitive"
 msgstr ""
 
 msgid "builtin history delete only supports --exact"
+msgstr ""
+
+msgid "called with no arguments. This will be an error in future."
+msgstr ""
+
+msgid "called with one argument. This will return false in future."
 msgstr ""
 
 msgid "calling job for event handler not found"
@@ -1913,6 +1907,9 @@ msgid "symlink"
 msgstr ""
 
 msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+msgstr ""
+
+msgid "the last argument must be ']'"
 msgstr ""
 
 #, c-format

@@ -178,10 +178,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s：找不到作業 %d"
 
 #, c-format
-msgid "%s: Expected at least one argument"
-msgstr "%s：預期至少有一個引數"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s：函式「%s」已存在。無法建立「%s」的複本"
 
@@ -228,14 +224,6 @@ msgstr "%s：沒有作業"
 #, c-format
 msgid "%s: There are no suitable jobs"
 msgstr "%s：沒有合式的作業"
-
-#, c-format
-msgid "%s: called with no arguments. This will be an error in future."
-msgstr "%s：不帶引數呼叫。這在之後會是錯誤。"
-
-#, c-format
-msgid "%s: called with one argument. This will return false in future."
-msgstr "%s：帶一個引數呼叫。這在之後會回傳 false。"
 
 #, c-format
 msgid "%s: cannot both export and unexport"
@@ -765,6 +753,9 @@ msgstr "預期是字串，卻找到重新導向"
 
 msgid "Expected a variable name after this $."
 msgstr "預期 $ 之後是變數名稱。"
+
+msgid "Expected at least one argument"
+msgstr ""
 
 msgid "Expected exactly one function name"
 msgstr ""
@@ -1686,9 +1677,6 @@ msgstr "視窗大小變更"
 msgid "Writing/reading the universal variable store"
 msgstr "通域變數存檔寫入／讀取"
 
-msgid "[: the last argument must be ']'"
-msgstr "[：最後一個引數必須是「]」"
-
 msgid "`set --show` does not allow slices with the var names"
 msgstr ""
 
@@ -1709,6 +1697,12 @@ msgstr "內建命令 history delete --exact 需要 --case-sensitive"
 
 msgid "builtin history delete only supports --exact"
 msgstr "內建命令 history delete 只支援 --exact"
+
+msgid "called with no arguments. This will be an error in future."
+msgstr ""
+
+msgid "called with one argument. This will return false in future."
+msgstr ""
 
 msgid "calling job for event handler not found"
 msgstr ""
@@ -1910,6 +1904,9 @@ msgid "symlink"
 msgstr "象徵式連結"
 
 msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+msgstr ""
+
+msgid "the last argument must be ']'"
 msgstr ""
 
 #, c-format

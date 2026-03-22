@@ -205,10 +205,6 @@ msgid "%s: Could not find job '%d'"
 msgstr "%s: 找不到作业 '%d'"
 
 #, c-format
-msgid "%s: Expected at least one argument"
-msgstr "%s: 至少需要一个参数"
-
-#, c-format
 msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: 函数 '%s' 已经存在。无法创建副本 '%s'"
 
@@ -255,14 +251,6 @@ msgstr "%s: 没有作业"
 #, c-format
 msgid "%s: There are no suitable jobs"
 msgstr "%s: 没有匹配的作业"
-
-#, c-format
-msgid "%s: called with no arguments. This will be an error in future."
-msgstr "%s: 未带参数调用。此操作在未来版本中将视为错误。"
-
-#, c-format
-msgid "%s: called with one argument. This will return false in future."
-msgstr "%s：带一个参数调用。此操作在未来版本中将返回 false。"
 
 #, c-format
 msgid "%s: cannot both export and unexport"
@@ -792,6 +780,9 @@ msgstr "预期是字符串，但找到重定向"
 
 msgid "Expected a variable name after this $."
 msgstr "在此 $ 之后应有变量名称。"
+
+msgid "Expected at least one argument"
+msgstr "至少需要一个参数"
 
 msgid "Expected exactly one function name"
 msgstr "需要一个函数名"
@@ -1712,9 +1703,6 @@ msgstr "窗口大小变更"
 msgid "Writing/reading the universal variable store"
 msgstr "写/读通用变量存储"
 
-msgid "[: the last argument must be ']'"
-msgstr "[：最后的参数必须是 ']'"
-
 msgid "`set --show` does not allow slices with the var names"
 msgstr "`set --show` 不支持使用带有变量名称的切片"
 
@@ -1735,6 +1723,12 @@ msgstr "内建历史删除 --exact 需要 --case-sensitive"
 
 msgid "builtin history delete only supports --exact"
 msgstr "内建历史删除只支持 --exact"
+
+msgid "called with no arguments. This will be an error in future."
+msgstr "未带参数调用。此操作在未来版本中将视为错误。"
+
+msgid "called with one argument. This will return false in future."
+msgstr ""
 
 msgid "calling job for event handler not found"
 msgstr "未找到事件处理程序的调用作业"
@@ -1936,6 +1930,9 @@ msgid "symlink"
 msgstr "符号链接"
 
 msgid "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+msgstr ""
+
+msgid "the last argument must be ']'"
 msgstr ""
 
 #, c-format

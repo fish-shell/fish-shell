@@ -205,10 +205,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知选项"
 
 #, c-format
-msgid "%s: '%s' is not a valid job ID"
-msgstr "%s: '%s' 不是一个有效的作业 ID"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: 参数 '%s' 超出取值范围"
 
@@ -327,10 +323,6 @@ msgstr "%s: 无效的宽度值 '%s'"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新限制不能为空字符串"
-
-#, c-format
-msgid "%s: No suitable job: %s"
-msgstr "%s: 没有合适的作业：%s"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -547,6 +539,10 @@ msgstr "'%s' 不是一个目录"
 #, c-format
 msgid "'%s' is not a job"
 msgstr "'%s' 不是一个作业"
+
+#, c-format
+msgid "'%s' is not a valid job ID"
+msgstr "'%s' 不是一个有效的作业 ID"
 
 #, c-format
 msgid "'%s' is not a valid process ID"
@@ -1205,6 +1201,10 @@ msgstr "未找到通配符 '%s' 的匹配项。参见 `help %s`。"
 #, c-format
 msgid "No suitable job: %d"
 msgstr "没有合适的作业：%d"
+
+#, c-format
+msgid "No suitable job: %s"
+msgstr "没有合适的作业：%s"
 
 msgid "Not a function"
 msgstr "不是一个函数"

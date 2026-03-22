@@ -2,6 +2,7 @@
 
 use super::prelude::*;
 use crate::common::{EscapeFlags, EscapeStringStyle, escape_string, timef};
+use crate::error::err_fmt;
 use crate::io::IoStreams;
 use crate::job_group::{JobId, MaybeJobId};
 use crate::localization::{wgettext, wgettext_fmt};
@@ -202,11 +203,9 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             if arg.char_at(0) == '%' {
                 match fish_wcstoi(&arg[1..]).ok().filter(|&job_id| job_id >= 0) {
                     None => {
-                        streams.err.appendln(&wgettext_fmt!(
-                            "%s: '%s' is not a valid job ID",
-                            cmd,
-                            arg
-                        ));
+                        err_fmt!("'%s' is not a valid job ID", arg)
+                            .with_cmd(cmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     Some(job_id) => {
@@ -230,9 +229,9 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                 found = true;
             } else {
                 if mode != JobsPrintMode::PrintNothing {
-                    streams
-                        .err
-                        .appendln(&wgettext_fmt!("%s: No suitable job: %s", cmd, arg));
+                    err_fmt!("No suitable job: %s", arg)
+                        .with_cmd(cmd)
+                        .finish(streams);
                 }
                 return Err(STATUS_CMD_ERROR);
             }

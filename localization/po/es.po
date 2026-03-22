@@ -184,10 +184,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: opción desconocida"
 
 #, c-format
-msgid "%s: '%s' is not a valid job ID"
-msgstr "%s: '%s' no es un ID de tarea válido"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: El argumento '%s' está fuera de rango"
 
@@ -306,10 +302,6 @@ msgstr "%s: Valor de ancho no válido '%s'"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: El nuevo límite no puede ser un string vacío"
-
-#, c-format
-msgid "%s: No suitable job: %s"
-msgstr "%s: No hay un trabajo adecuado: %s"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -526,6 +518,10 @@ msgstr "'%s' no es un directorio"
 #, c-format
 msgid "'%s' is not a job"
 msgstr "'%s' no es una tarea"
+
+#, c-format
+msgid "'%s' is not a valid job ID"
+msgstr "'%s' no es un ID de tarea válido"
 
 #, c-format
 msgid "'%s' is not a valid process ID"
@@ -1184,6 +1180,10 @@ msgstr "No hay coincidencias para el comodín '%s'. Consulte `help %s`."
 #, c-format
 msgid "No suitable job: %d"
 msgstr "No hay un trabajo adecuado: %d"
+
+#, c-format
+msgid "No suitable job: %s"
+msgstr "No hay un trabajo adecuado: %s"
 
 msgid "Not a function"
 msgstr "No es una función"

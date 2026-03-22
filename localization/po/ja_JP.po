@@ -183,10 +183,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知のオプションです"
 
 #, c-format
-msgid "%s: '%s' is not a valid job ID"
-msgstr "%s: '%s' は有効なジョブIDではありません"
-
-#, c-format
 msgid "%s: Argument '%s' is out of range"
 msgstr "%s: 引数 '%s' は範囲外です"
 
@@ -305,10 +301,6 @@ msgstr "%s: 幅の値 '%s' が無効です"
 #, c-format
 msgid "%s: New limit cannot be an empty string"
 msgstr "%s: 新しい制限値を空文字列にすることはできません"
-
-#, c-format
-msgid "%s: No suitable job: %s"
-msgstr "%s: 適切なジョブがありません: %s"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -525,6 +517,10 @@ msgstr "'%s' はディレクトリではありません"
 #, c-format
 msgid "'%s' is not a job"
 msgstr "'%s' はジョブではありません"
+
+#, c-format
+msgid "'%s' is not a valid job ID"
+msgstr "'%s' は有効なジョブIDではありません"
 
 #, c-format
 msgid "'%s' is not a valid process ID"
@@ -1183,6 +1179,10 @@ msgstr "ワイルドカード '%s' に一致するものがありません。 `h
 #, c-format
 msgid "No suitable job: %d"
 msgstr "適切なジョブがありません: %d"
+
+#, c-format
+msgid "No suitable job: %s"
+msgstr "適切なジョブがありません: %s"
 
 msgid "Not a function"
 msgstr "関数ではありません"

@@ -89,6 +89,10 @@ msgid "%s could not read response to Primary Device Attribute query after waitin
 msgstr ""
 
 #, c-format
+msgid "%s failed: %s"
+msgstr ""
+
+#, c-format
 msgid "%s is %s"
 msgstr ""
 
@@ -122,10 +126,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: %s %s: options cannot be used together"
-msgstr ""
-
-#, c-format
-msgid "%s: %s failed: %s"
 msgstr ""
 
 #, c-format

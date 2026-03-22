@@ -91,6 +91,10 @@ msgid "%s could not read response to Primary Device Attribute query after waitin
 msgstr "%s は %d 秒間待機しましたが、Primary Device Attribute クエリへの応答を読み取れませんでした。これは多くの場合、ターミナルの機能不足が原因です。 'help %s' または 'man fish-terminal-compatibility' を参照してください。この %s プロセスは未解決のクエリを待機しなくなり、一部のオプション機能が無効になります"
 
 #, c-format
+msgid "%s failed: %s"
+msgstr "%s が失敗しました: %s"
+
+#, c-format
 msgid "%s is %s"
 msgstr "%s は %s です"
 
@@ -125,10 +129,6 @@ msgstr "%s: %s"
 #, c-format
 msgid "%s: %s %s: options cannot be used together"
 msgstr "%s: %s %s: これらのオプションは同時には指定できません"
-
-#, c-format
-msgid "%s: %s failed: %s"
-msgstr "%s: %s が失敗しました: %s"
 
 #, c-format
 msgid "%s: %s must be a positive integer"

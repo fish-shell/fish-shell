@@ -86,6 +86,10 @@ msgid "%s could not read response to Primary Device Attribute query after waitin
 msgstr "%s 在過了 %d 秒後仍無法讀取到查詢主要裝置特性的回應。這通常是由於你的終端機缺少功能，參見「help %s」或「man fish-terminal-compatibility」。此 %s 行程不再會等待未決的查詢，一些非必要的功能將因此停用。"
 
 #, c-format
+msgid "%s failed: %s"
+msgstr ""
+
+#, c-format
 msgid "%s is %s"
 msgstr "%s 是 %s"
 
@@ -120,10 +124,6 @@ msgstr "%s：%s"
 #, c-format
 msgid "%s: %s %s: options cannot be used together"
 msgstr "%s：%s %s：選項不能同時使用"
-
-#, c-format
-msgid "%s: %s failed: %s"
-msgstr "%s：%s 失敗：%s"
 
 #, c-format
 msgid "%s: %s must be a positive integer"

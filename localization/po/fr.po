@@ -221,6 +221,10 @@ msgid "%s could not read response to Primary Device Attribute query after waitin
 msgstr "%s n’a pas pu lire de réponse à une requête « Primary Device Attribute » après avoir attendu %d secondes. Ceci est souvent dû à une fonctionnalité manquante de votre terminal. Voir « help %s » ou « man fish-terminal-compatibility ». Le processus %s va désormais ignorer les requêtes en attente, ce qui désactive quelques fonctionnalités optionnelles."
 
 #, c-format
+msgid "%s failed: %s"
+msgstr ""
+
+#, c-format
 msgid "%s is %s"
 msgstr "%s est %s"
 
@@ -255,10 +259,6 @@ msgstr "%s : %s"
 #, c-format
 msgid "%s: %s %s: options cannot be used together"
 msgstr "%s : %s %s : ces options ne peuvent pas être utilisées ensembles"
-
-#, c-format
-msgid "%s: %s failed: %s"
-msgstr ""
 
 #, c-format
 msgid "%s: %s must be a positive integer"

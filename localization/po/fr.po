@@ -237,6 +237,10 @@ msgid "%s is a function"
 msgstr "%s est une fonction"
 
 #, c-format
+msgid "%s must be a positive integer"
+msgstr ""
+
+#, c-format
 msgid "%s option requires %s"
 msgstr ""
 
@@ -259,10 +263,6 @@ msgstr "%s : %s"
 #, c-format
 msgid "%s: %s %s: options cannot be used together"
 msgstr "%s : %s %s : ces options ne peuvent pas être utilisées ensembles"
-
-#, c-format
-msgid "%s: %s must be a positive integer"
-msgstr ""
 
 #, c-format
 msgid "%s: %s: %s"
@@ -574,10 +574,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: missing subcommand"
-msgstr ""
-
-#, c-format
-msgid "%s: nothing to choose from"
 msgstr ""
 
 #, c-format
@@ -1986,6 +1982,9 @@ msgid "missing hexadecimal number in escape"
 msgstr "nombre hexadécimal manquant dans l’échappement"
 
 msgid "missing subcommand"
+msgstr ""
+
+msgid "nothing to choose from"
 msgstr ""
 
 #, c-format

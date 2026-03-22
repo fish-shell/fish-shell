@@ -108,6 +108,10 @@ msgid "%s is a function"
 msgstr "%s ist eine Funktion"
 
 #, c-format
+msgid "%s must be a positive integer"
+msgstr "%s muss eine positive Ganzzahl sein"
+
+#, c-format
 msgid "%s option requires %s"
 msgstr "Option %s braucht %s"
 
@@ -130,10 +134,6 @@ msgstr "%s: %s"
 #, c-format
 msgid "%s: %s %s: options cannot be used together"
 msgstr ""
-
-#, c-format
-msgid "%s: %s must be a positive integer"
-msgstr "%s: %s muss eine positive Ganzzahl sein"
 
 #, c-format
 msgid "%s: %s: %s"
@@ -446,10 +446,6 @@ msgstr ""
 #, c-format
 msgid "%s: missing subcommand"
 msgstr "%s: fehlender Unterbefehl"
-
-#, c-format
-msgid "%s: nothing to choose from"
-msgstr ""
 
 #, c-format
 msgid "%s: option cannot be used with a non-option argument"
@@ -1858,6 +1854,9 @@ msgstr "fehlende Hexadezimal-Zahl in Escapesequenz"
 
 msgid "missing subcommand"
 msgstr "fehlender Unterbefehl"
+
+msgid "nothing to choose from"
+msgstr ""
 
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"

@@ -102,6 +102,10 @@ msgid "%s is a function"
 msgstr "%s 是函式"
 
 #, c-format
+msgid "%s must be a positive integer"
+msgstr ""
+
+#, c-format
 msgid "%s option requires %s"
 msgstr ""
 
@@ -124,10 +128,6 @@ msgstr "%s：%s"
 #, c-format
 msgid "%s: %s %s: options cannot be used together"
 msgstr "%s：%s %s：選項不能同時使用"
-
-#, c-format
-msgid "%s: %s must be a positive integer"
-msgstr "%s：%s 必須是正整數"
 
 #, c-format
 msgid "%s: %s: %s"
@@ -440,10 +440,6 @@ msgstr "%s：缺少檔案名稱引數或輸入重新導向"
 #, c-format
 msgid "%s: missing subcommand"
 msgstr "%s：缺少子命令"
-
-#, c-format
-msgid "%s: nothing to choose from"
-msgstr "%s：沒得選擇"
 
 #, c-format
 msgid "%s: option cannot be used with a non-option argument"
@@ -1855,6 +1851,9 @@ msgid "missing hexadecimal number in escape"
 msgstr "轉義序列缺少十六進位數字"
 
 msgid "missing subcommand"
+msgstr ""
+
+msgid "nothing to choose from"
 msgstr ""
 
 #, c-format

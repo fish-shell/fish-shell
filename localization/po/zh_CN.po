@@ -129,6 +129,10 @@ msgid "%s is a function"
 msgstr "%s 是一个函数"
 
 #, c-format
+msgid "%s must be a positive integer"
+msgstr "%s 必须是正整数"
+
+#, c-format
 msgid "%s option requires %s"
 msgstr "%s 选项需要 %s"
 
@@ -151,10 +155,6 @@ msgstr "%s: %s"
 #, c-format
 msgid "%s: %s %s: options cannot be used together"
 msgstr "%s: %s %s: 选项无法一起使用"
-
-#, c-format
-msgid "%s: %s must be a positive integer"
-msgstr "%s: %s 必须是正整数"
 
 #, c-format
 msgid "%s: %s: %s"
@@ -467,10 +467,6 @@ msgstr "%s: 缺少文件名参数或输入重定向"
 #, c-format
 msgid "%s: missing subcommand"
 msgstr "%s: 缺少子命令"
-
-#, c-format
-msgid "%s: nothing to choose from"
-msgstr "%s: 没有可选项"
 
 #, c-format
 msgid "%s: option cannot be used with a non-option argument"
@@ -1882,6 +1878,9 @@ msgstr "在转义中缺少十六进制数字"
 
 msgid "missing subcommand"
 msgstr "缺少子命令"
+
+msgid "nothing to choose from"
+msgstr "没有可选项"
 
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"

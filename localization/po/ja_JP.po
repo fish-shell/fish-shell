@@ -191,26 +191,6 @@ msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: 関数 '%s' はすでに存在します。 '%s' のコピーを作成できません"
 
 #, c-format
-msgid "%s: Invalid count value '%s'"
-msgstr "%s: カウント値 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid end value '%s'"
-msgstr "%s: 終了値 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid escape style '%s'"
-msgstr "%s: エスケープスタイル '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid fields value '%s'"
-msgstr "%s: フィールド値 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid length value '%s'"
-msgstr "%s: 長さの値 '%s' が無効です"
-
-#, c-format
 msgid "%s: Invalid limit '%s'"
 msgstr "%s: 制限値 '%s' が無効です"
 
@@ -221,26 +201,6 @@ msgstr "%s: 最大一致数 '%s' が無効です"
 #, c-format
 msgid "%s: Invalid max value '%s'"
 msgstr "%s: 最大値 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid padding character of width zero '%s'"
-msgstr "%s: 幅がゼロのパディング文字 '%s' は無効です"
-
-#, c-format
-msgid "%s: Invalid range value for field '%s'"
-msgstr "%s: フィールド '%s' の範囲値が無効です"
-
-#, c-format
-msgid "%s: Invalid start value '%s'"
-msgstr "%s: 開始値 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid style value '%s'"
-msgstr "%s: スタイル値 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid width value '%s'"
-msgstr "%s: 幅の値 '%s' が無効です"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -259,16 +219,8 @@ msgid "%s: Number was empty"
 msgstr "%s: 数値が空です"
 
 #, c-format
-msgid "%s: Padding should be a character '%s'"
-msgstr "%s: パディングには1文字を指定する必要があります '%s'"
-
-#, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: 正規表現のコンパイルエラー: %s"
-
-#, c-format
-msgid "%s: Regular expression substitute error: %s"
-msgstr "%s: 正規表現の置換エラー: %s"
 
 #, c-format
 msgid "%s: Resource limit not available on this operating system"
@@ -971,6 +923,26 @@ msgid "Invalid arguments"
 msgstr "引数が無効です"
 
 #, c-format
+msgid "Invalid count value '%s'"
+msgstr "カウント値 '%s' が無効です"
+
+#, c-format
+msgid "Invalid end value '%s'"
+msgstr "終了値 '%s' が無効です"
+
+#, c-format
+msgid "Invalid escape sequence in pattern \"%s\""
+msgstr ""
+
+#, c-format
+msgid "Invalid escape style '%s'"
+msgstr "エスケープスタイル '%s' が無効です"
+
+#, c-format
+msgid "Invalid fields value '%s'"
+msgstr "フィールド値 '%s' が無効です"
+
+#, c-format
 msgid "Invalid function name: %s"
 msgstr "関数名が無効です: %s"
 
@@ -989,8 +961,20 @@ msgid "Invalid job control mode '%s'"
 msgstr "ジョブ制御モード '%s' が無効です"
 
 #, c-format
+msgid "Invalid length value '%s'"
+msgstr "長さの値 '%s' が無効です"
+
+#, c-format
 msgid "Invalid level value '%s'"
 msgstr "レベル値 '%s' が無効です"
+
+#, c-format
+msgid "Invalid max matches value '%s'"
+msgstr "最大一致数 '%s' が無効です"
+
+#, c-format
+msgid "Invalid max value '%s'"
+msgstr "最大値 '%s' が無効です"
 
 #, c-format
 msgid "Invalid number: %s"
@@ -1001,12 +985,20 @@ msgid "Invalid option spec '%s' at char '%c'"
 msgstr "オプション仕様 '%s' の文字 '%c' が無効です"
 
 #, c-format
+msgid "Invalid padding character of width zero '%s'"
+msgstr "幅がゼロのパディング文字 '%s' は無効です"
+
+#, c-format
 msgid "Invalid permission '%s'"
 msgstr "パーミッション '%s' が無効です"
 
 #, c-format
 msgid "Invalid position '%s'"
 msgstr "位置 '%s' が無効です"
+
+#, c-format
+msgid "Invalid range value for field '%s'"
+msgstr "フィールド '%s' の範囲値が無効です"
 
 #, c-format
 msgid "Invalid redirection target: %s"
@@ -1020,8 +1012,16 @@ msgstr "リダイレクトが無効です: %s"
 msgid "Invalid sort key '%s'"
 msgstr "ソートキー '%s' が無効です"
 
+#, c-format
+msgid "Invalid start value '%s'"
+msgstr "開始値 '%s' が無効です"
+
 msgid "Invalid state"
 msgstr "状態が無効です"
+
+#, c-format
+msgid "Invalid style value '%s'"
+msgstr "スタイル値 '%s' が無効です"
 
 #, c-format
 msgid "Invalid token '%s'"
@@ -1034,6 +1034,10 @@ msgstr "タイプ '%s' が無効です"
 #, c-format
 msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
 msgstr "'--color' オプションの値 '%s' が無効です。 'always'、 'never'、 または 'auto' が必要です"
+
+#, c-format
+msgid "Invalid width value '%s'"
+msgstr "幅の値 '%s' が無効です"
 
 #, c-format
 msgid "Items %u to %u of %u"
@@ -1184,6 +1188,10 @@ msgstr "\"%s\" のオープンに失敗しました: %s"
 msgid "Options %s and %s cannot be used together"
 msgstr "オプション %s と %s は同時には指定できません"
 
+#, c-format
+msgid "Padding should be a character '%s'"
+msgstr "パディングには1文字を指定する必要があります '%s'"
+
 msgid "Parse options in fish script"
 msgstr "fish スクリプト内のオプションを解析します"
 
@@ -1270,6 +1278,10 @@ msgstr "RefCell の動的借用"
 #, c-format
 msgid "Regular expression compile error: %s"
 msgstr "正規表現のコンパイルエラー: %s"
+
+#, c-format
+msgid "Regular expression substitute error: %s"
+msgstr "正規表現の置換エラー: %s"
 
 msgid "Remove job from job list"
 msgstr "ジョブリストからジョブを削除します"

@@ -213,26 +213,6 @@ msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: 函数 '%s' 已经存在。无法创建副本 '%s'"
 
 #, c-format
-msgid "%s: Invalid count value '%s'"
-msgstr "%s: 无效的计数值 '%s'"
-
-#, c-format
-msgid "%s: Invalid end value '%s'"
-msgstr "%s: 无效的终止值 '%s'"
-
-#, c-format
-msgid "%s: Invalid escape style '%s'"
-msgstr "%s: 无效的转义格式 '%s'"
-
-#, c-format
-msgid "%s: Invalid fields value '%s'"
-msgstr "%s: 无效的字段值 '%s'"
-
-#, c-format
-msgid "%s: Invalid length value '%s'"
-msgstr "%s: 无效的长度值 '%s'"
-
-#, c-format
 msgid "%s: Invalid limit '%s'"
 msgstr "%s: 无效的限制 '%s'"
 
@@ -243,26 +223,6 @@ msgstr "%s: 无效的最大匹配值 '%s'"
 #, c-format
 msgid "%s: Invalid max value '%s'"
 msgstr "%s: 无效的最大值 '%s'"
-
-#, c-format
-msgid "%s: Invalid padding character of width zero '%s'"
-msgstr "%s: 宽度为零的无效的填充字符 '%s'"
-
-#, c-format
-msgid "%s: Invalid range value for field '%s'"
-msgstr "%s: 字段 '%s' 的范围值无效"
-
-#, c-format
-msgid "%s: Invalid start value '%s'"
-msgstr "%s: 无效的起始值 '%s'"
-
-#, c-format
-msgid "%s: Invalid style value '%s'"
-msgstr "%s: 无效的样式值 '%s'"
-
-#, c-format
-msgid "%s: Invalid width value '%s'"
-msgstr "%s: 无效的宽度值 '%s'"
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -281,16 +241,8 @@ msgid "%s: Number was empty"
 msgstr "%s：数字为空"
 
 #, c-format
-msgid "%s: Padding should be a character '%s'"
-msgstr "%s: 填充应为字符 '%s'"
-
-#, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: 正则表达式编译错误：%s"
-
-#, c-format
-msgid "%s: Regular expression substitute error: %s"
-msgstr "%s: 正则表达式替换错误：%s"
 
 #, c-format
 msgid "%s: Resource limit not available on this operating system"
@@ -993,6 +945,26 @@ msgid "Invalid arguments"
 msgstr "无效参数"
 
 #, c-format
+msgid "Invalid count value '%s'"
+msgstr "无效的计数值 '%s'"
+
+#, c-format
+msgid "Invalid end value '%s'"
+msgstr "无效的终止值 '%s'"
+
+#, c-format
+msgid "Invalid escape sequence in pattern \"%s\""
+msgstr ""
+
+#, c-format
+msgid "Invalid escape style '%s'"
+msgstr "无效的转义格式 '%s'"
+
+#, c-format
+msgid "Invalid fields value '%s'"
+msgstr "无效的字段值 '%s'"
+
+#, c-format
 msgid "Invalid function name: %s"
 msgstr "无效的函数名：%s"
 
@@ -1011,8 +983,20 @@ msgid "Invalid job control mode '%s'"
 msgstr "无效的作业控制模式 '%s'"
 
 #, c-format
+msgid "Invalid length value '%s'"
+msgstr "无效的长度值 '%s'"
+
+#, c-format
 msgid "Invalid level value '%s'"
 msgstr "无效的级别值 '%s'"
+
+#, c-format
+msgid "Invalid max matches value '%s'"
+msgstr "无效的最大匹配值 '%s'"
+
+#, c-format
+msgid "Invalid max value '%s'"
+msgstr "无效的最大值 '%s'"
 
 #, c-format
 msgid "Invalid number: %s"
@@ -1023,12 +1007,20 @@ msgid "Invalid option spec '%s' at char '%c'"
 msgstr "无效的选项规范 '%s' 于字符 '%c'"
 
 #, c-format
+msgid "Invalid padding character of width zero '%s'"
+msgstr "宽度为零的无效的填充字符 '%s'"
+
+#, c-format
 msgid "Invalid permission '%s'"
 msgstr "无效的权限 '%s'"
 
 #, c-format
 msgid "Invalid position '%s'"
 msgstr "无效的位置 '%s'"
+
+#, c-format
+msgid "Invalid range value for field '%s'"
+msgstr "字段 '%s' 的范围值无效"
 
 #, c-format
 msgid "Invalid redirection target: %s"
@@ -1042,8 +1034,16 @@ msgstr "无效的重定向：%s"
 msgid "Invalid sort key '%s'"
 msgstr "无效的排序键 '%s'"
 
+#, c-format
+msgid "Invalid start value '%s'"
+msgstr "无效的起始值 '%s'"
+
 msgid "Invalid state"
 msgstr "无效状态"
+
+#, c-format
+msgid "Invalid style value '%s'"
+msgstr "无效的样式值 '%s'"
 
 #, c-format
 msgid "Invalid token '%s'"
@@ -1056,6 +1056,10 @@ msgstr "无效类型 '%s'"
 #, c-format
 msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
 msgstr "无效的 '--color' 选项值 '%s'。应为 'always'、'never' 或 'auto'"
+
+#, c-format
+msgid "Invalid width value '%s'"
+msgstr "无效的宽度值 '%s'"
 
 #, c-format
 msgid "Items %u to %u of %u"
@@ -1206,6 +1210,10 @@ msgstr "打开 \"%s\" 失败：%s"
 msgid "Options %s and %s cannot be used together"
 msgstr "选项 %s 和 %s 无法一起使用"
 
+#, c-format
+msgid "Padding should be a character '%s'"
+msgstr "填充应为字符 '%s'"
+
 msgid "Parse options in fish script"
 msgstr "解析 fish 文脚本中的选项"
 
@@ -1292,6 +1300,10 @@ msgstr "RefCell 动态借用"
 #, c-format
 msgid "Regular expression compile error: %s"
 msgstr "正则表达式编译错误：%s"
+
+#, c-format
+msgid "Regular expression substitute error: %s"
+msgstr "正则表达式替换错误：%s"
 
 msgid "Remove job from job list"
 msgstr "从作业列表中删除作业"

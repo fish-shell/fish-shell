@@ -192,26 +192,6 @@ msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid count value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid end value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid escape style '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid fields value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid length value '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Invalid limit '%s'"
 msgstr ""
 
@@ -221,26 +201,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: Invalid max value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid padding character of width zero '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid range value for field '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid start value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid style value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid width value '%s'"
 msgstr ""
 
 #, c-format
@@ -260,15 +220,7 @@ msgid "%s: Number was empty"
 msgstr ""
 
 #, c-format
-msgid "%s: Padding should be a character '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Regular expression compile error: %s"
-msgstr ""
-
-#, c-format
-msgid "%s: Regular expression substitute error: %s"
 msgstr ""
 
 #, c-format
@@ -972,6 +924,26 @@ msgid "Invalid arguments"
 msgstr ""
 
 #, c-format
+msgid "Invalid count value '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid end value '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid escape sequence in pattern \"%s\""
+msgstr ""
+
+#, c-format
+msgid "Invalid escape style '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid fields value '%s'"
+msgstr ""
+
+#, c-format
 msgid "Invalid function name: %s"
 msgstr ""
 
@@ -990,7 +962,19 @@ msgid "Invalid job control mode '%s'"
 msgstr ""
 
 #, c-format
+msgid "Invalid length value '%s'"
+msgstr ""
+
+#, c-format
 msgid "Invalid level value '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid max matches value '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid max value '%s'"
 msgstr ""
 
 #, c-format
@@ -1002,11 +986,19 @@ msgid "Invalid option spec '%s' at char '%c'"
 msgstr ""
 
 #, c-format
+msgid "Invalid padding character of width zero '%s'"
+msgstr ""
+
+#, c-format
 msgid "Invalid permission '%s'"
 msgstr ""
 
 #, c-format
 msgid "Invalid position '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid range value for field '%s'"
 msgstr ""
 
 #, c-format
@@ -1021,8 +1013,16 @@ msgstr ""
 msgid "Invalid sort key '%s'"
 msgstr ""
 
+#, c-format
+msgid "Invalid start value '%s'"
+msgstr ""
+
 msgid "Invalid state"
 msgstr "Invalid state"
+
+#, c-format
+msgid "Invalid style value '%s'"
+msgstr ""
 
 #, c-format
 msgid "Invalid token '%s'"
@@ -1034,6 +1034,10 @@ msgstr ""
 
 #, c-format
 msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
+msgstr ""
+
+#, c-format
+msgid "Invalid width value '%s'"
 msgstr ""
 
 #, c-format
@@ -1185,6 +1189,10 @@ msgstr ""
 msgid "Options %s and %s cannot be used together"
 msgstr ""
 
+#, c-format
+msgid "Padding should be a character '%s'"
+msgstr ""
+
 msgid "Parse options in fish script"
 msgstr ""
 
@@ -1270,6 +1278,10 @@ msgstr ""
 
 #, c-format
 msgid "Regular expression compile error: %s"
+msgstr ""
+
+#, c-format
+msgid "Regular expression substitute error: %s"
 msgstr ""
 
 msgid "Remove job from job list"

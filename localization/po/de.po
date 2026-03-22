@@ -192,26 +192,6 @@ msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: Funktion '%s' existiert schon. Konnte '%s' nicht kopieren"
 
 #, c-format
-msgid "%s: Invalid count value '%s'"
-msgstr "%s: Ungültiger 'count'-Wert '%s'"
-
-#, c-format
-msgid "%s: Invalid end value '%s'"
-msgstr "%s: Ungültiger 'end'-Wert '%s'"
-
-#, c-format
-msgid "%s: Invalid escape style '%s'"
-msgstr "%s: Ungültiger Escape-Stil '%s'"
-
-#, c-format
-msgid "%s: Invalid fields value '%s'"
-msgstr "%s: Ungültiger 'fields'-Wert '%s'"
-
-#, c-format
-msgid "%s: Invalid length value '%s'"
-msgstr "%s: Ungültiger Längenwert '%s'"
-
-#, c-format
 msgid "%s: Invalid limit '%s'"
 msgstr "%s: Ungültiges Limit '%s'"
 
@@ -222,26 +202,6 @@ msgstr ""
 #, c-format
 msgid "%s: Invalid max value '%s'"
 msgstr "%s: Ungültiger Maximalwert '%s'"
-
-#, c-format
-msgid "%s: Invalid padding character of width zero '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid range value for field '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid start value '%s'"
-msgstr "%s: Ungültiger Startwert '%s'"
-
-#, c-format
-msgid "%s: Invalid style value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid width value '%s'"
-msgstr ""
 
 #, c-format
 msgid "%s: New limit cannot be an empty string"
@@ -260,16 +220,8 @@ msgid "%s: Number was empty"
 msgstr "%s: Zahl war leer"
 
 #, c-format
-msgid "%s: Padding should be a character '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: Fehler beim Kompilieren von regulärem Ausdruck: %s"
-
-#, c-format
-msgid "%s: Regular expression substitute error: %s"
-msgstr "%s: Fehler beim Ersetzen von regulärem Ausdruck: %s"
 
 #, c-format
 msgid "%s: Resource limit not available on this operating system"
@@ -972,6 +924,26 @@ msgid "Invalid arguments"
 msgstr "Ungültige Argumente"
 
 #, c-format
+msgid "Invalid count value '%s'"
+msgstr "Ungültiger 'count'-Wert '%s'"
+
+#, c-format
+msgid "Invalid end value '%s'"
+msgstr "Ungültiger 'end'-Wert '%s'"
+
+#, c-format
+msgid "Invalid escape sequence in pattern \"%s\""
+msgstr ""
+
+#, c-format
+msgid "Invalid escape style '%s'"
+msgstr "Ungültiger Escape-Stil '%s'"
+
+#, c-format
+msgid "Invalid fields value '%s'"
+msgstr "Ungültiger 'fields'-Wert '%s'"
+
+#, c-format
 msgid "Invalid function name: %s"
 msgstr "Ungültiger Funktionsname: %s"
 
@@ -990,8 +962,20 @@ msgid "Invalid job control mode '%s'"
 msgstr "Ungültiger Jobkontrollmodus '%s'"
 
 #, c-format
+msgid "Invalid length value '%s'"
+msgstr "Ungültiger Längenwert '%s'"
+
+#, c-format
 msgid "Invalid level value '%s'"
 msgstr ""
+
+#, c-format
+msgid "Invalid max matches value '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid max value '%s'"
+msgstr "Ungültiger Maximalwert '%s'"
 
 #, c-format
 msgid "Invalid number: %s"
@@ -1002,12 +986,20 @@ msgid "Invalid option spec '%s' at char '%c'"
 msgstr "Ungültige Options-Spezifikation '%s' bei Zeichen '%c'"
 
 #, c-format
+msgid "Invalid padding character of width zero '%s'"
+msgstr ""
+
+#, c-format
 msgid "Invalid permission '%s'"
 msgstr "Ungültiger Rechtewert '%s'"
 
 #, c-format
 msgid "Invalid position '%s'"
 msgstr "Ungültige Position '%s'"
+
+#, c-format
+msgid "Invalid range value for field '%s'"
+msgstr ""
 
 #, c-format
 msgid "Invalid redirection target: %s"
@@ -1021,7 +1013,15 @@ msgstr "Ungültige Umleitung: %s"
 msgid "Invalid sort key '%s'"
 msgstr "Ungültiger Sortierschlüssel '%s'"
 
+#, c-format
+msgid "Invalid start value '%s'"
+msgstr "Ungültiger Startwert '%s'"
+
 msgid "Invalid state"
+msgstr ""
+
+#, c-format
+msgid "Invalid style value '%s'"
 msgstr ""
 
 #, c-format
@@ -1035,6 +1035,10 @@ msgstr ""
 #, c-format
 msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
 msgstr "Ungültiger Wert für '--color'-Option: '%s'. Erwartet wird 'always', 'never' oder 'auto'"
+
+#, c-format
+msgid "Invalid width value '%s'"
+msgstr ""
 
 #, c-format
 msgid "Items %u to %u of %u"
@@ -1185,6 +1189,10 @@ msgstr ""
 msgid "Options %s and %s cannot be used together"
 msgstr ""
 
+#, c-format
+msgid "Padding should be a character '%s'"
+msgstr ""
+
 msgid "Parse options in fish script"
 msgstr "Optionen in einem Fishskript parsen"
 
@@ -1271,6 +1279,10 @@ msgstr ""
 #, c-format
 msgid "Regular expression compile error: %s"
 msgstr "Fehler beim Kompilieren von regulärem Ausdruck: %s"
+
+#, c-format
+msgid "Regular expression substitute error: %s"
+msgstr "Fehler beim Ersetzen von regulärem Ausdruck: %s"
 
 msgid "Remove job from job list"
 msgstr "Job aus der Jobliste entfernen"

@@ -131,11 +131,11 @@ string pad -c_ --width 5 --center --right longer-than-width-param x
 # Current behavior is that only a single padding character is supported.
 # We can support longer strings in future without breaking compatibility.
 string pad -c ab -w4 .
-# CHECKERR: string pad: Padding should be a character 'ab'
+# CHECKERR: string: pad: Padding should be a character 'ab'
 
 # nonprintable characters does not make sense
 string pad -c \u07 .
-# CHECKERR: string pad: Invalid padding character of width zero {{'\a'}}
+# CHECKERR: string: pad: Invalid padding character of width zero {{'\a'}}
 
 # Visible length. Let's start off simple, colors are ignored:
 string length --visible (set_color red)abc
@@ -240,37 +240,37 @@ string split --fields=2,9 "" abc; or echo "exit 1"
 # CHECK: exit 1
 
 string split --fields=2-3-,9 "" a
-# CHECKERR: string split: 2-3-,9: invalid integer
+# CHECKERR: string: split: 2-3-,9: invalid integer
 
 string split --fields=1-99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 "" abc
-# CHECKERR: string split: 1-99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999: invalid integer
+# CHECKERR: string: split: 1-99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999: invalid integer
 
 string split --fields=99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999-1 "" abc
-# CHECKERR: string split: 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999-1: invalid integer
+# CHECKERR: string: split: 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999-1: invalid integer
 
 string split --fields=1--2 "" b
-# CHECKERR: string split: 1--2: invalid integer
+# CHECKERR: string: split: 1--2: invalid integer
 
 string split --fields=0 "" c
-# CHECKERR: string split: Invalid fields value '0'
+# CHECKERR: string: split: Invalid fields value '0'
 
 string split --fields=99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 "" abc
-# CHECKERR: string split: 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999: invalid integer
+# CHECKERR: string: split: 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999: invalid integer
 
 string split --fields=1-0 "" d
-# CHECKERR: string split: Invalid range value for field '1-0'
+# CHECKERR: string: split: Invalid range value for field '1-0'
 
 string split --fields=0-1 "" e
-# CHECKERR: string split: Invalid range value for field '0-1'
+# CHECKERR: string: split: Invalid range value for field '0-1'
 
 string split --fields=-1 "" f
-# CHECKERR: string split: -1: invalid integer
+# CHECKERR: string: split: -1: invalid integer
 
 string split --fields=1a "" g
-# CHECKERR: string split: 1a: invalid integer
+# CHECKERR: string: split: 1a: invalid integer
 
 string split --fields=a "" h
-# CHECKERR: string split: a: invalid integer
+# CHECKERR: string: split: a: invalid integer
 
 string split --fields=1-3,5,9-7 "" 123456789
 # CHECK: 1
@@ -492,9 +492,9 @@ string match -r '^([ugoa]*)([=+-]?)([rwx]*)$' '=r'
 
 ### Test some failure cases
 string match -r "[" "a[sd"; and echo "unexpected exit 0"
-# CHECKERR: string match: Regular expression compile error: missing terminating ] for character class
-# CHECKERR: string match: [
-# CHECKERR: string match: ^
+# CHECKERR: string: match: Regular expression compile error: missing terminating ] for character class
+# CHECKERR: string: match: [
+# CHECKERR: string: match: ^
 
 # FIXME: This prints usage summary?
 #string invalidarg; and echo "unexpected exit 0"
@@ -532,7 +532,7 @@ echo foo | string repeat 2
 # CHECK: foofoo
 
 string repeat foo
-# CHECKERR: string repeat: Invalid count value 'foo'
+# CHECKERR: string: repeat: Invalid count value 'foo'
 
 string repeat -n2 -q foo; and echo "exit 0"
 # CHECK: exit 0
@@ -607,29 +607,29 @@ echo after
 # CHECK: beforeafter
 
 string repeat -n-1 foo; and echo "exit 0"
-# CHECKERR: string repeat: Invalid count value '-1'
+# CHECKERR: string: repeat: Invalid count value '-1'
 
 string repeat -m-1 foo; and echo "exit 0"
-# CHECKERR: string repeat: Invalid max value '-1'
+# CHECKERR: string: repeat: Invalid max value '-1'
 
 string repeat -n notanumber foo; and echo "exit 0"
-# CHECKERR: string repeat: notanumber: invalid integer
+# CHECKERR: string: repeat: notanumber: invalid integer
 
 string repeat -m notanumber foo; and echo "exit 0"
-# CHECKERR: string repeat: notanumber: invalid integer
+# CHECKERR: string: repeat: notanumber: invalid integer
 
 echo stdin | string repeat -n1 "and arg"; and echo "exit 0"
-# CHECKERR: string repeat: too many arguments
+# CHECKERR: string: repeat: too many arguments
 
 string repeat -n; and echo "exit 0"
-# CHECKERR: string repeat: -n: option requires an argument
+# CHECKERR: string: repeat: -n: option requires an argument
 
 # FIXME: Also triggers usage
 # string repeat -l fakearg
-# DONTCHECKERR: string repeat: Unknown option '-l'
+# DONTCHECKERR: string: repeat: Unknown option '-l'
 
 string repeat ""
-# CHECKERR: string repeat: Invalid count value ''
+# CHECKERR: string: repeat: Invalid count value ''
 
 string repeat -n3 ""
 or echo string repeat empty string failed
@@ -899,14 +899,14 @@ echo $status
 
 # should not be able to enable UTF mode
 string match -r "(*UTF).*" aaa
-# CHECKERR: string match: Regular expression compile error: using UTF is disabled by the application
-# CHECKERR: string match: (*UTF).*
-# CHECKERR: string match:      ^
+# CHECKERR: string: match: Regular expression compile error: using UTF is disabled by the application
+# CHECKERR: string: match: (*UTF).*
+# CHECKERR: string: match:      ^
 
 string replace -r "(*UTF).*" aaa
-# CHECKERR: string replace: Regular expression compile error: using UTF is disabled by the application
-# CHECKERR: string replace: (*UTF).*
-# CHECKERR: string replace:      ^
+# CHECKERR: string: replace: Regular expression compile error: using UTF is disabled by the application
+# CHECKERR: string: replace: (*UTF).*
+# CHECKERR: string: replace:      ^
 
 string match -eq asd asd
 echo $status

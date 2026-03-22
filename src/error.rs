@@ -159,6 +159,12 @@ impl<'a> Error<'a> {
 
         pub STDIN_CLOSED
         "stdin is closed"
+
+        pub INVALID_MAX_MATCHES
+        "Invalid max matches value '%s'"
+
+        pub INVALID_MAX_VALUE
+        "Invalid max value '%s'"
     );
 
     pub fn new(msg: Cow<'a, wstr>) -> Self {

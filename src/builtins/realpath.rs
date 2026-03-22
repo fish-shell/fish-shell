@@ -4,6 +4,7 @@ use errno::errno;
 
 use super::prelude::*;
 use crate::env::Environment as _;
+use crate::err_fmt;
 use crate::{
     path::path_apply_working_directory,
     wutil::{normalize_path, wrealpath},
@@ -82,16 +83,13 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
             } else {
                 let errno = errno();
                 if errno.0 != 0 {
-                    streams.err.appendln(&wgettext_fmt!(
-                        "builtin %s: %s: %s",
-                        cmd,
-                        arg,
-                        errno.to_string()
-                    ));
+                    err_fmt!("%s: %s", arg, errno.to_string())
+                        .with_cmd(cmd)
+                        .finish(streams);
                 } else {
-                    streams
-                        .err
-                        .appendln(&wgettext_fmt!("builtin %s: Invalid arg: %s", cmd, arg));
+                    err_fmt!("Invalid arg: %s", arg)
+                        .with_cmd(cmd)
+                        .finish(streams);
                 }
                 had_error = true;
             }
@@ -106,12 +104,9 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
                 };
                 streams.out.appendln(&normalize_path(&absolute_arg, false));
             } else {
-                streams.err.appendln(&wgettext_fmt!(
-                    "builtin %s: %s failed: %s",
-                    cmd,
-                    "realpath",
-                    errno().to_string()
-                ));
+                err_fmt!("%s failed: %s", "realpath", errno().to_string())
+                    .with_cmd(cmd)
+                    .finish(streams);
                 had_error = true;
             }
         }

@@ -1008,6 +1008,10 @@ msgstr "--min-args の値 '%s' が無効です"
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr "--unknown-arguments の値 '%s' が無効です"
 
+#, c-format
+msgid "Invalid arg: %s"
+msgstr ""
+
 msgid "Invalid arguments"
 msgstr "引数が無効です"
 
@@ -1699,18 +1703,6 @@ msgstr "配列のインデックスは 0 ではなく 1 から始まります"
 
 msgid "autoloading"
 msgstr "オートロード中"
-
-#, c-format
-msgid "builtin %s: %s failed: %s"
-msgstr "組み込みコマンド %s: %s が失敗しました: %s"
-
-#, c-format
-msgid "builtin %s: %s: %s"
-msgstr "組み込みコマンド %s: %s: %s"
-
-#, c-format
-msgid "builtin %s: Invalid arg: %s"
-msgstr "組み込みコマンド %s: 無効な引数です: %s"
 
 msgid "builtin history delete --exact requires --case-sensitive"
 msgstr "組み込みコマンド history delete --exact には --case-sensitive が必要です"

@@ -1003,6 +1003,10 @@ msgstr ""
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr ""
 
+#, c-format
+msgid "Invalid arg: %s"
+msgstr ""
+
 msgid "Invalid arguments"
 msgstr "引數無效"
 
@@ -1695,18 +1699,6 @@ msgstr "陣列索引值從 1 開始而非 0。"
 
 msgid "autoloading"
 msgstr "自動載入"
-
-#, c-format
-msgid "builtin %s: %s failed: %s"
-msgstr "內建命令 %s：%s 失敗：%s"
-
-#, c-format
-msgid "builtin %s: %s: %s"
-msgstr "內建命令 %s：%s：%s"
-
-#, c-format
-msgid "builtin %s: Invalid arg: %s"
-msgstr "內建命令 %s：無效的引數：%s"
 
 msgid "builtin history delete --exact requires --case-sensitive"
 msgstr "內建命令 history delete --exact 需要 --case-sensitive"

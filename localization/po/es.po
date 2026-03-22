@@ -1009,6 +1009,10 @@ msgstr "Valor no válido para --min-args '%s'"
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr "Valor no válido para --unknown-arguments '%s'"
 
+#, c-format
+msgid "Invalid arg: %s"
+msgstr ""
+
 msgid "Invalid arguments"
 msgstr "Argumentos inválidos"
 
@@ -1700,18 +1704,6 @@ msgstr "los índices del array empiezan en 1, no en 0."
 
 msgid "autoloading"
 msgstr "carga automática"
-
-#, c-format
-msgid "builtin %s: %s failed: %s"
-msgstr "builtin %s: %s inválido: %s"
-
-#, c-format
-msgid "builtin %s: %s: %s"
-msgstr ""
-
-#, c-format
-msgid "builtin %s: Invalid arg: %s"
-msgstr "builtin %s: argumento inválido: %s"
 
 msgid "builtin history delete --exact requires --case-sensitive"
 msgstr ""

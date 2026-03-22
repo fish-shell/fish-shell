@@ -1030,6 +1030,10 @@ msgstr "无效的 --min-args 值 '%s'"
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr "无效的 --unknown-arguments 值 '%s'"
 
+#, c-format
+msgid "Invalid arg: %s"
+msgstr ""
+
 msgid "Invalid arguments"
 msgstr "无效参数"
 
@@ -1721,18 +1725,6 @@ msgstr "数组索引起始为 1，而不是 0。"
 
 msgid "autoloading"
 msgstr "自动加载"
-
-#, c-format
-msgid "builtin %s: %s failed: %s"
-msgstr "内建 %s: %s 失败：%s"
-
-#, c-format
-msgid "builtin %s: %s: %s"
-msgstr "内建 %s: %s: %s"
-
-#, c-format
-msgid "builtin %s: Invalid arg: %s"
-msgstr "内建 %s: 无效的参数：%s"
 
 msgid "builtin history delete --exact requires --case-sensitive"
 msgstr "内建历史删除 --exact 需要 --case-sensitive"

@@ -1009,6 +1009,10 @@ msgstr ""
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr ""
 
+#, c-format
+msgid "Invalid arg: %s"
+msgstr ""
+
 msgid "Invalid arguments"
 msgstr "Ungültige Argumente"
 
@@ -1700,18 +1704,6 @@ msgstr "Array-Indizes beginnen mit 1, nicht 0"
 
 msgid "autoloading"
 msgstr ""
-
-#, c-format
-msgid "builtin %s: %s failed: %s"
-msgstr ""
-
-#, c-format
-msgid "builtin %s: %s: %s"
-msgstr "builtin %s: %s: %s"
-
-#, c-format
-msgid "builtin %s: Invalid arg: %s"
-msgstr "builtin %s: Ungültiges argument: %s"
 
 msgid "builtin history delete --exact requires --case-sensitive"
 msgstr "builtin history delete --exact benötigt --case-sensitive"

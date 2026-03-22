@@ -187,23 +187,23 @@ impl<'a> Error<'a> {
             s.extend(append.chars());
         }
     }
-    pub fn finish(mut self, streams: &mut IoStreams) {
+    pub fn finish(self, streams: &mut IoStreams) {
         self.append_to(streams.err);
     }
 
-    pub fn to_string(&mut self) -> WString {
+    pub fn to_string(&self) -> WString {
         let mut out = OutputStream::String(StringOutputStream::new());
         self.append_to(&mut out);
         out.take()
     }
 
-    fn append_to(&mut self, output: &mut OutputStream) {
+    fn append_to(&self, output: &mut OutputStream) {
         self.print_msg(output);
         self.print_stacktrace(output);
         self.print_hint(output);
     }
 
-    fn print_msg(&mut self, output: &mut OutputStream) {
+    fn print_msg(&self, output: &mut OutputStream) {
         match (self.cmd, self.subcmd) {
             (None, _) => {
                 output.appendln(&self.msg);
@@ -217,7 +217,7 @@ impl<'a> Error<'a> {
         }
     }
 
-    fn print_stacktrace(&mut self, output: &mut OutputStream) {
+    fn print_stacktrace(&self, output: &mut OutputStream) {
         let Some(parser) = self.parser else {
             return;
         };
@@ -228,7 +228,7 @@ impl<'a> Error<'a> {
         }
     }
 
-    fn print_hint(&mut self, output: &mut OutputStream) {
+    fn print_hint(&self, output: &mut OutputStream) {
         if !self.hint {
             return;
         }

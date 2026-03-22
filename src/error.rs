@@ -88,6 +88,10 @@ impl<'a> Error<'a> {
         pub EXPORT_UNEXPORT
         "cannot both export and unexport"
 
+        /// Error message for specifying both path and unpath to set/read.
+        pub PATH_UNPATH
+        "cannot both path and unpath"
+
         /// Error message for unknown switch.
         pub UNKNOWN_OPT
         "%s: unknown option"

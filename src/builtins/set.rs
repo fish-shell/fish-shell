@@ -8,6 +8,8 @@ use crate::env::EnvStackSetResult;
 use crate::env::EnvVarFlags;
 use crate::env::INHERITED_VARS;
 use crate::err_fmt;
+use crate::err_str;
+use crate::error::Error;
 use crate::event;
 use crate::event::Event;
 use crate::expand::expand_escape_string;
@@ -177,22 +179,24 @@ impl Options {
                     let optind = w.wopt_index;
                     // implicit drop(w); here
                     if args[optind - 1].starts_with("-o") {
-                        // TODO: translate this
-                        streams.err.appendln(&sprintf!(
+                        let mut err = err_fmt!(
                             "Fish does not have shell options. See `help %s`.",
                             help_section!("fish_for_bash_users")
-                        ));
+                        );
+
                         if optind < args.len() {
+                            err.append_assign_to_msg('\n');
                             if args[optind] == "vi" {
                                 // Tell the vi users how to get what they need.
-                                streams
-                                    .err
-                                    .appendln(L!("To enable vi-mode, run `fish_vi_key_bindings`."));
+                                err.append_assign_to_msg(wgettext!(
+                                    "To enable vi-mode, run `fish_vi_key_bindings`."
+                                ));
                             } else if args[optind] == "ed" {
                                 // This should be enough for make ed users feel at home
-                                streams.err.append(L!("?\n?\n?\n"));
+                                err.append_assign_to_msg(L!("?\n?\n?\n"));
                             }
                         }
+                        err.finish(streams);
                     }
 
                     builtin_unknown_option(parser, streams, cmd, args[optind - 1], false);
@@ -226,15 +230,19 @@ impl Options {
     ) -> Result<(), ErrorCode> {
         // Can't query and erase or list.
         if opts.query && (opts.erase || opts.list) {
-            streams.err.appendln(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!(Error::COMBO)
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         // We can't both list and erase variables.
         if opts.erase && opts.list {
-            streams.err.appendln(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!(Error::COMBO)
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -247,35 +255,37 @@ impl Options {
             // ..unless we are erasing a variable, in which case we can erase from several in one go.
             && !opts.erase
         {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!(Error::MULTIPLE_SCOPES)
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         // Variables can only have one export status.
         if opts.exportv && opts.unexport {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!(Error::EXPORT_UNEXPORT)
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         // Variables can only have one path status.
         if opts.pathvar && opts.unpathvar {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_PATHUNPATH, cmd));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!(Error::PATH_UNPATH)
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         // Trying to erase and (un)export at the same time doesn't make sense.
         if opts.erase && (opts.exportv || opts.unexport) {
-            streams.err.appendln(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!(Error::COMBO)
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -289,18 +299,18 @@ impl Options {
                 || opts.exportv
                 || opts.universal)
         {
-            streams.err.appendln(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!(Error::COMBO)
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if args.len() == optind && opts.erase {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_MISSING_OPT_ARG,
-                cmd,
-                L!("--erase")
-            ));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_fmt!(Error::MISSING_OPT_ARG, L!("--erase"))
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -321,11 +331,12 @@ fn warn_if_uvar_shadows_global(
         && parser.is_interactive()
         && parser.vars().getf(dest, EnvMode::GLOBAL).is_some()
     {
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: successfully set universal '%s'; but a global by that name shadows it",
-            cmd,
+        err_fmt!(
+            "successfully set universal '%s'; but a global by that name shadows it",
             dest
-        ));
+        )
+        .with_cmd(cmd)
+        .finish(streams);
     }
 }
 
@@ -333,32 +344,30 @@ fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams:
     match retval {
         EnvStackSetResult::Ok => (),
         EnvStackSetResult::Perm => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Tried to change the read-only variable '%s'",
-                cmd,
-                key
-            ));
+            err_fmt!("Tried to change the read-only variable '%s'", key)
+                .with_cmd(cmd)
+                .finish(streams);
         }
         EnvStackSetResult::Scope => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Tried to modify the special variable '%s' with the wrong scope",
-                cmd,
+            err_fmt!(
+                "Tried to modify the special variable '%s' with the wrong scope",
                 key
-            ));
+            )
+            .with_cmd(cmd)
+            .finish(streams);
         }
         EnvStackSetResult::Invalid => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Tried to modify the special variable '%s' to an invalid value",
-                cmd,
+            err_fmt!(
+                "Tried to modify the special variable '%s' to an invalid value",
                 key
-            ));
+            )
+            .with_cmd(cmd)
+            .finish(streams);
         }
         EnvStackSetResult::NotFound => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: The variable '%s' does not exist",
-                cmd,
-                key
-            ));
+            err_fmt!("The variable '%s' does not exist", key)
+                .with_cmd(cmd)
+                .finish(streams);
         }
     }
 }
@@ -397,7 +406,9 @@ impl std::fmt::Display for EnvArrayParseError {
             "{}\n",
             match self {
                 EnvArrayParseError::InvalidIndex(varname) =>
-                    wgettext_fmt!("%s: Invalid index starting at '%s'", "set", varname).to_string(),
+                    err_fmt!("Invalid index starting at '%s'", varname)
+                        .with_cmd(L!("set"))
+                        .to_string(),
             }
         )
     }
@@ -740,11 +751,10 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
             }
 
             if arg.contains('[') {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: `set --show` does not allow slices with the var names",
-                    cmd
-                ));
-                builtin_print_error_trailer(parser, streams.err, cmd);
+                err_str!("`set --show` does not allow slices with the var names")
+                    .with_cmd(cmd)
+                    .with_full_trailer(parser)
+                    .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
 
@@ -944,10 +954,10 @@ fn set_internal(
     argv: &[&wstr],
 ) -> BuiltinResult {
     if argv.is_empty() {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_fmt!(Error::MIN_ARG_COUNT1, 1)
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -983,31 +993,31 @@ fn set_internal(
         // Indexes must be > 0. (Note split_var_and_indexes negates negative values).
         for ind in &split.indexes {
             if *ind <= 0 {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!("%s: array index out of bounds", cmd));
-                builtin_print_error_trailer(parser, streams.err, cmd);
+                err_str!("array index out of bounds")
+                    .with_cmd(cmd)
+                    .with_full_trailer(parser)
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
         }
         // Append and prepend are disallowed.
         if opts.append || opts.prepend {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Cannot use --append or --prepend when assigning to a slice",
-                cmd
-            ));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!("Cannot use --append or --prepend when assigning to a slice")
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         // Argument count and index count must agree.
         if split.indexes.len() != argv.len() {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: given %d indexes but %d values",
-                cmd,
+            err_fmt!(
+                "given %d indexes but %d values",
                 split.indexes.len(),
                 argv.len()
-            ));
+            )
+            .with_cmd(cmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     }

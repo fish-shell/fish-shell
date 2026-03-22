@@ -171,10 +171,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知のオプションです"
 
 #, c-format
-msgid "%s: Cannot use --append or --prepend when assigning to a slice"
-msgstr "%s: スライスへの代入時に --append または --prepend を使用することはできません"
-
-#, c-format
 msgid "%s: Could not find '%s'"
 msgstr "%s: '%s' が見つかりませんでした"
 
@@ -221,10 +217,6 @@ msgstr "%s: エスケープスタイル '%s' が無効です"
 #, c-format
 msgid "%s: Invalid fields value '%s'"
 msgstr "%s: フィールド値 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid index starting at '%s'"
-msgstr "%s: '%s' から始まるインデックスが無効です"
 
 #, c-format
 msgid "%s: Invalid job control mode '%s'"
@@ -303,36 +295,12 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s: このオペレーティングシステムではリソース制限を利用できません"
 
 #, c-format
-msgid "%s: The variable '%s' does not exist"
-msgstr "%s: 変数 '%s' は存在しません"
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s: ジョブはありません"
 
 #, c-format
 msgid "%s: There are no suitable jobs"
 msgstr "%s: 適切なジョブはありません"
-
-#, c-format
-msgid "%s: Tried to change the read-only variable '%s'"
-msgstr "%s: 読み取り専用変数 '%s' を変更しようとしました"
-
-#, c-format
-msgid "%s: Tried to modify the special variable '%s' to an invalid value"
-msgstr "%s: 特別な変数 '%s' を無効な値に変更しようとしました"
-
-#, c-format
-msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
-msgstr "%s: 特別な変数 '%s' を誤ったスコープで変更しようとしました"
-
-#, c-format
-msgid "%s: `set --show` does not allow slices with the var names"
-msgstr "%s: `set --show` では変数名にスライスを使用することはできません"
-
-#, c-format
-msgid "%s: array index out of bounds"
-msgstr "%s: 配列のインデックスが範囲外です"
 
 #, c-format
 msgid "%s: called with no arguments. This will be an error in future."
@@ -381,10 +349,6 @@ msgstr "%s: 数値が必要です"
 #, c-format
 msgid "%s: function name required"
 msgstr "%s: 関数名が必要です"
-
-#, c-format
-msgid "%s: given %d indexes but %d values"
-msgstr "%s: %d 個のインデックスが指定されましたが、値は %d 個です"
 
 #, c-format
 msgid "%s: invalid base value"
@@ -461,10 +425,6 @@ msgstr "%s: スコープは次のいずれかである必要があります: uni
 #, c-format
 msgid "%s: stdin is closed"
 msgstr "%s: 標準入力(stdin)が閉じられています"
-
-#, c-format
-msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
-msgstr "%s: ユニバーサル変数 '%s' の設定に成功しましたが、同名のグローバル変数がそれを覆い隠しています(シャドウイング)"
 
 #, c-format
 msgid "%s: too many arguments"
@@ -696,6 +656,9 @@ msgstr "複数の正規表現パターンを指定することはできません
 msgid "Cannot specify multiple set-cursor options"
 msgstr "複数の set-cursor オプションを指定することはできません"
 
+msgid "Cannot use --append or --prepend when assigning to a slice"
+msgstr "スライスへの代入時に --append または --prepend を使用することはできません"
+
 msgid "Cannot use stdin (fd 0) as pipe output"
 msgstr "標準入力(fd 0)をパイプの出力として使用することはできません"
 
@@ -906,6 +869,10 @@ msgstr "設定の検索と読み込み"
 msgid "Firing events"
 msgstr "イベントの発火"
 
+#, c-format
+msgid "Fish does not have shell options. See `help %s`."
+msgstr ""
+
 msgid "Floating point exception"
 msgstr "浮動小数点例外"
 
@@ -1018,6 +985,10 @@ msgstr "引数が無効です"
 #, c-format
 msgid "Invalid function name: %s"
 msgstr "関数名が無効です: %s"
+
+#, c-format
+msgid "Invalid index starting at '%s'"
+msgstr "'%s' から始まるインデックスが無効です"
 
 msgid "Invalid index value"
 msgstr "インデックス値が無効です"
@@ -1482,6 +1453,10 @@ msgstr "関数 '%s' が自分自身を即座に呼び出しています。これ
 msgid "The interactive reader/input system"
 msgstr "対話型リーダー / 入力システム"
 
+#, c-format
+msgid "The variable '%s' does not exist"
+msgstr "変数 '%s' は存在しません"
+
 msgid "There are no suitable jobs"
 msgstr "適切なジョブはありません"
 
@@ -1496,6 +1471,9 @@ msgstr "これはログインシェルではありません"
 
 msgid "Timer expired"
 msgstr "タイマーが終了しました"
+
+msgid "To enable vi-mode, run `fish_vi_key_bindings`."
+msgstr ""
 
 msgid "Too few arguments"
 msgstr "引数が少なすぎます"
@@ -1521,6 +1499,18 @@ msgstr "トレースまたはブレークポイントトラップ"
 
 msgid "Translate a string"
 msgstr "文字列を翻訳(変換)します"
+
+#, c-format
+msgid "Tried to change the read-only variable '%s'"
+msgstr "読み取り専用変数 '%s' を変更しようとしました"
+
+#, c-format
+msgid "Tried to modify the special variable '%s' to an invalid value"
+msgstr "特別な変数 '%s' を無効な値に変更しようとしました"
+
+#, c-format
+msgid "Tried to modify the special variable '%s' with the wrong scope"
+msgstr "特別な変数 '%s' を誤ったスコープで変更しようとしました"
 
 msgid "Trying to print invalid output"
 msgstr "無効な出力を表示しようとしています"
@@ -1695,8 +1685,14 @@ msgstr "ユニバーサル変数ストアの読み書き"
 msgid "[: the last argument must be ']'"
 msgstr "[: 最後の引数は ']' である必要があります"
 
+msgid "`set --show` does not allow slices with the var names"
+msgstr "`set --show` では変数名にスライスを使用することはできません"
+
 msgid "a path variable"
 msgstr "パス変数"
+
+msgid "array index out of bounds"
+msgstr "配列のインデックスが範囲外です"
 
 msgid "array indices start at 1, not 0."
 msgstr "配列のインデックスは 0 ではなく 1 から始まります"
@@ -1724,6 +1720,9 @@ msgstr "プライベートモードでは履歴をマージできません"
 
 msgid "cannot both export and unexport"
 msgstr "export と unexport を同時に行うことはできません"
+
+msgid "cannot both path and unpath"
+msgstr "path と unpath を同時に行うことはできません"
 
 #, c-format
 msgid "cannot parse key '%s'"
@@ -1802,6 +1801,10 @@ msgstr ""
 #, c-format
 msgid "from sourcing file %s"
 msgstr "ファイル %s を読み込み(source)中"
+
+#, c-format
+msgid "given %d indexes but %d values"
+msgstr "%d 個のインデックスが指定されましたが、値は %d 個です"
 
 msgid "in command substitution"
 msgstr "コマンド置換内"
@@ -1887,6 +1890,10 @@ msgstr "停止中"
 
 msgid "subcommand takes no options"
 msgstr "サブコマンドはオプションを取りません"
+
+#, c-format
+msgid "successfully set universal '%s'; but a global by that name shadows it"
+msgstr "ユニバーサル変数 '%s' の設定に成功しましたが、同名のグローバル変数がそれを覆い隠しています(シャドウイング)"
 
 #, c-format
 msgid "switch: Expected at most one argument, got %u"

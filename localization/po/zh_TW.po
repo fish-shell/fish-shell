@@ -166,10 +166,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s：%s：未知的選項"
 
 #, c-format
-msgid "%s: Cannot use --append or --prepend when assigning to a slice"
-msgstr "%s：指派給切片時不能使用 --append 或 --prepend"
-
-#, c-format
 msgid "%s: Could not find '%s'"
 msgstr "%s：找不到「%s」"
 
@@ -216,10 +212,6 @@ msgstr "%s：無效的轉義樣式「%s」"
 #, c-format
 msgid "%s: Invalid fields value '%s'"
 msgstr "%s：無效的欄位值「%s」"
-
-#, c-format
-msgid "%s: Invalid index starting at '%s'"
-msgstr "%s：無效的索引值，在「%s」處"
 
 #, c-format
 msgid "%s: Invalid job control mode '%s'"
@@ -298,36 +290,12 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr "%s：資源用量限制無法在此作業系統上使用"
 
 #, c-format
-msgid "%s: The variable '%s' does not exist"
-msgstr "%s：變數「%s」不存在"
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s：沒有作業"
 
 #, c-format
 msgid "%s: There are no suitable jobs"
 msgstr "%s：沒有合式的作業"
-
-#, c-format
-msgid "%s: Tried to change the read-only variable '%s'"
-msgstr "%s：試圖變更唯讀變數「%s」"
-
-#, c-format
-msgid "%s: Tried to modify the special variable '%s' to an invalid value"
-msgstr "%s：試圖將特殊變數「%s」修改為無效的值"
-
-#, c-format
-msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
-msgstr "%s：試圖以錯的作用域修改特殊變數「%s」"
-
-#, c-format
-msgid "%s: `set --show` does not allow slices with the var names"
-msgstr "%s：「set --show」不允許使用切片"
-
-#, c-format
-msgid "%s: array index out of bounds"
-msgstr "%s：陣列索引越界"
 
 #, c-format
 msgid "%s: called with no arguments. This will be an error in future."
@@ -376,10 +344,6 @@ msgstr "%s：預期一個數字"
 #, c-format
 msgid "%s: function name required"
 msgstr "%s：需要函式名稱"
-
-#, c-format
-msgid "%s: given %d indexes but %d values"
-msgstr "%s：指定了 %d 個索引卻有 %d 個值"
 
 #, c-format
 msgid "%s: invalid base value"
@@ -456,10 +420,6 @@ msgstr "%s：作用域只能是以下之一：universal、function、global、lo
 #, c-format
 msgid "%s: stdin is closed"
 msgstr "%s：stdin 已關閉"
-
-#, c-format
-msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
-msgstr "%s：成功設定了通域變數「%s」，但有同名的全域變數遮蔽了它"
 
 #, c-format
 msgid "%s: too many arguments"
@@ -691,6 +651,9 @@ msgstr ""
 msgid "Cannot specify multiple set-cursor options"
 msgstr ""
 
+msgid "Cannot use --append or --prepend when assigning to a slice"
+msgstr ""
+
 msgid "Cannot use stdin (fd 0) as pipe output"
 msgstr "不能將 stdin（fd 0）用作管道輸出"
 
@@ -901,6 +864,10 @@ msgstr "組態尋找和讀取"
 msgid "Firing events"
 msgstr "事件發出"
 
+#, c-format
+msgid "Fish does not have shell options. See `help %s`."
+msgstr ""
+
 msgid "Floating point exception"
 msgstr "浮點數例外"
 
@@ -1012,6 +979,10 @@ msgstr "引數無效"
 
 #, c-format
 msgid "Invalid function name: %s"
+msgstr ""
+
+#, c-format
+msgid "Invalid index starting at '%s'"
 msgstr ""
 
 msgid "Invalid index value"
@@ -1478,6 +1449,10 @@ msgstr "函式「%s」立刻呼叫了它自己，這會造成無限迴圈。"
 msgid "The interactive reader/input system"
 msgstr "互動式讀取器／輸入系統"
 
+#, c-format
+msgid "The variable '%s' does not exist"
+msgstr ""
+
 msgid "There are no suitable jobs"
 msgstr ""
 
@@ -1492,6 +1467,9 @@ msgstr "這不是登入 shell"
 
 msgid "Timer expired"
 msgstr "計時器到時間了"
+
+msgid "To enable vi-mode, run `fish_vi_key_bindings`."
+msgstr ""
 
 msgid "Too few arguments"
 msgstr "引數太少"
@@ -1517,6 +1495,18 @@ msgstr "追蹤或斷點陷阱"
 
 msgid "Translate a string"
 msgstr "翻譯字串"
+
+#, c-format
+msgid "Tried to change the read-only variable '%s'"
+msgstr ""
+
+#, c-format
+msgid "Tried to modify the special variable '%s' to an invalid value"
+msgstr ""
+
+#, c-format
+msgid "Tried to modify the special variable '%s' with the wrong scope"
+msgstr ""
 
 msgid "Trying to print invalid output"
 msgstr "嘗試印出無效的輸出"
@@ -1691,8 +1681,14 @@ msgstr "通域變數存檔寫入／讀取"
 msgid "[: the last argument must be ']'"
 msgstr "[：最後一個引數必須是「]」"
 
+msgid "`set --show` does not allow slices with the var names"
+msgstr ""
+
 msgid "a path variable"
 msgstr "路徑變數"
+
+msgid "array index out of bounds"
+msgstr ""
 
 msgid "array indices start at 1, not 0."
 msgstr "陣列索引值從 1 開始而非 0。"
@@ -1719,6 +1715,9 @@ msgid "can't merge history in private mode"
 msgstr ""
 
 msgid "cannot both export and unexport"
+msgstr ""
+
+msgid "cannot both path and unpath"
 msgstr ""
 
 #, c-format
@@ -1798,6 +1797,10 @@ msgstr ""
 #, c-format
 msgid "from sourcing file %s"
 msgstr "在載入的檔案 %s"
+
+#, c-format
+msgid "given %d indexes but %d values"
+msgstr ""
 
 msgid "in command substitution"
 msgstr "在命令替換"
@@ -1882,6 +1885,10 @@ msgid "stopped"
 msgstr "已停止"
 
 msgid "subcommand takes no options"
+msgstr ""
+
+#, c-format
+msgid "successfully set universal '%s'; but a global by that name shadows it"
 msgstr ""
 
 #, c-format

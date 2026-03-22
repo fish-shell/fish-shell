@@ -173,10 +173,6 @@ msgid "%s: %s: unknown option"
 msgstr ""
 
 #, c-format
-msgid "%s: Cannot use --append or --prepend when assigning to a slice"
-msgstr ""
-
-#, c-format
 msgid "%s: Could not find '%s'"
 msgstr "%s: Não foi possível encontrar '%s'"
 
@@ -222,10 +218,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: Invalid fields value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid index starting at '%s'"
 msgstr ""
 
 #, c-format
@@ -305,36 +297,12 @@ msgid "%s: Resource limit not available on this operating system"
 msgstr ""
 
 #, c-format
-msgid "%s: The variable '%s' does not exist"
-msgstr ""
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s: Não há tarefas"
 
 #, c-format
 msgid "%s: There are no suitable jobs"
 msgstr "%s: Não há tarefas adequadas"
-
-#, c-format
-msgid "%s: Tried to change the read-only variable '%s'"
-msgstr "%s: Tentou mudar a variável somente leitura “%s”"
-
-#, c-format
-msgid "%s: Tried to modify the special variable '%s' to an invalid value"
-msgstr ""
-
-#, c-format
-msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
-msgstr ""
-
-#, c-format
-msgid "%s: `set --show` does not allow slices with the var names"
-msgstr ""
-
-#, c-format
-msgid "%s: array index out of bounds"
-msgstr ""
 
 #, c-format
 msgid "%s: called with no arguments. This will be an error in future."
@@ -382,10 +350,6 @@ msgstr "%s: esperava valor numérico"
 
 #, c-format
 msgid "%s: function name required"
-msgstr ""
-
-#, c-format
-msgid "%s: given %d indexes but %d values"
 msgstr ""
 
 #, c-format
@@ -462,10 +426,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: stdin is closed"
-msgstr ""
-
-#, c-format
-msgid "%s: successfully set universal '%s'; but a global by that name shadows it"
 msgstr ""
 
 #, c-format
@@ -698,6 +658,9 @@ msgstr ""
 msgid "Cannot specify multiple set-cursor options"
 msgstr ""
 
+msgid "Cannot use --append or --prepend when assigning to a slice"
+msgstr ""
+
 msgid "Cannot use stdin (fd 0) as pipe output"
 msgstr "Não pode usar entrada padrão (fd 0) como saída de pipe"
 
@@ -908,6 +871,10 @@ msgstr ""
 msgid "Firing events"
 msgstr ""
 
+#, c-format
+msgid "Fish does not have shell options. See `help %s`."
+msgstr ""
+
 msgid "Floating point exception"
 msgstr "Exceção de ponto flutuante"
 
@@ -1019,6 +986,10 @@ msgstr ""
 
 #, c-format
 msgid "Invalid function name: %s"
+msgstr ""
+
+#, c-format
+msgid "Invalid index starting at '%s'"
 msgstr ""
 
 msgid "Invalid index value"
@@ -1484,6 +1455,10 @@ msgstr "A função “%s” se chama imediatamente, o que causaria um loop infin
 msgid "The interactive reader/input system"
 msgstr ""
 
+#, c-format
+msgid "The variable '%s' does not exist"
+msgstr ""
+
 msgid "There are no suitable jobs"
 msgstr "Não há tarefas adequadas"
 
@@ -1498,6 +1473,9 @@ msgstr "Este não é um shell de login"
 
 msgid "Timer expired"
 msgstr "Temporizador expirado"
+
+msgid "To enable vi-mode, run `fish_vi_key_bindings`."
+msgstr ""
 
 msgid "Too few arguments"
 msgstr ""
@@ -1523,6 +1501,18 @@ msgstr "Atingiu ponto de parada"
 
 msgid "Translate a string"
 msgstr "Traduz uma string"
+
+#, c-format
+msgid "Tried to change the read-only variable '%s'"
+msgstr "Tentou mudar a variável somente leitura “%s”"
+
+#, c-format
+msgid "Tried to modify the special variable '%s' to an invalid value"
+msgstr ""
+
+#, c-format
+msgid "Tried to modify the special variable '%s' with the wrong scope"
+msgstr ""
 
 msgid "Trying to print invalid output"
 msgstr ""
@@ -1697,7 +1687,13 @@ msgstr ""
 msgid "[: the last argument must be ']'"
 msgstr ""
 
+msgid "`set --show` does not allow slices with the var names"
+msgstr ""
+
 msgid "a path variable"
+msgstr ""
+
+msgid "array index out of bounds"
 msgstr ""
 
 msgid "array indices start at 1, not 0."
@@ -1725,6 +1721,9 @@ msgid "can't merge history in private mode"
 msgstr ""
 
 msgid "cannot both export and unexport"
+msgstr ""
+
+msgid "cannot both path and unpath"
 msgstr ""
 
 #, c-format
@@ -1801,6 +1800,10 @@ msgstr ""
 #, c-format
 msgid "from sourcing file %s"
 msgstr "do arquivo %s"
+
+#, c-format
+msgid "given %d indexes but %d values"
+msgstr ""
 
 msgid "in command substitution"
 msgstr "na substituição de comando"
@@ -1885,6 +1888,10 @@ msgid "stopped"
 msgstr "parado"
 
 msgid "subcommand takes no options"
+msgstr ""
+
+#, c-format
+msgid "successfully set universal '%s'; but a global by that name shadows it"
 msgstr ""
 
 #, c-format

@@ -309,10 +309,6 @@ msgid "%s: %s: option requires an argument"
 msgstr "%s : %s : cette option doit être utilisée avec un argument"
 
 #, c-format
-msgid "%s: %s: subcommand takes no options"
-msgstr "%s : %s : cette sous-command n’a pas d’option"
-
-#, c-format
 msgid "%s: %s: unknown option"
 msgstr "%s : %s : option inconnue"
 
@@ -514,10 +510,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: called with one argument. This will return false in future."
-msgstr ""
-
-#, c-format
-msgid "%s: can't merge history in private mode"
 msgstr ""
 
 #, c-format
@@ -1865,6 +1857,9 @@ msgstr ""
 msgid "can not save universal variables or functions"
 msgstr ""
 
+msgid "can't merge history in private mode"
+msgstr ""
+
 #, c-format
 msgid "cannot parse key '%s'"
 msgstr ""
@@ -2006,6 +2001,9 @@ msgstr ""
 
 msgid "stopped"
 msgstr "arrêtée"
+
+msgid "subcommand takes no options"
+msgstr ""
 
 #, c-format
 msgid "switch: Expected at most one argument, got %u"

@@ -180,10 +180,6 @@ msgid "%s: %s: option requires an argument"
 msgstr "%s: %s: la opción requiere un argumento"
 
 #, c-format
-msgid "%s: %s: subcommand takes no options"
-msgstr "%s: %s: el subcomando no admite opciones"
-
-#, c-format
 msgid "%s: %s: unknown option"
 msgstr "%s: %s: opción desconocida"
 
@@ -386,10 +382,6 @@ msgstr "%s: llamado sin argumentos. Esto será un error en el futuro."
 #, c-format
 msgid "%s: called with one argument. This will return false in future."
 msgstr "%s: llamado con un argumento. Esto devolverá falso en el futuro."
-
-#, c-format
-msgid "%s: can't merge history in private mode"
-msgstr "%s: no se puede fusionar el historial en modo privado"
 
 #, c-format
 msgid "%s: cannot both export and unexport"
@@ -1736,6 +1728,9 @@ msgstr "no se puede guardar el historial"
 msgid "can not save universal variables or functions"
 msgstr "no se pueden guardar variables o funciones universales"
 
+msgid "can't merge history in private mode"
+msgstr "no se puede fusionar el historial en modo privado"
+
 #, c-format
 msgid "cannot parse key '%s'"
 msgstr "no se puede analizar la clave ‘%s’"
@@ -1880,6 +1875,9 @@ msgstr "la entrada estándar (stdin) está cerrada"
 
 msgid "stopped"
 msgstr "detenido"
+
+msgid "subcommand takes no options"
+msgstr "el subcomando no admite opciones"
 
 #, c-format
 msgid "switch: Expected at most one argument, got %u"

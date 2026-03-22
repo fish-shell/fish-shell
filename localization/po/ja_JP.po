@@ -1881,6 +1881,9 @@ msgstr "検索:"
 msgid "setting cursor while evaluating 'complete --arguments' is not yet supported"
 msgstr "'complete --arguments' の評価中にカーソルを設定することはまだサポートされていません"
 
+msgid "stdin is closed"
+msgstr "標準入力(stdin)が閉じられています"
+
 msgid "stopped"
 msgstr "停止中"
 

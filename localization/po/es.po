@@ -1882,6 +1882,9 @@ msgstr "buscar:"
 msgid "setting cursor while evaluating 'complete --arguments' is not yet supported"
 msgstr "cambiar la posición del cursor durante la evaluación de 'complete --arguments' todavía no está soportado"
 
+msgid "stdin is closed"
+msgstr "la entrada estándar (stdin) está cerrada"
+
 msgid "stopped"
 msgstr "detenido"
 

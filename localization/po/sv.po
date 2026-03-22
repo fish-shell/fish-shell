@@ -1876,6 +1876,9 @@ msgstr ""
 msgid "setting cursor while evaluating 'complete --arguments' is not yet supported"
 msgstr ""
 
+msgid "stdin is closed"
+msgstr ""
+
 msgid "stopped"
 msgstr "stannat"
 

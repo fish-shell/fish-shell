@@ -119,6 +119,9 @@ impl<'a> Error<'a> {
 
         pub COULD_NOT_FIND_JOB
         "Could not find job '%d'"
+
+        pub STDIN_CLOSED
+        "stdin is closed"
     );
 
     pub fn new(msg: Cow<'a, wstr>) -> Self {

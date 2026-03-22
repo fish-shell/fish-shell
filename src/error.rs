@@ -115,6 +115,9 @@ impl<'a> Error<'a> {
         pub INVALID_SUBCMD
         "invalid subcommand"
 
+        pub INVALID_SUBSUBCMD
+        "%s: invalid subcommand"
+
         /// Error messages for unexpected args.
         pub ARG_COUNT0
         "missing argument"

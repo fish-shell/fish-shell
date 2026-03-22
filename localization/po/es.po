@@ -68,10 +68,6 @@ msgid "%s %s: options cannot be used together"
 msgstr ""
 
 #, c-format
-msgid "%s %s: unrecognized feature '%s'"
-msgstr "%s %s: característica no reconocida '%s'"
-
-#, c-format
 msgid "%s (line %d)"
 msgstr "%s (línea %d)"
 
@@ -212,16 +208,8 @@ msgid "%s: Invalid fields value '%s'"
 msgstr "%s: Valor no válido para los campos '%s'"
 
 #, c-format
-msgid "%s: Invalid job control mode '%s'"
-msgstr "%s: Modo de control de trabajos no válido '%s'"
-
-#, c-format
 msgid "%s: Invalid length value '%s'"
 msgstr "%s: Valor de longitud no válido '%s'"
-
-#, c-format
-msgid "%s: Invalid level value '%s'"
-msgstr "%s: Valor de nivel no válido '%s'"
 
 #, c-format
 msgid "%s: Invalid limit '%s'"
@@ -382,6 +370,10 @@ msgstr "%s: combinación de opciones no válida, %s"
 #, c-format
 msgid "%s: invalid scale"
 msgstr "%s: escala no válida"
+
+#, c-format
+msgid "%s: invalid subcommand"
+msgstr "%s: subcomando no válido"
 
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
@@ -992,6 +984,14 @@ msgstr "Valor de índice inválido"
 
 msgid "Invalid input/output redirection"
 msgstr "Redirección de entrada/salida inválida"
+
+#, c-format
+msgid "Invalid job control mode '%s'"
+msgstr "Modo de control de trabajos no válido '%s'"
+
+#, c-format
+msgid "Invalid level value '%s'"
+msgstr "Valor de nivel no válido '%s'"
 
 #, c-format
 msgid "Invalid number: %s"
@@ -1925,6 +1925,10 @@ msgstr "modificador desconocido '%s' en '%s'"
 
 msgid "unlimited"
 msgstr "sin límite"
+
+#, c-format
+msgid "unrecognized feature '%s'"
+msgstr "característica no reconocida '%s'"
 
 msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr "el uso de -i para --silent es obsoleto. Usa -s o --silent en su lugar."

@@ -62,10 +62,6 @@ msgid "%s %s: options cannot be used together"
 msgstr ""
 
 #, c-format
-msgid "%s %s: unrecognized feature '%s'"
-msgstr "%s %s：不認識的功能「%s」"
-
-#, c-format
 msgid "%s (line %d)"
 msgstr "%s（第 %d 行）"
 
@@ -206,16 +202,8 @@ msgid "%s: Invalid fields value '%s'"
 msgstr "%s：無效的欄位值「%s」"
 
 #, c-format
-msgid "%s: Invalid job control mode '%s'"
-msgstr "%s：無效的作業控制模式「%s」"
-
-#, c-format
 msgid "%s: Invalid length value '%s'"
 msgstr "%s：無效的長度「%s」"
-
-#, c-format
-msgid "%s: Invalid level value '%s'"
-msgstr "%s：無效的層級「%s」"
 
 #, c-format
 msgid "%s: Invalid limit '%s'"
@@ -375,6 +363,10 @@ msgstr "%s：無效的選項組合，%s"
 
 #, c-format
 msgid "%s: invalid scale"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid subcommand"
 msgstr ""
 
 #, c-format
@@ -986,6 +978,14 @@ msgstr "索引值無效"
 
 msgid "Invalid input/output redirection"
 msgstr "無效的輸入／輸出重新導向"
+
+#, c-format
+msgid "Invalid job control mode '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid level value '%s'"
+msgstr ""
 
 #, c-format
 msgid "Invalid number: %s"
@@ -1920,6 +1920,10 @@ msgstr "未知的修飾鍵「%s」，於「%s」"
 
 msgid "unlimited"
 msgstr "無限制"
+
+#, c-format
+msgid "unrecognized feature '%s'"
+msgstr ""
 
 msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr ""

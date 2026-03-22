@@ -64,10 +64,6 @@ msgid "%s %s: options cannot be used together"
 msgstr ""
 
 #, c-format
-msgid "%s %s: unrecognized feature '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s (line %d)"
 msgstr "%s (linia %d)"
 
@@ -208,16 +204,8 @@ msgid "%s: Invalid fields value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid job control mode '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Invalid length value '%s'"
 msgstr "%s: Nieprawidłowa wartość długości  '%s'"
-
-#, c-format
-msgid "%s: Invalid level value '%s'"
-msgstr ""
 
 #, c-format
 msgid "%s: Invalid limit '%s'"
@@ -377,6 +365,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: invalid scale"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid subcommand"
 msgstr ""
 
 #, c-format
@@ -987,6 +979,14 @@ msgid "Invalid index value"
 msgstr ""
 
 msgid "Invalid input/output redirection"
+msgstr ""
+
+#, c-format
+msgid "Invalid job control mode '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid level value '%s'"
 msgstr ""
 
 #, c-format
@@ -1917,6 +1917,10 @@ msgid "unknown modifier '%s' in '%s'"
 msgstr ""
 
 msgid "unlimited"
+msgstr ""
+
+#, c-format
+msgid "unrecognized feature '%s'"
 msgstr ""
 
 msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."

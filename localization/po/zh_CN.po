@@ -89,10 +89,6 @@ msgid "%s %s: options cannot be used together"
 msgstr ""
 
 #, c-format
-msgid "%s %s: unrecognized feature '%s'"
-msgstr "%s %s: 未识别的特性 '%s'"
-
-#, c-format
 msgid "%s (line %d)"
 msgstr "%s (行 %d)"
 
@@ -233,16 +229,8 @@ msgid "%s: Invalid fields value '%s'"
 msgstr "%s: 无效的字段值 '%s'"
 
 #, c-format
-msgid "%s: Invalid job control mode '%s'"
-msgstr "%s: 无效的作业控制模式 '%s'"
-
-#, c-format
 msgid "%s: Invalid length value '%s'"
 msgstr "%s: 无效的长度值 '%s'"
-
-#, c-format
-msgid "%s: Invalid level value '%s'"
-msgstr "%s: 无效的级别值 '%s'"
 
 #, c-format
 msgid "%s: Invalid limit '%s'"
@@ -403,6 +391,10 @@ msgstr "%s: 无效的选项组合，%s"
 #, c-format
 msgid "%s: invalid scale"
 msgstr "%s: 无效位数"
+
+#, c-format
+msgid "%s: invalid subcommand"
+msgstr "%s: 无效的子命令"
 
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
@@ -1013,6 +1005,14 @@ msgstr "无效索引值"
 
 msgid "Invalid input/output redirection"
 msgstr "无效的输入/输出重定向"
+
+#, c-format
+msgid "Invalid job control mode '%s'"
+msgstr "无效的作业控制模式 '%s'"
+
+#, c-format
+msgid "Invalid level value '%s'"
+msgstr "无效的级别值 '%s'"
 
 #, c-format
 msgid "Invalid number: %s"
@@ -1946,6 +1946,10 @@ msgstr "未知修饰符 '%s' 于 '%s'"
 
 msgid "unlimited"
 msgstr "无限制"
+
+#, c-format
+msgid "unrecognized feature '%s'"
+msgstr "未识别的特性 '%s'"
 
 msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr "参数 -i 用于表示 --silent 已弃用。请改用 -s 或 --silent 代替。"

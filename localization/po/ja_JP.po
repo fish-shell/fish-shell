@@ -67,10 +67,6 @@ msgid "%s %s: options cannot be used together"
 msgstr ""
 
 #, c-format
-msgid "%s %s: unrecognized feature '%s'"
-msgstr "%s %s: 認識できない機能です '%s'"
-
-#, c-format
 msgid "%s (line %d)"
 msgstr "%s (%d 行目)"
 
@@ -211,16 +207,8 @@ msgid "%s: Invalid fields value '%s'"
 msgstr "%s: フィールド値 '%s' が無効です"
 
 #, c-format
-msgid "%s: Invalid job control mode '%s'"
-msgstr "%s: ジョブ制御モード '%s' が無効です"
-
-#, c-format
 msgid "%s: Invalid length value '%s'"
 msgstr "%s: 長さの値 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid level value '%s'"
-msgstr "%s: レベル値 '%s' が無効です"
 
 #, c-format
 msgid "%s: Invalid limit '%s'"
@@ -381,6 +369,10 @@ msgstr "%s: 無効なオプションの組み合わせです: %s"
 #, c-format
 msgid "%s: invalid scale"
 msgstr "%s: スケールが無効です"
+
+#, c-format
+msgid "%s: invalid subcommand"
+msgstr "%s: 無効なサブコマンドです"
 
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
@@ -991,6 +983,14 @@ msgstr "インデックス値が無効です"
 
 msgid "Invalid input/output redirection"
 msgstr "入出力リダイレクトが無効です"
+
+#, c-format
+msgid "Invalid job control mode '%s'"
+msgstr "ジョブ制御モード '%s' が無効です"
+
+#, c-format
+msgid "Invalid level value '%s'"
+msgstr "レベル値 '%s' が無効です"
 
 #, c-format
 msgid "Invalid number: %s"
@@ -1924,6 +1924,10 @@ msgstr "不明な修飾子 '%s' が '%s' 内にあります"
 
 msgid "unlimited"
 msgstr "無制限"
+
+#, c-format
+msgid "unrecognized feature '%s'"
+msgstr "認識できない機能です '%s'"
 
 msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr "--silent の代わりに -i を使用する方法は非推奨です。代わりに -s または --silent を使用してください"

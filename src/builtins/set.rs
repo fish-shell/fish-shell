@@ -7,6 +7,7 @@ use crate::common::valid_var_name;
 use crate::env::EnvStackSetResult;
 use crate::env::EnvVarFlags;
 use crate::env::INHERITED_VARS;
+use crate::err_fmt;
 use crate::event;
 use crate::event::Event;
 use crate::expand::expand_escape_string;
@@ -732,8 +733,9 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
     } else {
         for arg in args.iter().copied() {
             if !valid_var_name(arg) {
-                streams.err.append(&varname_error(cmd, arg));
-                builtin_print_error_trailer(parser, streams.err, cmd);
+                varname_error(cmd, arg)
+                    .with_full_trailer(parser)
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
 
@@ -780,8 +782,9 @@ fn erase(
             };
 
             if !valid_var_name(split.varname) {
-                streams.err.append(&varname_error(cmd, split.varname));
-                builtin_print_error_trailer(parser, streams.err, cmd);
+                varname_error(cmd, split.varname)
+                    .with_full_trailer(parser)
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             let retval;
@@ -959,16 +962,19 @@ fn set_internal(
 
     // Is the variable valid?
     if !valid_var_name(split.varname) {
-        streams.err.append(&varname_error(cmd, split.varname));
+        let mut err = varname_error(cmd, split.varname);
         if let Some(pos) = split.varname.chars().position(|c| c == '=') {
-            streams.err.append(&wgettext_fmt!(
-                "%s: Did you mean `set %s %s`?",
-                cmd,
+            err.append_assign_to_msg('\n');
+            let extra = err_fmt!(
+                "Did you mean `set %s %s`?",
                 &escape(&split.varname[..pos]),
                 &escape(&split.varname[pos + 1..])
-            ));
+            )
+            .with_cmd(cmd)
+            .to_string();
+            err.append_assign_to_msg(&extra);
         }
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err.with_full_trailer(parser).finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 

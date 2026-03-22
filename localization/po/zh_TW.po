@@ -138,20 +138,12 @@ msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s：%s：不能覆寫唯讀變數"
 
 #, c-format
-msgid "%s: %s: cannot use reserved keyword as function name"
-msgstr "%s：%s：不能使用保留字作為函式名稱"
-
-#, c-format
 msgid "%s: %s: expected %d arguments; got %d"
 msgstr "%s：%s：預期有 %d 個引數，卻收到了 %d 個"
 
 #, c-format
 msgid "%s: %s: invalid base value"
 msgstr "%s：%s：無效的進位制"
-
-#, c-format
-msgid "%s: %s: invalid function name"
-msgstr "%s：%s：無效的函式名稱"
 
 #, c-format
 msgid "%s: %s: invalid integer"
@@ -174,10 +166,6 @@ msgid "%s: %s: invalid subcommand"
 msgstr "%s：%s：無效的子命令"
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help %s`"
-msgstr "%s：%s：無效的變數名稱。參見「help %s」"
-
-#, c-format
 msgid "%s: %s: option does not take an argument"
 msgstr "%s：%s：選項不需要引數"
 
@@ -188,10 +176,6 @@ msgstr "%s：%s：選項需要一個引數"
 #, c-format
 msgid "%s: %s: subcommand takes no options"
 msgstr "%s：%s：子命令沒有選項"
-
-#, c-format
-msgid "%s: %s: unexpected positional argument"
-msgstr "%s：%s：非預期的位置引數"
 
 #, c-format
 msgid "%s: %s: unknown option"
@@ -224,10 +208,6 @@ msgstr "%s：找不到名稱為「%s」的子行程"
 #, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s：找不到作業 %d"
-
-#, c-format
-msgid "%s: Did you mean `set %s %s`?"
-msgstr "%s：你是指「set %s %s」嗎？"
 
 #, c-format
 msgid "%s: Error encountered while sourcing file '%s':"
@@ -406,10 +386,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s：試圖以錯的作用域修改特殊變數「%s」"
 
 #, c-format
-msgid "%s: Unknown signal '%s'"
-msgstr "%s：未知的訊號「%s」"
-
-#, c-format
 msgid "%s: `set --show` does not allow slices with the var names"
 msgstr "%s：「set --show」不允許使用切片"
 
@@ -426,10 +402,6 @@ msgid "%s: called with one argument. This will return false in future."
 msgstr "%s：帶一個引數呼叫。這在之後會回傳 false。"
 
 #, c-format
-msgid "%s: calling job for event handler not found"
-msgstr "%s：找不到事件處理器要呼叫的作業"
-
-#, c-format
 msgid "%s: can't merge history in private mode"
 msgstr "%s：私密模式中不能合併歷史紀錄"
 
@@ -440,6 +412,10 @@ msgstr "%s：不能同時匯出和取消匯出"
 #, c-format
 msgid "%s: cannot both path and unpath"
 msgstr "%s：不能同時標為路徑和取消標為路徑"
+
+#, c-format
+msgid "%s: cannot use reserved keyword as function name"
+msgstr ""
 
 #, c-format
 msgid "%s: contains a syntax error"
@@ -474,6 +450,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s：轉換規格無效"
 
 #, c-format
+msgid "%s: invalid function name"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid integer"
 msgstr ""
 
@@ -492,6 +472,10 @@ msgstr "%s：無效的選項組合"
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s：無效的選項組合，%s"
+
+#, c-format
+msgid "%s: invalid variable name. See `help %s`"
+msgstr ""
 
 #, c-format
 msgid "%s: missing argument"
@@ -538,6 +522,10 @@ msgid "%s: too many arguments"
 msgstr "%s：太多引數"
 
 #, c-format
+msgid "%s: unexpected positional argument"
+msgstr ""
+
+#, c-format
 msgid "%s: unknown option"
 msgstr ""
 
@@ -548,10 +536,6 @@ msgstr "%s：以 -i 表示 --silent 的作法已棄用。請改用 -s 或 --sile
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
 msgstr "%s：值未完全轉換（無法轉換「%s」）"
-
-#, c-format
-msgid "%s: variable '%s' is read-only"
-msgstr "%s：變數「%s」是唯讀的"
 
 #, c-format
 msgid "'%s' is a broken symbolic link to '%s'"
@@ -842,6 +826,10 @@ msgstr "互動地定義"
 
 msgid "Defined via `source`"
 msgstr "透過「source」定義"
+
+#, c-format
+msgid "Did you mean `set %s %s`?"
+msgstr ""
 
 msgid "Division by zero"
 msgstr "除以零"
@@ -1646,6 +1634,10 @@ msgstr "未知函式「%s」"
 msgid "Unknown input function '%s'"
 msgstr ""
 
+#, c-format
+msgid "Unknown signal '%s'"
+msgstr ""
+
 msgid "Unmatched wildcard"
 msgstr "未匹配的 wildcard"
 
@@ -1731,6 +1723,9 @@ msgstr "內建命令 history delete --exact 需要 --case-sensitive"
 
 msgid "builtin history delete only supports --exact"
 msgstr "內建命令 history delete 只支援 --exact"
+
+msgid "calling job for event handler not found"
+msgstr ""
 
 msgid "can not save history"
 msgstr "無法儲存歷史紀錄"
@@ -1913,6 +1908,10 @@ msgstr "未知的修飾鍵「%s」，於「%s」"
 
 msgid "unlimited"
 msgstr "無限制"
+
+#, c-format
+msgid "variable '%s' is read-only"
+msgstr ""
 
 #, c-format
 msgid "with arguments '%s'"

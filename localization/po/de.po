@@ -144,20 +144,12 @@ msgid "%s: %s: cannot overwrite read-only variable"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: cannot use reserved keyword as function name"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: expected %d arguments; got %d"
 msgstr ""
 
 #, c-format
 msgid "%s: %s: invalid base value"
 msgstr "%s: %s: ungültiger Basiswert"
-
-#, c-format
-msgid "%s: %s: invalid function name"
-msgstr ""
 
 #, c-format
 msgid "%s: %s: invalid integer"
@@ -180,10 +172,6 @@ msgid "%s: %s: invalid subcommand"
 msgstr "%s: %s: ungültiger Unterbefehl"
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help %s`"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: option does not take an argument"
 msgstr ""
 
@@ -194,10 +182,6 @@ msgstr ""
 #, c-format
 msgid "%s: %s: subcommand takes no options"
 msgstr "%s: %s: Unterbefehl nimmt keine Optionen an"
-
-#, c-format
-msgid "%s: %s: unexpected positional argument"
-msgstr "%s: %s: unerwartetes Positionsargument"
 
 #, c-format
 msgid "%s: %s: unknown option"
@@ -230,10 +214,6 @@ msgstr "%s: Kein Kindprozess namens '%s' gefunden"
 #, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: Job '%d' nicht gefunden"
-
-#, c-format
-msgid "%s: Did you mean `set %s %s`?"
-msgstr "%s: Meintest du `set %s %s`?"
 
 #, c-format
 msgid "%s: Error encountered while sourcing file '%s':"
@@ -412,10 +392,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr ""
 
 #, c-format
-msgid "%s: Unknown signal '%s'"
-msgstr "%s: Unbekanntes Signal '%s'"
-
-#, c-format
 msgid "%s: `set --show` does not allow slices with the var names"
 msgstr ""
 
@@ -432,10 +408,6 @@ msgid "%s: called with one argument. This will return false in future."
 msgstr ""
 
 #, c-format
-msgid "%s: calling job for event handler not found"
-msgstr "%s: Aufrufender Job für Eventhandler nicht gefunden"
-
-#, c-format
 msgid "%s: can't merge history in private mode"
 msgstr "%s: Kann Verlauf im privaten Modus nicht zusammenfügen"
 
@@ -445,6 +417,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: cannot both path and unpath"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot use reserved keyword as function name"
 msgstr ""
 
 #, c-format
@@ -480,6 +456,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: Ungültige Umwandlungsspezifikation"
 
 #, c-format
+msgid "%s: invalid function name"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid integer"
 msgstr ""
 
@@ -497,6 +477,10 @@ msgstr "%s: ungültige Optionskombination"
 
 #, c-format
 msgid "%s: invalid option combination, %s"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid variable name. See `help %s`"
 msgstr ""
 
 #, c-format
@@ -544,6 +528,10 @@ msgid "%s: too many arguments"
 msgstr "%s: zu viele Argumente"
 
 #, c-format
+msgid "%s: unexpected positional argument"
+msgstr "%s: unerwartetes Positionsargument"
+
+#, c-format
 msgid "%s: unknown option"
 msgstr "%s: unbekannte Option"
 
@@ -554,10 +542,6 @@ msgstr ""
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
 msgstr "%s: Wert nicht vollständig konvertiert (kann '%s' nicht konvertieren)"
-
-#, c-format
-msgid "%s: variable '%s' is read-only"
-msgstr ""
 
 #, c-format
 msgid "'%s' is a broken symbolic link to '%s'"
@@ -848,6 +832,10 @@ msgstr "Interaktiv definiert"
 
 msgid "Defined via `source`"
 msgstr "Definiert über `source`"
+
+#, c-format
+msgid "Did you mean `set %s %s`?"
+msgstr "Meintest du `set %s %s`?"
 
 msgid "Division by zero"
 msgstr "Teilung durch Null"
@@ -1651,6 +1639,10 @@ msgstr "Unbekannte Funktion '%s'"
 msgid "Unknown input function '%s'"
 msgstr ""
 
+#, c-format
+msgid "Unknown signal '%s'"
+msgstr "Unbekanntes Signal '%s'"
+
 msgid "Unmatched wildcard"
 msgstr "Nicht passender Platzhalter"
 
@@ -1736,6 +1728,9 @@ msgstr "builtin history delete --exact benötigt --case-sensitive"
 
 msgid "builtin history delete only supports --exact"
 msgstr "'builtin history delete' unterstützt nur --exact"
+
+msgid "calling job for event handler not found"
+msgstr "Aufrufender Job für Eventhandler nicht gefunden"
 
 msgid "can not save history"
 msgstr "Kann Verlauf nicht speichern"
@@ -1915,6 +1910,10 @@ msgstr ""
 
 msgid "unlimited"
 msgstr "unbegrenzt"
+
+#, c-format
+msgid "variable '%s' is read-only"
+msgstr ""
 
 #, c-format
 msgid "with arguments '%s'"

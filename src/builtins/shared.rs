@@ -86,10 +86,6 @@ localizable_consts!(
     pub BUILTIN_ERR_MAX_ARG_COUNT1
     "%s: expected <= %d arguments; got %d"
 
-    /// Error message for invalid variable name.
-    pub BUILTIN_ERR_VARNAME
-    "%s: %s: invalid variable name. See `help %s`"
-
     /// Error message on invalid combination of options.
     pub BUILTIN_ERR_COMBO
     "%s: invalid option combination"

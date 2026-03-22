@@ -144,20 +144,12 @@ msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s: %s: no se puede sobrescribir la variable de solo lectura"
 
 #, c-format
-msgid "%s: %s: cannot use reserved keyword as function name"
-msgstr "%s: %s: no se puede usar una palabra clave reservada como nombre de función"
-
-#, c-format
 msgid "%s: %s: expected %d arguments; got %d"
 msgstr "%s: %s: se esperaban %d argumentos; se obtuvieron %d"
 
 #, c-format
 msgid "%s: %s: invalid base value"
 msgstr "%s: %s: valor base no válido"
-
-#, c-format
-msgid "%s: %s: invalid function name"
-msgstr "%s: %s: nombre de función no válido"
 
 #, c-format
 msgid "%s: %s: invalid integer"
@@ -180,10 +172,6 @@ msgid "%s: %s: invalid subcommand"
 msgstr "%s: %s: subcomando no válido"
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help %s`"
-msgstr "%s: %s: nombre de variable no válido. Consulte `help %s`"
-
-#, c-format
 msgid "%s: %s: option does not take an argument"
 msgstr "%s: %s: la opción no acepta un argumento"
 
@@ -194,10 +182,6 @@ msgstr "%s: %s: la opción requiere un argumento"
 #, c-format
 msgid "%s: %s: subcommand takes no options"
 msgstr "%s: %s: el subcomando no admite opciones"
-
-#, c-format
-msgid "%s: %s: unexpected positional argument"
-msgstr "%s: %s: argumento posicional inesperado"
 
 #, c-format
 msgid "%s: %s: unknown option"
@@ -230,10 +214,6 @@ msgstr "%s: No se pudieron encontrar procesos hijos con el nombre '%s'"
 #, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: No se pudo encontrar la tarea '%d'"
-
-#, c-format
-msgid "%s: Did you mean `set %s %s`?"
-msgstr "%s: ¿Quiso decir `set %s %s`?"
 
 #, c-format
 msgid "%s: Error encountered while sourcing file '%s':"
@@ -412,10 +392,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr "%s: Se intentó modificar la variable especial '%s' con un ámbito incorrecto"
 
 #, c-format
-msgid "%s: Unknown signal '%s'"
-msgstr "%s: Señal desconocida '%s'"
-
-#, c-format
 msgid "%s: `set --show` does not allow slices with the var names"
 msgstr "%s: `set --show` no permite segmentos aplicados a nombres de variables"
 
@@ -432,10 +408,6 @@ msgid "%s: called with one argument. This will return false in future."
 msgstr "%s: llamado con un argumento. Esto devolverá falso en el futuro."
 
 #, c-format
-msgid "%s: calling job for event handler not found"
-msgstr "%s: no se encontró el trabajo asociado al manejador de eventos"
-
-#, c-format
 msgid "%s: can't merge history in private mode"
 msgstr "%s: no se puede fusionar el historial en modo privado"
 
@@ -446,6 +418,10 @@ msgstr "%s: no se puede exportar y desexportar a la vez"
 #, c-format
 msgid "%s: cannot both path and unpath"
 msgstr "%s: no se puede establecer y desestablecer la ruta a la vez"
+
+#, c-format
+msgid "%s: cannot use reserved keyword as function name"
+msgstr "%s: no se puede usar una palabra clave reservada como nombre de función"
 
 #, c-format
 msgid "%s: contains a syntax error"
@@ -480,6 +456,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: especificación de conversión no válida"
 
 #, c-format
+msgid "%s: invalid function name"
+msgstr "%s: nombre de función no válido"
+
+#, c-format
 msgid "%s: invalid integer"
 msgstr "%s: entero no válido"
 
@@ -498,6 +478,10 @@ msgstr "%s: combinación de opciones no válida"
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s: combinación de opciones no válida, %s"
+
+#, c-format
+msgid "%s: invalid variable name. See `help %s`"
+msgstr "%s: nombre de variable no válido. Consulte `help %s`"
 
 #, c-format
 msgid "%s: missing argument"
@@ -544,6 +528,10 @@ msgid "%s: too many arguments"
 msgstr "%s: demasiados argumentos"
 
 #, c-format
+msgid "%s: unexpected positional argument"
+msgstr "%s: argumento posicional inesperado"
+
+#, c-format
 msgid "%s: unknown option"
 msgstr "%s: opción desconocida"
 
@@ -554,10 +542,6 @@ msgstr "%s: el uso de -i para --silent es obsoleto. Usa -s o --silent en su luga
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
 msgstr "%s: el valor no se convirtió completamente (no es posible convertir '%s')"
-
-#, c-format
-msgid "%s: variable '%s' is read-only"
-msgstr "%s: la variable '%s' es de solo lectura"
 
 #, c-format
 msgid "'%s' is a broken symbolic link to '%s'"
@@ -848,6 +832,10 @@ msgstr "Definido de forma interactiva"
 
 msgid "Defined via `source`"
 msgstr "Definido mediante `source`"
+
+#, c-format
+msgid "Did you mean `set %s %s`?"
+msgstr "¿Quiso decir `set %s %s`?"
 
 msgid "Division by zero"
 msgstr "División por cero"
@@ -1651,6 +1639,10 @@ msgstr "Función desconocida “%s”"
 msgid "Unknown input function '%s'"
 msgstr "Función de entrada desconocida '%s'"
 
+#, c-format
+msgid "Unknown signal '%s'"
+msgstr "Señal desconocida '%s'"
+
 msgid "Unmatched wildcard"
 msgstr "Comodín sin coincidencias"
 
@@ -1736,6 +1728,9 @@ msgstr ""
 
 msgid "builtin history delete only supports --exact"
 msgstr "builtin history delete solo soporta --exact"
+
+msgid "calling job for event handler not found"
+msgstr "no se encontró el trabajo asociado al manejador de eventos"
 
 msgid "can not save history"
 msgstr "no se puede guardar el historial"
@@ -1918,6 +1913,10 @@ msgstr "modificador desconocido '%s' en '%s'"
 
 msgid "unlimited"
 msgstr "sin límite"
+
+#, c-format
+msgid "variable '%s' is read-only"
+msgstr "la variable '%s' es de solo lectura"
 
 #, c-format
 msgid "with arguments '%s'"

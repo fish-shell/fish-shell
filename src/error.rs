@@ -1,7 +1,11 @@
 use std::borrow::Cow;
 
 use super::prelude::*;
-use crate::{io::IoStreams, parser::Parser, wgettext_fmt};
+use crate::{
+    io::{IoStreams, OutputStream, StringOutputStream},
+    parser::Parser,
+    wgettext_fmt,
+};
 
 use fish_widestring::wstr;
 
@@ -101,6 +105,10 @@ impl<'a> Error<'a> {
         pub MAX_ARG_COUNT1
         "expected <= %d arguments; got %d"
 
+        /// Error message for invalid variable name.
+        pub INVALID_VARNAME
+        "%s: invalid variable name. See `help %s`"
+
         /// Error message on invalid combination of options.
         pub COMBO
         "invalid option combination"
@@ -166,41 +174,47 @@ impl<'a> Error<'a> {
         }
     }
     pub fn finish(mut self, streams: &mut IoStreams) {
-        self.print_msg(streams);
-        self.print_stacktrace(streams);
-        self.print_hint(streams);
+        self.append_to(streams.err);
     }
 
-    fn print_msg(&mut self, streams: &mut IoStreams) {
+    pub fn to_string(&mut self) -> WString {
+        let mut out = OutputStream::String(StringOutputStream::new());
+        self.append_to(&mut out);
+        out.take()
+    }
+
+    fn append_to(&mut self, output: &mut OutputStream) {
+        self.print_msg(output);
+        self.print_stacktrace(output);
+        self.print_hint(output);
+    }
+
+    fn print_msg(&mut self, output: &mut OutputStream) {
         match (self.cmd, self.subcmd) {
             (None, _) => {
-                streams.err.appendln(&self.msg);
+                output.appendln(&self.msg);
             }
             (Some(cmd), None) => {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!("%s: %s", cmd, &self.msg));
+                output.appendln(&wgettext_fmt!("%s: %s", cmd, &self.msg));
             }
             (Some(cmd), Some(subcmd)) => {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!("%s: %s: %s", cmd, subcmd, &self.msg));
+                output.appendln(&wgettext_fmt!("%s: %s: %s", cmd, subcmd, &self.msg));
             }
         }
     }
 
-    fn print_stacktrace(&mut self, streams: &mut IoStreams) {
+    fn print_stacktrace(&mut self, output: &mut OutputStream) {
         let Some(parser) = self.parser else {
             return;
         };
         let stacktrace = parser.current_line();
         if !stacktrace.is_empty() {
-            streams.err.append('\n');
-            streams.err.appendln(&stacktrace);
+            output.append('\n');
+            output.appendln(&stacktrace);
         }
     }
 
-    fn print_hint(&mut self, streams: &mut IoStreams) {
+    fn print_hint(&mut self, output: &mut OutputStream) {
         if !self.hint {
             return;
         }
@@ -208,7 +222,7 @@ impl<'a> Error<'a> {
             return;
         };
 
-        streams.err.appendln(&wgettext_fmt!(
+        output.appendln(&wgettext_fmt!(
             "(Type 'help %s' for related documentation)",
             cmd
         ));

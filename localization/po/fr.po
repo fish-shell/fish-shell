@@ -273,20 +273,12 @@ msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s : %s : impossible de surcharger une variable en lecture seule"
 
 #, c-format
-msgid "%s: %s: cannot use reserved keyword as function name"
-msgstr "%s : %s : impossible d’utiliser un mot-clé réservé comme nom de fonction"
-
-#, c-format
 msgid "%s: %s: expected %d arguments; got %d"
 msgstr "%s : %s : %d arguments attendus ; %d reçus"
 
 #, c-format
 msgid "%s: %s: invalid base value"
 msgstr "%s : %s : valeur de base invalide"
-
-#, c-format
-msgid "%s: %s: invalid function name"
-msgstr "%s : %s : nom de fonction invalide"
 
 #, c-format
 msgid "%s: %s: invalid integer"
@@ -309,10 +301,6 @@ msgid "%s: %s: invalid subcommand"
 msgstr "%s : %s : sous-commande invalide"
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help %s`"
-msgstr "%s : %s : nom de variable invalide. Voir « help %s »"
-
-#, c-format
 msgid "%s: %s: option does not take an argument"
 msgstr "%s : %s : cette option ne prend pas d’argument"
 
@@ -323,10 +311,6 @@ msgstr "%s : %s : cette option doit être utilisée avec un argument"
 #, c-format
 msgid "%s: %s: subcommand takes no options"
 msgstr "%s : %s : cette sous-command n’a pas d’option"
-
-#, c-format
-msgid "%s: %s: unexpected positional argument"
-msgstr "%s : %s : argument positionnel inattendu"
 
 #, c-format
 msgid "%s: %s: unknown option"
@@ -359,10 +343,6 @@ msgstr "%s : Impossible de trouver des processus enfants avec le nom « %s »
 #, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s : Impossible de trouver la tâche « %d »"
-
-#, c-format
-msgid "%s: Did you mean `set %s %s`?"
-msgstr "%s : Vouliez-vous dire « set %s %s » ?"
 
 #, c-format
 msgid "%s: Error encountered while sourcing file '%s':"
@@ -541,10 +521,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr ""
 
 #, c-format
-msgid "%s: Unknown signal '%s'"
-msgstr "%s : Signal « %s » inconnu"
-
-#, c-format
 msgid "%s: `set --show` does not allow slices with the var names"
 msgstr "%s : « set --show » n’autorise pas de tranches avec les noms des variables"
 
@@ -561,10 +537,6 @@ msgid "%s: called with one argument. This will return false in future."
 msgstr ""
 
 #, c-format
-msgid "%s: calling job for event handler not found"
-msgstr ""
-
-#, c-format
 msgid "%s: can't merge history in private mode"
 msgstr ""
 
@@ -574,6 +546,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: cannot both path and unpath"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot use reserved keyword as function name"
 msgstr ""
 
 #, c-format
@@ -609,6 +585,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s : spécification de conversion invalide"
 
 #, c-format
+msgid "%s: invalid function name"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid integer"
 msgstr ""
 
@@ -626,6 +606,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: invalid option combination, %s"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid variable name. See `help %s`"
 msgstr ""
 
 #, c-format
@@ -673,6 +657,10 @@ msgid "%s: too many arguments"
 msgstr ""
 
 #, c-format
+msgid "%s: unexpected positional argument"
+msgstr ""
+
+#, c-format
 msgid "%s: unknown option"
 msgstr ""
 
@@ -682,10 +670,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
-msgstr ""
-
-#, c-format
-msgid "%s: variable '%s' is read-only"
 msgstr ""
 
 #, c-format
@@ -976,6 +960,10 @@ msgid "Defined interactively"
 msgstr ""
 
 msgid "Defined via `source`"
+msgstr ""
+
+#, c-format
+msgid "Did you mean `set %s %s`?"
 msgstr ""
 
 msgid "Division by zero"
@@ -1780,6 +1768,10 @@ msgstr "Fonction inconnue « %s »"
 msgid "Unknown input function '%s'"
 msgstr ""
 
+#, c-format
+msgid "Unknown signal '%s'"
+msgstr ""
+
 msgid "Unmatched wildcard"
 msgstr ""
 
@@ -1865,6 +1857,9 @@ msgstr ""
 
 msgid "builtin history delete only supports --exact"
 msgstr "la commande interne history delete ne supporte que --exact"
+
+msgid "calling job for event handler not found"
+msgstr ""
 
 msgid "can not save history"
 msgstr ""
@@ -2043,6 +2038,10 @@ msgid "unknown modifier '%s' in '%s'"
 msgstr ""
 
 msgid "unlimited"
+msgstr ""
+
+#, c-format
+msgid "variable '%s' is read-only"
 msgstr ""
 
 #, c-format

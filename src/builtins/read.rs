@@ -564,8 +564,9 @@ fn validate_read_args(
     // Verify all variable names.
     for arg in argv {
         if !valid_var_name(arg) {
-            streams.err.append(&varname_error(cmd, arg));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            varname_error(cmd, arg)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
         if EnvVar::flags_for(arg).contains(EnvVarFlags::READ_ONLY) {

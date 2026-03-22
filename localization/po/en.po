@@ -144,19 +144,11 @@ msgid "%s: %s: cannot overwrite read-only variable"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: cannot use reserved keyword as function name"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: expected %d arguments; got %d"
 msgstr ""
 
 #, c-format
 msgid "%s: %s: invalid base value"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: invalid function name"
 msgstr ""
 
 #, c-format
@@ -180,10 +172,6 @@ msgid "%s: %s: invalid subcommand"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid variable name. See `help %s`"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: option does not take an argument"
 msgstr ""
 
@@ -193,10 +181,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: %s: subcommand takes no options"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: unexpected positional argument"
 msgstr ""
 
 #, c-format
@@ -229,10 +213,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: Could not find job '%d'"
-msgstr ""
-
-#, c-format
-msgid "%s: Did you mean `set %s %s`?"
 msgstr ""
 
 #, c-format
@@ -412,10 +392,6 @@ msgid "%s: Tried to modify the special variable '%s' with the wrong scope"
 msgstr ""
 
 #, c-format
-msgid "%s: Unknown signal '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: `set --show` does not allow slices with the var names"
 msgstr ""
 
@@ -432,10 +408,6 @@ msgid "%s: called with one argument. This will return false in future."
 msgstr ""
 
 #, c-format
-msgid "%s: calling job for event handler not found"
-msgstr ""
-
-#, c-format
 msgid "%s: can't merge history in private mode"
 msgstr ""
 
@@ -445,6 +417,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: cannot both path and unpath"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot use reserved keyword as function name"
 msgstr ""
 
 #, c-format
@@ -480,6 +456,10 @@ msgid "%s: invalid conversion specification"
 msgstr "%s: invalid conversion specification"
 
 #, c-format
+msgid "%s: invalid function name"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid integer"
 msgstr ""
 
@@ -497,6 +477,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: invalid option combination, %s"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid variable name. See `help %s`"
 msgstr ""
 
 #, c-format
@@ -544,6 +528,10 @@ msgid "%s: too many arguments"
 msgstr ""
 
 #, c-format
+msgid "%s: unexpected positional argument"
+msgstr ""
+
+#, c-format
 msgid "%s: unknown option"
 msgstr ""
 
@@ -553,10 +541,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
-msgstr ""
-
-#, c-format
-msgid "%s: variable '%s' is read-only"
 msgstr ""
 
 #, c-format
@@ -847,6 +831,10 @@ msgid "Defined interactively"
 msgstr ""
 
 msgid "Defined via `source`"
+msgstr ""
+
+#, c-format
+msgid "Did you mean `set %s %s`?"
 msgstr ""
 
 msgid "Division by zero"
@@ -1651,6 +1639,10 @@ msgstr "Unknown function “%s”"
 msgid "Unknown input function '%s'"
 msgstr ""
 
+#, c-format
+msgid "Unknown signal '%s'"
+msgstr ""
+
 msgid "Unmatched wildcard"
 msgstr ""
 
@@ -1735,6 +1727,9 @@ msgid "builtin history delete --exact requires --case-sensitive"
 msgstr ""
 
 msgid "builtin history delete only supports --exact"
+msgstr ""
+
+msgid "calling job for event handler not found"
 msgstr ""
 
 msgid "can not save history"
@@ -1914,6 +1909,10 @@ msgid "unknown modifier '%s' in '%s'"
 msgstr ""
 
 msgid "unlimited"
+msgstr ""
+
+#, c-format
+msgid "variable '%s' is read-only"
 msgstr ""
 
 #, c-format

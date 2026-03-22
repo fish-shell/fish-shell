@@ -172,10 +172,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: unbekannte Option"
 
 #, c-format
-msgid "%s: Argument '%s' is out of range"
-msgstr "%s: Argument '%s' ist außerhalb des Definitionsbereichs"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr ""
 
@@ -292,10 +288,6 @@ msgid "%s: Number was empty"
 msgstr "%s: Zahl war leer"
 
 #, c-format
-msgid "%s: Options %s and %s cannot be used together"
-msgstr ""
-
-#, c-format
 msgid "%s: Padding should be a character '%s'"
 msgstr ""
 
@@ -357,6 +349,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: cannot both path and unpath"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot overwrite read-only variable"
 msgstr ""
 
 #, c-format
@@ -482,10 +478,6 @@ msgstr "%s: unerwartetes Positionsargument"
 #, c-format
 msgid "%s: unknown option"
 msgstr "%s: unbekannte Option"
-
-#, c-format
-msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
-msgstr ""
 
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
@@ -632,6 +624,10 @@ msgstr "Fehler beim Einrichten der Pipe aufgetreten"
 
 msgid "An option spec must have at least a short or a long flag"
 msgstr ""
+
+#, c-format
+msgid "Argument '%s' is out of range"
+msgstr "Argument '%s' ist außerhalb des Definitionsbereichs"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1214,6 +1210,10 @@ msgstr ""
 msgid "Opening \"%s\" failed: %s"
 msgstr ""
 
+#, c-format
+msgid "Options %s and %s cannot be used together"
+msgstr ""
+
 msgid "Parse options in fish script"
 msgstr "Optionen in einem Fishskript parsen"
 
@@ -1731,6 +1731,9 @@ msgstr "Kann universelle Variablen oder Funktionen nicht speichern"
 msgid "can't merge history in private mode"
 msgstr "Kann Verlauf im privaten Modus nicht zusammenfügen"
 
+msgid "cannot both export and unexport"
+msgstr ""
+
 #, c-format
 msgid "cannot parse key '%s'"
 msgstr ""
@@ -1873,6 +1876,9 @@ msgstr "Zeilen %u bis %u von %u"
 msgid "running"
 msgstr "aktiv"
 
+msgid "scope can be only one of: universal function global local"
+msgstr ""
+
 msgid "search:"
 msgstr "Suche:"
 
@@ -1918,6 +1924,9 @@ msgstr ""
 
 msgid "unlimited"
 msgstr "unbegrenzt"
+
+msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."
+msgstr ""
 
 #, c-format
 msgid "variable '%s' is read-only"

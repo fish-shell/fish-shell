@@ -168,10 +168,6 @@ msgid "%s: %s: unknown option"
 msgstr ""
 
 #, c-format
-msgid "%s: Argument '%s' is out of range"
-msgstr "%s: Argument '%s' jest poza zasięgiem"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr ""
 
@@ -288,10 +284,6 @@ msgid "%s: Number was empty"
 msgstr ""
 
 #, c-format
-msgid "%s: Options %s and %s cannot be used together"
-msgstr ""
-
-#, c-format
 msgid "%s: Padding should be a character '%s'"
 msgstr ""
 
@@ -353,6 +345,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: cannot both path and unpath"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot overwrite read-only variable"
 msgstr ""
 
 #, c-format
@@ -477,10 +473,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: unknown option"
-msgstr ""
-
-#, c-format
-msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr ""
 
 #, c-format
@@ -628,6 +620,10 @@ msgstr ""
 
 msgid "An option spec must have at least a short or a long flag"
 msgstr ""
+
+#, c-format
+msgid "Argument '%s' is out of range"
+msgstr "Argument '%s' jest poza zasięgiem"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1210,6 +1206,10 @@ msgstr "Tylko dla zadań interaktywnych"
 msgid "Opening \"%s\" failed: %s"
 msgstr ""
 
+#, c-format
+msgid "Options %s and %s cannot be used together"
+msgstr ""
+
 msgid "Parse options in fish script"
 msgstr ""
 
@@ -1727,6 +1727,9 @@ msgstr ""
 msgid "can't merge history in private mode"
 msgstr ""
 
+msgid "cannot both export and unexport"
+msgstr ""
+
 #, c-format
 msgid "cannot parse key '%s'"
 msgstr ""
@@ -1869,6 +1872,9 @@ msgstr "rzędy od %u do %u z %u"
 msgid "running"
 msgstr "uruchomiona"
 
+msgid "scope can be only one of: universal function global local"
+msgstr ""
+
 msgid "search:"
 msgstr "wyszukiwanie:"
 
@@ -1913,6 +1919,9 @@ msgid "unknown modifier '%s' in '%s'"
 msgstr ""
 
 msgid "unlimited"
+msgstr ""
+
+msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."
 msgstr ""
 
 #, c-format

@@ -80,6 +80,14 @@ impl<'a> Error<'a> {
         pub UNEXP_OPT_ARG
         "%s: option does not take an argument"
 
+        /// Error message on multiple scope levels for variables.
+        pub MULTIPLE_SCOPES
+        "scope can be only one of: universal function global local"
+
+        /// Error message for specifying both export and unexport to set/read.
+        pub EXPORT_UNEXPORT
+        "cannot both export and unexport"
+
         /// Error message for unknown switch.
         pub UNKNOWN_OPT
         "%s: unknown option"

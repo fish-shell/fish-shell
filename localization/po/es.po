@@ -172,10 +172,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: opción desconocida"
 
 #, c-format
-msgid "%s: Argument '%s' is out of range"
-msgstr "%s: El argumento '%s' está fuera de rango"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr "%s: No se puede usar --append o --prepend al asignar a una porción (*slice*)"
 
@@ -292,10 +288,6 @@ msgid "%s: Number was empty"
 msgstr "%s: El número estaba vacío"
 
 #, c-format
-msgid "%s: Options %s and %s cannot be used together"
-msgstr "%s: Las opciones %s y %s no pueden usarse juntas"
-
-#, c-format
 msgid "%s: Padding should be a character '%s'"
 msgstr "%s: El padding debe ser un carácter '%s'"
 
@@ -358,6 +350,10 @@ msgstr "%s: no se puede exportar y desexportar a la vez"
 #, c-format
 msgid "%s: cannot both path and unpath"
 msgstr "%s: no se puede establecer y desestablecer la ruta a la vez"
+
+#, c-format
+msgid "%s: cannot overwrite read-only variable"
+msgstr "%s: no se puede sobrescribir la variable de solo lectura"
 
 #, c-format
 msgid "%s: cannot use reserved keyword as function name"
@@ -482,10 +478,6 @@ msgstr "%s: argumento posicional inesperado"
 #, c-format
 msgid "%s: unknown option"
 msgstr "%s: opción desconocida"
-
-#, c-format
-msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
-msgstr "%s: el uso de -i para --silent es obsoleto. Usa -s o --silent en su lugar."
 
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
@@ -632,6 +624,10 @@ msgstr "Ocurrió un error al configurar la tubería (pipe)"
 
 msgid "An option spec must have at least a short or a long flag"
 msgstr "Una especificación de opción debe tener al menos un flag corto o largo"
+
+#, c-format
+msgid "Argument '%s' is out of range"
+msgstr "El argumento '%s' está fuera de rango"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1214,6 +1210,10 @@ msgstr "Solo en trabajos interactivos"
 msgid "Opening \"%s\" failed: %s"
 msgstr "Falló la apertura de \"%s\": %s"
 
+#, c-format
+msgid "Options %s and %s cannot be used together"
+msgstr "Las opciones %s y %s no pueden usarse juntas"
+
 msgid "Parse options in fish script"
 msgstr "Parsear opciones en un script de fish"
 
@@ -1731,6 +1731,9 @@ msgstr "no se pueden guardar variables o funciones universales"
 msgid "can't merge history in private mode"
 msgstr "no se puede fusionar el historial en modo privado"
 
+msgid "cannot both export and unexport"
+msgstr "no se puede exportar y desexportar a la vez"
+
 #, c-format
 msgid "cannot parse key '%s'"
 msgstr "no se puede analizar la clave ‘%s’"
@@ -1876,6 +1879,9 @@ msgstr "filas %u a %u de %u"
 msgid "running"
 msgstr "en ejecución"
 
+msgid "scope can be only one of: universal function global local"
+msgstr "el alcance solo puede ser uno de: universal, function, global, local"
+
 msgid "search:"
 msgstr "buscar:"
 
@@ -1921,6 +1927,9 @@ msgstr "modificador desconocido '%s' en '%s'"
 
 msgid "unlimited"
 msgstr "sin límite"
+
+msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."
+msgstr "el uso de -i para --silent es obsoleto. Usa -s o --silent en su lugar."
 
 #, c-format
 msgid "variable '%s' is read-only"

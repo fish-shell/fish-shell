@@ -171,10 +171,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知のオプションです"
 
 #, c-format
-msgid "%s: Argument '%s' is out of range"
-msgstr "%s: 引数 '%s' は範囲外です"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr "%s: スライスへの代入時に --append または --prepend を使用することはできません"
 
@@ -291,10 +287,6 @@ msgid "%s: Number was empty"
 msgstr "%s: 数値が空です"
 
 #, c-format
-msgid "%s: Options %s and %s cannot be used together"
-msgstr "%s: オプション %s と %s は同時には指定できません"
-
-#, c-format
 msgid "%s: Padding should be a character '%s'"
 msgstr "%s: パディングには1文字を指定する必要があります '%s'"
 
@@ -357,6 +349,10 @@ msgstr "%s: export と unexport を同時に行うことはできません"
 #, c-format
 msgid "%s: cannot both path and unpath"
 msgstr "%s: path と unpath を同時に行うことはできません"
+
+#, c-format
+msgid "%s: cannot overwrite read-only variable"
+msgstr "%s: 読み取り専用変数を上書きすることはできません"
 
 #, c-format
 msgid "%s: cannot use reserved keyword as function name"
@@ -481,10 +477,6 @@ msgstr "%s: 予期しない位置引数です"
 #, c-format
 msgid "%s: unknown option"
 msgstr "%s: 未知のオプションです"
-
-#, c-format
-msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
-msgstr "%s: --silent の代わりに -i を使用する方法は非推奨です。代わりに -s または --silent を使用してください"
 
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
@@ -631,6 +623,10 @@ msgstr "パイプの設定中にエラーが発生しました"
 
 msgid "An option spec must have at least a short or a long flag"
 msgstr "オプション仕様には、少なくとも短縮フラグまたはロングフラグが必要です"
+
+#, c-format
+msgid "Argument '%s' is out of range"
+msgstr "引数 '%s' は範囲外です"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1213,6 +1209,10 @@ msgstr "対話型のジョブでのみ有効です"
 msgid "Opening \"%s\" failed: %s"
 msgstr "\"%s\" のオープンに失敗しました: %s"
 
+#, c-format
+msgid "Options %s and %s cannot be used together"
+msgstr "オプション %s と %s は同時には指定できません"
+
 msgid "Parse options in fish script"
 msgstr "fish スクリプト内のオプションを解析します"
 
@@ -1730,6 +1730,9 @@ msgstr "ユニバーサル変数または関数を保存できません"
 msgid "can't merge history in private mode"
 msgstr "プライベートモードでは履歴をマージできません"
 
+msgid "cannot both export and unexport"
+msgstr "export と unexport を同時に行うことはできません"
+
 #, c-format
 msgid "cannot parse key '%s'"
 msgstr "キー '%s' を解析できません"
@@ -1875,6 +1878,9 @@ msgstr "%u 行中 %u から %u 行目"
 msgid "running"
 msgstr "実行中"
 
+msgid "scope can be only one of: universal function global local"
+msgstr "スコープは次のいずれかである必要があります: universal, function, global, local"
+
 msgid "search:"
 msgstr "検索:"
 
@@ -1920,6 +1926,9 @@ msgstr "不明な修飾子 '%s' が '%s' 内にあります"
 
 msgid "unlimited"
 msgstr "無制限"
+
+msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."
+msgstr "--silent の代わりに -i を使用する方法は非推奨です。代わりに -s または --silent を使用してください"
 
 #, c-format
 msgid "variable '%s' is read-only"

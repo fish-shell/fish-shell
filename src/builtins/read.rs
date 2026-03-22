@@ -11,6 +11,9 @@ use crate::env::EnvMode;
 use crate::env::Environment as _;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
+use crate::err_fmt;
+use crate::err_str;
+use crate::error::Error;
 use crate::input_common::DecodeState;
 use crate::input_common::InvalidPolicy;
 use crate::input_common::decode_one_codepoint_utf8;
@@ -122,10 +125,11 @@ fn parse_cmd_opts(
                 opts.delimiter = Some(w.woptarg.unwrap().to_owned());
             }
             'i' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead.",
-                    cmd
-                ));
+                err_str!(
+                    "usage of -i for --silent is deprecated. Please use -s or --silent instead."
+                )
+                .with_cmd(cmd)
+                .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             'f' => {
@@ -147,21 +151,17 @@ fn parse_cmd_opts(
                 opts.nchars = match fish_wcstoi(w.woptarg.unwrap()) {
                     Ok(n) if n >= 0 => NonZeroUsize::new(n.try_into().unwrap()),
                     Err(wutil::Error::Overflow) => {
-                        streams.err.appendln(&wgettext_fmt!(
-                            "%s: Argument '%s' is out of range",
-                            cmd,
-                            w.woptarg.unwrap()
-                        ));
-                        builtin_print_error_trailer(parser, streams.err, cmd);
+                        err_fmt!("Argument '%s' is out of range", w.woptarg.unwrap())
+                            .with_cmd(cmd)
+                            .with_full_trailer(parser)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     _ => {
-                        streams.err.appendln(&wgettext_fmt!(
-                            BUILTIN_ERR_NOT_NUMBER,
-                            cmd,
-                            w.woptarg.unwrap()
-                        ));
-                        builtin_print_error_trailer(parser, streams.err, cmd);
+                        err_fmt!(Error::NOT_NUMBER, w.woptarg.unwrap())
+                            .with_cmd(cmd)
+                            .with_full_trailer(parser)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                 }
@@ -189,16 +189,17 @@ fn parse_cmd_opts(
                 };
                 if let Some(old_mode) = opts.token_mode {
                     if old_mode != new_mode {
-                        streams.err.appendln(&wgettext_fmt!(
-                            BUILTIN_ERR_COMBO2,
-                            cmd,
+                        err_fmt!(
+                            Error::COMBO2,
                             wgettext_fmt!(
                                 "%s and %s are mutually exclusive",
                                 tokenize_flag(old_mode),
                                 tokenize_flag(new_mode),
                             )
-                        ));
-                        builtin_print_error_trailer(parser, streams.err, cmd);
+                        )
+                        .with_cmd(cmd)
+                        .with_full_trailer(parser)
+                        .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                 }
@@ -451,32 +452,26 @@ fn validate_read_args(
 ) -> BuiltinResult {
     localizable_consts! {
         OPTIONS_CANNOT_BE_COMBINED
-        "%s: Options %s and %s cannot be used together"
+        "Options %s and %s cannot be used together"
     }
     if opts.prompt.is_some() && opts.prompt_str.is_some() {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(OPTIONS_CANNOT_BE_COMBINED, cmd, "-p", "-P",));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_fmt!(OPTIONS_CANNOT_BE_COMBINED, "-p", "-P")
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.delimiter.is_some() && opts.one_line {
-        streams.err.appendln(&wgettext_fmt!(
-            OPTIONS_CANNOT_BE_COMBINED,
-            cmd,
-            "--delimiter",
-            "--line"
-        ));
+        err_fmt!(OPTIONS_CANNOT_BE_COMBINED, "--delimiter", "--line")
+            .with_cmd(cmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
     if opts.one_line && opts.split_null {
-        streams.err.appendln(&wgettext_fmt!(
-            OPTIONS_CANNOT_BE_COMBINED,
-            cmd,
-            "-z",
-            "--line"
-        ));
+        err_fmt!(OPTIONS_CANNOT_BE_COMBINED, "-z", "--line")
+            .with_cmd(cmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -487,10 +482,10 @@ fn validate_read_args(
     }
 
     if opts.place.mode.contains(EnvMode::UNEXPORT) && opts.place.mode.contains(EnvMode::EXPORT) {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!(Error::EXPORT_UNEXPORT)
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -502,32 +497,32 @@ fn validate_read_args(
         .count()
         > 1
     {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!(Error::MULTIPLE_SCOPES)
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
     let argc = argv.len();
     if !opts.array && argc < 1 && !opts.to_stdout {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc));
+        err_fmt!(Error::MIN_ARG_COUNT1, 1, argc)
+            .with_cmd(cmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.array && argc != 1 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc));
+        err_fmt!(Error::ARG_COUNT1, 1, argc)
+            .with_cmd(cmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.to_stdout && argc > 0 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc));
+        err_fmt!(Error::MAX_ARG_COUNT1, 0, argc)
+            .with_cmd(cmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -541,22 +536,20 @@ fn validate_read_args(
 
     if let Some(token_mode) = opts.token_mode {
         if opts.delimiter.is_some() {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                cmd,
+            err_fmt!(
+                Error::COMBO2_EXCLUSIVE,
                 "--delimiter",
-                tokenize_flag(token_mode),
-            ));
+                tokenize_flag(token_mode)
+            )
+            .with_cmd(cmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if opts.one_line {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                cmd,
-                "--line",
-                tokenize_flag(token_mode),
-            ));
+            err_fmt!(Error::COMBO2_EXCLUSIVE, "--line", tokenize_flag(token_mode))
+                .with_cmd(cmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     }
@@ -570,12 +563,10 @@ fn validate_read_args(
             return Err(STATUS_INVALID_ARGS);
         }
         if EnvVar::flags_for(arg).contains(EnvVarFlags::READ_ONLY) {
-            streams.err.append(&wgettext_fmt!(
-                "%s: %s: cannot overwrite read-only variable",
-                cmd,
-                arg
-            ));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_fmt!("%s: cannot overwrite read-only variable", arg)
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     }
@@ -610,9 +601,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
 
     // stdin may have been explicitly closed
     if streams.is_stdin_closed() {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_STDIN_CLOSED, cmd));
+        err_str!(Error::STDIN_CLOSED).with_cmd(cmd).finish(streams);
         return Err(STATUS_CMD_ERROR);
     }
 

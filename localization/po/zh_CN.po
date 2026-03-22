@@ -193,10 +193,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知选项"
 
 #, c-format
-msgid "%s: Argument '%s' is out of range"
-msgstr "%s: 参数 '%s' 超出取值范围"
-
-#, c-format
 msgid "%s: Cannot use --append or --prepend when assigning to a slice"
 msgstr "%s: 分配切片时无法使用 --append 或 --prepend"
 
@@ -313,10 +309,6 @@ msgid "%s: Number was empty"
 msgstr "%s：数字为空"
 
 #, c-format
-msgid "%s: Options %s and %s cannot be used together"
-msgstr "%s: 选项 %s 和 %s 无法一起使用"
-
-#, c-format
 msgid "%s: Padding should be a character '%s'"
 msgstr "%s: 填充应为字符 '%s'"
 
@@ -379,6 +371,10 @@ msgstr "%s: 无法同时导出和取消导出"
 #, c-format
 msgid "%s: cannot both path and unpath"
 msgstr "%s: 无法同时是路径变量和非路径变量"
+
+#, c-format
+msgid "%s: cannot overwrite read-only variable"
+msgstr "%s: 无法覆写只读变量"
 
 #, c-format
 msgid "%s: cannot use reserved keyword as function name"
@@ -503,10 +499,6 @@ msgstr "%s: 意外的位置参数"
 #, c-format
 msgid "%s: unknown option"
 msgstr "%s: 未知选项"
-
-#, c-format
-msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
-msgstr "%s: 参数 -i 用于表示 --silent 已弃用。请改用 -s 或 --silent 代替。"
 
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
@@ -653,6 +645,10 @@ msgstr "设置管道时出错"
 
 msgid "An option spec must have at least a short or a long flag"
 msgstr "选项规范必须至少包含一个短标识或长标识"
+
+#, c-format
+msgid "Argument '%s' is out of range"
+msgstr "参数 '%s' 超出取值范围"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -1235,6 +1231,10 @@ msgstr "只在不活跃的作业上"
 msgid "Opening \"%s\" failed: %s"
 msgstr "打开 \"%s\" 失败：%s"
 
+#, c-format
+msgid "Options %s and %s cannot be used together"
+msgstr "选项 %s 和 %s 无法一起使用"
+
 msgid "Parse options in fish script"
 msgstr "解析 fish 文脚本中的选项"
 
@@ -1752,6 +1752,9 @@ msgstr "无法保存通用变量或函数"
 msgid "can't merge history in private mode"
 msgstr "无法在私密模式中合并历史"
 
+msgid "cannot both export and unexport"
+msgstr "无法同时导出和取消导出"
+
 #, c-format
 msgid "cannot parse key '%s'"
 msgstr "无法解析键 '%s'"
@@ -1897,6 +1900,9 @@ msgstr "第 %u 行至第 %u 行，共 %u 行"
 msgid "running"
 msgstr "运行中"
 
+msgid "scope can be only one of: universal function global local"
+msgstr "范围只能是：universal（通用）function（函数）global（全局）local（局域）"
+
 msgid "search:"
 msgstr "搜索:"
 
@@ -1942,6 +1948,9 @@ msgstr "未知修饰符 '%s' 于 '%s'"
 
 msgid "unlimited"
 msgstr "无限制"
+
+msgid "usage of -i for --silent is deprecated. Please use -s or --silent instead."
+msgstr "参数 -i 用于表示 --silent 已弃用。请改用 -s 或 --silent 代替。"
 
 #, c-format
 msgid "variable '%s' is read-only"

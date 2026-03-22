@@ -254,16 +254,8 @@ msgid "%s: Invalid padding character of width zero '%s'"
 msgstr "%s：沒有寬度的填充字元「%s」無效"
 
 #, c-format
-msgid "%s: Invalid permission '%s'"
-msgstr "%s：無效的權限「%s」"
-
-#, c-format
 msgid "%s: Invalid range value for field '%s'"
 msgstr "%s：欄位有無效的範圍值「%s」"
-
-#, c-format
-msgid "%s: Invalid sort key '%s'"
-msgstr "%s：無效的排序鍵「%s」"
 
 #, c-format
 msgid "%s: Invalid start value '%s'"
@@ -272,10 +264,6 @@ msgstr "%s：無效的起點索引值「%s」"
 #, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr "%s：無效的樣式「%s」"
-
-#, c-format
-msgid "%s: Invalid type '%s'"
-msgstr "%s：無效的類型「%s」"
 
 #, c-format
 msgid "%s: Invalid width value '%s'"
@@ -1045,6 +1033,10 @@ msgid "Invalid option spec '%s' at char '%c'"
 msgstr ""
 
 #, c-format
+msgid "Invalid permission '%s'"
+msgstr ""
+
+#, c-format
 msgid "Invalid position '%s'"
 msgstr ""
 
@@ -1056,12 +1048,20 @@ msgstr "無效的重新導向目標：%s"
 msgid "Invalid redirection: %s"
 msgstr "無效的重新導向：%s"
 
+#, c-format
+msgid "Invalid sort key '%s'"
+msgstr ""
+
 msgid "Invalid state"
 msgstr ""
 
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "無效的詞元「%s」"
+
+#, c-format
+msgid "Invalid type '%s'"
+msgstr ""
 
 #, c-format
 msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
@@ -1834,6 +1834,9 @@ msgstr ""
 msgid "invalid precision: %s"
 msgstr "無效的精度：%s"
 
+msgid "invalid subcommand"
+msgstr ""
+
 #, c-format
 msgid "invalid underline style: %s"
 msgstr ""
@@ -1845,8 +1848,14 @@ msgstr ""
 msgid "line/column index starts at 1"
 msgstr ""
 
+msgid "missing argument"
+msgstr ""
+
 msgid "missing hexadecimal number in escape"
 msgstr "轉義序列缺少十六進位數字"
+
+msgid "missing subcommand"
+msgstr ""
 
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"

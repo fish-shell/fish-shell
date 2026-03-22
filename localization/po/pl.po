@@ -256,15 +256,7 @@ msgid "%s: Invalid padding character of width zero '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid permission '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Invalid range value for field '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid sort key '%s'"
 msgstr ""
 
 #, c-format
@@ -273,10 +265,6 @@ msgstr "%s: Nieprawidłową wartość początkowa '%s'"
 
 #, c-format
 msgid "%s: Invalid style value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid type '%s'"
 msgstr ""
 
 #, c-format
@@ -1047,6 +1035,10 @@ msgid "Invalid option spec '%s' at char '%c'"
 msgstr ""
 
 #, c-format
+msgid "Invalid permission '%s'"
+msgstr ""
+
+#, c-format
 msgid "Invalid position '%s'"
 msgstr ""
 
@@ -1058,11 +1050,19 @@ msgstr "Nieprawidłowy cel przekierowania: %s"
 msgid "Invalid redirection: %s"
 msgstr ""
 
+#, c-format
+msgid "Invalid sort key '%s'"
+msgstr ""
+
 msgid "Invalid state"
 msgstr "Nieprawidłowy stan"
 
 #, c-format
 msgid "Invalid token '%s'"
+msgstr ""
+
+#, c-format
+msgid "Invalid type '%s'"
 msgstr ""
 
 #, c-format
@@ -1832,6 +1832,9 @@ msgstr ""
 msgid "invalid precision: %s"
 msgstr ""
 
+msgid "invalid subcommand"
+msgstr ""
+
 #, c-format
 msgid "invalid underline style: %s"
 msgstr ""
@@ -1843,7 +1846,13 @@ msgstr ""
 msgid "line/column index starts at 1"
 msgstr ""
 
+msgid "missing argument"
+msgstr ""
+
 msgid "missing hexadecimal number in escape"
+msgstr ""
+
+msgid "missing subcommand"
 msgstr ""
 
 #, c-format

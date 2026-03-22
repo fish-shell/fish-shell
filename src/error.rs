@@ -96,6 +96,17 @@ impl<'a> Error<'a> {
         pub NOT_NUMBER
         "%s: invalid integer"
 
+        /// Command that requires a subcommand was invoked without a recognized subcommand.
+        pub MISSING_SUBCMD
+        "missing subcommand"
+
+        pub INVALID_SUBCMD
+        "invalid subcommand"
+
+        /// Error messages for unexpected args.
+        pub ARG_COUNT0
+        "missing argument"
+
         pub ARG_COUNT1
         "expected %d arguments; got %d"
 

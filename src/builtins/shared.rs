@@ -669,7 +669,7 @@ pub fn builtin_unknown_option(
     err.finish(streams);
 }
 
-/// Perform error reporting for encounter with missing argument.
+/// Perform error reporting for encounter with missing argument for commands.
 pub fn builtin_missing_argument(
     parser: &Parser,
     streams: &mut IoStreams,
@@ -685,6 +685,29 @@ pub fn builtin_missing_argument(
         err_fmt!(Error::MISSING_OPT_ARG, opt)
     };
     err = err.with_cmd(cmd);
+    if print_hints {
+        err = err.with_full_trailer(parser);
+    }
+    err.finish(streams);
+}
+
+/// Perform error reporting for encounter with missing argument for subcommands.
+pub fn builtin_subcmd_missing_argument(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    subcmd: &wstr,
+    mut opt: &wstr,
+    print_hints: bool, /*=true*/
+) {
+    let mut err = if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
+        // if c in -qc '-qc' is missing the argument, now opt is just 'c'
+        opt = &opt[opt.len() - 1..];
+        err_fmt!(Error::MISSING_OPT_ARG, L!("-").to_owned() + opt)
+    } else {
+        err_fmt!(Error::MISSING_OPT_ARG, opt)
+    };
+    err = err.with_subcmd(cmd, subcmd);
     if print_hints {
         err = err.with_full_trailer(parser);
     }

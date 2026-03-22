@@ -281,16 +281,8 @@ msgid "%s: Invalid padding character of width zero '%s'"
 msgstr "%s: 宽度为零的无效的填充字符 '%s'"
 
 #, c-format
-msgid "%s: Invalid permission '%s'"
-msgstr "%s: 无效的权限 '%s'"
-
-#, c-format
 msgid "%s: Invalid range value for field '%s'"
 msgstr "%s: 字段 '%s' 的范围值无效"
-
-#, c-format
-msgid "%s: Invalid sort key '%s'"
-msgstr "%s: 无效的排序键 '%s'"
 
 #, c-format
 msgid "%s: Invalid start value '%s'"
@@ -299,10 +291,6 @@ msgstr "%s: 无效的起始值 '%s'"
 #, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr "%s: 无效的样式值 '%s'"
-
-#, c-format
-msgid "%s: Invalid type '%s'"
-msgstr "%s: 无效类型 '%s'"
 
 #, c-format
 msgid "%s: Invalid width value '%s'"
@@ -1072,6 +1060,10 @@ msgid "Invalid option spec '%s' at char '%c'"
 msgstr "无效的选项规范 '%s' 于字符 '%c'"
 
 #, c-format
+msgid "Invalid permission '%s'"
+msgstr "无效的权限 '%s'"
+
+#, c-format
 msgid "Invalid position '%s'"
 msgstr "无效的位置 '%s'"
 
@@ -1083,12 +1075,20 @@ msgstr "无效的重定向目标：%s"
 msgid "Invalid redirection: %s"
 msgstr "无效的重定向：%s"
 
+#, c-format
+msgid "Invalid sort key '%s'"
+msgstr "无效的排序键 '%s'"
+
 msgid "Invalid state"
 msgstr "无效状态"
 
 #, c-format
 msgid "Invalid token '%s'"
 msgstr "无效记号 '%s'"
+
+#, c-format
+msgid "Invalid type '%s'"
+msgstr "无效类型 '%s'"
 
 #, c-format
 msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
@@ -1860,6 +1860,9 @@ msgstr "无效的选项组合，%s"
 msgid "invalid precision: %s"
 msgstr "无效的精度：%s"
 
+msgid "invalid subcommand"
+msgstr "无效的子命令"
+
 #, c-format
 msgid "invalid underline style: %s"
 msgstr "无效的下划线样式：%s"
@@ -1871,8 +1874,14 @@ msgstr "作业 %d ('%s') 已停止并收到继续信号。"
 msgid "line/column index starts at 1"
 msgstr "行/列索引从1开始"
 
+msgid "missing argument"
+msgstr "缺少参数"
+
 msgid "missing hexadecimal number in escape"
 msgstr "在转义中缺少十六进制数字"
+
+msgid "missing subcommand"
+msgstr "缺少子命令"
 
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"

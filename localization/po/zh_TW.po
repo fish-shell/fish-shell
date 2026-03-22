@@ -142,24 +142,12 @@ msgid "%s: %s: expected %d arguments; got %d"
 msgstr "%s：%s：預期有 %d 個引數，卻收到了 %d 個"
 
 #, c-format
-msgid "%s: %s: invalid base value"
-msgstr "%s：%s：無效的進位制"
-
-#, c-format
 msgid "%s: %s: invalid integer"
 msgstr "%s：%s：無效的整數"
 
 #, c-format
-msgid "%s: %s: invalid mode"
-msgstr "%s：%s：無效的模式"
-
-#, c-format
 msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s：%s：無效的模式名稱。參見「help %s」"
-
-#, c-format
-msgid "%s: %s: invalid scale"
-msgstr "%s：%s：無效的小數位數"
 
 #, c-format
 msgid "%s: %s: invalid subcommand"
@@ -410,6 +398,10 @@ msgid "%s: given %d indexes but %d values"
 msgstr "%s：指定了 %d 個索引卻有 %d 個值"
 
 #, c-format
+msgid "%s: invalid base value"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid conversion specification"
 msgstr "%s：轉換規格無效"
 
@@ -419,6 +411,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: invalid integer"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid mode"
 msgstr ""
 
 #, c-format
@@ -436,6 +432,10 @@ msgstr "%s：無效的選項組合"
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s：無效的選項組合，%s"
+
+#, c-format
+msgid "%s: invalid scale"
+msgstr ""
 
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
@@ -826,6 +826,10 @@ msgstr "重新命名檔案時發生錯誤：%s"
 #, c-format
 msgid "Error while reading file %s"
 msgstr "讀取檔案 %s 時發生錯誤"
+
+#, c-format
+msgid "Error: %s"
+msgstr ""
 
 msgid "Errors reported by exec (on by default)"
 msgstr "exec 回報的錯誤（預設開啟）"

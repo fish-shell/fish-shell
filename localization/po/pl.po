@@ -144,23 +144,11 @@ msgid "%s: %s: expected %d arguments; got %d"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid base value"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: invalid integer"
 msgstr ""
 
 #, c-format
-msgid "%s: %s: invalid mode"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: invalid mode name. See `help %s`"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: invalid scale"
 msgstr ""
 
 #, c-format
@@ -412,6 +400,10 @@ msgid "%s: given %d indexes but %d values"
 msgstr ""
 
 #, c-format
+msgid "%s: invalid base value"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid conversion specification"
 msgstr ""
 
@@ -421,6 +413,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: invalid integer"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid mode"
 msgstr ""
 
 #, c-format
@@ -437,6 +433,10 @@ msgstr ""
 
 #, c-format
 msgid "%s: invalid option combination, %s"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid scale"
 msgstr ""
 
 #, c-format
@@ -828,6 +828,10 @@ msgstr ""
 #, c-format
 msgid "Error while reading file %s"
 msgstr "Wystąpił błąd podczas odczytywania pliku %s"
+
+#, c-format
+msgid "Error: %s"
+msgstr ""
 
 msgid "Errors reported by exec (on by default)"
 msgstr ""

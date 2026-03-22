@@ -169,24 +169,12 @@ msgid "%s: %s: expected %d arguments; got %d"
 msgstr "%s: %s: 预期收到 %d 个参数；实际收到 %d 个"
 
 #, c-format
-msgid "%s: %s: invalid base value"
-msgstr "%s: %s: 无效的进制值"
-
-#, c-format
 msgid "%s: %s: invalid integer"
 msgstr "%s: %s: 无效整数"
 
 #, c-format
-msgid "%s: %s: invalid mode"
-msgstr "%s: %s: 无效舍入模式"
-
-#, c-format
 msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: 无效模式名。参见 `help %s`"
-
-#, c-format
-msgid "%s: %s: invalid scale"
-msgstr "%s: %s: 无效位数"
 
 #, c-format
 msgid "%s: %s: invalid subcommand"
@@ -437,6 +425,10 @@ msgid "%s: given %d indexes but %d values"
 msgstr "%s: 给定索引 %d 但只有 %d 个值"
 
 #, c-format
+msgid "%s: invalid base value"
+msgstr "%s: 无效的进制值"
+
+#, c-format
 msgid "%s: invalid conversion specification"
 msgstr "%s: 无效的转换规范"
 
@@ -447,6 +439,10 @@ msgstr "%s: 无效的函数名"
 #, c-format
 msgid "%s: invalid integer"
 msgstr "%s: 无效整数"
+
+#, c-format
+msgid "%s: invalid mode"
+msgstr "%s: 无效舍入模式"
 
 #, c-format
 msgid "%s: invalid mode name. See `help %s`"
@@ -463,6 +459,10 @@ msgstr "%s: 无效的选项组合"
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s: 无效的选项组合，%s"
+
+#, c-format
+msgid "%s: invalid scale"
+msgstr "%s: 无效位数"
 
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
@@ -853,6 +853,10 @@ msgstr "重命名文件时出错：%s"
 #, c-format
 msgid "Error while reading file %s"
 msgstr "读取文件 %s 时出错"
+
+#, c-format
+msgid "Error: %s"
+msgstr ""
 
 msgid "Errors reported by exec (on by default)"
 msgstr "exec 报告的错误 (默认开启)"

@@ -147,24 +147,12 @@ msgid "%s: %s: expected %d arguments; got %d"
 msgstr "%s: %s: 引数の数は %d 個である必要がありますが、 %d 個指定されました"
 
 #, c-format
-msgid "%s: %s: invalid base value"
-msgstr "%s: %s: 基数の値が無効です"
-
-#, c-format
 msgid "%s: %s: invalid integer"
 msgstr "%s: %s: 整数が無効です"
 
 #, c-format
-msgid "%s: %s: invalid mode"
-msgstr "%s: %s: モードが無効です"
-
-#, c-format
 msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: モード名が無効です。 `help %s` を参照してください"
-
-#, c-format
-msgid "%s: %s: invalid scale"
-msgstr "%s: %s: スケールが無効です"
 
 #, c-format
 msgid "%s: %s: invalid subcommand"
@@ -415,6 +403,10 @@ msgid "%s: given %d indexes but %d values"
 msgstr "%s: %d 個のインデックスが指定されましたが、値は %d 個です"
 
 #, c-format
+msgid "%s: invalid base value"
+msgstr "%s: 基数の値が無効です"
+
+#, c-format
 msgid "%s: invalid conversion specification"
 msgstr "%s: 無効な変換仕様です"
 
@@ -425,6 +417,10 @@ msgstr "%s: 関数名が無効です"
 #, c-format
 msgid "%s: invalid integer"
 msgstr "%s: 整数が無効です"
+
+#, c-format
+msgid "%s: invalid mode"
+msgstr "%s: モードが無効です"
 
 #, c-format
 msgid "%s: invalid mode name. See `help %s`"
@@ -441,6 +437,10 @@ msgstr "%s: 無効なオプションの組み合わせです"
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s: 無効なオプションの組み合わせです: %s"
+
+#, c-format
+msgid "%s: invalid scale"
+msgstr "%s: スケールが無効です"
 
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
@@ -831,6 +831,10 @@ msgstr "ファイル名の変更中にエラーが発生しました: %s"
 #, c-format
 msgid "Error while reading file %s"
 msgstr "ファイル %s の読み取り中にエラーが発生しました"
+
+#, c-format
+msgid "Error: %s"
+msgstr ""
 
 msgid "Errors reported by exec (on by default)"
 msgstr "exec によって報告されるエラー(デフォルトでオン)"

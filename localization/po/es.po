@@ -148,24 +148,12 @@ msgid "%s: %s: expected %d arguments; got %d"
 msgstr "%s: %s: se esperaban %d argumentos; se obtuvieron %d"
 
 #, c-format
-msgid "%s: %s: invalid base value"
-msgstr "%s: %s: valor base no válido"
-
-#, c-format
 msgid "%s: %s: invalid integer"
 msgstr "%s: %s: entero no válido"
 
 #, c-format
-msgid "%s: %s: invalid mode"
-msgstr "%s: %s: modo no válido"
-
-#, c-format
 msgid "%s: %s: invalid mode name. See `help %s`"
 msgstr "%s: %s: nombre de modo no válido. Consulte `help %s`"
-
-#, c-format
-msgid "%s: %s: invalid scale"
-msgstr "%s: %s: escala no válida"
 
 #, c-format
 msgid "%s: %s: invalid subcommand"
@@ -416,6 +404,10 @@ msgid "%s: given %d indexes but %d values"
 msgstr "%s: se proporcionaron %d índices pero %d valores"
 
 #, c-format
+msgid "%s: invalid base value"
+msgstr "%s: valor base no válido"
+
+#, c-format
 msgid "%s: invalid conversion specification"
 msgstr "%s: especificación de conversión no válida"
 
@@ -426,6 +418,10 @@ msgstr "%s: nombre de función no válido"
 #, c-format
 msgid "%s: invalid integer"
 msgstr "%s: entero no válido"
+
+#, c-format
+msgid "%s: invalid mode"
+msgstr "%s: modo no válido"
 
 #, c-format
 msgid "%s: invalid mode name. See `help %s`"
@@ -442,6 +438,10 @@ msgstr "%s: combinación de opciones no válida"
 #, c-format
 msgid "%s: invalid option combination, %s"
 msgstr "%s: combinación de opciones no válida, %s"
+
+#, c-format
+msgid "%s: invalid scale"
+msgstr "%s: escala no válida"
 
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
@@ -832,6 +832,10 @@ msgstr "Error al renombrar el archivo: %s"
 #, c-format
 msgid "Error while reading file %s"
 msgstr "Error al leer el archivo %s"
+
+#, c-format
+msgid "Error: %s"
+msgstr ""
 
 msgid "Errors reported by exec (on by default)"
 msgstr "Errores reportados por exec (activado por defecto)"

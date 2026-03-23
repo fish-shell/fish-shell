@@ -162,10 +162,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s：%s：未知的選項"
 
 #, c-format
-msgid "%s: Could not find '%s'"
-msgstr "%s：找不到「%s」"
-
-#, c-format
 msgid "%s: Could not find a job with process ID '%d'"
 msgstr "%s：找不到行程 ID 為 %d 的作業"
 
@@ -618,6 +614,10 @@ msgstr "繼續先前停止的行程"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "無法確定目前工作目錄。你正確設定好地區了嗎？"
+
+#, c-format
+msgid "Could not find '%s'"
+msgstr ""
 
 msgid "Could not find home directory"
 msgstr ""

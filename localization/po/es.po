@@ -168,10 +168,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: opción desconocida"
 
 #, c-format
-msgid "%s: Could not find '%s'"
-msgstr "%s: No se pudo encontrar '%s'"
-
-#, c-format
 msgid "%s: Could not find a job with process ID '%d'"
 msgstr "%s: No se pudo encontrar una tarea con ID de proceso '%d'"
 
@@ -624,6 +620,10 @@ msgstr "Continuar el proceso detenido previamente"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "No se pudo determinar el directorio de trabajo actual. ¿Está configurado correctamente el locale?"
+
+#, c-format
+msgid "Could not find '%s'"
+msgstr "No se pudo encontrar '%s'"
 
 msgid "Could not find home directory"
 msgstr "No se pudo encontrar el directorio personal"

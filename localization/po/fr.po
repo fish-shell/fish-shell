@@ -297,10 +297,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s : %s : option inconnue"
 
 #, c-format
-msgid "%s: Could not find '%s'"
-msgstr "%s : Impossible de trouver « %s »"
-
-#, c-format
 msgid "%s: Could not find a job with process ID '%d'"
 msgstr "%s : Impossible de trouver une tâche avec l’ID de processus « %d »"
 
@@ -753,6 +749,10 @@ msgstr "Continuer le processus précédemment arrêté"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "Impossible de déterminer le dossier de travail. Vos paramètres régionaux sont-ils corrects ?"
+
+#, c-format
+msgid "Could not find '%s'"
+msgstr ""
 
 msgid "Could not find home directory"
 msgstr ""

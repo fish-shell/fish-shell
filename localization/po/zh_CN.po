@@ -189,10 +189,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知选项"
 
 #, c-format
-msgid "%s: Could not find '%s'"
-msgstr "%s: 找不到 '%s'"
-
-#, c-format
 msgid "%s: Could not find a job with process ID '%d'"
 msgstr "%s: 无法找到进程 ID 为 '%d' 的作业"
 
@@ -645,6 +641,10 @@ msgstr "继续先前停止的进程"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "无法确定当前工作目录。你的区域设置正确吗？"
+
+#, c-format
+msgid "Could not find '%s'"
+msgstr "找不到 '%s'"
 
 msgid "Could not find home directory"
 msgstr "找不到主目录"

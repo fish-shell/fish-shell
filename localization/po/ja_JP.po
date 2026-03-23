@@ -1878,9 +1878,6 @@ msgid "with definition"
 msgstr "定義されています"
 
 # CHK
-msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
-msgstr "|& は無効です。fish では、標準出力と標準エラー出力の両方をパイプするには &| を使用してください"
-
 #, c-format
 msgid "…and %u more rows"
 msgstr "…他 %u 行"

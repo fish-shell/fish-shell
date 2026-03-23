@@ -235,7 +235,7 @@ It is possible to pipe a different output file descriptor by prepending its FD n
 
 will attempt to build ``fish``, and any errors will be shown using the ``less`` pager. [#]_
 
-As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. This is different from bash, which uses ``|&``.
+As a convenience, the pipe ``&|`` (as well as the ``|&`` alias which is also supported by Bash) both redirect stdout and stderr to the same process.
 
 .. [#] A "pager" here is a program that takes output and "paginates" it. ``less`` doesn't just do pages, it allows arbitrary scrolling (even back!).
 

@@ -1733,7 +1733,7 @@ mod tests {
             ("VAR", fg(HighlightRole::param)),
             ("=", fg(HighlightRole::operat), ns),
             ("false", fg(HighlightRole::command)),
-            ("|&", fg(HighlightRole::error)),
+            ("|&", fg(HighlightRole::statement_terminator)),
             ("true", fg(HighlightRole::command)),
             ("stuff", fg(HighlightRole::param)),
         );

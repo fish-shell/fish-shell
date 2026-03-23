@@ -1875,9 +1875,6 @@ msgstr "mit den Parametern '%s'"
 msgid "with definition"
 msgstr "mit Definition"
 
-msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
-msgstr "|& ist ungültig. In fish, nutze &| um stdout und stderr gleichzeitig zu pipen"
-
 #, c-format
 msgid "…and %u more rows"
 msgstr "…und %u weitere Zeilen"

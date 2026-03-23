@@ -58,10 +58,6 @@ msgid "%s %s: %s"
 msgstr ""
 
 #, c-format
-msgid "%s %s: %s: invalid subcommand"
-msgstr "%s %s：%s：無效的子命令"
-
-#, c-format
 msgid "%s %s: options cannot be used together"
 msgstr ""
 
@@ -126,52 +122,8 @@ msgid "%s: %s"
 msgstr "%s：%s"
 
 #, c-format
-msgid "%s: %s %s: options cannot be used together"
-msgstr "%s：%s %s：選項不能同時使用"
-
-#, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s：%s：不能覆寫唯讀變數"
-
-#, c-format
-msgid "%s: %s: expected %d arguments; got %d"
-msgstr "%s：%s：預期有 %d 個引數，卻收到了 %d 個"
-
-#, c-format
-msgid "%s: %s: invalid integer"
-msgstr "%s：%s：無效的整數"
-
-#, c-format
-msgid "%s: %s: invalid mode name. See `help %s`"
-msgstr "%s：%s：無效的模式名稱。參見「help %s」"
-
-#, c-format
-msgid "%s: %s: invalid subcommand"
-msgstr "%s：%s：無效的子命令"
-
-#, c-format
-msgid "%s: %s: option does not take an argument"
-msgstr "%s：%s：選項不需要引數"
-
-#, c-format
-msgid "%s: %s: option requires an argument"
-msgstr "%s：%s：選項需要一個引數"
-
-#, c-format
-msgid "%s: %s: unknown option"
-msgstr "%s：%s：未知的選項"
-
-#, c-format
-msgid "%s: Could not find job '%d'"
-msgstr "%s：找不到作業 %d"
-
-#, c-format
-msgid "%s: Invalid max matches value '%s'"
-msgstr "%s：無效的最大匹配數「%s」"
-
-#, c-format
-msgid "%s: Invalid max value '%s'"
-msgstr "%s：無效的最大值「%s」"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -182,24 +134,8 @@ msgid "%s: Number out of range"
 msgstr "%s：數字超出範圍"
 
 #, c-format
-msgid "%s: Regular expression compile error: %s"
-msgstr "%s：正則表示式編譯錯誤：%s"
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s：沒有作業"
-
-#, c-format
-msgid "%s: There are no suitable jobs"
-msgstr "%s：沒有合式的作業"
-
-#, c-format
-msgid "%s: cannot both export and unexport"
-msgstr "%s：不能同時匯出和取消匯出"
-
-#, c-format
-msgid "%s: cannot both path and unpath"
-msgstr "%s：不能同時標為路徑和取消標為路徑"
 
 #, c-format
 msgid "%s: cannot overwrite read-only variable"
@@ -216,14 +152,6 @@ msgstr ""
 #, c-format
 msgid "%s: expected %d arguments; got %d"
 msgstr "%s：預期有 %d 個引數，卻收到了 %d 個"
-
-#, c-format
-msgid "%s: expected <= %d arguments; got %d"
-msgstr "%s：預期有 <= %d 個引數，卻收到了 %d 個"
-
-#, c-format
-msgid "%s: expected >= %d arguments; got %d"
-msgstr "%s：預期有 >= %d 個引數，卻收到了 %d 個"
 
 #, c-format
 msgid "%s: expected a numeric value"
@@ -262,14 +190,6 @@ msgid "%s: invalid option argument: %s"
 msgstr ""
 
 #, c-format
-msgid "%s: invalid option combination"
-msgstr "%s：無效的選項組合"
-
-#, c-format
-msgid "%s: invalid option combination, %s"
-msgstr "%s：無效的選項組合，%s"
-
-#, c-format
 msgid "%s: invalid scale"
 msgstr ""
 
@@ -282,14 +202,6 @@ msgid "%s: invalid variable name. See `help %s`"
 msgstr ""
 
 #, c-format
-msgid "%s: missing argument"
-msgstr "%s：缺少引數"
-
-#, c-format
-msgid "%s: missing subcommand"
-msgstr "%s：缺少子命令"
-
-#, c-format
 msgid "%s: option cannot be used with a non-option argument"
 msgstr ""
 
@@ -300,18 +212,6 @@ msgstr ""
 #, c-format
 msgid "%s: option requires an argument"
 msgstr ""
-
-#, c-format
-msgid "%s: scope can be only one of: universal function global local"
-msgstr "%s：作用域只能是以下之一：universal、function、global、local"
-
-#, c-format
-msgid "%s: stdin is closed"
-msgstr "%s：stdin 已關閉"
-
-#, c-format
-msgid "%s: too many arguments"
-msgstr "%s：太多引數"
 
 #, c-format
 msgid "%s: unexpected positional argument"
@@ -1773,16 +1673,6 @@ msgstr "檔案"
 #, c-format
 msgid "fish does not have shell options. See `help %s`."
 msgstr ""
-
-#, c-format
-msgid ""
-"fish: %s: missing man page\n"
-"Documentation may not be installed.\n"
-"`help %s` will show an online version"
-msgstr ""
-"fish：%s：缺少手冊頁\n"
-"可能未安裝文件。\n"
-"「help %s」將顯示線上版本"
 
 #, c-format
 msgid "from sourcing file %s"

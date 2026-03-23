@@ -64,10 +64,6 @@ msgid "%s %s: %s"
 msgstr ""
 
 #, c-format
-msgid "%s %s: %s: invalid subcommand"
-msgstr "%s %s: %s: ungültiger Unterbefehl"
-
-#, c-format
 msgid "%s %s: options cannot be used together"
 msgstr ""
 
@@ -132,52 +128,8 @@ msgid "%s: %s"
 msgstr "%s: %s"
 
 #, c-format
-msgid "%s: %s %s: options cannot be used together"
-msgstr ""
-
-#, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
 msgstr ""
-
-#, c-format
-msgid "%s: %s: expected %d arguments; got %d"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: invalid integer"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: invalid mode name. See `help %s`"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: invalid subcommand"
-msgstr "%s: %s: ungültiger Unterbefehl"
-
-#, c-format
-msgid "%s: %s: option does not take an argument"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: option requires an argument"
-msgstr ""
-
-#, c-format
-msgid "%s: %s: unknown option"
-msgstr "%s: %s: unbekannte Option"
-
-#, c-format
-msgid "%s: Could not find job '%d'"
-msgstr "%s: Job '%d' nicht gefunden"
-
-#, c-format
-msgid "%s: Invalid max matches value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid max value '%s'"
-msgstr "%s: Ungültiger Maximalwert '%s'"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -188,24 +140,8 @@ msgid "%s: Number out of range"
 msgstr ""
 
 #, c-format
-msgid "%s: Regular expression compile error: %s"
-msgstr "%s: Fehler beim Kompilieren von regulärem Ausdruck: %s"
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s: Es gibt keine Jobs"
-
-#, c-format
-msgid "%s: There are no suitable jobs"
-msgstr ""
-
-#, c-format
-msgid "%s: cannot both export and unexport"
-msgstr ""
-
-#, c-format
-msgid "%s: cannot both path and unpath"
-msgstr ""
 
 #, c-format
 msgid "%s: cannot overwrite read-only variable"
@@ -221,14 +157,6 @@ msgstr "%s: enthält einen Syntaxfehler"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
-msgstr ""
-
-#, c-format
-msgid "%s: expected <= %d arguments; got %d"
-msgstr ""
-
-#, c-format
-msgid "%s: expected >= %d arguments; got %d"
 msgstr ""
 
 #, c-format
@@ -268,14 +196,6 @@ msgid "%s: invalid option argument: %s"
 msgstr ""
 
 #, c-format
-msgid "%s: invalid option combination"
-msgstr "%s: ungültige Optionskombination"
-
-#, c-format
-msgid "%s: invalid option combination, %s"
-msgstr ""
-
-#, c-format
 msgid "%s: invalid scale"
 msgstr ""
 
@@ -288,14 +208,6 @@ msgid "%s: invalid variable name. See `help %s`"
 msgstr ""
 
 #, c-format
-msgid "%s: missing argument"
-msgstr ""
-
-#, c-format
-msgid "%s: missing subcommand"
-msgstr "%s: fehlender Unterbefehl"
-
-#, c-format
 msgid "%s: option cannot be used with a non-option argument"
 msgstr ""
 
@@ -306,18 +218,6 @@ msgstr ""
 #, c-format
 msgid "%s: option requires an argument"
 msgstr ""
-
-#, c-format
-msgid "%s: scope can be only one of: universal function global local"
-msgstr ""
-
-#, c-format
-msgid "%s: stdin is closed"
-msgstr "%s: stdin ist geschlossen"
-
-#, c-format
-msgid "%s: too many arguments"
-msgstr "%s: zu viele Argumente"
 
 #, c-format
 msgid "%s: unexpected positional argument"
@@ -1777,13 +1677,6 @@ msgstr "Datei"
 
 #, c-format
 msgid "fish does not have shell options. See `help %s`."
-msgstr ""
-
-#, c-format
-msgid ""
-"fish: %s: missing man page\n"
-"Documentation may not be installed.\n"
-"`help %s` will show an online version"
 msgstr ""
 
 #, c-format

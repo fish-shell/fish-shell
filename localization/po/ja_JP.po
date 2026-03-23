@@ -63,10 +63,6 @@ msgid "%s %s: %s"
 msgstr ""
 
 #, c-format
-msgid "%s %s: %s: invalid subcommand"
-msgstr "%s %s: %s: 無効なサブコマンドです"
-
-#, c-format
 msgid "%s %s: options cannot be used together"
 msgstr "%s %s: これらのオプションは同時には指定できません"
 
@@ -131,52 +127,8 @@ msgid "%s: %s"
 msgstr "%s: %s"
 
 #, c-format
-msgid "%s: %s %s: options cannot be used together"
-msgstr "%s: %s %s: これらのオプションは同時には指定できません"
-
-#, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s: %s: 読み取り専用変数を上書きすることはできません"
-
-#, c-format
-msgid "%s: %s: expected %d arguments; got %d"
-msgstr "%s: %s: 引数の数は %d 個である必要がありますが、 %d 個指定されました"
-
-#, c-format
-msgid "%s: %s: invalid integer"
-msgstr "%s: %s: 整数が無効です"
-
-#, c-format
-msgid "%s: %s: invalid mode name. See `help %s`"
-msgstr "%s: %s: モード名が無効です。 `help %s` を参照してください"
-
-#, c-format
-msgid "%s: %s: invalid subcommand"
-msgstr "%s: %s: サブコマンドが無効です"
-
-#, c-format
-msgid "%s: %s: option does not take an argument"
-msgstr "%s: %s: オプションは引数を取りません"
-
-#, c-format
-msgid "%s: %s: option requires an argument"
-msgstr "%s: %s: オプションには引数が必要です"
-
-#, c-format
-msgid "%s: %s: unknown option"
-msgstr "%s: %s: 未知のオプションです"
-
-#, c-format
-msgid "%s: Could not find job '%d'"
-msgstr "%s: ジョブ '%d' が見つかりませんでした"
-
-#, c-format
-msgid "%s: Invalid max matches value '%s'"
-msgstr "%s: 最大一致数 '%s' が無効です"
-
-#, c-format
-msgid "%s: Invalid max value '%s'"
-msgstr "%s: 最大値 '%s' が無効です"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -187,24 +139,8 @@ msgid "%s: Number out of range"
 msgstr "%s: 数値が範囲外です"
 
 #, c-format
-msgid "%s: Regular expression compile error: %s"
-msgstr "%s: 正規表現のコンパイルエラー: %s"
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s: ジョブはありません"
-
-#, c-format
-msgid "%s: There are no suitable jobs"
-msgstr "%s: 適切なジョブはありません"
-
-#, c-format
-msgid "%s: cannot both export and unexport"
-msgstr "%s: export と unexport を同時に行うことはできません"
-
-#, c-format
-msgid "%s: cannot both path and unpath"
-msgstr "%s: path と unpath を同時に行うことはできません"
 
 #, c-format
 msgid "%s: cannot overwrite read-only variable"
@@ -221,14 +157,6 @@ msgstr "%s: 構文エラーが含まれています"
 #, c-format
 msgid "%s: expected %d arguments; got %d"
 msgstr "%s: %d 個の引数が必要ですが、 %d 個指定されました"
-
-#, c-format
-msgid "%s: expected <= %d arguments; got %d"
-msgstr "%s: 引数は %d 個以下である必要がありますが、 %d 個指定されました"
-
-#, c-format
-msgid "%s: expected >= %d arguments; got %d"
-msgstr "%s: 引数は %d 個以上である必要がありますが、 %d 個指定されました"
 
 #, c-format
 msgid "%s: expected a numeric value"
@@ -267,14 +195,6 @@ msgid "%s: invalid option argument: %s"
 msgstr "%s: オプションの引数が無効です: %s"
 
 #, c-format
-msgid "%s: invalid option combination"
-msgstr "%s: 無効なオプションの組み合わせです"
-
-#, c-format
-msgid "%s: invalid option combination, %s"
-msgstr "%s: 無効なオプションの組み合わせです: %s"
-
-#, c-format
 msgid "%s: invalid scale"
 msgstr "%s: スケールが無効です"
 
@@ -287,14 +207,6 @@ msgid "%s: invalid variable name. See `help %s`"
 msgstr "%s: 変数名が無効です。 `help %s` を参照してください"
 
 #, c-format
-msgid "%s: missing argument"
-msgstr "%s: 引数が不足しています"
-
-#, c-format
-msgid "%s: missing subcommand"
-msgstr "%s: サブコマンドが不足しています"
-
-#, c-format
 msgid "%s: option cannot be used with a non-option argument"
 msgstr "%s: オプションをオプション以外の引数と併用することはできません"
 
@@ -305,18 +217,6 @@ msgstr "%s: オプションは引数を取りません"
 #, c-format
 msgid "%s: option requires an argument"
 msgstr "%s: オプションには引数が必要です"
-
-#, c-format
-msgid "%s: scope can be only one of: universal function global local"
-msgstr "%s: スコープは次のいずれかである必要があります: universal, function, global, local"
-
-#, c-format
-msgid "%s: stdin is closed"
-msgstr "%s: 標準入力(stdin)が閉じられています"
-
-#, c-format
-msgid "%s: too many arguments"
-msgstr "%s: 引数が多すぎます"
 
 #, c-format
 msgid "%s: unexpected positional argument"
@@ -1777,16 +1677,6 @@ msgstr "ファイル"
 #, c-format
 msgid "fish does not have shell options. See `help %s`."
 msgstr ""
-
-#, c-format
-msgid ""
-"fish: %s: missing man page\n"
-"Documentation may not be installed.\n"
-"`help %s` will show an online version"
-msgstr ""
-"fish: %s: manページが見つかりません\n"
-"ドキュメントがインストールされていない可能性があります。\n"
-"`help %s` でオンライン版を表示できます"
 
 #, c-format
 msgid "from sourcing file %s"

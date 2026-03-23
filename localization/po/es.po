@@ -64,10 +64,6 @@ msgid "%s %s: %s"
 msgstr ""
 
 #, c-format
-msgid "%s %s: %s: invalid subcommand"
-msgstr "%s %s: %s: subcomando no válido"
-
-#, c-format
 msgid "%s %s: options cannot be used together"
 msgstr "%s %s: las opciones no pueden usarse juntas"
 
@@ -132,52 +128,8 @@ msgid "%s: %s"
 msgstr ""
 
 #, c-format
-msgid "%s: %s %s: options cannot be used together"
-msgstr "%s: %s %s: las opciones no pueden usarse juntas"
-
-#, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s: %s: no se puede sobrescribir la variable de solo lectura"
-
-#, c-format
-msgid "%s: %s: expected %d arguments; got %d"
-msgstr "%s: %s: se esperaban %d argumentos; se obtuvieron %d"
-
-#, c-format
-msgid "%s: %s: invalid integer"
-msgstr "%s: %s: entero no válido"
-
-#, c-format
-msgid "%s: %s: invalid mode name. See `help %s`"
-msgstr "%s: %s: nombre de modo no válido. Consulte `help %s`"
-
-#, c-format
-msgid "%s: %s: invalid subcommand"
-msgstr "%s: %s: subcomando no válido"
-
-#, c-format
-msgid "%s: %s: option does not take an argument"
-msgstr "%s: %s: la opción no acepta un argumento"
-
-#, c-format
-msgid "%s: %s: option requires an argument"
-msgstr "%s: %s: la opción requiere un argumento"
-
-#, c-format
-msgid "%s: %s: unknown option"
-msgstr "%s: %s: opción desconocida"
-
-#, c-format
-msgid "%s: Could not find job '%d'"
-msgstr "%s: No se pudo encontrar la tarea '%d'"
-
-#, c-format
-msgid "%s: Invalid max matches value '%s'"
-msgstr "%s: Valor máximo de coincidencias no válido '%s'"
-
-#, c-format
-msgid "%s: Invalid max value '%s'"
-msgstr "%s: Valor máximo no válido '%s'"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -188,24 +140,8 @@ msgid "%s: Number out of range"
 msgstr "%s: Número fuera de rango"
 
 #, c-format
-msgid "%s: Regular expression compile error: %s"
-msgstr "%s: Error al compilar la expresión regular: %s"
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s: No hay trabajos"
-
-#, c-format
-msgid "%s: There are no suitable jobs"
-msgstr "%s: No hay trabajos adecuados"
-
-#, c-format
-msgid "%s: cannot both export and unexport"
-msgstr "%s: no se puede exportar y desexportar a la vez"
-
-#, c-format
-msgid "%s: cannot both path and unpath"
-msgstr "%s: no se puede establecer y desestablecer la ruta a la vez"
 
 #, c-format
 msgid "%s: cannot overwrite read-only variable"
@@ -222,14 +158,6 @@ msgstr "%s: contiene un error de sintaxis"
 #, c-format
 msgid "%s: expected %d arguments; got %d"
 msgstr "%s: se esperaban %d argumentos; se obtuvieron %d"
-
-#, c-format
-msgid "%s: expected <= %d arguments; got %d"
-msgstr "%s: se esperaban <= %d argumentos; se obtuvieron %d"
-
-#, c-format
-msgid "%s: expected >= %d arguments; got %d"
-msgstr "%s: se esperaban >= %d argumentos; se obtuvieron %d"
 
 #, c-format
 msgid "%s: expected a numeric value"
@@ -268,14 +196,6 @@ msgid "%s: invalid option argument: %s"
 msgstr ""
 
 #, c-format
-msgid "%s: invalid option combination"
-msgstr "%s: combinación de opciones no válida"
-
-#, c-format
-msgid "%s: invalid option combination, %s"
-msgstr "%s: combinación de opciones no válida, %s"
-
-#, c-format
 msgid "%s: invalid scale"
 msgstr "%s: escala no válida"
 
@@ -288,14 +208,6 @@ msgid "%s: invalid variable name. See `help %s`"
 msgstr "%s: nombre de variable no válido. Consulte `help %s`"
 
 #, c-format
-msgid "%s: missing argument"
-msgstr "%s: falta un argumento"
-
-#, c-format
-msgid "%s: missing subcommand"
-msgstr "%s: falta un subcomando"
-
-#, c-format
 msgid "%s: option cannot be used with a non-option argument"
 msgstr ""
 
@@ -306,18 +218,6 @@ msgstr "%s: la opción no acepta un argumento"
 #, c-format
 msgid "%s: option requires an argument"
 msgstr "%s: la opción requiere un argumento"
-
-#, c-format
-msgid "%s: scope can be only one of: universal function global local"
-msgstr "%s: el alcance solo puede ser uno de: universal, function, global, local"
-
-#, c-format
-msgid "%s: stdin is closed"
-msgstr "%s: la entrada estándar (stdin) está cerrada"
-
-#, c-format
-msgid "%s: too many arguments"
-msgstr "%s: demasiados argumentos"
 
 #, c-format
 msgid "%s: unexpected positional argument"
@@ -1778,16 +1678,6 @@ msgstr "archivo"
 #, c-format
 msgid "fish does not have shell options. See `help %s`."
 msgstr ""
-
-#, c-format
-msgid ""
-"fish: %s: missing man page\n"
-"Documentation may not be installed.\n"
-"`help %s` will show an online version"
-msgstr ""
-"fish: %s: falta la página del manual\n"
-"La documentación puede no estar instalada.\n"
-"`help %s` mostrará una versión en línea"
 
 #, c-format
 msgid "from sourcing file %s"

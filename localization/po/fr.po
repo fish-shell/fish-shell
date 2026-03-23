@@ -193,10 +193,6 @@ msgid "%s %s: %s"
 msgstr ""
 
 #, c-format
-msgid "%s %s: %s: invalid subcommand"
-msgstr "%s %s : %s : sous-commande invalide"
-
-#, c-format
 msgid "%s %s: options cannot be used together"
 msgstr ""
 
@@ -261,52 +257,8 @@ msgid "%s: %s"
 msgstr "%s : %s"
 
 #, c-format
-msgid "%s: %s %s: options cannot be used together"
-msgstr "%s : %s %s : ces options ne peuvent pas être utilisées ensembles"
-
-#, c-format
 msgid "%s: %s: cannot overwrite read-only variable"
 msgstr "%s : %s : impossible de surcharger une variable en lecture seule"
-
-#, c-format
-msgid "%s: %s: expected %d arguments; got %d"
-msgstr "%s : %s : %d arguments attendus ; %d reçus"
-
-#, c-format
-msgid "%s: %s: invalid integer"
-msgstr "%s : %s : entier invalide"
-
-#, c-format
-msgid "%s: %s: invalid mode name. See `help %s`"
-msgstr "%s : %s : nom de mode invalide. Voir « help %s »"
-
-#, c-format
-msgid "%s: %s: invalid subcommand"
-msgstr "%s : %s : sous-commande invalide"
-
-#, c-format
-msgid "%s: %s: option does not take an argument"
-msgstr "%s : %s : cette option ne prend pas d’argument"
-
-#, c-format
-msgid "%s: %s: option requires an argument"
-msgstr "%s : %s : cette option doit être utilisée avec un argument"
-
-#, c-format
-msgid "%s: %s: unknown option"
-msgstr "%s : %s : option inconnue"
-
-#, c-format
-msgid "%s: Could not find job '%d'"
-msgstr "%s : Impossible de trouver la tâche « %d »"
-
-#, c-format
-msgid "%s: Invalid max matches value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: Invalid max value '%s'"
-msgstr "%s : Valeur maximale « %s » invalide"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -317,24 +269,8 @@ msgid "%s: Number out of range"
 msgstr "%s : Nombre hors limites"
 
 #, c-format
-msgid "%s: Regular expression compile error: %s"
-msgstr "%s : Erreur de compilation de l’expression régulière: %s"
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s : Aucune tâche"
-
-#, c-format
-msgid "%s: There are no suitable jobs"
-msgstr "%s : Aucune tâche appropriée"
-
-#, c-format
-msgid "%s: cannot both export and unexport"
-msgstr ""
-
-#, c-format
-msgid "%s: cannot both path and unpath"
-msgstr ""
 
 #, c-format
 msgid "%s: cannot overwrite read-only variable"
@@ -350,14 +286,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
-msgstr ""
-
-#, c-format
-msgid "%s: expected <= %d arguments; got %d"
-msgstr ""
-
-#, c-format
-msgid "%s: expected >= %d arguments; got %d"
 msgstr ""
 
 #, c-format
@@ -397,14 +325,6 @@ msgid "%s: invalid option argument: %s"
 msgstr ""
 
 #, c-format
-msgid "%s: invalid option combination"
-msgstr ""
-
-#, c-format
-msgid "%s: invalid option combination, %s"
-msgstr ""
-
-#, c-format
 msgid "%s: invalid scale"
 msgstr ""
 
@@ -417,14 +337,6 @@ msgid "%s: invalid variable name. See `help %s`"
 msgstr ""
 
 #, c-format
-msgid "%s: missing argument"
-msgstr ""
-
-#, c-format
-msgid "%s: missing subcommand"
-msgstr ""
-
-#, c-format
 msgid "%s: option cannot be used with a non-option argument"
 msgstr ""
 
@@ -434,18 +346,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: option requires an argument"
-msgstr ""
-
-#, c-format
-msgid "%s: scope can be only one of: universal function global local"
-msgstr ""
-
-#, c-format
-msgid "%s: stdin is closed"
-msgstr ""
-
-#, c-format
-msgid "%s: too many arguments"
 msgstr ""
 
 #, c-format
@@ -1906,13 +1806,6 @@ msgstr "fichier"
 
 #, c-format
 msgid "fish does not have shell options. See `help %s`."
-msgstr ""
-
-#, c-format
-msgid ""
-"fish: %s: missing man page\n"
-"Documentation may not be installed.\n"
-"`help %s` will show an online version"
 msgstr ""
 
 #, c-format

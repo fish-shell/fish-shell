@@ -162,14 +162,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s：%s：未知的選項"
 
 #, c-format
-msgid "%s: Could not find a job with process ID '%d'"
-msgstr "%s：找不到行程 ID 為 %d 的作業"
-
-#, c-format
-msgid "%s: Could not find child processes with the name '%s'"
-msgstr "%s：找不到名稱為「%s」的子行程"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s：找不到作業 %d"
 
@@ -605,6 +597,14 @@ msgstr "無法確定目前工作目錄。你正確設定好地區了嗎？"
 
 #, c-format
 msgid "Could not find '%s'"
+msgstr ""
+
+#, c-format
+msgid "Could not find a job with process ID '%d'"
+msgstr ""
+
+#, c-format
+msgid "Could not find child processes with the name '%s'"
 msgstr ""
 
 msgid "Could not find home directory"

@@ -297,14 +297,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s : %s : option inconnue"
 
 #, c-format
-msgid "%s: Could not find a job with process ID '%d'"
-msgstr "%s : Impossible de trouver une tâche avec l’ID de processus « %d »"
-
-#, c-format
-msgid "%s: Could not find child processes with the name '%s'"
-msgstr "%s : Impossible de trouver des processus enfants avec le nom « %s »"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s : Impossible de trouver la tâche « %d »"
 
@@ -740,6 +732,14 @@ msgstr "Impossible de déterminer le dossier de travail. Vos paramètres région
 
 #, c-format
 msgid "Could not find '%s'"
+msgstr ""
+
+#, c-format
+msgid "Could not find a job with process ID '%d'"
+msgstr ""
+
+#, c-format
+msgid "Could not find child processes with the name '%s'"
 msgstr ""
 
 msgid "Could not find home directory"

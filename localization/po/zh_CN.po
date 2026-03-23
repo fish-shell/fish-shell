@@ -189,14 +189,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知选项"
 
 #, c-format
-msgid "%s: Could not find a job with process ID '%d'"
-msgstr "%s: 无法找到进程 ID 为 '%d' 的作业"
-
-#, c-format
-msgid "%s: Could not find child processes with the name '%s'"
-msgstr "%s: 无法找到名为 '%s' 的子进程"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: 找不到作业 '%d'"
 
@@ -633,6 +625,14 @@ msgstr "无法确定当前工作目录。你的区域设置正确吗？"
 #, c-format
 msgid "Could not find '%s'"
 msgstr "找不到 '%s'"
+
+#, c-format
+msgid "Could not find a job with process ID '%d'"
+msgstr "无法找到进程 ID 为 '%d' 的作业"
+
+#, c-format
+msgid "Could not find child processes with the name '%s'"
+msgstr "无法找到名为 '%s' 的子进程"
 
 msgid "Could not find home directory"
 msgstr "找不到主目录"

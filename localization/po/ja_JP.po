@@ -167,14 +167,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: 未知のオプションです"
 
 #, c-format
-msgid "%s: Could not find a job with process ID '%d'"
-msgstr "%s: プロセスID '%d' を持つジョブが見つかりませんでした"
-
-#, c-format
-msgid "%s: Could not find child processes with the name '%s'"
-msgstr "%s: 名前が '%s' の子プロセスが見つかりませんでした"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: ジョブ '%d' が見つかりませんでした"
 
@@ -611,6 +603,14 @@ msgstr "現在の作業ディレクトリを特定できませんでした。ロ
 #, c-format
 msgid "Could not find '%s'"
 msgstr "'%s' が見つかりませんでした"
+
+#, c-format
+msgid "Could not find a job with process ID '%d'"
+msgstr "プロセスID '%d' を持つジョブが見つかりませんでした"
+
+#, c-format
+msgid "Could not find child processes with the name '%s'"
+msgstr "名前が '%s' の子プロセスが見つかりませんでした"
 
 msgid "Could not find home directory"
 msgstr "ホームディレクトリが見つかりませんでした"

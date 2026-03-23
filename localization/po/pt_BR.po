@@ -169,14 +169,6 @@ msgid "%s: %s: unknown option"
 msgstr ""
 
 #, c-format
-msgid "%s: Could not find a job with process ID '%d'"
-msgstr "%s: Não foi possível encontrar uma tarefa com id de processo '%d'"
-
-#, c-format
-msgid "%s: Could not find child processes with the name '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: Não foi possível encontrar a tarefa '%d'"
 
@@ -613,6 +605,14 @@ msgstr ""
 #, c-format
 msgid "Could not find '%s'"
 msgstr "Não foi possível encontrar '%s'"
+
+#, c-format
+msgid "Could not find a job with process ID '%d'"
+msgstr "Não foi possível encontrar uma tarefa com id de processo '%d'"
+
+#, c-format
+msgid "Could not find child processes with the name '%s'"
+msgstr ""
 
 msgid "Could not find home directory"
 msgstr "Não foi possível encontrar o diretório home"

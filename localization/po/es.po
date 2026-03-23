@@ -168,14 +168,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: opción desconocida"
 
 #, c-format
-msgid "%s: Could not find a job with process ID '%d'"
-msgstr "%s: No se pudo encontrar una tarea con ID de proceso '%d'"
-
-#, c-format
-msgid "%s: Could not find child processes with the name '%s'"
-msgstr "%s: No se pudieron encontrar procesos hijos con el nombre '%s'"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: No se pudo encontrar la tarea '%d'"
 
@@ -612,6 +604,14 @@ msgstr "No se pudo determinar el directorio de trabajo actual. ¿Está configura
 #, c-format
 msgid "Could not find '%s'"
 msgstr "No se pudo encontrar '%s'"
+
+#, c-format
+msgid "Could not find a job with process ID '%d'"
+msgstr "No se pudo encontrar una tarea con ID de proceso '%d'"
+
+#, c-format
+msgid "Could not find child processes with the name '%s'"
+msgstr "No se pudieron encontrar procesos hijos con el nombre '%s'"
 
 msgid "Could not find home directory"
 msgstr "No se pudo encontrar el directorio personal"

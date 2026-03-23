@@ -168,14 +168,6 @@ msgid "%s: %s: unknown option"
 msgstr "%s: %s: unbekannte Option"
 
 #, c-format
-msgid "%s: Could not find a job with process ID '%d'"
-msgstr "%s: Konnte keinen Job mit Prozess-ID '%d' finden"
-
-#, c-format
-msgid "%s: Could not find child processes with the name '%s'"
-msgstr "%s: Kein Kindprozess namens '%s' gefunden"
-
-#, c-format
 msgid "%s: Could not find job '%d'"
 msgstr "%s: Job '%d' nicht gefunden"
 
@@ -612,6 +604,14 @@ msgstr "Das aktuelle Arbeitsverzeichnis konnte nicht bestimmt werden. Ist die lo
 #, c-format
 msgid "Could not find '%s'"
 msgstr "Konnte '%s' nicht finden"
+
+#, c-format
+msgid "Could not find a job with process ID '%d'"
+msgstr "Konnte keinen Job mit Prozess-ID '%d' finden"
+
+#, c-format
+msgid "Could not find child processes with the name '%s'"
+msgstr "Kein Kindprozess namens '%s' gefunden"
 
 msgid "Could not find home directory"
 msgstr "Konnte Heimordner nicht finden"

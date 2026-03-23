@@ -8,6 +8,9 @@ end
 outnerr 0 &| count
 #CHECK: 2
 
+outnerr 1 |& count
+#CHECK: 2
+
 
 outnerr appendfd 2>>&1
 #CHECK: out appendfd
@@ -28,11 +31,6 @@ cat $tmpdir/file.txt
 
 echo noclobber &>>?$tmpdir/file.txt
 #CHECKERR: {{.*}} The file {{.*}} already exists
-
-eval "echo foo |& false"
-#CHECKERR: {{.*}} |& is not valid. In fish, use &| to pipe both stdout and stderr.
-#CHECKERR: echo foo |& false
-#CHECKERR:          ^^
 
 # Ensure that redirection empty data still creates the file.
 rm -f $tmpdir/file.txt

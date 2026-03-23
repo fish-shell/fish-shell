@@ -49,7 +49,6 @@ pub enum TokenizerError {
     UnterminatedEscape,
     InvalidRedirect,
     InvalidPipe,
-    InvalidPipeAmpersand,
     ClosingUnopenedSubshell,
     IllegalSlice,
     ClosingUnopenedBrace,
@@ -95,7 +94,7 @@ pub struct PipeOrRedir {
     pub mode: RedirectionMode,
 
     // Whether, in addition to this redirection, stderr should also be dup'd to stdout
-    // For example &| or &>
+    // For example &|, |& or &>
     pub stderr_merge: bool,
 
     // Number of characters consumed when parsing the string.
@@ -162,9 +161,6 @@ impl From<TokenizerError> for &'static wstr {
             }
             TokenizerError::InvalidPipe => {
                 wgettext!("Cannot use stdin (fd 0) as pipe output")
-            }
-            TokenizerError::InvalidPipeAmpersand => {
-                wgettext!("|& is not valid. In fish, use &| to pipe both stdout and stderr.")
             }
             TokenizerError::ClosingUnopenedSubshell => {
                 wgettext!("Unexpected ')' for unopened parenthesis")
@@ -473,10 +469,6 @@ impl<'c> Iterator for Tokenizer<'c> {
                     self.token_cursor += 2;
                     at_cmd_pos = true;
                     Some(result)
-                } else if next_char == Some('&') {
-                    // |& is a bashism; in fish it's &|.
-                    Some(self.call_error(TokenizerError::InvalidPipeAmpersand,
-                                            self.token_cursor, self.token_cursor, Some(2), 2))
                 } else {
                     let pipe = PipeOrRedir::try_from(buff).
                         expect("Should always succeed to parse a | pipe");
@@ -1024,6 +1016,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
                 );
                 result.fd = STDOUT_FILENO;
                 result.is_pipe = true;
+                result.stderr_merge = try_consume(&mut cursor, '&');
             }
             '>' => {
                 consume(&mut cursor, '>');
@@ -1356,6 +1349,9 @@ mod tests {
 
         assert!(pipe_or_redir!("&|").is_pipe);
         assert!(pipe_or_redir!("&|").stderr_merge);
+        assert!(pipe_or_redir!("|&").is_pipe);
+        assert!(pipe_or_redir!("|&").stderr_merge);
+        assert_eq!(pipe_or_redir!("|&").fd, STDOUT_FILENO);
         assert!(!pipe_or_redir!("&>").is_pipe);
         assert!(pipe_or_redir!("&>").stderr_merge);
         assert!(pipe_or_redir!("&>>").stderr_merge);

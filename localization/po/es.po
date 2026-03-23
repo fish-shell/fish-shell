@@ -184,20 +184,12 @@ msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: La función '%s' ya existe. No se puede crear una copia de '%s'"
 
 #, c-format
-msgid "%s: Invalid limit '%s'"
-msgstr "%s: Límite no válido '%s'"
-
-#, c-format
 msgid "%s: Invalid max matches value '%s'"
 msgstr "%s: Valor máximo de coincidencias no válido '%s'"
 
 #, c-format
 msgid "%s: Invalid max value '%s'"
 msgstr "%s: Valor máximo no válido '%s'"
-
-#, c-format
-msgid "%s: New limit cannot be an empty string"
-msgstr "%s: El nuevo límite no puede ser un string vacío"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -214,10 +206,6 @@ msgstr "%s: El número estaba vacío"
 #, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: Error al compilar la expresión regular: %s"
-
-#, c-format
-msgid "%s: Resource limit not available on this operating system"
-msgstr "%s: El límite de recursos no está disponible en este sistema operativo"
 
 #, c-format
 msgid "%s: There are no jobs"
@@ -961,6 +949,10 @@ msgid "Invalid level value '%s'"
 msgstr "Valor de nivel no válido '%s'"
 
 #, c-format
+msgid "Invalid limit '%s'"
+msgstr "Límite no válido '%s'"
+
+#, c-format
 msgid "Invalid max matches value '%s'"
 msgstr "Valor máximo de coincidencias no válido '%s'"
 
@@ -1114,6 +1106,9 @@ msgstr "Negar el estado de salida del trabajo"
 msgid "Never"
 msgstr "Nunca"
 
+msgid "New limit cannot be an empty string"
+msgstr "El nuevo límite no puede ser un string vacío"
+
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "No hay TTY para el shell interactivo (tcgetpgrp falló)"
 
@@ -1195,6 +1190,10 @@ msgstr "Ejecutar un comando múltiples veces"
 
 msgid "Perform a set of commands multiple times"
 msgstr "Ejecutar un conjunto de comandos múltiples veces"
+
+#, c-format
+msgid "Permission denied when changing resource of type '%s'"
+msgstr ""
 
 #, c-format
 msgid "Permission denied: '%s'"
@@ -1290,6 +1289,9 @@ msgstr "Requiere al menos dos argumentos"
 
 msgid "Requires exactly two arguments"
 msgstr "Requiere exactamente dos argumentos"
+
+msgid "Resource limit not available on this operating system"
+msgstr "El límite de recursos no está disponible en este sistema operativo"
 
 #, c-format
 msgid "Result too large: %s"
@@ -1920,10 +1922,6 @@ msgstr "no existe la línea %s"
 
 msgid "too many arguments"
 msgstr "demasiados argumentos"
-
-#, c-format
-msgid "ulimit: Permission denied when changing resource of type '%s'"
-msgstr "ulimit: Permiso denegado al cambiar el recurso del tipo '%s'"
 
 msgid "unexported"
 msgstr "no exportado"

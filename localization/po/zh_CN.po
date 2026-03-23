@@ -205,20 +205,12 @@ msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: 函数 '%s' 已经存在。无法创建副本 '%s'"
 
 #, c-format
-msgid "%s: Invalid limit '%s'"
-msgstr "%s: 无效的限制 '%s'"
-
-#, c-format
 msgid "%s: Invalid max matches value '%s'"
 msgstr "%s: 无效的最大匹配值 '%s'"
 
 #, c-format
 msgid "%s: Invalid max value '%s'"
 msgstr "%s: 无效的最大值 '%s'"
-
-#, c-format
-msgid "%s: New limit cannot be an empty string"
-msgstr "%s: 新限制不能为空字符串"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -235,10 +227,6 @@ msgstr "%s：数字为空"
 #, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: 正则表达式编译错误：%s"
-
-#, c-format
-msgid "%s: Resource limit not available on this operating system"
-msgstr "%s: 该操作系统不支持资源限制"
 
 #, c-format
 msgid "%s: There are no jobs"
@@ -982,6 +970,10 @@ msgid "Invalid level value '%s'"
 msgstr "无效的级别值 '%s'"
 
 #, c-format
+msgid "Invalid limit '%s'"
+msgstr "无效的限制 '%s'"
+
+#, c-format
 msgid "Invalid max matches value '%s'"
 msgstr "无效的最大匹配值 '%s'"
 
@@ -1135,6 +1127,9 @@ msgstr "对作业退出代码取反"
 msgid "Never"
 msgstr "从不"
 
+msgid "New limit cannot be an empty string"
+msgstr "新限制不能为空字符串"
+
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "交互 shell 没有 TTY (tcgetpgrp 失败)"
 
@@ -1216,6 +1211,10 @@ msgstr "多次执行一条命令"
 
 msgid "Perform a set of commands multiple times"
 msgstr "多次执行一组指令"
+
+#, c-format
+msgid "Permission denied when changing resource of type '%s'"
+msgstr ""
 
 #, c-format
 msgid "Permission denied: '%s'"
@@ -1311,6 +1310,9 @@ msgstr "需要至少两个参数"
 
 msgid "Requires exactly two arguments"
 msgstr "需要两个参数"
+
+msgid "Resource limit not available on this operating system"
+msgstr "该操作系统不支持资源限制"
 
 #, c-format
 msgid "Result too large: %s"
@@ -1941,10 +1943,6 @@ msgstr "不存在行 %s"
 
 msgid "too many arguments"
 msgstr "参数太多"
-
-#, c-format
-msgid "ulimit: Permission denied when changing resource of type '%s'"
-msgstr "ulimit: 更改类型 '%s' 的资源时权限被拒绝"
 
 msgid "unexported"
 msgstr "未导出"

@@ -7,7 +7,7 @@ use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::argument_is_help;
 use crate::parser::{BlockType, LoopStatus};
 use crate::proc::{Pid, ProcStatus, no_exec};
-use crate::{builtins::*, err_fmt, err_raw, wutil};
+use crate::{builtins::*, err_fmt, wutil};
 use errno::errno;
 use fish_common::assert_sorted_by_name;
 use fish_widestring::L;
@@ -741,14 +741,6 @@ pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &
         "(Type 'help %s' for related documentation)",
         cmd
     ));
-}
-
-/// This function works like perror, but it prints its result into the streams.err string instead
-/// to stderr. Used by the builtin commands.
-pub fn builtin_wperror(program_name: &wstr, streams: &mut IoStreams) {
-    let err = errno();
-    let werr = str2wcstring(err.to_string());
-    err_raw!(werr).with_cmd(program_name).finish(streams);
 }
 
 pub fn builtin_strerror() -> WString {

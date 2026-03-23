@@ -184,20 +184,12 @@ msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: Funktion '%s' existiert schon. Konnte '%s' nicht kopieren"
 
 #, c-format
-msgid "%s: Invalid limit '%s'"
-msgstr "%s: Ungültiges Limit '%s'"
-
-#, c-format
 msgid "%s: Invalid max matches value '%s'"
 msgstr ""
 
 #, c-format
 msgid "%s: Invalid max value '%s'"
 msgstr "%s: Ungültiger Maximalwert '%s'"
-
-#, c-format
-msgid "%s: New limit cannot be an empty string"
-msgstr "%s: Neues Limit darf keine leere Zeichenkette sein"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -214,10 +206,6 @@ msgstr "%s: Zahl war leer"
 #, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: Fehler beim Kompilieren von regulärem Ausdruck: %s"
-
-#, c-format
-msgid "%s: Resource limit not available on this operating system"
-msgstr "%s: Ressourcenlimit ist auf diesem Betriebssystem nicht verfügbar"
 
 #, c-format
 msgid "%s: There are no jobs"
@@ -961,6 +949,10 @@ msgid "Invalid level value '%s'"
 msgstr ""
 
 #, c-format
+msgid "Invalid limit '%s'"
+msgstr "Ungültiges Limit '%s'"
+
+#, c-format
 msgid "Invalid max matches value '%s'"
 msgstr ""
 
@@ -1114,6 +1106,9 @@ msgstr "Exit-Status des Jobs negieren"
 msgid "Never"
 msgstr "Nie"
 
+msgid "New limit cannot be an empty string"
+msgstr "Neues Limit darf keine leere Zeichenkette sein"
+
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Kein TTY für interaktive Shell (tcgetpgrp schlug fehl)"
 
@@ -1195,6 +1190,10 @@ msgstr "Einen Befehl mehrmals ausführen"
 
 msgid "Perform a set of commands multiple times"
 msgstr "Eine Befehlsfolge mehrmals ausführen"
+
+#, c-format
+msgid "Permission denied when changing resource of type '%s'"
+msgstr ""
 
 #, c-format
 msgid "Permission denied: '%s'"
@@ -1290,6 +1289,9 @@ msgstr "Erfordert mindestens zwei Argumente"
 
 msgid "Requires exactly two arguments"
 msgstr "Erfordert genau zwei Argumente"
+
+msgid "Resource limit not available on this operating system"
+msgstr "Ressourcenlimit ist auf diesem Betriebssystem nicht verfügbar"
 
 #, c-format
 msgid "Result too large: %s"
@@ -1917,10 +1919,6 @@ msgstr ""
 
 msgid "too many arguments"
 msgstr "zu viele Argumente"
-
-#, c-format
-msgid "ulimit: Permission denied when changing resource of type '%s'"
-msgstr ""
 
 msgid "unexported"
 msgstr "nicht exportiert"

@@ -185,19 +185,11 @@ msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid limit '%s'"
-msgstr ""
-
-#, c-format
 msgid "%s: Invalid max matches value '%s'"
 msgstr ""
 
 #, c-format
 msgid "%s: Invalid max value '%s'"
-msgstr ""
-
-#, c-format
-msgid "%s: New limit cannot be an empty string"
 msgstr ""
 
 #, c-format
@@ -214,10 +206,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: Regular expression compile error: %s"
-msgstr ""
-
-#, c-format
-msgid "%s: Resource limit not available on this operating system"
 msgstr ""
 
 #, c-format
@@ -962,6 +950,10 @@ msgid "Invalid level value '%s'"
 msgstr ""
 
 #, c-format
+msgid "Invalid limit '%s'"
+msgstr ""
+
+#, c-format
 msgid "Invalid max matches value '%s'"
 msgstr ""
 
@@ -1115,6 +1107,9 @@ msgstr "Nega estado de saída da tarefa"
 msgid "Never"
 msgstr "Nunca"
 
+msgid "New limit cannot be an empty string"
+msgstr ""
+
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Não há TTY para shell interativo (falha em tcgetpgrp)"
 
@@ -1196,6 +1191,10 @@ msgstr "Executa um comando várias vezes"
 
 msgid "Perform a set of commands multiple times"
 msgstr "Executa um conjunto de comandos várias vezes"
+
+#, c-format
+msgid "Permission denied when changing resource of type '%s'"
+msgstr ""
 
 #, c-format
 msgid "Permission denied: '%s'"
@@ -1290,6 +1289,9 @@ msgid "Requires at least two arguments"
 msgstr ""
 
 msgid "Requires exactly two arguments"
+msgstr ""
+
+msgid "Resource limit not available on this operating system"
 msgstr ""
 
 #, c-format
@@ -1917,10 +1919,6 @@ msgid "there is no line %s"
 msgstr ""
 
 msgid "too many arguments"
-msgstr ""
-
-#, c-format
-msgid "ulimit: Permission denied when changing resource of type '%s'"
 msgstr ""
 
 msgid "unexported"

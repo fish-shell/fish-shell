@@ -183,20 +183,12 @@ msgid "%s: Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "%s: 関数 '%s' はすでに存在します。 '%s' のコピーを作成できません"
 
 #, c-format
-msgid "%s: Invalid limit '%s'"
-msgstr "%s: 制限値 '%s' が無効です"
-
-#, c-format
 msgid "%s: Invalid max matches value '%s'"
 msgstr "%s: 最大一致数 '%s' が無効です"
 
 #, c-format
 msgid "%s: Invalid max value '%s'"
 msgstr "%s: 最大値 '%s' が無効です"
-
-#, c-format
-msgid "%s: New limit cannot be an empty string"
-msgstr "%s: 新しい制限値を空文字列にすることはできません"
 
 #, c-format
 msgid "%s: Not inside of loop"
@@ -213,10 +205,6 @@ msgstr "%s: 数値が空です"
 #, c-format
 msgid "%s: Regular expression compile error: %s"
 msgstr "%s: 正規表現のコンパイルエラー: %s"
-
-#, c-format
-msgid "%s: Resource limit not available on this operating system"
-msgstr "%s: このオペレーティングシステムではリソース制限を利用できません"
 
 #, c-format
 msgid "%s: There are no jobs"
@@ -960,6 +948,10 @@ msgid "Invalid level value '%s'"
 msgstr "レベル値 '%s' が無効です"
 
 #, c-format
+msgid "Invalid limit '%s'"
+msgstr "制限値 '%s' が無効です"
+
+#, c-format
 msgid "Invalid max matches value '%s'"
 msgstr "最大一致数 '%s' が無効です"
 
@@ -1113,6 +1105,9 @@ msgstr "ジョブの終了ステータスを反転(否定)"
 msgid "Never"
 msgstr "しない(Never)"
 
+msgid "New limit cannot be an empty string"
+msgstr "新しい制限値を空文字列にすることはできません"
+
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "対話型シェルのための TTY がありません(tcgetpgrp に失敗しました)"
 
@@ -1194,6 +1189,10 @@ msgstr "コマンドを繰り返し実行"
 
 msgid "Perform a set of commands multiple times"
 msgstr "一連のコマンドを繰り返し実行"
+
+#, c-format
+msgid "Permission denied when changing resource of type '%s'"
+msgstr ""
 
 #, c-format
 msgid "Permission denied: '%s'"
@@ -1289,6 +1288,9 @@ msgstr "少なくとも 2 つの引数が必要です"
 
 msgid "Requires exactly two arguments"
 msgstr "ちょうど 2 つの引数が必要です"
+
+msgid "Resource limit not available on this operating system"
+msgstr "このオペレーティングシステムではリソース制限を利用できません"
 
 #, c-format
 msgid "Result too large: %s"
@@ -1919,10 +1921,6 @@ msgstr "%s 行目は存在しません"
 
 msgid "too many arguments"
 msgstr "引数が多すぎます"
-
-#, c-format
-msgid "ulimit: Permission denied when changing resource of type '%s'"
-msgstr "ulimit: リソースタイプ '%s' の変更中にアクセス拒否されました"
 
 msgid "unexported"
 msgstr "エクスポート解除済み"

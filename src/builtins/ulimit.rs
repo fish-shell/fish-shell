@@ -4,7 +4,7 @@ use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
 use nix::sys::resource::Resource as ResourceEnum;
 
-use crate::wutil::perror_nix;
+use crate::{err_fmt, err_raw, err_str, error::Error, wutil::perror_nix};
 use fish_fallback::{fish_wcswidth, wcscasecmp};
 
 use super::prelude::*;
@@ -180,6 +180,8 @@ fn set_limit(
     value: rlim_t,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
+    let cmd = L!("ulimit");
+
     let Some((mut rlim_cur, mut rlim_max)) = getrlimit(resource) else {
         return Err(STATUS_CMD_ERROR);
     };
@@ -197,12 +199,14 @@ fn set_limit(
 
     if let Err(errno) = setrlimit(resource, rlim_cur, rlim_max) {
         if errno == Errno::EPERM {
-            streams.err.appendln(&wgettext_fmt!(
-                "ulimit: Permission denied when changing resource of type '%s'",
+            err_fmt!(
+                "Permission denied when changing resource of type '%s'",
                 get_desc(resource)
-            ));
+            )
+            .with_cmd(cmd)
+            .finish(streams);
         } else {
-            builtin_wperror(L!("ulimit"), streams);
+            err_raw!(builtin_strerror()).with_cmd(cmd).finish(streams);
         }
 
         Err(STATUS_CMD_ERROR)
@@ -334,12 +338,10 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     }
 
     if opts.what == -1 {
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: Resource limit not available on this operating system",
-            cmd
-        ));
-
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!("Resource limit not available on this operating system")
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -351,11 +353,10 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         print(what, opts.hard, streams);
         return Ok(SUCCESS);
     } else if arg_count != 1 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
-
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!(Error::TOO_MANY_ARGUMENTS)
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -367,15 +368,14 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         soft = true;
     }
     localizable_consts! {
-        BUILTIN_ULIMIT_INVALID "%s: Invalid limit '%s'"
+        BUILTIN_ULIMIT_INVALID "Invalid limit '%s'"
     }
 
     let new_limit: rlim_t = if w.wopt_index == argc {
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: New limit cannot be an empty string",
-            cmd
-        ));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!("New limit cannot be an empty string")
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     } else if wcscasecmp(w.argv[w.wopt_index], L!("unlimited")) == Ordering::Equal {
         RLIM_INFINITY
@@ -391,22 +391,18 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
     } else if let Ok(limit) = fish_wcstol(w.argv[w.wopt_index]) {
         let Some(x) = get_multiplier(what).checked_mul(limit as rlim_t) else {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ULIMIT_INVALID,
-                cmd,
-                w.argv[w.wopt_index]
-            ));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_fmt!(BUILTIN_ULIMIT_INVALID, w.argv[w.wopt_index])
+                .with_cmd(cmd)
+                .with_full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         x
     } else {
-        streams.err.appendln(&wgettext_fmt!(
-            BUILTIN_ULIMIT_INVALID,
-            cmd,
-            w.argv[w.wopt_index]
-        ));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_fmt!(BUILTIN_ULIMIT_INVALID, w.argv[w.wopt_index])
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     };
 

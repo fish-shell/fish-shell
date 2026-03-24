@@ -1873,9 +1873,6 @@ msgstr "，引數為「%s」"
 msgid "with definition"
 msgstr "，定義為"
 
-msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
-msgstr "|& 無效。在 fish 中請使用 &| 來同時管道傳輸 stdout 和 stderr。"
-
 #  第一個 %s 是刪節號。此字串出現在按下 <Tab> 的清單太長的情況。
 #, fuzzy, c-format
 msgid "…and %u more rows"

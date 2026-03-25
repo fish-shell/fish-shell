@@ -5169,6 +5169,17 @@ impl<'a> Reader<'a> {
 
                 self.left_prompt_buff =
                     join_strings(&self.exec_prompt_cmd(prompt_cmd, final_prompt), '\n');
+
+                // Support the SHELL_PROMPT_PREFIX and SHELL_PROMPT_SUFFIX environment
+                // variables as standardized by systemd v257. Prepend the prefix and
+                // append the suffix to the left prompt so that all prompts
+                // automatically pick them up.
+                if let Some(prefix) = self.vars().get_unless_empty(L!("SHELL_PROMPT_PREFIX")) {
+                    self.left_prompt_buff.insert_utfstr(0, &prefix.as_string());
+                }
+                if let Some(suffix) = self.vars().get_unless_empty(L!("SHELL_PROMPT_SUFFIX")) {
+                    self.left_prompt_buff.push_utfstr(&suffix.as_string());
+                }
             }
 
             // Don't execute the right prompt if it is undefined fish_right_prompt

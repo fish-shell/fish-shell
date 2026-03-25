@@ -1646,6 +1646,18 @@ You can change the settings of fish by changing the values of certain variables.
 
    the current file creation mask. The preferred way to change the umask variable is through the :doc:`umask <cmds/umask>` function. An attempt to set umask to an invalid value will always fail.
 
+.. envvar:: SHELL_PROMPT_PREFIX
+
+   if set, this string is automatically prepended to the left prompt. This is a standard environment variable that may be set by tools like systemd's ``run0`` to indicate special shell sessions.
+
+.. envvar:: SHELL_PROMPT_SUFFIX
+
+   if set, this string is automatically appended to the left prompt. This is a standard environment variable that may be set by tools like systemd's ``run0`` to indicate special shell sessions.
+
+.. envvar:: SHELL_WELCOME
+
+   if set, this string is displayed when an interactive shell starts, after the greeting. This is a standard environment variable that may be set by tools like systemd's ``run0`` to display session information.
+
 .. envvar:: BROWSER
 
    your preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.

@@ -24,6 +24,8 @@ The exit status of commands within ``fish_prompt`` will not modify the value of 
 
 If :envvar:`fish_transient_prompt` is set to 1, ``fish_prompt --final-rendering`` is run before executing the commandline.
 
+If :envvar:`SHELL_PROMPT_PREFIX` or :envvar:`SHELL_PROMPT_SUFFIX` are set, they are automatically prepended and appended to the left prompt. This applies to all prompts regardless of whether ``fish_prompt`` has been customized.
+
 ``fish`` ships with a number of example prompts that can be chosen with the ``fish_config`` command.
 
 

@@ -2266,7 +2266,7 @@ impl ReaderData {
         };
 
         while buff_pos != end {
-            if move_right && buff_pos >= el.len() {
+            if buff_pos == el.len() && (move_right || to_word_end) {
                 break;
             }
             let char_pos = if move_right {

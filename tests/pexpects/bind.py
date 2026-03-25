@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from pexpect_helper import SpawnedProc
+from pexpect_helper import SpawnedProc, control
 import os
 import platform
 import sys
@@ -680,6 +680,11 @@ send("echo foo-bar")
 send("\x07")  # ctrl-g
 sendline("qux")
 expect_str("foo-barqux")
+expect_prompt()
+
+sendline("bind ctrl-g backward-word-end")
+sendline("echo 12" + control("g") + "3")
+expect_str("123")
 expect_prompt()
 
 # Check that the builtin version of `exit` works

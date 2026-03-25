@@ -22,6 +22,8 @@ When an interactive fish starts, it executes fish_greeting and displays its outp
 
 The default fish_greeting is a function that prints a variable of the same name (``$fish_greeting``), so you can also just change that if you just want to change the text.
 
+If :envvar:`SHELL_WELCOME` is set, it is displayed after the greeting. This is a standard environment variable that may be set by tools like systemd's ``run0`` to display session information.
+
 While you could also just put ``echo`` calls into config.fish, fish_greeting takes care of only being used in interactive shells, so it won't be used e.g. with ``scp`` (which executes a shell), which prevents some errors.
 
 Example

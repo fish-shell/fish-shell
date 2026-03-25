@@ -34,6 +34,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
         fish_greeting
     end
 
+    # Display SHELL_WELCOME if set. This is a standard environment variable (introduced by
+    # systemd v257) intended for shells to display when they first initialize.
+    if status --is-interactive
+        and set -q SHELL_WELCOME[1]
+        echo $SHELL_WELCOME
+    end
+
     #
     # Completions for SysV startup scripts. These aren't bound to any
     # specific command, so they can't be autoloaded.

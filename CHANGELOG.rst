@@ -11,6 +11,7 @@ Deprecations and removed features
 
 Interactive improvements
 ------------------------
+- fish now supports the ``SHELL_PROMPT_PREFIX``, ``SHELL_PROMPT_SUFFIX``, and ``SHELL_WELCOME`` environment variables. The prefix and suffix are automatically prepended and appended to the left prompt, and the welcome message is displayed on startup after the greeting. These variables are a standard interface used by tools like systemd's ``run0`` (:issue:`10924`).
 - The tab completion pager now left-justifies the description of each column (:issue:`12546`).
 
 New or improved bindings

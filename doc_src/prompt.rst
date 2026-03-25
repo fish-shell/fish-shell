@@ -19,6 +19,8 @@ Unlike other shells, fish's prompt is built by running a function - :doc:`fish_p
 
 These functions are run, and whatever they print is displayed as the prompt (minus one trailing newline).
 
+If the :envvar:`SHELL_PROMPT_PREFIX` or :envvar:`SHELL_PROMPT_SUFFIX` environment variables are set, they are automatically prepended and appended to the left prompt.
+
 Here, we will just be writing a simple fish_prompt.
 
 Our first prompt

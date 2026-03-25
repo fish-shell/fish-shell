@@ -122,3 +122,12 @@ sendline("wait %5")
 expect_prompt("jobs: No suitable job: %5")
 sendline("kill %1")
 expect_prompt()
+
+# Regression test for #12301
+sendline("function sleep_func; sleep 2s; end")
+expect_prompt()
+sendline("cat | cat | sleep_func > /dev/null")
+sleep(0.2)
+send("\x1a")
+sleep(0.2)
+expect_prompt()

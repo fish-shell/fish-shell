@@ -25,7 +25,7 @@ use fish_widestring::ToWString;
 use libc::{
     _SC_CLK_TCK, EXIT_SUCCESS, SIG_IGN, SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGINT, SIGPIPE, SIGQUIT,
     SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED, WEXITSTATUS, WIFCONTINUED, WIFEXITED,
-    WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
+    WIFSIGNALED, WIFSTOPPED, WNOHANG, WSTOPSIG, WTERMSIG, WUNTRACED,
 };
 use nix::{
     sys::{
@@ -195,6 +195,11 @@ impl ProcStatus {
         WIFSIGNALED(self.status())
     }
 
+    pub fn stop_signal(&self) -> libc::c_int {
+        assert!(self.stopped(), "Process is not signal stopped");
+        WSTOPSIG(self.status())
+    }
+
     /// Return the signal code, given that we signal exited.
     pub fn signal_code(&self) -> libc::c_int {
         assert!(self.signal_exited(), "Process is not signal exited");
@@ -218,8 +223,10 @@ impl ProcStatus {
             128 + self.signal_code()
         } else if self.normal_exited() {
             i32::from(self.exit_code())
+        } else if self.stopped() {
+            128 + self.stop_signal()
         } else {
-            panic!("Process is not exited")
+            panic!("Unsupported status value")
         }
     }
 }

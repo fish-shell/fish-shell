@@ -129,6 +129,15 @@ impl HasNextState for SmallWordMovementState {
 struct BigWordMovementState {
     last_char_class: WordCharClass,
 }
+pub fn bigword_class(c: char) -> WordCharClass {
+    if c == '\n' {
+        WordCharClass::Newline
+    } else if is_blank(c) {
+        WordCharClass::Blank
+    } else {
+        WordCharClass::Word
+    }
+}
 impl HasNextState for BigWordMovementState {
     fn next_state(
         direction: MoveWordDir,
@@ -137,14 +146,7 @@ impl HasNextState for BigWordMovementState {
         _idx: usize,
         c: char,
     ) -> State<Self> {
-        let char_class = if c == '\n' {
-            WordCharClass::Newline
-        } else if is_blank(c) {
-            WordCharClass::Blank
-        } else {
-            WordCharClass::Word
-        };
-        next_word_movement_state(direction, state, char_class)
+        next_word_movement_state(direction, state, bigword_class(c))
     }
 }
 impl WordMovementState for BigWordMovementState {
@@ -485,6 +487,9 @@ mod tests {
 
         validate!(Right, Punctuation, "^ab^&^cd ^& ^e ^f^&^");
         validate!(Left, Punctuation, "^ab^&^cd ^& ^e ^f^&^");
+
+        validate!(Right, Punctuation, "^a^-^a^-^a^");
+        validate!(Right, Punctuation, "^aa^-^aa^-^aa^");
 
         // General Whiltespace tests
         validate!(Left, Whitespace, "^a ^bcd^");

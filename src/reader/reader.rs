@@ -87,6 +87,7 @@ use crate::proc::{
     HAVE_PROC_STAT, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
     print_exit_warning_for_jobs, proc_update_jiffies,
 };
+use crate::reader::word_motion::bigword_class;
 use crate::screen::{CharOffset, Screen, is_dumb, screen_force_clear_to_end};
 use crate::should_flog;
 use crate::signal::{
@@ -372,7 +373,7 @@ pub fn current_data() -> Option<&'static mut ReaderData> {
         .map(|data| unsafe { Pin::get_unchecked_mut(Pin::as_mut(data)) })
 }
 pub use current_data as reader_current_data;
-use fish_widestring::word_char::is_blank;
+use fish_widestring::word_char::{WordCharClass, is_blank};
 
 /// Add a new reader to the reader stack.
 /// If `history_name` is empty, then save history in-memory only; do not write it to disk.
@@ -3624,9 +3625,22 @@ impl<'a> Reader<'a> {
                     rl::ForwardBigwordEmacs | rl::KillBigwordEmacs => MoveWordStyle::Whitespace,
                     _ => unreachable!(),
                 };
-                let is_word_end = el.position() + 1 < el.len()
-                    && !is_blank(el.at(el.position()))
-                    && is_blank(el.at(el.position() + 1));
+                let is_word_end = el.position() + 1 < el.len() && {
+                    let pos = el.position();
+                    // TODO: this is a clone of word motion flavor implementations.
+                    let (cur_class, next_class) = match style {
+                        MoveWordStyle::Punctuation => (
+                            WordCharClass::from_char(el.at(pos)),
+                            WordCharClass::from_char(el.at(pos + 1)),
+                        ),
+                        MoveWordStyle::Whitespace => {
+                            (bigword_class(el.at(pos)), bigword_class(el.at(pos + 1)))
+                        }
+                        MoveWordStyle::PathComponents => unreachable!(),
+                    };
+                    !matches!(cur_class, WordCharClass::Blank | WordCharClass::Newline)
+                        && next_class != cur_class
+                };
 
                 // if at word end, forward/kill char, otherwise forward/kill word end
                 if self.is_at_autosuggestion() {

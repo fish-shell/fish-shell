@@ -737,7 +737,7 @@ pub enum TerminalQuery {
     Recurrent(RecurrentQuery),
 }
 
-pub const LONG_READ_TIMEOUT: Duration = Duration::from_secs(2);
+pub const LONG_READ_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// A trait which knows how to produce a stream of input events.
 /// Note this is conceptually a "base class" with override points.

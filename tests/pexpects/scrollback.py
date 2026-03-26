@@ -11,6 +11,7 @@ sendline, expect_prompt = sp.sendline, sp.expect_prompt
 expect_prompt()
 
 sendline("bind ctrl-g scrollback-push")
+sp.send_primary_device_attribute()
 expect_prompt()
 sp.send(control("g"))
 sp.send_cursor_position_report(y=10, x=5)

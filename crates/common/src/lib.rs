@@ -133,6 +133,7 @@ bitflags! {
 /// most common operating systems do not use them. The value is cached for the duration of the fish
 /// session. We err on the side of assuming it's not a console session. This approach isn't
 /// bullet-proof and that's OK.
+#[cfg(not(any(target_os = "ios", target_os = "macos")))]
 pub fn is_console_session() -> bool {
     static IS_CONSOLE_SESSION: OnceLock<bool> = OnceLock::new();
     // TODO(terminal-workaround)
@@ -152,6 +153,12 @@ pub fn is_console_session() -> bool {
                 is_console_tty && env::var_os("TERM").is_none_or(|t| !t.as_bytes().contains(&b'-'))
             })
     })
+}
+
+#[cfg(any(target_os = "ios", target_os = "macos"))]
+pub fn is_console_session() -> bool {
+    // No console session on Apple, and ttyname may hang (#12506).
+    false
 }
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.

@@ -29,6 +29,7 @@ Other improvements
 For distributors and developers
 -------------------------------
 - When the default global config directory (``$PREFIX/etc/fish``) exists but has been overridden via ``-DCMAKE_INSTALL_SYSCONFDIR``, fish will now respect that override (:issue:`10748`).
+- ``build_tools/update_translations.fish`` has been replaced by ``cargo xtask gettext {check,new,update}`` (:issue:`12676`).
 
 Regression fixes:
 -----------------

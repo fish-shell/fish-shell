@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use fish_build_helper::as_os_strs;
 use std::{path::PathBuf, process::Command};
-use xtask::{CommandExt, cargo, format::FormatArgs, shellcheck::shellcheck};
+use xtask::{CommandExt, cargo, format::FormatArgs, gettext::GettextArgs, shellcheck::shellcheck};
 
 #[derive(Parser)]
 #[command(
@@ -21,6 +21,8 @@ enum Task {
     Check,
     /// Format files or check if they are correctly formatted.
     Format(FormatArgs),
+    /// Work on the gettext PO files.
+    Gettext(GettextArgs),
     /// Build HTML docs
     HtmlDocs {
         /// Path to a fish_indent executable. If none is specified, fish_indent will be built.
@@ -39,6 +41,7 @@ fn main() -> Result<()> {
     match cli.task {
         Task::Check => run_checks(),
         Task::Format(format_args) => xtask::format::format(format_args),
+        Task::Gettext(gettext_args) => xtask::gettext::gettext(gettext_args),
         Task::HtmlDocs { fish_indent } => build_html_docs(fish_indent),
         Task::ManPages => cargo(["build", "--package", "fish-build-man-pages"]),
         Task::ShellCheck => shellcheck(),

@@ -107,6 +107,8 @@ if $lint; then
     for features in "" --no-default-features --all-features; do
         cargo clippy --workspace --all-targets $features
     done
+
+    cargo xtask gettext --rust-extraction-dir="$gettext_template_dir" check
 fi
 
 # When running `cargo test`, some binaries (e.g. `fish_gettext_extraction`)
@@ -134,8 +136,6 @@ fi
 system_tests() (
     # shellcheck disable=2163
     [ -n "$*" ] && export "$@"
-    # shellcheck disable=2031
-    export FISH_GETTEXT_EXTRACTION_DIR="$gettext_template_dir"
     "$workspace_root/tests/test_driver.py" "$build_dir"
 )
 

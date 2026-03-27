@@ -1,3 +1,5 @@
+# localization: tier1
+
 # This file does some internal fish setup.
 # It is not recommended to remove or edit it.
 #

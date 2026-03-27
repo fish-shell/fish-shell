@@ -2310,7 +2310,7 @@ pub fn complete_add(
         result_mode,
         comp,
         // The external source is a completion script in `share`,
-        // from which `build_tools/fish_xgettext.fish` extracts descriptions.
+        // from which `cargo xtask gettext update` extracts descriptions.
         desc: LocalizableString::from_external_source(desc),
         conditions: condition,
         flags,

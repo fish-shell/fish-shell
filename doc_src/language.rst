@@ -1573,7 +1573,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: fish_emoji_width
 
-   controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
+   controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It defaults to 2.
 
 .. envvar:: fish_autosuggestion_enabled
 

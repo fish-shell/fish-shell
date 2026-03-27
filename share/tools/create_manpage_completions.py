@@ -2102,7 +2102,7 @@ def get_paths_from_man_locations():
         parent_paths = ["/usr/share/man", "/usr/local/man", "/usr/local/share/man"]
         print(
             "Unable to get the manpath, falling back to %s." % ":".join(parent_paths),
-            "Explictly set $MANPATH to fix this error.",
+            "Explicitly set $MANPATH to fix this error.",
             file=sys.stderr,
         )
 

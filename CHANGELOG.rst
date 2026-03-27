@@ -8,6 +8,7 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
+- The default width for emoji is switched from 1 to 2, improving the experience for users connecting to old systems from modern desktops. Users of old desktops who notice that lines containing emoji are misaligned can set ``$fish_emoji_width`` back to 1 (:issue:`12562`).
 
 Interactive improvements
 ------------------------

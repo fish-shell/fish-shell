@@ -21,3 +21,20 @@ VISUAL=cat EDITOR=cat funced my-dst
 # CHECK: end
 # CHECK: Editor exited but the function was not modified
 # CHECK: If the editor is still running, check if it waits for completion, maybe a '--wait' option?
+
+# Test: funced on a function copied in-script should open the copy's name, not the original's
+function my-orig
+    echo hello
+end
+functions --copy my-orig my-copied
+
+functions --details my-copied
+# CHECK: {{.*}}funced.fish
+
+VISUAL=cat EDITOR=cat funced my-copied
+# CHECK: # Defined in {{.*}}/funced.fish @ line {{.*}}, copied in {{.*}}/funced.fish @ line {{.*}}
+# CHECK: function my-copied
+# CHECK:     echo hello
+# CHECK: end
+# CHECK: Editor exited but the function was not modified
+# CHECK: If the editor is still running, check if it waits for completion, maybe a '--wait' option?

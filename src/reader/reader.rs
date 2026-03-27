@@ -3625,19 +3625,16 @@ impl<'a> Reader<'a> {
                     rl::ForwardBigwordEmacs | rl::KillBigwordEmacs => MoveWordStyle::Whitespace,
                     _ => unreachable!(),
                 };
-                let is_word_end = el.position() + 1 < el.len() && {
-                    let pos = el.position();
+                let is_at_word_end = el.position() + 1 < el.len() && {
                     // TODO: this is a clone of word motion flavor implementations.
-                    let (cur_class, next_class) = match style {
-                        MoveWordStyle::Punctuation => (
-                            WordCharClass::from_char(el.at(pos)),
-                            WordCharClass::from_char(el.at(pos + 1)),
-                        ),
-                        MoveWordStyle::Whitespace => {
-                            (bigword_class(el.at(pos)), bigword_class(el.at(pos + 1)))
-                        }
+                    let class = match style {
+                        MoveWordStyle::Punctuation => WordCharClass::from_char,
+                        MoveWordStyle::Whitespace => bigword_class,
                         MoveWordStyle::PathComponents => unreachable!(),
                     };
+                    let pos = el.position();
+                    let cur_class = class(el.at(pos));
+                    let next_class = class(el.at(pos + 1));
                     !matches!(cur_class, WordCharClass::Blank | WordCharClass::Newline)
                         && next_class != cur_class
                 };
@@ -3648,7 +3645,7 @@ impl<'a> Reader<'a> {
                         style,
                         to_word_end: true,
                     });
-                } else if is_word_end {
+                } else if is_at_word_end {
                     if is_kill {
                         self.delete_char(/*backward*/ false);
                     } else {

@@ -1,0 +1,13 @@
+argparse-exclusive-flag-invalid = { $command_name }：互斥旗標「{ $flag }」無效
+argparse-exclusive-flag-string-invalid = { $command_name }：互斥旗標字串「{ $flag_string }」無效
+argparse-implicit-int-flag-already-defined = { $command_name }：定義過隱式整數旗標「{ $flag }」了
+argparse-int-short-invalid-modifier = { $command_name }：隱式整數短旗標「{ $flag }」不允許加上「{ $modifier }」等修飾
+argparse-invalid-argument-value = { $command_name }：無效的 { $argument } 值「{ $value }」
+argparse-invalid-option-spec = { $command_name }：無效的選項規格「{ $option_spec }」，在「{ $bad_char }」處
+argparse-long-flag-already-defined = { $command_name }：定義過長旗標「{ $flag }」了
+argparse-missing-double-hyphen-separator = { $command_name }：缺少 -- 分隔
+argparse-must-have-flag = { $command_name }：選項規格必須至少有一個短旗標或長旗標
+argparse-short-flag-already-defined = { $command_name }：定義過短旗標「{ $flag }」了
+argparse-short-flag-invalid = { $command_name }：短旗標「{ $flag }」無效，必須是字母、數字、或「#」
+argparse-too-many-long-only-options = { $command_name }：太多僅有長旗標的選項
+fish-version = { $package_name }, { $version } 版

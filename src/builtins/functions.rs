@@ -203,6 +203,9 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         let def_file = if let Some(p) = props.as_ref() {
             if let Some(cpf) = &p.copy_definition_file {
                 cpf.as_ref().to_owned()
+            } else if p.is_copy {
+                // copied interactively — don't inherit the original function's file
+                L!("stdin").to_owned()
             } else if let Some(df) = &p.definition_file {
                 df.as_ref().to_owned()
             } else {

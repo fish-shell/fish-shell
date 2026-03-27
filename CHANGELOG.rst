@@ -4,7 +4,7 @@ fish ?.?.? (released ???)
 Notable improvements and fixes
 ------------------------------
 - New Spanish translations (:issue:`12489`).
-- New Japanese translations.
+- New Japanese translations (:issue:`12499`).
 
 Deprecations and removed features
 ---------------------------------
@@ -12,31 +12,33 @@ Deprecations and removed features
 
 Interactive improvements
 ------------------------
-- fish now supports the ``SHELL_PROMPT_PREFIX``, ``SHELL_PROMPT_SUFFIX``, and ``SHELL_WELCOME`` environment variables. The prefix and suffix are automatically prepended and appended to the left prompt, and the welcome message is displayed on startup after the greeting. These variables are a standard interface used by tools like systemd's ``run0`` (:issue:`10924`).
 - The tab completion pager now left-justifies the description of each column (:issue:`12546`).
-
-New or improved bindings
-------------------------
+- fish now supports the ``SHELL_PROMPT_PREFIX``, ``SHELL_PROMPT_SUFFIX``, and ``SHELL_WELCOME`` environment variables. The prefix and suffix are automatically prepended and appended to the left prompt, and the welcome message is displayed on startup after the greeting.
+  These variables are set by systemd's ``run0`` for example (:issue:`10924`).
 
 Improved terminal support
 -------------------------
 - ``set_color`` is able to turn off italics, reverse mode, strikethrough and underline individually (e.g. ``--italics=off``).
-- ``set_color`` learned the foreground (``--foreground`` or ``-f``) and reset (``--reset``) modifiers.
+- ``set_color`` learned the foreground (``--foreground`` or ``-f``) and reset (``--reset``) options.
+- An error caused by slow terminal responses at macOS startup has been addressed (:issue:`12571`).
 
 Other improvements
 ------------------
-- For compatibility with Bash, fish now accepts ``|&`` as alternate spelling of ``&|``, for piping pipe both standard output and standard error (:issue:`11516`).
+- Signals like ``SIGWINCH`` (as sent on terminal resize) no longer interrupt builtin output (:issue:`12496`).
+- For compatibility with Bash, fish now accepts ``|&`` as alternate spelling of ``&|``, for piping both standard output and standard error (:issue:`11516`).
 - ``fish_indent`` now preserves comments and newlines immediately preceding a brace block (``{ }``) (:issue:`12505`).
+- A crash when suspending certain pipelines with :kbd:`ctrl-z` has been fixed (:issue:`12301`).
 
 For distributors and developers
 -------------------------------
-- xtasks no longer panic for expected failures
+- ``cargo xtask`` subcommands no longer panic on test failures.
 
 Regression fixes:
 -----------------
 - (from 4.5.0) Intermediate ``⏎`` artifact when redrawing prompt (:issue:`12476`).
 - (from 4.4.0) ``history`` honors explicitly specified ``--color=`` again (:issue:`12512`).
-- (from 4.3.0) Completion of commands starting with ``-`` (:issue:`12522`).
+- (from 4.4.0) Vi mode ``dl`` and ``dh`` (:issue:`12461`).
+- (from 4.3.0) Error completing of commands starting with ``-`` (:issue:`12522`).
 
 fish 4.5.0 (released February 17, 2026)
 =======================================

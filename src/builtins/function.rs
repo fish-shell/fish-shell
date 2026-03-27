@@ -337,7 +337,7 @@ pub fn function(
         func_node,
         named_arguments: opts.named_arguments,
         // Function descriptions are extracted from scripts in `share` via
-        // `build_tools/fish_xgettext.fish`.
+        // `cargo xtask gettext update`.
         description: LocalizableString::from_external_source(opts.description),
         inherit_vars: inherit_vars.into_boxed_slice(),
         shadow_scope: opts.shadow_scope,

@@ -69,6 +69,7 @@ rand = { version = "0.9.2", default-features = false, features = [
     "small_rng",
     "thread_rng",
 ] }
+regex = "1.12.3"
 rsconf = "0.3.0"
 rust-embed = { version = "8.11.0", features = [
     "deterministic-timestamps",
@@ -191,8 +192,8 @@ embed-manpages = ["dep:fish-build-man-pages"]
 localize-messages = ["dep:fish-gettext"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
-# desired. This happens when running tests via `cargo xtask check` and when calling
-# `build_tools/update_translations.fish`, so there should not be a need to enable it manually.
+# desired. This happens for the `gettext` xtask, which is also invoked via `cargo xtask check`.
+# There should not be a need to enable this feature manually.
 gettext-extract = ["dep:fish-gettext-extraction"]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.

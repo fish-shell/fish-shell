@@ -3701,9 +3701,6 @@ msgstr "fish 用の vi 風キーバインド"
 msgid "wait for app to exit"
 msgstr "アプリが終了するまで待機"
 
-msgid "fish-section-tier3-from-script-explicitly-added"
-msgstr ""
-
 msgid "fish-section-tier3-from-script-implicitly-added"
 msgstr ""
 

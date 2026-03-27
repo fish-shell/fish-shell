@@ -3696,9 +3696,6 @@ msgstr "vi 風格的按鍵綁定"
 msgid "wait for app to exit"
 msgstr "等待應用程式結束"
 
-msgid "fish-section-tier3-from-script-explicitly-added"
-msgstr ""
-
 msgid "fish-section-tier3-from-script-implicitly-added"
 msgstr ""
 

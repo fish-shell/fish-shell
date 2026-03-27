@@ -3,7 +3,7 @@
 ## --- WRITTEN MANUALLY ---
 
 function __fish_cargo
-    cargo --color=never $argv
+    RUSTUP_AUTO_INSTALL=0 cargo --color=never $argv
 end
 
 set -l __fish_cargo_subcommands (__fish_cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s*(.*)' '$1\t$2' | string escape)

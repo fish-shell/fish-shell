@@ -207,7 +207,7 @@ tt {
     border-top-left-radius: 5;
     border-bottom-left-radius: 5;
 
-    /* Pad one less than .master_element, to accomodate our border. */
+    /* Pad one less than .master_element, to accommodate our border. */
     padding-top: 5px;
     padding-bottom: 10px;
     padding-left: 4px;

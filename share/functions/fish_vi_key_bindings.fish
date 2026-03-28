@@ -129,7 +129,9 @@ function fish_vi_exec_motion
                 set motion_cmd commandline -f $motion
         end
         switch $motion[1]
-            case forward-char backward-char
+            case forward-char
+                set -e seq_total[1]
+            case backward-char
                 $motion_cmd
                 set -e seq_total[1]
         end

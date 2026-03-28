@@ -41,7 +41,7 @@ send("\033")
 sleep(1)
 send("hhhdhldl")
 sendline("")
-expect_re(r"\bacdf\b")
+expect_re(r"\bacef\b")
 
 # Test x copying to clipboard
 send("echo hello")

@@ -605,10 +605,6 @@ msgid "%s: Invalid start value '%s'"
 msgstr "%s : Indice de départ « %s » invalide"
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s : État invalide"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr ""
 

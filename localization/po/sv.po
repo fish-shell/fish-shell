@@ -473,10 +473,6 @@ msgid "%s: Invalid start value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s: Ogiltigt tillstånd"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr ""
 

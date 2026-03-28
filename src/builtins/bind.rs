@@ -16,10 +16,12 @@ use std::sync::MutexGuard;
 
 const DEFAULT_BIND_MODE: &wstr = L!("default");
 
-const BIND_INSERT: c_int = 0;
-const BIND_ERASE: c_int = 1;
-const BIND_KEY_NAMES: c_int = 2;
-const BIND_FUNCTION_NAMES: c_int = 3;
+enum BindMode {
+    Insert,
+    Erase,
+    KeyNames,
+    FunctionNames,
+}
 
 struct Options {
     all: bool,
@@ -30,7 +32,7 @@ struct Options {
     user: bool,
     have_preset: bool,
     preset: bool,
-    mode: c_int,
+    mode: BindMode,
     bind_mode: Option<WString>,
     sets_bind_mode: Option<WString>,
     color: ColorEnabled,
@@ -47,7 +49,7 @@ impl Options {
             user: false,
             have_preset: false,
             preset: false,
-            mode: BIND_INSERT,
+            mode: BindMode::Insert,
             bind_mode: None,
             sets_bind_mode: None,
             color: ColorEnabled::default(),
@@ -448,8 +450,8 @@ fn parse_cmd_opts(
     while let Some(c) = w.next_opt() {
         match c {
             'a' => opts.all = true,
-            'e' => opts.mode = BIND_ERASE,
-            'f' => opts.mode = BIND_FUNCTION_NAMES,
+            'e' => opts.mode = BindMode::Erase,
+            'f' => opts.mode = BindMode::FunctionNames,
             'h' => opts.print_help = true,
             'k' => {
                 streams.err.appendln(&wgettext_fmt!(
@@ -458,7 +460,7 @@ fn parse_cmd_opts(
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
-            'K' => opts.mode = BIND_KEY_NAMES,
+            'K' => opts.mode = BindMode::KeyNames,
             'L' => {
                 opts.list_modes = true;
                 return Ok(SUCCESS);
@@ -534,7 +536,7 @@ impl BuiltinBind {
         }
 
         match self.opts.mode {
-            BIND_ERASE => {
+            BindMode::Erase => {
                 // If we get both, we erase both.
                 if self.opts.user
                     && self.erase(
@@ -557,19 +559,13 @@ impl BuiltinBind {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
-            BIND_INSERT => {
+            BindMode::Insert => {
                 if self.insert(optind, argv, parser, streams) {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
-            BIND_KEY_NAMES => self.key_names(streams),
-            BIND_FUNCTION_NAMES => self.function_names(streams),
-            _ => {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!("%s: Invalid state", cmd));
-                return Err(STATUS_CMD_ERROR);
-            }
+            BindMode::KeyNames => self.key_names(streams),
+            BindMode::FunctionNames => self.function_names(streams),
         }
         Ok(SUCCESS)
     }

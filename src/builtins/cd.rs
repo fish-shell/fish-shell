@@ -69,17 +69,10 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
     let pwd = vars.get_pwd_slash();
 
     let dirs = path_apply_cdpath(dir_in, &pwd, vars);
-    if dirs.is_empty() {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(DIR_DOES_NOT_EXIST, cmd, dir_in));
-
-        if !parser.is_interactive() {
-            streams.err.append(&parser.current_line());
-        }
-
-        return Err(STATUS_CMD_ERROR);
-    }
+    assert!(
+        !dirs.is_empty(),
+        "dirs should always contains a least an abs path, or a rel path, or '<PWD>/...'"
+    );
 
     let mut best_errno = 0;
     let mut broken_symlink = WString::new();

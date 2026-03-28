@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Other improvements
+------------------
+- ``fish_update_completions`` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
+
 fish 4.6.0 (released March 28, 2026)
 ====================================
 

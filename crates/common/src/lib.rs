@@ -133,32 +133,28 @@ bitflags! {
 /// most common operating systems do not use them. The value is cached for the duration of the fish
 /// session. We err on the side of assuming it's not a console session. This approach isn't
 /// bullet-proof and that's OK.
-#[cfg(not(any(target_os = "ios", target_os = "macos")))]
 pub fn is_console_session() -> bool {
     static IS_CONSOLE_SESSION: OnceLock<bool> = OnceLock::new();
     // TODO(terminal-workaround)
     *IS_CONSOLE_SESSION.get_or_init(|| {
-        nix::unistd::ttyname(unsafe { std::os::fd::BorrowedFd::borrow_raw(STDIN_FILENO) })
-            .is_ok_and(|buf| {
-                // Check if the tty matches /dev/(console|dcons|tty[uv\d])
-                let is_console_tty = match buf.as_os_str().as_bytes() {
-                    b"/dev/console" => true,
-                    b"/dev/dcons" => true,
-                    bytes => bytes.strip_prefix(b"/dev/tty").is_some_and(|rest| {
-                        matches!(rest.first(), Some(b'u' | b'v' | b'0'..=b'9'))
-                    }),
-                };
+        // No console session on Apple, and ttyname may hang (#12506).
+        !cfg!(apple)
+            && nix::unistd::ttyname(unsafe { std::os::fd::BorrowedFd::borrow_raw(STDIN_FILENO) })
+                .is_ok_and(|buf| {
+                    // Check if the tty matches /dev/(console|dcons|tty[uv\d])
+                    let is_console_tty = match buf.as_os_str().as_bytes() {
+                        b"/dev/console" => true,
+                        b"/dev/dcons" => true,
+                        bytes => bytes.strip_prefix(b"/dev/tty").is_some_and(|rest| {
+                            matches!(rest.first(), Some(b'u' | b'v' | b'0'..=b'9'))
+                        }),
+                    };
 
-                // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something` or `sun-color`.
-                is_console_tty && env::var_os("TERM").is_none_or(|t| !t.as_bytes().contains(&b'-'))
-            })
+                    // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something` or `sun-color`.
+                    is_console_tty
+                        && env::var_os("TERM").is_none_or(|t| !t.as_bytes().contains(&b'-'))
+                })
     })
-}
-
-#[cfg(any(target_os = "ios", target_os = "macos"))]
-pub fn is_console_session() -> bool {
-    // No console session on Apple, and ttyname may hang (#12506).
-    false
 }
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.

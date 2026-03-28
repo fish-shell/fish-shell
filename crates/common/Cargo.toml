@@ -12,5 +12,9 @@ fish-widestring.workspace = true
 libc.workspace = true
 nix.workspace = true
 
+[build-dependencies]
+fish-build-helper.workspace = true
+rsconf.workspace = true
+
 [lints]
 workspace = true

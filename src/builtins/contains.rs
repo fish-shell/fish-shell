@@ -1,3 +1,5 @@
+use crate::err_str;
+
 // Implementation of the contains builtin.
 use super::prelude::*;
 
@@ -71,9 +73,7 @@ pub fn contains(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
             }
         }
     } else {
-        streams
-            .err
-            .appendln(&wgettext_fmt!("%s: Key not specified", cmd));
+        err_str!("Key not specified").with_cmd(cmd).finish(streams);
     }
 
     Err(STATUS_CMD_ERROR)

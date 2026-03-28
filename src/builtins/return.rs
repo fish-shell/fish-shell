@@ -2,6 +2,8 @@
 
 use std::ops::ControlFlow;
 
+use crate::{err_fmt, err_str, error::Error};
+
 use super::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -97,10 +99,10 @@ pub fn parse_return_value(
         return ControlFlow::Break(Ok(SUCCESS));
     }
     if optind + 1 < args.len() {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!(Error::TOO_MANY_ARGUMENTS)
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return ControlFlow::Break(Err(STATUS_INVALID_ARGS));
     }
     if optind == args.len() {
@@ -109,10 +111,10 @@ pub fn parse_return_value(
         match fish_wcstoi(args[optind]) {
             Ok(i) => ControlFlow::Continue(i),
             Err(_e) => {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
-                builtin_print_error_trailer(parser, streams.err, cmd);
+                err_fmt!(Error::NOT_NUMBER, args[1])
+                    .with_cmd(cmd)
+                    .with_full_trailer(parser)
+                    .finish(streams);
                 ControlFlow::Break(Err(STATUS_INVALID_ARGS))
             }
         }

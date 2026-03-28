@@ -31,7 +31,7 @@ status -b is-interactive
 
 # Try to set the job control to an invalid mode.
 status job-control full1
-#CHECKERR: status: Invalid job control mode 'full1'
+#CHECKERR: status: job-control: Invalid job control mode 'full1'
 status --job-control=1none
 #CHECKERR: status: Invalid job control mode '1none'
 
@@ -86,7 +86,7 @@ echo $status
 # Verify errors from writes - see #7857.
 if test -e /dev/full
     # Failed writes to stdout produce 1.
-    echo foo > /dev/full
+    echo foo >/dev/full
     if test $status -ne 1
         echo "Wrong status when writing to /dev/full"
     end
@@ -94,7 +94,7 @@ if test -e /dev/full
     # Here the builtin should fail with status 2,
     # and also the write should fail with status 1.
     # The builtin has precedence.
-    builtin string --not-a-valid-option 2> /dev/full
+    builtin string --not-a-valid-option 2>/dev/full
     if test $status -ne 2
         echo "Wrong status for failing builtin"
     end
@@ -137,6 +137,6 @@ and should have failed on too many args
 # CHECKERR: status: test-terminal-feature: expected 1 arguments; got 2
 status test-terminal-feature unrecognized-feature
 and should have failed on unrecognized feature
-# CHECKERR: status test-terminal-feature: unrecognized feature 'unrecognized-feature'
+# CHECKERR: status: test-terminal-feature: unrecognized feature 'unrecognized-feature'
 status test-terminal-feature scroll-content-up
 and should have failed when running without a TTY

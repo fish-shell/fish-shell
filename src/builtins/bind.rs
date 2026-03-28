@@ -4,6 +4,7 @@ use super::prelude::*;
 use crate::common::{
     EscapeFlags, EscapeStringStyle, bytes2wcstring, escape, escape_string, valid_var_name,
 };
+use crate::error::Error;
 use crate::highlight::highlight_and_colorize;
 use crate::input::{
     InputMapping, InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings,
@@ -11,6 +12,7 @@ use crate::input::{
 use crate::key::{
     self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
 };
+use crate::{err_fmt, err_raw, err_str};
 use fish_common::help_section;
 use std::sync::MutexGuard;
 
@@ -261,7 +263,7 @@ impl BuiltinBind {
         match parse_keys(seq) {
             Ok(keys) => Some(keys),
             Err(err) => {
-                streams.err.append(&sprintf!("bind: %s\n", err));
+                err_raw!(err).with_cmd(L!("bind")).finish(streams);
                 None
             }
         }
@@ -312,12 +314,9 @@ impl BuiltinBind {
         } else {
             // Inserting both on the other hand makes no sense.
             if self.opts.have_preset && self.opts.have_user {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                    cmd,
-                    "--preset",
-                    "--user"
-                ));
+                err_fmt!(Error::COMBO2_EXCLUSIVE, "--preset", "--user")
+                    .with_cmd(cmd)
+                    .finish(streams);
                 return true;
             }
         }
@@ -353,17 +352,13 @@ impl BuiltinBind {
                 );
                 if !self.opts.silent {
                     if seq.len() == 1 {
-                        streams.err.appendln(&wgettext_fmt!(
-                            "%s: No binding found for key '%s'",
-                            cmd,
-                            seq[0]
-                        ));
+                        err_fmt!("No binding found for key '%s'", seq[0])
+                            .with_cmd(cmd)
+                            .finish(streams);
                     } else {
-                        streams.err.appendln(&wgettext_fmt!(
-                            "%s: No binding found for key sequence '%s'",
-                            cmd,
-                            eseq
-                        ));
+                        err_fmt!("No binding found for key sequence '%s'", eseq)
+                            .with_cmd(cmd)
+                            .finish(streams);
                     }
                 }
                 return true;
@@ -433,12 +428,13 @@ fn parse_cmd_opts(
 
     let check_mode_name = |streams: &mut IoStreams, mode_name: &wstr| -> Result<(), ErrorCode> {
         if !valid_var_name(mode_name) {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_BIND_MODE,
-                cmd,
+            err_fmt!(
+                Error::BIND_MODE,
                 mode_name,
                 help_section!("language#shell-variable-and-function-names")
-            ));
+            )
+            .with_cmd(cmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
         Ok(())
@@ -452,10 +448,11 @@ fn parse_cmd_opts(
             'f' => opts.mode = BIND_FUNCTION_NAMES,
             'h' => opts.print_help = true,
             'k' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`",
-                    cmd,
-                ));
+                err_str!(
+                    "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+                )
+                .with_cmd(cmd)
+                .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             'K' => opts.mode = BIND_KEY_NAMES,
@@ -565,9 +562,7 @@ impl BuiltinBind {
             BIND_KEY_NAMES => self.key_names(streams),
             BIND_FUNCTION_NAMES => self.function_names(streams),
             _ => {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!("%s: Invalid state", cmd));
+                err_str!("Invalid state").with_cmd(cmd).finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
         }

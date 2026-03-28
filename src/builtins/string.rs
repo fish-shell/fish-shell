@@ -1,4 +1,4 @@
-use crate::screen::escape_code_length;
+use crate::{err_fmt, err_raw, err_str, error::Error, screen::escape_code_length};
 use fish_wcstringutil::fish_wcwidth_visible;
 // Forward some imports to make subcmd implementations easier
 use super::prelude::*;
@@ -21,35 +21,12 @@ mod unescape;
 #[cfg(test)]
 mod test_helpers;
 
-macro_rules! string_error {
-    (
-    $streams:expr,
-    $string:expr
-    $(, $args:expr)+
-    $(,)?
-    ) => {
-        $streams.err.append(L!("string "));
-        $streams.err.appendln(&wgettext_fmt!($string, $($args),*));
-    };
-}
-use string_error;
-
-fn string_unknown_option(parser: &Parser, streams: &mut IoStreams, subcmd: &wstr, opt: &wstr) {
-    string_error!(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
-    builtin_print_error_trailer(parser, streams.err, L!("string"));
-}
-
 trait StringSubCommand<'args> {
     const SHORT_OPTIONS: &'static wstr;
     const LONG_OPTIONS: &'static [WOption<'static>];
 
     /// Parse and store option specified by the associated short or long option.
-    fn parse_opt(
-        &mut self,
-        name: &wstr,
-        c: char,
-        arg: Option<&'args wstr>,
-    ) -> Result<(), StringError>;
+    fn parse_opt(&mut self, c: char, arg: Option<&'args wstr>) -> Result<(), StringError<'_>>;
 
     fn parse_opts(
         &mut self,
@@ -57,7 +34,8 @@ trait StringSubCommand<'args> {
         parser: &Parser,
         streams: &mut IoStreams,
     ) -> Result<usize, ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         let mut args_read = Vec::with_capacity(args.len());
         args_read.extend_from_slice(args);
 
@@ -65,36 +43,34 @@ trait StringSubCommand<'args> {
         while let Some(c) = w.next_opt() {
             match c {
                 ':' => {
-                    streams.err.append(L!("string ")); // clone of string_error
-                    builtin_missing_argument(
+                    builtin_subcmd_missing_argument(
                         parser,
                         streams,
                         cmd,
+                        subcmd,
                         args_read[w.wopt_index - 1],
                         false,
                     );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 ';' => {
-                    streams.err.append(L!("string ")); // clone of string_error
-                    builtin_unexpected_argument(
-                        parser,
-                        streams,
-                        cmd,
-                        args_read[w.wopt_index - 1],
-                        false,
-                    );
+                    err_fmt!(Error::UNEXP_OPT_ARG, args_read[w.wopt_index - 1])
+                        .with_subcmd(cmd, subcmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
-                    string_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
+                    err_fmt!(Error::UNKNOWN_OPT, args_read[w.wopt_index - 1])
+                        .with_subcmd(cmd, subcmd)
+                        .with_full_trailer(parser)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
                 c => {
-                    let retval = self.parse_opt(cmd, c, w.woptarg);
+                    let retval = self.parse_opt(c, w.woptarg);
                     if let Err(e) = retval {
                         e.print_error(&args_read, parser, streams, w.woptarg, w.wopt_index);
-                        return Err(e.retval());
+                        return Err(STATUS_INVALID_ARGS);
                     }
                 }
             }
@@ -154,7 +130,9 @@ trait StringSubCommand<'args> {
         self.take_args(&mut optind, args, streams)?;
 
         if streams.stdin_is_directly_redirected && args.len() > optind {
-            string_error!(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, args[0]);
+            err_str!(Error::TOO_MANY_ARGUMENTS)
+                .with_subcmd(L!("string"), args[0])
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -163,8 +141,8 @@ trait StringSubCommand<'args> {
 }
 
 /// This covers failing argument/option parsing
-enum StringError {
-    InvalidArgs(WString),
+enum StringError<'a> {
+    InvalidArgs(Error<'a>),
     NotANumber,
     UnknownOption,
 }
@@ -177,87 +155,81 @@ enum RegexError {
 
 impl RegexError {
     fn print_error(&self, args: &[&wstr], streams: &mut IoStreams) {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         use RegexError::*;
         match self {
             Compile(pattern, e) => {
-                string_error!(
-                    streams,
-                    BUILTIN_ERR_REGEX_COMPILE,
-                    cmd,
-                    &WString::from(e.error_message())
-                );
-                string_error!(streams, "%s: %s", cmd, pattern);
                 // TODO: This is misaligned if `pattern` contains characters which are not exactly 1
                 // terminal cell wide.
-                let mut marker = " ".repeat(e.offset().unwrap_or(0).saturating_sub(1));
+                let mut marker: WString =
+                    " ".repeat(e.offset().unwrap_or(0).saturating_sub(1)).into();
                 marker.push('^');
-                string_error!(streams, "%s: %s", cmd, marker);
+
+                err_fmt!(Error::REGEX_COMPILE, e.error_message())
+                    .append_to_msg('\n')
+                    .append_to_msg(&err_raw!(pattern).with_subcmd(cmd, subcmd).to_string())
+                    .append_to_msg('\n')
+                    .append_to_msg(&err_raw!(marker).with_subcmd(cmd, subcmd).to_string())
+                    .with_subcmd(cmd, subcmd)
+                    .finish(streams);
             }
             InvalidCaptureGroupName(name) => {
-                streams.err.appendln(&wgettext_fmt!(
+                err_fmt!(
                     "Modification of read-only variable \"%s\" is not allowed",
                     name
-                ));
+                )
+                .finish(streams);
             }
             InvalidEscape(pattern) => {
-                string_error!(
-                    streams,
-                    "%s",
-                    sprintf!(
-                        "%s: Invalid escape sequence in pattern \"%s\"",
-                        cmd,
-                        pattern
-                    )
-                );
+                err_fmt!("Invalid escape sequence in pattern \"%s\"", pattern)
+                    .with_subcmd(cmd, subcmd)
+                    .finish(streams);
             }
         }
     }
 }
 
-impl From<crate::wutil::wcstoi::Error> for StringError {
+impl<'a> From<crate::wutil::wcstoi::Error> for StringError<'a> {
     fn from(_: crate::wutil::wcstoi::Error) -> Self {
         StringError::NotANumber
     }
 }
 
-macro_rules! invalid_args {
-    ($msg:expr, $name:expr, $arg:expr) => {
-        StringError::InvalidArgs(crate::localization::wgettext_fmt!(
-            $msg,
-            $name,
-            $arg.unwrap()
-        ))
-    };
+impl<'a> From<crate::error::Error<'a>> for StringError<'a> {
+    fn from(error: crate::error::Error<'a>) -> Self {
+        StringError::InvalidArgs(error)
+    }
 }
-use invalid_args;
 
-impl StringError {
+impl<'a> StringError<'a> {
     fn print_error(
-        &self,
+        self,
         args: &[&wstr],
         parser: &Parser,
         streams: &mut IoStreams,
         optarg: Option<&wstr>,
         optind: usize,
     ) {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         use StringError::*;
         match self {
-            InvalidArgs(msg) => {
-                streams.err.appendln("string ".chars().chain(msg.chars()));
+            InvalidArgs(err) => {
+                err.with_subcmd(cmd, subcmd).finish(streams);
             }
             NotANumber => {
-                string_error!(streams, BUILTIN_ERR_NOT_NUMBER, cmd, optarg.unwrap());
+                err_fmt!(Error::NOT_NUMBER, optarg.unwrap())
+                    .with_subcmd(cmd, subcmd)
+                    .finish(streams);
             }
             UnknownOption => {
-                string_unknown_option(parser, streams, cmd, args[optind - 1]);
+                err_fmt!(Error::UNKNOWN_OPT, args[optind - 1])
+                    .with_subcmd(cmd, subcmd)
+                    .with_full_trailer(parser)
+                    .finish(streams);
             }
         }
-    }
-
-    fn retval(&self) -> ErrorCode {
-        STATUS_INVALID_ARGS
     }
 }
 
@@ -317,10 +289,10 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     let argc = args.len();
 
     if argc <= 1 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!(Error::MISSING_SUBCMD)
+            .with_cmd(cmd)
+            .with_full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -366,10 +338,10 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
         .run(parser, streams, args),
         _ => {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_fmt!(Error::INVALID_SUBCMD)
+                .with_subcmd(cmd, subcmd_name)
+                .with_full_trailer(parser)
+                .finish(streams);
             Err(STATUS_INVALID_ARGS)
         }
     }

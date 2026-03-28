@@ -1,8 +1,10 @@
 //! Implementation of the history builtin.
 
+use crate::error::Error;
 use crate::history::in_private_mode;
 use crate::history::{self, History, history_session_id};
 use crate::reader::commandline_get_state;
+use crate::{err_fmt, err_str};
 
 use super::prelude::*;
 
@@ -94,12 +96,13 @@ fn set_hist_cmd(
     streams: &mut IoStreams,
 ) -> bool {
     if *hist_cmd != HistCmd::None {
-        streams.err.appendln(&wgettext_fmt!(
-            BUILTIN_ERR_COMBO2_EXCLUSIVE,
-            cmd,
+        err_fmt!(
+            Error::COMBO2_EXCLUSIVE,
             hist_cmd.to_wstr(),
             sub_cmd.to_wstr()
-        ));
+        )
+        .with_cmd(cmd)
+        .finish(streams);
         return false;
     }
     *hist_cmd = sub_cmd;
@@ -114,22 +117,16 @@ fn check_for_unexpected_hist_args(
 ) -> bool {
     if opts.search_type.is_some() || opts.show_time_format.is_some() || opts.null_terminate {
         let subcmd_str = opts.hist_cmd.to_wstr();
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: %s: subcommand takes no options",
-            cmd,
-            subcmd_str
-        ));
+        err_str!("subcommand takes no options")
+            .with_subcmd(cmd, subcmd_str)
+            .finish(streams);
         return true;
     }
     if !args.is_empty() {
         let subcmd_str = opts.hist_cmd.to_wstr();
-        streams.err.appendln(&wgettext_fmt!(
-            BUILTIN_ERR_ARG_COUNT2,
-            cmd,
-            subcmd_str,
-            0,
-            args.len()
-        ));
+        err_fmt!(Error::ARG_COUNT1, 0, args.len())
+            .with_subcmd(cmd, subcmd_str)
+            .finish(streams);
         return true;
     }
     false
@@ -195,11 +192,9 @@ fn parse_cmd_opts(
             'n' => match fish_wcstol(w.woptarg.unwrap()) {
                 Ok(x) => opts.max_items = Some(x as _), // todo!("historical behavior is to cast")
                 Err(_) => {
-                    streams.err.appendln(&wgettext_fmt!(
-                        BUILTIN_ERR_NOT_NUMBER,
-                        cmd,
-                        w.woptarg.unwrap()
-                    ));
+                    err_fmt!(Error::NOT_NUMBER, w.woptarg.unwrap())
+                        .with_cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             },
@@ -305,15 +300,12 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
             // be handled only by the history function's interactive delete feature.
             if opts.search_type.unwrap_or(history::SearchType::Exact) != history::SearchType::Exact
             {
-                streams
-                    .err
-                    .appendln(wgettext!("builtin history delete only supports --exact"));
+                err_str!("builtin history delete only supports --exact").finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             if !opts.case_sensitive {
-                streams.err.appendln(wgettext!(
-                    "builtin history delete --exact requires --case-sensitive"
-                ));
+                err_str!("builtin history delete --exact requires --case-sensitive")
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
 
@@ -341,10 +333,9 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
             }
 
             if in_private_mode(parser.vars()) {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: can't merge history in private mode",
-                    cmd
-                ));
+                err_str!("can't merge history in private mode")
+                    .with_cmd(cmd)
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             history.incorporate_external_changes();

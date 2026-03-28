@@ -2,7 +2,7 @@ use fish_widestring::L;
 use num_traits::pow;
 
 use super::prelude::*;
-use crate::tinyexpr::te_interp;
+use crate::{err_fmt, error::Error, tinyexpr::te_interp};
 
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;
@@ -67,9 +67,9 @@ fn parse_cmd_opts(
                 } else {
                     let scale = fish_wcstoi(optarg).unwrap_or(-1);
                     if scale < 0 || scale > 15 {
-                        streams
-                            .err
-                            .appendln(&wgettext_fmt!("%s: %s: invalid scale", cmd, optarg));
+                        err_fmt!("%s: invalid scale", optarg)
+                            .with_cmd(cmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]
@@ -87,9 +87,9 @@ fn parse_cmd_opts(
                 } else if optarg.eq(L!("ceiling")) || optarg.eq(L!("ceil")) {
                     opts.scale_mode = ScaleMode::Ceiling;
                 } else {
-                    streams
-                        .err
-                        .appendln(&wgettext_fmt!("%s: %s: invalid mode", cmd, optarg));
+                    err_fmt!("%s: invalid mode", optarg)
+                        .with_cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -102,11 +102,9 @@ fn parse_cmd_opts(
                 } else {
                     let base = fish_wcstoi(optarg).unwrap_or(-1);
                     if base != 8 && base != 16 {
-                        streams.err.appendln(&wgettext_fmt!(
-                            "%s: %s: invalid base value",
-                            cmd,
-                            optarg
-                        ));
+                        err_fmt!("%s: invalid base value", optarg)
+                            .with_cmd(cmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is 8 or 16.
@@ -142,12 +140,13 @@ fn parse_cmd_opts(
     }
 
     if have_scale && opts.scale != 0 && opts.base != 10 {
-        streams.err.appendln(&wgettext_fmt!(
-            BUILTIN_ERR_COMBO2,
-            cmd,
+        err_fmt!(
+            Error::COMBO2,
             "non-zero scale value only valid
             for base 10"
-        ));
+        )
+        .with_cmd(cmd)
+        .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -243,27 +242,23 @@ fn evaluate_expression(
                 return Ok(SUCCESS);
             };
 
-            streams
-                .err
-                .append(&sprintf!("%s: Error: %s\n", cmd, error_message));
-            streams.err.append(&sprintf!("'%s'\n", expression));
+            let mut err = err_fmt!("Error: %s", error_message);
+            err.append_assign_to_msg(&sprintf!("\n'%s'\n", expression));
+            err.with_cmd(cmd).finish(streams);
 
             Err(STATUS_CMD_ERROR)
         }
         Err(err) => {
-            streams.err.append(&sprintf!(
-                L!("%s: Error: %s\n"),
-                cmd,
-                err.kind.describe_wstr()
-            ));
-            streams.err.append(&sprintf!("'%s'\n", expression));
+            let mut error = err_fmt!("Error: %s", err.kind.describe_wstr());
+            error.append_assign_to_msg(&sprintf!("\n'%s'", expression));
             let padding = WString::from_chars(vec![' '; err.position + 1]);
             if err.len >= 2 {
                 let tildes = WString::from_chars(vec!['~'; err.len - 2]);
-                streams.err.append(&sprintf!("%s^%s^\n", padding, tildes));
+                error.append_assign_to_msg(&sprintf!("\n%s^%s^", padding, tildes));
             } else {
-                streams.err.append(&sprintf!("%s^\n", padding));
+                error.append_assign_to_msg(&sprintf!("\n%s^", padding));
             }
+            error.with_cmd(cmd).finish(streams);
 
             Err(STATUS_CMD_ERROR)
         }
@@ -293,9 +288,9 @@ pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     }
 
     if expression.is_empty() {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0));
+        err_fmt!(Error::MIN_ARG_COUNT1, 1, 0)
+            .with_cmd(cmd)
+            .finish(streams);
         return Err(STATUS_CMD_ERROR);
     }
 

@@ -38,7 +38,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("aegivqrnm:");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'a' => self.all = true,
             'e' => self.entire = true,
@@ -55,11 +55,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
                         .ok()
                         .and_then(|v| NonZeroUsize::new(v as usize))
                         .ok_or_else(|| {
-                            StringError::InvalidArgs(wgettext_fmt!(
-                                BUILTIN_ERR_INVALID_MAX_MATCHES,
-                                _n,
-                                arg
-                            ))
+                            StringError::InvalidArgs(err_fmt!(Error::INVALID_MAX_MATCHES, arg))
                         })?;
                     Some(max)
                 }
@@ -75,9 +71,12 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         args: &[&'args wstr],
         streams: &mut IoStreams,
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         let Some(arg) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
+            err_fmt!(Error::ARG_COUNT0)
+                .with_subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
@@ -92,32 +91,36 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
 
         if self.entire && self.index {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::COMBO2,
                 wgettext!("--entire and --index are mutually exclusive")
-            ));
+            )
+            .with_subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if self.invert_match && self.groups_only {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::COMBO2,
                 wgettext!("--invert and --groups-only are mutually exclusive")
-            ));
+            )
+            .with_subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if self.entire && self.groups_only {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::COMBO2,
                 wgettext!("--entire and --groups-only are mutually exclusive")
-            ));
+            )
+            .with_subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 

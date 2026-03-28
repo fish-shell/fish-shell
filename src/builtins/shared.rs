@@ -1,12 +1,13 @@
 use super::prelude::*;
 use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name, str2wcstring};
+use crate::error::Error;
 use crate::fds::BorrowedFdFile;
 use crate::io::OutputStream;
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::argument_is_help;
 use crate::parser::{BlockType, LoopStatus};
 use crate::proc::{Pid, ProcStatus, no_exec};
-use crate::{builtins::*, wutil};
+use crate::{builtins::*, err_fmt, wutil};
 use errno::errno;
 use fish_common::assert_sorted_by_name;
 use fish_widestring::L;
@@ -20,11 +21,11 @@ pub const DEFAULT_READ_PROMPT: &wstr =
 
 localizable_consts!(
     /// Error message on missing argument.
-    pub BUILTIN_ERR_MISSING
+    pub BUILTIN_ERR_MISSING_OPT_ARG
     "%s: %s: option requires an argument"
 
     /// Error message on unexpected argument.
-    pub BUILTIN_ERR_UNEXP_ARG
+    pub BUILTIN_ERR_UNEXP_OPT_ARG
     "%s: %s: option does not take an argument"
 
     /// Error message on missing man page.
@@ -44,7 +45,7 @@ localizable_consts!(
     "%s: cannot both path and unpath"
 
     /// Error message for unknown switch.
-    pub BUILTIN_ERR_UNKNOWN
+    pub BUILTIN_ERR_UNKNOWN_OPT
     "%s: %s: unknown option"
 
     /// Error message for invalid bind mode name.
@@ -84,10 +85,6 @@ localizable_consts!(
 
     pub BUILTIN_ERR_MAX_ARG_COUNT1
     "%s: expected <= %d arguments; got %d"
-
-    /// Error message for invalid variable name.
-    pub BUILTIN_ERR_VARNAME
-    "%s: %s: invalid variable name. See `help %s`"
 
     /// Error message on invalid combination of options.
     pub BUILTIN_ERR_COMBO
@@ -665,15 +662,14 @@ pub fn builtin_unknown_option(
     opt: &wstr,
     print_hints: bool, /*=true*/
 ) {
-    streams
-        .err
-        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, cmd, opt));
+    let mut err = err_fmt!(Error::UNKNOWN_OPT, opt).with_cmd(cmd);
     if print_hints {
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err = err.with_full_trailer(parser);
     }
+    err.finish(streams);
 }
 
-/// Perform error reporting for encounter with missing argument.
+/// Perform error reporting for encounter with missing argument for commands.
 pub fn builtin_missing_argument(
     parser: &Parser,
     streams: &mut IoStreams,
@@ -681,22 +677,41 @@ pub fn builtin_missing_argument(
     mut opt: &wstr,
     print_hints: bool, /*=true*/
 ) {
-    if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
+    let mut err = if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
         // if c in -qc '-qc' is missing the argument, now opt is just 'c'
         opt = &opt[opt.len() - 1..];
-        streams.err.appendln(&wgettext_fmt!(
-            BUILTIN_ERR_MISSING,
-            cmd,
-            L!("-").to_owned() + opt
-        ));
+        err_fmt!(Error::MISSING_OPT_ARG, L!("-").to_owned() + opt)
     } else {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, opt));
-    }
+        err_fmt!(Error::MISSING_OPT_ARG, opt)
+    };
+    err = err.with_cmd(cmd);
     if print_hints {
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err = err.with_full_trailer(parser);
     }
+    err.finish(streams);
+}
+
+/// Perform error reporting for encounter with missing argument for subcommands.
+pub fn builtin_subcmd_missing_argument(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    subcmd: &wstr,
+    mut opt: &wstr,
+    print_hints: bool, /*=true*/
+) {
+    let mut err = if opt.char_at(0) == '-' && opt.char_at(1) != '-' {
+        // if c in -qc '-qc' is missing the argument, now opt is just 'c'
+        opt = &opt[opt.len() - 1..];
+        err_fmt!(Error::MISSING_OPT_ARG, L!("-").to_owned() + opt)
+    } else {
+        err_fmt!(Error::MISSING_OPT_ARG, opt)
+    };
+    err = err.with_subcmd(cmd, subcmd);
+    if print_hints {
+        err = err.with_full_trailer(parser);
+    }
+    err.finish(streams);
 }
 
 /// Perform error reporting for encounter with an extra argument.
@@ -707,12 +722,11 @@ pub fn builtin_unexpected_argument(
     opt: &wstr,
     print_hints: bool, /*=true*/
 ) {
-    streams
-        .err
-        .appendln(&wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, cmd, opt));
+    let mut err = err_fmt!(Error::UNEXP_OPT_ARG, opt).with_cmd(cmd);
     if print_hints {
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err = err.with_full_trailer(parser);
     }
+    err.finish(streams);
 }
 
 /// Print the backtrace and call for help that we use at the end of error messages.
@@ -729,16 +743,8 @@ pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &
     ));
 }
 
-/// This function works like perror, but it prints its result into the streams.err string instead
-/// to stderr. Used by the builtin commands.
-pub fn builtin_wperror(program_name: &wstr, streams: &mut IoStreams) {
-    let err = errno();
-    streams.err.append(program_name);
-    streams.err.append(L!(": "));
-    if err.0 != 0 {
-        let werr = str2wcstring(err.to_string());
-        streams.err.appendln(&werr);
-    }
+pub fn builtin_strerror() -> WString {
+    str2wcstring(errno().to_string())
 }
 
 pub struct HelpOnlyCmdOpts {
@@ -991,11 +997,9 @@ fn parsed_pid(
     match pid {
         Ok(pid @ 1..) => Ok(Pid::new(pid)),
         _ => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: '%s' is not a valid process ID",
-                cmd,
-                arg
-            ));
+            err_fmt!("'%s' is not a valid process ID", arg)
+                .with_cmd(cmd)
+                .finish(streams);
             Err(STATUS_INVALID_ARGS)
         }
     }
@@ -1040,9 +1044,9 @@ pub fn builtin_break_continue(
     }
 
     if argc != 1 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]));
+        err_fmt!(Error::UNKNOWN_OPT, argv[1])
+            .with_cmd(argv[0])
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -1112,11 +1116,13 @@ impl ColorEnabled {
         arg: &wstr,
     ) -> Result<Self, ErrorCode> {
         Self::try_from(arg).map_err(|()| {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'",
-                cmd,
+            err_fmt!(
+                "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'",
                 arg
-            ));
+            )
+            .with_cmd(cmd)
+            .finish(streams);
+
             STATUS_INVALID_ARGS
         })
     }

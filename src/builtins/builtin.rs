@@ -1,3 +1,5 @@
+use crate::{err_fmt, error::Error};
+
 use super::prelude::*;
 
 #[derive(Default)]
@@ -53,11 +55,12 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     }
 
     if opts.query && opts.list_names {
-        streams.err.appendln(&wgettext_fmt!(
-            BUILTIN_ERR_COMBO2,
-            cmd,
+        err_fmt!(
+            Error::COMBO2,
             wgettext!("--query and --names are mutually exclusive")
-        ));
+        )
+        .with_cmd(cmd)
+        .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 

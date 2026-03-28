@@ -18,6 +18,7 @@ pub mod editable_line;
 pub mod env;
 pub mod env_dispatch;
 pub mod env_universal_common;
+pub mod error;
 pub mod event;
 pub mod exec;
 pub mod expand;

@@ -32,32 +32,28 @@ impl StringSubCommand<'_> for Pad {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("c:rCw:");
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'c' => {
-                let [pad_char] = arg.unwrap().as_char_slice() else {
-                    return Err(invalid_args!(
-                        "%s: Padding should be a character '%s'",
-                        name,
-                        arg
-                    ));
+                let arg = arg.unwrap();
+                let [pad_char] = arg.as_char_slice() else {
+                    return Err(err_fmt!("Padding should be a character '%s'", arg).into());
                 };
                 let pad_char_width = fish_wcwidth(*pad_char);
                 if pad_char_width <= 0 {
-                    return Err(invalid_args!(
-                        "%s: Invalid padding character of width zero '%s'",
-                        name,
-                        arg
-                    ));
+                    return Err(
+                        err_fmt!("Invalid padding character of width zero '%s'", arg).into(),
+                    );
                 }
                 self.pad_char_width = pad_char_width as usize;
                 self.char_to_pad = *pad_char;
             }
             'r' => self.pad_from = Direction::Right,
             'w' => {
-                self.width = fish_wcstol(arg.unwrap())?
+                let arg = arg.unwrap();
+                self.width = fish_wcstol(arg)?
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid width value '%s'", name, arg))?;
+                    .map_err(|_| err_fmt!("Invalid width value '%s'", arg))?;
             }
             'C' => self.center = true,
             _ => return Err(StringError::UnknownOption),

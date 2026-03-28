@@ -3,6 +3,7 @@
 use super::prelude::*;
 use crate::{
     env::{EnvMode, Environment as _},
+    err_fmt, err_str,
     fds::{BEST_O_SEARCH, wopen_dir},
     parser::ParserEnvSetMode,
     path::path_apply_cdpath,
@@ -19,7 +20,7 @@ use std::sync::Arc;
 pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     localizable_consts! {
         DIR_DOES_NOT_EXIST
-        "%s: The directory '%s' does not exist"
+        "The directory '%s' does not exist"
     }
 
     let Some(&cmd) = args.first() else {
@@ -45,9 +46,9 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
                 &tmpstr
             }
             None => {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!("%s: Could not find home directory", cmd));
+                err_str!("Could not find home directory")
+                    .with_cmd(cmd)
+                    .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
         }
@@ -55,14 +56,11 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
 
     // Stop `cd ""` from crashing
     if dir_in.is_empty() {
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: Empty directory '%s' does not exist",
-            cmd,
-            dir_in
-        ));
+        let mut err = err_fmt!("Empty directory '%s' does not exist", dir_in).with_cmd(cmd);
         if !parser.is_interactive() {
-            streams.err.append(&parser.current_line());
+            err = err.with_stacktrace(parser);
         }
+        err.finish(streams);
         return Err(STATUS_CMD_ERROR);
     }
 
@@ -70,14 +68,11 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
 
     let dirs = path_apply_cdpath(dir_in, &pwd, vars);
     if dirs.is_empty() {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(DIR_DOES_NOT_EXIST, cmd, dir_in));
-
+        let mut err = err_fmt!(DIR_DOES_NOT_EXIST, dir_in).with_cmd(cmd);
         if !parser.is_interactive() {
-            streams.err.append(&parser.current_line());
+            err = err.with_stacktrace(parser);
         }
-
+        err.finish(streams);
         return Err(STATUS_CMD_ERROR);
     }
 
@@ -142,44 +137,30 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         return Ok(SUCCESS);
     }
 
-    if best_errno == ENOTDIR {
-        streams
-            .err
-            .appendln(&wgettext_fmt!("%s: '%s' is not a directory", cmd, dir_in));
+    let mut err = if best_errno == ENOTDIR {
+        err_fmt!("'%s' is not a directory", dir_in)
     } else if !broken_symlink.is_empty() {
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: '%s' is a broken symbolic link to '%s'",
-            cmd,
+        err_fmt!(
+            "'%s' is a broken symbolic link to '%s'",
             broken_symlink,
             broken_symlink_target
-        ));
+        )
     } else if best_errno == ELOOP {
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: Too many levels of symbolic links: '%s'",
-            cmd,
-            dir_in
-        ));
+        err_fmt!("Too many levels of symbolic links: '%s'", dir_in)
     } else if best_errno == ENOENT {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(DIR_DOES_NOT_EXIST, cmd, dir_in));
+        err_fmt!(DIR_DOES_NOT_EXIST, dir_in)
     } else if best_errno == EACCES || best_errno == EPERM {
-        streams
-            .err
-            .appendln(&wgettext_fmt!("%s: Permission denied: '%s'", cmd, dir_in));
+        err_fmt!("Permission denied: '%s'", dir_in)
     } else {
         errno::set_errno(Errno(best_errno));
         perror("cd");
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: Unknown error trying to locate directory '%s'",
-            cmd,
-            dir_in
-        ));
-    }
+        err_fmt!("Unknown error trying to locate directory '%s'", dir_in)
+    };
 
     if !parser.is_interactive() {
-        streams.err.append(&parser.current_line());
+        err = err.with_stacktrace(parser);
     }
+    err.with_cmd(cmd).finish(streams);
 
     Err(STATUS_CMD_ERROR)
 }

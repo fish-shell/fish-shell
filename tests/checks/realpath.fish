@@ -9,7 +9,7 @@ set -l data_home_realpath (builtin realpath $XDG_DATA_HOME)
 if not builtin realpath /this/better/be/an/invalid/path
     echo first invalid path handled okay
     # CHECK: first invalid path handled okay
-    # CHECKERR: builtin realpath: /this/better/be/an/invalid/path: No such file or directory
+    # CHECKERR: realpath: /this/better/be/an/invalid/path: No such file or directory
 end
 
 # A non-existent file relative to $PWD succeeds.
@@ -48,7 +48,7 @@ pushd $tmpdir
 # But that's what we want to test, so we weasel around it.
 sh -c "cd ..; rmdir $tmpdir"
 builtin realpath .
-# CHECKERR: builtin realpath: .: No such file or directory
+# CHECKERR: realpath: .: No such file or directory
 popd
 
 # A single symlink to a directory is correctly resolved.

@@ -669,6 +669,17 @@ impl OutputStream {
         }
     }
 
+    /// Consume and return any internally buffered contents.
+    /// This is only implemented for a string_output_stream; others will return an empty string.
+    pub fn take(self) -> WString {
+        match self {
+            OutputStream::String(stream) => stream.take(),
+            OutputStream::Null | OutputStream::Fd(_) | OutputStream::Buffered(_) => {
+                WString::default()
+            }
+        }
+    }
+
     /// Flush any unwritten data to the underlying device, and return an error code.
     /// A 0 code indicates success. The base implementation returns 0.
     pub fn flush_and_check_error(&mut self) -> libc::c_int {
@@ -785,6 +796,11 @@ impl StringOutputStream {
     /// Return the wcstring containing the output.
     fn contents(&self) -> &wstr {
         &self.contents
+    }
+
+    /// Consume and return the wcstring containing the output.
+    fn take(self) -> WString {
+        self.contents
     }
 }
 

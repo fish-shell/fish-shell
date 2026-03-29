@@ -2207,7 +2207,7 @@ impl ReaderData {
         // width at least 1.
         loop {
             pos -= 1;
-            if fish_wcwidth(el.text().char_at(pos)).is_some_and(|w| w != 0) || pos == 0 {
+            if fish_wcwidth(el.text().char_at(pos)).is_none_or(|w| w != 0) || pos == 0 {
                 break;
             }
         }

@@ -477,10 +477,6 @@ msgid "%s: Invalid start value '%s'"
 msgstr ""
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s: Estado inválido"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr ""
 

@@ -475,10 +475,6 @@ msgid "%s: Invalid start value '%s'"
 msgstr "%s: 開始値 '%s' が無効です"
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s: 状態が無効です"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr "%s: スタイル値 '%s' が無効です"
 

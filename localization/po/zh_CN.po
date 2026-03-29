@@ -497,10 +497,6 @@ msgid "%s: Invalid start value '%s'"
 msgstr "%s: 无效的起始值 '%s'"
 
 #, c-format
-msgid "%s: Invalid state"
-msgstr "%s: 无效状态"
-
-#, c-format
 msgid "%s: Invalid style value '%s'"
 msgstr "%s: 无效的样式值 '%s'"
 

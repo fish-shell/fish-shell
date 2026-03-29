@@ -1152,8 +1152,7 @@ fn print_max_impl(
     let mut remaining = max;
     let mut i = 0;
     while let Some(c) = chars.next() {
-        let iwidth_c = wcwidth_rendered(c);
-        let Ok(width_c) = usize::try_from(iwidth_c) else {
+        let Some(width_c) = wcwidth_rendered(c) else {
             // skip non-printable characters
             continue;
         };
@@ -1165,8 +1164,7 @@ fn print_max_impl(
         let ellipsis = ELLIPSIS_CHAR;
         if (width_c == remaining) && (has_more || chars.peek().is_some()) {
             line.append(ellipsis, color(i), offset_in_cmdline);
-            let ellipsis_width = wcwidth_rendered(ellipsis);
-            remaining = remaining.saturating_sub(usize::try_from(ellipsis_width).unwrap());
+            remaining = remaining.saturating_sub(wcwidth_rendered(ellipsis).unwrap());
             break;
         }
 

@@ -42,15 +42,16 @@ impl StringSubCommand<'_> for Pad {
                         arg
                     ));
                 };
-                let pad_char_width = fish_wcwidth(*pad_char);
-                if pad_char_width <= 0 {
-                    return Err(invalid_args!(
-                        "%s: Invalid padding character of width zero '%s'",
-                        name,
-                        arg
-                    ));
-                }
-                self.pad_char_width = pad_char_width as usize;
+                self.pad_char_width = match fish_wcwidth(*pad_char) {
+                    None | Some(0) => {
+                        return Err(invalid_args!(
+                            "%s: Invalid padding character of width zero '%s'",
+                            name,
+                            arg
+                        ));
+                    }
+                    Some(w) => w,
+                };
                 self.char_to_pad = *pad_char;
             }
             'r' => self.pad_from = Direction::Right,

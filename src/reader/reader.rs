@@ -2205,11 +2205,9 @@ impl ReaderData {
 
         // Fake composed character sequences by continuing to delete until we delete a character of
         // width at least 1.
-        let mut width;
         loop {
             pos -= 1;
-            width = fish_wcwidth(el.text().char_at(pos));
-            if width != 0 || pos == 0 {
+            if fish_wcwidth(el.text().char_at(pos)).is_some_and(|w| w != 0) || pos == 0 {
                 break;
             }
         }

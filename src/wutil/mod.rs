@@ -432,7 +432,7 @@ pub fn fish_iswalnum(c: char) -> bool {
     !fish_reserved_codepoint(c) && !fish_is_pua(c) && c.is_alphanumeric()
 }
 
-pub fn fish_wcswidth(s: &wstr) -> isize {
+pub fn fish_wcswidth(s: &wstr) -> Option<usize> {
     fish_fallback::fish_wcswidth(s)
 }
 

@@ -1786,23 +1786,24 @@ fn line_shared_prefix(a: &Line, b: &Line) -> usize {
         // We're done if the text or colors are different.
         if ac != bc || a.color_at(idx) != b.color_at(idx) {
             if idx > 0 {
+                fn invisible(c: char) -> bool {
+                    matches!(fish_wcwidth(c), None | Some(0))
+                }
+
                 let mut c = None;
                 // Possible combining mark, go back until we hit _two_ printable characters or idx
                 // of 0.
-                if fish_wcwidth(a.char_at(idx)) < 1 {
+                if invisible(a.char_at(idx)) {
                     c = Some(&a);
-                } else if fish_wcwidth(b.char_at(idx)) < 1 {
+                } else if invisible(b.char_at(idx)) {
                     c = Some(&b);
                 }
 
                 if let Some(c) = c {
-                    while idx > 1
-                        && (fish_wcwidth(c.char_at(idx - 1)) < 1
-                            || fish_wcwidth(c.char_at(idx)) < 1)
-                    {
+                    while idx > 1 && (invisible(c.char_at(idx - 1)) || invisible(c.char_at(idx))) {
                         idx -= 1;
                     }
-                    if idx == 1 && fish_wcwidth(c.char_at(idx)) < 1 {
+                    if idx == 1 && invisible(c.char_at(idx)) {
                         idx = 0;
                     }
                 }
@@ -2060,16 +2061,13 @@ fn rendered_character(c: char) -> char {
 }
 
 fn wcwidth_rendered_min_0(c: char) -> usize {
-    usize::try_from(wcwidth_rendered(c)).unwrap_or_default()
+    wcwidth_rendered(c).unwrap_or_default()
 }
-pub fn wcwidth_rendered(c: char) -> isize {
+pub fn wcwidth_rendered(c: char) -> Option<usize> {
     fish_wcwidth(rendered_character(c))
 }
 pub fn wcswidth_rendered(s: &wstr) -> usize {
-    fish_wcswidth_canonicalizing(s, rendered_character)
-        .max(0)
-        .try_into()
-        .unwrap()
+    fish_wcswidth_canonicalizing(s, rendered_character).unwrap_or_default()
 }
 
 #[cfg(test)]

@@ -1064,7 +1064,7 @@ macro_rules! write_to_output {
 pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
     let mut buff = WString::new();
 
-    let screen_width = isize::try_from(termsize.width()).unwrap();
+    let screen_width = termsize.width();
     if screen_width != 0 {
         let mut start = 0;
         let mut pos = start;
@@ -1077,7 +1077,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
             while pos < msg.len() && ![' ', '\n', '\r', '\t'].contains(&msg.char_at(pos)) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
-                let width = fish_wcwidth(msg.char_at(pos));
+                let width = fish_wcwidth(msg.char_at(pos)).unwrap_or_default();
                 if (tok_width + width) > (screen_width - 1) {
                     overflow = true;
                     break;

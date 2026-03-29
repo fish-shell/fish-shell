@@ -128,7 +128,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
     let mut w = 0;
 
     for resource in RESOURCE_ARR.iter() {
-        w = w.max(fish_wcswidth(resource.desc));
+        w = w.max(fish_wcswidth(resource.desc).unwrap_or_default());
     }
     for resource in RESOURCE_ARR.iter() {
         let Some((rlim_cur, rlim_max)) = getrlimit(resource.resource) else {

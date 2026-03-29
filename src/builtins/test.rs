@@ -750,7 +750,7 @@ mod test_expressions {
                     commandline.push_utfstr(arg);
                     narg += 1;
                     if narg == parser.error_idx {
-                        len_to_err = fish_wcswidth(&commandline);
+                        len_to_err = fish_wcswidth(&commandline).unwrap_or_default();
                     }
                 }
                 err.push_utfstr(program_name);

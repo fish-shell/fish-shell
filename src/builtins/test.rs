@@ -9,9 +9,9 @@ mod test_expressions {
 
     use crate::nix::isatty;
     use crate::wutil::{
-        Error, Options, file_id_for_path, fish_wcswidth, lwstat, waccess, wcstod::wcstod,
-        wcstoi_opts, wstat,
+        Error, Options, file_id_for_path, lwstat, waccess, wcstod::wcstod, wcstoi_opts, wstat,
     };
+    use fish_fallback::fish_wcswidth;
     use std::collections::HashMap;
     use std::os::unix::prelude::*;
     use std::sync::LazyLock;

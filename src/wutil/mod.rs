@@ -432,10 +432,6 @@ pub fn fish_iswalnum(c: char) -> bool {
     !fish_reserved_codepoint(c) && !fish_is_pua(c) && c.is_alphanumeric()
 }
 
-pub fn fish_wcswidth(s: &wstr) -> Option<usize> {
-    fish_fallback::fish_wcswidth(s)
-}
-
 /// Given that `cursor` is a pointer into `base`, return the offset in characters.
 /// This emulates C pointer arithmetic:
 ///    `wstr_offset_in(cursor, base)` is equivalent to C++ `cursor - base`.

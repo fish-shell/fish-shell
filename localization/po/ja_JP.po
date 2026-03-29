@@ -13038,6 +13038,9 @@ msgstr ""
 msgid "Copies between two remote hosts are transferred through the local host"
 msgstr ""
 
+msgid "Copr hub hostname"
+msgstr ""
+
 msgid "Copy Cc: list from first message to the others"
 msgstr ""
 
@@ -16135,6 +16138,9 @@ msgid "Disable Xinerama support"
 msgstr ""
 
 msgid "Disable \\write18{SHELL COMMAND}"
+msgstr ""
+
+msgid "Disable a Copr repository"
 msgstr ""
 
 msgid "Disable a NuGet source"
@@ -32541,6 +32547,9 @@ msgstr ""
 msgid "Install Node.js from source"
 msgstr ""
 
+msgid "Install a Copr repository"
+msgstr ""
+
 msgid "Install a Python version"
 msgstr ""
 
@@ -34156,6 +34165,9 @@ msgid "List APIs"
 msgstr ""
 
 msgid "List CloudFront distribution points"
+msgstr ""
+
+msgid "List Copr repositories"
 msgstr ""
 
 msgid "List DPP-capable devices"
@@ -37474,6 +37486,9 @@ msgid "Manage .NET tool"
 msgstr ""
 
 msgid "Manage .pac* files"
+msgstr ""
+
+msgid "Manage Copr repositories"
 msgstr ""
 
 msgid "Manage Flexible Resources between Primary and Secondary Controller "
@@ -45696,6 +45711,9 @@ msgstr ""
 msgid "Print synopsis and options"
 msgstr ""
 
+msgid "Print system info for debugging"
+msgstr ""
+
 msgid "Print tally"
 msgstr ""
 
@@ -49186,6 +49204,9 @@ msgid "Remove ZFS label information from the specified device"
 msgstr ""
 
 msgid "Remove [all] packages from cache"
+msgstr ""
+
+msgid "Remove a Copr repository"
 msgstr ""
 
 msgid "Remove a NuGet package reference"

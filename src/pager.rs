@@ -358,17 +358,14 @@ impl Pager {
                     comp.comp_width += 2;
                 }
 
-                // This can return -1 if it can't calculate the width. So be cautious.
-                let comp_width = wcswidth_rendered(comp_string);
                 if show_prefix {
-                    comp.comp_width += usize::try_from(prefix_len).unwrap_or_default();
+                    comp.comp_width += prefix_len;
                 }
-                comp.comp_width += usize::try_from(comp_width).unwrap_or_default();
+                comp.comp_width += wcswidth_rendered(comp_string);
             }
 
             // This can return -1 if it can't calculate the width. So be cautious.
-            let desc_width = wcswidth_rendered(&comp.desc);
-            comp.desc_width = usize::try_from(desc_width).unwrap_or_default();
+            comp.desc_width = wcswidth_rendered(&comp.desc);
         }
     }
 

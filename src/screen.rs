@@ -24,7 +24,7 @@ use crate::terminal::TerminalCommand::{
 use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
 use crate::termsize::Termsize;
 use crate::wutil::fstat;
-use fish_fallback::fish_wcwidth;
+use fish_fallback::{fish_wcswidth_canonicalizing, fish_wcwidth};
 use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string, wcs2bytes};
 use fish_widestring::ELLIPSIS_CHAR;
 use libc::{STDERR_FILENO, STDOUT_FILENO};
@@ -2065,8 +2065,11 @@ fn wcwidth_rendered_min_0(c: char) -> usize {
 pub fn wcwidth_rendered(c: char) -> isize {
     fish_wcwidth(rendered_character(c))
 }
-pub fn wcswidth_rendered(s: &wstr) -> isize {
-    s.chars().map(wcwidth_rendered).sum()
+pub fn wcswidth_rendered(s: &wstr) -> usize {
+    fish_wcswidth_canonicalizing(s, rendered_character)
+        .max(0)
+        .try_into()
+        .unwrap()
 }
 
 #[cfg(test)]

@@ -683,8 +683,8 @@ expect_str("foo-barqux")
 expect_prompt()
 
 sendline("bind ctrl-g backward-word-end")
-sendline("echo 12" + control("g") + "3")
-expect_str("123")
+sendline("eco 12" + control("g") + "h")
+expect_str("12")
 expect_prompt()
 
 # Check that the builtin version of `exit` works

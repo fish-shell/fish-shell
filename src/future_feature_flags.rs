@@ -237,19 +237,14 @@ impl Features {
     }
 
     fn set_from_string(&self, str: &wstr) {
-        let whitespace = L!("\t\n\0x0B\0x0C\r ").as_char_slice();
-        for entry in str.as_char_slice().split(|c| *c == ',') {
+        for entry in str.split(',') {
+            let entry = entry.trim();
             if entry.is_empty() {
                 continue;
             }
 
-            // Trim leading and trailing whitespace
-            let entry = &entry[entry.iter().take_while(|c| whitespace.contains(c)).count()..];
-            let entry =
-                &entry[..entry.len() - entry.iter().take_while(|c| whitespace.contains(c)).count()];
-
             // A "no-" prefix inverts the sense.
-            let (name, value) = match entry.strip_prefix(L!("no-").as_char_slice()) {
+            let (name, value) = match entry.strip_prefix("no-") {
                 Some(suffix) => (suffix, false),
                 None => (entry, true),
             };

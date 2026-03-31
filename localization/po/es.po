@@ -1926,9 +1926,6 @@ msgstr "%s: El número de posiciones a saltar debe ser un entero no negativo\\n"
 msgid "%s: Too many arguments"
 msgstr "%s: Demasiados argumentos"
 
-msgid "%s: Too many arguments\\n"
-msgstr "%s: Demasiados argumentos\\n"
-
 msgid "%s: Unknown function '%s'\\n"
 msgstr "%s: Función desconocida '%s'\\n"
 

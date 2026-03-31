@@ -1919,9 +1919,6 @@ msgstr ""
 msgid "%s: Too many arguments"
 msgstr ""
 
-msgid "%s: Too many arguments\\n"
-msgstr ""
-
 msgid "%s: Unknown function '%s'\\n"
 msgstr ""
 

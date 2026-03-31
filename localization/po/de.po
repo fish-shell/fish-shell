@@ -1921,10 +1921,7 @@ msgid "%s: The number of positions to skip must be a non-negative integer\\n"
 msgstr ""
 
 msgid "%s: Too many arguments"
-msgstr ""
-
-msgid "%s: Too many arguments\\n"
-msgstr "%s: Zu viele Argumente\\n"
+msgstr "%s: Zu viele Argumente"
 
 msgid "%s: Unknown function '%s'\\n"
 msgstr ""

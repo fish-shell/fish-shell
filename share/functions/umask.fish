@@ -182,7 +182,10 @@ function umask --description "Set default file permission mask"
             return 1
 
         case '*'
-            printf (_ '%s: Too many arguments\n') umask >&2
+            {
+                printf (_ '%s: Too many arguments') umask
+                echo
+            } >&2
             return 1
     end
 end

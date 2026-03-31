@@ -2052,9 +2052,6 @@ msgstr "%s : Le nombre de positions à passer doit être un entier naturel\\n"
 msgid "%s: Too many arguments"
 msgstr "%s : Trop d’arguments"
 
-msgid "%s: Too many arguments\\n"
-msgstr "%s : Trop d’arguments\\n"
-
 msgid "%s: Unknown function '%s'\\n"
 msgstr "%s : Fonction « %s » inconnue\\n"
 

@@ -1920,10 +1920,7 @@ msgid "%s: The number of positions to skip must be a non-negative integer\\n"
 msgstr "%s：要略過的位置數量必須是非負整數\\n"
 
 msgid "%s: Too many arguments"
-msgstr "%s：引數太少"
-
-msgid "%s: Too many arguments\\n"
-msgstr "%s：引數太多\\n"
+msgstr "%s：引數太多"
 
 msgid "%s: Unknown function '%s'\\n"
 msgstr "%s：未知函式「%s」\\n"

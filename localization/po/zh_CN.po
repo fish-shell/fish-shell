@@ -1947,9 +1947,6 @@ msgstr "%s: 要跳过的位置数必须是非负整数\\n"
 msgid "%s: Too many arguments"
 msgstr "%s: 参数过多"
 
-msgid "%s: Too many arguments\\n"
-msgstr "%s: 参数过多\\n"
-
 msgid "%s: Unknown function '%s'\\n"
 msgstr "%s: 未知函数 '%s'\\n"
 

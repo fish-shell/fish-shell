@@ -767,10 +767,6 @@ msgid "%s: too many arguments"
 msgstr "%s: 引数が多すぎます"
 
 #, c-format
-msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
-msgstr "%s: --silent の代わりに -i を使用する方法は非推奨です。代わりに -s または --silent を使用してください"
-
-#, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
 msgstr "%s: 値を完全に変換できませんでした('%s' を変換できません)"
 

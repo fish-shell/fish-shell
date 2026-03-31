@@ -789,10 +789,6 @@ msgid "%s: too many arguments"
 msgstr "%s: 参数太多"
 
 #, c-format
-msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
-msgstr "%s: 参数 -i 用于表示 --silent 已弃用。请改用 -s 或 --silent 代替。"
-
-#, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
 msgstr "%s: 数值未完全转换 (无法转换 '%s')"
 

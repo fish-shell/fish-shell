@@ -69,7 +69,7 @@ impl Options {
     }
 }
 
-const SHORT_OPTIONS: &wstr = L!("ac:d:fghiLln:p:sStuxzP:UR:L");
+const SHORT_OPTIONS: &wstr = L!("ac:d:fghLln:p:sStuxzP:UR:L");
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("array"), ArgType::NoArgument, 'a'),
     wopt(L!("command"), ArgType::RequiredArgument, 'c'),
@@ -120,13 +120,6 @@ fn parse_cmd_opts(
             }
             'd' => {
                 opts.delimiter = Some(w.woptarg.unwrap().to_owned());
-            }
-            'i' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead.",
-                    cmd
-                ));
-                return Err(STATUS_INVALID_ARGS);
             }
             'f' => {
                 opts.place.mode |= EnvMode::FUNCTION;

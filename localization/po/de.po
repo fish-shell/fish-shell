@@ -768,10 +768,6 @@ msgid "%s: too many arguments"
 msgstr "%s: zu viele Argumente"
 
 #, c-format
-msgid "%s: usage of -i for --silent is deprecated. Please use -s or --silent instead."
-msgstr ""
-
-#, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
 msgstr "%s: Wert nicht vollständig konvertiert (kann '%s' nicht konvertieren)"
 

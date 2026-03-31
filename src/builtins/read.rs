@@ -55,7 +55,6 @@ struct Options {
     array: bool,
     silent: bool,
     split_null: bool,
-    to_stdout: bool,
     nchars: Option<NonZeroUsize>,
     one_line: bool,
 }
@@ -502,25 +501,10 @@ fn validate_read_args(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    let argc = argv.len();
-    if !opts.array && argc < 1 && !opts.to_stdout {
+    if opts.array && argv.len() != 1 {
         streams
             .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc));
-        return Err(STATUS_INVALID_ARGS);
-    }
-
-    if opts.array && argc != 1 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc));
-        return Err(STATUS_INVALID_ARGS);
-    }
-
-    if opts.to_stdout && argc > 0 {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argv.len()));
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -583,15 +567,8 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     let (mut opts, optind) = parse_cmd_opts(argv, parser, streams)?;
 
     let cmd = argv[0];
-    let mut argv: &[&wstr] = argv;
-    if !opts.to_stdout {
-        argv = &argv[optind..];
-    }
+    let argv = &argv[optind..];
     let argc = argv.len();
-
-    if argv.is_empty() {
-        opts.to_stdout = true;
-    }
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
@@ -681,7 +658,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             return exit_res;
         }
 
-        if opts.to_stdout {
+        if argv.is_empty() {
             streams.out.append(&buff);
             return exit_res;
         }

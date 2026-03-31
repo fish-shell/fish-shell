@@ -12,6 +12,7 @@ use crate::fds::BorrowedFdFile;
 use crate::flog;
 use crate::signal::SigChecker;
 use crate::topic_monitor::Topic;
+use errno::{Errno, set_errno};
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2osstring, wcs2zstring};
 use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
@@ -100,6 +101,7 @@ pub fn wreadlink(file_name: &wstr) -> Option<WString> {
 /// `wrealpath()` returns `None`
 pub fn wrealpath(pathname: &wstr) -> Option<WString> {
     if pathname.is_empty() {
+        set_errno(Errno(0));
         return None;
     }
 

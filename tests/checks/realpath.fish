@@ -134,4 +134,11 @@ builtin realpath / /
 # CHECK: /
 # CHECK: /
 
+builtin realpath '' /tmp '' /dont-exist ''
+# CHECKERR: builtin realpath: Invalid arg:
+# CHECK: /tmp
+# CHECKERR: builtin realpath: Invalid arg:
+# CHECK: /dont-exist
+# CHECKERR: builtin realpath: Invalid arg:
+
 exit 0

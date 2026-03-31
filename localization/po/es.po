@@ -1821,6 +1821,9 @@ msgstr "precisión inválida: %s"
 msgid "missing hexadecimal number in escape"
 msgstr "falta un número hexadecimal en la secuencia de escape"
 
+msgid "non-zero scale value only valid for base 10"
+msgstr ""
+
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"
 msgstr "solo se soportan f1 hasta f%d, no ‘f%s’"

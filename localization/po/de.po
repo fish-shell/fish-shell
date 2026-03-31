@@ -1818,6 +1818,9 @@ msgstr "Ungültige Genauigkeitsangabe: %s"
 msgid "missing hexadecimal number in escape"
 msgstr "fehlende Hexadezimal-Zahl in Escapesequenz"
 
+msgid "non-zero scale value only valid for base 10"
+msgstr ""
+
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"
 msgstr ""

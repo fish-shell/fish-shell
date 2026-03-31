@@ -23,6 +23,8 @@ math --scale=6 '5 / 3 * 0.3'
 # CHECK: 0.5
 math --scale=max '5 / 3'
 # CHECK: 1.666666666666667
+math --scale=1 --base=16 "2 / 3 - 1"
+# CHECKERR: math: invalid option combination, non-zero scale value only valid for base 10
 math "7^2"
 # CHECK: 49
 math -1 + 1
@@ -137,7 +139,6 @@ math n + 4
 # CHECKERR: math: Error: Unknown function
 # CHECKERR: 'n + 4'
 # CHECKERR:  ^
-
 
 not math 'sin()'
 # CHECKERR: math: Error: Too few arguments

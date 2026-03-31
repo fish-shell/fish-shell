@@ -145,8 +145,7 @@ fn parse_cmd_opts(
         streams.err.appendln(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
-            "non-zero scale value only valid
-            for base 10"
+            wgettext!("non-zero scale value only valid for base 10")
         ));
         return Err(STATUS_INVALID_ARGS);
     }

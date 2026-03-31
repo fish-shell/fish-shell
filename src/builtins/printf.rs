@@ -205,16 +205,13 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<Error>) {
         // This check matches the historic `errcode != EINVAL` check from C++.
         // Note that empty or missing values will be silently treated as 0.
-        if errcode != None && errcode != Some(Error::InvalidChar) && errcode != Some(Error::Empty) {
+        if errcode.is_some_and(|err| err != Error::InvalidChar && err != Error::Empty) {
             match errcode.unwrap() {
                 Error::Overflow => {
                     self.fatal_error(wgettext_fmt!("%s: Number out of range", s));
                 }
-                Error::Empty => {
-                    self.fatal_error(wgettext_fmt!("%s: Number was empty", s));
-                }
-                Error::InvalidChar => {
-                    panic!("Unreachable");
+                Error::InvalidChar | Error::Empty => {
+                    unreachable!("Unreachable");
                 }
             }
         } else if !end.is_empty() {

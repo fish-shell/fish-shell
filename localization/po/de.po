@@ -540,10 +540,6 @@ msgid "%s: Number out of range"
 msgstr ""
 
 #, c-format
-msgid "%s: Number was empty"
-msgstr "%s: Zahl war leer"
-
-#, c-format
 msgid "%s: Options %s and %s cannot be used together"
 msgstr ""
 

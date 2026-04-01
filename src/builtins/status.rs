@@ -399,16 +399,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             let job_control_mode = match opts.new_job_control_mode {
                 Some(j) => {
                     // Flag form used
-                    if !args.is_empty() {
-                        streams.err.appendln(&wgettext_fmt!(
-                            BUILTIN_ERR_ARG_COUNT2,
-                            cmd,
-                            c.to_wstr(),
-                            0,
-                            args.len()
-                        ));
-                        return Err(STATUS_INVALID_ARGS);
-                    }
+                    // Any extra args would have already failed, either as an
+                    // unrecognized subcmd, or as a "subcmd combo"
+                    assert!(args.is_empty(), "unexpected job-control args");
                     j
                 }
                 None => {

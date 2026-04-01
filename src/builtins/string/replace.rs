@@ -194,7 +194,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                     replacement.to_owned()
                 } else {
                     Self::interpret_escape(replacement)
-                        .ok_or_else(|| RegexError::InvalidEscape(pattern.to_owned()))?
+                        .ok_or_else(|| RegexError::InvalidEscape(replacement.to_owned()))?
                 };
                 Self::Regex {
                     replacement,

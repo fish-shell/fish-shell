@@ -945,7 +945,7 @@ fn set_internal(
     if argv.is_empty() {
         streams
             .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1));
+            .appendln(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -1045,7 +1045,7 @@ pub fn set(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Buil
         list(&opts, parser, streams)
     } else if opts.show {
         show(cmd, parser, streams, args)
-    } else if args.is_empty() {
+    } else if args.is_empty() && !(opts.append || opts.prepend) {
         list(&opts, parser, streams)
     } else {
         set_internal(cmd, &opts, parser, streams, args)

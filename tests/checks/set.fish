@@ -625,6 +625,19 @@ set --show var5
 #CHECK: $var5[7]: |x|
 #CHECK: $var5[8]: |0|
 
+set -a
+# CHECKERR: set: expected >= 1 arguments; got 0
+# CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
+# CHECKERR: set -a
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+set -p
+# CHECKERR: set: expected >= 1 arguments; got 0
+# CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
+# CHECKERR: set -p
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
 # Setting local scope when no local scope of the var uses the closest scope
 set -g var6 ghi jkl
 begin
@@ -675,6 +688,19 @@ env | grep TESTVAR | sort | cat -v
 #CHECK: TESTVAR0=
 #CHECK: TESTVAR1=a
 #CHECK: TESTVAR2=a b
+
+set -x | grep TESTVAR | sort | cat -v
+#CHECK: TESTVAR0
+#CHECK: TESTVAR1 a
+#CHECK: TESTVAR2 'a' 'b'
+
+set -u TESTVAR0
+set -u TESTVAR2 a b
+set -u | grep TESTVAR | sort | cat -v
+#CHECK: TESTVAR0
+#CHECK: TESTVAR2 'a' 'b'
+set -x | grep TESTVAR | sort | cat -v
+#CHECK: TESTVAR1 a
 
 # if/for/while scope
 function test_ifforwhile_scope

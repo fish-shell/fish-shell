@@ -577,10 +577,6 @@ msgid "%s: The directory '%s' does not exist"
 msgstr "%s: O diretório “%s” não existe"
 
 #, c-format
-msgid "%s: The variable '%s' does not exist"
-msgstr ""
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s: Não há tarefas"
 

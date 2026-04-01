@@ -573,10 +573,6 @@ msgid "%s: The directory '%s' does not exist"
 msgstr "%s: Katalogen '%s' existerar inte"
 
 #, c-format
-msgid "%s: The variable '%s' does not exist"
-msgstr ""
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s: Det finns inga jobb"
 

@@ -351,11 +351,8 @@ fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams:
             ));
         }
         EnvStackSetResult::NotFound => {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: The variable '%s' does not exist",
-                cmd,
-                key
-            ));
+            // Only variable deletion can return a `NotFound` error, but that case is explicitly silenced
+            unreachable!("variable not found");
         }
     }
 }
@@ -729,13 +726,20 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
         }
     } else {
         for arg in args.iter().copied() {
+            let bracket = arg.find(L!("["));
+            let arg = if let Some(idx) = bracket {
+                &arg[..idx]
+            } else {
+                arg
+            };
+
             if !valid_var_name(arg) {
                 streams.err.append(&varname_error(cmd, arg));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
 
-            if arg.contains('[') {
+            if bracket.is_some() {
                 streams.err.appendln(&wgettext_fmt!(
                     "%s: `set --show` does not allow slices with the var names",
                     cmd

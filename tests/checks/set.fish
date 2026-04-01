@@ -49,7 +49,6 @@ else
 end
 # CHECK: Test 4 pass
 
-
 #Test that scope is preserved when setting a new value
 
 set t5 a
@@ -78,7 +77,6 @@ for i in 1
     end
 end
 # CHECK: Test 6 pass
-
 
 # Test if variables in for loop blocks do not go out of scope on new laps
 
@@ -405,7 +403,6 @@ set -x DONT_ESCAPE_COLONS_PATH 1: 2: :3:
 env | grep '^DONT_ESCAPE_COLONS_PATH='
 # CHECK: DONT_ESCAPE_COLONS_PATH=1::2:::3:
 
-
 # Path universal variables
 set -U __fish_test_path_not a b c
 set -U __fish_test_PATH 1 2 3
@@ -485,7 +482,6 @@ set -g __fish_test_global_vs_universal global
 echo "global-vs-universal 2: $__fish_test_global_vs_universal"
 # CHECK: global-vs-universal 2: global
 
-
 set __fish_test_global_vs_universal global2
 echo "global-vs-universal 3: $__fish_test_global_vs_universal"
 # CHECK: global-vs-universal 3: global2
@@ -536,6 +532,13 @@ set --show 'argle bargle'
 #CHECKERR: set --show 'argle bargle'
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
+
+set --show array[1]
+# CHECKERR: set: `set --show` does not allow slices with the var names
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set --show array[1]
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
 
 # Verify behavior of `set --show`
 set semiempty ''
@@ -747,7 +750,6 @@ echo $foo
 echo $bar
 #CHECK: 1 3
 
-
 # Test that `set -q` does not return 0 if there are 256 missing variables
 
 set -lq a(seq 1 256)
@@ -809,14 +811,14 @@ set -S stilllocal
 set -g globalvar global
 
 function test-function-scope
-    set -f funcvar "function"
+    set -f funcvar function
     echo $funcvar
     # CHECK: function
     set -S funcvar
     #CHECK: $funcvar: set in local scope, unexported, with 1 elements
     #CHECK: $funcvar[1]: |function|
     begin
-        set -l funcvar "block"
+        set -l funcvar block
         echo $funcvar
         # CHECK: block
         set -S funcvar
@@ -1014,7 +1016,6 @@ set line[0] ""
 # CHECKERR: set line[0] ""
 # CHECKERR: ^
 # CHECKERR: (Type 'help set' for related documentation)
-
 
 echo Still here
 # CHECK: Still here

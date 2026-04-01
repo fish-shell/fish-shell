@@ -575,10 +575,6 @@ msgid "%s: The directory '%s' does not exist"
 msgstr "%s: ディレクトリ '%s' は存在しません"
 
 #, c-format
-msgid "%s: The variable '%s' does not exist"
-msgstr "%s: 変数 '%s' は存在しません"
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s: ジョブはありません"
 

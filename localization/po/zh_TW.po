@@ -570,10 +570,6 @@ msgid "%s: The directory '%s' does not exist"
 msgstr "%s：目錄「%s」不存在"
 
 #, c-format
-msgid "%s: The variable '%s' does not exist"
-msgstr "%s：變數「%s」不存在"
-
-#, c-format
 msgid "%s: There are no jobs"
 msgstr "%s：沒有作業"
 

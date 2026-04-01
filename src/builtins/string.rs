@@ -34,11 +34,6 @@ macro_rules! string_error {
 }
 use string_error;
 
-fn string_unknown_option(parser: &Parser, streams: &mut IoStreams, subcmd: &wstr, opt: &wstr) {
-    string_error!(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
-    builtin_print_error_trailer(parser, streams.err, L!("string"));
-}
-
 trait StringSubCommand<'args> {
     const SHORT_OPTIONS: &'static wstr;
     const LONG_OPTIONS: &'static [WOption<'static>];
@@ -87,13 +82,19 @@ trait StringSubCommand<'args> {
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
-                    string_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
+                    string_error!(
+                        streams,
+                        BUILTIN_ERR_UNKNOWN,
+                        cmd,
+                        args_read[w.wopt_index - 1]
+                    );
+                    builtin_print_error_trailer(parser, streams.err, L!("string"));
                     return Err(STATUS_INVALID_ARGS);
                 }
                 c => {
                     let retval = self.parse_opt(cmd, c, w.woptarg);
                     if let Err(e) = retval {
-                        e.print_error(&args_read, parser, streams, w.woptarg, w.wopt_index);
+                        e.print_error(&args_read, streams, w.woptarg, w.wopt_index);
                         return Err(e.retval());
                     }
                 }
@@ -236,22 +237,26 @@ impl StringError {
     fn print_error(
         &self,
         args: &[&wstr],
-        parser: &Parser,
         streams: &mut IoStreams,
         optarg: Option<&wstr>,
         optind: usize,
     ) {
-        let cmd = args[0];
+        let subcmd = args[0];
         use StringError::*;
         match self {
             InvalidArgs(msg) => {
                 streams.err.appendln("string ".chars().chain(msg.chars()));
             }
             NotANumber => {
-                string_error!(streams, BUILTIN_ERR_NOT_NUMBER, cmd, optarg.unwrap());
+                string_error!(streams, BUILTIN_ERR_NOT_NUMBER, subcmd, optarg.unwrap());
             }
             UnknownOption => {
-                string_unknown_option(parser, streams, cmd, args[optind - 1]);
+                // This would mean the subcmd's XXX_OPTIONS does not match
+                // the list in its `parse_opt()` implementation
+                unreachable!(
+                    "unexpected option '{}' for 'string {subcmd}'",
+                    args[optind - 1]
+                )
             }
         }
     }
@@ -368,7 +373,7 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         _ => {
             streams
                 .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
+                .appendln(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
             builtin_print_error_trailer(parser, streams.err, cmd);
             Err(STATUS_INVALID_ARGS)
         }

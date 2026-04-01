@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: fish=%fish %fish %s
 # Tests for string builtin. Mostly taken from man page examples.
 
 string match -r -v "c.*" dog can cat diz; and echo "exit 0"
@@ -1209,3 +1209,6 @@ printf "dog\ncat\nbat\n" | string replace -rf --max-matches 1 'at$' aught
 printf "dog\ncat\nbat\n" | string replace -r --max-matches 1 '^c' h
 # CHECK: dog
 # CHECK: hat
+
+$fish --features="no-regex-easyesc" -c "string replace -r o '\c' -- foo"
+# CHECKERR: string replace: Invalid escape sequence in pattern "\c"

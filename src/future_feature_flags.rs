@@ -63,10 +63,10 @@ pub struct FeatureMetadata {
     pub description: &'static wstr,
 
     /// Default flag value.
-    pub default_value: bool,
+    default_value: bool,
 
     /// Whether the value can still be changed or not.
-    pub read_only: bool,
+    read_only: bool,
 }
 
 /// The metadata, indexed by flag.

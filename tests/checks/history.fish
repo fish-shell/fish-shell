@@ -70,3 +70,12 @@ builtin history save
 set -g fish_private_mode 1
 builtin history merge
 #CHECKERR: history: can't merge history in private mode
+
+builtin history -n abc
+#CHECKERR: history: abc: invalid integer
+
+builtin history delete --prefix abc
+#CHECKERR: builtin history delete only supports --exact
+
+builtin history delete --exact abc
+#CHECKERR: builtin history delete --exact requires --case-sensitive

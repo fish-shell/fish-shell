@@ -138,7 +138,6 @@ bind \ef forward-word
 bind \ef
 # CHECK: bind alt-f forward-word
 
-
 # Erasing bindings
 bind --erase tab
 bind tab
@@ -179,6 +178,9 @@ bind ctrl-shift-a
 bind ctrl-shift-ä
 # CHECKERR: bind: No binding found for key 'ctrl-shift-ä'
 
+bind '\n'
+# CHECKERR: bind: No binding found for key sequence '\\n'
+
 # Verify binds from all modes are returned when querying a sequence
 fish_vi_key_bindings
 bind --preset ctrl-q 'echo preset'
@@ -190,6 +192,10 @@ bind ctrl-q
 # CHECK: bind ctrl-q 'echo default'
 # CHECK: bind -M insert ctrl-q 'echo insert'
 # CHECK: bind -M replace ctrl-q 'echo replace'
+
+bind --user --preset ctrl-q 'echo preset'
+# CHECKERR: bind: --preset --user: options cannot be used together
+
 fish_default_key_bindings
 
 exit 0

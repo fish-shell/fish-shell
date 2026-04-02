@@ -76,3 +76,6 @@ wait -- -1
 # CHECKERR: wait: Could not find child processes with the name '-1'
 wait -- -(math 2 ^ 31)
 # CHECKERR: wait: Could not find child processes with the name '-2147483648'
+
+wait 999999999
+# CHECKERR: wait: Could not find a job with process ID '999999999'

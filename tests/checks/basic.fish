@@ -233,6 +233,8 @@ contains -i -- -- a b c; or echo nothing
 #CHECK: nothing
 contains -i -- -- a b c -- v
 #CHECK: 4
+contains
+#CHECKERR: contains: Key not specified
 
 # Test if, else, and else if
 if true
@@ -446,6 +448,11 @@ $dyn_break -h
 #CHECKERR: Documentation for break
 continue -h
 #CHECKERR: Documentation for continue
+
+for i in abc
+    break foo
+end
+#CHECKERR: break: foo: unknown option
 
 # Test implicit cd. This should do nothing.
 ./

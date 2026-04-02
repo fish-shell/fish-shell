@@ -140,3 +140,6 @@ chmod +x ./test
 
 PATH=.:$PATH type -P test
 # CHECK: ./test
+
+type -p -q type
+# CHECKERR: type: invalid option combination

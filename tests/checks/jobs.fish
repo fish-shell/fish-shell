@@ -133,3 +133,6 @@ end
 
 disown 252
 # CHECKERR: disown: Could not find job '252'
+
+jobs %abc
+# CHECKERR: jobs: '%abc' is not a valid job ID

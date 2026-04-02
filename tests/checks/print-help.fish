@@ -1,16 +1,16 @@
 # RUN: %fish %s
-# Test redirecting builtin help with a pipe
 # REQUIRES: command -v man
 
-set -lx __fish_data_dir (mktemp -d)
-mkdir -p $__fish_data_dir/man/man1
-# Create $__fish_data_dir/man/man1/and.1
-echo '.\" Test manpage for and (not real).
-.TH "AND" "1" "Feb 02, 2024" "3.7" "fish-shell"
-.SH NAME
-and \- conditionally execute a command' >$__fish_data_dir/man/man1/and.1
-
+# Test redirecting builtin help with a pipe
 # help should be redirected to grep instead of appearing on STDOUT
 builtin and --help 2>| grep -q "Documentation for and"
 echo $status
 #CHECK: 0
+
+function __fish_print_help
+    return 2
+end
+builtin and --help
+# CHECKERR: fish: and: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help and` will show an online version

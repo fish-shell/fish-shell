@@ -244,4 +244,22 @@ for flag in --on-process-exit --on-job-exit
     # CHECKERR:     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 end
 
+function handle_some_sig --on-signal SOME_SIG
+end
+#CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: Unknown signal 'SOME_SIG'
+#CHECKERR: function handle_some_sig --on-signal SOME_SIG
+#CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+
+function handle_exit_invalid_pid -j caller
+end
+#CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: calling job for event handler not found
+#CHECKERR: function handle_exit_invalid_pid -j caller
+#CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+
+function fn_with_args -- arg
+end
+#CHECKERR: {{.*}}/function.fish (line {{\d+}}): function: arg: unexpected positional argument
+#CHECKERR: function fn_with_args -- arg
+#CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~^
+
 exit 0

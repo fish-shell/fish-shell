@@ -86,7 +86,7 @@ echo $status
 # Verify errors from writes - see #7857.
 if test -e /dev/full
     # Failed writes to stdout produce 1.
-    echo foo > /dev/full
+    echo foo >/dev/full
     if test $status -ne 1
         echo "Wrong status when writing to /dev/full"
     end
@@ -94,7 +94,7 @@ if test -e /dev/full
     # Here the builtin should fail with status 2,
     # and also the write should fail with status 1.
     # The builtin has precedence.
-    builtin string --not-a-valid-option 2> /dev/full
+    builtin string --not-a-valid-option 2>/dev/full
     if test $status -ne 2
         echo "Wrong status for failing builtin"
     end
@@ -140,3 +140,51 @@ and should have failed on unrecognized feature
 # CHECKERR: status test-terminal-feature: unrecognized feature 'unrecognized-feature'
 status test-terminal-feature scroll-content-up
 and should have failed when running without a TTY
+
+status -L abc
+# CHECKERR: status: abc: invalid integer
+status -L 9999999999999999999999
+# CHECKERR: status: Invalid level value '9999999999999999999999'
+
+status unknown-subcmd
+# CHECKERR: status: unknown-subcmd: invalid subcommand
+
+status job-control abc cdf
+# CHECKERR: status: job-control: expected 1 arguments; got 2
+
+status test-feature
+# CHECKERR: status: test-feature: expected 1 arguments; got 0
+status test-feature one two
+# CHECKERR: status: test-feature: expected 1 arguments; got 2
+
+status get-file
+# CHECKERR: status: get-file: expected 1 arguments; got 0
+status get-file one two
+# CHECKERR: status: get-file: expected 1 arguments; got 2
+
+if status buildinfo | string match -q "*localize-messages*"
+    echo Skipped
+else
+    set -l result "$(status language 2>&1)"
+    if string match -q "fish was built with the `localize-messages` feature disabled. The `status language` command is unavailable." -- "$result"
+        echo Success
+    else
+        echo "Failed: $result"
+    end
+end
+# CHECK: {{Skipped|Success}}
+
+if not { status buildinfo | string match -q "*localize-messages*" }
+    echo Skipped
+else
+    set -l result "$(status language foo 2>&1)"
+    if string match -q "status language: foo: invalid subcommand" -- "$result"
+        echo Success
+    else
+        echo "Failed: $result"
+    end
+end
+# CHECK: {{Skipped|Success}}
+
+status build-info other-arg
+# CHECKERR: status: build-info: expected 0 arguments; got 1

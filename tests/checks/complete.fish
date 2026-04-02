@@ -482,6 +482,8 @@ complete -C"cmd_with_fancy_completion </dev/null >/dev/null 2>>/dev/null >?/dev/
 
 complete -c thing -x -F
 # CHECKERR: complete: invalid option combination, '--exclusive' and '--force-files'
+complete -c thing -F -f
+# CHECKERR: complete: invalid option combination, '--no-files' and '--force-files'
 # Multiple conditions
 complete -f -c shot
 complete -fc shot -n 'test (count (commandline -xpc) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a through
@@ -697,6 +699,18 @@ begin
     chmod +x "$TMPDIR/-command-starting-with-dash"
 
     set -l PATH "$TMPDIR" $PATH
-    complete -C"-command-starting-with"
+    complete -C-command-starting-with
     # CHECK: -command-starting-with-dash{{\t}}command
 end
+
+complete --command="foo\\"
+# CHECKERR: complete: Invalid token 'foo\'
+
+complete -c foo -a "foo\\"
+# CHECKERR: complete: foo\: contains a syntax error
+# CHECKERR: complete: Expected a string, but found an incomplete token
+# CHECKERR: foo\
+# CHECKERR:    ^
+
+complete -C
+# CHECKERR: complete: Can not get commandline in non-interactive mode

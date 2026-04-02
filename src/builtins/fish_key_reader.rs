@@ -220,7 +220,7 @@ fn parse_flags(
                 return ControlFlow::Break(Err(STATUS_CMD_ERROR));
             }
             '?' => {
-                streams.err.append(&wgettext_fmt!(
+                streams.err.appendln(&wgettext_fmt!(
                     BUILTIN_ERR_UNKNOWN,
                     "fish_key_reader",
                     w.argv[w.wopt_index - 1]

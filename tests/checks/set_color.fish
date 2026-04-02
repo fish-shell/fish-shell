@@ -138,3 +138,10 @@ string escape (set_color --underline=off)
 
 string escape (set_color --reset f00 --background=00f --underline-color=0f0 --bold --dim --italics --reverse --strikethrough --underline=curly)
 # CHECK: \e\[\;38\;2\;255\;0\;0\;48\;2\;0\;0\;255\;58:2::0:255:0\;1\;4:3\;2\;3m\e\[7\;9m
+
+set_color --unknown-opt
+# CHECKERR: set_color: --unknown-opt: unknown option
+# CHECKERR: {{.*}}checks/set_color.fish (line {{\d+}}):
+# CHECKERR: set_color --unknown-opt
+# CHECKERR: ^
+# CHECKERR: (Type 'help set_color' for related documentation)

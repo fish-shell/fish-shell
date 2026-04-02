@@ -36,6 +36,15 @@ test (pwd) = "$link" || echo "(pwd) != \$link:"\n "\$PWD: "(pwd)\n "\$link: $lin
 test (pwd -P) = "$real" || echo "(pwd -P) != \$real:"\n "\$PWD: $PWD"\n "\$real: $real"\n
 test (pwd -P -L) = "$link" || echo "(pwd -P -L) != \$link:"\n "\$PWD: $PWD"\n "\$link: $link"\n
 # Expect no output on success.
+pwd abc
+# CHECKERR: pwd: expected 0 arguments; got 1
+
+mkdir -p $base/pwd_real/subdir
+ln -s $base/pwd_real $base/pwd_link
+cd $base/pwd_link/subdir
+rmdir $base/pwd_real/subdir $base/pwd_real
+pwd -P
+# CHECKERR: pwd: realpath failed: No such file or directory
 
 # Create a symlink and verify logical completion.
 # create directory $base/through/the/looking/glass
@@ -309,3 +318,27 @@ else
     chmod -R +rx $tmp # we must be able to list the directory to delete its children
     rm -rf $tmp
 end
+
+HOME="" cd
+# CHECKERR: cd: Could not find home directory
+
+ln -s loop1 loop2
+ln -s loop2 loop1
+cd loop1
+# CHECKERR: cd: Too many levels of symbolic links: 'loop1'
+# CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+# CHECKERR: builtin cd $argv
+# CHECKERR: ^
+# CHECKERR: in function 'cd' with arguments 'loop1'
+# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+
+# According to https://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits,
+# the longest filename supported is with Reiser4 (3976 bytes)
+cd (string repeat 4096 a)
+# CHECKERR: cd: {{.+}}
+# CHECKERR: cd: Unknown error trying to locate directory '{{.*}}'
+# CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+# CHECKERR: builtin cd $argv
+# CHECKERR: ^
+# CHECKERR: in function 'cd' with arguments '{{.*}}'
+# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish

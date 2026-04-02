@@ -25,6 +25,12 @@ math --scale=max '5 / 3'
 # CHECK: 1.666666666666667
 math --scale=1 --base=16 "2 / 3 - 1"
 # CHECKERR: math: invalid option combination, non-zero scale value only valid for base 10
+math --scale=abc '5 / 3'
+# CHECKERR: math: abc: invalid scale
+math --scale=-1 '5 / 3'
+# CHECKERR: math: -1: invalid scale
+math --scale=16 '5 / 3'
+# CHECKERR: math: 16: invalid scale
 math "7^2"
 # CHECK: 49
 math -1 + 1
@@ -429,3 +435,6 @@ math -s 6 --scale-mode=ceiling "1 / 3 - 1"
 # CHECK: -0.666666
 math -s 6 --scale-mode=ceiling "2 / 3 - 1"
 # CHECK: -0.333333
+
+math -s 6 --scale-mode=random "2 / 3 - 1"
+# CHECKERR: math: random: invalid mode

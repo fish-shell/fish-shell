@@ -46204,9 +46204,6 @@ msgstr ""
 msgid "Print the version of the program and exit"
 msgstr "Afficher la version du programme et quitter"
 
-msgid "Print the version string"
-msgstr ""
-
 msgid "Print the version string of firewalld"
 msgstr ""
 
@@ -46523,9 +46520,6 @@ msgid "Prints an EEPROM dump"
 msgstr ""
 
 msgid "Prints an estimate of the download size of the APK"
-msgstr ""
-
-msgid "Prints author and licensing information"
 msgstr ""
 
 msgid "Prints backup sets and chains currently in repository"
@@ -53403,9 +53397,6 @@ msgstr ""
 
 msgid "Save and restore package state"
 msgstr "Sauvegarder et restaurer l’état des paquets"
-
-msgid "Save authtoken to configuration file"
-msgstr ""
 
 msgid "Save brightness"
 msgstr "Sauvegarder la luminosité"
@@ -64219,12 +64210,6 @@ msgstr ""
 msgid "Start a SOPS key kervice server"
 msgstr ""
 
-msgid "Start a TCP tunnel"
-msgstr ""
-
-msgid "Start a TLS tunnel"
-msgstr ""
-
 msgid "Start a block commit operation"
 msgstr ""
 
@@ -64271,9 +64256,6 @@ msgid "Start all auto-detected arrays"
 msgstr ""
 
 msgid "Start an Elm project"
-msgstr ""
-
-msgid "Start an HTTP tunnel"
 msgstr ""
 
 msgid "Start an IRB session in the context of the current bundle"
@@ -64580,9 +64562,6 @@ msgid "Start this profile"
 msgstr ""
 
 msgid "Start tracking work in Phrequent"
-msgstr ""
-
-msgid "Start tunnels by name from the configuration file"
 msgstr ""
 
 msgid "Start up the visual interface and display its preview screen"
@@ -68876,9 +68855,6 @@ msgid "Update mirror list"
 msgstr "Mettre à jour la liste des miroirs"
 
 msgid "Update modules"
-msgstr ""
-
-msgid "Update ngrok to the latest version"
 msgstr ""
 
 msgid "Update object name stored in a ref safely"
@@ -74194,9 +74170,6 @@ msgstr "Créer le raccourci clavier pour le mode commande au lieu du mode normal
 msgid "bind key to command"
 msgstr "Créer un raccourci clavier vers une commande"
 
-msgid "bind remote address (requires you reserve an address)"
-msgstr ""
-
 msgid "binding for command mode"
 msgstr "Raccourci pour le mode commande"
 
@@ -75646,9 +75619,6 @@ msgstr "Activer les ascenseurs verticaux"
 msgid "enable word mangling rules"
 msgstr ""
 
-msgid "enable/disable http introspection"
-msgstr ""
-
 msgid "enables a keepalive every N seconds"
 msgstr "Envoyer un keepalive à chaque délai en secondes spécifié"
 
@@ -75657,9 +75627,6 @@ msgstr "Terminer les champs avec NUL"
 
 msgid "end filenames with NUL, for use with xargs"
 msgstr "Terminer les noms de fichier par un caractère NUL, pour utilisation avec xargs"
-
-msgid "enforce basic auth on tunnel endpoint, 'user:password'"
-msgstr ""
 
 msgid "enforce strict mode"
 msgstr "Forcer le mode strict"
@@ -76349,12 +76316,6 @@ msgid "highlight current process and its ancestors"
 msgstr ""
 
 msgid "highlight this process and its ancestors"
-msgstr ""
-
-msgid "host tunnel on a custom subdomain"
-msgstr ""
-
-msgid "host tunnel on custom hostname (requires DNS CNAME)"
 msgstr ""
 
 msgid "how to combine with options from fstab/mtab"
@@ -77047,9 +77008,6 @@ msgstr ""
 msgid "list-dependencies flat, not as tree"
 msgstr "Lister les dépendances sans arborescence"
 
-msgid "listen for http, https or both: true/false/both"
-msgstr ""
-
 msgid "listen mode, for inbound connects"
 msgstr ""
 
@@ -77146,9 +77104,6 @@ msgstr ""
 msgid "log positions of (de)serialized objects in the snapshot"
 msgstr ""
 
-msgid "log record format: 'term', 'logfmt', 'json'"
-msgstr ""
-
 msgid "log statistical profiling information"
 msgstr "Journaliser les informations de profilage statistique"
 
@@ -77160,9 +77115,6 @@ msgstr ""
 
 msgid "log what we're doing to the specified FILE"
 msgstr ""
-
-msgid "logging level"
-msgstr "niveau de journalisation"
 
 msgid "loglevel of client"
 msgstr ""
@@ -77549,12 +77501,6 @@ msgid "new package description"
 msgstr ""
 
 msgid "new package name"
-msgstr ""
-
-msgid "ngrok server region [us , eu, au, ap] (default: us)"
-msgstr ""
-
-msgid "ngrok.com authtoken identifying a user"
 msgstr ""
 
 msgid "no cleaning of distfiles."
@@ -77953,15 +77899,6 @@ msgstr ""
 msgid "path to SSH private key file. May be repeated."
 msgstr "Chemin du fichier de clé privée SSH"
 
-msgid "path to TLS certificate authority to verify client certs"
-msgstr ""
-
-msgid "path to a TLS certificate for TLS termination"
-msgstr ""
-
-msgid "path to a TLS key for TLS termination"
-msgstr ""
-
 msgid "path to a custom ESLint configuration file"
 msgstr ""
 
@@ -77980,13 +77917,7 @@ msgstr ""
 msgid "path to config file for the test"
 msgstr ""
 
-msgid "path to config files; they are merged if multiple"
-msgstr ""
-
 msgid "path to log file"
-msgstr ""
-
-msgid "path to log file, 'stdout', 'stderr' or 'false'"
 msgstr ""
 
 msgid "path to plan to insert multiple data files that have master-detail relationships"
@@ -79294,9 +79225,6 @@ msgstr ""
 msgid "set Git namespace"
 msgstr ""
 
-msgid "set Host header; if 'rewrite' use local address hostname"
-msgstr ""
-
 msgid "set NAME to default values"
 msgstr ""
 
@@ -80056,9 +79984,6 @@ msgstr "Démarrer un environnement jail"
 msgid "start a server in the background"
 msgstr "Démarrer un serveur en arrière-plan"
 
-msgid "start all tunnels in the configuration file"
-msgstr ""
-
 msgid "start and print only the URL"
 msgstr ""
 
@@ -80072,9 +79997,6 @@ msgid "start debugger"
 msgstr "Démarrer le débogueur"
 
 msgid "start emacs with specified init directory"
-msgstr ""
-
-msgid "start running no tunnels"
 msgstr ""
 
 msgid "start session"
@@ -80492,9 +80414,6 @@ msgid "update a KRL"
 msgstr ""
 
 msgid "update a record"
-msgstr ""
-
-msgid "update channel (stable, beta)"
 msgstr ""
 
 msgid "update client status bar"

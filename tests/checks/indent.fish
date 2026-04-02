@@ -5,6 +5,17 @@
 fish_indent --no-such-option
 #CHECKERR: fish_indent: --no-such-option: unknown option
 
+fish_indent --check=foo
+#CHECKERR: fish_indent: --check=foo: option does not take an argument
+
+fish_indent -w
+#CHECKERR: Expected file path to read/write for -w:
+#CHECKERR: 
+#CHECKERR: {{ }}$ fish -w foo.fish
+
+fish_indent -w nonexistent
+#CHECKERR: Opening "nonexistent" failed: No such file or directory (os error {{\d+}})
+
 echo 'echo foo \\
 | cat' | $fish_indent
 #CHECK: echo foo \
@@ -35,7 +46,6 @@ echo 'echo foo \\
 brot' | $fish_indent
 #CHECK: echo foo \
 #CHECK: brot
-
 
 echo 'echo rabarber \\
      banana' | $fish_indent
@@ -225,7 +235,6 @@ echo < stdin >>appended yes 2>&1 no > stdout maybe 2>&    4 | cat 2>| cat
 ' | $fish_indent
 #CHECK: echo <stdin >>appended yes 2>&1 no >stdout maybe 2>&4 | cat 2>| cat
 
-
 # issue 7252
 echo -n '
 begin
@@ -264,7 +273,6 @@ end
 #CHECK: {{^    }}cmd \
 #CHECK: {{^    }}{{    }}continuation
 #CHECK: {{^}}end
-
 
 echo -n '
 i\
@@ -624,7 +632,6 @@ end' | $fish_indent --only-unindent
 # CHECK: {{^}}  not indented properly
 # CHECK: {{^}}end
 
-
 echo 'echo (
 if true
 echo
@@ -671,10 +678,15 @@ end
 # CHECK: {{^}})
 
 set -l tmpdir (mktemp -d)
-echo 'echo "foo" "bar"' > $tmpdir/indent_test.fish
+echo 'echo "foo" "bar"' >$tmpdir/indent_test.fish
 $fish_indent --write $tmpdir/indent_test.fish
 cat $tmpdir/indent_test.fish
 # CHECK: echo foo bar
+
+echo 'echo "foo" "bar"' >$tmpdir/indent_test.fish
+chmod 400 $tmpdir/indent_test.fish
+$fish_indent --write $tmpdir/indent_test.fish
+# CHECKERR: Opening "{{.*}}/indent_test.fish" failed: {{.*}})
 
 # See that the builtin can be redirected
 printf %s\n a b c | builtin fish_indent | grep b

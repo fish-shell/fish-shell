@@ -44,11 +44,15 @@ builtin realpath /def///
 # Verify `realpath .` when cwd is a deleted directory gives a no such file or dir error.
 set -l tmpdir (mktemp -d)
 pushd $tmpdir
+mkdir subdir
+cd subdir
 # Solaris rmdir tries to protect against deleting $PWD.
 # But that's what we want to test, so we weasel around it.
-sh -c "cd ..; rmdir $tmpdir"
+sh -c "cd ../..; rmdir $tmpdir/subdir $tmpdir"
 builtin realpath .
 # CHECKERR: builtin realpath: .: No such file or directory
+builtin realpath -s .
+# CHECKERR: builtin realpath: realpath failed: No such file or directory
 popd
 
 # A single symlink to a directory is correctly resolved.

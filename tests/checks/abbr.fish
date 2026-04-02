@@ -234,3 +234,54 @@ abbr | grep __abbr_coexist
 # CHECK: abbr -a --position anywhere --command bar -- __abbr_coexist_2 'bar command'
 abbr -e --command foo __abbr_coexist
 abbr -e --command bar __abbr_coexist_2
+
+abbr --add foo --rename foo fuu --show --list --erase foo --query foo
+# CHECKERR: abbr: Cannot combine options add, rename, show, list, erase, query
+
+abbr --add foo
+# CHECKERR: abbr --add: Requires at least two arguments
+
+abbr --add foo --function foobar extra
+# CHECKERR: abbr: too many arguments
+
+abbr --add foo --command=foobar --position=command bar
+# CHECKERR: abbr: --command cannot be combined with --position=command
+
+abbr --list --regex "."
+# CHECKERR: abbr: --regex option requires --add
+
+abbr --add --regex "a." --regex ".b" foo bar
+# CHECKERR: abbr: Cannot specify multiple regex patterns
+
+abbr --show --set-cursor=marker
+# CHECKERR: abbr: --set-cursor option requires --add
+
+abbr --add --set-cursor=marker --set-cursor=marker
+# CHECKERR: abbr: Cannot specify multiple set-cursor options
+
+abbr --add foo --set-cursor= foo
+# CHECKERR: abbr: --set-cursor argument cannot be empty
+
+abbr --list foo
+# CHECKERR: abbr --list: Unexpected argument -- 'foo'
+
+abbr --rename "" bar
+# CHECKERR: abbr --rename: Name cannot be empty
+
+abbr --rename foo ""
+# CHECKERR: abbr --rename: Name cannot be empty
+
+abbr sub1 -c foo -c bar foo_1
+abbr sub2 -c foo -c bar foo_1
+abbr --rename -c foo -c bar sub1 sub2
+# CHECKERR: abbr --rename: Abbreviation sub2 already exists for commands foo, bar, cannot rename sub1
+abbr --erase sub1 --command={foo,bar}
+abbr --erase sub2 --command={foo,bar}
+
+abbr --erase (abbr --list)
+abbr -U
+# CHECKERR: abbr: Warning: Option '-U' was removed and is now ignored
+# CHECKERR: {{.*}}checks/abbr.fish (line {{\d+}}):
+# CHECKERR: abbr -U
+# CHECKERR: ^
+# CHECKERR: (Type 'help abbr' for related documentation)

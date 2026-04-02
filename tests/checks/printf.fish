@@ -31,6 +31,12 @@ printf "%-20d%d\n" 5 10
 printf "%*d\n" 10 100
 # CHECK:       100
 
+printf "%*s\n" 2147483648 abc
+# CHECKERR: invalid field width: 2147483648
+
+printf "%*s\n" -2147483649 abc
+# CHECKERR: invalid field width: -2147483649
+
 printf "%%\"\\\n"
 printf "%s\b%s\n" x y
 # CHECK: %"\nxy
@@ -80,9 +86,11 @@ printf 'long hex2 %X\n' 498216206234
 printf 'long hex3 %X\n' 0xABCDEF1234567890
 # CHECK: long hex3 ABCDEF1234567890
 printf 'long hex4 %X\n' 0xABCDEF12345678901
+printf '\n'
+# CHECK: long hex4
 # CHECKERR: 0xABCDEF12345678901: Number out of range
 printf 'long decimal %d\n' 498216206594
-# CHECK: long hex4 long decimal 498216206594
+# CHECK: long decimal 498216206594
 printf 'long signed %d\n' -498216206595
 # CHECK: long signed -498216206595
 printf 'long signed to unsigned %u\n' -498216206596
@@ -124,6 +132,12 @@ printf '%d\n' 0g
 echo $status
 # CHECK: 1
 
+printf '%d\n' abc
+# CHECKERR: abc: expected a numeric value
+
+printf '%d\n' ""
+# CHECK: 0
+
 printf '%f\n' 0x2
 # CHECK: 2.000000
 
@@ -132,6 +146,12 @@ printf '%f\n' 0x2p3
 
 printf '%.1f\n' -0X1.5P8
 # CHECK: -336.0
+
+printf '%.*f\n' 2147483648 1
+# CHECKERR: invalid precision: 2147483648
+
+printf '%lb\n' 1
+# CHECKERR: %lb: invalid conversion specification
 
 # Test that we ignore options
 printf -a
@@ -156,7 +176,7 @@ printf %18446744073709551616s
 # CHECKERR: Number out of range
 
 # Test non-ASCII behavior
-printf '|%3s|\n' 'ö'
+printf '|%3s|\n' ö
 # CHECK: |  ö|
 printf '|%3s|\n' '🇺🇳'
 #CHECK: | 🇺🇳|
@@ -168,15 +188,23 @@ printf '|%.3s|\n' 'aa🇺🇳'
 #CHECK: |aa|
 printf '|%3.3s|\n' 'aa🇺🇳'
 #CHECK: | aa|
-printf '|%.1s|\n' '𒈙a'
+printf '|%.1s|\n' 𒈙a
 #CHECK: |𒈙|
 printf '|%3.3s|\n' '👨‍👨‍👧‍👧'
 #CHECK: | 👨‍👨‍👧‍👧|
+
+printf '\xxyz'
+# CHECKERR: missing hexadecimal number in escape
+printf '\uxyz'
+# CHECKERR: Missing hexadecimal number in Unicode escape
 
 # Check handling of chars we use in our internal PUA encoding.
 printf '\uf641' | display_bytes
 # CHECK: 0000000 357 231 201
 # CHECK: 0000003
+
+printf '\U110000'
+# CHECKERR: Not a valid Unicode character: \U00110000
 
 # UTF-8 representation of \uf641
 printf '%s' \xef\x99\x81 | display_bytes

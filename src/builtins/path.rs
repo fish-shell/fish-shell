@@ -283,7 +283,7 @@ fn parse_opts<'args>(
                 let types_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for t in types_args {
                     let Ok(r#type) = t.try_into() else {
-                        path_error!(streams, "%s: Invalid type '%s'", "path", t);
+                        path_error!(streams, "%s: Invalid type '%s'", cmd, t);
                         return Err(STATUS_INVALID_ARGS);
                     };
                     *types |= r#type;
@@ -295,7 +295,7 @@ fn parse_opts<'args>(
                 let perms_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for p in perms_args {
                     let Ok(perm) = p.try_into() else {
-                        path_error!(streams, "%s: Invalid permission '%s'", "path", p);
+                        path_error!(streams, "%s: Invalid permission '%s'", cmd, p);
                         return Err(STATUS_INVALID_ARGS);
                     };
                     *perms |= perm;

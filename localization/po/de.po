@@ -508,10 +508,6 @@ msgid "%s: Missing -- separator"
 msgstr "%s: Fehlendes '--'-Trennzeichen"
 
 #, c-format
-msgid "%s: New limit cannot be an empty string"
-msgstr "%s: Neues Limit darf keine leere Zeichenkette sein"
-
-#, c-format
 msgid "%s: No binding found for key '%s'"
 msgstr ""
 

@@ -637,10 +637,6 @@ msgid "%s: Missing -- separator"
 msgstr "%s : Séparateur -- manquant"
 
 #, c-format
-msgid "%s: New limit cannot be an empty string"
-msgstr "%s : La nouvelle limite ne peut être une chaîne vide"
-
-#, c-format
 msgid "%s: No binding found for key '%s'"
 msgstr "%s : Aucun lien trouvé pour la combinaison %s"
 

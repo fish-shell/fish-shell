@@ -529,10 +529,6 @@ msgid "%s: Missing -- separator"
 msgstr "%s: 缺少 -- 分隔符"
 
 #, c-format
-msgid "%s: New limit cannot be an empty string"
-msgstr "%s: 新限制不能为空字符串"
-
-#, c-format
 msgid "%s: No binding found for key '%s'"
 msgstr "%s: 未找到键 '%s' 的绑定"
 

@@ -507,10 +507,6 @@ msgid "%s: Missing -- separator"
 msgstr "%s: -- セパレータがありません"
 
 #, c-format
-msgid "%s: New limit cannot be an empty string"
-msgstr "%s: 新しい制限値を空文字列にすることはできません"
-
-#, c-format
 msgid "%s: No binding found for key '%s'"
 msgstr "%s: キー '%s' のバインドが見つかりません"
 

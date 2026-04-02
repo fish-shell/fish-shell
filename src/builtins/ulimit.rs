@@ -370,14 +370,8 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         BUILTIN_ULIMIT_INVALID "%s: Invalid limit '%s'"
     }
 
-    let new_limit: rlim_t = if w.wopt_index == argc {
-        streams.err.appendln(&wgettext_fmt!(
-            "%s: New limit cannot be an empty string",
-            cmd
-        ));
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return Err(STATUS_INVALID_ARGS);
-    } else if wcscasecmp(w.argv[w.wopt_index], L!("unlimited")) == Ordering::Equal {
+    let new_limit: rlim_t = if wcscasecmp(w.argv[w.wopt_index], L!("unlimited")) == Ordering::Equal
+    {
         RLIM_INFINITY
     } else if wcscasecmp(w.argv[w.wopt_index], L!("hard")) == Ordering::Equal {
         match get(what, true) {

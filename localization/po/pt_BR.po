@@ -509,10 +509,6 @@ msgid "%s: Missing -- separator"
 msgstr ""
 
 #, c-format
-msgid "%s: New limit cannot be an empty string"
-msgstr ""
-
-#, c-format
 msgid "%s: No binding found for key '%s'"
 msgstr ""
 

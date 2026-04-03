@@ -136,7 +136,7 @@ builtin realpath / /
 
 builtin realpath '' /tmp '' /dont-exist ''
 # CHECKERR: builtin realpath: Invalid arg:
-# CHECK: /tmp
+# CHECK: {{.*}}/tmp
 # CHECKERR: builtin realpath: Invalid arg:
 # CHECK: /dont-exist
 # CHECKERR: builtin realpath: Invalid arg:

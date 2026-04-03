@@ -1,10 +1,10 @@
 use crate::common::exit_without_destructors;
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::prelude::*;
-use crate::reader::{reader_handle_sigint, reader_sighup, safe_restore_term_mode};
+use crate::reader::{reader_handle_sigint, reader_set_exit_signal};
 use crate::termsize::safe_termsize_invalidate_tty;
 use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_principal};
-use crate::tty_handoff::{safe_deactivate_tty_protocols, safe_mark_tty_invalid};
+use crate::tty_handoff::safe_mark_tty_invalid;
 use crate::wutil::fish_wcstoi;
 use errno::{errno, set_errno};
 use fish_util::perror;
@@ -88,25 +88,15 @@ extern "C" fn fish_signal_handler(
             // Respond to a winch signal by telling the termsize container.
             safe_termsize_invalidate_tty();
         }
-        libc::SIGHUP => {
+        libc::SIGHUP | libc::SIGTERM => {
             // Exit unless the signal was trapped.
             if !observed {
-                reader_sighup();
-                safe_mark_tty_invalid();
-            }
-            topic_monitor_principal().post(Topic::SigHupInt);
-        }
-        libc::SIGTERM => {
-            // Handle sigterm. The only thing we do is restore the front process ID and disable protocols, then die.
-            if !observed {
-                safe_restore_term_mode();
-                safe_deactivate_tty_protocols();
-                // Safety: signal() and raise() are async-signal-safe.
-                unsafe {
-                    libc::signal(libc::SIGTERM, libc::SIG_DFL);
-                    libc::raise(libc::SIGTERM);
+                reader_set_exit_signal(sig);
+                if sig == libc::SIGHUP {
+                    safe_mark_tty_invalid();
                 }
             }
+            topic_monitor_principal().post(Topic::SigHupInt);
         }
         libc::SIGINT => {
             // Cancel unless the signal was trapped.
@@ -177,7 +167,7 @@ fn set_interactive_handlers() {
     act.sa_flags = libc::SA_SIGINFO;
     sigaction(libc::SIGTTIN, &act, nullptr);
 
-    // SIGTERM restores the terminal controlling process before dying.
+    // SIGTERM defers to allow graceful history save before exit.
     act.sa_sigaction = signal_handler;
     act.sa_flags = libc::SA_SIGINFO;
     sigaction(libc::SIGTERM, &act, nullptr);

@@ -178,8 +178,7 @@ fn zeroed_termios() -> Termios {
 
 pub static SHELL_MODES: LazyLock<Mutex<Termios>> = LazyLock::new(|| Mutex::new(zeroed_termios()));
 
-/// The valid terminal modes on startup.
-/// Warning: this is read from the SIGTERM handler! Hence the raw global.
+/// The valid terminal modes on startup. Raw global for async-signal-safe access.
 static TERMINAL_MODE_ON_STARTUP: OnceLock<libc::termios> = OnceLock::new();
 
 /// Mode we use to execute programs.
@@ -193,9 +192,9 @@ static STATUS_COUNT: AtomicU64 = AtomicU64::new(0);
 /// This variable is set to a signal by the signal handler when ^C is pressed.
 static INTERRUPTED: AtomicI32 = AtomicI32::new(0);
 
-/// If set, SIGHUP has been received. This latches to true.
-/// This is set from a signal handler.
-static SIGHUP_RECEIVED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+/// Stores the signal (SIGHUP or SIGTERM) that should cause fish to exit, or 0 if none.
+/// Set from a signal handler.
+static EXIT_SIGNAL: AtomicI32 = AtomicI32::new(0);
 
 // Get the terminal mode on startup. This is "safe" because it's async-signal safe.
 pub fn safe_get_terminal_mode_on_startup() -> Option<&'static libc::termios> {
@@ -217,8 +216,7 @@ fn redirect_tty_after_sighup() {
     use std::fs::OpenOptions;
 
     // If we have received SIGHUP, redirect the tty to avoid a user script triggering SIGTTIN or
-    // SIGTTOU.
-    assert!(reader_received_sighup(), "SIGHUP not received");
+    // SIGTTOU. The caller checks reader_exit_signal() == SIGHUP before calling this.
     static TTY_REDIRECTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
     if TTY_REDIRECTED.swap(true) {
         return;
@@ -291,7 +289,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
         use ImplicitEvent::{CheckExit, Eof};
         use QueryResultEvent::*;
         match input_queue.readch() {
-            Implicit(Eof) => reader_sighup(),
+            Implicit(Eof) => reader_set_exit_signal(libc::SIGHUP),
             Implicit(CheckExit) => {}
             CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute)) => {
                 break;
@@ -896,9 +894,8 @@ fn read_i(parser: &Parser) {
     reader_pop();
 
     // If we got SIGHUP, ensure the tty is redirected and release tty handoff without
-    // trying to muck with protocols.
-    if reader_received_sighup() {
-        // If we are the top-level reader, then we translate SIGHUP into exit_forced.
+    // trying to muck with protocols. SIGTERM does not redirect; the terminal is still valid.
+    if reader_exit_signal() == libc::SIGHUP {
         redirect_tty_after_sighup();
     }
 
@@ -1048,7 +1045,6 @@ pub fn reader_deinit(restore_foreground_pgroup: bool) {
 /// Restore the term mode if we own the terminal and are interactive (#8705).
 /// It's important we do this before restore_foreground_process_group,
 /// otherwise we won't think we own the terminal.
-/// THIS FUNCTION IS CALLED FROM A SIGNAL HANDLER. IT MUST BE ASYNC-SIGNAL-SAFE.
 pub fn safe_restore_term_mode() {
     if !is_interactive_session() || getpgrp().as_raw() != unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
         return;
@@ -1350,14 +1346,20 @@ pub fn reader_test_and_clear_interrupted() -> i32 {
     res
 }
 
-/// Mark that we encountered SIGHUP and must (soon) exit. This is invoked from a signal handler.
-pub fn reader_sighup() {
+/// Mark that we received an exit signal (SIGHUP or SIGTERM). Invoked from a signal handler.
+pub fn reader_set_exit_signal(sig: i32) {
     // Beware, we may be in a signal handler.
-    SIGHUP_RECEIVED.store(true);
+    EXIT_SIGNAL.store(sig, Ordering::Relaxed);
 }
 
-fn reader_received_sighup() -> bool {
-    SIGHUP_RECEIVED.load()
+/// Return the exit signal we received, or 0 if none.
+pub fn reader_exit_signal() -> i32 {
+    EXIT_SIGNAL.load(Ordering::Relaxed)
+}
+
+/// Whether we received SIGHUP or SIGTERM and should exit.
+fn reader_received_exit_signal() -> bool {
+    reader_exit_signal() != 0
 }
 
 impl ReaderData {
@@ -2877,7 +2879,7 @@ impl<'a> Reader<'a> {
             CharEvent::Implicit(implicit_event) => {
                 use ImplicitEvent::*;
                 match implicit_event {
-                    Eof => reader_sighup(),
+                    Eof => reader_set_exit_signal(libc::SIGHUP),
                     CheckExit => (),
                     FocusIn => {
                         event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
@@ -5018,10 +5020,7 @@ pub fn fish_is_unwinding_for_exit() -> bool {
     let exit_state = EXIT_STATE.load(Ordering::Relaxed);
     let exit_state: ExitState = unsafe { std::mem::transmute(exit_state) };
     match exit_state {
-        ExitState::None => {
-            // Cancel if we got SIGHUP.
-            reader_received_sighup()
-        }
+        ExitState::None => reader_received_exit_signal(),
         ExitState::RunningHandlers => {
             // We intend to exit but we want to allow these handlers to run.
             false
@@ -6522,8 +6521,7 @@ impl<'a> Reader<'a> {
 /// Check if we should exit the reader loop.
 /// Return true if we should exit.
 pub fn check_exit_loop_maybe_warning(data: Option<&mut Reader>) -> bool {
-    // sighup always forces exit.
-    if reader_received_sighup() {
+    if reader_received_exit_signal() {
         return true;
     }
 

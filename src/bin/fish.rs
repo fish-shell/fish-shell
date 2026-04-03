@@ -53,7 +53,7 @@ use fish::{
         Pid, get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
         set_interactive_session,
     },
-    reader::{reader_init, reader_read, term_copy_modes},
+    reader::{reader_exit_signal, reader_init, reader_read, term_copy_modes},
     signal::{signal_clear_cancel, signal_unblock_all},
     threads::{self},
     topic_monitor,
@@ -625,6 +625,16 @@ fn throwing_main() -> i32 {
     }
 
     history::save_all();
+
+    // If we deferred a fatal signal, re-raise it now so the parent sees WIFSIGNALED.
+    let exit_sig = reader_exit_signal();
+    if exit_sig != 0 {
+        unsafe {
+            libc::signal(exit_sig, libc::SIG_DFL);
+            libc::raise(exit_sig);
+        }
+    }
+
     if opts.print_rusage_self {
         print_rusage_self();
     }

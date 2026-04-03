@@ -27,7 +27,8 @@ use crate::{
     print_help::print_help,
     proc::set_interactive_session,
     reader::{
-        check_exit_loop_maybe_warning, reader_init, reader_sighup, set_shell_modes, terminal_init,
+        check_exit_loop_maybe_warning, reader_init, reader_set_exit_signal, set_shell_modes,
+        terminal_init,
     },
     threads,
     topic_monitor::topic_monitor_init,
@@ -96,7 +97,7 @@ fn process_input(
         use QueryResultEvent::*;
         let kevt = match input_queue.readch() {
             CharEvent::Implicit(ImplicitEvent::Eof) => {
-                reader_sighup();
+                reader_set_exit_signal(libc::SIGHUP);
                 continue;
             }
             CharEvent::Key(kevt) => kevt,

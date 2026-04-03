@@ -1810,6 +1810,7 @@ mod tests {
     use crate::env::{EnvMode, EnvSetMode, EnvStack};
     use crate::fs::{LockedFile, WriteMethod};
     use crate::prelude::*;
+    use crate::tests::prelude::test_init;
     use fish_build_helper::workspace_root;
     use fish_wcstringutil::{
         string_prefixes_string, string_prefixes_string_case_insensitive, wcs2bytes,
@@ -2292,6 +2293,7 @@ mod tests {
 
     #[test]
     fn test_history_path_detection() {
+        let _cleanup = test_init();
         // Regression test for #7582.
         // Temporary directory for the history files.
         let hist_tmpdir = fish_tempfile::new_dir().unwrap();

@@ -8,7 +8,7 @@ use crate::builtins::shared::{BuiltinResult, SUCCESS};
 use crate::common::{
     UnescapeStringStyle, cstr2wcstring, osstr2wcstring, str2wcstring, unescape_string,
 };
-use crate::env::config_paths::ConfigPaths;
+use crate::env::config_paths::{ConfigPaths, PREFIX};
 use crate::env::{EnvMode, EnvSetMode, EnvVar, Statuses};
 use crate::env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change};
 use crate::event::Event;
@@ -536,7 +536,7 @@ pub(crate) static FALLBACK_PATH: LazyLock<&[WString]> = LazyLock::new(|| {
         colon_split(&[cstr2wcstring(cstr)])
     } else {
         vec![
-            str2wcstring(env!("PREFIX")) + L!("/bin"),
+            str2wcstring(PREFIX) + L!("/bin"),
             L!("/usr/bin").to_owned(),
             L!("/bin").to_owned(),
         ]

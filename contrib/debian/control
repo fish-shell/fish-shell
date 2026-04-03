@@ -13,7 +13,7 @@ Build-Depends: debhelper-compat (= 13),
  python3-sphinx,
 # Test dependencies
  locales-all,
- man-db,
+ man-db | mandoc | man,
  python3
 # 4.6.2 is Debian 12/Ubuntu Noble 24.04; Ubuntu Jammy is 4.6.0.1
 Standards-Version: 4.6.2
@@ -26,8 +26,8 @@ Architecture: any
 # for col and lock
 Depends: bsdextrautils,
  file,
-# for man
- man-db,
+# for showing built-in help pages
+ man-db | mandoc | man,
 # for kill
  procps,
  python3 (>=3.5),

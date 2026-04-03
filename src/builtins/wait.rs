@@ -107,7 +107,7 @@ fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -
         return Ok(SUCCESS);
     }
 
-    let mut sigint = SigChecker::new_sighupint();
+    let mut sigint = SigChecker::new_sighupintterm();
     loop {
         let finished = if any_flag {
             whs.iter().any(is_completed)

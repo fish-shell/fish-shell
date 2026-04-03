@@ -38,15 +38,15 @@ use std::{cell::UnsafeCell, pin::Pin};
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Topic {
-    SigHupInt = 0,    // Corresponds to both SIGHUP and SIGINT signals.
-    SigChld = 1,      // Corresponds to SIGCHLD signal.
-    InternalExit = 2, // Corresponds to an internal process exit.
+    SigHupIntTerm = 0, // Corresponds to both SIGHUP and SIGINT signals.
+    SigChld = 1,       // Corresponds to SIGCHLD signal.
+    InternalExit = 2,  // Corresponds to an internal process exit.
 }
 
 // XXX: Is it correct to use the default or should the default be invalid_generation?
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord)]
 pub struct GenerationsList {
-    pub sighupint: Cell<u64>,
+    pub sighupintterm: Cell<u64>,
     pub sigchld: Cell<u64>,
     pub internal_exit: Cell<u64>,
 }
@@ -56,7 +56,7 @@ pub struct GenerationsList {
 impl GenerationsList {
     /// Update `self` gen counts to match those of `other`.
     pub fn update(&self, other: &Self) {
-        self.sighupint.set(other.sighupint.get());
+        self.sighupintterm.set(other.sighupintterm.get());
         self.sigchld.set(other.sigchld.get());
         self.internal_exit.set(other.internal_exit.get());
     }
@@ -70,7 +70,7 @@ impl FloggableDebug for Topic {}
 pub const INVALID_GENERATION: Generation = u64::MAX;
 
 pub fn all_topics() -> [Topic; 3] {
-    [Topic::SigHupInt, Topic::SigChld, Topic::InternalExit]
+    [Topic::SigHupIntTerm, Topic::SigChld, Topic::InternalExit]
 }
 
 impl GenerationsList {
@@ -81,7 +81,7 @@ impl GenerationsList {
     /// Generation list containing invalid generations only.
     pub fn invalid() -> GenerationsList {
         GenerationsList {
-            sighupint: INVALID_GENERATION.into(),
+            sighupintterm: INVALID_GENERATION.into(),
             sigchld: INVALID_GENERATION.into(),
             internal_exit: INVALID_GENERATION.into(),
         }
@@ -106,7 +106,7 @@ impl GenerationsList {
     /// Sets the generation for `topic` to `value`.
     pub fn set(&self, topic: Topic, value: Generation) {
         match topic {
-            Topic::SigHupInt => self.sighupint.set(value),
+            Topic::SigHupIntTerm => self.sighupintterm.set(value),
             Topic::SigChld => self.sigchld.set(value),
             Topic::InternalExit => self.internal_exit.set(value),
         }
@@ -115,7 +115,7 @@ impl GenerationsList {
     /// Return the value for a topic.
     pub fn get(&self, topic: Topic) -> Generation {
         match topic {
-            Topic::SigHupInt => self.sighupint.get(),
+            Topic::SigHupIntTerm => self.sighupintterm.get(),
             Topic::SigChld => self.sigchld.get(),
             Topic::InternalExit => self.internal_exit.get(),
         }
@@ -124,7 +124,7 @@ impl GenerationsList {
     /// Return ourselves as an array.
     pub fn as_array(&self) -> [Generation; 3] {
         [
-            self.sighupint.get(),
+            self.sighupintterm.get(),
             self.sigchld.get(),
             self.internal_exit.get(),
         ]
@@ -648,7 +648,7 @@ mod tests {
         let monitor = Arc::new(TopicMonitor::default());
         const THREAD_COUNT: usize = 64;
         let t1 = Topic::SigChld;
-        let t2 = Topic::SigHupInt;
+        let t2 = Topic::SigHupIntTerm;
         let mut gens_list = vec![GenerationsList::invalid(); THREAD_COUNT];
         let post_count = Arc::new(AtomicU64::new(0));
         for r#gen in &mut gens_list {

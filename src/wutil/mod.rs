@@ -392,7 +392,7 @@ pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Op
         true
     };
 
-    let mut sigcheck = SigChecker::new_sighupint();
+    let mut sigcheck = SigChecker::new_sighupintterm();
     let mut success = str2bytes_callback(input, |buff: &[u8]| {
         if buff.len() + accumlen > accum_capacity {
             // We have to flush.

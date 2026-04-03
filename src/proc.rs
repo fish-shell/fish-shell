@@ -1214,12 +1214,12 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
             if proc.has_pid() {
                 // Reaps with a pid.
                 reapgens.set_min_from(Topic::SigChld, &proc.gens);
-                reapgens.set_min_from(Topic::SigHupInt, &proc.gens);
+                reapgens.set_min_from(Topic::SigHupIntTerm, &proc.gens);
             }
             if proc.internal_proc.borrow().is_some() {
                 // Reaps with an internal process.
                 reapgens.set_min_from(Topic::InternalExit, &proc.gens);
-                reapgens.set_min_from(Topic::SigHupInt, &proc.gens);
+                reapgens.set_min_from(Topic::SigHupIntTerm, &proc.gens);
             }
         }
     }
@@ -1242,7 +1242,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
             }
 
             // Always update the signal hup/int gen.
-            proc.gens.sighupint.set(reapgens.sighupint.get());
+            proc.gens.sighupintterm.set(reapgens.sighupintterm.get());
 
             // Nothing to do if we did not get a new sigchld.
             if proc.gens.sigchld == reapgens.sigchld {
@@ -1311,7 +1311,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
             }
 
             // Always update the signal hup/int gen.
-            proc.gens.sighupint.set(reapgens.sighupint.get());
+            proc.gens.sighupintterm.set(reapgens.sighupintterm.get());
 
             // Nothing to do if we did not get a new internal exit.
             if proc.gens.internal_exit == reapgens.internal_exit {

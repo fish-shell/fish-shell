@@ -1,6 +1,6 @@
 //! Flags to enable upcoming features
 
-use crate::prelude::*;
+use fish_widestring::{L, WExt as _, wstr};
 #[cfg(test)]
 use std::cell::RefCell;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -266,7 +266,7 @@ pub fn with_overridden_feature(flag: FeatureFlag, value: bool, test_fn: impl FnO
 #[cfg(test)]
 mod tests {
     use super::{FeatureFlag, Features, METADATA, feature_test, with_overridden_feature};
-    use crate::prelude::*;
+    use fish_widestring::L;
 
     #[test]
     fn test_feature_flags() {

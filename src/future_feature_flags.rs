@@ -163,7 +163,7 @@ thread_local!(
 static FEATURES: Features = Features::new();
 
 /// Perform a feature test on the global set of features.
-pub fn test(flag: FeatureFlag) -> bool {
+pub fn feature_test(flag: FeatureFlag) -> bool {
     #[cfg(test)]
     if let Some(value) = LOCAL_OVERRIDE_STACK.with(|stack| {
         for &(overridden_feature, value) in stack.borrow().iter().rev() {
@@ -177,8 +177,6 @@ pub fn test(flag: FeatureFlag) -> bool {
     }
     FEATURES.test(flag)
 }
-
-pub use test as feature_test;
 
 /// Parses a comma-separated feature-flag string, updating ourselves with the values.
 /// Feature names or group names may be prefixed with "no-" to disable them.
@@ -267,7 +265,7 @@ pub fn with_overridden_feature(flag: FeatureFlag, value: bool, test_fn: impl FnO
 
 #[cfg(test)]
 mod tests {
-    use super::{FeatureFlag, Features, METADATA, test, with_overridden_feature};
+    use super::{FeatureFlag, Features, METADATA, feature_test, with_overridden_feature};
     use crate::prelude::*;
 
     #[test]
@@ -296,16 +294,16 @@ mod tests {
     #[test]
     fn test_overridden_feature() {
         with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, true, || {
-            assert!(test(FeatureFlag::QuestionMarkNoGlob));
+            assert!(feature_test(FeatureFlag::QuestionMarkNoGlob));
         });
 
         with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {
-            assert!(!test(FeatureFlag::QuestionMarkNoGlob));
+            assert!(!feature_test(FeatureFlag::QuestionMarkNoGlob));
         });
 
         with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {
             with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, true, || {
-                assert!(test(FeatureFlag::QuestionMarkNoGlob));
+                assert!(feature_test(FeatureFlag::QuestionMarkNoGlob));
             });
         });
     }

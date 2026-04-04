@@ -5,7 +5,7 @@ use crate::common::{
 use crate::env::{EnvStack, Environment as _};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::flog::{FloggableDebug, FloggableDisplay, flog};
-use crate::future_feature_flags::{FeatureFlag, test as feature_test};
+use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::key::{
     self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
     canonicalize_keyed_control_char, char_to_symbol, function_key, shift,

@@ -239,7 +239,7 @@ fn redirect_tty_after_sighup() {
 }
 
 fn querying_allowed(vars: &dyn Environment) -> bool {
-    future_feature_flags::test(FeatureFlag::QueryTerm)
+    future_feature_flags::feature_test(FeatureFlag::QueryTerm)
         && !is_dumb()
         && {
             // TODO(term-workaround)

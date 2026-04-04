@@ -1,9 +1,28 @@
 fish ?.?.? (released ???)
 =========================
 
+Notable improvements and fixes
+------------------------------
+
+Deprecations and removed features
+---------------------------------
+
+Interactive improvements
+------------------------
+
+Improved terminal support
+-------------------------
+
 Other improvements
 ------------------
 - ``fish_update_completions`` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
+
+For distributors and developers
+-------------------------------
+- When the default global config directory (``$PREFIX/etc/fish``) exists but has been overridden with ``-DCMAKE_INSTALL_SYSCONFDIR``, fish will now respect that override (:issue:`10748`).
+
+Regression fixes:
+-----------------
 
 fish 4.6.0 (released March 28, 2026)
 ====================================

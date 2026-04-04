@@ -181,7 +181,7 @@ fn osc_0_or_1_terminal_title(out: &mut Outputter, is_1: bool, title: &[WString])
 }
 
 fn osc_133_prompt_start(out: &mut Outputter) -> bool {
-    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
+    if !future_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
     static TEST_BALLOON: OnceLock<()> = OnceLock::new();
@@ -194,7 +194,7 @@ fn osc_133_prompt_start(out: &mut Outputter) -> bool {
 }
 
 fn osc_133_prompt_end(out: &mut Outputter) -> bool {
-    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
+    if !future_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
     write_to_output!(out, "\x1b]133;B\x07");
@@ -202,7 +202,7 @@ fn osc_133_prompt_end(out: &mut Outputter) -> bool {
 }
 
 fn osc_133_command_start(out: &mut Outputter, command: &wstr) -> bool {
-    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
+    if !future_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
     write_to_output!(
@@ -214,7 +214,7 @@ fn osc_133_command_start(out: &mut Outputter, command: &wstr) -> bool {
 }
 
 fn osc_133_command_finished(out: &mut Outputter, exit_status: libc::c_int) -> bool {
-    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
+    if !future_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
     write_to_output!(out, "\x1b]133;D;{}\x07", exit_status);

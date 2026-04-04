@@ -3,7 +3,7 @@ use libc::VERASE;
 use crate::{
     common::{EscapeFlags, EscapeStringStyle, escape_string},
     flog::FloggableDebug,
-    future_feature_flags::{FeatureFlag, test as feature_test},
+    future_feature_flags::{FeatureFlag, feature_test},
     prelude::*,
     reader::safe_get_terminal_mode_on_startup,
     wutil::fish_wcstoul,

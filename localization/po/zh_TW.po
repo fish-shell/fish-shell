@@ -10779,6 +10779,12 @@ msgstr ""
 msgid "Check that working files are unmodified."
 msgstr ""
 
+msgid "Check the GPG signature of commits"
+msgstr ""
+
+msgid "Check the GPG signature of tags"
+msgstr ""
+
 msgid "Check the branch related to the current directory"
 msgstr ""
 
@@ -28242,6 +28248,9 @@ msgstr ""
 msgid "Format to serialize in"
 msgstr ""
 
+msgid "Format to use for the output"
+msgstr ""
+
 msgid "Format to use when exporting"
 msgstr ""
 
@@ -44427,6 +44436,9 @@ msgstr ""
 msgid "Print commands before executing them"
 msgstr ""
 
+msgid "Print commit contents"
+msgstr ""
+
 msgid "Print compiler information"
 msgstr ""
 
@@ -45537,6 +45549,9 @@ msgstr ""
 msgid "Print raw entry names"
 msgstr ""
 
+msgid "Print raw gpg status output"
+msgstr ""
+
 msgid "Print raw stats"
 msgstr ""
 
@@ -45691,6 +45706,9 @@ msgid "Print synopsis and options"
 msgstr ""
 
 msgid "Print system info for debugging"
+msgstr ""
+
+msgid "Print tag contents"
 msgstr ""
 
 msgid "Print tally"

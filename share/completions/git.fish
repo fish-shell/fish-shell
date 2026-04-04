@@ -2969,10 +2969,23 @@ complete -f -c git -n '__fish_git_using_command update-ref' -l create-reflog -d 
 complete -f -c git -n '__fish_git_using_command update-ref' -l stdin -d 'Read instructions from stdin'
 complete -f -c git -n '__fish_git_using_command update-ref' -s z -d 'NUL-terminated format for stdin'
 
+### verify-commit
+complete -f -c git -n __fish_git_needs_command -a verify-commit -d 'Check the GPG signature of commits'
+complete -f -c git -n '__fish_git_using_command verify-commit' -ka '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command verify-commit' -s v -l verbose -d 'Print commit contents'
+complete -f -c git -n '__fish_git_using_command verify-commit' -l raw -d 'Print raw gpg status output'
+
 ### verify-pack
 complete -f -c git -n __fish_git_needs_command -a verify-pack -d 'Validate packed Git archive files'
 complete -f -c git -n '__fish_git_using_command verify-pack' -s v -l verbose -d 'Show objects contained in pack'
 complete -f -c git -n '__fish_git_using_command verify-pack' -s s -l stat-only -d 'Only show histogram of delta chain length'
+
+### verify-tag
+complete -f -c git -n __fish_git_needs_command -a verify-tag -d 'Check the GPG signature of tags'
+complete -f -c git -n '__fish_git_using_command verify-tag' -ka '(__fish_git_tags)'
+complete -f -c git -n '__fish_git_using_command verify-tag' -s v -l verbose -d 'Print tag contents'
+complete -f -c git -n '__fish_git_using_command verify-tag' -l raw -d 'Print raw gpg status output'
+complete -x -c git -n '__fish_git_using_command verify-tag' -l format -d 'Format to use for the output'
 
 ### write-tree
 complete -f -c git -n __fish_git_needs_command -a write-tree -d 'Create a tree object from the current index'

@@ -1,15 +1,13 @@
 //! Flags to enable upcoming features
 
 use crate::prelude::*;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
-
 #[cfg(test)]
 use std::cell::RefCell;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// The list of flags.
 #[repr(u8)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum FeatureFlag {
     /// Whether ^ is supported for stderr redirection.
     StderrNoCaret,
@@ -157,7 +155,8 @@ pub const METADATA: &[FeatureMetadata] = &[
 
 thread_local!(
     #[cfg(test)]
-    static LOCAL_FEATURES: RefCell<Option<Features>> = const { RefCell::new(None) };
+    static LOCAL_OVERRIDE_STACK: RefCell<Vec<(FeatureFlag, bool)>> =
+        const { RefCell::new(Vec::new()) };
 );
 
 /// The singleton shared feature set.
@@ -166,42 +165,27 @@ static FEATURES: Features = Features::new();
 /// Perform a feature test on the global set of features.
 pub fn test(flag: FeatureFlag) -> bool {
     #[cfg(test)]
-    {
-        LOCAL_FEATURES.with(|fc| fc.borrow().as_ref().unwrap_or(&FEATURES).test(flag))
+    if let Some(value) = LOCAL_OVERRIDE_STACK.with(|stack| {
+        for &(overridden_feature, value) in stack.borrow().iter().rev() {
+            if flag == overridden_feature {
+                return Some(value);
+            }
+        }
+        None
+    }) {
+        return value;
     }
-    #[cfg(not(test))]
-    {
-        FEATURES.test(flag)
-    }
+    FEATURES.test(flag)
 }
 
 pub use test as feature_test;
-
-/// Set a flag.
-#[cfg(test)]
-pub fn set(flag: FeatureFlag, value: bool) {
-    LOCAL_FEATURES.with(|fc| fc.borrow().as_ref().unwrap_or(&FEATURES).set(flag, value));
-}
 
 /// Parses a comma-separated feature-flag string, updating ourselves with the values.
 /// Feature names or group names may be prefixed with "no-" to disable them.
 /// The special group name "all" may be used for those who like to live on the edge.
 /// Unknown features are silently ignored.
 pub fn set_from_string<'a>(str: impl Into<&'a wstr>) {
-    let wstr: &wstr = str.into();
-    #[cfg(test)]
-    {
-        LOCAL_FEATURES.with(|fc| {
-            fc.borrow()
-                .as_ref()
-                .unwrap_or(&FEATURES)
-                .set_from_string(wstr);
-        });
-    }
-    #[cfg(not(test))]
-    {
-        FEATURES.set_from_string(wstr);
-    }
+    FEATURES.set_from_string(str.into());
 }
 
 impl Features {
@@ -270,27 +254,20 @@ impl Features {
     }
 }
 
+/// Run code with a feature overridden.
+/// This should only be used in tests.
 #[cfg(test)]
-pub fn scoped_test(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
-    LOCAL_FEATURES.with(|fc| {
-        assert!(
-            fc.borrow().is_none(),
-            "scoped_test() does not support nesting"
-        );
-
-        let f = Features::new();
-        f.set(flag, value);
-        *fc.borrow_mut() = Some(f);
-
+pub fn with_overridden_feature(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
+    LOCAL_OVERRIDE_STACK.with(|stack| {
+        stack.borrow_mut().push((flag, value));
         test_fn();
-
-        *fc.borrow_mut() = None;
+        stack.borrow_mut().pop();
     });
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{FeatureFlag, Features, METADATA, scoped_test, set, test};
+    use super::{FeatureFlag, Features, METADATA, test, with_overridden_feature};
     use crate::prelude::*;
 
     #[test]
@@ -317,25 +294,19 @@ mod tests {
     }
 
     #[test]
-    fn test_scoped() {
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
+    fn test_overridden_feature() {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, true, || {
             assert!(test(FeatureFlag::QuestionMarkNoGlob));
         });
 
-        set(FeatureFlag::QuestionMarkNoGlob, true);
-
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {
             assert!(!test(FeatureFlag::QuestionMarkNoGlob));
         });
 
-        set(FeatureFlag::QuestionMarkNoGlob, false);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_nested_scopes_not_supported() {
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
-            scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {});
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {
+            with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, true, || {
+                assert!(test(FeatureFlag::QuestionMarkNoGlob));
+            });
         });
     }
 }

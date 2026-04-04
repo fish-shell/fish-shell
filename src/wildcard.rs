@@ -1231,7 +1231,7 @@ pub fn wildcard_has(s: impl AsRef<wstr>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::future_feature_flags::scoped_test;
+    use crate::future_feature_flags::with_overridden_feature;
 
     #[test]
     fn test_wildcards() {
@@ -1244,12 +1244,12 @@ mod tests {
         let wc = unescape_string(wc, UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)).unwrap();
         assert!(!wildcard_has(&wc) && wildcard_has_internal(&wc));
 
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {
             assert!(wildcard_has(L!("?")));
             assert!(!wildcard_has(L!("\\?")));
         });
 
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, true, || {
             assert!(!wildcard_has(L!("?")));
             assert!(!wildcard_has(L!("\\?")));
         });

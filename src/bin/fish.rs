@@ -38,7 +38,7 @@ use fish::{
     eprintf,
     event::{self, Event},
     flog::{self, activate_flog_categories_by_pattern, flog, flogf, set_flog_file_fd},
-    fprintf, function, future_feature_flags as features,
+    fprintf, function,
     history::{self, start_private_mode},
     io::IoChain,
     locale::set_libc_locales,
@@ -482,10 +482,10 @@ fn throwing_main() -> i32 {
     // command line takes precedence).
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            features::set_from_string(s.as_utfstr());
+            fish_feature_flags::set_from_string(s.as_utfstr());
         }
     }
-    features::set_from_string(opts.features.as_utfstr());
+    fish_feature_flags::set_from_string(opts.features.as_utfstr());
     proc_init();
     reader_init(true);
 

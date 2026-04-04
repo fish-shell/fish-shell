@@ -15,7 +15,6 @@ use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{PROGRAM_NAME, get_program_name, osstr2wcstring, shell_modes},
     env::{EnvStack, Environment as _, env_init},
-    future_feature_flags,
     input_common::{
         CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer as _, KeyEvent,
         QueryResultEvent, match_key_event_to_key,
@@ -295,7 +294,7 @@ fn throwing_main() -> i32 {
     reader_init(false);
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            future_feature_flags::set_from_string(s.as_utfstr());
+            fish_feature_flags::set_from_string(s.as_utfstr());
         }
     }
 

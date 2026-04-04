@@ -1,9 +1,10 @@
 //! Flags to enable upcoming features
 
 use fish_widestring::{L, WExt as _, wstr};
-#[cfg(test)]
-use std::cell::RefCell;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::{
+    cell::RefCell,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 /// The list of flags.
 #[repr(u8)]
@@ -154,7 +155,6 @@ pub const METADATA: &[FeatureMetadata] = &[
 ];
 
 thread_local!(
-    #[cfg(test)]
     static LOCAL_OVERRIDE_STACK: RefCell<Vec<(FeatureFlag, bool)>> =
         const { RefCell::new(Vec::new()) };
 );
@@ -164,7 +164,6 @@ static FEATURES: Features = Features::new();
 
 /// Perform a feature test on the global set of features.
 pub fn feature_test(flag: FeatureFlag) -> bool {
-    #[cfg(test)]
     if let Some(value) = LOCAL_OVERRIDE_STACK.with(|stack| {
         for &(overridden_feature, value) in stack.borrow().iter().rev() {
             if flag == overridden_feature {
@@ -254,7 +253,6 @@ impl Features {
 
 /// Run code with a feature overridden.
 /// This should only be used in tests.
-#[cfg(test)]
 pub fn with_overridden_feature(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
     LOCAL_OVERRIDE_STACK.with(|stack| {
         stack.borrow_mut().push((flag, value));

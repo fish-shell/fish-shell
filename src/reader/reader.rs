@@ -46,7 +46,6 @@ use crate::expand::{ExpandFlags, ExpandResultCode, expand_string, expand_tilde};
 use crate::fd_readable_set::poll_fd_readable;
 use crate::fds::{make_fd_blocking, wopen_cloexec};
 use crate::flog::{flog, flogf};
-use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{
     HighlightRole, HighlightSpec, autosuggest_validate_from_history, highlight_shell,
@@ -121,6 +120,7 @@ use errno::{Errno, errno};
 use fish_common::{UTF8_BOM_WCHAR, help_section};
 use fish_fallback::fish_wcwidth;
 use fish_fallback::lowercase;
+use fish_feature_flags::FeatureFlag;
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{
     CaseSensitivity, IsPrefix, StringFuzzyMatch, count_preceding_backslashes, is_prefix,
@@ -239,7 +239,7 @@ fn redirect_tty_after_sighup() {
 }
 
 fn querying_allowed(vars: &dyn Environment) -> bool {
-    future_feature_flags::feature_test(FeatureFlag::QueryTerm)
+    fish_feature_flags::feature_test(FeatureFlag::QueryTerm)
         && !is_dumb()
         && {
             // TODO(term-workaround)

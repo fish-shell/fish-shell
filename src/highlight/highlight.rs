@@ -12,7 +12,6 @@ use crate::expand::{
     ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR, expand_one, expand_to_command_and_args,
 };
 use crate::function;
-use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::highlight::file_tester::FileTester;
 use crate::history::all_paths_are_valid;
 use crate::operation_context::OperationContext;
@@ -31,6 +30,7 @@ use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use fish_color::Color;
 use fish_common::{ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
+use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::string_prefixes_string;
 use fish_widestring::{L, WExt as _, WString, wstr};
 use std::collections::HashMap;
@@ -1314,12 +1314,12 @@ mod tests {
     use super::{HighlightColorResolver, HighlightRole, HighlightSpec, highlight_shell};
     use crate::common::ScopeGuard;
     use crate::env::{EnvMode, EnvSetMode, EnvVar, EnvVarFlags, Environment as _};
-    use crate::future_feature_flags::{FeatureFlag, with_overridden_feature};
     use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
     use crate::prelude::*;
     use crate::tests::prelude::*;
     use crate::text_face::{ResettableStyle, UnderlineStyle};
+    use fish_feature_flags::{FeatureFlag, with_overridden_feature};
     use libc::PATH_MAX;
 
     // Helper to return a string whose length greatly exceeds PATH_MAX.

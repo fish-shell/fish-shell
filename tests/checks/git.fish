@@ -37,7 +37,11 @@ git config --local alias.re 'restore --staged'
 
 set -p PATH $PWD
 echo "echo foo" >git-frobnicate
-chmod +x git-frobnicate
+if cygwin_noacl ./
+    echo "#!/bin/sh" >git-frobnicate
+else
+    chmod +x git-frobnicate
+end
 
 complete -c git-frobnicate -xa 'foo bar baz'
 complete -c git-frobnicate -l onto -xa 'onto1 onto2'

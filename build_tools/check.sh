@@ -8,10 +8,23 @@ if [ "$FISH_CHECK_LINT" = false ]; then
     lint=false
 fi
 
+is_cygwin=false
+if  uname | grep -qE "^(MSYS|CYGWIN)"; then
+    is_cygwin=true
+fi
+cygwin_var=CYGWIN
+if  uname | grep -qE "^MSYS"; then
+    cygwin_var=MSYS
+fi
+
 check_dependency_versions=false
 if [ "${FISH_CHECK_DEPENDENCY_VERSIONS:-false}" != false ]; then
     check_dependency_versions=true
 fi
+
+green="\e[0;32m"
+yellow='\e[1;33m'
+reset='\e[m'
 
 if $check_dependency_versions; then
     command -v curl
@@ -83,12 +96,36 @@ if $lint; then
         cargo clippy --workspace --all-targets $features
     done
 fi
-cargo test --no-default-features --workspace --all-targets
+
+# When running `cargo test`, some binaries (e.g. `fish_gettext_extraction`)
+# are dynamically linked against Rust's `std-xxx.dll` instead of being
+# statically link as they usually are.
+# On Cygwin, `PATH`is not properly updated to point to the `std-xxx.dll`
+# location, so we have to do it manually.
+# See:
+# - https://github.com/rust-lang/rust/issues/149050
+# - https://github.com/msys2/MSYS2-packages/issues/5784
+test_path="$PATH"
+if $is_cygwin; then
+    test_path="$PATH:$(rustc --print target-libdir)"
+fi
+PATH="$test_path" cargo test --no-default-features --workspace --all-targets
 cargo test --doc --workspace
+
 if $lint; then
     cargo doc --workspace --no-deps
 fi
-FISH_GETTEXT_EXTRACTION_DIR=$gettext_template_dir "$workspace_root/tests/test_driver.py" "$build_dir"
+
+test_cmd="FISH_GETTEXT_EXTRACTION_DIR=$gettext_template_dir \"$workspace_root/tests/test_driver.py\" \"$build_dir\""
+if $is_cygwin; then
+    echo -e "=== Running ${green}integration tests ${yellow}with${green} symlinks${reset}"
+    eval "$cygwin_var=winsymlinks $test_cmd"
+    echo -e "=== Running ${green}integration tests ${yellow}without${green} symlinks${reset}"
+    eval "$cygwin_var= $test_cmd"
+else
+    echo -e "=== Running ${green}integration tests${reset}"
+    eval $test_cmd
+fi
 
 exit
 }

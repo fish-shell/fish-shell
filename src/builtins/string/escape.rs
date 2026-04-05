@@ -14,14 +14,14 @@ impl StringSubCommand<'_> for Escape {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("n");
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'n' => self.no_quoted = true,
             NON_OPTION_CHAR => {
                 self.style = arg
                     .unwrap()
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid escape style '%s'", name, arg))?;
+                    .map_err(|_| err_fmt!("Invalid escape style '%s'", arg.unwrap()))?;
             }
             _ => return Err(StringError::UnknownOption),
         }

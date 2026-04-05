@@ -5,13 +5,13 @@ use crate::complete::complete_add_wrapper;
 use crate::env::environment::Environment as _;
 use crate::env::is_read_only;
 use crate::event::{self, EventDescription, EventHandler};
-use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::parse_execution::varname_error;
 use crate::parse_tree::NodeRef;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::proc::Pid;
 use crate::signal::Signal;
+use crate::{err_fmt, err_str, function};
 use nix::unistd::getpid;
 use std::sync::Arc;
 
@@ -86,15 +86,13 @@ fn parse_cmd_opts(
     let mut validate_variable_name =
         |streams: &mut IoStreams, varname: &wstr, read_only_ok: bool| {
             if !valid_var_name(varname) {
-                streams.err.append(&varname_error(cmd, varname));
+                varname_error(cmd, varname).finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             if !read_only_ok && is_read_only(varname) {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: variable '%s' is read-only",
-                    cmd,
-                    varname
-                ));
+                err_fmt!("variable '%s' is read-only", varname)
+                    .cmd(cmd)
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             Ok(())
@@ -122,11 +120,9 @@ fn parse_cmd_opts(
                 if handling_named_arguments {
                     add_named_argument(&mut validate_variable_name, streams, opts, woptarg)?;
                 } else {
-                    streams.err.append(&wgettext_fmt!(
-                        "%s: %s: unexpected positional argument",
-                        cmd,
-                        woptarg
-                    ));
+                    err_fmt!("%s: unexpected positional argument", woptarg)
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -135,11 +131,9 @@ fn parse_cmd_opts(
             }
             's' => {
                 let Some(signal) = Signal::parse(w.woptarg.unwrap()) else {
-                    streams.err.append(&wgettext_fmt!(
-                        "%s: Unknown signal '%s'",
-                        cmd,
-                        w.woptarg.unwrap()
-                    ));
+                    err_fmt!("Unknown signal '%s'", w.woptarg.unwrap())
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 };
                 opts.events.push(EventDescription::Signal { signal });
@@ -163,10 +157,9 @@ fn parse_cmd_opts(
                         0
                     };
                     if caller_id == 0 {
-                        streams.err.append(&wgettext_fmt!(
-                            "%s: calling job for event handler not found",
-                            cmd
-                        ));
+                        err_str!("calling job for event handler not found")
+                            .cmd(cmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     e = EventDescription::CallerExit { caller_id };
@@ -214,7 +207,14 @@ fn parse_cmd_opts(
                 opts.print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -245,11 +245,9 @@ fn parse_cmd_opts(
                 add_named_argument(&mut validate_variable_name, streams, opts, arg)?;
             }
         } else {
-            streams.err.append(&wgettext_fmt!(
-                "%s: %s: unexpected positional argument",
-                cmd,
-                argv[optind],
-            ));
+            err_fmt!("%s: unexpected positional argument", argv[optind],)
+                .cmd(cmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     }
@@ -271,19 +269,18 @@ fn validate_function_name(
     }
     *function_name = argv[1].to_owned();
     if !valid_func_name(function_name) {
-        streams.err.append(&wgettext_fmt!(
-            "%s: %s: invalid function name",
-            cmd,
-            function_name,
-        ));
+        err_fmt!("%s: invalid function name", function_name,)
+            .cmd(cmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
     if parser_keywords_is_reserved(function_name) {
-        streams.err.append(&wgettext_fmt!(
-            "%s: %s: cannot use reserved keyword as function name",
-            cmd,
+        err_fmt!(
+            "%s: cannot use reserved keyword as function name",
             function_name
-        ));
+        )
+        .cmd(cmd)
+        .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
     Ok(SUCCESS)

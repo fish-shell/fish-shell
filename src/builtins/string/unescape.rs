@@ -16,14 +16,14 @@ impl StringSubCommand<'_> for Unescape {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("n");
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'n' => self.no_quoted = true,
             NON_OPTION_CHAR => {
+                let arg = arg.unwrap();
                 self.style = arg
-                    .unwrap()
                     .try_into()
-                    .map_err(|_| invalid_args!("%s: Invalid style value '%s'", name, arg))?;
+                    .map_err(|_| err_fmt!("Invalid style value '%s'", arg))?;
             }
             _ => return Err(StringError::UnknownOption),
         }

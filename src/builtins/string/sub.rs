@@ -19,27 +19,30 @@ impl StringSubCommand<'_> for Sub {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("l:qs:e:");
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'l' => {
+                let arg = arg.unwrap();
                 self.length = Some(
-                    fish_wcstol(arg.unwrap())?
+                    fish_wcstol(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid length value '%s'", name, arg))?,
+                        .map_err(|_| err_fmt!("Invalid length value '%s'", arg))?,
                 );
             }
             's' => {
+                let arg = arg.unwrap();
                 self.start = Some(
-                    fish_wcstol(arg.unwrap())?
+                    fish_wcstol(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid start value '%s'", name, arg))?,
+                        .map_err(|_| err_fmt!("Invalid start value '%s'", arg))?,
                 );
             }
             'e' => {
+                let arg = arg.unwrap();
                 self.end = Some(
-                    fish_wcstol(arg.unwrap())?
+                    fish_wcstol(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!("%s: Invalid end value '%s'", name, arg))?,
+                        .map_err(|_| err_fmt!("Invalid end value '%s'", arg))?,
                 );
             }
             'q' => self.quiet = true,
@@ -55,13 +58,15 @@ impl StringSubCommand<'_> for Sub {
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         if self.length.is_some() && self.end.is_some() {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::COMBO2,
                 wgettext!("--end and --length are mutually exclusive")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 

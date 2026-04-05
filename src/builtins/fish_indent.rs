@@ -20,7 +20,6 @@ use crate::env::EnvStack;
 use crate::env::env_init;
 use crate::env::environment::Environment as _;
 use crate::expand::INTERNAL_SEPARATOR;
-use crate::future_feature_flags;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
 use crate::operation_context::OperationContext;
@@ -945,7 +944,7 @@ fn throwing_main() -> i32 {
     // Only set these here so you can't set them via the builtin.
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            future_feature_flags::set_from_string(s.as_utfstr());
+            fish_feature_flags::set_from_string(s.as_utfstr());
         }
     }
 

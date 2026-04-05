@@ -414,9 +414,9 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
 #[cfg(test)]
 mod tests {
     use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
-    use crate::future_feature_flags::{FeatureFlag, scoped_test};
     use crate::tests::prelude::*;
     use crate::validate;
+    use fish_feature_flags::{FeatureFlag, with_overridden_feature};
 
     #[test]
     #[serial]
@@ -487,7 +487,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn test_qmark_noglob_true() {
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, true, || {
             validate!(["string", "match", "a*b?c", "axxb?c"], STATUS_CMD_OK, "axxb?c\n");
             validate!(["string", "match", "*?", "a"], STATUS_CMD_ERROR, "");
             validate!(["string", "match", "*?", "ab"], STATUS_CMD_ERROR, "");
@@ -515,7 +515,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn test_qmark_glob() {
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {
             validate!(["string", "match", "a*b?c", "axxbyc"], STATUS_CMD_OK, "axxbyc\n");
             validate!(["string", "match", "*?", "a"], STATUS_CMD_OK, "a\n");
             validate!(["string", "match", "*?", "ab"], STATUS_CMD_OK, "ab\n");

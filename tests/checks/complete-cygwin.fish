@@ -5,7 +5,10 @@
 mkdir dir
 echo "#!/bin/sh" >dir/foo.exe
 echo "#!/bin/sh" >dir/foo.bar
-set PATH (pwd)/dir $PATH
+if ! cygwin_noacl ./
+    chmod u+x dir/foo*
+end
+set -p PATH (pwd)/dir
 
 # === Check that `complete` prefers to non-exe name, unless the user started
 # to type the extension
@@ -36,6 +39,9 @@ complete -C"./dir/foo."
 
 # === Check that if we have a non-exe and an exe file, they both show
 echo "#!/bin/sh" >dir/foo.bar.exe
+if ! cygwin_noacl ./
+    chmod u+x dir/foo.bar.exe
+end
 complete -C"./dir/foo.ba"
 # CHECK: ./dir/foo.bar{{\t}}command
 # CHECK: ./dir/foo.bar.exe{{\t}}command

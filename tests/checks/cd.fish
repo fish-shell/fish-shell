@@ -346,7 +346,9 @@ complete -C'cd .'
 # Note that there is no kern.osproductversion under older OS X releases!
 #
 # NetBSD 10 does not support it.
-if test (uname) = NetBSD || { test (uname) = Darwin && test (sysctl kern.osproductversion 2>/dev/null | string match -r \\d+; or echo 10) -lt 12 }
+# Cygwin/MSYS does not support it when using ACL. And without ACL, a directory
+# cannot be made unreadable, making the test pointless. So either way, skip it
+if test (uname) = NetBSD || __fish_is_cygwin || { test (uname) = Darwin && test (sysctl kern.osproductversion 2>/dev/null | string match -r \\d+; or echo 10) -lt 12 }
     # Not supported. Satisfy the CHECKs below.
     echo fake/a
     echo fake/a/b

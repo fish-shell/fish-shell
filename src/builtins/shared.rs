@@ -649,7 +649,13 @@ pub fn builtin_print_help(parser: &Parser, streams: &mut IoStreams, cmd: &wstr) 
     }
     let name_esc = escape(cmd);
     let cmd = sprintf!("__fish_print_help %s ", &name_esc);
-    let res = parser.eval(&cmd, streams.io_chain);
+    let res = parser.eval_with(
+        &cmd,
+        streams.io_chain,
+        streams.job_group.as_ref(),
+        BlockType::top,
+        false,
+    );
     if res.status.normal_exited() && res.status.exit_code() == 2 {
         streams
             .err

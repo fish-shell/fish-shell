@@ -46,7 +46,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             'm' => {
                 let arg = arg.unwrap();
                 self.max = Some(
-                    fish_wcstol(arg)?
+                    Self::parse_arg_number(arg)?
                         .try_into()
                         .map_err(|_| err_fmt!(Error::INVALID_MAX_VALUE, arg))?,
                 );

@@ -52,7 +52,7 @@ impl StringSubCommand<'_> for Pad {
             'r' => self.pad_from = Direction::Right,
             'w' => {
                 let arg = arg.unwrap();
-                self.width = fish_wcstol(arg)?
+                self.width = Self::parse_arg_number(arg)?
                     .try_into()
                     .map_err(|_| err_fmt!("Invalid width value '%s'", arg))?;
             }

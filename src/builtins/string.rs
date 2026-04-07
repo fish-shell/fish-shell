@@ -1,4 +1,4 @@
-use crate::{builtins::error::Error, err_fmt, err_raw, err_str, screen::escape_code_length};
+use crate::{err_fmt, err_raw, err_str, screen::escape_code_length};
 use fish_wcstringutil::fish_wcwidth_visible;
 // Forward some imports to make subcmd implementations easier
 use super::prelude::*;
@@ -69,7 +69,7 @@ trait StringSubCommand<'args> {
                 c => {
                     let retval = self.parse_opt(c, w.woptarg);
                     if let Err(e) = retval {
-                        e.print_error(&args_read, streams, w.woptarg, w.wopt_index);
+                        e.print_error(&args_read, streams, w.wopt_index);
                         return Err(STATUS_INVALID_ARGS);
                     }
                 }
@@ -77,6 +77,11 @@ trait StringSubCommand<'args> {
         }
 
         Ok(w.wopt_index)
+    }
+
+    fn parse_arg_number<'a, 'b>(arg: &'a wstr) -> Result<i64, StringError<'b>> {
+        let n = fish_wcstol(arg).map_err(|_| err_fmt!(Error::NOT_NUMBER, arg))?;
+        Ok(n)
     }
 
     /// Take any positional arguments after options have been parsed.
@@ -143,7 +148,6 @@ trait StringSubCommand<'args> {
 /// This covers failing argument/option parsing
 enum StringError<'a> {
     InvalidArgs(Error<'a>),
-    NotANumber,
     UnknownOption,
 }
 
@@ -190,37 +194,20 @@ impl RegexError {
     }
 }
 
-impl<'a> From<crate::wutil::wcstoi::Error> for StringError<'a> {
-    fn from(_: crate::wutil::wcstoi::Error) -> Self {
-        StringError::NotANumber
-    }
-}
-
-impl<'a> From<crate::builtins::error::Error<'a>> for StringError<'a> {
-    fn from(error: crate::builtins::error::Error<'a>) -> Self {
+impl<'a> From<error::Error<'a>> for StringError<'a> {
+    fn from(error: error::Error<'a>) -> Self {
         StringError::InvalidArgs(error)
     }
 }
 
 impl<'a> StringError<'a> {
-    fn print_error(
-        self,
-        args: &[&wstr],
-        streams: &mut IoStreams,
-        optarg: Option<&wstr>,
-        optind: usize,
-    ) {
+    fn print_error(self, args: &[&wstr], streams: &mut IoStreams, optind: usize) {
         let cmd = L!("string");
         let subcmd = args[0];
         use StringError::*;
         match self {
             InvalidArgs(err) => {
                 err.subcmd(cmd, subcmd).finish(streams);
-            }
-            NotANumber => {
-                err_fmt!(Error::NOT_NUMBER, optarg.unwrap())
-                    .subcmd(cmd, subcmd)
-                    .finish(streams);
             }
             UnknownOption => {
                 // This would mean the subcmd's XXX_OPTIONS does not match

@@ -24,7 +24,7 @@ impl StringSubCommand<'_> for Sub {
             'l' => {
                 let arg = arg.unwrap();
                 self.length = Some(
-                    fish_wcstol(arg)?
+                    Self::parse_arg_number(arg)?
                         .try_into()
                         .map_err(|_| err_fmt!("Invalid length value '%s'", arg))?,
                 );
@@ -32,7 +32,7 @@ impl StringSubCommand<'_> for Sub {
             's' => {
                 let arg = arg.unwrap();
                 self.start = Some(
-                    fish_wcstol(arg)?
+                    Self::parse_arg_number(arg)?
                         .try_into()
                         .map_err(|_| err_fmt!("Invalid start value '%s'", arg))?,
                 );
@@ -40,7 +40,7 @@ impl StringSubCommand<'_> for Sub {
             'e' => {
                 let arg = arg.unwrap();
                 self.end = Some(
-                    fish_wcstol(arg)?
+                    Self::parse_arg_number(arg)?
                         .try_into()
                         .map_err(|_| err_fmt!("Invalid end value '%s'", arg))?,
                 );

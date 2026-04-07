@@ -118,7 +118,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
             'r' => self.split_from = Direction::Right,
             'm' => {
                 let arg = arg.unwrap();
-                self.max = fish_wcstol(arg)?
+                self.max = Self::parse_arg_number(arg)?
                     .try_into()
                     .map_err(|_| err_fmt!(Error::INVALID_MAX_VALUE, arg))?;
             }

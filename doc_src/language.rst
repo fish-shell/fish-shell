@@ -1587,6 +1587,10 @@ You can change the settings of fish by changing the values of certain variables.
 
    determines whether fish should try to repaint the commandline when the terminal resizes. In terminals that reflow text this should be disabled. Set it to 1 to enable, anything else to disable.
 
+.. envvar:: fish_omitted_newline_char
+
+   the character displayed when command output doesn't end with a newline. Default: ``⏎`` (most terminals), ``¶`` (WSL), ``^J`` (console mode). Console mode always uses ``^J`` and ignores this variable.
+
 .. envvar:: fish_key_bindings
 
    the name of the function that sets up the keyboard shortcuts for the :ref:`command-line editor <editor>`.

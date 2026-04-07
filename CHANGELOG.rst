@@ -9,6 +9,7 @@ Deprecations and removed features
 
 Interactive improvements
 ------------------------
+- The omitted newline indicator can now be customized via the ``fish_omitted_newline_char`` variable, allowing users to replace the default ``⏎`` character with any single Unicode character. (:issue:`12615`)
 
 Improved terminal support
 -------------------------

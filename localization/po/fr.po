@@ -1129,7 +1129,7 @@ msgstr "Pas de TTY pour shell interactif (tcgetpgrp a échoué)"
 
 #, c-format
 msgid "No abbreviation named %s with the specified command restrictions"
-msgstr ""
+msgstr "aucune abréviation nommée %s"
 
 #, c-format
 msgid "No binding found for key '%s'"

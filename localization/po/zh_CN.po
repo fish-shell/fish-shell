@@ -86,7 +86,7 @@ msgstr "%s %s：%s"
 
 #, c-format
 msgid "%s %s: options cannot be used together"
-msgstr ""
+msgstr "%s %s: 选项无法一起使用"
 
 #, c-format
 msgid "%s (line %d)"
@@ -110,7 +110,7 @@ msgstr "%s 等待 %d 秒后仍无法读取 Primary Device Attribute 查询的响
 
 #, c-format
 msgid "%s failed: %s"
-msgstr ""
+msgstr "%s 失败：%s"
 
 #, c-format
 msgid "%s is %s"
@@ -126,15 +126,15 @@ msgstr "%s 是一个函数"
 
 #, c-format
 msgid "%s must be a positive integer"
-msgstr ""
+msgstr "%s 必须是正整数"
 
 #, c-format
 msgid "%s option requires %s"
-msgstr ""
+msgstr "%s 选项需要 %s"
 
 #, c-format
 msgid "%s requires a non-empty string"
-msgstr ""
+msgstr "%s 需要一个非空字符串"
 
 #, c-format
 msgid "%s variable"
@@ -170,11 +170,11 @@ msgstr ""
 
 #, c-format
 msgid "%s: cannot use reserved keyword as function name"
-msgstr ""
+msgstr "%s: 无法将保留关键字作为函数名"
 
 #, c-format
 msgid "%s: contains a syntax error"
-msgstr ""
+msgstr "%s: 包含语法错误"
 
 #, c-format
 msgid "%s: expected %d arguments; got %d"
@@ -190,7 +190,7 @@ msgstr "%s: 函数名称是必须的"
 
 #, c-format
 msgid "%s: invalid base value"
-msgstr ""
+msgstr "%s: 无效的进制值"
 
 #, c-format
 msgid "%s: invalid conversion specification"
@@ -198,19 +198,19 @@ msgstr "%s: 无效的转换规范"
 
 #, c-format
 msgid "%s: invalid function name"
-msgstr ""
+msgstr "%s: 无效的函数名"
 
 #, c-format
 msgid "%s: invalid integer"
-msgstr ""
+msgstr "%s: 无效整数"
 
 #, c-format
 msgid "%s: invalid mode"
-msgstr ""
+msgstr "%s: 无效舍入模式"
 
 #, c-format
 msgid "%s: invalid mode name. See `help %s`"
-msgstr ""
+msgstr "%s: 无效模式名。参见 `help %s`"
 
 #, c-format
 msgid "%s: invalid option argument: %s"
@@ -218,15 +218,15 @@ msgstr ""
 
 #, c-format
 msgid "%s: invalid scale"
-msgstr ""
+msgstr "%s: 无效位数"
 
 #, c-format
 msgid "%s: invalid subcommand"
-msgstr ""
+msgstr "%s: 无效的子命令"
 
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
-msgstr ""
+msgstr "%s: 无效的变量名。参见 `help %s`"
 
 #, c-format
 msgid "%s: option cannot be used with a non-option argument"
@@ -234,19 +234,19 @@ msgstr ""
 
 #, c-format
 msgid "%s: option does not take an argument"
-msgstr ""
+msgstr "%s: 选项不接受参数"
 
 #, c-format
 msgid "%s: option requires an argument"
-msgstr ""
+msgstr "%s: 选项需要参数"
 
 #, c-format
 msgid "%s: unexpected positional argument"
-msgstr ""
+msgstr "%s: 意外的位置参数"
 
 #, c-format
 msgid "%s: unknown option"
-msgstr ""
+msgstr "%s: 未知选项"
 
 #, c-format
 msgid "%s: value not completely converted (can't convert '%s')"
@@ -254,23 +254,23 @@ msgstr "%s: 数值未完全转换 (无法转换 '%s')"
 
 #, c-format
 msgid "'%s' is a broken symbolic link to '%s'"
-msgstr ""
+msgstr "'%s' 是损坏的到 '%s' 的符号链接"
 
 #, c-format
 msgid "'%s' is not a directory"
-msgstr ""
+msgstr "'%s' 不是一个目录"
 
 #, c-format
 msgid "'%s' is not a job"
-msgstr ""
+msgstr "'%s' 不是一个作业"
 
 #, c-format
 msgid "'%s' is not a valid job ID"
-msgstr ""
+msgstr "'%s' 不是一个有效的作业 ID"
 
 #, c-format
 msgid "'%s' is not a valid process ID"
-msgstr ""
+msgstr "'%s' 不是一个有效的进程 ID"
 
 msgid "'break' while not inside of loop"
 msgstr "'break' 不在循环内"
@@ -324,7 +324,7 @@ msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty 只对 --fields 有效"
 
 msgid "--command cannot be combined with --position=command"
-msgstr ""
+msgstr "--command 选项不能与 --position=command 组合使用"
 
 msgid "--end and --length are mutually exclusive"
 msgstr "--end 和 --length 互斥"
@@ -342,7 +342,7 @@ msgid "--query and --names are mutually exclusive"
 msgstr "--query 和 --names 互斥"
 
 msgid "--set-cursor argument cannot be empty"
-msgstr ""
+msgstr "--set-cursor 参数不能为空"
 
 msgid "--tokens options are mutually exclusive"
 msgstr "--tokens 各选项互斥"
@@ -352,15 +352,15 @@ msgstr "第二次尝试退出将终止它们。"
 
 #, c-format
 msgid "Abbreviation %s already exists for commands %s, cannot rename %s"
-msgstr ""
+msgstr "名为 %s 且适用于命令 %s 的缩写已存在，无法重命名 %s"
 
 #, c-format
 msgid "Abbreviation %s already exists, cannot rename %s"
-msgstr ""
+msgstr "缩写 %s 已经存在，无法重命名 %s"
 
 #, c-format
 msgid "Abbreviation '%s' cannot have spaces in the word"
-msgstr ""
+msgstr "缩写词 '%s' 不能包含空格"
 
 msgid "Abbreviation expansion"
 msgstr "缩写展开"
@@ -386,17 +386,17 @@ msgid "Always"
 msgstr "总是"
 
 msgid "Ambiguous job"
-msgstr ""
+msgstr "有歧义的作业"
 
 msgid "An error occurred while setting up pipe"
 msgstr "设置管道时出错"
 
 msgid "An option spec must have at least a short or a long flag"
-msgstr ""
+msgstr "选项规范必须至少包含一个短标识或长标识"
 
 #, c-format
 msgid "Argument '%s' is out of range"
-msgstr ""
+msgstr "参数 '%s' 超出取值范围"
 
 #, c-format
 msgid "Argument is not a number: '%s'"
@@ -436,18 +436,18 @@ msgid "Can not set commandline in non-interactive mode"
 msgstr ""
 
 msgid "Can not specify scope when removing block"
-msgstr ""
+msgstr "移除范围时不能指定作用域"
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "交互式会话时不能使用 no-execute 模式"
 
 #, c-format
 msgid "Can't put job %d, '%s' to foreground because it is not under job control"
-msgstr ""
+msgstr "不能将作业 %d，'%s' 带到前台，因为它不受作业控制管理"
 
 #, c-format
 msgid "Can't put job %s, '%s' to background because it is not under job control"
-msgstr ""
+msgstr "无法将作业 %s，'%s' 放到后台，因为它不受作业控制管理"
 
 #, c-format
 msgid "Cannot add control modifier to control character '%s'"
@@ -455,19 +455,19 @@ msgstr "无法向控制字符 '%s' 添加控制修饰符"
 
 #, c-format
 msgid "Cannot combine options %s"
-msgstr ""
+msgstr "无法合并选项 %s"
 
 msgid "Cannot specify multiple positions"
-msgstr ""
+msgstr "无法指定多个位置"
 
 msgid "Cannot specify multiple regex patterns"
-msgstr ""
+msgstr "无法指定多种正则匹配规则"
 
 msgid "Cannot specify multiple set-cursor options"
-msgstr ""
+msgstr "无法指定多个 set-cursor 选项"
 
 msgid "Cannot use --append or --prepend when assigning to a slice"
-msgstr ""
+msgstr "分配切片时无法使用 --append 或 --prepend"
 
 msgid "Cannot use stdin (fd 0) as pipe output"
 msgstr "无法使用 stdin (fd 0) 作为管道输出"
@@ -500,7 +500,7 @@ msgid "Command not executable"
 msgstr "命令不可执行"
 
 msgid "Command not valid at an interactive prompt"
-msgstr ""
+msgstr "命令在交互提示符下无效"
 
 msgid "Commandname was invalid"
 msgstr "命令名称无效"
@@ -516,22 +516,22 @@ msgstr "无法确定当前工作目录。你的区域设置正确吗？"
 
 #, c-format
 msgid "Could not find '%s'"
-msgstr ""
+msgstr "找不到 '%s'"
 
 #, c-format
 msgid "Could not find a job with process ID '%d'"
-msgstr ""
+msgstr "无法找到进程 ID 为 '%d' 的作业"
 
 #, c-format
 msgid "Could not find child processes with the name '%s'"
-msgstr ""
+msgstr "无法找到名为 '%s' 的子进程"
 
 msgid "Could not find home directory"
-msgstr ""
+msgstr "找不到主目录"
 
 #, c-format
 msgid "Could not find job '%d'"
-msgstr ""
+msgstr "找不到作业 '%d'"
 
 msgid "Could not set terminal mode for new job"
 msgstr "无法为新作业设置终端模式"
@@ -567,7 +567,7 @@ msgstr "通过 `source` 定义"
 
 #, c-format
 msgid "Did you mean `set %s %s`?"
-msgstr ""
+msgstr "您是否想输入 `set %s %s`？"
 
 msgid "Division by zero"
 msgstr "除以零"
@@ -580,14 +580,14 @@ msgstr "触发一个事件️"
 
 #, c-format
 msgid "Empty directory '%s' does not exist"
-msgstr ""
+msgstr "空目录 '%s' 不存在"
 
 msgid "End a block of commands"
 msgstr "结束一个命令块"
 
 #, c-format
 msgid "Error encountered while sourcing file '%s':"
-msgstr ""
+msgstr "加载源文件 '%s' 时遇到错误："
 
 #, c-format
 msgid "Error reading script file '%s':"
@@ -603,7 +603,7 @@ msgstr "读取文件 %s 时出错"
 
 #, c-format
 msgid "Error while reading file '%s'"
-msgstr ""
+msgstr "读取文件 '%s' 时发生错误"
 
 #, c-format
 msgid "Error: %s"
@@ -641,7 +641,7 @@ msgstr "展开产生了太多的结果"
 
 #, c-format
 msgid "Expected %s for %s"
-msgstr ""
+msgstr "预期 %s，对于 %s 选项"
 
 #, c-format
 msgid "Expected %s, but found %s"
@@ -662,13 +662,13 @@ msgid "Expected a variable name after this $."
 msgstr "在此 $ 之后应有变量名称。"
 
 msgid "Expected at least one argument"
-msgstr ""
+msgstr "至少需要一个参数"
 
 msgid "Expected exactly one function name"
-msgstr ""
+msgstr "需要一个函数名"
 
 msgid "Expected exactly two names (current function name, and new function name)"
-msgstr ""
+msgstr "预期有两个名称 (当前函数名，和新函数名)"
 
 msgid "Expected file path to read/write for -w:"
 msgstr "预期 -w 后有用于读或写的文件路径："
@@ -713,11 +713,11 @@ msgstr "强制停止"
 
 #, c-format
 msgid "Function '%s' already exists. Cannot create copy of '%s'"
-msgstr ""
+msgstr "函数 '%s' 已经存在。无法创建副本 '%s'"
 
 #, c-format
 msgid "Function '%s' does not exist"
-msgstr ""
+msgstr "函数 '%s' 不存在"
 
 msgid "Generate random number"
 msgstr "生成随机数"
@@ -766,18 +766,18 @@ msgstr "重定向 '%s' 中有非法文件描述符"
 
 #, c-format
 msgid "Illegal function name '%s'"
-msgstr ""
+msgstr "非法函数名 '%s'"
 
 msgid "Illegal instruction"
 msgstr "非法指令"
 
 #, c-format
 msgid "Implicit int flag '%c' already defined"
-msgstr ""
+msgstr "隐式整形标识 '%c' 已被定义"
 
 #, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
-msgstr ""
+msgstr "隐式整形短标识 '%c' 不能带有形如 '%c' 的修饰符"
 
 #, c-format
 msgid "Incomplete escape sequence '%s'"
@@ -798,15 +798,15 @@ msgstr "主题监视器的内部细节"
 
 #, c-format
 msgid "Invalid --max-args value '%s'"
-msgstr ""
+msgstr "无效的 --max-args 值 '%s'"
 
 #, c-format
 msgid "Invalid --min-args value '%s'"
-msgstr ""
+msgstr "无效的 --min-args 值 '%s'"
 
 #, c-format
 msgid "Invalid --unknown-arguments value '%s'"
-msgstr ""
+msgstr "无效的 --unknown-arguments 值 '%s'"
 
 #, c-format
 msgid "Invalid arg: %s"
@@ -817,11 +817,11 @@ msgstr "无效参数"
 
 #, c-format
 msgid "Invalid count value '%s'"
-msgstr ""
+msgstr "无效的计数值 '%s'"
 
 #, c-format
 msgid "Invalid end value '%s'"
-msgstr ""
+msgstr "无效的终止值 '%s'"
 
 #, c-format
 msgid "Invalid escape sequence in pattern \"%s\""
@@ -829,19 +829,19 @@ msgstr ""
 
 #, c-format
 msgid "Invalid escape style '%s'"
-msgstr ""
+msgstr "无效的转义格式 '%s'"
 
 #, c-format
 msgid "Invalid fields value '%s'"
-msgstr ""
+msgstr "无效的字段值 '%s'"
 
 #, c-format
 msgid "Invalid function name: %s"
-msgstr ""
+msgstr "无效的函数名：%s"
 
 #, c-format
 msgid "Invalid index starting at '%s'"
-msgstr ""
+msgstr "无效的起始索引值 '%s'"
 
 msgid "Invalid index value"
 msgstr "无效索引值"
@@ -851,27 +851,27 @@ msgstr "无效的输入/输出重定向"
 
 #, c-format
 msgid "Invalid job control mode '%s'"
-msgstr ""
+msgstr "无效的作业控制模式 '%s'"
 
 #, c-format
 msgid "Invalid length value '%s'"
-msgstr ""
+msgstr "无效的长度值 '%s'"
 
 #, c-format
 msgid "Invalid level value '%s'"
-msgstr ""
+msgstr "无效的级别值 '%s'"
 
 #, c-format
 msgid "Invalid limit '%s'"
-msgstr ""
+msgstr "无效的限制 '%s'"
 
 #, c-format
 msgid "Invalid max matches value '%s'"
-msgstr ""
+msgstr "无效的最大匹配值 '%s'"
 
 #, c-format
 msgid "Invalid max value '%s'"
-msgstr ""
+msgstr "无效的最大值 '%s'"
 
 #, c-format
 msgid "Invalid number: %s"
@@ -879,23 +879,23 @@ msgstr "无效的数字：%s"
 
 #, c-format
 msgid "Invalid option spec '%s' at char '%c'"
-msgstr ""
+msgstr "无效的选项规范 '%s' 于字符 '%c'"
 
 #, c-format
 msgid "Invalid padding character of width zero '%s'"
-msgstr ""
+msgstr "宽度为零的无效的填充字符 '%s'"
 
 #, c-format
 msgid "Invalid permission '%s'"
-msgstr ""
+msgstr "无效的权限 '%s'"
 
 #, c-format
 msgid "Invalid position '%s'"
-msgstr ""
+msgstr "无效的位置 '%s'"
 
 #, c-format
 msgid "Invalid range value for field '%s'"
-msgstr ""
+msgstr "字段 '%s' 的范围值无效"
 
 #, c-format
 msgid "Invalid redirection target: %s"
@@ -907,15 +907,15 @@ msgstr "无效的重定向：%s"
 
 #, c-format
 msgid "Invalid sort key '%s'"
-msgstr ""
+msgstr "无效的排序键 '%s'"
 
 #, c-format
 msgid "Invalid start value '%s'"
-msgstr ""
+msgstr "无效的起始值 '%s'"
 
 #, c-format
 msgid "Invalid style value '%s'"
-msgstr ""
+msgstr "无效的样式值 '%s'"
 
 #, c-format
 msgid "Invalid token '%s'"
@@ -923,15 +923,15 @@ msgstr "无效记号 '%s'"
 
 #, c-format
 msgid "Invalid type '%s'"
-msgstr ""
+msgstr "无效类型 '%s'"
 
 #, c-format
 msgid "Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
-msgstr ""
+msgstr "无效的 '--color' 选项值 '%s'。应为 'always'、'never' 或 'auto'"
 
 #, c-format
 msgid "Invalid width value '%s'"
-msgstr ""
+msgstr "无效的宽度值 '%s'"
 
 #, c-format
 msgid "Items %u to %u of %u"
@@ -954,7 +954,7 @@ msgid "Jobs getting started or continued"
 msgstr "正在启动或继续的作业"
 
 msgid "Key not specified"
-msgstr ""
+msgstr "没有指定键"
 
 msgid "Language specifiers appear repeatedly:"
 msgstr ""
@@ -967,7 +967,7 @@ msgstr "不支持逻辑运算，使用 `test` 替代"
 
 #, c-format
 msgid "Long flag '%s' already defined"
-msgstr ""
+msgstr "长标识 '%s' 已定义"
 
 msgid "Manage abbreviations"
 msgstr "管理缩写"
@@ -988,7 +988,7 @@ msgid "Mismatched parenthesis"
 msgstr "括号不匹配"
 
 msgid "Missing -- separator"
-msgstr ""
+msgstr "缺少 -- 分隔符"
 
 msgid "Missing closing parenthesis"
 msgstr "缺少收尾括号"
@@ -1008,7 +1008,7 @@ msgid "Modification of read-only variable \"%s\" is not allowed"
 msgstr "不允许修改只读变量 \"%s\""
 
 msgid "Name cannot be empty"
-msgstr ""
+msgstr "名称不能为空"
 
 msgid "Negate exit status of job"
 msgstr "对作业退出代码取反"
@@ -1021,18 +1021,18 @@ msgstr "交互 shell 没有 TTY (tcgetpgrp 失败)"
 
 #, c-format
 msgid "No abbreviation named %s with the specified command restrictions"
-msgstr ""
+msgstr "没有命名为 %s 且符合指定命令限制的缩写"
 
 #, c-format
 msgid "No binding found for key '%s'"
-msgstr ""
+msgstr "未找到键 '%s' 的绑定"
 
 #, c-format
 msgid "No binding found for key sequence '%s'"
-msgstr ""
+msgstr "未找到键序列 '%s' 的绑定"
 
 msgid "No blocks defined"
-msgstr ""
+msgstr "没有定义作用域"
 
 msgid "No catalogs available for language specifiers:"
 msgstr ""
@@ -1043,11 +1043,11 @@ msgstr "未找到通配符 '%s' 的匹配项。参见 `help %s`。"
 
 #, c-format
 msgid "No suitable job: %d"
-msgstr ""
+msgstr "没有合适的作业：%d"
 
 #, c-format
 msgid "No suitable job: %s"
-msgstr ""
+msgstr "没有合适的作业：%s"
 
 msgid "Not a function"
 msgstr "不是一个函数"
@@ -1080,11 +1080,11 @@ msgstr "打开 \"%s\" 失败：%s"
 
 #, c-format
 msgid "Options %s and %s cannot be used together"
-msgstr ""
+msgstr "选项 %s 和 %s 无法一起使用"
 
 #, c-format
 msgid "Padding should be a character '%s'"
-msgstr ""
+msgstr "填充应为字符 '%s'"
 
 msgid "Parse options in fish script"
 msgstr "解析 fish 文脚本中的选项"
@@ -1104,7 +1104,7 @@ msgstr ""
 
 #, c-format
 msgid "Permission denied: '%s'"
-msgstr ""
+msgstr "拒绝访问: '%s'"
 
 #, c-format
 msgid "Please set $%s to a directory where you have write access."
@@ -1175,11 +1175,11 @@ msgstr "RefCell 动态借用"
 
 #, c-format
 msgid "Regular expression compile error: %s"
-msgstr ""
+msgstr "正则表达式编译错误：%s"
 
 #, c-format
 msgid "Regular expression substitute error: %s"
-msgstr ""
+msgstr "正则表达式替换错误：%s"
 
 msgid "Remove job from job list"
 msgstr "从作业列表中删除作业"
@@ -1192,13 +1192,13 @@ msgid "Requested redirection to '%s', which is not a valid file descriptor"
 msgstr "请求重定向到 '%s'，这不是一个有效的文件描述符"
 
 msgid "Requires at least two arguments"
-msgstr ""
+msgstr "需要至少两个参数"
 
 msgid "Requires exactly two arguments"
-msgstr ""
+msgstr "需要两个参数"
 
 msgid "Resource limit not available on this operating system"
-msgstr ""
+msgstr "该操作系统不支持资源限制"
 
 #, c-format
 msgid "Result too large: %s"
@@ -1259,11 +1259,11 @@ msgstr "设置终端颜色"
 
 #, c-format
 msgid "Short flag '%c' already defined"
-msgstr ""
+msgstr "已经定义了短标识 '%c'"
 
 #, c-format
 msgid "Short flag '%c' invalid, must be alphanum or '#'"
-msgstr ""
+msgstr "短标识 '%c' 无效，必须是字母、数字或 '#'"
 
 msgid "Show absolute path sans symlinks"
 msgstr "显示绝对路径，不含符号链接"
@@ -1343,7 +1343,7 @@ msgstr "补全系统"
 
 #, c-format
 msgid "The directory '%s' does not exist"
-msgstr ""
+msgstr "目录 '%s' 不存在"
 
 #, c-format
 msgid "The error was '%s'."
@@ -1363,7 +1363,7 @@ msgid "The interactive reader/input system"
 msgstr "交互式阅读器/输入系统"
 
 msgid "There are no suitable jobs"
-msgstr ""
+msgstr "没有匹配的作业"
 
 msgid "There are still jobs active:"
 msgstr "仍然活动的作业："
@@ -1391,10 +1391,10 @@ msgstr "参数太多"
 
 #, c-format
 msgid "Too many levels of symbolic links: '%s'"
-msgstr ""
+msgstr "符号链接的级别过多：'%s'"
 
 msgid "Too many long-only options"
-msgstr ""
+msgstr "过多的仅长选项"
 
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr "命令替换生成的数据过多，因此被丢弃"
@@ -1407,15 +1407,15 @@ msgstr "翻译字符串"
 
 #, c-format
 msgid "Tried to change the read-only variable '%s'"
-msgstr ""
+msgstr "试图改变只读变量 '%s' 的值"
 
 #, c-format
 msgid "Tried to modify the special variable '%s' to an invalid value"
-msgstr ""
+msgstr "尝试将特殊变量 '%s' 修改为无效值"
 
 #, c-format
 msgid "Tried to modify the special variable '%s' with the wrong scope"
-msgstr ""
+msgstr "尝试用错误的范围修改特殊变量 '%s'"
 
 msgid "Trying to print invalid output"
 msgstr "尝试打印无效输出"
@@ -1460,7 +1460,7 @@ msgstr "意外找到 '}'，期待 ')'"
 
 #, c-format
 msgid "Unexpected argument -- '%s'"
-msgstr ""
+msgstr "意外参数 -- '%s'"
 
 msgid "Unexpected end of string, expecting ')'"
 msgstr "字符串意外结束，期待 ')'"
@@ -1489,7 +1489,7 @@ msgstr "未知的内建命令 '%s'"
 
 #, c-format
 msgid "Unknown color '%s'"
-msgstr ""
+msgstr "未知颜色 '%s'"
 
 msgid "Unknown command"
 msgstr "未知的命令"
@@ -1511,7 +1511,7 @@ msgstr "未知的命令："
 
 #, c-format
 msgid "Unknown error trying to locate directory '%s'"
-msgstr ""
+msgstr "定位目录 '%s' 时发生未知错误"
 
 msgid "Unknown error while evaluating command substitution"
 msgstr "求值命令替换时出现未知错误"
@@ -1525,11 +1525,11 @@ msgstr "未知函数 '%s'"
 
 #, c-format
 msgid "Unknown input function '%s'"
-msgstr ""
+msgstr "未知的输入函数 '%s'"
 
 #, c-format
 msgid "Unknown signal '%s'"
-msgstr ""
+msgstr "未知信号 '%s'"
 
 msgid "Unmatched wildcard"
 msgstr "未匹配的通配符"
@@ -1573,7 +1573,7 @@ msgstr "警告使用 test 命令的零参数或单参数模式（`test -d $foo`�
 
 #, c-format
 msgid "Warning: Option '%s' was removed and is now ignored"
-msgstr ""
+msgstr "警告：忽略已被删除的选项 '%s'"
 
 msgid "Warnings (on by default)"
 msgstr "警告 (默认开启)"
@@ -1588,13 +1588,13 @@ msgid "Writing/reading the universal variable store"
 msgstr "写/读通用变量存储"
 
 msgid "`set --show` does not allow slices with the var names"
-msgstr ""
+msgstr "`set --show` 不支持使用带有变量名称的切片"
 
 msgid "a path variable"
 msgstr "路径变量"
 
 msgid "array index out of bounds"
-msgstr ""
+msgstr "数组索引越界"
 
 msgid "array indices start at 1, not 0."
 msgstr "数组索引起始为 1，而不是 0。"
@@ -1609,13 +1609,13 @@ msgid "builtin history delete only supports --exact"
 msgstr "内建历史删除只支持 --exact"
 
 msgid "called with no arguments. This will be an error in future."
-msgstr ""
+msgstr "未带参数调用。此操作在未来版本中将视为错误。"
 
 msgid "called with one argument. This will return false in future."
 msgstr "带一个参数调用。此操作在未来版本中将返回 false。"
 
 msgid "calling job for event handler not found"
-msgstr ""
+msgstr "未找到事件处理程序的调用作业"
 
 msgid "can not save history"
 msgstr "无法保存历史"
@@ -1624,13 +1624,13 @@ msgid "can not save universal variables or functions"
 msgstr "无法保存通用变量或函数"
 
 msgid "can't merge history in private mode"
-msgstr ""
+msgstr "无法在私密模式中合并历史"
 
 msgid "cannot both export and unexport"
-msgstr ""
+msgstr "无法同时导出和取消导出"
 
 msgid "cannot both path and unpath"
-msgstr ""
+msgstr "无法同时是路径变量和非路径变量"
 
 #, c-format
 msgid "cannot parse key '%s'"
@@ -1638,7 +1638,7 @@ msgstr "无法解析键 '%s'"
 
 #, c-format
 msgid "column %s exceeds line length"
-msgstr ""
+msgstr "列 %s 超出行长度"
 
 msgid "command"
 msgstr "命令"
@@ -1666,23 +1666,23 @@ msgstr "错误"
 
 #, c-format
 msgid "exclusive flag '%s' is not valid"
-msgstr ""
+msgstr "排他标识 '%s' 无效"
 
 #, c-format
 msgid "exclusive flag string '%s' is not valid"
-msgstr ""
+msgstr "排他标识字符串 '%s' 无效"
 
 #, c-format
 msgid "expected %d arguments; got %d"
-msgstr ""
+msgstr "预期收到 %d 个参数；实际收到 %d 个"
 
 #, c-format
 msgid "expected <= %d arguments; got %d"
-msgstr ""
+msgstr "预期收到 <= %d 个参数；实际收到 %d 个"
 
 #, c-format
 msgid "expected >= %d arguments; got %d"
-msgstr ""
+msgstr "预期收到 >= %d 个参数；实际收到 %d 个"
 
 msgid "expected event name"
 msgstr ""
@@ -1706,7 +1706,7 @@ msgstr "从源文件 %s"
 
 #, c-format
 msgid "given %d indexes but %d values"
-msgstr ""
+msgstr "给定索引 %d 但只有 %d 个值"
 
 msgid "in command substitution"
 msgstr "在命令替换中"
@@ -1724,35 +1724,35 @@ msgid "invalid field width: %s"
 msgstr "无效的字段宽度：%s"
 
 msgid "invalid option combination"
-msgstr ""
+msgstr "无效的选项组合"
 
 #, c-format
 msgid "invalid option combination, %s"
-msgstr ""
+msgstr "无效的选项组合，%s"
 
 #, c-format
 msgid "invalid precision: %s"
 msgstr "无效的精度：%s"
 
 msgid "invalid subcommand"
-msgstr ""
+msgstr "无效的子命令"
 
 #, c-format
 msgid "invalid underline style: %s"
-msgstr ""
+msgstr "无效的下划线样式：%s"
 
 #, c-format
 msgid "job %d ('%s') was stopped and has been signalled to continue."
-msgstr ""
+msgstr "作业 %d ('%s') 已停止并收到继续信号。"
 
 msgid "line/column index starts at 1"
-msgstr ""
+msgstr "行/列索引从1开始"
 
 msgid "missing argument"
-msgstr ""
+msgstr "缺少参数"
 
 msgid "missing filename argument or input redirection"
-msgstr ""
+msgstr "缺少文件名参数或输入重定向"
 
 msgid "missing hexadecimal number in escape"
 msgstr "在转义中缺少十六进制数字"
@@ -1765,10 +1765,10 @@ msgid ""
 msgstr ""
 
 msgid "missing subcommand"
-msgstr ""
+msgstr "缺少子命令"
 
 msgid "nothing to choose from"
-msgstr ""
+msgstr "没有可选项"
 
 #, c-format
 msgid "only f1 through f%d are supported, not 'f%s'"
@@ -1786,7 +1786,7 @@ msgid "running"
 msgstr "运行中"
 
 msgid "scope can be only one of: universal function global local"
-msgstr ""
+msgstr "范围只能是：universal（通用）function（函数）global（全局）local（局域）"
 
 msgid "search:"
 msgstr "搜索:"
@@ -1795,17 +1795,17 @@ msgid "setting cursor while evaluating 'complete --arguments' is not yet support
 msgstr ""
 
 msgid "stdin is closed"
-msgstr ""
+msgstr "stdin 已关闭"
 
 msgid "stopped"
 msgstr "已终止"
 
 msgid "subcommand takes no options"
-msgstr ""
+msgstr "子命令不接受选项"
 
 #, c-format
 msgid "successfully set universal '%s'; but a global by that name shadows it"
-msgstr ""
+msgstr "成功设置通用变量 '%s' ；但是同名全局变量遮蔽它"
 
 #, c-format
 msgid "switch: Expected at most one argument, got %u"
@@ -1822,10 +1822,10 @@ msgstr ""
 
 #, c-format
 msgid "there is no line %s"
-msgstr ""
+msgstr "不存在行 %s"
 
 msgid "too many arguments"
-msgstr ""
+msgstr "参数太多"
 
 msgid "unexported"
 msgstr "未导出"
@@ -1839,11 +1839,11 @@ msgstr "无限制"
 
 #, c-format
 msgid "unrecognized feature '%s'"
-msgstr ""
+msgstr "未识别的特性 '%s'"
 
 #, c-format
 msgid "variable '%s' is read-only"
-msgstr ""
+msgstr "变量 '%s' 只读"
 
 #, c-format
 msgid "with arguments '%s'"

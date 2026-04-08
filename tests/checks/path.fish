@@ -337,3 +337,49 @@ path basename -E foo.txt /usr/local/foo.bar /foo.tar.gz
 
 path basename --null-out bar baz | string escape
 # CHECK: bar\x00baz\x00
+
+path basename --quiet=foo
+# CHECKERR: path basename: --quiet=foo: option does not take an argument
+
+path basename --unknown-option
+# CHECKERR: path basename: --unknown-option: unknown option
+# CHECKERR: {{.*}}/checks/path.fish (line {{\d+}}):
+# CHECKERR: path basename --unknown-option
+# CHECKERR: ^
+# CHECKERR: (Type 'help path' for related documentation)
+
+path filter -t invalid_type
+# CHECKERR: path filter: Invalid type 'invalid_type'
+
+path filter -p 999
+# CHECKERR: path filter: Invalid permission '999'
+
+path sort --relative
+# CHECKERR: path sort: --relative: unknown option
+# CHECKERR: {{.*}}/checks/path.fish (line {{\d+}}):
+# CHECKERR: path sort --relative
+# CHECKERR: ^
+# CHECKERR: (Type 'help path' for related documentation)
+
+path change-extension
+# CHECKERR: path change-extension: missing argument
+
+echo some.file | path basename other.file
+# CHECKERR: path basename: too many arguments
+
+path sort --key=invalid-key
+# CHECKERR: path sort: Invalid sort key 'invalid-key'
+
+path
+# CHECKERR: path: missing subcommand
+# CHECKERR: {{.*}}/checks/path.fish (line {{\d+}}):
+# CHECKERR: path
+# CHECKERR: ^
+# CHECKERR: (Type 'help path' for related documentation)
+
+path invalid-subcmd
+# CHECKERR: path invalid-subcmd: invalid subcommand
+# CHECKERR: {{.*}}/checks/path.fish (line {{\d+}}):
+# CHECKERR: path invalid-subcmd
+# CHECKERR: ^
+# CHECKERR: (Type 'help path' for related documentation)

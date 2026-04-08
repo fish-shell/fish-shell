@@ -2,7 +2,7 @@
 use errno::errno;
 
 use super::prelude::*;
-use crate::{env::Environment as _, wutil::wrealpath};
+use crate::{builtins::error::Error, env::Environment as _, err_fmt, wutil::wrealpath};
 
 // The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 const short_options: &wstr = L!("LPh");
@@ -38,9 +38,9 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Buil
     }
 
     if w.wopt_index != argc {
-        streams
-            .err
-            .appendln(&wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 0, argc - 1));
+        err_fmt!(Error::UNEXP_ARG_COUNT, 0, argc - 1)
+            .cmd(cmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -52,12 +52,9 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Buil
         if let Some(real_pwd) = wrealpath(&pwd) {
             pwd = real_pwd;
         } else {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: %s failed: %s",
-                cmd,
-                "realpath",
-                errno().to_string()
-            ));
+            err_fmt!("%s failed: %s", "realpath", errno().to_string())
+                .cmd(cmd)
+                .finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
     }

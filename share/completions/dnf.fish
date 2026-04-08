@@ -10,6 +10,19 @@ function __dnf_list_installed_packages
     dnf repoquery --cacheonly "$cur*" --qf "%{name}\n" --installed </dev/null
 end
 
+function __dnf_list_copr_repos
+    set -l copr_repos (dnf copr list)
+
+    switch $argv[1]
+        case enable
+            string replace -f -- " (disabled)" "" $copr_repos
+        case disable
+            string match -v -- "*(disabled)*" $copr_repos
+        case '*'
+            string replace -- " (disabled)" "" $copr_repos
+    end
+end
+
 function __dnf_list_available_packages
     set -l tok (commandline -ct | string collect)
     set -l files (__fish_complete_suffix .rpm)
@@ -85,6 +98,20 @@ complete -c dnf -n "__fish_seen_subcommand_from clean" -xa expire-cache -d "Mark
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa metadata -d "Removes repository metadata"
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa packages -d "Removes any cached packages"
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa all -d "Removes all cache"
+
+# Copr
+set -l coprcommands list enable disable remove debug
+complete -c dnf -n __fish_use_subcommand -xa copr -d "Manage Copr repositories"
+complete -c dnf -n "__fish_seen_subcommand_from copr; and not __fish_seen_subcommand_from $coprcommands" -xa list -d "List Copr repositories"
+complete -c dnf -n "__fish_seen_subcommand_from copr; and not __fish_seen_subcommand_from $coprcommands" -xa enable -d "Install a Copr repository"
+complete -c dnf -n "__fish_seen_subcommand_from copr; and not __fish_seen_subcommand_from $coprcommands" -xa disable -d "Disable a Copr repository"
+complete -c dnf -n "__fish_seen_subcommand_from copr; and not __fish_seen_subcommand_from $coprcommands" -xa remove -d "Remove a Copr repository"
+complete -c dnf -n "__fish_seen_subcommand_from copr; and not __fish_seen_subcommand_from $coprcommands" -xa debug -d "Print system info for debugging"
+complete -c dnf -n "__fish_seen_subcommand_from copr; and not __fish_seen_subcommand_from $coprcommands" -l hub -d "Copr hub hostname"
+
+for i in enable disable remove
+    complete -c dnf -n "__fish_seen_subcommand_from copr; and __fish_seen_subcommand_from $i" -xa "(__dnf_list_copr_repos $i)"
+end
 
 # Distro-sync
 complete -c dnf -n __fish_use_subcommand -xa distro-sync -d "Synchronizes packages to match the latest"

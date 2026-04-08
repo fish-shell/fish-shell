@@ -13,7 +13,7 @@ impl StringSubCommand<'_> for Collect {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("Na");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, _arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'a' => self.allow_empty = true,
             'N' => self.no_trim_newlines = true,

@@ -13,7 +13,7 @@ impl StringSubCommand<'_> for Length {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("qV");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, _arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'q' => self.quiet = true,
             'V' => self.visible = true,

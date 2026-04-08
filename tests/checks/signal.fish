@@ -73,4 +73,15 @@ echo "Now event handler should have run"
 # CHECK: PROCESS_EXIT 0
 # CHECK: JOB_EXIT 0
 # CHECK: Now event handler should have run
+
+begin
+    block --erase --local
+    # CHECKERR: block: Can not specify scope when removing block
+    block --erase --global
+    # CHECKERR: block: Can not specify scope when removing block
+    block --erase
+    # CHECKERR: block: No blocks defined
+end
+
+exit 0
 # CHECK: PROCESS_EXIT 0

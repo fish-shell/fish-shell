@@ -147,6 +147,50 @@ functions -Dv t2
 #CHECK: scope-shadowing
 #CHECK:
 
+functions -c first
+# CHECKERR: functions: Expected exactly two names (current function name, and new function name)
+# CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions -c first
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)
+
+functions -c first second third
+# CHECKERR: functions: Expected exactly two names (current function name, and new function name)
+# CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions -c first second third
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)
+
+functions -c unknown_function copy
+# CHECKERR: functions: Function 'unknown_function' does not exist
+# CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions -c unknown_function copy
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)
+
+function to_copy
+end
+functions -c -- to_copy -invalid_name
+# CHECKERR: functions: Illegal function name '-invalid_name'
+# CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions -c -- to_copy -invalid_name
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)
+
+functions -c -- to_copy function
+# CHECKERR: functions: Illegal function name 'function'
+# CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions -c -- to_copy function
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)
+
+functions -c -- to_copy to_copy
+# CHECKERR: functions: Function 'to_copy' already exists. Cannot create copy of 'to_copy'
+# CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions -c -- to_copy to_copy
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)
+
 echo "functions -c t t3" | source
 functions t3
 # CHECK: # Defined via `source`, copied via `source`
@@ -189,6 +233,9 @@ functions --handlers-type signal
 # CHECK: SIGTERM term1
 # CHECK: SIGTERM term2
 # CHECK: SIGTERM term3
+
+functions -t invalid_type
+# CHECKERR: functions: Expected generic | variable | signal | exit | job-id for --handlers-type
 
 # See how --names and --all work.
 # We don't want to list all of our functions here,
@@ -244,6 +291,9 @@ end
 functions --color=invalid
 # CHECKERR: functions: Invalid value for '--color' option: 'invalid'. Expected 'always', 'never', or 'auto'
 
+functions --color
+# CHECKERR: functions: --color: option requires an argument
+
 functions --no-details --color=never test_color_option
 # CHECK: function test_color_option
 # CHECK:     echo hello
@@ -253,3 +303,17 @@ string escape (functions --no-details --color=always test_color_option)
 # CHECK: function\ \e\[36mtest_color_option\e\[32m
 # CHECK: \e\[39m\ \ \ \ echo\ \e\[36mhello\e\[32m
 # CHECK: \e\[39mend\e\[32m\e\[39m
+
+functions --names --query
+# CHECKERR: functions: invalid option combination
+# CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions --names --query
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)
+
+functions -d desc unknown_function
+# CHECKERR: functions: Function 'unknown_function' does not exist
+# CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions -d desc unknown_function
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)

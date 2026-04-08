@@ -1,6 +1,7 @@
 //! Implementation of the bind builtin.
 
 use super::prelude::*;
+use crate::builtins::error::Error;
 use crate::common::{
     EscapeFlags, EscapeStringStyle, bytes2wcstring, escape, escape_string, valid_var_name,
 };
@@ -11,15 +12,18 @@ use crate::input::{
 use crate::key::{
     self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
 };
+use crate::{err_fmt, err_raw, err_str};
 use fish_common::help_section;
 use std::sync::MutexGuard;
 
 const DEFAULT_BIND_MODE: &wstr = L!("default");
 
-const BIND_INSERT: c_int = 0;
-const BIND_ERASE: c_int = 1;
-const BIND_KEY_NAMES: c_int = 2;
-const BIND_FUNCTION_NAMES: c_int = 3;
+enum BindMode {
+    Insert,
+    Erase,
+    KeyNames,
+    FunctionNames,
+}
 
 struct Options {
     all: bool,
@@ -30,7 +34,7 @@ struct Options {
     user: bool,
     have_preset: bool,
     preset: bool,
-    mode: c_int,
+    mode: BindMode,
     bind_mode: Option<WString>,
     sets_bind_mode: Option<WString>,
     color: ColorEnabled,
@@ -47,7 +51,7 @@ impl Options {
             user: false,
             have_preset: false,
             preset: false,
-            mode: BIND_INSERT,
+            mode: BindMode::Insert,
             bind_mode: None,
             sets_bind_mode: None,
             color: ColorEnabled::default(),
@@ -261,7 +265,7 @@ impl BuiltinBind {
         match parse_keys(seq) {
             Ok(keys) => Some(keys),
             Err(err) => {
-                streams.err.append(&sprintf!("bind: %s\n", err));
+                err_raw!(err).cmd(L!("bind")).finish(streams);
                 None
             }
         }
@@ -312,12 +316,9 @@ impl BuiltinBind {
         } else {
             // Inserting both on the other hand makes no sense.
             if self.opts.have_preset && self.opts.have_user {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                    cmd,
-                    "--preset",
-                    "--user"
-                ));
+                err_fmt!(Error::COMBO_EXCLUSIVE, "--preset", "--user")
+                    .cmd(cmd)
+                    .finish(streams);
                 return true;
             }
         }
@@ -353,17 +354,13 @@ impl BuiltinBind {
                 );
                 if !self.opts.silent {
                     if seq.len() == 1 {
-                        streams.err.appendln(&wgettext_fmt!(
-                            "%s: No binding found for key '%s'",
-                            cmd,
-                            seq[0]
-                        ));
+                        err_fmt!("No binding found for key '%s'", seq[0])
+                            .cmd(cmd)
+                            .finish(streams);
                     } else {
-                        streams.err.appendln(&wgettext_fmt!(
-                            "%s: No binding found for key sequence '%s'",
-                            cmd,
-                            eseq
-                        ));
+                        err_fmt!("No binding found for key sequence '%s'", eseq)
+                            .cmd(cmd)
+                            .finish(streams);
                     }
                 }
                 return true;
@@ -433,12 +430,13 @@ fn parse_cmd_opts(
 
     let check_mode_name = |streams: &mut IoStreams, mode_name: &wstr| -> Result<(), ErrorCode> {
         if !valid_var_name(mode_name) {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_BIND_MODE,
-                cmd,
+            err_fmt!(
+                Error::BIND_MODE,
                 mode_name,
                 help_section!("language#shell-variable-and-function-names")
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
         Ok(())
@@ -448,17 +446,18 @@ fn parse_cmd_opts(
     while let Some(c) = w.next_opt() {
         match c {
             'a' => opts.all = true,
-            'e' => opts.mode = BIND_ERASE,
-            'f' => opts.mode = BIND_FUNCTION_NAMES,
+            'e' => opts.mode = BindMode::Erase,
+            'f' => opts.mode = BindMode::FunctionNames,
             'h' => opts.print_help = true,
             'k' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`",
-                    cmd,
-                ));
+                err_str!(
+                    "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+                )
+                .cmd(cmd)
+                .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
-            'K' => opts.mode = BIND_KEY_NAMES,
+            'K' => opts.mode = BindMode::KeyNames,
             'L' => {
                 opts.list_modes = true;
                 return Ok(SUCCESS);
@@ -483,7 +482,7 @@ fn parse_cmd_opts(
                 opts.user = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
+                builtin_missing_argument(parser, streams, cmd, None, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -534,7 +533,7 @@ impl BuiltinBind {
         }
 
         match self.opts.mode {
-            BIND_ERASE => {
+            BindMode::Erase => {
                 // If we get both, we erase both.
                 if self.opts.user
                     && self.erase(
@@ -557,19 +556,13 @@ impl BuiltinBind {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
-            BIND_INSERT => {
+            BindMode::Insert => {
                 if self.insert(optind, argv, parser, streams) {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
-            BIND_KEY_NAMES => self.key_names(streams),
-            BIND_FUNCTION_NAMES => self.function_names(streams),
-            _ => {
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!("%s: Invalid state", cmd));
-                return Err(STATUS_CMD_ERROR);
-            }
+            BindMode::KeyNames => self.key_names(streams),
+            BindMode::FunctionNames => self.function_names(streams),
         }
         Ok(SUCCESS)
     }

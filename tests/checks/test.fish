@@ -142,3 +142,10 @@ test
 #CHECKERR: test
 #CHECKERR: ^
 #CHECKERR: (Type 'help test' for related documentation)
+
+[ -z
+#CHECKERR: [: the last argument must be ']'
+#CHECKERR: {{.*}}test.fish (line {{\d+}}):
+#CHECKERR: [ -z
+#CHECKERR: ^
+#CHECKERR: (Type 'help [' for related documentation)

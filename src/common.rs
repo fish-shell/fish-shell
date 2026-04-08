@@ -4,7 +4,6 @@ use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
-use crate::future_feature_flags::{FeatureFlag, feature_test};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
@@ -15,6 +14,7 @@ use crate::termsize::Termsize;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::fish_iswalnum;
 use fish_fallback::fish_wcwidth;
+use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::wcs2bytes;
 use fish_widestring::{
     ENCODE_DIRECT_END, decode_byte_from_char, encode_byte_to_char, subslice_position,
@@ -1064,7 +1064,7 @@ macro_rules! write_to_output {
 pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
     let mut buff = WString::new();
 
-    let screen_width = isize::try_from(termsize.width()).unwrap();
+    let screen_width = termsize.width();
     if screen_width != 0 {
         let mut start = 0;
         let mut pos = start;
@@ -1077,7 +1077,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
             while pos < msg.len() && ![' ', '\n', '\r', '\t'].contains(&msg.char_at(pos)) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
-                let width = fish_wcwidth(msg.char_at(pos));
+                let width = fish_wcwidth(msg.char_at(pos)).unwrap_or_default();
                 if (tok_width + width) > (screen_width - 1) {
                     overflow = true;
                     break;

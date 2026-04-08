@@ -16,7 +16,9 @@ pub struct ConfigPaths {
     pub doc: Option<PathBuf>,  // e.g., /usr/local/share/doc/fish
 }
 
+pub const PREFIX: &str = env!("PREFIX");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
+const DATADIR: Option<&str> = option_env!("DATADIR");
 
 impl ConfigPaths {
     pub fn new() -> Self {
@@ -58,7 +60,7 @@ impl ConfigPaths {
 
     fn from_exec_path(unresolved_exec_path: &'static FishPath) -> Self {
         let default_layout = |exec_path_parent: Option<&Path>| {
-            let data = option_env!("DATADIR").map(|p| PathBuf::from(p).join("fish"));
+            let data = DATADIR.map(|p| PathBuf::from(p).join("fish"));
             Self {
                 sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
                 bin: option_env!("BINDIR")
@@ -111,6 +113,8 @@ impl ConfigPaths {
             let prefix = exec_path_parent.parent().unwrap();
             let data = prefix.join("share/fish");
             let sysconf = prefix.join("etc/fish");
+            DATADIR.expect("cmake sets datadir").strip_prefix(PREFIX) == Some("/share") &&
+            SYSCONF_DIR.strip_prefix(PREFIX) == Some("/etc") &&
             data.exists() && sysconf.exists()
             // Installations with prefix set to exactly the workspace root are not supported;
             // those will behave like non-installed builds inside the workspace.

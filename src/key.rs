@@ -3,12 +3,12 @@ use libc::VERASE;
 use crate::{
     common::{EscapeFlags, EscapeStringStyle, escape_string},
     flog::FloggableDebug,
-    future_feature_flags::{FeatureFlag, test as feature_test},
     prelude::*,
     reader::safe_get_terminal_mode_on_startup,
     wutil::fish_wcstoul,
 };
 use fish_fallback::fish_wcwidth;
+use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_widestring::decode_byte_from_char;
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
@@ -445,7 +445,7 @@ pub fn char_to_symbol(c: char, is_first_in_token: bool) -> WString {
     } else if ('\u{e000}'..='\u{f8ff}').contains(&c) {
         // Unmapped key from https://sw.kovidgoyal.net/kitty/keyboard-protocol/#functional-key-definitions
         sprintf!(=> buf, "\\u%04X", u32::from(c));
-    } else if fish_wcwidth(c) > 0 {
+    } else if fish_wcwidth(c).is_some_and(|w| w != 0) {
         sprintf!(=> buf, "%c", c);
     } else if c <= '\u{FFFF}' {
         // BMP Unicode character

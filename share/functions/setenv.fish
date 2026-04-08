@@ -15,7 +15,10 @@ function setenv
     # `setenv` accepts only two arguments: the var name and the value. If there are more than two
     # args it is an error. The error message is verbatim from csh.
     if set -q argv[3]
-        printf (_ '%s: Too many arguments\n') setenv >&2
+        {
+            printf (_ '%s: Too many arguments') setenv
+            echo
+        } >&2
         return 1
     end
 

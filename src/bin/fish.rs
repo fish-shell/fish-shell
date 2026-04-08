@@ -20,11 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 use fish::{
     ast,
     builtins::{
+        error::Error,
         fish_indent, fish_key_reader,
-        shared::{
-            BUILTIN_ERR_MISSING, BUILTIN_ERR_UNEXP_ARG, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR,
-            STATUS_CMD_OK, STATUS_CMD_UNKNOWN, VERSION_STRING_TEMPLATE,
-        },
+        shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, VERSION_STRING_TEMPLATE},
     },
     common::{
         PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, bytes2wcstring, escape, osstr2wcstring,
@@ -35,12 +33,12 @@ use fish::{
         config_paths::ConfigPaths,
         environment::{EnvStack, Environment as _, env_init},
     },
-    eprintf,
+    eprintf, err_fmt,
     event::{self, Event},
     flog::{self, activate_flog_categories_by_pattern, flog, flogf, set_flog_file_fd},
-    fprintf, function, future_feature_flags as features,
+    fprintf, function,
     history::{self, start_private_mode},
-    io::IoChain,
+    io::{FdOutputStream, IoChain, OutputStream},
     locale::set_libc_locales,
     nix::isatty,
     panic::panic_handler,
@@ -62,7 +60,7 @@ use fish::{
     wutil::waccess,
 };
 use fish_wcstringutil::wcs2bytes;
-use libc::STDIN_FILENO;
+use libc::{STDERR_FILENO, STDIN_FILENO};
 use nix::{
     sys::resource::{UsageWho, getrusage},
     unistd::{AccessFlags, getpid},
@@ -318,24 +316,24 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 // Either remove it or make it work with flog.
             }
             '?' => {
-                eprintf!(
-                    "%s\n\n",
-                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.wopt_index - 1])
-                );
+                err_fmt!(Error::UNKNOWN_OPT, args[w.wopt_index - 1])
+                    .cmd(L!("fish"))
+                    .append_to_msg('\n')
+                    .write_to(&mut OutputStream::Fd(FdOutputStream::new(STDERR_FILENO)));
                 return ControlFlow::Break(1);
             }
             ':' => {
-                eprintf!(
-                    "%s\n\n",
-                    wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
-                );
+                err_fmt!(Error::MISSING_OPT_ARG, args[w.wopt_index - 1])
+                    .cmd(L!("fish"))
+                    .append_to_msg('\n')
+                    .write_to(&mut OutputStream::Fd(FdOutputStream::new(STDERR_FILENO)));
                 return ControlFlow::Break(1);
             }
             ';' => {
-                eprintf!(
-                    "%s\n\n",
-                    wgettext_fmt!(BUILTIN_ERR_UNEXP_ARG, "fish", args[w.wopt_index - 1])
-                );
+                err_fmt!(Error::UNEXP_OPT_ARG, args[w.wopt_index - 1])
+                    .cmd(L!("fish"))
+                    .append_to_msg('\n')
+                    .write_to(&mut OutputStream::Fd(FdOutputStream::new(STDERR_FILENO)));
                 return ControlFlow::Break(1);
             }
             _ => panic!("unexpected retval from WGetopter"),
@@ -482,10 +480,10 @@ fn throwing_main() -> i32 {
     // command line takes precedence).
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            features::set_from_string(s.as_utfstr());
+            fish_feature_flags::set_from_string(s.as_utfstr());
         }
     }
-    features::set_from_string(opts.features.as_utfstr());
+    fish_feature_flags::set_from_string(opts.features.as_utfstr());
     proc_init();
     reader_init(true);
 

@@ -8,12 +8,12 @@ use fish_widestring::prelude::*;
 use std::cmp;
 use std::sync::{
     LazyLock,
-    atomic::{AtomicIsize, Ordering},
+    atomic::{AtomicUsize, Ordering},
 };
 
 /// Width of ambiguous East Asian characters and, as of TR11, all private-use characters.
 /// 1 is the typical default, but we accept any non-negative override via `$fish_ambiguous_width`.
-pub static FISH_AMBIGUOUS_WIDTH: AtomicIsize = AtomicIsize::new(1);
+pub static FISH_AMBIGUOUS_WIDTH: AtomicUsize = AtomicUsize::new(1);
 
 /// Width of emoji characters.
 ///
@@ -25,34 +25,33 @@ pub static FISH_AMBIGUOUS_WIDTH: AtomicIsize = AtomicIsize::new(1);
 /// Valid values are 1, and 2. 1 is the typical emoji width used in Unicode 8 while some newer
 /// terminals use a width of 2 since Unicode 9.
 // For some reason, this is declared here and exposed here, but is set in `env_dispatch`.
-pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(2);
+pub static FISH_EMOJI_WIDTH: AtomicUsize = AtomicUsize::new(2);
 
 static WC_LOOKUP_TABLE: LazyLock<WcLookupTable> = LazyLock::new(WcLookupTable::new);
 
-// Big hack to use our versions of wcswidth where we know them to be broken, which is
-// EVERYWHERE (https://github.com/fish-shell/fish-shell/issues/2199)
-pub fn fish_wcwidth(c: char) -> isize {
+pub fn fish_wcwidth(c: char) -> Option<usize> {
     // Check for VS16 which selects emoji presentation. This "promotes" a character like U+2764
     // (width 1) to an emoji (probably width 2). So treat it as width 1 so the sums work. See #2652.
     // VS15 selects text presentation.
     let variation_selector_16 = '\u{FE0F}';
     let variation_selector_15 = '\u{FE0E}';
     if c == variation_selector_16 {
-        return 1;
+        return Some(1);
     } else if c == variation_selector_15 {
-        return 0;
+        return Some(0);
     }
 
     // Check for Emoji_Modifier property. Only the Fitzpatrick modifiers have this, in range
     // 1F3FB..1F3FF. This is a hack because such an emoji appearing on its own would be drawn as
     // width 2, but that's unlikely to be useful. See #8275.
     if ('\u{1F3FB}'..='\u{1F3FF}').contains(&c) {
-        return 0;
+        return Some(0);
     }
 
     let width = WC_LOOKUP_TABLE.classify(c);
-    match width {
-        WcWidth::NonCharacter | WcWidth::NonPrint | WcWidth::Combining | WcWidth::Unassigned => 0,
+    Some(match width {
+        WcWidth::NonPrint => return None,
+        WcWidth::NonCharacter | WcWidth::Combining | WcWidth::Unassigned => 0,
         WcWidth::Ambiguous | WcWidth::PrivateUse => {
             // TR11: "All private-use characters are by default classified as Ambiguous".
             FISH_AMBIGUOUS_WIDTH.load(Ordering::Relaxed)
@@ -60,25 +59,25 @@ pub fn fish_wcwidth(c: char) -> isize {
         WcWidth::One => 1,
         WcWidth::Two => 2,
         WcWidth::WidenedIn9 => FISH_EMOJI_WIDTH.load(Ordering::Relaxed),
-    }
+    })
 }
 
-/// fish's internal versions of wcwidth and wcswidth
-pub fn fish_wcswidth(s: &wstr) -> isize {
-    // ascii fast path; empty iterator returns true for .all()
-    if s.chars().all(|c| c.is_ascii() && !c.is_ascii_control()) {
-        return s.len() as isize;
+pub fn fish_wcswidth(s: &wstr) -> Option<usize> {
+    fish_wcswidth_canonicalizing(s, std::convert::identity)
+}
+
+pub fn fish_wcswidth_canonicalizing(s: &wstr, canonicalize: fn(char) -> char) -> Option<usize> {
+    let chars = s.chars().map(canonicalize);
+    // ascii fast path
+    if chars.clone().all(|c| c.is_ascii() && !c.is_ascii_control()) {
+        return Some(s.len());
     }
 
     let mut result = 0;
-    for c in s.chars() {
-        let w = fish_wcwidth(c);
-        if w < 0 {
-            return -1;
-        }
-        result += w;
+    for c in chars {
+        result += fish_wcwidth(c)?;
     }
-    result
+    Some(result)
 }
 
 pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {

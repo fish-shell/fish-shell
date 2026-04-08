@@ -49,7 +49,6 @@ else
 end
 # CHECK: Test 4 pass
 
-
 #Test that scope is preserved when setting a new value
 
 set t5 a
@@ -78,7 +77,6 @@ for i in 1
     end
 end
 # CHECK: Test 6 pass
-
 
 # Test if variables in for loop blocks do not go out of scope on new laps
 
@@ -405,7 +403,6 @@ set -x DONT_ESCAPE_COLONS_PATH 1: 2: :3:
 env | grep '^DONT_ESCAPE_COLONS_PATH='
 # CHECK: DONT_ESCAPE_COLONS_PATH=1::2:::3:
 
-
 # Path universal variables
 set -U __fish_test_path_not a b c
 set -U __fish_test_PATH 1 2 3
@@ -485,7 +482,6 @@ set -g __fish_test_global_vs_universal global
 echo "global-vs-universal 2: $__fish_test_global_vs_universal"
 # CHECK: global-vs-universal 2: global
 
-
 set __fish_test_global_vs_universal global2
 echo "global-vs-universal 3: $__fish_test_global_vs_universal"
 # CHECK: global-vs-universal 3: global2
@@ -536,6 +532,13 @@ set --show 'argle bargle'
 #CHECKERR: set --show 'argle bargle'
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
+
+set --show array[1]
+# CHECKERR: set: `set --show` does not allow slices with the var names
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set --show array[1]
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
 
 # Verify behavior of `set --show`
 set semiempty ''
@@ -622,6 +625,32 @@ set --show var5
 #CHECK: $var5[7]: |x|
 #CHECK: $var5[8]: |0|
 
+set -a
+# CHECKERR: set: expected >= 1 arguments; got 0
+# CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
+# CHECKERR: set -a
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+set -p
+# CHECKERR: set: expected >= 1 arguments; got 0
+# CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
+# CHECKERR: set -p
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -a foo[1]
+# CHECKERR: set: Cannot use --append or --prepend when assigning to a slice
+# CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
+# CHECKERR: set -a foo[1]
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+set -p foo[1]
+# CHECKERR: set: Cannot use --append or --prepend when assigning to a slice
+# CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
+# CHECKERR: set -p foo[1]
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
 # Setting local scope when no local scope of the var uses the closest scope
 set -g var6 ghi jkl
 begin
@@ -672,6 +701,19 @@ env | grep TESTVAR | sort | cat -v
 #CHECK: TESTVAR0=
 #CHECK: TESTVAR1=a
 #CHECK: TESTVAR2=a b
+
+set -x | grep TESTVAR | sort | cat -v
+#CHECK: TESTVAR0
+#CHECK: TESTVAR1 a
+#CHECK: TESTVAR2 'a' 'b'
+
+set -u TESTVAR0
+set -u TESTVAR2 a b
+set -u | grep TESTVAR | sort | cat -v
+#CHECK: TESTVAR0
+#CHECK: TESTVAR2 'a' 'b'
+set -x | grep TESTVAR | sort | cat -v
+#CHECK: TESTVAR1 a
 
 # if/for/while scope
 function test_ifforwhile_scope
@@ -747,7 +789,6 @@ echo $foo
 echo $bar
 #CHECK: 1 3
 
-
 # Test that `set -q` does not return 0 if there are 256 missing variables
 
 set -lq a(seq 1 256)
@@ -809,14 +850,14 @@ set -S stilllocal
 set -g globalvar global
 
 function test-function-scope
-    set -f funcvar "function"
+    set -f funcvar function
     echo $funcvar
     # CHECK: function
     set -S funcvar
     #CHECK: $funcvar: set in local scope, unexported, with 1 elements
     #CHECK: $funcvar[1]: |function|
     begin
-        set -l funcvar "block"
+        set -l funcvar block
         echo $funcvar
         # CHECK: block
         set -S funcvar
@@ -971,6 +1012,11 @@ set -e undefined[..1]
 set -l negative_oob 1 2 3
 set -q negative_oob[-10..1]
 
+set foo[1 2 3] a b
+# CHECKERR: set: given 3 indexes but 2 values
+set foo[1 2 3] a b c d
+# CHECKERR: set: given 3 indexes but 4 values
+
 # --no-event
 
 function onevent --on-variable nonevent
@@ -1015,8 +1061,89 @@ set line[0] ""
 # CHECKERR: ^
 # CHECKERR: (Type 'help set' for related documentation)
 
-
 echo Still here
 # CHECK: Still here
+
+set -o xtrace
+# CHECKERR: fish does not have shell options. See `help fish_for_bash_users`.
+# CHECKERR: set: -o: unknown option
+
+set -o vi
+# CHECKERR: fish does not have shell options. See `help fish_for_bash_users`.
+# CHECKERR: To enable vi-mode, run `fish_vi_key_bindings`.
+# CHECKERR: set: -o: unknown option
+
+set -o ed
+# CHECKERR: fish does not have shell options. See `help fish_for_bash_users`.
+# CHECKERR: ?
+# CHECKERR: ?
+# CHECKERR: ?
+# CHECKERR: set: -o: unknown option
+
+set -q -e foo
+# CHECKERR: set: invalid option combination
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set -q -e foo
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -q -n
+# CHECKERR: set: invalid option combination
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set -q -n
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -e -n
+# CHECKERR: set: invalid option combination
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set -e -n
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -l -g foo bar
+# CHECKERR: set: scope can be only one of: universal function global local
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set -l -g foo bar
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -u -x foo
+# CHECKERR: set: cannot both export and unexport
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set -u -x foo
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -e -x foo
+# CHECKERR: set: invalid option combination
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set -e -x foo
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -e -u foo
+# CHECKERR: set: invalid option combination
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set -e -u foo
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set --path --unpath foo
+# CHECKERR: set: cannot both path and unpath
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set --path --unpath foo
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -s -l
+# CHECKERR: set: invalid option combination
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set -s -l
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set umask abc
+# CHECKERR: set: Tried to modify the special variable 'umask' to an invalid value
 
 exit 0

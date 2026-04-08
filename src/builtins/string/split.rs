@@ -112,24 +112,26 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("qrm:nf:a");
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'q' => self.quiet = true,
             'r' => self.split_from = Direction::Right,
             'm' => {
-                self.max = fish_wcstol(arg.unwrap())?
+                let arg = arg.unwrap();
+                self.max = Self::parse_arg_number(arg)?
                     .try_into()
-                    .map_err(|_| invalid_args!(BUILTIN_ERR_INVALID_MAX_VALUE, name, arg))?;
+                    .map_err(|_| err_fmt!(Error::INVALID_MAX_VALUE, arg))?;
             }
             'n' => self.no_empty = true,
             'f' => {
-                self.fields = arg.unwrap().try_into().map_err(|e| match e {
-                    FieldParseError::Number => StringError::NotANumber,
+                let arg = arg.unwrap();
+                self.fields = arg.try_into().map_err(|e| match e {
+                    FieldParseError::Number => err_fmt!(Error::NOT_NUMBER, arg),
                     FieldParseError::Range => {
-                        invalid_args!("%s: Invalid range value for field '%s'", name, arg)
+                        err_fmt!("Invalid range value for field '%s'", arg)
                     }
                     FieldParseError::Field => {
-                        invalid_args!("%s: Invalid fields value '%s'", name, arg)
+                        err_fmt!("Invalid fields value '%s'", arg)
                     }
                 })?;
             }
@@ -148,8 +150,13 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         if self.is_split0 {
             return Ok(());
         }
+
+        let cmd = L!("string");
+        let subcmd = args[0];
         let Some(arg) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, args[0]);
+            err_str!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
@@ -164,12 +171,15 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         optind: &mut usize,
         args: &[&'args wstr],
     ) -> Result<(), ErrorCode> {
+        let cmd = L!("string");
+        let subcmd = args[0];
         if self.fields.is_empty() && self.allow_empty {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                args[0],
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 wgettext!("--allow-empty is only valid with --fields")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 

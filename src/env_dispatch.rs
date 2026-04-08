@@ -163,7 +163,8 @@ pub fn handle_emoji_width(vars: &EnvStack) {
 
     if let Some(width_str) = vars.get(L!("fish_emoji_width")) {
         // The only valid values are 1 or 2; we default to 1 if it was an invalid int.
-        let new_width = fish_wcstoi(&width_str.as_string()).unwrap_or(1).clamp(1, 2) as isize;
+        let new_width = fish_wcstoi(&width_str.as_string()).unwrap_or(1).clamp(1, 2);
+        let new_width = usize::try_from(new_width).unwrap_or_default();
         FISH_EMOJI_WIDTH.store(new_width, Ordering::Relaxed);
         flog!(
             term_support,
@@ -171,7 +172,7 @@ pub fn handle_emoji_width(vars: &EnvStack) {
             new_width
         );
     } else {
-        let width = 2_isize;
+        let width = 2_usize;
         FISH_EMOJI_WIDTH.store(width, Ordering::Relaxed);
         flog!(term_support, "default emoji width:", width);
     }
@@ -219,9 +220,9 @@ fn handle_change_ambiguous_width(vars: &EnvStack) {
         .map(|v| v.as_string())
         // We use the default value of 1 if it was an invalid int.
         .and_then(|fish_ambiguous_width| fish_wcstoi(&fish_ambiguous_width).ok())
-        .unwrap_or(1)
-        // Clamp in case of negative values.
-        .max(0) as isize;
+        .unwrap_or(1);
+    // Clamp in case of negative values.
+    let new_width = usize::try_from(new_width).unwrap_or_default();
     fish_fallback::FISH_AMBIGUOUS_WIDTH.store(new_width, Ordering::Relaxed);
 }
 

@@ -272,6 +272,7 @@ dependencies = [
  "fish-color",
  "fish-common",
  "fish-fallback",
+ "fish-feature-flags",
  "fish-gettext",
  "fish-gettext-extraction",
  "fish-gettext-mo-file-parser",
@@ -346,6 +347,13 @@ dependencies = [
  "libc",
  "rsconf",
  "widestring",
+]
+
+[[package]]
+name = "fish-feature-flags"
+version = "0.0.0"
+dependencies = [
+ "fish-widestring",
 ]
 
 [[package]]

@@ -9,7 +9,7 @@ set -l data_home_realpath (builtin realpath $XDG_DATA_HOME)
 if not builtin realpath /this/better/be/an/invalid/path
     echo first invalid path handled okay
     # CHECK: first invalid path handled okay
-    # CHECKERR: builtin realpath: /this/better/be/an/invalid/path: No such file or directory
+    # CHECKERR: realpath: /this/better/be/an/invalid/path: No such file or directory
 end
 
 # A non-existent file relative to $PWD succeeds.
@@ -44,11 +44,15 @@ builtin realpath /def///
 # Verify `realpath .` when cwd is a deleted directory gives a no such file or dir error.
 set -l tmpdir (mktemp -d)
 pushd $tmpdir
+mkdir subdir
+cd subdir
 # Solaris rmdir tries to protect against deleting $PWD.
 # But that's what we want to test, so we weasel around it.
-sh -c "cd ..; rmdir $tmpdir"
+sh -c "cd ../..; rmdir $tmpdir/subdir $tmpdir"
 builtin realpath .
-# CHECKERR: builtin realpath: .: No such file or directory
+# CHECKERR: realpath: .: No such file or directory
+builtin realpath -s .
+# CHECKERR: realpath: realpath failed: No such file or directory
 popd
 
 # A single symlink to a directory is correctly resolved.
@@ -133,5 +137,12 @@ end
 builtin realpath / /
 # CHECK: /
 # CHECK: /
+
+builtin realpath '' /tmp '' /dont-exist ''
+# CHECKERR: realpath: Invalid arg:
+# CHECK: {{.*}}/tmp
+# CHECKERR: realpath: Invalid arg:
+# CHECK: /dont-exist
+# CHECKERR: realpath: Invalid arg:
 
 exit 0

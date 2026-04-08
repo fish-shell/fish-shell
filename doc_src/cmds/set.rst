@@ -6,15 +6,16 @@ Synopsis
 
 .. synopsis::
 
-    set
-    set (-f | --function) (-l | --local) (-g | --global) (-U | --universal) [--no-event]
-    set [-Uflg] NAME [VALUE ...]
-    set [-Uflg] NAME[[INDEX ...]] [VALUE ...]
-    set (-x | --export) (-u | --unexport) [-Uflg] NAME [VALUE ...]
-    set (-a | --append) (-p | --prepend) [-Uflg] NAME VALUE ...
-    set (-e | --erase) [-Uflg] [-xu] [NAME][[INDEX]] ...]
-    set (-q | --query) [-Uflg] [-xu] [NAME][[INDEX]] ...]
+    set [(-f | --function) (-l | --local) (-g | --global) (-U | --universal)]
+        [(-x | --export) (-u | --unexport)]
     set (-S | --show) (-L | --long) [NAME ...]
+
+    set [-Uflg] [-xu] [--no-event] NAME [VALUE ...]
+    set [-Uflg] [--no-event] NAME[[INDEX ...]] [VALUE ...]
+    set (-a | --append) (-p | --prepend) [-Uflg] [--no-event] NAME VALUE ...
+    set (-e | --erase) [-Uflg] [--no-event] NAME[[INDEX]] ...
+
+    set (-q | --query) [-Uflg] [-xu] NAME[[INDEX]] ...
 
 Description
 -----------

@@ -1,6 +1,7 @@
 use super::prelude::*;
 
-use crate::wutil;
+use crate::builtins::error::Error;
+use crate::{err_fmt, err_str, wutil};
 use fish_util::get_seeded_rng;
 use rand::rngs::SmallRng;
 use rand::{Rng as _, RngCore as _};
@@ -26,7 +27,14 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 return Ok(SUCCESS);
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -56,9 +64,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
     let i = w.wopt_index;
     if arg_count >= 1 && argv[i] == "choice" {
         if arg_count == 1 {
-            streams
-                .err
-                .appendln(&wgettext_fmt!("%s: nothing to choose from", cmd));
+            err_str!("nothing to choose from").cmd(cmd).finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -69,18 +75,14 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
     fn parse_ll(streams: &mut IoStreams, cmd: &wstr, num: &wstr) -> Result<i64, wutil::Error> {
         let res = fish_wcstol(num);
         if res.is_err() {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, num));
+            err_fmt!(Error::NOT_NUMBER, num).cmd(cmd).finish(streams);
         }
         res
     }
     fn parse_ull(streams: &mut IoStreams, cmd: &wstr, num: &wstr) -> Result<u64, wutil::Error> {
         let res = fish_wcstoul(num);
         if res.is_err() {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, num));
+            err_fmt!(Error::NOT_NUMBER, num).cmd(cmd).finish(streams);
         }
         res
     }
@@ -124,11 +126,9 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
             match parse_ull(streams, cmd, argv[i + 1]) {
                 Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(0) => {
-                    streams.err.appendln(&wgettext_fmt!(
-                        "%s: %s must be a positive integer",
-                        cmd,
-                        "STEP"
-                    ));
+                    err_fmt!("%s must be a positive integer", "STEP")
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
                 Ok(x) => step = x,
@@ -140,9 +140,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
             }
         }
         _ => {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+            err_str!(Error::TOO_MANY_ARGUMENTS).cmd(cmd).finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
     }

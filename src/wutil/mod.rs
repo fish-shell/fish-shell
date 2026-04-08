@@ -12,6 +12,7 @@ use crate::fds::BorrowedFdFile;
 use crate::flog;
 use crate::signal::SigChecker;
 use crate::topic_monitor::Topic;
+use errno::{Errno, set_errno};
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2osstring, wcs2zstring};
 use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
@@ -100,6 +101,7 @@ pub fn wreadlink(file_name: &wstr) -> Option<WString> {
 /// `wrealpath()` returns `None`
 pub fn wrealpath(pathname: &wstr) -> Option<WString> {
     if pathname.is_empty() {
+        set_errno(Errno(0));
         return None;
     }
 
@@ -430,10 +432,6 @@ pub(crate) fn fish_is_pua(c: char) -> bool {
 /// some code points. See issue #3050.
 pub fn fish_iswalnum(c: char) -> bool {
     !fish_reserved_codepoint(c) && !fish_is_pua(c) && c.is_alphanumeric()
-}
-
-pub fn fish_wcswidth(s: &wstr) -> isize {
-    fish_fallback::fish_wcswidth(s)
 }
 
 /// Given that `cursor` is a pointer into `base`, return the offset in characters.

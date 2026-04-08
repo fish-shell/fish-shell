@@ -385,11 +385,8 @@ impl ParseError {
                 // It's possible that the start points at a newline itself. In that case,
                 // pretend it's a space. We only expect this to be at the end of the string.
                 caret_space_line += " ";
-            } else {
-                let width = fish_wcwidth(wc);
-                if width > 0 {
-                    caret_space_line += " ".repeat(width as usize).as_str();
-                }
+            } else if let Some(width) = fish_wcwidth(wc) {
+                caret_space_line += " ".repeat(width).as_str();
             }
         }
         result += "\n";
@@ -400,11 +397,11 @@ impl ParseError {
             // We do it like this
             //               ^~~^
             // With a "^" under the start and end, and squiggles in-between.
-            let width = fish_wcswidth(&src[start..start + len]);
+            let width = fish_wcswidth(&src[start..start + len]).unwrap_or_default();
             if width >= 2 {
                 // Subtract one for each of the carets - this is important in case
                 // the starting char has a width of > 1.
-                result += "~".repeat(width as usize - 2).as_str();
+                result += "~".repeat(width - 2).as_str();
                 result += "^";
             }
         }

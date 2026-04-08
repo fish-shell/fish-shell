@@ -46,7 +46,6 @@ use crate::expand::{ExpandFlags, ExpandResultCode, expand_string, expand_tilde};
 use crate::fd_readable_set::poll_fd_readable;
 use crate::fds::{make_fd_blocking, wopen_cloexec};
 use crate::flog::{flog, flogf};
-use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{
     HighlightRole, HighlightSpec, autosuggest_validate_from_history, highlight_shell,
@@ -121,6 +120,7 @@ use errno::{Errno, errno};
 use fish_common::{UTF8_BOM_WCHAR, help_section};
 use fish_fallback::fish_wcwidth;
 use fish_fallback::lowercase;
+use fish_feature_flags::FeatureFlag;
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{
     CaseSensitivity, IsPrefix, StringFuzzyMatch, count_preceding_backslashes, is_prefix,
@@ -239,7 +239,7 @@ fn redirect_tty_after_sighup() {
 }
 
 fn querying_allowed(vars: &dyn Environment) -> bool {
-    future_feature_flags::test(FeatureFlag::QueryTerm)
+    fish_feature_flags::feature_test(FeatureFlag::QueryTerm)
         && !is_dumb()
         && {
             // TODO(term-workaround)
@@ -2205,11 +2205,9 @@ impl ReaderData {
 
         // Fake composed character sequences by continuing to delete until we delete a character of
         // width at least 1.
-        let mut width;
         loop {
             pos -= 1;
-            width = fish_wcwidth(el.text().char_at(pos));
-            if width != 0 || pos == 0 {
+            if fish_wcwidth(el.text().char_at(pos)).is_none_or(|w| w != 0) || pos == 0 {
                 break;
             }
         }
@@ -2268,7 +2266,11 @@ impl ReaderData {
 
         while buff_pos != end {
             if buff_pos == el.len() && (move_right || to_word_end) {
-                break;
+                if !move_right && to_word_end && buff_pos != 0 {
+                    buff_pos -= 1;
+                } else {
+                    break;
+                }
             }
             let char_pos = if move_right {
                 if to_word_end { buff_pos + 1 } else { buff_pos }

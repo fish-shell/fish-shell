@@ -36,39 +36,45 @@ end
 
 # Invalid option specs
 argparse h-
-argparse /
-argparse +help
-argparse h/help:
-argparse h-help::
-argparse h-help=x
 #CHECKERR: argparse: Invalid option spec 'h-' at char '-'
 #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h-
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
+argparse /
 #CHECKERR: argparse: Short flag '/' invalid, must be alphanum or '#'
 #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse /
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
+argparse +help
 #CHECKERR: argparse: Short flag '+' invalid, must be alphanum or '#'
 #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse +help
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
+argparse h/help:
 #CHECKERR: argparse: Invalid option spec 'h/help:' at char ':'
 #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h/help:
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
+argparse h-help::
 #CHECKERR: argparse: Invalid option spec 'h-help::' at char ':'
 #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h-help::
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
+argparse h-help=x
 #CHECKERR: argparse: Invalid option spec 'h-help=x' at char 'x'
 #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h-help=x
+#CHECKERR: ^
+#CHECKERR: (Type 'help argparse' for related documentation)
+argparse h/
+#CHECKERR: argparse: Invalid option spec 'h/' at char '/'
+#CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
+#CHECKERR: argparse h/
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 
@@ -90,6 +96,19 @@ begin
     #CHECKERR: min-max: expected <= 1 arguments; got 2
     argparse --name min-max --max-args 1 -- arg1 arg2
     #CHECKERR: min-max: expected <= 1 arguments; got 2
+
+    argparse --name min-max --min-args -1 --
+    #CHECKERR: argparse: Invalid --min-args value '-1'
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: argparse --name min-max --min-args -1 --
+    #CHECKERR: ^
+    #CHECKERR: (Type 'help argparse' for related documentation)
+    argparse --name min-max --max-args -1 --
+    #CHECKERR: argparse: Invalid --max-args value '-1'
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: argparse --name min-max --max-args -1 --
+    #CHECKERR: ^
+    #CHECKERR: (Type 'help argparse' for related documentation)
 end
 
 # Invalid \"#-val\" spec
@@ -136,6 +155,13 @@ begin
     #CHECKERR: argparse '#-val' x/xray 'v#val' -- -s -x --long
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
+
+    argparse 'v#val' x/xray '#-val' -- -s -x --long
+    # CHECKERR: argparse: Implicit int flag 'v' already defined
+    # CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
+    # CHECKERR: argparse 'v#val' x/xray '#-val' -- -s -x --long
+    # CHECKERR: ^
+    # CHECKERR: (Type 'help argparse' for related documentation)
 end
 
 # Defining an implicit int flag with modifiers
@@ -304,7 +330,7 @@ and echo unexpected argparse return status >&2
 # CHECKERR: argparse: Value 'a1' for flag 'm' is not an integer
 
 begin
-# Check the exit status from argparse validation
+    # Check the exit status from argparse validation
     argparse 'm#max!set -l | grep "^_flag_"; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
     set -l saved_status $status
     test $saved_status -eq 57
@@ -419,7 +445,6 @@ begin
     # CHECK: argv
     # CHECK: argv_opts '--long=value' '--long'
 end
-
 
 begin
     argparse -u b/break -- "-b kubectl get pods -l name=foo"
@@ -726,9 +751,8 @@ begin
     # CHECK: argv_opts
 end
 
-
 begin
-    argparse 'd=?&' a b  -- -d -d3 -ad -bd345
+    argparse 'd=?&' a b -- -d -d3 -ad -bd345
     set -l
     # CHECK: _flag_a -a
     # CHECK: _flag_b -b
@@ -738,7 +762,7 @@ begin
 end
 
 begin
-    argparse 'd&' a b 'v='  -- 0 -adbv124 1 -abdv125 2 -dabv124 3 -vd3
+    argparse 'd&' a b 'v=' -- 0 -adbv124 1 -abdv125 2 -dabv124 3 -vd3
     set -l
     # CHECK: _flag_a '-a' '-a' '-a'
     # CHECK: _flag_b '-b' '-b' '-b'
@@ -793,6 +817,29 @@ begin
     # CHECK: _flag_opt '' 'val' '' '456'
     # CHECK: argv 'non-value' 'arg'
     # CHECK: argv_opts '-o' '-oval' '--opt' '--opt=456'
+end
+
+# Check --exclusive
+begin
+    argparse --exclusive=a a/abc b/bcd --
+    # CHECKERR: argparse: exclusive flag string 'a' is not valid
+
+    argparse --exclusive=a,bcd a/abc b/bcd --
+    argparse -x a,bcd a/abc b/bcd --
+
+    argparse --exclusive=a,bcd,e a/abc b/bcd --
+    # CHECKERR: argparse: exclusive flag 'e' is not valid
+end
+
+begin
+    # Many, many long options
+    argparse (for i in (seq 0 6400); echo "o$i"; end) --
+    # CHECKERR: argparse: Too many long-only options
+    # CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
+    # CHECKERR: argparse (for i in (seq 0 6400); echo "o$i"; end) --
+    # CHECKERR: ^
+    # CHECKERR: (Type 'help argparse' for related documentation)
+    set -l
 end
 
 # Check that the argparse's are properly wrapped in begin blocks

@@ -13,12 +13,11 @@ use crate::common::{
 };
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
 use crate::expand::ExpandFlags;
-use crate::future_feature_flags::FeatureFlag;
-use crate::future_feature_flags::feature_test;
 use crate::prelude::*;
 use crate::wutil::dir_iter::DirEntryType;
 use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
 use fish_fallback::wcscasecmp;
+use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{
     CaseSensitivity, string_fuzzy_match_string, string_suffixes_string_case_insensitive,
     strip_executable_suffix,
@@ -1231,7 +1230,7 @@ pub fn wildcard_has(s: impl AsRef<wstr>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::future_feature_flags::scoped_test;
+    use fish_feature_flags::with_overridden_feature;
 
     #[test]
     fn test_wildcards() {
@@ -1244,12 +1243,12 @@ mod tests {
         let wc = unescape_string(wc, UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)).unwrap();
         assert!(!wildcard_has(&wc) && wildcard_has_internal(&wc));
 
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {
             assert!(wildcard_has(L!("?")));
             assert!(!wildcard_has(L!("\\?")));
         });
 
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, true, || {
             assert!(!wildcard_has(L!("?")));
             assert!(!wildcard_has(L!("\\?")));
         });

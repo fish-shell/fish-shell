@@ -358,17 +358,14 @@ impl Pager {
                     comp.comp_width += 2;
                 }
 
-                // This can return -1 if it can't calculate the width. So be cautious.
-                let comp_width = wcswidth_rendered(comp_string);
                 if show_prefix {
-                    comp.comp_width += usize::try_from(prefix_len).unwrap_or_default();
+                    comp.comp_width += prefix_len;
                 }
-                comp.comp_width += usize::try_from(comp_width).unwrap_or_default();
+                comp.comp_width += wcswidth_rendered(comp_string);
             }
 
             // This can return -1 if it can't calculate the width. So be cautious.
-            let desc_width = wcswidth_rendered(&comp.desc);
-            comp.desc_width = usize::try_from(desc_width).unwrap_or_default();
+            comp.desc_width = wcswidth_rendered(&comp.desc);
         }
     }
 
@@ -1155,8 +1152,7 @@ fn print_max_impl(
     let mut remaining = max;
     let mut i = 0;
     while let Some(c) = chars.next() {
-        let iwidth_c = wcwidth_rendered(c);
-        let Ok(width_c) = usize::try_from(iwidth_c) else {
+        let Some(width_c) = wcwidth_rendered(c) else {
             // skip non-printable characters
             continue;
         };
@@ -1168,8 +1164,7 @@ fn print_max_impl(
         let ellipsis = ELLIPSIS_CHAR;
         if (width_c == remaining) && (has_more || chars.peek().is_some()) {
             line.append(ellipsis, color(i), offset_in_cmdline);
-            let ellipsis_width = wcwidth_rendered(ellipsis);
-            remaining = remaining.saturating_sub(usize::try_from(ellipsis_width).unwrap());
+            remaining = remaining.saturating_sub(wcwidth_rendered(ellipsis).unwrap());
             break;
         }
 

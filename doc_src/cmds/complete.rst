@@ -40,7 +40,6 @@ The following options are available:
 **-a** or **--arguments** *ARGUMENTS*
     Adds the specified option arguments to the completions list.
 
-
 **-k** or **--keep-order**
     Keeps the order of *ARGUMENTS* instead of sorting alphabetically. Multiple ``complete`` calls with **-k** result in arguments of the later ones displayed first.
 

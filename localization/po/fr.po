@@ -618,7 +618,7 @@ msgstr ""
 
 #, c-format
 msgid "%s: Invalid value for '--color' option: '%s'. Expected 'always', 'never', or 'auto'"
-msgstr "%s : Valeur invalide pour l'option '--color' : '%s'. Attendu 'always', 'never' ou 'auto'"
+msgstr "%s : Valeur invalide pour l'option '--color' : '%s'. Attendu 'always', 'never' ou 'auto'"
 
 #, c-format
 msgid "%s: Invalid width value '%s'"
@@ -662,7 +662,7 @@ msgstr "%s : À l’extérieur de toute boucle"
 
 #, c-format
 msgid "%s: Number out of range"
-msgstr "%s : Nombre hors limites"
+msgstr "%s : Nombre hors limites"
 
 #, c-format
 msgid "%s: Options %s and %s cannot be used together"

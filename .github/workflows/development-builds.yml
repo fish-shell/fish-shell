@@ -1,0 +1,33 @@
+name: Linux development builds
+
+on:
+  push:
+    branches:
+      - main
+      - buildscript
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: linux-development
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+      - uses: astral-sh/setup-uv@v7
+      - name: Update package database
+        run: sudo apt-get update
+      - name: Install deps
+        run: sudo apt install debhelper devscripts dpkg-dev
+      - name: Create tarball and source packages
+        run: |
+          version=$(build_tools/git_version_gen.sh --stdout 2>/dev/null)
+          mkdir /tmp/gpg
+          echo "$SIGNING_GPG_KEY" > /tmp/gpg/signing-gpg-key
+          mkdir /tmp/fish-built
+          FISH_ARTEFACT_PATH=/tmp/fish-built ./build_tools/make_tarball.sh
+          FISH_ARTEFACT_PATH=/tmp/fish-built DEB_SIGN_KEYFILE=/tmp/gpg/signing-gpg-key ./build_tools/make_linux_packages.sh $version
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-source-packages
+          path: |
+            /tmp/fish-built
+            ! /tmp/fish-built/fish-*/* # don't include the unpacked source directory

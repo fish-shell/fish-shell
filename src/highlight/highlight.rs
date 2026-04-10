@@ -190,9 +190,14 @@ impl HighlightColorResolver {
         if highlight.valid_path {
             if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
                 let valid_path_face = parse_text_face(valid_path_var.as_list());
-                // Historical behavior is to not apply background.
                 if let Some(fg) = valid_path_face.fg {
                     face.fg = fg;
+                }
+                if let Some(bg) = valid_path_face.bg {
+                    face.bg = bg;
+                }
+                if let Some(underline_color) = valid_path_face.underline_color {
+                    face.underline_color = underline_color;
                 }
                 face.style = face.style.union_prefer_right(valid_path_face.style);
             }

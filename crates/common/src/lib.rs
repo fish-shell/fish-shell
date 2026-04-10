@@ -213,7 +213,7 @@ impl<T: Read + ?Sized> ReadExt for T {
 
 /// A rusty port of the C++ `write_loop()` function from `common.cpp`. This should be deprecated in
 /// favor of native rust read/write methods at some point.
-pub fn safe_write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
+pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
     let fd = fd.as_raw_fd();
     let mut total = 0;
     while total < buf.len() {
@@ -231,8 +231,6 @@ pub fn safe_write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> 
     }
     Ok(())
 }
-
-pub use safe_write_loop as write_loop;
 
 pub const fn help_section_exists(section: &str) -> bool {
     let haystack = include_str!("../../../share/help_sections");

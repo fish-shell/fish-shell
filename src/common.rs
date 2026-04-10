@@ -999,17 +999,49 @@ pub(crate) fn charptr2wcstring(input: *const libc::c_char) -> WString {
     bytes2wcstring(input)
 }
 
-pub fn init_special_chars_once() {
+/// Validates and prepares a user-supplied omitted newline character.
+/// Returns None if the string is not exactly one valid-width character.
+fn validate_omitted_newline_char(s: &str) -> Option<&'static str> {
+    let mut chars = s.chars();
+    let first_char = chars.next()?;
+
+    if chars.next().is_some() {
+        return None;
+    }
+
+    fish_wcwidth(first_char)?;
+
+    Some(Box::leak(s.to_owned().into_boxed_str()))
+}
+
+fn init_omitted_newline_char() {
+    if is_console_session() {
+        OMITTED_NEWLINE_STR.store(&"^J");
+    } else {
+        let custom_char = env::var_os("fish_omitted_newline_char")
+            .and_then(|val| val.to_str().map(str::to_owned))
+            .and_then(|s| validate_omitted_newline_char(&s));
+
+        if let Some(custom) = custom_char {
+            // Create a static reference to the static string (which was leaked by validation)
+            let static_ref: &'static &'static str = Box::leak(Box::new(custom));
+            OMITTED_NEWLINE_STR.store(static_ref);
+        } else if is_windows_subsystem_for_linux(WSL::Any) {
+            // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
+            // they can be *encoded* just fine. Use alternative glyphs.
+            OMITTED_NEWLINE_STR.store(&"\u{00b6}"); // "pilcrow"
+        } else {
+            OMITTED_NEWLINE_STR.store(&"\u{23CE}"); // "return symbol" (⏎)
+        }
+    }
+}
+
+fn init_obfuscation_read_char() {
     if is_windows_subsystem_for_linux(WSL::Any) {
-        // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
-        // they can be *encoded* just fine. Use alternative glyphs.
-        OMITTED_NEWLINE_STR.store(&"\u{00b6}"); // "pilcrow"
         OBFUSCATION_READ_CHAR.store(u32::from('\u{2022}'), Ordering::Relaxed); // "bullet" (•)
     } else if is_console_session() {
-        OMITTED_NEWLINE_STR.store(&"^J");
         OBFUSCATION_READ_CHAR.store(u32::from('*'), Ordering::Relaxed);
     } else {
-        OMITTED_NEWLINE_STR.store(&"\u{23CE}"); // "return symbol" (⏎)
         OBFUSCATION_READ_CHAR.store(
             u32::from(
                 '\u{25CF}', // "black circle" (●)
@@ -1017,6 +1049,11 @@ pub fn init_special_chars_once() {
             Ordering::Relaxed,
         );
     }
+}
+
+pub fn init_special_chars_once() {
+    init_omitted_newline_char();
+    init_obfuscation_read_char();
 }
 
 /// Test if the string is a valid function name.
@@ -1578,6 +1615,35 @@ mod tests {
         check_decode!(&[0xef, 0xef, 0x98, 0x80, 0x61], &['�', '\u{f600}', 'a']);
         check_decode!(&[0x98, 0xef, 0xef, 0x80], &['�', '�', '�', '�']);
         check_decode!(&[0xff, 0xef, 0x98, 0x80], &['�', '\u{f600}']);
+    }
+
+    #[test]
+    fn test_validate_omitted_newline_char() {
+        use super::validate_omitted_newline_char;
+
+        // Valid single Unicode characters
+        assert!(validate_omitted_newline_char("⏎").is_some());
+        assert!(validate_omitted_newline_char("¶").is_some());
+        assert!(validate_omitted_newline_char("↵").is_some());
+        assert!(validate_omitted_newline_char("⤶").is_some());
+        assert!(validate_omitted_newline_char("◀").is_some());
+        assert!(validate_omitted_newline_char("●").is_some());
+
+        // Valid emoji (single character)
+        assert!(validate_omitted_newline_char("✓").is_some());
+        assert!(validate_omitted_newline_char("✗").is_some());
+
+        // Multi-character strings should be rejected
+        assert!(validate_omitted_newline_char("ab").is_none());
+        assert!(validate_omitted_newline_char("⏎⏎").is_none());
+        assert!(validate_omitted_newline_char("xyz").is_none());
+
+        // Empty string should be rejected
+        assert!(validate_omitted_newline_char("").is_none());
+
+        // ASCII characters should work if they have valid width
+        assert!(validate_omitted_newline_char("X").is_some());
+        assert!(validate_omitted_newline_char("*").is_some());
     }
 }
 

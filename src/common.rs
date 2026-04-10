@@ -15,10 +15,7 @@ use crate::wutil::fish_iswalnum;
 use fish_fallback::fish_wcwidth;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::wcs2bytes;
-use fish_widestring::{
-    ENCODE_DIRECT_END, SPECIAL_KEY_ENCODE_BASE, decode_byte_from_char, encode_byte_to_char,
-    subslice_position,
-};
+use fish_widestring::{decode_byte_from_char, encode_byte_to_char, subslice_position};
 use nix::sys::termios::Termios;
 use std::env;
 use std::ffi::{CStr, OsStr};
@@ -1226,19 +1223,6 @@ pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
     wsl.map(|wsl| v == WSL::Any || wsl == v).unwrap_or(false)
 }
 
-/// Return true if the character is in a range reserved for fish's private use.
-///
-/// NOTE: This is used when tokenizing the input. It is also used when reading input, before
-/// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted
-/// string. We don't want external input to be able to feed reserved characters into our
-/// lexer/parser or code evaluator.
-//
-// TODO: Actually implement the replacement as documented above.
-pub fn fish_reserved_codepoint(c: char) -> bool {
-    (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END)
-        || (c >= SPECIAL_KEY_ENCODE_BASE && c < ENCODE_DIRECT_END)
-}
-
 /// Test if the given char is valid in a variable name.
 pub fn valid_var_name_char(chr: char) -> bool {
     fish_iswalnum(chr) || chr == '_'
@@ -1271,11 +1255,13 @@ pub const ESCAPE_TEST_CHAR: usize = 4000;
 mod tests {
 
     use super::{
-        ENCODE_DIRECT_END, ESCAPE_TEST_CHAR, EscapeFlags, EscapeStringStyle, UnescapeStringStyle,
-        bytes2wcstring, escape_string, unescape_string, wcs2bytes,
+        ESCAPE_TEST_CHAR, EscapeFlags, EscapeStringStyle, UnescapeStringStyle, bytes2wcstring,
+        escape_string, unescape_string, wcs2bytes,
     };
     use fish_util::get_seeded_rng;
-    use fish_widestring::{ENCODE_DIRECT_BASE, L, WString, decode_with_replacement, wstr};
+    use fish_widestring::{
+        ENCODE_DIRECT_BASE, ENCODE_DIRECT_END, L, WString, decode_with_replacement, wstr,
+    };
     use rand::{Rng as _, RngCore as _};
     use std::fmt::Write as _;
 

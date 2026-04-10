@@ -9,7 +9,7 @@ use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use cfg_if::cfg_if;
 use errno::{Errno, errno, set_errno};
-use fish_wcstringutil::{wcs2osstring, wcs2zstring};
+use fish_widestring::{wcs2osstring, wcs2zstring};
 use libc::{EACCES, ENOENT, ENOTDIR, X_OK};
 use nix::unistd::AccessFlags;
 use std::ffi::OsStr;

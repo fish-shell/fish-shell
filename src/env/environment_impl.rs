@@ -13,7 +13,7 @@ use crate::prelude::*;
 use crate::reader::{commandline_get_state, reader_status_count};
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wutil::fish_wcstol_radix;
-use fish_wcstringutil::wcs2zstring;
+use fish_widestring::wcs2zstring;
 use nix::sys::stat::{Mode, umask};
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashSet;

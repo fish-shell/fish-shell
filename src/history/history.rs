@@ -1805,9 +1805,8 @@ mod tests {
     use crate::prelude::*;
     use crate::tests::prelude::test_init;
     use fish_build_helper::workspace_root;
-    use fish_wcstringutil::{
-        string_prefixes_string, string_prefixes_string_case_insensitive, wcs2bytes,
-    };
+    use fish_wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
+    use fish_widestring::wcs2bytes;
     use rand::Rng as _;
     use rand::rngs::ThreadRng;
     use std::collections::VecDeque;

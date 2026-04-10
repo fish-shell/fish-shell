@@ -45,8 +45,7 @@ use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror_io};
 use errno::{errno, set_errno};
 use fish_common::{ScopeGuard, exit_without_destructors, truncate_at_nul, write_loop};
-use fish_wcstringutil::{wcs2bytes, wcs2zstring};
-use fish_widestring::ToWString as _;
+use fish_widestring::{ToWString as _, wcs2bytes, wcs2zstring};
 use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO,

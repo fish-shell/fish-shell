@@ -59,7 +59,7 @@ use fish::{
     wutil::waccess,
 };
 use fish_common::save_term_foreground_process_group;
-use fish_wcstringutil::wcs2bytes;
+use fish_widestring::wcs2bytes;
 use libc::{STDERR_FILENO, STDIN_FILENO};
 use nix::{
     sys::resource::{UsageWho, getrusage},

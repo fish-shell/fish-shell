@@ -17,13 +17,17 @@ use crate::{
 use errno::{Errno, set_errno};
 use fish_common::fish_reserved_codepoint;
 use fish_util::{perror, write_to_fd};
-use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2osstring, wcs2zstring};
-use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
+use fish_wcstringutil::join_strings;
+use fish_widestring::{
+    IntoCharIter, L, WExt as _, WString, str2bytes_callback, wcs2osstring, wcs2zstring, wstr,
+};
 use nix::unistd::AccessFlags;
-use std::ffi::OsStr;
-use std::fs::{self, canonicalize};
-use std::io;
-use std::os::unix::prelude::*;
+use std::{
+    ffi::OsStr,
+    fs::{self, canonicalize},
+    io,
+    os::unix::prelude::*,
+};
 
 pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
 

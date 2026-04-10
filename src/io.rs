@@ -1,26 +1,27 @@
-use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::bytes2wcstring;
-use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
-use crate::fds::{
-    BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
+use crate::{
+    builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH},
+    common::bytes2wcstring,
+    fd_monitor::{Callback, FdMonitor, FdMonitorItemId},
+    fds::{BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec},
+    flog::{flog, flogf, should_flog},
+    nix::isatty,
+    path::path_apply_working_directory,
+    prelude::*,
+    proc::JobGroupRef,
+    redirection::{RedirectionMode, RedirectionSpecList},
+    wutil::{perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat},
 };
-use crate::flog::{flog, flogf, should_flog};
-use crate::nix::isatty;
-use crate::path::path_apply_working_directory;
-use crate::prelude::*;
-use crate::proc::JobGroupRef;
-use crate::redirection::{RedirectionMode, RedirectionSpecList};
-use crate::wutil::{perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat};
 use errno::Errno;
 use fish_util::perror;
-use fish_wcstringutil::wcs2bytes;
+use fish_widestring::wcs2bytes;
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EWOULDBLOCK, STDOUT_FILENO};
-use nix::fcntl::OFlag;
-use nix::sys::stat::Mode;
-use std::fs::File;
-use std::io;
-use std::os::fd::{AsFd as _, AsRawFd as _, BorrowedFd, OwnedFd, RawFd};
-use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
+use nix::{fcntl::OFlag, sys::stat::Mode};
+use std::{
+    fs::File,
+    io,
+    os::fd::{AsFd as _, AsRawFd as _, BorrowedFd, OwnedFd, RawFd},
+    sync::{Arc, LazyLock, Mutex, MutexGuard},
+};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just

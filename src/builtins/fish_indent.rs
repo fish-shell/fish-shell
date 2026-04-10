@@ -24,8 +24,9 @@ use crate::{
 };
 use assert_matches::assert_matches;
 use fish_common::{ReadExt as _, UnescapeFlags, UnescapeStringStyle};
-use fish_wcstringutil::{count_preceding_backslashes, wcs2bytes};
+use fish_wcstringutil::count_preceding_backslashes;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
+use fish_widestring::wcs2bytes;
 use std::{
     ffi::OsStr,
     fmt::Write as _,

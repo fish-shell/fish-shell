@@ -6,8 +6,8 @@ use crate::path::path_get_config;
 use crate::prelude::*;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
 use fish_common::{UnescapeFlags, UnescapeStringStyle};
-use fish_wcstringutil::{LineIterator, join_strings, wcs2zstring};
-use fish_widestring::decode_byte_from_char;
+use fish_wcstringutil::{LineIterator, join_strings};
+use fish_widestring::{decode_byte_from_char, wcs2zstring};
 use itertools::Itertools as _;
 use std::collections::HashSet;
 use std::collections::hash_map::Entry;
@@ -814,8 +814,7 @@ mod tests {
     use crate::tests::prelude::*;
     use crate::wutil::{INVALID_FILE_ID, file_id_for_path};
     use fish_tempfile::TempDir;
-    use fish_wcstringutil::wcs2osstring;
-    use fish_widestring::{ENCODE_DIRECT_BASE, char_offset};
+    use fish_widestring::{ENCODE_DIRECT_BASE, char_offset, wcs2osstring};
 
     const UVARS_PER_THREAD: usize = 8;
 

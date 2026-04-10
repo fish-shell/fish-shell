@@ -9,8 +9,7 @@ use crate::{
     wutil::{FileId, INVALID_FILE_ID, file_id_for_path},
 };
 use fish_common::ScopeGuard;
-use fish_wcstringutil::wcs2bytes;
-use fish_widestring::{L, WExt as _, WString, wstr};
+use fish_widestring::{L, WExt as _, WString, wcs2bytes, wstr};
 use lru::LruCache;
 use rust_embed::RustEmbed;
 use std::collections::{HashMap, HashSet};
@@ -467,7 +466,7 @@ mod tests {
     fn test_autoload() {
         let _cleanup = test_init();
         use crate::fds::wopen_cloexec;
-        use fish_wcstringutil::wcs2zstring;
+        use fish_widestring::wcs2zstring;
         use nix::fcntl::OFlag;
 
         macro_rules! run {

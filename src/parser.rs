@@ -36,8 +36,7 @@ use fish_common::{
     EscapeFlags, EscapeStringStyle, FilenameRef, ScopeGuarding, ScopedCell, ScopedRefCell,
 };
 use fish_util::get_time;
-use fish_wcstringutil::wcs2bytes;
-use fish_widestring::WExt as _;
+use fish_widestring::{WExt as _, wcs2bytes};
 use libc::c_int;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::OsStr;

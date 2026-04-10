@@ -14,7 +14,7 @@ use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use cfg_if::cfg_if;
 use fish_feature_flags::{self as features, feature_test};
 use fish_util::wcsfilecmp_glob;
-use fish_wcstringutil::wcs2bytes;
+use fish_widestring::wcs2bytes;
 use nix::unistd::AccessFlags;
 use rust_embed::RustEmbed;
 

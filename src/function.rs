@@ -2,24 +2,28 @@
 // autoloading functions in the $fish_function_path. Actual function evaluation is taken care of by
 // the parser and to some degree the builtin handling library.
 
-use crate::ast::{self, Node as _};
-use crate::autoload::{Autoload, AutoloadResult};
-use crate::common::{escape, valid_func_name};
-use crate::complete::complete_wrap_map;
-use crate::env::{EnvStack, Environment};
-use crate::event::{self, EventDescription};
-use crate::global_safety::RelaxedAtomicBool;
-use crate::parse_tree::NodeRef;
-use crate::parser::Parser;
-use crate::parser_keywords::parser_keywords_is_reserved;
-use crate::prelude::*;
-use crate::proc::Pid;
-use crate::wutil::dir_iter::DirIter;
+use crate::{
+    ast::{self, Node as _},
+    autoload::{Autoload, AutoloadResult},
+    common::{escape, valid_func_name},
+    complete::complete_wrap_map,
+    env::{EnvStack, Environment},
+    event::{self, EventDescription},
+    global_safety::RelaxedAtomicBool,
+    parse_tree::NodeRef,
+    parser::Parser,
+    parser_keywords::parser_keywords_is_reserved,
+    prelude::*,
+    proc::Pid,
+    wutil::dir_iter::DirIter,
+};
 use fish_common::{FilenameRef, assert_sync};
-use fish_wcstringutil::wcs2bytes;
-use std::collections::{HashMap, HashSet};
-use std::num::NonZeroU32;
-use std::sync::{Arc, LazyLock, Mutex};
+use fish_widestring::wcs2bytes;
+use std::{
+    collections::{HashMap, HashSet},
+    num::NonZeroU32,
+    sync::{Arc, LazyLock, Mutex},
+};
 
 #[derive(Clone)]
 pub struct FunctionProperties {

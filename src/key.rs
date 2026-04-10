@@ -7,31 +7,50 @@ use crate::{
 use fish_common::{EscapeFlags, EscapeStringStyle};
 use fish_fallback::fish_wcwidth;
 use fish_feature_flags::{FeatureFlag, feature_test};
-use fish_widestring::{L, WExt as _, WString, decode_byte_from_char, wstr};
+use fish_widestring::{
+    L, SPECIAL_KEY_ENCODE_BASE, WExt as _, WString, char_offset, decode_byte_from_char, wstr,
+};
 
-pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
-pub(crate) const Delete: char = '\u{F501}';
-pub(crate) const Escape: char = '\u{F502}';
-pub(crate) const Enter: char = '\u{F503}';
-pub(crate) const Up: char = '\u{F504}';
-pub(crate) const Down: char = '\u{F505}';
-pub(crate) const Left: char = '\u{F506}';
-pub(crate) const Right: char = '\u{F507}';
-pub(crate) const PageUp: char = '\u{F508}';
-pub(crate) const PageDown: char = '\u{F509}';
-pub(crate) const Home: char = '\u{F50A}';
-pub(crate) const End: char = '\u{F50B}';
-pub(crate) const Insert: char = '\u{F50C}';
-pub(crate) const Tab: char = '\u{F50D}';
-pub(crate) const Space: char = '\u{F50E}';
-pub(crate) const Menu: char = '\u{F50F}';
-pub(crate) const PrintScreen: char = '\u{F510}';
-pub(crate) const MAX_FUNCTION_KEY: u32 = 12;
-pub(crate) fn function_key(n: u32) -> char {
-    assert!((1..=MAX_FUNCTION_KEY).contains(&n));
-    char::from_u32(u32::from('\u{F5FF}') - MAX_FUNCTION_KEY + (n - 1)).unwrap()
+const fn special_key_char(offset: u8) -> char {
+    // TODO: use `u32::from(offset)` once that's available in const fn
+    char_offset(SPECIAL_KEY_ENCODE_BASE, offset as u32)
 }
-pub(crate) const Invalid: char = '\u{F5FF}';
+
+macro_rules! define_special_keys {
+    ($($key_name:ident: $offset:expr)*) => {
+        $(
+            pub(crate) const $key_name: char = special_key_char($offset);
+        )*
+    };
+}
+
+define_special_keys! {
+    Backspace: 0
+    Delete: 1
+    Escape: 2
+    Enter: 3
+    Up: 4
+    Down: 5
+    Left: 6
+    Right: 7
+    PageUp: 8
+    PageDown: 9
+    Home: 10
+    End: 11
+    Insert: 12
+    Tab: 13
+    Space: 14
+    Menu: 15
+    PrintScreen: 16
+
+    Invalid: 255
+}
+
+pub(crate) const MAX_FUNCTION_KEY: u8 = 12;
+pub(crate) fn function_key(n: u8) -> char {
+    assert!((1..=MAX_FUNCTION_KEY).contains(&n));
+    special_key_char(254 - MAX_FUNCTION_KEY + n)
+}
 
 pub(crate) const KEY_NAMES: &[(char, &wstr)] = &[
     ('-', L!("minus")),
@@ -297,7 +316,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                 let num = key_name.strip_prefix('f').unwrap();
                 let codepoint = match fish_wcstoul(num) {
                     Ok(n) if (1..=u64::from(MAX_FUNCTION_KEY)).contains(&n) => {
-                        function_key(u32::try_from(n).unwrap())
+                        function_key(u8::try_from(n).unwrap())
                     }
                     _ => {
                         return Err(wgettext_fmt!(

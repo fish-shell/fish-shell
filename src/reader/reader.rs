@@ -20,96 +20,95 @@
 use super::history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
 use super::iothreads::{self, Debouncers};
 use super::word_motion::{MoveWordDir, MoveWordStateMachine, MoveWordStyle};
-use crate::abbrs::abbrs_match;
-use crate::ast::{self, Kind, is_same_node};
-use crate::builtins::shared::ErrorCode;
-use crate::builtins::shared::STATUS_CMD_ERROR;
-use crate::builtins::shared::STATUS_CMD_OK;
-use crate::common::{bytes2wcstring, escape, escape_string, get_program_name, shell_modes};
-use crate::complete::{
-    CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete, complete_load,
-    sort_and_prioritize,
+use crate::{
+    abbrs::{self, abbrs_match},
+    ast::{self, Kind, is_same_node},
+    builtins::shared::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
+    common::{
+        bytes2wcstring, escape, escape_string, escape_string_with_quote, get_program_name,
+        shell_modes,
+    },
+    complete::{
+        CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete,
+        complete_load, sort_and_prioritize,
+    },
+    editable_line::{Edit, EditableLine, line_at_cursor, range_of_line_at_cursor},
+    env::{EnvMode, EnvStack, Environment, Statuses},
+    env_dispatch::{MIDNIGHT_COMMANDER_SID, handle_emoji_width},
+    event,
+    exec::exec_subshell,
+    expand::{ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_tilde},
+    fd_readable_set::poll_fd_readable,
+    fds::{make_fd_blocking, wopen_cloexec},
+    flog::{flog, flogf},
+    function,
+    global_safety::RelaxedAtomicBool,
+    highlight::{
+        HighlightRole, HighlightSpec, autosuggest_validate_from_history, highlight_shell,
+        parse_text_face_for_highlight,
+    },
+    history::{
+        History, HistorySearch, PersistenceMode, SearchDirection, SearchFlags, SearchType,
+        history_session_id, in_private_mode,
+    },
+    input_common::{
+        BackgroundColorQuery, CharEvent, CharInputStyle, CursorPositionQuery,
+        CursorPositionQueryReason, ImplicitEvent, InputData, InputEventQueue,
+        InputEventQueuer as _, LONG_READ_TIMEOUT, QueryResponse, QueryResultEvent, ReadlineCmd,
+        RecurrentQuery, TerminalQuery, stop_query,
+    },
+    io::IoChain,
+    key::ViewportPosition,
+    kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate},
+    nix::isatty,
+    operation_context::{OperationContext, get_bg_context},
+    pager::{PageRendering, Pager, SelectionMotion},
+    panic::AT_EXIT,
+    parse_constants::{ParseIssue, ParseTreeFlags, SourceRange},
+    parse_util::{
+        MaybeParentheses, SPACES_PER_INDENT, compute_indents, contains_wildcards,
+        detect_parse_errors, escape_wildcards, get_cmdsubst_extent, get_line_from_offset,
+        get_offset, get_offset_from_line, get_process_extent, get_process_first_token_offset,
+        get_token_extent, lineno, locate_cmdsubst_range,
+    },
+    parser::{BlockType, EvalRes, Parser, ParserEnvSetMode},
+    portable_atomic::AtomicU64,
+    prelude::*,
+    proc::{
+        HAVE_PROC_STAT, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
+        print_exit_warning_for_jobs, proc_update_jiffies,
+    },
+    reader::word_motion::bigword_class,
+    screen::{CharOffset, Screen, is_dumb, screen_force_clear_to_end},
+    should_flog,
+    signal::{
+        signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
+        signal_set_handlers_once,
+    },
+    terminal::{
+        BufferedOutputter, Outputter,
+        TerminalCommand::{
+            self, ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer,
+            DecsetShowCursor, Osc0WindowTitle, Osc1TabTitle, Osc133CommandFinished,
+            Osc133CommandStart, QueryBackgroundColor, QueryCursorPosition,
+            QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute, QueryXtgettcap,
+            QueryXtversion,
+        },
+    },
+    termsize::{safe_termsize_invalidate_tty, termsize_last, termsize_update},
+    text_face::{TextFace, parse_text_face},
+    threads::{assert_is_background_thread, assert_is_main_thread},
+    tokenizer::{
+        TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType, Tokenizer, quote_end, tok_command,
+        variable_assignment_equals_pos,
+    },
+    tty_handoff::{
+        SCROLL_CONTENT_UP_TERMINFO_CODE, TtyHandoff, XTGETTCAP_QUERY_OS_NAME,
+        get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
+    },
+    wildcard::wildcard_has,
+    wutil::{fstat, perror_nix, wstat},
 };
-use crate::editable_line::{Edit, EditableLine, line_at_cursor, range_of_line_at_cursor};
-use crate::env::EnvStack;
-use crate::env::{EnvMode, Environment, Statuses};
-use crate::env_dispatch::MIDNIGHT_COMMANDER_SID;
-use crate::env_dispatch::handle_emoji_width;
-use crate::exec::exec_subshell;
-use crate::expand::expand_one;
-use crate::expand::{ExpandFlags, ExpandResultCode, expand_string, expand_tilde};
-use crate::fd_readable_set::poll_fd_readable;
-use crate::fds::{make_fd_blocking, wopen_cloexec};
-use crate::flog::{flog, flogf};
-use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{
-    HighlightRole, HighlightSpec, autosuggest_validate_from_history, highlight_shell,
-    parse_text_face_for_highlight,
-};
-use crate::history::{
-    History, HistorySearch, PersistenceMode, SearchDirection, SearchFlags, SearchType,
-    history_session_id, in_private_mode,
-};
-use crate::input_common::BackgroundColorQuery;
-use crate::input_common::CursorPositionQueryReason;
-use crate::input_common::InputEventQueue;
-use crate::input_common::InputEventQueuer as _;
-use crate::input_common::QueryResponse;
-use crate::input_common::{
-    CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData, LONG_READ_TIMEOUT,
-    QueryResultEvent, ReadlineCmd, RecurrentQuery, TerminalQuery, stop_query,
-};
-use crate::io::IoChain;
-use crate::key::ViewportPosition;
-use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
-use crate::nix::isatty;
-use crate::operation_context::{OperationContext, get_bg_context};
-use crate::pager::{PageRendering, Pager, SelectionMotion};
-use crate::panic::AT_EXIT;
-use crate::parse_constants::SourceRange;
-use crate::parse_constants::{ParseIssue, ParseTreeFlags};
-use crate::parse_util::{
-    MaybeParentheses, SPACES_PER_INDENT, compute_indents, contains_wildcards, detect_parse_errors,
-    escape_string_with_quote, escape_wildcards, get_cmdsubst_extent, get_line_from_offset,
-    get_offset, get_offset_from_line, get_process_extent, get_process_first_token_offset,
-    get_token_extent, lineno, locate_cmdsubst_range,
-};
-use crate::parser::{BlockType, EvalRes, Parser, ParserEnvSetMode};
-use crate::portable_atomic::AtomicU64;
-use crate::prelude::*;
-use crate::proc::{
-    HAVE_PROC_STAT, hup_jobs, is_interactive_session, job_reap, jobs_requiring_warning_on_exit,
-    print_exit_warning_for_jobs, proc_update_jiffies,
-};
-use crate::reader::word_motion::bigword_class;
-use crate::screen::{CharOffset, Screen, is_dumb, screen_force_clear_to_end};
-use crate::should_flog;
-use crate::signal::{
-    signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
-    signal_set_handlers_once,
-};
-use crate::terminal::TerminalCommand::{
-    self, ClearScreen, DecrstAlternateScreenBuffer, DecsetAlternateScreenBuffer, DecsetShowCursor,
-    Osc0WindowTitle, Osc1TabTitle, Osc133CommandFinished, Osc133CommandStart, QueryBackgroundColor,
-    QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
-    QueryXtgettcap, QueryXtversion,
-};
-use crate::terminal::{BufferedOutputter, Outputter};
-use crate::termsize::{safe_termsize_invalidate_tty, termsize_last, termsize_update};
-use crate::text_face::{TextFace, parse_text_face};
-use crate::threads::{assert_is_background_thread, assert_is_main_thread};
-use crate::tokenizer::{
-    TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType, Tokenizer, quote_end, tok_command,
-    variable_assignment_equals_pos,
-};
-use crate::tty_handoff::SCROLL_CONTENT_UP_TERMINFO_CODE;
-use crate::tty_handoff::XTGETTCAP_QUERY_OS_NAME;
-use crate::tty_handoff::{
-    TtyHandoff, get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
-};
-use crate::wildcard::wildcard_has;
-use crate::wutil::{fstat, perror_nix, wstat};
-use crate::{abbrs, event, function};
 use assert_matches::assert_matches;
 use errno::{Errno, errno};
 use fish_common::{

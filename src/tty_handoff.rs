@@ -17,7 +17,7 @@ use crate::terminal::TerminalCommand::{
 };
 use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror_nix, wcstoi};
-use fish_common::{safe_write_loop, write_loop};
+use fish_common::write_loop;
 use fish_util::perror;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use nix::sys::termios::tcgetattr;
@@ -336,7 +336,7 @@ pub fn safe_deactivate_tty_protocols() {
 
     let commands = protocols.safe_get_commands(false);
     // Safety: just writing data to stdout.
-    let _ = safe_write_loop(&libc::STDOUT_FILENO, commands);
+    let _ = write_loop(&libc::STDOUT_FILENO, commands);
     TTY_PROTOCOLS_ACTIVE.store(false, Ordering::Release);
 }
 

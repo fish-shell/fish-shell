@@ -16,6 +16,7 @@ pub mod prelude {
 /// The character to use where the text has been truncated.
 pub const ELLIPSIS_CHAR: char = '\u{2026}'; // ('…')
 
+pub const SPECIAL_KEY_ENCODE_BASE: char = '\u{F500}';
 // These are in the Unicode private-use range. We really shouldn't use this
 // range but have little choice in the matter given how our lexer/parser works.
 // We can't use non-characters for these two ranges because there are only 66 of
@@ -28,7 +29,7 @@ pub const ELLIPSIS_CHAR: char = '\u{2026}'; // ('…')
 // Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
 // of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
-pub const ENCODE_DIRECT_BASE: char = '\u{F600}';
+pub const ENCODE_DIRECT_BASE: char = char_offset(SPECIAL_KEY_ENCODE_BASE, 256);
 pub const ENCODE_DIRECT_END: char = char_offset(ENCODE_DIRECT_BASE, 256);
 
 /// Encode a literal byte in a UTF-32 character. This is required for e.g. the echo builtin, whose

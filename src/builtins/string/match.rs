@@ -3,13 +3,14 @@ use std::collections::HashMap;
 use std::num::NonZeroUsize;
 
 use super::*;
-use crate::common::str2wcstring;
-use crate::env::{EnvVar, EnvVarFlags};
-use crate::flog::flog;
-use crate::parse_util::unescape_wildcards;
-use crate::parser::ParserEnvSetMode;
-use crate::wildcard::wildcard_match;
-use fish_widestring::ANY_STRING;
+use crate::{
+    env::{EnvVar, EnvVarFlags},
+    flog::flog,
+    parse_util::unescape_wildcards,
+    parser::ParserEnvSetMode,
+    wildcard::wildcard_match,
+};
+use fish_widestring::{ANY_STRING, str2wcstring};
 
 #[derive(Default)]
 pub struct Match<'args> {

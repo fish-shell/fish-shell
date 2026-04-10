@@ -1,36 +1,36 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 
-use crate::ast::{self, Node};
-use crate::builtins::shared::STATUS_ILLEGAL_CMD;
-use crate::common::{CancelChecker, PROFILING_ACTIVE, escape_string};
-use crate::complete::CompletionList;
-use crate::env::{
-    EnvMode, EnvSetMode, EnvStack, EnvStackSetResult, Environment, FISH_TERMINAL_COLOR_THEME_VAR,
-    Statuses,
+use crate::{
+    ast::{self, Node},
+    builtins::shared::STATUS_ILLEGAL_CMD,
+    common::{CancelChecker, PROFILING_ACTIVE, escape_string},
+    complete::CompletionList,
+    env::{
+        EnvMode, EnvSetMode, EnvStack, EnvStackSetResult, Environment,
+        FISH_TERMINAL_COLOR_THEME_VAR, Statuses,
+    },
+    event::{self, Event},
+    expand::{ExpandFlags, ExpandResultCode, expand_string, replace_home_directory_with_tilde},
+    fds::{BEST_O_SEARCH, open_dir},
+    flog, flogf, function,
+    global_safety::RelaxedAtomicBool,
+    input_common::TerminalQuery,
+    io::IoChain,
+    job_group::MaybeJobId,
+    operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext},
+    parse_constants::{
+        FISH_MAX_EVAL_DEPTH, FISH_MAX_STACK_DEPTH, ParseError, ParseErrorList, ParseTreeFlags,
+        SOURCE_LOCATION_UNKNOWN,
+    },
+    parse_execution::{EndExecutionReason, ExecutionContext},
+    parse_tree::{NodeRef, ParsedSourceRef, SourceLineCache, parse_source},
+    portable_atomic::AtomicU64,
+    prelude::*,
+    proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap},
+    signal::{Signal, signal_check_cancel, signal_clear_cancel},
+    wait_handle::WaitHandleStore,
+    wutil::perror_nix,
 };
-use crate::event::{self, Event};
-use crate::expand::{
-    ExpandFlags, ExpandResultCode, expand_string, replace_home_directory_with_tilde,
-};
-use crate::fds::{BEST_O_SEARCH, open_dir};
-use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::TerminalQuery;
-use crate::io::IoChain;
-use crate::job_group::MaybeJobId;
-use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext};
-use crate::parse_constants::{
-    FISH_MAX_EVAL_DEPTH, FISH_MAX_STACK_DEPTH, ParseError, ParseErrorList, ParseTreeFlags,
-    SOURCE_LOCATION_UNKNOWN,
-};
-use crate::parse_execution::{EndExecutionReason, ExecutionContext};
-use crate::parse_tree::{NodeRef, ParsedSourceRef, SourceLineCache, parse_source};
-use crate::portable_atomic::AtomicU64;
-use crate::prelude::*;
-use crate::proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap};
-use crate::signal::{Signal, signal_check_cancel, signal_clear_cancel};
-use crate::wait_handle::WaitHandleStore;
-use crate::wutil::perror_nix;
-use crate::{flog, flogf, function};
 use assert_matches::assert_matches;
 use fish_common::{
     EscapeFlags, EscapeStringStyle, FilenameRef, ScopeGuarding, ScopedCell, ScopedRefCell,
@@ -1500,20 +1500,22 @@ pub enum LoopStatus {
 #[cfg(test)]
 mod tests {
     use super::{CancelBehavior, Parser};
-    use crate::ast::{self, Ast, JobList, Kind, Node, Traversal, is_same_node};
-    use crate::common::str2wcstring;
-    use crate::env::EnvStack;
-    use crate::expand::ExpandFlags;
-    use crate::io::{IoBufferfill, IoChain};
-    use crate::parse_constants::{
-        ParseErrorCode, ParseIssue, ParseTokenType, ParseTreeFlags, StatementDecoration,
+    use crate::{
+        ast::{self, Ast, JobList, Kind, Node, Traversal, is_same_node},
+        env::EnvStack,
+        expand::ExpandFlags,
+        io::{IoBufferfill, IoChain},
+        parse_constants::{
+            ParseErrorCode, ParseIssue, ParseTokenType, ParseTreeFlags, StatementDecoration,
+        },
+        parse_util::{detect_errors_in_argument, detect_parse_errors},
+        prelude::*,
+        reader::{fake_scoped_reader, reader_reset_interrupted},
+        signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers},
+        tests::prelude::*,
     };
-    use crate::parse_util::{detect_errors_in_argument, detect_parse_errors};
-    use crate::prelude::*;
-    use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
-    use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
-    use crate::tests::prelude::*;
     use fish_wcstringutil::join_strings;
+    use fish_widestring::str2wcstring;
     use libc::SIGINT;
     use std::time::Duration;
     #[test]

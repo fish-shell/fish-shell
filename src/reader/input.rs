@@ -1,13 +1,14 @@
 //! Reader implementation of InputEventQueuer.
-use std::os::fd::RawFd;
-
-use crate::common::{bytes2wcstring, escape};
-use crate::event;
-use crate::input_common::{CharEvent, InputData, InputEventQueuer, ReadlineCmd};
-use crate::proc::job_reap;
-use crate::signal::signal_clear_cancel;
-
 use super::{Reader, reader_reading_interrupted, reader_schedule_prompt_repaint};
+use crate::{
+    common::escape,
+    event,
+    input_common::{CharEvent, InputData, InputEventQueuer, ReadlineCmd},
+    proc::job_reap,
+    signal::signal_clear_cancel,
+};
+use fish_widestring::bytes2wcstring;
+use std::os::fd::RawFd;
 
 impl<'a> InputEventQueuer for Reader<'a> {
     fn get_input_data(&self) -> &InputData {

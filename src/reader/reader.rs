@@ -26,10 +26,7 @@ use crate::{
     abbrs::{self, abbrs_match},
     ast::{self, Kind, is_same_node},
     builtins::shared::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
-    common::{
-        bytes2wcstring, escape, escape_string, escape_string_with_quote, get_program_name,
-        shell_modes,
-    },
+    common::{escape, escape_string, escape_string_with_quote, get_program_name, shell_modes},
     complete::{
         CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete,
         complete_load, sort_and_prioritize,
@@ -126,7 +123,7 @@ use fish_wcstringutil::{
     join_strings, string_prefixes_string, string_prefixes_string_case_insensitive,
     string_prefixes_string_maybe_case_insensitive,
 };
-use fish_widestring::{ELLIPSIS_CHAR, UTF8_BOM_WCHAR};
+use fish_widestring::{ELLIPSIS_CHAR, UTF8_BOM_WCHAR, bytes2wcstring};
 use libc::{
     _POSIX_VDISABLE, EIO, EISDIR, ENOTTY, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,

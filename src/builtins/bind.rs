@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{bytes2wcstring, escape, escape_string, valid_var_name},
+    common::{escape, escape_string, valid_var_name},
     err_fmt, err_raw, err_str,
     highlight::highlight_and_colorize,
     input::{
@@ -14,6 +14,7 @@ use crate::{
     },
 };
 use fish_common::{EscapeFlags, EscapeStringStyle, help_section};
+use fish_widestring::bytes2wcstring;
 use std::sync::MutexGuard;
 
 const DEFAULT_BIND_MODE: &wstr = L!("default");

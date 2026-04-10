@@ -1,14 +1,12 @@
 //! Implementation of the YAML-like history file format.
 
+use super::{HistoryItem, PersistenceMode};
+use crate::flog::flog;
+use fish_widestring::{bytes2wcstring, subslice_position};
 use std::{
     borrow::Cow,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
-
-use fish_widestring::subslice_position;
-
-use super::{HistoryItem, PersistenceMode};
-use crate::{common::bytes2wcstring, flog::flog};
 
 // Our history format is nearly-valid YAML (but isn't quite). Here it is:
 //

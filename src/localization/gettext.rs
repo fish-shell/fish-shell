@@ -41,7 +41,7 @@ fn gettext(message: MaybeStatic) -> &'static wstr {
                 LazyLock::new(|| Mutex::new(HashMap::default()));
             let mut localizations_to_wide = LOCALIZATION_TO_WIDE.lock().unwrap();
             if !localizations_to_wide.contains_key(localized_str) {
-                use crate::common::str2wcstring;
+                use fish_widestring::str2wcstring;
 
                 let localization_wstr = Box::leak(str2wcstring(localized_str).into_boxed_utfstr());
                 localizations_to_wide.insert(localized_str, localization_wstr);

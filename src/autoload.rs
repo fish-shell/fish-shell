@@ -135,7 +135,7 @@ impl Autoload {
                 parser.eval(&script_source, &IoChain::new());
             }
             AutoloadPath::Embedded(name) => {
-                use crate::common::bytes2wcstring;
+                use fish_widestring::bytes2wcstring;
                 use std::sync::Arc;
                 flogf!(autoload, "Loading embedded: %s", name);
                 let emfile = Asset::get(name).expect("Embedded file not found");

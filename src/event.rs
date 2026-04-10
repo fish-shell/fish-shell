@@ -4,19 +4,23 @@
 //! defined when these functions produce output or perform memory allocations, since such functions
 //! may not be safely called by signal handlers.
 
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex};
-
-use crate::common::{escape, str2wcstring};
-use crate::flog::flog;
-use crate::io::{IoChain, IoStreams};
-use crate::job_group::MaybeJobId;
-use crate::parser::{Block, Parser};
-use crate::prelude::*;
-use crate::proc::Pid;
-use crate::reader::reader_update_termsize;
-use crate::signal::{Signal, signal_check_cancel, signal_handle};
+use crate::{
+    common::escape,
+    flog::flog,
+    io::{IoChain, IoStreams},
+    job_group::MaybeJobId,
+    parser::{Block, Parser},
+    prelude::*,
+    proc::Pid,
+    reader::reader_update_termsize,
+    signal::{Signal, signal_check_cancel, signal_handle},
+};
 use fish_common::ScopeGuard;
+use fish_widestring::str2wcstring;
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, AtomicU32, Ordering},
+};
 
 pub enum EventType {
     Any,

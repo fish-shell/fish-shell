@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{bytes2wcstring, escape_string, reformat_for_screen, valid_func_name},
+    common::{escape_string, reformat_for_screen, valid_func_name},
     err_fmt, err_str,
     event::{self},
     function,
@@ -11,6 +11,7 @@ use crate::{
     termsize::termsize_last,
 };
 use fish_common::{EscapeFlags, EscapeStringStyle};
+use fish_widestring::bytes2wcstring;
 
 #[derive(Default)]
 struct FunctionsCmdOpts<'args> {

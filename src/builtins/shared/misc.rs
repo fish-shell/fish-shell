@@ -1,6 +1,6 @@
 use crate::{
     builtins::{prelude::*, *},
-    common::{bytes2wcstring, escape, str2wcstring},
+    common::escape,
     err_fmt,
     fds::BorrowedFdFile,
     io::OutputStream,
@@ -12,7 +12,7 @@ use crate::{
 };
 use errno::errno;
 use fish_common::{Named, assert_sorted_by_name, get_by_sorted_name};
-use fish_widestring::L;
+use fish_widestring::{L, bytes2wcstring, str2wcstring};
 use std::io::{BufRead as _, BufReader, Read as _};
 
 pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;

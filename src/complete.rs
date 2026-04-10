@@ -3,7 +3,7 @@ use crate::{
     ast::unescape_keyword,
     autoload::{Autoload, AutoloadResult},
     builtins::shared::{builtin_exists, builtin_get_desc, builtin_get_names},
-    common::{charptr2wcstring, escape, unescape_string, valid_var_name_char},
+    common::{escape, unescape_string, valid_var_name_char},
     env::{EnvMode, EnvStack, Environment},
     exec::exec_subshell,
     expand::{
@@ -35,7 +35,7 @@ use fish_wcstringutil::{
     string_prefixes_string_case_insensitive, string_suffixes_string_case_insensitive,
     strip_executable_suffix,
 };
-use fish_widestring::WExt as _;
+use fish_widestring::{WExt as _, charptr2wcstring};
 use std::{
     cmp::Ordering,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
@@ -1807,8 +1807,12 @@ impl<'ctx> Completer<'ctx> {
                 if ptr.is_null() {
                     return None;
                 }
+                // SAFETY: We established that `getpwent` returned non-NULL, in which case `ptr`
+                // will point to a valid `passwd` struct.
                 let pw = unsafe { ptr.read() };
-                Some(charptr2wcstring(pw.pw_name))
+                // SAFETY: This assumes that the successful `getpwent` call put a pointer to a valid
+                // string into `pw.pw_name`.
+                Some(unsafe { charptr2wcstring(pw.pw_name) })
             }
 
             let _guard = SETPWENT_LOCK.lock().unwrap();
@@ -2628,18 +2632,20 @@ mod tests {
         complete_add, complete_add_wrapper, complete_get_wrap_targets, complete_remove_wrapper,
         sort_and_prioritize,
     };
-    use crate::abbrs::{self, Abbreviation, with_abbrs_mut};
-    use crate::common::str2wcstring;
-    use crate::env::{EnvMode, EnvSetMode, Environment as _};
-    use crate::io::IoChain;
-    use crate::operation_context::{
-        EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT, OperationContext, no_cancel,
+    use crate::{
+        abbrs::{self, Abbreviation, with_abbrs_mut},
+        env::{EnvMode, EnvSetMode, Environment as _},
+        io::IoChain,
+        operation_context::{
+            EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT, OperationContext, no_cancel,
+        },
+        parser::ParserEnvSetMode,
+        prelude::*,
+        reader::completion_apply_to_command_line,
+        tests::prelude::*,
     };
-    use crate::parser::ParserEnvSetMode;
-    use crate::prelude::*;
-    use crate::reader::completion_apply_to_command_line;
-    use crate::tests::prelude::*;
     use fish_wcstringutil::join_strings;
+    use fish_widestring::str2wcstring;
     use std::collections::HashMap;
     use std::ffi::CString;
 
